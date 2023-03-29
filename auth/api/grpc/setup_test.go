@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/auth"
@@ -17,7 +18,7 @@ import (
 	"github.com/mainflux/mainflux/auth/mocks"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 )
 
@@ -29,29 +30,55 @@ func TestMain(m *testing.M) {
 	svc = newService(t)
 	startGRPCServer(t, serverErr, svc, port)
 
+	fmt.Println("Calling for loop")
 	for {
 		select {
 		case testRes <- m.Run():
+			fmt.Println()
+			fmt.Println("test ended")
+			fmt.Println()
 			code := <-testRes
 			os.Exit(code)
 		case err := <-serverErr:
 			if err != nil {
 				log.Fatalf("gPRC Server Terminated")
 			}
+		case <-time.After(30 * time.Second):
+			log.Fatalf("Tests took to long to complete")
 		}
 	}
 }
 
 func startGRPCServer(t *testing.T, serverErr chan error, svc auth.Service, port int) {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error while creating new listerner: %s", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating new listerner: %s", err))
 
 	server := grpc.NewServer()
 	mainflux.RegisterAuthServiceServer(server, grpcapi.NewServer(mocktracer.New(), svc))
 
-	go func() {
-		serverErr <- server.Serve(listener)
-	}()
+	done := make(chan bool)
+
+	t.Cleanup(func() {
+		fmt.Println()
+		fmt.Println("Test complete called t.cleanup")
+		fmt.Println()
+		close(done)
+	})
+
+	go func(done <-chan bool) {
+		for {
+			select {
+			case serverErr <- server.Serve(listener):
+				close(serverErr)
+				return
+			case <-done:
+				close(serverErr)
+				// serverErr <- nil
+				return
+			}
+
+		}
+	}(done)
 }
 
 func newService(t *testing.T) auth.Service {

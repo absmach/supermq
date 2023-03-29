@@ -5,6 +5,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
@@ -35,6 +36,9 @@ func issueEndpoint(svc auth.Service) endpoint.Endpoint {
 }
 
 func identifyEndpoint(svc auth.Service) endpoint.Endpoint {
+	fmt.Println()
+	fmt.Println("reached endpoint")
+	fmt.Println()
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(identityReq)
 		if err := req.validate(); err != nil {

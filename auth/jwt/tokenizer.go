@@ -4,6 +4,9 @@
 package jwt
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/mainflux/mainflux/auth"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -35,6 +38,9 @@ func New(secret string) auth.Tokenizer {
 }
 
 func (svc tokenizer) Issue(key auth.Key) (string, error) {
+	fmt.Println()
+	fmt.Println("reached jwt issue")
+	fmt.Println()
 	claims := claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:   issuerName,
@@ -53,6 +59,8 @@ func (svc tokenizer) Issue(key auth.Key) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	a, b := token.SignedString([]byte(svc.secret))
+	fmt.Println("returning : ", a, " : ", b)
 	return token.SignedString([]byte(svc.secret))
 }
 
@@ -90,6 +98,8 @@ func (c claims) toKey() auth.Key {
 
 	if c.ExpiresAt != nil && c.ExpiresAt.Time.UTC().Unix() != 0 {
 		key.ExpiresAt = c.ExpiresAt.Time.UTC()
+	} else {
+		key.ExpiresAt = time.Time{}
 	}
 
 	// Default type is 0.

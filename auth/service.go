@@ -104,15 +104,28 @@ func New(keys KeyRepository, groups GroupRepository, idp mainflux.IDProvider, to
 }
 
 func (svc service) Issue(ctx context.Context, token string, key Key) (Key, string, error) {
+	fmt.Println("Inside endpoint")
+	fmt.Println("reached 1")
+	fmt.Println()
 	if key.IssuedAt.IsZero() {
 		return Key{}, "", ErrInvalidKeyIssuedAt
 	}
 	switch key.Type {
+
 	case APIKey:
+		fmt.Println()
+		fmt.Println("reached switch 1")
+		fmt.Println()
 		return svc.userKey(ctx, token, key)
 	case RecoveryKey:
+		fmt.Println()
+		fmt.Println("reached switch 1")
+		fmt.Println()
 		return svc.tmpKey(recoveryDuration, key)
 	default:
+		fmt.Println()
+		fmt.Println("reached default")
+		fmt.Println()
 		return svc.tmpKey(svc.loginDuration, key)
 	}
 }

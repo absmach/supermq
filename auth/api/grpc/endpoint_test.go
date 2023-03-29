@@ -43,7 +43,9 @@ var svc auth.Service
 
 func TestIssue(t *testing.T) {
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client connection: %s", err))
+
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	cases := []struct {
@@ -105,17 +107,39 @@ func TestIssue(t *testing.T) {
 }
 
 func TestIdentify(t *testing.T) {
+	fmt.Println()
+	fmt.Println("reached 1")
+	fmt.Println()
+
 	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	require.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+
+	fmt.Println()
+	fmt.Println("reached 2")
+	fmt.Println()
 
 	_, recoverySecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.RecoveryKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	require.Nil(t, err, fmt.Sprintf("Issuing recovery key expected to succeed: %s", err))
 
+	fmt.Println()
+	fmt.Println("reached 3")
+	fmt.Println()
+
 	_, apiSecret, err := svc.Issue(context.Background(), loginSecret, auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Minute), IssuerID: id, Subject: email})
 	require.Nil(t, err, fmt.Sprintf("Issuing API key expected to succeed: %s", err))
 
+	fmt.Println()
+	fmt.Println("reached 4")
+	fmt.Println()
+
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client connection: %s", err))
+
+	fmt.Println()
+	fmt.Println("reached 5")
+	fmt.Println()
+
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	cases := []struct {
@@ -163,14 +187,25 @@ func TestIdentify(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		fmt.Println()
+		fmt.Println("###")
+		fmt.Println(tc.desc)
+		fmt.Println("###")
+		fmt.Println()
 		idt, err := client.Identify(context.Background(), &mainflux.Token{Value: tc.token})
+		fmt.Println("idt : ", idt)
+		fmt.Println("err : ", err)
 		if idt != nil {
 			assert.Equal(t, tc.idt, idt, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.idt, idt))
 		}
 		e, ok := status.FromError(err)
+		fmt.Println("e : ", e)
+		fmt.Println("ok : ", ok)
 		assert.True(t, ok, "gRPC status can't be extracted from the error")
 		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.code, e.Code()))
 	}
+
+	fmt.Println("Reached here")
 }
 
 func TestAuthorize(t *testing.T) {
@@ -178,7 +213,9 @@ func TestAuthorize(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client connection: %s", err))
+
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	cases := []struct {
@@ -252,6 +289,10 @@ func TestAuthorize(t *testing.T) {
 		assert.True(t, ok, "gRPC status can't be extracted from the error")
 		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.code, e.Code()))
 	}
+
+	fmt.Println()
+	fmt.Println("Reached here")
+	fmt.Println()
 }
 
 func TestAddPolicy(t *testing.T) {
@@ -259,7 +300,9 @@ func TestAddPolicy(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client connection: %s", err))
+
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	groupAdminObj := "groupadmin"
@@ -305,6 +348,8 @@ func TestAddPolicy(t *testing.T) {
 		assert.True(t, ok, "gRPC status can't be extracted from the error")
 		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.code, e.Code()))
 	}
+
+	fmt.Println("Reached here")
 }
 
 func TestDeletePolicy(t *testing.T) {
@@ -312,7 +357,9 @@ func TestDeletePolicy(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client connection: %s", err))
+
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	readRelation := "read"
@@ -357,6 +404,8 @@ func TestDeletePolicy(t *testing.T) {
 		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.code, e.Code()))
 		assert.Equal(t, tc.dpr.GetDeleted(), dpr.GetDeleted(), fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.dpr.GetDeleted(), dpr.GetDeleted()))
 	}
+
+	fmt.Println("Reached here")
 }
 
 func TestMembers(t *testing.T) {
@@ -429,7 +478,8 @@ func TestMembers(t *testing.T) {
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
 	conn, err := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error while creating client connection: %s", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client connection: %s", err))
+
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	for _, tc := range cases {
@@ -439,4 +489,6 @@ func TestMembers(t *testing.T) {
 		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.code, e.Code()))
 		assert.True(t, ok, "OK expected to be true")
 	}
+
+	fmt.Println("Reached here")
 }
