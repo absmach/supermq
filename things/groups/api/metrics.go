@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/metrics"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/things/groups"
 )
 
@@ -25,7 +26,7 @@ func MetricsMiddleware(svc groups.Service, counter metrics.Counter, latency metr
 	}
 }
 
-func (ms *metricsMiddleware) CreateGroups(ctx context.Context, token string, g ...groups.Group) ([]groups.Group, error) {
+func (ms *metricsMiddleware) CreateGroups(ctx context.Context, token string, g ...mfgroups.Group) ([]mfgroups.Group, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "create_channel").Add(1)
 		ms.latency.With("method", "create_channel").Observe(time.Since(begin).Seconds())
@@ -33,7 +34,7 @@ func (ms *metricsMiddleware) CreateGroups(ctx context.Context, token string, g .
 	return ms.svc.CreateGroups(ctx, token, g...)
 }
 
-func (ms *metricsMiddleware) UpdateGroup(ctx context.Context, token string, group groups.Group) (rGroup groups.Group, err error) {
+func (ms *metricsMiddleware) UpdateGroup(ctx context.Context, token string, group mfgroups.Group) (rGroup mfgroups.Group, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "update_channel").Add(1)
 		ms.latency.With("method", "update_channel").Observe(time.Since(begin).Seconds())
@@ -41,7 +42,7 @@ func (ms *metricsMiddleware) UpdateGroup(ctx context.Context, token string, grou
 	return ms.svc.UpdateGroup(ctx, token, group)
 }
 
-func (ms *metricsMiddleware) ViewGroup(ctx context.Context, token, id string) (g groups.Group, err error) {
+func (ms *metricsMiddleware) ViewGroup(ctx context.Context, token, id string) (g mfgroups.Group, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "view_channel").Add(1)
 		ms.latency.With("method", "view_channel").Observe(time.Since(begin).Seconds())
@@ -57,7 +58,7 @@ func (ms *metricsMiddleware) ListGroups(ctx context.Context, token string, gp gr
 	return ms.svc.ListGroups(ctx, token, gp)
 }
 
-func (ms *metricsMiddleware) EnableGroup(ctx context.Context, token string, id string) (g groups.Group, err error) {
+func (ms *metricsMiddleware) EnableGroup(ctx context.Context, token string, id string) (g mfgroups.Group, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "enable_channel").Add(1)
 		ms.latency.With("method", "enable_channel").Observe(time.Since(begin).Seconds())
@@ -65,7 +66,7 @@ func (ms *metricsMiddleware) EnableGroup(ctx context.Context, token string, id s
 	return ms.svc.EnableGroup(ctx, token, id)
 }
 
-func (ms *metricsMiddleware) DisableGroup(ctx context.Context, token string, id string) (g groups.Group, err error) {
+func (ms *metricsMiddleware) DisableGroup(ctx context.Context, token string, id string) (g mfgroups.Group, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "disable_channel").Add(1)
 		ms.latency.With("method", "disable_channel").Observe(time.Since(begin).Seconds())

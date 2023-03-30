@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/clients"
-	"github.com/mainflux/mainflux/things/groups"
 	"github.com/pelletier/go-toml"
 )
 
@@ -61,7 +61,7 @@ type Config struct {
 	Server    ServiceConf      `toml:"server" mapstructure:"server"`
 	Bootstrap Bootstrap        `toml:"bootstrap" mapstructure:"bootstrap"`
 	Things    []clients.Client `toml:"things" mapstructure:"things"`
-	Channels  []groups.Group   `toml:"channels" mapstructure:"channels"`
+	Channels  []mfgroups.Group `toml:"channels" mapstructure:"channels"`
 	Cert      Cert             `toml:"cert" mapstructure:"cert"`
 }
 

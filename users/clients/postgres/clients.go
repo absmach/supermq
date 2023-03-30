@@ -12,8 +12,8 @@ import (
 	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/things/groups"
 	"github.com/mainflux/mainflux/users/clients"
-	"github.com/mainflux/mainflux/users/groups"
 )
 
 var _ clients.ClientRepository = (*clientRepo)(nil)

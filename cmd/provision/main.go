@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/mainflux/mainflux"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	"github.com/mainflux/mainflux/logger"
@@ -18,7 +19,6 @@ import (
 	"github.com/mainflux/mainflux/provision"
 	"github.com/mainflux/mainflux/provision/api"
 	"github.com/mainflux/mainflux/things/clients"
-	"github.com/mainflux/mainflux/things/groups"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -198,7 +198,7 @@ func loadConfig() (provision.Config, error) {
 		},
 
 		// This is default conf for provision if there is no config file
-		Channels: []groups.Group{
+		Channels: []mfgroups.Group{
 			{
 				Name:     "control-channel",
 				Metadata: map[string]interface{}{"type": "control"},

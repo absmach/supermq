@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/things/groups"
 )
@@ -20,7 +21,7 @@ func LoggingMiddleware(svc groups.Service, logger mflog.Logger) groups.Service {
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) CreateGroups(ctx context.Context, token string, group ...groups.Group) (rGroup []groups.Group, err error) {
+func (lm *loggingMiddleware) CreateGroups(ctx context.Context, token string, group ...mfgroups.Group) (rGroup []mfgroups.Group, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method create_channel for %d channels using token %s took %s to complete", len(group), token, time.Since(begin))
 		if err != nil {
@@ -32,7 +33,7 @@ func (lm *loggingMiddleware) CreateGroups(ctx context.Context, token string, gro
 	return lm.svc.CreateGroups(ctx, token, group...)
 }
 
-func (lm *loggingMiddleware) UpdateGroup(ctx context.Context, token string, group groups.Group) (rGroup groups.Group, err error) {
+func (lm *loggingMiddleware) UpdateGroup(ctx context.Context, token string, group mfgroups.Group) (rGroup mfgroups.Group, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method update_channel for channel with id %s using token %s took %s to complete", group.ID, token, time.Since(begin))
 		if err != nil {
@@ -44,7 +45,7 @@ func (lm *loggingMiddleware) UpdateGroup(ctx context.Context, token string, grou
 	return lm.svc.UpdateGroup(ctx, token, group)
 }
 
-func (lm *loggingMiddleware) ViewGroup(ctx context.Context, token, id string) (g groups.Group, err error) {
+func (lm *loggingMiddleware) ViewGroup(ctx context.Context, token, id string) (g mfgroups.Group, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method view_channel for channel with id %s using token %s took %s to complete", g.Name, token, time.Since(begin))
 		if err != nil {
@@ -68,7 +69,7 @@ func (lm *loggingMiddleware) ListGroups(ctx context.Context, token string, gp gr
 	return lm.svc.ListGroups(ctx, token, gp)
 }
 
-func (lm *loggingMiddleware) EnableGroup(ctx context.Context, token string, id string) (g groups.Group, err error) {
+func (lm *loggingMiddleware) EnableGroup(ctx context.Context, token string, id string) (g mfgroups.Group, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method enable_channel for channel with id %s using token %s took %s to complete", id, token, time.Since(begin))
 		if err != nil {
@@ -80,7 +81,7 @@ func (lm *loggingMiddleware) EnableGroup(ctx context.Context, token string, id s
 	return lm.svc.EnableGroup(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) DisableGroup(ctx context.Context, token string, id string) (g groups.Group, err error) {
+func (lm *loggingMiddleware) DisableGroup(ctx context.Context, token string, id string) (g mfgroups.Group, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method disable_channel for channel with id %s using token %s took %s to complete", id, token, time.Since(begin))
 		if err != nil {

@@ -3,6 +3,7 @@ package mocks
 import (
 	"context"
 
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/groups"
 	"github.com/stretchr/testify/mock"
@@ -26,7 +27,7 @@ func (m *GroupRepository) ChangeStatus(ctx context.Context, group groups.Group) 
 		return groups.Group{}, errors.ErrMalformedEntity
 	}
 
-	return ret.Get(0).(groups.Group), ret.Error(1)
+	return ret.Get(0).(mfgroups.Group), ret.Error(1)
 }
 
 func (m *GroupRepository) Memberships(ctx context.Context, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
@@ -45,32 +46,32 @@ func (m *GroupRepository) RetrieveAll(ctx context.Context, gm groups.GroupsPage)
 	return ret.Get(0).(groups.GroupsPage), ret.Error(1)
 }
 
-func (m *GroupRepository) RetrieveByID(ctx context.Context, id string) (groups.Group, error) {
+func (m *GroupRepository) RetrieveByID(ctx context.Context, id string) (mfgroups.Group, error) {
 	ret := m.Called(ctx, id)
 	if id == WrongID {
-		return groups.Group{}, errors.ErrNotFound
+		return mfgroups.Group{}, errors.ErrNotFound
 	}
 
-	return ret.Get(0).(groups.Group), ret.Error(1)
+	return ret.Get(0).(mfgroups.Group), ret.Error(1)
 }
 
-func (m *GroupRepository) Save(ctx context.Context, g groups.Group) (groups.Group, error) {
+func (m *GroupRepository) Save(ctx context.Context, g mfgroups.Group) (mfgroups.Group, error) {
 	ret := m.Called(ctx, g)
-	if g.ParentID == WrongID {
-		return groups.Group{}, errors.ErrCreateEntity
+	if g.Parent == WrongID {
+		return mfgroups.Group{}, errors.ErrCreateEntity
 	}
-	if g.OwnerID == WrongID {
-		return groups.Group{}, errors.ErrCreateEntity
+	if g.Owner == WrongID {
+		return mfgroups.Group{}, errors.ErrCreateEntity
 	}
 
 	return g, ret.Error(1)
 }
 
-func (m *GroupRepository) Update(ctx context.Context, g groups.Group) (groups.Group, error) {
+func (m *GroupRepository) Update(ctx context.Context, g mfgroups.Group) (mfgroups.Group, error) {
 	ret := m.Called(ctx, g)
 	if g.ID == WrongID {
-		return groups.Group{}, errors.ErrNotFound
+		return mfgroups.Group{}, errors.ErrNotFound
 	}
 
-	return ret.Get(0).(groups.Group), ret.Error(1)
+	return ret.Get(0).(mfgroups.Group), ret.Error(1)
 }

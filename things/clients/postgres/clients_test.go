@@ -7,13 +7,13 @@ import (
 	"testing"
 
 	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/things/clients"
 	cpostgres "github.com/mainflux/mainflux/things/clients/postgres"
-	"github.com/mainflux/mainflux/things/groups"
 	gpostgres "github.com/mainflux/mainflux/things/groups/postgres"
 	"github.com/mainflux/mainflux/things/policies"
 	ppostgres "github.com/mainflux/mainflux/things/policies/postgres"
@@ -220,7 +220,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 	}
 	var expectedClients = []clients.Client{}
 
-	var sharedGroup = groups.Group{
+	var sharedGroup = mfgroups.Group{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "shared-group",
 	}

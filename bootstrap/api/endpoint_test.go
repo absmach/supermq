@@ -24,6 +24,7 @@ import (
 	bsapi "github.com/mainflux/mainflux/bootstrap/api"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
@@ -178,11 +179,11 @@ func newService(auth policies.AuthServiceClient, url string) bootstrap.Service {
 	return bootstrap.New(auth, things, sdk, encKey)
 }
 
-func generateChannels() map[string]groups.Group {
-	channels := make(map[string]groups.Group, channelsNum)
+func generateChannels() map[string]mfgroups.Group {
+	channels := make(map[string]mfgroups.Group, channelsNum)
 	for i := 0; i < channelsNum; i++ {
 		id := strconv.Itoa(i + 1)
-		channels[id] = groups.Group{
+		channels[id] = mfgroups.Group{
 			ID:       id,
 			Owner:    email,
 			Metadata: metadata,

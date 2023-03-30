@@ -11,6 +11,7 @@ import (
 	"github.com/mainflux/mainflux/internal/api"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/groups"
@@ -333,7 +334,7 @@ func decodeGroupCreate(_ context.Context, r *http.Request) (interface{}, error) 
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.ErrUnsupportedContentType
 	}
-	var g groups.Group
+	var g mfgroups.Group
 	if err := json.NewDecoder(r.Body).Decode(&g); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}

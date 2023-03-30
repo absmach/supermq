@@ -13,7 +13,6 @@ import (
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/clients"
-	"github.com/mainflux/mainflux/things/groups"
 )
 
 var _ clients.Repository = (*clientRepo)(nil)

@@ -10,6 +10,8 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux/internal/api"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/groups"
@@ -116,7 +118,7 @@ func decodeListMembershipRequest(_ context.Context, r *http.Request) (interface{
 	if err != nil {
 		return nil, err
 	}
-	st, err := groups.ToStatus(s)
+	st, err := mfclients.ToStatus(s)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +184,7 @@ func decodeListGroupsRequest(_ context.Context, r *http.Request) (interface{}, e
 	if err != nil {
 		return nil, err
 	}
-	st, err := groups.ToStatus(s)
+	st, err := mfclients.ToStatus(s)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +212,7 @@ func decodeGroupCreate(_ context.Context, r *http.Request) (interface{}, error) 
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.ErrUnsupportedContentType
 	}
-	var g groups.Group
+	var g mfgroups.Group
 	if err := json.NewDecoder(r.Body).Decode(&g); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}

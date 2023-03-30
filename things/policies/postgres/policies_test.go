@@ -6,13 +6,13 @@ import (
 	"testing"
 
 	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/things/clients"
 	cpostgres "github.com/mainflux/mainflux/things/clients/postgres"
-	"github.com/mainflux/mainflux/things/groups"
 	gpostgres "github.com/mainflux/mainflux/things/groups/postgres"
 	"github.com/mainflux/mainflux/things/policies"
 	ppostgres "github.com/mainflux/mainflux/things/policies/postgres"
@@ -31,10 +31,10 @@ func TestPoliciesSave(t *testing.T) {
 
 	uid := testsutil.GenerateUUID(t, idProvider)
 
-	group := groups.Group{
+	group := mfgroups.Group{
 		ID:     uid,
 		Name:   "policy-save@example.com",
-		Status: groups.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 
 	_, err := grepo.Save(context.Background(), group)
@@ -99,7 +99,7 @@ func TestPoliciesEvaluate(t *testing.T) {
 		},
 		Status: mfclients.EnabledStatus,
 	}
-	group := groups.Group{
+	group := mfgroups.Group{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "connecting-group@example.com",
 	}
@@ -177,10 +177,10 @@ func TestPoliciesRetrieve(t *testing.T) {
 	_, err := crepo.Save(context.Background(), client)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
-	group := groups.Group{
+	group := mfgroups.Group{
 		ID:     testsutil.GenerateUUID(t, idProvider),
 		Name:   "policy-save@example.com",
-		Status: groups.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 	_, err = grepo.Save(context.Background(), group)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -233,10 +233,10 @@ func TestPoliciesUpdate(t *testing.T) {
 	_, err := crepo.Save(context.Background(), client)
 	require.Nil(t, err, fmt.Sprintf("unexpected error during saving client: %s", err))
 
-	group := groups.Group{
+	group := mfgroups.Group{
 		ID:     testsutil.GenerateUUID(t, idProvider),
 		Name:   "policy-save@example.com",
-		Status: groups.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 	_, err = grepo.Save(context.Background(), group)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -371,10 +371,10 @@ func TestPoliciesRetrievalAll(t *testing.T) {
 
 	groupID := ""
 	for i := uint64(0); i < nPolicies; i++ {
-		group := groups.Group{
+		group := mfgroups.Group{
 			ID:     testsutil.GenerateUUID(t, idProvider),
 			Name:   fmt.Sprintf("TestRetrieveAll%d@example.com", i),
-			Status: groups.EnabledStatus,
+			Status: mfclients.EnabledStatus,
 		}
 		if i == 0 {
 			groupID = group.ID
@@ -614,10 +614,10 @@ func TestPoliciesDelete(t *testing.T) {
 	subject, err := crepo.Save(context.Background(), client)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
-	group := groups.Group{
+	group := mfgroups.Group{
 		ID:     testsutil.GenerateUUID(t, idProvider),
 		Name:   "policy-save@example.com",
-		Status: groups.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 	_, err = grepo.Save(context.Background(), group)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))

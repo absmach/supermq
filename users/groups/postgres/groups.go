@@ -9,6 +9,7 @@ import (
 	"time"
 
 	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/groups"
@@ -36,18 +37,18 @@ func (repo groupRepository) Save(ctx context.Context, g groups.Group) (groups.Gr
 
 	dbg, err := toDBGroup(g)
 	if err != nil {
-		return groups.Group{}, err
+		return mfgroups.Group{}, err
 	}
 	row, err := repo.db.NamedQueryContext(ctx, q, dbg)
 	if err != nil {
-		return groups.Group{}, postgres.HandleError(err, errors.ErrCreateEntity)
+		return mfgroups.Group{}, postgres.HandleError(err, errors.ErrCreateEntity)
 	}
 
 	defer row.Close()
 	row.Next()
 	dbg = dbGroup{}
 	if err := row.StructScan(&dbg); err != nil {
-		return groups.Group{}, err
+		return mfgroups.Group{}, err
 	}
 
 	return toGroup(dbg)
@@ -64,16 +65,16 @@ func (repo groupRepository) RetrieveByID(ctx context.Context, id string) (groups
 	row, err := repo.db.NamedQueryContext(ctx, q, dbg)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return groups.Group{}, errors.Wrap(errors.ErrNotFound, err)
+			return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, err)
 		}
-		return groups.Group{}, errors.Wrap(errors.ErrViewEntity, err)
+		return mfgroups.Group{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
 
 	defer row.Close()
 	row.Next()
 	dbg = dbGroup{}
 	if err := row.StructScan(&dbg); err != nil {
-		return groups.Group{}, errors.Wrap(errors.ErrNotFound, err)
+		return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, err)
 	}
 
 	return toGroup(dbg)
@@ -106,7 +107,7 @@ func (repo groupRepository) RetrieveAll(ctx context.Context, gm groups.GroupsPag
 	}
 	defer rows.Close()
 
-	var items []groups.Group
+	var items []mfgroups.Group
 	for rows.Next() {
 		dbg := dbGroup{}
 		if err := rows.StructScan(&dbg); err != nil {
@@ -168,7 +169,7 @@ func (repo groupRepository) Memberships(ctx context.Context, clientID string, gm
 	}
 	defer rows.Close()
 
-	var items []groups.Group
+	var items []mfgroups.Group
 	for rows.Next() {
 		dbg := dbGroup{}
 		if err := rows.StructScan(&dbg); err != nil {
@@ -198,7 +199,7 @@ func (repo groupRepository) Memberships(ctx context.Context, clientID string, gm
 	return page, nil
 }
 
-func (repo groupRepository) Update(ctx context.Context, g groups.Group) (groups.Group, error) {
+func (repo groupRepository) Update(ctx context.Context, g mfgroups.Group) (mfgroups.Group, error) {
 	var query []string
 	var upq string
 	if g.Name != "" {
@@ -220,21 +221,21 @@ func (repo groupRepository) Update(ctx context.Context, g groups.Group) (groups.
 
 	dbu, err := toDBGroup(g)
 	if err != nil {
-		return groups.Group{}, errors.Wrap(errors.ErrUpdateEntity, err)
+		return mfgroups.Group{}, errors.Wrap(errors.ErrUpdateEntity, err)
 	}
 
 	row, err := repo.db.NamedQueryContext(ctx, q, dbu)
 	if err != nil {
-		return groups.Group{}, postgres.HandleError(err, errors.ErrUpdateEntity)
+		return mfgroups.Group{}, postgres.HandleError(err, errors.ErrUpdateEntity)
 	}
 
 	defer row.Close()
 	if ok := row.Next(); !ok {
-		return groups.Group{}, errors.Wrap(errors.ErrNotFound, row.Err())
+		return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, row.Err())
 	}
 	dbu = dbGroup{}
 	if err := row.StructScan(&dbu); err != nil {
-		return groups.Group{}, errors.Wrap(err, errors.ErrUpdateEntity)
+		return mfgroups.Group{}, errors.Wrap(err, errors.ErrUpdateEntity)
 	}
 	return toGroup(dbu)
 }
@@ -249,16 +250,16 @@ func (repo groupRepository) ChangeStatus(ctx context.Context, group groups.Group
 	}
 	row, err := repo.db.NamedQueryContext(ctx, qc, dbg)
 	if err != nil {
-		return groups.Group{}, postgres.HandleError(err, errors.ErrUpdateEntity)
+		return mfgroups.Group{}, postgres.HandleError(err, errors.ErrUpdateEntity)
 	}
 
 	defer row.Close()
 	if ok := row.Next(); !ok {
-		return groups.Group{}, errors.Wrap(errors.ErrNotFound, row.Err())
+		return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, row.Err())
 	}
 	dbg = dbGroup{}
 	if err := row.StructScan(&dbg); err != nil {
-		return groups.Group{}, errors.Wrap(err, errors.ErrUpdateEntity)
+		return mfgroups.Group{}, errors.Wrap(err, errors.ErrUpdateEntity)
 	}
 
 	return toGroup(dbg)
@@ -320,7 +321,7 @@ type dbGroup struct {
 	Status      groups.Status `db:"status"`
 }
 
-func toDBGroup(g groups.Group) (dbGroup, error) {
+func toDBGroup(g mfgroups.Group) (dbGroup, error) {
 	data := []byte("{}")
 	if len(g.Metadata) > 0 {
 		b, err := json.Marshal(g.Metadata)
@@ -356,11 +357,11 @@ func toDBGroup(g groups.Group) (dbGroup, error) {
 	}, nil
 }
 
-func toGroup(g dbGroup) (groups.Group, error) {
-	var metadata groups.Metadata
+func toGroup(g dbGroup) (mfgroups.Group, error) {
+	var metadata mfgroups.Metadata
 	if g.Metadata != nil {
 		if err := json.Unmarshal([]byte(g.Metadata), &metadata); err != nil {
-			return groups.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)
+			return mfgroups.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)
 		}
 	}
 	var parentID string
@@ -393,8 +394,8 @@ func toGroup(g dbGroup) (groups.Group, error) {
 }
 
 func toDBGroupPage(pm groups.GroupsPage) (dbGroupPage, error) {
-	level := groups.MaxLevel
-	if pm.Level < groups.MaxLevel {
+	level := mfgroups.MaxLevel
+	if pm.Level < mfgroups.MaxLevel {
 		level = pm.Level
 	}
 	data := []byte("{}")

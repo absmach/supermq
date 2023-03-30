@@ -9,6 +9,7 @@ import (
 	"time"
 
 	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -100,8 +101,8 @@ func convertClients(cs []sdk.User) []clients.Client {
 	return ccs
 }
 
-func convertGroups(cs []sdk.Group) []groups.Group {
-	cgs := []groups.Group{}
+func convertGroups(cs []sdk.Group) []mfgroups.Group {
+	cgs := []mfgroups.Group{}
 
 	for _, c := range cs {
 		cgs = append(cgs, convertGroup(c))
@@ -162,8 +163,8 @@ func convertClientPage(p sdk.PageMetadata) clients.Page {
 	}
 }
 
-func convertMemberships(gs []sdk.Group) []groups.Group {
-	cg := []groups.Group{}
+func convertMemberships(gs []sdk.Group) []mfgroups.Group {
+	cg := []mfgroups.Group{}
 	for _, g := range gs {
 		cg = append(cg, convertGroup(g))
 	}
@@ -171,21 +172,21 @@ func convertMemberships(gs []sdk.Group) []groups.Group {
 	return cg
 }
 
-func convertGroup(g sdk.Group) groups.Group {
+func convertGroup(g sdk.Group) mfgroups.Group {
 	if g.Status == "" {
 		g.Status = mfclients.EnabledStatus.String()
 	}
 	status, err := mfclients.ToStatus(g.Status)
 	if err != nil {
-		return groups.Group{}
+		return mfgroups.Group{}
 	}
-	return groups.Group{
+	return mfgroups.Group{
 		ID:          g.ID,
-		OwnerID:     g.OwnerID,
-		ParentID:    g.ParentID,
+		Owner:       g.OwnerID,
+		Parent:      g.ParentID,
 		Name:        g.Name,
 		Description: g.Description,
-		Metadata:    groups.Metadata(g.Metadata),
+		Metadata:    mfgroups.Metadata(g.Metadata),
 		Level:       g.Level,
 		Path:        g.Path,
 		Children:    convertChildren(g.Children),
@@ -195,8 +196,8 @@ func convertGroup(g sdk.Group) groups.Group {
 	}
 }
 
-func convertChildren(gs []*sdk.Group) []*groups.Group {
-	cg := []*groups.Group{}
+func convertChildren(gs []*sdk.Group) []*mfgroups.Group {
+	cg := []*mfgroups.Group{}
 
 	if len(gs) == 0 {
 		return cg

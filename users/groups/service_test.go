@@ -8,6 +8,7 @@ import (
 	"time"
 
 	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -28,11 +29,11 @@ var (
 	idProvider     = uuid.New()
 	phasher        = hasher.New()
 	secret         = "strongsecret"
-	validGMetadata = groups.Metadata{"role": "client"}
+	validGMetadata = mfgroups.Metadata{"role": "client"}
 	inValidToken   = "invalidToken"
 	description    = "shortdescription"
 	gName          = "groupname"
-	group          = groups.Group{
+	group          = mfgroups.Group{
 		Name:        gName,
 		Description: description,
 		Metadata:    validGMetadata,
@@ -55,7 +56,7 @@ func TestCreateGroup(t *testing.T) {
 
 	cases := []struct {
 		desc  string
-		group groups.Group
+		group mfgroups.Group
 		err   error
 	}{
 		{
@@ -70,32 +71,32 @@ func TestCreateGroup(t *testing.T) {
 		},
 		{
 			desc: "create group with parent",
-			group: groups.Group{
-				Name:     gName,
-				ParentID: testsutil.GenerateUUID(t, idProvider),
-				Status:   mfclients.EnabledStatus,
+			group: mfgroups.Group{
+				Name:   gName,
+				Parent: testsutil.GenerateUUID(t, idProvider),
+				Status: mfclients.EnabledStatus,
 			},
 			err: nil,
 		},
 		{
 			desc: "create group with invalid parent",
-			group: groups.Group{
-				Name:     gName,
-				ParentID: mocks.WrongID,
+			group: mfgroups.Group{
+				Name:   gName,
+				Parent: mocks.WrongID,
 			},
 			err: errors.ErrCreateEntity,
 		},
 		{
 			desc: "create group with invalid owner",
-			group: groups.Group{
-				Name:    gName,
-				OwnerID: mocks.WrongID,
+			group: mfgroups.Group{
+				Name:  gName,
+				Owner: mocks.WrongID,
 			},
 			err: errors.ErrCreateEntity,
 		},
 		{
 			desc:  "create group with missing name",
-			group: groups.Group{},
+			group: mfgroups.Group{},
 			err:   errors.ErrMalformedEntity,
 		},
 	}
@@ -135,17 +136,17 @@ func TestUpdateGroup(t *testing.T) {
 	cases := []struct {
 		desc     string
 		token    string
-		group    groups.Group
-		response groups.Group
+		group    mfgroups.Group
+		response mfgroups.Group
 		err      error
 	}{
 		{
 			desc: "update group name",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID:   group.ID,
 				Name: "NewName",
 			},
-			response: groups.Group{
+			response: mfgroups.Group{
 				ID:   group.ID,
 				Name: "NewName",
 			},
@@ -154,11 +155,11 @@ func TestUpdateGroup(t *testing.T) {
 		},
 		{
 			desc: "update group description",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID:          group.ID,
 				Description: "NewDescription",
 			},
-			response: groups.Group{
+			response: mfgroups.Group{
 				ID:          group.ID,
 				Description: "NewDescription",
 			},
@@ -167,15 +168,15 @@ func TestUpdateGroup(t *testing.T) {
 		},
 		{
 			desc: "update group metadata",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID: group.ID,
-				Metadata: groups.Metadata{
+				Metadata: mfgroups.Metadata{
 					"field": "value2",
 				},
 			},
-			response: groups.Group{
+			response: mfgroups.Group{
 				ID: group.ID,
-				Metadata: groups.Metadata{
+				Metadata: mfgroups.Metadata{
 					"field": "value2",
 				},
 			},
@@ -184,65 +185,65 @@ func TestUpdateGroup(t *testing.T) {
 		},
 		{
 			desc: "update group name with invalid group id",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID:   mocks.WrongID,
 				Name: "NewName",
 			},
-			response: groups.Group{},
+			response: mfgroups.Group{},
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 			err:      errors.ErrNotFound,
 		},
 		{
 			desc: "update group description with invalid group id",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID:          mocks.WrongID,
 				Description: "NewDescription",
 			},
-			response: groups.Group{},
+			response: mfgroups.Group{},
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 			err:      errors.ErrNotFound,
 		},
 		{
 			desc: "update group metadata with invalid group id",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID: mocks.WrongID,
-				Metadata: groups.Metadata{
+				Metadata: mfgroups.Metadata{
 					"field": "value2",
 				},
 			},
-			response: groups.Group{},
+			response: mfgroups.Group{},
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 			err:      errors.ErrNotFound,
 		},
 		{
 			desc: "update group name with invalid token",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID:   group.ID,
 				Name: "NewName",
 			},
-			response: groups.Group{},
+			response: mfgroups.Group{},
 			token:    inValidToken,
 			err:      errors.ErrAuthentication,
 		},
 		{
 			desc: "update group description with invalid token",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID:          group.ID,
 				Description: "NewDescription",
 			},
-			response: groups.Group{},
+			response: mfgroups.Group{},
 			token:    inValidToken,
 			err:      errors.ErrAuthentication,
 		},
 		{
 			desc: "update group metadata with invalid token",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID: group.ID,
-				Metadata: groups.Metadata{
+				Metadata: mfgroups.Metadata{
 					"field": "value2",
 				},
 			},
-			response: groups.Group{},
+			response: mfgroups.Group{},
 			token:    inValidToken,
 			err:      errors.ErrAuthentication,
 		},
@@ -281,7 +282,7 @@ func TestViewGroup(t *testing.T) {
 		desc     string
 		token    string
 		groupID  string
-		response groups.Group
+		response mfgroups.Group
 		err      error
 	}{
 		{
@@ -296,14 +297,14 @@ func TestViewGroup(t *testing.T) {
 			desc:     "view group with invalid token",
 			token:    "wrongtoken",
 			groupID:  group.ID,
-			response: groups.Group{},
+			response: mfgroups.Group{},
 			err:      errors.ErrAuthentication,
 		},
 		{
 			desc:     "view group for wrong id",
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 			groupID:  mocks.WrongID,
-			response: groups.Group{},
+			response: mfgroups.Group{},
 			err:      errors.ErrNotFound,
 		},
 	}
@@ -336,16 +337,16 @@ func TestListGroups(t *testing.T) {
 
 	nGroups := uint64(200)
 	parentID := ""
-	var aGroups = []groups.Group{}
+	var aGroups = []mfgroups.Group{}
 	for i := uint64(0); i < nGroups; i++ {
-		group := groups.Group{
+		group := mfgroups.Group{
 			ID:          testsutil.GenerateUUID(t, idProvider),
 			Name:        fmt.Sprintf("Group_%d", i),
 			Description: description,
-			Metadata: groups.Metadata{
+			Metadata: mfgroups.Metadata{
 				"field": "value",
 			},
-			ParentID: parentID,
+			Parent: parentID,
 		}
 		parentID = group.ID
 		aGroups = append(aGroups, group)
@@ -426,8 +427,8 @@ func TestEnableGroup(t *testing.T) {
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := groups.NewService(gRepo, pRepo, tokenizer, idProvider)
 
-	enabledGroup1 := groups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group1", Status: mfclients.EnabledStatus}
-	disabledGroup := groups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group2", Status: mfclients.DisabledStatus}
+	enabledGroup1 := mfgroups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group1", Status: mfclients.EnabledStatus}
+	disabledGroup := mfgroups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group2", Status: mfclients.DisabledStatus}
 	disabledGroup1 := disabledGroup
 	disabledGroup1.Status = mfclients.EnabledStatus
 
@@ -435,8 +436,8 @@ func TestEnableGroup(t *testing.T) {
 		desc     string
 		id       string
 		token    string
-		group    groups.Group
-		response groups.Group
+		group    mfgroups.Group
+		response mfgroups.Group
 		err      error
 	}{
 		{
@@ -459,8 +460,8 @@ func TestEnableGroup(t *testing.T) {
 			desc:     "enable non-existing group",
 			id:       mocks.WrongID,
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
-			group:    groups.Group{},
-			response: groups.Group{},
+			group:    mfgroups.Group{},
+			response: mfgroups.Group{},
 			err:      errors.ErrNotFound,
 		},
 	}
@@ -498,7 +499,7 @@ func TestEnableGroup(t *testing.T) {
 					Offset: 0,
 					Limit:  100,
 				},
-				Groups: []groups.Group{enabledGroup1, disabledGroup1},
+				Groups: []mfgroups.Group{enabledGroup1, disabledGroup1},
 			},
 		},
 		{
@@ -511,7 +512,7 @@ func TestEnableGroup(t *testing.T) {
 					Offset: 0,
 					Limit:  100,
 				},
-				Groups: []groups.Group{disabledGroup},
+				Groups: []mfgroups.Group{disabledGroup},
 			},
 		},
 		{
@@ -524,7 +525,7 @@ func TestEnableGroup(t *testing.T) {
 					Offset: 0,
 					Limit:  100,
 				},
-				Groups: []groups.Group{enabledGroup1, disabledGroup, disabledGroup1},
+				Groups: []mfgroups.Group{enabledGroup1, disabledGroup, disabledGroup1},
 			},
 		},
 	}
@@ -555,8 +556,8 @@ func TestDisableGroup(t *testing.T) {
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := groups.NewService(gRepo, pRepo, tokenizer, idProvider)
 
-	enabledGroup1 := groups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group1", Status: mfclients.EnabledStatus}
-	disabledGroup := groups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group2", Status: mfclients.DisabledStatus}
+	enabledGroup1 := mfgroups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group1", Status: mfclients.EnabledStatus}
+	disabledGroup := mfgroups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group2", Status: mfclients.DisabledStatus}
 	disabledGroup1 := enabledGroup1
 	disabledGroup1.Status = mfclients.DisabledStatus
 
@@ -564,8 +565,8 @@ func TestDisableGroup(t *testing.T) {
 		desc     string
 		id       string
 		token    string
-		group    groups.Group
-		response groups.Group
+		group    mfgroups.Group
+		response mfgroups.Group
 		err      error
 	}{
 		{
@@ -581,15 +582,15 @@ func TestDisableGroup(t *testing.T) {
 			id:       disabledGroup.ID,
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 			group:    disabledGroup,
-			response: groups.Group{},
+			response: mfgroups.Group{},
 			err:      mfclients.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:     "disable non-existing group",
 			id:       mocks.WrongID,
-			group:    groups.Group{},
+			group:    mfgroups.Group{},
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
-			response: groups.Group{},
+			response: mfgroups.Group{},
 			err:      errors.ErrNotFound,
 		},
 	}
@@ -627,7 +628,7 @@ func TestDisableGroup(t *testing.T) {
 					Offset: 0,
 					Limit:  100,
 				},
-				Groups: []groups.Group{enabledGroup1},
+				Groups: []mfgroups.Group{enabledGroup1},
 			},
 		},
 		{
@@ -640,7 +641,7 @@ func TestDisableGroup(t *testing.T) {
 					Offset: 0,
 					Limit:  100,
 				},
-				Groups: []groups.Group{disabledGroup1, disabledGroup},
+				Groups: []mfgroups.Group{disabledGroup1, disabledGroup},
 			},
 		},
 		{
@@ -653,7 +654,7 @@ func TestDisableGroup(t *testing.T) {
 					Offset: 0,
 					Limit:  100,
 				},
-				Groups: []groups.Group{enabledGroup1, disabledGroup, disabledGroup1},
+				Groups: []mfgroups.Group{enabledGroup1, disabledGroup, disabledGroup1},
 			},
 		},
 	}
@@ -685,11 +686,11 @@ func TestListMemberships(t *testing.T) {
 	svc := groups.NewService(gRepo, pRepo, tokenizer, idProvider)
 
 	var nGroups = uint64(100)
-	var aGroups = []groups.Group{}
+	var aGroups = []mfgroups.Group{}
 	for i := uint64(1); i < nGroups; i++ {
-		group := groups.Group{
+		group := mfgroups.Group{
 			Name:     fmt.Sprintf("membership_%d@example.com", i),
-			Metadata: groups.Metadata{"role": "group"},
+			Metadata: mfgroups.Metadata{"role": "group"},
 		}
 		aGroups = append(aGroups, group)
 	}

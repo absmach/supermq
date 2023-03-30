@@ -20,6 +20,8 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
@@ -70,14 +72,14 @@ func newService(auth upolicies.AuthServiceClient, url string) bootstrap.Service 
 }
 
 func newThingsService(auth upolicies.AuthServiceClient) (clients.Service, groups.Service, tpolicies.Service) {
-	channels := make(map[string]groups.Group, channelsNum)
+	channels := make(map[string]mfgroups.Group, channelsNum)
 	for i := 0; i < channelsNum; i++ {
 		id := strconv.Itoa(i + 1)
-		channels[id] = groups.Group{
+		channels[id] = mfgroups.Group{
 			ID:       id,
 			Owner:    email,
 			Metadata: map[string]interface{}{"meta": "data"},
-			Status:   groups.EnabledStatus,
+			Status:   mfclients.EnabledStatus,
 		}
 	}
 

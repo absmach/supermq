@@ -7,13 +7,13 @@ import (
 
 	"github.com/mainflux/mainflux/internal/apiutil"
 	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/users/clients"
 	cpostgres "github.com/mainflux/mainflux/users/clients/postgres"
-	"github.com/mainflux/mainflux/users/groups"
 	gpostgres "github.com/mainflux/mainflux/users/groups/postgres"
 	"github.com/mainflux/mainflux/users/policies"
 	ppostgres "github.com/mainflux/mainflux/users/policies/postgres"
@@ -104,7 +104,7 @@ func TestPoliciesEvaluate(t *testing.T) {
 		},
 		Status: mfclients.EnabledStatus,
 	}
-	group := groups.Group{
+	group := mfgroups.Group{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "connecting-group@example.com",
 	}

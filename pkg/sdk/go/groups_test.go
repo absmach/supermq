@@ -10,6 +10,7 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -669,10 +670,10 @@ func TestEnableGroup(t *testing.T) {
 	repoCall1.Unset()
 	repoCall2.Unset()
 
-	g := groups.Group{
+	g := mfgroups.Group{
 		ID:        group.ID,
 		Name:      group.Name,
-		OwnerID:   group.OwnerID,
+		Owner:     group.OwnerID,
 		CreatedAt: creationTime,
 		UpdatedAt: creationTime,
 		Status:    mfclients.DisabledStatus,
@@ -734,10 +735,10 @@ func TestDisableGroup(t *testing.T) {
 	repoCall1.Unset()
 	repoCall2.Unset()
 
-	g := groups.Group{
+	g := mfgroups.Group{
 		ID:        group.ID,
 		Name:      group.Name,
-		OwnerID:   group.OwnerID,
+		Owner:     group.OwnerID,
 		CreatedAt: creationTime,
 		UpdatedAt: creationTime,
 		Status:    mfclients.EnabledStatus,

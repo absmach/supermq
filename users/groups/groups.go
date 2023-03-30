@@ -3,20 +3,15 @@ package groups
 import (
 	"context"
 	"time"
-)
 
-const (
-	// MaxLevel represents the maximum group hierarchy level.
-	MaxLevel = uint64(5)
-	// MinLevel represents the minimum group hierarchy level.
-	MinLevel = uint64(0)
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 )
 
 // MembershipsPage contains page related metadata as well as list of memberships that
 // belong to this page.
 type MembershipsPage struct {
 	Page
-	Memberships []Group
+	Memberships []mfgroups.Group
 }
 
 // GroupsPage contains page related metadata as well as list
@@ -53,13 +48,13 @@ type Group struct {
 // GroupRepository specifies a group persistence API.
 type GroupRepository interface {
 	// Save group.
-	Save(ctx context.Context, g Group) (Group, error)
+	Save(ctx context.Context, g mfgroups.Group) (mfgroups.Group, error)
 
 	// Update a group.
-	Update(ctx context.Context, g Group) (Group, error)
+	Update(ctx context.Context, g mfgroups.Group) (mfgroups.Group, error)
 
 	// RetrieveByID retrieves group by its id.
-	RetrieveByID(ctx context.Context, id string) (Group, error)
+	RetrieveByID(ctx context.Context, id string) (mfgroups.Group, error)
 
 	// RetrieveAll retrieves all groups.
 	RetrieveAll(ctx context.Context, gm GroupsPage) (GroupsPage, error)
@@ -75,13 +70,13 @@ type GroupRepository interface {
 // implementation, and all of its decorators (e.g. logging & metrics).
 type GroupService interface {
 	// CreateGroup creates new  group.
-	CreateGroup(ctx context.Context, token string, g Group) (Group, error)
+	CreateGroup(ctx context.Context, token string, g mfgroups.Group) (mfgroups.Group, error)
 
 	// UpdateGroup updates the group identified by the provided ID.
-	UpdateGroup(ctx context.Context, token string, g Group) (Group, error)
+	UpdateGroup(ctx context.Context, token string, g mfgroups.Group) (mfgroups.Group, error)
 
 	// ViewGroup retrieves data about the group identified by ID.
-	ViewGroup(ctx context.Context, token, id string) (Group, error)
+	ViewGroup(ctx context.Context, token, id string) (mfgroups.Group, error)
 
 	// ListGroups retrieves groups.
 	ListGroups(ctx context.Context, token string, gm GroupsPage) (GroupsPage, error)
@@ -90,8 +85,8 @@ type GroupService interface {
 	ListMemberships(ctx context.Context, token, clientID string, gm GroupsPage) (MembershipsPage, error)
 
 	// EnableGroup logically enables the group identified with the provided ID.
-	EnableGroup(ctx context.Context, token, id string) (Group, error)
+	EnableGroup(ctx context.Context, token, id string) (mfgroups.Group, error)
 
 	// DisableGroup logically disables the group identified with the provided ID.
-	DisableGroup(ctx context.Context, token, id string) (Group, error)
+	DisableGroup(ctx context.Context, token, id string) (mfgroups.Group, error)
 }

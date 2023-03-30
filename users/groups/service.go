@@ -7,6 +7,7 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/jwt"
 	"github.com/mainflux/mainflux/users/policies"
@@ -22,14 +23,6 @@ const (
 	listRelationKey   = "g_list"
 	deleteRelationKey = "g_delete"
 	entityType        = "group"
-)
-
-var (
-	// ErrInvalidStatus indicates invalid status.
-	ErrInvalidStatus = errors.New("invalid groups status")
-
-	// ErrStatusAlreadyAssigned indicated that the client or group has already been assigned the status.
-	ErrStatusAlreadyAssigned = errors.New("status already assigned")
 )
 
 // Service unites Clients and Group services.
@@ -54,20 +47,20 @@ func NewService(g GroupRepository, p policies.PolicyRepository, t jwt.TokenRepos
 	}
 }
 
-func (svc service) CreateGroup(ctx context.Context, token string, g Group) (Group, error) {
+func (svc service) CreateGroup(ctx context.Context, token string, g mfgroups.Group) (mfgroups.Group, error) {
 	ownerID, err := svc.identify(ctx, token)
 	if err != nil {
-		return Group{}, err
+		return mfgroups.Group{}, err
 	}
 	groupID, err := svc.idProvider.ID()
 	if err != nil {
-		return Group{}, err
+		return mfgroups.Group{}, err
 	}
 	if g.Status != mfclients.EnabledStatus && g.Status != mfclients.DisabledStatus {
-		return Group{}, apiutil.ErrInvalidStatus
+		return mfgroups.Group{}, apiutil.ErrInvalidStatus
 	}
-	if g.OwnerID == "" {
-		g.OwnerID = ownerID
+	if g.Owner == "" {
+		g.Owner = ownerID
 	}
 
 	g.ID = groupID
@@ -132,7 +125,7 @@ func (svc service) EnableGroup(ctx context.Context, token, id string) (Group, er
 	}
 	group, err := svc.changeGroupStatus(ctx, token, group)
 	if err != nil {
-		return Group{}, err
+		return mfgroups.Group{}, err
 	}
 	return group, nil
 }
@@ -145,7 +138,7 @@ func (svc service) DisableGroup(ctx context.Context, token, id string) (Group, e
 	}
 	group, err := svc.changeGroupStatus(ctx, token, group)
 	if err != nil {
-		return Group{}, err
+		return mfgroups.Group{}, err
 	}
 	return group, nil
 }
@@ -178,7 +171,7 @@ func (svc service) authorizeByToken(ctx context.Context, entityType string, p po
 func (svc service) changeGroupStatus(ctx context.Context, token string, group Group) (Group, error) {
 	id, err := svc.identify(ctx, token)
 	if err != nil {
-		return Group{}, err
+		return mfgroups.Group{}, err
 	}
 	if err := svc.authorizeByID(ctx, entityType, policies.Policy{Subject: id, Object: group.ID, Actions: []string{deleteRelationKey}}); err != nil {
 		return Group{}, err

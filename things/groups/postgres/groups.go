@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/groups"
@@ -40,24 +41,24 @@ func (repo grepo) Save(ctx context.Context, g groups.Group) (groups.Group, error
 	}
 	dbg, err := toDBGroup(g)
 	if err != nil {
-		return groups.Group{}, err
+		return mfgroups.Group{}, err
 	}
 	row, err := repo.db.NamedQueryContext(ctx, q, dbg)
 	if err != nil {
-		return groups.Group{}, postgres.HandleError(err, errors.ErrCreateEntity)
+		return mfgroups.Group{}, postgres.HandleError(err, errors.ErrCreateEntity)
 	}
 
 	defer row.Close()
 	row.Next()
 	dbg = dbGroup{}
 	if err := row.StructScan(&dbg); err != nil {
-		return groups.Group{}, err
+		return mfgroups.Group{}, err
 	}
 
 	return toGroup(dbg)
 }
 
-func (repo grepo) RetrieveByID(ctx context.Context, id string) (groups.Group, error) {
+func (repo grepo) RetrieveByID(ctx context.Context, id string) (mfgroups.Group, error) {
 	dbu := dbGroup{
 		ID: id,
 	}
@@ -65,10 +66,10 @@ func (repo grepo) RetrieveByID(ctx context.Context, id string) (groups.Group, er
 	    WHERE id = $1`
 	if err := repo.db.QueryRowxContext(ctx, q, dbu.ID).StructScan(&dbu); err != nil {
 		if err == sql.ErrNoRows {
-			return groups.Group{}, errors.Wrap(errors.ErrNotFound, err)
+			return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, err)
 
 		}
-		return groups.Group{}, errors.Wrap(errors.ErrViewEntity, err)
+		return mfgroups.Group{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
 	return toGroup(dbu)
 }
@@ -153,7 +154,7 @@ func (repo grepo) Memberships(ctx context.Context, clientID string, gm groups.Gr
 	}
 	defer rows.Close()
 
-	var items []groups.Group
+	var items []mfgroups.Group
 	for rows.Next() {
 		dbg := dbGroup{}
 		if err := rows.StructScan(&dbg); err != nil {
@@ -183,7 +184,7 @@ func (repo grepo) Memberships(ctx context.Context, clientID string, gm groups.Gr
 	return page, nil
 }
 
-func (repo grepo) Update(ctx context.Context, g groups.Group) (groups.Group, error) {
+func (repo grepo) Update(ctx context.Context, g mfgroups.Group) (mfgroups.Group, error) {
 	var query []string
 	var upq string
 	if g.Name != "" {
@@ -205,21 +206,21 @@ func (repo grepo) Update(ctx context.Context, g groups.Group) (groups.Group, err
 
 	dbu, err := toDBGroup(g)
 	if err != nil {
-		return groups.Group{}, errors.Wrap(errors.ErrUpdateEntity, err)
+		return mfgroups.Group{}, errors.Wrap(errors.ErrUpdateEntity, err)
 	}
 
 	row, err := repo.db.NamedQueryContext(ctx, q, dbu)
 	if err != nil {
-		return groups.Group{}, postgres.HandleError(err, errors.ErrUpdateEntity)
+		return mfgroups.Group{}, postgres.HandleError(err, errors.ErrUpdateEntity)
 	}
 
 	defer row.Close()
 	if ok := row.Next(); !ok {
-		return groups.Group{}, errors.Wrap(errors.ErrNotFound, row.Err())
+		return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, row.Err())
 	}
 	dbu = dbGroup{}
 	if err := row.StructScan(&dbu); err != nil {
-		return groups.Group{}, errors.Wrap(err, errors.ErrUpdateEntity)
+		return mfgroups.Group{}, errors.Wrap(err, errors.ErrUpdateEntity)
 	}
 	return toGroup(dbu)
 }
@@ -234,16 +235,16 @@ func (repo grepo) ChangeStatus(ctx context.Context, group groups.Group) (groups.
 
 	row, err := repo.db.NamedQueryContext(ctx, qc, dbg)
 	if err != nil {
-		return groups.Group{}, postgres.HandleError(err, errors.ErrUpdateEntity)
+		return mfgroups.Group{}, postgres.HandleError(err, errors.ErrUpdateEntity)
 	}
 
 	defer row.Close()
 	if ok := row.Next(); !ok {
-		return groups.Group{}, errors.Wrap(errors.ErrNotFound, row.Err())
+		return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, row.Err())
 	}
 	dbg = dbGroup{}
 	if err := row.StructScan(&dbg); err != nil {
-		return groups.Group{}, errors.Wrap(err, errors.ErrUpdateEntity)
+		return mfgroups.Group{}, errors.Wrap(err, errors.ErrUpdateEntity)
 	}
 
 	return toGroup(dbg)
@@ -279,13 +280,8 @@ func buildQuery(gm groups.GroupsPage) (string, error) {
 	}
 
 	if gm.Subject != "" {
-		queries = append(queries, "(g.owner_id = :owner_id OR id IN (SELECT object as id FROM policies WHERE subject = :subject AND :action=ANY(actions)))")
 	}
 	if len(gm.Metadata) > 0 {
-		queries = append(queries, "'g.metadata @> :metadata'")
-	}
-	if len(queries) > 0 {
-		return fmt.Sprintf("WHERE %s", strings.Join(queries, " AND ")), nil
 	}
 	return "", nil
 }
@@ -305,7 +301,7 @@ type dbGroup struct {
 	Status      groups.Status `db:"status"`
 }
 
-func toDBGroup(g groups.Group) (dbGroup, error) {
+func toDBGroup(g mfgroups.Group) (dbGroup, error) {
 	data := []byte("{}")
 	if len(g.Metadata) > 0 {
 		b, err := json.Marshal(g.Metadata)
@@ -337,11 +333,11 @@ func toDBGroup(g groups.Group) (dbGroup, error) {
 	}, nil
 }
 
-func toGroup(g dbGroup) (groups.Group, error) {
-	var metadata groups.Metadata
+func toGroup(g dbGroup) (mfgroups.Group, error) {
+	var metadata mfgroups.Metadata
 	if g.Metadata != nil {
 		if err := json.Unmarshal([]byte(g.Metadata), &metadata); err != nil {
-			return groups.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)
+			return mfgroups.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)
 		}
 	}
 	var updatedAt time.Time
@@ -369,8 +365,8 @@ func toGroup(g dbGroup) (groups.Group, error) {
 	}, nil
 }
 
-func (gr grepo) processRows(rows *sqlx.Rows) ([]groups.Group, error) {
-	var items []groups.Group
+func (gr grepo) processRows(rows *sqlx.Rows) ([]mfgroups.Group, error) {
+	var items []mfgroups.Group
 	for rows.Next() {
 		dbg := dbGroup{}
 		if err := rows.StructScan(&dbg); err != nil {
@@ -386,8 +382,8 @@ func (gr grepo) processRows(rows *sqlx.Rows) ([]groups.Group, error) {
 }
 
 func toDBGroupPage(pm groups.GroupsPage) (dbGroupPage, error) {
-	level := groups.MaxLevel
-	if pm.Level < groups.MaxLevel {
+	level := mfgroups.MaxLevel
+	if pm.Level < mfgroups.MaxLevel {
 		level = pm.Level
 	}
 	data := []byte("{}")

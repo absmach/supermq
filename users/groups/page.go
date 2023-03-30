@@ -1,9 +1,9 @@
 package groups
 
-import mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
-
-// Metadata represents arbitrary JSON.
-type Metadata map[string]interface{}
+import (
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
+)
 
 // Page contains page metadata that helps navigation.
 type Page struct {
@@ -13,7 +13,7 @@ type Page struct {
 	Name     string
 	OwnerID  string
 	Tag      string
-	Metadata Metadata
+	Metadata mfgroups.Metadata
 	SharedBy string
 	Status   mfclients.Status
 	Subject  string

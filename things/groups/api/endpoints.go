@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
+	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/things/groups"
 )
 
@@ -61,7 +62,7 @@ func updateGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 			return updateGroupRes{}, err
 		}
 
-		group := groups.Group{
+		group := mfgroups.Group{
 			ID:          req.id,
 			Name:        req.Name,
 			Description: req.Description,
@@ -153,13 +154,13 @@ func listMembershipsEndpoint(svc groups.Service) endpoint.Endpoint {
 }
 
 func buildGroupsResponseTree(page groups.GroupsPage) groupPageRes {
-	groupsMap := map[string]*groups.Group{}
+	groupsMap := map[string]*mfgroups.Group{}
 	// Parents' map keeps its array of children.
-	parentsMap := map[string][]*groups.Group{}
+	parentsMap := map[string][]*mfgroups.Group{}
 	for i := range page.Groups {
 		if _, ok := groupsMap[page.Groups[i].ID]; !ok {
 			groupsMap[page.Groups[i].ID] = &page.Groups[i]
-			parentsMap[page.Groups[i].ID] = make([]*groups.Group, 0)
+			parentsMap[page.Groups[i].ID] = make([]*mfgroups.Group, 0)
 		}
 	}
 
@@ -196,7 +197,7 @@ func buildGroupsResponseTree(page groups.GroupsPage) groupPageRes {
 	return res
 }
 
-func toViewGroupRes(group groups.Group) viewGroupRes {
+func toViewGroupRes(group mfgroups.Group) viewGroupRes {
 	view := viewGroupRes{
 		Group: group,
 	}
