@@ -9,7 +9,6 @@ import (
 	"net"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/auth"
@@ -30,23 +29,20 @@ func TestMain(m *testing.M) {
 	svc = newService(t)
 	startGRPCServer(t, serverErr, svc, port)
 
-	fmt.Println("Calling for loop")
-	for {
-		select {
-		case testRes <- m.Run():
-			fmt.Println()
-			fmt.Println("test ended")
-			fmt.Println()
-			code := <-testRes
-			os.Exit(code)
-		case err := <-serverErr:
-			if err != nil {
-				log.Fatalf("gPRC Server Terminated")
+	go func() {
+		for {
+			select {
+			case code := <-testRes:
+				os.Exit(code)
+			case err := <-serverErr:
+				if err != nil {
+					log.Fatalf("gPRC Server Terminated")
+				}
 			}
-		case <-time.After(30 * time.Second):
-			log.Fatalf("Tests took to long to complete")
 		}
-	}
+	}()
+
+	testRes <- m.Run()
 }
 
 func startGRPCServer(t *testing.T, serverErr chan error, svc auth.Service, port int) {

@@ -34,17 +34,20 @@ func TestMain(m *testing.M) {
 	testRes := make(chan int)
 	startServer(&testing.T{}, serverErr)
 
-	for {
-		select {
-		case testRes <- m.Run():
-			code := <-testRes
-			os.Exit(code)
-		case err := <-serverErr:
-			if err != nil {
-				log.Fatalf("gPRC Server Terminated")
+	go func() {
+		for {
+			select {
+			case code := <-testRes:
+				os.Exit(code)
+			case err := <-serverErr:
+				if err != nil {
+					log.Fatalf("gPRC Server Terminated")
+				}
 			}
 		}
-	}
+	}()
+
+	testRes <- m.Run()
 }
 
 func startServer(t *testing.T, serverErr chan error) {
