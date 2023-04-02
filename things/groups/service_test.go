@@ -6,7 +6,8 @@ import (
 	"testing"
 	"time"
 
-	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux"
+	mferrors "github.com/mainflux/mainflux/internal/mainflux/clients"
 	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -409,7 +410,7 @@ func TestEnableGroup(t *testing.T) {
 			token:    token,
 			group:    enabledGroup1,
 			response: enabledGroup1,
-			err:      mfclients.ErrStatusAlreadyAssigned,
+			err:      mferrors.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:     "enable non-existing group",
@@ -527,7 +528,7 @@ func TestDisableGroup(t *testing.T) {
 			token:    token,
 			group:    disabledGroup,
 			response: mfgroups.Group{},
-			err:      mfclients.ErrStatusAlreadyAssigned,
+			err:      mferrors.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:     "disable non-existing group",

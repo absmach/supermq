@@ -18,7 +18,7 @@ import (
 	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
 	"github.com/mainflux/mainflux/internal/email"
 	"github.com/mainflux/mainflux/internal/env"
-	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/internal/server"
 	grpcserver "github.com/mainflux/mainflux/internal/server/grpc"

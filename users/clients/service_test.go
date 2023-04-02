@@ -8,7 +8,8 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux/internal/apiutil"
-	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux"
+	mferrors "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -958,7 +959,7 @@ func TestEnableClient(t *testing.T) {
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			client:   enabledClient1,
 			response: enabledClient1,
-			err:      mfclients.ErrStatusAlreadyAssigned,
+			err:      mferrors.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:     "enable non-existing client",
@@ -1086,7 +1087,7 @@ func TestDisableClient(t *testing.T) {
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			client:   disabledClient1,
 			response: clients.Client{},
-			err:      mfclients.ErrStatusAlreadyAssigned,
+			err:      mferrors.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:     "disable non-existing client",

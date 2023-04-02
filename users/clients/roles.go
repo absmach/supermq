@@ -2,7 +2,7 @@ package clients
 
 import (
 	"github.com/mainflux/mainflux/internal/apiutil"
-	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux"
 )
 
 // Role represents Client role.

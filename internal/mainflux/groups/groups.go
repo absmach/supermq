@@ -3,7 +3,7 @@ package groups
 import (
 	"time"
 
-	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux"
 )
 
 const (

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgtype" // required for SQL access
+	mfclients "github.com/mainflux/mainflux/internal/mainflux"
 	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"

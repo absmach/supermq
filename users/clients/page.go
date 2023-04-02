@@ -1,6 +1,6 @@
 package clients
 
-import mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+import mfclients "github.com/mainflux/mainflux/internal/mainflux"
 
 // Metadata represents arbitrary JSON.
 type Metadata map[string]interface{}

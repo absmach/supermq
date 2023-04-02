@@ -7,7 +7,8 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
-	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux"
+	mferrors "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/policies"
 )
@@ -197,7 +198,7 @@ func (svc service) EnableClient(ctx context.Context, token, id string) (Client, 
 	}
 	client, err := svc.changeClientStatus(ctx, token, client)
 	if err != nil {
-		return Client{}, errors.Wrap(mfclients.ErrEnableClient, err)
+		return Client{}, errors.Wrap(mferrors.ErrEnableClient, err)
 	}
 
 	return client, nil
@@ -211,7 +212,7 @@ func (svc service) DisableClient(ctx context.Context, token, id string) (Client,
 	}
 	client, err := svc.changeClientStatus(ctx, token, client)
 	if err != nil {
-		return Client{}, errors.Wrap(mfclients.ErrDisableClient, err)
+		return Client{}, errors.Wrap(mferrors.ErrDisableClient, err)
 	}
 
 	return client, nil

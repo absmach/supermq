@@ -1,4 +1,4 @@
-package clients
+package mainflux
 
 import (
 	"encoding/json"
