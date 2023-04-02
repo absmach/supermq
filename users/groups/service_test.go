@@ -17,7 +17,6 @@ import (
 	cmocks "github.com/mainflux/mainflux/users/clients/mocks"
 	"github.com/mainflux/mainflux/users/groups"
 	"github.com/mainflux/mainflux/users/groups/mocks"
-	gmocks "github.com/mainflux/mainflux/users/groups/mocks"
 	"github.com/mainflux/mainflux/users/hasher"
 	"github.com/mainflux/mainflux/users/jwt"
 	pmocks "github.com/mainflux/mainflux/users/policies/mocks"
@@ -48,7 +47,7 @@ var (
 
 func TestCreateGroup(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
-	gRepo := new(gmocks.GroupRepository)
+	gRepo := new(mocks.GroupRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := cmocks.NewEmailer()
@@ -125,7 +124,7 @@ func TestCreateGroup(t *testing.T) {
 
 func TestUpdateGroup(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
-	gRepo := new(gmocks.GroupRepository)
+	gRepo := new(mocks.GroupRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := cmocks.NewEmailer()
@@ -270,7 +269,7 @@ func TestUpdateGroup(t *testing.T) {
 
 func TestViewGroup(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
-	gRepo := new(gmocks.GroupRepository)
+	gRepo := new(mocks.GroupRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := cmocks.NewEmailer()
@@ -329,7 +328,7 @@ func TestViewGroup(t *testing.T) {
 
 func TestListGroups(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
-	gRepo := new(gmocks.GroupRepository)
+	gRepo := new(mocks.GroupRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := cmocks.NewEmailer()
@@ -421,7 +420,7 @@ func TestListGroups(t *testing.T) {
 
 func TestEnableGroup(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
-	gRepo := new(gmocks.GroupRepository)
+	gRepo := new(mocks.GroupRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := cmocks.NewEmailer()
@@ -550,7 +549,7 @@ func TestEnableGroup(t *testing.T) {
 
 func TestDisableGroup(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
-	gRepo := new(gmocks.GroupRepository)
+	gRepo := new(mocks.GroupRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := cmocks.NewEmailer()
@@ -679,7 +678,7 @@ func TestDisableGroup(t *testing.T) {
 
 func TestListMemberships(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
-	gRepo := new(gmocks.GroupRepository)
+	gRepo := new(mocks.GroupRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := cmocks.NewEmailer()

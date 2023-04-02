@@ -37,7 +37,7 @@ func (req createClientsReq) validate() error {
 		return apiutil.ErrBearerToken
 	}
 
-	if len(req.Clients) <= 0 {
+	if len(req.Clients) == 0 {
 		return apiutil.ErrEmptyList
 	}
 

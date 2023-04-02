@@ -14,7 +14,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/things/clients"
 	"github.com/mainflux/mainflux/things/clients/mocks"
-	cmocks "github.com/mainflux/mainflux/things/clients/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -39,12 +38,12 @@ var (
 	token          = "token"
 )
 
-func newService(tokens map[string]string) (clients.Service, *cmocks.ClientRepository) {
+func newService(tokens map[string]string) (clients.Service, *mocks.ClientRepository) {
 	adminPolicy := mocks.MockSubjectSet{Object: ID, Relation: clients.AdminRelationKey}
 	auth := mocks.NewAuthService(tokens, map[string][]mocks.MockSubjectSet{token: {adminPolicy}})
 	thingCache := mocks.NewClientCache()
 	idProvider := uuid.NewMock()
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 
 	return clients.NewService(auth, cRepo, thingCache, idProvider), cRepo
 }
