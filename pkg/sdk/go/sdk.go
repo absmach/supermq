@@ -8,7 +8,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -377,7 +377,7 @@ func (sdk mfSDK) processRequest(method, url, token, contentType string, data []b
 		return make(http.Header), []byte{}, sdkerr
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return make(http.Header), []byte{}, errors.NewSDKError(err)
 	}

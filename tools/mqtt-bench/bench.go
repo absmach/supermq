@@ -8,7 +8,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"strconv"
@@ -39,10 +39,10 @@ func Benchmark(cfg Config) {
 		if err != nil {
 			logger.Warn(err.Error())
 		}
-		caByte, _ = ioutil.ReadAll(caFile)
+		caByte, _ = io.ReadAll(caFile)
 	}
 
-	data, err := ioutil.ReadFile(cfg.Mf.ConnFile)
+	data, err := os.ReadFile(cfg.Mf.ConnFile)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("Error loading connections file: %s", err))
 	}

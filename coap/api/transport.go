@@ -6,7 +6,7 @@ package api
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -155,7 +155,7 @@ func decodeMessage(msg *mux.Message) (*messaging.Message, error) {
 	}
 
 	if msg.Body != nil {
-		buff, err := ioutil.ReadAll(msg.Body)
+		buff, err := io.ReadAll(msg.Body)
 		if err != nil {
 			return ret, err
 		}

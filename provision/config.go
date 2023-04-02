@@ -5,7 +5,7 @@ package provision
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -71,7 +71,7 @@ func Save(c Config, file string) error {
 	if err != nil {
 		return errors.New(fmt.Sprintf("Error reading config file: %s", err))
 	}
-	if err := ioutil.WriteFile(file, b, 0644); err != nil {
+	if err := os.WriteFile(file, b, 0644); err != nil {
 		return errors.New(fmt.Sprintf("Error writing toml: %s", err))
 	}
 	return nil
@@ -79,7 +79,7 @@ func Save(c Config, file string) error {
 
 // Read - retrieve config from a file
 func Read(file string) (Config, error) {
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	c := Config{}
 	if err != nil {
 		return c, errors.New(fmt.Sprintf("Error reading config file: %s", err))

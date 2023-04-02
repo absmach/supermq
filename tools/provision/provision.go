@@ -14,7 +14,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/big"
 	"os"
@@ -108,7 +107,7 @@ func Provision(conf Config) {
 			log.Fatalf("Failed to load CA cert")
 		}
 
-		b, err := ioutil.ReadFile(conf.CA)
+		b, err := os.ReadFile(conf.CA)
 		if err != nil {
 			log.Fatalf("Failed to load CA cert")
 		}
