@@ -55,9 +55,6 @@ func startGRPCServer(t *testing.T, serverErr chan error, svc auth.Service, port 
 	done := make(chan bool)
 
 	t.Cleanup(func() {
-		fmt.Println()
-		fmt.Println("Test complete called t.cleanup")
-		fmt.Println()
 		close(done)
 	})
 

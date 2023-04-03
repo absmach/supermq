@@ -421,9 +421,6 @@ func TestBootstrap(t *testing.T) {
 	c := config
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	fmt.Println()
-	fmt.Println("Saved : ", saved)
-	fmt.Println()
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 	err = redisClient.FlushAll(context.Background()).Err()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -463,9 +460,7 @@ func TestBootstrap(t *testing.T) {
 
 	lastID := "0"
 	for _, tc := range cases {
-		fmt.Printf("\n\n\n%s\n\n\n", tc.desc)
 		_, errr := svc.Bootstrap(context.Background(), tc.externalKey, tc.externalID, false)
-		fmt.Println("returned error : ", errr)
 		assert.True(t, errors.Contains(errr, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, errr))
 
 		streams := redisClient.XRead(context.Background(), &redis.XReadArgs{
@@ -480,13 +475,6 @@ func TestBootstrap(t *testing.T) {
 			event = msg.Values
 			lastID = msg.ID
 		}
-		fmt.Println()
-		fmt.Println("tc.event : ")
-		fmt.Println(tc.event)
-		fmt.Println()
-		fmt.Println("event from XRead: ")
-		fmt.Println(event)
-		fmt.Println()
 		test(t, tc.event, event, tc.desc)
 	}
 }

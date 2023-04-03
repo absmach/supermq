@@ -169,13 +169,14 @@ func loadCertificates(conf config, logger mflog.Logger) (tls.Certificate, *x509.
 	}
 
 	block, _ := pem.Decode(b)
-	if block == nil {
+	switch block {
+	case nil:
 		logger.Fatal("No PEM data found, failed to decode CA")
-	}
-
-	caCert, err = x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		return tlsCert, caCert, errors.Wrap(errFailedCertDecode, err)
+	default:
+		caCert, err = x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return tlsCert, caCert, errors.Wrap(errFailedCertDecode, err)
+		}
 	}
 
 	return tlsCert, caCert, nil

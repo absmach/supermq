@@ -8,7 +8,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/hex"
-	"fmt"
 	"time"
 
 	"github.com/mainflux/mainflux"
@@ -273,38 +272,18 @@ func (bs bootstrapService) Remove(ctx context.Context, token, id string) error {
 
 func (bs bootstrapService) Bootstrap(ctx context.Context, externalKey, externalID string, secure bool) (Config, error) {
 	cfg, err := bs.configs.RetrieveByExternalID(externalID)
-	fmt.Println()
-	fmt.Println("RetreivebyexternalId :  : err 1", err)
-	fmt.Println()
-	fmt.Println("Received config : ", cfg.ExternalID)
-	fmt.Println("Received config : ", cfg.ExternalKey)
-	fmt.Println("Received config : ", cfg.Name)
-	fmt.Println("Received config : ", cfg.MFThing)
-	fmt.Println()
 	if err != nil {
-		fmt.Println("returning err 2: : ", err)
 		err = errors.Wrap(ErrBootstrap, err)
-		fmt.Println(err)
 		return cfg, err
 	}
 	if secure {
 		dec, err := bs.dec(externalKey)
 		if err != nil {
-			fmt.Println()
-			fmt.Println("returnring err 3 : ", err)
-			fmt.Println()
 			return Config{}, errors.Wrap(ErrExternalKeySecure, err)
 		}
 		externalKey = dec
 	}
-	fmt.Println()
-	fmt.Println("key value : ", cfg.ExternalKey, "   ", externalKey)
-	fmt.Println()
 	if cfg.ExternalKey != externalKey {
-		fmt.Println()
-		fmt.Println("returning error 4 : ", err)
-		fmt.Println()
-
 		return Config{}, ErrExternalKey
 	}
 

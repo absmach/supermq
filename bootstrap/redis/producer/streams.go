@@ -5,7 +5,6 @@ package producer
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -114,9 +113,6 @@ func (es eventStore) Remove(ctx context.Context, token, id string) error {
 }
 
 func (es eventStore) Bootstrap(ctx context.Context, externalKey, externalID string, secure bool) (bootstrap.Config, error) {
-	fmt.Println()
-	fmt.Println("Eventstore bootstrap called:")
-	fmt.Println()
 	cfg, err := es.svc.Bootstrap(ctx, externalKey, externalID, secure)
 
 	ev := bootstrapEvent{
@@ -127,17 +123,10 @@ func (es eventStore) Bootstrap(ctx context.Context, externalKey, externalID stri
 
 	if err != nil {
 		ev.success = false
-		fmt.Println()
-		fmt.Println("returning err 1: ", err)
-		fmt.Println()
 		return cfg, err
 	}
 
 	err = es.add(ctx, ev)
-	fmt.Println()
-	fmt.Println("returning err 2: ", err)
-	fmt.Println()
-
 	return cfg, err
 }
 

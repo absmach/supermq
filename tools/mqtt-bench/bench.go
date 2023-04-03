@@ -28,13 +28,12 @@ func Benchmark(cfg Config) {
 		caFile, err := os.Open(cfg.MQTT.TLS.CA)
 
 		defer func() {
-			err = caFile.Close()
-			if err != nil {
-				fmt.Println(err)
+			if err = caFile.Close(); err != nil {
+				log.Printf("Could  not close file: %s", err)
 			}
 		}()
 		if err != nil {
-			fmt.Println(err)
+			log.Print(err)
 		}
 		caByte, _ = ioutil.ReadAll(caFile)
 	}
@@ -116,8 +115,7 @@ func getBytePayload(size int, m message) (handler, error) {
 		sz := size - n
 		for {
 			b = make([]byte, sz)
-			_, err = rand.Read(b)
-			if err != nil {
+			if _, err = rand.Read(b); err != nil {
 				return nil, err
 			}
 			m.Payload = b

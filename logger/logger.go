@@ -70,6 +70,6 @@ func (l logger) Error(msg string) {
 }
 
 func (l logger) Fatal(msg string) {
-	l.kitLogger.Log("fatal", msg)
+	_ = l.kitLogger.Log("fatal", msg)
 	os.Exit(1)
 }
