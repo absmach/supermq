@@ -25,6 +25,7 @@ const (
 	id          = "testID"
 	groupName   = "mfx"
 	description = "Description"
+	read        = "read"
 
 	memberRelation = "member"
 	authoritiesObj = "authorities"
@@ -1081,7 +1082,7 @@ func TestAddPolicies(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	tmpID := "tmpid"
-	readPolicy := "read"
+	readPolicy := read
 	writePolicy := "write"
 	deletePolicy := "delete"
 
@@ -1166,7 +1167,7 @@ func TestDeletePolicies(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	tmpID := "tmpid"
-	readPolicy := "read"
+	readPolicy := read
 	writePolicy := "write"
 	deletePolicy := "delete"
 	memberPolicy := "member"
@@ -1252,7 +1253,7 @@ func TestListPolicies(t *testing.T) {
 	_, apiToken, err := svc.Issue(context.Background(), secret, key)
 	assert.Nil(t, err, fmt.Sprintf("Issuing user's key expected to succeed: %s", err))
 
-	readPolicy := "read"
+	readPolicy := read
 	pageLen := 15
 
 	// Add arbitrary policies to the user.

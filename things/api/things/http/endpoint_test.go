@@ -29,17 +29,20 @@ import (
 )
 
 const (
-	contentType = "application/json"
-	email       = "user@example.com"
-	adminEmail  = "admin@example.com"
-	token       = "token"
-	wrongValue  = "wrong_value"
-	wrongID     = 0
-	maxNameSize = 1024
-	nameKey     = "name"
-	ascKey      = "asc"
-	descKey     = "desc"
-	prefix      = "fe6b4e92-cc98-425e-b0aa-"
+	contentType       = "application/json"
+	email             = "user@example.com"
+	adminEmail        = "admin@example.com"
+	otherExampleEmail = "other_user@example.com"
+	token             = "token"
+	otherExampleToken = "other_token"
+	wrongValue        = "wrong_value"
+	thingKey          = "key"
+	wrongID           = 0
+	maxNameSize       = 1024
+	nameKey           = "name"
+	ascKey            = "asc"
+	descKey           = "desc"
+	prefix            = "fe6b4e92-cc98-425e-b0aa-"
 )
 
 var (
@@ -116,7 +119,7 @@ func TestCreateThing(t *testing.T) {
 	defer ts.Close()
 
 	th := thing
-	th.Key = "key"
+	th.Key = thingKey
 	data := toJSON(th)
 
 	th.Name = invalidName
@@ -2264,8 +2267,8 @@ func TestRemoveChannel(t *testing.T) {
 }
 
 func TestConnect(t *testing.T) {
-	otherToken := "other_token"
-	otherEmail := "other_user@example.com"
+	otherToken := otherExampleToken
+	otherEmail := otherExampleEmail
 	svc := newService(map[string]string{
 		token:      email,
 		otherToken: otherEmail,
@@ -2360,8 +2363,8 @@ func TestConnect(t *testing.T) {
 }
 
 func TestCreateConnections(t *testing.T) {
-	otherToken := "other_token"
-	otherEmail := "other_user@example.com"
+	otherToken := otherExampleToken
+	otherEmail := otherExampleEmail
 	svc := newService(map[string]string{
 		token:      email,
 		otherToken: otherEmail,
@@ -2549,8 +2552,8 @@ func TestCreateConnections(t *testing.T) {
 }
 
 func TestDisconnectList(t *testing.T) {
-	otherToken := "other_token"
-	otherEmail := "other_user@example.com"
+	otherToken := otherExampleToken
+	otherEmail := otherExampleEmail
 	svc := newService(map[string]string{
 		token:      email,
 		otherToken: otherEmail,
@@ -2742,8 +2745,8 @@ func TestDisconnectList(t *testing.T) {
 }
 
 func TestDisconnnect(t *testing.T) {
-	otherToken := "other_token"
-	otherEmail := "other_user@example.com"
+	otherToken := otherExampleToken
+	otherEmail := otherExampleEmail
 	svc := newService(map[string]string{
 		token:      email,
 		otherToken: otherEmail,

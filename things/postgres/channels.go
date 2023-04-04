@@ -20,6 +20,8 @@ import (
 
 var _ things.ChannelRepository = (*channelRepository)(nil)
 
+const name = "name"
+
 type channelRepository struct {
 	db Database
 }
@@ -505,8 +507,8 @@ func getNameQuery(name string) (string, string) {
 
 func getOrderQuery(order string) string {
 	switch order {
-	case "name":
-		return "name"
+	case name:
+		return name
 	default:
 		return "id"
 	}
@@ -514,7 +516,7 @@ func getOrderQuery(order string) string {
 
 func getConnOrderQuery(order string, level string) string {
 	switch order {
-	case "name":
+	case name:
 		return level + ".name"
 	default:
 		return level + ".id"
