@@ -32,13 +32,16 @@ var svc things.Service
 func TestMain(m *testing.M) {
 	serverErr := make(chan error)
 	testRes := make(chan int)
-	startServer(&testing.T{}, serverErr)
+	done := make(chan int)
+
+	startServer(&testing.T{}, serverErr, done)
 
 	go func() {
 		for {
 			select {
 			case code := <-testRes:
-				os.Exit(code)
+				done <- code
+				return
 			case err := <-serverErr:
 				if err != nil {
 					log.Fatalf("gPRC Server Terminated")
@@ -50,7 +53,7 @@ func TestMain(m *testing.M) {
 	testRes <- m.Run()
 }
 
-func startServer(t *testing.T, serverErr chan error) {
+func startServer(t *testing.T, serverErr chan error, done chan int) {
 	svc = newService(map[string]string{token: email})
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error while creating new listener: %s", err))
@@ -58,9 +61,21 @@ func startServer(t *testing.T, serverErr chan error) {
 	server := grpc.NewServer()
 	mainflux.RegisterThingsServiceServer(server, grpcapi.NewServer(mocktracer.New(), svc))
 
-	go func() {
-		serverErr <- server.Serve(listener)
-	}()
+	go func(done chan int, server *grpc.Server) {
+		for {
+			select {
+			case serverErr <- server.Serve(listener):
+				close(serverErr)
+				return
+			case code := <-done:
+				server.Stop()
+				close(serverErr)
+				close(done)
+				os.Exit(code)
+			}
+
+		}
+	}(done, server)
 }
 
 func newService(tokens map[string]string) things.Service {
