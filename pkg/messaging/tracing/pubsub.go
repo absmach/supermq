@@ -17,8 +17,20 @@ const (
 var _ messaging.PubSub = (*pubsubMiddleware)(nil)
 
 type pubsubMiddleware struct {
+	publisherMiddleware
 	pubsub messaging.PubSub
 	tracer opentracing.Tracer
+}
+
+func NewPubSub(pubsub messaging.PubSub, tracer opentracing.Tracer) messaging.PubSub {
+	return &pubsubMiddleware{
+		publisherMiddleware: publisherMiddleware{
+			publisher: pubsub,
+			tracer:    tracer,
+		},
+		pubsub: pubsub,
+		tracer: tracer,
+	}
 }
 
 // Subscribe implements messaging.PubSub
@@ -35,29 +47,6 @@ func (pm *pubsubMiddleware) Unsubscribe(ctx context.Context, id string, topic st
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 	return pm.pubsub.Unsubscribe(ctx, id, topic)
-}
-
-func NewPubSub(pubsub messaging.PubSub, tracer opentracing.Tracer) messaging.PubSub {
-	return &pubsubMiddleware{
-		pubsub: pubsub,
-		tracer: tracer,
-	}
-}
-
-// Close implements messaging.PubSub
-func (ps *pubsubMiddleware) Close() error {
-	return ps.pubsub.Close()
-}
-
-// Publish implements messaging.PubSub
-func (ps *pubsubMiddleware) Publish(ctx context.Context, topic string, msg *messaging.Message) error {
-	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, ps.tracer, publishOP)
-	ext.MessageBusDestination.Set(span, msg.Subtopic)
-	defer span.Finish()
-
-	ctx = opentracing.ContextWithSpan(ctx, span)
-
-	return ps.pubsub.Publish(ctx, topic, msg)
 }
 
 func (ps *pubsubMiddleware) handle(h messaging.MessageHandler) handleFunc {

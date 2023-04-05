@@ -25,11 +25,6 @@ func New(publisher messaging.Publisher, tracer opentracing.Tracer) *publisherMid
 	}
 }
 
-// Close implements messaging.Publisher
-func (pm *publisherMiddleware) Close() error {
-	return pm.publisher.Close()
-}
-
 // Publish implements messaging.Publisher
 func (pm *publisherMiddleware) Publish(ctx context.Context, topic string, msg *messaging.Message) error {
 	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, pm.tracer, publishOP)
@@ -39,4 +34,9 @@ func (pm *publisherMiddleware) Publish(ctx context.Context, topic string, msg *m
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
 	return pm.publisher.Publish(ctx, topic, msg)
+}
+
+// Close implements messaging.Publisher
+func (pm *publisherMiddleware) Close() error {
+	return pm.publisher.Close()
 }
