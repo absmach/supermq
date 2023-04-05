@@ -440,7 +440,8 @@ func (gr groupRepository) Assign(ctx context.Context, groupID, groupType string,
 		dbg.UpdatedAt = created
 
 		if _, err := tx.NamedExecContext(ctx, qIns, dbg); err != nil {
-			if err := tx.Rollback(); err != nil {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				err = errors.Wrap(err, rollbackErr)
 				return errors.Wrap(auth.ErrAssignToGroup, err)
 			}
 
@@ -482,8 +483,8 @@ func (gr groupRepository) Unassign(ctx context.Context, groupID string, ids ...s
 		}
 
 		if _, err := tx.NamedExecContext(ctx, qDel, dbg); err != nil {
-			err = tx.Rollback()
-			if err != nil {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				err = errors.Wrap(err, rollbackErr)
 				return errors.Wrap(auth.ErrAssignToGroup, err)
 			}
 
