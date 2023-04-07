@@ -43,8 +43,7 @@ func (repo *messageRepositoryMock) ReadAll(chanID string, rpm readers.PageMetada
 	if err != nil {
 		return readers.MessagesPage{}, err
 	}
-	err = json.Unmarshal(meta, &query)
-	if err != nil {
+	if err = json.Unmarshal(meta, &query); err != nil {
 		return readers.MessagesPage{}, err
 	}
 

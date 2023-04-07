@@ -50,8 +50,7 @@ func (es eventStore) CreateThings(ctx context.Context, token string, ths ...thin
 			Values:       event.Encode(),
 		}
 
-		err = es.client.XAdd(ctx, record).Err()
-		if err != nil {
+		if err = es.client.XAdd(ctx, record).Err(); err != nil {
 			return sths, err
 		}
 	}
@@ -136,8 +135,7 @@ func (es eventStore) CreateChannels(ctx context.Context, token string, channels 
 			MaxLenApprox: streamLen,
 			Values:       event.Encode(),
 		}
-		err = es.client.XAdd(ctx, record).Err()
-		if err != nil {
+		if err = es.client.XAdd(ctx, record).Err(); err != nil {
 			return schs, err
 		}
 	}
@@ -207,8 +205,7 @@ func (es eventStore) Connect(ctx context.Context, token string, chIDs, thIDs []s
 				MaxLenApprox: streamLen,
 				Values:       event.Encode(),
 			}
-			err := es.client.XAdd(ctx, record).Err()
-			if err != nil {
+			if err := es.client.XAdd(ctx, record).Err(); err != nil {
 				return err
 			}
 		}
@@ -233,8 +230,7 @@ func (es eventStore) Disconnect(ctx context.Context, token string, chIDs, thIDs 
 				MaxLenApprox: streamLen,
 				Values:       event.Encode(),
 			}
-			err := es.client.XAdd(ctx, record).Err()
-			if err != nil {
+			if err := es.client.XAdd(ctx, record).Err(); err != nil {
 				return err
 			}
 		}

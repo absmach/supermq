@@ -112,8 +112,7 @@ func (c client) Subscribe(ctx context.Context, cfg opcua.Config) error {
 		return errors.Wrap(errFailedSub, err)
 	}
 	defer func() {
-		err = sub.Cancel()
-		if err != nil {
+		if err = sub.Cancel(); err != nil {
 			c.logger.Error(fmt.Sprintf("subscription could not be cancelled: %s", err))
 		}
 	}()

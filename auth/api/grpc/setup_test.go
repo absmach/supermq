@@ -26,9 +26,28 @@ func TestMain(m *testing.M) {
 	serverErr := make(chan error)
 	testRes := make(chan int)
 	done := make(chan int)
+	endTest := make(chan int)
 
 	svc = newService(t)
-	startGRPCServer(t, serverErr, svc, port, done)
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating new listerner: %s", err))
+
+	server := grpc.NewServer()
+	mainflux.RegisterAuthServiceServer(server, grpcapi.NewServer(mocktracer.New(), svc))
+
+	go func(done chan int, endTest chan int, server *grpc.Server) {
+		for {
+			select {
+			case serverErr <- server.Serve(listener):
+				close(serverErr)
+				return
+			case code := <-done:
+				endTest <- code
+			}
+
+		}
+	}(done, endTest, server)
+
 	go func() {
 		for {
 			select {
@@ -44,30 +63,14 @@ func TestMain(m *testing.M) {
 	}()
 
 	testRes <- m.Run()
-}
+	code := <-endTest
 
-func startGRPCServer(t *testing.T, serverErr chan error, svc auth.Service, port int, done chan int) {
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating new listerner: %s", err))
+	server.Stop()
 
-	server := grpc.NewServer()
-	mainflux.RegisterAuthServiceServer(server, grpcapi.NewServer(mocktracer.New(), svc))
+	close(serverErr)
+	close(done)
 
-	go func(done chan int, server *grpc.Server) {
-		for {
-			select {
-			case serverErr <- server.Serve(listener):
-				close(serverErr)
-				return
-			case code := <-done:
-				server.Stop()
-				close(serverErr)
-				close(done)
-				os.Exit(code)
-			}
-
-		}
-	}(done, server)
+	os.Exit(code)
 }
 
 func newService(t *testing.T) auth.Service {

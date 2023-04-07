@@ -128,8 +128,7 @@ func buildQuery(chanID string, rpm readers.PageMetadata) (string, []interface{})
 	if err != nil {
 		return condCQL, vals
 	}
-	err = json.Unmarshal(meta, &query)
-	if err != nil {
+	if err = json.Unmarshal(meta, &query); err != nil {
 		return condCQL, vals
 	}
 
