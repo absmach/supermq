@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 	t := &testing.T{}
 	serverErr := make(chan error)
 	testRes := make(chan int)
-	done := make(chan int)
+	done := make(chan bool)
 	endTest := make(chan int)
 
 	svc = newService(t)
@@ -35,14 +35,14 @@ func TestMain(m *testing.M) {
 	server := grpc.NewServer()
 	mainflux.RegisterAuthServiceServer(server, grpcapi.NewServer(mocktracer.New(), svc))
 
-	go func(done chan int, endTest chan int, server *grpc.Server) {
+	go func(done chan bool, endTest chan int, server *grpc.Server) {
 		for {
 			select {
 			case serverErr <- server.Serve(listener):
 				close(serverErr)
 				return
-			case code := <-done:
-				endTest <- code
+			case <-done:
+				return
 			}
 
 		}
@@ -51,8 +51,7 @@ func TestMain(m *testing.M) {
 	go func() {
 		for {
 			select {
-			case code := <-testRes:
-				done <- code
+			case <-testRes:
 				return
 			case err := <-serverErr:
 				if err != nil {
@@ -62,8 +61,8 @@ func TestMain(m *testing.M) {
 		}
 	}()
 
-	testRes <- m.Run()
-	code := <-endTest
+	code := m.Run()
+	testRes <- code
 
 	server.Stop()
 
