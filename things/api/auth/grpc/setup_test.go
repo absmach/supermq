@@ -34,7 +34,7 @@ func TestMain(m *testing.M) {
 	done := make(chan bool)
 	endTest := make(chan int)
 
-	server := startServer(serverErr, done, endTest)
+	server := startGRPCServer(serverErr, done, endTest)
 
 	go func() {
 		for {
@@ -53,14 +53,10 @@ func TestMain(m *testing.M) {
 	testRes <- code
 
 	server.Stop()
-
-	close(serverErr)
-	close(done)
-
 	os.Exit(code)
 }
 
-func startServer(serverErr chan error, done chan bool, endTest chan int) *grpc.Server {
+func startGRPCServer(serverErr chan error, done chan bool, endTest chan int) *grpc.Server {
 	svc = newService(map[string]string{token: email})
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {

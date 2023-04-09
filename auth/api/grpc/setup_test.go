@@ -47,10 +47,6 @@ func TestMain(m *testing.M) {
 	testRes <- code
 
 	server.Stop()
-
-	close(serverErr)
-	close(done)
-
 	os.Exit(code)
 }
 
