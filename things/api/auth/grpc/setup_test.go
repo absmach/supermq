@@ -16,7 +16,6 @@ import (
 	grpcapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	"github.com/mainflux/mainflux/things/mocks"
 	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )
 
@@ -32,15 +31,15 @@ var svc things.Service
 func TestMain(m *testing.M) {
 	serverErr := make(chan error)
 	testRes := make(chan int)
-	done := make(chan int)
+	done := make(chan bool)
+	endTest := make(chan int)
 
-	startServer(&testing.T{}, serverErr, done)
+	server := startServer(serverErr, done, endTest)
 
 	go func() {
 		for {
 			select {
-			case code := <-testRes:
-				done <- code
+			case <-testRes:
 				return
 			case err := <-serverErr:
 				if err != nil {
@@ -50,32 +49,41 @@ func TestMain(m *testing.M) {
 		}
 	}()
 
-	testRes <- m.Run()
+	code := m.Run()
+	testRes <- code
+
+	server.Stop()
+
+	close(serverErr)
+	close(done)
+
+	os.Exit(code)
 }
 
-func startServer(t *testing.T, serverErr chan error, done chan int) {
+func startServer(serverErr chan error, done chan bool, endTest chan int) *grpc.Server {
 	svc = newService(map[string]string{token: email})
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error while creating new listener: %s", err))
+	if err != nil {
+		log.Fatalf("got unexpected error while creating new listerner: %s", err)
+	}
 
 	server := grpc.NewServer()
 	mainflux.RegisterThingsServiceServer(server, grpcapi.NewServer(mocktracer.New(), svc))
 
-	go func(done chan int, server *grpc.Server) {
+	go func(done chan bool, endTest chan int, server *grpc.Server) {
 		for {
 			select {
 			case serverErr <- server.Serve(listener):
 				close(serverErr)
 				return
-			case code := <-done:
-				server.Stop()
-				close(serverErr)
-				close(done)
-				os.Exit(code)
+			case <-done:
+				return
 			}
 
 		}
-	}(done, server)
+	}(done, endTest, server)
+
+	return server
 }
 
 func newService(tokens map[string]string) things.Service {
