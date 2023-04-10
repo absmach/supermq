@@ -69,7 +69,7 @@ func main() {
 	defer pubSub.Close()
 
 	// Start new consumer
-	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
+	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger, false); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Cassandra writer: %s", err))
 	}
 
@@ -97,10 +97,10 @@ func main() {
 
 }
 
-func newService(session *gocql.Session, logger mflog.Logger) consumers.Consumer {
+func newService(session *gocql.Session, logger mflog.Logger) consumers.SyncConsumer {
 	repo := cassandra.New(session)
-	repo = api.LoggingMiddleware(repo, logger)
+	repo = api.SyncLoggingMiddleware(repo, logger)
 	counter, latency := internal.MakeMetrics("cassandra", "message_writer")
-	repo = api.MetricsMiddleware(repo, counter, latency)
+	repo = api.SyncMetricsMiddleware(repo, counter, latency)
 	return repo
 }

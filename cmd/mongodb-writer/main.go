@@ -64,7 +64,7 @@ func main() {
 
 	repo := newService(db, logger)
 
-	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
+	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger, false); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to start MongoDB writer: %s", err))
 	}
 
@@ -87,10 +87,10 @@ func main() {
 	}
 }
 
-func newService(db *mongo.Database, logger mflog.Logger) consumers.Consumer {
+func newService(db *mongo.Database, logger mflog.Logger) consumers.SyncConsumer {
 	repo := mongodb.New(db)
-	repo = api.LoggingMiddleware(repo, logger)
+	repo = api.SyncLoggingMiddleware(repo, logger)
 	counter, latency := internal.MakeMetrics("mongodb", "message_writer")
-	repo = api.MetricsMiddleware(repo, counter, latency)
+	repo = api.SyncMetricsMiddleware(repo, counter, latency)
 	return repo
 }

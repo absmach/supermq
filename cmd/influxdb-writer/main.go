@@ -62,6 +62,7 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to load InfluxDB client configuration from environment variable : %s", err))
 	}
 	influxDBConfig.DBUrl = fmt.Sprintf("%s://%s:%s", influxDBConfig.Protocol, influxDBConfig.Host, influxDBConfig.Port)
+
 	repocfg := influxdb.RepoConfig{
 		Bucket: influxDBConfig.Bucket,
 		Org:    influxDBConfig.Org,
@@ -75,7 +76,7 @@ func main() {
 
 	repo := newService(client, repocfg, logger)
 
-	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
+	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger, true); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to start InfluxDB writer: %s", err))
 	}
 
@@ -98,10 +99,10 @@ func main() {
 	}
 }
 
-func newService(client influxdb2.Client, repocfg influxdb.RepoConfig, logger mflog.Logger) consumers.Consumer {
-	repo := influxdb.New(client, repocfg, true)
-	repo = api.LoggingMiddleware(repo, logger)
+func newService(client influxdb2.Client, repocfg influxdb.RepoConfig, logger mflog.Logger) consumers.AsyncConsumer {
+	repo := influxdb.NewAsync(client, repocfg)
+	repo = api.AsyncLoggingMiddleware(repo, logger)
 	counter, latency := internal.MakeMetrics("influxdb", "message_writer")
-	repo = api.MetricsMiddleware(repo, counter, latency)
+	repo = api.AsyncMetricsMiddleware(repo, counter, latency)
 	return repo
 }

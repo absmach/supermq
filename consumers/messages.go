@@ -33,7 +33,7 @@ var (
 // Start method starts consuming messages received from Message broker.
 // This method transforms messages to SenML format before
 // using MessageRepository to store them.
-func Start(id string, sub messaging.Subscriber, consumer Consumer, configPath string, logger logger.Logger) error {
+func Start(id string, sub messaging.Subscriber, consumer interface{}, configPath string, logger logger.Logger, async bool) error {
 	cfg, err := loadConfig(configPath)
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Failed to load consumer config: %s", err))
@@ -42,14 +42,24 @@ func Start(id string, sub messaging.Subscriber, consumer Consumer, configPath st
 	transformer := makeTransformer(cfg.TransformerCfg, logger)
 
 	for _, subject := range cfg.SubscriberCfg.Subjects {
-		if err := sub.Subscribe(id, subject, handle(transformer, consumer)); err != nil {
-			return err
+		switch c := consumer.(type) {
+		case AsyncConsumer:
+			if err := sub.Subscribe(id, subject, handleAsync(transformer, c)); err != nil {
+				return err
+			}
+		case SyncConsumer:
+			if err := sub.Subscribe(id, subject, handleSync(transformer, c)); err != nil {
+				return err
+			}
+		default:
+			return errors.ErrInvalidQueryParams
 		}
+
 	}
 	return nil
 }
 
-func handle(t transformers.Transformer, c Consumer) handleFunc {
+func handleSync(t transformers.Transformer, sc SyncConsumer) handleFunc {
 	return func(msg *messaging.Message) error {
 		m := interface{}(msg)
 		var err error
@@ -59,7 +69,24 @@ func handle(t transformers.Transformer, c Consumer) handleFunc {
 				return err
 			}
 		}
-		return c.Consume(m)
+		return sc.ConsumeBlocking(m)
+	}
+}
+
+func handleAsync(t transformers.Transformer, ac AsyncConsumer) handleFunc {
+	return func(msg *messaging.Message) error {
+		m := interface{}(msg)
+		var err error
+		if t != nil {
+			m, err = t.Transform(msg)
+			if err != nil {
+				return err
+			}
+		}
+
+		errs := make(chan error)
+		ac.ConsumeAsync(m, errs)
+		return <-errs
 	}
 }
 

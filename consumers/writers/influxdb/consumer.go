@@ -22,7 +22,8 @@ const senmlPoints = "messages"
 
 var errSaveMessage = errors.New("failed to save message to influxdb database")
 
-var _ consumers.Consumer = (*influxRepo)(nil)
+var _ consumers.AsyncConsumer = (*influxRepo)(nil)
+var _ consumers.SyncConsumer = (*influxRepo)(nil)
 
 type RepoConfig struct {
 	Bucket string
@@ -32,19 +33,66 @@ type RepoConfig struct {
 type influxRepo struct {
 	client           influxdb2.Client
 	cfg              RepoConfig
+	writeAPI         api.WriteAPI
 	writeAPIBlocking api.WriteAPIBlocking
 }
 
-// New returns new InfluxDB writer.
-func New(client influxdb2.Client, config RepoConfig, async bool) consumers.Consumer {
+// NewSync returns new InfluxDB writer.
+func NewSync(client influxdb2.Client, config RepoConfig) consumers.SyncConsumer {
 	return &influxRepo{
 		client:           client,
 		cfg:              config,
+		writeAPI:         nil,
 		writeAPIBlocking: client.WriteAPIBlocking(config.Org, config.Bucket),
 	}
 }
 
-func (repo *influxRepo) Consume(message interface{}) error {
+func NewAsync(client influxdb2.Client, config RepoConfig) consumers.AsyncConsumer {
+	return &influxRepo{
+		client:           client,
+		cfg:              config,
+		writeAPI:         client.WriteAPI(config.Org, config.Bucket),
+		writeAPIBlocking: nil,
+	}
+}
+
+func (repo *influxRepo) ConsumeAsync(message interface{}, errs chan<- error) {
+	var err error
+	var pts []*write.Point
+	switch m := message.(type) {
+	case json.Messages:
+		pts, err = repo.jsonPoints(m)
+	default:
+		pts, err = repo.senmlPoints(m)
+	}
+	if err != nil {
+		errs <- err
+		return
+	}
+
+	done := make(chan bool)
+	defer close(done)
+
+	go func(done <-chan bool) {
+		for {
+			select {
+			case err := <-repo.writeAPI.Errors():
+				errs <- err
+			case <-done:
+				errs <- nil // pass nil error to the error channel
+				return
+			}
+		}
+	}(done)
+
+	for _, pt := range pts {
+		repo.writeAPI.WritePoint(pt)
+	}
+
+	repo.writeAPI.Flush()
+}
+
+func (repo *influxRepo) ConsumeBlocking(message interface{}) error {
 	var err error
 	var pts []*write.Point
 	switch m := message.(type) {

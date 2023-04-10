@@ -66,7 +66,7 @@ func main() {
 
 	repo := newService(db, logger)
 
-	if err = consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
+	if err = consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger, false); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to create Postgres writer: %s", err))
 	}
 
@@ -89,10 +89,10 @@ func main() {
 	}
 }
 
-func newService(db *sqlx.DB, logger mflog.Logger) consumers.Consumer {
+func newService(db *sqlx.DB, logger mflog.Logger) consumers.SyncConsumer {
 	svc := writerPg.New(db)
-	svc = api.LoggingMiddleware(svc, logger)
+	svc = api.SyncLoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics("postgres", "message_writer")
-	svc = api.MetricsMiddleware(svc, counter, latency)
+	svc = api.SyncMetricsMiddleware(svc, counter, latency)
 	return svc
 }

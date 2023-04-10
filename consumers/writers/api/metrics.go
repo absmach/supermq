@@ -12,28 +12,57 @@ import (
 	"github.com/mainflux/mainflux/consumers"
 )
 
-var _ consumers.Consumer = (*metricsMiddleware)(nil)
+var _ consumers.AsyncConsumer = (*asyncMetricsMiddleware)(nil)
+var _ consumers.SyncConsumer = (*syncMetricsMiddleware)(nil)
 
-type metricsMiddleware struct {
-	counter  metrics.Counter
-	latency  metrics.Histogram
-	consumer consumers.Consumer
+type asyncMetricsMiddleware struct {
+	counter       metrics.Counter
+	latency       metrics.Histogram
+	asyncConsumer consumers.AsyncConsumer
 }
 
-// MetricsMiddleware returns new message repository
+// AsyncMetricsMiddleware returns new message repository
 // with Save method wrapped to expose metrics.
-func MetricsMiddleware(consumer consumers.Consumer, counter metrics.Counter, latency metrics.Histogram) consumers.Consumer {
-	return &metricsMiddleware{
-		counter:  counter,
-		latency:  latency,
-		consumer: consumer,
+func AsyncMetricsMiddleware(asyncConsumer consumers.AsyncConsumer, counter metrics.Counter, latency metrics.Histogram) consumers.AsyncConsumer {
+	return &asyncMetricsMiddleware{
+		counter:       counter,
+		latency:       latency,
+		asyncConsumer: asyncConsumer,
 	}
 }
 
-func (mm *metricsMiddleware) Consume(msgs interface{}) error {
+func (amm *asyncMetricsMiddleware) ConsumeAsync(msgs interface{}, errs chan<- error) {
+	ch := make(chan error)
+
 	defer func(begin time.Time) {
-		mm.counter.With("method", "consume").Add(1)
-		mm.latency.With("method", "consume").Observe(time.Since(begin).Seconds())
+		amm.counter.With("method", "consume").Add(1)
+		amm.latency.With("method", "consume").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return mm.consumer.Consume(msgs)
+
+	go amm.asyncConsumer.ConsumeAsync(msgs, ch)
+	<-ch
+}
+
+type syncMetricsMiddleware struct {
+	counter      metrics.Counter
+	latency      metrics.Histogram
+	syncConsumer consumers.SyncConsumer
+}
+
+// SyncMetricsMiddleware returns new message repository
+// with Save method wrapped to expose metrics.
+func SyncMetricsMiddleware(syncConsumer consumers.SyncConsumer, counter metrics.Counter, latency metrics.Histogram) consumers.SyncConsumer {
+	return &syncMetricsMiddleware{
+		counter:      counter,
+		latency:      latency,
+		syncConsumer: syncConsumer,
+	}
+}
+
+func (smm *syncMetricsMiddleware) ConsumeBlocking(msgs interface{}) error {
+	defer func(begin time.Time) {
+		smm.counter.With("method", "consume").Add(1)
+		smm.latency.With("method", "consume").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return smm.syncConsumer.ConsumeBlocking(msgs)
 }

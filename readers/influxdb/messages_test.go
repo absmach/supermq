@@ -50,7 +50,9 @@ var (
 )
 
 func TestReadSenml(t *testing.T) {
-	writer := iwriter.New(client, repoCfg, true)
+	// Testing both async and sync
+	asyncWriter := iwriter.NewAsync(client, repoCfg)
+	syncWriter := iwriter.NewSync(client, repoCfg)
 
 	chanID, err := idProvider.ID()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -110,8 +112,15 @@ func TestReadSenml(t *testing.T) {
 		messages = append(messages, msg)
 	}
 
-	err = writer.Consume(messages)
+	// TestSync
+	err = syncWriter.ConsumeBlocking(messages)
 	require.Nil(t, err, fmt.Sprintf("failed to store message to InfluxDB: %s", err))
+
+	// Test async
+	errs := make(chan error, 1)
+	asyncWriter.ConsumeAsync(messages, errs)
+	err = <-errs
+	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 
 	reader := ireader.New(client, repoCfg)
 
@@ -407,7 +416,9 @@ func TestReadSenml(t *testing.T) {
 }
 
 func TestReadJSON(t *testing.T) {
-	writer := iwriter.New(client, repoCfg, true)
+	// Testing both Sync and Async
+	syncWriter := iwriter.NewSync(client, repoCfg)
+	asyncWriter := iwriter.NewAsync(client, repoCfg)
 
 	id1, err := idProvider.ID()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -432,8 +443,16 @@ func TestReadJSON(t *testing.T) {
 		m := toMap(m)
 		msgs1 = append(msgs1, m)
 	}
-	err = writer.Consume(messages1)
-	require.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
+
+	// TestSync
+	err = syncWriter.ConsumeBlocking(messages1)
+	require.Nil(t, err, fmt.Sprintf("failed to store message to InfluxDB: %s", err))
+
+	// Test async
+	errs := make(chan error, 1)
+	asyncWriter.ConsumeAsync(messages1, errs)
+	err = <-errs
+	require.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 
 	id2, err := idProvider.ID()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -460,8 +479,14 @@ func TestReadJSON(t *testing.T) {
 		m := toMap(msg)
 		msgs2 = append(msgs2, m)
 	}
-	err = writer.Consume(messages2)
-	assert.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
+	// TestSync
+	err = syncWriter.ConsumeBlocking(messages2)
+	assert.Nil(t, err, fmt.Sprintf("failed to store message to InfluxDB: %s", err))
+
+	// Test async
+	asyncWriter.ConsumeAsync(messages2, errs)
+	err = <-errs
+	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 
 	httpMsgs := []map[string]interface{}{}
 	for i := 0; i < msgsNum; i += 2 {

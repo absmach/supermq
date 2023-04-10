@@ -33,7 +33,7 @@ type Service interface {
 	// RemoveSubscription removes the subscription having the provided identifier.
 	RemoveSubscription(ctx context.Context, token, id string) error
 
-	consumers.Consumer
+	consumers.SyncConsumer
 }
 
 var _ Service = (*notifierService)(nil)
@@ -95,7 +95,7 @@ func (ns *notifierService) RemoveSubscription(ctx context.Context, token, id str
 	return ns.subs.Remove(ctx, id)
 }
 
-func (ns *notifierService) Consume(message interface{}) error {
+func (ns *notifierService) ConsumeBlocking(message interface{}) error {
 	msg, ok := message.(*messaging.Message)
 	if !ok {
 		return ErrMessage
@@ -126,4 +126,36 @@ func (ns *notifierService) Consume(message interface{}) error {
 	}
 
 	return nil
+}
+
+func (ns *notifierService) ConsumeAsync(message interface{}, errs chan<- error) {
+	msg, ok := message.(*messaging.Message)
+	if !ok {
+		errs <- ErrMessage
+		return
+	}
+	topic := msg.Channel
+	if msg.Subtopic != "" {
+		topic = fmt.Sprintf("%s.%s", msg.Channel, msg.Subtopic)
+	}
+	pm := PageMetadata{
+		Topic:  topic,
+		Offset: 0,
+		Limit:  -1,
+	}
+	page, err := ns.subs.RetrieveAll(context.Background(), pm)
+	if err != nil {
+		errs <- err
+		return
+	}
+
+	var to []string
+	for _, sub := range page.Subscriptions {
+		to = append(to, sub.Contact)
+	}
+	if len(to) > 0 {
+		if err := ns.notifier.Notify(ns.from, to, msg); err != nil {
+			errs <- errors.Wrap(ErrNotify, err)
+		}
+	}
 }
