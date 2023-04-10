@@ -26,13 +26,15 @@ services:
     networks:
       - docker_mainflux-base-net
     volumes:
-      - ./metrics/:/etc/prometheus
+      - type: bind
+        source: ./addons/prometheus/metrics/prometheus.yml
+        target: /etc/prometheus/prometheus/prometheus.yml
       - mainflux-prometheus-volume:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'  
 
   grafana:
-    image: grafana/grafana:v8.2.6
+    image: grafana/grafana:8.2.6
     container_name: mainflux-grafana
     depends_on:
       - promethues
@@ -45,5 +47,13 @@ services:
     networks:
       - docker_mainflux-base-net
     volumes:
-      - ./grafana:/etc/grafana/provisioning/datasources
+      - type: bind
+        source: ./addons/prometheus/grafana/datasource.yml
+        target: /etc/grafana/provisioning/datasources/datasource.yml
+      - type: bind
+        source: ./addons/prometheus/grafana/dashboard.yml
+        target: /etc/grafana/provisioning/dashboards/main.yaml
+      - type: bind
+        source: ./addons/prometheus/grafana/example-dashboard.json
+        target: /var/lib/grafana/dashboards/example-dashboard.json
       
