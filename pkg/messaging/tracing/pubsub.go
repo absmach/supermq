@@ -36,23 +36,31 @@ func NewPubSub(pubsub messaging.PubSub, tracer opentracing.Tracer) messaging.Pub
 // Subscribe implements messaging.PubSub
 func (pm *pubsubMiddleware) Subscribe(ctx context.Context, id string, topic string, handler messaging.MessageHandler) error {
 	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, pm.tracer, subscribeOP)
+	ext.MessageBusDestination.Set(span, topic)
+	span.SetTag("subscriber", id)
+	span.SetTag("topic", topic)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
-	return pm.pubsub.Subscribe(ctx, id, topic, pm.handle(handler))
+	return pm.pubsub.Subscribe(ctx, id, topic, pm.handle(ctx, handler))
 }
 
 // Unsubscribe implements messaging.PubSub
 func (pm *pubsubMiddleware) Unsubscribe(ctx context.Context, id string, topic string) error {
 	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, pm.tracer, unsubscribeOp)
+	span.SetTag("topic", topic)
+	span.SetTag("subscriber", id)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 	return pm.pubsub.Unsubscribe(ctx, id, topic)
 }
 
-func (ps *pubsubMiddleware) handle(h messaging.MessageHandler) handleFunc {
+func (pm *pubsubMiddleware) handle(ctx context.Context, h messaging.MessageHandler) handleFunc {
 	return func(msg *messaging.Message) error {
-		span := ps.tracer.StartSpan(handleOp, ext.SpanKindConsumer)
+		span, _ := opentracing.StartSpanFromContextWithTracer(ctx, pm.tracer, handleOp, ext.SpanKindConsumer)
 		ext.MessageBusDestination.Set(span, msg.Subtopic)
+		span.SetTag("publisher", msg.Publisher)
+		span.SetTag("protocol", msg.Protocol)
+		span.SetTag("channel", msg.Channel)
 		defer span.Finish()
 		return h.Handle(msg)
 	}

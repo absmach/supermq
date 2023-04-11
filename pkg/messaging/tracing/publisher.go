@@ -29,10 +29,12 @@ func New(publisher messaging.Publisher, tracer opentracing.Tracer) *publisherMid
 func (pm *publisherMiddleware) Publish(ctx context.Context, topic string, msg *messaging.Message) error {
 	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, pm.tracer, publishOP)
 	ext.MessageBusDestination.Set(span, msg.Subtopic)
+	span.SetTag("publisher", msg.Publisher)
+	span.SetTag("protocol", msg.Protocol)
+	span.SetTag("channel", msg.Channel)
+	span.SetTag("topic", topic)
 	defer span.Finish()
-
 	ctx = opentracing.ContextWithSpan(ctx, span)
-
 	return pm.publisher.Publish(ctx, topic, msg)
 }
 
