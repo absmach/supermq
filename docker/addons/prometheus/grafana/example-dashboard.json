@@ -1,4 +1,14 @@
 {
+"__inputs": [
+  {
+    "name": "DS_PROMETHEUS",
+    "label": "Prometheus",
+    "description": "Def datasource",
+    "type": "datasource",
+    "pluginId": "prometheus",
+    "pluginName": "Prometheus"
+  }
+],
   "annotations": {
     "list": [
       {
@@ -27,7 +37,7 @@
   "liveNow": false,
   "panels": [
     {
-      "datasource": null,
+      "datasource": "${DS_PROMETHEUS}",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -86,7 +96,7 @@
       "type": "gauge"
     },
     {
-      "datasource": null,
+      "datasource": "${DS_PROMETHEUS}",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -167,7 +177,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": null,
+      "datasource": "${DS_PROMETHEUS}",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -249,7 +259,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": null,
+      "datasource": "${DS_PROMETHEUS}",
       "fieldConfig": {
         "defaults": {
           "color": {

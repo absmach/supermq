@@ -28,10 +28,8 @@ services:
     volumes:
       - type: bind
         source: ./addons/prometheus/metrics/prometheus.yml
-        target: /etc/prometheus/prometheus/prometheus.yml
+        target: /etc/prometheus/prometheus.yml
       - mainflux-prometheus-volume:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'  
 
   grafana:
     image: grafana/grafana:8.2.6
