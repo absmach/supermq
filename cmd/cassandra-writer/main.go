@@ -36,7 +36,7 @@ type config struct {
 	LogLevel   string `env:"MF_CASSANDRA_WRITER_LOG_LEVEL"     envDefault:"info"`
 	ConfigPath string `env:"MF_CASSANDRA_WRITER_CONFIG_PATH"   envDefault:"/config.toml"`
 	BrokerURL  string `env:"MF_BROKER_URL"                     envDefault:"nats://localhost:4222"`
-	JaegerURL  string `env:"MF_JAEGER_URL"                    envDefault:"localhost:6831"`
+	JaegerURL  string `env:"MF_JAEGER_URL"                     envDefault:"localhost:6831"`
 }
 
 func main() {
@@ -78,7 +78,7 @@ func main() {
 	defer pubSub.Close()
 
 	// Start new consumer
-	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
+	if err := consumers.Start(ctx, svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Cassandra writer: %s", err))
 	}
 

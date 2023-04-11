@@ -37,7 +37,7 @@ type config struct {
 	LogLevel   string `env:"MF_MONGO_WRITER_LOG_LEVEL"     envDefault:"info"`
 	ConfigPath string `env:"MF_MONGO_WRITER_CONFIG_PATH"   envDefault:"/config.toml"`
 	BrokerURL  string `env:"MF_BROKER_URL"                 envDefault:"nats://localhost:4222"`
-	JaegerURL  string `env:"MF_JAEGER_URL"               envDefault:"localhost:6831"`
+	JaegerURL  string `env:"MF_JAEGER_URL"                 envDefault:"localhost:6831"`
 }
 
 func main() {
@@ -73,7 +73,7 @@ func main() {
 
 	repo := newService(db, logger, tracer)
 
-	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
+	if err := consumers.Start(ctx, svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to start MongoDB writer: %s", err))
 	}
 

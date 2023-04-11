@@ -107,7 +107,7 @@ func main() {
 
 	svc := newService(db, dbTracer, auth, cfg, smppConfig, logger, tracer)
 
-	if err = consumers.Start(svcName, pubSub, svc, cfg.ConfigPath, logger); err != nil {
+	if err = consumers.Start(ctx, svcName, pubSub, svc, cfg.ConfigPath, logger); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to create Postgres writer: %s", err))
 	}
 

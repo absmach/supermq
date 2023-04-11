@@ -18,7 +18,6 @@ type serviceMiddleware struct {
 
 // Notify implements notifiers.Notifier
 func (sm *serviceMiddleware) Notify(from string, to []string, msg *messaging.Message) error {
-	// start new span
 	span := sm.tracer.StartSpan(notifierOp, ext.SpanKindConsumer)
 	ext.MessageBusDestination.Set(span, msg.Subtopic)
 	defer span.Finish()
