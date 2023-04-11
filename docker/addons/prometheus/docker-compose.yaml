@@ -54,4 +54,3 @@ services:
       - type: bind
         source: ./addons/prometheus/grafana/example-dashboard.json
         target: /var/lib/grafana/dashboards/example-dashboard.json
-      
