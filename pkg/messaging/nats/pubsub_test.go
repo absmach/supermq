@@ -29,9 +29,9 @@ var (
 )
 
 func TestPublisher(t *testing.T) {
-	err := pubsub.Subscribe(clientID, fmt.Sprintf("%s.%s", chansPrefix, topic), handler{})
+	err := pubsub.Subscribe(context.TODO(), clientID, fmt.Sprintf("%s.%s", chansPrefix, topic), handler{})
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	err = pubsub.Subscribe(clientID, fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic), handler{})
+	err = pubsub.Subscribe(context.TODO(), clientID, fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic), handler{})
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
@@ -74,7 +74,7 @@ func TestPublisher(t *testing.T) {
 		}
 		assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-		err = pubsub.Publish(topic, &expectedMsg)
+		err = pubsub.Publish(context.TODO(), topic, &expectedMsg)
 		assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 		receivedMsg := <-msgChan
