@@ -22,35 +22,32 @@ import (
 
 func TestMain(m *testing.M) {
 	serverErr := make(chan error)
-	testRes := make(chan int)
-	done := make(chan bool)
-	endTest := make(chan int)
-
+	done := make(chan interface{}, 1)
 	svc = newService()
-
-	server := startGRPCServer(serverErr, done, endTest)
+	server := startGRPCServer(serverErr, done)
 
 	go func() {
 		for {
 			select {
-			case <-testRes:
+			case <-done:
 				return
 			case err := <-serverErr:
 				if err != nil {
-					log.Fatalf("gPRC Server Terminated")
+					log.Fatalln("gPRC Server Terminated : ", err)
 				}
 			}
 		}
 	}()
 
 	code := m.Run()
-	testRes <- code
+	done <- true
+	done <- true
 
 	server.Stop()
 	os.Exit(code)
 }
 
-func startGRPCServer(serverErr chan error, done chan bool, endTest chan int) *grpc.Server {
+func startGRPCServer(serverErr chan error, done chan interface{}) *grpc.Server {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatalf("got unexpected error while creating new listerner: %s", err)
@@ -59,18 +56,17 @@ func startGRPCServer(serverErr chan error, done chan bool, endTest chan int) *gr
 	server := grpc.NewServer()
 	mainflux.RegisterAuthServiceServer(server, grpcapi.NewServer(mocktracer.New(), svc))
 
-	go func(done chan bool, endTest chan int, server *grpc.Server) {
+	go func(done chan interface{}, server *grpc.Server) {
 		for {
 			select {
 			case serverErr <- server.Serve(listener):
-				close(serverErr)
 				return
 			case <-done:
 				return
 			}
 
 		}
-	}(done, endTest, server)
+	}(done, server)
 
 	return server
 }
