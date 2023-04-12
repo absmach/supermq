@@ -22,7 +22,6 @@
   "fiscalYearStartMonth": 0,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 1,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -180,7 +179,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 22,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -230,25 +229,32 @@
       "interval": "15s",
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "mean",
+            "sum",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "multi"
         }
       },
       "targets": [
         {
           "exemplar": true,
           "expr": "promhttp_metric_handler_requests_total{}",
+          "hide": false,
           "interval": "",
-          "legendFormat": "{{instance}} - {{code}}",
+          "intervalFactor": 2,
+          "legendFormat": "{{instance}} - Code {{code}}",
           "refId": "A"
         }
       ],
       "timeFrom": null,
       "title": "Total HTTP Requests",
+      "transformations": [],
       "type": "timeseries"
     },
     {
@@ -382,7 +388,7 @@
           "exemplar": true,
           "expr": "auth_api_request_count{}",
           "interval": "",
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{method}}",
           "refId": "A"
         }
       ],
@@ -439,7 +445,7 @@
           "exemplar": true,
           "expr": "users_api_request_count{}",
           "interval": "",
-          "legendFormat": "",
+          "legendFormat": "{{method}}",
           "refId": "A"
         }
       ],
@@ -496,7 +502,7 @@
           "exemplar": true,
           "expr": "coap_adapter_api_request_count{}",
           "interval": "",
-          "legendFormat": "",
+          "legendFormat": "{{method}}",
           "refId": "A"
         }
       ],
@@ -554,7 +560,7 @@
           "expr": "things_api_request_count{}",
           "instant": false,
           "interval": "",
-          "legendFormat": "",
+          "legendFormat": "{{method}}",
           "refId": "A"
         }
       ],
@@ -611,7 +617,7 @@
           "exemplar": true,
           "expr": "ws_adapter_api_request_count{}",
           "interval": "",
-          "legendFormat": "",
+          "legendFormat": "{{method}}",
           "refId": "A"
         }
       ],
@@ -670,7 +676,7 @@
           "format": "time_series",
           "instant": false,
           "interval": "",
-          "legendFormat": "",
+          "legendFormat": "{{method}}",
           "refId": "A"
         }
       ],
