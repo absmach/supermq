@@ -14,14 +14,14 @@ import (
 	"strconv"
 	"time"
 
-	mf_log "github.com/mainflux/mainflux/logger"
+	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/pelletier/go-toml"
 )
 
 // Benchmark - main benchmarking function
 func Benchmark(cfg Config) {
 	checkConnection(cfg.MQTT.Broker.URL, 1)
-	logger, err := mf_log.New(os.Stdout, mf_log.Debug.String())
+	logger, err := mflog.New(os.Stdout, mflog.Debug.String())
 	if err != nil {
 		log.Fatalf(err.Error())
 	}

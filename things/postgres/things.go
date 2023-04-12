@@ -161,9 +161,6 @@ func (tr thingRepository) RetrieveByID(ctx context.Context, owner, id string) (t
 		}
 		return things.Thing{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
-	fmt.Println()
-	fmt.Println(dbth)
-	fmt.Println()
 	return toThing(dbth)
 }
 
