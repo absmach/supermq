@@ -33,6 +33,10 @@
           "color": {
             "mode": "thresholds"
           },
+          "custom": {
+            "fillOpacity": 70,
+            "lineWidth": 1
+          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -51,37 +55,38 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 12,
         "x": 0,
         "y": 0
       },
-      "id": 10,
+      "id": 12,
       "options": {
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
+        "colWidth": 0.9,
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
         },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "text": {}
+        "rowHeight": 0.9,
+        "showValue": "auto",
+        "tooltip": {
+          "mode": "single"
+        }
       },
       "pluginVersion": "8.2.6",
       "targets": [
         {
           "exemplar": true,
-          "expr": "rate(things_api_request_count{}[$__interval])",
+          "expr": "up{}",
           "interval": "",
-          "legendFormat": "",
+          "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ],
-      "title": "Things Request Count",
-      "type": "gauge"
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "UP",
+      "type": "status-history"
     },
     {
       "datasource": "Prometheus",
@@ -157,7 +162,7 @@
           "exemplar": true,
           "expr": "go_goroutines{}",
           "interval": "",
-          "legendFormat": "",
+          "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ],
@@ -189,12 +194,12 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 9,
+        "h": 8,
         "w": 12,
         "x": 0,
-        "y": 8
+        "y": 9
       },
-      "id": 8,
+      "id": 10,
       "options": {
         "orientation": "auto",
         "reduceOptions": {
@@ -212,15 +217,14 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "rate(go_memstats_alloc_bytes{}[$__interval])",
-          "format": "time_series",
+          "expr": "things_api_request_count{}",
           "instant": false,
           "interval": "",
           "legendFormat": "",
           "refId": "A"
         }
       ],
-      "title": "Allocated Bytes",
+      "title": "Things Request Count",
       "type": "gauge"
     },
     {
@@ -228,35 +232,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "mode": "thresholds"
           },
           "mappings": [],
           "thresholds": {
@@ -283,31 +259,93 @@
       },
       "id": 6,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
         },
-        "tooltip": {
-          "mode": "single"
-        }
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
       },
+      "pluginVersion": "8.2.6",
       "targets": [
         {
           "exemplar": true,
-          "expr": "rate(prometheus_http_request_duration_seconds_bucket{}[$__interval])",
+          "expr": "http_adapter_api_request_count{}",
           "format": "time_series",
+          "instant": false,
           "interval": "",
           "legendFormat": "",
           "refId": "A"
-        },
-        {
-          "hide": false,
-          "refId": "B"
         }
       ],
-      "title": "HTTP Request Duration",
-      "type": "timeseries"
+      "title": "HTTP Adapter Request Count",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "id": 8,
+      "interval": "30s",
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "8.2.6",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "rate(go_memstats_alloc_bytes_total{}[$__interval])",
+          "format": "heatmap",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "title": "Allocated Bytes",
+      "type": "gauge"
     },
     {
       "datasource": "Prometheus",
@@ -363,12 +401,13 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 9,
+        "w": 24,
         "x": 0,
-        "y": 17
+        "y": 25
       },
       "id": 4,
+      "interval": "15s",
       "options": {
         "legend": {
           "calcs": [],
@@ -382,12 +421,13 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "prometheus_http_requests_total{}",
+          "expr": "promhttp_metric_handler_requests_total{}",
           "interval": "",
-          "legendFormat": "",
+          "legendFormat": "{{instance}} - {{code}}",
           "refId": "A"
         }
       ],
+      "timeFrom": null,
       "title": "Total HTTP Requests",
       "type": "timeseries"
     }
@@ -407,5 +447,5 @@
   "timezone": "",
   "title": "mainflux",
   "uid": "sgKwOwY4k",
-  "version": 1
+  "version": 2
 }
