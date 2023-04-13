@@ -24,6 +24,7 @@ func (sm *serviceMiddleware) Notify(from string, to []string, msg *messaging.Mes
 	return sm.svc.Notify(from, to, msg)
 }
 
+// NewNotifier create new notifier tracing middleware service
 func NewNotifier(svc notifiers.Notifier, tracer opentracing.Tracer) notifiers.Notifier {
 	return &serviceMiddleware{
 		svc:    svc,

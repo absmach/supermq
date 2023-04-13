@@ -17,6 +17,7 @@ type tracingMiddleware struct {
 	consumer consumers.Consumer
 }
 
+// New creates new consumers tracing middleware service
 func New(tracer opentracing.Tracer, consumer consumers.Consumer) consumers.Consumer {
 	return &tracingMiddleware{
 		tracer:   tracer,

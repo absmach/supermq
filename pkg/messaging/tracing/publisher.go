@@ -18,7 +18,8 @@ type publisherMiddleware struct {
 	tracer    opentracing.Tracer
 }
 
-func New(publisher messaging.Publisher, tracer opentracing.Tracer) *publisherMiddleware {
+// New creates new messaging publisher tracing middleware
+func New(publisher messaging.Publisher, tracer opentracing.Tracer) messaging.Publisher {
 	return &publisherMiddleware{
 		publisher: publisher,
 		tracer:    tracer,

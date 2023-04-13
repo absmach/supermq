@@ -21,7 +21,8 @@ type tracingMiddleware struct {
 	svc    ws.Service
 }
 
-func New(tracer opentracing.Tracer, svc ws.Service) *tracingMiddleware {
+// New creates new ws tracing middleware service
+func New(tracer opentracing.Tracer, svc ws.Service) ws.Service {
 	return &tracingMiddleware{
 		tracer: tracer,
 		svc:    svc,

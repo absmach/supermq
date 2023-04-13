@@ -22,6 +22,7 @@ type pubsubMiddleware struct {
 	tracer opentracing.Tracer
 }
 
+// NewPubSub creates new pubsub tracing middleware service
 func NewPubSub(pubsub messaging.PubSub, tracer opentracing.Tracer) messaging.PubSub {
 	return &pubsubMiddleware{
 		publisherMiddleware: publisherMiddleware{
@@ -65,6 +66,7 @@ type traceHandler struct {
 	ctx     context.Context
 }
 
+// Handle tracing middleware handle for message handler
 func (h *traceHandler) Handle(msg *messaging.Message) error {
 	span, _ := opentracing.StartSpanFromContextWithTracer(h.ctx, h.tracer, handleOp, ext.SpanKindConsumer)
 	ext.MessageBusDestination.Set(span, msg.Subtopic)
@@ -75,6 +77,7 @@ func (h *traceHandler) Handle(msg *messaging.Message) error {
 	return h.handler.Handle(msg)
 }
 
+// Cancel tracing middleware handle for message handler
 func (h *traceHandler) Cancel() error {
 	return h.handler.Cancel()
 }
