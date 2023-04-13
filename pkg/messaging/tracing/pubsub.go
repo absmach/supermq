@@ -20,7 +20,6 @@ type pubsubMiddleware struct {
 	publisherMiddleware
 	pubsub messaging.PubSub
 	tracer opentracing.Tracer
-	cancel func() error
 }
 
 func NewPubSub(pubsub messaging.PubSub, tracer opentracing.Tracer) messaging.PubSub {
@@ -42,8 +41,12 @@ func (pm *pubsubMiddleware) Subscribe(ctx context.Context, id string, topic stri
 	span.SetTag("topic", topic)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
-	pm.cancel = handler.Cancel
-	return pm.pubsub.Subscribe(ctx, id, topic, pm.handle(ctx, handler))
+	h := &traceHandler{
+		handler: handler,
+		tracer:  pm.tracer,
+		ctx:     ctx,
+	}
+	return pm.pubsub.Subscribe(ctx, id, topic, h)
 }
 
 // Unsubscribe implements messaging.PubSub
@@ -53,28 +56,25 @@ func (pm *pubsubMiddleware) Unsubscribe(ctx context.Context, id string, topic st
 	span.SetTag("subscriber", id)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
-	pm.cancel()
 	return pm.pubsub.Unsubscribe(ctx, id, topic)
 }
 
-func (pm *pubsubMiddleware) handle(ctx context.Context, h messaging.MessageHandler) handleFunc {
-	return func(msg *messaging.Message) error {
-		span, _ := opentracing.StartSpanFromContextWithTracer(ctx, pm.tracer, handleOp, ext.SpanKindConsumer)
-		ext.MessageBusDestination.Set(span, msg.Subtopic)
-		span.SetTag("publisher", msg.Publisher)
-		span.SetTag("protocol", msg.Protocol)
-		span.SetTag("channel", msg.Channel)
-		defer span.Finish()
-		return h.Handle(msg)
-	}
+type traceHandler struct {
+	handler messaging.MessageHandler
+	tracer  opentracing.Tracer
+	ctx     context.Context
 }
 
-type handleFunc func(msg *messaging.Message) error
-
-func (h handleFunc) Handle(msg *messaging.Message) error {
-	return h(msg)
+func (h *traceHandler) Handle(msg *messaging.Message) error {
+	span, _ := opentracing.StartSpanFromContextWithTracer(h.ctx, h.tracer, handleOp, ext.SpanKindConsumer)
+	ext.MessageBusDestination.Set(span, msg.Subtopic)
+	span.SetTag("publisher", msg.Publisher)
+	span.SetTag("protocol", msg.Protocol)
+	span.SetTag("channel", msg.Channel)
+	defer span.Finish()
+	return h.handler.Handle(msg)
 }
 
-func (h handleFunc) Cancel() error {
-	return nil
+func (h *traceHandler) Cancel() error {
+	return h.handler.Cancel()
 }
