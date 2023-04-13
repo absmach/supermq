@@ -20,6 +20,7 @@ type pubsubMiddleware struct {
 	publisherMiddleware
 	pubsub messaging.PubSub
 	tracer opentracing.Tracer
+	cancel func() error
 }
 
 func NewPubSub(pubsub messaging.PubSub, tracer opentracing.Tracer) messaging.PubSub {
@@ -41,6 +42,7 @@ func (pm *pubsubMiddleware) Subscribe(ctx context.Context, id string, topic stri
 	span.SetTag("topic", topic)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
+	pm.cancel = handler.Cancel
 	return pm.pubsub.Subscribe(ctx, id, topic, pm.handle(ctx, handler))
 }
 
@@ -51,6 +53,7 @@ func (pm *pubsubMiddleware) Unsubscribe(ctx context.Context, id string, topic st
 	span.SetTag("subscriber", id)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
+	pm.cancel()
 	return pm.pubsub.Unsubscribe(ctx, id, topic)
 }
 
