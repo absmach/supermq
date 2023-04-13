@@ -118,7 +118,6 @@ func queryDB(fluxQuery string) (int, error) {
 }
 
 func TestSaveSenml(t *testing.T) {
-	// Testing both async and sync
 	syncRepo := writer.NewSync(client, repoCfg)
 	asyncRepo := writer.NewAsync(client, repoCfg)
 
@@ -139,6 +138,7 @@ func TestSaveSenml(t *testing.T) {
 		},
 	}
 
+	// Test async
 	for _, tc := range cases {
 		err := resetBucket()
 		assert.Nil(t, err, fmt.Sprintf("Cleaning data from InfluxDB expected to succeed: %s.\n", err))
@@ -178,28 +178,66 @@ func TestSaveSenml(t *testing.T) {
 			msgs = append(msgs, msg)
 		}
 
-		// Test async
-		errs := make(chan error, 1)
-		asyncRepo.ConsumeAsync(msgs, errs)
+		errs := asyncRepo.Errors()
+		asyncRepo.ConsumeAsync(msgs)
 		err = <-errs
 		assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 
 		count, err := queryDB(rowCountSenml)
 		assert.Nil(t, err, fmt.Sprintf("Querying InfluxDB to retrieve data expected to succeed: %s.\n", err))
 		assert.Equal(t, tc.expectedSize, count, fmt.Sprintf("Expected to have %d messages saved, found %d instead.\n", tc.expectedSize, count))
+	}
 
-		// TestSync
+	// TestSync
+	for _, tc := range cases {
+		err := resetBucket()
+		assert.Nil(t, err, fmt.Sprintf("Cleaning data from InfluxDB expected to succeed: %s.\n", err))
+		now := time.Now().UnixNano()
+		var msgs []senml.Message
+
+		chanID, err := idProvider.ID()
+		assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
+		pubID, err := idProvider.ID()
+		assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
+		for i := 0; i < tc.msgsNum; i++ {
+			msg := senml.Message{
+				Channel:    chanID,
+				Publisher:  pubID,
+				Protocol:   "http",
+				Name:       "test name",
+				Unit:       "km",
+				UpdateTime: 5456565466,
+			}
+			// Mix possible values as well as value sum.
+			count := i % valueFields
+			switch count {
+			case 0:
+				msg.Subtopic = subtopic
+				msg.Value = &v
+			case 1:
+				msg.BoolValue = &boolV
+			case 2:
+				msg.StringValue = &stringV
+			case 3:
+				msg.DataValue = &dataV
+			case 4:
+				msg.Sum = &sum
+			}
+
+			msg.Time = float64(now)/float64(1e9) - float64(i)
+			msgs = append(msgs, msg)
+		}
+
 		err = syncRepo.ConsumeBlocking(msgs)
 		assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 
-		count, err = queryDB(rowCountSenml)
+		count, err := queryDB(rowCountSenml)
 		assert.Nil(t, err, fmt.Sprintf("Querying InfluxDB to retrieve data expected to succeed: %s.\n", err))
 		assert.Equal(t, tc.expectedSize, count, fmt.Sprintf("Expected to have %d messages saved, found %d instead.\n", tc.expectedSize, count))
 	}
 }
 
 func TestSaveJSON(t *testing.T) {
-	// Testing both async and sync
 	asyncRepo := writer.NewAsync(client, repoCfg)
 	syncRepo := writer.NewSync(client, repoCfg)
 
@@ -290,13 +328,14 @@ func TestSaveJSON(t *testing.T) {
 			err:  json.ErrInvalidKey,
 		},
 	}
+
+	// Test Async
 	for _, tc := range cases {
 		err := resetBucket()
 		assert.Nil(t, err, fmt.Sprintf("Cleaning data from InfluxDB expected to succeed: %s.\n", err))
 
-		// Test Async
-		errs := make(chan error, 1)
-		asyncRepo.ConsumeAsync(msgs, errs)
+		errs := asyncRepo.Errors()
+		asyncRepo.ConsumeAsync(msgs)
 		err = <-errs
 		switch err {
 		case nil:
@@ -306,8 +345,13 @@ func TestSaveJSON(t *testing.T) {
 		default:
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s, got %s", tc.desc, tc.err, err))
 		}
+	}
 
-		// Test Sync
+	// Test Sync
+	for _, tc := range cases {
+		err := resetBucket()
+		assert.Nil(t, err, fmt.Sprintf("Cleaning data from InfluxDB expected to succeed: %s.\n", err))
+
 		switch err = syncRepo.ConsumeBlocking(tc.msgs); err {
 		case nil:
 			count, err := queryDB(rowCountJson)

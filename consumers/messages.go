@@ -84,8 +84,8 @@ func handleAsync(t transformers.Transformer, ac AsyncConsumer) handleFunc {
 			}
 		}
 
-		errs := make(chan error)
-		ac.ConsumeAsync(m, errs)
+		errs := ac.Errors()
+		ac.ConsumeAsync(m)
 		return <-errs
 	}
 }

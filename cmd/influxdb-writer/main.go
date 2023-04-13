@@ -9,11 +9,9 @@ import (
 	"log"
 	"os"
 
-	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/influxdb"
-	"github.com/mainflux/mainflux/internal"
 	influxDBClient "github.com/mainflux/mainflux/internal/clients/influxdb"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
@@ -74,7 +72,14 @@ func main() {
 	}
 	defer client.Close()
 
-	repo := newService(client, repocfg, logger)
+	repo := influxdb.NewAsync(client, repocfg)
+
+	go func(log mflog.Logger) {
+		errCh := repo.Errors()
+		for err := range errCh {
+			log.Error(err.Error())
+		}
+	}(logger)
 
 	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger, true); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to start InfluxDB writer: %s", err))
@@ -97,12 +102,4 @@ func main() {
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("InfluxDB reader service terminated: %s", err))
 	}
-}
-
-func newService(client influxdb2.Client, repocfg influxdb.RepoConfig, logger mflog.Logger) consumers.AsyncConsumer {
-	repo := influxdb.NewAsync(client, repocfg)
-	repo = api.AsyncLoggingMiddleware(repo, logger)
-	counter, latency := internal.MakeMetrics("influxdb", "message_writer")
-	repo = api.AsyncMetricsMiddleware(repo, counter, latency)
-	return repo
 }

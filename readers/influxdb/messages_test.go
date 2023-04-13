@@ -117,8 +117,8 @@ func TestReadSenml(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("failed to store message to InfluxDB: %s", err))
 
 	// Test async
-	errs := make(chan error, 1)
-	asyncWriter.ConsumeAsync(messages, errs)
+	errs := asyncWriter.Errors()
+	asyncWriter.ConsumeAsync(messages)
 	err = <-errs
 	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 
@@ -449,8 +449,8 @@ func TestReadJSON(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("failed to store message to InfluxDB: %s", err))
 
 	// Test async
-	errs := make(chan error, 1)
-	asyncWriter.ConsumeAsync(messages1, errs)
+	errs := asyncWriter.Errors()
+	asyncWriter.ConsumeAsync(messages1)
 	err = <-errs
 	require.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 
@@ -484,7 +484,7 @@ func TestReadJSON(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("failed to store message to InfluxDB: %s", err))
 
 	// Test async
-	asyncWriter.ConsumeAsync(messages2, errs)
+	asyncWriter.ConsumeAsync(messages2)
 	err = <-errs
 	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 

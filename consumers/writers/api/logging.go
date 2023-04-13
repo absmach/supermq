@@ -13,38 +13,42 @@ import (
 	log "github.com/mainflux/mainflux/logger"
 )
 
-var _ consumers.AsyncConsumer = (*asyncLoggingMiddleware)(nil)
+// var _ consumers.AsyncConsumer = (*asyncLoggingMiddleware)(nil)
 var _ consumers.SyncConsumer = (*syncLoggingMiddleware)(nil)
 
-type asyncLoggingMiddleware struct {
-	logger        log.Logger
-	asyncConsumer consumers.AsyncConsumer
-}
+// type asyncLoggingMiddleware struct {
+// 	logger        log.Logger
+// 	asyncConsumer consumers.AsyncConsumer
+// }
 
-// AsyncLoggingMiddleware adds logging facilities to the adapter.
-func AsyncLoggingMiddleware(asyncConsumer consumers.AsyncConsumer, logger log.Logger) consumers.AsyncConsumer {
-	return &asyncLoggingMiddleware{
-		logger:        logger,
-		asyncConsumer: asyncConsumer,
-	}
-}
+// // AsyncLoggingMiddleware adds logging facilities to the adapter.
+// func AsyncLoggingMiddleware(asyncConsumer consumers.AsyncConsumer, logger log.Logger) consumers.AsyncConsumer {
+// 	return &asyncLoggingMiddleware{
+// 		logger:        logger,
+// 		asyncConsumer: asyncConsumer,
+// 	}
+// }
 
-func (alm *asyncLoggingMiddleware) ConsumeAsync(msgs interface{}, errs chan<- error) {
-	ch := make(chan error)
-	var err error
+// func (alm *asyncLoggingMiddleware) ConsumeAsync(msgs interface{}) {
+// 	ch := alm.asyncConsumer.Errors()
+// 	var err error
 
-	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method consume took %s to complete", time.Since(begin))
-		if err != nil {
-			alm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
-			return
-		}
-		alm.logger.Info(fmt.Sprintf("%s without errors.", message))
-	}(time.Now())
+// 	defer func(begin time.Time) {
+// 		message := fmt.Sprintf("Method ConsumeAsync took %s to complete", time.Since(begin))
+// 		if err != nil {
+// 			alm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+// 			return
+// 		}
+// 		alm.logger.Info(fmt.Sprintf("%s without errors.", message))
+// 	}(time.Now())
 
-	go alm.asyncConsumer.ConsumeAsync(msgs, ch)
-	err = <-ch
-}
+// 	go alm.asyncConsumer.ConsumeAsync(msgs)
+// 	err = <-ch
+// }
+
+// func (alm *asyncLoggingMiddleware) Errors() <-chan error {
+// 	return alm.asyncConsumer.Errors()
+// }
 
 type syncLoggingMiddleware struct {
 	logger       log.Logger

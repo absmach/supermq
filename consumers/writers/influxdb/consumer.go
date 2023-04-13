@@ -33,6 +33,7 @@ type RepoConfig struct {
 type influxRepo struct {
 	client           influxdb2.Client
 	cfg              RepoConfig
+	errCh            chan error
 	writeAPI         api.WriteAPI
 	writeAPIBlocking api.WriteAPIBlocking
 }
@@ -51,12 +52,13 @@ func NewAsync(client influxdb2.Client, config RepoConfig) consumers.AsyncConsume
 	return &influxRepo{
 		client:           client,
 		cfg:              config,
+		errCh:            make(chan error, 1),
 		writeAPI:         client.WriteAPI(config.Org, config.Bucket),
 		writeAPIBlocking: nil,
 	}
 }
 
-func (repo *influxRepo) ConsumeAsync(message interface{}, errs chan<- error) {
+func (repo *influxRepo) ConsumeAsync(message interface{}) {
 	var err error
 	var pts []*write.Point
 	switch m := message.(type) {
@@ -66,7 +68,7 @@ func (repo *influxRepo) ConsumeAsync(message interface{}, errs chan<- error) {
 		pts, err = repo.senmlPoints(m)
 	}
 	if err != nil {
-		errs <- err
+		repo.errCh <- err
 		return
 	}
 
@@ -77,9 +79,9 @@ func (repo *influxRepo) ConsumeAsync(message interface{}, errs chan<- error) {
 		for {
 			select {
 			case err := <-repo.writeAPI.Errors():
-				errs <- err
+				repo.errCh <- err
 			case <-done:
-				errs <- nil // pass nil error to the error channel
+				repo.errCh <- nil // pass nil error to the error channel
 				return
 			}
 		}
@@ -90,6 +92,13 @@ func (repo *influxRepo) ConsumeAsync(message interface{}, errs chan<- error) {
 	}
 
 	repo.writeAPI.Flush()
+}
+
+func (repo *influxRepo) Errors() <-chan error {
+	if repo.errCh != nil {
+		return repo.errCh
+	}
+	panic("unimplemented")
 }
 
 func (repo *influxRepo) ConsumeBlocking(message interface{}) error {
