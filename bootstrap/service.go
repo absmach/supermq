@@ -273,8 +273,7 @@ func (bs bootstrapService) Remove(ctx context.Context, token, id string) error {
 func (bs bootstrapService) Bootstrap(ctx context.Context, externalKey, externalID string, secure bool) (Config, error) {
 	cfg, err := bs.configs.RetrieveByExternalID(externalID)
 	if err != nil {
-		err = errors.Wrap(ErrBootstrap, err)
-		return cfg, err
+		return cfg, errors.Wrap(ErrBootstrap, err)
 	}
 	if secure {
 		dec, err := bs.dec(externalKey)

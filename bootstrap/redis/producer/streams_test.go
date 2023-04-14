@@ -460,8 +460,8 @@ func TestBootstrap(t *testing.T) {
 
 	lastID := "0"
 	for _, tc := range cases {
-		_, errr := svc.Bootstrap(context.Background(), tc.externalKey, tc.externalID, false)
-		assert.True(t, errors.Contains(errr, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, errr))
+		_, err = svc.Bootstrap(context.Background(), tc.externalKey, tc.externalID, false)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 
 		streams := redisClient.XRead(context.Background(), &redis.XReadArgs{
 			Streams: []string{streamID, lastID},

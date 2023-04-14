@@ -4,7 +4,7 @@ GO_VERSION=1.19.4
 PROTOC_VERSION=21.12
 PROTOC_GEN_VERSION=v1.28.1
 PROTOC_GRPC_VERSION=v1.2.0
-GOLANGCI_LINT_VERSION=v1.51.1
+GOLANGCI_LINT_VERSION=v1.52.1
 
 function version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
 
