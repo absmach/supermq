@@ -44,10 +44,11 @@ func createSpan(ctx context.Context, operation, destination, topic, pubsub strin
 	if destination != "" {
 		ext.MessageBusDestination.Set(span, destination)
 	}
-	if operation == subscribeOP || operation == handleOp {
-		span.SetTag("subscriber", pubsub)
-	} else {
+	switch operation {
+	case publishOP:
 		span.SetTag("publisher", pubsub)
+	default:
+		span.SetTag("subscriber", pubsub)
 	}
 	span.SetTag("topic", topic)
 	return span
