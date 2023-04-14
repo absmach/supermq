@@ -10,7 +10,7 @@ import (
 
 var _ http.Service = (*serviceMiddleware)(nil)
 
-const publish_op = "http_publish"
+const publish_op = "publish"
 
 type serviceMiddleware struct {
 	tracer opentracing.Tracer

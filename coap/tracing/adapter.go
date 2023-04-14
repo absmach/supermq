@@ -11,9 +11,9 @@ import (
 var _ coap.Service = (*tracingServiceMiddleware)(nil)
 
 const (
-	publish_op     = "coap_publish"
-	subscribe_op   = "coap_subscirbe"
-	unsubscribe_op = "coap_unsubscribe"
+	publish_op     = "publish"
+	subscribe_op   = "subscirbe"
+	unsubscribe_op = "unsubscribe"
 )
 
 type tracingServiceMiddleware struct {
