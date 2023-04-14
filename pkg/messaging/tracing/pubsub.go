@@ -72,7 +72,7 @@ func (h *traceHandler) Handle(msg *messaging.Message) error {
 	ext.MessageBusDestination.Set(span, msg.Subtopic)
 	span.SetTag("publisher", msg.Publisher)
 	span.SetTag("protocol", msg.Protocol)
-	span.SetTag("channel", msg.Channel)
+	span.SetTag("topic", msg.Channel)
 	defer span.Finish()
 	return h.handler.Handle(msg)
 }

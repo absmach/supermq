@@ -32,7 +32,6 @@ func (pm *publisherMiddleware) Publish(ctx context.Context, topic string, msg *m
 	ext.MessageBusDestination.Set(span, msg.Subtopic)
 	span.SetTag("publisher", msg.Publisher)
 	span.SetTag("protocol", msg.Protocol)
-	span.SetTag("channel", msg.Channel)
 	span.SetTag("topic", topic)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
