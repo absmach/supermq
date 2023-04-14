@@ -5,7 +5,6 @@ import (
 
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 )
 
 const (
@@ -36,10 +35,7 @@ func NewPubSub(pubsub messaging.PubSub, tracer opentracing.Tracer) messaging.Pub
 
 // Subscribe implements messaging.PubSub
 func (pm *pubsubMiddleware) Subscribe(ctx context.Context, id string, topic string, handler messaging.MessageHandler) error {
-	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, pm.tracer, subscribeOP)
-	ext.MessageBusDestination.Set(span, topic)
-	span.SetTag("subscriber", id)
-	span.SetTag("topic", topic)
+	span := createSpan(ctx, subscribeOP, topic, topic, id, pm.tracer)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 	h := &traceHandler{
@@ -52,9 +48,7 @@ func (pm *pubsubMiddleware) Subscribe(ctx context.Context, id string, topic stri
 
 // Unsubscribe implements messaging.PubSub
 func (pm *pubsubMiddleware) Unsubscribe(ctx context.Context, id string, topic string) error {
-	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, pm.tracer, unsubscribeOp)
-	span.SetTag("topic", topic)
-	span.SetTag("subscriber", id)
+	span := createSpan(ctx, unsubscribeOp, "", topic, id, pm.tracer)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 	return pm.pubsub.Unsubscribe(ctx, id, topic)
@@ -68,10 +62,7 @@ type traceHandler struct {
 
 // Handle tracing middleware handle for message handler
 func (h *traceHandler) Handle(msg *messaging.Message) error {
-	span, _ := opentracing.StartSpanFromContextWithTracer(h.ctx, h.tracer, handleOp, ext.SpanKindConsumer)
-	ext.MessageBusDestination.Set(span, msg.Subtopic)
-	span.SetTag("publisher", msg.Publisher)
-	span.SetTag("topic", msg.Channel)
+	span := createSpan(h.ctx, handleOp, msg.Subtopic, msg.Channel, msg.Publisher, h.tracer)
 	defer span.Finish()
 	return h.handler.Handle(msg)
 }

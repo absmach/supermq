@@ -67,7 +67,7 @@ func main() {
 	defer traceCloser.Close()
 
 	// Coap tracer
-	coapTracer, coapTraceCloser, err := jaegerClient.NewTracer("coap_adapter", cfg.JaegerURL)
+	coapTracer, coapTraceCloser, err := jaegerClient.NewTracer(svcName, cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
 	}

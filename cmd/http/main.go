@@ -73,7 +73,7 @@ func main() {
 
 	defer pub.Close()
 
-	tracer, closer, err := jaegerClient.NewTracer("http_adapter", cfg.JaegerURL)
+	tracer, closer, err := jaegerClient.NewTracer(svcName, cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
 	}

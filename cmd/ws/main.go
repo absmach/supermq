@@ -68,7 +68,7 @@ func main() {
 	defer traceCloser.Close()
 
 	// ws tracer
-	wsTracer, wsTraceCloser, err := jaegerClient.NewTracer("ws_adapter", cfg.JaegerURL)
+	wsTracer, wsTraceCloser, err := jaegerClient.NewTracer(svcName, cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
 	}

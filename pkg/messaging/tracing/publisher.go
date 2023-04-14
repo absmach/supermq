@@ -28,10 +28,7 @@ func New(publisher messaging.Publisher, tracer opentracing.Tracer) messaging.Pub
 
 // Publish implements messaging.Publisher
 func (pm *publisherMiddleware) Publish(ctx context.Context, topic string, msg *messaging.Message) error {
-	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, pm.tracer, publishOP)
-	ext.MessageBusDestination.Set(span, msg.Subtopic)
-	span.SetTag("publisher", msg.Publisher)
-	span.SetTag("topic", topic)
+	span := createSpan(ctx, publishOP, msg.Subtopic, topic, msg.Publisher, pm.tracer)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 	return pm.publisher.Publish(ctx, topic, msg)
@@ -40,4 +37,14 @@ func (pm *publisherMiddleware) Publish(ctx context.Context, topic string, msg *m
 // Close implements messaging.Publisher
 func (pm *publisherMiddleware) Close() error {
 	return pm.publisher.Close()
+}
+
+func createSpan(ctx context.Context, operation, destination, topic, publisher string, tracer opentracing.Tracer) opentracing.Span {
+	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, tracer, operation)
+	if destination != "" {
+		ext.MessageBusDestination.Set(span, destination)
+	}
+	span.SetTag("publisher", publisher)
+	span.SetTag("topic", topic)
+	return span
 }
