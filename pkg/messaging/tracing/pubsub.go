@@ -71,7 +71,6 @@ func (h *traceHandler) Handle(msg *messaging.Message) error {
 	span, _ := opentracing.StartSpanFromContextWithTracer(h.ctx, h.tracer, handleOp, ext.SpanKindConsumer)
 	ext.MessageBusDestination.Set(span, msg.Subtopic)
 	span.SetTag("publisher", msg.Publisher)
-	span.SetTag("protocol", msg.Protocol)
 	span.SetTag("topic", msg.Channel)
 	defer span.Finish()
 	return h.handler.Handle(msg)

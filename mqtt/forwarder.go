@@ -21,7 +21,7 @@ const (
 type Forwarder interface {
 	// Forward subscribes to the Subscriber and
 	// publishes messages using provided Publisher.
-	Forward(id string, sub messaging.Subscriber, pub messaging.Publisher) error
+	Forward(ctx context.Context, id string, sub messaging.Subscriber, pub messaging.Publisher) error
 }
 
 type forwarder struct {
@@ -37,11 +37,11 @@ func NewForwarder(topic string, logger log.Logger) Forwarder {
 	}
 }
 
-func (f forwarder) Forward(id string, sub messaging.Subscriber, pub messaging.Publisher) error {
-	return sub.Subscribe(context.Background(), id, f.topic, handle(pub, f.logger))
+func (f forwarder) Forward(ctx context.Context, id string, sub messaging.Subscriber, pub messaging.Publisher) error {
+	return sub.Subscribe(ctx, id, f.topic, handle(ctx, pub, f.logger))
 }
 
-func handle(pub messaging.Publisher, logger log.Logger) handleFunc {
+func handle(ctx context.Context, pub messaging.Publisher, logger log.Logger) handleFunc {
 	return func(msg *messaging.Message) error {
 		if msg.Protocol == protocol {
 			return nil
@@ -53,7 +53,6 @@ func handle(pub messaging.Publisher, logger log.Logger) handleFunc {
 			topic += "/" + strings.ReplaceAll(msg.Subtopic, ".", "/")
 		}
 		go func() {
-			ctx := context.TODO()
 			if err := pub.Publish(ctx, topic, msg); err != nil {
 				logger.Warn(fmt.Sprintf("Failed to forward message: %s", err))
 			}

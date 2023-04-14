@@ -96,7 +96,7 @@ func main() {
 	mpub = tracing.New(mpub, tracer)
 
 	fwd := mqtt.NewForwarder(brokers.SubjectAllChannels, logger)
-	if err := fwd.Forward(svcName, nps, mpub); err != nil {
+	if err := fwd.Forward(ctx, svcName, nps, mpub); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to forward message broker messages: %s", err))
 	}
 
