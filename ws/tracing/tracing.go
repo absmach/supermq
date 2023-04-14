@@ -11,9 +11,9 @@ import (
 var _ ws.Service = (*tracingMiddleware)(nil)
 
 const (
-	publish_op     = "publish"
-	subscribe_op   = "subscribe"
-	unsubscribe_op = "unsubscribe"
+	publish_op     = "publish_op"
+	subscribe_op   = "subscribe_op"
+	unsubscribe_op = "unsubscribe_op"
 )
 
 type tracingMiddleware struct {

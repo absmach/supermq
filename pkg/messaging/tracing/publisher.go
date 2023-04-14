@@ -39,12 +39,16 @@ func (pm *publisherMiddleware) Close() error {
 	return pm.publisher.Close()
 }
 
-func createSpan(ctx context.Context, operation, destination, topic, publisher string, tracer opentracing.Tracer) opentracing.Span {
+func createSpan(ctx context.Context, operation, destination, topic, pubsub string, tracer opentracing.Tracer) opentracing.Span {
 	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, tracer, operation)
 	if destination != "" {
 		ext.MessageBusDestination.Set(span, destination)
 	}
-	span.SetTag("publisher", publisher)
+	if operation == subscribeOP || operation == handleOp {
+		span.SetTag("subscriber", pubsub)
+	} else {
+		span.SetTag("publisher", pubsub)
+	}
 	span.SetTag("topic", topic)
 	return span
 }
