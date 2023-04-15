@@ -77,7 +77,9 @@ func main() {
 	go func(log mflog.Logger) {
 		errCh := repo.Errors()
 		for err := range errCh {
-			log.Error(err.Error())
+			if err != nil {
+				log.Error(err.Error())
+			}
 		}
 	}(logger)
 
