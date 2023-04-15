@@ -99,8 +99,8 @@ func main() {
 
 func newService(session *gocql.Session, logger mflog.Logger) consumers.SyncConsumer {
 	repo := cassandra.New(session)
-	repo = api.SyncLoggingMiddleware(repo, logger)
+	repo = api.LoggingMiddleware(repo, logger)
 	counter, latency := internal.MakeMetrics("cassandra", "message_writer")
-	repo = api.SyncMetricsMiddleware(repo, counter, latency)
+	repo = api.MetricsMiddleware(repo, counter, latency)
 	return repo
 }

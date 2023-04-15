@@ -89,8 +89,8 @@ func main() {
 
 func newService(db *mongo.Database, logger mflog.Logger) consumers.SyncConsumer {
 	repo := mongodb.New(db)
-	repo = api.SyncLoggingMiddleware(repo, logger)
+	repo = api.LoggingMiddleware(repo, logger)
 	counter, latency := internal.MakeMetrics("mongodb", "message_writer")
-	repo = api.SyncMetricsMiddleware(repo, counter, latency)
+	repo = api.MetricsMiddleware(repo, counter, latency)
 	return repo
 }

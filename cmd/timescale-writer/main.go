@@ -91,8 +91,8 @@ func main() {
 
 func newService(db *sqlx.DB, logger mflog.Logger) consumers.SyncConsumer {
 	svc := timescale.New(db)
-	svc = api.SyncLoggingMiddleware(svc, logger)
+	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics("timescale", "message_writer")
-	svc = api.SyncMetricsMiddleware(svc, counter, latency)
+	svc = api.MetricsMiddleware(svc, counter, latency)
 	return svc
 }

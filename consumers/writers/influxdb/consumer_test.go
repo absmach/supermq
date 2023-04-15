@@ -117,8 +117,7 @@ func queryDB(fluxQuery string) (int, error) {
 	return rowCount, nil
 }
 
-func TestSaveSenml(t *testing.T) {
-	syncRepo := writer.NewSync(client, repoCfg)
+func TestAsyncSaveSenml(t *testing.T) {
 	asyncRepo := writer.NewAsync(client, repoCfg)
 
 	cases := []struct {
@@ -138,7 +137,6 @@ func TestSaveSenml(t *testing.T) {
 		},
 	}
 
-	// Test async
 	for _, tc := range cases {
 		err := resetBucket()
 		assert.Nil(t, err, fmt.Sprintf("Cleaning data from InfluxDB expected to succeed: %s.\n", err))
@@ -187,8 +185,28 @@ func TestSaveSenml(t *testing.T) {
 		assert.Nil(t, err, fmt.Sprintf("Querying InfluxDB to retrieve data expected to succeed: %s.\n", err))
 		assert.Equal(t, tc.expectedSize, count, fmt.Sprintf("Expected to have %d messages saved, found %d instead.\n", tc.expectedSize, count))
 	}
+}
 
-	// TestSync
+func TestBlockingSaveSenml(t *testing.T) {
+	syncRepo := writer.NewSync(client, repoCfg)
+
+	cases := []struct {
+		desc         string
+		msgsNum      int
+		expectedSize int
+	}{
+		{
+			desc:         "save a single message",
+			msgsNum:      1,
+			expectedSize: 1,
+		},
+		{
+			desc:         "save a batch of messages",
+			msgsNum:      streamsSize,
+			expectedSize: streamsSize,
+		},
+	}
+
 	for _, tc := range cases {
 		err := resetBucket()
 		assert.Nil(t, err, fmt.Sprintf("Cleaning data from InfluxDB expected to succeed: %s.\n", err))
@@ -237,8 +255,116 @@ func TestSaveSenml(t *testing.T) {
 	}
 }
 
-func TestSaveJSON(t *testing.T) {
+func TestAsyncSaveJSON(t *testing.T) {
 	asyncRepo := writer.NewAsync(client, repoCfg)
+
+	chanID, err := idProvider.ID()
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	pubID, err := idProvider.ID()
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	msg := json.Message{
+		Channel:   chanID,
+		Publisher: pubID,
+		Created:   time.Now().UnixNano(),
+		Subtopic:  "subtopic/format/some_json",
+		Protocol:  "mqtt",
+		Payload: map[string]interface{}{
+			"field_1": 123,
+			"field_2": "value",
+			"field_3": false,
+			"field_4": 12.344,
+			"field_5": map[string]interface{}{
+				"field_1": "value",
+				"field_2": 42,
+			},
+		},
+	}
+
+	invalidKeySepMsg := msg
+	invalidKeySepMsg.Payload = map[string]interface{}{
+		"field_1": 123,
+		"field_2": "value",
+		"field_3": false,
+		"field_4": 12.344,
+		"field_5": map[string]interface{}{
+			"field_1": "value",
+			"field_2": 42,
+		},
+		"field_6/field_7": "value",
+	}
+	invalidKeyNameMsg := msg
+	invalidKeyNameMsg.Payload = map[string]interface{}{
+		"field_1": 123,
+		"field_2": "value",
+		"field_3": false,
+		"field_4": 12.344,
+		"field_5": map[string]interface{}{
+			"field_1": "value",
+			"field_2": 42,
+		},
+		"publisher": "value",
+	}
+
+	now := time.Now().UnixNano()
+	msgs := json.Messages{
+		Format: "some_json",
+	}
+	invalidKeySepMsgs := json.Messages{
+		Format: "some_json",
+	}
+	invalidKeyNameMsgs := json.Messages{
+		Format: "some_json",
+	}
+
+	for i := 0; i < streamsSize; i++ {
+		msg.Created = now
+		msgs.Data = append(msgs.Data, msg)
+		invalidKeySepMsgs.Data = append(invalidKeySepMsgs.Data, invalidKeySepMsg)
+		invalidKeyNameMsgs.Data = append(invalidKeyNameMsgs.Data, invalidKeyNameMsg)
+	}
+
+	cases := []struct {
+		desc string
+		msgs json.Messages
+		err  error
+	}{
+		{
+			desc: "consume valid json messages",
+			msgs: msgs,
+			err:  nil,
+		},
+		{
+			desc: "consume invalid json messages containing invalid key separator",
+			msgs: invalidKeySepMsgs,
+			err:  json.ErrInvalidKey,
+		},
+		{
+			desc: "consume invalid json messages containing invalid key name",
+			msgs: invalidKeySepMsgs,
+			err:  json.ErrInvalidKey,
+		},
+	}
+
+	for _, tc := range cases {
+		err := resetBucket()
+		assert.Nil(t, err, fmt.Sprintf("Cleaning data from InfluxDB expected to succeed: %s.\n", err))
+
+		errs := asyncRepo.Errors()
+		asyncRepo.ConsumeAsync(msgs)
+		err = <-errs
+		switch err {
+		case nil:
+			count, err := queryDB(rowCountJson)
+			assert.Nil(t, err, fmt.Sprintf("Querying InfluxDB to retrieve data expected to succeed: %s.\n", err))
+			assert.Equal(t, streamsSize, count, fmt.Sprintf("Expected to have %d messages saved, found %d instead.\n", streamsSize, count))
+		default:
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s, got %s", tc.desc, tc.err, err))
+		}
+	}
+}
+
+func TestBlockingSaveJSON(t *testing.T) {
 	syncRepo := writer.NewSync(client, repoCfg)
 
 	chanID, err := idProvider.ID()
@@ -329,25 +455,6 @@ func TestSaveJSON(t *testing.T) {
 		},
 	}
 
-	// Test Async
-	for _, tc := range cases {
-		err := resetBucket()
-		assert.Nil(t, err, fmt.Sprintf("Cleaning data from InfluxDB expected to succeed: %s.\n", err))
-
-		errs := asyncRepo.Errors()
-		asyncRepo.ConsumeAsync(msgs)
-		err = <-errs
-		switch err {
-		case nil:
-			count, err := queryDB(rowCountJson)
-			assert.Nil(t, err, fmt.Sprintf("Querying InfluxDB to retrieve data expected to succeed: %s.\n", err))
-			assert.Equal(t, streamsSize, count, fmt.Sprintf("Expected to have %d messages saved, found %d instead.\n", streamsSize, count))
-		default:
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s, got %s", tc.desc, tc.err, err))
-		}
-	}
-
-	// Test Sync
 	for _, tc := range cases {
 		err := resetBucket()
 		assert.Nil(t, err, fmt.Sprintf("Cleaning data from InfluxDB expected to succeed: %s.\n", err))
