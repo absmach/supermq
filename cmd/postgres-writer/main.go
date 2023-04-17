@@ -13,7 +13,6 @@ import (
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	writerPg "github.com/mainflux/mainflux/consumers/writers/postgres"
-	"github.com/mainflux/mainflux/consumers/writers/tracing"
 	"github.com/mainflux/mainflux/internal"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
@@ -106,7 +105,6 @@ func main() {
 
 func newService(db *sqlx.DB, logger mflog.Logger) consumers.BlockingConsumer {
 	svc := writerPg.New(db)
-	svc = tracing.New(tracer, svc)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics("postgres", "message_writer")
 	svc = api.MetricsMiddleware(svc, counter, latency)

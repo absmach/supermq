@@ -12,7 +12,6 @@ import (
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/mongodb"
-	"github.com/mainflux/mainflux/consumers/writers/tracing"
 	"github.com/mainflux/mainflux/internal"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	mongoClient "github.com/mainflux/mainflux/internal/clients/mongo"
@@ -104,7 +103,6 @@ func main() {
 
 func newService(db *mongo.Database, logger mflog.Logger) consumers.BlockingConsumer {
 	repo := mongodb.New(db)
-	repo = tracing.New(tracer, repo)
 	repo = api.LoggingMiddleware(repo, logger)
 	counter, latency := internal.MakeMetrics("mongodb", "message_writer")
 	repo = api.MetricsMiddleware(repo, counter, latency)
