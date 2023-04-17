@@ -67,7 +67,7 @@ func main() {
 	defer traceCloser.Close()
 
 	// Create new cassandra-writer repo
-	repo := newService(csdSession, logger, tracer)
+	repo := newService(csdSession, logger)
 
 	// Create new pub sub broker
 	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)

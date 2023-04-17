@@ -72,7 +72,7 @@ func main() {
 	}
 	defer db.Close()
 
-	repo := newService(db, logger, tracer)
+	repo := newService(db, logger)
 
 	if err = consumers.Start(ctx, svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to create Postgres writer: %s", err))

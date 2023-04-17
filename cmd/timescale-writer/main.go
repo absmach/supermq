@@ -66,7 +66,7 @@ func main() {
 	}
 	defer traceCloser.Close()
 
-	repo := newService(db, logger, tracer)
+	repo := newService(db, logger)
 
 	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
 	if err != nil {

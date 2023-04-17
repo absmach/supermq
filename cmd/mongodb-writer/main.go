@@ -70,7 +70,7 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to setup mongo database : %s", err))
 	}
 
-	repo := newService(db, logger, tracer)
+	repo := newService(db, logger)
 
 	if err := consumers.Start(ctx, svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to start MongoDB writer: %s", err))
