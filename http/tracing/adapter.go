@@ -10,7 +10,7 @@ import (
 
 var _ http.Service = (*serviceMiddleware)(nil)
 
-const publish_op = "publish_op"
+const publishOP = "publishOP"
 
 type serviceMiddleware struct {
 	tracer opentracing.Tracer
@@ -25,13 +25,13 @@ func New(tracer opentracing.Tracer, svc http.Service) http.Service {
 	}
 }
 
-// Publish implements http.Service
+// Publish trace http publish operations
 func (sm *serviceMiddleware) Publish(ctx context.Context, token string, msg *messaging.Message) error {
 	var spanCtx opentracing.SpanContext = nil
 	if httpSpan := opentracing.SpanFromContext(ctx); httpSpan != nil {
 		spanCtx = httpSpan.Context()
 	}
-	span := sm.tracer.StartSpan(publish_op, opentracing.ChildOf(spanCtx))
+	span := sm.tracer.StartSpan(publishOP, opentracing.ChildOf(spanCtx))
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 	return sm.svc.Publish(ctx, token, msg)

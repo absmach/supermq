@@ -7,7 +7,7 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 )
 
-const notifierOp = "notifier_op"
+const notifierOP = "notifier_op"
 
 var _ notifiers.Notifier = (*serviceMiddleware)(nil)
 
@@ -16,7 +16,7 @@ type serviceMiddleware struct {
 	tracer opentracing.Tracer
 }
 
-// NewNotifier create new notifier tracing middleware service
+// NewNotifier creates new notifier tracing middleware service
 func NewNotifier(svc notifiers.Notifier, tracer opentracing.Tracer) notifiers.Notifier {
 	return &serviceMiddleware{
 		svc:    svc,
@@ -24,9 +24,9 @@ func NewNotifier(svc notifiers.Notifier, tracer opentracing.Tracer) notifiers.No
 	}
 }
 
-// Notify implements notifiers.Notifier
+// Notify traces notify operations
 func (sm *serviceMiddleware) Notify(from string, to []string, msg *messaging.Message) error {
-	span := sm.tracer.StartSpan(notifierOp, ext.SpanKindConsumer)
+	span := sm.tracer.StartSpan(notifierOP, ext.SpanKindConsumer)
 	ext.MessageBusDestination.Set(span, msg.Subtopic)
 	defer span.Finish()
 	return sm.svc.Notify(from, to, msg)

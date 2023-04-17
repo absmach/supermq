@@ -11,9 +11,9 @@ import (
 var _ ws.Service = (*tracingMiddleware)(nil)
 
 const (
-	publish_op     = "publish_op"
-	subscribe_op   = "subscribe_op"
-	unsubscribe_op = "unsubscribe_op"
+	publishOP     = "publish_op"
+	subscribeOP   = "subscribe_op"
+	unsubscribeOP = "unsubscribe_op"
 )
 
 type tracingMiddleware struct {
@@ -29,25 +29,25 @@ func New(tracer opentracing.Tracer, svc ws.Service) ws.Service {
 	}
 }
 
-// Publish implements ws.Service
+// Publish trace ws publish operations
 func (tm *tracingMiddleware) Publish(ctx context.Context, thingKey string, msg *messaging.Message) error {
-	span := tm.createSpan(ctx, publish_op)
+	span := tm.createSpan(ctx, publishOP)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 	return tm.svc.Publish(ctx, thingKey, msg)
 }
 
-// Subscribe implements ws.Service
+// Subscribe trace ws subscribe opertions
 func (tm *tracingMiddleware) Subscribe(ctx context.Context, thingKey string, chanID string, subtopic string, client *ws.Client) error {
-	span := tm.createSpan(ctx, subscribe_op)
+	span := tm.createSpan(ctx, subscribeOP)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 	return tm.svc.Subscribe(ctx, thingKey, chanID, subtopic, client)
 }
 
-// Unsubscribe implements ws.Service
+// Unsubscribe trace ws unsubscibe operations
 func (tm *tracingMiddleware) Unsubscribe(ctx context.Context, thingKey string, chanID string, subtopic string) error {
-	span := tm.createSpan(ctx, unsubscribe_op)
+	span := tm.createSpan(ctx, unsubscribeOP)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 	return tm.svc.Unsubscribe(ctx, thingKey, chanID, subtopic)

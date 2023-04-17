@@ -5,7 +5,6 @@ import (
 
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 )
 
 // traced ops
@@ -26,30 +25,28 @@ func New(publisher messaging.Publisher, tracer opentracing.Tracer) messaging.Pub
 	}
 }
 
-// Publish implements messaging.Publisher
+// Publish trace nats publish operations
 func (pm *publisherMiddleware) Publish(ctx context.Context, topic string, msg *messaging.Message) error {
-	span := createSpan(ctx, publishOP, msg.Subtopic, topic, msg.Publisher, pm.tracer)
+	span := createSpan(ctx, publishOP, topic, msg.Subtopic, msg.Publisher, pm.tracer)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 	return pm.publisher.Publish(ctx, topic, msg)
 }
 
-// Close implements messaging.Publisher
+// Close nats trace publisher middleware
 func (pm *publisherMiddleware) Close() error {
 	return pm.publisher.Close()
 }
 
-func createSpan(ctx context.Context, operation, destination, topic, pubsub string, tracer opentracing.Tracer) opentracing.Span {
+func createSpan(ctx context.Context, operation, topic, subTopic, thingID string, tracer opentracing.Tracer) opentracing.Span {
 	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, tracer, operation)
-	if destination != "" {
-		ext.MessageBusDestination.Set(span, destination)
-	}
 	switch operation {
 	case publishOP:
-		span.SetTag("publisher", pubsub)
+		span.SetTag("publisher", thingID)
 	default:
-		span.SetTag("subscriber", pubsub)
+		span.SetTag("subscriber", thingID)
 	}
 	span.SetTag("topic", topic)
+	span.SetTag("sub-topic", subTopic)
 	return span
 }
