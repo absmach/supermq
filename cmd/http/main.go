@@ -60,24 +60,17 @@ func main() {
 	defer tcHandler.Close()
 	logger.Info("Successfully connected to things grpc server " + tcHandler.Secure())
 
-	pbTracer, traceCloser, err := jaegerClient.NewTracer(svcName, cfg.JaegerURL)
-	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
-	}
-	defer traceCloser.Close()
-
-	pub, err := brokers.NewPublisher(cfg.BrokerURL, pbTracer)
-	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
-	}
-
-	defer pub.Close()
-
 	tracer, closer, err := jaegerClient.NewTracer(svcName, cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
 	}
 	defer closer.Close()
+
+	pub, err := brokers.NewPublisher(cfg.BrokerURL, tracer)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
+	}
+	defer pub.Close()
 
 	svc := newService(pub, tc, logger, tracer)
 

@@ -69,14 +69,8 @@ func main() {
 	// Create new cassandra-writer repo
 	repo := newService(csdSession, logger, tracer)
 
-	pbTracer, traceCloser, err := jaegerClient.NewTracer(svcName, cfg.JaegerURL)
-	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
-	}
-	defer traceCloser.Close()
-
 	// Create new pub sub broker
-	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, pbTracer)
+	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}

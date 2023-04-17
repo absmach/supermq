@@ -118,12 +118,6 @@ func main() {
 
 	svc := newService(ctx, svcName, pubSub, cfg.ChannelID, auth, dbTracer, db, cacheTracer, cacheClient, logger)
 
-	tracer, closer, err := jaegerClient.NewTracer("twins", cfg.JaegerURL)
-	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
-	}
-	defer closer.Close()
-
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))

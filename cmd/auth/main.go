@@ -99,7 +99,7 @@ func main() {
 	svc := newService(db, dbTracer, cfg.Secret, logger, readerConn, writerConn, cfg.LoginDuration)
 
 	// Create new HTTP Server
-	tracer, closer, err := jaegerClient.NewTracer("auth", cfg.JaegerURL)
+	tracer, closer, err := jaegerClient.NewTracer(svcName, cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
 	}

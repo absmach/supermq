@@ -67,13 +67,6 @@ func main() {
 	}
 	defer traceCloser.Close()
 
-	// ws tracer
-	wsTracer, wsTraceCloser, err := jaegerClient.NewTracer(svcName, cfg.JaegerURL)
-	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
-	}
-	defer wsTraceCloser.Close()
-
 	nps, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("Failed to connect to message broker: %s", err))
@@ -81,7 +74,7 @@ func main() {
 	}
 	defer nps.Close()
 
-	svc := newService(tc, nps, logger, wsTracer)
+	svc := newService(tc, nps, logger, tracer)
 
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {

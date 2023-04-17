@@ -68,13 +68,7 @@ func main() {
 
 	repo := newService(db, logger, tracer)
 
-	pbTracer, traceCloser, err := jaegerClient.NewTracer(svcName, cfg.JaegerURL)
-	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
-	}
-	defer traceCloser.Close()
-
-	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, pbTracer)
+	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
