@@ -47,6 +47,8 @@ func createSpan(ctx context.Context, operation, topic, subTopic, thingID string,
 		span.SetTag("subscriber", thingID)
 	}
 	span.SetTag("topic", topic)
-	span.SetTag("sub-topic", subTopic)
+	if subTopic != "" {
+		span.SetTag("sub-topic", subTopic)
+	}
 	return span
 }
