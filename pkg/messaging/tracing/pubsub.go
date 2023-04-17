@@ -7,6 +7,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
+// Constants to define different operations to be traced.
 const (
 	subscribeOP   = "subscribe_op"
 	unsubscribeOp = "unsubscribe_op"
@@ -21,7 +22,7 @@ type pubsubMiddleware struct {
 	tracer opentracing.Tracer
 }
 
-// NewPubSub creates new pubsub tracing middleware service
+// NewPubSub creates a new pubsub middleware that traces pubsub operations.
 func NewPubSub(pubsub messaging.PubSub, tracer opentracing.Tracer) messaging.PubSub {
 	return &pubsubMiddleware{
 		publisherMiddleware: publisherMiddleware{
@@ -33,7 +34,7 @@ func NewPubSub(pubsub messaging.PubSub, tracer opentracing.Tracer) messaging.Pub
 	}
 }
 
-// Subscribe trace nats subscribe operations
+// Subscribe creates a new subscription and traces the operation.
 func (pm *pubsubMiddleware) Subscribe(ctx context.Context, id string, topic string, handler messaging.MessageHandler) error {
 	span := createSpan(ctx, subscribeOP, topic, "", id, pm.tracer)
 	defer span.Finish()
@@ -46,7 +47,7 @@ func (pm *pubsubMiddleware) Subscribe(ctx context.Context, id string, topic stri
 	return pm.pubsub.Subscribe(ctx, id, topic, h)
 }
 
-// Unsubscribe trace nats unsubscribe operations
+// Unsubscribe removes an existing subscription and traces the operation.
 func (pm *pubsubMiddleware) Unsubscribe(ctx context.Context, id string, topic string) error {
 	span := createSpan(ctx, unsubscribeOp, topic, "", id, pm.tracer)
 	defer span.Finish()
@@ -54,6 +55,7 @@ func (pm *pubsubMiddleware) Unsubscribe(ctx context.Context, id string, topic st
 	return pm.pubsub.Unsubscribe(ctx, id, topic)
 }
 
+// traceHandler is used to trace the message handling operation
 type traceHandler struct {
 	handler messaging.MessageHandler
 	tracer  opentracing.Tracer
@@ -61,14 +63,14 @@ type traceHandler struct {
 	topic   string
 }
 
-// Handle tracing middleware handle for message handler
+// Handle instruments the message handling operation
 func (h *traceHandler) Handle(msg *messaging.Message) error {
 	span := createSpan(h.ctx, handleOp, h.topic, msg.Subtopic, msg.Publisher, h.tracer)
 	defer span.Finish()
 	return h.handler.Handle(msg)
 }
 
-// Cancel tracing middleware handle for message handler
+// Cancel cancels the message handling operation
 func (h *traceHandler) Cancel() error {
 	return h.handler.Cancel()
 }

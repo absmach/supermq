@@ -21,7 +21,7 @@ type tracingMiddleware struct {
 	svc    ws.Service
 }
 
-// New creates new ws tracing middleware service
+// New returns a new ws.Service that traces incoming requests using the given tracer.
 func New(tracer opentracing.Tracer, svc ws.Service) ws.Service {
 	return &tracingMiddleware{
 		tracer: tracer,
@@ -29,7 +29,7 @@ func New(tracer opentracing.Tracer, svc ws.Service) ws.Service {
 	}
 }
 
-// Publish trace ws publish operations
+// Publish traces the "Publish" operation of the wrapped ws.Service.
 func (tm *tracingMiddleware) Publish(ctx context.Context, thingKey string, msg *messaging.Message) error {
 	span := tm.createSpan(ctx, publishOP)
 	defer span.Finish()
@@ -37,7 +37,7 @@ func (tm *tracingMiddleware) Publish(ctx context.Context, thingKey string, msg *
 	return tm.svc.Publish(ctx, thingKey, msg)
 }
 
-// Subscribe trace ws subscribe opertions
+// Subscribe traces the "Subscribe" operation of the wrapped ws.Service.
 func (tm *tracingMiddleware) Subscribe(ctx context.Context, thingKey string, chanID string, subtopic string, client *ws.Client) error {
 	span := tm.createSpan(ctx, subscribeOP)
 	defer span.Finish()
@@ -45,7 +45,7 @@ func (tm *tracingMiddleware) Subscribe(ctx context.Context, thingKey string, cha
 	return tm.svc.Subscribe(ctx, thingKey, chanID, subtopic, client)
 }
 
-// Unsubscribe trace ws unsubscibe operations
+// Unsubscribe traces the "Unsubscribe" operation of the wrapped ws.Service.
 func (tm *tracingMiddleware) Unsubscribe(ctx context.Context, thingKey string, chanID string, subtopic string) error {
 	span := tm.createSpan(ctx, unsubscribeOP)
 	defer span.Finish()
@@ -53,6 +53,7 @@ func (tm *tracingMiddleware) Unsubscribe(ctx context.Context, thingKey string, c
 	return tm.svc.Unsubscribe(ctx, thingKey, chanID, subtopic)
 }
 
+// createSpan creates a new tracing span using the given context and operation name.
 func (tm *tracingMiddleware) createSpan(ctx context.Context, opName string) opentracing.Span {
 	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
 		return tm.tracer.StartSpan(

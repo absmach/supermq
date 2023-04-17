@@ -7,7 +7,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-// traced ops
+// traced ops.
 const publishOP = "publish_op"
 
 var _ messaging.Publisher = (*publisherMiddleware)(nil)
@@ -17,7 +17,7 @@ type publisherMiddleware struct {
 	tracer    opentracing.Tracer
 }
 
-// New creates new messaging publisher tracing middleware
+// New creates new messaging publisher tracing middleware.
 func New(publisher messaging.Publisher, tracer opentracing.Tracer) messaging.Publisher {
 	return &publisherMiddleware{
 		publisher: publisher,
@@ -25,7 +25,7 @@ func New(publisher messaging.Publisher, tracer opentracing.Tracer) messaging.Pub
 	}
 }
 
-// Publish trace nats publish operations
+// Publish traces nats publish operations.
 func (pm *publisherMiddleware) Publish(ctx context.Context, topic string, msg *messaging.Message) error {
 	span := createSpan(ctx, publishOP, topic, msg.Subtopic, msg.Publisher, pm.tracer)
 	defer span.Finish()

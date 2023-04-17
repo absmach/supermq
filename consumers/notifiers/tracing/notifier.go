@@ -16,7 +16,7 @@ type serviceMiddleware struct {
 	tracer opentracing.Tracer
 }
 
-// NewNotifier creates new notifier tracing middleware service
+// NewNotifier creates a new notifier tracing middleware service.
 func NewNotifier(svc notifiers.Notifier, tracer opentracing.Tracer) notifiers.Notifier {
 	return &serviceMiddleware{
 		svc:    svc,
@@ -24,7 +24,7 @@ func NewNotifier(svc notifiers.Notifier, tracer opentracing.Tracer) notifiers.No
 	}
 }
 
-// Notify traces notify operations
+// Notify traces notify operations.
 func (sm *serviceMiddleware) Notify(from string, to []string, msg *messaging.Message) error {
 	span := sm.tracer.StartSpan(notifierOP, ext.SpanKindConsumer)
 	ext.MessageBusDestination.Set(span, msg.Subtopic)
