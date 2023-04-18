@@ -16,27 +16,27 @@ import (
 var _ consumers.BlockingConsumer = (*loggingMiddleware)(nil)
 
 type loggingMiddleware struct {
-	logger       log.Logger
-	syncConsumer consumers.BlockingConsumer
+	logger   log.Logger
+	consumer consumers.BlockingConsumer
 }
 
 // LoggingMiddleware adds logging facilities to the adapter.
-func LoggingMiddleware(syncConsumer consumers.BlockingConsumer, logger log.Logger) consumers.BlockingConsumer {
+func LoggingMiddleware(consumer consumers.BlockingConsumer, logger log.Logger) consumers.BlockingConsumer {
 	return &loggingMiddleware{
-		logger:       logger,
-		syncConsumer: syncConsumer,
+		logger:   logger,
+		consumer: consumer,
 	}
 }
 
-func (slm *loggingMiddleware) ConsumeBlocking(msgs interface{}) (err error) {
+func (lm *loggingMiddleware) ConsumeBlocking(msgs interface{}) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method consume took %s to complete", time.Since(begin))
 		if err != nil {
-			slm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
 		}
-		slm.logger.Info(fmt.Sprintf("%s without errors.", message))
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return slm.syncConsumer.ConsumeBlocking(msgs)
+	return lm.consumer.ConsumeBlocking(msgs)
 }

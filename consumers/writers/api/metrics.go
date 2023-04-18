@@ -15,25 +15,25 @@ import (
 var _ consumers.BlockingConsumer = (*metricsMiddleware)(nil)
 
 type metricsMiddleware struct {
-	counter      metrics.Counter
-	latency      metrics.Histogram
-	syncConsumer consumers.BlockingConsumer
+	counter  metrics.Counter
+	latency  metrics.Histogram
+	consumer consumers.BlockingConsumer
 }
 
 // MetricsMiddleware returns new message repository
 // with Save method wrapped to expose metrics.
-func MetricsMiddleware(syncConsumer consumers.BlockingConsumer, counter metrics.Counter, latency metrics.Histogram) consumers.BlockingConsumer {
+func MetricsMiddleware(consumer consumers.BlockingConsumer, counter metrics.Counter, latency metrics.Histogram) consumers.BlockingConsumer {
 	return &metricsMiddleware{
-		counter:      counter,
-		latency:      latency,
-		syncConsumer: syncConsumer,
+		counter:  counter,
+		latency:  latency,
+		consumer: consumer,
 	}
 }
 
-func (smm *metricsMiddleware) ConsumeBlocking(msgs interface{}) error {
+func (mm *metricsMiddleware) ConsumeBlocking(msgs interface{}) error {
 	defer func(begin time.Time) {
-		smm.counter.With("method", "consume").Add(1)
-		smm.latency.With("method", "consume").Observe(time.Since(begin).Seconds())
+		mm.counter.With("method", "consume").Add(1)
+		mm.latency.With("method", "consume").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return smm.syncConsumer.ConsumeBlocking(msgs)
+	return mm.consumer.ConsumeBlocking(msgs)
 }

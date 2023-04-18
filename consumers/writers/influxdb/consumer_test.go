@@ -350,9 +350,13 @@ func TestAsyncSaveJSON(t *testing.T) {
 		err := resetBucket()
 		assert.Nil(t, err, fmt.Sprintf("Cleaning data from InfluxDB expected to succeed: %s.\n", err))
 
-		errs := asyncRepo.Errors()
 		asyncRepo.ConsumeAsync(msgs)
-		err = <-errs
+		timer := time.NewTimer(1 * time.Millisecond)
+		select {
+		case err = <-asyncRepo.Errors():
+		case <-timer.C:
+			t.Error("errors channel blocked, nothing returned.")
+		}
 		switch err {
 		case nil:
 			count, err := queryDB(rowCountJson)
