@@ -50,9 +50,7 @@ var (
 )
 
 func TestReadSenml(t *testing.T) {
-	// Testing both async and sync
 	asyncWriter := iwriter.NewAsync(client, repoCfg)
-	syncWriter := iwriter.NewSync(client, repoCfg)
 
 	chanID, err := idProvider.ID()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -112,11 +110,6 @@ func TestReadSenml(t *testing.T) {
 		messages = append(messages, msg)
 	}
 
-	// TestSync
-	err = syncWriter.ConsumeBlocking(messages)
-	require.Nil(t, err, fmt.Sprintf("failed to store message to InfluxDB: %s", err))
-
-	// Test async
 	errs := asyncWriter.Errors()
 	asyncWriter.ConsumeAsync(messages)
 	err = <-errs
@@ -416,8 +409,6 @@ func TestReadSenml(t *testing.T) {
 }
 
 func TestReadJSON(t *testing.T) {
-	// Testing both Sync and Async
-	syncWriter := iwriter.NewSync(client, repoCfg)
 	asyncWriter := iwriter.NewAsync(client, repoCfg)
 
 	id1, err := idProvider.ID()
@@ -444,11 +435,6 @@ func TestReadJSON(t *testing.T) {
 		msgs1 = append(msgs1, m)
 	}
 
-	// TestSync
-	err = syncWriter.ConsumeBlocking(messages1)
-	require.Nil(t, err, fmt.Sprintf("failed to store message to InfluxDB: %s", err))
-
-	// Test async
 	errs := asyncWriter.Errors()
 	asyncWriter.ConsumeAsync(messages1)
 	err = <-errs
@@ -479,9 +465,6 @@ func TestReadJSON(t *testing.T) {
 		m := toMap(msg)
 		msgs2 = append(msgs2, m)
 	}
-	// TestSync
-	err = syncWriter.ConsumeBlocking(messages2)
-	assert.Nil(t, err, fmt.Sprintf("failed to store message to InfluxDB: %s", err))
 
 	// Test async
 	asyncWriter.ConsumeAsync(messages2)

@@ -24,14 +24,14 @@ var (
 	errNoTable        = errors.New("relation does not exist")
 )
 
-var _ consumers.SyncConsumer = (*timescaleRepo)(nil)
+var _ consumers.BlockingConsumer = (*timescaleRepo)(nil)
 
 type timescaleRepo struct {
 	db *sqlx.DB
 }
 
 // New returns new TimescaleSQL writer.
-func New(db *sqlx.DB) consumers.SyncConsumer {
+func New(db *sqlx.DB) consumers.BlockingConsumer {
 	return &timescaleRepo{db: db}
 }
 

@@ -3,7 +3,7 @@
 
 package consumers
 
-// Consumer specifies message consuming API.
+// AsyncConsumer specifies asynchronous message consuming API.
 type AsyncConsumer interface {
 	// Consume method is used to consume received messages.
 	ConsumeAsync(messages interface{})
@@ -12,7 +12,8 @@ type AsyncConsumer interface {
 	Errors() <-chan error
 }
 
-type SyncConsumer interface {
+// BlockingConsumer specifies synchronous message consuming API.
+type BlockingConsumer interface {
 	// ConsumeBlocking method is used to consume received messages synchronously.
 	// A non-nil error is returned to indicate operation failure.
 	ConsumeBlocking(messages interface{}) error

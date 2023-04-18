@@ -18,14 +18,14 @@ const senmlCollection string = "messages"
 
 var errSaveMessage = errors.New("failed to save message to mongodb database")
 
-var _ consumers.SyncConsumer = (*mongoRepo)(nil)
+var _ consumers.BlockingConsumer = (*mongoRepo)(nil)
 
 type mongoRepo struct {
 	db *mongo.Database
 }
 
 // New returns new MongoDB writer.
-func New(db *mongo.Database) consumers.SyncConsumer {
+func New(db *mongo.Database) consumers.BlockingConsumer {
 	return &mongoRepo{db}
 }
 

@@ -18,6 +18,8 @@ var (
 	ErrMessage = errors.New("failed to convert to Mainflux message")
 )
 
+var _ consumers.AsyncConsumer = (*notifierService)(nil)
+
 // Service reprents a notification service.
 type Service interface {
 	// CreateSubscription persists a subscription.
@@ -33,7 +35,7 @@ type Service interface {
 	// RemoveSubscription removes the subscription having the provided identifier.
 	RemoveSubscription(ctx context.Context, token, id string) error
 
-	consumers.SyncConsumer
+	consumers.BlockingConsumer
 }
 
 var _ Service = (*notifierService)(nil)
@@ -43,6 +45,7 @@ type notifierService struct {
 	subs     SubscriptionsRepository
 	idp      mainflux.IDProvider
 	notifier Notifier
+	errCh    chan error
 	from     string
 }
 
@@ -53,6 +56,7 @@ func New(auth mainflux.AuthServiceClient, subs SubscriptionsRepository, idp main
 		subs:     subs,
 		idp:      idp,
 		notifier: notifier,
+		errCh:    make(chan error, 1),
 		from:     from,
 	}
 }
@@ -128,10 +132,10 @@ func (ns *notifierService) ConsumeBlocking(message interface{}) error {
 	return nil
 }
 
-func (ns *notifierService) ConsumeAsync(message interface{}, errs chan<- error) {
+func (ns *notifierService) ConsumeAsync(message interface{}) {
 	msg, ok := message.(*messaging.Message)
 	if !ok {
-		errs <- ErrMessage
+		ns.errCh <- ErrMessage
 		return
 	}
 	topic := msg.Channel
@@ -145,7 +149,7 @@ func (ns *notifierService) ConsumeAsync(message interface{}, errs chan<- error) 
 	}
 	page, err := ns.subs.RetrieveAll(context.Background(), pm)
 	if err != nil {
-		errs <- err
+		ns.errCh <- err
 		return
 	}
 
@@ -155,7 +159,11 @@ func (ns *notifierService) ConsumeAsync(message interface{}, errs chan<- error) 
 	}
 	if len(to) > 0 {
 		if err := ns.notifier.Notify(ns.from, to, msg); err != nil {
-			errs <- errors.Wrap(ErrNotify, err)
+			ns.errCh <- errors.Wrap(ErrNotify, err)
 		}
 	}
+}
+
+func (ns *notifierService) Errors() <-chan error {
+	return ns.errCh
 }

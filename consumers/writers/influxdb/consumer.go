@@ -23,7 +23,7 @@ const senmlPoints = "messages"
 var errSaveMessage = errors.New("failed to save message to influxdb database")
 
 var _ consumers.AsyncConsumer = (*influxRepo)(nil)
-var _ consumers.SyncConsumer = (*influxRepo)(nil)
+var _ consumers.BlockingConsumer = (*influxRepo)(nil)
 
 type RepoConfig struct {
 	Bucket string
@@ -39,7 +39,7 @@ type influxRepo struct {
 }
 
 // NewSync returns new InfluxDB writer.
-func NewSync(client influxdb2.Client, config RepoConfig) consumers.SyncConsumer {
+func NewSync(client influxdb2.Client, config RepoConfig) consumers.BlockingConsumer {
 	return &influxRepo{
 		client:           client,
 		cfg:              config,

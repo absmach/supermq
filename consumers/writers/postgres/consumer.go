@@ -25,14 +25,14 @@ var (
 	errNoTable        = errors.New("relation does not exist")
 )
 
-var _ consumers.SyncConsumer = (*postgresRepo)(nil)
+var _ consumers.BlockingConsumer = (*postgresRepo)(nil)
 
 type postgresRepo struct {
 	db *sqlx.DB
 }
 
 // New returns new PostgreSQL writer.
-func New(db *sqlx.DB) consumers.SyncConsumer {
+func New(db *sqlx.DB) consumers.BlockingConsumer {
 	return &postgresRepo{db: db}
 }
 

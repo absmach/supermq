@@ -46,7 +46,7 @@ func Start(id string, sub messaging.Subscriber, consumer interface{}, configPath
 			if err := sub.Subscribe(id, subject, handleAsync(transformer, c)); err != nil {
 				return err
 			}
-		case SyncConsumer:
+		case BlockingConsumer:
 			if err := sub.Subscribe(id, subject, handleSync(transformer, c)); err != nil {
 				return err
 			}
@@ -58,7 +58,7 @@ func Start(id string, sub messaging.Subscriber, consumer interface{}, configPath
 	return nil
 }
 
-func handleSync(t transformers.Transformer, sc SyncConsumer) handleFunc {
+func handleSync(t transformers.Transformer, sc BlockingConsumer) handleFunc {
 	return func(msg *messaging.Message) error {
 		m := interface{}(msg)
 		var err error
@@ -83,9 +83,8 @@ func handleAsync(t transformers.Transformer, ac AsyncConsumer) handleFunc {
 			}
 		}
 
-		errs := ac.Errors()
 		ac.ConsumeAsync(m)
-		return <-errs
+		return nil
 	}
 }
 
