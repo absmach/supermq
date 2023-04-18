@@ -123,10 +123,9 @@ func (es eventStore) Bootstrap(ctx context.Context, externalKey, externalID stri
 
 	if err != nil {
 		ev.success = false
-		return cfg, err
 	}
+	_ = es.add(ctx, ev)
 
-	err = es.add(ctx, ev)
 	return cfg, err
 }
 

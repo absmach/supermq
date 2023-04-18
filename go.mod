@@ -15,7 +15,7 @@ require (
 	github.com/go-zoo/bone v1.3.0
 	github.com/gocql/gocql v1.2.1
 	github.com/gofrs/uuid v4.3.0+incompatible
-	github.com/golang-jwt/jwt/v5 v5.0.0-rc.1
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/golang/protobuf v1.5.2
 	github.com/gopcua/opcua v0.1.6
 	github.com/gorilla/websocket v1.5.0
@@ -76,7 +76,6 @@ require (
 	github.com/go-gorp/gorp/v3 v3.1.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed // indirect

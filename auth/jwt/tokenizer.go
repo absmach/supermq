@@ -90,10 +90,9 @@ func (c claims) toKey() auth.Key {
 		IssuedAt: c.IssuedAt.Time.UTC(),
 	}
 
+	key.ExpiresAt = time.Time{}
 	if c.ExpiresAt != nil && c.ExpiresAt.Time.UTC().Unix() != 0 {
 		key.ExpiresAt = c.ExpiresAt.Time.UTC()
-	} else {
-		key.ExpiresAt = time.Time{}
 	}
 
 	// Default type is 0.

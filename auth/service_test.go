@@ -940,8 +940,8 @@ func TestAssign(t *testing.T) {
 
 	// check access control policies things members.
 	subjectSet := fmt.Sprintf("%s:%s#%s", "members", group.ID, memberRelation)
-	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: mid, Relation: "read", Subject: subjectSet})
-	assert.Nil(t, err, fmt.Sprintf("entites having an access to group %s must have %s policy on %s: %s", group.ID, "read", mid, err))
+	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: mid, Relation: read, Subject: subjectSet})
+	assert.Nil(t, err, fmt.Sprintf("entites having an access to group %s must have %s policy on %s: %s", group.ID, read, mid, err))
 	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: mid, Relation: "write", Subject: subjectSet})
 	assert.Nil(t, err, fmt.Sprintf("entites having an access to group %s must have %s policy on %s: %s", group.ID, "write", mid, err))
 	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: mid, Relation: "delete", Subject: subjectSet})

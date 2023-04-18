@@ -484,7 +484,7 @@ func (gr groupRepository) Unassign(ctx context.Context, groupID string, ids ...s
 
 		if _, err := tx.NamedExecContext(ctx, qDel, dbg); err != nil {
 			if rollbackErr := tx.Rollback(); rollbackErr != nil {
-				err = errors.Wrap(err, rollbackErr)
+				err = errors.Wrap(rollbackErr, err)
 				return errors.Wrap(auth.ErrAssignToGroup, err)
 			}
 

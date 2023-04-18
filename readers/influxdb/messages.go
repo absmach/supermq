@@ -119,8 +119,8 @@ func (repo *influxRepository) count(measurement, condition string, timeRange str
 		measurement,
 		condition)
 	queryAPI := repo.client.QueryAPI(repo.cfg.Org)
-	resp, err := queryAPI.Query(context.Background(), cmd)
 
+	resp, err := queryAPI.Query(context.Background(), cmd)
 	if err != nil {
 		return 0, err
 	}

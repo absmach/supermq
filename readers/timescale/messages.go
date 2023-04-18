@@ -121,7 +121,7 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) string {
 	if err != nil {
 		return condition
 	}
-	if err = json.Unmarshal(meta, &query); err != nil {
+	if err := json.Unmarshal(meta, &query); err != nil {
 		return condition
 	}
 

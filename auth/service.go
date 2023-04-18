@@ -108,7 +108,6 @@ func (svc service) Issue(ctx context.Context, token string, key Key) (Key, strin
 		return Key{}, "", ErrInvalidKeyIssuedAt
 	}
 	switch key.Type {
-
 	case APIKey:
 		return svc.userKey(ctx, token, key)
 	case RecoveryKey:
