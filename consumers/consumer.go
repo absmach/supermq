@@ -3,9 +3,9 @@
 
 package consumers
 
-// AsyncConsumer specifies a non-blocking message consuming API,
-// which can be used for writing time series data asynchronously
-// in batches to an InfluxDB server.
+// AsyncConsumer specifies a non-blocking message-consuming API,
+// which can be used for writing data to the DB, publishing messages
+// to broker, sending notifications, or any other asynchronous job.
 type AsyncConsumer interface {
 	// ConsumeAsync method is used to asynchronously consume received messages.
 	ConsumeAsync(messages interface{})
@@ -17,7 +17,10 @@ type AsyncConsumer interface {
 	Errors() <-chan error
 }
 
-// BlockingConsumer specifies synchronous, blocking message consuming API.
+// BlockingConsumer specifies a blocking message-consuming API,
+// which can be used for writing data to the DB, publishing messages
+// to broker, sending notifications... BlockingConsumer implementations
+// might also support concurrent use, but consult implementation for more details.
 type BlockingConsumer interface {
 	// ConsumeBlocking method is used to consume received messages synchronously.
 	// A non-nil error is returned to indicate operation failure.
