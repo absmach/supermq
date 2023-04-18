@@ -74,9 +74,9 @@ func main() {
 
 	repo := influxdb.NewAsync(client, repocfg)
 
+	// Start consuming and logging errors.
 	go func(log mflog.Logger) {
-		errCh := repo.Errors()
-		for err := range errCh {
+		for err := range repo.Errors() {
 			if err != nil {
 				log.Error(err.Error())
 			}
