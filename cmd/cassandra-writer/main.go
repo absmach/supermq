@@ -69,7 +69,7 @@ func main() {
 	defer pubSub.Close()
 
 	// Start new consumer
-	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger, false); err != nil {
+	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Cassandra writer: %s", err))
 	}
 

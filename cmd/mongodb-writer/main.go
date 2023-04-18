@@ -64,7 +64,7 @@ func main() {
 
 	repo := newService(db, logger)
 
-	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger, false); err != nil {
+	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to start MongoDB writer: %s", err))
 	}
 

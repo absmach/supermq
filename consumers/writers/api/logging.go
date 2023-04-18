@@ -20,7 +20,7 @@ type loggingMiddleware struct {
 	syncConsumer consumers.SyncConsumer
 }
 
-// SyncLoggingMiddleware adds logging facilities to the adapter.
+// LoggingMiddleware adds logging facilities to the adapter.
 func LoggingMiddleware(syncConsumer consumers.SyncConsumer, logger log.Logger) consumers.SyncConsumer {
 	return &loggingMiddleware{
 		logger:       logger,

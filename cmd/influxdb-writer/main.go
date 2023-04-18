@@ -83,7 +83,7 @@ func main() {
 		}
 	}(logger)
 
-	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger, true); err != nil {
+	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to start InfluxDB writer: %s", err))
 	}
 

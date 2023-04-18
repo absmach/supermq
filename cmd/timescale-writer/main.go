@@ -66,7 +66,7 @@ func main() {
 	}
 	defer pubSub.Close()
 
-	if err = consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger, false); err != nil {
+	if err = consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to create Timescale writer: %s", err))
 	}
 

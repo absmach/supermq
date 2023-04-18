@@ -98,7 +98,8 @@ func (repo *influxRepo) Errors() <-chan error {
 	if repo.errCh != nil {
 		return repo.errCh
 	}
-	panic("unimplemented")
+
+	return nil
 }
 
 func (repo *influxRepo) ConsumeBlocking(message interface{}) error {

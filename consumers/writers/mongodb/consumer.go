@@ -38,10 +38,6 @@ func (repo *mongoRepo) ConsumeBlocking(message interface{}) error {
 	}
 }
 
-func (repo *mongoRepo) ConsumeAsync(message interface{}, errs chan<- error) {
-	panic("unimplemented")
-}
-
 func (repo *mongoRepo) saveSenml(messages interface{}) error {
 	msgs, ok := messages.([]senml.Message)
 	if !ok {

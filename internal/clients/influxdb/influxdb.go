@@ -26,7 +26,7 @@ type Config struct {
 	Token              string        `env:"TOKEN"                 envDefault:"mainflux-token"`
 	DBUrl              string        `env:"DBURL"                 envDefault:""`
 	UserAgent          string        `env:"USER_AGENT"            envDefault:"InfluxDBClient"`
-	Timeout            time.Duration `env:"TIMEOUT"` // Influxdb client configuration by default there is no timeout duration , this field will not have fallback default timeout duration Reference: https://pkg.go.dev/github.com/influxdata/influxdb@v1.10.0/client/v2#HTTPConfig
+	Timeout            time.Duration `env:"TIMEOUT"` // Influxdb client configuration by default has no timeout duration , this field will not have a fallback default timeout duration. Reference: https://pkg.go.dev/github.com/influxdata/influxdb@v1.10.0/client/v2#HTTPConfig
 	InsecureSkipVerify bool          `env:"INSECURE_SKIP_VERIFY"  envDefault:"false"`
 }
 

@@ -5,7 +5,6 @@ package consumers
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -33,7 +32,7 @@ var (
 // Start method starts consuming messages received from Message broker.
 // This method transforms messages to SenML format before
 // using MessageRepository to store them.
-func Start(id string, sub messaging.Subscriber, consumer interface{}, configPath string, logger logger.Logger, async bool) error {
+func Start(id string, sub messaging.Subscriber, consumer interface{}, configPath string, logger logger.Logger) error {
 	cfg, err := loadConfig(configPath)
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Failed to load consumer config: %s", err))
@@ -127,7 +126,7 @@ func loadConfig(configPath string) (config, error) {
 		},
 	}
 
-	data, err := ioutil.ReadFile(configPath)
+	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return cfg, errors.Wrap(errOpenConfFile, err)
 	}

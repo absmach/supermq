@@ -20,7 +20,7 @@ type metricsMiddleware struct {
 	syncConsumer consumers.SyncConsumer
 }
 
-// SyncMetricsMiddleware returns new message repository
+// MetricsMiddleware returns new message repository
 // with Save method wrapped to expose metrics.
 func MetricsMiddleware(syncConsumer consumers.SyncConsumer, counter metrics.Counter, latency metrics.Histogram) consumers.SyncConsumer {
 	return &metricsMiddleware{
