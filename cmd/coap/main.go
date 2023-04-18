@@ -21,6 +21,7 @@ import (
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
+	pstracing "github.com/mainflux/mainflux/pkg/messaging/tracing"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -66,10 +67,11 @@ func main() {
 	}
 	defer traceCloser.Close()
 
-	nps, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
+	nps, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
+	nps = pstracing.NewPubSub(nps, tracer)
 	defer nps.Close()
 
 	svc := coap.New(tc, nps)

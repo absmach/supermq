@@ -23,6 +23,7 @@ import (
 	"github.com/mainflux/mainflux/opcua/gopcua"
 	"github.com/mainflux/mainflux/opcua/redis"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
+	"github.com/mainflux/mainflux/pkg/messaging/tracing"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -87,10 +88,11 @@ func main() {
 	}
 	defer traceCloser.Close()
 
-	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
+	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
+	pubSub = tracing.NewPubSub(pubSub, tracer)
 	defer pubSub.Close()
 
 	ctx := context.Background()

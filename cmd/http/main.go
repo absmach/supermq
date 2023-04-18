@@ -22,6 +22,7 @@ import (
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
+	pstracing "github.com/mainflux/mainflux/pkg/messaging/tracing"
 	"github.com/opentracing/opentracing-go"
 	"golang.org/x/sync/errgroup"
 )
@@ -66,10 +67,11 @@ func main() {
 	}
 	defer closer.Close()
 
-	pub, err := brokers.NewPublisher(cfg.BrokerURL, tracer)
+	pub, err := brokers.NewPublisher(cfg.BrokerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
+	pub = pstracing.New(pub, tracer)
 	defer pub.Close()
 
 	svc := newService(pub, tc, logger, tracer)

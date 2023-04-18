@@ -22,6 +22,7 @@ import (
 	"github.com/mainflux/mainflux/lora/mqtt"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
+	"github.com/mainflux/mainflux/pkg/messaging/tracing"
 	"golang.org/x/sync/errgroup"
 
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
@@ -80,10 +81,11 @@ func main() {
 	}
 	defer traceCloser.Close()
 
-	pub, err := brokers.NewPublisher(cfg.BrokerURL, tracer)
+	pub, err := brokers.NewPublisher(cfg.BrokerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
+	pub = tracing.New(pub, tracer)
 	defer pub.Close()
 
 	svc := newService(pub, rmConn, thingsRMPrefix, channelsRMPrefix, connsRMPrefix, logger)

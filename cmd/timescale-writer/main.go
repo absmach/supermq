@@ -21,6 +21,7 @@ import (
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
+	"github.com/mainflux/mainflux/pkg/messaging/tracing"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -68,10 +69,11 @@ func main() {
 
 	repo := newService(db, logger)
 
-	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
+	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
+	pubSub = tracing.NewPubSub(pubSub, tracer)
 	defer pubSub.Close()
 
 	if err = consumers.Start(ctx, svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
