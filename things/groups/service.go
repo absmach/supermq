@@ -10,7 +10,6 @@ import (
 	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/policies"
-	upolicies "github.com/mainflux/mainflux/users/policies"
 )
 
 // Possible token types are access and refresh tokens.
@@ -23,13 +22,13 @@ const (
 )
 
 type service struct {
-	auth       upolicies.AuthServiceClient
+	auth       policies.AuthServiceClient
 	groups     Repository
 	idProvider mainflux.IDProvider
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(auth upolicies.AuthServiceClient, g Repository, idp mainflux.IDProvider) Service {
+func NewService(auth policies.AuthServiceClient, g Repository, idp mainflux.IDProvider) Service {
 	return service{
 		auth:       auth,
 		groups:     g,
@@ -38,7 +37,7 @@ func NewService(auth upolicies.AuthServiceClient, g Repository, idp mainflux.IDP
 }
 
 func (svc service) CreateGroups(ctx context.Context, token string, gs ...mfgroups.Group) ([]mfgroups.Group, error) {
-	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
+	res, err := svc.auth.Identify(ctx, &policies.Token{Value: token})
 	if err != nil {
 		return []mfgroups.Group{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
@@ -80,7 +79,7 @@ func (svc service) ViewGroup(ctx context.Context, token string, id string) (mfgr
 }
 
 func (svc service) ListGroups(ctx context.Context, token string, gm GroupsPage) (GroupsPage, error) {
-	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
+	res, err := svc.auth.Identify(ctx, &policies.Token{Value: token})
 	if err != nil {
 		return GroupsPage{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
@@ -101,7 +100,7 @@ func (svc service) ListGroups(ctx context.Context, token string, gm GroupsPage) 
 }
 
 func (svc service) ListMemberships(ctx context.Context, token, clientID string, gm GroupsPage) (MembershipsPage, error) {
-	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
+	res, err := svc.auth.Identify(ctx, &policies.Token{Value: token})
 	if err != nil {
 		return MembershipsPage{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
@@ -116,7 +115,7 @@ func (svc service) ListMemberships(ctx context.Context, token, clientID string, 
 }
 
 func (svc service) UpdateGroup(ctx context.Context, token string, g mfgroups.Group) (mfgroups.Group, error) {
-	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
+	res, err := svc.auth.Identify(ctx, &policies.Token{Value: token})
 	if err != nil {
 		return mfgroups.Group{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
@@ -200,7 +199,7 @@ func (svc service) authorize(ctx context.Context, subject, object string, relati
 	if dbGroup.Owner == userID {
 		return nil
 	}
-	req := &upolicies.AuthorizeReq{
+	req := &policies.AuthorizeReq{
 		Sub:        subject,
 		Obj:        object,
 		Act:        relation,

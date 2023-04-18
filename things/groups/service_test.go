@@ -239,7 +239,7 @@ func TestUpdateGroup(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := gRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(groups.Group{}, tc.err)
+		repoCall := gRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(mfgroups.Group{}, tc.err)
 		repoCall1 := gRepo.On("Update", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		expectedGroup, err := svc.UpdateGroup(context.Background(), tc.token, tc.group)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -368,7 +368,7 @@ func TestListGroups(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := gRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(groups.Group{}, tc.err)
+		repoCall := gRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(mfgroups.Group{}, tc.err)
 		repoCall1 := gRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		page, err := svc.ListGroups(context.Background(), tc.token, tc.page)
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
@@ -486,7 +486,7 @@ func TestEnableGroup(t *testing.T) {
 				Status: tc.status,
 			},
 		}
-		repoCall := gRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(groups.Group{}, nil)
+		repoCall := gRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(mfgroups.Group{}, nil)
 		repoCall1 := gRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, nil)
 		page, err := svc.ListGroups(context.Background(), token, pm)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -604,7 +604,7 @@ func TestDisableGroup(t *testing.T) {
 				Status: tc.status,
 			},
 		}
-		repoCall := gRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(groups.Group{}, nil)
+		repoCall := gRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(mfgroups.Group{}, nil)
 		repoCall1 := gRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, nil)
 		page, err := svc.ListGroups(context.Background(), token, pm)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -723,7 +723,7 @@ func TestListMemberships(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := gRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(groups.Group{}, tc.err)
+		repoCall := gRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(mfgroups.Group{}, tc.err)
 		repoCall1 := gRepo.On("Memberships", context.Background(), tc.clientID, tc.page).Return(tc.response, tc.err)
 		page, err := svc.ListMemberships(context.Background(), tc.token, tc.clientID, tc.page)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
