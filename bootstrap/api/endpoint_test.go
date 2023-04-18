@@ -34,7 +34,6 @@ import (
 	tpolicies "github.com/mainflux/mainflux/things/policies"
 	papi "github.com/mainflux/mainflux/things/policies/api/http"
 	"github.com/mainflux/mainflux/users/policies"
-	upolicies "github.com/mainflux/mainflux/users/policies"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -191,7 +190,7 @@ func generateChannels() map[string]mfgroups.Group {
 	return channels
 }
 
-func newThingsService(auth upolicies.AuthServiceClient) (clients.Service, groups.Service, tpolicies.Service) {
+func newThingsService(auth policies.AuthServiceClient) (clients.Service, groups.Service, tpolicies.Service) {
 	csvc := mocks.NewThingsService(map[string]clients.Client{}, auth)
 	gsvc := mocks.NewChannelsService(generateChannels(), auth)
 	psvc := mocks.NewPoliciesService(auth)
