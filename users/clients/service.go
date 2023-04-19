@@ -23,6 +23,21 @@ const (
 	entityType        = "client"
 )
 
+var (
+	// ErrMissingResetToken indicates malformed or missing reset token
+	// for reseting password.
+	ErrMissingResetToken = errors.New("missing reset token")
+
+	// ErrRecoveryToken indicates error in generating password recovery token.
+	ErrRecoveryToken = errors.New("failed to generate password recovery token")
+
+	// ErrGetToken indicates error in getting signed token.
+	ErrGetToken = errors.New("failed to fetch signed token")
+
+	// ErrPasswordFormat indicates weak password.
+	ErrPasswordFormat = errors.New("password does not meet the requirements")
+)
+
 // Service unites Clients and Group services.
 type Service interface {
 	ClientService
@@ -233,7 +248,7 @@ func (svc service) GenerateResetToken(ctx context.Context, email, host string) e
 	}
 	t, err := svc.IssueToken(ctx, client.Credentials.Identity, client.Credentials.Secret)
 	if err != nil {
-		return errors.Wrap(clients.ErrRecoveryToken, err)
+		return errors.Wrap(ErrRecoveryToken, err)
 	}
 	return svc.SendPasswordReset(ctx, host, email, t.AccessToken)
 }
@@ -251,7 +266,7 @@ func (svc service) ResetSecret(ctx context.Context, resetToken, secret string) e
 		return errors.ErrNotFound
 	}
 	if !svc.passRegex.MatchString(secret) {
-		return clients.ErrPasswordFormat
+		return ErrPasswordFormat
 	}
 	secret, err = svc.hasher.Hash(secret)
 	if err != nil {
@@ -277,7 +292,7 @@ func (svc service) UpdateClientSecret(ctx context.Context, token, oldSecret, new
 		return Client{}, err
 	}
 	if !svc.passRegex.MatchString(newSecret) {
-		return Client{}, clients.ErrPasswordFormat
+		return Client{}, ErrPasswordFormat
 	}
 	dbClient, err := svc.clients.RetrieveByID(ctx, id)
 	if err != nil {

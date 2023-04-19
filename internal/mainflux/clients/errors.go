@@ -14,17 +14,4 @@ var (
 
 	// ErrStatusAlreadyAssigned indicated that the client or group has already been assigned the status.
 	ErrStatusAlreadyAssigned = errors.New("status already assigned")
-
-	// ErrMissingResetToken indicates malformed or missing reset token
-	// for reseting password.
-	ErrMissingResetToken = errors.New("missing reset token")
-
-	// ErrRecoveryToken indicates error in generating password recovery token.
-	ErrRecoveryToken = errors.New("failed to generate password recovery token")
-
-	// ErrGetToken indicates error in getting signed token.
-	ErrGetToken = errors.New("failed to fetch signed token")
-
-	// ErrPasswordFormat indicates weak password.
-	ErrPasswordFormat = errors.New("password does not meet the requirements")
 )

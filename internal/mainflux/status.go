@@ -30,7 +30,7 @@ const (
 	Unknown  = "unknown"
 )
 
-// String converts client status to string literal.
+// String converts client/group status to string literal.
 func (s Status) String() string {
 	switch s {
 	case DisabledStatus:
@@ -44,7 +44,7 @@ func (s Status) String() string {
 	}
 }
 
-// ToClientStatus converts string value to a valid Client status.
+// ToStatus converts string value to a valid Client/Group status.
 func ToStatus(status string) (Status, error) {
 	switch status {
 	case "", Enabled:
@@ -57,12 +57,12 @@ func ToStatus(status string) (Status, error) {
 	return Status(0), apiutil.ErrInvalidStatus
 }
 
-// Custom Marshaller for Client
+// Custom Marshaller for Client/Groups
 func (s Status) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.String())
 }
 
-// Custom Unmarshaler for Client
+// Custom Unmarshaler for Client/Groups
 func (s *Status) UnmarshalJSON(data []byte) error {
 	str := strings.Trim(string(data), "\"")
 	val, err := ToStatus(str)

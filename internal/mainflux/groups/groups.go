@@ -24,11 +24,11 @@ type Group struct {
 	ID          string           `json:"id"`
 	Owner       string           `json:"owner_id"`
 	Parent      string           `json:"parent_id,omitempty"`
-	Name        string           `json:"name"`
+	Name        string           `json:"name,omitempty"`
 	Description string           `json:"description,omitempty"`
 	Metadata    Metadata         `json:"metadata,omitempty"`
-	Level       int              `json:"level"`
-	Path        string           `json:"path"`
+	Level       int              `json:"level,omitempty"`
+	Path        string           `json:"path,omitempty"`
 	Children    []*Group         `json:"children,omitempty"`
 	CreatedAt   time.Time        `json:"created_at"`
 	UpdatedAt   time.Time        `json:"updated_at"`
