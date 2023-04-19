@@ -92,7 +92,7 @@ func main() {
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
-	pubSub = tracing.NewPubSub(pubSub, tracer)
+	pubSub = tracing.NewPubSub(tracer, pubSub)
 	defer pubSub.Close()
 
 	ctx := context.Background()

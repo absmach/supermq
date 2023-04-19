@@ -17,7 +17,7 @@ type serviceMiddleware struct {
 }
 
 // NewNotifier creates a new notifier tracing middleware service.
-func NewNotifier(svc notifiers.Notifier, tracer opentracing.Tracer) notifiers.Notifier {
+func NewNotifier(tracer opentracing.Tracer, svc notifiers.Notifier) notifiers.Notifier {
 	return &serviceMiddleware{
 		svc:    svc,
 		tracer: tracer,

@@ -73,7 +73,7 @@ func main() {
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
-	pubSub = tracing.NewPubSub(pubSub, tracer)
+	pubSub = tracing.NewPubSub(tracer, pubSub)
 	defer pubSub.Close()
 
 	if err = consumers.Start(ctx, svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {

@@ -85,7 +85,7 @@ func main() {
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
-	pubSub = pstracing.NewPubSub(pubSub, tracer)
+	pubSub = pstracing.NewPubSub(tracer, pubSub)
 	defer pubSub.Close()
 
 	auth, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL)
@@ -129,7 +129,7 @@ func main() {
 
 func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServiceClient, c config, ec email.Config, logger mflog.Logger, svcTracer opentracing.Tracer) notifiers.Service {
 	database := notifierPg.NewDatabase(db)
-	repo := tracing.New(notifierPg.New(database), tracer)
+	repo := tracing.New(tracer, notifierPg.New(database))
 	idp := ulid.New()
 
 	agent, err := email.New(&ec)
@@ -138,7 +138,7 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 	}
 
 	notifier := smtp.New(agent)
-	notifier = tracing.NewNotifier(notifier, svcTracer)
+	notifier = tracing.NewNotifier(tracer, notifier)
 	svc := notifiers.New(auth, repo, idp, notifier, c.From)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics("notifier", "smtp")

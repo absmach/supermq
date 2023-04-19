@@ -23,7 +23,7 @@ type pubsubMiddleware struct {
 }
 
 // NewPubSub creates a new pubsub middleware that traces pubsub operations.
-func NewPubSub(pubsub messaging.PubSub, tracer opentracing.Tracer) messaging.PubSub {
+func NewPubSub(tracer opentracing.Tracer, pubsub messaging.PubSub) messaging.PubSub {
 	return &pubsubMiddleware{
 		publisherMiddleware: publisherMiddleware{
 			publisher: pubsub,

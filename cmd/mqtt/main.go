@@ -87,14 +87,14 @@ func main() {
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
-	nps = tracing.NewPubSub(nps, tracer)
+	nps = tracing.NewPubSub(tracer, nps)
 	defer nps.Close()
 
 	mpub, err := mqttpub.NewPublisher(fmt.Sprintf("%s:%s", cfg.MqttTargetHost, cfg.MqttTargetPort), cfg.MqttForwarderTimeout)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to create MQTT publisher: %s", err))
 	}
-	mpub = tracing.New(mpub, tracer)
+	mpub = tracing.New(tracer, mpub)
 
 	fwd := mqtt.NewForwarder(brokers.SubjectAllChannels, logger)
 	if err := fwd.Forward(ctx, svcName, nps, mpub); err != nil {
@@ -105,7 +105,7 @@ func main() {
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
-	np = tracing.New(np, tracer)
+	np = tracing.New(tracer, np)
 	defer np.Close()
 
 	ec, err := redisClient.Setup(envPrefixES)

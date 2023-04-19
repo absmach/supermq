@@ -71,7 +71,7 @@ func main() {
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
-	pub = pstracing.New(pub, tracer)
+	pub = pstracing.New(tracer, pub)
 	defer pub.Close()
 
 	svc := newService(pub, tc, logger, tracer)
