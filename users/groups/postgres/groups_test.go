@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	mfclients "github.com/mainflux/mainflux/internal/mainflux"
+	"github.com/mainflux/mainflux/internal/mainflux"
 	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/internal/testsutil"
@@ -36,7 +36,7 @@ var (
 	invalidName = strings.Repeat("m", maxNameSize+10)
 	validDesc   = strings.Repeat("m", 100)
 	invalidDesc = strings.Repeat("m", maxDescSize+1)
-	metadata    = mfgroups.Metadata{
+	metadata    = mainflux.Metadata{
 		"admin": "true",
 	}
 	password   = "$tr0ngPassw0rd"
@@ -60,7 +60,7 @@ func TestGroupSave(t *testing.T) {
 			group: mfgroups.Group{
 				ID:     grpID,
 				Name:   groupName,
-				Status: mfclients.EnabledStatus,
+				Status: mainflux.EnabledStatus,
 			},
 			err: nil,
 		},
@@ -69,7 +69,7 @@ func TestGroupSave(t *testing.T) {
 			group: mfgroups.Group{
 				ID:     grpID,
 				Name:   groupName,
-				Status: mfclients.EnabledStatus,
+				Status: mainflux.EnabledStatus,
 			},
 			err: errors.ErrConflict,
 		},
@@ -78,7 +78,7 @@ func TestGroupSave(t *testing.T) {
 			group: mfgroups.Group{
 				ID:     testsutil.GenerateUUID(t, idProvider),
 				Name:   invalidName,
-				Status: mfclients.EnabledStatus,
+				Status: mainflux.EnabledStatus,
 			},
 			err: errors.ErrMalformedEntity,
 		},
@@ -88,7 +88,7 @@ func TestGroupSave(t *testing.T) {
 				ID:          usrID,
 				Name:        "withInvalidDescription",
 				Description: invalidDesc,
-				Status:      mfclients.EnabledStatus,
+				Status:      mainflux.EnabledStatus,
 			},
 			err: errors.ErrMalformedEntity,
 		},
@@ -98,7 +98,7 @@ func TestGroupSave(t *testing.T) {
 				ID:          testsutil.GenerateUUID(t, idProvider),
 				Name:        "withDescription",
 				Description: validDesc,
-				Status:      mfclients.EnabledStatus,
+				Status:      mainflux.EnabledStatus,
 			},
 			err: nil,
 		},
@@ -108,7 +108,7 @@ func TestGroupSave(t *testing.T) {
 				ID:          testsutil.GenerateUUID(t, idProvider),
 				Name:        "withInvalidDescription",
 				Description: invalidDesc,
-				Status:      mfclients.EnabledStatus,
+				Status:      mainflux.EnabledStatus,
 			},
 			err: errors.ErrMalformedEntity,
 		},
@@ -118,7 +118,7 @@ func TestGroupSave(t *testing.T) {
 				ID:     testsutil.GenerateUUID(t, idProvider),
 				Parent: grpID,
 				Name:   "withParent",
-				Status: mfclients.EnabledStatus,
+				Status: mainflux.EnabledStatus,
 			},
 			err: nil,
 		},
@@ -128,7 +128,7 @@ func TestGroupSave(t *testing.T) {
 				ID:     testsutil.GenerateUUID(t, idProvider),
 				Parent: invalidName,
 				Name:   "withInvalidParent",
-				Status: mfclients.EnabledStatus,
+				Status: mainflux.EnabledStatus,
 			},
 			err: errors.ErrMalformedEntity,
 		},
@@ -138,7 +138,7 @@ func TestGroupSave(t *testing.T) {
 				ID:     testsutil.GenerateUUID(t, idProvider),
 				Owner:  usrID,
 				Name:   "withOwner",
-				Status: mfclients.EnabledStatus,
+				Status: mainflux.EnabledStatus,
 			},
 			err: nil,
 		},
@@ -148,7 +148,7 @@ func TestGroupSave(t *testing.T) {
 				ID:     testsutil.GenerateUUID(t, idProvider),
 				Owner:  invalidName,
 				Name:   "withInvalidOwner",
-				Status: mfclients.EnabledStatus,
+				Status: mainflux.EnabledStatus,
 			},
 			err: errors.ErrMalformedEntity,
 		},
@@ -158,7 +158,7 @@ func TestGroupSave(t *testing.T) {
 				ID:       testsutil.GenerateUUID(t, idProvider),
 				Name:     "withMetadata",
 				Metadata: metadata,
-				Status:   mfclients.EnabledStatus,
+				Status:   mainflux.EnabledStatus,
 			},
 			err: nil,
 		},
@@ -180,7 +180,7 @@ func TestGroupRetrieveByID(t *testing.T) {
 		ID:     testsutil.GenerateUUID(t, idProvider),
 		Name:   groupName + "TestGroupRetrieveByID1",
 		Owner:  uid,
-		Status: mfclients.EnabledStatus,
+		Status: mainflux.EnabledStatus,
 	}
 
 	_, err := groupRepo.Save(context.Background(), group1)
@@ -202,7 +202,7 @@ func TestGroupRetrieveByID(t *testing.T) {
 		UpdatedAt:   creationTime,
 		Description: description,
 		Metadata:    metadata,
-		Status:      mfclients.EnabledStatus,
+		Status:      mainflux.EnabledStatus,
 	}
 
 	_, err = groupRepo.Save(context.Background(), group2)
@@ -234,7 +234,7 @@ func TestGroupRetrieveAll(t *testing.T) {
 			Description: fmt.Sprintf("%s-description-%d", groupName, i),
 			CreatedAt:   creationTime,
 			UpdatedAt:   creationTime,
-			Status:      mfclients.EnabledStatus,
+			Status:      mainflux.EnabledStatus,
 		}
 		if i == 1 {
 			parentID = group.ID
@@ -244,7 +244,7 @@ func TestGroupRetrieveAll(t *testing.T) {
 			group.Parent = parentID
 		}
 		if i%50 == 0 {
-			group.Status = mfclients.DisabledStatus
+			group.Status = mainflux.DisabledStatus
 		}
 		_, err := groupRepo.Save(context.Background(), group)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
@@ -260,7 +260,7 @@ func TestGroupRetrieveAll(t *testing.T) {
 				Page: groups.Page{
 					Total:  nGroups,
 					Limit:  nGroups,
-					Status: mfclients.AllStatus,
+					Status: mainflux.AllStatus,
 				},
 				Level: maxLevel,
 			},
@@ -272,7 +272,7 @@ func TestGroupRetrieveAll(t *testing.T) {
 					Total:  nGroups,
 					Offset: 50,
 					Limit:  nGroups,
-					Status: mfclients.AllStatus,
+					Status: mainflux.AllStatus,
 				},
 				Level: maxLevel,
 			},
@@ -284,7 +284,7 @@ func TestGroupRetrieveAll(t *testing.T) {
 					Total:  nGroups,
 					Offset: 0,
 					Limit:  50,
-					Status: mfclients.AllStatus,
+					Status: mainflux.AllStatus,
 				},
 				Level: maxLevel,
 			},
@@ -296,7 +296,7 @@ func TestGroupRetrieveAll(t *testing.T) {
 					Total:  nGroups,
 					Offset: 50,
 					Limit:  50,
-					Status: mfclients.AllStatus,
+					Status: mainflux.AllStatus,
 				},
 				Level: maxLevel,
 			},
@@ -308,7 +308,7 @@ func TestGroupRetrieveAll(t *testing.T) {
 					Total:  nGroups,
 					Offset: 250,
 					Limit:  nGroups,
-					Status: mfclients.AllStatus,
+					Status: mainflux.AllStatus,
 				},
 				Level: maxLevel,
 			},
@@ -321,7 +321,7 @@ func TestGroupRetrieveAll(t *testing.T) {
 					Limit:   nGroups,
 					Subject: ownerID,
 					OwnerID: ownerID,
-					Status:  mfclients.AllStatus,
+					Status:  mainflux.AllStatus,
 				},
 				Level: maxLevel,
 			},
@@ -355,10 +355,10 @@ func TestGroupUpdate(t *testing.T) {
 		UpdatedAt:   creationTime,
 		Description: description,
 		Metadata:    metadata,
-		Status:      mfclients.EnabledStatus,
+		Status:      mainflux.EnabledStatus,
 	}
 	updatedName := groupName + "Updated"
-	updatedMetadata := mfgroups.Metadata{"admin": "false"}
+	updatedMetadata := mainflux.Metadata{"admin": "false"}
 	updatedDescription := description + "updated"
 	_, err := groupRepo.Save(context.Background(), group)
 	require.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
@@ -475,8 +475,8 @@ func TestClientsMemberships(t *testing.T) {
 			Identity: "client-memberships1@example.com",
 			Secret:   password,
 		},
-		Metadata: clients.Metadata{},
-		Status:   mfclients.EnabledStatus,
+		Metadata: mainflux.Metadata{},
+		Status:   mainflux.EnabledStatus,
 	}
 	clientB := clients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
@@ -485,14 +485,14 @@ func TestClientsMemberships(t *testing.T) {
 			Identity: "client-memberships2@example.com",
 			Secret:   password,
 		},
-		Metadata: clients.Metadata{},
-		Status:   mfclients.EnabledStatus,
+		Metadata: mainflux.Metadata{},
+		Status:   mainflux.EnabledStatus,
 	}
 	group := mfgroups.Group{
 		ID:       testsutil.GenerateUUID(t, idProvider),
 		Name:     "group-membership",
-		Metadata: mfgroups.Metadata{},
-		Status:   mfclients.EnabledStatus,
+		Metadata: mainflux.Metadata{},
+		Status:   mainflux.EnabledStatus,
 	}
 
 	policyA := policies.Policy{
@@ -526,7 +526,7 @@ func TestClientsMemberships(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		mp, err := grepo.Memberships(context.Background(), tc.ID, groups.GroupsPage{Page: groups.Page{Total: 10, Offset: 0, Limit: 10, Status: mfclients.AllStatus, Subject: clientB.ID, Action: "g_list"}})
+		mp, err := grepo.Memberships(context.Background(), tc.ID, groups.GroupsPage{Page: groups.Page{Total: 10, Offset: 0, Limit: 10, Status: mainflux.AllStatus, Subject: clientB.ID, Action: "g_list"}})
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 		if tc.ID == clientA.ID {
 			assert.ElementsMatch(t, mp.Memberships, []mfgroups.Group{group}, fmt.Sprintf("%s: expected %v got %v\n", desc, []mfgroups.Group{group}, mp.Memberships))
@@ -542,12 +542,12 @@ func TestGroupChangeStatus(t *testing.T) {
 	group1 := mfgroups.Group{
 		ID:     testsutil.GenerateUUID(t, idProvider),
 		Name:   "active-group",
-		Status: mfclients.EnabledStatus,
+		Status: mainflux.EnabledStatus,
 	}
 	group2 := mfgroups.Group{
 		ID:     testsutil.GenerateUUID(t, idProvider),
 		Name:   "inactive-group",
-		Status: mfclients.DisabledStatus,
+		Status: mainflux.DisabledStatus,
 	}
 
 	group1, err := repo.Save(context.Background(), group1)
@@ -564,7 +564,7 @@ func TestGroupChangeStatus(t *testing.T) {
 			desc: "change group status for an active group",
 			group: mfgroups.Group{
 				ID:     group1.ID,
-				Status: groups.EnabledStatus,
+				Status: mainflux.DisabledStatus,
 			},
 			err: nil,
 		},
@@ -572,7 +572,7 @@ func TestGroupChangeStatus(t *testing.T) {
 			desc: "change group status for a inactive group",
 			group: mfgroups.Group{
 				ID:     group2.ID,
-				Status: mfclients.EnabledStatus,
+				Status: mainflux.EnabledStatus,
 			},
 			err: nil,
 		},
@@ -580,7 +580,7 @@ func TestGroupChangeStatus(t *testing.T) {
 			desc: "change group status for an invalid group",
 			group: mfgroups.Group{
 				ID:     "invalid",
-				Status: mfclients.DisabledStatus,
+				Status: mainflux.DisabledStatus,
 			},
 			err: errors.ErrNotFound,
 		},
