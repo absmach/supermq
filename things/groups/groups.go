@@ -4,14 +4,14 @@ import (
 	"context"
 	"time"
 
-	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
+	"github.com/mainflux/mainflux/internal/mainflux/groups"
 )
 
 // MembershipsPage contains page related metadata as well as list of memberships that
 // belong to this page.
 type MembershipsPage struct {
 	Page
-	Memberships []mfgroups.Group
+	Memberships []groups.Group
 }
 
 // GroupsPage contains page related metadata as well as list
@@ -48,13 +48,13 @@ type Group struct {
 // Repository specifies a group persistence API.
 type Repository interface {
 	// Save group.
-	Save(ctx context.Context, g mfgroups.Group) (mfgroups.Group, error)
+	Save(ctx context.Context, g groups.Group) (groups.Group, error)
 
 	// Update a group.
-	Update(ctx context.Context, g mfgroups.Group) (mfgroups.Group, error)
+	Update(ctx context.Context, g groups.Group) (groups.Group, error)
 
 	// RetrieveByID retrieves group by its id.
-	RetrieveByID(ctx context.Context, id string) (mfgroups.Group, error)
+	RetrieveByID(ctx context.Context, id string) (groups.Group, error)
 
 	// RetrieveAll retrieves all groups.
 	RetrieveAll(ctx context.Context, gm GroupsPage) (GroupsPage, error)
@@ -70,13 +70,13 @@ type Repository interface {
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
 	// CreateGroup creates new  group.
-	CreateGroups(ctx context.Context, token string, gs ...mfgroups.Group) ([]mfgroups.Group, error)
+	CreateGroups(ctx context.Context, token string, gs ...groups.Group) ([]groups.Group, error)
 
 	// UpdateGroup updates the group identified by the provided ID.
-	UpdateGroup(ctx context.Context, token string, g mfgroups.Group) (mfgroups.Group, error)
+	UpdateGroup(ctx context.Context, token string, g groups.Group) (groups.Group, error)
 
 	// ViewGroup retrieves data about the group identified by ID.
-	ViewGroup(ctx context.Context, token, id string) (mfgroups.Group, error)
+	ViewGroup(ctx context.Context, token, id string) (groups.Group, error)
 
 	// ListGroups retrieves groups.
 	ListGroups(ctx context.Context, token string, gm GroupsPage) (GroupsPage, error)
@@ -85,8 +85,8 @@ type Service interface {
 	ListMemberships(ctx context.Context, token, clientID string, gm GroupsPage) (MembershipsPage, error)
 
 	// EnableGroup logically enables the group identified with the provided ID.
-	EnableGroup(ctx context.Context, token, id string) (mfgroups.Group, error)
+	EnableGroup(ctx context.Context, token, id string) (groups.Group, error)
 
 	// DisableGroup logically disables the group identified with the provided ID.
-	DisableGroup(ctx context.Context, token, id string) (mfgroups.Group, error)
+	DisableGroup(ctx context.Context, token, id string) (groups.Group, error)
 }

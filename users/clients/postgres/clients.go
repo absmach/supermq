@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgtype" // required for SQL access
+	"github.com/mainflux/mainflux/internal/mainflux"
 	mfclients "github.com/mainflux/mainflux/internal/mainflux"
 	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/internal/postgres"
@@ -87,7 +88,7 @@ func (repo clientRepo) RetrieveByIdentity(ctx context.Context, identity string) 
 
 	dbc := dbClient{
 		Identity: identity,
-		Status:   mfclients.EnabledStatus,
+		Status:   mainflux.EnabledStatus,
 	}
 
 	row, err := repo.db.NamedQueryContext(ctx, q, dbc)
@@ -360,7 +361,7 @@ func toDBClient(c clients.Client) (dbClient, error) {
 }
 
 func toClient(c dbClient) (clients.Client, error) {
-	var metadata clients.Metadata
+	var metadata mainflux.Metadata
 	if c.Metadata != nil {
 		if err := json.Unmarshal([]byte(c.Metadata), &metadata); err != nil {
 			return clients.Client{}, errors.Wrap(errors.ErrMalformedEntity, err)
@@ -419,7 +420,7 @@ func pageQuery(pm clients.Page) (string, error) {
 	if pm.Tag != "" {
 		query = append(query, ":tag = ANY(c.tags)")
 	}
-	if pm.Status != mfclients.AllStatus {
+	if pm.Status != mainflux.AllStatus {
 		query = append(query, "c.status = :status")
 	}
 	// For listing clients that the specified client owns but not sharedby
@@ -467,17 +468,17 @@ func toDBClientsPage(pm clients.Page) (dbClientsPage, error) {
 }
 
 type dbClientsPage struct {
-	Total    uint64           `db:"total"`
-	Limit    uint64           `db:"limit"`
-	Offset   uint64           `db:"offset"`
-	Name     string           `db:"name"`
-	Owner    string           `db:"owner"`
-	Identity string           `db:"identity"`
-	Metadata []byte           `db:"metadata"`
-	Tag      string           `db:"tag"`
-	Status   mfclients.Status `db:"status"`
-	GroupID  string           `db:"group_id"`
-	SharedBy string           `db:"shared_by"`
-	Subject  string           `db:"subject"`
-	Action   string           `db:"action"`
+	Total    uint64          `db:"total"`
+	Limit    uint64          `db:"limit"`
+	Offset   uint64          `db:"offset"`
+	Name     string          `db:"name"`
+	Owner    string          `db:"owner"`
+	Identity string          `db:"identity"`
+	Metadata []byte          `db:"metadata"`
+	Tag      string          `db:"tag"`
+	Status   mainflux.Status `db:"status"`
+	GroupID  string          `db:"group_id"`
+	SharedBy string          `db:"shared_by"`
+	Subject  string          `db:"subject"`
+	Action   string          `db:"action"`
 }

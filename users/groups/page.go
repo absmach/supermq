@@ -1,8 +1,7 @@
 package groups
 
 import (
-	mfclients "github.com/mainflux/mainflux/internal/mainflux"
-	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
+	"github.com/mainflux/mainflux/internal/mainflux"
 )
 
 // Page contains page metadata that helps navigation.
@@ -13,9 +12,9 @@ type Page struct {
 	Name     string
 	OwnerID  string
 	Tag      string
-	Metadata mfgroups.Metadata
+	Metadata mainflux.Metadata
 	SharedBy string
-	Status   mfclients.Status
+	Status   mainflux.Status
 	Subject  string
 	Action   string
 }

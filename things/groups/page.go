@@ -1,8 +1,7 @@
 package groups
 
 import (
-	mfclients "github.com/mainflux/mainflux/internal/mainflux"
-	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
+	"github.com/mainflux/mainflux/internal/mainflux"
 )
 
 // Page contains page metadata that helps navigation.
@@ -11,10 +10,10 @@ type Page struct {
 	Offset       uint64            `json:"offset,omitempty"`
 	Limit        uint64            `json:"limit,omitempty"`
 	Name         string            `json:"name,omitempty"`
-	Metadata     mfgroups.Metadata `json:"metadata,omitempty"`
+	Metadata     mainflux.Metadata `json:"metadata,omitempty"`
 	Disconnected bool              // Used for connected or disconnected lists
 	OwnerID      string
-	Status       mfclients.Status
+	Status       mainflux.Status
 	Subject      string
 	Action       string
 }

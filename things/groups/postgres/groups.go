@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/mainflux/mainflux/internal/mainflux"
 	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -334,7 +335,7 @@ func toDBGroup(g mfgroups.Group) (dbGroup, error) {
 }
 
 func toGroup(g dbGroup) (mfgroups.Group, error) {
-	var metadata mfgroups.Metadata
+	var metadata mainflux.Metadata
 	if g.Metadata != nil {
 		if err := json.Unmarshal([]byte(g.Metadata), &metadata); err != nil {
 			return mfgroups.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)

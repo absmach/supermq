@@ -18,7 +18,7 @@ import (
 	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
 	"github.com/mainflux/mainflux/internal/email"
 	"github.com/mainflux/mainflux/internal/env"
-	mfclients "github.com/mainflux/mainflux/internal/mainflux"
+	"github.com/mainflux/mainflux/internal/mainflux"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/internal/server"
 	grpcserver "github.com/mainflux/mainflux/internal/server/grpc"
@@ -217,13 +217,13 @@ func createAdmin(c config, crepo clients.ClientRepository, hsr clients.Hasher, s
 			Identity: c.AdminEmail,
 			Secret:   hash,
 		},
-		Metadata: clients.Metadata{
+		Metadata: mainflux.Metadata{
 			"role": "admin",
 		},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Role:      clients.AdminRole,
-		Status:    mfclients.EnabledStatus,
+		Status:    mainflux.EnabledStatus,
 	}
 
 	if _, err := crepo.RetrieveByIdentity(context.Background(), client.Credentials.Identity); err == nil {

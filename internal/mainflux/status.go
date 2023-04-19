@@ -2,6 +2,7 @@ package mainflux
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 
 	"github.com/mainflux/mainflux/internal/apiutil"
@@ -28,6 +29,11 @@ const (
 	Enabled  = "enabled"
 	All      = "all"
 	Unknown  = "unknown"
+)
+
+var (
+	// ErrStatusAlreadyAssigned indicated that the client or group has already been assigned the status.
+	ErrStatusAlreadyAssigned = errors.New("status already assigned")
 )
 
 // String converts client/group status to string literal.

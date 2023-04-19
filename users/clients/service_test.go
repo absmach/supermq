@@ -8,8 +8,7 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux/internal/apiutil"
-	mfclients "github.com/mainflux/mainflux/internal/mainflux"
-	mferrors "github.com/mainflux/mainflux/internal/mainflux/clients"
+	"github.com/mainflux/mainflux/internal/mainflux"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -27,14 +26,14 @@ var (
 	idProvider     = uuid.New()
 	phasher        = hasher.New()
 	secret         = "strongsecret"
-	validCMetadata = clients.Metadata{"role": "client"}
+	validCMetadata = mainflux.Metadata{"role": "client"}
 	client         = clients.Client{
 		ID:          testsutil.GenerateUUID(&testing.T{}, idProvider),
 		Name:        "clientname",
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: clients.Credentials{Identity: "clientidentity", Secret: secret},
 		Metadata:    validCMetadata,
-		Status:      mfclients.EnabledStatus,
+		Status:      mainflux.EnabledStatus,
 	}
 	inValidToken    = "invalidToken"
 	withinDuration  = 5 * time.Second
@@ -76,7 +75,7 @@ func TestRegisterClient(t *testing.T) {
 					Identity: "newclientwithname@example.com",
 					Secret:   secret,
 				},
-				Status: mfclients.EnabledStatus,
+				Status: mainflux.EnabledStatus,
 			},
 			err:   nil,
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
@@ -101,7 +100,7 @@ func TestRegisterClient(t *testing.T) {
 					Identity: "newclientwithtags@example.com",
 					Secret:   secret,
 				},
-				Status: mfclients.EnabledStatus,
+				Status: mainflux.EnabledStatus,
 			},
 			err:   nil,
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
@@ -114,7 +113,7 @@ func TestRegisterClient(t *testing.T) {
 					Identity: "newclientwithtags@example.com",
 					Secret:   secret,
 				},
-				Status: mfclients.DisabledStatus,
+				Status: mainflux.DisabledStatus,
 			},
 			err:   nil,
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
@@ -127,7 +126,7 @@ func TestRegisterClient(t *testing.T) {
 					Secret:   secret,
 				},
 				Metadata: validCMetadata,
-				Status:   mfclients.EnabledStatus,
+				Status:   mainflux.EnabledStatus,
 			},
 			err:   nil,
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
@@ -162,7 +161,7 @@ func TestRegisterClient(t *testing.T) {
 					Identity: "newclientwithvalidstatus@example.com",
 					Secret:   secret,
 				},
-				Status: mfclients.DisabledStatus,
+				Status: mainflux.DisabledStatus,
 			},
 			err:   nil,
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
@@ -176,10 +175,10 @@ func TestRegisterClient(t *testing.T) {
 					Identity: "newclientwithallfields@example.com",
 					Secret:   secret,
 				},
-				Metadata: clients.Metadata{
+				Metadata: mainflux.Metadata{
 					"name": "newclientwithallfields",
 				},
-				Status: mfclients.EnabledStatus,
+				Status: mainflux.EnabledStatus,
 			},
 			err:   nil,
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
@@ -225,7 +224,7 @@ func TestRegisterClient(t *testing.T) {
 					Identity: "newclientwithinvalidstatus@example.com",
 					Secret:   secret,
 				},
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			err:   apiutil.ErrInvalidStatus,
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
@@ -334,7 +333,7 @@ func TestListClients(t *testing.T) {
 				Secret:   "password",
 			},
 			Tags:     []string{"tag1", "tag2"},
-			Metadata: clients.Metadata{"role": "client"},
+			Metadata: mainflux.Metadata{"role": "client"},
 		}
 		if i%50 == 0 {
 			client.Owner = OwnerID
@@ -356,7 +355,7 @@ func TestListClients(t *testing.T) {
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 
 			page: clients.Page{
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			size: 0,
 			response: clients.ClientsPage{
@@ -373,7 +372,7 @@ func TestListClients(t *testing.T) {
 			desc:  "list clients with an invalid token",
 			token: inValidToken,
 			page: clients.Page{
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			size: 0,
 			response: clients.ClientsPage{
@@ -392,7 +391,7 @@ func TestListClients(t *testing.T) {
 				Offset:   6,
 				Limit:    nClients,
 				SharedBy: clients.MyKey,
-				Status:   mfclients.EnabledStatus,
+				Status:   mainflux.EnabledStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -412,7 +411,7 @@ func TestListClients(t *testing.T) {
 				Limit:    nClients,
 				SharedBy: clients.MyKey,
 				Name:     "TestListClients3",
-				Status:   mfclients.EnabledStatus,
+				Status:   mainflux.EnabledStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -432,7 +431,7 @@ func TestListClients(t *testing.T) {
 				Limit:    nClients,
 				SharedBy: clients.MyKey,
 				Name:     "notpresentclient",
-				Status:   mfclients.EnabledStatus,
+				Status:   mainflux.EnabledStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -451,7 +450,7 @@ func TestListClients(t *testing.T) {
 				Offset: 6,
 				Limit:  nClients,
 				Owner:  clients.MyKey,
-				Status: mfclients.EnabledStatus,
+				Status: mainflux.EnabledStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -471,7 +470,7 @@ func TestListClients(t *testing.T) {
 				Limit:  nClients,
 				Owner:  clients.MyKey,
 				Name:   "TestListClients3",
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -491,7 +490,7 @@ func TestListClients(t *testing.T) {
 				Limit:  nClients,
 				Owner:  clients.MyKey,
 				Name:   "notpresentclient",
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -511,7 +510,7 @@ func TestListClients(t *testing.T) {
 				Limit:    nClients,
 				Owner:    clients.MyKey,
 				SharedBy: clients.MyKey,
-				Status:   mfclients.AllStatus,
+				Status:   mainflux.AllStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -532,7 +531,7 @@ func TestListClients(t *testing.T) {
 				SharedBy: clients.MyKey,
 				Owner:    clients.MyKey,
 				Name:     "TestListClients3",
-				Status:   mfclients.AllStatus,
+				Status:   mainflux.AllStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -553,7 +552,7 @@ func TestListClients(t *testing.T) {
 				SharedBy: clients.MyKey,
 				Owner:    clients.MyKey,
 				Name:     "notpresentclient",
-				Status:   mfclients.AllStatus,
+				Status:   mainflux.AllStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -572,7 +571,7 @@ func TestListClients(t *testing.T) {
 			page: clients.Page{
 				Offset: 6,
 				Limit:  nClients,
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -609,7 +608,7 @@ func TestUpdateClient(t *testing.T) {
 	client1 := client
 	client2 := client
 	client1.Name = "Updated client"
-	client2.Metadata = clients.Metadata{"role": "test"}
+	client2.Metadata = mainflux.Metadata{"role": "test"}
 
 	cases := []struct {
 		desc     string
@@ -931,10 +930,10 @@ func TestEnableClient(t *testing.T) {
 	e := mocks.NewEmailer()
 	svc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 
-	enabledClient1 := clients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: clients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: mfclients.EnabledStatus}
-	disabledClient1 := clients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: clients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: mfclients.DisabledStatus}
+	enabledClient1 := clients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: clients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: mainflux.EnabledStatus}
+	disabledClient1 := clients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: clients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: mainflux.DisabledStatus}
 	endisabledClient1 := disabledClient1
-	endisabledClient1.Status = mfclients.EnabledStatus
+	endisabledClient1.Status = mainflux.EnabledStatus
 
 	cases := []struct {
 		desc     string
@@ -958,7 +957,7 @@ func TestEnableClient(t *testing.T) {
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			client:   enabledClient1,
 			response: enabledClient1,
-			err:      mferrors.ErrStatusAlreadyAssigned,
+			err:      mainflux.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:     "enable non-existing client",
@@ -991,13 +990,13 @@ func TestEnableClient(t *testing.T) {
 
 	cases2 := []struct {
 		desc     string
-		status   mfclients.Status
+		status   mainflux.Status
 		size     uint64
 		response clients.ClientsPage
 	}{
 		{
 			desc:   "list enabled clients",
-			status: mfclients.EnabledStatus,
+			status: mainflux.EnabledStatus,
 			size:   2,
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -1010,7 +1009,7 @@ func TestEnableClient(t *testing.T) {
 		},
 		{
 			desc:   "list disabled clients",
-			status: mfclients.DisabledStatus,
+			status: mainflux.DisabledStatus,
 			size:   1,
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -1023,7 +1022,7 @@ func TestEnableClient(t *testing.T) {
 		},
 		{
 			desc:   "list enabled and disabled clients",
-			status: mfclients.AllStatus,
+			status: mainflux.AllStatus,
 			size:   3,
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -1059,10 +1058,10 @@ func TestDisableClient(t *testing.T) {
 	e := mocks.NewEmailer()
 	svc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 
-	enabledClient1 := clients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: clients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: mfclients.EnabledStatus}
-	disabledClient1 := clients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: clients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: mfclients.DisabledStatus}
+	enabledClient1 := clients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: clients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: mainflux.EnabledStatus}
+	disabledClient1 := clients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: clients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: mainflux.DisabledStatus}
 	disenabledClient1 := enabledClient1
-	disenabledClient1.Status = mfclients.DisabledStatus
+	disenabledClient1.Status = mainflux.DisabledStatus
 
 	cases := []struct {
 		desc     string
@@ -1086,7 +1085,7 @@ func TestDisableClient(t *testing.T) {
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			client:   disabledClient1,
 			response: clients.Client{},
-			err:      mferrors.ErrStatusAlreadyAssigned,
+			err:      mainflux.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:     "disable non-existing client",
@@ -1119,13 +1118,13 @@ func TestDisableClient(t *testing.T) {
 
 	cases2 := []struct {
 		desc     string
-		status   mfclients.Status
+		status   mainflux.Status
 		size     uint64
 		response clients.ClientsPage
 	}{
 		{
 			desc:   "list enabled clients",
-			status: mfclients.EnabledStatus,
+			status: mainflux.EnabledStatus,
 			size:   1,
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -1138,7 +1137,7 @@ func TestDisableClient(t *testing.T) {
 		},
 		{
 			desc:   "list disabled clients",
-			status: mfclients.DisabledStatus,
+			status: mainflux.DisabledStatus,
 			size:   2,
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -1151,7 +1150,7 @@ func TestDisableClient(t *testing.T) {
 		},
 		{
 			desc:   "list enabled and disabled clients",
-			status: mfclients.AllStatus,
+			status: mainflux.AllStatus,
 			size:   3,
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -1199,7 +1198,7 @@ func TestListMembers(t *testing.T) {
 				Secret:   "password",
 			},
 			Tags:     []string{"tag1", "tag2"},
-			Metadata: clients.Metadata{"role": "client"},
+			Metadata: mainflux.Metadata{"role": "client"},
 		}
 		aClients = append(aClients, client)
 	}
@@ -1239,7 +1238,7 @@ func TestListMembers(t *testing.T) {
 			page: clients.Page{
 				Offset:  6,
 				Limit:   nClients,
-				Status:  mfclients.AllStatus,
+				Status:  mainflux.AllStatus,
 				Subject: validID,
 				Action:  "g_list",
 			},

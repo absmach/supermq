@@ -1,9 +1,6 @@
 package clients
 
-import mfclients "github.com/mainflux/mainflux/internal/mainflux"
-
-// Metadata represents arbitrary JSON.
-type Metadata map[string]interface{}
+import "github.com/mainflux/mainflux/internal/mainflux"
 
 // Page contains page metadata that helps navigation.
 type Page struct {
@@ -14,9 +11,9 @@ type Page struct {
 	Identity string
 	Owner    string
 	Tag      string
-	Metadata Metadata
+	Metadata mainflux.Metadata
 	SharedBy string
-	Status   mfclients.Status
+	Status   mainflux.Status
 	Action   string
 	Subject  string
 }

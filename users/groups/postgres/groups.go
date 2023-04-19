@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	mfclients "github.com/mainflux/mainflux/internal/mainflux"
+	"github.com/mainflux/mainflux/internal/mainflux"
 	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -290,7 +290,7 @@ func buildQuery(gm groups.GroupsPage) (string, error) {
 	if gm.Name != "" {
 		queries = append(queries, "g.name = :name")
 	}
-	if gm.Status != mfclients.AllStatus {
+	if gm.Status != mainflux.AllStatus {
 		queries = append(queries, "g.status = :status")
 	}
 
@@ -358,7 +358,7 @@ func toDBGroup(g mfgroups.Group) (dbGroup, error) {
 }
 
 func toGroup(g dbGroup) (mfgroups.Group, error) {
-	var metadata mfgroups.Metadata
+	var metadata mainflux.Metadata
 	if g.Metadata != nil {
 		if err := json.Unmarshal([]byte(g.Metadata), &metadata); err != nil {
 			return mfgroups.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)
@@ -424,18 +424,18 @@ func toDBGroupPage(pm groups.GroupsPage) (dbGroupPage, error) {
 }
 
 type dbGroupPage struct {
-	ClientID string           `db:"client_id"`
-	ID       string           `db:"id"`
-	Name     string           `db:"name"`
-	ParentID string           `db:"parent_id"`
-	OwnerID  string           `db:"owner_id"`
-	Metadata []byte           `db:"metadata"`
-	Path     string           `db:"path"`
-	Level    uint64           `db:"level"`
-	Total    uint64           `db:"total"`
-	Limit    uint64           `db:"limit"`
-	Offset   uint64           `db:"offset"`
-	Subject  string           `db:"subject"`
-	Action   string           `db:"action"`
-	Status   mfclients.Status `db:"status"`
+	ClientID string          `db:"client_id"`
+	ID       string          `db:"id"`
+	Name     string          `db:"name"`
+	ParentID string          `db:"parent_id"`
+	OwnerID  string          `db:"owner_id"`
+	Metadata []byte          `db:"metadata"`
+	Path     string          `db:"path"`
+	Level    uint64          `db:"level"`
+	Total    uint64          `db:"total"`
+	Limit    uint64          `db:"limit"`
+	Offset   uint64          `db:"offset"`
+	Subject  string          `db:"subject"`
+	Action   string          `db:"action"`
+	Status   mainflux.Status `db:"status"`
 }
