@@ -7,8 +7,7 @@ import (
 	"testing"
 	"time"
 
-	mfclients "github.com/mainflux/mainflux/internal/mainflux"
-	mferrors "github.com/mainflux/mainflux/internal/mainflux/clients"
+	"github.com/mainflux/mainflux/internal/mainflux"
 	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -29,7 +28,7 @@ var (
 	idProvider     = uuid.New()
 	phasher        = hasher.New()
 	secret         = "strongsecret"
-	validGMetadata = mfgroups.Metadata{"role": "client"}
+	validGMetadata = mainflux.Metadata{"role": "client"}
 	inValidToken   = "invalidToken"
 	description    = "shortdescription"
 	gName          = "groupname"
@@ -37,7 +36,7 @@ var (
 		Name:        gName,
 		Description: description,
 		Metadata:    validGMetadata,
-		Status:      mfclients.EnabledStatus,
+		Status:      mainflux.EnabledStatus,
 	}
 	withinDuration  = 5 * time.Second
 	passRegex       = regexp.MustCompile("^.{8,}$")
@@ -74,7 +73,7 @@ func TestCreateGroup(t *testing.T) {
 			group: mfgroups.Group{
 				Name:   gName,
 				Parent: testsutil.GenerateUUID(t, idProvider),
-				Status: mfclients.EnabledStatus,
+				Status: mainflux.EnabledStatus,
 			},
 			err: nil,
 		},
@@ -170,13 +169,13 @@ func TestUpdateGroup(t *testing.T) {
 			desc: "update group metadata",
 			group: mfgroups.Group{
 				ID: group.ID,
-				Metadata: mfgroups.Metadata{
+				Metadata: mainflux.Metadata{
 					"field": "value2",
 				},
 			},
 			response: mfgroups.Group{
 				ID: group.ID,
-				Metadata: mfgroups.Metadata{
+				Metadata: mainflux.Metadata{
 					"field": "value2",
 				},
 			},
@@ -207,7 +206,7 @@ func TestUpdateGroup(t *testing.T) {
 			desc: "update group metadata with invalid group id",
 			group: mfgroups.Group{
 				ID: mocks.WrongID,
-				Metadata: mfgroups.Metadata{
+				Metadata: mainflux.Metadata{
 					"field": "value2",
 				},
 			},
@@ -239,7 +238,7 @@ func TestUpdateGroup(t *testing.T) {
 			desc: "update group metadata with invalid token",
 			group: mfgroups.Group{
 				ID: group.ID,
-				Metadata: mfgroups.Metadata{
+				Metadata: mainflux.Metadata{
 					"field": "value2",
 				},
 			},
@@ -343,7 +342,7 @@ func TestListGroups(t *testing.T) {
 			ID:          testsutil.GenerateUUID(t, idProvider),
 			Name:        fmt.Sprintf("Group_%d", i),
 			Description: description,
-			Metadata: mfgroups.Metadata{
+			Metadata: mainflux.Metadata{
 				"field": "value",
 			},
 			Parent: parentID,
@@ -427,10 +426,10 @@ func TestEnableGroup(t *testing.T) {
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := groups.NewService(gRepo, pRepo, tokenizer, idProvider)
 
-	enabledGroup1 := mfgroups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group1", Status: mfclients.EnabledStatus}
-	disabledGroup := mfgroups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group2", Status: mfclients.DisabledStatus}
+	enabledGroup1 := mfgroups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group1", Status: mainflux.EnabledStatus}
+	disabledGroup := mfgroups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group2", Status: mainflux.DisabledStatus}
 	disabledGroup1 := disabledGroup
-	disabledGroup1.Status = mfclients.EnabledStatus
+	disabledGroup1.Status = mainflux.EnabledStatus
 
 	casesEnabled := []struct {
 		desc     string
@@ -454,7 +453,7 @@ func TestEnableGroup(t *testing.T) {
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 			group:    enabledGroup1,
 			response: enabledGroup1,
-			err:      mferrors.ErrStatusAlreadyAssigned,
+			err:      mainflux.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:     "enable non-existing group",
@@ -485,13 +484,13 @@ func TestEnableGroup(t *testing.T) {
 
 	casesDisabled := []struct {
 		desc     string
-		status   mfclients.Status
+		status   mainflux.Status
 		size     uint64
 		response groups.GroupsPage
 	}{
 		{
 			desc:   "list activated groups",
-			status: mfclients.EnabledStatus,
+			status: mainflux.EnabledStatus,
 			size:   2,
 			response: groups.GroupsPage{
 				Page: groups.Page{
@@ -504,7 +503,7 @@ func TestEnableGroup(t *testing.T) {
 		},
 		{
 			desc:   "list deactivated groups",
-			status: mfclients.DisabledStatus,
+			status: mainflux.DisabledStatus,
 			size:   1,
 			response: groups.GroupsPage{
 				Page: groups.Page{
@@ -517,7 +516,7 @@ func TestEnableGroup(t *testing.T) {
 		},
 		{
 			desc:   "list activated and deactivated groups",
-			status: mfclients.AllStatus,
+			status: mainflux.AllStatus,
 			size:   3,
 			response: groups.GroupsPage{
 				Page: groups.Page{
@@ -556,10 +555,10 @@ func TestDisableGroup(t *testing.T) {
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := groups.NewService(gRepo, pRepo, tokenizer, idProvider)
 
-	enabledGroup1 := mfgroups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group1", Status: mfclients.EnabledStatus}
-	disabledGroup := mfgroups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group2", Status: mfclients.DisabledStatus}
+	enabledGroup1 := mfgroups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group1", Status: mainflux.EnabledStatus}
+	disabledGroup := mfgroups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group2", Status: mainflux.DisabledStatus}
 	disabledGroup1 := enabledGroup1
-	disabledGroup1.Status = mfclients.DisabledStatus
+	disabledGroup1.Status = mainflux.DisabledStatus
 
 	casesDisabled := []struct {
 		desc     string
@@ -583,7 +582,7 @@ func TestDisableGroup(t *testing.T) {
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 			group:    disabledGroup,
 			response: mfgroups.Group{},
-			err:      mferrors.ErrStatusAlreadyAssigned,
+			err:      mainflux.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:     "disable non-existing group",
@@ -614,13 +613,13 @@ func TestDisableGroup(t *testing.T) {
 
 	casesEnabled := []struct {
 		desc     string
-		status   mfclients.Status
+		status   mainflux.Status
 		size     uint64
 		response groups.GroupsPage
 	}{
 		{
 			desc:   "list activated groups",
-			status: mfclients.EnabledStatus,
+			status: mainflux.EnabledStatus,
 			size:   1,
 			response: groups.GroupsPage{
 				Page: groups.Page{
@@ -633,7 +632,7 @@ func TestDisableGroup(t *testing.T) {
 		},
 		{
 			desc:   "list deactivated groups",
-			status: mfclients.DisabledStatus,
+			status: mainflux.DisabledStatus,
 			size:   2,
 			response: groups.GroupsPage{
 				Page: groups.Page{
@@ -646,7 +645,7 @@ func TestDisableGroup(t *testing.T) {
 		},
 		{
 			desc:   "list activated and deactivated groups",
-			status: mfclients.AllStatus,
+			status: mainflux.AllStatus,
 			size:   3,
 			response: groups.GroupsPage{
 				Page: groups.Page{
@@ -690,7 +689,7 @@ func TestListMemberships(t *testing.T) {
 	for i := uint64(1); i < nGroups; i++ {
 		group := mfgroups.Group{
 			Name:     fmt.Sprintf("membership_%d@example.com", i),
-			Metadata: mfgroups.Metadata{"role": "group"},
+			Metadata: mainflux.Metadata{"role": "group"},
 		}
 		aGroups = append(aGroups, group)
 	}
@@ -734,7 +733,7 @@ func TestListMemberships(t *testing.T) {
 					Offset:  6,
 					Total:   nGroups,
 					Limit:   nGroups,
-					Status:  mfclients.AllStatus,
+					Status:  mainflux.AllStatus,
 					Subject: validID,
 					Action:  "g_list",
 				},

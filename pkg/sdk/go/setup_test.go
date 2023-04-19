@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	mfclients "github.com/mainflux/mainflux/internal/mainflux"
+	"github.com/mainflux/mainflux/internal/mainflux"
 	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
@@ -40,7 +40,7 @@ var (
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: sdk.Credentials{Identity: "clientidentity", Secret: secret},
 		Metadata:    validMetadata,
-		Status:      mfclients.EnabledStatus.String(),
+		Status:      mainflux.EnabledStatus.String(),
 	}
 	description = "shortdescription"
 	gName       = "groupname"
@@ -67,7 +67,7 @@ func generateValidToken(t *testing.T, svc clients.Service, cRepo *umocks.ClientR
 			Secret:   secret,
 		},
 		Role:   clients.AdminRole,
-		Status: mfclients.EnabledStatus,
+		Status: mainflux.EnabledStatus,
 	}
 	rclient := client
 	rclient.Credentials.Secret, _ = phasher.Hash(client.Credentials.Secret)
@@ -145,9 +145,9 @@ func convertMembershipsPage(m sdk.MembershipsPage) groups.MembershipsPage {
 
 func convertClientPage(p sdk.PageMetadata) clients.Page {
 	if p.Status == "" {
-		p.Status = mfclients.EnabledStatus.String()
+		p.Status = mainflux.EnabledStatus.String()
 	}
-	status, err := mfclients.ToStatus(p.Status)
+	status, err := mainflux.ToStatus(p.Status)
 	if err != nil {
 		return clients.Page{}
 	}
@@ -159,7 +159,7 @@ func convertClientPage(p sdk.PageMetadata) clients.Page {
 		Name:     p.Name,
 		Action:   p.Action,
 		Tag:      p.Tag,
-		Metadata: clients.Metadata(p.Metadata),
+		Metadata: mainflux.Metadata(p.Metadata),
 	}
 }
 
@@ -174,9 +174,9 @@ func convertMemberships(gs []sdk.Group) []mfgroups.Group {
 
 func convertGroup(g sdk.Group) mfgroups.Group {
 	if g.Status == "" {
-		g.Status = mfclients.EnabledStatus.String()
+		g.Status = mainflux.EnabledStatus.String()
 	}
-	status, err := mfclients.ToStatus(g.Status)
+	status, err := mainflux.ToStatus(g.Status)
 	if err != nil {
 		return mfgroups.Group{}
 	}
@@ -186,7 +186,7 @@ func convertGroup(g sdk.Group) mfgroups.Group {
 		Parent:      g.ParentID,
 		Name:        g.Name,
 		Description: g.Description,
-		Metadata:    mfgroups.Metadata(g.Metadata),
+		Metadata:    mainflux.Metadata(g.Metadata),
 		Level:       g.Level,
 		Path:        g.Path,
 		Children:    convertChildren(g.Children),
@@ -213,9 +213,9 @@ func convertChildren(gs []*sdk.Group) []*mfgroups.Group {
 
 func convertClient(c sdk.User) clients.Client {
 	if c.Status == "" {
-		c.Status = mfclients.EnabledStatus.String()
+		c.Status = mainflux.EnabledStatus.String()
 	}
-	status, err := mfclients.ToStatus(c.Status)
+	status, err := mainflux.ToStatus(c.Status)
 	if err != nil {
 		return clients.Client{}
 	}
@@ -225,7 +225,7 @@ func convertClient(c sdk.User) clients.Client {
 		Tags:        c.Tags,
 		Owner:       c.Owner,
 		Credentials: clients.Credentials(c.Credentials),
-		Metadata:    clients.Metadata(c.Metadata),
+		Metadata:    mainflux.Metadata(c.Metadata),
 		CreatedAt:   c.CreatedAt,
 		UpdatedAt:   c.UpdatedAt,
 		Status:      status,
