@@ -28,7 +28,7 @@ type Node struct {
 	NodeID    string
 }
 
-// Save stores a successfull subscription
+// Save stores a successful subscription
 func Save(serverURI, nodeID string) error {
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, os.ModePerm)
 	if err != nil {
