@@ -29,7 +29,7 @@ import (
 	gapi "github.com/mainflux/mainflux/things/groups/api"
 	tpolicies "github.com/mainflux/mainflux/things/policies"
 	papi "github.com/mainflux/mainflux/things/policies/api/http"
-	"github.com/mainflux/mainflux/users/policies"
+	upolicies "github.com/mainflux/mainflux/users/policies"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -69,7 +69,7 @@ var (
 	}
 )
 
-func newService(auth policies.AuthServiceClient, url string) bootstrap.Service {
+func newService(auth upolicies.AuthServiceClient, url string) bootstrap.Service {
 	configs := mocks.NewConfigsRepository()
 	config := mfsdk.Config{
 		ThingsURL: url,
@@ -79,7 +79,7 @@ func newService(auth policies.AuthServiceClient, url string) bootstrap.Service {
 	return bootstrap.New(auth, configs, sdk, encKey)
 }
 
-func newThingsService(auth policies.AuthServiceClient) (clients.Service, groups.Service, tpolicies.Service) {
+func newThingsService(auth upolicies.AuthServiceClient) (clients.Service, groups.Service, tpolicies.Service) {
 	channels := make(map[string]mfgroups.Group, channelsNum)
 	for i := 0; i < channelsNum; i++ {
 		id := strconv.Itoa(i + 1)

@@ -33,7 +33,7 @@ import (
 	gapi "github.com/mainflux/mainflux/things/groups/api"
 	tpolicies "github.com/mainflux/mainflux/things/policies"
 	papi "github.com/mainflux/mainflux/things/policies/api/http"
-	"github.com/mainflux/mainflux/users/policies"
+	upolicies "github.com/mainflux/mainflux/users/policies"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -167,7 +167,7 @@ func dec(in []byte) ([]byte, error) {
 	return in, nil
 }
 
-func newService(auth policies.AuthServiceClient, url string) bootstrap.Service {
+func newService(auth upolicies.AuthServiceClient, url string) bootstrap.Service {
 	things := mocks.NewConfigsRepository()
 	config := mfsdk.Config{
 		ThingsURL: url,
@@ -190,7 +190,7 @@ func generateChannels() map[string]mfgroups.Group {
 	return channels
 }
 
-func newThingsService(auth policies.AuthServiceClient) (clients.Service, groups.Service, tpolicies.Service) {
+func newThingsService(auth upolicies.AuthServiceClient) (clients.Service, groups.Service, tpolicies.Service) {
 	csvc := mocks.NewThingsService(map[string]clients.Client{}, auth)
 	gsvc := mocks.NewChannelsService(generateChannels(), auth)
 	psvc := mocks.NewPoliciesService(auth)
