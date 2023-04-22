@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/mainflux/et/pkg/client"
 	"github.com/mainflux/mainflux/coap"
 	"github.com/mainflux/mainflux/coap/api"
 	"github.com/mainflux/mainflux/coap/tracing"
@@ -17,7 +18,6 @@ import (
 	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	"github.com/mainflux/mainflux/internal/env"
-	"github.com/mainflux/mainflux/internal/homing"
 	"github.com/mainflux/mainflux/internal/server"
 	coapserver "github.com/mainflux/mainflux/internal/server/coap"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -102,7 +102,7 @@ func main() {
 	}
 	cs := coapserver.New(ctx, cancel, svcName, coapServerConfig, api.MakeCoAPHandler(svc, logger), logger)
 
-	homeSvc := homing.New(svcName, cfg.MFRelease, logger, cancel)
+	homeSvc := client.New(svcName, cfg.MFRelease, logger, cancel)
 
 	go homeSvc.CallHome(ctx)
 

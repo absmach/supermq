@@ -14,11 +14,11 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
+	"github.com/mainflux/et/pkg/client"
 	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	redisClient "github.com/mainflux/mainflux/internal/clients/redis"
 	"github.com/mainflux/mainflux/internal/env"
-	"github.com/mainflux/mainflux/internal/homing"
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/mqtt"
 	mqttredis "github.com/mainflux/mainflux/mqtt/redis"
@@ -144,7 +144,7 @@ func main() {
 	h := mqtt.NewHandler([]messaging.Publisher{np}, es, logger, tc)
 	h = mqtttracing.NewHandler(tracer, h)
 
-	homeSvc := homing.New(svcName, cfg.MFRelease, logger, cancel)
+	homeSvc := client.New(svcName, cfg.MFRelease, logger, cancel)
 
 	go homeSvc.CallHome(ctx)
 
