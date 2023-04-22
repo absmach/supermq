@@ -501,17 +501,7 @@
               "mode": "off"
             }
           },
-          "mappings": [
-            {
-              "options": {
-                "NaN": {
-                  "index": 0,
-                  "text": "0"
-                }
-              },
-              "type": "value"
-            }
-          ],
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -548,6 +538,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "9.4.7",
       "targets": [
         {
           "datasource": {
@@ -556,9 +547,9 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by(quantile) (rate(auth_api_request_latency_microseconds[$__rate_interval]))",
+          "expr": "avg by(quantile) (auth_api_request_latency_microseconds)",
           "format": "time_series",
-          "instant": true,
+          "instant": false,
           "interval": "",
           "key": "Q-cc5a9d33-5437-4862-abd9-60afd75f3f39-0",
           "legendFormat": "{{quantile}}",
@@ -739,9 +730,9 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by(quantile) (rate(things_api_request_latency_microseconds[$__rate_interval]))",
+          "expr": "avg by(quantile) (things_api_request_latency_microseconds)",
           "format": "time_series",
-          "instant": true,
+          "instant": false,
           "interval": "",
           "key": "Q-cc5a9d33-5437-4862-abd9-60afd75f3f39-0",
           "legendFormat": "{{quantile}}",
@@ -919,11 +910,11 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "editorMode": "builder",
+          "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by(quantile) (rate(users_api_request_latency_microseconds[$__rate_interval]))",
+          "expr": "avg by(quantile) (users_api_request_latency_microseconds)",
           "format": "time_series",
-          "instant": true,
+          "instant": false,
           "interval": "",
           "key": "Q-cc5a9d33-5437-4862-abd9-60afd75f3f39-0",
           "legendFormat": "{{quantile}}",
@@ -1101,11 +1092,11 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "editorMode": "builder",
+          "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by(quantile) (rate(coap_adapter_api_request_latency_microseconds[$__rate_interval]))",
+          "expr": "avg by(quantile) (coap_adapter_api_request_latency_microseconds)",
           "format": "time_series",
-          "instant": true,
+          "instant": false,
           "interval": "",
           "key": "Q-cc5a9d33-5437-4862-abd9-60afd75f3f39-0",
           "legendFormat": "{{quantile}}",
@@ -1282,11 +1273,11 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "editorMode": "builder",
+          "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by(quantile) (rate(ws_adapter_api_request_latency_microseconds[$__rate_interval]))",
+          "expr": "avg by(quantile) (ws_adapter_api_request_latency_microseconds)",
           "format": "time_series",
-          "instant": true,
+          "instant": false,
           "interval": "",
           "key": "Q-cc5a9d33-5437-4862-abd9-60afd75f3f39-0",
           "legendFormat": "{{quantile}}",
@@ -1413,17 +1404,7 @@
               "mode": "off"
             }
           },
-          "mappings": [
-            {
-              "options": {
-                "NaN": {
-                  "index": 0,
-                  "text": "0"
-                }
-              },
-              "type": "value"
-            }
-          ],
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1459,6 +1440,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "9.4.7",
       "targets": [
         {
           "datasource": {
@@ -1467,9 +1449,9 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(rate(http_adapter_api_request_latency_microseconds[$__rate_interval])) by (quantile)",
+          "expr": "avg(http_adapter_api_request_latency_microseconds) by (quantile)",
           "format": "time_series",
-          "instant": true,
+          "instant": false,
           "interval": "",
           "key": "Q-cc5a9d33-5437-4862-abd9-60afd75f3f39-0",
           "legendFormat": "{{quantile}}",
@@ -1490,7 +1472,7 @@
     "list": []
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {},
