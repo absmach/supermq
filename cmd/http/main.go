@@ -10,7 +10,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/mainflux/et/pkg/client"
+	"github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"

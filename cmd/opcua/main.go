@@ -11,7 +11,7 @@ import (
 	"os"
 
 	r "github.com/go-redis/redis/v8"
-	"github.com/mainflux/et/pkg/client"
+	"github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux/internal"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	redisClient "github.com/mainflux/mainflux/internal/clients/redis"

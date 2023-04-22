@@ -13,7 +13,7 @@ import (
 
 	mqttPaho "github.com/eclipse/paho.mqtt.golang"
 	r "github.com/go-redis/redis/v8"
-	"github.com/mainflux/et/pkg/client"
+	"github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux/internal"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"

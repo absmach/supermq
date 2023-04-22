@@ -10,7 +10,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/mainflux/et/pkg/client"
+	"github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux/coap"
 	"github.com/mainflux/mainflux/coap/api"
 	"github.com/mainflux/mainflux/coap/tracing"

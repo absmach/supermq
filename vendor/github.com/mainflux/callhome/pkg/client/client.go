@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	HomeUrl           = "localhost:9022"
+	HomeUrl           = "localhost:8855"
 	stopWaitTime      = 5 * time.Second
 	callHomeSleepTime = 2 * time.Hour
 )
