@@ -17,7 +17,7 @@ import (
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/mqtt"
 	mqttredis "github.com/mainflux/mainflux/mqtt/redis"
-	"github.com/mainflux/mainflux/mqtt/tracing"
+	fwdtracing "github.com/mainflux/mainflux/mqtt/tracing"
 	"github.com/mainflux/mainflux/pkg/auth"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
@@ -98,7 +98,7 @@ func main() {
 	mpub = tracing.New(tracer, mpub)
 
 	fwd := mqtt.NewForwarder(brokers.SubjectAllChannels, logger)
-	fwd = tracing.New(tracer, fwd)
+	fwd = fwdtracing.New(tracer, fwd)
 	if err := fwd.Forward(ctx, svcName, nps, mpub); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to forward message broker messages: %s", err))
 	}
