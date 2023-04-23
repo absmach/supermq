@@ -8,15 +8,16 @@ import (
 	"io"
 	"net/http"
 	"net/netip"
+	"strings"
 	"time"
 
 	mflog "github.com/mainflux/mainflux/logger"
 )
 
 const (
-	HomeUrl           = "localhost:8855"
+	HomeUrl           = "http://callhome-server:8855/telemetry"
 	stopWaitTime      = 5 * time.Second
-	callHomeSleepTime = 2 * time.Hour
+	callHomeSleepTime = 30 * time.Minute
 )
 
 var ipEndpoints = []string{
@@ -60,6 +61,8 @@ func (hs *homingService) CallHome(ctx context.Context) {
 					hs.logger.Warn(fmt.Sprintf("failed to get ip address with error: %v", err))
 					continue
 				}
+				ip = strings.ReplaceAll(ip, "\n", "")
+				ip = strings.ReplaceAll(ip, "\\", "")
 				parsedIP, err := netip.ParseAddr(ip)
 				if err != nil {
 					hs.logger.Warn(fmt.Sprintf("failed to parse ip address with error: %v", err))
@@ -121,6 +124,7 @@ func (hs *homingService) send(telDat *telemetryData) error {
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/json")
 	res, err := hs.httpClient.Do(req)
 	if err != nil || res.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unsuccessful sending telemetry data")
