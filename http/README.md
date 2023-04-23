@@ -18,6 +18,7 @@ default values.
 | MF_JAEGER_URL               | Jaeger server URL                                             | localhost:6831        |
 | MF_THINGS_AUTH_GRPC_URL     | Things service Auth gRPC URL                                  | localhost:7000        |
 | MF_THINGS_AUTH_GRPC_TIMEOUT | Things service Auth gRPC request timeout in seconds           | 1s                    |
+| MF_RELEASE_TAG | Mainflux release tag | latest |
 
 ## Deployment
 
