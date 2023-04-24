@@ -13,6 +13,7 @@ import (
 	chclient "github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/consumers"
+	consumerTracing "github.com/mainflux/mainflux/consumers/tracing"
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/mongodb"
 	"github.com/mainflux/mainflux/internal"
@@ -92,6 +93,7 @@ func main() {
 	}
 
 	repo := newService(db, logger)
+	repo = consumerTracing.NewBlocking(tracer, repo)
 
 	if err := consumers.Start(ctx, svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to start MongoDB writer: %s", err))

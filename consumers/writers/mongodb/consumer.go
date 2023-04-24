@@ -29,7 +29,7 @@ func New(db *mongo.Database) consumers.BlockingConsumer {
 	return &mongoRepo{db}
 }
 
-func (repo *mongoRepo) ConsumeBlocking(message interface{}) error {
+func (repo *mongoRepo) ConsumeBlocking(_ context.Context, message interface{}) error {
 	switch m := message.(type) {
 	case json.Messages:
 		return repo.saveJSON(m)

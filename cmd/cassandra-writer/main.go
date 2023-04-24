@@ -15,6 +15,7 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/mainflux/mainflux/consumers"
+	consumerTracing "github.com/mainflux/mainflux/consumers/tracing"
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/cassandra"
 	"github.com/mainflux/mainflux/internal"
@@ -89,6 +90,7 @@ func main() {
 
 	// Create new cassandra-writer repo
 	repo := newService(csdSession, logger)
+	repo = consumerTracing.NewBlocking(tracer, repo)
 
 	// Create new pub sub broker
 	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)

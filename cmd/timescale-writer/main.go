@@ -15,6 +15,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux/consumers"
+	consumerTracing "github.com/mainflux/mainflux/consumers/tracing"
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/timescale"
 	"github.com/mainflux/mainflux/internal"
@@ -88,6 +89,7 @@ func main() {
 	tracer := tp.Tracer(svcName)
 
 	repo := newService(db, logger)
+	repo = consumerTracing.NewBlocking(tracer, repo)
 
 	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
 	if err != nil {

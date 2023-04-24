@@ -35,7 +35,7 @@ func New(db *sqlx.DB) consumers.BlockingConsumer {
 	return &timescaleRepo{db: db}
 }
 
-func (tr *timescaleRepo) ConsumeBlocking(message interface{}) (err error) {
+func (tr *timescaleRepo) ConsumeBlocking(_ context.Context, message interface{}) (err error) {
 	switch m := message.(type) {
 	case mfjson.Messages:
 		return tr.saveJSON(m)

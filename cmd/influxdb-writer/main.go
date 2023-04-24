@@ -13,6 +13,7 @@ import (
 	chclient "github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/consumers"
+	consumerTracing "github.com/mainflux/mainflux/consumers/tracing"
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/influxdb"
 	influxDBClient "github.com/mainflux/mainflux/internal/clients/influxdb"
@@ -102,6 +103,7 @@ func main() {
 	defer client.Close()
 
 	repo := influxdb.NewAsync(client, repocfg)
+	repo = consumerTracing.NewAsync(tracer, repo)
 
 	// Start consuming and logging errors.
 	go func(log mflog.Logger) {

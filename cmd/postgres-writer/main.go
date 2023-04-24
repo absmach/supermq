@@ -14,6 +14,7 @@ import (
 	chclient "github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/consumers"
+	consumerTracing "github.com/mainflux/mainflux/consumers/tracing"
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	writerPg "github.com/mainflux/mainflux/consumers/writers/postgres"
 	"github.com/mainflux/mainflux/internal"
@@ -94,6 +95,7 @@ func main() {
 	defer db.Close()
 
 	repo := newService(db, logger)
+	repo = consumerTracing.NewBlocking(tracer, repo)
 
 	if err = consumers.Start(ctx, svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to create Postgres writer: %s", err))

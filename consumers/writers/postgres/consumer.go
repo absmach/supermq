@@ -36,7 +36,7 @@ func New(db *sqlx.DB) consumers.BlockingConsumer {
 	return &postgresRepo{db: db}
 }
 
-func (pr postgresRepo) ConsumeBlocking(message interface{}) (err error) {
+func (pr postgresRepo) ConsumeBlocking(_ context.Context, message interface{}) (err error) {
 	switch m := message.(type) {
 	case mfjson.Messages:
 		return pr.saveJSON(m)
