@@ -52,10 +52,7 @@ func (tm *tracingMiddlewareBlock) ConsumeBlocking(ctx context.Context, messages 
 		defer span.Finish()
 		ctx = opentracing.ContextWithSpan(ctx, span)
 		for _, mes := range m.Data {
-			mesSpan, _ := opentracing.StartSpanFromContextWithTracer(ctx, tm.tracer, consumeBlockingOP)
-			mesSpan.SetTag("topic", mes.Channel)
-			mesSpan.SetTag("sub-topic", mes.Subtopic)
-			mesSpan.SetTag("publisher", mes.Publisher)
+			mesSpan := createMessageSpan(ctx, tm.tracer, mes.Channel, mes.Subtopic, mes.Publisher, consumeBlockingOP)
 			ctx = opentracing.ContextWithSpan(ctx, span)
 			defer mesSpan.Finish()
 		}
@@ -65,13 +62,9 @@ func (tm *tracingMiddlewareBlock) ConsumeBlocking(ctx context.Context, messages 
 		defer span.Finish()
 		ctx = opentracing.ContextWithSpan(ctx, span)
 		for _, mes := range m {
-			mesSpan, _ := opentracing.StartSpanFromContextWithTracer(ctx, tm.tracer, consumeBlockingOP)
-			mesSpan.SetTag("topic", mes.Channel)
-			mesSpan.SetTag("sub-topic", mes.Subtopic)
-			mesSpan.SetTag("publisher", mes.Publisher)
+			mesSpan := createMessageSpan(ctx, tm.tracer, mes.Channel, mes.Subtopic, mes.Publisher, consumeBlockingOP)
 			ctx = opentracing.ContextWithSpan(ctx, span)
 			defer mesSpan.Finish()
-			// NewBlocking creates a new traced consumers.Blocking service mesSpan.Finish()
 		}
 	}
 	return tm.consumerBlock.ConsumeBlocking(ctx, messages)
@@ -86,10 +79,7 @@ func (tm *tracingMiddlewareAsync) ConsumeAsync(ctx context.Context, messages int
 		defer span.Finish()
 		ctx = opentracing.ContextWithSpan(ctx, span)
 		for _, mes := range m.Data {
-			mesSpan, _ := opentracing.StartSpanFromContextWithTracer(ctx, tm.tracer, consumeAsyncOP)
-			mesSpan.SetTag("topic", mes.Channel)
-			mesSpan.SetTag("sub-topic", mes.Subtopic)
-			mesSpan.SetTag("publisher", mes.Publisher)
+			mesSpan := createMessageSpan(ctx, tm.tracer, mes.Channel, mes.Subtopic, mes.Publisher, consumeAsyncOP)
 			ctx = opentracing.ContextWithSpan(ctx, mesSpan)
 			defer mesSpan.Finish()
 		}
@@ -99,10 +89,7 @@ func (tm *tracingMiddlewareAsync) ConsumeAsync(ctx context.Context, messages int
 		defer span.Finish()
 		ctx = opentracing.ContextWithSpan(ctx, span)
 		for _, mes := range m {
-			mesSpan, _ := opentracing.StartSpanFromContextWithTracer(ctx, tm.tracer, consumeAsyncOP)
-			mesSpan.SetTag("topic", mes.Channel)
-			mesSpan.SetTag("sub-topic", mes.Subtopic)
-			mesSpan.SetTag("publisher", mes.Publisher)
+			mesSpan := createMessageSpan(ctx, tm.tracer, mes.Channel, mes.Subtopic, mes.Publisher, consumeAsyncOP)
 			ctx = opentracing.ContextWithSpan(ctx, mesSpan)
 			defer mesSpan.Finish()
 		}
@@ -113,4 +100,12 @@ func (tm *tracingMiddlewareAsync) ConsumeAsync(ctx context.Context, messages int
 // Errors traces async consume errors.
 func (tm *tracingMiddlewareAsync) Errors() <-chan error {
 	return tm.consumerAsync.Errors()
+}
+
+func createMessageSpan(ctx context.Context, tracer opentracing.Tracer, topic, subTopic, publisher, operation string) opentracing.Span {
+	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, tracer, consumeAsyncOP)
+	span.SetTag("topic", topic)
+	span.SetTag("sub-topic", subTopic)
+	span.SetTag("publisher", publisher)
+	return span
 }
