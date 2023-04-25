@@ -2,6 +2,7 @@ package mqtt_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -91,7 +92,8 @@ func TestAuthConnect(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := handler.AuthConnect(tc.session)
+		ctx := tc.session.ToContext(context.TODO())
+		err := handler.AuthConnect(ctx)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -137,7 +139,8 @@ func TestAuthPublish(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := handler.AuthPublish(tc.client, tc.topic, &tc.payload)
+		ctx := tc.client.ToContext(context.TODO())
+		err := handler.AuthPublish(ctx, tc.topic, &tc.payload)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -190,7 +193,8 @@ func TestAuthSubscribe(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := handler.AuthSubscribe(tc.client, tc.topic)
+		ctx := tc.client.ToContext(context.TODO())
+		err := handler.AuthSubscribe(ctx, tc.topic)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -217,7 +221,8 @@ func TestConnect(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		handler.Connect(tc.client)
+		ctx := tc.client.ToContext(context.TODO())
+		handler.Connect(ctx)
 		assert.Contains(t, logBuffer.String(), tc.logMsg)
 	}
 }
@@ -289,7 +294,8 @@ func TestPublish(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		handler.Publish(tc.client, &tc.topic, &tc.payload)
+		ctx := tc.client.ToContext(context.TODO())
+		handler.Publish(ctx, &tc.topic, &tc.payload)
 		assert.Contains(t, logBuffer.String(), tc.logMsg)
 	}
 }
@@ -319,7 +325,8 @@ func TestSubscribe(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		handler.Subscribe(tc.client, &tc.topic)
+		ctx := tc.client.ToContext(context.TODO())
+		handler.Subscribe(ctx, &tc.topic)
 		assert.Contains(t, logBuffer.String(), tc.logMsg)
 	}
 }
@@ -349,7 +356,8 @@ func TestUnsubscribe(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		handler.Unsubscribe(tc.client, &tc.topic)
+		ctx := tc.client.ToContext(context.TODO())
+		handler.Unsubscribe(ctx, &tc.topic)
 		assert.Contains(t, logBuffer.String(), tc.logMsg)
 	}
 }
@@ -379,7 +387,8 @@ func TestDisconnect(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		handler.Disconnect(tc.client)
+		ctx := tc.client.ToContext(context.TODO())
+		handler.Disconnect(ctx)
 		assert.Contains(t, logBuffer.String(), tc.logMsg)
 	}
 }

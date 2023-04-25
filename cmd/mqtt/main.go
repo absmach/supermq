@@ -165,7 +165,7 @@ func proxyMQTT(ctx context.Context, cfg config, logger mflog.Logger, handler ses
 
 	errCh := make(chan error)
 	go func() {
-		errCh <- mp.Listen()
+		errCh <- mp.Listen(ctx)
 	}()
 
 	select {

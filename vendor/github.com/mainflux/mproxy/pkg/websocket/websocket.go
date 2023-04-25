@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
@@ -58,11 +59,11 @@ func (p Proxy) handle() http.Handler {
 			return
 		}
 
-		go p.pass(cconn)
+		go p.pass(r.Context(), cconn)
 	})
 }
 
-func (p Proxy) pass(in *websocket.Conn) {
+func (p Proxy) pass(ctx context.Context, in *websocket.Conn) {
 	defer in.Close()
 
 	url := url.URL{
@@ -94,10 +95,13 @@ func (p Proxy) pass(in *websocket.Conn) {
 		return
 	}
 
-	session := session.New(c, s, p.event, p.logger, clientCert)
-	err = session.Stream()
+	sess := session.New(ctx, c, s, p.event, p.logger, clientCert)
+	err = sess.Stream()
 	errc <- err
-	p.logger.Warn("Broken connection for client: " + session.Client.ID + " with error: " + err.Error())
+	var client session.Client
+	if err := client.FromContext(ctx); err != nil {
+		p.logger.Warn("Broken connection for client: " + client.ID + " with error: " + err.Error())
+	}
 }
 
 // Listen of the server

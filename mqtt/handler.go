@@ -72,8 +72,9 @@ func NewHandler(publishers []messaging.Publisher, es redis.EventStore,
 
 // AuthConnect is called on device connection,
 // prior forwarding to the MQTT broker
-func (h *handler) AuthConnect(c *session.Client) error {
-	if c == nil {
+func (h *handler) AuthConnect(ctx context.Context) error {
+	var c session.Client
+	if err := c.FromContext(ctx); err != nil {
 		return ErrClientNotInitialized
 	}
 
@@ -81,7 +82,7 @@ func (h *handler) AuthConnect(c *session.Client) error {
 		return ErrMissingClientID
 	}
 
-	thid, err := h.auth.Identify(context.Background(), string(c.Password))
+	thid, err := h.auth.Identify(ctx, string(c.Password))
 	if err != nil {
 		return err
 	}
@@ -99,8 +100,9 @@ func (h *handler) AuthConnect(c *session.Client) error {
 
 // AuthPublish is called on device publish,
 // prior forwarding to the MQTT broker
-func (h *handler) AuthPublish(c *session.Client, topic *string, payload *[]byte) error {
-	if c == nil {
+func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byte) error {
+	var c session.Client
+	if err := c.FromContext(ctx); err != nil {
 		return ErrClientNotInitialized
 	}
 	if topic == nil {
@@ -112,8 +114,9 @@ func (h *handler) AuthPublish(c *session.Client, topic *string, payload *[]byte)
 
 // AuthSubscribe is called on device publish,
 // prior forwarding to the MQTT broker
-func (h *handler) AuthSubscribe(c *session.Client, topics *[]string) error {
-	if c == nil {
+func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
+	var c session.Client
+	if err := c.FromContext(ctx); err != nil {
 		return ErrClientNotInitialized
 	}
 	if topics == nil || *topics == nil {
@@ -131,8 +134,9 @@ func (h *handler) AuthSubscribe(c *session.Client, topics *[]string) error {
 }
 
 // Connect - after client successfully connected
-func (h *handler) Connect(c *session.Client) {
-	if c == nil {
+func (h *handler) Connect(ctx context.Context) {
+	var c session.Client
+	if err := c.FromContext(ctx); err != nil {
 		h.logger.Error(LogErrFailedConnect + (ErrClientNotInitialized).Error())
 		return
 	}
@@ -140,8 +144,9 @@ func (h *handler) Connect(c *session.Client) {
 }
 
 // Publish - after client successfully published
-func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
-	if c == nil {
+func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) {
+	var c session.Client
+	if err := c.FromContext(ctx); err != nil {
 		h.logger.Error(LogErrFailedPublish + ErrClientNotInitialized.Error())
 		return
 	}
@@ -181,8 +186,9 @@ func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 }
 
 // Subscribe - after client successfully subscribed
-func (h *handler) Subscribe(c *session.Client, topics *[]string) {
-	if c == nil {
+func (h *handler) Subscribe(ctx context.Context, topics *[]string) {
+	var c session.Client
+	if err := c.FromContext(ctx); err != nil {
 		h.logger.Error(LogErrFailedSubscribe + (ErrClientNotInitialized).Error())
 		return
 	}
@@ -190,8 +196,9 @@ func (h *handler) Subscribe(c *session.Client, topics *[]string) {
 }
 
 // Unsubscribe - after client unsubscribed
-func (h *handler) Unsubscribe(c *session.Client, topics *[]string) {
-	if c == nil {
+func (h *handler) Unsubscribe(ctx context.Context, topics *[]string) {
+	var c session.Client
+	if err := c.FromContext(ctx); err != nil {
 		h.logger.Error(LogErrFailedUnsubscribe + (ErrClientNotInitialized).Error())
 		return
 	}
@@ -199,8 +206,9 @@ func (h *handler) Unsubscribe(c *session.Client, topics *[]string) {
 }
 
 // Disconnect - connection with broker or client lost
-func (h *handler) Disconnect(c *session.Client) {
-	if c == nil {
+func (h *handler) Disconnect(ctx context.Context) {
+	var c session.Client
+	if err := c.FromContext(ctx); err != nil {
 		h.logger.Error(LogErrFailedDisconnect + (ErrClientNotInitialized).Error())
 		return
 	}
