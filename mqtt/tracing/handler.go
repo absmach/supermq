@@ -25,6 +25,7 @@ type handlerMiddleware struct {
 	tracer  opentracing.Tracer
 }
 
+// NewHandler creates a new session.Handler middlware with tracing.
 func NewHandler(tracer opentracing.Tracer, handler session.Handler) session.Handler {
 	return &handlerMiddleware{
 		tracer:  tracer,
@@ -32,56 +33,56 @@ func NewHandler(tracer opentracing.Tracer, handler session.Handler) session.Hand
 	}
 }
 
-// AuthConnect implements session.Handler
+// AuthConnect traces auth connect operations.
 func (h *handlerMiddleware) AuthConnect(ctx context.Context) error {
 	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, h.tracer, authConnectOP)
 	defer span.Finish()
 	return h.handler.AuthConnect(ctx)
 }
 
-// AuthPublish implements session.Handler
+// AuthPublish traces auth publish operations.
 func (h *handlerMiddleware) AuthPublish(ctx context.Context, topic *string, payload *[]byte) error {
 	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, h.tracer, authPublishOP)
 	defer span.Finish()
 	return h.handler.AuthPublish(ctx, topic, payload)
 }
 
-// AuthSubscribe implements session.Handler
+// AuthSubscribe traces auth subscribe operations.
 func (h *handlerMiddleware) AuthSubscribe(ctx context.Context, topics *[]string) error {
 	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, h.tracer, authSubscribeOP)
 	defer span.Finish()
 	return h.handler.AuthSubscribe(ctx, topics)
 }
 
-// Connect implements session.Handler
+// Connect traces connect operations.
 func (h *handlerMiddleware) Connect(ctx context.Context) {
 	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, h.tracer, connectOP)
 	defer span.Finish()
 	h.handler.Connect(ctx)
 }
 
-// Disconnect implements session.Handler
+// Disconnect traces disconnect operations.
 func (h *handlerMiddleware) Disconnect(ctx context.Context) {
 	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, h.tracer, disconnectOP)
 	defer span.Finish()
 	h.handler.Disconnect(ctx)
 }
 
-// Publish implements session.Handler
+// Publish traces publish operations.
 func (h *handlerMiddleware) Publish(ctx context.Context, topic *string, payload *[]byte) {
 	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, h.tracer, publishOP)
 	defer span.Finish()
 	h.handler.Publish(ctx, topic, payload)
 }
 
-// Subscribe implements session.Handler
+// Subscribe traces subscribe operations.
 func (h *handlerMiddleware) Subscribe(ctx context.Context, topics *[]string) {
 	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, h.tracer, subscribeOP)
 	defer span.Finish()
 	h.handler.Subscribe(ctx, topics)
 }
 
-// Unsubscribe implements session.Handler
+// Unsubscribe traces unsubscribe operations.
 func (h *handlerMiddleware) Unsubscribe(ctx context.Context, topics *[]string) {
 	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, h.tracer, unsubscribeOP)
 	defer span.Finish()
