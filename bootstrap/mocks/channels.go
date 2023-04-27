@@ -33,7 +33,7 @@ func NewChannelsService(channels map[string]mfgroups.Group, auth upolicies.AuthS
 	}
 }
 
-func (svc *mainfluxChannels) CreateGroups(_ context.Context, token string, chs ...mfgroups.Group) ([]mfgroups.Group, error) {
+func (svc *mainfluxChannels) CreateGroups(ctx context.Context, token string, chs ...mfgroups.Group) ([]mfgroups.Group, error) {
 	svc.mu.Lock()
 	defer svc.mu.Unlock()
 
