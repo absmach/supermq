@@ -28,10 +28,9 @@ func New(tracer opentracing.Tracer, forwarder mqtt.Forwarder) mqtt.Forwarder {
 
 // Forward traces mqtt forward operations
 func (fm *forwarderMiddleware) Forward(ctx context.Context, id string, sub messaging.Subscriber, pub messaging.Publisher) error {
-	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, fm.tracer, forwardOP)
+	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, fm.tracer, forwardOP)
 	defer span.Finish()
 	span.SetTag("subscriber", id)
 	span.SetTag("topic", fm.topic)
-	ctx = opentracing.ContextWithSpan(ctx, span)
 	return fm.forwarder.Forward(ctx, id, sub, pub)
 }
