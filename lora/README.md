@@ -28,8 +28,8 @@ default values.
 | MF_THINGS_ES_PASS                | Things service event source password  |                                 |
 | MF_THINGS_ES_DB                  | Things service event source DB        | 0                               |
 | MF_LORA_ADAPTER_EVENT_CONSUMER   | Service event consumer name           | lora                            |
-| MF_JAEGER_URL               | Jaeger server URL                                             | localhost:6831        |
-| MF_RELEASE_TAG | Mainflux release tag | latest |
+| MF_JAEGER_URL                    | Jaeger server URL                     | localhost:6831                  |
+| MF_RELEASE_TAG                   | Mainflux release tag                  | 0.13.0                          |
 
 ## Deployment
 
