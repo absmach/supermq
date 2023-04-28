@@ -19,10 +19,11 @@ type forwarderMiddleware struct {
 }
 
 // New creates new mqtt forwarder tracing middleware.
-func New(tracer opentracing.Tracer, forwarder mqtt.Forwarder) mqtt.Forwarder {
+func New(tracer opentracing.Tracer, forwarder mqtt.Forwarder, topic string) mqtt.Forwarder {
 	return &forwarderMiddleware{
 		forwarder: forwarder,
 		tracer:    tracer,
+		topic:     topic,
 	}
 }
 
