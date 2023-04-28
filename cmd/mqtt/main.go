@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	"github.com/mainflux/callhome/pkg/client"
+	chclient "github.com/mainflux/callhome/pkg/client"
 	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	redisClient "github.com/mainflux/mainflux/internal/clients/redis"
@@ -144,9 +144,8 @@ func main() {
 	h := mqtt.NewHandler([]messaging.Publisher{np}, es, logger, tc)
 	h = mqtttracing.NewHandler(tracer, h)
 
-	homeSvc := client.New(svcName, cfg.MFRelease, logger, cancel)
-
-	go homeSvc.CallHome(ctx)
+	chc := chclient.New(svcName, cfg.MFRelease, logger, cancel)
+	go chc.CallHome(ctx)
 
 	logger.Info(fmt.Sprintf("Starting MQTT proxy on port %s", cfg.MqttPort))
 	g.Go(func() error {

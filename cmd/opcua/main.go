@@ -11,7 +11,7 @@ import (
 	"os"
 
 	r "github.com/go-redis/redis/v8"
-	"github.com/mainflux/callhome/pkg/client"
+	chclient "github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux/internal"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	redisClient "github.com/mainflux/mainflux/internal/clients/redis"
@@ -118,9 +118,8 @@ func main() {
 	}
 	hs := httpserver.New(httpCtx, httpCancel, svcName, httpServerConfig, api.MakeHandler(svc, logger), logger)
 
-	homeSvc := client.New(svcName, cfg.MFRelease, logger, httpCancel)
-
-	go homeSvc.CallHome(httpCtx)
+	chc := chclient.New(svcName, cfg.MFRelease, logger, httpCancel)
+	go chc.CallHome(httpCtx)
 
 	g.Go(func() error {
 		return hs.Start()

@@ -10,7 +10,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/mainflux/callhome/pkg/client"
+	chclient "github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
@@ -91,9 +91,8 @@ func main() {
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc), logger)
 
-	homeSvc := client.New(svcName, cfg.MFRelease, logger, cancel)
-
-	go homeSvc.CallHome(ctx)
+	chc := chclient.New(svcName, cfg.MFRelease, logger, cancel)
+	go chc.CallHome(ctx)
 
 	g.Go(func() error {
 		return hs.Start()

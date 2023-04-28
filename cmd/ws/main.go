@@ -13,7 +13,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/mainflux/callhome/pkg/client"
+	chclient "github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux/internal"
 	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
@@ -90,9 +90,8 @@ func main() {
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, logger), logger)
 
-	homeSvc := client.New(svcName, cfg.MFRelease, logger, cancel)
-
-	go homeSvc.CallHome(ctx)
+	chc := chclient.New(svcName, cfg.MFRelease, logger, cancel)
+	go chc.CallHome(ctx)
 
 	g.Go(func() error {
 		return hs.Start()

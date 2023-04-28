@@ -10,7 +10,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/mainflux/callhome/pkg/client"
+	chclient "github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux/coap"
 	"github.com/mainflux/mainflux/coap/api"
 	"github.com/mainflux/mainflux/coap/tracing"
@@ -102,9 +102,8 @@ func main() {
 	}
 	cs := coapserver.New(ctx, cancel, svcName, coapServerConfig, api.MakeCoAPHandler(svc, logger), logger)
 
-	homeSvc := client.New(svcName, cfg.MFRelease, logger, cancel)
-
-	go homeSvc.CallHome(ctx)
+	chc := chclient.New(svcName, cfg.MFRelease, logger, cancel)
+	go chc.CallHome(ctx)
 
 	g.Go(func() error {
 		return hs.Start()

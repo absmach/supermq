@@ -13,7 +13,7 @@ import (
 
 	mqttPaho "github.com/eclipse/paho.mqtt.golang"
 	r "github.com/go-redis/redis/v8"
-	"github.com/mainflux/callhome/pkg/client"
+	chclient "github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux/internal"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
@@ -115,9 +115,8 @@ func main() {
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(), logger)
 
-	homeSvc := client.New(svcName, cfg.MFRelease, logger, cancel)
-
-	go homeSvc.CallHome(ctx)
+	chc := chclient.New(svcName, cfg.MFRelease, logger, cancel)
+	go chc.CallHome(ctx)
 
 	g.Go(func() error {
 		return hs.Start()
