@@ -234,6 +234,10 @@ func (repo grepo) ChangeStatus(ctx context.Context, group groups.Group) (groups.
 		return groups.Group{}, errors.Wrap(errors.ErrUpdateEntity, err)
 	}
 
+	dbg := dbGroup{
+		ID:     id,
+		Status: status,
+	}
 	row, err := repo.db.NamedQueryContext(ctx, qc, dbg)
 	if err != nil {
 		return mfgroups.Group{}, postgres.HandleError(err, errors.ErrUpdateEntity)
@@ -276,7 +280,7 @@ func buildQuery(gm groups.GroupsPage) (string, error) {
 	if gm.Name != "" {
 		queries = append(queries, "g.name = :name")
 	}
-	if gm.Status != groups.AllStatus {
+	if gm.Status != mainflux.AllStatus {
 		queries = append(queries, "g.status = :status")
 	}
 
