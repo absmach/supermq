@@ -547,12 +547,12 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "auth_api_request_latency_microseconds",
+          "expr": "label_replace(label_replace(label_replace(auth_api_request_latency_microseconds, \"quantile\", \"50th percentile\", \"quantile\", \"0.5\"), \"quantile\", \"90th percentile\", \"quantile\", \"0.9\"), \"quantile\", \"99th percentile\", \"quantile\", \"0.99\")",
           "format": "time_series",
           "instant": false,
           "interval": "",
           "key": "Q-cc5a9d33-5437-4862-abd9-60afd75f3f39-0",
-          "legendFormat": "{{quantile}}",
+          "legendFormat": "{{method}} - {{quantile}}",
           "range": true,
           "refId": "A"
         }
@@ -730,12 +730,12 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "things_api_request_latency_microseconds",
+          "expr": "label_replace(label_replace(label_replace(things_api_request_latency_microseconds, \"quantile\", \"50th percentile\", \"quantile\", \"0.5\"), \"quantile\", \"90th percentile\", \"quantile\", \"0.9\"), \"quantile\", \"99th percentile\", \"quantile\", \"0.99\")",
           "format": "time_series",
           "instant": false,
           "interval": "",
           "key": "Q-cc5a9d33-5437-4862-abd9-60afd75f3f39-0",
-          "legendFormat": "{{quantile}}",
+          "legendFormat": "{{method}} - {{quantile}}",
           "range": true,
           "refId": "A"
         }
@@ -912,12 +912,12 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "users_api_request_latency_microseconds",
+          "expr": "label_replace(label_replace(label_replace(users_api_request_latency_microseconds, \"quantile\", \"50th percentile\", \"quantile\", \"0.5\"), \"quantile\", \"90th percentile\", \"quantile\", \"0.9\"), \"quantile\", \"99th percentile\", \"quantile\", \"0.99\")",
           "format": "time_series",
           "instant": false,
           "interval": "",
           "key": "Q-cc5a9d33-5437-4862-abd9-60afd75f3f39-0",
-          "legendFormat": "{{quantile}}",
+          "legendFormat": "{{method}} - {{quantile}}",
           "range": true,
           "refId": "A"
         }
@@ -1094,12 +1094,12 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "coap_adapter_api_request_latency_microseconds",
+          "expr": "label_replace(label_replace(label_replace(coap_adapter_api_request_latency_microseconds, \"quantile\", \"50th percentile\", \"quantile\", \"0.5\"), \"quantile\", \"90th percentile\", \"quantile\", \"0.9\"), \"quantile\", \"99th percentile\", \"quantile\", \"0.99\")",
           "format": "time_series",
           "instant": false,
           "interval": "",
           "key": "Q-cc5a9d33-5437-4862-abd9-60afd75f3f39-0",
-          "legendFormat": "{{quantile}}",
+          "legendFormat": "{{method}} - {{quantile}}",
           "range": true,
           "refId": "A"
         }
@@ -1275,12 +1275,12 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "ws_adapter_api_request_latency_microseconds",
+          "expr": "label_replace(label_replace(label_replace(ws_adapter_api_request_latency_microseconds, \"quantile\", \"50th percentile\", \"quantile\", \"0.5\"), \"quantile\", \"90th percentile\", \"quantile\", \"0.9\"), \"quantile\", \"99th percentile\", \"quantile\", \"0.99\")",
           "format": "time_series",
           "instant": false,
           "interval": "",
           "key": "Q-cc5a9d33-5437-4862-abd9-60afd75f3f39-0",
-          "legendFormat": "{{quantile}}",
+          "legendFormat": "{{method}} - {{quantile}}",
           "range": true,
           "refId": "A"
         }
@@ -1449,12 +1449,12 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "http_adapter_api_request_latency_microseconds",
+          "expr": "label_replace(label_replace(label_replace(http_adapter_api_request_latency_microseconds, \"quantile\", \"50th percentile\", \"quantile\", \"0.5\"), \"quantile\", \"90th percentile\", \"quantile\", \"0.9\"), \"quantile\", \"99th percentile\", \"quantile\", \"0.99\")",
           "format": "time_series",
           "instant": false,
           "interval": "",
           "key": "Q-cc5a9d33-5437-4862-abd9-60afd75f3f39-0",
-          "legendFormat": "{{quantile}}",
+          "legendFormat": "{{method}} - {{quantile}}",
           "range": true,
           "refId": "A"
         }
@@ -1479,6 +1479,6 @@
   "timezone": "",
   "title": "mainflux",
   "uid": "sgKwOwY4k",
-  "version": 3,
+  "version": 4,
   "weekStart": ""
 }
