@@ -510,7 +510,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unit": "µs"
         },
         "overrides": []
       },
@@ -694,7 +695,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unit": "µs"
         },
         "overrides": []
       },
@@ -876,7 +878,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unit": "µs"
         },
         "overrides": []
       },
@@ -1058,7 +1061,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unit": "µs"
         },
         "overrides": []
       },
@@ -1240,7 +1244,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unit": "µs"
         },
         "overrides": []
       },
@@ -1413,7 +1418,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unit": "µs"
         },
         "overrides": []
       },
@@ -1479,6 +1485,6 @@
   "timezone": "",
   "title": "mainflux",
   "uid": "sgKwOwY4k",
-  "version": 4,
+  "version": 5,
   "weekStart": ""
 }
