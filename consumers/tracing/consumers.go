@@ -100,7 +100,9 @@ func (tm *tracingMiddlewareAsync) Errors() <-chan error {
 func createMessageSpan(ctx context.Context, tracer opentracing.Tracer, topic, subTopic, publisher, operation string) opentracing.Span {
 	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, tracer, operation)
 	span.SetTag("topic", topic)
-	span.SetTag("sub-topic", subTopic)
+	if subTopic != "" {
+		span.SetTag("sub-topic", subTopic)
+	}
 	span.SetTag("publisher", publisher)
 	return span
 }
