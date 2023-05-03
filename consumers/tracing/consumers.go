@@ -27,7 +27,7 @@ type tracingMiddlewareBlock struct {
 	tracer        opentracing.Tracer
 }
 
-// NewAsync creates a new traced consumers.Blocking service
+// NewAsync creates a new traced consumers.AsyncConsumer service
 func NewAsync(tracer opentracing.Tracer, consumerAsync consumers.AsyncConsumer) consumers.AsyncConsumer {
 	return &tracingMiddlewareAsync{
 		consumerAsync: consumerAsync,
@@ -35,7 +35,7 @@ func NewAsync(tracer opentracing.Tracer, consumerAsync consumers.AsyncConsumer) 
 	}
 }
 
-// NewBlocking creates a new traced consumers.Blocking service
+// NewBlocking creates a new traced consumers.BlockingConsumer service
 func NewBlocking(tracer opentracing.Tracer, consumerBlock consumers.BlockingConsumer) consumers.BlockingConsumer {
 	return &tracingMiddlewareBlock{
 		consumerBlock: consumerBlock,
@@ -43,7 +43,7 @@ func NewBlocking(tracer opentracing.Tracer, consumerBlock consumers.BlockingCons
 	}
 }
 
-// ConsumeBlocking  traces consume operations for each message.
+// ConsumeBlocking  traces consume operations for message/s consumed.
 func (tm *tracingMiddlewareBlock) ConsumeBlocking(ctx context.Context, messages interface{}) error {
 	var span opentracing.Span
 	switch m := messages.(type) {
@@ -59,7 +59,7 @@ func (tm *tracingMiddlewareBlock) ConsumeBlocking(ctx context.Context, messages 
 	return tm.consumerBlock.ConsumeBlocking(ctx, messages)
 }
 
-// ConsumeAsync traces consume operations for each message.
+// ConsumeAsync traces consume operations for message/s consumed.
 func (tm *tracingMiddlewareAsync) ConsumeAsync(ctx context.Context, messages interface{}) {
 	var span opentracing.Span
 	switch m := messages.(type) {
