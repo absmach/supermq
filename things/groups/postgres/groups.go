@@ -417,18 +417,18 @@ func toDBGroupPage(pm groups.GroupsPage) (dbGroupPage, error) {
 }
 
 type dbGroupPage struct {
-	ClientID string        `db:"client_id"`
-	ID       string        `db:"id"`
-	Name     string        `db:"name"`
-	ParentID string        `db:"parent_id"`
-	Owner    string        `db:"owner_id"`
-	Metadata []byte        `db:"metadata"`
-	Path     string        `db:"path"`
-	Level    uint64        `db:"level"`
-	Total    uint64        `db:"total"`
-	Limit    uint64        `db:"limit"`
-	Offset   uint64        `db:"offset"`
-	Subject  string        `db:"subject"`
-	Action   string        `db:"action"`
-	Status   groups.Status `db:"status"`
+	ClientID string          `db:"client_id"`
+	ID       string          `db:"id"`
+	Name     string          `db:"name"`
+	ParentID string          `db:"parent_id"`
+	Owner    string          `db:"owner_id"`
+	Metadata []byte          `db:"metadata"`
+	Path     string          `db:"path"`
+	Level    uint64          `db:"level"`
+	Total    uint64          `db:"total"`
+	Limit    uint64          `db:"limit"`
+	Offset   uint64          `db:"offset"`
+	Subject  string          `db:"subject"`
+	Action   string          `db:"action"`
+	Status   mainflux.Status `db:"status"`
 }
