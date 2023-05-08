@@ -74,7 +74,7 @@ type listClientsReq struct {
 	owner      string
 	sharedBy   string
 	visibility string
-	metadata   clients.Metadata
+	metadata   mfclients.Metadata
 }
 
 func (req listClientsReq) validate() error {

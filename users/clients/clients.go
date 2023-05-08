@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mainflux/mainflux/internal/mainflux"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"golang.org/x/net/idna"
 )
@@ -37,17 +38,17 @@ type Credentials struct {
 
 // Client represents generic Client.
 type Client struct {
-	ID          string      `json:"id"`
-	Name        string      `json:"name,omitempty"`
-	Tags        []string    `json:"tags,omitempty"`
-	Owner       string      `json:"owner,omitempty"` // nullable
-	Credentials Credentials `json:"credentials"`
-	Metadata    Metadata    `json:"metadata,omitempty"`
-	CreatedAt   time.Time   `json:"created_at"`
-	UpdatedAt   time.Time   `json:"updated_at,omitempty"`
-	UpdatedBy   string      `json:"updated_by,omitempty"`
-	Status      Status      `json:"status"`         // 1 for enabled, 0 for disabled
-	Role        Role        `json:"role,omitempty"` // 1 for admin, 0 for normal user
+	ID          string            `json:"id"`
+	Name        string            `json:"name,omitempty"`
+	Tags        []string          `json:"tags,omitempty"`
+	Owner       string            `json:"owner,omitempty"` // nullable
+	Credentials Credentials       `json:"credentials"`
+	Metadata    mainflux.Metadata `json:"metadata,omitempty"`
+	CreatedAt   time.Time         `json:"created_at"`
+	UpdatedAt   time.Time         `json:"updated_at,omitempty"`
+	UpdatedBy   string            `json:"updated_by,omitempty"`
+	Status      mainflux.Status   `json:"status"`         // 1 for enabled, 0 for disabled
+	Role        Role              `json:"role,omitempty"` // 1 for admin, 0 for normal user
 }
 
 // ClientsPage contains page related metadata as well as list

@@ -7,6 +7,7 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	mfclients "github.com/mainflux/mainflux/internal/mainflux"
+	"github.com/mainflux/mainflux/internal/mainflux/groups"
 	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/jwt"
@@ -69,9 +70,9 @@ func (svc service) CreateGroup(ctx context.Context, token string, g mfgroups.Gro
 	return svc.groups.Save(ctx, g)
 }
 
-func (svc service) ViewGroup(ctx context.Context, token string, id string) (Group, error) {
+func (svc service) ViewGroup(ctx context.Context, token string, id string) (groups.Group, error) {
 	if err := svc.authorizeByToken(ctx, entityType, policies.Policy{Subject: token, Object: id, Actions: []string{listRelationKey}}); err != nil {
-		return Group{}, err
+		return groups.Group{}, err
 	}
 
 	return svc.groups.RetrieveByID(ctx, id)
@@ -103,13 +104,13 @@ func (svc service) ListMemberships(ctx context.Context, token, clientID string, 
 	return svc.groups.Memberships(ctx, clientID, gm)
 }
 
-func (svc service) UpdateGroup(ctx context.Context, token string, g Group) (Group, error) {
+func (svc service) UpdateGroup(ctx context.Context, token string, g groups.Group) (groups.Group, error) {
 	id, err := svc.identify(ctx, token)
 	if err != nil {
-		return Group{}, err
+		return groups.Group{}, err
 	}
 	if err := svc.authorizeByID(ctx, entityType, policies.Policy{Subject: id, Object: g.ID, Actions: []string{updateRelationKey}}); err != nil {
-		return Group{}, err
+		return groups.Group{}, err
 	}
 	g.UpdatedAt = time.Now()
 	g.UpdatedBy = id
@@ -117,10 +118,10 @@ func (svc service) UpdateGroup(ctx context.Context, token string, g Group) (Grou
 	return svc.groups.Update(ctx, g)
 }
 
-func (svc service) EnableGroup(ctx context.Context, token, id string) (Group, error) {
-	group := Group{
+func (svc service) EnableGroup(ctx context.Context, token, id string) (groups.Group, error) {
+	group := groups.Group{
 		ID:        id,
-		Status:    EnabledStatus,
+		Status:    mfclients.EnabledStatus,
 		UpdatedAt: time.Now(),
 	}
 	group, err := svc.changeGroupStatus(ctx, token, group)
@@ -130,10 +131,10 @@ func (svc service) EnableGroup(ctx context.Context, token, id string) (Group, er
 	return group, nil
 }
 
-func (svc service) DisableGroup(ctx context.Context, token, id string) (Group, error) {
-	group := Group{
+func (svc service) DisableGroup(ctx context.Context, token, id string) (groups.Group, error) {
+	group := groups.Group{
 		ID:        id,
-		Status:    DisabledStatus,
+		Status:    mfclients.DisabledStatus,
 		UpdatedAt: time.Now(),
 	}
 	group, err := svc.changeGroupStatus(ctx, token, group)
@@ -168,20 +169,20 @@ func (svc service) authorizeByToken(ctx context.Context, entityType string, p po
 	return svc.policies.Evaluate(ctx, entityType, p)
 }
 
-func (svc service) changeGroupStatus(ctx context.Context, token string, group Group) (Group, error) {
+func (svc service) changeGroupStatus(ctx context.Context, token string, group groups.Group) (groups.Group, error) {
 	id, err := svc.identify(ctx, token)
 	if err != nil {
 		return mfgroups.Group{}, err
 	}
 	if err := svc.authorizeByID(ctx, entityType, policies.Policy{Subject: id, Object: group.ID, Actions: []string{deleteRelationKey}}); err != nil {
-		return Group{}, err
+		return groups.Group{}, err
 	}
 	dbGroup, err := svc.groups.RetrieveByID(ctx, group.ID)
 	if err != nil {
-		return Group{}, err
+		return groups.Group{}, err
 	}
 	if dbGroup.Status == group.Status {
-		return Group{}, ErrStatusAlreadyAssigned
+		return groups.Group{}, mfclients.ErrStatusAlreadyAssigned
 	}
 
 	group.UpdatedBy = id

@@ -21,7 +21,7 @@ type Group struct {
 	ID          string            `json:"id"`
 	Owner       string            `json:"owner_id"`
 	Parent      string            `json:"parent_id,omitempty"`
-	Name        string            `json:"name,omitempty"`
+	Name        string            `json:"name"`
 	Description string            `json:"description,omitempty"`
 	Metadata    mainflux.Metadata `json:"metadata,omitempty"`
 	Level       int               `json:"level,omitempty"`
@@ -29,5 +29,6 @@ type Group struct {
 	Children    []*Group          `json:"children,omitempty"`
 	CreatedAt   time.Time         `json:"created_at"`
 	UpdatedAt   time.Time         `json:"updated_at"`
+	UpdatedBy   string            `json:"updated_by"`
 	Status      mainflux.Status   `json:"status"`
 }

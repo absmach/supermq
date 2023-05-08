@@ -10,11 +10,9 @@ import (
 
 	"github.com/jackc/pgtype" // required for SQL access
 	"github.com/mainflux/mainflux/internal/mainflux"
-	mfclients "github.com/mainflux/mainflux/internal/mainflux"
-	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+	"github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/things/groups"
 	"github.com/mainflux/mainflux/users/clients"
 )
 
@@ -231,7 +229,7 @@ func (repo clientRepo) Update(ctx context.Context, client clients.Client) (clien
 	if len(query) > 0 {
 		upq = strings.Join(query, " ")
 	}
-	client.Status = clients.EnabledStatus
+	client.Status = mainflux.EnabledStatus
 	q := fmt.Sprintf(`UPDATE clients SET %s updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at, updated_by`,
@@ -241,7 +239,7 @@ func (repo clientRepo) Update(ctx context.Context, client clients.Client) (clien
 }
 
 func (repo clientRepo) UpdateTags(ctx context.Context, client clients.Client) (clients.Client, error) {
-	client.Status = clients.EnabledStatus
+	client.Status = mainflux.EnabledStatus
 	q := `UPDATE clients SET tags = :tags, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at, updated_by`
@@ -314,7 +312,7 @@ type dbClient struct {
 	UpdatedAt sql.NullTime     `db:"updated_at,omitempty"`
 	UpdatedBy *string          `db:"updated_by,omitempty"`
 	Groups    []groups.Group   `db:"groups,omitempty"`
-	Status    mfclients.Status `db:"status"`
+	Status    mainflux.Status  `db:"status"`
 	Role      clients.Role     `db:"role"`
 }
 

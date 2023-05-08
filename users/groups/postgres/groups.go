@@ -30,7 +30,7 @@ func NewGroupRepo(db postgres.Database) groups.GroupRepository {
 }
 
 // TODO - check parent group write access.
-func (repo groupRepository) Save(ctx context.Context, g groups.Group) (groups.Group, error) {
+func (repo groupRepository) Save(ctx context.Context, g mfgroups.Group) (mfgroups.Group, error) {
 	q := `INSERT INTO groups (name, description, id, owner_id, parent_id, metadata, created_at, status)
 		VALUES (:name, :description, :id, :owner_id, :parent_id, :metadata, :created_at, :status)
 		RETURNING id, name, description, owner_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, status;`
@@ -54,7 +54,7 @@ func (repo groupRepository) Save(ctx context.Context, g groups.Group) (groups.Gr
 	return toGroup(dbg)
 }
 
-func (repo groupRepository) RetrieveByID(ctx context.Context, id string) (groups.Group, error) {
+func (repo groupRepository) RetrieveByID(ctx context.Context, id string) (mfgroups.Group, error) {
 	q := `SELECT id, name, owner_id, COALESCE(parent_id, '') AS parent_id, description, metadata, created_at, updated_at, updated_by, status FROM groups
 	    WHERE id = :id`
 
@@ -214,7 +214,7 @@ func (repo groupRepository) Update(ctx context.Context, g mfgroups.Group) (mfgro
 	if len(query) > 0 {
 		upq = strings.Join(query, " ")
 	}
-	g.Status = groups.EnabledStatus
+	g.Status = mainflux.EnabledStatus
 	q := fmt.Sprintf(`UPDATE groups SET %s updated_at = :updated_at, updated_by = :updated_by
 		WHERE id = :id AND status = :status
 		RETURNING id, name, description, owner_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, updated_at, updated_by, status`, upq)
@@ -240,13 +240,13 @@ func (repo groupRepository) Update(ctx context.Context, g mfgroups.Group) (mfgro
 	return toGroup(dbu)
 }
 
-func (repo groupRepository) ChangeStatus(ctx context.Context, group groups.Group) (groups.Group, error) {
+func (repo groupRepository) ChangeStatus(ctx context.Context, group mfgroups.Group) (mfgroups.Group, error) {
 	qc := `UPDATE groups SET status = :status WHERE id = :id
 	RETURNING id, name, description, owner_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, updated_at, updated_by, status`
 
 	dbg, err := toDBGroup(group)
 	if err != nil {
-		return groups.Group{}, errors.Wrap(errors.ErrUpdateEntity, err)
+		return mfgroups.Group{}, errors.Wrap(errors.ErrUpdateEntity, err)
 	}
 	row, err := repo.db.NamedQueryContext(ctx, qc, dbg)
 	if err != nil {
@@ -307,18 +307,18 @@ func buildQuery(gm groups.GroupsPage) (string, error) {
 }
 
 type dbGroup struct {
-	ID          string        `db:"id"`
-	ParentID    *string       `db:"parent_id,omitempty"`
-	OwnerID     string        `db:"owner_id,omitempty"`
-	Name        string        `db:"name"`
-	Description string        `db:"description,omitempty"`
-	Level       int           `db:"level"`
-	Path        string        `db:"path,omitempty"`
-	Metadata    []byte        `db:"metadata,omitempty"`
-	CreatedAt   time.Time     `db:"created_at"`
-	UpdatedAt   sql.NullTime  `db:"updated_at,omitempty"`
-	UpdatedBy   *string       `db:"updated_by,omitempty"`
-	Status      groups.Status `db:"status"`
+	ID          string          `db:"id"`
+	ParentID    *string         `db:"parent_id,omitempty"`
+	OwnerID     string          `db:"owner_id,omitempty"`
+	Name        string          `db:"name"`
+	Description string          `db:"description,omitempty"`
+	Level       int             `db:"level"`
+	Path        string          `db:"path,omitempty"`
+	Metadata    []byte          `db:"metadata,omitempty"`
+	CreatedAt   time.Time       `db:"created_at"`
+	UpdatedAt   sql.NullTime    `db:"updated_at,omitempty"`
+	UpdatedBy   *string         `db:"updated_by,omitempty"`
+	Status      mainflux.Status `db:"status"`
 }
 
 func toDBGroup(g mfgroups.Group) (dbGroup, error) {
@@ -331,8 +331,8 @@ func toDBGroup(g mfgroups.Group) (dbGroup, error) {
 		data = b
 	}
 	var parentID *string
-	if g.ParentID != "" {
-		parentID = &g.ParentID
+	if g.Parent != "" {
+		parentID = &g.Parent
 	}
 	var updatedAt sql.NullTime
 	if g.UpdatedAt != (time.Time{}) {
@@ -346,7 +346,7 @@ func toDBGroup(g mfgroups.Group) (dbGroup, error) {
 		ID:          g.ID,
 		Name:        g.Name,
 		ParentID:    parentID,
-		OwnerID:     g.OwnerID,
+		OwnerID:     g.Owner,
 		Description: g.Description,
 		Metadata:    data,
 		Path:        g.Path,
@@ -377,11 +377,11 @@ func toGroup(g dbGroup) (mfgroups.Group, error) {
 		updatedBy = *g.UpdatedBy
 	}
 
-	return groups.Group{
+	return mfgroups.Group{
 		ID:          g.ID,
 		Name:        g.Name,
-		ParentID:    parentID,
-		OwnerID:     g.OwnerID,
+		Parent:      parentID,
+		Owner:       g.OwnerID,
 		Description: g.Description,
 		Metadata:    metadata,
 		Level:       g.Level,

@@ -193,7 +193,7 @@ func (svc service) UpdateClientOwner(ctx context.Context, token string, cli Clie
 func (svc service) EnableClient(ctx context.Context, token, id string) (Client, error) {
 	client := Client{
 		ID:        id,
-		Status:    EnabledStatus,
+		Status:    mfclients.EnabledStatus,
 		UpdatedAt: time.Now(),
 	}
 	client, err := svc.changeClientStatus(ctx, token, client)
@@ -207,7 +207,7 @@ func (svc service) EnableClient(ctx context.Context, token, id string) (Client, 
 func (svc service) DisableClient(ctx context.Context, token, id string) (Client, error) {
 	client := Client{
 		ID:        id,
-		Status:    DisabledStatus,
+		Status:    mfclients.DisabledStatus,
 		UpdatedAt: time.Now(),
 	}
 	client, err := svc.changeClientStatus(ctx, token, client)
@@ -260,7 +260,7 @@ func (svc service) changeClientStatus(ctx context.Context, token string, client 
 		return Client{}, err
 	}
 	if dbClient.Status == client.Status {
-		return Client{}, ErrStatusAlreadyAssigned
+		return Client{}, mfclients.ErrStatusAlreadyAssigned
 	}
 	client.UpdatedBy = userID
 	return svc.clients.ChangeStatus(ctx, client)

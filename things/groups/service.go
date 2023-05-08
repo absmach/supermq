@@ -7,7 +7,7 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	mfclients "github.com/mainflux/mainflux/internal/mainflux"
-	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
+	"github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
 	upolicies "github.com/mainflux/mainflux/users/policies"
 )
@@ -36,18 +36,18 @@ func NewService(auth upolicies.AuthServiceClient, g Repository, idp mainflux.IDP
 	}
 }
 
-func (svc service) CreateGroups(ctx context.Context, token string, gs ...mfgroups.Group) ([]mfgroups.Group, error) {
+func (svc service) CreateGroups(ctx context.Context, token string, gs ...groups.Group) ([]groups.Group, error) {
 	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
 	if err != nil {
-		return []mfgroups.Group{}, errors.Wrap(errors.ErrAuthentication, err)
+		return []groups.Group{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 
-	var grps []mfgroups.Group
+	var grps []groups.Group
 	for _, g := range gs {
 		if g.ID == "" {
 			groupID, err := svc.idProvider.ID()
 			if err != nil {
-				return []mfgroups.Group{}, err
+				return []groups.Group{}, err
 			}
 			g.ID = groupID
 		}
@@ -56,7 +56,7 @@ func (svc service) CreateGroups(ctx context.Context, token string, gs ...mfgroup
 		}
 
 		if g.Status != mfclients.EnabledStatus && g.Status != mfclients.DisabledStatus {
-			return []mfgroups.Group{}, apiutil.ErrInvalidStatus
+			return []groups.Group{}, apiutil.ErrInvalidStatus
 		}
 
 		g.CreatedAt = time.Now()
@@ -64,16 +64,16 @@ func (svc service) CreateGroups(ctx context.Context, token string, gs ...mfgroup
 		g.UpdatedBy = g.Owner
 		grp, err := svc.groups.Save(ctx, g)
 		if err != nil {
-			return []mfgroups.Group{}, err
+			return []groups.Group{}, err
 		}
 		grps = append(grps, grp)
 	}
 	return grps, nil
 }
 
-func (svc service) ViewGroup(ctx context.Context, token string, id string) (mfgroups.Group, error) {
+func (svc service) ViewGroup(ctx context.Context, token string, id string) (groups.Group, error) {
 	if err := svc.authorize(ctx, token, id, listRelationKey); err != nil {
-		return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, err)
+		return groups.Group{}, errors.Wrap(errors.ErrNotFound, err)
 	}
 	return svc.groups.RetrieveByID(ctx, id)
 }
@@ -114,14 +114,14 @@ func (svc service) ListMemberships(ctx context.Context, token, clientID string, 
 	return svc.groups.Memberships(ctx, clientID, gm)
 }
 
-func (svc service) UpdateGroup(ctx context.Context, token string, g mfgroups.Group) (mfgroups.Group, error) {
+func (svc service) UpdateGroup(ctx context.Context, token string, g groups.Group) (groups.Group, error) {
 	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
 	if err != nil {
-		return mfgroups.Group{}, errors.Wrap(errors.ErrAuthentication, err)
+		return groups.Group{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 
 	if err := svc.authorize(ctx, token, g.ID, updateRelationKey); err != nil {
-		return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, err)
+		return groups.Group{}, errors.Wrap(errors.ErrNotFound, err)
 	}
 
 	g.Owner = res.GetId()
@@ -131,47 +131,47 @@ func (svc service) UpdateGroup(ctx context.Context, token string, g mfgroups.Gro
 	return svc.groups.Update(ctx, g)
 }
 
-func (svc service) EnableGroup(ctx context.Context, token, id string) (Group, error) {
-	group := Group{
+func (svc service) EnableGroup(ctx context.Context, token, id string) (groups.Group, error) {
+	group := groups.Group{
 		ID:        id,
-		Status:    EnabledStatus,
+		Status:    mfclients.EnabledStatus,
 		UpdatedAt: time.Now(),
 	}
 	group, err := svc.changeGroupStatus(ctx, token, group)
 	if err != nil {
-		return mfgroups.Group{}, errors.Wrap(mfgroups.ErrEnableGroup, err)
+		return groups.Group{}, errors.Wrap(groups.ErrEnableGroup, err)
 	}
 	return group, nil
 }
 
-func (svc service) DisableGroup(ctx context.Context, token, id string) (Group, error) {
-	group := Group{
+func (svc service) DisableGroup(ctx context.Context, token, id string) (groups.Group, error) {
+	group := groups.Group{
 		ID:        id,
-		Status:    DisabledStatus,
+		Status:    mfclients.DisabledStatus,
 		UpdatedAt: time.Now(),
 	}
 	group, err := svc.changeGroupStatus(ctx, token, group)
 	if err != nil {
-		return mfgroups.Group{}, errors.Wrap(mfgroups.ErrDisableGroup, err)
+		return groups.Group{}, errors.Wrap(groups.ErrDisableGroup, err)
 	}
 	return group, nil
 }
 
-func (svc service) changeGroupStatus(ctx context.Context, token string, group Group) (Group, error) {
+func (svc service) changeGroupStatus(ctx context.Context, token string, group groups.Group) (groups.Group, error) {
 	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
 	if err != nil {
-		return Group{}, errors.Wrap(errors.ErrAuthentication, err)
+		return groups.Group{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 	if err := svc.authorize(ctx, token, group.ID, deleteRelationKey); err != nil {
-		return Group{}, errors.Wrap(errors.ErrNotFound, err)
+		return groups.Group{}, errors.Wrap(errors.ErrNotFound, err)
 	}
 	dbGroup, err := svc.groups.RetrieveByID(ctx, group.ID)
 	if err != nil {
-		return mfgroups.Group{}, err
+		return groups.Group{}, err
 	}
 
 	if dbGroup.Status == group.Status {
-		return Group{}, ErrStatusAlreadyAssigned
+		return groups.Group{}, mfclients.ErrStatusAlreadyAssigned
 	}
 	group.UpdatedBy = res.GetId()
 	return svc.groups.ChangeStatus(ctx, group)

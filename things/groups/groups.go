@@ -2,7 +2,6 @@ package groups
 
 import (
 	"context"
-	"time"
 
 	"github.com/mainflux/mainflux/internal/mainflux/groups"
 )
@@ -22,27 +21,7 @@ type GroupsPage struct {
 	Level     uint64
 	ID        string
 	Direction int64 // ancestors (-1) or descendants (+1)
-	Groups    []Group
-}
-
-// Group represents the group of Clients.
-// Indicates a level in tree hierarchy. Root node is level 1.
-// Path in a tree consisting of group IDs
-// Paths are unique per owner.
-type Group struct {
-	ID          string    `json:"id"`
-	Owner       string    `json:"owner_id"`
-	Parent      string    `json:"parent_id,omitempty"`
-	Name        string    `json:"name"`
-	Description string    `json:"description,omitempty"`
-	Metadata    Metadata  `json:"metadata,omitempty"`
-	Level       int       `json:"level,omitempty"`
-	Path        string    `json:"path,omitempty"`
-	Children    []*Group  `json:"children,omitempty"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	UpdatedBy   string    `json:"updated_by"`
-	Status      Status    `json:"status"`
+	Groups    []groups.Group
 }
 
 // Repository specifies a group persistence API.
@@ -63,7 +42,7 @@ type Repository interface {
 	Memberships(ctx context.Context, clientID string, gm GroupsPage) (MembershipsPage, error)
 
 	// ChangeStatus changes groups status to active or inactive
-	ChangeStatus(ctx context.Context, group Group) (Group, error)
+	ChangeStatus(ctx context.Context, group groups.Group) (groups.Group, error)
 }
 
 // Service specifies an API that must be fulfilled by the domain service

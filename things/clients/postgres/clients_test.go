@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	mfclients "github.com/mainflux/mainflux/internal/mainflux"
+	"github.com/mainflux/mainflux/internal/mainflux"
 	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/internal/testsutil"
@@ -53,8 +53,8 @@ func TestClientsSave(t *testing.T) {
 					Identity: clientIdentity,
 					Secret:   testsutil.GenerateUUID(t, idProvider),
 				},
-				Metadata: clients.Metadata{},
-				Status:   mfclients.EnabledStatus,
+				Metadata: mainflux.Metadata{},
+				Status:   mainflux.EnabledStatus,
 			},
 			err: nil,
 		},
@@ -68,8 +68,8 @@ func TestClientsSave(t *testing.T) {
 					Identity: "withowner-client@example.com",
 					Secret:   testsutil.GenerateUUID(t, idProvider),
 				},
-				Metadata: clients.Metadata{},
-				Status:   mfclients.EnabledStatus,
+				Metadata: mainflux.Metadata{},
+				Status:   mainflux.EnabledStatus,
 			},
 			err: nil,
 		},
@@ -82,8 +82,8 @@ func TestClientsSave(t *testing.T) {
 					Identity: "invalidid-client@example.com",
 					Secret:   testsutil.GenerateUUID(t, idProvider),
 				},
-				Metadata: clients.Metadata{},
-				Status:   mfclients.EnabledStatus,
+				Metadata: mainflux.Metadata{},
+				Status:   mainflux.EnabledStatus,
 			},
 			err: errors.ErrCreateEntity,
 		},
@@ -96,8 +96,8 @@ func TestClientsSave(t *testing.T) {
 					Identity: "invalidname-client@example.com",
 					Secret:   testsutil.GenerateUUID(t, idProvider),
 				},
-				Metadata: clients.Metadata{},
-				Status:   mfclients.EnabledStatus,
+				Metadata: mainflux.Metadata{},
+				Status:   mainflux.EnabledStatus,
 			},
 			err: errors.ErrCreateEntity,
 		},
@@ -110,8 +110,8 @@ func TestClientsSave(t *testing.T) {
 					Identity: "invalidowner-client@example.com",
 					Secret:   testsutil.GenerateUUID(t, idProvider),
 				},
-				Metadata: clients.Metadata{},
-				Status:   mfclients.EnabledStatus,
+				Metadata: mainflux.Metadata{},
+				Status:   mainflux.EnabledStatus,
 			},
 			err: errors.ErrCreateEntity,
 		},
@@ -124,8 +124,8 @@ func TestClientsSave(t *testing.T) {
 					Identity: invalidName,
 					Secret:   testsutil.GenerateUUID(t, idProvider),
 				},
-				Metadata: clients.Metadata{},
-				Status:   mfclients.EnabledStatus,
+				Metadata: mainflux.Metadata{},
+				Status:   mainflux.EnabledStatus,
 			},
 			err: errors.ErrCreateEntity,
 		},
@@ -137,7 +137,7 @@ func TestClientsSave(t *testing.T) {
 					Identity: "",
 					Secret:   testsutil.GenerateUUID(t, idProvider),
 				},
-				Metadata: clients.Metadata{},
+				Metadata: mainflux.Metadata{},
 			},
 			err: nil,
 		},
@@ -149,7 +149,7 @@ func TestClientsSave(t *testing.T) {
 					Identity: "missing-client-secret@example.com",
 					Secret:   "",
 				},
-				Metadata: clients.Metadata{},
+				Metadata: mainflux.Metadata{},
 			},
 			err: nil,
 		},
@@ -176,7 +176,7 @@ func TestClientsRetrieveByID(t *testing.T) {
 			Identity: clientIdentity,
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: mfclients.EnabledStatus,
+		Status: mainflux.EnabledStatus,
 	}
 
 	_, err := repo.Save(context.Background(), client)
@@ -212,10 +212,10 @@ func TestClientsRetrieveAll(t *testing.T) {
 	var nClients = uint64(200)
 	var ownerID string
 
-	meta := clients.Metadata{
+	meta := mainflux.Metadata{
 		"admin": "true",
 	}
-	wrongMeta := clients.Metadata{
+	wrongMeta := mainflux.Metadata{
 		"admin": "false",
 	}
 	var expectedClients = []clients.Client{}
@@ -236,8 +236,8 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Identity: identity,
 				Secret:   testsutil.GenerateUUID(t, idProvider),
 			},
-			Metadata: clients.Metadata{},
-			Status:   mfclients.EnabledStatus,
+			Metadata: mainflux.Metadata{},
+			Status:   mainflux.EnabledStatus,
 		}
 		if i == 1 {
 			ownerID = client.ID
@@ -248,7 +248,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 			client.Tags = []string{"Test"}
 		}
 		if i%50 == 0 {
-			client.Status = mfclients.DisabledStatus
+			client.Status = mainflux.DisabledStatus
 		}
 		_, err := repo.Save(context.Background(), client)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -276,7 +276,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 			pm: clients.Page{
 				Offset: 0,
 				Limit:  nClients,
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			response: expectedClients,
 			size:     200,
@@ -285,7 +285,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 			pm: clients.Page{
 				Offset: 0,
 				Limit:  50,
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			response: expectedClients[0:50],
 			size:     50,
@@ -294,7 +294,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 			pm: clients.Page{
 				Offset: 50,
 				Limit:  nClients,
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			response: expectedClients[50:200],
 			size:     150,
@@ -303,7 +303,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 			pm: clients.Page{
 				Offset: 50,
 				Limit:  50,
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			response: expectedClients[50:100],
 			size:     50,
@@ -312,7 +312,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 			pm: clients.Page{
 				Offset: 170,
 				Limit:  50,
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			response: expectedClients[170:200],
 			size:     30,
@@ -323,7 +323,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Limit:    nClients,
 				Total:    nClients,
 				Metadata: meta,
-				Status:   mfclients.AllStatus,
+				Status:   mainflux.AllStatus,
 			},
 			response: []clients.Client{expectedClients[0], expectedClients[10], expectedClients[20], expectedClients[30], expectedClients[40], expectedClients[50], expectedClients[60],
 				expectedClients[70], expectedClients[80], expectedClients[90], expectedClients[100], expectedClients[110], expectedClients[120], expectedClients[130],
@@ -337,7 +337,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Limit:    nClients,
 				Total:    nClients,
 				Metadata: wrongMeta,
-				Status:   mfclients.AllStatus,
+				Status:   mainflux.AllStatus,
 			},
 			response: []clients.Client{},
 			size:     0,
@@ -348,7 +348,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Limit:  nClients,
 				Total:  nClients,
 				Name:   "TestRetrieveAll3@example.com",
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			response: []clients.Client{expectedClients[3]},
 			size:     1,
@@ -359,7 +359,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Limit:  nClients,
 				Total:  nClients,
 				Name:   wrongName,
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			response: []clients.Client{},
 			size:     0,
@@ -370,7 +370,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Limit:  nClients,
 				Total:  nClients,
 				Owner:  ownerID,
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			response: []clients.Client{expectedClients[10], expectedClients[20], expectedClients[30], expectedClients[40], expectedClients[50], expectedClients[60],
 				expectedClients[70], expectedClients[80], expectedClients[90], expectedClients[100], expectedClients[110], expectedClients[120], expectedClients[130],
@@ -384,7 +384,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Limit:  nClients,
 				Total:  nClients,
 				Owner:  wrongID,
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			response: []clients.Client{},
 			size:     0,
@@ -394,7 +394,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Offset: 0,
 				Limit:  nClients,
 				Total:  nClients,
-				Status: mfclients.DisabledStatus,
+				Status: mainflux.DisabledStatus,
 			},
 			response: []clients.Client{expectedClients[0], expectedClients[50], expectedClients[100], expectedClients[150]},
 			size:     4,
@@ -404,7 +404,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Offset: 0,
 				Limit:  nClients,
 				Total:  nClients,
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			response: expectedClients,
 			size:     200,
@@ -425,7 +425,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Limit:  nClients,
 				Total:  nClients,
 				Tag:    "Test",
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			response: []clients.Client{expectedClients[0], expectedClients[10], expectedClients[20], expectedClients[30], expectedClients[40], expectedClients[50], expectedClients[60],
 				expectedClients[70], expectedClients[80], expectedClients[90], expectedClients[100], expectedClients[110], expectedClients[120], expectedClients[130],
@@ -439,7 +439,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Limit:  nClients,
 				Total:  nClients,
 				Tag:    "wrongTags",
-				Status: mfclients.AllStatus,
+				Status: mainflux.AllStatus,
 			},
 			response: []clients.Client{},
 			size:     0,
@@ -466,11 +466,11 @@ func TestClientsUpdateMetadata(t *testing.T) {
 			Identity: "client1-update@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Metadata: clients.Metadata{
+		Metadata: mainflux.Metadata{
 			"name": "enabled-client",
 		},
 		Tags:   []string{"enabled", "tag1"},
-		Status: mfclients.EnabledStatus,
+		Status: mainflux.EnabledStatus,
 	}
 
 	client2 := clients.Client{
@@ -480,11 +480,11 @@ func TestClientsUpdateMetadata(t *testing.T) {
 			Identity: "client2-update@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Metadata: clients.Metadata{
+		Metadata: mainflux.Metadata{
 			"name": "disabled-client",
 		},
 		Tags:   []string{"disabled", "tag1"},
-		Status: mfclients.DisabledStatus,
+		Status: mainflux.DisabledStatus,
 	}
 
 	_, err := repo.Save(context.Background(), client1)
@@ -503,7 +503,7 @@ func TestClientsUpdateMetadata(t *testing.T) {
 			update: "metadata",
 			client: clients.Client{
 				ID: client1.ID,
-				Metadata: clients.Metadata{
+				Metadata: mainflux.Metadata{
 					"update": "metadata",
 				},
 			},
@@ -514,7 +514,7 @@ func TestClientsUpdateMetadata(t *testing.T) {
 			update: "metadata",
 			client: clients.Client{
 				ID: client2.ID,
-				Metadata: clients.Metadata{
+				Metadata: mainflux.Metadata{
 					"update": "metadata",
 				},
 			},
@@ -544,7 +544,7 @@ func TestClientsUpdateMetadata(t *testing.T) {
 			client: clients.Client{
 				ID:   client1.ID,
 				Name: "updated name and metadata",
-				Metadata: clients.Metadata{
+				Metadata: mainflux.Metadata{
 					"update": "name and metadata",
 				},
 			},
@@ -556,7 +556,7 @@ func TestClientsUpdateMetadata(t *testing.T) {
 			client: clients.Client{
 				ID:   client2.ID,
 				Name: "updated name and metadata",
-				Metadata: clients.Metadata{
+				Metadata: mainflux.Metadata{
 					"update": "name and metadata",
 				},
 			},
@@ -567,7 +567,7 @@ func TestClientsUpdateMetadata(t *testing.T) {
 			update: "metadata",
 			client: clients.Client{
 				ID: wrongID,
-				Metadata: clients.Metadata{
+				Metadata: mainflux.Metadata{
 					"update": "metadata",
 				},
 			},
@@ -588,7 +588,7 @@ func TestClientsUpdateMetadata(t *testing.T) {
 			client: clients.Client{
 				ID:   client2.ID,
 				Name: "updated name and metadata",
-				Metadata: clients.Metadata{
+				Metadata: mainflux.Metadata{
 					"update": "name and metadata",
 				},
 			},
@@ -623,7 +623,7 @@ func TestClientsUpdateTags(t *testing.T) {
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
 		Tags:   []string{"test", "enabled"},
-		Status: mfclients.EnabledStatus,
+		Status: mainflux.EnabledStatus,
 	}
 	client2 := clients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
@@ -633,7 +633,7 @@ func TestClientsUpdateTags(t *testing.T) {
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
 		Tags:   []string{"test", "disabled"},
-		Status: mfclients.DisabledStatus,
+		Status: mainflux.DisabledStatus,
 	}
 
 	_, err := repo.Save(context.Background(), client1)
@@ -697,7 +697,7 @@ func TestClientsUpdateSecret(t *testing.T) {
 			Identity: "client1-update@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: mfclients.EnabledStatus,
+		Status: mainflux.EnabledStatus,
 	}
 	client2 := clients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
@@ -706,7 +706,7 @@ func TestClientsUpdateSecret(t *testing.T) {
 			Identity: "client2-update@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: mfclients.DisabledStatus,
+		Status: mainflux.DisabledStatus,
 	}
 
 	rClient1, err := repo.Save(context.Background(), client1)
@@ -783,7 +783,7 @@ func TestClientsUpdateOwner(t *testing.T) {
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
 		Owner:  testsutil.GenerateUUID(t, idProvider),
-		Status: mfclients.EnabledStatus,
+		Status: mainflux.EnabledStatus,
 	}
 	client2 := clients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
@@ -793,7 +793,7 @@ func TestClientsUpdateOwner(t *testing.T) {
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
 		Owner:  testsutil.GenerateUUID(t, idProvider),
-		Status: mfclients.DisabledStatus,
+		Status: mainflux.DisabledStatus,
 	}
 
 	_, err := repo.Save(context.Background(), client1)
@@ -857,7 +857,7 @@ func TestClientsChangeStatus(t *testing.T) {
 			Identity: "client1-update@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: mfclients.EnabledStatus,
+		Status: mainflux.EnabledStatus,
 	}
 
 	_, err := repo.Save(context.Background(), client1)

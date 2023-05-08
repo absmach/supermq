@@ -11,7 +11,6 @@ import (
 	"github.com/jackc/pgtype" // required for SQL access
 	"github.com/mainflux/mainflux/internal/mainflux"
 	mfclients "github.com/mainflux/mainflux/internal/mainflux"
-	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -222,7 +221,7 @@ func (repo clientRepo) Update(ctx context.Context, client clients.Client) (clien
 	if len(query) > 0 {
 		upq = strings.Join(query, " ")
 	}
-	client.Status = clients.EnabledStatus
+	client.Status = mainflux.EnabledStatus
 	q := fmt.Sprintf(`UPDATE clients SET %s updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, secret,  metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at, updated_by`,
@@ -232,7 +231,7 @@ func (repo clientRepo) Update(ctx context.Context, client clients.Client) (clien
 }
 
 func (repo clientRepo) UpdateTags(ctx context.Context, client clients.Client) (clients.Client, error) {
-	client.Status = clients.EnabledStatus
+	client.Status = mainflux.EnabledStatus
 	q := `UPDATE clients SET tags = :tags, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at, updated_by`
@@ -241,7 +240,7 @@ func (repo clientRepo) UpdateTags(ctx context.Context, client clients.Client) (c
 }
 
 func (repo clientRepo) UpdateIdentity(ctx context.Context, client clients.Client) (clients.Client, error) {
-	client.Status = clients.EnabledStatus
+	client.Status = mainflux.EnabledStatus
 	q := `UPDATE clients SET identity = :identity, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at, updated_by`
@@ -250,7 +249,7 @@ func (repo clientRepo) UpdateIdentity(ctx context.Context, client clients.Client
 }
 
 func (repo clientRepo) UpdateSecret(ctx context.Context, client clients.Client) (clients.Client, error) {
-	client.Status = clients.EnabledStatus
+	client.Status = mainflux.EnabledStatus
 	q := `UPDATE clients SET secret = :secret, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at, updated_by`
@@ -259,7 +258,7 @@ func (repo clientRepo) UpdateSecret(ctx context.Context, client clients.Client) 
 }
 
 func (repo clientRepo) UpdateOwner(ctx context.Context, client clients.Client) (clients.Client, error) {
-	client.Status = clients.EnabledStatus
+	client.Status = mainflux.EnabledStatus
 	q := `UPDATE clients SET owner_id = :owner_id, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at, updated_by`
@@ -351,7 +350,7 @@ func toDBClient(c clients.Client) (dbClient, error) {
 }
 
 func toClient(c dbClient) (clients.Client, error) {
-	var metadata clients.Metadata
+	var metadata mainflux.Metadata
 	if c.Metadata != nil {
 		if err := json.Unmarshal([]byte(c.Metadata), &metadata); err != nil {
 			return clients.Client{}, errors.Wrap(errors.ErrMalformedEntity, err)

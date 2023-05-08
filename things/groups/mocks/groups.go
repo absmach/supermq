@@ -3,6 +3,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/mainflux/mainflux/internal/mainflux"
 	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/groups"
@@ -17,14 +18,14 @@ type GroupRepository struct {
 	mock.Mock
 }
 
-func (m *GroupRepository) ChangeStatus(ctx context.Context, group groups.Group) (groups.Group, error) {
+func (m *GroupRepository) ChangeStatus(ctx context.Context, group mfgroups.Group) (mfgroups.Group, error) {
 	ret := m.Called(ctx, group)
 
 	if group.ID == WrongID {
-		return groups.Group{}, errors.ErrNotFound
+		return mfgroups.Group{}, errors.ErrNotFound
 	}
-	if group.Status != groups.EnabledStatus && group.Status != groups.DisabledStatus {
-		return groups.Group{}, errors.ErrMalformedEntity
+	if group.Status != mainflux.EnabledStatus && group.Status != mainflux.DisabledStatus {
+		return mfgroups.Group{}, errors.ErrMalformedEntity
 	}
 
 	return ret.Get(0).(mfgroups.Group), ret.Error(1)

@@ -481,7 +481,7 @@ func TestClientsMemberships(t *testing.T) {
 			Identity: "client-memberships1@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Metadata: clients.Metadata{},
+		Metadata: mainflux.Metadata{},
 		Status:   mainflux.EnabledStatus,
 	}
 	clientB := clients.Client{
@@ -491,7 +491,7 @@ func TestClientsMemberships(t *testing.T) {
 			Identity: "client-memberships2@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Metadata: clients.Metadata{},
+		Metadata: mainflux.Metadata{},
 		Status:   mainflux.EnabledStatus,
 	}
 	group := mfgroups.Group{
@@ -570,7 +570,7 @@ func TestGroupChangeStatus(t *testing.T) {
 			desc: "change group status for an active group",
 			group: mfgroups.Group{
 				ID:     group1.ID,
-				Status: mainflux.DisabledStatus,
+				Status: mainflux.EnabledStatus,
 			},
 			err: nil,
 		},

@@ -21,7 +21,7 @@ import (
 var (
 	idProvider     = uuid.New()
 	secret         = "strongsecret"
-	validCMetadata = clients.Metadata{"role": "client"}
+	validCMetadata = mainflux.Metadata{"role": "client"}
 	ID             = testsutil.GenerateUUID(&testing.T{}, idProvider)
 	client         = clients.Client{
 		ID:          ID,
@@ -176,7 +176,7 @@ func TestRegisterClient(t *testing.T) {
 					Identity: "newclientwithallfields@example.com",
 					Secret:   secret,
 				},
-				Metadata: clients.Metadata{
+				Metadata: mainflux.Metadata{
 					"name": "newclientwithallfields",
 				},
 				Status: mainflux.EnabledStatus,
@@ -316,7 +316,7 @@ func TestListClients(t *testing.T) {
 				Secret:   "password",
 			},
 			Tags:     []string{"tag1", "tag2"},
-			Metadata: clients.Metadata{"role": "client"},
+			Metadata: mainflux.Metadata{"role": "client"},
 		}
 		if i%50 == 0 {
 			client.Owner = OwnerID
@@ -585,7 +585,7 @@ func TestUpdateClient(t *testing.T) {
 	client1 := client
 	client2 := client
 	client1.Name = "Updated client"
-	client2.Metadata = clients.Metadata{"role": "test"}
+	client2.Metadata = mainflux.Metadata{"role": "test"}
 
 	cases := []struct {
 		desc     string
@@ -1029,7 +1029,7 @@ func TestListMembers(t *testing.T) {
 				Secret:   "password",
 			},
 			Tags:     []string{"tag1", "tag2"},
-			Metadata: clients.Metadata{"role": "client"},
+			Metadata: mainflux.Metadata{"role": "client"},
 		}
 		aClients = append(aClients, client)
 	}

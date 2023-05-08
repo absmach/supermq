@@ -340,7 +340,7 @@ func (svc service) EnableClient(ctx context.Context, token, id string) (Client, 
 	client := Client{
 		ID:        id,
 		UpdatedAt: time.Now(),
-		Status:    EnabledStatus,
+		Status:    mfclients.EnabledStatus,
 	}
 	client, err := svc.changeClientStatus(ctx, token, client)
 	if err != nil {
@@ -354,7 +354,7 @@ func (svc service) DisableClient(ctx context.Context, token, id string) (Client,
 	client := Client{
 		ID:        id,
 		UpdatedAt: time.Now(),
-		Status:    DisabledStatus,
+		Status:    mfclients.DisabledStatus,
 	}
 	client, err := svc.changeClientStatus(ctx, token, client)
 	if err != nil {
@@ -392,7 +392,7 @@ func (svc service) changeClientStatus(ctx context.Context, token string, client 
 		return Client{}, err
 	}
 	if dbClient.Status == client.Status {
-		return Client{}, ErrStatusAlreadyAssigned
+		return Client{}, mfclients.ErrStatusAlreadyAssigned
 	}
 	client.UpdatedBy = id
 	return svc.clients.ChangeStatus(ctx, client)
