@@ -6,8 +6,13 @@ import (
 	"errors"
 )
 
+// The ctxkey type is unexported to prevent collisions with context keys defined in
+// other packages.
 type ctxkey int
 
+// mproxyClientKey is the context key for the session client.  Its value of one is
+// arbitrary.  If this package defined other context keys, they would have
+// different integer values.
 const mproxyClientKey ctxkey = 1
 
 // ErrClientNotInContext failed to retrieve client from context
@@ -27,13 +32,9 @@ func (c Client) ToContext(ctx context.Context) context.Context {
 }
 
 // FromContext retrieve client from context.Context
-func (c *Client) FromContext(ctx context.Context) error {
+func FromContext(ctx context.Context) (Client, error) {
 	if client, ok := ctx.Value(mproxyClientKey).(Client); ok {
-		c.ID = client.ID
-		c.Password = client.Password
-		c.Username = client.Username
-		c.Cert = client.Cert
-		return nil
+		return client, nil
 	}
-	return ErrClientNotInContext
+	return Client{}, ErrClientNotInContext
 }
