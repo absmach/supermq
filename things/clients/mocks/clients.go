@@ -17,7 +17,7 @@ type ClientRepository struct {
 }
 
 // RetrieveByIdentity retrieves client by its unique credentials
-func (ClientRepository) RetrieveByIdentity(ctx context.Context, identity string) (mfclients.Client, error) {
+func (*ClientRepository) RetrieveByIdentity(ctx context.Context, identity string) (mfclients.Client, error) {
 	return mfclients.Client{}, nil
 }
 

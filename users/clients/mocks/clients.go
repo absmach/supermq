@@ -133,6 +133,6 @@ func (m *ClientRepository) UpdateOwner(ctx context.Context, client mfclients.Cli
 	return ret.Get(0).(mfclients.Client), ret.Error(1)
 }
 
-func (ClientRepository) RetrieveBySecret(ctx context.Context, key string) (mfclients.Client, error) {
+func (*ClientRepository) RetrieveBySecret(ctx context.Context, key string) (mfclients.Client, error) {
 	return mfclients.Client{}, nil
 }

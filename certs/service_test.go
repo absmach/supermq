@@ -21,6 +21,7 @@ import (
 	"github.com/mainflux/mainflux/certs"
 	"github.com/mainflux/mainflux/certs/mocks"
 	"github.com/mainflux/mainflux/logger"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/things/clients"
@@ -78,12 +79,12 @@ func newService(tokens map[string]string) (certs.Service, error) {
 }
 
 func newThingsService(auth policies.AuthServiceClient) clients.Service {
-	ths := make(map[string]clients.Client, thingsNum)
+	ths := make(map[string]mfclients.Client, thingsNum)
 	for i := 0; i < thingsNum; i++ {
 		id := strconv.Itoa(i + 1)
-		ths[id] = clients.Client{
+		ths[id] = mfclients.Client{
 			ID: id,
-			Credentials: clients.Credentials{
+			Credentials: mfclients.Credentials{
 				Secret: thingKey,
 			},
 			Owner: email,
