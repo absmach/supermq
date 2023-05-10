@@ -34,9 +34,9 @@ func (clientRepo) RetrieveBySecret(ctx context.Context, key string) (mfclients.C
 }
 
 func (repo clientRepo) Save(ctx context.Context, c ...mfclients.Client) ([]mfclients.Client, error) {
-	q := `INSERT INTO clients (id, name, tags, owner, identity, secret, metadata, created_at, status, role)
-        VALUES (:id, :name, :tags, :owner, :identity, :secret, :metadata, :created_at, :status, :role)
-        RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at`
+	q := `INSERT INTO clients (id, name, tags, owner_id, identity, secret, metadata, created_at, status, role)
+        VALUES (:id, :name, :tags, :owner_id, :identity, :secret, :metadata, :created_at, :status, :role)
+        RETURNING id, name, tags, identity, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at`
 	dbc, err := toDBClient(c[0])
 	if err != nil {
 		return []mfclients.Client{}, errors.Wrap(errors.ErrCreateEntity, err)
@@ -63,7 +63,7 @@ func (repo clientRepo) Save(ctx context.Context, c ...mfclients.Client) ([]mfcli
 }
 
 func (repo clientRepo) RetrieveByID(ctx context.Context, id string) (mfclients.Client, error) {
-	q := `SELECT id, name, tags, COALESCE(owner, '') AS owner, identity, secret, metadata, created_at, updated_at, updated_by, status 
+	q := `SELECT id, name, tags, COALESCE(owner_id, '') AS owner_id, identity, secret, metadata, created_at, updated_at, updated_by, status 
         FROM clients WHERE id = :id`
 
 	dbc := dbClient{
@@ -89,7 +89,7 @@ func (repo clientRepo) RetrieveByID(ctx context.Context, id string) (mfclients.C
 }
 
 func (repo clientRepo) RetrieveByIdentity(ctx context.Context, identity string) (mfclients.Client, error) {
-	q := `SELECT id, name, tags, COALESCE(owner, '') AS owner, identity, secret, metadata, created_at, updated_at, updated_by, status
+	q := `SELECT id, name, tags, COALESCE(owner_id, '') AS owner_id, identity, secret, metadata, created_at, updated_at, updated_by, status
         FROM clients WHERE identity = :identity AND status = :status`
 
 	dbc := dbClient{
@@ -121,7 +121,7 @@ func (repo clientRepo) RetrieveAll(ctx context.Context, pm mfclients.Page) (mfcl
 		return mfclients.ClientsPage{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
 
-	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.identity, c.metadata, COALESCE(c.owner, '') AS owner, c.status,
+	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.identity, c.metadata, COALESCE(c.owner_id, '') AS owner_id, c.status,
 					c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM clients c %s ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, query)
 
 	dbPage, err := toDBClientsPage(pm)
@@ -240,7 +240,7 @@ func (repo clientRepo) Update(ctx context.Context, client mfclients.Client) (mfc
 	client.Status = mfclients.EnabledStatus
 	q := fmt.Sprintf(`UPDATE clients SET %s updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
-        RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at, updated_by`,
+        RETURNING id, name, tags, identity, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at, updated_by`,
 		upq)
 
 	return repo.update(ctx, client, q)
@@ -250,7 +250,7 @@ func (repo clientRepo) UpdateTags(ctx context.Context, client mfclients.Client) 
 	client.Status = mfclients.EnabledStatus
 	q := `UPDATE clients SET tags = :tags, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
-        RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at, updated_by`
+        RETURNING id, name, tags, identity, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at, updated_by`
 
 	return repo.update(ctx, client, q)
 }
@@ -258,7 +258,7 @@ func (repo clientRepo) UpdateTags(ctx context.Context, client mfclients.Client) 
 func (repo clientRepo) UpdateIdentity(ctx context.Context, client mfclients.Client) (mfclients.Client, error) {
 	q := `UPDATE clients SET identity = :identity, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
-        RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at, updated_by`
+        RETURNING id, name, tags, identity, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at, updated_by`
 
 	return repo.update(ctx, client, q)
 }
@@ -266,22 +266,22 @@ func (repo clientRepo) UpdateIdentity(ctx context.Context, client mfclients.Clie
 func (repo clientRepo) UpdateSecret(ctx context.Context, client mfclients.Client) (mfclients.Client, error) {
 	q := `UPDATE clients SET secret = :secret, updated_at = :updated_at, updated_by = :updated_by
         WHERE identity = :identity AND status = :status
-        RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at, updated_by`
+        RETURNING id, name, tags, identity, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at, updated_by`
 
 	return repo.update(ctx, client, q)
 }
 
 func (repo clientRepo) UpdateOwner(ctx context.Context, client mfclients.Client) (mfclients.Client, error) {
-	q := `UPDATE clients SET owner = :owner, updated_at = :updated_at, updated_by = :updated_by
+	q := `UPDATE clients SET owner_id = :owner_id, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
-        RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at, updated_by`
+        RETURNING id, name, tags, identity, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at, updated_by`
 
 	return repo.update(ctx, client, q)
 }
 
 func (repo clientRepo) ChangeStatus(ctx context.Context, client mfclients.Client) (mfclients.Client, error) {
 	q := `UPDATE clients SET status = :status WHERE id = :id
-        RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at, updated_by`
+        RETURNING id, name, tags, identity, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at, updated_by`
 
 	return repo.update(ctx, client, q)
 }
@@ -313,7 +313,7 @@ type dbClient struct {
 	Name      string           `db:"name,omitempty"`
 	Tags      pgtype.TextArray `db:"tags,omitempty"`
 	Identity  string           `db:"identity"`
-	Owner     *string          `db:"owner,omitempty"` // nullable
+	Owner     *string          `db:"owner_id,omitempty"` // nullable
 	Secret    string           `db:"secret"`
 	Metadata  []byte           `db:"metadata,omitempty"`
 	CreatedAt time.Time        `db:"created_at"`
@@ -431,16 +431,16 @@ func pageQuery(pm mfclients.Page) (string, error) {
 	}
 	// For listing clients that the specified client owns but not sharedby
 	if pm.Owner != "" && pm.SharedBy == "" {
-		query = append(query, "c.owner = :owner")
+		query = append(query, "c.owner_id = :owner_id")
 	}
 
 	// For listing clients that the specified client owns and that are shared with the specified client
 	if pm.Owner != "" && pm.SharedBy != "" {
-		query = append(query, "(c.owner = :owner OR EXISTS (SELECT 1 FROM policies WHERE subject = :shared_by AND :action=ANY(actions) AND object = policies.object))")
+		query = append(query, "(c.owner_id = :owner_id OR EXISTS (SELECT 1 FROM policies WHERE subject = :shared_by AND :action=ANY(actions) AND object = policies.object))")
 	}
 	// For listing clients that the specified client is shared with
 	if pm.SharedBy != "" && pm.Owner == "" {
-		query = append(query, "c.owner != :shared_by AND (policies.object IN (SELECT object FROM policies WHERE subject = :shared_by AND :action=ANY(actions)))")
+		query = append(query, "c.owner_id != :shared_by AND (policies.object IN (SELECT object FROM policies WHERE subject = :shared_by AND :action=ANY(actions)))")
 	}
 	if len(query) > 0 {
 		emq = fmt.Sprintf("WHERE %s", strings.Join(query, " AND "))
@@ -478,7 +478,7 @@ type dbClientsPage struct {
 	Limit    uint64           `db:"limit"`
 	Offset   uint64           `db:"offset"`
 	Name     string           `db:"name"`
-	Owner    string           `db:"owner"`
+	Owner    string           `db:"owner_id"`
 	Identity string           `db:"identity"`
 	Metadata []byte           `db:"metadata"`
 	Tag      string           `db:"tag"`
