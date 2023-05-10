@@ -200,7 +200,7 @@ func newService(db *sqlx.DB, tracer trace.Tracer, c config, ec email.Config, log
 	return csvc, gsvc, psvc
 }
 
-func createAdmin(c config, crepo clients.ClientRepository, hsr clients.Hasher, svc clients.Service) error {
+func createAdmin(c config, crepo mfclients.Repository, hsr clients.Hasher, svc clients.Service) error {
 	id, err := uuid.New().ID()
 	if err != nil {
 		return err
@@ -210,10 +210,10 @@ func createAdmin(c config, crepo clients.ClientRepository, hsr clients.Hasher, s
 		return err
 	}
 
-	client := clients.Client{
+	client := mfclients.Client{
 		ID:   id,
 		Name: "admin",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: c.AdminEmail,
 			Secret:   hash,
 		},
@@ -222,7 +222,7 @@ func createAdmin(c config, crepo clients.ClientRepository, hsr clients.Hasher, s
 		},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		Role:      clients.AdminRole,
+		Role:      mfclients.AdminRole,
 		Status:    mfclients.EnabledStatus,
 	}
 

@@ -13,7 +13,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	"github.com/mainflux/mainflux/pkg/uuid"
-	"github.com/mainflux/mainflux/users/clients"
 	cpostgres "github.com/mainflux/mainflux/users/clients/postgres"
 	"github.com/mainflux/mainflux/users/groups"
 	gpostgres "github.com/mainflux/mainflux/users/groups/postgres"
@@ -468,20 +467,20 @@ func TestClientsMemberships(t *testing.T) {
 	grepo := gpostgres.NewGroupRepo(database)
 	prepo := ppostgres.NewPolicyRepo(database)
 
-	clientA := clients.Client{
+	clientA := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "client-memberships",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "client-memberships1@example.com",
 			Secret:   password,
 		},
 		Metadata: mfclients.Metadata{},
 		Status:   mfclients.EnabledStatus,
 	}
-	clientB := clients.Client{
+	clientB := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "client-memberships",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "client-memberships2@example.com",
 			Secret:   password,
 		},

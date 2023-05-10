@@ -9,8 +9,8 @@ import (
 
 	"github.com/jackc/pgtype"
 	"github.com/mainflux/mainflux/internal/postgres"
+	"github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/users/clients"
 	"github.com/mainflux/mainflux/users/policies"
 )
 
@@ -25,7 +25,7 @@ type policyRepository struct {
 	db postgres.Database
 }
 
-// NewPolicyRepo instantiates a PostgreSQL implementation of policy repository.
+// NewPolicyRepo instantiates a PostgreSQL implementclients.Serviceation of policy repository.
 func NewPolicyRepo(db postgres.Database) policies.PolicyRepository {
 	return &policyRepository{
 		db: db,

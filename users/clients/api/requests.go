@@ -4,13 +4,12 @@ import (
 	"github.com/mainflux/mainflux/internal/api"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
-	"github.com/mainflux/mainflux/users/clients"
 )
 
 const maxLimitSize = 100
 
 type createClientReq struct {
-	client clients.Client
+	client mfclients.Client
 	token  string
 }
 
@@ -67,7 +66,7 @@ func (req listClientsReq) validate() error {
 }
 
 type listMembersReq struct {
-	clients.Page
+	mfclients.Page
 	token   string
 	groupID string
 }

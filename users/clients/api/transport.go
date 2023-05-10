@@ -349,7 +349,7 @@ func decodeCreateClientReq(_ context.Context, r *http.Request) (interface{}, err
 		return nil, errors.ErrUnsupportedContentType
 	}
 
-	var c clients.Client
+	var c mfclients.Client
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
@@ -409,7 +409,7 @@ func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, 
 	}
 	req := listMembersReq{
 		token: apiutil.ExtractBearerToken(r),
-		Page: clients.Page{
+		Page: mfclients.Page{
 			Status:   st,
 			Offset:   o,
 			Limit:    l,

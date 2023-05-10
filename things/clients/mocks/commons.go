@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/mainflux/mainflux/things/clients"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 )
 
 const uuidLen = 36
@@ -21,7 +21,7 @@ func key(owner string, id string) string {
 	return fmt.Sprintf("%s-%s", owner, id)
 }
 
-func sortThings(pm clients.Page, ths []clients.Client) []clients.Client {
+func sortThings(pm mfclients.Page, ths []mfclients.Client) []mfclients.Client {
 	switch pm.Order {
 	case "name":
 		if pm.Dir == "asc" {

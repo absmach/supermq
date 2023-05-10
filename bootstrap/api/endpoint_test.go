@@ -24,6 +24,7 @@ import (
 	"github.com/mainflux/mainflux/bootstrap/mocks"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	mflog "github.com/mainflux/mainflux/logger"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
@@ -191,7 +192,7 @@ func generateChannels() map[string]mfgroups.Group {
 }
 
 func newThingsService(auth upolicies.AuthServiceClient) (clients.Service, groups.Service, tpolicies.Service) {
-	csvc := mocks.NewThingsService(map[string]clients.Client{}, auth)
+	csvc := mocks.NewThingsService(map[string]mfclients.Client{}, auth)
 	gsvc := mocks.NewChannelsService(generateChannels(), auth)
 	psvc := mocks.NewPoliciesService(auth)
 	return csvc, gsvc, psvc

@@ -11,7 +11,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	"github.com/mainflux/mainflux/pkg/uuid"
-	"github.com/mainflux/mainflux/things/clients"
 	cpostgres "github.com/mainflux/mainflux/things/clients/postgres"
 	gpostgres "github.com/mainflux/mainflux/things/groups/postgres"
 	"github.com/mainflux/mainflux/things/policies"
@@ -81,19 +80,19 @@ func TestPoliciesEvaluate(t *testing.T) {
 	crepo := cpostgres.NewRepository(database)
 	grepo := gpostgres.NewRepository(database)
 
-	client1 := clients.Client{
+	client1 := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "connectedclients-clientA@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "connectedclients-clientA@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
 		Status: mfclients.EnabledStatus,
 	}
-	client2 := clients.Client{
+	client2 := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "connectedclients-clientB@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "connectedclients-clientB@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
@@ -164,10 +163,10 @@ func TestPoliciesRetrieve(t *testing.T) {
 
 	uid := testsutil.GenerateUUID(t, idProvider)
 
-	client := clients.Client{
+	client := mfclients.Client{
 		ID:   uid,
 		Name: "single-policy-retrieval@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "single-policy-retrieval@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
@@ -220,10 +219,10 @@ func TestPoliciesUpdate(t *testing.T) {
 	crepo := cpostgres.NewRepository(database)
 	grepo := gpostgres.NewRepository(database)
 
-	client := clients.Client{
+	client := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "policy-update@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "policy-update@example.com",
 			Secret:   "pass",
 		},
@@ -345,19 +344,19 @@ func TestPoliciesRetrievalAll(t *testing.T) {
 
 	var nPolicies = uint64(10)
 
-	clientA := clients.Client{
+	clientA := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "policyA-retrievalall@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "policyA-retrievalall@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
 		Status: mfclients.EnabledStatus,
 	}
-	clientB := clients.Client{
+	clientB := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "policyB-retrievalall@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "policyB-retrievalall@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
@@ -601,10 +600,10 @@ func TestPoliciesDelete(t *testing.T) {
 	crepo := cpostgres.NewRepository(database)
 	grepo := gpostgres.NewRepository(database)
 
-	client := clients.Client{
+	client := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "policy-delete@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "policy-delete@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},

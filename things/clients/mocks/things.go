@@ -9,15 +9,16 @@ import (
 	"strings"
 	"sync"
 
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/clients"
 )
 
-var _ clients.Repository = (*clientRepoMock)(nil)
+var _ mfclients.Repository = (*clientRepoMock)(nil)
 
 type Connection struct {
 	chanID    string
-	thing     clients.Client
+	thing     mfclients.Client
 	connected bool
 }
 
@@ -25,16 +26,16 @@ type clientRepoMock struct {
 	mu      sync.Mutex
 	counter uint64
 	conns   chan Connection
-	tconns  map[string]map[string]clients.Client
-	things  map[string]clients.Client
+	tconns  map[string]map[string]mfclients.Client
+	things  map[string]mfclients.Client
 }
 
 // NewThingRepository creates in-memory thing repository.
-func NewThingRepository(conns chan Connection) clients.Repository {
+func NewThingRepository(conns chan Connection) mfclients.Repository {
 	repo := &clientRepoMock{
 		conns:  conns,
-		things: make(map[string]clients.Client),
-		tconns: make(map[string]map[string]clients.Client),
+		things: make(map[string]mfclients.Client),
+		tconns: make(map[string]map[string]mfclients.Client),
 	}
 	go func(conns chan Connection, repo *clientRepoMock) {
 		for conn := range conns {
@@ -49,14 +50,22 @@ func NewThingRepository(conns chan Connection) clients.Repository {
 	return repo
 }
 
-func (trm *clientRepoMock) Save(_ context.Context, clis ...clients.Client) ([]clients.Client, error) {
+func (*clientRepoMock) UpdateIdentity(ctx context.Context, client mfclients.Client) (mfclients.Client, error) {
+	return mfclients.Client{}, nil
+}
+
+func (*clientRepoMock) RetrieveByIdentity(ctx context.Context, identity string) (mfclients.Client, error) {
+	return mfclients.Client{}, nil
+}
+
+func (trm *clientRepoMock) Save(_ context.Context, clis ...mfclients.Client) ([]mfclients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
 	for _, cli := range clis {
 		for _, th := range trm.things {
 			if th.Credentials.Secret == cli.Credentials.Secret {
-				return []clients.Client{}, errors.ErrConflict
+				return []mfclients.Client{}, errors.ErrConflict
 			}
 		}
 
@@ -69,14 +78,14 @@ func (trm *clientRepoMock) Save(_ context.Context, clis ...clients.Client) ([]cl
 	return clis, nil
 }
 
-func (trm *clientRepoMock) Update(_ context.Context, thing clients.Client) (clients.Client, error) {
+func (trm *clientRepoMock) Update(_ context.Context, thing mfclients.Client) (mfclients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
 	dbKey := key(thing.Owner, thing.ID)
 
 	if _, ok := trm.things[dbKey]; !ok {
-		return clients.Client{}, errors.ErrNotFound
+		return mfclients.Client{}, errors.ErrNotFound
 	}
 
 	trm.things[dbKey] = thing
@@ -84,13 +93,13 @@ func (trm *clientRepoMock) Update(_ context.Context, thing clients.Client) (clie
 	return trm.things[dbKey], nil
 }
 
-func (trm *clientRepoMock) UpdateSecret(_ context.Context, client clients.Client) (clients.Client, error) {
+func (trm *clientRepoMock) UpdateSecret(_ context.Context, client mfclients.Client) (mfclients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
 	for _, th := range trm.things {
 		if th.Credentials.Secret == client.Credentials.Secret {
-			return clients.Client{}, errors.ErrConflict
+			return mfclients.Client{}, errors.ErrConflict
 		}
 	}
 
@@ -98,7 +107,7 @@ func (trm *clientRepoMock) UpdateSecret(_ context.Context, client clients.Client
 
 	th, ok := trm.things[dbKey]
 	if !ok {
-		return clients.Client{}, errors.ErrNotFound
+		return mfclients.Client{}, errors.ErrNotFound
 	}
 
 	th.Credentials.Secret = client.Credentials.Secret
@@ -107,7 +116,7 @@ func (trm *clientRepoMock) UpdateSecret(_ context.Context, client clients.Client
 	return trm.things[dbKey], nil
 }
 
-func (trm *clientRepoMock) UpdateOwner(_ context.Context, client clients.Client) (clients.Client, error) {
+func (trm *clientRepoMock) UpdateOwner(_ context.Context, client mfclients.Client) (mfclients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -115,7 +124,7 @@ func (trm *clientRepoMock) UpdateOwner(_ context.Context, client clients.Client)
 
 	th, ok := trm.things[dbKey]
 	if !ok {
-		return clients.Client{}, errors.ErrNotFound
+		return mfclients.Client{}, errors.ErrNotFound
 	}
 
 	th.Owner = client.Owner
@@ -124,7 +133,7 @@ func (trm *clientRepoMock) UpdateOwner(_ context.Context, client clients.Client)
 	return trm.things[dbKey], nil
 }
 
-func (trm *clientRepoMock) UpdateTags(_ context.Context, client clients.Client) (clients.Client, error) {
+func (trm *clientRepoMock) UpdateTags(_ context.Context, client mfclients.Client) (mfclients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -132,7 +141,7 @@ func (trm *clientRepoMock) UpdateTags(_ context.Context, client clients.Client) 
 
 	th, ok := trm.things[dbKey]
 	if !ok {
-		return clients.Client{}, errors.ErrNotFound
+		return mfclients.Client{}, errors.ErrNotFound
 	}
 
 	th.Tags = client.Tags
@@ -141,7 +150,7 @@ func (trm *clientRepoMock) UpdateTags(_ context.Context, client clients.Client) 
 	return trm.things[dbKey], nil
 }
 
-func (trm *clientRepoMock) RetrieveByID(_ context.Context, id string) (clients.Client, error) {
+func (trm *clientRepoMock) RetrieveByID(_ context.Context, id string) (mfclients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -149,17 +158,17 @@ func (trm *clientRepoMock) RetrieveByID(_ context.Context, id string) (clients.C
 		return c, nil
 	}
 
-	return clients.Client{}, errors.ErrNotFound
+	return mfclients.Client{}, errors.ErrNotFound
 }
 
-func (trm *clientRepoMock) RetrieveAll(_ context.Context, pm clients.Page) (clients.ClientsPage, error) {
+func (trm *clientRepoMock) RetrieveAll(_ context.Context, pm mfclients.Page) (mfclients.ClientsPage, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
 	first := uint64(pm.Offset) + 1
 	last := first + uint64(pm.Limit)
 
-	var ths []clients.Client
+	var ths []mfclients.Client
 
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).
@@ -174,9 +183,9 @@ func (trm *clientRepoMock) RetrieveAll(_ context.Context, pm clients.Page) (clie
 	// Sort Things list
 	ths = sortThings(pm, ths)
 
-	page := clients.ClientsPage{
+	page := mfclients.ClientsPage{
 		Clients: ths,
-		Page: clients.Page{
+		Page: mfclients.Page{
 			Total:  trm.counter,
 			Offset: pm.Offset,
 			Limit:  pm.Limit,
@@ -186,18 +195,18 @@ func (trm *clientRepoMock) RetrieveAll(_ context.Context, pm clients.Page) (clie
 	return page, nil
 }
 
-func (trm *clientRepoMock) Members(_ context.Context, chID string, pm clients.Page) (clients.MembersPage, error) {
+func (trm *clientRepoMock) Members(_ context.Context, chID string, pm mfclients.Page) (mfclients.MembersPage, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
 	if pm.Limit <= 0 {
-		return clients.MembersPage{}, nil
+		return mfclients.MembersPage{}, nil
 	}
 
 	first := uint64(pm.Offset) + 1
 	last := first + uint64(pm.Limit)
 
-	var ths []clients.Client
+	var ths []mfclients.Client
 
 	// Append connected or not connected channels
 	switch pm.Disconnected {
@@ -230,9 +239,9 @@ func (trm *clientRepoMock) Members(_ context.Context, chID string, pm clients.Pa
 	// Sort Things by Channel list
 	ths = sortThings(pm, ths)
 
-	page := clients.MembersPage{
+	page := mfclients.MembersPage{
 		Members: ths,
-		Page: clients.Page{
+		Page: mfclients.Page{
 			Total:  trm.counter,
 			Offset: pm.Offset,
 			Limit:  pm.Limit,
@@ -242,7 +251,7 @@ func (trm *clientRepoMock) Members(_ context.Context, chID string, pm clients.Pa
 	return page, nil
 }
 
-func (trm *clientRepoMock) ChangeStatus(_ context.Context, client clients.Client) (clients.Client, error) {
+func (trm *clientRepoMock) ChangeStatus(_ context.Context, client mfclients.Client) (mfclients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 	th := trm.things[client.ID]
@@ -251,7 +260,7 @@ func (trm *clientRepoMock) ChangeStatus(_ context.Context, client clients.Client
 	return th, nil
 }
 
-func (trm *clientRepoMock) RetrieveBySecret(_ context.Context, key string) (clients.Client, error) {
+func (trm *clientRepoMock) RetrieveBySecret(_ context.Context, key string) (mfclients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -261,7 +270,7 @@ func (trm *clientRepoMock) RetrieveBySecret(_ context.Context, key string) (clie
 		}
 	}
 
-	return clients.Client{}, errors.ErrNotFound
+	return mfclients.Client{}, errors.ErrNotFound
 }
 
 func (trm *clientRepoMock) connect(conn Connection) {
@@ -269,7 +278,7 @@ func (trm *clientRepoMock) connect(conn Connection) {
 	defer trm.mu.Unlock()
 
 	if _, ok := trm.tconns[conn.chanID]; !ok {
-		trm.tconns[conn.chanID] = make(map[string]clients.Client)
+		trm.tconns[conn.chanID] = make(map[string]mfclients.Client)
 	}
 	trm.tconns[conn.chanID][conn.thing.ID] = conn.thing
 }

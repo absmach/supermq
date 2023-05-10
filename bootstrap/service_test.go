@@ -83,7 +83,7 @@ func newThingsService(auth upolicies.AuthServiceClient) (clients.Service, groups
 		}
 	}
 
-	csvc := mocks.NewThingsService(map[string]clients.Client{}, auth)
+	csvc := mocks.NewThingsService(map[string]mfclients.Client{}, auth)
 	gsvc := mocks.NewChannelsService(channels, auth)
 	psvc := mocks.NewPoliciesService(auth)
 	return csvc, gsvc, psvc

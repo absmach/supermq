@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/things/clients"
 )
 
@@ -68,10 +69,10 @@ func listClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listClientsReq)
 		if err := req.validate(); err != nil {
-			return clients.ClientsPage{}, err
+			return mfclients.ClientsPage{}, err
 		}
 
-		pm := clients.Page{
+		pm := mfclients.Page{
 			SharedBy: req.sharedBy,
 			Status:   req.status,
 			Offset:   req.offset,
@@ -83,7 +84,7 @@ func listClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		page, err := svc.ListClients(ctx, req.token, pm)
 		if err != nil {
-			return clients.ClientsPage{}, err
+			return mfclients.ClientsPage{}, err
 		}
 
 		res := clientsPageRes{
@@ -123,7 +124,7 @@ func updateClientEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		cli := clients.Client{
+		cli := mfclients.Client{
 			ID:       req.id,
 			Name:     req.Name,
 			Metadata: req.Metadata,
@@ -143,7 +144,7 @@ func updateClientTagsEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		cli := clients.Client{
+		cli := mfclients.Client{
 			ID:   req.id,
 			Tags: req.Tags,
 		}
@@ -189,7 +190,7 @@ func updateClientOwnerEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		cli := clients.Client{
+		cli := mfclients.Client{
 			ID:    req.id,
 			Owner: req.Owner,
 		}
@@ -230,7 +231,7 @@ func disableClientEndpoint(svc clients.Service) endpoint.Endpoint {
 	}
 }
 
-func buildMembersResponse(cp clients.MembersPage) memberPageRes {
+func buildMembersResponse(cp mfclients.MembersPage) memberPageRes {
 	res := memberPageRes{
 		pageRes: pageRes{
 			Total:  cp.Total,

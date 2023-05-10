@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"os"
 
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/groups"
-	"github.com/mainflux/mainflux/things/clients"
 	"github.com/pelletier/go-toml"
 )
 
@@ -57,12 +57,12 @@ type Cert struct {
 
 // Config struct of Provision
 type Config struct {
-	File      string           `toml:"file"`
-	Server    ServiceConf      `toml:"server" mapstructure:"server"`
-	Bootstrap Bootstrap        `toml:"bootstrap" mapstructure:"bootstrap"`
-	Things    []clients.Client `toml:"things" mapstructure:"things"`
-	Channels  []groups.Group   `toml:"channels" mapstructure:"channels"`
-	Cert      Cert             `toml:"cert" mapstructure:"cert"`
+	File      string             `toml:"file"`
+	Server    ServiceConf        `toml:"server" mapstructure:"server"`
+	Bootstrap Bootstrap          `toml:"bootstrap" mapstructure:"bootstrap"`
+	Things    []mfclients.Client `toml:"things" mapstructure:"things"`
+	Channels  []groups.Group     `toml:"channels" mapstructure:"channels"`
+	Cert      Cert               `toml:"cert" mapstructure:"cert"`
 }
 
 // Save - store config in a file

@@ -59,14 +59,14 @@ var (
 )
 
 func generateValidToken(t *testing.T, svc clients.Service, cRepo *umocks.ClientRepository) string {
-	client := clients.Client{
+	client := mfclients.Client{
 		ID:   generateUUID(t),
 		Name: "validtoken",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "validtoken",
 			Secret:   secret,
 		},
-		Role:   clients.AdminRole,
+		Role:   mfclients.AdminRole,
 		Status: mfclients.EnabledStatus,
 	}
 	rclient := client
@@ -85,14 +85,14 @@ func generateUUID(t *testing.T) string {
 	return ulid
 }
 
-func convertClientsPage(cp sdk.UsersPage) clients.ClientsPage {
-	return clients.ClientsPage{
+func convertClientsPage(cp sdk.UsersPage) mfclients.ClientsPage {
+	return mfclients.ClientsPage{
 		Clients: convertClients(cp.Users),
 	}
 }
 
-func convertClients(cs []sdk.User) []clients.Client {
-	ccs := []clients.Client{}
+func convertClients(cs []sdk.User) []mfclients.Client {
+	ccs := []mfclients.Client{}
 
 	for _, c := range cs {
 		ccs = append(ccs, convertClient(c))
@@ -143,15 +143,15 @@ func convertMembershipsPage(m sdk.MembershipsPage) groups.MembershipsPage {
 	}
 }
 
-func convertClientPage(p sdk.PageMetadata) clients.Page {
+func convertClientPage(p sdk.PageMetadata) mfclients.Page {
 	if p.Status == "" {
 		p.Status = mfclients.EnabledStatus.String()
 	}
 	status, err := mfclients.ToStatus(p.Status)
 	if err != nil {
-		return clients.Page{}
+		return mfclients.Page{}
 	}
-	return clients.Page{
+	return mfclients.Page{
 		Status:   status,
 		Total:    p.Total,
 		Offset:   p.Offset,
@@ -211,20 +211,20 @@ func convertChildren(gs []*sdk.Group) []*mfgroups.Group {
 	return cg
 }
 
-func convertClient(c sdk.User) clients.Client {
+func convertClient(c sdk.User) mfclients.Client {
 	if c.Status == "" {
 		c.Status = mfclients.EnabledStatus.String()
 	}
 	status, err := mfclients.ToStatus(c.Status)
 	if err != nil {
-		return clients.Client{}
+		return mfclients.Client{}
 	}
-	return clients.Client{
+	return mfclients.Client{
 		ID:          c.ID,
 		Name:        c.Name,
 		Tags:        c.Tags,
 		Owner:       c.Owner,
-		Credentials: clients.Credentials(c.Credentials),
+		Credentials: mfclients.Credentials(c.Credentials),
 		Metadata:    mfclients.Metadata(c.Metadata),
 		CreatedAt:   c.CreatedAt,
 		UpdatedAt:   c.UpdatedAt,

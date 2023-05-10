@@ -355,7 +355,7 @@ func TestListClients(t *testing.T) {
 			Tag:      tc.tag,
 		}
 
-		repoCall := cRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(clients.ClientsPage{Page: convertClientPage(pm), Clients: convertClients(tc.response)}, tc.err)
+		repoCall := cRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(mfclients.ClientsPage{Page: convertClientPage(pm), Clients: convertClients(tc.response)}, tc.err)
 		page, err := clientSDK.Users(pm, generateValidToken(t, svc, cRepo))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page.Users, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
@@ -494,7 +494,7 @@ func TestListMembers(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("Members", mock.Anything, tc.groupID, mock.Anything).Return(clients.MembersPage{Members: convertClients(tc.response)}, tc.err)
+		repoCall1 := cRepo.On("Members", mock.Anything, tc.groupID, mock.Anything).Return(mfclients.MembersPage{Members: convertClients(tc.response)}, tc.err)
 		membersPage, err := clientSDK.Members(tc.groupID, tc.page, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, membersPage.Members, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, membersPage.Members))

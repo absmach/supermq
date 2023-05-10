@@ -12,7 +12,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	"github.com/mainflux/mainflux/pkg/uuid"
-	"github.com/mainflux/mainflux/users/clients"
 	cpostgres "github.com/mainflux/mainflux/users/clients/postgres"
 	gpostgres "github.com/mainflux/mainflux/users/groups/postgres"
 	"github.com/mainflux/mainflux/users/policies"
@@ -32,18 +31,19 @@ func TestPoliciesSave(t *testing.T) {
 
 	uid := testsutil.GenerateUUID(t, idProvider)
 
-	client := clients.Client{
+	client := mfclients.Client{
 		ID:   uid,
 		Name: "policy-save@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "policy-save@example.com",
 			Secret:   "pass",
 		},
 		Status: mfclients.EnabledStatus,
 	}
 
-	client, err := crepo.Save(context.Background(), client)
+	clients, err := crepo.Save(context.Background(), client)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	client = clients[0]
 
 	uid = testsutil.GenerateUUID(t, idProvider)
 
@@ -86,19 +86,19 @@ func TestPoliciesEvaluate(t *testing.T) {
 	crepo := cpostgres.NewClientRepo(database)
 	grepo := gpostgres.NewGroupRepo(database)
 
-	client1 := clients.Client{
+	client1 := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "connectedclients-clientA@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "connectedclients-clientA@example.com",
 			Secret:   "pass",
 		},
 		Status: mfclients.EnabledStatus,
 	}
-	client2 := clients.Client{
+	client2 := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "connectedclients-clientB@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "connectedclients-clientB@example.com",
 			Secret:   "pass",
 		},
@@ -109,10 +109,12 @@ func TestPoliciesEvaluate(t *testing.T) {
 		Name: "connecting-group@example.com",
 	}
 
-	client1, err := crepo.Save(context.Background(), client1)
+	clients1, err := crepo.Save(context.Background(), client1)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-	client2, err = crepo.Save(context.Background(), client2)
+	client1 = clients1[0]
+	clients2, err := crepo.Save(context.Background(), client2)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	client2 = clients2[0]
 	group, err = grepo.Save(context.Background(), group)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
@@ -168,18 +170,19 @@ func TestPoliciesRetrieve(t *testing.T) {
 
 	uid := testsutil.GenerateUUID(t, idProvider)
 
-	client := clients.Client{
+	client := mfclients.Client{
 		ID:   uid,
 		Name: "single-policy-retrieval@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "single-policy-retrieval@example.com",
 			Secret:   "pass",
 		},
 		Status: mfclients.EnabledStatus,
 	}
 
-	client, err := crepo.Save(context.Background(), client)
+	clients, err := crepo.Save(context.Background(), client)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	client = clients[0]
 
 	uid, err = idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -221,10 +224,10 @@ func TestPoliciesUpdate(t *testing.T) {
 	cid := testsutil.GenerateUUID(t, idProvider)
 	pid := testsutil.GenerateUUID(t, idProvider)
 
-	client := clients.Client{
+	client := mfclients.Client{
 		ID:   cid,
 		Name: "policy-update@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "policy-update@example.com",
 			Secret:   "pass",
 		},
@@ -354,29 +357,31 @@ func TestPoliciesRetrievalAll(t *testing.T) {
 
 	var nPolicies = uint64(10)
 
-	clientA := clients.Client{
+	clientA := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "policyA-retrievalall@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "policyA-retrievalall@example.com",
 			Secret:   "pass",
 		},
 		Status: mfclients.EnabledStatus,
 	}
-	clientB := clients.Client{
+	clientB := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "policyB-retrievalall@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "policyB-retrievalall@example.com",
 			Secret:   "pass",
 		},
 		Status: mfclients.EnabledStatus,
 	}
 
-	clientA, err := crepo.Save(context.Background(), clientA)
+	clientsA, err := crepo.Save(context.Background(), clientA)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-	clientB, err = crepo.Save(context.Background(), clientB)
+	clientA = clientsA[0]
+	clientsB, err := crepo.Save(context.Background(), clientB)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	clientB = clientsB[0]
 
 	for i := uint64(0); i < nPolicies; i++ {
 		obj := fmt.Sprintf("TestRetrieveAll%d@example.com", i)
@@ -616,10 +621,10 @@ func TestPoliciesDelete(t *testing.T) {
 	repo := ppostgres.NewPolicyRepo(database)
 	crepo := cpostgres.NewClientRepo(database)
 
-	client := clients.Client{
+	client := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "policy-delete@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "policy-delete@example.com",
 			Secret:   "pass",
 		},
@@ -632,8 +637,8 @@ func TestPoliciesDelete(t *testing.T) {
 	objectID := testsutil.GenerateUUID(t, idProvider)
 
 	policy := policies.Policy{
-		OwnerID: subject.ID,
-		Subject: subject.ID,
+		OwnerID: subject[0].ID,
+		Subject: subject[0].ID,
 		Object:  objectID,
 		Actions: []string{"c_delete"},
 	}
@@ -647,9 +652,9 @@ func TestPoliciesDelete(t *testing.T) {
 		err     error
 	}{
 		"delete non-existing policy":                      {"unknown", "unknown", nil},
-		"delete non-existing policy with correct subject": {subject.ID, "unknown", nil},
+		"delete non-existing policy with correct subject": {subject[0].ID, "unknown", nil},
 		"delete non-existing policy with correct object":  {"unknown", objectID, nil},
-		"delete existing policy":                          {subject.ID, objectID, nil},
+		"delete existing policy":                          {subject[0].ID, objectID, nil},
 	}
 
 	for desc, tc := range cases {
@@ -661,8 +666,8 @@ func TestPoliciesDelete(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 	pm := policies.Page{
-		OwnerID: subject.ID,
-		Subject: subject.ID,
+		OwnerID: subject[0].ID,
+		Subject: subject[0].ID,
 		Object:  objectID,
 		Action:  "c_delete",
 	}

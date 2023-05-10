@@ -22,10 +22,10 @@ func GenerateUUID(t *testing.T, idProvider mainflux.IDProvider) string {
 }
 
 func GenerateValidToken(t *testing.T, clientID string, svc clients.Service, cRepo *cmocks.ClientRepository, phasher clients.Hasher) string {
-	client := clients.Client{
+	client := mfclients.Client{
 		ID:   clientID,
 		Name: "validtoken",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "validtoken",
 			Secret:   "secret",
 		},
