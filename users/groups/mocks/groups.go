@@ -3,9 +3,9 @@ package mocks
 import (
 	"context"
 
-	"github.com/mainflux/mainflux/internal/mainflux"
-	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	"github.com/mainflux/mainflux/users/groups"
 	"github.com/stretchr/testify/mock"
 )
@@ -24,7 +24,7 @@ func (m *GroupRepository) ChangeStatus(ctx context.Context, group mfgroups.Group
 	if group.ID == WrongID {
 		return mfgroups.Group{}, errors.ErrNotFound
 	}
-	if group.Status != mainflux.EnabledStatus && group.Status != mainflux.DisabledStatus {
+	if group.Status != mfclients.EnabledStatus && group.Status != mfclients.DisabledStatus {
 		return mfgroups.Group{}, errors.ErrMalformedEntity
 	}
 

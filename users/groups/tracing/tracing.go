@@ -3,7 +3,7 @@ package tracing
 import (
 	"context"
 
-	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	"github.com/mainflux/mainflux/users/groups"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"

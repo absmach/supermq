@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/mainflux/mainflux/internal/mainflux"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 )
 
 // Credentials represent client credentials: its
@@ -17,16 +17,16 @@ type Credentials struct {
 
 // Client represents generic Client.
 type Client struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name,omitempty"`
-	Tags        []string          `json:"tags,omitempty"`
-	Owner       string            `json:"owner,omitempty"` // nullable
-	Credentials Credentials       `json:"credentials"`
-	Metadata    mainflux.Metadata `json:"metadata,omitempty"`
-	CreatedAt   time.Time         `json:"created_at"`
-	UpdatedAt   time.Time         `json:"updated_at"`
-	UpdatedBy   string            `json:"updated_by"`
-	Status      mainflux.Status   `json:"status"` // 1 for enabled, 0 for disabled
+	ID          string             `json:"id"`
+	Name        string             `json:"name,omitempty"`
+	Tags        []string           `json:"tags,omitempty"`
+	Owner       string             `json:"owner,omitempty"` // nullable
+	Credentials Credentials        `json:"credentials"`
+	Metadata    mfclients.Metadata `json:"metadata,omitempty"`
+	CreatedAt   time.Time          `json:"created_at"`
+	UpdatedAt   time.Time          `json:"updated_at"`
+	UpdatedBy   string             `json:"updated_by"`
+	Status      mfclients.Status   `json:"status"` // 1 for enabled, 0 for disabled
 }
 
 // ClientsPage contains page related metadata as well as list

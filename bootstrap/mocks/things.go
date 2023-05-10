@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"sync"
 
-	mfclients "github.com/mainflux/mainflux/internal/mainflux"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/clients"
 	upolicies "github.com/mainflux/mainflux/users/policies"

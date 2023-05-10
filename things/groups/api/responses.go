@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/mainflux/mainflux"
-	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 )
 
 var (

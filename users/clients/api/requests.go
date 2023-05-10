@@ -3,7 +3,7 @@ package api
 import (
 	"github.com/mainflux/mainflux/internal/api"
 	"github.com/mainflux/mainflux/internal/apiutil"
-	"github.com/mainflux/mainflux/internal/mainflux"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/users/clients"
 )
 
@@ -38,7 +38,7 @@ func (req viewClientReq) validate() error {
 
 type listClientsReq struct {
 	token      string
-	status     mainflux.Status
+	status     mfclients.Status
 	offset     uint64
 	limit      uint64
 	name       string
@@ -47,7 +47,7 @@ type listClientsReq struct {
 	visibility string
 	owner      string
 	sharedBy   string
-	metadata   mainflux.Metadata
+	metadata   mfclients.Metadata
 }
 
 func (req listClientsReq) validate() error {
@@ -87,8 +87,8 @@ func (req listMembersReq) validate() error {
 type updateClientReq struct {
 	token    string
 	id       string
-	Name     string            `json:"name,omitempty"`
-	Metadata mainflux.Metadata `json:"metadata,omitempty"`
+	Name     string             `json:"name,omitempty"`
+	Metadata mfclients.Metadata `json:"metadata,omitempty"`
 }
 
 func (req updateClientReq) validate() error {

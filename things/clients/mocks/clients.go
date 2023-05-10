@@ -3,7 +3,7 @@ package mocks
 import (
 	"context"
 
-	"github.com/mainflux/mainflux/internal/mainflux"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/clients"
 	"github.com/stretchr/testify/mock"
@@ -24,7 +24,7 @@ func (m *ClientRepository) ChangeStatus(ctx context.Context, client clients.Clie
 		return clients.Client{}, errors.ErrNotFound
 	}
 
-	if client.Status != mainflux.EnabledStatus && client.Status != mainflux.DisabledStatus {
+	if client.Status != mfclients.EnabledStatus && client.Status != mfclients.DisabledStatus {
 		return clients.Client{}, errors.ErrMalformedEntity
 	}
 

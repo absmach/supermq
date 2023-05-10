@@ -6,9 +6,9 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
-	mfclients "github.com/mainflux/mainflux/internal/mainflux"
-	"github.com/mainflux/mainflux/internal/mainflux/groups"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/groups"
 	upolicies "github.com/mainflux/mainflux/users/policies"
 )
 

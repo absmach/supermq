@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgtype" // required for SQL access
-	"github.com/mainflux/mainflux/internal/mainflux"
-	"github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/postgres"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/groups"
 	"github.com/mainflux/mainflux/users/clients"
 )
 
@@ -86,7 +86,7 @@ func (repo clientRepo) RetrieveByIdentity(ctx context.Context, identity string) 
 
 	dbc := dbClient{
 		Identity: identity,
-		Status:   mainflux.EnabledStatus,
+		Status:   mfclients.EnabledStatus,
 	}
 
 	row, err := repo.db.NamedQueryContext(ctx, q, dbc)
@@ -229,7 +229,7 @@ func (repo clientRepo) Update(ctx context.Context, client clients.Client) (clien
 	if len(query) > 0 {
 		upq = strings.Join(query, " ")
 	}
-	client.Status = mainflux.EnabledStatus
+	client.Status = mfclients.EnabledStatus
 	q := fmt.Sprintf(`UPDATE clients SET %s updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at, updated_by`,
@@ -239,7 +239,7 @@ func (repo clientRepo) Update(ctx context.Context, client clients.Client) (clien
 }
 
 func (repo clientRepo) UpdateTags(ctx context.Context, client clients.Client) (clients.Client, error) {
-	client.Status = mainflux.EnabledStatus
+	client.Status = mfclients.EnabledStatus
 	q := `UPDATE clients SET tags = :tags, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at, updated_by`
@@ -312,7 +312,7 @@ type dbClient struct {
 	UpdatedAt sql.NullTime     `db:"updated_at,omitempty"`
 	UpdatedBy *string          `db:"updated_by,omitempty"`
 	Groups    []groups.Group   `db:"groups,omitempty"`
-	Status    mainflux.Status  `db:"status"`
+	Status    mfclients.Status `db:"status"`
 	Role      clients.Role     `db:"role"`
 }
 
@@ -359,7 +359,7 @@ func toDBClient(c clients.Client) (dbClient, error) {
 }
 
 func toClient(c dbClient) (clients.Client, error) {
-	var metadata mainflux.Metadata
+	var metadata mfclients.Metadata
 	if c.Metadata != nil {
 		if err := json.Unmarshal([]byte(c.Metadata), &metadata); err != nil {
 			return clients.Client{}, errors.Wrap(errors.ErrMalformedEntity, err)
@@ -418,7 +418,7 @@ func pageQuery(pm clients.Page) (string, error) {
 	if pm.Tag != "" {
 		query = append(query, ":tag = ANY(c.tags)")
 	}
-	if pm.Status != mainflux.AllStatus {
+	if pm.Status != mfclients.AllStatus {
 		query = append(query, "c.status = :status")
 	}
 	// For listing clients that the specified client owns but not sharedby
@@ -466,17 +466,17 @@ func toDBClientsPage(pm clients.Page) (dbClientsPage, error) {
 }
 
 type dbClientsPage struct {
-	Total    uint64          `db:"total"`
-	Limit    uint64          `db:"limit"`
-	Offset   uint64          `db:"offset"`
-	Name     string          `db:"name"`
-	Owner    string          `db:"owner"`
-	Identity string          `db:"identity"`
-	Metadata []byte          `db:"metadata"`
-	Tag      string          `db:"tag"`
-	Status   mainflux.Status `db:"status"`
-	GroupID  string          `db:"group_id"`
-	SharedBy string          `db:"shared_by"`
-	Subject  string          `db:"subject"`
-	Action   string          `db:"action"`
+	Total    uint64           `db:"total"`
+	Limit    uint64           `db:"limit"`
+	Offset   uint64           `db:"offset"`
+	Name     string           `db:"name"`
+	Owner    string           `db:"owner"`
+	Identity string           `db:"identity"`
+	Metadata []byte           `db:"metadata"`
+	Tag      string           `db:"tag"`
+	Status   mfclients.Status `db:"status"`
+	GroupID  string           `db:"group_id"`
+	SharedBy string           `db:"shared_by"`
+	Subject  string           `db:"subject"`
+	Action   string           `db:"action"`
 }

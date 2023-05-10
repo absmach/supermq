@@ -1,6 +1,6 @@
 package clients
 
-import "github.com/mainflux/mainflux/internal/mainflux"
+import mfclients "github.com/mainflux/mainflux/pkg/clients"
 
 // Page contains page metadata that helps navigation.
 type Page struct {
@@ -11,9 +11,9 @@ type Page struct {
 	Identity string
 	Owner    string
 	Tag      string
-	Metadata mainflux.Metadata
+	Metadata mfclients.Metadata
 	SharedBy string
-	Status   mainflux.Status
+	Status   mfclients.Status
 	Action   string
 	Subject  string
 }

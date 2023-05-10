@@ -3,7 +3,7 @@ package groups
 import (
 	"context"
 
-	"github.com/mainflux/mainflux/internal/mainflux/groups"
+	"github.com/mainflux/mainflux/pkg/groups"
 )
 
 // MembershipsPage contains page related metadata as well as list of memberships that

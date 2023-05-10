@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/mainflux/mainflux/internal/mainflux"
-	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/internal/postgres"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	"github.com/mainflux/mainflux/things/groups"
 )
 
@@ -200,7 +200,7 @@ func (repo grepo) Update(ctx context.Context, g mfgroups.Group) (mfgroups.Group,
 	if len(query) > 0 {
 		upq = strings.Join(query, " ")
 	}
-	g.Status = mainflux.EnabledStatus
+	g.Status = mfclients.EnabledStatus
 	q := fmt.Sprintf(`UPDATE groups SET %s updated_at = :updated_at, updated_by = :updated_by
 		WHERE owner_id = :owner_id AND id = :id AND status = :status
 		RETURNING id, name, description, owner_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, updated_at, updated_by, status`, upq)
@@ -277,7 +277,7 @@ func buildQuery(gm groups.GroupsPage) (string, error) {
 	if gm.Name != "" {
 		queries = append(queries, "g.name = :name")
 	}
-	if gm.Status != mainflux.AllStatus {
+	if gm.Status != mfclients.AllStatus {
 		queries = append(queries, "g.status = :status")
 	}
 
@@ -289,18 +289,18 @@ func buildQuery(gm groups.GroupsPage) (string, error) {
 }
 
 type dbGroup struct {
-	ID          string          `db:"id"`
-	Parent      string          `db:"parent_id"`
-	Owner       string          `db:"owner_id"`
-	Name        string          `db:"name"`
-	Description string          `db:"description"`
-	Level       int             `db:"level"`
-	Path        string          `db:"path,omitempty"`
-	Metadata    []byte          `db:"metadata"`
-	CreatedAt   time.Time       `db:"created_at"`
-	UpdatedAt   sql.NullTime    `db:"updated_at,omitempty"`
-	UpdatedBy   *string         `db:"updated_by,omitempty"`
-	Status      mainflux.Status `db:"status"`
+	ID          string           `db:"id"`
+	Parent      string           `db:"parent_id"`
+	Owner       string           `db:"owner_id"`
+	Name        string           `db:"name"`
+	Description string           `db:"description"`
+	Level       int              `db:"level"`
+	Path        string           `db:"path,omitempty"`
+	Metadata    []byte           `db:"metadata"`
+	CreatedAt   time.Time        `db:"created_at"`
+	UpdatedAt   sql.NullTime     `db:"updated_at,omitempty"`
+	UpdatedBy   *string          `db:"updated_by,omitempty"`
+	Status      mfclients.Status `db:"status"`
 }
 
 func toDBGroup(g mfgroups.Group) (dbGroup, error) {
@@ -336,7 +336,7 @@ func toDBGroup(g mfgroups.Group) (dbGroup, error) {
 }
 
 func toGroup(g dbGroup) (mfgroups.Group, error) {
-	var metadata mainflux.Metadata
+	var metadata mfclients.Metadata
 	if g.Metadata != nil {
 		if err := json.Unmarshal([]byte(g.Metadata), &metadata); err != nil {
 			return mfgroups.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)
@@ -414,18 +414,18 @@ func toDBGroupPage(pm groups.GroupsPage) (dbGroupPage, error) {
 }
 
 type dbGroupPage struct {
-	ClientID string          `db:"client_id"`
-	ID       string          `db:"id"`
-	Name     string          `db:"name"`
-	ParentID string          `db:"parent_id"`
-	Owner    string          `db:"owner_id"`
-	Metadata []byte          `db:"metadata"`
-	Path     string          `db:"path"`
-	Level    uint64          `db:"level"`
-	Total    uint64          `db:"total"`
-	Limit    uint64          `db:"limit"`
-	Offset   uint64          `db:"offset"`
-	Subject  string          `db:"subject"`
-	Action   string          `db:"action"`
-	Status   mainflux.Status `db:"status"`
+	ClientID string           `db:"client_id"`
+	ID       string           `db:"id"`
+	Name     string           `db:"name"`
+	ParentID string           `db:"parent_id"`
+	Owner    string           `db:"owner_id"`
+	Metadata []byte           `db:"metadata"`
+	Path     string           `db:"path"`
+	Level    uint64           `db:"level"`
+	Total    uint64           `db:"total"`
+	Limit    uint64           `db:"limit"`
+	Offset   uint64           `db:"offset"`
+	Subject  string           `db:"subject"`
+	Action   string           `db:"action"`
+	Status   mfclients.Status `db:"status"`
 }

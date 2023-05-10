@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mainflux/mainflux/internal/mainflux/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/groups"
 	"github.com/mainflux/mainflux/things/clients"
 	"github.com/pelletier/go-toml"
 )

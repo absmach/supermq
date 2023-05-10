@@ -1,7 +1,7 @@
 package groups
 
 import (
-	"github.com/mainflux/mainflux/internal/mainflux"
+	"github.com/mainflux/mainflux/pkg/clients"
 )
 
 // Page contains page metadata that helps navigation.
@@ -12,9 +12,9 @@ type Page struct {
 	Name     string
 	OwnerID  string
 	Tag      string
-	Metadata mainflux.Metadata
+	Metadata clients.Metadata
 	SharedBy string
-	Status   mainflux.Status
+	Status   clients.Status
 	Subject  string
 	Action   string
 }

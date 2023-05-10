@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	mfgroups "github.com/mainflux/mainflux/internal/mainflux/groups"
 	mflog "github.com/mainflux/mainflux/logger"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	"github.com/mainflux/mainflux/users/groups"
 )
 
