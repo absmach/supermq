@@ -173,8 +173,8 @@ func TestClientsSave(t *testing.T) {
 	for _, tc := range cases {
 		rClient, err := repo.Save(context.Background(), tc.client)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		rClient[0].Credentials.Secret = tc.client.Credentials.Secret
 		if err == nil {
+			rClient[0].Credentials.Secret = tc.client.Credentials.Secret
 			assert.Equal(t, tc.client, rClient[0], fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.client, rClient))
 		}
 	}
