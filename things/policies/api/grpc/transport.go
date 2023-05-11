@@ -87,8 +87,7 @@ func encodeError(err error) error {
 		err == apiutil.ErrMalformedPolicyAct,
 		err == apiutil.ErrMalformedPolicy,
 		err == apiutil.ErrMissingPolicyOwner,
-		err == apiutil.ErrBearerKey,
-		err == apiutil.ErrHigherPolicyRank:
+		err == apiutil.ErrBearerKey:
 		return status.Error(codes.InvalidArgument, err.Error())
 	case errors.Contains(err, errors.ErrAuthentication),
 		err == apiutil.ErrBearerToken:
