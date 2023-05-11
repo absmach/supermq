@@ -1,8 +1,6 @@
 package clients
 
-import (
-	"github.com/mainflux/mainflux/internal/apiutil"
-)
+import "github.com/mainflux/mainflux/internal/apiutil"
 
 // Role represents Client role.
 type Role uint8

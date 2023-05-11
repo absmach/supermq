@@ -1,8 +1,6 @@
 package groups
 
-import (
-	"github.com/mainflux/mainflux/pkg/clients"
-)
+import "github.com/mainflux/mainflux/pkg/clients"
 
 // Page contains page metadata that helps navigation.
 type Page struct {
