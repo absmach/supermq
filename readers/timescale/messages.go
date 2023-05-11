@@ -121,9 +121,7 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) string {
 	if err != nil {
 		return condition
 	}
-	if err := json.Unmarshal(meta, &query); err != nil {
-		return condition
-	}
+	json.Unmarshal(meta, &query)
 
 	for name := range query {
 		switch name {
@@ -139,9 +137,15 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) string {
 		case "vb":
 			condition = fmt.Sprintf(`%s AND bool_value = :bool_value`, condition)
 		case "vs":
-			condition = fmt.Sprintf(`%s AND string_value = :string_value`, condition)
+			comparator := readers.ParseValueComparator(query)
+			if comparator == "=" || comparator == "<" || comparator == "<=" {
+				condition = fmt.Sprintf("%s AND string_value LIKE '%%' || :string_value || '%%'", condition)
+			} else {
+				condition = fmt.Sprintf("%s AND :string_value LIKE '%%' || string_value || '%%'", condition)
+			}
 		case "vd":
-			condition = fmt.Sprintf(`%s AND data_value = :data_value`, condition)
+			comparator := readers.ParseValueComparator(query)
+			condition = fmt.Sprintf(`%s AND data_value %s :data_value`, condition, comparator)
 		case "from":
 			condition = fmt.Sprintf(`%s AND time >= :from`, condition)
 		case "to":
