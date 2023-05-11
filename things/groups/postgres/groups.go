@@ -13,22 +13,24 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux/internal/postgres"
-	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfgroups "github.com/mainflux/mainflux/pkg/groups"
+	pggroups "github.com/mainflux/mainflux/pkg/groups/postgres"
 )
 
 var _ mfgroups.Repository = (*grepo)(nil)
 
 type grepo struct {
 	db postgres.Database
+	pggroups.GroupRepository
 }
 
 // NewRepository instantiates a PostgreSQL implementation of group
 // repository.
 func NewRepository(db postgres.Database) mfgroups.Repository {
 	return &grepo{
-		db: db,
+		db:              db,
+		GroupRepository: pggroups.GroupRepository{DB: db},
 	}
 }
 
@@ -42,7 +44,7 @@ func (repo grepo) Save(ctx context.Context, g mfgroups.Group) (mfgroups.Group, e
 		VALUES (:name, :description, :id, :owner_id, :parent_id, :metadata, :created_at, :updated_at, :updated_by, :status)
 		RETURNING id, name, description, owner_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, updated_at, updated_by, status;`
 	}
-	dbg, err := toDBGroup(g)
+	dbg, err := pggroups.ToDBGroup(g)
 	if err != nil {
 		return mfgroups.Group{}, err
 	}
@@ -53,16 +55,16 @@ func (repo grepo) Save(ctx context.Context, g mfgroups.Group) (mfgroups.Group, e
 
 	defer row.Close()
 	row.Next()
-	dbg = dbGroup{}
+	dbg = pggroups.DBGroup{}
 	if err := row.StructScan(&dbg); err != nil {
 		return mfgroups.Group{}, err
 	}
 
-	return toGroup(dbg)
+	return pggroups.ToGroup(dbg)
 }
 
 func (repo grepo) RetrieveByID(ctx context.Context, id string) (mfgroups.Group, error) {
-	dbu := dbGroup{
+	dbu := pggroups.DBGroup{
 		ID: id,
 	}
 	q := `SELECT id, name, owner_id, COALESCE(parent_id, '') AS parent_id, description, metadata, created_at, updated_at, updated_by, status FROM groups
@@ -74,18 +76,18 @@ func (repo grepo) RetrieveByID(ctx context.Context, id string) (mfgroups.Group, 
 		}
 		return mfgroups.Group{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
-	return toGroup(dbu)
+	return pggroups.ToGroup(dbu)
 }
 
 func (repo grepo) RetrieveAll(ctx context.Context, gm mfgroups.GroupsPage) (mfgroups.GroupsPage, error) {
 	var q string
-	query, err := buildQuery(gm)
+	query, err := pggroups.BuildQuery(gm)
 	if err != nil {
 		return mfgroups.GroupsPage{}, err
 	}
 
 	if gm.ID != "" {
-		q = buildHierachy(gm)
+		q = pggroups.BuildHierachy(gm)
 	}
 	if gm.ID == "" {
 		q = `SELECT DISTINCT g.id, g.owner_id, COALESCE(g.parent_id, '') AS parent_id, g.name, g.description,
@@ -93,7 +95,7 @@ func (repo grepo) RetrieveAll(ctx context.Context, gm mfgroups.GroupsPage) (mfgr
 	}
 	q = fmt.Sprintf("%s %s ORDER BY g.updated_at LIMIT :limit OFFSET :offset;", q, query)
 
-	dbPage, err := toDBGroupPage(gm)
+	dbPage, err := pggroups.ToDBGroupPage(gm)
 	if err != nil {
 		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
 	}
@@ -382,62 +384,15 @@ func toGroup(g dbGroup) (mfgroups.Group, error) {
 func (gr grepo) processRows(rows *sqlx.Rows) ([]mfgroups.Group, error) {
 	var items []mfgroups.Group
 	for rows.Next() {
-		dbg := dbGroup{}
+		dbg := pggroups.DBGroup{}
 		if err := rows.StructScan(&dbg); err != nil {
 			return items, err
 		}
-		group, err := toGroup(dbg)
+		group, err := pggroups.ToGroup(dbg)
 		if err != nil {
 			return items, err
 		}
 		items = append(items, group)
 	}
 	return items, nil
-}
-
-func toDBGroupPage(pm mfgroups.GroupsPage) (dbGroupPage, error) {
-	level := mfgroups.MaxLevel
-	if pm.Level < mfgroups.MaxLevel {
-		level = pm.Level
-	}
-	data := []byte("{}")
-	if len(pm.Metadata) > 0 {
-		b, err := json.Marshal(pm.Metadata)
-		if err != nil {
-			return dbGroupPage{}, errors.Wrap(errors.ErrMalformedEntity, err)
-		}
-		data = b
-	}
-	return dbGroupPage{
-		ID:       pm.ID,
-		Name:     pm.Name,
-		Metadata: data,
-		Path:     pm.Path,
-		Level:    level,
-		Total:    pm.Total,
-		Offset:   pm.Offset,
-		Limit:    pm.Limit,
-		ParentID: pm.ID,
-		Owner:    pm.OwnerID,
-		Subject:  pm.Subject,
-		Action:   pm.Action,
-		Status:   pm.Status,
-	}, nil
-}
-
-type dbGroupPage struct {
-	ClientID string           `db:"client_id"`
-	ID       string           `db:"id"`
-	Name     string           `db:"name"`
-	ParentID string           `db:"parent_id"`
-	Owner    string           `db:"owner_id"`
-	Metadata []byte           `db:"metadata"`
-	Path     string           `db:"path"`
-	Level    uint64           `db:"level"`
-	Total    uint64           `db:"total"`
-	Limit    uint64           `db:"limit"`
-	Offset   uint64           `db:"offset"`
-	Subject  string           `db:"subject"`
-	Action   string           `db:"action"`
-	Status   mfclients.Status `db:"status"`
 }
