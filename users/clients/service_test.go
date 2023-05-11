@@ -9,11 +9,11 @@ import (
 
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/internal/testsutil"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/users/clients"
 	"github.com/mainflux/mainflux/users/clients/mocks"
-	cmocks "github.com/mainflux/mainflux/users/clients/mocks"
 	"github.com/mainflux/mainflux/users/hasher"
 	"github.com/mainflux/mainflux/users/jwt"
 	pmocks "github.com/mainflux/mainflux/users/policies/mocks"
@@ -26,14 +26,14 @@ var (
 	idProvider     = uuid.New()
 	phasher        = hasher.New()
 	secret         = "strongsecret"
-	validCMetadata = clients.Metadata{"role": "client"}
-	client         = clients.Client{
+	validCMetadata = mfclients.Metadata{"role": "client"}
+	client         = mfclients.Client{
 		ID:          testsutil.GenerateUUID(&testing.T{}, idProvider),
 		Name:        "clientname",
 		Tags:        []string{"tag1", "tag2"},
-		Credentials: clients.Credentials{Identity: "clientidentity", Secret: secret},
+		Credentials: mfclients.Credentials{Identity: "clientidentity", Secret: secret},
 		Metadata:    validCMetadata,
-		Status:      clients.EnabledStatus,
+		Status:      mfclients.EnabledStatus,
 	}
 	inValidToken    = "invalidToken"
 	withinDuration  = 5 * time.Second
@@ -43,7 +43,7 @@ var (
 )
 
 func TestRegisterClient(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
@@ -51,7 +51,7 @@ func TestRegisterClient(t *testing.T) {
 
 	cases := []struct {
 		desc   string
-		client clients.Client
+		client mfclients.Client
 		token  string
 		err    error
 	}{
@@ -69,22 +69,22 @@ func TestRegisterClient(t *testing.T) {
 		},
 		{
 			desc: "register a new enabled client with name",
-			client: clients.Client{
+			client: mfclients.Client{
 				Name: "clientWithName",
-				Credentials: clients.Credentials{
+				Credentials: mfclients.Credentials{
 					Identity: "newclientwithname@example.com",
 					Secret:   secret,
 				},
-				Status: clients.EnabledStatus,
+				Status: mfclients.EnabledStatus,
 			},
 			err:   nil,
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new disabled client with name",
-			client: clients.Client{
+			client: mfclients.Client{
 				Name: "clientWithName",
-				Credentials: clients.Credentials{
+				Credentials: mfclients.Credentials{
 					Identity: "newclientwithname@example.com",
 					Secret:   secret,
 				},
@@ -94,47 +94,47 @@ func TestRegisterClient(t *testing.T) {
 		},
 		{
 			desc: "register a new enabled client with tags",
-			client: clients.Client{
+			client: mfclients.Client{
 				Tags: []string{"tag1", "tag2"},
-				Credentials: clients.Credentials{
+				Credentials: mfclients.Credentials{
 					Identity: "newclientwithtags@example.com",
 					Secret:   secret,
 				},
-				Status: clients.EnabledStatus,
+				Status: mfclients.EnabledStatus,
 			},
 			err:   nil,
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new disabled client with tags",
-			client: clients.Client{
+			client: mfclients.Client{
 				Tags: []string{"tag1", "tag2"},
-				Credentials: clients.Credentials{
+				Credentials: mfclients.Credentials{
 					Identity: "newclientwithtags@example.com",
 					Secret:   secret,
 				},
-				Status: clients.DisabledStatus,
+				Status: mfclients.DisabledStatus,
 			},
 			err:   nil,
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new enabled client with metadata",
-			client: clients.Client{
-				Credentials: clients.Credentials{
+			client: mfclients.Client{
+				Credentials: mfclients.Credentials{
 					Identity: "newclientwithmetadata@example.com",
 					Secret:   secret,
 				},
 				Metadata: validCMetadata,
-				Status:   clients.EnabledStatus,
+				Status:   mfclients.EnabledStatus,
 			},
 			err:   nil,
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new disabled client with metadata",
-			client: clients.Client{
-				Credentials: clients.Credentials{
+			client: mfclients.Client{
+				Credentials: mfclients.Credentials{
 					Identity: "newclientwithmetadata@example.com",
 					Secret:   secret,
 				},
@@ -145,8 +145,8 @@ func TestRegisterClient(t *testing.T) {
 		},
 		{
 			desc: "register a new disabled client",
-			client: clients.Client{
-				Credentials: clients.Credentials{
+			client: mfclients.Client{
+				Credentials: mfclients.Credentials{
 					Identity: "newclientwithvalidstatus@example.com",
 					Secret:   secret,
 				},
@@ -156,38 +156,38 @@ func TestRegisterClient(t *testing.T) {
 		},
 		{
 			desc: "register a new client with valid disabled status",
-			client: clients.Client{
-				Credentials: clients.Credentials{
+			client: mfclients.Client{
+				Credentials: mfclients.Credentials{
 					Identity: "newclientwithvalidstatus@example.com",
 					Secret:   secret,
 				},
-				Status: clients.DisabledStatus,
+				Status: mfclients.DisabledStatus,
 			},
 			err:   nil,
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new client with all fields",
-			client: clients.Client{
+			client: mfclients.Client{
 				Name: "newclientwithallfields",
 				Tags: []string{"tag1", "tag2"},
-				Credentials: clients.Credentials{
+				Credentials: mfclients.Credentials{
 					Identity: "newclientwithallfields@example.com",
 					Secret:   secret,
 				},
-				Metadata: clients.Metadata{
+				Metadata: mfclients.Metadata{
 					"name": "newclientwithallfields",
 				},
-				Status: clients.EnabledStatus,
+				Status: mfclients.EnabledStatus,
 			},
 			err:   nil,
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new client with missing identity",
-			client: clients.Client{
+			client: mfclients.Client{
 				Name: "clientWithMissingIdentity",
-				Credentials: clients.Credentials{
+				Credentials: mfclients.Credentials{
 					Secret: secret,
 				},
 			},
@@ -196,9 +196,9 @@ func TestRegisterClient(t *testing.T) {
 		},
 		{
 			desc: "register a new client with invalid owner",
-			client: clients.Client{
+			client: mfclients.Client{
 				Owner: mocks.WrongID,
-				Credentials: clients.Credentials{
+				Credentials: mfclients.Credentials{
 					Identity: "newclientwithinvalidowner@example.com",
 					Secret:   secret,
 				},
@@ -208,9 +208,9 @@ func TestRegisterClient(t *testing.T) {
 		},
 		{
 			desc: "register a new client with empty secret",
-			client: clients.Client{
+			client: mfclients.Client{
 				Owner: testsutil.GenerateUUID(t, idProvider),
-				Credentials: clients.Credentials{
+				Credentials: mfclients.Credentials{
 					Identity: "newclientwithemptysecret@example.com",
 				},
 			},
@@ -219,12 +219,12 @@ func TestRegisterClient(t *testing.T) {
 		},
 		{
 			desc: "register a new client with invalid status",
-			client: clients.Client{
-				Credentials: clients.Credentials{
+			client: mfclients.Client{
+				Credentials: mfclients.Credentials{
 					Identity: "newclientwithinvalidstatus@example.com",
 					Secret:   secret,
 				},
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			err:   apiutil.ErrInvalidStatus,
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
@@ -232,7 +232,7 @@ func TestRegisterClient(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := cRepo.On("Save", context.Background(), mock.Anything).Return(&clients.Client{}, tc.err)
+		repoCall := cRepo.On("Save", context.Background(), mock.Anything).Return(&mfclients.Client{}, tc.err)
 		registerTime := time.Now()
 		expected, err := svc.RegisterClient(context.Background(), tc.token, tc.client)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -254,7 +254,7 @@ func TestRegisterClient(t *testing.T) {
 }
 
 func TestViewClient(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
@@ -264,7 +264,7 @@ func TestViewClient(t *testing.T) {
 		desc     string
 		token    string
 		clientID string
-		response clients.Client
+		response mfclients.Client
 		err      error
 	}{
 		{
@@ -276,21 +276,21 @@ func TestViewClient(t *testing.T) {
 		},
 		{
 			desc:     "view client with an invalid token",
-			response: clients.Client{},
+			response: mfclients.Client{},
 			token:    inValidToken,
 			clientID: "",
 			err:      errors.ErrAuthentication,
 		},
 		{
 			desc:     "view client with valid token and invalid client id",
-			response: clients.Client{},
+			response: mfclients.Client{},
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			clientID: mocks.WrongID,
 			err:      errors.ErrNotFound,
 		},
 		{
 			desc:     "view client with an invalid token and invalid client id",
-			response: clients.Client{},
+			response: mfclients.Client{},
 			token:    inValidToken,
 			clientID: mocks.WrongID,
 			err:      errors.ErrAuthentication,
@@ -315,25 +315,25 @@ func TestViewClient(t *testing.T) {
 }
 
 func TestListClients(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
 	svc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 
 	var nClients = uint64(200)
-	var aClients = []clients.Client{}
+	var aClients = []mfclients.Client{}
 	var OwnerID = testsutil.GenerateUUID(t, idProvider)
 	for i := uint64(1); i < nClients; i++ {
 		identity := fmt.Sprintf("TestListClients_%d@example.com", i)
-		client := clients.Client{
+		client := mfclients.Client{
 			Name: identity,
-			Credentials: clients.Credentials{
+			Credentials: mfclients.Credentials{
 				Identity: identity,
 				Secret:   "password",
 			},
 			Tags:     []string{"tag1", "tag2"},
-			Metadata: clients.Metadata{"role": "client"},
+			Metadata: mfclients.Metadata{"role": "client"},
 		}
 		if i%50 == 0 {
 			client.Owner = OwnerID
@@ -345,8 +345,8 @@ func TestListClients(t *testing.T) {
 	cases := []struct {
 		desc     string
 		token    string
-		page     clients.Page
-		response clients.ClientsPage
+		page     mfclients.Page
+		response mfclients.ClientsPage
 		size     uint64
 		err      error
 	}{
@@ -354,29 +354,29 @@ func TestListClients(t *testing.T) {
 			desc:  "list clients with authorized token",
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 
-			page: clients.Page{
-				Status: clients.AllStatus,
+			page: mfclients.Page{
+				Status: mfclients.AllStatus,
 			},
 			size: 0,
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  0,
 					Offset: 0,
 					Limit:  0,
 				},
-				Clients: []clients.Client{},
+				Clients: []mfclients.Client{},
 			},
 			err: nil,
 		},
 		{
 			desc:  "list clients with an invalid token",
 			token: inValidToken,
-			page: clients.Page{
-				Status: clients.AllStatus,
+			page: mfclients.Page{
+				Status: mfclients.AllStatus,
 			},
 			size: 0,
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  0,
 					Offset: 0,
 					Limit:  0,
@@ -387,180 +387,180 @@ func TestListClients(t *testing.T) {
 		{
 			desc:  "list clients that are shared with me",
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
-			page: clients.Page{
+			page: mfclients.Page{
 				Offset:   6,
 				Limit:    nClients,
 				SharedBy: clients.MyKey,
-				Status:   clients.EnabledStatus,
+				Status:   mfclients.EnabledStatus,
 			},
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  4,
 					Offset: 0,
 					Limit:  0,
 				},
-				Clients: []clients.Client{aClients[0], aClients[50], aClients[100], aClients[150]},
+				Clients: []mfclients.Client{aClients[0], aClients[50], aClients[100], aClients[150]},
 			},
 			size: 4,
 		},
 		{
 			desc:  "list clients that are shared with me with a specific name",
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
-			page: clients.Page{
+			page: mfclients.Page{
 				Offset:   6,
 				Limit:    nClients,
 				SharedBy: clients.MyKey,
 				Name:     "TestListClients3",
-				Status:   clients.EnabledStatus,
+				Status:   mfclients.EnabledStatus,
 			},
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  4,
 					Offset: 0,
 					Limit:  0,
 				},
-				Clients: []clients.Client{aClients[0], aClients[50], aClients[100], aClients[150]},
+				Clients: []mfclients.Client{aClients[0], aClients[50], aClients[100], aClients[150]},
 			},
 			size: 4,
 		},
 		{
 			desc:  "list clients that are shared with me with an invalid name",
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
-			page: clients.Page{
+			page: mfclients.Page{
 				Offset:   6,
 				Limit:    nClients,
 				SharedBy: clients.MyKey,
 				Name:     "notpresentclient",
-				Status:   clients.EnabledStatus,
+				Status:   mfclients.EnabledStatus,
 			},
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  0,
 					Offset: 0,
 					Limit:  0,
 				},
-				Clients: []clients.Client{},
+				Clients: []mfclients.Client{},
 			},
 			size: 0,
 		},
 		{
 			desc:  "list clients that I own",
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
-			page: clients.Page{
+			page: mfclients.Page{
 				Offset: 6,
 				Limit:  nClients,
 				Owner:  clients.MyKey,
-				Status: clients.EnabledStatus,
+				Status: mfclients.EnabledStatus,
 			},
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  4,
 					Offset: 0,
 					Limit:  0,
 				},
-				Clients: []clients.Client{aClients[0], aClients[50], aClients[100], aClients[150]},
+				Clients: []mfclients.Client{aClients[0], aClients[50], aClients[100], aClients[150]},
 			},
 			size: 4,
 		},
 		{
 			desc:  "list clients that I own with a specific name",
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
-			page: clients.Page{
+			page: mfclients.Page{
 				Offset: 6,
 				Limit:  nClients,
 				Owner:  clients.MyKey,
 				Name:   "TestListClients3",
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  4,
 					Offset: 0,
 					Limit:  0,
 				},
-				Clients: []clients.Client{aClients[0], aClients[50], aClients[100], aClients[150]},
+				Clients: []mfclients.Client{aClients[0], aClients[50], aClients[100], aClients[150]},
 			},
 			size: 4,
 		},
 		{
 			desc:  "list clients that I own with an invalid name",
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
-			page: clients.Page{
+			page: mfclients.Page{
 				Offset: 6,
 				Limit:  nClients,
 				Owner:  clients.MyKey,
 				Name:   "notpresentclient",
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  0,
 					Offset: 0,
 					Limit:  0,
 				},
-				Clients: []clients.Client{},
+				Clients: []mfclients.Client{},
 			},
 			size: 0,
 		},
 		{
 			desc:  "list clients that I own and are shared with me",
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
-			page: clients.Page{
+			page: mfclients.Page{
 				Offset:   6,
 				Limit:    nClients,
 				Owner:    clients.MyKey,
 				SharedBy: clients.MyKey,
-				Status:   clients.AllStatus,
+				Status:   mfclients.AllStatus,
 			},
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  4,
 					Offset: 0,
 					Limit:  0,
 				},
-				Clients: []clients.Client{aClients[0], aClients[50], aClients[100], aClients[150]},
+				Clients: []mfclients.Client{aClients[0], aClients[50], aClients[100], aClients[150]},
 			},
 			size: 4,
 		},
 		{
 			desc:  "list clients that I own and are shared with me with a specific name",
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
-			page: clients.Page{
+			page: mfclients.Page{
 				Offset:   6,
 				Limit:    nClients,
 				SharedBy: clients.MyKey,
 				Owner:    clients.MyKey,
 				Name:     "TestListClients3",
-				Status:   clients.AllStatus,
+				Status:   mfclients.AllStatus,
 			},
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  4,
 					Offset: 0,
 					Limit:  0,
 				},
-				Clients: []clients.Client{aClients[0], aClients[50], aClients[100], aClients[150]},
+				Clients: []mfclients.Client{aClients[0], aClients[50], aClients[100], aClients[150]},
 			},
 			size: 4,
 		},
 		{
 			desc:  "list clients that I own and are shared with me with an invalid name",
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
-			page: clients.Page{
+			page: mfclients.Page{
 				Offset:   6,
 				Limit:    nClients,
 				SharedBy: clients.MyKey,
 				Owner:    clients.MyKey,
 				Name:     "notpresentclient",
-				Status:   clients.AllStatus,
+				Status:   mfclients.AllStatus,
 			},
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  0,
 					Offset: 0,
 					Limit:  0,
 				},
-				Clients: []clients.Client{},
+				Clients: []mfclients.Client{},
 			},
 			size: 0,
 		},
@@ -568,13 +568,13 @@ func TestListClients(t *testing.T) {
 			desc:  "list clients with offset and limit",
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 
-			page: clients.Page{
+			page: mfclients.Page{
 				Offset: 6,
 				Limit:  nClients,
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  nClients - 6,
 					Offset: 0,
 					Limit:  0,
@@ -599,7 +599,7 @@ func TestListClients(t *testing.T) {
 }
 
 func TestUpdateClient(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
@@ -608,12 +608,12 @@ func TestUpdateClient(t *testing.T) {
 	client1 := client
 	client2 := client
 	client1.Name = "Updated client"
-	client2.Metadata = clients.Metadata{"role": "test"}
+	client2.Metadata = mfclients.Metadata{"role": "test"}
 
 	cases := []struct {
 		desc     string
-		client   clients.Client
-		response clients.Client
+		client   mfclients.Client
+		response mfclients.Client
 		token    string
 		err      error
 	}{
@@ -627,17 +627,17 @@ func TestUpdateClient(t *testing.T) {
 		{
 			desc:     "update client name with invalid token",
 			client:   client1,
-			response: clients.Client{},
+			response: mfclients.Client{},
 			token:    "non-existent",
 			err:      errors.ErrAuthentication,
 		},
 		{
 			desc: "update client name with invalid ID",
-			client: clients.Client{
+			client: mfclients.Client{
 				ID:   mocks.WrongID,
 				Name: "Updated Client",
 			},
-			response: clients.Client{},
+			response: mfclients.Client{},
 			token:    "non-existent",
 			err:      errors.ErrAuthentication,
 		},
@@ -651,7 +651,7 @@ func TestUpdateClient(t *testing.T) {
 		{
 			desc:     "update client metadata with invalid token",
 			client:   client2,
-			response: clients.Client{},
+			response: mfclients.Client{},
 			token:    "non-existent",
 			err:      errors.ErrAuthentication,
 		},
@@ -675,7 +675,7 @@ func TestUpdateClient(t *testing.T) {
 }
 
 func TestUpdateClientTags(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
@@ -685,8 +685,8 @@ func TestUpdateClientTags(t *testing.T) {
 
 	cases := []struct {
 		desc     string
-		client   clients.Client
-		response clients.Client
+		client   mfclients.Client
+		response mfclients.Client
 		token    string
 		err      error
 	}{
@@ -701,16 +701,16 @@ func TestUpdateClientTags(t *testing.T) {
 			desc:     "update client tags with invalid token",
 			client:   client,
 			token:    "non-existent",
-			response: clients.Client{},
+			response: mfclients.Client{},
 			err:      errors.ErrAuthentication,
 		},
 		{
 			desc: "update client name with invalid ID",
-			client: clients.Client{
+			client: mfclients.Client{
 				ID:   mocks.WrongID,
 				Name: "Updated name",
 			},
-			response: clients.Client{},
+			response: mfclients.Client{},
 			token:    "non-existent",
 			err:      errors.ErrAuthentication,
 		},
@@ -734,7 +734,7 @@ func TestUpdateClientTags(t *testing.T) {
 }
 
 func TestUpdateClientIdentity(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
@@ -746,7 +746,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 	cases := []struct {
 		desc     string
 		identity string
-		response clients.Client
+		response mfclients.Client
 		token    string
 		id       string
 		err      error
@@ -764,7 +764,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 			identity: "updated@example.com",
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			id:       mocks.WrongID,
-			response: clients.Client{},
+			response: mfclients.Client{},
 			err:      errors.ErrNotFound,
 		},
 		{
@@ -772,7 +772,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 			identity: "updated@example.com",
 			token:    "non-existent",
 			id:       client2.ID,
-			response: clients.Client{},
+			response: mfclients.Client{},
 			err:      errors.ErrAuthentication,
 		},
 	}
@@ -795,7 +795,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 }
 
 func TestUpdateClientOwner(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
@@ -805,8 +805,8 @@ func TestUpdateClientOwner(t *testing.T) {
 
 	cases := []struct {
 		desc     string
-		client   clients.Client
-		response clients.Client
+		client   mfclients.Client
+		response mfclients.Client
 		token    string
 		err      error
 	}{
@@ -821,16 +821,16 @@ func TestUpdateClientOwner(t *testing.T) {
 			desc:     "update client owner with invalid token",
 			client:   client,
 			token:    "non-existent",
-			response: clients.Client{},
+			response: mfclients.Client{},
 			err:      errors.ErrAuthentication,
 		},
 		{
 			desc: "update client owner with invalid ID",
-			client: clients.Client{
+			client: mfclients.Client{
 				ID:    mocks.WrongID,
 				Owner: "updatedowner@mail.com",
 			},
-			response: clients.Client{},
+			response: mfclients.Client{},
 			token:    "non-existent",
 			err:      errors.ErrAuthentication,
 		},
@@ -854,7 +854,7 @@ func TestUpdateClientOwner(t *testing.T) {
 }
 
 func TestUpdateClientSecret(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
@@ -873,7 +873,7 @@ func TestUpdateClientSecret(t *testing.T) {
 		oldSecret string
 		newSecret string
 		token     string
-		response  clients.Client
+		response  mfclients.Client
 		err       error
 	}{
 		{
@@ -889,7 +889,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			oldSecret: client.Credentials.Secret,
 			newSecret: "newPassword",
 			token:     "non-existent",
-			response:  clients.Client{},
+			response:  mfclients.Client{},
 			err:       errors.ErrAuthentication,
 		},
 		{
@@ -897,7 +897,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			oldSecret: "oldSecret",
 			newSecret: "newSecret",
 			token:     token.AccessToken,
-			response:  clients.Client{},
+			response:  mfclients.Client{},
 			err:       apiutil.ErrInvalidSecret,
 		},
 	}
@@ -924,23 +924,23 @@ func TestUpdateClientSecret(t *testing.T) {
 }
 
 func TestEnableClient(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
 	svc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 
-	enabledClient1 := clients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: clients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: clients.EnabledStatus}
-	disabledClient1 := clients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: clients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: clients.DisabledStatus}
+	enabledClient1 := mfclients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: mfclients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: mfclients.EnabledStatus}
+	disabledClient1 := mfclients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: mfclients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: mfclients.DisabledStatus}
 	endisabledClient1 := disabledClient1
-	endisabledClient1.Status = clients.EnabledStatus
+	endisabledClient1.Status = mfclients.EnabledStatus
 
 	cases := []struct {
 		desc     string
 		id       string
 		token    string
-		client   clients.Client
-		response clients.Client
+		client   mfclients.Client
+		response mfclients.Client
 		err      error
 	}{
 		{
@@ -957,14 +957,14 @@ func TestEnableClient(t *testing.T) {
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			client:   enabledClient1,
 			response: enabledClient1,
-			err:      clients.ErrStatusAlreadyAssigned,
+			err:      mfclients.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:     "enable non-existing client",
 			id:       mocks.WrongID,
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
-			client:   clients.Client{},
-			response: clients.Client{},
+			client:   mfclients.Client{},
+			response: mfclients.Client{},
 			err:      errors.ErrNotFound,
 		},
 	}
@@ -990,53 +990,53 @@ func TestEnableClient(t *testing.T) {
 
 	cases2 := []struct {
 		desc     string
-		status   clients.Status
+		status   mfclients.Status
 		size     uint64
-		response clients.ClientsPage
+		response mfclients.ClientsPage
 	}{
 		{
 			desc:   "list enabled clients",
-			status: clients.EnabledStatus,
+			status: mfclients.EnabledStatus,
 			size:   2,
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  2,
 					Offset: 0,
 					Limit:  100,
 				},
-				Clients: []clients.Client{enabledClient1, endisabledClient1},
+				Clients: []mfclients.Client{enabledClient1, endisabledClient1},
 			},
 		},
 		{
 			desc:   "list disabled clients",
-			status: clients.DisabledStatus,
+			status: mfclients.DisabledStatus,
 			size:   1,
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  1,
 					Offset: 0,
 					Limit:  100,
 				},
-				Clients: []clients.Client{disabledClient1},
+				Clients: []mfclients.Client{disabledClient1},
 			},
 		},
 		{
 			desc:   "list enabled and disabled clients",
-			status: clients.AllStatus,
+			status: mfclients.AllStatus,
 			size:   3,
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  3,
 					Offset: 0,
 					Limit:  100,
 				},
-				Clients: []clients.Client{enabledClient1, disabledClient1, endisabledClient1},
+				Clients: []mfclients.Client{enabledClient1, disabledClient1, endisabledClient1},
 			},
 		},
 	}
 
 	for _, tc := range cases2 {
-		pm := clients.Page{
+		pm := mfclients.Page{
 			Offset: 0,
 			Limit:  100,
 			Status: tc.status,
@@ -1052,23 +1052,23 @@ func TestEnableClient(t *testing.T) {
 }
 
 func TestDisableClient(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
 	svc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 
-	enabledClient1 := clients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: clients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: clients.EnabledStatus}
-	disabledClient1 := clients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: clients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: clients.DisabledStatus}
+	enabledClient1 := mfclients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: mfclients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: mfclients.EnabledStatus}
+	disabledClient1 := mfclients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: mfclients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: mfclients.DisabledStatus}
 	disenabledClient1 := enabledClient1
-	disenabledClient1.Status = clients.DisabledStatus
+	disenabledClient1.Status = mfclients.DisabledStatus
 
 	cases := []struct {
 		desc     string
 		id       string
 		token    string
-		client   clients.Client
-		response clients.Client
+		client   mfclients.Client
+		response mfclients.Client
 		err      error
 	}{
 		{
@@ -1084,15 +1084,15 @@ func TestDisableClient(t *testing.T) {
 			id:       disabledClient1.ID,
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			client:   disabledClient1,
-			response: clients.Client{},
-			err:      clients.ErrStatusAlreadyAssigned,
+			response: mfclients.Client{},
+			err:      mfclients.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:     "disable non-existing client",
 			id:       mocks.WrongID,
-			client:   clients.Client{},
+			client:   mfclients.Client{},
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
-			response: clients.Client{},
+			response: mfclients.Client{},
 			err:      errors.ErrNotFound,
 		},
 	}
@@ -1118,53 +1118,53 @@ func TestDisableClient(t *testing.T) {
 
 	cases2 := []struct {
 		desc     string
-		status   clients.Status
+		status   mfclients.Status
 		size     uint64
-		response clients.ClientsPage
+		response mfclients.ClientsPage
 	}{
 		{
 			desc:   "list enabled clients",
-			status: clients.EnabledStatus,
+			status: mfclients.EnabledStatus,
 			size:   1,
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  1,
 					Offset: 0,
 					Limit:  100,
 				},
-				Clients: []clients.Client{enabledClient1},
+				Clients: []mfclients.Client{enabledClient1},
 			},
 		},
 		{
 			desc:   "list disabled clients",
-			status: clients.DisabledStatus,
+			status: mfclients.DisabledStatus,
 			size:   2,
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  2,
 					Offset: 0,
 					Limit:  100,
 				},
-				Clients: []clients.Client{disenabledClient1, disabledClient1},
+				Clients: []mfclients.Client{disenabledClient1, disabledClient1},
 			},
 		},
 		{
 			desc:   "list enabled and disabled clients",
-			status: clients.AllStatus,
+			status: mfclients.AllStatus,
 			size:   3,
-			response: clients.ClientsPage{
-				Page: clients.Page{
+			response: mfclients.ClientsPage{
+				Page: mfclients.Page{
 					Total:  3,
 					Offset: 0,
 					Limit:  100,
 				},
-				Clients: []clients.Client{enabledClient1, disabledClient1, disenabledClient1},
+				Clients: []mfclients.Client{enabledClient1, disabledClient1, disenabledClient1},
 			},
 		},
 	}
 
 	for _, tc := range cases2 {
-		pm := clients.Page{
+		pm := mfclients.Page{
 			Offset: 0,
 			Limit:  100,
 			Status: tc.status,
@@ -1180,25 +1180,25 @@ func TestDisableClient(t *testing.T) {
 }
 
 func TestListMembers(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
 	svc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 
 	var nClients = uint64(10)
-	var aClients = []clients.Client{}
+	var aClients = []mfclients.Client{}
 	for i := uint64(1); i < nClients; i++ {
 		identity := fmt.Sprintf("member_%d@example.com", i)
-		client := clients.Client{
+		client := mfclients.Client{
 			ID:   testsutil.GenerateUUID(t, idProvider),
 			Name: identity,
-			Credentials: clients.Credentials{
+			Credentials: mfclients.Credentials{
 				Identity: identity,
 				Secret:   "password",
 			},
 			Tags:     []string{"tag1", "tag2"},
-			Metadata: clients.Metadata{"role": "client"},
+			Metadata: mfclients.Metadata{"role": "client"},
 		}
 		aClients = append(aClients, client)
 	}
@@ -1209,25 +1209,25 @@ func TestListMembers(t *testing.T) {
 		desc     string
 		token    string
 		groupID  string
-		page     clients.Page
-		response clients.MembersPage
+		page     mfclients.Page
+		response mfclients.MembersPage
 		err      error
 	}{
 		{
 			desc:    "list clients with authorized token",
 			token:   validToken,
 			groupID: testsutil.GenerateUUID(t, idProvider),
-			page: clients.Page{
+			page: mfclients.Page{
 				Subject: validID,
 				Action:  "g_list",
 			},
-			response: clients.MembersPage{
-				Page: clients.Page{
+			response: mfclients.MembersPage{
+				Page: mfclients.Page{
 					Total:  0,
 					Offset: 0,
 					Limit:  0,
 				},
-				Members: []clients.Client{},
+				Members: []mfclients.Client{},
 			},
 			err: nil,
 		},
@@ -1235,15 +1235,15 @@ func TestListMembers(t *testing.T) {
 			desc:    "list clients with offset and limit",
 			token:   validToken,
 			groupID: testsutil.GenerateUUID(t, idProvider),
-			page: clients.Page{
+			page: mfclients.Page{
 				Offset:  6,
 				Limit:   nClients,
-				Status:  clients.AllStatus,
+				Status:  mfclients.AllStatus,
 				Subject: validID,
 				Action:  "g_list",
 			},
-			response: clients.MembersPage{
-				Page: clients.Page{
+			response: mfclients.MembersPage{
+				Page: mfclients.Page{
 					Total: nClients - 6 - 1,
 				},
 				Members: aClients[6 : nClients-1],
@@ -1253,12 +1253,12 @@ func TestListMembers(t *testing.T) {
 			desc:    "list clients with an invalid token",
 			token:   inValidToken,
 			groupID: testsutil.GenerateUUID(t, idProvider),
-			page: clients.Page{
+			page: mfclients.Page{
 				Subject: validID,
 				Action:  "g_list",
 			},
-			response: clients.MembersPage{
-				Page: clients.Page{
+			response: mfclients.MembersPage{
+				Page: mfclients.Page{
 					Total:  0,
 					Offset: 0,
 					Limit:  0,
@@ -1270,12 +1270,12 @@ func TestListMembers(t *testing.T) {
 			desc:    "list clients with an invalid id",
 			token:   validToken,
 			groupID: mocks.WrongID,
-			page: clients.Page{
+			page: mfclients.Page{
 				Subject: validID,
 				Action:  "g_list",
 			},
-			response: clients.MembersPage{
-				Page: clients.Page{
+			response: mfclients.MembersPage{
+				Page: mfclients.Page{
 					Total:  0,
 					Offset: 0,
 					Limit:  0,
@@ -1303,7 +1303,7 @@ func TestListMembers(t *testing.T) {
 }
 
 func TestIssueToken(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
@@ -1318,8 +1318,8 @@ func TestIssueToken(t *testing.T) {
 
 	cases := []struct {
 		desc    string
-		client  clients.Client
-		rClient clients.Client
+		client  mfclients.Client
+		rClient mfclients.Client
 		err     error
 	}{
 		{
@@ -1331,7 +1331,7 @@ func TestIssueToken(t *testing.T) {
 		{
 			desc:    "issue token for a non-existing client",
 			client:  client,
-			rClient: clients.Client{},
+			rClient: mfclients.Client{},
 			err:     errors.ErrAuthentication,
 		},
 		{
@@ -1357,7 +1357,7 @@ func TestIssueToken(t *testing.T) {
 }
 
 func TestRefreshToken(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
@@ -1374,7 +1374,7 @@ func TestRefreshToken(t *testing.T) {
 	cases := []struct {
 		desc   string
 		token  string
-		client clients.Client
+		client mfclients.Client
 		err    error
 	}{
 		{
@@ -1386,7 +1386,7 @@ func TestRefreshToken(t *testing.T) {
 		{
 			desc:   "refresh token with refresh token for a non-existing client",
 			token:  token.RefreshToken,
-			client: clients.Client{},
+			client: mfclients.Client{},
 			err:    errors.ErrAuthentication,
 		},
 		{
@@ -1398,7 +1398,7 @@ func TestRefreshToken(t *testing.T) {
 		{
 			desc:   "refresh token with access token for a non-existing client",
 			token:  token.AccessToken,
-			client: clients.Client{},
+			client: mfclients.Client{},
 			err:    errors.ErrAuthentication,
 		},
 		{

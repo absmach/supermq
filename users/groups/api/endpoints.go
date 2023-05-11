@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	"github.com/mainflux/mainflux/users/groups"
 )
 
@@ -46,7 +47,7 @@ func updateGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 			return updateGroupRes{}, err
 		}
 
-		group := groups.Group{
+		group := mfgroups.Group{
 			ID:          req.id,
 			Name:        req.Name,
 			Description: req.Description,
@@ -137,21 +138,21 @@ func listMembershipsEndpoint(svc groups.Service) endpoint.Endpoint {
 	}
 }
 
-func buildGroupsResponseTree(page groups.GroupsPage) groupPageRes {
-	groupsMap := map[string]*groups.Group{}
+func buildGroupsResponseTree(page mfgroups.GroupsPage) groupPageRes {
+	groupsMap := map[string]*mfgroups.Group{}
 	// Parents' map keeps its array of children.
-	parentsMap := map[string][]*groups.Group{}
+	parentsMap := map[string][]*mfgroups.Group{}
 	for i := range page.Groups {
 		if _, ok := groupsMap[page.Groups[i].ID]; !ok {
 			groupsMap[page.Groups[i].ID] = &page.Groups[i]
-			parentsMap[page.Groups[i].ID] = make([]*groups.Group, 0)
+			parentsMap[page.Groups[i].ID] = make([]*mfgroups.Group, 0)
 		}
 	}
 
 	for _, group := range groupsMap {
-		if children, ok := parentsMap[group.ParentID]; ok {
+		if children, ok := parentsMap[group.Parent]; ok {
 			children = append(children, group)
-			parentsMap[group.ParentID] = children
+			parentsMap[group.Parent] = children
 		}
 	}
 
@@ -174,7 +175,7 @@ func buildGroupsResponseTree(page groups.GroupsPage) groupPageRes {
 
 	for _, group := range groupsMap {
 		view := toViewGroupRes(*group)
-		if children, ok := parentsMap[group.ParentID]; len(children) == 0 || !ok {
+		if children, ok := parentsMap[group.Parent]; len(children) == 0 || !ok {
 			res.Groups = append(res.Groups, view)
 		}
 	}
@@ -182,14 +183,14 @@ func buildGroupsResponseTree(page groups.GroupsPage) groupPageRes {
 	return res
 }
 
-func toViewGroupRes(group groups.Group) viewGroupRes {
+func toViewGroupRes(group mfgroups.Group) viewGroupRes {
 	view := viewGroupRes{
 		Group: group,
 	}
 	return view
 }
 
-func buildGroupsResponse(gp groups.GroupsPage) groupPageRes {
+func buildGroupsResponse(gp mfgroups.GroupsPage) groupPageRes {
 	res := groupPageRes{
 		pageRes: pageRes{
 			Total: gp.Total,

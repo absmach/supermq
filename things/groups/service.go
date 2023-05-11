@@ -6,8 +6,9 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/users/policies"
+	"github.com/mainflux/mainflux/pkg/groups"
 	upolicies "github.com/mainflux/mainflux/users/policies"
 )
 
@@ -20,28 +21,14 @@ const (
 	entityType        = "group"
 )
 
-var (
-	// ErrInvalidStatus indicates invalid status.
-	ErrInvalidStatus = errors.New("invalid groups status")
-
-	// ErrEnableGroup indicates error in enabling group.
-	ErrEnableGroup = errors.New("failed to enable group")
-
-	// ErrDisableGroup indicates error in disabling group.
-	ErrDisableGroup = errors.New("failed to disable group")
-
-	// ErrStatusAlreadyAssigned indicated that the group has already been assigned the status.
-	ErrStatusAlreadyAssigned = errors.New("status already assigned")
-)
-
 type service struct {
 	auth       upolicies.AuthServiceClient
-	groups     Repository
+	groups     groups.Repository
 	idProvider mainflux.IDProvider
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(auth upolicies.AuthServiceClient, g Repository, idp mainflux.IDProvider) Service {
+func NewService(auth upolicies.AuthServiceClient, g groups.Repository, idp mainflux.IDProvider) Service {
 	return service{
 		auth:       auth,
 		groups:     g,
@@ -49,18 +36,18 @@ func NewService(auth upolicies.AuthServiceClient, g Repository, idp mainflux.IDP
 	}
 }
 
-func (svc service) CreateGroups(ctx context.Context, token string, gs ...Group) ([]Group, error) {
+func (svc service) CreateGroups(ctx context.Context, token string, gs ...groups.Group) ([]groups.Group, error) {
 	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
 	if err != nil {
-		return []Group{}, errors.Wrap(errors.ErrAuthentication, err)
+		return []groups.Group{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 
-	var grps []Group
+	var grps []groups.Group
 	for _, g := range gs {
 		if g.ID == "" {
 			groupID, err := svc.idProvider.ID()
 			if err != nil {
-				return []Group{}, err
+				return []groups.Group{}, err
 			}
 			g.ID = groupID
 		}
@@ -68,8 +55,8 @@ func (svc service) CreateGroups(ctx context.Context, token string, gs ...Group) 
 			g.Owner = res.GetId()
 		}
 
-		if g.Status != EnabledStatus && g.Status != DisabledStatus {
-			return []Group{}, apiutil.ErrInvalidStatus
+		if g.Status != mfclients.EnabledStatus && g.Status != mfclients.DisabledStatus {
+			return []groups.Group{}, apiutil.ErrInvalidStatus
 		}
 
 		g.CreatedAt = time.Now()
@@ -77,31 +64,31 @@ func (svc service) CreateGroups(ctx context.Context, token string, gs ...Group) 
 		g.UpdatedBy = g.Owner
 		grp, err := svc.groups.Save(ctx, g)
 		if err != nil {
-			return []Group{}, err
+			return []groups.Group{}, err
 		}
 		grps = append(grps, grp)
 	}
 	return grps, nil
 }
 
-func (svc service) ViewGroup(ctx context.Context, token string, id string) (Group, error) {
+func (svc service) ViewGroup(ctx context.Context, token string, id string) (groups.Group, error) {
 	if err := svc.authorize(ctx, token, id, listRelationKey); err != nil {
-		return Group{}, errors.Wrap(errors.ErrNotFound, err)
+		return groups.Group{}, errors.Wrap(errors.ErrNotFound, err)
 	}
 	return svc.groups.RetrieveByID(ctx, id)
 }
 
-func (svc service) ListGroups(ctx context.Context, token string, gm GroupsPage) (GroupsPage, error) {
+func (svc service) ListGroups(ctx context.Context, token string, gm groups.GroupsPage) (groups.GroupsPage, error) {
 	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
 	if err != nil {
-		return GroupsPage{}, errors.Wrap(errors.ErrAuthentication, err)
+		return groups.GroupsPage{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 
 	// If the user is admin, fetch all channels from the database.
 	if err := svc.authorize(ctx, token, thingsObjectKey, listRelationKey); err == nil {
 		page, err := svc.groups.RetrieveAll(ctx, gm)
 		if err != nil {
-			return GroupsPage{}, err
+			return groups.GroupsPage{}, err
 		}
 		return page, err
 	}
@@ -112,10 +99,10 @@ func (svc service) ListGroups(ctx context.Context, token string, gm GroupsPage) 
 	return svc.groups.RetrieveAll(ctx, gm)
 }
 
-func (svc service) ListMemberships(ctx context.Context, token, clientID string, gm GroupsPage) (MembershipsPage, error) {
+func (svc service) ListMemberships(ctx context.Context, token, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
 	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
 	if err != nil {
-		return MembershipsPage{}, errors.Wrap(errors.ErrAuthentication, err)
+		return groups.MembershipsPage{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 
 	// If the user is admin, fetch all channels from the database.
@@ -127,14 +114,14 @@ func (svc service) ListMemberships(ctx context.Context, token, clientID string, 
 	return svc.groups.Memberships(ctx, clientID, gm)
 }
 
-func (svc service) UpdateGroup(ctx context.Context, token string, g Group) (Group, error) {
+func (svc service) UpdateGroup(ctx context.Context, token string, g groups.Group) (groups.Group, error) {
 	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
 	if err != nil {
-		return Group{}, errors.Wrap(errors.ErrAuthentication, err)
+		return groups.Group{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 
 	if err := svc.authorize(ctx, token, g.ID, updateRelationKey); err != nil {
-		return Group{}, errors.Wrap(errors.ErrNotFound, err)
+		return groups.Group{}, errors.Wrap(errors.ErrNotFound, err)
 	}
 
 	g.Owner = res.GetId()
@@ -144,54 +131,54 @@ func (svc service) UpdateGroup(ctx context.Context, token string, g Group) (Grou
 	return svc.groups.Update(ctx, g)
 }
 
-func (svc service) EnableGroup(ctx context.Context, token, id string) (Group, error) {
-	group := Group{
+func (svc service) EnableGroup(ctx context.Context, token, id string) (groups.Group, error) {
+	group := groups.Group{
 		ID:        id,
-		Status:    EnabledStatus,
+		Status:    mfclients.EnabledStatus,
 		UpdatedAt: time.Now(),
 	}
 	group, err := svc.changeGroupStatus(ctx, token, group)
 	if err != nil {
-		return Group{}, errors.Wrap(ErrEnableGroup, err)
+		return groups.Group{}, errors.Wrap(groups.ErrEnableGroup, err)
 	}
 	return group, nil
 }
 
-func (svc service) DisableGroup(ctx context.Context, token, id string) (Group, error) {
-	group := Group{
+func (svc service) DisableGroup(ctx context.Context, token, id string) (groups.Group, error) {
+	group := groups.Group{
 		ID:        id,
-		Status:    DisabledStatus,
+		Status:    mfclients.DisabledStatus,
 		UpdatedAt: time.Now(),
 	}
 	group, err := svc.changeGroupStatus(ctx, token, group)
 	if err != nil {
-		return Group{}, errors.Wrap(ErrDisableGroup, err)
+		return groups.Group{}, errors.Wrap(groups.ErrDisableGroup, err)
 	}
 	return group, nil
 }
 
-func (svc service) changeGroupStatus(ctx context.Context, token string, group Group) (Group, error) {
+func (svc service) changeGroupStatus(ctx context.Context, token string, group groups.Group) (groups.Group, error) {
 	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
 	if err != nil {
-		return Group{}, errors.Wrap(errors.ErrAuthentication, err)
+		return groups.Group{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 	if err := svc.authorize(ctx, token, group.ID, deleteRelationKey); err != nil {
-		return Group{}, errors.Wrap(errors.ErrNotFound, err)
+		return groups.Group{}, errors.Wrap(errors.ErrNotFound, err)
 	}
 	dbGroup, err := svc.groups.RetrieveByID(ctx, group.ID)
 	if err != nil {
-		return Group{}, err
+		return groups.Group{}, err
 	}
 
 	if dbGroup.Status == group.Status {
-		return Group{}, ErrStatusAlreadyAssigned
+		return groups.Group{}, mfclients.ErrStatusAlreadyAssigned
 	}
 	group.UpdatedBy = res.GetId()
 	return svc.groups.ChangeStatus(ctx, group)
 }
 
 func (svc service) identifyUser(ctx context.Context, token string) (string, error) {
-	req := &policies.Token{Value: token}
+	req := &upolicies.Token{Value: token}
 	res, err := svc.auth.Identify(ctx, req)
 	if err != nil {
 		return "", errors.Wrap(errors.ErrAuthorization, err)

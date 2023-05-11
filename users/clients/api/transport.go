@@ -12,6 +12,7 @@ import (
 	"github.com/mainflux/mainflux/internal/api"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	mflog "github.com/mainflux/mainflux/logger"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/clients"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -205,7 +206,7 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 		sid = api.MyVisibility
 		oid = api.MyVisibility
 	}
-	st, err := clients.ToStatus(s)
+	st, err := mfclients.ToStatus(s)
 	if err != nil {
 		return nil, err
 	}
@@ -348,7 +349,7 @@ func decodeCreateClientReq(_ context.Context, r *http.Request) (interface{}, err
 		return nil, errors.ErrUnsupportedContentType
 	}
 
-	var c clients.Client
+	var c mfclients.Client
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
@@ -402,13 +403,13 @@ func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, 
 	if err != nil {
 		return nil, err
 	}
-	st, err := clients.ToStatus(s)
+	st, err := mfclients.ToStatus(s)
 	if err != nil {
 		return nil, err
 	}
 	req := listMembersReq{
 		token: apiutil.ExtractBearerToken(r),
-		Page: clients.Page{
+		Page: mfclients.Page{
 			Status:   st,
 			Offset:   o,
 			Limit:    l,

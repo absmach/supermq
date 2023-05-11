@@ -3,11 +3,11 @@ package api
 import (
 	"github.com/mainflux/mainflux/internal/api"
 	"github.com/mainflux/mainflux/internal/apiutil"
-	"github.com/mainflux/mainflux/things/clients"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 )
 
 type createClientReq struct {
-	client clients.Client
+	client mfclients.Client
 	token  string
 }
 
@@ -28,7 +28,7 @@ func (req createClientReq) validate() error {
 
 type createClientsReq struct {
 	token   string
-	Clients []clients.Client
+	Clients []mfclients.Client
 }
 
 func (req createClientsReq) validate() error {
@@ -36,7 +36,7 @@ func (req createClientsReq) validate() error {
 		return apiutil.ErrBearerToken
 	}
 
-	if len(req.Clients) <= 0 {
+	if len(req.Clients) == 0 {
 		return apiutil.ErrEmptyList
 	}
 
@@ -65,7 +65,7 @@ func (req viewClientReq) validate() error {
 
 type listClientsReq struct {
 	token      string
-	status     clients.Status
+	status     mfclients.Status
 	offset     uint64
 	limit      uint64
 	name       string
@@ -73,7 +73,7 @@ type listClientsReq struct {
 	owner      string
 	sharedBy   string
 	visibility string
-	metadata   clients.Metadata
+	metadata   mfclients.Metadata
 }
 
 func (req listClientsReq) validate() error {
@@ -98,7 +98,7 @@ func (req listClientsReq) validate() error {
 }
 
 type listMembersReq struct {
-	clients.Page
+	mfclients.Page
 	token   string
 	groupID string
 }

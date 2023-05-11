@@ -7,11 +7,11 @@ import (
 
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/internal/testsutil"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	"github.com/mainflux/mainflux/pkg/uuid"
-	"github.com/mainflux/mainflux/things/clients"
 	cpostgres "github.com/mainflux/mainflux/things/clients/postgres"
-	"github.com/mainflux/mainflux/things/groups"
 	gpostgres "github.com/mainflux/mainflux/things/groups/postgres"
 	"github.com/mainflux/mainflux/things/policies"
 	ppostgres "github.com/mainflux/mainflux/things/policies/postgres"
@@ -30,10 +30,10 @@ func TestPoliciesSave(t *testing.T) {
 
 	uid := testsutil.GenerateUUID(t, idProvider)
 
-	group := groups.Group{
+	group := mfgroups.Group{
 		ID:     uid,
 		Name:   "policy-save@example.com",
-		Status: groups.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 
 	_, err := grepo.Save(context.Background(), group)
@@ -80,25 +80,25 @@ func TestPoliciesEvaluate(t *testing.T) {
 	crepo := cpostgres.NewRepository(database)
 	grepo := gpostgres.NewRepository(database)
 
-	client1 := clients.Client{
+	client1 := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "connectedclients-clientA@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "connectedclients-clientA@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
-	client2 := clients.Client{
+	client2 := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "connectedclients-clientB@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "connectedclients-clientB@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
-	group := groups.Group{
+	group := mfgroups.Group{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "connecting-group@example.com",
 	}
@@ -163,23 +163,23 @@ func TestPoliciesRetrieve(t *testing.T) {
 
 	uid := testsutil.GenerateUUID(t, idProvider)
 
-	client := clients.Client{
+	client := mfclients.Client{
 		ID:   uid,
 		Name: "single-policy-retrieval@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "single-policy-retrieval@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 
 	_, err := crepo.Save(context.Background(), client)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
-	group := groups.Group{
+	group := mfgroups.Group{
 		ID:     testsutil.GenerateUUID(t, idProvider),
 		Name:   "policy-save@example.com",
-		Status: groups.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 	_, err = grepo.Save(context.Background(), group)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -219,23 +219,23 @@ func TestPoliciesUpdate(t *testing.T) {
 	crepo := cpostgres.NewRepository(database)
 	grepo := gpostgres.NewRepository(database)
 
-	client := clients.Client{
+	client := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "policy-update@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "policy-update@example.com",
 			Secret:   "pass",
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 
 	_, err := crepo.Save(context.Background(), client)
 	require.Nil(t, err, fmt.Sprintf("unexpected error during saving client: %s", err))
 
-	group := groups.Group{
+	group := mfgroups.Group{
 		ID:     testsutil.GenerateUUID(t, idProvider),
 		Name:   "policy-save@example.com",
-		Status: groups.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 	_, err = grepo.Save(context.Background(), group)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -344,23 +344,23 @@ func TestPoliciesRetrievalAll(t *testing.T) {
 
 	var nPolicies = uint64(10)
 
-	clientA := clients.Client{
+	clientA := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "policyA-retrievalall@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "policyA-retrievalall@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
-	clientB := clients.Client{
+	clientB := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "policyB-retrievalall@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "policyB-retrievalall@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 
 	_, err := crepo.Save(context.Background(), clientA)
@@ -370,10 +370,10 @@ func TestPoliciesRetrievalAll(t *testing.T) {
 
 	groupID := ""
 	for i := uint64(0); i < nPolicies; i++ {
-		group := groups.Group{
+		group := mfgroups.Group{
 			ID:     testsutil.GenerateUUID(t, idProvider),
 			Name:   fmt.Sprintf("TestRetrieveAll%d@example.com", i),
-			Status: groups.EnabledStatus,
+			Status: mfclients.EnabledStatus,
 		}
 		if i == 0 {
 			groupID = group.ID
@@ -600,23 +600,23 @@ func TestPoliciesDelete(t *testing.T) {
 	crepo := cpostgres.NewRepository(database)
 	grepo := gpostgres.NewRepository(database)
 
-	client := clients.Client{
+	client := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "policy-delete@example.com",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "policy-delete@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 
 	subject, err := crepo.Save(context.Background(), client)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
-	group := groups.Group{
+	group := mfgroups.Group{
 		ID:     testsutil.GenerateUUID(t, idProvider),
 		Name:   "policy-save@example.com",
-		Status: groups.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 	_, err = grepo.Save(context.Background(), group)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))

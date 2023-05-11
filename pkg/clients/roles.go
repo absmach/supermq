@@ -1,6 +1,11 @@
 package clients
 
-import "github.com/mainflux/mainflux/internal/apiutil"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/mainflux/mainflux/internal/apiutil"
+)
 
 // Role represents Client role.
 type Role uint8
@@ -38,4 +43,15 @@ func ToRole(status string) (Role, error) {
 		return AdminRole, nil
 	}
 	return Role(0), apiutil.ErrInvalidRole
+}
+
+func (r Role) MarshalJSON() ([]byte, error) {
+	return json.Marshal(r.String())
+}
+
+func (r *Role) UnmarshalJSON(data []byte) error {
+	str := strings.Trim(string(data), "\"")
+	val, err := ToRole(str)
+	*r = val
+	return err
 }

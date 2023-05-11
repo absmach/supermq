@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/users/clients"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 )
 
 // MailSent message response when link is sent
@@ -28,7 +28,7 @@ type pageRes struct {
 }
 
 type createClientRes struct {
-	clients.Client
+	mfclients.Client
 	created bool
 }
 
@@ -73,7 +73,7 @@ func (res tokenRes) Empty() bool {
 }
 
 type updateClientRes struct {
-	clients.Client
+	mfclients.Client
 }
 
 func (res updateClientRes) Code() int {
@@ -89,7 +89,7 @@ func (res updateClientRes) Empty() bool {
 }
 
 type viewClientRes struct {
-	clients.Client
+	mfclients.Client
 }
 
 func (res viewClientRes) Code() int {
@@ -122,7 +122,7 @@ func (res clientsPageRes) Empty() bool {
 }
 
 type viewMembersRes struct {
-	clients.Client
+	mfclients.Client
 }
 
 func (res viewMembersRes) Code() int {
@@ -155,7 +155,7 @@ func (res memberPageRes) Empty() bool {
 }
 
 type deleteClientRes struct {
-	clients.Client
+	mfclients.Client
 }
 
 func (res deleteClientRes) Code() int {

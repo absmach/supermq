@@ -12,7 +12,6 @@ import (
 
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
-	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/users/policies"
 )
 
@@ -374,7 +373,7 @@ func (bs bootstrapService) identify(token string) (string, error) {
 
 // Method thing retrieves Mainflux Thing creating one if an empty ID is passed.
 func (bs bootstrapService) thing(id, token string) (mfsdk.Thing, error) {
-	var thing sdk.Thing
+	var thing mfsdk.Thing
 	var err error
 
 	if id == "" {

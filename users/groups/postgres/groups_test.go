@@ -9,11 +9,11 @@ import (
 
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/internal/testsutil"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	"github.com/mainflux/mainflux/pkg/uuid"
-	"github.com/mainflux/mainflux/users/clients"
 	cpostgres "github.com/mainflux/mainflux/users/clients/postgres"
-	"github.com/mainflux/mainflux/users/groups"
 	gpostgres "github.com/mainflux/mainflux/users/groups/postgres"
 	"github.com/mainflux/mainflux/users/policies"
 	ppostgres "github.com/mainflux/mainflux/users/policies/postgres"
@@ -34,7 +34,7 @@ var (
 	invalidName = strings.Repeat("m", maxNameSize+10)
 	validDesc   = strings.Repeat("m", 100)
 	invalidDesc = strings.Repeat("m", maxDescSize+1)
-	metadata    = groups.Metadata{
+	metadata    = mfclients.Metadata{
 		"admin": "true",
 	}
 	password   = "$tr0ngPassw0rd"
@@ -50,113 +50,113 @@ func TestGroupSave(t *testing.T) {
 
 	cases := []struct {
 		desc  string
-		group groups.Group
+		group mfgroups.Group
 		err   error
 	}{
 		{
 			desc: "create new group successfully",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID:     grpID,
 				Name:   groupName,
-				Status: groups.EnabledStatus,
+				Status: mfclients.EnabledStatus,
 			},
 			err: nil,
 		},
 		{
 			desc: "create a new group with an existing name",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID:     grpID,
 				Name:   groupName,
-				Status: groups.EnabledStatus,
+				Status: mfclients.EnabledStatus,
 			},
 			err: errors.ErrConflict,
 		},
 		{
 			desc: "create group with an invalid name",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID:     testsutil.GenerateUUID(t, idProvider),
 				Name:   invalidName,
-				Status: groups.EnabledStatus,
+				Status: mfclients.EnabledStatus,
 			},
 			err: errors.ErrMalformedEntity,
 		},
 		{
 			desc: "create a group with invalid ID",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID:          usrID,
 				Name:        "withInvalidDescription",
 				Description: invalidDesc,
-				Status:      groups.EnabledStatus,
+				Status:      mfclients.EnabledStatus,
 			},
 			err: errors.ErrMalformedEntity,
 		},
 		{
 			desc: "create group with description",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID:          testsutil.GenerateUUID(t, idProvider),
 				Name:        "withDescription",
 				Description: validDesc,
-				Status:      groups.EnabledStatus,
+				Status:      mfclients.EnabledStatus,
 			},
 			err: nil,
 		},
 		{
 			desc: "create group with invalid description",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID:          testsutil.GenerateUUID(t, idProvider),
 				Name:        "withInvalidDescription",
 				Description: invalidDesc,
-				Status:      groups.EnabledStatus,
+				Status:      mfclients.EnabledStatus,
 			},
 			err: errors.ErrMalformedEntity,
 		},
 		{
 			desc: "create group with parent",
-			group: groups.Group{
-				ID:       testsutil.GenerateUUID(t, idProvider),
-				ParentID: grpID,
-				Name:     "withParent",
-				Status:   groups.EnabledStatus,
+			group: mfgroups.Group{
+				ID:     testsutil.GenerateUUID(t, idProvider),
+				Parent: grpID,
+				Name:   "withParent",
+				Status: mfclients.EnabledStatus,
 			},
 			err: nil,
 		},
 		{
 			desc: "create a group with an invalid parent",
-			group: groups.Group{
-				ID:       testsutil.GenerateUUID(t, idProvider),
-				ParentID: invalidName,
-				Name:     "withInvalidParent",
-				Status:   groups.EnabledStatus,
+			group: mfgroups.Group{
+				ID:     testsutil.GenerateUUID(t, idProvider),
+				Parent: invalidName,
+				Name:   "withInvalidParent",
+				Status: mfclients.EnabledStatus,
 			},
 			err: errors.ErrMalformedEntity,
 		},
 		{
 			desc: "create a group with an owner",
-			group: groups.Group{
-				ID:      testsutil.GenerateUUID(t, idProvider),
-				OwnerID: usrID,
-				Name:    "withOwner",
-				Status:  groups.EnabledStatus,
+			group: mfgroups.Group{
+				ID:     testsutil.GenerateUUID(t, idProvider),
+				Owner:  usrID,
+				Name:   "withOwner",
+				Status: mfclients.EnabledStatus,
 			},
 			err: nil,
 		},
 		{
 			desc: "create a group with an invalid owner",
-			group: groups.Group{
-				ID:      testsutil.GenerateUUID(t, idProvider),
-				OwnerID: invalidName,
-				Name:    "withInvalidOwner",
-				Status:  groups.EnabledStatus,
+			group: mfgroups.Group{
+				ID:     testsutil.GenerateUUID(t, idProvider),
+				Owner:  invalidName,
+				Name:   "withInvalidOwner",
+				Status: mfclients.EnabledStatus,
 			},
 			err: errors.ErrMalformedEntity,
 		},
 		{
 			desc: "create a group with metadata",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID:       testsutil.GenerateUUID(t, idProvider),
 				Name:     "withMetadata",
 				Metadata: metadata,
-				Status:   groups.EnabledStatus,
+				Status:   mfclients.EnabledStatus,
 			},
 			err: nil,
 		},
@@ -174,11 +174,11 @@ func TestGroupRetrieveByID(t *testing.T) {
 	groupRepo := gpostgres.NewGroupRepo(database)
 
 	uid := testsutil.GenerateUUID(t, idProvider)
-	group1 := groups.Group{
-		ID:      testsutil.GenerateUUID(t, idProvider),
-		Name:    groupName + "TestGroupRetrieveByID1",
-		OwnerID: uid,
-		Status:  groups.EnabledStatus,
+	group1 := mfgroups.Group{
+		ID:     testsutil.GenerateUUID(t, idProvider),
+		Name:   groupName + "TestGroupRetrieveByID1",
+		Owner:  uid,
+		Status: mfclients.EnabledStatus,
 	}
 
 	_, err := groupRepo.Save(context.Background(), group1)
@@ -191,16 +191,16 @@ func TestGroupRetrieveByID(t *testing.T) {
 	// Round to milliseconds as otherwise saving and retrieving from DB
 	// adds rounding error.
 	creationTime := time.Now().UTC().Round(time.Millisecond)
-	group2 := groups.Group{
+	group2 := mfgroups.Group{
 		ID:          testsutil.GenerateUUID(t, idProvider),
 		Name:        groupName + "TestGroupRetrieveByID",
-		OwnerID:     uid,
-		ParentID:    group1.ID,
+		Owner:       uid,
+		Parent:      group1.ID,
 		CreatedAt:   creationTime,
 		UpdatedAt:   creationTime,
 		Description: description,
 		Metadata:    metadata,
-		Status:      groups.EnabledStatus,
+		Status:      mfclients.EnabledStatus,
 	}
 
 	_, err = groupRepo.Save(context.Background(), group2)
@@ -210,7 +210,7 @@ func TestGroupRetrieveByID(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	assert.True(t, retrieved.ID == group2.ID, fmt.Sprintf("Save group, ID: expected %s got %s\n", group2.ID, retrieved.ID))
 	assert.True(t, retrieved.CreatedAt.Equal(creationTime), fmt.Sprintf("Save group, CreatedAt: expected %s got %s\n", creationTime, retrieved.CreatedAt))
-	assert.True(t, retrieved.ParentID == group1.ID, fmt.Sprintf("Save group, Level: expected %s got %s\n", group1.ID, retrieved.ParentID))
+	assert.True(t, retrieved.Parent == group1.ID, fmt.Sprintf("Save group, Level: expected %s got %s\n", group1.ID, retrieved.Parent))
 	assert.True(t, retrieved.Description == description, fmt.Sprintf("Save group, Description: expected %v got %v\n", retrieved.Description, description))
 
 	retrieved, err = groupRepo.RetrieveByID(context.Background(), testsutil.GenerateUUID(t, idProvider))
@@ -226,23 +226,23 @@ func TestGroupRetrieveAll(t *testing.T) {
 	var parentID string
 	for i := uint64(0); i < nGroups; i++ {
 		creationTime := time.Now().UTC()
-		group := groups.Group{
+		group := mfgroups.Group{
 			ID:          testsutil.GenerateUUID(t, idProvider),
 			Name:        fmt.Sprintf("%s-%d", groupName, i),
 			Description: fmt.Sprintf("%s-description-%d", groupName, i),
 			CreatedAt:   creationTime,
 			UpdatedAt:   creationTime,
-			Status:      groups.EnabledStatus,
+			Status:      mfclients.EnabledStatus,
 		}
 		if i == 1 {
 			parentID = group.ID
 		}
 		if i%10 == 0 {
-			group.OwnerID = ownerID
-			group.ParentID = parentID
+			group.Owner = ownerID
+			group.Parent = parentID
 		}
 		if i%50 == 0 {
-			group.Status = groups.DisabledStatus
+			group.Status = mfclients.DisabledStatus
 		}
 		_, err := groupRepo.Save(context.Background(), group)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
@@ -251,75 +251,75 @@ func TestGroupRetrieveAll(t *testing.T) {
 
 	cases := map[string]struct {
 		Size     uint64
-		Metadata groups.GroupsPage
+		Metadata mfgroups.GroupsPage
 	}{
 		"retrieve all groups": {
-			Metadata: groups.GroupsPage{
-				Page: groups.Page{
+			Metadata: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:  nGroups,
 					Limit:  nGroups,
-					Status: groups.AllStatus,
+					Status: mfclients.AllStatus,
 				},
 				Level: maxLevel,
 			},
 			Size: nGroups,
 		},
 		"retrieve all groups with offset": {
-			Metadata: groups.GroupsPage{
-				Page: groups.Page{
+			Metadata: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:  nGroups,
 					Offset: 50,
 					Limit:  nGroups,
-					Status: groups.AllStatus,
+					Status: mfclients.AllStatus,
 				},
 				Level: maxLevel,
 			},
 			Size: nGroups - 50,
 		},
 		"retrieve all groups with limit": {
-			Metadata: groups.GroupsPage{
-				Page: groups.Page{
+			Metadata: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:  nGroups,
 					Offset: 0,
 					Limit:  50,
-					Status: groups.AllStatus,
+					Status: mfclients.AllStatus,
 				},
 				Level: maxLevel,
 			},
 			Size: 50,
 		},
 		"retrieve all groups with offset and limit": {
-			Metadata: groups.GroupsPage{
-				Page: groups.Page{
+			Metadata: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:  nGroups,
 					Offset: 50,
 					Limit:  50,
-					Status: groups.AllStatus,
+					Status: mfclients.AllStatus,
 				},
 				Level: maxLevel,
 			},
 			Size: 50,
 		},
 		"retrieve all groups with offset greater than limit": {
-			Metadata: groups.GroupsPage{
-				Page: groups.Page{
+			Metadata: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:  nGroups,
 					Offset: 250,
 					Limit:  nGroups,
-					Status: groups.AllStatus,
+					Status: mfclients.AllStatus,
 				},
 				Level: maxLevel,
 			},
 			Size: 0,
 		},
 		"retrieve all groups with owner id": {
-			Metadata: groups.GroupsPage{
-				Page: groups.Page{
+			Metadata: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:   nGroups,
 					Limit:   nGroups,
 					Subject: ownerID,
 					OwnerID: ownerID,
-					Status:  groups.AllStatus,
+					Status:  mfclients.AllStatus,
 				},
 				Level: maxLevel,
 			},
@@ -345,18 +345,18 @@ func TestGroupUpdate(t *testing.T) {
 	updateTime := time.Now().UTC()
 	groupID := testsutil.GenerateUUID(t, idProvider)
 
-	group := groups.Group{
+	group := mfgroups.Group{
 		ID:          groupID,
 		Name:        groupName + "TestGroupUpdate",
-		OwnerID:     uid,
+		Owner:       uid,
 		CreatedAt:   creationTime,
 		UpdatedAt:   creationTime,
 		Description: description,
 		Metadata:    metadata,
-		Status:      groups.EnabledStatus,
+		Status:      mfclients.EnabledStatus,
 	}
 	updatedName := groupName + "Updated"
-	updatedMetadata := groups.Metadata{"admin": "false"}
+	updatedMetadata := mfclients.Metadata{"admin": "false"}
 	updatedDescription := description + "updated"
 	_, err := groupRepo.Save(context.Background(), group)
 	require.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
@@ -366,18 +366,18 @@ func TestGroupUpdate(t *testing.T) {
 
 	cases := []struct {
 		desc          string
-		groupUpdate   groups.Group
-		groupExpected groups.Group
+		groupUpdate   mfgroups.Group
+		groupExpected mfgroups.Group
 		err           error
 	}{
 		{
 			desc: "update group name for existing id",
-			groupUpdate: groups.Group{
+			groupUpdate: mfgroups.Group{
 				ID:        groupID,
 				Name:      updatedName,
 				UpdatedAt: updateTime,
 			},
-			groupExpected: groups.Group{
+			groupExpected: mfgroups.Group{
 				Name:        updatedName,
 				Metadata:    retrieved.Metadata,
 				Description: retrieved.Description,
@@ -386,12 +386,12 @@ func TestGroupUpdate(t *testing.T) {
 		},
 		{
 			desc: "update group metadata for existing id",
-			groupUpdate: groups.Group{
+			groupUpdate: mfgroups.Group{
 				ID:        groupID,
 				UpdatedAt: updateTime,
 				Metadata:  updatedMetadata,
 			},
-			groupExpected: groups.Group{
+			groupExpected: mfgroups.Group{
 				Name:        updatedName,
 				UpdatedAt:   updateTime,
 				Metadata:    updatedMetadata,
@@ -401,12 +401,12 @@ func TestGroupUpdate(t *testing.T) {
 		},
 		{
 			desc: "update group description for existing id",
-			groupUpdate: groups.Group{
+			groupUpdate: mfgroups.Group{
 				ID:          groupID,
 				UpdatedAt:   updateTime,
 				Description: updatedDescription,
 			},
-			groupExpected: groups.Group{
+			groupExpected: mfgroups.Group{
 				Name:        updatedName,
 				Description: updatedDescription,
 				UpdatedAt:   updateTime,
@@ -416,13 +416,13 @@ func TestGroupUpdate(t *testing.T) {
 		},
 		{
 			desc: "update group name and metadata for existing id",
-			groupUpdate: groups.Group{
+			groupUpdate: mfgroups.Group{
 				ID:        groupID,
 				Name:      updatedName,
 				UpdatedAt: updateTime,
 				Metadata:  updatedMetadata,
 			},
-			groupExpected: groups.Group{
+			groupExpected: mfgroups.Group{
 				Name:        updatedName,
 				UpdatedAt:   updateTime,
 				Metadata:    updatedMetadata,
@@ -432,7 +432,7 @@ func TestGroupUpdate(t *testing.T) {
 		},
 		{
 			desc: "update group for invalid name",
-			groupUpdate: groups.Group{
+			groupUpdate: mfgroups.Group{
 				ID:   groupID,
 				Name: invalidName,
 			},
@@ -440,7 +440,7 @@ func TestGroupUpdate(t *testing.T) {
 		},
 		{
 			desc: "update group for invalid description",
-			groupUpdate: groups.Group{
+			groupUpdate: mfgroups.Group{
 				ID:          groupID,
 				Description: invalidDesc,
 			},
@@ -466,31 +466,31 @@ func TestClientsMemberships(t *testing.T) {
 	grepo := gpostgres.NewGroupRepo(database)
 	prepo := ppostgres.NewPolicyRepo(database)
 
-	clientA := clients.Client{
+	clientA := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "client-memberships",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "client-memberships1@example.com",
 			Secret:   password,
 		},
-		Metadata: clients.Metadata{},
-		Status:   clients.EnabledStatus,
+		Metadata: mfclients.Metadata{},
+		Status:   mfclients.EnabledStatus,
 	}
-	clientB := clients.Client{
+	clientB := mfclients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "client-memberships",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "client-memberships2@example.com",
 			Secret:   password,
 		},
-		Metadata: clients.Metadata{},
-		Status:   clients.EnabledStatus,
+		Metadata: mfclients.Metadata{},
+		Status:   mfclients.EnabledStatus,
 	}
-	group := groups.Group{
+	group := mfgroups.Group{
 		ID:       testsutil.GenerateUUID(t, idProvider),
 		Name:     "group-membership",
-		Metadata: groups.Metadata{},
-		Status:   groups.EnabledStatus,
+		Metadata: mfclients.Metadata{},
+		Status:   mfclients.EnabledStatus,
 	}
 
 	policyA := policies.Policy{
@@ -524,10 +524,10 @@ func TestClientsMemberships(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		mp, err := grepo.Memberships(context.Background(), tc.ID, groups.GroupsPage{Page: groups.Page{Total: 10, Offset: 0, Limit: 10, Status: groups.AllStatus, Subject: clientB.ID, Action: "g_list"}})
+		mp, err := grepo.Memberships(context.Background(), tc.ID, mfgroups.GroupsPage{Page: mfgroups.Page{Total: 10, Offset: 0, Limit: 10, Status: mfclients.AllStatus, Subject: clientB.ID, Action: "g_list"}})
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 		if tc.ID == clientA.ID {
-			assert.ElementsMatch(t, mp.Memberships, []groups.Group{group}, fmt.Sprintf("%s: expected %v got %v\n", desc, []groups.Group{group}, mp.Memberships))
+			assert.ElementsMatch(t, mp.Memberships, []mfgroups.Group{group}, fmt.Sprintf("%s: expected %v got %v\n", desc, []mfgroups.Group{group}, mp.Memberships))
 		}
 	}
 }
@@ -537,15 +537,15 @@ func TestGroupChangeStatus(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db, tracer)
 	repo := gpostgres.NewGroupRepo(dbMiddleware)
 
-	group1 := groups.Group{
+	group1 := mfgroups.Group{
 		ID:     testsutil.GenerateUUID(t, idProvider),
 		Name:   "active-group",
-		Status: groups.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
-	group2 := groups.Group{
+	group2 := mfgroups.Group{
 		ID:     testsutil.GenerateUUID(t, idProvider),
 		Name:   "inactive-group",
-		Status: groups.DisabledStatus,
+		Status: mfclients.DisabledStatus,
 	}
 
 	group1, err := repo.Save(context.Background(), group1)
@@ -555,30 +555,30 @@ func TestGroupChangeStatus(t *testing.T) {
 
 	cases := []struct {
 		desc  string
-		group groups.Group
+		group mfgroups.Group
 		err   error
 	}{
 		{
 			desc: "change group status for an active group",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID:     group1.ID,
-				Status: groups.EnabledStatus,
+				Status: mfclients.DisabledStatus,
 			},
 			err: nil,
 		},
 		{
 			desc: "change group status for a inactive group",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID:     group2.ID,
-				Status: groups.EnabledStatus,
+				Status: mfclients.EnabledStatus,
 			},
 			err: nil,
 		},
 		{
 			desc: "change group status for an invalid group",
-			group: groups.Group{
+			group: mfgroups.Group{
 				ID:     "invalid",
-				Status: groups.DisabledStatus,
+				Status: mfclients.DisabledStatus,
 			},
 			err: errors.ErrNotFound,
 		},

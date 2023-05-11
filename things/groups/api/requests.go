@@ -3,11 +3,11 @@ package api
 import (
 	"github.com/mainflux/mainflux/internal/api"
 	"github.com/mainflux/mainflux/internal/apiutil"
-	"github.com/mainflux/mainflux/things/groups"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 )
 
 type createGroupReq struct {
-	groups.Group
+	mfgroups.Group
 	token string
 }
 
@@ -28,7 +28,7 @@ func (req createGroupReq) validate() error {
 
 type createGroupsReq struct {
 	token  string
-	Groups []groups.Group
+	Groups []mfgroups.Group
 }
 
 func (req createGroupsReq) validate() error {
@@ -78,7 +78,7 @@ func (req updateGroupReq) validate() error {
 }
 
 type listGroupsReq struct {
-	groups.GroupsPage
+	mfgroups.GroupsPage
 	token string
 	// - `true`  - result is JSON tree representing groups hierarchy,
 	// - `false` - result is JSON array of groups.
@@ -86,7 +86,7 @@ type listGroupsReq struct {
 }
 
 func (req listGroupsReq) validate() error {
-	if req.Level < groups.MinLevel || req.Level > groups.MaxLevel {
+	if req.Level < mfgroups.MinLevel || req.Level > mfgroups.MaxLevel {
 		return apiutil.ErrInvalidLevel
 	}
 
@@ -94,7 +94,7 @@ func (req listGroupsReq) validate() error {
 }
 
 type listMembershipReq struct {
-	groups.GroupsPage
+	mfgroups.GroupsPage
 	token    string
 	clientID string
 }

@@ -8,12 +8,13 @@ import (
 	"testing"
 	"time"
 
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/users/clients"
 	umocks "github.com/mainflux/mainflux/users/clients/mocks"
-	"github.com/mainflux/mainflux/users/groups"
 	"github.com/mainflux/mainflux/users/hasher"
 	"github.com/mainflux/mainflux/users/policies"
 	"github.com/stretchr/testify/assert"
@@ -38,7 +39,7 @@ var (
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: sdk.Credentials{Identity: "clientidentity", Secret: secret},
 		Metadata:    validMetadata,
-		Status:      clients.EnabledStatus.String(),
+		Status:      mfclients.EnabledStatus.String(),
 	}
 	description = "shortdescription"
 	gName       = "groupname"
@@ -57,15 +58,15 @@ var (
 )
 
 func generateValidToken(t *testing.T, svc clients.Service, cRepo *umocks.ClientRepository) string {
-	client := clients.Client{
+	client := mfclients.Client{
 		ID:   generateUUID(t),
 		Name: "validtoken",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: "validtoken",
 			Secret:   secret,
 		},
-		Role:   clients.AdminRole,
-		Status: clients.EnabledStatus,
+		Role:   mfclients.AdminRole,
+		Status: mfclients.EnabledStatus,
 	}
 	rclient := client
 	rclient.Credentials.Secret, _ = phasher.Hash(client.Credentials.Secret)
@@ -83,14 +84,14 @@ func generateUUID(t *testing.T) string {
 	return ulid
 }
 
-func convertClientsPage(cp sdk.UsersPage) clients.ClientsPage {
-	return clients.ClientsPage{
+func convertClientsPage(cp sdk.UsersPage) mfclients.ClientsPage {
+	return mfclients.ClientsPage{
 		Clients: convertClients(cp.Users),
 	}
 }
 
-func convertClients(cs []sdk.User) []clients.Client {
-	ccs := []clients.Client{}
+func convertClients(cs []sdk.User) []mfclients.Client {
+	ccs := []mfclients.Client{}
 
 	for _, c := range cs {
 		ccs = append(ccs, convertClient(c))
@@ -99,8 +100,8 @@ func convertClients(cs []sdk.User) []clients.Client {
 	return ccs
 }
 
-func convertGroups(cs []sdk.Group) []groups.Group {
-	cgs := []groups.Group{}
+func convertGroups(cs []sdk.Group) []mfgroups.Group {
+	cgs := []mfgroups.Group{}
 
 	for _, c := range cs {
 		cgs = append(cgs, convertGroup(c))
@@ -130,9 +131,9 @@ func convertPolicy(sp sdk.Policy) policies.Policy {
 	}
 }
 
-func convertMembershipsPage(m sdk.MembershipsPage) groups.MembershipsPage {
-	return groups.MembershipsPage{
-		Page: groups.Page{
+func convertMembershipsPage(m sdk.MembershipsPage) mfgroups.MembershipsPage {
+	return mfgroups.MembershipsPage{
+		Page: mfgroups.Page{
 			Limit:  m.Limit,
 			Total:  m.Total,
 			Offset: m.Offset,
@@ -141,15 +142,15 @@ func convertMembershipsPage(m sdk.MembershipsPage) groups.MembershipsPage {
 	}
 }
 
-func convertClientPage(p sdk.PageMetadata) clients.Page {
+func convertClientPage(p sdk.PageMetadata) mfclients.Page {
 	if p.Status == "" {
-		p.Status = clients.EnabledStatus.String()
+		p.Status = mfclients.EnabledStatus.String()
 	}
-	status, err := clients.ToStatus(p.Status)
+	status, err := mfclients.ToStatus(p.Status)
 	if err != nil {
-		return clients.Page{}
+		return mfclients.Page{}
 	}
-	return clients.Page{
+	return mfclients.Page{
 		Status:   status,
 		Total:    p.Total,
 		Offset:   p.Offset,
@@ -157,12 +158,12 @@ func convertClientPage(p sdk.PageMetadata) clients.Page {
 		Name:     p.Name,
 		Action:   p.Action,
 		Tag:      p.Tag,
-		Metadata: clients.Metadata(p.Metadata),
+		Metadata: mfclients.Metadata(p.Metadata),
 	}
 }
 
-func convertMemberships(gs []sdk.Group) []groups.Group {
-	cg := []groups.Group{}
+func convertMemberships(gs []sdk.Group) []mfgroups.Group {
+	cg := []mfgroups.Group{}
 	for _, g := range gs {
 		cg = append(cg, convertGroup(g))
 	}
@@ -170,21 +171,21 @@ func convertMemberships(gs []sdk.Group) []groups.Group {
 	return cg
 }
 
-func convertGroup(g sdk.Group) groups.Group {
+func convertGroup(g sdk.Group) mfgroups.Group {
 	if g.Status == "" {
-		g.Status = groups.EnabledStatus.String()
+		g.Status = mfclients.EnabledStatus.String()
 	}
-	status, err := groups.ToStatus(g.Status)
+	status, err := mfclients.ToStatus(g.Status)
 	if err != nil {
-		return groups.Group{}
+		return mfgroups.Group{}
 	}
-	return groups.Group{
+	return mfgroups.Group{
 		ID:          g.ID,
-		OwnerID:     g.OwnerID,
-		ParentID:    g.ParentID,
+		Owner:       g.OwnerID,
+		Parent:      g.ParentID,
 		Name:        g.Name,
 		Description: g.Description,
-		Metadata:    groups.Metadata(g.Metadata),
+		Metadata:    mfclients.Metadata(g.Metadata),
 		Level:       g.Level,
 		Path:        g.Path,
 		Children:    convertChildren(g.Children),
@@ -194,8 +195,8 @@ func convertGroup(g sdk.Group) groups.Group {
 	}
 }
 
-func convertChildren(gs []*sdk.Group) []*groups.Group {
-	cg := []*groups.Group{}
+func convertChildren(gs []*sdk.Group) []*mfgroups.Group {
+	cg := []*mfgroups.Group{}
 
 	if len(gs) == 0 {
 		return cg
@@ -209,21 +210,21 @@ func convertChildren(gs []*sdk.Group) []*groups.Group {
 	return cg
 }
 
-func convertClient(c sdk.User) clients.Client {
+func convertClient(c sdk.User) mfclients.Client {
 	if c.Status == "" {
-		c.Status = clients.EnabledStatus.String()
+		c.Status = mfclients.EnabledStatus.String()
 	}
-	status, err := clients.ToStatus(c.Status)
+	status, err := mfclients.ToStatus(c.Status)
 	if err != nil {
-		return clients.Client{}
+		return mfclients.Client{}
 	}
-	return clients.Client{
+	return mfclients.Client{
 		ID:          c.ID,
 		Name:        c.Name,
 		Tags:        c.Tags,
 		Owner:       c.Owner,
-		Credentials: clients.Credentials(c.Credentials),
-		Metadata:    clients.Metadata(c.Metadata),
+		Credentials: mfclients.Credentials(c.Credentials),
+		Metadata:    mfclients.Metadata(c.Metadata),
 		CreatedAt:   c.CreatedAt,
 		UpdatedAt:   c.UpdatedAt,
 		Status:      status,

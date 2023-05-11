@@ -6,7 +6,7 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -121,7 +121,7 @@ func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 		token = apiutil.ExtractThingKey(r)
 	}
 
-	payload, err := ioutil.ReadAll(r.Body)
+	payload, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, errors.ErrMalformedEntity
 	}

@@ -1,8 +1,5 @@
 package clients
 
-// Metadata represents arbitrary JSON.
-type Metadata map[string]interface{}
-
 // Page contains page metadata that helps navigation.
 type Page struct {
 	Total        uint64
@@ -20,4 +17,5 @@ type Page struct {
 	Action       string
 	Subject      string
 	IDs          []string
+	Identity     string
 }

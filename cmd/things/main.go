@@ -131,7 +131,7 @@ func main() {
 	}
 	gs := grpcserver.New(ctx, cancel, svcName, grpcServerConfig, registerThingsServiceServer, logger)
 
-	//Start all servers
+	// Start all servers
 	g.Go(func() error {
 		return hsp.Start()
 	})

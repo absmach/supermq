@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/go-redis/redis/v8"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/things/clients"
 )
 
@@ -31,7 +32,7 @@ func NewEventStoreMiddleware(svc clients.Service, client *redis.Client) clients.
 	}
 }
 
-func (es eventStore) CreateThings(ctx context.Context, token string, thing ...clients.Client) ([]clients.Client, error) {
+func (es eventStore) CreateThings(ctx context.Context, token string, thing ...mfclients.Client) ([]mfclients.Client, error) {
 	sths, err := es.svc.CreateThings(ctx, token, thing...)
 	if err != nil {
 		return sths, err
@@ -55,10 +56,10 @@ func (es eventStore) CreateThings(ctx context.Context, token string, thing ...cl
 	return sths, nil
 }
 
-func (es eventStore) UpdateClient(ctx context.Context, token string, thing clients.Client) (clients.Client, error) {
+func (es eventStore) UpdateClient(ctx context.Context, token string, thing mfclients.Client) (mfclients.Client, error) {
 	cli, err := es.svc.UpdateClient(ctx, token, thing)
 	if err != nil {
-		return clients.Client{}, err
+		return mfclients.Client{}, err
 	}
 
 	event := updateClientEvent{
@@ -72,16 +73,16 @@ func (es eventStore) UpdateClient(ctx context.Context, token string, thing clien
 		Values:       event.Encode(),
 	}
 	if err := es.client.XAdd(ctx, record).Err(); err != nil {
-		return clients.Client{}, err
+		return mfclients.Client{}, err
 	}
 
 	return cli, nil
 }
 
-func (es eventStore) UpdateClientOwner(ctx context.Context, token string, thing clients.Client) (clients.Client, error) {
+func (es eventStore) UpdateClientOwner(ctx context.Context, token string, thing mfclients.Client) (mfclients.Client, error) {
 	cli, err := es.svc.UpdateClientOwner(ctx, token, thing)
 	if err != nil {
-		return clients.Client{}, err
+		return mfclients.Client{}, err
 	}
 
 	event := updateClientEvent{
@@ -93,16 +94,16 @@ func (es eventStore) UpdateClientOwner(ctx context.Context, token string, thing 
 		Values:       event.Encode(),
 	}
 	if err := es.client.XAdd(ctx, record).Err(); err != nil {
-		return clients.Client{}, err
+		return mfclients.Client{}, err
 	}
 
 	return cli, nil
 }
 
-func (es eventStore) UpdateClientTags(ctx context.Context, token string, thing clients.Client) (clients.Client, error) {
+func (es eventStore) UpdateClientTags(ctx context.Context, token string, thing mfclients.Client) (mfclients.Client, error) {
 	cli, err := es.svc.UpdateClientTags(ctx, token, thing)
 	if err != nil {
-		return clients.Client{}, err
+		return mfclients.Client{}, err
 	}
 
 	event := updateClientEvent{
@@ -114,7 +115,7 @@ func (es eventStore) UpdateClientTags(ctx context.Context, token string, thing c
 		Values:       event.Encode(),
 	}
 	if err := es.client.XAdd(ctx, record).Err(); err != nil {
-		return clients.Client{}, err
+		return mfclients.Client{}, err
 	}
 
 	return cli, nil
@@ -123,7 +124,7 @@ func (es eventStore) UpdateClientTags(ctx context.Context, token string, thing c
 // UpdateClientSecret doesn't send event because key shouldn't be sent over stream.
 // Maybe we can start publishing this event at some point, without key value
 // in order to notify adapters to disconnect connected things after key update.
-func (es eventStore) UpdateClientSecret(ctx context.Context, token, id, key string) (clients.Client, error) {
+func (es eventStore) UpdateClientSecret(ctx context.Context, token, id, key string) (mfclients.Client, error) {
 	return es.svc.UpdateClientSecret(ctx, token, id, key)
 }
 
@@ -131,22 +132,22 @@ func (es eventStore) ShareClient(ctx context.Context, token, thingID string, act
 	return es.svc.ShareClient(ctx, token, thingID, actions, userIDs)
 }
 
-func (es eventStore) ViewClient(ctx context.Context, token, id string) (clients.Client, error) {
+func (es eventStore) ViewClient(ctx context.Context, token, id string) (mfclients.Client, error) {
 	return es.svc.ViewClient(ctx, token, id)
 }
 
-func (es eventStore) ListClients(ctx context.Context, token string, pm clients.Page) (clients.ClientsPage, error) {
+func (es eventStore) ListClients(ctx context.Context, token string, pm mfclients.Page) (mfclients.ClientsPage, error) {
 	return es.svc.ListClients(ctx, token, pm)
 }
 
-func (es eventStore) ListClientsByGroup(ctx context.Context, token, chID string, pm clients.Page) (clients.MembersPage, error) {
+func (es eventStore) ListClientsByGroup(ctx context.Context, token, chID string, pm mfclients.Page) (mfclients.MembersPage, error) {
 	return es.svc.ListClientsByGroup(ctx, token, chID, pm)
 }
 
-func (es eventStore) EnableClient(ctx context.Context, token, id string) (clients.Client, error) {
+func (es eventStore) EnableClient(ctx context.Context, token, id string) (mfclients.Client, error) {
 	cli, err := es.svc.EnableClient(ctx, token, id)
 	if err != nil {
-		return clients.Client{}, err
+		return mfclients.Client{}, err
 	}
 
 	event := removeClientEvent{
@@ -158,16 +159,16 @@ func (es eventStore) EnableClient(ctx context.Context, token, id string) (client
 		Values:       event.Encode(),
 	}
 	if err := es.client.XAdd(ctx, record).Err(); err != nil {
-		return clients.Client{}, err
+		return mfclients.Client{}, err
 	}
 
 	return cli, nil
 }
 
-func (es eventStore) DisableClient(ctx context.Context, token, id string) (clients.Client, error) {
+func (es eventStore) DisableClient(ctx context.Context, token, id string) (mfclients.Client, error) {
 	cli, err := es.svc.DisableClient(ctx, token, id)
 	if err != nil {
-		return clients.Client{}, err
+		return mfclients.Client{}, err
 	}
 
 	event := removeClientEvent{
@@ -179,7 +180,7 @@ func (es eventStore) DisableClient(ctx context.Context, token, id string) (clien
 		Values:       event.Encode(),
 	}
 	if err := es.client.XAdd(ctx, record).Err(); err != nil {
-		return clients.Client{}, err
+		return mfclients.Client{}, err
 	}
 
 	return cli, nil

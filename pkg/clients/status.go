@@ -1,6 +1,12 @@
 package clients
 
-import "github.com/mainflux/mainflux/internal/apiutil"
+import (
+	"encoding/json"
+	"errors"
+	"strings"
+
+	"github.com/mainflux/mainflux/internal/apiutil"
+)
 
 // Status represents Client status.
 type Status uint8
@@ -25,7 +31,12 @@ const (
 	Unknown  = "unknown"
 )
 
-// String converts client status to string literal.
+var (
+	// ErrStatusAlreadyAssigned indicated that the client or group has already been assigned the status.
+	ErrStatusAlreadyAssigned = errors.New("status already assigned")
+)
+
+// String converts client/group status to string literal.
 func (s Status) String() string {
 	switch s {
 	case DisabledStatus:
@@ -39,7 +50,7 @@ func (s Status) String() string {
 	}
 }
 
-// ToClientStatus converts string value to a valid Client status.
+// ToStatus converts string value to a valid Client/Group status.
 func ToStatus(status string) (Status, error) {
 	switch status {
 	case "", Enabled:
@@ -50,4 +61,17 @@ func ToStatus(status string) (Status, error) {
 		return AllStatus, nil
 	}
 	return Status(0), apiutil.ErrInvalidStatus
+}
+
+// Custom Marshaller for Client/Groups
+func (s Status) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.String())
+}
+
+// Custom Unmarshaler for Client/Groups
+func (s *Status) UnmarshalJSON(data []byte) error {
+	str := strings.Trim(string(data), "\"")
+	val, err := ToStatus(str)
+	*s = val
+	return err
 }

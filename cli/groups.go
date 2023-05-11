@@ -6,8 +6,8 @@ package cli
 import (
 	"encoding/json"
 
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	mfxsdk "github.com/mainflux/mainflux/pkg/sdk/go"
-	"github.com/mainflux/mainflux/users/groups"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +35,7 @@ var cmdGroups = []cobra.Command{
 				logError(err)
 				return
 			}
-			group.Status = groups.EnabledStatus.String()
+			group.Status = mfclients.EnabledStatus.String()
 			group, err := sdk.CreateGroup(group, args[1])
 			if err != nil {
 				logError(err)

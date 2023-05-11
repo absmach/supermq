@@ -3,13 +3,13 @@ package api
 import (
 	"github.com/mainflux/mainflux/internal/api"
 	"github.com/mainflux/mainflux/internal/apiutil"
-	"github.com/mainflux/mainflux/users/clients"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 )
 
 const maxLimitSize = 100
 
 type createClientReq struct {
-	client clients.Client
+	client mfclients.Client
 	token  string
 }
 
@@ -37,7 +37,7 @@ func (req viewClientReq) validate() error {
 
 type listClientsReq struct {
 	token      string
-	status     clients.Status
+	status     mfclients.Status
 	offset     uint64
 	limit      uint64
 	name       string
@@ -46,7 +46,7 @@ type listClientsReq struct {
 	visibility string
 	owner      string
 	sharedBy   string
-	metadata   clients.Metadata
+	metadata   mfclients.Metadata
 }
 
 func (req listClientsReq) validate() error {
@@ -66,7 +66,7 @@ func (req listClientsReq) validate() error {
 }
 
 type listMembersReq struct {
-	clients.Page
+	mfclients.Page
 	token   string
 	groupID string
 }
@@ -86,8 +86,8 @@ func (req listMembersReq) validate() error {
 type updateClientReq struct {
 	token    string
 	id       string
-	Name     string           `json:"name,omitempty"`
-	Metadata clients.Metadata `json:"metadata,omitempty"`
+	Name     string             `json:"name,omitempty"`
+	Metadata mfclients.Metadata `json:"metadata,omitempty"`
 }
 
 func (req updateClientReq) validate() error {

@@ -5,11 +5,11 @@ package provision
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/things/clients"
-	"github.com/mainflux/mainflux/things/groups"
+	"github.com/mainflux/mainflux/pkg/groups"
 	"github.com/pelletier/go-toml"
 )
 
@@ -57,12 +57,12 @@ type Cert struct {
 
 // Config struct of Provision
 type Config struct {
-	File      string           `toml:"file"`
-	Server    ServiceConf      `toml:"server" mapstructure:"server"`
-	Bootstrap Bootstrap        `toml:"bootstrap" mapstructure:"bootstrap"`
-	Things    []clients.Client `toml:"things" mapstructure:"things"`
-	Channels  []groups.Group   `toml:"channels" mapstructure:"channels"`
-	Cert      Cert             `toml:"cert" mapstructure:"cert"`
+	File      string             `toml:"file"`
+	Server    ServiceConf        `toml:"server" mapstructure:"server"`
+	Bootstrap Bootstrap          `toml:"bootstrap" mapstructure:"bootstrap"`
+	Things    []mfclients.Client `toml:"things" mapstructure:"things"`
+	Channels  []groups.Group     `toml:"channels" mapstructure:"channels"`
+	Cert      Cert               `toml:"cert" mapstructure:"cert"`
 }
 
 // Save - store config in a file
@@ -71,7 +71,7 @@ func Save(c Config, file string) error {
 	if err != nil {
 		return errors.New(fmt.Sprintf("Error reading config file: %s", err))
 	}
-	if err := ioutil.WriteFile(file, b, 0644); err != nil {
+	if err := os.WriteFile(file, b, 0644); err != nil {
 		return errors.New(fmt.Sprintf("Error writing toml: %s", err))
 	}
 	return nil
@@ -79,7 +79,7 @@ func Save(c Config, file string) error {
 
 // Read - retrieve config from a file
 func Read(file string) (Config, error) {
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	c := Config{}
 	if err != nil {
 		return c, errors.New(fmt.Sprintf("Error reading config file: %s", err))

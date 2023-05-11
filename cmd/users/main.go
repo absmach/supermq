@@ -23,6 +23,7 @@ import (
 	grpcserver "github.com/mainflux/mainflux/internal/server/grpc"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	mflog "github.com/mainflux/mainflux/logger"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/users/clients"
 	capi "github.com/mainflux/mainflux/users/clients/api"
@@ -199,7 +200,7 @@ func newService(db *sqlx.DB, tracer trace.Tracer, c config, ec email.Config, log
 	return csvc, gsvc, psvc
 }
 
-func createAdmin(c config, crepo clients.ClientRepository, hsr clients.Hasher, svc clients.Service) error {
+func createAdmin(c config, crepo mfclients.Repository, hsr clients.Hasher, svc clients.Service) error {
 	id, err := uuid.New().ID()
 	if err != nil {
 		return err
@@ -209,20 +210,20 @@ func createAdmin(c config, crepo clients.ClientRepository, hsr clients.Hasher, s
 		return err
 	}
 
-	client := clients.Client{
+	client := mfclients.Client{
 		ID:   id,
 		Name: "admin",
-		Credentials: clients.Credentials{
+		Credentials: mfclients.Credentials{
 			Identity: c.AdminEmail,
 			Secret:   hash,
 		},
-		Metadata: clients.Metadata{
+		Metadata: mfclients.Metadata{
 			"role": "admin",
 		},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		Role:      clients.AdminRole,
-		Status:    clients.EnabledStatus,
+		Role:      mfclients.AdminRole,
+		Status:    mfclients.EnabledStatus,
 	}
 
 	if _, err := crepo.RetrieveByIdentity(context.Background(), client.Credentials.Identity); err == nil {

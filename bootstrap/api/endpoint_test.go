@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -25,7 +24,9 @@ import (
 	"github.com/mainflux/mainflux/bootstrap/mocks"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	mflog "github.com/mainflux/mainflux/logger"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/things/clients"
 	capi "github.com/mainflux/mainflux/things/clients/api"
@@ -33,7 +34,6 @@ import (
 	gapi "github.com/mainflux/mainflux/things/groups/api"
 	tpolicies "github.com/mainflux/mainflux/things/policies"
 	papi "github.com/mainflux/mainflux/things/policies/api/http"
-	"github.com/mainflux/mainflux/users/policies"
 	upolicies "github.com/mainflux/mainflux/users/policies"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -168,7 +168,7 @@ func dec(in []byte) ([]byte, error) {
 	return in, nil
 }
 
-func newService(auth policies.AuthServiceClient, url string) bootstrap.Service {
+func newService(auth upolicies.AuthServiceClient, url string) bootstrap.Service {
 	things := mocks.NewConfigsRepository()
 	config := mfsdk.Config{
 		ThingsURL: url,
@@ -178,11 +178,11 @@ func newService(auth policies.AuthServiceClient, url string) bootstrap.Service {
 	return bootstrap.New(auth, things, sdk, encKey)
 }
 
-func generateChannels() map[string]groups.Group {
-	channels := make(map[string]groups.Group, channelsNum)
+func generateChannels() map[string]mfgroups.Group {
+	channels := make(map[string]mfgroups.Group, channelsNum)
 	for i := 0; i < channelsNum; i++ {
 		id := strconv.Itoa(i + 1)
-		channels[id] = groups.Group{
+		channels[id] = mfgroups.Group{
 			ID:       id,
 			Owner:    email,
 			Metadata: metadata,
@@ -192,7 +192,7 @@ func generateChannels() map[string]groups.Group {
 }
 
 func newThingsService(auth upolicies.AuthServiceClient) (clients.Service, groups.Service, tpolicies.Service) {
-	csvc := mocks.NewThingsService(map[string]clients.Client{}, auth)
+	csvc := mocks.NewThingsService(map[string]mfclients.Client{}, auth)
 	gsvc := mocks.NewChannelsService(generateChannels(), auth)
 	psvc := mocks.NewPoliciesService(auth)
 	return csvc, gsvc, psvc
@@ -1166,7 +1166,7 @@ func TestBootstrap(t *testing.T) {
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		if tc.secure && tc.status == http.StatusOK {
 			body, err = dec(body)

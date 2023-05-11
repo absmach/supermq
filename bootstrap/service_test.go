@@ -21,7 +21,9 @@ import (
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
 	mflog "github.com/mainflux/mainflux/logger"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/things/clients"
 	capi "github.com/mainflux/mainflux/things/clients/api"
@@ -70,18 +72,18 @@ func newService(auth upolicies.AuthServiceClient, url string) bootstrap.Service 
 }
 
 func newThingsService(auth upolicies.AuthServiceClient) (clients.Service, groups.Service, tpolicies.Service) {
-	channels := make(map[string]groups.Group, channelsNum)
+	channels := make(map[string]mfgroups.Group, channelsNum)
 	for i := 0; i < channelsNum; i++ {
 		id := strconv.Itoa(i + 1)
-		channels[id] = groups.Group{
+		channels[id] = mfgroups.Group{
 			ID:       id,
 			Owner:    email,
 			Metadata: map[string]interface{}{"meta": "data"},
-			Status:   groups.EnabledStatus,
+			Status:   mfclients.EnabledStatus,
 		}
 	}
 
-	csvc := mocks.NewThingsService(map[string]clients.Client{}, auth)
+	csvc := mocks.NewThingsService(map[string]mfclients.Client{}, auth)
 	gsvc := mocks.NewChannelsService(channels, auth)
 	psvc := mocks.NewPoliciesService(auth)
 	return csvc, gsvc, psvc

@@ -6,6 +6,7 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/clients"
 	upolicies "github.com/mainflux/mainflux/users/policies"
@@ -21,7 +22,7 @@ const (
 
 type service struct {
 	auth        upolicies.AuthServiceClient
-	things      clients.Repository
+	things      mfclients.Repository
 	policies    Repository
 	policyCache Cache
 	thingCache  clients.ClientCache
@@ -29,7 +30,7 @@ type service struct {
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(auth upolicies.AuthServiceClient, t clients.Repository, p Repository, tcache clients.ClientCache, ccache Cache, idp mainflux.IDProvider) Service {
+func NewService(auth upolicies.AuthServiceClient, t mfclients.Repository, p Repository, tcache clients.ClientCache, ccache Cache, idp mainflux.IDProvider) Service {
 	return service{
 		auth:        auth,
 		things:      t,

@@ -11,7 +11,9 @@ import (
 	"github.com/mainflux/mainflux/internal/api"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/logger"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	"github.com/mainflux/mainflux/things/groups"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/go-kit/kit/otelkit"
 )
@@ -116,17 +118,17 @@ func decodeListMembershipRequest(_ context.Context, r *http.Request) (interface{
 	if err != nil {
 		return nil, err
 	}
-	st, err := groups.ToStatus(s)
+	st, err := mfclients.ToStatus(s)
 	if err != nil {
 		return nil, err
 	}
 	req := listMembershipReq{
 		token:    apiutil.ExtractBearerToken(r),
 		clientID: bone.GetValue(r, "thingID"),
-		GroupsPage: groups.GroupsPage{
+		GroupsPage: mfgroups.GroupsPage{
 			Level: level,
 			ID:    parentID,
-			Page: groups.Page{
+			Page: mfgroups.Page{
 				Offset:   offset,
 				Limit:    limit,
 				OwnerID:  ownerID,
@@ -182,17 +184,17 @@ func decodeListGroupsRequest(_ context.Context, r *http.Request) (interface{}, e
 	if err != nil {
 		return nil, err
 	}
-	st, err := groups.ToStatus(s)
+	st, err := mfclients.ToStatus(s)
 	if err != nil {
 		return nil, err
 	}
 	req := listGroupsReq{
 		token: apiutil.ExtractBearerToken(r),
 		tree:  tree,
-		GroupsPage: groups.GroupsPage{
+		GroupsPage: mfgroups.GroupsPage{
 			Level: level,
 			ID:    parentID,
-			Page: groups.Page{
+			Page: mfgroups.Page{
 				Offset:   offset,
 				Limit:    limit,
 				OwnerID:  ownerID,
@@ -210,7 +212,7 @@ func decodeGroupCreate(_ context.Context, r *http.Request) (interface{}, error) 
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.ErrUnsupportedContentType
 	}
-	var g groups.Group
+	var g mfgroups.Group
 	if err := json.NewDecoder(r.Body).Decode(&g); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}

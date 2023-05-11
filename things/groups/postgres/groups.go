@@ -10,11 +10,12 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux/internal/postgres"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/things/groups"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 )
 
-var _ groups.Repository = (*grepo)(nil)
+var _ mfgroups.Repository = (*grepo)(nil)
 
 type grepo struct {
 	db postgres.Database
@@ -22,14 +23,14 @@ type grepo struct {
 
 // NewRepository instantiates a PostgreSQL implementation of group
 // repository.
-func NewRepository(db postgres.Database) groups.Repository {
+func NewRepository(db postgres.Database) mfgroups.Repository {
 	return &grepo{
 		db: db,
 	}
 }
 
 // TODO - check parent group write access.
-func (repo grepo) Save(ctx context.Context, g groups.Group) (groups.Group, error) {
+func (repo grepo) Save(ctx context.Context, g mfgroups.Group) (mfgroups.Group, error) {
 	q := `INSERT INTO groups (name, description, id, owner_id, metadata, created_at, updated_at, updated_by, status)
 		VALUES (:name, :description, :id, :owner_id, :metadata, :created_at, :updated_at, :updated_by, :status)
 		RETURNING id, name, description, owner_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, updated_at, updated_by, status;`
@@ -40,24 +41,24 @@ func (repo grepo) Save(ctx context.Context, g groups.Group) (groups.Group, error
 	}
 	dbg, err := toDBGroup(g)
 	if err != nil {
-		return groups.Group{}, err
+		return mfgroups.Group{}, err
 	}
 	row, err := repo.db.NamedQueryContext(ctx, q, dbg)
 	if err != nil {
-		return groups.Group{}, postgres.HandleError(err, errors.ErrCreateEntity)
+		return mfgroups.Group{}, postgres.HandleError(err, errors.ErrCreateEntity)
 	}
 
 	defer row.Close()
 	row.Next()
 	dbg = dbGroup{}
 	if err := row.StructScan(&dbg); err != nil {
-		return groups.Group{}, err
+		return mfgroups.Group{}, err
 	}
 
 	return toGroup(dbg)
 }
 
-func (repo grepo) RetrieveByID(ctx context.Context, id string) (groups.Group, error) {
+func (repo grepo) RetrieveByID(ctx context.Context, id string) (mfgroups.Group, error) {
 	dbu := dbGroup{
 		ID: id,
 	}
@@ -65,19 +66,19 @@ func (repo grepo) RetrieveByID(ctx context.Context, id string) (groups.Group, er
 	    WHERE id = $1`
 	if err := repo.db.QueryRowxContext(ctx, q, dbu.ID).StructScan(&dbu); err != nil {
 		if err == sql.ErrNoRows {
-			return groups.Group{}, errors.Wrap(errors.ErrNotFound, err)
+			return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, err)
 
 		}
-		return groups.Group{}, errors.Wrap(errors.ErrViewEntity, err)
+		return mfgroups.Group{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
 	return toGroup(dbu)
 }
 
-func (repo grepo) RetrieveAll(ctx context.Context, gm groups.GroupsPage) (groups.GroupsPage, error) {
+func (repo grepo) RetrieveAll(ctx context.Context, gm mfgroups.GroupsPage) (mfgroups.GroupsPage, error) {
 	var q string
 	query, err := buildQuery(gm)
 	if err != nil {
-		return groups.GroupsPage{}, err
+		return mfgroups.GroupsPage{}, err
 	}
 
 	if gm.ID != "" {
@@ -91,17 +92,17 @@ func (repo grepo) RetrieveAll(ctx context.Context, gm groups.GroupsPage) (groups
 
 	dbPage, err := toDBGroupPage(gm)
 	if err != nil {
-		return groups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
+		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
 	}
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
-		return groups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
+		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
 	}
 	defer rows.Close()
 
 	items, err := repo.processRows(rows)
 	if err != nil {
-		return groups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
+		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
 	}
 
 	cq := "SELECT COUNT(*) FROM groups g"
@@ -111,7 +112,7 @@ func (repo grepo) RetrieveAll(ctx context.Context, gm groups.GroupsPage) (groups
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbPage)
 	if err != nil {
-		return groups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
+		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
 	}
 
 	page := gm
@@ -121,11 +122,11 @@ func (repo grepo) RetrieveAll(ctx context.Context, gm groups.GroupsPage) (groups
 	return page, nil
 }
 
-func (repo grepo) Memberships(ctx context.Context, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
+func (repo grepo) Memberships(ctx context.Context, clientID string, gm mfgroups.GroupsPage) (mfgroups.MembershipsPage, error) {
 	var q string
 	query, err := buildQuery(gm)
 	if err != nil {
-		return groups.MembershipsPage{}, err
+		return mfgroups.MembershipsPage{}, err
 	}
 	if gm.ID != "" {
 		q = buildHierachy(gm)
@@ -144,24 +145,24 @@ func (repo grepo) Memberships(ctx context.Context, clientID string, gm groups.Gr
 
 	dbPage, err := toDBGroupPage(gm)
 	if err != nil {
-		return groups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
+		return mfgroups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
 	}
 	dbPage.ClientID = clientID
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
-		return groups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
+		return mfgroups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
 	}
 	defer rows.Close()
 
-	var items []groups.Group
+	var items []mfgroups.Group
 	for rows.Next() {
 		dbg := dbGroup{}
 		if err := rows.StructScan(&dbg); err != nil {
-			return groups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
+			return mfgroups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
 		}
 		group, err := toGroup(dbg)
 		if err != nil {
-			return groups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
+			return mfgroups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
 		}
 		items = append(items, group)
 	}
@@ -171,11 +172,11 @@ func (repo grepo) Memberships(ctx context.Context, clientID string, gm groups.Gr
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbPage)
 	if err != nil {
-		return groups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
+		return mfgroups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
 	}
-	page := groups.MembershipsPage{
+	page := mfgroups.MembershipsPage{
 		Memberships: items,
-		Page: groups.Page{
+		Page: mfgroups.Page{
 			Total: total,
 		},
 	}
@@ -183,7 +184,7 @@ func (repo grepo) Memberships(ctx context.Context, clientID string, gm groups.Gr
 	return page, nil
 }
 
-func (repo grepo) Update(ctx context.Context, g groups.Group) (groups.Group, error) {
+func (repo grepo) Update(ctx context.Context, g mfgroups.Group) (mfgroups.Group, error) {
 	var query []string
 	var upq string
 	if g.Name != "" {
@@ -198,58 +199,59 @@ func (repo grepo) Update(ctx context.Context, g groups.Group) (groups.Group, err
 	if len(query) > 0 {
 		upq = strings.Join(query, " ")
 	}
-	g.Status = groups.EnabledStatus
+	g.Status = mfclients.EnabledStatus
 	q := fmt.Sprintf(`UPDATE groups SET %s updated_at = :updated_at, updated_by = :updated_by
 		WHERE owner_id = :owner_id AND id = :id AND status = :status
 		RETURNING id, name, description, owner_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, updated_at, updated_by, status`, upq)
 
 	dbu, err := toDBGroup(g)
 	if err != nil {
-		return groups.Group{}, errors.Wrap(errors.ErrUpdateEntity, err)
+		return mfgroups.Group{}, errors.Wrap(errors.ErrUpdateEntity, err)
 	}
 
 	row, err := repo.db.NamedQueryContext(ctx, q, dbu)
 	if err != nil {
-		return groups.Group{}, postgres.HandleError(err, errors.ErrUpdateEntity)
+		return mfgroups.Group{}, postgres.HandleError(err, errors.ErrUpdateEntity)
 	}
 
 	defer row.Close()
 	if ok := row.Next(); !ok {
-		return groups.Group{}, errors.Wrap(errors.ErrNotFound, row.Err())
+		return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, row.Err())
 	}
 	dbu = dbGroup{}
 	if err := row.StructScan(&dbu); err != nil {
-		return groups.Group{}, errors.Wrap(err, errors.ErrUpdateEntity)
+		return mfgroups.Group{}, errors.Wrap(err, errors.ErrUpdateEntity)
 	}
 	return toGroup(dbu)
 }
 
-func (repo grepo) ChangeStatus(ctx context.Context, group groups.Group) (groups.Group, error) {
+func (repo grepo) ChangeStatus(ctx context.Context, group mfgroups.Group) (mfgroups.Group, error) {
 	qc := `UPDATE groups SET status = :status WHERE id = :id RETURNING id, name, description, owner_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, updated_at, updated_by, status`
 
 	dbg, err := toDBGroup(group)
 	if err != nil {
-		return groups.Group{}, errors.Wrap(errors.ErrUpdateEntity, err)
+		return mfgroups.Group{}, errors.Wrap(errors.ErrUpdateEntity, err)
 	}
 
 	row, err := repo.db.NamedQueryContext(ctx, qc, dbg)
 	if err != nil {
-		return groups.Group{}, postgres.HandleError(err, errors.ErrUpdateEntity)
+		return mfgroups.Group{}, postgres.HandleError(err, errors.ErrUpdateEntity)
 	}
 
 	defer row.Close()
 	if ok := row.Next(); !ok {
-		return groups.Group{}, errors.Wrap(errors.ErrNotFound, row.Err())
+		return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, row.Err())
 	}
 	dbg = dbGroup{}
 	if err := row.StructScan(&dbg); err != nil {
-		return groups.Group{}, errors.Wrap(err, errors.ErrUpdateEntity)
+		return mfgroups.Group{}, errors.Wrap(err, errors.ErrUpdateEntity)
 	}
 
 	return toGroup(dbg)
+
 }
 
-func buildHierachy(gm groups.GroupsPage) string {
+func buildHierachy(gm mfgroups.GroupsPage) string {
 	query := ""
 	switch {
 	case gm.Direction >= 0: // ancestors
@@ -268,13 +270,13 @@ func buildHierachy(gm groups.GroupsPage) string {
 	}
 	return query
 }
-func buildQuery(gm groups.GroupsPage) (string, error) {
+func buildQuery(gm mfgroups.GroupsPage) (string, error) {
 	queries := []string{}
 
 	if gm.Name != "" {
 		queries = append(queries, "g.name = :name")
 	}
-	if gm.Status != groups.AllStatus {
+	if gm.Status != mfclients.AllStatus {
 		queries = append(queries, "g.status = :status")
 	}
 
@@ -291,21 +293,21 @@ func buildQuery(gm groups.GroupsPage) (string, error) {
 }
 
 type dbGroup struct {
-	ID          string        `db:"id"`
-	Parent      string        `db:"parent_id"`
-	Owner       string        `db:"owner_id"`
-	Name        string        `db:"name"`
-	Description string        `db:"description"`
-	Level       int           `db:"level"`
-	Path        string        `db:"path,omitempty"`
-	Metadata    []byte        `db:"metadata"`
-	CreatedAt   time.Time     `db:"created_at"`
-	UpdatedAt   sql.NullTime  `db:"updated_at,omitempty"`
-	UpdatedBy   *string       `db:"updated_by,omitempty"`
-	Status      groups.Status `db:"status"`
+	ID          string           `db:"id"`
+	Parent      string           `db:"parent_id"`
+	Owner       string           `db:"owner_id"`
+	Name        string           `db:"name"`
+	Description string           `db:"description"`
+	Level       int              `db:"level"`
+	Path        string           `db:"path,omitempty"`
+	Metadata    []byte           `db:"metadata"`
+	CreatedAt   time.Time        `db:"created_at"`
+	UpdatedAt   sql.NullTime     `db:"updated_at,omitempty"`
+	UpdatedBy   *string          `db:"updated_by,omitempty"`
+	Status      mfclients.Status `db:"status"`
 }
 
-func toDBGroup(g groups.Group) (dbGroup, error) {
+func toDBGroup(g mfgroups.Group) (dbGroup, error) {
 	data := []byte("{}")
 	if len(g.Metadata) > 0 {
 		b, err := json.Marshal(g.Metadata)
@@ -337,11 +339,11 @@ func toDBGroup(g groups.Group) (dbGroup, error) {
 	}, nil
 }
 
-func toGroup(g dbGroup) (groups.Group, error) {
-	var metadata groups.Metadata
+func toGroup(g dbGroup) (mfgroups.Group, error) {
+	var metadata mfclients.Metadata
 	if g.Metadata != nil {
 		if err := json.Unmarshal([]byte(g.Metadata), &metadata); err != nil {
-			return groups.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)
+			return mfgroups.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)
 		}
 	}
 	var updatedAt time.Time
@@ -353,7 +355,7 @@ func toGroup(g dbGroup) (groups.Group, error) {
 		updatedBy = *g.UpdatedBy
 	}
 
-	return groups.Group{
+	return mfgroups.Group{
 		ID:          g.ID,
 		Name:        g.Name,
 		Parent:      g.Parent,
@@ -369,8 +371,8 @@ func toGroup(g dbGroup) (groups.Group, error) {
 	}, nil
 }
 
-func (gr grepo) processRows(rows *sqlx.Rows) ([]groups.Group, error) {
-	var items []groups.Group
+func (gr grepo) processRows(rows *sqlx.Rows) ([]mfgroups.Group, error) {
+	var items []mfgroups.Group
 	for rows.Next() {
 		dbg := dbGroup{}
 		if err := rows.StructScan(&dbg); err != nil {
@@ -385,9 +387,9 @@ func (gr grepo) processRows(rows *sqlx.Rows) ([]groups.Group, error) {
 	return items, nil
 }
 
-func toDBGroupPage(pm groups.GroupsPage) (dbGroupPage, error) {
-	level := groups.MaxLevel
-	if pm.Level < groups.MaxLevel {
+func toDBGroupPage(pm mfgroups.GroupsPage) (dbGroupPage, error) {
+	level := mfgroups.MaxLevel
+	if pm.Level < mfgroups.MaxLevel {
 		level = pm.Level
 	}
 	data := []byte("{}")
@@ -416,18 +418,18 @@ func toDBGroupPage(pm groups.GroupsPage) (dbGroupPage, error) {
 }
 
 type dbGroupPage struct {
-	ClientID string        `db:"client_id"`
-	ID       string        `db:"id"`
-	Name     string        `db:"name"`
-	ParentID string        `db:"parent_id"`
-	Owner    string        `db:"owner_id"`
-	Metadata []byte        `db:"metadata"`
-	Path     string        `db:"path"`
-	Level    uint64        `db:"level"`
-	Total    uint64        `db:"total"`
-	Limit    uint64        `db:"limit"`
-	Offset   uint64        `db:"offset"`
-	Subject  string        `db:"subject"`
-	Action   string        `db:"action"`
-	Status   groups.Status `db:"status"`
+	ClientID string           `db:"client_id"`
+	ID       string           `db:"id"`
+	Name     string           `db:"name"`
+	ParentID string           `db:"parent_id"`
+	Owner    string           `db:"owner_id"`
+	Metadata []byte           `db:"metadata"`
+	Path     string           `db:"path"`
+	Level    uint64           `db:"level"`
+	Total    uint64           `db:"total"`
+	Limit    uint64           `db:"limit"`
+	Offset   uint64           `db:"offset"`
+	Subject  string           `db:"subject"`
+	Action   string           `db:"action"`
+	Status   mfclients.Status `db:"status"`
 }

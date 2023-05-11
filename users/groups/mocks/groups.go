@@ -3,74 +3,75 @@ package mocks
 import (
 	"context"
 
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/users/groups"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	"github.com/stretchr/testify/mock"
 )
 
 const WrongID = "wrongID"
 
-var _ groups.GroupRepository = (*GroupRepository)(nil)
+var _ mfgroups.Repository = (*GroupRepository)(nil)
 
 type GroupRepository struct {
 	mock.Mock
 }
 
-func (m *GroupRepository) ChangeStatus(ctx context.Context, group groups.Group) (groups.Group, error) {
+func (m *GroupRepository) ChangeStatus(ctx context.Context, group mfgroups.Group) (mfgroups.Group, error) {
 	ret := m.Called(ctx, group)
 
 	if group.ID == WrongID {
-		return groups.Group{}, errors.ErrNotFound
+		return mfgroups.Group{}, errors.ErrNotFound
 	}
-	if group.Status != groups.EnabledStatus && group.Status != groups.DisabledStatus {
-		return groups.Group{}, errors.ErrMalformedEntity
+	if group.Status != mfclients.EnabledStatus && group.Status != mfclients.DisabledStatus {
+		return mfgroups.Group{}, errors.ErrMalformedEntity
 	}
 
-	return ret.Get(0).(groups.Group), ret.Error(1)
+	return ret.Get(0).(mfgroups.Group), ret.Error(1)
 }
 
-func (m *GroupRepository) Memberships(ctx context.Context, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
+func (m *GroupRepository) Memberships(ctx context.Context, clientID string, gm mfgroups.GroupsPage) (mfgroups.MembershipsPage, error) {
 	ret := m.Called(ctx, clientID, gm)
 
 	if clientID == WrongID {
-		return groups.MembershipsPage{}, errors.ErrNotFound
+		return mfgroups.MembershipsPage{}, errors.ErrNotFound
 	}
 
-	return ret.Get(0).(groups.MembershipsPage), ret.Error(1)
+	return ret.Get(0).(mfgroups.MembershipsPage), ret.Error(1)
 }
 
-func (m *GroupRepository) RetrieveAll(ctx context.Context, gm groups.GroupsPage) (groups.GroupsPage, error) {
+func (m *GroupRepository) RetrieveAll(ctx context.Context, gm mfgroups.GroupsPage) (mfgroups.GroupsPage, error) {
 	ret := m.Called(ctx, gm)
 
-	return ret.Get(0).(groups.GroupsPage), ret.Error(1)
+	return ret.Get(0).(mfgroups.GroupsPage), ret.Error(1)
 }
 
-func (m *GroupRepository) RetrieveByID(ctx context.Context, id string) (groups.Group, error) {
+func (m *GroupRepository) RetrieveByID(ctx context.Context, id string) (mfgroups.Group, error) {
 	ret := m.Called(ctx, id)
 	if id == WrongID {
-		return groups.Group{}, errors.ErrNotFound
+		return mfgroups.Group{}, errors.ErrNotFound
 	}
 
-	return ret.Get(0).(groups.Group), ret.Error(1)
+	return ret.Get(0).(mfgroups.Group), ret.Error(1)
 }
 
-func (m *GroupRepository) Save(ctx context.Context, g groups.Group) (groups.Group, error) {
+func (m *GroupRepository) Save(ctx context.Context, g mfgroups.Group) (mfgroups.Group, error) {
 	ret := m.Called(ctx, g)
-	if g.ParentID == WrongID {
-		return groups.Group{}, errors.ErrCreateEntity
+	if g.Parent == WrongID {
+		return mfgroups.Group{}, errors.ErrCreateEntity
 	}
-	if g.OwnerID == WrongID {
-		return groups.Group{}, errors.ErrCreateEntity
+	if g.Owner == WrongID {
+		return mfgroups.Group{}, errors.ErrCreateEntity
 	}
 
 	return g, ret.Error(1)
 }
 
-func (m *GroupRepository) Update(ctx context.Context, g groups.Group) (groups.Group, error) {
+func (m *GroupRepository) Update(ctx context.Context, g mfgroups.Group) (mfgroups.Group, error) {
 	ret := m.Called(ctx, g)
 	if g.ID == WrongID {
-		return groups.Group{}, errors.ErrNotFound
+		return mfgroups.Group{}, errors.ErrNotFound
 	}
 
-	return ret.Get(0).(groups.Group), ret.Error(1)
+	return ret.Get(0).(mfgroups.Group), ret.Error(1)
 }

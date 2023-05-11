@@ -13,7 +13,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/users/clients"
 	"github.com/mainflux/mainflux/users/clients/mocks"
-	cmocks "github.com/mainflux/mainflux/users/clients/mocks"
 	"github.com/mainflux/mainflux/users/hasher"
 	"github.com/mainflux/mainflux/users/jwt"
 	"github.com/mainflux/mainflux/users/policies"
@@ -36,7 +35,7 @@ var (
 )
 
 func TestAddPolicy(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
@@ -167,7 +166,7 @@ func TestAddPolicy(t *testing.T) {
 }
 
 func TestAuthorize(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
@@ -234,7 +233,7 @@ func TestAuthorize(t *testing.T) {
 }
 
 func TestDeletePolicy(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
@@ -256,7 +255,7 @@ func TestDeletePolicy(t *testing.T) {
 }
 
 func TestListPolicies(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
@@ -353,7 +352,7 @@ func TestListPolicies(t *testing.T) {
 }
 
 func TestUpdatePolicies(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()

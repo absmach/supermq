@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -256,7 +255,7 @@ func TestView(t *testing.T) {
 		}
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected request error %s", tc.desc, err))
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected read error %s", tc.desc, err))
 		data := strings.Trim(string(body), "\n")
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
@@ -376,7 +375,7 @@ func TestList(t *testing.T) {
 		}
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		data := strings.Trim(string(body), "\n")
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))

@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/users/groups"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 )
 
 var (
@@ -19,7 +19,7 @@ var (
 )
 
 type viewMembershipRes struct {
-	groups.Group
+	mfgroups.Group
 }
 
 func (res viewMembershipRes) Code() int {
@@ -52,7 +52,7 @@ func (res membershipPageRes) Empty() bool {
 }
 
 type viewGroupRes struct {
-	groups.Group
+	mfgroups.Group
 }
 
 func (res viewGroupRes) Code() int {
@@ -68,7 +68,7 @@ func (res viewGroupRes) Empty() bool {
 }
 
 type createGroupRes struct {
-	groups.Group
+	mfgroups.Group
 	created bool
 }
 
@@ -119,7 +119,7 @@ func (res groupPageRes) Empty() bool {
 }
 
 type updateGroupRes struct {
-	groups.Group
+	mfgroups.Group
 }
 
 func (res updateGroupRes) Code() int {
@@ -135,7 +135,7 @@ func (res updateGroupRes) Empty() bool {
 }
 
 type changeStatusRes struct {
-	groups.Group
+	mfgroups.Group
 }
 
 func (res changeStatusRes) Code() int {

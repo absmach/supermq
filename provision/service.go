@@ -7,7 +7,6 @@ import (
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	SDK "github.com/mainflux/mainflux/pkg/sdk/go"
-	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 )
 
 const (
@@ -156,7 +155,7 @@ func (ps *provisionService) Provision(token, name, externalID, externalKey strin
 	for _, channel := range ps.conf.Channels {
 		ch := SDK.Channel{
 			Name:     channel.Name,
-			Metadata: sdk.Metadata(channel.Metadata),
+			Metadata: SDK.Metadata(channel.Metadata),
 		}
 		ch, err := ps.sdk.CreateChannel(ch, token)
 		if err != nil {

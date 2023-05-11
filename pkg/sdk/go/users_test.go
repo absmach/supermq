@@ -12,12 +12,12 @@ import (
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	mflog "github.com/mainflux/mainflux/logger"
+	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/users/clients"
 	"github.com/mainflux/mainflux/users/clients/api"
 	"github.com/mainflux/mainflux/users/clients/mocks"
-	cmocks "github.com/mainflux/mainflux/users/clients/mocks"
 	"github.com/mainflux/mainflux/users/jwt"
 	pmocks "github.com/mainflux/mainflux/users/policies/mocks"
 	"github.com/stretchr/testify/assert"
@@ -34,7 +34,7 @@ func newClientServer(svc clients.Service) *httptest.Server {
 }
 
 func TestCreateClient(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 
@@ -44,7 +44,7 @@ func TestCreateClient(t *testing.T) {
 
 	user := sdk.User{
 		Credentials: sdk.Credentials{Identity: "admin@example.com", Secret: "secret"},
-		Status:      clients.EnabledStatus.String(),
+		Status:      mfclients.EnabledStatus.String(),
 	}
 	conf := sdk.Config{
 		UsersURL: ts.URL,
@@ -148,7 +148,7 @@ func TestCreateClient(t *testing.T) {
 				Metadata:    validMetadata,
 				CreatedAt:   time.Now(),
 				UpdatedAt:   time.Now(),
-				Status:      clients.EnabledStatus.String(),
+				Status:      mfclients.EnabledStatus.String(),
 			},
 			response: sdk.User{
 				ID:          id,
@@ -159,7 +159,7 @@ func TestCreateClient(t *testing.T) {
 				Metadata:    validMetadata,
 				CreatedAt:   time.Now(),
 				UpdatedAt:   time.Now(),
-				Status:      clients.EnabledStatus.String(),
+				Status:      mfclients.EnabledStatus.String(),
 			},
 			token: token,
 			err:   nil,
@@ -183,7 +183,7 @@ func TestCreateClient(t *testing.T) {
 }
 
 func TestListClients(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 
@@ -206,11 +206,11 @@ func TestListClients(t *testing.T) {
 				Secret:   fmt.Sprintf("password_%d", i),
 			},
 			Metadata: sdk.Metadata{"name": fmt.Sprintf("client_%d", i)},
-			Status:   clients.EnabledStatus.String(),
+			Status:   mfclients.EnabledStatus.String(),
 		}
 		if i == 50 {
 			cl.Owner = "clientowner"
-			cl.Status = clients.DisabledStatus.String()
+			cl.Status = mfclients.DisabledStatus.String()
 			cl.Tags = []string{"tag1", "tag2"}
 		}
 		cls = append(cls, cl)
@@ -328,7 +328,7 @@ func TestListClients(t *testing.T) {
 			token:    generateValidToken(t, svc, cRepo),
 			offset:   0,
 			limit:    1,
-			status:   clients.DisabledStatus.String(),
+			status:   mfclients.DisabledStatus.String(),
 			response: []sdk.User{cls[50]},
 			err:      nil,
 		},
@@ -355,7 +355,7 @@ func TestListClients(t *testing.T) {
 			Tag:      tc.tag,
 		}
 
-		repoCall := cRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(clients.ClientsPage{Page: convertClientPage(pm), Clients: convertClients(tc.response)}, tc.err)
+		repoCall := cRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(mfclients.ClientsPage{Page: convertClientPage(pm), Clients: convertClients(tc.response)}, tc.err)
 		page, err := clientSDK.Users(pm, generateValidToken(t, svc, cRepo))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page.Users, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
@@ -368,7 +368,7 @@ func TestListClients(t *testing.T) {
 }
 
 func TestListMembers(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 
@@ -393,7 +393,7 @@ func TestListMembers(t *testing.T) {
 			},
 			Tags:     []string{"tag1", "tag2"},
 			Metadata: sdk.Metadata{"role": "client"},
-			Status:   clients.EnabledStatus.String(),
+			Status:   mfclients.EnabledStatus.String(),
 		}
 		aClients = append(aClients, client)
 	}
@@ -494,7 +494,7 @@ func TestListMembers(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("Members", mock.Anything, tc.groupID, mock.Anything).Return(clients.MembersPage{Members: convertClients(tc.response)}, tc.err)
+		repoCall1 := cRepo.On("Members", mock.Anything, tc.groupID, mock.Anything).Return(mfclients.MembersPage{Members: convertClients(tc.response)}, tc.err)
 		membersPage, err := clientSDK.Members(tc.groupID, tc.page, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, membersPage.Members, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, membersPage.Members))
@@ -510,7 +510,7 @@ func TestListMembers(t *testing.T) {
 }
 
 func TestClient(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 
@@ -523,7 +523,7 @@ func TestClient(t *testing.T) {
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: sdk.Credentials{Identity: "clientidentity", Secret: secret},
 		Metadata:    validMetadata,
-		Status:      clients.EnabledStatus.String(),
+		Status:      mfclients.EnabledStatus.String(),
 	}
 	conf := sdk.Config{
 		UsersURL: ts.URL,
@@ -585,7 +585,7 @@ func TestClient(t *testing.T) {
 }
 
 func TestUpdateClient(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 
@@ -604,7 +604,7 @@ func TestUpdateClient(t *testing.T) {
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: sdk.Credentials{Identity: "clientidentity", Secret: secret},
 		Metadata:    validMetadata,
-		Status:      clients.EnabledStatus.String(),
+		Status:      mfclients.EnabledStatus.String(),
 	}
 
 	client1 := user
@@ -662,7 +662,7 @@ func TestUpdateClient(t *testing.T) {
 }
 
 func TestUpdateClientTags(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 
@@ -681,7 +681,7 @@ func TestUpdateClientTags(t *testing.T) {
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: sdk.Credentials{Identity: "clientidentity", Secret: secret},
 		Metadata:    validMetadata,
-		Status:      clients.EnabledStatus.String(),
+		Status:      mfclients.EnabledStatus.String(),
 	}
 
 	client1 := user
@@ -738,7 +738,7 @@ func TestUpdateClientTags(t *testing.T) {
 }
 
 func TestUpdateClientIdentity(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 
@@ -757,7 +757,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: sdk.Credentials{Identity: "updatedclientidentity", Secret: secret},
 		Metadata:    validMetadata,
-		Status:      clients.EnabledStatus.String(),
+		Status:      mfclients.EnabledStatus.String(),
 	}
 
 	client2 := user
@@ -812,7 +812,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 }
 
 func TestUpdateClientSecret(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 
@@ -890,7 +890,7 @@ func TestUpdateClientSecret(t *testing.T) {
 }
 
 func TestUpdateClientOwner(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 
@@ -909,7 +909,7 @@ func TestUpdateClientOwner(t *testing.T) {
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: sdk.Credentials{Identity: "clientidentity", Secret: secret},
 		Metadata:    validMetadata,
-		Status:      clients.EnabledStatus.String(),
+		Status:      mfclients.EnabledStatus.String(),
 		Owner:       "owner",
 	}
 
@@ -964,7 +964,7 @@ func TestUpdateClientOwner(t *testing.T) {
 }
 
 func TestEnableClient(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 
@@ -977,10 +977,10 @@ func TestEnableClient(t *testing.T) {
 	}
 	clientSDK := sdk.NewSDK(conf)
 
-	enabledClient1 := sdk.User{ID: testsutil.GenerateUUID(t, idProvider), Credentials: sdk.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: clients.EnabledStatus.String()}
-	disabledClient1 := sdk.User{ID: testsutil.GenerateUUID(t, idProvider), Credentials: sdk.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: clients.DisabledStatus.String()}
+	enabledClient1 := sdk.User{ID: testsutil.GenerateUUID(t, idProvider), Credentials: sdk.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: mfclients.EnabledStatus.String()}
+	disabledClient1 := sdk.User{ID: testsutil.GenerateUUID(t, idProvider), Credentials: sdk.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: mfclients.DisabledStatus.String()}
 	endisabledClient1 := disabledClient1
-	endisabledClient1.Status = clients.EnabledStatus.String()
+	endisabledClient1.Status = mfclients.EnabledStatus.String()
 	endisabledClient1.ID = testsutil.GenerateUUID(t, idProvider)
 
 	cases := []struct {
@@ -1047,7 +1047,7 @@ func TestEnableClient(t *testing.T) {
 	}{
 		{
 			desc:   "list enabled clients",
-			status: clients.EnabledStatus.String(),
+			status: mfclients.EnabledStatus.String(),
 			size:   2,
 			response: sdk.UsersPage{
 				Users: []sdk.User{enabledClient1, endisabledClient1},
@@ -1055,7 +1055,7 @@ func TestEnableClient(t *testing.T) {
 		},
 		{
 			desc:   "list disabled clients",
-			status: clients.DisabledStatus.String(),
+			status: mfclients.DisabledStatus.String(),
 			size:   1,
 			response: sdk.UsersPage{
 				Users: []sdk.User{disabledClient1},
@@ -1063,7 +1063,7 @@ func TestEnableClient(t *testing.T) {
 		},
 		{
 			desc:   "list enabled and disabled clients",
-			status: clients.AllStatus.String(),
+			status: mfclients.AllStatus.String(),
 			size:   3,
 			response: sdk.UsersPage{
 				Users: []sdk.User{enabledClient1, disabledClient1, endisabledClient1},
@@ -1089,7 +1089,7 @@ func TestEnableClient(t *testing.T) {
 }
 
 func TestDisableClient(t *testing.T) {
-	cRepo := new(cmocks.ClientRepository)
+	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 
@@ -1102,10 +1102,10 @@ func TestDisableClient(t *testing.T) {
 	}
 	clientSDK := sdk.NewSDK(conf)
 
-	enabledClient1 := sdk.User{ID: testsutil.GenerateUUID(t, idProvider), Credentials: sdk.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: clients.EnabledStatus.String()}
-	disabledClient1 := sdk.User{ID: testsutil.GenerateUUID(t, idProvider), Credentials: sdk.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: clients.DisabledStatus.String()}
+	enabledClient1 := sdk.User{ID: testsutil.GenerateUUID(t, idProvider), Credentials: sdk.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: mfclients.EnabledStatus.String()}
+	disabledClient1 := sdk.User{ID: testsutil.GenerateUUID(t, idProvider), Credentials: sdk.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: mfclients.DisabledStatus.String()}
 	disenabledClient1 := enabledClient1
-	disenabledClient1.Status = clients.DisabledStatus.String()
+	disenabledClient1.Status = mfclients.DisabledStatus.String()
 	disenabledClient1.ID = testsutil.GenerateUUID(t, idProvider)
 
 	cases := []struct {
@@ -1172,7 +1172,7 @@ func TestDisableClient(t *testing.T) {
 	}{
 		{
 			desc:   "list enabled clients",
-			status: clients.EnabledStatus.String(),
+			status: mfclients.EnabledStatus.String(),
 			size:   2,
 			response: sdk.UsersPage{
 				Users: []sdk.User{enabledClient1, disenabledClient1},
@@ -1180,7 +1180,7 @@ func TestDisableClient(t *testing.T) {
 		},
 		{
 			desc:   "list disabled clients",
-			status: clients.DisabledStatus.String(),
+			status: mfclients.DisabledStatus.String(),
 			size:   1,
 			response: sdk.UsersPage{
 				Users: []sdk.User{disabledClient1},
@@ -1188,7 +1188,7 @@ func TestDisableClient(t *testing.T) {
 		},
 		{
 			desc:   "list enabled and disabled clients",
-			status: clients.AllStatus.String(),
+			status: mfclients.AllStatus.String(),
 			size:   3,
 			response: sdk.UsersPage{
 				Users: []sdk.User{enabledClient1, disabledClient1, disenabledClient1},
