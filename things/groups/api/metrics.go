@@ -50,7 +50,7 @@ func (ms *metricsMiddleware) ViewGroup(ctx context.Context, token, id string) (g
 	return ms.svc.ViewGroup(ctx, token, id)
 }
 
-func (ms *metricsMiddleware) ListGroups(ctx context.Context, token string, gp groups.GroupsPage) (cg groups.GroupsPage, err error) {
+func (ms *metricsMiddleware) ListGroups(ctx context.Context, token string, gp mfgroups.GroupsPage) (cg mfgroups.GroupsPage, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_channels").Add(1)
 		ms.latency.With("method", "list_channels").Observe(time.Since(begin).Seconds())
@@ -74,7 +74,7 @@ func (ms *metricsMiddleware) DisableGroup(ctx context.Context, token string, id 
 	return ms.svc.DisableGroup(ctx, token, id)
 }
 
-func (ms *metricsMiddleware) ListMemberships(ctx context.Context, token, clientID string, gp groups.GroupsPage) (mp groups.MembershipsPage, err error) {
+func (ms *metricsMiddleware) ListMemberships(ctx context.Context, token, clientID string, gp mfgroups.GroupsPage) (mp mfgroups.MembershipsPage, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_channels_by_thing").Add(1)
 		ms.latency.With("method", "list_channels_by_thing").Observe(time.Since(begin).Seconds())

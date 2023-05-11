@@ -31,14 +31,14 @@ type Service interface {
 }
 
 type service struct {
-	groups     GroupRepository
+	groups     groups.Repository
 	policies   policies.PolicyRepository
 	tokens     jwt.TokenRepository
 	idProvider mainflux.IDProvider
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(g GroupRepository, p policies.PolicyRepository, t jwt.TokenRepository, idp mainflux.IDProvider) Service {
+func NewService(g groups.Repository, p policies.PolicyRepository, t jwt.TokenRepository, idp mainflux.IDProvider) Service {
 	return service{
 		groups:     g,
 		policies:   p,
@@ -77,10 +77,10 @@ func (svc service) ViewGroup(ctx context.Context, token string, id string) (grou
 	return svc.groups.RetrieveByID(ctx, id)
 }
 
-func (svc service) ListGroups(ctx context.Context, token string, gm GroupsPage) (GroupsPage, error) {
+func (svc service) ListGroups(ctx context.Context, token string, gm groups.GroupsPage) (groups.GroupsPage, error) {
 	id, err := svc.identify(ctx, token)
 	if err != nil {
-		return GroupsPage{}, err
+		return groups.GroupsPage{}, err
 	}
 	gm.Subject = id
 	gm.OwnerID = id
@@ -88,10 +88,10 @@ func (svc service) ListGroups(ctx context.Context, token string, gm GroupsPage) 
 	return svc.groups.RetrieveAll(ctx, gm)
 }
 
-func (svc service) ListMemberships(ctx context.Context, token, clientID string, gm GroupsPage) (MembershipsPage, error) {
+func (svc service) ListMemberships(ctx context.Context, token, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
 	id, err := svc.identify(ctx, token)
 	if err != nil {
-		return MembershipsPage{}, err
+		return groups.MembershipsPage{}, err
 	}
 	// If the user is admin, fetch all members from the database.
 	if err := svc.authorizeByID(ctx, entityType, policies.Policy{Subject: id, Object: groupsObjectKey, Actions: []string{listRelationKey}}); err == nil {

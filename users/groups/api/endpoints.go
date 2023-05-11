@@ -138,7 +138,7 @@ func listMembershipsEndpoint(svc groups.Service) endpoint.Endpoint {
 	}
 }
 
-func buildGroupsResponseTree(page groups.GroupsPage) groupPageRes {
+func buildGroupsResponseTree(page mfgroups.GroupsPage) groupPageRes {
 	groupsMap := map[string]*mfgroups.Group{}
 	// Parents' map keeps its array of children.
 	parentsMap := map[string][]*mfgroups.Group{}
@@ -190,7 +190,7 @@ func toViewGroupRes(group mfgroups.Group) viewGroupRes {
 	return view
 }
 
-func buildGroupsResponse(gp groups.GroupsPage) groupPageRes {
+func buildGroupsResponse(gp mfgroups.GroupsPage) groupPageRes {
 	res := groupPageRes{
 		pageRes: pageRes{
 			Total: gp.Total,

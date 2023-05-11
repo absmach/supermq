@@ -12,10 +12,9 @@ import (
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfgroups "github.com/mainflux/mainflux/pkg/groups"
-	"github.com/mainflux/mainflux/users/groups"
 )
 
-var _ groups.GroupRepository = (*groupRepository)(nil)
+var _ mfgroups.Repository = (*groupRepository)(nil)
 
 type groupRepository struct {
 	db postgres.Database
@@ -23,7 +22,7 @@ type groupRepository struct {
 
 // NewGroupRepo instantiates a PostgreSQL implementation of group
 // repository.
-func NewGroupRepo(db postgres.Database) groups.GroupRepository {
+func NewGroupRepo(db postgres.Database) mfgroups.Repository {
 	return &groupRepository{
 		db: db,
 	}
@@ -81,11 +80,11 @@ func (repo groupRepository) RetrieveByID(ctx context.Context, id string) (mfgrou
 
 }
 
-func (repo groupRepository) RetrieveAll(ctx context.Context, gm groups.GroupsPage) (groups.GroupsPage, error) {
+func (repo groupRepository) RetrieveAll(ctx context.Context, gm mfgroups.GroupsPage) (mfgroups.GroupsPage, error) {
 	var q string
 	query, err := buildQuery(gm)
 	if err != nil {
-		return groups.GroupsPage{}, err
+		return mfgroups.GroupsPage{}, err
 	}
 
 	if gm.ID != "" {
@@ -99,11 +98,11 @@ func (repo groupRepository) RetrieveAll(ctx context.Context, gm groups.GroupsPag
 
 	dbPage, err := toDBGroupPage(gm)
 	if err != nil {
-		return groups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
+		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
 	}
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
-		return groups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
+		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
 	}
 	defer rows.Close()
 
@@ -111,11 +110,11 @@ func (repo groupRepository) RetrieveAll(ctx context.Context, gm groups.GroupsPag
 	for rows.Next() {
 		dbg := dbGroup{}
 		if err := rows.StructScan(&dbg); err != nil {
-			return groups.GroupsPage{}, err
+			return mfgroups.GroupsPage{}, err
 		}
 		group, err := toGroup(dbg)
 		if err != nil {
-			return groups.GroupsPage{}, err
+			return mfgroups.GroupsPage{}, err
 		}
 		items = append(items, group)
 	}
@@ -127,7 +126,7 @@ func (repo groupRepository) RetrieveAll(ctx context.Context, gm groups.GroupsPag
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbPage)
 	if err != nil {
-		return groups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
+		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
 	}
 
 	page := gm
@@ -137,11 +136,11 @@ func (repo groupRepository) RetrieveAll(ctx context.Context, gm groups.GroupsPag
 	return page, nil
 }
 
-func (repo groupRepository) Memberships(ctx context.Context, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
+func (repo groupRepository) Memberships(ctx context.Context, clientID string, gm mfgroups.GroupsPage) (mfgroups.MembershipsPage, error) {
 	var q string
 	query, err := buildQuery(gm)
 	if err != nil {
-		return groups.MembershipsPage{}, err
+		return mfgroups.MembershipsPage{}, err
 	}
 	if gm.ID != "" {
 		q = buildHierachy(gm)
@@ -160,12 +159,12 @@ func (repo groupRepository) Memberships(ctx context.Context, clientID string, gm
 
 	dbPage, err := toDBGroupPage(gm)
 	if err != nil {
-		return groups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
+		return mfgroups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
 	}
 	dbPage.ClientID = clientID
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
-		return groups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
+		return mfgroups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
 	}
 	defer rows.Close()
 
@@ -173,11 +172,11 @@ func (repo groupRepository) Memberships(ctx context.Context, clientID string, gm
 	for rows.Next() {
 		dbg := dbGroup{}
 		if err := rows.StructScan(&dbg); err != nil {
-			return groups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
+			return mfgroups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
 		}
 		group, err := toGroup(dbg)
 		if err != nil {
-			return groups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
+			return mfgroups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
 		}
 		items = append(items, group)
 	}
@@ -187,11 +186,11 @@ func (repo groupRepository) Memberships(ctx context.Context, clientID string, gm
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbPage)
 	if err != nil {
-		return groups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
+		return mfgroups.MembershipsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembership, err)
 	}
-	page := groups.MembershipsPage{
+	page := mfgroups.MembershipsPage{
 		Memberships: items,
-		Page: groups.Page{
+		Page: mfgroups.Page{
 			Total: total,
 		},
 	}
@@ -265,7 +264,7 @@ func (repo groupRepository) ChangeStatus(ctx context.Context, group mfgroups.Gro
 	return toGroup(dbg)
 }
 
-func buildHierachy(gm groups.GroupsPage) string {
+func buildHierachy(gm mfgroups.GroupsPage) string {
 	query := ""
 	switch {
 	case gm.Direction >= 0: // ancestors
@@ -284,7 +283,7 @@ func buildHierachy(gm groups.GroupsPage) string {
 	}
 	return query
 }
-func buildQuery(gm groups.GroupsPage) (string, error) {
+func buildQuery(gm mfgroups.GroupsPage) (string, error) {
 	queries := []string{}
 
 	if gm.Name != "" {
@@ -393,7 +392,7 @@ func toGroup(g dbGroup) (mfgroups.Group, error) {
 	}, nil
 }
 
-func toDBGroupPage(pm groups.GroupsPage) (dbGroupPage, error) {
+func toDBGroupPage(pm mfgroups.GroupsPage) (dbGroupPage, error) {
 	level := mfgroups.MaxLevel
 	if pm.Level < mfgroups.MaxLevel {
 		level = pm.Level

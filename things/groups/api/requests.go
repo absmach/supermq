@@ -4,7 +4,6 @@ import (
 	"github.com/mainflux/mainflux/internal/api"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	mfgroups "github.com/mainflux/mainflux/pkg/groups"
-	"github.com/mainflux/mainflux/things/groups"
 )
 
 type createGroupReq struct {
@@ -79,7 +78,7 @@ func (req updateGroupReq) validate() error {
 }
 
 type listGroupsReq struct {
-	groups.GroupsPage
+	mfgroups.GroupsPage
 	token string
 	// - `true`  - result is JSON tree representing groups hierarchy,
 	// - `false` - result is JSON array of groups.
@@ -95,7 +94,7 @@ func (req listGroupsReq) validate() error {
 }
 
 type listMembershipReq struct {
-	groups.GroupsPage
+	mfgroups.GroupsPage
 	token    string
 	clientID string
 }

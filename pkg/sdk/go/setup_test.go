@@ -15,7 +15,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/users/clients"
 	umocks "github.com/mainflux/mainflux/users/clients/mocks"
-	"github.com/mainflux/mainflux/users/groups"
 	"github.com/mainflux/mainflux/users/hasher"
 	"github.com/mainflux/mainflux/users/policies"
 	"github.com/stretchr/testify/assert"
@@ -132,9 +131,9 @@ func convertPolicy(sp sdk.Policy) policies.Policy {
 	}
 }
 
-func convertMembershipsPage(m sdk.MembershipsPage) groups.MembershipsPage {
-	return groups.MembershipsPage{
-		Page: groups.Page{
+func convertMembershipsPage(m sdk.MembershipsPage) mfgroups.MembershipsPage {
+	return mfgroups.MembershipsPage{
+		Page: mfgroups.Page{
 			Limit:  m.Limit,
 			Total:  m.Total,
 			Offset: m.Offset,

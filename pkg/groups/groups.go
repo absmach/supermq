@@ -1,6 +1,7 @@
 package groups
 
 import (
+	"context"
 	"time"
 
 	"github.com/mainflux/mainflux/pkg/clients"
@@ -31,4 +32,43 @@ type Group struct {
 	UpdatedAt   time.Time        `json:"updated_at"`
 	UpdatedBy   string           `json:"updated_by"`
 	Status      clients.Status   `json:"status"`
+}
+
+// MembershipsPage contains page related metadata as well as list of memberships that
+// belong to this page.
+type MembershipsPage struct {
+	Page
+	Memberships []Group
+}
+
+// GroupsPage contains page related metadata as well as list
+// of Groups that belong to the page.
+type GroupsPage struct {
+	Page
+	Path      string
+	Level     uint64
+	ID        string
+	Direction int64 // ancestors (-1) or descendants (+1)
+	Groups    []Group
+}
+
+// Repository specifies a group persistence API.
+type Repository interface {
+	// Save group.
+	Save(ctx context.Context, g Group) (Group, error)
+
+	// Update a group.
+	Update(ctx context.Context, g Group) (Group, error)
+
+	// RetrieveByID retrieves group by its id.
+	RetrieveByID(ctx context.Context, id string) (Group, error)
+
+	// RetrieveAll retrieves all groups.
+	RetrieveAll(ctx context.Context, gm GroupsPage) (GroupsPage, error)
+
+	// Memberships retrieves everything that is assigned to a group identified by clientID.
+	Memberships(ctx context.Context, clientID string, gm GroupsPage) (MembershipsPage, error)
+
+	// ChangeStatus changes groups status to active or inactive
+	ChangeStatus(ctx context.Context, group Group) (Group, error)
 }

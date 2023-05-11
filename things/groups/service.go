@@ -23,12 +23,12 @@ const (
 
 type service struct {
 	auth       upolicies.AuthServiceClient
-	groups     Repository
+	groups     groups.Repository
 	idProvider mainflux.IDProvider
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(auth upolicies.AuthServiceClient, g Repository, idp mainflux.IDProvider) Service {
+func NewService(auth upolicies.AuthServiceClient, g groups.Repository, idp mainflux.IDProvider) Service {
 	return service{
 		auth:       auth,
 		groups:     g,
@@ -78,17 +78,17 @@ func (svc service) ViewGroup(ctx context.Context, token string, id string) (grou
 	return svc.groups.RetrieveByID(ctx, id)
 }
 
-func (svc service) ListGroups(ctx context.Context, token string, gm GroupsPage) (GroupsPage, error) {
+func (svc service) ListGroups(ctx context.Context, token string, gm groups.GroupsPage) (groups.GroupsPage, error) {
 	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
 	if err != nil {
-		return GroupsPage{}, errors.Wrap(errors.ErrAuthentication, err)
+		return groups.GroupsPage{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 
 	// If the user is admin, fetch all channels from the database.
 	if err := svc.authorize(ctx, token, thingsObjectKey, listRelationKey); err == nil {
 		page, err := svc.groups.RetrieveAll(ctx, gm)
 		if err != nil {
-			return GroupsPage{}, err
+			return groups.GroupsPage{}, err
 		}
 		return page, err
 	}
@@ -99,10 +99,10 @@ func (svc service) ListGroups(ctx context.Context, token string, gm GroupsPage) 
 	return svc.groups.RetrieveAll(ctx, gm)
 }
 
-func (svc service) ListMemberships(ctx context.Context, token, clientID string, gm GroupsPage) (MembershipsPage, error) {
+func (svc service) ListMemberships(ctx context.Context, token, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
 	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
 	if err != nil {
-		return MembershipsPage{}, errors.Wrap(errors.ErrAuthentication, err)
+		return groups.MembershipsPage{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 
 	// If the user is admin, fetch all channels from the database.

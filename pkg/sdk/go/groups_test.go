@@ -248,7 +248,7 @@ func TestListGroups(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := gRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(groups.GroupsPage{Groups: convertGroups(tc.response)}, tc.err)
+		repoCall := gRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(mfgroups.GroupsPage{Groups: convertGroups(tc.response)}, tc.err)
 		pm := sdk.PageMetadata{}
 		page, err := groupSDK.Groups(pm, generateValidToken(t, csvc, cRepo))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))

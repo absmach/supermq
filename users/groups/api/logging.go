@@ -57,7 +57,7 @@ func (lm *loggingMiddleware) ViewGroup(ctx context.Context, token, id string) (g
 	return lm.svc.ViewGroup(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) ListGroups(ctx context.Context, token string, gp groups.GroupsPage) (cg groups.GroupsPage, err error) {
+func (lm *loggingMiddleware) ListGroups(ctx context.Context, token string, gp mfgroups.GroupsPage) (cg mfgroups.GroupsPage, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method list_groups %d groups using token %s took %s to complete", cg.Total, token, time.Since(begin))
 		if err != nil {
@@ -93,7 +93,7 @@ func (lm *loggingMiddleware) DisableGroup(ctx context.Context, token, id string)
 	return lm.svc.DisableGroup(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) ListMemberships(ctx context.Context, token, clientID string, cp groups.GroupsPage) (mp groups.MembershipsPage, err error) {
+func (lm *loggingMiddleware) ListMemberships(ctx context.Context, token, clientID string, cp mfgroups.GroupsPage) (mp mfgroups.MembershipsPage, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method list_memberships for client with id %s using token %s took %s to complete", clientID, token, time.Since(begin))
 		if err != nil {

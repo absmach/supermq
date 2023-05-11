@@ -318,8 +318,8 @@ func TestListGroups(t *testing.T) {
 		desc     string
 		token    string
 		size     uint64
-		response groups.GroupsPage
-		page     groups.GroupsPage
+		response mfgroups.GroupsPage
+		page     mfgroups.GroupsPage
 		err      error
 	}{
 		{
@@ -327,15 +327,15 @@ func TestListGroups(t *testing.T) {
 			token: token,
 			size:  nGroups,
 			err:   nil,
-			page: groups.GroupsPage{
-				Page: groups.Page{
+			page: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Offset: 0,
 					Total:  nGroups,
 					Limit:  nGroups,
 				},
 			},
-			response: groups.GroupsPage{
-				Page: groups.Page{
+			response: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Offset: 0,
 					Total:  nGroups,
 					Limit:  nGroups,
@@ -348,15 +348,15 @@ func TestListGroups(t *testing.T) {
 			token: token,
 			size:  150,
 			err:   nil,
-			page: groups.GroupsPage{
-				Page: groups.Page{
+			page: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Offset: 50,
 					Total:  nGroups,
 					Limit:  nGroups,
 				},
 			},
-			response: groups.GroupsPage{
-				Page: groups.Page{
+			response: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Offset: 0,
 					Total:  150,
 					Limit:  nGroups,
@@ -434,14 +434,14 @@ func TestEnableGroup(t *testing.T) {
 		desc     string
 		status   mfclients.Status
 		size     uint64
-		response groups.GroupsPage
+		response mfgroups.GroupsPage
 	}{
 		{
 			desc:   "list activated groups",
 			status: mfclients.EnabledStatus,
 			size:   2,
-			response: groups.GroupsPage{
-				Page: groups.Page{
+			response: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:  2,
 					Offset: 0,
 					Limit:  100,
@@ -453,8 +453,8 @@ func TestEnableGroup(t *testing.T) {
 			desc:   "list deactivated groups",
 			status: mfclients.DisabledStatus,
 			size:   1,
-			response: groups.GroupsPage{
-				Page: groups.Page{
+			response: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:  1,
 					Offset: 0,
 					Limit:  100,
@@ -466,8 +466,8 @@ func TestEnableGroup(t *testing.T) {
 			desc:   "list activated and deactivated groups",
 			status: mfclients.AllStatus,
 			size:   3,
-			response: groups.GroupsPage{
-				Page: groups.Page{
+			response: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:  3,
 					Offset: 0,
 					Limit:  100,
@@ -478,8 +478,8 @@ func TestEnableGroup(t *testing.T) {
 	}
 
 	for _, tc := range casesDisabled {
-		pm := groups.GroupsPage{
-			Page: groups.Page{
+		pm := mfgroups.GroupsPage{
+			Page: mfgroups.Page{
 				Offset: 0,
 				Limit:  100,
 				Status: tc.status,
@@ -552,14 +552,14 @@ func TestDisableGroup(t *testing.T) {
 		desc     string
 		status   mfclients.Status
 		size     uint64
-		response groups.GroupsPage
+		response mfgroups.GroupsPage
 	}{
 		{
 			desc:   "list activated groups",
 			status: mfclients.EnabledStatus,
 			size:   1,
-			response: groups.GroupsPage{
-				Page: groups.Page{
+			response: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:  1,
 					Offset: 0,
 					Limit:  100,
@@ -571,8 +571,8 @@ func TestDisableGroup(t *testing.T) {
 			desc:   "list deactivated groups",
 			status: mfclients.DisabledStatus,
 			size:   2,
-			response: groups.GroupsPage{
-				Page: groups.Page{
+			response: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:  2,
 					Offset: 0,
 					Limit:  100,
@@ -584,8 +584,8 @@ func TestDisableGroup(t *testing.T) {
 			desc:   "list activated and deactivated groups",
 			status: mfclients.AllStatus,
 			size:   3,
-			response: groups.GroupsPage{
-				Page: groups.Page{
+			response: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:  3,
 					Offset: 0,
 					Limit:  100,
@@ -596,8 +596,8 @@ func TestDisableGroup(t *testing.T) {
 	}
 
 	for _, tc := range casesEnabled {
-		pm := groups.GroupsPage{
-			Page: groups.Page{
+		pm := mfgroups.GroupsPage{
+			Page: mfgroups.Page{
 				Offset: 0,
 				Limit:  100,
 				Status: tc.status,
@@ -632,23 +632,23 @@ func TestListMemberships(t *testing.T) {
 		desc     string
 		token    string
 		clientID string
-		page     groups.GroupsPage
-		response groups.MembershipsPage
+		page     mfgroups.GroupsPage
+		response mfgroups.MembershipsPage
 		err      error
 	}{
 		{
 			desc:     "list clients with authorized token",
 			token:    token,
 			clientID: testsutil.GenerateUUID(t, idProvider),
-			page: groups.GroupsPage{
-				Page: groups.Page{
+			page: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Action:  "g_list",
 					Subject: adminEmail,
 					OwnerID: adminEmail,
 				},
 			},
-			response: groups.MembershipsPage{
-				Page: groups.Page{
+			response: mfgroups.MembershipsPage{
+				Page: mfgroups.Page{
 					Total:  nGroups,
 					Offset: 0,
 					Limit:  0,
@@ -661,8 +661,8 @@ func TestListMemberships(t *testing.T) {
 			desc:     "list clients with offset and limit",
 			token:    token,
 			clientID: testsutil.GenerateUUID(t, idProvider),
-			page: groups.GroupsPage{
-				Page: groups.Page{
+			page: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Offset:  6,
 					Total:   nGroups,
 					Limit:   nGroups,
@@ -672,8 +672,8 @@ func TestListMemberships(t *testing.T) {
 					Action:  "g_list",
 				},
 			},
-			response: groups.MembershipsPage{
-				Page: groups.Page{
+			response: mfgroups.MembershipsPage{
+				Page: mfgroups.Page{
 					Total: nGroups - 6,
 				},
 				Memberships: aGroups[6:nGroups],
@@ -683,15 +683,15 @@ func TestListMemberships(t *testing.T) {
 			desc:     "list clients with an invalid token",
 			token:    inValidToken,
 			clientID: testsutil.GenerateUUID(t, idProvider),
-			page: groups.GroupsPage{
-				Page: groups.Page{
+			page: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Action:  "g_list",
 					Subject: adminEmail,
 					OwnerID: adminEmail,
 				},
 			},
-			response: groups.MembershipsPage{
-				Page: groups.Page{
+			response: mfgroups.MembershipsPage{
+				Page: mfgroups.Page{
 					Total:  0,
 					Offset: 0,
 					Limit:  0,
@@ -703,15 +703,15 @@ func TestListMemberships(t *testing.T) {
 			desc:     "list clients with an invalid id",
 			token:    token,
 			clientID: mocks.WrongID,
-			page: groups.GroupsPage{
-				Page: groups.Page{
+			page: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Action:  "g_list",
 					Subject: adminEmail,
 					OwnerID: adminEmail,
 				},
 			},
-			response: groups.MembershipsPage{
-				Page: groups.Page{
+			response: mfgroups.MembershipsPage{
+				Page: mfgroups.Page{
 					Total:  0,
 					Offset: 0,
 					Limit:  0,

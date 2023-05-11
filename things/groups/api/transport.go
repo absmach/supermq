@@ -125,10 +125,10 @@ func decodeListMembershipRequest(_ context.Context, r *http.Request) (interface{
 	req := listMembershipReq{
 		token:    apiutil.ExtractBearerToken(r),
 		clientID: bone.GetValue(r, "thingID"),
-		GroupsPage: groups.GroupsPage{
+		GroupsPage: mfgroups.GroupsPage{
 			Level: level,
 			ID:    parentID,
-			Page: groups.Page{
+			Page: mfgroups.Page{
 				Offset:   offset,
 				Limit:    limit,
 				OwnerID:  ownerID,
@@ -191,10 +191,10 @@ func decodeListGroupsRequest(_ context.Context, r *http.Request) (interface{}, e
 	req := listGroupsReq{
 		token: apiutil.ExtractBearerToken(r),
 		tree:  tree,
-		GroupsPage: groups.GroupsPage{
+		GroupsPage: mfgroups.GroupsPage{
 			Level: level,
 			ID:    parentID,
-			Page: groups.Page{
+			Page: mfgroups.Page{
 				Offset:   offset,
 				Limit:    limit,
 				OwnerID:  ownerID,

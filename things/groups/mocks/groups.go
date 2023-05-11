@@ -6,13 +6,12 @@ import (
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfgroups "github.com/mainflux/mainflux/pkg/groups"
-	"github.com/mainflux/mainflux/things/groups"
 	"github.com/stretchr/testify/mock"
 )
 
 const WrongID = "wrongID"
 
-var _ groups.Repository = (*GroupRepository)(nil)
+var _ mfgroups.Repository = (*GroupRepository)(nil)
 
 type GroupRepository struct {
 	mock.Mock
@@ -31,20 +30,20 @@ func (m *GroupRepository) ChangeStatus(ctx context.Context, group mfgroups.Group
 	return ret.Get(0).(mfgroups.Group), ret.Error(1)
 }
 
-func (m *GroupRepository) Memberships(ctx context.Context, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
+func (m *GroupRepository) Memberships(ctx context.Context, clientID string, gm mfgroups.GroupsPage) (mfgroups.MembershipsPage, error) {
 	ret := m.Called(ctx, clientID, gm)
 
 	if clientID == WrongID {
-		return groups.MembershipsPage{}, errors.ErrNotFound
+		return mfgroups.MembershipsPage{}, errors.ErrNotFound
 	}
 
-	return ret.Get(0).(groups.MembershipsPage), ret.Error(1)
+	return ret.Get(0).(mfgroups.MembershipsPage), ret.Error(1)
 }
 
-func (m *GroupRepository) RetrieveAll(ctx context.Context, gm groups.GroupsPage) (groups.GroupsPage, error) {
+func (m *GroupRepository) RetrieveAll(ctx context.Context, gm mfgroups.GroupsPage) (mfgroups.GroupsPage, error) {
 	ret := m.Called(ctx, gm)
 
-	return ret.Get(0).(groups.GroupsPage), ret.Error(1)
+	return ret.Get(0).(mfgroups.GroupsPage), ret.Error(1)
 }
 
 func (m *GroupRepository) RetrieveByID(ctx context.Context, id string) (mfgroups.Group, error) {

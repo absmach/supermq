@@ -14,7 +14,6 @@ import (
 	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	cpostgres "github.com/mainflux/mainflux/users/clients/postgres"
-	"github.com/mainflux/mainflux/users/groups"
 	gpostgres "github.com/mainflux/mainflux/users/groups/postgres"
 	"github.com/mainflux/mainflux/users/policies"
 	ppostgres "github.com/mainflux/mainflux/users/policies/postgres"
@@ -252,11 +251,11 @@ func TestGroupRetrieveAll(t *testing.T) {
 
 	cases := map[string]struct {
 		Size     uint64
-		Metadata groups.GroupsPage
+		Metadata mfgroups.GroupsPage
 	}{
 		"retrieve all groups": {
-			Metadata: groups.GroupsPage{
-				Page: groups.Page{
+			Metadata: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:  nGroups,
 					Limit:  nGroups,
 					Status: mfclients.AllStatus,
@@ -266,8 +265,8 @@ func TestGroupRetrieveAll(t *testing.T) {
 			Size: nGroups,
 		},
 		"retrieve all groups with offset": {
-			Metadata: groups.GroupsPage{
-				Page: groups.Page{
+			Metadata: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:  nGroups,
 					Offset: 50,
 					Limit:  nGroups,
@@ -278,8 +277,8 @@ func TestGroupRetrieveAll(t *testing.T) {
 			Size: nGroups - 50,
 		},
 		"retrieve all groups with limit": {
-			Metadata: groups.GroupsPage{
-				Page: groups.Page{
+			Metadata: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:  nGroups,
 					Offset: 0,
 					Limit:  50,
@@ -290,8 +289,8 @@ func TestGroupRetrieveAll(t *testing.T) {
 			Size: 50,
 		},
 		"retrieve all groups with offset and limit": {
-			Metadata: groups.GroupsPage{
-				Page: groups.Page{
+			Metadata: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:  nGroups,
 					Offset: 50,
 					Limit:  50,
@@ -302,8 +301,8 @@ func TestGroupRetrieveAll(t *testing.T) {
 			Size: 50,
 		},
 		"retrieve all groups with offset greater than limit": {
-			Metadata: groups.GroupsPage{
-				Page: groups.Page{
+			Metadata: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:  nGroups,
 					Offset: 250,
 					Limit:  nGroups,
@@ -314,8 +313,8 @@ func TestGroupRetrieveAll(t *testing.T) {
 			Size: 0,
 		},
 		"retrieve all groups with owner id": {
-			Metadata: groups.GroupsPage{
-				Page: groups.Page{
+			Metadata: mfgroups.GroupsPage{
+				Page: mfgroups.Page{
 					Total:   nGroups,
 					Limit:   nGroups,
 					Subject: ownerID,
@@ -525,7 +524,7 @@ func TestClientsMemberships(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		mp, err := grepo.Memberships(context.Background(), tc.ID, groups.GroupsPage{Page: groups.Page{Total: 10, Offset: 0, Limit: 10, Status: mfclients.AllStatus, Subject: clientB.ID, Action: "g_list"}})
+		mp, err := grepo.Memberships(context.Background(), tc.ID, mfgroups.GroupsPage{Page: mfgroups.Page{Total: 10, Offset: 0, Limit: 10, Status: mfclients.AllStatus, Subject: clientB.ID, Action: "g_list"}})
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 		if tc.ID == clientA.ID {
 			assert.ElementsMatch(t, mp.Memberships, []mfgroups.Group{group}, fmt.Sprintf("%s: expected %v got %v\n", desc, []mfgroups.Group{group}, mp.Memberships))

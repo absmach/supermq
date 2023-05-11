@@ -36,7 +36,7 @@ func (tm *tracingMiddleware) ViewGroup(ctx context.Context, token string, id str
 
 }
 
-func (tm *tracingMiddleware) ListGroups(ctx context.Context, token string, gm groups.GroupsPage) (groups.GroupsPage, error) {
+func (tm *tracingMiddleware) ListGroups(ctx context.Context, token string, gm mfgroups.GroupsPage) (mfgroups.GroupsPage, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_list_groups")
 	defer span.End()
 
@@ -44,7 +44,7 @@ func (tm *tracingMiddleware) ListGroups(ctx context.Context, token string, gm gr
 
 }
 
-func (tm *tracingMiddleware) ListMemberships(ctx context.Context, token, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
+func (tm *tracingMiddleware) ListMemberships(ctx context.Context, token, clientID string, gm mfgroups.GroupsPage) (mfgroups.MembershipsPage, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_list_memberships")
 	defer span.End()
 	return tm.gsvc.ListMemberships(ctx, token, clientID, gm)

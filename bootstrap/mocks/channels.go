@@ -58,11 +58,11 @@ func (svc *mainfluxChannels) ViewGroup(_ context.Context, owner, id string) (mfg
 	return mfgroups.Group{}, errors.ErrNotFound
 }
 
-func (svc *mainfluxChannels) ListGroups(context.Context, string, groups.GroupsPage) (groups.GroupsPage, error) {
+func (svc *mainfluxChannels) ListGroups(context.Context, string, mfgroups.GroupsPage) (mfgroups.GroupsPage, error) {
 	panic("not implemented")
 }
 
-func (svc *mainfluxChannels) ListMemberships(context.Context, string, string, groups.GroupsPage) (groups.MembershipsPage, error) {
+func (svc *mainfluxChannels) ListMemberships(context.Context, string, string, mfgroups.GroupsPage) (mfgroups.MembershipsPage, error) {
 	panic("not implemented")
 }
 
