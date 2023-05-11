@@ -72,7 +72,7 @@ func (pr policyRepository) Evaluate(ctx context.Context, entityType string, poli
 		// Evaluates if two clients are connected to the same group and the subject has the specified action
 		// or subject is the owner of the object
 		q = fmt.Sprintf(`SELECT COALESCE(p.subject, c.id) as subject FROM policies p
-		JOIN policies p2 ON p.object = p2.object LEFT JOIN clients c ON c.owner = :subject AND c.id = :object
+		JOIN policies p2 ON p.object = p2.object LEFT JOIN clients c ON c.owner_id = :subject AND c.id = :object
 		WHERE (p.subject = :subject AND p2.subject = :object AND '%s' = ANY(p.actions)) OR (c.id IS NOT NULL) LIMIT 1;`,
 			policy.Actions[0])
 	case "group":
