@@ -120,9 +120,6 @@ var (
 	// ErrMissingPolicyEntityType indicates malformed policy entity type
 	ErrMissingPolicyEntityType = errors.New("malformed or missing entity type")
 
-	// ErrHigherPolicyRank indicates that policies is not the same ranking with parsed policy.
-	ErrHigherPolicyRank = errors.New("policy is of a higher rank that of the client")
-
 	// ErrMissingName indicates missing identity name.
 	ErrMissingName = errors.New("missing identity name")
 

@@ -8,7 +8,23 @@ import (
 )
 
 // PolicyTypes contains a list of the available policy types currently supported
-var PolicyTypes = []string{"c_delete", "c_update", "c_add", "c_list", "g_delete", "g_update", "g_add", "g_list", "m_write", "m_read"}
+// They are arranged in the following order based on their priority:
+//
+// Group policies
+//  1. g_add - adds a member to a group
+//  2. g_delete - delete a group
+//  3. g_update - update a group
+//  4. g_list - list groups and their members
+//
+// Client policies
+//  5. c_delete - delete a client
+//  6. c_update - update a client
+//  8. c_list - list clients
+//
+// Message policies
+//  9. m_write - write a message
+//  10. m_read - read a message
+var PolicyTypes = []string{"g_add", "g_delete", "g_update", "g_list", "c_delete", "c_update", "c_list", "m_write", "m_read"}
 
 // Policy represents an argument struct for making a policy related function calls.
 type Policy struct {
@@ -36,6 +52,12 @@ type PolicyRepository interface {
 
 	// CheckAdmin checks if the user is an admin user
 	CheckAdmin(ctx context.Context, id string) error
+
+	// CheckClientOwner checks if the user is the owner of the client
+	CheckClientOwner(ctx context.Context, id, owner string) error
+
+	// CheckGroupOwner checks if the user is the owner of the group
+	CheckGroupOwner(ctx context.Context, id, owner string) error
 
 	// Evaluate is used to evaluate if you have the correct permissions.
 	// We evaluate if we are in the same group first then evaluate if the

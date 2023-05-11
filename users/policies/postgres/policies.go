@@ -65,6 +65,34 @@ func (pr policyRepository) CheckAdmin(ctx context.Context, id string) error {
 	return nil
 }
 
+func (pr policyRepository) CheckClientOwner(ctx context.Context, id, owner string) error {
+	q := fmt.Sprintf(`SELECT id FROM clients WHERE id = '%s' AND owner = '%s';`, id, owner)
+
+	var clientID string
+	if err := pr.db.QueryRowxContext(ctx, q).Scan(&clientID); err != nil {
+		return errors.Wrap(errors.ErrAuthorization, err)
+	}
+	if clientID == "" {
+		return errors.ErrAuthorization
+	}
+
+	return nil
+}
+
+func (pr policyRepository) CheckGroupOwner(ctx context.Context, id, owner string) error {
+	q := fmt.Sprintf(`SELECT id FROM group WHERE id = '%s' AND owner_id = '%s';`, id, owner)
+
+	var clientID string
+	if err := pr.db.QueryRowxContext(ctx, q).Scan(&clientID); err != nil {
+		return errors.Wrap(errors.ErrAuthorization, err)
+	}
+	if clientID == "" {
+		return errors.ErrAuthorization
+	}
+
+	return nil
+}
+
 func (pr policyRepository) Evaluate(ctx context.Context, entityType string, policy policies.Policy) error {
 	q := ""
 	switch entityType {
