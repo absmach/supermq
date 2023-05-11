@@ -2,7 +2,6 @@ package clients
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -64,7 +63,7 @@ type MembersPage struct {
 	Members []Client
 }
 
-// ClientRepository specifies an account persistence API.
+// Repository specifies an account persistence API.
 type Repository interface {
 	// Save persists the client account. A non-nil error is returned to indicate
 	// operation failure.
@@ -101,17 +100,6 @@ type Repository interface {
 	ChangeStatus(ctx context.Context, client Client) (Client, error)
 
 	RetrieveBySecret(ctx context.Context, key string) (Client, error)
-}
-
-func (r Role) MarshalJSON() ([]byte, error) {
-	return json.Marshal(r.String())
-}
-
-func (r *Role) UnmarshalJSON(data []byte) error {
-	str := strings.Trim(string(data), "\"")
-	val, err := ToRole(str)
-	*r = val
-	return err
 }
 
 // Validate returns an error if client representation is invalid.
