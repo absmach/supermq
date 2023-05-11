@@ -123,7 +123,6 @@ func (o *Options) LogLevel() uint {
 //   - WarningLevel
 //   - InfoLevel
 //   - DebugLevel
-//
 // The DebugLevel will print also content of writen batches, queries.
 // The InfoLevel prints HTTP requests info, among others.
 // Set log.Log to nil in order to completely disable logging.
