@@ -87,7 +87,7 @@ func TestAddPolicy(t *testing.T) {
 			policy: policies.Policy{
 				Subject: testsutil.GenerateUUID(t, idProvider),
 				Object:  testsutil.GenerateUUID(t, idProvider),
-				Actions: []string{"c_delete", "c_update", "c_add", "c_list"},
+				Actions: []string{"c_delete", "c_update", "c_list"},
 			},
 			err:   nil,
 			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
@@ -242,14 +242,12 @@ func TestDeletePolicy(t *testing.T) {
 
 	pr := policies.Policy{Object: authoritiesObj, Actions: memberActions, Subject: testsutil.GenerateUUID(t, idProvider)}
 
-	repoCall := pRepo.On("Delete", context.Background(), pr).Return(nil)
-	repoCall1 := pRepo.On("Retrieve", context.Background(), mock.Anything).Return(policies.PolicyPage{Policies: []policies.Policy{pr}}, nil)
+	repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
+	repoCall1 := pRepo.On("Delete", context.Background(), pr).Return(nil)
 	err := svc.DeletePolicy(context.Background(), testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher), pr)
 	require.Nil(t, err, fmt.Sprintf("deleting %v policy expected to succeed: %s", pr, err))
 	ok := repoCall.Parent.AssertCalled(t, "Delete", context.Background(), pr)
 	assert.True(t, ok, "Delete was not called on deleting policy")
-	ok = repoCall1.Parent.AssertCalled(t, "Retrieve", context.Background(), mock.Anything)
-	assert.True(t, ok, "Retrieve was not called on deleting policy")
 	repoCall.Unset()
 	repoCall1.Unset()
 }
@@ -391,8 +389,9 @@ func TestUpdatePolicies(t *testing.T) {
 
 	for _, tc := range cases {
 		policy.Actions = tc.action
-		repoCall := pRepo.On("Retrieve", context.Background(), mock.Anything).Return(policies.PolicyPage{Policies: []policies.Policy{policy}}, nil)
-		repoCall1 := pRepo.On("Update", context.Background(), mock.Anything).Return(tc.err)
+		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
+		repoCall1 := pRepo.On("Retrieve", context.Background(), mock.Anything).Return(policies.PolicyPage{Policies: []policies.Policy{policy}}, nil)
+		repoCall2 := pRepo.On("Update", context.Background(), mock.Anything).Return(tc.err)
 		err := svc.UpdatePolicy(context.Background(), tc.token, policy)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if tc.err == nil {
@@ -401,5 +400,6 @@ func TestUpdatePolicies(t *testing.T) {
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
+		repoCall2.Unset()
 	}
 }

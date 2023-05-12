@@ -1080,7 +1080,6 @@ func TestEnableClient(t *testing.T) {
 			Limit:  100,
 			Status: tc.status,
 		}
-
 		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
 		repoCall1 := cRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(convertClientsPage(tc.response), nil)
 		clientsPage, err := clientSDK.Users(pm, generateValidToken(t, svc, cRepo))
