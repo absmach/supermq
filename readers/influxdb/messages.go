@@ -110,7 +110,6 @@ func (repo *influxRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 }
 
 func (repo *influxRepository) count(measurement, condition string, timeRange string) (uint64, error) {
-
 	cmd := fmt.Sprintf(`
 	import "influxdata/influxdb/v1"
 	import "strings"
@@ -205,10 +204,19 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) (string, string) {
 		case "vs":
 			comparator := readers.ParseValueComparator(query)
 			sb.WriteString(`|> filter(fn: (r) => exists r.stringValue)`)
-			if comparator == "=" || comparator == "<" || comparator == "<=" {
-				sb.WriteString(fmt.Sprintf(`|> filter(fn: (r) => strings.containsStr(v: r.stringValue, substr: "%s") == true)`, value))
-			} else {
+			switch comparator {
+			case "=":
+				sb.WriteString(fmt.Sprintf(`|> filter(fn: (r) =>  r.stringValue == "%s")`, value))
+			case "<":
 				sb.WriteString(fmt.Sprintf(`|> filter(fn: (r) => strings.containsStr(v: "%s", substr: r.stringValue) == true)`, value))
+				sb.WriteString(fmt.Sprintf(`|> filter(fn: (r) =>  r.stringValue !="%s")`, value))
+			case "<=":
+				sb.WriteString(fmt.Sprintf(`|> filter(fn: (r) => strings.containsStr(v: "%s", substr: r.stringValue) == true)`, value))
+			case ">":
+				sb.WriteString(fmt.Sprintf(`|> filter(fn: (r) => strings.containsStr(v: r.stringValue, substr: "%s") == true)`, value))
+				sb.WriteString(fmt.Sprintf(`|> filter(fn: (r) =>  r.stringValue != "%s")`, value))
+			case ">=":
+				sb.WriteString(fmt.Sprintf(`|> filter(fn: (r) => strings.containsStr(v: r.stringValue, substr: "%s") == true)`, value))
 			}
 		case "vd":
 			comparator := readers.ParseValueComparator(query)

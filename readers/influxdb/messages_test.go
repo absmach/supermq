@@ -36,7 +36,7 @@ const (
 
 var (
 	v   float64 = 5
-	vs  string  = "a"
+	vs  string  = "value"
 	vb  bool    = true
 	vd  string  = "dataValue"
 	sum float64 = 42
@@ -362,20 +362,20 @@ func TestReadSenml(t *testing.T) {
 				Messages: fromSenml(stringMsgs[0:limit]),
 			},
 		},
-		// {
-		// 	desc:   "read message with string value and lower-than comparator",
-		// 	chanID: chanID,
-		// 	pageMeta: readers.PageMetadata{
-		// 		Offset:      0,
-		// 		Limit:       limit,
-		// 		StringValue: vs[:len(vs)-1],
-		// 		Comparator:  readers.LowerThanKey,
-		// 	},
-		// 	page: readers.MessagesPage{
-		// 		Total:    uint64(len(stringMsgs)),
-		// 		Messages: fromSenml(stringMsgs[0:limit]),
-		// 	},
-		// },
+		{
+			desc:   "read message with string value and lower-than comparator",
+			chanID: chanID,
+			pageMeta: readers.PageMetadata{
+				Offset:      0,
+				Limit:       limit,
+				StringValue: "strings and values",
+				Comparator:  readers.LowerThanKey,
+			},
+			page: readers.MessagesPage{
+				Total:    uint64(len(stringMsgs)),
+				Messages: fromSenml(stringMsgs[0:limit]),
+			},
+		},
 		{
 			desc:   "read message with string value and lower-than-or-equal comparator",
 			chanID: chanID,
@@ -396,7 +396,7 @@ func TestReadSenml(t *testing.T) {
 			pageMeta: readers.PageMetadata{
 				Offset:      0,
 				Limit:       limit,
-				StringValue: "strings and values",
+				StringValue: "alu",
 				Comparator:  readers.GreaterThanKey,
 			},
 			page: readers.MessagesPage{
@@ -410,7 +410,7 @@ func TestReadSenml(t *testing.T) {
 			pageMeta: readers.PageMetadata{
 				Offset:      0,
 				Limit:       limit,
-				StringValue: vs + string(rune(1)),
+				StringValue: vs,
 				Comparator:  readers.GreaterThanEqualKey,
 			},
 			page: readers.MessagesPage{
@@ -465,7 +465,7 @@ func TestReadSenml(t *testing.T) {
 			pageMeta: readers.PageMetadata{
 				Offset:     0,
 				Limit:      limit,
-				DataValue:  vd[:len(vs)-1] + string(rune(1)),
+				DataValue:  vd[:len(vd)-1] + string(rune(1)),
 				Comparator: readers.GreaterThanKey,
 			},
 			page: readers.MessagesPage{
