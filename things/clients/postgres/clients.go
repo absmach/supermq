@@ -11,9 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jackc/pgtype" // required for SQL access
+	// required for SQL access
+	"github.com/jackc/pgtype"
 	"github.com/mainflux/mainflux/internal/postgres"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
+	pgclients "github.com/mainflux/mainflux/pkg/clients/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/groups"
 )
@@ -22,13 +24,15 @@ var _ mfclients.Repository = (*clientRepo)(nil)
 
 type clientRepo struct {
 	db postgres.Database
+	pgclients.ClientRepository
 }
 
 // NewRepository instantiates a PostgreSQL
 // implementation of Clients repository.
 func NewRepository(db postgres.Database) mfclients.Repository {
 	return &clientRepo{
-		db: db,
+		db:               db,
+		ClientRepository: pgclients.ClientRepository{DB: db},
 	}
 }
 
@@ -48,7 +52,7 @@ func (repo clientRepo) Save(ctx context.Context, cs ...mfclients.Client) ([]mfcl
         VALUES (:id, :name, :tags, :owner_id, :identity, :secret, :metadata, :created_at, :updated_at, :updated_by, :status)
         RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at, updated_by`
 
-		dbcli, err := toDBClient(cli)
+		dbcli, err := pgclients.ToDBClient(cli)
 		if err != nil {
 			return []mfclients.Client{}, errors.Wrap(errors.ErrCreateEntity, err)
 		}
@@ -71,7 +75,7 @@ func (repo clientRepo) RetrieveByID(ctx context.Context, id string) (mfclients.C
         FROM clients
         WHERE id = $1`
 
-	dbc := dbClient{
+	dbc := pgclients.DBClient{
 		ID: id,
 	}
 
@@ -83,7 +87,7 @@ func (repo clientRepo) RetrieveByID(ctx context.Context, id string) (mfclients.C
 		return mfclients.Client{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
 
-	return toClient(dbc)
+	return pgclients.ToClient(dbc)
 }
 
 func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (mfclients.Client, error) {
@@ -91,7 +95,7 @@ func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (mfclie
         FROM clients
         WHERE secret = $1 AND status = %d`, mfclients.EnabledStatus)
 
-	dbc := dbClient{
+	dbc := pgclients.DBClient{
 		Secret: key,
 	}
 
@@ -103,7 +107,7 @@ func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (mfclie
 		return mfclients.Client{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
 
-	return toClient(dbc)
+	return pgclients.ToClient(dbc)
 }
 
 func (repo clientRepo) RetrieveAll(ctx context.Context, pm mfclients.Page) (mfclients.ClientsPage, error) {
@@ -115,7 +119,7 @@ func (repo clientRepo) RetrieveAll(ctx context.Context, pm mfclients.Page) (mfcl
 	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.identity, c.secret, c.metadata, COALESCE(c.owner_id, '') AS owner_id, c.status, c.created_at
 						FROM clients c %s ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, query)
 
-	dbPage, err := toDBClientsPage(pm)
+	dbPage, err := pgclients.ToDBClientsPage(pm)
 	if err != nil {
 		return mfclients.ClientsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
 	}
@@ -127,12 +131,12 @@ func (repo clientRepo) RetrieveAll(ctx context.Context, pm mfclients.Page) (mfcl
 
 	var items []mfclients.Client
 	for rows.Next() {
-		dbc := dbClient{}
+		dbc := pgclients.DBClient{}
 		if err := rows.StructScan(&dbc); err != nil {
 			return mfclients.ClientsPage{}, errors.Wrap(errors.ErrViewEntity, err)
 		}
 
-		c, err := toClient(dbc)
+		c, err := pgclients.ToClient(dbc)
 		if err != nil {
 			return mfclients.ClientsPage{}, err
 		}
@@ -173,7 +177,7 @@ func (repo clientRepo) Members(ctx context.Context, groupID string, pm mfclients
 
 	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.metadata, c.identity, c.secret, c.status, c.created_at FROM clients c
 		INNER JOIN policies ON c.id=policies.subject %s AND policies.object = :group_id %s ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, emq, aq)
-	dbPage, err := toDBClientsPage(pm)
+	dbPage, err := pgclients.ToDBClientsPage(pm)
 	if err != nil {
 		return mfclients.MembersPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
 	}
@@ -186,12 +190,12 @@ func (repo clientRepo) Members(ctx context.Context, groupID string, pm mfclients
 
 	var items []mfclients.Client
 	for rows.Next() {
-		dbc := dbClient{}
+		dbc := pgclients.DBClient{}
 		if err := rows.StructScan(&dbc); err != nil {
 			return mfclients.MembersPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembers, err)
 		}
 
-		c, err := toClient(dbc)
+		c, err := pgclients.ToClient(dbc)
 		if err != nil {
 			return mfclients.MembersPage{}, err
 		}

@@ -11,9 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jackc/pgtype" // required for SQL access
+	// required for SQL access
+	"github.com/jackc/pgtype"
 	"github.com/mainflux/mainflux/internal/postgres"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
+	pgclients "github.com/mainflux/mainflux/pkg/clients/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/groups"
 )
@@ -22,13 +24,15 @@ var _ mfclients.Repository = (*clientRepo)(nil)
 
 type clientRepo struct {
 	db postgres.Database
+	pgclients.ClientRepository
 }
 
 // NewRepository instantiates a PostgreSQL
 // implementation of Clients repository.
 func NewRepository(db postgres.Database) mfclients.Repository {
 	return &clientRepo{
-		db: db,
+		db:               db,
+		ClientRepository: pgclients.ClientRepository{DB: db},
 	}
 }
 
@@ -40,7 +44,7 @@ func (repo clientRepo) Save(ctx context.Context, c ...mfclients.Client) ([]mfcli
 	q := `INSERT INTO clients (id, name, tags, owner_id, identity, secret, metadata, created_at, status, role)
         VALUES (:id, :name, :tags, :owner_id, :identity, :secret, :metadata, :created_at, :status, :role)
         RETURNING id, name, tags, identity, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at`
-	dbc, err := toDBClient(c[0])
+	dbc, err := pgclients.ToDBClient(c[0])
 	if err != nil {
 		return []mfclients.Client{}, errors.Wrap(errors.ErrCreateEntity, err)
 	}
@@ -52,12 +56,12 @@ func (repo clientRepo) Save(ctx context.Context, c ...mfclients.Client) ([]mfcli
 
 	defer row.Close()
 	row.Next()
-	dbc = dbClient{}
+	dbc = pgclients.DBClient{}
 	if err := row.StructScan(&dbc); err != nil {
 		return []mfclients.Client{}, err
 	}
 
-	client, err := toClient(dbc)
+	client, err := pgclients.ToClient(dbc)
 	if err != nil {
 		return []mfclients.Client{}, err
 	}
@@ -69,7 +73,7 @@ func (repo clientRepo) RetrieveByID(ctx context.Context, id string) (mfclients.C
 	q := `SELECT id, name, tags, COALESCE(owner_id, '') AS owner_id, identity, secret, metadata, created_at, updated_at, updated_by, status 
         FROM clients WHERE id = :id`
 
-	dbc := dbClient{
+	dbc := pgclients.DBClient{
 		ID: id,
 	}
 
@@ -83,19 +87,19 @@ func (repo clientRepo) RetrieveByID(ctx context.Context, id string) (mfclients.C
 
 	defer row.Close()
 	row.Next()
-	dbc = dbClient{}
+	dbc = pgclients.DBClient{}
 	if err := row.StructScan(&dbc); err != nil {
 		return mfclients.Client{}, errors.Wrap(errors.ErrNotFound, err)
 	}
 
-	return toClient(dbc)
+	return pgclients.ToClient(dbc)
 }
 
 func (repo clientRepo) RetrieveByIdentity(ctx context.Context, identity string) (mfclients.Client, error) {
 	q := `SELECT id, name, tags, COALESCE(owner_id, '') AS owner_id, identity, secret, metadata, created_at, updated_at, updated_by, status
         FROM clients WHERE identity = :identity AND status = :status`
 
-	dbc := dbClient{
+	dbc := pgclients.DBClient{
 		Identity: identity,
 		Status:   mfclients.EnabledStatus,
 	}
@@ -110,12 +114,12 @@ func (repo clientRepo) RetrieveByIdentity(ctx context.Context, identity string) 
 
 	defer row.Close()
 	row.Next()
-	dbc = dbClient{}
+	dbc = pgclients.DBClient{}
 	if err := row.StructScan(&dbc); err != nil {
 		return mfclients.Client{}, errors.Wrap(errors.ErrNotFound, err)
 	}
 
-	return toClient(dbc)
+	return pgclients.ToClient(dbc)
 }
 
 func (repo clientRepo) RetrieveAll(ctx context.Context, pm mfclients.Page) (mfclients.ClientsPage, error) {
@@ -127,7 +131,7 @@ func (repo clientRepo) RetrieveAll(ctx context.Context, pm mfclients.Page) (mfcl
 	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.identity, c.metadata, COALESCE(c.owner_id, '') AS owner_id, c.status,
 					c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM clients c %s ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, query)
 
-	dbPage, err := toDBClientsPage(pm)
+	dbPage, err := pgclients.ToDBClientsPage(pm)
 	if err != nil {
 		return mfclients.ClientsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
 	}
@@ -139,12 +143,12 @@ func (repo clientRepo) RetrieveAll(ctx context.Context, pm mfclients.Page) (mfcl
 
 	var items []mfclients.Client
 	for rows.Next() {
-		dbc := dbClient{}
+		dbc := pgclients.DBClient{}
 		if err := rows.StructScan(&dbc); err != nil {
 			return mfclients.ClientsPage{}, errors.Wrap(errors.ErrViewEntity, err)
 		}
 
-		c, err := toClient(dbc)
+		c, err := pgclients.ToClient(dbc)
 		if err != nil {
 			return mfclients.ClientsPage{}, err
 		}
@@ -187,7 +191,7 @@ func (repo clientRepo) Members(ctx context.Context, groupID string, pm mfclients
 		c.created_at, c.updated_at FROM clients c
 		INNER JOIN policies ON c.id=policies.subject %s AND policies.object = :group_id %s
 	  	ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, emq, aq)
-	dbPage, err := toDBClientsPage(pm)
+	dbPage, err := pgclients.ToDBClientsPage(pm)
 	if err != nil {
 		return mfclients.MembersPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
 	}
@@ -200,12 +204,12 @@ func (repo clientRepo) Members(ctx context.Context, groupID string, pm mfclients
 
 	var items []mfclients.Client
 	for rows.Next() {
-		dbc := dbClient{}
+		dbc := pgclients.DBClient{}
 		if err := rows.StructScan(&dbc); err != nil {
 			return mfclients.MembersPage{}, errors.Wrap(postgres.ErrFailedToRetrieveMembers, err)
 		}
 
-		c, err := toClient(dbc)
+		c, err := pgclients.ToClient(dbc)
 		if err != nil {
 			return mfclients.MembersPage{}, err
 		}
@@ -457,42 +461,4 @@ func pageQuery(pm mfclients.Page) (string, error) {
 		}
 	}
 	return emq, nil
-
-}
-
-func toDBClientsPage(pm mfclients.Page) (dbClientsPage, error) {
-	_, data, err := postgres.CreateMetadataQuery("", pm.Metadata)
-	if err != nil {
-		return dbClientsPage{}, errors.Wrap(errors.ErrViewEntity, err)
-	}
-	return dbClientsPage{
-		Name:     pm.Name,
-		Identity: pm.Identity,
-		Metadata: data,
-		Owner:    pm.Owner,
-		Total:    pm.Total,
-		Offset:   pm.Offset,
-		Limit:    pm.Limit,
-		Status:   pm.Status,
-		Tag:      pm.Tag,
-		Subject:  pm.Subject,
-		Action:   pm.Action,
-		SharedBy: pm.SharedBy,
-	}, nil
-}
-
-type dbClientsPage struct {
-	Total    uint64           `db:"total"`
-	Limit    uint64           `db:"limit"`
-	Offset   uint64           `db:"offset"`
-	Name     string           `db:"name"`
-	Owner    string           `db:"owner_id"`
-	Identity string           `db:"identity"`
-	Metadata []byte           `db:"metadata"`
-	Tag      string           `db:"tag"`
-	Status   mfclients.Status `db:"status"`
-	GroupID  string           `db:"group_id"`
-	SharedBy string           `db:"shared_by"`
-	Subject  string           `db:"subject"`
-	Action   string           `db:"action"`
 }
