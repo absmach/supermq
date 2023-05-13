@@ -52,43 +52,43 @@ func TestPublish(t *testing.T) {
 	cases := []struct {
 		desc     string
 		thingKey string
-		msg      messaging.Message
+		msg      *messaging.Message
 		err      error
 	}{
 		{
 			desc:     "publish a valid message with valid thingKey",
 			thingKey: thingKey,
-			msg:      msg,
+			msg:      &msg,
 			err:      nil,
 		},
 		{
 			desc:     "publish a valid message with empty thingKey",
 			thingKey: "",
-			msg:      msg,
+			msg:      &msg,
 			err:      coap.ErrUnauthorizedAccess,
 		},
 		{
 			desc:     "publish a valid message with invalid thingKey",
 			thingKey: "invalid",
-			msg:      msg,
+			msg:      &msg,
 			err:      coap.ErrUnauthorizedAccess,
 		},
 		{
 			desc:     "publish an empty message with valid thingKey",
 			thingKey: thingKey,
-			msg:      messaging.Message{},
+			msg:      &messaging.Message{},
 			err:      coap.ErrFailedMessagePublish,
 		},
 		{
 			desc:     "publish an empty message with empty thingKey",
 			thingKey: "",
-			msg:      messaging.Message{},
+			msg:      &messaging.Message{},
 			err:      coap.ErrUnauthorizedAccess,
 		},
 		{
 			desc:     "publish an empty message with invalid thingKey",
 			thingKey: "invalid",
-			msg:      messaging.Message{},
+			msg:      &messaging.Message{},
 			err:      coap.ErrUnauthorizedAccess,
 		},
 	}
