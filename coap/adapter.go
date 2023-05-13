@@ -20,19 +20,7 @@ import (
 const chansPrefix = "channels"
 
 // ErrUnsubscribe indicates an error to unsubscribe
-var (
-	// ErrFailedMessagePublish indicates that message publishing failed
-	ErrFailedMessagePublish = errors.New("failed to publish message")
-
-	// ErrFailedSubscription indicates that client couldn't subscribe to specified channel
-	ErrFailedSubscription = errors.New("failed to subscribe to a channel")
-
-	// ErrFailedUnsubscribe indicates that client couldn't unsubscribe from specified channel
-	ErrFailedUnsubscribe = errors.New("failed to unsubscribe from a channel")
-
-	// ErrUnauthorizedAccess indicates that client provided missing or invalid credentials
-	ErrUnauthorizedAccess = errors.New("missing or invalid credentials provided")
-)
+var ErrUnsubscribe = errors.New("unable to unsubscribe")
 
 // Service specifies CoAP service API.
 type Service interface {
@@ -74,7 +62,7 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 	}
 	thid, err := svc.auth.CanAccessByKey(ctx, ar)
 	if err != nil {
-		return ErrUnauthorizedAccess
+		return errors.Wrap(errors.ErrAuthorization, err)
 	}
 	msg.Publisher = thid.GetValue()
 
@@ -82,15 +70,13 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 }
 
 func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic string, c Client) error {
-	if chanID == "" || key == "" {
-		return ErrUnauthorizedAccess
+	ar := &mainflux.AccessByKeyReq{
+		Token:  key,
+		ChanID: chanID,
 	}
-
-	_, err := svc.authorize(ctx, key, chanID)
-	if err != nil {
-		return ErrUnauthorizedAccess
+	if _, err := svc.auth.CanAccessByKey(ctx, ar); err != nil {
+		return errors.Wrap(errors.ErrAuthorization, err)
 	}
-
 	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
@@ -99,15 +85,13 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 }
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopic, token string) error {
-	if chanID == "" || key == "" {
-		return ErrUnauthorizedAccess
+	ar := &mainflux.AccessByKeyReq{
+		Token:  key,
+		ChanID: chanID,
 	}
-
-	_, err := svc.authorize(ctx, key, chanID)
-	if err != nil {
-		return ErrUnauthorizedAccess
+	if _, err := svc.auth.CanAccessByKey(ctx, ar); err != nil {
+		return errors.Wrap(errors.ErrAuthorization, err)
 	}
-
 	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
