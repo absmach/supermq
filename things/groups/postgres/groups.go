@@ -63,22 +63,6 @@ func (repo grepo) Save(ctx context.Context, g mfgroups.Group) (mfgroups.Group, e
 	return pggroups.ToGroup(dbg)
 }
 
-func (repo grepo) RetrieveByID(ctx context.Context, id string) (mfgroups.Group, error) {
-	dbu := pggroups.DBGroup{
-		ID: id,
-	}
-	q := `SELECT id, name, owner_id, COALESCE(parent_id, '') AS parent_id, description, metadata, created_at, updated_at, updated_by, status FROM groups
-	    WHERE id = $1`
-	if err := repo.db.QueryRowxContext(ctx, q, dbu.ID).StructScan(&dbu); err != nil {
-		if err == sql.ErrNoRows {
-			return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, err)
-
-		}
-		return mfgroups.Group{}, errors.Wrap(errors.ErrViewEntity, err)
-	}
-	return pggroups.ToGroup(dbu)
-}
-
 func (repo grepo) RetrieveAll(ctx context.Context, gm mfgroups.GroupsPage) (mfgroups.GroupsPage, error) {
 	var q string
 	query, err := pggroups.BuildQuery(gm)

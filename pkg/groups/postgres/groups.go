@@ -146,6 +146,32 @@ func (repo GroupRepository) ChangeStatus(ctx context.Context, group mfgroups.Gro
 	return ToGroup(dbg)
 }
 
+func (repo GroupRepository) RetrieveByID(ctx context.Context, id string) (mfgroups.Group, error) {
+	q := `SELECT id, name, owner_id, COALESCE(parent_id, '') AS parent_id, description, metadata, created_at, updated_at, updated_by, status FROM groups
+	    WHERE id = :id`
+
+	dbg := DBGroup{
+		ID: id,
+	}
+
+	row, err := repo.DB.NamedQueryContext(ctx, q, dbg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, err)
+		}
+		return mfgroups.Group{}, errors.Wrap(errors.ErrViewEntity, err)
+	}
+
+	defer row.Close()
+	row.Next()
+	dbg = DBGroup{}
+	if err := row.StructScan(&dbg); err != nil {
+		return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, err)
+	}
+
+	return ToGroup(dbg)
+}
+
 func BuildHierachy(gm mfgroups.GroupsPage) string {
 	query := ""
 	switch {

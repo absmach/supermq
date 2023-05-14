@@ -58,33 +58,6 @@ func (repo groupRepository) Save(ctx context.Context, g mfgroups.Group) (mfgroup
 	return pggroups.ToGroup(dbg)
 }
 
-func (repo groupRepository) RetrieveByID(ctx context.Context, id string) (mfgroups.Group, error) {
-	q := `SELECT id, name, owner_id, COALESCE(parent_id, '') AS parent_id, description, metadata, created_at, updated_at, updated_by, status FROM groups
-	    WHERE id = :id`
-
-	dbg := pggroups.DBGroup{
-		ID: id,
-	}
-
-	row, err := repo.db.NamedQueryContext(ctx, q, dbg)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, err)
-		}
-		return mfgroups.Group{}, errors.Wrap(errors.ErrViewEntity, err)
-	}
-
-	defer row.Close()
-	row.Next()
-	dbg = pggroups.DBGroup{}
-	if err := row.StructScan(&dbg); err != nil {
-		return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, err)
-	}
-
-	return pggroups.ToGroup(dbg)
-
-}
-
 func (repo groupRepository) RetrieveAll(ctx context.Context, gm mfgroups.GroupsPage) (mfgroups.GroupsPage, error) {
 	var q string
 	query, err := pggroups.BuildQuery(gm)
