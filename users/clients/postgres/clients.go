@@ -36,10 +36,6 @@ func NewRepository(db postgres.Database) mfclients.Repository {
 	}
 }
 
-func (clientRepo) RetrieveBySecret(ctx context.Context, key string) (mfclients.Client, error) {
-	return mfclients.Client{}, nil
-}
-
 func (repo clientRepo) Save(ctx context.Context, c ...mfclients.Client) ([]mfclients.Client, error) {
 	q := `INSERT INTO clients (id, name, tags, owner_id, identity, secret, metadata, created_at, status, role)
         VALUES (:id, :name, :tags, :owner_id, :identity, :secret, :metadata, :created_at, :status, :role)
