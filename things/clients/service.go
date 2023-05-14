@@ -198,6 +198,7 @@ func (svc service) UpdateClientSecret(ctx context.Context, token, id, key string
 		},
 		UpdatedAt: time.Now(),
 		UpdatedBy: userID,
+		Status:    mfclients.EnabledStatus,
 	}
 
 	return svc.clients.UpdateSecret(ctx, client)
@@ -217,6 +218,7 @@ func (svc service) UpdateClientOwner(ctx context.Context, token string, cli mfcl
 		Owner:     cli.Owner,
 		UpdatedAt: time.Now(),
 		UpdatedBy: userID,
+		Status:    mfclients.EnabledStatus,
 	}
 
 	return svc.clients.UpdateOwner(ctx, client)
