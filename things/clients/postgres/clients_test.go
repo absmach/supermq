@@ -256,7 +256,6 @@ func TestClientsRetrieveAll(t *testing.T) {
 		_, err = prepo.Save(context.Background(), policy)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	}
-	fmt.Println("client3", expectedClients[3])
 
 	cases := map[string]struct {
 		size     uint64
