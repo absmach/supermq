@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux/internal/postgres"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -170,6 +171,54 @@ func (repo GroupRepository) RetrieveByID(ctx context.Context, id string) (mfgrou
 	}
 
 	return ToGroup(dbg)
+}
+
+func (repo GroupRepository) RetrieveAll(ctx context.Context, gm mfgroups.GroupsPage) (mfgroups.GroupsPage, error) {
+	var q string
+	query, err := BuildQuery(gm)
+	if err != nil {
+		return mfgroups.GroupsPage{}, err
+	}
+
+	if gm.ID != "" {
+		q = BuildHierachy(gm)
+	}
+	if gm.ID == "" {
+		q = `SELECT DISTINCT g.id, g.owner_id, COALESCE(g.parent_id, '') AS parent_id, g.name, g.description,
+		g.metadata, g.created_at, g.updated_at, g.updated_by, g.status FROM groups g`
+	}
+	q = fmt.Sprintf("%s %s ORDER BY g.updated_at LIMIT :limit OFFSET :offset;", q, query)
+
+	dbPage, err := ToDBGroupPage(gm)
+	if err != nil {
+		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
+	}
+	rows, err := repo.DB.NamedQueryContext(ctx, q, dbPage)
+	if err != nil {
+		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
+	}
+	defer rows.Close()
+
+	items, err := repo.processRows(rows)
+	if err != nil {
+		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
+	}
+
+	cq := "SELECT COUNT(*) FROM groups g"
+	if query != "" {
+		cq = fmt.Sprintf(" %s %s", cq, query)
+	}
+
+	total, err := postgres.Total(ctx, repo.DB, cq, dbPage)
+	if err != nil {
+		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
+	}
+
+	page := gm
+	page.Groups = items
+	page.Total = total
+
+	return page, nil
 }
 
 func BuildHierachy(gm mfgroups.GroupsPage) string {
@@ -345,4 +394,20 @@ type DBGroupPage struct {
 	Subject  string           `db:"subject"`
 	Action   string           `db:"action"`
 	Status   mfclients.Status `db:"status"`
+}
+
+func (gr GroupRepository) processRows(rows *sqlx.Rows) ([]mfgroups.Group, error) {
+	var items []mfgroups.Group
+	for rows.Next() {
+		dbg := DBGroup{}
+		if err := rows.StructScan(&dbg); err != nil {
+			return items, err
+		}
+		group, err := ToGroup(dbg)
+		if err != nil {
+			return items, err
+		}
+		items = append(items, group)
+	}
+	return items, nil
 }
