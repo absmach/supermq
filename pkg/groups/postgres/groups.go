@@ -31,10 +31,9 @@ func New(db postgres.Database) mfgroups.Repository {
 
 // TODO - check parent group write access.
 func (repo groupRepository) Save(ctx context.Context, g mfgroups.Group) (mfgroups.Group, error) {
-	q := `INSERT INTO groups (name, description, id, owner_id, parent_id, metadata, created_at, status)
-		VALUES (:name, :description, :id, :owner_id, :parent_id, :metadata, :created_at, :status)
-		RETURNING id, name, description, owner_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, status;`
-
+	q := `INSERT INTO groups (name, description, id, owner_id, parent_id, metadata, created_at, updated_at, updated_by, status)
+		VALUES (:name, :description, :id, :owner_id, :parent_id, :metadata, :created_at, :updated_at, :updated_by, :status)
+		RETURNING id, name, description, owner_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, updated_at, updated_by, status;`
 	dbg, err := toDBGroup(g)
 	if err != nil {
 		return mfgroups.Group{}, err
