@@ -14,9 +14,9 @@ import (
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfgroups "github.com/mainflux/mainflux/pkg/groups"
+	gpostgres "github.com/mainflux/mainflux/pkg/groups/postgres"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	cpostgres "github.com/mainflux/mainflux/things/clients/postgres"
-	gpostgres "github.com/mainflux/mainflux/things/groups/postgres"
 	"github.com/mainflux/mainflux/things/policies"
 	ppostgres "github.com/mainflux/mainflux/things/policies/postgres"
 	"github.com/stretchr/testify/assert"
@@ -44,7 +44,7 @@ var (
 
 func TestGroupSave(t *testing.T) {
 	t.Cleanup(func() { testsutil.CleanUpDB(t, db) })
-	groupRepo := gpostgres.NewRepository(database)
+	groupRepo := gpostgres.New(database)
 
 	usrID := testsutil.GenerateUUID(t, idProvider)
 	grpID := testsutil.GenerateUUID(t, idProvider)
@@ -172,7 +172,7 @@ func TestGroupSave(t *testing.T) {
 
 func TestGroupRetrieveByID(t *testing.T) {
 	t.Cleanup(func() { testsutil.CleanUpDB(t, db) })
-	groupRepo := gpostgres.NewRepository(database)
+	groupRepo := gpostgres.New(database)
 
 	uid := testsutil.GenerateUUID(t, idProvider)
 	group1 := mfgroups.Group{
@@ -221,7 +221,7 @@ func TestGroupRetrieveByID(t *testing.T) {
 
 func TestGroupRetrieveAll(t *testing.T) {
 	t.Cleanup(func() { testsutil.CleanUpDB(t, db) })
-	groupRepo := gpostgres.NewRepository(database)
+	groupRepo := gpostgres.New(database)
 
 	var nGroups = uint64(200)
 	var ownerID = testsutil.GenerateUUID(t, idProvider)
@@ -339,7 +339,7 @@ func TestGroupRetrieveAll(t *testing.T) {
 
 func TestGroupUpdate(t *testing.T) {
 	t.Cleanup(func() { testsutil.CleanUpDB(t, db) })
-	groupRepo := gpostgres.NewRepository(database)
+	groupRepo := gpostgres.New(database)
 
 	uid := testsutil.GenerateUUID(t, idProvider)
 
@@ -470,7 +470,7 @@ func TestGroupUpdate(t *testing.T) {
 func TestClientsMemberships(t *testing.T) {
 	t.Cleanup(func() { testsutil.CleanUpDB(t, db) })
 	crepo := cpostgres.NewRepository(database)
-	grepo := gpostgres.NewRepository(database)
+	grepo := gpostgres.New(database)
 	prepo := ppostgres.NewRepository(database)
 
 	clientA := mfclients.Client{
@@ -541,7 +541,7 @@ func TestClientsMemberships(t *testing.T) {
 
 func TestGroupChangeStatus(t *testing.T) {
 	t.Cleanup(func() { testsutil.CleanUpDB(t, db) })
-	repo := gpostgres.NewRepository(database)
+	repo := gpostgres.New(database)
 
 	group1 := mfgroups.Group{
 		ID:     testsutil.GenerateUUID(t, idProvider),

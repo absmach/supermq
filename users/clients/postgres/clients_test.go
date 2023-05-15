@@ -13,9 +13,9 @@ import (
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfgroups "github.com/mainflux/mainflux/pkg/groups"
+	gpostgres "github.com/mainflux/mainflux/pkg/groups/postgres"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	cpostgres "github.com/mainflux/mainflux/users/clients/postgres"
-	gpostgres "github.com/mainflux/mainflux/users/groups/postgres"
 	"github.com/mainflux/mainflux/users/policies"
 	ppostgres "github.com/mainflux/mainflux/users/policies/postgres"
 	"github.com/stretchr/testify/assert"
@@ -253,7 +253,7 @@ func TestClientsRetrieveByIdentity(t *testing.T) {
 func TestClientsRetrieveAll(t *testing.T) {
 	t.Cleanup(func() { testsutil.CleanUpDB(t, db) })
 	repo := cpostgres.NewRepository(database)
-	grepo := gpostgres.NewRepository(database)
+	grepo := gpostgres.New(database)
 	prepo := ppostgres.NewRepository(database)
 
 	var nClients = uint64(200)
