@@ -3,8 +3,8 @@ package env
 import (
 	"fmt"
 	"testing"
+	"time"
 
-	"github.com/caarlos0/env/v7"
 	"github.com/mainflux/mainflux/internal/clients/grpc"
 	"github.com/mainflux/mainflux/internal/server"
 	"github.com/stretchr/testify/assert"
@@ -12,41 +12,102 @@ import (
 
 func TestParse(t *testing.T) {
 	t.Run("Parsing a grpc.Config struct", func(t *testing.T) {
-		opts := []env.Options{
+		testCfg := &grpc.Config{
+			URL:     "val.com",
+			Timeout: time.Second,
+		}
+		opts := []Options{
 			{
 				Environment: map[string]string{
-					"URL": "value",
+					"URL":     testCfg.URL,
+					"TIMEOUT": testCfg.Timeout.String(),
 				},
 			},
 		}
 		cfg := &grpc.Config{}
-		err := env.Parse(cfg, opts...)
-		fmt.Println(cfg.URL)
+		err := Parse(cfg, opts...)
 		assert.NoError(t, err)
+		assert.Equal(t, *testCfg, *cfg, fmt.Sprintf("expected %v got %v", testCfg, cfg))
+	})
+	t.Run("Invalid type parsing", func(t *testing.T) {
+		testCfg := &grpc.Config{
+			URL:     "val.com",
+			Timeout: time.Second,
+		}
+		opts := []Options{
+			{
+				Environment: map[string]string{
+					"URL":     testCfg.URL,
+					"TIMEOUT": "invalid",
+				},
+			},
+		}
+		cfg := &grpc.Config{}
+		err := Parse(cfg, opts...)
+		assert.Error(t, err)
 	})
 
-	t.Run("Parsing a server.Config struct", func(t *testing.T) {
+	t.Run("Parsing with Server Config with Alt-Prefix", func(t *testing.T) {
+		testCfg := &server.Config{
+			Host:     "localhost",
+			Port:     "8080",
+			CertFile: "cert",
+			KeyFile:  "key",
+		}
+		opts := []Options{
+			{
+				Environment: map[string]string{
+					"MF-HOST":        testCfg.Host,
+					"MF-HTTP-PORT":   testCfg.Port,
+					"MF-SERVER_CERT": testCfg.CertFile,
+					"MF-SERVER_KEY":  testCfg.KeyFile,
+				},
+				Prefix:    "MF-",
+				AltPrefix: "MF-HTTP-",
+			},
+		}
 		cfg := &server.Config{}
-		err := env.Parse(cfg)
+		err := Parse(cfg, opts...)
 		assert.NoError(t, err)
+		assert.Equal(t, *testCfg, *cfg, fmt.Sprintf("expected %v got %v", testCfg, cfg))
 	})
-
-	t.Run("Parsing an unsupported struct", func(t *testing.T) {
-		//var cfg struct{}
-		//err := env.Parse(&cfg)
-		//assert.Error(t, err)
-	})
-
-	t.Run("Parsing with custom options", func(t *testing.T) {
-		cfg := &grpc.Config{}
-		opts := []env.Options{
+	t.Run("Parsing a grpc.Config with Alt-Prefix", func(t *testing.T) {
+		testCfg := &grpc.Config{
+			URL:     "val.com",
+			Timeout: time.Second,
+		}
+		opts := []Options{
 			{
 				Environment: map[string]string{
-					"MY_ENV_VAR": "value",
+					"MF-URL":          testCfg.URL,
+					"MF-GRPC-TIMEOUT": testCfg.Timeout.String(),
 				},
+				Prefix:    "MF-",
+				AltPrefix: "MF-GRPC-",
 			},
 		}
-		err := env.Parse(cfg, opts...)
+		cfg := &grpc.Config{}
+		err := Parse(cfg, opts...)
 		assert.NoError(t, err)
+		assert.Equal(t, *testCfg, *cfg, fmt.Sprintf("expected %v got %v", testCfg, cfg))
+	})
+	t.Run("Parsing a grpc.Config with Alt-Prefix and errors", func(t *testing.T) {
+		testCfg := &grpc.Config{
+			URL:     "val.com",
+			Timeout: time.Second,
+		}
+		opts := []Options{
+			{
+				Environment: map[string]string{
+					"MF-URL":          testCfg.URL,
+					"MF-GRPC-TIMEOUT": "not-duration",
+				},
+				Prefix:    "MF-",
+				AltPrefix: "MF-GRPC-",
+			},
+		}
+		cfg := &grpc.Config{}
+		err := Parse(cfg, opts...)
+		assert.Error(t, err)
 	})
 }
