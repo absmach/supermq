@@ -51,7 +51,7 @@ func (svc *mainfluxPolicies) DeletePolicy(_ context.Context, token string, p tpo
 	}
 
 	for _, pol := range svc.connections {
-		if pol.Object == p.Subject && pol.Object == p.Object {
+		if pol.Subject == p.Subject && pol.Object == p.Object {
 			delete(svc.connections, fmt.Sprintf("%s:%s", p.Subject, p.Object))
 		}
 	}
