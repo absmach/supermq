@@ -64,7 +64,6 @@ func (repo mongoRepository) ReadAll(chanID string, rpm readers.PageMetadata) (re
 	fmt.Println()
 	fmt.Println()
 	fmt.Println()
-	fmt.Println("###")
 	cursor, err := col.Find(context.Background(), filter, options.Find().SetSort(sortMap).SetLimit(int64(rpm.Limit)).SetSkip(int64(rpm.Offset)))
 	if err != nil {
 		return readers.MessagesPage{}, errors.Wrap(readers.ErrReadMessages, err)
@@ -154,22 +153,26 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) bson.D {
 					// comparator = fmt.Sprintf("$%s", mongoComparators[val]) // mongoDB comparison operator
 					bsonFilter = bson.M{comparator: value}
 				case "$gt":
-					notBsonFilter := bson.M{"$eq": value}
-					filter = append(filter, bson.E{Key: "string_value", Value: bson.M{"$not": notBsonFilter}})
+					notBsonFilter := bson.E{Key: "$ne", Value: value}
 					value = fmt.Sprintf("/%s/", value)
 					comparator = "$regex"
-					bsonFilter = value
+					regexBsonFilter := bson.E{Key: comparator, Value: value}
+					/// Can use either of the two lines below
+					// bsonFilter = bson.D{notBsonFilter, regexBsonFilter}
+					bsonFilter = bson.M{notBsonFilter.Key: notBsonFilter.Value, regexBsonFilter.Key: regexBsonFilter.Value}
 				case "$gte":
+					comparator = "$regex"
 					value = fmt.Sprintf("/%s/", value)
-					bsonFilter = value
+					bsonFilter = bson.M{comparator: value}
 				case "$lte":
-					notBsonFilter := bson.M{"$eq": value}
-					filter = append(filter, bson.E{Key: "string_value", Value: bson.M{"$not": notBsonFilter}})
+					comparator = "$regex"
 					stringValue = fmt.Sprintf("/%s/", stringValue)
-					bsonFilter = value
+					bsonFilter = bson.M{comparator: value}
 				case "$lt":
-					stringValue = fmt.Sprintf("/%s/", stringValue)
-					bsonFilter = value
+					filter = append(filter, bson.E{Key: "string_value", Value: bson.M{"$ne": value}})
+					stringValue = fmt.Sprintf("/^%s/", stringValue)
+					comparator = "$regex"
+					bsonFilter = bson.M{comparator: value}
 				}
 			}
 			filter = append(filter, bson.E{Key: stringValue, Value: bsonFilter})
@@ -191,3 +194,5 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) bson.D {
 }
 
 // string_value = value/field in the mongo database , value = vs -> from query
+
+//db.messages.find({channel: "abcd",string_value: {$regex: /alu/,$ne: "alu"}})
