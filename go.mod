@@ -180,4 +180,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/mainflux/callhome => github.com/sammyoina/et v0.0.0-20230423181509-41bd8434a0d9
+replace github.com/mainflux/callhome => github.com/sammyoina/et v0.0.0-20230518114602-0b466f8e0976

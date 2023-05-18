@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,15 +16,25 @@ import (
 )
 
 const (
-	HomeUrl           = "http://callhome-server:8855/telemetry"
+	HomeUrl           = "http://64.226.105.108/telemetry"
 	stopWaitTime      = 5 * time.Second
 	callHomeSleepTime = 30 * time.Minute
+	backOff           = 10 * time.Second
+	apiKey            = "77e04a7c-f207-40dd-8950-c344871fd516"
 )
 
 var ipEndpoints = []string{
 	"https://checkip.amazonaws.com/",
 	"https://ipinfo.io/ip",
 	"https://api.ipify.org/",
+}
+
+type homingService struct {
+	serviceName string
+	version     string
+	logger      mflog.Logger
+	cancel      context.CancelFunc
+	httpClient  http.Client
 }
 
 func New(svc, version string, homingLogger mflog.Logger, cancel context.CancelFunc) *homingService {
@@ -34,14 +45,6 @@ func New(svc, version string, homingLogger mflog.Logger, cancel context.CancelFu
 		cancel:      cancel,
 		httpClient:  *http.DefaultClient,
 	}
-}
-
-type homingService struct {
-	serviceName string
-	version     string
-	logger      mflog.Logger
-	cancel      context.CancelFunc
-	httpClient  http.Client
 }
 
 func (hs *homingService) CallHome(ctx context.Context) {
@@ -73,6 +76,7 @@ func (hs *homingService) CallHome(ctx context.Context) {
 			}
 			if err := hs.send(&data); err != nil && data.IpAddress != "" {
 				hs.logger.Warn(fmt.Sprintf("failed to send telemetry data with error: %v", err))
+				time.Sleep(backOff)
 				continue
 			}
 		}
@@ -120,14 +124,19 @@ func (hs *homingService) send(telDat *telemetryData) error {
 	if err != nil {
 		return err
 	}
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	req, err := http.NewRequest(http.MethodPost, HomeUrl, bytes.NewReader(b))
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("apikey", apiKey)
 	res, err := hs.httpClient.Do(req)
 	if err != nil || res.StatusCode != http.StatusCreated {
-		return fmt.Errorf("unsuccessful sending telemetry data")
+		if res != nil {
+			return fmt.Errorf("unsuccessful sending telemetry data with code %d and error: %v", res.StatusCode, err)
+		}
+		return err
 	}
 	return nil
 }
