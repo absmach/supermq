@@ -154,7 +154,7 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) bson.D {
 					bsonFilter = bson.M{comparator: value}
 				case "$gt":
 					notBsonFilter := bson.E{Key: "$ne", Value: value}
-					value = fmt.Sprintf("/%s/", value)
+					value = fmt.Sprintf(".*%s.*", value)
 					comparator = "$regex"
 					regexBsonFilter := bson.E{Key: comparator, Value: value}
 					/// Can use either of the two lines below
@@ -162,15 +162,23 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) bson.D {
 					bsonFilter = bson.M{notBsonFilter.Key: notBsonFilter.Value, regexBsonFilter.Key: regexBsonFilter.Value}
 				case "$gte":
 					comparator = "$regex"
-					value = fmt.Sprintf("/%s/", value)
-					bsonFilter = bson.M{comparator: value}
+					value = fmt.Sprintf(".*%s.*", value)
+					// bsonFilter = bson.{comparator: value}
+					bsonFilter = bson.E{Key: comparator, Value: value}
 				case "$lte":
+					// comparator = "$regex"
+					// stringValue = fmt.Sprintf("/%s/", stringValue)
+					// bsonFilter = bson.M{comparator: value}
+					notBsonFilter := bson.E{Key: "$ne", Value: value}
+					value = fmt.Sprintf(".*%s.*", value)
 					comparator = "$regex"
-					stringValue = fmt.Sprintf("/%s/", stringValue)
-					bsonFilter = bson.M{comparator: value}
+					regexBsonFilter := bson.E{Key: comparator, Value: value}
+					/// Can use either of the two lines below
+					// bsonFilter = bson.D{notBsonFilter, regexBsonFilter}
+					bsonFilter = bson.M{notBsonFilter.Key: notBsonFilter.Value, regexBsonFilter.Key: regexBsonFilter.Value}
 				case "$lt":
 					filter = append(filter, bson.E{Key: "string_value", Value: bson.M{"$ne": value}})
-					stringValue = fmt.Sprintf("/^%s/", stringValue)
+					stringValue = fmt.Sprintf(".*(?=%s)", stringValue)
 					comparator = "$regex"
 					bsonFilter = bson.M{comparator: value}
 				}
@@ -196,3 +204,6 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) bson.D {
 // string_value = value/field in the mongo database , value = vs -> from query
 
 //db.messages.find({channel: "abcd",string_value: {$regex: /alu/,$ne: "alu"}})
+
+// db.messages.find({channel: "7aaeb42d-2f6a-4c47-bf73-ffe6348e7848",string_value: {"$regex": ".*value.*"}})
+// db.messages.find({"string_value": {"$regex": ".*value.*"}})
