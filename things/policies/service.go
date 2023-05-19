@@ -10,12 +10,7 @@ import (
 	upolicies "github.com/mainflux/mainflux/users/policies"
 )
 
-type ClientType int
-
 const (
-	UserClientType = iota
-	ThingClinetType
-
 	ReadAction       = "m_read"
 	WriteAction      = "m_write"
 	ClientEntityType = "client"
@@ -85,7 +80,7 @@ func (svc service) Authorize(ctx context.Context, ar AccessRequest, entity strin
 //  1. The client is admin
 //
 //  2. The client has `g_add` action on the object or is the owner of the object.
-func (svc service) AddPolicy(ctx context.Context, token string, clientType ClientType, p Policy) (Policy, error) {
+func (svc service) AddPolicy(ctx context.Context, token string, p Policy) (Policy, error) {
 	userID, err := svc.identifyUser(ctx, token)
 	if err != nil {
 		return Policy{}, err
@@ -109,10 +104,6 @@ func (svc service) AddPolicy(ctx context.Context, token string, clientType Clien
 	p.OwnerID = userID
 	p.CreatedAt = time.Now()
 
-	if err := svc.checkSubject(ctx, clientType, userID, p); err != nil {
-		return Policy{}, err
-	}
-
 	// If the client is admin, add the policy
 	if err := svc.checkAdmin(ctx, userID); err == nil {
 		if err := svc.policyCache.Put(ctx, p); err != nil {
@@ -133,37 +124,6 @@ func (svc service) AddPolicy(ctx context.Context, token string, clientType Clien
 	return Policy{}, errors.ErrAuthorization
 }
 
-// checkSubject checks if the subject:
-//
-//  1. If it is a user - the client is authorized to manage it.
-//  2. If it is a thing - the client is authorized to manage it.
-func (svc service) checkSubject(ctx context.Context, clientType ClientType, userID string, p Policy) error {
-	switch clientType {
-	case UserClientType:
-		req := &upolicies.AuthorizeReq{
-			Sub:        userID,
-			Obj:        p.Subject,
-			Act:        "m_manage",
-			EntityType: GroupEntityType,
-		}
-		res, err := svc.auth.Authorize(ctx, req)
-		if err != nil {
-			return errors.Wrap(errors.ErrAuthorization, err)
-		}
-		if !res.GetAuthorized() {
-			return errors.ErrAuthorization
-		}
-		return nil
-	case ThingClinetType:
-		policy := Policy{Subject: userID, Object: p.Subject, Actions: []string{"m_manage"}}
-		if err := svc.Authorize(ctx, GroupEntityType, policy); err != nil {
-			return errors.Wrap(errors.ErrAuthorization, err)
-		}
-		return nil
-	default:
-		return errors.ErrAuthorization
-	}
-}
 func (svc service) UpdatePolicy(ctx context.Context, token string, p Policy) (Policy, error) {
 	userID, err := svc.identifyUser(ctx, token)
 	if err != nil {

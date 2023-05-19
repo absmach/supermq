@@ -33,7 +33,7 @@ func (lm *loggingMiddleware) Authorize(ctx context.Context, ar policies.AccessRe
 	return lm.svc.Authorize(ctx, ar, entityType)
 }
 
-func (lm *loggingMiddleware) AddPolicy(ctx context.Context, token string, clientType policies.ClientType, p policies.Policy) (policy policies.Policy, err error) {
+func (lm *loggingMiddleware) AddPolicy(ctx context.Context, token string, p policies.Policy) (policy policies.Policy, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method add_policy for client with id %s using token %s took %s to complete", p.Subject, token, time.Since(begin))
 		if err != nil {
@@ -42,7 +42,7 @@ func (lm *loggingMiddleware) AddPolicy(ctx context.Context, token string, client
 		}
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
-	return lm.svc.AddPolicy(ctx, token, clientType, p)
+	return lm.svc.AddPolicy(ctx, token, p)
 }
 
 func (lm *loggingMiddleware) UpdatePolicy(ctx context.Context, token string, p policies.Policy) (policy policies.Policy, err error) {

@@ -327,6 +327,20 @@ func (svc service) ShareClient(ctx context.Context, token, userID, groupID strin
 		return err
 	}
 
+	req := &upolicies.AuthorizeReq{
+		Sub:        id,
+		Obj:        userID,
+		Act:        "m_manage",
+		EntityType: entityType,
+	}
+	res, err := svc.uauth.Authorize(ctx, req)
+	if err != nil {
+		return errors.Wrap(errors.ErrAuthorization, err)
+	}
+	if !res.GetAuthorized() {
+		return errors.ErrAuthorization
+	}
+
 	policy := tpolicies.Policy{
 		Subject:   userID,
 		Object:    groupID,
