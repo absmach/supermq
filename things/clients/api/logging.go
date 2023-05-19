@@ -141,7 +141,7 @@ func (lm *loggingMiddleware) ListClientsByGroup(ctx context.Context, token, chan
 	return lm.svc.ListClientsByGroup(ctx, token, channelID, cp)
 }
 
-func (lm *loggingMiddleware) ShareClient(ctx context.Context, token, id string, actions, userIDs []string) (err error) {
+func (lm *loggingMiddleware) ShareClient(ctx context.Context, token, id, groupID string, actions, userIDs []string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method share_thing for thing with id %s using token %s took %s to complete", id, token, time.Since(begin))
 		if err != nil {
@@ -150,7 +150,7 @@ func (lm *loggingMiddleware) ShareClient(ctx context.Context, token, id string, 
 		}
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
-	return lm.svc.ShareClient(ctx, token, id, actions, userIDs)
+	return lm.svc.ShareClient(ctx, token, id, groupID, actions, userIDs)
 }
 
 func (lm *loggingMiddleware) Identify(ctx context.Context, key string) (id string, err error) {

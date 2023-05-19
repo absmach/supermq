@@ -209,6 +209,7 @@ func (req changeClientStatusReq) validate() error {
 type shareClientReq struct {
 	token    string
 	clientID string
+	GroupID  string   `json:"group_id"`
 	UserIDs  []string `json:"user_ids"`
 	Policies []string `json:"policies"`
 }
@@ -218,7 +219,7 @@ func (req shareClientReq) validate() error {
 		return apiutil.ErrBearerToken
 	}
 
-	if req.clientID == "" || len(req.UserIDs) == 0 {
+	if req.clientID == "" || req.GroupID == "" || len(req.UserIDs) == 0 {
 		return apiutil.ErrMissingID
 	}
 

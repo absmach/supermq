@@ -162,7 +162,7 @@ func shareClientEndpoint(svc clients.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
-		if err := svc.ShareClient(ctx, req.token, req.clientID, req.Policies, req.UserIDs); err != nil {
+		if err := svc.ShareClient(ctx, req.token, req.clientID, req.GroupID, req.Policies, req.UserIDs); err != nil {
 			return nil, err
 		}
 		return shareClientRes{}, nil

@@ -321,60 +321,15 @@ func (svc service) checkAdmin(ctx context.Context, subject, object string, relat
 }
 
 // ShareClient shares a thing with a user.
-// We need to create a group, add things to the group and add the user to the group.
-func (svc service) ShareClient(ctx context.Context, token, userID string, actions, thingIDs []string) error {
-	var err error
+func (svc service) ShareClient(ctx context.Context, token, userID, groupID string, actions, thingIDs []string) error {
 	id, err := svc.identifyUser(ctx, token)
 	if err != nil {
 		return err
 	}
 
-	// check if the group already exists
-	group := mfgroups.Group{Name: "sharing-group-with-" + userID}
-	pm := mfgroups.GroupsPage{
-		Page: mfgroups.Page{
-			Offset:  0,
-			Limit:   1,
-			OwnerID: id,
-			Name:    group.Name,
-		},
-	}
-	gps, _ := svc.grepo.RetrieveAll(ctx, pm)
-	if len(gps.Groups) == 0 {
-		// create the group
-		group.ID, err = svc.idProvider.ID()
-		if err != nil {
-			return err
-		}
-		group.CreatedAt = time.Now()
-		group.Owner = id
-		group.Status = mfclients.EnabledStatus
-
-		group, err = svc.grepo.Save(ctx, group)
-		if err != nil {
-			return err
-		}
-	}
-
-	// add things to the group
-	for _, thingID := range thingIDs {
-		policy := tpolicies.Policy{
-			Subject:   thingID,
-			Object:    group.ID,
-			Actions:   actions,
-			OwnerID:   id,
-			CreatedAt: time.Now(),
-		}
-
-		if _, err := svc.policies.Save(ctx, policy); err != nil {
-			return err
-		}
-	}
-
-	// add user to the group
 	policy := tpolicies.Policy{
 		Subject:   userID,
-		Object:    group.ID,
+		Object:    groupID,
 		Actions:   actions,
 		OwnerID:   id,
 		CreatedAt: time.Now(),
