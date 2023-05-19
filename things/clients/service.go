@@ -9,7 +9,7 @@ import (
 	"github.com/mainflux/mainflux/internal/apiutil"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/users/policies"
+	upolicies "github.com/mainflux/mainflux/users/policies"
 )
 
 const (
@@ -25,14 +25,14 @@ const (
 var AdminRelationKey = []string{createKey, updateRelationKey, listRelationKey, deleteRelationKey}
 
 type service struct {
-	auth        policies.AuthServiceClient
+	auth        upolicies.AuthServiceClient
 	clients     mfclients.Repository
 	clientCache ClientCache
 	idProvider  mainflux.IDProvider
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(auth policies.AuthServiceClient, c mfclients.Repository, tcache ClientCache, idp mainflux.IDProvider) Service {
+func NewService(auth upolicies.AuthServiceClient, c mfclients.Repository, tcache ClientCache, idp mainflux.IDProvider) Service {
 	return service{
 		auth:        auth,
 		clients:     c,
@@ -42,7 +42,7 @@ func NewService(auth policies.AuthServiceClient, c mfclients.Repository, tcache 
 }
 
 func (svc service) CreateThings(ctx context.Context, token string, clis ...mfclients.Client) ([]mfclients.Client, error) {
-	res, err := svc.auth.Identify(ctx, &policies.Token{Value: token})
+	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
 	if err != nil {
 		return []mfclients.Client{}, err
 	}
@@ -274,7 +274,7 @@ func (svc service) changeClientStatus(ctx context.Context, token string, client 
 }
 
 func (svc service) identifyUser(ctx context.Context, token string) (string, error) {
-	req := &policies.Token{Value: token}
+	req := &upolicies.Token{Value: token}
 	res, err := svc.auth.Identify(ctx, req)
 	if err != nil {
 		return "", errors.Wrap(errors.ErrAuthorization, err)
@@ -291,7 +291,7 @@ func (svc service) authorize(ctx context.Context, subject, object string, relati
 	if dbThing.Owner == subject {
 		return nil
 	}
-	req := &policies.AuthorizeReq{
+	req := &upolicies.AuthorizeReq{
 		Sub:        subject,
 		Obj:        object,
 		Act:        relation,
@@ -313,7 +313,7 @@ func (svc service) ShareClient(ctx context.Context, token, clientID string, acti
 	}
 	var errs error
 	for _, userID := range userIDs {
-		apr, err := svc.auth.AddPolicy(ctx, &policies.AddPolicyReq{Token: token, Sub: userID, Obj: clientID, Act: actions})
+		apr, err := svc.auth.AddPolicy(ctx, &upolicies.AddPolicyReq{Token: token, Sub: userID, Obj: clientID, Act: actions})
 		if err != nil {
 			errs = errors.Wrap(fmt.Errorf("cannot claim ownership on object '%s' by user '%s': %s", clientID, userID, err), errs)
 		}

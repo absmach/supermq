@@ -65,25 +65,11 @@ func (pr policyRepository) CheckAdmin(ctx context.Context, id string) error {
 	return nil
 }
 
-func (pr policyRepository) CheckClientOwner(ctx context.Context, id, owner string) error {
-	q := fmt.Sprintf(`SELECT id FROM clients WHERE id = '%s' AND owner = '%s';`, id, owner)
+func (pr policyRepository) CheckClientExists(ctx context.Context, id string) error {
+	q := `SELECT id FROM clients WHERE id = $1;`
 
 	var clientID string
-	if err := pr.db.QueryRowxContext(ctx, q).Scan(&clientID); err != nil {
-		return errors.Wrap(errors.ErrAuthorization, err)
-	}
-	if clientID == "" {
-		return errors.ErrAuthorization
-	}
-
-	return nil
-}
-
-func (pr policyRepository) CheckGroupOwner(ctx context.Context, id, owner string) error {
-	q := fmt.Sprintf(`SELECT id FROM group WHERE id = '%s' AND owner_id = '%s';`, id, owner)
-
-	var clientID string
-	if err := pr.db.QueryRowxContext(ctx, q).Scan(&clientID); err != nil {
+	if err := pr.db.QueryRowxContext(ctx, q, id).Scan(&clientID); err != nil {
 		return errors.Wrap(errors.ErrAuthorization, err)
 	}
 	if clientID == "" {
@@ -104,11 +90,13 @@ func (pr policyRepository) Evaluate(ctx context.Context, entityType string, poli
 		WHERE (p.subject = :subject AND p2.subject = :object AND '%s' = ANY(p.actions)) OR (c.id IS NOT NULL) LIMIT 1;`,
 			policy.Actions[0])
 	case "group":
-		// Evaluates if client is connected to the specified group and has the required action
-		q = fmt.Sprintf(`SELECT DISTINCT policies.subject FROM policies
-		LEFT JOIN groups ON groups.owner_id = policies.subject AND groups.id = policies.object
-		WHERE policies.subject = :subject AND policies.object = :object AND '%s' = ANY(policies.actions)
-		LIMIT 1`, policy.Actions[0])
+		// Evaluates if client is a member to that group and has the specified action or is the owner of the group
+		q = fmt.Sprintf(`(SELECT policies.subject FROM policies
+		WHERE policies.subject = :subject AND policies.object = :object AND '%s' = ANY(policies.actions))
+		UNION
+		(SELECT groups.owner_id as subject FROM groups
+		WHERE groups.owner_id = :subject AND groups.id = :object)`, policy.Actions[0])
+
 	default:
 		return ErrInvalidEntityType
 	}

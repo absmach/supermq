@@ -65,8 +65,13 @@ func (svc service) UpdatePolicy(ctx context.Context, token string, p Policy) err
 // AddPolicy adds a policy is added if:
 //
 //  1. The client is admin
-//  2. The client has `g_add` action on the object.
-//  3. The client is the owner of both the subject and the object.
+//
+//  2. The client has `g_add` action on the object or is the owner of the object.
+//
+//  3. The subject for the folowing:
+//
+//     3.1. If it is a user - it must exists. In the future, it must exists and in the same scope.
+//     3.2. If it is a thing - it mus be owned by the client. In the future, maybe some other checks such if the thing is already shared with me
 func (svc service) AddPolicy(ctx context.Context, token string, p Policy) error {
 	id, err := svc.identify(ctx, token)
 	if err != nil {
@@ -89,9 +94,6 @@ func (svc service) AddPolicy(ctx context.Context, token string, p Policy) error 
 		return svc.policies.Update(ctx, p)
 	}
 
-	if err := svc.checkPolicy(ctx, id, p); err != nil {
-		return err
-	}
 	p.OwnerID = id
 	p.CreatedAt = time.Now()
 
@@ -100,21 +102,20 @@ func (svc service) AddPolicy(ctx context.Context, token string, p Policy) error 
 		return svc.policies.Save(ctx, p)
 	}
 
-	// check if the client has `g_add` action on the object
+	// check if the client has `g_add` action on the object or is the owner of the object
 	pol := Policy{Subject: id, Object: p.Object, Actions: []string{"g_add"}}
 	if err := svc.policies.Evaluate(ctx, "group", pol); err == nil {
-		return svc.policies.Save(ctx, p)
+		// check if the subject is a user and if it exists
+		if err := svc.policies.CheckClientExists(ctx, p.Subject); err == nil {
+			return svc.policies.Save(ctx, p)
+		}
+
+		// TODO: check if the subject is a thing and if it is owned by the client
+
+		return errors.ErrAuthorization
 	}
 
-	// check if the client is the owner of the subject and the object
-	if err := svc.policies.CheckClientOwner(ctx, p.Subject, id); err != nil {
-		return err
-	}
-	if err := svc.policies.CheckGroupOwner(ctx, p.Object, id); err != nil {
-		return err
-	}
-
-	return svc.policies.Save(ctx, p)
+	return errors.ErrAuthorization
 }
 
 func (svc service) DeletePolicy(ctx context.Context, token string, p Policy) error {

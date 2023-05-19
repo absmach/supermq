@@ -47,14 +47,8 @@ func (m *PolicyRepository) CheckAdmin(ctx context.Context, id string) error {
 	return ret.Error(0)
 }
 
-func (m *PolicyRepository) CheckClientOwner(ctx context.Context, id, owner string) error {
-	ret := m.Called(ctx, id, owner)
-
-	return ret.Error(0)
-}
-
-func (m *PolicyRepository) CheckGroupOwner(ctx context.Context, id, owner string) error {
-	ret := m.Called(ctx, id, owner)
+func (m *PolicyRepository) CheckClientExists(ctx context.Context, id string) error {
+	ret := m.Called(ctx, id)
 
 	return ret.Error(0)
 }

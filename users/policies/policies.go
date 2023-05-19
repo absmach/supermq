@@ -53,11 +53,8 @@ type PolicyRepository interface {
 	// CheckAdmin checks if the user is an admin user
 	CheckAdmin(ctx context.Context, id string) error
 
-	// CheckClientOwner checks if the user is the owner of the client
-	CheckClientOwner(ctx context.Context, id, owner string) error
-
-	// CheckGroupOwner checks if the user is the owner of the group
-	CheckGroupOwner(ctx context.Context, id, owner string) error
+	// CheckClientExists checks if the client exists
+	CheckClientExists(ctx context.Context, id string) error
 
 	// Evaluate is used to evaluate if you have the correct permissions.
 	// We evaluate if we are in the same group first then evaluate if the

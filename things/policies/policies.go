@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux/internal/apiutil"
-	"github.com/mainflux/mainflux/users/policies"
 )
 
 // PolicyTypes contains a list of the available policy types currently supported
@@ -112,7 +111,7 @@ func (p Policy) Validate() error {
 		// Validate things policies first
 		if ok := ValidateAction(p); !ok {
 			// Validate users policies for clients connected to a group
-			if ok := policies.ValidateAction(p); !ok {
+			if ok := ValidateAction(p); !ok {
 				return apiutil.ErrMalformedPolicyAct
 			}
 		}
