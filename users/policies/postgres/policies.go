@@ -65,20 +65,6 @@ func (pr policyRepository) CheckAdmin(ctx context.Context, id string) error {
 	return nil
 }
 
-func (pr policyRepository) CheckClientExists(ctx context.Context, id string) error {
-	q := `SELECT id FROM clients WHERE id = $1;`
-
-	var clientID string
-	if err := pr.db.QueryRowxContext(ctx, q, id).Scan(&clientID); err != nil {
-		return errors.Wrap(errors.ErrAuthorization, err)
-	}
-	if clientID == "" {
-		return errors.ErrAuthorization
-	}
-
-	return nil
-}
-
 func (pr policyRepository) Evaluate(ctx context.Context, entityType string, policy policies.Policy) error {
 	q := ""
 	switch entityType {

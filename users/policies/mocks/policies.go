@@ -46,9 +46,3 @@ func (m *PolicyRepository) CheckAdmin(ctx context.Context, id string) error {
 
 	return ret.Error(0)
 }
-
-func (m *PolicyRepository) CheckClientExists(ctx context.Context, id string) error {
-	ret := m.Called(ctx, id)
-
-	return ret.Error(0)
-}
