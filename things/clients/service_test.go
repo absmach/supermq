@@ -13,6 +13,8 @@ import (
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/things/clients"
 	"github.com/mainflux/mainflux/things/clients/mocks"
+	gmocks "github.com/mainflux/mainflux/things/groups/mocks"
+	pmocks "github.com/mainflux/mainflux/things/policies/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -43,8 +45,10 @@ func newService(tokens map[string]string) (clients.Service, *mocks.ClientReposit
 	thingCache := mocks.NewClientCache()
 	idProvider := uuid.NewMock()
 	cRepo := new(mocks.ClientRepository)
+	gRepo := new(gmocks.GroupRepository)
+	pRepo := new(pmocks.PolicyRepository)
 
-	return clients.NewService(auth, cRepo, thingCache, idProvider), cRepo
+	return clients.NewService(auth, pRepo, cRepo, gRepo, thingCache, idProvider), cRepo
 }
 
 func TestRegisterClient(t *testing.T) {

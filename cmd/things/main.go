@@ -176,7 +176,7 @@ func newService(db *sqlx.DB, auth upolicies.AuthServiceClient, cacheClient *redi
 	policyCache := redispcache.NewCache(cacheClient)
 	thingCache := redisthcache.NewCache(cacheClient)
 
-	csvc := clients.NewService(auth, cRepo, thingCache, idp)
+	csvc := clients.NewService(auth, pRepo, cRepo, gRepo, thingCache, idp)
 	gsvc := groups.NewService(auth, gRepo, idp)
 	psvc := tpolicies.NewService(auth, pRepo, thingCache, policyCache, idp)
 

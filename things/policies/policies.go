@@ -72,7 +72,7 @@ type Service interface {
 	// AddPolicy creates a policy for the given subject, so that, after
 	// AddPolicy, `subject` has a `relation` on `object`. Returns a non-nil
 	// error in case of failures.
-	AddPolicy(ctx context.Context, token string, p Policy) (Policy, error)
+	AddPolicy(ctx context.Context, token string, clientType ClientType, p Policy) (Policy, error)
 
 	// DeletePolicy removes a policy.
 	DeletePolicy(ctx context.Context, token string, p Policy) error
@@ -94,6 +94,18 @@ type Cache interface {
 
 	// Remove deletes a client connection to a group.
 	Remove(ctx context.Context, policy Policy) error
+}
+
+// ClientCache contains thing caching interface.
+type ClientCache interface {
+	// Save stores pair thing key, thing id.
+	Save(context.Context, string, string) error
+
+	// ID returns thing ID for given key.
+	ID(context.Context, string) (string, error)
+
+	// Removes thing from cache.
+	Remove(context.Context, string) error
 }
 
 // Validate returns an error if policy representation is invalid.

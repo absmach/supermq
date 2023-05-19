@@ -10,8 +10,12 @@ import (
 	upolicies "github.com/mainflux/mainflux/users/policies"
 )
 
-// Possible token types are access and refresh tokens.
+type ClientType int
+
 const (
+	UserClientType = iota
+	ThingClinetType
+
 	ReadAction       = "m_read"
 	WriteAction      = "m_write"
 	ClientEntityType = "client"
@@ -76,67 +80,135 @@ func (svc service) Authorize(ctx context.Context, ar AccessRequest, entity strin
 
 }
 
-func (svc service) AddPolicy(ctx context.Context, token string, p Policy) (Policy, error) {
-	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
+// AddPolicy adds a policy is added if:
+//
+//  1. The client is admin
+//
+//  2. The client has `g_add` action on the object or is the owner of the object.
+func (svc service) AddPolicy(ctx context.Context, token string, clientType ClientType, p Policy) (Policy, error) {
+	userID, err := svc.identifyUser(ctx, token)
 	if err != nil {
-		return Policy{}, errors.Wrap(errors.ErrAuthentication, err)
+		return Policy{}, err
 	}
-
 	if err := p.Validate(); err != nil {
 		return Policy{}, err
 	}
+	pm := Page{Subject: p.Subject, Object: p.Object, Offset: 0, Limit: 1}
+	page, err := svc.policies.Retrieve(ctx, pm)
+	if err != nil {
+		return Policy{}, err
+	}
 
-	p.OwnerID = res.GetId()
+	// If the policy already exists, replace the actions
+	if len(page.Policies) == 1 {
+		p.UpdatedAt = time.Now()
+		p.UpdatedBy = userID
+		return svc.policies.Update(ctx, p)
+	}
+
+	p.OwnerID = userID
 	p.CreatedAt = time.Now()
 
-	p, err = svc.policies.Save(ctx, p)
+	if err := svc.checkSubject(ctx, clientType, userID, p); err != nil {
+		return Policy{}, err
+	}
+
+	// If the client is admin, add the policy
+	if err := svc.checkAdmin(ctx, userID); err == nil {
+		if err := svc.policyCache.Put(ctx, p); err != nil {
+			return Policy{}, err
+		}
+		return svc.policies.Save(ctx, p)
+	}
+
+	// If the client has `g_add` action on the object or is the owner of the object, add the policy
+	pol := Policy{Subject: userID, Object: p.Object, Actions: []string{"g_add"}}
+	if err := svc.policies.Evaluate(ctx, "group", pol); err == nil {
+		if err := svc.policyCache.Put(ctx, p); err != nil {
+			return Policy{}, err
+		}
+		return svc.policies.Save(ctx, p)
+	}
+
+	return Policy{}, errors.ErrAuthorization
+}
+
+// checkSubject checks if the subject:
+//
+//  1. If it is a user - the client is authorized to manage it.
+//  2. If it is a thing - the client is authorized to manage it.
+func (svc service) checkSubject(ctx context.Context, clientType ClientType, userID string, p Policy) error {
+	switch clientType {
+	case UserClientType:
+		req := &upolicies.AuthorizeReq{
+			Sub:        userID,
+			Obj:        p.Subject,
+			Act:        "m_manage",
+			EntityType: GroupEntityType,
+		}
+		res, err := svc.auth.Authorize(ctx, req)
+		if err != nil {
+			return errors.Wrap(errors.ErrAuthorization, err)
+		}
+		if !res.GetAuthorized() {
+			return errors.ErrAuthorization
+		}
+		return nil
+	case ThingClinetType:
+		policy := Policy{Subject: userID, Object: p.Subject, Actions: []string{"m_manage"}}
+		if err := svc.Authorize(ctx, GroupEntityType, policy); err != nil {
+			return errors.Wrap(errors.ErrAuthorization, err)
+		}
+		return nil
+	default:
+		return errors.ErrAuthorization
+	}
+}
+func (svc service) UpdatePolicy(ctx context.Context, token string, p Policy) (Policy, error) {
+	userID, err := svc.identifyUser(ctx, token)
 	if err != nil {
 		return Policy{}, err
 	}
 
-	if err := svc.policyCache.Put(ctx, p); err != nil {
-		return p, err
-	}
-	return p, nil
-}
-
-func (svc service) UpdatePolicy(ctx context.Context, token string, p Policy) (Policy, error) {
-	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
-	if err != nil {
-		return Policy{}, errors.Wrap(errors.ErrAuthentication, err)
-	}
 	if err := p.Validate(); err != nil {
 		return Policy{}, err
 	}
-	if err := svc.checkAction(ctx, res.GetId(), p); err != nil {
+	if err := svc.checkPolicy(ctx, userID, p); err != nil {
 		return Policy{}, err
 	}
 	p.UpdatedAt = time.Now()
-	p.UpdatedBy = res.GetId()
+	p.UpdatedBy = userID
 
 	return svc.policies.Update(ctx, p)
 }
 
 func (svc service) ListPolicies(ctx context.Context, token string, pm Page) (PolicyPage, error) {
-	if _, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token}); err != nil {
-		return PolicyPage{}, errors.Wrap(errors.ErrAuthentication, err)
+	userID, err := svc.identifyUser(ctx, token)
+	if err != nil {
+		return PolicyPage{}, err
 	}
 	if err := pm.Validate(); err != nil {
 		return PolicyPage{}, err
 	}
-
-	page, err := svc.policies.Retrieve(ctx, pm)
-	if err != nil {
-		return PolicyPage{}, err
+	// If the user is admin, return all policies
+	if err := svc.checkAdmin(ctx, userID); err == nil {
+		return svc.policies.Retrieve(ctx, pm)
 	}
 
-	return page, err
+	// If the user is not admin, return only the policies that they are in
+	pm.Subject = userID
+	pm.Object = userID
+
+	return svc.policies.Retrieve(ctx, pm)
 }
 
 func (svc service) DeletePolicy(ctx context.Context, token string, p Policy) error {
-	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
+	userID, err := svc.identifyUser(ctx, token)
 	if err != nil {
-		return errors.Wrap(errors.ErrAuthentication, err)
+		return err
+	}
+	if err := svc.checkPolicy(ctx, userID, p); err != nil {
+		return err
 	}
 	if err := svc.checkAction(ctx, res.GetId(), p); err != nil {
 		return err
@@ -147,29 +219,51 @@ func (svc service) DeletePolicy(ctx context.Context, token string, p Policy) err
 	return svc.policies.Delete(ctx, p)
 }
 
-// checkAction check if client updating the policy has the sufficient priviledges.
-// If the client is the owner of the policy.
-// If the client is the admin.
-func (svc service) checkAction(ctx context.Context, clientID string, p Policy) error {
-	pm := Page{Subject: p.Subject, Object: p.Object, OwnerID: clientID, Total: 1, Offset: 0}
+// checkPolicy checks for the following:
+//
+//  1. Check if the client is admin
+//  2. Check if the client is the owner of the policy
+func (svc service) checkPolicy(ctx context.Context, clientID string, p Policy) error {
+	// Check if the client is admin
+	if err := svc.checkAdmin(ctx, clientID); err == nil {
+		return nil
+	}
+
+	// Check if the client is the owner of the policy
+	pm := Page{Subject: p.Subject, Object: p.Object, OwnerID: clientID, Offset: 0, Limit: 1}
 	page, err := svc.policies.Retrieve(ctx, pm)
 	if err != nil {
 		return err
 	}
-	if len(page.Policies) != 1 {
-		return errors.ErrAuthorization
-	}
-	// If the client is the owner of the policy
-	if page.Policies[0].OwnerID == clientID {
-		return nil
-	}
-
-	// If the client is the admin
-	req := &upolicies.AuthorizeReq{Sub: clientID, Obj: p.Object, Act: p.Actions[0], EntityType: "client"}
-	if _, err := svc.auth.Authorize(ctx, req); err == nil {
+	if len(page.Policies) == 1 && page.Policies[0].OwnerID == clientID {
 		return nil
 	}
 
 	return errors.ErrAuthorization
+}
 
+func (svc service) identifyUser(ctx context.Context, token string) (string, error) {
+	req := &upolicies.Token{Value: token}
+	res, err := svc.auth.Identify(ctx, req)
+	if err != nil {
+		return "", errors.Wrap(errors.ErrAuthorization, err)
+	}
+	return res.GetId(), nil
+}
+
+func (svc service) checkAdmin(ctx context.Context, id string) error {
+	req := &upolicies.AuthorizeReq{
+		Sub:        id,
+		Obj:        "object",
+		Act:        "action",
+		EntityType: GroupEntityType,
+	}
+	res, err := svc.auth.Authorize(ctx, req)
+	if err != nil {
+		return errors.Wrap(errors.ErrAuthorization, err)
+	}
+	if !res.GetAuthorized() {
+		return errors.ErrAuthorization
+	}
+	return nil
 }

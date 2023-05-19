@@ -58,10 +58,8 @@ func (svc service) CreateGroups(ctx context.Context, token string, gs ...groups.
 		if g.Status != mfclients.EnabledStatus && g.Status != mfclients.DisabledStatus {
 			return []groups.Group{}, apiutil.ErrInvalidStatus
 		}
-
 		g.CreatedAt = time.Now()
-		g.UpdatedAt = g.CreatedAt
-		g.UpdatedBy = g.Owner
+
 		grp, err := svc.groups.Save(ctx, g)
 		if err != nil {
 			return []groups.Group{}, err

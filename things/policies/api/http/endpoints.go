@@ -59,7 +59,7 @@ func connectEndpoint(svc policies.Service) endpoint.Endpoint {
 			Object:  cr.GroupID,
 			Actions: cr.Actions,
 		}
-		policy, err := svc.AddPolicy(ctx, cr.token, policy)
+		policy, err := svc.AddPolicy(ctx, cr.token, policies.ThingClinetType, policy)
 		if err != nil {
 			return nil, err
 		}
@@ -86,7 +86,7 @@ func connectThingsEndpoint(svc policies.Service) endpoint.Endpoint {
 					Object:  cid,
 					Actions: cr.Actions,
 				}
-				if _, err := svc.AddPolicy(ctx, cr.token, policy); err != nil {
+				if _, err := svc.AddPolicy(ctx, cr.token, policies.ThingClinetType, policy); err != nil {
 					return nil, err
 				}
 				ps = append(ps, policy)

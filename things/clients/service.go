@@ -2,47 +2,51 @@ package clients
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
+	mfgroups "github.com/mainflux/mainflux/pkg/groups"
+	tpolicies "github.com/mainflux/mainflux/things/policies"
 	upolicies "github.com/mainflux/mainflux/users/policies"
 )
 
 const (
 	MyKey             = "mine"
 	thingsObjectKey   = "things"
-	createKey         = "c_add"
 	updateRelationKey = "c_update"
 	listRelationKey   = "c_list"
 	deleteRelationKey = "c_delete"
 	entityType        = "group"
 )
 
-var AdminRelationKey = []string{createKey, updateRelationKey, listRelationKey, deleteRelationKey}
+var AdminRelationKey = []string{updateRelationKey, listRelationKey, deleteRelationKey}
 
 type service struct {
-	auth        upolicies.AuthServiceClient
+	uauth       upolicies.AuthServiceClient
+	policies    tpolicies.Repository
 	clients     mfclients.Repository
 	clientCache ClientCache
 	idProvider  mainflux.IDProvider
+	grepo       mfgroups.Repository
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(auth upolicies.AuthServiceClient, c mfclients.Repository, tcache ClientCache, idp mainflux.IDProvider) Service {
+func NewService(uauth upolicies.AuthServiceClient, policies tpolicies.Repository, c mfclients.Repository, grepo mfgroups.Repository, tcache ClientCache, idp mainflux.IDProvider) Service {
 	return service{
-		auth:        auth,
+		uauth:       uauth,
+		policies:    policies,
 		clients:     c,
+		grepo:       grepo,
 		clientCache: tcache,
 		idProvider:  idp,
 	}
 }
 
 func (svc service) CreateThings(ctx context.Context, token string, clis ...mfclients.Client) ([]mfclients.Client, error) {
-	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
+	userID, err := svc.identifyUser(ctx, token)
 	if err != nil {
 		return []mfclients.Client{}, err
 	}
@@ -63,14 +67,13 @@ func (svc service) CreateThings(ctx context.Context, token string, clis ...mfcli
 			cli.Credentials.Secret = key
 		}
 		if cli.Owner == "" {
-			cli.Owner = res.GetId()
+			cli.Owner = userID
 		}
 		if cli.Status != mfclients.DisabledStatus && cli.Status != mfclients.EnabledStatus {
 			return []mfclients.Client{}, apiutil.ErrInvalidStatus
 		}
 		cli.CreatedAt = time.Now()
-		cli.UpdatedAt = cli.CreatedAt
-		cli.UpdatedBy = cli.Owner
+
 		clients = append(clients, cli)
 	}
 	return svc.clients.Save(ctx, clients...)
@@ -94,7 +97,7 @@ func (svc service) ListClients(ctx context.Context, token string, pm mfclients.P
 	}
 
 	// If the user is admin, fetch all things from database.
-	if err := svc.authorize(ctx, userID, thingsObjectKey, listRelationKey); err == nil {
+	if err := svc.checkAdmin(ctx, userID, thingsObjectKey, listRelationKey); err == nil {
 		pm.Owner = ""
 		pm.SharedBy = ""
 		return svc.clients.RetrieveAll(ctx, pm)
@@ -231,7 +234,7 @@ func (svc service) ListClientsByGroup(ctx context.Context, token, groupID string
 		return mfclients.MembersPage{}, err
 	}
 	// If the user is admin, fetch all things connected to the channel.
-	if err := svc.authorize(ctx, token, thingsObjectKey, listRelationKey); err == nil {
+	if err := svc.checkAdmin(ctx, token, thingsObjectKey, listRelationKey); err == nil {
 		return svc.clients.Members(ctx, groupID, pm)
 	}
 	pm.Owner = userID
@@ -275,7 +278,7 @@ func (svc service) changeClientStatus(ctx context.Context, token string, client 
 
 func (svc service) identifyUser(ctx context.Context, token string) (string, error) {
 	req := &upolicies.Token{Value: token}
-	res, err := svc.auth.Identify(ctx, req)
+	res, err := svc.uauth.Identify(ctx, req)
 	if err != nil {
 		return "", errors.Wrap(errors.ErrAuthorization, err)
 	}
@@ -283,21 +286,31 @@ func (svc service) identifyUser(ctx context.Context, token string) (string, erro
 }
 
 func (svc service) authorize(ctx context.Context, subject, object string, relation string) error {
-	// Check if the client is the owner of the thing.
-	dbThing, err := svc.clients.RetrieveByID(ctx, object)
-	if err != nil {
-		return err
-	}
-	if dbThing.Owner == subject {
+	// If the user is admin, skip authorization.
+	if err := svc.checkAdmin(ctx, subject, thingsObjectKey, relation); err == nil {
 		return nil
 	}
+
+	policy := tpolicies.Policy{
+		Subject: subject,
+		Object:  object,
+		Actions: []string{relation},
+	}
+	if err := policy.Validate(); err != nil {
+		return err
+	}
+
+	return svc.policies.Evaluate(ctx, entityType, policy)
+}
+
+func (svc service) checkAdmin(ctx context.Context, subject, object string, relation string) error {
 	req := &upolicies.AuthorizeReq{
 		Sub:        subject,
 		Obj:        object,
 		Act:        relation,
 		EntityType: entityType,
 	}
-	res, err := svc.auth.Authorize(ctx, req)
+	res, err := svc.uauth.Authorize(ctx, req)
 	if err != nil {
 		return errors.Wrap(errors.ErrAuthorization, err)
 	}
@@ -307,19 +320,68 @@ func (svc service) authorize(ctx context.Context, subject, object string, relati
 	return nil
 }
 
-func (svc service) ShareClient(ctx context.Context, token, clientID string, actions, userIDs []string) error {
-	if err := svc.authorize(ctx, token, clientID, updateRelationKey); err != nil {
+// ShareClient shares a thing with a user.
+// We need to create a group, add things to the group and add the user to the group.
+func (svc service) ShareClient(ctx context.Context, token, userID string, actions, thingIDs []string) error {
+	var err error
+	id, err := svc.identifyUser(ctx, token)
+	if err != nil {
 		return err
 	}
-	var errs error
-	for _, userID := range userIDs {
-		apr, err := svc.auth.AddPolicy(ctx, &upolicies.AddPolicyReq{Token: token, Sub: userID, Obj: clientID, Act: actions})
+
+	// check if the group already exists
+	group := mfgroups.Group{Name: "sharing-group-with-" + userID}
+	pm := mfgroups.GroupsPage{
+		Page: mfgroups.Page{
+			Offset:  0,
+			Limit:   1,
+			OwnerID: id,
+			Name:    group.Name,
+		},
+	}
+	gps, _ := svc.grepo.RetrieveAll(ctx, pm)
+	if len(gps.Groups) == 0 {
+		// create the group
+		group.ID, err = svc.idProvider.ID()
 		if err != nil {
-			errs = errors.Wrap(fmt.Errorf("cannot claim ownership on object '%s' by user '%s': %s", clientID, userID, err), errs)
+			return err
 		}
-		if !apr.GetAuthorized() {
-			errs = errors.Wrap(fmt.Errorf("cannot claim ownership on object '%s' by user '%s': unauthorized", clientID, userID), errs)
+		group.CreatedAt = time.Now()
+		group.Owner = id
+		group.Status = mfclients.EnabledStatus
+
+		group, err = svc.grepo.Save(ctx, group)
+		if err != nil {
+			return err
 		}
 	}
-	return errs
+
+	// add things to the group
+	for _, thingID := range thingIDs {
+		policy := tpolicies.Policy{
+			Subject:   thingID,
+			Object:    group.ID,
+			Actions:   actions,
+			OwnerID:   id,
+			CreatedAt: time.Now(),
+		}
+
+		if _, err := svc.policies.Save(ctx, policy); err != nil {
+			return err
+		}
+	}
+
+	// add user to the group
+	policy := tpolicies.Policy{
+		Subject:   userID,
+		Object:    group.ID,
+		Actions:   actions,
+		OwnerID:   id,
+		CreatedAt: time.Now(),
+	}
+	if _, err = svc.policies.Save(ctx, policy); err != nil {
+		return err
+	}
+
+	return nil
 }
