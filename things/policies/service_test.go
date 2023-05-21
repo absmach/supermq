@@ -13,6 +13,7 @@ import (
 	"github.com/mainflux/mainflux/things/clients/mocks"
 	"github.com/mainflux/mainflux/things/policies"
 	pmocks "github.com/mainflux/mainflux/things/policies/mocks"
+	umocks "github.com/mainflux/mainflux/users/policies/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -26,19 +27,20 @@ var (
 	token         = "token"
 )
 
-func newService(tokens map[string]string) (policies.Service, *pmocks.PolicyRepository) {
-	adminPolicy := mocks.MockSubjectSet{Object: "authorities", Relation: clients.AdminRelationKey}
+func newService(tokens map[string]string) (policies.Service, *pmocks.PolicyRepository, *umocks.PolicyRepository) {
+	adminPolicy := mocks.MockSubjectSet{Object: "object", Relation: clients.AdminRelationKey}
 	auth := mocks.NewAuthService(tokens, map[string][]mocks.MockSubjectSet{adminEmail: {adminPolicy}})
 	idProvider := uuid.NewMock()
 	thingsCache := mocks.NewClientCache()
 	policiesCache := pmocks.NewChannelCache()
 	pRepo := new(pmocks.PolicyRepository)
+	uRepo := new(umocks.PolicyRepository)
 
-	return policies.NewService(auth, pRepo, thingsCache, policiesCache, idProvider), pRepo
+	return policies.NewService(auth, pRepo, thingsCache, policiesCache, idProvider), pRepo, uRepo
 }
 
 func TestAddPolicy(t *testing.T) {
-	svc, pRepo := newService(map[string]string{token: adminEmail})
+	svc, pRepo, _ := newService(map[string]string{token: adminEmail})
 
 	policy := policies.Policy{Object: "obj1", Actions: []string{"m_read"}, Subject: "sub1"}
 
@@ -56,77 +58,70 @@ func TestAddPolicy(t *testing.T) {
 			token:  token,
 			err:    nil,
 		},
-		// {
-		// 	desc:   "add existing policy",
-		// 	policy: policy,
-		// 	page:   policies.PolicyPage{Policies: []policies.Policy{policy}},
-		// 	token:  token,
-		// 	err:    errors.ErrConflict,
-		// },
-		// {
-		// 	desc: "add a new policy with owner",
-		// 	page: policies.PolicyPage{},
-		// 	policy: policies.Policy{
-		// 		OwnerID: testsutil.GenerateUUID(t, idProvider),
-		// 		Object:  "objwithowner",
-		// 		Actions: []string{"m_read"},
-		// 		Subject: "subwithowner",
-		// 	},
-		// 	err:   nil,
-		// 	token: token,
-		// },
-		// {
-		// 	desc: "add a new policy with more actions",
-		// 	page: policies.PolicyPage{},
-		// 	policy: policies.Policy{
-		// 		Object:  "obj2",
-		// 		Actions: []string{"c_delete", "c_update", "c_list"},
-		// 		Subject: "sub2",
-		// 	},
-		// 	err:   nil,
-		// 	token: token,
-		// },
-		// {
-		// 	desc: "add a new policy with wrong action",
-		// 	page: policies.PolicyPage{},
-		// 	policy: policies.Policy{
-		// 		Object:  "obj3",
-		// 		Actions: []string{"wrong"},
-		// 		Subject: "sub3",
-		// 	},
-		// 	err:   apiutil.ErrMalformedPolicyAct,
-		// 	token: token,
-		// },
-		// {
-		// 	desc: "add a new policy with empty object",
-		// 	page: policies.PolicyPage{},
-		// 	policy: policies.Policy{
-		// 		Actions: []string{"c_delete"},
-		// 		Subject: "sub4",
-		// 	},
-		// 	err:   apiutil.ErrMissingPolicyObj,
-		// 	token: token,
-		// },
-		// {
-		// 	desc: "add a new policy with empty subject",
-		// 	page: policies.PolicyPage{},
-		// 	policy: policies.Policy{
-		// 		Actions: []string{"c_delete"},
-		// 		Object:  "obj4",
-		// 	},
-		// 	err:   apiutil.ErrMissingPolicySub,
-		// 	token: token,
-		// },
-		// {
-		// 	desc: "add a new policy with empty action",
-		// 	page: policies.PolicyPage{},
-		// 	policy: policies.Policy{
-		// 		Subject: "sub5",
-		// 		Object:  "obj5",
-		// 	},
-		// 	err:   apiutil.ErrMalformedPolicyAct,
-		// 	token: token,
-		// },
+		{
+			desc: "add a new policy with owner",
+			page: policies.PolicyPage{},
+			policy: policies.Policy{
+				OwnerID: testsutil.GenerateUUID(t, idProvider),
+				Object:  "objwithowner",
+				Actions: []string{"m_read"},
+				Subject: "subwithowner",
+			},
+			err:   nil,
+			token: token,
+		},
+		{
+			desc: "add a new policy with more actions",
+			page: policies.PolicyPage{},
+			policy: policies.Policy{
+				Object:  "obj2",
+				Actions: []string{"c_delete", "c_update", "c_list"},
+				Subject: "sub2",
+			},
+			err:   nil,
+			token: token,
+		},
+		{
+			desc: "add a new policy with wrong action",
+			page: policies.PolicyPage{},
+			policy: policies.Policy{
+				Object:  "obj3",
+				Actions: []string{"wrong"},
+				Subject: "sub3",
+			},
+			err:   apiutil.ErrMalformedPolicyAct,
+			token: token,
+		},
+		{
+			desc: "add a new policy with empty object",
+			page: policies.PolicyPage{},
+			policy: policies.Policy{
+				Actions: []string{"c_delete"},
+				Subject: "sub4",
+			},
+			err:   apiutil.ErrMissingPolicyObj,
+			token: token,
+		},
+		{
+			desc: "add a new policy with empty subject",
+			page: policies.PolicyPage{},
+			policy: policies.Policy{
+				Actions: []string{"c_delete"},
+				Object:  "obj4",
+			},
+			err:   apiutil.ErrMissingPolicySub,
+			token: token,
+		},
+		{
+			desc: "add a new policy with empty action",
+			page: policies.PolicyPage{},
+			policy: policies.Policy{
+				Subject: "sub5",
+				Object:  "obj5",
+			},
+			err:   apiutil.ErrMalformedPolicyAct,
+			token: token,
+		},
 	}
 
 	for _, tc := range cases {
@@ -154,7 +149,7 @@ func TestAddPolicy(t *testing.T) {
 }
 
 func TestAuthorize(t *testing.T) {
-	svc, pRepo := newService(map[string]string{token: adminEmail})
+	svc, pRepo, _ := newService(map[string]string{token: adminEmail})
 
 	cases := []struct {
 		desc   string
@@ -201,8 +196,7 @@ func TestAuthorize(t *testing.T) {
 }
 
 func TestDeletePolicy(t *testing.T) {
-
-	svc, pRepo := newService(map[string]string{token: adminEmail})
+	svc, pRepo, uRepo := newService(map[string]string{token: adminEmail})
 
 	pr := policies.Policy{Object: testsutil.GenerateUUID(t, idProvider), Actions: memberActions, Subject: testsutil.GenerateUUID(t, idProvider)}
 
@@ -212,11 +206,12 @@ func TestDeletePolicy(t *testing.T) {
 	assert.EqualError(t, err, errors.ErrAuthorization.Error(), fmt.Sprintf("deleting %v policy expected to fail: %s", pr, err))
 	repoCall.Unset()
 	repoCall1.Unset()
+	repoCall2.Unset()
 }
 
 func TestListPolicies(t *testing.T) {
 
-	svc, pRepo := newService(map[string]string{token: adminEmail})
+	svc, pRepo, _ := newService(map[string]string{token: adminEmail})
 
 	id := testsutil.GenerateUUID(t, idProvider)
 
@@ -305,7 +300,7 @@ func TestListPolicies(t *testing.T) {
 
 func TestUpdatePolicies(t *testing.T) {
 
-	svc, pRepo := newService(map[string]string{token: adminEmail})
+	svc, pRepo, _ := newService(map[string]string{token: adminEmail})
 
 	policy := policies.Policy{Object: "obj1", Actions: []string{"m_read"}, Subject: "sub1"}
 

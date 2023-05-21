@@ -215,7 +215,7 @@ func (svc service) checkAdmin(ctx context.Context, id string) error {
 	req := &upolicies.AuthorizeReq{
 		Sub:        id,
 		Obj:        "object",
-		Act:        "action",
+		Act:        "c_update",
 		EntityType: GroupEntityType,
 	}
 	res, err := svc.auth.Authorize(ctx, req)
