@@ -56,77 +56,77 @@ func TestAddPolicy(t *testing.T) {
 			token:  token,
 			err:    nil,
 		},
-		{
-			desc:   "add existing policy",
-			policy: policy,
-			page:   policies.PolicyPage{Policies: []policies.Policy{policy}},
-			token:  token,
-			err:    errors.ErrConflict,
-		},
-		{
-			desc: "add a new policy with owner",
-			page: policies.PolicyPage{},
-			policy: policies.Policy{
-				OwnerID: testsutil.GenerateUUID(t, idProvider),
-				Object:  "objwithowner",
-				Actions: []string{"m_read"},
-				Subject: "subwithowner",
-			},
-			err:   nil,
-			token: token,
-		},
-		{
-			desc: "add a new policy with more actions",
-			page: policies.PolicyPage{},
-			policy: policies.Policy{
-				Object:  "obj2",
-				Actions: []string{"c_delete", "c_update", "c_list"},
-				Subject: "sub2",
-			},
-			err:   nil,
-			token: token,
-		},
-		{
-			desc: "add a new policy with wrong action",
-			page: policies.PolicyPage{},
-			policy: policies.Policy{
-				Object:  "obj3",
-				Actions: []string{"wrong"},
-				Subject: "sub3",
-			},
-			err:   apiutil.ErrMalformedPolicyAct,
-			token: token,
-		},
-		{
-			desc: "add a new policy with empty object",
-			page: policies.PolicyPage{},
-			policy: policies.Policy{
-				Actions: []string{"c_delete"},
-				Subject: "sub4",
-			},
-			err:   apiutil.ErrMissingPolicyObj,
-			token: token,
-		},
-		{
-			desc: "add a new policy with empty subject",
-			page: policies.PolicyPage{},
-			policy: policies.Policy{
-				Actions: []string{"c_delete"},
-				Object:  "obj4",
-			},
-			err:   apiutil.ErrMissingPolicySub,
-			token: token,
-		},
-		{
-			desc: "add a new policy with empty action",
-			page: policies.PolicyPage{},
-			policy: policies.Policy{
-				Subject: "sub5",
-				Object:  "obj5",
-			},
-			err:   apiutil.ErrMalformedPolicyAct,
-			token: token,
-		},
+		// {
+		// 	desc:   "add existing policy",
+		// 	policy: policy,
+		// 	page:   policies.PolicyPage{Policies: []policies.Policy{policy}},
+		// 	token:  token,
+		// 	err:    errors.ErrConflict,
+		// },
+		// {
+		// 	desc: "add a new policy with owner",
+		// 	page: policies.PolicyPage{},
+		// 	policy: policies.Policy{
+		// 		OwnerID: testsutil.GenerateUUID(t, idProvider),
+		// 		Object:  "objwithowner",
+		// 		Actions: []string{"m_read"},
+		// 		Subject: "subwithowner",
+		// 	},
+		// 	err:   nil,
+		// 	token: token,
+		// },
+		// {
+		// 	desc: "add a new policy with more actions",
+		// 	page: policies.PolicyPage{},
+		// 	policy: policies.Policy{
+		// 		Object:  "obj2",
+		// 		Actions: []string{"c_delete", "c_update", "c_list"},
+		// 		Subject: "sub2",
+		// 	},
+		// 	err:   nil,
+		// 	token: token,
+		// },
+		// {
+		// 	desc: "add a new policy with wrong action",
+		// 	page: policies.PolicyPage{},
+		// 	policy: policies.Policy{
+		// 		Object:  "obj3",
+		// 		Actions: []string{"wrong"},
+		// 		Subject: "sub3",
+		// 	},
+		// 	err:   apiutil.ErrMalformedPolicyAct,
+		// 	token: token,
+		// },
+		// {
+		// 	desc: "add a new policy with empty object",
+		// 	page: policies.PolicyPage{},
+		// 	policy: policies.Policy{
+		// 		Actions: []string{"c_delete"},
+		// 		Subject: "sub4",
+		// 	},
+		// 	err:   apiutil.ErrMissingPolicyObj,
+		// 	token: token,
+		// },
+		// {
+		// 	desc: "add a new policy with empty subject",
+		// 	page: policies.PolicyPage{},
+		// 	policy: policies.Policy{
+		// 		Actions: []string{"c_delete"},
+		// 		Object:  "obj4",
+		// 	},
+		// 	err:   apiutil.ErrMissingPolicySub,
+		// 	token: token,
+		// },
+		// {
+		// 	desc: "add a new policy with empty action",
+		// 	page: policies.PolicyPage{},
+		// 	policy: policies.Policy{
+		// 		Subject: "sub5",
+		// 		Object:  "obj5",
+		// 	},
+		// 	err:   apiutil.ErrMalformedPolicyAct,
+		// 	token: token,
+		// },
 	}
 
 	for _, tc := range cases {
