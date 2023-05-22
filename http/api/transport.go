@@ -16,7 +16,6 @@ import (
 	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
-	"github.com/hashicorp/go-uuid"
 	"github.com/mainflux/mainflux"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/internal/apiutil"
@@ -122,10 +121,6 @@ func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	case !ok:
 		token = apiutil.ExtractThingKey(r)
 	}
-	_, err = uuid.ParseUUID(token)
-	if err != nil {
-		return nil, errors.ErrMalformedEntity
-	}
 
 	payload, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -133,16 +128,10 @@ func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	}
 	defer r.Body.Close()
 
-	channel := bone.GetValue(r, "chanID")
-	_, err = uuid.ParseUUID(channel)
-	if err != nil {
-		return nil, errors.ErrMalformedEntity
-	}
-
 	req := publishReq{
 		msg: &messaging.Message{
 			Protocol: protocol,
-			Channel:  channel,
+			Channel:  bone.GetValue(r, "chanID"),
 			Subtopic: subtopic,
 			Payload:  payload,
 			Created:  time.Now().UnixNano(),
