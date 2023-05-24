@@ -6,25 +6,24 @@ package grpc_test
 import (
 	"context"
 	"fmt"
-	"net"
 	"testing"
 	"time"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/auth"
 	grpcapi "github.com/mainflux/mainflux/auth/api/grpc"
-	"github.com/mainflux/mainflux/auth/jwt"
-	"github.com/mainflux/mainflux/auth/mocks"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 )
 
 const (
-	port        = 8081
+	port        = 7001
 	secret      = "secret"
 	email       = "test@example.com"
 	id          = "testID"
@@ -42,30 +41,11 @@ const (
 
 var svc auth.Service
 
-func newService() auth.Service {
-	repo := mocks.NewKeyRepository()
-	groupRepo := mocks.NewGroupRepository()
-	idProvider := uuid.NewMock()
-
-	mockAuthzDB := map[string][]mocks.MockSubjectSet{}
-	mockAuthzDB[id] = append(mockAuthzDB[id], mocks.MockSubjectSet{Object: authoritiesObj, Relation: memberRelation})
-	ketoMock := mocks.NewKetoMock(mockAuthzDB)
-
-	t := jwt.New(secret)
-
-	return auth.New(repo, groupRepo, idProvider, t, ketoMock, loginDuration)
-}
-
-func startGRPCServer(svc auth.Service, port int) {
-	listener, _ := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	server := grpc.NewServer()
-	mainflux.RegisterAuthServiceServer(server, grpcapi.NewServer(mocktracer.New(), svc))
-	go server.Serve(listener)
-}
-
 func TestIssue(t *testing.T) {
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client connection: %s", err))
+
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	cases := []struct {
@@ -128,57 +108,59 @@ func TestIssue(t *testing.T) {
 
 func TestIdentify(t *testing.T) {
 	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
-	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
 	_, recoverySecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.RecoveryKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
-	assert.Nil(t, err, fmt.Sprintf("Issuing recovery key expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Issuing recovery key expected to succeed: %s", err))
 
 	_, apiSecret, err := svc.Issue(context.Background(), loginSecret, auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Minute), IssuerID: id, Subject: email})
-	assert.Nil(t, err, fmt.Sprintf("Issuing API key expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Issuing API key expected to succeed: %s", err))
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client connection: %s", err))
+
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	cases := []struct {
 		desc  string
 		token string
-		idt   mainflux.UserIdentity
+		idt   *mainflux.UserIdentity
 		err   error
 		code  codes.Code
 	}{
 		{
 			desc:  "identify user with user token",
 			token: loginSecret,
-			idt:   mainflux.UserIdentity{Email: email, Id: id},
+			idt:   &mainflux.UserIdentity{Email: email, Id: id},
 			err:   nil,
 			code:  codes.OK,
 		},
 		{
 			desc:  "identify user with recovery token",
 			token: recoverySecret,
-			idt:   mainflux.UserIdentity{Email: email, Id: id},
+			idt:   &mainflux.UserIdentity{Email: email, Id: id},
 			err:   nil,
 			code:  codes.OK,
 		},
 		{
 			desc:  "identify user with API token",
 			token: apiSecret,
-			idt:   mainflux.UserIdentity{Email: email, Id: id},
+			idt:   &mainflux.UserIdentity{Email: email, Id: id},
 			err:   nil,
 			code:  codes.OK,
 		},
 		{
 			desc:  "identify user with invalid user token",
 			token: "invalid",
-			idt:   mainflux.UserIdentity{},
+			idt:   &mainflux.UserIdentity{},
 			err:   status.Error(codes.Unauthenticated, "unauthenticated access"),
 			code:  codes.Unauthenticated,
 		},
 		{
 			desc:  "identify user with empty token",
 			token: "",
-			idt:   mainflux.UserIdentity{},
+			idt:   &mainflux.UserIdentity{},
 			err:   status.Error(codes.InvalidArgument, "received invalid token request"),
 			code:  codes.Unauthenticated,
 		},
@@ -187,7 +169,7 @@ func TestIdentify(t *testing.T) {
 	for _, tc := range cases {
 		idt, err := client.Identify(context.Background(), &mainflux.Token{Value: tc.token})
 		if idt != nil {
-			assert.Equal(t, tc.idt, *idt, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.idt, *idt))
+			assert.Equal(t, tc.idt, idt, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.idt, idt))
 		}
 		e, ok := status.FromError(err)
 		assert.True(t, ok, "gRPC status can't be extracted from the error")
@@ -197,10 +179,12 @@ func TestIdentify(t *testing.T) {
 
 func TestAuthorize(t *testing.T) {
 	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
-	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client connection: %s", err))
+
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	cases := []struct {
@@ -209,7 +193,7 @@ func TestAuthorize(t *testing.T) {
 		subject  string
 		object   string
 		relation string
-		ar       mainflux.AuthorizeRes
+		ar       *mainflux.AuthorizeRes
 		err      error
 		code     codes.Code
 	}{
@@ -219,7 +203,7 @@ func TestAuthorize(t *testing.T) {
 			subject:  id,
 			object:   authoritiesObj,
 			relation: memberRelation,
-			ar:       mainflux.AuthorizeRes{Authorized: true},
+			ar:       &mainflux.AuthorizeRes{Authorized: true},
 			err:      nil,
 			code:     codes.OK,
 		},
@@ -229,7 +213,7 @@ func TestAuthorize(t *testing.T) {
 			subject:  id,
 			object:   authoritiesObj,
 			relation: "unauthorizedRelation",
-			ar:       mainflux.AuthorizeRes{Authorized: false},
+			ar:       &mainflux.AuthorizeRes{Authorized: false},
 			err:      nil,
 			code:     codes.PermissionDenied,
 		},
@@ -239,7 +223,7 @@ func TestAuthorize(t *testing.T) {
 			subject:  id,
 			object:   "unauthorizedobject",
 			relation: memberRelation,
-			ar:       mainflux.AuthorizeRes{Authorized: false},
+			ar:       &mainflux.AuthorizeRes{Authorized: false},
 			err:      nil,
 			code:     codes.PermissionDenied,
 		},
@@ -249,7 +233,7 @@ func TestAuthorize(t *testing.T) {
 			subject:  "unauthorizedSubject",
 			object:   authoritiesObj,
 			relation: memberRelation,
-			ar:       mainflux.AuthorizeRes{Authorized: false},
+			ar:       &mainflux.AuthorizeRes{Authorized: false},
 			err:      nil,
 			code:     codes.PermissionDenied,
 		},
@@ -259,7 +243,7 @@ func TestAuthorize(t *testing.T) {
 			subject:  "",
 			object:   "",
 			relation: "",
-			ar:       mainflux.AuthorizeRes{Authorized: false},
+			ar:       &mainflux.AuthorizeRes{Authorized: false},
 			err:      nil,
 			code:     codes.InvalidArgument,
 		},
@@ -267,7 +251,7 @@ func TestAuthorize(t *testing.T) {
 	for _, tc := range cases {
 		ar, err := client.Authorize(context.Background(), &mainflux.AuthorizeReq{Sub: tc.subject, Obj: tc.object, Act: tc.relation})
 		if ar != nil {
-			assert.Equal(t, tc.ar, *ar, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.ar, *ar))
+			assert.Equal(t, tc.ar, ar, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.ar, ar))
 		}
 
 		e, ok := status.FromError(err)
@@ -278,10 +262,12 @@ func TestAuthorize(t *testing.T) {
 
 func TestAddPolicy(t *testing.T) {
 	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
-	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client connection: %s", err))
+
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	groupAdminObj := "groupadmin"
@@ -292,7 +278,7 @@ func TestAddPolicy(t *testing.T) {
 		subject  string
 		object   string
 		relation string
-		ar       mainflux.AddPolicyRes
+		ar       *mainflux.AddPolicyRes
 		err      error
 		code     codes.Code
 	}{
@@ -302,7 +288,7 @@ func TestAddPolicy(t *testing.T) {
 			subject:  id,
 			object:   groupAdminObj,
 			relation: memberRelation,
-			ar:       mainflux.AddPolicyRes{Authorized: true},
+			ar:       &mainflux.AddPolicyRes{Authorized: true},
 			err:      nil,
 			code:     codes.OK,
 		},
@@ -312,7 +298,7 @@ func TestAddPolicy(t *testing.T) {
 			subject:  "",
 			object:   "",
 			relation: "",
-			ar:       mainflux.AddPolicyRes{Authorized: false},
+			ar:       &mainflux.AddPolicyRes{Authorized: false},
 			err:      nil,
 			code:     codes.InvalidArgument,
 		},
@@ -320,7 +306,7 @@ func TestAddPolicy(t *testing.T) {
 	for _, tc := range cases {
 		apr, err := client.AddPolicy(context.Background(), &mainflux.AddPolicyReq{Sub: tc.subject, Obj: tc.object, Act: tc.relation})
 		if apr != nil {
-			assert.Equal(t, tc.ar, *apr, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.ar, *apr))
+			assert.Equal(t, tc.ar, apr, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.ar, apr))
 		}
 
 		e, ok := status.FromError(err)
@@ -331,18 +317,20 @@ func TestAddPolicy(t *testing.T) {
 
 func TestDeletePolicy(t *testing.T) {
 	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
-	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client connection: %s", err))
+
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	readRelation := "read"
 	thingID := "thing"
 
 	apr, err := client.AddPolicy(context.Background(), &mainflux.AddPolicyReq{Sub: id, Obj: thingID, Act: readRelation})
-	assert.Nil(t, err, fmt.Sprintf("Adding read policy to user expected to succeed: %s", err))
-	assert.True(t, apr.GetAuthorized(), fmt.Sprintf("Adding read policy expected to make user authorized, expected %v got %v", true, apr.GetAuthorized()))
+	require.Nil(t, err, fmt.Sprintf("Adding read policy to user expected to succeed: %s", err))
+	require.True(t, apr.GetAuthorized(), fmt.Sprintf("Adding read policy expected to make user authorized, expected %v got %v", true, apr.GetAuthorized()))
 
 	cases := []struct {
 		desc     string
@@ -383,7 +371,7 @@ func TestDeletePolicy(t *testing.T) {
 
 func TestMembers(t *testing.T) {
 	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
-	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
 	group := auth.Group{
 		Name:        "Mainflux",
@@ -393,10 +381,10 @@ func TestMembers(t *testing.T) {
 	var things []string
 	for i := 0; i < numOfThings; i++ {
 		thID, err := uuid.New().ID()
-		assert.Nil(t, err, fmt.Sprintf("Generate thing id expected to succeed: %s", err))
+		require.Nil(t, err, fmt.Sprintf("Generate thing id expected to succeed: %s", err))
 
 		err = svc.AddPolicy(context.Background(), auth.PolicyReq{Subject: id, Object: thID, Relation: "owner"})
-		assert.Nil(t, err, fmt.Sprintf("Adding a policy expected to succeed: %s", err))
+		require.Nil(t, err, fmt.Sprintf("Adding a policy expected to succeed: %s", err))
 
 		things = append(things, thID)
 	}
@@ -404,21 +392,21 @@ func TestMembers(t *testing.T) {
 	var users []string
 	for i := 0; i < numOfUsers; i++ {
 		id, err := uuid.New().ID()
-		assert.Nil(t, err, fmt.Sprintf("Generate thing id expected to succeed: %s", err))
+		require.Nil(t, err, fmt.Sprintf("Generate thing id expected to succeed: %s", err))
 
 		users = append(users, id)
 	}
 
 	group, err = svc.CreateGroup(context.Background(), token, group)
-	assert.Nil(t, err, fmt.Sprintf("Creating group expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Creating group expected to succeed: %s", err))
 	err = svc.AddPolicy(context.Background(), auth.PolicyReq{Subject: id, Object: group.ID, Relation: "groupadmin"})
-	assert.Nil(t, err, fmt.Sprintf("Adding a policy expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Adding a policy expected to succeed: %s", err))
 
 	err = svc.Assign(context.Background(), token, group.ID, thingsType, things...)
-	assert.Nil(t, err, fmt.Sprintf("Assign members to  expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Assign members to  expected to succeed: %s", err))
 
 	err = svc.Assign(context.Background(), token, group.ID, usersType, users...)
-	assert.Nil(t, err, fmt.Sprintf("Assign members to group expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Assign members to group expected to succeed: %s", err))
 
 	cases := []struct {
 		desc      string
@@ -450,7 +438,9 @@ func TestMembers(t *testing.T) {
 	}
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client connection: %s", err))
+
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	for _, tc := range cases {

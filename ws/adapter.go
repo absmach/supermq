@@ -3,7 +3,6 @@
 
 // Package ws contains the domain concept definitions needed to support
 // Mainflux ws adapter service functionality
-
 package ws
 
 import (
@@ -48,7 +47,7 @@ var (
 // Service specifies web socket service API.
 type Service interface {
 	// Publish Message
-	Publish(ctx context.Context, thingKey string, msg messaging.Message) error
+	Publish(ctx context.Context, thingKey string, msg *messaging.Message) error
 
 	// Subscribes to a channel with specified id.
 	Subscribe(ctx context.Context, thingKey, chanID, subtopic string, client *Client) error
@@ -73,7 +72,7 @@ func New(auth mainflux.ThingsServiceClient, pubsub messaging.PubSub) Service {
 }
 
 // Publish publishes the message using the broker
-func (svc *adapterService) Publish(ctx context.Context, thingKey string, msg messaging.Message) error {
+func (svc *adapterService) Publish(ctx context.Context, thingKey string, msg *messaging.Message) error {
 	thid, err := svc.authorize(ctx, thingKey, msg.GetChannel())
 	if err != nil {
 		return ErrUnauthorizedAccess
@@ -85,7 +84,7 @@ func (svc *adapterService) Publish(ctx context.Context, thingKey string, msg mes
 
 	msg.Publisher = thid.GetValue()
 
-	if err := svc.pubsub.Publish(msg.GetChannel(), msg); err != nil {
+	if err := svc.pubsub.Publish(ctx, msg.GetChannel(), msg); err != nil {
 		return ErrFailedMessagePublish
 	}
 
@@ -110,7 +109,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subt
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
 
-	if err := svc.pubsub.Subscribe(thid.GetValue(), subject, c); err != nil {
+	if err := svc.pubsub.Subscribe(ctx, thid.GetValue(), subject, c); err != nil {
 		return ErrFailedSubscription
 	}
 
@@ -133,7 +132,7 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, thingKey, chanID, su
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
 
-	return svc.pubsub.Unsubscribe(thid.GetValue(), subject)
+	return svc.pubsub.Unsubscribe(ctx, thid.GetValue(), subject)
 }
 
 func (svc *adapterService) authorize(ctx context.Context, thingKey, chanID string) (*mainflux.ThingID, error) {

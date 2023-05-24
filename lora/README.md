@@ -13,8 +13,8 @@ default values.
 
 | Variable                         | Description                           | Default                         |
 |----------------------------------|---------------------------------------|---------------------------------|
-| MF_LORA_ADAPTER_HTTP_PORT        | Service HTTP port                     | 8180                            |
-| MF_LORA_ADAPTER_LOG_LEVEL        | Service Log level                     | error                           |
+| MF_LORA_ADAPTER_HTTP_PORT        | Service HTTP port                     | 9017                            |
+| MF_LORA_ADAPTER_LOG_LEVEL        | Service Log level                     | info                            |
 | MF_BROKER_URL                    | Message broker instance URL           | nats://localhost:4222           |
 | MF_LORA_ADAPTER_MESSAGES_URL     | LoRa adapter MQTT broker URL          | tcp://localhost:1883            |
 | MF_LORA_ADAPTER_MESSAGES_TOPIC   | LoRa adapter MQTT subscriber Topic    | application/+/device/+/event/up |
@@ -28,6 +28,7 @@ default values.
 | MF_THINGS_ES_PASS                | Things service event source password  |                                 |
 | MF_THINGS_ES_DB                  | Things service event source DB        | 0                               |
 | MF_LORA_ADAPTER_EVENT_CONSUMER   | Service event consumer name           | lora                            |
+| MF_JAEGER_URL               | Jaeger server URL                                             | localhost:6831        |
 
 ## Deployment
 

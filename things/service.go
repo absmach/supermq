@@ -22,7 +22,7 @@ const (
 	deleteRelationKey = "delete"
 )
 
-// Service specifies an API that must be fullfiled by the domain service
+// Service specifies an API that must be fulfilled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
 	// CreateThings adds things to the user identified by the provided key.
@@ -244,7 +244,7 @@ func (ts *thingsService) claimOwnership(ctx context.Context, objectID string, ac
 		for _, action := range actions {
 			apr, err := ts.auth.AddPolicy(ctx, &mainflux.AddPolicyReq{Obj: objectID, Act: action, Sub: userID})
 			if err != nil {
-				errs = errors.Wrap(fmt.Errorf("cannot claim ownership on object '%s' by user '%s': %s", objectID, userID, err), errs)
+				errs = errors.Wrap(fmt.Errorf("cannot claim ownership on object '%s' by user '%s': %w", objectID, userID, err), errs)
 			}
 			if !apr.GetAuthorized() {
 				errs = errors.Wrap(fmt.Errorf("cannot claim ownership on object '%s' by user '%s': unauthorized", objectID, userID), errs)

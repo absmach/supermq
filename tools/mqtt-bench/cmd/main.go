@@ -19,14 +19,14 @@ func main() {
 	var rootCmd = &cobra.Command{
 		Use:   "mqtt-bench",
 		Short: "mqtt-bench is MQTT benchmark tool for Mainflux",
-		Long: `Tool for exctensive load and benchmarking of MQTT brokers used withing Mainflux platform.
+		Long: `Tool for exctensive load and benchmarking of MQTT brokers used within the Mainflux platform.
 Complete documentation is available at https://docs.mainflux.io`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if confFile != "" {
 				viper.SetConfigFile(confFile)
 
 				if err := viper.ReadInConfig(); err != nil {
-					log.Printf("Failed to load config - %s", err.Error())
+					log.Printf("Failed to load config - %s", err)
 				}
 
 				if err := viper.Unmarshal(&bconf); err != nil {
@@ -62,7 +62,7 @@ Complete documentation is available at https://docs.mainflux.io`,
 	rootCmd.PersistentFlags().IntVarP(&bconf.Test.Pubs, "pubs", "p", 10, "Number of publishers")
 
 	// Log params
-	rootCmd.PersistentFlags().BoolVarP(&bconf.Log.Quiet, "quiet", "", false, "Supress messages")
+	rootCmd.PersistentFlags().BoolVarP(&bconf.Log.Quiet, "quiet", "", false, "Suppress messages")
 
 	// Config file
 	rootCmd.PersistentFlags().StringVarP(&confFile, "config", "c", "config.toml", "config file for mqtt-bench")

@@ -9,7 +9,7 @@ import (
 
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jmoiron/sqlx" // required for DB access
+	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/readers"
@@ -123,7 +123,9 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) string {
 	if err != nil {
 		return condition
 	}
-	json.Unmarshal(meta, &query)
+	if err := json.Unmarshal(meta, &query); err != nil {
+		return condition
+	}
 
 	for name := range query {
 		switch name {

@@ -10,6 +10,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux/consumers/writers/cassandra"
+	casClient "github.com/mainflux/mainflux/internal/clients/cassandra"
 	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/stretchr/testify/assert"
@@ -34,11 +35,13 @@ var (
 )
 
 func TestSaveSenml(t *testing.T) {
-	session, err := cassandra.Connect(cassandra.DBConfig{
+	session, err := casClient.Connect(casClient.Config{
 		Hosts:    []string{addr},
 		Keyspace: keyspace,
 	})
 	require.Nil(t, err, fmt.Sprintf("failed to connect to Cassandra: %s", err))
+	err = casClient.InitDB(session, cassandra.Table)
+	require.Nil(t, err, fmt.Sprintf("failed to initialize to Cassandra: %s", err))
 	repo := cassandra.New(session)
 	now := time.Now().Unix()
 	msg := senml.Message{
@@ -69,12 +72,12 @@ func TestSaveSenml(t *testing.T) {
 		msgs = append(msgs, msg)
 	}
 
-	err = repo.Consume(msgs)
+	err = repo.ConsumeBlocking(msgs)
 	assert.Nil(t, err, fmt.Sprintf("expected no error, got %s", err))
 }
 
 func TestSaveJSON(t *testing.T) {
-	session, err := cassandra.Connect(cassandra.DBConfig{
+	session, err := casClient.Connect(casClient.Config{
 		Hosts:    []string{addr},
 		Keyspace: keyspace,
 	})
@@ -113,6 +116,6 @@ func TestSaveJSON(t *testing.T) {
 		msgs.Data = append(msgs.Data, msg)
 	}
 
-	err = repo.Consume(msgs)
+	err = repo.ConsumeBlocking(msgs)
 	assert.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
 }

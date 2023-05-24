@@ -64,7 +64,7 @@ func MakeHandler(svc auth.Service, mux *bone.Mux, tracer opentracing.Tracer, log
 		opts...,
 	))
 
-	mux.Post("/groups/:subjectGroupID/share", kithttp.NewServer(
+	mux.Post("/groups/:groupID/share", kithttp.NewServer(
 		kitot.TraceServer(tracer, "share_group_access")(shareGroupAccessEndpoint(svc)),
 		decodeShareGroupRequest,
 		encodeResponse,
@@ -92,14 +92,14 @@ func MakeHandler(svc auth.Service, mux *bone.Mux, tracer opentracing.Tracer, log
 		opts...,
 	))
 
-	mux.Post("/groups/:groupID/members", kithttp.NewServer(
+	mux.Post("/groups/:groupID/members/assign", kithttp.NewServer(
 		kitot.TraceServer(tracer, "assign")(assignEndpoint(svc)),
 		decodeAssignRequest,
 		encodeResponse,
 		opts...,
 	))
 
-	mux.Delete("/groups/:groupID/members", kithttp.NewServer(
+	mux.Post("/groups/:groupID/members/unassign", kithttp.NewServer(
 		kitot.TraceServer(tracer, "unassign")(unassignEndpoint(svc)),
 		decodeUnassignRequest,
 		encodeResponse,
@@ -130,7 +130,7 @@ func decodeShareGroupRequest(ctx context.Context, r *http.Request) (interface{},
 
 	req := shareGroupAccessReq{
 		token:       apiutil.ExtractBearerToken(r),
-		userGroupID: bone.GetValue(r, "subjectGroupID"),
+		userGroupID: bone.GetValue(r, "groupID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)

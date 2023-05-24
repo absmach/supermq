@@ -18,7 +18,7 @@ default values.
 
 | Variable                  | Description                                                             | Default        |
 | ------------------------- | ----------------------------------------------------------------------- | -------------- |
-| MF_USERS_LOG_LEVEL        | Log level for Users (debug, info, warn, error)                          | error          |
+| MF_USERS_LOG_LEVEL        | Log level for Users (debug, info, warn, error)                          | info           |
 | MF_USERS_DB_HOST          | Database host address                                                   | localhost      |
 | MF_USERS_DB_PORT          | Database host port                                                      | 5432           |
 | MF_USERS_DB_USER          | Database user                                                           | mainflux       |
@@ -28,7 +28,7 @@ default values.
 | MF_USERS_DB_SSL_CERT      | Path to the PEM encoded certificate file                                |                |
 | MF_USERS_DB_SSL_KEY       | Path to the PEM encoded key file                                        |                |
 | MF_USERS_DB_SSL_ROOT_CERT | Path to the PEM encoded root certificate file                           |                |
-| MF_USERS_HTTP_PORT        | Users service HTTP port                                                 | 8180           |
+| MF_USERS_HTTP_PORT        | Users service HTTP port                                                 | 9002           |
 | MF_USERS_SERVER_CERT      | Path to server certificate in pem format                                |                |
 | MF_USERS_SERVER_KEY       | Path to server key in pem format                                        |                |
 | MF_USERS_ADMIN_EMAIL      | Default user, created on startup                                        |                |

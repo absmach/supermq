@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/gocql/gocql"
-	"github.com/mainflux/mainflux/consumers/writers/cassandra"
+	casClient "github.com/mainflux/mainflux/internal/clients/cassandra"
 	log "github.com/mainflux/mainflux/logger"
 	dockertest "github.com/ory/dockertest/v3"
 )
@@ -30,12 +30,12 @@ func TestMain(m *testing.M) {
 	port := container.GetPort("9042/tcp")
 	addr = fmt.Sprintf("%s:%s", addr, port)
 
-	err = pool.Retry(func() error {
+	if err = pool.Retry(func() error {
 		if err := createKeyspace([]string{addr}); err != nil {
 			return err
 		}
 
-		session, err := cassandra.Connect(cassandra.DBConfig{
+		session, err := casClient.Connect(casClient.Config{
 			Hosts:    []string{addr},
 			Keyspace: keyspace,
 		})
@@ -45,11 +45,8 @@ func TestMain(m *testing.M) {
 		defer session.Close()
 
 		return nil
-	})
-
-	if err != nil {
-		logger.Error(fmt.Sprintf("Could not connect to docker: %s", err))
-		os.Exit(1)
+	}); err != nil {
+		logger.Fatal(fmt.Sprintf("Could not connect to docker: %s", err))
 	}
 
 	code := m.Run()

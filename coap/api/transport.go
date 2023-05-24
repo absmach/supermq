@@ -79,25 +79,24 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 		Context: m.Context,
 		Options: make(message.Options, 0, 16),
 	}
-
+	defer sendResp(w, &resp)
 	msg, err := decodeMessage(m)
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error decoding message: %s", err))
 		resp.Code = codes.BadRequest
-		sendResp(w, &resp)
 		return
 	}
 	key, err := parseKey(m)
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error parsing auth: %s", err))
 		resp.Code = codes.Unauthorized
-		sendResp(w, &resp)
 		return
 	}
 	switch m.Code {
 	case codes.GET:
 		err = handleGet(m, w.Client(), msg, key)
 	case codes.POST:
+		resp.Code = codes.Created
 		err = service.Publish(context.Background(), key, msg)
 	default:
 		err = errors.ErrNotFound
@@ -114,11 +113,10 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 		default:
 			resp.Code = codes.InternalServerError
 		}
-		sendResp(w, &resp)
 	}
 }
 
-func handleGet(m *mux.Message, c mux.Client, msg messaging.Message, key string) error {
+func handleGet(m *mux.Message, c mux.Client, msg *messaging.Message, key string) error {
 	var obs uint32
 	obs, err := m.Options.Observe()
 	if err != nil {
@@ -132,24 +130,24 @@ func handleGet(m *mux.Message, c mux.Client, msg messaging.Message, key string) 
 	return service.Unsubscribe(context.Background(), key, msg.Channel, msg.Subtopic, m.Token.String())
 }
 
-func decodeMessage(msg *mux.Message) (messaging.Message, error) {
+func decodeMessage(msg *mux.Message) (*messaging.Message, error) {
 	if msg.Options == nil {
-		return messaging.Message{}, errBadOptions
+		return &messaging.Message{}, errBadOptions
 	}
 	path, err := msg.Options.Path()
 	if err != nil {
-		return messaging.Message{}, err
+		return &messaging.Message{}, err
 	}
 	channelParts := channelPartRegExp.FindStringSubmatch(path)
 	if len(channelParts) < numGroups {
-		return messaging.Message{}, errMalformedSubtopic
+		return &messaging.Message{}, errMalformedSubtopic
 	}
 
 	st, err := parseSubtopic(channelParts[channelGroup])
 	if err != nil {
-		return messaging.Message{}, err
+		return &messaging.Message{}, err
 	}
-	ret := messaging.Message{
+	ret := &messaging.Message{
 		Protocol: protocol,
 		Channel:  channelParts[1],
 		Subtopic: st,

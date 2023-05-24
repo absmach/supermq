@@ -4,6 +4,7 @@
 package influxdb
 
 import (
+	"context"
 	"math"
 	"time"
 
@@ -12,74 +13,132 @@ import (
 	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 
-	influxdata "github.com/influxdata/influxdb/client/v2"
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	"github.com/influxdata/influxdb-client-go/v2/api"
+	"github.com/influxdata/influxdb-client-go/v2/api/write"
 )
 
 const senmlPoints = "messages"
 
 var errSaveMessage = errors.New("failed to save message to influxdb database")
 
-var _ consumers.Consumer = (*influxRepo)(nil)
+var _ consumers.AsyncConsumer = (*influxRepo)(nil)
+var _ consumers.BlockingConsumer = (*influxRepo)(nil)
+
+type RepoConfig struct {
+	Bucket string
+	Org    string
+}
 
 type influxRepo struct {
-	client influxdata.Client
-	cfg    influxdata.BatchPointsConfig
+	client           influxdb2.Client
+	cfg              RepoConfig
+	errCh            chan error
+	writeAPI         api.WriteAPI
+	writeAPIBlocking api.WriteAPIBlocking
 }
 
-// New returns new InfluxDB writer.
-func New(client influxdata.Client, database string) consumers.Consumer {
+// NewSync returns new InfluxDB writer.
+func NewSync(client influxdb2.Client, config RepoConfig) consumers.BlockingConsumer {
 	return &influxRepo{
-		client: client,
-		cfg: influxdata.BatchPointsConfig{
-			Database: database,
-		},
+		client:           client,
+		cfg:              config,
+		writeAPI:         nil,
+		writeAPIBlocking: client.WriteAPIBlocking(config.Org, config.Bucket),
 	}
 }
 
-func (repo *influxRepo) Consume(message interface{}) error {
-	pts, err := influxdata.NewBatchPoints(repo.cfg)
-	if err != nil {
-		return errors.Wrap(errSaveMessage, err)
+func NewAsync(client influxdb2.Client, config RepoConfig) consumers.AsyncConsumer {
+	return &influxRepo{
+		client:           client,
+		cfg:              config,
+		errCh:            make(chan error, 1),
+		writeAPI:         client.WriteAPI(config.Org, config.Bucket),
+		writeAPIBlocking: nil,
 	}
+}
+
+func (repo *influxRepo) ConsumeAsync(message interface{}) {
+	var err error
+	var pts []*write.Point
 	switch m := message.(type) {
 	case json.Messages:
-		pts, err = repo.jsonPoints(pts, m)
+		pts, err = repo.jsonPoints(m)
 	default:
-		pts, err = repo.senmlPoints(pts, m)
+		pts, err = repo.senmlPoints(m)
+	}
+	if err != nil {
+		repo.errCh <- err
+		return
+	}
+
+	done := make(chan bool)
+	defer close(done)
+
+	go func(done <-chan bool) {
+		for {
+			select {
+			case err := <-repo.writeAPI.Errors():
+				repo.errCh <- err
+			case <-done:
+				repo.errCh <- nil // pass nil error to the error channel
+				return
+			}
+		}
+	}(done)
+
+	for _, pt := range pts {
+		repo.writeAPI.WritePoint(pt)
+	}
+
+	repo.writeAPI.Flush()
+}
+
+func (repo *influxRepo) Errors() <-chan error {
+	if repo.errCh != nil {
+		return repo.errCh
+	}
+
+	return nil
+}
+
+func (repo *influxRepo) ConsumeBlocking(message interface{}) error {
+	var err error
+	var pts []*write.Point
+	switch m := message.(type) {
+	case json.Messages:
+		pts, err = repo.jsonPoints(m)
+	default:
+		pts, err = repo.senmlPoints(m)
 	}
 	if err != nil {
 		return err
 	}
 
-	if err := repo.client.Write(pts); err != nil {
-		return errors.Wrap(errSaveMessage, err)
-	}
-	return nil
+	return repo.writeAPIBlocking.WritePoint(context.Background(), pts...)
 }
 
-func (repo *influxRepo) senmlPoints(pts influxdata.BatchPoints, messages interface{}) (influxdata.BatchPoints, error) {
+func (repo *influxRepo) senmlPoints(messages interface{}) ([]*write.Point, error) {
 	msgs, ok := messages.([]senml.Message)
 	if !ok {
 		return nil, errSaveMessage
 	}
-
+	var pts []*write.Point
 	for _, msg := range msgs {
 		tgs, flds := senmlTags(msg), senmlFields(msg)
 
 		sec, dec := math.Modf(msg.Time)
 		t := time.Unix(int64(sec), int64(dec*(1e9)))
 
-		pt, err := influxdata.NewPoint(senmlPoints, tgs, flds, t)
-		if err != nil {
-			return nil, errors.Wrap(errSaveMessage, err)
-		}
-		pts.AddPoint(pt)
+		pt := influxdb2.NewPoint(senmlPoints, tgs, flds, t)
+		pts = append(pts, pt)
 	}
 
 	return pts, nil
 }
 
-func (repo *influxRepo) jsonPoints(pts influxdata.BatchPoints, msgs json.Messages) (influxdata.BatchPoints, error) {
+func (repo *influxRepo) jsonPoints(msgs json.Messages) ([]*write.Point, error) {
+	var pts []*write.Point
 	for i, m := range msgs.Data {
 		t := time.Unix(0, m.Created+int64(i))
 
@@ -96,11 +155,8 @@ func (repo *influxRepo) jsonPoints(pts influxdata.BatchPoints, msgs json.Message
 		}
 		// At least one known field need to exist so that COUNT can be performed.
 		fields["protocol"] = m.Protocol
-		pt, err := influxdata.NewPoint(msgs.Format, jsonTags(m), fields, t)
-		if err != nil {
-			return nil, errors.Wrap(errSaveMessage, err)
-		}
-		pts.AddPoint(pt)
+		pt := influxdb2.NewPoint(msgs.Format, jsonTags(m), fields, t)
+		pts = append(pts, pt)
 	}
 
 	return pts, nil

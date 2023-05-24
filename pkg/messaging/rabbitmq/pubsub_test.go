@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/rabbitmq"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -26,7 +26,7 @@ const (
 )
 
 var (
-	msgChan = make(chan messaging.Message)
+	msgChan = make(chan *messaging.Message)
 	data    = []byte("payload")
 )
 
@@ -87,11 +87,16 @@ func TestPublisher(t *testing.T) {
 			Subtopic:  tc.subtopic,
 			Payload:   tc.payload,
 		}
-		err = pubsub.Publish(topic, expectedMsg)
+		err = pubsub.Publish(context.TODO(), topic, &expectedMsg)
 		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s", tc.desc, err))
 
 		receivedMsg := <-msgChan
-		assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
+		assert.Equal(t, expectedMsg.Channel, receivedMsg.Channel, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+		assert.Equal(t, expectedMsg.Created, receivedMsg.Created, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+		assert.Equal(t, expectedMsg.Protocol, receivedMsg.Protocol, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+		assert.Equal(t, expectedMsg.Publisher, receivedMsg.Publisher, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+		assert.Equal(t, expectedMsg.Subtopic, receivedMsg.Subtopic, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+		assert.Equal(t, expectedMsg.Payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
 	}
 }
 
@@ -163,7 +168,7 @@ func TestSubscribe(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		err := pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
+		err := pubsub.Subscribe(context.TODO(), tc.clientID, tc.topic, tc.handler)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
 
 		if tc.err == nil {
@@ -192,7 +197,12 @@ func TestSubscribe(t *testing.T) {
 			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 			receivedMsg := <-msgChan
-			assert.Equal(t, expectedMsg.Payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Channel, receivedMsg.Channel, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Created, receivedMsg.Created, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Protocol, receivedMsg.Protocol, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Publisher, receivedMsg.Publisher, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Subtopic, receivedMsg.Subtopic, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
 		}
 	}
 }
@@ -332,10 +342,10 @@ func TestUnsubscribe(t *testing.T) {
 	for _, tc := range cases {
 		switch tc.subscribe {
 		case true:
-			err := pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
+			err := pubsub.Subscribe(context.TODO(), tc.clientID, tc.topic, tc.handler)
 			assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
 		default:
-			err := pubsub.Unsubscribe(tc.clientID, tc.topic)
+			err := pubsub.Unsubscribe(context.TODO(), tc.clientID, tc.topic)
 			assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
 		}
 	}
@@ -390,7 +400,7 @@ func TestPubSub(t *testing.T) {
 		if tc.topic != "" {
 			subject = fmt.Sprintf("%s.%s", chansPrefix, tc.topic)
 		}
-		err := pubsub.Subscribe(tc.clientID, subject, tc.handler)
+		err := pubsub.Subscribe(context.TODO(), tc.clientID, subject, tc.handler)
 
 		switch tc.err {
 		case nil:
@@ -402,13 +412,18 @@ func TestPubSub(t *testing.T) {
 				Payload: data,
 			}
 
-			err = pubsub.Publish(tc.topic, expectedMsg)
+			err = pubsub.Publish(context.TODO(), tc.topic, &expectedMsg)
 			assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", tc.desc, err))
 
 			receivedMsg := <-msgChan
-			assert.Equal(t, expectedMsg.Payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Channel, receivedMsg.Channel, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Created, receivedMsg.Created, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Protocol, receivedMsg.Protocol, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Publisher, receivedMsg.Publisher, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Subtopic, receivedMsg.Subtopic, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
 
-			err = pubsub.Unsubscribe(tc.clientID, fmt.Sprintf("%s.%s", chansPrefix, tc.topic))
+			err = pubsub.Unsubscribe(context.TODO(), tc.clientID, fmt.Sprintf("%s.%s", chansPrefix, tc.topic))
 			assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", tc.desc, err))
 		default:
 			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.err))
@@ -421,7 +436,7 @@ type handler struct {
 	publisher string
 }
 
-func (h handler) Handle(msg messaging.Message) error {
+func (h handler) Handle(msg *messaging.Message) error {
 	if msg.Publisher != h.publisher {
 		msgChan <- msg
 	}

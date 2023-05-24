@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"reflect"
 	"strconv"
-	"time"
 
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/internal/server"
+	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfSDK "github.com/mainflux/mainflux/pkg/sdk/go"
@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	stopWaitTime = 5 * time.Second
+	svcName = "provision"
 
 	defLogLevel        = "error"
 	defConfigFile      = "config.toml"
@@ -31,13 +31,13 @@ const (
 	defServerKey       = ""
 	defThingsURL       = "http://localhost"
 	defUsersURL        = "http://localhost"
-	defHTTPPort        = "8190"
+	defHTTPPort        = "9016"
 	defMfUser          = "test@example.com"
 	defMfPass          = "test"
 	defMfAPIKey        = ""
-	defMfBSURL         = "http://localhost:8202/things/configs"
-	defMfWhiteListURL  = "http://localhost:8202/things/state"
-	defMfCertsURL      = "http://localhost:8204"
+	defMfBSURL         = "http://localhost:9000/things/configs"
+	defMfWhiteListURL  = "http://localhost:9000/things/state"
+	defMfCertsURL      = "http://localhost:9019"
 	defProvisionCerts  = "false"
 	defProvisionBS     = "true"
 	defBSAutoWhitelist = "true"
@@ -89,6 +89,7 @@ func main() {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
+
 	if cfgFromFile, err := loadConfigFromFile(cfg.File); err != nil {
 		logger.Warn(fmt.Sprintf("Continue with settings from env, failed to load from: %s: %s", cfg.File, err))
 	} else {
@@ -99,6 +100,7 @@ func main() {
 	}
 
 	SDKCfg := mfSDK.Config{
+		UsersURL:        cfg.Server.UsersURL,
 		ThingsURL:       cfg.Server.ThingsURL,
 		BootstrapURL:    cfg.Server.MfBSURL,
 		CertsURL:        cfg.Server.MfCertsURL,
@@ -110,56 +112,21 @@ func main() {
 	svc := provision.New(cfg, SDK, logger)
 	svc = api.NewLoggingMiddleware(svc, logger)
 
+	httpServerConfig := server.Config{Host: "", Port: cfg.Server.HTTPPort, KeyFile: cfg.Server.ServerKey, CertFile: cfg.Server.ServerCert}
+	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, logger), logger)
+
 	g.Go(func() error {
-		return startHTTPServer(ctx, svc, cfg, logger)
+		return hs.Start()
 	})
 
 	g.Go(func() error {
-		if sig := errors.SignalHandler(ctx); sig != nil {
-			cancel()
-			logger.Info(fmt.Sprintf("Provision service shutdown by signal: %s", sig))
-		}
-		return nil
+		return server.StopSignalHandler(ctx, cancel, logger, svcName, hs)
 	})
 
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("Provision service terminated: %s", err))
 	}
 
-}
-
-func startHTTPServer(ctx context.Context, svc provision.Service, cfg provision.Config, logger logger.Logger) error {
-	p := fmt.Sprintf(":%s", cfg.Server.HTTPPort)
-	errCh := make(chan error)
-	server := &http.Server{Addr: p, Handler: api.MakeHandler(svc, logger)}
-
-	switch {
-	case cfg.Server.ServerCert != "" || cfg.Server.ServerKey != "":
-		logger.Info(fmt.Sprintf("Provision service started using https on port %s with cert %s key %s",
-			cfg.Server.HTTPPort, cfg.Server.ServerCert, cfg.Server.ServerKey))
-		go func() {
-			errCh <- server.ListenAndServeTLS(cfg.Server.ServerCert, cfg.Server.ServerKey)
-		}()
-	default:
-		logger.Info(fmt.Sprintf("Provision service started using http on port %s", cfg.Server.HTTPPort))
-		go func() {
-			errCh <- server.ListenAndServe()
-		}()
-	}
-
-	select {
-	case <-ctx.Done():
-		ctxShutdown, cancelShutdown := context.WithTimeout(context.Background(), stopWaitTime)
-		defer cancelShutdown()
-		if err := server.Shutdown(ctxShutdown); err != nil {
-			logger.Error(fmt.Sprintf("Provision service error occurred during shutdown at %s: %s", p, err))
-			return fmt.Errorf("provision service occurred during shutdown at %s: %w", p, err)
-		}
-		logger.Info(fmt.Sprintf("Provision service  shutdown of http at %s", p))
-		return nil
-	case err := <-errCh:
-		return err
-	}
 }
 
 func loadConfigFromFile(file string) (provision.Config, error) {

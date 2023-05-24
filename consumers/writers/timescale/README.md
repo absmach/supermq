@@ -11,8 +11,8 @@ default values.
 | Variable                             | Description                                               | Default                |
 | -----------------------------------  | --------------------------------------------------------- | ---------------------- |
 | MF_BROKER_URL                        | Message broker instance URL                               | nats://localhost:4222  |
-| MF_TIMESCALE_WRITER_LOG_LEVEL        | Service log level                                         | error                  |
-| MF_TIMESCALE_WRITER_PORT             | Service HTTP port                                         | 9104                   |
+| MF_TIMESCALE_WRITER_LOG_LEVEL        | Service log level                                         | info                   |
+| MF_TIMESCALE_WRITER_PORT             | Service HTTP port                                         | 9012                   |
 | MF_TIMESCALE_WRITER_DB_HOST          | Timescale DB host                                         | timescale              |
 | MF_TIMESCALE_WRITER_DB_PORT          | Timescale DB port                                         | 5432                   |
 | MF_TIMESCALE_WRITER_DB_USER          | Timescale user                                            | mainflux               |
@@ -23,6 +23,7 @@ default values.
 | MF_TIMESCALE_WRITER_DB_SSL_KEY       | Timescale SSL key                                         | ""                     |
 | MF_TIMESCALE_WRITER_DB_SSL_ROOT_CERT | Timescale SSL root certificate path                       | ""                     |
 | MF_TIMESCALE_WRITER_CONFIG_PATH      | Configuration file path with Message broker subjects list | /config.toml           |
+| MF_JAEGER_URL                 | Jaeger server URL                                                        | localhost:6831 |
 
 ## Deployment
 

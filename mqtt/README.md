@@ -12,7 +12,7 @@ default values.
 
 | Variable                                 | Description                                                      | Default               |
 |------------------------------------------|------------------------------------------------------------------|-----------------------|
-| MF_MQTT_ADAPTER_LOG_LEVEL                | mProxy Log level                                                 | error                 |
+| MF_MQTT_ADAPTER_LOG_LEVEL                | mProxy Log level                                                 | info                  |
 | MF_MQTT_ADAPTER_MQTT_PORT                | mProxy port                                                      | 1883                  |
 | MF_MQTT_ADAPTER_MQTT_TARGET_HOST         | MQTT broker host                                                 | 0.0.0.0               |
 | MF_MQTT_ADAPTER_MQTT_TARGET_PORT         | MQTT broker port                                                 | 1883                  |
@@ -23,9 +23,9 @@ default values.
 | MF_MQTT_ADAPTER_WS_TARGET_PATH           | MQTT broker MQTT over WS path                                    | /mqtt                 |
 | MF_MQTT_ADAPTER_FORWARDER_TIMEOUT        | MQTT forwarder for multiprotocol communication timeout           | 30s                   |
 | MF_BROKER_URL                            | Message broker broker URL                                        | nats://127.0.0.1:4222 |
-| MF_THINGS_AUTH_GRPC_URL                  | Things gRPC endpoint URL                                         | localhost:8181        |
+| MF_THINGS_AUTH_GRPC_URL                  | Things gRPC endpoint URL                                         | localhost:7000        |
 | MF_THINGS_AUTH_GRPC_TIMEOUT              | Timeout in seconds for Things service gRPC calls                 | 1s                    |
-| MF_JAEGER_URL                            | URL of Jaeger tracing service                                    | ""                    |
+| MF_JAEGER_URL                            | URL of Jaeger tracing service                                    | "localhost:6831"                    |
 | MF_MQTT_ADAPTER_CLIENT_TLS               | gRPC client TLS                                                  | false                 |
 | MF_MQTT_ADAPTER_CA_CERTS                 | CA certs for gRPC client TLS                                     | ""                    |
 | MF_MQTT_ADAPTER_INSTANCE                 | Instance name for event sourcing                                 | ""                    |

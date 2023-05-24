@@ -4,15 +4,16 @@
 package mqtt
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/gogo/protobuf/proto"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -79,7 +80,7 @@ func NewPubSub(url, queue string, timeout time.Duration, logger log.Logger) (mes
 	return ret, nil
 }
 
-func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) error {
+func (ps *pubsub) Subscribe(ctx context.Context, id, topic string, handler messaging.MessageHandler) error {
 	if id == "" {
 		return ErrEmptyID
 	}
@@ -122,7 +123,7 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 	return token.Error()
 }
 
-func (ps *pubsub) Unsubscribe(id, topic string) error {
+func (ps *pubsub) Unsubscribe(ctx context.Context, id, topic string) error {
 	if id == "" {
 		return ErrEmptyID
 	}
@@ -199,7 +200,7 @@ func (ps *pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
 			return
 		}
-		if err := h.Handle(msg); err != nil {
+		if err := h.Handle(&msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
 		}
 	}

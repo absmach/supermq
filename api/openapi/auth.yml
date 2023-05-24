@@ -25,7 +25,7 @@ paths:
           description: Missing or invalid content type.
         '500':
           $ref: "#/components/responses/ServiceError"
-  /keys/{id}:
+  /keys/{keyID}:
     get:
       summary: Gets API key details.
       description: |
@@ -65,8 +65,8 @@ paths:
         Creates new group that can be used for grouping entities - things, users.
       tags:
         - auth
-      parameters:
-        - $ref: "#/components/requestBodies/GroupCreateReq"
+      requestBody:
+        $ref: "#/components/requestBodies/GroupCreateReq"
       responses:
         '201':
           $ref: "#/components/responses/GroupCreateRes"
@@ -101,7 +101,7 @@ paths:
           description: Group does not exist.
         '500':
           $ref: "#/components/responses/ServiceError"
-  /groups/{groupId}:
+  /groups/{groupID}:
     get:
       summary: Gets group info.
       description: |
@@ -166,7 +166,7 @@ paths:
           description: Group does not exist.
         '500':
           $ref: "#/components/responses/ServiceError"
-  /groups/{groupId}/children:
+  /groups/{groupID}/children:
     get:
       summary: Gets group children.
       description: |
@@ -191,7 +191,7 @@ paths:
           description: Group does not exist.
         '500':
           $ref: "#/components/responses/ServiceError"
-  /groups/{groupId}/parents:
+  /groups/{groupID}/parents:
     get:
       summary: Gets group info.
       description: |
@@ -216,7 +216,25 @@ paths:
           description: Group does not exist.
         '500':
           $ref: "#/components/responses/ServiceError"
-  /groups/{groupId}/members:
+  /groups/{groupID}/members:
+    get:
+      summary: Gets members of a group.
+      description: |
+        Array of member ids that are in the group specified with groupID.
+      tags:
+        - auth        
+      parameters:
+        - $ref: "#/components/parameters/GroupId"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        '200':
+          $ref: "#/components/responses/MembersRes"
+        '401':
+          description: Missing or invalid access token provided.
+        '500':
+          $ref: "#/components/responses/ServiceError"
+  /groups/{groupID}/members/assign:
     post:
       summary: Assigns members to a group.
       description: |
@@ -240,19 +258,28 @@ paths:
           description: Missing or invalid content type.
         '500':
           $ref: "#/components/responses/ServiceError"
-    get:
-      summary: Gets members of a group.
+  /groups/{groupID}/members/unassign:
+    post:
+      summary: Unassigns members to a group.
       description: |
-        Array of member ids that are in the group specified with groupID.
+        Unassigns thing or user id to a group.
+      tags:
+        - auth
       parameters:
         - $ref: "#/components/parameters/GroupId"
-        - $ref: "#/components/parameters/Offset"
-        - $ref: "#/components/parameters/Limit"
+      requestBody:
+        $ref: "#/components/requestBodies/MembersReq"
       responses:
-        '200':
-          $ref: "#/components/responses/MembersRes"
+        '201':
+          $ref: "#/components/responses/GroupCreateRes"
+        '400':
+          description: Failed due to malformed JSON.
         '401':
           description: Missing or invalid access token provided.
+        '409':
+          description: Failed due to using an existing email address.
+        '415':
+          description: Missing or invalid content type.
         '500':
           $ref: "#/components/responses/ServiceError"
   /groups/{userGroupID}/share:
@@ -277,11 +304,13 @@ paths:
           description: Missing or invalid content type.
         '500':
           $ref: "#/components/responses/ServiceError"
-  /members/{memberId}/groups:
+  /members/{memberID}/groups:
     get:
       summary: Gets memberships for a member with member id.
       description: |
         Array of groups that member belongs to.
+      tags:
+        - auth        
       parameters:
         - $ref: "#/components/parameters/MemberId"
         - $ref: "#/components/parameters/Offset"
@@ -541,7 +570,7 @@ components:
 
   parameters:
     ApiKeyId:
-      name: id
+      name: keyID
       description: API Key ID.
       in: path
       schema:
@@ -557,7 +586,7 @@ components:
         format: uuid
       required: true
     GroupId:
-      name: groupId
+      name: groupID
       description: Group ID.
       in: path
       schema:
@@ -565,7 +594,7 @@ components:
         format: uuid
       required: true
     MemberId:
-      name: memberId
+      name: memberID
       description: Member id.
       in: path
       schema:

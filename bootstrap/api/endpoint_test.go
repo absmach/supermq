@@ -350,7 +350,7 @@ func TestView(t *testing.T) {
 	}
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	var channels []channel
 	for _, ch := range saved.MFChannels {
@@ -439,7 +439,7 @@ func TestUpdate(t *testing.T) {
 	c := newConfig([]bootstrap.Channel{{ID: "1"}})
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	data := toJSON(updateReq)
 
@@ -533,7 +533,7 @@ func TestUpdateCert(t *testing.T) {
 	c := newConfig([]bootstrap.Channel{{ID: "1"}})
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	data := toJSON(updateReq)
 
@@ -628,7 +628,7 @@ func TestUpdateConnections(t *testing.T) {
 	c := newConfig([]bootstrap.Channel{{ID: "1"}})
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	data := toJSON(updateReq)
 
@@ -747,7 +747,7 @@ func TestList(t *testing.T) {
 		c.ExternalKey = fmt.Sprintf("%s%s", addExternalKey, strconv.Itoa(i))
 
 		saved, err := svc.Add(context.Background(), validToken, c)
-		require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+		assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 		var channels []channel
 		for _, ch := range saved.MFChannels {
@@ -773,7 +773,7 @@ func TestList(t *testing.T) {
 			state = bootstrap.Inactive
 		}
 		err := svc.ChangeState(context.Background(), validToken, list[i].MFThing, state)
-		require.Nil(t, err, fmt.Sprintf("Changing state expected to succeed: %s.\n", err))
+		assert.Nil(t, err, fmt.Sprintf("Changing state expected to succeed: %s.\n", err))
 		list[i].State = state
 		if state == bootstrap.Inactive {
 			inactive = append(inactive, list[i])
@@ -967,7 +967,9 @@ func TestList(t *testing.T) {
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 		var body configPage
 
-		json.NewDecoder(res.Body).Decode(&body)
+		err = json.NewDecoder(res.Body).Decode(&body)
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while decoding response body: %s", tc.desc, err))
+
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.ElementsMatch(t, tc.res.Configs, body.Configs, fmt.Sprintf("%s: expected response '%s' got '%s'", tc.desc, tc.res.Configs, body.Configs))
 		assert.Equal(t, tc.res.Total, body.Total, fmt.Sprintf("%s: expected response total '%d' got '%d'", tc.desc, tc.res.Total, body.Total))
@@ -984,7 +986,7 @@ func TestRemove(t *testing.T) {
 	c := newConfig([]bootstrap.Channel{{ID: "1"}})
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	cases := []struct {
 		desc   string
@@ -1046,10 +1048,10 @@ func TestBootstrap(t *testing.T) {
 	c := newConfig([]bootstrap.Channel{{ID: "1"}})
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	encExternKey, err := enc([]byte(c.ExternalKey))
-	require.Nil(t, err, fmt.Sprintf("Encrypting config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Encrypting config expected to succeed: %s.\n", err))
 
 	var channels []channel
 	for _, ch := range saved.MFChannels {
@@ -1157,6 +1159,7 @@ func TestBootstrap(t *testing.T) {
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		if tc.secure && tc.status == http.StatusOK {
 			body, err = dec(body)
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while decoding body: %s", tc.desc, err))
 		}
 
 		data := strings.Trim(string(body), "\n")

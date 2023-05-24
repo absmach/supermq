@@ -42,7 +42,7 @@ paths:
           description: Missing or invalid access token provided.
         "500":
           $ref: "#/components/responses/ServiceError"
-  /subscriptions/{id}:
+  /subscriptions/{subID}:
     get:
       summary: Get subscription with the provided id
       description: Retrieves a subscription with the provided id.
@@ -105,6 +105,17 @@ components:
           type: string
           example: user@example.com
           description: The contact of the user to which the notification will be sent.
+    CreateSubscription:
+      type: object
+      properties:
+        topic:
+          type: string
+          example: topic.subtopic
+          description: Topic to which the user subscribes.
+        contact:
+          type: string
+          example: user@example.com
+          description: The contact of the user to which the notification will be sent.          
     Page:
       type: object
       properties:
@@ -126,7 +137,7 @@ components:
 
   parameters:
     Id:
-      name: id
+      name: subID
       description: Unique identifier.
       in: path
       schema:
@@ -174,7 +185,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Subscription"
+            $ref: "#/components/schemas/CreateSubscription"
 
   responses:
     Create:
@@ -186,7 +197,7 @@ components:
               schema:
                 type: string
                 description: Created subscription relative URL
-                example: /subscriptions/{id}
+                example: /subscriptions/{subId}
     View:
       description: View subscription.
       content:

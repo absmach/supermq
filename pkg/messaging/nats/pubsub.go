@@ -4,11 +4,12 @@
 package nats
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
 
-	"github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
@@ -63,7 +64,7 @@ func NewPubSub(url, queue string, logger log.Logger) (messaging.PubSub, error) {
 	return ret, nil
 }
 
-func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) error {
+func (ps *pubsub) Subscribe(ctx context.Context, id, topic string, handler messaging.MessageHandler) error {
 	if id == "" {
 		return ErrEmptyID
 	}
@@ -79,7 +80,7 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 		if _, ok := s[id]; ok {
 			// Unlocking, so that Unsubscribe() can access ps.subscriptions
 			ps.mu.Unlock()
-			if err := ps.Unsubscribe(id, topic); err != nil {
+			if err := ps.Unsubscribe(ctx, id, topic); err != nil {
 				return err
 			}
 
@@ -119,7 +120,7 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 	return nil
 }
 
-func (ps *pubsub) Unsubscribe(id, topic string) error {
+func (ps *pubsub) Unsubscribe(ctx context.Context, id, topic string) error {
 	if id == "" {
 		return ErrEmptyID
 	}
@@ -161,7 +162,7 @@ func (ps *pubsub) natsHandler(h messaging.MessageHandler) broker.MsgHandler {
 			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
 			return
 		}
-		if err := h.Handle(msg); err != nil {
+		if err := h.Handle(&msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
 		}
 	}

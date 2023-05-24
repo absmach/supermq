@@ -2,11 +2,10 @@ package influxdb_test
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
 	"time"
 
-	influxdata "github.com/influxdata/influxdb/client/v2"
+	influxdata "github.com/influxdata/influxdb-client-go/v2"
 	iwriter "github.com/mainflux/mainflux/consumers/writers/influxdb"
 	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
@@ -19,7 +18,6 @@ import (
 )
 
 const (
-	testDB      = "test"
 	subtopic    = "topic"
 	msgsNum     = 100
 	limit       = 10
@@ -28,34 +26,42 @@ const (
 	httpProt    = "http"
 	msgName     = "temperature"
 	offset      = 21
-
-	format1 = "format1"
-	format2 = "format2"
-	wrongID = "wrong_id"
+	format1     = "format1"
+	format2     = "format2"
+	wrongID     = "wrong_id"
 )
 
 var (
 	v   float64 = 5
-	vs          = "a"
-	vb          = true
-	vd          = "dataValue"
+	vs  string  = "a"
+	vb  bool    = true
+	vd  string  = "dataValue"
 	sum float64 = 42
 
-	client     influxdata.Client
+	client  influxdata.Client
+	repoCfg = struct {
+		Bucket string
+		Org    string
+	}{
+		Bucket: dbBucket,
+		Org:    dbOrg,
+	}
 	idProvider = uuid.New()
 )
 
-func TestReadAll(t *testing.T) {
-	writer := iwriter.New(client, testDB)
+func TestReadSenml(t *testing.T) {
+	asyncWriter := iwriter.NewAsync(client, repoCfg)
 
 	chanID, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	pubID, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	pubID2, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	wrongID, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	m := senml.Message{
 		Channel:    chanID,
@@ -72,9 +78,7 @@ func TestReadAll(t *testing.T) {
 	stringMsgs := []senml.Message{}
 	dataMsgs := []senml.Message{}
 	queryMsgs := []senml.Message{}
-	rand.Seed(time.Now().UnixNano())
-	to := msgsNum
-	now := float64(rand.Intn(to) + offset)
+	now := float64(time.Now().Unix())
 
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
@@ -103,21 +107,24 @@ func TestReadAll(t *testing.T) {
 			msg.Name = msgName
 			queryMsgs = append(queryMsgs, msg)
 		}
-
 		messages = append(messages, msg)
 	}
 
-	err = writer.Consume(messages)
-	require.Nil(t, err, fmt.Sprintf("failed to store message to InfluxDB: %s", err))
+	errs := asyncWriter.Errors()
+	asyncWriter.ConsumeAsync(messages)
+	err = <-errs
+	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 
-	reader := ireader.New(client, testDB)
+	reader := ireader.New(client, repoCfg)
 
-	cases := map[string]struct {
+	cases := []struct {
+		desc     string
 		chanID   string
 		pageMeta readers.PageMetadata
 		page     readers.MessagesPage
 	}{
-		"read message page for existing channel": {
+		{
+			desc:   "read message page for existing channel",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset: 0,
@@ -128,7 +135,8 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(messages),
 			},
 		},
-		"read message page for non-existent channel": {
+		{
+			desc:   "read message page for non-existent channel",
 			chanID: wrongID,
 			pageMeta: readers.PageMetadata{
 				Offset: 0,
@@ -138,7 +146,8 @@ func TestReadAll(t *testing.T) {
 				Messages: []readers.Message{},
 			},
 		},
-		"read message last page": {
+		{
+			desc:   "read message last page",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset: msgsNum - 20,
@@ -149,7 +158,8 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(messages[msgsNum-20 : msgsNum]),
 			},
 		},
-		"read message with non-existent subtopic": {
+		{
+			desc:   "read message with non-existent subtopic",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:   0,
@@ -160,7 +170,8 @@ func TestReadAll(t *testing.T) {
 				Messages: []readers.Message{},
 			},
 		},
-		"read message with subtopic": {
+		{
+			desc:   "read message with subtopic",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:   0,
@@ -172,7 +183,8 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(queryMsgs),
 			},
 		},
-		"read message with publisher": {
+		{
+			desc:   "read message with publisher",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:    0,
@@ -184,7 +196,8 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(queryMsgs),
 			},
 		},
-		"read message with wrong format": {
+		{
+			desc:   "read message with wrong format",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Format:    "messagess",
@@ -197,7 +210,8 @@ func TestReadAll(t *testing.T) {
 				Messages: []readers.Message{},
 			},
 		},
-		"read message with protocol": {
+		{
+			desc:   "read message with protocol",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:   0,
@@ -209,7 +223,8 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(queryMsgs),
 			},
 		},
-		"read message with name": {
+		{
+			desc:   "read message with name",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset: 0,
@@ -221,7 +236,8 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(queryMsgs[0:limit]),
 			},
 		},
-		"read message with value": {
+		{
+			desc:   "read message with value",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset: 0,
@@ -233,7 +249,8 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(valueMsgs[0:limit]),
 			},
 		},
-		"read message with value and equal comparator": {
+		{
+			desc:   "read message with value and equal comparator",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:     0,
@@ -246,7 +263,8 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(valueMsgs[0:limit]),
 			},
 		},
-		"read message with value and lower-than comparator": {
+		{
+			desc:   "read message with value and lower-than comparator",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:     0,
@@ -259,7 +277,8 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(valueMsgs[0:limit]),
 			},
 		},
-		"read message with value and lower-than-or-equal comparator": {
+		{
+			desc:   "read message with value and lower-than-or-equal comparator",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:     0,
@@ -272,7 +291,8 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(valueMsgs[0:limit]),
 			},
 		},
-		"read message with value and greater-than comparator": {
+		{
+			desc:   "read message with value and greater-than comparator",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:     0,
@@ -285,7 +305,8 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(valueMsgs[0:limit]),
 			},
 		},
-		"read message with value and greater-than-or-equal comparator": {
+		{
+			desc:   "read message with value and greater-than-or-equal comparator",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:     0,
@@ -298,7 +319,8 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(valueMsgs[0:limit]),
 			},
 		},
-		"read message with boolean value": {
+		{
+			desc:   "read message with boolean value",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:    0,
@@ -310,7 +332,8 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(boolMsgs[0:limit]),
 			},
 		},
-		"read message with string value": {
+		{
+			desc:   "read message with string value",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:      0,
@@ -322,7 +345,8 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(stringMsgs[0:limit]),
 			},
 		},
-		"read message with data value": {
+		{
+			desc:   "read message with data value",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:    0,
@@ -334,23 +358,25 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(dataMsgs[0:limit]),
 			},
 		},
-		"read message with from": {
+		{
+			desc:   "failing test case : read message with from",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset: 0,
-				Limit:  uint64(len(messages[0:offset])),
-				From:   messages[offset-1].Time,
+				Limit:  uint64(len(messages[0 : offset+1])),
+				From:   messages[offset].Time,
 			},
 			page: readers.MessagesPage{
-				Total:    uint64(len(messages[0:offset])),
-				Messages: fromSenml(messages[0:offset]),
+				Total:    uint64(len(messages[0 : offset+1])),
+				Messages: fromSenml(messages[0 : offset+1]),
 			},
 		},
-		"read message with to": {
+		{
+			desc:   "failing test case : read message with to",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset: 0,
-				Limit:  uint64(len(messages[offset:])),
+				Limit:  uint64(len(messages[offset-1:])),
 				To:     messages[offset-1].Time,
 			},
 			page: readers.MessagesPage{
@@ -358,7 +384,8 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(messages[offset:]),
 			},
 		},
-		"read message with from/to": {
+		{
+			desc:   "read message with from/to",
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset: 0,
@@ -367,29 +394,29 @@ func TestReadAll(t *testing.T) {
 				To:     messages[0].Time,
 			},
 			page: readers.MessagesPage{
-				Total:    5,
-				Messages: fromSenml(messages[1:6]),
+				Total:    uint64(len(messages[0+1 : 5+1])),
+				Messages: fromSenml(messages[0+1 : 5+1]),
 			},
 		},
 	}
 
-	for desc, tc := range cases {
+	for _, tc := range cases {
 		result, err := reader.ReadAll(tc.chanID, tc.pageMeta)
-		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %s", desc, err))
-		assert.ElementsMatch(t, tc.page.Messages, result.Messages, fmt.Sprintf("%s: expected: %v, got: %v", desc, tc.page.Messages, result.Messages))
-		assert.Equal(t, tc.page.Total, result.Total, fmt.Sprintf("%s: expected %d got %d", desc, tc.page.Total, result.Total))
+		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %s", tc.desc, err))
+		assert.ElementsMatch(t, tc.page.Messages, result.Messages, fmt.Sprintf("%s: got incorrect list of senml Messages from ReadAll()", tc.desc))
+		assert.Equal(t, tc.page.Total, result.Total, fmt.Sprintf("%s: expected %d got %d", tc.desc, tc.page.Total, result.Total))
 	}
 }
 
 func TestReadJSON(t *testing.T) {
-	writer := iwriter.New(client, testDB)
+	asyncWriter := iwriter.NewAsync(client, repoCfg)
 
 	id1, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	m := json.Message{
 		Channel:   id1,
 		Publisher: id1,
-		Created:   time.Now().UnixNano(),
+		Created:   time.Now().Unix() * 1e9,
 		Subtopic:  "subtopic/format/some_json",
 		Protocol:  "coap",
 		Payload: map[string]interface{}{
@@ -407,15 +434,18 @@ func TestReadJSON(t *testing.T) {
 		m := toMap(m)
 		msgs1 = append(msgs1, m)
 	}
-	err = writer.Consume(messages1)
-	assert.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
+
+	errs := asyncWriter.Errors()
+	asyncWriter.ConsumeAsync(messages1)
+	err = <-errs
+	require.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 
 	id2, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	m = json.Message{
 		Channel:   id2,
 		Publisher: id2,
-		Created:   time.Now().UnixNano() + msgsNum,
+		Created:   time.Now().Unix()*1e9 + msgsNum,
 		Subtopic:  "subtopic/other_format/some_other_json",
 		Protocol:  "udp",
 		Payload: map[string]interface{}{
@@ -435,21 +465,26 @@ func TestReadJSON(t *testing.T) {
 		m := toMap(msg)
 		msgs2 = append(msgs2, m)
 	}
-	err = writer.Consume(messages2)
-	assert.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
+
+	// Test async
+	asyncWriter.ConsumeAsync(messages2)
+	err = <-errs
+	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 
 	httpMsgs := []map[string]interface{}{}
 	for i := 0; i < msgsNum; i += 2 {
 		httpMsgs = append(httpMsgs, msgs2[i])
 	}
-	reader := ireader.New(client, testDB)
+	reader := ireader.New(client, repoCfg)
 
-	cases := map[string]struct {
+	cases := []struct {
+		desc     string
 		chanID   string
 		pageMeta readers.PageMetadata
 		page     readers.MessagesPage
 	}{
-		"read message page for existing channel": {
+		{
+			desc:   "read message page for existing channel",
 			chanID: id1,
 			pageMeta: readers.PageMetadata{
 				Format: messages1.Format,
@@ -461,7 +496,8 @@ func TestReadJSON(t *testing.T) {
 				Messages: fromJSON(msgs1[:1]),
 			},
 		},
-		"read message page for non-existent channel": {
+		{
+			desc:   "read message page for non-existent channel",
 			chanID: wrongID,
 			pageMeta: readers.PageMetadata{
 				Format: messages1.Format,
@@ -472,7 +508,8 @@ func TestReadJSON(t *testing.T) {
 				Messages: []readers.Message{},
 			},
 		},
-		"read message last page": {
+		{
+			desc:   "read message last page",
 			chanID: id2,
 			pageMeta: readers.PageMetadata{
 				Format: messages2.Format,
@@ -484,7 +521,8 @@ func TestReadJSON(t *testing.T) {
 				Messages: fromJSON(msgs2[msgsNum-20 : msgsNum]),
 			},
 		},
-		"read message with protocol": {
+		{
+			desc:   "read message with protocol",
 			chanID: id2,
 			pageMeta: readers.PageMetadata{
 				Format:   messages2.Format,
@@ -499,9 +537,9 @@ func TestReadJSON(t *testing.T) {
 		},
 	}
 
-	for desc, tc := range cases {
+	for _, tc := range cases {
 		result, err := reader.ReadAll(tc.chanID, tc.pageMeta)
-		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %s", desc, err))
+		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s", tc.desc, err))
 
 		for i := 0; i < len(result.Messages); i++ {
 			m := result.Messages[i]
@@ -510,8 +548,8 @@ func TestReadJSON(t *testing.T) {
 
 			result.Messages[i] = m
 		}
-		assert.ElementsMatch(t, tc.page.Messages, result.Messages, fmt.Sprintf("%s: expected \n%v got \n%v", desc, tc.page.Messages, result.Messages))
-		assert.Equal(t, tc.page.Total, result.Total, fmt.Sprintf("%s: expected %v got %v", desc, tc.page.Total, result.Total))
+		assert.ElementsMatch(t, tc.page.Messages, result.Messages, fmt.Sprintf("%s: expected \n%v got \n%v", tc.desc, tc.page.Messages, result.Messages))
+		assert.Equal(t, tc.page.Total, result.Total, fmt.Sprintf("%s: got incorrect list of json Messages from ReadAll()", tc.desc))
 	}
 }
 

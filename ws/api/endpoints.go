@@ -61,7 +61,7 @@ func decodeRequest(r *http.Request) (connReq, error) {
 		authKey = authKeys[0]
 	}
 
-	chanID := bone.GetValue(r, "id")
+	chanID := bone.GetValue(r, "chanID")
 
 	req := connReq{
 		thingKey: authKey,
@@ -145,7 +145,7 @@ func process(svc ws.Service, req connReq, msgs <-chan []byte) {
 			Payload:  msg,
 			Created:  time.Now().UnixNano(),
 		}
-		svc.Publish(context.Background(), req.thingKey, m)
+		_ = svc.Publish(context.Background(), req.thingKey, &m)
 	}
 	if err := svc.Unsubscribe(context.Background(), req.thingKey, req.chanID, req.subtopic); err != nil {
 		req.conn.Close()
@@ -153,7 +153,7 @@ func process(svc ws.Service, req connReq, msgs <-chan []byte) {
 }
 
 func encodeError(w http.ResponseWriter, err error) {
-	statusCode := http.StatusUnauthorized
+	var statusCode int
 
 	switch err {
 	case ws.ErrEmptyID, ws.ErrEmptyTopic:

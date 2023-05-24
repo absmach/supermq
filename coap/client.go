@@ -21,7 +21,7 @@ import (
 type Client interface {
 	// In CoAP terminology, Token similar to the Session ID.
 	Token() string
-	Handle(m messaging.Message) error
+	Handle(m *messaging.Message) error
 	Cancel() error
 	Done() <-chan struct{}
 }
@@ -67,7 +67,7 @@ func (c *client) Token() string {
 	return c.token.String()
 }
 
-func (c *client) Handle(msg messaging.Message) error {
+func (c *client) Handle(msg *messaging.Message) error {
 	m := message.Message{
 		Code:    codes.Content,
 		Token:   c.token,
@@ -88,7 +88,7 @@ func (c *client) Handle(msg messaging.Message) error {
 		return errors.Wrap(ErrOption, err)
 	}
 	opts = append(opts, message.Option{ID: message.Observe, Value: []byte{byte(c.observe)}})
-	opts, n, err = opts.SetObserve(buff, uint32(c.observe))
+	opts, n, err = opts.SetObserve(buff, c.observe)
 	if err == message.ErrTooSmall {
 		buff = append(buff, make([]byte, n)...)
 		opts, _, err = opts.SetObserve(buff, uint32(c.observe))

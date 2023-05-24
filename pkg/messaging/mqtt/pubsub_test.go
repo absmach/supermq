@@ -4,16 +4,17 @@
 package mqtt_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	mqtt_pubsub "github.com/mainflux/mainflux/pkg/messaging/mqtt"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -63,7 +64,7 @@ func TestPublisher(t *testing.T) {
 	})
 
 	// Test publish with an empty topic.
-	err = pubsub.Publish("", messaging.Message{Payload: data})
+	err = pubsub.Publish(context.TODO(), "", &messaging.Message{Payload: data})
 	assert.Equal(t, err, mqtt_pubsub.ErrEmptyTopic, fmt.Sprintf("Publish with empty topic: expected: %s, got: %s", mqtt_pubsub.ErrEmptyTopic, err))
 
 	cases := []struct {
@@ -104,7 +105,8 @@ func TestPublisher(t *testing.T) {
 			Subtopic:  tc.subtopic,
 			Payload:   tc.payload,
 		}
-		err := pubsub.Publish(topic, expectedMsg)
+
+		err := pubsub.Publish(context.TODO(), topic, &expectedMsg)
 		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
 
 		data, err := proto.Marshal(&expectedMsg)
@@ -116,7 +118,7 @@ func TestPublisher(t *testing.T) {
 }
 
 func TestSubscribe(t *testing.T) {
-	msgChan := make(chan messaging.Message)
+	msgChan := make(chan *messaging.Message)
 
 	// Creating client to Publish messages to subscribed topic.
 	client, err := newClient(address, "mainflux", brokerTimeout)
@@ -185,7 +187,7 @@ func TestSubscribe(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		err = pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
+		err = pubsub.Subscribe(context.TODO(), tc.clientID, tc.topic, tc.handler)
 		assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.err))
 
 		if tc.err == nil {
@@ -203,13 +205,18 @@ func TestSubscribe(t *testing.T) {
 			assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 
 			receivedMsg := <-msgChan
-			assert.Equal(t, expectedMsg.Payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Channel, receivedMsg.Channel, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Created, receivedMsg.Created, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Protocol, receivedMsg.Protocol, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Publisher, receivedMsg.Publisher, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Subtopic, receivedMsg.Subtopic, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
 		}
 	}
 }
 
 func TestPubSub(t *testing.T) {
-	msgChan := make(chan messaging.Message)
+	msgChan := make(chan *messaging.Message)
 
 	cases := []struct {
 		desc     string
@@ -255,7 +262,7 @@ func TestPubSub(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		err := pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
+		err := pubsub.Subscribe(context.TODO(), tc.clientID, tc.topic, tc.handler)
 		assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.err))
 
 		if tc.err == nil {
@@ -268,17 +275,22 @@ func TestPubSub(t *testing.T) {
 			}
 
 			// Publish message, and then receive it on message channel.
-			err := pubsub.Publish(topic, expectedMsg)
+			err := pubsub.Publish(context.TODO(), topic, &expectedMsg)
 			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
 
 			receivedMsg := <-msgChan
-			assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Channel, receivedMsg.Channel, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Created, receivedMsg.Created, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Protocol, receivedMsg.Protocol, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Publisher, receivedMsg.Publisher, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Subtopic, receivedMsg.Subtopic, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg.Payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
 		}
 	}
 }
 
 func TestUnsubscribe(t *testing.T) {
-	msgChan := make(chan messaging.Message)
+	msgChan := make(chan *messaging.Message)
 
 	cases := []struct {
 		desc      string
@@ -412,10 +424,10 @@ func TestUnsubscribe(t *testing.T) {
 	for _, tc := range cases {
 		switch tc.subscribe {
 		case true:
-			err := pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
+			err := pubsub.Subscribe(context.TODO(), tc.clientID, tc.topic, tc.handler)
 			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
 		default:
-			err := pubsub.Unsubscribe(tc.clientID, tc.topic)
+			err := pubsub.Unsubscribe(context.TODO(), tc.clientID, tc.topic)
 			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
 		}
 	}
@@ -424,10 +436,10 @@ func TestUnsubscribe(t *testing.T) {
 type handler struct {
 	fail      bool
 	publisher string
-	msgChan   chan messaging.Message
+	msgChan   chan *messaging.Message
 }
 
-func (h handler) Handle(msg messaging.Message) error {
+func (h handler) Handle(msg *messaging.Message) error {
 	if msg.Publisher != h.publisher {
 		h.msgChan <- msg
 	}
