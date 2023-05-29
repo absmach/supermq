@@ -142,7 +142,7 @@ func (bs bootstrapService) Add(ctx context.Context, token string, cfg Config) (C
 	id := cfg.MFThing
 	mfThing, err := bs.thing(token, id)
 	if err != nil {
-		return Config{}, errors.Wrap(errThingNotExist, err)
+		return Config{}, errors.Wrap(errThingNotFound, err)
 	}
 
 	cfg.MFThing = mfThing.ID
