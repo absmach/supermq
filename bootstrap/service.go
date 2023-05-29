@@ -40,7 +40,7 @@ var (
 	errDisconnectThing    = errors.New("failed to disconnect thing")
 	errCheckChannels      = errors.New("failed to check if channels exists")
 	errConnectionChannels = errors.New("failed to check channels connections")
-	errThingNotExist      = errors.New("failed to find thing")
+	errThingNotFound      = errors.New("failed to find thing")
 	errUpdateCert         = errors.New("failed to update cert")
 )
 
