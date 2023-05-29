@@ -84,7 +84,7 @@ func createMessageSpan(ctx context.Context, tracer opentracing.Tracer, topic, su
 	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, tracer, operation, ext.SpanKindConsumer)
 	span.SetTag("topic", topic)
 	if subTopic != "" {
-		span.SetTag("sub-topic", subTopic)
+		span.SetTag("subtopic", subTopic)
 	}
 	span.SetTag("publisher", publisher)
 	span.SetTag("number_of_messages", noMessages)
