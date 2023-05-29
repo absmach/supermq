@@ -28,7 +28,7 @@ var (
 )
 
 func newService(tokens map[string]string) (policies.Service, *pmocks.PolicyRepository, *umocks.PolicyRepository) {
-	adminPolicy := mocks.MockSubjectSet{Object: "object", Relation: clients.AdminRelationKey}
+	adminPolicy := mocks.MockSubjectSet{Object: "things", Relation: clients.AdminRelationKey}
 	auth := mocks.NewAuthService(tokens, map[string][]mocks.MockSubjectSet{adminEmail: {adminPolicy}})
 	idProvider := uuid.NewMock()
 	thingsCache := mocks.NewClientCache()
@@ -196,7 +196,7 @@ func TestAuthorize(t *testing.T) {
 }
 
 func TestDeletePolicy(t *testing.T) {
-	svc, pRepo, uRepo := newService(map[string]string{token: adminEmail})
+	svc, pRepo, _ := newService(map[string]string{token: adminEmail})
 
 	pr := policies.Policy{Object: testsutil.GenerateUUID(t, idProvider), Actions: memberActions, Subject: testsutil.GenerateUUID(t, idProvider)}
 
@@ -289,7 +289,7 @@ func TestListPolicies(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Retrieve", context.Background(), tc.page).Return(tc.response, tc.err)
+		repoCall := pRepo.On("Retrieve", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		page, err := svc.ListPolicies(context.Background(), tc.token, tc.page)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected size %v got %v\n", tc.desc, tc.response, page))
