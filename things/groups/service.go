@@ -9,6 +9,7 @@ import (
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/groups"
+	tpolicies "github.com/mainflux/mainflux/things/policies"
 	upolicies "github.com/mainflux/mainflux/users/policies"
 )
 
@@ -22,22 +23,24 @@ const (
 )
 
 type service struct {
-	auth       upolicies.AuthServiceClient
+	uauth      upolicies.AuthServiceClient
+	policies   tpolicies.Service
 	groups     groups.Repository
 	idProvider mainflux.IDProvider
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(auth upolicies.AuthServiceClient, g groups.Repository, idp mainflux.IDProvider) Service {
+func NewService(uauth upolicies.AuthServiceClient, policies tpolicies.Service, g groups.Repository, idp mainflux.IDProvider) Service {
 	return service{
-		auth:       auth,
+		uauth:      uauth,
+		policies:   policies,
 		groups:     g,
 		idProvider: idp,
 	}
 }
 
 func (svc service) CreateGroups(ctx context.Context, token string, gs ...groups.Group) ([]groups.Group, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return []groups.Group{}, err
 	}
@@ -70,7 +73,7 @@ func (svc service) CreateGroups(ctx context.Context, token string, gs ...groups.
 }
 
 func (svc service) ViewGroup(ctx context.Context, token string, id string) (groups.Group, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return groups.Group{}, err
 	}
@@ -81,13 +84,13 @@ func (svc service) ViewGroup(ctx context.Context, token string, id string) (grou
 }
 
 func (svc service) ListGroups(ctx context.Context, token string, gm groups.GroupsPage) (groups.GroupsPage, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return groups.GroupsPage{}, err
 	}
 
 	// If the user is admin, fetch all channels from the database.
-	if err := svc.authorize(ctx, token, thingsObjectKey, listRelationKey); err == nil {
+	if err := svc.authorize(ctx, userID, thingsObjectKey, listRelationKey); err == nil {
 		page, err := svc.groups.RetrieveAll(ctx, gm)
 		if err != nil {
 			return groups.GroupsPage{}, err
@@ -102,13 +105,13 @@ func (svc service) ListGroups(ctx context.Context, token string, gm groups.Group
 }
 
 func (svc service) ListMemberships(ctx context.Context, token, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return groups.MembershipsPage{}, err
 	}
 
 	// If the user is admin, fetch all channels from the database.
-	if err := svc.authorize(ctx, token, thingsObjectKey, listRelationKey); err == nil {
+	if err := svc.authorize(ctx, userID, thingsObjectKey, listRelationKey); err == nil {
 		return svc.groups.Memberships(ctx, clientID, gm)
 	}
 
@@ -117,7 +120,7 @@ func (svc service) ListMemberships(ctx context.Context, token, clientID string, 
 }
 
 func (svc service) UpdateGroup(ctx context.Context, token string, g groups.Group) (groups.Group, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return groups.Group{}, err
 	}
@@ -160,7 +163,7 @@ func (svc service) DisableGroup(ctx context.Context, token, id string) (groups.G
 }
 
 func (svc service) changeGroupStatus(ctx context.Context, token string, group groups.Group) (groups.Group, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return groups.Group{}, err
 	}
@@ -179,31 +182,37 @@ func (svc service) changeGroupStatus(ctx context.Context, token string, group gr
 	return svc.groups.ChangeStatus(ctx, group)
 }
 
-func (svc service) identifyUser(ctx context.Context, token string) (string, error) {
+func (svc service) identify(ctx context.Context, token string) (string, error) {
 	req := &upolicies.Token{Value: token}
-	res, err := svc.auth.Identify(ctx, req)
+	res, err := svc.uauth.Identify(ctx, req)
 	if err != nil {
 		return "", errors.Wrap(errors.ErrAuthorization, err)
 	}
 	return res.GetId(), nil
 }
 
-func (svc service) authorize(ctx context.Context, subject, object string, relation string) error {
-	// Check if the client is the owner of the group.
-	dbGroup, err := svc.groups.RetrieveByID(ctx, object)
-	if err != nil {
-		return err
-	}
-	if dbGroup.Owner == subject {
+func (svc service) authorize(ctx context.Context, subject, object, action string) error {
+	// If the user is admin, skip authorization.
+	if err := svc.checkAdmin(ctx, subject, thingsObjectKey, action); err == nil {
 		return nil
 	}
+
+	policy := tpolicies.Policy{Subject: subject, Object: object, Actions: []string{action}}
+	if err := policy.Validate(); err != nil {
+		return err
+	}
+	return svc.policies.Authorize(ctx, entityType, policy)
+}
+
+// TODO : Only accept token as parameter since object and action are irrelevant.
+func (svc service) checkAdmin(ctx context.Context, subject, object, action string) error {
 	req := &upolicies.AuthorizeReq{
 		Sub:        subject,
 		Obj:        object,
-		Act:        relation,
+		Act:        action,
 		EntityType: entityType,
 	}
-	res, err := svc.auth.Authorize(ctx, req)
+	res, err := svc.uauth.Authorize(ctx, req)
 	if err != nil {
 		return errors.Wrap(errors.ErrAuthorization, err)
 	}

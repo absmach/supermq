@@ -48,7 +48,7 @@ func NewService(uauth upolicies.AuthServiceClient, policies tpolicies.Service, c
 }
 
 func (svc service) CreateThings(ctx context.Context, token string, clis ...mfclients.Client) ([]mfclients.Client, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return []mfclients.Client{}, err
 	}
@@ -82,7 +82,7 @@ func (svc service) CreateThings(ctx context.Context, token string, clis ...mfcli
 }
 
 func (svc service) ViewClient(ctx context.Context, token string, id string) (mfclients.Client, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return mfclients.Client{}, err
 	}
@@ -93,7 +93,7 @@ func (svc service) ViewClient(ctx context.Context, token string, id string) (mfc
 }
 
 func (svc service) ListClients(ctx context.Context, token string, pm mfclients.Page) (mfclients.ClientsPage, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return mfclients.ClientsPage{}, err
 	}
@@ -120,7 +120,7 @@ func (svc service) ListClients(ctx context.Context, token string, pm mfclients.P
 }
 
 func (svc service) UpdateClient(ctx context.Context, token string, cli mfclients.Client) (mfclients.Client, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return mfclients.Client{}, err
 	}
@@ -140,7 +140,7 @@ func (svc service) UpdateClient(ctx context.Context, token string, cli mfclients
 }
 
 func (svc service) UpdateClientTags(ctx context.Context, token string, cli mfclients.Client) (mfclients.Client, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return mfclients.Client{}, err
 	}
@@ -159,7 +159,7 @@ func (svc service) UpdateClientTags(ctx context.Context, token string, cli mfcli
 }
 
 func (svc service) UpdateClientSecret(ctx context.Context, token, id, key string) (mfclients.Client, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return mfclients.Client{}, err
 	}
@@ -180,7 +180,7 @@ func (svc service) UpdateClientSecret(ctx context.Context, token, id, key string
 }
 
 func (svc service) UpdateClientOwner(ctx context.Context, token string, cli mfclients.Client) (mfclients.Client, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return mfclients.Client{}, err
 	}
@@ -231,7 +231,7 @@ func (svc service) DisableClient(ctx context.Context, token, id string) (mfclien
 }
 
 func (svc service) changeClientStatus(ctx context.Context, token string, client mfclients.Client) (mfclients.Client, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return mfclients.Client{}, err
 	}
@@ -250,7 +250,7 @@ func (svc service) changeClientStatus(ctx context.Context, token string, client 
 }
 
 func (svc service) ListClientsByGroup(ctx context.Context, token, groupID string, pm mfclients.Page) (mfclients.MembersPage, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return mfclients.MembersPage{}, err
 	}
@@ -278,53 +278,10 @@ func (svc service) Identify(ctx context.Context, key string) (string, error) {
 	return client.ID, nil
 }
 
-func (svc service) identifyUser(ctx context.Context, token string) (string, error) {
-	req := &upolicies.Token{Value: token}
-	res, err := svc.uauth.Identify(ctx, req)
-	if err != nil {
-		return "", errors.Wrap(errors.ErrAuthorization, err)
-	}
-	return res.GetId(), nil
-}
-
-func (svc service) authorize(ctx context.Context, subject, object string, relation string) error {
-	// If the user is admin, skip authorization.
-	if err := svc.checkAdmin(ctx, subject, thingsObjectKey, relation); err == nil {
-		return nil
-	}
-
-	policy := tpolicies.Policy{
-		Subject: subject,
-		Object:  object,
-		Actions: []string{relation},
-	}
-	if err := policy.Validate(); err != nil {
-		return err
-	}
-
-	return svc.policies.Authorize(ctx, entityType, policy)
-}
-
-func (svc service) checkAdmin(ctx context.Context, subject, object string, relation string) error {
-	req := &upolicies.AuthorizeReq{
-		Sub:        subject,
-		Obj:        object,
-		Act:        relation,
-		EntityType: entityType,
-	}
-	res, err := svc.uauth.Authorize(ctx, req)
-	if err != nil {
-		return errors.Wrap(errors.ErrAuthorization, err)
-	}
-	if !res.GetAuthorized() {
-		return errors.ErrAuthorization
-	}
-	return nil
-}
-
 // ShareClient shares a thing with a user.
+// We assume the user has already created the things anf group.
 func (svc service) ShareClient(ctx context.Context, token, userID, groupID string, actions, thingIDs []string) error {
-	id, err := svc.identifyUser(ctx, token)
+	id, err := svc.identify(ctx, token)
 	if err != nil {
 		return err
 	}
@@ -353,5 +310,45 @@ func (svc service) ShareClient(ctx context.Context, token, userID, groupID strin
 		return err
 	}
 
+	return nil
+}
+
+func (svc service) identify(ctx context.Context, token string) (string, error) {
+	req := &upolicies.Token{Value: token}
+	res, err := svc.uauth.Identify(ctx, req)
+	if err != nil {
+		return "", errors.Wrap(errors.ErrAuthorization, err)
+	}
+	return res.GetId(), nil
+}
+
+func (svc service) authorize(ctx context.Context, subject, object, action string) error {
+	// If the user is admin, skip authorization.
+	if err := svc.checkAdmin(ctx, subject, thingsObjectKey, action); err == nil {
+		return nil
+	}
+
+	policy := tpolicies.Policy{Subject: subject, Object: object, Actions: []string{action}}
+	if err := policy.Validate(); err != nil {
+		return err
+	}
+	return svc.policies.Authorize(ctx, entityType, policy)
+}
+
+// TODO : Only accept token as parameter since object and action are irrelevant.
+func (svc service) checkAdmin(ctx context.Context, subject, object, action string) error {
+	req := &upolicies.AuthorizeReq{
+		Sub:        subject,
+		Obj:        object,
+		Act:        action,
+		EntityType: entityType,
+	}
+	res, err := svc.uauth.Authorize(ctx, req)
+	if err != nil {
+		return errors.Wrap(errors.ErrAuthorization, err)
+	}
+	if !res.GetAuthorized() {
+		return errors.ErrAuthorization
+	}
 	return nil
 }

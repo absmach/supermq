@@ -14,6 +14,8 @@ import (
 	"github.com/mainflux/mainflux/things/clients/mocks"
 	"github.com/mainflux/mainflux/things/groups"
 	gmocks "github.com/mainflux/mainflux/things/groups/mocks"
+	"github.com/mainflux/mainflux/things/policies"
+	pmocks "github.com/mainflux/mainflux/things/policies/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -42,9 +44,16 @@ func newService(tokens map[string]string) (groups.Service, *gmocks.GroupReposito
 	adminPolicy := mocks.MockSubjectSet{Object: ID, Relation: []string{"g_add", "g_update", "g_list", "g_delete"}}
 	auth := mocks.NewAuthService(tokens, map[string][]mocks.MockSubjectSet{adminEmail: {adminPolicy}})
 	idProvider := uuid.NewMock()
-	gRepo := new(gmocks.GroupRepository)
 
-	return groups.NewService(auth, gRepo, idProvider), gRepo
+	cRepo := new(mocks.ClientRepository)
+	gRepo := new(gmocks.GroupRepository)
+	pRepo := new(pmocks.PolicyRepository)
+	thingCache := mocks.NewClientCache()
+	policiesCache := pmocks.NewChannelCache()
+
+	psvc := policies.NewService(auth, cRepo, pRepo, thingCache, policiesCache, idProvider)
+
+	return groups.NewService(auth, psvc, gRepo, idProvider), gRepo
 }
 
 func TestCreateGroup(t *testing.T) {

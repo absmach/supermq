@@ -61,6 +61,6 @@ type ClientService interface {
 	// DisableClient logically disables the client identified with the provided ID
 	DisableClient(ctx context.Context, token, id string) (clients.Client, error)
 
-	// Identify returns the client email and id from the given token
+	// Identify returns the client id from the given token
 	Identify(ctx context.Context, tkn string) (string, error)
 }

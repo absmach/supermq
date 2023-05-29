@@ -67,14 +67,15 @@ func NewService(c mfclients.Repository, p policies.PolicyRepository, t jwt.Token
 }
 
 func (svc service) RegisterClient(ctx context.Context, token string, cli mfclients.Client) (mfclients.Client, error) {
+	ownerID, err := svc.Identify(ctx, token)
+	if err != nil {
+		return mfclients.Client{}, err
+	}
 	clientID, err := svc.idProvider.ID()
 	if err != nil {
 		return mfclients.Client{}, err
 	}
-
-	// We don't check the error currently since we can register client with empty token
-	ownerID, _ := svc.Identify(ctx, token)
-	if ownerID != "" && cli.Owner == "" {
+	if cli.Owner == "" {
 		cli.Owner = ownerID
 	}
 	if cli.Credentials.Secret == "" {
@@ -142,8 +143,7 @@ func (svc service) ViewClient(ctx context.Context, token string, id string) (mfc
 	if ir == id {
 		return svc.clients.RetrieveByID(ctx, id)
 	}
-
-	if err := svc.authorize(ctx, entityType, policies.Policy{Subject: ir, Object: id, Actions: []string{listRelationKey}}); err != nil {
+	if err := svc.authorize(ctx, ir, id, listRelationKey); err != nil {
 		return mfclients.Client{}, err
 	}
 
@@ -173,8 +173,7 @@ func (svc service) ListClients(ctx context.Context, token string, pm mfclients.P
 	pm.Action = "c_list"
 
 	// If the user is admin, fetch all things from database.
-	p := policies.Policy{Subject: id, Object: clientsObjectKey, Actions: []string{listRelationKey}}
-	if err := svc.authorize(ctx, clientsObjectKey, p); err == nil {
+	if err := svc.authorize(ctx, id, clientsObjectKey, listRelationKey); err == nil {
 		pm.SharedBy = ""
 		pm.Owner = ""
 		pm.Action = ""
@@ -201,7 +200,7 @@ func (svc service) UpdateClient(ctx context.Context, token string, cli mfclients
 	if err != nil {
 		return mfclients.Client{}, err
 	}
-	if err := svc.authorize(ctx, entityType, policies.Policy{Subject: id, Object: cli.ID, Actions: []string{updateRelationKey}}); err != nil {
+	if err := svc.authorize(ctx, id, cli.ID, updateRelationKey); err != nil {
 		return mfclients.Client{}, err
 	}
 
@@ -221,7 +220,7 @@ func (svc service) UpdateClientTags(ctx context.Context, token string, cli mfcli
 	if err != nil {
 		return mfclients.Client{}, err
 	}
-	if err := svc.authorize(ctx, entityType, policies.Policy{Subject: id, Object: cli.ID, Actions: []string{updateRelationKey}}); err != nil {
+	if err := svc.authorize(ctx, id, cli.ID, updateRelationKey); err != nil {
 		return mfclients.Client{}, err
 	}
 
@@ -240,7 +239,7 @@ func (svc service) UpdateClientIdentity(ctx context.Context, token, clientID, id
 	if err != nil {
 		return mfclients.Client{}, err
 	}
-	if err := svc.authorize(ctx, entityType, policies.Policy{Subject: id, Object: clientID, Actions: []string{updateRelationKey}}); err != nil {
+	if err := svc.authorize(ctx, id, clientID, updateRelationKey); err != nil {
 		return mfclients.Client{}, err
 	}
 
@@ -340,7 +339,7 @@ func (svc service) UpdateClientOwner(ctx context.Context, token string, cli mfcl
 	if err != nil {
 		return mfclients.Client{}, err
 	}
-	if err := svc.authorize(ctx, entityType, policies.Policy{Subject: id, Object: cli.ID, Actions: []string{updateRelationKey}}); err != nil {
+	if err := svc.authorize(ctx, id, cli.ID, updateRelationKey); err != nil {
 		return mfclients.Client{}, err
 	}
 
@@ -382,27 +381,12 @@ func (svc service) DisableClient(ctx context.Context, token, id string) (mfclien
 	return client, nil
 }
 
-func (svc service) ListMembers(ctx context.Context, token, groupID string, pm mfclients.Page) (mfclients.MembersPage, error) {
-	id, err := svc.Identify(ctx, token)
-	if err != nil {
-		return mfclients.MembersPage{}, err
-	}
-	// If the user is admin, fetch all members from the database.
-	if err := svc.authorize(ctx, entityType, policies.Policy{Subject: id, Object: clientsObjectKey, Actions: []string{listRelationKey}}); err == nil {
-		return svc.clients.Members(ctx, groupID, pm)
-	}
-	pm.Subject = id
-	pm.Action = "g_list"
-
-	return svc.clients.Members(ctx, groupID, pm)
-}
-
 func (svc service) changeClientStatus(ctx context.Context, token string, client mfclients.Client) (mfclients.Client, error) {
 	id, err := svc.Identify(ctx, token)
 	if err != nil {
 		return mfclients.Client{}, err
 	}
-	if err := svc.authorize(ctx, entityType, policies.Policy{Subject: id, Object: client.ID, Actions: []string{deleteRelationKey}}); err != nil {
+	if err := svc.authorize(ctx, id, client.ID, deleteRelationKey); err != nil {
 		return mfclients.Client{}, err
 	}
 	dbClient, err := svc.clients.RetrieveByID(ctx, client.ID)
@@ -416,18 +400,34 @@ func (svc service) changeClientStatus(ctx context.Context, token string, client 
 	return svc.clients.ChangeStatus(ctx, client)
 }
 
-func (svc service) authorize(ctx context.Context, entityType string, p policies.Policy) error {
-	if err := p.Validate(); err != nil {
-		return err
+func (svc service) ListMembers(ctx context.Context, token, groupID string, pm mfclients.Page) (mfclients.MembersPage, error) {
+	id, err := svc.Identify(ctx, token)
+	if err != nil {
+		return mfclients.MembersPage{}, err
 	}
-	if err := svc.policies.CheckAdmin(ctx, p.Subject); err == nil {
-		return nil
+	// If the user is admin, fetch all members from the database.
+	if err := svc.authorize(ctx, id, groupID, listRelationKey); err == nil {
+		return svc.clients.Members(ctx, groupID, pm)
 	}
-	return svc.policies.Evaluate(ctx, entityType, p)
+	pm.Subject = id
+	pm.Action = "g_list"
+
+	return svc.clients.Members(ctx, groupID, pm)
 }
 
-func (svc service) Identify(ctx context.Context, tkn string) (string, error) {
-	claims, err := svc.tokens.Parse(ctx, tkn)
+func (svc service) authorize(ctx context.Context, subject, object, action string) error {
+	policy := policies.Policy{Subject: subject, Object: object, Actions: []string{action}}
+	if err := policy.Validate(); err != nil {
+		return err
+	}
+	if err := svc.policies.CheckAdmin(ctx, policy.Subject); err == nil {
+		return nil
+	}
+	return svc.policies.Evaluate(ctx, entityType, policy)
+}
+
+func (svc service) Identify(ctx context.Context, token string) (string, error) {
+	claims, err := svc.tokens.Parse(ctx, token)
 	if err != nil {
 		return "", errors.Wrap(errors.ErrAuthentication, err)
 	}

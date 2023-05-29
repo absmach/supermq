@@ -15,6 +15,7 @@ const (
 	WriteAction      = "m_write"
 	ClientEntityType = "client"
 	GroupEntityType  = "group"
+	thingsObjectKey  = "things"
 )
 
 type service struct {
@@ -81,7 +82,7 @@ func (svc service) Authorize(ctx context.Context, ar AccessRequest, entity strin
 //
 //  2. The client has `g_add` action on the object or is the owner of the object.
 func (svc service) AddPolicy(ctx context.Context, token string, p Policy) (Policy, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return Policy{}, err
 	}
@@ -125,7 +126,7 @@ func (svc service) AddPolicy(ctx context.Context, token string, p Policy) (Polic
 }
 
 func (svc service) UpdatePolicy(ctx context.Context, token string, p Policy) (Policy, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return Policy{}, err
 	}
@@ -143,7 +144,7 @@ func (svc service) UpdatePolicy(ctx context.Context, token string, p Policy) (Po
 }
 
 func (svc service) ListPolicies(ctx context.Context, token string, pm Page) (PolicyPage, error) {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return PolicyPage{}, err
 	}
@@ -163,7 +164,7 @@ func (svc service) ListPolicies(ctx context.Context, token string, pm Page) (Pol
 }
 
 func (svc service) DeletePolicy(ctx context.Context, token string, p Policy) error {
-	userID, err := svc.identifyUser(ctx, token)
+	userID, err := svc.identify(ctx, token)
 	if err != nil {
 		return err
 	}
@@ -202,7 +203,7 @@ func (svc service) checkPolicy(ctx context.Context, clientID string, p Policy) e
 	return errors.ErrAuthorization
 }
 
-func (svc service) identifyUser(ctx context.Context, token string) (string, error) {
+func (svc service) identify(ctx context.Context, token string) (string, error) {
 	req := &upolicies.Token{Value: token}
 	res, err := svc.auth.Identify(ctx, req)
 	if err != nil {
@@ -214,8 +215,8 @@ func (svc service) identifyUser(ctx context.Context, token string) (string, erro
 func (svc service) checkAdmin(ctx context.Context, id string) error {
 	req := &upolicies.AuthorizeReq{
 		Sub:        id,
-		Obj:        "object",
-		Act:        "c_update",
+		Obj:        thingsObjectKey,
+		Act:        "c_update", // TODO: remove since this is not used
 		EntityType: GroupEntityType,
 	}
 	res, err := svc.auth.Authorize(ctx, req)

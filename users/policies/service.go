@@ -45,23 +45,6 @@ func (svc service) Authorize(ctx context.Context, entityType string, p Policy) e
 	return svc.policies.Evaluate(ctx, entityType, p)
 }
 
-func (svc service) UpdatePolicy(ctx context.Context, token string, p Policy) error {
-	id, err := svc.identify(ctx, token)
-	if err != nil {
-		return err
-	}
-	if err := p.Validate(); err != nil {
-		return err
-	}
-	if err := svc.checkPolicy(ctx, id, p); err != nil {
-		return err
-	}
-	p.UpdatedAt = time.Now()
-	p.UpdatedBy = id
-
-	return svc.policies.Update(ctx, p)
-}
-
 // AddPolicy adds a policy is added if:
 //
 //  1. The client is admin
@@ -84,6 +67,10 @@ func (svc service) AddPolicy(ctx context.Context, token string, p Policy) error 
 
 	// If the policy already exists, replace the actions
 	if len(page.Policies) == 1 {
+		if err := svc.checkPolicy(ctx, id, p); err != nil {
+			return err
+		}
+
 		p.UpdatedAt = time.Now()
 		p.UpdatedBy = id
 		return svc.policies.Update(ctx, p)
@@ -106,16 +93,21 @@ func (svc service) AddPolicy(ctx context.Context, token string, p Policy) error 
 	return errors.ErrAuthorization
 }
 
-func (svc service) DeletePolicy(ctx context.Context, token string, p Policy) error {
+func (svc service) UpdatePolicy(ctx context.Context, token string, p Policy) error {
 	id, err := svc.identify(ctx, token)
 	if err != nil {
+		return err
+	}
+	if err := p.Validate(); err != nil {
 		return err
 	}
 	if err := svc.checkPolicy(ctx, id, p); err != nil {
 		return err
 	}
+	p.UpdatedAt = time.Now()
+	p.UpdatedBy = id
 
-	return svc.policies.Delete(ctx, p)
+	return svc.policies.Update(ctx, p)
 }
 
 func (svc service) ListPolicy(ctx context.Context, token string, pm Page) (PolicyPage, error) {
@@ -136,6 +128,17 @@ func (svc service) ListPolicy(ctx context.Context, token string, pm Page) (Polic
 	pm.Object = id
 
 	return svc.policies.Retrieve(ctx, pm)
+}
+
+func (svc service) DeletePolicy(ctx context.Context, token string, p Policy) error {
+	id, err := svc.identify(ctx, token)
+	if err != nil {
+		return err
+	}
+	if err := svc.checkPolicy(ctx, id, p); err != nil {
+		return err
+	}
+	return svc.policies.Delete(ctx, p)
 }
 
 // checkPolicy checks for the following:
@@ -161,8 +164,8 @@ func (svc service) checkPolicy(ctx context.Context, clientID string, p Policy) e
 	return errors.ErrAuthorization
 }
 
-func (svc service) identify(ctx context.Context, tkn string) (string, error) {
-	claims, err := svc.tokens.Parse(ctx, tkn)
+func (svc service) identify(ctx context.Context, token string) (string, error) {
+	claims, err := svc.tokens.Parse(ctx, token)
 	if err != nil {
 		return "", errors.Wrap(errors.ErrAuthentication, err)
 	}

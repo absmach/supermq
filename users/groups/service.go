@@ -70,7 +70,7 @@ func (svc service) CreateGroup(ctx context.Context, token string, g groups.Group
 }
 
 func (svc service) ViewGroup(ctx context.Context, token string, id string) (groups.Group, error) {
-	if err := svc.authorizeByToken(ctx, entityType, policies.Policy{Subject: token, Object: id, Actions: []string{listRelationKey}}); err != nil {
+	if err := svc.authorizeByToken(ctx, token, id, listRelationKey); err != nil {
 		return groups.Group{}, err
 	}
 
@@ -82,10 +82,12 @@ func (svc service) ListGroups(ctx context.Context, token string, gm groups.Group
 	if err != nil {
 		return groups.GroupsPage{}, err
 	}
+
 	// If the user is admin, fetch all groups from the database.
-	if err := svc.authorizeByID(ctx, entityType, policies.Policy{Subject: id, Object: groupsObjectKey, Actions: []string{listRelationKey}}); err == nil {
+	if err := svc.authorizeByID(ctx, id, groupsObjectKey, listRelationKey); err == nil {
 		return svc.groups.RetrieveAll(ctx, gm)
 	}
+
 	gm.Subject = id
 	gm.OwnerID = id
 	gm.Action = listRelationKey
@@ -98,7 +100,7 @@ func (svc service) ListMemberships(ctx context.Context, token, clientID string, 
 		return groups.MembershipsPage{}, err
 	}
 	// If the user is admin, fetch all members from the database.
-	if err := svc.authorizeByID(ctx, entityType, policies.Policy{Subject: id, Object: groupsObjectKey, Actions: []string{listRelationKey}}); err == nil {
+	if err := svc.authorizeByID(ctx, id, groupsObjectKey, listRelationKey); err == nil {
 		return svc.groups.Memberships(ctx, clientID, gm)
 	}
 
@@ -112,7 +114,7 @@ func (svc service) UpdateGroup(ctx context.Context, token string, g groups.Group
 	if err != nil {
 		return groups.Group{}, err
 	}
-	if err := svc.authorizeByID(ctx, entityType, policies.Policy{Subject: id, Object: g.ID, Actions: []string{updateRelationKey}}); err != nil {
+	if err := svc.authorizeByID(ctx, id, g.ID, updateRelationKey); err != nil {
 		return groups.Group{}, err
 	}
 	g.UpdatedAt = time.Now()
@@ -147,37 +149,12 @@ func (svc service) DisableGroup(ctx context.Context, token, id string) (groups.G
 	return group, nil
 }
 
-func (svc service) authorizeByID(ctx context.Context, entityType string, p policies.Policy) error {
-	if err := p.Validate(); err != nil {
-		return err
-	}
-	if err := svc.policies.CheckAdmin(ctx, p.Subject); err == nil {
-		return nil
-	}
-	return svc.policies.Evaluate(ctx, entityType, p)
-}
-
-func (svc service) authorizeByToken(ctx context.Context, entityType string, p policies.Policy) error {
-	if err := p.Validate(); err != nil {
-		return err
-	}
-	id, err := svc.identify(ctx, p.Subject)
-	if err != nil {
-		return err
-	}
-	if err = svc.policies.CheckAdmin(ctx, id); err == nil {
-		return nil
-	}
-	p.Subject = id
-	return svc.policies.Evaluate(ctx, entityType, p)
-}
-
 func (svc service) changeGroupStatus(ctx context.Context, token string, group groups.Group) (groups.Group, error) {
 	id, err := svc.identify(ctx, token)
 	if err != nil {
 		return groups.Group{}, err
 	}
-	if err := svc.authorizeByID(ctx, entityType, policies.Policy{Subject: id, Object: group.ID, Actions: []string{deleteRelationKey}}); err != nil {
+	if err := svc.authorizeByID(ctx, id, group.ID, deleteRelationKey); err != nil {
 		return groups.Group{}, err
 	}
 	dbGroup, err := svc.groups.RetrieveByID(ctx, group.ID)
@@ -192,8 +169,27 @@ func (svc service) changeGroupStatus(ctx context.Context, token string, group gr
 	return svc.groups.ChangeStatus(ctx, group)
 }
 
-func (svc service) identify(ctx context.Context, tkn string) (string, error) {
-	claims, err := svc.tokens.Parse(ctx, tkn)
+func (svc service) authorizeByID(ctx context.Context, subject, object, action string) error {
+	policy := policies.Policy{Subject: subject, Object: object, Actions: []string{action}}
+	if err := policy.Validate(); err != nil {
+		return err
+	}
+	if err := svc.policies.CheckAdmin(ctx, policy.Subject); err == nil {
+		return nil
+	}
+	return svc.policies.Evaluate(ctx, entityType, policy)
+}
+
+func (svc service) authorizeByToken(ctx context.Context, token, object, action string) error {
+	id, err := svc.identify(ctx, token)
+	if err != nil {
+		return err
+	}
+	return svc.authorizeByID(ctx, id, object, action)
+}
+
+func (svc service) identify(ctx context.Context, token string) (string, error) {
+	claims, err := svc.tokens.Parse(ctx, token)
 	if err != nil {
 		return "", errors.Wrap(errors.ErrAuthentication, err)
 	}
