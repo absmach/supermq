@@ -26,7 +26,7 @@ require (
 	github.com/jackc/pgtype v1.13.0
 	github.com/jackc/pgx/v5 v5.2.0
 	github.com/jmoiron/sqlx v1.3.5
-	github.com/mainflux/mproxy v0.2.3
+	github.com/mainflux/mproxy v0.2.4-0.20230529093723-735321c0fccd
 	github.com/mainflux/senml v1.5.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/nats-io/nats.go v1.18.0
