@@ -2,8 +2,6 @@ module github.com/mainflux/mainflux
 
 go 1.19
 
-replace github.com/mainflux/mproxy => /home/sammy/Documents/mproxy
-
 require (
 	github.com/caarlos0/env/v7 v7.0.0
 	github.com/cenkalti/backoff/v4 v4.1.3

@@ -1,7 +1,6 @@
 package mqtt
 
 import (
-	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -31,7 +30,7 @@ func New(address, target string, handler session.Handler, logger logger.Logger) 
 	}
 }
 
-func (p Proxy) accept(ctx context.Context, l net.Listener) {
+func (p Proxy) accept(l net.Listener) {
 	for {
 		conn, err := l.Accept()
 		if err != nil {
@@ -40,11 +39,11 @@ func (p Proxy) accept(ctx context.Context, l net.Listener) {
 		}
 
 		p.logger.Info("Accepted new client")
-		go p.handle(ctx, conn)
+		go p.handle(conn)
 	}
 }
 
-func (p Proxy) handle(ctx context.Context, inbound net.Conn) {
+func (p Proxy) handle(inbound net.Conn) {
 	defer p.close(inbound)
 	outbound, err := p.dialer.Dial("tcp", p.target)
 	if err != nil {
@@ -59,13 +58,15 @@ func (p Proxy) handle(ctx context.Context, inbound net.Conn) {
 		return
 	}
 
-	if err = session.Stream(ctx, inbound, outbound, p.handler, clientCert); err != io.EOF {
-		p.logger.Warn(err.Error())
+	s := session.New(inbound, outbound, p.handler, p.logger, clientCert)
+
+	if err = s.Stream(); err != io.EOF {
+		p.logger.Warn("Broken connection for client: " + s.Client.ID + " with error: " + err.Error())
 	}
 }
 
 // Listen of the server, this will block.
-func (p Proxy) Listen(ctx context.Context) error {
+func (p Proxy) Listen() error {
 	l, err := net.Listen("tcp", p.address)
 	if err != nil {
 		return err
@@ -73,14 +74,14 @@ func (p Proxy) Listen(ctx context.Context) error {
 	defer l.Close()
 
 	// Acceptor loop
-	p.accept(ctx, l)
+	p.accept(l)
 
 	p.logger.Info("Server Exiting...")
 	return nil
 }
 
 // ListenTLS - version of Listen with TLS encryption
-func (p Proxy) ListenTLS(ctx context.Context, tlsCfg *tls.Config) error {
+func (p Proxy) ListenTLS(tlsCfg *tls.Config) error {
 
 	l, err := tls.Listen("tcp", p.address, tlsCfg)
 	if err != nil {
@@ -89,7 +90,7 @@ func (p Proxy) ListenTLS(ctx context.Context, tlsCfg *tls.Config) error {
 	defer l.Close()
 
 	// Acceptor loop
-	p.accept(ctx, l)
+	p.accept(l)
 
 	p.logger.Info("Server Exiting...")
 	return nil

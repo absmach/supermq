@@ -485,6 +485,8 @@ github.com/magiconair/properties v1.8.6 h1:5ibWZ6iY0NctNGWo87LalDlEZ6R41TqbbDamh
 github.com/magiconair/properties v1.8.6/go.mod h1:y3VJvCyxH9uVvJTWEGAELF3aiYNyPKd5NZ3oSwXrF60=
 github.com/mailru/easyjson v0.0.0-20190614124828-94de47d64c63/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
+github.com/mainflux/mproxy v0.2.3 h1:tKc3i+/fNLUb2qwLVDinAJmtW7SMHAE9cgoueJmYsIU=
+github.com/mainflux/mproxy v0.2.3/go.mod h1:qJGrcNHt2e63IEIXowgHyRqgjIqsgOoU0CjAUTOUvII=
 github.com/mainflux/senml v1.5.0 h1:GAd1y1eMohfa6sVYcr2iQfVfkkh9l/q7B1TWF5L68xs=
 github.com/mainflux/senml v1.5.0/go.mod h1:SMX76mM5yenjLVjZOM27+njCGkP+AA64O46nRQiBRlE=
 github.com/markbates/errx v1.1.0 h1:QDFeR+UP95dO12JgW+tgi2UVfo0V8YBHiUIOaeBPiEI=

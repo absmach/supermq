@@ -331,7 +331,7 @@ github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/magiconair/properties v1.8.6
 ## explicit; go 1.13
 github.com/magiconair/properties
-# github.com/mainflux/mproxy v0.2.3 => /home/sammy/Documents/mproxy
+# github.com/mainflux/mproxy v0.2.3
 ## explicit; go 1.18
 github.com/mainflux/mproxy/pkg/logger
 github.com/mainflux/mproxy/pkg/mqtt
@@ -885,4 +885,3 @@ gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# github.com/mainflux/mproxy => /home/sammy/Documents/mproxy
