@@ -220,7 +220,7 @@ func TestConnect(t *testing.T) {
 		{
 			desc:    "connect without active session",
 			session: nil,
-			logMsg:  mqtt.LogErrFailedConnect + mqtt.ErrClientNotInitialized.Error(),
+			logMsg:  errors.Wrap(mqtt.ErrFailedConnect, mqtt.ErrClientNotInitialized).Error(),
 		},
 		{
 			desc:    "connect with active session",
@@ -273,7 +273,7 @@ func TestPublish(t *testing.T) {
 			session: &sessionClient,
 			topic:   invalidChannelIDTopic,
 			payload: payload,
-			logMsg:  mqtt.LogErrFailedPublish + mqtt.ErrMalformedTopic.Error(),
+			logMsg:  errors.Wrap(mqtt.ErrFailedPublish, mqtt.ErrMalformedTopic).Error(),
 		},
 		{
 			desc:    "publish with malformed subtopic",
@@ -329,7 +329,7 @@ func TestSubscribe(t *testing.T) {
 			desc:    "subscribe without active session",
 			session: nil,
 			topic:   topics,
-			logMsg:  mqtt.LogErrFailedSubscribe + mqtt.ErrClientNotInitialized.Error(),
+			logMsg:  errors.Wrap(mqtt.ErrFailedSubscribe, mqtt.ErrClientNotInitialized).Error(),
 		},
 		{
 			desc:    "subscribe with valid session and topics",
@@ -363,7 +363,7 @@ func TestUnsubscribe(t *testing.T) {
 			desc:    "unsubscribe without active session",
 			session: nil,
 			topic:   topics,
-			logMsg:  mqtt.LogErrFailedUnsubscribe + mqtt.ErrClientNotInitialized.Error(),
+			logMsg:  errors.Wrap(mqtt.ErrFailedUnsubscribe, mqtt.ErrClientNotInitialized).Error(),
 		},
 		{
 			desc:    "unsubscribe with valid session and topics",
@@ -397,7 +397,7 @@ func TestDisconnect(t *testing.T) {
 			desc:    "disconnect without active session",
 			session: nil,
 			topic:   topics,
-			logMsg:  mqtt.LogErrFailedDisconnect + mqtt.ErrClientNotInitialized.Error(),
+			logMsg:  errors.Wrap(mqtt.ErrFailedDisconnect, mqtt.ErrClientNotInitialized).Error(),
 		},
 		{
 			desc:    "disconnect with valid session",
