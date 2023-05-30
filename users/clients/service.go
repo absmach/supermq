@@ -67,15 +67,14 @@ func NewService(c mfclients.Repository, p policies.PolicyRepository, t jwt.Token
 }
 
 func (svc service) RegisterClient(ctx context.Context, token string, cli mfclients.Client) (mfclients.Client, error) {
-	ownerID, err := svc.Identify(ctx, token)
-	if err != nil {
-		return mfclients.Client{}, err
-	}
+	// We don't check the error currently since we can register client with empty token
+	ownerID, _ := svc.Identify(ctx, token)
+
 	clientID, err := svc.idProvider.ID()
 	if err != nil {
 		return mfclients.Client{}, err
 	}
-	if cli.Owner == "" {
+	if cli.Owner == "" && ownerID != "" {
 		cli.Owner = ownerID
 	}
 	if cli.Credentials.Secret == "" {

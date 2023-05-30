@@ -17,11 +17,12 @@ import (
 const (
 	MyKey             = "mine"
 	thingsObjectKey   = "things"
-	addRelationKey    = "c_add"
+	addRelationKey    = "g_add"
 	updateRelationKey = "c_update"
 	listRelationKey   = "c_list"
 	deleteRelationKey = "c_delete"
 	entityType        = "group"
+	clientEntityType  = "client"
 )
 
 var AdminRelationKey = []string{updateRelationKey, listRelationKey, deleteRelationKey}
@@ -280,28 +281,23 @@ func (svc service) Identify(ctx context.Context, key string) (string, error) {
 
 // ShareClient shares a thing with a user.
 // We assume the user has already created the things anf group.
-func (svc service) ShareClient(ctx context.Context, token, userID, groupID string, actions, thingIDs []string) error {
+func (svc service) ShareClient(ctx context.Context, token, userID, groupID, thingID string, actions []string) error {
 	id, err := svc.identify(ctx, token)
 	if err != nil {
 		return err
 	}
 
-	var errs error
-	for _, tid := range thingIDs {
-		req := tpolicies.Policy{
-			Subject: id,
-			Object:  tid,
-			Actions: []string{addRelationKey},
-		}
-		if err := svc.policies.Authorize(ctx, entityType, req); err != nil {
-			errs = errors.Wrap(fmt.Errorf("cannot share '%s' with user '%s': %s", tid, userID, err), errs)
-		}
-	}
-	if errs != nil {
-		return errs
+	policy := tpolicies.Policy{Subject: id, Object: groupID, Actions: []string{addRelationKey}}
+	if err := svc.policies.Authorize(ctx, entityType, policy); err != nil {
+		return fmt.Errorf("cannot share things using group %s to user %s: %s", groupID, userID, err)
 	}
 
-	policy := tpolicies.Policy{
+	policy = tpolicies.Policy{Subject: id, Object: thingID, Actions: []string{addRelationKey}}
+	if err := svc.policies.Authorize(ctx, clientEntityType, policy); err != nil {
+		return fmt.Errorf("cannot share thing %s with user %s: %s", thingID, userID, err)
+	}
+
+	policy = tpolicies.Policy{
 		Subject: userID,
 		Object:  groupID,
 		Actions: actions,

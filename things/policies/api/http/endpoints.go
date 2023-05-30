@@ -75,12 +75,12 @@ func connectThingsEndpoint(svc policies.Service) endpoint.Endpoint {
 		if err := cr.validate(); err != nil {
 			return nil, err
 		}
+		if len(cr.Actions) == 0 {
+			cr.Actions = policies.PolicyTypes
+		}
 		ps := []policies.Policy{}
 		for _, tid := range cr.ClientIDs {
 			for _, cid := range cr.GroupIDs {
-				if len(cr.Actions) == 0 {
-					cr.Actions = policies.PolicyTypes
-				}
 				policy := policies.Policy{
 					Subject: tid,
 					Object:  cid,

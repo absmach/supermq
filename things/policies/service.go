@@ -11,11 +11,10 @@ import (
 )
 
 const (
-	ReadAction       = "m_read"
-	WriteAction      = "m_write"
-	ClientEntityType = "client"
-	GroupEntityType  = "group"
-	thingsObjectKey  = "things"
+	ReadAction      = "m_read"
+	WriteAction     = "m_write"
+	GroupEntityType = "group"
+	thingsObjectKey = "things"
 )
 
 type service struct {
@@ -97,6 +96,10 @@ func (svc service) AddPolicy(ctx context.Context, token string, p Policy) (Polic
 
 	// If the policy already exists, replace the actions
 	if len(page.Policies) == 1 {
+		if err := svc.checkPolicy(ctx, userID, p); err != nil {
+			return Policy{}, err
+		}
+
 		p.UpdatedAt = time.Now()
 		p.UpdatedBy = userID
 		return svc.policies.Update(ctx, p)
@@ -185,12 +188,10 @@ func (svc service) DeletePolicy(ctx context.Context, token string, p Policy) err
 //  1. Check if the client is admin
 //  2. Check if the client is the owner of the policy
 func (svc service) checkPolicy(ctx context.Context, clientID string, p Policy) error {
-	// Check if the client is admin
 	if err := svc.checkAdmin(ctx, clientID); err == nil {
 		return nil
 	}
 
-	// Check if the client is the owner of the policy
 	pm := Page{Subject: p.Subject, Object: p.Object, OwnerID: clientID, Offset: 0, Limit: 1}
 	page, err := svc.policies.Retrieve(ctx, pm)
 	if err != nil {

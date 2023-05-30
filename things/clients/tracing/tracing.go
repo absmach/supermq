@@ -90,10 +90,10 @@ func (tm *tracingMiddleware) ListClientsByGroup(ctx context.Context, token, grou
 
 }
 
-func (tm *tracingMiddleware) ShareClient(ctx context.Context, token, thingID, groupID string, actions, userIDs []string) error {
+func (tm *tracingMiddleware) ShareClient(ctx context.Context, token, userID, groupID, thingID string, actions []string) error {
 	ctx, span := tm.tracer.Start(ctx, "svc_share_client", trace.WithAttributes(attribute.String("id", thingID)))
 	defer span.End()
-	return tm.svc.ShareClient(ctx, token, thingID, groupID, actions, userIDs)
+	return tm.svc.ShareClient(ctx, token, userID, groupID, thingID, actions)
 }
 
 func (tm *tracingMiddleware) Identify(ctx context.Context, key string) (string, error) {

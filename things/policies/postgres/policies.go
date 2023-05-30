@@ -95,10 +95,11 @@ func (pr prepo) Evaluate(ctx context.Context, entityType string, policy policies
 			policy.Actions[0])
 	case "group":
 		// Evaluates if client is connected to the specified group and has the required action
-		q = fmt.Sprintf(`SELECT DISTINCT policies.subject FROM policies
-		LEFT JOIN groups ON groups.owner_id = policies.subject AND groups.id = policies.object
-		WHERE policies.subject = :subject AND policies.object = :object AND '%s' = ANY(policies.actions)
-		LIMIT 1`, policy.Actions[0])
+		q = fmt.Sprintf(`(SELECT policies.subject FROM policies
+			WHERE policies.subject = :subject AND policies.object = :object AND '%s' = ANY(policies.actions))
+			UNION
+			(SELECT groups.owner_id as subject FROM groups
+			WHERE groups.owner_id = :subject AND groups.id = :object)`, policy.Actions[0])
 	default:
 		return ErrInvalidEntityType
 	}
