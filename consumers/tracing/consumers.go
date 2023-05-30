@@ -19,27 +19,27 @@ var _ consumers.AsyncConsumer = (*tracingMiddlewareAsync)(nil)
 var _ consumers.BlockingConsumer = (*tracingMiddlewareBlock)(nil)
 
 type tracingMiddlewareAsync struct {
-	consumerAsync consumers.AsyncConsumer
-	tracer        opentracing.Tracer
+	consumer consumers.AsyncConsumer
+	tracer   opentracing.Tracer
 }
 type tracingMiddlewareBlock struct {
-	consumerBlock consumers.BlockingConsumer
-	tracer        opentracing.Tracer
+	consumer consumers.BlockingConsumer
+	tracer   opentracing.Tracer
 }
 
 // NewAsync creates a new traced consumers.AsyncConsumer service
 func NewAsync(tracer opentracing.Tracer, consumerAsync consumers.AsyncConsumer) consumers.AsyncConsumer {
 	return &tracingMiddlewareAsync{
-		consumerAsync: consumerAsync,
-		tracer:        tracer,
+		consumer: consumerAsync,
+		tracer:   tracer,
 	}
 }
 
 // NewBlocking creates a new traced consumers.BlockingConsumer service
 func NewBlocking(tracer opentracing.Tracer, consumerBlock consumers.BlockingConsumer) consumers.BlockingConsumer {
 	return &tracingMiddlewareBlock{
-		consumerBlock: consumerBlock,
-		tracer:        tracer,
+		consumer: consumerBlock,
+		tracer:   tracer,
 	}
 }
 
@@ -48,19 +48,19 @@ func (tm *tracingMiddlewareBlock) ConsumeBlocking(ctx context.Context, messages 
 	var span opentracing.Span
 	switch m := messages.(type) {
 	case mfjson.Messages:
-		if len(m.Data) >= 1 {
+		if len(m.Data) > 0 {
 			firstMsg := m.Data[0]
 			span, ctx = createMessageSpan(ctx, tm.tracer, firstMsg.Channel, firstMsg.Subtopic, firstMsg.Publisher, consumeBlockingOP, len(m.Data))
 			defer span.Finish()
 		}
 	case []senml.Message:
-		if len(m) >= 1 {
+		if len(m) > 0 {
 			firstMsg := m[0]
 			span, ctx = createMessageSpan(ctx, tm.tracer, firstMsg.Channel, firstMsg.Subtopic, firstMsg.Publisher, consumeBlockingOP, len(m))
 			defer span.Finish()
 		}
 	}
-	return tm.consumerBlock.ConsumeBlocking(ctx, messages)
+	return tm.consumer.ConsumeBlocking(ctx, messages)
 }
 
 // ConsumeAsync traces consume operations for message/s consumed.
@@ -68,24 +68,24 @@ func (tm *tracingMiddlewareAsync) ConsumeAsync(ctx context.Context, messages int
 	var span opentracing.Span
 	switch m := messages.(type) {
 	case mfjson.Messages:
-		if len(m.Data) >= 1 {
+		if len(m.Data) > 0 {
 			firstMsg := m.Data[0]
 			span, ctx = createMessageSpan(ctx, tm.tracer, firstMsg.Channel, firstMsg.Subtopic, firstMsg.Publisher, consumeAsyncOP, len(m.Data))
 			defer span.Finish()
 		}
 	case []senml.Message:
-		if len(m) >= 1 {
+		if len(m) > 0 {
 			firstMsg := m[0]
 			span, ctx = createMessageSpan(ctx, tm.tracer, firstMsg.Channel, firstMsg.Subtopic, firstMsg.Publisher, consumeAsyncOP, len(m))
 			defer span.Finish()
 		}
 	}
-	tm.consumerAsync.ConsumeAsync(ctx, messages)
+	tm.consumer.ConsumeAsync(ctx, messages)
 }
 
 // Errors traces async consume errors.
 func (tm *tracingMiddlewareAsync) Errors() <-chan error {
-	return tm.consumerAsync.Errors()
+	return tm.consumer.Errors()
 }
 
 func createMessageSpan(ctx context.Context, tracer opentracing.Tracer, topic, subTopic, publisher, operation string, noMessages int) (opentracing.Span, context.Context) {
