@@ -48,13 +48,17 @@ func (tm *tracingMiddlewareBlock) ConsumeBlocking(ctx context.Context, messages 
 	var span opentracing.Span
 	switch m := messages.(type) {
 	case mfjson.Messages:
-		firstMsg := m.Data[0]
-		span, ctx = createMessageSpan(ctx, tm.tracer, firstMsg.Channel, firstMsg.Subtopic, firstMsg.Publisher, consumeBlockingOP, len(m.Data))
-		defer span.Finish()
+		if len(m.Data) >= 1 {
+			firstMsg := m.Data[0]
+			span, ctx = createMessageSpan(ctx, tm.tracer, firstMsg.Channel, firstMsg.Subtopic, firstMsg.Publisher, consumeBlockingOP, len(m.Data))
+			defer span.Finish()
+		}
 	case []senml.Message:
-		firstMsg := m[0]
-		span, ctx = createMessageSpan(ctx, tm.tracer, firstMsg.Channel, firstMsg.Subtopic, firstMsg.Publisher, consumeBlockingOP, len(m))
-		defer span.Finish()
+		if len(m) >= 1 {
+			firstMsg := m[0]
+			span, ctx = createMessageSpan(ctx, tm.tracer, firstMsg.Channel, firstMsg.Subtopic, firstMsg.Publisher, consumeBlockingOP, len(m))
+			defer span.Finish()
+		}
 	}
 	return tm.consumerBlock.ConsumeBlocking(ctx, messages)
 }
@@ -64,13 +68,17 @@ func (tm *tracingMiddlewareAsync) ConsumeAsync(ctx context.Context, messages int
 	var span opentracing.Span
 	switch m := messages.(type) {
 	case mfjson.Messages:
-		firstMsg := m.Data[0]
-		span, ctx = createMessageSpan(ctx, tm.tracer, firstMsg.Channel, firstMsg.Subtopic, firstMsg.Publisher, consumeAsyncOP, len(m.Data))
-		defer span.Finish()
+		if len(m.Data) >= 1 {
+			firstMsg := m.Data[0]
+			span, ctx = createMessageSpan(ctx, tm.tracer, firstMsg.Channel, firstMsg.Subtopic, firstMsg.Publisher, consumeAsyncOP, len(m.Data))
+			defer span.Finish()
+		}
 	case []senml.Message:
-		firstMsg := m[0]
-		span, ctx = createMessageSpan(ctx, tm.tracer, firstMsg.Channel, firstMsg.Subtopic, firstMsg.Publisher, consumeAsyncOP, len(m))
-		defer span.Finish()
+		if len(m) >= 1 {
+			firstMsg := m[0]
+			span, ctx = createMessageSpan(ctx, tm.tracer, firstMsg.Channel, firstMsg.Subtopic, firstMsg.Publisher, consumeAsyncOP, len(m))
+			defer span.Finish()
+		}
 	}
 	tm.consumerAsync.ConsumeAsync(ctx, messages)
 }
