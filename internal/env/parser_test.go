@@ -116,14 +116,13 @@ func TestParse(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			err := Parse(test.config, test.options...)
-			if test.err != nil {
-				assert.Error(t, err, "expected error but got nil")
-			} else {
-				assert.NoError(t, err, fmt.Sprintf("expected no error but got %v", err))
-			}
-			assert.Equal(t, test.expectedConfig, test.config, fmt.Sprintf("expected %v got %v", test.expectedConfig, test.config))
-		})
+		err := Parse(test.config, test.options...)
+		if test.err != nil {
+			assert.Error(t, err, "expected error but got nil")
+		} else {
+			assert.NoError(t, err, fmt.Sprintf("expected no error but got %v", err))
+		}
+		assert.Equal(t, test.expectedConfig, test.config, fmt.Sprintf("expected %v got %v", test.expectedConfig, test.config))
+
 	}
 }
