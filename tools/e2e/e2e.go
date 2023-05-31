@@ -81,56 +81,51 @@ func Test(conf Config) {
 
 	magenta := color.FgLightMagenta.Render
 
-	token, owner, err := createUser(s, conf)
+	token, err := createUser(s, conf)
 	if err != nil {
-		errExit(err)
+		errExit(fmt.Errorf("unable to create user: %w", err))
 	}
 	color.Success.Printf("created user with token %s\n", magenta(token))
 
 	users, err := createUsers(s, conf, token)
 	if err != nil {
-		errExit(err)
+		errExit(fmt.Errorf("unable to create users: %w", err))
 	}
 	color.Success.Printf("created users of ids:\n%s\n", magenta(getIDS(users)))
 
 	groups, err := createGroups(s, conf, token)
 	if err != nil {
-		errExit(err)
+		errExit(fmt.Errorf("unable to create groups: %w", err))
 	}
 	color.Success.Printf("created groups of ids:\n%s\n", magenta(getIDS(groups)))
 
 	things, err := createThings(s, conf, token)
 	if err != nil {
-		errExit(err)
+		errExit(fmt.Errorf("unable to create things: %w", err))
 	}
 	color.Success.Printf("created things of ids:\n%s\n", magenta(getIDS(things)))
 
 	channels, err := createChannels(s, conf, token)
 	if err != nil {
-		errExit(err)
+		errExit(fmt.Errorf("unable to create channels: %w", err))
 	}
 	color.Success.Printf("created channels of ids:\n%s\n", magenta(getIDS(channels)))
 
-	if err := createPolicies(s, conf, token, owner, users, groups, things, channels); err != nil {
-		errExit(err)
-	}
-	color.Success.Println("created policies for users, groups, things and channels")
-
 	// List users, groups, things and channels
 	if err := read(s, conf, token, users, groups, things, channels); err != nil {
-		errExit(err)
+		errExit(fmt.Errorf("unable to read users, groups, things and channels: %w", err))
 	}
 	color.Success.Println("viewed users, groups, things and channels")
 
 	// Update users, groups, things and channels
 	if err := update(s, token, users, groups, things, channels); err != nil {
-		errExit(err)
+		errExit(fmt.Errorf("unable to update users, groups, things and channels: %w", err))
 	}
 	color.Success.Println("updated users, groups, things and channels")
 
 	// Send messages to channels
 	if err := messaging(s, conf, token, things, channels); err != nil {
-		errExit(err)
+		errExit(fmt.Errorf("unable to send messages to channels: %w", err))
 	}
 	color.Success.Println("sent messages to channels")
 }
@@ -140,7 +135,7 @@ func errExit(err error) {
 	os.Exit(1)
 }
 
-func createUser(s sdk.SDK, conf Config) (string, string, error) {
+func createUser(s sdk.SDK, conf Config) (string, error) {
 	user := sdk.User{
 		Name: fmt.Sprintf("%s-%s", conf.Prefix, namesgenerator.Generate()),
 		Credentials: sdk.Credentials{
@@ -154,16 +149,16 @@ func createUser(s sdk.SDK, conf Config) (string, string, error) {
 
 	user, err := s.CreateUser(user, "")
 	if err != nil {
-		return "", "", fmt.Errorf("unable to create user: %w", err)
+		return "", fmt.Errorf("unable to create user: %w", err)
 	}
 
 	user.Credentials.Secret = pass
 	token, err := s.CreateToken(user)
 	if err != nil {
-		return "", "", fmt.Errorf("unable to login user: %w", err)
+		return "", fmt.Errorf("unable to login user: %w", err)
 	}
 
-	return token.AccessToken, user.ID, nil
+	return token.AccessToken, nil
 }
 
 func createUsers(s sdk.SDK, conf Config, token string) ([]sdk.User, error) {
@@ -247,45 +242,6 @@ func createChannels(s sdk.SDK, conf Config, token string) ([]sdk.Channel, error)
 	}
 
 	return channels, nil
-}
-
-func createPolicies(s sdk.SDK, conf Config, token, owner string, users []sdk.User, groups []sdk.Group, things []sdk.Thing, channels []sdk.Channel) error {
-	for i := uint64(0); i < conf.Num; i++ {
-		upolicy := sdk.Policy{
-			Subject: owner,
-			Object:  users[i].ID,
-			Actions: []string{"c_delete", "c_update", "c_add", "c_list"},
-		}
-		gpolicy := sdk.Policy{
-			Subject: owner,
-			Object:  groups[i].ID,
-			Actions: []string{"g_delete", "g_update", "g_add", "g_list"},
-		}
-		tpolicy := sdk.Policy{
-			Subject: owner,
-			Object:  things[i].ID,
-			Actions: []string{"c_delete", "c_update", "c_add", "c_list"},
-		}
-		cpolicy := sdk.Policy{
-			Subject: owner,
-			Object:  channels[i].ID,
-			Actions: []string{"g_delete", "g_update", "g_add", "g_list"},
-		}
-		if err := s.CreatePolicy(upolicy, token); err != nil {
-			return err
-		}
-		if err := s.CreatePolicy(gpolicy, token); err != nil {
-			return err
-		}
-		if err := s.CreatePolicy(tpolicy, token); err != nil {
-			return err
-		}
-		if err := s.CreatePolicy(cpolicy, token); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func read(s sdk.SDK, conf Config, token string, users []sdk.User, groups []sdk.Group, things []sdk.Thing, channels []sdk.Channel) error {
