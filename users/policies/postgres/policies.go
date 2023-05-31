@@ -71,17 +71,15 @@ func (pr policyRepository) Evaluate(ctx context.Context, entityType string, poli
 	case "client":
 		// Evaluates if two clients are connected to the same group and the subject has the specified action
 		// or subject is the owner of the object
-		q = fmt.Sprintf(`SELECT COALESCE(p.subject, c.id) as subject FROM policies p
-		JOIN policies p2 ON p.object = p2.object LEFT JOIN clients c ON c.owner_id = :subject AND c.id = :object
-		WHERE (p.subject = :subject AND p2.subject = :object AND '%s' = ANY(p.actions)) OR (c.id IS NOT NULL) LIMIT 1;`,
-			policy.Actions[0])
+		q = fmt.Sprintf(`(SELECT subject FROM policies p 
+		WHERE p.subject = :subject AND '%s' = ANY(p.actions) AND object IN (SELECT object FROM policies WHERE subject = :subject))
+		UNION
+		(SELECT id as subject FROM clients c WHERE c.owner_id = :subject AND c.id = :object) LIMIT 1;`, policy.Actions[0])
 	case "group":
 		// Evaluates if client is a member to that group and has the specified action or is the owner of the group
-		q = fmt.Sprintf(`(SELECT policies.subject FROM policies
-		WHERE policies.subject = :subject AND policies.object = :object AND '%s' = ANY(policies.actions))
+		q = fmt.Sprintf(`(SELECT subject FROM policies p WHERE p.subject = :subject AND p.object = :object AND '%s' = ANY(p.actions))
 		UNION
-		(SELECT groups.owner_id as subject FROM groups
-		WHERE groups.owner_id = :subject AND groups.id = :object)`, policy.Actions[0])
+		(SELECT id as subject FROM groups g WHERE g.owner_id = :subject AND g.id = :object)`, policy.Actions[0])
 
 	default:
 		return ErrInvalidEntityType

@@ -21,7 +21,7 @@ const (
 	updateRelationKey = "c_update"
 	listRelationKey   = "c_list"
 	deleteRelationKey = "c_delete"
-	entityType        = "group"
+	groupEntityType   = "group"
 	clientEntityType  = "client"
 )
 
@@ -288,7 +288,7 @@ func (svc service) ShareClient(ctx context.Context, token, userID, groupID, thin
 	}
 
 	policy := tpolicies.Policy{Subject: id, Object: groupID, Actions: []string{addRelationKey}}
-	if err := svc.policies.Authorize(ctx, entityType, policy); err != nil {
+	if err := svc.policies.Authorize(ctx, groupEntityType, policy); err != nil {
 		return fmt.Errorf("cannot share things using group %s to user %s: %s", groupID, userID, err)
 	}
 
@@ -328,7 +328,7 @@ func (svc service) authorize(ctx context.Context, subject, object, action string
 	if err := policy.Validate(); err != nil {
 		return err
 	}
-	return svc.policies.Authorize(ctx, entityType, policy)
+	return svc.policies.Authorize(ctx, clientEntityType, policy)
 }
 
 // TODO : Only accept token as parameter since object and action are irrelevant.
@@ -337,7 +337,7 @@ func (svc service) checkAdmin(ctx context.Context, subject, object, action strin
 		Sub:        subject,
 		Obj:        object,
 		Act:        action,
-		EntityType: entityType,
+		EntityType: clientEntityType,
 	}
 	res, err := svc.uauth.Authorize(ctx, req)
 	if err != nil {
