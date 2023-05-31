@@ -115,30 +115,8 @@ paths:
           description: Missing or invalid access token provided.
         '500':
           $ref: "#/components/responses/ServiceError"
-<<<<<<< HEAD
-  /users/{userID}:
-     get:
-      summary: Gets info on specified user.
-      description: |
-        Gets info on the specified user. Info is obtained using userId
-      tags:
-        - users
-      parameters:
-        - $ref: "#/components/parameters/UserId"        
-      responses:
-        '200':
-          $ref: "#/components/responses/UserRes"
-        '400':
-          description: Failed due to malformed query parameters.
-        '401':
-          description: Missing or invalid access token provided.
-        '500':
-          $ref: "#/components/responses/ServiceError"          
-  /groups/{groupID}:
-=======
           
   /users/{userID}:
->>>>>>> d0357fa40 (Move Things and Users to Clients)
     get:
       summary: Retrieves a user
       description: |
