@@ -300,7 +300,7 @@ func TestViewClient(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, "group", mock.Anything).Return(nil)
+		repoCall := pRepo.On("Evaluate", mock.Anything, "client", mock.Anything).Return(nil)
 		repoCall1 := cRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		rClient, err := svc.ViewClient(context.Background(), tc.token, tc.clientID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -646,7 +646,7 @@ func TestUpdateClient(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, "group", mock.Anything).Return(nil)
+		repoCall := pRepo.On("Evaluate", mock.Anything, "client", mock.Anything).Return(nil)
 		repoCall1 := cRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(mfclients.Client{}, tc.err)
 		repoCall2 := cRepo.On("Update", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		updatedClient, err := svc.UpdateClient(context.Background(), tc.token, tc.client)
@@ -697,7 +697,7 @@ func TestUpdateClientTags(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, "group", mock.Anything).Return(nil)
+		repoCall := pRepo.On("Evaluate", mock.Anything, "client", mock.Anything).Return(nil)
 		repoCall1 := cRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(mfclients.Client{}, tc.err)
 		repoCall2 := cRepo.On("UpdateTags", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		updatedClient, err := svc.UpdateClientTags(context.Background(), tc.token, tc.client)
@@ -748,7 +748,7 @@ func TestUpdateClientOwner(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, "group", mock.Anything).Return(nil)
+		repoCall := pRepo.On("Evaluate", mock.Anything, "client", mock.Anything).Return(nil)
 		repoCall1 := cRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(mfclients.Client{}, tc.err)
 		repoCall2 := cRepo.On("UpdateOwner", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		updatedClient, err := svc.UpdateClientOwner(context.Background(), tc.token, tc.client)
@@ -790,7 +790,7 @@ func TestUpdateClientSecret(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, "group", mock.Anything).Return(nil)
+		repoCall := pRepo.On("Evaluate", mock.Anything, "client", mock.Anything).Return(nil)
 		repoCall1 := cRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		repoCall2 := cRepo.On("RetrieveByIdentity", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		repoCall3 := cRepo.On("UpdateSecret", context.Background(), mock.Anything).Return(tc.response, tc.err)
@@ -847,7 +847,7 @@ func TestEnableClient(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, "group", mock.Anything).Return(nil)
+		repoCall := pRepo.On("Evaluate", mock.Anything, "client", mock.Anything).Return(nil)
 		repoCall1 := cRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(tc.client, tc.err)
 		repoCall2 := cRepo.On("ChangeStatus", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		_, err := svc.EnableClient(context.Background(), tc.token, tc.id)
@@ -964,7 +964,7 @@ func TestDisableClient(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, "group", mock.Anything).Return(nil)
+		repoCall := pRepo.On("Evaluate", mock.Anything, "client", mock.Anything).Return(nil)
 		repoCall1 := cRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(tc.client, tc.err)
 		repoCall2 := cRepo.On("ChangeStatus", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		_, err := svc.DisableClient(context.Background(), tc.token, tc.id)
