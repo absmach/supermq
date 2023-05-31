@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	HomeUrl           = "http://64.226.105.108/telemetry"
+	HomeUrl           = "https://deployments.mainflux.io/telemetry"
 	stopWaitTime      = 5 * time.Second
 	callHomeSleepTime = 30 * time.Minute
 	backOff           = 10 * time.Second
