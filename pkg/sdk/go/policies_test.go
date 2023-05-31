@@ -145,7 +145,7 @@ func TestCreatePolicy(t *testing.T) {
 		repoCall1 := pRepo.On("Retrieve", mock.Anything, mock.Anything).Return(convertPolicyPage(tc.page), nil)
 		repoCall2 := pRepo.On("Update", mock.Anything, mock.Anything).Return(tc.err)
 		repoCall3 := pRepo.On("Save", mock.Anything, mock.Anything).Return(tc.err)
-		err := policySDK.AddPolicy(tc.policy, tc.token)
+		err := policySDK.CreatePolicy(tc.policy, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		if tc.err == nil {
 			ok := repoCall.Parent.AssertCalled(t, "Retrieve", mock.Anything, mock.Anything)
