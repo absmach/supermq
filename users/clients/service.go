@@ -139,9 +139,6 @@ func (svc service) ViewClient(ctx context.Context, token string, id string) (mfc
 	if err != nil {
 		return mfclients.Client{}, err
 	}
-	if ir == id {
-		return svc.clients.RetrieveByID(ctx, id)
-	}
 	if err := svc.authorize(ctx, ir, id, listRelationKey); err != nil {
 		return mfclients.Client{}, err
 	}
@@ -415,6 +412,9 @@ func (svc service) ListMembers(ctx context.Context, token, groupID string, pm mf
 }
 
 func (svc service) authorize(ctx context.Context, subject, object, action string) error {
+	if subject == object {
+		return nil
+	}
 	policy := policies.Policy{Subject: subject, Object: object, Actions: []string{action}}
 	if err := policy.Validate(); err != nil {
 		return err
