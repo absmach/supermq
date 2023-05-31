@@ -396,6 +396,9 @@ github.com/lestrrat-go/option
 # github.com/magiconair/properties v1.8.6
 ## explicit; go 1.13
 github.com/magiconair/properties
+# github.com/mainflux/callhome v0.0.0-20230531125544-ff9d160524fb
+## explicit; go 1.20
+github.com/mainflux/callhome/pkg/client
 # github.com/mainflux/mproxy v0.3.0
 ## explicit; go 1.19
 github.com/mainflux/mproxy/pkg/logger
@@ -973,4 +976,3 @@ gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# github.com/mainflux/callhome => github.com/sammyoina/et v0.0.0-20230531094301-3b937fcf598d
