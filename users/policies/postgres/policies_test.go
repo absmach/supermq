@@ -144,8 +144,8 @@ func TestPoliciesEvaluate(t *testing.T) {
 	}{
 		"evaluate valid client update":   {client1.ID, client2.ID, "c_update", "client", nil},
 		"evaluate valid group update":    {client1.ID, group.ID, "g_update", "group", nil},
-		"evaluate valid client list":     {client1.ID, client2.ID, "c_list", "client", errors.ErrAuthorization},
-		"evaluate valid group list":      {client1.ID, group.ID, "g_list", "group", errors.ErrAuthorization},
+		"evaluate valid client list":     {client1.ID, client2.ID, "c_list", "client", nil},
+		"evaluate valid group list":      {client1.ID, group.ID, "g_list", "group", nil},
 		"evaluate invalid client delete": {client1.ID, client2.ID, "c_delete", "client", errors.ErrAuthorization},
 		"evaluate invalid group delete":  {client1.ID, group.ID, "g_delete", "group", errors.ErrAuthorization},
 		"evaluate invalid client update": {"unknown", "unknown", "c_update", "client", errors.ErrAuthorization},

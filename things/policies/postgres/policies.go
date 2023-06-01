@@ -90,7 +90,7 @@ func (pr prepo) Evaluate(ctx context.Context, entityType string, policy policies
 		// Evaluates if two clients are connected to the same group and the subject has the specified action
 		// or subject is the owner of the object
 		q = fmt.Sprintf(`(SELECT subject FROM policies p 
-			WHERE p.subject = :subject AND '%s' = ANY(p.actions) AND object IN (SELECT object FROM policies WHERE subject = :subject AND object = :object))
+			WHERE p.subject = :subject AND '%s' = ANY(p.actions) AND object IN (SELECT object FROM policies WHERE subject = :object))
 			UNION
 			(SELECT id as subject FROM clients c WHERE c.owner_id = :subject AND c.id = :object) LIMIT 1;`, policy.Actions[0])
 	case "group":
@@ -103,6 +103,8 @@ func (pr prepo) Evaluate(ctx context.Context, entityType string, policy policies
 	default:
 		return ErrInvalidEntityType
 	}
+	fmt.Printf("Query: %s\n", q)
+	fmt.Printf("Policy: %+v\n", policy)
 	dbu, err := toDBPolicy(policy)
 	if err != nil {
 		return errors.Wrap(errors.ErrAuthorization, err)
