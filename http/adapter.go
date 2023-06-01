@@ -34,10 +34,10 @@ func New(publisher messaging.Publisher, things policies.ThingsServiceClient) Ser
 }
 
 func (as *adapterService) Publish(ctx context.Context, token string, msg *messaging.Message) error {
-	ar := &policies.TAuthorizeReq{
+	ar := &policies.AuthorizeReq{
 		Sub:        token,
 		Obj:        msg.Channel,
-		Act:        policies.ReadAction,
+		Act:        policies.WriteAction,
 		EntityType: policies.GroupEntityType,
 	}
 	thid, err := as.things.AuthorizeByKey(ctx, ar)

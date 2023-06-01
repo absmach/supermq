@@ -28,6 +28,10 @@ func (ccm *channelCacheMock) AddPolicy(_ context.Context, policy policies.Policy
 	return nil
 }
 
+func (ccm *channelCacheMock) RetrieveOne(subject, object string) (policies.Policy, error) {
+	panic("Unimplemented")
+}
+
 func (ccm *channelCacheMock) Evaluate(_ context.Context, policy policies.Policy) bool {
 	ccm.mu.Lock()
 	defer ccm.mu.Unlock()

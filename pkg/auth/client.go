@@ -56,7 +56,7 @@ func (c client) Authorize(ctx context.Context, chanID, thingID, action string) e
 		return nil
 	}
 
-	ar := &policies.TAuthorizeReq{
+	ar := &policies.AuthorizeReq{
 		Sub:        thingID,
 		Obj:        chanID,
 		Act:        action,

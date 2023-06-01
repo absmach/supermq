@@ -43,7 +43,7 @@ func NewServer(csvc clients.Service, psvc policies.Service) policies.ThingsServi
 	}
 }
 
-func (gs *grpcServer) AuthorizeByKey(ctx context.Context, req *policies.TAuthorizeReq) (*policies.ClientID, error) {
+func (gs *grpcServer) AuthorizeByKey(ctx context.Context, req *policies.AuthorizeReq) (*policies.ClientID, error) {
 	_, res, err := gs.authorizeByKey.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, encodeError(err)
@@ -52,13 +52,13 @@ func (gs *grpcServer) AuthorizeByKey(ctx context.Context, req *policies.TAuthori
 	return res.(*policies.ClientID), nil
 }
 
-func (gs *grpcServer) Authorize(ctx context.Context, req *policies.TAuthorizeReq) (*policies.TAuthorizeRes, error) {
+func (gs *grpcServer) Authorize(ctx context.Context, req *policies.AuthorizeReq) (*policies.AuthorizeRes, error) {
 	_, res, err := gs.authorize.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, encodeError(err)
 	}
 
-	return res.(*policies.TAuthorizeRes), nil
+	return res.(*policies.AuthorizeRes), nil
 }
 
 func (gs *grpcServer) Identify(ctx context.Context, req *policies.Key) (*policies.ClientID, error) {
@@ -71,12 +71,12 @@ func (gs *grpcServer) Identify(ctx context.Context, req *policies.Key) (*policie
 }
 
 func decodeAuthorizeByKeyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*policies.TAuthorizeReq)
+	req := grpcReq.(*policies.AuthorizeReq)
 	return authorizeReq{entityType: req.GetEntityType(), clientID: req.GetSub(), groupID: req.GetObj(), action: req.GetAct()}, nil
 }
 
 func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*policies.TAuthorizeReq)
+	req := grpcReq.(*policies.AuthorizeReq)
 	return authorizeReq{entityType: req.GetEntityType(), clientID: req.GetSub(), groupID: req.GetObj(), action: req.GetAct()}, nil
 }
 
@@ -92,7 +92,7 @@ func encodeIdentityResponse(_ context.Context, grpcRes interface{}) (interface{}
 
 func encodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(authorizeRes)
-	return &policies.TAuthorizeRes{Authorized: res.authorized}, nil
+	return &policies.AuthorizeRes{Authorized: res.authorized}, nil
 }
 
 func encodeError(err error) error {

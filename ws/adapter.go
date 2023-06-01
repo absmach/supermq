@@ -136,7 +136,7 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, thingKey, chanID, su
 }
 
 func (svc *adapterService) authorize(ctx context.Context, thingKey, chanID string) (*policies.ClientID, error) {
-	ar := &policies.TAuthorizeReq{
+	ar := &policies.AuthorizeReq{
 		Sub:        thingKey,
 		Obj:        chanID,
 		Act:        policies.ReadAction,

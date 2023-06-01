@@ -22,6 +22,13 @@ type Policy struct {
 	UpdatedBy string    `json:"updated_by"`
 }
 
+// AccessRequest represents an access control request for Authorization.
+type AccessRequest struct {
+	Subject string `json:"subject"`
+	Object  string `json:"object"`
+	Action  string `json:"action"`
+}
+
 // PolicyPage contains a page of policies.
 type PolicyPage struct {
 	Page
@@ -40,6 +47,9 @@ type Repository interface {
 	// object has that action over the subject
 	Evaluate(ctx context.Context, entityType string, p Policy) error
 
+	// RetrieveOne retrieves policy by subject and object.
+	RetrieveOne(ctx context.Context, subject, object string) (Policy, error)
+
 	// Update updates the policy type.
 	Update(ctx context.Context, p Policy) (Policy, error)
 
@@ -53,12 +63,12 @@ type Repository interface {
 // Service represents a authorization service. It exposes
 // functionalities through `auth` to perform authorization.
 type Service interface {
-	// Authorize checks authorization of the given `subject`. Basically,
+	// Authorize checks authorization of the given `subject`.
 	// Authorize verifies that Is `subject` allowed to `relation` on
 	// `object`. Authorize returns a non-nil error if the subject has
 	// no relation on the object (which simply means the operation is
 	// denied).
-	Authorize(ctx context.Context, entityType string, p Policy) error
+	Authorize(ctx context.Context, ar AccessRequest, entityType string, p Policy) error
 
 	// AddPolicy creates a policy for the given subject, so that, after
 	// AddPolicy, `subject` has a `relation` on `object`. Returns a non-nil
@@ -76,19 +86,19 @@ type Service interface {
 
 	// AuthorizeByKey determines whether the group can be accessed using the
 	// provided key and returns thing's id if access is allowed.
-	AuthorizeByKey(ctx context.Context, entityType string, p Policy) (string, error)
+	AuthorizeByKey(ctx context.Context, ar AccessRequest, entity string) (string, error)
 }
 
 // Cache contains channel-thing connection caching interface.
 type Cache interface {
-	// AddPolicy connects group to a client with the specified action.
-	AddPolicy(ctx context.Context, policy Policy) error
+	// Put connects group to a client with the specified action.
+	Put(ctx context.Context, policy Policy) error
 
-	// Evaluate checks if a client is connected to group.
-	Evaluate(ctx context.Context, policy Policy) bool
+	// Get checks if a client is connected to group.
+	Get(ctx context.Context, policy Policy) (Policy, error)
 
-	// DeletePolicy deletes a client connection to a group.
-	DeletePolicy(ctx context.Context, policy Policy) error
+	// Remove deletes a client connection to a group.
+	Remove(ctx context.Context, policy Policy) error
 }
 
 // Validate returns an error if policy representation is invalid.

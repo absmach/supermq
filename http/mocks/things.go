@@ -27,7 +27,7 @@ func NewThingsClient(data map[string]string) policies.ThingsServiceClient {
 	return &thingsClient{data}
 }
 
-func (tc thingsClient) AuthorizeByKey(ctx context.Context, req *policies.TAuthorizeReq, opts ...grpc.CallOption) (*policies.ClientID, error) {
+func (tc thingsClient) AuthorizeByKey(ctx context.Context, req *policies.AuthorizeReq, opts ...grpc.CallOption) (*policies.ClientID, error) {
 	key := req.GetSub()
 
 	// Since there is no appropriate way to simulate internal server error,
@@ -49,7 +49,7 @@ func (tc thingsClient) AuthorizeByKey(ctx context.Context, req *policies.TAuthor
 	return &policies.ClientID{Value: id}, nil
 }
 
-func (tc thingsClient) Authorize(context.Context, *policies.TAuthorizeReq, ...grpc.CallOption) (*policies.TAuthorizeRes, error) {
+func (tc thingsClient) Authorize(context.Context, *policies.AuthorizeReq, ...grpc.CallOption) (*policies.AuthorizeRes, error) {
 	panic("not implemented")
 }
 

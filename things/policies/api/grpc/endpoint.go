@@ -19,7 +19,12 @@ func authorizeEndpoint(svc policies.Service) endpoint.Endpoint {
 			Object:  req.groupID,
 			Actions: []string{req.action},
 		}
-		if err := svc.Authorize(ctx, req.entityType, policy); err != nil {
+		ar := policies.AccessRequest{
+			Subject: req.clientID,
+			Object:  req.groupID,
+			Action:  req.action,
+		}
+		if err := svc.Authorize(ctx, ar, req.entityType, policy); err != nil {
 			return authorizeRes{}, err
 		}
 
@@ -33,12 +38,12 @@ func authorizeByKeyEndpoint(svc policies.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
-		policy := policies.Policy{
+		ar := policies.AccessRequest{
 			Subject: req.clientID,
 			Object:  req.groupID,
-			Actions: []string{req.action},
+			Action:  req.action,
 		}
-		clientID, err := svc.AuthorizeByKey(ctx, req.entityType, policy)
+		clientID, err := svc.AuthorizeByKey(ctx, ar, req.entityType)
 		if err != nil {
 			return identityRes{}, err
 		}

@@ -55,6 +55,34 @@ func (pr prepo) Save(ctx context.Context, policy policies.Policy) (policies.Poli
 	return toPolicy(dbp)
 }
 
+func (pr prepo) RetrieveOne(ctx context.Context, subject, object string) (policies.Policy, error) {
+	q := `SELECT subject, object, actions 
+			FROM policies p INNER JOIN clients c ON c.id = p.subject
+			WHERE c.secret = :subject AND p.object = :object`
+	params := struct {
+		Subject string `db:"subject"`
+		Object  string `db:"object"`
+	}{
+		Subject: subject,
+		Object:  object,
+	}
+	row, err := pr.db.NamedQueryContext(ctx, q, params)
+	if err != nil {
+		return policies.Policy{}, postgres.HandleError(err, errors.ErrAuthorization)
+	}
+
+	defer row.Close()
+
+	if ok := row.Next(); !ok {
+		return policies.Policy{}, errors.Wrap(errors.ErrAuthorization, row.Err())
+	}
+	var p dbPolicy
+	if err := row.StructScan(&p); err != nil {
+		return policies.Policy{}, err
+	}
+	return toPolicy(p)
+}
+
 func (pr prepo) Evaluate(ctx context.Context, entityType string, policy policies.Policy) error {
 	q := ""
 	switch entityType {

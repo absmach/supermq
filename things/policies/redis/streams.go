@@ -31,13 +31,13 @@ func NewEventStoreMiddleware(svc policies.Service, client *redis.Client) policie
 	}
 }
 
-func (es eventStore) Authorize(ctx context.Context, entityType string, policy policies.Policy) error {
-	if err := es.svc.Authorize(ctx, entityType, policy); err != nil {
+func (es eventStore) Authorize(ctx context.Context, ar policies.AccessRequest, entity string, policy policies.Policy) error {
+	if err := es.svc.Authorize(ctx, ar, entity, policy); err != nil {
 		return err
 	}
 
 	event := policyEvent{
-		entityType: entityType,
+		entityType: entity,
 		groupID:    policy.Object,
 		clientID:   policy.Subject,
 		actions:    policy.Actions,
@@ -55,17 +55,17 @@ func (es eventStore) Authorize(ctx context.Context, entityType string, policy po
 	return nil
 }
 
-func (es eventStore) AuthorizeByKey(ctx context.Context, entityType string, policy policies.Policy) (string, error) {
-	clientID, err := es.svc.AuthorizeByKey(ctx, entityType, policy)
+func (es eventStore) AuthorizeByKey(ctx context.Context, ar policies.AccessRequest, entityType string) (string, error) {
+	clientID, err := es.svc.AuthorizeByKey(ctx, ar, entityType)
 	if err != nil {
 		return "", err
 	}
 
 	event := policyEvent{
 		entityType: entityType,
-		groupID:    policy.Object,
-		clientID:   policy.Subject,
-		actions:    policy.Actions,
+		clientID:   clientID,
+		groupID:    ar.Object,
+		actions:    []string{ar.Action},
 	}
 
 	record := &redis.XAddArgs{

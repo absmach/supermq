@@ -56,7 +56,7 @@ func New(auth policies.ThingsServiceClient, pubsub messaging.PubSub) Service {
 }
 
 func (svc *adapterService) Publish(ctx context.Context, key string, msg *messaging.Message) error {
-	ar := &policies.TAuthorizeReq{
+	ar := &policies.AuthorizeReq{
 		Sub:        key,
 		Obj:        msg.Channel,
 		Act:        policies.WriteAction,
@@ -72,7 +72,7 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 }
 
 func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic string, c Client) error {
-	ar := &policies.TAuthorizeReq{
+	ar := &policies.AuthorizeReq{
 		Sub:        key,
 		Obj:        chanID,
 		Act:        policies.ReadAction,
@@ -89,7 +89,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 }
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopic, token string) error {
-	ar := &policies.TAuthorizeReq{
+	ar := &policies.AuthorizeReq{
 		Sub:        key,
 		Obj:        chanID,
 		Act:        policies.ReadAction,

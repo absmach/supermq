@@ -25,7 +25,6 @@ type service struct {
 	things      mfclients.Repository
 	policies    Repository
 	policyCache Cache
-	thingCache  clients.ClientCache
 	idProvider  mainflux.IDProvider
 }
 
@@ -35,41 +34,58 @@ func NewService(auth upolicies.AuthServiceClient, t mfclients.Repository, p Repo
 		auth:        auth,
 		things:      t,
 		policies:    p,
-		thingCache:  tcache,
 		policyCache: ccache,
 		idProvider:  idp,
 	}
 }
 
-func (svc service) Authorize(ctx context.Context, entityType string, p Policy) error {
+func (svc service) Authorize(ctx context.Context, ar AccessRequest, entity string, p Policy) error {
 	if err := p.Validate(); err != nil {
 		return err
 	}
-	if connected := svc.policyCache.Evaluate(ctx, p); connected {
-		return nil
+	if ar.Subject == p.Subject && ar.Object == p.Object {
+		for _, a := range p.Actions {
+			if a == ar.Action {
+				return nil
+			}
+		}
 	}
-	if err := svc.policies.Evaluate(ctx, entityType, p); err != nil {
-		return err
-	}
-	if err := svc.policyCache.AddPolicy(ctx, p); err != nil {
-		return err
-	}
-	return nil
+
+	return errors.New("unauthorized")
 }
 
-func (svc service) AuthorizeByKey(ctx context.Context, entityType string, p Policy) (string, error) {
-	thingID, err := svc.hasThing(ctx, p)
+func (svc service) AuthorizeByKey(ctx context.Context, ar AccessRequest, entity string) (string, error) {
+	// Fetch policy from cache...
+	p := Policy{
+		Subject: ar.Subject,
+		Object:  ar.Object,
+	}
+	policy, err := svc.policyCache.Get(ctx, p)
 	if err == nil {
-		if err := svc.thingCache.Save(ctx, p.Subject, thingID); err != nil {
+		if err := svc.Authorize(ctx, ar, "thing", policy); err != nil {
 			return "", err
 		}
-		return thingID, nil
+		return ar.Subject, nil
 	}
-
-	if err := svc.Authorize(ctx, entityType, p); err != nil {
+	if !errors.Contains(err, errors.ErrNotFound) {
 		return "", err
 	}
-	return thingID, nil
+	// and fallback to repo if policy is not found in cache.
+	policy, err = svc.policies.RetrieveOne(ctx, p.Subject, p.Object)
+	if err != nil {
+		return "", err
+	}
+	// Replace Subject since AccessRequest Subject is Thing Key,
+	// and Policy subject is Thing ID.
+	policy.Subject = ar.Subject
+	if err := svc.Authorize(ctx, ar, "thing", policy); err != nil {
+		return "", err
+	}
+	if err := svc.policyCache.Put(ctx, policy); err != nil {
+		return policy.Subject, errors.Wrap(errors.New("failed to store to cache"), err)
+	}
+
+	return policy.Subject, nil
 }
 
 func (svc service) AddPolicy(ctx context.Context, token string, p Policy) (Policy, error) {
@@ -85,9 +101,6 @@ func (svc service) AddPolicy(ctx context.Context, token string, p Policy) (Polic
 	p.OwnerID = res.GetId()
 	p.CreatedAt = time.Now()
 
-	if err := svc.policyCache.AddPolicy(ctx, p); err != nil {
-		return Policy{}, err
-	}
 	return svc.policies.Save(ctx, p)
 }
 
@@ -129,13 +142,13 @@ func (svc service) DeletePolicy(ctx context.Context, token string, p Policy) err
 		return errors.Wrap(errors.ErrAuthentication, err)
 	}
 
-	if err := svc.policyCache.DeletePolicy(ctx, p); err != nil {
+	if err := svc.policyCache.Remove(ctx, p); err != nil {
 		return err
 	}
 	return svc.policies.Delete(ctx, p)
 }
 
-// checkActionRank check if client updating the policy has the sufficient priviledges
+// checkActionRank check if client updating the policy has the sufficient privileges
 // WriteAction has a higher priority to ReadAction
 func (svc service) checkActionRank(ctx context.Context, clientID string, p Policy) error {
 	page, err := svc.policies.Retrieve(ctx, Page{Subject: clientID, Object: p.Object, Total: 1})
@@ -158,23 +171,4 @@ func (svc service) checkActionRank(ctx context.Context, clientID string, p Polic
 
 	return apiutil.ErrHigherPolicyRank
 
-}
-
-func (svc service) hasThing(ctx context.Context, p Policy) (string, error) {
-	thingID, err := svc.thingCache.ID(ctx, p.Subject)
-	if errors.Contains(err, errors.ErrNotFound) {
-		thing, err := svc.things.RetrieveBySecret(ctx, p.Subject)
-		if err != nil {
-			return "", err
-		}
-		return thing.ID, nil
-	}
-	if err != nil {
-		return "", err
-	}
-	p.Subject = thingID
-	if connected := svc.policyCache.Evaluate(ctx, p); !connected {
-		return "", errors.ErrAuthorization
-	}
-	return thingID, nil
 }

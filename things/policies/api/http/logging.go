@@ -16,11 +16,12 @@ type loggingMiddleware struct {
 	svc    policies.Service
 }
 
+// LoggingMiddleware returns a new logging middleware.
 func LoggingMiddleware(svc policies.Service, logger mflog.Logger) policies.Service {
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) Authorize(ctx context.Context, entityType string, p policies.Policy) (err error) {
+func (lm *loggingMiddleware) Authorize(ctx context.Context, ar policies.AccessRequest, entityType string, p policies.Policy) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method authorize for channel with id %s by client with id %s took %s to complete", p.Object, p.Subject, time.Since(begin))
 		if err != nil {
@@ -29,19 +30,19 @@ func (lm *loggingMiddleware) Authorize(ctx context.Context, entityType string, p
 		}
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
-	return lm.svc.Authorize(ctx, entityType, p)
+	return lm.svc.Authorize(ctx, ar, entityType, p)
 }
 
-func (lm *loggingMiddleware) AuthorizeByKey(ctx context.Context, entityType string, p policies.Policy) (id string, err error) {
+func (lm *loggingMiddleware) AuthorizeByKey(ctx context.Context, ar policies.AccessRequest, entityType string) (id string, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method authorize_by_key for channel with id %s by client with secret %s took %s to complete", p.Object, p.Subject, time.Since(begin))
+		message := fmt.Sprintf("Method authorize_by_key for channel with id %s by client with secret %s took %s to complete", ar.Object, ar.Subject, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
 		}
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
-	return lm.svc.AuthorizeByKey(ctx, entityType, p)
+	return lm.svc.AuthorizeByKey(ctx, ar, entityType)
 }
 
 func (lm *loggingMiddleware) AddPolicy(ctx context.Context, token string, p policies.Policy) (policy policies.Policy, err error) {

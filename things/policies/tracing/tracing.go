@@ -15,22 +15,23 @@ type tracingMiddleware struct {
 	psvc   policies.Service
 }
 
+// TracingMiddleware enriches policies with traces for improved monitoring.
 func TracingMiddleware(psvc policies.Service, tracer trace.Tracer) policies.Service {
 	return &tracingMiddleware{tracer, psvc}
 }
 
-func (tm *tracingMiddleware) Authorize(ctx context.Context, entityType string, p policies.Policy) error {
+func (tm *tracingMiddleware) Authorize(ctx context.Context, ar policies.AccessRequest, entityType string, p policies.Policy) error {
 	ctx, span := tm.tracer.Start(ctx, "svc_authorize", trace.WithAttributes(attribute.String("subject", p.Subject), attribute.String("object", p.Object), attribute.StringSlice("actions", p.Actions)))
 	defer span.End()
 
-	return tm.psvc.Authorize(ctx, entityType, p)
+	return tm.psvc.Authorize(ctx, ar, entityType, p)
 }
 
-func (tm *tracingMiddleware) AuthorizeByKey(ctx context.Context, entityType string, p policies.Policy) (string, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_authorize_by_key", trace.WithAttributes(attribute.String("subject", p.Subject), attribute.String("object", p.Object), attribute.StringSlice("actions", p.Actions)))
+func (tm *tracingMiddleware) AuthorizeByKey(ctx context.Context, ar policies.AccessRequest, entityType string) (string, error) {
+	ctx, span := tm.tracer.Start(ctx, "svc_authorize_by_key", trace.WithAttributes(attribute.String("subject", ar.Subject), attribute.String("object", ar.Object), attribute.String("action", ar.Action)))
 	defer span.End()
 
-	return tm.psvc.AuthorizeByKey(ctx, entityType, p)
+	return tm.psvc.AuthorizeByKey(ctx, ar, entityType)
 }
 
 func (tm *tracingMiddleware) AddPolicy(ctx context.Context, token string, p policies.Policy) (policies.Policy, error) {
