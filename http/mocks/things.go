@@ -27,30 +27,25 @@ func NewThingsClient(data map[string]string) policies.ThingsServiceClient {
 	return &thingsClient{data}
 }
 
-func (tc thingsClient) AuthorizeByKey(ctx context.Context, req *policies.AuthorizeReq, opts ...grpc.CallOption) (*policies.ClientID, error) {
-	key := req.GetSub()
+func (tc thingsClient) Authorize(ctx context.Context, req *policies.AuthorizeReq, opts ...grpc.CallOption) (*policies.AuthorizeRes, error) {
+	secret := req.GetSub()
 
 	// Since there is no appropriate way to simulate internal server error,
 	// we had to use this obscure approach. ErrorToken simulates gRPC
 	// call which returns internal server error.
-	if key == ServiceErrToken {
-		return nil, status.Error(codes.Internal, "internal server error")
+	if secret == ServiceErrToken {
+		return &policies.AuthorizeRes{ThingID: "", Authorized: false}, status.Error(codes.Internal, "internal server error")
 	}
 
-	if key == "" {
-		return nil, errors.ErrAuthentication
+	if secret == "" {
+		return &policies.AuthorizeRes{ThingID: "", Authorized: false}, errors.ErrAuthentication
 	}
 
-	id, ok := tc.things[key]
+	id, ok := tc.things[secret]
 	if !ok {
-		return nil, status.Error(codes.Unauthenticated, "invalid credentials provided")
+		return &policies.AuthorizeRes{ThingID: "", Authorized: false}, status.Error(codes.Unauthenticated, "invalid credentials provided")
 	}
-
-	return &policies.ClientID{Value: id}, nil
-}
-
-func (tc thingsClient) Authorize(context.Context, *policies.AuthorizeReq, ...grpc.CallOption) (*policies.AuthorizeRes, error) {
-	panic("not implemented")
+	return &policies.AuthorizeRes{ThingID: id, Authorized: true}, nil
 }
 
 func (tc thingsClient) Identify(ctx context.Context, req *policies.Key, opts ...grpc.CallOption) (*policies.ClientID, error) {

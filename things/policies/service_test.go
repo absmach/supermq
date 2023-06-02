@@ -33,10 +33,9 @@ func newService(tokens map[string]string) (policies.Service, *pmocks.PolicyRepos
 	idProvider := uuid.NewMock()
 	thingsCache := mocks.NewClientCache()
 	policiesCache := pmocks.NewChannelCache()
-	cRepo := new(mocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 
-	return policies.NewService(auth, cRepo, pRepo, thingsCache, policiesCache, idProvider), pRepo
+	return policies.NewService(auth, pRepo, thingsCache, policiesCache, idProvider), pRepo
 }
 
 func TestAddPolicy(t *testing.T) {
@@ -132,10 +131,11 @@ func TestAddPolicy(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repo1Call := pRepo.On("Evaluate", context.Background(), "client", mock.Anything).Return(nil)
-		repoCall := pRepo.On("Update", context.Background(), tc.policy).Return(tc.err)
-		repoCall1 := pRepo.On("Save", context.Background(), mock.Anything).Return(tc.policy, tc.err)
-		repoCall2 := pRepo.On("Retrieve", context.Background(), mock.Anything).Return(tc.page, nil)
+		repoCall := pRepo.On("RetrieveOne", context.Background(), mock.Anything, mock.Anything).Return(tc.policy, tc.err)
+		repoCall1 := pRepo.On("Evaluate", context.Background(), "client", mock.Anything).Return(nil)
+		repoCall2 := pRepo.On("Update", context.Background(), tc.policy).Return(tc.err)
+		repoCall3 := pRepo.On("Save", context.Background(), mock.Anything).Return(tc.policy, tc.err)
+		repoCall4 := pRepo.On("Retrieve", context.Background(), mock.Anything).Return(tc.page, nil)
 		_, err := svc.AddPolicy(context.Background(), tc.token, tc.policy)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
@@ -144,11 +144,12 @@ func TestAddPolicy(t *testing.T) {
 			_, err = svc.Authorize(context.Background(), areq, "client")
 			require.Nil(t, err, fmt.Sprintf("checking shared %v policy expected to be succeed: %#v", tc.policy, err))
 		}
-		repoCall1.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything)
+		repoCall3.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything)
 		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
-		repo1Call.Unset()
+		repoCall3.Unset()
+		repoCall4.Unset()
 	}
 
 }
@@ -170,7 +171,7 @@ func TestAuthorize(t *testing.T) {
 		},
 		{
 			desc:   "check valid policy in group domain",
-			policy: policies.AccessRequest{Object: "client1", Action: "g_update", Subject: token},
+			policy: policies.AccessRequest{Object: "client2", Action: "g_update", Subject: token},
 			domain: "group",
 			err:    errors.ErrConflict,
 		},
@@ -182,17 +183,20 @@ func TestAuthorize(t *testing.T) {
 		},
 		{
 			desc:   "check invalid policy in group domain",
-			policy: policies.AccessRequest{Object: "client3", Action: "g_update", Subject: token},
+			policy: policies.AccessRequest{Object: "client4", Action: "g_update", Subject: token},
 			domain: "group",
 			err:    nil,
 		},
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", context.Background(), tc.domain, mock.Anything).Return(tc.err)
+		policy := policies.Policy{Object: tc.policy.Object, Actions: []string{tc.policy.Action}, Subject: tc.policy.Subject}
+		repoCall := pRepo.On("RetrieveOne", context.Background(), mock.Anything, mock.Anything).Return(policy, tc.err)
+		repoCall1 := pRepo.On("Evaluate", context.Background(), tc.domain, mock.Anything).Return(tc.err)
 		_, err := svc.Authorize(context.Background(), tc.policy, tc.domain)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall.Unset()
+		repoCall1.Unset()
 	}
 
 }

@@ -6,7 +6,6 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
-	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/clients"
 	upolicies "github.com/mainflux/mainflux/users/policies"
@@ -22,17 +21,15 @@ const (
 
 type service struct {
 	auth        upolicies.AuthServiceClient
-	things      mfclients.Repository
 	policies    Repository
 	policyCache Cache
 	idProvider  mainflux.IDProvider
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(auth upolicies.AuthServiceClient, t mfclients.Repository, p Repository, tcache clients.ClientCache, ccache Cache, idp mainflux.IDProvider) Service {
+func NewService(auth upolicies.AuthServiceClient, p Repository, tcache clients.ClientCache, ccache Cache, idp mainflux.IDProvider) Service {
 	return service{
 		auth:        auth,
-		things:      t,
 		policies:    p,
 		policyCache: ccache,
 		idProvider:  idp,
@@ -40,7 +37,7 @@ func NewService(auth upolicies.AuthServiceClient, t mfclients.Repository, p Repo
 }
 
 func (svc service) Authorize(ctx context.Context, ar AccessRequest, entity string) (string, error) {
-	// Fetch policy from cache...
+	// fetch from cache first
 	p := Policy{
 		Subject: ar.Subject,
 		Object:  ar.Object,
@@ -57,21 +54,20 @@ func (svc service) Authorize(ctx context.Context, ar AccessRequest, entity strin
 	if !errors.Contains(err, errors.ErrNotFound) {
 		return "", err
 	}
-	// and fallback to repo if policy is not found in cache.
+	// fetch from repo as a fallback if not found in cache
 	policy, err = svc.policies.RetrieveOne(ctx, p.Subject, p.Object)
 	if err != nil {
 		return "", err
 	}
+
 	// Replace Subject since AccessRequest Subject is Thing Key,
 	// and Policy subject is Thing ID.
-	// policy.Subject = ar.Subject
-	// if err := svc.Authorize(ctx, ar, "thing", policy); err != nil {
-	// 	return "", err
-	// }
+	policy.Subject = ar.Subject
+
 	for _, action := range policy.Actions {
 		if action == ar.Action {
 			if err := svc.policyCache.Put(ctx, policy); err != nil {
-				return policy.Subject, errors.Wrap(errors.New("failed to store to cache"), err)
+				return policy.Subject, err
 			}
 
 			return policy.Subject, nil

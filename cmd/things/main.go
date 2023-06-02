@@ -170,7 +170,7 @@ func newService(db *sqlx.DB, auth upolicies.AuthServiceClient, cacheClient *redi
 
 	csvc := clients.NewService(auth, cRepo, thingCache, idp)
 	gsvc := groups.NewService(auth, gRepo, idp)
-	psvc := tpolicies.NewService(auth, cRepo, pRepo, thingCache, policyCache, idp)
+	psvc := tpolicies.NewService(auth, pRepo, thingCache, policyCache, idp)
 
 	csvc = ctracing.TracingMiddleware(csvc, tracer)
 	csvc = capi.LoggingMiddleware(csvc, logger)

@@ -248,16 +248,18 @@ func TestListGroups(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := gRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(mfgroups.GroupsPage{Groups: convertGroups(tc.response)}, tc.err)
+		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
+		repoCall1 := gRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(mfgroups.GroupsPage{Groups: convertGroups(tc.response)}, tc.err)
 		pm := sdk.PageMetadata{}
 		page, err := groupSDK.Groups(pm, generateValidToken(t, csvc, cRepo))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, len(tc.response), len(page.Groups), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
 		if tc.err == nil {
-			ok := repoCall.Parent.AssertCalled(t, "RetrieveAll", mock.Anything, mock.Anything)
+			ok := repoCall1.Parent.AssertCalled(t, "RetrieveAll", mock.Anything, mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("RetrieveAll was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
+		repoCall1.Unset()
 	}
 }
 

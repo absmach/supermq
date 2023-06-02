@@ -404,15 +404,17 @@ func TestListGroups(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := gRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, tc.err)
+		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
+		repoCall1 := gRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		page, err := svc.ListGroups(context.Background(), tc.token, tc.page)
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if tc.err == nil {
-			ok := repoCall.Parent.AssertCalled(t, "RetrieveAll", context.Background(), mock.Anything)
+			ok := repoCall1.Parent.AssertCalled(t, "RetrieveAll", context.Background(), mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("RetrieveAll was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
+		repoCall1.Unset()
 	}
 
 }
@@ -537,12 +539,14 @@ func TestEnableGroup(t *testing.T) {
 				Status: tc.status,
 			},
 		}
-		repoCall := gRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, nil)
+		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
+		repoCall1 := gRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, nil)
 		page, err := svc.ListGroups(context.Background(), testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher), pm)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		size := uint64(len(page.Groups))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", tc.desc, tc.size, size))
 		repoCall.Unset()
+		repoCall1.Unset()
 	}
 }
 
@@ -666,12 +670,14 @@ func TestDisableGroup(t *testing.T) {
 				Status: tc.status,
 			},
 		}
-		repoCall := gRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, nil)
+		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
+		repoCall1 := gRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, nil)
 		page, err := svc.ListGroups(context.Background(), testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher), pm)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		size := uint64(len(page.Groups))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", tc.desc, tc.size, size))
 		repoCall.Unset()
+		repoCall1.Unset()
 	}
 }
 

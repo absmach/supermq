@@ -7,15 +7,16 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/policies"
 )
 
-// const groupPrefix = "group"
-const separator = ":"
+const (
+	separator   = ":"
+	keyDuration = 0
+)
 
 var _ policies.Cache = (*pcache)(nil)
 
@@ -30,7 +31,7 @@ func NewCache(client *redis.Client) policies.Cache {
 
 func (cc pcache) Put(ctx context.Context, policy policies.Policy) error {
 	k, v := kv(policy)
-	if err := cc.client.Set(ctx, k, v, time.Second*20).Err(); err != nil {
+	if err := cc.client.Set(ctx, k, v, keyDuration).Err(); err != nil {
 		return errors.Wrap(errors.ErrCreateEntity, err)
 	}
 	return nil
@@ -62,7 +63,7 @@ func (cc pcache) Remove(ctx context.Context, policy policies.Policy) error {
 	return nil
 }
 
-// Generates key-value pair
+// Generates key-value pair for Redis client.
 func kv(p policies.Policy) (string, string) {
 	return fmt.Sprintf("%s%s%s", p.Subject, separator, p.Object), strings.Join(p.Actions, separator)
 }
