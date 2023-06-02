@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.21.12
-// source: things/policies/thingsauth.proto
+// source: things/policies/auth.proto
 
 package policies
 
@@ -36,7 +36,7 @@ func NewThingsServiceClient(cc grpc.ClientConnInterface) ThingsServiceClient {
 
 func (c *thingsServiceClient) Authorize(ctx context.Context, in *AuthorizeReq, opts ...grpc.CallOption) (*AuthorizeRes, error) {
 	out := new(AuthorizeRes)
-	err := c.cc.Invoke(ctx, "/policies.ThingsService/Authorize", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mainflux.things.policies.ThingsService/Authorize", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (c *thingsServiceClient) Authorize(ctx context.Context, in *AuthorizeReq, o
 
 func (c *thingsServiceClient) Identify(ctx context.Context, in *Key, opts ...grpc.CallOption) (*ClientID, error) {
 	out := new(ClientID)
-	err := c.cc.Invoke(ctx, "/policies.ThingsService/Identify", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mainflux.things.policies.ThingsService/Identify", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func _ThingsService_Authorize_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/policies.ThingsService/Authorize",
+		FullMethod: "/mainflux.things.policies.ThingsService/Authorize",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ThingsServiceServer).Authorize(ctx, req.(*AuthorizeReq))
@@ -112,7 +112,7 @@ func _ThingsService_Identify_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/policies.ThingsService/Identify",
+		FullMethod: "/mainflux.things.policies.ThingsService/Identify",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ThingsServiceServer).Identify(ctx, req.(*Key))
@@ -124,7 +124,7 @@ func _ThingsService_Identify_Handler(srv interface{}, ctx context.Context, dec f
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var ThingsService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "policies.ThingsService",
+	ServiceName: "mainflux.things.policies.ThingsService",
 	HandlerType: (*ThingsServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -137,5 +137,5 @@ var ThingsService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "things/policies/thingsauth.proto",
+	Metadata: "things/policies/auth.proto",
 }

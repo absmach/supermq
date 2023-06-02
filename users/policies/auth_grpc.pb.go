@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.21.12
-// source: users/policies/usersauth.proto
+// source: users/policies/auth.proto
 
 package policies
 
@@ -40,7 +40,7 @@ func NewAuthServiceClient(cc grpc.ClientConnInterface) AuthServiceClient {
 
 func (c *authServiceClient) Authorize(ctx context.Context, in *AuthorizeReq, opts ...grpc.CallOption) (*AuthorizeRes, error) {
 	out := new(AuthorizeRes)
-	err := c.cc.Invoke(ctx, "/policies.AuthService/Authorize", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mainflux.users.policies.AuthService/Authorize", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (c *authServiceClient) Authorize(ctx context.Context, in *AuthorizeReq, opt
 
 func (c *authServiceClient) Issue(ctx context.Context, in *IssueReq, opts ...grpc.CallOption) (*Token, error) {
 	out := new(Token)
-	err := c.cc.Invoke(ctx, "/policies.AuthService/Issue", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mainflux.users.policies.AuthService/Issue", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (c *authServiceClient) Issue(ctx context.Context, in *IssueReq, opts ...grp
 
 func (c *authServiceClient) Identify(ctx context.Context, in *Token, opts ...grpc.CallOption) (*UserIdentity, error) {
 	out := new(UserIdentity)
-	err := c.cc.Invoke(ctx, "/policies.AuthService/Identify", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mainflux.users.policies.AuthService/Identify", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (c *authServiceClient) Identify(ctx context.Context, in *Token, opts ...grp
 
 func (c *authServiceClient) AddPolicy(ctx context.Context, in *AddPolicyReq, opts ...grpc.CallOption) (*AddPolicyRes, error) {
 	out := new(AddPolicyRes)
-	err := c.cc.Invoke(ctx, "/policies.AuthService/AddPolicy", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mainflux.users.policies.AuthService/AddPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (c *authServiceClient) AddPolicy(ctx context.Context, in *AddPolicyReq, opt
 
 func (c *authServiceClient) DeletePolicy(ctx context.Context, in *DeletePolicyReq, opts ...grpc.CallOption) (*DeletePolicyRes, error) {
 	out := new(DeletePolicyRes)
-	err := c.cc.Invoke(ctx, "/policies.AuthService/DeletePolicy", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mainflux.users.policies.AuthService/DeletePolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (c *authServiceClient) DeletePolicy(ctx context.Context, in *DeletePolicyRe
 
 func (c *authServiceClient) ListPolicies(ctx context.Context, in *ListPoliciesReq, opts ...grpc.CallOption) (*ListPoliciesRes, error) {
 	out := new(ListPoliciesRes)
-	err := c.cc.Invoke(ctx, "/policies.AuthService/ListPolicies", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mainflux.users.policies.AuthService/ListPolicies", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func _AuthService_Authorize_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/policies.AuthService/Authorize",
+		FullMethod: "/mainflux.users.policies.AuthService/Authorize",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServiceServer).Authorize(ctx, req.(*AuthorizeReq))
@@ -168,7 +168,7 @@ func _AuthService_Issue_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/policies.AuthService/Issue",
+		FullMethod: "/mainflux.users.policies.AuthService/Issue",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServiceServer).Issue(ctx, req.(*IssueReq))
@@ -186,7 +186,7 @@ func _AuthService_Identify_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/policies.AuthService/Identify",
+		FullMethod: "/mainflux.users.policies.AuthService/Identify",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServiceServer).Identify(ctx, req.(*Token))
@@ -204,7 +204,7 @@ func _AuthService_AddPolicy_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/policies.AuthService/AddPolicy",
+		FullMethod: "/mainflux.users.policies.AuthService/AddPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServiceServer).AddPolicy(ctx, req.(*AddPolicyReq))
@@ -222,7 +222,7 @@ func _AuthService_DeletePolicy_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/policies.AuthService/DeletePolicy",
+		FullMethod: "/mainflux.users.policies.AuthService/DeletePolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServiceServer).DeletePolicy(ctx, req.(*DeletePolicyReq))
@@ -240,7 +240,7 @@ func _AuthService_ListPolicies_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/policies.AuthService/ListPolicies",
+		FullMethod: "/mainflux.users.policies.AuthService/ListPolicies",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServiceServer).ListPolicies(ctx, req.(*ListPoliciesReq))
@@ -252,7 +252,7 @@ func _AuthService_ListPolicies_Handler(srv interface{}, ctx context.Context, dec
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var AuthService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "policies.AuthService",
+	ServiceName: "mainflux.users.policies.AuthService",
 	HandlerType: (*AuthServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -281,5 +281,5 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "users/policies/usersauth.proto",
+	Metadata: "users/policies/auth.proto",
 }

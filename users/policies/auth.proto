@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package policies;
+package mainflux.users.policies;
 
 option go_package = "./policies";
 

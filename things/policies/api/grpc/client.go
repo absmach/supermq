@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const svcName = "policies.ThingsService"
+const svcName = "mainflux.things.policies.ThingsService"
 
 var _ policies.ThingsServiceClient = (*grpcClient)(nil)
 
