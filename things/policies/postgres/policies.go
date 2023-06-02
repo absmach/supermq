@@ -103,8 +103,7 @@ func (pr prepo) Evaluate(ctx context.Context, entityType string, policy policies
 	default:
 		return ErrInvalidEntityType
 	}
-	fmt.Printf("Query: %s\n", q)
-	fmt.Printf("Policy: %+v\n", policy)
+
 	dbu, err := toDBPolicy(policy)
 	if err != nil {
 		return errors.Wrap(errors.ErrAuthorization, err)

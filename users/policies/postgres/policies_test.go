@@ -122,7 +122,7 @@ func TestPoliciesEvaluate(t *testing.T) {
 		OwnerID: client1.ID,
 		Subject: client1.ID,
 		Object:  group.ID,
-		Actions: []string{"c_update", "g_update"},
+		Actions: []string{"c_update", "c_list", "g_list", "g_update"},
 	}
 	policy2 := policies.Policy{
 		OwnerID: client2.ID,

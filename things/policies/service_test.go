@@ -206,7 +206,6 @@ func TestDeletePolicy(t *testing.T) {
 	assert.EqualError(t, err, errors.ErrAuthorization.Error(), fmt.Sprintf("deleting %v policy expected to fail: %s", pr, err))
 	repoCall.Unset()
 	repoCall1.Unset()
-	repoCall2.Unset()
 }
 
 func TestListPolicies(t *testing.T) {

@@ -13,6 +13,7 @@ import (
 const (
 	ReadAction      = "m_read"
 	WriteAction     = "m_write"
+	addPolicyAction = "g_add"
 	GroupEntityType = "group"
 	thingsObjectKey = "things"
 )
@@ -213,10 +214,11 @@ func (svc service) identify(ctx context.Context, token string) (string, error) {
 }
 
 func (svc service) checkAdmin(ctx context.Context, id string) error {
+	// for checking admin rights policy object, action and entity type are not important
 	req := &upolicies.AuthorizeReq{
 		Sub:        id,
 		Obj:        thingsObjectKey,
-		Act:        "c_update", // TODO: remove since this is not used
+		Act:        addPolicyAction,
 		EntityType: GroupEntityType,
 	}
 	res, err := svc.auth.Authorize(ctx, req)

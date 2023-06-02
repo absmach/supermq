@@ -204,8 +204,8 @@ func (svc service) authorize(ctx context.Context, subject, object, action string
 	return svc.policies.Authorize(ctx, entityType, policy)
 }
 
-// TODO : Only accept token as parameter since object and action are irrelevant.
 func (svc service) checkAdmin(ctx context.Context, subject, object, action string) error {
+	// for checking admin rights policy object, action and entity type are not important
 	req := &upolicies.AuthorizeReq{
 		Sub:        subject,
 		Obj:        object,
