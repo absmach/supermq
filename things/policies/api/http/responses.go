@@ -82,7 +82,10 @@ func (res identityRes) Empty() bool {
 	return false
 }
 
-type authorizeRes struct{}
+type authorizeRes struct {
+	ThingID    string `json:"thing_id"`
+	Authorized bool   `json:"authorized"`
+}
 
 func (res authorizeRes) Code() int {
 	return http.StatusOK

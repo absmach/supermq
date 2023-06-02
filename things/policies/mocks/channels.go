@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/policies"
 )
 
@@ -20,7 +21,7 @@ func NewChannelCache() policies.Cache {
 	}
 }
 
-func (ccm *channelCacheMock) AddPolicy(_ context.Context, policy policies.Policy) error {
+func (ccm *channelCacheMock) Put(_ context.Context, policy policies.Policy) error {
 	ccm.mu.Lock()
 	defer ccm.mu.Unlock()
 
@@ -28,24 +29,20 @@ func (ccm *channelCacheMock) AddPolicy(_ context.Context, policy policies.Policy
 	return nil
 }
 
-func (ccm *channelCacheMock) RetrieveOne(subject, object string) (policies.Policy, error) {
-	panic("Unimplemented")
-}
-
-func (ccm *channelCacheMock) Evaluate(_ context.Context, policy policies.Policy) bool {
+func (ccm *channelCacheMock) Get(_ context.Context, policy policies.Policy) (policies.Policy, error) {
 	ccm.mu.Lock()
 	defer ccm.mu.Unlock()
 
 	for _, a := range ccm.policies[fmt.Sprintf("%s:%s", policy.Subject, policy.Object)].Actions {
 		if a == policy.Actions[0] {
-			return true
+			return policy, nil
 		}
 	}
 
-	return false
+	return policies.Policy{}, errors.ErrNotFound
 }
 
-func (ccm *channelCacheMock) DeletePolicy(_ context.Context, policy policies.Policy) error {
+func (ccm *channelCacheMock) Remove(_ context.Context, policy policies.Policy) error {
 	ccm.mu.Lock()
 	defer ccm.mu.Unlock()
 

@@ -8,6 +8,7 @@ package http
 import (
 	"context"
 
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/things/policies"
 )
@@ -40,11 +41,14 @@ func (as *adapterService) Publish(ctx context.Context, token string, msg *messag
 		Act:        policies.WriteAction,
 		EntityType: policies.GroupEntityType,
 	}
-	thid, err := as.things.AuthorizeByKey(ctx, ar)
+	res, err := as.things.Authorize(ctx, ar)
 	if err != nil {
 		return err
 	}
-	msg.Publisher = thid.GetValue()
+	if !res.GetAuthorized() {
+		return errors.ErrAuthorization
+	}
+	msg.Publisher = res.GetThingID()
 
 	return as.publisher.Publish(ctx, msg.Channel, msg)
 }

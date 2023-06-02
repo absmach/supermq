@@ -16,20 +16,14 @@ import (
 var _ policies.ThingsServiceServer = (*grpcServer)(nil)
 
 type grpcServer struct {
-	authorizeByKey kitgrpc.Handler
-	authorize      kitgrpc.Handler
-	identify       kitgrpc.Handler
+	authorize kitgrpc.Handler
+	identify  kitgrpc.Handler
 	policies.UnimplementedThingsServiceServer
 }
 
 // NewServer returns new ThingsServiceServer instance.
 func NewServer(csvc clients.Service, psvc policies.Service) policies.ThingsServiceServer {
 	return &grpcServer{
-		authorizeByKey: kitgrpc.NewServer(
-			otelkit.EndpointMiddleware(otelkit.WithOperation("can_access_by_key"))(authorizeByKeyEndpoint(psvc)),
-			decodeAuthorizeByKeyRequest,
-			encodeIdentityResponse,
-		),
 		authorize: kitgrpc.NewServer(
 			otelkit.EndpointMiddleware(otelkit.WithOperation("can_access_by_id"))(authorizeEndpoint(psvc)),
 			decodeAuthorizeRequest,
@@ -41,15 +35,6 @@ func NewServer(csvc clients.Service, psvc policies.Service) policies.ThingsServi
 			encodeIdentityResponse,
 		),
 	}
-}
-
-func (gs *grpcServer) AuthorizeByKey(ctx context.Context, req *policies.AuthorizeReq) (*policies.ClientID, error) {
-	_, res, err := gs.authorizeByKey.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, encodeError(err)
-	}
-
-	return res.(*policies.ClientID), nil
 }
 
 func (gs *grpcServer) Authorize(ctx context.Context, req *policies.AuthorizeReq) (*policies.AuthorizeRes, error) {
@@ -70,11 +55,6 @@ func (gs *grpcServer) Identify(ctx context.Context, req *policies.Key) (*policie
 	return res.(*policies.ClientID), nil
 }
 
-func decodeAuthorizeByKeyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*policies.AuthorizeReq)
-	return authorizeReq{entityType: req.GetEntityType(), clientID: req.GetSub(), groupID: req.GetObj(), action: req.GetAct()}, nil
-}
-
 func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*policies.AuthorizeReq)
 	return authorizeReq{entityType: req.GetEntityType(), clientID: req.GetSub(), groupID: req.GetObj(), action: req.GetAct()}, nil
@@ -92,7 +72,7 @@ func encodeIdentityResponse(_ context.Context, grpcRes interface{}) (interface{}
 
 func encodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(authorizeRes)
-	return &policies.AuthorizeRes{Authorized: res.authorized}, nil
+	return &policies.AuthorizeRes{ThingID: res.thingID, Authorized: res.authorized}, nil
 }
 
 func encodeError(err error) error {

@@ -6,7 +6,6 @@ option go_package = "./policies";
 
 service ThingsService {
     rpc Authorize(AuthorizeReq) returns (AuthorizeRes) {}
-    rpc AuthorizeByKey(AuthorizeReq) returns (ClientID) {}
     rpc Identify(Key) returns (ClientID) {}
 }
 
@@ -18,16 +17,17 @@ message AuthorizeReq {
 }
 
 message AuthorizeRes {
-    bool authorized = 1;
-}
-
-message ClientID {
-    string value = 1;
+    string thingID  = 1;
+    bool authorized = 2;
 }
 
 // If a key is not carrying any information itself, the type
 // field can be used to determine how to validate the token.
 // Also, different tokens can be encoded in different ways.
 message Key {
+    string value = 1;
+}
+
+message ClientID {
     string value = 1;
 }

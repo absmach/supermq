@@ -36,14 +36,14 @@ func MakePolicyHandler(csvc clients.Service, psvc policies.Service, mux *bone.Mu
 		opts...,
 	))
 
-	mux.Post("/channels/:chanID/things/:tingID", kithttp.NewServer(
+	mux.Post("/channels/:chanID/things/:thingID", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("connect_thing"))(connectEndpoint(psvc)),
 		decodeConnectThing,
 		api.EncodeResponse,
 		opts...,
 	))
 
-	mux.Delete("/channels/:chanID/things/:tingID", kithttp.NewServer(
+	mux.Delete("/channels/:chanID/things/:thingID", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("disconnect_thing"))(disconnectEndpoint(psvc)),
 		decodeDisconnectThing,
 		api.EncodeResponse,
@@ -71,16 +71,9 @@ func MakePolicyHandler(csvc clients.Service, psvc policies.Service, mux *bone.Mu
 		opts...,
 	))
 
-	mux.Post("/identify/channels/:chanID/access-by-key", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("authorize_by_key"))(authorizeByKeyEndpoint(psvc)),
-		decodeCanAccessByKey,
-		api.EncodeResponse,
-		opts...,
-	))
-
-	mux.Post("/identify/channels/:chanID/access-by-id", kithttp.NewServer(
+	mux.Post("/identify/channels/:chanID/access", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("authorize"))(authorizeEndpoint(psvc)),
-		decodeCanAccessByID,
+		decodeCanAccess,
 		api.EncodeResponse,
 		opts...,
 	))
@@ -92,7 +85,7 @@ func decodeConnectThing(_ context.Context, r *http.Request) (interface{}, error)
 	req := createPolicyReq{
 		token:    apiutil.ExtractBearerToken(r),
 		GroupID:  bone.GetValue(r, "chanID"),
-		ClientID: bone.GetValue(r, "tingID"),
+		ClientID: bone.GetValue(r, "thingID"),
 	}
 	if r.Body != http.NoBody {
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -107,7 +100,7 @@ func decodeDisconnectThing(_ context.Context, r *http.Request) (interface{}, err
 	req := createPolicyReq{
 		token:    apiutil.ExtractBearerToken(r),
 		GroupID:  bone.GetValue(r, "chanID"),
-		ClientID: bone.GetValue(r, "tingID"),
+		ClientID: bone.GetValue(r, "thingID"),
 	}
 	if r.Body != http.NoBody {
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -143,25 +136,11 @@ func decodeIdentify(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func decodeCanAccessByKey(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeCanAccess(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.ErrUnsupportedContentType
 	}
 
-	req := authorizeReq{
-		GroupID: bone.GetValue(r, "chanID"),
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
-	}
-
-	return req, nil
-}
-
-func decodeCanAccessByID(_ context.Context, r *http.Request) (interface{}, error) {
-	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.ErrUnsupportedContentType
-	}
 	req := authorizeReq{
 		GroupID: bone.GetValue(r, "chanID"),
 	}

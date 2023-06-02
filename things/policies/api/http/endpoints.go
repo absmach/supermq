@@ -31,35 +31,16 @@ func authorizeEndpoint(svc policies.Service) endpoint.Endpoint {
 			return nil, err
 		}
 		ar := policies.AccessRequest{
-			Subject: req.ClientID,
+			Subject: req.ClientSecret,
 			Object:  req.GroupID,
 			Action:  req.Action,
 		}
-		if err := svc.Authorize(ctx, ar, req.EntityType, policies.Policy{}); err != nil {
-			return nil, err
-		}
-
-		return authorizeRes{}, nil
-	}
-}
-
-func authorizeByKeyEndpoint(svc policies.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(authorizeReq)
-		if err := req.validate(); err != nil {
-			return nil, err
-		}
-		ar := policies.AccessRequest{
-			Subject: req.ClientID,
-			Object:  req.GroupID,
-			Action:  req.Action,
-		}
-		id, err := svc.AuthorizeByKey(ctx, ar, req.EntityType)
+		id, err := svc.Authorize(ctx, ar, req.EntityType)
 		if err != nil {
-			return nil, err
+			return authorizeRes{Authorized: false}, err
 		}
 
-		return identityRes{ID: id}, nil
+		return authorizeRes{ThingID: id, Authorized: true}, nil
 	}
 }
 

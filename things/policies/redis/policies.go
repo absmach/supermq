@@ -14,7 +14,7 @@ import (
 	"github.com/mainflux/mainflux/things/policies"
 )
 
-const groupPrefix = "group"
+// const groupPrefix = "group"
 const separator = ":"
 
 var _ policies.Cache = (*pcache)(nil)

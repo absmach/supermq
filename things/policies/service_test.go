@@ -140,7 +140,8 @@ func TestAddPolicy(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
 			tc.policy.Subject = tc.token
-			err = svc.Authorize(context.Background(), "client", tc.policy)
+			areq := policies.AccessRequest{Subject: tc.policy.Subject, Object: tc.policy.Object, Action: tc.policy.Actions[0]}
+			_, err = svc.Authorize(context.Background(), areq, "client")
 			require.Nil(t, err, fmt.Sprintf("checking shared %v policy expected to be succeed: %#v", tc.policy, err))
 		}
 		repoCall1.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything)
@@ -157,31 +158,31 @@ func TestAuthorize(t *testing.T) {
 
 	cases := []struct {
 		desc   string
-		policy policies.Policy
+		policy policies.AccessRequest
 		domain string
 		err    error
 	}{
 		{
 			desc:   "check valid policy in client domain",
-			policy: policies.Policy{Object: "client1", Actions: []string{"c_update"}, Subject: token},
+			policy: policies.AccessRequest{Object: "client1", Action: "c_update", Subject: token},
 			domain: "client",
 			err:    nil,
 		},
 		{
 			desc:   "check valid policy in group domain",
-			policy: policies.Policy{Object: "client1", Actions: []string{"g_update"}, Subject: token},
+			policy: policies.AccessRequest{Object: "client1", Action: "g_update", Subject: token},
 			domain: "group",
 			err:    errors.ErrConflict,
 		},
 		{
 			desc:   "check invalid policy in client domain",
-			policy: policies.Policy{Object: "client3", Actions: []string{"c_update"}, Subject: token},
+			policy: policies.AccessRequest{Object: "client3", Action: "c_update", Subject: token},
 			domain: "client",
 			err:    nil,
 		},
 		{
 			desc:   "check invalid policy in group domain",
-			policy: policies.Policy{Object: "client3", Actions: []string{"g_update"}, Subject: token},
+			policy: policies.AccessRequest{Object: "client3", Action: "g_update", Subject: token},
 			domain: "group",
 			err:    nil,
 		},
@@ -189,7 +190,7 @@ func TestAuthorize(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("Evaluate", context.Background(), tc.domain, mock.Anything).Return(tc.err)
-		err := svc.Authorize(context.Background(), tc.domain, tc.policy)
+		_, err := svc.Authorize(context.Background(), tc.policy, tc.domain)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall.Unset()
 	}

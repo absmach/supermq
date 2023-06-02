@@ -14,40 +14,17 @@ func authorizeEndpoint(svc policies.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
-		policy := policies.Policy{
-			Subject: req.clientID,
-			Object:  req.groupID,
-			Actions: []string{req.action},
-		}
 		ar := policies.AccessRequest{
 			Subject: req.clientID,
 			Object:  req.groupID,
 			Action:  req.action,
 		}
-		if err := svc.Authorize(ctx, ar, req.entityType, policy); err != nil {
-			return authorizeRes{}, err
-		}
-
-		return authorizeRes{authorized: true}, nil
-	}
-}
-
-func authorizeByKeyEndpoint(svc policies.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(authorizeReq)
-		if err := req.validate(); err != nil {
-			return nil, err
-		}
-		ar := policies.AccessRequest{
-			Subject: req.clientID,
-			Object:  req.groupID,
-			Action:  req.action,
-		}
-		clientID, err := svc.AuthorizeByKey(ctx, ar, req.entityType)
+		thindID, err := svc.Authorize(ctx, ar, req.entityType)
 		if err != nil {
-			return identityRes{}, err
+			return authorizeRes{authorized: false}, err
 		}
-		return identityRes{id: clientID}, nil
+
+		return authorizeRes{authorized: true, thingID: thindID}, nil
 	}
 }
 

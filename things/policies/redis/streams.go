@@ -31,16 +31,17 @@ func NewEventStoreMiddleware(svc policies.Service, client *redis.Client) policie
 	}
 }
 
-func (es eventStore) Authorize(ctx context.Context, ar policies.AccessRequest, entity string, policy policies.Policy) error {
-	if err := es.svc.Authorize(ctx, ar, entity, policy); err != nil {
-		return err
+func (es eventStore) Authorize(ctx context.Context, ar policies.AccessRequest, entity string) (string, error) {
+	id, err := es.svc.Authorize(ctx, ar, entity)
+	if err != nil {
+		return "", err
 	}
 
 	event := policyEvent{
 		entityType: entity,
-		groupID:    policy.Object,
-		clientID:   policy.Subject,
-		actions:    policy.Actions,
+		groupID:    ar.Object,
+		clientID:   id,
+		actions:    []string{ar.Action},
 	}
 
 	record := &redis.XAddArgs{
@@ -49,35 +50,10 @@ func (es eventStore) Authorize(ctx context.Context, ar policies.AccessRequest, e
 		Values:       event.Encode(authorize),
 	}
 	if err := es.client.XAdd(ctx, record).Err(); err != nil {
-		return err
+		return id, err
 	}
 
-	return nil
-}
-
-func (es eventStore) AuthorizeByKey(ctx context.Context, ar policies.AccessRequest, entityType string) (string, error) {
-	clientID, err := es.svc.AuthorizeByKey(ctx, ar, entityType)
-	if err != nil {
-		return "", err
-	}
-
-	event := policyEvent{
-		entityType: entityType,
-		clientID:   clientID,
-		groupID:    ar.Object,
-		actions:    []string{ar.Action},
-	}
-
-	record := &redis.XAddArgs{
-		Stream:       streamID,
-		MaxLenApprox: streamLen,
-		Values:       event.Encode(authorizeByKey),
-	}
-	if err := es.client.XAdd(ctx, record).Err(); err != nil {
-		return "", err
-	}
-
-	return clientID, nil
+	return id, nil
 }
 
 func (es eventStore) AddPolicy(ctx context.Context, token string, policy policies.Policy) (policies.Policy, error) {

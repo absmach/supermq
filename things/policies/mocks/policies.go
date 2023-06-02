@@ -40,3 +40,9 @@ func (m *PolicyRepository) Evaluate(ctx context.Context, entityType string, p po
 
 	return ret.Error(0)
 }
+
+func (m *PolicyRepository) RetrieveOne(ctx context.Context, subject, object string) (policies.Policy, error) {
+	ret := m.Called(ctx, subject, object)
+
+	return ret.Get(0).(policies.Policy), ret.Error(1)
+}

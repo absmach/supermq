@@ -57,18 +57,10 @@ func (ms *metricsMiddleware) DeletePolicy(ctx context.Context, token string, p p
 	return ms.svc.DeletePolicy(ctx, token, p)
 }
 
-func (ms *metricsMiddleware) AuthorizeByKey(ctx context.Context, ar policies.AccessRequest, entityType string) (id string, err error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "authorize_by_key").Add(1)
-		ms.latency.With("method", "authorize_by_key").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-	return ms.svc.AuthorizeByKey(ctx, ar, entityType)
-}
-
-func (ms *metricsMiddleware) Authorize(ctx context.Context, ar policies.AccessRequest, entityType string, p policies.Policy) (err error) {
+func (ms *metricsMiddleware) Authorize(ctx context.Context, ar policies.AccessRequest, entityType string) (id string, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "authorize").Add(1)
 		ms.latency.With("method", "authorize").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.Authorize(ctx, ar, entityType, p)
+	return ms.svc.Authorize(ctx, ar, entityType)
 }

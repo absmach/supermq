@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/policies"
 )
 
@@ -62,6 +63,13 @@ func (c client) Authorize(ctx context.Context, chanID, thingID, action string) e
 		Act:        action,
 		EntityType: policies.GroupEntityType,
 	}
-	_, err := c.thingsClient.Authorize(ctx, ar)
+	res, err := c.thingsClient.Authorize(ctx, ar)
+	if err != nil {
+		return err
+	}
+	if !res.GetAuthorized() {
+		return errors.ErrAuthorization
+	}
+
 	return err
 }

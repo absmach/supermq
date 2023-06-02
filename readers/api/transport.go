@@ -232,7 +232,7 @@ func authorize(ctx context.Context, req listMessagesReq, tc tpolicies.ThingsServ
 		}
 		return nil
 	default:
-		if _, err := tc.AuthorizeByKey(ctx, &tpolicies.AuthorizeReq{Sub: req.key, Obj: req.chanID, Act: tpolicies.ReadAction, EntityType: tpolicies.GroupEntityType}); err != nil {
+		if _, err := tc.Authorize(ctx, &tpolicies.AuthorizeReq{Sub: req.key, Obj: req.chanID, Act: tpolicies.ReadAction, EntityType: tpolicies.GroupEntityType}); err != nil {
 			return errors.Wrap(errThingAccess, err)
 		}
 		return nil

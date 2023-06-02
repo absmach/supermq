@@ -23,7 +23,6 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ThingsServiceClient interface {
 	Authorize(ctx context.Context, in *AuthorizeReq, opts ...grpc.CallOption) (*AuthorizeRes, error)
-	AuthorizeByKey(ctx context.Context, in *AuthorizeReq, opts ...grpc.CallOption) (*ClientID, error)
 	Identify(ctx context.Context, in *Key, opts ...grpc.CallOption) (*ClientID, error)
 }
 
@@ -44,15 +43,6 @@ func (c *thingsServiceClient) Authorize(ctx context.Context, in *AuthorizeReq, o
 	return out, nil
 }
 
-func (c *thingsServiceClient) AuthorizeByKey(ctx context.Context, in *AuthorizeReq, opts ...grpc.CallOption) (*ClientID, error) {
-	out := new(ClientID)
-	err := c.cc.Invoke(ctx, "/policies.ThingsService/AuthorizeByKey", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *thingsServiceClient) Identify(ctx context.Context, in *Key, opts ...grpc.CallOption) (*ClientID, error) {
 	out := new(ClientID)
 	err := c.cc.Invoke(ctx, "/policies.ThingsService/Identify", in, out, opts...)
@@ -67,7 +57,6 @@ func (c *thingsServiceClient) Identify(ctx context.Context, in *Key, opts ...grp
 // for forward compatibility
 type ThingsServiceServer interface {
 	Authorize(context.Context, *AuthorizeReq) (*AuthorizeRes, error)
-	AuthorizeByKey(context.Context, *AuthorizeReq) (*ClientID, error)
 	Identify(context.Context, *Key) (*ClientID, error)
 	mustEmbedUnimplementedThingsServiceServer()
 }
@@ -78,9 +67,6 @@ type UnimplementedThingsServiceServer struct {
 
 func (UnimplementedThingsServiceServer) Authorize(context.Context, *AuthorizeReq) (*AuthorizeRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Authorize not implemented")
-}
-func (UnimplementedThingsServiceServer) AuthorizeByKey(context.Context, *AuthorizeReq) (*ClientID, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AuthorizeByKey not implemented")
 }
 func (UnimplementedThingsServiceServer) Identify(context.Context, *Key) (*ClientID, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Identify not implemented")
@@ -116,24 +102,6 @@ func _ThingsService_Authorize_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ThingsService_AuthorizeByKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthorizeReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ThingsServiceServer).AuthorizeByKey(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/policies.ThingsService/AuthorizeByKey",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ThingsServiceServer).AuthorizeByKey(ctx, req.(*AuthorizeReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _ThingsService_Identify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Key)
 	if err := dec(in); err != nil {
@@ -162,10 +130,6 @@ var ThingsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Authorize",
 			Handler:    _ThingsService_Authorize_Handler,
-		},
-		{
-			MethodName: "AuthorizeByKey",
-			Handler:    _ThingsService_AuthorizeByKey_Handler,
 		},
 		{
 			MethodName: "Identify",

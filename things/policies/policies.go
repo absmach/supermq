@@ -68,7 +68,7 @@ type Service interface {
 	// `object`. Authorize returns a non-nil error if the subject has
 	// no relation on the object (which simply means the operation is
 	// denied).
-	Authorize(ctx context.Context, ar AccessRequest, entityType string, p Policy) error
+	Authorize(ctx context.Context, ar AccessRequest, entity string) (string, error)
 
 	// AddPolicy creates a policy for the given subject, so that, after
 	// AddPolicy, `subject` has a `relation` on `object`. Returns a non-nil
@@ -83,10 +83,6 @@ type Service interface {
 
 	// ListPolicies lists existing policies
 	ListPolicies(ctx context.Context, token string, p Page) (PolicyPage, error)
-
-	// AuthorizeByKey determines whether the group can be accessed using the
-	// provided key and returns thing's id if access is allowed.
-	AuthorizeByKey(ctx context.Context, ar AccessRequest, entity string) (string, error)
 }
 
 // Cache contains channel-thing connection caching interface.

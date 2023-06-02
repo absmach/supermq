@@ -62,11 +62,14 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 		Act:        policies.WriteAction,
 		EntityType: policies.GroupEntityType,
 	}
-	thid, err := svc.auth.AuthorizeByKey(ctx, ar)
+	res, err := svc.auth.Authorize(ctx, ar)
 	if err != nil {
 		return errors.Wrap(errors.ErrAuthorization, err)
 	}
-	msg.Publisher = thid.GetValue()
+	if !res.GetAuthorized() {
+		return errors.ErrAuthorization
+	}
+	msg.Publisher = res.GetThingID()
 
 	return svc.pubsub.Publish(ctx, msg.Channel, msg)
 }
@@ -78,8 +81,12 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 		Act:        policies.ReadAction,
 		EntityType: policies.GroupEntityType,
 	}
-	if _, err := svc.auth.AuthorizeByKey(ctx, ar); err != nil {
+	res, err := svc.auth.Authorize(ctx, ar)
+	if err != nil {
 		return errors.Wrap(errors.ErrAuthorization, err)
+	}
+	if !res.GetAuthorized() {
+		return errors.ErrAuthorization
 	}
 	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
 	if subtopic != "" {
@@ -95,8 +102,12 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopi
 		Act:        policies.ReadAction,
 		EntityType: policies.GroupEntityType,
 	}
-	if _, err := svc.auth.AuthorizeByKey(ctx, ar); err != nil {
+	res, err := svc.auth.Authorize(ctx, ar)
+	if err != nil {
 		return errors.Wrap(errors.ErrAuthorization, err)
+	}
+	if !res.GetAuthorized() {
+		return errors.ErrAuthorization
 	}
 	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
 	if subtopic != "" {

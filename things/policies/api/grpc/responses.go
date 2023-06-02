@@ -5,5 +5,6 @@ type identityRes struct {
 }
 
 type authorizeRes struct {
+	thingID    string
 	authorized bool
 }

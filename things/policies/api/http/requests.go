@@ -66,15 +66,18 @@ func (req identifyReq) validate() error {
 }
 
 type authorizeReq struct {
-	ClientID   string `json:"client_id"`
-	GroupID    string `json:"group_id"`
-	Action     string `json:"action"`
-	EntityType string `json:"entity_type"`
+	ClientSecret string `json:"secret"`
+	GroupID      string `json:"group_id"`
+	Action       string `json:"action"`
+	EntityType   string `json:"entity_type"`
 }
 
 func (req authorizeReq) validate() error {
-	if req.ClientID == "" || req.GroupID == "" {
+	if req.GroupID == "" {
 		return apiutil.ErrMissingID
+	}
+	if req.ClientSecret == "" {
+		return apiutil.ErrMissingSecret
 	}
 
 	return nil
