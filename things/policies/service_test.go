@@ -31,12 +31,11 @@ func newService(tokens map[string]string) (policies.Service, *pmocks.PolicyRepos
 	adminPolicy := mocks.MockSubjectSet{Object: "things", Relation: clients.AdminRelationKey}
 	auth := mocks.NewAuthService(tokens, map[string][]mocks.MockSubjectSet{adminEmail: {adminPolicy}})
 	idProvider := uuid.NewMock()
-	thingsCache := mocks.NewClientCache()
 	policiesCache := pmocks.NewChannelCache()
 	pRepo := new(pmocks.PolicyRepository)
 	uRepo := new(umocks.PolicyRepository)
 
-	return policies.NewService(auth, pRepo, thingsCache, policiesCache, idProvider), pRepo, uRepo
+	return policies.NewService(auth, pRepo, policiesCache, idProvider), pRepo, uRepo
 }
 
 func TestAddPolicy(t *testing.T) {
@@ -126,7 +125,7 @@ func TestAddPolicy(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("RetrieveOne", context.Background(), mock.Anything, mock.Anything).Return(tc.policy, tc.err)
-		repoCall1 := pRepo.On("Evaluate", context.Background(), "client", mock.Anything).Return(nil)
+		repoCall1 := pRepo.On("Evaluate", context.Background(), "group", mock.Anything).Return(nil)
 		repoCall2 := pRepo.On("Update", context.Background(), tc.policy).Return(tc.err)
 		repoCall3 := pRepo.On("Save", context.Background(), mock.Anything).Return(tc.policy, tc.err)
 		repoCall4 := pRepo.On("Retrieve", context.Background(), mock.Anything).Return(tc.page, nil)

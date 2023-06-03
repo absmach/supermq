@@ -197,11 +197,10 @@ func (svc service) authorize(ctx context.Context, subject, object, action string
 		return nil
 	}
 
-	policy := tpolicies.Policy{Subject: subject, Object: object, Actions: []string{action}}
-	if err := policy.Validate(); err != nil {
-		return err
-	}
-	return svc.policies.Authorize(ctx, entityType, policy)
+	areq := tpolicies.AccessRequest{Subject: subject, Object: object, Action: action}
+
+	_, err := svc.policies.Authorize(ctx, areq, entityType)
+	return err
 }
 
 func (svc service) checkAdmin(ctx context.Context, subject, object, action string) error {
