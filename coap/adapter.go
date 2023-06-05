@@ -60,7 +60,7 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 		Sub:        key,
 		Obj:        msg.Channel,
 		Act:        policies.WriteAction,
-		EntityType: policies.GroupEntityType,
+		EntityType: policies.ThingEntityType,
 	}
 	res, err := svc.auth.Authorize(ctx, ar)
 	if err != nil {

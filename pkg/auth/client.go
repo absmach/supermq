@@ -61,7 +61,7 @@ func (c client) Authorize(ctx context.Context, chanID, thingID, action string) e
 		Sub:        thingID,
 		Obj:        chanID,
 		Act:        action,
-		EntityType: policies.GroupEntityType,
+		EntityType: policies.ThingEntityType,
 	}
 	res, err := c.thingsClient.Authorize(ctx, ar)
 	if err != nil {

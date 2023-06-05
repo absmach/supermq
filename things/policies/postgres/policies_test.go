@@ -150,8 +150,14 @@ func TestPoliciesEvaluate(t *testing.T) {
 			Object:  tc.Object,
 			Actions: []string{tc.Action},
 		}
-		err := repo.Evaluate(context.Background(), tc.Domain, p)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		switch tc.Domain {
+		case "client":
+			_, err := repo.EvaluateThingAccess(context.Background(), p)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		case "group":
+			_, err := repo.EvaluateGroupAccess(context.Background(), p)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		}
 	}
 }
 

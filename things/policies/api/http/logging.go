@@ -21,7 +21,7 @@ func LoggingMiddleware(svc policies.Service, logger mflog.Logger) policies.Servi
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) Authorize(ctx context.Context, ar policies.AccessRequest, entityType string) (id string, err error) {
+func (lm *loggingMiddleware) Authorize(ctx context.Context, ar policies.AccessRequest) (policy policies.Policy, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method authorize for channel with id %s by client with id %s took %s to complete", ar.Object, ar.Subject, time.Since(begin))
 		if err != nil {
@@ -30,7 +30,7 @@ func (lm *loggingMiddleware) Authorize(ctx context.Context, ar policies.AccessRe
 		}
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
-	return lm.svc.Authorize(ctx, ar, entityType)
+	return lm.svc.Authorize(ctx, ar)
 }
 
 func (lm *loggingMiddleware) AddPolicy(ctx context.Context, token string, p policies.Policy) (policy policies.Policy, err error) {

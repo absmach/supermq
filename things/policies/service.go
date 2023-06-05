@@ -10,11 +10,18 @@ import (
 )
 
 const (
-	ReadAction      = "m_read"
-	WriteAction     = "m_write"
-	addPolicyAction = "g_add"
-	GroupEntityType = "group"
-	thingsObjectKey = "things"
+	ReadAction       = "m_read"
+	WriteAction      = "m_write"
+	addPolicyAction  = "g_add"
+	ClientEntityType = "client"
+	GroupEntityType  = "group"
+	ThingEntityType  = "thing"
+	thingsObjectKey  = "things"
+)
+
+var (
+	// ErrInvalidEntityType indicates that the entity type is invalid.
+	ErrInvalidEntityType = errors.New("invalid entity type")
 )
 
 type service struct {
@@ -34,45 +41,60 @@ func NewService(auth upolicies.AuthServiceClient, p Repository, ccache Cache, id
 	}
 }
 
-func (svc service) Authorize(ctx context.Context, ar AccessRequest, entity string) (string, error) {
+func (svc service) Authorize(ctx context.Context, ar AccessRequest) (Policy, error) {
 	// fetch from cache first
-	p := Policy{
+	policy := Policy{
 		Subject: ar.Subject,
 		Object:  ar.Object,
 	}
-	policy, err := svc.policyCache.Get(ctx, p)
+	policy, err := svc.policyCache.Get(ctx, policy)
 	if err == nil {
 		for _, action := range policy.Actions {
 			if action == ar.Action {
-				return policy.Subject, nil
+				return policy, nil
 			}
 		}
-		return "", errors.ErrAuthorization
+		return Policy{}, errors.ErrAuthorization
 	}
 	if !errors.Contains(err, errors.ErrNotFound) {
-		return "", err
+		return Policy{}, err
+	}
+	policy = Policy{
+		Subject: ar.Subject,
+		Object:  ar.Object,
+		Actions: []string{ar.Action},
 	}
 	// fetch from repo as a fallback if not found in cache
-	policy, err = svc.policies.RetrieveOne(ctx, p.Subject, p.Object)
-	if err != nil {
-		return "", err
-	}
-
-	// Replace Subject since AccessRequest Subject is Thing Key,
-	// and Policy subject is Thing ID.
-	policy.Subject = ar.Subject
-
-	for _, action := range policy.Actions {
-		if action == ar.Action {
-			if err := svc.policyCache.Put(ctx, policy); err != nil {
-				return policy.Subject, err
-			}
-
-			return policy.Subject, nil
+	switch ar.Entity {
+	case GroupEntityType:
+		policy, err = svc.policies.EvaluateGroupAccess(ctx, policy)
+		if err != nil {
+			return Policy{}, err
 		}
-	}
-	return "", errors.ErrAuthorization
 
+	case ClientEntityType:
+		policy, err = svc.policies.EvaluateThingAccess(ctx, policy)
+		if err != nil {
+			return Policy{}, err
+		}
+
+	case ThingEntityType:
+		policy, err := svc.policies.EvaluateMessagingAccess(ctx, policy)
+		if err != nil {
+			return Policy{}, err
+		}
+		// Replace Subject since AccessRequest Subject is Thing Key,
+		// and Policy subject is Thing ID.
+		policy.Subject = ar.Subject
+	default:
+		return Policy{}, ErrInvalidEntityType
+	}
+
+	if err := svc.policyCache.Put(ctx, policy); err != nil {
+		return policy, err
+	}
+
+	return policy, nil
 }
 
 // AddPolicy adds a policy is added if:
@@ -118,7 +140,7 @@ func (svc service) AddPolicy(ctx context.Context, token string, p Policy) (Polic
 
 	// If the client has `g_add` action on the object or is the owner of the object, add the policy
 	pol := Policy{Subject: userID, Object: p.Object, Actions: []string{"g_add"}}
-	if err := svc.policies.Evaluate(ctx, "group", pol); err == nil {
+	if _, err := svc.policies.EvaluateGroupAccess(ctx, pol); err == nil {
 		if err := svc.policyCache.Put(ctx, p); err != nil {
 			return Policy{}, err
 		}

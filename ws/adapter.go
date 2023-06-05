@@ -140,7 +140,7 @@ func (svc *adapterService) authorize(ctx context.Context, thingKey, chanID strin
 		Sub:        thingKey,
 		Obj:        chanID,
 		Act:        policies.ReadAction,
-		EntityType: policies.GroupEntityType,
+		EntityType: policies.ThingEntityType,
 	}
 	res, err := svc.auth.Authorize(ctx, ar)
 	if err != nil {

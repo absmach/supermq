@@ -14,11 +14,6 @@ import (
 
 var _ policies.Repository = (*prepo)(nil)
 
-var (
-	// ErrInvalidEntityType indicates that the entity type is invalid.
-	ErrInvalidEntityType = errors.New("invalid entity type")
-)
-
 type prepo struct {
 	db postgres.Database
 }
@@ -55,18 +50,42 @@ func (pr prepo) Save(ctx context.Context, policy policies.Policy) (policies.Poli
 	return toPolicy(dbp)
 }
 
-func (pr prepo) RetrieveOne(ctx context.Context, subject, object string) (policies.Policy, error) {
-	q := `SELECT subject, object, actions 
-			FROM policies p INNER JOIN clients c ON c.id = p.subject
-			WHERE c.secret = :subject AND p.object = :object`
-	params := struct {
-		Subject string `db:"subject"`
-		Object  string `db:"object"`
-	}{
-		Subject: subject,
-		Object:  object,
+func (pr prepo) EvaluateMessagingAccess(ctx context.Context, p policies.Policy) (policies.Policy, error) {
+	query := fmt.Sprintf(`SELECT subject, object, actions 
+	FROM policies p INNER JOIN clients c ON c.id = p.subject
+	WHERE c.secret = :subject AND p.object = :object AND '%s' = ANY(p.actions)`, p.Actions[0])
+
+	return pr.evaluate(ctx, query, p)
+}
+
+func (pr prepo) EvaluateThingAccess(ctx context.Context, p policies.Policy) (policies.Policy, error) {
+	// Evaluates if two clients are connected to the same group and the subject has the specified action
+	// or subject is the owner of the object
+	query := fmt.Sprintf(`(SELECT subject FROM policies p 
+		WHERE p.subject = :subject AND '%s' = ANY(p.actions) AND object IN (SELECT object FROM policies WHERE subject = :object))
+		UNION
+		(SELECT id as subject FROM clients c WHERE c.owner_id = :subject AND c.id = :object) LIMIT 1;`, p.Actions[0])
+
+	return pr.evaluate(ctx, query, p)
+}
+
+func (pr prepo) EvaluateGroupAccess(ctx context.Context, p policies.Policy) (policies.Policy, error) {
+	// Evaluates if client is connected to the specified group and has the required action
+	query := fmt.Sprintf(`(SELECT policies.subject FROM policies
+		WHERE policies.subject = :subject AND policies.object = :object AND '%s' = ANY(policies.actions))
+		UNION
+		(SELECT groups.owner_id as subject FROM groups
+		WHERE groups.owner_id = :subject AND groups.id = :object)`, p.Actions[0])
+
+	return pr.evaluate(ctx, query, p)
+}
+
+func (pr prepo) evaluate(ctx context.Context, query string, policy policies.Policy) (policies.Policy, error) {
+	dbp, err := toDBPolicy(policy)
+	if err != nil {
+		return policies.Policy{}, errors.Wrap(errors.ErrAuthorization, err)
 	}
-	row, err := pr.db.NamedQueryContext(ctx, q, params)
+	row, err := pr.db.NamedQueryContext(ctx, query, dbp)
 	if err != nil {
 		return policies.Policy{}, postgres.HandleError(err, errors.ErrAuthorization)
 	}
@@ -76,53 +95,11 @@ func (pr prepo) RetrieveOne(ctx context.Context, subject, object string) (polici
 	if ok := row.Next(); !ok {
 		return policies.Policy{}, errors.Wrap(errors.ErrAuthorization, row.Err())
 	}
-	var p dbPolicy
-	if err := row.StructScan(&p); err != nil {
+	dbp = dbPolicy{}
+	if err := row.StructScan(&dbp); err != nil {
 		return policies.Policy{}, err
 	}
-	return toPolicy(p)
-}
-
-func (pr prepo) Evaluate(ctx context.Context, entityType string, policy policies.Policy) error {
-	q := ""
-	switch entityType {
-	case "client":
-		// Evaluates if two clients are connected to the same group and the subject has the specified action
-		// or subject is the owner of the object
-		q = fmt.Sprintf(`(SELECT subject FROM policies p 
-			WHERE p.subject = :subject AND '%s' = ANY(p.actions) AND object IN (SELECT object FROM policies WHERE subject = :object))
-			UNION
-			(SELECT id as subject FROM clients c WHERE c.owner_id = :subject AND c.id = :object) LIMIT 1;`, policy.Actions[0])
-	case "group":
-		// Evaluates if client is connected to the specified group and has the required action
-		q = fmt.Sprintf(`(SELECT policies.subject FROM policies
-			WHERE policies.subject = :subject AND policies.object = :object AND '%s' = ANY(policies.actions))
-			UNION
-			(SELECT groups.owner_id as subject FROM groups
-			WHERE groups.owner_id = :subject AND groups.id = :object)`, policy.Actions[0])
-	default:
-		return ErrInvalidEntityType
-	}
-
-	dbu, err := toDBPolicy(policy)
-	if err != nil {
-		return errors.Wrap(errors.ErrAuthorization, err)
-	}
-	row, err := pr.db.NamedQueryContext(ctx, q, dbu)
-	if err != nil {
-		return postgres.HandleError(err, errors.ErrAuthorization)
-	}
-
-	defer row.Close()
-
-	if ok := row.Next(); !ok {
-		return errors.Wrap(errors.ErrAuthorization, row.Err())
-	}
-	var rPolicy dbPolicy
-	if err := row.StructScan(&rPolicy); err != nil {
-		return err
-	}
-	return nil
+	return toPolicy(dbp)
 }
 
 func (pr prepo) Update(ctx context.Context, policy policies.Policy) (policies.Policy, error) {

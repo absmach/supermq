@@ -62,7 +62,7 @@ func (svc *mainfluxPolicies) UpdatePolicy(context.Context, string, tpolicies.Pol
 	panic("not implemented")
 }
 
-func (svc *mainfluxPolicies) Authorize(context.Context, tpolicies.AccessRequest, string) (string, error) {
+func (svc *mainfluxPolicies) Authorize(context.Context, tpolicies.AccessRequest) (tpolicies.Policy, error) {
 	panic("not implemented")
 }
 

@@ -197,9 +197,9 @@ func (svc service) authorize(ctx context.Context, subject, object, action string
 		return nil
 	}
 
-	areq := tpolicies.AccessRequest{Subject: subject, Object: object, Action: action}
+	areq := tpolicies.AccessRequest{Subject: subject, Object: object, Action: action, Entity: entityType}
 
-	_, err := svc.policies.Authorize(ctx, areq, entityType)
+	_, err := svc.policies.Authorize(ctx, areq)
 	return err
 }
 

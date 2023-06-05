@@ -18,13 +18,14 @@ func authorizeEndpoint(svc policies.Service) endpoint.Endpoint {
 			Subject: req.clientID,
 			Object:  req.groupID,
 			Action:  req.action,
+			Entity:  req.entityType,
 		}
-		thindID, err := svc.Authorize(ctx, ar, req.entityType)
+		policy, err := svc.Authorize(ctx, ar)
 		if err != nil {
 			return authorizeRes{authorized: false}, err
 		}
 
-		return authorizeRes{authorized: true, thingID: thindID}, nil
+		return authorizeRes{authorized: true, thingID: policy.Subject}, nil
 	}
 }
 

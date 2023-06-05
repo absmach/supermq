@@ -27,6 +27,7 @@ type AccessRequest struct {
 	Subject string `json:"subject"`
 	Object  string `json:"object"`
 	Action  string `json:"action"`
+	Entity  string `json:"entity"`
 }
 
 // PolicyPage contains a page of policies.
@@ -42,13 +43,14 @@ type Repository interface {
 	// error in case of failures.
 	Save(ctx context.Context, p Policy) (Policy, error)
 
-	// Evaluate is used to evaluate if you have the correct permissions.
-	// We evaluate if we are in the same group first then evaluate if the
-	// object has that action over the subject
-	Evaluate(ctx context.Context, entityType string, p Policy) error
+	// EvaluateMessagingAccess is used to evaluate if thing has access to channel.
+	EvaluateMessagingAccess(ctx context.Context, p Policy) (Policy, error)
 
-	// RetrieveOne retrieves policy by subject and object.
-	RetrieveOne(ctx context.Context, subject, object string) (Policy, error)
+	// EvaluateThingAccess is used to evaluate if user has access to a thing.
+	EvaluateThingAccess(ctx context.Context, p Policy) (Policy, error)
+
+	// EvaluateGroupAccess is used to evaluate if user has access to a group.
+	EvaluateGroupAccess(ctx context.Context, p Policy) (Policy, error)
 
 	// Update updates the policy type.
 	Update(ctx context.Context, p Policy) (Policy, error)
@@ -63,12 +65,13 @@ type Repository interface {
 // Service represents a authorization service. It exposes
 // functionalities through `auth` to perform authorization.
 type Service interface {
-	// Authorize checks authorization of the given `subject`.
-	// Authorize verifies that Is `subject` allowed to `relation` on
-	// `object`. Authorize returns a non-nil error if the subject has
+	// Authorize is used to check if subject has access to object with the specified action.
+	// Authorize returns non-nil error if the subject has
 	// no relation on the object (which simply means the operation is
 	// denied).
-	Authorize(ctx context.Context, ar AccessRequest, entity string) (string, error)
+	// Authorize is used to check if user has access to thing and group.
+	// Authorize is also used to check if things has access to group i.e they are connected.
+	Authorize(ctx context.Context, ar AccessRequest) (Policy, error)
 
 	// AddPolicy creates a policy for the given subject, so that, after
 	// AddPolicy, `subject` has a `relation` on `object`. Returns a non-nil

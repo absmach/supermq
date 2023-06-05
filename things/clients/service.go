@@ -287,13 +287,13 @@ func (svc service) ShareClient(ctx context.Context, token, userID, groupID, thin
 		return err
 	}
 
-	areq := tpolicies.AccessRequest{Subject: id, Object: groupID, Action: addRelationKey}
-	if _, err := svc.policies.Authorize(ctx, areq, groupEntityType); err != nil {
+	areq := tpolicies.AccessRequest{Subject: id, Object: groupID, Action: addRelationKey, Entity: groupEntityType}
+	if _, err := svc.policies.Authorize(ctx, areq); err != nil {
 		return fmt.Errorf("cannot share things using group %s to user %s: %s", groupID, userID, err)
 	}
 
-	areq = tpolicies.AccessRequest{Subject: id, Object: thingID, Action: addRelationKey}
-	if _, err := svc.policies.Authorize(ctx, areq, clientEntityType); err != nil {
+	areq = tpolicies.AccessRequest{Subject: id, Object: thingID, Action: addRelationKey, Entity: clientEntityType}
+	if _, err := svc.policies.Authorize(ctx, areq); err != nil {
 		return fmt.Errorf("cannot share thing %s with user %s: %s", thingID, userID, err)
 	}
 
@@ -324,9 +324,9 @@ func (svc service) authorize(ctx context.Context, subject, object, action string
 		return nil
 	}
 
-	policy := tpolicies.AccessRequest{Subject: subject, Object: object, Action: action}
+	policy := tpolicies.AccessRequest{Subject: subject, Object: object, Action: action, Entity: clientEntityType}
 
-	_, err := svc.policies.Authorize(ctx, policy, clientEntityType)
+	_, err := svc.policies.Authorize(ctx, policy)
 	return err
 }
 

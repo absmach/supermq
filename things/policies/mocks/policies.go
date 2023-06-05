@@ -35,14 +35,20 @@ func (m *PolicyRepository) Update(ctx context.Context, p policies.Policy) (polic
 	return ret.Get(0).(policies.Policy), ret.Error(1)
 }
 
-func (m *PolicyRepository) Evaluate(ctx context.Context, entityType string, p policies.Policy) error {
-	ret := m.Called(ctx, entityType, p)
+func (m *PolicyRepository) EvaluateMessagingAccess(ctx context.Context, p policies.Policy) (policies.Policy, error) {
+	ret := m.Called(ctx, p)
 
-	return ret.Error(0)
+	return ret.Get(0).(policies.Policy), ret.Error(1)
 }
 
-func (m *PolicyRepository) RetrieveOne(ctx context.Context, subject, object string) (policies.Policy, error) {
-	ret := m.Called(ctx, subject, object)
+func (m *PolicyRepository) EvaluateThingAccess(ctx context.Context, p policies.Policy) (policies.Policy, error) {
+	ret := m.Called(ctx, p)
+
+	return ret.Get(0).(policies.Policy), ret.Error(1)
+}
+
+func (m *PolicyRepository) EvaluateGroupAccess(ctx context.Context, p policies.Policy) (policies.Policy, error) {
+	ret := m.Called(ctx, p)
 
 	return ret.Get(0).(policies.Policy), ret.Error(1)
 }

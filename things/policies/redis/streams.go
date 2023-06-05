@@ -31,14 +31,14 @@ func NewEventStoreMiddleware(svc policies.Service, client *redis.Client) policie
 	}
 }
 
-func (es eventStore) Authorize(ctx context.Context, ar policies.AccessRequest, entity string) (string, error) {
-	id, err := es.svc.Authorize(ctx, ar, entity)
+func (es eventStore) Authorize(ctx context.Context, ar policies.AccessRequest) (policies.Policy, error) {
+	id, err := es.svc.Authorize(ctx, ar)
 	if err != nil {
-		return "", err
+		return policies.Policy{}, err
 	}
 
 	event := authorizeEvent{
-		ar, entity,
+		ar, ar.Entity,
 	}
 	values, err := event.Encode()
 	if err != nil {

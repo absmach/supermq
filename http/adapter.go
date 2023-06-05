@@ -39,7 +39,7 @@ func (as *adapterService) Publish(ctx context.Context, token string, msg *messag
 		Sub:        token,
 		Obj:        msg.Channel,
 		Act:        policies.WriteAction,
-		EntityType: policies.GroupEntityType,
+		EntityType: policies.ThingEntityType,
 	}
 	res, err := as.things.Authorize(ctx, ar)
 	if err != nil {
