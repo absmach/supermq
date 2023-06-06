@@ -118,7 +118,7 @@ func main() {
 		auth = localusers.NewAuthService(cfg.StandaloneID, cfg.StandaloneToken)
 		logger.Info("Using standalone auth service")
 	default:
-		authServiceClient, authHandler, err := authClient.Setup(envPrefix, svcName, cfg.JaegerURL)
+		authServiceClient, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL, svcName)
 		if err != nil {
 			logger.Fatal(err.Error())
 		}
