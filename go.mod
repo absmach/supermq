@@ -33,7 +33,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/nats-io/nats.go v1.18.0
 	github.com/oklog/ulid/v2 v2.1.0
-	github.com/opentracing/opentracing-go v1.2.0
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/pelletier/go-toml v1.9.5
 	github.com/plgd-dev/go-coap/v2 v2.6.0

@@ -136,7 +136,8 @@ func (rce removeClientEvent) Encode() (map[string]interface{}, error) {
 type shareClientEvent struct {
 	thingID string
 	actions string
-	userIDs string
+	userID  string
+	groupID string
 }
 
 func (sce shareClientEvent) Encode() (map[string]interface{}, error) {
@@ -144,7 +145,8 @@ func (sce shareClientEvent) Encode() (map[string]interface{}, error) {
 		"operation": clientShare,
 		"thing_id":  sce.thingID,
 		"actions":   sce.actions,
-		"user_ids":  sce.userIDs,
+		"user_id":   sce.userID,
+		"group_id":  sce.groupID,
 	}, nil
 }
 

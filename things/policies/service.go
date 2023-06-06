@@ -195,9 +195,7 @@ func (svc service) DeletePolicy(ctx context.Context, token string, p Policy) err
 	if err := svc.checkPolicy(ctx, userID, p); err != nil {
 		return err
 	}
-	if err := svc.checkAction(ctx, res.GetId(), p); err != nil {
-		return err
-	}
+
 	if err := svc.policyCache.Remove(ctx, p); err != nil {
 		return err
 	}

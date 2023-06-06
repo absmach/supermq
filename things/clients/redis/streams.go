@@ -116,14 +116,15 @@ func (es eventStore) update(ctx context.Context, operation string, cli mfclients
 	return cli, nil
 }
 
-func (es eventStore) ShareClient(ctx context.Context, token, thingID string, actions, userIDs []string) error {
-	if err := es.svc.ShareClient(ctx, token, thingID, actions, userIDs); err != nil {
+func (es eventStore) ShareClient(ctx context.Context, token, userID, groupID, thingID string, actions []string) error {
+	if err := es.svc.ShareClient(ctx, token, userID, groupID, thingID, actions); err != nil {
 		return err
 	}
 	event := shareClientEvent{
 		thingID: thingID,
+		userID:  userID,
+		groupID: groupID,
 		actions: fmt.Sprintf("[%s]", strings.Join(actions, ",")),
-		userIDs: fmt.Sprintf("[%s]", strings.Join(userIDs, ",")),
 	}
 	values, err := event.Encode()
 	if err != nil {
