@@ -14,6 +14,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	chclient "github.com/mainflux/callhome/pkg/client"
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal"
 	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
@@ -90,7 +91,7 @@ func main() {
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, logger), logger)
 
-	chc := chclient.New(svcName, cfg.MFRelease, logger, cancel)
+	chc := chclient.New(svcName, mainflux.Version, logger, cancel)
 	go chc.CallHome(ctx)
 
 	g.Go(func() error {

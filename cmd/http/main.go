@@ -91,7 +91,7 @@ func main() {
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc), logger)
 
-	chc := chclient.New(svcName, cfg.MFRelease, logger, cancel)
+	chc := chclient.New(svcName, mainflux.Version, logger, cancel)
 	go chc.CallHome(ctx)
 
 	g.Go(func() error {

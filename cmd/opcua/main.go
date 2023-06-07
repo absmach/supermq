@@ -12,6 +12,7 @@ import (
 
 	r "github.com/go-redis/redis/v8"
 	chclient "github.com/mainflux/callhome/pkg/client"
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	redisClient "github.com/mainflux/mainflux/internal/clients/redis"
@@ -47,7 +48,6 @@ type config struct {
 	ESConsumerName string `env:"MF_OPCUA_ADAPTER_EVENT_CONSUMER"     envDefault:""`
 	BrokerURL      string `env:"MF_BROKER_URL"                       envDefault:"nats://localhost:4222"`
 	JaegerURL      string `env:"MF_JAEGER_URL"                       envDefault:"localhost:6831"`
-	MFRelease      string `env:"MF_RELEASE_TAG"`
 }
 
 func main() {
@@ -118,7 +118,7 @@ func main() {
 	}
 	hs := httpserver.New(httpCtx, httpCancel, svcName, httpServerConfig, api.MakeHandler(svc, logger), logger)
 
-	chc := chclient.New(svcName, cfg.MFRelease, logger, httpCancel)
+	chc := chclient.New(svcName, mainflux.Version, logger, httpCancel)
 	go chc.CallHome(httpCtx)
 
 	g.Go(func() error {
