@@ -55,7 +55,7 @@ type config struct {
 	HttpTargetPath        string        `env:"MF_MQTT_ADAPTER_WS_TARGET_PATH"               envDefault:"/mqtt"`
 	Instance              string        `env:"MF_MQTT_ADAPTER_INSTANCE"                     envDefault:""`
 	JaegerURL             string        `env:"MF_JAEGER_URL"                                envDefault:"http://jaeger:14268/api/traces"`
-	BrokerURL             string        `env:"MF_BROKER_URL"`
+	BrokerURL             string        `env:"MF_BROKER_URL"                                envDefault:"nats://localhost:4222"`
 }
 
 func main() {
