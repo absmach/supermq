@@ -14,6 +14,8 @@ import (
 
 	"github.com/go-zoo/bone"
 	"github.com/jmoiron/sqlx"
+	chclient "github.com/mainflux/callhome/pkg/client"
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
@@ -137,6 +139,9 @@ func main() {
 		log.Fatalf("failed to load %s gRPC server configuration : %s", svcName, err.Error())
 	}
 	gs := grpcserver.New(ctx, cancel, svcName, grpcServerConfig, registerAuthServiceServer, logger)
+
+	chc := chclient.New(svcName, mainflux.Version, logger, cancel)
+	go chc.CallHome(ctx)
 
 	g.Go(func() error {
 		return hsp.Start()
