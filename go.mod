@@ -52,7 +52,6 @@ require (
 	go.opentelemetry.io/otel/exporters/jaeger v1.12.0
 	go.opentelemetry.io/otel/sdk v1.12.0
 	go.opentelemetry.io/otel/trace v1.14.0
-	golang.org/x/crypto v0.5.0
 	golang.org/x/crypto v0.6.0
 	golang.org/x/net v0.10.0
 	golang.org/x/sync v0.1.0
