@@ -157,8 +157,10 @@ func main() {
 	}
 	gs := grpcserver.New(ctx, cancel, svcName, grpcServerConfig, registerThingsServiceServer, logger)
 
-	chc := chclient.New(svcName, mainflux.Version, logger, cancel)
-	go chc.CallHome(ctx)
+	if cfg.SendTelemetry {
+		chc := chclient.New(svcName, mainflux.Version, logger, cancel)
+		go chc.CallHome(ctx)
+	}
 
 	// Start all servers
 	g.Go(func() error {

@@ -47,6 +47,7 @@ default values.
 | MF_JAEGER_URL                | Jaeger server URL                                                       | localhost:6831 |
 | MF_AUTH_GRPC_URL             | Users service gRPC URL                                                  | localhost:7001 |
 | MF_AUTH_GRPC_TIMEOUT         | Users service gRPC request timeout in seconds                           | 1s             |
+| MF_SEND_TELEMETRY            | Send telemetry to mainflux call home server.                            | true           |
 
 **Note** that if you want `things` service to have only one user locally, you should use `MF_THINGS_STANDALONE` env vars. By specifying these, you don't need `auth` service in your deployment for users' authorization.
 

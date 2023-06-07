@@ -35,6 +35,7 @@ default values.
 | MF_AUTH_CACHE_URL                        | Users cache URL                                                  | localhost:6379        |
 | MF_AUTH_CACHE_PASS                       | Users cache password                                             | ""                    |
 | MF_AUTH_CACHE_DB                         | Users cache database                                             | "0"                   |
+| MF_SEND_TELEMETRY                        | Send telemetry to mainflux call home server.                     | true                  |
 
 ## Deployment
 

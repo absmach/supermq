@@ -56,6 +56,7 @@ type config struct {
 	Instance              string        `env:"MF_MQTT_ADAPTER_INSTANCE"                     envDefault:""`
 	JaegerURL             string        `env:"MF_JAEGER_URL"                                envDefault:"http://jaeger:14268/api/traces"`
 	BrokerURL             string        `env:"MF_BROKER_URL"                                envDefault:"nats://localhost:4222"`
+	SendTelemetry         bool          `env:"MF_SEND_TELEMETRY"                            envDefault:"true"`
 }
 
 func main() {
@@ -144,8 +145,10 @@ func main() {
 	h := mqtt.NewHandler([]messaging.Publisher{np}, es, logger, tc)
 	h = mqtttracing.NewHandler(tracer, h)
 
-	chc := chclient.New(svcName, mainflux.Version, logger, cancel)
-	go chc.CallHome(ctx)
+	if cfg.SendTelemetry {
+		chc := chclient.New(svcName, mainflux.Version, logger, cancel)
+		go chc.CallHome(ctx)
+	}
 
 	logger.Info(fmt.Sprintf("Starting MQTT proxy on port %s", cfg.MqttPort))
 	g.Go(func() error {

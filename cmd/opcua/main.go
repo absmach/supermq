@@ -48,6 +48,7 @@ type config struct {
 	ESConsumerName string `env:"MF_OPCUA_ADAPTER_EVENT_CONSUMER"     envDefault:""`
 	BrokerURL      string `env:"MF_BROKER_URL"                       envDefault:"nats://localhost:4222"`
 	JaegerURL      string `env:"MF_JAEGER_URL"                       envDefault:"localhost:6831"`
+	SendTelemetry  bool   `env:"MF_SEND_TELEMETRY"                   envDefault:"true"`
 }
 
 func main() {
@@ -118,8 +119,10 @@ func main() {
 	}
 	hs := httpserver.New(httpCtx, httpCancel, svcName, httpServerConfig, api.MakeHandler(svc, logger), logger)
 
-	chc := chclient.New(svcName, mainflux.Version, logger, httpCancel)
-	go chc.CallHome(httpCtx)
+	if cfg.SendTelemetry {
+		chc := chclient.New(svcName, mainflux.Version, logger, httpCancel)
+		go chc.CallHome(httpCtx)
+	}
 
 	g.Go(func() error {
 		return hs.Start()
