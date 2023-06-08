@@ -11,6 +11,8 @@ import (
 	"os"
 
 	"github.com/jmoiron/sqlx"
+	chclient "github.com/mainflux/callhome/pkg/client"
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/consumers/notifiers"
 	"github.com/mainflux/mainflux/consumers/notifiers/api"
@@ -43,11 +45,12 @@ const (
 )
 
 type config struct {
-	LogLevel   string `env:"MF_SMPP_NOTIFIER_LOG_LEVEL"   envDefault:"info"`
-	From       string `env:"MF_SMPP_NOTIFIER_FROM_ADDR"   envDefault:""`
-	ConfigPath string `env:"MF_SMPP_NOTIFIER_CONFIG_PATH" envDefault:"/config.toml"`
-	BrokerURL  string `env:"MF_BROKER_URL"                envDefault:"nats://localhost:4222"`
-	JaegerURL  string `env:"MF_JAEGER_URL"                envDefault:"http://jaeger:14268/api/traces"`
+	LogLevel      string `env:"MF_SMPP_NOTIFIER_LOG_LEVEL"   envDefault:"info"`
+	From          string `env:"MF_SMPP_NOTIFIER_FROM_ADDR"   envDefault:""`
+	ConfigPath    string `env:"MF_SMPP_NOTIFIER_CONFIG_PATH" envDefault:"/config.toml"`
+	BrokerURL     string `env:"MF_BROKER_URL"                envDefault:"nats://localhost:4222"`
+	JaegerURL     string `env:"MF_JAEGER_URL"                envDefault:"http://jaeger:14268/api/traces"`
+	SendTelemetry bool   `env:"MF_SEND_TELEMETRY"            envDefault:"true"`
 }
 
 func main() {
@@ -111,6 +114,11 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, logger), logger)
+
+	if cfg.SendTelemetry {
+		chc := chclient.New(svcName, mainflux.Version, logger, cancel)
+		go chc.CallHome(ctx)
+	}
 
 	g.Go(func() error {
 		return hs.Start()

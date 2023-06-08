@@ -64,6 +64,7 @@ The service is configured using the environment variables presented in the follo
 | MF_JAEGER_URL                 | Jaeger server URL                                                       | localhost:6831                   |
 | MF_AUTH_GRPC_URL              | Users service gRPC URL                                                  | localhost:7001                   |
 | MF_AUTH_GRPC_TIMEOUT          | Users service gRPC request timeout in seconds                           | 1s                               |
+| MF_SEND_TELEMETRY             | Send telemetry to mainflux call home server                             | true                             |
 
 ## Deployment
 

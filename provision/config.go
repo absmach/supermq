@@ -57,12 +57,13 @@ type Cert struct {
 
 // Config struct of Provision.
 type Config struct {
-	File      string             `toml:"file"`
-	Server    ServiceConf        `toml:"server" mapstructure:"server"`
-	Bootstrap Bootstrap          `toml:"bootstrap" mapstructure:"bootstrap"`
-	Things    []mfclients.Client `toml:"things" mapstructure:"things"`
-	Channels  []groups.Group     `toml:"channels" mapstructure:"channels"`
-	Cert      Cert               `toml:"cert" mapstructure:"cert"`
+	File          string             `toml:"file"`
+	Server        ServiceConf        `toml:"server" mapstructure:"server"`
+	Bootstrap     Bootstrap          `toml:"bootstrap" mapstructure:"bootstrap"`
+	Things        []mfclients.Client `toml:"things" mapstructure:"things"`
+	Channels      []groups.Group     `toml:"channels" mapstructure:"channels"`
+	Cert          Cert               `toml:"cert" mapstructure:"cert"`
+	SendTelemetry bool               `toml:"-"`
 }
 
 // Save - store config in a file.

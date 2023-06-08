@@ -37,6 +37,7 @@ default values.
 | MF_AUTH_GRPC_TIMEOUT              | Users service gRPC request timeout in seconds                           | 1s                    |
 | MF_AUTH_CLIENT_TLS                | Auth client TLS flag                                                    | false                 |
 | MF_AUTH_CA_CERTS                  | Path to Auth client CA certs in pem format                              |                       |
+| MF_SEND_TELEMETRY                 | Send telemetry to mainflux call home server                             | true                  |
 
 ## Usage
 

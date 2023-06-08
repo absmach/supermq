@@ -10,6 +10,9 @@ import (
 	"log"
 	"os"
 
+	chclient "github.com/mainflux/callhome/pkg/client"
+	"github.com/mainflux/mainflux"
+
 	"github.com/mainflux/mainflux/certs"
 	"github.com/mainflux/mainflux/certs/api"
 	vault "github.com/mainflux/mainflux/certs/pki"
@@ -37,10 +40,11 @@ const (
 )
 
 type config struct {
-	LogLevel  string `env:"MF_CERTS_LOG_LEVEL"        envDefault:"info"`
-	CertsURL  string `env:"MF_SDK_CERTS_URL"          envDefault:"http://localhost"`
-	ThingsURL string `env:"MF_THINGS_URL"             envDefault:"http://things:9000"`
-	JaegerURL string `env:"MF_JAEGER_URL"             envDefault:"http://jaeger:14268/api/traces"`
+	LogLevel      string `env:"MF_CERTS_LOG_LEVEL"        envDefault:"info"`
+	CertsURL      string `env:"MF_SDK_CERTS_URL"          envDefault:"http://localhost"`
+	ThingsURL     string `env:"MF_THINGS_URL"             envDefault:"http://things:9000"`
+	JaegerURL     string `env:"MF_JAEGER_URL"             envDefault:"http://jaeger:14268/api/traces"`
+	SendTelemetry bool   `env:"MF_SEND_TELEMETRY"         envDefault:"true"`
 
 	// Sign and issue certificates without 3rd party PKI
 	SignCAPath    string `env:"MF_CERTS_SIGN_CA_PATH"        envDefault:"ca.crt"`
@@ -100,6 +104,11 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, logger), logger)
+
+	if cfg.SendTelemetry {
+		chc := chclient.New(svcName, mainflux.Version, logger, cancel)
+		go chc.CallHome(ctx)
+	}
 
 	g.Go(func() error {
 		return hs.Start()

@@ -34,6 +34,7 @@ default values.
 | MF_THINGS_AUTH_GRPC_TIMEOUT  | Things service Auth gRPC request timeout in seconds | 1s                |
 | MF_AUTH_GRPC_URL             | Users service gRPC URL                              | localhost:7001    |
 | MF_AUTH_GRPC_TIMEOUT         | Users service gRPC request timeout in seconds       | 1s                |
+| MF_SEND_TELEMETRY            | Send telemetry to mainflux call home server         | true              |
 
 
 ## Deployment

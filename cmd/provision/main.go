@@ -13,6 +13,7 @@ import (
 	"reflect"
 	"strconv"
 
+	chclient "github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -48,6 +49,7 @@ const (
 	defBSAutoWhitelist = "true"
 	defBSContent       = ""
 	defCertsHoursValid = "2400h"
+	defSendTelemetry   = "true"
 
 	envConfigFile       = "MF_PROVISION_CONFIG_FILE"
 	envLogLevel         = "MF_PROVISION_LOG_LEVEL"
@@ -68,6 +70,7 @@ const (
 	envBSAutoWhiteList  = "MF_PROVISION_BS_AUTO_WHITELIST"
 	envBSContent        = "MF_PROVISION_BS_CONTENT"
 	envCertsHoursValid  = "MF_PROVISION_CERTS_HOURS_VALID"
+	envSendTelemetry    = "MF_SEND_TELEMETRY"
 
 	contentType = "application/json"
 )
@@ -80,6 +83,7 @@ var (
 	errFailGettingTLSConf           = errors.New("failed to get TLS setting")
 	errFailGettingProvBS            = errors.New("failed to get BS url setting")
 	errFailedToReadBootstrapContent = errors.New("failed to read bootstrap content from envs")
+	errFailedToSetupCallHome        = errors.New("failed to set up callhome")
 )
 
 func main() {
@@ -119,6 +123,11 @@ func main() {
 
 	httpServerConfig := server.Config{Host: "", Port: cfg.Server.HTTPPort, KeyFile: cfg.Server.ServerKey, CertFile: cfg.Server.ServerCert}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, logger), logger)
+
+	if cfg.SendTelemetry {
+		chc := chclient.New(svcName, mainflux.Version, logger, cancel)
+		go chc.CallHome(ctx)
+	}
 
 	g.Go(func() error {
 		return hs.Start()
@@ -220,6 +229,10 @@ func loadConfig() (provision.Config, error) {
 	}
 
 	cfg.File = mainflux.Env(envConfigFile, defConfigFile)
+	cfg.SendTelemetry, err = strconv.ParseBool(mainflux.Env(envSendTelemetry, defSendTelemetry))
+	if err != nil {
+		return cfg, errors.Wrap(errFailedToSetupCallHome, err)
+	}
 	return cfg, nil
 }
 

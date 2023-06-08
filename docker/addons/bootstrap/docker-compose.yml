@@ -52,5 +52,6 @@ services:
       MF_JAEGER_URL: ${MF_JAEGER_URL}
       MF_AUTH_GRPC_URL: ${MF_USERS_GRPC_URL}
       MF_AUTH_GRPC_TIMMEOUT: ${MF_USERS_GRPC_TIMEOUT}
+      MF_SEND_TELEMETRY: ${MF_SEND_TELEMETRY}
     networks:
       - docker_mainflux-base-net

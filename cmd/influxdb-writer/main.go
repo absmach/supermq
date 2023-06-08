@@ -10,6 +10,8 @@ import (
 	"log"
 	"os"
 
+	chclient "github.com/mainflux/callhome/pkg/client"
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/influxdb"
@@ -33,10 +35,11 @@ const (
 )
 
 type config struct {
-	LogLevel   string `env:"MF_INFLUX_WRITER_LOG_LEVEL"     envDefault:"info"`
-	ConfigPath string `env:"MF_INFLUX_WRITER_CONFIG_PATH"   envDefault:"/config.toml"`
-	BrokerURL  string `env:"MF_BROKER_URL"                  envDefault:"nats://localhost:4222"`
-	JaegerURL  string `env:"MF_JAEGER_URL"                  envDefault:"localhost:6831"`
+	LogLevel      string `env:"MF_INFLUX_WRITER_LOG_LEVEL"     envDefault:"info"`
+	ConfigPath    string `env:"MF_INFLUX_WRITER_CONFIG_PATH"   envDefault:"/config.toml"`
+	BrokerURL     string `env:"MF_BROKER_URL"                  envDefault:"nats://localhost:4222"`
+	JaegerURL     string `env:"MF_JAEGER_URL"                  envDefault:"localhost:6831"`
+	SendTelemetry bool   `env:"MF_SEND_TELEMETRY"              envDefault:"true"`
 }
 
 func main() {
@@ -108,6 +111,11 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svcName), logger)
+
+	if cfg.SendTelemetry {
+		chc := chclient.New(svcName, mainflux.Version, logger, cancel)
+		go chc.CallHome(ctx)
+	}
 
 	g.Go(func() error {
 		return hs.Start()
