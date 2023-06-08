@@ -3,7 +3,6 @@ package client
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -61,7 +60,7 @@ func (hs *homingService) CallHome(ctx context.Context) {
 			for _, endpoint := range ipEndpoints {
 				ip, err := hs.getIP(endpoint)
 				if err != nil {
-					hs.logger.Warn(fmt.Sprintf("failed to get ip address with error: %v", err))
+					hs.logger.Warn(fmt.Sprintf("failed to obtain service public IP address for sending Mainflux usage telemetry with error: %v", err))
 					continue
 				}
 				ip = strings.ReplaceAll(ip, "\n", "")
@@ -75,7 +74,7 @@ func (hs *homingService) CallHome(ctx context.Context) {
 				break
 			}
 			if err := hs.send(&data); err != nil && data.IpAddress != "" {
-				hs.logger.Warn(fmt.Sprintf("failed to send telemetry data with error: %v", err))
+				hs.logger.Warn(fmt.Sprintf("failed to send Mainflux telemetry data with error: %v", err))
 				time.Sleep(backOff)
 				continue
 			}
@@ -124,7 +123,6 @@ func (hs *homingService) send(telDat *telemetryData) error {
 	if err != nil {
 		return err
 	}
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	req, err := http.NewRequest(http.MethodPost, HomeUrl, bytes.NewReader(b))
 	if err != nil {
 		return err

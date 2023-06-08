@@ -309,6 +309,8 @@ github.com/influxdata/influxdb-client-go/v2/log
 # github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839
 ## explicit; go 1.13
 github.com/influxdata/line-protocol
+# github.com/ip2location/ip2location-go/v9 v9.5.0
+## explicit; go 1.14
 # github.com/ivanpirog/coloredcobra v1.0.1
 ## explicit; go 1.15
 github.com/ivanpirog/coloredcobra
@@ -393,10 +395,12 @@ github.com/lestrrat-go/jwx/v2/x25519
 # github.com/lestrrat-go/option v1.0.0
 ## explicit; go 1.16
 github.com/lestrrat-go/option
+# github.com/lib/pq v1.10.7
+## explicit; go 1.13
 # github.com/magiconair/properties v1.8.6
 ## explicit; go 1.13
 github.com/magiconair/properties
-# github.com/mainflux/callhome v0.0.0-20230531125544-ff9d160524fb
+# github.com/mainflux/callhome v0.0.0-20230608115609-cc5a014a27ae
 ## explicit; go 1.20
 github.com/mainflux/callhome/pkg/client
 # github.com/mainflux/mproxy v0.3.0

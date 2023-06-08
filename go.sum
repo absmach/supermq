@@ -420,6 +420,8 @@ github.com/influxdata/influxdb-client-go/v2 v2.12.3 h1:28nRlNMRIV4QbtIUvxhWqaxn0
 github.com/influxdata/influxdb-client-go/v2 v2.12.3/go.mod h1:IrrLUbCjjfkmRuaCiGQg4m2GbkaeJDcuWoxiWdQEbA0=
 github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 h1:W9WBk7wlPfJLvMCdtV4zPulc4uCPrlywQOmbFOhgQNU=
 github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839/go.mod h1:xaLFMmpvUxqXtVkUJfg9QmT88cDaCJ3ZKgdZ78oO8Qo=
+github.com/ip2location/ip2location-go/v9 v9.5.0 h1:7gqKncm4MhBrpJIK0PmV8o6Bf8YbbSAPjORzyjAv1iM=
+github.com/ip2location/ip2location-go/v9 v9.5.0/go.mod h1:s5SV6YZL10TpfPpXw//7fEJC65G/yH7Oh+Tjq9JcQEQ=
 github.com/ivanpirog/coloredcobra v1.0.1 h1:aURSdEmlR90/tSiWS0dMjdwOvCVUeYLfltLfbgNxrN4=
 github.com/ivanpirog/coloredcobra v1.0.1/go.mod h1:iho4nEKcnwZFiniGSdcgdvRgZNjxm+h20acv8vqmN6Q=
 github.com/jackc/chunkreader v1.0.0 h1:4s39bBR8ByfqH+DKm8rQA3E1LHZWB9XWcrz8fqaZbe0=
@@ -545,6 +547,8 @@ github.com/mailru/easyjson v0.0.0-20190614124828-94de47d64c63/go.mod h1:C1wdFJiN
 github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mainflux/callhome v0.0.0-20230531125544-ff9d160524fb h1:i4aHTIthelML+oVIANxBETE02RDeXxU6txBIBoh4sbo=
 github.com/mainflux/callhome v0.0.0-20230531125544-ff9d160524fb/go.mod h1:OPoa5Fjln5HiQbaJVUzaNuNEYBGkrYnCA2kQM2J3BRk=
+github.com/mainflux/callhome v0.0.0-20230608115609-cc5a014a27ae h1:dIgWnDW78ZwFsOddUglGXjg8LpriNS3fXaZnH4BIWQc=
+github.com/mainflux/callhome v0.0.0-20230608115609-cc5a014a27ae/go.mod h1:OPoa5Fjln5HiQbaJVUzaNuNEYBGkrYnCA2kQM2J3BRk=
 github.com/mainflux/mproxy v0.3.0 h1:tU60nu/Bd5lWb7NlJJvW6ulKxeBGJFnp5uOS9j6JXBQ=
 github.com/mainflux/mproxy v0.3.0/go.mod h1:nG9MP2YbS8ax26Z8mvJOYohhi3ebYwSlOmePzbfv2ew=
 github.com/mainflux/senml v1.5.0 h1:GAd1y1eMohfa6sVYcr2iQfVfkkh9l/q7B1TWF5L68xs=
