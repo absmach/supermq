@@ -118,10 +118,11 @@ func TestParseServerConfig(t *testing.T) {
 	}
 	for _, test := range tests {
 		err := Parse(test.config, test.options...)
-		if test.err != nil {
-			assert.Error(t, err, "expected error but got nil")
-		} else {
+		switch test.err {
+		case nil:
 			assert.NoError(t, err, fmt.Sprintf("expected no error but got %v", err))
+		default:
+			assert.Error(t, err, "expected error but got nil")
 		}
 		assert.Equal(t, test.expectedConfig, test.config, fmt.Sprintf("expected %v got %v", test.expectedConfig, test.config))
 	}
@@ -232,10 +233,11 @@ func TestParseGRPCConfig(t *testing.T) {
 	}
 	for _, test := range tests {
 		err := Parse(test.config, test.options...)
-		if test.err != nil {
-			assert.Error(t, err, "expected error but got nil")
-		} else {
+		switch test.err {
+		case nil:
 			assert.NoError(t, err, fmt.Sprintf("expected no error but got %v", err))
+		default:
+			assert.Error(t, err, "expected error but got nil")
 		}
 		assert.Equal(t, test.expectedConfig, test.config, fmt.Sprintf("expected %v got %v", test.expectedConfig, test.config))
 	}
@@ -301,10 +303,11 @@ func TestParseCustomConfig(t *testing.T) {
 
 	for _, test := range tests {
 		err := Parse(test.config, test.options...)
-		if test.err != nil {
-			assert.Error(t, err, "expected error but got nil")
-		} else {
+		switch test.err {
+		case nil:
 			assert.NoError(t, err, fmt.Sprintf("expected no error but got %v", err))
+		default:
+			assert.Error(t, err, "expected error but got nil")
 		}
 		assert.Equal(t, test.expectedConfig, test.config, fmt.Sprintf("expected %v got %v", test.expectedConfig, test.config))
 	}
