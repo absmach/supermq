@@ -299,7 +299,6 @@ func TestClientsRetrieveAll(t *testing.T) {
 		}
 		_, err := repo.Save(context.Background(), client)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-		client.Credentials.Secret = ""
 		expectedClients = append(expectedClients, client)
 		var policy = policies.Policy{
 			Subject: client.ID,
