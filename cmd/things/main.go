@@ -27,7 +27,6 @@ import (
 	grpcserver "github.com/mainflux/mainflux/internal/server/grpc"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	mflog "github.com/mainflux/mainflux/logger"
-	gpostgres "github.com/mainflux/mainflux/pkg/groups/postgres"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/things/clients"
 	capi "github.com/mainflux/mainflux/things/clients/api"
@@ -215,7 +214,7 @@ func main() {
 func newService(ctx context.Context, db *sqlx.DB, dbConfig pgClient.Config, auth upolicies.AuthServiceClient, cacheClient *redis.Client, esClient *redis.Client, keyDuration string, tracer trace.Tracer, logger mflog.Logger) (clients.Service, groups.Service, tpolicies.Service) {
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 	cRepo := cpostgres.NewRepository(database)
-	gRepo := gpostgres.New(database)
+	gRepo := gpostgres.NewRepository(database)
 	pRepo := ppostgres.NewRepository(database)
 
 	idp := uuid.New()
