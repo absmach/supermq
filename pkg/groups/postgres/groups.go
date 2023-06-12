@@ -325,7 +325,7 @@ func toDBGroup(g mfgroups.Group) (dbGroup, error) {
 		parentID = &g.Parent
 	}
 	var updatedAt sql.NullTime
-	if g.UpdatedAt != (time.Time{}) {
+	if !g.UpdatedAt.IsZero() {
 		updatedAt = sql.NullTime{Time: g.UpdatedAt, Valid: true}
 	}
 	var updatedBy *string
