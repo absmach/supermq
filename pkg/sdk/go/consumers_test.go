@@ -41,14 +41,14 @@ func newSubscriptionService() notifiers.Service {
 	notifier := mocks.NewNotifier()
 	idp := uuid.NewMock()
 	from := "exampleFrom"
-
+	
 	return notifiers.New(auth, repo, idp, notifier, from)
 }
 
 func newSubscriptionServer(svc notifiers.Service) *httptest.Server {
 	logger := logger.NewMock()
 	mux := httpapi.MakeHandler(svc, logger)
-
+	
 	return httptest.NewServer(mux)
 }
 
