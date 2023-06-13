@@ -72,6 +72,7 @@ type config struct {
 	StandaloneToken  string `env:"MF_THINGS_STANDALONE_TOKEN"    envDefault:""`
 	JaegerURL        string `env:"MF_JAEGER_URL"                 envDefault:"http://jaeger:14268/api/traces"`
 	CacheKeyDuration string `env:"MF_THINGS_CACHE_KEY_DURATION"  envDefault:"10m"`
+	SendTelemetry    bool   `env:"MF_SEND_TELEMETRY"             envDefault:"true"`
 }
 
 func main() {

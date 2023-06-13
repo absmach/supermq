@@ -237,70 +237,7 @@ var cmdThings = []cobra.Command{
 				return
 			}
 
-			logJSON(thing)
-		},
-	},
-	{
-		Use:   "update owner <thing_id> <tags> <user_auth_token>",
-		Short: "Update thing owner",
-		Long:  `Update thing record`,
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
-				logUsage(cmd.Use)
-				return
-			}
-
-			var thing mfxsdk.Thing
-			if err := json.Unmarshal([]byte(args[1]), &thing.Owner); err != nil {
-				logError(err)
-				return
-			}
-			thing.ID = args[0]
-			thing, err := sdk.UpdateThingOwner(thing, args[2])
-			if err != nil {
-				logError(err)
-				return
-			}
-
-			logJSON(thing)
-		},
-	},
-	{
-		Use:   "enable <thing_id> <user_auth_token>",
-		Short: "Change thing status to enabled",
-		Long:  `Change thing status to enabled`,
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
-				logUsage(cmd.Use)
-				return
-			}
-
-			thing, err := sdk.EnableThing(args[0], args[1])
-			if err != nil {
-				logError(err)
-				return
-			}
-
-			logJSON(thing)
-		},
-	},
-	{
-		Use:   "disable <thing_id> <user_auth_token>",
-		Short: "Change thing status to disabled",
-		Long:  `Change thing status to disabled`,
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
-				logUsage(cmd.Use)
-				return
-			}
-
-			thing, err := sdk.DisableThing(args[0], args[1])
-			if err != nil {
-				logError(err)
-				return
-			}
-
-			logJSON(thing)
+			logOK()
 		},
 	},
 	{
