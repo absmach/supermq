@@ -106,7 +106,7 @@ func (repo ClientRepository) RetrieveByID(ctx context.Context, id string) (clien
 	return ToClient(dbc)
 }
 
-// RetrieveByIdentity retrieves client by its unique credentials
+// RetrieveByIdentity retrieves client by its unique credentials.
 func (repo ClientRepository) RetrieveByIdentity(ctx context.Context, identity string) (clients.Client, error) {
 	q := `SELECT id, name, tags, COALESCE(owner_id, '') AS owner_id, identity, secret, metadata, created_at, updated_at, updated_by, status
         FROM clients WHERE identity = :identity AND status = :status`
@@ -264,7 +264,7 @@ func (repo ClientRepository) Members(ctx context.Context, groupID string, pm cli
 	return page, nil
 }
 
-// generic update function
+// generic update function.
 func (repo ClientRepository) update(ctx context.Context, client clients.Client, query string) (clients.Client, error) {
 	dbc, err := ToDBClient(client)
 	if err != nil {
