@@ -10,8 +10,10 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/errors"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
+	"github.com/mainflux/mainflux/things/clients"
 	"github.com/mainflux/mainflux/things/clients/mocks"
 	gmocks "github.com/mainflux/mainflux/things/groups/mocks"
+	"github.com/mainflux/mainflux/things/policies"
 	pmocks "github.com/mainflux/mainflux/things/policies/mocks"
 	cmocks "github.com/mainflux/mainflux/users/clients/mocks"
 	"github.com/stretchr/testify/assert"
@@ -30,6 +32,11 @@ func TestHealth(t *testing.T) {
 	policiesCache := pmocks.NewCache()
 
 	pRepo := new(pmocks.Repository)
+	psvc := policies.NewService(uauth, pRepo, policiesCache, idProvider)
+
+	svc := clients.NewService(uauth, psvc, cRepo, gRepo, thingCache, idProvider)
+	ts := newThingsServer(svc, psvc)
+	defer ts.Close()
 
 	sdkConf := sdk.Config{
 		ThingsURL:       ts.URL,
