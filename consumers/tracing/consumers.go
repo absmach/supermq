@@ -27,7 +27,7 @@ type tracingMiddlewareBlock struct {
 	tracer   trace.Tracer
 }
 
-// NewAsync creates a new traced consumers.AsyncConsumer service
+// NewAsync creates a new traced consumers.AsyncConsumer service.
 func NewAsync(tracer trace.Tracer, consumerAsync consumers.AsyncConsumer) consumers.AsyncConsumer {
 	return &tracingMiddlewareAsync{
 		consumer: consumerAsync,
@@ -35,7 +35,7 @@ func NewAsync(tracer trace.Tracer, consumerAsync consumers.AsyncConsumer) consum
 	}
 }
 
-// NewBlocking creates a new traced consumers.BlockingConsumer service
+// NewBlocking creates a new traced consumers.BlockingConsumer service.
 func NewBlocking(tracer trace.Tracer, consumerBlock consumers.BlockingConsumer) consumers.BlockingConsumer {
 	return &tracingMiddlewareBlock{
 		consumer: consumerBlock,
