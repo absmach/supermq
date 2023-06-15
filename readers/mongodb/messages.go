@@ -6,7 +6,6 @@ package mongodb
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
@@ -18,17 +17,6 @@ import (
 
 // Collection for SenML messages.
 const defCollection = "messages"
-
-// mongoDB comparison operators different than default mainflux
-// readers comparison operators. This map maps mainflux comparators
-// to mongoDB comparators.
-var mongoComparators = map[string]string{
-	readers.EqualKey:            "eq",
-	readers.LowerThanKey:        "lt",
-	readers.LowerThanEqualKey:   "lte",
-	readers.GreaterThanKey:      "gt",
-	readers.GreaterThanEqualKey: "gte",
-}
 
 var _ readers.MessageRepository = (*mongoRepository)(nil)
 
@@ -58,12 +46,6 @@ func (repo mongoRepository) ReadAll(chanID string, rpm readers.PageMetadata) (re
 	}
 	// Remove format filter and format the rest properly.
 	filter := fmtCondition(chanID, rpm)
-	fmt.Println("Filter:-")
-	fmt.Println("###")
-	fmt.Println(filter)
-	fmt.Println()
-	fmt.Println()
-	fmt.Println()
 	cursor, err := col.Find(context.Background(), filter, options.Find().SetSort(sortMap).SetLimit(int64(rpm.Limit)).SetSkip(int64(rpm.Offset)))
 	if err != nil {
 		return readers.MessagesPage{}, errors.Wrap(readers.ErrReadMessages, err)
@@ -134,63 +116,28 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) bson.D {
 			filter = append(filter, bson.E{Key: name, Value: value})
 		case "v":
 			bsonFilter := value
-			if val, ok := query["comparator"].(string); ok {
-				comparator := fmt.Sprintf("$%s", mongoComparators[val]) // mongoDB comparison operator
-				bsonFilter = bson.M{comparator: value}
+			val, ok := query["comparator"]
+			if ok {
+				switch val.(string) {
+				case readers.EqualKey:
+					bsonFilter = value
+				case readers.LowerThanKey:
+					bsonFilter = bson.M{"$lt": value}
+				case readers.LowerThanEqualKey:
+					bsonFilter = bson.M{"$lte": value}
+				case readers.GreaterThanKey:
+					bsonFilter = bson.M{"$gt": value}
+				case readers.GreaterThanEqualKey:
+					bsonFilter = bson.M{"$gte": value}
+				}
 			}
 			filter = append(filter, bson.E{Key: "value", Value: bsonFilter})
 		case "vb":
 			filter = append(filter, bson.E{Key: "bool_value", Value: value})
 		case "vs":
-			bsonFilter := value
-			stringValue := "string_value"
-			if val, ok := query["comparator"].(string); ok {
-				fmt.Println("val = ", val)
-				comparator := fmt.Sprintf("$%s", mongoComparators[val])
-				fmt.Println("comparator = ", comparator)
-				switch comparator {
-				case "$eq":
-					// comparator = fmt.Sprintf("$%s", mongoComparators[val]) // mongoDB comparison operator
-					bsonFilter = bson.M{comparator: value}
-				case "$gt":
-					notBsonFilter := bson.E{Key: "$ne", Value: value}
-					value = fmt.Sprintf(".*%s.*", value)
-					comparator = "$regex"
-					regexBsonFilter := bson.E{Key: comparator, Value: value}
-					/// Can use either of the two lines below
-					// bsonFilter = bson.D{notBsonFilter, regexBsonFilter}
-					bsonFilter = bson.M{notBsonFilter.Key: notBsonFilter.Value, regexBsonFilter.Key: regexBsonFilter.Value}
-				case "$gte":
-					comparator = "$regex"
-					value = fmt.Sprintf(".*%s.*", value)
-					// bsonFilter = bson.{comparator: value}
-					bsonFilter = bson.E{Key: comparator, Value: value}
-				case "$lte":
-					// comparator = "$regex"
-					// stringValue = fmt.Sprintf("/%s/", stringValue)
-					// bsonFilter = bson.M{comparator: value}
-					notBsonFilter := bson.E{Key: "$ne", Value: value}
-					value = fmt.Sprintf(".*%s.*", value)
-					comparator = "$regex"
-					regexBsonFilter := bson.E{Key: comparator, Value: value}
-					/// Can use either of the two lines below
-					// bsonFilter = bson.D{notBsonFilter, regexBsonFilter}
-					bsonFilter = bson.M{notBsonFilter.Key: notBsonFilter.Value, regexBsonFilter.Key: regexBsonFilter.Value}
-				case "$lt":
-					filter = append(filter, bson.E{Key: "string_value", Value: bson.M{"$ne": value}})
-					stringValue = fmt.Sprintf(".*(?=%s)", stringValue)
-					comparator = "$regex"
-					bsonFilter = bson.M{comparator: value}
-				}
-			}
-			filter = append(filter, bson.E{Key: stringValue, Value: bsonFilter})
+			filter = append(filter, bson.E{Key: "string_value", Value: value})
 		case "vd":
-			bsonFilter := value
-			if val, ok := query["comparator"].(string); ok {
-				comparator := fmt.Sprintf("$%s", mongoComparators[val])
-				bsonFilter = bson.M{comparator: value}
-			}
-			filter = append(filter, bson.E{Key: "data_value", Value: bsonFilter})
+			filter = append(filter, bson.E{Key: "data_value", Value: value})
 		case "from":
 			filter = append(filter, bson.E{Key: "time", Value: bson.M{"$gte": value}})
 		case "to":
@@ -200,10 +147,3 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) bson.D {
 
 	return filter
 }
-
-// string_value = value/field in the mongo database , value = vs -> from query
-
-//db.messages.find({channel: "abcd",string_value: {$regex: /alu/,$ne: "alu"}})
-
-// db.messages.find({channel: "7aaeb42d-2f6a-4c47-bf73-ffe6348e7848",string_value: {"$regex": ".*value.*"}})
-// db.messages.find({"string_value": {"$regex": ".*value.*"}})
