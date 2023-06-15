@@ -57,7 +57,6 @@ func (tr postgresRepository) ReadAll(chanID string, rpm readers.PageMetadata) (r
 		"from":         rpm.From,
 		"to":           rpm.To,
 	}
-	fmt.Println(q)
 	rows, err := tr.db.NamedQuery(q, params)
 	if err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
