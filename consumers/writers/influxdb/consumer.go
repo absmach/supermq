@@ -102,7 +102,7 @@ func (repo *influxRepo) Errors() <-chan error {
 	return nil
 }
 
-func (repo *influxRepo) ConsumeBlocking(_ context.Context, message interface{}) error {
+func (repo *influxRepo) ConsumeBlocking(ctx context.Context, message interface{}) error {
 	var err error
 	var pts []*write.Point
 	switch m := message.(type) {
@@ -115,7 +115,7 @@ func (repo *influxRepo) ConsumeBlocking(_ context.Context, message interface{}) 
 		return err
 	}
 
-	return repo.writeAPIBlocking.WritePoint(context.Background(), pts...)
+	return repo.writeAPIBlocking.WritePoint(ctx, pts...)
 }
 
 func (repo *influxRepo) senmlPoints(messages interface{}) ([]*write.Point, error) {
