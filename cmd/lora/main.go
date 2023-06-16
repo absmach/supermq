@@ -171,7 +171,6 @@ func connectToMQTTBroker(url, user, password string, timeout time.Duration, logg
 	})
 	opts.SetConnectionLostHandler(func(c mqttPaho.Client, err error) {
 		logger.Error(fmt.Sprintf("MQTT connection lost: %s", err))
-		return
 	})
 
 	client := mqttPaho.NewClient(opts)

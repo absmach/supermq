@@ -56,7 +56,7 @@ type message struct {
 
 type handler func(*message) ([]byte, error)
 
-func (c *Client) publish(r chan *runResults) {
+func (c *Client) publish(r chan *runResults, errChan chan<- error) {
 	res := &runResults{}
 	times := make([]*float64, c.MsgCount)
 
@@ -68,7 +68,6 @@ func (c *Client) publish(r chan *runResults) {
 			times[i] = calcMsgRes(&m, res)
 		}
 		r <- calcRes(res, start, arr(times))
-		return
 	}
 	if !c.Quiet {
 		log.Printf("Client %v is connected to the broker %v\n", c.ID, c.BrokerURL)
@@ -84,7 +83,7 @@ func (c *Client) publish(r chan *runResults) {
 	}
 	payload, err := c.SendMsg(&m)
 	if err != nil {
-		log.Fatalf("Failed to marshal payload - %s", err.Error())
+		errChan <- fmt.Errorf("Failed to marshal payload - %s", err.Error())
 	}
 
 	for i := 0; i < c.MsgCount; i++ {
