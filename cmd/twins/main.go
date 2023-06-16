@@ -86,6 +86,10 @@ func main() {
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
+	var exitCode int
+	defer func() {
+		os.Exit(exitCode)
+	}()
 	defer cacheClient.Close()
 
 	// Setup new redis event store client
@@ -97,12 +101,16 @@ func main() {
 
 	db, err := mongoClient.Setup(envPrefix)
 	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to setup postgres database : %s", err))
+		logger.Error(fmt.Sprintf("failed to setup postgres database : %s", err))
+		exitCode = 1
+		return
 	}
 
 	tp, err := jaegerClient.NewProvider(svcName, cfg.JaegerURL, instanceID)
 	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
+		logger.Error(fmt.Sprintf("failed to init Jaeger: %s", err))
+		exitCode = 1
+		return
 	}
 	defer func() {
 		if err := tp.Shutdown(ctx); err != nil {
@@ -118,7 +126,9 @@ func main() {
 	default:
 		authServiceClient, authHandler, err := authClient.Setup(envPrefix, svcName)
 		if err != nil {
-			logger.Fatal(err.Error())
+			logger.Error(err.Error())
+			exitCode = 1
+			return
 		}
 		defer authHandler.Close()
 		auth = authServiceClient
@@ -127,7 +137,9 @@ func main() {
 
 	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, queue, logger)
 	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
+		logger.Error(fmt.Sprintf("failed to connect to message broker: %s", err))
+		exitCode = 1
+		return
 	}
 	pubSub = pstracing.NewPubSub(tracer, pubSub)
 	defer pubSub.Close()
@@ -136,7 +148,9 @@ func main() {
 
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		logger.Fatal(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
+		logger.Error(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
+		exitCode = 1
+		return
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, twapi.MakeHandler(svc, logger, instanceID), logger)
 

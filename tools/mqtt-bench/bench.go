@@ -20,7 +20,9 @@ import (
 
 // Benchmark - main benchmarking function.
 func Benchmark(cfg Config) {
-	checkConnection(cfg.MQTT.Broker.URL, 1)
+	if err := checkConnection(cfg.MQTT.Broker.URL, 1); err != nil {
+		log.Fatal(err)
+	}
 	logger, err := mflog.New(os.Stdout, mflog.Debug.String())
 	if err != nil {
 		log.Fatalf(err.Error())

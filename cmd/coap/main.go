@@ -72,6 +72,10 @@ func main() {
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
+	var exitCode int
+	defer func() {
+		os.Exit(exitCode)
+	}()
 	defer tcHandler.Close()
 	logger.Info("Successfully connected to things grpc server " + tcHandler.Secure())
 
@@ -88,7 +92,9 @@ func main() {
 
 	nps, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
 	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
+		logger.Error(fmt.Sprintf("failed to connect to message broker: %s", err))
+		exitCode = 1
+		return
 	}
 	nps = pstracing.NewPubSub(tracer, nps)
 	defer nps.Close()
@@ -104,13 +110,17 @@ func main() {
 
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		logger.Fatal(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
+		logger.Error(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
+		exitCode = 1
+		return
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(instanceID), logger)
 
 	coapServerConfig := server.Config{Port: defSvcCoapPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixCoap, AltPrefix: envPrefix}); err != nil {
-		logger.Fatal(fmt.Sprintf("failed to load %s CoAP server configuration : %s", svcName, err))
+		logger.Error(fmt.Sprintf("failed to load %s CoAP server configuration : %s", svcName, err))
+		exitCode = 1
+		return
 	}
 	cs := coapserver.New(ctx, cancel, svcName, coapServerConfig, api.MakeCoAPHandler(svc, logger), logger)
 

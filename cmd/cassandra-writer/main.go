@@ -75,6 +75,10 @@ func main() {
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
+	var exitCode int
+	defer func() {
+		os.Exit(exitCode)
+	}()
 	defer csdSession.Close()
 
 	tp, err := jaegerClient.NewProvider(svcName, cfg.JaegerURL, instanceID)
@@ -90,7 +94,9 @@ func main() {
 
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefix, AltPrefix: envPrefixHttp}); err != nil {
-		logger.Fatal(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
+		logger.Error(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
+		exitCode = 1
+		return
 	}
 
 	// Create new cassandra-writer repo
@@ -100,7 +106,9 @@ func main() {
 	// Create new pub sub broker
 	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
 	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
+		logger.Error(fmt.Sprintf("failed to connect to message broker: %s", err))
+		exitCode = 1
+		return
 	}
 	pubSub = tracing.NewPubSub(tracer, pubSub)
 	defer pubSub.Close()

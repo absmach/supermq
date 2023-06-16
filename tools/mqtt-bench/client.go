@@ -7,6 +7,7 @@ import (
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -165,10 +166,10 @@ func (c *Client) connect() error {
 	return nil
 }
 
-func checkConnection(broker string, timeoutSecs int) {
+func checkConnection(broker string, timeoutSecs int) error {
 	s := strings.Split(broker, ":")
 	if len(s) != 3 {
-		log.Fatalf("Wrong host address format")
+		return errors.New("Wrong host address format")
 	}
 
 	network := s[0]
@@ -186,14 +187,15 @@ func checkConnection(broker string, timeoutSecs int) {
 
 	defer conClose()
 	if err, ok := err.(*net.OpError); ok && err.Timeout() {
-		log.Fatalf("Timeout error: %s\n", err.Error())
+		return fmt.Errorf("Timeout error: %s\n", err.Error())
 	}
 
 	if err != nil {
-		log.Fatalf("Error: %s\n", err.Error())
+		return fmt.Errorf("Error: %s\n", err.Error())
 	}
 
 	log.Printf("Connection to %s://%s:%s looks OK\n", network, host, port)
+	return nil
 }
 
 func arr(a []*float64) []float64 {
