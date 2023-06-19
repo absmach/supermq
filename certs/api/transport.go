@@ -144,7 +144,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
-	case errors.Contains(err, errors.ErrMalformedEntity),
+	case errors.Contains(err, apiutil.ErrMalformedEntity),
 		err == apiutil.ErrMissingID,
 		err == apiutil.ErrMissingCertData,
 		err == apiutil.ErrInvalidCertData,

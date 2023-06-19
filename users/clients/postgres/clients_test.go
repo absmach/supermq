@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -95,7 +96,7 @@ func TestClientsSave(t *testing.T) {
 				Metadata: mfclients.Metadata{},
 				Status:   mfclients.EnabledStatus,
 			},
-			err: errors.ErrMalformedEntity,
+			err: apiutil.ErrMalformedEntity,
 		},
 		{
 			desc: "add client with invalid client name",
@@ -109,7 +110,7 @@ func TestClientsSave(t *testing.T) {
 				Metadata: mfclients.Metadata{},
 				Status:   mfclients.EnabledStatus,
 			},
-			err: errors.ErrMalformedEntity,
+			err: apiutil.ErrMalformedEntity,
 		},
 		{
 			desc: "add client with invalid client owner",
@@ -123,7 +124,7 @@ func TestClientsSave(t *testing.T) {
 				Metadata: mfclients.Metadata{},
 				Status:   mfclients.EnabledStatus,
 			},
-			err: errors.ErrMalformedEntity,
+			err: apiutil.ErrMalformedEntity,
 		},
 		{
 			desc: "add client with invalid client identity",
@@ -137,7 +138,7 @@ func TestClientsSave(t *testing.T) {
 				Metadata: mfclients.Metadata{},
 				Status:   mfclients.EnabledStatus,
 			},
-			err: errors.ErrMalformedEntity,
+			err: apiutil.ErrMalformedEntity,
 		},
 		{
 			desc: "add client with a missing client identity",

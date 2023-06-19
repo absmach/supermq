@@ -1,3 +1,6 @@
+// Copyright (c) Mainflux
+// SPDX-License-Identifier: Apache-2.0
+
 package postgres
 
 import (
@@ -8,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/internal/postgres"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
@@ -22,9 +24,9 @@ type groupRepository struct {
 	db postgres.Database
 }
 
-// New instantiates a PostgreSQL implementation of group
+// NewRepository instantiates a PostgreSQL implementation of group
 // repository.
-func New(db postgres.Database) mfgroups.Repository {
+func NewRepository(db postgres.Database) mfgroups.Repository {
 	return &groupRepository{
 		db: db,
 	}
@@ -35,6 +37,7 @@ func (repo groupRepository) Save(ctx context.Context, g mfgroups.Group) (mfgroup
 	q := `INSERT INTO groups (name, description, id, owner_id, parent_id, metadata, created_at, status)
 		VALUES (:name, :description, :id, :owner_id, :parent_id, :metadata, :created_at, :status)
 		RETURNING id, name, description, owner_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, status;`
+
 	dbg, err := toDBGroup(g)
 	if err != nil {
 		return mfgroups.Group{}, err
@@ -52,6 +55,89 @@ func (repo groupRepository) Save(ctx context.Context, g mfgroups.Group) (mfgroup
 	}
 
 	return toGroup(dbg)
+}
+
+func (repo groupRepository) RetrieveByID(ctx context.Context, id string) (mfgroups.Group, error) {
+	q := `SELECT id, name, owner_id, COALESCE(parent_id, '') AS parent_id, description, metadata, created_at, updated_at, updated_by, status FROM groups
+	    WHERE id = :id`
+
+	dbg := dbGroup{
+		ID: id,
+	}
+
+	row, err := repo.db.NamedQueryContext(ctx, q, dbg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, err)
+		}
+		return mfgroups.Group{}, errors.Wrap(errors.ErrViewEntity, err)
+	}
+
+	defer row.Close()
+	row.Next()
+	dbg = dbGroup{}
+	if err := row.StructScan(&dbg); err != nil {
+		return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, err)
+	}
+
+	return toGroup(dbg)
+
+}
+
+func (repo groupRepository) RetrieveAll(ctx context.Context, gm mfgroups.GroupsPage) (mfgroups.GroupsPage, error) {
+	var q string
+	query, err := buildQuery(gm)
+	if err != nil {
+		return mfgroups.GroupsPage{}, err
+	}
+
+	if gm.ID != "" {
+		q = buildHierachy(gm)
+	}
+	if gm.ID == "" {
+		q = `SELECT g.id, g.owner_id, COALESCE(g.parent_id, '') AS parent_id, g.name, g.description,
+		g.metadata, g.created_at, g.updated_at, g.updated_by, g.status FROM groups g`
+	}
+	q = fmt.Sprintf("%s %s ORDER BY g.updated_at LIMIT :limit OFFSET :offset;", q, query)
+
+	dbPage, err := toDBGroupPage(gm)
+	if err != nil {
+		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
+	}
+	rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
+	if err != nil {
+		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
+	}
+	defer rows.Close()
+
+	var items []mfgroups.Group
+	for rows.Next() {
+		dbg := dbGroup{}
+		if err := rows.StructScan(&dbg); err != nil {
+			return mfgroups.GroupsPage{}, err
+		}
+		group, err := toGroup(dbg)
+		if err != nil {
+			return mfgroups.GroupsPage{}, err
+		}
+		items = append(items, group)
+	}
+
+	cq := "SELECT COUNT(*) FROM groups g"
+	if query != "" {
+		cq = fmt.Sprintf(" %s %s", cq, query)
+	}
+
+	total, err := postgres.Total(ctx, repo.db, cq, dbPage)
+	if err != nil {
+		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
+	}
+
+	page := gm
+	page.Groups = items
+	page.Total = total
+
+	return page, nil
 }
 
 func (repo groupRepository) Memberships(ctx context.Context, clientID string, gm mfgroups.GroupsPage) (mfgroups.MembershipsPage, error) {
@@ -180,80 +266,6 @@ func (repo groupRepository) ChangeStatus(ctx context.Context, group mfgroups.Gro
 	}
 
 	return toGroup(dbg)
-}
-
-func (repo groupRepository) RetrieveByID(ctx context.Context, id string) (mfgroups.Group, error) {
-	q := `SELECT id, name, owner_id, COALESCE(parent_id, '') AS parent_id, description, metadata, created_at, updated_at, updated_by, status FROM groups
-	    WHERE id = :id`
-
-	dbg := dbGroup{
-		ID: id,
-	}
-
-	row, err := repo.db.NamedQueryContext(ctx, q, dbg)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, err)
-		}
-		return mfgroups.Group{}, errors.Wrap(errors.ErrViewEntity, err)
-	}
-
-	defer row.Close()
-	row.Next()
-	dbg = dbGroup{}
-	if err := row.StructScan(&dbg); err != nil {
-		return mfgroups.Group{}, errors.Wrap(errors.ErrNotFound, err)
-	}
-
-	return toGroup(dbg)
-}
-
-func (repo groupRepository) RetrieveAll(ctx context.Context, gm mfgroups.GroupsPage) (mfgroups.GroupsPage, error) {
-	var q string
-	query, err := buildQuery(gm)
-	if err != nil {
-		return mfgroups.GroupsPage{}, err
-	}
-
-	if gm.ID != "" {
-		q = buildHierachy(gm)
-	}
-	if gm.ID == "" {
-		q = `SELECT DISTINCT g.id, g.owner_id, COALESCE(g.parent_id, '') AS parent_id, g.name, g.description,
-		g.metadata, g.created_at, g.updated_at, g.updated_by, g.status FROM groups g`
-	}
-	q = fmt.Sprintf("%s %s ORDER BY g.updated_at LIMIT :limit OFFSET :offset;", q, query)
-
-	dbPage, err := toDBGroupPage(gm)
-	if err != nil {
-		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
-	}
-	rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
-	if err != nil {
-		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
-	}
-	defer rows.Close()
-
-	items, err := repo.processRows(rows)
-	if err != nil {
-		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
-	}
-
-	cq := "SELECT COUNT(*) FROM groups g"
-	if query != "" {
-		cq = fmt.Sprintf(" %s %s", cq, query)
-	}
-
-	total, err := postgres.Total(ctx, repo.db, cq, dbPage)
-	if err != nil {
-		return mfgroups.GroupsPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
-	}
-
-	page := gm
-	page.Groups = items
-	page.Total = total
-
-	return page, nil
 }
 
 func buildHierachy(gm mfgroups.GroupsPage) string {
@@ -434,20 +446,4 @@ type dbGroupPage struct {
 	Subject  string           `db:"subject"`
 	Action   string           `db:"action"`
 	Status   mfclients.Status `db:"status"`
-}
-
-func (gr groupRepository) processRows(rows *sqlx.Rows) ([]mfgroups.Group, error) {
-	var items []mfgroups.Group
-	for rows.Next() {
-		dbg := dbGroup{}
-		if err := rows.StructScan(&dbg); err != nil {
-			return items, err
-		}
-		group, err := toGroup(dbg)
-		if err != nil {
-			return items, err
-		}
-		items = append(items, group)
-	}
-	return items, nil
 }

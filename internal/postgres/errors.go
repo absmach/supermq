@@ -5,6 +5,7 @@ package postgres
 
 import (
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
@@ -24,7 +25,7 @@ func HandleError(err, wrapper error) error {
 		case errDuplicate:
 			return errors.Wrap(errors.ErrConflict, err)
 		case errInvalid, errTruncation:
-			return errors.Wrap(errors.ErrMalformedEntity, err)
+			return errors.Wrap(apiutil.ErrMalformedEntity, err)
 		case errFK:
 			return errors.Wrap(errors.ErrCreateEntity, err)
 		}

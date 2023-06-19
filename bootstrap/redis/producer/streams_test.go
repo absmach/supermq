@@ -15,6 +15,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/go-zoo/bone"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 
@@ -164,7 +165,7 @@ func TestAdd(t *testing.T) {
 			desc:   "create invalid config",
 			config: invalidConfig,
 			token:  validToken,
-			err:    errors.ErrMalformedEntity,
+			err:    apiutil.ErrMalformedEntity,
 			event:  nil,
 		},
 	}
@@ -331,7 +332,7 @@ func TestUpdateConnections(t *testing.T) {
 			id:          saved.ThingID,
 			token:       validToken,
 			connections: []string{"256"},
-			err:         errors.ErrMalformedEntity,
+			err:         apiutil.ErrMalformedEntity,
 			event:       nil,
 		},
 	}

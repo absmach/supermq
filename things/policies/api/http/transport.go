@@ -114,7 +114,7 @@ func decodeConnectList(_ context.Context, r *http.Request) (interface{}, error) 
 	}
 	req := createPoliciesReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
 	}
 
 	return req, nil
@@ -137,7 +137,7 @@ func decodeCanAccess(_ context.Context, r *http.Request) (interface{}, error) {
 
 	req := authorizeReq{Object: bone.GetValue(r, "chanID")}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
 	}
 
 	return req, nil
@@ -149,7 +149,7 @@ func decodeUpdatePolicy(_ context.Context, r *http.Request) (interface{}, error)
 	}
 	req := policyReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
 	}
 
 	return req, nil

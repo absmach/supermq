@@ -80,7 +80,7 @@ func TestCreateClient(t *testing.T) {
 			client:   sdk.User{},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrMalformedEntity, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMalformedEntity, http.StatusBadRequest),
 		},
 		{
 			desc: "register a user that can't be marshalled",
@@ -107,7 +107,7 @@ func TestCreateClient(t *testing.T) {
 			},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrMalformedEntity, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMalformedEntity, http.StatusBadRequest),
 		},
 		{
 			desc: "register user with empty secret",
@@ -119,7 +119,7 @@ func TestCreateClient(t *testing.T) {
 			},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrMalformedEntity, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMalformedEntity, http.StatusBadRequest),
 		},
 		{
 			desc: "register user with empty identity",
@@ -131,7 +131,7 @@ func TestCreateClient(t *testing.T) {
 			},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrMalformedEntity, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMalformedEntity, http.StatusBadRequest),
 		},
 		{
 			desc:     "register empty user",

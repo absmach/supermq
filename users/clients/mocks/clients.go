@@ -6,18 +6,23 @@ package mocks
 import (
 	"context"
 
+	"github.com/mainflux/mainflux/internal/apiutil"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/users/clients/postgres"
 	"github.com/stretchr/testify/mock"
 )
 
 const WrongID = "wrongID"
 
-var _ postgres.Repository = (*Repository)(nil)
+var _ mfclients.Repository = (*Repository)(nil)
 
 type Repository struct {
 	mock.Mock
+}
+
+// RetrieveByIdentity retrieves client by its unique credentials.
+func (*Repository) RetrieveByIdentity(ctx context.Context, identity string) (mfclients.Client, error) {
+	return mfclients.Client{}, nil
 }
 
 func (m *Repository) ChangeStatus(ctx context.Context, client mfclients.Client) (mfclients.Client, error) {
@@ -28,7 +33,7 @@ func (m *Repository) ChangeStatus(ctx context.Context, client mfclients.Client) 
 	}
 
 	if client.Status != mfclients.EnabledStatus && client.Status != mfclients.DisabledStatus {
-		return mfclients.Client{}, errors.ErrMalformedEntity
+		return mfclients.Client{}, apiutil.ErrMalformedEntity
 	}
 
 	return ret.Get(0).(mfclients.Client), ret.Error(1)
@@ -59,26 +64,24 @@ func (m *Repository) RetrieveByID(ctx context.Context, id string) (mfclients.Cli
 	return ret.Get(0).(mfclients.Client), ret.Error(1)
 }
 
-func (m *Repository) RetrieveByIdentity(ctx context.Context, identity string) (mfclients.Client, error) {
-	ret := m.Called(ctx, identity)
+func (m *Repository) RetrieveBySecret(ctx context.Context, secret string) (mfclients.Client, error) {
+	ret := m.Called(ctx, secret)
 
-	if identity == "" {
-		return mfclients.Client{}, errors.ErrMalformedEntity
+	if secret == "" {
+		return mfclients.Client{}, apiutil.ErrMalformedEntity
 	}
 
 	return ret.Get(0).(mfclients.Client), ret.Error(1)
 }
 
-func (m *Repository) Save(ctx context.Context, client mfclients.Client) (mfclients.Client, error) {
-	ret := m.Called(ctx, client)
-	if client.Owner == WrongID {
-		return mfclients.Client{}, errors.ErrMalformedEntity
+func (m *Repository) Save(ctx context.Context, clis ...mfclients.Client) ([]mfclients.Client, error) {
+	ret := m.Called(ctx, clis)
+	for _, cli := range clis {
+		if cli.Owner == WrongID {
+			return []mfclients.Client{}, apiutil.ErrMalformedEntity
+		}
 	}
-	if client.Credentials.Secret == "" {
-		return mfclients.Client{}, errors.ErrMalformedEntity
-	}
-
-	return client, ret.Error(1)
+	return clis, ret.Error(1)
 }
 
 func (m *Repository) Update(ctx context.Context, client mfclients.Client) (mfclients.Client, error) {
@@ -97,7 +100,7 @@ func (m *Repository) UpdateIdentity(ctx context.Context, client mfclients.Client
 		return mfclients.Client{}, errors.ErrNotFound
 	}
 	if client.Credentials.Identity == "" {
-		return mfclients.Client{}, errors.ErrMalformedEntity
+		return mfclients.Client{}, apiutil.ErrMalformedEntity
 	}
 
 	return ret.Get(0).(mfclients.Client), ret.Error(1)
@@ -110,7 +113,7 @@ func (m *Repository) UpdateSecret(ctx context.Context, client mfclients.Client) 
 		return mfclients.Client{}, errors.ErrNotFound
 	}
 	if client.Credentials.Secret == "" {
-		return mfclients.Client{}, errors.ErrMalformedEntity
+		return mfclients.Client{}, apiutil.ErrMalformedEntity
 	}
 
 	return ret.Get(0).(mfclients.Client), ret.Error(1)
@@ -134,8 +137,4 @@ func (m *Repository) UpdateOwner(ctx context.Context, client mfclients.Client) (
 	}
 
 	return ret.Get(0).(mfclients.Client), ret.Error(1)
-}
-
-func (*Repository) RetrieveBySecret(ctx context.Context, key string) (mfclients.Client, error) {
-	return mfclients.Client{}, nil
 }

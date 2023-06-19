@@ -14,7 +14,7 @@ import (
 
 	"github.com/go-zoo/bone"
 	"github.com/gorilla/websocket"
-	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/ws"
 )
@@ -72,7 +72,7 @@ func decodeRequest(r *http.Request) (connReq, error) {
 	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
 	if len(channelParts) < 2 {
 		logger.Warn("Empty channel id or malformed url")
-		return connReq{}, errors.ErrMalformedEntity
+		return connReq{}, apiutil.ErrMalformedEntity
 	}
 
 	subtopic, err := parseSubTopic(channelParts[2])
@@ -161,7 +161,7 @@ func encodeError(w http.ResponseWriter, err error) {
 		statusCode = http.StatusBadRequest
 	case errUnauthorizedAccess:
 		statusCode = http.StatusForbidden
-	case errMalformedSubtopic, errors.ErrMalformedEntity:
+	case errMalformedSubtopic, apiutil.ErrMalformedEntity:
 		statusCode = http.StatusBadRequest
 	default:
 		statusCode = http.StatusNotFound

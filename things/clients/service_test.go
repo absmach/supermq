@@ -204,7 +204,7 @@ func TestRegisterClient(t *testing.T) {
 					Secret: secret,
 				},
 			},
-			err:   errors.ErrMalformedEntity,
+			err:   apiutil.ErrMalformedEntity,
 			token: token,
 		},
 		{
@@ -216,7 +216,7 @@ func TestRegisterClient(t *testing.T) {
 					Secret:   secret,
 				},
 			},
-			err:   errors.ErrMalformedEntity,
+			err:   apiutil.ErrMalformedEntity,
 			token: token,
 		},
 		{

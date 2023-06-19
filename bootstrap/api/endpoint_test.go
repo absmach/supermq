@@ -25,7 +25,6 @@ import (
 	"github.com/mainflux/mainflux/internal/apiutil"
 	mflog "github.com/mainflux/mainflux/logger"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
-	"github.com/mainflux/mainflux/pkg/errors"
 	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/things/clients"
@@ -160,7 +159,7 @@ func dec(in []byte) ([]byte, error) {
 		return nil, err
 	}
 	if len(in) < aes.BlockSize {
-		return nil, errors.ErrMalformedEntity
+		return nil, apiutil.ErrMalformedEntity
 	}
 	iv := in[:aes.BlockSize]
 	in = in[aes.BlockSize:]

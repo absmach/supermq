@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mainflux/mainflux/internal/apiutil"
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -75,7 +76,7 @@ func TestTwinsSave(t *testing.T) {
 				Owner: email,
 				Name:  invalidName,
 			},
-			err: errors.ErrMalformedEntity,
+			err: apiutil.ErrMalformedEntity,
 		},
 	}
 
@@ -132,7 +133,7 @@ func TestTwinsUpdate(t *testing.T) {
 				Owner: email,
 				Name:  invalidName,
 			},
-			err: errors.ErrMalformedEntity,
+			err: apiutil.ErrMalformedEntity,
 		},
 	}
 

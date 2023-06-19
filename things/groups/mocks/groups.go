@@ -6,6 +6,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/mainflux/mainflux/internal/apiutil"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfgroups "github.com/mainflux/mainflux/pkg/groups"
@@ -27,7 +28,7 @@ func (m *Repository) ChangeStatus(ctx context.Context, group mfgroups.Group) (mf
 		return mfgroups.Group{}, errors.ErrNotFound
 	}
 	if group.Status != mfclients.EnabledStatus && group.Status != mfclients.DisabledStatus {
-		return mfgroups.Group{}, errors.ErrMalformedEntity
+		return mfgroups.Group{}, apiutil.ErrMalformedEntity
 	}
 
 	return ret.Get(0).(mfgroups.Group), ret.Error(1)

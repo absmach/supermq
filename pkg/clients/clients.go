@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"golang.org/x/net/idna"
 )
 
@@ -103,7 +103,7 @@ type Repository interface {
 // Validate returns an error if client representation is invalid.
 func (u Client) Validate() error {
 	if !isEmail(u.Credentials.Identity) {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMalformedEntity
 	}
 	return nil
 }

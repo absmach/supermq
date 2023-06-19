@@ -69,7 +69,7 @@ func decodeAuthorize(_ context.Context, r *http.Request) (interface{}, error) {
 
 	var authReq authorizeReq
 	if err := json.NewDecoder(r.Body).Decode(&authReq); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
 	}
 
 	return authReq, nil
@@ -82,7 +82,7 @@ func decodePolicyCreate(_ context.Context, r *http.Request) (interface{}, error)
 
 	var m policies.Policy
 	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
 	}
 
 	req := createPolicyReq{
@@ -100,7 +100,7 @@ func decodePolicyUpdate(_ context.Context, r *http.Request) (interface{}, error)
 	}
 	var m policies.Policy
 	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
 	}
 
 	req := updatePolicyReq{

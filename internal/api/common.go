@@ -91,7 +91,7 @@ func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface
 func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", ContentType)
 	switch {
-	case errors.Contains(err, errors.ErrMalformedEntity),
+	case errors.Contains(err, apiutil.ErrMalformedEntity),
 		err == apiutil.ErrMissingID,
 		err == apiutil.ErrEmptyList,
 		err == apiutil.ErrMissingMemberType,

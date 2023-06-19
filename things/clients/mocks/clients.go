@@ -6,6 +6,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/mainflux/mainflux/internal/apiutil"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/stretchr/testify/mock"
@@ -32,7 +33,7 @@ func (m *Repository) ChangeStatus(ctx context.Context, client mfclients.Client) 
 	}
 
 	if client.Status != mfclients.EnabledStatus && client.Status != mfclients.DisabledStatus {
-		return mfclients.Client{}, errors.ErrMalformedEntity
+		return mfclients.Client{}, apiutil.ErrMalformedEntity
 	}
 
 	return ret.Get(0).(mfclients.Client), ret.Error(1)
@@ -67,7 +68,7 @@ func (m *Repository) RetrieveBySecret(ctx context.Context, secret string) (mfcli
 	ret := m.Called(ctx, secret)
 
 	if secret == "" {
-		return mfclients.Client{}, errors.ErrMalformedEntity
+		return mfclients.Client{}, apiutil.ErrMalformedEntity
 	}
 
 	return ret.Get(0).(mfclients.Client), ret.Error(1)
@@ -77,7 +78,7 @@ func (m *Repository) Save(ctx context.Context, clis ...mfclients.Client) ([]mfcl
 	ret := m.Called(ctx, clis)
 	for _, cli := range clis {
 		if cli.Owner == WrongID {
-			return []mfclients.Client{}, errors.ErrMalformedEntity
+			return []mfclients.Client{}, apiutil.ErrMalformedEntity
 		}
 	}
 	return clis, ret.Error(1)
@@ -99,7 +100,7 @@ func (m *Repository) UpdateIdentity(ctx context.Context, client mfclients.Client
 		return mfclients.Client{}, errors.ErrNotFound
 	}
 	if client.Credentials.Identity == "" {
-		return mfclients.Client{}, errors.ErrMalformedEntity
+		return mfclients.Client{}, apiutil.ErrMalformedEntity
 	}
 
 	return ret.Get(0).(mfclients.Client), ret.Error(1)
@@ -112,7 +113,7 @@ func (m *Repository) UpdateSecret(ctx context.Context, client mfclients.Client) 
 		return mfclients.Client{}, errors.ErrNotFound
 	}
 	if client.Credentials.Secret == "" {
-		return mfclients.Client{}, errors.ErrMalformedEntity
+		return mfclients.Client{}, apiutil.ErrMalformedEntity
 	}
 
 	return ret.Get(0).(mfclients.Client), ret.Error(1)

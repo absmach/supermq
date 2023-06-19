@@ -10,6 +10,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
@@ -178,7 +179,7 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 	}
 
 	if !revision {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMalformedEntity
 	}
 
 	tw.Updated = time.Now()

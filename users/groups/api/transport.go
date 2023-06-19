@@ -339,7 +339,7 @@ func decodeGroupCreate(_ context.Context, r *http.Request) (interface{}, error) 
 	}
 	var g mfgroups.Group
 	if err := json.NewDecoder(r.Body).Decode(&g); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
 	}
 	req := createGroupReq{
 		Group: g,
@@ -358,7 +358,7 @@ func decodeGroupUpdate(_ context.Context, r *http.Request) (interface{}, error) 
 		token: apiutil.ExtractBearerToken(r),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
 	}
 	return req, nil
 }
