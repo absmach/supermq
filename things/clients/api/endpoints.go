@@ -9,6 +9,7 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/things/clients"
+	"github.com/mainflux/mainflux/things/policies"
 )
 
 func createClientEndpoint(svc clients.Service) endpoint.Endpoint {
@@ -159,13 +160,18 @@ func updateClientTagsEndpoint(svc clients.Service) endpoint.Endpoint {
 	}
 }
 
-func shareClientEndpoint(svc clients.Service) endpoint.Endpoint {
+func shareClientEndpoint(svc policies.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(shareClientReq)
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
-		if err := svc.ShareClient(ctx, req.token, req.UserID, req.GroupID, req.clientID, req.Actions); err != nil {
+		policy := policies.Policy{
+			Subject: req.UserID,
+			Object:  req.GroupID,
+			Actions: req.Actions,
+		}
+		if _, err := svc.AddPolicy(ctx, req.token, policy); err != nil {
 			return nil, err
 		}
 		return shareClientRes{}, nil

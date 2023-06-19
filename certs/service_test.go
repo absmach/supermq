@@ -23,7 +23,8 @@ import (
 	"github.com/mainflux/mainflux/things/clients"
 	httpapi "github.com/mainflux/mainflux/things/clients/api"
 	thmocks "github.com/mainflux/mainflux/things/clients/mocks"
-	"github.com/mainflux/mainflux/users/policies"
+	tpolicies "github.com/mainflux/mainflux/things/policies"
+	upolicies "github.com/mainflux/mainflux/users/policies"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -47,7 +48,10 @@ const (
 
 func newService(tokens map[string]string) (certs.Service, error) {
 	ac := bsmocks.NewAuthClient(map[string]string{token: email})
-	server := newThingsServer(newThingsService(ac))
+
+	psvc := mocks.NewPoliciesService(ac)
+
+	server := newThingsServer(newThingsService(ac), psvc)
 
 	policies := []thmocks.MockSubjectSet{{Object: "token", Relation: clients.AdminRelationKey}}
 	auth := thmocks.NewAuthService(tokens, map[string][]thmocks.MockSubjectSet{token: policies})
@@ -74,7 +78,7 @@ func newService(tokens map[string]string) (certs.Service, error) {
 	return certs.New(auth, repo, sdk, pki), nil
 }
 
-func newThingsService(auth policies.AuthServiceClient) clients.Service {
+func newThingsService(auth upolicies.AuthServiceClient) clients.Service {
 	ths := make(map[string]mfclients.Client, thingsNum)
 	for i := 0; i < thingsNum; i++ {
 		id := strconv.Itoa(i + 1)
@@ -363,9 +367,9 @@ func TestViewCert(t *testing.T) {
 	}
 }
 
-func newThingsServer(svc clients.Service) *httptest.Server {
+func newThingsServer(svc clients.Service, psvc tpolicies.Service) *httptest.Server {
 	logger := logger.NewMock()
 	mux := bone.New()
-	httpapi.MakeHandler(svc, mux, logger)
+	httpapi.MakeHandler(svc, psvc, mux, logger)
 	return httptest.NewServer(mux)
 }

@@ -210,11 +210,10 @@ func (req changeClientStatusReq) validate() error {
 }
 
 type shareClientReq struct {
-	token    string
-	clientID string
-	GroupID  string   `json:"group_id"`
-	UserID   string   `json:"user_id"`
-	Actions  []string `json:"actions"`
+	token   string
+	GroupID string   `json:"group_id"`
+	UserID  string   `json:"user_id"`
+	Actions []string `json:"actions"`
 }
 
 func (req shareClientReq) validate() error {
@@ -222,7 +221,7 @@ func (req shareClientReq) validate() error {
 		return apiutil.ErrBearerToken
 	}
 
-	if req.clientID == "" || req.GroupID == "" || req.UserID == "" {
+	if req.GroupID == "" || req.UserID == "" {
 		return apiutil.ErrMissingID
 	}
 
