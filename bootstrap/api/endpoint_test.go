@@ -25,6 +25,7 @@ import (
 	"github.com/mainflux/mainflux/internal/apiutil"
 	mflog "github.com/mainflux/mainflux/logger"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
+	"github.com/mainflux/mainflux/pkg/errors"
 	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/things/clients"
@@ -87,11 +88,11 @@ var (
 		CACert:     "newca",
 	}
 
-	bsErrorRes    = toJSON(apiutil.ErrorRes{Err: bootstrap.ErrBootstrap.Error()})
-	extKeyRes     = toJSON(apiutil.ErrorRes{Err: bootstrap.ErrExternalKey.Error()})
-	extSecKeyRes  = toJSON(apiutil.ErrorRes{Err: bootstrap.ErrExternalKeySecure.Error()})
-	missingIDRes  = toJSON(apiutil.ErrorRes{Err: apiutil.ErrMissingID.Error()})
-	missingKeyRes = toJSON(apiutil.ErrorRes{Err: apiutil.ErrBearerKey.Error()})
+	bsErrorRes    = toJSON(apiutil.ErrorRes{Err: errors.Wrap(apiutil.ErrValidation, bootstrap.ErrBootstrap).Error()})
+	extKeyRes     = toJSON(apiutil.ErrorRes{Err: errors.Wrap(apiutil.ErrValidation, bootstrap.ErrExternalKey).Error()})
+	extSecKeyRes  = toJSON(apiutil.ErrorRes{Err: errors.Wrap(apiutil.ErrValidation, bootstrap.ErrExternalKeySecure).Error()})
+	missingIDRes  = toJSON(apiutil.ErrorRes{Err: errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID).Error()})
+	missingKeyRes = toJSON(apiutil.ErrorRes{Err: errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerKey).Error()})
 )
 
 type testRequest struct {
@@ -281,7 +282,7 @@ func TestAdd(t *testing.T) {
 			req:         neData,
 			auth:        validToken,
 			contentType: contentType,
-			status:      http.StatusNotFound,
+			status:      http.StatusBadRequest,
 			location:    "",
 		},
 		{
