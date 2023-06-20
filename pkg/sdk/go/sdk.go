@@ -374,7 +374,7 @@ type SDK interface {
 	// already created a group and added things to it. It also assumes that
 	// you have required policy to share a thing with the specified user.
 	//
-	// Under the hoold `ShareThing` calls the `Connect` method with the
+	// The `ShareThing` method calls the `Connect` method with the
 	// subject as `userID` rather than `thingID`.
 	//
 	// example:
