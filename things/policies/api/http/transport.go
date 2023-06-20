@@ -110,11 +110,11 @@ func decodeDisconnectThing(_ context.Context, r *http.Request) (interface{}, err
 
 func decodeConnectList(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.ErrUnsupportedContentType
+		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := createPoliciesReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, errors.Wrap(err, apiutil.ErrValidation))
 	}
 
 	return req, nil
@@ -122,7 +122,7 @@ func decodeConnectList(_ context.Context, r *http.Request) (interface{}, error) 
 
 func decodeIdentify(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.ErrUnsupportedContentType
+		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := identifyReq{secret: apiutil.ExtractThingKey(r)}
@@ -132,12 +132,12 @@ func decodeIdentify(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeCanAccess(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.ErrUnsupportedContentType
+		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := authorizeReq{Object: bone.GetValue(r, "chanID")}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, errors.Wrap(err, apiutil.ErrValidation))
 	}
 
 	return req, nil
@@ -145,11 +145,11 @@ func decodeCanAccess(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeUpdatePolicy(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.ErrUnsupportedContentType
+		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := policyReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, errors.Wrap(err, apiutil.ErrValidation))
 	}
 
 	return req, nil
@@ -158,27 +158,27 @@ func decodeUpdatePolicy(_ context.Context, r *http.Request) (interface{}, error)
 func decodeListPolicies(_ context.Context, r *http.Request) (interface{}, error) {
 	o, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	l, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	c, err := apiutil.ReadStringQuery(r, api.ClientKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	g, err := apiutil.ReadStringQuery(r, api.GroupKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	a, err := apiutil.ReadStringQuery(r, api.ActionKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	oid, err := apiutil.ReadStringQuery(r, api.OwnerKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 
 	req := listPoliciesReq{

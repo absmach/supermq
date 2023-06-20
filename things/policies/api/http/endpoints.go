@@ -7,6 +7,8 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/mainflux/mainflux/internal/apiutil"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/clients"
 	"github.com/mainflux/mainflux/things/policies"
 )
@@ -15,12 +17,12 @@ func identifyEndpoint(svc clients.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(identifyReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		id, err := svc.Identify(ctx, req.secret)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		return identityRes{ID: id}, nil
@@ -65,7 +67,7 @@ func connectEndpoint(svc policies.Service) endpoint.Endpoint {
 		}
 		policy, err := svc.AddPolicy(ctx, cr.token, cr.External, policy)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		return addPolicyRes{created: true, Policy: policy}, nil
@@ -129,7 +131,7 @@ func listPoliciesEndpoint(svc policies.Service) endpoint.Endpoint {
 		lpr := request.(listPoliciesReq)
 
 		if err := lpr.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		pm := policies.Page{
 			Limit:   lpr.limit,
@@ -141,7 +143,7 @@ func listPoliciesEndpoint(svc policies.Service) endpoint.Endpoint {
 		}
 		policyPage, err := svc.ListPolicies(ctx, lpr.token, pm)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		return buildPoliciesResponse(policyPage), nil

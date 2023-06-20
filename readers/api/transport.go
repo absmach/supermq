@@ -126,7 +126,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 	}
 
 	vb, err := apiutil.ReadBoolQuery(r, boolValueKey, false)
-	if err != nil && err != errors.ErrNotFoundParam {
+	if err != nil && err != apiutil.ErrNotFoundParam {
 		return nil, err
 	}
 

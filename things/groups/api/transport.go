@@ -88,43 +88,43 @@ func MakeHandler(svc groups.Service, mux *bone.Mux, logger logger.Logger) http.H
 func decodeListMembershipRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefGroupStatus)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	level, err := apiutil.ReadNumQuery[uint64](r, api.LevelKey, api.DefLevel)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	offset, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	limit, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	parentID, err := apiutil.ReadStringQuery(r, api.ParentKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	ownerID, err := apiutil.ReadStringQuery(r, api.OwnerKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	name, err := apiutil.ReadStringQuery(r, api.NameKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	meta, err := apiutil.ReadMetadataQuery(r, api.MetadataKey, nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	dir, err := apiutil.ReadNumQuery[int64](r, api.DirKey, -1)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	st, err := mfclients.ToStatus(s)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	req := listMembershipReq{
 		token:    apiutil.ExtractBearerToken(r),
@@ -150,47 +150,47 @@ func decodeListMembershipRequest(_ context.Context, r *http.Request) (interface{
 func decodeListGroupsRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefGroupStatus)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	level, err := apiutil.ReadNumQuery[uint64](r, api.LevelKey, api.DefLevel)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	offset, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	limit, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	parentID, err := apiutil.ReadStringQuery(r, api.ParentKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	ownerID, err := apiutil.ReadStringQuery(r, api.OwnerKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	name, err := apiutil.ReadStringQuery(r, api.NameKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	meta, err := apiutil.ReadMetadataQuery(r, api.MetadataKey, nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	tree, err := apiutil.ReadBoolQuery(r, api.TreeKey, false)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	dir, err := apiutil.ReadNumQuery[int64](r, api.DirKey, -1)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	st, err := mfclients.ToStatus(s)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	req := listGroupsReq{
 		token: apiutil.ExtractBearerToken(r),
@@ -214,11 +214,11 @@ func decodeListGroupsRequest(_ context.Context, r *http.Request) (interface{}, e
 
 func decodeGroupCreate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.ErrUnsupportedContentType
+		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	var g mfgroups.Group
 	if err := json.NewDecoder(r.Body).Decode(&g); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, errors.Wrap(err, apiutil.ErrValidation))
 	}
 	req := createGroupReq{
 		Group: g,
@@ -230,11 +230,11 @@ func decodeGroupCreate(_ context.Context, r *http.Request) (interface{}, error) 
 
 func decodeGroupsCreate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.ErrUnsupportedContentType
+		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := createGroupsReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req.Groups); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, errors.Wrap(err, apiutil.ErrValidation))
 	}
 
 	return req, nil
@@ -242,14 +242,14 @@ func decodeGroupsCreate(_ context.Context, r *http.Request) (interface{}, error)
 
 func decodeGroupUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.ErrUnsupportedContentType
+		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := updateGroupReq{
 		id:    bone.GetValue(r, "chanID"),
 		token: apiutil.ExtractBearerToken(r),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, errors.Wrap(err, apiutil.ErrValidation))
 	}
 	return req, nil
 }
