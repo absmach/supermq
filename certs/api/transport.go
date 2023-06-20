@@ -6,6 +6,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -140,19 +141,18 @@ func decodeRevokeCerts(_ context.Context, r *http.Request) (interface{}, error) 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, errors.ErrAuthentication),
-		err == apiutil.ErrBearerToken:
+		errors.Contains(err, apiutil.ErrBearerToken):
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	case errors.Contains(err, apiutil.ErrMalformedEntity),
-		err == apiutil.ErrMissingID,
-		err == apiutil.ErrMissingCertData,
-		err == apiutil.ErrInvalidCertData,
-		err == apiutil.ErrLimitSize:
+		errors.Contains(err, apiutil.ErrMissingID),
+		errors.Contains(err, apiutil.ErrMissingCertData),
+		errors.Contains(err, apiutil.ErrInvalidCertData),
+		errors.Contains(err, apiutil.ErrLimitSize):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrConflict):
 		w.WriteHeader(http.StatusConflict)
-
 	case errors.Contains(err, errors.ErrCreateEntity),
 		errors.Contains(err, errors.ErrViewEntity),
 		errors.Contains(err, errors.ErrRemoveEntity):
@@ -164,7 +164,13 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 	if errorVal, ok := err.(errors.Error); ok {
 		w.Header().Set("Content-Type", contentType)
-		if err := json.NewEncoder(w).Encode(apiutil.ErrorRes{Err: errorVal.Msg()}); err != nil {
+
+		errMsg := errorVal.Msg()
+		if errorVal.Err() != nil {
+			errMsg = fmt.Sprintf("%s : %s", errorVal.Msg(), errorVal.Err().Msg())
+		}
+
+		if err := json.NewEncoder(w).Encode(apiutil.ErrorRes{Err: errMsg}); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
