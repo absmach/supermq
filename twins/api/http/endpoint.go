@@ -7,6 +7,8 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/mainflux/mainflux/internal/apiutil"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/twins"
 )
 
@@ -15,7 +17,7 @@ func addTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		req := request.(addTwinReq)
 
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		twin := twins.Twin{
@@ -24,7 +26,7 @@ func addTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		}
 		saved, err := svc.AddTwin(ctx, req.token, twin, req.Definition)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		res := twinRes{
@@ -40,7 +42,7 @@ func updateTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		req := request.(updateTwinReq)
 
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		twin := twins.Twin{
@@ -50,7 +52,7 @@ func updateTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		}
 
 		if err := svc.UpdateTwin(ctx, req.token, twin, req.Definition); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		res := twinRes{id: req.id, created: false}
@@ -63,12 +65,12 @@ func viewTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		req := request.(viewTwinReq)
 
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		twin, err := svc.ViewTwin(ctx, req.token, req.id)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		res := viewTwinRes{
@@ -90,12 +92,12 @@ func listTwinsEndpoint(svc twins.Service) endpoint.Endpoint {
 		req := request.(listReq)
 
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		page, err := svc.ListTwins(ctx, req.token, req.offset, req.limit, req.name, req.metadata)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		res := twinsPageRes{
@@ -130,7 +132,7 @@ func removeTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 
 		err := req.validate()
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		if err := svc.RemoveTwin(ctx, req.token, req.id); err != nil {
@@ -146,12 +148,12 @@ func listStatesEndpoint(svc twins.Service) endpoint.Endpoint {
 		req := request.(listStatesReq)
 
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		page, err := svc.ListStates(ctx, req.token, req.offset, req.limit, req.id)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		res := statesPageRes{
