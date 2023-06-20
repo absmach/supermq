@@ -6,6 +6,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -71,57 +72,57 @@ func MakeHandler(svc readers.MessageRepository, tc tpolicies.AuthServiceClient, 
 func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 	offset, err := apiutil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 
 	limit, err := apiutil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 
 	format, err := apiutil.ReadStringQuery(r, formatKey, defFormat)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 
 	subtopic, err := apiutil.ReadStringQuery(r, subtopicKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 
 	publisher, err := apiutil.ReadStringQuery(r, publisherKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 
 	protocol, err := apiutil.ReadStringQuery(r, protocolKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 
 	name, err := apiutil.ReadStringQuery(r, nameKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 
 	v, err := apiutil.ReadFloatQuery(r, valueKey, 0)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 
 	comparator, err := apiutil.ReadStringQuery(r, comparatorKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 
 	vs, err := apiutil.ReadStringQuery(r, stringValueKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 
 	vd, err := apiutil.ReadStringQuery(r, dataValueKey, "")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 
 	vb, err := apiutil.ReadBoolQuery(r, boolValueKey, false)
@@ -131,12 +132,12 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 
 	from, err := apiutil.ReadFloatQuery(r, fromKey, 0)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 
 	to, err := apiutil.ReadFloatQuery(r, toKey, 0)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 
 	req := listMessagesReq{
@@ -187,24 +188,29 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case errors.Contains(err, nil):
 	case errors.Contains(err, apiutil.ErrInvalidQueryParams),
 		errors.Contains(err, apiutil.ErrMalformedEntity),
-		err == apiutil.ErrMissingID,
-		err == apiutil.ErrLimitSize,
-		err == apiutil.ErrOffsetSize,
-		err == apiutil.ErrInvalidComparator:
+		errors.Contains(err, apiutil.ErrMissingID),
+		errors.Contains(err, apiutil.ErrLimitSize),
+		errors.Contains(err, apiutil.ErrOffsetSize),
+		errors.Contains(err, apiutil.ErrInvalidComparator):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrAuthentication),
-		err == apiutil.ErrBearerToken:
+		errors.Contains(err, apiutil.ErrBearerToken):
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, readers.ErrReadMessages):
 		w.WriteHeader(http.StatusInternalServerError)
-
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
 	if errorVal, ok := err.(errors.Error); ok {
 		w.Header().Set("Content-Type", contentType)
-		if err := json.NewEncoder(w).Encode(apiutil.ErrorRes{Err: errorVal.Msg()}); err != nil {
+
+		errMsg := errorVal.Msg()
+		if errorVal.Err() != nil {
+			errMsg = fmt.Sprintf("%s : %s", errorVal.Msg(), errorVal.Err().Msg())
+		}
+
+		if err := json.NewEncoder(w).Encode(apiutil.ErrorRes{Err: errMsg}); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
