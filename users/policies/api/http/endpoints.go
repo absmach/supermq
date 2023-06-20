@@ -7,6 +7,8 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/mainflux/mainflux/internal/apiutil"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/policies"
 )
 
@@ -35,7 +37,7 @@ func createPolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createPolicyReq)
 		if err := req.validate(); err != nil {
-			return addPolicyRes{}, err
+			return addPolicyRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		policy := policies.Policy{
@@ -45,7 +47,7 @@ func createPolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 		}
 		err := svc.AddPolicy(ctx, req.token, policy)
 		if err != nil {
-			return addPolicyRes{}, err
+			return addPolicyRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		return addPolicyRes{created: true}, nil
@@ -56,7 +58,7 @@ func updatePolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(updatePolicyReq)
 		if err := req.validate(); err != nil {
-			return updatePolicyRes{}, err
+			return updatePolicyRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		policy := policies.Policy{
@@ -67,7 +69,7 @@ func updatePolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 
 		err := svc.UpdatePolicy(ctx, req.token, policy)
 		if err != nil {
-			return updatePolicyRes{}, err
+			return updatePolicyRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		return updatePolicyRes{updated: true}, nil
@@ -78,7 +80,7 @@ func listPolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listPolicyReq)
 		if err := req.validate(); err != nil {
-			return listPolicyRes{}, err
+			return listPolicyRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		pm := policies.Page{
 			Total:   req.Total,
@@ -91,7 +93,7 @@ func listPolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 		}
 		page, err := svc.ListPolicies(ctx, req.token, pm)
 		if err != nil {
-			return listPolicyRes{}, err
+			return listPolicyRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		return buildPoliciesResponse(page), nil
 	}
@@ -101,14 +103,14 @@ func deletePolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(deletePolicyReq)
 		if err := req.validate(); err != nil {
-			return deletePolicyRes{}, err
+			return deletePolicyRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		policy := policies.Policy{
 			Subject: req.Subject,
 			Object:  req.Object,
 		}
 		if err := svc.DeletePolicy(ctx, req.token, policy); err != nil {
-			return deletePolicyRes{}, err
+			return deletePolicyRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		return deletePolicyRes{deleted: true}, nil
