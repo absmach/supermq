@@ -6,6 +6,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -74,12 +75,12 @@ func MakeHandler(svc notifiers.Service, logger logger.Logger, instanceID string)
 
 func decodeCreate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.ErrUnsupportedContentType
+		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := createSubReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, errors.Wrap(err, apiutil.ErrValidation))
 	}
 
 	return req, nil
@@ -108,13 +109,13 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 
 	offset, err := apiutil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
-		return listSubsReq{}, err
+		return listSubsReq{}, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	req.offset = uint(offset)
 
 	limit, err := apiutil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
-		return listSubsReq{}, err
+		return listSubsReq{}, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	req.limit = uint(limit)
 
@@ -140,15 +141,15 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, apiutil.ErrMalformedEntity),
-		err == apiutil.ErrInvalidContact,
-		err == apiutil.ErrInvalidTopic,
-		err == apiutil.ErrMissingID,
+		errors.Contains(err, apiutil.ErrInvalidContact),
+		errors.Contains(err, apiutil.ErrInvalidTopic),
+		errors.Contains(err, apiutil.ErrMissingID),
 		errors.Contains(err, apiutil.ErrInvalidQueryParams):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound)
 	case errors.Contains(err, errors.ErrAuthentication),
-		err == apiutil.ErrBearerToken:
+		errors.Contains(err, apiutil.ErrBearerToken):
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrConflict):
 		w.WriteHeader(http.StatusConflict)
@@ -166,7 +167,13 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 	if errorVal, ok := err.(errors.Error); ok {
 		w.Header().Set("Content-Type", contentType)
-		if err := json.NewEncoder(w).Encode(apiutil.ErrorRes{Err: errorVal.Msg()}); err != nil {
+
+		errMsg := errorVal.Msg()
+		if errorVal.Err() != nil {
+			errMsg = fmt.Sprintf("%s : %s", errorVal.Msg(), errorVal.Err().Msg())
+		}
+
+		if err := json.NewEncoder(w).Encode(apiutil.ErrorRes{Err: errMsg}); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
