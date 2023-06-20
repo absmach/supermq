@@ -23,7 +23,6 @@ import (
 	"github.com/mainflux/mainflux/things/clients"
 	httpapi "github.com/mainflux/mainflux/things/clients/api"
 	thmocks "github.com/mainflux/mainflux/things/clients/mocks"
-	tpolicies "github.com/mainflux/mainflux/things/policies"
 	upolicies "github.com/mainflux/mainflux/users/policies"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -49,9 +48,7 @@ const (
 func newService(tokens map[string]string) (certs.Service, error) {
 	ac := bsmocks.NewAuthClient(map[string]string{token: email})
 
-	psvc := mocks.NewPoliciesService(ac)
-
-	server := newThingsServer(newThingsService(ac), psvc)
+	server := newThingsServer(newThingsService(ac))
 
 	policies := []thmocks.MockSubjectSet{{Object: "token", Relation: clients.AdminRelationKey}}
 	auth := thmocks.NewAuthService(tokens, map[string][]thmocks.MockSubjectSet{token: policies})
@@ -367,9 +364,9 @@ func TestViewCert(t *testing.T) {
 	}
 }
 
-func newThingsServer(svc clients.Service, psvc tpolicies.Service) *httptest.Server {
+func newThingsServer(svc clients.Service) *httptest.Server {
 	logger := logger.NewMock()
 	mux := bone.New()
-	httpapi.MakeHandler(svc, psvc, mux, logger)
+	httpapi.MakeHandler(svc, mux, logger)
 	return httptest.NewServer(mux)
 }

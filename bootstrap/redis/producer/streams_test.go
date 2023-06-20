@@ -101,7 +101,7 @@ func newThingsService(auth upolicies.AuthServiceClient) (clients.Service, groups
 func newThingsServer(csvc clients.Service, gsvc groups.Service, psvc tpolicies.Service) *httptest.Server {
 	logger := logger.NewMock()
 	mux := bone.New()
-	capi.MakeHandler(csvc, psvc, mux, logger)
+	capi.MakeHandler(csvc, mux, logger)
 	gapi.MakeHandler(gsvc, mux, logger)
 	papi.MakeHandler(csvc, psvc, mux, logger)
 	return httptest.NewServer(mux)
