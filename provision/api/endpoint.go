@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/mainflux/mainflux/internal/apiutil"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/provision"
 )
 
@@ -11,7 +13,7 @@ func doProvision(svc provision.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(provisionReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, apiutil.ErrValidation)
 		}
 		token := req.token
 
@@ -39,7 +41,7 @@ func getMapping(svc provision.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(mappingReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, apiutil.ErrValidation)
 		}
 		return svc.Mapping(req.token)
 	}
