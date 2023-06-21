@@ -60,7 +60,7 @@ func TestIssueToken(t *testing.T) {
 		{
 			desc:   "issue token for an empty user",
 			client: sdk.User{},
-			err:    errors.NewSDKErrorWithStatus(apiutil.ErrMissingIdentity, http.StatusInternalServerError),
+			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingIdentity), http.StatusInternalServerError),
 		},
 		{
 			desc: "issue token for invalid secret",
@@ -71,7 +71,7 @@ func TestIssueToken(t *testing.T) {
 				},
 			},
 			dbClient: wrongClient,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 	}
 	for _, tc := range cases {
@@ -133,12 +133,12 @@ func TestRefreshToken(t *testing.T) {
 		{
 			desc:  "refresh token for a valid access token",
 			token: token.AccessToken,
-			err:   errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 		{
 			desc:  "refresh token for an empty token",
 			token: "",
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerToken), http.StatusInternalServerError),
 		},
 	}
 	for _, tc := range cases {
