@@ -92,7 +92,7 @@ func decodeConnectThing(_ context.Context, r *http.Request) (interface{}, error)
 
 	req := createPolicyReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
 	}
 
 	return req, nil

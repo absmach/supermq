@@ -86,14 +86,14 @@ func TestCreateThing(t *testing.T) {
 			client:   thing,
 			response: sdk.Thing{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedCreation, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedCreation), http.StatusInternalServerError),
 		},
 		{
 			desc:     "register empty thing",
 			client:   sdk.Thing{},
 			response: sdk.Thing{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMalformedEntity, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedEntity), http.StatusBadRequest),
 		},
 		{
 			desc: "register a thing that can't be marshalled",
@@ -146,7 +146,7 @@ func TestCreateThing(t *testing.T) {
 			client:   sdk.Thing{},
 			response: sdk.Thing{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMalformedEntity, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedEntity), http.StatusBadRequest),
 		},
 		{
 			desc: "register thing with every field defined",
@@ -179,6 +179,14 @@ func TestCreateThing(t *testing.T) {
 	for _, tc := range cases {
 		repoCall := cRepo.On("Save", mock.Anything, mock.Anything).Return(tc.response, tc.err)
 		rThing, err := mfsdk.CreateThing(tc.client, tc.token)
+
+		// fmt.Println()
+		// fmt.Println(tc.desc)
+		// fmt.Println()
+		// fmt.Println("tc.err -> ", tc.err)
+		// fmt.Println("err -> ", err)
+		// fmt.Println()
+
 		tc.response.ID = rThing.ID
 		tc.response.Owner = rThing.Owner
 		tc.response.CreatedAt = rThing.CreatedAt
@@ -243,7 +251,7 @@ func TestCreateThings(t *testing.T) {
 			things:   things,
 			response: []sdk.Thing{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedCreation, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedCreation), http.StatusInternalServerError),
 		},
 		{
 			desc:     "register empty things",

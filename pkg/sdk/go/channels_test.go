@@ -91,7 +91,7 @@ func TestCreateChannel(t *testing.T) {
 				},
 			},
 			token: token,
-			err:   errors.NewSDKError(errors.Wrap(fmt.Errorf("json: unsupported type: chan int"), apiutil.ErrValidation)),
+			err:   errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc: "create channel with parent",
@@ -109,7 +109,7 @@ func TestCreateChannel(t *testing.T) {
 				ParentID: gmocks.WrongID,
 				Status:   mfclients.EnabledStatus.String(),
 			},
-			err: errors.NewSDKErrorWithStatus(errors.Wrap(errors.ErrCreateEntity, apiutil.ErrValidation), http.StatusInternalServerError),
+			err: errors.NewSDKErrorWithStatus(errors.ErrCreateEntity, http.StatusInternalServerError),
 		},
 		{
 			desc: "create channel with invalid owner",
@@ -118,14 +118,14 @@ func TestCreateChannel(t *testing.T) {
 				OwnerID: gmocks.WrongID,
 				Status:  mfclients.EnabledStatus.String(),
 			},
-			err: errors.NewSDKErrorWithStatus(errors.Wrap(sdk.ErrFailedCreation, apiutil.ErrValidation), http.StatusInternalServerError),
+			err: errors.NewSDKErrorWithStatus(sdk.ErrFailedCreation, http.StatusInternalServerError),
 		},
 		{
 			desc: "create channel with missing name",
 			channel: sdk.Channel{
 				Status: mfclients.EnabledStatus.String(),
 			},
-			err: errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrNameSize, apiutil.ErrValidation), http.StatusBadRequest),
+			err: errors.NewSDKErrorWithStatus(apiutil.ErrNameSize, http.StatusBadRequest),
 		},
 		{
 			desc: "create a channel with every field defined",

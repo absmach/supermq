@@ -165,6 +165,11 @@ func TestAdd(t *testing.T) {
 
 	for _, tc := range cases {
 		_, err := svc.Add(context.Background(), tc.token, tc.config)
+		fmt.Println()
+		fmt.Println(tc.desc)
+		fmt.Println()
+		fmt.Println("exp -> ", tc.err)
+		fmt.Println("got -> ", err)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }

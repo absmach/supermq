@@ -32,6 +32,7 @@ type Thing struct {
 func (sdk mfSDK) CreateThing(thing Thing, token string) (Thing, errors.SDKError) {
 	data, err := json.Marshal(thing)
 	if err != nil {
+		fmt.Println("1 -> passing in error : ", err)
 		return Thing{}, errors.NewSDKError(err)
 	}
 
@@ -39,11 +40,13 @@ func (sdk mfSDK) CreateThing(thing Thing, token string) (Thing, errors.SDKError)
 
 	_, body, sdkerr := sdk.processRequest(http.MethodPost, url, token, data, nil, http.StatusCreated)
 	if sdkerr != nil {
+		fmt.Println("2 -> returning from processRequest error : ", sdkerr)
 		return Thing{}, sdkerr
 	}
 
 	thing = Thing{}
 	if err := json.Unmarshal(body, &thing); err != nil {
+		fmt.Println("3 -> passing in error : ", err)
 		return Thing{}, errors.NewSDKError(err)
 	}
 

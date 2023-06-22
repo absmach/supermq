@@ -70,6 +70,7 @@ func NewSDKErrorWithStatus(err error, statusCode int) SDKError {
 // Since multiple status codes can be valid, we can pass multiple status codes to the function.
 // The function then checks for errors in the HTTP response.
 func CheckError(resp *http.Response, expectedStatusCodes ...int) SDKError {
+	fmt.Println("RESP.STATUSCODE = ", resp.StatusCode)
 	for _, expectedStatusCode := range expectedStatusCodes {
 		if resp.StatusCode == expectedStatusCode {
 			return nil

@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux"
@@ -92,31 +93,40 @@ func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface
 func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", ContentType)
 	switch {
-	case errors.Contains(err, apiutil.ErrMalformedEntity),
-		errors.Contains(err, apiutil.ErrMissingID),
-		errors.Contains(err, apiutil.ErrEmptyList),
-		errors.Contains(err, apiutil.ErrMissingMemberType),
-		errors.Contains(err, apiutil.ErrInvalidSecret),
-		errors.Contains(err, apiutil.ErrNameSize):
+	case strings.Contains(err.Error(), apiutil.ErrMalformedEntity.Error()),
+		strings.Contains(err.Error(), apiutil.ErrMissingID.Error()),
+		strings.Contains(err.Error(), apiutil.ErrEmptyList.Error()),
+		strings.Contains(err.Error(), apiutil.ErrMissingMemberType.Error()),
+		strings.Contains(err.Error(), apiutil.ErrInvalidSecret.Error()),
+		strings.Contains(err.Error(), apiutil.ErrNameSize.Error()):
+		fmt.Println("1111", err)
 		w.WriteHeader(http.StatusBadRequest)
-	case errors.Contains(err, errors.ErrAuthentication):
+	case strings.Contains(err.Error(), errors.ErrAuthentication.Error()):
+		fmt.Println("2222", err)
 		w.WriteHeader(http.StatusUnauthorized)
-	case errors.Contains(err, errors.ErrNotFound):
+	case strings.Contains(err.Error(), errors.ErrNotFound.Error()):
+		fmt.Println("3333", err)
 		w.WriteHeader(http.StatusNotFound)
-	case errors.Contains(err, errors.ErrConflict):
+	case strings.Contains(err.Error(), errors.ErrConflict.Error()):
+		fmt.Println("4444", err)
 		w.WriteHeader(http.StatusConflict)
-	case errors.Contains(err, errors.ErrAuthorization):
+	case strings.Contains(err.Error(), errors.ErrAuthorization.Error()):
+		fmt.Println("5555", err)
 		w.WriteHeader(http.StatusForbidden)
-	case errors.Contains(err, postgres.ErrMemberAlreadyAssigned):
+	case strings.Contains(err.Error(), postgres.ErrMemberAlreadyAssigned.Error()):
+		fmt.Println("6666", err)
 		w.WriteHeader(http.StatusConflict)
-	case errors.Contains(err, errors.ErrUnsupportedContentType):
+	case strings.Contains(err.Error(), errors.ErrUnsupportedContentType.Error()):
+		fmt.Println("7777", err)
 		w.WriteHeader(http.StatusUnsupportedMediaType)
-	case errors.Contains(err, errors.ErrCreateEntity),
-		errors.Contains(err, errors.ErrUpdateEntity),
-		errors.Contains(err, errors.ErrViewEntity),
-		errors.Contains(err, errors.ErrRemoveEntity):
+	case strings.Contains(err.Error(), errors.ErrCreateEntity.Error()),
+		strings.Contains(err.Error(), errors.ErrUpdateEntity.Error()),
+		strings.Contains(err.Error(), errors.ErrViewEntity.Error()),
+		strings.Contains(err.Error(), errors.ErrRemoveEntity.Error()):
+		fmt.Println("8888", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	default:
+		fmt.Println("9999", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
@@ -124,10 +134,13 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 		errMsg := errorVal.Msg()
 		if errorVal.Err() != nil {
-			errMsg = fmt.Sprintf("%s : %s", errorVal.Msg(), errorVal.Err().Msg())
+			errMsg = errorVal.Err().Msg()
+			// errMsg = fmt.Sprintf("%s : %s", errorVal.Msg(), errorVal.Err().Msg())
 		}
-
+		// fmt.Println("ERRORVAL = ", errorVal)
+		// fmt.Println("ERRMSG = ", errMsg)
 		if err := json.NewEncoder(w).Encode(apiutil.ErrorRes{Err: errMsg}); err != nil {
+			fmt.Println("Got error while json.NewEncoder ing ->", err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
