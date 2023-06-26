@@ -74,11 +74,16 @@ func ValidateUUID(extID string) (err error) {
 
 // EncodeResponse encodes successful response.
 func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
+	fmt.Println()
+	fmt.Println("Inside Encode Response")
+	fmt.Println()
 	if ar, ok := response.(mainflux.Response); ok {
 		for k, v := range ar.Headers() {
+			fmt.Println("Inside EncodeResponse: Setting header -> ", k, " -> ", v)
 			w.Header().Set(k, v)
 		}
 		w.Header().Set("Content-Type", ContentType)
+		fmt.Println("Setting ar.code() => ", ar.Code())
 		w.WriteHeader(ar.Code())
 
 		if ar.Empty() {
@@ -86,11 +91,18 @@ func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface
 		}
 	}
 
+	fmt.Println()
+	fmt.Println("Exiting EncodeResponse")
+	fmt.Println()
+
 	return json.NewEncoder(w).Encode(response)
 }
 
 // EncodeError encodes an error response.
 func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
+	fmt.Println()
+	fmt.Println("Inside EncodeError -> ")
+	fmt.Println()
 	w.Header().Set("Content-Type", ContentType)
 	switch {
 	case strings.Contains(err.Error(), apiutil.ErrMalformedEntity.Error()),
@@ -134,14 +146,18 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 		errMsg := errorVal.Msg()
 		if errorVal.Err() != nil {
-			errMsg = errorVal.Err().Msg()
-			// errMsg = fmt.Sprintf("%s : %s", errorVal.Msg(), errorVal.Err().Msg())
+			// errMsg = errorVal.Err().Msg()
+			errMsg = fmt.Sprintf("%s : %s", errorVal.Msg(), errorVal.Err().Msg())
 		}
-		// fmt.Println("ERRORVAL = ", errorVal)
-		// fmt.Println("ERRMSG = ", errMsg)
+		fmt.Println("ERRORVAL = ", errorVal)
+		fmt.Println("ERRMSG = ", errMsg)
 		if err := json.NewEncoder(w).Encode(apiutil.ErrorRes{Err: errMsg}); err != nil {
 			fmt.Println("Got error while json.NewEncoder ing ->", err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
+
+	fmt.Println()
+	fmt.Println("Exiting EncodeError")
+	fmt.Println()
 }

@@ -192,6 +192,7 @@ func decodeListGroupsRequest(_ context.Context, r *http.Request) (interface{}, e
 	if err != nil {
 		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
+
 	req := listGroupsReq{
 		token: apiutil.ExtractBearerToken(r),
 		tree:  tree,

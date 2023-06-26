@@ -5,6 +5,7 @@ package groups
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/mainflux/mainflux"
@@ -88,8 +89,14 @@ func (svc service) ViewGroup(ctx context.Context, token string, id string) (grou
 }
 
 func (svc service) ListGroups(ctx context.Context, token string, gm groups.GroupsPage) (groups.GroupsPage, error) {
+	fmt.Println()
+	fmt.Println("Inside svc.Listgroups()")
+	fmt.Println()
 	userID, err := svc.identify(ctx, token)
 	if err != nil {
+		fmt.Println()
+		fmt.Println("1. svc.listgroups return -> ", err)
+		fmt.Println()
 		return groups.GroupsPage{}, err
 	}
 
@@ -101,7 +108,11 @@ func (svc service) ListGroups(ctx context.Context, token string, gm groups.Group
 	gm.Subject = userID
 	gm.OwnerID = userID
 	gm.Action = "g_list"
-	return svc.groups.RetrieveAll(ctx, gm)
+	gp, err := svc.groups.RetrieveAll(ctx, gm)
+	fmt.Println()
+	fmt.Println("3. svc.Listgroups -> ", err)
+	fmt.Println()
+	return gp, err
 }
 
 func (svc service) ListMemberships(ctx context.Context, token, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {

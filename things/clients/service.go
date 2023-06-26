@@ -80,6 +80,7 @@ func (svc service) CreateThings(ctx context.Context, token string, clis ...mfcli
 		cli.CreatedAt = time.Now()
 		clients = append(clients, cli)
 	}
+
 	return svc.clients.Save(ctx, clients...)
 }
 
@@ -147,7 +148,7 @@ func (svc service) ListClients(ctx context.Context, token string, pm mfclients.P
 func (svc service) UpdateClient(ctx context.Context, token string, cli mfclients.Client) (mfclients.Client, error) {
 	userID, err := svc.identify(ctx, token)
 	if err != nil {
-		return mfclients.Client{}, err
+		return mfclients.Client{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	if err := svc.authorize(ctx, userID, cli.ID, updateRelationKey); err != nil {
 		return mfclients.Client{}, err
@@ -167,7 +168,7 @@ func (svc service) UpdateClient(ctx context.Context, token string, cli mfclients
 func (svc service) UpdateClientTags(ctx context.Context, token string, cli mfclients.Client) (mfclients.Client, error) {
 	userID, err := svc.identify(ctx, token)
 	if err != nil {
-		return mfclients.Client{}, err
+		return mfclients.Client{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	if err := svc.authorize(ctx, userID, cli.ID, updateRelationKey); err != nil {
 		return mfclients.Client{}, err
@@ -186,7 +187,7 @@ func (svc service) UpdateClientTags(ctx context.Context, token string, cli mfcli
 func (svc service) UpdateClientSecret(ctx context.Context, token, id, key string) (mfclients.Client, error) {
 	userID, err := svc.identify(ctx, token)
 	if err != nil {
-		return mfclients.Client{}, err
+		return mfclients.Client{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	if err := svc.authorize(ctx, userID, id, updateRelationKey); err != nil {
 		return mfclients.Client{}, err
@@ -208,7 +209,7 @@ func (svc service) UpdateClientSecret(ctx context.Context, token, id, key string
 func (svc service) UpdateClientOwner(ctx context.Context, token string, cli mfclients.Client) (mfclients.Client, error) {
 	userID, err := svc.identify(ctx, token)
 	if err != nil {
-		return mfclients.Client{}, err
+		return mfclients.Client{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	if err := svc.authorize(ctx, userID, cli.ID, updateRelationKey); err != nil {
 		return mfclients.Client{}, err

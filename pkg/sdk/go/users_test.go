@@ -73,14 +73,14 @@ func TestCreateClient(t *testing.T) {
 			client:   user,
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedCreation, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedCreation), http.StatusInternalServerError),
 		},
 		{
 			desc:     "register empty user",
 			client:   sdk.User{},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMalformedEntity, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedEntity), http.StatusBadRequest),
 		},
 		{
 			desc: "register a user that can't be marshalled",
@@ -107,7 +107,7 @@ func TestCreateClient(t *testing.T) {
 			},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMalformedEntity, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedEntity), http.StatusBadRequest),
 		},
 		{
 			desc: "register user with empty secret",
@@ -119,7 +119,7 @@ func TestCreateClient(t *testing.T) {
 			},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMalformedEntity, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedEntity), http.StatusBadRequest),
 		},
 		{
 			desc: "register user with empty identity",
@@ -131,14 +131,14 @@ func TestCreateClient(t *testing.T) {
 			},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMalformedEntity, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedEntity), http.StatusBadRequest),
 		},
 		{
 			desc:     "register empty user",
 			client:   sdk.User{},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMalformedEntity, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedEntity), http.StatusBadRequest),
 		},
 		{
 			desc: "register user with every field defined",
@@ -249,7 +249,7 @@ func TestListClients(t *testing.T) {
 			token:    invalidToken,
 			offset:   offset,
 			limit:    limit,
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedList, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedList), http.StatusInternalServerError),
 			response: nil,
 		},
 		{
@@ -257,7 +257,7 @@ func TestListClients(t *testing.T) {
 			token:    "",
 			offset:   offset,
 			limit:    limit,
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedList, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedList), http.StatusInternalServerError),
 			response: nil,
 		},
 		{
@@ -265,7 +265,7 @@ func TestListClients(t *testing.T) {
 			token:    token,
 			offset:   offset,
 			limit:    0,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrLimitSize, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusInternalServerError),
 			response: nil,
 		},
 		{
@@ -273,7 +273,7 @@ func TestListClients(t *testing.T) {
 			token:    token,
 			offset:   offset,
 			limit:    110,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrLimitSize, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusInternalServerError),
 			response: []sdk.User(nil),
 		},
 		{
@@ -484,7 +484,7 @@ func TestListMembers(t *testing.T) {
 			groupID:  testsutil.GenerateUUID(t, idProvider),
 			page:     sdk.PageMetadata{},
 			response: []sdk.User(nil),
-			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 		{
 			desc:     "list clients with an invalid id",
@@ -492,7 +492,7 @@ func TestListMembers(t *testing.T) {
 			groupID:  mocks.WrongID,
 			page:     sdk.PageMetadata{},
 			response: []sdk.User(nil),
-			err:      errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrNotFound), http.StatusNotFound),
 		},
 	}
 
@@ -553,21 +553,21 @@ func TestClient(t *testing.T) {
 			response: sdk.User{},
 			token:    invalidToken,
 			clientID: generateUUID(t),
-			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 		{
 			desc:     "view client with valid token and invalid client id",
 			response: sdk.User{},
 			token:    generateValidToken(t, svc, cRepo),
 			clientID: mocks.WrongID,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrNotFound), http.StatusNotFound),
 		},
 		{
 			desc:     "view client with an invalid token and invalid client id",
 			response: sdk.User{},
 			token:    invalidToken,
 			clientID: mocks.WrongID,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 	}
 
@@ -628,7 +628,7 @@ func TestProfile(t *testing.T) {
 			desc:     "view client with an invalid token",
 			response: sdk.User{},
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 	}
 
@@ -695,14 +695,14 @@ func TestUpdateClient(t *testing.T) {
 			client:   client1,
 			response: sdk.User{},
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 		{
 			desc:     "update client name with invalid id",
 			client:   client2,
 			response: sdk.User{},
 			token:    generateValidToken(t, svc, cRepo),
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedUpdate, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedUpdate), http.StatusInternalServerError),
 		},
 		{
 			desc: "update a user that can't be marshalled",
@@ -786,14 +786,14 @@ func TestUpdateClientTags(t *testing.T) {
 			client:   client1,
 			response: sdk.User{},
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 		{
 			desc:     "update client name with invalid id",
 			client:   client2,
 			response: sdk.User{},
 			token:    generateValidToken(t, svc, cRepo),
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedUpdate, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedUpdate), http.StatusInternalServerError),
 		},
 		{
 			desc: "update a user that can't be marshalled",
@@ -876,14 +876,14 @@ func TestUpdateClientIdentity(t *testing.T) {
 			client:   user,
 			response: sdk.User{},
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 		{
 			desc:     "update client name with invalid id",
 			client:   client2,
 			response: sdk.User{},
 			token:    generateValidToken(t, svc, cRepo),
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedUpdate, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedUpdate), http.StatusInternalServerError),
 		},
 		{
 			desc: "update a user that can't be marshalled",
@@ -899,7 +899,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 			},
 			response: sdk.User{},
 			token:    generateValidToken(t, svc, cRepo),
-			err:      errors.NewSDKErrorWithStatus(fmt.Errorf("json: unsupported type: chan int"), http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, fmt.Errorf("json: unsupported type: chan int")), http.StatusInternalServerError),
 		},
 	}
 
@@ -965,7 +965,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			newSecret: "newPassword",
 			token:     "non-existent",
 			response:  sdk.User{},
-			err:       errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 		{
 			desc:      "update client secret with wrong old secret",
@@ -973,7 +973,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			newSecret: "newSecret",
 			token:     token.AccessToken,
 			response:  sdk.User{},
-			err:       errors.NewSDKErrorWithStatus(apiutil.ErrInvalidSecret, http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidSecret), http.StatusBadRequest),
 		},
 	}
 
@@ -1044,14 +1044,14 @@ func TestUpdateClientOwner(t *testing.T) {
 			client:   client2,
 			response: sdk.User{},
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 		{
 			desc:     "update client name with invalid id",
 			client:   client2,
 			response: sdk.User{},
 			token:    generateValidToken(t, svc, cRepo),
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedUpdate, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedUpdate), http.StatusInternalServerError),
 		},
 		{
 			desc: "update a user that can't be marshalled",
@@ -1129,7 +1129,7 @@ func TestEnableClient(t *testing.T) {
 			token:    generateValidToken(t, svc, cRepo),
 			client:   enabledClient1,
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedEnable, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedEnable), http.StatusInternalServerError),
 		},
 		{
 			desc:     "enable non-existing client",
@@ -1137,7 +1137,7 @@ func TestEnableClient(t *testing.T) {
 			token:    generateValidToken(t, svc, cRepo),
 			client:   sdk.User{},
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedEnable, http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedEnable), http.StatusNotFound),
 		},
 	}
 
@@ -1255,7 +1255,7 @@ func TestDisableClient(t *testing.T) {
 			token:    generateValidToken(t, svc, cRepo),
 			client:   disabledClient1,
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedDisable, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedDisable), http.StatusInternalServerError),
 		},
 		{
 			desc:     "disable non-existing client",
@@ -1263,7 +1263,7 @@ func TestDisableClient(t *testing.T) {
 			client:   sdk.User{},
 			token:    generateValidToken(t, svc, cRepo),
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedDisable, http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedDisable), http.StatusNotFound),
 		},
 	}
 

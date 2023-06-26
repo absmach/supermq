@@ -92,7 +92,7 @@ func TestCreatePolicyUser(t *testing.T) {
 			},
 			page:  sdk.PolicyPage{Policies: []sdk.Policy{clientPolicy}},
 			token: generateValidToken(t, csvc, cRepo),
-			err:   errors.NewSDKErrorWithStatus(sdk.ErrFailedCreation, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedCreation), http.StatusInternalServerError),
 		},
 		{
 			desc: "add a new policy with owner",
@@ -125,7 +125,7 @@ func TestCreatePolicyUser(t *testing.T) {
 				Actions: []string{"wrong"},
 				Subject: "sub3",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMalformedPolicyAct, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedPolicyAct), http.StatusInternalServerError),
 			token: generateValidToken(t, csvc, cRepo),
 		},
 		{
@@ -135,7 +135,7 @@ func TestCreatePolicyUser(t *testing.T) {
 				Actions: []string{"c_delete"},
 				Subject: "sub4",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMissingPolicyObj, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPolicyObj), http.StatusInternalServerError),
 			token: generateValidToken(t, csvc, cRepo),
 		},
 		{
@@ -145,7 +145,7 @@ func TestCreatePolicyUser(t *testing.T) {
 				Actions: []string{"c_delete"},
 				Object:  "obj4",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMissingPolicySub, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPolicySub), http.StatusInternalServerError),
 			token: generateValidToken(t, csvc, cRepo),
 		},
 		{
@@ -155,7 +155,7 @@ func TestCreatePolicyUser(t *testing.T) {
 				Subject: "sub5",
 				Object:  "obj5",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMalformedPolicyAct, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedPolicyAct), http.StatusInternalServerError),
 			token: generateValidToken(t, csvc, cRepo),
 		},
 	}
@@ -228,7 +228,7 @@ func TestAuthorizeUser(t *testing.T) {
 				Subject:    "sub3",
 				EntityType: "client",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMalformedPolicyAct, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedPolicyAct), http.StatusInternalServerError),
 			token: generateValidToken(t, csvc, cRepo),
 		},
 		{
@@ -239,7 +239,7 @@ func TestAuthorizeUser(t *testing.T) {
 				Subject:    "sub4",
 				EntityType: "client",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMissingPolicyObj, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPolicyObj), http.StatusInternalServerError),
 			token: generateValidToken(t, csvc, cRepo),
 		},
 		{
@@ -250,7 +250,7 @@ func TestAuthorizeUser(t *testing.T) {
 				Object:     "obj4",
 				EntityType: "client",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMissingPolicySub, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPolicySub), http.StatusInternalServerError),
 			token: generateValidToken(t, csvc, cRepo),
 		},
 		{
@@ -261,7 +261,7 @@ func TestAuthorizeUser(t *testing.T) {
 				Object:     "obj5",
 				EntityType: "client",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMalformedPolicyAct, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedPolicyAct), http.StatusInternalServerError),
 			token: generateValidToken(t, csvc, cRepo),
 		},
 	}
@@ -322,7 +322,7 @@ func TestAssign(t *testing.T) {
 			},
 			page:  sdk.PolicyPage{Policies: []sdk.Policy{clientPolicy}},
 			token: generateValidToken(t, csvc, cRepo),
-			err:   errors.NewSDKErrorWithStatus(sdk.ErrFailedCreation, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedCreation), http.StatusInternalServerError),
 		},
 		{
 			desc: "add a new policy with owner",
@@ -355,7 +355,7 @@ func TestAssign(t *testing.T) {
 				Actions: []string{"wrong"},
 				Subject: "sub3",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMalformedPolicyAct, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedPolicyAct), http.StatusInternalServerError),
 			token: generateValidToken(t, csvc, cRepo),
 		},
 		{
@@ -365,7 +365,7 @@ func TestAssign(t *testing.T) {
 				Actions: []string{"c_delete"},
 				Subject: "sub4",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMissingPolicyObj, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPolicyObj), http.StatusInternalServerError),
 			token: generateValidToken(t, csvc, cRepo),
 		},
 		{
@@ -375,7 +375,7 @@ func TestAssign(t *testing.T) {
 				Actions: []string{"c_delete"},
 				Object:  "obj4",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMissingPolicySub, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPolicySub), http.StatusInternalServerError),
 			token: generateValidToken(t, csvc, cRepo),
 		},
 		{
@@ -385,7 +385,7 @@ func TestAssign(t *testing.T) {
 				Subject: "sub5",
 				Object:  "obj5",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMalformedPolicyAct, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedPolicyAct), http.StatusInternalServerError),
 			token: generateValidToken(t, csvc, cRepo),
 		},
 	}
@@ -440,13 +440,13 @@ func TestUpdatePolicy(t *testing.T) {
 			desc:   "update policy action with invalid token",
 			action: []string{"m_write"},
 			token:  "non-existent",
-			err:    errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 		{
 			desc:   "update policy action with wrong policy action",
 			action: []string{"wrong"},
 			token:  generateValidToken(t, csvc, cRepo),
-			err:    errors.NewSDKErrorWithStatus(apiutil.ErrMalformedPolicyAct, http.StatusInternalServerError),
+			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedPolicyAct), http.StatusInternalServerError),
 		},
 	}
 
@@ -507,13 +507,13 @@ func TestUpdateThingsPolicy(t *testing.T) {
 			desc:   "update policy action with invalid token",
 			action: []string{"m_write"},
 			token:  "non-existent",
-			err:    errors.NewSDKErrorWithStatus(errors.ErrAuthorization, http.StatusUnauthorized),
+			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusUnauthorized),
 		},
 		{
 			desc:   "update policy action with wrong policy action",
 			action: []string{"wrong"},
 			token:  adminToken,
-			err:    errors.NewSDKErrorWithStatus(apiutil.ErrMalformedPolicyAct, http.StatusInternalServerError),
+			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedPolicyAct), http.StatusInternalServerError),
 		},
 	}
 
@@ -578,7 +578,7 @@ func TestListPolicies(t *testing.T) {
 		{
 			desc:     "list policies with invalid token",
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
 			response: []sdk.Policy(nil),
 		},
 		{
@@ -648,7 +648,7 @@ func TestListPolicies(t *testing.T) {
 				Action: "wrong",
 			},
 			response: []sdk.Policy(nil),
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMalformedPolicyAct, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedPolicyAct), http.StatusInternalServerError),
 		},
 	}
 
@@ -699,7 +699,7 @@ func TestDeletePolicy(t *testing.T) {
 	repoCall1 = pRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(convertUserPolicyPage(sdk.PolicyPage{Policies: []sdk.Policy{cpr}}), nil)
 	repoCall2 = pRepo.On("Delete", mock.Anything, mock.Anything).Return(sdk.ErrFailedRemoval)
 	err = mfsdk.DeleteUserPolicy(pr, invalidToken)
-	assert.Equal(t, err, errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized), fmt.Sprintf("expected %v got %v", pr, err))
+	assert.Equal(t, err, errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized), fmt.Sprintf("expected %s got %s", pr, err))
 	ok = repoCall.Parent.AssertCalled(t, "Delete", mock.Anything, mock.Anything)
 	assert.True(t, ok, "Delete was not called on invalid policy")
 	repoCall2.Unset()
@@ -741,7 +741,7 @@ func TestUnassign(t *testing.T) {
 	repoCall1 = pRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(convertUserPolicyPage(sdk.PolicyPage{Policies: []sdk.Policy{cpr}}), nil)
 	repoCall2 = pRepo.On("Delete", mock.Anything, mock.Anything).Return(sdk.ErrFailedRemoval)
 	err = mfsdk.Unassign(pr.Subject, pr.Object, invalidToken)
-	assert.Equal(t, err, errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized), fmt.Sprintf("expected %v got %v", pr, err))
+	assert.Equal(t, err, errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized), fmt.Sprintf("expected %s got %s", pr, err))
 	ok = repoCall.Parent.AssertCalled(t, "Delete", mock.Anything, mock.Anything)
 	assert.True(t, ok, "Delete was not called on invalid policy")
 	repoCall2.Unset()
@@ -797,7 +797,7 @@ func TestConnect(t *testing.T) {
 			},
 			page:  sdk.PolicyPage{Policies: []sdk.Policy{clientPolicy}},
 			token: adminToken,
-			err:   errors.NewSDKErrorWithStatus(sdk.ErrFailedCreation, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedCreation), http.StatusInternalServerError),
 		},
 		{
 			desc: "add a new policy with owner",
@@ -830,7 +830,7 @@ func TestConnect(t *testing.T) {
 				Actions: []string{"wrong"},
 				Subject: "sub3",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMalformedPolicyAct, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedPolicyAct), http.StatusInternalServerError),
 			token: adminToken,
 		},
 		{
@@ -840,7 +840,7 @@ func TestConnect(t *testing.T) {
 				Actions: []string{"c_delete"},
 				Subject: "sub4",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
 			token: adminToken,
 		},
 		{
@@ -850,7 +850,7 @@ func TestConnect(t *testing.T) {
 				Actions: []string{"c_delete"},
 				Object:  "obj4",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
 			token: adminToken,
 		},
 		{
@@ -860,7 +860,7 @@ func TestConnect(t *testing.T) {
 				Subject: "sub5",
 				Object:  "obj5",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMalformedPolicyAct, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedPolicyAct), http.StatusInternalServerError),
 			token: adminToken,
 		},
 	}
@@ -926,7 +926,7 @@ func TestConnectThing(t *testing.T) {
 			},
 			page:  sdk.PolicyPage{Policies: []sdk.Policy{clientPolicy}},
 			token: adminToken,
-			err:   errors.NewSDKErrorWithStatus(sdk.ErrFailedCreation, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedCreation), http.StatusInternalServerError),
 		},
 		{
 			desc: "add a new policy with owner",
@@ -959,7 +959,7 @@ func TestConnectThing(t *testing.T) {
 				Actions: []string{"wrong"},
 				Subject: "sub3",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMalformedPolicyAct, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedPolicyAct), http.StatusInternalServerError),
 			token: adminToken,
 		},
 		{
@@ -969,7 +969,7 @@ func TestConnectThing(t *testing.T) {
 				Actions: []string{"c_delete"},
 				Subject: "sub4",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
 			token: adminToken,
 		},
 		{
@@ -979,7 +979,7 @@ func TestConnectThing(t *testing.T) {
 				Actions: []string{"c_delete"},
 				Object:  "obj4",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
 			token: adminToken,
 		},
 		{
@@ -989,7 +989,7 @@ func TestConnectThing(t *testing.T) {
 				Subject: "sub5",
 				Object:  "obj5",
 			},
-			err:   errors.NewSDKErrorWithStatus(apiutil.ErrMalformedPolicyAct, http.StatusInternalServerError),
+			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedPolicyAct), http.StatusInternalServerError),
 			token: adminToken,
 		},
 	}
@@ -1037,7 +1037,7 @@ func TestDisconnectThing(t *testing.T) {
 
 	repoCall = pRepo.On("Delete", mock.Anything, mock.Anything).Return(sdk.ErrFailedRemoval)
 	err = mfsdk.DisconnectThing(pr.Subject, pr.Object, invalidToken)
-	assert.Equal(t, err, errors.NewSDKErrorWithStatus(errors.ErrAuthorization, http.StatusUnauthorized), fmt.Sprintf("expected %v got %v", pr, err))
+	assert.Equal(t, err, errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusUnauthorized), fmt.Sprintf("expected %s got %s", pr, err))
 	ok = repoCall.Parent.AssertCalled(t, "Delete", mock.Anything, mock.Anything)
 	assert.True(t, ok, "Delete was not called on invalid policy")
 	repoCall.Unset()
@@ -1076,7 +1076,7 @@ func TestDisconnect(t *testing.T) {
 	repoCall = pRepo.On("Delete", mock.Anything, mock.Anything).Return(sdk.ErrFailedRemoval)
 	conn = sdk.ConnectionIDs{ChannelIDs: []string{pr.Object}, ThingIDs: []string{pr.Subject}}
 	err = mfsdk.Disconnect(conn, invalidToken)
-	assert.Equal(t, err, errors.NewSDKErrorWithStatus(errors.ErrAuthorization, http.StatusUnauthorized), fmt.Sprintf("expected %v got %v", pr, err))
+	assert.Equal(t, err, errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusUnauthorized), fmt.Sprintf("expected %s got %s", pr, err))
 	ok = repoCall.Parent.AssertCalled(t, "Delete", mock.Anything, mock.Anything)
 	assert.True(t, ok, "Delete was not called on invalid policy")
 	repoCall.Unset()

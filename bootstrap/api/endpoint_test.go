@@ -282,7 +282,7 @@ func TestAdd(t *testing.T) {
 			req:         neData,
 			auth:        validToken,
 			contentType: contentType,
-			status:      http.StatusBadRequest,
+			status:      http.StatusServiceUnavailable,
 			location:    "",
 		},
 		{

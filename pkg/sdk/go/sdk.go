@@ -1041,23 +1041,12 @@ func (sdk mfSDK) processRequest(method, url, token string, data []byte, headers 
 
 	resp, err := sdk.client.Do(req)
 	if err != nil {
-		fmt.Println("processrequest -> err in sdk.client.Do -> ", err)
 		return make(http.Header), []byte{}, errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
 	sdkerr := errors.CheckError(resp, expectedRespCodes...)
 	if sdkerr != nil {
-		fmt.Println("processrequest -> sdkerr from checkError-> ", sdkerr)
-		if sdkerr != nil {
-			fmt.Println("checkerror -> .err ->", sdkerr.Err())
-			fmt.Println("checkerror -> .error ->", sdkerr.Error())
-			fmt.Println("checkerror -> .msg ->", sdkerr.Msg())
-		}
-		if sdkerr.Err() != nil {
-			fmt.Println("checkerror -> .err.msg ->", sdkerr.Err().Msg())
-			fmt.Println("checkerror ->.err.error ->", sdkerr.Err().Error())
-		}
 		return make(http.Header), []byte{}, sdkerr
 	}
 

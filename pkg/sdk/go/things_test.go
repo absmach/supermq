@@ -180,13 +180,6 @@ func TestCreateThing(t *testing.T) {
 		repoCall := cRepo.On("Save", mock.Anything, mock.Anything).Return(tc.response, tc.err)
 		rThing, err := mfsdk.CreateThing(tc.client, tc.token)
 
-		// fmt.Println()
-		// fmt.Println(tc.desc)
-		// fmt.Println()
-		// fmt.Println("tc.err -> ", tc.err)
-		// fmt.Println("err -> ", err)
-		// fmt.Println()
-
 		tc.response.ID = rThing.ID
 		tc.response.Owner = rThing.Owner
 		tc.response.CreatedAt = rThing.CreatedAt
@@ -258,7 +251,7 @@ func TestCreateThings(t *testing.T) {
 			things:   []sdk.Thing{},
 			response: []sdk.Thing{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrEmptyList, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrEmptyList), http.StatusBadRequest),
 		},
 		{
 			desc: "register things that can't be marshalled",
@@ -365,7 +358,7 @@ func TestListThings(t *testing.T) {
 			token:    invalidToken,
 			offset:   offset,
 			limit:    limit,
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedList, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedList), http.StatusInternalServerError),
 			response: nil,
 		},
 		{
@@ -373,7 +366,7 @@ func TestListThings(t *testing.T) {
 			token:    "",
 			offset:   offset,
 			limit:    limit,
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedList, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedList), http.StatusInternalServerError),
 			response: nil,
 		},
 		{
@@ -381,7 +374,7 @@ func TestListThings(t *testing.T) {
 			token:    token,
 			offset:   offset,
 			limit:    0,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrLimitSize, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusInternalServerError),
 			response: nil,
 		},
 		{
@@ -389,7 +382,7 @@ func TestListThings(t *testing.T) {
 			token:    token,
 			offset:   offset,
 			limit:    110,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrLimitSize, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusInternalServerError),
 			response: []sdk.Thing(nil),
 		},
 		{
@@ -600,7 +593,7 @@ func TestListThingsByChannel(t *testing.T) {
 			channelID: testsutil.GenerateUUID(t, idProvider),
 			page:      sdk.PageMetadata{},
 			response:  []sdk.Thing(nil),
-			err:       errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusUnauthorized),
 		},
 		{
 			desc:      "list things with an invalid id",
@@ -608,7 +601,7 @@ func TestListThingsByChannel(t *testing.T) {
 			channelID: mocks.WrongID,
 			page:      sdk.PageMetadata{},
 			response:  []sdk.Thing(nil),
-			err:       errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound),
+			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrNotFound), http.StatusNotFound),
 		},
 	}
 
@@ -670,21 +663,21 @@ func TestThing(t *testing.T) {
 			response: sdk.Thing{},
 			token:    invalidToken,
 			thingID:  generateUUID(t),
-			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusUnauthorized),
 		},
 		{
 			desc:     "view thing with valid token and invalid thing id",
 			response: sdk.Thing{},
 			token:    adminToken,
 			thingID:  mocks.WrongID,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrNotFound), http.StatusNotFound),
 		},
 		{
 			desc:     "view thing with an invalid token and invalid thing id",
 			response: sdk.Thing{},
 			token:    invalidToken,
 			thingID:  mocks.WrongID,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusUnauthorized),
 		},
 	}
 
@@ -756,14 +749,14 @@ func TestUpdateThing(t *testing.T) {
 			thing:    thing1,
 			response: sdk.Thing{},
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusUnauthorized),
 		},
 		{
 			desc:     "update thing name with invalid id",
 			thing:    thing2,
 			response: sdk.Thing{},
 			token:    adminToken,
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedUpdate, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedUpdate), http.StatusInternalServerError),
 		},
 		{
 			desc: "update thing that can't be marshalled",
@@ -848,14 +841,14 @@ func TestUpdateThingTags(t *testing.T) {
 			thing:    thing1,
 			response: sdk.Thing{},
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusUnauthorized),
 		},
 		{
 			desc:     "update thing name with invalid id",
 			thing:    thing2,
 			response: sdk.Thing{},
 			token:    adminToken,
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedUpdate, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedUpdate), http.StatusInternalServerError),
 		},
 		{
 			desc: "update thing that can't be marshalled",
@@ -933,7 +926,7 @@ func TestUpdateThingSecret(t *testing.T) {
 			newSecret: "newPassword",
 			token:     "non-existent",
 			response:  sdk.Thing{},
-			err:       errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusUnauthorized),
 		},
 		{
 			desc:      "update thing secret with wrong old secret",
@@ -941,7 +934,7 @@ func TestUpdateThingSecret(t *testing.T) {
 			newSecret: "newSecret",
 			token:     adminToken,
 			response:  sdk.Thing{},
-			err:       errors.NewSDKErrorWithStatus(apiutil.ErrInvalidSecret, http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidSecret), http.StatusBadRequest),
 		},
 	}
 
@@ -1011,14 +1004,14 @@ func TestUpdateThingOwner(t *testing.T) {
 			thing:    thing2,
 			response: sdk.Thing{},
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusUnauthorized),
 		},
 		{
 			desc:     "update thing name with invalid id",
 			thing:    thing2,
 			response: sdk.Thing{},
 			token:    adminToken,
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedUpdate, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedUpdate), http.StatusInternalServerError),
 		},
 		{
 			desc: "update thing that can't be marshalled",
@@ -1098,7 +1091,7 @@ func TestEnableThing(t *testing.T) {
 			token:    adminToken,
 			thing:    enabledThing1,
 			response: sdk.Thing{},
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedEnable, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedEnable), http.StatusInternalServerError),
 		},
 		{
 			desc:     "enable non-existing thing",
@@ -1106,7 +1099,7 @@ func TestEnableThing(t *testing.T) {
 			token:    adminToken,
 			thing:    sdk.Thing{},
 			response: sdk.Thing{},
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedEnable, http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedEnable), http.StatusNotFound),
 		},
 	}
 
@@ -1229,7 +1222,7 @@ func TestDisableThing(t *testing.T) {
 			token:    adminToken,
 			thing:    disabledThing1,
 			response: sdk.Thing{},
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedDisable, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedDisable), http.StatusInternalServerError),
 		},
 		{
 			desc:     "disable non-existing thing",
@@ -1237,7 +1230,7 @@ func TestDisableThing(t *testing.T) {
 			thing:    sdk.Thing{},
 			token:    adminToken,
 			response: sdk.Thing{},
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedDisable, http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedDisable), http.StatusNotFound),
 		},
 	}
 
@@ -1355,7 +1348,7 @@ func TestIdentify(t *testing.T) {
 			desc:     "identify thing with an invalid token",
 			response: "",
 			secret:   invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 	}
 
@@ -1415,14 +1408,14 @@ func TestShareThing(t *testing.T) {
 			channelID: generateUUID(t),
 			thingID:   thingID,
 			token:     invalidToken,
-			err:       errors.NewSDKErrorWithStatus(errors.ErrAuthorization, http.StatusUnauthorized),
+			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusUnauthorized),
 		},
 		{
 			desc:      "share thing with valid token for unauthorized user",
 			channelID: generateUUID(t),
 			thingID:   thingID,
 			token:     userToken,
-			err:       errors.NewSDKErrorWithStatus(errors.ErrAuthorization, http.StatusForbidden),
+			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusForbidden),
 			repoErr:   errors.ErrAuthorization,
 		},
 	}

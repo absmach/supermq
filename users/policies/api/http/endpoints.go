@@ -5,6 +5,7 @@ package http
 
 import (
 	"context"
+	"strings"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/internal/apiutil"
@@ -26,6 +27,9 @@ func authorizeEndpoint(svc policies.Service) endpoint.Endpoint {
 		}
 		err := svc.Authorize(ctx, aReq)
 		if err != nil {
+			if !errors.Contains(err, apiutil.ErrValidation) {
+				err = errors.Wrap(apiutil.ErrValidation, err)
+			}
 			return authorizeRes{}, err
 		}
 
@@ -47,7 +51,10 @@ func createPolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 		}
 		err := svc.AddPolicy(ctx, req.token, policy)
 		if err != nil {
-			return addPolicyRes{}, errors.Wrap(apiutil.ErrValidation, err)
+			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
+				err = errors.Wrap(apiutil.ErrValidation, err)
+			}
+			return addPolicyRes{}, err
 		}
 
 		return addPolicyRes{created: true}, nil
@@ -69,7 +76,10 @@ func updatePolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 
 		err := svc.UpdatePolicy(ctx, req.token, policy)
 		if err != nil {
-			return updatePolicyRes{}, errors.Wrap(apiutil.ErrValidation, err)
+			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
+				err = errors.Wrap(apiutil.ErrValidation, err)
+			}
+			return updatePolicyRes{}, err
 		}
 
 		return updatePolicyRes{updated: true}, nil
@@ -93,7 +103,10 @@ func listPolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 		}
 		page, err := svc.ListPolicies(ctx, req.token, pm)
 		if err != nil {
-			return listPolicyRes{}, errors.Wrap(apiutil.ErrValidation, err)
+			if !errors.Contains(err, apiutil.ErrValidation) {
+				err = errors.Wrap(apiutil.ErrValidation, err)
+			}
+			return listPolicyRes{}, err
 		}
 		return buildPoliciesResponse(page), nil
 	}
@@ -110,7 +123,10 @@ func deletePolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 			Object:  req.Object,
 		}
 		if err := svc.DeletePolicy(ctx, req.token, policy); err != nil {
-			return deletePolicyRes{}, errors.Wrap(apiutil.ErrValidation, err)
+			if !errors.Contains(err, apiutil.ErrValidation) {
+				err = errors.Wrap(apiutil.ErrValidation, err)
+			}
+			return deletePolicyRes{}, err
 		}
 
 		return deletePolicyRes{deleted: true}, nil

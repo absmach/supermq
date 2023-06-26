@@ -21,7 +21,7 @@ func createClientEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.CreateThings(ctx, req.token, req.client)
 		if err != nil {
-			return createClientRes{}, errors.Wrap(apiutil.ErrValidation, err)
+			return createClientRes{}, err
 		}
 		ucr := createClientRes{
 			Client:  client[0],
@@ -40,7 +40,7 @@ func createClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		page, err := svc.CreateThings(ctx, req.token, req.Clients...)
 		if err != nil {
-			return clientsPageRes{}, errors.Wrap(apiutil.ErrValidation, err)
+			return clientsPageRes{}, err
 		}
 		res := clientsPageRes{
 			pageRes: pageRes{
@@ -64,7 +64,10 @@ func viewClientEndpoint(svc clients.Service) endpoint.Endpoint {
 
 		c, err := svc.ViewClient(ctx, req.token, req.id)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			if !errors.Contains(err, apiutil.ErrValidation) {
+				err = errors.Wrap(apiutil.ErrValidation, err)
+			}
+			return nil, err
 		}
 		return viewClientRes{Client: c}, nil
 	}
@@ -89,7 +92,7 @@ func listClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		page, err := svc.ListClients(ctx, req.token, pm)
 		if err != nil {
-			return mfclients.ClientsPage{}, errors.Wrap(apiutil.ErrValidation, err)
+			return mfclients.ClientsPage{}, err
 		}
 
 		res := clientsPageRes{
@@ -116,7 +119,13 @@ func listMembersEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		page, err := svc.ListClientsByGroup(ctx, req.token, req.groupID, req.Page)
 		if err != nil {
-			return memberPageRes{}, errors.Wrap(apiutil.ErrValidation, err)
+			// fmt.Println()
+			// fmt.Println("######################## Error from svc.ListClientsByGroup -> ", err)
+			// fmt.Println()
+			if !errors.Contains(err, apiutil.ErrValidation) {
+				err = errors.Wrap(apiutil.ErrValidation, err)
+			}
+			return memberPageRes{}, err
 		}
 		return buildMembersResponse(page), nil
 	}
@@ -136,7 +145,7 @@ func updateClientEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.UpdateClient(ctx, req.token, cli)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 		return updateClientRes{Client: client}, nil
 	}
@@ -155,7 +164,7 @@ func updateClientTagsEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.UpdateClientTags(ctx, req.token, cli)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 		return updateClientRes{Client: client}, nil
 	}
@@ -169,7 +178,7 @@ func updateClientSecretEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.UpdateClientSecret(ctx, req.token, req.id, req.Secret)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 		return updateClientRes{Client: client}, nil
 	}
@@ -189,7 +198,7 @@ func updateClientOwnerEndpoint(svc clients.Service) endpoint.Endpoint {
 
 		client, err := svc.UpdateClientOwner(ctx, req.token, cli)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 		return updateClientRes{Client: client}, nil
 	}
@@ -203,7 +212,10 @@ func enableClientEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.EnableClient(ctx, req.token, req.id)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			if !errors.Contains(err, apiutil.ErrValidation) {
+				err = errors.Wrap(apiutil.ErrValidation, err)
+			}
+			return nil, err
 		}
 		return deleteClientRes{Client: client}, nil
 	}
@@ -217,7 +229,10 @@ func disableClientEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.DisableClient(ctx, req.token, req.id)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			if !errors.Contains(err, apiutil.ErrValidation) {
+				err = errors.Wrap(apiutil.ErrValidation, err)
+			}
+			return nil, err
 		}
 		return deleteClientRes{Client: client}, nil
 	}

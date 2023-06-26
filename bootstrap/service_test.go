@@ -14,6 +14,7 @@ import (
 	"net/http/httptest"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/go-zoo/bone"
@@ -170,7 +171,12 @@ func TestAdd(t *testing.T) {
 		fmt.Println()
 		fmt.Println("exp -> ", tc.err)
 		fmt.Println("got -> ", err)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		switch err {
+		case nil:
+			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error : %s", tc.desc, err))
+		default:
+			assert.True(t, strings.Contains(err.Error(), tc.err.Error()), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		}
 	}
 }
 

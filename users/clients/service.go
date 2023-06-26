@@ -336,7 +336,7 @@ func (svc service) ResetSecret(ctx context.Context, resetToken, secret string) e
 func (svc service) UpdateClientSecret(ctx context.Context, token, oldSecret, newSecret string) (mfclients.Client, error) {
 	id, err := svc.Identify(ctx, token)
 	if err != nil {
-		return mfclients.Client{}, err
+		return mfclients.Client{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	if !svc.passRegex.MatchString(newSecret) {
 		return mfclients.Client{}, ErrPasswordFormat
