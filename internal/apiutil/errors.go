@@ -9,7 +9,7 @@ import "github.com/mainflux/mainflux/pkg/errors"
 // to distinguish and log API request validation errors and avoid that service
 // errors are logged twice.
 var (
-	// ErrValidation indicates that an error was returned by the API
+	// ErrValidation indicates that an error was returned by the API.
 	ErrValidation = errors.New("something went wrong with the request")
 
 	// ErrBearerToken indicates missing or invalid bearer user token.
