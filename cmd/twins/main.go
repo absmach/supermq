@@ -116,7 +116,7 @@ func main() {
 	case true:
 		auth = localusers.NewAuthService(cfg.StandaloneID, cfg.StandaloneToken)
 	default:
-		authServiceClient, authHandler, err := authClient.Setup(envPrefix, svcName)
+		authServiceClient, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL, svcName)
 		if err != nil {
 			logger.Fatal(err.Error())
 		}

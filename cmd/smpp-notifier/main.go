@@ -107,7 +107,7 @@ func main() {
 	pubSub = pstracing.NewPubSub(tracer, pubSub)
 	defer pubSub.Close()
 
-	auth, authHandler, err := authClient.Setup(envPrefix, svcName)
+	auth, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL, svcName)
 	if err != nil {
 		logger.Fatal(err.Error())
 	}

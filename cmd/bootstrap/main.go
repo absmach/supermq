@@ -97,7 +97,7 @@ func main() {
 	defer esClient.Close()
 
 	// Create new auth grpc client api
-	auth, authHandler, err := authClient.Setup(envPrefix, svcName)
+	auth, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL, svcName)
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
