@@ -67,7 +67,7 @@ func main() {
 
 	repo := newService(db, logger)
 
-	auth, authHandler, err := authClient.Setup(envPrefix, svcName, cfg.JaegerURL)
+	auth, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL, svcName)
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
