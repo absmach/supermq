@@ -17,7 +17,6 @@ import (
 var _ mfclients.Repository = (*clientRepo)(nil)
 
 type clientRepo struct {
-	db postgres.Database
 	pgclients.ClientRepository
 }
 
@@ -25,7 +24,6 @@ type clientRepo struct {
 // implementation of Clients repository.
 func NewRepository(db postgres.Database) mfclients.Repository {
 	return &clientRepo{
-		db:               db,
 		ClientRepository: pgclients.ClientRepository{DB: db},
 	}
 }
@@ -39,7 +37,7 @@ func (repo clientRepo) Save(ctx context.Context, c ...mfclients.Client) ([]mfcli
 		return []mfclients.Client{}, errors.Wrap(errors.ErrCreateEntity, err)
 	}
 
-	row, err := repo.db.NamedQueryContext(ctx, q, dbc)
+	row, err := repo.ClientRepository.DB.NamedQueryContext(ctx, q, dbc)
 	if err != nil {
 		return []mfclients.Client{}, postgres.HandleError(err, errors.ErrCreateEntity)
 	}

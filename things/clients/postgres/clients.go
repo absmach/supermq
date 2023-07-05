@@ -17,7 +17,6 @@ import (
 var _ mfclients.Repository = (*clientRepo)(nil)
 
 type clientRepo struct {
-	db postgres.Database
 	pgclients.ClientRepository
 }
 
@@ -25,7 +24,6 @@ type clientRepo struct {
 // implementation of Clients repository.
 func NewRepository(db postgres.Database) mfclients.Repository {
 	return &clientRepo{
-		db:               db,
 		ClientRepository: pgclients.ClientRepository{DB: db},
 	}
 }
@@ -36,7 +34,7 @@ func (clientRepo) RetrieveByIdentity(ctx context.Context, identity string) (mfcl
 }
 
 func (repo clientRepo) Save(ctx context.Context, cs ...mfclients.Client) ([]mfclients.Client, error) {
-	tx, err := repo.db.BeginTxx(ctx, nil)
+	tx, err := repo.ClientRepository.DB.BeginTxx(ctx, nil)
 	if err != nil {
 		return []mfclients.Client{}, errors.Wrap(errors.ErrCreateEntity, err)
 	}
