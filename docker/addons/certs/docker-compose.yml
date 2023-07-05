@@ -9,8 +9,8 @@
 version: "3.7"
 
 networks:
-  docker_mainflux-base-net:
-    external: true
+  mainflux-base-net:
+
 
 volumes:
   mainflux-certs-db-volume:
@@ -26,7 +26,7 @@ services:
       POSTGRES_PASSWORD: ${MF_CERTS_DB_PASS}
       POSTGRES_DB: ${MF_CERTS_DB_NAME}
     networks:
-      - docker_mainflux-base-net
+      - mainflux-base-net
     volumes:
       - mainflux-certs-db-volume:/var/lib/postgresql/data
 
@@ -37,7 +37,7 @@ services:
       - certs-db
     restart: on-failure
     networks:
-      - docker_mainflux-base-net
+      - mainflux-base-net
     ports:
       - ${MF_CERTS_HTTP_PORT}:${MF_CERTS_HTTP_PORT}
     environment:

@@ -4,6 +4,10 @@
 package grpc
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -19,10 +23,11 @@ var (
 )
 
 type Config struct {
-	ClientTLS bool          `env:"CLIENT_TLS"    envDefault:"false"`
-	CACerts   string        `env:"CA_CERTS"      envDefault:""`
-	URL       string        `env:"URL"           envDefault:""`
-	Timeout   time.Duration `env:"TIMEOUT"       envDefault:"1s"`
+	ClientCert   string        `env:"CLIENT_CERT"      envDefault:""`
+	ClientKey    string        `env:"CLIENT_KEY"       envDefault:""`
+	ServerCAFile string        `env:"SERVER_CA_CERTS"  envDefault:""`
+	URL          string        `env:"URL"              envDefault:""`
+	Timeout      time.Duration `env:"TIMEOUT"          envDefault:"1s"`
 }
 
 type ClientHandler interface {
@@ -45,20 +50,42 @@ func NewClientHandler(c *Client) ClientHandler {
 
 // Connect creates new gRPC client and connect to gRPC server.
 func Connect(cfg Config) (*gogrpc.ClientConn, bool, error) {
-	var opts []gogrpc.DialOption
+	opts := []gogrpc.DialOption{
+		gogrpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
+	}
 	secure := false
 	tc := insecure.NewCredentials()
 
-	if cfg.ClientTLS && cfg.CACerts != "" {
-		var err error
-		tc, err = credentials.NewClientTLSFromFile(cfg.CACerts, "")
+	if cfg.ServerCAFile != "" {
+		tlsConfig := &tls.Config{}
+
+		// Loading root ca certificates file
+		rootCA, err := os.ReadFile(cfg.ServerCAFile)
 		if err != nil {
-			return nil, secure, err
+			return nil, secure, fmt.Errorf("failed to load root ca file: %w", err)
 		}
+		if rootCA != nil {
+			capool := x509.NewCertPool()
+			if !capool.AppendCertsFromPEM(rootCA) {
+				return nil, secure, fmt.Errorf("failed to append root ca to tls.Config")
+			}
+			tlsConfig.RootCAs = capool
+		}
+
+		// Loading mtls certificates file
+		if cfg.ClientCert != "" || cfg.ClientKey != "" {
+			certificate, err := tls.LoadX509KeyPair(cfg.ClientCert, cfg.ClientKey)
+			if err != nil {
+				return nil, secure, fmt.Errorf("failed to client certificate and key %w", err)
+			}
+			tlsConfig.Certificates = []tls.Certificate{certificate}
+		}
+
+		tc = credentials.NewTLS(tlsConfig)
 		secure = true
 	}
 
-	opts = append(opts, gogrpc.WithTransportCredentials(tc), gogrpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()))
+	opts = append(opts, gogrpc.WithTransportCredentials(tc))
 
 	conn, err := gogrpc.Dial(cfg.URL, opts...)
 	if err != nil {

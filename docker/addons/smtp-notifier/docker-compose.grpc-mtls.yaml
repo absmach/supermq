@@ -1,0 +1,12 @@
+services:
+  smtp-notifier:
+    environment:
+      # Users gRPC client environmental varaibles
+      MF_AUTH_GRPC_CLIENT_CERT: /users-grpc-client.crt
+      MF_AUTH_GRPC_CLIENT_KEY: /users-grpc-client.key
+      MF_AUTH_GRPC_SERVER_CA_CERTS: /users-grpc-server-ca.crt
+    volumes:
+      # Users gRPC client certificates
+      - ${MF_ADDONS_CERTS_PATH_PREFIX}${MF_USERS_GRPC_CLIENT_CERT}:/users-grpc-client.crt
+      - ${MF_ADDONS_CERTS_PATH_PREFIX}${MF_USERS_GRPC_CLIENT_KEY}:/users-grpc-client.key
+      - ${MF_ADDONS_CERTS_PATH_PREFIX}${MF_USERS_GRPC_SERVER_CA_CERTS}:/users-grpc-server-ca.crt

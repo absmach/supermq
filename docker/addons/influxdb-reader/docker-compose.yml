@@ -11,8 +11,8 @@
 version: "3.7"
 
 networks:
-  docker_mainflux-base-net:
-    external: true
+  mainflux-base-net:
+
 
 services:
   influxdb-reader:
@@ -52,6 +52,6 @@ services:
     ports:
       - ${MF_INFLUX_READER_HTTP_PORT}:${MF_INFLUX_READER_HTTP_PORT}
     networks:
-      - docker_mainflux-base-net
+      - mainflux-base-net
     volumes:
       - ../../ssl/certs:/etc/ssl/certs

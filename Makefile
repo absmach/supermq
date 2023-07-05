@@ -13,7 +13,15 @@ GOARCH ?= amd64
 VERSION ?= $(shell git describe --abbrev=0 --tags)
 COMMIT ?= $(shell git rev-parse HEAD)
 TIME ?= $(shell date +%F_%T)
-
+USER_REPO ?= $(shell git remote get-url origin | sed -e 's/.*\/\([^/]*\)\/\([^/]*\).*/\1_\2/' )
+BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD  2>/dev/null || git describe --tags --abbrev=0  2>/dev/null )
+empty:=
+space:= $(empty) $(empty)
+DOCKER_PROJECT ?= $(subst $(space),,$(USER_REPO)_$(BRANCH))
+DOCKER_PROJECT := $(strip  $(DOCKER_PROJECT))
+DOCKER_PROJECT := $(shell  echo $(DOCKER_PROJECT) | tr -c -s '[:alnum:][=-=]' '_')
+DOCKER_COMPOSE_COMMANDS_SUPPORTED := up down config
+DEFAULT_DOCKER_COMPOSE_COMMAND  := up
 ifneq ($(MF_BROKER_TYPE),)
     MF_BROKER_TYPE := $(MF_BROKER_TYPE)
 else
@@ -54,9 +62,30 @@ define make_docker_dev
 		-f docker/Dockerfile.dev ./build
 endef
 
+ADDON_SERVICES = bootstrap cassandra-reader cassandra-writer certs \
+					influxdb-reader influxdb-writer lora-adapter mongodb-reader mongodb-writer \
+					opcua-adapter postgres-reader postgres-writer provision smpp-notifier smtp-notifier \
+					timescale-reader timescale-writer twins
+
+EXTERNAL_SERVICES = vault prometheus
+
+ifneq ($(filter run%,$(firstword $(MAKECMDGOALS))),)
+  temp_args := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  DOCKER_COMPOSE_COMMAND := $(if $(filter $(DOCKER_COMPOSE_COMMANDS_SUPPORTED),$(temp_args)), $(filter $(DOCKER_COMPOSE_COMMANDS_SUPPORTED),$(temp_args)), $(DEFAULT_DOCKER_COMPOSE_COMMAND))
+  $(eval $(DOCKER_COMPOSE_COMMAND):;@)
+endif
+
+ifneq ($(filter run_addons%,$(firstword $(MAKECMDGOALS))),)
+  temp_args := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  RUN_ADDON_ARGS :=  $(if $(filter-out $(DOCKER_COMPOSE_COMMANDS_SUPPORTED),$(temp_args)), $(filter-out $(DOCKER_COMPOSE_COMMANDS_SUPPORTED),$(temp_args)),$(ADDON_SERVICES) $(EXTERNAL_SERVICES))
+  $(eval $(RUN_ADDON_ARGS):;@)
+endif
+
+FILTERED_SERVICES = $(filter-out $(RUN_ADDON_ARGS), $(SERVICES))
+
 all: $(SERVICES)
 
-.PHONY: all $(SERVICES) dockers dockers_dev latest release
+.PHONY: all $(SERVICES) dockers dockers_dev latest release gen_mtls_certs run run_grpc_mtls run_addons run_addons_grpc_mtls
 
 clean:
 	rm -rf ${BUILD_DIR}
@@ -81,7 +110,7 @@ proto:
 	protoc -I. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative users/policies/*.proto
 	protoc -I. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative things/policies/*.proto
 
-$(SERVICES):
+$(FILTERED_SERVICES):
 	$(call compile_service,$(@))
 
 $(DOCKERS):
@@ -117,7 +146,16 @@ release:
 rundev:
 	cd scripts && ./run.sh
 
+grpc_mtls_certs:
+	make -C docker/ssl users_grpc_certs things_grpc_certs
+
 run:
 	sed -i "s,file: brokers/.*.yml,file: brokers/${MF_BROKER_TYPE}.yml," docker/docker-compose.yml
 	sed -i "s,MF_BROKER_URL=.*,MF_BROKER_URL=$$\{MF_$(shell echo ${MF_BROKER_TYPE} | tr 'a-z' 'A-Z')_URL\}," docker/.env
-	docker-compose -f docker/docker-compose.yml up
+	docker-compose -f docker/docker-compose.yml -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
+
+run_addons:
+	$(foreach SVC,$(RUN_ADDON_ARGS),$(if $(filter $(SVC),$(ADDON_SERVICES) $(EXTERNAL_SERVICES)),,$(error Invalid Service $(SVC))))
+	@for SVC in $(RUN_ADDON_ARGS); do \
+		docker-compose -f docker/addons/$$SVC/docker-compose.yml -p $(DOCKER_PROJECT) --env-file ./docker/.env $(DOCKER_COMPOSE_COMMAND) $(args) & \
+	done

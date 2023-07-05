@@ -10,8 +10,8 @@
 version: "3.7"
 
 networks:
-  docker_mainflux-base-net:
-    external: true
+  mainflux-base-net:
+
 
 services:
   timescale-reader:
@@ -47,4 +47,4 @@ services:
     ports:
       - ${MF_TIMESCALE_READER_HTTP_PORT}:${MF_TIMESCALE_READER_HTTP_PORT}
     networks:
-      - docker_mainflux-base-net
+      - mainflux-base-net

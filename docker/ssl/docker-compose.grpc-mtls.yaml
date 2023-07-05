@@ -1,0 +1,84 @@
+services:
+  users:
+    environment:
+      # Users gRPC server environmental varaibles
+      MF_USERS_GRPC_SERVER_CERT: /users-grpc-server.crt
+      MF_USERS_GRPC_SERVER_KEY: /users-grpc-server.key
+      MF_USERS_GRPC_SERVER_CA_CERTS: /users-grpc-server-ca.crt
+      MF_USERS_GRPC_CLIENT_CA_CERTS: /users-grpc-client-ca.crt
+    volumes:
+      # Users gRPC server certificates
+      - ${MF_USERS_GRPC_SERVER_CERT}:/users-grpc-server.crt
+      - ${MF_USERS_GRPC_SERVER_KEY}:/users-grpc-server.key
+      - ${MF_USERS_GRPC_SERVER_CA_CERTS}:/users-grpc-server-ca.crt
+      - ${MF_USERS_GRPC_CLIENT_CA_CERTS}:/users-grpc-client-ca.crt
+
+  things:
+    environment:
+      # Users gRPC client environmental varaibles
+      MF_AUTH_GRPC_CLIENT_CERT: /users-grpc-client.crt
+      MF_AUTH_GRPC_CLIENT_KEY: /users-grpc-client.key
+      MF_AUTH_GRPC_SERVER_CA_CERTS: /users-grpc-server-ca.crt
+      # Things gRPC server environmental varaibles
+      MF_THINGS_AUTH_GRPC_SERVER_CERT: /things-grpc-server.crt
+      MF_THINGS_AUTH_GRPC_SERVER_KEY: /things-grpc-server.key
+      MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS: /things-grpc-server-ca.crt
+      MF_THINGS_AUTH_GRPC_CLIENT_CA_CERTS: /things-grpc-client-ca.crt
+    volumes:
+      # Things gRPC server certificates
+      - ${MF_THINGS_AUTH_GRPC_SERVER_CERT}:/things-grpc-server.crt
+      - ${MF_THINGS_AUTH_GRPC_SERVER_KEY}:/things-grpc-server.key
+      - ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS}:/things-grpc-server-ca.crt
+      - ${MF_THINGS_AUTH_GRPC_CLIENT_CA_CERTS}:/things-grpc-client-ca.crt
+      # Users gRPC client certificates
+      - ${MF_USERS_GRPC_CLIENT_CERT}:/users-grpc-client.crt
+      - ${MF_USERS_GRPC_CLIENT_KEY}:/users-grpc-client.key
+      - ${MF_USERS_GRPC_SERVER_CA_CERTS}:/users-grpc-server-ca.crt
+
+  mqtt-adapter:
+    environment:
+      # Things gRPC client environmental varaibles
+      MF_THINGS_AUTH_GRPC_CLIENT_CERT: /client.crt
+      MF_THINGS_AUTH_GRPC_CLIENT_KEY: /client.key
+      MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS: /server_ca.crt
+    volumes:
+      # Things gRPC client certificates
+      - ${MF_THINGS_AUTH_GRPC_CLIENT_CERT}:/client.crt
+      - ${MF_THINGS_AUTH_GRPC_CLIENT_KEY}:/client.key
+      - ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS}:/server_ca.crt
+
+  http-adapter:
+    environment:
+      # Things gRPC client environmental varaibles
+      MF_THINGS_AUTH_GRPC_CLIENT_CERT: /client.crt
+      MF_THINGS_AUTH_GRPC_CLIENT_KEY: /client.key
+      MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS: /server_ca.crt
+    volumes:
+      # Things gRPC client certificates
+      - ${MF_THINGS_AUTH_GRPC_CLIENT_CERT}:/client.crt
+      - ${MF_THINGS_AUTH_GRPC_CLIENT_KEY}:/client.key
+      - ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS}:/server_ca.crt
+
+  coap-adapter:
+    environment:
+      # Things gRPC client environmental varaibles
+      MF_THINGS_AUTH_GRPC_CLIENT_CERT: /client.crt
+      MF_THINGS_AUTH_GRPC_CLIENT_KEY: /client.key
+      MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS: /server_ca.crt
+    volumes:
+      # Things gRPC client certificates
+      - ${MF_THINGS_AUTH_GRPC_CLIENT_CERT}:/client.crt
+      - ${MF_THINGS_AUTH_GRPC_CLIENT_KEY}:/client.key
+      - ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS}:/server_ca.crt
+
+  ws-adapter:
+    environment:
+      # Things gRPC client environmental varaibles
+      MF_THINGS_AUTH_GRPC_CLIENT_CERT: /client.crt
+      MF_THINGS_AUTH_GRPC_CLIENT_KEY: /client.key
+      MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS: /server_ca.crt
+    volumes:
+      # Things gRPC client certificates
+      - ${MF_THINGS_AUTH_GRPC_CLIENT_CERT}:/client.crt
+      - ${MF_THINGS_AUTH_GRPC_CLIENT_KEY}:/client.key
+      - ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS}:/server_ca.crt
