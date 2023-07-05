@@ -59,7 +59,7 @@ func (repo ClientRepository) UpdateIdentity(ctx context.Context, client clients.
 
 func (repo ClientRepository) UpdateSecret(ctx context.Context, client clients.Client) (clients.Client, error) {
 	q := `UPDATE clients SET secret = :secret, updated_at = :updated_at, updated_by = :updated_by
-        WHERE identity = :identity AND status = :status
+        WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at, updated_by`
 
 	return repo.update(ctx, client, q)
