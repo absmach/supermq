@@ -37,7 +37,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/bootstrap/api"
-	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 )
 
 const (
