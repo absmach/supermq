@@ -42,61 +42,61 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader, logger mf
 	r := bone.New()
 
 	r.Post("/things/configs", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("add"), otelkit.WithTracerProvider(tp))(addEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("add"))(addEndpoint(svc)),
 		decodeAddRequest,
 		encodeResponse,
 		opts...))
 
 	r.Get("/things/configs/:configID", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("view"), otelkit.WithTracerProvider(tp))(viewEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("view"))(viewEndpoint(svc)),
 		decodeEntityRequest,
 		encodeResponse,
 		opts...))
 
 	r.Put("/things/configs/:configID", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("update"), otelkit.WithTracerProvider(tp))(updateEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("update"))(updateEndpoint(svc)),
 		decodeUpdateRequest,
 		encodeResponse,
 		opts...))
 
 	r.Patch("/things/configs/certs/:certID", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("update_cert"), otelkit.WithTracerProvider(tp))(updateCertEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("update_cert"))(updateCertEndpoint(svc)),
 		decodeUpdateCertRequest,
 		encodeResponse,
 		opts...))
 
 	r.Put("/things/configs/connections/:connID", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("update_connections"), otelkit.WithTracerProvider(tp))(updateConnEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("update_connections"))(updateConnEndpoint(svc)),
 		decodeUpdateConnRequest,
 		encodeResponse,
 		opts...))
 
 	r.Get("/things/configs", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("list"), otelkit.WithTracerProvider(tp))(listEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("list"))(listEndpoint(svc)),
 		decodeListRequest,
 		encodeResponse,
 		opts...))
 
 	r.Get("/things/bootstrap/:externalID", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("bootstrap"), otelkit.WithTracerProvider(tp))(bootstrapEndpoint(svc, reader, false)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("bootstrap"))(bootstrapEndpoint(svc, reader, false)),
 		decodeBootstrapRequest,
 		encodeResponse,
 		opts...))
 
 	r.Get("/things/bootstrap/secure/:externalID", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("bootstrap_secure"), otelkit.WithTracerProvider(tp))(bootstrapEndpoint(svc, reader, true)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("bootstrap_secure"))(bootstrapEndpoint(svc, reader, true)),
 		decodeBootstrapRequest,
 		encodeSecureRes,
 		opts...))
 
 	r.Put("/things/state/:thingID", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("state"), otelkit.WithTracerProvider(tp))(stateEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("state"))(stateEndpoint(svc)),
 		decodeStateRequest,
 		encodeResponse,
 		opts...))
 
 	r.Delete("/things/configs/:configID", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("remove"), otelkit.WithTracerProvider(tp))(removeEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("remove"))(removeEndpoint(svc)),
 		decodeEntityRequest,
 		encodeResponse,
 		opts...))
