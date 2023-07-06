@@ -18,6 +18,7 @@ import (
 	vault "github.com/mainflux/mainflux/certs/pki"
 	certsPg "github.com/mainflux/mainflux/certs/postgres"
 	"github.com/mainflux/mainflux/internal"
+	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -112,6 +113,15 @@ func main() {
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
 	}
+	tp, err := jaegerClient.NewProvider(svcName, cfg.JaegerURL)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
+	}
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			logger.Error(fmt.Sprintf("error shutting down tracer provider: %v", err))
+		}
+	}()
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, logger, instanceID), logger)
 
 	if cfg.SendTelemetry {
