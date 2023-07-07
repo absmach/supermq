@@ -20,7 +20,7 @@ const (
         sum double,
         time double,
         update_time double,
-        PRIMARY KEY (channel, time, id, publisher, name)
+        PRIMARY KEY (channel, time, id)
     ) WITH CLUSTERING ORDER BY (time DESC)`
 
 	jsonTable = `CREATE TABLE IF NOT EXISTS %s (
@@ -31,6 +31,6 @@ const (
         protocol text,
         created bigint,
         payload text,
-        PRIMARY KEY (channel, created, id, publisher)
+        PRIMARY KEY (channel, created, id)
     ) WITH CLUSTERING ORDER BY (created DESC)`
 )
