@@ -62,7 +62,7 @@ func (tm *tracingMiddleware) Update(ctx context.Context, token string, cfg boots
 }
 
 // UpdateCert traces the "UpdateCert" operation of the wrapped bootstrap.Service.
-func (tm *tracingMiddleware) UpdateCert(ctx context.Context, token, thingID, clientCert, clientKey, caCert string) error {
+func (tm *tracingMiddleware) UpdateCert(ctx context.Context, token, thingID, clientCert, clientKey, caCert string) (bootstrap.Config, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_update_cert", trace.WithAttributes(
 		attribute.String("thing_id", thingID),
 	))

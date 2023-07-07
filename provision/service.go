@@ -192,7 +192,7 @@ func (ps *provisionService) Provision(token, name, externalID, externalKey strin
 
 		if ps.conf.Bootstrap.Provision && needsBootstrap(thing) {
 			bsReq := SDK.BootstrapConfig{
-				ThingID:     thing.ID,
+				MFThing:     thing.ID,
 				ExternalID:  externalID,
 				ExternalKey: externalKey,
 				Channels:    chanIDs,
@@ -226,7 +226,8 @@ func (ps *provisionService) Provision(token, name, externalID, externalKey strin
 			res.CACert = ""
 
 			if needsBootstrap(thing) {
-				if err = ps.sdk.UpdateBootstrapCerts(bsConfig.MFThing, cert.ClientCert, cert.ClientKey, "", token); err != nil {
+				_, err = ps.sdk.UpdateBootstrapCerts(bsConfig.MFThing, cert.ClientCert, cert.ClientKey, "", token)
+				if err != nil {
 					return Result{}, errors.Wrap(ErrFailedCertCreation, err)
 				}
 			}

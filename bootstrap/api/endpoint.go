@@ -55,11 +55,17 @@ func updateCertEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err := svc.UpdateCert(ctx, req.token, req.thingID, req.ClientCert, req.ClientKey, req.CACert); err != nil {
+		cfg, err := svc.UpdateCert(ctx, req.token, req.thingID, req.ClientCert, req.ClientKey, req.CACert)
+		if err != nil {
 			return nil, err
 		}
 
-		res := configRes{}
+		res := updateConfigRes{
+			MFThing:    cfg.MFThing,
+			ClientCert: cfg.ClientCert,
+			CACert:     cfg.CACert,
+			ClientKey:  cfg.ClientKey,
+		}
 
 		return res, nil
 	}

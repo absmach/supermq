@@ -123,6 +123,7 @@ paths:
       responses:
         '200':
           description: Config updated.
+          $ref: "#/components/responses/ConfigUpdateCertsRes"
         '400':
           description: Failed due to malformed JSON.
         '401':
@@ -274,6 +275,12 @@ components:
           description: Free-form custom configuration.
         state:
           $ref: "#/components/schemas/State"
+        client_cert:
+          type: string
+          description: Client certificate.
+        ca_cert:
+          type: string
+          description: Issuing CA certificate.
       required:
         - external_id
         - external_key
@@ -321,6 +328,27 @@ components:
         content:
           type: string
           description: Free-form custom configuration.
+        client_cert:
+          type: string
+          description: Client certificate.
+        client_key:
+          type: string
+          description: Key for the client_cert.
+        ca_cert:
+          type: string
+          description: Issuing CA certificate.
+      required:
+        - mainflux_id
+        - mainflux_key
+        - mainflux_channels
+        - content
+    ConfigUpdateCerts:
+      type: object
+      properties:
+        mainflux_id:
+          type: string
+          format: uuid
+          description: Corresponding Mainflux Thing ID.
         client_cert:
           type: string
           description: Client certificate.
@@ -401,7 +429,7 @@ components:
               external_key:
                 type: string
                 description: External key.
-              thing_id:
+              mainflux_id:
                 type: string
                 description: ID of the corresponding Mainflux Thing.
               channels:
@@ -511,6 +539,12 @@ components:
         application/json:
           schema:
             $ref: "./schemas/HealthInfo.yml"
+    ConfigUpdateCertsRes:
+      description: Data retrieved. Config certs updated.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ConfigUpdateCerts"
 
   securitySchemes:
     bearerAuth:

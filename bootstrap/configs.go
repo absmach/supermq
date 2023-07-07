@@ -80,9 +80,9 @@ type ConfigRepository interface {
 	// to indicate operation failure.
 	Update(ctx context.Context, cfg Config) error
 
-	// UpdateCerts updates an existing Config certificate and owner.
+	// UpdateCerts updates and returns an existing Config certificate and owner.
 	// A non-nil error is returned to indicate operation failure.
-	UpdateCert(ctx context.Context, owner, thingID, clientCert, clientKey, caCert string) error
+	UpdateCert(ctx context.Context, owner, thingID, clientCert, clientKey, caCert string) (Config, error)
 
 	// UpdateConnections updates a list of Channels the Config is connected to
 	// adding new Channels if needed.

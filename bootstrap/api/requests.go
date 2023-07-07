@@ -12,7 +12,7 @@ const maxLimitSize = 100
 
 type addReq struct {
 	token       string
-	ThingID     string   `json:"thing_id"`
+	ThingID     string   `json:"mainflux_id"`
 	ExternalID  string   `json:"external_id"`
 	ExternalKey string   `json:"external_key"`
 	Channels    []string `json:"channels"`

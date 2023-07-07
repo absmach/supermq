@@ -76,7 +76,6 @@ type viewRes struct {
 	Name        string          `json:"name,omitempty"`
 	State       bootstrap.State `json:"state"`
 	ClientCert  string          `json:"client_cert,omitempty"`
-	ClientKey   string          `json:"client_key,omitempty"`
 	CACert      string          `json:"ca_cert,omitempty"`
 }
 
@@ -123,4 +122,23 @@ func (res stateRes) Headers() map[string]string {
 
 func (res stateRes) Empty() bool {
 	return true
+}
+
+type updateConfigRes struct {
+	MFThing    string `json:"mainflux_id,omitempty"`
+	ClientCert string `json:"client_cert,omitempty"`
+	CACert     string `json:"ca_cert,omitempty"`
+	ClientKey  string `json:"client_key,omitempty"`
+}
+
+func (res updateConfigRes) Code() int {
+	return http.StatusOK
+}
+
+func (res updateConfigRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res updateConfigRes) Empty() bool {
+	return false
 }

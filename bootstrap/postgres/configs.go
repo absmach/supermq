@@ -86,7 +86,7 @@ func (cr configRepository) Save(ctx context.Context, cfg bootstrap.Config, chsCo
 }
 
 func (cr configRepository) RetrieveByID(ctx context.Context, owner, id string) (bootstrap.Config, error) {
-	q := `SELECT mainflux_thing, mainflux_key, external_id, external_key, name, content, state, client_cert, client_key, ca_cert
+	q := `SELECT mainflux_thing, mainflux_key, external_id, external_key, name, content, state, client_cert, ca_cert
 		  FROM configs
 		  WHERE mainflux_thing = $1 AND owner = $2`
 
@@ -236,7 +236,7 @@ func (cr configRepository) RetrieveByExternalID(ctx context.Context, externalID 
 }
 
 func (cr configRepository) Update(ctx context.Context, cfg bootstrap.Config) error {
-	q := `UPDATE configs SET name = $1, content = $2 WHERE mainflux_thing = $3 AND owner = $4`
+	q := `UPDATE configs SET name = $1, content = $2 WHERE mainflux_thing = $3 AND owner = $4 `
 
 	content := nullString(cfg.Content)
 	name := nullString(cfg.Name)
@@ -258,24 +258,29 @@ func (cr configRepository) Update(ctx context.Context, cfg bootstrap.Config) err
 	return nil
 }
 
-func (cr configRepository) UpdateCert(ctx context.Context, owner, thingID, clientCert, clientKey, caCert string) error {
-	q := `UPDATE configs SET client_cert = $1, client_key = $2, ca_cert = $3 WHERE mainflux_thing = $4 AND owner = $5`
+func (cr configRepository) UpdateCert(ctx context.Context, owner, thingID, clientCert, clientKey, caCert string) (bootstrap.Config, error) {
+	q := `UPDATE configs SET client_cert = $1, client_key = $2, ca_cert = $3 WHERE mainflux_thing = $4 AND owner = $5 
+	RETURNING mainflux_thing, client_cert, client_key, ca_cert`
 
-	res, err := cr.db.ExecContext(ctx, q, clientCert, clientKey, caCert, thingID, owner)
+	dbcfg := dbConfig{
+		MFThing: thingID,
+	}
+
+	row, err := cr.db.QueryContext(ctx, q, clientCert, clientKey, caCert, thingID, owner)
 	if err != nil {
-		return errors.Wrap(errors.ErrUpdateEntity, err)
+		return bootstrap.Config{}, errors.Wrap(errors.ErrUpdateEntity, err)
+	}
+	defer row.Close()
+
+	if ok := row.Next(); !ok {
+		return bootstrap.Config{}, errors.Wrap(errors.ErrUpdateEntity, row.Err())
 	}
 
-	cnt, err := res.RowsAffected()
-	if err != nil {
-		return errors.Wrap(errors.ErrUpdateEntity, err)
+	if err := row.Scan(&dbcfg); err != nil {
+		return bootstrap.Config{}, err
 	}
 
-	if cnt == 0 {
-		return errors.ErrNotFound
-	}
-
-	return nil
+	return toConfig(dbcfg), nil
 }
 
 func (cr configRepository) UpdateConnections(ctx context.Context, owner, id string, channels []bootstrap.Channel, connections []string) error {

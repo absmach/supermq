@@ -370,8 +370,15 @@ func TestUpdateCert(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		err := repo.UpdateCert(context.Background(), tc.owner, tc.thingID, tc.cert, tc.certKey, tc.ca)
+		testCfg := bootstrap.Config{
+			MFThing:    tc.thingID,
+			ClientCert: tc.cert,
+			CACert:     tc.ca,
+			ClientKey:  tc.certKey,
+		}
+		cfg, err := repo.UpdateCert(context.Background(), tc.owner, tc.thingID, tc.cert, tc.certKey, tc.ca)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Equal(t, testCfg, cfg, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, testCfg, cfg))
 	}
 }
 

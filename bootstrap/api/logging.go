@@ -73,7 +73,7 @@ func (lm *loggingMiddleware) Update(ctx context.Context, token string, cfg boots
 
 // UpdateCert logs the update_cert request. It logs token, thing ID and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) UpdateCert(ctx context.Context, token, thingID, clientCert, clientKey, caCert string) (err error) {
+func (lm *loggingMiddleware) UpdateCert(ctx context.Context, token, thingID, clientCert, clientKey, caCert string) (cfg bootstrap.Config, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method update_cert using token %s with thing id %s took %s to complete", token, thingID, time.Since(begin))
 		if err != nil {
