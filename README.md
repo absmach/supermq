@@ -149,7 +149,7 @@ You like Mainflux and you would like to make it your day job? We're always looki
 Mainflux is committed to continuously improving its services and ensuring a seamless experience for its users. To achieve this, we collect certain data from your deployments. Rest assured, this data is collected solely for the purpose of enhancing Mainflux and is not used with any malicious intent. The deployment summary can be found on our [website][callhome].
 
 The collected data includes:
-- **IP Address** - Used for location information on deployments.
+- **IP Address** - Used for approximate location information on deployments.
 - **Services Used** - To understand which features are popular and prioritize future developments.
 - **Last Seen Time** - To ensure the stability and availability of Mainflux.
 - **Mainflux Version** - To track the software version and deliver relevant updates.
