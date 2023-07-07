@@ -156,6 +156,9 @@ The collected data includes:
 
 We take your privacy and data security seriously. All data collected is handled in accordance with our stringent privacy policies and industry best practices.
 
+Data collection is on by default and can be disabled by setting the env variable:
+`MF_SEND_TELEMETRY=false`
+
 By utilizing Mainflux, you actively contribute to its improvement. Together, we can build a more robust and efficient IoT platform. Thank you for your trust in Mainflux!
 
 [banner]: https://github.com/mainflux/docs/blob/master/docs/img/gopherBanner.jpg
