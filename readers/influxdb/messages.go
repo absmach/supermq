@@ -176,7 +176,7 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) (string, string) {
 		toValue := int64(value.(float64) * 1e9)
 		to = fmt.Sprintf(`, stop: time(v: %d )`, toValue)
 	}
-	// timeRange returned seperately because
+	// timeRange returned separately because
 	// in FluxQL time range must be at the
 	// beginning of the query.
 	timeRange = fmt.Sprintf(`|> range(%s %s)`, from, to)
