@@ -75,6 +75,9 @@ type viewRes struct {
 	Content     string          `json:"content,omitempty"`
 	Name        string          `json:"name,omitempty"`
 	State       bootstrap.State `json:"state"`
+	ClientCert  string          `json:"client_cert,omitempty"`
+	ClientKey   string          `json:"client_key,omitempty"`
+	CACert      string          `json:"ca_cert,omitempty"`
 }
 
 func (res viewRes) Code() int {
