@@ -274,13 +274,14 @@ func TestUpdateCert(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	cases := []struct {
-		desc       string
-		token      string
-		thingKey   string
-		clientCert string
-		clientKey  string
-		caCert     string
-		err        error
+		desc           string
+		token          string
+		thingKey       string
+		clientCert     string
+		clientKey      string
+		caCert         string
+		expectedConfig bootstrap.Config
+		err            error
 	}{
 		{
 			desc:       "update certs for the valid config",
@@ -289,48 +290,49 @@ func TestUpdateCert(t *testing.T) {
 			clientKey:  "newKey",
 			caCert:     "newCert",
 			token:      validToken,
-			err:        nil,
+			expectedConfig: bootstrap.Config{
+				Name:        saved.Name,
+				MFKey:       saved.MFKey,
+				MFChannels:  saved.MFChannels,
+				ExternalID:  saved.ExternalID,
+				ExternalKey: saved.ExternalKey,
+				Content:     saved.Content,
+				State:       saved.State,
+				Owner:       saved.Owner,
+				MFThing:     saved.MFThing,
+				ClientCert:  "newCert",
+				CACert:      "newCert",
+				ClientKey:   "newKey",
+			},
+			err: nil,
 		},
 		{
-			desc:       "update cert for a non-existing config",
-			thingKey:   "empty",
-			clientCert: "newCert",
-			clientKey:  "newKey",
-			caCert:     "newCert",
-
-			token: validToken,
-			err:   errors.ErrNotFound,
+			desc:           "update cert for a non-existing config",
+			thingKey:       "empty",
+			clientCert:     "newCert",
+			clientKey:      "newKey",
+			caCert:         "newCert",
+			token:          validToken,
+			expectedConfig: bootstrap.Config{},
+			err:            errors.ErrNotFound,
 		},
 		{
-			desc:       "update config cert with wrong credentials",
-			thingKey:   saved.MFKey,
-			clientCert: "newCert",
-			clientKey:  "newKey",
-			caCert:     "newCert",
-			token:      invalidToken,
-			err:        errors.ErrAuthentication,
+			desc:           "update config cert with wrong credentials",
+			thingKey:       saved.MFKey,
+			clientCert:     "newCert",
+			clientKey:      "newKey",
+			caCert:         "newCert",
+			token:          invalidToken,
+			expectedConfig: bootstrap.Config{},
+			err:            errors.ErrAuthentication,
 		},
 	}
 
 	for _, tc := range cases {
-		testCfg := bootstrap.Config{
-			Name:        saved.Name,
-			MFKey:       saved.MFKey,
-			MFChannels:  saved.MFChannels,
-			ExternalID:  saved.ExternalID,
-			ExternalKey: saved.ExternalKey,
-			Content:     saved.Content,
-			State:       saved.State,
-			Owner:       saved.Owner,
-			MFThing:     tc.thingKey,
-			ClientCert:  tc.clientCert,
-			CACert:      tc.caCert,
-			ClientKey:   tc.clientKey,
-		}
 		cfg, err := svc.UpdateCert(context.Background(), tc.token, tc.thingKey, tc.clientCert, tc.clientKey, tc.caCert)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
-			assert.Equal(t, testCfg, cfg, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, testCfg, cfg))
+			assert.Equal(t, tc.expectedConfig, cfg, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.expectedConfig, cfg))
 		}
 	}
 }

@@ -342,22 +342,24 @@ func TestUpdateCert(t *testing.T) {
 	wrongOwner.Owner = "3"
 
 	cases := []struct {
-		desc    string
-		thingID string
-		owner   string
-		cert    string
-		certKey string
-		ca      string
-		err     error
+		desc           string
+		thingID        string
+		owner          string
+		cert           string
+		certKey        string
+		ca             string
+		expectedConfig bootstrap.Config
+		err            error
 	}{
 		{
-			desc:    "update with wrong owner",
-			thingID: "",
-			cert:    "cert",
-			certKey: "certKey",
-			ca:      "",
-			owner:   "wrong",
-			err:     errors.ErrNotFound,
+			desc:           "update with wrong owner",
+			thingID:        "",
+			cert:           "cert",
+			certKey:        "certKey",
+			ca:             "",
+			owner:          "wrong",
+			expectedConfig: bootstrap.Config{},
+			err:            errors.ErrNotFound,
 		},
 		{
 			desc:    "update a config",
@@ -366,21 +368,19 @@ func TestUpdateCert(t *testing.T) {
 			certKey: "certKey",
 			ca:      "ca",
 			owner:   c.Owner,
-			err:     nil,
+			expectedConfig: bootstrap.Config{
+				MFThing:    c.MFThing,
+				ClientCert: "cert",
+				CACert:     "ca",
+				ClientKey:  "certKey",
+			},
+			err: nil,
 		},
 	}
 	for _, tc := range cases {
-		testCfg := bootstrap.Config{
-			MFThing:    tc.thingID,
-			ClientCert: tc.cert,
-			CACert:     tc.ca,
-			ClientKey:  tc.certKey,
-		}
 		cfg, err := repo.UpdateCert(context.Background(), tc.owner, tc.thingID, tc.cert, tc.certKey, tc.ca)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		if err != nil {
-			assert.Equal(t, testCfg, cfg, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, testCfg, cfg))
-		}
+		assert.Equal(t, tc.expectedConfig, cfg, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.expectedConfig, cfg))
 	}
 }
 
