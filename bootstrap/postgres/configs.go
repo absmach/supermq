@@ -271,15 +271,12 @@ func (cr configRepository) UpdateCert(ctx context.Context, owner, thingID, clien
 
 	row, err := cr.db.NamedQueryContext(ctx, q, dbcfg)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return bootstrap.Config{}, errors.Wrap(errors.ErrNotFound, err)
-		}
 		return bootstrap.Config{}, errors.Wrap(errors.ErrUpdateEntity, err)
 	}
 	defer row.Close()
 
 	if ok := row.Next(); !ok {
-		return bootstrap.Config{}, errors.Wrap(errors.ErrUpdateEntity, row.Err())
+		return bootstrap.Config{}, errors.Wrap(errors.ErrNotFound, row.Err())
 	}
 
 	if err := row.StructScan(&dbcfg); err != nil {

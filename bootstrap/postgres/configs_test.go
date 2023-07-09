@@ -373,6 +373,7 @@ func TestUpdateCert(t *testing.T) {
 				ClientCert: "cert",
 				CACert:     "ca",
 				ClientKey:  "certKey",
+				Owner:      c.Owner,
 			},
 			err: nil,
 		},
