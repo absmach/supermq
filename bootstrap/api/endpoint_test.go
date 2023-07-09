@@ -58,7 +58,7 @@ var (
 	encKey   = []byte("1234567891011121")
 	metadata = map[string]interface{}{"meta": "data"}
 	addReq   = struct {
-		ThingID     string   `json:"thing_id"`
+		ThingID     string   `json:"mainflux_id"`
 		ExternalID  string   `json:"external_id"`
 		ExternalKey string   `json:"external_key"`
 		Channels    []string `json:"channels"`
