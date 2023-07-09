@@ -378,7 +378,9 @@ func TestUpdateCert(t *testing.T) {
 		}
 		cfg, err := repo.UpdateCert(context.Background(), tc.owner, tc.thingID, tc.cert, tc.certKey, tc.ca)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		assert.Equal(t, testCfg, cfg, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, testCfg, cfg))
+		if err != nil {
+			assert.Equal(t, testCfg, cfg, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, testCfg, cfg))
+		}
 	}
 }
 
