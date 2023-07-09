@@ -323,7 +323,7 @@ func TestUpdateCert(t *testing.T) {
 			State:       saved.State,
 			Owner:       saved.Owner,
 			MFThing:     tc.thingKey,
-			ClientCert:  tc.clientKey,
+			ClientCert:  tc.clientCert,
 			CACert:      tc.caCert,
 			ClientKey:   tc.clientKey,
 		}
