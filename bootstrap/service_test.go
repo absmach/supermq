@@ -314,10 +314,18 @@ func TestUpdateCert(t *testing.T) {
 
 	for _, tc := range cases {
 		testCfg := bootstrap.Config{
-			MFThing:    tc.thingKey,
-			ClientCert: tc.clientKey,
-			CACert:     tc.caCert,
-			ClientKey:  tc.clientKey,
+			Name:        saved.Name,
+			MFKey:       saved.MFKey,
+			MFChannels:  saved.MFChannels,
+			ExternalID:  saved.ExternalID,
+			ExternalKey: saved.ExternalKey,
+			Content:     saved.Content,
+			State:       saved.State,
+			Owner:       saved.Owner,
+			MFThing:     tc.thingKey,
+			ClientCert:  tc.clientKey,
+			CACert:      tc.caCert,
+			ClientKey:   tc.clientKey,
 		}
 		cfg, err := svc.UpdateCert(context.Background(), tc.token, tc.thingKey, tc.clientCert, tc.clientKey, tc.caCert)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
