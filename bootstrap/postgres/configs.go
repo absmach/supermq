@@ -96,12 +96,11 @@ func (cr configRepository) RetrieveByID(ctx context.Context, owner, id string) (
 	}
 
 	if err := cr.db.QueryRowxContext(ctx, q, id, owner).StructScan(&dbcfg); err != nil {
-		empty := bootstrap.Config{}
 		if err == sql.ErrNoRows {
-			return empty, errors.Wrap(errors.ErrNotFound, err)
+			return bootstrap.Config{}, errors.Wrap(errors.ErrNotFound, err)
 		}
 
-		return empty, errors.Wrap(errors.ErrViewEntity, err)
+		return bootstrap.Config{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
 
 	q = `SELECT mainflux_channel, name, metadata FROM channels ch
@@ -259,15 +258,22 @@ func (cr configRepository) Update(ctx context.Context, cfg bootstrap.Config) err
 }
 
 func (cr configRepository) UpdateCert(ctx context.Context, owner, thingID, clientCert, clientKey, caCert string) (bootstrap.Config, error) {
-	q := `UPDATE configs SET client_cert = $1, client_key = $2, ca_cert = $3 WHERE mainflux_thing = $4 AND owner = $5 
+	q := `UPDATE configs SET client_cert = :client_cert, client_key = :client_key, ca_cert = :ca_cert WHERE mainflux_thing = :mainflux_thing AND owner = :owner 
 	RETURNING mainflux_thing, client_cert, client_key, ca_cert`
 
 	dbcfg := dbConfig{
-		MFThing: thingID,
+		MFThing:    thingID,
+		ClientCert: nullString(clientCert),
+		Owner:      owner,
+		ClientKey:  nullString(clientKey),
+		CaCert:     nullString(caCert),
 	}
 
-	row, err := cr.db.QueryContext(ctx, q, clientCert, clientKey, caCert, thingID, owner)
+	row, err := cr.db.NamedQueryContext(ctx, q, dbcfg)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return bootstrap.Config{}, errors.Wrap(errors.ErrNotFound, err)
+		}
 		return bootstrap.Config{}, errors.Wrap(errors.ErrUpdateEntity, err)
 	}
 	defer row.Close()
@@ -276,7 +282,7 @@ func (cr configRepository) UpdateCert(ctx context.Context, owner, thingID, clien
 		return bootstrap.Config{}, errors.Wrap(errors.ErrUpdateEntity, row.Err())
 	}
 
-	if err := row.Scan(&dbcfg); err != nil {
+	if err := row.StructScan(&dbcfg); err != nil {
 		return bootstrap.Config{}, err
 	}
 
