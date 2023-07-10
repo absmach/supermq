@@ -38,7 +38,7 @@ var (
 	v   float64 = 5
 	vs  string  = "value"
 	vb  bool    = true
-	vd  string  = "dataValue"
+	vd  string  = "base64"
 	sum float64 = 42
 
 	client  influxdata.Client
@@ -368,7 +368,7 @@ func TestReadSenml(t *testing.T) {
 			pageMeta: readers.PageMetadata{
 				Offset:      0,
 				Limit:       limit,
-				StringValue: "strings and values",
+				StringValue: "a stringvalues b",
 				Comparator:  readers.LowerThanKey,
 			},
 			page: readers.MessagesPage{

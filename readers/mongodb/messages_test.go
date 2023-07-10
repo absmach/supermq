@@ -44,7 +44,7 @@ var (
 	v   float64 = 5
 	vs          = "value"
 	vb          = true
-	vd          = "dataValue"
+	vd          = "base64"
 	sum float64 = 42
 
 	idProvider = uuid.New()
