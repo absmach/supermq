@@ -24,8 +24,6 @@ var (
 	invalidName    = strings.Repeat("m", maxNameSize+10)
 	clientIdentity = "client-identity@example.com"
 	clientName     = "client name"
-	wrongName      = "wrong-name"
-	wrongID        = "wrong-id"
 )
 
 func TestClientsSave(t *testing.T) {

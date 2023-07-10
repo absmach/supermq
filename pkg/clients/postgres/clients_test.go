@@ -6,7 +6,6 @@ package postgres_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/mainflux/mainflux/internal/postgres"
@@ -23,13 +22,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	maxNameSize = 254
-)
-
 var (
 	idProvider     = uuid.New()
-	invalidName    = strings.Repeat("m", maxNameSize+10)
 	password       = "$tr0ngPassw0rd"
 	clientIdentity = "client-identity@example.com"
 	clientName     = "client name"

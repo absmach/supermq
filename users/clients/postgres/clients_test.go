@@ -27,8 +27,6 @@ var (
 	password       = "$tr0ngPassw0rd"
 	clientIdentity = "client-identity@example.com"
 	clientName     = "client name"
-	wrongName      = "wrong-name"
-	wrongID        = "wrong-id"
 )
 
 func TestClientsSave(t *testing.T) {
