@@ -16,7 +16,7 @@ func createSubscriptionEndpoint(svc notifiers.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createSubReq)
 		if err := req.validate(); err != nil {
-			return createSubRes{}, errors.Wrap(err, apiutil.ErrValidation)
+			return createSubRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		sub := notifiers.Subscription{
 			Contact: req.Contact,
@@ -24,7 +24,7 @@ func createSubscriptionEndpoint(svc notifiers.Service) endpoint.Endpoint {
 		}
 		id, err := svc.CreateSubscription(ctx, req.token, sub)
 		if err != nil {
-			return createSubRes{}, errors.Wrap(err, apiutil.ErrValidation)
+			return createSubRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		ucr := createSubRes{
 			ID: id,
@@ -38,11 +38,11 @@ func viewSubscriptionEndpint(svc notifiers.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(subReq)
 		if err := req.validate(); err != nil {
-			return viewSubRes{}, errors.Wrap(err, apiutil.ErrValidation)
+			return viewSubRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		sub, err := svc.ViewSubscription(ctx, req.token, req.id)
 		if err != nil {
-			return viewSubRes{}, errors.Wrap(err, apiutil.ErrValidation)
+			return viewSubRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		res := viewSubRes{
 			ID:      sub.ID,
@@ -58,7 +58,7 @@ func listSubscriptionsEndpoint(svc notifiers.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listSubsReq)
 		if err := req.validate(); err != nil {
-			return listSubsRes{}, errors.Wrap(err, apiutil.ErrValidation)
+			return listSubsRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		pm := notifiers.PageMetadata{
 			Topic:   req.topic,
@@ -68,7 +68,7 @@ func listSubscriptionsEndpoint(svc notifiers.Service) endpoint.Endpoint {
 		}
 		page, err := svc.ListSubscriptions(ctx, req.token, pm)
 		if err != nil {
-			return listSubsRes{}, errors.Wrap(err, apiutil.ErrValidation)
+			return listSubsRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		res := listSubsRes{
 			Offset: page.Offset,
@@ -93,10 +93,10 @@ func deleteSubscriptionEndpint(svc notifiers.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(subReq)
 		if err := req.validate(); err != nil {
-			return nil, errors.Wrap(err, apiutil.ErrValidation)
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		if err := svc.RemoveSubscription(ctx, req.token, req.id); err != nil {
-			return nil, errors.Wrap(err, apiutil.ErrValidation)
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		return removeSubRes{}, nil
 	}
