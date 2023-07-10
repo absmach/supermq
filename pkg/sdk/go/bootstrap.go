@@ -143,7 +143,6 @@ func (sdk mfSDK) UpdateBootstrapCerts(id, clientCert, clientKey, ca, token strin
 	}
 
 	_, _, sdkerr := sdk.processRequest(http.MethodPatch, url, token, string(CTJSON), data, http.StatusOK)
-
 	return sdkerr
 }
 
@@ -158,14 +157,12 @@ func (sdk mfSDK) UpdateBootstrapConnection(id string, channels []string, token s
 	}
 
 	_, _, sdkerr := sdk.processRequest(http.MethodPut, url, token, string(CTJSON), data, http.StatusOK)
-
 	return sdkerr
 }
 
 func (sdk mfSDK) RemoveBootstrap(id, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s", sdk.bootstrapURL, configsEndpoint, id)
 	_, _, err := sdk.processRequest(http.MethodDelete, url, token, string(CTJSON), nil, http.StatusNoContent)
-
 	return err
 }
 
