@@ -88,19 +88,27 @@ func (cr configRepository) Save(ctx context.Context, cfg bootstrap.Config, chsCo
 func (cr configRepository) RetrieveByID(ctx context.Context, owner, id string) (bootstrap.Config, error) {
 	q := `SELECT mainflux_thing, mainflux_key, external_id, external_key, name, content, state, client_cert, ca_cert
 		  FROM configs
-		  WHERE mainflux_thing = $1 AND owner = $2`
+		  WHERE mainflux_thing = :mainflux_thing AND owner = owner`
 
 	dbcfg := dbConfig{
 		MFThing: id,
 		Owner:   owner,
 	}
-
-	if err := cr.db.QueryRowxContext(ctx, q, id, owner).StructScan(&dbcfg); err != nil {
+	row, err := cr.db.NamedQueryContext(ctx, q, dbcfg)
+	if err != nil {
 		if err == sql.ErrNoRows {
 			return bootstrap.Config{}, errors.Wrap(errors.ErrNotFound, err)
 		}
 
 		return bootstrap.Config{}, errors.Wrap(errors.ErrViewEntity, err)
+	}
+
+	if ok := row.Next(); !ok {
+		return bootstrap.Config{}, errors.Wrap(errors.ErrNotFound, row.Err())
+	}
+
+	if err := row.StructScan(&dbcfg); err != nil {
+		return bootstrap.Config{}, err
 	}
 
 	q = `SELECT mainflux_channel, name, metadata FROM channels ch
@@ -186,17 +194,25 @@ func (cr configRepository) RetrieveAll(ctx context.Context, owner string, filter
 func (cr configRepository) RetrieveByExternalID(ctx context.Context, externalID string) (bootstrap.Config, error) {
 	q := `SELECT mainflux_thing, mainflux_key, external_key, owner, name, client_cert, client_key, ca_cert, content, state
 		  FROM configs
-		  WHERE external_id = $1`
+		  WHERE external_id = :external_id`
 	dbcfg := dbConfig{
 		ExternalID: externalID,
 	}
 
-	if err := cr.db.QueryRowxContext(ctx, q, externalID).StructScan(&dbcfg); err != nil {
-		empty := bootstrap.Config{}
+	row, err := cr.db.NamedQueryContext(ctx, q, dbcfg)
+	if err != nil {
 		if err == sql.ErrNoRows {
-			return empty, errors.Wrap(errors.ErrNotFound, err)
+			return bootstrap.Config{}, errors.Wrap(errors.ErrNotFound, err)
 		}
-		return empty, errors.Wrap(errors.ErrViewEntity, err)
+		return bootstrap.Config{}, errors.Wrap(errors.ErrViewEntity, err)
+	}
+
+	if ok := row.Next(); !ok {
+		return bootstrap.Config{}, errors.Wrap(errors.ErrNotFound, row.Err())
+	}
+
+	if err := row.StructScan(&dbcfg); err != nil {
+		return bootstrap.Config{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
 
 	q = `SELECT mainflux_channel, name, metadata FROM channels ch
@@ -235,12 +251,16 @@ func (cr configRepository) RetrieveByExternalID(ctx context.Context, externalID 
 }
 
 func (cr configRepository) Update(ctx context.Context, cfg bootstrap.Config) error {
-	q := `UPDATE configs SET name = $1, content = $2 WHERE mainflux_thing = $3 AND owner = $4 `
+	q := `UPDATE configs SET name = :name, content = :content WHERE mainflux_thing = :mainflux_thing AND owner = :owner `
 
-	content := nullString(cfg.Content)
-	name := nullString(cfg.Name)
+	dbcfg := dbConfig{
+		Name:    nullString(cfg.Name),
+		Content: nullString(cfg.Content),
+		MFThing: cfg.MFThing,
+		Owner:   cfg.Owner,
+	}
 
-	res, err := cr.db.ExecContext(ctx, q, name, content, cfg.MFThing, cfg.Owner)
+	res, err := cr.db.NamedExecContext(ctx, q, dbcfg)
 	if err != nil {
 		return errors.Wrap(errors.ErrUpdateEntity, err)
 	}
@@ -316,8 +336,13 @@ func (cr configRepository) UpdateConnections(ctx context.Context, owner, id stri
 }
 
 func (cr configRepository) Remove(ctx context.Context, owner, id string) error {
-	q := `DELETE FROM configs WHERE mainflux_thing = $1 AND owner = $2`
-	if _, err := cr.db.ExecContext(ctx, q, id, owner); err != nil {
+	q := `DELETE FROM configs WHERE mainflux_thing = :mainflux_thing AND owner = :owner`
+	dbcfg := dbConfig{
+		MFThing: id,
+		Owner:   owner,
+	}
+
+	if _, err := cr.db.NamedExecContext(ctx, q, dbcfg); err != nil {
 		return errors.Wrap(errors.ErrRemoveEntity, err)
 	}
 
@@ -329,9 +354,15 @@ func (cr configRepository) Remove(ctx context.Context, owner, id string) error {
 }
 
 func (cr configRepository) ChangeState(ctx context.Context, owner, id string, state bootstrap.State) error {
-	q := `UPDATE configs SET state = $1 WHERE mainflux_thing = $2 AND owner = $3;`
+	q := `UPDATE configs SET state = :state WHERE mainflux_thing = :mainflux_thing AND owner = :owner;`
 
-	res, err := cr.db.ExecContext(ctx, q, state, id, owner)
+	dbcfg := dbConfig{
+		MFThing: id,
+		State:   state,
+		Owner:   owner,
+	}
+
+	res, err := cr.db.NamedExecContext(ctx, q, dbcfg)
 	if err != nil {
 		return errors.Wrap(errors.ErrUpdateEntity, err)
 	}
