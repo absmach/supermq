@@ -226,8 +226,7 @@ func (ps *provisionService) Provision(token, name, externalID, externalKey strin
 			res.CACert = ""
 
 			if needsBootstrap(thing) {
-				_, err = ps.sdk.UpdateBootstrapCerts(bsConfig.MFThing, cert.ClientCert, cert.ClientKey, "", token)
-				if err != nil {
+				if _, err = ps.sdk.UpdateBootstrapCerts(bsConfig.MFThing, cert.ClientCert, cert.ClientKey, "", token); err != nil {
 					return Result{}, errors.Wrap(ErrFailedCertCreation, err)
 				}
 			}

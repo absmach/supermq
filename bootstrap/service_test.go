@@ -331,9 +331,7 @@ func TestUpdateCert(t *testing.T) {
 	for _, tc := range cases {
 		cfg, err := svc.UpdateCert(context.Background(), tc.token, tc.thingKey, tc.clientCert, tc.clientKey, tc.caCert)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		if err == nil {
-			assert.Equal(t, tc.expectedConfig, cfg, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.expectedConfig, cfg))
-		}
+		assert.Equal(t, tc.expectedConfig, cfg, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.expectedConfig, cfg))
 	}
 }
 
