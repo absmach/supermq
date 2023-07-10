@@ -14,11 +14,9 @@ import (
 )
 
 var (
-	errGrpcConnect            = errors.New("failed to connect to grpc server")
-	errJaeger                 = errors.New("failed to initialize jaeger ")
-	errGrpcClose              = errors.New("failed to close grpc connection")
-	errJaegerClose            = errors.New("failed to shut down jaeger tracer provider")
-	errFailedToParseJaegerUrl = errors.New("failed to parse jaeger url")
+	errGrpcConnect = errors.New("failed to connect to grpc server")
+	errGrpcClose   = errors.New("failed to close grpc connection")
+	errJaegerClose = errors.New("failed to shut down jaeger tracer provider")
 )
 
 type Config struct {
