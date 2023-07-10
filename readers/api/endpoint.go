@@ -19,14 +19,14 @@ func listMessagesEndpoint(svc readers.MessageRepository, tc tpolicies.AuthServic
 		req := request.(listMessagesReq)
 
 		if err := req.validate(); err != nil {
-			return nil, errors.Wrap(err, apiutil.ErrValidation)
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		if err := authorize(ctx, req, tc, ac); err != nil {
 			return nil, errors.Wrap(errors.ErrAuthorization, errors.Wrap(err, apiutil.ErrValidation))
 		}
 		page, err := svc.ReadAll(req.chanID, req.pageMeta)
 		if err != nil {
-			return nil, errors.Wrap(err, apiutil.ErrValidation)
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		return pageRes{

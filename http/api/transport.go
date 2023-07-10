@@ -100,7 +100,7 @@ func parseSubtopic(subtopic string) (string, error) {
 func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	ct := r.Header.Get("Content-Type")
 	if ct != ctSenmlJSON && ct != contentType && ct != ctSenmlCBOR {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
@@ -155,7 +155,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrAuthorization):
 		w.WriteHeader(http.StatusForbidden)
-	case errors.Contains(err, errors.ErrUnsupportedContentType):
+	case errors.Contains(err, apiutil.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	case errors.Contains(err, errMalformedSubtopic),
 		errors.Contains(err, apiutil.ErrMalformedEntity):

@@ -75,7 +75,7 @@ func MakeHandler(svc notifiers.Service, logger logger.Logger, instanceID string)
 
 func decodeCreate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := createSubReq{token: apiutil.ExtractBearerToken(r)}
@@ -153,7 +153,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrConflict):
 		w.WriteHeader(http.StatusConflict)
-	case errors.Contains(err, errors.ErrUnsupportedContentType):
+	case errors.Contains(err, apiutil.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 
 	case errors.Contains(err, errors.ErrCreateEntity),

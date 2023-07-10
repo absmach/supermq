@@ -215,7 +215,7 @@ func decodeListGroupsRequest(_ context.Context, r *http.Request) (interface{}, e
 
 func decodeGroupCreate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	var g mfgroups.Group
 	if err := json.NewDecoder(r.Body).Decode(&g); err != nil {
@@ -231,7 +231,7 @@ func decodeGroupCreate(_ context.Context, r *http.Request) (interface{}, error) 
 
 func decodeGroupsCreate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := createGroupsReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req.Groups); err != nil {
@@ -243,7 +243,7 @@ func decodeGroupsCreate(_ context.Context, r *http.Request) (interface{}, error)
 
 func decodeGroupUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := updateGroupReq{
 		id:    bone.GetValue(r, "chanID"),

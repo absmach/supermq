@@ -143,4 +143,7 @@ var (
 
 	// ErrInvalidVisibilityType indicates invalid visibility type.
 	ErrInvalidVisibilityType = errors.New("invalid visibility type")
+
+	// ErrUnsupportedContentType indicates unacceptable or lack of Content-Type.
+	ErrUnsupportedContentType = errors.New("unsupported content type")
 )

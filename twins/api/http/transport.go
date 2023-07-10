@@ -89,7 +89,7 @@ func MakeHandler(svc twins.Service, logger logger.Logger, instanceID string) htt
 
 func decodeTwinCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := addTwinReq{token: apiutil.ExtractBearerToken(r)}
@@ -102,7 +102,7 @@ func decodeTwinCreation(_ context.Context, r *http.Request) (interface{}, error)
 
 func decodeTwinUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := updateTwinReq{
@@ -203,7 +203,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, apiutil.ErrInvalidQueryParams):
 		w.WriteHeader(http.StatusBadRequest)
-	case errors.Contains(err, errors.ErrUnsupportedContentType):
+	case errors.Contains(err, apiutil.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	case errors.Contains(err, apiutil.ErrMalformedEntity),
 		errors.Contains(err, apiutil.ErrMissingID),

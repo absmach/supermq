@@ -21,41 +21,6 @@ func LoggingErrorEncoder(logger logger.Logger, enc kithttp.ErrorEncoder) kithttp
 		if errors.Contains(err, ErrValidation) {
 			logger.Error(err.Error())
 		}
-		// switch {
-		// case errors.Contains(err, ErrBearerToken),
-		// 	errors.Contains(err, ErrMissingID),
-		// 	errors.Contains(err, ErrBearerKey),
-		// 	errors.Contains(err, ErrInvalidAuthKey),
-		// 	errors.Contains(err, ErrInvalidIDFormat),
-		// 	errors.Contains(err, ErrNameSize),
-		// 	errors.Contains(err, ErrLimitSize),
-		// 	errors.Contains(err, ErrOffsetSize),
-		// 	errors.Contains(err, ErrInvalidOrder),
-		// 	errors.Contains(err, ErrInvalidDirection),
-		// 	errors.Contains(err, ErrEmptyList),
-		// 	errors.Contains(err, ErrMalformedPolicy),
-		// 	errors.Contains(err, ErrMissingPolicySub),
-		// 	errors.Contains(err, ErrMissingPolicyObj),
-		// 	errors.Contains(err, ErrMalformedPolicyAct),
-		// 	errors.Contains(err, ErrMissingCertData),
-		// 	errors.Contains(err, ErrInvalidTopic),
-		// 	errors.Contains(err, ErrInvalidContact),
-		// 	errors.Contains(err, ErrMissingEmail),
-		// 	errors.Contains(err, ErrMissingHost),
-		// 	errors.Contains(err, ErrMissingPass),
-		// 	errors.Contains(err, ErrMissingConfPass),
-		// 	errors.Contains(err, ErrInvalidResetPass),
-		// 	errors.Contains(err, ErrInvalidComparator),
-		// 	errors.Contains(err, ErrMissingMemberType),
-		// 	errors.Contains(err, ErrMaxLevelExceeded),
-		// 	errors.Contains(err, ErrInvalidAPIKey),
-		// 	errors.Contains(err, ErrInvalidLevel),
-		// 	errors.Contains(err, ErrBootstrapState),
-		// 	errors.Contains(err, ErrInvalidQueryParams),
-		// 	errors.Contains(err, ErrMalformedEntity):
-		// 	logger.Error(err.Error())
-		// }
-
 		enc(ctx, err, w)
 	}
 }

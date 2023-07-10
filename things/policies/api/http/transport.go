@@ -110,7 +110,7 @@ func decodeDisconnectThing(_ context.Context, r *http.Request) (interface{}, err
 
 func decodeConnectList(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := createPoliciesReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -122,7 +122,7 @@ func decodeConnectList(_ context.Context, r *http.Request) (interface{}, error) 
 
 func decodeIdentify(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := identifyReq{secret: apiutil.ExtractThingKey(r)}
@@ -132,7 +132,7 @@ func decodeIdentify(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeCanAccess(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := authorizeReq{Object: bone.GetValue(r, "chanID")}
@@ -145,7 +145,7 @@ func decodeCanAccess(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeUpdatePolicy(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := policyReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

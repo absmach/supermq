@@ -130,7 +130,7 @@ func TestSetContentType(t *testing.T) {
 		{
 			desc:  "set invalid content type",
 			cType: "invalid",
-			err:   errors.NewSDKError(errors.ErrUnsupportedContentType),
+			err:   errors.NewSDKError(apiutil.ErrUnsupportedContentType),
 		},
 	}
 	for _, tc := range cases {

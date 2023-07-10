@@ -233,7 +233,7 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 
 func decodeUpdateClient(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := updateClientReq{
 		token: apiutil.ExtractBearerToken(r),
@@ -248,7 +248,7 @@ func decodeUpdateClient(_ context.Context, r *http.Request) (interface{}, error)
 
 func decodeUpdateClientTags(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := updateClientTagsReq{
 		token: apiutil.ExtractBearerToken(r),
@@ -263,7 +263,7 @@ func decodeUpdateClientTags(_ context.Context, r *http.Request) (interface{}, er
 
 func decodeUpdateClientIdentity(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := updateClientIdentityReq{
 		token: apiutil.ExtractBearerToken(r),
@@ -278,7 +278,7 @@ func decodeUpdateClientIdentity(_ context.Context, r *http.Request) (interface{}
 
 func decodeUpdateClientSecret(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := updateClientSecretReq{
 		token: apiutil.ExtractBearerToken(r),
@@ -292,7 +292,7 @@ func decodeUpdateClientSecret(_ context.Context, r *http.Request) (interface{}, 
 
 func decodePasswordResetRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.ErrUnsupportedContentType
+		return nil, apiutil.ErrUnsupportedContentType
 	}
 
 	var req passwResetReq
@@ -307,7 +307,7 @@ func decodePasswordResetRequest(_ context.Context, r *http.Request) (interface{}
 
 func decodePasswordReset(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	var req resetTokenReq
@@ -320,7 +320,7 @@ func decodePasswordReset(_ context.Context, r *http.Request) (interface{}, error
 
 func decodeUpdateClientOwner(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := updateClientOwnerReq{
 		token: apiutil.ExtractBearerToken(r),
@@ -335,7 +335,7 @@ func decodeUpdateClientOwner(_ context.Context, r *http.Request) (interface{}, e
 
 func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := loginClientReq{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -352,7 +352,7 @@ func decodeRefreshToken(_ context.Context, r *http.Request) (interface{}, error)
 }
 func decodeCreateClientReq(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	var c mfclients.Client

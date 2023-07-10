@@ -64,7 +64,7 @@ func MakeHandler(svc policies.Service, mux *bone.Mux, logger logger.Logger) http
 
 func decodeAuthorize(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	var authReq authorizeReq
@@ -77,7 +77,7 @@ func decodeAuthorize(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodePolicyCreate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	var m policies.Policy
@@ -96,7 +96,7 @@ func decodePolicyCreate(_ context.Context, r *http.Request) (interface{}, error)
 
 func decodePolicyUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	var m policies.Policy
 	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {

@@ -69,7 +69,7 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 
 func decodeProvisionRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := provisionReq{token: apiutil.ExtractBearerToken(r)}
@@ -82,7 +82,7 @@ func decodeProvisionRequest(_ context.Context, r *http.Request) (interface{}, er
 
 func decodeMappingRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := mappingReq{token: apiutil.ExtractBearerToken(r)}
@@ -95,7 +95,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case errors.Contains(err, errors.ErrAuthentication),
 		errors.Contains(err, apiutil.ErrBearerToken):
 		w.WriteHeader(http.StatusUnauthorized)
-	case errors.Contains(err, errors.ErrUnsupportedContentType):
+	case errors.Contains(err, apiutil.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	case errors.Contains(err, apiutil.ErrMalformedEntity),
 		errors.Contains(err, apiutil.ErrMissingID),

@@ -13,7 +13,7 @@ func doProvision(svc provision.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(provisionReq)
 		if err := req.validate(); err != nil {
-			return nil, errors.Wrap(err, apiutil.ErrValidation)
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		token := req.token
 
@@ -41,7 +41,7 @@ func getMapping(svc provision.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(mappingReq)
 		if err := req.validate(); err != nil {
-			return nil, errors.Wrap(err, apiutil.ErrValidation)
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		return svc.Mapping(req.token)
 	}

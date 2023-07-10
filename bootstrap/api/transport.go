@@ -110,7 +110,7 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader, logger mf
 
 func decodeAddRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := addReq{token: apiutil.ExtractBearerToken(r)}
@@ -123,7 +123,7 @@ func decodeAddRequest(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeUpdateRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := updateReq{
@@ -139,7 +139,7 @@ func decodeUpdateRequest(_ context.Context, r *http.Request) (interface{}, error
 
 func decodeUpdateCertRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := updateCertReq{
@@ -155,7 +155,7 @@ func decodeUpdateCertRequest(_ context.Context, r *http.Request) (interface{}, e
 
 func decodeUpdateConnRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := updateConnReq{
@@ -206,7 +206,7 @@ func decodeBootstrapRequest(_ context.Context, r *http.Request) (interface{}, er
 
 func decodeStateRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := changeStateReq{
@@ -263,7 +263,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, apiutil.ErrBearerToken),
 		errors.Contains(err, apiutil.ErrBearerKey):
 		w.WriteHeader(http.StatusUnauthorized)
-	case errors.Contains(err, errors.ErrUnsupportedContentType):
+	case errors.Contains(err, apiutil.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	case errors.Contains(err, apiutil.ErrInvalidQueryParams),
 		errors.Contains(err, apiutil.ErrMalformedEntity),

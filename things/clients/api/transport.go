@@ -185,7 +185,7 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 
 func decodeUpdateClient(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := updateClientReq{
 		token: apiutil.ExtractBearerToken(r),
@@ -200,7 +200,7 @@ func decodeUpdateClient(_ context.Context, r *http.Request) (interface{}, error)
 
 func decodeUpdateClientTags(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := updateClientTagsReq{
 		token: apiutil.ExtractBearerToken(r),
@@ -215,7 +215,7 @@ func decodeUpdateClientTags(_ context.Context, r *http.Request) (interface{}, er
 
 func decodeUpdateClientCredentials(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := updateClientCredentialsReq{
 		token: apiutil.ExtractBearerToken(r),
@@ -230,7 +230,7 @@ func decodeUpdateClientCredentials(_ context.Context, r *http.Request) (interfac
 
 func decodeUpdateClientOwner(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 	req := updateClientOwnerReq{
 		token: apiutil.ExtractBearerToken(r),
@@ -245,7 +245,7 @@ func decodeUpdateClientOwner(_ context.Context, r *http.Request) (interface{}, e
 
 func decodeCreateClientReq(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	var c mfclients.Client
@@ -262,7 +262,7 @@ func decodeCreateClientReq(_ context.Context, r *http.Request) (interface{}, err
 
 func decodeCreateClientsReq(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(errors.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	c := createClientsReq{token: apiutil.ExtractBearerToken(r)}

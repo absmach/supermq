@@ -118,7 +118,7 @@ func decodeViewCert(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
-		return nil, errors.ErrUnsupportedContentType
+		return nil, apiutil.ErrUnsupportedContentType
 	}
 
 	req := addCertsReq{token: apiutil.ExtractBearerToken(r)}
@@ -143,7 +143,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case errors.Contains(err, errors.ErrAuthentication),
 		errors.Contains(err, apiutil.ErrBearerToken):
 		w.WriteHeader(http.StatusUnauthorized)
-	case errors.Contains(err, errors.ErrUnsupportedContentType):
+	case errors.Contains(err, apiutil.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	case errors.Contains(err, apiutil.ErrMalformedEntity),
 		errors.Contains(err, apiutil.ErrMissingID),
