@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"net/http/httptest"
+	"sort"
 	"strconv"
 	"testing"
 
@@ -331,6 +332,12 @@ func TestUpdateCert(t *testing.T) {
 	for _, tc := range cases {
 		cfg, err := svc.UpdateCert(context.Background(), tc.token, tc.thingKey, tc.clientCert, tc.clientKey, tc.caCert)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		sort.Slice(cfg.MFChannels, func(i, j int) bool {
+			return cfg.MFChannels[i].ID < cfg.MFChannels[j].ID
+		})
+		sort.Slice(tc.expectedConfig.MFChannels, func(i, j int) bool {
+			return tc.expectedConfig.MFChannels[i].ID < tc.expectedConfig.MFChannels[j].ID
+		})
 		assert.Equal(t, tc.expectedConfig, cfg, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.expectedConfig, cfg))
 	}
 }
