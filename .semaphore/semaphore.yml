@@ -37,26 +37,23 @@ blocks:
       jobs:
         - name: Check Generated Protocol Buffer Files
           commands:
-            - |
-              setup_protoc() {
-                PROTOC_VERSION=23.3
-                PROTOC_GEN_VERSION=v1.31.0
-                PROTOC_GRPC_VERSION=v1.3.0
-                PROTOC_ZIP=protoc-$PROTOC_VERSION-linux-x86_64.zip
+            - PROTOC_VERSION=23.3
+            - PROTOC_GEN_VERSION=v1.31.0
+            - PROTOC_GRPC_VERSION=v1.3.0
+            - PROTOC_ZIP=protoc-$PROTOC_VERSION-linux-x86_64.zip
 
-                curl -0L https://github.com/google/protobuf/releases/download/v$PROTOC_VERSION/$PROTOC_ZIP -o $PROTOC_ZIP
-                unzip -o $PROTOC_ZIP -d protoc3
-                sudo mv protoc3/bin/* /usr/local/bin/
-                sudo mv protoc3/include/* /usr/local/include/
-                rm -rf $PROTOC_ZIP protoc3
+            - curl -0L https://github.com/google/protobuf/releases/download/v$PROTOC_VERSION/$PROTOC_ZIP -o $PROTOC_ZIP
+            - unzip -o $PROTOC_ZIP -d protoc3
+            - sudo mv protoc3/bin/* /usr/local/bin/
+            - sudo mv protoc3/include/* /usr/local/include/
+            - rm -rf $PROTOC_ZIP protoc3
 
-                go install google.golang.org/protobuf/cmd/protoc-gen-go@$PROTOC_GEN_VERSION
-                go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@$PROTOC_GRPC_VERSION
+            - go install google.golang.org/protobuf/cmd/protoc-gen-go@$PROTOC_GEN_VERSION
+            - go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@$PROTOC_GRPC_VERSION
                 
-                export PATH=$PATH:/usr/local/bin/protoc
-                export PATH=$PATH:$HOME/go/bin
-              }
-            - setup_protoc
+            - export PATH=$PATH:/usr/local/bin/protoc
+            - export PATH=$PATH:$HOME/go/bin
+             
             - |
               check_files() {
                 echo "Setting up Mainflux..."
