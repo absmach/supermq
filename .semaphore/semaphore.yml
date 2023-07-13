@@ -65,21 +65,24 @@ blocks:
               for p in $(ls pkg/messaging/*.pb.go); do
                 mv $p $p.tmp
               done
-              protoc -I. --go_out=. --go_opt=paths=source_relative pkg/messaging/*.proto
-              protoc -I. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative users/policies/*.proto
-              protoc -I. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative things/policies/*.proto
+            - protoc -I. --go_out=. --go_opt=paths=source_relative pkg/messaging/*.proto
+            - protoc -I. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative users/policies/*.proto
+            - protoc -I. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative things/policies/*.proto
+            - |
               for p in $(ls users/policies/*.pb.go); do
                 if ! cmp -s $p $p.tmp; then
                   echo "Proto file and generated Go file $p are out of sync!"
                   exit 1
                 fi
               done
+            - |
               for p in $(ls things/policies/*.pb.go); do
                 if ! cmp -s $p $p.tmp; then
                   echo "Proto file and generated Go file $p are out of sync!"
                   exit 1
                 fi
-              done                
+              done
+            - |                
               for p in $(ls pkg/messaging/*.pb.go); do
                 if ! cmp -s $p $p.tmp; then
                   echo "Proto file and generated Go file $p are out of sync!"
