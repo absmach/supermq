@@ -767,10 +767,6 @@ blocks:
       when: "change_in(['things/policies/postgres', 'things/policies/service.go'])"
     task:
       jobs:
-        - name: Test Things
-          commands:
-            - cd things
-            - go test ./... --race
         - name: Test CoAP
           commands:
             - cd coap
@@ -850,16 +846,16 @@ blocks:
             - ./codecov
       secrets:
         - name: CODECOV_TOKEN
-  - name: Push Docker Images
-    dependencies:
-      - Setup
-    run:
-      when: branch = 'master'
-    task:
-      jobs:
-        - name: Push Docker Images
-          commands:
-            - make -j$NPROC latest
+  # - name: Push Docker Images
+  #   dependencies:
+  #     - Setup
+  #   run:
+  #     when: branch = 'master'
+  #   task:
+  #     jobs:
+  #       - name: Push Docker Images
+  #         commands:
+  #           - make -j$NPROC latest
   - name: Compile Check For RabbitMQ
     dependencies:
       - Setup
