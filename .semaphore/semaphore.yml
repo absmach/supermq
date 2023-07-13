@@ -465,7 +465,7 @@ blocks:
     dependencies:
       - Lint and Test Readers
     run:
-      when: "change_in(['readers', 'cmd/cassandra-reader', 'cmd/influxdb-reader', 'cmd/mongodb-reader', 'cmd/postgres-reader', 'cmd/timescale-reader', ])"
+      when: "change_in(['readers', 'cmd/cassandra-reader', 'cmd/influxdb-reader', 'cmd/mongodb-reader', 'cmd/postgres-reader', 'cmd/timescale-reader' ])"
     task:
       jobs:
         - name: Build Readers
