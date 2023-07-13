@@ -237,7 +237,7 @@ func decodeUpdateClientOwner(_ context.Context, r *http.Request) (interface{}, e
 		id:    bone.GetValue(r, "thingID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, errors.Wrap(err, apiutil.ErrValidation))
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
 	}
 
 	return req, nil
@@ -250,7 +250,7 @@ func decodeCreateClientReq(_ context.Context, r *http.Request) (interface{}, err
 
 	var c mfclients.Client
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, errors.Wrap(err, apiutil.ErrValidation))
+		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
 	}
 	req := createClientReq{
 		client: c,

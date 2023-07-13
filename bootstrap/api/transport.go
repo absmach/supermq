@@ -271,7 +271,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, apiutil.ErrBootstrapState),
 		errors.Contains(err, apiutil.ErrLimitSize):
 		w.WriteHeader(http.StatusBadRequest)
-	case errors.Contains(err, errors.ErrNotFound):
+	case errors.Contains(err, errors.ErrNotFound),
+		errors.Contains(err, bootstrap.ErrThings):
 		w.WriteHeader(http.StatusNotFound)
 	case errors.Contains(err, bootstrap.ErrExternalKey),
 		errors.Contains(err, bootstrap.ErrExternalKeySecure),

@@ -950,6 +950,7 @@ func TestUpdateClientSecret(t *testing.T) {
 		token     string
 		response  sdk.User
 		err       error
+		repoErr   error
 	}{
 		{
 			desc:      "update client secret with valid token",
@@ -957,6 +958,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			newSecret: "newSecret",
 			token:     token.AccessToken,
 			response:  rclient,
+			repoErr:   nil,
 			err:       nil,
 		},
 		{
@@ -965,6 +967,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			newSecret: "newPassword",
 			token:     "non-existent",
 			response:  sdk.User{},
+			repoErr:   errors.ErrAuthentication,
 			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 		{
@@ -973,14 +976,15 @@ func TestUpdateClientSecret(t *testing.T) {
 			newSecret: "newSecret",
 			token:     token.AccessToken,
 			response:  sdk.User{},
+			repoErr:   apiutil.ErrInvalidSecret,
 			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidSecret), http.StatusBadRequest),
 		},
 	}
 
 	for _, tc := range cases {
-		repoCall := cRepo.On("RetrieveByID", mock.Anything, user.ID).Return(convertClient(tc.response), tc.err)
-		repoCall1 := cRepo.On("RetrieveByIdentity", mock.Anything, user.Credentials.Identity).Return(convertClient(tc.response), tc.err)
-		repoCall2 := cRepo.On("UpdateSecret", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
+		repoCall := cRepo.On("RetrieveByID", mock.Anything, user.ID).Return(convertClient(tc.response), tc.repoErr)
+		repoCall1 := cRepo.On("RetrieveByIdentity", mock.Anything, user.Credentials.Identity).Return(convertClient(tc.response), tc.repoErr)
+		repoCall2 := cRepo.On("UpdateSecret", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.repoErr)
 		uClient, err := mfsdk.UpdatePassword(tc.oldSecret, tc.newSecret, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, uClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, uClient))
@@ -1113,6 +1117,7 @@ func TestEnableClient(t *testing.T) {
 		token    string
 		client   sdk.User
 		response sdk.User
+		repoErr  error
 		err      errors.SDKError
 	}{
 		{
@@ -1121,6 +1126,7 @@ func TestEnableClient(t *testing.T) {
 			token:    generateValidToken(t, svc, cRepo),
 			client:   disabledClient1,
 			response: endisabledClient1,
+			repoErr:  nil,
 			err:      nil,
 		},
 		{
@@ -1129,6 +1135,7 @@ func TestEnableClient(t *testing.T) {
 			token:    generateValidToken(t, svc, cRepo),
 			client:   enabledClient1,
 			response: sdk.User{},
+			repoErr:  sdk.ErrFailedEnable,
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedEnable), http.StatusInternalServerError),
 		},
 		{
@@ -1137,14 +1144,15 @@ func TestEnableClient(t *testing.T) {
 			token:    generateValidToken(t, svc, cRepo),
 			client:   sdk.User{},
 			response: sdk.User{},
+			repoErr:  sdk.ErrFailedEnable,
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedEnable), http.StatusNotFound),
 		},
 	}
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, tc.id).Return(convertClient(tc.client), tc.err)
-		repoCall2 := cRepo.On("ChangeStatus", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
+		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, tc.id).Return(convertClient(tc.client), tc.repoErr)
+		repoCall2 := cRepo.On("ChangeStatus", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.repoErr)
 		eClient, err := mfsdk.EnableUser(tc.id, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, eClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, eClient))
@@ -1239,6 +1247,7 @@ func TestDisableClient(t *testing.T) {
 		token    string
 		client   sdk.User
 		response sdk.User
+		repoErr  error
 		err      errors.SDKError
 	}{
 		{
@@ -1248,6 +1257,7 @@ func TestDisableClient(t *testing.T) {
 			client:   enabledClient1,
 			response: disenabledClient1,
 			err:      nil,
+			repoErr:  nil,
 		},
 		{
 			desc:     "disable disabled client",
@@ -1255,6 +1265,7 @@ func TestDisableClient(t *testing.T) {
 			token:    generateValidToken(t, svc, cRepo),
 			client:   disabledClient1,
 			response: sdk.User{},
+			repoErr:  sdk.ErrFailedDisable,
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedDisable), http.StatusInternalServerError),
 		},
 		{
@@ -1263,14 +1274,15 @@ func TestDisableClient(t *testing.T) {
 			client:   sdk.User{},
 			token:    generateValidToken(t, svc, cRepo),
 			response: sdk.User{},
+			repoErr:  sdk.ErrFailedDisable,
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedDisable), http.StatusNotFound),
 		},
 	}
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, tc.id).Return(convertClient(tc.client), tc.err)
-		repoCall2 := cRepo.On("ChangeStatus", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
+		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, tc.id).Return(convertClient(tc.client), tc.repoErr)
+		repoCall2 := cRepo.On("ChangeStatus", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.repoErr)
 		dClient, err := mfsdk.DisableUser(tc.id, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, dClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, dClient))

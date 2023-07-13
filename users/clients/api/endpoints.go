@@ -5,7 +5,7 @@ package api
 
 import (
 	"context"
-	"strings"
+	"fmt"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/internal/apiutil"
@@ -22,9 +22,6 @@ func registrationEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.RegisterClient(ctx, req.token, req.client)
 		if err != nil {
-			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return createClientRes{}, err
 		}
 		ucr := createClientRes{
@@ -45,7 +42,7 @@ func viewClientEndpoint(svc clients.Service) endpoint.Endpoint {
 
 		client, err := svc.ViewClient(ctx, req.token, req.id)
 		if err != nil {
-			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
+			if !errors.Contains(err, apiutil.ErrValidation) {
 				err = errors.Wrap(apiutil.ErrValidation, err)
 			}
 			return nil, err
@@ -63,7 +60,7 @@ func viewProfileEndpoint(svc clients.Service) endpoint.Endpoint {
 
 		client, err := svc.ViewProfile(ctx, req.token)
 		if err != nil {
-			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
+			if !errors.Contains(err, apiutil.ErrValidation) {
 				err = errors.Wrap(apiutil.ErrValidation, err)
 			}
 			return nil, err
@@ -78,6 +75,7 @@ func listClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listClientsReq)
 		if err := req.validate(); err != nil {
+			fmt.Println("ERRor returned from req.validate without wrapping = ", err)
 			return mfclients.ClientsPage{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
@@ -94,9 +92,6 @@ func listClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		page, err := svc.ListClients(ctx, req.token, pm)
 		if err != nil {
-			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return mfclients.ClientsPage{}, err
 		}
 
@@ -124,7 +119,7 @@ func listMembersEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		page, err := svc.ListMembers(ctx, req.token, req.groupID, req.Page)
 		if err != nil {
-			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
+			if !errors.Contains(err, apiutil.ErrValidation) {
 				err = errors.Wrap(apiutil.ErrValidation, err)
 			}
 			return memberPageRes{}, err
@@ -147,9 +142,6 @@ func updateClientEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.UpdateClient(ctx, req.token, client)
 		if err != nil {
-			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 		return updateClientRes{Client: client}, nil
@@ -169,9 +161,6 @@ func updateClientTagsEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.UpdateClientTags(ctx, req.token, client)
 		if err != nil {
-			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 		return updateClientRes{Client: client}, nil
@@ -186,9 +175,6 @@ func updateClientIdentityEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.UpdateClientIdentity(ctx, req.token, req.id, req.Identity)
 		if err != nil {
-			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 		return updateClientRes{Client: client}, nil
@@ -212,9 +198,6 @@ func passwordResetRequestEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		if err := svc.GenerateResetToken(ctx, req.Email, req.Host); err != nil {
-			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 
@@ -232,9 +215,6 @@ func passwordResetEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		if err := svc.ResetSecret(ctx, req.Token, req.Password); err != nil {
-			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 		return passwChangeRes{}, nil
@@ -248,9 +228,6 @@ func updateClientSecretEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		client, err := svc.UpdateClientSecret(ctx, req.token, req.OldSecret, req.NewSecret)
-		// if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
-		// 	err = errors.Wrap(apiutil.ErrValidation, err)
-		// }
 		if err != nil {
 			return nil, err
 		}
@@ -272,9 +249,6 @@ func updateClientOwnerEndpoint(svc clients.Service) endpoint.Endpoint {
 
 		client, err := svc.UpdateClientOwner(ctx, req.token, client)
 		if err != nil {
-			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 		return updateClientRes{Client: client}, nil
@@ -331,9 +305,6 @@ func enableClientEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.EnableClient(ctx, req.token, req.id)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 		return deleteClientRes{Client: client}, nil
@@ -348,9 +319,6 @@ func disableClientEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.DisableClient(ctx, req.token, req.id)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 		return deleteClientRes{Client: client}, nil

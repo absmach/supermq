@@ -228,7 +228,7 @@ func (svc service) ListClients(ctx context.Context, token string, pm mfclients.P
 func (svc service) UpdateClient(ctx context.Context, token string, cli mfclients.Client) (mfclients.Client, error) {
 	id, err := svc.Identify(ctx, token)
 	if err != nil {
-		return mfclients.Client{}, err
+		return mfclients.Client{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	if err := svc.authorize(ctx, id, cli.ID, updateRelationKey); err != nil {
 		return mfclients.Client{}, err
@@ -248,7 +248,7 @@ func (svc service) UpdateClient(ctx context.Context, token string, cli mfclients
 func (svc service) UpdateClientTags(ctx context.Context, token string, cli mfclients.Client) (mfclients.Client, error) {
 	id, err := svc.Identify(ctx, token)
 	if err != nil {
-		return mfclients.Client{}, err
+		return mfclients.Client{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	if err := svc.authorize(ctx, id, cli.ID, updateRelationKey); err != nil {
 		return mfclients.Client{}, err
@@ -267,7 +267,7 @@ func (svc service) UpdateClientTags(ctx context.Context, token string, cli mfcli
 func (svc service) UpdateClientIdentity(ctx context.Context, token, clientID, identity string) (mfclients.Client, error) {
 	id, err := svc.Identify(ctx, token)
 	if err != nil {
-		return mfclients.Client{}, err
+		return mfclients.Client{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	if err := svc.authorize(ctx, id, clientID, updateRelationKey); err != nil {
 		return mfclients.Client{}, err
@@ -343,14 +343,14 @@ func (svc service) UpdateClientSecret(ctx context.Context, token, oldSecret, new
 	}
 	dbClient, err := svc.clients.RetrieveByID(ctx, id)
 	if err != nil {
-		return mfclients.Client{}, err
+		return mfclients.Client{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	if _, err := svc.IssueToken(ctx, dbClient.Credentials.Identity, oldSecret); err != nil {
 		return mfclients.Client{}, err
 	}
 	newSecret, err = svc.hasher.Hash(newSecret)
 	if err != nil {
-		return mfclients.Client{}, err
+		return mfclients.Client{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	dbClient.Credentials.Secret = newSecret
 	dbClient.UpdatedAt = time.Now()
@@ -367,7 +367,7 @@ func (svc service) SendPasswordReset(_ context.Context, host, email, user, token
 func (svc service) UpdateClientOwner(ctx context.Context, token string, cli mfclients.Client) (mfclients.Client, error) {
 	id, err := svc.Identify(ctx, token)
 	if err != nil {
-		return mfclients.Client{}, err
+		return mfclients.Client{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	if err := svc.authorize(ctx, id, cli.ID, updateRelationKey); err != nil {
 		return mfclients.Client{}, err
@@ -391,7 +391,7 @@ func (svc service) EnableClient(ctx context.Context, token, id string) (mfclient
 	}
 	client, err := svc.changeClientStatus(ctx, token, client)
 	if err != nil {
-		return mfclients.Client{}, errors.Wrap(mfclients.ErrEnableClient, err)
+		return mfclients.Client{}, errors.Wrap(apiutil.ErrValidation, errors.Wrap(mfclients.ErrEnableClient, err))
 	}
 
 	return client, nil
@@ -405,7 +405,7 @@ func (svc service) DisableClient(ctx context.Context, token, id string) (mfclien
 	}
 	client, err := svc.changeClientStatus(ctx, token, client)
 	if err != nil {
-		return mfclients.Client{}, errors.Wrap(mfclients.ErrDisableClient, err)
+		return mfclients.Client{}, errors.Wrap(apiutil.ErrValidation, errors.Wrap(mfclients.ErrDisableClient, err))
 	}
 
 	return client, nil

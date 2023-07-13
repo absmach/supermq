@@ -378,24 +378,25 @@ func (bs bootstrapService) identify(ctx context.Context, token string) (string, 
 func (bs bootstrapService) thing(id, token string) (mfsdk.Thing, error) {
 	var thing mfsdk.Thing
 	var err error
+	var errT errors.SDKError
 
 	thing.ID = id
 	if id == "" {
-		thing, err = bs.sdk.CreateThing(mfsdk.Thing{}, token)
+		thing, errT = bs.sdk.CreateThing(mfsdk.Thing{}, token)
 		if err != nil {
-			return mfsdk.Thing{}, errors.Wrap(errCreateThing, err)
+			return mfsdk.Thing{}, errors.Wrap(errCreateThing, errors.New(errT.ErrString()))
 		}
 	}
 
-	thing, err = bs.sdk.Thing(thing.ID, token)
-	if err != nil {
+	thing, errT = bs.sdk.Thing(thing.ID, token)
+	if errT != nil {
 		if id != "" {
-			if _, errT := bs.sdk.DisableThing(thing.ID, token); errT != nil {
-				err = errors.Wrap(err, errT)
+			if _, errT2 := bs.sdk.DisableThing(thing.ID, token); errT2 != nil {
+				errT = errors.NewSDKError(errors.Wrap(errT, errT2))
 			}
 		}
 
-		return mfsdk.Thing{}, errors.Wrap(ErrThings, err)
+		return mfsdk.Thing{}, errors.Wrap(ErrThings, errT)
 	}
 
 	return thing, nil

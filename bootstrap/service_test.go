@@ -166,11 +166,6 @@ func TestAdd(t *testing.T) {
 
 	for _, tc := range cases {
 		_, err := svc.Add(context.Background(), tc.token, tc.config)
-		fmt.Println()
-		fmt.Println(tc.desc)
-		fmt.Println()
-		fmt.Println("exp -> ", tc.err)
-		fmt.Println("got -> ", err)
 		switch err {
 		case nil:
 			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error : %s", tc.desc, err))

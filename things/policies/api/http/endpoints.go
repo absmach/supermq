@@ -23,7 +23,7 @@ func identifyEndpoint(svc clients.Service) endpoint.Endpoint {
 
 		id, err := svc.Identify(ctx, req.secret)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		return identityRes{ID: id}, nil

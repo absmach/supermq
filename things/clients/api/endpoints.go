@@ -21,7 +21,7 @@ func createClientEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.CreateThings(ctx, req.token, req.client)
 		if err != nil {
-			return createClientRes{}, err
+			return createClientRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		ucr := createClientRes{
 			Client:  client[0],
@@ -119,9 +119,6 @@ func listMembersEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		page, err := svc.ListClientsByGroup(ctx, req.token, req.groupID, req.Page)
 		if err != nil {
-			// fmt.Println()
-			// fmt.Println("######################## Error from svc.ListClientsByGroup -> ", err)
-			// fmt.Println()
 			if !errors.Contains(err, apiutil.ErrValidation) {
 				err = errors.Wrap(apiutil.ErrValidation, err)
 			}
@@ -178,7 +175,11 @@ func updateClientSecretEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.UpdateClientSecret(ctx, req.token, req.id, req.Secret)
 		if err != nil {
+			if !errors.Contains(err, apiutil.ErrValidation) {
+				return nil, errors.Wrap(apiutil.ErrValidation, err)
+			}
 			return nil, err
+
 		}
 		return updateClientRes{Client: client}, nil
 	}
