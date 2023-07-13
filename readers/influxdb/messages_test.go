@@ -36,9 +36,9 @@ const (
 
 var (
 	v   float64 = 5
-	vs  string  = "value"
+	vs  string  = "stringValue"
 	vb  bool    = true
-	vd  string  = "base64"
+	vd  string  = "dataValue"
 	sum float64 = 42
 
 	client  influxdata.Client
@@ -368,7 +368,7 @@ func TestReadSenml(t *testing.T) {
 			pageMeta: readers.PageMetadata{
 				Offset:      0,
 				Limit:       limit,
-				StringValue: "a stringvalues b",
+				StringValue: "a stringValues b",
 				Comparator:  readers.LowerThanKey,
 			},
 			page: readers.MessagesPage{
@@ -479,7 +479,7 @@ func TestReadSenml(t *testing.T) {
 			pageMeta: readers.PageMetadata{
 				Offset:     0,
 				Limit:      limit,
-				DataValue:  vd[:len(vs)-1] + string(rune(1)),
+				DataValue:  vd[:len(vd)-1] + string(rune(1)),
 				Comparator: readers.GreaterThanEqualKey,
 			},
 			page: readers.MessagesPage{

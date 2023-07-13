@@ -34,9 +34,9 @@ const (
 
 var (
 	v   float64 = 5
-	vs          = "value"
+	vs          = "stringValue"
 	vb          = true
-	vd          = "base64"
+	vd          = "dataValue"
 	sum float64 = 42
 
 	idProvider = uuid.New()
@@ -355,7 +355,7 @@ func TestReadSenml(t *testing.T) {
 			pageMeta: readers.PageMetadata{
 				Offset:      0,
 				Limit:       limit,
-				StringValue: "strings and values",
+				StringValue: "a stringValues b",
 				Comparator:  readers.LowerThanKey,
 			},
 			page: readers.MessagesPage{
@@ -452,7 +452,7 @@ func TestReadSenml(t *testing.T) {
 			pageMeta: readers.PageMetadata{
 				Offset:     0,
 				Limit:      limit,
-				DataValue:  vd[:len(vs)-1],
+				DataValue:  vd[:len(vd)-1],
 				Comparator: readers.GreaterThanKey,
 			},
 			page: readers.MessagesPage{
@@ -466,7 +466,7 @@ func TestReadSenml(t *testing.T) {
 			pageMeta: readers.PageMetadata{
 				Offset:     0,
 				Limit:      limit,
-				DataValue:  vd[:len(vs)-1],
+				DataValue:  vd[:len(vd)-1],
 				Comparator: readers.GreaterThanEqualKey,
 			},
 			page: readers.MessagesPage{
