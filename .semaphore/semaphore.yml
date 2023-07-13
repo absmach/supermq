@@ -764,51 +764,33 @@ blocks:
   - name: Things Auth Changes
     dependencies: []
     run:
-      when: "change_in('things/policies/auth.proto')"
+      when: "change_in(['things/policies/postgres', 'things/policies/service.go'])"
     task:
       jobs:
         - name: Test Things
           commands:
             - cd things
-            - go test ./... --race -v -coverprofile=coverage.out
-            - go tool cover -html=coverage.out -o coverage.html
-            - cache restore codecov
-            - ./codecov
+            - go test ./... --race
         - name: Test CoAP
           commands:
             - cd coap
-            - go test ./... --race -v -coverprofile=coverage.out
-            - go tool cover -html=coverage.out -o coverage.html
-            - cache restore codecov
-            - ./codecov
+            - go test ./... --race
         - name: Test HTTP
           commands:
             - cd http
-            - go test ./... --race -v -coverprofile=coverage.out
-            - go tool cover -html=coverage.out -o coverage.html
-            - cache restore codecov
-            - ./codecov
+            - go test ./... --race
         - name: Test MQTT
           commands:
             - cd mqtt
-            - go test ./... --race -v -coverprofile=coverage.out
-            - go tool cover -html=coverage.out -o coverage.html
-            - cache restore codecov
-            - ./codecov
+            - go test ./... --race
         - name: Test WS
           commands:
             - cd ws
-            - go test ./... --race -v -coverprofile=coverage.out
-            - go tool cover -html=coverage.out -o coverage.html
-            - cache restore codecov
-            - ./codecov
+            - go test ./... --race
         - name: Test Readers
           commands:
             - cd readers
-            - go test ./... --race -v -coverprofile=coverage.out
-            - go tool cover -html=coverage.out -o coverage.html
-            - cache restore codecov
-            - ./codecov
+            - go test ./... --race
       secrets:
         - name: CODECOV_TOKEN
   - name: Messaging Changes
