@@ -122,8 +122,7 @@ blocks:
           commands:
             - make docker_users
       secrets:
-        - name: DOCKER_TOKEN            
-        - name: DOCKER_USERNAME                    
+        - name: docker_hub                   
   - name: Lint and Test Things
     run:
       when: "change_in(['things', 'cmd/things', 'things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go'])"
@@ -157,8 +156,7 @@ blocks:
           commands:
             - make docker_things
       secrets:
-        - name: DOCKER_TOKEN            
-        - name: DOCKER_USERNAME              
+        - name: docker_hub             
   - name: Lint and Test CoAP
     run:
       when: "change_in(['coap', 'cmd/coap','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go', 'things/policies/service.go'])"
@@ -192,8 +190,7 @@ blocks:
           commands:
             - make docker_coap
       secrets:
-        - name: DOCKER_TOKEN            
-        - name: DOCKER_USERNAME              
+        - name: docker_hub             
   - name: Lint and Test HTTP
     run:
       when: "change_in(['http', 'cmd/http', 'things/policies/postgres', 'things/policies/service.go'])"
@@ -227,8 +224,7 @@ blocks:
           commands:
             - make docker_http
       secrets:
-        - name: DOCKER_TOKEN            
-        - name: DOCKER_USERNAME              
+        - name: docker_hub             
   - name: Lint and Test MQTT
     run:
       when: "change_in(['mqtt', 'cmd/mqtt', 'things/policies/postgres', 'things/policies/service.go','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go'])"
@@ -262,8 +258,7 @@ blocks:
           commands:
             - make docker_mqtt
       secrets:
-        - name: DOCKER_TOKEN            
-        - name: DOCKER_USERNAME              
+        - name: docker_hub             
   - name: Lint and Test WS
     run:
       when: "change_in(['ws', 'cmd/ws', 'things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go'])"
@@ -297,8 +292,7 @@ blocks:
           commands:
             - make docker_ws
       secrets:
-        - name: DOCKER_TOKEN            
-        - name: DOCKER_USERNAME              
+        - name: docker_hub             
   - name: Lint and Test Bootstrap
     run:
       when: "change_in(['bootstrap', 'cmd/bootstrap','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go'])"
@@ -332,8 +326,7 @@ blocks:
           commands:
             - make docker_bootstrap
       secrets:
-        - name: DOCKER_TOKEN            
-        - name: DOCKER_USERNAME              
+        - name: docker_hub             
   - name: Lint and Test Certs
     run:
       when: "change_in(['certs', 'cmd/certs','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go'])"
@@ -367,8 +360,7 @@ blocks:
           commands:
             - make docker_certs
       secrets:
-        - name: DOCKER_TOKEN            
-        - name: DOCKER_USERNAME              
+        - name: docker_hub             
   - name: Lint and Test Provision
     dependencies:
       - Setup
@@ -402,8 +394,7 @@ blocks:
           commands:
             - make docker_provision
       secrets:
-        - name: DOCKER_TOKEN            
-        - name: DOCKER_USERNAME              
+        - name: docker_hub             
   - name: Lint and Test Twins
     run:
       when: "change_in(['twins', 'cmd/twins','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go'])"
@@ -437,8 +428,7 @@ blocks:
           commands:
             - make docker_twins
       secrets:
-        - name: DOCKER_TOKEN            
-        - name: DOCKER_USERNAME              
+        - name: docker_hub             
   - name: Lint and Test Readers
     run:
       when: "change_in(['/readers','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go', 'cmd/cassandra-reader', 'cmd/influxdb-reader', 'cmd/mongodb-reader', 'cmd/postgres-reader', 'cmd/timescale-reader', 'things/policies/service.go'])"
@@ -476,8 +466,7 @@ blocks:
             - make docker_postgres-reader
             - make docker_timescale-reader
       secrets:
-        - name: DOCKER_TOKEN            
-        - name: DOCKER_USERNAME              
+        - name: docker_hub             
   - name: Lint and Test Consumers
     run:
       when: "change_in(['consumers','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go', 'cmd/cassandra-writer', 'cmd/influxdb-writer', 'cmd/mongodb-writer', 'cmd/postgres-writer', 'cmd/timescale-writer', 'cmd/smpp-notifier', 'cmd/smtp-notifier'])"
@@ -517,8 +506,7 @@ blocks:
             - make docker_smpp-notifier
             - make docker_smtp-notifier
       secrets:
-        - name: DOCKER_TOKEN            
-        - name: DOCKER_USERNAME              
+        - name: docker_hub             
   - name: Lint and Test CLI
     run:
       when: "change_in(['cli', 'cmd/cli'])"
@@ -552,8 +540,7 @@ blocks:
           commands:
             - make docker_cli
       secrets:
-        - name: DOCKER_TOKEN            
-        - name: DOCKER_USERNAME              
+        - name: docker_hub             
   - name: Lint and Test LoRa
     run:
       when: "change_in(['lora', 'cmd/lora'])"
@@ -587,8 +574,7 @@ blocks:
           commands:
             - make docker_lora
       secrets:
-        - name: DOCKER_TOKEN            
-        - name: DOCKER_USERNAME              
+        - name: docker_hub             
   - name: Lint and Test OPC-UA
     run:
       when: "change_in(['/opcua', 'cmd/opcua','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go'])"
@@ -622,8 +608,7 @@ blocks:
           commands:
             - make docker_opcua
       secrets:
-        - name: DOCKER_TOKEN            
-        - name: DOCKER_USERNAME               
+        - name: docker_hub              
   - name: Lint and Test Internal
     run:
       when: "change_in('/internal')"
