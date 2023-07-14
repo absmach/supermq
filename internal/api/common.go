@@ -92,8 +92,7 @@ func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface
 func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", ContentType)
 	switch {
-	case
-		errors.Contains(err, apiutil.ErrInvalidSecret),
+	case errors.Contains(err, apiutil.ErrInvalidSecret),
 		errors.Contains(err, apiutil.ErrMalformedEntity),
 		errors.Contains(err, apiutil.ErrMissingID),
 		errors.Contains(err, apiutil.ErrEmptyList),
@@ -112,8 +111,7 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusConflict)
 	case errors.Contains(err, apiutil.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
-	case
-		errors.Contains(err, errors.ErrCreateEntity),
+	case errors.Contains(err, errors.ErrCreateEntity),
 		errors.Contains(err, errors.ErrUpdateEntity),
 		errors.Contains(err, errors.ErrViewEntity),
 		errors.Contains(err, errors.ErrRemoveEntity):

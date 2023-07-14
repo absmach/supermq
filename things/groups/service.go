@@ -101,9 +101,7 @@ func (svc service) ListGroups(ctx context.Context, token string, gm groups.Group
 	gm.Subject = userID
 	gm.OwnerID = userID
 	gm.Action = "g_list"
-	gp, err := svc.groups.RetrieveAll(ctx, gm)
-
-	return gp, err
+	return svc.groups.RetrieveAll(ctx, gm)
 }
 
 func (svc service) ListMemberships(ctx context.Context, token, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
