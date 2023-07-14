@@ -26,7 +26,7 @@ func New(svc bootstrap.Service, tracer trace.Tracer) bootstrap.Service {
 // Add traces the "Add" operation of the wrapped bootstrap.Service.
 func (tm *tracingMiddleware) Add(ctx context.Context, token string, cfg bootstrap.Config) (bootstrap.Config, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_register_client", trace.WithAttributes(
-		attribute.String("mainflux_thing", cfg.MFThing),
+		attribute.String("thing_id", cfg.ThingID),
 		attribute.String("owner", cfg.Owner),
 		attribute.String("name", cfg.Name),
 		attribute.String("external_id", cfg.ExternalID),
@@ -53,7 +53,7 @@ func (tm *tracingMiddleware) Update(ctx context.Context, token string, cfg boots
 	ctx, span := tm.tracer.Start(ctx, "svc_update_client", trace.WithAttributes(
 		attribute.String("name", cfg.Name),
 		attribute.String("content", cfg.Content),
-		attribute.String("mainflux_thing", cfg.MFThing),
+		attribute.String("thing_id", cfg.ThingID),
 		attribute.String("owner", cfg.Owner),
 	))
 	defer span.End()

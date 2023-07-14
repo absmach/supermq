@@ -24,8 +24,8 @@ type readChan struct {
 }
 
 type readResp struct {
-	MFThing    string     `json:"mainflux_id"`
-	MFKey      string     `json:"mainflux_key"`
+	ThingID    string     `json:"thing_id"`
+	ThingKey   string     `json:"thing_key"`
 	MFChannels []readChan `json:"mainflux_channels"`
 	Content    string     `json:"content,omitempty"`
 	ClientCert string     `json:"client_cert,omitempty"`
@@ -50,11 +50,11 @@ func dec(in []byte) ([]byte, error) {
 
 func TestReadConfig(t *testing.T) {
 	cfg := bootstrap.Config{
-		MFThing:    "mf_id",
+		ThingID:    "mf_id",
 		ClientCert: "client_cert",
 		ClientKey:  "client_key",
 		CACert:     "ca_cert",
-		MFKey:      "mf_key",
+		ThingKey:   "mf_key",
 		MFChannels: []bootstrap.Channel{
 			{
 				ID:       "mf_id",
@@ -65,8 +65,8 @@ func TestReadConfig(t *testing.T) {
 		Content: "content",
 	}
 	ret := readResp{
-		MFThing: "mf_id",
-		MFKey:   "mf_key",
+		ThingID:  "mf_id",
+		ThingKey: "mf_key",
 		MFChannels: []readChan{
 			{
 				ID:       "mf_id",

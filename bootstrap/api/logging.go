@@ -30,7 +30,7 @@ func LoggingMiddleware(svc bootstrap.Service, logger mflog.Logger) bootstrap.Ser
 // If the request fails, it logs the error.
 func (lm *loggingMiddleware) Add(ctx context.Context, token string, cfg bootstrap.Config) (saved bootstrap.Config, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method add using token %s with thing %s took %s to complete", token, saved.MFThing, time.Since(begin))
+		message := fmt.Sprintf("Method add using token %s with thing %s took %s to complete", token, saved.ThingID, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -45,7 +45,7 @@ func (lm *loggingMiddleware) Add(ctx context.Context, token string, cfg bootstra
 // If the request fails, it logs the error.
 func (lm *loggingMiddleware) View(ctx context.Context, token, id string) (saved bootstrap.Config, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method view using token %s with thing %s took %s to complete", token, saved.MFThing, time.Since(begin))
+		message := fmt.Sprintf("Method view using token %s with thing %s took %s to complete", token, saved.ThingID, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -60,7 +60,7 @@ func (lm *loggingMiddleware) View(ctx context.Context, token, id string) (saved 
 // If the request fails, it logs the error.
 func (lm *loggingMiddleware) Update(ctx context.Context, token string, cfg bootstrap.Config) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method update using token %s with thing %s took %s to complete", token, cfg.MFThing, time.Since(begin))
+		message := fmt.Sprintf("Method update using token %s with thing %s took %s to complete", token, cfg.ThingID, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return

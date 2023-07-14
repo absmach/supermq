@@ -139,28 +139,28 @@ func (bs bootstrapService) Add(ctx context.Context, token string, cfg Config) (C
 		return Config{}, errors.Wrap(errConnectionChannels, err)
 	}
 
-	id := cfg.MFThing
+	id := cfg.ThingID
 	mfThing, err := bs.thing(id, token)
 	if err != nil {
 		return Config{}, errors.Wrap(errThingNotFound, err)
 	}
 
-	cfg.MFThing = mfThing.ID
+	cfg.ThingID = mfThing.ID
 	cfg.Owner = owner
 	cfg.State = Inactive
-	cfg.MFKey = mfThing.Credentials.Secret
+	cfg.ThingKey = mfThing.Credentials.Secret
 
 	saved, err := bs.configs.Save(ctx, cfg, toConnect)
 	if err != nil {
 		if id == "" {
-			if _, errT := bs.sdk.DisableThing(cfg.MFThing, token); errT != nil {
+			if _, errT := bs.sdk.DisableThing(cfg.ThingID, token); errT != nil {
 				err = errors.Wrap(err, errT)
 			}
 		}
 		return Config{}, errors.Wrap(errAddBootstrap, err)
 	}
 
-	cfg.MFThing = saved
+	cfg.ThingID = saved
 	cfg.MFChannels = append(cfg.MFChannels, existing...)
 
 	return cfg, nil
@@ -311,7 +311,7 @@ func (bs bootstrapService) ChangeState(ctx context.Context, token, id string, st
 		for _, c := range cfg.MFChannels {
 			conIDs := mfsdk.ConnectionIDs{
 				ChannelIDs: []string{c.ID},
-				ThingIDs:   []string{cfg.MFThing},
+				ThingIDs:   []string{cfg.ThingID},
 			}
 			if err := bs.sdk.Connect(conIDs, token); err != nil {
 				return ErrThings
@@ -319,7 +319,7 @@ func (bs bootstrapService) ChangeState(ctx context.Context, token, id string, st
 		}
 	case Inactive:
 		for _, c := range cfg.MFChannels {
-			if err := bs.sdk.DisconnectThing(cfg.MFThing, c.ID, token); err != nil {
+			if err := bs.sdk.DisconnectThing(cfg.ThingID, c.ID, token); err != nil {
 				if errors.Contains(err, errors.ErrNotFound) {
 					continue
 				}

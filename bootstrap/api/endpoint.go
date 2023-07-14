@@ -23,7 +23,7 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		config := bootstrap.Config{
-			MFThing:     req.ThingID,
+			ThingID:     req.ThingID,
 			ExternalID:  req.ExternalID,
 			ExternalKey: req.ExternalKey,
 			MFChannels:  channels,
@@ -40,7 +40,7 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		res := configRes{
-			id:      saved.MFThing,
+			id:      saved.ThingID,
 			created: true,
 		}
 
@@ -61,7 +61,7 @@ func updateCertEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		res := updateConfigRes{
-			MFThing:    cfg.MFThing,
+			ThingID:    cfg.ThingID,
 			ClientCert: cfg.ClientCert,
 			CACert:     cfg.CACert,
 			ClientKey:  cfg.ClientKey,
@@ -94,8 +94,8 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		res := viewRes{
-			MFThing:     config.MFThing,
-			MFKey:       config.MFKey,
+			ThingID:     config.ThingID,
+			ThingKey:    config.ThingKey,
 			Channels:    channels,
 			ExternalID:  config.ExternalID,
 			ExternalKey: config.ExternalKey,
@@ -117,7 +117,7 @@ func updateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		config := bootstrap.Config{
-			MFThing: req.id,
+			ThingID: req.id,
 			Name:    req.Name,
 			Content: req.Content,
 		}
@@ -127,7 +127,7 @@ func updateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		res := configRes{
-			id:      config.MFThing,
+			id:      config.ThingID,
 			created: false,
 		}
 
@@ -186,8 +186,8 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			}
 
 			view := viewRes{
-				MFThing:     cfg.MFThing,
-				MFKey:       cfg.MFKey,
+				ThingID:     cfg.ThingID,
+				ThingKey:    cfg.ThingKey,
 				Channels:    channels,
 				ExternalID:  cfg.ExternalID,
 				ExternalKey: cfg.ExternalKey,

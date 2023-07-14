@@ -21,8 +21,8 @@ const numConfigs = 10
 
 var (
 	config = bootstrap.Config{
-		MFThing:     "mf-thing",
-		MFKey:       "mf-key",
+		ThingID:     "mf-thing",
+		ThingKey:    "mf-key",
 		ExternalID:  "external-id",
 		ExternalKey: "external-key",
 		Owner:       "user@email.com",
@@ -46,18 +46,18 @@ func TestSave(t *testing.T) {
 
 	duplicateThing := config
 	duplicateThing.ExternalID = diff
-	duplicateThing.MFKey = diff
+	duplicateThing.ThingKey = diff
 	duplicateThing.MFChannels = []bootstrap.Channel{}
 
 	duplicateExternal := config
-	duplicateExternal.MFThing = diff
-	duplicateExternal.MFKey = diff
+	duplicateExternal.ThingID = diff
+	duplicateExternal.ThingKey = diff
 	duplicateExternal.MFChannels = []bootstrap.Channel{}
 
 	duplicateChannels := config
 	duplicateChannels.ExternalID = diff
-	duplicateChannels.MFKey = diff
-	duplicateChannels.MFThing = diff
+	duplicateChannels.ThingKey = diff
+	duplicateChannels.ThingID = diff
 
 	cases := []struct {
 		desc        string
@@ -94,7 +94,7 @@ func TestSave(t *testing.T) {
 		id, err := repo.Save(context.Background(), tc.config, tc.connections)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
-			assert.Equal(t, id, tc.config.MFThing, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.config.MFThing, id))
+			assert.Equal(t, id, tc.config.ThingID, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.config.ThingID, id))
 		}
 	}
 }
@@ -108,8 +108,8 @@ func TestRetrieveByID(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.MFKey = uid.String()
-	c.MFThing = uid.String()
+	c.ThingKey = uid.String()
+	c.ThingID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	id, err := repo.Save(context.Background(), c, channels)
@@ -168,8 +168,8 @@ func TestRetrieveAll(t *testing.T) {
 		require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 		c.ExternalID = uid.String()
 		c.Name = fmt.Sprintf("name %d", i)
-		c.MFThing = uid.String()
-		c.MFKey = uid.String()
+		c.ThingID = uid.String()
+		c.ThingKey = uid.String()
 
 		if i%2 == 0 {
 			c.State = bootstrap.Active
@@ -245,8 +245,8 @@ func TestRetrieveByExternalID(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.MFKey = uid.String()
-	c.MFThing = uid.String()
+	c.ThingKey = uid.String()
+	c.ThingID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	_, err = repo.Save(context.Background(), c, channels)
@@ -283,8 +283,8 @@ func TestUpdate(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.MFKey = uid.String()
-	c.MFThing = uid.String()
+	c.ThingKey = uid.String()
+	c.ThingID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	_, err = repo.Save(context.Background(), c, channels)
@@ -328,8 +328,8 @@ func TestUpdateCert(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.MFKey = uid.String()
-	c.MFThing = uid.String()
+	c.ThingKey = uid.String()
+	c.ThingID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	_, err = repo.Save(context.Background(), c, channels)
@@ -363,13 +363,13 @@ func TestUpdateCert(t *testing.T) {
 		},
 		{
 			desc:    "update a config",
-			thingID: c.MFThing,
+			thingID: c.ThingID,
 			cert:    "cert",
 			certKey: "certKey",
 			ca:      "ca",
 			owner:   c.Owner,
 			expectedConfig: bootstrap.Config{
-				MFThing:    c.MFThing,
+				ThingID:    c.ThingID,
 				ClientCert: "cert",
 				CACert:     "ca",
 				ClientKey:  "certKey",
@@ -394,8 +394,8 @@ func TestUpdateConnections(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.MFKey = uid.String()
-	c.MFThing = uid.String()
+	c.ThingKey = uid.String()
+	c.ThingID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	_, err = repo.Save(context.Background(), c, channels)
@@ -403,8 +403,8 @@ func TestUpdateConnections(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err = uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.MFKey = uid.String()
-	c.MFThing = uid.String()
+	c.ThingKey = uid.String()
+	c.ThingID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	c.MFChannels = []bootstrap.Channel{}
@@ -430,7 +430,7 @@ func TestUpdateConnections(t *testing.T) {
 		{
 			desc:        "update connections",
 			owner:       config.Owner,
-			id:          c.MFThing,
+			id:          c.ThingID,
 			channels:    nil,
 			connections: []string{channels[1]},
 			err:         nil,
@@ -446,7 +446,7 @@ func TestUpdateConnections(t *testing.T) {
 		{
 			desc:        "update connections no channels",
 			owner:       config.Owner,
-			id:          c.MFThing,
+			id:          c.ThingID,
 			channels:    nil,
 			connections: nil,
 			err:         nil,
@@ -467,8 +467,8 @@ func TestRemove(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.MFKey = uid.String()
-	c.MFThing = uid.String()
+	c.ThingKey = uid.String()
+	c.ThingID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	id, err := repo.Save(context.Background(), c, channels)
@@ -494,8 +494,8 @@ func TestChangeState(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.MFKey = uid.String()
-	c.MFThing = uid.String()
+	c.ThingKey = uid.String()
+	c.ThingID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	saved, err := repo.Save(context.Background(), c, channels)
@@ -550,8 +550,8 @@ func TestListExisting(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.MFKey = uid.String()
-	c.MFThing = uid.String()
+	c.ThingKey = uid.String()
+	c.ThingID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	_, err = repo.Save(context.Background(), c, channels)
@@ -601,8 +601,8 @@ func TestRemoveThing(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.MFKey = uid.String()
-	c.MFThing = uid.String()
+	c.ThingKey = uid.String()
+	c.ThingID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	saved, err := repo.Save(context.Background(), c, channels)
@@ -622,8 +622,8 @@ func TestUpdateChannel(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.MFKey = uid.String()
-	c.MFThing = uid.String()
+	c.ThingKey = uid.String()
+	c.ThingID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	_, err = repo.Save(context.Background(), c, channels)
@@ -638,7 +638,7 @@ func TestUpdateChannel(t *testing.T) {
 	err = repo.UpdateChannel(context.Background(), update)
 	assert.Nil(t, err, fmt.Sprintf("updating config expected to succeed: %s.\n", err))
 
-	cfg, err := repo.RetrieveByID(context.Background(), c.Owner, c.MFThing)
+	cfg, err := repo.RetrieveByID(context.Background(), c.Owner, c.ThingID)
 	assert.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
 	var retreved bootstrap.Channel
 	for _, c := range cfg.MFChannels {
@@ -659,8 +659,8 @@ func TestRemoveChannel(t *testing.T) {
 	c := config
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.MFKey = uid.String()
-	c.MFThing = uid.String()
+	c.ThingKey = uid.String()
+	c.ThingID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	_, err = repo.Save(context.Background(), c, channels)
@@ -669,7 +669,7 @@ func TestRemoveChannel(t *testing.T) {
 	err = repo.RemoveChannel(context.Background(), c.MFChannels[0].ID)
 	assert.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
 
-	cfg, err := repo.RetrieveByID(context.Background(), c.Owner, c.MFThing)
+	cfg, err := repo.RetrieveByID(context.Background(), c.Owner, c.ThingID)
 	assert.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
 	assert.NotContains(t, cfg.MFChannels, c.MFChannels[0], fmt.Sprintf("expected to remove channel %s from %s", c.MFChannels[0], cfg.MFChannels))
 }
@@ -683,8 +683,8 @@ func TestDisconnectThing(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.MFKey = uid.String()
-	c.MFThing = uid.String()
+	c.ThingKey = uid.String()
+	c.ThingID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	saved, err := repo.Save(context.Background(), c, channels)
@@ -693,7 +693,7 @@ func TestDisconnectThing(t *testing.T) {
 	err = repo.DisconnectThing(context.Background(), c.MFChannels[0].ID, saved)
 	assert.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
 
-	cfg, err := repo.RetrieveByID(context.Background(), c.Owner, c.MFThing)
+	cfg, err := repo.RetrieveByID(context.Background(), c.Owner, c.ThingID)
 	assert.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
 	assert.Equal(t, cfg.State, bootstrap.Inactive, fmt.Sprintf("expected ti be inactive when a connection is removed from %s", cfg))
 }

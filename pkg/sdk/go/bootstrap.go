@@ -30,9 +30,9 @@ type BootstrapConfig struct {
 	Channels    []string  `json:"channels,omitempty"`
 	ExternalID  string    `json:"external_id,omitempty"`
 	ExternalKey string    `json:"external_key,omitempty"`
-	MFThing     string    `json:"mainflux_id,omitempty"`
+	ThingID     string    `json:"thing_id,omitempty"`
 	MFChannels  []Channel `json:"mainflux_channels,omitempty"`
-	MFKey       string    `json:"mainflux_key,omitempty"`
+	ThingKey    string    `json:"thing_key,omitempty"`
 	Name        string    `json:"name,omitempty"`
 	ClientCert  string    `json:"client_cert,omitempty"`
 	ClientKey   string    `json:"client_key,omitempty"`
@@ -90,11 +90,11 @@ func (sdk mfSDK) Whitelist(cfg BootstrapConfig, token string) errors.SDKError {
 		return errors.NewSDKError(err)
 	}
 
-	if cfg.MFThing == "" {
+	if cfg.ThingID == "" {
 		return errors.NewSDKError(errors.ErrNotFoundParam)
 	}
 
-	url := fmt.Sprintf("%s/%s/%s", sdk.bootstrapURL, whitelistEndpoint, cfg.MFThing)
+	url := fmt.Sprintf("%s/%s/%s", sdk.bootstrapURL, whitelistEndpoint, cfg.ThingID)
 
 	_, _, sdkerr := sdk.processRequest(http.MethodPut, url, token, string(CTJSON), data, http.StatusCreated, http.StatusOK)
 
@@ -122,7 +122,7 @@ func (sdk mfSDK) UpdateBootstrap(cfg BootstrapConfig, token string) errors.SDKEr
 		return errors.NewSDKError(err)
 	}
 
-	url := fmt.Sprintf("%s/%s/%s", sdk.bootstrapURL, configsEndpoint, cfg.MFThing)
+	url := fmt.Sprintf("%s/%s/%s", sdk.bootstrapURL, configsEndpoint, cfg.ThingID)
 	_, _, sdkerr := sdk.processRequest(http.MethodPut, url, token, string(CTJSON), data, http.StatusOK)
 
 	return sdkerr

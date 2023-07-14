@@ -240,7 +240,7 @@ components:
     Config:
       type: object
       properties:
-        mainflux_id:
+        thing_id:
           type: string
           format: uuid
           description: Corresponding Mainflux Thing ID.
@@ -312,11 +312,11 @@ components:
     BootstrapConfig:
       type: object
       properties:
-        mainflux_id:
+        thing_id:
           type: string
           format: uuid
           description: Corresponding Mainflux Thing ID.
-        mainflux_key:
+        thing_key:
           type: string
           format: uuid
           description: Corresponding Mainflux Thing key.
@@ -338,14 +338,14 @@ components:
           type: string
           description: Issuing CA certificate.
       required:
-        - mainflux_id
-        - mainflux_key
+        - thing_id
+        - thing_key
         - mainflux_channels
         - content
     ConfigUpdateCerts:
       type: object
       properties:
-        mainflux_id:
+        thing_id:
           type: string
           format: uuid
           description: Corresponding Mainflux Thing ID.
@@ -359,8 +359,8 @@ components:
           type: string
           description: Issuing CA certificate.
       required:
-        - mainflux_id
-        - mainflux_key
+        - thing_id
+        - thing_key
         - mainflux_channels
         - content
 
@@ -429,7 +429,7 @@ components:
               external_key:
                 type: string
                 description: External key.
-              mainflux_id:
+              thing_id:
                 type: string
                 description: ID of the corresponding Mainflux Thing.
               channels:

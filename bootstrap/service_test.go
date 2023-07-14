@@ -123,7 +123,7 @@ func TestAdd(t *testing.T) {
 	svc := newService(users, server.URL)
 
 	neID := config
-	neID.MFThing = "non-existent"
+	neID.ThingID = "non-existent"
 
 	wrongChannels := config
 	ch := channel
@@ -185,7 +185,7 @@ func TestView(t *testing.T) {
 	}{
 		{
 			desc:  "view an existing config",
-			id:    saved.MFThing,
+			id:    saved.ThingID,
 			token: validToken,
 			err:   nil,
 		},
@@ -197,7 +197,7 @@ func TestView(t *testing.T) {
 		},
 		{
 			desc:  "view a config with wrong credentials",
-			id:    config.MFThing,
+			id:    config.ThingID,
 			token: invalidToken,
 			err:   errors.ErrAuthentication,
 		},
@@ -227,7 +227,7 @@ func TestUpdate(t *testing.T) {
 	modifiedCreated.Name = "new name"
 
 	nonExisting := config
-	nonExisting.MFThing = unknown
+	nonExisting.ThingID = unknown
 
 	cases := []struct {
 		desc   string
@@ -286,21 +286,21 @@ func TestUpdateCert(t *testing.T) {
 	}{
 		{
 			desc:       "update certs for the valid config",
-			thingKey:   saved.MFKey,
+			thingKey:   saved.ThingKey,
 			clientCert: "newCert",
 			clientKey:  "newKey",
 			caCert:     "newCert",
 			token:      validToken,
 			expectedConfig: bootstrap.Config{
 				Name:        saved.Name,
-				MFKey:       saved.MFKey,
+				ThingKey:    saved.ThingKey,
 				MFChannels:  saved.MFChannels,
 				ExternalID:  saved.ExternalID,
 				ExternalKey: saved.ExternalKey,
 				Content:     saved.Content,
 				State:       saved.State,
 				Owner:       saved.Owner,
-				MFThing:     saved.MFThing,
+				ThingID:     saved.ThingID,
 				ClientCert:  "newCert",
 				CACert:      "newCert",
 				ClientKey:   "newKey",
@@ -319,7 +319,7 @@ func TestUpdateCert(t *testing.T) {
 		},
 		{
 			desc:           "update config cert with wrong credentials",
-			thingKey:       saved.MFKey,
+			thingKey:       saved.ThingKey,
 			clientCert:     "newCert",
 			clientKey:      "newKey",
 			caCert:         "newCert",
@@ -360,11 +360,11 @@ func TestUpdateConnections(t *testing.T) {
 	c.ExternalID = externalID.String()
 	active, err := svc.Add(context.Background(), validToken, c)
 	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
-	err = svc.ChangeState(context.Background(), validToken, active.MFThing, bootstrap.Active)
+	err = svc.ChangeState(context.Background(), validToken, active.ThingID, bootstrap.Active)
 	assert.Nil(t, err, fmt.Sprintf("Changing state expected to succeed: %s.\n", err))
 
 	nonExisting := config
-	nonExisting.MFThing = unknown
+	nonExisting.ThingID = unknown
 
 	cases := []struct {
 		desc        string
@@ -376,14 +376,14 @@ func TestUpdateConnections(t *testing.T) {
 		{
 			desc:        "update connections for config with state Inactive",
 			token:       validToken,
-			id:          created.MFThing,
+			id:          created.ThingID,
 			connections: []string{"2"},
 			err:         nil,
 		},
 		{
 			desc:        "update connections for config with state Active",
 			token:       validToken,
-			id:          active.MFThing,
+			id:          active.ThingID,
 			connections: []string{"3"},
 			err:         nil,
 		},
@@ -397,14 +397,14 @@ func TestUpdateConnections(t *testing.T) {
 		{
 			desc:        "update connections with invalid channels",
 			token:       validToken,
-			id:          created.MFThing,
+			id:          created.ThingID,
 			connections: []string{"wrong"},
 			err:         errors.ErrMalformedEntity,
 		},
 		{
 			desc:        "update connections a config with wrong credentials",
 			token:       invalidToken,
-			id:          created.MFKey,
+			id:          created.ThingKey,
 			connections: []string{"2", "3"},
 			err:         errors.ErrAuthentication,
 		},
@@ -541,19 +541,19 @@ func TestRemove(t *testing.T) {
 	}{
 		{
 			desc:  "view a config with wrong credentials",
-			id:    saved.MFThing,
+			id:    saved.ThingID,
 			token: invalidToken,
 			err:   errors.ErrAuthentication,
 		},
 		{
 			desc:  "remove an existing config",
-			id:    saved.MFThing,
+			id:    saved.ThingID,
 			token: validToken,
 			err:   nil,
 		},
 		{
 			desc:  "remove removed config",
-			id:    saved.MFThing,
+			id:    saved.ThingID,
 			token: validToken,
 			err:   nil,
 		},
@@ -651,7 +651,7 @@ func TestChangeState(t *testing.T) {
 		{
 			desc:  "change state with wrong credentials",
 			state: bootstrap.Active,
-			id:    saved.MFThing,
+			id:    saved.ThingID,
 			token: invalidToken,
 			err:   errors.ErrAuthentication,
 		},
@@ -665,21 +665,21 @@ func TestChangeState(t *testing.T) {
 		{
 			desc:  "change state to Active",
 			state: bootstrap.Active,
-			id:    saved.MFThing,
+			id:    saved.ThingID,
 			token: validToken,
 			err:   nil,
 		},
 		{
 			desc:  "change state to current state",
 			state: bootstrap.Active,
-			id:    saved.MFThing,
+			id:    saved.ThingID,
 			token: validToken,
 			err:   nil,
 		},
 		{
 			desc:  "change state to Inactive",
 			state: bootstrap.Inactive,
-			id:    saved.MFThing,
+			id:    saved.ThingID,
 			token: validToken,
 			err:   nil,
 		},
@@ -776,7 +776,7 @@ func TestRemoveCoinfigHandler(t *testing.T) {
 	}{
 		{
 			desc: "remove an existing config",
-			id:   saved.MFThing,
+			id:   saved.ThingID,
 			err:  nil,
 		},
 		{
@@ -810,13 +810,13 @@ func TestDisconnectThingsHandler(t *testing.T) {
 		{
 			desc:      "disconnect",
 			channelID: channel.ID,
-			thingID:   saved.MFThing,
+			thingID:   saved.ThingID,
 			err:       nil,
 		},
 		{
 			desc:      "disconnect disconnected",
 			channelID: channel.ID,
-			thingID:   saved.MFThing,
+			thingID:   saved.ThingID,
 			err:       nil,
 		},
 	}

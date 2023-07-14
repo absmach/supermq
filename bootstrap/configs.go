@@ -16,13 +16,13 @@ import (
 // MFKey is key of corresponding Mainflux Thing.
 // MFChannels is a list of Mainflux Channels corresponding Mainflux Thing connects to.
 type Config struct {
-	MFThing     string    `json:"mainflux_thing"`
+	ThingID     string    `json:"thing_id"`
 	Owner       string    `json:"owner,omitempty"`
 	Name        string    `json:"name,omitempty"`
 	ClientCert  string    `json:"client_cert,omitempty"`
 	ClientKey   string    `json:"client_key,omitempty"`
 	CACert      string    `json:"ca_cert,omitempty"`
-	MFKey       string    `json:"mainflux_key"`
+	ThingKey    string    `json:"thing_key"`
 	MFChannels  []Channel `json:"mainflux_channels,omitempty"`
 	ExternalID  string    `json:"external_id"`
 	ExternalKey string    `json:"external_key"`

@@ -57,8 +57,8 @@ func (ce configEvent) encode() (map[string]interface{}, error) {
 		"state":     ce.State.String(),
 		"operation": ce.operation,
 	}
-	if ce.MFThing != "" {
-		val["mainflux_thing"] = ce.MFThing
+	if ce.ThingID != "" {
+		val["thing_id"] = ce.ThingID
 	}
 	if ce.Content != "" {
 		val["content"] = ce.Content
@@ -152,8 +152,8 @@ func (be bootstrapEvent) encode() (map[string]interface{}, error) {
 		"operation":   thingBootstrap,
 	}
 
-	if be.MFThing != "" {
-		val["mainflux_thing"] = be.MFThing
+	if be.ThingID != "" {
+		val["thing_id"] = be.ThingID
 	}
 	if be.Content != "" {
 		val["content"] = be.Content

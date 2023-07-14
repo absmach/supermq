@@ -67,8 +67,8 @@ type channelRes struct {
 }
 
 type viewRes struct {
-	MFThing     string          `json:"mainflux_id,omitempty"`
-	MFKey       string          `json:"mainflux_key,omitempty"`
+	ThingID     string          `json:"thing_id,omitempty"`
+	ThingKey    string          `json:"thing_key,omitempty"`
 	Channels    []channelRes    `json:"mainflux_channels,omitempty"`
 	ExternalID  string          `json:"external_id"`
 	ExternalKey string          `json:"external_key,omitempty"`
@@ -125,7 +125,7 @@ func (res stateRes) Empty() bool {
 }
 
 type updateConfigRes struct {
-	MFThing    string `json:"mainflux_id,omitempty"`
+	ThingID    string `json:"thing_id,omitempty"`
 	ClientCert string `json:"client_cert,omitempty"`
 	CACert     string `json:"ca_cert,omitempty"`
 	ClientKey  string `json:"client_key,omitempty"`

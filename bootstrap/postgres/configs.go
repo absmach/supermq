@@ -82,7 +82,7 @@ func (cr configRepository) Save(ctx context.Context, cfg bootstrap.Config, chsCo
 		return "", err
 	}
 
-	return cfg.MFThing, nil
+	return cfg.ThingID, nil
 }
 
 func (cr configRepository) RetrieveByID(ctx context.Context, owner, id string) (bootstrap.Config, error) {
@@ -165,7 +165,7 @@ func (cr configRepository) RetrieveAll(ctx context.Context, owner string, filter
 
 	for rows.Next() {
 		c := bootstrap.Config{Owner: owner}
-		if err := rows.Scan(&c.MFThing, &c.MFKey, &c.ExternalID, &c.ExternalKey, &name, &content, &c.State); err != nil {
+		if err := rows.Scan(&c.ThingID, &c.ThingKey, &c.ExternalID, &c.ExternalKey, &name, &content, &c.State); err != nil {
 			cr.log.Error(fmt.Sprintf("Failed to read retrieved config due to %s", err))
 			return bootstrap.ConfigsPage{}
 		}
@@ -256,7 +256,7 @@ func (cr configRepository) Update(ctx context.Context, cfg bootstrap.Config) err
 	dbcfg := dbConfig{
 		Name:    nullString(cfg.Name),
 		Content: nullString(cfg.Content),
-		MFThing: cfg.MFThing,
+		MFThing: cfg.ThingID,
 		Owner:   cfg.Owner,
 	}
 
@@ -524,7 +524,7 @@ func insertConnections(ctx context.Context, cfg bootstrap.Config, connections []
 	conns := []dbConnection{}
 	for _, conn := range connections {
 		dbconn := dbConnection{
-			Config:       cfg.MFThing,
+			Config:       cfg.ThingID,
 			Channel:      conn,
 			ConfigOwner:  cfg.Owner,
 			ChannelOwner: cfg.Owner,
@@ -625,13 +625,13 @@ type dbConfig struct {
 
 func toDBConfig(cfg bootstrap.Config) dbConfig {
 	return dbConfig{
-		MFThing:     cfg.MFThing,
+		MFThing:     cfg.ThingID,
 		Owner:       cfg.Owner,
 		Name:        nullString(cfg.Name),
 		ClientCert:  nullString(cfg.ClientCert),
 		ClientKey:   nullString(cfg.ClientKey),
 		CaCert:      nullString(cfg.CACert),
-		MFKey:       cfg.MFKey,
+		MFKey:       cfg.ThingKey,
 		ExternalID:  cfg.ExternalID,
 		ExternalKey: cfg.ExternalKey,
 		Content:     nullString(cfg.Content),
@@ -641,9 +641,9 @@ func toDBConfig(cfg bootstrap.Config) dbConfig {
 
 func toConfig(dbcfg dbConfig) bootstrap.Config {
 	cfg := bootstrap.Config{
-		MFThing:     dbcfg.MFThing,
+		ThingID:     dbcfg.MFThing,
 		Owner:       dbcfg.Owner,
-		MFKey:       dbcfg.MFKey,
+		ThingKey:    dbcfg.MFKey,
 		ExternalID:  dbcfg.ExternalID,
 		ExternalKey: dbcfg.ExternalKey,
 		State:       dbcfg.State,
