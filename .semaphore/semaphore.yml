@@ -222,7 +222,8 @@ blocks:
       jobs:
         - name: Build HTTP
           commands:
-            - make docker_http
+            - echo $DOCKER_TOKEN | docker login --username "$DOCKER_USERNAME" --password-stdin
+            - docker push mainflux/http:latest
       secrets:
         - name: docker_hub             
   - name: Lint and Test MQTT
@@ -256,7 +257,8 @@ blocks:
       jobs:
         - name: Build MQTT
           commands:
-            - make docker_mqtt
+            - echo $DOCKER_TOKEN | docker login --username "$DOCKER_USERNAME" --password-stdin
+            - docker push mainflux/mqtt:latest
       secrets:
         - name: docker_hub             
   - name: Lint and Test WS
@@ -290,7 +292,8 @@ blocks:
       jobs:
         - name: Build WS
           commands:
-            - make docker_ws
+            - echo $DOCKER_TOKEN | docker login --username "$DOCKER_USERNAME" --password-stdin
+            - docker push mainflux/ws:latest
       secrets:
         - name: docker_hub             
   - name: Lint and Test Bootstrap
@@ -324,7 +327,8 @@ blocks:
       jobs:
         - name: Build Bootstrap
           commands:
-            - make docker_bootstrap
+            - echo $DOCKER_TOKEN | docker login --username "$DOCKER_USERNAME" --password-stdin
+            - docker push mainflux/bootstrap:latest
       secrets:
         - name: docker_hub             
   - name: Lint and Test Certs
@@ -358,7 +362,8 @@ blocks:
       jobs:
         - name: Build Certs
           commands:
-            - make docker_certs
+            - echo $DOCKER_TOKEN | docker login --username "$DOCKER_USERNAME" --password-stdin
+            - docker push mainflux/certs:latest
       secrets:
         - name: docker_hub             
   - name: Lint and Test Provision
@@ -392,7 +397,8 @@ blocks:
       jobs:
         - name: Build Provision
           commands:
-            - make docker_provision
+            - echo $DOCKER_TOKEN | docker login --username "$DOCKER_USERNAME" --password-stdin
+            - docker push mainflux/http:latest
       secrets:
         - name: docker_hub             
   - name: Lint and Test Twins
@@ -426,7 +432,8 @@ blocks:
       jobs:
         - name: Build Twins
           commands:
-            - make docker_twins
+            - echo $DOCKER_TOKEN | docker login --username "$DOCKER_USERNAME" --password-stdin
+            - docker push mainflux/twins:latest
       secrets:
         - name: docker_hub             
   - name: Lint and Test Readers
@@ -460,11 +467,12 @@ blocks:
       jobs:
         - name: Build Readers
           commands:
-            - make docker_cassandra-reader
-            - make docker_influxdb-reader
-            - make docker_mongodb-reader
-            - make docker_postgres-reader
-            - make docker_timescale-reader
+            - echo $DOCKER_TOKEN | docker login --username "$DOCKER_USERNAME" --password-stdin
+            - docker push mainflux/cassandra-reader:latest
+            - docker push mainflux/influxdb-reader:latest
+            - docker push mainflux/mongodb-reader:latest
+            - docker push mainflux/postgres-reader:latest
+            - docker push mainflux/timescale-reader:latest
       secrets:
         - name: docker_hub             
   - name: Lint and Test Consumers
@@ -498,13 +506,13 @@ blocks:
       jobs:
         - name: Build Consumers
           commands:
-            - make docker_cassandra-writer
-            - make docker_influxdb-writer
-            - make docker_mongodb-writer
-            - make docker_postgres-writer
-            - make docker_timescale-writer
-            - make docker_smpp-notifier
-            - make docker_smtp-notifier
+            - echo $DOCKER_TOKEN | docker login --username "$DOCKER_USERNAME" --password-stdin
+            - docker push mainflux/cassandra-writer:latest
+            - docker push mainflux/influxdb-writer:latest
+            - docker push mainflux/mongodb-writer:latest
+            - docker push mainflux/postgres-writer:latest
+            - docker push mainflux/timescale-writer:latest
+            - docker push mainflux/smtp-notifier:latest
       secrets:
         - name: docker_hub             
   - name: Lint and Test CLI
@@ -538,7 +546,8 @@ blocks:
       jobs:
         - name: Build CLI
           commands:
-            - make docker_cli
+            - echo $DOCKER_TOKEN | docker login --username "$DOCKER_USERNAME" --password-stdin
+            - docker push mainflux/cli:latest
       secrets:
         - name: docker_hub             
   - name: Lint and Test LoRa
@@ -572,7 +581,8 @@ blocks:
       jobs:
         - name: Build LoRa
           commands:
-            - make docker_lora
+            - echo $DOCKER_TOKEN | docker login --username "$DOCKER_USERNAME" --password-stdin
+            - docker push mainflux/lora:latest
       secrets:
         - name: docker_hub             
   - name: Lint and Test OPC-UA
@@ -606,7 +616,8 @@ blocks:
       jobs:
         - name: Build OPC-UA
           commands:
-            - make docker_opcua
+            - echo $DOCKER_TOKEN | docker login --username "$DOCKER_USERNAME" --password-stdin
+            - docker push mainflux/opcua:latest
       secrets:
         - name: docker_hub              
   - name: Lint and Test Internal
