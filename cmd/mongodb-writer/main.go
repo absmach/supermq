@@ -92,17 +92,18 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to setup mongo database : %s", err))
 	}
 
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
+	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
+		logger.Fatal(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
+	}
+
 	repo := newService(db, logger)
-	repo = consumerTracing.NewBlocking(tracer, repo)
+	repo = consumerTracing.NewBlocking(tracer, repo, httpServerConfig)
 
 	if err := consumers.Start(ctx, svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to start MongoDB writer: %s", err))
 	}
 
-	httpServerConfig := server.Config{Port: defSvcHttpPort}
-	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		logger.Fatal(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
-	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svcName, instanceID), logger)
 
 	if cfg.SendTelemetry {

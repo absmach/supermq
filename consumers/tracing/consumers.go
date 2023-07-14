@@ -2,8 +2,10 @@ package tracing
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/mainflux/mainflux/consumers"
+	"github.com/mainflux/mainflux/internal/server"
 	mfjson "github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"go.opentelemetry.io/otel/attribute"
@@ -15,31 +17,46 @@ const (
 	consumeAsyncOP    = "consume_async_op"
 )
 
+var defaultAttributes = []attribute.KeyValue{
+	attribute.String("messaging.system", "nats"),
+	attribute.Bool("messaging.destination.anonymous", false),
+	attribute.String("messaging.destination.template", "channels/{channelID}/messages/*"),
+	attribute.Bool("messaging.destination.temporary", true),
+	attribute.String("network.protocol.name", "nats"),
+	attribute.String("network.protocol.version", "2.2.4"),
+	attribute.String("network.transport", "tcp"),
+	attribute.String("network.type", "ipv4"),
+}
+
 var _ consumers.AsyncConsumer = (*tracingMiddlewareAsync)(nil)
 var _ consumers.BlockingConsumer = (*tracingMiddlewareBlock)(nil)
 
 type tracingMiddlewareAsync struct {
 	consumer consumers.AsyncConsumer
 	tracer   trace.Tracer
+	host     server.Config
 }
 type tracingMiddlewareBlock struct {
 	consumer consumers.BlockingConsumer
 	tracer   trace.Tracer
+	host     server.Config
 }
 
 // NewAsync creates a new traced consumers.AsyncConsumer service.
-func NewAsync(tracer trace.Tracer, consumerAsync consumers.AsyncConsumer) consumers.AsyncConsumer {
+func NewAsync(tracer trace.Tracer, consumerAsync consumers.AsyncConsumer, host server.Config) consumers.AsyncConsumer {
 	return &tracingMiddlewareAsync{
 		consumer: consumerAsync,
 		tracer:   tracer,
+		host:     host,
 	}
 }
 
 // NewBlocking creates a new traced consumers.BlockingConsumer service.
-func NewBlocking(tracer trace.Tracer, consumerBlock consumers.BlockingConsumer) consumers.BlockingConsumer {
+func NewBlocking(tracer trace.Tracer, consumerBlock consumers.BlockingConsumer, host server.Config) consumers.BlockingConsumer {
 	return &tracingMiddlewareBlock{
 		consumer: consumerBlock,
 		tracer:   tracer,
+		host:     host,
 	}
 }
 
@@ -50,13 +67,13 @@ func (tm *tracingMiddlewareBlock) ConsumeBlocking(ctx context.Context, messages 
 	case mfjson.Messages:
 		if len(m.Data) > 0 {
 			firstMsg := m.Data[0]
-			ctx, span = createMessageSpan(ctx, tm.tracer, firstMsg.Channel, firstMsg.Subtopic, firstMsg.Publisher, consumeBlockingOP, len(m.Data))
+			ctx, span = createSpan(ctx, consumeBlockingOP, firstMsg.Publisher, firstMsg.Channel, firstMsg.Subtopic, len(m.Data), tm.host, trace.SpanKindConsumer, tm.tracer)
 			defer span.End()
 		}
 	case []senml.Message:
 		if len(m) > 0 {
 			firstMsg := m[0]
-			ctx, span = createMessageSpan(ctx, tm.tracer, firstMsg.Channel, firstMsg.Subtopic, firstMsg.Publisher, consumeBlockingOP, len(m))
+			ctx, span = createSpan(ctx, consumeBlockingOP, firstMsg.Publisher, firstMsg.Channel, firstMsg.Subtopic, len(m), tm.host, trace.SpanKindConsumer, tm.tracer)
 			defer span.End()
 		}
 	}
@@ -70,13 +87,13 @@ func (tm *tracingMiddlewareAsync) ConsumeAsync(ctx context.Context, messages int
 	case mfjson.Messages:
 		if len(m.Data) > 0 {
 			firstMsg := m.Data[0]
-			ctx, span = createMessageSpan(ctx, tm.tracer, firstMsg.Channel, firstMsg.Subtopic, firstMsg.Publisher, consumeAsyncOP, len(m.Data))
+			ctx, span = createSpan(ctx, consumeAsyncOP, firstMsg.Publisher, firstMsg.Channel, firstMsg.Subtopic, len(m.Data), tm.host, trace.SpanKindConsumer, tm.tracer)
 			defer span.End()
 		}
 	case []senml.Message:
 		if len(m) > 0 {
 			firstMsg := m[0]
-			ctx, span = createMessageSpan(ctx, tm.tracer, firstMsg.Channel, firstMsg.Subtopic, firstMsg.Publisher, consumeAsyncOP, len(m))
+			ctx, span = createSpan(ctx, consumeAsyncOP, firstMsg.Publisher, firstMsg.Channel, firstMsg.Subtopic, len(m), tm.host, trace.SpanKindConsumer, tm.tracer)
 			defer span.End()
 		}
 	}
@@ -88,11 +105,23 @@ func (tm *tracingMiddlewareAsync) Errors() <-chan error {
 	return tm.consumer.Errors()
 }
 
-func createMessageSpan(ctx context.Context, tracer trace.Tracer, topic, subTopic, publisher, operation string, noMessages int) (context.Context, trace.Span) {
-	kvOpts := []attribute.KeyValue{}
-	kvOpts = append(kvOpts, attribute.String("topic", topic), attribute.String("publisher", publisher), attribute.Int("number_of_messages", noMessages))
+func createSpan(ctx context.Context, operation, clientID, topic, subTopic string, noMessages int, cfg server.Config, spanKind trace.SpanKind, tracer trace.Tracer) (context.Context, trace.Span) {
+	var subject = fmt.Sprintf("channels.%s.messages", topic)
 	if subTopic != "" {
-		kvOpts = append(kvOpts, attribute.String("subtopic", subTopic))
+		subject = fmt.Sprintf("%s.%s", subject, subTopic)
 	}
-	return tracer.Start(ctx, operation, trace.WithAttributes(kvOpts...))
+	spanName := fmt.Sprintf("%s %s", subject, operation)
+
+	kvOpts := []attribute.KeyValue{
+		attribute.String("messaging.operation", operation),
+		attribute.String("messaging.client_id", clientID),
+		attribute.String("messaging.destination.name", subject),
+		attribute.String("server.address", cfg.Host),
+		attribute.String("server.socket.port", cfg.Port),
+		attribute.Int("messaging.batch.message_count", noMessages),
+	}
+
+	kvOpts = append(kvOpts, defaultAttributes...)
+
+	return tracer.Start(ctx, spanName, trace.WithAttributes(kvOpts...), trace.WithSpanKind(spanKind))
 }
