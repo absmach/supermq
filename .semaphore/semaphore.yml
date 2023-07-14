@@ -91,7 +91,7 @@ blocks:
               done
   - name: Lint and Test Users
     run:
-      when: "change_in(['users', 'cmd/users', 'users/policies/auth.proto'])"
+      when: "change_in(['users', 'cmd/users', 'things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go'])"
     dependencies:
       - Setup
       - Check Generated Protocol Buffer Files
@@ -126,7 +126,7 @@ blocks:
         - name: DOCKER_USERNAME                    
   - name: Lint and Test Things
     run:
-      when: "change_in(['things', 'cmd/things', 'users/policies/auth.proto'])"
+      when: "change_in(['things', 'cmd/things', 'things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go'])"
     dependencies:
       - Setup
       - Check Generated Protocol Buffer Files
@@ -161,7 +161,7 @@ blocks:
         - name: DOCKER_USERNAME              
   - name: Lint and Test CoAP
     run:
-      when: "change_in(['coap', 'cmd/coap', 'pkg/messaging/message.proto', 'things/policies/postgres', 'things/policies/service.go'])"
+      when: "change_in(['coap', 'cmd/coap','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go', 'things/policies/service.go'])"
     dependencies:
       - Setup
       - Check Generated Protocol Buffer Files
@@ -231,7 +231,7 @@ blocks:
         - name: DOCKER_USERNAME              
   - name: Lint and Test MQTT
     run:
-      when: "change_in(['mqtt', 'cmd/mqtt', 'things/policies/postgres', 'things/policies/service.go', 'pkg/messaging/message.proto'])"
+      when: "change_in(['mqtt', 'cmd/mqtt', 'things/policies/postgres', 'things/policies/service.go','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go'])"
     dependencies:
       - Setup
       - Check Generated Protocol Buffer Files
@@ -266,7 +266,7 @@ blocks:
         - name: DOCKER_USERNAME              
   - name: Lint and Test WS
     run:
-      when: "change_in(['ws', 'cmd/ws', 'pkg/messaging/message.proto'])"
+      when: "change_in(['ws', 'cmd/ws', 'things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go'])"
     dependencies:
       - Setup
       - Check Generated Protocol Buffer Files
@@ -301,7 +301,7 @@ blocks:
         - name: DOCKER_USERNAME              
   - name: Lint and Test Bootstrap
     run:
-      when: "change_in(['bootstrap', 'cmd/bootstrap', 'users/policies/auth.proto'])"
+      when: "change_in(['bootstrap', 'cmd/bootstrap','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go'])"
     dependencies:
       - Setup
       - Check Generated Protocol Buffer Files
@@ -336,7 +336,7 @@ blocks:
         - name: DOCKER_USERNAME              
   - name: Lint and Test Certs
     run:
-      when: "change_in(['certs', 'cmd/certs', 'users/policies/auth.proto'])"
+      when: "change_in(['certs', 'cmd/certs','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go'])"
     dependencies:
       - Setup
       - Check Generated Protocol Buffer Files
@@ -395,7 +395,7 @@ blocks:
     dependencies:
       - Lint and Test Provision
     run:
-      when: "change_in(['provision', 'cmd/provision', 'pkg/messaging/message.proto'])"
+      when: "change_in(['provision', 'cmd/provision','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go'])"
     task:
       jobs:
         - name: Build Provision
@@ -406,7 +406,7 @@ blocks:
         - name: DOCKER_USERNAME              
   - name: Lint and Test Twins
     run:
-      when: "change_in(['twins', 'cmd/twins', 'users/policies/auth.proto'])"
+      when: "change_in(['twins', 'cmd/twins','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go'])"
     dependencies:
       - Setup
       - Check Generated Protocol Buffer Files
@@ -441,7 +441,7 @@ blocks:
         - name: DOCKER_USERNAME              
   - name: Lint and Test Readers
     run:
-      when: "change_in(['/readers', 'users/policies/auth.proto', 'cmd/cassandra-reader', 'cmd/influxdb-reader', 'cmd/mongodb-reader', 'cmd/postgres-reader', 'cmd/timescale-reader','things/policies/postgres', 'things/policies/service.go'])"
+      when: "change_in(['/readers','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go', 'cmd/cassandra-reader', 'cmd/influxdb-reader', 'cmd/mongodb-reader', 'cmd/postgres-reader', 'cmd/timescale-reader', 'things/policies/service.go'])"
     dependencies:
       - Setup
       - Check Generated Protocol Buffer Files
@@ -480,7 +480,7 @@ blocks:
         - name: DOCKER_USERNAME              
   - name: Lint and Test Consumers
     run:
-      when: "change_in(['consumers', 'users/policies/auth.proto', 'pkg/messaging/message.proto', 'cmd/cassandra-writer', 'cmd/influxdb-writer', 'cmd/mongodb-writer', 'cmd/postgres-writer', 'cmd/timescale-writer', 'cmd/smpp-notifier', 'cmd/smtp-notifier'])"
+      when: "change_in(['consumers','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go', 'cmd/cassandra-writer', 'cmd/influxdb-writer', 'cmd/mongodb-writer', 'cmd/postgres-writer', 'cmd/timescale-writer', 'cmd/smpp-notifier', 'cmd/smtp-notifier'])"
     dependencies:
       - Setup
       - Check Generated Protocol Buffer Files
@@ -591,7 +591,7 @@ blocks:
         - name: DOCKER_USERNAME              
   - name: Lint and Test OPC-UA
     run:
-      when: "change_in(['/opcua', 'cmd/opcua', 'pkg/messaging/message.proto'])"
+      when: "change_in(['/opcua', 'cmd/opcua','things/policies/postgres/policies.go', 'things/policies/api/grpc/client.go'])"
     dependencies:
       - Setup
       - Check Generated Protocol Buffer Files
@@ -704,16 +704,6 @@ blocks:
             - go tool cover -html=coverage.out -o coverage.html
             - cache restore codecov
             - ./codecov
-  # - name: Push Docker Images
-  #   dependencies:
-  #     - Setup
-  #   run:
-  #     when: branch = 'master'
-  #   task:
-  #     jobs:
-  #       - name: Push Docker Images
-  #         commands:
-  #           - make -j$NPROC latest
   - name: Compile Check For RabbitMQ
     dependencies:
       - Setup
