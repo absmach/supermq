@@ -167,7 +167,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 		errMsg := errorVal.Msg()
 		if errorVal.Err() != nil {
-			errMsg = fmt.Sprintf("%s : %s", errorVal.Msg(), errorVal.Err().Msg())
+			errMsg = fmt.Sprintf("%s : %s", errMsg, errorVal.Err().Msg())
 		}
 
 		if err := json.NewEncoder(w).Encode(apiutil.ErrorRes{Err: errMsg}); err != nil {
