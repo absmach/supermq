@@ -1,0 +1,30 @@
+title = "CLI config file"
+
+#Flags
+[[flags]]
+token = ""
+[flags.root]  # root flags
+ThingsURL = ""
+UsersURL = ""
+ReaderURL = ""
+HTTPAdapterURL = ""
+BootstrapURL = ""
+CertsURL = ""
+MsgContentType = ""
+TLSVerification = ""
+
+[flags.client]  # Client
+Offset = ""
+Limit = ""
+RawOutput = ""
+Name = ""
+Contact = ""
+Email = ""
+Metadata = ""
+
+[flags.channel]  # Channel flags
+Status = ""
+State = ""
+Topic = ""
+
+
