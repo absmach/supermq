@@ -3,7 +3,7 @@ title = "CLI config file"
 #Flags
 [[flags]]
 token = ""
-[flags.root]  # root flags
+[url]  # root flags
 ThingsURL = ""
 UsersURL = ""
 ReaderURL = ""
@@ -13,7 +13,7 @@ CertsURL = ""
 MsgContentType = ""
 TLSVerification = ""
 
-[flags.client]  # Client
+[filter]  # Client
 Offset = ""
 Limit = ""
 RawOutput = ""
@@ -22,7 +22,7 @@ Contact = ""
 Email = ""
 Metadata = ""
 
-[flags.channel]  # Channel flags
+[channel]  # Channel flags
 Status = ""
 State = ""
 Topic = ""
