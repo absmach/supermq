@@ -10,8 +10,6 @@ ReaderURL = ""
 HTTPAdapterURL = ""
 BootstrapURL = ""
 CertsURL = ""
-MsgContentType = ""
-TLSVerification = ""
 
 [filter]  # Client
 Offset = ""
@@ -21,6 +19,8 @@ Name = ""
 Contact = ""
 Email = ""
 Metadata = ""
+MsgContentType = ""
+TLSVerification = ""
 
 [channel]  # Channel flags
 Status = ""
