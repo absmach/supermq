@@ -88,9 +88,7 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to setup route map redis client : %s", err))
 	}
 	var exitCode int
-	defer func() {
-		os.Exit(exitCode)
-	}()
+	defer mflog.ExitWithError(&exitCode)
 	defer rmConn.Close()
 
 	tp, err := jaegerClient.NewProvider(svcName, cfg.JaegerURL, instanceID)

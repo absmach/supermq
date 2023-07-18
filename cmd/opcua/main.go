@@ -95,9 +95,7 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to setup %s bootstrap event store redis client : %s", svcName, err))
 	}
 	var exitCode int
-	defer func() {
-		os.Exit(exitCode)
-	}()
+	defer mflog.ExitWithError(&exitCode)
 	defer esConn.Close()
 
 	tp, err := jaegerClient.NewProvider(svcName, cfg.JaegerURL, instanceID)

@@ -74,9 +74,7 @@ func main() {
 		logger.Fatal(err.Error())
 	}
 	var exitCode int
-	defer func() {
-		os.Exit(exitCode)
-	}()
+	defer mflog.ExitWithError(&exitCode)
 	defer internal.Close(logger, tcHandler)
 	logger.Info("Successfully connected to things grpc server " + tcHandler.Secure())
 

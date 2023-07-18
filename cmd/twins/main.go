@@ -87,9 +87,7 @@ func main() {
 		logger.Fatal(err.Error())
 	}
 	var exitCode int
-	defer func() {
-		os.Exit(exitCode)
-	}()
+	defer mflog.ExitWithError(&exitCode)
 	defer cacheClient.Close()
 
 	// Setup new redis event store client

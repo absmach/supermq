@@ -88,9 +88,7 @@ func main() {
 		logger.Fatal(err.Error())
 	}
 	var exitCode int
-	defer func() {
-		os.Exit(exitCode)
-	}()
+	defer mflog.ExitWithError(&exitCode)
 	defer db.Close()
 
 	// Create new redis client for bootstrap event store

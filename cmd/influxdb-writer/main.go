@@ -72,9 +72,7 @@ func main() {
 		logger.Error(fmt.Sprintf("Failed to init Jaeger: %s", err))
 	}
 	var exitCode int
-	defer func() {
-		os.Exit(exitCode)
-	}()
+	defer mflog.ExitWithError(&exitCode)
 	defer func() {
 		if err := tp.Shutdown(ctx); err != nil {
 			logger.Error(fmt.Sprintf("Error shutting down tracer provider: %v", err))
