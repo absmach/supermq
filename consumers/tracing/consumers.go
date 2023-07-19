@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	consumeBlockingOP = "retrieve_blocking"
-	consumeAsyncOP    = "retrieve_async"
+	consumeBlockingOP = "retrieve_blocking" // This is not specified in the open telemetry spec.
+	consumeAsyncOP    = "retrieve_async"    // This is not specified in the open telemetry spec.
 )
 
 var defaultAttributes = []attribute.KeyValue{
