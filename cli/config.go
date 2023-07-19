@@ -196,5 +196,4 @@ func setConfigValue(key string, value string) {
 		return
 	}
 
-	fmt.Println("Configuration updated successfully")
 }
