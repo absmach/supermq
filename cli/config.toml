@@ -3,28 +3,28 @@ title = "CLI config file"
 #Flags
 [[flags]]
 token = ""
-[url]  # root flags
-ThingsURL = "wesmbetes"
-UsersURL = ""
-ReaderURL = ""
-HTTPAdapterURL = ""
-BootstrapURL = ""
-CertsURL = ""
+[remotes]  # root flags
+things_url = "wesmbetes"
+users_url = ""
+reader_url = ""
+http_adapter_url = ""
+bootstrap_url = ""
+certs_url = ""
 
 [filter]  # Client
-Offset = ""
-Limit = "10"
-RawOutput = "true"
-Name = ""
-Contact = ""
-Email = ""
-Metadata = ""
-MsgContentType = ""
-TLSVerification = ""
+offset = ""
+limit = "10"
+raw_output = "true"
+name = ""
+contact = ""
+email = ""
+metadata = ""
+msg_content_type= ""
+tls_verification = ""
 
 [channel]  # Channel flags
-Status = ""
-State = ""
-Topic = ""
+status = ""
+state = ""
+topic = ""
 
 

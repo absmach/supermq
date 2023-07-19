@@ -13,35 +13,35 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type url struct {
-	ThingsURL      string `toml:"ThingsURL"`
-	UsersURL       string `toml:"UsersURL"`
-	ReaderURL      string `toml:"ReaderURL"`
-	HTTPAdapterURL string `toml:"HTTPAdapterURL"`
-	BootstrapURL   string `toml:"BootstrapURL"`
-	CertsURL       string `toml:"CertsURL"`
+type remotes struct {
+	ThingsURL      string `toml:"things_url"`
+	UsersURL       string `toml:"users_url"`
+	ReaderURL      string `toml:"reader_url"`
+	HTTPAdapterURL string `toml:"http_adapter_url"`
+	BootstrapURL   string `toml:"bootstrap_url"`
+	CertsURL       string `toml:"certs_url"`
 }
 
 type filter struct {
-	Offset          string `toml:"Offset"`
-	Limit           string `toml:"Limit"`
-	RawOutput       string `toml:"RawOutput"`
-	Name            string `toml:"Name"`
-	Contact         string `toml:"Contact"`
-	Email           string `toml:"Email"`
-	Metadata        string `toml:"Metadata"`
-	MsgContentType  string `toml:"MsgContentType"`
-	TLSVerification string `toml:"TLSVerification"`
+	Offset          string `toml:"offset"`
+	Limit           string `toml:"limit"`
+	RawOutput       string `toml:"raw_output"`
+	Name            string `toml:"name"`
+	Contact         string `toml:"contact"`
+	Email           string `toml:"email"`
+	Metadata        string `toml:"metadata"`
+	MsgContentType  string `toml:"msg_content_type"`
+	TLSVerification string `toml:"tls_verification"`
 }
 
 type channel struct {
-	Status string `toml:"Status"`
-	State  string `toml:"State"`
-	Topic  string `toml:"Topic"`
+	Status string `toml:"status"`
+	State  string `toml:"state"`
+	Topic  string `toml:"topic"`
 }
 
 type Config struct {
-	URL     url     `toml:"url"`
+	Remotes remotes `toml:"remotes"`
 	Filter  filter  `toml:"filter"`
 	Channel channel `toml:"channel"`
 }
@@ -151,31 +151,31 @@ func setConfigValue(key string, value string) {
 
 	// Update the specific key in the struct
 	switch key {
-	case "ThingsURL":
-		config.URL.ThingsURL = value
-	case "UsersURL":
-		config.URL.UsersURL = value
-	case "ReaderURL":
-		config.URL.ReaderURL = value
-	case "HTTPAdapterURL":
-		config.URL.HTTPAdapterURL = value
-	case "BootstrapURL":
-		config.URL.BootstrapURL = value
-	case "CertsURL":
-		config.URL.CertsURL = value
-	case "Offset":
+	case "things_url":
+		config.Remotes.ThingsURL = value
+	case "users_url":
+		config.Remotes.UsersURL = value
+	case "reader_url":
+		config.Remotes.ReaderURL = value
+	case "http_adapter_url":
+		config.Remotes.HTTPAdapterURL = value
+	case "bootstrap_url":
+		config.Remotes.BootstrapURL = value
+	case "certs_url":
+		config.Remotes.CertsURL = value
+	case "offset":
 		config.Filter.Offset = value
-	case "Limit":
+	case "limit":
 		config.Filter.Limit = value
-	case "Name":
+	case "name":
 		config.Filter.Name = value
-	case "RawOutput":
+	case "raw_output":
 		config.Filter.RawOutput = value
-	case "Status":
+	case "status":
 		config.Channel.Status = value
-	case "State":
+	case "state":
 		config.Channel.State = value
-	case "Topic":
+	case "topic":
 		config.Channel.Topic = value
 	default:
 		fmt.Println("Unknown key:", key)
