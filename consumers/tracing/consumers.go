@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	consumeBlockingOP = "consume_blocking_op"
-	consumeAsyncOP    = "consume_async_op"
+	consumeBlockingOP = "retrieve_blocking"
+	consumeAsyncOP    = "retrieve_async"
 )
 
 var defaultAttributes = []attribute.KeyValue{
