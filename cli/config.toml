@@ -13,7 +13,7 @@ CertsURL = ""
 
 [filter]  # Client
 Offset = ""
-Limit = "9"
+Limit = "10"
 RawOutput = "true"
 Name = ""
 Contact = ""

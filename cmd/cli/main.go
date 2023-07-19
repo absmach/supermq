@@ -61,6 +61,7 @@ func main() {
 	certsCmd := cli.NewCertsCmd()
 	subscriptionsCmd := cli.NewSubscriptionCmd()
 	policiesCmd := cli.NewPolicyCmd()
+	configCmd := cli.NewConfigCmd()
 
 	// Root Commands
 	rootCmd.AddCommand(healthCmd)
@@ -74,6 +75,7 @@ func main() {
 	rootCmd.AddCommand(certsCmd)
 	rootCmd.AddCommand(subscriptionsCmd)
 	rootCmd.AddCommand(policiesCmd)
+	rootCmd.AddCommand(configCmd)
 
 	// Root Flags
 	rootCmd.PersistentFlags().StringVarP(
@@ -165,7 +167,7 @@ func main() {
 	)
 
 	// Client and Channels Flags
-	rootCmd.PersistentFlags().UintVarP(
+	rootCmd.PersistentFlags().Uint64VarP(
 		&cli.Limit,
 		"limit",
 		"l",
@@ -173,7 +175,7 @@ func main() {
 		"Limit query parameter",
 	)
 
-	rootCmd.PersistentFlags().UintVarP(
+	rootCmd.PersistentFlags().Uint64VarP(
 		&cli.Offset,
 		"offset",
 		"o",

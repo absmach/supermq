@@ -10,6 +10,7 @@ import (
 
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/pelletier/go-toml"
+	"github.com/spf13/cobra"
 )
 
 type url struct {
@@ -117,3 +118,83 @@ func ParseConfig() error {
 	return nil
 }
 
+func NewConfigCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "config",
+		Short: "CLI local config",
+		Long:  "Local param storage to prevent repetitive passing of keys",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("Configuring CLI...")
+			var key, value string
+
+			// Prompt the user for inputs
+			fmt.Print("Enter key: ")
+			fmt.Scan(&key)
+
+			fmt.Print("Enter value: ")
+			fmt.Scan(&value)
+
+			setConfigValue(key, value)
+			fmt.Println("Configuration complete")
+		},
+	}
+}
+
+func setConfigValue(key string, value string) {
+	// Read the existing configuration file
+	configPath := ConfigPath
+	config, err := read(configPath)
+	if err != nil {
+		fmt.Println("Error reading the existing configuration:", err)
+		return
+	}
+
+	// Update the specific key in the struct
+	switch key {
+	case "ThingsURL":
+		config.URL.ThingsURL = value
+	case "UsersURL":
+		config.URL.UsersURL = value
+	case "ReaderURL":
+		config.URL.ReaderURL = value
+	case "HTTPAdapterURL":
+		config.URL.HTTPAdapterURL = value
+	case "BootstrapURL":
+		config.URL.BootstrapURL = value
+	case "CertsURL":
+		config.URL.CertsURL = value
+	case "Offset":
+		config.Filter.Offset = value
+	case "Limit":
+		config.Filter.Limit = value
+	case "Name":
+		config.Filter.Name = value
+	case "RawOutput":
+		config.Filter.RawOutput = value
+	case "Status":
+		config.Channel.Status = value
+	case "State":
+		config.Channel.State = value
+	case "Topic":
+		config.Channel.Topic = value
+	default:
+		fmt.Println("Unknown key:", key)
+		return
+	}
+
+	// Marshal the updated struct back into TOML format
+	buf, err := toml.Marshal(config)
+	if err != nil {
+		fmt.Println("Error marshaling the configuration:", err)
+		return
+	}
+
+	// Write the updated configuration to the TOML file
+	err = os.WriteFile(configPath, buf, 0644)
+	if err != nil {
+		fmt.Println("Error writing the updated configuration to file:", err)
+		return
+	}
+
+	fmt.Println("Configuration updated successfully")
+}
