@@ -51,17 +51,17 @@ func read(file string) (Config, error) {
 	c := Config{}
 	data, err := os.Open(file)
 	if err != nil {
-		return c, errors.New(fmt.Sprintf("failed to read config file: %s", err))
+		return c, err
 	}
 	defer data.Close()
 
-	buf, err := ioutil.ReadAll(data)
+	buf, err := io.ReadAll(data)
 	if err != nil {
-		return c, errors.New(fmt.Sprintf("failed to read config file: %s", err))
+		return c, err
 	}
 
 	if err := toml.Unmarshal(buf, &c); err != nil {
-		return Config{}, errors.New(fmt.Sprintf("failed to unmarshal config TOML: %s", err))
+		return Config{}, err
 	}
 
 	return c, nil
@@ -87,7 +87,7 @@ func ParseConfig() error {
 	if config.Filter.Offset != "" {
 		offset, err := strconv.ParseUint(config.Filter.Offset, 10, 64)
 		if err != nil {
-			fmt.Println("Error converting Offset to uint64:", err)
+			log.Println("Error converting Offset to uint64:", err)
 			return
 		}
 		Offset = offset
@@ -96,7 +96,7 @@ func ParseConfig() error {
 	if config.Filter.Limit != "" {
 		limit, err := strconv.ParseUint(config.Filter.Limit, 10, 64)
 		if err != nil {
-			fmt.Println("Error converting Offset to uint64:", err)
+			log.Println("Error converting Offset to uint64:", err)
 			return
 		}
 		Limit = limit
@@ -110,7 +110,7 @@ func ParseConfig() error {
 		rawOutput, err := strconv.ParseBool(config.Filter.RawOutput)
 
 		if err != nil {
-			fmt.Println("Error converting string to bool:", err)
+			log.Println("Error converting string to bool:", err)
 		}
 
 		RawOutput = rawOutput
@@ -120,20 +120,20 @@ func ParseConfig() error {
 
 func NewConfigCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "config",
+		Use:   "config <key> <value>",
 		Short: "CLI local config",
 		Long:  "Local param storage to prevent repetitive passing of keys",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("Configuring CLI...")
-			var key, value string
 
+			if len(args) != 2 {
+				logUsage(cmd.Use)
+				return
+			}
+
+			key := args[1]
+			value := args[2]
 			// Prompt the user for inputs
-			fmt.Print("Enter key: ")
-			fmt.Scan(&key)
-
-			fmt.Print("Enter value: ")
-			fmt.Scan(&value)
-
 			setConfigValue(key, value)
 			fmt.Println("Configuration complete")
 		},
@@ -145,7 +145,7 @@ func setConfigValue(key string, value string) {
 	configPath := ConfigPath
 	config, err := read(configPath)
 	if err != nil {
-		fmt.Println("Error reading the existing configuration:", err)
+		log.Println("Error reading the existing configuration:", err)
 		return
 	}
 
@@ -185,14 +185,14 @@ func setConfigValue(key string, value string) {
 	// Marshal the updated struct back into TOML format
 	buf, err := toml.Marshal(config)
 	if err != nil {
-		fmt.Println("Error marshaling the configuration:", err)
+		log.Println("Error marshaling the configuration:", err)
 		return
 	}
 
 	// Write the updated configuration to the TOML file
 	err = os.WriteFile(configPath, buf, 0644)
 	if err != nil {
-		fmt.Println("Error writing the updated configuration to file:", err)
+		log.Println("Error writing the updated configuration to file:", err)
 		return
 	}
 
