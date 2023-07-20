@@ -6,6 +6,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"strconv"
 
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -131,8 +132,8 @@ func NewConfigCmd() *cobra.Command {
 				return
 			}
 
-			key := args[1]
-			value := args[2]
+			key := args[0]
+			value := args[1]
 			// Prompt the user for inputs
 			setConfigValue(key, value)
 			fmt.Println("Configuration complete")
@@ -149,36 +150,49 @@ func setConfigValue(key string, value string) {
 		return
 	}
 
-	// Update the specific key in the struct
-	switch key {
-	case "things_url":
-		config.Remotes.ThingsURL = value
-	case "users_url":
-		config.Remotes.UsersURL = value
-	case "reader_url":
-		config.Remotes.ReaderURL = value
-	case "http_adapter_url":
-		config.Remotes.HTTPAdapterURL = value
-	case "bootstrap_url":
-		config.Remotes.BootstrapURL = value
-	case "certs_url":
-		config.Remotes.CertsURL = value
-	case "offset":
-		config.Filter.Offset = value
-	case "limit":
-		config.Filter.Limit = value
-	case "name":
-		config.Filter.Name = value
-	case "raw_output":
-		config.Filter.RawOutput = value
-	case "status":
-		config.Channel.Status = value
-	case "state":
-		config.Channel.State = value
-	case "topic":
-		config.Channel.Topic = value
+	var configKeyToField = map[string]interface{}{
+		"things_url":       &config.Remotes.ThingsURL,
+		"users_url":        &config.Remotes.UsersURL,
+		"reader_url":       &config.Remotes.ReaderURL,
+		"http_adapter_url": &config.Remotes.HTTPAdapterURL,
+		"bootstrap_url":    &config.Remotes.BootstrapURL,
+		"certs_url":        &config.Remotes.CertsURL,
+		"offset":           &config.Filter.Offset,
+		"limit":            &config.Filter.Limit,
+		"name":             &config.Filter.Name,
+		"raw_output":       &config.Filter.RawOutput,
+		"status":           &config.Channel.Status,
+		"state":            &config.Channel.State,
+		"topic":            &config.Channel.Topic,
+	}
+
+	fieldPtr, found := configKeyToField[key]
+	if !found {
+		log.Println("Unknown key:", key)
+		return
+	}
+
+	fieldValue := reflect.ValueOf(fieldPtr).Elem()
+
+	switch fieldValue.Kind() {
+	case reflect.String:
+		fieldValue.SetString(value)
+	case reflect.Int:
+		intValue, err := strconv.Atoi(value)
+		if err != nil {
+			fmt.Println("Error: Invalid integer value for key", key)
+			return
+		}
+		fieldValue.SetInt(int64(intValue))
+	case reflect.Bool:
+		boolValue, err := strconv.ParseBool(value)
+		if err != nil {
+			fmt.Println("Error: Invalid boolean value for key", key)
+			return
+		}
+		fieldValue.SetBool(boolValue)
 	default:
-		fmt.Println("Unknown key:", key)
+		fmt.Println("Error: Unsupported data type for key", key)
 		return
 	}
 
