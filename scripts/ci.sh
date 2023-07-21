@@ -1,7 +1,7 @@
 # This script contains commands to be executed by the CI tool.
 NPROC=$(nproc)
 GO_VERSION=1.19.4
-PROTOC_VERSION=23.3
+PROTOC_VERSION=23.4
 PROTOC_GEN_VERSION=v1.31.0
 PROTOC_GRPC_VERSION=v1.3.0
 GOLANGCI_LINT_VERSION=v1.52.1
