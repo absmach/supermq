@@ -18,9 +18,9 @@ import (
 	chclient "github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal"
-	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
-	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
-	redisClient "github.com/mainflux/mainflux/internal/clients/redis"
+	jaegerclient "github.com/mainflux/mainflux/internal/clients/jaeger"
+	pgclient "github.com/mainflux/mainflux/internal/clients/postgres"
+	redisclient "github.com/mainflux/mainflux/internal/clients/redis"
 	"github.com/mainflux/mainflux/internal/email"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/postgres"
@@ -120,11 +120,11 @@ func main() {
 		return
 	}
 
-	dbConfig := pgClient.Config{Name: defDB}
+	dbConfig := pgclient.Config{Name: defDB}
 	if err := dbConfig.LoadEnv(envPrefixDB); err != nil {
 		logger.Fatal(err.Error())
 	}
-	db, err := pgClient.SetupWithConfig(envPrefixDB, *clientsPg.Migration(), dbConfig)
+	db, err := pgclient.SetupWithConfig(envPrefixDB, *clientsPg.Migration(), dbConfig)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
@@ -132,7 +132,7 @@ func main() {
 	}
 	defer db.Close()
 
-	tp, err := jaegerClient.NewProvider(svcName, cfg.JaegerURL, cfg.InstanceID)
+	tp, err := jaegerclient.NewProvider(svcName, cfg.JaegerURL, cfg.InstanceID)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to init Jaeger: %s", err))
 		exitCode = 1
@@ -146,7 +146,7 @@ func main() {
 	tracer := tp.Tracer(svcName)
 
 	// Setup new redis event store client
-	esClient, err := redisClient.Setup(envPrefixES)
+	esClient, err := redisclient.Setup(envPrefixES)
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
@@ -198,7 +198,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgClient.Config, esClient *redis.Client, tracer trace.Tracer, c config, ec email.Config, logger mflog.Logger) (clients.Service, groups.Service, policies.Service) {
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, esClient *redis.Client, tracer trace.Tracer, c config, ec email.Config, logger mflog.Logger) (clients.Service, groups.Service, policies.Service) {
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 	cRepo := uclients.NewRepository(database)
 	gRepo := gpostgres.New(database)

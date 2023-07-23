@@ -15,12 +15,12 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/mainflux/mainflux/consumers"
-	consumerTracing "github.com/mainflux/mainflux/consumers/tracing"
+	consumertracing "github.com/mainflux/mainflux/consumers/tracing"
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/cassandra"
 	"github.com/mainflux/mainflux/internal"
-	cassandraClient "github.com/mainflux/mainflux/internal/clients/cassandra"
-	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
+	cassandraclient "github.com/mainflux/mainflux/internal/clients/cassandra"
+	jaegerclient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -81,7 +81,7 @@ func main() {
 	}
 
 	// Create new to cassandra client
-	csdSession, err := cassandraClient.SetupDB(envPrefixDB, cassandra.Table)
+	csdSession, err := cassandraclient.SetupDB(envPrefixDB, cassandra.Table)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
@@ -89,7 +89,7 @@ func main() {
 	}
 	defer csdSession.Close()
 
-	tp, err := jaegerClient.NewProvider(svcName, cfg.JaegerURL, cfg.InstanceID)
+	tp, err := jaegerclient.NewProvider(svcName, cfg.JaegerURL, cfg.InstanceID)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to init Jaeger: %s", err))
 		exitCode = 1
@@ -104,7 +104,7 @@ func main() {
 
 	// Create new cassandra-writer repo
 	repo := newService(csdSession, logger)
-	repo = consumerTracing.NewBlocking(tracer, repo, httpServerConfig)
+	repo = consumertracing.NewBlocking(tracer, repo, httpServerConfig)
 
 	// Create new pub sub broker
 	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)

@@ -16,15 +16,15 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/bootstrap/api"
-	bootstrapPg "github.com/mainflux/mainflux/bootstrap/postgres"
+	bootstrappg "github.com/mainflux/mainflux/bootstrap/postgres"
 	rediscons "github.com/mainflux/mainflux/bootstrap/redis/consumer"
 	redisprod "github.com/mainflux/mainflux/bootstrap/redis/producer"
 	"github.com/mainflux/mainflux/bootstrap/tracing"
 	"github.com/mainflux/mainflux/internal"
-	authClient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
-	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
-	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
-	redisClient "github.com/mainflux/mainflux/internal/clients/redis"
+	authclient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
+	jaegerclient "github.com/mainflux/mainflux/internal/clients/jaeger"
+	pgclient "github.com/mainflux/mainflux/internal/clients/postgres"
+	redisclient "github.com/mainflux/mainflux/internal/clients/redis"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/internal/server"
@@ -82,11 +82,11 @@ func main() {
 	}
 
 	// Create new postgres client
-	dbConfig := pgClient.Config{Name: defDB}
+	dbConfig := pgclient.Config{Name: defDB}
 	if err := dbConfig.LoadEnv(envPrefixDB); err != nil {
 		logger.Fatal(err.Error())
 	}
-	db, err := pgClient.SetupWithConfig(envPrefixDB, *bootstrapPg.Migration(), dbConfig)
+	db, err := pgclient.SetupWithConfig(envPrefixDB, *bootstrappg.Migration(), dbConfig)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
@@ -95,7 +95,7 @@ func main() {
 	defer db.Close()
 
 	// Create new redis client for bootstrap event store
-	esClient, err := redisClient.Setup(envPrefixES)
+	esClient, err := redisclient.Setup(envPrefixES)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to setup %s bootstrap event store redis client : %s", svcName, err))
 		exitCode = 1
@@ -104,7 +104,7 @@ func main() {
 	defer esClient.Close()
 
 	// Create new auth grpc client api
-	auth, authHandler, err := authClient.Setup(svcName)
+	auth, authHandler, err := authclient.Setup(svcName)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
@@ -113,7 +113,7 @@ func main() {
 	defer authHandler.Close()
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	tp, err := jaegerClient.NewProvider(svcName, cfg.JaegerURL, cfg.InstanceID)
+	tp, err := jaegerclient.NewProvider(svcName, cfg.JaegerURL, cfg.InstanceID)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to init Jaeger: %s", err))
 		exitCode = 1
@@ -151,7 +151,7 @@ func main() {
 	})
 
 	// Subscribe to things event store
-	thingsESClient, err := redisClient.Setup(envPrefixES)
+	thingsESClient, err := redisclient.Setup(envPrefixES)
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
@@ -164,10 +164,10 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, auth policies.AuthServiceClient, db *sqlx.DB, tracer trace.Tracer, logger mflog.Logger, esClient *redis.Client, cfg config, dbConfig pgClient.Config) bootstrap.Service {
+func newService(ctx context.Context, auth policies.AuthServiceClient, db *sqlx.DB, tracer trace.Tracer, logger mflog.Logger, esClient *redis.Client, cfg config, dbConfig pgclient.Config) bootstrap.Service {
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 
-	repoConfig := bootstrapPg.NewConfigRepository(database, logger)
+	repoConfig := bootstrappg.NewConfigRepository(database, logger)
 
 	config := mfsdk.Config{
 		ThingsURL: cfg.ThingsURL,

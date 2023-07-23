@@ -17,8 +17,8 @@ import (
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/mongodb"
 	"github.com/mainflux/mainflux/internal"
-	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
-	mongoClient "github.com/mainflux/mainflux/internal/clients/mongo"
+	jaegerclient "github.com/mainflux/mainflux/internal/clients/jaeger"
+	mongoclient "github.com/mainflux/mainflux/internal/clients/mongo"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -100,7 +100,7 @@ func main() {
 	defer pubSub.Close()
 	pubSub = brokerstracing.NewPubSub(httpServerConfig, tracer, pubSub)
 
-	db, err := mongoClient.Setup(envPrefixDB)
+	db, err := mongoclient.Setup(envPrefixDB)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to setup mongo database : %s", err))
 		exitCode = 1

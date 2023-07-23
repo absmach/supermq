@@ -14,8 +14,8 @@ import (
 	chclient "github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal"
-	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
-	redisClient "github.com/mainflux/mainflux/internal/clients/redis"
+	jaegerclient "github.com/mainflux/mainflux/internal/clients/jaeger"
+	redisclient "github.com/mainflux/mainflux/internal/clients/redis"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -89,7 +89,7 @@ func main() {
 		return
 	}
 
-	rmConn, err := redisClient.Setup(envPrefixRouteMap)
+	rmConn, err := redisclient.Setup(envPrefixRouteMap)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to setup %s bootstrap event store redis client : %s", svcName, err))
 		exitCode = 1
@@ -101,7 +101,7 @@ func main() {
 	chanRM := newRouteMapRepositoy(rmConn, channelsRMPrefix, logger)
 	connRM := newRouteMapRepositoy(rmConn, connectionRMPrefix, logger)
 
-	esConn, err := redisClient.Setup(envPrefixES)
+	esConn, err := redisclient.Setup(envPrefixES)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to setup %s bootstrap event store redis client : %s", svcName, err))
 		exitCode = 1
@@ -109,7 +109,7 @@ func main() {
 	}
 	defer esConn.Close()
 
-	tp, err := jaegerClient.NewProvider(svcName, cfg.JaegerURL, cfg.InstanceID)
+	tp, err := jaegerclient.NewProvider(svcName, cfg.JaegerURL, cfg.InstanceID)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to init Jaeger: %s", err))
 		exitCode = 1
