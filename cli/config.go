@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/mainflux/mainflux/internal/env"
+	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
@@ -47,22 +49,37 @@ type Config struct {
 	Channel channel `toml:"channel"`
 }
 
+type config struct {
+	LogLevel string `env:"MF_CLI_LOG_LEVEL"   envDefault:"info"`
+}
+
 // read - retrieve config from a file.
 func read(file string) (Config, error) {
 	c := Config{}
 	data, err := os.Open(file)
 	if err != nil {
-		return c, err
+		return c, errors.Wrap(errors.New("Failed to read config file."), err)
 	}
 	defer data.Close()
 
+	cfg := config{}
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatalf("failed to load configuration")
+	}
+
+	logger, err := mflog.New(os.Stdout, cfg.LogLevel)
+
+	if err != nil {
+		logger.Fatal("failed to init logger")
+	}
+
 	buf, err := io.ReadAll(data)
 	if err != nil {
-		return c, err
+		return c, errors.Wrap(errors.New("Failed to read config file."), err)
 	}
 
 	if err := toml.Unmarshal(buf, &c); err != nil {
-		return Config{}, err
+		return Config{}, errors.Wrap(errors.New("Failed to Unmarshall config TOML."), err)
 	}
 
 	return c, nil
@@ -88,7 +105,7 @@ func ParseConfig() error {
 	if config.Filter.Offset != "" {
 		offset, err := strconv.ParseUint(config.Filter.Offset, 10, 64)
 		if err != nil {
-			log.Println("Error converting Offset to uint64:", err)
+			logger.Warn("Error converting Offset to uint64:")
 			return
 		}
 		Offset = offset
@@ -97,7 +114,7 @@ func ParseConfig() error {
 	if config.Filter.Limit != "" {
 		limit, err := strconv.ParseUint(config.Filter.Limit, 10, 64)
 		if err != nil {
-			log.Println("Error converting Offset to uint64:", err)
+			logger.Warn("Error converting Offset to uint64:")
 			return
 		}
 		Limit = limit
@@ -111,7 +128,7 @@ func ParseConfig() error {
 		rawOutput, err := strconv.ParseBool(config.Filter.RawOutput)
 
 		if err != nil {
-			log.Println("Error converting string to bool:", err)
+			logger.Warn("Error converting string to bool:")
 		}
 
 		RawOutput = rawOutput
