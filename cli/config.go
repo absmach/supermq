@@ -35,7 +35,7 @@ func read(file string) (Config, error) {
 func ParseConfig() error {
 	if ConfigPath == "" {
 		// No config file
-		return errors.New("empty config path")
+		return nil
 	}
 
 	if _, err := os.Stat(ConfigPath); os.IsNotExist(err) {
