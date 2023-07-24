@@ -134,7 +134,7 @@ func NewConfigCmd() *cobra.Command {
 		Short: "CLI local config",
 		Long:  "Local param storage to prevent repetitive passing of keys",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Configuring CLI...")
+			logOK()
 
 			if len(args) != 2 {
 				logUsage(cmd.Use)
@@ -145,7 +145,7 @@ func NewConfigCmd() *cobra.Command {
 			value := args[1]
 
 			setConfigValue(key, value)
-			fmt.Println("Configuration complete")
+			logOK()
 		},
 	}
 }
