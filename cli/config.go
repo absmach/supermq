@@ -53,7 +53,6 @@ type config struct {
 	LogLevel string `env:"MF_CLI_LOG_LEVEL"   envDefault:"info"`
 }
 
-// read - retrieve config from a file.
 func read(file string) (Config, error) {
 	c := Config{}
 	data, err := os.Open(file)
@@ -151,7 +150,7 @@ func NewConfigCmd() *cobra.Command {
 
 			key := args[0]
 			value := args[1]
-			// Prompt the user for inputs
+
 			setConfigValue(key, value)
 			fmt.Println("Configuration complete")
 		},
@@ -159,7 +158,6 @@ func NewConfigCmd() *cobra.Command {
 }
 
 func setConfigValue(key string, value string) {
-	// Read the existing configuration file
 	configPath := ConfigPath
 	config, err := read(configPath)
 	if err != nil {
@@ -213,18 +211,15 @@ func setConfigValue(key string, value string) {
 		return
 	}
 
-	// Marshal the updated struct back into TOML format
 	buf, err := toml.Marshal(config)
 	if err != nil {
 		logError(errors.Wrap(errors.New("Error marshaling the configuration:"), err))
 		return
 	}
 
-	// Write the updated configuration to the TOML file
 	err = os.WriteFile(configPath, buf, 0644)
 	if err != nil {
 		logError(errors.Wrap(errors.New("Error writing the updated config to file"), err))
 		return
 	}
-	return
 }
