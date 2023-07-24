@@ -4,8 +4,8 @@
 package policies_test
 
 import (
-	context "context"
-	fmt "fmt"
+	"context"
+	"fmt"
 	"testing"
 
 	"github.com/mainflux/mainflux/internal/apiutil"
