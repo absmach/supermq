@@ -168,7 +168,9 @@ func (ps *pubsub) handle(deliveries <-chan amqp.Delivery, h messaging.MessageHan
 			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
 			return
 		}
-		msg.Subject = d.RoutingKey
+		if msg.Subtopic == "" {
+			msg.Subtopic = d.RoutingKey // set for messages not published using adapters.
+		}
 		if err := h.Handle(&msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
 			return
