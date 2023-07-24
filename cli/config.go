@@ -105,7 +105,7 @@ func ParseConfig() error {
 	if config.Filter.Offset != "" {
 		offset, err := strconv.ParseUint(config.Filter.Offset, 10, 64)
 		if err != nil {
-			logger.Warn("Error converting Offset to uint64:")
+			logError(errors.Wrap(errors.New("Error converting filter to Uint64"), err))
 			return
 		}
 		Offset = offset
@@ -114,7 +114,7 @@ func ParseConfig() error {
 	if config.Filter.Limit != "" {
 		limit, err := strconv.ParseUint(config.Filter.Limit, 10, 64)
 		if err != nil {
-			logger.Warn("Error converting Offset to uint64:")
+			logError(errors.Wrap(errors.New("Error converting offset to uint64."), err))
 			return
 		}
 		Limit = limit
@@ -128,7 +128,7 @@ func ParseConfig() error {
 		rawOutput, err := strconv.ParseBool(config.Filter.RawOutput)
 
 		if err != nil {
-			logger.Warn("Error converting string to bool:")
+			logError(errors.Wrap(errors.New("Error converting string to bool."), err))
 		}
 
 		RawOutput = rawOutput
@@ -163,7 +163,7 @@ func setConfigValue(key string, value string) {
 	configPath := ConfigPath
 	config, err := read(configPath)
 	if err != nil {
-		log.Println("Error reading the existing configuration:", err)
+		logError(errors.Wrap(errors.New("Error using the existing configuration"), err))
 		return
 	}
 
@@ -185,7 +185,7 @@ func setConfigValue(key string, value string) {
 
 	fieldPtr, found := configKeyToField[key]
 	if !found {
-		log.Println("Unknown key:", key)
+		logError(errors.New("Failed to read config file."))
 		return
 	}
 
@@ -197,34 +197,34 @@ func setConfigValue(key string, value string) {
 	case reflect.Int:
 		intValue, err := strconv.Atoi(value)
 		if err != nil {
-			fmt.Println("Error: Invalid integer value for key", key)
+			logError(errors.Wrap(errors.New("Error: Invalid integer value for key"), err))
 			return
 		}
 		fieldValue.SetInt(int64(intValue))
 	case reflect.Bool:
 		boolValue, err := strconv.ParseBool(value)
 		if err != nil {
-			fmt.Println("Error: Invalid boolean value for key", key)
+			logError(errors.Wrap(errors.New("Error: Invalid boolean value for key"), err))
 			return
 		}
 		fieldValue.SetBool(boolValue)
 	default:
-		fmt.Println("Error: Unsupported data type for key", key)
+		logError(errors.Wrap(errors.New("Error: Unsupported data type for key"), err))
 		return
 	}
 
 	// Marshal the updated struct back into TOML format
 	buf, err := toml.Marshal(config)
 	if err != nil {
-		log.Println("Error marshaling the configuration:", err)
+		logError(errors.Wrap(errors.New("Error marshaling the configuration:"), err))
 		return
 	}
 
 	// Write the updated configuration to the TOML file
 	err = os.WriteFile(configPath, buf, 0644)
 	if err != nil {
-		log.Println("Error writing the updated configuration to file:", err)
+		logError(errors.Wrap(errors.New("Error writing the updated config to file"), err))
 		return
 	}
-
+	return
 }
