@@ -41,7 +41,7 @@ func ParseConfig() error {
 	if _, err := os.Stat(ConfigPath); os.IsNotExist(err) {
 		errConfigNotFound := errors.Wrap(errors.New("config file was not found"), err)
 		logError(errConfigNotFound)
-		return errConfigNotFound
+		return nil
 	}
 
 	config, err := read(ConfigPath)
