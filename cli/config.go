@@ -10,7 +10,6 @@ import (
 	"strconv"
 
 	"github.com/mainflux/mainflux/internal/env"
-	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
@@ -63,13 +62,7 @@ func read(file string) (Config, error) {
 
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("failed to load configuration")
-	}
-
-	logger, err := mflog.New(os.Stdout, cfg.LogLevel)
-
-	if err != nil {
-		logger.Fatal("failed to init logger")
+		logError(errors.Wrap(errors.New("Failed to read configuration."), err))
 	}
 
 	buf, err := io.ReadAll(data)

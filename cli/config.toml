@@ -4,7 +4,7 @@ title = "CLI config file"
 [[flags]]
 token = ""
 [remotes]  # root flags
-things_url = "wesmbetes"
+things_url = ""
 users_url = ""
 reader_url = ""
 http_adapter_url = ""
@@ -13,8 +13,8 @@ certs_url = ""
 
 [filter]  # Client
 offset = ""
-limit = "10"
-raw_output = "true"
+limit = ""
+raw_output = ""
 name = ""
 contact = ""
 email = ""
