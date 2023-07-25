@@ -43,8 +43,8 @@ func main() {
 				log.Fatal(err)
 			}
 
-			sdkConf.MsgContentType = sdk.ContentType(msgContentType)
-			s := sdk.NewSDK(sdkConf)
+			cliConf.MsgContentType = sdk.ContentType(msgContentType)
+			s := sdk.NewSDK(cliConf)
 			cli.SetSDK(s)
 		},
 	}
