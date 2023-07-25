@@ -10,12 +10,10 @@ import (
 	"strconv"
 
 	"github.com/mainflux/mainflux/pkg/errors"
-	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
+	mfxsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
 )
-
-const defURL string = "http://localhost"
 
 type remotes struct {
 	ThingsURL       string `toml:"things_url"`
@@ -93,7 +91,7 @@ func ParseConfig() error {
 		offset, err := strconv.ParseUint(config.Filter.Offset, 10, 64)
 		if err != nil {
 			logError(errors.Wrap(errors.New("Error converting filter to Uint64"), err))
-			return sdkConf, errors.Wrap(errors.New("Error converting filter to Uint64"), err)
+			return sdkConf
 		}
 		Offset = offset
 	}
@@ -102,7 +100,7 @@ func ParseConfig() error {
 		limit, err := strconv.ParseUint(config.Filter.Limit, 10, 64)
 		if err != nil {
 			logError(errors.Wrap(errors.New("Error converting offset to uint64."), err))
-			return sdkConf, errors.Wrap(errors.New("Error converting offset to uint64."), err)
+			return sdkConf
 		}
 		Limit = limit
 	}
