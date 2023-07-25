@@ -4,12 +4,12 @@ title = "CLI config file"
 [[flags]]
 token = ""
 [remotes]  # root flags
-things_url = ""
-users_url = ""
-reader_url = ""
-http_adapter_url = ""
-bootstrap_url = ""
-certs_url = ""
+things_url = "http://localhost"
+users_url = "http://localhost"
+reader_url = "http://localhost"
+http_adapter_url = "http://localhost/http"
+bootstrap_url = "http://localhost"
+certs_url = "http://localhost"
 
 [filter]  # Client
 offset = ""
@@ -20,7 +20,7 @@ contact = ""
 email = ""
 metadata = ""
 msg_content_type= ""
-tls_verification = ""
+tls_verification = "false"
 
 [channel]  # Channel flags
 status = ""

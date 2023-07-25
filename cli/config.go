@@ -9,19 +9,23 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/pkg/errors"
+	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
 )
 
+const defURL string = "http://localhost"
+
 type remotes struct {
-	ThingsURL      string `toml:"things_url"`
-	UsersURL       string `toml:"users_url"`
-	ReaderURL      string `toml:"reader_url"`
-	HTTPAdapterURL string `toml:"http_adapter_url"`
-	BootstrapURL   string `toml:"bootstrap_url"`
-	CertsURL       string `toml:"certs_url"`
+	ThingsURL       string `toml:"things_url"`
+	UsersURL        string `toml:"users_url"`
+	ReaderURL       string `toml:"reader_url"`
+	HTTPAdapterURL  string `toml:"http_adapter_url"`
+	BootstrapURL    string `toml:"bootstrap_url"`
+	CertsURL        string `toml:"certs_url"`
+	MsgContentType  string `toml:"msg_content_type"`
+	TLSVerification bool   `toml:"tls_verification"`
 }
 
 type filter struct {
@@ -48,10 +52,6 @@ type Config struct {
 	Channel channel `toml:"channel"`
 }
 
-type config struct {
-	LogLevel string `env:"MF_CLI_LOG_LEVEL"   envDefault:"info"`
-}
-
 func read(file string) (Config, error) {
 	c := Config{}
 	data, err := os.Open(file)
@@ -59,11 +59,6 @@ func read(file string) (Config, error) {
 		return c, errors.Wrap(errors.New("Failed to read config file."), err)
 	}
 	defer data.Close()
-
-	cfg := config{}
-	if err := env.Parse(&cfg); err != nil {
-		logError(errors.Wrap(errors.New("Failed to read configuration."), err))
-	}
 
 	buf, err := io.ReadAll(data)
 	if err != nil {
@@ -98,7 +93,7 @@ func ParseConfig() error {
 		offset, err := strconv.ParseUint(config.Filter.Offset, 10, 64)
 		if err != nil {
 			logError(errors.Wrap(errors.New("Error converting filter to Uint64"), err))
-			return
+			return sdkConf, errors.Wrap(errors.New("Error converting filter to Uint64"), err)
 		}
 		Offset = offset
 	}
@@ -107,7 +102,7 @@ func ParseConfig() error {
 		limit, err := strconv.ParseUint(config.Filter.Limit, 10, 64)
 		if err != nil {
 			logError(errors.Wrap(errors.New("Error converting offset to uint64."), err))
-			return
+			return sdkConf, errors.Wrap(errors.New("Error converting offset to uint64."), err)
 		}
 		Limit = limit
 	}
@@ -118,7 +113,6 @@ func ParseConfig() error {
 
 	if config.Filter.RawOutput != "" {
 		rawOutput, err := strconv.ParseBool(config.Filter.RawOutput)
-
 		if err != nil {
 			logError(errors.Wrap(errors.New("Error converting string to bool."), err))
 		}
