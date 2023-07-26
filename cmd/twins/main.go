@@ -101,13 +101,13 @@ func main() {
 	defer cacheClient.Close()
 
 	// Setup new redis event store client
-	esclient, err := redisclient.Setup(envPrefixES)
+	esClient, err := redisclient.Setup(envPrefixES)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
 		return
 	}
-	defer esclient.Close()
+	defer esClient.Close()
 
 	db, err := mongoclient.Setup(envPrefixDB)
 	if err != nil {
@@ -154,7 +154,7 @@ func main() {
 	defer pubSub.Close()
 	pubSub = brokerstracing.NewPubSub(httpServerConfig, tracer, pubSub)
 
-	svc := newService(ctx, svcName, pubSub, cfg.ChannelID, auth, tracer, db, cacheClient, esclient, logger)
+	svc := newService(ctx, svcName, pubSub, cfg.ChannelID, auth, tracer, db, cacheClient, esClient, logger)
 
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, twapi.MakeHandler(svc, logger, cfg.InstanceID), logger)
 
@@ -176,7 +176,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, id string, ps messaging.PubSub, chanID string, users policies.AuthServiceClient, tracer trace.Tracer, db *mongo.Database, cacheclient *redis.Client, esclient *redis.Client, logger mflog.Logger) twins.Service {
+func newService(ctx context.Context, id string, ps messaging.PubSub, chanID string, users policies.AuthServiceClient, tracer trace.Tracer, db *mongo.Database, cacheClient *redis.Client, esClient *redis.Client, logger mflog.Logger) twins.Service {
 	twinRepo := twmongodb.NewTwinRepository(db)
 	twinRepo = tracing.TwinRepositoryMiddleware(tracer, twinRepo)
 
@@ -184,12 +184,12 @@ func newService(ctx context.Context, id string, ps messaging.PubSub, chanID stri
 	stateRepo = tracing.StateRepositoryMiddleware(tracer, stateRepo)
 
 	idProvider := uuid.New()
-	twinCache := rediscache.NewTwinCache(cacheclient)
+	twinCache := rediscache.NewTwinCache(cacheClient)
 	twinCache = tracing.TwinCacheMiddleware(tracer, twinCache)
 
 	svc := twins.New(ps, users, twinRepo, twinCache, stateRepo, idProvider, chanID, logger)
 
-	svc = rediscache.NewEventStoreMiddleware(svc, esclient)
+	svc = rediscache.NewEventStoreMiddleware(svc, esClient)
 
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")

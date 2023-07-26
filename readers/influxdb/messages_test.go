@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	influxdata "github.com/influxdata/influxdb-client-go/v2"
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	iwriter "github.com/mainflux/mainflux/consumers/writers/influxdb"
 	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
@@ -42,7 +42,7 @@ var (
 	vd  string  = "dataValue"
 	sum float64 = 42
 
-	client  influxdata.Client
+	client  influxdb2.Client
 	repoCfg = struct {
 		Bucket string
 		Org    string

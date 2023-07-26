@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/jmoiron/sqlx"
-	bootstraprepo "github.com/mainflux/mainflux/bootstrap/postgres"
+	"github.com/mainflux/mainflux/bootstrap/postgres"
 	pgclient "github.com/mainflux/mainflux/internal/clients/postgres"
 	"github.com/mainflux/mainflux/logger"
 
@@ -62,7 +62,7 @@ func TestMain(m *testing.M) {
 		SSLRootCert: "",
 	}
 
-	if db, err = pgclient.SetupDB(dbConfig, *bootstraprepo.Migration()); err != nil {
+	if db, err = pgclient.SetupDB(dbConfig, *postgres.Migration()); err != nil {
 		testLog.Error(fmt.Sprintf("Could not setup test DB connection: %s", err))
 	}
 

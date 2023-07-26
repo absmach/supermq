@@ -10,7 +10,7 @@ import (
 	"log"
 	"os"
 
-	r "github.com/go-redis/redis/v8"
+	redisv8 "github.com/go-redis/redis/v8"
 	chclient "github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal"
@@ -177,14 +177,14 @@ func subscribeToStoredSubs(ctx context.Context, sub opcua.Subscriber, cfg opcua.
 	}
 }
 
-func subscribeToThingsES(ctx context.Context, svc opcua.Service, client *r.Client, prefix string, logger mflog.Logger) {
+func subscribeToThingsES(ctx context.Context, svc opcua.Service, client *redisv8.Client, prefix string, logger mflog.Logger) {
 	eventStore := redis.NewEventStore(svc, client, prefix, logger)
 	if err := eventStore.Subscribe(ctx, "mainflux.things"); err != nil {
 		logger.Warn(fmt.Sprintf("Failed to subscribe to Redis event source: %s", err))
 	}
 }
 
-func newRouteMapRepositoy(client *r.Client, prefix string, logger mflog.Logger) opcua.RouteMapRepository {
+func newRouteMapRepositoy(client *redisv8.Client, prefix string, logger mflog.Logger) opcua.RouteMapRepository {
 	logger.Info(fmt.Sprintf("Connected to %s Redis Route-map", prefix))
 	return redis.NewRouteMapRepository(client, prefix)
 }

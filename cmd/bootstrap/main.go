@@ -22,7 +22,7 @@ import (
 	"github.com/mainflux/mainflux/bootstrap/tracing"
 	"github.com/mainflux/mainflux/internal"
 	authclient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
-	jaegerclient "github.com/mainflux/mainflux/internal/clients/jaeger"
+	"github.com/mainflux/mainflux/internal/clients/jaeger"
 	pgclient "github.com/mainflux/mainflux/internal/clients/postgres"
 	redisclient "github.com/mainflux/mainflux/internal/clients/redis"
 	"github.com/mainflux/mainflux/internal/env"

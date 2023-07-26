@@ -50,7 +50,7 @@ import (
 	ppostgres "github.com/mainflux/mainflux/users/policies/postgres"
 	pcache "github.com/mainflux/mainflux/users/policies/redis"
 	ptracing "github.com/mainflux/mainflux/users/policies/tracing"
-	clientsPg "github.com/mainflux/mainflux/users/postgres"
+	clientspg "github.com/mainflux/mainflux/users/postgres"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -124,7 +124,7 @@ func main() {
 	if err := dbConfig.LoadEnv(envPrefixDB); err != nil {
 		logger.Fatal(err.Error())
 	}
-	db, err := pgclient.SetupWithConfig(envPrefixDB, *clientsPg.Migration(), dbConfig)
+	db, err := pgclient.SetupWithConfig(envPrefixDB, *clientspg.Migration(), dbConfig)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
