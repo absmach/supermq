@@ -43,7 +43,9 @@ func main() {
 				log.Fatal(err)
 			}
 
-			cliConf.MsgContentType = sdk.ContentType(msgContentType)
+			if cliConf.MsgContentType == "" {
+				cliConf.MsgContentType = sdk.ContentType(msgContentType)
+			}
 			s := sdk.NewSDK(cliConf)
 			cli.SetSDK(s)
 		},

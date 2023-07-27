@@ -27,15 +27,13 @@ type remotes struct {
 }
 
 type filter struct {
-	Offset          string `toml:"offset"`
-	Limit           string `toml:"limit"`
-	RawOutput       string `toml:"raw_output"`
-	Name            string `toml:"name"`
-	Contact         string `toml:"contact"`
-	Email           string `toml:"email"`
-	Metadata        string `toml:"metadata"`
-	MsgContentType  string `toml:"msg_content_type"`
-	TLSVerification string `toml:"tls_verification"`
+	Offset    string `toml:"offset"`
+	Limit     string `toml:"limit"`
+	RawOutput string `toml:"raw_output"`
+	Name      string `toml:"name"`
+	Contact   string `toml:"contact"`
+	Email     string `toml:"email"`
+	Metadata  string `toml:"metadata"`
 }
 
 type channel struct {
@@ -44,14 +42,14 @@ type channel struct {
 	Topic  string `toml:"topic"`
 }
 
-type Config struct {
+type config struct {
 	Remotes remotes `toml:"remotes"`
 	Filter  filter  `toml:"filter"`
 	Channel channel `toml:"channel"`
 }
 
-func read(file string) (Config, error) {
-	c := Config{}
+func read(file string) (config, error) {
+	c := config{}
 	data, err := os.Open(file)
 	if err != nil {
 		return c, errors.Wrap(errors.New("Failed to read config file."), err)
@@ -64,7 +62,7 @@ func read(file string) (Config, error) {
 	}
 
 	if err := toml.Unmarshal(buf, &c); err != nil {
-		return Config{}, errors.Wrap(errors.New("Failed to Unmarshall config TOML."), err)
+		return config{}, errors.Wrap(errors.New("failed to Unmarshall config TOML."), err)
 	}
 
 	return c, nil
@@ -90,7 +88,7 @@ func ParseConfig() error {
 	if config.Filter.Offset != "" {
 		offset, err := strconv.ParseUint(config.Filter.Offset, 10, 64)
 		if err != nil {
-			logError(errors.Wrap(errors.New("Error converting filter to Uint64"), err))
+			logError(errors.Wrap(errors.New("error converting filter to Uint64"), err))
 			return sdkConf
 		}
 		Offset = offset
