@@ -109,7 +109,7 @@ func newConfig(channels []bootstrap.Channel) bootstrap.Config {
 	return bootstrap.Config{
 		ExternalID:  addExternalID,
 		ExternalKey: addExternalKey,
-		MFChannels:  channels,
+		Channels:    channels,
 		Name:        addName,
 		Content:     addContent,
 		ClientCert:  "newcert",
@@ -355,7 +355,7 @@ func TestView(t *testing.T) {
 
 	mfChs := generateChannels()
 	for id, ch := range mfChs {
-		c.MFChannels = append(c.MFChannels, bootstrap.Channel{
+		c.Channels = append(c.Channels, bootstrap.Channel{
 			ID:       ch.ID,
 			Name:     fmt.Sprintf("%s%s", "name ", id),
 			Metadata: map[string]interface{}{"type": fmt.Sprintf("some type %s", id)},
@@ -366,7 +366,7 @@ func TestView(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	var channels []channel
-	for _, ch := range saved.MFChannels {
+	for _, ch := range saved.Channels {
 		channels = append(channels, channel{ID: ch.ID, Name: ch.Name, Metadata: ch.Metadata})
 	}
 
@@ -763,7 +763,7 @@ func TestList(t *testing.T) {
 		assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 		var channels []channel
-		for _, ch := range saved.MFChannels {
+		for _, ch := range saved.Channels {
 			channels = append(channels, channel{ID: ch.ID, Name: ch.Name, Metadata: ch.Metadata})
 		}
 		s := config{
@@ -1067,14 +1067,14 @@ func TestBootstrap(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Encrypting config expected to succeed: %s.\n", err))
 
 	var channels []channel
-	for _, ch := range saved.MFChannels {
+	for _, ch := range saved.Channels {
 		channels = append(channels, channel{ID: ch.ID, Name: ch.Name, Metadata: ch.Metadata})
 	}
 
 	s := struct {
 		ThingID    string    `json:"thing_id"`
 		ThingKey   string    `json:"thing_key"`
-		MFChannels []channel `json:"mainflux_channels"`
+		Channels   []channel `json:"channels"`
 		Content    string    `json:"content"`
 		ClientCert string    `json:"client_cert"`
 		ClientKey  string    `json:"client_key"`
@@ -1082,7 +1082,7 @@ func TestBootstrap(t *testing.T) {
 	}{
 		ThingID:    saved.ThingID,
 		ThingKey:   saved.ThingKey,
-		MFChannels: channels,
+		Channels:   channels,
 		Content:    saved.Content,
 		ClientCert: saved.ClientCert,
 		ClientKey:  saved.ClientKey,
@@ -1293,7 +1293,7 @@ type channel struct {
 type config struct {
 	ThingID     string          `json:"thing_id,omitempty"`
 	ThingKey    string          `json:"thing_key,omitempty"`
-	Channels    []channel       `json:"mainflux_channels,omitempty"`
+	Channels    []channel       `json:"channels,omitempty"`
 	ExternalID  string          `json:"external_id"`
 	ExternalKey string          `json:"external_key,omitempty"`
 	Content     string          `json:"content,omitempty"`

@@ -66,7 +66,7 @@ var (
 	config = bootstrap.Config{
 		ExternalID:  "external_id",
 		ExternalKey: "external_key",
-		MFChannels:  []bootstrap.Channel{channel},
+		Channels:    []bootstrap.Channel{channel},
 		Content:     "config",
 	}
 )
@@ -119,13 +119,13 @@ func TestAdd(t *testing.T) {
 	svc = producer.NewEventStoreMiddleware(svc, redisClient)
 
 	var channels []string
-	for _, ch := range config.MFChannels {
+	for _, ch := range config.Channels {
 		channels = append(channels, ch.ID)
 	}
 
 	invalidConfig := config
-	invalidConfig.MFChannels = []bootstrap.Channel{{ID: "empty"}}
-	invalidConfig.MFChannels = []bootstrap.Channel{{ID: "empty"}}
+	invalidConfig.Channels = []bootstrap.Channel{{ID: "empty"}}
+	invalidConfig.Channels = []bootstrap.Channel{{ID: "empty"}}
 
 	cases := []struct {
 		desc   string
@@ -210,7 +210,7 @@ func TestUpdate(t *testing.T) {
 
 	ch := channel
 	ch.ID = "2"
-	c.MFChannels = append(c.MFChannels, ch)
+	c.Channels = append(c.Channels, ch)
 	saved, err := svc.Add(context.Background(), validToken, c)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 

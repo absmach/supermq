@@ -248,7 +248,7 @@ components:
           type: string
           format: uuid
           description: Corresponding Mainflux Thing key.
-        mainflux_channels:
+        channels:
           type: array
           minItems: 0
           items:
@@ -320,7 +320,7 @@ components:
           type: string
           format: uuid
           description: Corresponding Mainflux Thing key.
-        mainflux_channels:
+        channels:
           type: array
           minItems: 0
           items:
@@ -340,7 +340,7 @@ components:
       required:
         - thing_id
         - thing_key
-        - mainflux_channels
+        - channels
         - content
     ConfigUpdateCerts:
       type: object
@@ -361,7 +361,7 @@ components:
       required:
         - thing_id
         - thing_key
-        - mainflux_channels
+        - channels
         - content
 
   parameters:

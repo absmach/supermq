@@ -23,7 +23,7 @@ type Config struct {
 	ClientKey   string    `json:"client_key,omitempty"`
 	CACert      string    `json:"ca_cert,omitempty"`
 	ThingKey    string    `json:"thing_key"`
-	MFChannels  []Channel `json:"mainflux_channels,omitempty"`
+	Channels    []Channel `json:"channels,omitempty"`
 	ExternalID  string    `json:"external_id"`
 	ExternalKey string    `json:"external_key"`
 	Content     string    `json:"content,omitempty"`

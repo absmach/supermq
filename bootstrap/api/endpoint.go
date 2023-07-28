@@ -26,7 +26,7 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			ThingID:     req.ThingID,
 			ExternalID:  req.ExternalID,
 			ExternalKey: req.ExternalKey,
-			MFChannels:  channels,
+			Channels:    channels,
 			Name:        req.Name,
 			ClientCert:  req.ClientCert,
 			ClientKey:   req.ClientKey,
@@ -85,7 +85,7 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		var channels []channelRes
-		for _, ch := range config.MFChannels {
+		for _, ch := range config.Channels {
 			channels = append(channels, channelRes{
 				ID:       ch.ID,
 				Name:     ch.Name,
@@ -177,7 +177,7 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 
 		for _, cfg := range page.Configs {
 			var channels []channelRes
-			for _, ch := range cfg.MFChannels {
+			for _, ch := range cfg.Channels {
 				channels = append(channels, channelRes{
 					ID:       ch.ID,
 					Name:     ch.Name,

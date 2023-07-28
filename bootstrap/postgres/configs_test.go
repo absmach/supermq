@@ -26,7 +26,7 @@ var (
 		ExternalID:  "external-id",
 		ExternalKey: "external-key",
 		Owner:       "user@email.com",
-		MFChannels: []bootstrap.Channel{
+		Channels: []bootstrap.Channel{
 			{ID: "1", Name: "name 1", Metadata: map[string]interface{}{"meta": 1.0}},
 			{ID: "2", Name: "name 2", Metadata: map[string]interface{}{"meta": 2.0}},
 		},
@@ -47,12 +47,12 @@ func TestSave(t *testing.T) {
 	duplicateThing := config
 	duplicateThing.ExternalID = diff
 	duplicateThing.ThingKey = diff
-	duplicateThing.MFChannels = []bootstrap.Channel{}
+	duplicateThing.Channels = []bootstrap.Channel{}
 
 	duplicateExternal := config
 	duplicateExternal.ThingID = diff
 	duplicateExternal.ThingKey = diff
-	duplicateExternal.MFChannels = []bootstrap.Channel{}
+	duplicateExternal.Channels = []bootstrap.Channel{}
 
 	duplicateChannels := config
 	duplicateChannels.ExternalID = diff
@@ -176,7 +176,7 @@ func TestRetrieveAll(t *testing.T) {
 		}
 
 		if i > 0 {
-			c.MFChannels = nil
+			c.Channels = nil
 		}
 
 		_, err = repo.Save(context.Background(), c, channels)
@@ -407,7 +407,7 @@ func TestUpdateConnections(t *testing.T) {
 	c.ThingID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
-	c.MFChannels = []bootstrap.Channel{}
+	c.Channels = []bootstrap.Channel{}
 	c2, err := repo.Save(context.Background(), c, []string{channels[0]})
 	assert.Nil(t, err, fmt.Sprintf("Saving a config expected to succeed: %s.\n", err))
 
@@ -558,7 +558,7 @@ func TestListExisting(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	var chs []bootstrap.Channel
-	chs = append(chs, config.MFChannels...)
+	chs = append(chs, config.Channels...)
 
 	cases := []struct {
 		desc        string
@@ -629,7 +629,7 @@ func TestUpdateChannel(t *testing.T) {
 	_, err = repo.Save(context.Background(), c, channels)
 	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
-	id := c.MFChannels[0].ID
+	id := c.Channels[0].ID
 	update := bootstrap.Channel{
 		ID:       id,
 		Name:     "update name",
@@ -641,7 +641,7 @@ func TestUpdateChannel(t *testing.T) {
 	cfg, err := repo.RetrieveByID(context.Background(), c.Owner, c.ThingID)
 	assert.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
 	var retreved bootstrap.Channel
-	for _, c := range cfg.MFChannels {
+	for _, c := range cfg.Channels {
 		if c.ID == id {
 			retreved = c
 			break
@@ -666,12 +666,12 @@ func TestRemoveChannel(t *testing.T) {
 	_, err = repo.Save(context.Background(), c, channels)
 	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
-	err = repo.RemoveChannel(context.Background(), c.MFChannels[0].ID)
+	err = repo.RemoveChannel(context.Background(), c.Channels[0].ID)
 	assert.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
 
 	cfg, err := repo.RetrieveByID(context.Background(), c.Owner, c.ThingID)
 	assert.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
-	assert.NotContains(t, cfg.MFChannels, c.MFChannels[0], fmt.Sprintf("expected to remove channel %s from %s", c.MFChannels[0], cfg.MFChannels))
+	assert.NotContains(t, cfg.Channels, c.Channels[0], fmt.Sprintf("expected to remove channel %s from %s", c.Channels[0], cfg.Channels))
 }
 
 func TestDisconnectThing(t *testing.T) {
@@ -690,7 +690,7 @@ func TestDisconnectThing(t *testing.T) {
 	saved, err := repo.Save(context.Background(), c, channels)
 	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
-	err = repo.DisconnectThing(context.Background(), c.MFChannels[0].ID, saved)
+	err = repo.DisconnectThing(context.Background(), c.Channels[0].ID, saved)
 	assert.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
 
 	cfg, err := repo.RetrieveByID(context.Background(), c.Owner, c.ThingID)

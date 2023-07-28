@@ -72,9 +72,9 @@ func (ce configEvent) encode() (map[string]interface{}, error) {
 	if ce.ExternalID != "" {
 		val["external_id"] = ce.ExternalID
 	}
-	if len(ce.MFChannels) > 0 {
-		channels := make([]string, len(ce.MFChannels))
-		for i, ch := range ce.MFChannels {
+	if len(ce.Channels) > 0 {
+		channels := make([]string, len(ce.Channels))
+		for i, ch := range ce.Channels {
 			channels[i] = ch.ID
 		}
 		val["channels"] = fmt.Sprintf("[%s]", strings.Join(channels, ", "))
@@ -167,9 +167,9 @@ func (be bootstrapEvent) encode() (map[string]interface{}, error) {
 	if be.ExternalID != "" {
 		val["external_id"] = be.ExternalID
 	}
-	if len(be.MFChannels) > 0 {
-		channels := make([]string, len(be.MFChannels))
-		for i, ch := range be.MFChannels {
+	if len(be.Channels) > 0 {
+		channels := make([]string, len(be.Channels))
+		for i, ch := range be.Channels {
 			channels[i] = ch.ID
 		}
 		val["channels"] = fmt.Sprintf("[%s]", strings.Join(channels, ", "))

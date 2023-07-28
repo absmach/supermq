@@ -125,7 +125,7 @@ func (bs bootstrapService) Add(ctx context.Context, token string, cfg Config) (C
 		return Config{}, err
 	}
 
-	toConnect := bs.toIDList(cfg.MFChannels)
+	toConnect := bs.toIDList(cfg.Channels)
 
 	// Check if channels exist. This is the way to prevent fetching channels that already exist.
 	existing, err := bs.configs.ListExisting(ctx, owner, toConnect)
@@ -133,7 +133,7 @@ func (bs bootstrapService) Add(ctx context.Context, token string, cfg Config) (C
 		return Config{}, errors.Wrap(errCheckChannels, err)
 	}
 
-	cfg.MFChannels, err = bs.connectionChannels(toConnect, bs.toIDList(existing), token)
+	cfg.Channels, err = bs.connectionChannels(toConnect, bs.toIDList(existing), token)
 
 	if err != nil {
 		return Config{}, errors.Wrap(errConnectionChannels, err)
@@ -161,7 +161,7 @@ func (bs bootstrapService) Add(ctx context.Context, token string, cfg Config) (C
 	}
 
 	cfg.ThingID = saved
-	cfg.MFChannels = append(cfg.MFChannels, existing...)
+	cfg.Channels = append(cfg.Channels, existing...)
 
 	return cfg, nil
 }
@@ -222,7 +222,7 @@ func (bs bootstrapService) UpdateConnections(ctx context.Context, token, id stri
 		return errors.Wrap(errUpdateConnections, err)
 	}
 
-	cfg.MFChannels = channels
+	cfg.Channels = channels
 	var connect, disconnect []string
 
 	if cfg.State == Active {
@@ -308,7 +308,7 @@ func (bs bootstrapService) ChangeState(ctx context.Context, token, id string, st
 
 	switch state {
 	case Active:
-		for _, c := range cfg.MFChannels {
+		for _, c := range cfg.Channels {
 			conIDs := mfsdk.ConnectionIDs{
 				ChannelIDs: []string{c.ID},
 				ThingIDs:   []string{cfg.ThingID},
@@ -318,7 +318,7 @@ func (bs bootstrapService) ChangeState(ctx context.Context, token, id string, st
 			}
 		}
 	case Inactive:
-		for _, c := range cfg.MFChannels {
+		for _, c := range cfg.Channels {
 			if err := bs.sdk.DisconnectThing(cfg.ThingID, c.ID, token); err != nil {
 				if errors.Contains(err, errors.ErrNotFound) {
 					continue
@@ -434,8 +434,8 @@ func (bs bootstrapService) connectionChannels(channels, existing []string, token
 // 2) IDs of Channels to be removed
 // 3) IDs of common Channels for these two configs.
 func (bs bootstrapService) updateList(cfg Config, connections []string) (add, remove []string) {
-	disconnect := make(map[string]bool, len(cfg.MFChannels))
-	for _, c := range cfg.MFChannels {
+	disconnect := make(map[string]bool, len(cfg.Channels))
+	for _, c := range cfg.Channels {
 		disconnect[c.ID] = true
 	}
 

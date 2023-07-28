@@ -67,7 +67,7 @@ func (cr configRepository) Save(ctx context.Context, cfg bootstrap.Config, chsCo
 		return "", errors.Wrap(errors.ErrCreateEntity, e)
 	}
 
-	if err := insertChannels(ctx, cfg.Owner, cfg.MFChannels, tx); err != nil {
+	if err := insertChannels(ctx, cfg.Owner, cfg.Channels, tx); err != nil {
 		cr.rollback("Failed to insert Channels", tx)
 		return "", errors.Wrap(errSaveChannels, err)
 	}
@@ -140,7 +140,7 @@ func (cr configRepository) RetrieveByID(ctx context.Context, owner, id string) (
 	}
 
 	cfg := toConfig(dbcfg)
-	cfg.MFChannels = chans
+	cfg.Channels = chans
 
 	return cfg, nil
 }
@@ -245,7 +245,7 @@ func (cr configRepository) RetrieveByExternalID(ctx context.Context, externalID 
 	}
 
 	cfg := toConfig(dbcfg)
-	cfg.MFChannels = channels
+	cfg.Channels = channels
 
 	return cfg, nil
 }

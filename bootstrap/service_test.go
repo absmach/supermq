@@ -58,7 +58,7 @@ var (
 	config = bootstrap.Config{
 		ExternalID:  "external_id",
 		ExternalKey: "external_key",
-		MFChannels:  []bootstrap.Channel{channel},
+		Channels:    []bootstrap.Channel{channel},
 		Content:     "config",
 	}
 )
@@ -128,7 +128,7 @@ func TestAdd(t *testing.T) {
 	wrongChannels := config
 	ch := channel
 	ch.ID = "invalid"
-	wrongChannels.MFChannels = append(wrongChannels.MFChannels, ch)
+	wrongChannels.Channels = append(wrongChannels.Channels, ch)
 
 	cases := []struct {
 		desc   string
@@ -218,7 +218,7 @@ func TestUpdate(t *testing.T) {
 
 	ch := channel
 	ch.ID = "2"
-	c.MFChannels = append(c.MFChannels, ch)
+	c.Channels = append(c.Channels, ch)
 	saved, err := svc.Add(context.Background(), validToken, c)
 	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
@@ -270,7 +270,7 @@ func TestUpdateCert(t *testing.T) {
 
 	ch := channel
 	ch.ID = "2"
-	c.MFChannels = append(c.MFChannels, ch)
+	c.Channels = append(c.Channels, ch)
 	saved, err := svc.Add(context.Background(), validToken, c)
 	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
@@ -294,7 +294,7 @@ func TestUpdateCert(t *testing.T) {
 			expectedConfig: bootstrap.Config{
 				Name:        saved.Name,
 				ThingKey:    saved.ThingKey,
-				MFChannels:  saved.MFChannels,
+				Channels:    saved.Channels,
 				ExternalID:  saved.ExternalID,
 				ExternalKey: saved.ExternalKey,
 				Content:     saved.Content,
@@ -332,11 +332,11 @@ func TestUpdateCert(t *testing.T) {
 	for _, tc := range cases {
 		cfg, err := svc.UpdateCert(context.Background(), tc.token, tc.thingKey, tc.clientCert, tc.clientKey, tc.caCert)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		sort.Slice(cfg.MFChannels, func(i, j int) bool {
-			return cfg.MFChannels[i].ID < cfg.MFChannels[j].ID
+		sort.Slice(cfg.Channels, func(i, j int) bool {
+			return cfg.Channels[i].ID < cfg.Channels[j].ID
 		})
-		sort.Slice(tc.expectedConfig.MFChannels, func(i, j int) bool {
-			return tc.expectedConfig.MFChannels[i].ID < tc.expectedConfig.MFChannels[j].ID
+		sort.Slice(tc.expectedConfig.Channels, func(i, j int) bool {
+			return tc.expectedConfig.Channels[i].ID < tc.expectedConfig.Channels[j].ID
 		})
 		assert.Equal(t, tc.expectedConfig, cfg, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.expectedConfig, cfg))
 	}
@@ -351,7 +351,7 @@ func TestUpdateConnections(t *testing.T) {
 
 	ch := channel
 	ch.ID = "2"
-	c.MFChannels = append(c.MFChannels, ch)
+	c.Channels = append(c.Channels, ch)
 	created, err := svc.Add(context.Background(), validToken, c)
 	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 

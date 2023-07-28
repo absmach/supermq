@@ -47,14 +47,14 @@ func (crm *configRepositoryMock) Save(_ context.Context, config bootstrap.Config
 	config.ThingID = strconv.FormatUint(crm.counter, 10)
 	crm.configs[config.ThingID] = config
 
-	for _, ch := range config.MFChannels {
+	for _, ch := range config.Channels {
 		crm.channels[ch.ID] = ch
 	}
 
-	config.MFChannels = []bootstrap.Channel{}
+	config.Channels = []bootstrap.Channel{}
 
 	for _, ch := range connections {
-		config.MFChannels = append(config.MFChannels, crm.channels[ch])
+		config.Channels = append(config.Channels, crm.channels[ch])
 	}
 
 	crm.configs[config.ThingID] = config
@@ -185,13 +185,13 @@ func (crm *configRepositoryMock) UpdateConnections(_ context.Context, token, id 
 		crm.channels[ch.ID] = ch
 	}
 
-	config.MFChannels = []bootstrap.Channel{}
+	config.Channels = []bootstrap.Channel{}
 	for _, conn := range connections {
 		ch, ok := crm.channels[conn]
 		if !ok {
 			return errors.ErrNotFound
 		}
-		config.MFChannels = append(config.MFChannels, ch)
+		config.Channels = append(config.Channels, ch)
 	}
 	crm.configs[id] = config
 
@@ -284,7 +284,7 @@ func (crm *configRepositoryMock) DisconnectThing(_ context.Context, channelID, t
 
 	idx := -1
 	if config, ok := crm.configs[thingID]; ok {
-		for i, ch := range config.MFChannels {
+		for i, ch := range config.Channels {
 			if ch.ID == channelID {
 				idx = i
 				break
@@ -292,7 +292,7 @@ func (crm *configRepositoryMock) DisconnectThing(_ context.Context, channelID, t
 		}
 
 		if idx != -1 {
-			config.MFChannels = append(config.MFChannels[0:idx], config.MFChannels[idx:]...)
+			config.Channels = append(config.Channels[0:idx], config.Channels[idx:]...)
 		}
 		crm.configs[thingID] = config
 	}
