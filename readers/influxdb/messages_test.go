@@ -4,6 +4,7 @@
 package influxdb_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -114,7 +115,7 @@ func TestReadSenml(t *testing.T) {
 	}
 
 	errs := asyncWriter.Errors()
-	asyncWriter.ConsumeAsync(messages)
+	asyncWriter.ConsumeAsync(context.TODO(), messages)
 	err = <-errs
 	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 
@@ -591,7 +592,7 @@ func TestReadJSON(t *testing.T) {
 	}
 
 	errs := asyncWriter.Errors()
-	asyncWriter.ConsumeAsync(messages1)
+	asyncWriter.ConsumeAsync(context.TODO(), messages1)
 	err = <-errs
 	require.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 
@@ -622,7 +623,7 @@ func TestReadJSON(t *testing.T) {
 	}
 
 	// Test async
-	asyncWriter.ConsumeAsync(messages2)
+	asyncWriter.ConsumeAsync(context.TODO(), messages2)
 	err = <-errs
 	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 
