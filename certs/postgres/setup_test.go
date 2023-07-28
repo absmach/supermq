@@ -12,7 +12,7 @@ import (
 	"github.com/mainflux/mainflux/certs/postgres"
 	pgclient "github.com/mainflux/mainflux/internal/clients/postgres"
 	"github.com/mainflux/mainflux/logger"
-	dockertest "github.com/ory/dockertest/v3"
+	"github.com/ory/dockertest/v3"
 )
 
 var (

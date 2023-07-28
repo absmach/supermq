@@ -16,7 +16,7 @@ import (
 	"github.com/mainflux/mainflux/consumers/notifiers/postgres"
 	pgclient "github.com/mainflux/mainflux/internal/clients/postgres"
 	"github.com/mainflux/mainflux/pkg/ulid"
-	dockertest "github.com/ory/dockertest/v3"
+	"github.com/ory/dockertest/v3"
 )
 
 var (

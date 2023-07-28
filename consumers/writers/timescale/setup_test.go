@@ -15,7 +15,7 @@ import (
 
 	"github.com/mainflux/mainflux/consumers/writers/timescale"
 	pgclient "github.com/mainflux/mainflux/internal/clients/postgres"
-	dockertest "github.com/ory/dockertest/v3"
+	"github.com/ory/dockertest/v3"
 )
 
 var db *sqlx.DB

@@ -11,7 +11,7 @@ import (
 	"github.com/gocql/gocql"
 	"github.com/mainflux/mainflux/internal/clients/cassandra"
 	mflog "github.com/mainflux/mainflux/logger"
-	dockertest "github.com/ory/dockertest/v3"
+	"github.com/ory/dockertest/v3"
 )
 
 var logger, _ = mflog.New(os.Stdout, mflog.Info.String())
