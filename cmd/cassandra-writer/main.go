@@ -10,10 +10,9 @@ import (
 	"log"
 	"os"
 
+	"github.com/gocql/gocql"
 	chclient "github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux"
-
-	"github.com/gocql/gocql"
 	"github.com/mainflux/mainflux/consumers"
 	consumertracing "github.com/mainflux/mainflux/consumers/tracing"
 	"github.com/mainflux/mainflux/consumers/writers/api"

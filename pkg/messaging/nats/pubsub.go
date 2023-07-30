@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	"google.golang.org/protobuf/proto"
-
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	broker "github.com/nats-io/nats.go"
