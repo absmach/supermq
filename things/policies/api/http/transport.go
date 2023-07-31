@@ -87,7 +87,7 @@ func MakeHandler(csvc clients.Service, psvc policies.Service, mux *bone.Mux, log
 
 func decodeConnectThing(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.ErrUnsupportedContentType
+		return nil, apiutil.ErrUnsupportedContentType
 	}
 
 	req := createPolicyReq{token: apiutil.ExtractBearerToken(r)}

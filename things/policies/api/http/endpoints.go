@@ -59,7 +59,7 @@ func connectEndpoint(svc policies.Service) endpoint.Endpoint {
 		cr := request.(createPolicyReq)
 
 		if err := cr.validate(); err != nil {
-			return addPolicyRes{}, err
+			return addPolicyRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		if len(cr.Actions) == 0 {
 			cr.Actions = policies.PolicyTypes
@@ -86,7 +86,7 @@ func connectThingsEndpoint(svc policies.Service) endpoint.Endpoint {
 		cr := request.(createPoliciesReq)
 
 		if err := cr.validate(); err != nil {
-			return listPolicyRes{}, err
+			return listPolicyRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		if len(cr.Actions) == 0 {
 			cr.Actions = policies.PolicyTypes

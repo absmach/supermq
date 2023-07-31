@@ -17,7 +17,7 @@ func authorizeEndpoint(svc policies.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(authorizeReq)
 		if err := req.validate(); err != nil {
-			return authorizeRes{}, err
+			return authorizeRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		aReq := policies.AccessRequest{
 			Subject: req.Subject,

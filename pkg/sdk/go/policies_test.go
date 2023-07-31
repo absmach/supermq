@@ -776,6 +776,7 @@ func TestConnect(t *testing.T) {
 		page   sdk.PolicyPage
 		token  string
 		err    errors.SDKError
+		tcerr  errors.SDKError
 	}{
 		{
 			desc: "add new policy",
@@ -787,6 +788,7 @@ func TestConnect(t *testing.T) {
 			page:  sdk.PolicyPage{},
 			token: adminToken,
 			err:   nil,
+			tcerr: nil,
 		},
 		{
 			desc: "add existing policy",
@@ -798,6 +800,7 @@ func TestConnect(t *testing.T) {
 			page:  sdk.PolicyPage{Policies: []sdk.Policy{clientPolicy}},
 			token: adminToken,
 			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedCreation), http.StatusInternalServerError),
+			tcerr: errors.NewSDKError(sdk.ErrFailedCreation),
 		},
 		{
 			desc: "add a new policy with owner",
@@ -809,6 +812,7 @@ func TestConnect(t *testing.T) {
 				Subject: "subwithowner",
 			},
 			err:   nil,
+			tcerr: nil,
 			token: adminToken,
 		},
 		{
@@ -820,6 +824,7 @@ func TestConnect(t *testing.T) {
 				Subject: "sub2",
 			},
 			err:   nil,
+			tcerr: nil,
 			token: adminToken,
 		},
 		{
@@ -831,6 +836,7 @@ func TestConnect(t *testing.T) {
 				Subject: "sub3",
 			},
 			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedPolicyAct), http.StatusInternalServerError),
+			tcerr: errors.NewSDKError(apiutil.ErrMalformedPolicyAct),
 			token: adminToken,
 		},
 		{
@@ -841,6 +847,7 @@ func TestConnect(t *testing.T) {
 				Subject: "sub4",
 			},
 			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			tcerr: errors.NewSDKError(apiutil.ErrMissingID),
 			token: adminToken,
 		},
 		{
@@ -851,6 +858,7 @@ func TestConnect(t *testing.T) {
 				Object:  "obj4",
 			},
 			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			tcerr: errors.NewSDKError(apiutil.ErrMissingID),
 			token: adminToken,
 		},
 		{
@@ -861,12 +869,13 @@ func TestConnect(t *testing.T) {
 				Object:  "obj5",
 			},
 			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMalformedPolicyAct), http.StatusInternalServerError),
+			tcerr: errors.NewSDKError(apiutil.ErrMalformedPolicyAct),
 			token: adminToken,
 		},
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Save", mock.Anything, mock.Anything).Return(convertThingPolicy(tc.policy), tc.err)
+		repoCall := pRepo.On("Save", mock.Anything, mock.Anything).Return(convertThingPolicy(tc.policy), tc.tcerr)
 		conn := sdk.ConnectionIDs{ChannelIDs: []string{tc.policy.Object}, ThingIDs: []string{tc.policy.Subject}, Actions: tc.policy.Actions}
 		err := mfsdk.Connect(conn, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
