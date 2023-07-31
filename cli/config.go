@@ -15,6 +15,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type usertoken struct {
+	usertoken string `toml:"user_token"`
+}
 type remotes struct {
 	ThingsURL       string `toml:"things_url"`
 	UsersURL        string `toml:"users_url"`
@@ -43,26 +46,42 @@ type channel struct {
 }
 
 type config struct {
-	Remotes remotes `toml:"remotes"`
-	Filter  filter  `toml:"filter"`
-	Channel channel `toml:"channel"`
+	Remotes   remotes   `toml:"remotes"`
+	Filter    filter    `toml:"filter"`
+	Channel   channel   `toml:"channel"`
+	UserToken usertoken `toml:"user_token"`
 }
+
+var (
+	errReadFail            = errors.New("failed to read config file.")
+	errUnmarshalFail       = errors.New("failed to Unmarshall config TOML.")
+	errConfigNotFound      = errors.New("config file was not found")
+	errUintConv            = errors.New("error converting filter to Uint64")
+	errBoolConv            = errors.New("error converting string to bool.")
+	errUseExistConf        = errors.New("error using the existing configuration")
+	errNoKey               = errors.New("no such key.")
+	errInvalidInt          = errors.New("error: invalid integer value for key")
+	errInvalidBool         = errors.New("error: invalid boolean value for key")
+	errUnsupportedKeyValue = errors.New("error: unsupported data type for key")
+	errMarshal             = errors.New("error marshaling the configuration")
+	errWritingConfig       = errors.New("error writing the updated config to file")
+)
 
 func read(file string) (config, error) {
 	c := config{}
 	data, err := os.Open(file)
 	if err != nil {
-		return c, errors.Wrap(errors.New("Failed to read config file."), err)
+		return c, errors.Wrap(errReadFail, err)
 	}
 	defer data.Close()
 
 	buf, err := io.ReadAll(data)
 	if err != nil {
-		return c, errors.Wrap(errors.New("Failed to read config file."), err)
+		return c, errors.Wrap(errReadFail, err)
 	}
 
 	if err := toml.Unmarshal(buf, &c); err != nil {
-		return config{}, errors.Wrap(errors.New("failed to Unmarshall config TOML."), err)
+		return config{}, errors.Wrap(errUnmarshalFail, err)
 	}
 
 	return c, nil
@@ -75,7 +94,7 @@ func ParseConfig() error {
 	}
 
 	if _, err := os.Stat(ConfigPath); os.IsNotExist(err) {
-		errConfigNotFound := errors.Wrap(errors.New("config file was not found"), err)
+		errConfigNotFound := errors.Wrap(errConfigNotFound, err)
 		logError(errConfigNotFound)
 		return nil
 	}
@@ -88,7 +107,7 @@ func ParseConfig() error {
 	if config.Filter.Offset != "" {
 		offset, err := strconv.ParseUint(config.Filter.Offset, 10, 64)
 		if err != nil {
-			logError(errors.Wrap(errors.New("error converting filter to Uint64"), err))
+			logError(errors.Wrap(errUintConv, err))
 			return sdkConf
 		}
 		Offset = offset
@@ -97,7 +116,7 @@ func ParseConfig() error {
 	if config.Filter.Limit != "" {
 		limit, err := strconv.ParseUint(config.Filter.Limit, 10, 64)
 		if err != nil {
-			logError(errors.Wrap(errors.New("Error converting offset to uint64."), err))
+			logError(errors.Wrap(errUintConv, err))
 			return sdkConf
 		}
 		Limit = limit
@@ -110,7 +129,7 @@ func ParseConfig() error {
 	if config.Filter.RawOutput != "" {
 		rawOutput, err := strconv.ParseBool(config.Filter.RawOutput)
 		if err != nil {
-			logError(errors.Wrap(errors.New("Error converting string to bool."), err))
+			logError(errors.Wrap(errBoolConv, err))
 		}
 
 		RawOutput = rawOutput
@@ -142,7 +161,7 @@ func setConfigValue(key string, value string) {
 	configPath := ConfigPath
 	config, err := read(configPath)
 	if err != nil {
-		logError(errors.Wrap(errors.New("Error using the existing configuration"), err))
+		logError(errors.Wrap(errUseExistConf, err))
 		return
 	}
 
@@ -160,11 +179,12 @@ func setConfigValue(key string, value string) {
 		"status":           &config.Channel.Status,
 		"state":            &config.Channel.State,
 		"topic":            &config.Channel.Topic,
+		"user_token":       &config.UserToken.usertoken,
 	}
 
 	fieldPtr, found := configKeyToField[key]
 	if !found {
-		logError(errors.New("Failed to read config file."))
+		logError(errNoKey)
 		return
 	}
 
@@ -176,31 +196,31 @@ func setConfigValue(key string, value string) {
 	case reflect.Int:
 		intValue, err := strconv.Atoi(value)
 		if err != nil {
-			logError(errors.Wrap(errors.New("Error: Invalid integer value for key"), err))
+			logError(errors.Wrap(errInvalidInt, err))
 			return
 		}
 		fieldValue.SetInt(int64(intValue))
 	case reflect.Bool:
 		boolValue, err := strconv.ParseBool(value)
 		if err != nil {
-			logError(errors.Wrap(errors.New("Error: Invalid boolean value for key"), err))
+			logError(errors.Wrap(errInvalidBool, err))
 			return
 		}
 		fieldValue.SetBool(boolValue)
 	default:
-		logError(errors.Wrap(errors.New("Error: Unsupported data type for key"), err))
+		logError(errors.Wrap(errUnsupportedKeyValue, err))
 		return
 	}
 
 	buf, err := toml.Marshal(config)
 	if err != nil {
-		logError(errors.Wrap(errors.New("Error marshaling the configuration:"), err))
+		logError(errors.Wrap(errMarshal, err))
 		return
 	}
 
 	err = os.WriteFile(configPath, buf, 0644)
 	if err != nil {
-		logError(errors.Wrap(errors.New("Error writing the updated config to file"), err))
+		logError(errors.Wrap(errWritingConfig, err))
 		return
 	}
 }
