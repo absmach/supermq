@@ -1,3 +1,4 @@
+
 [channel]
   state = ""
   status = ""
@@ -23,4 +24,3 @@
   users_url = "http://localhost"
 
 [user_token]
-  user_token = ""
