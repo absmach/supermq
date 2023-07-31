@@ -46,57 +46,43 @@ func (ts *BootstrapConfig) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	if channelData, ok := rawData["channel"]; ok {
+	if channelData, ok := rawData["channels"]; ok {
 		var stringData []string
 		if err := json.Unmarshal(channelData, &stringData); err == nil {
 			ts.Channels = stringData
 		} else {
-			var channel Channel
-			if err := json.Unmarshal(channelData, &channel); err == nil {
-				ts.Channels = channel
+			var channels []Channel
+			if err := json.Unmarshal(channelData, &channels); err == nil {
+				ts.Channels = channels
 			} else {
 				return fmt.Errorf("unsupported channel data type")
 			}
 		}
 	}
 
-	if err := json.Unmarshal(rawData["external_id"], &ts.ExternalID); err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(rawData["external_key"], &ts.ExternalKey); err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(rawData["thing_id"], &ts.ExternalKey); err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(rawData["thing_key"], &ts.ThingKey); err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(rawData["name"], &ts.Name); err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(rawData["client_key"], &ts.ClientKey); err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(rawData["client_cert"], &ts.ClientCert); err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(rawData["ca_cert"], &ts.CACert); err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(rawData["state"], &ts.State); err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(rawData["content"], &ts.Content); err != nil {
+	if err := json.Unmarshal(data, &struct {
+		ExternalID  *string `json:"external_id,omitempty"`
+		ExternalKey *string `json:"external_key,omitempty"`
+		ThingID     *string `json:"thing_id,omitempty"`
+		ThingKey    *string `json:"thing_key,omitempty"`
+		Name        *string `json:"name,omitempty"`
+		ClientCert  *string `json:"client_cert,omitempty"`
+		ClientKey   *string `json:"client_key,omitempty"`
+		CACert      *string `json:"ca_cert,omitempty"`
+		Content     *string `json:"content,omitempty"`
+		State       *int    `json:"state,omitempty"`
+	}{
+		ExternalID:  &ts.ExternalID,
+		ExternalKey: &ts.ExternalKey,
+		ThingID:     &ts.ThingID,
+		ThingKey:    &ts.ThingKey,
+		Name:        &ts.Name,
+		ClientCert:  &ts.ClientCert,
+		ClientKey:   &ts.ClientKey,
+		CACert:      &ts.CACert,
+		Content:     &ts.Content,
+		State:       &ts.State,
+	}); err != nil {
 		return err
 	}
 
