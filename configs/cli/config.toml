@@ -1,28 +1,24 @@
-#Flags
-[[flags]]
 
-[remotes]  # root flags
-bootstrap_url = "http://localhost"
-certs_url = "http://localhost"
-http_adapter_url = "http://localhost/http"
-reader_url = "http://localhost"
-things_url = "http://localhost"
-users_url = "http://localhost"
+[channel]
+  state = ""
+  status = ""
+  topic = ""
 
-[filter]  # Client
-contact = ""
-email = ""
-limit = ""
-metadata = ""
-msg_content_type= ""
-name = ""
-offset = ""
-raw_output = ""
-tls_verification = "false"
+[filter]
+  contact = ""
+  email = ""
+  limit = ""
+  metadata = ""
+  name = ""
+  offset = ""
+  raw_output = ""
 
-[channel]  # Channel flags
-state = ""
-status = ""
-topic = ""
-
-
+[remotes]
+  bootstrap_url = "http://localhost"
+  certs_url = "http://localhost"
+  http_adapter_url = "http://localhost/http"
+  msg_content_type = ""
+  reader_url = "http://localhost"
+  things_url = "http://localhost"
+  tls_verification = false
+  users_url = "http://localhost"
