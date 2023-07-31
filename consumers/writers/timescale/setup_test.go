@@ -12,7 +12,6 @@ import (
 	"testing"
 
 	"github.com/jmoiron/sqlx"
-
 	"github.com/mainflux/mainflux/consumers/writers/timescale"
 	pgclient "github.com/mainflux/mainflux/internal/clients/postgres"
 	"github.com/ory/dockertest/v3"

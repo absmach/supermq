@@ -141,7 +141,6 @@ func main() {
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("Cassandra writer service terminated: %s", err))
 	}
-
 }
 
 func newService(session *gocql.Session, logger mflog.Logger) consumers.BlockingConsumer {

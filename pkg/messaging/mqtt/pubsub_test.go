@@ -25,9 +25,7 @@ const (
 	tokenTimeout = 100 * time.Millisecond
 )
 
-var (
-	data = []byte("payload")
-)
+var data = []byte("payload")
 
 // ErrFailedHandleMessage indicates that the message couldn't be handled.
 var errFailedHandleMessage = errors.New("failed to handle mainflux message")

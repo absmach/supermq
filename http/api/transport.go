@@ -24,6 +24,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -35,9 +36,7 @@ const (
 	contentType = "application/json"
 )
 
-var (
-	errMalformedSubtopic = errors.New("malformed subtopic")
-)
+var errMalformedSubtopic = errors.New("malformed subtopic")
 
 var channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
 

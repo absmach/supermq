@@ -101,7 +101,7 @@ func browse(oc *opcuagocpua.Client, nodeID, path string, level int) ([]NodeDef, 
 		return nil, err
 	}
 
-	var def = NodeDef{
+	def := NodeDef{
 		NodeID: n.ID,
 	}
 

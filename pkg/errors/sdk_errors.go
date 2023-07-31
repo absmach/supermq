@@ -12,10 +12,8 @@ import (
 
 const errorKey = "error"
 
-var (
-	// Failed to read response body.
-	errRespBody = New("failed to read response body")
-)
+// Failed to read response body.
+var errRespBody = New("failed to read response body")
 
 // SDKError is an error type for Mainflux SDK.
 type SDKError interface {

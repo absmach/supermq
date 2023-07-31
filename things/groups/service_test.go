@@ -58,7 +58,6 @@ func newService(tokens map[string]string) (groups.Service, *gmocks.Repository, *
 }
 
 func TestCreateGroup(t *testing.T) {
-
 	svc, gRepo, _ := newService(map[string]string{token: adminEmail})
 
 	cases := []struct {
@@ -128,7 +127,6 @@ func TestCreateGroup(t *testing.T) {
 }
 
 func TestUpdateGroup(t *testing.T) {
-
 	svc, gRepo, pRepo := newService(map[string]string{token: adminEmail})
 
 	cases := []struct {
@@ -258,11 +256,9 @@ func TestUpdateGroup(t *testing.T) {
 		repoCall1.Unset()
 		repoCall2.Unset()
 	}
-
 }
 
 func TestViewGroup(t *testing.T) {
-
 	svc, gRepo, pRepo := newService(map[string]string{token: adminEmail})
 
 	cases := []struct {
@@ -273,7 +269,6 @@ func TestViewGroup(t *testing.T) {
 		err      error
 	}{
 		{
-
 			desc:     "view group",
 			token:    token,
 			groupID:  group.ID,
@@ -308,12 +303,11 @@ func TestViewGroup(t *testing.T) {
 }
 
 func TestListGroups(t *testing.T) {
-
 	svc, gRepo, pRepo := newService(map[string]string{token: adminEmail})
 
 	nGroups := uint64(200)
 	parentID := ""
-	var aGroups = []mfgroups.Group{}
+	aGroups := []mfgroups.Group{}
 	for i := uint64(0); i < nGroups; i++ {
 		group := mfgroups.Group{
 			ID:          testsutil.GenerateUUID(t, idProvider),
@@ -392,7 +386,6 @@ func TestListGroups(t *testing.T) {
 }
 
 func TestEnableGroup(t *testing.T) {
-
 	svc, gRepo, pRepo := newService(map[string]string{token: adminEmail})
 
 	enabledGroup1 := mfgroups.Group{ID: ID, Name: "group1", Status: mfclients.EnabledStatus}
@@ -512,7 +505,6 @@ func TestEnableGroup(t *testing.T) {
 }
 
 func TestDisableGroup(t *testing.T) {
-
 	svc, gRepo, pRepo := newService(map[string]string{token: adminEmail})
 
 	enabledGroup1 := mfgroups.Group{ID: ID, Name: "group1", Status: mfclients.EnabledStatus}
@@ -632,11 +624,10 @@ func TestDisableGroup(t *testing.T) {
 }
 
 func TestListMemberships(t *testing.T) {
-
 	svc, gRepo, pRepo := newService(map[string]string{token: adminEmail})
 
-	var nGroups = uint64(100)
-	var aGroups = []mfgroups.Group{}
+	nGroups := uint64(100)
+	aGroups := []mfgroups.Group{}
 	owner := testsutil.GenerateUUID(t, idProvider)
 	for i := uint64(1); i < nGroups; i++ {
 		group := mfgroups.Group{

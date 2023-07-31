@@ -16,7 +16,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/readers"
 	ireader "github.com/mainflux/mainflux/readers/influxdb"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

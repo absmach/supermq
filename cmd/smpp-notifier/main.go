@@ -156,7 +156,6 @@ func main() {
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("SMPP notifier service terminated: %s", err))
 	}
-
 }
 
 func newService(db *sqlx.DB, tracer trace.Tracer, auth policies.AuthServiceClient, c config, sc mfsmpp.Config, logger mflog.Logger) notifiers.Service {

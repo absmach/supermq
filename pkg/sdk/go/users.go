@@ -221,7 +221,7 @@ func (sdk mfSDK) ResetPassword(password, confPass, token string) errors.SDKError
 }
 
 func (sdk mfSDK) UpdatePassword(oldPass, newPass, token string) (User, errors.SDKError) {
-	var ucsr = updateClientSecretReq{OldSecret: oldPass, NewSecret: newPass}
+	ucsr := updateClientSecretReq{OldSecret: oldPass, NewSecret: newPass}
 
 	data, err := json.Marshal(ucsr)
 	if err != nil {

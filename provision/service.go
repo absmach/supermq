@@ -372,7 +372,6 @@ func (ps *provisionService) recover(e *error, ths *[]sdk.Thing, chs *[]sdk.Chann
 			if needsBootstrap(th) {
 				ps.errLog(ps.sdk.RemoveBootstrap(th.ID, token))
 			}
-
 		}
 		return
 	}

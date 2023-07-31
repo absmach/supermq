@@ -166,7 +166,6 @@ func main() {
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("SMTP notifier service terminated: %s", err))
 	}
-
 }
 
 func newService(db *sqlx.DB, tracer trace.Tracer, auth policies.AuthServiceClient, c config, ec email.Config, logger mflog.Logger) (notifiers.Service, error) {

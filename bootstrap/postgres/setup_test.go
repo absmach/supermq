@@ -12,7 +12,6 @@ import (
 	"github.com/mainflux/mainflux/bootstrap/postgres"
 	pgclient "github.com/mainflux/mainflux/internal/clients/postgres"
 	"github.com/mainflux/mainflux/logger"
-
 	"github.com/ory/dockertest/v3"
 )
 

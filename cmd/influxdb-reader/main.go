@@ -10,10 +10,9 @@ import (
 	"log"
 	"os"
 
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	chclient "github.com/mainflux/callhome/pkg/client"
 	"github.com/mainflux/mainflux"
-
-	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/mainflux/mainflux/internal"
 	authclient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
 	thingsclient "github.com/mainflux/mainflux/internal/clients/grpc/things"

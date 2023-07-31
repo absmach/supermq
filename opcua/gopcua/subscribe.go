@@ -17,8 +17,10 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging"
 )
 
-const protocol = "opcua"
-const token = ""
+const (
+	protocol = "opcua"
+	token    = ""
+)
 
 var (
 	errNotFoundServerURI = errors.New("route map not found for Server URI")

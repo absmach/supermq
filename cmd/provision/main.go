@@ -155,7 +155,6 @@ func main() {
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("Provision service terminated: %s", err))
 	}
-
 }
 
 func loadConfigFromFile(file string) (provision.Config, error) {

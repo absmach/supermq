@@ -5,13 +5,12 @@
 package ulid
 
 import (
+	"math/rand"
 	"time"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/oklog/ulid/v2"
-
-	"math/rand"
 )
 
 // ErrGeneratingID indicates error in generating ULID.
