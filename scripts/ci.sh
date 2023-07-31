@@ -85,7 +85,7 @@ setup() {
 
 run_test() {
     echo "Running lint..."
-    golangci-lint run --no-config --disable-all --enable gosimple --enable goimports --enable gci, --enable errcheck --enable govet --enable unused --enable goconst --enable godot --timeout 3m
+    golangci-lint run --no-config --disable-all --enable gosimple --enable goimports --enable gci --enable errcheck --enable govet --enable unused --enable goconst --enable godot --timeout 3m
     echo "Running tests..."
     echo "" > coverage.txt
     for d in $(go list ./... | grep -v 'vendor\|cmd'); do
