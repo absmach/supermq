@@ -15,9 +15,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type usertoken struct {
-	user_token string `toml:"user_token"`
-}
 type remotes struct {
 	ThingsURL       string `toml:"things_url"`
 	UsersURL        string `toml:"users_url"`
@@ -46,10 +43,9 @@ type channel struct {
 }
 
 type config struct {
-	Remotes   remotes   `toml:"remotes"`
-	Filter    filter    `toml:"filter"`
-	Channel   channel   `toml:"channel"`
-	UserToken usertoken `toml:"usertoken"`
+	Remotes remotes `toml:"remotes"`
+	Filter  filter  `toml:"filter"`
+	Channel channel `toml:"channel"`
 }
 
 var (

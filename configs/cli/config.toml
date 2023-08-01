@@ -20,6 +20,5 @@
   msg_content_type = "json"
   reader_url = "http://localhost"
   things_url = "http://localhost"
-  tls_verification = true
+  tls_verification = false
   users_url = "http://localhost"
-
