@@ -4,8 +4,8 @@
 package groups_test
 
 import (
-	context "context"
-	fmt "fmt"
+	"context"
+	"fmt"
 	"regexp"
 	"testing"
 	"time"
