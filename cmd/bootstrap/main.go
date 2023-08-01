@@ -17,8 +17,8 @@ import (
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/bootstrap/api"
 	bootstrappg "github.com/mainflux/mainflux/bootstrap/postgres"
-	rediscons "github.com/mainflux/mainflux/bootstrap/redis/consumer"
-	redisprod "github.com/mainflux/mainflux/bootstrap/redis/producer"
+	"github.com/mainflux/mainflux/bootstrap/redis/consumer"
+	"github.com/mainflux/mainflux/bootstrap/redis/producer"
 	"github.com/mainflux/mainflux/bootstrap/tracing"
 	"github.com/mainflux/mainflux/internal"
 	authclient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
@@ -176,7 +176,7 @@ func newService(ctx context.Context, auth policies.AuthServiceClient, db *sqlx.D
 	sdk := mfsdk.NewSDK(config)
 
 	svc := bootstrap.New(auth, repoConfig, sdk, []byte(cfg.EncKey))
-	svc = redisprod.NewEventStoreMiddleware(ctx, svc, esClient)
+	svc = producer.NewEventStoreMiddleware(ctx, svc, esClient)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)
@@ -185,8 +185,8 @@ func newService(ctx context.Context, auth policies.AuthServiceClient, db *sqlx.D
 	return svc
 }
 
-func subscribeToThingsES(ctx context.Context, svc bootstrap.Service, client *redis.Client, consumer string, logger mflog.Logger) {
-	eventStore := rediscons.NewEventStore(svc, client, consumer, logger)
+func subscribeToThingsES(ctx context.Context, svc bootstrap.Service, client *redis.Client, consumers string, logger mflog.Logger) {
+	eventStore := consumer.NewEventStore(svc, client, consumers, logger)
 	logger.Info("Subscribed to Redis Event Store")
 	if err := eventStore.Subscribe(ctx, "mainflux.things"); err != nil {
 		logger.Warn(fmt.Sprintf("Bootstrap service failed to subscribe to event sourcing: %s", err))

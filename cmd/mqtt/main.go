@@ -33,7 +33,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/uuid"
 	mp "github.com/mainflux/mproxy/pkg/mqtt"
 	"github.com/mainflux/mproxy/pkg/session"
-	ws "github.com/mainflux/mproxy/pkg/websocket"
+	"github.com/mainflux/mproxy/pkg/websocket"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -222,7 +222,7 @@ func proxyMQTT(ctx context.Context, cfg config, logger mflog.Logger, handler ses
 
 func proxyWS(ctx context.Context, cfg config, logger mflog.Logger, handler session.Handler) error {
 	target := fmt.Sprintf("%s:%s", cfg.HTTPTargetHost, cfg.HTTPTargetPort)
-	wp := ws.New(target, cfg.HTTPTargetPath, "ws", handler, logger)
+	wp := websocket.New(target, cfg.HTTPTargetPath, "ws", handler, logger)
 	http.Handle("/mqtt", wp.Handler())
 
 	errCh := make(chan error)
