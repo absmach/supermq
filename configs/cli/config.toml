@@ -8,8 +8,8 @@
   contact = ""
   email = ""
   limit = ""
-  metadata = ""
-  name = ""
+  metadata = "info"
+  name = "thing_1"
   offset = ""
   raw_output = ""
 
@@ -20,7 +20,7 @@
   msg_content_type = ""
   reader_url = "http://localhost"
   things_url = "http://localhost"
-  tls_verification = false
+  tls_verification = true
   users_url = "http://localhost"
 
-[user_token]
+[usertoken]

@@ -16,7 +16,7 @@ import (
 )
 
 type usertoken struct {
-	usertoken string `toml:"user_token"`
+	user_token string `toml:"user_token"`
 }
 type remotes struct {
 	ThingsURL       string `toml:"things_url"`
@@ -49,7 +49,7 @@ type config struct {
 	Remotes   remotes   `toml:"remotes"`
 	Filter    filter    `toml:"filter"`
 	Channel   channel   `toml:"channel"`
-	UserToken usertoken `toml:"user_token"`
+	UserToken usertoken `toml:"usertoken"`
 }
 
 var (
@@ -158,8 +158,7 @@ func NewConfigCmd() *cobra.Command {
 }
 
 func setConfigValue(key string, value string) {
-	configPath := ConfigPath
-	config, err := read(configPath)
+	config, err := read(ConfigPath)
 	if err != nil {
 		logError(errors.Wrap(errUseExistConf, err))
 		return
@@ -179,7 +178,9 @@ func setConfigValue(key string, value string) {
 		"status":           &config.Channel.Status,
 		"state":            &config.Channel.State,
 		"topic":            &config.Channel.Topic,
-		"user_token":       &config.UserToken.usertoken,
+		"user_token":       &config.UserToken.user_token,
+		"metadata":         &config.Filter.Metadata,
+		"tls_verification": &config.Remotes.TLSVerification,
 	}
 
 	fieldPtr, found := configKeyToField[key]
@@ -218,7 +219,7 @@ func setConfigValue(key string, value string) {
 		return
 	}
 
-	err = os.WriteFile(configPath, buf, 0644)
+	err = os.WriteFile(ConfigPath, buf, 0644)
 	if err != nil {
 		logError(errors.Wrap(errWritingConfig, err))
 		return
