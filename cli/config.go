@@ -178,9 +178,9 @@ func setConfigValue(key string, value string) {
 		"status":           &config.Channel.Status,
 		"state":            &config.Channel.State,
 		"topic":            &config.Channel.Topic,
-		"user_token":       &config.UserToken.user_token,
 		"metadata":         &config.Filter.Metadata,
 		"tls_verification": &config.Remotes.TLSVerification,
+		"msg_content_type": &config.Remotes.MsgContentType,
 	}
 
 	fieldPtr, found := configKeyToField[key]
