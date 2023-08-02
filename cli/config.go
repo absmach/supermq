@@ -8,6 +8,8 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
+	"net/url"
 
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfxsdk "github.com/mainflux/mainflux/pkg/sdk/go"
@@ -61,6 +63,7 @@ var (
 	errUnsupportedKeyValue = errors.New("error: unsupported data type for key")
 	errMarshal             = errors.New("error marshaling the configuration")
 	errWritingConfig       = errors.New("error writing the updated config to file")
+	errInvalidURL 		   = errors.New("invalid url")
 )
 
 func read(file string) (config, error) {
@@ -160,6 +163,12 @@ func setConfigValue(key string, value string) {
 		return
 	}
 
+	if isURLKey(key)  {
+		if !isValidURL(value) {
+			logError(errInvalidURL)
+			return
+		}
+	}
 	var configKeyToField = map[string]interface{}{
 		"things_url":       &config.Remotes.ThingsURL,
 		"users_url":        &config.Remotes.UsersURL,
@@ -220,4 +229,30 @@ func setConfigValue(key string, value string) {
 		logError(errors.Wrap(errWritingConfig, err))
 		return
 	}
+}
+
+func isValidURL(inputURL string) bool {
+	u, err := url.Parse(inputURL)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return false
+	}
+	return strings.HasPrefix(u.Scheme, "http") || strings.HasPrefix(u.Scheme, "https")
+}
+
+func isURLKey(key string) bool {
+	urlKeys := []string{
+		"things_url",
+		"users_url",
+		"reader_url",
+		"http_adapter_url",
+		"bootstrap_url",
+		"certs_url",
+	}
+
+	for _, urlKey := range urlKeys {
+		if key == urlKey {
+			return true
+		}
+	}
+	return false
 }
