@@ -27,7 +27,7 @@ var (
 	// Status query parameter.
 	Status string = ""
 	// ConfigPath config path parameter.
-	ConfigPath string = "configs/cli/config.toml"
+	ConfigPath string = ""
 	// State query parameter.
 	State string = ""
 	// Topic query parameter.

@@ -6,7 +6,6 @@ package cli
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -64,28 +63,17 @@ var (
 	errMarshal             = errors.New("error marshaling the configuration")
 	errWritingConfig       = errors.New("error writing the updated config to file")
 	errInvalidURL          = errors.New("invalid url")
-	ConfigFile             = ""
+	defaultConfigPath      = "./config.toml"
 )
 
-// func read(file string) (config, error) {
-// 	c := config{}
-// 	data, err := os.Open(file)
-// 	if err != nil {
-// 		return c, errors.Wrap(errReadFail, err)
-// 	}
-// 	defer data.Close()
+// configFileContents contains the contents of the config file in hex.
+const configFileContents = "0a5b6368616e6e656c5d0a20207374617465203d2022220a2020737461747573203d2022220a2020746f706963203d2022220a0a5b66696c7465725d0a2020636f6e74616374203d2022220a2020656d61696c203d2022220a20206c696d6974203d2022220a20206d65746164617461203d2022220a20206e616d65203d2022220a20206f6666736574203d2022220a20207261775f6f7574707574203d2022220a0a5b72656d6f7465735d0a2020626f6f7473747261705f75726c203d2022687474703a2f2f6c6f63616c686f73743a39303133220a202063657274735f75726c203d2022687474703a2f2f6c6f63616c686f73743a39303139220a2020687474705f616461707465725f75726c203d2022687474703a2f2f6c6f63616c686f73742f68747470220a20206d73675f636f6e74656e745f74797065203d20226170706c69636174696f6e2f6a736f6e220a20207265616465725f75726c203d2022687474703a2f2f6c6f63616c686f7374220a20207468696e67735f75726c203d2022687474703a2f2f6c6f63616c686f73743a39303030220a2020746c735f766572696669636174696f6e203d2066616c73650a202075736572735f75726c203d2022687474703a2f2f6c6f63616c686f73743a39303032220a"
 
-// 	buf, err := io.ReadAll(data)
-// 	if err != nil {
-// 		return c, errors.Wrap(errReadFail, err)
-// 	}
-
-// 	if err := toml.Unmarshal(buf, &c); err != nil {
-// 		return config{}, errors.Wrap(errUnmarshalFail, err)
-// 	}
-
-// 	return c, nil
-// }
+func init() {
+	if os.Getenv("GOBIN") != "" {
+		defaultConfigPath = os.Getenv("GOBIN") + "/config.toml"
+	}
+}
 
 func read(file string) (config, error) {
 	c := config{}
@@ -119,7 +107,7 @@ func ParseConfig() error {
 		return nil
 	}
 
-	config, err := read(configFile)
+	config, err := read(ConfigPath)
 	if err != nil {
 		return err
 	}
@@ -132,8 +120,7 @@ func ParseConfig() error {
 	if config.Filter.Offset != "" {
 		offset, err := strconv.ParseUint(config.Filter.Offset, 10, 64)
 		if err != nil {
-			logError(errors.Wrap(errUintConv, err))
-			return sdkConf
+			return sdkConf, errors.Wrap(errUintConv, err)
 		}
 		Offset = offset
 	}
@@ -141,8 +128,7 @@ func ParseConfig() error {
 	if config.Filter.Limit != "" {
 		limit, err := strconv.ParseUint(config.Filter.Limit, 10, 64)
 		if err != nil {
-			logError(errors.Wrap(errUintConv, err))
-			return sdkConf
+			return sdkConf, errors.Wrap(errUintConv, err)
 		}
 		Limit = limit
 	}
@@ -154,7 +140,7 @@ func ParseConfig() error {
 	if config.Filter.RawOutput != "" {
 		rawOutput, err := strconv.ParseBool(config.Filter.RawOutput)
 		if err != nil {
-			logError(errors.Wrap(errBoolConv, err))
+			return sdkConf, errors.Wrap(errBoolConv, err)
 		}
 
 		RawOutput = rawOutput
@@ -163,30 +149,8 @@ func ParseConfig() error {
 }
 
 // New config command to store params to local TOML file
-// func NewConfigCmd() *cobra.Command {
-// 	return &cobra.Command{
-// 		Use:   "config <key> <value>",
-// 		Short: "CLI local config",
-// 		Long:  "Local param storage to prevent repetitive passing of keys",
-// 		Run: func(cmd *cobra.Command, args []string) {
-// 			if len(args) != 2 {
-// 				logUsage(cmd.Use)
-// 				return
-// 			}
-
-// 			key := args[0]
-// 			value := args[1]
-
-// 			setConfigValue(key, value)
-// 			logOK()
-// 		},
-// 	}
-// }
-
-// New config command to store params to local TOML file
 func NewConfigCmd() *cobra.Command {
-
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "config <key> <value>",
 		Short: "CLI local config",
 		Long:  "Local param storage to prevent repetitive passing of keys",
@@ -199,42 +163,28 @@ func NewConfigCmd() *cobra.Command {
 			key := args[0]
 			value := args[1]
 
-			setConfigValue(key, value)
+			if err := setConfigValue(key, value); err != nil {
+				logError(err)
+				return
+			}
+
 			logOK()
 		},
 	}
-
-	cmd.Flags().StringVarP(&ConfigFile, "config", "c", "", "Config file path")
-	cmd.Run = func(cmd *cobra.Command, args []string) {
-		if len(args) != 2 {
-			logUsage(cmd.Use)
-			return
-		}
-
-		key := args[0]
-		value := args[1]
-
-		// ParseConfig(sdkConf, configFile) // Use the provided configFile
-		setConfigValue(key, value)
-		logOK()
-	}
-
-	return cmd
 }
 
-func setConfigValue(key string, value string) {
+func setConfigValue(key string, value string) error {
 	config, err := read(ConfigPath)
 	if err != nil {
-		logError(errors.Wrap(errUseExistConf, err))
-		return
+		return errors.Wrap(errUseExistConf, err)
 	}
 
 	if isURLKey(key) {
-		if !isValidURL(value) {
-			logError(errInvalidURL)
-			return
+		if ok, err := isValidURL(value); !ok {
+			return errors.Wrap(errInvalidURL, err)
 		}
 	}
+
 	var configKeyToField = map[string]interface{}{
 		"things_url":       &config.Remotes.ThingsURL,
 		"users_url":        &config.Remotes.UsersURL,
@@ -256,8 +206,7 @@ func setConfigValue(key string, value string) {
 
 	fieldPtr, found := configKeyToField[key]
 	if !found {
-		logError(errNoKey)
-		return
+		return errNoKey
 	}
 
 	fieldValue := reflect.ValueOf(fieldPtr).Elem()
@@ -268,41 +217,39 @@ func setConfigValue(key string, value string) {
 	case reflect.Int:
 		intValue, err := strconv.Atoi(value)
 		if err != nil {
-			logError(errors.Wrap(errInvalidInt, err))
-			return
+			return errors.Wrap(errInvalidInt, err)
 		}
 		fieldValue.SetInt(int64(intValue))
 	case reflect.Bool:
 		boolValue, err := strconv.ParseBool(value)
 		if err != nil {
-			logError(errors.Wrap(errInvalidBool, err))
-			return
+			return errors.Wrap(errInvalidBool, err)
 		}
 		fieldValue.SetBool(boolValue)
 	default:
-		logError(errors.Wrap(errUnsupportedKeyValue, err))
-		return
+		return errors.Wrap(errUnsupportedKeyValue, err)
 	}
 
 	buf, err := toml.Marshal(config)
 	if err != nil {
-		logError(errors.Wrap(errMarshal, err))
-		return
+		return errors.Wrap(errMarshal, err)
 	}
 
 	err = os.WriteFile(ConfigPath, buf, 0644)
 	if err != nil {
-		logError(errors.Wrap(errWritingConfig, err))
-		return
+		return errors.Wrap(errWritingConfig, err)
 	}
+
+	return nil
 }
 
-func isValidURL(inputURL string) bool {
+func isValidURL(inputURL string) (bool, error) {
 	u, err := url.Parse(inputURL)
 	if err != nil || u.Scheme == "" || u.Host == "" {
-		return false
+		return false, err
 	}
-	return strings.HasPrefix(u.Scheme, "http") || strings.HasPrefix(u.Scheme, "https")
+
+	return strings.HasPrefix(u.Scheme, "http") || strings.HasPrefix(u.Scheme, "https"), nil
 }
 
 func isURLKey(key string) bool {
