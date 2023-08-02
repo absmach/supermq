@@ -148,7 +148,7 @@ func ParseConfig() error {
 	return nil
 }
 
-// New config command to store params to local TOML file
+// New config command to store params to local TOML file.
 func NewConfigCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "config <key> <value>",
