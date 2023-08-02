@@ -6,10 +6,10 @@ package cli
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
-	"net/url"
 
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfxsdk "github.com/mainflux/mainflux/pkg/sdk/go"
@@ -51,20 +51,41 @@ type config struct {
 }
 
 var (
-	errReadFail            = errors.New("failed to read config file.")
-	errUnmarshalFail       = errors.New("failed to Unmarshall config TOML.")
+	errReadFail            = errors.New("failed to read config file")
+	errUnmarshalFail       = errors.New("failed to Unmarshall config TOML")
 	errConfigNotFound      = errors.New("config file was not found")
 	errUintConv            = errors.New("error converting filter to Uint64")
-	errBoolConv            = errors.New("error converting string to bool.")
+	errBoolConv            = errors.New("error converting string to bool")
 	errUseExistConf        = errors.New("error using the existing configuration")
-	errNoKey               = errors.New("no such key.")
+	errNoKey               = errors.New("no such key")
 	errInvalidInt          = errors.New("error: invalid integer value for key")
 	errInvalidBool         = errors.New("error: invalid boolean value for key")
 	errUnsupportedKeyValue = errors.New("error: unsupported data type for key")
 	errMarshal             = errors.New("error marshaling the configuration")
 	errWritingConfig       = errors.New("error writing the updated config to file")
-	errInvalidURL 		   = errors.New("invalid url")
+	errInvalidURL          = errors.New("invalid url")
+	ConfigFile             = ""
 )
+
+// func read(file string) (config, error) {
+// 	c := config{}
+// 	data, err := os.Open(file)
+// 	if err != nil {
+// 		return c, errors.Wrap(errReadFail, err)
+// 	}
+// 	defer data.Close()
+
+// 	buf, err := io.ReadAll(data)
+// 	if err != nil {
+// 		return c, errors.Wrap(errReadFail, err)
+// 	}
+
+// 	if err := toml.Unmarshal(buf, &c); err != nil {
+// 		return config{}, errors.Wrap(errUnmarshalFail, err)
+// 	}
+
+// 	return c, nil
+// }
 
 func read(file string) (config, error) {
 	c := config{}
@@ -92,15 +113,20 @@ func ParseConfig() error {
 		return nil
 	}
 
-	if _, err := os.Stat(ConfigPath); os.IsNotExist(err) {
+	if _, err := os.Stat(configFile); os.IsNotExist(err) {
 		errConfigNotFound := errors.Wrap(errConfigNotFound, err)
 		logError(errConfigNotFound)
 		return nil
 	}
 
-	config, err := read(ConfigPath)
+	config, err := read(configFile)
 	if err != nil {
 		return err
+	}
+	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+		errConfigNotFound := errors.Wrap(errConfigNotFound, err)
+		logError(errConfigNotFound)
+		return sdkConf
 	}
 
 	if config.Filter.Offset != "" {
@@ -136,8 +162,31 @@ func ParseConfig() error {
 	return nil
 }
 
+// New config command to store params to local TOML file
+// func NewConfigCmd() *cobra.Command {
+// 	return &cobra.Command{
+// 		Use:   "config <key> <value>",
+// 		Short: "CLI local config",
+// 		Long:  "Local param storage to prevent repetitive passing of keys",
+// 		Run: func(cmd *cobra.Command, args []string) {
+// 			if len(args) != 2 {
+// 				logUsage(cmd.Use)
+// 				return
+// 			}
+
+// 			key := args[0]
+// 			value := args[1]
+
+// 			setConfigValue(key, value)
+// 			logOK()
+// 		},
+// 	}
+// }
+
+// New config command to store params to local TOML file
 func NewConfigCmd() *cobra.Command {
-	return &cobra.Command{
+
+	cmd := &cobra.Command{
 		Use:   "config <key> <value>",
 		Short: "CLI local config",
 		Long:  "Local param storage to prevent repetitive passing of keys",
@@ -154,6 +203,23 @@ func NewConfigCmd() *cobra.Command {
 			logOK()
 		},
 	}
+
+	cmd.Flags().StringVarP(&ConfigFile, "config", "c", "", "Config file path")
+	cmd.Run = func(cmd *cobra.Command, args []string) {
+		if len(args) != 2 {
+			logUsage(cmd.Use)
+			return
+		}
+
+		key := args[0]
+		value := args[1]
+
+		// ParseConfig(sdkConf, configFile) // Use the provided configFile
+		setConfigValue(key, value)
+		logOK()
+	}
+
+	return cmd
 }
 
 func setConfigValue(key string, value string) {
@@ -163,7 +229,7 @@ func setConfigValue(key string, value string) {
 		return
 	}
 
-	if isURLKey(key)  {
+	if isURLKey(key) {
 		if !isValidURL(value) {
 			logError(errInvalidURL)
 			return
