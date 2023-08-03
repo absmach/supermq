@@ -399,7 +399,8 @@ func TestGroupsMembers(t *testing.T) {
 		ID:   testsutil.GenerateUUID(t, idProvider),
 		Name: "client-memberships",
 		Credentials: mfclients.Credentials{
-			Secret: testsutil.GenerateUUID(t, idProvider),
+			Identity: "client-memberships1@example.com",
+			Secret:   password,
 		},
 		Metadata: mfclients.Metadata{},
 		Status:   mfclients.EnabledStatus,
@@ -409,7 +410,7 @@ func TestGroupsMembers(t *testing.T) {
 		Name: "client-memberships",
 		Credentials: mfclients.Credentials{
 			Identity: "client-memberships2@example.com",
-			Secret:   testsutil.GenerateUUID(t, idProvider),
+			Secret:   password,
 		},
 		Metadata: mfclients.Metadata{},
 		Status:   mfclients.EnabledStatus,
@@ -434,8 +435,10 @@ func TestGroupsMembers(t *testing.T) {
 
 	_, err := crepo.Save(context.Background(), clientA)
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("save client: expected %v got %s\n", nil, err))
+	clientA.Credentials.Secret = ""
 	_, err = crepo.Save(context.Background(), clientB)
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("save client: expected %v got %s\n", nil, err))
+	clientB.Credentials.Secret = ""
 	_, err = grepo.Save(context.Background(), group)
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("save group: expected %v got %s\n", nil, err))
 	err = prepo.Save(context.Background(), policyA)
