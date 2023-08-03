@@ -265,11 +265,11 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Owner:  ownerID,
 				Status: mfclients.AllStatus,
 			},
-			response: []mfclients.Client{expectedClients[10], expectedClients[20], expectedClients[30], expectedClients[40], expectedClients[50], expectedClients[60],
+			response: []mfclients.Client{expectedClients[0], expectedClients[10], expectedClients[20], expectedClients[30], expectedClients[40], expectedClients[50], expectedClients[60],
 				expectedClients[70], expectedClients[80], expectedClients[90], expectedClients[100], expectedClients[110], expectedClients[120], expectedClients[130],
 				expectedClients[140], expectedClients[150], expectedClients[160], expectedClients[170], expectedClients[180], expectedClients[190],
 			},
-			size: 19,
+			size: 20,
 		},
 		"retrieve clients by wrong owner": {
 			pm: mfclients.Page{
@@ -291,8 +291,11 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Action:   "c_list",
 				Status:   mfclients.AllStatus,
 			},
-			response: expectedClients,
-			size:     20,
+			response: []mfclients.Client{expectedClients[0], expectedClients[10], expectedClients[20], expectedClients[30], expectedClients[40], expectedClients[50], expectedClients[60],
+				expectedClients[70], expectedClients[80], expectedClients[90], expectedClients[100], expectedClients[110], expectedClients[120], expectedClients[130],
+				expectedClients[140], expectedClients[150], expectedClients[160], expectedClients[170], expectedClients[180], expectedClients[190],
+			},
+			size: 20,
 		},
 		"retrieve all clients shared by and owned by": {
 			pm: mfclients.Page{
