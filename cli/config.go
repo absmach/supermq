@@ -179,7 +179,7 @@ func setConfigValue(key string, value string) error {
 		return errors.Wrap(errUseExistConf, err)
 	}
 
-	if isURLKey(key) {
+	if strings.Contains(key ,"url") {
 		if ok, err := isValidURL(value); !ok {
 			return errors.Wrap(errInvalidURL, err)
 		}
@@ -250,22 +250,4 @@ func isValidURL(inputURL string) (bool, error) {
 	}
 
 	return strings.HasPrefix(u.Scheme, "http") || strings.HasPrefix(u.Scheme, "https"), nil
-}
-
-func isURLKey(key string) bool {
-	urlKeys := []string{
-		"things_url",
-		"users_url",
-		"reader_url",
-		"http_adapter_url",
-		"bootstrap_url",
-		"certs_url",
-	}
-
-	for _, urlKey := range urlKeys {
-		if key == urlKey {
-			return true
-		}
-	}
-	return false
 }
