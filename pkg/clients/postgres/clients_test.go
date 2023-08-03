@@ -377,7 +377,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				expectedClients[70], expectedClients[80], expectedClients[90], expectedClients[100], expectedClients[110], expectedClients[120], expectedClients[130],
 				expectedClients[140], expectedClients[150], expectedClients[160], expectedClients[170], expectedClients[180], expectedClients[190],
 			},
-			size: 19,
+			size: 20,
 		},
 	}
 	for desc, tc := range cases {
