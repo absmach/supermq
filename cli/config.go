@@ -180,7 +180,11 @@ func setConfigValue(key string, value string) error {
 	}
 
 	if strings.Contains(key ,"url") {
-		if ok, err := isValidURL(value); !ok {
+		u, err := url.Parse(value)
+		if u.Scheme == "" || u.Host == "" {
+			return err
+		}
+		if strings.HasPrefix(u.Scheme, "http") || strings.HasPrefix(u.Scheme, "https") {
 			return errors.Wrap(errInvalidURL, err)
 		}
 	}
@@ -241,13 +245,4 @@ func setConfigValue(key string, value string) error {
 	}
 
 	return nil
-}
-
-func isValidURL(inputURL string) (bool, error) {
-	u, err := url.Parse(inputURL)
-	if err != nil || u.Scheme == "" || u.Host == "" {
-		return false, err
-	}
-
-	return strings.HasPrefix(u.Scheme, "http") || strings.HasPrefix(u.Scheme, "https"), nil
 }
