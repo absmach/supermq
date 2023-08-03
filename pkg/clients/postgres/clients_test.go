@@ -292,7 +292,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Status:   mfclients.AllStatus,
 			},
 			response: expectedClients,
-			size:     nClients,
+			size:     20,
 		},
 		"retrieve all clients shared by and owned by": {
 			pm: mfclients.Page{
