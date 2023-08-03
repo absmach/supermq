@@ -29,7 +29,7 @@ func TestPoliciesSave(t *testing.T) {
 	t.Cleanup(func() { testsutil.CleanUpDB(t, db) })
 	repo := ppostgres.NewRepository(database)
 	crepo := cpostgres.NewRepository(database)
-	grepo := gpostgres.NewRepository(database)
+	grepo := gpostgres.New(database)
 
 	group := mfgroups.Group{
 		ID:   testsutil.GenerateUUID(t, idProvider),
@@ -178,7 +178,7 @@ func TestPoliciesRetrieve(t *testing.T) {
 	t.Cleanup(func() { testsutil.CleanUpDB(t, db) })
 	repo := ppostgres.NewRepository(database)
 	crepo := cpostgres.NewRepository(database)
-	grepo := gpostgres.NewRepository(database)
+	grepo := gpostgres.New(database)
 
 	group := mfgroups.Group{
 		ID:   testsutil.GenerateUUID(t, idProvider),
@@ -234,7 +234,7 @@ func TestPoliciesUpdate(t *testing.T) {
 	t.Cleanup(func() { testsutil.CleanUpDB(t, db) })
 	repo := ppostgres.NewRepository(database)
 	crepo := cpostgres.NewRepository(database)
-	grepo := gpostgres.NewRepository(database)
+	grepo := gpostgres.New(database)
 
 	group := mfgroups.Group{
 		ID:   testsutil.GenerateUUID(t, idProvider),
@@ -352,7 +352,7 @@ func TestPoliciesRetrievalAll(t *testing.T) {
 	t.Cleanup(func() { testsutil.CleanUpDB(t, db) })
 	repo := ppostgres.NewRepository(database)
 	crepo := cpostgres.NewRepository(database)
-	grepo := gpostgres.NewRepository(database)
+	grepo := gpostgres.New(database)
 
 	var nPolicies = uint64(10)
 
@@ -628,7 +628,7 @@ func TestPoliciesDelete(t *testing.T) {
 	t.Cleanup(func() { testsutil.CleanUpDB(t, db) })
 	repo := ppostgres.NewRepository(database)
 	crepo := cpostgres.NewRepository(database)
-	grepo := gpostgres.NewRepository(database)
+	grepo := gpostgres.New(database)
 
 	group := mfgroups.Group{
 		ID:   testsutil.GenerateUUID(t, idProvider),

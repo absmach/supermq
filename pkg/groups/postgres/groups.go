@@ -31,9 +31,9 @@ func New(db postgres.Database) mfgroups.Repository {
 
 // TODO - check parent group write access.
 func (repo groupRepository) Save(ctx context.Context, g mfgroups.Group) (mfgroups.Group, error) {
-	q := `INSERT INTO groups (name, description, id, owner_id, parent_id, metadata, created_at, updated_at, updated_by, status)
-		VALUES (:name, :description, :id, :owner_id, :parent_id, :metadata, :created_at, :updated_at, :updated_by, :status)
-		RETURNING id, name, description, owner_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, updated_at, updated_by, status;`
+	q := `INSERT INTO groups (name, description, id, owner_id, parent_id, metadata, created_at, status)
+		VALUES (:name, :description, :id, :owner_id, :parent_id, :metadata, :created_at, :status)
+		RETURNING id, name, description, owner_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, status;`
 	dbg, err := toDBGroup(g)
 	if err != nil {
 		return mfgroups.Group{}, err
@@ -67,9 +67,9 @@ func (repo groupRepository) Memberships(ctx context.Context, clientID string, gm
 		g.metadata, g.created_at, g.updated_at, g.updated_by, g.status FROM groups g`
 	}
 	aq := ""
-	// If not admin, the client needs to have a g_list action on the group
+	// If not admin, the client needs to have a g_list action on the group or they are the owner.
 	if gm.Subject != "" {
-		aq = `AND policies.object IN (SELECT object FROM policies WHERE subject = :subject AND :action=ANY(actions))`
+		aq = `AND policies.object IN (SELECT object FROM policies WHERE subject = :subject AND :action=ANY(actions)) OR g.owner_id = :subject`
 	}
 	q = fmt.Sprintf(`%s INNER JOIN policies ON g.id=policies.object %s AND policies.subject = :client_id %s
 			ORDER BY g.updated_at LIMIT :limit OFFSET :offset;`, q, query, aq)
@@ -283,7 +283,12 @@ func buildQuery(gm mfgroups.GroupsPage) (string, error) {
 	if gm.Status != mfclients.AllStatus {
 		queries = append(queries, "g.status = :status")
 	}
-
+	if gm.OwnerID != "" {
+		queries = append(queries, "g.owner_id = :owner_id")
+	}
+	if gm.Tag != "" {
+		queries = append(queries, ":tag = ANY(c.tags)")
+	}
 	if gm.Subject != "" {
 		queries = append(queries, "(g.owner_id = :owner_id OR id IN (SELECT object as id FROM policies WHERE subject = :subject AND :action=ANY(actions)))")
 	}
