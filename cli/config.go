@@ -4,7 +4,8 @@
 package cli
 
 import (
-	"fmt"
+	"io"
+	"net/url"
 	"os"
 	"reflect"
 	"strconv"
@@ -93,26 +94,60 @@ func read(file string) (config, error) {
 	return c, nil
 }
 
-func ParseConfig() error {
+// Get config parameters from the config file.
+func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 	if ConfigPath == "" {
-		// No config file
-		return nil
+		ConfigPath = defaultConfigPath
 	}
 
-	if _, err := os.Stat(configFile); os.IsNotExist(err) {
-		errConfigNotFound := errors.Wrap(errConfigNotFound, err)
-		logError(errConfigNotFound)
-		return nil
+	_, err := os.Stat(ConfigPath)
+
+	// If the config file does not exist, create it.
+	if os.IsNotExist(err) {
+		// Create the config file with default values
+		defaultConfig := config{
+			Channel: channel{
+				Status: "",
+				State:  "",
+				Topic:  "",
+			},
+			Filter: filter{
+				Offset:    "",
+				Limit:     "",
+				RawOutput: "",
+				Name:      "",
+				Contact:   "",
+				Email:     "",
+				Metadata:  "",
+			},
+			Remotes: remotes{
+				ThingsURL:       "http://localhost:9000",
+				UsersURL:        "http://localhost:9002",
+				ReaderURL:       "http://localhost",
+				HTTPAdapterURL:  "http://localhost/http:9016",
+				BootstrapURL:    "http://localhost",
+				CertsURL:        "https://localhost:9019",
+				MsgContentType:  "application/json",
+				TLSVerification: false,
+			},
+		}
+		buf, err := toml.Marshal(defaultConfig)
+		if err != nil {
+			return sdkConf, errors.Wrap(errMarshal, err)
+		}
+		err = os.WriteFile(ConfigPath, buf, 0644)
+		if err != nil {
+			return sdkConf, errors.Wrap(errWritingConfig, err)
+		}
+	}
+
+	if _, err := os.Stat(ConfigPath); os.IsNotExist(err) {
+		return sdkConf, errors.Wrap(errConfigNotFound, err)
 	}
 
 	config, err := read(ConfigPath)
 	if err != nil {
-		return err
-	}
-	if _, err := os.Stat(configFile); os.IsNotExist(err) {
-		errConfigNotFound := errors.Wrap(errConfigNotFound, err)
-		logError(errConfigNotFound)
-		return sdkConf
+		return sdkConf, errors.Wrap(errReadFail, err)
 	}
 
 	if config.Filter.Offset != "" {
@@ -143,7 +178,15 @@ func ParseConfig() error {
 
 		RawOutput = rawOutput
 	}
-	return nil
+
+	sdkConf.ThingsURL = config.Remotes.ThingsURL
+	sdkConf.UsersURL = config.Remotes.UsersURL
+	sdkConf.ReaderURL = config.Remotes.ReaderURL
+	sdkConf.HTTPAdapterURL = config.Remotes.HTTPAdapterURL
+	sdkConf.BootstrapURL = config.Remotes.BootstrapURL
+	sdkConf.CertsURL = config.Remotes.CertsURL
+
+	return sdkConf, nil
 }
 
 // New config command to store params to local TOML file.
