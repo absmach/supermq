@@ -39,10 +39,10 @@ func main() {
 	var rootCmd = &cobra.Command{
 		Use: "mainflux-cli",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			if err := cli.ParseConfig(); err != nil {
-				log.Fatal(err)
+			cliConf, err := cli.ParseConfig(sdkConf)
+			if err != nil {
+				log.Fatalf("Failed to parse config: %s", err)
 			}
-
 			if cliConf.MsgContentType == "" {
 				cliConf.MsgContentType = sdk.ContentType(msgContentType)
 			}
@@ -50,7 +50,6 @@ func main() {
 			cli.SetSDK(s)
 		},
 	}
-
 	// API commands
 	healthCmd := cli.NewHealthCmd()
 	usersCmd := cli.NewUsersCmd()
