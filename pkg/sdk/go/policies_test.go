@@ -9,15 +9,12 @@ import (
 
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux/internal/apiutil"
-	"github.com/mainflux/mainflux/logger"
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
-	"github.com/mainflux/mainflux/things/clients"
 	tclients "github.com/mainflux/mainflux/things/clients"
 	tmocks "github.com/mainflux/mainflux/things/clients/mocks"
 	tgmocks "github.com/mainflux/mainflux/things/groups/mocks"
-	"github.com/mainflux/mainflux/things/policies"
 	tpolicies "github.com/mainflux/mainflux/things/policies"
 	tapi "github.com/mainflux/mainflux/things/policies/api/http"
 	tpmocks "github.com/mainflux/mainflux/things/policies/mocks"
@@ -34,14 +31,14 @@ import (
 var utadminPolicy = umocks.SubjectSet{Subject: "things", Relation: []string{"g_add"}}
 
 func newUsersPolicyServer(svc upolicies.Service) *httptest.Server {
-	logger := logger.NewMock()
+	logger := mflog.NewMock()
 	mux := bone.New()
 	uapi.MakeHandler(svc, mux, logger)
 
 	return httptest.NewServer(mux)
 }
 
-func newThingsPolicyServer(svc clients.Service, psvc policies.Service) *httptest.Server {
+func newThingsPolicyServer(svc tclients.Service, psvc tpolicies.Service) *httptest.Server {
 	logger := mflog.NewMock()
 	mux := bone.New()
 	tapi.MakeHandler(svc, psvc, mux, logger)
@@ -521,7 +518,7 @@ func TestUpdateThingsPolicy(t *testing.T) {
 		policy.Actions = tc.action
 		policy.CreatedAt = time.Now()
 		repoCall := pRepo.On("RetrieveAll", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tpolicies.PolicyPage{}, nil)
-		repoCall1 := pRepo.On("Update", mock.Anything, mock.Anything).Return(policies.Policy{}, tc.err)
+		repoCall1 := pRepo.On("Update", mock.Anything, mock.Anything).Return(tpolicies.Policy{}, tc.err)
 		err := mfsdk.UpdateThingPolicy(policy, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		ok := repoCall.Parent.AssertCalled(t, "Update", mock.Anything, mock.Anything)
