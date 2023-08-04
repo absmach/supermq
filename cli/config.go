@@ -63,6 +63,7 @@ var (
 	errMarshal             = errors.New("error marshaling the configuration")
 	errWritingConfig       = errors.New("error writing the updated config to file")
 	errInvalidURL          = errors.New("invalid url")
+	errURLParseFail        = errors.New("failed to parse url")
 	defaultConfigPath      = "./config.toml"
 )
 
@@ -179,8 +180,11 @@ func setConfigValue(key string, value string) error {
 		return errors.Wrap(errUseExistConf, err)
 	}
 
-	if strings.Contains(key ,"url") {
+	if strings.Contains(key, "url") {
 		u, err := url.Parse(value)
+		if err != nil {
+			return errors.Wrap(errURLParseFail, err)
+		}
 		if u.Scheme == "" || u.Host == "" {
 			return err
 		}
