@@ -186,7 +186,7 @@ func setConfigValue(key string, value string) error {
 			return errors.Wrap(errURLParseFail, err)
 		}
 		if u.Scheme == "" || u.Host == "" {
-			return err
+			return errInvalidURL
 		}
 		if strings.HasPrefix(u.Scheme, "http") || strings.HasPrefix(u.Scheme, "https") {
 			return errors.Wrap(errInvalidURL, err)
