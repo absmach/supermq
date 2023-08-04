@@ -65,14 +65,9 @@ var (
 	errWritingConfig       = errors.New("error writing the updated config to file")
 	errInvalidURL          = errors.New("invalid url")
 	errURLParseFail        = errors.New("failed to parse url")
+	fileErr                = errors.New("file error")
 	defaultConfigPath      = "./config.toml"
 )
-
-func init() {
-	if os.Getenv("GOBIN") != "" {
-		defaultConfigPath = os.Getenv("GOBIN") + "/config.toml"
-	}
-}
 
 func read(file string) (config, error) {
 	c := config{}
@@ -139,6 +134,8 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 		if err != nil {
 			return sdkConf, errors.Wrap(errWritingConfig, err)
 		}
+	} else {
+		return sdkConf, errors.Wrap(fileErr, err)
 	}
 
 	if _, err := os.Stat(ConfigPath); os.IsNotExist(err) {
