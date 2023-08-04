@@ -134,7 +134,7 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 		if err != nil {
 			return sdkConf, errors.Wrap(errWritingConfig, err)
 		}
-	} else {
+	} else if err != nil {
 		return sdkConf, errors.Wrap(fileErr, err)
 	}
 
