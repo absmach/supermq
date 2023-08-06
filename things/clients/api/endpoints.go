@@ -21,7 +21,7 @@ func createClientEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.CreateThings(ctx, req.token, req.client)
 		if err != nil {
-			return createClientRes{}, errors.Wrap(apiutil.ErrValidation, err)
+			return createClientRes{}, err
 		}
 		ucr := createClientRes{
 			Client:  client[0],
@@ -64,9 +64,6 @@ func viewClientEndpoint(svc clients.Service) endpoint.Endpoint {
 
 		c, err := svc.ViewClient(ctx, req.token, req.id)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 		return viewClientRes{Client: c}, nil
@@ -119,9 +116,6 @@ func listMembersEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		page, err := svc.ListClientsByGroup(ctx, req.token, req.groupID, req.Page)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return memberPageRes{}, err
 		}
 		return buildMembersResponse(page), nil
@@ -175,9 +169,6 @@ func updateClientSecretEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.UpdateClientSecret(ctx, req.token, req.id, req.Secret)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				return nil, errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 
 		}
@@ -213,9 +204,6 @@ func enableClientEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.EnableClient(ctx, req.token, req.id)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 		return deleteClientRes{Client: client}, nil
@@ -230,9 +218,6 @@ func disableClientEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		client, err := svc.DisableClient(ctx, req.token, req.id)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 		return deleteClientRes{Client: client}, nil

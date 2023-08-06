@@ -192,7 +192,7 @@ func decodeUpdateClient(_ context.Context, r *http.Request) (interface{}, error)
 		id:    bone.GetValue(r, "thingID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, errors.Wrap(err, apiutil.ErrValidation))
+		return nil, errors.Wrap(errors.Wrap(apiutil.ErrMalformedEntity, err), apiutil.ErrValidation)
 	}
 
 	return req, nil
@@ -207,7 +207,7 @@ func decodeUpdateClientTags(_ context.Context, r *http.Request) (interface{}, er
 		id:    bone.GetValue(r, "thingID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, errors.Wrap(err, apiutil.ErrValidation))
+		return nil, errors.Wrap(errors.Wrap(apiutil.ErrMalformedEntity, err), apiutil.ErrValidation)
 	}
 
 	return req, nil
@@ -222,7 +222,7 @@ func decodeUpdateClientCredentials(_ context.Context, r *http.Request) (interfac
 		id:    bone.GetValue(r, "thingID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, errors.Wrap(err, apiutil.ErrValidation))
+		return nil, errors.Wrap(errors.Wrap(apiutil.ErrMalformedEntity, err), apiutil.ErrValidation)
 	}
 
 	return req, nil
@@ -237,7 +237,7 @@ func decodeUpdateClientOwner(_ context.Context, r *http.Request) (interface{}, e
 		id:    bone.GetValue(r, "thingID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
+		return nil, errors.Wrap(errors.Wrap(apiutil.ErrMalformedEntity, err), apiutil.ErrValidation)
 	}
 
 	return req, nil
@@ -250,7 +250,7 @@ func decodeCreateClientReq(_ context.Context, r *http.Request) (interface{}, err
 
 	var c mfclients.Client
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
+		return nil, errors.Wrap(errors.Wrap(apiutil.ErrMalformedEntity, err), apiutil.ErrValidation)
 	}
 	req := createClientReq{
 		client: c,
@@ -267,7 +267,7 @@ func decodeCreateClientsReq(_ context.Context, r *http.Request) (interface{}, er
 
 	c := createClientsReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&c.Clients); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, errors.Wrap(err, apiutil.ErrValidation))
+		return nil, errors.Wrap(errors.Wrap(apiutil.ErrMalformedEntity, err), apiutil.ErrValidation)
 	}
 
 	return c, nil

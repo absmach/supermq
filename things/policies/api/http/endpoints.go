@@ -5,7 +5,6 @@ package http
 
 import (
 	"context"
-	"strings"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/internal/apiutil"
@@ -23,7 +22,7 @@ func identifyEndpoint(svc clients.Service) endpoint.Endpoint {
 
 		id, err := svc.Identify(ctx, req.secret)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 
 		return identityRes{ID: id}, nil
@@ -44,9 +43,6 @@ func authorizeEndpoint(svc policies.Service) endpoint.Endpoint {
 		}
 		policy, err := svc.Authorize(ctx, ar)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return authorizeRes{}, err
 		}
 
@@ -71,9 +67,6 @@ func connectEndpoint(svc policies.Service) endpoint.Endpoint {
 		}
 		policy, err := svc.AddPolicy(ctx, cr.token, cr.External, policy)
 		if err != nil {
-			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 
@@ -101,9 +94,6 @@ func connectThingsEndpoint(svc policies.Service) endpoint.Endpoint {
 				}
 				p, err := svc.AddPolicy(ctx, cr.token, cr.External, policy)
 				if err != nil {
-					if !errors.Contains(err, apiutil.ErrValidation) {
-						err = errors.Wrap(apiutil.ErrValidation, err)
-					}
 					return listPolicyRes{}, err
 				}
 
@@ -129,10 +119,6 @@ func updatePolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 		}
 		policy, err := svc.UpdatePolicy(ctx, cr.token, policy)
 		if err != nil {
-
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return updatePolicyRes{}, err
 		}
 
@@ -157,9 +143,6 @@ func listPoliciesEndpoint(svc policies.Service) endpoint.Endpoint {
 		}
 		policyPage, err := svc.ListPolicies(ctx, lpr.token, pm)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 
@@ -183,9 +166,6 @@ func disconnectEndpoint(svc policies.Service) endpoint.Endpoint {
 			Actions: cr.Actions,
 		}
 		if err := svc.DeletePolicy(ctx, cr.token, policy); err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return deletePolicyRes{}, err
 		}
 
@@ -206,9 +186,6 @@ func disconnectThingsEndpoint(svc policies.Service) endpoint.Endpoint {
 					Object:  cid,
 				}
 				if err := svc.DeletePolicy(ctx, req.token, policy); err != nil {
-					if !errors.Contains(err, apiutil.ErrValidation) {
-						err = errors.Wrap(apiutil.ErrValidation, err)
-					}
 					return deletePolicyRes{}, err
 				}
 			}
