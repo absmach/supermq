@@ -42,9 +42,6 @@ func viewClientEndpoint(svc clients.Service) endpoint.Endpoint {
 
 		client, err := svc.ViewClient(ctx, req.token, req.id)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 		return viewClientRes{Client: client}, nil
@@ -60,9 +57,6 @@ func viewProfileEndpoint(svc clients.Service) endpoint.Endpoint {
 
 		client, err := svc.ViewProfile(ctx, req.token)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 		return viewClientRes{
@@ -119,9 +113,6 @@ func listMembersEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 		page, err := svc.ListMembers(ctx, req.token, req.groupID, req.Page)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return memberPageRes{}, err
 		}
 		return buildMembersResponse(page), nil
@@ -283,9 +274,6 @@ func refreshTokenEndpoint(svc clients.Service) endpoint.Endpoint {
 
 		token, err := svc.RefreshToken(ctx, req.RefreshToken)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 

@@ -5,7 +5,6 @@ package http
 
 import (
 	"context"
-	"strings"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/internal/apiutil"
@@ -27,9 +26,6 @@ func authorizeEndpoint(svc policies.Service) endpoint.Endpoint {
 		}
 		err := svc.Authorize(ctx, aReq)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return authorizeRes{}, err
 		}
 
@@ -51,9 +47,6 @@ func createPolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 		}
 		err := svc.AddPolicy(ctx, req.token, policy)
 		if err != nil {
-			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return addPolicyRes{}, err
 		}
 
@@ -76,9 +69,6 @@ func updatePolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 
 		err := svc.UpdatePolicy(ctx, req.token, policy)
 		if err != nil {
-			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return updatePolicyRes{}, err
 		}
 
@@ -103,9 +93,6 @@ func listPolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 		}
 		page, err := svc.ListPolicies(ctx, req.token, pm)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return listPolicyRes{}, err
 		}
 		return buildPoliciesResponse(page), nil
@@ -123,9 +110,6 @@ func deletePolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 			Object:  req.Object,
 		}
 		if err := svc.DeletePolicy(ctx, req.token, policy); err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return deletePolicyRes{}, err
 		}
 

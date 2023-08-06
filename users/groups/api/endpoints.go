@@ -5,7 +5,6 @@ package api
 
 import (
 	"context"
-	"strings"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/internal/apiutil"
@@ -23,9 +22,6 @@ func createGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		group, err := svc.CreateGroup(ctx, req.token, req.Group)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return createGroupRes{}, err
 		}
 
@@ -42,9 +38,6 @@ func viewGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		group, err := svc.ViewGroup(ctx, req.token, req.id)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return viewGroupRes{}, err
 		}
 
@@ -68,9 +61,6 @@ func updateGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		group, err := svc.UpdateGroup(ctx, req.token, group)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return updateGroupRes{}, err
 		}
 
@@ -86,9 +76,6 @@ func enableGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 		}
 		group, err := svc.EnableGroup(ctx, req.token, req.id)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 		return changeStatusRes{Group: group}, nil
@@ -103,9 +90,6 @@ func disableGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 		}
 		group, err := svc.DisableGroup(ctx, req.token, req.id)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return nil, err
 		}
 		return changeStatusRes{Group: group}, nil
@@ -120,9 +104,6 @@ func listGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 		}
 		page, err := svc.ListGroups(ctx, req.token, req.GroupsPage)
 		if err != nil {
-			if !strings.Contains(err.Error(), apiutil.ErrValidation.Error()) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return groupPageRes{}, err
 		}
 
@@ -143,9 +124,6 @@ func listMembershipsEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		page, err := svc.ListMemberships(ctx, req.token, req.clientID, req.GroupsPage)
 		if err != nil {
-			if !errors.Contains(err, apiutil.ErrValidation) {
-				err = errors.Wrap(apiutil.ErrValidation, err)
-			}
 			return membershipPageRes{}, err
 		}
 
