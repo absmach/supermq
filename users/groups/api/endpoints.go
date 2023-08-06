@@ -5,6 +5,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/internal/apiutil"
@@ -117,13 +118,24 @@ func listGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 
 func listMembershipsEndpoint(svc groups.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		fmt.Println()
+		fmt.Println("INside endpoint")
+		fmt.Println()
 		req := request.(listMembershipReq)
 		if err := req.validate(); err != nil {
+			fmt.Println()
+			fmt.Println("Returning req.validate error ", err)
+			fmt.Println()
+
 			return membershipPageRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		page, err := svc.ListMemberships(ctx, req.token, req.clientID, req.GroupsPage)
 		if err != nil {
+			fmt.Println()
+			fmt.Println("Returning svc.listmemberships error : ", err)
+			fmt.Println()
+
 			return membershipPageRes{}, err
 		}
 

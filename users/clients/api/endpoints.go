@@ -107,12 +107,24 @@ func listClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 
 func listMembersEndpoint(svc clients.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		fmt.Println()
+		fmt.Println("INSIDE ENDPOINT")
+		fmt.Println()
+
 		req := request.(listMembersReq)
 		if err := req.validate(); err != nil {
+			fmt.Println()
+			fmt.Println("Returning validate error :", err)
+			fmt.Println()
+
 			return memberPageRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		page, err := svc.ListMembers(ctx, req.token, req.groupID, req.Page)
 		if err != nil {
+			fmt.Println()
+			fmt.Println("Returning ListMembers : ", err)
+			fmt.Println()
+
 			return memberPageRes{}, err
 		}
 		return buildMembersResponse(page), nil

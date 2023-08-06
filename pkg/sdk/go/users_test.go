@@ -484,7 +484,7 @@ func TestListMembers(t *testing.T) {
 			groupID:  testsutil.GenerateUUID(t, idProvider),
 			page:     sdk.PageMetadata{},
 			response: []sdk.User(nil),
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(errors.ErrAuthentication, errors.New("invalid JWT")), http.StatusUnauthorized),
 		},
 		{
 			desc:     "list clients with an invalid id",
@@ -492,11 +492,15 @@ func TestListMembers(t *testing.T) {
 			groupID:  mocks.WrongID,
 			page:     sdk.PageMetadata{},
 			response: []sdk.User(nil),
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrNotFound), http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound),
 		},
 	}
 
 	for _, tc := range cases {
+		fmt.Println()
+		fmt.Println(tc.desc)
+		fmt.Println()
+
 		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
 		repoCall1 := cRepo.On("Members", mock.Anything, tc.groupID, mock.Anything).Return(mfclients.MembersPage{Members: convertClients(tc.response)}, tc.err)
 		membersPage, err := mfsdk.Members(tc.groupID, tc.page, tc.token)
@@ -553,21 +557,21 @@ func TestClient(t *testing.T) {
 			response: sdk.User{},
 			token:    invalidToken,
 			clientID: generateUUID(t),
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(errors.ErrAuthentication, errors.New("invalid JWT")), http.StatusUnauthorized),
 		},
 		{
 			desc:     "view client with valid token and invalid client id",
 			response: sdk.User{},
 			token:    generateValidToken(t, svc, cRepo),
 			clientID: mocks.WrongID,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrNotFound), http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc:     "view client with an invalid token and invalid client id",
 			response: sdk.User{},
 			token:    invalidToken,
 			clientID: mocks.WrongID,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(errors.ErrAuthentication, errors.New("invalid JWT")), http.StatusUnauthorized),
 		},
 	}
 
@@ -628,7 +632,7 @@ func TestProfile(t *testing.T) {
 			desc:     "view client with an invalid token",
 			response: sdk.User{},
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(errors.ErrAuthentication, errors.New("invalid JWT")), http.StatusUnauthorized),
 		},
 	}
 
@@ -695,7 +699,7 @@ func TestUpdateClient(t *testing.T) {
 			client:   client1,
 			response: sdk.User{},
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(errors.ErrAuthentication, errors.New("invalid JWT")), http.StatusUnauthorized),
 		},
 		{
 			desc:     "update client name with invalid id",
@@ -786,7 +790,7 @@ func TestUpdateClientTags(t *testing.T) {
 			client:   client1,
 			response: sdk.User{},
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(errors.ErrAuthentication, errors.New("invalid JWT")), http.StatusUnauthorized),
 		},
 		{
 			desc:     "update client name with invalid id",
@@ -876,7 +880,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 			client:   user,
 			response: sdk.User{},
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(errors.ErrAuthentication, errors.New("invalid JWT")), http.StatusUnauthorized),
 		},
 		{
 			desc:     "update client name with invalid id",
@@ -968,7 +972,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			token:     "non-existent",
 			response:  sdk.User{},
 			repoErr:   errors.ErrAuthentication,
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
+			err:       errors.NewSDKErrorWithStatus(errors.Wrap(errors.ErrAuthentication, errors.New("invalid JWT")), http.StatusUnauthorized),
 		},
 		{
 			desc:      "update client secret with wrong old secret",
@@ -977,7 +981,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			token:     token.AccessToken,
 			response:  sdk.User{},
 			repoErr:   apiutil.ErrInvalidSecret,
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidSecret), http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(apiutil.ErrInvalidSecret, http.StatusBadRequest),
 		},
 	}
 
@@ -1048,7 +1052,7 @@ func TestUpdateClientOwner(t *testing.T) {
 			client:   client2,
 			response: sdk.User{},
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(errors.ErrAuthentication, errors.New("invalid JWT")), http.StatusUnauthorized),
 		},
 		{
 			desc:     "update client name with invalid id",
@@ -1136,7 +1140,7 @@ func TestEnableClient(t *testing.T) {
 			client:   enabledClient1,
 			response: sdk.User{},
 			repoErr:  sdk.ErrFailedEnable,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedEnable), http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(sdk.ErrFailedEnable, sdk.ErrFailedEnable), http.StatusInternalServerError),
 		},
 		{
 			desc:     "enable non-existing client",
@@ -1145,7 +1149,7 @@ func TestEnableClient(t *testing.T) {
 			client:   sdk.User{},
 			response: sdk.User{},
 			repoErr:  sdk.ErrFailedEnable,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedEnable), http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(sdk.ErrFailedEnable, errors.ErrNotFound), http.StatusNotFound),
 		},
 	}
 
@@ -1266,7 +1270,7 @@ func TestDisableClient(t *testing.T) {
 			client:   disabledClient1,
 			response: sdk.User{},
 			repoErr:  sdk.ErrFailedDisable,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedDisable), http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(sdk.ErrFailedDisable, sdk.ErrFailedDisable), http.StatusInternalServerError),
 		},
 		{
 			desc:     "disable non-existing client",
@@ -1275,7 +1279,7 @@ func TestDisableClient(t *testing.T) {
 			token:    generateValidToken(t, svc, cRepo),
 			response: sdk.User{},
 			repoErr:  sdk.ErrFailedDisable,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedDisable), http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(sdk.ErrFailedDisable, errors.ErrNotFound), http.StatusNotFound),
 		},
 	}
 
