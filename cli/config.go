@@ -220,13 +220,13 @@ func setConfigValue(key string, value string) error {
 	if strings.Contains(key, "url") {
 		u, err := url.Parse(value)
 		if err != nil {
-			return errors.Wrap(errURLParseFail, err)
+			return errors.Wrap(errInvalidURL, err)
 		}
 		if u.Scheme == "" || u.Host == "" {
 			return errInvalidURL
 		}
-		if strings.HasPrefix(u.Scheme, "http") || strings.HasPrefix(u.Scheme, "https") {
-			return errors.Wrap(errInvalidURL, err)
+		if u.Scheme != "http" && u.Scheme != "https" {
+			return errors.Wrap(errURLParseFail, err)
 		}
 	}
 
