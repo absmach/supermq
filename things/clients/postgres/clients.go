@@ -64,14 +64,11 @@ func (repo clientRepo) Save(ctx context.Context, cs ...mfclients.Client) ([]mfcl
 			return []mfclients.Client{}, errors.Wrap(errors.ErrCreateEntity, err)
 		}
 
-		if _, err := tx.NamedExecContext(ctx, q, dbcli); err != nil {
+		row, err := repo.ClientRepository.DB.NamedQueryContext(ctx, q, dbcli)
+		if err != nil {
 			if err := tx.Rollback(); err != nil {
 				return []mfclients.Client{}, postgres.HandleError(err, errors.ErrCreateEntity)
 			}
-		}
-
-		row, err := repo.ClientRepository.DB.NamedQueryContext(ctx, q, dbcli)
-		if err != nil {
 			return []mfclients.Client{}, postgres.HandleError(err, errors.ErrCreateEntity)
 		}
 
