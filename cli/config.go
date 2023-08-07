@@ -51,19 +51,12 @@ const filePermission = 0644
 
 var (
 	errReadFail            = errors.New("failed to read config file")
-	errUnmarshalFail       = errors.New("failed to Unmarshall config TOML")
-	errUintConv            = errors.New("error converting filter to Uint64")
-	errBoolConv            = errors.New("error converting string to bool")
-	errUseExistConf        = errors.New("error using the existing configuration")
+	errUseExistConf        = errors.New("error in using the existing configuration")
 	errNoKey               = errors.New("no such key")
-	errInvalidInt          = errors.New("error: invalid integer value for key")
-	errInvalidBool         = errors.New("error: invalid boolean value for key")
-	errUnsupportedKeyValue = errors.New("error: unsupported data type for key")
-	errMarshal             = errors.New("error marshaling the configuration")
-	errWritingConfig       = errors.New("error writing the updated config to file")
+	errUnsupportedKeyValue = errors.New("unsupported data type for key")
+	errWritingConfig       = errors.New("error in writing the updated config to file")
 	errInvalidURL          = errors.New("invalid url")
 	errURLParseFail        = errors.New("failed to parse url")
-	errFile                = errors.New("file error")
 	defaultConfigPath      = "./config.toml"
 )
 
@@ -81,7 +74,7 @@ func read(file string) (config, error) {
 	}
 
 	if err := toml.Unmarshal(buf, &c); err != nil {
-		return config{}, errors.Wrap(errUnmarshalFail, err)
+		return config{}, err
 	}
 
 	return c, nil
@@ -110,13 +103,13 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 		}
 		buf, err := toml.Marshal(defaultConfig)
 		if err != nil {
-			return sdkConf, errors.Wrap(errMarshal, err)
+			return sdkConf, err
 		}
 		if err = os.WriteFile(ConfigPath, buf, filePermission); err != nil {
 			return sdkConf, errors.Wrap(errWritingConfig, err)
 		}
 	case err != nil:
-		return sdkConf, errors.Wrap(errFile, err)
+		return sdkConf, err
 	}
 
 	config, err := read(ConfigPath)
@@ -127,7 +120,7 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 	if config.Filter.Offset != "" {
 		offset, err := strconv.ParseUint(config.Filter.Offset, 10, 64)
 		if err != nil {
-			return sdkConf, errors.Wrap(errUintConv, err)
+			return sdkConf, err
 		}
 		Offset = offset
 	}
@@ -135,7 +128,7 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 	if config.Filter.Limit != "" {
 		limit, err := strconv.ParseUint(config.Filter.Limit, 10, 64)
 		if err != nil {
-			return sdkConf, errors.Wrap(errUintConv, err)
+			return sdkConf, err
 		}
 		Limit = limit
 	}
@@ -171,7 +164,7 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 	if config.RawOutput != "" {
 		rawOutput, err := strconv.ParseBool(config.RawOutput)
 		if err != nil {
-			return sdkConf, errors.Wrap(errBoolConv, err)
+			return sdkConf, err
 		}
 		RawOutput = rawOutput
 	}
@@ -256,13 +249,13 @@ func setConfigValue(key string, value string) error {
 	case reflect.Int:
 		intValue, err := strconv.Atoi(value)
 		if err != nil {
-			return errors.Wrap(errInvalidInt, err)
+			return err
 		}
 		fieldValue.SetUint(uint64(intValue))
 	case reflect.Bool:
 		boolValue, err := strconv.ParseBool(value)
 		if err != nil {
-			return errors.Wrap(errInvalidBool, err)
+			return err
 		}
 		fieldValue.SetBool(boolValue)
 	default:
@@ -271,7 +264,7 @@ func setConfigValue(key string, value string) error {
 
 	buf, err := toml.Marshal(config)
 	if err != nil {
-		return errors.Wrap(errMarshal, err)
+		return err
 	}
 
 	if err = os.WriteFile(ConfigPath, buf, filePermission); err != nil {
