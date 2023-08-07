@@ -46,6 +46,9 @@ type config struct {
 	RawOutput string  `toml:"raw_output"`
 }
 
+// Readable by all user groups but writeable by the user only.
+const filePermission = 0644
+
 var (
 	errReadFail            = errors.New("failed to read config file")
 	errUnmarshalFail       = errors.New("failed to Unmarshall config TOML")
@@ -60,7 +63,7 @@ var (
 	errWritingConfig       = errors.New("error writing the updated config to file")
 	errInvalidURL          = errors.New("invalid url")
 	errURLParseFail        = errors.New("failed to parse url")
-	fileErr                = errors.New("file error")
+	errFile                = errors.New("file error")
 	defaultConfigPath      = "./config.toml"
 )
 
@@ -109,11 +112,11 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 		if err != nil {
 			return sdkConf, errors.Wrap(errMarshal, err)
 		}
-		if err = os.WriteFile(ConfigPath, buf, 0644); err != nil {
+		if err = os.WriteFile(ConfigPath, buf, filePermission); err != nil {
 			return sdkConf, errors.Wrap(errWritingConfig, err)
 		}
 	case err != nil:
-		return sdkConf, errors.Wrap(fileErr, err)
+		return sdkConf, errors.Wrap(errFile, err)
 	}
 
 	config, err := read(ConfigPath)
@@ -271,7 +274,7 @@ func setConfigValue(key string, value string) error {
 		return errors.Wrap(errMarshal, err)
 	}
 
-	if err = os.WriteFile(ConfigPath, buf, 0644); err != nil {
+	if err = os.WriteFile(ConfigPath, buf, filePermission); err != nil {
 		return errors.Wrap(errWritingConfig, err)
 	}
 
