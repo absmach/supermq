@@ -100,15 +100,7 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 		// Create the config file with default values
 		defaultConfig := config{
 			Channel: channel{},
-			Filter: filter{
-				Offset:    "",
-				Limit:     "",
-				RawOutput: "",
-				Name:      "",
-				Contact:   "",
-				Email:     "",
-				Metadata:  "",
-			},
+			Filter:  filter{},
 			Remotes: remotes{
 				ThingsURL:       "http://localhost:9000",
 				UsersURL:        "http://localhost:9002",
