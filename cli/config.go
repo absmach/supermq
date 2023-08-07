@@ -24,7 +24,6 @@ type remotes struct {
 	HTTPAdapterURL  string `toml:"http_adapter_url"`
 	BootstrapURL    string `toml:"bootstrap_url"`
 	CertsURL        string `toml:"certs_url"`
-	MsgContentType  string `toml:"msg_content_type"`
 	TLSVerification bool   `toml:"tls_verification"`
 }
 
@@ -39,8 +38,6 @@ type filter struct {
 }
 
 type channel struct {
-	Status string `toml:"status"`
-	State  string `toml:"state"`
 	Topic  string `toml:"topic"`
 }
 
@@ -98,13 +95,12 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 
 	_, err := os.Stat(ConfigPath)
 
-	// If the config file does not exist, create it.
-	if os.IsNotExist(err) {
+	// If the config file does n3ot exist, create it.
+	switch {
+	case err == os.ErrNotExist:
 		// Create the config file with default values
 		defaultConfig := config{
 			Channel: channel{
-				Status: "",
-				State:  "",
 				Topic:  "",
 			},
 			Filter: filter{
@@ -123,7 +119,6 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 				HTTPAdapterURL:  "http://localhost/http:9016",
 				BootstrapURL:    "http://localhost",
 				CertsURL:        "https://localhost:9019",
-				MsgContentType:  "application/json",
 				TLSVerification: false,
 			},
 		}
@@ -135,7 +130,7 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 		if err != nil {
 			return sdkConf, errors.Wrap(errWritingConfig, err)
 		}
-	} else if err != nil {
+	case err != nil:
 		return sdkConf, errors.Wrap(fileErr, err)
 	}
 
@@ -242,12 +237,9 @@ func setConfigValue(key string, value string) error {
 		"limit":            &config.Filter.Limit,
 		"name":             &config.Filter.Name,
 		"raw_output":       &config.Filter.RawOutput,
-		"status":           &config.Channel.Status,
-		"state":            &config.Channel.State,
 		"topic":            &config.Channel.Topic,
 		"metadata":         &config.Filter.Metadata,
 		"tls_verification": &config.Remotes.TLSVerification,
-		"msg_content_type": &config.Remotes.MsgContentType,
 		"user_token":       &config.UserToken,
 	}
 
