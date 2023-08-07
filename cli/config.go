@@ -44,14 +44,11 @@ type channel struct {
 	Topic  string `toml:"topic"`
 }
 
-type user_token struct {
-	user_token string `toml:"user_token"`
-}
 type config struct {
-	Remotes    remotes    `toml:"remotes"`
-	Filter     filter     `toml:"filter"`
-	Channel    channel    `toml:"channel"`
-	User_token user_token `toml:"user_token"`
+	Remotes   remotes `toml:"remotes"`
+	Filter    filter  `toml:"filter"`
+	Channel   channel `toml:"channel"`
+	UserToken string  `toml:"user_token"`
 }
 
 var (
@@ -251,7 +248,7 @@ func setConfigValue(key string, value string) error {
 		"metadata":         &config.Filter.Metadata,
 		"tls_verification": &config.Remotes.TLSVerification,
 		"msg_content_type": &config.Remotes.MsgContentType,
-		"user_token":       &config.User_token.user_token,
+		"user_token":       &config.UserToken,
 	}
 
 	fieldPtr, found := configKeyToField[key]
