@@ -1,0 +1,19 @@
+user_token = ""
+
+[filter]
+  contact = ""
+  email = ""
+  limit = ""
+  metadata = ""
+  name = ""
+  offset = ""
+  raw_output = ""
+
+[remotes]
+  bootstrap_url = ""
+  certs_url = ""
+  http_adapter_url = ""
+  reader_url = ""
+  things_url = ""
+  tls_verification = false
+  users_url = ""

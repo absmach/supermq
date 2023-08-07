@@ -1,8 +1,5 @@
 user_token = ""
 
-[channel]
-  topic = ""
-
 [filter]
   contact = ""
   email = ""

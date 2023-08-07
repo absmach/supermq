@@ -37,13 +37,9 @@ type filter struct {
 	Metadata  string `toml:"metadata"`
 }
 
-type channel struct {
-}
-
 type config struct {
 	Remotes   remotes `toml:"remotes"`
 	Filter    filter  `toml:"filter"`
-	Channel   channel `toml:"channel"`
 	UserToken string  `toml:"user_token"`
 }
 
@@ -63,7 +59,7 @@ var (
 	errInvalidURL          = errors.New("invalid url")
 	errURLParseFail        = errors.New("failed to parse url")
 	fileErr                = errors.New("file error")
-	defaultConfigPath      = "./config.toml"
+	defaultConfigPath      = "config.toml"
 )
 
 func read(file string) (config, error) {
@@ -99,8 +95,7 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 	case err == os.ErrNotExist:
 		// Create the config file with default values
 		defaultConfig := config{
-			Channel: channel{},
-			Filter:  filter{},
+			Filter: filter{},
 			Remotes: remotes{
 				ThingsURL:       "http://localhost:9000",
 				UsersURL:        "http://localhost:9002",
@@ -121,10 +116,6 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 		}
 	case err != nil:
 		return sdkConf, errors.Wrap(fileErr, err)
-	}
-
-	if _, err := os.Stat(ConfigPath); os.IsNotExist(err) {
-		return sdkConf, errors.Wrap(errConfigNotFound, err)
 	}
 
 	config, err := read(ConfigPath)
