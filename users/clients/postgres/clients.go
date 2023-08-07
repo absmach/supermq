@@ -9,7 +9,6 @@ import (
 	// required for SQL access.
 
 	"github.com/mainflux/mainflux/internal/postgres"
-	"github.com/mainflux/mainflux/pkg/clients"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	pgclients "github.com/mainflux/mainflux/pkg/clients/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -26,7 +25,7 @@ type Repository interface {
 
 	// Save persists the client account. A non-nil error is returned to indicate
 	// operation failure.
-	Save(ctx context.Context, client clients.Client) (clients.Client, error)
+	Save(ctx context.Context, client mfclients.Client) (mfclients.Client, error)
 }
 
 // NewRepository instantiates a PostgreSQL

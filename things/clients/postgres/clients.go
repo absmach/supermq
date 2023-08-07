@@ -11,7 +11,6 @@ import (
 	// required for SQL access.
 
 	"github.com/mainflux/mainflux/internal/postgres"
-	"github.com/mainflux/mainflux/pkg/clients"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	pgclients "github.com/mainflux/mainflux/pkg/clients/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -28,10 +27,10 @@ type Repository interface {
 
 	// Save persists the client account. A non-nil error is returned to indicate
 	// operation failure.
-	Save(ctx context.Context, client ...clients.Client) ([]clients.Client, error)
+	Save(ctx context.Context, client ...mfclients.Client) ([]mfclients.Client, error)
 
 	// RetrieveBySecret retrieves a client based on the secret (key).
-	RetrieveBySecret(ctx context.Context, key string) (clients.Client, error)
+	RetrieveBySecret(ctx context.Context, key string) (mfclients.Client, error)
 }
 
 // NewRepository instantiates a PostgreSQL
@@ -92,10 +91,10 @@ func (repo clientRepo) Save(ctx context.Context, cs ...mfclients.Client) ([]mfcl
 	return clients, nil
 }
 
-func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (clients.Client, error) {
+func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (mfclients.Client, error) {
 	q := fmt.Sprintf(`SELECT id, name, tags, COALESCE(owner_id, '') AS owner_id, identity, secret, metadata, created_at, updated_at, updated_by, status
         FROM clients
-        WHERE secret = $1 AND status = %d`, clients.EnabledStatus)
+        WHERE secret = $1 AND status = %d`, mfclients.EnabledStatus)
 
 	dbc := pgclients.DBClient{
 		Secret: key,
@@ -103,10 +102,10 @@ func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (client
 
 	if err := repo.DB.QueryRowxContext(ctx, q, key).StructScan(&dbc); err != nil {
 		if err == sql.ErrNoRows {
-			return clients.Client{}, errors.Wrap(errors.ErrNotFound, err)
+			return mfclients.Client{}, errors.Wrap(errors.ErrNotFound, err)
 
 		}
-		return clients.Client{}, errors.Wrap(errors.ErrViewEntity, err)
+		return mfclients.Client{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
 
 	return pgclients.ToClient(dbc)
