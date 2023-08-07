@@ -68,7 +68,7 @@ func (repo clientRepo) Save(ctx context.Context, cs ...mfclients.Client) ([]mfcl
 			if err := tx.Rollback(); err != nil {
 				return []mfclients.Client{}, postgres.HandleError(err, errors.ErrCreateEntity)
 			}
-			return []mfclients.Client{}, postgres.HandleError(err, errors.ErrCreateEntity)
+			return []mfclients.Client{}, errors.Wrap(errors.ErrCreateEntity, err)
 		}
 
 		defer row.Close()
