@@ -29,6 +29,9 @@ type Repository interface {
 	// Save persists the client account. A non-nil error is returned to indicate
 	// operation failure.
 	Save(ctx context.Context, client ...clients.Client) ([]clients.Client, error)
+
+	// RetrieveBySecret retrieves a client based on the secret (key).
+	RetrieveBySecret(ctx context.Context, key string) (clients.Client, error)
 }
 
 // NewRepository instantiates a PostgreSQL

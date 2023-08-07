@@ -65,7 +65,3 @@ func (repo clientRepo) Save(ctx context.Context, c mfclients.Client) (mfclients.
 
 	return client, nil
 }
-
-func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (clients.Client, error) {
-	return clients.Client{}, nil
-}

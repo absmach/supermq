@@ -106,7 +106,6 @@ func (repo ClientRepository) RetrieveByID(ctx context.Context, id string) (clien
 	return ToClient(dbc)
 }
 
-// RetrieveByIdentity retrieves client by its unique credentials.
 func (repo ClientRepository) RetrieveByIdentity(ctx context.Context, identity string) (clients.Client, error) {
 	q := `SELECT id, name, tags, COALESCE(owner_id, '') AS owner_id, identity, secret, metadata, created_at, updated_at, updated_by, status
         FROM clients WHERE identity = :identity AND status = :status`

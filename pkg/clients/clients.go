@@ -98,8 +98,6 @@ type Repository interface {
 
 	// ChangeStatus changes client status to enabled or disabled
 	ChangeStatus(ctx context.Context, client Client) (Client, error)
-
-	RetrieveBySecret(ctx context.Context, key string) (Client, error)
 }
 
 // Validate returns an error if client representation is invalid.
