@@ -9,6 +9,7 @@ import (
 	// required for SQL access.
 
 	"github.com/mainflux/mainflux/internal/postgres"
+	"github.com/mainflux/mainflux/pkg/clients"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	pgclients "github.com/mainflux/mainflux/pkg/clients/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -20,39 +21,51 @@ type clientRepo struct {
 	pgclients.ClientRepository
 }
 
+type Repository interface {
+	mfclients.Repository
+
+	// Save persists the client account. A non-nil error is returned to indicate
+	// operation failure.
+	Save(ctx context.Context, client clients.Client) (clients.Client, error)
+}
+
 // NewRepository instantiates a PostgreSQL
 // implementation of Clients repository.
-func NewRepository(db postgres.Database) mfclients.Repository {
+func NewRepository(db postgres.Database) Repository {
 	return &clientRepo{
 		ClientRepository: pgclients.ClientRepository{DB: db},
 	}
 }
 
-func (repo clientRepo) Save(ctx context.Context, c ...mfclients.Client) ([]mfclients.Client, error) {
+func (repo clientRepo) Save(ctx context.Context, c mfclients.Client) (mfclients.Client, error) {
 	q := `INSERT INTO clients (id, name, tags, owner_id, identity, secret, metadata, created_at, status, role)
         VALUES (:id, :name, :tags, :owner_id, :identity, :secret, :metadata, :created_at, :status, :role)
         RETURNING id, name, tags, identity, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at`
-	dbc, err := pgclients.ToDBClient(c[0])
+	dbc, err := pgclients.ToDBClient(c)
 	if err != nil {
-		return []mfclients.Client{}, errors.Wrap(errors.ErrCreateEntity, err)
+		return mfclients.Client{}, errors.Wrap(errors.ErrCreateEntity, err)
 	}
 
 	row, err := repo.ClientRepository.DB.NamedQueryContext(ctx, q, dbc)
 	if err != nil {
-		return []mfclients.Client{}, postgres.HandleError(err, errors.ErrCreateEntity)
+		return mfclients.Client{}, postgres.HandleError(err, errors.ErrCreateEntity)
 	}
 
 	defer row.Close()
 	row.Next()
 	dbc = pgclients.DBClient{}
 	if err := row.StructScan(&dbc); err != nil {
-		return []mfclients.Client{}, err
+		return mfclients.Client{}, err
 	}
 
 	client, err := pgclients.ToClient(dbc)
 	if err != nil {
-		return []mfclients.Client{}, err
+		return mfclients.Client{}, err
 	}
 
-	return []mfclients.Client{client}, nil
+	return client, nil
+}
+
+func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (clients.Client, error) {
+	return clients.Client{}, nil
 }

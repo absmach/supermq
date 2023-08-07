@@ -50,7 +50,7 @@ func TestPoliciesSave(t *testing.T) {
 
 	clients, err := crepo.Save(context.Background(), client)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-	client = clients[0]
+	client = clients
 
 	cases := []struct {
 		desc   string
@@ -116,10 +116,10 @@ func TestPoliciesEvaluate(t *testing.T) {
 
 	clients1, err := crepo.Save(context.Background(), client1)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-	client1 = clients1[0]
+	client1 = clients1
 	clients2, err := crepo.Save(context.Background(), client2)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-	client2 = clients2[0]
+	client2 = clients2
 	group, err = grepo.Save(context.Background(), group)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
@@ -199,7 +199,7 @@ func TestPoliciesRetrieve(t *testing.T) {
 
 	clients, err := crepo.Save(context.Background(), client)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-	client = clients[0]
+	client = clients
 
 	policy := policies.Policy{
 		OwnerID: client.ID,
@@ -377,10 +377,10 @@ func TestPoliciesRetrievalAll(t *testing.T) {
 
 	clientsA, err := crepo.Save(context.Background(), clientA)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-	clientA = clientsA[0]
+	clientA = clientsA
 	clientsB, err := crepo.Save(context.Background(), clientB)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-	clientB = clientsB[0]
+	clientB = clientsB
 
 	grps := []string{}
 	for i := uint64(0); i < nPolicies; i++ {
@@ -649,7 +649,7 @@ func TestPoliciesDelete(t *testing.T) {
 
 	clients, err := crepo.Save(context.Background(), client)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-	client = clients[0]
+	client = clients
 
 	policy := policies.Policy{
 		OwnerID: client.ID,

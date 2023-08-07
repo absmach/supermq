@@ -34,7 +34,7 @@ import (
 	"github.com/mainflux/mainflux/users/clients"
 	capi "github.com/mainflux/mainflux/users/clients/api"
 	"github.com/mainflux/mainflux/users/clients/emailer"
-	cpostgres "github.com/mainflux/mainflux/users/clients/postgres"
+	uclients "github.com/mainflux/mainflux/users/clients/postgres"
 	ucache "github.com/mainflux/mainflux/users/clients/redis"
 	ctracing "github.com/mainflux/mainflux/users/clients/tracing"
 	"github.com/mainflux/mainflux/users/groups"
@@ -200,7 +200,7 @@ func main() {
 
 func newService(ctx context.Context, db *sqlx.DB, dbConfig pgClient.Config, esClient *redis.Client, tracer trace.Tracer, c config, ec email.Config, logger mflog.Logger) (clients.Service, groups.Service, policies.Service) {
 	database := postgres.NewDatabase(db, dbConfig, tracer)
-	cRepo := cpostgres.NewRepository(database)
+	cRepo := uclients.NewRepository(database)
 	gRepo := gpostgres.New(database)
 	pRepo := ppostgres.NewRepository(database)
 
@@ -250,7 +250,7 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgClient.Config, esCl
 	return csvc, gsvc, psvc
 }
 
-func createAdmin(ctx context.Context, c config, crepo mfclients.Repository, hsr clients.Hasher, svc clients.Service) error {
+func createAdmin(ctx context.Context, c config, crepo uclients.Repository, hsr clients.Hasher, svc clients.Service) error {
 	id, err := uuid.New().ID()
 	if err != nil {
 		return err

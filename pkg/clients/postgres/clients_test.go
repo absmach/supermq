@@ -46,7 +46,7 @@ func TestClientsRetrieveByID(t *testing.T) {
 
 	clients, err := repo.Save(context.Background(), client)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-	client = clients[0]
+	client = clients
 
 	cases := map[string]struct {
 		ID  string
@@ -502,8 +502,8 @@ func TestClientsUpdateMetadata(t *testing.T) {
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("add new client with metadata: expected %v got %s\n", nil, err))
 	clients2, err := repo.Save(context.Background(), client2)
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("add new disabled client: expected %v got %s\n", nil, err))
-	client1 = clients1[0]
-	client2 = clients2[0]
+	client1 = clients1
+	client2 = clients2
 
 	ucases := []struct {
 		desc   string
@@ -653,13 +653,13 @@ func TestClientsUpdateTags(t *testing.T) {
 	if err == nil {
 		assert.Equal(t, client1.ID, client1.ID, fmt.Sprintf("add new client with tags: expected %v got %s\n", nil, err))
 	}
-	client1 = clients1[0]
+	client1 = clients1
 	clients2, err := repo.Save(context.Background(), client2)
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("add new disabled client with tags: expected %v got %s\n", nil, err))
 	if err == nil {
 		assert.Equal(t, client2.ID, client2.ID, fmt.Sprintf("add new disabled client with tags: expected %v got %s\n", nil, err))
 	}
-	client2 = clients2[0]
+	client2 = clients2
 	ucases := []struct {
 		desc   string
 		client mfclients.Client
@@ -725,12 +725,12 @@ func TestClientsUpdateSecret(t *testing.T) {
 	rClients1, err := repo.Save(context.Background(), client1)
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("add new client: expected %v got %s\n", nil, err))
 	if err == nil {
-		assert.Equal(t, client1.ID, rClients1[0].ID, fmt.Sprintf("add new client: expected %v got %s\n", nil, err))
+		assert.Equal(t, client1.ID, rClients1.ID, fmt.Sprintf("add new client: expected %v got %s\n", nil, err))
 	}
 	rClients2, err := repo.Save(context.Background(), client2)
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("add new disabled client: expected %v got %s\n", nil, err))
 	if err == nil {
-		assert.Equal(t, client2.ID, rClients2[0].ID, fmt.Sprintf("add new disabled client: expected %v got %s\n", nil, err))
+		assert.Equal(t, client2.ID, rClients2.ID, fmt.Sprintf("add new disabled client: expected %v got %s\n", nil, err))
 	}
 
 	ucases := []struct {
@@ -809,12 +809,12 @@ func TestClientsUpdateIdentity(t *testing.T) {
 	rClients1, err := repo.Save(context.Background(), client1)
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("add new client: expected %v got %s\n", nil, err))
 	if err == nil {
-		assert.Equal(t, client1.ID, rClients1[0].ID, fmt.Sprintf("add new client: expected %v got %s\n", nil, err))
+		assert.Equal(t, client1.ID, rClients1.ID, fmt.Sprintf("add new client: expected %v got %s\n", nil, err))
 	}
 	rClients2, err := repo.Save(context.Background(), client2)
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("add new disabled client: expected %v got %s\n", nil, err))
 	if err == nil {
-		assert.Equal(t, client2.ID, rClients2[0].ID, fmt.Sprintf("add new disabled client: expected %v got %s\n", nil, err))
+		assert.Equal(t, client2.ID, rClients2.ID, fmt.Sprintf("add new disabled client: expected %v got %s\n", nil, err))
 	}
 
 	ucases := []struct {
@@ -888,13 +888,13 @@ func TestClientsUpdateOwner(t *testing.T) {
 	}
 
 	clients1, err := repo.Save(context.Background(), client1)
-	client1 = clients1[0]
+	client1 = clients1
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("add new client with owner: expected %v got %s\n", nil, err))
 	if err == nil {
 		assert.Equal(t, client1.ID, client1.ID, fmt.Sprintf("add new client with owner: expected %v got %s\n", nil, err))
 	}
 	clients2, err := repo.Save(context.Background(), client2)
-	client2 = clients2[0]
+	client2 = clients2
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("add new disabled client with owner: expected %v got %s\n", nil, err))
 	if err == nil {
 		assert.Equal(t, client2.ID, client2.ID, fmt.Sprintf("add new disabled client with owner: expected %v got %s\n", nil, err))
@@ -954,7 +954,7 @@ func TestClientsChangeStatus(t *testing.T) {
 
 	clients1, err := repo.Save(context.Background(), client1)
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("add new client: expected %v got %s\n", nil, err))
-	client1 = clients1[0]
+	client1 = clients1
 
 	ucases := []struct {
 		desc   string

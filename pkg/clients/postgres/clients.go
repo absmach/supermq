@@ -134,26 +134,6 @@ func (repo ClientRepository) RetrieveByIdentity(ctx context.Context, identity st
 	return ToClient(dbc)
 }
 
-func (repo ClientRepository) RetrieveBySecret(ctx context.Context, key string) (clients.Client, error) {
-	q := fmt.Sprintf(`SELECT id, name, tags, COALESCE(owner_id, '') AS owner_id, identity, secret, metadata, created_at, updated_at, updated_by, status
-        FROM clients
-        WHERE secret = $1 AND status = %d`, clients.EnabledStatus)
-
-	dbc := DBClient{
-		Secret: key,
-	}
-
-	if err := repo.DB.QueryRowxContext(ctx, q, key).StructScan(&dbc); err != nil {
-		if err == sql.ErrNoRows {
-			return clients.Client{}, errors.Wrap(errors.ErrNotFound, err)
-
-		}
-		return clients.Client{}, errors.Wrap(errors.ErrViewEntity, err)
-	}
-
-	return ToClient(dbc)
-}
-
 func (repo ClientRepository) RetrieveAll(ctx context.Context, pm clients.Page) (clients.ClientsPage, error) {
 	query, err := pageQuery(pm)
 	if err != nil {
