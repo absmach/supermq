@@ -1,19 +1,22 @@
+raw_output = ""
 user_token = ""
 
 [filter]
   contact = ""
   email = ""
   limit = ""
-  metadata = "info"
+  metadata = ""
   name = ""
   offset = ""
-  raw_output = ""
+  state = ""
+  status = ""
+  topic = ""
 
 [remotes]
   bootstrap_url = "http://localhost"
-  certs_url = "http://localhost"
-  http_adapter_url = "http://localhost/http"
+  certs_url = "https://localhost:9019"
+  http_adapter_url = "http://localhost/http:9016"
   reader_url = "http://localhost"
-  things_url = "http://localhost"
+  things_url = "http://localhost:9000"
   tls_verification = false
-  users_url = "http://localhost"
+  users_url = "http://localhost:9002"

@@ -28,25 +28,27 @@ type remotes struct {
 }
 
 type filter struct {
-	Offset    string `toml:"offset"`
-	Limit     string `toml:"limit"`
-	RawOutput string `toml:"raw_output"`
-	Name      string `toml:"name"`
-	Contact   string `toml:"contact"`
-	Email     string `toml:"email"`
-	Metadata  string `toml:"metadata"`
+	Offset   string `toml:"offset"`
+	Limit    string `toml:"limit"`
+	Name     string `toml:"name"`
+	Email    string `toml:"email"`
+	Metadata string `toml:"metadata"`
+	Status   string `toml:"status"`
+	State    string `toml:"state"`
+	Topic    string `toml:"topic"`
+	Contact  string `toml:"contact"`
 }
 
 type config struct {
 	Remotes   remotes `toml:"remotes"`
 	Filter    filter  `toml:"filter"`
 	UserToken string  `toml:"user_token"`
+	RawOutput string  `toml:"raw_output"`
 }
 
 var (
 	errReadFail            = errors.New("failed to read config file")
 	errUnmarshalFail       = errors.New("failed to Unmarshall config TOML")
-	errConfigNotFound      = errors.New("config file was not found")
 	errUintConv            = errors.New("error converting filter to Uint64")
 	errBoolConv            = errors.New("error converting string to bool")
 	errUseExistConf        = errors.New("error using the existing configuration")
@@ -59,7 +61,7 @@ var (
 	errInvalidURL          = errors.New("invalid url")
 	errURLParseFail        = errors.New("failed to parse url")
 	fileErr                = errors.New("file error")
-	defaultConfigPath      = "config.toml"
+	defaultConfigPath      = "./config.toml"
 )
 
 func read(file string) (config, error) {
@@ -82,20 +84,17 @@ func read(file string) (config, error) {
 	return c, nil
 }
 
-// Get config parameters from the config file.
+// ParseConfig - parses the config file.
 func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 	if ConfigPath == "" {
 		ConfigPath = defaultConfigPath
 	}
 
 	_, err := os.Stat(ConfigPath)
-
-	// If the config file does n3ot exist, create it.
 	switch {
-	case err == os.ErrNotExist:
-		// Create the config file with default values
+	// If the file does not exist, create it with default values.
+	case os.IsNotExist(err):
 		defaultConfig := config{
-			Filter: filter{},
 			Remotes: remotes{
 				ThingsURL:       "http://localhost:9000",
 				UsersURL:        "http://localhost:9002",
@@ -110,8 +109,7 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 		if err != nil {
 			return sdkConf, errors.Wrap(errMarshal, err)
 		}
-		err = os.WriteFile(ConfigPath, buf, 0644)
-		if err != nil {
+		if err = os.WriteFile(ConfigPath, buf, 0644); err != nil {
 			return sdkConf, errors.Wrap(errWritingConfig, err)
 		}
 	case err != nil:
@@ -143,12 +141,35 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 		Name = config.Filter.Name
 	}
 
-	if config.Filter.RawOutput != "" {
-		rawOutput, err := strconv.ParseBool(config.Filter.RawOutput)
+	if config.Filter.Email != "" {
+		Email = config.Filter.Email
+	}
+
+	if config.Filter.Metadata != "" {
+		Metadata = config.Filter.Metadata
+	}
+
+	if config.Filter.Status != "" {
+		Status = config.Filter.Status
+	}
+
+	if config.Filter.State != "" {
+		State = config.Filter.State
+	}
+
+	if config.Filter.Topic != "" {
+		Topic = config.Filter.Topic
+	}
+
+	if config.Filter.Contact != "" {
+		Contact = config.Filter.Contact
+	}
+
+	if config.RawOutput != "" {
+		rawOutput, err := strconv.ParseBool(config.RawOutput)
 		if err != nil {
 			return sdkConf, errors.Wrap(errBoolConv, err)
 		}
-
 		RawOutput = rawOutput
 	}
 
@@ -210,17 +231,17 @@ func setConfigValue(key string, value string) error {
 		"http_adapter_url": &config.Remotes.HTTPAdapterURL,
 		"bootstrap_url":    &config.Remotes.BootstrapURL,
 		"certs_url":        &config.Remotes.CertsURL,
+		"tls_verification": &config.Remotes.TLSVerification,
 		"offset":           &config.Filter.Offset,
 		"limit":            &config.Filter.Limit,
 		"name":             &config.Filter.Name,
-		"raw_output":       &config.Filter.RawOutput,
 		"metadata":         &config.Filter.Metadata,
-		"tls_verification": &config.Remotes.TLSVerification,
+		"raw_output":       &config.RawOutput,
 		"user_token":       &config.UserToken,
 	}
 
-	fieldPtr, found := configKeyToField[key]
-	if !found {
+	fieldPtr, ok := configKeyToField[key]
+	if !ok {
 		return errNoKey
 	}
 
@@ -234,7 +255,7 @@ func setConfigValue(key string, value string) error {
 		if err != nil {
 			return errors.Wrap(errInvalidInt, err)
 		}
-		fieldValue.SetInt(int64(intValue))
+		fieldValue.SetUint(uint64(intValue))
 	case reflect.Bool:
 		boolValue, err := strconv.ParseBool(value)
 		if err != nil {
