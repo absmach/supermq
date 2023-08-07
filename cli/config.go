@@ -51,7 +51,6 @@ const filePermission = 0644
 
 var (
 	errReadFail            = errors.New("failed to read config file")
-	errUseExistConf        = errors.New("error in using the existing configuration")
 	errNoKey               = errors.New("no such key")
 	errUnsupportedKeyValue = errors.New("unsupported data type for key")
 	errWritingConfig       = errors.New("error in writing the updated config to file")
@@ -114,7 +113,7 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 
 	config, err := read(ConfigPath)
 	if err != nil {
-		return sdkConf, errors.Wrap(errReadFail, err)
+		return sdkConf, err
 	}
 
 	if config.Filter.Offset != "" {
@@ -204,7 +203,7 @@ func NewConfigCmd() *cobra.Command {
 func setConfigValue(key string, value string) error {
 	config, err := read(ConfigPath)
 	if err != nil {
-		return errors.Wrap(errUseExistConf, err)
+		return err
 	}
 
 	if strings.Contains(key, "url") {
@@ -213,7 +212,7 @@ func setConfigValue(key string, value string) error {
 			return errors.Wrap(errInvalidURL, err)
 		}
 		if u.Scheme == "" || u.Host == "" {
-			return errInvalidURL
+			return errors.Wrap(errInvalidURL, err)
 		}
 		if u.Scheme != "http" && u.Scheme != "https" {
 			return errors.Wrap(errURLParseFail, err)
