@@ -38,7 +38,6 @@ type filter struct {
 }
 
 type channel struct {
-	Topic  string `toml:"topic"`
 }
 
 type config struct {
@@ -100,9 +99,7 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 	case err == os.ErrNotExist:
 		// Create the config file with default values
 		defaultConfig := config{
-			Channel: channel{
-				Topic:  "",
-			},
+			Channel: channel{},
 			Filter: filter{
 				Offset:    "",
 				Limit:     "",
@@ -194,10 +191,7 @@ func NewConfigCmd() *cobra.Command {
 				return
 			}
 
-			key := args[0]
-			value := args[1]
-
-			if err := setConfigValue(key, value); err != nil {
+			if err := setConfigValue(args[0], args[1]); err != nil {
 				logError(err)
 				return
 			}
@@ -237,7 +231,6 @@ func setConfigValue(key string, value string) error {
 		"limit":            &config.Filter.Limit,
 		"name":             &config.Filter.Name,
 		"raw_output":       &config.Filter.RawOutput,
-		"topic":            &config.Channel.Topic,
 		"metadata":         &config.Filter.Metadata,
 		"tls_verification": &config.Remotes.TLSVerification,
 		"user_token":       &config.UserToken,

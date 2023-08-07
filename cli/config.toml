@@ -1,7 +1,6 @@
+user_token = ""
 
 [channel]
-  state = ""
-  status = ""
   topic = ""
 
 [filter]
@@ -9,7 +8,7 @@
   email = ""
   limit = ""
   metadata = "info"
-  name = "thing_1"
+  name = ""
   offset = ""
   raw_output = ""
 
@@ -17,7 +16,6 @@
   bootstrap_url = "http://localhost"
   certs_url = "http://localhost"
   http_adapter_url = "http://localhost/http"
-  msg_content_type = "json"
   reader_url = "http://localhost"
   things_url = "http://localhost"
   tls_verification = false
