@@ -271,8 +271,7 @@ func setConfigValue(key string, value string) error {
 		return errors.Wrap(errMarshal, err)
 	}
 
-	err = os.WriteFile(ConfigPath, buf, 0644)
-	if err != nil {
+	if err = os.WriteFile(ConfigPath, buf, 0644); err != nil {
 		return errors.Wrap(errWritingConfig, err)
 	}
 
