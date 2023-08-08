@@ -195,6 +195,12 @@ github.com/go-redis/redis/v8/internal/util
 # github.com/go-zoo/bone v1.3.0
 ## explicit; go 1.9
 github.com/go-zoo/bone
+# github.com/goburrow/modbus v0.1.0
+## explicit
+github.com/goburrow/modbus
+# github.com/goburrow/serial v0.1.0
+## explicit
+github.com/goburrow/serial
 # github.com/goccy/go-json v0.10.2
 ## explicit; go 1.12
 github.com/goccy/go-json
