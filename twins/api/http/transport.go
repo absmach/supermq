@@ -89,12 +89,18 @@ func MakeHandler(svc twins.Service, logger logger.Logger, instanceID string) htt
 
 func decodeTwinCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+		fmt.Println()
+		fmt.Println("decode error 1 = ", apiutil.ErrUnsupportedContentType)
+		fmt.Println()
 		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := addTwinReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, errors.Wrap(err, apiutil.ErrValidation))
+		fmt.Println()
+		fmt.Println("decode error 2 = ", errors.Wrap(errors.Wrap(err, apiutil.ErrMalformedEntity), apiutil.ErrValidation))
+		fmt.Println()
+		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, apiutil.ErrMalformedEntity))
 	}
 
 	return req, nil
@@ -110,7 +116,7 @@ func decodeTwinUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 		id:    bone.GetValue(r, "twinID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrMalformedEntity, errors.Wrap(err, apiutil.ErrValidation))
+		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, apiutil.ErrMalformedEntity))
 	}
 
 	return req, nil
@@ -197,6 +203,9 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
+	fmt.Println()
+	fmt.Println("Received error in encodeError/twins/http/api = ", err)
+	fmt.Println()
 	switch {
 	case errors.Contains(err, errors.ErrAuthentication),
 		errors.Contains(err, apiutil.ErrBearerToken):

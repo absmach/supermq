@@ -5,6 +5,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/internal/apiutil"
@@ -17,6 +18,9 @@ func addTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		req := request.(addTwinReq)
 
 		if err := req.validate(); err != nil {
+			fmt.Println()
+			fmt.Println("Returning error from req.validate : ", errors.Wrap(apiutil.ErrValidation, err))
+			fmt.Println()
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
@@ -26,7 +30,11 @@ func addTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		}
 		saved, err := svc.AddTwin(ctx, req.token, twin, req.Definition)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			fmt.Println()
+			fmt.Println("RETURNING ERROR FROM SERVICE LAYER = ", err)
+			fmt.Println()
+
+			return nil, err
 		}
 
 		res := twinRes{
@@ -52,7 +60,7 @@ func updateTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		}
 
 		if err := svc.UpdateTwin(ctx, req.token, twin, req.Definition); err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 
 		res := twinRes{id: req.id, created: false}
@@ -70,7 +78,7 @@ func viewTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 
 		twin, err := svc.ViewTwin(ctx, req.token, req.id)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 
 		res := viewTwinRes{
@@ -97,7 +105,7 @@ func listTwinsEndpoint(svc twins.Service) endpoint.Endpoint {
 
 		page, err := svc.ListTwins(ctx, req.token, req.offset, req.limit, req.name, req.metadata)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 
 		res := twinsPageRes{
@@ -153,7 +161,7 @@ func listStatesEndpoint(svc twins.Service) endpoint.Endpoint {
 
 		page, err := svc.ListStates(ctx, req.token, req.offset, req.limit, req.id)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 
 		res := statesPageRes{

@@ -38,7 +38,7 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 
 		saved, err := svc.Add(ctx, req.token, config)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 
 		res := configRes{
@@ -59,7 +59,7 @@ func updateCertEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 
 		cfg, err := svc.UpdateCert(ctx, req.token, req.thingID, req.ClientCert, req.ClientKey, req.CACert)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 
 		res := updateConfigRes{
@@ -83,7 +83,7 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 
 		config, err := svc.View(ctx, req.token, req.id)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 
 		var channels []channelRes
@@ -125,7 +125,7 @@ func updateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		if err := svc.Update(ctx, req.token, config); err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 
 		res := configRes{
@@ -146,7 +146,7 @@ func updateConnEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		if err := svc.UpdateConnections(ctx, req.token, req.id, req.Channels); err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 
 		res := configRes{
@@ -168,7 +168,7 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 
 		page, err := svc.List(ctx, req.token, req.filter, req.offset, req.limit)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 		res := listRes{
 			Total:   page.Total,
@@ -213,7 +213,7 @@ func removeEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		if err := svc.Remove(ctx, req.token, req.id); err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 
 		return removeRes{}, nil
@@ -229,7 +229,7 @@ func bootstrapEndpoint(svc bootstrap.Service, reader bootstrap.ConfigReader, sec
 
 		cfg, err := svc.Bootstrap(ctx, req.key, req.id, secure)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 
 		return reader.ReadConfig(cfg, secure)
@@ -245,7 +245,7 @@ func stateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		if err := svc.ChangeState(ctx, req.token, req.id, req.State); err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
+			return nil, err
 		}
 
 		return stateRes{}, nil

@@ -91,11 +91,11 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 func decodeListCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	l, err := apiutil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 	o, err := apiutil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 
 	req := listReq{
@@ -118,12 +118,12 @@ func decodeViewCert(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
-		return nil, apiutil.ErrUnsupportedContentType
+		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	req := addCertsReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, apiutil.ErrValidation)
 	}
 
 	return req, nil

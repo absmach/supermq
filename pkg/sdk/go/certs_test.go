@@ -321,13 +321,13 @@ func TestRevokeCert(t *testing.T) {
 			desc:    "revoke cert with invalid token",
 			thingID: thingID,
 			token:   wrongValue,
-			err:     errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
+			err:     errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
 			desc:    "revoke non-existing cert",
 			thingID: "2",
 			token:   token,
-			err:     errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, certs.ErrFailedCertRevocation), http.StatusInternalServerError),
+			err:     errors.NewSDKErrorWithStatus(errors.Wrap(certs.ErrFailedCertRevocation, errors.ErrNotFound), http.StatusInternalServerError),
 		},
 		{
 			desc:    "revoke cert with invalid id",
@@ -351,7 +351,7 @@ func TestRevokeCert(t *testing.T) {
 			desc:    "revoke deleted cert",
 			thingID: thingID,
 			token:   token,
-			err:     errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, certs.ErrFailedToRemoveCertFromDB), http.StatusInternalServerError),
+			err:     errors.NewSDKErrorWithStatus(errors.Wrap(certs.ErrFailedToRemoveCertFromDB, errors.ErrNotFound), http.StatusInternalServerError),
 		},
 	}
 
