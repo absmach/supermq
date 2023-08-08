@@ -136,7 +136,7 @@ func TestRefreshToken(t *testing.T) {
 		{
 			desc:  "refresh token for a valid access token",
 			token: token.AccessToken,
-			err:   errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthentication), http.StatusUnauthorized),
+			err:   errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
 			desc:  "refresh token for an empty token",

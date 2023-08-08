@@ -6,7 +6,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -245,27 +244,18 @@ func decodeUpdateClientOwner(_ context.Context, r *http.Request) (interface{}, e
 }
 
 func decodeCreateClientReq(_ context.Context, r *http.Request) (interface{}, error) {
-	fmt.Println()
-	fmt.Println("ENTERING DECODECLIENTREQ")
-	fmt.Println()
-
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
 	}
 
 	var c mfclients.Client
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
-		fmt.Println("RETURNING MALFORMED ENTITY")
 		return nil, errors.Wrap(errors.Wrap(apiutil.ErrMalformedEntity, err), apiutil.ErrValidation)
 	}
 	req := createClientReq{
 		client: c,
 		token:  apiutil.ExtractBearerToken(r),
 	}
-
-	fmt.Println()
-	fmt.Println("LEAVING WITHOUT ERROR FROM DECODECLIENTREQ")
-	fmt.Println()
 
 	return req, nil
 }

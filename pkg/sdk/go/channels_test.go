@@ -109,7 +109,7 @@ func TestCreateChannel(t *testing.T) {
 				ParentID: gmocks.WrongID,
 				Status:   mfclients.EnabledStatus.String(),
 			},
-			err: errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrCreateEntity), http.StatusInternalServerError),
+			err: errors.NewSDKErrorWithStatus(errors.ErrCreateEntity, http.StatusInternalServerError),
 		},
 		{
 			desc: "create channel with invalid owner",
@@ -118,7 +118,7 @@ func TestCreateChannel(t *testing.T) {
 				OwnerID: gmocks.WrongID,
 				Status:  mfclients.EnabledStatus.String(),
 			},
-			err: errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, sdk.ErrFailedCreation), http.StatusInternalServerError),
+			err: errors.NewSDKErrorWithStatus(sdk.ErrFailedCreation, http.StatusInternalServerError),
 		},
 		{
 			desc: "create channel with missing name",
@@ -421,14 +421,14 @@ func TestViewChannel(t *testing.T) {
 			token:     "wrongtoken",
 			channelID: channel.ID,
 			response:  sdk.Channel{Children: []*sdk.Channel{}},
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusUnauthorized),
+			err:       errors.NewSDKErrorWithStatus(errors.Wrap(errors.ErrAuthorization, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 		{
 			desc:      "view channel for wrong id",
 			token:     adminToken,
 			channelID: gmocks.WrongID,
 			response:  sdk.Channel{Children: []*sdk.Channel{}},
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrNotFound), http.StatusNotFound),
+			err:       errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound),
 		},
 	}
 
@@ -543,7 +543,7 @@ func TestUpdateChannel(t *testing.T) {
 			},
 			response: sdk.Channel{},
 			token:    adminToken,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrNotFound), http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc: "update channel description with invalid channel id",
@@ -553,7 +553,7 @@ func TestUpdateChannel(t *testing.T) {
 			},
 			response: sdk.Channel{},
 			token:    adminToken,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrNotFound), http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc: "update channel metadata with invalid channel id",
@@ -565,7 +565,7 @@ func TestUpdateChannel(t *testing.T) {
 			},
 			response: sdk.Channel{},
 			token:    adminToken,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrNotFound), http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc: "update channel name with invalid token",
@@ -575,7 +575,7 @@ func TestUpdateChannel(t *testing.T) {
 			},
 			response: sdk.Channel{},
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(errors.ErrAuthorization, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 		{
 			desc: "update channel description with invalid token",
@@ -585,7 +585,7 @@ func TestUpdateChannel(t *testing.T) {
 			},
 			response: sdk.Channel{},
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(errors.ErrAuthorization, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 		{
 			desc: "update channel metadata with invalid token",
@@ -597,7 +597,7 @@ func TestUpdateChannel(t *testing.T) {
 			},
 			response: sdk.Channel{},
 			token:    invalidToken,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(errors.ErrAuthorization, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 		{
 			desc: "update channel that can't be marshalled",
@@ -739,7 +739,7 @@ func TestListChannelsByThing(t *testing.T) {
 			clientID: testsutil.GenerateUUID(t, idProvider),
 			page:     sdk.PageMetadata{},
 			response: []sdk.Channel(nil),
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrAuthorization), http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(errors.ErrAuthorization, errors.ErrAuthentication), http.StatusUnauthorized),
 		},
 		{
 			desc:     "list channel with an invalid id",
@@ -747,7 +747,7 @@ func TestListChannelsByThing(t *testing.T) {
 			clientID: gmocks.WrongID,
 			page:     sdk.PageMetadata{},
 			response: []sdk.Channel(nil),
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, errors.ErrNotFound), http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound),
 		},
 	}
 
@@ -803,7 +803,7 @@ func TestEnableChannel(t *testing.T) {
 	repoCall1 := gRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(nil)
 	repoCall2 := gRepo.On("ChangeStatus", mock.Anything, mock.Anything).Return(nil)
 	_, err := mfsdk.EnableChannel("wrongID", adminToken)
-	assert.Equal(t, err, errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, mfgroups.ErrEnableGroup), http.StatusNotFound), fmt.Sprintf("Enable channel with wrong id: expected %v got %v", errors.ErrNotFound, err))
+	assert.Equal(t, err, errors.NewSDKErrorWithStatus(errors.Wrap(mfgroups.ErrEnableGroup, errors.ErrNotFound), http.StatusNotFound), fmt.Sprintf("Enable channel with wrong id: expected %v got %v", errors.ErrNotFound, err))
 	ok := repoCall.Parent.AssertCalled(t, "EvaluateGroupAccess", mock.Anything, mock.Anything)
 	assert.True(t, ok, "EvaluateGroupAccess was not called on enabling channel")
 	ok = repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, "wrongID")
@@ -873,7 +873,7 @@ func TestDisableChannel(t *testing.T) {
 	repoCall1 := gRepo.On("ChangeStatus", mock.Anything, mock.Anything).Return(sdk.ErrFailedRemoval)
 	repoCall2 := gRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(nil)
 	_, err := mfsdk.DisableChannel("wrongID", adminToken)
-	assert.Equal(t, err, errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, mfgroups.ErrDisableGroup), http.StatusNotFound), fmt.Sprintf("Disable channel with wrong id: expected %v got %v", errors.ErrNotFound, err))
+	assert.Equal(t, err, errors.NewSDKErrorWithStatus(errors.Wrap(mfgroups.ErrDisableGroup, errors.ErrNotFound), http.StatusNotFound), fmt.Sprintf("Disable channel with wrong id: expected %v got %v", errors.ErrNotFound, err))
 	ok := repoCall.Parent.AssertCalled(t, "EvaluateGroupAccess", mock.Anything, mock.Anything)
 	assert.True(t, ok, "EvaluateGroupAccess was not called on disabling group with wrong id")
 	ok = repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, "wrongID")

@@ -5,7 +5,6 @@ package clients
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 	"time"
 
@@ -434,26 +433,15 @@ func (svc service) changeClientStatus(ctx context.Context, token string, client 
 func (svc service) ListMembers(ctx context.Context, token, groupID string, pm mfclients.Page) (mfclients.MembersPage, error) {
 	id, err := svc.Identify(ctx, token)
 	if err != nil {
-		fmt.Println()
-		fmt.Println("svc.Listmembers error = ", err)
-		fmt.Println()
-
 		return mfclients.MembersPage{}, err
 	}
 	// If the user is admin, fetch all members from the database.
 	if err := svc.authorize(ctx, id, groupID, listRelationKey); err == nil {
-		fmt.Println()
-		fmt.Println("svc.listmembers authorize error = ", err)
-		fmt.Println()
-
 		return svc.clients.Members(ctx, groupID, pm)
 	}
 	pm.Subject = id
 	pm.Action = "g_list"
 
-	fmt.Println()
-	fmt.Println("Returning svc.clients.Members ")
-	fmt.Println()
 	return svc.clients.Members(ctx, groupID, pm)
 }
 
@@ -478,9 +466,6 @@ func (svc service) authorize(ctx context.Context, subject, object, action string
 func (svc service) Identify(ctx context.Context, token string) (string, error) {
 	claims, err := svc.tokens.Parse(ctx, token)
 	if err != nil {
-		fmt.Println()
-		fmt.Println("RETURNING FROM IDENTIFY = ", err)
-		fmt.Println()
 		return "", err
 	}
 	if claims.Type != jwt.AccessToken {
