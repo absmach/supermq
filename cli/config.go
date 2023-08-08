@@ -28,15 +28,9 @@ type remotes struct {
 }
 
 type filter struct {
-	Offset   string `toml:"offset"`
-	Limit    string `toml:"limit"`
-	Name     string `toml:"name"`
-	Email    string `toml:"email"`
-	Metadata string `toml:"metadata"`
-	Status   string `toml:"status"`
-	State    string `toml:"state"`
-	Topic    string `toml:"topic"`
-	Contact  string `toml:"contact"`
+	Offset string `toml:"offset"`
+	Limit  string `toml:"limit"`
+	Topic  string `toml:"topic"`
 }
 
 type config struct {
@@ -132,32 +126,8 @@ func ParseConfig(sdkConf mfxsdk.Config) (mfxsdk.Config, error) {
 		Limit = limit
 	}
 
-	if config.Filter.Name != "" {
-		Name = config.Filter.Name
-	}
-
-	if config.Filter.Email != "" {
-		Email = config.Filter.Email
-	}
-
-	if config.Filter.Metadata != "" {
-		Metadata = config.Filter.Metadata
-	}
-
-	if config.Filter.Status != "" {
-		Status = config.Filter.Status
-	}
-
-	if config.Filter.State != "" {
-		State = config.Filter.State
-	}
-
 	if config.Filter.Topic != "" {
 		Topic = config.Filter.Topic
-	}
-
-	if config.Filter.Contact != "" {
-		Contact = config.Filter.Contact
 	}
 
 	if config.RawOutput != "" {
@@ -229,8 +199,7 @@ func setConfigValue(key string, value string) error {
 		"tls_verification": &config.Remotes.TLSVerification,
 		"offset":           &config.Filter.Offset,
 		"limit":            &config.Filter.Limit,
-		"name":             &config.Filter.Name,
-		"metadata":         &config.Filter.Metadata,
+		"topic":            &config.Filter.Topic,
 		"raw_output":       &config.RawOutput,
 		"user_token":       &config.UserToken,
 	}
