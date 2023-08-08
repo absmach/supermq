@@ -27,6 +27,9 @@ blocks:
           commands:
             - 'curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.53.3'
             - cache store linter ./bin/golangci-lint
+        - name: Setup GoCritic
+          commands:
+            - 'go install -v github.com/go-critic/go-critic/cmd/gocritic@latest'
       secrets:
         - name: CODECOV_TOKEN
   - name: Check Generated Protocol Buffer Files
@@ -102,6 +105,7 @@ blocks:
             - cd users
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test Users
           commands:
             - cd users
@@ -136,6 +140,7 @@ blocks:
             - cd things
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test Things
           commands:
             - cd things
@@ -170,6 +175,7 @@ blocks:
             - cd coap
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test CoAP
           commands:
             - cd coap
@@ -204,6 +210,7 @@ blocks:
             - cd http
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test HTTP
           commands:
             - cd http
@@ -239,6 +246,7 @@ blocks:
             - cd mqtt
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test MQTT
           commands:
             - cd mqtt
@@ -274,6 +282,7 @@ blocks:
             - cd ws
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test WS
           commands:
             - cd ws
@@ -309,6 +318,7 @@ blocks:
             - cd bootstrap
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test Bootstrap
           commands:
             - cd bootstrap
@@ -344,6 +354,7 @@ blocks:
             - cd certs
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test Certs
           commands:
             - cd certs
@@ -379,6 +390,7 @@ blocks:
             - cd provision
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test Provision
           commands:
             - cd provision
@@ -414,6 +426,7 @@ blocks:
             - cd twins
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test Twins
           commands:
             - cd twins
@@ -449,6 +462,7 @@ blocks:
             - cd readers
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test Twins
           commands:
             - cd readers
@@ -488,6 +502,7 @@ blocks:
             - cd consumers
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test Consumers
           commands:
             - cd consumers
@@ -528,6 +543,7 @@ blocks:
             - cd cli
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test CLI
           commands:
             - cd cli
@@ -563,6 +579,7 @@ blocks:
             - cd lora
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test LoRa
           commands:
             - cd lora
@@ -598,6 +615,7 @@ blocks:
             - cd opcua
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test OPC-UA
           commands:
             - cd opcua
@@ -633,6 +651,7 @@ blocks:
             - cd internal
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test Internal
           commands:
             - cd internal
@@ -653,6 +672,7 @@ blocks:
             - cd logger
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test Logger
           commands:
             - cd logger
@@ -673,6 +693,7 @@ blocks:
             - cd pkg
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test PKG
           commands:
             - cd pkg
@@ -693,6 +714,7 @@ blocks:
             - cd tools
             - cache restore linter
             - './bin/golangci-lint run --no-config --disable-all --enable gosimple,errcheck,govet,unused,goconst,godot --timeout 3m'
+            - 'gocritic check -enable=dupImport ./...'
         - name: Test Tools
           commands:
             - cd tools
