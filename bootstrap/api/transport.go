@@ -258,11 +258,9 @@ func encodeSecureRes(_ context.Context, w http.ResponseWriter, response interfac
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
-	var wrappedErr = err
+	var wrapper error
 	if errors.Contains(err, apiutil.ErrValidation) {
-		if ce, ok := err.(errors.Error); ok {
-			err = ce.Err()
-		}
+		wrapper, err = errors.Unwrap(err)
 	}
 
 	switch {
@@ -300,7 +298,11 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	if errorVal, ok := wrappedErr.(errors.Error); ok {
+	if wrapper != nil {
+		err = errors.Wrap(wrapper, err)
+	}
+
+	if errorVal, ok := err.(errors.Error); ok {
 		w.Header().Set("Content-Type", contentType)
 
 		errMsg := errorVal.Msg()
