@@ -185,10 +185,6 @@ func TestAddTwin(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		fmt.Println()
-		fmt.Println("###", tc.desc, "###")
-		fmt.Println()
-
 		req := testRequest{
 			client:      ts.Client(),
 			method:      http.MethodPost,
