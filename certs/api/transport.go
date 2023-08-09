@@ -91,11 +91,11 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 func decodeListCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	l, err := apiutil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
-		return nil, errors.Wrap(err, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	o, err := apiutil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
-		return nil, errors.Wrap(err, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	req := listReq{
@@ -118,12 +118,12 @@ func decodeViewCert(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
-		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
 	req := addCertsReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(err, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	return req, nil
@@ -139,6 +139,11 @@ func decodeRevokeCerts(_ context.Context, r *http.Request) (interface{}, error) 
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
+	var wrapper error
+	if errors.Contains(err, apiutil.ErrValidation) {
+		wrapper, err = errors.Unwrap(err)
+	}
+
 	switch {
 	case errors.Contains(err, errors.ErrAuthentication),
 		errors.Contains(err, apiutil.ErrBearerToken):
@@ -160,6 +165,10 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	if wrapper != nil {
+		err = errors.Wrap(wrapper, err)
 	}
 
 	if errorVal, ok := err.(errors.Error); ok {

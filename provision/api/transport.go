@@ -69,12 +69,12 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 
 func decodeProvisionRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
-		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
 	req := provisionReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(err, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	return req, nil
@@ -82,7 +82,7 @@ func decodeProvisionRequest(_ context.Context, r *http.Request) (interface{}, er
 
 func decodeMappingRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
-		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
 	req := mappingReq{token: apiutil.ExtractBearerToken(r)}
@@ -91,6 +91,11 @@ func decodeMappingRequest(_ context.Context, r *http.Request) (interface{}, erro
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
+	var wrapper error
+	if errors.Contains(err, apiutil.ErrValidation) {
+		wrapper, err = errors.Unwrap(err)
+	}
+
 	switch {
 	case errors.Contains(err, errors.ErrAuthentication),
 		errors.Contains(err, apiutil.ErrBearerToken):
@@ -105,6 +110,10 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusConflict)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	if wrapper != nil {
+		err = errors.Wrap(wrapper, err)
 	}
 
 	if errorVal, ok := err.(errors.Error); ok {

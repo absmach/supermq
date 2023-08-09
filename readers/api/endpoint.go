@@ -22,7 +22,7 @@ func listMessagesEndpoint(svc readers.MessageRepository, tc tpolicies.AuthServic
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		if err := authorize(ctx, req, tc, ac); err != nil {
-			return nil, errors.Wrap(errors.ErrAuthorization, errors.Wrap(err, apiutil.ErrValidation))
+			return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrAuthorization, err))
 		}
 		page, err := svc.ReadAll(req.chanID, req.pageMeta)
 		if err != nil {

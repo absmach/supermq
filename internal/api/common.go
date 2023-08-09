@@ -90,6 +90,11 @@ func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface
 
 // EncodeError encodes an error response.
 func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
+	var wrapper error
+	if errors.Contains(err, apiutil.ErrValidation) {
+		wrapper, err = errors.Unwrap(err)
+	}
+
 	w.Header().Set("Content-Type", ContentType)
 	switch {
 	case errors.Contains(err, apiutil.ErrInvalidSecret),
@@ -120,8 +125,11 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	if errorVal, ok := err.(errors.Error); ok {
+	if wrapper != nil {
+		err = errors.Wrap(wrapper, err)
+	}
 
+	if errorVal, ok := err.(errors.Error); ok {
 		errMsg := errorVal.Msg()
 		if errorVal.Err() != nil {
 			errMsg = fmt.Sprintf("%s : %s", errMsg, errorVal.Err().Msg())

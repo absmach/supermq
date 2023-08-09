@@ -81,7 +81,7 @@ func Wrap(wrapper error, err error) error {
 	}
 }
 
-// Unwrap returns the wrapper and the error by separating the Wrapper from the error
+// Unwrap returns the wrapper and the error by separating the Wrapper from the error.
 func Unwrap(err error) (error, error) {
 	if ce, ok := err.(Error); ok {
 		if ce.Err() == nil {

@@ -17,7 +17,7 @@ func sendMessageEndpoint(svc http.Service) endpoint.Endpoint {
 		req := request.(publishReq)
 
 		if err := req.validate(); err != nil {
-			return nil, errors.Wrap(err, apiutil.ErrValidation)
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		return nil, svc.Publish(ctx, req.token, req.msg)

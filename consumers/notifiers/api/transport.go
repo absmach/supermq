@@ -75,7 +75,7 @@ func MakeHandler(svc notifiers.Service, logger logger.Logger, instanceID string)
 
 func decodeCreate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
 	req := createSubReq{token: apiutil.ExtractBearerToken(r)}
@@ -109,13 +109,13 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 
 	offset, err := apiutil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
-		return listSubsReq{}, errors.Wrap(err, apiutil.ErrValidation)
+		return listSubsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	req.offset = uint(offset)
 
 	limit, err := apiutil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
-		return listSubsReq{}, errors.Wrap(err, apiutil.ErrValidation)
+		return listSubsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	req.limit = uint(limit)
 
@@ -139,6 +139,11 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
+	var wrapper error
+	if errors.Contains(err, apiutil.ErrValidation) {
+		wrapper, err = errors.Unwrap(err)
+	}
+
 	switch {
 	case errors.Contains(err, errors.ErrMalformedEntity),
 		errors.Contains(err, apiutil.ErrInvalidContact),
@@ -163,6 +168,10 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	if wrapper != nil {
+		err = errors.Wrap(wrapper, err)
 	}
 
 	if errorVal, ok := err.(errors.Error); ok {

@@ -75,7 +75,7 @@ func parseSubtopic(subtopic string) (string, error) {
 
 	subtopic, err := url.QueryUnescape(subtopic)
 	if err != nil {
-		return "", errors.Wrap(errMalformedSubtopic, apiutil.ErrValidation)
+		return "", errors.Wrap(apiutil.ErrValidation, errMalformedSubtopic)
 	}
 	subtopic = strings.ReplaceAll(subtopic, "/", ".")
 
@@ -87,7 +87,7 @@ func parseSubtopic(subtopic string) (string, error) {
 		}
 
 		if len(elem) > 1 && (strings.Contains(elem, "*") || strings.Contains(elem, ">")) {
-			return "", errors.Wrap(errMalformedSubtopic, apiutil.ErrValidation)
+			return "", errors.Wrap(apiutil.ErrValidation, errMalformedSubtopic)
 		}
 
 		filteredElems = append(filteredElems, elem)
@@ -100,17 +100,17 @@ func parseSubtopic(subtopic string) (string, error) {
 func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	ct := r.Header.Get("Content-Type")
 	if ct != ctSenmlJSON && ct != contentType && ct != ctSenmlCBOR {
-		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
 	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
 	if len(channelParts) < 2 {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, errors.ErrMalformedEntity)
 	}
 
 	subtopic, err := parseSubtopic(channelParts[2])
 	if err != nil {
-		return nil, errors.Wrap(err, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	var token string
@@ -124,7 +124,7 @@ func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, errors.ErrMalformedEntity)
 	}
 	defer r.Body.Close()
 
@@ -148,6 +148,11 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, _ interface{}) err
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
+	var wrapper error
+	if errors.Contains(err, apiutil.ErrValidation) {
+		wrapper, err = errors.Unwrap(err)
+	}
+
 	switch {
 	case errors.Contains(err, errors.ErrAuthentication),
 		errors.Contains(err, apiutil.ErrBearerKey),
@@ -180,6 +185,10 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
+	}
+
+	if wrapper != nil {
+		err = errors.Wrap(wrapper, err)
 	}
 
 	if errorVal, ok := err.(errors.Error); ok {
