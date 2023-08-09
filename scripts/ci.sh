@@ -73,7 +73,6 @@ setup_mf() {
 setup_lint() {
     # binary will be $(go env GOBIN)/golangci-lint
     curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOBIN) $GOLANGCI_LINT_VERSION
-    go install -v github.com/go-critic/go-critic/cmd/gocritic@latest
 }
 
 setup() {
@@ -86,8 +85,7 @@ setup() {
 
 run_test() {
     echo "Running lint..."
-    golangci-lint run --no-config --disable-all --enable gosimple --enable errcheck --enable govet --enable unused --enable goconst --enable godot --timeout 3m
-    gocritic check -enable=dupImport ./...
+    golangci-lint run
     echo "Running tests..."
     echo "" > coverage.txt
     for d in $(go list ./... | grep -v 'vendor\|cmd'); do
