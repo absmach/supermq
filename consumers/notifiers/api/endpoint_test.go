@@ -37,7 +37,7 @@ const (
 var (
 	notFoundRes   = toJSON(apiutil.ErrorRes{Err: errors.ErrNotFound.Error()})
 	unauthRes     = toJSON(apiutil.ErrorRes{Err: errors.ErrAuthentication.Error()})
-	invalidRes    = toJSON(apiutil.ErrorRes{Err: errors.Wrap(apiutil.ErrInvalidQueryParams, apiutil.ErrValidation).Error()})
+	invalidRes    = toJSON(apiutil.ErrorRes{Err: errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidQueryParams).Error()})
 	missingTokRes = toJSON(apiutil.ErrorRes{Err: errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerToken).Error()})
 )
 
