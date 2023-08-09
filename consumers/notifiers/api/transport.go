@@ -80,7 +80,7 @@ func decodeCreate(_ context.Context, r *http.Request) (interface{}, error) {
 
 	req := createSubReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, apiutil.ErrMalformedEntity))
+		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
 	}
 
 	return req, nil
@@ -140,7 +140,7 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
-	case errors.Contains(err, apiutil.ErrMalformedEntity),
+	case errors.Contains(err, errors.ErrMalformedEntity),
 		errors.Contains(err, apiutil.ErrInvalidContact),
 		errors.Contains(err, apiutil.ErrInvalidTopic),
 		errors.Contains(err, apiutil.ErrMissingID),

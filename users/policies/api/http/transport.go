@@ -69,7 +69,7 @@ func decodeAuthorize(_ context.Context, r *http.Request) (interface{}, error) {
 
 	var authReq authorizeReq
 	if err := json.NewDecoder(r.Body).Decode(&authReq); err != nil {
-		return nil, errors.Wrap(errors.Wrap(err, apiutil.ErrMalformedEntity), apiutil.ErrValidation)
+		return nil, errors.Wrap(errors.Wrap(err, errors.ErrMalformedEntity), apiutil.ErrValidation)
 	}
 
 	return authReq, nil
@@ -82,7 +82,7 @@ func decodePolicyCreate(_ context.Context, r *http.Request) (interface{}, error)
 
 	var m policies.Policy
 	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
-		return nil, errors.Wrap(errors.Wrap(err, apiutil.ErrMalformedEntity), apiutil.ErrValidation)
+		return nil, errors.Wrap(errors.Wrap(err, errors.ErrMalformedEntity), apiutil.ErrValidation)
 	}
 
 	req := createPolicyReq{
@@ -100,7 +100,7 @@ func decodePolicyUpdate(_ context.Context, r *http.Request) (interface{}, error)
 	}
 	var m policies.Policy
 	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
-		return nil, errors.Wrap(errors.Wrap(err, apiutil.ErrMalformedEntity), apiutil.ErrValidation)
+		return nil, errors.Wrap(errors.Wrap(err, errors.ErrMalformedEntity), apiutil.ErrValidation)
 	}
 
 	req := updatePolicyReq{

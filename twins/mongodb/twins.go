@@ -6,7 +6,6 @@ package mongodb
 import (
 	"context"
 
-	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/twins"
 	"go.mongodb.org/mongo-driver/bson"
@@ -34,7 +33,7 @@ func NewTwinRepository(db *mongo.Database) twins.TwinRepository {
 
 func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, error) {
 	if len(tw.Name) > maxNameSize {
-		return "", apiutil.ErrMalformedEntity
+		return "", errors.ErrMalformedEntity
 	}
 
 	coll := tr.db.Collection(twinsCollection)
@@ -48,7 +47,7 @@ func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, erro
 
 func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
 	if len(tw.Name) > maxNameSize {
-		return apiutil.ErrMalformedEntity
+		return errors.ErrMalformedEntity
 	}
 
 	coll := tr.db.Collection(twinsCollection)

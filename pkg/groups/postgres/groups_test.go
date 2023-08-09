@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -81,7 +80,7 @@ func TestGroupSave(t *testing.T) {
 				Name:   invalidName,
 				Status: mfclients.EnabledStatus,
 			},
-			err: apiutil.ErrMalformedEntity,
+			err: errors.ErrMalformedEntity,
 		},
 		{
 			desc: "create a group with invalid ID",
@@ -91,7 +90,7 @@ func TestGroupSave(t *testing.T) {
 				Description: invalidDesc,
 				Status:      mfclients.EnabledStatus,
 			},
-			err: apiutil.ErrMalformedEntity,
+			err: errors.ErrMalformedEntity,
 		},
 		{
 			desc: "create group with description",
@@ -111,7 +110,7 @@ func TestGroupSave(t *testing.T) {
 				Description: invalidDesc,
 				Status:      mfclients.EnabledStatus,
 			},
-			err: apiutil.ErrMalformedEntity,
+			err: errors.ErrMalformedEntity,
 		},
 		{
 			desc: "create group with parent",
@@ -131,7 +130,7 @@ func TestGroupSave(t *testing.T) {
 				Name:   "withInvalidParent",
 				Status: mfclients.EnabledStatus,
 			},
-			err: apiutil.ErrMalformedEntity,
+			err: errors.ErrMalformedEntity,
 		},
 		{
 			desc: "create a group with an owner",
@@ -151,7 +150,7 @@ func TestGroupSave(t *testing.T) {
 				Name:   "withInvalidOwner",
 				Status: mfclients.EnabledStatus,
 			},
-			err: apiutil.ErrMalformedEntity,
+			err: errors.ErrMalformedEntity,
 		},
 		{
 			desc: "create a group with metadata",
@@ -439,7 +438,7 @@ func TestGroupUpdate(t *testing.T) {
 				ID:   groupID,
 				Name: invalidName,
 			},
-			err: apiutil.ErrMalformedEntity,
+			err: errors.ErrMalformedEntity,
 		},
 		{
 			desc: "update group for invalid description",
@@ -447,7 +446,7 @@ func TestGroupUpdate(t *testing.T) {
 				ID:          groupID,
 				Description: invalidDesc,
 			},
-			err: apiutil.ErrMalformedEntity,
+			err: errors.ErrMalformedEntity,
 		},
 	}
 

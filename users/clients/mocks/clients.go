@@ -6,7 +6,6 @@ package mocks
 import (
 	"context"
 
-	"github.com/mainflux/mainflux/internal/apiutil"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/clients/postgres"
@@ -29,7 +28,7 @@ func (m *Repository) ChangeStatus(ctx context.Context, client mfclients.Client) 
 	}
 
 	if client.Status != mfclients.EnabledStatus && client.Status != mfclients.DisabledStatus {
-		return mfclients.Client{}, apiutil.ErrMalformedEntity
+		return mfclients.Client{}, errors.ErrMalformedEntity
 	}
 
 	return ret.Get(0).(mfclients.Client), ret.Error(1)
@@ -64,7 +63,7 @@ func (m *Repository) RetrieveByIdentity(ctx context.Context, identity string) (m
 	ret := m.Called(ctx, identity)
 
 	if identity == "" {
-		return mfclients.Client{}, apiutil.ErrMalformedEntity
+		return mfclients.Client{}, errors.ErrMalformedEntity
 	}
 
 	return ret.Get(0).(mfclients.Client), ret.Error(1)
@@ -73,10 +72,10 @@ func (m *Repository) RetrieveByIdentity(ctx context.Context, identity string) (m
 func (m *Repository) Save(ctx context.Context, client mfclients.Client) (mfclients.Client, error) {
 	ret := m.Called(ctx, client)
 	if client.Owner == WrongID {
-		return mfclients.Client{}, apiutil.ErrMalformedEntity
+		return mfclients.Client{}, errors.ErrMalformedEntity
 	}
 	if client.Credentials.Secret == "" {
-		return mfclients.Client{}, apiutil.ErrMalformedEntity
+		return mfclients.Client{}, errors.ErrMalformedEntity
 	}
 
 	return client, ret.Error(1)
@@ -98,7 +97,7 @@ func (m *Repository) UpdateIdentity(ctx context.Context, client mfclients.Client
 		return mfclients.Client{}, errors.ErrNotFound
 	}
 	if client.Credentials.Identity == "" {
-		return mfclients.Client{}, apiutil.ErrMalformedEntity
+		return mfclients.Client{}, errors.ErrMalformedEntity
 	}
 
 	return ret.Get(0).(mfclients.Client), ret.Error(1)
@@ -111,7 +110,7 @@ func (m *Repository) UpdateSecret(ctx context.Context, client mfclients.Client) 
 		return mfclients.Client{}, errors.ErrNotFound
 	}
 	if client.Credentials.Secret == "" {
-		return mfclients.Client{}, apiutil.ErrMalformedEntity
+		return mfclients.Client{}, errors.ErrMalformedEntity
 	}
 
 	return ret.Get(0).(mfclients.Client), ret.Error(1)

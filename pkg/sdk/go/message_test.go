@@ -82,7 +82,7 @@ func TestSendMessage(t *testing.T) {
 			chanID: "",
 			msg:    msg,
 			auth:   atoken,
-			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrMalformedEntity, apiutil.ErrValidation), http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(errors.Wrap(errors.ErrMalformedEntity, apiutil.ErrValidation), http.StatusBadRequest),
 		},
 		"publish message unable to authorize": {
 			chanID: chanID,

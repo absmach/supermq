@@ -10,7 +10,6 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/users/policies"
@@ -418,7 +417,7 @@ func (bs bootstrapService) connectionChannels(channels, existing []string, token
 	for id := range add {
 		ch, err := bs.sdk.Channel(id, token)
 		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrMalformedEntity, err)
+			return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 		}
 
 		ret = append(ret, Channel{

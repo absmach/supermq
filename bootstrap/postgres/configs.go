@@ -16,7 +16,6 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux/bootstrap"
-	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/internal/postgres"
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/clients"
@@ -700,7 +699,7 @@ func toDBChannel(owner string, ch bootstrap.Channel) (dbChannel, error) {
 
 	metadata, err := json.Marshal(ch.Metadata)
 	if err != nil {
-		return dbChannel{}, errors.Wrap(apiutil.ErrMalformedEntity, err)
+		return dbChannel{}, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 
 	dbch.Metadata = string(metadata)
@@ -732,7 +731,7 @@ func toChannel(dbch dbChannel) (bootstrap.Channel, error) {
 	}
 
 	if err := json.Unmarshal([]byte(dbch.Metadata), &ch.Metadata); err != nil {
-		return bootstrap.Channel{}, errors.Wrap(apiutil.ErrMalformedEntity, err)
+		return bootstrap.Channel{}, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 
 	return ch, nil

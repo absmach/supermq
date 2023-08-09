@@ -22,7 +22,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
-	"github.com/mainflux/mainflux/internal/apiutil"
 	mflog "github.com/mainflux/mainflux/logger"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -160,7 +159,7 @@ func TestAdd(t *testing.T) {
 			desc:   "add a config with invalid list of channels",
 			config: wrongChannels,
 			token:  validToken,
-			err:    apiutil.ErrMalformedEntity,
+			err:    errors.ErrMalformedEntity,
 		},
 	}
 
@@ -406,7 +405,7 @@ func TestUpdateConnections(t *testing.T) {
 			token:       validToken,
 			id:          created.ThingID,
 			connections: []string{"wrong"},
-			err:         apiutil.ErrMalformedEntity,
+			err:         errors.ErrMalformedEntity,
 		},
 		{
 			desc:        "update connections a config with wrong credentials",

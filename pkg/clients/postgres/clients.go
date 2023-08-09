@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgtype"
-	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -294,7 +293,7 @@ func ToDBClient(c clients.Client) (DBClient, error) {
 	if len(c.Metadata) > 0 {
 		b, err := json.Marshal(c.Metadata)
 		if err != nil {
-			return DBClient{}, errors.Wrap(apiutil.ErrMalformedEntity, err)
+			return DBClient{}, errors.Wrap(errors.ErrMalformedEntity, err)
 		}
 		data = b
 	}
@@ -335,7 +334,7 @@ func ToClient(c DBClient) (clients.Client, error) {
 	var metadata clients.Metadata
 	if c.Metadata != nil {
 		if err := json.Unmarshal([]byte(c.Metadata), &metadata); err != nil {
-			return clients.Client{}, errors.Wrap(apiutil.ErrMalformedEntity, err)
+			return clients.Client{}, errors.Wrap(errors.ErrMalformedEntity, err)
 		}
 	}
 	var tags []string

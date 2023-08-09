@@ -4,7 +4,6 @@
 package mocks
 
 import (
-	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/clients"
 )
@@ -21,7 +20,7 @@ func NewHasher() clients.Hasher {
 
 func (hm *hasherMock) Hash(pwd string) (string, error) {
 	if pwd == "" {
-		return "", apiutil.ErrMalformedEntity
+		return "", errors.ErrMalformedEntity
 	}
 	return pwd, nil
 }

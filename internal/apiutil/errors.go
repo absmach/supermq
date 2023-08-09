@@ -135,9 +135,6 @@ var (
 	// ErrNotFoundParam indicates that the parameter was not found in the query.
 	ErrNotFoundParam = errors.New("parameter not found in the query")
 
-	// ErrMalformedEntity indicates a malformed entity specification.
-	ErrMalformedEntity = errors.New("malformed entity specification")
-
 	// ErrInvalidQueryParams indicates invalid query parameters.
 	ErrInvalidQueryParams = errors.New("invalid query parameters")
 

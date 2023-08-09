@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/internal/postgres"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -322,7 +321,7 @@ func toDBGroup(g mfgroups.Group) (dbGroup, error) {
 	if len(g.Metadata) > 0 {
 		b, err := json.Marshal(g.Metadata)
 		if err != nil {
-			return dbGroup{}, errors.Wrap(apiutil.ErrMalformedEntity, err)
+			return dbGroup{}, errors.Wrap(errors.ErrMalformedEntity, err)
 		}
 		data = b
 	}
@@ -357,7 +356,7 @@ func toGroup(g dbGroup) (mfgroups.Group, error) {
 	var metadata mfclients.Metadata
 	if g.Metadata != nil {
 		if err := json.Unmarshal([]byte(g.Metadata), &metadata); err != nil {
-			return mfgroups.Group{}, errors.Wrap(apiutil.ErrMalformedEntity, err)
+			return mfgroups.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)
 		}
 	}
 	var parentID string
@@ -398,7 +397,7 @@ func toDBGroupPage(pm mfgroups.GroupsPage) (dbGroupPage, error) {
 	if len(pm.Metadata) > 0 {
 		b, err := json.Marshal(pm.Metadata)
 		if err != nil {
-			return dbGroupPage{}, errors.Wrap(apiutil.ErrMalformedEntity, err)
+			return dbGroupPage{}, errors.Wrap(errors.ErrMalformedEntity, err)
 		}
 		data = b
 	}

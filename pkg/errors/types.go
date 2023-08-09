@@ -10,6 +10,9 @@ var (
 	// ErrAuthorization indicates failure occurred while authorizing the entity.
 	ErrAuthorization = New("failed to perform authorization over the entity")
 
+	// ErrMalformedEntity indicates a malformed entity specification.
+	ErrMalformedEntity = New("malformed entity specification")
+
 	// ErrNotFound indicates a non-existent entity request.
 	ErrNotFound = New("entity not found")
 

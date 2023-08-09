@@ -219,7 +219,7 @@ func decodeGroupCreate(_ context.Context, r *http.Request) (interface{}, error) 
 	}
 	var g mfgroups.Group
 	if err := json.NewDecoder(r.Body).Decode(&g); err != nil {
-		return nil, errors.Wrap(errors.Wrap(apiutil.ErrMalformedEntity, err), apiutil.ErrValidation)
+		return nil, errors.Wrap(errors.Wrap(errors.ErrMalformedEntity, err), apiutil.ErrValidation)
 	}
 	req := createGroupReq{
 		Group: g,
@@ -235,7 +235,7 @@ func decodeGroupsCreate(_ context.Context, r *http.Request) (interface{}, error)
 	}
 	req := createGroupsReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req.Groups); err != nil {
-		return nil, errors.Wrap(errors.Wrap(apiutil.ErrMalformedEntity, err), apiutil.ErrValidation)
+		return nil, errors.Wrap(errors.Wrap(errors.ErrMalformedEntity, err), apiutil.ErrValidation)
 	}
 
 	return req, nil
@@ -250,7 +250,7 @@ func decodeGroupUpdate(_ context.Context, r *http.Request) (interface{}, error) 
 		token: apiutil.ExtractBearerToken(r),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(errors.Wrap(apiutil.ErrMalformedEntity, err), apiutil.ErrValidation)
+		return nil, errors.Wrap(errors.Wrap(errors.ErrMalformedEntity, err), apiutil.ErrValidation)
 	}
 	return req, nil
 }

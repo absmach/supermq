@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -100,7 +99,7 @@ func TestCreateGroup(t *testing.T) {
 		{
 			desc:  "create group with missing name",
 			group: mfgroups.Group{},
-			err:   apiutil.ErrMalformedEntity,
+			err:   errors.ErrMalformedEntity,
 		},
 	}
 

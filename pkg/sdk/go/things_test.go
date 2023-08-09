@@ -96,8 +96,8 @@ func TestCreateThing(t *testing.T) {
 			client:   sdk.Thing{},
 			response: sdk.Thing{},
 			token:    token,
-			repoErr:  apiutil.ErrMalformedEntity,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMalformedEntity, http.StatusBadRequest),
+			repoErr:  errors.ErrMalformedEntity,
+			err:      errors.NewSDKErrorWithStatus(errors.ErrMalformedEntity, http.StatusBadRequest),
 		},
 		{
 			desc: "register a thing that can't be marshalled",
