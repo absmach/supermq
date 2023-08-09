@@ -9,20 +9,16 @@ import (
 	"github.com/mainflux/mainflux/internal/apiutil"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/users/clients/postgres"
 	"github.com/stretchr/testify/mock"
 )
 
 const WrongID = "wrongID"
 
-var _ mfclients.Repository = (*Repository)(nil)
+var _ postgres.Repository = (*Repository)(nil)
 
 type Repository struct {
 	mock.Mock
-}
-
-// RetrieveByIdentity retrieves client by its unique credentials.
-func (*Repository) RetrieveByIdentity(ctx context.Context, identity string) (mfclients.Client, error) {
-	return mfclients.Client{}, nil
 }
 
 func (m *Repository) ChangeStatus(ctx context.Context, client mfclients.Client) (mfclients.Client, error) {
@@ -64,24 +60,26 @@ func (m *Repository) RetrieveByID(ctx context.Context, id string) (mfclients.Cli
 	return ret.Get(0).(mfclients.Client), ret.Error(1)
 }
 
-func (m *Repository) RetrieveBySecret(ctx context.Context, secret string) (mfclients.Client, error) {
-	ret := m.Called(ctx, secret)
+func (m *Repository) RetrieveByIdentity(ctx context.Context, identity string) (mfclients.Client, error) {
+	ret := m.Called(ctx, identity)
 
-	if secret == "" {
+	if identity == "" {
 		return mfclients.Client{}, apiutil.ErrMalformedEntity
 	}
 
 	return ret.Get(0).(mfclients.Client), ret.Error(1)
 }
 
-func (m *Repository) Save(ctx context.Context, clis ...mfclients.Client) ([]mfclients.Client, error) {
-	ret := m.Called(ctx, clis)
-	for _, cli := range clis {
-		if cli.Owner == WrongID {
-			return []mfclients.Client{}, apiutil.ErrMalformedEntity
-		}
+func (m *Repository) Save(ctx context.Context, client mfclients.Client) (mfclients.Client, error) {
+	ret := m.Called(ctx, client)
+	if client.Owner == WrongID {
+		return mfclients.Client{}, apiutil.ErrMalformedEntity
 	}
-	return clis, ret.Error(1)
+	if client.Credentials.Secret == "" {
+		return mfclients.Client{}, apiutil.ErrMalformedEntity
+	}
+
+	return client, ret.Error(1)
 }
 
 func (m *Repository) Update(ctx context.Context, client mfclients.Client) (mfclients.Client, error) {
@@ -137,4 +135,8 @@ func (m *Repository) UpdateOwner(ctx context.Context, client mfclients.Client) (
 	}
 
 	return ret.Get(0).(mfclients.Client), ret.Error(1)
+}
+
+func (*Repository) RetrieveBySecret(ctx context.Context, key string) (mfclients.Client, error) {
+	return mfclients.Client{}, nil
 }
