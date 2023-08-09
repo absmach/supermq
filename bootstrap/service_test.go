@@ -14,7 +14,6 @@ import (
 	"net/http/httptest"
 	"sort"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/go-zoo/bone"
@@ -169,14 +168,13 @@ func TestAdd(t *testing.T) {
 		case nil:
 			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error : %s", tc.desc, err))
 		default:
-			assert.True(t, strings.Contains(err.Error(), tc.err.Error()), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		}
 	}
 }
 
 func TestView(t *testing.T) {
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
-
 	server := newThingsServer(newThingsService(users))
 	svc := newService(users, server.URL)
 

@@ -110,7 +110,7 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader, logger mf
 
 func decodeAddRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
 	req := addReq{token: apiutil.ExtractBearerToken(r)}
@@ -123,7 +123,7 @@ func decodeAddRequest(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeUpdateRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
 	req := updateReq{
@@ -139,7 +139,7 @@ func decodeUpdateRequest(_ context.Context, r *http.Request) (interface{}, error
 
 func decodeUpdateCertRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
 	req := updateCertReq{
@@ -155,7 +155,7 @@ func decodeUpdateCertRequest(_ context.Context, r *http.Request) (interface{}, e
 
 func decodeUpdateConnRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
 	req := updateConnReq{
@@ -172,17 +172,17 @@ func decodeUpdateConnRequest(_ context.Context, r *http.Request) (interface{}, e
 func decodeListRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	o, err := apiutil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
-		return nil, errors.Wrap(err, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	l, err := apiutil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
-		return nil, errors.Wrap(err, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	q, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrInvalidQueryParams, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidQueryParams)
 	}
 
 	req := listReq{
@@ -206,7 +206,7 @@ func decodeBootstrapRequest(_ context.Context, r *http.Request) (interface{}, er
 
 func decodeStateRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.Wrap(apiutil.ErrUnsupportedContentType, apiutil.ErrValidation)
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
 	req := changeStateReq{
@@ -258,6 +258,13 @@ func encodeSecureRes(_ context.Context, w http.ResponseWriter, response interfac
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
+	var wrappedErr = err
+	if errors.Contains(err, apiutil.ErrValidation) {
+		if ce, ok := err.(errors.Error); ok {
+			err = ce.Err()
+		}
+	}
+
 	switch {
 	case errors.Contains(err, errors.ErrAuthentication),
 		errors.Contains(err, apiutil.ErrBearerToken),
@@ -293,7 +300,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	if errorVal, ok := err.(errors.Error); ok {
+	if errorVal, ok := wrappedErr.(errors.Error); ok {
 		w.Header().Set("Content-Type", contentType)
 
 		errMsg := errorVal.Msg()

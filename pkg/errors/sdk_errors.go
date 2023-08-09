@@ -21,7 +21,6 @@ var (
 type SDKError interface {
 	Error
 	StatusCode() int
-	ErrString() string
 }
 
 var _ SDKError = (*sdkError)(nil)
@@ -43,13 +42,6 @@ func (ce *sdkError) Error() string {
 
 func (ce *sdkError) StatusCode() int {
 	return ce.statusCode
-}
-
-func (ce *sdkError) ErrString() string {
-	if ce.customError == nil {
-		return ""
-	}
-	return ce.customError.Error()
 }
 
 // NewSDKError returns an SDK Error that formats as the given text.

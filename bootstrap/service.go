@@ -377,25 +377,25 @@ func (bs bootstrapService) identify(ctx context.Context, token string) (string, 
 func (bs bootstrapService) thing(id, token string) (mfsdk.Thing, error) {
 	var thing mfsdk.Thing
 	var err error
-	var errT errors.SDKError
+	var sdkErr errors.SDKError
 
 	thing.ID = id
 	if id == "" {
-		thing, errT = bs.sdk.CreateThing(mfsdk.Thing{}, token)
+		thing, sdkErr = bs.sdk.CreateThing(mfsdk.Thing{}, token)
 		if err != nil {
-			return mfsdk.Thing{}, errors.Wrap(errCreateThing, errors.New(errT.ErrString()))
+			return mfsdk.Thing{}, errors.Wrap(errCreateThing, errors.New(sdkErr.Err().Msg()))
 		}
 	}
 
-	thing, errT = bs.sdk.Thing(thing.ID, token)
-	if errT != nil {
+	thing, sdkErr = bs.sdk.Thing(thing.ID, token)
+	if sdkErr != nil {
+		err = errors.New(sdkErr.Error())
 		if id != "" {
-			if _, errT2 := bs.sdk.DisableThing(thing.ID, token); errT2 != nil {
-				errT = errors.NewSDKError(errors.Wrap(errT, errT2))
+			if _, sdkErr2 := bs.sdk.DisableThing(thing.ID, token); sdkErr2 != nil {
+				err = errors.Wrap(errors.New(sdkErr.Msg()), errors.New(sdkErr2.Msg()))
 			}
 		}
-
-		return mfsdk.Thing{}, errors.Wrap(ErrThings, errT)
+		return mfsdk.Thing{}, errors.Wrap(ErrThings, err)
 	}
 
 	return thing, nil
