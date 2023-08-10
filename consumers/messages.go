@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/pelletier/go-toml"
-
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -19,6 +18,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/transformers"
 	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
+
 )
 
 const (
