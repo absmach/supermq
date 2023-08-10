@@ -101,7 +101,6 @@ func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (mfclie
 	if err := repo.DB.QueryRowxContext(ctx, q, key).StructScan(&dbc); err != nil {
 		if err == sql.ErrNoRows {
 			return mfclients.Client{}, errors.Wrap(errors.ErrNotFound, err)
-
 		}
 		return mfclients.Client{}, errors.Wrap(errors.ErrViewEntity, err)
 	}

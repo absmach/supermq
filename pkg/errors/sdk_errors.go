@@ -84,7 +84,6 @@ func CheckError(resp *http.Response, expectedStatusCodes ...int) SDKError {
 	if msg, ok := content[errorKey]; ok {
 		if v, ok := msg.(string); ok {
 			return NewSDKErrorWithStatus(New(v), resp.StatusCode)
-
 		}
 		return NewSDKErrorWithStatus(fmt.Errorf("%v", msg), resp.StatusCode)
 	}
