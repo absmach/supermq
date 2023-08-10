@@ -19,7 +19,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/transformers"
 	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
-	"github.com/pelletier/go-toml"
 )
 
 const (
