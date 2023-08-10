@@ -1,83 +1,78 @@
 package modbus
 
 import (
-	"errors"
+	"context"
+	"net/url"
+	"strings"
 
-	"github.com/goburrow/modbus"
+	mflog "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/pkg/messaging"
 )
-
-type IO string
 
 const (
-	Coil            IO = "coil"
-	HoldingRegister IO = "h_register"
-	InputRegister   IO = "i_register"
-	Register        IO = "register"
-	Discrete        IO = "discrete"
-	FIFO            IO = "fifo"
+	readTopic  = "modbus-read"
+	writeTopic = "modbus-write"
 )
 
-var errInvalidInput = errors.New("invalid input type")
-
 type Service interface {
-	// Read gets data from modbus.
-	Read(address, quantity uint16, iotype IO) ([]byte, error)
-	// Write writes a value/s on Modbus.
-	Write(address, quantity uint16, value interface{}, iotype IO) ([]byte, error)
+	// Forward subscribes to the Subscriber and
+	// publishes messages using provided Publisher.
+	Read(ctx context.Context, id string, sub messaging.Subscriber, pub messaging.Publisher) error
+	// Forward subscribes to the Subscriber and
+	// publishes messages using provided Publisher.
+	Write(ctx context.Context, id string, sub messaging.Subscriber, pub messaging.Publisher) error
 }
 
-var _ Service = (*adapterService)(nil)
-
-// adapterService provides methods for reading and writing data on Modbus.
-type adapterService struct {
-	Client modbus.Client
+type service struct {
+	logger mflog.Logger
 }
 
-// NewModbusService creates a new instance of ModbusService.
-func NewModbusService(client modbus.Client) Service {
-	return &adapterService{Client: client}
-}
-
-// Write writes a value/s on Modbus.
-func (s *adapterService) Write(address, quantity uint16, value interface{}, iotype IO) ([]byte, error) {
-	switch iotype {
-	case Coil:
-		switch val := value.(type) {
-		case uint16:
-			return s.Client.WriteSingleCoil(address, val)
-		case []byte:
-			return s.Client.WriteMultipleCoils(address, quantity, val)
-		default:
-			return nil, errInvalidInput
-		}
-	case Register:
-		switch val := value.(type) {
-		case uint16:
-			return s.Client.WriteSingleRegister(address, val)
-		case []byte:
-			return s.Client.WriteMultipleRegisters(address, quantity, val)
-		default:
-			return nil, errInvalidInput
-		}
-	default:
-		return nil, errInvalidInput
+// NewForwarder returns new Forwarder implementation.
+func New(logger mflog.Logger) Service {
+	return service{
+		logger: logger,
 	}
 }
 
-// Read gets data from modbus.
-func (s *adapterService) Read(address uint16, quantity uint16, iotype IO) ([]byte, error) {
-	switch iotype {
-	case Coil:
-		return s.Client.ReadCoils(address, quantity)
-	case Discrete:
-		return s.Client.ReadDiscreteInputs(address, quantity)
-	case FIFO:
-		return s.Client.ReadFIFOQueue(address)
-	case HoldingRegister:
-		return s.Client.ReadHoldingRegisters(address, quantity)
-	case InputRegister:
-		return s.Client.ReadInputRegisters(address, quantity)
+func (f service) Read(ctx context.Context, id string, sub messaging.Subscriber, pub messaging.Publisher) error {
+	return sub.Subscribe(ctx, id, readTopic, handleRead(ctx, pub, f.logger))
+}
+
+func handleRead(ctx context.Context, pub messaging.Publisher, logger mflog.Logger) handleFunc {
+	return func(msg *messaging.Message) error {
+		return nil
+	}
+}
+
+func (f service) Write(ctx context.Context, id string, sub messaging.Subscriber, pub messaging.Publisher) error {
+	return sub.Subscribe(ctx, id, writeTopic, handleWrite(ctx, pub, f.logger))
+}
+
+func handleWrite(ctx context.Context, pub messaging.Publisher, logger mflog.Logger) handleFunc {
+	return func(msg *messaging.Message) error {
+		return nil
+	}
+}
+
+type handleFunc func(msg *messaging.Message) error
+
+func (h handleFunc) Handle(msg *messaging.Message) error {
+	return h(msg)
+
+}
+
+func (h handleFunc) Cancel() error {
+	return nil
+}
+
+func getClient(address string) (ModbusService, error) {
+	switch {
+	case strings.HasPrefix(address, "/dev/") || strings.Contains(address, "COM"):
+		return NewRTUClient(address, RTUHandlerOptions{})
 	default:
-		return nil, errInvalidInput
+		if _, err := url.Parse(address); err != nil {
+			return nil, err
+		}
+		return NewTCPClient(address, TCPHandlerOptions{})
 	}
 }
