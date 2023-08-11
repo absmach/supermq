@@ -62,9 +62,7 @@ type handler struct {
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(publishers []messaging.Publisher, es redis.EventStore,
-	logger logger.Logger, auth policies.AuthServiceClient,
-) session.Handler {
+func NewHandler(publishers []messaging.Publisher, es redis.EventStore, logger logger.Logger, auth policies.AuthServiceClient) session.Handler {
 	return &handler{
 		es:         es,
 		logger:     logger,
