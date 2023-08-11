@@ -2,24 +2,22 @@ package modbus
 
 import (
 	"context"
-	"net/url"
-	"strings"
 
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 )
 
 const (
-	readTopic  = "modbus-read"
-	writeTopic = "modbus-write"
+	readTopic  = "channels.*.modbus.read.*"
+	writeTopic = "channels.*.modbus.write.*"
 )
 
 type Service interface {
-	// Forward subscribes to the Subscriber and
-	// publishes messages using provided Publisher.
+	// Read subscribes to the Subscriber and
+	// reads modbus sensor values while publishing them to publisher.
 	Read(ctx context.Context, id string, sub messaging.Subscriber, pub messaging.Publisher) error
-	// Forward subscribes to the Subscriber and
-	// publishes messages using provided Publisher.
+	// Write subscribes to the Subscriber and
+	// writes to modbus sensor.
 	Write(ctx context.Context, id string, sub messaging.Subscriber, pub messaging.Publisher) error
 }
 
@@ -63,16 +61,4 @@ func (h handleFunc) Handle(msg *messaging.Message) error {
 
 func (h handleFunc) Cancel() error {
 	return nil
-}
-
-func getClient(address string) (ModbusService, error) {
-	switch {
-	case strings.HasPrefix(address, "/dev/") || strings.Contains(address, "COM"):
-		return NewRTUClient(address, RTUHandlerOptions{})
-	default:
-		if _, err := url.Parse(address); err != nil {
-			return nil, err
-		}
-		return NewTCPClient(address, TCPHandlerOptions{})
-	}
 }
