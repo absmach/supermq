@@ -17,6 +17,12 @@ jobs:
 
       - name: find number of cores
         run: lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
+
+      - name: Check Git Configuration
+        run: git config --list # Print Git configuration
+
+      - name: Fetch Tags from Upstream
+        run: git fetch --tags https://github.com/mainflux/mainflux.git
       
       - name: create images
         if: always()
