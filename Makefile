@@ -124,8 +124,6 @@ $(DOCKERS):
 $(DOCKERS_DEV):
 	$(call make_docker_dev,$(@))
 
-stop:
-	docker-compose -f docker/docker-compose.yml down
 dockers: $(DOCKERS)
 dockers_dev: $(DOCKERS_DEV)
 
