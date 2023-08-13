@@ -20,17 +20,17 @@ jobs:
       - name: find number of cores
         run: lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
 
-      - name: Check Git Configuration
-        run: git config --list # Print Git configuration
+      # - name: Check Git Configuration
+      #   run: git config --list # Print Git configuration
 
-      - name: Check Version Var
-        run: git describe --abbrev=0 --tags
+      # # - name: Check Version Var
+      # #   run: git describe --abbrev=0 --tags
 
-      - name: Check Version Var Always
-        run: git describe --abbrev=0 --tags --always
+      # # - name: Check Version Var Always
+      # #   run: git describe --abbrev=0 --tags --always
 
-      - name: Fetch Tags from Upstream
-        run: git fetch --tags https://github.com/mainflux/mainflux.git
+      # # - name: Fetch Tags from Upstream
+      # #   run: git fetch --tags https://github.com/mainflux/mainflux.git
       
       - name: create images
         if: always()
@@ -45,10 +45,10 @@ jobs:
         run: |
           curl -sSiX POST http://localhost:9002/users -H "Content-Type: application/json" -d '{"name": "John Doe","credentials": {"identity": "admin@example.com","secret": "12345678"}}'
       
-      - name: REST API with curl to check mf token endpoint
-        if: always()
-        run: |
-          curl -X POST "http://localhost:9002/users/tokens/issue" -H "Content-Type: application/json" -d '{"identity": "admin@example.com","secret": "12345678"}'
+      # - name: REST API with curl to check mf token endpoint
+      #   if: always()
+      #   run: |
+      #     curl -X POST "http://localhost:9002/users/tokens/issue" -H "Content-Type: application/json" -d '{"identity": "admin@example.com","secret": "12345678"}'
 
       - name: Set ACCESS_TOKEN
         id: set-access-token
