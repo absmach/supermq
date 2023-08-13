@@ -43,25 +43,12 @@ jobs:
       - name: REST API with curl to provision user
         if: always()
         run: |
-          curl -sSiX POST http://localhost:9002/users -H "Content-Type: application/json" -d @- << EOF
-{
-  "name": "John Doe",
-  "credentials": {
-    "identity": "admin@example.com",
-    "secret": "12345678"
-  }
-}
-EOF
+          curl -sSiX POST http://localhost:9002/users -H "Content-Type: application/json" -d '{"name": "John Doe","credentials": {"identity": "admin@example.com","secret": "12345678"}}'
       
       - name: REST API with curl to check mf token endpoint
         if: always()
         run: |
-          curl -X POST "http://localhost:9002/users/tokens/issue" -H "Content-Type: application/json" -d @- <<EOF                                                                                     ─╯
-{
-    "identity": "admin@example.com",
-    "secret": "12345678"
-}
-EOF
+          curl -X POST "http://localhost:9002/users/tokens/issue" -H "Content-Type: application/json" -d '{"identity": "admin@example.com","secret": "12345678"}'
 
       - name: Set ACCESS_TOKEN
         id: set-access-token
@@ -74,7 +61,10 @@ EOF
         if: always()
         run: echo $MF_TOKEN
       
-      - name: Test mf token as environment
+      - name: Set token env variable
+        run: echo "MF_TOKEN=$(echo $MF_TOKEN)" >> $GITHUB_ENV
+
+      - name: Test
         run: echo ${{ env.MF_TOKEN }}
       
       # Bootstrap.yml
