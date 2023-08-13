@@ -43,21 +43,38 @@ jobs:
       - name: REST API with curl to provision user
         if: always()
         run: |
-          curl -s -S -i -X POST -H "Content-Type: application/json" http://localhost:9002/users -d '{"email":"admin@example.com", "password":"12345678"}'
+          curl -sSiX POST http://localhost:9002/users -H "Content-Type: application/json" -d @- << EOF
+{
+  "name": "John Doe",
+  "credentials": {
+    "identity": "admin@example.com",
+    "secret": "12345678"
+  }
+}
+EOF
       
-      - name: REST API with curl to set mf token
+      - name: REST API with curl to check mf token endpoint
         if: always()
         run: |
-          echo "MF_TOKEN=$(curl -s -S -i -X POST -H "Content-Type: application/json" http://localhost:9002/tokens -d '{"email":"admin@example.com", "password":"12345678"}' | grep -Po "token\":\"\K(.*)(?=\")")" >> $GITHUB_ENV
-      
+          curl -X POST "http://localhost:9002/users/tokens/issue" -H "Content-Type: application/json" -d @- <<EOF                                                                                     ─╯
+{
+    "identity": "admin@example.com",
+    "secret": "12345678"
+}
+EOF
+
+      - name: Set ACCESS_TOKEN
+        id: set-access-token
+        run: |
+          response='{"access_token":"..." ... }' # Replace with your JSON response
+          access_token=$(echo "$response" | grep -o '"access_token":"[^"]*' | cut -d'"' -f4)
+          echo "ACCESS_TOKEN=$access_token" >> $GITHUB_ENV
+
       - name: print mf token
         if: always()
         run: echo $MF_TOKEN
       
-      - name: Set token env variable
-        run: echo "MF_TOKEN=$(echo $MF_TOKEN)" >> $GITHUB_ENV
-
-      - name: Test
+      - name: Test mf token as environment
         run: echo ${{ env.MF_TOKEN }}
       
       # Bootstrap.yml
