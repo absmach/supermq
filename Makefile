@@ -22,6 +22,7 @@ DOCKER_PROJECT := $(strip  $(DOCKER_PROJECT))
 DOCKER_PROJECT := $(shell  echo $(DOCKER_PROJECT) | tr -c -s '[:alnum:][=-=]' '_')
 DOCKER_COMPOSE_COMMANDS_SUPPORTED := up down config
 DEFAULT_DOCKER_COMPOSE_COMMAND  := up
+GRPC_MTLS_CERT_FILES_EXISTS = 0
 ifneq ($(MF_BROKER_TYPE),)
     MF_BROKER_TYPE := $(MF_BROKER_TYPE)
 else
@@ -79,6 +80,12 @@ ifneq ($(filter run_addons%,$(firstword $(MAKECMDGOALS))),)
   temp_args := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
   RUN_ADDON_ARGS :=  $(if $(filter-out $(DOCKER_COMPOSE_COMMANDS_SUPPORTED),$(temp_args)), $(filter-out $(DOCKER_COMPOSE_COMMANDS_SUPPORTED),$(temp_args)),$(ADDON_SERVICES) $(EXTERNAL_SERVICES))
   $(eval $(RUN_ADDON_ARGS):;@)
+endif
+
+ifneq ("$(wildcard docker/ssl/certs/*-grpc-*)","")
+GRPC_MTLS_CERT_FILES_EXISTS = 1
+else
+GRPC_MTLS_CERT_FILES_EXISTS = 0
 endif
 
 FILTERED_SERVICES = $(filter-out $(RUN_ADDON_ARGS), $(SERVICES))
@@ -147,15 +154,30 @@ rundev:
 	cd scripts && ./run.sh
 
 grpc_mtls_certs:
-	make -C docker/ssl users_grpc_certs things_grpc_certs
+	$(MAKE) -C docker/ssl users_grpc_certs things_grpc_certs
 
-run:
+check_mtls:
+ifeq ($(GRPC_MTLS),true)
+	@echo "MTLS is enabled"
+else
+	@unset GRPC_MTLS
+GRPC_MTLS=
+endif
+
+check_certs: check_mtls
+ifeq ($(GRPC_MTLS_CERT_FILES_EXISTS),0)
+ifeq ($(GRPC_MTLS),true)
+	$(MAKE) -C docker/ssl users_grpc_certs things_grpc_certs
+endif
+endif
+
+run: check_certs
 	sed -i "s,file: brokers/.*.yml,file: brokers/${MF_BROKER_TYPE}.yml," docker/docker-compose.yml
 	sed -i "s,MF_BROKER_URL=.*,MF_BROKER_URL=$$\{MF_$(shell echo ${MF_BROKER_TYPE} | tr 'a-z' 'A-Z')_URL\}," docker/.env
 	docker-compose -f docker/docker-compose.yml -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
 
-run_addons:
+run_addons: check_certs
 	$(foreach SVC,$(RUN_ADDON_ARGS),$(if $(filter $(SVC),$(ADDON_SERVICES) $(EXTERNAL_SERVICES)),,$(error Invalid Service $(SVC))))
 	@for SVC in $(RUN_ADDON_ARGS); do \
-		docker-compose -f docker/addons/$$SVC/docker-compose.yml -p $(DOCKER_PROJECT) --env-file ./docker/.env $(DOCKER_COMPOSE_COMMAND) $(args) & \
+		MF_ADDONS_CERTS_PATH_PREFIX="../."  docker-compose -f docker/addons/$$SVC/docker-compose.yml -p $(DOCKER_PROJECT) --env-file ./docker/.env $(DOCKER_COMPOSE_COMMAND) $(args) & \
 	done
