@@ -1,7 +1,9 @@
 package modbus
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"reflect"
 	"time"
@@ -10,24 +12,24 @@ import (
 	"github.com/goburrow/serial"
 )
 
-type IO string
+type dataPoint string
 
 const (
-	Coil            IO = "coil"
-	HoldingRegister IO = "h_register"
-	InputRegister   IO = "i_register"
-	Register        IO = "register"
-	Discrete        IO = "discrete"
-	FIFO            IO = "fifo"
+	Coil            dataPoint = "coil"
+	HoldingRegister dataPoint = "h_register"
+	InputRegister   dataPoint = "i_register"
+	Register        dataPoint = "register"
+	Discrete        dataPoint = "discrete"
+	FIFO            dataPoint = "fifo"
 )
 
 var errInvalidInput = errors.New("invalid input type")
 
 type ModbusService interface {
 	// Read gets data from modbus.
-	Read(address, quantity uint16, iotype IO) ([]byte, error)
+	Read(address, quantity uint16, iotype dataPoint) ([]byte, error)
 	// Write writes a value/s on Modbus.
-	Write(address, quantity uint16, value interface{}, iotype IO) ([]byte, error)
+	Write(address, quantity uint16, value interface{}, iotype dataPoint) ([]byte, error)
 }
 
 var _ ModbusService = (*modbusService)(nil)
@@ -39,6 +41,7 @@ type modbusService struct {
 
 // TCPHandlerOptions defines optional handler values.
 type TCPHandlerOptions struct {
+	Address     string
 	IdleTimeout time.Duration
 	Logger      *log.Logger
 	SlaveId     byte
@@ -47,8 +50,8 @@ type TCPHandlerOptions struct {
 
 // NewRTUClient initializes a new modbus.Client on TCP protocol from the address
 // and handler options provided.
-func NewTCPClient(address string, config TCPHandlerOptions) (ModbusService, error) {
-	handler := modbus.NewTCPClientHandler(address)
+func NewTCPClient(config TCPHandlerOptions) (ModbusService, error) {
+	handler := modbus.NewTCPClientHandler(config.Address)
 	if err := handler.Connect(); err != nil {
 		return nil, err
 	}
@@ -65,6 +68,11 @@ func NewTCPClient(address string, config TCPHandlerOptions) (ModbusService, erro
 		handler.Timeout = config.Timeout
 	}
 
+	err := handler.Connect()
+	if err != nil {
+		return nil, err
+	}
+
 	return &modbusService{
 		Client: modbus.NewClient(handler),
 	}, nil
@@ -72,6 +80,7 @@ func NewTCPClient(address string, config TCPHandlerOptions) (ModbusService, erro
 
 // RTUHandlerOptions defines optional handler values.
 type RTUHandlerOptions struct {
+	Address     string
 	BaudRate    int
 	Config      serial.Config
 	DataBits    int
@@ -86,8 +95,8 @@ type RTUHandlerOptions struct {
 
 // NewRTUClient initializes a new modbus.Client on RTU/ASCII protocol from the address
 // and handler options provided.
-func NewRTUClient(address string, config RTUHandlerOptions) (ModbusService, error) {
-	handler := modbus.NewRTUClientHandler(address)
+func NewRTUClient(config RTUHandlerOptions) (ModbusService, error) {
+	handler := modbus.NewRTUClientHandler(config.Address)
 	if err := handler.Connect(); err != nil {
 		return nil, err
 	}
@@ -121,6 +130,10 @@ func NewRTUClient(address string, config RTUHandlerOptions) (ModbusService, erro
 	if !isZeroValue(config.Timeout) {
 		handler.Timeout = config.Timeout
 	}
+	err := handler.Connect()
+	if err != nil {
+		return nil, err
+	}
 	return &modbusService{
 		Client: modbus.NewClient(handler),
 	}, nil
@@ -147,7 +160,7 @@ func isZeroValue(val interface{}) bool {
 }
 
 // Write writes a value/s on Modbus.
-func (s *modbusService) Write(address, quantity uint16, value interface{}, iotype IO) ([]byte, error) {
+func (s *modbusService) Write(address, quantity uint16, value interface{}, iotype dataPoint) ([]byte, error) {
 	switch iotype {
 	case Coil:
 		switch val := value.(type) {
@@ -173,7 +186,7 @@ func (s *modbusService) Write(address, quantity uint16, value interface{}, iotyp
 }
 
 // Read gets data from modbus.
-func (s *modbusService) Read(address uint16, quantity uint16, iotype IO) ([]byte, error) {
+func (s *modbusService) Read(address uint16, quantity uint16, iotype dataPoint) ([]byte, error) {
 	switch iotype {
 	case Coil:
 		return s.Client.ReadCoils(address, quantity)
@@ -188,4 +201,30 @@ func (s *modbusService) Read(address uint16, quantity uint16, iotype IO) ([]byte
 	default:
 		return nil, errInvalidInput
 	}
+}
+
+type RWOptions struct {
+	Address  uint16
+	Quantity uint16
+	Value    ValueWrapper
+}
+
+type ValueWrapper struct {
+	Data interface{}
+}
+
+func (vw *ValueWrapper) UnmarshalJSON(data []byte) error {
+	var num uint16
+	if err := json.Unmarshal(data, &num); err == nil {
+		vw.Data = num
+		return nil
+	}
+
+	var byteArray []byte
+	if err := json.Unmarshal(data, &byteArray); err == nil {
+		vw.Data = byteArray
+		return nil
+	}
+
+	return fmt.Errorf("unable to unmarshal Value")
 }
