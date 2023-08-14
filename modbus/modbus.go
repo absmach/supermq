@@ -44,11 +44,11 @@ type modbusService struct {
 
 // TCPHandlerOptions defines optional handler values.
 type TCPHandlerOptions struct {
-	Address     string
-	IdleTimeout time.Duration
-	Logger      *log.Logger
-	SlaveId     byte
-	Timeout     time.Duration
+	Address     string        `json:"address"`
+	IdleTimeout time.Duration `json:"idle_time"`
+	Logger      *log.Logger   `json:"-"`
+	SlaveId     byte          `json:"slave_id,omitempty"`
+	Timeout     time.Duration `json:"timeout,omitempty"`
 }
 
 // NewRTUClient initializes a new modbus.Client on TCP protocol from the address
@@ -84,17 +84,17 @@ func NewTCPClient(config TCPHandlerOptions) (ModbusService, error) {
 
 // RTUHandlerOptions defines optional handler values.
 type RTUHandlerOptions struct {
-	Address     string
-	BaudRate    int
-	Config      serial.Config
-	DataBits    int
-	IdleTimeout time.Duration
-	Logger      *log.Logger
-	Parity      string
-	RS485       serial.RS485Config
-	SlaveId     byte
-	StopBits    int
-	Timeout     time.Duration
+	Address     string             `json:"address,omitempty"`
+	BaudRate    int                `json:"baud_rate,omitempty"`
+	Config      serial.Config      `json:"config,omitempty"`
+	DataBits    int                `json:"data_bits,omitempty"`
+	IdleTimeout time.Duration      `json:"idle_timeout,omitempty"`
+	Logger      *log.Logger        `json:"-"`
+	Parity      string             `json:"parity,omitempty"`
+	RS485       serial.RS485Config `json:"rs485,omitempty"`
+	SlaveId     byte               `json:"slave_id,omitempty"`
+	StopBits    int                `json:"stop_bits,omitempty"`
+	Timeout     time.Duration      `json:"timeout,omitempty"`
 }
 
 // NewRTUClient initializes a new modbus.Client on RTU/ASCII protocol from the address
@@ -219,9 +219,9 @@ func (s *modbusService) Close() error {
 }
 
 type RWOptions struct {
-	Address  uint16
-	Quantity uint16
-	Value    ValueWrapper
+	Address  uint16       `json:"address"`
+	Quantity uint16       `json:"quantity"`
+	Value    ValueWrapper `json:"value,omitempty"`
 }
 
 type ValueWrapper struct {

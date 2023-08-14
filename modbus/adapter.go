@@ -134,7 +134,7 @@ func getInput(data []byte) (RWOptions, []byte, error) {
 	var confs json.RawMessage
 	if err := json.Unmarshal(data, &struct {
 		Options *RWOptions       `json:"options"`
-		Config  *json.RawMessage `json:"external_key"`
+		Config  *json.RawMessage `json:"config"`
 	}{
 		Options: &opts,
 		Config:  &confs,
