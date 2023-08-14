@@ -30,13 +30,16 @@ type ModbusService interface {
 	Read(address, quantity uint16, iotype dataPoint) ([]byte, error)
 	// Write writes a value/s on Modbus.
 	Write(address, quantity uint16, value interface{}, iotype dataPoint) ([]byte, error)
+	// Close closes the modbus connection.
+	Close() error
 }
 
 var _ ModbusService = (*modbusService)(nil)
 
 // adapterService provides methods for reading and writing data on Modbus.
 type modbusService struct {
-	Client modbus.Client
+	Client  modbus.Client
+	handler modbus.ClientHandler
 }
 
 // TCPHandlerOptions defines optional handler values.
@@ -74,7 +77,8 @@ func NewTCPClient(config TCPHandlerOptions) (ModbusService, error) {
 	}
 
 	return &modbusService{
-		Client: modbus.NewClient(handler),
+		Client:  modbus.NewClient(handler),
+		handler: handler,
 	}, nil
 }
 
@@ -200,6 +204,17 @@ func (s *modbusService) Read(address uint16, quantity uint16, iotype dataPoint) 
 		return s.Client.ReadInputRegisters(address, quantity)
 	default:
 		return nil, errInvalidInput
+	}
+}
+
+func (s *modbusService) Close() error {
+	switch h := s.handler.(type) {
+	case *modbus.RTUClientHandler:
+		return h.Close()
+	case *modbus.TCPClientHandler:
+		return h.Close()
+	default:
+		return nil
 	}
 }
 

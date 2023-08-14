@@ -1,7 +1,7 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-// Package main contains mqtt-adapter main function to start the mqtt-adapter service.
+// Package main contains modbus-adapter main function to start the modbus-adapter service.
 package main
 
 import (
@@ -10,6 +10,8 @@ import (
 	"log"
 	"os"
 
+	chclient "github.com/mainflux/callhome/pkg/client"
+	"github.com/mainflux/mainflux"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
@@ -23,16 +25,16 @@ import (
 )
 
 const (
-	svcName     = "mqtt"
-	envPrefixES = "MF_MQTT_ADAPTER_ES_"
+	svcName     = "modbus"
+	envPrefixES = "MF_MODBUS_ADAPTER_"
 )
 
 type config struct {
-	LogLevel      string `env:"MF_MQTT_ADAPTER_LOG_LEVEL"                    envDefault:"info"`
-	JaegerURL     string `env:"MF_JAEGER_URL"                                envDefault:"http://localhost:14268/api/traces"`
-	BrokerURL     string `env:"MF_BROKER_URL"                                envDefault:"nats://localhost:4222"`
-	SendTelemetry bool   `env:"MF_SEND_TELEMETRY"                            envDefault:"true"`
-	InstanceID    string `env:"MF_MQTT_ADAPTER_INSTANCE_ID"                  envDefault:""`
+	LogLevel      string `env:"MF_MODBUS_ADAPTER_LOG_LEVEL"   envDefault:"info"`
+	JaegerURL     string `env:"MF_JAEGER_URL"               envDefault:"http://localhost:14268/api/traces"`
+	BrokerURL     string `env:"MF_BROKER_URL"               envDefault:"nats://localhost:4222"`
+	SendTelemetry bool   `env:"MF_SEND_TELEMETRY"           envDefault:"true"`
+	InstanceID    string `env:"MF_MODBUS_ADAPTER_INSTANCE_ID" envDefault:""`
 }
 
 func main() {
@@ -49,23 +51,19 @@ func main() {
 		log.Fatalf("failed to init logger: %s", err)
 	}
 
-	var exitCode int
-	defer mflog.ExitWithError(&exitCode)
-
 	if cfg.InstanceID == "" {
 		if cfg.InstanceID, err = uuid.New().ID(); err != nil {
-			logger.Error(fmt.Sprintf("failed to generate instanceID: %s", err))
-			exitCode = 1
-			return
+			logger.Fatal(fmt.Sprintf("failed to generate instanceID: %s", err))
 		}
 	}
 
 	tp, err := jaegerClient.NewProvider(svcName, cfg.JaegerURL, cfg.InstanceID)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to init Jaeger: %s", err))
-		exitCode = 1
-		return
+		logger.Fatal(fmt.Sprintf("Failed to init Jaeger: %s", err))
 	}
+	var exitCode int
+	defer mflog.ExitWithError(&exitCode)
+
 	defer func() {
 		if err := tp.Shutdown(ctx); err != nil {
 			logger.Error(fmt.Sprintf("Error shutting down tracer provider: %v", err))
@@ -84,26 +82,32 @@ func main() {
 
 	svc := modbus.New(logger)
 
-	if err := svc.Read(ctx, "modbus", nps, nps); err != nil {
-		logger.Error(fmt.Sprintf("failed to forward message broker messages: %s", err))
+	if err := svc.Read(ctx, svcName, nps, nps); err != nil {
+		logger.Error(fmt.Sprintf("failed to forward read messages: %v", err))
 		exitCode = 1
 		return
 	}
 
-	/*if cfg.SendTelemetry {
+	if err := svc.Write(ctx, svcName, nps, nps); err != nil {
+		logger.Error(fmt.Sprintf("failed to forward write messages: %v", err))
+		exitCode = 1
+		return
+	}
+
+	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, mainflux.Version, logger, cancel)
 		go chc.CallHome(ctx)
-	}*/
+	}
 
 	g.Go(func() error {
 		if sig := errors.SignalHandler(ctx); sig != nil {
 			cancel()
-			logger.Info(fmt.Sprintf("mProxy shutdown by signal: %s", sig))
+			logger.Info(fmt.Sprintf("modbus shutdown by signal: %s", sig))
 		}
 		return nil
 	})
 
 	if err := g.Wait(); err != nil {
-		logger.Error(fmt.Sprintf("mProxy terminated: %s", err))
+		logger.Error(fmt.Sprintf("modbus service terminated: %s", err))
 	}
 }

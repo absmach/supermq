@@ -52,6 +52,7 @@ func handleRead(ctx context.Context, pub messaging.Publisher, logger mflog.Logge
 			return err
 		}
 		go func() {
+			defer client.Close()
 			for {
 				res, err := client.Read(writeOpts.Address, writeOpts.Quantity, dataPoint(dp))
 				if err != nil {
@@ -82,6 +83,7 @@ func handleWrite(ctx context.Context, pub messaging.Publisher, logger mflog.Logg
 		if err != nil {
 			return err
 		}
+		defer client.Close()
 		res, err := client.Write(writeOpts.Address, writeOpts.Quantity, writeOpts.Value.Data, dataPoint(dp))
 		if err != nil {
 			return err
