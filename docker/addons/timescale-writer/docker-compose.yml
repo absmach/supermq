@@ -13,7 +13,6 @@ version: "3.7"
 networks:
   mainflux-base-net:
 
-
 volumes:
   mainflux-timescale-writer-volume:
 

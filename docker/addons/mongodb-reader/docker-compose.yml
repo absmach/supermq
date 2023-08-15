@@ -12,7 +12,6 @@ version: "3.7"
 networks:
   mainflux-base-net:
 
-
 services:
   mongodb-reader:
     image: mainflux/mongodb-reader:${MF_RELEASE_TAG}
