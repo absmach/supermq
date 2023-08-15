@@ -71,8 +71,7 @@ func NewTCPClient(config TCPHandlerOptions) (ModbusService, error) {
 		handler.Timeout = config.Timeout
 	}
 
-	err := handler.Connect()
-	if err != nil {
+	if err := handler.Connect(); err != nil {
 		return nil, err
 	}
 
@@ -134,8 +133,8 @@ func NewRTUClient(config RTUHandlerOptions) (ModbusService, error) {
 	if !isZeroValue(config.Timeout) {
 		handler.Timeout = config.Timeout
 	}
-	err := handler.Connect()
-	if err != nil {
+
+	if err := handler.Connect(); err != nil {
 		return nil, err
 	}
 	return &modbusService{
@@ -184,6 +183,8 @@ func (s *modbusService) Write(address, quantity uint16, value interface{}, iotyp
 		default:
 			return nil, errInvalidInput
 		}
+	case HoldingRegister, InputRegister, Discrete, FIFO:
+		return nil, fmt.Errorf("invalid iotype for Write method: %s", iotype)
 	default:
 		return nil, errInvalidInput
 	}
@@ -202,6 +203,8 @@ func (s *modbusService) Read(address uint16, quantity uint16, iotype dataPoint) 
 		return s.Client.ReadHoldingRegisters(address, quantity)
 	case InputRegister:
 		return s.Client.ReadInputRegisters(address, quantity)
+	case Register:
+		return nil, fmt.Errorf("invalid iotype for Read method: %s", iotype)
 	default:
 		return nil, errInvalidInput
 	}

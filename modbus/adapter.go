@@ -47,6 +47,9 @@ func handleRead(ctx context.Context, pub messaging.Publisher, logger mflog.Logge
 		protocal := strings.Split(msg.Subtopic, ".")[2]
 		dp := strings.Split(msg.Subtopic, ".")[3]
 		writeOpts, cfg, err := getInput(msg.Payload)
+		if err != nil {
+			return err
+		}
 		client, err := clientFromProtocol(protocal, cfg)
 		if err != nil {
 			return err
@@ -54,15 +57,20 @@ func handleRead(ctx context.Context, pub messaging.Publisher, logger mflog.Logge
 		go func() {
 			defer client.Close()
 			for {
-				res, err := client.Read(writeOpts.Address, writeOpts.Quantity, dataPoint(dp))
-				if err != nil {
-					logger.Error(err.Error())
-				}
-				if err := pub.Publish(ctx, msg.Channel, &messaging.Message{
-					Payload:  res,
-					Subtopic: "modbus.res",
-				}); err != nil {
-					logger.Error(err.Error())
+				select {
+				case <-ctx.Done():
+					return
+				default:
+					res, err := client.Read(writeOpts.Address, writeOpts.Quantity, dataPoint(dp))
+					if err != nil {
+						logger.Error(err.Error())
+					}
+					if err := pub.Publish(ctx, msg.Channel, &messaging.Message{
+						Payload:  res,
+						Subtopic: "modbus.res",
+					}); err != nil {
+						logger.Error(err.Error())
+					}
 				}
 			}
 		}()
@@ -79,6 +87,9 @@ func handleWrite(ctx context.Context, pub messaging.Publisher, logger mflog.Logg
 		protocal := strings.Split(msg.Subtopic, ".")[2]
 		dp := strings.Split(msg.Subtopic, ".")[3]
 		writeOpts, cfg, err := getInput(msg.Payload)
+		if err != nil {
+			return err
+		}
 		client, err := clientFromProtocol(protocal, cfg)
 		if err != nil {
 			return err
@@ -139,7 +150,7 @@ func getInput(data []byte) (RWOptions, []byte, error) {
 		Options: &opts,
 		Config:  &confs,
 	}); err != nil {
-		return RWOptions{}, nil, nil
+		return RWOptions{}, nil, err
 	}
 	return opts, confs, nil
 }

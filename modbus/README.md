@@ -42,7 +42,7 @@ MF_BROKER_URL=[Message broker instance URL] \
 MF_JAEGER_URL=[Jaeger server URL] \
 MF_SEND_TELEMETRY=[Send telemetry to mainflux call home server] \
 MF_MODBUS_ADAPTER_INSTANCE_ID=[CoAP adapter instance ID] \
-$GOBIN/mainflux-coap
+$GOBIN/mainflux-modbus
 ```
 
 ## Usage
@@ -109,7 +109,7 @@ The results of the readings are published on `channels/<channel_id>/messages/mod
 
 ### Writing Values
 
-To start reading values, you need to publish a message using mainflux messaging adapters such as http, coap, mqtt etc to the channel `channels/<channel_id>/messages/modbus/write/<modbus_protocol>/<modbus_data_point>`.
+To start writing values, you need to publish a message using mainflux messaging adapters such as http, coap, mqtt etc to the channel `channels/<channel_id>/messages/modbus/write/<modbus_protocol>/<modbus_data_point>`.
 
 The payload of the message is structured as follows:
 
