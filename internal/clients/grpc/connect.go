@@ -17,6 +17,14 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+type security int
+
+const (
+	WITHOUT_TLS security = iota
+	WITH_TLS
+	WITH_MTLS
+)
+
 var (
 	errGrpcConnect = errors.New("failed to connect to grpc server")
 	errGrpcClose   = errors.New("failed to close grpc connection")
@@ -38,7 +46,7 @@ type ClientHandler interface {
 
 type Client struct {
 	*gogrpc.ClientConn
-	secure bool
+	secure security
 }
 
 var _ ClientHandler = (*Client)(nil)
@@ -49,11 +57,11 @@ func NewClientHandler(c *Client) ClientHandler {
 }
 
 // Connect creates new gRPC client and connect to gRPC server.
-func Connect(cfg Config) (*gogrpc.ClientConn, bool, error) {
+func Connect(cfg Config) (*gogrpc.ClientConn, security, error) {
 	opts := []gogrpc.DialOption{
 		gogrpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 	}
-	secure := false
+	secure := WITHOUT_TLS
 	tc := insecure.NewCredentials()
 
 	if cfg.ServerCAFile != "" {
@@ -70,6 +78,7 @@ func Connect(cfg Config) (*gogrpc.ClientConn, bool, error) {
 				return nil, secure, fmt.Errorf("failed to append root ca to tls.Config")
 			}
 			tlsConfig.RootCAs = capool
+			secure = WITH_TLS
 		}
 
 		// Loading mtls certificates file
@@ -79,10 +88,10 @@ func Connect(cfg Config) (*gogrpc.ClientConn, bool, error) {
 				return nil, secure, fmt.Errorf("failed to client certificate and key %w", err)
 			}
 			tlsConfig.Certificates = []tls.Certificate{certificate}
+			secure = WITH_MTLS
 		}
 
 		tc = credentials.NewTLS(tlsConfig)
-		secure = true
 	}
 
 	opts = append(opts, gogrpc.WithTransportCredentials(tc))
@@ -96,7 +105,7 @@ func Connect(cfg Config) (*gogrpc.ClientConn, bool, error) {
 
 // Setup load gRPC configuration from environment variable, creates new gRPC client and connect to gRPC server.
 func Setup(config Config, svcName string) (*Client, ClientHandler, error) {
-	secure := false
+	secure := WITHOUT_TLS
 
 	// connect to auth grpc server
 	grpcClient, secure, err := Connect(config)
@@ -122,13 +131,26 @@ func (c *Client) Close() error {
 // IsSecure is utility method for checking if
 // the client is running with TLS enabled.
 func (c *Client) IsSecure() bool {
-	return c.secure
+	switch c.secure {
+	case WITH_TLS, WITH_MTLS:
+		return true
+	case WITHOUT_TLS:
+		fallthrough
+	default:
+		return true
+	}
 }
 
 // Secure is used for pretty printing TLS info.
 func (c *Client) Secure() string {
-	if c.secure {
+	switch c.secure {
+	case WITH_TLS:
 		return "with TLS"
+	case WITH_MTLS:
+		return "with mTLS"
+	case WITHOUT_TLS:
+		fallthrough
+	default:
+		return "without TLS"
 	}
-	return "without TLS"
 }

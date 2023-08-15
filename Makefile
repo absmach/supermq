@@ -156,17 +156,29 @@ rundev:
 grpc_mtls_certs:
 	$(MAKE) -C docker/ssl users_grpc_certs things_grpc_certs
 
+check_tls:
+ifeq ($(GRPC_TLS),true)
+	@unset GRPC_MTLS
+	@echo "gRPC TLS is enabled"
+GRPC_MTLS=
+else
+	@unset GRPC_TLS
+GRPC_TLS=
+endif
+
 check_mtls:
 ifeq ($(GRPC_MTLS),true)
-	@echo "MTLS is enabled"
+	@unset GRPC_TLS
+	@echo "gRPC MTLS is enabled"
+GRPC_TLS=
 else
 	@unset GRPC_MTLS
 GRPC_MTLS=
 endif
 
-check_certs: check_mtls
+check_certs: check_mtls check_tls
 ifeq ($(GRPC_MTLS_CERT_FILES_EXISTS),0)
-ifeq ($(GRPC_MTLS),true)
+ifneq ($(filter $(GRPC_MTLS),true $(GRPC_TLS),true),)
 	$(MAKE) -C docker/ssl users_grpc_certs things_grpc_certs
 endif
 endif
