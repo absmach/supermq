@@ -92,7 +92,7 @@ FILTERED_SERVICES = $(filter-out $(RUN_ADDON_ARGS), $(SERVICES))
 
 all: $(SERVICES)
 
-.PHONY: all $(SERVICES) dockers dockers_dev latest release gen_mtls_certs run run_grpc_mtls run_addons run_addons_grpc_mtls
+.PHONY: all $(SERVICES) dockers dockers_dev latest release run run_addons grpc_mtls_certs check_mtls check_certs
 
 clean:
 	rm -rf ${BUILD_DIR}
