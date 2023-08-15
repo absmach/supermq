@@ -10,13 +10,8 @@ import (
 	"os/signal"
 	"syscall"
 	"testing"
-	"time"
 
 	dockertest "github.com/ory/dockertest/v3"
-)
-
-const (
-	poolMaxWait = 120 * time.Second
 )
 
 var (
