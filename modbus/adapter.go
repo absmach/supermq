@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	// channels.<channel_id>.modbus.<read/write>.<modbus_protocol>.<modbus_data_point>
+	// channels.<channel_id>.modbus.<read/write>.<modbus_protocol>.<modbus_data_point> .
 	readTopic  = "channels.*.modbus.read.*.*"
 	writeTopic = "channels.*.modbus.write.*.*"
 )
