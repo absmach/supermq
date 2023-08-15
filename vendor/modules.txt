@@ -675,6 +675,9 @@ github.com/stretchr/testify/require
 # github.com/subosito/gotenv v1.4.2
 ## explicit; go 1.18
 github.com/subosito/gotenv
+# github.com/tbrandon/mbserver v0.0.0-20211210035124-daf3c8c4269f
+## explicit
+github.com/tbrandon/mbserver
 # github.com/twitchyliquid64/golang-asm v0.15.1
 ## explicit; go 1.13
 github.com/twitchyliquid64/golang-asm/asm/arch

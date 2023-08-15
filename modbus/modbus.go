@@ -2,11 +2,12 @@ package modbus
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"reflect"
 	"time"
+
+	"github.com/mainflux/mainflux/pkg/errors"
 
 	"github.com/goburrow/modbus"
 	"github.com/goburrow/serial"
@@ -23,7 +24,10 @@ const (
 	FIFO            dataPoint = "fifo"
 )
 
-var errInvalidInput = errors.New("invalid input type")
+var (
+	errInvalidInput    = errors.New("invalid input type")
+	errUnsupportedRead = errors.New("invalid iotype for Write method: register")
+)
 
 type ModbusService interface {
 	// Read gets data from modbus.
@@ -204,7 +208,7 @@ func (s *modbusService) Read(address uint16, quantity uint16, iotype dataPoint) 
 	case InputRegister:
 		return s.Client.ReadInputRegisters(address, quantity)
 	case Register:
-		return nil, fmt.Errorf("invalid iotype for Read method: %s", iotype)
+		return nil, errUnsupportedRead
 	default:
 		return nil, errInvalidInput
 	}

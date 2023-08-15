@@ -62,7 +62,10 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
 
-require github.com/goburrow/serial v0.1.0 // indirect
+require (
+	github.com/goburrow/serial v0.1.0
+	github.com/tbrandon/mbserver v0.0.0-20211210035124-daf3c8c4269f
+)
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect

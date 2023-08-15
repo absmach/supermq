@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
+	"time"
 
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
@@ -64,6 +65,7 @@ func handleRead(ctx context.Context, pub messaging.Publisher, logger mflog.Logge
 					res, err := client.Read(writeOpts.Address, writeOpts.Quantity, dataPoint(dp))
 					if err != nil {
 						logger.Error(err.Error())
+						continue
 					}
 					if err := pub.Publish(ctx, msg.Channel, &messaging.Message{
 						Payload:  res,
@@ -72,6 +74,7 @@ func handleRead(ctx context.Context, pub messaging.Publisher, logger mflog.Logge
 						logger.Error(err.Error())
 					}
 				}
+				time.Sleep(time.Second * 2)
 			}
 		}()
 		return nil
