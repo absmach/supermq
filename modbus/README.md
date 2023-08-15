@@ -75,33 +75,39 @@ The payload of the message is structured as follows:
         "address": 123,
         "quantity": 2,
     },
-    "config": {}
+    "config": {
+		"sampling_frquency: ""
+		...
+	}
 }
 
 ```
 
-The config can be either TCP or RTU and has the following structure:
+The config can be eithee RTU or TCP and has the following structures respectively:
 
-```go
-type RTUHandlerOptions struct {
-	Address     string             `json:"address,omitempty"`
-	BaudRate    int                `json:"baud_rate,omitempty"`
-	Config      serial.Config      `json:"config,omitempty"`
-	DataBits    int                `json:"data_bits,omitempty"`
-	IdleTimeout time.Duration      `json:"idle_timeout,omitempty"`
-	Logger      *log.Logger        `json:"-"`
-	Parity      string             `json:"parity,omitempty"`
-	RS485       serial.RS485Config `json:"rs485,omitempty"`
-	SlaveId     byte               `json:"slave_id,omitempty"`
-	StopBits    int                `json:"stop_bits,omitempty"`
-	Timeout     time.Duration      `json:"timeout,omitempty"`
+```json
+{
+  "address": "/dev/ttyS0",
+  "baud_rate": 9600,
+  "config": {},
+  "data_bits": 8,
+  "idle_timeout": "5m",
+  "parity": "even",
+  "rs485": {},
+  "slave_id": 1,
+  "stop_bits": 1,
+  "timeout": "10s",
+  "sampling_frequency": "1s"
 }
-type TCPHandlerOptions struct {
-	Address     string        `json:"address"`
-	IdleTimeout time.Duration `json:"idle_time"`
-	Logger      *log.Logger   `json:"-"`
-	SlaveId     byte          `json:"slave_id,omitempty"`
-	Timeout     time.Duration `json:"timeout,omitempty"`
+```
+
+```json
+{
+  "address": "localhost:1502",
+  "idle_time": "15m",
+  "slave_id": 2,
+  "timeout": "5s",
+  "sampling_frequency": "30s"
 }
 ```
 

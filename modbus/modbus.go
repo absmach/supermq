@@ -48,11 +48,12 @@ type modbusService struct {
 
 // TCPHandlerOptions defines optional handler values.
 type TCPHandlerOptions struct {
-	Address     string        `json:"address"`
-	IdleTimeout time.Duration `json:"idle_time"`
-	Logger      *log.Logger   `json:"-"`
-	SlaveId     byte          `json:"slave_id,omitempty"`
-	Timeout     time.Duration `json:"timeout,omitempty"`
+	Address           string         `json:"address"`
+	IdleTimeout       customDuration `json:"idle_time"`
+	Logger            *log.Logger    `json:"-"`
+	SlaveId           byte           `json:"slave_id,omitempty"`
+	Timeout           customDuration `json:"timeout,omitempty"`
+	SamplingFrequency customDuration `json:"sampling_frequency,omitempty"`
 }
 
 // NewRTUClient initializes a new modbus.Client on TCP protocol from the address
@@ -63,7 +64,7 @@ func NewTCPClient(config TCPHandlerOptions) (ModbusService, error) {
 		return nil, err
 	}
 	if !isZeroValue(config.IdleTimeout) {
-		handler.IdleTimeout = config.IdleTimeout
+		handler.IdleTimeout = config.IdleTimeout.Duration
 	}
 	if !isZeroValue(config.Logger) {
 		handler.Logger = config.Logger
@@ -72,7 +73,7 @@ func NewTCPClient(config TCPHandlerOptions) (ModbusService, error) {
 		handler.SlaveId = config.SlaveId
 	}
 	if !isZeroValue(config.Timeout) {
-		handler.Timeout = config.Timeout
+		handler.Timeout = config.Timeout.Duration
 	}
 
 	if err := handler.Connect(); err != nil {
@@ -87,17 +88,18 @@ func NewTCPClient(config TCPHandlerOptions) (ModbusService, error) {
 
 // RTUHandlerOptions defines optional handler values.
 type RTUHandlerOptions struct {
-	Address     string             `json:"address,omitempty"`
-	BaudRate    int                `json:"baud_rate,omitempty"`
-	Config      serial.Config      `json:"config,omitempty"`
-	DataBits    int                `json:"data_bits,omitempty"`
-	IdleTimeout time.Duration      `json:"idle_timeout,omitempty"`
-	Logger      *log.Logger        `json:"-"`
-	Parity      string             `json:"parity,omitempty"`
-	RS485       serial.RS485Config `json:"rs485,omitempty"`
-	SlaveId     byte               `json:"slave_id,omitempty"`
-	StopBits    int                `json:"stop_bits,omitempty"`
-	Timeout     time.Duration      `json:"timeout,omitempty"`
+	Address           string             `json:"address,omitempty"`
+	BaudRate          int                `json:"baud_rate,omitempty"`
+	Config            serial.Config      `json:"config,omitempty"`
+	DataBits          int                `json:"data_bits,omitempty"`
+	IdleTimeout       customDuration     `json:"idle_timeout,omitempty"`
+	Logger            *log.Logger        `json:"-"`
+	Parity            string             `json:"parity,omitempty"`
+	RS485             serial.RS485Config `json:"rs485,omitempty"`
+	SlaveId           byte               `json:"slave_id,omitempty"`
+	StopBits          int                `json:"stop_bits,omitempty"`
+	Timeout           customDuration     `json:"timeout,omitempty"`
+	SamplingFrequency customDuration     `json:"sampling_frequency,omitempty"`
 }
 
 // NewRTUClient initializes a new modbus.Client on RTU/ASCII protocol from the address
@@ -117,7 +119,7 @@ func NewRTUClient(config RTUHandlerOptions) (ModbusService, error) {
 		handler.DataBits = config.DataBits
 	}
 	if !isZeroValue(config.IdleTimeout) {
-		handler.IdleTimeout = config.IdleTimeout
+		handler.IdleTimeout = config.IdleTimeout.Duration
 	}
 	if !isZeroValue(config.Logger) {
 		handler.Logger = config.Logger
@@ -135,7 +137,7 @@ func NewRTUClient(config RTUHandlerOptions) (ModbusService, error) {
 		handler.StopBits = config.StopBits
 	}
 	if !isZeroValue(config.Timeout) {
-		handler.Timeout = config.Timeout
+		handler.Timeout = config.Timeout.Duration
 	}
 
 	if err := handler.Connect(); err != nil {
@@ -249,4 +251,23 @@ func (vw *ValueWrapper) UnmarshalJSON(data []byte) error {
 	}
 
 	return fmt.Errorf("unable to unmarshal Value")
+}
+
+type customDuration struct {
+	time.Duration
+}
+
+func (cd *customDuration) UnmarshalJSON(data []byte) error {
+	var durationStr string
+	if err := json.Unmarshal(data, &durationStr); err != nil {
+		return err
+	}
+
+	duration, err := time.ParseDuration(durationStr)
+	if err != nil {
+		return err
+	}
+
+	cd.Duration = duration
+	return nil
 }

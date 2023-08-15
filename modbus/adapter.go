@@ -51,7 +51,7 @@ func handleRead(ctx context.Context, pub messaging.Publisher, logger mflog.Logge
 		if err != nil {
 			return err
 		}
-		client, err := clientFromProtocol(protocal, cfg)
+		client, freq, err := clientFromProtocol(protocal, cfg)
 		if err != nil {
 			return err
 		}
@@ -74,7 +74,7 @@ func handleRead(ctx context.Context, pub messaging.Publisher, logger mflog.Logge
 						logger.Error(err.Error())
 					}
 				}
-				time.Sleep(time.Second * 2)
+				time.Sleep(freq)
 			}
 		}()
 		return nil
@@ -93,7 +93,7 @@ func handleWrite(ctx context.Context, pub messaging.Publisher, logger mflog.Logg
 		if err != nil {
 			return err
 		}
-		client, err := clientFromProtocol(protocal, cfg)
+		client, _, err := clientFromProtocol(protocal, cfg)
 		if err != nil {
 			return err
 		}
@@ -124,22 +124,24 @@ func (h handleFunc) Cancel() error {
 	return nil
 }
 
-func clientFromProtocol(protocol string, config []byte) (ModbusService, error) {
+func clientFromProtocol(protocol string, config []byte) (ModbusService, time.Duration, error) {
 	switch protocol {
 	case "tcp":
 		var cfg TCPHandlerOptions
 		if err := json.Unmarshal(config, &cfg); err != nil {
-			return nil, err
+			return nil, time.Second, err
 		}
-		return NewTCPClient(cfg)
+		svc, err := NewTCPClient(cfg)
+		return svc, cfg.SamplingFrequency.Duration, err
 	case "rtu":
 		var cfg RTUHandlerOptions
 		if err := json.Unmarshal(config, &cfg); err != nil {
-			return nil, err
+			return nil, time.Second, err
 		}
-		return NewRTUClient(cfg)
+		svc, err := NewRTUClient(cfg)
+		return svc, cfg.SamplingFrequency.Duration, err
 	default:
-		return nil, errUnsupportedModbusProtocol
+		return nil, time.Second, errUnsupportedModbusProtocol
 	}
 }
 
