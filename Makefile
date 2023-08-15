@@ -178,8 +178,10 @@ endif
 
 check_certs: check_mtls check_tls
 ifeq ($(GRPC_MTLS_CERT_FILES_EXISTS),0)
-ifneq ($(filter $(GRPC_MTLS),true $(GRPC_TLS),true),)
+ifeq ($(filter true,$(GRPC_MTLS) $(GRPC_TLS)),true)
+ifeq ($(filter $(DEFAULT_DOCKER_COMPOSE_COMMAND),$(DOCKER_COMPOSE_COMMAND)),$(DEFAULT_DOCKER_COMPOSE_COMMAND))
 	$(MAKE) -C docker/ssl users_grpc_certs things_grpc_certs
+endif
 endif
 endif
 

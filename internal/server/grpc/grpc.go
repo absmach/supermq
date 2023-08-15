@@ -72,18 +72,20 @@ func (s *Server) Start() error {
 			Certificates: []tls.Certificate{certificate},
 		}
 
+		var mtlsCA string
 		// Loading Server CA file
 		rootCA, err := loadCertFile(s.Config.ServerCAFile)
 		if err != nil {
 			return fmt.Errorf("failed to load root ca file: %w", err)
 		}
-		if rootCA != nil {
+		if len(rootCA) > 0 {
 			if tlsConfig.RootCAs == nil {
 				tlsConfig.RootCAs = x509.NewCertPool()
 			}
 			if !tlsConfig.RootCAs.AppendCertsFromPEM(rootCA) {
 				return fmt.Errorf("failed to append root ca to tls.Config")
 			}
+			mtlsCA = fmt.Sprintf("root ca %s", s.Config.ServerCAFile)
 		}
 
 		// Loading Client CA File
@@ -91,17 +93,22 @@ func (s *Server) Start() error {
 		if err != nil {
 			return fmt.Errorf("failed to load client ca file: %w", err)
 		}
-		if clientCA != nil {
+		if len(clientCA) > 0 {
 			if tlsConfig.ClientCAs == nil {
 				tlsConfig.ClientCAs = x509.NewCertPool()
 			}
 			if !tlsConfig.ClientCAs.AppendCertsFromPEM(clientCA) {
 				return fmt.Errorf("failed to append client ca to tls.Config")
 			}
+			mtlsCA = fmt.Sprintf("%s client ca %s", mtlsCA, s.Config.ClientCAFile)
 		}
-
 		creds = grpc.Creds(credentials.NewTLS(tlsConfig))
-		s.Logger.Info(fmt.Sprintf("%s service gRPC server listening at %s with TLS cert %s and key %s", s.Name, s.Address, s.Config.CertFile, s.Config.KeyFile))
+		switch {
+		case len(mtlsCA) > 0:
+			s.Logger.Info(fmt.Sprintf("%s service gRPC server listening at %s with TLS/mTLS cert %s , key %s and %s", s.Name, s.Address, s.Config.CertFile, s.Config.KeyFile, mtlsCA))
+		default:
+			s.Logger.Info(fmt.Sprintf("%s service gRPC server listening at %s with TLS cert %s and key %s", s.Name, s.Address, s.Config.CertFile, s.Config.KeyFile))
+		}
 	default:
 		s.Logger.Info(fmt.Sprintf("%s service gRPC server listening at %s without TLS", s.Name, s.Address))
 

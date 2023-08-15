@@ -72,7 +72,7 @@ func Connect(cfg Config) (*gogrpc.ClientConn, security, error) {
 		if err != nil {
 			return nil, secure, fmt.Errorf("failed to load root ca file: %w", err)
 		}
-		if rootCA != nil {
+		if len(rootCA) > 0 {
 			capool := x509.NewCertPool()
 			if !capool.AppendCertsFromPEM(rootCA) {
 				return nil, secure, fmt.Errorf("failed to append root ca to tls.Config")

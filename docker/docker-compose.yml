@@ -92,8 +92,8 @@ services:
       MF_THINGS_CACHE_KEY_DURATION: ${MF_THINGS_CACHE_KEY_DURATION}
       MF_THINGS_HTTP_HOST: ${MF_THINGS_HTTP_HOST}
       MF_THINGS_HTTP_PORT: ${MF_THINGS_HTTP_PORT}
-      MF_THINGS_GRPC_HOST: ${MF_THINGS_GRPC_HOST}
-      MF_THINGS_GRPC_PORT: ${MF_THINGS_GRPC_PORT}
+      MF_THINGS_AUTH_GRPC_HOST: ${MF_THINGS_AUTH_GRPC_HOST}
+      MF_THINGS_AUTH_GRPC_PORT: ${MF_THINGS_AUTH_GRPC_PORT}
       ## Compose supports parameter expansion in environment,
       ## Eg: ${VAR:+replacement} or ${VAR+replacement} -> replacement if VAR is set and non-empty, otherwise empty
       ## Eg :${VAR:-default} or ${VAR-default}  -> value of VAR if set and non-empty, otherwise default
@@ -125,32 +125,32 @@ services:
       MF_SEND_TELEMETRY: ${MF_SEND_TELEMETRY}
     ports:
       - ${MF_THINGS_HTTP_PORT}:${MF_THINGS_HTTP_PORT}
-      - ${MF_THINGS_GRPC_PORT}:${MF_THINGS_GRPC_PORT}
+      - ${MF_THINGS_AUTH_GRPC_PORT}:${MF_THINGS_AUTH_GRPC_PORT}
     networks:
       - mainflux-base-net
     volumes:
       # Things gRPC server certificates
       - type: bind
-        source: ${MF_THINGS_AUTH_GRPC_SERVER_CERT:-docker/ssl/certs/grpc/server_cert}
+        source: ${MF_THINGS_AUTH_GRPC_SERVER_CERT:-ssl/certs/dummy/server_cert}
         target: /things-grpc-server${MF_THINGS_AUTH_GRPC_SERVER_CERT:+.crt}
       - type: bind
-        source: ${MF_THINGS_AUTH_GRPC_SERVER_KEY:-docker/ssl/certs/grpc/server_key}
+        source: ${MF_THINGS_AUTH_GRPC_SERVER_KEY:-ssl/certs/dummy/server_key}
         target: /things-grpc-server${MF_THINGS_AUTH_GRPC_SERVER_KEY:+.key}
       - type: bind
-        source: ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:-docker/ssl/certs/grpc/server_ca_certs}
+        source: ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:-ssl/certs/dummy/server_ca_certs}
         target: /things-grpc-server-ca${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:+.crt}
       - type: bind
-        source: ${MF_THINGS_AUTH_GRPC_CLIENT_CA_CERTS:-docker/ssl/certs/grpc/client_ca_certs}
+        source: ${MF_THINGS_AUTH_GRPC_CLIENT_CA_CERTS:-ssl/certs/dummy/client_ca_certs}
         target: /things-grpc-client-ca${MF_THINGS_AUTH_GRPC_CLIENT_CA_CERTS:+.crt}
       # Users gRPC client certificates
       - type: bind
-        source: ${MF_USERS_GRPC_CLIENT_CERT:-docker/ssl/certs/grpc/client_cert}
+        source: ${MF_USERS_GRPC_CLIENT_CERT:-ssl/certs/dummy/client_cert}
         target: /users-grpc-client${MF_USERS_GRPC_CLIENT_CERT:+.crt}
       - type: bind
-        source: ${MF_USERS_GRPC_CLIENT_KEY:-docker/ssl/certs/grpc/client_key}
+        source: ${MF_USERS_GRPC_CLIENT_KEY:-ssl/certs/dummy/client_key}
         target: /users-grpc-client${MF_USERS_GRPC_CLIENT_KEY:+.key}
       - type: bind
-        source: ${MF_USERS_GRPC_SERVER_CA_CERTS:-docker/ssl/certs/grpc/server_ca}
+        source: ${MF_USERS_GRPC_SERVER_CA_CERTS:-ssl/certs/dummy/server_ca}
         target: /users-grpc-server-ca${MF_USERS_GRPC_SERVER_CA_CERTS:+.crt}
 
   users-db:
@@ -221,16 +221,16 @@ services:
       - ./templates/${MF_USERS_RESET_PWD_TEMPLATE}:/email.tmpl
       # Users gRPC mTLS server certificates
       - type: bind
-        source: ${MF_USERS_GRPC_SERVER_CERT:-docker/ssl/certs/grpc/server_cert}
+        source: ${MF_USERS_GRPC_SERVER_CERT:-ssl/certs/dummy/server_cert}
         target: /users-grpc-server${MF_USERS_GRPC_SERVER_CERT:+.crt}
       - type: bind
-        source: ${MF_USERS_GRPC_SERVER_KEY:-docker/ssl/certs/grpc/server_key}
+        source: ${MF_USERS_GRPC_SERVER_KEY:-ssl/certs/dummy/server_key}
         target: /users-grpc-server${MF_USERS_GRPC_SERVER_KEY:+.key}
       - type: bind
-        source: ${MF_USERS_GRPC_SERVER_CA_CERTS:-docker/ssl/certs/grpc/server_ca_certs}
+        source: ${MF_USERS_GRPC_SERVER_CA_CERTS:-ssl/certs/dummy/server_ca_certs}
         target: /users-grpc-server-ca${MF_USERS_GRPC_SERVER_CA_CERTS:+.crt}
       - type: bind
-        source: ${MF_USERS_GRPC_CLIENT_CA_CERTS:-docker/ssl/certs/grpc/client_ca_certs}
+        source: ${MF_USERS_GRPC_CLIENT_CA_CERTS:-ssl/certs/dummy/client_ca_certs}
         target: /users-grpc-client-ca${MF_USERS_GRPC_CLIENT_CA_CERTS:+.crt}
 
   jaeger:
@@ -293,13 +293,13 @@ services:
     volumes:
       # Things gRPC mTLS client certificates
       - type: bind
-        source: ${MF_THINGS_AUTH_GRPC_CLIENT_CERT:-docker/ssl/certs/grpc/client_cert}
+        source: ${MF_THINGS_AUTH_GRPC_CLIENT_CERT:-ssl/certs/dummy/client_cert}
         target: /client${MF_THINGS_AUTH_GRPC_CLIENT_CERT:+.crt}
       - type: bind
-        source: ${MF_THINGS_AUTH_GRPC_CLIENT_KEY:-docker/ssl/certs/grpc/client_key}
+        source: ${MF_THINGS_AUTH_GRPC_CLIENT_KEY:-ssl/certs/dummy/client_key}
         target: /client${MF_THINGS_AUTH_GRPC_CLIENT_KEY:+.key}
       - type: bind
-        source: ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:-docker/ssl/certs/grpc/server_ca}
+        source: ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:-ssl/certs/dummy/server_ca}
         target: /server_ca${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:+.crt}
 
   http-adapter:
@@ -331,13 +331,13 @@ services:
     volumes:
       # Things gRPC mTLS client certificates
       - type: bind
-        source: ${MF_THINGS_AUTH_GRPC_CLIENT_CERT:-docker/ssl/certs/grpc/client_cert}
+        source: ${MF_THINGS_AUTH_GRPC_CLIENT_CERT:-ssl/certs/dummy/client_cert}
         target: /client${MF_THINGS_AUTH_GRPC_CLIENT_CERT:+.crt}
       - type: bind
-        source: ${MF_THINGS_AUTH_GRPC_CLIENT_KEY:-docker/ssl/certs/grpc/client_key}
+        source: ${MF_THINGS_AUTH_GRPC_CLIENT_KEY:-ssl/certs/dummy/client_key}
         target: /client${MF_THINGS_AUTH_GRPC_CLIENT_KEY:+.key}
       - type: bind
-        source: ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:-docker/ssl/certs/grpc/server_ca}
+        source: ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:-ssl/certs/dummy/server_ca}
         target: /server_ca${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:+.crt}
 
   es-redis:
@@ -383,13 +383,13 @@ services:
     volumes:
       ## Things gRPC mTLS client certificates
       - type: bind
-        source: ${MF_THINGS_AUTH_GRPC_CLIENT_CERT:-docker/ssl/certs/grpc/client_cert}
+        source: ${MF_THINGS_AUTH_GRPC_CLIENT_CERT:-ssl/certs/dummy/client_cert}
         target: /client${MF_THINGS_AUTH_GRPC_CLIENT_CERT:+.crt}
       - type: bind
-        source: ${MF_THINGS_AUTH_GRPC_CLIENT_KEY:-docker/ssl/certs/grpc/client_key}
+        source: ${MF_THINGS_AUTH_GRPC_CLIENT_KEY:-ssl/certs/dummy/client_key}
         target: /client${MF_THINGS_AUTH_GRPC_CLIENT_KEY:+.key}
       - type: bind
-        source: ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:-docker/ssl/certs/grpc/server_ca}
+        source: ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:-ssl/certs/dummy/server_ca}
         target: /server_ca${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:+.crt}
 
   ws-adapter:
@@ -421,11 +421,11 @@ services:
     volumes:
       # Things gRPC mTLS client certificates
       - type: bind
-        source: ${MF_THINGS_AUTH_GRPC_CLIENT_CERT:-docker/ssl/certs/grpc/client_cert}
+        source: ${MF_THINGS_AUTH_GRPC_CLIENT_CERT:-ssl/certs/dummy/client_cert}
         target: /client${MF_THINGS_AUTH_GRPC_CLIENT_CERT:+.crt}
       - type: bind
-        source: ${MF_THINGS_AUTH_GRPC_CLIENT_KEY:-docker/ssl/certs/grpc/client_key}
+        source: ${MF_THINGS_AUTH_GRPC_CLIENT_KEY:-ssl/certs/dummy/client_key}
         target: /client${MF_THINGS_AUTH_GRPC_CLIENT_KEY:+.key}
       - type: bind
-        source: ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:-docker/ssl/certs/grpc/server_ca}
+        source: ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:-ssl/certs/dummy/server_ca}
         target: /server_ca${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:+.crt}
