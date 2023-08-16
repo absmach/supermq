@@ -20,9 +20,9 @@ import (
 type security int
 
 const (
-	WITHOUT_TLS security = iota
-	WITH_TLS
-	WITH_MTLS
+	withoutTLS security = iota
+	withTLS
+	withmTLS
 )
 
 var (
@@ -61,7 +61,7 @@ func Connect(cfg Config) (*gogrpc.ClientConn, security, error) {
 	opts := []gogrpc.DialOption{
 		gogrpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 	}
-	secure := WITHOUT_TLS
+	secure := withoutTLS
 	tc := insecure.NewCredentials()
 
 	if cfg.ServerCAFile != "" {
@@ -78,7 +78,7 @@ func Connect(cfg Config) (*gogrpc.ClientConn, security, error) {
 				return nil, secure, fmt.Errorf("failed to append root ca to tls.Config")
 			}
 			tlsConfig.RootCAs = capool
-			secure = WITH_TLS
+			secure = withTLS
 		}
 
 		// Loading mtls certificates file
@@ -88,7 +88,7 @@ func Connect(cfg Config) (*gogrpc.ClientConn, security, error) {
 				return nil, secure, fmt.Errorf("failed to client certificate and key %w", err)
 			}
 			tlsConfig.Certificates = []tls.Certificate{certificate}
-			secure = WITH_MTLS
+			secure = withmTLS
 		}
 
 		tc = credentials.NewTLS(tlsConfig)
@@ -105,7 +105,7 @@ func Connect(cfg Config) (*gogrpc.ClientConn, security, error) {
 
 // Setup load gRPC configuration from environment variable, creates new gRPC client and connect to gRPC server.
 func Setup(config Config, svcName string) (*Client, ClientHandler, error) {
-	secure := WITHOUT_TLS
+	secure := withoutTLS
 
 	// connect to auth grpc server
 	grpcClient, secure, err := Connect(config)
@@ -132,9 +132,9 @@ func (c *Client) Close() error {
 // the client is running with TLS enabled.
 func (c *Client) IsSecure() bool {
 	switch c.secure {
-	case WITH_TLS, WITH_MTLS:
+	case withTLS, withmTLS:
 		return true
-	case WITHOUT_TLS:
+	case withoutTLS:
 		fallthrough
 	default:
 		return true
@@ -144,11 +144,11 @@ func (c *Client) IsSecure() bool {
 // Secure is used for pretty printing TLS info.
 func (c *Client) Secure() string {
 	switch c.secure {
-	case WITH_TLS:
+	case withTLS:
 		return "with TLS"
-	case WITH_MTLS:
+	case withmTLS:
 		return "with mTLS"
-	case WITHOUT_TLS:
+	case withoutTLS:
 		fallthrough
 	default:
 		return "without TLS"
