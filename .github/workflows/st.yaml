@@ -57,9 +57,12 @@ jobs:
           access_token=$(echo "$response" | grep -o '"access_token":"[^"]*' | cut -d'"' -f4)
           echo "ACCESS_TOKEN=$access_token" >> $GITHUB_ENV
 
-      - name: print access token
+      - name: Set BEARER_TOKEN
+        run: echo "BEARER_TOKEN=rer $MF_TOKEN" >> $GITHUB_ENV
+
+      - name: print bearer token
         if: always()
-        run: echo $ACCESS_TOKEN
+        run: echo $BEARER_TOKEN
       
       # - name: Set token env variable
       #   run: echo "MF_TOKEN=$(echo $MF_TOKEN)" >> $GITHUB_ENV
@@ -74,35 +77,35 @@ jobs:
         with:
           schema: './api/openapi/bootstrap.yml'
           base-url: 'http://localhost'
-          args: -H Authorization:${{ env.ACCESS_TOKEN }}
+          args: "-H Authorization: Bearer {{ env.ACCESS_TOKEN }}"
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
-      - name: Run st for bootstrap.yml
-        if: always()
-        uses: schemathesis/action@v1
-        with:
-          schema: './api/openapi/bootstrap.yml'
-          base-url: 'http://localhost'
-          args: -H Authorization:Bearer ${{ env.ACCESS_TOKEN }}
-          token: ${{ secrets.SCHEMATHESIS_TOKEN }}
+      # - name: Run st for bootstrap.yml
+      #   if: always()
+      #   uses: schemathesis/action@v1
+      #   with:
+      #     schema: './api/openapi/bootstrap.yml'
+      #     base-url: 'http://localhost'
+      #     args: -H Authorization:Bearer ${{ env.ACCESS_TOKEN }}
+      #     token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
-      - name: Run st for bootstrap.yml
-        if: always()
-        uses: schemathesis/action@v1
-        with:
-          schema: './api/openapi/bootstrap.yml'
-          base-url: 'http://localhost'
-          args: "-H Authorization:Bearer ${{ env.ACCESS_TOKEN }}"
-          token: ${{ secrets.SCHEMATHESIS_TOKEN }}
+      # - name: Run st for bootstrap.yml
+      #   if: always()
+      #   uses: schemathesis/action@v1
+      #   with:
+      #     schema: './api/openapi/bootstrap.yml'
+      #     base-url: 'http://localhost'
+      #     args: "-H Authorization:Bearer ${{ env.ACCESS_TOKEN }}"
+      #     token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
-      - name: Run st for bootstrap.yml
-        if: always()
-        uses: schemathesis/action@v1
-        with:
-          schema: './api/openapi/bootstrap.yml'
-          base-url: 'http://localhost'
-          args: "-H Authorization: Bearer ${{ env.ACCESS_TOKEN }}"
-          token: ${{ secrets.SCHEMATHESIS_TOKEN }}
+      # - name: Run st for bootstrap.yml
+      #   if: always()
+      #   uses: schemathesis/action@v1
+      #   with:
+      #     schema: './api/openapi/bootstrap.yml'
+      #     base-url: 'http://localhost'
+      #     args: "-H Authorization: Bearer ${{ env.ACCESS_TOKEN }}"
+      #     token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       - name: Run st for bootstrap.yml
         if: always()
@@ -130,7 +133,7 @@ jobs:
         with:
           schema: './api/openapi/certs.yml'
           base-url: 'http://localhost'
-          args: -H Authorization:${{ env.MF_TOKEN }}
+          args: -H Authorization:${{ env.BEARER_TOKEN }}
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Consumers-notifiers.yml
@@ -140,7 +143,7 @@ jobs:
         with:
           schema: './api/openapi/consumers-notifiers.yml'
           base-url: 'http://localhost'
-          args: -H Authorization:${{ env.MF_TOKEN }}
+          args: -H Authorization:${{ env.BEARER_TOKEN }}
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
       
       # Http.yml
@@ -150,7 +153,7 @@ jobs:
         with:
           schema: './api/openapi/http.yml'
           base-url: 'http://localhost'
-          args: -H Authorization:${{ env.MF_TOKEN }}
+          args: -H Authorization:${{ env.BEARER_TOKEN }}
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Provision.yml
@@ -160,7 +163,7 @@ jobs:
         with:
           schema: './api/openapi/provision.yml'
           base-url: 'http://localhost'
-          args: -H Authorization:${{ env.MF_TOKEN }}
+          args: -H Authorization:${{ env.BEARER_TOKEN }}
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Readers.yml
