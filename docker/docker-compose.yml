@@ -133,25 +133,39 @@ services:
       - type: bind
         source: ${MF_THINGS_AUTH_GRPC_SERVER_CERT:-ssl/certs/dummy/server_cert}
         target: /things-grpc-server${MF_THINGS_AUTH_GRPC_SERVER_CERT:+.crt}
+        bind:
+          create_host_path: true
       - type: bind
         source: ${MF_THINGS_AUTH_GRPC_SERVER_KEY:-ssl/certs/dummy/server_key}
         target: /things-grpc-server${MF_THINGS_AUTH_GRPC_SERVER_KEY:+.key}
+        bind:
+          create_host_path: true
       - type: bind
         source: ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:-ssl/certs/dummy/server_ca_certs}
         target: /things-grpc-server-ca${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:+.crt}
+        bind:
+          create_host_path: true
       - type: bind
         source: ${MF_THINGS_AUTH_GRPC_CLIENT_CA_CERTS:-ssl/certs/dummy/client_ca_certs}
         target: /things-grpc-client-ca${MF_THINGS_AUTH_GRPC_CLIENT_CA_CERTS:+.crt}
+        bind:
+          create_host_path: true
       # Users gRPC client certificates
       - type: bind
         source: ${MF_USERS_GRPC_CLIENT_CERT:-ssl/certs/dummy/client_cert}
         target: /users-grpc-client${MF_USERS_GRPC_CLIENT_CERT:+.crt}
+        bind:
+          create_host_path: true
       - type: bind
         source: ${MF_USERS_GRPC_CLIENT_KEY:-ssl/certs/dummy/client_key}
         target: /users-grpc-client${MF_USERS_GRPC_CLIENT_KEY:+.key}
+        bind:
+          create_host_path: true
       - type: bind
         source: ${MF_USERS_GRPC_SERVER_CA_CERTS:-ssl/certs/dummy/server_ca}
         target: /users-grpc-server-ca${MF_USERS_GRPC_SERVER_CA_CERTS:+.crt}
+        bind:
+          create_host_path: true
 
   users-db:
     image: postgres:15.1-alpine
@@ -223,15 +237,23 @@ services:
       - type: bind
         source: ${MF_USERS_GRPC_SERVER_CERT:-ssl/certs/dummy/server_cert}
         target: /users-grpc-server${MF_USERS_GRPC_SERVER_CERT:+.crt}
+        bind:
+          create_host_path: true
       - type: bind
         source: ${MF_USERS_GRPC_SERVER_KEY:-ssl/certs/dummy/server_key}
         target: /users-grpc-server${MF_USERS_GRPC_SERVER_KEY:+.key}
+        bind:
+          create_host_path: true
       - type: bind
         source: ${MF_USERS_GRPC_SERVER_CA_CERTS:-ssl/certs/dummy/server_ca_certs}
         target: /users-grpc-server-ca${MF_USERS_GRPC_SERVER_CA_CERTS:+.crt}
+        bind:
+          create_host_path: true
       - type: bind
         source: ${MF_USERS_GRPC_CLIENT_CA_CERTS:-ssl/certs/dummy/client_ca_certs}
         target: /users-grpc-client-ca${MF_USERS_GRPC_CLIENT_CA_CERTS:+.crt}
+        bind:
+          create_host_path: true
 
   jaeger:
     image: jaegertracing/all-in-one:1.38.0
@@ -295,12 +317,18 @@ services:
       - type: bind
         source: ${MF_THINGS_AUTH_GRPC_CLIENT_CERT:-ssl/certs/dummy/client_cert}
         target: /client${MF_THINGS_AUTH_GRPC_CLIENT_CERT:+.crt}
+        bind:
+          create_host_path: true
       - type: bind
         source: ${MF_THINGS_AUTH_GRPC_CLIENT_KEY:-ssl/certs/dummy/client_key}
         target: /client${MF_THINGS_AUTH_GRPC_CLIENT_KEY:+.key}
+        bind:
+          create_host_path: true
       - type: bind
         source: ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:-ssl/certs/dummy/server_ca}
         target: /server_ca${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:+.crt}
+        bind:
+          create_host_path: true
 
   http-adapter:
     image: mainflux/http:${MF_RELEASE_TAG}
@@ -333,12 +361,18 @@ services:
       - type: bind
         source: ${MF_THINGS_AUTH_GRPC_CLIENT_CERT:-ssl/certs/dummy/client_cert}
         target: /client${MF_THINGS_AUTH_GRPC_CLIENT_CERT:+.crt}
+        bind:
+          create_host_path: true
       - type: bind
         source: ${MF_THINGS_AUTH_GRPC_CLIENT_KEY:-ssl/certs/dummy/client_key}
         target: /client${MF_THINGS_AUTH_GRPC_CLIENT_KEY:+.key}
+        bind:
+          create_host_path: true
       - type: bind
         source: ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:-ssl/certs/dummy/server_ca}
         target: /server_ca${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:+.crt}
+        bind:
+          create_host_path: true
 
   es-redis:
     image: redis:6.2.2-alpine
@@ -385,12 +419,18 @@ services:
       - type: bind
         source: ${MF_THINGS_AUTH_GRPC_CLIENT_CERT:-ssl/certs/dummy/client_cert}
         target: /client${MF_THINGS_AUTH_GRPC_CLIENT_CERT:+.crt}
+        bind:
+          create_host_path: true
       - type: bind
         source: ${MF_THINGS_AUTH_GRPC_CLIENT_KEY:-ssl/certs/dummy/client_key}
         target: /client${MF_THINGS_AUTH_GRPC_CLIENT_KEY:+.key}
+        bind:
+          create_host_path: true
       - type: bind
         source: ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:-ssl/certs/dummy/server_ca}
         target: /server_ca${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:+.crt}
+        bind:
+          create_host_path: true
 
   ws-adapter:
     image: mainflux/ws:${MF_RELEASE_TAG}
@@ -423,9 +463,15 @@ services:
       - type: bind
         source: ${MF_THINGS_AUTH_GRPC_CLIENT_CERT:-ssl/certs/dummy/client_cert}
         target: /client${MF_THINGS_AUTH_GRPC_CLIENT_CERT:+.crt}
+        bind:
+          create_host_path: true
       - type: bind
         source: ${MF_THINGS_AUTH_GRPC_CLIENT_KEY:-ssl/certs/dummy/client_key}
         target: /client${MF_THINGS_AUTH_GRPC_CLIENT_KEY:+.key}
+        bind:
+          create_host_path: true
       - type: bind
         source: ${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:-ssl/certs/dummy/server_ca}
         target: /server_ca${MF_THINGS_AUTH_GRPC_SERVER_CA_CERTS:+.crt}
+        bind:
+          create_host_path: true
