@@ -3,8 +3,6 @@ name: Test OpenAPI using Schemathesis
 on: [push, pull_request] 
 
 env:
-  # MF_TOKEN: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzM5MTgxNjUsImlhdCI6MTY3Mzg4MjE2NSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImV4YW1wbGVAZWcuY29tIiwiaXNzdWVyX2lkIjoiNzE0NTk5MmYtMzZkZi00NjE5LWE1YzQtOGJkMzg2YjI3YmE5IiwidHlwZSI6MH0.W7Ra3ChV0PPfTTJGJX4hAW_1Gq2zK0RR9qJJm3sk5tw"
-  # To check if the MF_TOKEN gets updated in subsequent steps (big string gets displayed as ... , so I can't test)
   MF_TOKEN: abcd
   EMAIL: admin@example.com
   PASSWORD: 12345678
@@ -20,18 +18,6 @@ jobs:
       - name: find number of cores
         run: lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
 
-      # - name: Check Git Configuration
-      #   run: git config --list # Print Git configuration
-
-      # # - name: Check Version Var
-      # #   run: git describe --abbrev=0 --tags
-
-      # # - name: Check Version Var Always
-      # #   run: git describe --abbrev=0 --tags --always
-
-      # # - name: Fetch Tags from Upstream
-      # #   run: git fetch --tags https://github.com/mainflux/mainflux.git
-      
       - name: create images
         if: always()
         run: make all -j 2 && make -j 2 dockers_dev
@@ -45,11 +31,6 @@ jobs:
         run: |
           curl -sSiX POST http://localhost:9002/users -H "Content-Type: application/json" -d '{"name": "John Doe","credentials": {"identity": "admin@example.com","secret": "12345678"}}'
       
-      # - name: REST API with curl to check mf token endpoint
-      #   if: always()
-      #   run: |
-      #     curl -X POST "http://localhost:9002/users/tokens/issue" -H "Content-Type: application/json" -d '{"identity": "admin@example.com","secret": "12345678"}'
-
       - name: Set ACCESS_TOKEN
         id: set-access-token
         run: |
@@ -64,8 +45,8 @@ jobs:
         if: always()
         run: echo $BEARER_TOKEN
       
-      # - name: Set token env variable
-      #   run: echo "MF_TOKEN=$(echo $MF_TOKEN)" >> $GITHUB_ENV
+      - name: Set token env variable
+        run: echo "MF_TOKEN=$(echo $MF_TOKEN)" >> $GITHUB_ENV
 
       - name: Test
         run: echo ${{ env.ACCESS_TOKEN }}
