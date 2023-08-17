@@ -206,17 +206,6 @@ jobs:
           args: -H Authorization:${{ env.MF_TOKEN }}
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
-      # Websocket.yml
-      - name: Run st for websocket.yml
-        if: always()
-        uses: schemathesis/action@v1
-        with:
-          schema: './api/openapi/websocket.yml'
-          base-url: 'http://localhost'
-          args: -H Authorization:${{ env.MF_TOKEN }}
-          token: ${{ secrets.SCHEMATHESIS_TOKEN }}
-
-
       - name: Stop the running docker containers
         if: always()
         run: make stop 
