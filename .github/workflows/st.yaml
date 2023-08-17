@@ -80,32 +80,32 @@ jobs:
           args: "-H Authorization: Bearer {{ env.ACCESS_TOKEN }}"
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
-      # - name: Run st for bootstrap.yml
-      #   if: always()
-      #   uses: schemathesis/action@v1
-      #   with:
-      #     schema: './api/openapi/bootstrap.yml'
-      #     base-url: 'http://localhost'
-      #     args: -H Authorization:Bearer ${{ env.ACCESS_TOKEN }}
-      #     token: ${{ secrets.SCHEMATHESIS_TOKEN }}
+      - name: Run st for bootstrap.yml
+        if: always()
+        uses: schemathesis/action@v1
+        with:
+          schema: './api/openapi/bootstrap.yml'
+          base-url: 'http://localhost'
+          args: -H Authorization:Bearer ${{ env.ACCESS_TOKEN }}
+          token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
-      # - name: Run st for bootstrap.yml
-      #   if: always()
-      #   uses: schemathesis/action@v1
-      #   with:
-      #     schema: './api/openapi/bootstrap.yml'
-      #     base-url: 'http://localhost'
-      #     args: "-H Authorization:Bearer ${{ env.ACCESS_TOKEN }}"
-      #     token: ${{ secrets.SCHEMATHESIS_TOKEN }}
+      - name: Run st for bootstrap.yml
+        if: always()
+        uses: schemathesis/action@v1
+        with:
+          schema: './api/openapi/bootstrap.yml'
+          base-url: 'http://localhost'
+          args: "-H Authorization:Bearer ${{ env.ACCESS_TOKEN }}"
+          token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
-      # - name: Run st for bootstrap.yml
-      #   if: always()
-      #   uses: schemathesis/action@v1
-      #   with:
-      #     schema: './api/openapi/bootstrap.yml'
-      #     base-url: 'http://localhost'
-      #     args: "-H Authorization: Bearer ${{ env.ACCESS_TOKEN }}"
-      #     token: ${{ secrets.SCHEMATHESIS_TOKEN }}
+      - name: Run st for bootstrap.yml
+        if: always()
+        uses: schemathesis/action@v1
+        with:
+          schema: './api/openapi/bootstrap.yml'
+          base-url: 'http://localhost'
+          args: "-H Authorization: Bearer ${{ env.ACCESS_TOKEN }}"
+          token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       - name: Run st for bootstrap.yml
         if: always()
@@ -115,16 +115,6 @@ jobs:
           base-url: 'http://localhost'
           args: "-H 'Authorization: Bearer ${{ env.ACCESS_TOKEN }}'"
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
-
-
-      # - name: Run st for bootstrap.yml
-      #   if: always()
-      #   uses: schemathesis/action@v1
-      #   with:
-      #     schema: './api/openapi/bootstrap.yml'
-      #     base-url: 'http://localhost'
-      #     args: "--header=Authorization: Bearer ${{ env.ACCESS_TOKEN }}"
-      #     token: ${{ secrets.SCHEMATHESIS_TOKEN }}
         
       # Certs.yml
       - name: Run st for certs.yml
