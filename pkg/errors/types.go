@@ -35,5 +35,5 @@ var (
 	ErrScanMetadata = New("failed to scan metadata in db")
 
 	// ErrWrongSecret indicates a wrong secret was provided.
-	ErrWrongSecret = New("wrong secret")
+	ErrWrongSecret = New("invalid user id / secret")
 )
