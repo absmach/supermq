@@ -47,6 +47,15 @@ func (ce *sdkError) StatusCode() int {
 
 // NewSDKError returns an SDK Error that formats as the given text.
 func NewSDKError(err error) SDKError {
+	if e, ok := err.(Error); ok {
+		return &sdkError{
+			statusCode: 0,
+			customError: &customError{
+				msg: e.Msg(),
+				err: cast(e.Err()),
+			},
+		}
+	}
 	return &sdkError{
 		customError: &customError{
 			msg: err.Error(),
@@ -97,7 +106,10 @@ func CheckError(resp *http.Response, expectedStatusCodes ...int) SDKError {
 		if msgError, ok := content[errorKey]; ok {
 			if m, ok := msg.(string); ok {
 				if e, ok := msgError.(string); ok {
-					return NewSDKErrorWithStatus(Wrap(New(m), New(e)), resp.StatusCode)
+					if e != "" {
+						return NewSDKErrorWithStatus(Wrap(New(m), New(e)), resp.StatusCode)
+					}
+					return NewSDKErrorWithStatus(New(m), resp.StatusCode)
 				}
 				return NewSDKErrorWithStatus(fmt.Errorf("invalid err type: %v", msgError), resp.StatusCode)
 			}
