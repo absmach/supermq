@@ -84,7 +84,7 @@ func TestIssueToken(t *testing.T) {
 			ok := repoCall.Parent.AssertCalled(t, "RetrieveByIdentity", mock.Anything, mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("RetrieveByIdentity was not called on %s", tc.desc))
 		default:
-			assert.True(t, strings.Contains(err.Msg(), tc.err.Msg()), fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
+			assert.True(t, strings.Contains(err.Error(), tc.err.Msg()), fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		}
 		repoCall.Unset()
 	}
