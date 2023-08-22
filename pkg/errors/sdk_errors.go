@@ -103,6 +103,9 @@ func CheckError(resp *http.Response, expectedStatusCodes ...int) SDKError {
 	if err := json.Unmarshal(body, &content); err != nil {
 		return NewSDKErrorWithStatus(err, resp.StatusCode)
 	}
+	if content.Err == "" {
+		return NewSDKErrorWithStatus(New(content.Msg), resp.StatusCode)
+	}
 
 	return NewSDKErrorWithStatus(Wrap(New(content.Msg), New(content.Err)), resp.StatusCode)
 }
