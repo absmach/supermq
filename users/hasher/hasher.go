@@ -13,7 +13,7 @@ const cost int = 10
 
 var (
 	errHashPassword    = errors.New("Generate hash from password failed")
-	errComparePassword = errors.New("Failed to verify identity or secret")
+	errComparePassword = errors.New("compare hash and password failed")
 )
 
 var _ clients.Hasher = (*bcryptHasher)(nil)
