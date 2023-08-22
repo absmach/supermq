@@ -10,10 +10,10 @@ import (
 	"net/http"
 )
 
-const (
-	errorKey   = "error"
-	messageKey = "message"
-)
+type errorRes struct {
+	Err string `json:"error"`
+	Msg string `json:"message"`
+}
 
 // Failed to read response body.
 var errRespBody = New("failed to read response body")
@@ -99,24 +99,10 @@ func CheckError(resp *http.Response, expectedStatusCodes ...int) SDKError {
 	if err != nil {
 		return NewSDKErrorWithStatus(Wrap(errRespBody, err), resp.StatusCode)
 	}
-	var content map[string]interface{}
-	_ = json.Unmarshal(body, &content)
-
-	if msg, ok := content[messageKey]; ok {
-		if msgError, ok := content[errorKey]; ok {
-			if m, ok := msg.(string); ok {
-				if e, ok := msgError.(string); ok {
-					if e != "" {
-						return NewSDKErrorWithStatus(Wrap(New(m), New(e)), resp.StatusCode)
-					}
-					return NewSDKErrorWithStatus(New(m), resp.StatusCode)
-				}
-				return NewSDKErrorWithStatus(fmt.Errorf("invalid err type: %v", msgError), resp.StatusCode)
-			}
-			return NewSDKErrorWithStatus(fmt.Errorf("invalid message type: %v", msg), resp.StatusCode)
-		}
-		return NewSDKErrorWithStatus(fmt.Errorf("%v", msg), resp.StatusCode)
+	var content errorRes
+	if err := json.Unmarshal(body, &content); err != nil {
+		return NewSDKErrorWithStatus(err, resp.StatusCode)
 	}
 
-	return NewSDKErrorWithStatus(New(string(body)), resp.StatusCode)
+	return NewSDKErrorWithStatus(Wrap(New(content.Msg), New(content.Err)), resp.StatusCode)
 }

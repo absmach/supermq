@@ -209,6 +209,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		err = errors.Wrap(wrapper, err)
 	}
 	if errorVal, ok := err.(errors.Error); ok {
+		w.Header().Set("Content-Type", contentType)
 		errorRes := apiutil.ErrorRes{
 			Err: "",
 			Msg: errorVal.Msg(),
