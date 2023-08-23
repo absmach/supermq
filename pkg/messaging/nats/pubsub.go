@@ -69,8 +69,7 @@ func NewPubSub(ctx context.Context, url string, logger mflog.Logger) (messaging.
 
 	ret := &pubsub{
 		publisher: publisher{
-			js:   js,
-			conn: conn,
+			js: js,
 		},
 		stream: stream,
 		logger: logger,
