@@ -116,17 +116,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 	if errorVal, ok := err.(errors.Error); ok {
 		w.Header().Set("Content-Type", contentType)
-		errorRes := apiutil.ErrorRes{
-			Err: "",
-			Msg: errorVal.Msg(),
-		}
-		if errorVal.Err() != nil {
-			errorRes = apiutil.ErrorRes{
-				Err: errorVal.Err().Msg(),
-				Msg: errorVal.Msg(),
-			}
-		}
-		if err := json.NewEncoder(w).Encode(errorRes); err != nil {
+		if err := json.NewEncoder(w).Encode(errorVal); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}

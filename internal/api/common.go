@@ -129,17 +129,7 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 	}
 
 	if errorVal, ok := err.(errors.Error); ok {
-		errorRes := apiutil.ErrorRes{
-			Err: "",
-			Msg: errorVal.Msg(),
-		}
-		if errorVal.Err() != nil {
-			errorRes = apiutil.ErrorRes{
-				Err: errorVal.Err().Msg(),
-				Msg: errorVal.Msg(),
-			}
-		}
-		if err := json.NewEncoder(w).Encode(errorRes); err != nil {
+		if err := json.NewEncoder(w).Encode(errorVal); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
