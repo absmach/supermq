@@ -68,6 +68,5 @@ func (pub *publisher) Publish(ctx context.Context, topic string, msg *messaging.
 }
 
 func (pub *publisher) Close() error {
-
 	return nil
 }
