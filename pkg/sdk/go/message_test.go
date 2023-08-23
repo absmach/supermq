@@ -95,12 +95,14 @@ func TestSendMessage(t *testing.T) {
 	}
 	for desc, tc := range cases {
 		err := mfsdk.SendMessage(tc.chanID, tc.msg, tc.auth)
-		if tc.err == nil {
+		switch tc.err {
+		case nil:
 			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s", desc, err))
-		} else {
+		default:
 			assert.Equal(t, tc.err.Error(), err.Error(), fmt.Sprintf("%s: expected error %s, got %s", desc, tc.err, err))
 		}
 	}
+
 }
 
 func TestSetContentType(t *testing.T) {
