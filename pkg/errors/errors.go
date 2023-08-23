@@ -17,13 +17,13 @@ type Error interface {
 	// Error implements the error interface.
 	Error() string
 
-	// Msg returns error message
+	// Msg returns error message.
 	Msg() string
 
-	// Err returns wrapped error
+	// Err returns wrapped error.
 	Err() Error
 
-	// MarshalJSON returns a marshaled error
+	// MarshalJSON returns a marshaled error.
 	MarshalJSON() ([]byte, error)
 }
 
