@@ -42,13 +42,19 @@ func Start(ctx context.Context, id string, sub messaging.Subscriber, consumer in
 	transformer := makeTransformer(cfg.TransformerCfg, logger)
 
 	for _, subject := range cfg.SubscriberCfg.Subjects {
+		var subCfg = messaging.SubscriberConfig{
+			ID:    id,
+			Topic: subject,
+		}
 		switch c := consumer.(type) {
 		case AsyncConsumer:
-			if err := sub.Subscribe(ctx, id, subject, handleAsync(ctx, transformer, c)); err != nil {
+			subCfg.Handler = handleAsync(ctx, transformer, c)
+			if err := sub.Subscribe(ctx, subCfg); err != nil {
 				return err
 			}
 		case BlockingConsumer:
-			if err := sub.Subscribe(ctx, id, subject, handleSync(ctx, transformer, c)); err != nil {
+			subCfg.Handler = handleSync(ctx, transformer, c)
+			if err := sub.Subscribe(ctx, subCfg); err != nil {
 				return err
 			}
 		default:

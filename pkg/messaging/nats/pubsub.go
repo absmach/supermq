@@ -79,22 +79,22 @@ func NewPubSub(ctx context.Context, url string, logger mflog.Logger) (messaging.
 	return ret, nil
 }
 
-func (ps *pubsub) Subscribe(ctx context.Context, id, topic string, handler messaging.MessageHandler) error {
-	if id == "" {
+func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig) error {
+	if cfg.ID == "" {
 		return ErrEmptyID
 	}
-	if topic == "" {
+	if cfg.Topic == "" {
 		return ErrEmptyTopic
 	}
 
-	nh := ps.natsHandler(handler)
+	nh := ps.natsHandler(cfg.Handler)
 
 	consumerConfig := jetstream.ConsumerConfig{
-		Name:          formatConsumerName(topic, id),
-		Durable:       formatConsumerName(topic, id),
-		Description:   fmt.Sprintf("Mainflux consumer of id %s for topic %s", id, topic),
+		Name:          formatConsumerName(cfg.Topic, cfg.ID),
+		Durable:       formatConsumerName(cfg.Topic, cfg.ID),
+		Description:   fmt.Sprintf("Mainflux consumer of id %s for cfg.Topic %s", cfg.ID, cfg.Topic),
 		DeliverPolicy: jetstream.DeliverNewPolicy,
-		FilterSubject: topic,
+		FilterSubject: cfg.Topic,
 	}
 
 	consumer, err := ps.stream.CreateOrUpdateConsumer(ctx, consumerConfig)
@@ -109,15 +109,15 @@ func (ps *pubsub) Subscribe(ctx context.Context, id, topic string, handler messa
 	return nil
 }
 
-func (ps *pubsub) Unsubscribe(ctx context.Context, id, topic string) error {
-	if id == "" {
+func (ps *pubsub) Unsubscribe(ctx context.Context, cfg messaging.SubscriberConfig) error {
+	if cfg.ID == "" {
 		return ErrEmptyID
 	}
-	if topic == "" {
+	if cfg.Topic == "" {
 		return ErrEmptyTopic
 	}
 
-	err := ps.stream.DeleteConsumer(ctx, formatConsumerName(topic, id))
+	err := ps.stream.DeleteConsumer(ctx, formatConsumerName(cfg.Topic, cfg.ID))
 	switch {
 	case errors.Is(err, jetstream.ErrConsumerNotFound):
 		return ErrNotSubscribed

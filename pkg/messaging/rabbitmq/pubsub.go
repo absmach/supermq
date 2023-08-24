@@ -68,46 +68,46 @@ func NewPubSub(url string, logger mflog.Logger) (messaging.PubSub, error) {
 	return ret, nil
 }
 
-func (ps *pubsub) Subscribe(ctx context.Context, id, topic string, handler messaging.MessageHandler) error {
-	if id == "" {
+func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig) error {
+	if cfg.ID == "" {
 		return ErrEmptyID
 	}
-	if topic == "" {
+	if cfg.Topic == "" {
 		return ErrEmptyTopic
 	}
 	ps.mu.Lock()
 
-	topic = formatTopic(topic)
+	cfg.Topic = formatTopic(cfg.Topic)
 	// Check topic
-	s, ok := ps.subscriptions[topic]
+	s, ok := ps.subscriptions[cfg.Topic]
 	if ok {
 		// Check client ID
-		if _, ok := s[id]; ok {
+		if _, ok := s[cfg.ID]; ok {
 			// Unlocking, so that Unsubscribe() can access ps.subscriptions
 			ps.mu.Unlock()
-			if err := ps.Unsubscribe(ctx, id, topic); err != nil {
+			if err := ps.Unsubscribe(ctx, cfg); err != nil {
 				return err
 			}
 
 			ps.mu.Lock()
 			// value of s can be changed while ps.mu is unlocked
-			s = ps.subscriptions[topic]
+			s = ps.subscriptions[cfg.Topic]
 		}
 	}
 	defer ps.mu.Unlock()
 	if s == nil {
 		s = make(map[string]subscription)
-		ps.subscriptions[topic] = s
+		ps.subscriptions[cfg.Topic] = s
 	}
 
-	clientID := fmt.Sprintf("%s-%s", topic, id)
+	clientID := fmt.Sprintf("%s-%s", cfg.Topic, cfg.ID)
 
 	queue, err := ps.ch.QueueDeclare(clientID, true, false, false, false, nil)
 	if err != nil {
 		return err
 	}
 
-	if err := ps.ch.QueueBind(queue.Name, topic, exchangeName, false, nil); err != nil {
+	if err := ps.ch.QueueBind(queue.Name, cfg.Topic, exchangeName, false, nil); err != nil {
 		return err
 	}
 
@@ -115,37 +115,37 @@ func (ps *pubsub) Subscribe(ctx context.Context, id, topic string, handler messa
 	if err != nil {
 		return err
 	}
-	go ps.handle(msgs, handler)
-	s[id] = subscription{
+	go ps.handle(msgs, cfg.Handler)
+	s[cfg.ID] = subscription{
 		cancel: func() error {
 			if err := ps.ch.Cancel(clientID, false); err != nil {
 				return err
 			}
-			return handler.Cancel()
+			return cfg.Handler.Cancel()
 		},
 	}
 
 	return nil
 }
 
-func (ps *pubsub) Unsubscribe(ctx context.Context, id, topic string) error {
-	if id == "" {
+func (ps *pubsub) Unsubscribe(ctx context.Context, cfg messaging.SubscriberConfig) error {
+	if cfg.ID == "" {
 		return ErrEmptyID
 	}
-	if topic == "" {
+	if cfg.Topic == "" {
 		return ErrEmptyTopic
 	}
 	ps.mu.Lock()
 	defer ps.mu.Unlock()
 
-	topic = formatTopic(topic)
+	cfg.Topic = formatTopic(cfg.Topic)
 	// Check topic
-	s, ok := ps.subscriptions[topic]
+	s, ok := ps.subscriptions[cfg.Topic]
 	if !ok {
 		return ErrNotSubscribed
 	}
 	// Check topic ID
-	current, ok := s[id]
+	current, ok := s[cfg.ID]
 	if !ok {
 		return ErrNotSubscribed
 	}
@@ -154,13 +154,13 @@ func (ps *pubsub) Unsubscribe(ctx context.Context, id, topic string) error {
 			return err
 		}
 	}
-	if err := ps.ch.QueueUnbind(topic, topic, exchangeName, nil); err != nil {
+	if err := ps.ch.QueueUnbind(cfg.Topic, cfg.Topic, exchangeName, nil); err != nil {
 		return err
 	}
 
-	delete(s, id)
+	delete(s, cfg.ID)
 	if len(s) == 0 {
-		delete(ps.subscriptions, topic)
+		delete(ps.subscriptions, cfg.Topic)
 	}
 	return nil
 }

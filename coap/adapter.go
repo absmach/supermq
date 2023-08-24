@@ -96,7 +96,12 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
-	return svc.pubsub.Subscribe(ctx, c.Token(), subject, c)
+	var subCfg = messaging.SubscriberConfig{
+		ID:      c.Token(),
+		Topic:   subject,
+		Handler: c,
+	}
+	return svc.pubsub.Subscribe(ctx, subCfg)
 }
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopic, token string) error {
@@ -119,5 +124,10 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopi
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
-	return svc.pubsub.Unsubscribe(ctx, token, subject)
+	var unSubCfg = messaging.SubscriberConfig{
+		ID:      token,
+		Topic:   subject,
+		Handler: nil,
+	}
+	return svc.pubsub.Unsubscribe(ctx, unSubCfg)
 }

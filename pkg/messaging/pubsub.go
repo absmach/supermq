@@ -23,14 +23,20 @@ type MessageHandler interface {
 	Cancel() error
 }
 
+type SubscriberConfig struct {
+	ID      string
+	Topic   string
+	Handler MessageHandler
+}
+
 // Subscriber specifies message subscription API.
 type Subscriber interface {
 	// Subscribe subscribes to the message stream and consumes messages.
-	Subscribe(ctx context.Context, id, topic string, handler MessageHandler) error
+	Subscribe(ctx context.Context, cfg SubscriberConfig) error
 
 	// Unsubscribe unsubscribes from the message stream and
 	// stops consuming messages.
-	Unsubscribe(ctx context.Context, id, topic string) error
+	Unsubscribe(ctx context.Context, cfg SubscriberConfig) error
 
 	// Close gracefully closes message subscriber's connection.
 	Close() error

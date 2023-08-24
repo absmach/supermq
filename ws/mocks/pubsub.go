@@ -19,10 +19,10 @@ type MockPubSub interface {
 	Publish(context.Context, string, *messaging.Message) error
 
 	// Subscribe subscribes messages from the channel.
-	Subscribe(context.Context, string, string, messaging.MessageHandler) error
+	Subscribe(context.Context, messaging.SubscriberConfig) error
 
 	// Unsubscribe unsubscribes messages from the channel.
-	Unsubscribe(context.Context, string, string) error
+	Unsubscribe(context.Context, messaging.SubscriberConfig) error
 
 	// SetFail sets the fail flag.
 	SetFail(bool)
@@ -58,14 +58,14 @@ func (pubsub *mockPubSub) Publish(ctx context.Context, s string, msg *messaging.
 	return nil
 }
 
-func (pubsub *mockPubSub) Subscribe(context.Context, string, string, messaging.MessageHandler) error {
+func (pubsub *mockPubSub) Subscribe(context.Context, messaging.SubscriberConfig) error {
 	if pubsub.fail {
 		return ws.ErrFailedSubscription
 	}
 	return nil
 }
 
-func (pubsub *mockPubSub) Unsubscribe(context.Context, string, string) error {
+func (pubsub *mockPubSub) Unsubscribe(context.Context, messaging.SubscriberConfig) error {
 	if pubsub.fail {
 		return ws.ErrFailedUnsubscribe
 	}

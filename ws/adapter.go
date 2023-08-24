@@ -110,8 +110,13 @@ func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subt
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
 
-	if err := svc.pubsub.Subscribe(ctx, thingID, subject, c); err != nil {
-		return errors.Wrap(ErrFailedSubscription, err)
+	subCfg := messaging.SubscriberConfig{
+		ID:      thingID,
+		Topic:   subject,
+		Handler: c,
+	}
+	if err := svc.pubsub.Subscribe(ctx, subCfg); err != nil {
+		return ErrFailedSubscription
 	}
 
 	return nil
@@ -132,7 +137,12 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, thingKey, chanID, su
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
 
-	return svc.pubsub.Unsubscribe(ctx, thid, subject)
+	unSubCfg := messaging.SubscriberConfig{
+		ID:    thid,
+		Topic: subject,
+	}
+
+	return svc.pubsub.Unsubscribe(ctx, unSubCfg)
 }
 
 // authorize checks if the thingKey is authorized to access the channel
