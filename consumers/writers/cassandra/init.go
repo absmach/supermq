@@ -20,7 +20,7 @@ const (
         sum double,
         time double,
         update_time double,
-        PRIMARY KEY (channel, time, id)
+        PRIMARY KEY (publisher, time, subtopic, name)
     ) WITH CLUSTERING ORDER BY (time DESC)`
 
 	jsonTable = `CREATE TABLE IF NOT EXISTS %s (
