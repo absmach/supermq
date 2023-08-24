@@ -5,6 +5,17 @@ package messaging
 
 import "context"
 
+type DeliverPolicy uint8
+
+const (
+	// DeliverNewPolicy will only deliver new messages that are sent after the consumer is created.
+	// This is the default policy.
+	DeliverNewPolicy DeliverPolicy = iota
+
+	// DeliverAllPolicy starts delivering messages from the very beginning of a stream.
+	DeliverAllPolicy
+)
+
 // Publisher specifies message publishing API.
 type Publisher interface {
 	// Publishes message to the stream.
@@ -24,9 +35,10 @@ type MessageHandler interface {
 }
 
 type SubscriberConfig struct {
-	ID      string
-	Topic   string
-	Handler MessageHandler
+	ID            string
+	Topic         string
+	Handler       MessageHandler
+	DeliverPolicy DeliverPolicy
 }
 
 // Subscriber specifies message subscription API.

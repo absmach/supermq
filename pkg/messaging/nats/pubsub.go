@@ -97,6 +97,13 @@ func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig)
 		FilterSubject: cfg.Topic,
 	}
 
+	switch cfg.DeliverPolicy {
+	case messaging.DeliverNewPolicy:
+		consumerConfig.DeliverPolicy = jetstream.DeliverNewPolicy
+	case messaging.DeliverAllPolicy:
+		consumerConfig.DeliverPolicy = jetstream.DeliverAllPolicy
+	}
+
 	consumer, err := ps.stream.CreateOrUpdateConsumer(ctx, consumerConfig)
 	if err != nil {
 		return fmt.Errorf("failed to create consumer: %w", err)

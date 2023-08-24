@@ -43,8 +43,9 @@ func Start(ctx context.Context, id string, sub messaging.Subscriber, consumer in
 
 	for _, subject := range cfg.SubscriberCfg.Subjects {
 		var subCfg = messaging.SubscriberConfig{
-			ID:    id,
-			Topic: subject,
+			ID:            id,
+			Topic:         subject,
+			DeliverPolicy: messaging.DeliverAllPolicy,
 		}
 		switch c := consumer.(type) {
 		case AsyncConsumer:
