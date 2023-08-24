@@ -97,7 +97,7 @@ func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig)
 		FilterSubject: cfg.Topic,
 	}
 
-	switch cfg.DeliverPolicy {
+	switch cfg.DeliveryPolicy {
 	case messaging.DeliverNewPolicy:
 		consumerConfig.DeliverPolicy = jetstream.DeliverNewPolicy
 	case messaging.DeliverAllPolicy:
