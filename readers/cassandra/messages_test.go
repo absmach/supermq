@@ -60,15 +60,11 @@ func TestReadSenml(t *testing.T) {
 
 	chanID, err := idProvider.ID()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	pubID, err := idProvider.ID()
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	pubID2, err := idProvider.ID()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	wrongID, err := idProvider.ID()
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	m := senml.Message{
@@ -429,7 +425,6 @@ func TestReadJSON(t *testing.T) {
 	m := json.Message{
 		Channel:   id1,
 		Publisher: id1,
-		Created:   time.Now().Unix(),
 		Subtopic:  "subtopic/format/some_json",
 		Protocol:  "coap",
 		Payload: map[string]interface{}{
@@ -446,8 +441,10 @@ func TestReadJSON(t *testing.T) {
 		Format: format1,
 	}
 	msgs1 := []map[string]interface{}{}
+	now := time.Now().Unix()
 	for i := 0; i < msgsNum; i++ {
 		msg := m
+		msg.Created = now - int64(i)
 		messages1.Data = append(messages1.Data, msg)
 		m := toMap(msg)
 		msgs1 = append(msgs1, m)
@@ -461,7 +458,6 @@ func TestReadJSON(t *testing.T) {
 	m = json.Message{
 		Channel:   id2,
 		Publisher: id2,
-		Created:   time.Now().Unix(),
 		Subtopic:  "subtopic/other_format/some_other_json",
 		Protocol:  "udp",
 		Payload: map[string]interface{}{
@@ -477,8 +473,10 @@ func TestReadJSON(t *testing.T) {
 		Format: format2,
 	}
 	msgs2 := []map[string]interface{}{}
+	now = time.Now().Unix()
 	for i := 0; i < msgsNum; i++ {
 		msg := m
+		msg.Created = now - int64(i)
 		if i%2 == 0 {
 			msg.Protocol = httpProt
 		}
