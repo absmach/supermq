@@ -176,7 +176,7 @@ func subscribeToStoredSubs(ctx context.Context, sub opcua.Subscriber, cfg opcua.
 }
 
 func subscribeToThingsES(ctx context.Context, svc opcua.Service, cfg config, logger mflog.Logger) error {
-	subscriber, err := mfredis.NewEventStoreSubscriber(cfg.ESURL, thingsStream, cfg.ESConsumerName, logger)
+	subscriber, err := mfredis.NewSubscriber(cfg.ESURL, thingsStream, cfg.ESConsumerName, logger)
 	if err != nil {
 		return err
 	}

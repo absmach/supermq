@@ -57,10 +57,10 @@ func TestPublish(t *testing.T) {
 	err := redisClient.FlushAll(context.Background()).Err()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on flushing redis: %s", err))
 
-	publisher, err := mfredis.NewEventStore(context.Background(), redisURL, streamID, streamLen)
+	publisher, err := mfredis.NewPublisher(context.Background(), redisURL, streamID, streamLen)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
-	subcriber, err := mfredis.NewEventStoreSubscriber(redisURL, streamID, consumer, logger)
+	subcriber, err := mfredis.NewSubscriber(redisURL, streamID, consumer, logger)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
 	err = subcriber.Subscribe(context.Background(), streamID, handler{})
@@ -216,7 +216,7 @@ func TestPubsub(t *testing.T) {
 	}
 
 	for _, pc := range subcases {
-		subcriber, err := mfredis.NewEventStoreSubscriber(redisURL, pc.stream, consumer, logger)
+		subcriber, err := mfredis.NewSubscriber(redisURL, pc.stream, consumer, logger)
 		if err != nil {
 			assert.Equal(t, err, pc.errorMessage, fmt.Sprintf("%s got expected error: %s - got: %s", pc.desc, pc.errorMessage, err))
 

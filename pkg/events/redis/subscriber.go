@@ -35,7 +35,7 @@ type subEventStore struct {
 	logger   mflog.Logger
 }
 
-func NewEventStoreSubscriber(url, stream, consumer string, logger mflog.Logger) (events.Subscriber, error) {
+func NewSubscriber(url, stream, consumer string, logger mflog.Logger) (events.Subscriber, error) {
 	opts, err := redis.ParseURL(url)
 	if err != nil {
 		return nil, err

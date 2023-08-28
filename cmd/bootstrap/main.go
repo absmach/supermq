@@ -184,7 +184,7 @@ func newService(ctx context.Context, auth policies.AuthServiceClient, db *sqlx.D
 }
 
 func subscribeToThingsES(ctx context.Context, svc bootstrap.Service, cfg config, logger mflog.Logger) error {
-	subscriber, err := redis.NewEventStoreSubscriber(cfg.ESURL, thingsStream, cfg.ESConsumerName, logger)
+	subscriber, err := redis.NewSubscriber(cfg.ESURL, thingsStream, cfg.ESConsumerName, logger)
 	if err != nil {
 		return err
 	}

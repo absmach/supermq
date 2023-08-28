@@ -12,7 +12,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/events"
 )
 
-type eventStore struct {
+type pubEventStore struct {
 	client            *redis.Client
 	unpublishedEvents chan *redis.XAddArgs
 	streamID          string
@@ -20,13 +20,13 @@ type eventStore struct {
 	mu                sync.Mutex
 }
 
-func NewEventStore(ctx context.Context, url, streamID string, streamLen int64) (events.Publisher, error) {
+func NewPublisher(ctx context.Context, url, streamID string, streamLen int64) (events.Publisher, error) {
 	opts, err := redis.ParseURL(url)
 	if err != nil {
 		return nil, err
 	}
 
-	es := &eventStore{
+	es := &pubEventStore{
 		client:            redis.NewClient(opts),
 		unpublishedEvents: make(chan *redis.XAddArgs, events.MaxUnpublishedEvents),
 		streamID:          streamID,
@@ -38,7 +38,7 @@ func NewEventStore(ctx context.Context, url, streamID string, streamLen int64) (
 	return es, nil
 }
 
-func (es *eventStore) Publish(ctx context.Context, event events.Event) error {
+func (es *pubEventStore) Publish(ctx context.Context, event events.Event) error {
 	values, err := event.Encode()
 	if err != nil {
 		return err
@@ -68,7 +68,7 @@ func (es *eventStore) Publish(ctx context.Context, event events.Event) error {
 	return es.client.XAdd(ctx, record).Err()
 }
 
-func (es *eventStore) StartPublishingRoutine(ctx context.Context) {
+func (es *pubEventStore) StartPublishingRoutine(ctx context.Context) {
 	defer close(es.unpublishedEvents)
 
 	ticker := time.NewTicker(events.UnpublishedEventsCheckInterval)
@@ -95,11 +95,11 @@ func (es *eventStore) StartPublishingRoutine(ctx context.Context) {
 	}
 }
 
-func (es *eventStore) Close() error {
+func (es *pubEventStore) Close() error {
 	return es.client.Close()
 }
 
-func (es *eventStore) checkRedisConnection(ctx context.Context) error {
+func (es *pubEventStore) checkRedisConnection(ctx context.Context) error {
 	// A timeout is used to avoid blocking the main thread
 	ctx, cancel := context.WithTimeout(ctx, events.ConnCheckInterval)
 	defer cancel()

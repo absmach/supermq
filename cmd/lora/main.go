@@ -168,7 +168,7 @@ func connectToMQTTBroker(url, user, password string, timeout time.Duration, logg
 	opts.SetOnConnectHandler(func(_ mqttpaho.Client) {
 		logger.Info("Connected to Lora MQTT broker")
 	})
-	opts.SetConnectionLostHandler(func(c mqttpaho.Client, err error) {
+	opts.SetConnectionLostHandler(func(_ mqttpaho.Client, err error) {
 		logger.Error(fmt.Sprintf("MQTT connection lost: %s", err))
 	})
 
@@ -191,7 +191,7 @@ func subscribeToLoRaBroker(svc lora.Service, mc mqttpaho.Client, timeout time.Du
 }
 
 func subscribeToThingsES(ctx context.Context, svc lora.Service, cfg config, logger mflog.Logger) error {
-	subscriber, err := mfredis.NewEventStoreSubscriber(cfg.ESURL, thingsStream, cfg.ESConsumerName, logger)
+	subscriber, err := mfredis.NewSubscriber(cfg.ESURL, thingsStream, cfg.ESConsumerName, logger)
 	if err != nil {
 		return err
 	}
