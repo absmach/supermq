@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"time"
 
-	mfredis "github.com/mainflux/mainflux/internal/clients/redis"
+	"github.com/mainflux/mainflux/pkg/events"
 	mfgroups "github.com/mainflux/mainflux/pkg/groups"
 )
 
@@ -22,12 +22,12 @@ const (
 )
 
 var (
-	_ mfredis.Event = (*createGroupEvent)(nil)
-	_ mfredis.Event = (*updateGroupEvent)(nil)
-	_ mfredis.Event = (*removeGroupEvent)(nil)
-	_ mfredis.Event = (*viewGroupEvent)(nil)
-	_ mfredis.Event = (*listGroupEvent)(nil)
-	_ mfredis.Event = (*listGroupMembershipEvent)(nil)
+	_ events.Event = (*createGroupEvent)(nil)
+	_ events.Event = (*updateGroupEvent)(nil)
+	_ events.Event = (*removeGroupEvent)(nil)
+	_ events.Event = (*viewGroupEvent)(nil)
+	_ events.Event = (*listGroupEvent)(nil)
+	_ events.Event = (*listGroupMembershipEvent)(nil)
 )
 
 type createGroupEvent struct {

@@ -7,7 +7,8 @@ import (
 	"context"
 
 	"github.com/go-redis/redis/v8"
-	mfredis "github.com/mainflux/mainflux/internal/clients/redis"
+	"github.com/mainflux/mainflux/pkg/events"
+	mfredis "github.com/mainflux/mainflux/pkg/events/redis"
 )
 
 const (
@@ -22,7 +23,7 @@ type EventStore interface {
 
 // EventStore is a struct used to store event streams in Redis.
 type eventStore struct {
-	mfredis.Publisher
+	events.Publisher
 	client   *redis.Client
 	instance string
 }

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	mfredis "github.com/mainflux/mainflux/internal/clients/redis"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
+	"github.com/mainflux/mainflux/pkg/events"
 )
 
 const (
@@ -31,19 +31,19 @@ const (
 )
 
 var (
-	_ mfredis.Event = (*createClientEvent)(nil)
-	_ mfredis.Event = (*updateClientEvent)(nil)
-	_ mfredis.Event = (*removeClientEvent)(nil)
-	_ mfredis.Event = (*viewClientEvent)(nil)
-	_ mfredis.Event = (*viewProfileEvent)(nil)
-	_ mfredis.Event = (*listClientEvent)(nil)
-	_ mfredis.Event = (*listClientByGroupEvent)(nil)
-	_ mfredis.Event = (*identifyClientEvent)(nil)
-	_ mfredis.Event = (*generateResetTokenEvent)(nil)
-	_ mfredis.Event = (*issueTokenEvent)(nil)
-	_ mfredis.Event = (*refreshTokenEvent)(nil)
-	_ mfredis.Event = (*resetSecretEvent)(nil)
-	_ mfredis.Event = (*sendPasswordResetEvent)(nil)
+	_ events.Event = (*createClientEvent)(nil)
+	_ events.Event = (*updateClientEvent)(nil)
+	_ events.Event = (*removeClientEvent)(nil)
+	_ events.Event = (*viewClientEvent)(nil)
+	_ events.Event = (*viewProfileEvent)(nil)
+	_ events.Event = (*listClientEvent)(nil)
+	_ events.Event = (*listClientByGroupEvent)(nil)
+	_ events.Event = (*identifyClientEvent)(nil)
+	_ events.Event = (*generateResetTokenEvent)(nil)
+	_ events.Event = (*issueTokenEvent)(nil)
+	_ events.Event = (*refreshTokenEvent)(nil)
+	_ events.Event = (*resetSecretEvent)(nil)
+	_ events.Event = (*sendPasswordResetEvent)(nil)
 )
 
 type createClientEvent struct {

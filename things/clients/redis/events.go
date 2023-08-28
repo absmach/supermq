@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mainflux/mainflux/internal/clients/redis"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
+	"github.com/mainflux/mainflux/pkg/events"
 )
 
 const (
@@ -25,13 +25,13 @@ const (
 )
 
 var (
-	_ redis.Event = (*createClientEvent)(nil)
-	_ redis.Event = (*updateClientEvent)(nil)
-	_ redis.Event = (*removeClientEvent)(nil)
-	_ redis.Event = (*viewClientEvent)(nil)
-	_ redis.Event = (*listClientEvent)(nil)
-	_ redis.Event = (*listClientByGroupEvent)(nil)
-	_ redis.Event = (*identifyClientEvent)(nil)
+	_ events.Event = (*createClientEvent)(nil)
+	_ events.Event = (*updateClientEvent)(nil)
+	_ events.Event = (*removeClientEvent)(nil)
+	_ events.Event = (*viewClientEvent)(nil)
+	_ events.Event = (*listClientEvent)(nil)
+	_ events.Event = (*listClientByGroupEvent)(nil)
+	_ events.Event = (*identifyClientEvent)(nil)
 )
 
 type createClientEvent struct {

@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/mainflux/mainflux/bootstrap"
-	"github.com/mainflux/mainflux/internal/clients/redis"
+	"github.com/mainflux/mainflux/pkg/events"
 )
 
 const (
@@ -34,14 +34,14 @@ const (
 )
 
 var (
-	_ redis.Event = (*configEvent)(nil)
-	_ redis.Event = (*removeConfigEvent)(nil)
-	_ redis.Event = (*bootstrapEvent)(nil)
-	_ redis.Event = (*changeStateEvent)(nil)
-	_ redis.Event = (*updateConnectionsEvent)(nil)
-	_ redis.Event = (*updateCertEvent)(nil)
-	_ redis.Event = (*listConfigsEvent)(nil)
-	_ redis.Event = (*removeHandlerEvent)(nil)
+	_ events.Event = (*configEvent)(nil)
+	_ events.Event = (*removeConfigEvent)(nil)
+	_ events.Event = (*bootstrapEvent)(nil)
+	_ events.Event = (*changeStateEvent)(nil)
+	_ events.Event = (*updateConnectionsEvent)(nil)
+	_ events.Event = (*updateCertEvent)(nil)
+	_ events.Event = (*listConfigsEvent)(nil)
+	_ events.Event = (*removeHandlerEvent)(nil)
 )
 
 type configEvent struct {

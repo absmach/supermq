@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mainflux/mainflux/internal/clients/redis"
+	"github.com/mainflux/mainflux/pkg/events"
 	"github.com/mainflux/mainflux/things/policies"
 )
 
@@ -21,9 +21,9 @@ const (
 )
 
 var (
-	_ redis.Event = (*policyEvent)(nil)
-	_ redis.Event = (*authorizeEvent)(nil)
-	_ redis.Event = (*listPoliciesEvent)(nil)
+	_ events.Event = (*policyEvent)(nil)
+	_ events.Event = (*authorizeEvent)(nil)
+	_ events.Event = (*listPoliciesEvent)(nil)
 )
 
 type policyEvent struct {

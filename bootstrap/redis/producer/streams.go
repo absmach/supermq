@@ -8,7 +8,8 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/mainflux/mainflux/bootstrap"
-	mfredis "github.com/mainflux/mainflux/internal/clients/redis"
+	"github.com/mainflux/mainflux/pkg/events"
+	mfredis "github.com/mainflux/mainflux/pkg/events/redis"
 )
 
 const (
@@ -19,7 +20,7 @@ const (
 var _ bootstrap.Service = (*eventStore)(nil)
 
 type eventStore struct {
-	mfredis.Publisher
+	events.Publisher
 	svc    bootstrap.Service
 	client *redis.Client
 }
