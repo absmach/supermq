@@ -30,8 +30,8 @@ import (
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/api"
 	twapi "github.com/mainflux/mainflux/twins/api/http"
+	"github.com/mainflux/mainflux/twins/events"
 	twmongodb "github.com/mainflux/mainflux/twins/mongodb"
-	rediscache "github.com/mainflux/mainflux/twins/redis"
 	"github.com/mainflux/mainflux/twins/tracing"
 	"github.com/mainflux/mainflux/users/policies"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -180,13 +180,13 @@ func newService(ctx context.Context, id string, ps messaging.PubSub, cfg config,
 	stateRepo = tracing.StateRepositoryMiddleware(tracer, stateRepo)
 
 	idProvider := uuid.New()
-	twinCache := rediscache.NewTwinCache(cacheclient)
+	twinCache := events.NewTwinCache(cacheclient)
 	twinCache = tracing.TwinCacheMiddleware(tracer, twinCache)
 
 	svc := twins.New(ps, users, twinRepo, twinCache, stateRepo, idProvider, cfg.ChannelID, logger)
 
 	var err error
-	svc, err = rediscache.NewEventStoreMiddleware(ctx, svc, cfg.ESURL)
+	svc, err = events.NewEventStoreMiddleware(ctx, svc, cfg.ESURL)
 	if err != nil {
 		return nil, err
 	}

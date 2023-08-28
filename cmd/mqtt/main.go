@@ -22,7 +22,7 @@ import (
 	"github.com/mainflux/mainflux/internal/server"
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/mqtt"
-	mqttredis "github.com/mainflux/mainflux/mqtt/redis"
+	"github.com/mainflux/mainflux/mqtt/events"
 	mqtttracing "github.com/mainflux/mainflux/mqtt/tracing"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
@@ -147,7 +147,7 @@ func main() {
 	defer np.Close()
 	np = brokerstracing.NewPublisher(serverConfig, tracer, np)
 
-	es, err := mqttredis.NewEventStore(ctx, cfg.ESURL, cfg.Instance)
+	es, err := events.NewEventStore(ctx, cfg.ESURL, cfg.Instance)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create %s event store : %s", svcName, err))
 		exitCode = 1

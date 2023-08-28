@@ -24,8 +24,8 @@ import (
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/lora"
 	"github.com/mainflux/mainflux/lora/api"
+	"github.com/mainflux/mainflux/lora/events"
 	"github.com/mainflux/mainflux/lora/mqtt"
-	loraredis "github.com/mainflux/mainflux/lora/redis"
 	mfredis "github.com/mainflux/mainflux/pkg/events/redis"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
@@ -196,7 +196,7 @@ func subscribeToThingsES(ctx context.Context, svc lora.Service, cfg config, logg
 		return err
 	}
 
-	handler := loraredis.NewEventHandler(svc)
+	handler := events.NewEventHandler(svc)
 
 	logger.Info("Subscribed to Redis Event Store")
 
@@ -205,7 +205,7 @@ func subscribeToThingsES(ctx context.Context, svc lora.Service, cfg config, logg
 
 func newRouteMapRepository(client *redis.Client, prefix string, logger mflog.Logger) lora.RouteMapRepository {
 	logger.Info(fmt.Sprintf("Connected to %s Redis Route-map", prefix))
-	return loraredis.NewRouteMapRepository(client, prefix)
+	return events.NewRouteMapRepository(client, prefix)
 }
 
 func newService(pub messaging.Publisher, rmConn *redis.Client, thingsRMPrefix, channelsRMPrefix, connsRMPrefix string, logger mflog.Logger) lora.Service {

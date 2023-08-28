@@ -32,12 +32,12 @@ import (
 	"github.com/mainflux/mainflux/users/clients"
 	capi "github.com/mainflux/mainflux/users/clients/api"
 	"github.com/mainflux/mainflux/users/clients/emailer"
+	uevents "github.com/mainflux/mainflux/users/clients/events"
 	uclients "github.com/mainflux/mainflux/users/clients/postgres"
-	ucache "github.com/mainflux/mainflux/users/clients/redis"
 	ctracing "github.com/mainflux/mainflux/users/clients/tracing"
 	"github.com/mainflux/mainflux/users/groups"
 	gapi "github.com/mainflux/mainflux/users/groups/api"
-	gcache "github.com/mainflux/mainflux/users/groups/redis"
+	gevents "github.com/mainflux/mainflux/users/groups/events"
 	gtracing "github.com/mainflux/mainflux/users/groups/tracing"
 	"github.com/mainflux/mainflux/users/hasher"
 	"github.com/mainflux/mainflux/users/jwt"
@@ -45,8 +45,8 @@ import (
 	papi "github.com/mainflux/mainflux/users/policies/api"
 	grpcapi "github.com/mainflux/mainflux/users/policies/api/grpc"
 	httpapi "github.com/mainflux/mainflux/users/policies/api/http"
+	pevents "github.com/mainflux/mainflux/users/policies/events"
 	ppostgres "github.com/mainflux/mainflux/users/policies/postgres"
-	pcache "github.com/mainflux/mainflux/users/policies/redis"
 	ptracing "github.com/mainflux/mainflux/users/policies/tracing"
 	clientspg "github.com/mainflux/mainflux/users/postgres"
 	"go.opentelemetry.io/otel/trace"
@@ -221,15 +221,15 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, trac
 	gsvc := groups.NewService(gRepo, pRepo, tokenizer, idp)
 	psvc := policies.NewService(pRepo, tokenizer, idp)
 
-	csvc, err = ucache.NewEventStoreMiddleware(ctx, csvc, c.ESURL)
+	csvc, err = uevents.NewEventStoreMiddleware(ctx, csvc, c.ESURL)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	gsvc, err = gcache.NewEventStoreMiddleware(ctx, gsvc, c.ESURL)
+	gsvc, err = gevents.NewEventStoreMiddleware(ctx, gsvc, c.ESURL)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	psvc, err = pcache.NewEventStoreMiddleware(ctx, psvc, c.ESURL)
+	psvc, err = pevents.NewEventStoreMiddleware(ctx, psvc, c.ESURL)
 	if err != nil {
 		return nil, nil, nil, err
 	}

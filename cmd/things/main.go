@@ -31,20 +31,20 @@ import (
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/things/clients"
 	capi "github.com/mainflux/mainflux/things/clients/api"
+	thevents "github.com/mainflux/mainflux/things/clients/events"
 	cpostgres "github.com/mainflux/mainflux/things/clients/postgres"
-	thcache "github.com/mainflux/mainflux/things/clients/redis"
 	localusers "github.com/mainflux/mainflux/things/clients/standalone"
 	ctracing "github.com/mainflux/mainflux/things/clients/tracing"
 	"github.com/mainflux/mainflux/things/groups"
 	gapi "github.com/mainflux/mainflux/things/groups/api"
-	chcache "github.com/mainflux/mainflux/things/groups/redis"
+	chevents "github.com/mainflux/mainflux/things/groups/events"
 	gtracing "github.com/mainflux/mainflux/things/groups/tracing"
 	tpolicies "github.com/mainflux/mainflux/things/policies"
 	papi "github.com/mainflux/mainflux/things/policies/api"
 	grpcapi "github.com/mainflux/mainflux/things/policies/api/grpc"
 	httpapi "github.com/mainflux/mainflux/things/policies/api/http"
+	pevents "github.com/mainflux/mainflux/things/policies/events"
 	ppostgres "github.com/mainflux/mainflux/things/policies/postgres"
-	pcache "github.com/mainflux/mainflux/things/policies/redis"
 	ppracing "github.com/mainflux/mainflux/things/policies/tracing"
 	thingspg "github.com/mainflux/mainflux/things/postgres"
 	upolicies "github.com/mainflux/mainflux/users/policies"
@@ -220,24 +220,24 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 		logger.Error(fmt.Sprintf("failed to parse cache key duration: %s", err.Error()))
 	}
 
-	policyCache := pcache.NewCache(cacheClient, kDuration)
-	thingCache := thcache.NewCache(cacheClient, kDuration)
+	policyCache := pevents.NewCache(cacheClient, kDuration)
+	thingCache := thevents.NewCache(cacheClient, kDuration)
 
 	psvc := tpolicies.NewService(auth, pRepo, policyCache, idp)
 	csvc := clients.NewService(auth, psvc, cRepo, gRepo, thingCache, idp)
 	gsvc := groups.NewService(auth, psvc, gRepo, idp)
 
-	csvc, err = thcache.NewEventStoreMiddleware(ctx, csvc, cfg.ESURL)
+	csvc, err = thevents.NewEventStoreMiddleware(ctx, csvc, cfg.ESURL)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	gsvc, err = chcache.NewEventStoreMiddleware(ctx, gsvc, cfg.ESURL)
+	gsvc, err = chevents.NewEventStoreMiddleware(ctx, gsvc, cfg.ESURL)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	psvc, err = pcache.NewEventStoreMiddleware(ctx, psvc, cfg.ESURL)
+	psvc, err = pevents.NewEventStoreMiddleware(ctx, psvc, cfg.ESURL)
 	if err != nil {
 		return nil, nil, nil, err
 	}

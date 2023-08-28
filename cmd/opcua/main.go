@@ -23,8 +23,8 @@ import (
 	"github.com/mainflux/mainflux/opcua"
 	"github.com/mainflux/mainflux/opcua/api"
 	"github.com/mainflux/mainflux/opcua/db"
+	"github.com/mainflux/mainflux/opcua/events"
 	"github.com/mainflux/mainflux/opcua/gopcua"
-	opcuaredis "github.com/mainflux/mainflux/opcua/redis"
 	mfredis "github.com/mainflux/mainflux/pkg/events/redis"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	brokerstracing "github.com/mainflux/mainflux/pkg/messaging/brokers/tracing"
@@ -181,7 +181,7 @@ func subscribeToThingsES(ctx context.Context, svc opcua.Service, cfg config, log
 		return err
 	}
 
-	handler := opcuaredis.NewEventHandler(svc)
+	handler := events.NewEventHandler(svc)
 
 	logger.Info("Subscribed to Redis Event Store")
 
@@ -190,7 +190,7 @@ func subscribeToThingsES(ctx context.Context, svc opcua.Service, cfg config, log
 
 func newRouteMapRepositoy(client *redis.Client, prefix string, logger mflog.Logger) opcua.RouteMapRepository {
 	logger.Info(fmt.Sprintf("Connected to %s Redis Route-map", prefix))
-	return opcuaredis.NewRouteMapRepository(client, prefix)
+	return events.NewRouteMapRepository(client, prefix)
 }
 
 func newService(sub opcua.Subscriber, browser opcua.Browser, thingRM, chanRM, connRM opcua.RouteMapRepository, opcuaConfig opcua.Config, logger mflog.Logger) opcua.Service {
