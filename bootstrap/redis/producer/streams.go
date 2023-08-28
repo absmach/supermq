@@ -6,7 +6,6 @@ package producer
 import (
 	"context"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/pkg/events"
 	mfredis "github.com/mainflux/mainflux/pkg/events/redis"
@@ -21,22 +20,25 @@ var _ bootstrap.Service = (*eventStore)(nil)
 
 type eventStore struct {
 	events.Publisher
-	svc    bootstrap.Service
-	client *redis.Client
+	svc bootstrap.Service
 }
 
 // NewEventStoreMiddleware returns wrapper around bootstrap service that sends
 // events to event store.
-func NewEventStoreMiddleware(ctx context.Context, svc bootstrap.Service, client *redis.Client) bootstrap.Service {
+func NewEventStoreMiddleware(ctx context.Context, svc bootstrap.Service, url string) (bootstrap.Service, error) {
+	publisher, err := mfredis.NewEventStore(url, streamID, streamLen)
+	if err != nil {
+		return nil, err
+	}
+
 	es := &eventStore{
 		svc:       svc,
-		client:    client,
-		Publisher: mfredis.NewEventStore(client, streamID, streamLen),
+		Publisher: publisher,
 	}
 
 	go es.StartPublishingRoutine(ctx)
 
-	return es
+	return es, nil
 }
 
 func (es *eventStore) Add(ctx context.Context, token string, cfg bootstrap.Config) (bootstrap.Config, error) {

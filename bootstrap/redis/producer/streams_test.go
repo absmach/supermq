@@ -125,7 +125,7 @@ func TestAdd(t *testing.T) {
 
 	server := newThingsServer(newThingsService(users))
 	svc := newService(users, server.URL)
-	svc = producer.NewEventStoreMiddleware(context.Background(), svc, redisClient)
+	svc, err = producer.NewEventStoreMiddleware(context.Background(), svc, redisURL)
 
 	var channels []string
 	for _, ch := range config.Channels {
@@ -199,7 +199,8 @@ func TestView(t *testing.T) {
 
 	svcConfig, svcErr := svc.View(context.Background(), validToken, saved.ThingID)
 
-	svc = producer.NewEventStoreMiddleware(context.Background(), svc, redisClient)
+	svc, err = producer.NewEventStoreMiddleware(context.Background(), svc, redisURL)
+	assert.Nil(t, err, fmt.Sprintf("go unexpected error on creating event store middleware: %s", err))
 	esConfig, esErr := svc.View(context.Background(), validToken, saved.ThingID)
 
 	assert.Equal(t, svcConfig, esConfig, fmt.Sprintf("event sourcing changed service behavior: expected %v got %v", svcConfig, esConfig))
@@ -213,7 +214,8 @@ func TestUpdate(t *testing.T) {
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
 	server := newThingsServer(newThingsService(users))
 	svc := newService(users, server.URL)
-	svc = producer.NewEventStoreMiddleware(context.Background(), svc, redisClient)
+	svc, err = producer.NewEventStoreMiddleware(context.Background(), svc, redisURL)
+	assert.Nil(t, err, fmt.Sprintf("go unexpected error on creating event store middleware: %s", err))
 
 	c := config
 
@@ -297,7 +299,8 @@ func TestUpdateConnections(t *testing.T) {
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
 	server := newThingsServer(newThingsService(users))
 	svc := newService(users, server.URL)
-	svc = producer.NewEventStoreMiddleware(context.Background(), svc, redisClient)
+	svc, err = producer.NewEventStoreMiddleware(context.Background(), svc, redisURL)
+	assert.Nil(t, err, fmt.Sprintf("go unexpected error on creating event store middleware: %s", err))
 
 	saved, err := svc.Add(context.Background(), validToken, config)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
@@ -363,7 +366,8 @@ func TestUpdateCert(t *testing.T) {
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
 	server := newThingsServer(newThingsService(users))
 	svc := newService(users, server.URL)
-	svc = producer.NewEventStoreMiddleware(context.Background(), svc, redisClient)
+	svc, err = producer.NewEventStoreMiddleware(context.Background(), svc, redisURL)
+	assert.Nil(t, err, fmt.Sprintf("go unexpected error on creating event store middleware: %s", err))
 
 	saved, err := svc.Add(context.Background(), validToken, config)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
@@ -518,7 +522,8 @@ func TestList(t *testing.T) {
 	limit := uint64(10)
 	svcConfigs, svcErr := svc.List(context.Background(), validToken, bootstrap.Filter{}, offset, limit)
 
-	svc = producer.NewEventStoreMiddleware(context.Background(), svc, redisClient)
+	svc, err = producer.NewEventStoreMiddleware(context.Background(), svc, redisURL)
+	assert.Nil(t, err, fmt.Sprintf("go unexpected error on creating event store middleware: %s", err))
 	esConfigs, esErr := svc.List(context.Background(), validToken, bootstrap.Filter{}, offset, limit)
 	assert.Equal(t, svcConfigs, esConfigs)
 	assert.Equal(t, svcErr, esErr)
@@ -531,7 +536,8 @@ func TestRemove(t *testing.T) {
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
 	server := newThingsServer(newThingsService(users))
 	svc := newService(users, server.URL)
-	svc = producer.NewEventStoreMiddleware(context.Background(), svc, redisClient)
+	svc, err = producer.NewEventStoreMiddleware(context.Background(), svc, redisURL)
+	assert.Nil(t, err, fmt.Sprintf("go unexpected error on creating event store middleware: %s", err))
 
 	c := config
 
@@ -595,7 +601,8 @@ func TestBootstrap(t *testing.T) {
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
 	server := newThingsServer(newThingsService(users))
 	svc := newService(users, server.URL)
-	svc = producer.NewEventStoreMiddleware(context.Background(), svc, redisClient)
+	svc, err = producer.NewEventStoreMiddleware(context.Background(), svc, redisURL)
+	assert.Nil(t, err, fmt.Sprintf("go unexpected error on creating event store middleware: %s", err))
 
 	c := config
 
@@ -664,7 +671,8 @@ func TestChangeState(t *testing.T) {
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
 	server := newThingsServer(newThingsService(users))
 	svc := newService(users, server.URL)
-	svc = producer.NewEventStoreMiddleware(context.Background(), svc, redisClient)
+	svc, err = producer.NewEventStoreMiddleware(context.Background(), svc, redisURL)
+	assert.Nil(t, err, fmt.Sprintf("go unexpected error on creating event store middleware: %s", err))
 
 	c := config
 
@@ -732,7 +740,8 @@ func TestUpdateChannelHandler(t *testing.T) {
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
 	server := newThingsServer(newThingsService(users))
 	svc := newService(users, server.URL)
-	svc = producer.NewEventStoreMiddleware(context.Background(), svc, redisClient)
+	svc, err = producer.NewEventStoreMiddleware(context.Background(), svc, redisURL)
+	assert.Nil(t, err, fmt.Sprintf("go unexpected error on creating event store middleware: %s", err))
 
 	err = redisClient.FlushAll(context.Background()).Err()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -818,7 +827,8 @@ func TestRemoveChannelHandler(t *testing.T) {
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
 	server := newThingsServer(newThingsService(users))
 	svc := newService(users, server.URL)
-	svc = producer.NewEventStoreMiddleware(context.Background(), svc, redisClient)
+	svc, err = producer.NewEventStoreMiddleware(context.Background(), svc, redisURL)
+	assert.Nil(t, err, fmt.Sprintf("go unexpected error on creating event store middleware: %s", err))
 
 	err = redisClient.FlushAll(context.Background()).Err()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -884,7 +894,8 @@ func TestRemoveConfigHandler(t *testing.T) {
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
 	server := newThingsServer(newThingsService(users))
 	svc := newService(users, server.URL)
-	svc = producer.NewEventStoreMiddleware(context.Background(), svc, redisClient)
+	svc, err = producer.NewEventStoreMiddleware(context.Background(), svc, redisURL)
+	assert.Nil(t, err, fmt.Sprintf("go unexpected error on creating event store middleware: %s", err))
 
 	err = redisClient.FlushAll(context.Background()).Err()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -950,7 +961,8 @@ func TestDisconnectThingHandler(t *testing.T) {
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
 	server := newThingsServer(newThingsService(users))
 	svc := newService(users, server.URL)
-	svc = producer.NewEventStoreMiddleware(context.Background(), svc, redisClient)
+	svc, err = producer.NewEventStoreMiddleware(context.Background(), svc, redisURL)
+	assert.Nil(t, err, fmt.Sprintf("go unexpected error on creating event store middleware: %s", err))
 
 	err = redisClient.FlushAll(context.Background()).Err()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))

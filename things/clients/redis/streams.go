@@ -6,7 +6,6 @@ package redis
 import (
 	"context"
 
-	"github.com/go-redis/redis/v8"
 	mfclients "github.com/mainflux/mainflux/pkg/clients"
 	"github.com/mainflux/mainflux/pkg/events"
 	mfredis "github.com/mainflux/mainflux/pkg/events/redis"
@@ -22,22 +21,25 @@ var _ clients.Service = (*eventStore)(nil)
 
 type eventStore struct {
 	events.Publisher
-	svc    clients.Service
-	client *redis.Client
+	svc clients.Service
 }
 
 // NewEventStoreMiddleware returns wrapper around things service that sends
 // events to event store.
-func NewEventStoreMiddleware(ctx context.Context, svc clients.Service, client *redis.Client) clients.Service {
+func NewEventStoreMiddleware(ctx context.Context, svc clients.Service, url string) (clients.Service, error) {
+	publisher, err := mfredis.NewEventStore(url, streamID, streamLen)
+	if err != nil {
+		return nil, err
+	}
+
 	es := &eventStore{
 		svc:       svc,
-		client:    client,
-		Publisher: mfredis.NewEventStore(client, streamID, streamLen),
+		Publisher: publisher,
 	}
 
 	go es.StartPublishingRoutine(ctx)
 
-	return es
+	return es, nil
 }
 
 func (es *eventStore) CreateThings(ctx context.Context, token string, thing ...mfclients.Client) ([]mfclients.Client, error) {

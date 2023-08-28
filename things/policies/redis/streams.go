@@ -6,7 +6,6 @@ package redis
 import (
 	"context"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/mainflux/mainflux/pkg/events"
 	mfredis "github.com/mainflux/mainflux/pkg/events/redis"
 	"github.com/mainflux/mainflux/things/policies"
@@ -21,22 +20,25 @@ var _ policies.Service = (*eventStore)(nil)
 
 type eventStore struct {
 	events.Publisher
-	svc    policies.Service
-	client *redis.Client
+	svc policies.Service
 }
 
 // NewEventStoreMiddleware returns wrapper around policy service that sends
 // events to event store.
-func NewEventStoreMiddleware(ctx context.Context, svc policies.Service, client *redis.Client) policies.Service {
+func NewEventStoreMiddleware(ctx context.Context, svc policies.Service, url string) (policies.Service, error) {
+	publisher, err := mfredis.NewEventStore(url, streamID, streamLen)
+	if err != nil {
+		return nil, err
+	}
+
 	es := &eventStore{
 		svc:       svc,
-		client:    client,
-		Publisher: mfredis.NewEventStore(client, streamID, streamLen),
+		Publisher: publisher,
 	}
 
 	go es.StartPublishingRoutine(ctx)
 
-	return es
+	return es, nil
 }
 
 func (es *eventStore) Authorize(ctx context.Context, ar policies.AccessRequest) (policies.Policy, error) {

@@ -20,13 +20,18 @@ type eventStore struct {
 	mu                sync.Mutex
 }
 
-func NewEventStore(client *redis.Client, streamID string, streamLen int64) events.Publisher {
+func NewEventStore(url, streamID string, streamLen int64) (events.Publisher, error) {
+	opts, err := redis.ParseURL(url)
+	if err != nil {
+		return nil, err
+	}
+
 	return &eventStore{
-		client:            client,
+		client:            redis.NewClient(opts),
 		unpublishedEvents: make(chan *redis.XAddArgs, events.MaxUnpublishedEvents),
 		streamID:          streamID,
 		streamLen:         streamLen,
-	}
+	}, nil
 }
 
 func (es *eventStore) Publish(ctx context.Context, event events.Event) error {

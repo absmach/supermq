@@ -54,6 +54,7 @@ type config struct {
 	JaegerURL      string `env:"MF_JAEGER_URL"                 envDefault:"http://jaeger:14268/api/traces"`
 	SendTelemetry  bool   `env:"MF_SEND_TELEMETRY"             envDefault:"true"`
 	InstanceID     string `env:"MF_BOOTSTRAP_INSTANCE_ID"      envDefault:""`
+	ESURL          string `env:"MF_BOOTSTRAP_ES_URL"           envDefault:"redis://localhost:6379/0"`
 }
 
 func main() {
@@ -94,15 +95,6 @@ func main() {
 	}
 	defer db.Close()
 
-	// Create new redis client for bootstrap event store
-	esClient, err := redisclient.Setup(envPrefixES)
-	if err != nil {
-		logger.Error(fmt.Sprintf("failed to setup %s bootstrap event store redis client : %s", svcName, err))
-		exitCode = 1
-		return
-	}
-	defer esClient.Close()
-
 	// Create new auth grpc client api
 	auth, authHandler, err := authclient.Setup(svcName)
 	if err != nil {
@@ -127,7 +119,12 @@ func main() {
 	tracer := tp.Tracer(svcName)
 
 	// Create new service
-	svc := newService(ctx, auth, db, tracer, logger, esClient, cfg, dbConfig)
+	svc, err := newService(ctx, auth, db, tracer, logger, cfg, dbConfig)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to create %s service: %s", svcName, err))
+		exitCode = 1
+		return
+	}
 
 	httpServerConfig := server.Config{Port: defSvcHTTPPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHTTP}); err != nil {
@@ -164,7 +161,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, auth policies.AuthServiceClient, db *sqlx.DB, tracer trace.Tracer, logger mflog.Logger, esClient *redis.Client, cfg config, dbConfig pgclient.Config) bootstrap.Service {
+func newService(ctx context.Context, auth policies.AuthServiceClient, db *sqlx.DB, tracer trace.Tracer, logger mflog.Logger, cfg config, dbConfig pgclient.Config) (bootstrap.Service, error) {
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 
 	repoConfig := bootstrappg.NewConfigRepository(database, logger)
@@ -176,13 +173,18 @@ func newService(ctx context.Context, auth policies.AuthServiceClient, db *sqlx.D
 	sdk := mfsdk.NewSDK(config)
 
 	svc := bootstrap.New(auth, repoConfig, sdk, []byte(cfg.EncKey))
-	svc = producer.NewEventStoreMiddleware(ctx, svc, esClient)
+
+	var err error
+	svc, err = producer.NewEventStoreMiddleware(ctx, svc, cfg.ESURL)
+	if err != nil {
+		return nil, err
+	}
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)
 	svc = tracing.New(svc, tracer)
 
-	return svc
+	return svc, nil
 }
 
 func subscribeToThingsES(ctx context.Context, svc bootstrap.Service, client *redis.Client, consumers string, logger mflog.Logger) {

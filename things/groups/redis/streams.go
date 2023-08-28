@@ -6,7 +6,6 @@ package redis
 import (
 	"context"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/mainflux/mainflux/pkg/events"
 	mfredis "github.com/mainflux/mainflux/pkg/events/redis"
 	mfgroups "github.com/mainflux/mainflux/pkg/groups"
@@ -22,22 +21,25 @@ var _ groups.Service = (*eventStore)(nil)
 
 type eventStore struct {
 	events.Publisher
-	svc    groups.Service
-	client *redis.Client
+	svc groups.Service
 }
 
 // NewEventStoreMiddleware returns wrapper around things service that sends
 // events to event store.
-func NewEventStoreMiddleware(ctx context.Context, svc groups.Service, client *redis.Client) groups.Service {
+func NewEventStoreMiddleware(ctx context.Context, svc groups.Service, url string) (groups.Service, error) {
+	publisher, err := mfredis.NewEventStore(url, streamID, streamLen)
+	if err != nil {
+		return nil, err
+	}
+
 	es := &eventStore{
 		svc:       svc,
-		client:    client,
-		Publisher: mfredis.NewEventStore(client, streamID, streamLen),
+		Publisher: publisher,
 	}
 
 	go es.StartPublishingRoutine(ctx)
 
-	return es
+	return es, nil
 }
 
 func (es *eventStore) CreateGroups(ctx context.Context, token string, groups ...mfgroups.Group) ([]mfgroups.Group, error) {

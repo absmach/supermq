@@ -6,7 +6,6 @@ package redis
 import (
 	"context"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/mainflux/mainflux/pkg/events"
 	mfredis "github.com/mainflux/mainflux/pkg/events/redis"
 )
@@ -24,22 +23,25 @@ type EventStore interface {
 // EventStore is a struct used to store event streams in Redis.
 type eventStore struct {
 	events.Publisher
-	client   *redis.Client
 	instance string
 }
 
 // NewEventStore returns wrapper around mProxy service that sends
 // events to event store.
-func NewEventStore(ctx context.Context, client *redis.Client, instance string) EventStore {
+func NewEventStore(ctx context.Context, url, instance string) (EventStore, error) {
+	publisher, err := mfredis.NewEventStore(url, streamID, streamLen)
+	if err != nil {
+		return nil, err
+	}
+
 	es := &eventStore{
-		client:    client,
 		instance:  instance,
-		Publisher: mfredis.NewEventStore(client, streamID, streamLen),
+		Publisher: publisher,
 	}
 
 	go es.StartPublishingRoutine(ctx)
 
-	return es
+	return es, nil
 }
 
 // Connect issues event on MQTT CONNECT.

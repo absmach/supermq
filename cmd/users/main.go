@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/go-zoo/bone"
 	"github.com/jmoiron/sqlx"
 	chclient "github.com/mainflux/callhome/pkg/client"
@@ -20,7 +19,6 @@ import (
 	"github.com/mainflux/mainflux/internal"
 	jaegerclient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	pgclient "github.com/mainflux/mainflux/internal/clients/postgres"
-	redisclient "github.com/mainflux/mainflux/internal/clients/redis"
 	"github.com/mainflux/mainflux/internal/email"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/postgres"
@@ -60,7 +58,6 @@ import (
 const (
 	svcName        = "users"
 	envPrefixDB    = "MF_USERS_DB_"
-	envPrefixES    = "MF_USERS_ES_"
 	envPrefixHTTP  = "MF_USERS_HTTP_"
 	envPrefixGrpc  = "MF_USERS_GRPC_"
 	defDB          = "users"
@@ -80,6 +77,7 @@ type config struct {
 	JaegerURL       string `env:"MF_JAEGER_URL"                   envDefault:"http://jaeger:14268/api/traces"`
 	SendTelemetry   bool   `env:"MF_SEND_TELEMETRY"               envDefault:"true"`
 	InstanceID      string `env:"MF_USERS_INSTANCE_ID"            envDefault:""`
+	ESURL           string `env:"MF_USERS_ES_URL"                 envDefault:"redis://localhost:6379/0"`
 	PassRegex       *regexp.Regexp
 }
 
@@ -145,14 +143,12 @@ func main() {
 	}()
 	tracer := tp.Tracer(svcName)
 
-	// Setup new redis event store client
-	esClient, err := redisclient.Setup(envPrefixES)
+	csvc, gsvc, psvc, err := newService(ctx, db, dbConfig, tracer, cfg, ec, logger)
 	if err != nil {
-		logger.Fatal(err.Error())
+		logger.Error(fmt.Sprintf("failed to create %s service: %s", svcName, err.Error()))
+		exitCode = 1
+		return
 	}
-	defer esClient.Close()
-
-	csvc, gsvc, psvc := newService(ctx, db, dbConfig, esClient, tracer, cfg, ec, logger)
 
 	httpServerConfig := server.Config{Port: defSvcHTTPPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHTTP}); err != nil {
@@ -198,7 +194,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, esClient *redis.Client, tracer trace.Tracer, c config, ec email.Config, logger mflog.Logger) (clients.Service, groups.Service, policies.Service) {
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, c config, ec email.Config, logger mflog.Logger) (clients.Service, groups.Service, policies.Service, error) {
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 	cRepo := uclients.NewRepository(database)
 	gRepo := gpostgres.New(database)
@@ -225,9 +221,18 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, esCl
 	gsvc := groups.NewService(gRepo, pRepo, tokenizer, idp)
 	psvc := policies.NewService(pRepo, tokenizer, idp)
 
-	csvc = ucache.NewEventStoreMiddleware(ctx, csvc, esClient)
-	gsvc = gcache.NewEventStoreMiddleware(ctx, gsvc, esClient)
-	psvc = pcache.NewEventStoreMiddleware(ctx, psvc, esClient)
+	csvc, err = ucache.NewEventStoreMiddleware(ctx, csvc, c.ESURL)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	gsvc, err = gcache.NewEventStoreMiddleware(ctx, gsvc, c.ESURL)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	psvc, err = pcache.NewEventStoreMiddleware(ctx, psvc, c.ESURL)
+	if err != nil {
+		return nil, nil, nil, err
+	}
 
 	csvc = ctracing.New(csvc, tracer)
 	csvc = capi.LoggingMiddleware(csvc, logger)
@@ -247,7 +252,7 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, esCl
 	if err := createAdmin(ctx, c, cRepo, hsr, csvc); err != nil {
 		logger.Error(fmt.Sprintf("failed to create admin client: %s", err))
 	}
-	return csvc, gsvc, psvc
+	return csvc, gsvc, psvc, nil
 }
 
 func createAdmin(ctx context.Context, c config, crepo uclients.Repository, hsr clients.Hasher, svc clients.Service) error {
