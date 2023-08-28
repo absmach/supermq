@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
@@ -10,7 +11,21 @@ import (
 )
 
 const (
-	exists = "BUSYGROUP Consumer Group name already exists"
+	eventCount = 100
+	exists     = "BUSYGROUP Consumer Group name already exists"
+)
+
+var _ events.Subscriber = (*subEventStore)(nil)
+
+var (
+	// ErrEmptyGroup is returned when group name is empty.
+	ErrEmptyGroup = errors.New("group name cannot be empty")
+
+	// ErrEmptyStream is returned when stream name is empty.
+	ErrEmptyStream = errors.New("stream name cannot be empty")
+
+	// ErrEmptyConsumer is returned when consumer name is empty.
+	ErrEmptyConsumer = errors.New("consumer name cannot be empty")
 )
 
 type subEventStore struct {
@@ -26,6 +41,13 @@ func NewEventStoreSubscriber(url, stream, consumer string, logger mflog.Logger) 
 		return nil, err
 	}
 
+	if stream == "" {
+		return nil, ErrEmptyStream
+	}
+	if consumer == "" {
+		return nil, ErrEmptyConsumer
+	}
+
 	return &subEventStore{
 		client:   redis.NewClient(opts),
 		stream:   stream,
@@ -35,6 +57,10 @@ func NewEventStoreSubscriber(url, stream, consumer string, logger mflog.Logger) 
 }
 
 func (es *subEventStore) Subscribe(ctx context.Context, group string, handler events.EventHandler) error {
+	if group == "" {
+		return ErrEmptyGroup
+	}
+
 	err := es.client.XGroupCreateMkStream(ctx, es.stream, group, "$").Err()
 	if err != nil && err.Error() != exists {
 		return err
@@ -46,10 +72,11 @@ func (es *subEventStore) Subscribe(ctx context.Context, group string, handler ev
 				Group:    group,
 				Consumer: es.consumer,
 				Streams:  []string{es.stream, ">"},
-				Count:    100,
+				Count:    eventCount,
 			}).Result()
 			if err != nil {
 				es.logger.Warn(fmt.Sprintf("failed to read from Redis stream: %s", err))
+
 				continue
 			}
 			if len(msgs) == 0 {
@@ -81,6 +108,7 @@ func (es *subEventStore) handle(ctx context.Context, group string, msgs []redis.
 
 		if err := h.Handle(ctx, event); err != nil {
 			es.logger.Warn(fmt.Sprintf("failed to handle redis event: %s", err))
+
 			return
 		}
 

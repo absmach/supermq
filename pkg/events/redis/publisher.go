@@ -83,6 +83,7 @@ func (es *eventStore) StartPublishingRoutine(ctx context.Context) {
 					record := <-es.unpublishedEvents
 					if err := es.client.XAdd(ctx, record).Err(); err != nil {
 						es.unpublishedEvents <- record
+
 						break
 					}
 				}
