@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/mainflux/mainflux/pkg/events"
-	mfredis "github.com/mainflux/mainflux/pkg/events/redis"
+	"github.com/mainflux/mainflux/pkg/events/redis"
 )
 
 const (
@@ -29,7 +29,7 @@ type eventStore struct {
 // NewEventStore returns wrapper around mProxy service that sends
 // events to event store.
 func NewEventStore(ctx context.Context, url, instance string) (EventStore, error) {
-	publisher, err := mfredis.NewPublisher(ctx, url, streamID, streamLen)
+	publisher, err := redis.NewPublisher(ctx, url, streamID, streamLen)
 	if err != nil {
 		return nil, err
 	}
