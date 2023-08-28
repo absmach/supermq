@@ -27,19 +27,15 @@ type eventStore struct {
 // NewEventStoreMiddleware returns wrapper around things service that sends
 // events to event store.
 func NewEventStoreMiddleware(ctx context.Context, svc clients.Service, url string) (clients.Service, error) {
-	publisher, err := mfredis.NewEventStore(url, streamID, streamLen)
+	publisher, err := mfredis.NewEventStore(ctx, url, streamID, streamLen)
 	if err != nil {
 		return nil, err
 	}
 
-	es := &eventStore{
+	return &eventStore{
 		svc:       svc,
 		Publisher: publisher,
-	}
-
-	go es.StartPublishingRoutine(ctx)
-
-	return es, nil
+	}, nil
 }
 
 func (es *eventStore) CreateThings(ctx context.Context, token string, thing ...mfclients.Client) ([]mfclients.Client, error) {

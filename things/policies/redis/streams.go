@@ -26,19 +26,15 @@ type eventStore struct {
 // NewEventStoreMiddleware returns wrapper around policy service that sends
 // events to event store.
 func NewEventStoreMiddleware(ctx context.Context, svc policies.Service, url string) (policies.Service, error) {
-	publisher, err := mfredis.NewEventStore(url, streamID, streamLen)
+	publisher, err := mfredis.NewEventStore(ctx, url, streamID, streamLen)
 	if err != nil {
 		return nil, err
 	}
 
-	es := &eventStore{
+	return &eventStore{
 		svc:       svc,
 		Publisher: publisher,
-	}
-
-	go es.StartPublishingRoutine(ctx)
-
-	return es, nil
+	}, nil
 }
 
 func (es *eventStore) Authorize(ctx context.Context, ar policies.AccessRequest) (policies.Policy, error) {

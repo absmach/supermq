@@ -14,7 +14,7 @@ const (
 	MaxUnpublishedEvents           uint64 = 1e6
 )
 
-// Event represents event.
+// Event represents an event.
 type Event interface {
 	// Encode encodes event to map.
 	Encode() (map[string]interface{}, error)
@@ -22,10 +22,10 @@ type Event interface {
 
 // Publisher specifies events publishing API.
 type Publisher interface {
-	// Publishes event to stream.
+	// Publish publishes event to stream.
 	Publish(ctx context.Context, event Event) error
 
-	// StartPublishingRoutine starts routine that checks for unpublished events
+	// StartPublishingRoutine starts a routine that checks for unpublished events
 	// and publishes them to stream.
 	StartPublishingRoutine(ctx context.Context)
 

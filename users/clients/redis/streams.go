@@ -28,22 +28,18 @@ type eventStore struct {
 // NewEventStoreMiddleware returns wrapper around users service that sends
 // events to event store.
 func NewEventStoreMiddleware(ctx context.Context, svc clients.Service, url string) (clients.Service, error) {
-	publisher, err := mfredis.NewEventStore(url, streamID, streamLen)
+	publisher, err := mfredis.NewEventStore(ctx, url, streamID, streamLen)
 	if err != nil {
 		return nil, err
 	}
 
-	es := eventStore{
+	return &eventStore{
 		svc:       svc,
 		Publisher: publisher,
-	}
-
-	go es.StartPublishingRoutine(ctx)
-
-	return es, nil
+	}, nil
 }
 
-func (es eventStore) RegisterClient(ctx context.Context, token string, user mfclients.Client) (mfclients.Client, error) {
+func (es *eventStore) RegisterClient(ctx context.Context, token string, user mfclients.Client) (mfclients.Client, error) {
 	user, err := es.svc.RegisterClient(ctx, token, user)
 	if err != nil {
 		return user, err
@@ -60,7 +56,7 @@ func (es eventStore) RegisterClient(ctx context.Context, token string, user mfcl
 	return user, nil
 }
 
-func (es eventStore) UpdateClient(ctx context.Context, token string, user mfclients.Client) (mfclients.Client, error) {
+func (es *eventStore) UpdateClient(ctx context.Context, token string, user mfclients.Client) (mfclients.Client, error) {
 	user, err := es.svc.UpdateClient(ctx, token, user)
 	if err != nil {
 		return user, err
@@ -69,7 +65,7 @@ func (es eventStore) UpdateClient(ctx context.Context, token string, user mfclie
 	return es.update(ctx, "", user)
 }
 
-func (es eventStore) UpdateClientOwner(ctx context.Context, token string, user mfclients.Client) (mfclients.Client, error) {
+func (es *eventStore) UpdateClientOwner(ctx context.Context, token string, user mfclients.Client) (mfclients.Client, error) {
 	user, err := es.svc.UpdateClientOwner(ctx, token, user)
 	if err != nil {
 		return user, err
@@ -78,7 +74,7 @@ func (es eventStore) UpdateClientOwner(ctx context.Context, token string, user m
 	return es.update(ctx, "owner", user)
 }
 
-func (es eventStore) UpdateClientTags(ctx context.Context, token string, user mfclients.Client) (mfclients.Client, error) {
+func (es *eventStore) UpdateClientTags(ctx context.Context, token string, user mfclients.Client) (mfclients.Client, error) {
 	user, err := es.svc.UpdateClientTags(ctx, token, user)
 	if err != nil {
 		return user, err
@@ -87,7 +83,7 @@ func (es eventStore) UpdateClientTags(ctx context.Context, token string, user mf
 	return es.update(ctx, "tags", user)
 }
 
-func (es eventStore) UpdateClientSecret(ctx context.Context, token, oldSecret, newSecret string) (mfclients.Client, error) {
+func (es *eventStore) UpdateClientSecret(ctx context.Context, token, oldSecret, newSecret string) (mfclients.Client, error) {
 	user, err := es.svc.UpdateClientSecret(ctx, token, oldSecret, newSecret)
 	if err != nil {
 		return user, err
@@ -96,7 +92,7 @@ func (es eventStore) UpdateClientSecret(ctx context.Context, token, oldSecret, n
 	return es.update(ctx, "secret", user)
 }
 
-func (es eventStore) UpdateClientIdentity(ctx context.Context, token, id, identity string) (mfclients.Client, error) {
+func (es *eventStore) UpdateClientIdentity(ctx context.Context, token, id, identity string) (mfclients.Client, error) {
 	user, err := es.svc.UpdateClientIdentity(ctx, token, id, identity)
 	if err != nil {
 		return user, err
@@ -105,7 +101,7 @@ func (es eventStore) UpdateClientIdentity(ctx context.Context, token, id, identi
 	return es.update(ctx, "identity", user)
 }
 
-func (es eventStore) update(ctx context.Context, operation string, user mfclients.Client) (mfclients.Client, error) {
+func (es *eventStore) update(ctx context.Context, operation string, user mfclients.Client) (mfclients.Client, error) {
 	event := updateClientEvent{
 		user, operation,
 	}
@@ -117,7 +113,7 @@ func (es eventStore) update(ctx context.Context, operation string, user mfclient
 	return user, nil
 }
 
-func (es eventStore) ViewClient(ctx context.Context, token, id string) (mfclients.Client, error) {
+func (es *eventStore) ViewClient(ctx context.Context, token, id string) (mfclients.Client, error) {
 	user, err := es.svc.ViewClient(ctx, token, id)
 	if err != nil {
 		return user, err
@@ -134,7 +130,7 @@ func (es eventStore) ViewClient(ctx context.Context, token, id string) (mfclient
 	return user, nil
 }
 
-func (es eventStore) ViewProfile(ctx context.Context, token string) (mfclients.Client, error) {
+func (es *eventStore) ViewProfile(ctx context.Context, token string) (mfclients.Client, error) {
 	user, err := es.svc.ViewProfile(ctx, token)
 	if err != nil {
 		return user, err
@@ -151,7 +147,7 @@ func (es eventStore) ViewProfile(ctx context.Context, token string) (mfclients.C
 	return user, nil
 }
 
-func (es eventStore) ListClients(ctx context.Context, token string, pm mfclients.Page) (mfclients.ClientsPage, error) {
+func (es *eventStore) ListClients(ctx context.Context, token string, pm mfclients.Page) (mfclients.ClientsPage, error) {
 	cp, err := es.svc.ListClients(ctx, token, pm)
 	if err != nil {
 		return cp, err
@@ -167,7 +163,7 @@ func (es eventStore) ListClients(ctx context.Context, token string, pm mfclients
 	return cp, nil
 }
 
-func (es eventStore) ListMembers(ctx context.Context, token, groupID string, pm mfclients.Page) (mfclients.MembersPage, error) {
+func (es *eventStore) ListMembers(ctx context.Context, token, groupID string, pm mfclients.Page) (mfclients.MembersPage, error) {
 	mp, err := es.svc.ListMembers(ctx, token, groupID, pm)
 	if err != nil {
 		return mp, err
@@ -183,7 +179,7 @@ func (es eventStore) ListMembers(ctx context.Context, token, groupID string, pm 
 	return mp, nil
 }
 
-func (es eventStore) EnableClient(ctx context.Context, token, id string) (mfclients.Client, error) {
+func (es *eventStore) EnableClient(ctx context.Context, token, id string) (mfclients.Client, error) {
 	user, err := es.svc.EnableClient(ctx, token, id)
 	if err != nil {
 		return user, err
@@ -192,7 +188,7 @@ func (es eventStore) EnableClient(ctx context.Context, token, id string) (mfclie
 	return es.delete(ctx, user)
 }
 
-func (es eventStore) DisableClient(ctx context.Context, token, id string) (mfclients.Client, error) {
+func (es *eventStore) DisableClient(ctx context.Context, token, id string) (mfclients.Client, error) {
 	user, err := es.svc.DisableClient(ctx, token, id)
 	if err != nil {
 		return user, err
@@ -201,7 +197,7 @@ func (es eventStore) DisableClient(ctx context.Context, token, id string) (mfcli
 	return es.delete(ctx, user)
 }
 
-func (es eventStore) delete(ctx context.Context, user mfclients.Client) (mfclients.Client, error) {
+func (es *eventStore) delete(ctx context.Context, user mfclients.Client) (mfclients.Client, error) {
 	event := removeClientEvent{
 		id:        user.ID,
 		updatedAt: user.UpdatedAt,
@@ -216,7 +212,7 @@ func (es eventStore) delete(ctx context.Context, user mfclients.Client) (mfclien
 	return user, nil
 }
 
-func (es eventStore) Identify(ctx context.Context, token string) (string, error) {
+func (es *eventStore) Identify(ctx context.Context, token string) (string, error) {
 	userID, err := es.svc.Identify(ctx, token)
 	if err != nil {
 		return userID, err
@@ -232,7 +228,7 @@ func (es eventStore) Identify(ctx context.Context, token string) (string, error)
 	return userID, nil
 }
 
-func (es eventStore) GenerateResetToken(ctx context.Context, email, host string) error {
+func (es *eventStore) GenerateResetToken(ctx context.Context, email, host string) error {
 	if err := es.svc.GenerateResetToken(ctx, email, host); err != nil {
 		return err
 	}
@@ -244,7 +240,7 @@ func (es eventStore) GenerateResetToken(ctx context.Context, email, host string)
 	return es.Publish(ctx, event)
 }
 
-func (es eventStore) IssueToken(ctx context.Context, identity, secret string) (jwt.Token, error) {
+func (es *eventStore) IssueToken(ctx context.Context, identity, secret string) (jwt.Token, error) {
 	token, err := es.svc.IssueToken(ctx, identity, secret)
 	if err != nil {
 		return token, err
@@ -260,7 +256,7 @@ func (es eventStore) IssueToken(ctx context.Context, identity, secret string) (j
 	return token, nil
 }
 
-func (es eventStore) RefreshToken(ctx context.Context, refreshToken string) (jwt.Token, error) {
+func (es *eventStore) RefreshToken(ctx context.Context, refreshToken string) (jwt.Token, error) {
 	token, err := es.svc.RefreshToken(ctx, refreshToken)
 	if err != nil {
 		return token, err
@@ -274,7 +270,7 @@ func (es eventStore) RefreshToken(ctx context.Context, refreshToken string) (jwt
 	return token, nil
 }
 
-func (es eventStore) ResetSecret(ctx context.Context, resetToken, secret string) error {
+func (es *eventStore) ResetSecret(ctx context.Context, resetToken, secret string) error {
 	if err := es.svc.ResetSecret(ctx, resetToken, secret); err != nil {
 		return err
 	}
@@ -283,7 +279,7 @@ func (es eventStore) ResetSecret(ctx context.Context, resetToken, secret string)
 	return es.Publish(ctx, event)
 }
 
-func (es eventStore) SendPasswordReset(ctx context.Context, host, email, user, token string) error {
+func (es *eventStore) SendPasswordReset(ctx context.Context, host, email, user, token string) error {
 	if err := es.svc.SendPasswordReset(ctx, host, email, user, token); err != nil {
 		return err
 	}
