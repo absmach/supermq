@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	container, err := pool.Run("redis", "5.0-alpine", nil)
+	container, err := pool.Run("redis", "7.2.0-alpine", nil)
 	if err != nil {
 		log.Fatalf("Could not start container: %s", err)
 	}

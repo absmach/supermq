@@ -13,7 +13,7 @@ networks:
 
 services:
   lora-redis:
-    image: redis:5.0-alpine
+    image: redis:7.2.0-alpine
     container_name: mainflux-lora-redis
     restart: on-failure
     networks:

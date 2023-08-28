@@ -70,7 +70,7 @@ services:
       - mainflux-things-db-volume:/var/lib/postgresql/data
 
   things-redis:
-    image: redis:6.2.2-alpine
+    image: redis:7.2.0-alpine
     container_name: mainflux-things-redis
     restart: on-failure
     networks:
@@ -369,7 +369,7 @@ services:
           create_host_path: true
 
   es-redis:
-    image: redis:6.2.2-alpine
+    image: redis:7.2.0-alpine
     container_name: mainflux-es-redis
     restart: on-failure
     networks:
