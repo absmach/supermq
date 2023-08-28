@@ -36,27 +36,14 @@ type Publisher interface {
 // EventHandler represents event handler for Subscriber.
 type EventHandler interface {
 	// Handle handles events passed by underlying implementation.
-	Handle(event Event) error
-
-	// Cancel is used for cleanup during unsubscribing and it's optional.
-	Cancel() error
+	Handle(ctx context.Context, event Event) error
 }
 
 // Subscriber specifies event subscription API.
 type Subscriber interface {
 	// Subscribe subscribes to the event stream and consumes events.
-	Subscribe(ctx context.Context, handler EventHandler) error
-
-	// Unsubscribe unsubscribes from the event stream and
-	// stops consuming events.
-	Unsubscribe(ctx context.Context) error
+	Subscribe(ctx context.Context, id string, handler EventHandler) error
 
 	// Close gracefully closes event subscriber's connection.
 	Close() error
-}
-
-// PubSub  represents aggregation interface for publisher and subscriber.
-type PubSub interface {
-	Publisher
-	Subscriber
 }

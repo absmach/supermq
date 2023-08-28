@@ -6,7 +6,8 @@ package redis
 import (
 	"context"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/mainflux/mainflux/pkg/events"
+	mfredis "github.com/mainflux/mainflux/pkg/events/redis"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/twins"
 )
@@ -19,17 +20,26 @@ const (
 var _ twins.Service = (*eventStore)(nil)
 
 type eventStore struct {
-	svc    twins.Service
-	client *redis.Client
+	events.Publisher
+	svc twins.Service
 }
 
 // NewEventStoreMiddleware returns wrapper around things service that sends
 // events to event store.
-func NewEventStoreMiddleware(svc twins.Service, client *redis.Client) twins.Service {
-	return eventStore{
-		svc:    svc,
-		client: client,
+func NewEventStoreMiddleware(ctx context.Context, svc twins.Service, url string) (twins.Service, error) {
+	publisher, err := mfredis.NewEventStore(url, streamID, streamLen)
+	if err != nil {
+		return nil, err
 	}
+
+	es := &eventStore{
+		svc:       svc,
+		Publisher: publisher,
+	}
+
+	go es.StartPublishingRoutine(ctx)
+
+	return es, nil
 }
 
 func (es eventStore) AddTwin(ctx context.Context, token string, twin twins.Twin, def twins.Definition) (twins.Twin, error) {
@@ -41,16 +51,8 @@ func (es eventStore) AddTwin(ctx context.Context, token string, twin twins.Twin,
 	event := addTwinEvent{
 		twin, def,
 	}
-	values, err := event.Encode()
-	if err != nil {
-		return twin, err
-	}
-	record := &redis.XAddArgs{
-		Stream: streamID,
-		MaxLen: streamLen,
-		Values: values,
-	}
-	if err := es.client.XAdd(ctx, record).Err(); err != nil {
+
+	if err := es.Publish(ctx, event); err != nil {
 		return twin, err
 	}
 
@@ -61,19 +63,12 @@ func (es eventStore) UpdateTwin(ctx context.Context, token string, twin twins.Tw
 	if err := es.svc.UpdateTwin(ctx, token, twin, def); err != nil {
 		return err
 	}
+
 	event := updateTwinEvent{
 		twin, def,
 	}
-	values, err := event.Encode()
-	if err != nil {
-		return err
-	}
-	record := &redis.XAddArgs{
-		Stream:       streamID,
-		MaxLenApprox: streamLen,
-		Values:       values,
-	}
-	if err := es.client.XAdd(ctx, record).Err(); err != nil {
+
+	if err := es.Publish(ctx, event); err != nil {
 		return err
 	}
 
@@ -85,19 +80,12 @@ func (es eventStore) ViewTwin(ctx context.Context, token, id string) (twins.Twin
 	if err != nil {
 		return twin, err
 	}
+
 	event := viewTwinEvent{
 		id,
 	}
-	values, err := event.Encode()
-	if err != nil {
-		return twin, err
-	}
-	record := &redis.XAddArgs{
-		Stream:       streamID,
-		MaxLenApprox: streamLen,
-		Values:       values,
-	}
-	if err := es.client.XAdd(ctx, record).Err(); err != nil {
+
+	if err := es.Publish(ctx, event); err != nil {
 		return twin, err
 	}
 
@@ -112,16 +100,8 @@ func (es eventStore) RemoveTwin(ctx context.Context, token, id string) error {
 	event := removeTwinEvent{
 		id,
 	}
-	values, err := event.Encode()
-	if err != nil {
-		return err
-	}
-	record := &redis.XAddArgs{
-		Stream:       streamID,
-		MaxLenApprox: streamLen,
-		Values:       values,
-	}
-	if err := es.client.XAdd(ctx, record).Err(); err != nil {
+
+	if err := es.Publish(ctx, event); err != nil {
 		return err
 	}
 
@@ -139,16 +119,8 @@ func (es eventStore) ListTwins(ctx context.Context, token string, offset uint64,
 		name,
 		metadata,
 	}
-	values, err := event.Encode()
-	if err != nil {
-		return tp, err
-	}
-	record := &redis.XAddArgs{
-		Stream:       streamID,
-		MaxLenApprox: streamLen,
-		Values:       values,
-	}
-	if err := es.client.XAdd(ctx, record).Err(); err != nil {
+
+	if err := es.Publish(ctx, event); err != nil {
 		return tp, err
 	}
 
@@ -160,21 +132,14 @@ func (es eventStore) ListStates(ctx context.Context, token string, offset uint64
 	if err != nil {
 		return sp, err
 	}
+
 	event := listStatesEvent{
 		offset,
 		limit,
 		id,
 	}
-	values, err := event.Encode()
-	if err != nil {
-		return sp, err
-	}
-	record := &redis.XAddArgs{
-		Stream:       streamID,
-		MaxLenApprox: streamLen,
-		Values:       values,
-	}
-	if err := es.client.XAdd(ctx, record).Err(); err != nil {
+
+	if err := es.Publish(ctx, event); err != nil {
 		return sp, err
 	}
 
@@ -188,16 +153,8 @@ func (es eventStore) SaveStates(ctx context.Context, msg *messaging.Message) err
 	event := saveStatesEvent{
 		msg,
 	}
-	values, err := event.Encode()
-	if err != nil {
-		return err
-	}
-	record := &redis.XAddArgs{
-		Stream:       streamID,
-		MaxLenApprox: streamLen,
-		Values:       values,
-	}
-	if err := es.client.XAdd(ctx, record).Err(); err != nil {
+
+	if err := es.Publish(ctx, event); err != nil {
 		return err
 	}
 

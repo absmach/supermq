@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/mainflux/mainflux/pkg/events"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/twins"
 )
@@ -22,18 +23,14 @@ const (
 	twinSaveStates = twinPrefix + "save_states"
 )
 
-type event interface {
-	Encode() (map[string]interface{}, error)
-}
-
 var (
-	_ event = (*addTwinEvent)(nil)
-	_ event = (*updateTwinEvent)(nil)
-	_ event = (*removeTwinEvent)(nil)
-	_ event = (*viewTwinEvent)(nil)
-	_ event = (*listTwinsEvent)(nil)
-	_ event = (*listStatesEvent)(nil)
-	_ event = (*saveStatesEvent)(nil)
+	_ events.Event = (*addTwinEvent)(nil)
+	_ events.Event = (*updateTwinEvent)(nil)
+	_ events.Event = (*removeTwinEvent)(nil)
+	_ events.Event = (*viewTwinEvent)(nil)
+	_ events.Event = (*listTwinsEvent)(nil)
+	_ events.Event = (*listStatesEvent)(nil)
+	_ events.Event = (*saveStatesEvent)(nil)
 )
 
 type addTwinEvent struct {

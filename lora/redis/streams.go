@@ -7,20 +7,15 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 
-	"github.com/go-redis/redis/v8"
-	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/lora"
+	"github.com/mainflux/mainflux/pkg/events"
 )
 
 const (
 	keyType   = "lora"
 	keyDevEUI = "dev_eui"
 	keyAppID  = "app_id"
-
-	group  = "mainflux.lora"
-	stream = "mainflux.things"
 
 	thingPrefix     = "thing."
 	thingCreate     = thingPrefix + "create"
@@ -33,8 +28,6 @@ const (
 	channelCreate = channelPrefix + "create"
 	channelUpdate = channelPrefix + "update"
 	channelRemove = channelPrefix + "remove"
-
-	exists = "BUSYGROUP Consumer Group name already exists"
 )
 
 var (
@@ -47,100 +40,71 @@ var (
 	errMetadataDevEUI = errors.New("device EUI not found in thing metadatada")
 )
 
-// Subscriber represents event source for things and channels provisioning.
-type Subscriber interface {
-	// Subscribes to geven subject and receives events.
-	Subscribe(context.Context, string) error
+type eventHandler struct {
+	svc lora.Service
 }
 
-type eventStore struct {
-	svc      lora.Service
-	client   *redis.Client
-	consumer string
-	logger   mflog.Logger
-}
-
-// NewEventStore returns new event store instance.
-func NewEventStore(svc lora.Service, client *redis.Client, consumer string, log mflog.Logger) Subscriber {
-	return eventStore{
-		svc:      svc,
-		client:   client,
-		consumer: consumer,
-		logger:   log,
+// NewEventHandler returns new event store handler.
+func NewEventHandler(svc lora.Service) events.EventHandler {
+	return &eventHandler{
+		svc: svc,
 	}
 }
 
-func (es eventStore) Subscribe(ctx context.Context, subject string) error {
-	err := es.client.XGroupCreateMkStream(ctx, stream, group, "$").Err()
-	if err != nil && err.Error() != exists {
+func (es *eventHandler) Handle(ctx context.Context, event events.Event) error {
+	msg, err := event.Encode()
+	if err != nil {
 		return err
 	}
 
-	for {
-		streams, err := es.client.XReadGroup(ctx, &redis.XReadGroupArgs{
-			Group:    group,
-			Consumer: es.consumer,
-			Streams:  []string{stream, ">"},
-			Count:    100,
-		}).Result()
-		if err != nil || len(streams) == 0 {
-			continue
+	switch msg["operation"] {
+	case thingCreate:
+		cte, derr := decodeCreateThing(msg)
+		if derr != nil {
+			err = derr
+			break
 		}
-
-		for _, msg := range streams[0].Messages {
-			event := msg.Values
-
-			var err error
-			switch event["operation"] {
-			case thingCreate:
-				cte, derr := decodeCreateThing(event)
-				if derr != nil {
-					err = derr
-					break
-				}
-				err = es.svc.CreateThing(ctx, cte.id, cte.loraDevEUI)
-			case thingUpdate:
-				ute, derr := decodeCreateThing(event)
-				if derr != nil {
-					err = derr
-					break
-				}
-				err = es.svc.CreateThing(ctx, ute.id, ute.loraDevEUI)
-
-			case channelCreate:
-				cce, derr := decodeCreateChannel(event)
-				if derr != nil {
-					err = derr
-					break
-				}
-				err = es.svc.CreateChannel(ctx, cce.id, cce.loraAppID)
-			case channelUpdate:
-				uce, derr := decodeCreateChannel(event)
-				if derr != nil {
-					err = derr
-					break
-				}
-				err = es.svc.CreateChannel(ctx, uce.id, uce.loraAppID)
-			case thingRemove:
-				rte := decodeRemoveThing(event)
-				err = es.svc.RemoveThing(ctx, rte.id)
-			case channelRemove:
-				rce := decodeRemoveChannel(event)
-				err = es.svc.RemoveChannel(ctx, rce.id)
-			case thingConnect:
-				tce := decodeConnectionThing(event)
-				err = es.svc.ConnectThing(ctx, tce.chanID, tce.thingID)
-			case thingDisconnect:
-				tde := decodeConnectionThing(event)
-				err = es.svc.DisconnectThing(ctx, tde.chanID, tde.thingID)
-			}
-			if err != nil && err != errMetadataType {
-				es.logger.Warn(fmt.Sprintf("Failed to handle event sourcing: %s", err.Error()))
-				break
-			}
-			es.client.XAck(ctx, stream, group, msg.ID)
+		err = es.svc.CreateThing(ctx, cte.id, cte.loraDevEUI)
+	case thingUpdate:
+		ute, derr := decodeCreateThing(msg)
+		if derr != nil {
+			err = derr
+			break
 		}
+		err = es.svc.CreateThing(ctx, ute.id, ute.loraDevEUI)
+
+	case channelCreate:
+		cce, derr := decodeCreateChannel(msg)
+		if derr != nil {
+			err = derr
+			break
+		}
+		err = es.svc.CreateChannel(ctx, cce.id, cce.loraAppID)
+	case channelUpdate:
+		uce, derr := decodeCreateChannel(msg)
+		if derr != nil {
+			err = derr
+			break
+		}
+		err = es.svc.CreateChannel(ctx, uce.id, uce.loraAppID)
+	case thingRemove:
+		rte := decodeRemoveThing(msg)
+		err = es.svc.RemoveThing(ctx, rte.id)
+	case channelRemove:
+		rce := decodeRemoveChannel(msg)
+		err = es.svc.RemoveChannel(ctx, rce.id)
+	case thingConnect:
+		tce := decodeConnectionThing(msg)
+		err = es.svc.ConnectThing(ctx, tce.chanID, tce.thingID)
+	case thingDisconnect:
+		tde := decodeConnectionThing(msg)
+		err = es.svc.DisconnectThing(ctx, tde.chanID, tde.thingID)
 	}
+	if err != nil && err != errMetadataType {
+		return err
+	}
+
+	return nil
 }
 
 func decodeCreateThing(event map[string]interface{}) (createThingEvent, error) {

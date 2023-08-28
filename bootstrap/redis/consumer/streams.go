@@ -6,94 +6,58 @@ package consumer
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/mainflux/mainflux/bootstrap"
-	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/clients"
+	"github.com/mainflux/mainflux/pkg/events"
 )
 
 const (
-	stream = "mainflux.things"
-	group  = "mainflux.bootstrap"
-
 	thingRemove     = "thing.remove"
 	thingDisconnect = "policy.delete"
 
 	channelPrefix = "channel."
 	channelUpdate = channelPrefix + "update"
 	channelRemove = channelPrefix + "remove"
-
-	exists = "BUSYGROUP Consumer Group name already exists"
 )
 
-// Subscriber represents event source for things and channels provisioning.
-type Subscriber interface {
-	// Subscribes to given subject and receives events.
-	Subscribe(ctx context.Context, subject string) error
+type eventHandler struct {
+	svc bootstrap.Service
 }
 
-type eventStore struct {
-	svc      bootstrap.Service
-	client   *redis.Client
-	consumer string
-	logger   logger.Logger
-}
-
-// NewEventStore returns new event store instance.
-func NewEventStore(svc bootstrap.Service, client *redis.Client, consumer string, log logger.Logger) Subscriber {
-	return eventStore{
-		svc:      svc,
-		client:   client,
-		consumer: consumer,
-		logger:   log,
+// NewEventHandler returns new event store handler.
+func NewEventHandler(svc bootstrap.Service) events.EventHandler {
+	return &eventHandler{
+		svc: svc,
 	}
 }
 
-func (es eventStore) Subscribe(ctx context.Context, subject string) error {
-	err := es.client.XGroupCreateMkStream(ctx, stream, group, "$").Err()
-	if err != nil && err.Error() != exists {
+func (es *eventHandler) Handle(ctx context.Context, event events.Event) error {
+	msg, err := event.Encode()
+	if err != nil {
 		return err
 	}
 
-	for {
-		streams, err := es.client.XReadGroup(ctx, &redis.XReadGroupArgs{
-			Group:    group,
-			Consumer: es.consumer,
-			Streams:  []string{stream, ">"},
-			Count:    100,
-		}).Result()
-		if err != nil || len(streams) == 0 {
-			continue
-		}
-
-		for _, msg := range streams[0].Messages {
-			event := msg.Values
-
-			var err error
-			switch event["operation"] {
-			case thingRemove:
-				rte := decodeRemoveThing(event)
-				err = es.svc.RemoveConfigHandler(ctx, rte.id)
-			case thingDisconnect:
-				dte := decodeDisconnectThing(event)
-				err = es.svc.DisconnectThingHandler(ctx, dte.channelID, dte.thingID)
-			case channelUpdate:
-				uce := decodeUpdateChannel(event)
-				err = es.handleUpdateChannel(ctx, uce)
-			case channelRemove:
-				rce := decodeRemoveChannel(event)
-				err = es.svc.RemoveChannelHandler(ctx, rce.id)
-			}
-			if err != nil {
-				es.logger.Warn(fmt.Sprintf("Failed to handle event sourcing: %s", err.Error()))
-				break
-			}
-			es.client.XAck(ctx, stream, group, msg.ID)
-		}
+	switch msg["operation"] {
+	case thingRemove:
+		rte := decodeRemoveThing(msg)
+		err = es.svc.RemoveConfigHandler(ctx, rte.id)
+	case thingDisconnect:
+		dte := decodeDisconnectThing(msg)
+		err = es.svc.DisconnectThingHandler(ctx, dte.channelID, dte.thingID)
+	case channelUpdate:
+		uce := decodeUpdateChannel(msg)
+		err = es.handleUpdateChannel(ctx, uce)
+	case channelRemove:
+		rce := decodeRemoveChannel(msg)
+		err = es.svc.RemoveChannelHandler(ctx, rce.id)
 	}
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func decodeRemoveThing(event map[string]interface{}) removeEvent {
@@ -155,7 +119,7 @@ func decodeDisconnectThing(event map[string]interface{}) disconnectEvent {
 	}
 }
 
-func (es eventStore) handleUpdateChannel(ctx context.Context, uce updateChannelEvent) error {
+func (es *eventHandler) handleUpdateChannel(ctx context.Context, uce updateChannelEvent) error {
 	channel := bootstrap.Channel{
 		ID:        uce.id,
 		Name:      uce.name,
