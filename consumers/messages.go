@@ -42,7 +42,7 @@ func Start(ctx context.Context, id string, sub messaging.Subscriber, consumer in
 	transformer := makeTransformer(cfg.TransformerCfg, logger)
 
 	for _, subject := range cfg.SubscriberCfg.Subjects {
-		var subCfg = messaging.SubscriberConfig{
+		subCfg := messaging.SubscriberConfig{
 			ID:             id,
 			Topic:          subject,
 			DeliveryPolicy: messaging.DeliverAllPolicy,

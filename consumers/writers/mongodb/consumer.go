@@ -47,7 +47,7 @@ func (repo *mongoRepo) saveSenml(ctx context.Context, messages interface{}) erro
 	var dbMsgs []interface{}
 	for _, msg := range msgs {
 		// check if message is already in database
-		var filter = bson.M{"time": msg.Time, "publisher": msg.Publisher, "subtopic": msg.Subtopic, "name": msg.Name}
+		filter := bson.M{"time": msg.Time, "publisher": msg.Publisher, "subtopic": msg.Subtopic, "name": msg.Name}
 
 		count, err := coll.CountDocuments(ctx, filter)
 		if err != nil {

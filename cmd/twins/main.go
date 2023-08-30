@@ -193,7 +193,7 @@ func newService(ctx context.Context, id string, ps messaging.PubSub, cfg config,
 	counter, latency := internal.MakeMetrics(svcName, "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)
 
-	var subCfg = messaging.SubscriberConfig{
+	subCfg := messaging.SubscriberConfig{
 		ID:      id,
 		Topic:   brokers.SubjectAllChannels,
 		Handler: handle(ctx, logger, cfg.ChannelID, svc),

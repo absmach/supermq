@@ -187,7 +187,7 @@ func TestSubscribe(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		var subCfg = messaging.SubscriberConfig{
+		subCfg := messaging.SubscriberConfig{
 			ID:      tc.clientID,
 			Topic:   tc.topic,
 			Handler: tc.handler,
@@ -267,7 +267,7 @@ func TestPubSub(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		var subCfg = messaging.SubscriberConfig{
+		subCfg := messaging.SubscriberConfig{
 			ID:      tc.clientID,
 			Topic:   tc.topic,
 			Handler: tc.handler,
@@ -437,7 +437,7 @@ func TestUnsubscribe(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		var subCfg = messaging.SubscriberConfig{
+		subCfg := messaging.SubscriberConfig{
 			ID:      tc.clientID,
 			Topic:   tc.topic,
 			Handler: tc.handler,

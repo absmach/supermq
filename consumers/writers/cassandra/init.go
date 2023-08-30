@@ -31,6 +31,6 @@ const (
         protocol text,
         created bigint,
         payload text,
-        PRIMARY KEY (channel, created, id)
+        PRIMARY KEY (publisher, created, subtopic)
     ) WITH CLUSTERING ORDER BY (created DESC)`
 )

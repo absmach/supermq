@@ -96,7 +96,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
-	var subCfg = messaging.SubscriberConfig{
+	subCfg := messaging.SubscriberConfig{
 		ID:      c.Token(),
 		Topic:   subject,
 		Handler: c,
@@ -124,7 +124,7 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopi
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
-	var unSubCfg = messaging.SubscriberConfig{
+	unSubCfg := messaging.SubscriberConfig{
 		ID:      token,
 		Topic:   subject,
 		Handler: nil,

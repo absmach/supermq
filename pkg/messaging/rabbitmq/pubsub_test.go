@@ -168,7 +168,7 @@ func TestSubscribe(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		var subCfg = messaging.SubscriberConfig{
+		subCfg := messaging.SubscriberConfig{
 			ID:      tc.clientID,
 			Topic:   tc.topic,
 			Handler: tc.handler,
@@ -345,7 +345,7 @@ func TestUnsubscribe(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		var subCfg = messaging.SubscriberConfig{
+		subCfg := messaging.SubscriberConfig{
 			ID:      tc.clientID,
 			Topic:   tc.topic,
 			Handler: tc.handler,
@@ -410,7 +410,7 @@ func TestPubSub(t *testing.T) {
 		if tc.topic != "" {
 			subject = fmt.Sprintf("%s.%s", chansPrefix, tc.topic)
 		}
-		var subCfg = messaging.SubscriberConfig{
+		subCfg := messaging.SubscriberConfig{
 			ID:      tc.clientID,
 			Topic:   subject,
 			Handler: tc.handler,
@@ -432,7 +432,7 @@ func TestPubSub(t *testing.T) {
 			assert.Equal(t, expectedMsg.Channel, receivedMsg.Channel, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
 			assert.Equal(t, expectedMsg.Payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
 
-			var unsubCfg = messaging.SubscriberConfig{
+			unsubCfg := messaging.SubscriberConfig{
 				ID:    tc.clientID,
 				Topic: fmt.Sprintf("%s.%s", chansPrefix, tc.topic),
 			}

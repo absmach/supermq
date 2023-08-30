@@ -35,7 +35,7 @@ var (
 )
 
 func TestPublisher(t *testing.T) {
-	var subCfg = messaging.SubscriberConfig{
+	subCfg := messaging.SubscriberConfig{
 		ID:      clientID,
 		Topic:   fmt.Sprintf("%s.>", chansPrefix),
 		Handler: handler{},
@@ -261,7 +261,7 @@ func TestPubsub(t *testing.T) {
 	}
 
 	for _, pc := range subcases {
-		var subCfg = messaging.SubscriberConfig{
+		subCfg := messaging.SubscriberConfig{
 			ID:      pc.clientID,
 			Topic:   pc.topic,
 			Handler: pc.handler,
