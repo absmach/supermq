@@ -18,7 +18,7 @@ import (
 
 const (
 	username = "mainflux-mqtt"
-	qos      = 2
+	qos      = 1
 )
 
 var (
@@ -120,7 +120,8 @@ func (ps *pubsub) Subscribe(ctx context.Context, id, topic string, handler messa
 	if ok := token.WaitTimeout(ps.timeout); !ok {
 		return ErrSubscribeTimeout
 	}
-	return token.Error()
+
+	return nil
 }
 
 func (ps *pubsub) Unsubscribe(ctx context.Context, id, topic string) error {
@@ -181,13 +182,8 @@ func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
 		return nil, token.Error()
 	}
 
-	ok := token.WaitTimeout(timeout)
-	if !ok {
+	if ok := token.WaitTimeout(timeout); !ok {
 		return nil, ErrConnect
-	}
-
-	if token.Error() != nil {
-		return nil, token.Error()
 	}
 
 	return client, nil
@@ -200,6 +196,7 @@ func (ps *pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
 			return
 		}
+
 		if err := h.Handle(&msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
 		}
