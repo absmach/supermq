@@ -58,43 +58,7 @@ jobs:
         with:
           schema: './api/openapi/bootstrap.yml'
           base-url: 'http://localhost'
-          args: "-H Authorization: Bearer {{ env.ACCESS_TOKEN }}"
-          token: ${{ secrets.SCHEMATHESIS_TOKEN }}
-
-      - name: Run st for bootstrap.yml
-        if: always()
-        uses: schemathesis/action@v1
-        with:
-          schema: './api/openapi/bootstrap.yml'
-          base-url: 'http://localhost'
-          args: -H Authorization:Bearer ${{ env.ACCESS_TOKEN }}
-          token: ${{ secrets.SCHEMATHESIS_TOKEN }}
-
-      - name: Run st for bootstrap.yml
-        if: always()
-        uses: schemathesis/action@v1
-        with:
-          schema: './api/openapi/bootstrap.yml'
-          base-url: 'http://localhost'
-          args: "-H Authorization:Bearer ${{ env.ACCESS_TOKEN }}"
-          token: ${{ secrets.SCHEMATHESIS_TOKEN }}
-
-      - name: Run st for bootstrap.yml
-        if: always()
-        uses: schemathesis/action@v1
-        with:
-          schema: './api/openapi/bootstrap.yml'
-          base-url: 'http://localhost'
-          args: "-H Authorization: Bearer ${{ env.ACCESS_TOKEN }}"
-          token: ${{ secrets.SCHEMATHESIS_TOKEN }}
-
-      - name: Run st for bootstrap.yml
-        if: always()
-        uses: schemathesis/action@v1
-        with:
-          schema: './api/openapi/bootstrap.yml'
-          base-url: 'http://localhost'
-          args: "-H 'Authorization: Bearer ${{ env.ACCESS_TOKEN }}'"
+          args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
         
       # Certs.yml
@@ -104,7 +68,7 @@ jobs:
         with:
           schema: './api/openapi/certs.yml'
           base-url: 'http://localhost'
-          args: -H Authorization:${{ env.BEARER_TOKEN }}
+          args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Consumers-notifiers.yml
@@ -114,7 +78,7 @@ jobs:
         with:
           schema: './api/openapi/consumers-notifiers.yml'
           base-url: 'http://localhost'
-          args: -H Authorization:${{ env.BEARER_TOKEN }}
+          args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
       
       # Http.yml
@@ -124,7 +88,7 @@ jobs:
         with:
           schema: './api/openapi/http.yml'
           base-url: 'http://localhost'
-          args: -H Authorization:${{ env.BEARER_TOKEN }}
+          args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Provision.yml
@@ -134,7 +98,7 @@ jobs:
         with:
           schema: './api/openapi/provision.yml'
           base-url: 'http://localhost'
-          args: -H Authorization:${{ env.BEARER_TOKEN }}
+          args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Readers.yml
@@ -144,7 +108,7 @@ jobs:
         with:
           schema: './api/openapi/readers.yml'
           base-url: 'http://localhost'
-          args: -H Authorization:${{ env.MF_TOKEN }}
+          args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Things.yml
@@ -154,7 +118,7 @@ jobs:
         with:
           schema: './api/openapi/things.yml'
           base-url: 'http://localhost'
-          args: -H Authorization:${{ env.MF_TOKEN }}
+          args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Twins.yml
@@ -164,7 +128,7 @@ jobs:
         with:
           schema: './api/openapi/twins.yml'
           base-url: 'http://localhost'
-          args: -H Authorization:${{ env.MF_TOKEN }}
+          args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Users.yml
@@ -174,7 +138,7 @@ jobs:
         with:
           schema: './api/openapi/users.yml'
           base-url: 'http://localhost'
-          args: -H Authorization:${{ env.MF_TOKEN }}
+          args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       - name: Stop the running docker containers
