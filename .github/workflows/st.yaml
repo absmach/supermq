@@ -24,7 +24,7 @@ jobs:
 
       - name: run containers
         if: always()
-        run: make run ARGS="-d"
+        run: sudo docker-compose -f docker/docker-compose.yml up -d
 
       - name: REST API with curl to provision user
         if: always()
@@ -69,6 +69,7 @@ jobs:
           schema: './api/openapi/certs.yml'
           base-url: 'http://localhost'
           args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
+          args: '--hypothesis-suppress-health-check=filter_too_much,too_slow'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Consumers-notifiers.yml
@@ -79,6 +80,7 @@ jobs:
           schema: './api/openapi/consumers-notifiers.yml'
           base-url: 'http://localhost'
           args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
+          args: '--hypothesis-suppress-health-check=filter_too_much,too_slow'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
       
       # Http.yml
@@ -89,6 +91,7 @@ jobs:
           schema: './api/openapi/http.yml'
           base-url: 'http://localhost'
           args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
+          args: '--hypothesis-suppress-health-check=filter_too_much,too_slow'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Provision.yml
@@ -99,6 +102,7 @@ jobs:
           schema: './api/openapi/provision.yml'
           base-url: 'http://localhost'
           args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
+          args: '--hypothesis-suppress-health-check=filter_too_much,too_slow'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Readers.yml
@@ -109,6 +113,7 @@ jobs:
           schema: './api/openapi/readers.yml'
           base-url: 'http://localhost'
           args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
+          args: '--hypothesis-suppress-health-check=filter_too_much,too_slow'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Things.yml
@@ -119,6 +124,7 @@ jobs:
           schema: './api/openapi/things.yml'
           base-url: 'http://localhost'
           args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
+          args: '--hypothesis-suppress-health-check=filter_too_much,too_slow'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Twins.yml
@@ -129,6 +135,7 @@ jobs:
           schema: './api/openapi/twins.yml'
           base-url: 'http://localhost'
           args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
+          args: '--hypothesis-suppress-health-check=filter_too_much,too_slow'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Users.yml
@@ -139,6 +146,7 @@ jobs:
           schema: './api/openapi/users.yml'
           base-url: 'http://localhost'
           args: '-H "Authorization: Bearer {{ env.ACCESS_TOKEN }}"'
+          args: '--hypothesis-suppress-health-check=filter_too_much,too_slow'
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       - name: Stop the running docker containers
