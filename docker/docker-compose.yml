@@ -362,23 +362,10 @@ services:
     networks:
       - mainflux-base-net
 
-  vernemq:
-    image: mainflux/vernemq:${MF_RELEASE_TAG}
-    container_name: mainflux-vernemq
-    restart: on-failure
-    environment:
-      DOCKER_VERNEMQ_ALLOW_ANONYMOUS: ${MF_DOCKER_VERNEMQ_ALLOW_ANONYMOUS}
-      DOCKER_VERNEMQ_LOG__CONSOLE__LEVEL: ${MF_DOCKER_VERNEMQ_LOG__CONSOLE__LEVEL}
-    networks:
-      - mainflux-base-net
-    volumes:
-      - mainflux-mqtt-broker-volume:/var/lib/vernemq
-
   mqtt-adapter:
     image: mainflux/mqtt:${MF_RELEASE_TAG}
     container_name: mainflux-mqtt
     depends_on:
-      - vernemq
       - things
       - broker
     restart: on-failure

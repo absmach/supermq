@@ -25,7 +25,6 @@ import (
 	"github.com/mainflux/mainflux/mqtt/events"
 	mqtttracing "github.com/mainflux/mainflux/mqtt/tracing"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	brokerstracing "github.com/mainflux/mainflux/pkg/messaging/brokers/tracing"
 	mqttpub "github.com/mainflux/mainflux/pkg/messaging/mqtt"
@@ -113,16 +112,16 @@ func main() {
 	}()
 	tracer := tp.Tracer(svcName)
 
-	nps, err := brokers.NewPubSub(ctx, cfg.BrokerURL, logger)
+	bsub, err := brokers.NewPubSub(ctx, cfg.BrokerURL, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to connect to message broker: %s", err))
 		exitCode = 1
 		return
 	}
-	defer nps.Close()
-	nps = brokerstracing.NewPubSub(serverConfig, tracer, nps)
+	defer bsub.Close()
+	bsub = brokerstracing.NewPubSub(serverConfig, tracer, bsub)
 
-	mpub, err := mqttpub.NewPublisher(fmt.Sprintf("%s:%s", cfg.MQTTTargetHost, cfg.MQTTTargetPort), cfg.MQTTForwarderTimeout)
+	mpub, err := mqttpub.NewPublisher(fmt.Sprintf("mqtt://%s:%s", cfg.MQTTTargetHost, cfg.MQTTTargetPort), cfg.MQTTForwarderTimeout)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create MQTT publisher: %s", err))
 		exitCode = 1
@@ -132,7 +131,7 @@ func main() {
 
 	fwd := mqtt.NewForwarder(brokers.SubjectAllChannels, logger)
 	fwd = mqtttracing.New(serverConfig, tracer, fwd, brokers.SubjectAllChannels)
-	if err := fwd.Forward(ctx, svcName, nps, mpub); err != nil {
+	if err := fwd.Forward(ctx, svcName, bsub, mpub); err != nil {
 		logger.Error(fmt.Sprintf("failed to forward message broker messages: %s", err))
 		exitCode = 1
 		return
@@ -164,7 +163,7 @@ func main() {
 
 	logger.Info("Successfully connected to things grpc server " + aHandler.Secure())
 
-	h := mqtt.NewHandler([]messaging.Publisher{np}, es, logger, auth)
+	h := mqtt.NewHandler(np, es, logger, auth)
 	h = mqtttracing.NewHandler(tracer, h)
 
 	if cfg.SendTelemetry {
