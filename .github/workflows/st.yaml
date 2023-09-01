@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: find number of cores
-        run: lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
+        run: lscpu|egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
 
       - name: create images
         if: always()
