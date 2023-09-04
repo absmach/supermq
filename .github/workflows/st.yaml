@@ -24,7 +24,7 @@ jobs:
 
       - name: run containers
         if: always()
-        run: sudo docker-compose -f docker/docker-compose.yml up -d
+        run: make run
 
       - name: REST API with curl to provision user
         if: always()
