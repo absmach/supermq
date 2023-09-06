@@ -22,11 +22,19 @@ DOCKER_PROJECT ?= $(shell echo $(subst $(space),,$(USER_REPO)_$(BRANCH)) | tr -c
 DOCKER_COMPOSE_COMMANDS_SUPPORTED := up down config
 DEFAULT_DOCKER_COMPOSE_COMMAND  := up
 GRPC_MTLS_CERT_FILES_EXISTS = 0
+DOCKER_PROFILE ?= $(MF_MQTT_BROKER_TYPE)_$(MF_BROKER_TYPE)
 ifneq ($(MF_BROKER_TYPE),)
     MF_BROKER_TYPE := $(MF_BROKER_TYPE)
 else
     MF_BROKER_TYPE=nats
 endif
+
+ifneq ($(MF_MQTT_BROKER_TYPE),)
+    MF_MQTT_BROKER_TYPE := $(MF_MQTT_BROKER_TYPE)
+else
+    MF_MQTT_BROKER_TYPE=nats
+endif
+
 
 define compile_service
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) \
@@ -183,12 +191,45 @@ endif
 endif
 endif
 
-run: check_certs
-	sed -i "s,file: brokers/.*.yml,file: brokers/${MF_BROKER_TYPE}.yml," docker/docker-compose.yml
+define edit_docker_config
+ifeq ($(2),rabbitmq)
+	sed -i "s/nats/broker/g" docker/docker-compose.yml
+	sed -i "s/rabbitmq/broker/g" docker/docker-compose.yml
+endif
+	sed -i "s/MF_MQTT_BROKER_TYPE=.*/MF_MQTT_BROKER_TYPE=$(1)/" docker/.env
+	sed -i "s/MF_MQTT_BROKER_HEALTH_CHECK=.*/MF_MQTT_BROKER_HEALTH_CHECK=$$\{MF_$(shell echo ${MF_MQTT_BROKER_TYPE} | tr 'a-z' 'A-Z')_HEALTH_CHECK}/" docker/.env
+	sed -i "s/MF_MQTT_ADAPTER_WS_TARGET_PATH=.*/MF_MQTT_ADAPTER_WS_TARGET_PATH=${MF_$(shell echo ${MF_MQTT_BROKER_TYPE} | tr 'a-z' 'A-Z')_WS_TARGET_PATH}/" docker/.env
+	sed -i "s/MF_BROKER_TYPE=.*/MF_BROKER_TYPE=$(1)/" docker/.env
+	sed -i "s,file: .*.yml,file: $(1).yml," docker/brokers/docker-compose.yml
 	sed -i "s,MF_BROKER_URL=.*,MF_BROKER_URL=$$\{MF_$(shell echo ${MF_BROKER_TYPE} | tr 'a-z' 'A-Z')_URL\}," docker/.env
-	docker-compose -f docker/docker-compose.yml -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
+endef
+
+define change_config
+ifeq ($(DOCKER_PROFILE),nats_nats)
+	sed -i "s/\bbroker\b/nats/g" docker/docker-compose.yml
+	sed -i "s/rabbitmq/nats/g" docker/docker-compose.yml
+	sed -i "s,MF_NATS_URL=.*,MF_NATS_URL=nats://nats:$$\{MF_NATS_PORT}," docker/.env
+	$(call edit_docker_config,nats,nats)
+else ifeq ($(DOCKER_PROFILE),nats_rabbitmq)
+	$(call edit_docker_config,nats,rabbitmq)
+else ifeq ($(DOCKER_PROFILE),vernemq_nats)
+	sed -i "s/nats/broker/g" docker/docker-compose.yml
+	sed -i "s/rabbitmq/broker/g" docker/docker-compose.yml
+	sed -i "s,MF_NATS_URL=.*,MF_NATS_URL=nats://broker:$$\{MF_NATS_PORT}," docker/.env
+	$(call edit_docker_config,vernemq,nats)
+else ifeq ($(DOCKER_PROFILE),vernemq_rabbitmq)
+	$(call edit_docker_config,vernemq,rabbitmq)
+else
+	$(error Invalid DOCKER_PROFILE $(DOCKER_PROFILE))
+endif
+endef
+
+run: check_certs
+	$(call change_config)
+	docker-compose -f docker/docker-compose.yml --profile $(DOCKER_PROFILE) -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
 
 run_addons: check_certs
+	$(call change_config)
 	$(foreach SVC,$(RUN_ADDON_ARGS),$(if $(filter $(SVC),$(ADDON_SERVICES) $(EXTERNAL_SERVICES)),,$(error Invalid Service $(SVC))))
 	@for SVC in $(RUN_ADDON_ARGS); do \
 		MF_ADDONS_CERTS_PATH_PREFIX="../."  docker-compose -f docker/addons/$$SVC/docker-compose.yml -p $(DOCKER_PROJECT) --env-file ./docker/.env $(DOCKER_COMPOSE_COMMAND) $(args) & \

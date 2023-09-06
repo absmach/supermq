@@ -18,6 +18,10 @@ volumes:
   mainflux-spicedb-db-volume:
   mainflux-auth-db-volume:
 
+include:
+  - path: brokers/docker-compose.yml
+    env_file: docker/.env
+
 services:
   spicedb:
     image: "authzed/spicedb"
@@ -138,17 +142,6 @@ services:
       - mqtt-adapter
       - http-adapter
       - ws-adapter
-
-  broker:
-    extends:
-      file: brokers/nats.yml
-      service: broker
-    container_name: mainflux-broker
-    restart: on-failure
-    networks:
-      - mainflux-base-net
-    volumes:
-      - mainflux-broker-volume:/data
 
   things-db:
     image: postgres:13.3-alpine
@@ -367,7 +360,7 @@ services:
     container_name: mainflux-mqtt
     depends_on:
       - things
-      - broker
+      - nats
     restart: on-failure
     environment:
       MF_MQTT_ADAPTER_LOG_LEVEL: ${MF_MQTT_ADAPTER_LOG_LEVEL}
@@ -416,7 +409,7 @@ services:
     container_name: mainflux-http
     depends_on:
       - things
-      - broker
+      - nats
     restart: on-failure
     environment:
       MF_HTTP_ADAPTER_LOG_LEVEL: ${MF_HTTP_ADAPTER_LOG_LEVEL}
@@ -469,7 +462,7 @@ services:
     container_name: mainflux-coap
     depends_on:
       - things
-      - broker
+      - nats
     restart: on-failure
     environment:
       MF_COAP_ADAPTER_LOG_LEVEL: ${MF_COAP_ADAPTER_LOG_LEVEL}
@@ -518,7 +511,7 @@ services:
     container_name: mainflux-ws
     depends_on:
       - things
-      - broker
+      - nats
     restart: on-failure
     environment:
       MF_WS_ADAPTER_LOG_LEVEL: ${MF_WS_ADAPTER_LOG_LEVEL}
