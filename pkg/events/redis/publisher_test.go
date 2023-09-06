@@ -15,7 +15,7 @@ import (
 
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/events"
-	mfredis "github.com/mainflux/mainflux/pkg/events/redis"
+	"github.com/mainflux/mainflux/pkg/events/redis"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -57,10 +57,10 @@ func TestPublish(t *testing.T) {
 	err := redisClient.FlushAll(context.Background()).Err()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on flushing redis: %s", err))
 
-	publisher, err := mfredis.NewPublisher(context.Background(), redisURL, streamID, streamLen)
+	publisher, err := redis.NewPublisher(context.Background(), redisURL, streamID, streamLen)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
-	subcriber, err := mfredis.NewSubscriber(redisURL, streamID, consumer, logger)
+	subcriber, err := redis.NewSubscriber(redisURL, streamID, consumer, logger)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
 	err = subcriber.Subscribe(context.Background(), streamID, handler{})
@@ -189,14 +189,14 @@ func TestPubsub(t *testing.T) {
 			desc:         "Subscribe to an empty stream with an ID",
 			stream:       "",
 			group:        "clientid1",
-			errorMessage: mfredis.ErrEmptyStream,
+			errorMessage: redis.ErrEmptyStream,
 			handler:      handler{false},
 		},
 		{
 			desc:         "Subscribe to a stream with empty id",
 			stream:       fmt.Sprintf("%s.%s", streamID, stream),
 			group:        "",
-			errorMessage: mfredis.ErrEmptyGroup,
+			errorMessage: redis.ErrEmptyGroup,
 			handler:      handler{false},
 		},
 		{
@@ -216,7 +216,7 @@ func TestPubsub(t *testing.T) {
 	}
 
 	for _, pc := range subcases {
-		subcriber, err := mfredis.NewSubscriber(redisURL, pc.stream, consumer, logger)
+		subcriber, err := redis.NewSubscriber(redisURL, pc.stream, consumer, logger)
 		if err != nil {
 			assert.Equal(t, err, pc.errorMessage, fmt.Sprintf("%s got expected error: %s - got: %s", pc.desc, pc.errorMessage, err))
 

@@ -126,6 +126,7 @@ func TestAdd(t *testing.T) {
 	server := newThingsServer(newThingsService(users))
 	svc := newService(users, server.URL)
 	svc, err = producer.NewEventStoreMiddleware(context.Background(), svc, redisURL)
+	assert.Nil(t, err, fmt.Sprintf("go unexpected error on creating event store middleware: %s", err))
 
 	var channels []string
 	for _, ch := range config.Channels {
