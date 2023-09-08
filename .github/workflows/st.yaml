@@ -10,13 +10,16 @@ env:
 
 jobs:
   api-tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: checkout repo
         uses: actions/checkout@v2
 
       - name: find number of cores
         run: lscpu|egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
+      
+      - name: dockerversion
+        run: docker-compose --version
 
       - name: create images
         if: always()
