@@ -21,8 +21,34 @@ jobs:
       - name: dockerversion
         run: docker-compose --version
         
-      - name: update docker-compose
-        run: sudo apt-get update && sudo apt-get install docker-compose
+      # - name: update docker-compose
+      #   run: sudo apt-get update && sudo apt-get install docker-compose
+      
+      # - name: Install docker-compose
+      #   get_url:
+      #     url : https://github.com/docker/compose/releases/download/1.26.2/docker-compose-Linux-x86_64
+      #     dest: /usr/local/bin/docker-compose
+      #     mode: '755'
+      #     force: yes  # Handle GitHub returning 304
+      #   become: yes
+
+      - name: Uninstall old versions of Docker and Docker Compose
+        run: |
+          sudo apt-get remove docker docker-engine docker.io containerd runc
+          sudo rm /usr/local/bin/docker-compose
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+          sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+          sudo apt-get update
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/$(curl --silent https://api.github.com/repos/docker/compose/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+
 
       - name: updated dockerversion
         run: docker-compose --version
@@ -33,7 +59,7 @@ jobs:
 
       - name: run containers
         if: always()
-        run: make run
+        run: sudo docker-compose -f docker/docker-compose.yml --env-file docker/.env up -d
 
       - name: REST API with curl to provision user
         if: always()
