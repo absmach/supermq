@@ -20,6 +20,12 @@ jobs:
       
       - name: dockerversion
         run: docker-compose --version
+        
+      - name: update docker-compose
+        run: sudo apt-get update && sudo apt-get install docker-compose
+
+      - name: updated dockerversion
+        run: docker-compose --version
 
       - name: create images
         if: always()
