@@ -57,7 +57,7 @@ func TestPublish(t *testing.T) {
 	err := redisClient.FlushAll(context.Background()).Err()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on flushing redis: %s", err))
 
-	publisher, err := redis.NewPublisher(context.Background(), redisURL, streamID, streamLen)
+	publisher, err := redis.NewPublisher(context.Background(), redisURL, streamID)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
 	subcriber, err := redis.NewSubscriber(redisURL, streamID, consumer, logger)

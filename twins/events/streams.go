@@ -12,10 +12,7 @@ import (
 	"github.com/mainflux/mainflux/twins"
 )
 
-const (
-	streamID  = "mainflux.twins"
-	streamLen = 1000
-)
+const streamID = "mainflux.twins"
 
 var _ twins.Service = (*eventStore)(nil)
 
@@ -27,7 +24,7 @@ type eventStore struct {
 // NewEventStoreMiddleware returns wrapper around things service that sends
 // events to event store.
 func NewEventStoreMiddleware(ctx context.Context, svc twins.Service, url string) (twins.Service, error) {
-	publisher, err := redis.NewPublisher(ctx, url, streamID, streamLen)
+	publisher, err := redis.NewPublisher(ctx, url, streamID)
 	if err != nil {
 		return nil, err
 	}

@@ -13,10 +13,7 @@ import (
 	"github.com/mainflux/mainflux/users/jwt"
 )
 
-const (
-	streamID  = "mainflux.users"
-	streamLen = 1000
-)
+const streamID = "mainflux.users"
 
 var _ clients.Service = (*eventStore)(nil)
 
@@ -28,7 +25,7 @@ type eventStore struct {
 // NewEventStoreMiddleware returns wrapper around users service that sends
 // events to event store.
 func NewEventStoreMiddleware(ctx context.Context, svc clients.Service, url string) (clients.Service, error) {
-	publisher, err := redis.NewPublisher(ctx, url, streamID, streamLen)
+	publisher, err := redis.NewPublisher(ctx, url, streamID)
 	if err != nil {
 		return nil, err
 	}

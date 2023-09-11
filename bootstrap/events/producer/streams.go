@@ -11,10 +11,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/events/redis"
 )
 
-const (
-	streamID  = "mainflux.bootstrap"
-	streamLen = 1000
-)
+const streamID = "mainflux.bootstrap"
 
 var _ bootstrap.Service = (*eventStore)(nil)
 
@@ -26,7 +23,7 @@ type eventStore struct {
 // NewEventStoreMiddleware returns wrapper around bootstrap service that sends
 // events to event store.
 func NewEventStoreMiddleware(ctx context.Context, svc bootstrap.Service, url string) (bootstrap.Service, error) {
-	publisher, err := redis.NewPublisher(ctx, url, streamID, streamLen)
+	publisher, err := redis.NewPublisher(ctx, url, streamID)
 	if err != nil {
 		return nil, err
 	}

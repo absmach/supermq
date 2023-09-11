@@ -10,10 +10,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/events/redis"
 )
 
-const (
-	streamID  = "mainflux.mqtt"
-	streamLen = 1000
-)
+const streamID = "mainflux.mqtt"
 
 type EventStore interface {
 	Connect(ctx context.Context, clientID string) error
@@ -29,7 +26,7 @@ type eventStore struct {
 // NewEventStore returns wrapper around mProxy service that sends
 // events to event store.
 func NewEventStore(ctx context.Context, url, instance string) (EventStore, error) {
-	publisher, err := redis.NewPublisher(ctx, url, streamID, streamLen)
+	publisher, err := redis.NewPublisher(ctx, url, streamID)
 	if err != nil {
 		return nil, err
 	}

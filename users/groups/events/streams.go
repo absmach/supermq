@@ -12,10 +12,7 @@ import (
 	"github.com/mainflux/mainflux/users/groups"
 )
 
-const (
-	streamID  = "mainflux.users"
-	streamLen = 1000
-)
+const streamID = "mainflux.users"
 
 var _ groups.Service = (*eventStore)(nil)
 
@@ -27,7 +24,7 @@ type eventStore struct {
 // NewEventStoreMiddleware returns wrapper around things service that sends
 // events to event store.
 func NewEventStoreMiddleware(ctx context.Context, svc groups.Service, url string) (groups.Service, error) {
-	publisher, err := redis.NewPublisher(ctx, url, streamID, streamLen)
+	publisher, err := redis.NewPublisher(ctx, url, streamID)
 	if err != nil {
 		return nil, err
 	}
