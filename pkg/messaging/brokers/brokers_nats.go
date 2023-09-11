@@ -8,21 +8,20 @@ package brokers
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/nats"
-	broker "github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-const (
-	// SubjectAllChannels represents subject to subscribe for all the channels.
-	SubjectAllChannels = "channels.>"
+// SubjectAllChannels represents subject to subscribe for all the channels.
+const SubjectAllChannels = "channels.>"
 
-	maxReconnects = -1
-)
+// ErrInvalidType is returned when the provided value is not of the expected type.
+var ErrInvalidType = errors.New("invalid type")
 
 func init() {
 	log.Println("The binary was build using Nats as the message broker")
@@ -46,27 +45,41 @@ func NewPubSub(ctx context.Context, url string, logger mflog.Logger, opts ...mes
 	return pb, nil
 }
 
-func WithStream(ctx context.Context, cfg jetstream.StreamConfig) messaging.Option {
-	return func(url, _ string) error {
-		conn, err := broker.Connect(url, broker.MaxReconnects(maxReconnects))
-		if err != nil {
-			return err
+func WithPrefix(prefix *string) messaging.Option {
+	return func(val interface{}) error {
+		p, ok := val.(*nats.NPublisher)
+		if !ok {
+			return ErrInvalidType
 		}
-		js, err := jetstream.New(conn)
-		if err != nil {
-			return err
-		}
-		if _, err := js.CreateStream(ctx, cfg); err != nil {
-			return err
-		}
+
+		p.Prefix = *prefix
 
 		return nil
 	}
 }
 
-func WithPrefix(prefix string) messaging.Option {
-	return func(_, p string) error {
-		p = prefix
+func WithJSStream(stream jetstream.JetStream) messaging.Option {
+	return func(val interface{}) error {
+		p, ok := val.(*nats.NPublisher)
+		if !ok {
+			return ErrInvalidType
+		}
+
+		p.JS = stream
+
+		return nil
+	}
+}
+
+func WithStream(stream jetstream.Stream) messaging.Option {
+	return func(val interface{}) error {
+		p, ok := val.(*nats.NPubsub)
+		if !ok {
+			return ErrInvalidType
+		}
+
+		p.Stream = stream
+
 		return nil
 	}
 }

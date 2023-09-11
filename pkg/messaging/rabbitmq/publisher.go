@@ -13,12 +13,12 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var _ messaging.Publisher = (*publisher)(nil)
+var _ messaging.Publisher = (*RPublisher)(nil)
 
-type publisher struct {
-	conn   *amqp.Connection
-	ch     *amqp.Channel
-	prefix string
+type RPublisher struct {
+	Conn    *amqp.Connection
+	Channel *amqp.Channel
+	Prefix  string
 }
 
 // NewPublisher returns RabbitMQ message Publisher.
@@ -35,14 +35,14 @@ func NewPublisher(url string, opts ...messaging.Option) (messaging.Publisher, er
 		return nil, err
 	}
 
-	ret := &publisher{
-		conn:   conn,
-		ch:     ch,
-		prefix: chansPrefix,
+	ret := &RPublisher{
+		Conn:    conn,
+		Channel: ch,
+		Prefix:  chansPrefix,
 	}
 
 	for _, opt := range opts {
-		if err := opt(url, ret.prefix); err != nil {
+		if err := opt(ret); err != nil {
 			return nil, err
 		}
 	}
@@ -50,7 +50,7 @@ func NewPublisher(url string, opts ...messaging.Option) (messaging.Publisher, er
 	return ret, nil
 }
 
-func (pub *publisher) Publish(ctx context.Context, topic string, msg *messaging.Message) error {
+func (pub *RPublisher) Publish(ctx context.Context, topic string, msg *messaging.Message) error {
 	if topic == "" {
 		return ErrEmptyTopic
 	}
@@ -59,13 +59,13 @@ func (pub *publisher) Publish(ctx context.Context, topic string, msg *messaging.
 		return err
 	}
 
-	subject := fmt.Sprintf("%s.%s", pub.prefix, topic)
+	subject := fmt.Sprintf("%s.%s", pub.Prefix, topic)
 	if msg.Subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, msg.Subtopic)
 	}
 	subject = formatTopic(subject)
 
-	err = pub.ch.PublishWithContext(
+	err = pub.Channel.PublishWithContext(
 		ctx,
 		exchangeName,
 		subject,
@@ -85,11 +85,12 @@ func (pub *publisher) Publish(ctx context.Context, topic string, msg *messaging.
 	return nil
 }
 
-func (pub *publisher) Close() error {
-	if err := pub.ch.Close(); err != nil {
+func (pub *RPublisher) Close() error {
+	if err := pub.Channel.Close(); err != nil {
 		return err
 	}
-	return pub.conn.Close()
+
+	return pub.Conn.Close()
 }
 
 func formatTopic(topic string) string {

@@ -61,4 +61,4 @@ type PubSub interface {
 }
 
 // Option represents optional configuration for message broker.
-type Option func(url, prefix string) error
+type Option func(vals interface{}) error

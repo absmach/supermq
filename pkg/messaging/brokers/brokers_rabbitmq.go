@@ -8,6 +8,7 @@ package brokers
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	mflog "github.com/mainflux/mainflux/logger"
@@ -18,6 +19,9 @@ import (
 
 // SubjectAllChannels represents subject to subscribe for all the channels.
 const SubjectAllChannels = "channels.#"
+
+// ErrInvalidType is returned when the provided value is not of the expected type.
+var ErrInvalidType = errors.New("invalid type")
 
 func init() {
 	log.Println("The binary was build using RabbitMQ as the message broker")
@@ -41,27 +45,28 @@ func NewPubSub(_ context.Context, url string, logger mflog.Logger, opts ...messa
 	return pb, nil
 }
 
-func WithExchange(url, name, kind string, durable, autoDelete, internal, noWait bool, args amqp.Table) messaging.Option {
-	return func(url, _ string) error {
-		conn, err := amqp.Dial(url)
-		if err != nil {
-			return err
+func WithChannel(channel *amqp.Channel) messaging.Option {
+	return func(val interface{}) error {
+		ch, ok := val.(*rabbitmq.RPublisher)
+		if !ok {
+			return ErrInvalidType
 		}
-		ch, err := conn.Channel()
-		if err != nil {
-			return err
-		}
-		if err := ch.ExchangeDeclare(name, kind, durable, autoDelete, internal, noWait, args); err != nil {
-			return err
-		}
+
+		ch.Channel = channel
 
 		return nil
 	}
 }
 
-func WithPrefix(prefix string) messaging.Option {
-	return func(_, p string) error {
-		p = prefix
+func WithPrefix(prefix *string) messaging.Option {
+	return func(val interface{}) error {
+		p, ok := val.(*rabbitmq.RPublisher)
+		if !ok {
+			return ErrInvalidType
+		}
+
+		p.Prefix = *prefix
+
 		return nil
 	}
 }

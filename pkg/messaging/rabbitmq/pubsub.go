@@ -19,7 +19,7 @@ const (
 	chansPrefix = "channels"
 	// SubjectAllChannels represents subject to subscribe for all the channels.
 	SubjectAllChannels = "channels.#"
-	exchangeName       = "mainflux"
+	exchangeName       = "messages"
 )
 
 var (
@@ -32,13 +32,13 @@ var (
 	// ErrEmptyID indicates the absence of ID.
 	ErrEmptyID = errors.New("empty ID")
 )
-var _ messaging.PubSub = (*pubsub)(nil)
+var _ messaging.PubSub = (*Rpubsub)(nil)
 
 type subscription struct {
 	cancel func() error
 }
-type pubsub struct {
-	publisher
+type Rpubsub struct {
+	RPublisher
 	logger        mflog.Logger
 	subscriptions map[string]map[string]subscription
 	mu            sync.Mutex
@@ -58,17 +58,17 @@ func NewPubSub(url string, logger mflog.Logger, opts ...messaging.Option) (messa
 		return nil, err
 	}
 
-	ret := &pubsub{
-		publisher: publisher{
-			conn: conn,
-			ch:   ch,
+	ret := &Rpubsub{
+		RPublisher: RPublisher{
+			Conn:    conn,
+			Channel: ch,
 		},
 		logger:        logger,
 		subscriptions: make(map[string]map[string]subscription),
 	}
 
 	for _, opt := range opts {
-		if err := opt(url, ret.prefix); err != nil {
+		if err := opt(ret); err != nil {
 			return nil, err
 		}
 	}
@@ -76,7 +76,7 @@ func NewPubSub(url string, logger mflog.Logger, opts ...messaging.Option) (messa
 	return ret, nil
 }
 
-func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig) error {
+func (ps *Rpubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig) error {
 	if cfg.ID == "" {
 		return ErrEmptyID
 	}
@@ -110,23 +110,23 @@ func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig)
 
 	clientID := fmt.Sprintf("%s-%s", cfg.Topic, cfg.ID)
 
-	queue, err := ps.ch.QueueDeclare(clientID, true, false, false, false, nil)
+	queue, err := ps.Channel.QueueDeclare(clientID, true, false, false, false, nil)
 	if err != nil {
 		return err
 	}
 
-	if err := ps.ch.QueueBind(queue.Name, cfg.Topic, exchangeName, false, nil); err != nil {
+	if err := ps.Channel.QueueBind(queue.Name, cfg.Topic, exchangeName, false, nil); err != nil {
 		return err
 	}
 
-	msgs, err := ps.ch.Consume(queue.Name, clientID, true, false, false, false, nil)
+	msgs, err := ps.Channel.Consume(queue.Name, clientID, true, false, false, false, nil)
 	if err != nil {
 		return err
 	}
 	go ps.handle(msgs, cfg.Handler)
 	s[cfg.ID] = subscription{
 		cancel: func() error {
-			if err := ps.ch.Cancel(clientID, false); err != nil {
+			if err := ps.Channel.Cancel(clientID, false); err != nil {
 				return err
 			}
 			return cfg.Handler.Cancel()
@@ -173,7 +173,7 @@ func (ps *pubsub) Unsubscribe(ctx context.Context, id, topic string) error {
 	return nil
 }
 
-func (ps *pubsub) handle(deliveries <-chan amqp.Delivery, h messaging.MessageHandler) {
+func (ps *Rpubsub) handle(deliveries <-chan amqp.Delivery, h messaging.MessageHandler) {
 	for d := range deliveries {
 		var msg messaging.Message
 		if err := proto.Unmarshal(d.Body, &msg); err != nil {
