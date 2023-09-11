@@ -59,3 +59,6 @@ type PubSub interface {
 	Publisher
 	Subscriber
 }
+
+// Option represents optional configuration for message broker.
+type Option func(url, prefix string) error

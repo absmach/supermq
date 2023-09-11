@@ -45,7 +45,7 @@ type pubsub struct {
 }
 
 // NewPubSub returns RabbitMQ message publisher/subscriber.
-func NewPubSub(url string, logger mflog.Logger) (messaging.PubSub, error) {
+func NewPubSub(url string, logger mflog.Logger, opts ...messaging.Option) (messaging.PubSub, error) {
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		return nil, err
@@ -57,6 +57,7 @@ func NewPubSub(url string, logger mflog.Logger) (messaging.PubSub, error) {
 	if err := ch.ExchangeDeclare(exchangeName, amqp.ExchangeTopic, true, false, false, false, nil); err != nil {
 		return nil, err
 	}
+
 	ret := &pubsub{
 		publisher: publisher{
 			conn: conn,
@@ -65,6 +66,13 @@ func NewPubSub(url string, logger mflog.Logger) (messaging.PubSub, error) {
 		logger:        logger,
 		subscriptions: make(map[string]map[string]subscription),
 	}
+
+	for _, opt := range opts {
+		if err := opt(url, ret.prefix); err != nil {
+			return nil, err
+		}
+	}
+
 	return ret, nil
 }
 

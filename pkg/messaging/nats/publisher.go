@@ -21,15 +21,13 @@ const maxReconnects = -1
 var _ messaging.Publisher = (*publisher)(nil)
 
 type publisher struct {
-	js   jetstream.JetStream
-	conn *broker.Conn
+	js     jetstream.JetStream
+	conn   *broker.Conn
+	prefix string
 }
 
-// Publisher wraps messaging Publisher exposing
-// Close() method for NATS connection.
-
 // NewPublisher returns NATS message Publisher.
-func NewPublisher(ctx context.Context, url string) (messaging.Publisher, error) {
+func NewPublisher(ctx context.Context, url string, opts ...messaging.Option) (messaging.Publisher, error) {
 	conn, err := broker.Connect(url, broker.MaxReconnects(maxReconnects))
 	if err != nil {
 		return nil, err
@@ -41,9 +39,17 @@ func NewPublisher(ctx context.Context, url string) (messaging.Publisher, error) 
 	if _, err := js.CreateStream(ctx, jsStreamConfig); err != nil {
 		return nil, err
 	}
+
 	ret := &publisher{
-		js:   js,
-		conn: conn,
+		js:     js,
+		conn:   conn,
+		prefix: chansPrefix,
+	}
+
+	for _, opt := range opts {
+		if err := opt(url, ret.prefix); err != nil {
+			return nil, err
+		}
 	}
 
 	return ret, nil
@@ -59,7 +65,7 @@ func (pub *publisher) Publish(ctx context.Context, topic string, msg *messaging.
 		return err
 	}
 
-	subject := fmt.Sprintf("%s.%s", chansPrefix, topic)
+	subject := fmt.Sprintf("%s.%s", pub.prefix, topic)
 	if msg.Subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, msg.Subtopic)
 	}
