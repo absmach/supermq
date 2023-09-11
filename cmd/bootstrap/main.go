@@ -193,5 +193,5 @@ func subscribeToThingsES(ctx context.Context, svc bootstrap.Service, cfg config,
 
 	logger.Info("Subscribed to Redis Event Store")
 
-	return subscriber.Subscribe(ctx, svcName, handler)
+	return subscriber.Subscribe(ctx, handler)
 }

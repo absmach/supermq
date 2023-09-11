@@ -43,7 +43,7 @@ type EventHandler interface {
 // Subscriber specifies event subscription API.
 type Subscriber interface {
 	// Subscribe subscribes to the event stream and consumes events.
-	Subscribe(ctx context.Context, id string, handler EventHandler) error
+	Subscribe(ctx context.Context, handler EventHandler) error
 
 	// Close gracefully closes event subscriber's connection.
 	Close() error

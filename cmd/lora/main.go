@@ -53,7 +53,7 @@ type config struct {
 	LoraMsgPass    string        `env:"MF_LORA_ADAPTER_MESSAGES_PASS"       envDefault:""`
 	LoraMsgTopic   string        `env:"MF_LORA_ADAPTER_MESSAGES_TOPIC"      envDefault:"application/+/device/+/event/up"`
 	LoraMsgTimeout time.Duration `env:"MF_LORA_ADAPTER_MESSAGES_TIMEOUT"    envDefault:"30s"`
-	ESConsumerName string        `env:"MF_LORA_ADAPTER_EVENT_CONSUMER"      envDefault:"lora"`
+	ESConsumerName string        `env:"MF_LORA_ADAPTER_EVENT_CONSUMER"      envDefault:"lora-adapter"`
 	BrokerURL      string        `env:"MF_BROKER_URL"                       envDefault:"nats://localhost:4222"`
 	JaegerURL      string        `env:"MF_JAEGER_URL"                       envDefault:"http://jaeger:14268/api/traces"`
 	SendTelemetry  bool          `env:"MF_SEND_TELEMETRY"                   envDefault:"true"`
@@ -200,7 +200,7 @@ func subscribeToThingsES(ctx context.Context, svc lora.Service, cfg config, logg
 
 	logger.Info("Subscribed to Redis Event Store")
 
-	return subscriber.Subscribe(ctx, svcName, handler)
+	return subscriber.Subscribe(ctx, handler)
 }
 
 func newRouteMapRepository(client *redis.Client, prefix string, logger mflog.Logger) lora.RouteMapRepository {

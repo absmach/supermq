@@ -47,7 +47,7 @@ const (
 
 type config struct {
 	LogLevel       string `env:"MF_OPCUA_ADAPTER_LOG_LEVEL"          envDefault:"info"`
-	ESConsumerName string `env:"MF_OPCUA_ADAPTER_EVENT_CONSUMER"     envDefault:""`
+	ESConsumerName string `env:"MF_OPCUA_ADAPTER_EVENT_CONSUMER"     envDefault:"opcua-adapter"`
 	BrokerURL      string `env:"MF_BROKER_URL"                       envDefault:"nats://localhost:4222"`
 	JaegerURL      string `env:"MF_JAEGER_URL"                       envDefault:"http://jaeger:14268/api/traces"`
 	SendTelemetry  bool   `env:"MF_SEND_TELEMETRY"                   envDefault:"true"`
@@ -185,7 +185,7 @@ func subscribeToThingsES(ctx context.Context, svc opcua.Service, cfg config, log
 
 	logger.Info("Subscribed to Redis Event Store")
 
-	return subscriber.Subscribe(ctx, svcName, handler)
+	return subscriber.Subscribe(ctx, handler)
 }
 
 func newRouteMapRepositoy(client *redis.Client, prefix string, logger mflog.Logger) opcua.RouteMapRepository {

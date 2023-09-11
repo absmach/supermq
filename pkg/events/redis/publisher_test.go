@@ -20,13 +20,12 @@ import (
 )
 
 var (
-	streamID         = "mainflux.eventstest"
-	streamLen  int64 = 1000
-	consumer         = "test-consumer"
-	stream           = "test-topic"
-	eventsChan       = make(chan map[string]interface{})
-	logger           = mflog.NewMock()
-	errFailed        = errors.New("failed")
+	streamName  = "mainflux.eventstest"
+	consumer    = "test-consumer"
+	streamTopic = "test-topic"
+	eventsChan  = make(chan map[string]interface{})
+	logger      = mflog.NewMock()
+	errFailed   = errors.New("failed")
 )
 
 type testEvent struct {
@@ -57,13 +56,13 @@ func TestPublish(t *testing.T) {
 	err := redisClient.FlushAll(context.Background()).Err()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on flushing redis: %s", err))
 
-	publisher, err := redis.NewPublisher(context.Background(), redisURL, streamID)
+	publisher, err := redis.NewPublisher(context.Background(), redisURL, streamName)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
-	subcriber, err := redis.NewSubscriber(redisURL, streamID, consumer, logger)
+	subcriber, err := redis.NewSubscriber(redisURL, streamName, consumer, logger)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
-	err = subcriber.Subscribe(context.Background(), streamID, handler{})
+	err = subcriber.Subscribe(context.Background(), handler{})
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on subscribing to event store: %s", err))
 
 	cases := []struct {
@@ -160,56 +159,30 @@ func TestPubsub(t *testing.T) {
 	subcases := []struct {
 		desc         string
 		stream       string
-		group        string
 		errorMessage error
 		handler      events.EventHandler
 	}{
 		{
-			desc:         "Subscribe to a stream with an ID",
-			stream:       fmt.Sprintf("%s.%s", streamID, stream),
-			group:        "clientid1",
+			desc:         "Subscribe to a stream",
+			stream:       fmt.Sprintf("%s.%s", streamName, streamTopic),
 			errorMessage: nil,
 			handler:      handler{false},
 		},
 		{
-			desc:         "Subscribe to the same stream with a different ID",
-			stream:       fmt.Sprintf("%s.%s", streamID, stream),
-			group:        "clientid2",
+			desc:         "Subscribe to the same stream",
+			stream:       fmt.Sprintf("%s.%s", streamName, streamTopic),
 			errorMessage: nil,
 			handler:      handler{false},
 		},
 		{
-			desc:         "Subscribe to an already subscribed stream with an ID",
-			stream:       fmt.Sprintf("%s.%s", streamID, stream),
-			group:        "clientid1",
-			errorMessage: nil,
-			handler:      handler{false},
-		},
-		{
-			desc:         "Subscribe to an empty stream with an ID",
+			desc:         "Subscribe to an empty stream",
 			stream:       "",
-			group:        "clientid1",
 			errorMessage: redis.ErrEmptyStream,
 			handler:      handler{false},
 		},
 		{
-			desc:         "Subscribe to a stream with empty id",
-			stream:       fmt.Sprintf("%s.%s", streamID, stream),
-			group:        "",
-			errorMessage: redis.ErrEmptyGroup,
-			handler:      handler{false},
-		},
-		{
-			desc:         "Subscribe to another stream with an ID",
-			stream:       fmt.Sprintf("%s.%s", streamID, stream+"1"),
-			group:        "clientid3",
-			errorMessage: nil,
-			handler:      handler{true},
-		},
-		{
-			desc:         "Subscribe to a new stream with an ID",
-			stream:       fmt.Sprintf("%s.%s", streamID, stream+"2"),
-			group:        "clientid4",
+			desc:         "Subscribe to another stream",
+			stream:       fmt.Sprintf("%s.%s", streamName, streamTopic+"1"),
 			errorMessage: nil,
 			handler:      handler{true},
 		},
@@ -225,7 +198,7 @@ func TestPubsub(t *testing.T) {
 
 		assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
 
-		switch err := subcriber.Subscribe(context.TODO(), pc.group, pc.handler); {
+		switch err := subcriber.Subscribe(context.TODO(), pc.handler); {
 		case err == nil:
 			assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
 		default:

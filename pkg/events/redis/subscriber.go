@@ -13,14 +13,12 @@ import (
 const (
 	eventCount = 100
 	exists     = "BUSYGROUP Consumer Group name already exists"
+	group      = "mainflux"
 )
 
 var _ events.Subscriber = (*subEventStore)(nil)
 
 var (
-	// ErrEmptyGroup is returned when group name is empty.
-	ErrEmptyGroup = errors.New("group name cannot be empty")
-
 	// ErrEmptyStream is returned when stream name is empty.
 	ErrEmptyStream = errors.New("stream name cannot be empty")
 
@@ -36,16 +34,17 @@ type subEventStore struct {
 }
 
 func NewSubscriber(url, stream, consumer string, logger mflog.Logger) (events.Subscriber, error) {
-	opts, err := redis.ParseURL(url)
-	if err != nil {
-		return nil, err
-	}
-
 	if stream == "" {
 		return nil, ErrEmptyStream
 	}
+
 	if consumer == "" {
 		return nil, ErrEmptyConsumer
+	}
+
+	opts, err := redis.ParseURL(url)
+	if err != nil {
+		return nil, err
 	}
 
 	return &subEventStore{
@@ -56,17 +55,13 @@ func NewSubscriber(url, stream, consumer string, logger mflog.Logger) (events.Su
 	}, nil
 }
 
-func (es *subEventStore) Subscribe(ctx context.Context, group string, handler events.EventHandler) error {
-	if group == "" {
-		return ErrEmptyGroup
-	}
-
+func (es *subEventStore) Subscribe(ctx context.Context, handler events.EventHandler) error {
 	err := es.client.XGroupCreateMkStream(ctx, es.stream, group, "$").Err()
 	if err != nil && err.Error() != exists {
 		return err
 	}
 
-	go func(ctx context.Context, group string) {
+	go func() {
 		for {
 			msgs, err := es.client.XReadGroup(ctx, &redis.XReadGroupArgs{
 				Group:    group,
@@ -83,9 +78,9 @@ func (es *subEventStore) Subscribe(ctx context.Context, group string, handler ev
 				continue
 			}
 
-			es.handle(ctx, group, msgs[0].Messages, handler)
+			es.handle(ctx, msgs[0].Messages, handler)
 		}
-	}(ctx, group)
+	}()
 
 	return nil
 }
@@ -102,9 +97,11 @@ func (re redisEvent) Encode() (map[string]interface{}, error) {
 	return re.Data, nil
 }
 
-func (es *subEventStore) handle(ctx context.Context, group string, msgs []redis.XMessage, h events.EventHandler) {
+func (es *subEventStore) handle(ctx context.Context, msgs []redis.XMessage, h events.EventHandler) {
 	for _, msg := range msgs {
-		var event = redisEvent{msg.Values}
+		var event = redisEvent{
+			Data: msg.Values,
+		}
 
 		if err := h.Handle(ctx, event); err != nil {
 			es.logger.Warn(fmt.Sprintf("failed to handle redis event: %s", err))
@@ -112,6 +109,10 @@ func (es *subEventStore) handle(ctx context.Context, group string, msgs []redis.
 			return
 		}
 
-		es.client.XAck(ctx, es.stream, group, msg.ID)
+		if err := es.client.XAck(ctx, es.stream, group, msg.ID).Err(); err != nil {
+			es.logger.Warn(fmt.Sprintf("failed to ack redis event: %s", err))
+
+			return
+		}
 	}
 }
