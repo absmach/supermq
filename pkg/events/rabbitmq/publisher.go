@@ -1,5 +1,8 @@
-//go:build rabbitmq
-// +build rabbitmq
+// Copyright (c) Mainflux
+// SPDX-License-Identifier: Apache-2.0
+
+//go:build rabbitmq && test
+// +build rabbitmq,test
 
 package rabbitmq
 

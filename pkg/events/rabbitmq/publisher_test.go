@@ -1,8 +1,8 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build rabbitmq
-// +build rabbitmq
+//go:build rabbitmq && test
+// +build rabbitmq,test
 
 package rabbitmq_test
 
@@ -56,7 +56,7 @@ func TestPublish(t *testing.T) {
 	publisher, err := rabbitmq.NewPublisher(ctx, rabbitmqURL, stream)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
-	subcriber, err := rabbitmq.NewSubscriber(ctx, rabbitmqURL, stream, consumer, logger)
+	subcriber, err := rabbitmq.NewSubscriber(rabbitmqURL, stream, consumer, logger)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
 	err = subcriber.Subscribe(ctx, handler{})
@@ -182,7 +182,7 @@ func TestPubsub(t *testing.T) {
 	}
 
 	for _, pc := range subcases {
-		subcriber, err := rabbitmq.NewSubscriber(ctx, rabbitmqURL, pc.stream, consumer, logger)
+		subcriber, err := rabbitmq.NewSubscriber(rabbitmqURL, pc.stream, consumer, logger)
 		if err != nil {
 			assert.Equal(t, err, pc.errorMessage, fmt.Sprintf("%s got expected error: %s - got: %s", pc.desc, pc.errorMessage, err))
 

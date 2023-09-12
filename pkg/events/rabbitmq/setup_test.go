@@ -1,9 +1,8 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build rabbitmq
-// +build rabbitmq
-
+//go:build rabbitmq && test
+// +build rabbitmq,test
 
 package rabbitmq_test
 
@@ -51,7 +50,7 @@ func TestMain(m *testing.M) {
 	}
 
 	if err := pool.Retry(func() error {
-		_, err = rabbitmq.NewSubscriber(ctx, rabbitmqURL, stream, consumer, logger)
+		_, err = rabbitmq.NewSubscriber(rabbitmqURL, stream, consumer, logger)
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
