@@ -1,9 +1,6 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build rabbitmq && test
-// +build rabbitmq,test
-
 package rabbitmq
 
 import (
@@ -14,7 +11,6 @@ import (
 
 	"github.com/mainflux/mainflux/pkg/events"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	broker "github.com/mainflux/mainflux/pkg/messaging/rabbitmq"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -22,7 +18,7 @@ import (
 type pubEventStore struct {
 	conn              *amqp.Connection
 	publisher         messaging.Publisher
-	unpublishedEvents chan *messaging.Message
+	unpublishedEvents chan amqp.Return
 	stream            string
 	mu                sync.Mutex
 }
@@ -40,7 +36,7 @@ func NewPublisher(ctx context.Context, url, stream string) (events.Publisher, er
 		return nil, err
 	}
 
-	publisher, err := broker.NewPublisher(url, brokers.WithPrefix(&eventsPrefix), brokers.WithChannel(ch))
+	publisher, err := broker.NewPublisher(url, broker.WithPrefix(&eventsPrefix), broker.WithExchange(&exchangeName), broker.WithChannel(ch))
 	if err != nil {
 		return nil, err
 	}
@@ -48,9 +44,11 @@ func NewPublisher(ctx context.Context, url, stream string) (events.Publisher, er
 	es := &pubEventStore{
 		conn:              conn,
 		publisher:         publisher,
-		unpublishedEvents: make(chan *messaging.Message, events.MaxUnpublishedEvents),
+		unpublishedEvents: make(chan amqp.Return, events.MaxUnpublishedEvents),
 		stream:            stream,
 	}
+
+	ch.NotifyReturn(es.unpublishedEvents)
 
 	go es.StartPublishingRoutine(ctx)
 
@@ -73,20 +71,6 @@ func (es *pubEventStore) Publish(ctx context.Context, event events.Event) error 
 		Payload: data,
 	}
 
-	if ok := es.checkConnection(ctx); !ok {
-		es.mu.Lock()
-		defer es.mu.Unlock()
-
-		select {
-		case es.unpublishedEvents <- record:
-		default:
-			// If the channel is full (rarely happens), drop the events.
-			return nil
-		}
-
-		return nil
-	}
-
 	return es.publisher.Publish(ctx, es.stream, record)
 }
 
@@ -99,11 +83,14 @@ func (es *pubEventStore) StartPublishingRoutine(ctx context.Context) {
 	for {
 		select {
 		case <-ticker.C:
-			if ok := es.checkConnection(ctx); ok {
+			if ok := es.conn.IsClosed(); !ok {
 				es.mu.Lock()
 				for i := len(es.unpublishedEvents) - 1; i >= 0; i-- {
 					record := <-es.unpublishedEvents
-					if err := es.publisher.Publish(ctx, es.stream, record); err != nil {
+					var msg = &messaging.Message{
+						Payload: record.Body,
+					}
+					if err := es.publisher.Publish(ctx, es.stream, msg); err != nil {
 						es.unpublishedEvents <- record
 
 						break
@@ -121,12 +108,4 @@ func (es *pubEventStore) Close() error {
 	es.conn.Close()
 
 	return es.publisher.Close()
-}
-
-func (es *pubEventStore) checkConnection(ctx context.Context) bool {
-	// A timeout is used to avoid blocking the main thread
-	ctx, cancel := context.WithTimeout(ctx, events.ConnCheckInterval)
-	defer cancel()
-
-	return es.conn.IsClosed()
 }

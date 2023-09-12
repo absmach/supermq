@@ -38,10 +38,10 @@ var (
 	}
 )
 
-var _ messaging.PubSub = (*NPubsub)(nil)
+var _ messaging.PubSub = (*pubsub)(nil)
 
-type NPubsub struct {
-	NPublisher
+type pubsub struct {
+	publisher
 	logger mflog.Logger
 	stream jetstream.Stream
 }
@@ -69,8 +69,9 @@ func NewPubSub(ctx context.Context, url string, logger mflog.Logger, opts ...mes
 
 	ret := &pubsub{
 		publisher: publisher{
-			js:   js,
-			conn: conn,
+			js:     js,
+			conn:   conn,
+			prefix: chansPrefix,
 		},
 		stream: stream,
 		logger: logger,
@@ -85,7 +86,7 @@ func NewPubSub(ctx context.Context, url string, logger mflog.Logger, opts ...mes
 	return ret, nil
 }
 
-func (ps *NPubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig) error {
+func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig) error {
 	if cfg.ID == "" {
 		return ErrEmptyID
 	}
@@ -110,7 +111,7 @@ func (ps *NPubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig
 		consumerConfig.DeliverPolicy = jetstream.DeliverAllPolicy
 	}
 
-	consumer, err := ps.Stream.CreateOrUpdateConsumer(ctx, consumerConfig)
+	consumer, err := ps.stream.CreateOrUpdateConsumer(ctx, consumerConfig)
 	if err != nil {
 		return fmt.Errorf("failed to create consumer: %w", err)
 	}
@@ -139,7 +140,7 @@ func (ps *pubsub) Unsubscribe(ctx context.Context, id, topic string) error {
 	}
 }
 
-func (ps *NPubsub) natsHandler(h messaging.MessageHandler) func(m jetstream.Msg) {
+func (ps *pubsub) natsHandler(h messaging.MessageHandler) func(m jetstream.Msg) {
 	return func(m jetstream.Msg) {
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Data(), &msg); err != nil {

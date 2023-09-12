@@ -1,35 +1,32 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build !redis && !rabbitmq
-// +build !redis,!rabbitmq
-
 package nats
 
 import (
 	"context"
 	"encoding/json"
-	"sync"
 	"time"
 
 	"github.com/mainflux/mainflux/pkg/events"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	broker "github.com/mainflux/mainflux/pkg/messaging/nats"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
+// Max message payload size is 1MB.
+var reconnectBufSize = 1024 * 1024 * int(events.MaxUnpublishedEvents)
+
 type pubEventStore struct {
-	conn              *nats.Conn
-	publisher         messaging.Publisher
-	unpublishedEvents chan *messaging.Message
-	stream            string
-	mu                sync.Mutex
+	url       string
+	conn      *nats.Conn
+	publisher messaging.Publisher
+	stream    string
 }
 
 func NewPublisher(ctx context.Context, url, stream string) (events.Publisher, error) {
-	conn, err := nats.Connect(url, nats.MaxReconnects(maxReconnects))
+	conn, err := nats.Connect(url, nats.MaxReconnects(maxReconnects), nats.ReconnectBufSize(reconnectBufSize))
 	if err != nil {
 		return nil, err
 	}
@@ -41,16 +38,16 @@ func NewPublisher(ctx context.Context, url, stream string) (events.Publisher, er
 		return nil, err
 	}
 
-	publisher, err := broker.NewPublisher(ctx, url, brokers.WithPrefix(&eventsPrefix), brokers.WithJSStream(js))
+	publisher, err := broker.NewPublisher(ctx, url, broker.WithPrefix(&eventsPrefix), broker.WithJSStream(js))
 	if err != nil {
 		return nil, err
 	}
 
 	es := &pubEventStore{
-		conn:              conn,
-		publisher:         publisher,
-		unpublishedEvents: make(chan *messaging.Message, events.MaxUnpublishedEvents),
-		stream:            stream,
+		url:       url,
+		conn:      conn,
+		publisher: publisher,
+		stream:    stream,
 	}
 
 	go es.StartPublishingRoutine(ctx)
@@ -74,60 +71,20 @@ func (es *pubEventStore) Publish(ctx context.Context, event events.Event) error 
 		Payload: data,
 	}
 
-	if ok := es.checkConnection(ctx); !ok {
-		es.mu.Lock()
-		defer es.mu.Unlock()
-
-		select {
-		case es.unpublishedEvents <- record:
-		default:
-			// If the channel is full (rarely happens), drop the events.
-			return nil
-		}
-
-		return nil
-	}
-
 	return es.publisher.Publish(ctx, es.stream, record)
 }
 
 func (es *pubEventStore) StartPublishingRoutine(ctx context.Context) {
-	defer close(es.unpublishedEvents)
+	// Nats doesn't need to check for unpublished events
+	// since the events a publisher to a buffer.
+	// The buffer is flushed when the connection is reestablished.
+	// https://docs.nats.io/using-nats/developer/connecting/reconnect/buffer
 
-	ticker := time.NewTicker(events.UnpublishedEventsCheckInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			if ok := es.checkConnection(ctx); ok {
-				es.mu.Lock()
-				for i := len(es.unpublishedEvents) - 1; i >= 0; i-- {
-					record := <-es.unpublishedEvents
-					if err := es.publisher.Publish(ctx, es.stream, record); err != nil {
-						es.unpublishedEvents <- record
-
-						break
-					}
-				}
-				es.mu.Unlock()
-			}
-		case <-ctx.Done():
-			return
-		}
-	}
+	<-ctx.Done()
 }
 
 func (es *pubEventStore) Close() error {
 	es.conn.Close()
 
 	return es.publisher.Close()
-}
-
-func (es *pubEventStore) checkConnection(ctx context.Context) bool {
-	// A timeout is used to avoid blocking the main thread
-	ctx, cancel := context.WithTimeout(ctx, events.ConnCheckInterval)
-	defer cancel()
-
-	return es.conn.IsConnected()
 }

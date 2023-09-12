@@ -1,9 +1,6 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build !redis && !rabbitmq
-// +build !redis,!rabbitmq
-
 package nats
 
 import (
@@ -16,7 +13,6 @@ import (
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/events"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	broker "github.com/mainflux/mainflux/pkg/messaging/nats"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
@@ -80,7 +76,7 @@ func NewSubscriber(ctx context.Context, url, stream, consumer string, logger mfl
 		return nil, err
 	}
 
-	pubsub, err := broker.NewPubSub(ctx, url, logger, brokers.WithPrefix(&eventsPrefix), brokers.WithStream(jsStream))
+	pubsub, err := broker.NewPubSub(ctx, url, logger, broker.WithStream(jsStream))
 	if err != nil {
 		return nil, err
 	}

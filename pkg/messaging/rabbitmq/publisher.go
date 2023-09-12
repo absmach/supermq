@@ -13,12 +13,13 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var _ messaging.Publisher = (*RPublisher)(nil)
+var _ messaging.Publisher = (*publisher)(nil)
 
-type RPublisher struct {
-	Conn    *amqp.Connection
-	Channel *amqp.Channel
-	Prefix  string
+type publisher struct {
+	conn     *amqp.Connection
+	channel  *amqp.Channel
+	prefix   string
+	exchange string
 }
 
 // NewPublisher returns RabbitMQ message Publisher.
@@ -35,10 +36,11 @@ func NewPublisher(url string, opts ...messaging.Option) (messaging.Publisher, er
 		return nil, err
 	}
 
-	ret := &RPublisher{
-		Conn:    conn,
-		Channel: ch,
-		Prefix:  chansPrefix,
+	ret := &publisher{
+		conn:     conn,
+		channel:  ch,
+		prefix:   chansPrefix,
+		exchange: exchangeName,
 	}
 
 	for _, opt := range opts {
@@ -50,7 +52,7 @@ func NewPublisher(url string, opts ...messaging.Option) (messaging.Publisher, er
 	return ret, nil
 }
 
-func (pub *RPublisher) Publish(ctx context.Context, topic string, msg *messaging.Message) error {
+func (pub *publisher) Publish(ctx context.Context, topic string, msg *messaging.Message) error {
 	if topic == "" {
 		return ErrEmptyTopic
 	}
@@ -59,15 +61,15 @@ func (pub *RPublisher) Publish(ctx context.Context, topic string, msg *messaging
 		return err
 	}
 
-	subject := fmt.Sprintf("%s.%s", pub.Prefix, topic)
+	subject := fmt.Sprintf("%s.%s", pub.prefix, topic)
 	if msg.Subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, msg.Subtopic)
 	}
 	subject = formatTopic(subject)
 
-	err = pub.Channel.PublishWithContext(
+	err = pub.channel.PublishWithContext(
 		ctx,
-		exchangeName,
+		pub.exchange,
 		subject,
 		false,
 		false,
@@ -85,12 +87,8 @@ func (pub *RPublisher) Publish(ctx context.Context, topic string, msg *messaging
 	return nil
 }
 
-func (pub *RPublisher) Close() error {
-	if err := pub.Channel.Close(); err != nil {
-		return err
-	}
-
-	return pub.Conn.Close()
+func (pub *publisher) Close() error {
+	return pub.conn.Close()
 }
 
 func formatTopic(topic string) string {

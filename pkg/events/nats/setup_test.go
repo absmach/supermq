@@ -1,9 +1,6 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build !redis && !rabbitmq
-// +build !redis,!rabbitmq
-
 package nats_test
 
 import (
@@ -19,49 +16,29 @@ import (
 	"github.com/ory/dockertest/v3"
 )
 
+type client struct {
+	url       string
+	pool      *dockertest.Pool
+	container *dockertest.Resource
+}
+
 var (
-	redisURL string
+	natsURL  string
 	stream   = "tests.events"
 	consumer = "tests-consumer"
 	ctx      = context.Background()
 )
 
 func TestMain(m *testing.M) {
-	pool, err := dockertest.NewPool("")
+	client, err := startContainer()
 	if err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
+		log.Fatalf(err.Error())
 	}
-
-	container, err := pool.RunWithOptions(&dockertest.RunOptions{
-		Repository: "nats",
-		Tag:        "2.9.21-alpine",
-		Cmd:        []string{"-DVV", "-js"},
-	})
-	if err != nil {
-		log.Fatalf("Could not start container: %s", err)
-	}
-
-	handleInterrupt(pool, container)
-
-	address := fmt.Sprintf("%s:%s", "localhost", container.GetPort("4222/tcp"))
-
-	if err := pool.Retry(func() error {
-		_, err = nats.NewPublisher(ctx, address, stream)
-		return err
-	}); err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
-	}
-
-	if err := pool.Retry(func() error {
-		_, err = nats.NewSubscriber(ctx, address, stream, consumer, logger)
-		return err
-	}); err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
-	}
+	natsURL = client.url
 
 	code := m.Run()
 
-	if err := pool.Purge(container); err != nil {
+	if err := client.pool.Purge(client.container); err != nil {
 		log.Fatalf("Could not purge container: %s", err)
 	}
 
@@ -79,4 +56,42 @@ func handleInterrupt(pool *dockertest.Pool, container *dockertest.Resource) {
 		}
 		os.Exit(0)
 	}()
+}
+
+func startContainer() (client, error) {
+	var cli client
+	var err error
+	cli.pool, err = dockertest.NewPool("")
+	if err != nil {
+		return client{}, fmt.Errorf("Could not connect to docker: %s", err)
+	}
+
+	cli.container, err = cli.pool.RunWithOptions(&dockertest.RunOptions{
+		Repository: "nats",
+		Tag:        "2.9.21-alpine",
+		Cmd:        []string{"-DVV", "-js"},
+	})
+	if err != nil {
+		return client{}, fmt.Errorf("Could not start container: %s", err)
+	}
+
+	handleInterrupt(cli.pool, cli.container)
+
+	cli.url = fmt.Sprintf("nats://%s:%s", "localhost", cli.container.GetPort("4222/tcp"))
+
+	if err := cli.pool.Retry(func() error {
+		_, err = nats.NewPublisher(ctx, cli.url, stream)
+		return err
+	}); err != nil {
+		return client{}, fmt.Errorf("Could not connect to docker: %s", err)
+	}
+
+	if err := cli.pool.Retry(func() error {
+		_, err = nats.NewSubscriber(ctx, cli.url, stream, consumer, logger)
+		return err
+	}); err != nil {
+		return client{}, fmt.Errorf("Could not connect to docker: %s", err)
+	}
+
+	return cli, nil
 }

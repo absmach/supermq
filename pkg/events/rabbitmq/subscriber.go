@@ -1,9 +1,6 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build rabbitmq && test
-// +build rabbitmq,test
-
 package rabbitmq
 
 import (
@@ -15,7 +12,6 @@ import (
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/events"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	broker "github.com/mainflux/mainflux/pkg/messaging/rabbitmq"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -62,7 +58,7 @@ func NewSubscriber(url, stream, consumer string, logger mflog.Logger) (events.Su
 		return nil, err
 	}
 
-	pubsub, err := broker.NewPubSub(url, logger, brokers.WithChannel(ch))
+	pubsub, err := broker.NewPubSub(url, logger, broker.WithChannel(ch), broker.WithExchange(&exchangeName))
 	if err != nil {
 		return nil, err
 	}

@@ -1,9 +1,6 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build rabbitmq && test
-// +build rabbitmq,test
-
 package rabbitmq_test
 
 import (
@@ -19,48 +16,29 @@ import (
 	"github.com/ory/dockertest/v3"
 )
 
+type client struct {
+	url       string
+	pool      *dockertest.Pool
+	container *dockertest.Resource
+}
+
 var (
 	rabbitmqURL string
 	stream      = "tests.events"
 	consumer    = "tests-consumer"
-	ctx         = context.Background()
+	ctx         = context.TODO()
 )
 
 func TestMain(m *testing.M) {
-	pool, err := dockertest.NewPool("")
+	client, err := startContainer()
 	if err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
+		log.Fatalf(err.Error())
 	}
-
-	container, err := pool.Run("rabbitmq", "3.9.20", []string{})
-	if err != nil {
-		log.Fatalf("Could not start container: %s", err)
-	}
-
-	handleInterrupt(pool, container)
-
-	rabbitmqURL = fmt.Sprintf("amqp://%s:%s", "localhost", container.GetPort("5672/tcp"))
-
-	fmt.Printf("address: %s\n", rabbitmqURL)
-	if err := pool.Retry(func() error {
-		_, err = rabbitmq.NewPublisher(ctx, rabbitmqURL, stream)
-		return err
-	}); err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
-	}
-
-	if err := pool.Retry(func() error {
-		_, err = rabbitmq.NewSubscriber(rabbitmqURL, stream, consumer, logger)
-		return err
-	}); err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
-	}
-
-	fmt.Println("RabbitMQ started")
+	rabbitmqURL = client.url
 
 	code := m.Run()
 
-	if err := pool.Purge(container); err != nil {
+	if err := client.pool.Purge(client.container); err != nil {
 		log.Fatalf("Could not purge container: %s", err)
 	}
 
@@ -78,4 +56,38 @@ func handleInterrupt(pool *dockertest.Pool, container *dockertest.Resource) {
 		}
 		os.Exit(0)
 	}()
+}
+
+func startContainer() (client, error) {
+	var cli client
+	var err error
+	cli.pool, err = dockertest.NewPool("")
+	if err != nil {
+		return client{}, fmt.Errorf("Could not connect to docker: %s", err)
+	}
+
+	cli.container, err = cli.pool.Run("rabbitmq", "3.9.20", []string{})
+	if err != nil {
+		log.Fatalf("Could not start container: %s", err)
+	}
+
+	handleInterrupt(cli.pool, cli.container)
+
+	cli.url = fmt.Sprintf("amqp://%s:%s", "localhost", cli.container.GetPort("5672/tcp"))
+
+	if err := cli.pool.Retry(func() error {
+		_, err = rabbitmq.NewPublisher(ctx, cli.url, stream)
+		return err
+	}); err != nil {
+		log.Fatalf("Could not connect to docker: %s", err)
+	}
+
+	if err := cli.pool.Retry(func() error {
+		_, err = rabbitmq.NewSubscriber(cli.url, stream, consumer, logger)
+		return err
+	}); err != nil {
+		log.Fatalf("Could not connect to docker: %s", err)
+	}
+
+	return cli, nil
 }

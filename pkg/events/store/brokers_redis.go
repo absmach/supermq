@@ -1,8 +1,8 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build redis
-// +build redis
+//go:build !nats && !rabbitmq
+// +build !nats,!rabbitmq
 
 package store
 

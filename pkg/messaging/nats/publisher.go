@@ -18,7 +18,7 @@ import (
 // will never give up on retrying to re-establish connection to NATS server.
 const maxReconnects = -1
 
-var _ messaging.Publisher = (*NPublisher)(nil)
+var _ messaging.Publisher = (*publisher)(nil)
 
 type publisher struct {
 	js     jetstream.JetStream
@@ -55,7 +55,7 @@ func NewPublisher(ctx context.Context, url string, opts ...messaging.Option) (me
 	return ret, nil
 }
 
-func (pub *NPublisher) Publish(ctx context.Context, topic string, msg *messaging.Message) error {
+func (pub *publisher) Publish(ctx context.Context, topic string, msg *messaging.Message) error {
 	if topic == "" {
 		return ErrEmptyTopic
 	}
@@ -65,12 +65,12 @@ func (pub *NPublisher) Publish(ctx context.Context, topic string, msg *messaging
 		return err
 	}
 
-	subject := fmt.Sprintf("%s.%s", pub.Prefix, topic)
+	subject := fmt.Sprintf("%s.%s", pub.prefix, topic)
 	if msg.Subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, msg.Subtopic)
 	}
 
-	_, err = pub.JS.Publish(ctx, subject, data)
+	_, err = pub.js.Publish(ctx, subject, data)
 
 	return err
 }
