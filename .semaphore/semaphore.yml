@@ -697,3 +697,11 @@ blocks:
           commands:
             - MF_MESSAGE_BROKER_TYPE=rabbitmq make mqtt
 
+  - name: Compile Check For Redis
+    dependencies:
+      - Setup
+    task:
+      jobs:
+        - name: Compile For Redis
+          commands:
+            - MF_ES_STORE_TYPE=redis make mqtt
