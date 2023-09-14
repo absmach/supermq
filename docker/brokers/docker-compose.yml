@@ -1,5 +1,5 @@
 # This file configures Mainflux brokers. Mainflux uses two types of brokers:
-# 1. MQTT_BROKER: Handles MQTT communication between Mainflux services.
+# 1. MQTT_BROKER: Handles MQTT communication between MQTT adapters and message broker.
 # 2. MESSAGE_BROKER: Manages communication between adapters and Mainflux writer services.
 #
 # MQTT_BROKER can be either 'vernemq' or 'nats'.
