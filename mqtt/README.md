@@ -30,7 +30,7 @@ default values.
 | MF_MQTT_ADAPTER_ES_URL                   | Event sourcing URL                                     | localhost:6379                   |
 | MF_MQTT_ADAPTER_ES_PASS                  | Event sourcing password                                | ""                               |
 | MF_MQTT_ADAPTER_ES_DB                    | Event sourcing database                                | "0"                              |
-| MF_BROKER_URL                            | Message broker broker URL                              | nats://127.0.0.1:4222            |
+| MF_MESSAGE_BROKER_URL                    | Message broker broker URL                              | nats://127.0.0.1:4222            |
 | MF_JAEGER_URL                            | URL of Jaeger tracing service                          | "http://jaeger:14268/api/traces" |
 | MF_SEND_TELEMETRY                        | Send telemetry to mainflux call home server            | true                             |
 | MF_MQTT_ADAPTER_INSTANCE_ID              | Instance ID for telemetry                              | ""                               |
@@ -75,7 +75,7 @@ MF_MQTT_ADAPTER_CA_CERTS=[CA certs for gRPC client] \
 MF_MQTT_ADAPTER_ES_URL=[Event sourcing URL] \
 MF_MQTT_ADAPTER_ES_PASS=[Event sourcing pass] \
 MF_MQTT_ADAPTER_ES_DB=[Event sourcing database] \
-MF_BROKER_URL=[Message broker instance URL] \
+MF_MESSAGE_BROKER_URL=[Message broker instance URL] \
 MF_JAEGER_URL=[Jaeger service URL] \
 MF_SEND_TELEMETRY=[Send telemetry to mainflux call home server] \
 MF_MQTT_ADAPTER_INSTANCE_ID=[Instance ID] \

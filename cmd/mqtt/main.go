@@ -50,7 +50,7 @@ type config struct {
 	HTTPTargetPath        string        `env:"MF_MQTT_ADAPTER_WS_TARGET_PATH"               envDefault:"/mqtt"`
 	Instance              string        `env:"MF_MQTT_ADAPTER_INSTANCE"                     envDefault:""`
 	JaegerURL             string        `env:"MF_JAEGER_URL"                                envDefault:"http://jaeger:14268/api/traces"`
-	BrokerURL             string        `env:"MF_BROKER_URL"                                envDefault:"nats://localhost:4222"`
+	BrokerURL             string        `env:"MF_MESSAGE_BROKER_URL"                        envDefault:"nats://localhost:4222"`
 	SendTelemetry         bool          `env:"MF_SEND_TELEMETRY"                            envDefault:"true"`
 	InstanceID            string        `env:"MF_MQTT_ADAPTER_INSTANCE_ID"                  envDefault:""`
 	ESURL                 string        `env:"MF_MQTT_ADAPTER_ES_URL"                       envDefault:"redis://localhost:6379/0"`
