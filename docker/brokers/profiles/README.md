@@ -14,11 +14,11 @@ They are automatically included in the main profile, so you can run them dependi
 The following command will run Nats as an MQTT broker and Nats as a message broker:
 
 ```bash
-MF_MQTT_BROKER_TYPE=nats MF_BROKER_TYPE=nats make run
+MF_MQTT_BROKER_TYPE=nats MF_MESSAGE_BROKER_TYPE=nats make run
 ```
 
 The following command will run Nats as an MQTT broker and RabbitMQ as a message broker:
 
 ```bash
-MF_MQTT_BROKER_TYPE=nats MF_BROKER_TYPE=rabbit make run
+MF_MQTT_BROKER_TYPE=nats MF_MESSAGE_BROKER_TYPE=rabbit make run
 ```

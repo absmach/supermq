@@ -22,11 +22,11 @@ DOCKER_PROJECT ?= $(shell echo $(subst $(space),,$(USER_REPO)_$(BRANCH)) | tr -c
 DOCKER_COMPOSE_COMMANDS_SUPPORTED := up down config
 DEFAULT_DOCKER_COMPOSE_COMMAND  := up
 GRPC_MTLS_CERT_FILES_EXISTS = 0
-DOCKER_PROFILE ?= $(MF_MQTT_BROKER_TYPE)_$(MF_BROKER_TYPE)
-ifneq ($(MF_BROKER_TYPE),)
-    MF_BROKER_TYPE := $(MF_BROKER_TYPE)
+DOCKER_PROFILE ?= $(MF_MQTT_BROKER_TYPE)_$(MF_MESSAGE_BROKER_TYPE)
+ifneq ($(MF_MESSAGE_BROKER_TYPE),)
+    MF_MESSAGE_BROKER_TYPE := $(MF_MESSAGE_BROKER_TYPE)
 else
-    MF_BROKER_TYPE=nats
+    MF_MESSAGE_BROKER_TYPE=nats
 endif
 
 ifneq ($(MF_MQTT_BROKER_TYPE),)
@@ -38,7 +38,7 @@ endif
 
 define compile_service
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) \
-	go build -mod=vendor -tags $(MF_BROKER_TYPE) -ldflags "-s -w \
+	go build -mod=vendor -tags $(MF_MESSAGE_BROKER_TYPE) -ldflags "-s -w \
 	-X 'github.com/mainflux/mainflux.BuildTime=$(TIME)' \
 	-X 'github.com/mainflux/mainflux.Version=$(VERSION)' \
 	-X 'github.com/mainflux/mainflux.Commit=$(COMMIT)'" \
@@ -195,9 +195,9 @@ define edit_docker_config
 	sed -i "s/MF_MQTT_BROKER_TYPE=.*/MF_MQTT_BROKER_TYPE=$(1)/" docker/.env
 	sed -i "s/MF_MQTT_BROKER_HEALTH_CHECK=.*/MF_MQTT_BROKER_HEALTH_CHECK=$$\{MF_$(shell echo ${MF_MQTT_BROKER_TYPE} | tr 'a-z' 'A-Z')_HEALTH_CHECK}/" docker/.env
 	sed -i "s/MF_MQTT_ADAPTER_WS_TARGET_PATH=.*/MF_MQTT_ADAPTER_WS_TARGET_PATH=$$\{MF_$(shell echo ${MF_MQTT_BROKER_TYPE} | tr 'a-z' 'A-Z')_WS_TARGET_PATH}/" docker/.env
-	sed -i "s/MF_BROKER_TYPE=.*/MF_BROKER_TYPE=$(2)/" docker/.env
+	sed -i "s/MF_MESSAGE_BROKER_TYPE=.*/MF_MESSAGE_BROKER_TYPE=$(2)/" docker/.env
 	sed -i "s,file: .*.yml,file: $(2).yml," docker/brokers/docker-compose.yml
-	sed -i "s,MF_BROKER_URL=.*,MF_BROKER_URL=$$\{MF_$(shell echo ${MF_BROKER_TYPE} | tr 'a-z' 'A-Z')_URL\}," docker/.env
+	sed -i "s,MF_BROKER_URL=.*,MF_BROKER_URL=$$\{MF_$(shell echo ${MF_MESSAGE_BROKER_TYPE} | tr 'a-z' 'A-Z')_URL\}," docker/.env
 endef
 
 change_config:
