@@ -208,6 +208,7 @@ ifeq ($(DOCKER_PROFILE),nats_nats)
 	$(call edit_docker_config,nats,nats)
 else ifeq ($(DOCKER_PROFILE),nats_rabbitmq)
 	sed -i "s/nats/broker/g" docker/docker-compose.yml
+	sed -i "s,MF_NATS_URL=.*,MF_NATS_URL=nats://nats:$$\{MF_NATS_PORT}," docker/.env
 	sed -i "s/rabbitmq/broker/g" docker/docker-compose.yml
 	$(call edit_docker_config,nats,rabbitmq)
 else ifeq ($(DOCKER_PROFILE),vernemq_nats)
