@@ -39,7 +39,6 @@ import (
 const (
 	svcName        = "bootstrap"
 	envPrefixDB    = "MF_BOOTSTRAP_DB_"
-	envPrefixES    = "MF_BOOTSTRAP_ES_"
 	envPrefixHTTP  = "MF_BOOTSTRAP_HTTP_"
 	defDB          = "bootstrap"
 	defSvcHTTPPort = "9013"
