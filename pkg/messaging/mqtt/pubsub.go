@@ -18,7 +18,7 @@ import (
 
 const (
 	username = "mainflux-mqtt"
-	qos      = 1
+	qos      = 1 // At least once - Since NATS supports up to QoS 1.
 )
 
 var (
