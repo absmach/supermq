@@ -20,8 +20,7 @@ MF_CERTS_VAULT_TOKEN=<vault_acces_token>
 
 For lab purposes you can use docker-compose and script for setting up PKI in [https://github.com/mteodor/vault](https://github.com/mteodor/vault)
 
-Issuing certificate is same as in **Development** mode.
-In this mode certificates can also be revoked:
+The certificates can also be revoked using `certs` service. To revoke a certificate you need to provide `thing_id` of the thing for which the certificate was issued.
 
 ```bash
 curl -s -S -X DELETE http://localhost:9019/certs/revoke -H "Authorization: Bearer $TOK" -H 'Content-Type: application/json'   -d '{"thing_id":"c30b8842-507c-4bcd-973c-74008cef3be5"}'
