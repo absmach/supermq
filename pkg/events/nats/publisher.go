@@ -76,7 +76,7 @@ func (es *pubEventStore) Publish(ctx context.Context, event events.Event) error 
 
 func (es *pubEventStore) StartPublishingRoutine(ctx context.Context) {
 	// Nats doesn't need to check for unpublished events
-	// since the events a publisher to a buffer.
+	// since the events are published to a buffer.
 	// The buffer is flushed when the connection is reestablished.
 	// https://docs.nats.io/using-nats/developer/connecting/reconnect/buffer
 
