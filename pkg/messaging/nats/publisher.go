@@ -21,7 +21,8 @@ const maxReconnects = -1
 var _ messaging.Publisher = (*publisher)(nil)
 
 type publisher struct {
-	js jetstream.JetStream
+	js   jetstream.JetStream
+	conn *broker.Conn
 }
 
 // Publisher wraps messaging Publisher exposing
@@ -41,7 +42,8 @@ func NewPublisher(ctx context.Context, url string) (messaging.Publisher, error) 
 		return nil, err
 	}
 	ret := &publisher{
-		js: js,
+		js:   js,
+		conn: conn,
 	}
 
 	return ret, nil
@@ -68,5 +70,6 @@ func (pub *publisher) Publish(ctx context.Context, topic string, msg *messaging.
 }
 
 func (pub *publisher) Close() error {
+	pub.conn.Close()
 	return nil
 }
