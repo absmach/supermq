@@ -31,6 +31,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/things/clients"
 	capi "github.com/mainflux/mainflux/things/clients/api"
+	thcache "github.com/mainflux/mainflux/things/clients/cache"
 	thevents "github.com/mainflux/mainflux/things/clients/events"
 	cpostgres "github.com/mainflux/mainflux/things/clients/postgres"
 	localusers "github.com/mainflux/mainflux/things/clients/standalone"
@@ -43,6 +44,7 @@ import (
 	papi "github.com/mainflux/mainflux/things/policies/api"
 	grpcapi "github.com/mainflux/mainflux/things/policies/api/grpc"
 	httpapi "github.com/mainflux/mainflux/things/policies/api/http"
+	pcache "github.com/mainflux/mainflux/things/policies/cache"
 	pevents "github.com/mainflux/mainflux/things/policies/events"
 	ppostgres "github.com/mainflux/mainflux/things/policies/postgres"
 	ppracing "github.com/mainflux/mainflux/things/policies/tracing"
@@ -220,8 +222,8 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 		logger.Error(fmt.Sprintf("failed to parse cache key duration: %s", err.Error()))
 	}
 
-	policyCache := pevents.NewCache(cacheClient, kDuration)
-	thingCache := thevents.NewCache(cacheClient, kDuration)
+	policyCache := pcache.NewCache(cacheClient, kDuration)
+	thingCache := thcache.NewCache(cacheClient, kDuration)
 
 	psvc := tpolicies.NewService(auth, pRepo, policyCache, idp)
 	csvc := clients.NewService(auth, psvc, cRepo, gRepo, thingCache, idp)

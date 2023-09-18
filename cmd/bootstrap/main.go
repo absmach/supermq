@@ -126,6 +126,12 @@ func main() {
 		return
 	}
 
+	if err = subscribeToThingsES(ctx, svc, cfg, logger); err != nil {
+		logger.Error(fmt.Sprintf("failed to subscribe to things event store: %s", err))
+		exitCode = 1
+		return
+	}
+
 	httpServerConfig := server.Config{Port: defSvcHTTPPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHTTP}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
@@ -145,10 +151,6 @@ func main() {
 	})
 	g.Go(func() error {
 		return server.StopSignalHandler(ctx, cancel, logger, svcName, hs)
-	})
-
-	g.Go(func() error {
-		return subscribeToThingsES(ctx, svc, cfg, logger)
 	})
 
 	if err := g.Wait(); err != nil {

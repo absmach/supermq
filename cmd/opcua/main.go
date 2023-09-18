@@ -133,9 +133,11 @@ func main() {
 
 	go subscribeToStoredSubs(ctx, sub, opcConfig, logger)
 
-	g.Go(func() error {
-		return subscribeToThingsES(ctx, svc, cfg, logger)
-	})
+	if err = subscribeToThingsES(ctx, svc, cfg, logger); err != nil {
+		logger.Error(fmt.Sprintf("failed to subscribe to things event store: %s", err))
+		exitCode = 1
+		return
+	}
 
 	hs := httpserver.New(ctx, httpCancel, svcName, httpServerConfig, api.MakeHandler(svc, logger, cfg.InstanceID), logger)
 

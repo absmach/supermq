@@ -132,13 +132,17 @@ func main() {
 		return
 	}
 
-	g.Go(func() error {
-		return subscribeToLoRaBroker(svc, mqttConn, cfg.LoraMsgTimeout, cfg.LoraMsgTopic, logger)
-	})
+	if err = subscribeToLoRaBroker(svc, mqttConn, cfg.LoraMsgTimeout, cfg.LoraMsgTopic, logger); err != nil {
+		logger.Error(fmt.Sprintf("failed to subscribe to Lora MQTT broker: %s", err))
+		exitCode = 1
+		return
+	}
 
-	g.Go(func() error {
-		return subscribeToThingsES(ctx, svc, cfg, logger)
-	})
+	if err = subscribeToThingsES(ctx, svc, cfg, logger); err != nil {
+		logger.Error(fmt.Sprintf("failed to subscribe to things event store: %s", err))
+		exitCode = 1
+		return
+	}
 
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(cfg.InstanceID), logger)
 
