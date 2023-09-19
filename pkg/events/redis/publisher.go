@@ -31,7 +31,7 @@ func NewPublisher(ctx context.Context, url, stream string) (events.Publisher, er
 		stream:            stream,
 	}
 
-	go es.StartPublishingRoutine(ctx)
+	go es.startPublishingRoutine(ctx)
 
 	return es, nil
 }
@@ -67,7 +67,7 @@ func (es *pubEventStore) Publish(ctx context.Context, event events.Event) error 
 	return es.client.XAdd(ctx, record).Err()
 }
 
-func (es *pubEventStore) StartPublishingRoutine(ctx context.Context) {
+func (es *pubEventStore) startPublishingRoutine(ctx context.Context) {
 	defer close(es.unpublishedEvents)
 
 	ticker := time.NewTicker(events.UnpublishedEventsCheckInterval)

@@ -26,10 +26,6 @@ type Publisher interface {
 	// Publish publishes event to stream.
 	Publish(ctx context.Context, event Event) error
 
-	// StartPublishingRoutine starts a routine that checks for unpublished events
-	// and publishes them to stream.
-	StartPublishingRoutine(ctx context.Context)
-
 	// Close gracefully closes event publisher's connection.
 	Close() error
 }
