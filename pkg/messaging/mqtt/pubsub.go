@@ -16,10 +16,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const (
-	username = "mainflux-mqtt"
-	qos      = 1 // At least once - Since NATS supports up to QoS 1.
-)
+const username = "mainflux-mqtt"
 
 var (
 	// ErrConnect indicates that connection to MQTT broker failed.
@@ -62,7 +59,7 @@ type pubsub struct {
 }
 
 // NewPubSub returns MQTT message publisher/subscriber.
-func NewPubSub(url string, timeout time.Duration, logger mflog.Logger) (messaging.PubSub, error) {
+func NewPubSub(url string, qos uint8, timeout time.Duration, logger mflog.Logger) (messaging.PubSub, error) {
 	client, err := newClient(url, "mqtt-publisher", timeout)
 	if err != nil {
 		return nil, err
@@ -71,6 +68,7 @@ func NewPubSub(url string, timeout time.Duration, logger mflog.Logger) (messagin
 		publisher: publisher{
 			client:  client,
 			timeout: timeout,
+			qos:     qos,
 		},
 		address:       url,
 		timeout:       timeout,
@@ -113,7 +111,7 @@ func (ps *pubsub) Subscribe(ctx context.Context, id, topic string, handler messa
 	s.topics = append(s.topics, topic)
 	ps.subscriptions[id] = s
 
-	token := s.client.Subscribe(topic, qos, ps.mqttHandler(handler))
+	token := s.client.Subscribe(topic, byte(ps.qos), ps.mqttHandler(handler))
 	if token.Error() != nil {
 		return token.Error()
 	}

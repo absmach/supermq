@@ -198,6 +198,7 @@ define edit_docker_config
 	sed -i "s/MF_MESSAGE_BROKER_TYPE=.*/MF_MESSAGE_BROKER_TYPE=$(2)/" docker/.env
 	sed -i "s,file: .*.yml,file: $(2).yml," docker/brokers/docker-compose.yml
 	sed -i "s,MF_MESSAGE_BROKER_URL=.*,MF_MESSAGE_BROKER_URL=$$\{MF_$(shell echo ${MF_MESSAGE_BROKER_TYPE} | tr 'a-z' 'A-Z')_URL\}," docker/.env
+	sed -i "s,MF_MQTT_ADAPTER_MQTT_QOS=.*,MF_MQTT_ADAPTER_MQTT_QOS=$$\{MF_$(shell echo ${MF_MESSAGE_BROKER_TYPE} | tr 'a-z' 'A-Z')_MQTT_QOS\}," docker/.env
 endef
 
 change_config:

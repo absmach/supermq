@@ -16,6 +16,7 @@ default values.
 | MF_MQTT_ADAPTER_MQTT_PORT                | mProxy port                                            | 1883                             |
 | MF_MQTT_ADAPTER_MQTT_TARGET_HOST         | MQTT broker host                                       | 0.0.0.0                          |
 | MF_MQTT_ADAPTER_MQTT_TARGET_PORT         | MQTT broker port                                       | 1883                             |
+| MF_MQTT_ADAPTER_MQTT_QOS                 | MQTT broker QoS                                        | 1                                |
 | MF_MQTT_ADAPTER_FORWARDER_TIMEOUT        | MQTT forwarder for multiprotocol communication timeout | 30s                              |
 | MF_MQTT_ADAPTER_MQTT_TARGET_HEALTH_CHECK | URL of broker health check                             | ""                               |
 | MF_MQTT_ADAPTER_WS_PORT                  | mProxy MQTT over WS port                               | 8080                             |
@@ -61,6 +62,7 @@ MF_MQTT_ADAPTER_MQTT_TARGET_HOST=[MQTT broker host] \
 MF_MQTT_ADAPTER_MQTT_TARGET_PORT=[MQTT broker MQTT port]] \
 MF_MQTT_ADAPTER_FORWARDER_TIMEOUT=[MQTT forwarder for multiprotocol support timeout] \
 MF_MQTT_ADAPTER_MQTT_TARGET_HEALTH_CHECK=[MQTT health check URL] \
+MF_MQTT_ADAPTER_MQTT_QOS=[MQTT broker QoS] \
 MF_MQTT_ADAPTER_WS_PORT=[MQTT adapter WS port] \
 MF_MQTT_ADAPTER_WS_TARGET_HOST=[MQTT broker for MQTT over WS host] \
 MF_MQTT_ADAPTER_WS_TARGET_PORT=[MQTT broker for MQTT over WS port]] \
