@@ -21,11 +21,12 @@ import (
 )
 
 const (
-	defPass      = "12345678"
-	defReaderURL = "http://localhost:8905"
-	defWSPort    = "8186"
-	numAdapters  = 4
-	batchSize    = 99
+	defPass     = "12345678"
+	defWSPort   = "8186"
+	numAdapters = 4
+	batchSize   = 99
+	usersPort   = "9002"
+	thingsPort  = "9000"
 )
 
 var (
@@ -63,12 +64,9 @@ type Config struct {
 // - Publish message from HTTP, MQTT, WS and CoAP Adapters.
 func Test(conf Config) {
 	sdkConf := sdk.Config{
-		ThingsURL:       fmt.Sprintf("http://%s:9000", conf.Host),
-		UsersURL:        fmt.Sprintf("http://%s:9002", conf.Host),
-		ReaderURL:       defReaderURL,
-		HTTPAdapterURL:  fmt.Sprintf("http://%s:8008", conf.Host),
-		BootstrapURL:    fmt.Sprintf("http://%s", conf.Host),
-		CertsURL:        fmt.Sprintf("http://%s", conf.Host),
+		ThingsURL:       fmt.Sprintf("http://%s:%s", conf.Host, thingsPort),
+		UsersURL:        fmt.Sprintf("http://%s:%s", conf.Host, usersPort),
+		HTTPAdapterURL:  fmt.Sprintf("http://%s/http", conf.Host),
 		MsgContentType:  sdk.CTJSONSenML,
 		TLSVerification: false,
 	}
@@ -226,7 +224,7 @@ func createThingsInBatch(s sdk.SDK, conf Config, token string, num uint64) ([]sd
 }
 
 func createThings(s sdk.SDK, conf Config, token string) ([]sdk.Thing, error) {
-	var things = []sdk.Thing{}
+	things := []sdk.Thing{}
 
 	if conf.Num > batchSize {
 		batches := int(conf.Num) / batchSize
@@ -271,7 +269,7 @@ func createChannelsInBatch(s sdk.SDK, conf Config, token string, num uint64) ([]
 }
 
 func createChannels(s sdk.SDK, conf Config, token string) ([]sdk.Channel, error) {
-	var channels = []sdk.Channel{}
+	channels := []sdk.Channel{}
 
 	if conf.Num > batchSize {
 		batches := int(conf.Num) / batchSize
