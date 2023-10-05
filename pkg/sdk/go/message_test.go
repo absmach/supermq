@@ -9,29 +9,39 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/mainflux/mainflux"
 	authmocks "github.com/mainflux/mainflux/auth/mocks"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/http/mocks"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
+	"github.com/mainflux/mainflux/things/policies"
+	mproxy "github.com/mainflux/mproxy/pkg/http"
+	"github.com/mainflux/mproxy/pkg/session"
 	"github.com/stretchr/testify/assert"
 )
 
 var errUnexpectedJSONEnd = errors.New("unexpected end of JSON input")
 
-func newMessageService(auth mainflux.AuthServiceClient) adapter.Service {
+func newMessageService(cc policies.AuthServiceClient) session.Handler {
 	pub := mocks.NewPublisher()
 
-	return adapter.New(pub, auth)
+	return adapter.NewHandler(pub, logger.NewMock(), cc)
 }
 
-func newMessageServer(svc adapter.Service) *httptest.Server {
-	mux := api.MakeHandler(svc, instanceID)
-
+func newTargetHTTPServer() *httptest.Server {
+	mux := api.MakeHandler(instanceID)
 	return httptest.NewServer(mux)
+}
+
+func newProxyHTPPServer(svc session.Handler, targetServer *httptest.Server) (*httptest.Server, error) {
+	mp, err := mproxy.NewProxy("", targetServer.URL, svc, logger.NewMock())
+	if err != nil {
+		return nil, err
+	}
+	return httptest.NewServer(http.HandlerFunc(mp.Handler)), nil
 }
 
 func TestSendMessage(t *testing.T) {
@@ -39,9 +49,11 @@ func TestSendMessage(t *testing.T) {
 	atoken := "auth_token"
 	invalidToken := "invalid_token"
 	msg := `[{"n":"current","t":-1,"v":1.6}]`
-	auth := new(authmocks.Service)
-	pub := newMessageService(auth)
-	ts := newMessageServer(pub)
+	thingsClient := mocks.NewThingsClient(map[string]string{atoken: chanID})
+	pub := newMessageService(thingsClient)
+	target := newTargetHTTPServer()
+	ts, err := newProxyHTPPServer(pub, target)
+	assert.Nil(t, err, fmt.Sprintf("failed to create proxy server with err: %v", err))
 	defer ts.Close()
 	sdkConf := sdk.Config{
 		HTTPAdapterURL:  ts.URL,
@@ -118,6 +130,11 @@ func TestSetContentType(t *testing.T) {
 		TLSVerification: false,
 	}
 	mfsdk := sdk.NewSDK(sdkConf)
+	pub := newMessageService(thingsClient)
+	target := newTargetHTTPServer()
+	ts, err := newProxyHTPPServer(pub, target)
+	assert.Nil(t, err, fmt.Sprintf("failed to create proxy server with err: %v", err))
+	defer ts.Close()
 
 	cases := []struct {
 		desc  string
