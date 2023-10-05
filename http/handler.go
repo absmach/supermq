@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
@@ -79,9 +80,14 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 		return ErrClientNotInitialized
 	}
 
-	tok := string(s.Password)
-	if strings.HasPrefix(tok, "Thing") {
-		tok = extractThingKey(tok)
+	var tok string
+	switch {
+	case string(s.Password) == "":
+		return errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerKey)
+	case strings.HasPrefix(string(s.Password), "Thing"):
+		tok = extractThingKey(string(s.Password))
+	default:
+		tok = string(s.Password)
 	}
 
 	return h.authAccess(ctx, tok, *topic, policies.WriteAction)
@@ -128,9 +134,14 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		Payload:  *payload,
 		Created:  time.Now().UnixNano(),
 	}
-	tok := string(s.Password)
-	if strings.HasPrefix(tok, "Thing") {
-		tok = extractThingKey(tok)
+	var tok string
+	switch {
+	case string(s.Password) == "":
+		return errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerKey)
+	case strings.HasPrefix(string(s.Password), "Thing"):
+		tok = extractThingKey(string(s.Password))
+	default:
+		tok = string(s.Password)
 	}
 	ar := &policies.AuthorizeReq{
 		Subject:    tok,
