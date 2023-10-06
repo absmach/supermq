@@ -105,6 +105,9 @@ func (h *handler) Connect(ctx context.Context) error {
 
 // Publish - after client successfully published.
 func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) error {
+	if topic == nil {
+		return ErrMissingTopicPub
+	}
 	topic = &strings.Split(*topic, "?")[0]
 	s, ok := session.FromContext(ctx)
 	if !ok {

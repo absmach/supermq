@@ -20,7 +20,6 @@ import (
 )
 
 const (
-	protocol    = "http"
 	ctSenmlJSON = "application/senml+json"
 	ctSenmlCBOR = "application/senml+cbor"
 	contentType = "application/json"
