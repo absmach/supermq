@@ -35,8 +35,8 @@ type ReadWriter interface {
 	Writer
 }
 
-// ConnCtx is a wrapper of net.Conn using context.Context.
-type ConnCtx interface {
+// Conn is a wrapper of net.Conn using context.Context.
+type Conn interface {
 	Reader
 	Writer
 	io.Closer
@@ -45,7 +45,7 @@ type ConnCtx interface {
 	Conn() net.Conn
 }
 
-type connCtx struct {
+type conn struct {
 	nextConn  net.Conn
 	closed    chan struct{}
 	closeOnce sync.Once
@@ -55,22 +55,24 @@ type connCtx struct {
 
 var veryOld = time.Unix(0, 1) //nolint:gochecknoglobals
 
-// New creates a new ConnCtx wrapping given net.Conn.
-func New(conn net.Conn) ConnCtx {
-	c := &connCtx{
-		nextConn: conn,
+// NewConn creates a new Conn wrapping given net.Conn.
+func NewConn(netConn net.Conn) Conn {
+	c := &conn{
+		nextConn: netConn,
 		closed:   make(chan struct{}),
 	}
 	return c
 }
 
-func (c *connCtx) ReadContext(ctx context.Context, b []byte) (int, error) {
+// ReadContext reads data from the connection.
+// Unlike net.Conn.Read(), the provided context is used to control timeout.
+func (c *conn) ReadContext(ctx context.Context, b []byte) (int, error) {
 	c.readMu.Lock()
 	defer c.readMu.Unlock()
 
 	select {
 	case <-c.closed:
-		return 0, io.EOF
+		return 0, net.ErrClosed
 	default:
 	}
 
@@ -108,7 +110,9 @@ func (c *connCtx) ReadContext(ctx context.Context, b []byte) (int, error) {
 	return n, err
 }
 
-func (c *connCtx) WriteContext(ctx context.Context, b []byte) (int, error) {
+// WriteContext writes data to the connection.
+// Unlike net.Conn.Write(), the provided context is used to control timeout.
+func (c *conn) WriteContext(ctx context.Context, b []byte) (int, error) {
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()
 
@@ -152,7 +156,10 @@ func (c *connCtx) WriteContext(ctx context.Context, b []byte) (int, error) {
 	return n, err
 }
 
-func (c *connCtx) Close() error {
+// Close closes the connection.
+// Any blocked ReadContext or WriteContext operations will be unblocked and
+// return errors.
+func (c *conn) Close() error {
 	err := c.nextConn.Close()
 	c.closeOnce.Do(func() {
 		c.writeMu.Lock()
@@ -164,14 +171,17 @@ func (c *connCtx) Close() error {
 	return err
 }
 
-func (c *connCtx) LocalAddr() net.Addr {
+// LocalAddr returns the local network address, if known.
+func (c *conn) LocalAddr() net.Addr {
 	return c.nextConn.LocalAddr()
 }
 
-func (c *connCtx) RemoteAddr() net.Addr {
+// LocalAddr returns the local network address, if known.
+func (c *conn) RemoteAddr() net.Addr {
 	return c.nextConn.RemoteAddr()
 }
 
-func (c *connCtx) Conn() net.Conn {
+// Conn returns the underlying net.Conn.
+func (c *conn) Conn() net.Conn {
 	return c.nextConn
 }

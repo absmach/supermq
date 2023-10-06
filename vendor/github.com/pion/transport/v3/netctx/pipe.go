@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
-package connctx
+package netctx
 
 import (
 	"net"
 )
 
-// Pipe creates piped pair of ConnCtx.
-func Pipe() (ConnCtx, ConnCtx) {
+// Pipe creates piped pair of Conn.
+func Pipe() (Conn, Conn) {
 	ca, cb := net.Pipe()
-	return New(ca), New(cb)
+	return NewConn(ca), NewConn(cb)
 }

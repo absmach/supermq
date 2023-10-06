@@ -571,7 +571,7 @@ github.com/mailru/easyjson/jwriter
 # github.com/mainflux/callhome v0.0.0-20230920140432-33c5663382ce
 ## explicit; go 1.21
 github.com/mainflux/callhome/pkg/client
-# github.com/mainflux/mproxy v0.3.1-0.20231022160500-0e0db9e1642c
+# github.com/mainflux/mproxy v0.3.1-0.20230822124450-4b4dfe600cc2 => github.com/sammyoina/mproxy v0.0.0-20231006131650-51e30985e320
 ## explicit; go 1.19
 github.com/mainflux/mproxy/pkg/http
 github.com/mainflux/mproxy/pkg/logger
@@ -676,12 +676,14 @@ github.com/pelletier/go-toml/v2/internal/characters
 github.com/pelletier/go-toml/v2/internal/danger
 github.com/pelletier/go-toml/v2/internal/tracker
 github.com/pelletier/go-toml/v2/unstable
-# github.com/pion/dtls/v2 v2.2.7
+# github.com/pion/dtls/v2 v2.2.8-0.20230905141523-2b584af66577
 ## explicit; go 1.13
 github.com/pion/dtls/v2
 github.com/pion/dtls/v2/internal/ciphersuite
 github.com/pion/dtls/v2/internal/ciphersuite/types
 github.com/pion/dtls/v2/internal/closer
+github.com/pion/dtls/v2/internal/net
+github.com/pion/dtls/v2/internal/net/udp
 github.com/pion/dtls/v2/internal/util
 github.com/pion/dtls/v2/pkg/crypto/ccm
 github.com/pion/dtls/v2/pkg/crypto/ciphersuite
@@ -691,6 +693,7 @@ github.com/pion/dtls/v2/pkg/crypto/hash
 github.com/pion/dtls/v2/pkg/crypto/prf
 github.com/pion/dtls/v2/pkg/crypto/signature
 github.com/pion/dtls/v2/pkg/crypto/signaturehash
+github.com/pion/dtls/v2/pkg/net
 github.com/pion/dtls/v2/pkg/protocol
 github.com/pion/dtls/v2/pkg/protocol/alert
 github.com/pion/dtls/v2/pkg/protocol/extension
@@ -701,11 +704,9 @@ github.com/pion/dtls/v2/pkg/protocol/recordlayer
 github.com/pion/logging
 # github.com/pion/transport/v2 v2.2.4
 ## explicit; go 1.12
-github.com/pion/transport/v2/connctx
-github.com/pion/transport/v2/deadline
-github.com/pion/transport/v2/packetio
-github.com/pion/transport/v2/replaydetector
-github.com/pion/transport/v2/udp
+github.com/pion/transport/v3/deadline
+github.com/pion/transport/v3/netctx
+github.com/pion/transport/v3/replaydetector
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
@@ -1268,3 +1269,4 @@ gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
+# github.com/mainflux/mproxy => github.com/sammyoina/mproxy v0.0.0-20231006131650-51e30985e320
