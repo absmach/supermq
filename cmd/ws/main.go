@@ -80,6 +80,11 @@ func main() {
 		return
 	}
 
+	targetServerConf := server.Config{
+		Port: targetWSPort,
+		Host: targetWSHost,
+	}
+
 	auth, aHandler, err := authapi.SetupAuthz("authz")
 	if err != nil {
 		logger.Error(err.Error())
@@ -110,11 +115,11 @@ func main() {
 		return
 	}
 	defer nps.Close()
-	nps = brokerstracing.NewPubSub(httpServerConfig, tracer, nps)
+	nps = brokerstracing.NewPubSub(targetServerConf, tracer, nps)
 
 	svc := newService(auth, nps, logger, tracer)
 
-	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(ctx, svc, logger, cfg.InstanceID), logger)
+	hs := httpserver.New(ctx, cancel, svcName, targetServerConf, api.MakeHandler(ctx, svc, logger, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, mainflux.Version, logger, cancel)
@@ -125,7 +130,7 @@ func main() {
 		if err := hs.Start(); err != nil {
 			return err
 		}
-		handler := ws.NewHandler(nps, logger, tc)
+		handler := ws.NewHandler(nps, logger, auth)
 		return proxyWS(ctx, httpServerConfig, logger, handler)
 	})
 
