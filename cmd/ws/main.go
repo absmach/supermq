@@ -23,9 +23,11 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	brokerstracing "github.com/mainflux/mainflux/pkg/messaging/brokers/tracing"
 	"github.com/mainflux/mainflux/pkg/uuid"
-	adapter "github.com/mainflux/mainflux/ws"
+	"github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/api"
 	"github.com/mainflux/mainflux/ws/tracing"
+	"github.com/mainflux/mproxy/pkg/session"
+	"github.com/mainflux/mproxy/pkg/websockets"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 )
@@ -34,6 +36,8 @@ const (
 	svcName        = "ws-adapter"
 	envPrefixHTTP  = "MF_WS_ADAPTER_HTTP_"
 	defSvcHTTPPort = "8190"
+	targetWSPort   = "8191"
+	targetWSHost   = ""
 )
 
 type config struct {
@@ -118,7 +122,11 @@ func main() {
 	}
 
 	g.Go(func() error {
-		return hs.Start()
+		if err := hs.Start(); err != nil {
+			return err
+		}
+		handler := ws.NewHandler(nps, logger, tc)
+		return proxyWS(ctx, httpServerConfig, logger, handler)
 	})
 
 	g.Go(func() error {
@@ -131,10 +139,37 @@ func main() {
 }
 
 func newService(tc mainflux.AuthzServiceClient, nps messaging.PubSub, logger mflog.Logger, tracer trace.Tracer) adapter.Service {
-	svc := adapter.New(tc, nps)
+	svc := ws.New(tc, nps)
 	svc = tracing.New(tracer, svc)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics("ws_adapter", "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)
 	return svc
+}
+
+func proxyWS(ctx context.Context, cfg server.Config, logger mflog.Logger, handler session.Handler) error {
+	target := fmt.Sprintf("%s:%s", targetWSHost, targetWSPort)
+	address := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
+	wp, err := websockets.NewProxy(address, target, logger, handler)
+	if err != nil {
+		return err
+	}
+
+	errCh := make(chan error)
+
+	go func() {
+		if cfg.CertFile != "" && cfg.KeyFile != "" {
+			errCh <- wp.ListenTLS(cfg.CertFile, cfg.KeyFile)
+		} else {
+			errCh <- wp.Listen()
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		logger.Info(fmt.Sprintf("proxy MQTT WS shutdown at %s", target))
+		return nil
+	case err := <-errCh:
+		return err
+	}
 }

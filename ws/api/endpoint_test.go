@@ -14,11 +14,14 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
 	authmocks "github.com/mainflux/mainflux/auth/mocks"
+	httpmock "github.com/mainflux/mainflux/http/mocks"
 	"github.com/mainflux/mainflux/internal/testsutil"
-	mflog "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/api"
 	"github.com/mainflux/mainflux/ws/mocks"
+	"github.com/mainflux/mproxy/pkg/session"
+	"github.com/mainflux/mproxy/pkg/websockets"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -40,9 +43,17 @@ func newService() (ws.Service, mocks.MockPubSub, *authmocks.Service) {
 }
 
 func newHTTPServer(svc ws.Service) *httptest.Server {
-	logger := mflog.NewMock()
+	logger := logger.NewMock()
 	mux := api.MakeHandler(context.Background(), svc, logger, instanceID)
 	return httptest.NewServer(mux)
+}
+
+func newProxyHTPPServer(svc session.Handler, targetServer *httptest.Server) (*httptest.Server, error) {
+	mp, err := websockets.NewProxy("", targetServer.URL, logger.NewMock(), svc)
+	if err != nil {
+		return nil, err
+	}
+	return httptest.NewServer(http.HandlerFunc(mp.Handler)), nil
 }
 
 func makeURL(tsURL, chanID, subtopic, thingKey string, header bool) (string, error) {
@@ -80,8 +91,13 @@ func handshake(tsURL, chanID, subtopic, thingKey string, addHeader bool) (*webso
 }
 
 func TestHandshake(t *testing.T) {
-	svc, _, auth := newService()
-	ts := newHTTPServer(svc)
+	thingsClient := httpmock.NewThingsClient(map[string]string{thingKey: chanID})
+	svc, pubsub := newService(thingsClient)
+	target := newHTTPServer(svc)
+	defer target.Close()
+	handler := ws.NewHandler(pubsub, logger.NewMock(), thingsClient)
+	ts, err := newProxyHTPPServer(handler, target)
+	assert.Nil(t, err)
 	defer ts.Close()
 
 	cases := []struct {
