@@ -137,7 +137,7 @@ func main() {
 	counter, latency := internal.MakeMetrics(svcName, "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)
 
-	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(cfg.InstanceID), logger)
+	hs := httpserver.New(ctx, cancel, svcName, targetCoAPServerCfg, api.MakeHandler(cfg.InstanceID), logger)
 
 	cs := coapserver.New(ctx, cancel, svcName, targetCoAPServerCfg, api.MakeCoAPHandler(svc, logger), logger)
 
@@ -150,9 +150,9 @@ func main() {
 		return hs.Start()
 	})
 	g.Go(func() error {
-		if err := cs.Start(); err != nil {
-			return err
-		}
+		g.Go(func() error {
+			return cs.Start()
+		})
 		return proxyCoAP(ctx, coapServerConfig, logger, coap.NewHandler(nps, logger, tc))
 	})
 	g.Go(func() error {
