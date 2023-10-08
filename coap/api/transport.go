@@ -96,7 +96,7 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 		err = handleGet(m.Context, m, w.Client(), msg, key)
 	case codes.POST:
 		resp.Code = codes.Created
-		err = service.Publish(m.Context, key, msg)
+		err = nil
 	default:
 		err = errors.ErrNotFound
 	}
