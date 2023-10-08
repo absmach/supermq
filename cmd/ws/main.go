@@ -127,9 +127,9 @@ func main() {
 	}
 
 	g.Go(func() error {
-		if err := hs.Start(); err != nil {
-			return err
-		}
+		g.Go(func() error {
+			return hs.Start()
+		})
 		handler := ws.NewHandler(nps, logger, auth)
 		return proxyWS(ctx, httpServerConfig, logger, handler)
 	})
