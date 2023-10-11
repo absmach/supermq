@@ -688,6 +688,8 @@ github.com/sanity-io/litter v1.5.5 h1:iE+sBxPBzoK6uaEP5Lt3fHNgpKcHXc/A2HGETy0uJQ
 github.com/sanity-io/litter v1.5.5/go.mod h1:9gzJgR2i4ZpjZHsKvUXIRQVk7P+yM3e+jAF7bU2UI5U=
 github.com/sammyoina/mproxy v0.0.0-20231005134356-c44220b46ea0 h1:ilHnk+zROSxfZVD7waCaktwiGPmqv5qFpHO+ahxdNHU=
 github.com/sammyoina/mproxy v0.0.0-20231005134356-c44220b46ea0/go.mod h1:nG9MP2YbS8ax26Z8mvJOYohhi3ebYwSlOmePzbfv2ew=
+github.com/sammyoina/mproxy v0.0.0-20231011110044-2315a880fd95 h1:zVPU7tR9ga65lOxQlj/HFrlcYJiEtTsM9skGzMCLI3I=
+github.com/sammyoina/mproxy v0.0.0-20231011110044-2315a880fd95/go.mod h1:nG9MP2YbS8ax26Z8mvJOYohhi3ebYwSlOmePzbfv2ew=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/schollz/closestmatch v2.1.0+incompatible h1:Uel2GXEpJqOWBrlyI+oY9LTiyyjYS17cCYRqP13/SHk=
 github.com/schollz/closestmatch v2.1.0+incompatible/go.mod h1:RtP1ddjLong6gTkbtmuhtR2uUrrJOpYzYRvbcPAid+g=
