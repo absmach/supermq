@@ -30,9 +30,9 @@ require (
 	github.com/jackc/pgtype v1.14.0
 	github.com/jackc/pgx/v5 v5.4.3
 	github.com/jmoiron/sqlx v1.3.5
-	github.com/lestrrat-go/jwx/v2 v2.0.13
-	github.com/mainflux/callhome v0.0.0-20230920140432-33c5663382ce
-	github.com/mainflux/mproxy v0.3.1-0.20230822124450-4b4dfe600cc2
+	github.com/lestrrat-go/jwx/v2 v2.0.11
+	github.com/mainflux/callhome v0.0.0-20230626140149-b03b1f4c46f2
+	github.com/mainflux/mproxy v0.3.1-0.20231012122315-af3634f798d1
 	github.com/mainflux/senml v1.5.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/nats-io/nats.go v1.30.2
@@ -230,5 +230,3 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/mainflux/mproxy => github.com/sammyoina/mproxy v0.0.0-20231011110044-2315a880fd95
