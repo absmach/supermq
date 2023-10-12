@@ -66,15 +66,6 @@ func NewHandler(publisher messaging.Publisher, logger logger.Logger, auth polici
 // AuthConnect is called on device connection,
 // prior forwarding to the HTTP server.
 func (h *handler) AuthConnect(ctx context.Context) error {
-	return nil
-}
-
-// AuthPublish is called on device publish,
-// prior forwarding to the HTTP broker.
-func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byte) error {
-	if topic == nil {
-		return ErrMissingTopicPub
-	}
 	s, ok := session.FromContext(ctx)
 	if !ok {
 		return ErrClientNotInitialized
@@ -90,7 +81,21 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 		tok = string(s.Password)
 	}
 
-	return h.authAccess(ctx, tok, *topic, policies.WriteAction)
+	t := &policies.IdentifyReq{
+		Secret: tok,
+	}
+
+	_, err := h.auth.Identify(ctx, t)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// AuthPublish is not used in HTTP service.
+func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byte) error {
+	return nil
 }
 
 // AuthSubscribe is not used in HTTP service.
@@ -180,37 +185,6 @@ func (h *handler) Unsubscribe(ctx context.Context, topics *[]string) error {
 
 // Disconnect - not used for HTTP.
 func (h *handler) Disconnect(ctx context.Context) error {
-	return nil
-}
-
-func (h *handler) authAccess(ctx context.Context, password, topic, action string) error {
-	// Topics are in the format:
-	// channels/<channel_id>/messages/<subtopic>/.../ct/<content_type>
-	if !channelRegExp.Match([]byte(topic)) {
-		return ErrMalformedTopic
-	}
-
-	channelParts := channelRegExp.FindStringSubmatch(topic)
-	if len(channelParts) < 1 {
-		return ErrMalformedTopic
-	}
-
-	chanID := channelParts[1]
-
-	ar := &policies.AuthorizeReq{
-		Subject:    password,
-		Object:     chanID,
-		Action:     action,
-		EntityType: policies.ThingEntityType,
-	}
-	res, err := h.auth.Authorize(ctx, ar)
-	if err != nil {
-		return err
-	}
-	if !res.GetAuthorized() {
-		return errors.ErrAuthorization
-	}
-
 	return nil
 }
 
