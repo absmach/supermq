@@ -126,7 +126,7 @@ func TestPublish(t *testing.T) {
 			msg:         msg,
 			contentType: ctSenmlJSON,
 			key:         "",
-			status:      http.StatusUnauthorized,
+			status:      http.StatusBadGateway,
 		},
 		"publish message with basic auth": {
 			chanID:      chanID,
@@ -163,7 +163,7 @@ func TestPublish(t *testing.T) {
 			msg:         msg,
 			contentType: ctSenmlJSON,
 			key:         thingKey,
-			status:      http.StatusUnauthorized,
+			status:      http.StatusBadRequest,
 		},
 		"publish message unable to authorize": {
 			chanID:      chanID,
