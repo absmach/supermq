@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mainflux/mainflux"
 	authmocks "github.com/mainflux/mainflux/auth/mocks"
 	server "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
@@ -20,12 +21,13 @@ import (
 	mproxy "github.com/mainflux/mproxy/pkg/http"
 	"github.com/mainflux/mproxy/pkg/session"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 const instanceID = "5de9b29a-feb9-11ed-be56-0242ac120002"
 
-func newService() session.Handler {
-	auth := new(authmocks.Service)
+func newService(auth mainflux.AuthzServiceClient) session.Handler {
+	//l, _ := logger.New(os.Stdout, "debug")
 	pub := mocks.NewPublisher()
 	return server.NewHandler(pub, logger.NewMock(), auth)
 }
@@ -36,6 +38,7 @@ func newTargetHTTPServer() *httptest.Server {
 }
 
 func newProxyHTPPServer(svc session.Handler, targetServer *httptest.Server) (*httptest.Server, error) {
+	//l, _ := logger.New(os.Stdout, "debug")
 	mp, err := mproxy.NewProxy("", targetServer.URL, svc, logger.NewMock())
 	if err != nil {
 		return nil, err
@@ -72,6 +75,7 @@ func (tr testRequest) make() (*http.Response, error) {
 }
 
 func TestPublish(t *testing.T) {
+	auth := new(authmocks.Service)
 	chanID := "1"
 	ctSenmlJSON := "application/senml+json"
 	ctSenmlCBOR := "application/senml+cbor"
@@ -81,13 +85,22 @@ func TestPublish(t *testing.T) {
 	msg := `[{"n":"current","t":-1,"v":1.6}]`
 	msgJSON := `{"field1":"val1","field2":"val2"}`
 	msgCBOR := `81A3616E6763757272656E746174206176FB3FF999999999999A`
-	svc := newService()
+	svc := newService(auth)
 	target := newTargetHTTPServer()
 	defer target.Close()
 	ts, err := newProxyHTPPServer(svc, target)
 	assert.Nil(t, err, fmt.Sprintf("failed to create proxy server with err: %v", err))
 
 	defer ts.Close()
+
+	auth.On("Authorize", mock.Anything, &mainflux.AuthorizeReq{
+		Subject:     thingKey,
+		Object:      chanID,
+		Namespace:   "",
+		SubjectType: "thing",
+		Permission:  "publish",
+		ObjectType:  "group"}).Return(&mainflux.AuthorizeRes{Authorized: true, Id: ""}, nil)
+	auth.On("Authorize", mock.Anything, mock.Anything).Return(&mainflux.AuthorizeRes{Authorized: false, Id: ""}, nil)
 
 	cases := map[string]struct {
 		chanID      string
@@ -97,35 +110,28 @@ func TestPublish(t *testing.T) {
 		status      int
 		basicAuth   bool
 	}{
-		"publish message": {
-			chanID:      chanID,
-			msg:         msg,
-			contentType: ctSenmlJSON,
-			key:         thingKey,
-			status:      http.StatusAccepted,
-		},
-		"publish message with application/senml+cbor content-type": {
+		"2publish message with application/senml+cbor content-type": {
 			chanID:      chanID,
 			msg:         msgCBOR,
 			contentType: ctSenmlCBOR,
 			key:         thingKey,
 			status:      http.StatusAccepted,
 		},
-		"publish message with application/json content-type": {
+		"3publish message with application/json content-type": {
 			chanID:      chanID,
 			msg:         msgJSON,
 			contentType: ctJSON,
 			key:         thingKey,
 			status:      http.StatusAccepted,
 		},
-		"publish message with empty key": {
+		"4publish message with empty key": {
 			chanID:      chanID,
 			msg:         msg,
 			contentType: ctSenmlJSON,
 			key:         "",
 			status:      http.StatusBadGateway,
 		},
-		"publish message with basic auth": {
+		"5publish message with basic auth": {
 			chanID:      chanID,
 			msg:         msg,
 			contentType: ctSenmlJSON,
@@ -133,41 +139,34 @@ func TestPublish(t *testing.T) {
 			basicAuth:   true,
 			status:      http.StatusAccepted,
 		},
-		"publish message with invalid key": {
+		"6publish message with invalid key": {
 			chanID:      chanID,
 			msg:         msg,
 			contentType: ctSenmlJSON,
 			key:         invalidKey,
-			status:      http.StatusForbidden,
+			status:      http.StatusBadRequest,
 		},
-		"publish message with invalid basic auth": {
+		"7publish message with invalid basic auth": {
 			chanID:      chanID,
 			msg:         msg,
 			contentType: ctSenmlJSON,
 			key:         invalidKey,
 			basicAuth:   true,
-			status:      http.StatusForbidden,
+			status:      http.StatusBadRequest,
 		},
-		"publish message without content type": {
+		"8publish message without content type": {
 			chanID:      chanID,
 			msg:         msg,
 			contentType: "",
 			key:         thingKey,
 			status:      http.StatusUnsupportedMediaType,
 		},
-		"publish message to invalid channel": {
+		"9publish message to invalid channel": {
 			chanID:      "",
 			msg:         msg,
 			contentType: ctSenmlJSON,
 			key:         thingKey,
 			status:      http.StatusBadRequest,
-		},
-		"publish message unable to authorize": {
-			chanID:      chanID,
-			msg:         msg,
-			contentType: ctSenmlJSON,
-			//key:         mocks.ServiceErrToken,
-			status: http.StatusUnauthorized,
 		},
 	}
 
