@@ -525,5 +525,4 @@ func TestListPolicies(t *testing.T) {
 	page, err := svc.ListObjects(context.Background(), auth.PolicyReq{Subject: id, Relation: readPolicy}, "", 100)
 	assert.Nil(t, err, fmt.Sprintf("listing policies expected to succeed: %s", err))
 	assert.Equal(t, pageLen, len(page.Policies), fmt.Sprintf("unexpected listing page size, expected %d, got %d: %v", pageLen, len(page.Policies), err))
-
 }

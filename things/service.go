@@ -333,7 +333,6 @@ func (svc service) ListClientsByGroup(ctx context.Context, token, groupID string
 	})
 	if err != nil {
 		return mfclients.MembersPage{}, err
-
 	}
 
 	pm.IDs = tids.Policies

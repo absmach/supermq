@@ -243,7 +243,6 @@ func (ps *provisionService) Provision(token, name, externalID, externalKey strin
 			}
 			res.Whitelisted[thing.ID] = true
 		}
-
 	}
 
 	if err = ps.updateGateway(token, bsConfig, channels); err != nil {

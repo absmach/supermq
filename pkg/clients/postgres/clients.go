@@ -426,7 +426,6 @@ func pageQuery(pm clients.Page) (string, error) {
 
 	if len(query) > 0 {
 		emq = fmt.Sprintf("WHERE %s", strings.Join(query, " AND "))
-
 	}
 	return emq, nil
 }

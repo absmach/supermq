@@ -78,7 +78,6 @@ func (m *Authz) ListSubjects(ctx context.Context, pr auth.PolicyReq, nextPageTok
 	ret := m.Called(ctx, pr, nextPageToken, limit)
 
 	return ret.Get(0).(auth.PolicyPage), ret.Error(1)
-
 }
 
 type PolicyAgent struct {
