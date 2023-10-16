@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	"github.com/mainflux/mainflux/things/policies"
 	"github.com/mainflux/mproxy/pkg/session"
 )
 
@@ -25,7 +25,7 @@ const protocol = "http"
 
 // Log message formats.
 const (
-	LogInfoConnected = "connected with client_id %s"
+	LogInfoConnected = "connected with thing_key %s"
 	// ThingPrefix represents the key prefix for Thing authentication scheme.
 	ThingPrefix      = "Thing "
 	LogInfoPublished = "published with client_id %s to the topic %s"
@@ -50,12 +50,12 @@ var channelRegExp = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]
 // Event implements events.Event interface.
 type handler struct {
 	publisher messaging.Publisher
-	auth      policies.AuthServiceClient
+	auth      mainflux.AuthzServiceClient
 	logger    logger.Logger
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(publisher messaging.Publisher, logger logger.Logger, auth policies.AuthServiceClient) session.Handler {
+func NewHandler(publisher messaging.Publisher, logger logger.Logger, auth mainflux.AuthzServiceClient) session.Handler {
 	return &handler{
 		logger:    logger,
 		publisher: publisher,
@@ -81,15 +81,7 @@ func (h *handler) AuthConnect(ctx context.Context) error {
 		tok = string(s.Password)
 	}
 
-	t := &policies.IdentifyReq{
-		Secret: tok,
-	}
-
-	_, err := h.auth.Identify(ctx, t)
-	if err != nil {
-		return err
-	}
-
+	h.logger.Info(fmt.Sprintf(LogInfoConnected, tok))
 	return nil
 }
 
@@ -151,11 +143,13 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 	default:
 		tok = string(s.Password)
 	}
-	ar := &policies.AuthorizeReq{
-		Subject:    tok,
-		Object:     msg.Channel,
-		Action:     policies.WriteAction,
-		EntityType: policies.ThingEntityType,
+	ar := &mainflux.AuthorizeReq{
+		Subject:     tok,
+		Object:      msg.Channel,
+		Namespace:   "",
+		SubjectType: "thing",
+		Permission:  "publish",
+		ObjectType:  "group",
 	}
 	res, err := h.auth.Authorize(ctx, ar)
 	if err != nil {
@@ -164,7 +158,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 	if !res.GetAuthorized() {
 		return errors.ErrAuthorization
 	}
-	msg.Publisher = res.GetThingID()
+	msg.Publisher = res.GetId()
 
 	if err := h.publisher.Publish(ctx, msg.Channel, &msg); err != nil {
 		return errors.Wrap(ErrFailedPublishToMsgBroker, err)

@@ -532,10 +532,6 @@ github.com/mailgun/raymond/v2 v2.0.48 h1:5dmlB680ZkFG2RN/0lvTAghrSxIESeu9/2aeDqA
 github.com/mailgun/raymond/v2 v2.0.48/go.mod h1:lsgvL50kgt1ylcFJYZiULi5fjPBkkhNfj4KA0W54Z18=
 github.com/mailru/easyjson v0.7.7 h1:UGYAvKxe3sBsEDzO8ZeWOSlIQfWFlxbzLZe7hwFURr0=
 github.com/mailru/easyjson v0.7.7/go.mod h1:xzfreul335JAWq5oZzymOObrkdz5UnU4kGfJJLY9Nlc=
-github.com/mainflux/callhome v0.0.0-20230920140432-33c5663382ce h1:BX3a91DXaewIBd+3zp9GpUZCpFfZX2FRLUJ2Mpas7jU=
-github.com/mainflux/callhome v0.0.0-20230920140432-33c5663382ce/go.mod h1:a8I+g3fXeefHGoGBG69Ndj1Dg1nrahaM2OWdUc9K4EI=
-github.com/mainflux/mproxy v0.3.1-0.20230822124450-4b4dfe600cc2 h1:D5Ofrffx/4FWehczvJbmzD8lfcOkxcIS4XZE/fwl4mo=
-github.com/mainflux/mproxy v0.3.1-0.20230822124450-4b4dfe600cc2/go.mod h1:nG9MP2YbS8ax26Z8mvJOYohhi3ebYwSlOmePzbfv2ew=
 github.com/mainflux/callhome v0.0.0-20230626140149-b03b1f4c46f2 h1:QN+yhU6Twwwwz8Mu9u12f2TbPsmM/zIvndAhH1dIdWU=
 github.com/mainflux/callhome v0.0.0-20230626140149-b03b1f4c46f2/go.mod h1:q4cTH8I3Y6kDyocJh5dBppuv4dY9drb/2kVdB6FP124=
 github.com/mainflux/mproxy v0.3.1-0.20231012122315-af3634f798d1 h1:XuouKIujMM6iLN18Bjk8zJnJ1Xkd+vetB1+GfIDaQ9A=
@@ -690,10 +686,6 @@ github.com/sagikazarmark/slog-shim v0.1.0 h1:diDBnUNK9N/354PgrxMywXnAwEr1QZcOr6g
 github.com/sagikazarmark/slog-shim v0.1.0/go.mod h1:SrcSrq8aKtyuqEI1uvTDTK1arOWRIczQRv+GVI1AkeQ=
 github.com/sanity-io/litter v1.5.5 h1:iE+sBxPBzoK6uaEP5Lt3fHNgpKcHXc/A2HGETy0uJQo=
 github.com/sanity-io/litter v1.5.5/go.mod h1:9gzJgR2i4ZpjZHsKvUXIRQVk7P+yM3e+jAF7bU2UI5U=
-github.com/sammyoina/mproxy v0.0.0-20231005134356-c44220b46ea0 h1:ilHnk+zROSxfZVD7waCaktwiGPmqv5qFpHO+ahxdNHU=
-github.com/sammyoina/mproxy v0.0.0-20231005134356-c44220b46ea0/go.mod h1:nG9MP2YbS8ax26Z8mvJOYohhi3ebYwSlOmePzbfv2ew=
-github.com/sammyoina/mproxy v0.0.0-20231011110044-2315a880fd95 h1:zVPU7tR9ga65lOxQlj/HFrlcYJiEtTsM9skGzMCLI3I=
-github.com/sammyoina/mproxy v0.0.0-20231011110044-2315a880fd95/go.mod h1:nG9MP2YbS8ax26Z8mvJOYohhi3ebYwSlOmePzbfv2ew=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/schollz/closestmatch v2.1.0+incompatible h1:Uel2GXEpJqOWBrlyI+oY9LTiyyjYS17cCYRqP13/SHk=
 github.com/schollz/closestmatch v2.1.0+incompatible/go.mod h1:RtP1ddjLong6gTkbtmuhtR2uUrrJOpYzYRvbcPAid+g=

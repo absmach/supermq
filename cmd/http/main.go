@@ -26,7 +26,6 @@ import (
 	brokerstracing "github.com/mainflux/mainflux/pkg/messaging/brokers/tracing"
 	"github.com/mainflux/mainflux/pkg/messaging/handler"
 	"github.com/mainflux/mainflux/pkg/uuid"
-	"github.com/mainflux/mainflux/ws/tracing"
 	mproxy "github.com/mainflux/mproxy/pkg/http"
 	"github.com/mainflux/mproxy/pkg/session"
 	"go.opentelemetry.io/otel/trace"
@@ -127,7 +126,6 @@ func main() {
 		return hs.Start()
 	})
 
-	svc := newService(pub, tc, logger, tracer)
 	switch {
 	case httpServerConfig.CertFile != "" || httpServerConfig.KeyFile != "":
 		logger.Info(fmt.Sprintf("%s service https server listening at %s:%s with TLS cert %s and key %s", svcName, httpServerConfig.Host, httpServerConfig.Port, httpServerConfig.CertFile, httpServerConfig.KeyFile))
@@ -150,10 +148,10 @@ func main() {
 	}
 }
 
-func newService(pub messaging.Publisher, tc mainflux.AuthzServiceClient, logger mflog.Logger, tracer trace.Tracer) adapter.Service {
-	svc := adapter.New(pub, tc)
-	svc = tracing.New(tracer, svc)
-	svc = api.LoggingMiddleware(svc, logger)
+func newService(pub messaging.Publisher, tc mainflux.AuthzServiceClient, logger mflog.Logger, tracer trace.Tracer) session.Handler {
+	svc := adapter.NewHandler(pub, logger, tc)
+	svc = handler.NewTracing(tracer, svc)
+	svc = handler.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")
 	svc = handler.MetricsMiddleware(svc, counter, latency)
 	return svc
