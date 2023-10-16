@@ -113,7 +113,7 @@ func main() {
 	pub = brokerstracing.NewPublisher(httpServerConfig, tracer, pub)
 
 	svc := newService(pub, auth, logger, tracer)
-	targetServerCfg := server.Config{Port: targetHTTPPort, Host: targetHTTPHost}
+	targetServerCfg := server.Config{Port: targetHTTPPort}
 
 	hs := httpserver.New(ctx, cancel, svcName, targetServerCfg, api.MakeHandler(cfg.InstanceID), logger)
 
@@ -130,12 +130,12 @@ func main() {
 	case httpServerConfig.CertFile != "" || httpServerConfig.KeyFile != "":
 		logger.Info(fmt.Sprintf("%s service https server listening at %s:%s with TLS cert %s and key %s", svcName, httpServerConfig.Host, httpServerConfig.Port, httpServerConfig.CertFile, httpServerConfig.KeyFile))
 		if err := proxyHTTPS(ctx, httpServerConfig, logger, svc); err != nil {
-			logger.Error(fmt.Sprintf("failed to start proxy server with error: %v", err))
+			logger.Fatal(fmt.Sprintf("failed to start proxy server with error: %v", err))
 		}
 	default:
 		logger.Info(fmt.Sprintf("%s service http server listening at %s:%s without TLS", svcName, httpServerConfig.Host, httpServerConfig.Port))
 		if err := proxyHTTP(ctx, httpServerConfig, logger, svc); err != nil {
-			logger.Error(fmt.Sprintf("failed to start proxy server with error: %v", err))
+			logger.Fatal(fmt.Sprintf("failed to start proxy server with error: %v", err))
 		}
 	}
 
