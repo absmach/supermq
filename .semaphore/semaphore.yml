@@ -37,7 +37,7 @@ blocks:
       jobs:
         - name: Check Generated Protocol Buffer Files
           commands:
-            - PROTOC_VERSION=23.3
+            - PROTOC_VERSION=24.3
             - PROTOC_GEN_VERSION=v1.31.0
             - PROTOC_GRPC_VERSION=v1.3.0
             - PROTOC_ZIP=protoc-$PROTOC_VERSION-linux-x86_64.zip
@@ -148,7 +148,6 @@ blocks:
   - name: Lint and Test CoAP
     run:
       when: "change_in(['coap', 'cmd/coap', 'things/api/grpc', 'auth/service.go', 'auth/api/grpc/client.go'])"
-      
     dependencies:
       - Setup
       - Check Generated Protocol Buffer Files
