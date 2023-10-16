@@ -21,6 +21,7 @@ import (
 	mproxy "github.com/mainflux/mproxy/pkg/http"
 	"github.com/mainflux/mproxy/pkg/session"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func newMessageService(cc mainflux.AuthzServiceClient) session.Handler {
@@ -61,6 +62,22 @@ func TestSendMessage(t *testing.T) {
 
 	mfsdk := sdk.NewSDK(sdkConf)
 
+	auth.On("Authorize", mock.Anything, &mainflux.AuthorizeReq{
+		Subject:     atoken,
+		Object:      chanID,
+		Namespace:   "",
+		SubjectType: "thing",
+		Permission:  "publish",
+		ObjectType:  "group"}).Return(&mainflux.AuthorizeRes{Authorized: true, Id: ""}, nil)
+	auth.On("Authorize", mock.Anything, &mainflux.AuthorizeReq{
+		Subject:     invalidToken,
+		Object:      chanID,
+		Namespace:   "",
+		SubjectType: "thing",
+		Permission:  "publish",
+		ObjectType:  "group"}).Return(&mainflux.AuthorizeRes{Authorized: true, Id: ""}, errors.ErrAuthentication)
+	auth.On("Authorize", mock.Anything, mock.Anything).Return(&mainflux.AuthorizeRes{Authorized: false, Id: ""}, nil)
+
 	cases := map[string]struct {
 		chanID string
 		msg    string
@@ -77,13 +94,13 @@ func TestSendMessage(t *testing.T) {
 			chanID: chanID,
 			msg:    msg,
 			auth:   "",
-			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerKey), http.StatusUnauthorized),
+			err:    errors.NewSDKErrorWithStatus(errors.ErrAuthorization, http.StatusBadRequest),
 		},
 		"publish message with invalid authorization token": {
 			chanID: chanID,
 			msg:    msg,
 			auth:   invalidToken,
-			err:    errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:    errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusBadRequest),
 		},
 		"publish message with wrong content type": {
 			chanID: chanID,
@@ -101,7 +118,7 @@ func TestSendMessage(t *testing.T) {
 			chanID: chanID,
 			msg:    msg,
 			auth:   "invalid-token",
-			err:    errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
+			err:    errors.NewSDKErrorWithStatus(errors.ErrAuthorization, http.StatusBadRequest),
 		},
 	}
 	for desc, tc := range cases {

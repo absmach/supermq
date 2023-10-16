@@ -27,7 +27,6 @@ import (
 const instanceID = "5de9b29a-feb9-11ed-be56-0242ac120002"
 
 func newService(auth mainflux.AuthzServiceClient) session.Handler {
-	//l, _ := logger.New(os.Stdout, "debug")
 	pub := mocks.NewPublisher()
 	return server.NewHandler(pub, logger.NewMock(), auth)
 }
@@ -38,7 +37,6 @@ func newTargetHTTPServer() *httptest.Server {
 }
 
 func newProxyHTPPServer(svc session.Handler, targetServer *httptest.Server) (*httptest.Server, error) {
-	//l, _ := logger.New(os.Stdout, "debug")
 	mp, err := mproxy.NewProxy("", targetServer.URL, svc, logger.NewMock())
 	if err != nil {
 		return nil, err
@@ -110,28 +108,35 @@ func TestPublish(t *testing.T) {
 		status      int
 		basicAuth   bool
 	}{
-		"2publish message with application/senml+cbor content-type": {
+		"publish message": {
+			chanID:      chanID,
+			msg:         msg,
+			contentType: ctSenmlJSON,
+			key:         thingKey,
+			status:      http.StatusAccepted,
+		},
+		"publish message with application/senml+cbor content-type": {
 			chanID:      chanID,
 			msg:         msgCBOR,
 			contentType: ctSenmlCBOR,
 			key:         thingKey,
 			status:      http.StatusAccepted,
 		},
-		"3publish message with application/json content-type": {
+		"publish message with application/json content-type": {
 			chanID:      chanID,
 			msg:         msgJSON,
 			contentType: ctJSON,
 			key:         thingKey,
 			status:      http.StatusAccepted,
 		},
-		"4publish message with empty key": {
+		"publish message with empty key": {
 			chanID:      chanID,
 			msg:         msg,
 			contentType: ctSenmlJSON,
 			key:         "",
 			status:      http.StatusBadGateway,
 		},
-		"5publish message with basic auth": {
+		"publish message with basic auth": {
 			chanID:      chanID,
 			msg:         msg,
 			contentType: ctSenmlJSON,
@@ -139,14 +144,14 @@ func TestPublish(t *testing.T) {
 			basicAuth:   true,
 			status:      http.StatusAccepted,
 		},
-		"6publish message with invalid key": {
+		"publish message with invalid key": {
 			chanID:      chanID,
 			msg:         msg,
 			contentType: ctSenmlJSON,
 			key:         invalidKey,
 			status:      http.StatusBadRequest,
 		},
-		"7publish message with invalid basic auth": {
+		"publish message with invalid basic auth": {
 			chanID:      chanID,
 			msg:         msg,
 			contentType: ctSenmlJSON,
@@ -154,14 +159,14 @@ func TestPublish(t *testing.T) {
 			basicAuth:   true,
 			status:      http.StatusBadRequest,
 		},
-		"8publish message without content type": {
+		"publish message without content type": {
 			chanID:      chanID,
 			msg:         msg,
 			contentType: "",
 			key:         thingKey,
 			status:      http.StatusUnsupportedMediaType,
 		},
-		"9publish message to invalid channel": {
+		"publish message to invalid channel": {
 			chanID:      "",
 			msg:         msg,
 			contentType: ctSenmlJSON,

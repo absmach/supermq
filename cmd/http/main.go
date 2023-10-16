@@ -37,7 +37,7 @@ const (
 	envPrefix      = "MF_HTTP_ADAPTER_"
 	defSvcHTTPPort = "80"
 	targetHTTPPort = "81"
-	targetHTTPHost = ""
+	targetHTTPHost = "http://localhost"
 )
 
 type config struct {
