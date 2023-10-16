@@ -17,16 +17,6 @@ import (
 
 var errParentUnAuthz = errors.New("failed to authorize parent group")
 
-// Possible token types are access and refresh tokens.
-const (
-	RefreshToken = "refresh"
-	AccessToken  = "access"
-
-	MyKey = "mine"
-
-	groupsObjectKey = "groups"
-)
-
 const (
 	ownerRelation       = "owner"
 	channelRelation     = "channel"
@@ -332,16 +322,11 @@ func (svc service) DisableGroup(ctx context.Context, token, id string) (groups.G
 	return group, nil
 }
 
-// Yet to do
 func (svc service) Assign(ctx context.Context, token, groupID, relation, memberKind string, memberIDs ...string) error {
 	_, err := svc.authorize(ctx, userType, token, editPermission, groupType, groupID)
 	if err != nil {
 		return err
 	}
-
-	// if err := svc.groups.Assign(ctx, groupID, memberKind, memberIDs...); err != nil {
-	// 	return err
-	// }
 
 	prs := []*mainflux.AddPolicyReq{}
 	switch memberKind {
@@ -387,7 +372,6 @@ func (svc service) Assign(ctx context.Context, token, groupID, relation, memberK
 	return nil
 }
 
-// Yet to do
 func (svc service) Unassign(ctx context.Context, token, groupID, relation, memberKind string, memberIDs ...string) error {
 	_, err := svc.authorize(ctx, userType, token, editPermission, groupType, groupID)
 	if err != nil {
@@ -436,9 +420,7 @@ func (svc service) Unassign(ctx context.Context, token, groupID, relation, membe
 			return fmt.Errorf("failed to delete policies : %w", err)
 		}
 	}
-	// if err := svc.groups.Unassign(ctx, groupID, memberIDs...); err != nil {
-	// 	return err
-	// }
+
 	return nil
 }
 

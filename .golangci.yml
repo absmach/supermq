@@ -9,7 +9,7 @@ linters-settings:
     disabled-checks:
       - appendAssign
     enabled-tags:
-    - diagnostic
+      - diagnostic
     disabled-tags:
       - performance
       - style
