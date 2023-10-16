@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/mainflux/mainflux"
 	authmocks "github.com/mainflux/mainflux/auth/mocks"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
@@ -17,22 +18,19 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
-	"github.com/mainflux/mainflux/things/policies"
 	mproxy "github.com/mainflux/mproxy/pkg/http"
 	"github.com/mainflux/mproxy/pkg/session"
 	"github.com/stretchr/testify/assert"
 )
 
-var errUnexpectedJSONEnd = errors.New("unexpected end of JSON input")
-
-func newMessageService(cc policies.AuthServiceClient) session.Handler {
+func newMessageService(cc mainflux.AuthzServiceClient) session.Handler {
 	pub := mocks.NewPublisher()
 
 	return adapter.NewHandler(pub, logger.NewMock(), cc)
 }
 
 func newTargetHTTPServer() *httptest.Server {
-	mux := api.MakeHandler(instanceID)
+	mux := api.MakeHandler("")
 	return httptest.NewServer(mux)
 }
 
@@ -49,15 +47,15 @@ func TestSendMessage(t *testing.T) {
 	atoken := "auth_token"
 	invalidToken := "invalid_token"
 	msg := `[{"n":"current","t":-1,"v":1.6}]`
-	thingsClient := mocks.NewThingsClient(map[string]string{atoken: chanID})
-	pub := newMessageService(thingsClient)
+	auth := new(authmocks.Service)
+	pub := newMessageService(auth)
 	target := newTargetHTTPServer()
 	ts, err := newProxyHTPPServer(pub, target)
 	assert.Nil(t, err, fmt.Sprintf("failed to create proxy server with err: %v", err))
 	defer ts.Close()
 	sdkConf := sdk.Config{
 		HTTPAdapterURL:  ts.URL,
-		MsgContentType:  contentType,
+		MsgContentType:  "application/senml+json",
 		TLSVerification: false,
 	}
 
@@ -117,24 +115,23 @@ func TestSendMessage(t *testing.T) {
 	}
 }
 
+}
+
 func TestSetContentType(t *testing.T) {
 	auth := new(authmocks.Service)
 
 	pub := newMessageService(auth)
-	ts := newMessageServer(pub)
-	defer ts.Close()
-
-	sdkConf := sdk.Config{
-		HTTPAdapterURL:  ts.URL,
-		MsgContentType:  contentType,
-		TLSVerification: false,
-	}
-	mfsdk := sdk.NewSDK(sdkConf)
-	pub := newMessageService(thingsClient)
 	target := newTargetHTTPServer()
 	ts, err := newProxyHTPPServer(pub, target)
 	assert.Nil(t, err, fmt.Sprintf("failed to create proxy server with err: %v", err))
 	defer ts.Close()
+
+	sdkConf := sdk.Config{
+		HTTPAdapterURL:  ts.URL,
+		MsgContentType:  "application/senml+json",
+		TLSVerification: false,
+	}
+	mfsdk := sdk.NewSDK(sdkConf)
 
 	cases := []struct {
 		desc  string
