@@ -38,7 +38,7 @@ func (pa *policyAgent) CheckPolicy(ctx context.Context, pr auth.PolicyReq) error
 		Subject:    &v1.SubjectReference{Object: &v1.ObjectReference{ObjectType: pr.SubjectType, ObjectId: pr.Subject}, OptionalRelation: pr.SubjectRelation},
 	}
 
-	resp, err := pa.permissionClient.CheckPermission(context.Background(), &checkReq)
+	resp, err := pa.permissionClient.CheckPermission(ctx, &checkReq)
 	if err != nil {
 		return errors.Wrap(errors.ErrMalformedEntity, fmt.Errorf("failed to check permission: %w", err))
 	}
@@ -71,6 +71,7 @@ func (pa *policyAgent) AddPolicies(ctx context.Context, prs []auth.PolicyReq) er
 	}
 	return nil
 }
+
 func (pa *policyAgent) AddPolicy(ctx context.Context, pr auth.PolicyReq) error {
 	updates := []*v1.RelationshipUpdate{
 		{

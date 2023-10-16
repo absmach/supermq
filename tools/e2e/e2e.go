@@ -462,7 +462,7 @@ func messaging(s sdk.SDK, conf Config, token string, things []sdk.Thing, channel
 
 	for _, thing := range things {
 		for _, channel := range channels {
-			var conn = sdk.Connection{
+			conn := sdk.Connection{
 				ThingID:    thing.ID,
 				ChannelID:  channel.ID,
 				Permission: "publish",

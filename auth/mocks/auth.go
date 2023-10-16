@@ -10,8 +10,10 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var _ auth.Authz = (*Authz)(nil)
-var _ auth.PolicyAgent = (*PolicyAgent)(nil)
+var (
+	_ auth.Authz       = (*Authz)(nil)
+	_ auth.PolicyAgent = (*PolicyAgent)(nil)
+)
 
 type Authz struct {
 	mock.Mock

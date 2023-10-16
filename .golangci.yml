@@ -51,3 +51,22 @@ linters:
     - goimports
     - loggercheck
     - goheader
+    - asasalint
+    - asciicheck
+    - bidichk
+    - contextcheck
+    - decorder
+    - dogsled
+    - errchkjson
+    - errname
+    - execinquery
+    - exportloopref
+    - ginkgolinter
+    - gocheckcompilerdirectives
+    - gofumpt
+    - goprintffuncname
+    - importas
+    - makezero
+    - mirror
+    - misspell
+    - nakedret

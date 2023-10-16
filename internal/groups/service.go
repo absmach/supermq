@@ -199,7 +199,6 @@ func (svc service) ListGroups(ctx context.Context, token string, memberKind, mem
 				Permission:  gm.Permission,
 				ObjectType:  groupType,
 			})
-
 			if err != nil {
 				return groups.Page{}, err
 			}
@@ -448,7 +447,6 @@ func (svc service) listAllGroupsOfUserID(ctx context.Context, userID string, per
 		Permission:  permission,
 		ObjectType:  groupType,
 	})
-
 	if err != nil {
 		return []string{}, err
 	}
