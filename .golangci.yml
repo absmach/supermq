@@ -1,5 +1,12 @@
 run:
   timeout: 3m
+  build-tags:
+    - "nats"
+
+issues:
+  max-issues-per-linter: 10
+  max-same-issues: 10
+
 linters-settings:
   gocritic:
     enabled-checks:
@@ -15,6 +22,16 @@ linters-settings:
       - style
       - experimental
       - opinionated
+  misspell:
+    ignore-words:
+      - "mosquitto"
+  stylecheck:
+    checks: ["-ST1000", "-ST1003", "-ST1020", "-ST1021", "-ST1022"]
+  goheader:
+    template: |-
+      Copyright (c) Mainflux
+      SPDX-License-Identifier: Apache-2.0
+
 linters:
   disable-all: true
   enable:
@@ -26,3 +43,11 @@ linters:
     - goconst
     - godot
     - ineffassign
+    - misspell
+    - stylecheck
+    - whitespace
+    - gci
+    - gofmt
+    - goimports
+    - loggercheck
+    - goheader
