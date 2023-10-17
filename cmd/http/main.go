@@ -128,15 +128,13 @@ func main() {
 
 	switch {
 	case httpServerConfig.CertFile != "" || httpServerConfig.KeyFile != "":
-		logger.Info(fmt.Sprintf("%s service https server listening at %s:%s with TLS cert %s and key %s", svcName, httpServerConfig.Host, httpServerConfig.Port, httpServerConfig.CertFile, httpServerConfig.KeyFile))
-		if err := proxyHTTPS(ctx, httpServerConfig, logger, svc); err != nil {
-			logger.Fatal(fmt.Sprintf("failed to start proxy server with error: %v", err))
-		}
+		g.Go(func() error {
+			return proxyHTTPS(ctx, httpServerConfig, logger, svc)
+		})
 	default:
-		logger.Info(fmt.Sprintf("%s service http server listening at %s:%s without TLS", svcName, httpServerConfig.Host, httpServerConfig.Port))
-		if err := proxyHTTP(ctx, httpServerConfig, logger, svc); err != nil {
-			logger.Fatal(fmt.Sprintf("failed to start proxy server with error: %v", err))
-		}
+		g.Go(func() error {
+			return proxyHTTP(ctx, httpServerConfig, logger, svc)
+		})
 	}
 
 	g.Go(func() error {
@@ -169,6 +167,7 @@ func proxyHTTP(ctx context.Context, cfg server.Config, logger mflog.Logger, hand
 	go func() {
 		errCh <- mp.Listen()
 	}()
+	logger.Info(fmt.Sprintf("%s service http server listening at %s:%s without TLS", svcName, cfg.Host, cfg.Port))
 
 	select {
 	case <-ctx.Done():
@@ -192,6 +191,7 @@ func proxyHTTPS(ctx context.Context, cfg server.Config, logger mflog.Logger, han
 	go func() {
 		errCh <- mp.ListenTLS(cfg.CertFile, cfg.KeyFile)
 	}()
+	logger.Info(fmt.Sprintf("%s service https server listening at %s:%s with TLS cert %s and key %s", svcName, cfg.Host, cfg.Port, cfg.CertFile, cfg.KeyFile))
 
 	select {
 	case <-ctx.Done():
