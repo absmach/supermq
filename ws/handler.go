@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	"github.com/mainflux/mainflux/things/policies"
 	"github.com/mainflux/mproxy/pkg/session"
 )
 
@@ -54,12 +54,12 @@ var channelRegExp = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]
 // Event implements events.Event interface.
 type handler struct {
 	pubsub messaging.PubSub
-	auth   policies.AuthServiceClient
+	auth   mainflux.AuthzServiceClient
 	logger logger.Logger
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(pubsub messaging.PubSub, logger logger.Logger, auth policies.AuthServiceClient) session.Handler {
+func NewHandler(pubsub messaging.PubSub, logger logger.Logger, auth mainflux.AuthzServiceClient) session.Handler {
 	return &handler{
 		logger: logger,
 		pubsub: pubsub,
@@ -92,7 +92,7 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 		token = string(s.Password)
 	}
 
-	return h.authAccess(ctx, token, *topic, policies.WriteAction)
+	return h.authAccess(ctx, token, *topic, "publish")
 }
 
 // AuthSubscribe is called on device publish,
@@ -115,7 +115,7 @@ func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
 	}
 
 	for _, v := range *topics {
-		if err := h.authAccess(ctx, token, v, policies.ReadAction); err != nil {
+		if err := h.authAccess(ctx, token, v, "subscribe"); err != nil {
 			return err
 		}
 	}
@@ -163,11 +163,13 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		token = string(s.Password)
 	}
 
-	ar := &policies.AuthorizeReq{
-		Subject:    token,
-		Object:     chanID,
-		Action:     policies.WriteAction,
-		EntityType: policies.ThingEntityType,
+	ar := &mainflux.AuthorizeReq{
+		Namespace:   "",
+		SubjectType: "thing",
+		Permission:  "publish",
+		Subject:     token,
+		Object:      chanID,
+		ObjectType:  "group",
 	}
 	res, err := h.auth.Authorize(ctx, ar)
 	if err != nil {
@@ -181,7 +183,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		Protocol:  protocol,
 		Channel:   chanID,
 		Subtopic:  subtopic,
-		Publisher: res.GetThingID(),
+		Publisher: res.GetId(),
 		Payload:   *payload,
 		Created:   time.Now().UnixNano(),
 	}
@@ -218,11 +220,13 @@ func (h *handler) Unsubscribe(ctx context.Context, topics *[]string) error {
 	}
 
 	for _, topic := range *topics {
-		ar := &policies.AuthorizeReq{
-			Subject:    token,
-			Object:     topic,
-			Action:     policies.WriteAction,
-			EntityType: policies.ThingEntityType,
+		ar := &mainflux.AuthorizeReq{
+			Namespace:   "",
+			SubjectType: "thing",
+			Permission:  "subscribe",
+			Subject:     token,
+			Object:      topic,
+			ObjectType:  "group",
 		}
 		res, err := h.auth.Authorize(ctx, ar)
 		if err != nil {
@@ -231,7 +235,7 @@ func (h *handler) Unsubscribe(ctx context.Context, topics *[]string) error {
 		if !res.GetAuthorized() {
 			return errors.ErrAuthorization
 		}
-		if err := h.pubsub.Unsubscribe(ctx, res.GetThingID(), topic); err != nil {
+		if err := h.pubsub.Unsubscribe(ctx, res.GetId(), topic); err != nil {
 			return err
 		}
 	}
@@ -258,11 +262,13 @@ func (h *handler) authAccess(ctx context.Context, password, topic, action string
 
 	chanID := channelParts[1]
 
-	ar := &policies.AuthorizeReq{
-		Subject:    password,
-		Object:     chanID,
-		Action:     action,
-		EntityType: policies.ThingEntityType,
+	ar := &mainflux.AuthorizeReq{
+		Namespace:   "",
+		SubjectType: "thing",
+		Permission:  action,
+		Subject:     password,
+		Object:      chanID,
+		ObjectType:  "group",
 	}
 	res, err := h.auth.Authorize(ctx, ar)
 	if err != nil {
