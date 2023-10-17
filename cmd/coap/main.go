@@ -96,7 +96,6 @@ func main() {
 		Port: targetPort,
 	}
 
-	tc, tcHandler, err := thingsclient.Setup()
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
@@ -153,7 +152,7 @@ func main() {
 		g.Go(func() error {
 			return cs.Start()
 		})
-		return proxyCoAP(ctx, coapServerConfig, logger, coap.NewHandler(nps, logger, tc))
+		return proxyCoAP(ctx, coapServerConfig, logger, coap.NewHandler(nps, logger, auth))
 	})
 	g.Go(func() error {
 		return server.StopSignalHandler(ctx, cancel, logger, svcName, hs, cs)

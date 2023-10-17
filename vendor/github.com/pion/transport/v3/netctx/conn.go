@@ -1,10 +1,8 @@
 // SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
-// Package connctx wraps net.Conn using context.Context.
-//
-// Deprecated: use netctx instead.
-package connctx
+// Package netctx wraps common net interfaces using context.Context.
+package netctx
 
 import (
 	"context"
