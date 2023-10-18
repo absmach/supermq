@@ -16,7 +16,6 @@ import (
 	authmocks "github.com/mainflux/mainflux/auth/mocks"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	mflog "github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/api"
 	"github.com/mainflux/mainflux/ws/mocks"
@@ -180,9 +179,6 @@ func TestHandshake(t *testing.T) {
 
 	for _, tc := range cases {
 		repocall := auth.On("Authorize", mock.Anything, mock.Anything).Return(&mainflux.AuthorizeRes{Authorized: true, Id: testsutil.GenerateUUID(t)}, nil)
-		if tc.thingKey == authmocks.InvalidID {
-			repocall.Return(&mainflux.AuthorizeRes{Authorized: false}, errors.ErrAuthorization)
-		}
 		conn, res, err := handshake(ts.URL, tc.chanID, tc.subtopic, tc.thingKey, tc.header)
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code '%d' got '%d'\n", tc.desc, tc.status, res.StatusCode))
 

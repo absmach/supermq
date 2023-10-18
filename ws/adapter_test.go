@@ -65,7 +65,7 @@ func TestPublish(t *testing.T) {
 		},
 		{
 			desc:     "publish a valid message with invalid thingKey",
-			thingKey: authmocks.InvalidID,
+			thingKey: authmocks.InvalidValue,
 			msg:      &msg,
 			err:      ws.ErrUnauthorizedAccess,
 		},
@@ -83,7 +83,7 @@ func TestPublish(t *testing.T) {
 		},
 		{
 			desc:     "publish an empty message with invalid thingKey",
-			thingKey: authmocks.InvalidID,
+			thingKey: authmocks.InvalidValue,
 			msg:      &messaging.Message{},
 			err:      ws.ErrFailedMessagePublish,
 		},
@@ -91,9 +91,6 @@ func TestPublish(t *testing.T) {
 
 	for _, tc := range cases {
 		repocall := auth.On("Authorize", mock.Anything, mock.Anything).Return(&mainflux.AuthorizeRes{Authorized: true, Id: testsutil.GenerateUUID(t)}, nil)
-		if tc.thingKey == authmocks.InvalidID {
-			repocall.Return(&mainflux.AuthorizeRes{Authorized: false}, errors.ErrAuthorization)
-		}
 		err := svc.Publish(context.Background(), tc.thingKey, tc.msg)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		repocall.Unset()
@@ -139,8 +136,8 @@ func TestSubscribe(t *testing.T) {
 		},
 		{
 			desc:     "subscribe to channel with invalid chanID and invalid thingKey",
-			thingKey: authmocks.InvalidID,
-			chanID:   authmocks.InvalidID,
+			thingKey: authmocks.InvalidValue,
+			chanID:   authmocks.InvalidValue,
 			subtopic: subTopic,
 			fail:     false,
 			err:      ws.ErrUnauthorizedAccess,
@@ -174,9 +171,6 @@ func TestSubscribe(t *testing.T) {
 	for _, tc := range cases {
 		pubsub.SetFail(tc.fail)
 		repocall := auth.On("Authorize", mock.Anything, mock.Anything).Return(&mainflux.AuthorizeRes{Authorized: true, Id: testsutil.GenerateUUID(t)}, nil)
-		if tc.thingKey == authmocks.InvalidID {
-			repocall.Return(&mainflux.AuthorizeRes{Authorized: false}, errors.ErrAuthorization)
-		}
 		err := svc.Subscribe(context.Background(), tc.thingKey, tc.chanID, tc.subtopic, c)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		repocall.Unset()
@@ -247,9 +241,6 @@ func TestUnsubscribe(t *testing.T) {
 	for _, tc := range cases {
 		pubsub.SetFail(tc.fail)
 		repocall := auth.On("Authorize", mock.Anything, mock.Anything).Return(&mainflux.AuthorizeRes{Authorized: true, Id: testsutil.GenerateUUID(t)}, nil)
-		if tc.thingKey == authmocks.InvalidID {
-			repocall.Return(&mainflux.AuthorizeRes{Authorized: false}, errors.ErrAuthorization)
-		}
 		err := svc.Unsubscribe(context.Background(), tc.thingKey, tc.chanID, tc.subtopic)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		repocall.Unset()
