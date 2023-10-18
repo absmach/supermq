@@ -1283,7 +1283,11 @@ func TestShareThing(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := mfsdk.ShareThing(tc.channelID, tc.thingID, []string{"c_list", "c_delete"}, tc.token)
+		req := sdk.UsersRelationRequest{
+			Relation: "viewer",
+			UserIDs:  []string{tc.channelID},
+		}
+		err := mfsdk.ShareThing(tc.thingID, req, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
 }
