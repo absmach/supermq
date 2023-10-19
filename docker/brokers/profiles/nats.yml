@@ -13,3 +13,4 @@ services:
       - mainflux-broker-volume:/data
     profiles:
       - nats_nats
+      - nats_rabbitmq

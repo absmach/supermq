@@ -13,9 +13,7 @@
 #
 
 include:
-  - path: profiles/nats_nats.yml
-    env_file: docker/.env
-  - path: profiles/nats_rabbitmq.yml
+  - path: profiles/nats.yml
     env_file: docker/.env
 
 services:
