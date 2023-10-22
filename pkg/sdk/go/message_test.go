@@ -35,7 +35,7 @@ func newTargetHTTPServer() *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
-func newProxyHTPPServer(svc session.Handler, targetServer *httptest.Server) (*httptest.Server, error) {
+func newProxyHTTPServer(svc session.Handler, targetServer *httptest.Server) (*httptest.Server, error) {
 	mp, err := mproxy.NewProxy("", targetServer.URL, svc, logger.NewMock())
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func TestSendMessage(t *testing.T) {
 	auth := new(authmocks.Service)
 	pub := newMessageService(auth)
 	target := newTargetHTTPServer()
-	ts, err := newProxyHTPPServer(pub, target)
+	ts, err := newProxyHTTPServer(pub, target)
 	assert.Nil(t, err, fmt.Sprintf("failed to create proxy server with err: %v", err))
 	defer ts.Close()
 	sdkConf := sdk.Config{
@@ -137,7 +137,7 @@ func TestSetContentType(t *testing.T) {
 
 	pub := newMessageService(auth)
 	target := newTargetHTTPServer()
-	ts, err := newProxyHTPPServer(pub, target)
+	ts, err := newProxyHTTPServer(pub, target)
 	assert.Nil(t, err, fmt.Sprintf("failed to create proxy server with err: %v", err))
 	defer ts.Close()
 
