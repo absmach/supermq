@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	chclient "github.com/mainflux/callhome/pkg/client"
@@ -156,12 +157,13 @@ func newService(pub messaging.Publisher, tc mainflux.AuthzServiceClient, logger 
 }
 
 func proxyHTTP(ctx context.Context, cfg server.Config, logger mflog.Logger, handler session.Handler) error {
-	address := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
+	address := fmt.Sprintf("%s:%s", "", cfg.Port)
 	target := fmt.Sprintf("%s:%s", targetHTTPHost, targetHTTPPort)
 	mp, err := mproxy.NewProxy(address, target, handler, logger)
 	if err != nil {
 		return err
 	}
+	http.HandleFunc("/", mp.Handler)
 
 	errCh := make(chan error)
 	go func() {
@@ -179,12 +181,13 @@ func proxyHTTP(ctx context.Context, cfg server.Config, logger mflog.Logger, hand
 }
 
 func proxyHTTPS(ctx context.Context, cfg server.Config, logger mflog.Logger, handler session.Handler) error {
-	address := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
+	address := fmt.Sprintf("%s:%s", "", cfg.Port)
 	target := fmt.Sprintf("%s:%s", targetHTTPHost, targetHTTPPort)
 	mp, err := mproxy.NewProxy(address, target, handler, logger)
 	if err != nil {
 		return err
 	}
+	http.HandleFunc("/", mp.Handler)
 
 	errCh := make(chan error)
 
