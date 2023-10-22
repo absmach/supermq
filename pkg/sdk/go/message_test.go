@@ -132,8 +132,6 @@ func TestSendMessage(t *testing.T) {
 	}
 }
 
-}
-
 func TestSetContentType(t *testing.T) {
 	auth := new(authmocks.Service)
 

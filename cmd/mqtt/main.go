@@ -25,7 +25,6 @@ import (
 	"github.com/mainflux/mainflux/mqtt/events"
 	mqtttracing "github.com/mainflux/mainflux/mqtt/tracing"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	brokerstracing "github.com/mainflux/mainflux/pkg/messaging/brokers/tracing"
 	"github.com/mainflux/mainflux/pkg/messaging/handler"
@@ -166,7 +165,7 @@ func main() {
 
 	logger.Info("Successfully connected to things grpc server " + aHandler.Secure())
 
-	h := mqtt.NewHandler([]messaging.Publisher{np}, es, logger, auth)
+	h := mqtt.NewHandler(np, es, logger, auth)
 	h = handler.NewTracing(tracer, h)
 
 	if cfg.SendTelemetry {
