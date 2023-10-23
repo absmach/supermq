@@ -127,16 +127,9 @@ func main() {
 		return hs.Start()
 	})
 
-	switch {
-	case httpServerConfig.CertFile != "" || httpServerConfig.KeyFile != "":
-		g.Go(func() error {
-			return proxyHTTPS(ctx, httpServerConfig, logger, svc)
-		})
-	default:
-		g.Go(func() error {
-			return proxyHTTP(ctx, httpServerConfig, logger, svc)
-		})
-	}
+	g.Go(func() error {
+		return proxyHTTP(ctx, httpServerConfig, logger, svc)
+	})
 
 	g.Go(func() error {
 		return server.StopSignalHandler(ctx, cancel, logger, svcName, hs)
@@ -166,39 +159,23 @@ func proxyHTTP(ctx context.Context, cfg server.Config, logger mflog.Logger, hand
 	http.HandleFunc("/", mp.Handler)
 
 	errCh := make(chan error)
-	go func() {
-		errCh <- mp.Listen()
-	}()
-	logger.Info(fmt.Sprintf("%s service http server listening at %s:%s without TLS", svcName, cfg.Host, cfg.Port))
+	switch {
+	case cfg.CertFile != "" || cfg.KeyFile != "":
+		go func() {
+			errCh <- mp.ListenTLS(cfg.CertFile, cfg.KeyFile)
+		}()
+		logger.Info(fmt.Sprintf("%s service https server listening at %s:%s with TLS cert %s and key %s", svcName, cfg.Host, cfg.Port, cfg.CertFile, cfg.KeyFile))
+	default:
+		go func() {
+			errCh <- mp.Listen()
+		}()
+		logger.Info(fmt.Sprintf("%s service http server listening at %s:%s without TLS", svcName, cfg.Host, cfg.Port))
+
+	}
 
 	select {
 	case <-ctx.Done():
 		logger.Info(fmt.Sprintf("proxy HTTP shutdown at %s", target))
-		return nil
-	case err := <-errCh:
-		return err
-	}
-}
-
-func proxyHTTPS(ctx context.Context, cfg server.Config, logger mflog.Logger, handler session.Handler) error {
-	address := fmt.Sprintf("%s:%s", "", cfg.Port)
-	target := fmt.Sprintf("%s:%s", targetHTTPHost, targetHTTPPort)
-	mp, err := mproxy.NewProxy(address, target, handler, logger)
-	if err != nil {
-		return err
-	}
-	http.HandleFunc("/", mp.Handler)
-
-	errCh := make(chan error)
-
-	go func() {
-		errCh <- mp.ListenTLS(cfg.CertFile, cfg.KeyFile)
-	}()
-	logger.Info(fmt.Sprintf("%s service https server listening at %s:%s with TLS cert %s and key %s", svcName, cfg.Host, cfg.Port, cfg.CertFile, cfg.KeyFile))
-
-	select {
-	case <-ctx.Done():
-		logger.Info(fmt.Sprintf("proxy MQTT WS shutdown at %s", target))
 		return nil
 	case err := <-errCh:
 		return err
