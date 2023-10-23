@@ -164,7 +164,7 @@ func (ps *pubsub) Unsubscribe(ctx context.Context, id, topic string) error {
 			return err
 		}
 	}
-	if err := ps.ch.QueueUnbind(topic, topic, exchangeName, nil); err != nil {
+	if err := ps.channel.QueueUnbind(topic, topic, exchangeName, nil); err != nil {
 		return err
 	}
 
