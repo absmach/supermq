@@ -38,7 +38,7 @@ var msg = []byte(`[{"n":"current","t":-1,"v":1.6}]`)
 
 func newService(auth mainflux.AuthzServiceClient) (ws.Service, mocks.MockPubSub) {
 	pubsub := mocks.NewPubSub()
-	return ws.New(auth, pubsub), pubsub, auth
+	return ws.New(auth, pubsub), pubsub
 }
 
 func newHTTPServer(svc ws.Service) *httptest.Server {

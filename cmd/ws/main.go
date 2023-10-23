@@ -37,7 +37,7 @@ const (
 	envPrefixHTTP  = "MF_WS_ADAPTER_HTTP_"
 	defSvcHTTPPort = "8190"
 	targetWSPort   = "8191"
-	targetWSHost   = ""
+	targetWSHost   = "localhost"
 )
 
 type config struct {
@@ -153,7 +153,7 @@ func newService(tc mainflux.AuthzServiceClient, nps messaging.PubSub, logger mfl
 }
 
 func proxyWS(ctx context.Context, cfg server.Config, logger mflog.Logger, handler session.Handler) error {
-	target := fmt.Sprintf("%s:%s", targetWSHost, targetWSPort)
+	target := fmt.Sprintf("ws://%s:%s", targetWSHost, targetWSPort)
 	address := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
 	wp, err := websockets.NewProxy(address, target, logger, handler)
 	if err != nil {
@@ -164,8 +164,10 @@ func proxyWS(ctx context.Context, cfg server.Config, logger mflog.Logger, handle
 
 	go func() {
 		if cfg.CertFile != "" && cfg.KeyFile != "" {
+			logger.Info(fmt.Sprintf("ws-adapter service http server listening at %s:%s with TLS", cfg.Host, cfg.Port))
 			errCh <- wp.ListenTLS(cfg.CertFile, cfg.KeyFile)
 		} else {
+			logger.Info(fmt.Sprintf("ws-adapter service http server listening at %s:%s without TLS", cfg.Host, cfg.Port))
 			errCh <- wp.Listen()
 		}
 	}()
