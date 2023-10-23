@@ -71,7 +71,7 @@ func (c *client) Token() string {
 }
 
 func (c *client) Handle(msg *messaging.Message) error {
-	pm := c.client.AcquireMessage(c.client.Context())
+	pm := c.client.AcquireMessage(context.Background())
 	pm.SetCode(codes.Content)
 	pm.SetToken(c.token)
 	pm.SetBody(bytes.NewReader(msg.Payload))
