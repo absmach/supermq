@@ -211,34 +211,7 @@ func (h *handler) Unsubscribe(ctx context.Context, topics *[]string) error {
 	if !ok {
 		return errors.Wrap(ErrFailedUnsubscribe, ErrClientNotInitialized)
 	}
-	var token string
-	switch {
-	case strings.HasPrefix(string(s.Password), "Thing"):
-		token = strings.ReplaceAll(string(s.Password), "Thing ", "")
-	default:
-		token = string(s.Password)
-	}
 
-	for _, topic := range *topics {
-		ar := &mainflux.AuthorizeReq{
-			Namespace:   "",
-			SubjectType: "thing",
-			Permission:  "subscribe",
-			Subject:     token,
-			Object:      topic,
-			ObjectType:  "group",
-		}
-		res, err := h.auth.Authorize(ctx, ar)
-		if err != nil {
-			return err
-		}
-		if !res.GetAuthorized() {
-			return errors.ErrAuthorization
-		}
-		if err := h.pubsub.Unsubscribe(ctx, res.GetId(), topic); err != nil {
-			return err
-		}
-	}
 	h.logger.Info(fmt.Sprintf(LogInfoUnsubscribed, s.ID, strings.Join(*topics, ",")))
 	return nil
 }
