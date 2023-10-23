@@ -447,7 +447,7 @@ func TestUnsubscribe(t *testing.T) {
 			err := pubsub.Subscribe(context.TODO(), subCfg)
 			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
 		default:
-			err := pubsub.Unsubscribe(context.TODO(), subCfg)
+			err := pubsub.Unsubscribe(context.TODO(), tc.clientID, tc.topic)
 			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
 		}
 	}

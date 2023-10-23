@@ -274,7 +274,7 @@ func TestPubsub(t *testing.T) {
 				assert.Equal(t, err, pc.errorMessage, fmt.Sprintf("%s expected %+v got %+v\n", pc.desc, pc.errorMessage, err))
 			}
 		} else {
-			err := pubsub.Unsubscribe(context.TODO(), subCfg)
+			err := pubsub.Unsubscribe(context.TODO(), pc.clientID, pc.topic)
 			if pc.errorMessage == nil {
 				assert.Nil(t, err, fmt.Sprintf("%s expected %+v got %+v\n", pc.desc, pc.errorMessage, err))
 			} else {

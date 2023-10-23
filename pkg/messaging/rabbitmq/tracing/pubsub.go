@@ -61,13 +61,13 @@ func (pm *pubsubMiddleware) Subscribe(ctx context.Context, cfg messaging.Subscri
 }
 
 // Unsubscribe removes an existing subscription and traces the operation.
-func (pm *pubsubMiddleware) Unsubscribe(ctx context.Context, cfg messaging.SubscriberConfig) error {
-	ctx, span := tracing.CreateSpan(ctx, unsubscribeOp, cfg.ID, cfg.Topic, "", 0, pm.host, trace.SpanKindInternal, pm.tracer)
+func (pm *pubsubMiddleware) Unsubscribe(ctx context.Context, id, topic string) error {
+	ctx, span := tracing.CreateSpan(ctx, unsubscribeOp, id, topic, "", 0, pm.host, trace.SpanKindInternal, pm.tracer)
 	defer span.End()
 
 	span.SetAttributes(defaultAttributes...)
 
-	return pm.pubsub.Unsubscribe(ctx, cfg)
+	return pm.pubsub.Unsubscribe(ctx, id, topic)
 }
 
 // TraceHandler is used to trace the message handling operation.

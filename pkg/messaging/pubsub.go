@@ -48,7 +48,7 @@ type Subscriber interface {
 
 	// Unsubscribe unsubscribes from the message stream and
 	// stops consuming messages.
-	Unsubscribe(ctx context.Context, cfg SubscriberConfig) error
+	Unsubscribe(ctx context.Context, id, topic string) error
 
 	// Close gracefully closes message subscriber's connection.
 	Close() error

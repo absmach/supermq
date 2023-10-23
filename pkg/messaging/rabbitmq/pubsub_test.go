@@ -355,7 +355,7 @@ func TestUnsubscribe(t *testing.T) {
 			err := pubsub.Subscribe(context.TODO(), subCfg)
 			assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
 		default:
-			err := pubsub.Unsubscribe(context.TODO(), subCfg)
+			err := pubsub.Unsubscribe(context.TODO(), tc.clientID, tc.topic)
 			assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
 		}
 	}
@@ -432,11 +432,7 @@ func TestPubSub(t *testing.T) {
 			assert.Equal(t, expectedMsg.Channel, receivedMsg.Channel, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
 			assert.Equal(t, expectedMsg.Payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, &expectedMsg, receivedMsg))
 
-			unsubCfg := messaging.SubscriberConfig{
-				ID:    tc.clientID,
-				Topic: fmt.Sprintf("%s.%s", chansPrefix, tc.topic),
-			}
-			err = pubsub.Unsubscribe(context.TODO(), unsubCfg)
+			err = pubsub.Unsubscribe(context.TODO(), tc.clientID, fmt.Sprintf("%s.%s", chansPrefix, tc.topic))
 			assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", tc.desc, err))
 		default:
 			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.err))

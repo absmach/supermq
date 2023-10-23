@@ -137,12 +137,7 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, thingKey, chanID, su
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
 
-	unSubCfg := messaging.SubscriberConfig{
-		ID:    thid,
-		Topic: subject,
-	}
-
-	return svc.pubsub.Unsubscribe(ctx, unSubCfg)
+	return svc.pubsub.Unsubscribe(ctx, thid, subject)
 }
 
 // authorize checks if the thingKey is authorized to access the channel

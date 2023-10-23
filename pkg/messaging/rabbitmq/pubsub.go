@@ -85,7 +85,7 @@ func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig)
 		if _, ok := s[cfg.ID]; ok {
 			// Unlocking, so that Unsubscribe() can access ps.subscriptions
 			ps.mu.Unlock()
-			if err := ps.Unsubscribe(ctx, cfg); err != nil {
+			if err := ps.Unsubscribe(ctx, cfg.ID, cfg.Topic); err != nil {
 				return err
 			}
 
@@ -128,24 +128,24 @@ func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig)
 	return nil
 }
 
-func (ps *pubsub) Unsubscribe(ctx context.Context, cfg messaging.SubscriberConfig) error {
-	if cfg.ID == "" {
+func (ps *pubsub) Unsubscribe(ctx context.Context, id, topic string) error {
+	if id == "" {
 		return ErrEmptyID
 	}
-	if cfg.Topic == "" {
+	if topic == "" {
 		return ErrEmptyTopic
 	}
 	ps.mu.Lock()
 	defer ps.mu.Unlock()
 
-	cfg.Topic = formatTopic(cfg.Topic)
+	topic = formatTopic(topic)
 	// Check topic
-	s, ok := ps.subscriptions[cfg.Topic]
+	s, ok := ps.subscriptions[topic]
 	if !ok {
 		return ErrNotSubscribed
 	}
 	// Check topic ID
-	current, ok := s[cfg.ID]
+	current, ok := s[id]
 	if !ok {
 		return ErrNotSubscribed
 	}
@@ -154,13 +154,13 @@ func (ps *pubsub) Unsubscribe(ctx context.Context, cfg messaging.SubscriberConfi
 			return err
 		}
 	}
-	if err := ps.ch.QueueUnbind(cfg.Topic, cfg.Topic, exchangeName, nil); err != nil {
+	if err := ps.ch.QueueUnbind(topic, topic, exchangeName, nil); err != nil {
 		return err
 	}
 
-	delete(s, cfg.ID)
+	delete(s, id)
 	if len(s) == 0 {
-		delete(ps.subscriptions, cfg.Topic)
+		delete(ps.subscriptions, topic)
 	}
 	return nil
 }

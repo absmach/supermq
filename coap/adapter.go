@@ -124,10 +124,6 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopi
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
-	unSubCfg := messaging.SubscriberConfig{
-		ID:      token,
-		Topic:   subject,
-		Handler: nil,
-	}
-	return svc.pubsub.Unsubscribe(ctx, unSubCfg)
+
+	return svc.pubsub.Unsubscribe(ctx, token, subject)
 }

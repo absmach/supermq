@@ -122,28 +122,28 @@ func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig)
 	return nil
 }
 
-func (ps *pubsub) Unsubscribe(ctx context.Context, cfg messaging.SubscriberConfig) error {
-	if cfg.ID == "" {
+func (ps *pubsub) Unsubscribe(ctx context.Context, id, topic string) error {
+	if id == "" {
 		return ErrEmptyID
 	}
-	if cfg.Topic == "" {
+	if topic == "" {
 		return ErrEmptyTopic
 	}
 	ps.mu.Lock()
 	defer ps.mu.Unlock()
 
-	s, ok := ps.subscriptions[cfg.ID]
-	if !ok || !s.contains(cfg.Topic) {
+	s, ok := ps.subscriptions[id]
+	if !ok || !s.contains(topic) {
 		return ErrNotSubscribed
 	}
 
-	if err := s.unsubscribe(cfg.Topic, ps.timeout); err != nil {
+	if err := s.unsubscribe(topic, ps.timeout); err != nil {
 		return err
 	}
-	ps.subscriptions[cfg.ID] = s
+	ps.subscriptions[id] = s
 
 	if len(s.topics) == 0 {
-		delete(ps.subscriptions, cfg.ID)
+		delete(ps.subscriptions, id)
 	}
 	return nil
 }

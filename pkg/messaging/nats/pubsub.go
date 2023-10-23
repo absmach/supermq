@@ -116,15 +116,15 @@ func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig)
 	return nil
 }
 
-func (ps *pubsub) Unsubscribe(ctx context.Context, cfg messaging.SubscriberConfig) error {
-	if cfg.ID == "" {
+func (ps *pubsub) Unsubscribe(ctx context.Context, id, topic string) error {
+	if id == "" {
 		return ErrEmptyID
 	}
-	if cfg.Topic == "" {
+	if topic == "" {
 		return ErrEmptyTopic
 	}
 
-	err := ps.stream.DeleteConsumer(ctx, formatConsumerName(cfg.Topic, cfg.ID))
+	err := ps.stream.DeleteConsumer(ctx, formatConsumerName(topic, id))
 	switch {
 	case errors.Is(err, jetstream.ErrConsumerNotFound):
 		return ErrNotSubscribed
