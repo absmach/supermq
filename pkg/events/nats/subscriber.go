@@ -91,7 +91,7 @@ func NewSubscriber(ctx context.Context, url, stream, consumer string, logger mfl
 }
 
 func (es *subEventStore) Subscribe(ctx context.Context, handler events.EventHandler) error {
-	var subCfg = messaging.SubscriberConfig{
+	subCfg := messaging.SubscriberConfig{
 		ID:    es.consumer,
 		Topic: eventsPrefix + "." + es.stream,
 		Handler: &eventHandler{
@@ -125,7 +125,7 @@ type eventHandler struct {
 }
 
 func (eh *eventHandler) Handle(msg *messaging.Message) error {
-	var event = event{
+	event := event{
 		Data: make(map[string]interface{}),
 	}
 

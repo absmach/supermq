@@ -30,7 +30,7 @@ type testEvent struct {
 }
 
 func (te testEvent) Encode() (map[string]interface{}, error) {
-	var data = make(map[string]interface{})
+	data := make(map[string]interface{})
 	for k, v := range te.Data {
 		switch v.(type) {
 		case string:
@@ -53,10 +53,10 @@ func TestPublish(t *testing.T) {
 	publisher, err := rabbitmq.NewPublisher(ctx, rabbitmqURL, stream)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
-	subcriber, err := rabbitmq.NewSubscriber("http://invaliurl.com", stream, consumer, logger)
+	_, err = rabbitmq.NewSubscriber("http://invaliurl.com", stream, consumer, logger)
 	assert.NotNilf(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err), err)
 
-	subcriber, err = rabbitmq.NewSubscriber(rabbitmqURL, stream, consumer, logger)
+	subcriber, err := rabbitmq.NewSubscriber(rabbitmqURL, stream, consumer, logger)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
 	err = subcriber.Subscribe(ctx, handler{})
@@ -120,7 +120,7 @@ func TestPublish(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		var event = testEvent{Data: tc.event}
+		event := testEvent{Data: tc.event}
 
 		err := publisher.Publish(ctx, event)
 		switch tc.err {
@@ -152,10 +152,10 @@ func TestUnavailablePublish(t *testing.T) {
 	client, err := startContainer()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on starting container: %s", err))
 
-	publisher, err := rabbitmq.NewPublisher(ctx, "http://invaliurl.com", stream)
+	_, err = rabbitmq.NewPublisher(ctx, "http://invaliurl.com", stream)
 	assert.NotNilf(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err), err)
 
-	publisher, err = rabbitmq.NewPublisher(ctx, client.url, stream)
+	publisher, err := rabbitmq.NewPublisher(ctx, client.url, stream)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
 	err = client.pool.Client.PauseContainer(client.container.Container.ID)

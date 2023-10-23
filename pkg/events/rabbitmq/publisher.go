@@ -67,7 +67,7 @@ func (es *pubEventStore) Publish(ctx context.Context, event events.Event) error 
 		return err
 	}
 
-	var record = &messaging.Message{
+	record := &messaging.Message{
 		Payload: data,
 	}
 
@@ -87,7 +87,7 @@ func (es *pubEventStore) StartPublishingRoutine(ctx context.Context) {
 				es.mu.Lock()
 				for i := len(es.unpublishedEvents) - 1; i >= 0; i-- {
 					record := <-es.unpublishedEvents
-					var msg = &messaging.Message{
+					msg := &messaging.Message{
 						Payload: record.Body,
 					}
 					if err := es.publisher.Publish(ctx, es.stream, msg); err != nil {

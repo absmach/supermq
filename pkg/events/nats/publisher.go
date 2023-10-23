@@ -67,7 +67,7 @@ func (es *pubEventStore) Publish(ctx context.Context, event events.Event) error 
 		return err
 	}
 
-	var record = &messaging.Message{
+	record := &messaging.Message{
 		Payload: data,
 	}
 
