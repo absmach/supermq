@@ -9,6 +9,6 @@ services:
     networks:
       - mainflux-base-net
     volumes:
-      - mainflux-es-redis-volume:/data
+      - mainflux-es-volume:/data
     profiles:
       - redis

@@ -14,6 +14,7 @@ volumes:
   mainflux-things-redis-volume:
   mainflux-mqtt-broker-volume:
   mainflux-broker-volume:
+  mainflux-es-volume:
   mainflux-spicedb-db-volume:
   mainflux-auth-db-volume:
 
