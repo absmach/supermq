@@ -13,6 +13,7 @@ import (
 // ErrInvalidType is returned when the provided value is not of the expected type.
 var ErrInvalidType = errors.New("invalid type")
 
+// WithPrefix sets the prefix for the publisher.
 func WithPrefix(prefix *string) messaging.Option {
 	return func(val interface{}) error {
 		p, ok := val.(*publisher)
@@ -26,6 +27,7 @@ func WithPrefix(prefix *string) messaging.Option {
 	}
 }
 
+// WithJSStream sets the JetStream for the publisher.
 func WithJSStream(stream jetstream.JetStream) messaging.Option {
 	return func(val interface{}) error {
 		p, ok := val.(*publisher)
@@ -39,6 +41,7 @@ func WithJSStream(stream jetstream.JetStream) messaging.Option {
 	}
 }
 
+// WithStream sets the Stream for the subscriber.
 func WithStream(stream jetstream.Stream) messaging.Option {
 	return func(val interface{}) error {
 		p, ok := val.(*pubsub)
