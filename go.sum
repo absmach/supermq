@@ -643,8 +643,8 @@ github.com/sagikazarmark/locafero v0.3.0 h1:zT7VEGWC2DTflmccN/5T1etyKvxSxpHsjb9c
 github.com/sagikazarmark/locafero v0.3.0/go.mod h1:w+v7UsPNFwzF1cHuOajOOzoq4U7v/ig1mpRjqV+Bu1U=
 github.com/sagikazarmark/slog-shim v0.1.0 h1:diDBnUNK9N/354PgrxMywXnAwEr1QZcOr6gto+ugjYE=
 github.com/sagikazarmark/slog-shim v0.1.0/go.mod h1:SrcSrq8aKtyuqEI1uvTDTK1arOWRIczQRv+GVI1AkeQ=
-github.com/sammyoina/mproxy v0.0.0-20231024082152-85023b061a89 h1:eEyIbGqRbSDuLOzUpvH/+1qE/HcqfxZjEXUFzFhswnw=
-github.com/sammyoina/mproxy v0.0.0-20231024082152-85023b061a89/go.mod h1:TNRFqWV+c89e+fBKmzTSOnoV+GzJIWL163kgPC4k8To=
+github.com/sammyoina/mproxy v0.0.0-20231024112414-eac328c3d845 h1:1FeY+9geU4Hae0ceQpQg9abcNrX/H72WEWjwkSVYyY4=
+github.com/sammyoina/mproxy v0.0.0-20231024112414-eac328c3d845/go.mod h1:TNRFqWV+c89e+fBKmzTSOnoV+GzJIWL163kgPC4k8To=
 github.com/sanity-io/litter v1.5.5 h1:iE+sBxPBzoK6uaEP5Lt3fHNgpKcHXc/A2HGETy0uJQo=
 github.com/sanity-io/litter v1.5.5/go.mod h1:9gzJgR2i4ZpjZHsKvUXIRQVk7P+yM3e+jAF7bU2UI5U=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
