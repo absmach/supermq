@@ -15,13 +15,15 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// SubjectAllChannels represents subject to subscribe for all the channels.
-const SubjectAllChannels = "channels.#"
+const (
+	// SubjectAllChannels represents subject to subscribe for all the channels.
+	SubjectAllChannels = "channels.#"
 
-var (
 	exchangeName = "messages"
 	chansPrefix  = "channels"
+)
 
+var (
 	// ErrNotSubscribed indicates that the topic is not subscribed to.
 	ErrNotSubscribed = errors.New("not subscribed")
 

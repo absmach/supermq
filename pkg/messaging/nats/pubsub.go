@@ -17,10 +17,10 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+const chansPrefix = "channels"
+
 // Publisher and Subscriber errors.
 var (
-	chansPrefix = "channels"
-
 	ErrNotSubscribed = errors.New("not subscribed")
 	ErrEmptyTopic    = errors.New("empty topic")
 	ErrEmptyID       = errors.New("empty id")
