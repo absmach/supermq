@@ -81,7 +81,8 @@ func (p *Proxy) postUpstream(cc mux.Conn, req *mux.Message, token []byte) error 
 	if err != nil {
 		return err
 	}
-	return sendPoolMessage(cc, pm, token)
+	pm.SetToken(token)
+	return cc.WriteMessage(pm)
 }
 
 func (p *Proxy) getUpstream(cc mux.Conn, req *mux.Message, token []byte) error {
@@ -99,7 +100,8 @@ func (p *Proxy) getUpstream(cc mux.Conn, req *mux.Message, token []byte) error {
 	if err != nil {
 		return err
 	}
-	return sendPoolMessage(cc, pm, token)
+	pm.SetToken(token)
+	return cc.WriteMessage(pm)
 }
 
 func (p *Proxy) observeUpstream(ctx context.Context, cc mux.Conn, opts []message.Option, token []byte, path string) {
@@ -113,7 +115,9 @@ func (p *Proxy) observeUpstream(ctx context.Context, cc mux.Conn, opts []message
 	doneObserving := make(chan struct{})
 
 	obs, err := targetConn.Observe(context.Background(), path, func(req *pool.Message) {
-		if err := sendPoolMessage(cc, req, token); err != nil {
+		req.SetToken(token)
+
+		if err := cc.WriteMessage(req); err != nil {
 			if err := sendErrorMessage(cc, token, err, codes.BadGateway); err != nil {
 				p.logger.Error(err.Error())
 			}
@@ -145,7 +149,7 @@ func (p *Proxy) handler(w mux.ResponseWriter, r *mux.Message) {
 		}
 		return
 	}
-	ctx := session.NewContext(r.Context(), &session.Session{Password: tok})
+	ctx := session.NewContext(context.Background(), &session.Session{Password: tok})
 	if err := p.event.AuthConnect(ctx); err != nil {
 		if err := sendErrorMessage(w.Conn(), r.Token(), err, codes.Unauthorized); err != nil {
 			p.logger.Error(err.Error())
