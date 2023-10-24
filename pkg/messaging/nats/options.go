@@ -14,14 +14,14 @@ import (
 var ErrInvalidType = errors.New("invalid type")
 
 // WithPrefix sets the prefix for the publisher.
-func WithPrefix(prefix *string) messaging.Option {
+func WithPrefix(prefix string) messaging.Option {
 	return func(val interface{}) error {
 		p, ok := val.(*publisher)
 		if !ok {
 			return ErrInvalidType
 		}
 
-		p.prefix = *prefix
+		p.prefix = prefix
 
 		return nil
 	}
