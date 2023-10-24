@@ -76,5 +76,5 @@ type PubSub interface {
 //
 // Example:
 //
-//	broker.NewPublisher(ctx, url, broker.WithPrefix(&eventsPrefix), broker.WithJSStream(js))
+//	broker.NewPublisher(ctx, url, broker.Prefix(eventsPrefix), broker.JSStream(js))
 type Option func(vals interface{}) error
