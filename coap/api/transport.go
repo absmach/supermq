@@ -66,8 +66,9 @@ func MakeCoAPHandler(svc coap.Service, l mflog.Logger) mux.HandlerFunc {
 	return handler
 }
 
-func sendResp(ctx context.Context, w mux.ResponseWriter, resp *message.Message) {
-	m := w.Conn().AcquireMessage(ctx)
+func sendResp(w mux.ResponseWriter, resp *message.Message) {
+	m := w.Conn().AcquireMessage(w.Conn().Context())
+	defer w.Conn().ReleaseMessage(m)
 	m.SetCode(resp.Code)
 	m.SetBody(bytes.NewReader(resp.Payload))
 	m.SetToken(resp.Token)
@@ -85,7 +86,7 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 		Token:   m.Token(),
 		Options: make(message.Options, 0, 16),
 	}
-	defer sendResp(m.Context(), w, &resp)
+	defer sendResp(w, &resp)
 	msg, err := decodeMessage(m)
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error decoding message: %s", err))
@@ -100,7 +101,7 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 	}
 	switch m.Code() {
 	case codes.GET:
-		err = handleGet(m.Context(), m, w.Conn(), msg, key)
+		err = handleGet(context.Background(), m, w, msg, key)
 	case codes.POST:
 		resp.Code = codes.Created
 		err = nil
@@ -122,7 +123,7 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 	}
 }
 
-func handleGet(ctx context.Context, m *mux.Message, c mux.Conn, msg *messaging.Message, key string) error {
+func handleGet(ctx context.Context, m *mux.Message, c mux.ResponseWriter, msg *messaging.Message, key string) error {
 	var obs uint32
 	obs, err := m.Observe()
 	if err != nil {

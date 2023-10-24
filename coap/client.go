@@ -14,7 +14,8 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/plgd-dev/go-coap/v3/message"
 	"github.com/plgd-dev/go-coap/v3/message/codes"
-	mux "github.com/plgd-dev/go-coap/v3/mux"
+	"github.com/plgd-dev/go-coap/v3/message/pool"
+	"github.com/plgd-dev/go-coap/v3/mux"
 )
 
 // Client wraps CoAP client.
@@ -36,14 +37,14 @@ type Client interface {
 var ErrOption = errors.New("unable to set option")
 
 type client struct {
-	client  mux.Conn
+	client  mux.ResponseWriter
 	token   message.Token
 	observe uint32
 	logger  logger.Logger
 }
 
 // NewClient instantiates a new Observer.
-func NewClient(c mux.Conn, tkn message.Token, l logger.Logger) Client {
+func NewClient(c mux.ResponseWriter, tkn message.Token, l logger.Logger) Client {
 	return &client{
 		client:  c,
 		token:   tkn,
@@ -53,17 +54,17 @@ func NewClient(c mux.Conn, tkn message.Token, l logger.Logger) Client {
 }
 
 func (c *client) Done() <-chan struct{} {
-	return c.client.Done()
+	return c.client.Conn().Done()
 }
 
 func (c *client) Cancel() error {
-	pm := c.client.AcquireMessage(context.Background())
+	pm := c.client.Conn().AcquireMessage(context.Background())
 	pm.SetCode(codes.Content)
 	pm.SetToken(c.token)
-	if err := c.client.WriteMessage(pm); err != nil {
+	if err := c.client.Conn().WriteMessage(pm); err != nil {
 		c.logger.Error(fmt.Sprintf("Error sending message: %s.", err))
 	}
-	return c.client.Close()
+	return c.client.Conn().Close()
 }
 
 func (c *client) Token() string {
@@ -71,7 +72,7 @@ func (c *client) Token() string {
 }
 
 func (c *client) Handle(msg *messaging.Message) error {
-	pm := c.client.AcquireMessage(context.Background())
+	pm := pool.NewMessage(context.Background())
 	pm.SetCode(codes.Content)
 	pm.SetToken(c.token)
 	pm.SetBody(bytes.NewReader(msg.Payload))
@@ -101,5 +102,8 @@ func (c *client) Handle(msg *messaging.Message) error {
 	for _, option := range opts {
 		pm.SetOptionBytes(option.ID, option.Value)
 	}
-	return c.client.WriteMessage(pm)
+	if err := c.client.Conn().WriteMessage(pm); err != nil {
+		return err
+	}
+	return nil
 }
