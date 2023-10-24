@@ -13,8 +13,8 @@ import (
 // ErrInvalidType is returned when the provided value is not of the expected type.
 var ErrInvalidType = errors.New("invalid type")
 
-// WithPrefix sets the prefix for the publisher.
-func WithPrefix(prefix string) messaging.Option {
+// Prefix sets the prefix for the publisher.
+func Prefix(prefix string) messaging.Option {
 	return func(val interface{}) error {
 		p, ok := val.(*publisher)
 		if !ok {
@@ -27,8 +27,8 @@ func WithPrefix(prefix string) messaging.Option {
 	}
 }
 
-// WithChannel sets the channel for the publisher or subscriber.
-func WithChannel(channel *amqp.Channel) messaging.Option {
+// Channel sets the channel for the publisher or subscriber.
+func Channel(channel *amqp.Channel) messaging.Option {
 	return func(val interface{}) error {
 		switch v := val.(type) {
 		case *publisher:
@@ -43,8 +43,8 @@ func WithChannel(channel *amqp.Channel) messaging.Option {
 	}
 }
 
-// WithExchange sets the exchange for the publisher or subscriber.
-func WithExchange(exchange string) messaging.Option {
+// Exchange sets the exchange for the publisher or subscriber.
+func Exchange(exchange string) messaging.Option {
 	return func(val interface{}) error {
 		switch v := val.(type) {
 		case *publisher:

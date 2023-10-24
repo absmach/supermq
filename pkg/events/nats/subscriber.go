@@ -76,7 +76,7 @@ func NewSubscriber(ctx context.Context, url, stream, consumer string, logger mfl
 		return nil, err
 	}
 
-	pubsub, err := broker.NewPubSub(ctx, url, logger, broker.WithStream(jsStream))
+	pubsub, err := broker.NewPubSub(ctx, url, logger, broker.Stream(jsStream))
 	if err != nil {
 		return nil, err
 	}

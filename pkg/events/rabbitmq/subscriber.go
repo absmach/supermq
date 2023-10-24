@@ -58,7 +58,7 @@ func NewSubscriber(url, stream, consumer string, logger mflog.Logger) (events.Su
 		return nil, err
 	}
 
-	pubsub, err := broker.NewPubSub(url, logger, broker.WithChannel(ch), broker.WithExchange(exchangeName))
+	pubsub, err := broker.NewPubSub(url, logger, broker.Channel(ch), broker.Exchange(exchangeName))
 	if err != nil {
 		return nil, err
 	}
