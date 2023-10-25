@@ -66,7 +66,7 @@ func MakeCoAPHandler(svc coap.Service, l mflog.Logger) mux.HandlerFunc {
 	return handler
 }
 
-func sendResp(w mux.ResponseWriter, resp *message.Message) {
+func sendResp(w mux.ResponseWriter, resp *message.Message, isObs bool) {
 	m := w.Conn().AcquireMessage(w.Conn().Context())
 	defer w.Conn().ReleaseMessage(m)
 	m.SetCode(resp.Code)
@@ -75,8 +75,10 @@ func sendResp(w mux.ResponseWriter, resp *message.Message) {
 	for _, option := range resp.Options {
 		m.SetOptionBytes(option.ID, option.Value)
 	}
-	if err := w.Conn().WriteMessage(m); err != nil {
-		logger.Warn(fmt.Sprintf("Can't set response: %s", err))
+	if !isObs {
+		if err := w.Conn().WriteMessage(m); err != nil {
+			logger.Warn(fmt.Sprintf("Can't set response: %s", err))
+		}
 	}
 }
 
@@ -86,7 +88,6 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 		Token:   m.Token(),
 		Options: make(message.Options, 0, 16),
 	}
-	defer sendResp(w, &resp)
 	msg, err := decodeMessage(m)
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error decoding message: %s", err))
@@ -99,15 +100,17 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 		resp.Code = codes.Unauthorized
 		return
 	}
+	var isObs bool = false
 	switch m.Code() {
 	case codes.GET:
-		err = handleGet(context.Background(), m, w, msg, key)
+		isObs, err = handleGet(context.Background(), m, w, msg, key)
 	case codes.POST:
 		resp.Code = codes.Created
 		err = nil
 	default:
 		err = errors.ErrNotFound
 	}
+	defer sendResp(w, &resp, isObs)
 	if err != nil {
 		switch {
 		case err == errBadOptions:
@@ -123,18 +126,18 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 	}
 }
 
-func handleGet(ctx context.Context, m *mux.Message, c mux.ResponseWriter, msg *messaging.Message, key string) error {
+func handleGet(ctx context.Context, m *mux.Message, c mux.ResponseWriter, msg *messaging.Message, key string) (bool, error) {
 	var obs uint32
 	obs, err := m.Observe()
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error reading observe option: %s", err))
-		return errBadOptions
+		return false, errBadOptions
 	}
 	if obs == startObserve {
 		c := coap.NewClient(c, m.Token(), logger)
-		return service.Subscribe(ctx, key, msg.Channel, msg.Subtopic, c)
+		return true, service.Subscribe(ctx, key, msg.Channel, msg.Subtopic, c)
 	}
-	return service.Unsubscribe(ctx, key, msg.Channel, msg.Subtopic, m.Token().String())
+	return false, service.Unsubscribe(ctx, key, msg.Channel, msg.Subtopic, m.Token().String())
 }
 
 func decodeMessage(msg *mux.Message) (*messaging.Message, error) {
