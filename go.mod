@@ -230,4 +230,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/mainflux/mproxy => github.com/sammyoina/mproxy v0.0.0-20231024112414-eac328c3d845
+replace github.com/mainflux/mproxy => github.com/sammyoina/mproxy v0.0.0-20231025071023-605c83df5e59

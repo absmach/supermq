@@ -571,7 +571,7 @@ github.com/mailru/easyjson/jwriter
 # github.com/mainflux/callhome v0.0.0-20230920140432-33c5663382ce
 ## explicit; go 1.21
 github.com/mainflux/callhome/pkg/client
-# github.com/mainflux/mproxy v0.3.1-0.20231022160500-0e0db9e1642c => github.com/sammyoina/mproxy v0.0.0-20231024112414-eac328c3d845
+# github.com/mainflux/mproxy v0.3.1-0.20231022160500-0e0db9e1642c => github.com/sammyoina/mproxy v0.0.0-20231025071023-605c83df5e59
 ## explicit; go 1.19
 github.com/mainflux/mproxy/pkg/coap
 github.com/mainflux/mproxy/pkg/http
@@ -1280,4 +1280,4 @@ gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# github.com/mainflux/mproxy => github.com/sammyoina/mproxy v0.0.0-20231024112414-eac328c3d845
+# github.com/mainflux/mproxy => github.com/sammyoina/mproxy v0.0.0-20231025071023-605c83df5e59
