@@ -130,7 +130,6 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, apiutil.ErrMissingRelation),
 		errors.Contains(err, apiutil.ErrPasswordFormat),
 		errors.Contains(err, apiutil.ErrInvalidLevel),
-		errors.Contains(err, apiutil.ErrBearerKey),
 		errors.Contains(err, apiutil.ErrMalformedPolicy),
 		errors.Contains(err, apiutil.ErrInvalidAPIKey),
 		errors.Contains(err, apiutil.ErrMissingName),
