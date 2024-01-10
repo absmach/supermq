@@ -19,11 +19,10 @@ import (
 )
 
 var (
-	streamTopic = "test-topic"
-	eventsChan  = make(chan map[string]interface{})
-	logger      = mglog.NewMock()
-	errFailed   = errors.New("failed")
-	numEvents   = 100
+	eventsChan = make(chan map[string]interface{})
+	logger     = mglog.NewMock()
+	errFailed  = errors.New("failed")
+	numEvents  = 100
 )
 
 type testEvent struct {
@@ -56,15 +55,17 @@ func TestPublish(t *testing.T) {
 
 	publisher, err := rabbitmq.NewPublisher(context.Background(), rabbitmqURL, stream)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
+	defer publisher.Close()
 
 	_, err = rabbitmq.NewSubscriber("http://invaliurl.com", logger)
 	assert.NotNilf(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err), err)
 
 	subcriber, err := rabbitmq.NewSubscriber(rabbitmqURL, logger)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
+	defer subcriber.Close()
 
 	cfg := events.SubscriberConfig{
-		Stream:   stream,
+		Stream:   "events." + stream,
 		Consumer: consumer,
 		Handler:  handler{},
 	}
@@ -128,115 +129,120 @@ func TestPublish(t *testing.T) {
 		},
 	}
 
-	for _, tc := range cases {
-		event := testEvent{Data: tc.event}
+	for _, c := range cases {
+		t.Run(c.desc, func(t *testing.T) {
+			event := testEvent{Data: c.event}
 
-		err := publisher.Publish(context.Background(), event)
-		switch tc.err {
-		case nil:
-			receivedEvent := <-eventsChan
+			err := publisher.Publish(context.Background(), event)
+			switch c.err {
+			case nil:
+				receivedEvent := <-eventsChan
 
-			val := int64(receivedEvent["occurred_at"].(float64))
-			if assert.WithinRange(t, time.Unix(0, val), time.Now().Add(-time.Second), time.Now().Add(time.Second)) {
-				delete(receivedEvent, "occurred_at")
-				delete(tc.event, "occurred_at")
+				val := int64(receivedEvent["occurred_at"].(float64))
+				if assert.WithinRange(t, time.Unix(0, val), time.Now().Add(-time.Second), time.Now().Add(time.Second)) {
+					delete(receivedEvent, "occurred_at")
+					delete(c.event, "occurred_at")
+				}
+
+				assert.Equal(t, c.event["temperature"], receivedEvent["temperature"])
+				assert.Equal(t, c.event["humidity"], receivedEvent["humidity"])
+				assert.Equal(t, c.event["sensor_id"], receivedEvent["sensor_id"])
+				assert.Equal(t, c.event["status"], receivedEvent["status"])
+				assert.Equal(t, c.event["timestamp"], receivedEvent["timestamp"])
+				assert.Equal(t, c.event["operation"], receivedEvent["operation"])
+
+			default:
+				assert.ErrorContains(t, err, c.err.Error())
 			}
-
-			assert.Equal(t, tc.event["temperature"], receivedEvent["temperature"])
-			assert.Equal(t, tc.event["humidity"], receivedEvent["humidity"])
-			assert.Equal(t, tc.event["sensor_id"], receivedEvent["sensor_id"])
-			assert.Equal(t, tc.event["status"], receivedEvent["status"])
-			assert.Equal(t, tc.event["timestamp"], receivedEvent["timestamp"])
-			assert.Equal(t, tc.event["operation"], receivedEvent["operation"])
-
-		default:
-			assert.ErrorContains(t, err, tc.err.Error(), fmt.Sprintf("%s - expected error: %s", tc.desc, tc.err))
-		}
+		})
 	}
 }
 
 func TestPubsub(t *testing.T) {
-	subcases := []struct {
-		desc         string
-		stream       string
-		consumer     string
-		errorMessage error
-		handler      events.EventHandler
+	cases := []struct {
+		desc     string
+		stream   string
+		consumer string
+		err      error
+		handler  events.EventHandler
 	}{
 		{
-			desc:         "Subscribe to a stream",
-			stream:       fmt.Sprintf("%s.%s", stream, streamTopic),
-			consumer:     consumer,
-			errorMessage: nil,
-			handler:      handler{false},
+			desc:     "Subscribe to a stream",
+			stream:   fmt.Sprintf("events.%s", stream),
+			consumer: consumer,
+			err:      nil,
+			handler:  handler{false},
 		},
 		{
-			desc:         "Subscribe to the same stream",
-			stream:       fmt.Sprintf("%s.%s", stream, streamTopic),
-			consumer:     consumer,
-			errorMessage: nil,
-			handler:      handler{false},
+			desc:     "Subscribe to the same stream",
+			stream:   fmt.Sprintf("events.%s", stream),
+			consumer: consumer,
+			err:      nil,
+			handler:  handler{false},
 		},
 		{
-			desc:         "Subscribe to an empty stream with an empty consumer",
-			stream:       "",
-			consumer:     "",
-			errorMessage: rabbitmq.ErrEmptyStream,
-			handler:      handler{false},
+			desc:     "Subscribe to an empty stream with an empty consumer",
+			stream:   "",
+			consumer: "",
+			err:      rabbitmq.ErrEmptyConsumer,
+			handler:  handler{false},
 		},
 		{
-			desc:         "Subscribe to an empty stream with a valid consumer",
-			stream:       "",
-			consumer:     consumer,
-			errorMessage: rabbitmq.ErrEmptyStream,
-			handler:      handler{false},
+			desc:     "Subscribe to an empty stream with a valid consumer",
+			stream:   "",
+			consumer: consumer,
+			err:      rabbitmq.ErrEmptyStream,
+			handler:  handler{false},
 		},
 		{
-			desc:         "Subscribe to a valid stream with an empty consumer",
-			stream:       fmt.Sprintf("%s.%s", stream, streamTopic),
-			consumer:     "",
-			errorMessage: rabbitmq.ErrEmptyConsumer,
-			handler:      handler{false},
+			desc:     "Subscribe to a valid stream with an empty consumer",
+			stream:   fmt.Sprintf("events.%s", stream),
+			consumer: "",
+			err:      rabbitmq.ErrEmptyConsumer,
+			handler:  handler{false},
 		},
 		{
-			desc:         "Subscribe to another stream",
-			stream:       fmt.Sprintf("%s.%s", stream, streamTopic+"1"),
-			consumer:     consumer,
-			errorMessage: nil,
-			handler:      handler{false},
+			desc:     "Subscribe to another stream",
+			stream:   fmt.Sprintf("events.%s.%d", stream, 1),
+			consumer: consumer,
+			err:      nil,
+			handler:  handler{false},
 		},
 		{
-			desc:         "Subscribe to a stream with malformed handler",
-			stream:       fmt.Sprintf("%s.%s", stream, streamTopic),
-			consumer:     consumer,
-			errorMessage: nil,
-			handler:      handler{true},
+			desc:     "Subscribe to a stream with malformed handler",
+			stream:   fmt.Sprintf("events.%s", stream),
+			consumer: consumer,
+			err:      nil,
+			handler:  handler{true},
 		},
 	}
 
-	for _, pc := range subcases {
-		subcriber, err := rabbitmq.NewSubscriber(rabbitmqURL, logger)
-		if err != nil {
-			assert.Equal(t, err, pc.errorMessage, fmt.Sprintf("%s got expected error: %s - got: %s", pc.desc, pc.errorMessage, err))
+	for _, c := range cases {
+		t.Run(c.desc, func(t *testing.T) {
+			subcriber, err := rabbitmq.NewSubscriber(rabbitmqURL, logger)
+			if err != nil {
+				assert.Equal(t, err, c.err)
 
-			continue
-		}
-		assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
+				return
+			}
 
-		cfg := events.SubscriberConfig{
-			Stream:   pc.stream,
-			Consumer: pc.consumer,
-			Handler:  pc.handler,
-		}
-		switch err := subcriber.Subscribe(context.Background(), cfg); {
-		case err == nil:
-			assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
-		default:
-			assert.Equal(t, err, pc.errorMessage, fmt.Sprintf("%s got expected error: %s - got: %s", pc.desc, pc.errorMessage, err))
-		}
+			assert.Nil(t, err)
 
-		err = subcriber.Close()
-		assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
+			cfg := events.SubscriberConfig{
+				Stream:   c.stream,
+				Consumer: c.consumer,
+				Handler:  c.handler,
+			}
+			switch err := subcriber.Subscribe(context.Background(), cfg); {
+			case err == nil:
+				assert.Nil(t, err)
+			default:
+				assert.Equal(t, err, c.err)
+			}
+
+			err = subcriber.Close()
+			assert.Nil(t, err)
+		})
 	}
 }
 

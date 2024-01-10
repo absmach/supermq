@@ -44,7 +44,7 @@ const (
 	channelsRMPrefix   = "channel"
 	connectionRMPrefix = "connection"
 
-	thingsStream = "magistrala.things"
+	thingsStream = "events.magistrala.things"
 )
 
 type config struct {

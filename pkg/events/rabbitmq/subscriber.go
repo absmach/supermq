@@ -70,7 +70,7 @@ func (es *subEventStore) Subscribe(ctx context.Context, cfg events.SubscriberCon
 
 	subCfg := messaging.SubscriberConfig{
 		ID:    cfg.Consumer,
-		Topic: eventsPrefix + "." + cfg.Stream,
+		Topic: cfg.Stream,
 		Handler: &eventHandler{
 			handler: cfg.Handler,
 			ctx:     ctx,
@@ -111,7 +111,7 @@ func (eh *eventHandler) Handle(msg *messaging.Message) error {
 	}
 
 	if err := eh.handler.Handle(eh.ctx, event); err != nil {
-		eh.logger.Warn(fmt.Sprintf("failed to handle redis event: %s", err))
+		eh.logger.Warn(fmt.Sprintf("failed to handle rabbitmq event: %s", err))
 	}
 
 	return nil

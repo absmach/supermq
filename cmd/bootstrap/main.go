@@ -46,7 +46,7 @@ const (
 	defDB          = "bootstrap"
 	defSvcHTTPPort = "9013"
 
-	thingsStream = "magistrala.things"
+	thingsStream = "events.magistrala.things"
 	streamID     = "magistrala.bootstrap"
 )
 

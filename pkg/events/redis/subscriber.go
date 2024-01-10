@@ -1,9 +1,6 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build !nats && !rabbitmq
-// +build !nats,!rabbitmq
-
 package redis
 
 import (
@@ -71,7 +68,7 @@ func (es *subEventStore) Subscribe(ctx context.Context, cfg events.SubscriberCon
 				Count:    eventCount,
 			}).Result()
 			if err != nil {
-				es.logger.Warn(fmt.Sprintf("failed to read from Redis stream: %s", err))
+				es.logger.Warn(fmt.Sprintf("failed to read from redis stream: %s", err))
 
 				continue
 			}
