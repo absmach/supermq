@@ -57,13 +57,18 @@ func TestPublish(t *testing.T) {
 	publisher, err := rabbitmq.NewPublisher(context.Background(), rabbitmqURL, stream)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
-	_, err = rabbitmq.NewSubscriber("http://invaliurl.com", stream, consumer, logger)
+	_, err = rabbitmq.NewSubscriber("http://invaliurl.com", logger)
 	assert.NotNilf(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err), err)
 
-	subcriber, err := rabbitmq.NewSubscriber(rabbitmqURL, stream, consumer, logger)
+	subcriber, err := rabbitmq.NewSubscriber(rabbitmqURL, logger)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
-	err = subcriber.Subscribe(context.Background(), handler{})
+	cfg := events.SubscriberConfig{
+		Stream:   stream,
+		Consumer: consumer,
+		Handler:  handler{},
+	}
+	err = subcriber.Subscribe(context.Background(), cfg)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on subscribing to event store: %s", err))
 
 	cases := []struct {
@@ -210,14 +215,20 @@ func TestPubsub(t *testing.T) {
 	}
 
 	for _, pc := range subcases {
-		subcriber, err := rabbitmq.NewSubscriber(rabbitmqURL, pc.stream, pc.consumer, logger)
+		subcriber, err := rabbitmq.NewSubscriber(rabbitmqURL, logger)
 		if err != nil {
 			assert.Equal(t, err, pc.errorMessage, fmt.Sprintf("%s got expected error: %s - got: %s", pc.desc, pc.errorMessage, err))
 
 			continue
 		}
+		assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
 
-		switch err := subcriber.Subscribe(context.Background(), pc.handler); {
+		cfg := events.SubscriberConfig{
+			Stream:   pc.stream,
+			Consumer: pc.consumer,
+			Handler:  pc.handler,
+		}
+		switch err := subcriber.Subscribe(context.Background(), cfg); {
 		case err == nil:
 			assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
 		default:
@@ -233,10 +244,15 @@ func TestUnavailablePublish(t *testing.T) {
 	publisher, err := rabbitmq.NewPublisher(context.Background(), rabbitmqURL, stream)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
-	subcriber, err := rabbitmq.NewSubscriber(rabbitmqURL, stream, consumer, logger)
+	subcriber, err := rabbitmq.NewSubscriber(rabbitmqURL, logger)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
-	err = subcriber.Subscribe(context.Background(), handler{})
+	cfg := events.SubscriberConfig{
+		Stream:   stream,
+		Consumer: consumer,
+		Handler:  handler{},
+	}
+	err = subcriber.Subscribe(context.Background(), cfg)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on subscribing to event store: %s", err))
 
 	err = pool.Client.PauseContainer(container.Container.ID)

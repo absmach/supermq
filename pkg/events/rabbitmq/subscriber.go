@@ -30,22 +30,12 @@ var (
 )
 
 type subEventStore struct {
-	conn     *amqp.Connection
-	pubsub   messaging.PubSub
-	stream   string
-	consumer string
-	logger   *slog.Logger
+	conn   *amqp.Connection
+	pubsub messaging.PubSub
+	logger *slog.Logger
 }
 
-func NewSubscriber(url, stream, consumer string, logger *slog.Logger) (events.Subscriber, error) {
-	if stream == "" {
-		return nil, ErrEmptyStream
-	}
-
-	if consumer == "" {
-		return nil, ErrEmptyConsumer
-	}
-
+func NewSubscriber(url string, logger *slog.Logger) (events.Subscriber, error) {
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		return nil, err
@@ -64,20 +54,25 @@ func NewSubscriber(url, stream, consumer string, logger *slog.Logger) (events.Su
 	}
 
 	return &subEventStore{
-		conn:     conn,
-		pubsub:   pubsub,
-		stream:   stream,
-		consumer: consumer,
-		logger:   logger,
+		conn:   conn,
+		pubsub: pubsub,
+		logger: logger,
 	}, nil
 }
 
-func (es *subEventStore) Subscribe(ctx context.Context, handler events.EventHandler) error {
+func (es *subEventStore) Subscribe(ctx context.Context, cfg events.SubscriberConfig) error {
+	if cfg.Consumer == "" {
+		return ErrEmptyConsumer
+	}
+	if cfg.Stream == "" {
+		return ErrEmptyStream
+	}
+
 	subCfg := messaging.SubscriberConfig{
-		ID:    es.consumer,
-		Topic: eventsPrefix + "." + es.stream,
+		ID:    cfg.Consumer,
+		Topic: eventsPrefix + "." + cfg.Stream,
 		Handler: &eventHandler{
-			handler: handler,
+			handler: cfg.Handler,
 			ctx:     ctx,
 			logger:  es.logger,
 		},

@@ -47,22 +47,12 @@ var (
 )
 
 type subEventStore struct {
-	conn     *nats.Conn
-	pubsub   messaging.PubSub
-	stream   string
-	consumer string
-	logger   *slog.Logger
+	conn   *nats.Conn
+	pubsub messaging.PubSub
+	logger *slog.Logger
 }
 
-func NewSubscriber(ctx context.Context, url, stream, consumer string, logger *slog.Logger) (events.Subscriber, error) {
-	if stream == "" {
-		return nil, ErrEmptyStream
-	}
-
-	if consumer == "" {
-		return nil, ErrEmptyConsumer
-	}
-
+func NewSubscriber(ctx context.Context, url string, logger *slog.Logger) (events.Subscriber, error) {
 	conn, err := nats.Connect(url, nats.MaxReconnects(maxReconnects))
 	if err != nil {
 		return nil, err
@@ -82,20 +72,25 @@ func NewSubscriber(ctx context.Context, url, stream, consumer string, logger *sl
 	}
 
 	return &subEventStore{
-		conn:     conn,
-		pubsub:   pubsub,
-		stream:   stream,
-		consumer: consumer,
-		logger:   logger,
+		conn:   conn,
+		pubsub: pubsub,
+		logger: logger,
 	}, nil
 }
 
-func (es *subEventStore) Subscribe(ctx context.Context, handler events.EventHandler) error {
+func (es *subEventStore) Subscribe(ctx context.Context, cfg events.SubscriberConfig) error {
+	if cfg.Consumer == "" {
+		return ErrEmptyConsumer
+	}
+	if cfg.Stream == "" {
+		return ErrEmptyStream
+	}
+
 	subCfg := messaging.SubscriberConfig{
-		ID:    es.consumer,
-		Topic: eventsPrefix + "." + es.stream,
+		ID:    cfg.Consumer,
+		Topic: eventsPrefix + "." + cfg.Stream,
 		Handler: &eventHandler{
-			handler: handler,
+			handler: cfg.Handler,
 			ctx:     ctx,
 			logger:  es.logger,
 		},

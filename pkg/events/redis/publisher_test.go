@@ -66,13 +66,18 @@ func TestPublish(t *testing.T) {
 	publisher, err := redis.NewPublisher(context.Background(), redisURL, streamName, events.UnpublishedEventsCheckInterval)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
-	_, err = redis.NewSubscriber("http://invaliurl.com", streamName, consumer, logger)
+	_, err = redis.NewSubscriber("http://invaliurl.com", logger)
 	assert.NotNilf(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err), err)
 
-	subcriber, err := redis.NewSubscriber(redisURL, streamName, consumer, logger)
+	subcriber, err := redis.NewSubscriber(redisURL, logger)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
-	err = subcriber.Subscribe(context.Background(), handler{})
+	cfg := events.SubscriberConfig{
+		Stream:   streamName,
+		Consumer: consumer,
+		Handler:  handler{},
+	}
+	err = subcriber.Subscribe(context.Background(), cfg)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on subscribing to event store: %s", err))
 
 	cases := []struct {
@@ -223,7 +228,7 @@ func TestPubsub(t *testing.T) {
 	}
 
 	for _, pc := range subcases {
-		subcriber, err := redis.NewSubscriber(redisURL, pc.stream, pc.consumer, logger)
+		subcriber, err := redis.NewSubscriber(redisURL, logger)
 		if err != nil {
 			assert.Equal(t, err, pc.errorMessage, fmt.Sprintf("%s got expected error: %s - got: %s", pc.desc, pc.errorMessage, err))
 
@@ -232,7 +237,12 @@ func TestPubsub(t *testing.T) {
 
 		assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
 
-		switch err := subcriber.Subscribe(context.Background(), pc.handler); {
+		cfg := events.SubscriberConfig{
+			Stream:   pc.stream,
+			Consumer: pc.consumer,
+			Handler:  pc.handler,
+		}
+		switch err := subcriber.Subscribe(context.Background(), cfg); {
 		case err == nil:
 			assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
 		default:
@@ -248,10 +258,15 @@ func TestUnavailablePublish(t *testing.T) {
 	publisher, err := redis.NewPublisher(context.Background(), redisURL, streamName, time.Second)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
-	subcriber, err := redis.NewSubscriber(redisURL, streamName, consumer, logger)
+	subcriber, err := redis.NewSubscriber(redisURL, logger)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
-	err = subcriber.Subscribe(context.Background(), handler{})
+	cfg := events.SubscriberConfig{
+		Stream:   streamName,
+		Consumer: consumer,
+		Handler:  handler{},
+	}
+	err = subcriber.Subscribe(context.Background(), cfg)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on subscribing to event store: %s", err))
 
 	err = pool.Client.PauseContainer(container.Container.ID)
