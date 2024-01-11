@@ -1451,6 +1451,70 @@ func TestRefreshToken(t *testing.T) {
 	}
 }
 
+func TestResetSecret(t *testing.T) {
+	cRepo := new(mocks.Repository)
+	auth := new(authmocks.Service)
+	e := mocks.NewEmailer()
+	svc := users.NewService(cRepo, auth, e, phasher, idProvider, passRegex, true)
+
+	cases := []struct {
+		desc       string
+		resetToken string
+		secret     string
+		client     mgclients.Client
+		err        error
+	}{
+		{
+			desc:       "reset secret with valid reset token for an existing client",
+			resetToken: validToken,
+			client:     client,
+			secret:     "newSecret",
+			err:        nil,
+		},
+		{
+			desc:       "reset secret with valid reset token for an non-existing client",
+			resetToken: validToken,
+			client:     mgclients.Client{},
+			secret:     "newSecret",
+			err:        repoerr.ErrNotFound,
+		},
+		{
+			desc:       "reset secret with wrong password format for an existing client",
+			resetToken: validToken,
+			client:     client,
+			secret:     "secret",
+			err:        errors.ErrAuthentication,
+		},
+		{
+			desc:       "reset secret with invalid reset token for an existing client",
+			resetToken: inValidToken,
+			client:     client,
+			secret:     "newSecret",
+			err:        svcerr.ErrAuthentication,
+		},
+	}
+
+	for _, tc := range cases {
+		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: validToken}).Return(&magistrala.IdentityRes{UserId: client.ID}, nil)
+		if tc.resetToken == inValidToken {
+			repoCall = auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: inValidToken}).Return(&magistrala.IdentityRes{}, svcerr.ErrAuthentication)
+		}
+		repoCall1 := cRepo.On("RetrieveByID", context.Background(), client.ID).Return(tc.client, tc.err)
+		repoCall2 := cRepo.On("UpdateSecret", context.Background(), mock.Anything).Return(tc.client, tc.err)
+		err := svc.ResetSecret(context.Background(), tc.resetToken, tc.secret)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		if tc.err == nil {
+			ok := repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.client.ID)
+			assert.True(t, ok, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
+			ok = repoCall2.Parent.AssertCalled(t, "UpdateSecret", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("UpdateSecret was not called on %s", tc.desc))
+		}
+		repoCall.Unset()
+		repoCall1.Unset()
+		repoCall2.Unset()
+	}
+}
+
 func clientsToUUIDs(clients []mgclients.Client) []string {
 	ids := []string{}
 	for _, c := range clients {
