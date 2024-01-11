@@ -29,6 +29,7 @@ var (
 	idProvider     = uuid.New()
 	phasher        = hasher.New()
 	secret         = "strongsecret"
+	weakSecret     = "secret"
 	validCMetadata = mgclients.Metadata{"role": "client"}
 	client         = mgclients.Client{
 		ID:          testsutil.GenerateUUID(&testing.T{}),
@@ -1468,28 +1469,28 @@ func TestResetSecret(t *testing.T) {
 			desc:       "reset secret with valid reset token for an existing client",
 			resetToken: validToken,
 			client:     client,
-			secret:     "newSecret",
+			secret:     secret,
 			err:        nil,
 		},
 		{
 			desc:       "reset secret with valid reset token for an non-existing client",
 			resetToken: validToken,
 			client:     mgclients.Client{},
-			secret:     "newSecret",
+			secret:     secret,
 			err:        repoerr.ErrNotFound,
 		},
 		{
 			desc:       "reset secret with wrong password format for an existing client",
 			resetToken: validToken,
 			client:     client,
-			secret:     "secret",
+			secret:     weakSecret,
 			err:        errors.ErrAuthentication,
 		},
 		{
 			desc:       "reset secret with invalid reset token for an existing client",
 			resetToken: inValidToken,
 			client:     client,
-			secret:     "newSecret",
+			secret:     secret,
 			err:        svcerr.ErrAuthentication,
 		},
 	}
