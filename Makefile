@@ -5,7 +5,7 @@ MG_DOCKER_IMAGE_NAME_PREFIX ?= magistrala
 BUILD_DIR = build
 SERVICES = auth users things http coap ws lora influxdb-writer influxdb-reader mongodb-writer \
 	mongodb-reader cassandra-writer cassandra-reader postgres-writer postgres-reader timescale-writer timescale-reader cli \
-	bootstrap opcua twins mqtt provision certs smtp-notifier smpp-notifier invitations
+	bootstrap opcua twins mqtt provision certs smtp-notifier smpp-notifier invitations event-logs
 TEST_API_SERVICES = auth bootstrap certs http invitations notifiers provision readers things twins users
 TEST_API = $(addprefix test_api_,$(TEST_API_SERVICES))
 DOCKERS = $(addprefix docker_,$(SERVICES))
@@ -73,7 +73,7 @@ endef
 ADDON_SERVICES = bootstrap cassandra-reader cassandra-writer certs \
 					influxdb-reader influxdb-writer lora-adapter mongodb-reader mongodb-writer \
 					opcua-adapter postgres-reader postgres-writer provision smpp-notifier smtp-notifier \
-					timescale-reader timescale-writer twins
+					timescale-reader timescale-writer twins event-logs
 
 EXTERNAL_SERVICES = vault prometheus
 
