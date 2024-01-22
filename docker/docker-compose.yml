@@ -161,7 +161,7 @@ services:
           create_host_path: true
 
   invitations-db:
-    image: postgres:15.3-alpine
+    image: postgres:16.1-alpine
     container_name: magistrala-invitations-db
     restart: on-failure
     command: postgres -c "max_connections=${MG_POSTGRES_MAX_CONNECTIONS}"
@@ -232,7 +232,7 @@ services:
           create_host_path: true
 
   nginx:
-    image: nginx:1.23.3-alpine
+    image: nginx:1.25.0-alpine
     container_name: magistrala-nginx
     restart: on-failure
     volumes:
@@ -373,7 +373,7 @@ services:
           create_host_path: true
 
   users-db:
-    image: postgres:15.1-alpine
+    image: postgres:16.1-alpine
     container_name: magistrala-users-db
     restart: on-failure
     command: postgres -c "max_connections=${MG_POSTGRES_MAX_CONNECTIONS}"
@@ -458,7 +458,7 @@ services:
           create_host_path: true
 
   jaeger:
-    image: jaegertracing/all-in-one:1.38.0
+    image: jaegertracing/all-in-one:1.53.0
     container_name: magistrala-jaeger
     environment:
       COLLECTOR_OTLP_ENABLED: ${MG_JAEGER_COLLECTOR_OTLP_ENABLED}
