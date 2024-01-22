@@ -27,7 +27,7 @@ include:
 
 services:
   spicedb:
-    image: "authzed/spicedb"
+    image: "authzed/spicedb:v1.29.0"
     container_name: magistrala-spicedb
     command: "serve"
     restart: "always"
@@ -45,7 +45,7 @@ services:
       - spicedb-migrate
 
   spicedb-migrate:
-    image: "authzed/spicedb"
+    image: "authzed/spicedb:v1.29.0"
     container_name: magistrala-spicedb-migrate
     command: "migrate head"
     restart: "on-failure"
