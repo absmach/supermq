@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 
 	container, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "cassandra",
-		Tag:        "3.11.10",
+		Tag:        "3.11.16",
 	}, func(config *docker.HostConfig) {
 		config.AutoRemove = true
 		config.RestartPolicy = docker.RestartPolicy{Name: "no"}
