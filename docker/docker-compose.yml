@@ -278,7 +278,7 @@ services:
       - magistrala-things-db-volume:/var/lib/postgresql/data
 
   things-redis:
-    image: redis:6.2.2-alpine
+    image: redis:7.2.4-alpine
     container_name: magistrala-things-redis
     restart: on-failure
     networks:
