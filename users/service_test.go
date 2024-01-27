@@ -287,7 +287,6 @@ func TestRegisterClient(t *testing.T) {
 			tc.client.CreatedAt = expected.CreatedAt
 			tc.client.UpdatedAt = expected.UpdatedAt
 			tc.client.Credentials.Secret = expected.Credentials.Secret
-			tc.client.Owner = expected.Owner
 			tc.client.UpdatedBy = expected.UpdatedBy
 			assert.Equal(t, tc.client, expected, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.client, expected))
 			ok := repoCall2.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything)
@@ -364,7 +363,6 @@ func TestRegisterClient(t *testing.T) {
 			tc.client.CreatedAt = expected.CreatedAt
 			tc.client.UpdatedAt = expected.UpdatedAt
 			tc.client.Credentials.Secret = expected.Credentials.Secret
-			tc.client.Owner = expected.Owner
 			tc.client.UpdatedBy = expected.UpdatedBy
 			assert.Equal(t, tc.client, expected, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.client, expected))
 			ok := repoCall5.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything)
