@@ -88,7 +88,7 @@ func main() {
 	}
 
 	var logger *slog.Logger
-	logger, err := mglog.New(os.Stdout, cfg.LogLevel)
+	logger, err := mglog.New(os.Stdout, cfg.LogLevel, nil)
 	if err != nil {
 		log.Fatalf("failed to init logger: %s", err.Error())
 	}

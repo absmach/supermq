@@ -25,7 +25,7 @@ import (
 var (
 	port        string
 	addr        string
-	testLog, _  = mglog.New(os.Stdout, "info")
+	testLog, _  = mglog.New(os.Stdout, "info", nil)
 	testDB      = "test"
 	collection  = "messages"
 	msgsNum     = 100

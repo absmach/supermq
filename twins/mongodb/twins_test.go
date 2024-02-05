@@ -36,7 +36,7 @@ const (
 var (
 	port        string
 	addr        string
-	testLog, _  = mglog.New(os.Stdout, "info")
+	testLog, _  = mglog.New(os.Stdout, "info", nil)
 	idProvider  = uuid.New()
 	invalidName = strings.Repeat("m", maxNameSize+1)
 )

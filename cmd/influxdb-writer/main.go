@@ -56,7 +56,7 @@ func main() {
 		log.Fatalf("failed to load %s configuration : %s", svcName, err)
 	}
 
-	logger, err := mglog.New(os.Stdout, cfg.LogLevel)
+	logger, err := mglog.New(os.Stdout, cfg.LogLevel, nil)
 	if err != nil {
 		log.Fatalf("failed to init logger: %s", err.Error())
 	}

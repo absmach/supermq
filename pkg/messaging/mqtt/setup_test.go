@@ -57,7 +57,7 @@ func TestMain(m *testing.M) {
 	address = fmt.Sprintf("%s:%s", "localhost", container.GetPort(port))
 	pool.MaxWait = poolMaxWait
 
-	logger, err = mglog.New(os.Stdout, "debug")
+	logger, err = mglog.New(os.Stdout, "debug", nil)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}

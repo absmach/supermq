@@ -16,7 +16,7 @@ import (
 	"github.com/ory/dockertest/v3/docker"
 )
 
-var logger, _ = mglog.New(os.Stdout, "info")
+var logger, _ = mglog.New(os.Stdout, "info", nil)
 
 func TestMain(m *testing.M) {
 	pool, err := dockertest.NewPool("")

@@ -17,7 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var testLog, _ = mglog.New(os.Stdout, "info")
+var testLog, _ = mglog.New(os.Stdout, "info", nil)
 
 func TestMain(m *testing.M) {
 	pool, err := dockertest.NewPool("")

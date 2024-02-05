@@ -442,7 +442,7 @@ func TestDisconnect(t *testing.T) {
 }
 
 func newHandler() (session.Handler, *authmocks.AuthClient) {
-	logger, err := mglog.New(&logBuffer, "debug")
+	logger, err := mglog.New(&logBuffer, "debug", nil)
 	if err != nil {
 		log.Fatalf("failed to create logger: %s", err)
 	}
