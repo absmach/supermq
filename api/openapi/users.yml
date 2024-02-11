@@ -965,33 +965,54 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  /domains/{domainID}/users:
+
+  /users/{memberID}/channels:
     get:
-      summary: List users assigned to domain
+      summary: List of channels connected to specified user
       description: |
-        List users assigned to domain that is identified by the domain ID.
+        Retrieves list of channels connected to specified user with pagination
+        metadata.
       tags:
-        - Domains
+        - Channels
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/MemberID"
         - $ref: "#/components/parameters/Offset"
-        - $ref: "#/components/parameters/Metadata"
-        - $ref: "#/components/parameters/Status"
-      security:
-        - bearerAuth: []
+        - $ref: "#/components/parameters/Limit"
       responses:
         "200":
-          $ref: "#/components/responses/UserPageRes"
-          description: List of users assigned to domain.
+          $ref: "#/components/responses/ChannelPageRes"
         "400":
-          description: Failed due to malformed domain's ID.
+          description: Failed due to malformed query parameters.
         "401":
           description: Missing or invalid access token provided.
-        "403":
-          description: Unauthorized access the domain ID.
         "404":
-          description: A non-existent entity request.
+          description: Thing does not exist.
+        "422":
+          description: Database can't process request.
+        "500":
+          $ref: "#/components/responses/ServiceError"
+
+  /groups/{memberID}/channels:
+    get:
+      summary: List of channels connected to specified group
+      description: |
+        Retrieves list of channels connected to specified group with pagination
+        metadata.
+      tags:
+        - Channels
+      parameters:
+        - $ref: "#/components/parameters/MemberID"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          $ref: "#/components/responses/ChannelPageRes"
+        "400":
+          description: Failed due to malformed query parameters.
+        "401":
+          description: Missing or invalid access token provided.
+        "404":
+          description: Thing does not exist.
         "422":
           description: Database can't process request.
         "500":
