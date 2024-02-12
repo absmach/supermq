@@ -29,7 +29,7 @@ func NewPublisher(ctx context.Context, url, stream string, flushPeriod time.Dura
 	es := &pubEventStore{
 		client:            redis.NewClient(opts),
 		unpublishedEvents: make(chan *redis.XAddArgs, events.MaxUnpublishedEvents),
-		stream:            stream,
+		stream:            eventsPrefix + stream,
 		flushPeriod:       flushPeriod,
 	}
 

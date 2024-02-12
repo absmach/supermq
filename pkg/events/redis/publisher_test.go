@@ -20,13 +20,12 @@ import (
 )
 
 var (
-	streamName = "magistrala.eventstest"
+	stream     = "tests.events"
 	consumer   = "test-consumer"
 	eventsChan = make(chan map[string]interface{})
 	logger     = mglog.NewMock()
 	errFailed  = errors.New("failed")
 	numEvents  = 100
-	stream     = "tests.events"
 )
 
 type testEvent struct {
@@ -57,10 +56,10 @@ func TestPublish(t *testing.T) {
 	err := redisClient.FlushAll(context.Background()).Err()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on flushing redis: %s", err))
 
-	_, err = redis.NewPublisher(context.Background(), "http://invaliurl.com", streamName, events.UnpublishedEventsCheckInterval)
+	_, err = redis.NewPublisher(context.Background(), "http://invaliurl.com", stream, events.UnpublishedEventsCheckInterval)
 	assert.NotNilf(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err), err)
 
-	publisher, err := redis.NewPublisher(context.Background(), redisURL, streamName, events.UnpublishedEventsCheckInterval)
+	publisher, err := redis.NewPublisher(context.Background(), redisURL, stream, events.UnpublishedEventsCheckInterval)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 	defer publisher.Close()
 
@@ -136,33 +135,31 @@ func TestPublish(t *testing.T) {
 		},
 	}
 
-	for _, c := range cases {
-		t.Run(c.desc, func(t *testing.T) {
-			event := testEvent{Data: c.event}
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			event := testEvent{Data: tc.event}
 
 			err := publisher.Publish(context.Background(), event)
-			switch c.err {
+			switch tc.err {
 			case nil:
-				assert.Nil(t, err)
-
 				receivedEvent := <-eventsChan
 
 				roa, err := strconv.ParseInt(receivedEvent["occurred_at"].(string), 10, 64)
 				assert.Nil(t, err)
 				if assert.WithinRange(t, time.Unix(0, roa), time.Now().Add(-time.Second), time.Now().Add(time.Second)) {
 					delete(receivedEvent, "occurred_at")
-					delete(c.event, "occurred_at")
+					delete(tc.event, "occurred_at")
 				}
 
-				assert.Equal(t, c.event["temperature"], receivedEvent["temperature"])
-				assert.Equal(t, c.event["humidity"], receivedEvent["humidity"])
-				assert.Equal(t, c.event["sensor_id"], receivedEvent["sensor_id"])
-				assert.Equal(t, c.event["status"], receivedEvent["status"])
-				assert.Equal(t, c.event["timestamp"], receivedEvent["timestamp"])
-				assert.Equal(t, c.event["operation"], receivedEvent["operation"])
+				assert.Equal(t, tc.event["temperature"], receivedEvent["temperature"])
+				assert.Equal(t, tc.event["humidity"], receivedEvent["humidity"])
+				assert.Equal(t, tc.event["sensor_id"], receivedEvent["sensor_id"])
+				assert.Equal(t, tc.event["status"], receivedEvent["status"])
+				assert.Equal(t, tc.event["timestamp"], receivedEvent["timestamp"])
+				assert.Equal(t, tc.event["operation"], receivedEvent["operation"])
 
 			default:
-				assert.ErrorContains(t, err, c.err.Error())
+				assert.ErrorContains(t, err, tc.err.Error())
 			}
 		})
 	}
@@ -197,7 +194,7 @@ func TestPubsub(t *testing.T) {
 			desc:     "Subscribe to an empty stream with an empty consumer",
 			stream:   "",
 			consumer: "",
-			err:      redis.ErrEmptyConsumer,
+			err:      redis.ErrEmptyStream,
 			handler:  handler{false},
 		},
 		{
@@ -230,25 +227,25 @@ func TestPubsub(t *testing.T) {
 		},
 	}
 
-	for _, c := range cases {
-		t.Run(c.desc, func(t *testing.T) {
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
 			subcriber, err := redis.NewSubscriber(redisURL, logger)
 			if err != nil {
-				assert.Equal(t, err, c.err)
+				assert.Equal(t, err, tc.err)
 
 				return
 			}
 
 			cfg := events.SubscriberConfig{
-				Stream:   c.stream,
-				Consumer: c.consumer,
-				Handler:  c.handler,
+				Stream:   tc.stream,
+				Consumer: tc.consumer,
+				Handler:  tc.handler,
 			}
-			switch err := subcriber.Subscribe(context.TODO(), cfg); {
+			switch err := subcriber.Subscribe(context.Background(), cfg); {
 			case err == nil:
 				assert.Nil(t, err)
 			default:
-				assert.Equal(t, err, c.err)
+				assert.Equal(t, err, tc.err)
 			}
 
 			err = subcriber.Close()
@@ -258,14 +255,14 @@ func TestPubsub(t *testing.T) {
 }
 
 func TestUnavailablePublish(t *testing.T) {
-	publisher, err := redis.NewPublisher(context.Background(), redisURL, streamName, time.Second)
+	publisher, err := redis.NewPublisher(context.Background(), redisURL, stream, time.Second)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
 	subcriber, err := redis.NewSubscriber(redisURL, logger)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
 	cfg := events.SubscriberConfig{
-		Stream:   streamName,
+		Stream:   "events." + stream,
 		Consumer: consumer,
 		Handler:  handler{},
 	}

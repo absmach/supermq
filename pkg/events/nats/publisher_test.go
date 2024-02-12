@@ -150,7 +150,6 @@ func TestPublish(t *testing.T) {
 				assert.Equal(t, tc.event["status"], receivedEvent["status"])
 				assert.Equal(t, tc.event["timestamp"], receivedEvent["timestamp"])
 				assert.Equal(t, tc.event["operation"], receivedEvent["operation"])
-
 			default:
 				assert.ErrorContains(t, err, tc.err.Error())
 			}
@@ -184,7 +183,7 @@ func TestPubsub(t *testing.T) {
 			desc:     "Subscribe to an empty stream with an empty consumer",
 			stream:   "",
 			consumer: "",
-			err:      nats.ErrEmptyConsumer,
+			err:      nats.ErrEmptyStream,
 			handler:  handler{false},
 		},
 		{
@@ -217,25 +216,25 @@ func TestPubsub(t *testing.T) {
 		},
 	}
 
-	for _, pc := range cases {
-		t.Run(pc.desc, func(t *testing.T) {
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
 			subcriber, err := nats.NewSubscriber(context.Background(), natsURL, logger)
 			if err != nil {
-				assert.Equal(t, err, pc.err)
+				assert.Equal(t, err, tc.err)
 
 				return
 			}
 
 			cfg := events.SubscriberConfig{
-				Stream:   pc.stream,
-				Consumer: pc.consumer,
-				Handler:  pc.handler,
+				Stream:   tc.stream,
+				Consumer: tc.consumer,
+				Handler:  tc.handler,
 			}
 			switch err := subcriber.Subscribe(context.Background(), cfg); {
 			case err == nil:
 				assert.Nil(t, err)
 			default:
-				assert.Equal(t, err, pc.err)
+				assert.Equal(t, err, tc.err)
 			}
 
 			err = subcriber.Close()
@@ -252,7 +251,7 @@ func TestUnavailablePublish(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
 	cfg := events.SubscriberConfig{
-		Stream:   stream,
+		Stream:   "events." + stream,
 		Consumer: consumer,
 		Handler:  handler{},
 	}

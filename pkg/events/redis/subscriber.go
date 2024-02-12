@@ -14,9 +14,10 @@ import (
 )
 
 const (
-	eventCount = 100
-	exists     = "BUSYGROUP Consumer Group name already exists"
-	group      = "magistrala"
+	eventsPrefix = "events."
+	eventCount   = 100
+	exists       = "BUSYGROUP Consumer Group name already exists"
+	group        = "magistrala"
 )
 
 var _ events.Subscriber = (*subEventStore)(nil)
@@ -47,11 +48,11 @@ func NewSubscriber(url string, logger *slog.Logger) (events.Subscriber, error) {
 }
 
 func (es *subEventStore) Subscribe(ctx context.Context, cfg events.SubscriberConfig) error {
-	if cfg.Consumer == "" {
-		return ErrEmptyConsumer
-	}
 	if cfg.Stream == "" {
 		return ErrEmptyStream
+	}
+	if cfg.Consumer == "" {
+		return ErrEmptyConsumer
 	}
 
 	err := es.client.XGroupCreateMkStream(ctx, cfg.Stream, group, "$").Err()

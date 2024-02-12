@@ -61,11 +61,11 @@ func NewSubscriber(url string, logger *slog.Logger) (events.Subscriber, error) {
 }
 
 func (es *subEventStore) Subscribe(ctx context.Context, cfg events.SubscriberConfig) error {
-	if cfg.Consumer == "" {
-		return ErrEmptyConsumer
-	}
 	if cfg.Stream == "" {
 		return ErrEmptyStream
+	}
+	if cfg.Consumer == "" {
+		return ErrEmptyConsumer
 	}
 
 	subCfg := messaging.SubscriberConfig{
