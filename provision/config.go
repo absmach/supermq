@@ -60,7 +60,6 @@ type Cert struct {
 
 // Config struct of Provision.
 type Config struct {
-	LogLevel      string             `toml:"log_level" env:"MG_PROVISION_LOG_LEVEL" envDefault:"info"`
 	File          string             `toml:"file"      env:"MG_PROVISION_CONFIG_FILE" envDefault:"config.toml"`
 	Server        ServiceConf        `toml:"server"    mapstructure:"server"`
 	Bootstrap     Bootstrap          `toml:"bootstrap" mapstructure:"bootstrap"`
