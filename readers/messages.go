@@ -37,6 +37,10 @@ type MessagesPage struct {
 	PageMetadata
 	Total    uint64
 	Messages []Message
+	Sum 	float64
+	Avg 	float64
+	Max 	float64
+	Min 	float64
 }
 
 // PageMetadata represents the parameters used to create database queries.

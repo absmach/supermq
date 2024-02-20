@@ -109,6 +109,66 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 	}
 	page.Total = total
 
+	q= fmt.Sprintf(`SELECT SUM(*) FROM %s WHERE %s;`, format, fmtCondition(chanID, rpm))
+	rows, err = tr.db.NamedQuery(q, params)
+	if err != nil {
+		return readers.MessagesPage{}, errors.Wrap(readers.ErrReadMessages, err)
+	}
+	defer rows.Close()
+
+	sum := float64(0)
+	if rows.Next() {
+		if err := rows.Scan(&sum); err != nil {
+			return page, err
+		}
+	}
+	page.Sum = sum
+
+	q= fmt.Sprintf(`SELECT AVG(*) FROM %s WHERE %s;`, format, fmtCondition(chanID, rpm))
+	rows, err = tr.db.NamedQuery(q, params)
+	if err != nil {
+		return readers.MessagesPage{}, errors.Wrap(readers.ErrReadMessages, err)
+	}
+	defer rows.Close()
+
+	avg := float64(0)
+	if rows.Next() {
+		if err := rows.Scan(&avg); err != nil {
+			return page, err
+		}
+	}
+	page.Avg = avg
+
+	q= fmt.Sprintf(`SELECT MAX(*) FROM %s WHERE %s;`, format, fmtCondition(chanID, rpm))
+	rows, err = tr.db.NamedQuery(q, params)
+	if err != nil {
+		return readers.MessagesPage{}, errors.Wrap(readers.ErrReadMessages, err)
+	}
+	defer rows.Close()
+
+	max := float64(0)
+	if rows.Next() {
+		if err := rows.Scan(&max); err != nil {
+			return page, err
+		}
+	}
+	page.Max = max
+
+	q= fmt.Sprintf(`SELECT MIN(*) FROM %s WHERE %s;`, format, fmtCondition(chanID, rpm))
+	rows, err = tr.db.NamedQuery(q, params)
+	if err != nil {
+		return readers.MessagesPage{}, errors.Wrap(readers.ErrReadMessages, err)
+	}
+	defer rows.Close()
+
+	min := float64(0)
+	if rows.Next() {
+		if err := rows.Scan(&min); err != nil {
+			return page, err
+		}
+	}
+	page.Min = min
+
 	return page, nil
 }
 
@@ -193,3 +253,47 @@ func (msg jsonMessage) toMap() (map[string]interface{}, error) {
 	ret["payload"] = pld
 	return ret, nil
 }
+
+// type AggregationQueryParams struct {
+//     ChannelID    string
+//     From         time.Time
+//     To           time.Time
+//     AggregateBy  string 
+//     TimeInterval string
+//     PageMetadata readers.PageMetadata
+// }
+
+// type AggregationResult struct {
+//     Time  time.Time
+//     Value float64
+// }
+
+// func (tr *timescaleRepository) AggregateData(params AggregationQueryParams) ([]AggregationResult, error) {
+// 	condition := fmtCondition(params.ChannelID, params.PageMetadata)
+
+// 	format := defTable
+
+// 	q := fmt.Sprintf(
+// 		`SELECT time_bucket('%s', time) AS bucket, %s AS value FROM %s WHERE %s GROUP BY bucket ORDER BY bucket ASC;`, params.TimeInterval, params.AggregateBy, format, condition)
+	
+// 	rows, err := tr.db.Query(q, params.From, params.To)
+// 	if err != nil {
+// 		return nil, errors.Wrap(readers.ErrReadMessages, err)
+// 	}
+// 	defer rows.Close()
+
+// 	var results []AggregationResult
+// 	for rows.Next() {
+// 		var r AggregationResult
+// 		if err := rows.Scan(&r.Time, &r.Value); err != nil {
+// 			return nil, errors.Wrap(readers.ErrReadMessages, err)
+// 		}
+// 		results = append(results, r)
+// 	}
+
+// 	if err := rows.Err(); err != nil {
+// 		return nil, errors.Wrap(readers.ErrReadMessages, err)
+// 	}
+
+// 	return results, nil
+// }

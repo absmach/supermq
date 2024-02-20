@@ -98,6 +98,14 @@ type PageMetadata struct {
 	UserID          string   `json:"user_id,omitempty"`
 	DomainID        string   `json:"domain_id,omitempty"`
 	Relation        string   `json:"relation,omitempty"`
+	Subtopic        string   `json:"subtopic,omitempty"`
+	Publisher       string   `json:"publisher,omitempty"`
+	Comparator      string   `json:"comparator,omitempty"`
+	BoolValue       bool     `json:"vb,omitempty"`
+	StringValue     string   `json:"vs,omitempty"`
+	DataValue       string   `json:"vd,omitempty"`
+	From            float64  `json:"from,omitempty"`
+	To              float64  `json:"to,omitempty"`
 }
 
 // Credentials represent client credentials: it contains
@@ -1352,6 +1360,30 @@ func (pm PageMetadata) query() (string, error) {
 	}
 	if pm.Relation != "" {
 		q.Add("relation", pm.Relation)
+	}
+	if pm.Subtopic != "" {
+		q.Add("subtopic", pm.Subtopic)
+	}
+	if pm.Publisher != "" {
+		q.Add("publisher", pm.Publisher)
+	}
+	if pm.Comparator != "" {
+		q.Add("comparator", pm.Comparator)
+	}
+	if pm.BoolValue {
+		q.Add("bool_value", strconv.FormatBool(pm.BoolValue))
+	}
+	if pm.StringValue != "" {
+		q.Add("string_value", pm.StringValue)
+	}
+	if pm.DataValue != "" {
+		q.Add("data_value", pm.DataValue)
+	}
+	if pm.From != 0 {
+		q.Add("from", strconv.FormatFloat(pm.From, 'f', -1, 64))
+	}
+	if pm.To != 0 {
+		q.Add("to", strconv.FormatFloat(pm.To, 'f', -1, 64))
 	}
 
 	return q.Encode(), nil
