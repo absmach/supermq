@@ -88,7 +88,7 @@ func TestRegisterClient(t *testing.T) {
 			deletePoliciesResponse: &magistrala.DeletePoliciesRes{Deleted: true},
 			token:                  validToken,
 			saveErr:                repoerr.ErrConflict,
-			err:                    errors.ErrConflict,
+			err:                    repoerr.ErrConflict,
 		},
 		{
 			desc: "register a new enabled client with name",
@@ -227,7 +227,7 @@ func TestRegisterClient(t *testing.T) {
 				Role: mgclients.AdminRole,
 			},
 			addPoliciesResponse: &magistrala.AddPoliciesRes{Added: false},
-			err:                 errors.ErrAuthorization,
+			err:                 svcerr.ErrAuthorization,
 		},
 		{
 			desc: "register a new client with failed to add policies with err",
@@ -337,7 +337,7 @@ func TestRegisterClient(t *testing.T) {
 			identifyResponse:  &magistrala.IdentityRes{UserId: wrongID},
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
 			token:             validToken,
-			err:               errors.ErrAuthorization,
+			err:               svcerr.ErrAuthorization,
 		},
 		{
 			desc:               "register a new client as admin with failed check on super admin",
@@ -345,8 +345,8 @@ func TestRegisterClient(t *testing.T) {
 			identifyResponse:   &magistrala.IdentityRes{UserId: validID},
 			authorizeResponse:  &magistrala.AuthorizeRes{Authorized: false},
 			token:              validToken,
-			checkSuperAdminErr: errors.ErrAuthorization,
-			err:                errors.ErrAuthorization,
+			checkSuperAdminErr: svcerr.ErrAuthorization,
+			err:                svcerr.ErrAuthorization,
 		},
 	}
 	for _, tc := range cases2 {
@@ -418,7 +418,7 @@ func TestViewClient(t *testing.T) {
 			retrieveByIDResponse: mgclients.Client{},
 			token:                validToken,
 			clientID:             client.ID,
-			retrieveByIDErr:      errors.ErrNotFound,
+			retrieveByIDErr:      repoerr.ErrNotFound,
 			err:                  svcerr.ErrNotFound,
 		},
 		{
@@ -435,7 +435,7 @@ func TestViewClient(t *testing.T) {
 			desc:             "view client as admin user with invalid token",
 			identifyResponse: &magistrala.IdentityRes{},
 			token:            inValidToken,
-			identifyErr:      errors.ErrAuthentication,
+			identifyErr:      svcerr.ErrAuthentication,
 			err:              svcerr.ErrAuthentication,
 		},
 		{
@@ -444,7 +444,7 @@ func TestViewClient(t *testing.T) {
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
 			token:             validToken,
 			clientID:          client.ID,
-			err:               errors.ErrAuthorization,
+			err:               svcerr.ErrAuthorization,
 		},
 		{
 			desc:               "view client as admin user with failed check on super admin",
@@ -452,8 +452,8 @@ func TestViewClient(t *testing.T) {
 			authorizeResponse:  &magistrala.AuthorizeRes{Authorized: false},
 			token:              validToken,
 			clientID:           client.ID,
-			checkSuperAdminErr: errors.ErrAuthorization,
-			err:                errors.ErrAuthorization,
+			checkSuperAdminErr: svcerr.ErrAuthorization,
+			err:                svcerr.ErrAuthorization,
 		},
 	}
 
@@ -548,7 +548,7 @@ func TestListClients(t *testing.T) {
 			authorizeResponse:   &magistrala.AuthorizeRes{Authorized: true},
 			retrieveAllResponse: mgclients.ClientsPage{},
 			token:               validToken,
-			retrieveAllErr:      errors.ErrNotFound,
+			retrieveAllErr:      repoerr.ErrNotFound,
 			err:                 svcerr.ErrNotFound,
 		},
 		{
@@ -559,7 +559,7 @@ func TestListClients(t *testing.T) {
 			identifyResponse:  &magistrala.IdentityRes{UserId: client.ID},
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
 			token:             validToken,
-			superAdminErr:     errors.ErrAuthorization,
+			superAdminErr:     svcerr.ErrAuthorization,
 			err:               nil,
 		},
 		{
@@ -593,7 +593,7 @@ func TestListClients(t *testing.T) {
 			authorizeResponse:   &magistrala.AuthorizeRes{Authorized: false},
 			retrieveAllResponse: mgclients.ClientsPage{},
 			token:               validToken,
-			retrieveAllErr:      errors.ErrNotFound,
+			retrieveAllErr:      repoerr.ErrNotFound,
 			err:                 svcerr.ErrNotFound,
 		},
 	}
@@ -660,7 +660,7 @@ func TestUpdateClient(t *testing.T) {
 			client:           client1,
 			identifyResponse: &magistrala.IdentityRes{},
 			token:            inValidToken,
-			identifyErr:      errors.ErrAuthentication,
+			identifyErr:      svcerr.ErrAuthentication,
 			err:              svcerr.ErrAuthentication,
 		},
 		{
@@ -694,7 +694,7 @@ func TestUpdateClient(t *testing.T) {
 			desc:             "update client name as admin with invalid token",
 			client:           client1,
 			identifyResponse: &magistrala.IdentityRes{},
-			identifyErr:      errors.ErrAuthentication,
+			identifyErr:      svcerr.ErrAuthentication,
 			token:            inValidToken,
 			err:              svcerr.ErrAuthentication,
 		},
@@ -704,7 +704,7 @@ func TestUpdateClient(t *testing.T) {
 			identifyResponse:  &magistrala.IdentityRes{UserId: wrongID},
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
 			token:             validToken,
-			err:               errors.ErrAuthorization,
+			err:               svcerr.ErrAuthorization,
 		},
 		{
 			desc:               "update client with failed check on super admin",
@@ -712,8 +712,8 @@ func TestUpdateClient(t *testing.T) {
 			identifyResponse:   &magistrala.IdentityRes{UserId: adminID},
 			authorizeResponse:  &magistrala.AuthorizeRes{Authorized: false},
 			token:              validToken,
-			checkSuperAdminErr: errors.ErrAuthorization,
-			err:                errors.ErrAuthorization,
+			checkSuperAdminErr: svcerr.ErrAuthorization,
+			err:                svcerr.ErrAuthorization,
 		},
 		{
 			desc:              "update client name as admin with repo error on update",
@@ -778,7 +778,7 @@ func TestUpdateClientTags(t *testing.T) {
 			desc:             "update client tags as normal user with invalid token",
 			client:           client,
 			identifyResponse: &magistrala.IdentityRes{},
-			identifyErr:      errors.ErrAuthentication,
+			identifyErr:      svcerr.ErrAuthentication,
 			token:            inValidToken,
 			err:              svcerr.ErrAuthentication,
 		},
@@ -803,7 +803,7 @@ func TestUpdateClientTags(t *testing.T) {
 			desc:             "update client tags as admin with invalid token",
 			client:           client,
 			identifyResponse: &magistrala.IdentityRes{},
-			identifyErr:      errors.ErrAuthentication,
+			identifyErr:      svcerr.ErrAuthentication,
 			token:            inValidToken,
 			err:              svcerr.ErrAuthentication,
 		},
@@ -813,16 +813,16 @@ func TestUpdateClientTags(t *testing.T) {
 			identifyResponse:  &magistrala.IdentityRes{UserId: wrongID},
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
 			token:             validToken,
-			err:               errors.ErrAuthorization,
+			err:               svcerr.ErrAuthorization,
 		},
 		{
 			desc:               "update client tags as admin with failed check on super admin",
 			client:             client,
 			identifyResponse:   &magistrala.IdentityRes{UserId: adminID},
 			authorizeResponse:  &magistrala.AuthorizeRes{Authorized: false},
-			checkSuperAdminErr: errors.ErrAuthorization,
+			checkSuperAdminErr: svcerr.ErrAuthorization,
 			token:              validToken,
-			err:                errors.ErrAuthorization,
+			err:                svcerr.ErrAuthorization,
 		},
 		{
 			desc:                     "update client tags as admin with repo error on update",
@@ -891,7 +891,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 			token:            inValidToken,
 			id:               client.ID,
 			identifyResponse: &magistrala.IdentityRes{},
-			identifyErr:      errors.ErrAuthentication,
+			identifyErr:      svcerr.ErrAuthentication,
 			err:              svcerr.ErrAuthentication,
 		},
 		{
@@ -919,7 +919,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 			token:            inValidToken,
 			id:               client.ID,
 			identifyResponse: &magistrala.IdentityRes{},
-			identifyErr:      errors.ErrAuthentication,
+			identifyErr:      svcerr.ErrAuthentication,
 			err:              svcerr.ErrAuthentication,
 		},
 		{
@@ -929,7 +929,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 			id:                client.ID,
 			identifyResponse:  &magistrala.IdentityRes{UserId: wrongID},
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
-			err:               errors.ErrAuthorization,
+			err:               svcerr.ErrAuthorization,
 		},
 		{
 			desc:               "update client identity as admin with failed check on super admin",
@@ -938,8 +938,8 @@ func TestUpdateClientIdentity(t *testing.T) {
 			id:                 client.ID,
 			identifyResponse:   &magistrala.IdentityRes{UserId: adminID},
 			authorizeResponse:  &magistrala.AuthorizeRes{Authorized: false},
-			checkSuperAdminErr: errors.ErrAuthorization,
-			err:                errors.ErrAuthorization,
+			checkSuperAdminErr: svcerr.ErrAuthorization,
+			err:                svcerr.ErrAuthorization,
 		},
 		{
 			desc:                         "update client identity as admin with repo error on update",
@@ -1011,7 +1011,7 @@ func TestUpdateClientRole(t *testing.T) {
 			desc:             "update client role with invalid token",
 			client:           client,
 			identifyResponse: &magistrala.IdentityRes{},
-			identifyErr:      errors.ErrAuthentication,
+			identifyErr:      svcerr.ErrAuthentication,
 			token:            inValidToken,
 			err:              svcerr.ErrAuthentication,
 		},
@@ -1021,16 +1021,16 @@ func TestUpdateClientRole(t *testing.T) {
 			identifyResponse:  &magistrala.IdentityRes{UserId: wrongID},
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
 			token:             validToken,
-			err:               errors.ErrAuthorization,
+			err:               svcerr.ErrAuthorization,
 		},
 		{
 			desc:               "update client role with failed check on super admin",
 			client:             client,
 			identifyResponse:   &magistrala.IdentityRes{UserId: client.ID},
 			authorizeResponse:  &magistrala.AuthorizeRes{Authorized: false},
-			checkSuperAdminErr: errors.ErrAuthorization,
+			checkSuperAdminErr: svcerr.ErrAuthorization,
 			token:              validToken,
-			err:                errors.ErrAuthorization,
+			err:                svcerr.ErrAuthorization,
 		},
 		{
 			desc:              "update client role with failed authorization on add policy",
@@ -1039,7 +1039,7 @@ func TestUpdateClientRole(t *testing.T) {
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: true},
 			addPolicyResponse: &magistrala.AddPolicyRes{Added: false},
 			token:             validToken,
-			err:               errors.ErrAuthorization,
+			err:               svcerr.ErrAuthorization,
 		},
 		{
 			desc:              "update client role with failed to add policy",
@@ -1175,7 +1175,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			newSecret:        newSecret,
 			token:            inValidToken,
 			identifyResponse: &magistrala.IdentityRes{},
-			identifyErr:      errors.ErrAuthentication,
+			identifyErr:      svcerr.ErrAuthentication,
 			err:              svcerr.ErrAuthentication,
 		},
 		{
@@ -1215,7 +1215,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			identifyResponse:           &magistrala.IdentityRes{UserId: client.ID},
 			retrieveByIDResponse:       client,
 			retrieveByIdentityResponse: rClient,
-			err:                        errors.ErrLogin,
+			err:                        svcerr.ErrLogin,
 		},
 		{
 			desc:                       "update client secret with too long new secret",
@@ -1309,7 +1309,7 @@ func TestEnableClient(t *testing.T) {
 			token:            inValidToken,
 			client:           disabledClient1,
 			identifyResponse: &magistrala.IdentityRes{},
-			identifyErr:      errors.ErrAuthentication,
+			identifyErr:      svcerr.ErrAuthentication,
 			err:              svcerr.ErrAuthentication,
 		},
 		{
@@ -1319,7 +1319,7 @@ func TestEnableClient(t *testing.T) {
 			client:            disabledClient1,
 			identifyResponse:  &magistrala.IdentityRes{UserId: disabledClient1.ID},
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
-			err:               errors.ErrAuthorization,
+			err:               svcerr.ErrAuthorization,
 		},
 		{
 			desc:               "enable disabled client with normal user token",
@@ -1328,8 +1328,8 @@ func TestEnableClient(t *testing.T) {
 			client:             disabledClient1,
 			identifyResponse:   &magistrala.IdentityRes{UserId: validID},
 			authorizeResponse:  &magistrala.AuthorizeRes{Authorized: false},
-			checkSuperAdminErr: errors.ErrAuthorization,
-			err:                errors.ErrAuthorization,
+			checkSuperAdminErr: svcerr.ErrAuthorization,
+			err:                svcerr.ErrAuthorization,
 		},
 		{
 			desc:                 "enable disabled client with failed to retrieve client by ID",
@@ -1496,7 +1496,7 @@ func TestDisableClient(t *testing.T) {
 			token:            inValidToken,
 			client:           enabledClient1,
 			identifyResponse: &magistrala.IdentityRes{},
-			identifyErr:      errors.ErrAuthentication,
+			identifyErr:      svcerr.ErrAuthentication,
 			err:              svcerr.ErrAuthentication,
 		},
 		{
@@ -1506,7 +1506,7 @@ func TestDisableClient(t *testing.T) {
 			client:            enabledClient1,
 			identifyResponse:  &magistrala.IdentityRes{UserId: disabledClient1.ID},
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
-			err:               errors.ErrAuthorization,
+			err:               svcerr.ErrAuthorization,
 		},
 		{
 			desc:               "disable enabled client with normal user token",
@@ -1515,8 +1515,8 @@ func TestDisableClient(t *testing.T) {
 			client:             enabledClient1,
 			identifyResponse:   &magistrala.IdentityRes{UserId: enabledClient1.ID},
 			authorizeResponse:  &magistrala.AuthorizeRes{Authorized: false},
-			checkSuperAdminErr: errors.ErrAuthorization,
-			err:                errors.ErrAuthorization,
+			checkSuperAdminErr: svcerr.ErrAuthorization,
+			err:                svcerr.ErrAuthorization,
 		},
 		{
 			desc:                 "disable enabled client with failed to retrieve client by ID",
@@ -1847,7 +1847,7 @@ func TestListMembers(t *testing.T) {
 				Object:      validID,
 			},
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
-			err:               errors.ErrAuthorization,
+			err:               svcerr.ErrAuthorization,
 		},
 		{
 			desc:             "list members with of the things kind with failed to list all subjects",
@@ -1872,9 +1872,9 @@ func TestListMembers(t *testing.T) {
 				ObjectType:  authsvc.ThingType,
 			},
 			authorizeResponse:       &magistrala.AuthorizeRes{Authorized: true},
-			listAllSubjectsErr:      errors.ErrNotFound,
+			listAllSubjectsErr:      repoerr.ErrNotFound,
 			listAllSubjectsResponse: &magistrala.ListSubjectsRes{},
-			err:                     errors.ErrNotFound,
+			err:                     repoerr.ErrNotFound,
 		},
 		{
 			desc:             "list members with of the things kind with failed to retrieve all",
@@ -2001,7 +2001,7 @@ func TestListMembers(t *testing.T) {
 				Object:      validID,
 			},
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
-			err:               errors.ErrAuthorization,
+			err:               svcerr.ErrAuthorization,
 		},
 		{
 			desc:                    "list members with no policies successfully of the groups kind",
@@ -2085,7 +2085,7 @@ func TestListMembers(t *testing.T) {
 			token:            inValidToken,
 			page:             mgclients.Page{Offset: 0, Limit: 100, Permission: "read"},
 			identifyResponse: &magistrala.IdentityRes{},
-			identifyErr:      errors.ErrAuthentication,
+			identifyErr:      svcerr.ErrAuthentication,
 			err:              svcerr.ErrAuthentication,
 		},
 	}
@@ -2139,14 +2139,14 @@ func TestIssueToken(t *testing.T) {
 			desc:                       "issue token for a non-existing client",
 			client:                     client,
 			retrieveByIdentityResponse: mgclients.Client{},
-			retrieveByIdentityErr:      errors.ErrNotFound,
+			retrieveByIdentityErr:      repoerr.ErrNotFound,
 			err:                        repoerr.ErrNotFound,
 		},
 		{
 			desc:                       "issue token for a client with wrong secret",
 			client:                     client,
 			retrieveByIdentityResponse: rClient3,
-			err:                        errors.ErrLogin,
+			err:                        svcerr.ErrLogin,
 		},
 		{
 			desc:                       "issue token with non-empty domain id",
@@ -2269,8 +2269,8 @@ func TestGenerateResetToken(t *testing.T) {
 					Identity: "",
 				},
 			},
-			retrieveByIdentityErr: errors.ErrNotFound,
-			err:                   errors.ErrNotFound,
+			retrieveByIdentityErr: repoerr.ErrNotFound,
+			err:                   repoerr.ErrNotFound,
 		},
 		{
 			desc:                       "generate reset token with failed to issue token",
@@ -2360,7 +2360,7 @@ func TestResetSecret(t *testing.T) {
 					Identity: "",
 				},
 			},
-			err: errors.ErrNotFound,
+			err: repoerr.ErrNotFound,
 		},
 		{
 			desc:                 "reset secret with invalid secret format",
