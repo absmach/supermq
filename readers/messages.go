@@ -5,7 +5,6 @@ package readers
 
 import (
 	"errors"
-	"time"
 )
 
 const (
@@ -29,27 +28,17 @@ type MessageRepository interface {
 	// ReadAll skips given number of messages for given channel and returns next
 	// limited number of messages.
 	ReadAll(chanID string, pm PageMetadata) (MessagesPage, error)
-} 
+}
 
 // Message represents any message format.
 type Message interface{}
 
-// TimeBucket represents the time interval needed for aggregation of timeseries data
-type TimeBucket struct {
-	Time time.Time
-	Total float64
-}
 // MessagesPage contains page related metadata as well as list of messages that
 // belong to this page.
 type MessagesPage struct {
 	PageMetadata
 	Total    uint64
 	Messages []Message
-	Sum      float64
-	Avg      float64
-	Max      float64
-	Min      float64
-	Buckets []TimeBucket
 }
 
 // PageMetadata represents the parameters used to create database queries.
@@ -68,6 +57,8 @@ type PageMetadata struct {
 	From        float64 `json:"from,omitempty"`
 	To          float64 `json:"to,omitempty"`
 	Format      string  `json:"format,omitempty"`
+	Aggregation string  `json:"aggregation,omitempty"`
+	Interval    string  `json:"interval,omitempty"`
 }
 
 // ParseValueComparator convert comparison operator keys into mathematic anotation.

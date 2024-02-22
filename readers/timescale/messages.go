@@ -29,15 +29,17 @@ func New(db *sqlx.DB) readers.MessageRepository {
 }
 
 func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (readers.MessagesPage, error) {
-	order := "time"
+	// order := "time"
 	format := defTable
 
 	if rpm.Format != "" && rpm.Format != defTable {
-		order = "created"
+		// order = "created"
 		format = rpm.Format
 	}
 
-	q := fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s DESC LIMIT :limit OFFSET :offset;`, format, fmtCondition(chanID, rpm), order)
+	fmt.Println("time interval: ", rpm.Interval)
+
+	q := fmt.Sprintf(`SELECT EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, %s(value) AS value FROM %s WHERE %s GROUP BY 1 ORDER BY 1 DESC LIMIT :limit OFFSET :offset;`, rpm.Interval, rpm.Aggregation, format, fmtCondition(chanID, rpm))
 
 	params := map[string]interface{}{
 		"channel":      chanID,
@@ -95,6 +97,7 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 	}
 
 	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, format, fmtCondition(chanID, rpm))
+
 	rows, err = tr.db.NamedQuery(q, params)
 	if err != nil {
 		return readers.MessagesPage{}, errors.Wrap(readers.ErrReadMessages, err)
@@ -108,104 +111,6 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 		}
 	}
 	page.Total = total
-
-	q = fmt.Sprintf(`SELECT time_bucket('1 hour', time) AS bucket, SUM(*) FROM %s WHERE %s GROUP BY bucket ORDER BY bucket ASC;`, format, fmtCondition(chanID, rpm))
-	rows, err = tr.db.NamedQuery(q, params)
-	if err != nil {
-		return readers.MessagesPage{}, errors.Wrap(readers.ErrReadMessages, err)
-	}
-	defer rows.Close()
-
-	var buckets []readers.TimeBucket
-	for rows.Next() {
-		var bucket readers.TimeBucket
-		if err := rows.Scan(&bucket.Time, &bucket.Total); err != nil {
-			return page,err
-		}
-		buckets = append(buckets, bucket)
-	}
-	page.Buckets = buckets
-
-	sum := float64(0)
-	if rows.Next() {
-		if err := rows.Scan(&sum); err != nil {
-			return page, err
-		}
-	}
-	page.Sum = sum
-
-	q = fmt.Sprintf(`SELECT time_bucket('1 hour', time) AS bucket, AVG(*) FROM %s WHERE %s GROUP BY bucket ORDER BY bucket ASC;`, format, fmtCondition(chanID, rpm))
-	rows, err = tr.db.NamedQuery(q, params)
-	if err != nil {
-		return readers.MessagesPage{}, errors.Wrap(readers.ErrReadMessages, err)
-	}
-	defer rows.Close()
-
-	avg := float64(0)
-	if rows.Next() {
-		if err := rows.Scan(&avg); err != nil {
-			return page, err
-		}
-	}
-	page.Avg = avg
-
-	for rows.Next() {
-		var bucket readers.TimeBucket
-		if err := rows.Scan(&bucket.Time, &bucket.Total); err != nil {
-			return page,err
-		}
-		buckets = append(buckets, bucket)
-	}
-	page.Buckets = buckets
-
-
-	q = fmt.Sprintf(`SELECT time_bucket('1 hour', time) AS bucket, MAX(*) FROM %s WHERE %s GROUP BY bucket ORDER BY bucket ASC;`, format, fmtCondition(chanID, rpm))
-	rows, err = tr.db.NamedQuery(q, params)
-	if err != nil {
-		return readers.MessagesPage{}, errors.Wrap(readers.ErrReadMessages, err)
-	}
-	defer rows.Close()
-
-	max := float64(0)
-	if rows.Next() {
-		if err := rows.Scan(&max); err != nil {
-			return page, err
-		}
-	}
-	page.Max = max
-
-	for rows.Next() {
-		var bucket readers.TimeBucket
-		if err := rows.Scan(&bucket.Time, &bucket.Total); err != nil {
-			return page,err
-		}
-		buckets = append(buckets, bucket)
-	}
-	page.Buckets = buckets
-
-	q = fmt.Sprintf(`SELECT time_bucket('1 hour', time) AS bucket, MIN(*) FROM %s WHERE %s GROUP BY bucket ORDER BY bucket ASC;`, format, fmtCondition(chanID, rpm))
-	rows, err = tr.db.NamedQuery(q, params)
-	if err != nil {
-		return readers.MessagesPage{}, errors.Wrap(readers.ErrReadMessages, err)
-	}
-	defer rows.Close()
-
-	min := float64(0)
-	if rows.Next() {
-		if err := rows.Scan(&min); err != nil {
-			return page, err
-		}
-	}
-	page.Min = min
-
-	for rows.Next() {
-		var bucket readers.TimeBucket
-		if err := rows.Scan(&bucket.Time, &bucket.Total); err != nil {
-			return page,err
-		}
-		buckets = append(buckets, bucket)
-	}
-	page.Buckets = buckets
 
 	return page, nil
 }
@@ -291,4 +196,3 @@ func (msg jsonMessage) toMap() (map[string]interface{}, error) {
 	ret["payload"] = pld
 	return ret, nil
 }
-

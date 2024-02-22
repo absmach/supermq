@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/pkg/errors"
-	"github.com/absmach/magistrala/readers"
 )
 
 const (
@@ -70,48 +69,50 @@ var (
 	ErrInvalidJWT = errors.New("invalid JWT")
 )
 
+type MessagePageMeta struct {
+	PageMetadata
+	Subtopic    string  `json:"subtopic,omitempty"`
+	Publisher   string  `json:"publisher,omitempty"`
+	Comparator  string  `json:"comparator,omitempty"`
+	BoolValue   bool    `json:"vb,omitempty"`
+	StringValue string  `json:"vs,omitempty"`
+	DataValue   string  `json:"vd,omitempty"`
+	From        float64 `json:"from,omitempty"`
+	To          float64 `json:"to,omitempty"`
+	Total       uint64  `json:"total,omitempty"`
+	Aggregation string  `json:"aggregation,omitempty"`
+	Interval    string  `json:"interval,omitempty"`
+}
+
 type PageMetadata struct {
-	Total           uint64               `json:"total"`
-	Offset          uint64               `json:"offset"`
-	Limit           uint64               `json:"limit"`
-	Order           string               `json:"order,omitempty"`
-	Direction       string               `json:"direction,omitempty"`
-	Level           uint64               `json:"level,omitempty"`
-	Identity        string               `json:"identity,omitempty"`
-	Name            string               `json:"name,omitempty"`
-	Type            string               `json:"type,omitempty"`
-	Metadata        Metadata             `json:"metadata,omitempty"`
-	Status          string               `json:"status,omitempty"`
-	Action          string               `json:"action,omitempty"`
-	Subject         string               `json:"subject,omitempty"`
-	Object          string               `json:"object,omitempty"`
-	Permission      string               `json:"permission,omitempty"`
-	Tag             string               `json:"tag,omitempty"`
-	Owner           string               `json:"owner,omitempty"`
-	SharedBy        string               `json:"shared_by,omitempty"`
-	Visibility      string               `json:"visibility,omitempty"`
-	OwnerID         string               `json:"owner_id,omitempty"`
-	Topic           string               `json:"topic,omitempty"`
-	Contact         string               `json:"contact,omitempty"`
-	State           string               `json:"state,omitempty"`
-	ListPermissions string               `json:"list_perms,omitempty"`
-	InvitedBy       string               `json:"invited_by,omitempty"`
-	UserID          string               `json:"user_id,omitempty"`
-	DomainID        string               `json:"domain_id,omitempty"`
-	Relation        string               `json:"relation,omitempty"`
-	Subtopic        string               `json:"subtopic,omitempty"`
-	Publisher       string               `json:"publisher,omitempty"`
-	Comparator      string               `json:"comparator,omitempty"`
-	BoolValue       bool                 `json:"vb,omitempty"`
-	StringValue     string               `json:"vs,omitempty"`
-	DataValue       string               `json:"vd,omitempty"`
-	From            float64              `json:"from,omitempty"`
-	To              float64              `json:"to,omitempty"`
-	Sum             float64              `json:"sum,omitempty"`
-	Avg             float64              `json:"avg,omitempty"`
-	Max             float64              `json:"max,omitempty"`
-	Min             float64              `json:"min,omitempty"`
-	Buckets         []readers.TimeBucket `json:"buckets,omitempty"`
+	Total           uint64   `json:"total"`
+	Offset          uint64   `json:"offset"`
+	Limit           uint64   `json:"limit"`
+	Order           string   `json:"order,omitempty"`
+	Direction       string   `json:"direction,omitempty"`
+	Level           uint64   `json:"level,omitempty"`
+	Identity        string   `json:"identity,omitempty"`
+	Name            string   `json:"name,omitempty"`
+	Type            string   `json:"type,omitempty"`
+	Metadata        Metadata `json:"metadata,omitempty"`
+	Status          string   `json:"status,omitempty"`
+	Action          string   `json:"action,omitempty"`
+	Subject         string   `json:"subject,omitempty"`
+	Object          string   `json:"object,omitempty"`
+	Permission      string   `json:"permission,omitempty"`
+	Tag             string   `json:"tag,omitempty"`
+	Owner           string   `json:"owner,omitempty"`
+	SharedBy        string   `json:"shared_by,omitempty"`
+	Visibility      string   `json:"visibility,omitempty"`
+	OwnerID         string   `json:"owner_id,omitempty"`
+	Topic           string   `json:"topic,omitempty"`
+	Contact         string   `json:"contact,omitempty"`
+	State           string   `json:"state,omitempty"`
+	ListPermissions string   `json:"list_perms,omitempty"`
+	InvitedBy       string   `json:"invited_by,omitempty"`
+	UserID          string   `json:"user_id,omitempty"`
+	DomainID        string   `json:"domain_id,omitempty"`
+	Relation        string   `json:"relation,omitempty"`
 }
 
 // Credentials represent client credentials: it contains
@@ -848,7 +849,7 @@ type SDK interface {
 	//  }
 	//  msgs, _ := sdk.ReadMessages(pm,"channelID", "token")
 	//  fmt.Println(msgs)
-	ReadMessages(pm PageMetadata, chanID, token string) (MessagesPage, errors.SDKError)
+	ReadMessages(pm MessagePageMeta, chanID, token string) (MessagesPage, errors.SDKError)
 
 	// SetContentType sets message content type.
 	//
@@ -1366,30 +1367,6 @@ func (pm PageMetadata) query() (string, error) {
 	}
 	if pm.Relation != "" {
 		q.Add("relation", pm.Relation)
-	}
-	if pm.Subtopic != "" {
-		q.Add("subtopic", pm.Subtopic)
-	}
-	if pm.Publisher != "" {
-		q.Add("publisher", pm.Publisher)
-	}
-	if pm.Comparator != "" {
-		q.Add("comparator", pm.Comparator)
-	}
-	if pm.BoolValue {
-		q.Add("bool_value", strconv.FormatBool(pm.BoolValue))
-	}
-	if pm.StringValue != "" {
-		q.Add("string_value", pm.StringValue)
-	}
-	if pm.DataValue != "" {
-		q.Add("data_value", pm.DataValue)
-	}
-	if pm.From != 0 {
-		q.Add("from", strconv.FormatFloat(pm.From, 'f', -1, 64))
-	}
-	if pm.To != 0 {
-		q.Add("to", strconv.FormatFloat(pm.To, 'f', -1, 64))
 	}
 
 	return q.Encode(), nil

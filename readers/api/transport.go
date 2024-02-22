@@ -36,6 +36,8 @@ const (
 	comparatorKey  = "comparator"
 	fromKey        = "from"
 	toKey          = "to"
+	aggregationKey = "aggregation"
+	intervalKey    = "interval"
 	defLimit       = 10
 	defOffset      = 0
 	defFormat      = "messages"
@@ -140,6 +142,15 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
+	aggregation, err := apiutil.ReadStringQuery(r, aggregationKey, "")
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	interval, err := apiutil.ReadStringQuery(r, intervalKey, "")
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
 
 	req := listMessagesReq{
 		chanID: chi.URLParam(r, "chanID"),
@@ -160,6 +171,8 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 			BoolValue:   vb,
 			From:        from,
 			To:          to,
+			Aggregation: aggregation,
+			Interval:    interval,
 		},
 	}
 	return req, nil
