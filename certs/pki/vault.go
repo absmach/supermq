@@ -181,7 +181,7 @@ func (p *pkiAgent) Revoke(serial string) (time.Time, error) {
 	}
 
 	// Vault will return a response without errors but with a warning if the certificate is expired.
-	// The response will include "revocation_time" in such cases.
+	// The response will not have "revocation_time" in such cases.
 	if revokeTime, ok := s.Data["revocation_time"]; ok {
 		switch v := revokeTime.(type) {
 		case json.Number:
