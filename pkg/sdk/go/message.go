@@ -25,9 +25,9 @@ func (sdk mgSDK) SendMessage(chanName, msg, key string) errors.SDKError {
 		subtopicPart = fmt.Sprintf("/%s", strings.ReplaceAll(chanNameParts[1], ".", "/"))
 	}
 
-	url := fmt.Sprintf("%s/channels/%s/messages%s", sdk.httpAdapterURL, chanID, subtopicPart)
+	reqUrl := fmt.Sprintf("%s/channels/%s/messages%s", sdk.httpAdapterURL, chanID, subtopicPart)
 
-	_, _, err := sdk.processRequest(http.MethodPost, url, ThingPrefix+key, []byte(msg), nil, http.StatusAccepted)
+	_, _, err := sdk.processRequest(http.MethodPost, reqUrl, ThingPrefix+key, []byte(msg), nil, http.StatusAccepted)
 
 	return err
 }
@@ -41,17 +41,15 @@ func (sdk mgSDK) ReadMessages(pm MessagePageMeta, chanName, token string) (Messa
 	}
 
 	readMessagesEndpoint := fmt.Sprintf("channels/%s/messages%s", chanID, subtopicPart)
-	url, err := sdk.withMessageQueryParams(sdk.readerURL, readMessagesEndpoint, pm)
+	msgUrl, err := sdk.withMessageQueryParams(sdk.readerURL, readMessagesEndpoint, pm)
 	if err != nil {
 		return MessagesPage{}, errors.NewSDKError(err)
 	}
 
-	fmt.Println("sdk url: ", url)
-
 	header := make(map[string]string)
 	header["Content-Type"] = string(sdk.msgContentType)
 
-	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, header, http.StatusOK)
+	_, body, sdkerr := sdk.processRequest(http.MethodGet, msgUrl, token, nil, header, http.StatusOK)
 	if sdkerr != nil {
 		return MessagesPage{}, sdkerr
 	}

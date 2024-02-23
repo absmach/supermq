@@ -37,8 +37,6 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 		format = rpm.Format
 	}
 
-	fmt.Println("time interval: ", rpm.Interval)
-
 	q := fmt.Sprintf(`SELECT EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, %s(value) AS value FROM %s WHERE %s GROUP BY 1 ORDER BY 1 DESC LIMIT :limit OFFSET :offset;`, rpm.Interval, rpm.Aggregation, format, fmtCondition(chanID, rpm))
 
 	params := map[string]interface{}{
