@@ -36,38 +36,37 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 		order = "created"
 		format = rpm.Format
 	}
-
+	var q string
 	// Construct the base query without time_bucket and aggregation
-	q := fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s ASC LIMIT :limit OFFSET :offset;`, format, fmtCondition(chanID, rpm), order)
+	// q := fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s ASC LIMIT :limit OFFSET :offset;`, format, fmtCondition(chanID, rpm), order)
 
 	// If aggregation is provided, add time_bucket and aggregation to the query
 	if rpm.Aggregation != "" {
 		q = fmt.Sprintf(`
-    SELECT 
-        channel, publisher, protocol, name, unit,
-        EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, 
-        %s(value) AS value 
-    FROM 
-        %s 
-    WHERE 
-        %s 
-    GROUP BY 
-        channel, publisher, protocol, name, unit, time 
-    ORDER BY 
-        %s ASC 
-    LIMIT 
-        :limit OFFSET :offset;
-    `,
+			SELECT 
+				channel, publisher, protocol, name, unit,
+				EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, 
+				%s(value) AS value 
+			FROM 
+				%s 
+			WHERE 
+				%s 
+			GROUP BY 
+				channel, publisher, protocol, name, unit, time 
+			ORDER BY 
+				%s ASC 
+			LIMIT 
+				:limit OFFSET :offset;
+		`,
 			rpm.Interval,
 			rpm.Aggregation,
 			format,
 			fmtCondition(chanID, rpm),
 			order,
 		)
+	} else {
+		q = fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s ASC LIMIT :limit OFFSET :offset;`, format, fmtCondition(chanID, rpm), order)
 	}
-	fmt.Println("query", q)
-
-	fmt.Println("aggregation", rpm.Aggregation)
 
 	params := map[string]interface{}{
 		"channel":      chanID,
@@ -123,18 +122,36 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 			page.Messages = append(page.Messages, m)
 		}
 	}
+	var countQuery string
+	if rpm.Aggregation != "" {
+		countQuery = fmt.Sprintf(`
+			SELECT COUNT(*) 
+			FROM (
+				SELECT 
+					EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time 
+				FROM 
+					%s 
+				WHERE 
+					%s 
+				GROUP BY 
+					time
+			) AS subquery;
+		`, rpm.Interval, format, fmtCondition(chanID, rpm))
+	} else {
+		countQuery = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, format, fmtCondition(chanID, rpm))
+	}
+	fmt.Println("countquery:", countQuery)
+	fmt.Println("query:", q)
 
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, format, fmtCondition(chanID, rpm))
-
-	rows, err = tr.db.NamedQuery(q, params)
+	countRows, err := tr.db.NamedQuery(countQuery, params)
 	if err != nil {
 		return readers.MessagesPage{}, errors.Wrap(readers.ErrReadMessages, err)
 	}
 	defer rows.Close()
 
 	total := uint64(0)
-	if rows.Next() {
-		if err := rows.Scan(&total); err != nil {
+	if countRows.Next() {
+		if err := countRows.Scan(&total); err != nil {
 			return page, err
 		}
 	}
