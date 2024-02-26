@@ -3,9 +3,7 @@
 
 package readers
 
-import (
-	"errors"
-)
+import "errors"
 
 const (
 	// EqualKey represents the equal comparison operator key.

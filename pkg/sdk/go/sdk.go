@@ -69,7 +69,7 @@ var (
 	ErrInvalidJWT = errors.New("invalid JWT")
 )
 
-type MessagePageMeta struct {
+type MessagePageMetadata struct {
 	PageMetadata
 	Subtopic    string  `json:"subtopic,omitempty"`
 	Publisher   string  `json:"publisher,omitempty"`
@@ -850,7 +850,7 @@ type SDK interface {
 	//  }
 	//  msgs, _ := sdk.ReadMessages(pm,"channelID", "token")
 	//  fmt.Println(msgs)
-	ReadMessages(pm MessagePageMeta, chanID, token string) (MessagesPage, errors.SDKError)
+	ReadMessages(pm MessagePageMetadata, chanID, token string) (MessagesPage, errors.SDKError)
 
 	// SetContentType sets message content type.
 	//

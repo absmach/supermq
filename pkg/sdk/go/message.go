@@ -32,7 +32,7 @@ func (sdk mgSDK) SendMessage(chanName, msg, key string) errors.SDKError {
 	return err
 }
 
-func (sdk mgSDK) ReadMessages(pm MessagePageMeta, chanName, token string) (MessagesPage, errors.SDKError) {
+func (sdk mgSDK) ReadMessages(pm MessagePageMetadata, chanName, token string) (MessagesPage, errors.SDKError) {
 	chanNameParts := strings.SplitN(chanName, ".", channelParts)
 	chanID := chanNameParts[0]
 	subtopicPart := ""
@@ -53,6 +53,7 @@ func (sdk mgSDK) ReadMessages(pm MessagePageMeta, chanName, token string) (Messa
 	if sdkerr != nil {
 		return MessagesPage{}, sdkerr
 	}
+	fmt.Println("msgUrl:", msgUrl)
 
 	var mp MessagesPage
 	if err := json.Unmarshal(body, &mp); err != nil {
@@ -72,7 +73,7 @@ func (sdk *mgSDK) SetContentType(ct ContentType) errors.SDKError {
 	return nil
 }
 
-func (sdk mgSDK) withMessageQueryParams(baseURL, endpoint string, mpm MessagePageMeta) (string, error) {
+func (sdk mgSDK) withMessageQueryParams(baseURL, endpoint string, mpm MessagePageMetadata) (string, error) {
 	b, err := json.Marshal(mpm)
 	if err != nil {
 		return "", err

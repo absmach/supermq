@@ -37,20 +37,17 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 		format = rpm.Format
 	}
 	var q string
-	// Construct the base query without time_bucket and aggregation
-	// q := fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s ASC LIMIT :limit OFFSET :offset;`, format, fmtCondition(chanID, rpm), order)
-
 	// If aggregation is provided, add time_bucket and aggregation to the query
 	if rpm.Aggregation != "" {
 		q = fmt.Sprintf(`
 			SELECT 
 				channel, publisher, protocol, name, unit,
-				EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, 
-				%s(value) AS value 
+				EXTRACT(epoch FROM time_bucket('1 hour', to_timestamp(time))) AS time, 
+				MAX(value) AS value 
 			FROM 
-				%s 
+				messages
 			WHERE 
-				%s 
+				%s
 			GROUP BY 
 				channel, publisher, protocol, name, unit, time 
 			ORDER BY 
@@ -58,13 +55,11 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 			LIMIT 
 				:limit OFFSET :offset;
 		`,
-			rpm.Interval,
-			rpm.Aggregation,
-			format,
 			fmtCondition(chanID, rpm),
 			order,
 		)
 	} else {
+		// Construct the base query without time_bucket and aggregation
 		q = fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s ASC LIMIT :limit OFFSET :offset;`, format, fmtCondition(chanID, rpm), order)
 	}
 
@@ -130,13 +125,16 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 				SELECT 
 					EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time 
 				FROM 
-					%s 
+					%s
 				WHERE 
 					%s 
 				GROUP BY 
 					time
 			) AS subquery;
-		`, rpm.Interval, format, fmtCondition(chanID, rpm))
+		`,  rpm.Interval, 
+			format, 
+			fmtCondition(chanID, rpm),
+		)
 	} else {
 		countQuery = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, format, fmtCondition(chanID, rpm))
 	}
@@ -147,7 +145,7 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 	if err != nil {
 		return readers.MessagesPage{}, errors.Wrap(readers.ErrReadMessages, err)
 	}
-	defer rows.Close()
+	defer countRows.Close()
 
 	total := uint64(0)
 	if countRows.Next() {
