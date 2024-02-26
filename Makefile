@@ -135,7 +135,7 @@ test_api:
 	--checks all \
 	--base-url http://localhost:9002 \
 	--header "Authorization: Bearer $(USER_TOKEN)" \
-	--contrib-unique-data --contrib-openapi-formats-uuid \
+	--contrib-openapi-formats-uuid \
 	--hypothesis-suppress-health-check=filter_too_much \
 	--stateful=links
 
