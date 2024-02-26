@@ -42,10 +42,10 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 		q = fmt.Sprintf(`
 			SELECT 
 				channel, publisher, protocol, name, unit,
-				EXTRACT(epoch FROM time_bucket('1 hour', to_timestamp(time))) AS time, 
-				MAX(value) AS value 
+				EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, 
+				%s(value) AS value 
 			FROM 
-				messages
+				%s
 			WHERE 
 				%s
 			GROUP BY 
@@ -55,6 +55,9 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 			LIMIT 
 				:limit OFFSET :offset;
 		`,
+			rpm.Interval,
+			rpm.Aggregation,
+			format,
 			fmtCondition(chanID, rpm),
 			order,
 		)
@@ -131,15 +134,13 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 				GROUP BY 
 					time
 			) AS subquery;
-		`,  rpm.Interval, 
-			format, 
+		`, rpm.Interval,
+			format,
 			fmtCondition(chanID, rpm),
 		)
 	} else {
 		countQuery = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, format, fmtCondition(chanID, rpm))
 	}
-	fmt.Println("countquery:", countQuery)
-	fmt.Println("query:", q)
 
 	countRows, err := tr.db.NamedQuery(countQuery, params)
 	if err != nil {
