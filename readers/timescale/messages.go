@@ -29,15 +29,45 @@ func New(db *sqlx.DB) readers.MessageRepository {
 }
 
 func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (readers.MessagesPage, error) {
-	// order := "time"
+	order := "time"
 	format := defTable
 
 	if rpm.Format != "" && rpm.Format != defTable {
-		// order = "created"
+		order = "created"
 		format = rpm.Format
 	}
 
-	q := fmt.Sprintf(`SELECT EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, %s(value) AS value FROM %s WHERE %s GROUP BY 1 ORDER BY 1 DESC LIMIT :limit OFFSET :offset;`, rpm.Interval, rpm.Aggregation, format, fmtCondition(chanID, rpm))
+	// Construct the base query without time_bucket and aggregation
+	q := fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s ASC LIMIT :limit OFFSET :offset;`, format, fmtCondition(chanID, rpm), order)
+
+	// If aggregation is provided, add time_bucket and aggregation to the query
+	if rpm.Aggregation != "" {
+		q = fmt.Sprintf(`
+    SELECT 
+        channel, publisher, protocol, name, unit,
+        EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, 
+        %s(value) AS value 
+    FROM 
+        %s 
+    WHERE 
+        %s 
+    GROUP BY 
+        channel, publisher, protocol, name, unit, time 
+    ORDER BY 
+        %s ASC 
+    LIMIT 
+        :limit OFFSET :offset;
+    `,
+			rpm.Interval,
+			rpm.Aggregation,
+			format,
+			fmtCondition(chanID, rpm),
+			order,
+		)
+	}
+	fmt.Println("query", q)
+
+	fmt.Println("aggregation", rpm.Aggregation)
 
 	params := map[string]interface{}{
 		"channel":      chanID,

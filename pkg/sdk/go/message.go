@@ -73,133 +73,34 @@ func (sdk *mgSDK) SetContentType(ct ContentType) errors.SDKError {
 }
 
 func (sdk mgSDK) withMessageQueryParams(baseURL, endpoint string, mpm MessagePageMeta) (string, error) {
-	q, err := mpm.mquery()
+	b, err := json.Marshal(mpm)
 	if err != nil {
 		return "", err
 	}
-
-	return fmt.Sprintf("%s/%s?%s", baseURL, endpoint, q), nil
-}
-
-func (mpm MessagePageMeta) mquery() (string, error) {
-	q := url.Values{}
-	if mpm.Offset != 0 {
-		q.Add("offset", strconv.FormatUint(mpm.Offset, 10))
+	q := map[string]interface{}{}
+	if err := json.Unmarshal(b, &q); err != nil {
+		return "", err
 	}
-	if mpm.Limit != 0 {
-		q.Add("limit", strconv.FormatUint(mpm.Limit, 10))
-	}
-	if mpm.Total != 0 {
-		q.Add("total", strconv.FormatUint(mpm.Total, 10))
-	}
-	if mpm.Order != "" {
-		q.Add("order", mpm.Order)
-	}
-	if mpm.Direction != "" {
-		q.Add("dir", mpm.Direction)
-	}
-	if mpm.Level != 0 {
-		q.Add("level", strconv.FormatUint(mpm.Level, 10))
-	}
-	if mpm.Identity != "" {
-		q.Add("identity", mpm.Identity)
-	}
-	if mpm.Name != "" {
-		q.Add("name", mpm.Name)
-	}
-	if mpm.Type != "" {
-		q.Add("type", mpm.Type)
-	}
-	if mpm.Visibility != "" {
-		q.Add("visibility", mpm.Visibility)
-	}
-	if mpm.Status != "" {
-		q.Add("status", mpm.Status)
-	}
-	if mpm.Metadata != nil {
-		md, err := json.Marshal(mpm.Metadata)
-		if err != nil {
-			return "", errors.NewSDKError(err)
+	ret := url.Values{}
+	for k, v := range q {
+		switch t := v.(type) {
+		case string:
+			ret.Add(k, t)
+		case float64:
+			ret.Add(k, strconv.FormatFloat(t, 'f', -1, 64))
+		case uint64:
+			ret.Add(k, strconv.FormatUint(t, 10))
+		case int64:
+			ret.Add(k, strconv.FormatInt(t, 10))
+		case json.Number:
+			ret.Add(k, t.String())
+		case bool:
+			ret.Add(k, strconv.FormatBool(t))
 		}
-		q.Add("metadata", string(md))
 	}
-	if mpm.Action != "" {
-		q.Add("action", mpm.Action)
+	qs, err := ret.Encode(), nil
+	if err != nil {
+		return "", err
 	}
-	if mpm.Subject != "" {
-		q.Add("subject", mpm.Subject)
-	}
-	if mpm.Object != "" {
-		q.Add("object", mpm.Object)
-	}
-	if mpm.Tag != "" {
-		q.Add("tag", mpm.Tag)
-	}
-	if mpm.Owner != "" {
-		q.Add("owner", mpm.Owner)
-	}
-	if mpm.SharedBy != "" {
-		q.Add("shared_by", mpm.SharedBy)
-	}
-	if mpm.Topic != "" {
-		q.Add("topic", mpm.Topic)
-	}
-	if mpm.Contact != "" {
-		q.Add("contact", mpm.Contact)
-	}
-	if mpm.State != "" {
-		q.Add("state", mpm.State)
-	}
-	if mpm.Permission != "" {
-		q.Add("permission", mpm.Permission)
-	}
-	if mpm.ListPermissions != "" {
-		q.Add("list_perms", mpm.ListPermissions)
-	}
-	if mpm.InvitedBy != "" {
-		q.Add("invited_by", mpm.InvitedBy)
-	}
-	if mpm.UserID != "" {
-		q.Add("user_id", mpm.UserID)
-	}
-	if mpm.DomainID != "" {
-		q.Add("domain_id", mpm.DomainID)
-	}
-	if mpm.Relation != "" {
-		q.Add("relation", mpm.Relation)
-	}
-	if mpm.Subtopic != "" {
-		q.Add("subtopic", mpm.Subtopic)
-	}
-	if mpm.Publisher != "" {
-		q.Add("publisher", mpm.Publisher)
-	}
-	if mpm.Comparator != "" {
-		q.Add("comparator", mpm.Comparator)
-	}
-	if mpm.BoolValue {
-		q.Add("bool_value", strconv.FormatBool(mpm.BoolValue))
-	}
-	if mpm.StringValue != "" {
-		q.Add("string_value", mpm.StringValue)
-	}
-	if mpm.DataValue != "" {
-		q.Add("data_value", mpm.DataValue)
-	}
-	if mpm.From != 0 {
-		q.Add("from", strconv.FormatFloat(mpm.From, 'f', -1, 64))
-	}
-	if mpm.To != 0 {
-		q.Add("to", strconv.FormatFloat(mpm.To, 'f', -1, 64))
-	}
-	if mpm.Total != 0 {
-		q.Add("total", strconv.FormatUint(mpm.Total, 10))
-	}
-	if mpm.Aggregation != "" {
-		q.Add("aggregation", mpm.Aggregation)
-	}
-	if mpm.Interval != "" {
-		q.Add("interval", mpm.Interval)
-	}
-	return q.Encode(), nil
+	return fmt.Sprintf("%s/%s?%s", baseURL, endpoint, qs), nil
 }

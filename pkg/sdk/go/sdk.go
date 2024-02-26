@@ -79,7 +79,6 @@ type MessagePageMeta struct {
 	DataValue   string  `json:"vd,omitempty"`
 	From        float64 `json:"from,omitempty"`
 	To          float64 `json:"to,omitempty"`
-	Total       uint64  `json:"total,omitempty"`
 	Aggregation string  `json:"aggregation,omitempty"`
 	Interval    string  `json:"interval,omitempty"`
 }
