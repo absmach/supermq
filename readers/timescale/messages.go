@@ -36,31 +36,36 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 		order = "created"
 		format = rpm.Format
 	}
-	var q string
-	// If aggregation is provided, add time_bucket and aggregation to the query
-	if rpm.Aggregation != "" {
-		q = fmt.Sprintf(`
-		SELECT 
-		EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, 
-		%s(value) AS value 
-		FROM 
+	baseQuery := fmt.Sprintf(`FROM 
 		%s 
 		WHERE 
 		%s 
 		GROUP BY 
 		1 
 		ORDER BY
-		%s DESC 
-		LIMIT 
-		:limit 
-		OFFSET 
-		:offset;`,
+		%s DESC`,
+		format,
+		fmtCondition(chanID, rpm),
+		order,
+	)
+	var q string
+	// If aggregation is provided, add time_bucket and aggregation to the query
+	switch {
+	case rpm.Aggregation != "":
+		q = fmt.Sprintf(`
+			SELECT 
+			EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, 
+			%s(value) AS value 
+			%s
+			LIMIT 
+			:limit 
+			OFFSET 
+			:offset;`,
 			rpm.Interval,
 			rpm.Aggregation,
-			format, fmtCondition(chanID, rpm),
-			order,
+			baseQuery,
 		)
-	} else {
+	default:
 		// Construct the base query without time_bucket and aggregation
 		q = fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s DESC LIMIT :limit OFFSET :offset;`, format, fmtCondition(chanID, rpm), order)
 	}
@@ -119,37 +124,25 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 			page.Messages = append(page.Messages, m)
 		}
 	}
+	// countQuery is a string variable that holds the SQL query for counting gotal messages.
 	var countQuery string
-	if rpm.Aggregation != "" {
+	switch {
+	case rpm.Aggregation != "":
 		countQuery = fmt.Sprintf(`
 			SELECT COUNT(*) 
 			FROM (
 				SELECT 
 				EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, 
 				%s(value) AS value 
-				FROM 
-				%s 
-				WHERE 
-				%s 
-				GROUP BY 
-				1 
-				ORDER BY
-				%s DESC 
-				LIMIT 
-				:limit 
-				OFFSET 
-				:offset
+				%s
 			) AS subquery;`,
 			rpm.Interval,
 			rpm.Aggregation,
-			format,
-			fmtCondition(chanID, rpm),
-			order,
+			baseQuery,
 		)
-	} else {
+	default:
 		countQuery = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, format, fmtCondition(chanID, rpm))
 	}
-
 	countRows, err := tr.db.NamedQuery(countQuery, params)
 	if err != nil {
 		return readers.MessagesPage{}, errors.Wrap(readers.ErrReadMessages, err)

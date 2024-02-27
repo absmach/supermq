@@ -142,6 +142,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
+
 	aggregation, err := apiutil.ReadStringQuery(r, aggregationKey, "")
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)

@@ -514,7 +514,7 @@ func TestReadSenml(t *testing.T) {
 		result, err := reader.ReadAll(tc.chanID, tc.pageMeta)
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %s", tc.desc, err))
 		assert.ElementsMatch(t, tc.page.Messages, result.Messages, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.page.Messages, result.Messages))
-		// assert.Equal(t, tc.page.Total, result.Total, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.page.Total, result.Total))
+		assert.Equal(t, tc.page.Total, result.Total, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.page.Total, result.Total))
 	}
 }
 
@@ -652,7 +652,7 @@ func TestReadJSON(t *testing.T) {
 		result, err := reader.ReadAll(tc.chanID, tc.pageMeta)
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %s", desc, err))
 		assert.ElementsMatch(t, tc.page.Messages, result.Messages, fmt.Sprintf("%s: got incorrect list of json Messages from ReadAll()", desc))
-		// assert.Equal(t, tc.page.Total, result.Total, fmt.Sprintf("%s: expected %v got %v", desc, tc.page.Total, result.Total))
+		assert.Equal(t, tc.page.Total, result.Total, fmt.Sprintf("%s: expected %v got %v", desc, tc.page.Total, result.Total))
 	}
 }
 
