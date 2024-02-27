@@ -53,7 +53,6 @@ func (sdk mgSDK) ReadMessages(pm MessagePageMetadata, chanName, token string) (M
 	if sdkerr != nil {
 		return MessagesPage{}, sdkerr
 	}
-	fmt.Println("msgUrl:", msgUrl)
 
 	var mp MessagesPage
 	if err := json.Unmarshal(body, &mp); err != nil {

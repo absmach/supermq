@@ -40,30 +40,29 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 	// If aggregation is provided, add time_bucket and aggregation to the query
 	if rpm.Aggregation != "" {
 		q = fmt.Sprintf(`
-			SELECT 
-				channel, publisher, protocol, name, unit,
-				EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, 
-				%s(value) AS value 
-			FROM 
-				%s
-			WHERE 
-				%s
-			GROUP BY 
-				channel, publisher, protocol, name, unit, time 
-			ORDER BY 
-				%s ASC 
-			LIMIT 
-				:limit OFFSET :offset;
-		`,
+		SELECT 
+		EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, 
+		%s(value) AS value 
+		FROM 
+		%s 
+		WHERE 
+		%s 
+		GROUP BY 
+		1 
+		ORDER BY
+		%s DESC 
+		LIMIT 
+		:limit 
+		OFFSET 
+		:offset;`,
 			rpm.Interval,
 			rpm.Aggregation,
-			format,
-			fmtCondition(chanID, rpm),
+			format, fmtCondition(chanID, rpm),
 			order,
 		)
 	} else {
 		// Construct the base query without time_bucket and aggregation
-		q = fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s ASC LIMIT :limit OFFSET :offset;`, format, fmtCondition(chanID, rpm), order)
+		q = fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s DESC LIMIT :limit OFFSET :offset;`, format, fmtCondition(chanID, rpm), order)
 	}
 
 	params := map[string]interface{}{
@@ -126,17 +125,26 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 			SELECT COUNT(*) 
 			FROM (
 				SELECT 
-					EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time 
+				EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, 
+				%s(value) AS value 
 				FROM 
-					%s
+				%s 
 				WHERE 
-					%s 
+				%s 
 				GROUP BY 
-					time
-			) AS subquery;
-		`, rpm.Interval,
+				1 
+				ORDER BY
+				%s DESC 
+				LIMIT 
+				:limit 
+				OFFSET 
+				:offset
+			) AS subquery;`,
+			rpm.Interval,
+			rpm.Aggregation,
 			format,
 			fmtCondition(chanID, rpm),
+			order,
 		)
 	} else {
 		countQuery = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, format, fmtCondition(chanID, rpm))

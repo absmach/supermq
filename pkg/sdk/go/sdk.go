@@ -844,7 +844,7 @@ type SDK interface {
 	// ReadMessages read messages of specified channel.
 	//
 	// example:
-	//  pm := sdk.PageMetadata{
+	//  pm := sdk.MessagePageMetadata{
 	//    Offset: 0,
 	//    Limit:  10,
 	//  }
