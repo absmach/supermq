@@ -41,12 +41,9 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 		WHERE 
 		%s 
 		GROUP BY 
-		1 
-		ORDER BY
-		%s DESC`,
+		1`,
 		format,
 		fmtCondition(chanID, rpm),
-		order,
 	)
 	var q string
 	// If aggregation is provided, add time_bucket and aggregation to the query
@@ -57,6 +54,8 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 			EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, 
 			%s(value) AS value 
 			%s
+			ORDER BY
+			%s DESC
 			LIMIT 
 			:limit 
 			OFFSET 
@@ -64,6 +63,7 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 			rpm.Interval,
 			rpm.Aggregation,
 			baseQuery,
+			order,
 		)
 	default:
 		// Construct the base query without time_bucket and aggregation
@@ -124,7 +124,7 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 			page.Messages = append(page.Messages, m)
 		}
 	}
-	// countQuery is a string variable that holds the SQL query for counting gotal messages.
+	// countQuery is a string variable that holds the SQL query for counting total messages.
 	var countQuery string
 	switch {
 	case rpm.Aggregation != "":
