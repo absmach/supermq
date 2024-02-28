@@ -164,4 +164,7 @@ var (
 
 	// ErrRollbackTx indicates failed to rollback transaction.
 	ErrRollbackTx = errors.New("failed to rollback transaction")
+
+	// ErrAggregation indicates missing aggregation and interval.
+	ErrAggregation = errors.New("both aggregation and interval are required")
 )

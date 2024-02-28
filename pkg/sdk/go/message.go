@@ -25,9 +25,9 @@ func (sdk mgSDK) SendMessage(chanName, msg, key string) errors.SDKError {
 		subtopicPart = fmt.Sprintf("/%s", strings.ReplaceAll(chanNameParts[1], ".", "/"))
 	}
 
-	reqUrl := fmt.Sprintf("%s/channels/%s/messages%s", sdk.httpAdapterURL, chanID, subtopicPart)
+	reqURL := fmt.Sprintf("%s/channels/%s/messages%s", sdk.httpAdapterURL, chanID, subtopicPart)
 
-	_, _, err := sdk.processRequest(http.MethodPost, reqUrl, ThingPrefix+key, []byte(msg), nil, http.StatusAccepted)
+	_, _, err := sdk.processRequest(http.MethodPost, reqURL, ThingPrefix+key, []byte(msg), nil, http.StatusAccepted)
 
 	return err
 }

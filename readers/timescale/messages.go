@@ -42,22 +42,7 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 	// If aggregation is provided, add time_bucket and aggregation to the query
 	switch {
 	case rpm.Aggregation != "":
-		q = fmt.Sprintf(`
-			SELECT 
-			EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, 
-			%s(value) AS value 
-			%s
-			ORDER BY
-			%s DESC
-			LIMIT 
-			:limit 
-			OFFSET 
-			:offset;`,
-			rpm.Interval,
-			rpm.Aggregation,
-			baseQuery,
-			order,
-		)
+		q = fmt.Sprintf(`SELECT EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, %s(value) AS value %s ORDER BY %s DESC LIMIT :limit OFFSET :offset;`, rpm.Interval, rpm.Aggregation, baseQuery, order)
 	default:
 		// Construct the base query without time_bucket and aggregation
 		q = fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s DESC LIMIT :limit OFFSET :offset;`, format, fmtCondition(chanID, rpm), order)
@@ -121,18 +106,7 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 	var countQuery string
 	switch {
 	case rpm.Aggregation != "":
-		countQuery = fmt.Sprintf(`
-			SELECT COUNT(*) 
-			FROM (
-				SELECT 
-				EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, 
-				%s(value) AS value 
-				%s
-			) AS subquery;`,
-			rpm.Interval,
-			rpm.Aggregation,
-			baseQuery,
-		)
+		countQuery = fmt.Sprintf(`SELECT COUNT(*) FROM (SELECT EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, %s(value) AS value %s) AS subquery;`, rpm.Interval, rpm.Aggregation, baseQuery)
 	default:
 		countQuery = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, format, fmtCondition(chanID, rpm))
 	}
