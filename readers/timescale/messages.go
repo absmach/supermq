@@ -31,20 +31,13 @@ func New(db *sqlx.DB) readers.MessageRepository {
 func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (readers.MessagesPage, error) {
 	order := "time"
 	format := defTable
+	baseQuery := fmt.Sprintf(`FROM %s WHERE %s GROUP BY 1`, format, fmtCondition(chanID, rpm))
 
 	if rpm.Format != "" && rpm.Format != defTable {
 		order = "created"
 		format = rpm.Format
 	}
-	baseQuery := fmt.Sprintf(`FROM 
-		%s 
-		WHERE 
-		%s 
-		GROUP BY 
-		1`,
-		format,
-		fmtCondition(chanID, rpm),
-	)
+
 	var q string
 	// If aggregation is provided, add time_bucket and aggregation to the query
 	switch {

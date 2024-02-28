@@ -153,6 +153,10 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
+	if aggregation == "" || interval == "" {
+		return nil, errors.Wrap(apiutil.ErrValidation, errors.New("both aggregation and interval are required"))
+	}
+
 	req := listMessagesReq{
 		chanID: chi.URLParam(r, "chanID"),
 		token:  apiutil.ExtractBearerToken(r),
