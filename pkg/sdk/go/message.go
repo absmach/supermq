@@ -41,7 +41,7 @@ func (sdk mgSDK) ReadMessages(pm MessagePageMetadata, chanName, token string) (M
 	}
 
 	readMessagesEndpoint := fmt.Sprintf("channels/%s/messages%s", chanID, subtopicPart)
-	msgUrl, err := sdk.withMessageQueryParams(sdk.readerURL, readMessagesEndpoint, pm)
+	msgURL, err := sdk.withMessageQueryParams(sdk.readerURL, readMessagesEndpoint, pm)
 	if err != nil {
 		return MessagesPage{}, errors.NewSDKError(err)
 	}
@@ -49,7 +49,7 @@ func (sdk mgSDK) ReadMessages(pm MessagePageMetadata, chanName, token string) (M
 	header := make(map[string]string)
 	header["Content-Type"] = string(sdk.msgContentType)
 
-	_, body, sdkerr := sdk.processRequest(http.MethodGet, msgUrl, token, nil, header, http.StatusOK)
+	_, body, sdkerr := sdk.processRequest(http.MethodGet, msgURL, token, nil, header, http.StatusOK)
 	if sdkerr != nil {
 		return MessagesPage{}, sdkerr
 	}
@@ -98,9 +98,7 @@ func (sdk mgSDK) withMessageQueryParams(baseURL, endpoint string, mpm MessagePag
 			ret.Add(k, strconv.FormatBool(t))
 		}
 	}
-	qs, err := ret.Encode(), nil
-	if err != nil {
-		return "", err
-	}
+	qs := ret.Encode()
+
 	return fmt.Sprintf("%s/%s?%s", baseURL, endpoint, qs), nil
 }

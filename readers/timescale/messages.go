@@ -31,7 +31,7 @@ func New(db *sqlx.DB) readers.MessageRepository {
 func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (readers.MessagesPage, error) {
 	order := "time"
 	format := defTable
-	baseQuery := fmt.Sprintf(`FROM %s WHERE %s GROUP BY 1`, format, fmtCondition(chanID, rpm))
+	baseQuery := fmt.Sprintf(`FROM %s WHERE %s GROUP BY 1`, format, fmtCondition(rpm))
 
 	if rpm.Format != "" && rpm.Format != defTable {
 		order = "created"
@@ -45,7 +45,7 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 		q = fmt.Sprintf(`SELECT EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, %s(value) AS value %s ORDER BY %s DESC LIMIT :limit OFFSET :offset;`, rpm.Interval, rpm.Aggregation, baseQuery, order)
 	default:
 		// Construct the base query without time_bucket and aggregation
-		q = fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s DESC LIMIT :limit OFFSET :offset;`, format, fmtCondition(chanID, rpm), order)
+		q = fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s DESC LIMIT :limit OFFSET :offset;`, format, fmtCondition(rpm), order)
 	}
 
 	params := map[string]interface{}{
@@ -108,7 +108,7 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 	case rpm.Aggregation != "":
 		countQuery = fmt.Sprintf(`SELECT COUNT(*) FROM (SELECT EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time))) AS time, %s(value) AS value %s) AS subquery;`, rpm.Interval, rpm.Aggregation, baseQuery)
 	default:
-		countQuery = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, format, fmtCondition(chanID, rpm))
+		countQuery = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, format, fmtCondition(rpm))
 	}
 	countRows, err := tr.db.NamedQuery(countQuery, params)
 	if err != nil {
@@ -127,7 +127,7 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 	return page, nil
 }
 
-func fmtCondition(chanID string, rpm readers.PageMetadata) string {
+func fmtCondition(rpm readers.PageMetadata) string {
 	condition := `channel = :channel`
 
 	var query map[string]interface{}
