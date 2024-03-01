@@ -39,9 +39,38 @@ func (req listMessagesReq) validate() error {
 		return apiutil.ErrInvalidComparator
 	}
 
-	if (req.pageMeta.Aggregation != "" || req.pageMeta.Interval != "") &&
-		(req.pageMeta.Aggregation == "" || req.pageMeta.Interval == "" || req.pageMeta.To == 0 || req.pageMeta.From == 0) {
-		return apiutil.ErrAggregation
+	validAggregations := map[string]bool{
+		"MAX": true,
+		"MIN": true,
+		"AVG": true,
+		"SUM": true,
+	}
+
+	_, aggregationValid := validAggregations[req.pageMeta.Aggregation]
+
+	if (req.pageMeta.Aggregation != "" || req.pageMeta.Interval != "" || req.pageMeta.To != 0 || req.pageMeta.From != 0) &&
+		(!aggregationValid) {
+		return apiutil.ErrInvalidAggregation
+	}
+
+	if (req.pageMeta.Aggregation != "" || req.pageMeta.Interval != "" || req.pageMeta.From != 0) &&
+		(req.pageMeta.To == 0) {
+		return apiutil.ErrMissingTo
+	}
+
+	if (req.pageMeta.Aggregation != "" || req.pageMeta.Interval != "" || req.pageMeta.To != 0) &&
+		(req.pageMeta.From == 0) {
+		return apiutil.ErrMissingFrom
+	}
+
+	if (req.pageMeta.Aggregation != "" || req.pageMeta.To != 0 || req.pageMeta.From != 0) &&
+		(req.pageMeta.Interval == "") {
+		return apiutil.ErrMissingInterval
+	}
+
+	if (req.pageMeta.Interval != "" || req.pageMeta.To != 0 || req.pageMeta.From != 0) &&
+		(req.pageMeta.Aggregation == "") {
+		return apiutil.ErrMissingAggregation
 	}
 
 	return nil
