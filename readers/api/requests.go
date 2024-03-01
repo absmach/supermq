@@ -46,12 +46,18 @@ func (req listMessagesReq) validate() error {
 		"MIN": true,
 		"AVG": true,
 		"SUM": true,
+		"COUNT": true,
+		"max": true,
+		"min": true,
+		"avg": true,
+		"sum": true,
+		"count": true,
 	}
 
-	_, aggregationValid := validAggregations[req.pageMeta.Aggregation]
+	aggregationValid := validAggregations[req.pageMeta.Aggregation]
 
 	_, err := time.ParseDuration(req.pageMeta.Interval)
-	intervalValid := err == nil
+	validInterval := err == nil
 
 	if (req.pageMeta.Aggregation != "" || req.pageMeta.Interval != "" || req.pageMeta.To != 0 || req.pageMeta.From != 0) &&
 		!aggregationValid {
@@ -59,7 +65,7 @@ func (req listMessagesReq) validate() error {
 	}
 
 	if (req.pageMeta.Aggregation != "" || req.pageMeta.Interval != "" || req.pageMeta.To != 0 || req.pageMeta.From != 0) &&
-		!intervalValid {
+		!validInterval {
 		return apiutil.ErrInvalidInterval
 	}
 
