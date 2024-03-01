@@ -39,8 +39,8 @@ func (req listMessagesReq) validate() error {
 		return apiutil.ErrInvalidComparator
 	}
 
-	if (req.pageMeta.Aggregation != "" && req.pageMeta.Interval == "" && req.pageMeta.To == 0 && req.pageMeta.From == 0) ||
-		(req.pageMeta.Interval != "" && req.pageMeta.Aggregation == "" && req.pageMeta.To == 0 && req.pageMeta.From == 0) {
+	if (req.pageMeta.Aggregation != "" || req.pageMeta.Interval != "") &&
+		(req.pageMeta.Aggregation == "" || req.pageMeta.Interval == "" || req.pageMeta.To == 0 || req.pageMeta.From == 0) {
 		return apiutil.ErrAggregation
 	}
 
