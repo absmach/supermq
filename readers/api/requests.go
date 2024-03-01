@@ -42,15 +42,15 @@ func (req listMessagesReq) validate() error {
 	}
 
 	validAggregations := map[string]bool{
-		"MAX": true,
-		"MIN": true,
-		"AVG": true,
-		"SUM": true,
+		"MAX":   true,
+		"MIN":   true,
+		"AVG":   true,
+		"SUM":   true,
 		"COUNT": true,
-		"max": true,
-		"min": true,
-		"avg": true,
-		"sum": true,
+		"max":   true,
+		"min":   true,
+		"avg":   true,
+		"sum":   true,
 		"count": true,
 	}
 
