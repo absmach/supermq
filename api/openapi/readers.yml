@@ -244,10 +244,10 @@ components:
         type: string
         default: none
         enum:
-          - avg
-          - sum
-          - min
-          - max
+          - MAX
+          - SUM
+          - MIN
+          - MAX
       required: false
     Interval:
       name: interval
