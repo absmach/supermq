@@ -4,6 +4,8 @@
 package api
 
 import (
+	"time"
+
 	"github.com/absmach/magistrala/internal/apiutil"
 	"github.com/absmach/magistrala/readers"
 )
@@ -48,28 +50,36 @@ func (req listMessagesReq) validate() error {
 
 	_, aggregationValid := validAggregations[req.pageMeta.Aggregation]
 
+	_, err := time.ParseDuration(req.pageMeta.Interval)
+	intervalValid := err == nil
+
 	if (req.pageMeta.Aggregation != "" || req.pageMeta.Interval != "" || req.pageMeta.To != 0 || req.pageMeta.From != 0) &&
-		(!aggregationValid) {
+		!aggregationValid {
 		return apiutil.ErrInvalidAggregation
 	}
 
+	if (req.pageMeta.Aggregation != "" || req.pageMeta.Interval != "" || req.pageMeta.To != 0 || req.pageMeta.From != 0) &&
+		!intervalValid {
+		return apiutil.ErrInvalidInterval
+	}
+
 	if (req.pageMeta.Aggregation != "" || req.pageMeta.Interval != "" || req.pageMeta.From != 0) &&
-		(req.pageMeta.To == 0) {
+		req.pageMeta.To == 0 {
 		return apiutil.ErrMissingTo
 	}
 
 	if (req.pageMeta.Aggregation != "" || req.pageMeta.Interval != "" || req.pageMeta.To != 0) &&
-		(req.pageMeta.From == 0) {
+		req.pageMeta.From == 0 {
 		return apiutil.ErrMissingFrom
 	}
 
 	if (req.pageMeta.Aggregation != "" || req.pageMeta.To != 0 || req.pageMeta.From != 0) &&
-		(req.pageMeta.Interval == "") {
+		req.pageMeta.Interval == "" {
 		return apiutil.ErrMissingInterval
 	}
 
 	if (req.pageMeta.Interval != "" || req.pageMeta.To != 0 || req.pageMeta.From != 0) &&
-		(req.pageMeta.Aggregation == "") {
+		req.pageMeta.Aggregation == "" {
 		return apiutil.ErrMissingAggregation
 	}
 
