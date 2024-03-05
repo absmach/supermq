@@ -4,6 +4,8 @@
 package api
 
 import (
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/absmach/magistrala/internal/apiutil"
@@ -41,41 +43,23 @@ func (req listMessagesReq) validate() error {
 		return apiutil.ErrInvalidComparator
 	}
 
-	validAggregations := map[string]bool{
-		"MAX":   true,
-		"MIN":   true,
-		"AVG":   true,
-		"SUM":   true,
-		"COUNT": true,
-		"max":   true,
-		"min":   true,
-		"avg":   true,
-		"sum":   true,
-		"count": true,
+	validAggregations := []string{"MAX", "MIN", "AVG", "SUM", "COUNT"}
+
+	if req.pageMeta.Aggregation != "" {
+		if !slices.Contains(validAggregations, strings.ToUpper(req.pageMeta.Aggregation)) {
+			return apiutil.ErrInvalidAggregation
+		}
 	}
 
-	aggregationValid := validAggregations[req.pageMeta.Aggregation]
-
-	_, err := time.ParseDuration(req.pageMeta.Interval)
-	validInterval := err == nil
-
-	if (req.pageMeta.Aggregation != "" || req.pageMeta.Interval != "" || req.pageMeta.To != 0 || req.pageMeta.From != 0) &&
-		!aggregationValid {
-		return apiutil.ErrInvalidAggregation
-	}
-
-	if (req.pageMeta.Aggregation != "" || req.pageMeta.Interval != "" || req.pageMeta.To != 0 || req.pageMeta.From != 0) &&
-		!validInterval {
+	if _, err := time.ParseDuration(req.pageMeta.Interval); req.pageMeta.Interval != "" && err != nil {
 		return apiutil.ErrInvalidInterval
 	}
 
-	if (req.pageMeta.Aggregation != "" || req.pageMeta.Interval != "" || req.pageMeta.From != 0) &&
-		req.pageMeta.To == 0 {
+	if req.pageMeta.Aggregation != "" && req.pageMeta.To == 0 {
 		return apiutil.ErrMissingTo
 	}
 
-	if (req.pageMeta.Aggregation != "" || req.pageMeta.Interval != "" || req.pageMeta.To != 0) &&
-		req.pageMeta.From == 0 {
+	if req.pageMeta.Aggregation != "" && req.pageMeta.From == 0 {
 		return apiutil.ErrMissingFrom
 	}
 

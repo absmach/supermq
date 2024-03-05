@@ -38,14 +38,15 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 		format = rpm.Format
 	}
 
-	var q string
+	q := fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s DESC LIMIT :limit OFFSET :offset;`, format, fmtCondition(rpm), order)
+
+	// countQuery is a string variable that holds the SQL query for counting total messages.
+	countQuery := fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, format, fmtCondition(rpm))
+
 	// If aggregation is provided, add time_bucket and aggregation to the query
-	switch {
-	case rpm.Aggregation != "":
-		q = fmt.Sprintf(`SELECT EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time/1000))) AS time, %s(value) AS value %s ORDER BY 1 DESC LIMIT :limit OFFSET :offset;`, rpm.Interval, rpm.Aggregation, baseQuery)
-	default:
-		// Construct the base query without time_bucket and aggregation
-		q = fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s DESC LIMIT :limit OFFSET :offset;`, format, fmtCondition(rpm), order)
+	if rpm.Aggregation != "" {
+		q = fmt.Sprintf(`SELECT EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time/1000))) AS time, %s(value) AS value %s ORDER BY time DESC LIMIT :limit OFFSET :offset;`, rpm.Interval, rpm.Aggregation, baseQuery)
+		countQuery = fmt.Sprintf(`SELECT COUNT(*) FROM (SELECT EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time/1000))) AS time, %s(value) AS value %s) AS subquery;`, rpm.Interval, rpm.Aggregation, baseQuery)
 	}
 
 	params := map[string]interface{}{
@@ -103,13 +104,6 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 		}
 	}
 	// countQuery is a string variable that holds the SQL query for counting total messages.
-	var countQuery string
-	switch {
-	case rpm.Aggregation != "":
-		countQuery = fmt.Sprintf(`SELECT COUNT(*) FROM (SELECT EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time/1000))) AS time, %s(value) AS value %s) AS subquery;`, rpm.Interval, rpm.Aggregation, baseQuery)
-	default:
-		countQuery = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, format, fmtCondition(rpm))
-	}
 	rows, err = tr.db.NamedQuery(countQuery, params)
 	if err != nil {
 		return readers.MessagesPage{}, errors.Wrap(readers.ErrReadMessages, err)

@@ -148,9 +148,12 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
-	interval, err := apiutil.ReadStringQuery(r, intervalKey, "")
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	var interval string
+	if aggregation != "" {
+		interval, err = apiutil.ReadStringQuery(r, intervalKey, "1s")
+		if err != nil {
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
+		}
 	}
 
 	req := listMessagesReq{

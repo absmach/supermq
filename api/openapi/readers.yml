@@ -242,7 +242,6 @@ components:
       in: query
       schema:
         type: string
-        default: none
         enum:
           - MAX
           - AVG
@@ -260,8 +259,7 @@ components:
       description: Aggregation interval.
       in: query
       schema:
-        type: string
-        default: none
+        type: number
         minimum: 1
       required: false
 
