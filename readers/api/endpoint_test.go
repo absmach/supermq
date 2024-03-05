@@ -414,7 +414,6 @@ func TestReadAll(t *testing.T) {
 			key:    thingToken,
 			status: http.StatusBadRequest,
 		},
-
 		{
 			desc:   "read page with non-float to as thing",
 			url:    fmt.Sprintf("%s/channels/%s/messages?to=ABCD", ts.URL, chanID),

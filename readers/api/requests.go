@@ -14,6 +14,8 @@ import (
 
 const maxLimitSize = 1000
 
+var validAggregations = []string{"MAX", "MIN", "AVG", "SUM", "COUNT"}
+
 type listMessagesReq struct {
 	chanID   string
 	token    string
@@ -43,34 +45,22 @@ func (req listMessagesReq) validate() error {
 		return apiutil.ErrInvalidComparator
 	}
 
-	validAggregations := []string{"MAX", "MIN", "AVG", "SUM", "COUNT"}
-
 	if req.pageMeta.Aggregation != "" {
+		if req.pageMeta.From == 0 {
+			return apiutil.ErrMissingFrom
+		}
+
+		if req.pageMeta.To == 0 {
+			return apiutil.ErrMissingTo
+		}
+
 		if !slices.Contains(validAggregations, strings.ToUpper(req.pageMeta.Aggregation)) {
 			return apiutil.ErrInvalidAggregation
 		}
-	}
 
-	if _, err := time.ParseDuration(req.pageMeta.Interval); req.pageMeta.Interval != "" && err != nil {
-		return apiutil.ErrInvalidInterval
-	}
-
-	if req.pageMeta.Aggregation != "" && req.pageMeta.To == 0 {
-		return apiutil.ErrMissingTo
-	}
-
-	if req.pageMeta.Aggregation != "" && req.pageMeta.From == 0 {
-		return apiutil.ErrMissingFrom
-	}
-
-	if (req.pageMeta.Aggregation != "" || req.pageMeta.To != 0 || req.pageMeta.From != 0) &&
-		req.pageMeta.Interval == "" {
-		return apiutil.ErrMissingInterval
-	}
-
-	if (req.pageMeta.Interval != "" || req.pageMeta.To != 0 || req.pageMeta.From != 0) &&
-		req.pageMeta.Aggregation == "" {
-		return apiutil.ErrMissingAggregation
+		if _, err := time.ParseDuration(req.pageMeta.Interval); err != nil {
+			return apiutil.ErrInvalidInterval
+		}
 	}
 
 	return nil

@@ -228,6 +228,7 @@ components:
       in: query
       schema:
         type: number
+      example: 1709218556069
       required: false
     To:
       name: to
@@ -235,6 +236,7 @@ components:
       in: query
       schema:
         type: number
+      example: 1709218757503
       required: false
     Aggregation:
       name: aggregation
@@ -253,14 +255,15 @@ components:
           - sum
           - avg
           - count
+      example: MAX
       required: false
     Interval:
       name: interval
       description: Aggregation interval.
       in: query
       schema:
-        type: number
-        minimum: 1
+        type: string
+      example: 10s
       required: false
 
   responses:

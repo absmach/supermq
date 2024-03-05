@@ -31,7 +31,6 @@ func New(db *sqlx.DB) readers.MessageRepository {
 func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (readers.MessagesPage, error) {
 	order := "time"
 	format := defTable
-	baseQuery := fmt.Sprintf(`FROM %s WHERE %s GROUP BY 1`, format, fmtCondition(rpm))
 
 	if rpm.Format != "" && rpm.Format != defTable {
 		order = "created"
@@ -39,14 +38,12 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 	}
 
 	q := fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s DESC LIMIT :limit OFFSET :offset;`, format, fmtCondition(rpm), order)
-
-	// countQuery is a string variable that holds the SQL query for counting total messages.
-	countQuery := fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, format, fmtCondition(rpm))
+	totalQuery := fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, format, fmtCondition(rpm))
 
 	// If aggregation is provided, add time_bucket and aggregation to the query
 	if rpm.Aggregation != "" {
-		q = fmt.Sprintf(`SELECT EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time/1000))) AS time, %s(value) AS value %s ORDER BY time DESC LIMIT :limit OFFSET :offset;`, rpm.Interval, rpm.Aggregation, baseQuery)
-		countQuery = fmt.Sprintf(`SELECT COUNT(*) FROM (SELECT EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time/1000))) AS time, %s(value) AS value %s) AS subquery;`, rpm.Interval, rpm.Aggregation, baseQuery)
+		q = fmt.Sprintf(`SELECT EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time/1000))) AS time, %s(value) AS value FROM %s WHERE %s GROUP BY 1 ORDER BY time DESC LIMIT :limit OFFSET :offset;`, rpm.Interval, rpm.Aggregation, format, fmtCondition(rpm))
+		totalQuery = fmt.Sprintf(`SELECT COUNT(*) FROM (SELECT EXTRACT(epoch FROM time_bucket('%s', to_timestamp(time/1000))) AS time, %s(value) AS value FROM %s WHERE %s GROUP BY 1) AS subquery;`, rpm.Interval, rpm.Aggregation, format, fmtCondition(rpm))
 	}
 
 	params := map[string]interface{}{
@@ -103,8 +100,8 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 			page.Messages = append(page.Messages, m)
 		}
 	}
-	// countQuery is a string variable that holds the SQL query for counting total messages.
-	rows, err = tr.db.NamedQuery(countQuery, params)
+
+	rows, err = tr.db.NamedQuery(totalQuery, params)
 	if err != nil {
 		return readers.MessagesPage{}, errors.Wrap(readers.ErrReadMessages, err)
 	}

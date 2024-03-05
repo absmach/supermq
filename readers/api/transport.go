@@ -38,6 +38,7 @@ const (
 	toKey          = "to"
 	aggregationKey = "aggregation"
 	intervalKey    = "interval"
+	defInterval    = "1s"
 	defLimit       = 10
 	defOffset      = 0
 	defFormat      = "messages"
@@ -150,7 +151,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 
 	var interval string
 	if aggregation != "" {
-		interval, err = apiutil.ReadStringQuery(r, intervalKey, "1s")
+		interval, err = apiutil.ReadStringQuery(r, intervalKey, defInterval)
 		if err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
