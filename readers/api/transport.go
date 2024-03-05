@@ -214,7 +214,11 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, apiutil.ErrMissingID),
 		errors.Contains(err, apiutil.ErrLimitSize),
 		errors.Contains(err, apiutil.ErrOffsetSize),
-		errors.Contains(err, apiutil.ErrInvalidComparator):
+		errors.Contains(err, apiutil.ErrInvalidComparator),
+		errors.Contains(err, apiutil.ErrInvalidAggregation),
+		errors.Contains(err, apiutil.ErrInvalidInterval),
+		errors.Contains(err, apiutil.ErrMissingFrom),
+		errors.Contains(err, apiutil.ErrMissingTo):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, svcerr.ErrAuthentication),
 		errors.Contains(err, svcerr.ErrAuthorization),
