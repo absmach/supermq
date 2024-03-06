@@ -84,10 +84,18 @@ func (tok *tokenizer) Issue(key auth.Key) (string, error) {
 			return "", errors.Wrap(svcerr.ErrAuthentication, errInvalidProvider)
 		}
 		builder.Claim(oauthProviderField, provider.Name())
-		builder.Claim(provider.Name(), map[string]interface{}{
-			oauthAccessTokenField:  key.OAuth.AccessToken,
-			oauthRefreshTokenField: key.OAuth.RefreshToken,
-		})
+
+		// when issuing an access token, the refresh token is not present and vice versa
+		if key.OAuth.AccessToken != "" && key.OAuth.RefreshToken == "" {
+			builder.Claim(provider.Name(), map[string]interface{}{
+				oauthAccessTokenField: key.OAuth.AccessToken,
+			})
+		}
+		if key.OAuth.AccessToken == "" && key.OAuth.RefreshToken != "" {
+			builder.Claim(provider.Name(), map[string]interface{}{
+				oauthRefreshTokenField: key.OAuth.RefreshToken,
+			})
+		}
 	}
 
 	if key.ID != "" {
@@ -184,18 +192,15 @@ func parseOAuthToken(ctx context.Context, provider oauth2.Provider, token jwt.To
 		if !ok {
 			return auth.Key{}, errors.Wrap(ErrParseToken, fmt.Errorf("invalid claims for %s token", provider.Name()))
 		}
-		accessToken, ok := claims[oauthAccessTokenField].(string)
-		if !ok {
-			return auth.Key{}, errors.Wrap(ErrParseToken, fmt.Errorf("invalid access token claim for %s token", provider.Name()))
-		}
-		refreshToken, ok := claims[oauthRefreshTokenField].(string)
-		if !ok {
-			return auth.Key{}, errors.Wrap(ErrParseToken, fmt.Errorf("invalid refresh token claim for %s token", provider.Name()))
-		}
+
+		// access token and refresh token are not mandatory either of them can be present
+		accessToken, _ := claims[oauthAccessTokenField].(string)
+		refreshToken, _ := claims[oauthRefreshTokenField].(string)
 
 		switch provider.Validate(ctx, accessToken) {
 		case nil:
 			key.OAuth.AccessToken = accessToken
+			key.OAuth.RefreshToken = refreshToken
 		default:
 			token, err := provider.Refresh(ctx, refreshToken)
 			if err != nil {
@@ -203,11 +208,7 @@ func parseOAuthToken(ctx context.Context, provider oauth2.Provider, token jwt.To
 			}
 			key.OAuth.AccessToken = token.AccessToken
 			key.OAuth.RefreshToken = token.RefreshToken
-
-			return key, nil
 		}
-
-		key.OAuth.RefreshToken = refreshToken
 
 		return key, nil
 	}

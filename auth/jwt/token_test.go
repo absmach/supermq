@@ -208,8 +208,7 @@ func TestParseOAuthToken(t *testing.T) {
 			key:         validKey,
 			validateErr: svcerr.ErrAuthentication,
 			refreshToken: oauth2.Token{
-				AccessToken:  strings.Repeat("a", 10),
-				RefreshToken: strings.Repeat("b", 10),
+				AccessToken: strings.Repeat("a", 10),
 			},
 			refreshErr: nil,
 			err:        nil,
@@ -226,7 +225,7 @@ func TestParseOAuthToken(t *testing.T) {
 		},
 		{
 			desc:        "parse invalid key with different provider",
-			issuedToken: invalidOauthToken(t, invalidKey, "invalid", "a", "b"),
+			issuedToken: invalidOauthToken(t, invalidKey, "different", "a", nil),
 			err:         svcerr.ErrAuthentication,
 		},
 		{
@@ -241,7 +240,7 @@ func TestParseOAuthToken(t *testing.T) {
 		},
 		{
 			desc:        "parse invalid key with invalid provider",
-			issuedToken: invalidOauthToken(t, invalidKey, "test", "a", "b"),
+			issuedToken: invalidOauthToken(t, invalidKey, "invalid", "a", nil),
 			err:         svcerr.ErrAuthentication,
 		},
 	}
@@ -289,9 +288,8 @@ func oauthKey(t *testing.T) auth.Key {
 		IssuedAt:  time.Now().UTC().Add(-10 * time.Second).Round(time.Second),
 		ExpiresAt: time.Now().UTC().Add(10 * time.Minute).Round(time.Second),
 		OAuth: auth.OAuthToken{
-			Provider:     "test",
-			AccessToken:  strings.Repeat("a", 10),
-			RefreshToken: strings.Repeat("b", 10),
+			Provider:    "test",
+			AccessToken: strings.Repeat("a", 10),
 		},
 	}
 }
