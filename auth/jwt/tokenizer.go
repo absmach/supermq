@@ -102,6 +102,26 @@ func (tok *tokenizer) Issue(key auth.Key) (string, error) {
 }
 
 func (tok *tokenizer) Parse(token string) (auth.Key, error) {
+	tkn, err := tok.validateToken(token)
+	if err != nil {
+		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
+	}
+
+	key, err := toKey(tkn)
+	if err != nil {
+		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
+	}
+
+	oauthToken, err := tok.parseOAuthToken(tkn, key.Type)
+	if err != nil {
+		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
+	}
+	key.OAuth = oauthToken
+
+	return key, nil
+}
+
+func (tok *tokenizer) validateToken(token string) (jwt.Token, error) {
 	tkn, err := jwt.Parse(
 		[]byte(token),
 		jwt.WithValidate(true),
@@ -109,10 +129,10 @@ func (tok *tokenizer) Parse(token string) (auth.Key, error) {
 	)
 	if err != nil {
 		if errors.Contains(err, errJWTExpiryKey) {
-			return auth.Key{}, ErrExpiry
+			return nil, ErrExpiry
 		}
 
-		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
+		return nil, err
 	}
 	validator := jwt.ValidatorFunc(func(_ context.Context, t jwt.Token) jwt.ValidationError {
 		if t.Issuer() != issuerName {
@@ -121,25 +141,29 @@ func (tok *tokenizer) Parse(token string) (auth.Key, error) {
 		return nil
 	})
 	if err := jwt.Validate(tkn, jwt.WithValidator(validator)); err != nil {
-		return auth.Key{}, errors.Wrap(ErrValidateJWTToken, err)
+		return nil, errors.Wrap(ErrValidateJWTToken, err)
 	}
 
-	jsn, err := json.Marshal(tkn.PrivateClaims())
+	return tkn, nil
+}
+
+func toKey(tkn jwt.Token) (auth.Key, error) {
+	data, err := json.Marshal(tkn.PrivateClaims())
 	if err != nil {
 		return auth.Key{}, errors.Wrap(ErrJSONHandle, err)
 	}
 	var key auth.Key
-	if err := json.Unmarshal(jsn, &key); err != nil {
+	if err := json.Unmarshal(data, &key); err != nil {
 		return auth.Key{}, errors.Wrap(ErrJSONHandle, err)
 	}
 
 	tType, ok := tkn.Get(tokenType)
 	if !ok {
-		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
+		return auth.Key{}, err
 	}
 	ktype, err := strconv.ParseInt(fmt.Sprintf("%v", tType), 10, 64)
 	if err != nil {
-		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
+		return auth.Key{}, err
 	}
 
 	key.ID = tkn.JwtID()
@@ -149,59 +173,59 @@ func (tok *tokenizer) Parse(token string) (auth.Key, error) {
 	key.IssuedAt = tkn.IssuedAt()
 	key.ExpiresAt = tkn.Expiration()
 
-	oauthProvider, ok := tkn.Get(oauthProviderField)
+	return key, nil
+}
+
+func (tok *tokenizer) parseOAuthToken(token jwt.Token, keyType auth.KeyType) (auth.OAuthToken, error) {
+	oauthProvider, ok := token.Get(oauthProviderField)
 	if ok {
 		provider, ok := oauthProvider.(string)
 		if !ok {
-			return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, errInvalidProvider)
+			return auth.OAuthToken{}, errInvalidProvider
 		}
 		if provider != "" {
 			prov, ok := tok.providers[provider]
 			if !ok {
-				return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, errInvalidProvider)
-			}
-			key.OAuth.Provider = prov.Name()
-
-			key, err = parseOAuthToken(context.Background(), prov, tkn, key)
-			if err != nil {
-				return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
+				return auth.OAuthToken{}, errInvalidProvider
 			}
 
-			return key, nil
+			return extractOAuthToken(context.Background(), prov, token, keyType)
 		}
+
+		return auth.OAuthToken{}, nil
 	}
 
-	return key, nil
+	return auth.OAuthToken{}, nil
 }
 
-func parseOAuthToken(ctx context.Context, provider oauth2.Provider, token jwt.Token, key auth.Key) (auth.Key, error) {
+func extractOAuthToken(ctx context.Context, provider oauth2.Provider, token jwt.Token, keyType auth.KeyType) (auth.OAuthToken, error) {
 	oauthToken, ok := token.Get(provider.Name())
 	if ok {
 		var claims auth.OAuthToken
 		claims.FromInterface(oauthToken)
 
-		switch key.Type {
+		switch keyType {
 		case auth.AccessKey:
 			if err := provider.Validate(ctx, claims.AccessToken); err != nil {
-				return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
+				return auth.OAuthToken{}, err
 			}
-			key.OAuth.AccessToken = claims.AccessToken
 		case auth.RefreshKey:
 			if err := provider.Validate(ctx, claims.RefreshToken); err != nil {
 				token, err := provider.Refresh(ctx, claims.RefreshToken)
 				if err != nil {
-					return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
+					return auth.OAuthToken{}, err
 				}
-				key.OAuth.RefreshToken = token.RefreshToken
-				key.OAuth.AccessToken = token.AccessToken
+				claims.RefreshToken = token.RefreshToken
+				claims.AccessToken = token.AccessToken
 
-				return key, nil
+				return claims, nil
 			}
-			key.OAuth.RefreshToken = claims.RefreshToken
+		default:
+			return auth.OAuthToken{}, nil
 		}
 
-		return key, nil
+		return claims, nil
 	}
 
-	return key, nil
+	return auth.OAuthToken{}, nil
 }
