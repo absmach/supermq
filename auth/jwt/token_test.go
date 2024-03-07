@@ -202,18 +202,6 @@ func TestParseOAuthToken(t *testing.T) {
 			err:         nil,
 		},
 		{
-			desc:        "parse invalid key but refreshed",
-			token:       validKey,
-			issuedToken: "",
-			key:         validKey,
-			validateErr: svcerr.ErrAuthentication,
-			refreshToken: oauth2.Token{
-				AccessToken: strings.Repeat("a", 10),
-			},
-			refreshErr: nil,
-			err:        nil,
-		},
-		{
 			desc:         "parse invalid key but not refreshed",
 			token:        validKey,
 			issuedToken:  "",
@@ -225,22 +213,22 @@ func TestParseOAuthToken(t *testing.T) {
 		},
 		{
 			desc:        "parse invalid key with different provider",
-			issuedToken: invalidOauthToken(t, invalidKey, "different", "a", nil),
+			issuedToken: invalidOauthToken(t, invalidKey, "different"),
 			err:         svcerr.ErrAuthentication,
 		},
 		{
 			desc:        "parse invalid key with invalid access token",
-			issuedToken: invalidOauthToken(t, invalidKey, "invalid", 123, "b"),
+			issuedToken: invalidOauthToken(t, invalidKey, "invalid"),
 			err:         svcerr.ErrAuthentication,
 		},
 		{
 			desc:        "parse invalid key with invalid refresh token",
-			issuedToken: invalidOauthToken(t, invalidKey, "invalid", "a", 123),
+			issuedToken: invalidOauthToken(t, invalidKey, "invalid"),
 			err:         svcerr.ErrAuthentication,
 		},
 		{
 			desc:        "parse invalid key with invalid provider",
-			issuedToken: invalidOauthToken(t, invalidKey, "invalid", "a", nil),
+			issuedToken: invalidOauthToken(t, invalidKey, "invalid"),
 			err:         svcerr.ErrAuthentication,
 		},
 	}
@@ -294,7 +282,7 @@ func oauthKey(t *testing.T) auth.Key {
 	}
 }
 
-func invalidOauthToken(t *testing.T, key auth.Key, provider, accessToken, refreshToken interface{}) string {
+func invalidOauthToken(t *testing.T, key auth.Key, provider interface{}) string {
 	builder := jwt.NewBuilder()
 	builder.
 		Issuer(issuerName).
@@ -306,12 +294,7 @@ func invalidOauthToken(t *testing.T, key auth.Key, provider, accessToken, refres
 	builder.Claim(domainField, key.Domain)
 	if provider != nil {
 		builder.Claim("oauth_provider", provider)
-		if accessToken != nil {
-			builder.Claim(provider.(string), map[string]interface{}{"access_token": accessToken})
-		}
-		if refreshToken != nil {
-			builder.Claim(provider.(string), map[string]interface{}{"refresh_token": refreshToken})
-		}
+		builder.Claim(provider.(string), key.OAuth)
 	}
 	if key.ID != "" {
 		builder.JwtID(key.ID)

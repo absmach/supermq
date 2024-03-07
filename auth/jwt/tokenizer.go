@@ -84,18 +84,7 @@ func (tok *tokenizer) Issue(key auth.Key) (string, error) {
 			return "", errors.Wrap(svcerr.ErrAuthentication, errInvalidProvider)
 		}
 		builder.Claim(oauthProviderField, provider.Name())
-
-		// when issuing an access token, the refresh token is not present and vice versa
-		if key.OAuth.AccessToken != "" && key.OAuth.RefreshToken == "" {
-			builder.Claim(provider.Name(), map[string]interface{}{
-				oauthAccessTokenField: key.OAuth.AccessToken,
-			})
-		}
-		if key.OAuth.AccessToken == "" && key.OAuth.RefreshToken != "" {
-			builder.Claim(provider.Name(), map[string]interface{}{
-				oauthRefreshTokenField: key.OAuth.RefreshToken,
-			})
-		}
+		builder.Claim(provider.Name(), key.OAuth)
 	}
 
 	if key.ID != "" {
@@ -188,26 +177,27 @@ func (tok *tokenizer) Parse(token string) (auth.Key, error) {
 func parseOAuthToken(ctx context.Context, provider oauth2.Provider, token jwt.Token, key auth.Key) (auth.Key, error) {
 	oauthToken, ok := token.Get(provider.Name())
 	if ok {
-		claims, ok := oauthToken.(map[string]interface{})
-		if !ok {
-			return auth.Key{}, errors.Wrap(ErrParseToken, fmt.Errorf("invalid claims for %s token", provider.Name()))
-		}
+		var claims auth.OAuthToken
+		claims.FromInterface(oauthToken)
 
-		// access token and refresh token are not mandatory either of them can be present
-		accessToken, _ := claims[oauthAccessTokenField].(string)
-		refreshToken, _ := claims[oauthRefreshTokenField].(string)
-
-		switch provider.Validate(ctx, accessToken) {
-		case nil:
-			key.OAuth.AccessToken = accessToken
-			key.OAuth.RefreshToken = refreshToken
-		default:
-			token, err := provider.Refresh(ctx, refreshToken)
-			if err != nil {
+		switch key.Type {
+		case auth.AccessKey:
+			if err := provider.Validate(ctx, claims.AccessToken); err != nil {
 				return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
 			}
-			key.OAuth.AccessToken = token.AccessToken
-			key.OAuth.RefreshToken = token.RefreshToken
+			key.OAuth.AccessToken = claims.AccessToken
+		case auth.RefreshKey:
+			if err := provider.Validate(ctx, claims.RefreshToken); err != nil {
+				token, err := provider.Refresh(ctx, claims.RefreshToken)
+				if err != nil {
+					return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
+				}
+				key.OAuth.RefreshToken = token.RefreshToken
+				key.OAuth.AccessToken = token.AccessToken
+
+				return key, nil
+			}
+			key.OAuth.RefreshToken = claims.RefreshToken
 		}
 
 		return key, nil

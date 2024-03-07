@@ -65,6 +65,24 @@ type OAuthToken struct {
 	RefreshToken string `json:"refresh_token,omitempty"`
 }
 
+func (o *OAuthToken) FromInterface(i interface{}) {
+	m, ok := i.(map[string]interface{})
+	if ok {
+		provider, ok := m["provider"].(string)
+		if ok {
+			o.Provider = provider
+		}
+		accessToken, ok := m["access_token"].(string)
+		if ok {
+			o.AccessToken = accessToken
+		}
+		refreshToken, ok := m["refresh_token"].(string)
+		if ok {
+			o.RefreshToken = refreshToken
+		}
+	}
+}
+
 // Key represents API key.
 type Key struct {
 	ID        string     `json:"id,omitempty"`
