@@ -75,16 +75,17 @@ func (cfg *config) IsEnabled() bool {
 	return cfg.config.ClientID != "" && cfg.config.ClientSecret != ""
 }
 
-func (cfg *config) UserDetails(ctx context.Context, code string) (mfclients.Client, error) {
+func (cfg *config) Exchange(ctx context.Context, code string) (oauth2.Token, error) {
 	token, err := cfg.config.Exchange(ctx, code)
 	if err != nil {
-		return mfclients.Client{}, err
-	}
-	if token.RefreshToken == "" {
-		return mfclients.Client{}, svcerr.ErrAuthentication
+		return oauth2.Token{}, err
 	}
 
-	resp, err := http.Get(userInfoURL + url.QueryEscape(token.AccessToken))
+	return *token, nil
+}
+
+func (cfg *config) UserInfo(accessToken string) (mfclients.Client, error) {
+	resp, err := http.Get(userInfoURL + url.QueryEscape(accessToken))
 	if err != nil {
 		return mfclients.Client{}, err
 	}

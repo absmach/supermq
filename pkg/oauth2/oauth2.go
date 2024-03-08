@@ -8,6 +8,7 @@ import (
 	"errors"
 
 	mfclients "github.com/absmach/magistrala/pkg/clients"
+	"golang.org/x/oauth2"
 )
 
 // State is the state of the OAuth2 flow.
@@ -71,6 +72,9 @@ type Provider interface {
 	// IsEnabled checks if the OAuth2 provider is enabled.
 	IsEnabled() bool
 
-	// UserDetails retrieves the user's details and OAuth tokens from the OAuth2 provider.
-	UserDetails(ctx context.Context, code string) (mfclients.Client, error)
+	// Exchange converts an authorization code into a token.
+	Exchange(ctx context.Context, code string) (oauth2.Token, error)
+
+	// UserInfo retrieves the user's information using the access token.
+	UserInfo(accessToken string) (mfclients.Client, error)
 }
