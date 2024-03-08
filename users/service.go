@@ -16,7 +16,6 @@ import (
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	mgoauth2 "github.com/absmach/magistrala/pkg/oauth2"
 	"github.com/absmach/magistrala/users/postgres"
-	"golang.org/x/oauth2"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -576,7 +575,7 @@ func (svc *service) authorize(ctx context.Context, subjType, subjKind, subj, per
 	return res.GetId(), nil
 }
 
-func (svc service) OAuthCallback(ctx context.Context, provider string, state mgoauth2.State, token oauth2.Token, client mgclients.Client) (*magistrala.Token, error) {
+func (svc service) OAuthCallback(ctx context.Context, state mgoauth2.State, client mgclients.Client) (*magistrala.Token, error) {
 	switch state {
 	case mgoauth2.SignIn:
 		rclient, err := svc.clients.RetrieveByIdentity(ctx, client.Credentials.Identity)
@@ -587,11 +586,8 @@ func (svc service) OAuthCallback(ctx context.Context, provider string, state mgo
 			return &magistrala.Token{}, err
 		}
 		claims := &magistrala.IssueReq{
-			UserId:            rclient.ID,
-			Type:              0,
-			OauthProvider:     provider,
-			OauthAccessToken:  token.AccessToken,
-			OauthRefreshToken: token.RefreshToken,
+			UserId: rclient.ID,
+			Type:   0,
 		}
 		return svc.auth.Issue(ctx, claims)
 	case mgoauth2.SignUp:
@@ -603,11 +599,8 @@ func (svc service) OAuthCallback(ctx context.Context, provider string, state mgo
 			return &magistrala.Token{}, err
 		}
 		claims := &magistrala.IssueReq{
-			UserId:            rclient.ID,
-			Type:              0,
-			OauthProvider:     provider,
-			OauthAccessToken:  token.AccessToken,
-			OauthRefreshToken: token.RefreshToken,
+			UserId: rclient.ID,
+			Type:   0,
 		}
 		return svc.auth.Issue(ctx, claims)
 	default:

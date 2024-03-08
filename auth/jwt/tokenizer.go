@@ -12,7 +12,6 @@ import (
 	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/pkg/oauth2"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
@@ -33,9 +32,6 @@ var (
 	ErrValidateJWTToken = errors.New("failed to validate jwt token")
 	// ErrJSONHandle indicates an error in handling JSON.
 	ErrJSONHandle = errors.New("failed to perform operation JSON")
-
-	// errInvalidProvider indicates an invalid OAuth2.0 provider.
-	errInvalidProvider = errors.New("invalid OAuth2.0 provider")
 )
 
 const (
@@ -49,21 +45,15 @@ const (
 )
 
 type tokenizer struct {
-	secret    []byte
-	providers map[string]oauth2.Provider
+	secret []byte
 }
 
 var _ auth.Tokenizer = (*tokenizer)(nil)
 
 // NewRepository instantiates an implementation of Token repository.
-func New(secret []byte, providers ...oauth2.Provider) auth.Tokenizer {
-	providersMap := make(map[string]oauth2.Provider)
-	for _, provider := range providers {
-		providersMap[provider.Name()] = provider
-	}
+func New(secret []byte) auth.Tokenizer {
 	return &tokenizer{
-		secret:    secret,
-		providers: providersMap,
+		secret: secret,
 	}
 }
 
@@ -77,15 +67,6 @@ func (tok *tokenizer) Issue(key auth.Key) (string, error) {
 		Expiration(key.ExpiresAt)
 	builder.Claim(userField, key.User)
 	builder.Claim(domainField, key.Domain)
-
-	if key.OAuth.Provider != "" {
-		provider, ok := tok.providers[key.OAuth.Provider]
-		if !ok {
-			return "", errors.Wrap(svcerr.ErrAuthentication, errInvalidProvider)
-		}
-		builder.Claim(oauthProviderField, provider.Name())
-		builder.Claim(provider.Name(), key.OAuth)
-	}
 
 	if key.ID != "" {
 		builder.JwtID(key.ID)
@@ -111,12 +92,6 @@ func (tok *tokenizer) Parse(token string) (auth.Key, error) {
 	if err != nil {
 		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-
-	oauthToken, err := tok.parseOAuthToken(tkn, key.Type)
-	if err != nil {
-		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
-	}
-	key.OAuth = oauthToken
 
 	return key, nil
 }
@@ -174,58 +149,4 @@ func toKey(tkn jwt.Token) (auth.Key, error) {
 	key.ExpiresAt = tkn.Expiration()
 
 	return key, nil
-}
-
-func (tok *tokenizer) parseOAuthToken(token jwt.Token, keyType auth.KeyType) (auth.OAuthToken, error) {
-	oauthProvider, ok := token.Get(oauthProviderField)
-	if ok {
-		provider, ok := oauthProvider.(string)
-		if !ok {
-			return auth.OAuthToken{}, errInvalidProvider
-		}
-		if provider != "" {
-			prov, ok := tok.providers[provider]
-			if !ok {
-				return auth.OAuthToken{}, errInvalidProvider
-			}
-
-			return extractOAuthToken(context.Background(), prov, token, keyType)
-		}
-
-		return auth.OAuthToken{}, nil
-	}
-
-	return auth.OAuthToken{}, nil
-}
-
-func extractOAuthToken(ctx context.Context, provider oauth2.Provider, token jwt.Token, keyType auth.KeyType) (auth.OAuthToken, error) {
-	oauthToken, ok := token.Get(provider.Name())
-	if ok {
-		var claims auth.OAuthToken
-		claims.FromInterface(oauthToken)
-
-		switch keyType {
-		case auth.AccessKey:
-			if err := provider.Validate(ctx, claims.AccessToken); err != nil {
-				return auth.OAuthToken{}, err
-			}
-		case auth.RefreshKey:
-			if err := provider.Validate(ctx, claims.RefreshToken); err != nil {
-				token, err := provider.Refresh(ctx, claims.RefreshToken)
-				if err != nil {
-					return auth.OAuthToken{}, err
-				}
-				claims.RefreshToken = token.RefreshToken
-				claims.AccessToken = token.AccessToken
-
-				return claims, nil
-			}
-		default:
-			return auth.OAuthToken{}, nil
-		}
-
-		return claims, nil
-	}
-
-	return auth.OAuthToken{}, nil
 }

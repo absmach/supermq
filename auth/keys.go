@@ -58,42 +58,16 @@ func (kt KeyType) String() string {
 	}
 }
 
-// OAuthToken represents OAuth token.
-type OAuthToken struct {
-	Provider     string `json:"provider,omitempty"`
-	AccessToken  string `json:"access_token,omitempty"`
-	RefreshToken string `json:"refresh_token,omitempty"`
-}
-
-func (o *OAuthToken) FromInterface(i interface{}) {
-	m, ok := i.(map[string]interface{})
-	if ok {
-		provider, ok := m["provider"].(string)
-		if ok {
-			o.Provider = provider
-		}
-		accessToken, ok := m["access_token"].(string)
-		if ok {
-			o.AccessToken = accessToken
-		}
-		refreshToken, ok := m["refresh_token"].(string)
-		if ok {
-			o.RefreshToken = refreshToken
-		}
-	}
-}
-
 // Key represents API key.
 type Key struct {
-	ID        string     `json:"id,omitempty"`
-	Type      KeyType    `json:"type,omitempty"`
-	Issuer    string     `json:"issuer,omitempty"`
-	Subject   string     `json:"subject,omitempty"` // user ID
-	User      string     `json:"user,omitempty"`
-	Domain    string     `json:"domain,omitempty"` // domain user ID
-	IssuedAt  time.Time  `json:"issued_at,omitempty"`
-	ExpiresAt time.Time  `json:"expires_at,omitempty"`
-	OAuth     OAuthToken `json:"oauth,omitempty"`
+	ID        string    `json:"id,omitempty"`
+	Type      KeyType   `json:"type,omitempty"`
+	Issuer    string    `json:"issuer,omitempty"`
+	Subject   string    `json:"subject,omitempty"` // user ID
+	User      string    `json:"user,omitempty"`
+	Domain    string    `json:"domain,omitempty"` // domain user ID
+	IssuedAt  time.Time `json:"issued_at,omitempty"`
+	ExpiresAt time.Time `json:"expires_at,omitempty"`
 }
 
 func (key Key) String() string {
