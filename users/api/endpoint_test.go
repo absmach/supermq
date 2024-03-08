@@ -1479,7 +1479,7 @@ func TestIssueToken(t *testing.T) {
 			desc:        "issue token with empty identity",
 			data:        fmt.Sprintf(`{"identity": "%s", "secret": "%s", "domainID": "%s"}`, "", secret, validID),
 			contentType: contentType,
-			status:      http.StatusInternalServerError,
+			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
 		},
 		{

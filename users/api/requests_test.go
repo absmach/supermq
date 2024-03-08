@@ -67,6 +67,34 @@ func TestCreateClientReqValidate(t *testing.T) {
 			},
 			err: apiutil.ErrNameSize,
 		},
+		{
+			desc: "missing identity in request",
+			req: createClientReq{
+				token: valid,
+				client: mgclients.Client{
+					ID:   validID,
+					Name: valid,
+					Credentials: mgclients.Credentials{
+						Secret: valid,
+					},
+				},
+			},
+			err: apiutil.ErrMissingIdentity,
+		},
+		{
+			desc: "missing secret in request",
+			req: createClientReq{
+				token: valid,
+				client: mgclients.Client{
+					ID:   validID,
+					Name: valid,
+					Credentials: mgclients.Credentials{
+						Identity: "example@example.com",
+					},
+				},
+			},
+			err: apiutil.ErrMissingSecret,
+		},
 	}
 	for _, tc := range cases {
 		err := tc.req.validate()

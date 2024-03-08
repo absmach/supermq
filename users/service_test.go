@@ -174,7 +174,7 @@ func TestRegisterClient(t *testing.T) {
 			},
 			addPoliciesResponse:    &magistrala.AddPoliciesRes{Added: true},
 			deletePoliciesResponse: &magistrala.DeletePoliciesRes{Deleted: true},
-			err:                    nil,
+			err:                    errors.ErrMalformedEntity,
 		},
 		{
 			desc: " register a client with a secret that is too long",

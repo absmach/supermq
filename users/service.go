@@ -84,6 +84,9 @@ func (svc service) RegisterClient(ctx context.Context, token string, cli mgclien
 	}
 
 	if cli.Credentials.Secret != "" {
+		if !svc.passRegex.MatchString(cli.Credentials.Secret) {
+			return mgclients.Client{}, errors.Wrap(svcerr.ErrMalformedEntity, ErrPasswordFormat)
+		}
 		hash, err := svc.hasher.Hash(cli.Credentials.Secret)
 		if err != nil {
 			return mgclients.Client{}, errors.Wrap(repoerr.ErrMalformedEntity, err)
@@ -92,10 +95,10 @@ func (svc service) RegisterClient(ctx context.Context, token string, cli mgclien
 	}
 
 	if cli.Status != mgclients.DisabledStatus && cli.Status != mgclients.EnabledStatus {
-		return mgclients.Client{}, svcerr.ErrInvalidStatus
+		return mgclients.Client{}, errors.Wrap(svcerr.ErrMalformedEntity, svcerr.ErrInvalidStatus)
 	}
 	if cli.Role != mgclients.UserRole && cli.Role != mgclients.AdminRole {
-		return mgclients.Client{}, svcerr.ErrInvalidRole
+		return mgclients.Client{}, errors.Wrap(svcerr.ErrMalformedEntity, svcerr.ErrInvalidRole)
 	}
 	cli.ID = clientID
 	cli.CreatedAt = time.Now()
@@ -314,7 +317,7 @@ func (svc service) ResetSecret(ctx context.Context, resetToken, secret string) e
 		return repoerr.ErrNotFound
 	}
 	if !svc.passRegex.MatchString(secret) {
-		return ErrPasswordFormat
+		return errors.Wrap(svcerr.ErrMalformedEntity, ErrPasswordFormat)
 	}
 	secret, err = svc.hasher.Hash(secret)
 	if err != nil {
@@ -340,7 +343,7 @@ func (svc service) UpdateClientSecret(ctx context.Context, token, oldSecret, new
 		return mgclients.Client{}, err
 	}
 	if !svc.passRegex.MatchString(newSecret) {
-		return mgclients.Client{}, ErrPasswordFormat
+		return mgclients.Client{}, errors.Wrap(svcerr.ErrMalformedEntity, ErrPasswordFormat)
 	}
 	dbClient, err := svc.clients.RetrieveByID(ctx, id)
 	if err != nil {

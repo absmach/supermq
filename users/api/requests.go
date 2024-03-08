@@ -20,6 +20,12 @@ func (req createClientReq) validate() error {
 	if len(req.client.Name) > api.MaxNameSize {
 		return apiutil.ErrNameSize
 	}
+	if req.client.Credentials.Identity == "" {
+		return apiutil.ErrMissingIdentity
+	}
+	if req.client.Credentials.Secret == "" {
+		return apiutil.ErrMissingSecret
+	}
 
 	return req.client.Validate()
 }
