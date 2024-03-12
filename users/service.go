@@ -6,7 +6,6 @@ package users
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
 	"github.com/absmach/magistrala"
@@ -24,9 +23,6 @@ import (
 var (
 	// ErrRecoveryToken indicates error in generating password recovery token.
 	ErrRecoveryToken = errors.New("failed to generate password recovery token")
-
-	// ErrPasswordFormat indicates weak password.
-	ErrPasswordFormat = errors.New("password does not meet the requirements")
 
 	// ErrFailedPolicyUpdate indicates a failure to update user policy.
 	ErrFailedPolicyUpdate = errors.New("failed to update user policy")
@@ -50,19 +46,17 @@ type service struct {
 	auth         magistrala.AuthServiceClient
 	hasher       Hasher
 	email        Emailer
-	passRegex    *regexp.Regexp
 	selfRegister bool
 }
 
 // NewService returns a new Users service implementation.
-func NewService(crepo postgres.Repository, authClient magistrala.AuthServiceClient, emailer Emailer, hasher Hasher, idp magistrala.IDProvider, pr *regexp.Regexp, selfRegister bool) Service {
+func NewService(crepo postgres.Repository, authClient magistrala.AuthServiceClient, emailer Emailer, hasher Hasher, idp magistrala.IDProvider, selfRegister bool) Service {
 	return service{
 		clients:      crepo,
 		auth:         authClient,
 		hasher:       hasher,
 		email:        emailer,
 		idProvider:   idp,
-		passRegex:    pr,
 		selfRegister: selfRegister,
 	}
 }
@@ -84,9 +78,6 @@ func (svc service) RegisterClient(ctx context.Context, token string, cli mgclien
 	}
 
 	if cli.Credentials.Secret != "" {
-		if !svc.passRegex.MatchString(cli.Credentials.Secret) {
-			return mgclients.Client{}, errors.Wrap(svcerr.ErrMalformedEntity, ErrPasswordFormat)
-		}
 		hash, err := svc.hasher.Hash(cli.Credentials.Secret)
 		if err != nil {
 			return mgclients.Client{}, errors.Wrap(repoerr.ErrMalformedEntity, err)
@@ -316,9 +307,6 @@ func (svc service) ResetSecret(ctx context.Context, resetToken, secret string) e
 	if c.Credentials.Identity == "" {
 		return repoerr.ErrNotFound
 	}
-	if !svc.passRegex.MatchString(secret) {
-		return errors.Wrap(svcerr.ErrMalformedEntity, ErrPasswordFormat)
-	}
 	secret, err = svc.hasher.Hash(secret)
 	if err != nil {
 		return err
@@ -341,9 +329,6 @@ func (svc service) UpdateClientSecret(ctx context.Context, token, oldSecret, new
 	id, err := svc.Identify(ctx, token)
 	if err != nil {
 		return mgclients.Client{}, err
-	}
-	if !svc.passRegex.MatchString(newSecret) {
-		return mgclients.Client{}, errors.Wrap(svcerr.ErrMalformedEntity, ErrPasswordFormat)
 	}
 	dbClient, err := svc.clients.RetrieveByID(ctx, id)
 	if err != nil {

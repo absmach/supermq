@@ -4,6 +4,8 @@
 package api
 
 import (
+	"regexp"
+
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/internal/apiutil"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
@@ -16,7 +18,7 @@ type createClientReq struct {
 	token  string
 }
 
-func (req createClientReq) validate() error {
+func (req createClientReq) validate(passRegex *regexp.Regexp) error {
 	if len(req.client.Name) > api.MaxNameSize {
 		return apiutil.ErrNameSize
 	}
@@ -24,7 +26,10 @@ func (req createClientReq) validate() error {
 		return apiutil.ErrMissingIdentity
 	}
 	if req.client.Credentials.Secret == "" {
-		return apiutil.ErrMissingSecret
+		return apiutil.ErrMissingPass
+	}
+	if !passRegex.MatchString(req.client.Credentials.Secret) {
+		return apiutil.ErrPasswordFormat
 	}
 
 	return req.client.Validate()
@@ -182,9 +187,15 @@ type updateClientSecretReq struct {
 	NewSecret string `json:"new_secret,omitempty"`
 }
 
-func (req updateClientSecretReq) validate() error {
+func (req updateClientSecretReq) validate(passRegex *regexp.Regexp) error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
+	}
+	if req.OldSecret == "" || req.NewSecret == "" {
+		return apiutil.ErrMissingPass
+	}
+	if !passRegex.MatchString(req.NewSecret) {
+		return apiutil.ErrPasswordFormat
 	}
 
 	return nil
@@ -217,7 +228,7 @@ func (req loginClientReq) validate() error {
 		return apiutil.ErrMissingIdentity
 	}
 	if req.Secret == "" {
-		return apiutil.ErrMissingSecret
+		return apiutil.ErrMissingPass
 	}
 
 	return nil
@@ -258,7 +269,7 @@ type resetTokenReq struct {
 	ConfPass string `json:"confirm_password"`
 }
 
-func (req resetTokenReq) validate() error {
+func (req resetTokenReq) validate(passRegex *regexp.Regexp) error {
 	if req.Password == "" {
 		return apiutil.ErrMissingPass
 	}
@@ -270,6 +281,9 @@ func (req resetTokenReq) validate() error {
 	}
 	if req.Password != req.ConfPass {
 		return apiutil.ErrInvalidResetPass
+	}
+	if !passRegex.MatchString(req.ConfPass) {
+		return apiutil.ErrPasswordFormat
 	}
 
 	return nil

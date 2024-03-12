@@ -43,14 +43,14 @@ func setupUsers() (*httptest.Server, *umocks.Repository, *gmocks.Repository, *au
 	gRepo := new(gmocks.Repository)
 
 	auth := new(authmocks.AuthClient)
-	csvc := users.NewService(crepo, auth, emailer, phasher, idProvider, passRegex, true)
+	csvc := users.NewService(crepo, auth, emailer, phasher, idProvider, true)
 	gsvc := groups.NewService(gRepo, idProvider, auth)
 
 	logger := mglog.NewMock()
 	mux := chi.NewRouter()
 	provider := new(oauth2mocks.Provider)
 	provider.On("Name").Return("test")
-	api.MakeHandler(csvc, gsvc, mux, logger, "", provider)
+	api.MakeHandler(csvc, gsvc, mux, logger, "", passRegex, provider)
 
 	return httptest.NewServer(mux), crepo, gRepo, auth
 }
@@ -821,7 +821,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			newSecret: "newSecret",
 			token:     validToken,
 			response:  sdk.User{},
-			repoErr:   apiutil.ErrInvalidSecret,
+			repoErr:   apiutil.ErrMissingSecret,
 			err:       errors.NewSDKErrorWithStatus(errors.Wrap(svcerr.ErrNotFound, repoerr.ErrMissingSecret), http.StatusBadRequest),
 		},
 	}

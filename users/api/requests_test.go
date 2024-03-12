@@ -4,6 +4,7 @@
 package api
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 
@@ -17,9 +18,13 @@ import (
 const (
 	valid   = "valid"
 	invalid = "invalid"
+	secret  = "QJg58*aMan7j"
 )
 
-var validID = testsutil.GenerateUUID(&testing.T{})
+var (
+	validID   = testsutil.GenerateUUID(&testing.T{})
+	passRegex = regexp.MustCompile("^.{8,}$")
+)
 
 func TestCreateClientReqValidate(t *testing.T) {
 	cases := []struct {
@@ -36,7 +41,7 @@ func TestCreateClientReqValidate(t *testing.T) {
 					Name: valid,
 					Credentials: mgclients.Credentials{
 						Identity: "example@example.com",
-						Secret:   valid,
+						Secret:   secret,
 					},
 				},
 			},
@@ -51,7 +56,7 @@ func TestCreateClientReqValidate(t *testing.T) {
 					Name: valid,
 					Credentials: mgclients.Credentials{
 						Identity: "example@example.com",
-						Secret:   valid,
+						Secret:   secret,
 					},
 				},
 			},
@@ -93,11 +98,26 @@ func TestCreateClientReqValidate(t *testing.T) {
 					},
 				},
 			},
-			err: apiutil.ErrMissingSecret,
+			err: apiutil.ErrMissingPass,
+		},
+		{
+			desc: "invalid secret in request",
+			req: createClientReq{
+				token: valid,
+				client: mgclients.Client{
+					ID:   validID,
+					Name: valid,
+					Credentials: mgclients.Credentials{
+						Identity: "example@example.com",
+						Secret:   "invalid",
+					},
+				},
+			},
+			err: apiutil.ErrPasswordFormat,
 		},
 	}
 	for _, tc := range cases {
-		err := tc.req.validate()
+		err := tc.req.validate(passRegex)
 		assert.Equal(t, tc.err, err)
 	}
 }
@@ -439,8 +459,8 @@ func TestUpdateClientSecretReqValidate(t *testing.T) {
 			desc: "valid request",
 			req: updateClientSecretReq{
 				token:     valid,
-				OldSecret: valid,
-				NewSecret: valid,
+				OldSecret: secret,
+				NewSecret: secret,
 			},
 			err: nil,
 		},
@@ -448,14 +468,41 @@ func TestUpdateClientSecretReqValidate(t *testing.T) {
 			desc: "empty token",
 			req: updateClientSecretReq{
 				token:     "",
-				OldSecret: valid,
-				NewSecret: valid,
+				OldSecret: secret,
+				NewSecret: secret,
 			},
 			err: apiutil.ErrBearerToken,
 		},
+		{
+			desc: "missing old secret",
+			req: updateClientSecretReq{
+				token:     valid,
+				OldSecret: "",
+				NewSecret: secret,
+			},
+			err: apiutil.ErrMissingPass,
+		},
+		{
+			desc: "missing new secret",
+			req: updateClientSecretReq{
+				token:     valid,
+				OldSecret: secret,
+				NewSecret: "",
+			},
+			err: apiutil.ErrMissingPass,
+		},
+		{
+			desc: "invalid new secret",
+			req: updateClientSecretReq{
+				token:     valid,
+				OldSecret: secret,
+				NewSecret: "invalid",
+			},
+			err: apiutil.ErrPasswordFormat,
+		},
 	}
 	for _, c := range cases {
-		err := c.req.validate()
+		err := c.req.validate(passRegex)
 		assert.Equal(t, c.err, err)
 	}
 }
@@ -507,7 +554,7 @@ func TestLoginClientReqValidate(t *testing.T) {
 			desc: "valid request",
 			req: loginClientReq{
 				Identity: "eaxmple,example.com",
-				Secret:   valid,
+				Secret:   secret,
 			},
 			err: nil,
 		},
@@ -515,7 +562,7 @@ func TestLoginClientReqValidate(t *testing.T) {
 			desc: "empty identity",
 			req: loginClientReq{
 				Identity: "",
-				Secret:   valid,
+				Secret:   secret,
 			},
 			err: apiutil.ErrMissingIdentity,
 		},
@@ -525,7 +572,7 @@ func TestLoginClientReqValidate(t *testing.T) {
 				Identity: "eaxmple,example.com",
 				Secret:   "",
 			},
-			err: apiutil.ErrMissingSecret,
+			err: apiutil.ErrMissingPass,
 		},
 	}
 	for _, c := range cases {
@@ -608,8 +655,8 @@ func TestResetTokenReqValidate(t *testing.T) {
 			desc: "valid request",
 			req: resetTokenReq{
 				Token:    valid,
-				Password: valid,
-				ConfPass: valid,
+				Password: secret,
+				ConfPass: secret,
 			},
 			err: nil,
 		},
@@ -617,8 +664,8 @@ func TestResetTokenReqValidate(t *testing.T) {
 			desc: "empty token",
 			req: resetTokenReq{
 				Token:    "",
-				Password: valid,
-				ConfPass: valid,
+				Password: secret,
+				ConfPass: secret,
 			},
 			err: apiutil.ErrBearerToken,
 		},
@@ -627,7 +674,7 @@ func TestResetTokenReqValidate(t *testing.T) {
 			req: resetTokenReq{
 				Token:    valid,
 				Password: "",
-				ConfPass: valid,
+				ConfPass: secret,
 			},
 			err: apiutil.ErrMissingPass,
 		},
@@ -635,7 +682,7 @@ func TestResetTokenReqValidate(t *testing.T) {
 			desc: "empty confpass",
 			req: resetTokenReq{
 				Token:    valid,
-				Password: valid,
+				Password: secret,
 				ConfPass: "",
 			},
 			err: apiutil.ErrMissingConfPass,
@@ -644,14 +691,14 @@ func TestResetTokenReqValidate(t *testing.T) {
 			desc: "mismatching password and confpass",
 			req: resetTokenReq{
 				Token:    valid,
-				Password: "valid2",
-				ConfPass: valid,
+				Password: "secret",
+				ConfPass: secret,
 			},
 			err: apiutil.ErrInvalidResetPass,
 		},
 	}
 	for _, c := range cases {
-		err := c.req.validate()
+		err := c.req.validate(passRegex)
 		assert.Equal(t, c.err, err)
 	}
 }

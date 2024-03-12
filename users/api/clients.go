@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/absmach/magistrala/auth"
@@ -23,13 +24,13 @@ import (
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func clientsHandler(svc users.Service, r *chi.Mux, logger *slog.Logger, providers ...oauth2.Provider) http.Handler {
+func clientsHandler(svc users.Service, r *chi.Mux, logger *slog.Logger, passRegex *regexp.Regexp, providers ...oauth2.Provider) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
 	r.Route("/users", func(r chi.Router) {
 		r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
-			registrationEndpoint(svc),
+			registrationEndpoint(svc, passRegex),
 			decodeCreateClientReq,
 			api.EncodeResponse,
 			opts...,
@@ -57,7 +58,7 @@ func clientsHandler(svc users.Service, r *chi.Mux, logger *slog.Logger, provider
 		), "list_clients").ServeHTTP)
 
 		r.Patch("/secret", otelhttp.NewHandler(kithttp.NewServer(
-			updateClientSecretEndpoint(svc),
+			updateClientSecretEndpoint(svc, passRegex),
 			decodeUpdateClientSecret,
 			api.EncodeResponse,
 			opts...,
@@ -92,7 +93,7 @@ func clientsHandler(svc users.Service, r *chi.Mux, logger *slog.Logger, provider
 		), "password_reset_req").ServeHTTP)
 
 		r.Put("/password/reset", otelhttp.NewHandler(kithttp.NewServer(
-			passwordResetEndpoint(svc),
+			passwordResetEndpoint(svc, passRegex),
 			decodePasswordReset,
 			api.EncodeResponse,
 			opts...,
