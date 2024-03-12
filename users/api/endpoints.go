@@ -5,7 +5,6 @@ package api
 
 import (
 	"context"
-	"regexp"
 
 	"github.com/absmach/magistrala/internal/apiutil"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
@@ -14,10 +13,10 @@ import (
 	"github.com/go-kit/kit/endpoint"
 )
 
-func registrationEndpoint(svc users.Service, passRegex *regexp.Regexp) endpoint.Endpoint {
+func registrationEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createClientReq)
-		if err := req.validate(passRegex); err != nil {
+		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
@@ -258,10 +257,10 @@ func passwordResetRequestEndpoint(svc users.Service) endpoint.Endpoint {
 // This is endpoint that actually sets new password in password reset flow.
 // When user clicks on a link in email finally ends on this endpoint as explained in
 // the comment above.
-func passwordResetEndpoint(svc users.Service, passRegex *regexp.Regexp) endpoint.Endpoint {
+func passwordResetEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(resetTokenReq)
-		if err := req.validate(passRegex); err != nil {
+		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
@@ -273,10 +272,10 @@ func passwordResetEndpoint(svc users.Service, passRegex *regexp.Regexp) endpoint
 	}
 }
 
-func updateClientSecretEndpoint(svc users.Service, passRegex *regexp.Regexp) endpoint.Endpoint {
+func updateClientSecretEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(updateClientSecretReq)
-		if err := req.validate(passRegex); err != nil {
+		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 

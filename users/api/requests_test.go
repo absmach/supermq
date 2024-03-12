@@ -4,7 +4,6 @@
 package api
 
 import (
-	"regexp"
 	"strings"
 	"testing"
 
@@ -21,10 +20,7 @@ const (
 	secret  = "QJg58*aMan7j"
 )
 
-var (
-	validID   = testsutil.GenerateUUID(&testing.T{})
-	passRegex = regexp.MustCompile("^.{8,}$")
-)
+var validID = testsutil.GenerateUUID(&testing.T{})
 
 func TestCreateClientReqValidate(t *testing.T) {
 	cases := []struct {
@@ -117,7 +113,7 @@ func TestCreateClientReqValidate(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		err := tc.req.validate(passRegex)
+		err := tc.req.validate()
 		assert.Equal(t, tc.err, err)
 	}
 }
@@ -502,7 +498,7 @@ func TestUpdateClientSecretReqValidate(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		err := c.req.validate(passRegex)
+		err := c.req.validate()
 		assert.Equal(t, c.err, err)
 	}
 }
@@ -698,7 +694,7 @@ func TestResetTokenReqValidate(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		err := c.req.validate(passRegex)
+		err := c.req.validate()
 		assert.Equal(t, c.err, err)
 	}
 }

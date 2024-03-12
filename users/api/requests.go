@@ -4,8 +4,6 @@
 package api
 
 import (
-	"regexp"
-
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/internal/apiutil"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
@@ -18,7 +16,7 @@ type createClientReq struct {
 	token  string
 }
 
-func (req createClientReq) validate(passRegex *regexp.Regexp) error {
+func (req createClientReq) validate() error {
 	if len(req.client.Name) > api.MaxNameSize {
 		return apiutil.ErrNameSize
 	}
@@ -187,7 +185,7 @@ type updateClientSecretReq struct {
 	NewSecret string `json:"new_secret,omitempty"`
 }
 
-func (req updateClientSecretReq) validate(passRegex *regexp.Regexp) error {
+func (req updateClientSecretReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
@@ -269,7 +267,7 @@ type resetTokenReq struct {
 	ConfPass string `json:"confirm_password"`
 }
 
-func (req resetTokenReq) validate(passRegex *regexp.Regexp) error {
+func (req resetTokenReq) validate() error {
 	if req.Password == "" {
 		return apiutil.ErrMissingPass
 	}
