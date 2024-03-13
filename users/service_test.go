@@ -6,7 +6,6 @@ package users_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -43,7 +42,6 @@ var (
 		Metadata:    validCMetadata,
 		Status:      mgclients.EnabledStatus,
 	}
-	passRegex         = regexp.MustCompile("^.{8,}$")
 	validToken        = "token"
 	inValidToken      = "invalid"
 	validID           = "d4ebb847-5d0e-4e46-bdd9-b6aceaaa3a22"
@@ -57,7 +55,7 @@ func newService(selfRegister bool) (users.Service, *mocks.Repository, *authmocks
 	cRepo := new(mocks.Repository)
 	auth := new(authmocks.AuthClient)
 	e := mocks.NewEmailer()
-	return users.NewService(cRepo, auth, e, phasher, idProvider, passRegex, selfRegister), cRepo, auth, e
+	return users.NewService(cRepo, auth, e, phasher, idProvider, selfRegister), cRepo, auth, e
 }
 
 func TestRegisterClient(t *testing.T) {
@@ -158,19 +156,6 @@ func TestRegisterClient(t *testing.T) {
 				Credentials: mgclients.Credentials{
 					Identity: "clientwithmissingsecret@example.com",
 					Secret:   "",
-				},
-			},
-			addPoliciesResponse:    &magistrala.AddPoliciesRes{Added: true},
-			deletePoliciesResponse: &magistrala.DeletePoliciesRes{Deleted: true},
-			err:                    nil,
-		},
-		{
-			desc: "register a new client with a weak secret",
-			client: mgclients.Client{
-				Name: "clientWithWeakSecret",
-				Credentials: mgclients.Credentials{
-					Identity: "clientwithweaksecret@example.com",
-					Secret:   "weak",
 				},
 			},
 			addPoliciesResponse:    &magistrala.AddPoliciesRes{Added: true},
@@ -1179,14 +1164,6 @@ func TestUpdateClientSecret(t *testing.T) {
 			identifyResponse: &magistrala.IdentityRes{},
 			identifyErr:      svcerr.ErrAuthentication,
 			err:              svcerr.ErrAuthentication,
-		},
-		{
-			desc:             "update client secret with weak secret",
-			oldSecret:        client.Credentials.Secret,
-			newSecret:        "weak",
-			token:            validToken,
-			identifyResponse: &magistrala.IdentityRes{UserId: client.ID},
-			err:              users.ErrPasswordFormat,
 		},
 		{
 			desc:                 "update client secret with failed to retrieve client by ID",
@@ -2363,14 +2340,6 @@ func TestResetSecret(t *testing.T) {
 				},
 			},
 			err: repoerr.ErrNotFound,
-		},
-		{
-			desc:                 "reset secret with invalid secret format",
-			token:                validToken,
-			newSecret:            "weak",
-			identifyResponse:     &magistrala.IdentityRes{UserId: client.ID},
-			retrieveByIDResponse: client,
-			err:                  users.ErrPasswordFormat,
 		},
 		{
 			desc:                 "reset secret with failed to update secret",
