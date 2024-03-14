@@ -26,6 +26,7 @@ const (
 
 var (
 	_ events.Event = (*assignEvent)(nil)
+	_ events.Event = (*unassignEvent)(nil)
 	_ events.Event = (*createGroupEvent)(nil)
 	_ events.Event = (*updateGroupEvent)(nil)
 	_ events.Event = (*changeStatusGroupEvent)(nil)
