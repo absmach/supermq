@@ -25,7 +25,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/oauth2"
 )
 
 var (
@@ -2442,9 +2441,7 @@ func TestOAuthCallback(t *testing.T) {
 
 	cases := []struct {
 		desc                       string
-		provider                   string
 		state                      mgoauth2.State
-		token                      oauth2.Token
 		client                     mgclients.Client
 		retrieveByIdentityResponse mgclients.Client
 		retrieveByIdentityErr      error
@@ -2459,13 +2456,8 @@ func TestOAuthCallback(t *testing.T) {
 		err                        error
 	}{
 		{
-			desc:     "oauth signin callback with successfully",
-			provider: "google",
-			state:    mgoauth2.SignIn,
-			token: oauth2.Token{
-				AccessToken:  strings.Repeat("a", 10),
-				RefreshToken: strings.Repeat("b", 10),
-			},
+			desc:  "oauth signin callback with successfully",
+			state: mgoauth2.SignIn,
 			client: mgclients.Client{
 				Credentials: mgclients.Credentials{
 					Identity: "test@example.com",
@@ -2482,13 +2474,8 @@ func TestOAuthCallback(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:     "oauth signin callback with error",
-			provider: "google",
-			state:    mgoauth2.SignIn,
-			token: oauth2.Token{
-				AccessToken:  strings.Repeat("a", 10),
-				RefreshToken: strings.Repeat("b", 10),
-			},
+			desc:  "oauth signin callback with error",
+			state: mgoauth2.SignIn,
 			client: mgclients.Client{
 				Credentials: mgclients.Credentials{
 					Identity: "test@example.com",
@@ -2500,13 +2487,8 @@ func TestOAuthCallback(t *testing.T) {
 			err:                        errors.New("user not signed up"),
 		},
 		{
-			desc:     "oauth signup callback with successfully",
-			provider: "google",
-			state:    mgoauth2.SignUp,
-			token: oauth2.Token{
-				AccessToken:  strings.Repeat("a", 10),
-				RefreshToken: strings.Repeat("b", 10),
-			},
+			desc:  "oauth signup callback with successfully",
+			state: mgoauth2.SignUp,
 			client: mgclients.Client{
 				Credentials: mgclients.Credentials{
 					Identity: "test@example.com",
@@ -2531,13 +2513,8 @@ func TestOAuthCallback(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:     "oauth signup callback with error",
-			provider: "google",
-			state:    mgoauth2.SignUp,
-			token: oauth2.Token{
-				AccessToken:  strings.Repeat("a", 10),
-				RefreshToken: strings.Repeat("b", 10),
-			},
+			desc:  "oauth signup callback with error",
+			state: mgoauth2.SignUp,
 			client: mgclients.Client{
 				Credentials: mgclients.Credentials{
 					Identity: "test@example.com",
@@ -2568,7 +2545,7 @@ func TestOAuthCallback(t *testing.T) {
 			repoCall1 := auth.On("AddPolicies", mock.Anything, mock.Anything).Return(tc.addPoliciesResponse, tc.addPoliciesErr)
 			repoCall2 := auth.On("DeletePolicies", mock.Anything, mock.Anything).Return(tc.deletePoliciesResponse, tc.deletePoliciesErr)
 			repoCall3 := auth.On("Issue", mock.Anything, mock.Anything).Return(tc.issueResponse, tc.issueErr)
-			token, err := svc.OAuthCallback(context.Background(), tc.provider, tc.state, tc.token, tc.client)
+			token, err := svc.OAuthCallback(context.Background(), tc.state, tc.client)
 			if err == nil {
 				assert.Equal(t, tc.issueResponse.AccessToken, token.AccessToken)
 				assert.Equal(t, tc.issueResponse.RefreshToken, token.RefreshToken)
@@ -2581,7 +2558,7 @@ func TestOAuthCallback(t *testing.T) {
 		case mgoauth2.SignIn:
 			repoCall := cRepo.On("RetrieveByIdentity", context.Background(), tc.client.Credentials.Identity).Return(tc.retrieveByIdentityResponse, tc.retrieveByIdentityErr)
 			repoCall1 := auth.On("Issue", mock.Anything, mock.Anything).Return(tc.issueResponse, tc.issueErr)
-			token, err := svc.OAuthCallback(context.Background(), tc.provider, tc.state, tc.token, tc.client)
+			token, err := svc.OAuthCallback(context.Background(), tc.state, tc.client)
 			if err == nil {
 				assert.Equal(t, tc.issueResponse.AccessToken, token.AccessToken)
 				assert.Equal(t, tc.issueResponse.RefreshToken, token.RefreshToken)
