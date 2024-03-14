@@ -39,7 +39,7 @@ var (
 
 type assignEvent struct {
 	operation string
-	memberID  []string
+	memberID  string
 	groupID   string
 	createdAt time.Time
 }
@@ -57,7 +57,7 @@ func (cge assignEvent) Encode() (map[string]interface{}, error) {
 
 type unassignEvent struct {
 	operation string
-	memberID  []string
+	memberID  string
 	groupID   string
 	createdAt time.Time
 }

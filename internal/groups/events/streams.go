@@ -148,7 +148,7 @@ func (es eventStore) Assign(ctx context.Context, token, groupID, relation, membe
 	event := assignEvent{
 		operation: "group.assign",
 		groupID:   groupID,
-		memberID:  memberIDs,
+		memberID:  memberIDs[0],
 		createdAt: time.Now(),
 	}
 
@@ -167,7 +167,7 @@ func (es eventStore) Unassign(ctx context.Context, token, groupID, relation, mem
 	event := unassignEvent{
 		operation: "group.unassign",
 		groupID:   groupID,
-		memberID:  memberIDs,
+		memberID:  memberIDs[0],
 		createdAt: time.Now(),
 	}
 
