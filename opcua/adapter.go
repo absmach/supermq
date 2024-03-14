@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strconv"
 
 	"github.com/absmach/magistrala/opcua/db"
 )
@@ -44,13 +45,14 @@ type Service interface {
 
 // Config OPC-UA Server.
 type Config struct {
-	ServerURI string
-	NodeID    string
-	Interval  string `env:"MG_OPCUA_ADAPTER_INTERVAL_MS"   envDefault:"1000"`
-	Policy    string `env:"MG_OPCUA_ADAPTER_POLICY"        envDefault:""`
-	Mode      string `env:"MG_OPCUA_ADAPTER_MODE"          envDefault:""`
-	CertFile  string `env:"MG_OPCUA_ADAPTER_CERT_FILE"     envDefault:""`
-	KeyFile   string `env:"MG_OPCUA_ADAPTER_KEY_FILE"      envDefault:""`
+	ServerURI    string
+	NodeID       string
+	Interval     string `env:"MG_OPCUA_ADAPTER_INTERVAL_MS"     envDefault:"1000"`
+	Policy       string `env:"MG_OPCUA_ADAPTER_POLICY"          envDefault:""`
+	Mode         string `env:"MG_OPCUA_ADAPTER_MODE"            envDefault:""`
+	CertFile     string `env:"MG_OPCUA_ADAPTER_CERT_FILE"       envDefault:""`
+	KeyFile      string `env:"MG_OPCUA_ADAPTER_KEY_FILE"        envDefault:""`
+	NodeIDFormat string `env:"MG_OPCUA_ADAPTER_NODE_ID_FORMAT"	envDefault:"string"`
 }
 
 var _ Service = (*adapterService)(nil)
@@ -132,7 +134,26 @@ func (as *adapterService) ConnectThing(ctx context.Context, chanID, thingID stri
 }
 
 func (as *adapterService) Browse(ctx context.Context, serverURI, namespace, identifier string) ([]BrowsedNode, error) {
-	nodeID := fmt.Sprintf("ns=%s;s=%s", namespace, identifier)
+	var nodeID string
+
+	switch as.cfg.NodeIDFormat {
+	case "string":
+		nodeID = fmt.Sprintf("ns=%s;s=%s", namespace, identifier)
+	case "numeric":
+		numericIdentifier, err := strconv.Atoi(identifier) // Convert identifier to int
+		if err != nil {
+			nodeID = fmt.Sprintf("ns=%s;s=%s", namespace, identifier)
+			as.logger.Warn(fmt.Sprintf("failed to parse numeric nodeID format: %s, defaulting to string", err))
+			break
+		}
+		nodeID = fmt.Sprintf("ns=%s;i=%d", namespace, numericIdentifier)
+	case "guid":
+		nodeID = fmt.Sprintf("ns=%s;g=%s", namespace, identifier)
+	case "opaque":
+		nodeID = fmt.Sprintf("ns=%s;b=%s", namespace, identifier)
+	default:
+		nodeID = fmt.Sprintf("ns=%s;s=%s", namespace, identifier)
+	}
 
 	nodes, err := as.browser.Browse(serverURI, nodeID)
 	if err != nil {
