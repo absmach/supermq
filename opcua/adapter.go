@@ -52,7 +52,7 @@ type Config struct {
 	Mode         string `env:"MG_OPCUA_ADAPTER_MODE"            envDefault:""`
 	CertFile     string `env:"MG_OPCUA_ADAPTER_CERT_FILE"       envDefault:""`
 	KeyFile      string `env:"MG_OPCUA_ADAPTER_KEY_FILE"        envDefault:""`
-	NodeIDFormat string `env:"MG_OPCUA_ADAPTER_NODE_ID_FORMAT"	envDefault:"string"`
+	NodeIDFormat string `env:"MG_OPCUA_ADAPTER_NODE_ID_FORMAT"  envDefault:"string"`
 }
 
 var _ Service = (*adapterService)(nil)
