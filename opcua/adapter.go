@@ -132,7 +132,7 @@ func (as *adapterService) ConnectThing(ctx context.Context, chanID, thingID stri
 }
 
 func (as *adapterService) Browse(ctx context.Context, serverURI, namespace, identifier string) ([]BrowsedNode, error) {
-	nodeID := fmt.Sprintf("%s;%s", namespace, identifier)
+	nodeID := fmt.Sprintf("ns=%s;s=%s", namespace, identifier)
 
 	nodes, err := as.browser.Browse(serverURI, nodeID)
 	if err != nil {

@@ -5,6 +5,7 @@ package events
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 
@@ -13,21 +14,21 @@ import (
 )
 
 const (
-	keyType      = "opcua"
-	keyNodeID    = "node_id"
-	keyServerURI = "server_uri"
-
-	thingPrefix     = "thing."
-	thingCreate     = thingPrefix + "create"
-	thingUpdate     = thingPrefix + "update"
-	thingRemove     = thingPrefix + "remove"
-	thingConnect    = thingPrefix + "connect"
-	thingDisconnect = thingPrefix + "disconnect"
-
+	keyType       = "opcua"
+	keyNodeID     = "node_id"
+	keyServerURI  = "server_uri"
 	channelPrefix = "group."
-	channelCreate = channelPrefix + "create"
-	channelUpdate = channelPrefix + "update"
-	channelRemove = channelPrefix + "remove"
+	thingPrefix   = "thing."
+
+	thingCreate = thingPrefix + "create"
+	thingUpdate = thingPrefix + "update"
+	thingRemove = thingPrefix + "remove"
+
+	channelCreate     = channelPrefix + "create"
+	channelUpdate     = channelPrefix + "update"
+	channelRemove     = channelPrefix + "remove"
+	channelConnect    = channelPrefix + "assign"
+	channelDisconnect = channelPrefix + "unassign"
 )
 
 var (
@@ -92,10 +93,10 @@ func (es *eventHandler) Handle(ctx context.Context, event events.Event) error {
 	case channelRemove:
 		rce := decodeRemoveChannel(msg)
 		err = es.svc.RemoveChannel(ctx, rce.id)
-	case thingConnect:
+	case channelConnect:
 		rce := decodeConnectThing(msg)
 		err = es.svc.ConnectThing(ctx, rce.chanID, rce.thingID)
-	case thingDisconnect:
+	case channelDisconnect:
 		rce := decodeDisconnectThing(msg)
 		err = es.svc.DisconnectThing(ctx, rce.chanID, rce.thingID)
 	}
@@ -108,8 +109,12 @@ func (es *eventHandler) Handle(ctx context.Context, event events.Event) error {
 
 func decodeCreateThing(event map[string]interface{}) (createThingEvent, error) {
 	strmeta := read(event, "metadata", "{}")
+	meta, err := base64.StdEncoding.DecodeString(strmeta)
+	if err != nil {
+		return createThingEvent{}, err
+	}
 	var metadata map[string]interface{}
-	if err := json.Unmarshal([]byte(strmeta), &metadata); err != nil {
+	if err := json.Unmarshal(meta, &metadata); err != nil {
 		return createThingEvent{}, err
 	}
 
@@ -144,8 +149,12 @@ func decodeRemoveThing(event map[string]interface{}) removeThingEvent {
 
 func decodeCreateChannel(event map[string]interface{}) (createChannelEvent, error) {
 	strmeta := read(event, "metadata", "{}")
+	meta, err := base64.StdEncoding.DecodeString(strmeta)
+	if err != nil {
+		return createChannelEvent{}, err
+	}
 	var metadata map[string]interface{}
-	if err := json.Unmarshal([]byte(strmeta), &metadata); err != nil {
+	if err := json.Unmarshal([]byte(meta), &metadata); err != nil {
 		return createChannelEvent{}, err
 	}
 
@@ -180,8 +189,8 @@ func decodeRemoveChannel(event map[string]interface{}) removeChannelEvent {
 
 func decodeConnectThing(event map[string]interface{}) connectThingEvent {
 	return connectThingEvent{
-		chanID:  read(event, "chan_id", ""),
-		thingID: read(event, "thing_id", ""),
+		chanID:  read(event, "group_id", ""),
+		thingID: read(event, "member_id", ""),
 	}
 }
 

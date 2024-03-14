@@ -21,9 +21,11 @@ const (
 	groupList            = groupPrefix + "list"
 	groupListMemberships = groupPrefix + "list_by_user"
 	groupRemove          = groupPrefix + "remove"
+	groupAssign          = groupPrefix + "assign"
 )
 
 var (
+	_ events.Event = (*assignEvent)(nil)
 	_ events.Event = (*createGroupEvent)(nil)
 	_ events.Event = (*updateGroupEvent)(nil)
 	_ events.Event = (*changeStatusGroupEvent)(nil)
@@ -33,6 +35,42 @@ var (
 	_ events.Event = (*listGroupEvent)(nil)
 	_ events.Event = (*listGroupMembershipEvent)(nil)
 )
+
+type assignEvent struct {
+	operation string
+	memberID  []string
+	groupID   string
+	createdAt time.Time
+}
+
+func (cge assignEvent) Encode() (map[string]interface{}, error) {
+	val := map[string]interface{}{
+		"operation":  groupAssign,
+		"member_id":  cge.memberID,
+		"group_id":   cge.groupID,
+		"created_at": cge.createdAt,
+	}
+
+	return val, nil
+}
+
+type unassignEvent struct {
+	operation string
+	memberID  []string
+	groupID   string
+	createdAt time.Time
+}
+
+func (cge unassignEvent) Encode() (map[string]interface{}, error) {
+	val := map[string]interface{}{
+		"operation":  groupAssign,
+		"member_id":  cge.memberID,
+		"group_id":   cge.groupID,
+		"created_at": cge.createdAt,
+	}
+
+	return val, nil
+}
 
 type createGroupEvent struct {
 	groups.Group

@@ -5,6 +5,7 @@ package events
 
 import (
 	"context"
+	"time"
 
 	"github.com/absmach/magistrala/pkg/events"
 	"github.com/absmach/magistrala/pkg/events/store"
@@ -140,10 +141,39 @@ func (es eventStore) EnableGroup(ctx context.Context, token, id string) (groups.
 }
 
 func (es eventStore) Assign(ctx context.Context, token, groupID, relation, memberKind string, memberIDs ...string) error {
-	return es.svc.Assign(ctx, token, groupID, relation, memberKind, memberIDs...)
+	if err := es.svc.Assign(ctx, token, groupID, relation, memberKind, memberIDs...); err != nil {
+		return err
+	}
+
+	event := assignEvent{
+		operation: "group.assign",
+		groupID:   groupID,
+		memberID:  memberIDs,
+		createdAt: time.Now(),
+	}
+
+	if err := es.Publish(ctx, event); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (es eventStore) Unassign(ctx context.Context, token, groupID, relation, memberKind string, memberIDs ...string) error {
+	if err := es.svc.Unassign(ctx, token, groupID, relation, memberKind, memberIDs...); err != nil {
+		return err
+	}
+
+	event := unassignEvent{
+		operation: "group.unassign",
+		groupID:   groupID,
+		memberID:  memberIDs,
+		createdAt: time.Now(),
+	}
+
+	if err := es.Publish(ctx, event); err != nil {
+		return err
+	}
 	return es.svc.Unassign(ctx, token, groupID, relation, memberKind, memberIDs...)
 }
 
