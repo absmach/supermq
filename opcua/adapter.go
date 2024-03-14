@@ -40,19 +40,18 @@ type Service interface {
 	DisconnectThing(ctx context.Context, chanID, thingID string) error
 
 	// Browse browses available nodes for a given OPC-UA Server URI and NodeID
-	Browse(ctx context.Context, serverURI, namespace, identifier string) ([]BrowsedNode, error)
+	Browse(ctx context.Context, serverURI, namespace, identifier, identifierType string) ([]BrowsedNode, error)
 }
 
 // Config OPC-UA Server.
 type Config struct {
-	ServerURI    string
-	NodeID       string
-	Interval     string `env:"MG_OPCUA_ADAPTER_INTERVAL_MS"     envDefault:"1000"`
-	Policy       string `env:"MG_OPCUA_ADAPTER_POLICY"          envDefault:""`
-	Mode         string `env:"MG_OPCUA_ADAPTER_MODE"            envDefault:""`
-	CertFile     string `env:"MG_OPCUA_ADAPTER_CERT_FILE"       envDefault:""`
-	KeyFile      string `env:"MG_OPCUA_ADAPTER_KEY_FILE"        envDefault:""`
-	NodeIDFormat string `env:"MG_OPCUA_ADAPTER_NODE_ID_FORMAT"  envDefault:"string"`
+	ServerURI string
+	NodeID    string
+	Interval  string `env:"MG_OPCUA_ADAPTER_INTERVAL_MS"     envDefault:"1000"`
+	Policy    string `env:"MG_OPCUA_ADAPTER_POLICY"          envDefault:""`
+	Mode      string `env:"MG_OPCUA_ADAPTER_MODE"            envDefault:""`
+	CertFile  string `env:"MG_OPCUA_ADAPTER_CERT_FILE"       envDefault:""`
+	KeyFile   string `env:"MG_OPCUA_ADAPTER_KEY_FILE"        envDefault:""`
 }
 
 var _ Service = (*adapterService)(nil)
@@ -133,10 +132,10 @@ func (as *adapterService) ConnectThing(ctx context.Context, chanID, thingID stri
 	return db.Save(serverURI, nodeID)
 }
 
-func (as *adapterService) Browse(ctx context.Context, serverURI, namespace, identifier string) ([]BrowsedNode, error) {
+func (as *adapterService) Browse(ctx context.Context, serverURI, namespace, identifier, identifierType string) ([]BrowsedNode, error) {
 	var nodeID string
 
-	switch as.cfg.NodeIDFormat {
+	switch identifierType {
 	case "string":
 		nodeID = fmt.Sprintf("ns=%s;s=%s", namespace, identifier)
 	case "numeric":

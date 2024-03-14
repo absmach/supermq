@@ -102,11 +102,11 @@ func (mm *metricsMiddleware) DisconnectThing(ctx context.Context, mgxChanID, mgx
 	return mm.svc.DisconnectThing(ctx, mgxChanID, mgxThingID)
 }
 
-func (mm *metricsMiddleware) Browse(ctx context.Context, serverURI, namespace, identifier string) ([]opcua.BrowsedNode, error) {
+func (mm *metricsMiddleware) Browse(ctx context.Context, serverURI, namespace, identifier, identifierType string) ([]opcua.BrowsedNode, error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "browse").Add(1)
 		mm.latency.With("method", "browse").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Browse(ctx, serverURI, namespace, identifier)
+	return mm.svc.Browse(ctx, serverURI, namespace, identifier, identifierType)
 }

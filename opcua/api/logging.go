@@ -170,7 +170,7 @@ func (lm loggingMiddleware) DisconnectThing(ctx context.Context, mgxChanID, mgxT
 	return lm.svc.DisconnectThing(ctx, mgxChanID, mgxThingID)
 }
 
-func (lm loggingMiddleware) Browse(ctx context.Context, serverURI, namespace, identifier string) (nodes []opcua.BrowsedNode, err error) {
+func (lm loggingMiddleware) Browse(ctx context.Context, serverURI, namespace, identifier, identifierType string) (nodes []opcua.BrowsedNode, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -186,5 +186,5 @@ func (lm loggingMiddleware) Browse(ctx context.Context, serverURI, namespace, id
 		lm.logger.Info("Browse available nodes completed successfully", args...)
 	}(time.Now())
 
-	return lm.svc.Browse(ctx, serverURI, namespace, identifier)
+	return lm.svc.Browse(ctx, serverURI, namespace, identifier, identifierType)
 }
