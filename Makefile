@@ -130,6 +130,10 @@ test: mocks
 	go test -v --race -count 1 -tags test -coverprofile=coverage/coverage.out $$(go list ./... | grep -v 'consumers\|readers\|postgres\|internal\|opcua\|cmd')
 
 test_api:
+ifeq ($(USER_TOKEN),)
+	@echo "env variable USER_TOKEN is empty"
+	exit 1
+endif
 	@which st > /dev/null || (echo "schemathesis not found, please install it from https://github.com/schemathesis/schemathesis#getting-started" && exit 1)
 	st run api/openapi/users.yml \
 	--checks all \
