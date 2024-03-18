@@ -5,7 +5,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/absmach/magistrala/cli"
@@ -26,17 +25,8 @@ const (
 func main() {
 	msgContentType := string(sdk.CTJSONSenML)
 	sdkConf := sdk.Config{
-		ThingsURL:       defThingsURL,
-		UsersURL:        defUsersURL,
-		ReaderURL:       defURL,
-		HTTPAdapterURL:  fmt.Sprintf("%s/http", defURL),
-		BootstrapURL:    defBootstrapURL,
-		CertsURL:        defCertsURL,
-		DomainsURL:      defDomainsURL,
-		InvitationsURL:  defInvitationsURL,
-		MsgContentType:  sdk.ContentType(msgContentType),
-		TLSVerification: false,
-		HostURL:         defURL,
+		MsgContentType: sdk.ContentType(msgContentType),
+		HostURL:        defURL,
 	}
 
 	// Root
