@@ -22,6 +22,7 @@ const (
 	groupListMemberships = groupPrefix + "list_by_user"
 	groupRemove          = groupPrefix + "remove"
 	groupAssign          = groupPrefix + "assign"
+	groupUnassign        = groupPrefix + "unassign"
 )
 
 var (
@@ -64,7 +65,7 @@ type unassignEvent struct {
 
 func (cge unassignEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
-		"operation":  groupAssign,
+		"operation":  groupUnassign,
 		"member_id":  cge.memberID,
 		"group_id":   cge.groupID,
 		"created_at": cge.createdAt,
