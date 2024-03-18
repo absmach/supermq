@@ -13,13 +13,7 @@ import (
 )
 
 const (
-	defURL            string = "http://localhost"
-	defUsersURL       string = defURL + ":9002"
-	defThingsURL      string = defURL + ":9000"
-	defBootstrapURL   string = defURL + ":9013"
-	defDomainsURL     string = defURL + ":8189"
-	defCertsURL       string = defURL + ":9019"
-	defInvitationsURL string = defURL + ":9020"
+	defURL string = "http://localhost"
 )
 
 func main() {
