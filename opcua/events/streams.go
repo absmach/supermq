@@ -95,10 +95,10 @@ func (es *eventHandler) Handle(ctx context.Context, event events.Event) error {
 		err = es.svc.RemoveChannel(ctx, rce.id)
 	case channelConnect:
 		rce := decodeConnectThing(msg)
-		err = es.svc.ConnectThing(ctx, rce.chanID, rce.thingID)
+		err = es.svc.ConnectThing(ctx, rce.chanID, rce.thingIDs)
 	case channelDisconnect:
 		rce := decodeDisconnectThing(msg)
-		err = es.svc.DisconnectThing(ctx, rce.chanID, rce.thingID)
+		err = es.svc.DisconnectThing(ctx, rce.chanID, rce.thingIDs)
 	}
 	if err != nil && err != errMetadataType {
 		return err
@@ -109,6 +109,8 @@ func (es *eventHandler) Handle(ctx context.Context, event events.Event) error {
 
 func decodeCreateThing(event map[string]interface{}) (createThingEvent, error) {
 	strmeta := read(event, "metadata", "{}")
+
+	// Metadata is base64 encoded since it is marshalled as []byte.
 	meta, err := base64.StdEncoding.DecodeString(strmeta)
 	if err != nil {
 		return createThingEvent{}, err
@@ -189,15 +191,15 @@ func decodeRemoveChannel(event map[string]interface{}) removeChannelEvent {
 
 func decodeConnectThing(event map[string]interface{}) connectThingEvent {
 	return connectThingEvent{
-		chanID:  read(event, "group_id", ""),
-		thingID: read(event, "member_id", ""),
+		chanID:   read(event, "group_id", ""),
+		thingIDs: readMemberIDs(event, "member_id"),
 	}
 }
 
 func decodeDisconnectThing(event map[string]interface{}) connectThingEvent {
 	return connectThingEvent{
-		chanID:  read(event, "chan_id", ""),
-		thingID: read(event, "thing_id", ""),
+		chanID:   read(event, "chan_id", ""),
+		thingIDs: readMemberIDs(event, "member_id"),
 	}
 }
 
@@ -208,4 +210,20 @@ func read(event map[string]interface{}, key, def string) string {
 	}
 
 	return val
+}
+
+func readMemberIDs(event map[string]interface{}, key string) []string {
+	var memberIDs []string
+	val, ok := event[key].([]interface{})
+	if !ok {
+		return memberIDs
+	}
+
+	for _, v := range val {
+		if str, ok := v.(string); ok {
+			memberIDs = append(memberIDs, str)
+		}
+	}
+
+	return memberIDs
 }

@@ -40,17 +40,15 @@ var (
 
 type assignEvent struct {
 	operation string
-	memberID  string
+	memberIDs []string
 	groupID   string
-	createdAt time.Time
 }
 
 func (cge assignEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
-		"operation":  groupAssign,
-		"member_id":  cge.memberID,
-		"group_id":   cge.groupID,
-		"created_at": cge.createdAt,
+		"operation": groupAssign,
+		"member_id": cge.memberIDs,
+		"group_id":  cge.groupID,
 	}
 
 	return val, nil
@@ -58,17 +56,15 @@ func (cge assignEvent) Encode() (map[string]interface{}, error) {
 
 type unassignEvent struct {
 	operation string
-	memberID  string
+	memberIDs []string
 	groupID   string
-	createdAt time.Time
 }
 
 func (cge unassignEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
-		"operation":  groupUnassign,
-		"member_id":  cge.memberID,
-		"group_id":   cge.groupID,
-		"created_at": cge.createdAt,
+		"operation": groupUnassign,
+		"member_id": cge.memberIDs,
+		"group_id":  cge.groupID,
 	}
 
 	return val, nil

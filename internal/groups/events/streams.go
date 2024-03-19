@@ -5,7 +5,6 @@ package events
 
 import (
 	"context"
-	"time"
 
 	"github.com/absmach/magistrala/pkg/events"
 	"github.com/absmach/magistrala/pkg/events/store"
@@ -148,8 +147,7 @@ func (es eventStore) Assign(ctx context.Context, token, groupID, relation, membe
 	event := assignEvent{
 		operation: "group.assign",
 		groupID:   groupID,
-		memberID:  memberIDs[0],
-		createdAt: time.Now(),
+		memberIDs: memberIDs,
 	}
 
 	if err := es.Publish(ctx, event); err != nil {
@@ -167,8 +165,7 @@ func (es eventStore) Unassign(ctx context.Context, token, groupID, relation, mem
 	event := unassignEvent{
 		operation: "group.unassign",
 		groupID:   groupID,
-		memberID:  memberIDs[0],
-		createdAt: time.Now(),
+		memberIDs: memberIDs,
 	}
 
 	if err := es.Publish(ctx, event); err != nil {

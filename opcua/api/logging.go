@@ -134,12 +134,12 @@ func (lm loggingMiddleware) RemoveChannel(ctx context.Context, mgxChanID string)
 	return lm.svc.RemoveChannel(ctx, mgxChanID)
 }
 
-func (lm loggingMiddleware) ConnectThing(ctx context.Context, mgxChanID, mgxThingID string) (err error) {
+func (lm loggingMiddleware) ConnectThing(ctx context.Context, mgxChanID string, mgxThingIDs []string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.String("channel_id", mgxChanID),
-			slog.String("thing_id", mgxThingID),
+			slog.Any("thing_id", mgxThingIDs),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
@@ -149,15 +149,15 @@ func (lm loggingMiddleware) ConnectThing(ctx context.Context, mgxChanID, mgxThin
 		lm.logger.Info("Connect thing to channel completed successfully", args...)
 	}(time.Now())
 
-	return lm.svc.ConnectThing(ctx, mgxChanID, mgxThingID)
+	return lm.svc.ConnectThing(ctx, mgxChanID, mgxThingIDs)
 }
 
-func (lm loggingMiddleware) DisconnectThing(ctx context.Context, mgxChanID, mgxThingID string) (err error) {
+func (lm loggingMiddleware) DisconnectThing(ctx context.Context, mgxChanID string, mgxThingIDs []string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.String("channel_id", mgxChanID),
-			slog.String("thing_id", mgxThingID),
+			slog.Any("thing_id", mgxThingIDs),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
@@ -167,7 +167,7 @@ func (lm loggingMiddleware) DisconnectThing(ctx context.Context, mgxChanID, mgxT
 		lm.logger.Info("Disconnect thing from channel completed successfully", args...)
 	}(time.Now())
 
-	return lm.svc.DisconnectThing(ctx, mgxChanID, mgxThingID)
+	return lm.svc.DisconnectThing(ctx, mgxChanID, mgxThingIDs)
 }
 
 func (lm loggingMiddleware) Browse(ctx context.Context, serverURI, namespace, identifier, identifierType string) (nodes []opcua.BrowsedNode, err error) {

@@ -34,10 +34,10 @@ type Service interface {
 	RemoveChannel(ctx context.Context, chanID string) error
 
 	// ConnectThing creates thingID:channelID route-map
-	ConnectThing(ctx context.Context, chanID, thingID string) error
+	ConnectThing(ctx context.Context, chanID string, thingIDs []string) error
 
 	// DisconnectThing removes thingID:channelID route-map
-	DisconnectThing(ctx context.Context, chanID, thingID string) error
+	DisconnectThing(ctx context.Context, chanID string, thingID []string) error
 
 	// Browse browses available nodes for a given OPC-UA Server URI and NodeID
 	Browse(ctx context.Context, serverURI, namespace, identifier, identifierType string) ([]BrowsedNode, error)
@@ -103,33 +103,39 @@ func (as *adapterService) RemoveChannel(ctx context.Context, chanID string) erro
 	return as.channelsRM.Remove(ctx, chanID)
 }
 
-func (as *adapterService) ConnectThing(ctx context.Context, chanID, thingID string) error {
+func (as *adapterService) ConnectThing(ctx context.Context, chanID string, thingIDs []string) error {
 	serverURI, err := as.channelsRM.Get(ctx, chanID)
 	if err != nil {
 		return err
 	}
 
-	nodeID, err := as.thingsRM.Get(ctx, thingID)
-	if err != nil {
-		return err
-	}
-
-	as.cfg.NodeID = nodeID
-	as.cfg.ServerURI = serverURI
-
-	c := fmt.Sprintf("%s:%s", chanID, thingID)
-	if err := as.connectRM.Save(ctx, c, c); err != nil {
-		return err
-	}
-
-	go func() {
-		if err := as.subscriber.Subscribe(ctx, as.cfg); err != nil {
-			as.logger.Warn(fmt.Sprintf("subscription failed: %s", err))
+	for _, t := range thingIDs {
+		nodeID, err := as.thingsRM.Get(ctx, t)
+		if err != nil {
+			return err
 		}
-	}()
 
-	// Store subscription details
-	return db.Save(serverURI, nodeID)
+		as.cfg.NodeID = nodeID
+		as.cfg.ServerURI = serverURI
+
+		c := fmt.Sprintf("%s:%s", chanID, t)
+		if err := as.connectRM.Save(ctx, c, c); err != nil {
+			return err
+		}
+
+		go func() {
+			if err := as.subscriber.Subscribe(ctx, as.cfg); err != nil {
+				as.logger.Warn(fmt.Sprintf("subscription failed: %s", err))
+			}
+		}()
+
+		// Store subscription details
+		if err := db.Save(serverURI, nodeID); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (as *adapterService) Browse(ctx context.Context, serverURI, namespace, identifier, identifierType string) ([]BrowsedNode, error) {
@@ -161,7 +167,12 @@ func (as *adapterService) Browse(ctx context.Context, serverURI, namespace, iden
 	return nodes, nil
 }
 
-func (as *adapterService) DisconnectThing(ctx context.Context, chanID, thingID string) error {
-	c := fmt.Sprintf("%s:%s", chanID, thingID)
-	return as.connectRM.Remove(ctx, c)
+func (as *adapterService) DisconnectThing(ctx context.Context, chanID string, thingIDs []string) error {
+	for _, t := range thingIDs {
+		c := fmt.Sprintf("%s:%s", chanID, t)
+		if err := as.connectRM.Remove(ctx, c); err != nil {
+			return err
+		}
+	}
+	return nil
 }
