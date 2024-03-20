@@ -125,7 +125,7 @@ func (as *adapterService) ConnectThing(ctx context.Context, chanID string, thing
 
 		go func() {
 			if err := as.subscriber.Subscribe(ctx, as.cfg); err != nil {
-				as.logger.Warn("subscription failed", slog.String("error", err.Error()))
+				as.logger.Warn("subscription failed", slog.Any("error", err))
 			}
 		}()
 
@@ -151,7 +151,7 @@ func (as *adapterService) Browse(ctx context.Context, serverURI, namespace, iden
 			args := []any{
 				slog.String("namespace", namespace),
 				slog.String("identifier", identifier),
-				slog.String("error", err.Error()),
+				slog.Any("error", err),
 			}
 			as.logger.Warn("failed to parse numeric identifier", args...)
 			break
