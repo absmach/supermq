@@ -20,8 +20,8 @@ import (
 var _ magistrala.AuthzServiceServer = (*grpcServer)(nil)
 
 type grpcServer struct {
-	magistrala.UnimplementedAuthzServiceServer
 	authorize kitgrpc.Handler
+	magistrala.UnimplementedAuthzServiceServer
 }
 
 // NewServer returns new AuthServiceServer instance.
