@@ -139,7 +139,7 @@ func (lm loggingMiddleware) ConnectThing(ctx context.Context, mgxChanID string, 
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.String("channel_id", mgxChanID),
-			slog.Any("thing_id", mgxThingIDs),
+			slog.Any("thing_ids", mgxThingIDs),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
@@ -157,7 +157,7 @@ func (lm loggingMiddleware) DisconnectThing(ctx context.Context, mgxChanID strin
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.String("channel_id", mgxChanID),
-			slog.Any("thing_id", mgxThingIDs),
+			slog.Any("thing_ids", mgxThingIDs),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))

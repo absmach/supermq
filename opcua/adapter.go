@@ -37,7 +37,7 @@ type Service interface {
 	ConnectThing(ctx context.Context, chanID string, thingIDs []string) error
 
 	// DisconnectThing removes thingID:channelID route-map
-	DisconnectThing(ctx context.Context, chanID string, thingID []string) error
+	DisconnectThing(ctx context.Context, chanID string, thingIDs []string) error
 
 	// Browse browses available nodes for a given OPC-UA Server URI and NodeID
 	Browse(ctx context.Context, serverURI, namespace, identifier, identifierType string) ([]BrowsedNode, error)
@@ -109,8 +109,8 @@ func (as *adapterService) ConnectThing(ctx context.Context, chanID string, thing
 		return err
 	}
 
-	for _, t := range thingIDs {
-		nodeID, err := as.thingsRM.Get(ctx, t)
+	for _, thingID := range thingIDs {
+		nodeID, err := as.thingsRM.Get(ctx, thingID)
 		if err != nil {
 			return err
 		}
@@ -118,7 +118,7 @@ func (as *adapterService) ConnectThing(ctx context.Context, chanID string, thing
 		as.cfg.NodeID = nodeID
 		as.cfg.ServerURI = serverURI
 
-		c := fmt.Sprintf("%s:%s", chanID, t)
+		c := fmt.Sprintf("%s:%s", chanID, thingID)
 		if err := as.connectRM.Save(ctx, c, c); err != nil {
 			return err
 		}
@@ -173,8 +173,8 @@ func (as *adapterService) Browse(ctx context.Context, serverURI, namespace, iden
 }
 
 func (as *adapterService) DisconnectThing(ctx context.Context, chanID string, thingIDs []string) error {
-	for _, t := range thingIDs {
-		c := fmt.Sprintf("%s:%s", chanID, t)
+	for _, thingID := range thingIDs {
+		c := fmt.Sprintf("%s:%s", chanID, thingID)
 		if err := as.connectRM.Remove(ctx, c); err != nil {
 			return err
 		}
