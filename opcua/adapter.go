@@ -125,7 +125,7 @@ func (as *adapterService) ConnectThing(ctx context.Context, chanID string, thing
 
 		go func() {
 			if err := as.subscriber.Subscribe(ctx, as.cfg); err != nil {
-				as.logger.Warn(fmt.Sprintf("subscription failed: %s", err))
+				as.logger.Warn("subscription failed", slog.String("error", err.Error()))
 			}
 		}()
 
@@ -148,7 +148,12 @@ func (as *adapterService) Browse(ctx context.Context, serverURI, namespace, iden
 		numericIdentifier, err := strconv.Atoi(identifier) // Convert identifier to int
 		if err != nil {
 			nodeID = fmt.Sprintf("ns=%s;s=%s", namespace, identifier)
-			as.logger.Warn(fmt.Sprintf("failed to parse numeric nodeID format: %s, defaulting to string", err))
+			args := []any{
+				slog.String("namespace", namespace),
+				slog.String("identifier", identifier),
+				slog.String("error", err.Error()),
+			}
+			as.logger.Warn("failed to parse numeric identifier", args...)
 			break
 		}
 		nodeID = fmt.Sprintf("ns=%s;i=%d", namespace, numericIdentifier)

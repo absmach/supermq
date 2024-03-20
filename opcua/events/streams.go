@@ -192,14 +192,14 @@ func decodeRemoveChannel(event map[string]interface{}) removeChannelEvent {
 func decodeConnectThing(event map[string]interface{}) connectThingEvent {
 	return connectThingEvent{
 		chanID:   read(event, "group_id", ""),
-		thingIDs: readMemberIDs(event, "member_id"),
+		thingIDs: readMemberIDs(event, "member_ids"),
 	}
 }
 
 func decodeDisconnectThing(event map[string]interface{}) connectThingEvent {
 	return connectThingEvent{
 		chanID:   read(event, "chan_id", ""),
-		thingIDs: readMemberIDs(event, "member_id"),
+		thingIDs: readMemberIDs(event, "member_ids"),
 	}
 }
 

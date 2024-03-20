@@ -145,7 +145,6 @@ func (es eventStore) Assign(ctx context.Context, token, groupID, relation, membe
 	}
 
 	event := assignEvent{
-		operation: "group.assign",
 		groupID:   groupID,
 		memberIDs: memberIDs,
 	}
@@ -163,7 +162,6 @@ func (es eventStore) Unassign(ctx context.Context, token, groupID, relation, mem
 	}
 
 	event := unassignEvent{
-		operation: "group.unassign",
 		groupID:   groupID,
 		memberIDs: memberIDs,
 	}
