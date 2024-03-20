@@ -400,7 +400,7 @@ func (bs bootstrapService) thing(id, token string) (mgsdk.Thing, error) {
 		}
 		thing, sdkErr := bs.sdk.CreateThing(mgsdk.Thing{ID: id, Name: "Bootstrapped Thing " + id}, token)
 		if sdkErr != nil {
-			return mgsdk.Thing{}, errors.Wrap(errCreateThing, errors.New(sdkErr.Err().Msg()))
+			return mgsdk.Thing{}, errors.Wrap(errCreateThing, sdkErr)
 		}
 		return thing, nil
 	}

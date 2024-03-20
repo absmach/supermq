@@ -230,8 +230,14 @@ func TestViewCertByThing(t *testing.T) {
 		{
 			desc:    "get existing cert",
 			thingID: thingID,
+			token:   authmocks.InvalidValue,
+			err:     errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:    "revoke non-existing cert",
+			thingID: "2",
 			token:   token,
-			page:    certs.Page{Certs: []certs.Cert{c}},
+			err:     errors.NewSDKErrorWithStatus(certs.ErrFailedCertRevocation, http.StatusNotFound),
 		},
 		{
 			desc:    "get non-existent cert",
@@ -248,7 +254,18 @@ func TestViewCertByThing(t *testing.T) {
 			token:   "",
 			page:    certs.Page{Certs: []certs.Cert{}},
 			err:     errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerToken), http.StatusUnauthorized),
-			svcerr:  errors.Wrap(svcerr.ErrAuthentication, apiutil.ErrBearerToken),
+		},
+		{
+			desc:    "revoke existing cert",
+			thingID: thingID,
+			token:   token,
+			err:     nil,
+		},
+		{
+			desc:    "revoke deleted cert",
+			thingID: thingID,
+			token:   token,
+			err:     errors.NewSDKErrorWithStatus(certs.ErrFailedToRemoveCertFromDB, http.StatusNotFound),
 		},
 	}
 	for _, tc := range cases {
