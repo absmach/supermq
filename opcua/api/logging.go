@@ -177,7 +177,7 @@ func (lm loggingMiddleware) Browse(ctx context.Context, serverURI, namespace, id
 			slog.String("server_uri", serverURI),
 			slog.String("namespace", namespace),
 			slog.String("identifier", identifier),
-			slog.String("identifierType", identifierType),
+			slog.String("identifier_type", identifierType),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))

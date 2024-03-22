@@ -156,7 +156,7 @@ func decodeCreateChannel(event map[string]interface{}) (createChannelEvent, erro
 		return createChannelEvent{}, err
 	}
 	var metadata map[string]interface{}
-	if err := json.Unmarshal([]byte(meta), &metadata); err != nil {
+	if err := json.Unmarshal(meta, &metadata); err != nil {
 		return createChannelEvent{}, err
 	}
 
