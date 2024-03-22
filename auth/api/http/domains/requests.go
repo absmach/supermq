@@ -107,12 +107,17 @@ func (req listDomainsReq) validate() error {
 	return nil
 }
 
-type enableDomainReq struct {
+type statusDomainReq struct {
 	token    string
 	domainID string
+	Status   auth.Status `json:"status,omitempty"`
 }
 
-func (req enableDomainReq) validate() error {
+func (req statusDomainReq) validate() error {
+	validStatuses := make(map[auth.Status]struct{})
+	validStatuses[auth.EnabledStatus] = struct{}{}
+	validStatuses[auth.DisabledStatus] = struct{}{}
+	validStatuses[auth.FreezeStatus] = struct{}{}
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
@@ -121,32 +126,18 @@ func (req enableDomainReq) validate() error {
 		return apiutil.ErrMissingID
 	}
 
-	return nil
-}
-
-type disableDomainReq struct {
-	token    string
-	domainID string
-}
-
-func (req disableDomainReq) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
-
-	if req.domainID == "" {
+	if _, ok := validStatuses[req.Status]; !ok {
 		return apiutil.ErrMissingID
 	}
-
 	return nil
 }
 
-type freezeDomainReq struct {
+type deleteDomainReq struct {
 	token    string
 	domainID string
 }
 
-func (req freezeDomainReq) validate() error {
+func (req deleteDomainReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}

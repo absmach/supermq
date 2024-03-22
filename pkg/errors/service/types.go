@@ -69,4 +69,7 @@ var (
 
 	// ErrFailedUpdateRole indicates a failure to update user role.
 	ErrFailedUpdateRole = errors.New("failed to update user role")
+
+	// ErrFailedDelete indicates a failure to delete domain.
+	ErrFailedDelete = errors.New("failed to delete domain")
 )

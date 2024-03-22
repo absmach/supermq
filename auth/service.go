@@ -559,6 +559,27 @@ func (svc service) CreateDomain(ctx context.Context, token string, d Domain) (do
 	return dom, nil
 }
 
+func (svc service) DeleteDomain(ctx context.Context, token string, d Domain) error {
+	key, err := svc.Identify(ctx, token)
+	if err != nil {
+		return errors.Wrap(svcerr.ErrAuthentication, err)
+	}
+	if err := svc.Authorize(ctx, PolicyReq{
+		Subject:     key.Subject,
+		SubjectType: UserType,
+		SubjectKind: UsersKind,
+		ObjectType:  DomainType,
+		Permission:  AdminPermission,
+		Object:      d.ID,
+	}); err != nil {
+		return errors.Wrap(svcerr.ErrAuthorization, err)
+	}
+	if err := svc.domains.Delete(ctx, d.ID); err != nil {
+		return errors.Wrap(svcerr.ErrFailedDelete, err)
+	}
+	return nil
+}
+
 func (svc service) RetrieveDomain(ctx context.Context, token, id string) (Domain, error) {
 	if err := svc.Authorize(ctx, PolicyReq{
 		Subject:     token,
