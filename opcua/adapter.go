@@ -56,8 +56,10 @@ type Config struct {
 	KeyFile   string `env:"MG_OPCUA_ADAPTER_KEY_FILE"        envDefault:""`
 }
 
-var _ Service = (*adapterService)(nil)
-var guidRegex = regexp.MustCompile(`^\{?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}\}?$`)
+var (
+	_         Service = (*adapterService)(nil)
+	guidRegex         = regexp.MustCompile(`^\{?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}\}?$`)
+)
 
 type adapterService struct {
 	subscriber Subscriber
