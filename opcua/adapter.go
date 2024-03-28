@@ -5,8 +5,10 @@ package opcua
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log/slog"
+	"regexp"
 	"strconv"
 
 	"github.com/absmach/magistrala/opcua/db"
@@ -55,6 +57,7 @@ type Config struct {
 }
 
 var _ Service = (*adapterService)(nil)
+var guidRegex = regexp.MustCompile(`^\{?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}\}?$`)
 
 type adapterService struct {
 	subscriber Subscriber
@@ -139,15 +142,12 @@ func (as *adapterService) ConnectThing(ctx context.Context, chanID string, thing
 }
 
 func (as *adapterService) Browse(ctx context.Context, serverURI, namespace, identifier, identifierType string) ([]BrowsedNode, error) {
-	var nodeID string
-
+	idFormat := "s"
 	switch identifierType {
 	case "string":
-		nodeID = fmt.Sprintf("ns=%s;s=%s", namespace, identifier)
+		break
 	case "numeric":
-		numericIdentifier, err := strconv.Atoi(identifier) // Convert identifier to int
-		if err != nil {
-			nodeID = fmt.Sprintf("ns=%s;s=%s", namespace, identifier)
+		if _, err := strconv.Atoi(identifier); err != nil {
 			args := []any{
 				slog.String("namespace", namespace),
 				slog.String("identifier", identifier),
@@ -156,15 +156,30 @@ func (as *adapterService) Browse(ctx context.Context, serverURI, namespace, iden
 			as.logger.Warn("failed to parse numeric identifier", args...)
 			break
 		}
-		nodeID = fmt.Sprintf("ns=%s;i=%d", namespace, numericIdentifier)
+		idFormat = "i"
 	case "guid":
-		nodeID = fmt.Sprintf("ns=%s;g=%s", namespace, identifier)
+		if !guidRegex.MatchString(identifier) {
+			args := []any{
+				slog.String("namespace", namespace),
+				slog.String("identifier", identifier),
+			}
+			as.logger.Warn("GUID identifier has invalid format", args...)
+			break
+		}
+		idFormat = "g"
 	case "opaque":
-		nodeID = fmt.Sprintf("ns=%s;b=%s", namespace, identifier)
-	default:
-		nodeID = fmt.Sprintf("ns=%s;s=%s", namespace, identifier)
+		if _, err := base64.StdEncoding.DecodeString(identifier); err != nil {
+			args := []any{
+				slog.String("namespace", namespace),
+				slog.String("identifier", identifier),
+				slog.Any("error", err),
+			}
+			as.logger.Warn("opaque identifier has invalid base64 format", args...)
+			break
+		}
+		idFormat = "b"
 	}
-
+	nodeID := fmt.Sprintf("ns=%s;%s=%s", namespace, idFormat, identifier)
 	nodes, err := as.browser.Browse(serverURI, nodeID)
 	if err != nil {
 		return nil, err
