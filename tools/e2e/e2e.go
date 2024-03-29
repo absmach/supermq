@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/0x6flab/namegenerator"
 	sdk "github.com/absmach/magistrala/pkg/sdk/go"
 	"github.com/gookit/color"
+	"github.com/goombaio/namegenerator"
 	"github.com/gorilla/websocket"
 	"golang.org/x/sync/errgroup"
 )
@@ -31,7 +31,7 @@ const (
 )
 
 var (
-	namesgenerator = namegenerator.NewNameGenerator()
+	namesgenerator = namegenerator.NewNameGenerator(time.Now().UTC().UnixNano())
 	msgFormat      = `[{"bn":"demo", "bu":"V", "t": %d, "bver":5, "n":"voltage", "u":"V", "v":%d}]`
 )
 

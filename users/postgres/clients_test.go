@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
-	"github.com/0x6flab/namegenerator"
 	"github.com/absmach/magistrala/internal/testsutil"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	cpostgres "github.com/absmach/magistrala/users/postgres"
+	"github.com/goombaio/namegenerator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,7 +25,7 @@ const maxNameSize = 254
 var (
 	invalidName = strings.Repeat("m", maxNameSize+10)
 	password    = "$tr0ngPassw0rd"
-	namesgen    = namegenerator.NewNameGenerator()
+	namesgen    = namegenerator.NewNameGenerator(time.Now().UTC().UnixNano())
 )
 
 func TestClientsSave(t *testing.T) {

@@ -5,7 +5,6 @@ go 1.21.5
 toolchain go1.21.6
 
 require (
-	github.com/0x6flab/namegenerator v1.2.0
 	github.com/absmach/callhome v0.14.0
 	github.com/absmach/mproxy v0.4.2
 	github.com/absmach/senml v1.0.5
@@ -23,6 +22,7 @@ require (
 	github.com/gocql/gocql v1.6.0
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/gookit/color v1.5.4
+	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gopcua/opcua v0.1.6
 	github.com/gorilla/websocket v1.5.1
 	github.com/hashicorp/vault/api v1.12.0

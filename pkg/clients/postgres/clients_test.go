@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/0x6flab/namegenerator"
 	ipostgres "github.com/absmach/magistrala/internal/postgres"
 	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/pkg/clients"
@@ -20,6 +19,7 @@ import (
 	pgclients "github.com/absmach/magistrala/pkg/clients/postgres"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
+	"github.com/goombaio/namegenerator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -27,7 +27,7 @@ import (
 var (
 	password    = "$tr0ngPassw0rd"
 	emailSuffix = "@example.com"
-	namegen     = namegenerator.NewNameGenerator()
+	namegen     = namegenerator.NewNameGenerator(time.Now().UTC().UnixNano())
 )
 
 func TestRetrieveByID(t *testing.T) {

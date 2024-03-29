@@ -11,8 +11,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
-	"github.com/0x6flab/namegenerator"
 	authmocks "github.com/absmach/magistrala/auth/mocks"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/internal/apiutil"
@@ -27,6 +27,7 @@ import (
 	httpapi "github.com/absmach/magistrala/things/api/http"
 	"github.com/absmach/magistrala/things/mocks"
 	"github.com/go-chi/chi/v5"
+	"github.com/goombaio/namegenerator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -48,7 +49,7 @@ var (
 	inValidToken = "invalid"
 	inValid      = "invalid"
 	validID      = "d4ebb847-5d0e-4e46-bdd9-b6aceaaa3a22"
-	namesgen     = namegenerator.NewNameGenerator()
+	namesgen     = namegenerator.NewNameGenerator(time.Now().UTC().UnixNano())
 )
 
 const contentType = "application/json"
