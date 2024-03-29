@@ -137,7 +137,7 @@ You like Magistrala and you would like to make it your day job? We're always loo
 
 [Apache-2.0](LICENSE)
 
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fabsmach%2Fmagistrala.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fabsmach%2Fmagistrala?ref=badge_shield&issueType=license)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fabsmach%2Fmagistrala.svg?type=large&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fabsmach%2Fmagistrala?ref=badge_large&issueType=license)
 ## Data Collection for Magistrala
 
 Magistrala is committed to continuously improving its services and ensuring a seamless experience for its users. To achieve this, we collect certain data from your deployments. Rest assured, this data is collected solely for the purpose of enhancing Magistrala and is not used with any malicious intent. The deployment summary can be found on our [website][callhome].
