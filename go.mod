@@ -5,6 +5,7 @@ go 1.21.5
 toolchain go1.21.6
 
 require (
+	github.com/0x6flab/namegenerator v1.2.0
 	github.com/absmach/callhome v0.14.0
 	github.com/absmach/mproxy v0.4.2
 	github.com/absmach/senml v1.0.5

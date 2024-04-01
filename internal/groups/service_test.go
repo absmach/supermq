@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/0x6flab/namegenerator"
 	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/auth"
 	authmocks "github.com/absmach/magistrala/auth/mocks"
@@ -22,7 +23,6 @@ import (
 	mggroups "github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/groups/mocks"
 	"github.com/absmach/magistrala/pkg/uuid"
-	"github.com/goombaio/namegenerator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -30,7 +30,7 @@ import (
 var (
 	idProvider = uuid.New()
 	token      = "token"
-	namegen    = namegenerator.NewNameGenerator(time.Now().UTC().UnixNano())
+	namegen    = namegenerator.NewNameGenerator()
 	validGroup = mggroups.Group{
 		Name:        namegen.Generate(),
 		Description: namegen.Generate(),
