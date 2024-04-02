@@ -228,7 +228,7 @@ func (svc service) ListGroups(ctx context.Context, token, memberKind, memberID s
 
 	gp, err := svc.groups.RetrieveByIDs(ctx, gm, ids...)
 	if err != nil {
-		return groups.Page{}, err
+		return groups.Page{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
 	if gm.ListPerms && len(gp.Groups) > 0 {

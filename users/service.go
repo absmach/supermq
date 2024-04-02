@@ -168,7 +168,7 @@ func (svc service) ListClients(ctx context.Context, token string, pm mgclients.P
 	if err := svc.checkSuperAdmin(ctx, userID); err == nil {
 		pg, err := svc.clients.RetrieveAll(ctx, pm)
 		if err != nil {
-			return mgclients.ClientsPage{}, errors.Wrap(svcerr.ErrNotFound, err)
+			return mgclients.ClientsPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 		}
 		return pg, err
 	}
@@ -183,7 +183,7 @@ func (svc service) ListClients(ctx context.Context, token string, pm mgclients.P
 	}
 	pg, err := svc.clients.RetrieveAll(ctx, p)
 	if err != nil {
-		return mgclients.ClientsPage{}, errors.Wrap(svcerr.ErrNotFound, err)
+		return mgclients.ClientsPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return pg, nil
 }
@@ -479,7 +479,7 @@ func (svc service) ListMembers(ctx context.Context, token, objectKind, objectID 
 
 	cp, err := svc.clients.RetrieveAll(ctx, pm)
 	if err != nil {
-		return mgclients.MembersPage{}, errors.Wrap(repoerr.ErrNotFound, err)
+		return mgclients.MembersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
 	if pm.ListPerms && len(cp.Clients) > 0 {
