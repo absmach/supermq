@@ -41,13 +41,11 @@ var (
 		Metadata:    validCMetadata,
 		Status:      mgclients.EnabledStatus,
 	}
-	validToken        = "token"
-	inValidToken      = "invalid"
-	validID           = "d4ebb847-5d0e-4e46-bdd9-b6aceaaa3a22"
-	wrongID           = testsutil.GenerateUUID(&testing.T{})
-	errHashPassword   = errors.New("generate hash from password failed")
-	errAddPolicies    = errors.New("failed to add policies")
-	errDeletePolicies = errors.New("failed to delete policies")
+	validToken      = "token"
+	inValidToken    = "invalid"
+	validID         = "d4ebb847-5d0e-4e46-bdd9-b6aceaaa3a22"
+	wrongID         = testsutil.GenerateUUID(&testing.T{})
+	errHashPassword = errors.New("generate hash from password failed")
 )
 
 func newService(selfRegister bool) (users.Service, *mocks.Repository, *authmocks.AuthClient, users.Emailer) {
@@ -226,8 +224,8 @@ func TestRegisterClient(t *testing.T) {
 				Role: mgclients.AdminRole,
 			},
 			addPoliciesResponse:    &magistrala.AddPoliciesRes{Added: true},
-			addPoliciesResponseErr: errAddPolicies,
-			err:                    errAddPolicies,
+			addPoliciesResponseErr: svcerr.ErrAddPolicies,
+			err:                    svcerr.ErrAddPolicies,
 		},
 		{
 			desc: "register a new client with failed to delete policies with err",
@@ -241,9 +239,9 @@ func TestRegisterClient(t *testing.T) {
 			},
 			addPoliciesResponse:       &magistrala.AddPoliciesRes{Added: true},
 			deletePoliciesResponse:    &magistrala.DeletePoliciesRes{Deleted: false},
-			deletePoliciesResponseErr: errDeletePolicies,
+			deletePoliciesResponseErr: svcerr.ErrConflict,
 			saveErr:                   repoerr.ErrConflict,
-			err:                       errDeletePolicies,
+			err:                       svcerr.ErrConflict,
 		},
 		{
 			desc: "register a new client with failed to delete policies with failed to delete",
@@ -258,7 +256,7 @@ func TestRegisterClient(t *testing.T) {
 			addPoliciesResponse:    &magistrala.AddPoliciesRes{Added: true},
 			deletePoliciesResponse: &magistrala.DeletePoliciesRes{Deleted: false},
 			saveErr:                repoerr.ErrConflict,
-			err:                    svcerr.ErrAuthorization,
+			err:                    svcerr.ErrConflict,
 		},
 	}
 
@@ -1035,7 +1033,7 @@ func TestUpdateClientRole(t *testing.T) {
 			addPolicyResponse: &magistrala.AddPolicyRes{},
 			addPolicyErr:      errors.ErrMalformedEntity,
 			token:             validToken,
-			err:               errAddPolicies,
+			err:               svcerr.ErrAddPolicies,
 		},
 		{
 			desc:                 "update client role to user role successfully  ",
@@ -1054,7 +1052,7 @@ func TestUpdateClientRole(t *testing.T) {
 			deletePolicyResponse: &magistrala.DeletePolicyRes{Deleted: false},
 			updateRoleResponse:   mgclients.Client{},
 			token:                validToken,
-			err:                  errDeletePolicies,
+			err:                  svcerr.ErrFailedPolicyUpdate,
 		},
 		{
 			desc:                 "update client role to user role with failed to delete policy with error",
@@ -1064,7 +1062,7 @@ func TestUpdateClientRole(t *testing.T) {
 			updateRoleResponse:   mgclients.Client{},
 			token:                validToken,
 			deletePolicyErr:      svcerr.ErrMalformedEntity,
-			err:                  errDeletePolicies,
+			err:                  svcerr.ErrDeletePolicies,
 		},
 		{
 			desc:                 "Update client with failed repo update and roll back",
