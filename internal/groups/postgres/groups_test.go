@@ -10,19 +10,19 @@ import (
 	"testing"
 	"time"
 
+	"github.com/0x6flab/namegenerator"
 	"github.com/absmach/magistrala/internal/groups/postgres"
 	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	mggroups "github.com/absmach/magistrala/pkg/groups"
-	"github.com/goombaio/namegenerator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	namegen    = namegenerator.NewNameGenerator(time.Now().UTC().UnixNano())
+	namegen    = namegenerator.NewGenerator()
 	invalidID  = strings.Repeat("a", 37)
 	validGroup = mggroups.Group{
 		ID:          testsutil.GenerateUUID(&testing.T{}),
