@@ -31,7 +31,6 @@ var (
 	idProvider     = uuid.New()
 	phasher        = hasher.New()
 	secret         = "strongsecret"
-	weakSecret     = "secret"
 	validCMetadata = mgclients.Metadata{"role": "client"}
 	client         = mgclients.Client{
 		ID:          testsutil.GenerateUUID(&testing.T{}),
