@@ -115,7 +115,6 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, apiutil.ErrBearerKey),
 		errors.Contains(err, apiutil.ErrNameSize),
 		errors.Contains(err, apiutil.ErrInvalidIDFormat),
-		errors.Contains(err, apiutil.ErrInvalidStatus),
 		errors.Contains(err, svcerr.ErrInvalidStatus),
 		errors.Contains(err, apiutil.ErrValidation),
 		errors.Contains(err, apiutil.ErrInvitationState),

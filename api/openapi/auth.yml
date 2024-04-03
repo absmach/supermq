@@ -75,7 +75,7 @@ paths:
         "200":
           $ref: "#/components/responses/DomainsPageRes"
         "400":
-          description: Failed due to malformed query parameters.          
+          description: Failed due to malformed query parameters.
         "401":
           description: Missing or invalid access token provided.
         "404":
@@ -102,7 +102,7 @@ paths:
         "401":
           description: Missing or invalid access token provided.
         "403":
-          description: Failed to perform authorization over the entity.          
+          description: Failed to perform authorization over the entity.
         "404":
           description: A non-existent entity request.
         "422":
@@ -618,7 +618,7 @@ components:
             ]
         relation:
           type: string
-          enum: ["administrator", "editor","viewer","member"]
+          enum: ["administrator", "editor", "viewer", "member"]
           example: "administrator"
           description: Policy relations.
       required:
