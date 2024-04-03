@@ -383,7 +383,7 @@ paths:
       tags:
         - Users
       parameters:
-        - $ref: "#/components/parameters/Referrer"
+        - $ref: "#/components/parameters/Referer"
       requestBody:
         $ref: "#/components/requestBodies/RequestPasswordReset"
       responses:
@@ -883,7 +883,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        "200":
+        "204":
           description: Member assigned.
         "400":
           description: Failed due to malformed group's ID.
@@ -1494,8 +1494,8 @@ components:
           example: 1970-01-01_00:00:00
 
   parameters:
-    Referrer:
-      name: Referrer
+    Referer:
+      name: Referer
       description: Host being sent by browser.
       in: header
       schema:
