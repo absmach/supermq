@@ -1211,6 +1211,7 @@ components:
             secret:
               type: string
               example: password
+              minimum: 8
               description: User secret password.
         metadata:
           type: object
@@ -1352,10 +1353,12 @@ components:
         old_secret:
           type: string
           example: oldpassword
+          minimum: 8
           description: Old user secret password.
         new_secret:
           type: string
           example: newpassword
+          minimum: 8
           description: New user secret password.
       required:
         - old_secret
@@ -1451,6 +1454,7 @@ components:
         secret:
           type: string
           example: password
+          minimum: 8
           description: User secret password.
       required:
         - identity
@@ -1815,9 +1819,11 @@ components:
               password:
                 type: string
                 format: password
+                minimum: 8
                 description: New password.
               old_password:
                 type: string
+                minimum: 8
                 format: password
                 description: Old password.
 
