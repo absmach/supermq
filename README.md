@@ -156,7 +156,7 @@ Data collection is on by default and can be disabled by setting the env variable
 
 By utilizing Magistrala, you actively contribute to its improvement. Together, we can build a more robust and efficient IoT platform. Thank you for your trust in Magistrala!
 
-[banner]: https://github.com/absmach/magistrala-docs/blob/master/docs/img/gopherBanner.jpg
+[banner]: https://github.com/absmach/magistrala-docs/blob/main/docs/img/gopherBanner.jpg
 [docs]: https://docs.magistrala.abstractmachines.fr
 [docker]: https://www.docker.com
 [forum]: https://groups.google.com/forum/#!forum/mainflux
@@ -167,7 +167,7 @@ By utilizing Magistrala, you actively contribute to its improvement. Together, w
 [cov-badge]: https://codecov.io/gh/absmach/magistrala/graph/badge.svg?token=SEMDAO3L09
 [cov-url]: https://codecov.io/gh/absmach/magistrala
 [license]: https://img.shields.io/badge/license-Apache%20v2.0-blue.svg
-[twitter]: https://twitter.com/mainflux
+[twitter]: https://twitter.com/absmach
 [lora]: https://lora-alliance.org/
 [opcua]: https://opcfoundation.org/about/opc-technologies/opc-ua/
 [agent]: https://github.com/absmach/agent
