@@ -886,7 +886,7 @@ paths:
         - bearerAuth: []
       responses:
         "204":
-          description: Member assigned.
+          description: Member unassigned.
         "400":
           description: Failed due to malformed group's ID.
         "401":
