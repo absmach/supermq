@@ -79,7 +79,7 @@ func (svc service) RegisterClient(ctx context.Context, token string, cli mgclien
 	defer func() {
 		if err != nil {
 			if errRollback := svc.addClientPolicyRollback(ctx, cli.ID, cli.Role); errRollback != nil {
-				err = errors.Wrap(err, errors.Wrap(repoerr.ErrRollbackTx, errRollback))
+				err = errors.Wrap(errors.Wrap(repoerr.ErrRollbackTx, errRollback), err)
 			}
 		}
 	}()

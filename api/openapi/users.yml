@@ -391,6 +391,8 @@ paths:
           description: Users link for resetting password.
         "400":
           description: Failed due to malformed JSON.
+        "404":
+          description: A non-existent entity request.
         "415":
           description: Missing or invalid content type.
         "422":
