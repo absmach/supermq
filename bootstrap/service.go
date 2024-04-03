@@ -25,9 +25,6 @@ var (
 	// ErrExternalKey indicates a non-existent bootstrap configuration for given external key.
 	ErrExternalKey = errors.New("failed to get bootstrap configuration for given external key")
 
-	// ErrConflict indicates that the entity that the client is trying to create already exists.
-	ErrConflict = errors.New("Entity already exists")
-
 	// ErrExternalKeySecure indicates error in getting bootstrap configuration for given encrypted external key.
 	ErrExternalKeySecure = errors.New("failed to get bootstrap configuration for given encrypted external key")
 
