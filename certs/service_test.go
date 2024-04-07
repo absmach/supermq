@@ -46,7 +46,7 @@ func newService(t *testing.T) (certs.Service, *authmocks.AuthClient, *sdkmocks.S
 	auth := new(authmocks.AuthClient)
 
 	sdk := new(sdkmocks.SDK)
-	repo := mocks.NewCertsRepository()
+	repo := mocks.NewRepository(t)
 
 	tlsCert, caCert, err := certs.LoadCertificates(caPath, caKeyPath)
 	require.Nil(t, err, fmt.Sprintf("unexpected cert loading error: %s\n", err))
