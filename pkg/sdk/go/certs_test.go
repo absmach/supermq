@@ -38,14 +38,14 @@ var (
 	cfgSignHoursValid = "24h"
 )
 
-func setupCerts() (*httptest.Server, *authmocks.AuthClient, *thmocks.Repository, error) {
+func setupCerts(t *testing.T) (*httptest.Server, *authmocks.AuthClient, *thmocks.Repository, error) {
 	server, trepo, _, auth, _ := setupThings()
 	config := sdk.Config{
 		ThingsURL: server.URL,
 	}
 
 	mgsdk := sdk.NewSDK(config)
-	repo := mocks.NewCertsRepository()
+	repo := mocks.NewRepository(t)
 
 	tlsCert, caCert, err := certs.LoadCertificates(caPath, caKeyPath)
 	if err != nil {
@@ -67,7 +67,7 @@ func setupCerts() (*httptest.Server, *authmocks.AuthClient, *thmocks.Repository,
 }
 
 func TestIssueCert(t *testing.T) {
-	ts, auth, trepo, err := setupCerts()
+	ts, auth, trepo, err := setupCerts(t)
 	require.Nil(t, err, fmt.Sprintf("unexpected error during creating service: %s", err))
 	defer ts.Close()
 
@@ -160,7 +160,7 @@ func TestIssueCert(t *testing.T) {
 }
 
 func TestViewCert(t *testing.T) {
-	ts, auth, trepo, err := setupCerts()
+	ts, auth, trepo, err := setupCerts(t)
 	require.Nil(t, err, fmt.Sprintf("unexpected error during creating service: %s", err))
 	defer ts.Close()
 
@@ -223,7 +223,7 @@ func TestViewCert(t *testing.T) {
 }
 
 func TestViewCertByThing(t *testing.T) {
-	ts, auth, trepo, err := setupCerts()
+	ts, auth, trepo, err := setupCerts(t)
 	require.Nil(t, err, fmt.Sprintf("unexpected error during creating service: %s", err))
 	defer ts.Close()
 
@@ -286,7 +286,7 @@ func TestViewCertByThing(t *testing.T) {
 }
 
 func TestRevokeCert(t *testing.T) {
-	ts, auth, trepo, err := setupCerts()
+	ts, auth, trepo, err := setupCerts(t)
 	require.Nil(t, err, fmt.Sprintf("unexpected error during creating service: %s", err))
 	defer ts.Close()
 
