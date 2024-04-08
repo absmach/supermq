@@ -14,6 +14,7 @@ import (
 	authmocks "github.com/absmach/magistrala/auth/mocks"
 	"github.com/absmach/magistrala/certs"
 	"github.com/absmach/magistrala/certs/mocks"
+	"github.com/absmach/magistrala/certs/pki"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	mgsdk "github.com/absmach/magistrala/pkg/sdk/go"
@@ -34,34 +35,27 @@ const (
 	certNum   = 10
 	validID   = "d4ebb847-5d0e-4e46-bdd9-b6aceaaa3a22"
 
-	cfgAuthTimeout = "1s"
+	// cfgAuthTimeout = "1s"
 
-	caPath            = "../docker/ssl/certs/ca.crt"
-	caKeyPath         = "../docker/ssl/certs/ca.key"
-	cfgSignHoursValid = "24h"
-	instanceID        = "5de9b29a-feb9-11ed-be56-0242ac120002"
+	// caPath            = "../docker/ssl/certs/ca.crt"
+	// caKeyPath         = "../docker/ssl/certs/ca.key"
+	// cfgSignHoursValid = "24h"
+	// instanceID        = "5de9b29a-feb9-11ed-be56-0242ac120002"
 )
 
-func newService(t *testing.T) (certs.Service, *mocks.Repository, *authmocks.AuthClient, *sdkmocks.SDK) {
+func newService(t *testing.T) (certs.Service, *mocks.Repository, *mocks.Agent, *authmocks.AuthClient, *sdkmocks.SDK) {
 	auth := new(authmocks.AuthClient)
 
 	sdk := new(sdkmocks.SDK)
 	repo := new(mocks.Repository)
 
-	tlsCert, caCert, err := certs.LoadCertificates(caPath, caKeyPath)
-	require.Nil(t, err, fmt.Sprintf("unexpected cert loading error: %s\n", err))
+	agent := new(mocks.Agent)
 
-	authTimeout, err := time.ParseDuration(cfgAuthTimeout)
-	require.Nil(t, err, fmt.Sprintf("unexpected auth timeout parsing error: %s\n", err))
-
-	pki := mocks.NewPkiAgent(tlsCert, caCert, cfgSignHoursValid, authTimeout)
-
-	return certs.New(auth, repo, sdk, pki), repo, auth, sdk
+	return certs.New(auth, repo, sdk, agent), repo, agent, auth, sdk
 }
 
 func TestIssueCert(t *testing.T) {
-	svc, repo, auth, sdk := newService(t)
-
+	svc, repo, agent, auth, sdk := newService(t)
 	cases := []struct {
 		token   string
 		desc    string
@@ -97,7 +91,8 @@ func TestIssueCert(t *testing.T) {
 		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
 		repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, tc.err)
 		repoCall2 := sdk.On("Thing", mock.Anything, mock.Anything).Return(mgsdk.Thing{ID: tc.thingID, Credentials: mgsdk.Credentials{Secret: thingKey}}, errors.NewSDKError(tc.err))
-		repoCall3 := repo.On("Save", mock.Anything, mock.Anything).Return("", tc.err)
+		repoCall3 := agent.On("IssueCert", mock.Anything, mock.Anything).Return(pki.Cert{}, tc.err)
+		repoCall4 := repo.On("Save", mock.Anything, mock.Anything).Return("", tc.err)
 
 		c, err := svc.IssueCert(context.Background(), tc.token, tc.thingID, tc.ttl)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -109,16 +104,18 @@ func TestIssueCert(t *testing.T) {
 		repoCall1.Unset()
 		repoCall2.Unset()
 		repoCall3.Unset()
+		repoCall4.Unset()
 	}
 }
 
 func TestRevokeCert(t *testing.T) {
-	svc, repo, auth, sdk := newService(t)
+	svc, repo, agent, auth, sdk := newService(t)
 
 	repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
 	repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
 	repoCall2 := sdk.On("Thing", mock.Anything, mock.Anything).Return(mgsdk.Thing{ID: thingID, Credentials: mgsdk.Credentials{Secret: thingKey}}, nil)
-	repoCall3 := repo.On("Save", mock.Anything, mock.Anything).Return("", nil)
+	repoCall3 := agent.On("IssueCert", mock.Anything, mock.Anything).Return(pki.Cert{}, nil)
+	repoCall4 := repo.On("Save", mock.Anything, mock.Anything).Return("", nil)
 
 	_, err := svc.IssueCert(context.Background(), token, thingID, ttl)
 	require.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
@@ -126,6 +123,7 @@ func TestRevokeCert(t *testing.T) {
 	repoCall1.Unset()
 	repoCall2.Unset()
 	repoCall3.Unset()
+	repoCall4.Unset()
 
 	cases := []struct {
 		token   string
@@ -169,108 +167,80 @@ func TestRevokeCert(t *testing.T) {
 }
 
 func TestListCerts(t *testing.T) {
-	svc, repo, auth, sdk := newService(t)
-
+	svc, repo, agent, auth, _ := newService(t)
+	var mycerts []certs.Cert
 	for i := 0; i < certNum; i++ {
-		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
-		repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-		repoCall2 := sdk.On("Thing", mock.Anything, mock.Anything).Return(mgsdk.Thing{ID: thingID, Credentials: mgsdk.Credentials{Secret: thingKey}}, nil)
-		repoCall3 := repo.On("Save", mock.Anything, mock.Anything).Return("", nil)
-
-		_, err := svc.IssueCert(context.Background(), token, thingID, ttl)
-		require.Nil(t, err, fmt.Sprintf("unexpected cert creation error: %s\n", err))
-		repoCall.Unset()
-		repoCall1.Unset()
-		repoCall2.Unset()
-		repoCall3.Unset()
+		newCert := certs.Cert{
+			OwnerID: validID,
+			ThingID: thingID,
+			Serial:  fmt.Sprintf("%d", i),
+			Expire:  time.Now().Add(time.Hour),
+		}
+		mycerts = append(mycerts, newCert)
 	}
 
 	cases := []struct {
 		token   string
 		desc    string
 		thingID string
-		offset  uint64
-		limit   uint64
-		size    uint64
-		err     error
 		page    certs.Page
+		err     error
 	}{
 		{
 			desc:    "list all certs with valid token",
 			token:   token,
 			thingID: thingID,
-			offset:  0,
-			limit:   certNum,
-			size:    certNum,
+			page:    certs.Page{Limit: certNum, Offset: 0, Total: certNum, Certs: mycerts},
 			err:     nil,
-			page: certs.Page{
-				Total:  certNum,
-				Limit:  certNum,
-				Offset: 0,
-			},
 		},
 		{
 			desc:    "list all certs with invalid token",
 			token:   invalid,
 			thingID: thingID,
-			offset:  0,
-			limit:   certNum,
-			size:    0,
-			err:     svcerr.ErrAuthentication,
 			page:    certs.Page{},
+			err:     svcerr.ErrAuthentication,
 		},
 		{
 			desc:    "list half certs with valid token",
 			token:   token,
 			thingID: thingID,
-			offset:  certNum / 2,
-			limit:   certNum,
-			size:    certNum / 2,
+			page:    certs.Page{Limit: certNum, Offset: certNum / 2, Total: certNum / 2, Certs: mycerts[certNum/2:]},
 			err:     nil,
-			page: certs.Page{
-				Total:  certNum,
-				Limit:  certNum,
-				Offset: certNum / 2,
-			},
 		},
 		{
 			desc:    "list last cert with valid token",
 			token:   token,
 			thingID: thingID,
-			offset:  certNum - 1,
-			limit:   certNum,
-			size:    1,
+			page:    certs.Page{Limit: certNum, Offset: certNum - 1, Total: 1, Certs: []certs.Cert{mycerts[certNum-1]}},
 			err:     nil,
-			page: certs.Page{
-				Total:  certNum,
-				Limit:  certNum,
-				Offset: certNum / 2,
-			},
 		},
 	}
 
 	for _, tc := range cases {
 		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
-		repoCall1 := repo.On("RetrieveByThing", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.page, tc.err)
+		repoCall1 := repo.On("RetrieveByThing", context.Background(), validID, thingID, tc.page.Offset, tc.page.Limit).Return(tc.page, tc.err)
+		repoCall2 := agent.On("Read", mock.Anything).Return(pki.Cert{}, tc.err)
 
-		page, err := svc.ListCerts(context.Background(), tc.token, tc.thingID, tc.offset, tc.limit)
+		page, err := svc.ListCerts(context.Background(), tc.token, tc.thingID, tc.page.Offset, tc.page.Limit)
 		size := uint64(len(page.Certs))
-		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", tc.desc, tc.size, size))
+		assert.Equal(t, tc.page.Total, size, fmt.Sprintf("%s: expected %d got %d\n", tc.desc, tc.page.Total, size))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall.Unset()
 		repoCall1.Unset()
+		repoCall2.Unset()
 	}
 }
 
 func TestListSerials(t *testing.T) {
-	svc, repo, auth, sdk := newService(t)
+	svc, repo, agent, auth, sdk := newService(t)
 
 	var issuedCerts []certs.Cert
 	for i := 0; i < certNum; i++ {
 		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
 		repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
 		repoCall2 := sdk.On("Thing", mock.Anything, mock.Anything).Return(mgsdk.Thing{ID: thingID, Credentials: mgsdk.Credentials{Secret: thingKey}}, nil)
-		repoCall3 := repo.On("Save", mock.Anything, mock.Anything).Return("", nil)
+		repoCall3 := agent.On("IssueCert", mock.Anything, mock.Anything).Return(pki.Cert{}, nil)
+		repoCall4 := repo.On("Save", mock.Anything, mock.Anything).Return("", nil)
 
 		cert, err := svc.IssueCert(context.Background(), token, thingID, ttl)
 		assert.Nil(t, err, fmt.Sprintf("unexpected cert creation error: %s\n", err))
@@ -278,6 +248,7 @@ func TestListSerials(t *testing.T) {
 		repoCall1.Unset()
 		repoCall2.Unset()
 		repoCall3.Unset()
+		repoCall4.Unset()
 
 		crt := certs.Cert{
 			OwnerID: cert.OwnerID,
@@ -348,12 +319,13 @@ func TestListSerials(t *testing.T) {
 }
 
 func TestViewCert(t *testing.T) {
-	svc, repo, auth, sdk := newService(t)
+	svc, repo, agent, auth, sdk := newService(t)
 
 	repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
 	repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
 	repoCall2 := sdk.On("Thing", mock.Anything, mock.Anything).Return(mgsdk.Thing{ID: thingID, Credentials: mgsdk.Credentials{Secret: thingKey}}, nil)
-	repoCall3 := repo.On("Save", mock.Anything, mock.Anything).Return("", nil)
+	repoCall3 := agent.On("IssueCert", mock.Anything, mock.Anything).Return(pki.Cert{}, nil)
+	repoCall4 := repo.On("Save", mock.Anything, mock.Anything).Return("", nil)
 
 	ic, err := svc.IssueCert(context.Background(), token, thingID, ttl)
 	require.Nil(t, err, fmt.Sprintf("unexpected cert creation error: %s\n", err))
@@ -361,6 +333,7 @@ func TestViewCert(t *testing.T) {
 	repoCall1.Unset()
 	repoCall2.Unset()
 	repoCall3.Unset()
+	repoCall4.Unset()
 
 	cert := certs.Cert{
 		ThingID:    thingID,
@@ -402,11 +375,13 @@ func TestViewCert(t *testing.T) {
 	for _, tc := range cases {
 		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
 		repoCall1 := repo.On("RetrieveBySerial", context.Background(), mock.Anything, mock.Anything).Return(tc.cert, tc.err)
+		repoCall2 := agent.On("Read", mock.Anything).Return(pki.Cert{}, tc.err)
 
 		cert, err := svc.ViewCert(context.Background(), tc.token, tc.serialID)
 		assert.Equal(t, tc.cert, cert, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.cert, cert))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall.Unset()
 		repoCall1.Unset()
+		repoCall2.Unset()
 	}
 }
