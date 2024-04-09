@@ -34,16 +34,9 @@ const (
 	ttl       = "1h"
 	certNum   = 10
 	validID   = "d4ebb847-5d0e-4e46-bdd9-b6aceaaa3a22"
-
-	// cfgAuthTimeout = "1s"
-
-	// caPath            = "../docker/ssl/certs/ca.crt"
-	// caKeyPath         = "../docker/ssl/certs/ca.key"
-	// cfgSignHoursValid = "24h"
-	// instanceID        = "5de9b29a-feb9-11ed-be56-0242ac120002"
 )
 
-func newService(t *testing.T) (certs.Service, *mocks.Repository, *mocks.Agent, *authmocks.AuthClient, *sdkmocks.SDK) {
+func newService(_ *testing.T) (certs.Service, *mocks.Repository, *mocks.Agent, *authmocks.AuthClient, *sdkmocks.SDK) {
 	auth := new(authmocks.AuthClient)
 
 	sdk := new(sdkmocks.SDK)
