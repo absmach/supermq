@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
 	"time"
 
 	"github.com/absmach/magistrala"
@@ -22,6 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	//"github.com/stretchr/testify/require"
 )
 
 const (
@@ -36,19 +38,26 @@ const (
 	validID   = "d4ebb847-5d0e-4e46-bdd9-b6aceaaa3a22"
 )
 
-func newService(_ *testing.T) (certs.Service, *mocks.Repository, *mocks.Agent, *authmocks.AuthClient, *sdkmocks.SDK) {
-	auth := new(authmocks.AuthClient)
+type Mocks struct {
+	Repo  *mocks.Repository
+	Agent *mocks.Agent
+	Auth  *authmocks.AuthClient
+	SDK   *sdkmocks.SDK
+}
 
-	sdk := new(sdkmocks.SDK)
-	repo := new(mocks.Repository)
+func newService(_ *testing.T) (certs.Service, Mocks) {
+	testMocks := Mocks{
+		Repo:  new(mocks.Repository),
+		Agent: new(mocks.Agent),
+		Auth:  new(authmocks.AuthClient),
+		SDK:   new(sdkmocks.SDK),
+	}
 
-	agent := new(mocks.Agent)
-
-	return certs.New(auth, repo, sdk, agent), repo, agent, auth, sdk
+	return certs.New(testMocks.Auth, testMocks.Repo, testMocks.SDK, testMocks.Agent), testMocks
 }
 
 func TestIssueCert(t *testing.T) {
-	svc, repo, agent, auth, sdk := newService(t)
+	svc, testMocks := newService(t)
 	cases := []struct {
 		token   string
 		desc    string
@@ -81,11 +90,11 @@ func TestIssueCert(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
-		repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, tc.err)
-		repoCall2 := sdk.On("Thing", mock.Anything, mock.Anything).Return(mgsdk.Thing{ID: tc.thingID, Credentials: mgsdk.Credentials{Secret: thingKey}}, errors.NewSDKError(tc.err))
-		repoCall3 := agent.On("IssueCert", mock.Anything, mock.Anything).Return(pki.Cert{}, tc.err)
-		repoCall4 := repo.On("Save", mock.Anything, mock.Anything).Return("", tc.err)
+		repoCall := testMocks.Auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
+		repoCall1 := testMocks.Auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, tc.err)
+		repoCall2 := testMocks.SDK.On("Thing", mock.Anything, mock.Anything).Return(mgsdk.Thing{ID: tc.thingID, Credentials: mgsdk.Credentials{Secret: thingKey}}, errors.NewSDKError(tc.err))
+		repoCall3 := testMocks.Agent.On("IssueCert", mock.Anything, mock.Anything).Return(pki.Cert{}, tc.err)
+		repoCall4 := testMocks.Repo.On("Save", mock.Anything, mock.Anything).Return("", tc.err)
 
 		c, err := svc.IssueCert(context.Background(), tc.token, tc.thingID, tc.ttl)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -102,13 +111,13 @@ func TestIssueCert(t *testing.T) {
 }
 
 func TestRevokeCert(t *testing.T) {
-	svc, repo, agent, auth, sdk := newService(t)
+	svc, testMocks := newService(t)
 
-	repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
-	repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-	repoCall2 := sdk.On("Thing", mock.Anything, mock.Anything).Return(mgsdk.Thing{ID: thingID, Credentials: mgsdk.Credentials{Secret: thingKey}}, nil)
-	repoCall3 := agent.On("IssueCert", mock.Anything, mock.Anything).Return(pki.Cert{}, nil)
-	repoCall4 := repo.On("Save", mock.Anything, mock.Anything).Return("", nil)
+	repoCall := testMocks.Auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
+	repoCall1 := testMocks.Auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
+	repoCall2 := testMocks.SDK.On("Thing", mock.Anything, mock.Anything).Return(mgsdk.Thing{ID: thingID, Credentials: mgsdk.Credentials{Secret: thingKey}}, nil)
+	repoCall3 := testMocks.Agent.On("IssueCert", mock.Anything, mock.Anything).Return(pki.Cert{}, nil)
+	repoCall4 := testMocks.Repo.On("Save", mock.Anything, mock.Anything).Return("", nil)
 
 	_, err := svc.IssueCert(context.Background(), token, thingID, ttl)
 	require.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
@@ -145,10 +154,10 @@ func TestRevokeCert(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
-		repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, tc.err)
-		repoCall2 := sdk.On("Thing", mock.Anything, mock.Anything).Return(mgsdk.Thing{ID: tc.thingID, Credentials: mgsdk.Credentials{Secret: thingKey}}, errors.NewSDKError(tc.err))
-		repoCall3 := repo.On("RetrieveByThing", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(certs.Page{}, tc.err)
+		repoCall := testMocks.Auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
+		repoCall1 := testMocks.Auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, tc.err)
+		repoCall2 := testMocks.SDK.On("Thing", mock.Anything, mock.Anything).Return(mgsdk.Thing{ID: tc.thingID, Credentials: mgsdk.Credentials{Secret: thingKey}}, errors.NewSDKError(tc.err))
+		repoCall3 := testMocks.Repo.On("RetrieveByThing", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(certs.Page{}, tc.err)
 
 		_, err := svc.RevokeCert(context.Background(), tc.token, tc.thingID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -160,7 +169,7 @@ func TestRevokeCert(t *testing.T) {
 }
 
 func TestListCerts(t *testing.T) {
-	svc, repo, agent, auth, _ := newService(t)
+	svc, testMocks := newService(t)
 	var mycerts []certs.Cert
 	for i := 0; i < certNum; i++ {
 		newCert := certs.Cert{
@@ -210,9 +219,9 @@ func TestListCerts(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
-		repoCall1 := repo.On("RetrieveByThing", context.Background(), validID, thingID, tc.page.Offset, tc.page.Limit).Return(tc.page, tc.err)
-		repoCall2 := agent.On("Read", mock.Anything).Return(pki.Cert{}, tc.err)
+		repoCall := testMocks.Auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
+		repoCall1 := testMocks.Repo.On("RetrieveByThing", context.Background(), validID, thingID, tc.page.Offset, tc.page.Limit).Return(tc.page, tc.err)
+		repoCall2 := testMocks.Agent.On("Read", mock.Anything).Return(pki.Cert{}, tc.err)
 
 		page, err := svc.ListCerts(context.Background(), tc.token, tc.thingID, tc.page.Offset, tc.page.Limit)
 		size := uint64(len(page.Certs))
@@ -225,15 +234,15 @@ func TestListCerts(t *testing.T) {
 }
 
 func TestListSerials(t *testing.T) {
-	svc, repo, agent, auth, sdk := newService(t)
+	svc, testMocks := newService(t)
 
 	var issuedCerts []certs.Cert
 	for i := 0; i < certNum; i++ {
-		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
-		repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-		repoCall2 := sdk.On("Thing", mock.Anything, mock.Anything).Return(mgsdk.Thing{ID: thingID, Credentials: mgsdk.Credentials{Secret: thingKey}}, nil)
-		repoCall3 := agent.On("IssueCert", mock.Anything, mock.Anything).Return(pki.Cert{}, nil)
-		repoCall4 := repo.On("Save", mock.Anything, mock.Anything).Return("", nil)
+		repoCall := testMocks.Auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
+		repoCall1 := testMocks.Auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
+		repoCall2 := testMocks.SDK.On("Thing", mock.Anything, mock.Anything).Return(mgsdk.Thing{ID: thingID, Credentials: mgsdk.Credentials{Secret: thingKey}}, nil)
+		repoCall3 := testMocks.Agent.On("IssueCert", mock.Anything, mock.Anything).Return(pki.Cert{}, nil)
+		repoCall4 := testMocks.Repo.On("Save", mock.Anything, mock.Anything).Return("", nil)
 
 		cert, err := svc.IssueCert(context.Background(), token, thingID, ttl)
 		assert.Nil(t, err, fmt.Sprintf("unexpected cert creation error: %s\n", err))
@@ -300,8 +309,8 @@ func TestListSerials(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
-		repoCall1 := repo.On("RetrieveByThing", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(certs.Page{Limit: tc.limit, Offset: tc.offset, Total: certNum, Certs: tc.certs}, tc.err)
+		repoCall := testMocks.Auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
+		repoCall1 := testMocks.Repo.On("RetrieveByThing", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(certs.Page{Limit: tc.limit, Offset: tc.offset, Total: certNum, Certs: tc.certs}, tc.err)
 
 		page, err := svc.ListSerials(context.Background(), tc.token, tc.thingID, tc.offset, tc.limit)
 		assert.Equal(t, tc.certs, page.Certs, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.certs, page.Certs))
@@ -312,13 +321,13 @@ func TestListSerials(t *testing.T) {
 }
 
 func TestViewCert(t *testing.T) {
-	svc, repo, agent, auth, sdk := newService(t)
+	svc, testMocks := newService(t)
 
-	repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
-	repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-	repoCall2 := sdk.On("Thing", mock.Anything, mock.Anything).Return(mgsdk.Thing{ID: thingID, Credentials: mgsdk.Credentials{Secret: thingKey}}, nil)
-	repoCall3 := agent.On("IssueCert", mock.Anything, mock.Anything).Return(pki.Cert{}, nil)
-	repoCall4 := repo.On("Save", mock.Anything, mock.Anything).Return("", nil)
+	repoCall := testMocks.Auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
+	repoCall1 := testMocks.Auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
+	repoCall2 := testMocks.SDK.On("Thing", mock.Anything, mock.Anything).Return(mgsdk.Thing{ID: thingID, Credentials: mgsdk.Credentials{Secret: thingKey}}, nil)
+	repoCall3 := testMocks.Agent.On("IssueCert", mock.Anything, mock.Anything).Return(pki.Cert{}, nil)
+	repoCall4 := testMocks.Repo.On("Save", mock.Anything, mock.Anything).Return("", nil)
 
 	ic, err := svc.IssueCert(context.Background(), token, thingID, ttl)
 	require.Nil(t, err, fmt.Sprintf("unexpected cert creation error: %s\n", err))
@@ -366,9 +375,9 @@ func TestViewCert(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
-		repoCall1 := repo.On("RetrieveBySerial", context.Background(), mock.Anything, mock.Anything).Return(tc.cert, tc.err)
-		repoCall2 := agent.On("Read", mock.Anything).Return(pki.Cert{}, tc.err)
+		repoCall := testMocks.Auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
+		repoCall1 := testMocks.Repo.On("RetrieveBySerial", context.Background(), mock.Anything, mock.Anything).Return(tc.cert, tc.err)
+		repoCall2 := testMocks.Agent.On("Read", mock.Anything).Return(pki.Cert{}, tc.err)
 
 		cert, err := svc.ViewCert(context.Background(), tc.token, tc.serialID)
 		assert.Equal(t, tc.cert, cert, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.cert, cert))
