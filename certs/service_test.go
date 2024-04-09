@@ -171,13 +171,13 @@ func TestListCerts(t *testing.T) {
 	svc, testMocks := newService(t)
 	var mycerts []certs.Cert
 	for i := 0; i < certNum; i++ {
-		newCert := certs.Cert{
+		c := certs.Cert{
 			OwnerID: validID,
 			ThingID: thingID,
 			Serial:  fmt.Sprintf("%d", i),
 			Expire:  time.Now().Add(time.Hour),
 		}
-		mycerts = append(mycerts, newCert)
+		mycerts = append(mycerts, c)
 	}
 
 	cases := []struct {

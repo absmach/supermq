@@ -929,7 +929,7 @@ type SDK interface {
 	//  fmt.Println(bootstrap)
 	Bootstrap(externalID, externalKey string) (BootstrapConfig, errors.SDKError)
 
-	// BootstrapSecure retrieves a configuration with given external ID and encrypted external key.
+	// BootstrapSecure RetrieveBySerials a configuration with given external ID and encrypted external key.
 	//
 	// example:
 	//  bootstrap, _ := sdk.BootstrapSecure("externalID", "externalKey", "cryptoKey")
