@@ -87,13 +87,13 @@ and writer service, it contains InfluxData Web Admin Interface which can be used
 exploration and data visualization and analytics. In order to run Magistrala InfluxDB writer, execute the following command:
 
 ```bash
-docker-compose -f docker/addons/influxdb-writer/docker-compose.yml up -d
+docker compose -f docker/addons/influxdb-writer/docker-compose.yml up -d
 ```
 
 And, to use the default .env file, execute the following command:
 
 ```bash
-docker-compose -f docker/addons/influxdb-writer/docker-compose.yml up --env-file docker/.env -d
+docker compose -f docker/addons/influxdb-writer/docker-compose.yml up --env-file docker/.env -d
 ```
 
 _Please note that you need to start core services before the additional ones._

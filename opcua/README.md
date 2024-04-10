@@ -69,7 +69,7 @@ Setting `MG_LORA_ADAPTER_HTTP_SERVER_CERT` and `MG_LORA_ADAPTER_HTTP_SERVER_KEY`
 This service can be deployed using docker containers. Docker compose file is available in `<project_root>/docker/addons/opcua-adapter/docker-compose.yml`. In order to run Magistrala opcua-adapter, execute the following command:
 
 ```bash
-docker-compose -f docker/addons/opcua-adapter/docker-compose.yml up -d
+docker compose -f docker/addons/opcua-adapter/docker-compose.yml up -d
 ```
 
 ## Usage

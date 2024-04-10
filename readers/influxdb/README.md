@@ -100,14 +100,14 @@ In order to run all Magistrala core services, as well as mentioned optional ones
 execute following command:
 
 ```bash
-docker-compose -f docker/docker-compose.yml up -d
-docker-compose -f docker/addons/influxdb-reader/docker-compose.yml up -d
+docker compose -f docker/docker-compose.yml up -d
+docker compose -f docker/addons/influxdb-reader/docker-compose.yml up -d
 ```
 
 And, to use the default .env file, execute the following command:
 
 ```bash
-docker-compose -f docker/addons/influxdb-reader/docker-compose.yml up --env-file docker/.env -d
+docker compose -f docker/addons/influxdb-reader/docker-compose.yml up --env-file docker/.env -d
 ```
 
 ## Usage
