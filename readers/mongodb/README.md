@@ -33,7 +33,7 @@ default values.
 ## Deployment
 
 The service itself is distributed as Docker container. Check the [`mongodb-reader`](https://github.com/absmach/magistrala/blob/main/docker/addons/mongodb-reader/docker-compose.yml#L16-L37) service section in
-docker-compose to see how service is deployed.
+docker-compose file to see how service is deployed.
 
 To start the service, execute the following shell script:
 
