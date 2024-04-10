@@ -269,42 +269,45 @@ func TestViewCertByThing(t *testing.T) {
 	repoCall4.Unset()
 
 	cases := []struct {
-		desc     string
-		thingID  string
-		token    string
-		err      errors.SDKError
-		response sdk.Subscription
+		desc        string
+		thingID     string
+		token       string
+		err         errors.SDKError
+		response    sdk.Subscription
+		retrieveErr error
 	}{
-		// {
-		// 	desc:     "get existing cert",
-		// 	thingID:  thingID,
-		// 	token:    token,
-		// 	err:      nil,
-		// 	response: sub1,
-		// },
 		{
-			desc:     "get non-existent cert",
-			thingID:  "43",
+			desc:     "get existing cert",
+			thingID:  thingID,
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, repoerr.ErrNotFound), http.StatusInternalServerError),
+			err:      nil,
+			response: sub1,
+		},
+		{
+			desc:        "get non-existent cert",
+			thingID:     "43",
+			token:       token,
+			err:         errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, repoerr.ErrNotFound), http.StatusInternalServerError),
+			response:    sdk.Subscription{},
+			retrieveErr: errors.Wrap(repoerr.ErrNotFound, apiutil.ErrValidation),
+		},
+		{
+			desc:     "get cert with invalid token",
+			thingID:  thingID,
+			token:    "",
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerToken), http.StatusUnauthorized),
 			response: sdk.Subscription{},
 		},
-		// {
-		// 	desc:     "get cert with invalid token",
-		// 	thingID:  thingID,
-		// 	token:    "",
-		// 	err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerToken), http.StatusUnauthorized),
-		// 	response: sdk.Subscription{},
-		// },
 	}
 	for _, tc := range cases {
 		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
-		repoCall1 := repo.On("RetrieveByThing", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(p, tc.err)
-		fmt.Println("This is the wrapped error1", tc.err)
+		repoCall1 := repo.On("RetrieveByThing", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(p, tc.retrieveErr)
+		fmt.Println("tc.err =", tc.err)
+		fmt.Println("p =", p)
 
 		cert, err := mgsdk.ViewCertByThing(tc.thingID, tc.token)
-		fmt.Println("This is my cert", cert)
-		fmt.Println("This is the wrapped error2", err)
+		fmt.Println("cert =", cert)
+		fmt.Println("err =", err)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		if err == nil {
 			assert.NotEmpty(t, cert, fmt.Sprintf("%s: got empty cert", tc.desc))
@@ -314,85 +317,89 @@ func TestViewCertByThing(t *testing.T) {
 	}
 }
 
-// func TestRevokeCert(t *testing.T) {
-// 	ts, auth, agent, repo, trepo, err := setupCerts()
-// 	require.Nil(t, err, fmt.Sprintf("unexpected error during creating service: %s", err))
-// 	defer ts.Close()
+func TestRevokeCert(t *testing.T) {
+	ts, auth, agent, repo, trepo, err := setupCerts()
+	require.Nil(t, err, fmt.Sprintf("unexpected error during creating service: %s", err))
+	defer ts.Close()
 
-// 	sdkConf := sdk.Config{
-// 		CertsURL:        ts.URL,
-// 		MsgContentType:  contentType,
-// 		TLSVerification: false,
-// 	}
+	sdkConf := sdk.Config{
+		CertsURL:        ts.URL,
+		MsgContentType:  contentType,
+		TLSVerification: false,
+	}
 
-// 	mgsdk := sdk.NewSDK(sdkConf)
+	mgsdk := sdk.NewSDK(sdkConf)
 
-// 	repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
-// 	repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-// 	repoCall2 := trepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(clients.Client{ID: thingID}, nil)
-// 	repoCall3 := agent.On("IssueCert", mock.Anything, mock.Anything).Return(pki.Cert{}, err)
-// 	repoCall4 := repo.On("Save", mock.Anything, mock.Anything).Return("", err)
+	repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
+	repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
+	repoCall2 := trepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(clients.Client{ID: thingID}, nil)
+	repoCall3 := agent.On("IssueCert", mock.Anything, mock.Anything).Return(pki.Cert{}, err)
+	repoCall4 := repo.On("Save", mock.Anything, mock.Anything).Return("", err)
 
-// 	_, err = mgsdk.IssueCert(thingID, "10h", validToken)
-// 	require.Nil(t, err, fmt.Sprintf("unexpected error during creating cert: %s", err))
-// 	repoCall.Unset()
-// 	repoCall1.Unset()
-// 	repoCall2.Unset()
-// 	repoCall3.Unset()
-// 	repoCall4.Unset()
+	_, err = mgsdk.IssueCert(thingID, "10h", validToken)
+	require.Nil(t, err, fmt.Sprintf("unexpected error during creating cert: %s", err))
+	repoCall.Unset()
+	repoCall1.Unset()
+	repoCall2.Unset()
+	repoCall3.Unset()
+	repoCall4.Unset()
 
-// 	cases := []struct {
-// 		desc    string
-// 		thingID string
-// 		token   string
-// 		err     errors.SDKError
-// 	}{
-// 		{
-// 			desc:    "revoke cert with invalid token",
-// 			thingID: thingID,
-// 			token:   authmocks.InvalidValue,
-// 			err:     errors.NewSDKErrorWithStatus(errors.Wrap(svcerr.ErrAuthentication, svcerr.ErrAuthentication), http.StatusUnauthorized),
-// 		},
-// 		{
-// 			desc:    "revoke non-existing cert",
-// 			thingID: "2",
-// 			token:   token,
-// 			err:     errors.NewSDKErrorWithStatus(errors.Wrap(svcerr.ErrNotFound, certs.ErrFailedCertRevocation), http.StatusInternalServerError),
-// 		},
-// 		{
-// 			desc:    "revoke cert with empty token",
-// 			thingID: thingID,
-// 			token:   "",
-// 			err:     errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrBearerToken, apiutil.ErrValidation), http.StatusUnauthorized),
-// 		},
-// 		{
-// 			desc:    "revoke existing cert",
-// 			thingID: thingID,
-// 			token:   token,
-// 			err:     nil,
-// 		},
-// 		{
-// 			desc:    "revoke deleted cert",
-// 			thingID: thingID,
-// 			token:   token,
-// 			err:     errors.NewSDKErrorWithStatus(errors.Wrap(svcerr.ErrNotFound, certs.ErrFailedToRemoveCertFromDB), http.StatusInternalServerError),
-// 		},
-// 	}
+	cases := []struct {
+		desc    string
+		thingID string
+		token   string
+		err     errors.SDKError
+		authErr error
+		retrieveID error
+		retrieveThing error
+	}{
+		{
+			desc:    "revoke cert with invalid token",
+			thingID: thingID,
+			token:   authmocks.InvalidValue,
+			err:     errors.NewSDKErrorWithStatus(errors.Wrap(svcerr.ErrAuthentication, svcerr.ErrAuthentication), http.StatusUnauthorized),
+		},
+		{
+			desc:    "revoke non-existing cert",
+			thingID: "2",
+			token:   token,
+			err:     errors.NewSDKErrorWithStatus(errors.Wrap(certs.ErrFailedCertRevocation, svcerr.ErrNotFound), http.StatusInternalServerError),
+			retrieveThing: errors.Wrap(svcerr.ErrNotFound, certs.ErrFailedCertRevocation),
+		},
+		{
+			desc:    "revoke cert with empty token",
+			thingID: thingID,
+			token:   "",
+			err:     errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerToken), http.StatusUnauthorized),
+		},
+		// {
+		// 	desc:    "revoke existing cert",
+		// 	thingID: thingID,
+		// 	token:   token,
+		// 	err:     nil,
+		// },
+		// {
+		// 	desc:    "revoke deleted cert",
+		// 	thingID: thingID,
+		// 	token:   token,
+		// 	err:     errors.NewSDKErrorWithStatus(errors.Wrap(certs.ErrFailedToRemoveCertFromDB, svcerr.ErrNotFound), http.StatusInternalServerError),
+		// },
+	}
 
-// 	for _, tc := range cases {
-// 		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
-// 		repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-// 		repoCall2 := trepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(clients.Client{ID: tc.thingID}, nil)
-// 		repoCall3 := repo.On("RetrieveByThing", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(p, tc.err)
+	for _, tc := range cases {
+		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
+		repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
+		repoCall2 := trepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(clients.Client{ID: tc.thingID}, nil)
+		repoCall3 := repo.On("RetrieveByThing", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(p, tc.retrieveThing)
 
-// 		response, err := mgsdk.RevokeCert(tc.thingID, tc.token)
-// 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
-// 		if err == nil {
-// 			assert.NotEmpty(t, response, fmt.Sprintf("%s: got empty revocation time", tc.desc))
-// 		}
-// 		repoCall.Unset()
-// 		repoCall1.Unset()
-// 		repoCall2.Unset()
-// 		repoCall3.Unset()
-// 	}
-// }
+		response, err := mgsdk.RevokeCert(tc.thingID, tc.token)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
+		if err == nil {
+			assert.NotEmpty(t, response, fmt.Sprintf("%s: got empty revocation time", tc.desc))
+		}
+		repoCall.Unset()
+		repoCall1.Unset()
+		repoCall2.Unset()
+		repoCall3.Unset()
+	}
+}
