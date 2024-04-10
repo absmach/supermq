@@ -34,7 +34,7 @@ default values.
 
 ## Deployment
 
-The service itself is distributed as Docker container. Check the [`cassandra-reader`](https://github.com/absmach/magistrala/blob/master/docker/addons/cassandra-reader/docker-compose.yml#L15-L35) service section in
+The service itself is distributed as Docker container. Check the [`cassandra-reader`](https://github.com/absmach/magistrala/blob/main/docker/addons/cassandra-reader/docker-compose.yml#L15-L35) service section in
 docker-compose to see how service is deployed.
 
 To start the service, execute the following shell script:
