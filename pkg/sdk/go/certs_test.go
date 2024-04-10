@@ -187,7 +187,9 @@ func TestViewCert(t *testing.T) {
 	repoCall4 := repo.On("Save", mock.Anything, mock.Anything).Return("", nil)
 
 	cert, err := mgsdk.IssueCert(thingID, "10h", token)
-	assert.NotEmpty(t, cert, "expected non-nil cert")
+	if err == nil {
+		require.NotEmpty(t, cert, "expected non-empty cert")
+	}
 	require.Nil(t, err, fmt.Sprintf("unexpected error during creating cert: %s", err))
 
 	repoCall.Unset()
