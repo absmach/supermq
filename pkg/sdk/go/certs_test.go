@@ -13,14 +13,14 @@ import (
 	"github.com/absmach/magistrala"
 	authmocks "github.com/absmach/magistrala/auth/mocks"
 	"github.com/absmach/magistrala/certs"
+	"github.com/absmach/magistrala/certs/pki"
 	httpapi "github.com/absmach/magistrala/certs/api"
 	"github.com/absmach/magistrala/certs/mocks"
-	"github.com/absmach/magistrala/certs/pki"
 	"github.com/absmach/magistrala/internal/apiutil"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
-	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
+	//repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	sdk "github.com/absmach/magistrala/pkg/sdk/go"
 	thmocks "github.com/absmach/magistrala/things/mocks"
@@ -283,26 +283,28 @@ func TestViewCertByThing(t *testing.T) {
 			err:      nil,
 			response: sub1,
 		},
-		{
-			desc:     "get non-existent cert",
-			thingID:  "43",
-			token:    token,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, repoerr.ErrNotFound), http.StatusInternalServerError),
-			response: sdk.Subscription{},
-		},
 		// {
-		// 	desc:     "get cert with invalid token",
-		// 	thingID:  thingID,
-		// 	token:    "",
-		// 	err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerToken), http.StatusUnauthorized),
+		// 	desc:     "get non-existent cert",
+		// 	thingID:  "43",
+		// 	token:    token,
+		// 	err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, repoerr.ErrNotFound), http.StatusInternalServerError),
 		// 	response: sdk.Subscription{},
 		// },
+		{
+			desc:     "get cert with invalid token",
+			thingID:  thingID,
+			token:    "",
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerToken), http.StatusUnauthorized),
+			response: sdk.Subscription{},
+		},
 	}
 	for _, tc := range cases {
 		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID}, nil)
 		repoCall1 := repo.On("RetrieveByThing", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(p, tc.err)
-		fmt.Println("This is the wrapped error", tc.err)
+		fmt.Println("This is the wrapped error1", tc.err)
+
 		cert, err := mgsdk.ViewCertByThing(tc.thingID, tc.token)
+		fmt.Println("This is the wrapped error2", err)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		if err == nil {
 			assert.NotEmpty(t, cert, fmt.Sprintf("%s: got empty cert", tc.desc))
@@ -355,13 +357,13 @@ func TestViewCertByThing(t *testing.T) {
 // 			desc:    "revoke non-existing cert",
 // 			thingID: "2",
 // 			token:   token,
-// 			err:     errors.NewSDKErrorWithStatus(errors.Wrap(certs.ErrFailedCertRevocation, svcerr.ErrNotFound), http.StatusInternalServerError),
+// 			err:     errors.NewSDKErrorWithStatus(errors.Wrap(svcerr.ErrNotFound, certs.ErrFailedCertRevocation), http.StatusInternalServerError),
 // 		},
 // 		{
 // 			desc:    "revoke cert with empty token",
 // 			thingID: thingID,
 // 			token:   "",
-// 			err:     errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerToken), http.StatusUnauthorized),
+// 			err:     errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrBearerToken, apiutil.ErrValidation), http.StatusUnauthorized),
 // 		},
 // 		{
 // 			desc:    "revoke existing cert",
@@ -373,7 +375,7 @@ func TestViewCertByThing(t *testing.T) {
 // 			desc:    "revoke deleted cert",
 // 			thingID: thingID,
 // 			token:   token,
-// 			err:     errors.NewSDKErrorWithStatus(errors.Wrap(certs.ErrFailedToRemoveCertFromDB, svcerr.ErrNotFound), http.StatusInternalServerError),
+// 			err:     errors.NewSDKErrorWithStatus(errors.Wrap(svcerr.ErrNotFound, certs.ErrFailedToRemoveCertFromDB), http.StatusInternalServerError),
 // 		},
 // 	}
 
