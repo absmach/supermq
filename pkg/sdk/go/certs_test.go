@@ -20,7 +20,7 @@ import (
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
-	//repoerr "github.com/absmach/magistrala/pkg/errors/repository"
+	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	sdk "github.com/absmach/magistrala/pkg/sdk/go"
 	thmocks "github.com/absmach/magistrala/things/mocks"
@@ -283,13 +283,13 @@ func TestViewCertByThing(t *testing.T) {
 			err:      nil,
 			response: sub1,
 		},
-		// {
-		// 	desc:     "get non-existent cert",
-		// 	thingID:  "43",
-		// 	token:    token,
-		// 	err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, repoerr.ErrNotFound), http.StatusInternalServerError),
-		// 	response: sdk.Subscription{},
-		// },
+		{
+			desc:     "get non-existent cert",
+			thingID:  "43",
+			token:    token,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, repoerr.ErrNotFound), http.StatusInternalServerError),
+			response: sdk.Subscription{},
+		},
 		{
 			desc:     "get cert with invalid token",
 			thingID:  thingID,
