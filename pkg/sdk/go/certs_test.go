@@ -187,8 +187,9 @@ func TestViewCert(t *testing.T) {
 	repoCall4 := repo.On("Save", mock.Anything, mock.Anything).Return("", nil)
 
 	cert, err := mgsdk.IssueCert(thingID, "10h", token)
+	assert.NotEmpty(t, cert, "expected non-nil cert")
 	require.Nil(t, err, fmt.Sprintf("unexpected error during creating cert: %s", err))
-	fmt.Println("This is", cert.CertSerial)
+
 	repoCall.Unset()
 	repoCall1.Unset()
 	repoCall2.Unset()
@@ -345,12 +346,12 @@ func TestRevokeCert(t *testing.T) {
 	repoCall4.Unset()
 
 	cases := []struct {
-		desc    string
-		thingID string
-		token   string
-		err     errors.SDKError
-		authErr error
-		retrieveID error
+		desc          string
+		thingID       string
+		token         string
+		err           errors.SDKError
+		authErr       error
+		retrieveID    error
 		retrieveThing error
 	}{
 		{
@@ -360,10 +361,10 @@ func TestRevokeCert(t *testing.T) {
 			err:     errors.NewSDKErrorWithStatus(errors.Wrap(svcerr.ErrAuthentication, svcerr.ErrAuthentication), http.StatusUnauthorized),
 		},
 		{
-			desc:    "revoke non-existing cert",
-			thingID: "2",
-			token:   token,
-			err:     errors.NewSDKErrorWithStatus(errors.Wrap(certs.ErrFailedCertRevocation, svcerr.ErrNotFound), http.StatusInternalServerError),
+			desc:          "revoke non-existing cert",
+			thingID:       "2",
+			token:         token,
+			err:           errors.NewSDKErrorWithStatus(errors.Wrap(certs.ErrFailedCertRevocation, svcerr.ErrNotFound), http.StatusInternalServerError),
 			retrieveThing: errors.Wrap(svcerr.ErrNotFound, certs.ErrFailedCertRevocation),
 		},
 		{
