@@ -718,87 +718,76 @@ func (svc service) AssignUsers(ctx context.Context, token, id string, userIds []
 }
 
 func (svc service) UnassignUsers(ctx context.Context, token, id string, userIds []string, relation string) error {
-	if err := svc.Authorize(ctx, PolicyReq{
+	pr := PolicyReq{
 		Subject:     token,
 		SubjectType: UserType,
 		SubjectKind: TokenKind,
 		Object:      id,
 		ObjectType:  DomainType,
 		Permission:  SharePermission,
-	}); err != nil {
+	}
+	if err := svc.Authorize(ctx, pr); err != nil {
 		return err
 	}
 
 	if relation != "" {
-		if err := svc.Authorize(ctx, PolicyReq{
-			Subject:     token,
-			SubjectType: UserType,
-			SubjectKind: TokenKind,
-			Object:      id,
-			ObjectType:  DomainType,
-			Permission:  SwitchToPermission(relation),
-		}); err != nil {
+		pr.Permission = SwitchToPermission(relation)
+		if err := svc.Authorize(ctx, pr); err != nil {
 			return err
 		}
 
 		if err := svc.removeDomainPolicies(ctx, id, relation, userIds...); err != nil {
 			return errors.Wrap(errRemovePolicies, err)
 		}
-	} else {
-		if err := svc.Authorize(ctx, PolicyReq{
-			Subject:     token,
-			SubjectType: UserType,
-			SubjectKind: TokenKind,
-			Object:      id,
-			ObjectType:  DomainType,
-			Permission:  AdminPermission,
-		}); err != nil {
-			// User is not admin.
-			var ids []string
-			for _, userID := range userIds {
-				if err := svc.Authorize(ctx, PolicyReq{
-					Subject:     userID,
-					SubjectType: UserType,
-					SubjectKind: UsersKind,
-					Permission:  AdminPermission,
-					Object:      id,
-					ObjectType:  DomainType,
-				}); err != nil {
-					// Append all non-admins to ids.
-					ids = append(ids, userID)
-				}
-			}
-
-			// Remove only non-admins.
-			if err := svc.removeDomainPolicies(ctx, id, MemberRelation, ids...); err != nil {
-				return errors.Wrap(errRemovePolicies, err)
-			}
-
-			if err := svc.removeDomainPolicies(ctx, id, ViewerRelation, ids...); err != nil {
-				return errors.Wrap(errRemovePolicies, err)
-			}
-
-			if err := svc.removeDomainPolicies(ctx, id, EditorRelation, ids...); err != nil {
-				return errors.Wrap(errRemovePolicies, err)
+		return nil
+	}
+	pr.Permission = AdminPermission
+	if err := svc.Authorize(ctx, pr); err != nil {
+		// User is not admin.
+		var ids []string
+		for _, userID := range userIds {
+			if err := svc.Authorize(ctx, PolicyReq{
+				Subject:     userID,
+				SubjectType: UserType,
+				SubjectKind: UsersKind,
+				Permission:  AdminPermission,
+				Object:      id,
+				ObjectType:  DomainType,
+			}); err != nil {
+				// Append all non-admins to ids.
+				ids = append(ids, userID)
 			}
 		}
 
-		// If user is admin, remove all policies from all users.
-		if err := svc.removeDomainPolicies(ctx, id, MemberRelation, userIds...); err != nil {
+		// Remove only non-admins.
+		if err := svc.removeDomainPolicies(ctx, id, MemberRelation, ids...); err != nil {
 			return errors.Wrap(errRemovePolicies, err)
 		}
 
-		if err := svc.removeDomainPolicies(ctx, id, ViewerRelation, userIds...); err != nil {
+		if err := svc.removeDomainPolicies(ctx, id, ViewerRelation, ids...); err != nil {
 			return errors.Wrap(errRemovePolicies, err)
 		}
 
-		if err := svc.removeDomainPolicies(ctx, id, EditorRelation, userIds...); err != nil {
+		if err := svc.removeDomainPolicies(ctx, id, EditorRelation, ids...); err != nil {
 			return errors.Wrap(errRemovePolicies, err)
 		}
+	}
 
-		if err := svc.removeDomainPolicies(ctx, id, AdministratorRelation, userIds...); err != nil {
-			return errors.Wrap(errRemovePolicies, err)
-		}
+	// If user is admin, remove all policies from all users.
+	if err := svc.removeDomainPolicies(ctx, id, MemberRelation, userIds...); err != nil {
+		return errors.Wrap(errRemovePolicies, err)
+	}
+
+	if err := svc.removeDomainPolicies(ctx, id, ViewerRelation, userIds...); err != nil {
+		return errors.Wrap(errRemovePolicies, err)
+	}
+
+	if err := svc.removeDomainPolicies(ctx, id, EditorRelation, userIds...); err != nil {
+		return errors.Wrap(errRemovePolicies, err)
+	}
+
+	if err := svc.removeDomainPolicies(ctx, id, AdministratorRelation, userIds...); err != nil {
+		return errors.Wrap(errRemovePolicies, err)
 	}
 
 	return nil
