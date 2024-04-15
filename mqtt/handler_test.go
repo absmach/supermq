@@ -449,7 +449,7 @@ func TestDisconnect(t *testing.T) {
 	}
 }
 
-func newHandler(t *testing.T) (session.Handler, *authmocks.AuthClient, *mocks.EventStore) {
+func newHandler(_ *testing.T) (session.Handler, *authmocks.AuthClient, *mocks.EventStore) {
 	logger, err := mglog.New(&logBuffer, "debug")
 	if err != nil {
 		log.Fatalf("failed to create logger: %s", err)
