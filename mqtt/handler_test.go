@@ -64,7 +64,7 @@ var (
 )
 
 func TestAuthConnect(t *testing.T) {
-	handler, _, eventStore := newHandler(t)
+	handler, _, eventStore := newHandler()
 
 	cases := []struct {
 		desc    string
@@ -120,7 +120,7 @@ func TestAuthConnect(t *testing.T) {
 }
 
 func TestAuthPublish(t *testing.T) {
-	handler, auth, _ := newHandler(t)
+	handler, auth, _ := newHandler()
 
 	cases := []struct {
 		desc    string
@@ -172,7 +172,7 @@ func TestAuthPublish(t *testing.T) {
 }
 
 func TestAuthSubscribe(t *testing.T) {
-	handler, auth, _ := newHandler(t)
+	handler, auth, _ := newHandler()
 
 	cases := []struct {
 		desc    string
@@ -225,7 +225,7 @@ func TestAuthSubscribe(t *testing.T) {
 }
 
 func TestConnect(t *testing.T) {
-	handler, _, _ := newHandler(t)
+	handler, _, _ := newHandler()
 	logBuffer.Reset()
 
 	cases := []struct {
@@ -259,7 +259,7 @@ func TestConnect(t *testing.T) {
 }
 
 func TestPublish(t *testing.T) {
-	handler, _, _ := newHandler(t)
+	handler, _, _ := newHandler()
 	logBuffer.Reset()
 
 	malformedSubtopics := topic + "/" + subtopic + "%"
@@ -338,7 +338,7 @@ func TestPublish(t *testing.T) {
 }
 
 func TestSubscribe(t *testing.T) {
-	handler, _, _ := newHandler(t)
+	handler, _, _ := newHandler()
 	logBuffer.Reset()
 
 	cases := []struct {
@@ -374,7 +374,7 @@ func TestSubscribe(t *testing.T) {
 }
 
 func TestUnsubscribe(t *testing.T) {
-	handler, _, _ := newHandler(t)
+	handler, _, _ := newHandler()
 	logBuffer.Reset()
 
 	cases := []struct {
@@ -410,7 +410,7 @@ func TestUnsubscribe(t *testing.T) {
 }
 
 func TestDisconnect(t *testing.T) {
-	handler, _, eventStore := newHandler(t)
+	handler, _, eventStore := newHandler()
 	logBuffer.Reset()
 
 	cases := []struct {
@@ -449,7 +449,7 @@ func TestDisconnect(t *testing.T) {
 	}
 }
 
-func newHandler(_ *testing.T) (session.Handler, *authmocks.AuthClient, *mocks.EventStore) {
+func newHandler() (session.Handler, *authmocks.AuthClient, *mocks.EventStore) {
 	logger, err := mglog.New(&logBuffer, "debug")
 	if err != nil {
 		log.Fatalf("failed to create logger: %s", err)
