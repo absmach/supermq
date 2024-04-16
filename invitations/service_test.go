@@ -18,14 +18,23 @@ import (
 	"github.com/absmach/magistrala/invitations/mocks"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	sdk "github.com/absmach/magistrala/pkg/sdk/go"
+	sdkmocks "github.com/absmach/magistrala/pkg/sdk/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 var (
+	validName       = "valid"
 	validInvitation = invitations.Invitation{
-		UserID:   testsutil.GenerateUUID(&testing.T{}),
-		DomainID: testsutil.GenerateUUID(&testing.T{}),
+		User: invitations.Entity{
+			ID:   testsutil.GenerateUUID(&testing.T{}),
+			Name: validName,
+		},
+		Domain: invitations.Entity{
+			ID:   testsutil.GenerateUUID(&testing.T{}),
+			Name: validName,
+		},
 		Relation: auth.ViewerRelation,
 	}
 	validToken = "token"
@@ -153,8 +162,14 @@ func TestSendInvitation(t *testing.T) {
 			token:       validToken,
 			tokenUserID: testsutil.GenerateUUID(t),
 			req: invitations.Invitation{
-				UserID:   testsutil.GenerateUUID(t),
-				DomainID: testsutil.GenerateUUID(t),
+				User: invitations.Entity{
+					ID:   testsutil.GenerateUUID(t),
+					Name: validName,
+				},
+				Domain: invitations.Entity{
+					ID:   testsutil.GenerateUUID(t),
+					Name: validName,
+				},
 				Relation: auth.ViewerRelation,
 				Resend:   true,
 			},
@@ -190,7 +205,7 @@ func TestSendInvitation(t *testing.T) {
 			Subject:     idRes.GetId(),
 			Permission:  auth.AdminPermission,
 			ObjectType:  auth.DomainType,
-			Object:      tc.req.DomainID,
+			Object:      tc.req.Domain.ID,
 		}
 		domaincall1 := authsvc.On("Authorize", context.Background(), &domainAdminReq).Return(&magistrala.AuthorizeRes{Authorized: tc.authorised}, tc.domainAdminErr)
 		platformReq := magistrala.AuthorizeReq{
@@ -221,12 +236,22 @@ func TestSendInvitation(t *testing.T) {
 func TestViewInvitation(t *testing.T) {
 	repo := new(mocks.Repository)
 	authsvc := new(authmocks.AuthClient)
-	svc := invitations.NewService(repo, authsvc, nil)
+	sdkmock := new(sdkmocks.SDK)
+	svc := invitations.NewService(repo, authsvc, sdkmock)
 
 	validInvitation := invitations.Invitation{
-		InvitedBy:   testsutil.GenerateUUID(t),
-		UserID:      testsutil.GenerateUUID(t),
-		DomainID:    testsutil.GenerateUUID(t),
+		InvitedBy: invitations.Entity{
+			ID:   testsutil.GenerateUUID(t),
+			Name: validName,
+		},
+		User: invitations.Entity{
+			ID:   testsutil.GenerateUUID(t),
+			Name: validName,
+		},
+		Domain: invitations.Entity{
+			ID:   testsutil.GenerateUUID(t),
+			Name: validName,
+		},
 		Relation:    auth.ViewerRelation,
 		CreatedAt:   time.Now().Add(-time.Hour),
 		UpdatedAt:   time.Now().Add(-time.Hour),
@@ -250,8 +275,8 @@ func TestViewInvitation(t *testing.T) {
 			desc:        "view invitation successful",
 			token:       validToken,
 			tokenUserID: testsutil.GenerateUUID(t),
-			userID:      validInvitation.UserID,
-			domainID:    validInvitation.DomainID,
+			userID:      validInvitation.User.ID,
+			domainID:    validInvitation.Domain.ID,
 			resp:        validInvitation,
 			err:         nil,
 			authNErr:    nil,
@@ -264,8 +289,8 @@ func TestViewInvitation(t *testing.T) {
 			desc:        "invalid token",
 			token:       authmocks.InvalidValue,
 			tokenUserID: "",
-			userID:      validInvitation.UserID,
-			domainID:    validInvitation.DomainID,
+			userID:      validInvitation.User.ID,
+			domainID:    validInvitation.Domain.ID,
 			resp:        invitations.Invitation{},
 			err:         svcerr.ErrAuthentication,
 			authNErr:    svcerr.ErrAuthentication,
@@ -278,8 +303,8 @@ func TestViewInvitation(t *testing.T) {
 			desc:        "error retrieving invitation",
 			token:       validToken,
 			tokenUserID: testsutil.GenerateUUID(t),
-			userID:      validInvitation.UserID,
-			domainID:    validInvitation.DomainID,
+			userID:      validInvitation.User.ID,
+			domainID:    validInvitation.Domain.ID,
 			resp:        invitations.Invitation{},
 			err:         svcerr.ErrNotFound,
 			authNErr:    nil,
@@ -291,9 +316,9 @@ func TestViewInvitation(t *testing.T) {
 		{
 			desc:        "valid invitation for the same user",
 			token:       validToken,
-			tokenUserID: validInvitation.UserID,
-			userID:      validInvitation.UserID,
-			domainID:    validInvitation.DomainID,
+			tokenUserID: validInvitation.User.ID,
+			userID:      validInvitation.User.ID,
+			domainID:    validInvitation.Domain.ID,
 			resp:        validInvitation,
 			err:         nil,
 			authNErr:    nil,
@@ -305,9 +330,9 @@ func TestViewInvitation(t *testing.T) {
 		{
 			desc:        "valid invitation for the invited user",
 			token:       validToken,
-			tokenUserID: validInvitation.InvitedBy,
-			userID:      validInvitation.UserID,
-			domainID:    validInvitation.DomainID,
+			tokenUserID: validInvitation.InvitedBy.ID,
+			userID:      validInvitation.User.ID,
+			domainID:    validInvitation.Domain.ID,
 			resp:        validInvitation,
 			err:         nil,
 			authNErr:    nil,
@@ -320,8 +345,8 @@ func TestViewInvitation(t *testing.T) {
 			desc:        "valid invitation for the domain admin",
 			token:       validToken,
 			tokenUserID: testsutil.GenerateUUID(t),
-			userID:      validInvitation.UserID,
-			domainID:    validInvitation.DomainID,
+			userID:      validInvitation.User.ID,
+			domainID:    validInvitation.Domain.ID,
 			resp:        validInvitation,
 			err:         nil,
 			authNErr:    nil,
@@ -334,8 +359,8 @@ func TestViewInvitation(t *testing.T) {
 			desc:        "valid invitation for the platform admin",
 			token:       validToken,
 			tokenUserID: testsutil.GenerateUUID(t),
-			userID:      validInvitation.UserID,
-			domainID:    validInvitation.DomainID,
+			userID:      validInvitation.User.ID,
+			domainID:    validInvitation.Domain.ID,
 			resp:        validInvitation,
 			err:         nil,
 			authNErr:    nil,
@@ -385,12 +410,16 @@ func TestViewInvitation(t *testing.T) {
 		}
 		platformcall := authsvc.On("Authorize", context.Background(), &platformReq).Return(&magistrala.AuthorizeRes{Authorized: tc.authorised}, tc.adminErr)
 		repocall1 := repo.On("Retrieve", context.Background(), mock.Anything, mock.Anything).Return(tc.resp, tc.repoErr)
+		platformcall1 := sdkmock.On("User", mock.Anything, mock.Anything).Return(sdk.User{Name: validName}, nil)
+		platformcall2 := sdkmock.On("Domain", mock.Anything, mock.Anything).Return(sdk.Domain{Name: validName}, nil)
 		inv, err := svc.ViewInvitation(context.Background(), tc.token, tc.userID, tc.domainID)
 		assert.Equal(t, tc.err, err, tc.desc)
 		assert.Equal(t, tc.resp, inv, tc.desc)
 		repocall.Unset()
 		domaincall.Unset()
 		platformcall.Unset()
+		platformcall1.Unset()
+		platformcall2.Unset()
 		repocall1.Unset()
 	}
 }
@@ -398,7 +427,8 @@ func TestViewInvitation(t *testing.T) {
 func TestListInvitations(t *testing.T) {
 	repo := new(mocks.Repository)
 	authsvc := new(authmocks.AuthClient)
-	svc := invitations.NewService(repo, authsvc, nil)
+	sdkmock := new(sdkmocks.SDK)
+	svc := invitations.NewService(repo, authsvc, sdkmock)
 
 	validPage := invitations.Page{
 		Offset: 0,
@@ -410,9 +440,18 @@ func TestListInvitations(t *testing.T) {
 		Limit:  10,
 		Invitations: []invitations.Invitation{
 			{
-				InvitedBy:   testsutil.GenerateUUID(t),
-				UserID:      testsutil.GenerateUUID(t),
-				DomainID:    testsutil.GenerateUUID(t),
+				InvitedBy: invitations.Entity{
+					ID:   testsutil.GenerateUUID(t),
+					Name: validName,
+				},
+				User: invitations.Entity{
+					ID:   testsutil.GenerateUUID(t),
+					Name: validName,
+				},
+				Domain: invitations.Entity{
+					ID:   testsutil.GenerateUUID(t),
+					Name: validName,
+				},
 				Relation:    auth.ViewerRelation,
 				CreatedAt:   time.Now().Add(-time.Hour),
 				UpdatedAt:   time.Now().Add(-time.Hour),
@@ -563,12 +602,16 @@ func TestListInvitations(t *testing.T) {
 		}
 		platformcall := authsvc.On("Authorize", context.Background(), &platformReq).Return(&magistrala.AuthorizeRes{Authorized: tc.authorised}, tc.adminErr)
 		repocall1 := repo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.resp, tc.repoErr)
+		platformcall1 := sdkmock.On("User", mock.Anything, mock.Anything).Return(sdk.User{Name: validName}, nil)
+		platformcall2 := sdkmock.On("Domain", mock.Anything, mock.Anything).Return(sdk.Domain{Name: validName}, nil)
 		resp, err := svc.ListInvitations(context.Background(), tc.token, tc.page)
 		assert.Equal(t, tc.err, err, tc.desc)
 		assert.Equal(t, tc.resp, resp, tc.desc)
 		repocall.Unset()
 		domaincall.Unset()
 		platformcall.Unset()
+		platformcall1.Unset()
+		platformcall2.Unset()
 		repocall1.Unset()
 	}
 }
@@ -610,8 +653,14 @@ func TestAcceptInvitation(t *testing.T) {
 			tokenUserID: userID,
 			domainID:    "",
 			resp: invitations.Invitation{
-				UserID:      userID,
-				DomainID:    testsutil.GenerateUUID(t),
+				User: invitations.Entity{
+					ID:   userID,
+					Name: validName,
+				},
+				Domain: invitations.Entity{
+					ID:   testsutil.GenerateUUID(t),
+					Name: validName,
+				},
 				Token:       validToken,
 				Relation:    auth.ViewerRelation,
 				ConfirmedAt: time.Now().Add(-time.Second * time.Duration(rand.Intn(100))),
@@ -695,9 +744,9 @@ func TestDeleteInvitation(t *testing.T) {
 		{
 			desc:        "delete invitations for the same user",
 			token:       validToken,
-			tokenUserID: validInvitation.UserID,
-			userID:      validInvitation.UserID,
-			domainID:    validInvitation.DomainID,
+			tokenUserID: validInvitation.User.ID,
+			userID:      validInvitation.User.ID,
+			domainID:    validInvitation.Domain.ID,
 			resp:        validInvitation,
 			err:         nil,
 			authNErr:    nil,
@@ -709,9 +758,9 @@ func TestDeleteInvitation(t *testing.T) {
 		{
 			desc:        "delete invitations for the invited user",
 			token:       validToken,
-			tokenUserID: validInvitation.InvitedBy,
-			userID:      validInvitation.UserID,
-			domainID:    validInvitation.DomainID,
+			tokenUserID: validInvitation.InvitedBy.ID,
+			userID:      validInvitation.User.ID,
+			domainID:    validInvitation.Domain.ID,
 			resp:        validInvitation,
 			err:         nil,
 			authNErr:    nil,
@@ -724,8 +773,8 @@ func TestDeleteInvitation(t *testing.T) {
 			desc:        "error retrieving invitation",
 			token:       validToken,
 			tokenUserID: testsutil.GenerateUUID(t),
-			userID:      validInvitation.UserID,
-			domainID:    validInvitation.DomainID,
+			userID:      validInvitation.User.ID,
+			domainID:    validInvitation.Domain.ID,
 			resp:        invitations.Invitation{},
 			err:         svcerr.ErrNotFound,
 			authNErr:    nil,

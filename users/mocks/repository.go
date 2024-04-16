@@ -147,6 +147,34 @@ func (_m *Repository) RetrieveAllByIDs(ctx context.Context, pm clients.Page) (cl
 	return r0, r1
 }
 
+// RetrieveBasicInfoByID provides a mock function with given fields: ctx, id
+func (_m *Repository) RetrieveBasicInfoByID(ctx context.Context, id string) (clients.Client, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveBasicInfoByID")
+	}
+
+	var r0 clients.Client
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (clients.Client, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) clients.Client); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(clients.Client)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RetrieveByID provides a mock function with given fields: ctx, id
 func (_m *Repository) RetrieveByID(ctx context.Context, id string) (clients.Client, error) {
 	ret := _m.Called(ctx, id)

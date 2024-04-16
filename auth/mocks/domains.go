@@ -134,6 +134,34 @@ func (_m *DomainsRepository) RetrieveAllByIDs(ctx context.Context, pm auth.Page)
 	return r0, r1
 }
 
+// RetrieveBasicInfoByID provides a mock function with given fields: ctx, id
+func (_m *DomainsRepository) RetrieveBasicInfoByID(ctx context.Context, id string) (auth.Domain, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveBasicInfoByID")
+	}
+
+	var r0 auth.Domain
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (auth.Domain, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) auth.Domain); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(auth.Domain)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RetrieveByID provides a mock function with given fields: ctx, id
 func (_m *DomainsRepository) RetrieveByID(ctx context.Context, id string) (auth.Domain, error) {
 	ret := _m.Called(ctx, id)

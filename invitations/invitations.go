@@ -14,15 +14,20 @@ import (
 
 // Invitation is an invitation to join a domain.
 type Invitation struct {
-	InvitedBy   string    `json:"invited_by"`
-	UserID      string    `json:"user_id"`
-	DomainID    string    `json:"domain_id"`
+	InvitedBy   Entity    `json:"invited_by"`
+	User        Entity    `json:"invited_user"`
+	Domain      Entity    `json:"domain"`
 	Token       string    `json:"token,omitempty"`
 	Relation    string    `json:"relation,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at,omitempty"`
 	ConfirmedAt time.Time `json:"confirmed_at,omitempty"`
 	Resend      bool      `json:"resend,omitempty"`
+}
+
+type Entity struct {
+	Name string `json:"name"`
+	ID   string `json:"id"`
 }
 
 // Page is a page of invitations.

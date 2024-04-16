@@ -1874,11 +1874,13 @@ func TestRetrieveDomain(t *testing.T) {
 		repoCall := drepo.On("RetrieveByID", mock.Anything, groupName).Return(auth.Domain{}, tc.domainRepoErr)
 		repoCall1 := prepo.On("CheckPolicy", mock.Anything, mock.Anything).Return(tc.checkPolicyErr)
 		repoCall2 := drepo.On("RetrieveByID", mock.Anything, tc.domainID).Return(auth.Domain{}, tc.domainRepoErr1)
+		repoCall3 := drepo.On("RetrieveBasicInfoByID", mock.Anything, tc.domainID).Return(auth.Domain{Name: valid}, tc.domainRepoErr1)
 		_, err := svc.RetrieveDomain(context.Background(), tc.token, tc.domainID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
+		repoCall3.Unset()
 	}
 }
 

@@ -26,8 +26,10 @@ func (lm *logging) SendInvitation(ctx context.Context, token string, invitation 
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.String("user_id", invitation.UserID),
-			slog.String("domain_id", invitation.DomainID),
+			slog.String("user_id", invitation.User.ID),
+			slog.String("domain_id", invitation.Domain.ID),
+			slog.String("user_id", invitation.User.Name),
+			slog.String("domain_id", invitation.Domain.Name),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))

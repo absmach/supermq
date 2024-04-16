@@ -40,7 +40,7 @@ func (svc *service) SendInvitation(ctx context.Context, token string, invitation
 	if err != nil {
 		return err
 	}
-	invitation.InvitedBy = user.GetUserId()
+	invitation.InvitedBy.ID = user.GetUserId()
 
 	domainUserId := auth.EncodeDomainUserID(invitation.DomainID, invitation.UserID)
 	if err := svc.authorize(ctx, domainUserId, auth.MembershipPermission, auth.DomainType, invitation.DomainID); err == nil {
@@ -52,7 +52,7 @@ func (svc *service) SendInvitation(ctx context.Context, token string, invitation
 		return err
 	}
 
-	joinToken, err := svc.auth.Issue(ctx, &magistrala.IssueReq{UserId: user.GetUserId(), DomainId: &invitation.DomainID, Type: uint32(auth.InvitationKey)})
+	joinToken, err := svc.auth.Issue(ctx, &magistrala.IssueReq{UserId: user.GetUserId(), DomainId: &invitation.Domain.ID, Type: uint32(auth.InvitationKey)})
 	if err != nil {
 		return err
 	}
@@ -74,17 +74,36 @@ func (svc *service) ViewInvitation(ctx context.Context, token, userID, domainID 
 	if err != nil {
 		return Invitation{}, err
 	}
+
 	inv, err := svc.repo.Retrieve(ctx, userID, domainID)
 	if err != nil {
 		return Invitation{}, err
 	}
 	inv.Token = ""
 
+	client, err := svc.sdk.User(userID, token)
+	if err != nil {
+		return Invitation{}, err
+	}
+	inv.User.Name = client.Name
+
+	domain, err := svc.sdk.Domain(domainID, token)
+	if err != nil {
+		return Invitation{}, err
+	}
+	inv.Domain.Name = domain.Name
+
+	client, err = svc.sdk.User(inv.InvitedBy.ID, token)
+	if err != nil {
+		return Invitation{}, err
+	}
+	inv.InvitedBy.Name = client.Name
+
 	if user.GetUserId() == userID {
 		return inv, nil
 	}
 
-	if inv.InvitedBy == user.GetUserId() {
+	if inv.InvitedBy.ID == user.GetUserId() {
 		return inv, nil
 	}
 
@@ -115,7 +134,26 @@ func (svc *service) ListInvitations(ctx context.Context, token string, page Page
 
 	page.InvitedByOrUserID = user.GetUserId()
 
-	return svc.repo.RetrieveAll(ctx, page)
+	invs, err := svc.repo.RetrieveAll(ctx, page)
+	if err != nil {
+		return InvitationPage{}, err
+	}
+
+	for _, invitation := range invs.Invitations {
+		client, err := svc.sdk.User(invitation.InvitedBy.ID, token)
+		if err != nil {
+			return InvitationPage{}, err
+		}
+		invitation.InvitedBy.Name = client.Name
+
+		client, err = svc.sdk.User(invitation.User.ID, token)
+		if err != nil {
+			return InvitationPage{}, err
+		}
+		invitation.InvitedBy.Name = client.Name
+	}
+
+	return invs, nil
 }
 
 func (svc *service) AcceptInvitation(ctx context.Context, token, domainID string) error {
@@ -129,12 +167,12 @@ func (svc *service) AcceptInvitation(ctx context.Context, token, domainID string
 		return err
 	}
 
-	if inv.UserID == user.GetUserId() && inv.ConfirmedAt.IsZero() {
+	if inv.User.ID == user.GetUserId() && inv.ConfirmedAt.IsZero() {
 		req := mgsdk.UsersRelationRequest{
 			Relation: inv.Relation,
 			UserIDs:  []string{user.GetUserId()},
 		}
-		if sdkerr := svc.sdk.AddUserToDomain(inv.DomainID, req, inv.Token); sdkerr != nil {
+		if sdkerr := svc.sdk.AddUserToDomain(inv.Domain.ID, req, inv.Token); sdkerr != nil {
 			return sdkerr
 		}
 
@@ -162,7 +200,7 @@ func (svc *service) DeleteInvitation(ctx context.Context, token, userID, domainI
 		return err
 	}
 
-	if inv.InvitedBy == user.GetUserId() {
+	if inv.InvitedBy.ID == user.GetUserId() {
 		return svc.repo.Delete(ctx, userID, domainID)
 	}
 

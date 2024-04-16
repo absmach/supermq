@@ -40,6 +40,9 @@ var (
 		Metadata:    validCMetadata,
 		Status:      mgclients.EnabledStatus,
 	}
+	basicClient = mgclients.Client{
+		Name: "clientname",
+	}
 	validToken      = "token"
 	inValidToken    = "invalid"
 	validID         = "d4ebb847-5d0e-4e46-bdd9-b6aceaaa3a22"
@@ -427,16 +430,19 @@ func TestViewClient(t *testing.T) {
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
 			token:             validToken,
 			clientID:          client.ID,
+			identifyErr:       svcerr.ErrAuthorization,
 			err:               svcerr.ErrAuthorization,
 		},
 		{
-			desc:               "view client as admin user with failed check on super admin",
-			identifyResponse:   &magistrala.IdentityRes{UserId: adminID},
-			authorizeResponse:  &magistrala.AuthorizeRes{Authorized: false},
-			token:              validToken,
-			clientID:           client.ID,
-			checkSuperAdminErr: svcerr.ErrAuthorization,
-			err:                svcerr.ErrAuthorization,
+			desc:                 "view client as admin user with failed check on super admin",
+			identifyResponse:     &magistrala.IdentityRes{UserId: adminID},
+			authorizeResponse:    &magistrala.AuthorizeRes{Authorized: false},
+			token:                validToken,
+			retrieveByIDResponse: basicClient,
+			response:             basicClient,
+			clientID:             client.ID,
+			checkSuperAdminErr:   svcerr.ErrAuthorization,
+			err:                  nil,
 		},
 	}
 

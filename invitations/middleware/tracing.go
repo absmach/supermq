@@ -24,8 +24,10 @@ func Tracing(svc invitations.Service, tracer trace.Tracer) invitations.Service {
 
 func (tm *tracing) SendInvitation(ctx context.Context, token string, invitation invitations.Invitation) (err error) {
 	ctx, span := tm.tracer.Start(ctx, "send_invitation", trace.WithAttributes(
-		attribute.String("domain_id", invitation.DomainID),
-		attribute.String("user_id", invitation.UserID),
+		attribute.String("domain_id", invitation.Domain.ID),
+		attribute.String("user_id", invitation.User.ID),
+		attribute.String("domain_name", invitation.Domain.Name),
+		attribute.String("user_name", invitation.User.Name),
 	))
 	defer span.End()
 

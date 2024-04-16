@@ -23,8 +23,8 @@ func sendInvitationEndpoint(svc invitations.Service) endpoint.Endpoint {
 		}
 
 		invitation := invitations.Invitation{
-			UserID:   req.UserID,
-			DomainID: req.DomainID,
+			User:     req.User,
+			Domain:   req.Domain,
 			Relation: req.Relation,
 			Resend:   req.Resend,
 		}

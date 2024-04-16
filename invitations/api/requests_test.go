@@ -24,9 +24,15 @@ func TestSendInvitationReqValidation(t *testing.T) {
 		{
 			desc: "valid request",
 			req: sendInvitationReq{
-				token:    valid,
-				UserID:   valid,
-				DomainID: valid,
+				token: valid,
+				User: invitations.Entity{
+					ID:   valid,
+					Name: valid,
+				},
+				Domain: invitations.Entity{
+					ID:   valid,
+					Name: valid,
+				},
 				Relation: auth.DomainRelation,
 				Resend:   true,
 			},
@@ -35,9 +41,15 @@ func TestSendInvitationReqValidation(t *testing.T) {
 		{
 			desc: "empty token",
 			req: sendInvitationReq{
-				token:    "",
-				UserID:   valid,
-				DomainID: valid,
+				token: "",
+				User: invitations.Entity{
+					ID:   valid,
+					Name: valid,
+				},
+				Domain: invitations.Entity{
+					ID:   valid,
+					Name: valid,
+				},
 				Relation: auth.DomainRelation,
 				Resend:   true,
 			},
@@ -46,9 +58,15 @@ func TestSendInvitationReqValidation(t *testing.T) {
 		{
 			desc: "empty user ID",
 			req: sendInvitationReq{
-				token:    valid,
-				UserID:   "",
-				DomainID: valid,
+				token: valid,
+				User: invitations.Entity{
+					ID:   "",
+					Name: valid,
+				},
+				Domain: invitations.Entity{
+					ID:   valid,
+					Name: valid,
+				},
 				Relation: auth.DomainRelation,
 				Resend:   true,
 			},
@@ -57,9 +75,15 @@ func TestSendInvitationReqValidation(t *testing.T) {
 		{
 			desc: "empty domain_id",
 			req: sendInvitationReq{
-				token:    valid,
-				UserID:   valid,
-				DomainID: "",
+				token: valid,
+				User: invitations.Entity{
+					ID:   valid,
+					Name: valid,
+				},
+				Domain: invitations.Entity{
+					ID:   "",
+					Name: valid,
+				},
 				Relation: auth.DomainRelation,
 				Resend:   true,
 			},
@@ -68,9 +92,15 @@ func TestSendInvitationReqValidation(t *testing.T) {
 		{
 			desc: "missing relation",
 			req: sendInvitationReq{
-				token:    valid,
-				UserID:   valid,
-				DomainID: valid,
+				token: valid,
+				User: invitations.Entity{
+					ID:   valid,
+					Name: valid,
+				},
+				Domain: invitations.Entity{
+					ID:   valid,
+					Name: valid,
+				},
 				Relation: "",
 				Resend:   true,
 			},
@@ -79,9 +109,15 @@ func TestSendInvitationReqValidation(t *testing.T) {
 		{
 			desc: "invalid relation",
 			req: sendInvitationReq{
-				token:    valid,
-				UserID:   valid,
-				DomainID: valid,
+				token: valid,
+				User: invitations.Entity{
+					ID:   valid,
+					Name: valid,
+				},
+				Domain: invitations.Entity{
+					ID:   valid,
+					Name: valid,
+				},
 				Relation: "invalid",
 				Resend:   true,
 			},

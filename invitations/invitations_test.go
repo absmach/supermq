@@ -33,13 +33,22 @@ func TestInvitation_MarshalJSON(t *testing.T) {
 				Limit:  0,
 				Invitations: []invitations.Invitation{
 					{
-						InvitedBy: "John",
-						UserID:    "123",
-						DomainID:  "123",
+						InvitedBy: invitations.Entity{
+							ID:   "John",
+							Name: "John",
+						},
+						User: invitations.Entity{
+							ID:   "123",
+							Name: "Mike",
+						},
+						Domain: invitations.Entity{
+							ID:   "123",
+							Name: "Org1",
+						},
 					},
 				},
 			},
-			res: `{"total":1,"offset":0,"limit":0,"invitations":[{"invited_by":"John","user_id":"123","domain_id":"123","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","confirmed_at":"0001-01-01T00:00:00Z"}]}`,
+			res: `{"total":1,"offset":0,"limit":0,"invitations":[{"invited_by":{"name":"John","id":"John"},"invited_user":{"name":"Mike","id":"123"},"domain":{"name":"Org1","id":"123"},"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","confirmed_at":"0001-01-01T00:00:00Z"}]}`,
 		},
 	}
 

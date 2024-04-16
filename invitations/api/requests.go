@@ -16,20 +16,20 @@ var errMissingDomain = errors.New("missing domain")
 
 type sendInvitationReq struct {
 	token    string
-	UserID   string `json:"user_id,omitempty"`
-	DomainID string `json:"domain_id,omitempty"`
-	Relation string `json:"relation,omitempty"`
-	Resend   bool   `json:"resend,omitempty"`
+	User     invitations.Entity `json:"invited_user,omitempty"`
+	Domain   invitations.Entity `json:"domain,omitempty"`
+	Relation string             `json:"relation,omitempty"`
+	Resend   bool               `json:"resend,omitempty"`
 }
 
 func (req *sendInvitationReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
-	if req.UserID == "" {
+	if req.User.ID == "" {
 		return apiutil.ErrMissingID
 	}
-	if req.DomainID == "" {
+	if req.Domain.ID == "" {
 		return errMissingDomain
 	}
 	if err := invitations.CheckRelation(req.Relation); err != nil {
