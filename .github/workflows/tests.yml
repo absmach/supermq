@@ -116,9 +116,9 @@ jobs:
               - "pkg/uuid/**"
               - "pkg/messaging/**"
 
-            eventlogs:
-              - "eventlogs/**"
-              - "cmd/eventlogs/**"
+            activitylog:
+              - "activitylog/**"
+              - "cmd/activitylog/**"
               - "auth.pb.go"
               - "auth_grpc.pb.go"
               - "auth/**"
@@ -275,6 +275,11 @@ jobs:
         run: |
           mkdir coverage
 
+      - name: Run pkg activitylog tests
+        if: steps.changes.outputs.activitylog == 'true' || steps.changes.outputs.workflow == 'true'
+        run: |
+          go test --race -v -count=1 -coverprofile=coverage/activitylog.out ./pkg/events/...
+
       - name: Run auth tests
         if: steps.changes.outputs.auth == 'true' || steps.changes.outputs.workflow == 'true'
         run: |
@@ -299,11 +304,6 @@ jobs:
         if: steps.changes.outputs.consumers == 'true' || steps.changes.outputs.workflow == 'true'
         run: |
           go test --race -v -count=1 -coverprofile=coverage/consumers.out ./consumers/...
-
-      - name: Run pkg eventlogs tests
-        if: steps.changes.outputs.eventlogs == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/eventlogs.out ./pkg/events/...
 
       - name: Run HTTP tests
         if: steps.changes.outputs.http == 'true' || steps.changes.outputs.workflow == 'true'

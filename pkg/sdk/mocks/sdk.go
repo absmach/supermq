@@ -36,6 +36,34 @@ func (_m *SDK) AcceptInvitation(domainID string, token string) error {
 	return r0
 }
 
+// Activities provides a mock function with given fields: pm, token
+func (_m *SDK) Activities(pm sdk.PageMetadata, token string) (sdk.ActivitiesPage, error) {
+	ret := _m.Called(pm, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Activities")
+	}
+
+	var r0 sdk.ActivitiesPage
+	var r1 error
+	if rf, ok := ret.Get(0).(func(sdk.PageMetadata, string) (sdk.ActivitiesPage, error)); ok {
+		return rf(pm, token)
+	}
+	if rf, ok := ret.Get(0).(func(sdk.PageMetadata, string) sdk.ActivitiesPage); ok {
+		r0 = rf(pm, token)
+	} else {
+		r0 = ret.Get(0).(sdk.ActivitiesPage)
+	}
+
+	if rf, ok := ret.Get(1).(func(sdk.PageMetadata, string) error); ok {
+		r1 = rf(pm, token)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // AddBootstrap provides a mock function with given fields: cfg, token
 func (_m *SDK) AddBootstrap(cfg sdk.BootstrapConfig, token string) (string, errors.SDKError) {
 	ret := _m.Called(cfg, token)
@@ -1171,34 +1199,6 @@ func (_m *SDK) EnableUser(id string, token string) (sdk.User, errors.SDKError) {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.SDKError)
 		}
-	}
-
-	return r0, r1
-}
-
-// Events provides a mock function with given fields: pm, id, entityType, token
-func (_m *SDK) Events(pm sdk.PageMetadata, id string, entityType string, token string) (sdk.EventsPage, error) {
-	ret := _m.Called(pm, id, entityType, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Events")
-	}
-
-	var r0 sdk.EventsPage
-	var r1 error
-	if rf, ok := ret.Get(0).(func(sdk.PageMetadata, string, string, string) (sdk.EventsPage, error)); ok {
-		return rf(pm, id, entityType, token)
-	}
-	if rf, ok := ret.Get(0).(func(sdk.PageMetadata, string, string, string) sdk.EventsPage); ok {
-		r0 = rf(pm, id, entityType, token)
-	} else {
-		r0 = ret.Get(0).(sdk.EventsPage)
-	}
-
-	if rf, ok := ret.Get(1).(func(sdk.PageMetadata, string, string, string) error); ok {
-		r1 = rf(pm, id, entityType, token)
-	} else {
-		r1 = ret.Error(1)
 	}
 
 	return r0, r1

@@ -75,7 +75,7 @@ jobs:
               - "twins/twins.go"
               - "twins/states.go"
               - "twins/service.go"
-              - "eventlogs/events.go"
+              - "activitylog/activity.go"
 
       - name: Set up protoc
         if: steps.changes.outputs.proto == 'true'
@@ -158,8 +158,8 @@ jobs:
           mv ./twins/mocks/states.go ./twins/mocks/states.go.tmp
           mv ./twins/mocks/repository.go ./twins/mocks/repository.go.tmp
           mv ./twins/mocks/cache.go ./twins/mocks/cache.go.tmp
-          mv ./eventlogs/mocks/repository.go ./eventlogs/mocks/repository.go.tmp
-          mv ./eventlogs/mocks/service.go ./eventlogs/mocks/service.go.tmp
+          mv ./activitylog/mocks/repository.go ./activitylog/mocks/repository.go.tmp
+          mv ./activitylog/mocks/service.go ./activitylog/mocks/service.go.tmp
 
           make mocks
 
@@ -211,5 +211,5 @@ jobs:
           check_mock_changes ./twins/mocks/states.go "Twins States ./twins/mocks/states.go"
           check_mock_changes ./twins/mocks/repository.go "Twins Repository ./twins/mocks/repository.go"
           check_mock_changes ./twins/mocks/cache.go "Twins Cache ./twins/mocks/cache.go"
-          check_mock_changes ./eventlogs/mocks/repository.go "Event Logs Repository ./eventlogs/mocks/repository.go"
-          check_mock_changes ./eventlogs/mocks/service.go "Event Logs Service ./eventlogs/mocks/service.go"
+          check_mock_changes ./activitylog/mocks/repository.go "Activity Log Repository ./activitylog/mocks/repository.go"
+          check_mock_changes ./activitylog/mocks/service.go "Activity Log Service ./activitylog/mocks/service.go"
