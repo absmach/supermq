@@ -156,6 +156,8 @@ paths:
           description: Malformed entity specification.
         "401":
           description: Missing or invalid access token provided.
+        "403":
+          description: Failed authorization over the domain.
         "404":
           description: A non-existent entity request.
         "422":

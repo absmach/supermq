@@ -187,7 +187,7 @@ func (cs *certsService) ViewCert(ctx context.Context, token, serialID string) (C
 
 	cert, err := cs.certsRepo.RetrieveBySerial(ctx, u.GetId(), serialID)
 	if err != nil {
-		return Cert{}, errors.Wrap(svcerr.ErrNotFound, err)
+		return Cert{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
 	vcert, err := cs.pki.Read(serialID)

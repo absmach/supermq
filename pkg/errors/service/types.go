@@ -63,6 +63,7 @@ var (
 
 	// ErrFailedPermissionsList indicates a failure to list permissions.
 	ErrFailedPermissionsList = errors.New("failed to list permissions")
+
 	// ErrEnableClient indicates error in enabling client.
 	ErrEnableClient = errors.New("failed to enable client")
 

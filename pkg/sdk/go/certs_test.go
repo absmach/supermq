@@ -181,7 +181,7 @@ func TestViewCert(t *testing.T) {
 			certID: "43",
 			token:  token,
 			cRes:   c,
-			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, svcerr.ErrNotFound), http.StatusNotFound),
+			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, svcerr.ErrViewEntity), http.StatusBadRequest),
 			svcerr: errors.Wrap(svcerr.ErrNotFound, repoerr.ErrNotFound),
 		},
 		{

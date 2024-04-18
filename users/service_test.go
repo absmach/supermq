@@ -2349,7 +2349,7 @@ func TestResetSecret(t *testing.T) {
 					Identity: "",
 				},
 			},
-			err: repoerr.ErrNotFound,
+			err: nil,
 		},
 		{
 			desc:                 "reset secret with failed to update secret",
@@ -2547,7 +2547,7 @@ func TestOAuthCallback(t *testing.T) {
 			saveResponse:      mgclients.Client{},
 			saveErr:           repoerr.ErrConflict,
 			issueResponse:     &magistrala.Token{},
-			err:               svcerr.ErrConflict,
+			err:               errors.New("user already exists"),
 		},
 	}
 

@@ -20,13 +20,7 @@ import (
 )
 
 var (
-
-	// ErrFailedUpdateRole indicates a failure to update user role.
-	ErrFailedUpdateRole = errors.New("failed to update user role")
-
-	// ErrIssueToken indicates a failure to issue token.
-	ErrIssueToken = errors.New("failed to issue token")
-
+	errIssueToken            = errors.New("failed to issue token")
 	errUserNotSignedUp       = errors.New("user not signed up")
 	errFailedPermissionsList = errors.New("failed to list permissions")
 	errAddPolicies           = errors.New("failed to add policies")
@@ -273,8 +267,8 @@ func (svc service) UpdateClientIdentity(ctx context.Context, token, clientID, id
 
 func (svc service) GenerateResetToken(ctx context.Context, email, host string) error {
 	client, err := svc.clients.RetrieveByIdentity(ctx, email)
-	if err != nil || client.Credentials.Identity == "" {
-		return svcerr.ErrNotFound
+	if err != nil {
+		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	issueReq := &magistrala.IssueReq{
 		UserId: client.ID,
@@ -297,9 +291,7 @@ func (svc service) ResetSecret(ctx context.Context, resetToken, secret string) e
 	if err != nil {
 		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
-	if c.Credentials.Identity == "" {
-		return svcerr.ErrNotFound
-	}
+
 	secret, err = svc.hasher.Hash(secret)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrUpdateEntity, err)
@@ -329,7 +321,7 @@ func (svc service) UpdateClientSecret(ctx context.Context, token, oldSecret, new
 		return mgclients.Client{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	if _, err := svc.IssueToken(ctx, dbClient.Credentials.Identity, oldSecret, ""); err != nil {
-		return mgclients.Client{}, errors.Wrap(ErrIssueToken, err)
+		return mgclients.Client{}, errors.Wrap(errIssueToken, err)
 	}
 	newSecret, err = svc.hasher.Hash(newSecret)
 	if err != nil {
@@ -589,7 +581,7 @@ func (svc service) OAuthCallback(ctx context.Context, state mgoauth2.State, clie
 		rclient, err := svc.RegisterClient(ctx, "", client)
 		if err != nil {
 			if errors.Contains(err, repoerr.ErrConflict) {
-				return &magistrala.Token{}, errors.Wrap(svcerr.ErrConflict, err)
+				return &magistrala.Token{}, errors.New("user already exists")
 			}
 			return &magistrala.Token{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 		}
