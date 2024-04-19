@@ -76,6 +76,19 @@ func TestIssue(t *testing.T) {
 			},
 			err: nil,
 		},
+		{
+			desc: "issue token without a domain",
+			key: auth.Key{
+				ID:        testsutil.GenerateUUID(t),
+				Type:      auth.AccessKey,
+				Subject:   testsutil.GenerateUUID(t),
+				User:      testsutil.GenerateUUID(t),
+				Domain:    "",
+				IssuedAt:  time.Now().Add(-10 * time.Second).Round(time.Second),
+				ExpiresAt: time.Now().Add(10 * time.Minute).Round(time.Second),
+			},
+			err: nil,
+		},
 	}
 
 	for _, tc := range cases {
