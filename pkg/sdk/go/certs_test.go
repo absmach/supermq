@@ -75,8 +75,6 @@ func TestIssueCert(t *testing.T) {
 			duration: "10h",
 			token:    validToken,
 			cRes:     c,
-			err:      nil,
-			svcerr:   nil,
 		},
 		{
 			desc:     "create new cert with empty thing id and duration",
@@ -121,7 +119,7 @@ func TestIssueCert(t *testing.T) {
 			token:    "",
 			cRes:     c,
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerToken), http.StatusUnauthorized),
-			svcerr:   errors.Wrap(certs.ErrFailedCertCreation, certs.ErrFailedCertCreation),
+			svcerr:   errors.Wrap(certs.ErrFailedCertCreation, svcerr.ErrAuthentication),
 		},
 		{
 			desc:     "create new cert with invalid token",
@@ -176,9 +174,7 @@ func TestViewCert(t *testing.T) {
 			desc:   "get existing cert",
 			certID: validID,
 			token:  token,
-			err:    nil,
 			cRes:   c,
-			svcerr: nil,
 		},
 		{
 			desc:   "get non-existent cert",
@@ -186,7 +182,7 @@ func TestViewCert(t *testing.T) {
 			token:  token,
 			cRes:   c,
 			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, svcerr.ErrNotFound), http.StatusNotFound),
-			svcerr: errors.Wrap(svcerr.ErrNotFound, svcerr.ErrNotFound),
+			svcerr: errors.Wrap(svcerr.ErrNotFound, repoerr.ErrNotFound),
 		},
 		{
 			desc:   "get cert with invalid token",
@@ -235,8 +231,6 @@ func TestViewCertByThing(t *testing.T) {
 			thingID: thingID,
 			token:   token,
 			page:    certs.Page{Certs: []certs.Cert{c}},
-			err:     nil,
-			svcerr:  nil,
 		},
 		{
 			desc:    "get non-existent cert",
@@ -319,8 +313,6 @@ func TestRevokeCert(t *testing.T) {
 			thingID:     thingID,
 			token:       token,
 			svcResponse: certs.Revoke{RevocationTime: time.Now()},
-			err:         nil,
-			svcerr:      nil,
 		},
 		{
 			desc:        "revoke deleted cert",
