@@ -66,7 +66,9 @@ func (tok *tokenizer) Issue(key auth.Key) (string, error) {
 		Claim(tokenType, key.Type).
 		Expiration(key.ExpiresAt)
 	builder.Claim(userField, key.User)
-	builder.Claim(domainField, key.Domain)
+	if key.Domain != "" {
+		builder.Claim(domainField, key.Domain)
+	}
 
 	if key.ID != "" {
 		builder.JwtID(key.ID)
