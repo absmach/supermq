@@ -62,12 +62,12 @@ func (tok *tokenizer) Issue(key auth.Key) (string, error) {
 	builder.
 		Issuer(issuerName).
 		IssuedAt(key.IssuedAt).
-		Subject(key.Subject).
 		Claim(tokenType, key.Type).
 		Expiration(key.ExpiresAt)
 	builder.Claim(userField, key.User)
 	if key.Domain != "" {
 		builder.Claim(domainField, key.Domain)
+		builder.Subject(key.Subject)
 	}
 
 	if key.ID != "" {
@@ -83,7 +83,6 @@ func (tok *tokenizer) Issue(key auth.Key) (string, error) {
 	}
 	return string(signedTkn), nil
 }
-
 func (tok *tokenizer) Parse(token string) (auth.Key, error) {
 	tkn, err := tok.validateToken(token)
 	if err != nil {
