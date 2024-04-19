@@ -77,11 +77,11 @@ func TestIssue(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc: "issue token without domain and subject",
+			desc: "issue token without a domain",
 			key: auth.Key{
 				ID:        testsutil.GenerateUUID(t),
 				Type:      auth.AccessKey,
-				Subject:   "",
+				Subject:   testsutil.GenerateUUID(t),
 				User:      testsutil.GenerateUUID(t),
 				Domain:    "",
 				IssuedAt:  time.Now().Add(-10 * time.Second).Round(time.Second),
