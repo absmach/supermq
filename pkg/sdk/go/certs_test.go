@@ -224,6 +224,7 @@ func TestViewCertByThing(t *testing.T) {
 		token   string
 		page    certs.Page
 		err     errors.SDKError
+		viewerr errors.SDKError
 		svcerr  error
 	}{
 		{
@@ -239,6 +240,7 @@ func TestViewCertByThing(t *testing.T) {
 			page:    certs.Page{Certs: []certs.Cert{}},
 			err:     errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, repoerr.ErrNotFound), http.StatusNotFound),
 			svcerr:  errors.Wrap(svcerr.ErrNotFound, repoerr.ErrNotFound),
+			viewerr: errors.NewSDKError(svcerr.ErrViewEntity),
 		},
 		{
 			desc:    "get cert with invalid token",
@@ -251,7 +253,7 @@ func TestViewCertByThing(t *testing.T) {
 	}
 	for _, tc := range cases {
 		svcCall := svc.On("ListSerials", mock.Anything, tc.token, tc.thingID, tc.page.Offset, mock.Anything).Return(tc.page, tc.svcerr)
-		svcCall1 := svc.On("ViewCertByThing", mock.Anything, tc.thingID, tc.token).Return(tc.page, nil)
+		svcCall1 := svc.On("ViewCertByThing", mock.Anything, tc.thingID, tc.token).Return(tc.page, tc.viewerr)
 
 		cert, err := mgsdk.ViewCertByThing(tc.thingID, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
