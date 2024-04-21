@@ -89,8 +89,33 @@ func TestIssue(t *testing.T) {
 			},
 			err: nil,
 		},
+		{
+			desc: "issue token without a subject",
+			key: auth.Key{
+				ID:        testsutil.GenerateUUID(t),
+				Type:      auth.AccessKey,
+				Subject:   "",
+				User:      testsutil.GenerateUUID(t),
+				Domain:    testsutil.GenerateUUID(t),
+				IssuedAt:  time.Now().Add(-10 * time.Second).Round(time.Second),
+				ExpiresAt: time.Now().Add(10 * time.Minute).Round(time.Second),
+			},
+			err: nil,
+		},
+		{
+			desc: "issue token without a domain and subject",
+			key: auth.Key{
+				ID:        testsutil.GenerateUUID(t),
+				Type:      auth.AccessKey,
+				Subject:   "",
+				User:      testsutil.GenerateUUID(t),
+				Domain:    "",
+				IssuedAt:  time.Now().Add(-10 * time.Second).Round(time.Second),
+				ExpiresAt: time.Now().Add(10 * time.Minute).Round(time.Second),
+			},
+			err: nil,
+		},
 	}
-
 	for _, tc := range cases {
 		tkn, err := tokenizer.Issue(tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s, got %s", tc.desc, tc.err, err))
