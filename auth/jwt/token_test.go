@@ -142,9 +142,18 @@ func TestParse(t *testing.T) {
 
 	inValidToken := newToken("invalid", key())
 
-	newKey := key()
-	newKey.Domain = ""
-	newKey.Subject = ""
+	createKeyAndToken := func(domain, subject string) (auth.Key, string) {
+		k := key()
+		k.Domain = domain
+		k.Subject = subject
+		tkn, err := tokenizer.Issue(k)
+		require.Nil(t, err, fmt.Sprintf("issuing key expected to succeed: %s", err))
+		return k, tkn
+	}
+
+	emptyDomainKey, emptyDomainToken := createKeyAndToken("", "subject")
+	emptySubjectKey, emptySubjectToken := createKeyAndToken("domain", "")
+	emptyKey, emptyToken := createKeyAndToken("", "")
 
 	cases := []struct {
 		desc  string
@@ -190,21 +199,21 @@ func TestParse(t *testing.T) {
 		},
 		{
 			desc:  "parse token with empty domain",
-			key:   newKey,
-			token: newToken(issuerName, newKey),
-			err:   svcerr.ErrAuthentication,
+			key:   emptyDomainKey,
+			token: emptyDomainToken,
+			err:   nil,
 		},
 		{
 			desc:  "parse token with empty subject",
-			key:   newKey,
-			token: newToken(issuerName, newKey),
-			err:   svcerr.ErrAuthentication,
+			key:   emptySubjectKey,
+			token: emptySubjectToken,
+			err:   nil,
 		},
 		{
 			desc:  "parse token with empty domain and subject",
-			key:   newKey,
-			token: newToken(issuerName, newKey),
-			err:   svcerr.ErrAuthentication,
+			key:   emptyKey,
+			token: emptyToken,
+			err:   nil,
 		},
 	}
 
