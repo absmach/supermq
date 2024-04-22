@@ -330,7 +330,7 @@ func TestViewGroup(t *testing.T) {
 				Authorized: false,
 			},
 			authzErr: svcerr.ErrAuthorization,
-			err:      svcerr.ErrAuthorization,
+			err:      nil,
 		},
 		{
 			desc:  "with failed to authorize",
@@ -340,7 +340,7 @@ func TestViewGroup(t *testing.T) {
 				Authorized: false,
 			},
 			authzErr: nil,
-			err:      svcerr.ErrAuthorization,
+			err:      nil,
 		},
 	}
 

@@ -111,7 +111,12 @@ func (svc service) CreateGroup(ctx context.Context, token, kind string, g groups
 func (svc service) ViewGroup(ctx context.Context, token, id string) (groups.Group, error) {
 	_, err := svc.authorizeToken(ctx, auth.UserType, token, auth.ViewPermission, auth.GroupType, id)
 	if err != nil {
-		return groups.Group{}, err
+		group, err := svc.groups.RetrieveByID(ctx, id)
+		if err != nil {
+			return groups.Group{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+
+		return groups.Group{Name: group.Name, Description: group.Description}, nil
 	}
 
 	group, err := svc.groups.RetrieveByID(ctx, id)
