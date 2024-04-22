@@ -77,32 +77,6 @@ func TestIssue(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc: "issue token without a domain",
-			key: auth.Key{
-				ID:        testsutil.GenerateUUID(t),
-				Type:      auth.AccessKey,
-				Subject:   testsutil.GenerateUUID(t),
-				User:      testsutil.GenerateUUID(t),
-				Domain:    "",
-				IssuedAt:  time.Now().Add(-10 * time.Second).Round(time.Second),
-				ExpiresAt: time.Now().Add(10 * time.Minute).Round(time.Second),
-			},
-			err: nil,
-		},
-		{
-			desc: "issue token without a subject",
-			key: auth.Key{
-				ID:        testsutil.GenerateUUID(t),
-				Type:      auth.AccessKey,
-				Subject:   "",
-				User:      testsutil.GenerateUUID(t),
-				Domain:    testsutil.GenerateUUID(t),
-				IssuedAt:  time.Now().Add(-10 * time.Second).Round(time.Second),
-				ExpiresAt: time.Now().Add(10 * time.Minute).Round(time.Second),
-			},
-			err: nil,
-		},
-		{
 			desc: "issue token without a domain and subject",
 			key: auth.Key{
 				ID:        testsutil.GenerateUUID(t),
@@ -143,6 +117,10 @@ func TestParse(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("issuing expired key expected to succeed: %s", err))
 
 	inValidToken := newToken("invalid", key())
+
+	newKey := key()
+	newKey.Domain = ""
+	newKey.Subject = ""
 
 	cases := []struct {
 		desc  string
@@ -185,6 +163,12 @@ func TestParse(t *testing.T) {
 			key:   auth.Key{},
 			token: newToken(issuerName, key()),
 			err:   authjwt.ErrJSONHandle,
+		},
+		{
+			desc:  "parse token with empty domain and subject",
+			key:   newKey,
+			token: newToken(issuerName, newKey),
+			err:   svcerr.ErrAuthentication,
 		},
 	}
 
