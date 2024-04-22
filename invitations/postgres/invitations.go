@@ -195,9 +195,9 @@ func toDBInvitation(inv invitations.Invitation) dbInvitation {
 	}
 
 	return dbInvitation{
-		InvitedBy:   inv.InvitedBy.ID,
-		UserID:      inv.User.ID,
-		DomainID:    inv.Domain.ID,
+		InvitedBy:   inv.InvitedBy,
+		UserID:      inv.UserID,
+		DomainID:    inv.DomainID,
 		Token:       inv.Token,
 		Relation:    inv.Relation,
 		CreatedAt:   inv.CreatedAt,
@@ -217,15 +217,9 @@ func toInvitation(dbinv dbInvitation) invitations.Invitation {
 	}
 
 	return invitations.Invitation{
-		InvitedBy: invitations.Entity{
-			ID: dbinv.InvitedBy,
-		},
-		User: invitations.Entity{
-			ID: dbinv.UserID,
-		},
-		Domain: invitations.Entity{
-			ID: dbinv.DomainID,
-		},
+		InvitedBy:   dbinv.InvitedBy,
+		UserID:      dbinv.UserID,
+		DomainID:    dbinv.DomainID,
 		Token:       dbinv.Token,
 		Relation:    dbinv.Relation,
 		CreatedAt:   dbinv.CreatedAt,

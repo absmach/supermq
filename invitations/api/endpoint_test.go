@@ -76,7 +76,7 @@ func TestSendInvitation(t *testing.T) {
 		{
 			desc:        "valid request",
 			token:       validToken,
-			data:        fmt.Sprintf(`{"invited_user" :{"id" : "%s"}, "domain" : {"id" : "%s"}, "relation" : "%s"}`, validID, validID, "domain"),
+			data:        fmt.Sprintf(`{"user_id": "%s", "domain_id": "%s", "relation": "%s"}`, validID, validID, "domain"),
 			status:      http.StatusCreated,
 			contentType: validContenType,
 			svcErr:      nil,
@@ -84,7 +84,7 @@ func TestSendInvitation(t *testing.T) {
 		{
 			desc:        "invalid token",
 			token:       "",
-			data:        fmt.Sprintf(`{"invited_user" :{"id" : "%s"}, "domain" : {"id" : "%s"}, "relation" : "%s"}`, validID, validID, "domain"),
+			data:        fmt.Sprintf(`{"user_id": "%s", "domain_id": "%s", "relation": "%s"}`, validID, validID, "domain"),
 			status:      http.StatusUnauthorized,
 			contentType: validContenType,
 			svcErr:      nil,
@@ -92,7 +92,7 @@ func TestSendInvitation(t *testing.T) {
 		{
 			desc:        "invalid content type",
 			token:       validToken,
-			data:        fmt.Sprintf(`{"invited_user" :{"id" : "%s"}, "domain" : {"id" : "%s"}, "relation" : "%s"}`, validID, validID, "domain"),
+			data:        fmt.Sprintf(`{"user_id": "%s", "domain_id": "%s", "relation": "%s"}`, validID, validID, "domain"),
 			status:      http.StatusUnsupportedMediaType,
 			contentType: "text/plain",
 			svcErr:      nil,
@@ -108,7 +108,7 @@ func TestSendInvitation(t *testing.T) {
 		{
 			desc:        "with service error",
 			token:       validToken,
-			data:        fmt.Sprintf(`{"invited_user" :{"id" : "%s"}, "domain" : {"id" : "%s"}, "relation" : "%s"}`, validID, validID, "domain"),
+			data:        fmt.Sprintf(`{"user_id": "%s", "domain_id": "%s", "relation": "%s"}`, validID, validID, "domain"),
 			status:      http.StatusForbidden,
 			contentType: validContenType,
 			svcErr:      svcerr.ErrAuthorization,

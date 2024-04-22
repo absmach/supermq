@@ -40,7 +40,7 @@ func (svc *service) SendInvitation(ctx context.Context, token string, invitation
 	if err != nil {
 		return err
 	}
-	invitation.InvitedBy.ID = user.GetUserId()
+	invitation.InvitedBy = user.GetUserId()
 
 	domainUserId := auth.EncodeDomainUserID(invitation.DomainID, invitation.UserID)
 	if err := svc.authorize(ctx, domainUserId, auth.MembershipPermission, auth.DomainType, invitation.DomainID); err == nil {
@@ -52,7 +52,7 @@ func (svc *service) SendInvitation(ctx context.Context, token string, invitation
 		return err
 	}
 
-	joinToken, err := svc.auth.Issue(ctx, &magistrala.IssueReq{UserId: user.GetUserId(), DomainId: &invitation.Domain.ID, Type: uint32(auth.InvitationKey)})
+	joinToken, err := svc.auth.Issue(ctx, &magistrala.IssueReq{UserId: user.GetUserId(), DomainId: &invitation.DomainID, Type: uint32(auth.InvitationKey)})
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,6 @@ func (svc *service) ViewInvitation(ctx context.Context, token, userID, domainID 
 	if err != nil {
 		return Invitation{}, err
 	}
-
 	inv, err := svc.repo.Retrieve(ctx, userID, domainID)
 	if err != nil {
 		return Invitation{}, err
@@ -85,7 +84,7 @@ func (svc *service) ViewInvitation(ctx context.Context, token, userID, domainID 
 		return inv, nil
 	}
 
-	if inv.InvitedBy.ID == user.GetUserId() {
+	if inv.InvitedBy == user.GetUserId() {
 		return inv, nil
 	}
 
@@ -130,12 +129,12 @@ func (svc *service) AcceptInvitation(ctx context.Context, token, domainID string
 		return err
 	}
 
-	if inv.User.ID == user.GetUserId() && inv.ConfirmedAt.IsZero() {
+	if inv.UserID == user.GetUserId() && inv.ConfirmedAt.IsZero() {
 		req := mgsdk.UsersRelationRequest{
 			Relation: inv.Relation,
 			UserIDs:  []string{user.GetUserId()},
 		}
-		if sdkerr := svc.sdk.AddUserToDomain(inv.Domain.ID, req, inv.Token); sdkerr != nil {
+		if sdkerr := svc.sdk.AddUserToDomain(inv.DomainID, req, inv.Token); sdkerr != nil {
 			return sdkerr
 		}
 
@@ -163,7 +162,7 @@ func (svc *service) DeleteInvitation(ctx context.Context, token, userID, domainI
 		return err
 	}
 
-	if inv.InvitedBy.ID == user.GetUserId() {
+	if inv.InvitedBy == user.GetUserId() {
 		return svc.repo.Delete(ctx, userID, domainID)
 	}
 

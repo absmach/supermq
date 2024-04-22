@@ -43,15 +43,9 @@ func TestInvitationCreate(t *testing.T) {
 		{
 			desc: "add new invitation successfully",
 			invitation: invitations.Invitation{
-				InvitedBy: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				User: invitations.Entity{
-					ID: userID,
-				},
-				Domain: invitations.Entity{
-					ID: domainID,
-				},
+				InvitedBy: testsutil.GenerateUUID(t),
+				UserID:    userID,
+				DomainID:  domainID,
 				Token:     validToken,
 				Relation:  relation,
 				CreatedAt: time.Now(),
@@ -61,15 +55,9 @@ func TestInvitationCreate(t *testing.T) {
 		{
 			desc: "add new invitation with an confirmed_at date",
 			invitation: invitations.Invitation{
-				InvitedBy: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				User: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				Domain: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
+				InvitedBy:   testsutil.GenerateUUID(t),
+				UserID:      testsutil.GenerateUUID(t),
+				DomainID:    testsutil.GenerateUUID(t),
 				Token:       validToken,
 				Relation:    relation,
 				CreatedAt:   time.Now(),
@@ -80,15 +68,9 @@ func TestInvitationCreate(t *testing.T) {
 		{
 			desc: "add invitation with duplicate invitation",
 			invitation: invitations.Invitation{
-				InvitedBy: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				User: invitations.Entity{
-					ID: userID,
-				},
-				Domain: invitations.Entity{
-					ID: domainID,
-				},
+				InvitedBy: testsutil.GenerateUUID(t),
+				UserID:    userID,
+				DomainID:  domainID,
 				Token:     validToken,
 				Relation:  relation,
 				CreatedAt: time.Now(),
@@ -98,15 +80,9 @@ func TestInvitationCreate(t *testing.T) {
 		{
 			desc: "add invitation with invalid invitation invited_by",
 			invitation: invitations.Invitation{
-				InvitedBy: invitations.Entity{
-					ID: invalidUUID,
-				},
-				User: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				Domain: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
+				InvitedBy: invalidUUID,
+				UserID:    testsutil.GenerateUUID(t),
+				DomainID:  testsutil.GenerateUUID(t),
 				Token:     validToken,
 				Relation:  relation,
 				CreatedAt: time.Now(),
@@ -116,15 +92,9 @@ func TestInvitationCreate(t *testing.T) {
 		{
 			desc: "add invitation with invalid invitation relation",
 			invitation: invitations.Invitation{
-				InvitedBy: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				User: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				Domain: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
+				InvitedBy: testsutil.GenerateUUID(t),
+				UserID:    testsutil.GenerateUUID(t),
+				DomainID:  testsutil.GenerateUUID(t),
 				Token:     validToken,
 				Relation:  strings.Repeat("a", 255),
 				CreatedAt: time.Now(),
@@ -134,15 +104,9 @@ func TestInvitationCreate(t *testing.T) {
 		{
 			desc: "add invitation with invalid invitation domain",
 			invitation: invitations.Invitation{
-				InvitedBy: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				User: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				Domain: invitations.Entity{
-					ID: invalidUUID,
-				},
+				InvitedBy: testsutil.GenerateUUID(t),
+				UserID:    testsutil.GenerateUUID(t),
+				DomainID:  invalidUUID,
 				Token:     validToken,
 				Relation:  relation,
 				CreatedAt: time.Now(),
@@ -152,15 +116,9 @@ func TestInvitationCreate(t *testing.T) {
 		{
 			desc: "add invitation with invalid invitation user id",
 			invitation: invitations.Invitation{
-				InvitedBy: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				User: invitations.Entity{
-					ID: invalidUUID,
-				},
-				Domain: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
+				InvitedBy: testsutil.GenerateUUID(t),
+				UserID:    invalidUUID,
+				DomainID:  testsutil.GenerateUUID(t),
 				Token:     validToken,
 				Relation:  relation,
 				CreatedAt: time.Now(),
@@ -170,12 +128,8 @@ func TestInvitationCreate(t *testing.T) {
 		{
 			desc: "add invitation with empty invitation domain",
 			invitation: invitations.Invitation{
-				InvitedBy: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				User: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
+				InvitedBy: testsutil.GenerateUUID(t),
+				UserID:    testsutil.GenerateUUID(t),
 				Token:     validToken,
 				Relation:  relation,
 				CreatedAt: time.Now(),
@@ -185,12 +139,8 @@ func TestInvitationCreate(t *testing.T) {
 		{
 			desc: "add invitation with empty invitation user id",
 			invitation: invitations.Invitation{
-				InvitedBy: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				Domain: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
+				InvitedBy: testsutil.GenerateUUID(t),
+				DomainID:  testsutil.GenerateUUID(t),
 				Token:     validToken,
 				Relation:  relation,
 				CreatedAt: time.Now(),
@@ -200,12 +150,8 @@ func TestInvitationCreate(t *testing.T) {
 		{
 			desc: "add invitation with empty invitation invited_by",
 			invitation: invitations.Invitation{
-				User: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				Domain: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
+				DomainID:  testsutil.GenerateUUID(t),
+				UserID:    testsutil.GenerateUUID(t),
 				Token:     validToken,
 				Relation:  relation,
 				CreatedAt: time.Now(),
@@ -215,15 +161,9 @@ func TestInvitationCreate(t *testing.T) {
 		{
 			desc: "add invitation with empty invitation token",
 			invitation: invitations.Invitation{
-				InvitedBy: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				User: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				Domain: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
+				InvitedBy: testsutil.GenerateUUID(t),
+				DomainID:  testsutil.GenerateUUID(t),
+				UserID:    testsutil.GenerateUUID(t),
 				Relation:  relation,
 				CreatedAt: time.Now(),
 			},
@@ -248,15 +188,9 @@ func TestInvitationRetrieve(t *testing.T) {
 	repo := postgres.NewRepository(database)
 
 	invitation := invitations.Invitation{
-		InvitedBy: invitations.Entity{
-			ID: testsutil.GenerateUUID(t),
-		},
-		User: invitations.Entity{
-			ID: testsutil.GenerateUUID(t),
-		},
-		Domain: invitations.Entity{
-			ID: testsutil.GenerateUUID(t),
-		},
+		InvitedBy: testsutil.GenerateUUID(t),
+		UserID:    testsutil.GenerateUUID(t),
+		DomainID:  testsutil.GenerateUUID(t),
 		Token:     validToken,
 		Relation:  relation,
 		CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
@@ -273,21 +207,21 @@ func TestInvitationRetrieve(t *testing.T) {
 	}{
 		{
 			desc:     "retrieve invitations successfully",
-			userID:   invitation.User.ID,
-			domainID: invitation.Domain.ID,
+			userID:   invitation.UserID,
+			domainID: invitation.DomainID,
 			response: invitation,
 			err:      nil,
 		},
 		{
 			desc:     "retrieve invitations with invalid invitation user id",
 			userID:   testsutil.GenerateUUID(t),
-			domainID: invitation.Domain.ID,
+			domainID: invitation.DomainID,
 			response: invitations.Invitation{},
 			err:      repoerr.ErrNotFound,
 		},
 		{
 			desc:     "retrieve invitations with invalid invitation domain_id",
-			userID:   invitation.User.ID,
+			userID:   invitation.UserID,
 			domainID: testsutil.GenerateUUID(t),
 			response: invitations.Invitation{},
 			err:      repoerr.ErrNotFound,
@@ -302,13 +236,13 @@ func TestInvitationRetrieve(t *testing.T) {
 		{
 			desc:     "retrieve invitations with empty invitation user id",
 			userID:   "",
-			domainID: invitation.Domain.ID,
+			domainID: invitation.DomainID,
 			response: invitations.Invitation{},
 			err:      repoerr.ErrNotFound,
 		},
 		{
 			desc:     "retrieve invitations with empty invitation domain_id",
-			userID:   invitation.User.ID,
+			userID:   invitation.UserID,
 			domainID: "",
 			response: invitations.Invitation{},
 			err:      repoerr.ErrNotFound,
@@ -340,15 +274,9 @@ func TestInvitationRetrieveAll(t *testing.T) {
 	var items []invitations.Invitation
 	for i := 0; i < num; i++ {
 		invitation := invitations.Invitation{
-			InvitedBy: invitations.Entity{
-				ID: testsutil.GenerateUUID(t),
-			},
-			User: invitations.Entity{
-				ID: testsutil.GenerateUUID(t),
-			},
-			Domain: invitations.Entity{
-				ID: testsutil.GenerateUUID(t),
-			},
+			InvitedBy: testsutil.GenerateUUID(t),
+			UserID:    testsutil.GenerateUUID(t),
+			DomainID:  testsutil.GenerateUUID(t),
 			Token:     validToken,
 			Relation:  fmt.Sprintf("%s-%d", relation, i),
 			CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
@@ -477,7 +405,7 @@ func TestInvitationRetrieveAll(t *testing.T) {
 		{
 			desc: "retrieve invitations with domain",
 			page: invitations.Page{
-				DomainID: items[0].Domain.ID,
+				DomainID: items[0].DomainID,
 				Offset:   0,
 				Limit:    10,
 			},
@@ -491,7 +419,7 @@ func TestInvitationRetrieveAll(t *testing.T) {
 		{
 			desc: "retrieve invitations with user id",
 			page: invitations.Page{
-				UserID: items[0].User.ID,
+				UserID: items[0].UserID,
 				Offset: 0,
 				Limit:  10,
 			},
@@ -505,7 +433,7 @@ func TestInvitationRetrieveAll(t *testing.T) {
 		{
 			desc: "retrieve invitations with invited_by",
 			page: invitations.Page{
-				InvitedBy: items[0].InvitedBy.ID,
+				InvitedBy: items[0].InvitedBy,
 				Offset:    0,
 				Limit:     10,
 			},
@@ -519,7 +447,7 @@ func TestInvitationRetrieveAll(t *testing.T) {
 		{
 			desc: "retrieve invitations with invited_by_or_user_id",
 			page: invitations.Page{
-				InvitedByOrUserID: items[0].User.ID,
+				InvitedByOrUserID: items[0].UserID,
 				Offset:            0,
 				Limit:             10,
 			},
@@ -547,8 +475,8 @@ func TestInvitationRetrieveAll(t *testing.T) {
 		{
 			desc: "retrieve invitations with domain_id and user id",
 			page: invitations.Page{
-				DomainID: items[0].Domain.ID,
-				UserID:   items[0].User.ID,
+				DomainID: items[0].DomainID,
+				UserID:   items[0].UserID,
 				Offset:   0,
 				Limit:    10,
 			},
@@ -562,8 +490,8 @@ func TestInvitationRetrieveAll(t *testing.T) {
 		{
 			desc: "retrieve invitations with domain_id and invited_by",
 			page: invitations.Page{
-				DomainID:  items[0].Domain.ID,
-				InvitedBy: items[0].InvitedBy.ID,
+				DomainID:  items[0].DomainID,
+				InvitedBy: items[0].InvitedBy,
 				Offset:    0,
 				Limit:     10,
 			},
@@ -577,8 +505,8 @@ func TestInvitationRetrieveAll(t *testing.T) {
 		{
 			desc: "retrieve invitations with user id and invited_by",
 			page: invitations.Page{
-				UserID:    items[0].User.ID,
-				InvitedBy: items[0].InvitedBy.ID,
+				UserID:    items[0].UserID,
+				InvitedBy: items[0].InvitedBy,
 				Offset:    0,
 				Limit:     10,
 			},
@@ -592,9 +520,9 @@ func TestInvitationRetrieveAll(t *testing.T) {
 		{
 			desc: "retrieve invitations with domain_id, user id and invited_by",
 			page: invitations.Page{
-				DomainID:  items[0].Domain.ID,
-				UserID:    items[0].User.ID,
-				InvitedBy: items[0].InvitedBy.ID,
+				DomainID:  items[0].DomainID,
+				UserID:    items[0].UserID,
+				InvitedBy: items[0].InvitedBy,
 				Offset:    0,
 				Limit:     10,
 			},
@@ -608,9 +536,9 @@ func TestInvitationRetrieveAll(t *testing.T) {
 		{
 			desc: "retrieve invitations with domain_id, user id, invited_by and relation",
 			page: invitations.Page{
-				DomainID:  items[0].Domain.ID,
-				UserID:    items[0].User.ID,
-				InvitedBy: items[0].InvitedBy.ID,
+				DomainID:  items[0].DomainID,
+				UserID:    items[0].UserID,
+				InvitedBy: items[0].InvitedBy,
 				Relation:  relation + "-0",
 				Offset:    0,
 				Limit:     10,
@@ -725,15 +653,9 @@ func TestInvitationUpdateToken(t *testing.T) {
 	repo := postgres.NewRepository(database)
 
 	invitation := invitations.Invitation{
-		InvitedBy: invitations.Entity{
-			ID: testsutil.GenerateUUID(t),
-		},
-		User: invitations.Entity{
-			ID: testsutil.GenerateUUID(t),
-		},
-		Domain: invitations.Entity{
-			ID: testsutil.GenerateUUID(t),
-		},
+		InvitedBy: testsutil.GenerateUUID(t),
+		UserID:    testsutil.GenerateUUID(t),
+		DomainID:  testsutil.GenerateUUID(t),
 		Token:     validToken,
 		CreatedAt: time.Now(),
 	}
@@ -748,12 +670,8 @@ func TestInvitationUpdateToken(t *testing.T) {
 		{
 			desc: "update invitation successfully",
 			invitation: invitations.Invitation{
-				User: invitations.Entity{
-					ID: invitation.User.ID,
-				},
-				Domain: invitations.Entity{
-					ID: invitation.Domain.ID,
-				},
+				DomainID:  invitation.DomainID,
+				UserID:    invitation.UserID,
 				Token:     validToken,
 				UpdatedAt: time.Now(),
 			},
@@ -762,12 +680,8 @@ func TestInvitationUpdateToken(t *testing.T) {
 		{
 			desc: "update invitation with invalid user id",
 			invitation: invitations.Invitation{
-				User: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				Domain: invitations.Entity{
-					ID: invitation.Domain.ID,
-				},
+				UserID:    testsutil.GenerateUUID(t),
+				DomainID:  invitation.DomainID,
 				Token:     validToken,
 				UpdatedAt: time.Now(),
 			},
@@ -776,12 +690,8 @@ func TestInvitationUpdateToken(t *testing.T) {
 		{
 			desc: "update invitation with invalid domain_id",
 			invitation: invitations.Invitation{
-				User: invitations.Entity{
-					ID: invitation.User.ID,
-				},
-				Domain: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
+				UserID:    invitation.UserID,
+				DomainID:  testsutil.GenerateUUID(t),
 				Token:     validToken,
 				UpdatedAt: time.Now(),
 			},
@@ -802,15 +712,9 @@ func TestInvitationUpdateConfirmation(t *testing.T) {
 	repo := postgres.NewRepository(database)
 
 	invitation := invitations.Invitation{
-		InvitedBy: invitations.Entity{
-			ID: testsutil.GenerateUUID(t),
-		},
-		User: invitations.Entity{
-			ID: testsutil.GenerateUUID(t),
-		},
-		Domain: invitations.Entity{
-			ID: testsutil.GenerateUUID(t),
-		},
+		InvitedBy: testsutil.GenerateUUID(t),
+		UserID:    testsutil.GenerateUUID(t),
+		DomainID:  testsutil.GenerateUUID(t),
 		Token:     validToken,
 		CreatedAt: time.Now(),
 	}
@@ -825,12 +729,8 @@ func TestInvitationUpdateConfirmation(t *testing.T) {
 		{
 			desc: "update invitation successfully",
 			invitation: invitations.Invitation{
-				User: invitations.Entity{
-					ID: invitation.User.ID,
-				},
-				Domain: invitations.Entity{
-					ID: invitation.Domain.ID,
-				},
+				DomainID:    invitation.DomainID,
+				UserID:      invitation.UserID,
 				ConfirmedAt: time.Now(),
 			},
 			err: nil,
@@ -838,12 +738,8 @@ func TestInvitationUpdateConfirmation(t *testing.T) {
 		{
 			desc: "update invitation with invalid user id",
 			invitation: invitations.Invitation{
-				User: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				Domain: invitations.Entity{
-					ID: invitation.User.ID,
-				},
+				UserID:      testsutil.GenerateUUID(t),
+				DomainID:    invitation.UserID,
 				ConfirmedAt: time.Now(),
 			},
 			err: repoerr.ErrNotFound,
@@ -851,12 +747,8 @@ func TestInvitationUpdateConfirmation(t *testing.T) {
 		{
 			desc: "update invitation with invalid domain",
 			invitation: invitations.Invitation{
-				User: invitations.Entity{
-					ID: invitation.User.ID,
-				},
-				Domain: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
+				UserID:      invitation.UserID,
+				DomainID:    testsutil.GenerateUUID(t),
 				ConfirmedAt: time.Now(),
 			},
 			err: repoerr.ErrNotFound,
@@ -876,15 +768,9 @@ func TestInvitationDelete(t *testing.T) {
 	repo := postgres.NewRepository(database)
 
 	invitation := invitations.Invitation{
-		User: invitations.Entity{
-			ID: testsutil.GenerateUUID(t),
-		},
-		Domain: invitations.Entity{
-			ID: testsutil.GenerateUUID(t),
-		},
-		InvitedBy: invitations.Entity{
-			ID: testsutil.GenerateUUID(t),
-		},
+		InvitedBy: testsutil.GenerateUUID(t),
+		UserID:    testsutil.GenerateUUID(t),
+		DomainID:  testsutil.GenerateUUID(t),
 		Token:     validToken,
 		CreatedAt: time.Now(),
 	}
@@ -899,24 +785,16 @@ func TestInvitationDelete(t *testing.T) {
 		{
 			desc: "delete invitation successfully",
 			invitation: invitations.Invitation{
-				User: invitations.Entity{
-					ID: invitation.User.ID,
-				},
-				Domain: invitations.Entity{
-					ID: invitation.Domain.ID,
-				},
+				UserID:   invitation.UserID,
+				DomainID: invitation.DomainID,
 			},
 			err: nil,
 		},
 		{
 			desc: "delete invitation with invalid invitation id",
 			invitation: invitations.Invitation{
-				User: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
-				Domain: invitations.Entity{
-					ID: testsutil.GenerateUUID(t),
-				},
+				UserID:   testsutil.GenerateUUID(t),
+				DomainID: testsutil.GenerateUUID(t),
 			},
 			err: repoerr.ErrNotFound,
 		},
@@ -927,7 +805,7 @@ func TestInvitationDelete(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		err := repo.Delete(context.Background(), tc.invitation.User.ID, tc.invitation.Domain.ID)
+		err := repo.Delete(context.Background(), tc.invitation.UserID, tc.invitation.DomainID)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
