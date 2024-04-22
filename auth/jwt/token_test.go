@@ -93,9 +93,9 @@ func TestIssue(t *testing.T) {
 			key: auth.Key{
 				ID:       testsutil.GenerateUUID(t),
 				Type:     auth.AccessKey,
-				Subject:  testsutil.GenerateUUID(t),
+				Subject:  "",
 				User:     testsutil.GenerateUUID(t),
-				Domain:   "",
+				Domain:   testsutil.GenerateUUID(t),
 				IssuedAt: time.Now().Add(-10 * time.Second).Round(time.Second),
 			},
 			err: nil,
@@ -187,6 +187,18 @@ func TestParse(t *testing.T) {
 			key:   auth.Key{},
 			token: newToken(issuerName, key()),
 			err:   authjwt.ErrJSONHandle,
+		},
+		{
+			desc:  "parse token with empty domain",
+			key:   newKey,
+			token: newToken(issuerName, newKey),
+			err:   svcerr.ErrAuthentication,
+		},
+		{
+			desc:  "parse token with empty subject",
+			key:   newKey,
+			token: newToken(issuerName, newKey),
+			err:   svcerr.ErrAuthentication,
 		},
 		{
 			desc:  "parse token with empty domain and subject",
