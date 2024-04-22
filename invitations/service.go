@@ -81,24 +81,6 @@ func (svc *service) ViewInvitation(ctx context.Context, token, userID, domainID 
 	}
 	inv.Token = ""
 
-	client, err := svc.sdk.User(userID, token)
-	if err != nil {
-		return Invitation{}, err
-	}
-	inv.User.Name = client.Name
-
-	domain, err := svc.sdk.Domain(domainID, token)
-	if err != nil {
-		return Invitation{}, err
-	}
-	inv.Domain.Name = domain.Name
-
-	client, err = svc.sdk.User(inv.InvitedBy.ID, token)
-	if err != nil {
-		return Invitation{}, err
-	}
-	inv.InvitedBy.Name = client.Name
-
 	if user.GetUserId() == userID {
 		return inv, nil
 	}
@@ -134,26 +116,7 @@ func (svc *service) ListInvitations(ctx context.Context, token string, page Page
 
 	page.InvitedByOrUserID = user.GetUserId()
 
-	invs, err := svc.repo.RetrieveAll(ctx, page)
-	if err != nil {
-		return InvitationPage{}, err
-	}
-
-	for _, invitation := range invs.Invitations {
-		client, err := svc.sdk.User(invitation.InvitedBy.ID, token)
-		if err != nil {
-			return InvitationPage{}, err
-		}
-		invitation.InvitedBy.Name = client.Name
-
-		client, err = svc.sdk.User(invitation.User.ID, token)
-		if err != nil {
-			return InvitationPage{}, err
-		}
-		invitation.InvitedBy.Name = client.Name
-	}
-
-	return invs, nil
+	return svc.repo.RetrieveAll(ctx, page)
 }
 
 func (svc *service) AcceptInvitation(ctx context.Context, token, domainID string) error {
