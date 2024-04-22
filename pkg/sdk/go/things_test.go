@@ -638,7 +638,7 @@ func TestThing(t *testing.T) {
 			response: sdk.Thing{},
 			token:    invalidToken,
 			thingID:  generateUUID(t),
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusUnprocessableEntity),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
 			desc:     "view thing with valid token and invalid thing id",
@@ -652,7 +652,7 @@ func TestThing(t *testing.T) {
 			response: sdk.Thing{},
 			token:    invalidToken,
 			thingID:  wrongID,
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusUnprocessableEntity),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 	}
 

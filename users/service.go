@@ -143,36 +143,27 @@ func (svc service) RefreshToken(ctx context.Context, refreshToken, domainID stri
 }
 
 func (svc service) ViewClient(ctx context.Context, token, id string) (mgclients.Client, error) {
-	var basicInfo mgclients.Client
 	tokenUserID, err := svc.Identify(ctx, token)
 	if err != nil {
 		return mgclients.Client{}, err
 	}
 
-	if tokenUserID != id {
-		if err := svc.checkSuperAdmin(ctx, tokenUserID); err == nil {
-			client, err := svc.clients.RetrieveByID(ctx, id)
-			if err != nil {
-				return mgclients.Client{}, errors.Wrap(svcerr.ErrViewEntity, err)
-			}
-			client.Credentials.Secret = ""
-			return client, nil
-		}
-
-		client, clientErr := svc.clients.RetrieveByID(ctx, id)
-		if clientErr != nil {
-			return mgclients.Client{}, errors.Wrap(svcerr.ErrViewEntity, clientErr)
-		}
-
-		basicInfo.Name = client.Name
-		basicInfo.ID = client.ID
-
-		return basicInfo, nil
-	}
 	client, err := svc.clients.RetrieveByID(ctx, id)
 	if err != nil {
 		return mgclients.Client{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
+
+	if tokenUserID != id {
+		if err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
+			client, clientErr := svc.clients.RetrieveByID(ctx, id)
+			if clientErr != nil {
+				return mgclients.Client{}, errors.Wrap(svcerr.ErrViewEntity, clientErr)
+			}
+
+			return mgclients.Client{Name: client.Name, ID: client.ID}, nil
+		}
+	}
+
 	client.Credentials.Secret = ""
 
 	return client, nil

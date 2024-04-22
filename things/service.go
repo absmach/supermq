@@ -128,11 +128,7 @@ func (svc service) CreateThings(ctx context.Context, token string, cls ...mgclie
 func (svc service) ViewClient(ctx context.Context, token, id string) (mgclients.Client, error) {
 	_, err := svc.authorize(ctx, "", auth.UserType, auth.TokenKind, token, auth.ViewPermission, auth.ThingType, id)
 	if err != nil {
-		client, err := svc.clients.RetrieveByID(ctx, id)
-		if err != nil {
-			return mgclients.Client{}, errors.Wrap(svcerr.ErrViewEntity, err)
-		}
-		return mgclients.Client{Name: client.Name}, nil
+		return mgclients.Client{}, errors.Wrap(svcerr.ErrAuthorization, err)
 	}
 	client, err := svc.clients.RetrieveByID(ctx, id)
 	if err != nil {

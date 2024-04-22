@@ -1849,17 +1849,19 @@ func TestRetrieveDomain(t *testing.T) {
 			err:      svcerr.ErrAuthentication,
 		},
 		{
-			desc:     "retrieve domain with empty domainID",
-			token:    accessToken,
-			domainID: "",
-			err:      nil,
+			desc:           "retrieve domain with empty domainID",
+			token:          accessToken,
+			domainID:       "",
+			err:            svcerr.ErrViewEntity,
+			domainRepoErr1: repoerr.ErrNotFound,
 		},
 		{
-			desc:          "retrieve non-existing domain",
-			token:         accessToken,
-			domainID:      inValid,
-			domainRepoErr: repoerr.ErrNotFound,
-			err:           svcerr.ErrAuthorization,
+			desc:           "retrieve non-existing domain",
+			token:          accessToken,
+			domainID:       inValid,
+			domainRepoErr:  repoerr.ErrNotFound,
+			err:            svcerr.ErrViewEntity,
+			domainRepoErr1: repoerr.ErrNotFound,
 		},
 		{
 			desc:           "retrieve domain with failed to retrieve by id",
@@ -1874,13 +1876,11 @@ func TestRetrieveDomain(t *testing.T) {
 		repoCall := drepo.On("RetrieveByID", mock.Anything, groupName).Return(auth.Domain{}, tc.domainRepoErr)
 		repoCall1 := prepo.On("CheckPolicy", mock.Anything, mock.Anything).Return(tc.checkPolicyErr)
 		repoCall2 := drepo.On("RetrieveByID", mock.Anything, tc.domainID).Return(auth.Domain{}, tc.domainRepoErr1)
-		repoCall3 := drepo.On("RetrieveBasicInfoByID", mock.Anything, tc.domainID).Return(auth.Domain{Name: valid}, tc.domainRepoErr1)
 		_, err := svc.RetrieveDomain(context.Background(), tc.token, tc.domainID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
-		repoCall3.Unset()
 	}
 }
 

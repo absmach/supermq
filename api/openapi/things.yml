@@ -207,6 +207,8 @@ paths:
           description: Missing or invalid access token provided.
         "403":
           description: Unauthorized access to thing id.
+        "404":
+          description: Missing thing.
         "500":
           $ref: "#/components/responses/ServiceError"
   /things/{thingID}/tags:
