@@ -37,7 +37,6 @@ func newToken(issuerName string, key auth.Key) string {
 	builder.
 		Issuer(issuerName).
 		IssuedAt(key.IssuedAt).
-		Subject(key.Subject).
 		Claim(tokenType, "r").
 		Expiration(key.ExpiresAt)
 	builder.Claim(userField, key.User)
@@ -147,18 +146,10 @@ func TestParse(t *testing.T) {
 
 	inValidToken := newToken("invalid", key())
 
-	createKeyAndToken := func(domain, subject string) (auth.Key, string) {
-		k := key()
-		k.Domain = domain
-		k.Subject = subject
-		tkn, err := tokenizer.Issue(k)
-		require.Nil(t, err, fmt.Sprintf("issuing key expected to succeed: %s", err))
-		return k, tkn
-	}
-
-	emptyDomainKey, emptyDomainToken := createKeyAndToken("", "subject")
-	emptySubjectKey, emptySubjectToken := createKeyAndToken("domain", "")
-	emptyKey, emptyToken := createKeyAndToken("", "")
+	emptyKey := key()
+	emptyKey.Domain = ""
+	emptyKey.Subject = ""
+	emptyToken, err := tokenizer.Issue(emptyKey)
 
 	cases := []struct {
 		desc  string
@@ -204,14 +195,14 @@ func TestParse(t *testing.T) {
 		},
 		{
 			desc:  "parse token with empty domain",
-			key:   emptyDomainKey,
-			token: emptyDomainToken,
+			key:   emptyKey,
+			token: emptyToken,
 			err:   nil,
 		},
 		{
 			desc:  "parse token with empty subject",
-			key:   emptySubjectKey,
-			token: emptySubjectToken,
+			key:   emptyKey,
+			token: emptyToken,
 			err:   nil,
 		},
 		{
