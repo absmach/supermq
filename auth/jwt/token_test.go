@@ -144,12 +144,23 @@ func TestParse(t *testing.T) {
 	expToken, err := tokenizer.Issue(expKey)
 	require.Nil(t, err, fmt.Sprintf("issuing expired key expected to succeed: %s", err))
 
-	inValidToken := newToken("invalid", key())
+	emptyDomainKey := key()
+	emptyDomainKey.Domain = ""
+	emptyDomainToken, err := tokenizer.Issue(emptyDomainKey)
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+
+	emptySubjectKey := key()
+	emptySubjectKey.Subject = ""
+	emptySubjectToken, err := tokenizer.Issue(emptySubjectKey)
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
 
 	emptyKey := key()
 	emptyKey.Domain = ""
 	emptyKey.Subject = ""
 	emptyToken, err := tokenizer.Issue(emptyKey)
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+
+	inValidToken := newToken("invalid", key())
 
 	cases := []struct {
 		desc  string
@@ -195,14 +206,14 @@ func TestParse(t *testing.T) {
 		},
 		{
 			desc:  "parse token with empty domain",
-			key:   emptyKey,
-			token: emptyToken,
+			key:   emptyDomainKey,
+			token: emptyDomainToken,
 			err:   nil,
 		},
 		{
 			desc:  "parse token with empty subject",
-			key:   emptyKey,
-			token: emptyToken,
+			key:   emptySubjectKey,
+			token: emptySubjectToken,
 			err:   nil,
 		},
 		{
