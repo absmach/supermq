@@ -759,7 +759,7 @@ func (svc service) UnassignUsers(ctx context.Context, token, id string, userIds 
 			}
 		}
 
-		userIds = ids 
+		userIds = ids
 	}
 
 	for _, rel := range []string{MemberRelation, ViewerRelation, EditorRelation} {
