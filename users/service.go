@@ -294,7 +294,7 @@ func (svc service) ResetSecret(ctx context.Context, resetToken, secret string) e
 
 	secret, err = svc.hasher.Hash(secret)
 	if err != nil {
-		return errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return errors.Wrap(svcerr.ErrMalformedEntity, err)
 	}
 	c = mgclients.Client{
 		ID: c.ID,

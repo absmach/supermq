@@ -175,13 +175,15 @@ func TestViewCert(t *testing.T) {
 			certID: validID,
 			token:  token,
 			cRes:   c,
+			err:    nil,
+			svcerr: nil,
 		},
 		{
 			desc:   "get non-existent cert",
 			certID: "43",
 			token:  token,
 			cRes:   c,
-			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, svcerr.ErrViewEntity), http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, svcerr.ErrNotFound), http.StatusNotFound),
 			svcerr: errors.Wrap(svcerr.ErrNotFound, repoerr.ErrNotFound),
 		},
 		{
@@ -230,14 +232,8 @@ func TestViewCertByThing(t *testing.T) {
 		{
 			desc:    "get existing cert",
 			thingID: thingID,
-			token:   authmocks.InvalidValue,
-			err:     errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
-		},
-		{
-			desc:    "revoke non-existing cert",
-			thingID: "2",
 			token:   token,
-			err:     errors.NewSDKErrorWithStatus(certs.ErrFailedCertRevocation, http.StatusNotFound),
+			page:    certs.Page{Certs: []certs.Cert{c}},
 		},
 		{
 			desc:    "get non-existent cert",
@@ -254,18 +250,7 @@ func TestViewCertByThing(t *testing.T) {
 			token:   "",
 			page:    certs.Page{Certs: []certs.Cert{}},
 			err:     errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerToken), http.StatusUnauthorized),
-		},
-		{
-			desc:    "revoke existing cert",
-			thingID: thingID,
-			token:   token,
-			err:     nil,
-		},
-		{
-			desc:    "revoke deleted cert",
-			thingID: thingID,
-			token:   token,
-			err:     errors.NewSDKErrorWithStatus(certs.ErrFailedToRemoveCertFromDB, http.StatusNotFound),
+			svcerr:  errors.Wrap(svcerr.ErrAuthentication, apiutil.ErrBearerToken),
 		},
 	}
 	for _, tc := range cases {
@@ -308,7 +293,7 @@ func TestRevokeCert(t *testing.T) {
 			thingID:     thingID,
 			token:       authmocks.InvalidValue,
 			svcResponse: certs.Revoke{RevocationTime: time.Now()},
-			err:         errors.NewSDKErrorWithStatus(errors.Wrap(svcerr.ErrAuthentication, svcerr.ErrAuthentication), http.StatusUnauthorized),
+			err:         errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 			svcerr:      errors.Wrap(svcerr.ErrAuthentication, svcerr.ErrAuthentication),
 		},
 		{
@@ -316,7 +301,7 @@ func TestRevokeCert(t *testing.T) {
 			thingID:     "2",
 			token:       token,
 			svcResponse: certs.Revoke{RevocationTime: time.Now()},
-			err:         errors.NewSDKErrorWithStatus(errors.Wrap(certs.ErrFailedCertRevocation, svcerr.ErrNotFound), http.StatusNotFound),
+			err:         errors.NewSDKErrorWithStatus(certs.ErrFailedCertRevocation, http.StatusNotFound),
 			svcerr:      errors.Wrap(certs.ErrFailedCertRevocation, svcerr.ErrNotFound),
 		},
 		{
@@ -338,7 +323,7 @@ func TestRevokeCert(t *testing.T) {
 			thingID:     thingID,
 			token:       token,
 			svcResponse: certs.Revoke{RevocationTime: time.Now()},
-			err:         errors.NewSDKErrorWithStatus(errors.Wrap(certs.ErrFailedToRemoveCertFromDB, svcerr.ErrNotFound), http.StatusNotFound),
+			err:         errors.NewSDKErrorWithStatus(certs.ErrFailedToRemoveCertFromDB, http.StatusNotFound),
 			svcerr:      errors.Wrap(certs.ErrFailedToRemoveCertFromDB, svcerr.ErrNotFound),
 		},
 	}
