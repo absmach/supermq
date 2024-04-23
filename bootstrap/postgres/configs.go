@@ -28,6 +28,7 @@ var (
 	errSaveConnections = errors.New("failed to insert connections to database")
 	errUpdateChannels  = errors.New("failed to update channels in bootstrap configuration database")
 	errRemoveChannels  = errors.New("failed to remove channels from bootstrap configuration in database")
+	errConnectThing    = errors.New("failed to connect thing in bootstrap configuration in database")
 	errDisconnectThing = errors.New("failed to disconnect thing in bootstrap configuration in database")
 )
 
@@ -59,27 +60,33 @@ func (cr configRepository) Save(ctx context.Context, cfg bootstrap.Config, chsCo
 	dbcfg := toDBConfig(cfg)
 
 	if _, err := tx.NamedExec(q, dbcfg); err != nil {
-		e := err
 		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == pgerrcode.UniqueViolation {
-			e = repoerr.ErrConflict
+			err = repoerr.ErrConflict
 		}
 
-		cr.rollback("Failed to insert a Config", tx)
-		return "", errors.Wrap(repoerr.ErrCreateEntity, e)
+		if errRollback := cr.rollback("failed to insert a Config", tx); errRollback != nil {
+			return "", errors.Wrap(err, errRollback)
+		}
 	}
 
 	if err := insertChannels(ctx, cfg.Owner, cfg.Channels, tx); err != nil {
-		cr.rollback("Failed to insert Channels", tx)
+		if errRollback := cr.rollback("failed to insert Channels", tx); errRollback != nil {
+			return "", errors.Wrap(err, errRollback)
+		}
 		return "", errors.Wrap(errSaveChannels, err)
 	}
 
 	if err := insertConnections(ctx, cfg, chsConnIDs, tx); err != nil {
-		cr.rollback("Failed to insert connections", tx)
+		if errRollback := cr.rollback("failed to insert connections", tx); errRollback != nil {
+			return "", errors.Wrap(err, errRollback)
+		}
 		return "", errors.Wrap(errSaveConnections, err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		cr.rollback("Failed to commit Config save", tx)
+		if errRollback := cr.rollback("failed to commit Config save", tx); errRollback != nil {
+			return "", errors.Wrap(err, errRollback)
+		}
 		return "", err
 	}
 
@@ -314,7 +321,9 @@ func (cr configRepository) UpdateConnections(ctx context.Context, owner, id stri
 	}
 
 	if err := insertChannels(ctx, owner, channels, tx); err != nil {
-		cr.rollback("Failed to insert Channels during the update", tx)
+		if rollbackErr := cr.rollback("failed to insert Channels during the update", tx); rollbackErr != nil {
+			return err
+		}
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
@@ -324,12 +333,16 @@ func (cr configRepository) UpdateConnections(ctx context.Context, owner, id stri
 				return repoerr.ErrNotFound
 			}
 		}
-		cr.rollback("Failed to update connections during the update", tx)
+		if errRollback := cr.rollback("failed to update connections during the update", tx); errRollback != nil {
+			return errors.Wrap(err, errRollback)
+		}
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		cr.rollback("Failed to commit Config update", tx)
+		if errRollback := cr.rollback("failed to commit Config update", tx); errRollback != nil {
+			return errors.Wrap(err, errRollback)
+		}
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
@@ -451,10 +464,19 @@ func (cr configRepository) RemoveChannel(ctx context.Context, id string) error {
 	return nil
 }
 
-func (cr configRepository) DisconnectThing(ctx context.Context, channelID, thingID string) error {
+func (cr configRepository) ConnectThing(ctx context.Context, mgChannel, mgThing string) error {
 	q := `UPDATE configs SET state = $1 WHERE EXISTS (
 		SELECT 1 FROM connections WHERE config_id = $2 AND channel_id = $3)`
-	if _, err := cr.db.ExecContext(ctx, q, bootstrap.Inactive, thingID, channelID); err != nil {
+	if _, err := cr.db.ExecContext(ctx, q, bootstrap.Active, mgThing, mgChannel); err != nil {
+		return errors.Wrap(errConnectThing, err)
+	}
+	return nil
+}
+
+func (cr configRepository) DisconnectThing(ctx context.Context, mgChannel, mgThing string) error {
+	q := `UPDATE configs SET state = $1 WHERE EXISTS (
+		SELECT 1 FROM connections WHERE config_id = $2 AND channel_id = $3)`
+	if _, err := cr.db.ExecContext(ctx, q, bootstrap.Inactive, mgThing, mgChannel); err != nil {
 		return errors.Wrap(errDisconnectThing, err)
 	}
 	return nil
@@ -483,10 +505,13 @@ func (cr configRepository) retrieveAll(owner string, filter bootstrap.Filter) (s
 	return fmt.Sprintf(template, f), params
 }
 
-func (cr configRepository) rollback(content string, tx *sqlx.Tx) {
+func (cr configRepository) rollback(content string, tx *sqlx.Tx) error {
+	errMsg := errors.New(content)
 	if err := tx.Rollback(); err != nil {
-		cr.log.Error(fmt.Sprintf("Failed to rollback due to %s", err))
+		errRollback := errors.New("failed to rollback")
+		return errors.Wrap(errMsg, errors.Wrap(errRollback, err))
 	}
+	return errMsg
 }
 
 func insertChannels(_ context.Context, owner string, channels []bootstrap.Channel, tx *sqlx.Tx) error {

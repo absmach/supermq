@@ -112,7 +112,11 @@ type ConfigRepository interface {
 	// RemoveChannel removes channel with the given ID.
 	RemoveChannel(ctx context.Context, id string) error
 
+	// ConnectHandler changes state of the Config when the corresponding Thing is
+	// connected to the Channel.
+	ConnectThing(ctx context.Context, mgChannel, mgThing string) error
+
 	// DisconnectHandler changes state of the Config when the corresponding Thing is
 	// disconnected from the Channel.
-	DisconnectThing(ctx context.Context, channelID, thingID string) error
+	DisconnectThing(ctx context.Context, mgChannel, mgThing string) error
 }

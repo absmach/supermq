@@ -23,6 +23,7 @@ const (
 	thingBootstrap         = thingPrefix + "bootstrap"
 	thingStateChange       = thingPrefix + "change_state"
 	thingUpdateConnections = thingPrefix + "update_connections"
+	thingConnect           = thingPrefix + "connect"
 	thingDisconnect        = thingPrefix + "disconnect"
 
 	channelPrefix        = "group."
@@ -276,15 +277,28 @@ func (uche updateChannelHandlerEvent) Encode() (map[string]interface{}, error) {
 	return val, nil
 }
 
+type connectThingEvent struct {
+	mgThing   string
+	mgChannel string
+}
+
+func (cte connectThingEvent) Encode() (map[string]interface{}, error) {
+	return map[string]interface{}{
+		"thing_id":   cte.mgThing,
+		"channel_id": cte.mgChannel,
+		"operation":  thingConnect,
+	}, nil
+}
+
 type disconnectThingEvent struct {
-	thingID   string
-	channelID string
+	mgThing   string
+	mgChannel string
 }
 
 func (dte disconnectThingEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
-		"thing_id":   dte.thingID,
-		"channel_id": dte.channelID,
+		"thing_id":   dte.mgThing,
+		"channel_id": dte.mgChannel,
 		"operation":  thingDisconnect,
 	}, nil
 }
