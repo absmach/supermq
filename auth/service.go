@@ -759,15 +759,9 @@ func (svc service) UnassignUsers(ctx context.Context, token, id string, userIds 
 			}
 		}
 
-		for _, rel := range []string{MemberRelation, ViewerRelation, EditorRelation} {
-			// Remove only non-admins.
-			if err := svc.removeDomainPolicies(ctx, id, rel, ids...); err != nil {
-				return errors.Wrap(errRemovePolicies, err)
-			}
-		}
+		userIds = ids 
 	}
 
-	// If user is admin, remove all policies from all users.
 	for _, rel := range []string{MemberRelation, ViewerRelation, EditorRelation} {
 		// Remove only non-admins.
 		if err := svc.removeDomainPolicies(ctx, id, rel, userIds...); err != nil {
