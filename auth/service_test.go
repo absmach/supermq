@@ -215,6 +215,7 @@ func TestIssue(t *testing.T) {
 				SubjectType: auth.UserType,
 				ObjectType:  auth.DomainType,
 				Permission:  auth.MembershipPermission,
+				Object:      groupName,
 			},
 			checkPolicyErr:       repoerr.ErrNotFound,
 			retrieveByIDResponse: auth.Domain{},
@@ -253,6 +254,7 @@ func TestIssue(t *testing.T) {
 				Permission:  auth.MembershipPermission,
 			},
 			checkPolicyErr:       svcerr.ErrAuthorization,
+			checkPolicyErr1:      svcerr.ErrAuthorization,
 			retrieveByIDResponse: auth.Domain{Status: auth.EnabledStatus},
 			err:                  svcerr.ErrAuthorization,
 		},
@@ -288,7 +290,7 @@ func TestIssue(t *testing.T) {
 				Permission:  auth.MembershipPermission,
 			},
 			checkPolicyErr:       svcerr.ErrAuthorization,
-			checkPolicyErr1:      nil,
+			checkPolicyErr1:      svcerr.ErrAuthorization,
 			retrieveByIDResponse: auth.Domain{Status: auth.EnabledStatus},
 			err:                  svcerr.ErrAuthorization,
 		},
@@ -443,6 +445,7 @@ func TestIssue(t *testing.T) {
 				Subject:     "mgx_test@example.com",
 				SubjectType: auth.UserType,
 				SubjectKind: "",
+				Object:      groupName,
 				ObjectKind:  "",
 				ObjectType:  auth.DomainType,
 				Permission:  auth.MembershipPermission,
@@ -522,6 +525,7 @@ func TestIssue(t *testing.T) {
 			},
 			checkPolicyRequest1: auth.PolicyReq{
 				SubjectType: auth.UserType,
+				Object:      groupName,
 				ObjectType:  auth.DomainType,
 				Permission:  auth.MembershipPermission,
 			},
@@ -876,8 +880,9 @@ func TestAuthorize(t *testing.T) {
 			checkPolicyReq: auth.PolicyReq{
 				Subject:     id,
 				SubjectType: auth.UserType,
+				Object:      validID,
 				ObjectType:  auth.DomainType,
-				Permission:  auth.AdminPermission,
+				Permission:  auth.MembershipPermission,
 			},
 			checkPolicyReq1: auth.PolicyReq{
 				Subject:     id,
@@ -890,8 +895,9 @@ func TestAuthorize(t *testing.T) {
 			checkPolicyReq2: auth.PolicyReq{
 				Subject:     id,
 				SubjectType: auth.UserType,
+				Object:      validID,
 				ObjectType:  auth.DomainType,
-				Permission:  auth.MembershipPermission,
+				Permission:  auth.AdminPermission,
 			},
 
 			retrieveDomainRes: auth.Domain{
@@ -928,6 +934,7 @@ func TestAuthorize(t *testing.T) {
 			checkPolicyReq2: auth.PolicyReq{
 				Subject:     id,
 				SubjectType: auth.UserType,
+				Object:      validID,
 				ObjectType:  auth.DomainType,
 				Permission:  auth.MembershipPermission,
 			},
@@ -968,6 +975,7 @@ func TestAuthorize(t *testing.T) {
 			checkPolicyReq2: auth.PolicyReq{
 				Subject:     id,
 				SubjectType: auth.UserType,
+				Object:      validID,
 				ObjectType:  auth.DomainType,
 				Permission:  auth.MembershipPermission,
 			},
@@ -1007,6 +1015,7 @@ func TestAuthorize(t *testing.T) {
 			checkPolicyReq2: auth.PolicyReq{
 				Subject:     id,
 				SubjectType: auth.UserType,
+				Object:      validID,
 				ObjectType:  auth.DomainType,
 				Permission:  auth.MembershipPermission,
 			},
@@ -1047,6 +1056,7 @@ func TestAuthorize(t *testing.T) {
 			checkPolicyReq2: auth.PolicyReq{
 				Subject:     id,
 				SubjectType: auth.UserType,
+				Object:      validID,
 				ObjectType:  auth.DomainType,
 				Permission:  auth.MembershipPermission,
 			},
@@ -1080,6 +1090,7 @@ func TestAuthorize(t *testing.T) {
 			checkPolicyReq2: auth.PolicyReq{
 				Subject:     id,
 				SubjectType: auth.UserType,
+				Object:      validID,
 				ObjectType:  auth.DomainType,
 				Permission:  auth.MembershipPermission,
 			},
@@ -1104,6 +1115,7 @@ func TestAuthorize(t *testing.T) {
 			checkPolicyReq2: auth.PolicyReq{
 				Subject:     id,
 				SubjectType: auth.UserType,
+				Object:      validID,
 				ObjectType:  auth.DomainType,
 				Permission:  auth.MembershipPermission,
 			},
@@ -1128,6 +1140,7 @@ func TestAuthorize(t *testing.T) {
 			checkPolicyReq2: auth.PolicyReq{
 				Subject:     id,
 				SubjectType: auth.UserType,
+				Object:      validID,
 				ObjectType:  auth.DomainType,
 				Permission:  auth.MembershipPermission,
 			},
@@ -1153,6 +1166,7 @@ func TestAuthorize(t *testing.T) {
 			checkPolicyReq2: auth.PolicyReq{
 				Subject:     id,
 				SubjectType: auth.UserType,
+				Object:      validID,
 				ObjectType:  auth.DomainType,
 				Permission:  auth.MembershipPermission,
 			},
@@ -1177,6 +1191,7 @@ func TestAuthorize(t *testing.T) {
 			checkPolicyReq2: auth.PolicyReq{
 				Subject:     id,
 				SubjectType: auth.UserType,
+				Object:      validID,
 				ObjectType:  auth.DomainType,
 				Permission:  auth.MembershipPermission,
 			},
@@ -1184,6 +1199,7 @@ func TestAuthorize(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
+		fmt.Println(tc.desc)
 		repoCall := prepo.On("CheckPolicy", mock.Anything, tc.checkPolicyReq).Return(tc.checkPolicyErr)
 		repoCall1 := drepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(tc.retrieveDomainRes, nil)
 		repoCall2 := prepo.On("CheckPolicy", mock.Anything, tc.checkPolicyReq1).Return(tc.checkPolicyErr1)
@@ -1197,7 +1213,7 @@ func TestAuthorize(t *testing.T) {
 		repoCall3.Unset()
 		repoCall4.Unset()
 	}
-
+	fmt.Println("Cases 1 end")
 	cases2 := []struct {
 		desc      string
 		policyReq auth.PolicyReq

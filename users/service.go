@@ -23,7 +23,6 @@ var (
 	errIssueToken            = errors.New("failed to issue token")
 	errUserNotSignedUp       = errors.New("user not signed up")
 	errFailedPermissionsList = errors.New("failed to list permissions")
-	errAddPolicies           = errors.New("failed to add policies")
 	errRecoveryToken         = errors.New("failed to generate password recovery token")
 )
 
@@ -101,7 +100,7 @@ func (svc service) RegisterClient(ctx context.Context, token string, cli mgclien
 func (svc service) IssueToken(ctx context.Context, identity, secret, domainID string) (*magistrala.Token, error) {
 	dbUser, err := svc.clients.RetrieveByIdentity(ctx, identity)
 	if err != nil {
-		return &magistrala.Token{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		return &magistrala.Token{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
 	if err := svc.hasher.Compare(secret, dbUser.Credentials.Secret); err != nil {
 		return &magistrala.Token{}, errors.Wrap(svcerr.ErrLogin, err)
@@ -111,7 +110,13 @@ func (svc service) IssueToken(ctx context.Context, identity, secret, domainID st
 	if domainID != "" {
 		d = domainID
 	}
-	return svc.auth.Issue(ctx, &magistrala.IssueReq{UserId: dbUser.ID, DomainId: &d, Type: uint32(auth.AccessKey)})
+
+	token, err := svc.auth.Issue(ctx, &magistrala.IssueReq{UserId: dbUser.ID, DomainId: &d, Type: uint32(auth.AccessKey)})
+	if err != nil {
+		return &magistrala.Token{}, errors.Wrap(errIssueToken, err)
+	}
+
+	return token, err
 }
 
 func (svc service) RefreshToken(ctx context.Context, refreshToken, domainID string) (*magistrala.Token, error) {
@@ -321,7 +326,7 @@ func (svc service) UpdateClientSecret(ctx context.Context, token, oldSecret, new
 		return mgclients.Client{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	if _, err := svc.IssueToken(ctx, dbClient.Credentials.Identity, oldSecret, ""); err != nil {
-		return mgclients.Client{}, errors.Wrap(errIssueToken, err)
+		return mgclients.Client{}, err
 	}
 	newSecret, err = svc.hasher.Hash(newSecret)
 	if err != nil {
@@ -405,10 +410,10 @@ func (svc service) DisableClient(ctx context.Context, token, id string) (mgclien
 func (svc service) changeClientStatus(ctx context.Context, token string, client mgclients.Client) (mgclients.Client, error) {
 	tokenUserID, err := svc.Identify(ctx, token)
 	if err != nil {
-		return mgclients.Client{}, errors.Wrap(svcerr.ErrAuthentication, err)
+		return mgclients.Client{}, err
 	}
 	if err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
-		return mgclients.Client{}, errors.Wrap(svcerr.ErrAuthorization, err)
+		return mgclients.Client{}, err
 	}
 	dbClient, err := svc.clients.RetrieveByID(ctx, client.ID)
 	if err != nil {
@@ -581,9 +586,9 @@ func (svc service) OAuthCallback(ctx context.Context, state mgoauth2.State, clie
 		rclient, err := svc.RegisterClient(ctx, "", client)
 		if err != nil {
 			if errors.Contains(err, repoerr.ErrConflict) {
-				return &magistrala.Token{}, errors.New("user already exists")
+				return &magistrala.Token{}, errors.Wrap(svcerr.ErrConflict, errors.New("user already exists"))
 			}
-			return &magistrala.Token{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+			return &magistrala.Token{}, err
 		}
 		claims := &magistrala.IssueReq{
 			UserId: rclient.ID,
@@ -625,7 +630,7 @@ func (svc service) addClientPolicy(ctx context.Context, userID string, role mgcl
 	}
 	resp, err := svc.auth.AddPolicies(ctx, &policies)
 	if err != nil {
-		return errors.Wrap(errAddPolicies, err)
+		return errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
 	if !resp.Added {
 		return svcerr.ErrAuthorization
@@ -658,7 +663,7 @@ func (svc service) addClientPolicyRollback(ctx context.Context, userID string, r
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
 	}
 	if !resp.Deleted {
-		return svcerr.ErrDeletePolicies
+		return svcerr.ErrAuthorization
 	}
 	return nil
 }
@@ -674,10 +679,10 @@ func (svc service) updateClientPolicy(ctx context.Context, userID string, role m
 			Object:      auth.MagistralaObject,
 		})
 		if err != nil {
-			return errors.Wrap(errAddPolicies, err)
+			return errors.Wrap(svcerr.ErrAddPolicies, err)
 		}
 		if !resp.Added {
-			return errors.Wrap(svcerr.ErrUpdateEntity, errAddPolicies)
+			return svcerr.ErrAuthorization
 		}
 		return nil
 	case mgclients.UserRole:
@@ -691,10 +696,10 @@ func (svc service) updateClientPolicy(ctx context.Context, userID string, role m
 			Object:      auth.MagistralaObject,
 		})
 		if err != nil {
-			return errors.Wrap(svcerr.ErrUpdateEntity, err)
+			return errors.Wrap(svcerr.ErrDeletePolicies, err)
 		}
 		if !resp.Deleted {
-			return svcerr.ErrUpdateEntity
+			return svcerr.ErrAuthorization
 		}
 		return nil
 	}

@@ -69,7 +69,7 @@ func TestIssueToken(t *testing.T) {
 			login:    sdk.Login{Identity: "invalid", Secret: "secret"},
 			token:    &magistrala.Token{},
 			dbClient: wrongClient,
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
 	}
 	for _, tc := range cases {

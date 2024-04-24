@@ -1024,7 +1024,7 @@ func TestUpdateClientRole(t *testing.T) {
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: true},
 			addPolicyResponse: &magistrala.AddPolicyRes{Added: false},
 			token:             validToken,
-			err:               svcerr.ErrAddPolicies,
+			err:               svcerr.ErrAuthorization,
 		},
 		{
 			desc:              "update client role with failed to add policy",
@@ -1053,7 +1053,7 @@ func TestUpdateClientRole(t *testing.T) {
 			deletePolicyResponse: &magistrala.DeletePolicyRes{Deleted: false},
 			updateRoleResponse:   mgclients.Client{},
 			token:                validToken,
-			err:                  svcerr.ErrUpdateEntity,
+			err:                  svcerr.ErrAuthorization,
 		},
 		{
 			desc:                 "update client role to user role with failed to delete policy with error",
@@ -1063,7 +1063,7 @@ func TestUpdateClientRole(t *testing.T) {
 			updateRoleResponse:   mgclients.Client{},
 			token:                validToken,
 			deletePolicyErr:      svcerr.ErrMalformedEntity,
-			err:                  svcerr.ErrUpdateEntity,
+			err:                  svcerr.ErrDeletePolicies,
 		},
 		{
 			desc:                 "Update client with failed repo update and roll back",
