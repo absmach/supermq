@@ -807,23 +807,15 @@ func (svc service) UnassignUsers(ctx context.Context, token, id string, userIds 
 	}
 	pr.Permission = AdminPermission
 	if err := svc.Authorize(ctx, pr); err != nil {
+		pr.SubjectKind = UsersKind
 		// User is not admin.
-		var ids []string
 		for _, userID := range userIds {
-			if err := svc.Authorize(ctx, PolicyReq{
-				Subject:     userID,
-				SubjectType: UserType,
-				SubjectKind: UsersKind,
-				Permission:  AdminPermission,
-				Object:      id,
-				ObjectType:  DomainType,
-			}); err != nil {
-				// Append all non-admins to ids.
-				ids = append(ids, userID)
+			pr.Subject = userID
+			if err := svc.Authorize(ctx, pr); err == nil {
+				// Non admin attempts to remove admin.
+				return errors.Wrap(svcerr.ErrAuthorization, err)
 			}
 		}
-
-		userIds = ids
 	}
 
 	for _, rel := range []string{MemberRelation, ContributorRelation, EditorRelation, GuestRelation} {
