@@ -139,7 +139,7 @@ func TestIssue(t *testing.T) {
 		retrieveByIDResponse   auth.Domain
 		token                  string
 		saveErr                error
-		checkPolicyReq3uest     auth.PolicyReq
+		checkPolicyRequest     auth.PolicyReq
 		checkPlatformPolicyReq auth.PolicyReq
 		checkDomainPolicyReq   auth.PolicyReq
 		checkPolicyErr         error
@@ -153,7 +153,7 @@ func TestIssue(t *testing.T) {
 				Type:     auth.AccessKey,
 				IssuedAt: time.Now(),
 			},
-			checkPolicyReq3uest: auth.PolicyReq{
+			checkPolicyRequest: auth.PolicyReq{
 				SubjectType: auth.UserType,
 				Object:      auth.MagistralaObject,
 				ObjectType:  auth.PlatformType,
@@ -174,7 +174,7 @@ func TestIssue(t *testing.T) {
 				IssuedAt: time.Now(),
 				Domain:   groupName,
 			},
-			checkPolicyReq3uest: auth.PolicyReq{
+			checkPolicyRequest: auth.PolicyReq{
 				SubjectType: auth.UserType,
 				Object:      auth.MagistralaObject,
 				ObjectType:  auth.PlatformType,
@@ -196,7 +196,7 @@ func TestIssue(t *testing.T) {
 				Domain:   groupName,
 			},
 			token: accessToken,
-			checkPolicyReq3uest: auth.PolicyReq{
+			checkPolicyRequest: auth.PolicyReq{
 				SubjectType: auth.UserType,
 				Object:      auth.MagistralaObject,
 				ObjectType:  auth.PlatformType,
@@ -221,7 +221,7 @@ func TestIssue(t *testing.T) {
 				Domain:   groupName,
 			},
 			token: accessToken,
-			checkPolicyReq3uest: auth.PolicyReq{
+			checkPolicyRequest: auth.PolicyReq{
 				SubjectType: auth.UserType,
 				Object:      auth.MagistralaObject,
 				ObjectType:  auth.PlatformType,
@@ -251,7 +251,7 @@ func TestIssue(t *testing.T) {
 				Domain:   groupName,
 			},
 			token: accessToken,
-			checkPolicyReq3uest: auth.PolicyReq{
+			checkPolicyRequest: auth.PolicyReq{
 				SubjectType: auth.UserType,
 				Object:      auth.MagistralaObject,
 				ObjectType:  auth.PlatformType,
@@ -281,7 +281,7 @@ func TestIssue(t *testing.T) {
 				Domain:   groupName,
 			},
 			token: accessToken,
-			checkPolicyReq3uest: auth.PolicyReq{
+			checkPolicyRequest: auth.PolicyReq{
 				SubjectType: auth.UserType,
 				Object:      auth.MagistralaObject,
 				ObjectType:  auth.PlatformType,
@@ -306,7 +306,7 @@ func TestIssue(t *testing.T) {
 	}
 	for _, tc := range cases2 {
 		repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, tc.saveErr)
-		repoCall1 := prepo.On("CheckPolicy", mock.Anything, tc.checkPolicyReq3uest).Return(tc.checkPolicyErr)
+		repoCall1 := prepo.On("CheckPolicy", mock.Anything, tc.checkPolicyRequest).Return(tc.checkPolicyErr)
 		repoCall2 := prepo.On("CheckPolicy", mock.Anything, tc.checkPlatformPolicyReq).Return(tc.checkPolicyErr1)
 		repoCall3 := drepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(tc.retrieveByIDResponse, tc.retreiveByIDErr)
 		repoCall4 := prepo.On("CheckPolicy", mock.Anything, tc.checkDomainPolicyReq).Return(tc.checkPolicyErr)
@@ -375,7 +375,7 @@ func TestIssue(t *testing.T) {
 		desc                 string
 		key                  auth.Key
 		token                string
-		checkPolicyReq3uest   auth.PolicyReq
+		checkPolicyRequest   auth.PolicyReq
 		checkDOmainPolicyReq auth.PolicyReq
 		checkPolicyErr       error
 		retrieveByIDErr      error
@@ -387,7 +387,7 @@ func TestIssue(t *testing.T) {
 				Type:     auth.RefreshKey,
 				IssuedAt: time.Now(),
 			},
-			checkPolicyReq3uest: auth.PolicyReq{
+			checkPolicyRequest: auth.PolicyReq{
 				Subject:     email,
 				SubjectType: auth.UserType,
 				Object:      auth.MagistralaObject,
@@ -403,7 +403,7 @@ func TestIssue(t *testing.T) {
 				Type:     auth.RefreshKey,
 				IssuedAt: time.Now(),
 			},
-			checkPolicyReq3uest: auth.PolicyReq{
+			checkPolicyRequest: auth.PolicyReq{
 				Subject:     email,
 				SubjectType: auth.UserType,
 				Object:      auth.MagistralaObject,
@@ -458,7 +458,7 @@ func TestIssue(t *testing.T) {
 				Type:     auth.InvitationKey,
 				IssuedAt: time.Now(),
 			},
-			checkPolicyReq3uest: auth.PolicyReq{
+			checkPolicyRequest: auth.PolicyReq{
 				Subject:     email,
 				SubjectType: auth.UserType,
 				Object:      auth.MagistralaObject,
@@ -475,7 +475,7 @@ func TestIssue(t *testing.T) {
 				IssuedAt: time.Now(),
 				Domain:   groupName,
 			},
-			checkPolicyReq3uest: auth.PolicyReq{
+			checkPolicyRequest: auth.PolicyReq{
 				SubjectType: auth.UserType,
 				Object:      auth.MagistralaObject,
 				ObjectType:  auth.PlatformType,
@@ -494,7 +494,7 @@ func TestIssue(t *testing.T) {
 		},
 	}
 	for _, tc := range cases4 {
-		repoCall := prepo.On("CheckPolicy", mock.Anything, tc.checkPolicyReq3uest).Return(tc.checkPolicyErr)
+		repoCall := prepo.On("CheckPolicy", mock.Anything, tc.checkPolicyRequest).Return(tc.checkPolicyErr)
 		repoCall1 := drepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(auth.Domain{}, tc.retrieveByIDErr)
 		repoCall2 := prepo.On("CheckPolicy", mock.Anything, tc.checkDOmainPolicyReq).Return(tc.checkPolicyErr)
 		_, err := svc.Issue(context.Background(), tc.token, tc.key)
@@ -763,7 +763,7 @@ func TestAuthorize(t *testing.T) {
 		desc                 string
 		policyReq            auth.PolicyReq
 		retrieveDomainRes    auth.Domain
-		checkPolicyReq3       auth.PolicyReq
+		checkPolicyReq3      auth.PolicyReq
 		checkAdminPolicyReq  auth.PolicyReq
 		checkDomainPolicyReq auth.PolicyReq
 		checkPolicyErr       error
@@ -2167,10 +2167,10 @@ func TestAssignUsers(t *testing.T) {
 		domainID             string
 		userIDs              []string
 		relation             string
-		checkPolicyReq3       auth.PolicyReq
+		checkPolicyReq3      auth.PolicyReq
 		checkAdminPolicyReq  auth.PolicyReq
 		checkDomainPolicyReq auth.PolicyReq
-		checkPolicyReq33      auth.PolicyReq
+		checkPolicyReq33     auth.PolicyReq
 		checkpolicyErr       error
 		checkPolicyErr1      error
 		checkPolicyErr2      error
@@ -2482,7 +2482,7 @@ func TestUnassignUsers(t *testing.T) {
 		desc                 string
 		token                string
 		domainID             string
-		checkPolicyReq3       auth.PolicyReq
+		checkPolicyReq3      auth.PolicyReq
 		checkAdminPolicyReq  auth.PolicyReq
 		checkDomainPolicyReq auth.PolicyReq
 		checkPolicyErr       error
