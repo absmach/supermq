@@ -234,7 +234,7 @@ func proxyWS(ctx context.Context, cfg config, logger *slog.Logger, sessionHandle
 	config := mproxy.Config{
 		Address:    fmt.Sprintf("%s:%s", "", cfg.HTTPPort),
 		Target:     fmt.Sprintf("%s:%s", cfg.HTTPTargetHost, cfg.HTTPTargetPort),
-		PrefixPath: "/mqtt",
+		PathPrefix: "/mqtt",
 	}
 
 	wp := websocket.New(config, sessionHandler, interceptor, logger)

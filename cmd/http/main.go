@@ -164,8 +164,9 @@ func newService(pub messaging.Publisher, tc magistrala.AuthzServiceClient, logge
 
 func proxyHTTP(ctx context.Context, cfg server.Config, logger *slog.Logger, sessionHandler session.Handler) error {
 	config := mproxy.Config{
-		Address: fmt.Sprintf("%s:%s", "", cfg.Port),
-		Target:  fmt.Sprintf("%s:%s", targetHTTPHost, targetHTTPPort),
+		Address:    fmt.Sprintf("%s:%s", "", cfg.Port),
+		Target:     fmt.Sprintf("%s:%s", targetHTTPHost, targetHTTPPort),
+		PathPrefix: "/",
 	}
 	if cfg.CertFile != "" || cfg.KeyFile != "" {
 		tlsCert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
