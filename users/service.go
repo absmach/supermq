@@ -575,7 +575,7 @@ func (svc service) OAuthCallback(ctx context.Context, state mgoauth2.State, clie
 			if errors.Contains(err, repoerr.ErrNotFound) {
 				return &magistrala.Token{}, errors.Wrap(svcerr.ErrNotFound, errUserNotSignedUp)
 			}
-			return &magistrala.Token{}, errors.Wrap(svcerr.ErrNotFound, err)
+			return &magistrala.Token{}, errors.Wrap(svcerr.ErrViewEntity, err)
 		}
 		claims := &magistrala.IssueReq{
 			UserId: rclient.ID,
