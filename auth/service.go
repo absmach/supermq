@@ -586,7 +586,7 @@ func (svc service) RetrieveDomain(ctx context.Context, token, id string) (Domain
 		ObjectType:  DomainType,
 		Permission:  MembershipPermission,
 	}); err != nil {
-		return Domain{Name: domain.Name, Alias: domain.Alias}, nil
+		return Domain{ID: domain.ID, Name: domain.Name, Alias: domain.Alias}, nil
 	}
 	return domain, nil
 }
