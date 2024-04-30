@@ -155,11 +155,6 @@ func (svc service) ViewClient(ctx context.Context, token, id string) (mgclients.
 
 	if tokenUserID != id {
 		if err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
-			client, clientErr := svc.clients.RetrieveByID(ctx, id)
-			if clientErr != nil {
-				return mgclients.Client{}, errors.Wrap(svcerr.ErrViewEntity, clientErr)
-			}
-
 			return mgclients.Client{Name: client.Name, ID: client.ID}, nil
 		}
 	}

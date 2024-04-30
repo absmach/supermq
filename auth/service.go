@@ -574,7 +574,7 @@ func (svc service) RetrieveDomain(ctx context.Context, token, id string) (Domain
 	if err != nil {
 		return Domain{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-	dom, err := svc.domains.RetrieveByID(ctx, id)
+	domain, err := svc.domains.RetrieveByID(ctx, id)
 	if err != nil {
 		return Domain{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
@@ -586,9 +586,9 @@ func (svc service) RetrieveDomain(ctx context.Context, token, id string) (Domain
 		ObjectType:  DomainType,
 		Permission:  MembershipPermission,
 	}); err != nil {
-		return Domain{Name: dom.Name, Alias: dom.Alias}, nil
+		return Domain{Name: domain.Name, Alias: domain.Alias}, nil
 	}
-	return dom, nil
+	return domain, nil
 }
 
 func (svc service) RetrieveDomainPermissions(ctx context.Context, token, id string) (Permissions, error) {
