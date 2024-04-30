@@ -5,7 +5,6 @@ package api
 
 import (
 	"github.com/absmach/magistrala/activitylog"
-	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/internal/apiutil"
 )
@@ -20,12 +19,6 @@ type listActivitiesReq struct {
 func (req listActivitiesReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
-	}
-	if req.page.ID != "" && req.page.EntityType == "" {
-		return apiutil.ErrMissingEntityType
-	}
-	if req.page.EntityType != "" && req.page.EntityType != auth.UserType && req.page.EntityType != auth.GroupType && req.page.EntityType != auth.ThingType {
-		return apiutil.ErrInvalidEntityType
 	}
 	if req.page.Limit > maxLimitSize {
 		return apiutil.ErrLimitSize

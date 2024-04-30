@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 )
@@ -29,39 +28,11 @@ func (svc *service) Save(ctx context.Context, activity Activity) error {
 }
 
 func (svc *service) ReadAll(ctx context.Context, token string, page Page) (ActivitiesPage, error) {
-	switch page.ID {
-	case "":
-		if err := svc.identify(ctx, token); err != nil {
-			return ActivitiesPage{}, err
-		}
-	default:
-		if err := svc.authorize(ctx, token, page.ID, page.EntityType); err != nil {
-			return ActivitiesPage{}, err
-		}
+	if err := svc.identify(ctx, token); err != nil {
+		return ActivitiesPage{}, err
 	}
 
 	return svc.repository.RetrieveAll(ctx, page)
-}
-
-func (svc *service) authorize(ctx context.Context, token, id, entityType string) error {
-	req := &magistrala.AuthorizeReq{
-		SubjectType: auth.UserType,
-		SubjectKind: auth.TokenKind,
-		Subject:     token,
-		Permission:  auth.ViewPermission,
-		ObjectType:  entityType,
-		Object:      id,
-	}
-
-	res, err := svc.auth.Authorize(ctx, req)
-	if err != nil {
-		return errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-	if !res.GetAuthorized() {
-		return svcerr.ErrAuthorization
-	}
-
-	return nil
 }
 
 func (svc *service) identify(ctx context.Context, token string) error {

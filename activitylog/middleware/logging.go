@@ -31,7 +31,7 @@ func (lm *loggingMiddleware) Save(ctx context.Context, activity activitylog.Acti
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("activity",
-				slog.String("id", activity.ID),
+				slog.String("occurred_at", activity.OccurredAt.Format(time.RFC3339Nano)),
 				slog.String("operation", activity.Operation),
 			),
 		}
@@ -52,8 +52,6 @@ func (lm *loggingMiddleware) ReadAll(ctx context.Context, token string, page act
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("page",
 				slog.String("operation", page.Operation),
-				slog.String("entity_type", page.EntityType),
-				slog.String("entity_id", page.ID),
 				slog.Uint64("offset", page.Offset),
 				slog.Uint64("limit", page.Limit),
 				slog.Uint64("total", activitiesPage.Total),

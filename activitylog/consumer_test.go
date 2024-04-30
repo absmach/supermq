@@ -13,7 +13,6 @@ import (
 
 	"github.com/absmach/magistrala/activitylog"
 	"github.com/absmach/magistrala/activitylog/mocks"
-	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -53,19 +52,6 @@ func TestHandle(t *testing.T) {
 			desc: "success",
 			event: testEvent{
 				data: map[string]interface{}{
-					"id":          testsutil.GenerateUUID(t),
-					"operation":   operation,
-					"occurred_at": time.Now().UnixNano(),
-					"payload":     payload,
-				},
-			},
-			err: nil,
-		},
-		{
-			desc: "with missing id",
-			event: testEvent{
-				data: map[string]interface{}{
-					"id":          "",
 					"operation":   operation,
 					"occurred_at": time.Now().UnixNano(),
 					"payload":     payload,
@@ -77,7 +63,6 @@ func TestHandle(t *testing.T) {
 			desc: "with missing operation",
 			event: testEvent{
 				data: map[string]interface{}{
-					"id":          testsutil.GenerateUUID(t),
 					"operation":   "",
 					"occurred_at": time.Now().UnixNano(),
 					"payload":     payload,
@@ -89,7 +74,6 @@ func TestHandle(t *testing.T) {
 			desc: "with missing occurred_at",
 			event: testEvent{
 				data: map[string]interface{}{
-					"id":          testsutil.GenerateUUID(t),
 					"operation":   operation,
 					"occurred_at": 0,
 					"payload":     payload,
@@ -101,7 +85,6 @@ func TestHandle(t *testing.T) {
 			desc: "with missing payload",
 			event: testEvent{
 				data: map[string]interface{}{
-					"id":          testsutil.GenerateUUID(t),
 					"operation":   operation,
 					"occurred_at": time.Now().UnixNano(),
 					"payload":     map[string]interface{}{},
@@ -121,7 +104,6 @@ func TestHandle(t *testing.T) {
 			assert.NoError(t, err)
 
 			activity := activitylog.Activity{
-				ID:         event["id"].(string),
 				Operation:  event["operation"].(string),
 				OccurredAt: time.Unix(0, int64(event["occurred_at"].(float64))),
 				Payload:    event["payload"].(map[string]interface{}),

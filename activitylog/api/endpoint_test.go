@@ -15,19 +15,14 @@ import (
 	"github.com/absmach/magistrala/activitylog"
 	"github.com/absmach/magistrala/activitylog/api"
 	"github.com/absmach/magistrala/activitylog/mocks"
-	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/internal/apiutil"
-	"github.com/absmach/magistrala/internal/testsutil"
 	mglog "github.com/absmach/magistrala/logger"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-var (
-	validToken = "valid"
-	validID    = testsutil.GenerateUUID(&testing.T{})
-)
+var validToken = "valid"
 
 type testRequest struct {
 	client *http.Client
@@ -199,55 +194,6 @@ func TestListActivitiesEndpoint(t *testing.T) {
 			desc:   "with invalid direction query",
 			token:  validToken,
 			url:    "?dir=invalid&dir=invalid2",
-			status: http.StatusBadRequest,
-			svcErr: nil,
-		},
-		{
-			desc:   "with id",
-			token:  validToken,
-			url:    "?id=" + validID,
-			status: http.StatusBadRequest,
-			svcErr: nil,
-		},
-		{
-			desc:   "with id and entity type",
-			token:  validToken,
-			url:    "?id=" + validID + "&entity_type=" + auth.UserType,
-			status: http.StatusOK,
-			svcErr: nil,
-		},
-		{
-			desc:   "with invalid id",
-			token:  validToken,
-			url:    "?id=invalid&id=invalid2",
-			status: http.StatusBadRequest,
-			svcErr: nil,
-		},
-		{
-			desc:   "with entity type",
-			token:  validToken,
-			url:    "?entity_type=" + auth.UserType,
-			status: http.StatusOK,
-			svcErr: nil,
-		},
-		{
-			desc:   "with empty id type",
-			token:  validToken,
-			url:    "?entity_type=",
-			status: http.StatusOK,
-			svcErr: nil,
-		},
-		{
-			desc:   "with invalid entity type",
-			token:  validToken,
-			url:    "?entity_type=invalid",
-			status: http.StatusBadRequest,
-			svcErr: nil,
-		},
-		{
-			desc:   "with invalid entity type query",
-			token:  validToken,
-			url:    "?entity_type=invalid&entity_type=invalid2",
 			status: http.StatusBadRequest,
 			svcErr: nil,
 		},

@@ -29,12 +29,6 @@ func Handle(service Service) handleFunc {
 			return err
 		}
 
-		id, ok := data["id"].(string)
-		if !ok {
-			return nil
-		}
-		delete(data, "id")
-
 		operation, ok := data["operation"].(string)
 		if !ok {
 			return nil
@@ -48,7 +42,6 @@ func Handle(service Service) handleFunc {
 		delete(data, "occurred_at")
 
 		activity := Activity{
-			ID:         id,
 			Operation:  operation,
 			OccurredAt: time.Unix(0, int64(occurredAt)),
 			Payload:    data,

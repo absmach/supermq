@@ -11,7 +11,6 @@ import (
 
 // Activity represents an event activity that occurred in the system.
 type Activity struct {
-	ID         string                 `json:"id,omitempty" db:"id,omitempty"`
 	Operation  string                 `json:"operation,omitempty" db:"operation,omitempty"`
 	OccurredAt time.Time              `json:"occurred_at,omitempty" db:"occurred_at,omitempty"`
 	Payload    map[string]interface{} `json:"payload,omitempty" db:"payload,omitempty"`
@@ -29,8 +28,6 @@ type ActivitiesPage struct {
 type Page struct {
 	Offset      uint64    `json:"offset" db:"offset"`
 	Limit       uint64    `json:"limit" db:"limit"`
-	ID          string    `json:"id,omitempty" db:"id,omitempty"`
-	EntityType  string    `json:"entity_type,omitempty"`
 	Operation   string    `json:"operation,omitempty" db:"operation,omitempty"`
 	From        time.Time `json:"from,omitempty" db:"from,omitempty"`
 	To          time.Time `json:"to,omitempty" db:"to,omitempty"`

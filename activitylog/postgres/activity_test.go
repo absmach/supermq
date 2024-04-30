@@ -14,7 +14,6 @@ import (
 
 	"github.com/absmach/magistrala/activitylog"
 	"github.com/absmach/magistrala/activitylog/postgres"
-	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	"github.com/stretchr/testify/assert"
@@ -22,9 +21,8 @@ import (
 )
 
 var (
-	invalidUUID = strings.Repeat("a", 37)
-	operation   = "user.create"
-	payload     = map[string]interface{}{
+	operation = "user.create"
+	payload   = map[string]interface{}{
 		"temperature": rand.Float64(),
 		"humidity":    rand.Float64(),
 		"sensor_id":   rand.Intn(1000),
@@ -45,7 +43,6 @@ func TestActivitySave(t *testing.T) {
 	})
 	repo := postgres.NewRepository(database)
 
-	id := testsutil.GenerateUUID(t)
 	occurredAt := time.Now()
 
 	cases := []struct {
@@ -56,7 +53,6 @@ func TestActivitySave(t *testing.T) {
 		{
 			desc: "new activity successfully",
 			activity: activitylog.Activity{
-				ID:         id,
 				Operation:  operation,
 				OccurredAt: occurredAt,
 				Payload:    payload,
@@ -66,7 +62,6 @@ func TestActivitySave(t *testing.T) {
 		{
 			desc: "with duplicate activity",
 			activity: activitylog.Activity{
-				ID:         id,
 				Operation:  operation,
 				OccurredAt: occurredAt,
 				Payload:    payload,
@@ -76,7 +71,6 @@ func TestActivitySave(t *testing.T) {
 		{
 			desc: "with massive activity payload",
 			activity: activitylog.Activity{
-				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation,
 				OccurredAt: time.Now(),
 				Payload: map[string]interface{}{
@@ -98,41 +92,11 @@ func TestActivitySave(t *testing.T) {
 					"data": payload,
 				},
 			},
-			err: nil,
-		},
-		{
-			desc: "with invalid activity id",
-			activity: activitylog.Activity{
-				ID:         invalidUUID,
-				Operation:  operation,
-				OccurredAt: time.Now(),
-				Payload:    payload,
-			},
-			err: repoerr.ErrMalformedEntity,
-		},
-		{
-			desc: "with nil activity id",
-			activity: activitylog.Activity{
-				Operation:  operation,
-				OccurredAt: time.Now(),
-				Payload:    payload,
-			},
-			err: repoerr.ErrMalformedEntity,
-		},
-		{
-			desc: "with empty activity id",
-			activity: activitylog.Activity{
-				ID:         "",
-				Operation:  operation,
-				OccurredAt: time.Now(),
-				Payload:    payload,
-			},
-			err: repoerr.ErrMalformedEntity,
+			err: repoerr.ErrConflict,
 		},
 		{
 			desc: "with nil activity operation",
 			activity: activitylog.Activity{
-				ID:         testsutil.GenerateUUID(t),
 				OccurredAt: time.Now(),
 				Payload:    payload,
 			},
@@ -141,17 +105,15 @@ func TestActivitySave(t *testing.T) {
 		{
 			desc: "with empty activity operation",
 			activity: activitylog.Activity{
-				ID:         testsutil.GenerateUUID(t),
 				Operation:  "",
 				OccurredAt: time.Now(),
 				Payload:    payload,
 			},
-			err: repoerr.ErrCreateEntity,
+			err: repoerr.ErrConflict,
 		},
 		{
 			desc: "with nil activity occurred_at",
 			activity: activitylog.Activity{
-				ID:        testsutil.GenerateUUID(t),
 				Operation: operation,
 				Payload:   payload,
 			},
@@ -160,26 +122,23 @@ func TestActivitySave(t *testing.T) {
 		{
 			desc: "with empty activity occurred_at",
 			activity: activitylog.Activity{
-				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation,
 				OccurredAt: time.Time{},
 				Payload:    payload,
 			},
-			err: repoerr.ErrCreateEntity,
+			err: repoerr.ErrConflict,
 		},
 		{
 			desc: "with nil activity payload",
 			activity: activitylog.Activity{
-				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation,
 				OccurredAt: time.Now(),
 			},
-			err: nil,
+			err: repoerr.ErrConflict,
 		},
 		{
 			desc: "with invalid activity payload",
 			activity: activitylog.Activity{
-				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation,
 				OccurredAt: time.Now(),
 				Payload:    map[string]interface{}{"invalid": make(chan struct{})},
@@ -189,7 +148,6 @@ func TestActivitySave(t *testing.T) {
 		{
 			desc: "with empty activity payload",
 			activity: activitylog.Activity{
-				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation,
 				OccurredAt: time.Now(),
 				Payload:    map[string]interface{}{},
@@ -226,7 +184,6 @@ func TestActivityRetrieveAll(t *testing.T) {
 	var items []activitylog.Activity
 	for i := 0; i < num; i++ {
 		activity := activitylog.Activity{
-			ID:         testsutil.GenerateUUID(t),
 			Operation:  fmt.Sprintf("%s-%d", operation, i),
 			OccurredAt: time.Now().UTC().Truncate(time.Millisecond),
 			Payload:    payload,
@@ -350,20 +307,6 @@ func TestActivityRetrieveAll(t *testing.T) {
 			},
 		},
 		{
-			desc: "with id",
-			page: activitylog.Page{
-				ID:     items[0].ID,
-				Offset: 0,
-				Limit:  10,
-			},
-			response: activitylog.ActivitiesPage{
-				Total:      1,
-				Offset:     0,
-				Limit:      10,
-				Activities: []activitylog.Activity{items[0]},
-			},
-		},
-		{
 			desc: "with operation",
 			page: activitylog.Page{
 				Operation: items[0].Operation,
@@ -465,7 +408,6 @@ func TestActivityRetrieveAll(t *testing.T) {
 		{
 			desc: "with all filters",
 			page: activitylog.Page{
-				ID:          items[0].ID,
 				Operation:   items[0].Operation,
 				From:        items[0].OccurredAt,
 				To:          items[num-1].OccurredAt,
@@ -479,20 +421,6 @@ func TestActivityRetrieveAll(t *testing.T) {
 				Offset:     0,
 				Limit:      10,
 				Activities: []activitylog.Activity{items[0]},
-			},
-		},
-		{
-			desc: "with invalid id",
-			page: activitylog.Page{
-				ID:     testsutil.GenerateUUID(t),
-				Offset: 0,
-				Limit:  10,
-			},
-			response: activitylog.ActivitiesPage{
-				Total:      0,
-				Offset:     0,
-				Limit:      10,
-				Activities: []activitylog.Activity(nil),
 			},
 		},
 		{

@@ -25,8 +25,8 @@ func NewRepository(db postgres.Database) activitylog.Repository {
 }
 
 func (repo *repository) Save(ctx context.Context, activity activitylog.Activity) (err error) {
-	q := `INSERT INTO activities (id, operation, occurred_at, payload)
-		VALUES (:id, :operation, :occurred_at, :payload)`
+	q := `INSERT INTO activities (operation, occurred_at, payload)
+		VALUES (:operation, :occurred_at, :payload)`
 
 	dbActivity, err := toDBActivity(activity)
 	if err != nil {
@@ -43,7 +43,7 @@ func (repo *repository) Save(ctx context.Context, activity activitylog.Activity)
 func (repo *repository) RetrieveAll(ctx context.Context, page activitylog.Page) (activitylog.ActivitiesPage, error) {
 	query := pageQuery(page)
 
-	sq := "id, operation, occurred_at"
+	sq := "operation, occurred_at"
 	if page.WithPayload {
 		sq += ", payload"
 	}
@@ -88,9 +88,6 @@ func (repo *repository) RetrieveAll(ctx context.Context, page activitylog.Page) 
 func pageQuery(pm activitylog.Page) string {
 	var query []string
 	var emq string
-	if pm.ID != "" {
-		query = append(query, "id = :id")
-	}
 	if pm.Operation != "" {
 		query = append(query, "operation = :operation")
 	}
@@ -109,7 +106,6 @@ func pageQuery(pm activitylog.Page) string {
 }
 
 type dbActivity struct {
-	ID         string    `db:"id"`
 	Operation  string    `db:"operation"`
 	OccurredAt time.Time `db:"occurred_at"`
 	Payload    []byte    `db:"payload"`
@@ -126,7 +122,6 @@ func toDBActivity(activity activitylog.Activity) (dbActivity, error) {
 	}
 
 	return dbActivity{
-		ID:         activity.ID,
 		Operation:  activity.Operation,
 		OccurredAt: activity.OccurredAt,
 		Payload:    data,
@@ -142,7 +137,6 @@ func toActivity(activity dbActivity) (activitylog.Activity, error) {
 	}
 
 	return activitylog.Activity{
-		ID:         activity.ID,
 		Operation:  activity.Operation,
 		OccurredAt: activity.OccurredAt,
 		Payload:    payload,

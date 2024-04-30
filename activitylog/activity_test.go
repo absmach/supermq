@@ -35,14 +35,13 @@ func TestActivitiesPage_MarshalJSON(t *testing.T) {
 				Limit:  0,
 				Activities: []activitylog.Activity{
 					{
-						ID:         "123",
 						Operation:  "123",
 						OccurredAt: occurredAt,
 						Payload:    map[string]interface{}{"123": "123"},
 					},
 				},
 			},
-			res: fmt.Sprintf(`{"total":1,"offset":0,"limit":0,"activities":[{"id":"123","operation":"123","occurred_at":"%s","payload":{"123":"123"}}]}`, occurredAt.Format(time.RFC3339Nano)),
+			res: fmt.Sprintf(`{"total":1,"offset":0,"limit":0,"activities":[{"operation":"123","occurred_at":"%s","payload":{"123":"123"}}]}`, occurredAt.Format(time.RFC3339Nano)),
 		},
 	}
 

@@ -85,22 +85,12 @@ func decodeListActivitiesReq(_ context.Context, r *http.Request) (interface{}, e
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	id, err := apiutil.ReadStringQuery(r, idKey, "")
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	entityType, err := apiutil.ReadStringQuery(r, entityTypeKey, "")
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
 
 	req := listActivitiesReq{
 		token: apiutil.ExtractBearerToken(r),
 		page: activitylog.Page{
 			Offset:      offset,
 			Limit:       limit,
-			ID:          id,
-			EntityType:  entityType,
 			Operation:   operation,
 			From:        time.Unix(0, from),
 			To:          time.Unix(0, to),

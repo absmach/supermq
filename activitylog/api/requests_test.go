@@ -7,9 +7,7 @@ import (
 	"testing"
 
 	"github.com/absmach/magistrala/activitylog"
-	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/internal/apiutil"
-	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,9 +27,7 @@ func TestListActivitiesReqValidate(t *testing.T) {
 			req: listActivitiesReq{
 				token: token,
 				page: activitylog.Page{
-					ID:         testsutil.GenerateUUID(t),
-					EntityType: auth.UserType,
-					Limit:      limit,
+					Limit: limit,
 				},
 			},
 			err: nil,
@@ -44,39 +40,6 @@ func TestListActivitiesReqValidate(t *testing.T) {
 				},
 			},
 			err: apiutil.ErrBearerToken,
-		},
-		{
-			desc: "missing id",
-			req: listActivitiesReq{
-				token: token,
-				page: activitylog.Page{
-					Limit: limit,
-				},
-			},
-			err: nil,
-		},
-		{
-			desc: "valid id but missing entity type",
-			req: listActivitiesReq{
-				token: token,
-				page: activitylog.Page{
-					ID:    testsutil.GenerateUUID(t),
-					Limit: limit,
-				},
-			},
-			err: apiutil.ErrMissingEntityType,
-		},
-		{
-			desc: "valid id but invalid entity type",
-			req: listActivitiesReq{
-				token: token,
-				page: activitylog.Page{
-					ID:         testsutil.GenerateUUID(t),
-					EntityType: "invalid",
-					Limit:      limit,
-				},
-			},
-			err: apiutil.ErrInvalidEntityType,
 		},
 		{
 			desc: "invalid limit size",

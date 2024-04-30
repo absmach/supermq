@@ -24,7 +24,7 @@ func Tracing(svc activitylog.Service, tracer trace.Tracer) activitylog.Service {
 
 func (tm *tracing) Save(ctx context.Context, activity activitylog.Activity) error {
 	ctx, span := tm.tracer.Start(ctx, "save", trace.WithAttributes(
-		attribute.String("id", activity.ID),
+		attribute.String("occurred_at", activity.OccurredAt.String()),
 		attribute.String("operation", activity.Operation),
 	))
 	defer span.End()
@@ -34,8 +34,8 @@ func (tm *tracing) Save(ctx context.Context, activity activitylog.Activity) erro
 
 func (tm *tracing) ReadAll(ctx context.Context, token string, page activitylog.Page) (activitylog.ActivitiesPage, error) {
 	ctx, span := tm.tracer.Start(ctx, "read_all", trace.WithAttributes(
-		attribute.String("id", page.ID),
-		attribute.String("entity_type", page.EntityType),
+		attribute.Int64("offset", int64(page.Offset)),
+		attribute.Int64("limit", int64(page.Limit)),
 	))
 	defer span.End()
 
