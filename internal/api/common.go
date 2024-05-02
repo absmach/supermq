@@ -156,7 +156,9 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, apiutil.ErrInvalidCertData),
 		errors.Contains(err, apiutil.ErrEmptyMessage),
 		errors.Contains(err, apiutil.ErrInvalidLevel),
-		errors.Contains(err, apiutil.ErrInvalidDirection):
+		errors.Contains(err, apiutil.ErrInvalidDirection),
+		errors.Contains(err, apiutil.ErrInvalidEntity),
+		errors.Contains(err, apiutil.ErrInvalidTime):
 		err = unwrap(err)
 		w.WriteHeader(http.StatusBadRequest)
 

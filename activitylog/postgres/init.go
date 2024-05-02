@@ -15,10 +15,12 @@ func Migration() *migrate.MemoryMigrationSource {
 				Id: "activities_01",
 				Up: []string{
 					`CREATE TABLE IF NOT EXISTS activities (
-						operation	VARCHAR NOT NULL,
+						id 			UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+						operation	VARCHAR NOT NULL CHECK (operation <> ''),
 						occurred_at	TIMESTAMP NOT NULL,
-						payload		JSONB NOT NULL,
-						PRIMARY KEY (operation, occurred_at)
+						attributes	JSONB NOT NULL,
+						metadata	JSONB,
+						UNIQUE(operation, occurred_at, attributes)
 					)`,
 				},
 				Down: []string{

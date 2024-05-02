@@ -173,4 +173,7 @@ var (
 
 	// ErrInvalidEntityType indicates invalid entity type.
 	ErrInvalidEntityType = errors.New("invalid entity type")
+
+	// ErrInvalidTime indicates invalid time i.e not unix time.
+	ErrInvalidTime = errors.New("invalid time use unix time")
 )

@@ -5,6 +5,7 @@ package activitylog
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/absmach/magistrala/pkg/events"
@@ -31,20 +32,39 @@ func Handle(service Service) handleFunc {
 
 		operation, ok := data["operation"].(string)
 		if !ok {
-			return nil
+			return errors.New("missing operation")
 		}
 		delete(data, "operation")
 
+		if operation == "" {
+			return errors.New("missing operation")
+		}
+
 		occurredAt, ok := data["occurred_at"].(float64)
 		if !ok {
-			return nil
+			return ErrMissingOccurredAt
 		}
 		delete(data, "occurred_at")
+
+		if occurredAt == 0 {
+			return ErrMissingOccurredAt
+		}
+
+		metadata, ok := data["metadata"].(map[string]interface{})
+		if !ok {
+			metadata = make(map[string]interface{})
+		}
+		delete(data, "metadata")
+
+		if len(data) == 0 {
+			return errors.New("missing attributes")
+		}
 
 		activity := Activity{
 			Operation:  operation,
 			OccurredAt: time.Unix(0, int64(occurredAt)),
-			Payload:    data,
+			Attributes: data,
+			Metadata:   metadata,
 		}
 
 		return service.Save(ctx, activity)

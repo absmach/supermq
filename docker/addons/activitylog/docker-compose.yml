@@ -16,7 +16,7 @@ volumes:
 
 services:
   activitylog-db:
-    image: postgres:15.3-alpine
+    image: postgres:16.2-alpine
     container_name: magistrala-activitylog-db
     restart: on-failure
     command: postgres -c "max_connections=${MG_POSTGRES_MAX_CONNECTIONS}"

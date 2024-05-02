@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/activitylog"
+	"github.com/absmach/magistrala/internal/apiutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,11 +38,12 @@ func TestActivitiesPage_MarshalJSON(t *testing.T) {
 					{
 						Operation:  "123",
 						OccurredAt: occurredAt,
-						Payload:    map[string]interface{}{"123": "123"},
+						Attributes: map[string]interface{}{"123": "123"},
+						Metadata:   map[string]interface{}{"123": "123"},
 					},
 				},
 			},
-			res: fmt.Sprintf(`{"total":1,"offset":0,"limit":0,"activities":[{"operation":"123","occurred_at":"%s","payload":{"123":"123"}}]}`, occurredAt.Format(time.RFC3339Nano)),
+			res: fmt.Sprintf(`{"total":1,"offset":0,"limit":0,"activities":[{"operation":"123","occurred_at":"%s","attributes":{"123":"123"},"metadata":{"123":"123"}}]}`, occurredAt.Format(time.RFC3339Nano)),
 		},
 	}
 
@@ -50,6 +52,106 @@ func TestActivitiesPage_MarshalJSON(t *testing.T) {
 			data, err := tc.page.MarshalJSON()
 			assert.NoError(t, err, "Unexpected error: %v", err)
 			assert.Equal(t, tc.res, string(data))
+		})
+	}
+}
+
+func TestEntityType(t *testing.T) {
+	cases := []struct {
+		desc        string
+		e           activitylog.EntityType
+		str         string
+		authString  string
+		queryString string
+	}{
+		{
+			desc:       "EmptyEntity",
+			e:          activitylog.EmptyEntity,
+			str:        "",
+			authString: "",
+		},
+		{
+			desc:       "UserEntity",
+			e:          activitylog.UserEntity,
+			str:        "user",
+			authString: "user",
+		},
+		{
+			desc:       "ThingEntity",
+			e:          activitylog.ThingEntity,
+			str:        "thing",
+			authString: "thing",
+		},
+		{
+			desc:       "GroupEntity",
+			e:          activitylog.GroupEntity,
+			str:        "group",
+			authString: "group",
+		},
+		{
+			desc:       "ChannelEntity",
+			e:          activitylog.ChannelEntity,
+			str:        "channel",
+			authString: "group",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			assert.Equal(t, tc.str, tc.e.String())
+			assert.Equal(t, tc.authString, tc.e.AuthString())
+			if tc.e != activitylog.EmptyEntity {
+				assert.NotEmpty(t, tc.e.Query())
+			}
+		})
+	}
+}
+
+func TestToEntityType(t *testing.T) {
+	cases := []struct {
+		desc        string
+		entityType  string
+		expected    activitylog.EntityType
+		expectedErr error
+	}{
+		{
+			desc:       "EmptyEntity",
+			entityType: "",
+			expected:   activitylog.EmptyEntity,
+		},
+		{
+			desc:       "UserEntity",
+			entityType: "user",
+			expected:   activitylog.UserEntity,
+		},
+		{
+			desc:       "ThingEntity",
+			entityType: "thing",
+			expected:   activitylog.ThingEntity,
+		},
+		{
+			desc:       "GroupEntity",
+			entityType: "group",
+			expected:   activitylog.GroupEntity,
+		},
+		{
+			desc:       "ChannelEntity",
+			entityType: "channel",
+			expected:   activitylog.ChannelEntity,
+		},
+		{
+			desc:        "Invalid entity type",
+			entityType:  "invalid",
+			expected:    activitylog.EmptyEntity,
+			expectedErr: apiutil.ErrInvalidEntity,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			entityType, err := activitylog.ToEntityType(tc.entityType)
+			assert.Equal(t, tc.expected, entityType)
+			assert.Equal(t, tc.expectedErr, err)
 		})
 	}
 }

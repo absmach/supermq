@@ -6,6 +6,7 @@ package api
 import (
 	"context"
 	"log/slog"
+	"math"
 	"net/http"
 	"time"
 
@@ -22,10 +23,11 @@ import (
 
 const (
 	operationKey  = "operation"
-	payloadKey    = "with_payload"
 	fromKey       = "from"
 	toKey         = "to"
-	idKey         = "id"
+	attributesKey = "with_attributes"
+	metadataKey   = "with_metadata"
+	entityIDKey   = "id"
 	entityTypeKey = "entity_type"
 )
 
@@ -67,17 +69,29 @@ func decodeListActivitiesReq(_ context.Context, r *http.Request) (interface{}, e
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	if from == 0 {
-		from = time.Now().Add(-24 * time.Hour).UnixNano()
+	if from > math.MaxInt32 {
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidTime)
+	}
+	var fromTime time.Time
+	if from != 0 {
+		fromTime = time.Unix(from, 0)
 	}
 	to, err := apiutil.ReadNumQuery[int64](r, toKey, 0)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	if to == 0 {
-		to = time.Now().UnixNano()
+	if to > math.MaxInt32 {
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidTime)
 	}
-	payload, err := apiutil.ReadBoolQuery(r, payloadKey, false)
+	var toTime time.Time
+	if to != 0 {
+		toTime = time.Unix(to, 0)
+	}
+	attributes, err := apiutil.ReadBoolQuery(r, attributesKey, false)
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	metadata, err := apiutil.ReadBoolQuery(r, metadataKey, false)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
@@ -85,17 +99,32 @@ func decodeListActivitiesReq(_ context.Context, r *http.Request) (interface{}, e
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
+	entityID, err := apiutil.ReadStringQuery(r, entityIDKey, "")
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	entity, err := apiutil.ReadStringQuery(r, entityTypeKey, "")
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	entityType, err := activitylog.ToEntityType(entity)
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
 
 	req := listActivitiesReq{
 		token: apiutil.ExtractBearerToken(r),
 		page: activitylog.Page{
-			Offset:      offset,
-			Limit:       limit,
-			Operation:   operation,
-			From:        time.Unix(0, from),
-			To:          time.Unix(0, to),
-			WithPayload: payload,
-			Direction:   dir,
+			Offset:         offset,
+			Limit:          limit,
+			Operation:      operation,
+			From:           fromTime,
+			To:             toTime,
+			WithAttributes: attributes,
+			WithMetadata:   metadata,
+			EntityID:       entityID,
+			EntityType:     entityType,
+			Direction:      dir,
 		},
 	}
 

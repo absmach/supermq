@@ -25,8 +25,8 @@ func NewRepository(db postgres.Database) activitylog.Repository {
 }
 
 func (repo *repository) Save(ctx context.Context, activity activitylog.Activity) (err error) {
-	q := `INSERT INTO activities (operation, occurred_at, payload)
-		VALUES (:operation, :occurred_at, :payload)`
+	q := `INSERT INTO activities (operation, occurred_at, attributes, metadata)
+		VALUES (:operation, :occurred_at, :attributes, :metadata);`
 
 	dbActivity, err := toDBActivity(activity)
 	if err != nil {
@@ -44,8 +44,11 @@ func (repo *repository) RetrieveAll(ctx context.Context, page activitylog.Page) 
 	query := pageQuery(page)
 
 	sq := "operation, occurred_at"
-	if page.WithPayload {
-		sq += ", payload"
+	if page.WithAttributes {
+		sq += ", attributes"
+	}
+	if page.WithMetadata {
+		sq += ", metadata"
 	}
 	q := fmt.Sprintf("SELECT %s FROM activities %s ORDER BY occurred_at %s LIMIT :limit OFFSET :offset;", sq, query, page.Direction)
 
@@ -68,7 +71,7 @@ func (repo *repository) RetrieveAll(ctx context.Context, page activitylog.Page) 
 		items = append(items, activity)
 	}
 
-	tq := fmt.Sprintf(`SELECT COUNT(*) FROM activities %s`, query)
+	tq := fmt.Sprintf(`SELECT COUNT(*) FROM activities %s;`, query)
 
 	total, err := postgres.Total(ctx, repo.db, tq, page)
 	if err != nil {
@@ -97,6 +100,9 @@ func pageQuery(pm activitylog.Page) string {
 	if !pm.To.IsZero() {
 		query = append(query, "occurred_at <= :to")
 	}
+	if pm.EntityType != activitylog.EmptyEntity && pm.EntityID != "" {
+		query = append(query, pm.EntityType.Query())
+	}
 
 	if len(query) > 0 {
 		emq = fmt.Sprintf("WHERE %s", strings.Join(query, " AND "))
@@ -108,30 +114,52 @@ func pageQuery(pm activitylog.Page) string {
 type dbActivity struct {
 	Operation  string    `db:"operation"`
 	OccurredAt time.Time `db:"occurred_at"`
-	Payload    []byte    `db:"payload"`
+	Attributes []byte    `db:"attributes"`
+	Metadata   []byte    `db:"metadata"`
 }
 
 func toDBActivity(activity activitylog.Activity) (dbActivity, error) {
-	data := []byte("{}")
-	if len(activity.Payload) > 0 {
-		b, err := json.Marshal(activity.Payload)
+	if activity.OccurredAt.IsZero() {
+		return dbActivity{}, errors.Wrap(repoerr.ErrMalformedEntity, activitylog.ErrMissingOccurredAt)
+	}
+
+	attributes := []byte("{}")
+	if len(activity.Attributes) > 0 {
+		b, err := json.Marshal(activity.Attributes)
 		if err != nil {
 			return dbActivity{}, errors.Wrap(repoerr.ErrMalformedEntity, err)
 		}
-		data = b
+		attributes = b
+	}
+
+	metadata := []byte("{}")
+	if len(activity.Metadata) > 0 {
+		b, err := json.Marshal(activity.Metadata)
+		if err != nil {
+			return dbActivity{}, errors.Wrap(repoerr.ErrMalformedEntity, err)
+		}
+		metadata = b
 	}
 
 	return dbActivity{
 		Operation:  activity.Operation,
 		OccurredAt: activity.OccurredAt,
-		Payload:    data,
+		Attributes: attributes,
+		Metadata:   metadata,
 	}, nil
 }
 
 func toActivity(activity dbActivity) (activitylog.Activity, error) {
-	var payload map[string]interface{}
-	if activity.Payload != nil {
-		if err := json.Unmarshal(activity.Payload, &payload); err != nil {
+	var attributes map[string]interface{}
+	if activity.Attributes != nil {
+		if err := json.Unmarshal(activity.Attributes, &attributes); err != nil {
+			return activitylog.Activity{}, errors.Wrap(repoerr.ErrMalformedEntity, err)
+		}
+	}
+
+	var metadata map[string]interface{}
+	if activity.Metadata != nil {
+		if err := json.Unmarshal(activity.Metadata, &metadata); err != nil {
 			return activitylog.Activity{}, errors.Wrap(repoerr.ErrMalformedEntity, err)
 		}
 	}
@@ -139,6 +167,7 @@ func toActivity(activity dbActivity) (activitylog.Activity, error) {
 	return activitylog.Activity{
 		Operation:  activity.Operation,
 		OccurredAt: activity.OccurredAt,
-		Payload:    payload,
+		Attributes: attributes,
+		Metadata:   metadata,
 	}, nil
 }

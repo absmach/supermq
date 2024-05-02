@@ -26,6 +26,12 @@ func (req listActivitiesReq) validate() error {
 	if req.page.Direction != "" && req.page.Direction != api.AscDir && req.page.Direction != api.DescDir {
 		return apiutil.ErrInvalidDirection
 	}
+	if req.page.EntityID != "" && req.page.EntityType == activitylog.EmptyEntity {
+		return apiutil.ErrMissingEntityType
+	}
+	if req.page.EntityID == "" && req.page.EntityType != activitylog.EmptyEntity {
+		return apiutil.ErrMissingID
+	}
 
 	return nil
 }

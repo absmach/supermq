@@ -6,14 +6,103 @@ package activitylog
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"time"
+
+	"github.com/absmach/magistrala/internal/apiutil"
 )
+
+type EntityType uint8
+
+const (
+	// Empty represents an empty entity type. This is the default value.
+	EmptyEntity EntityType = iota
+	UserEntity
+	GroupEntity
+	ThingEntity
+	ChannelEntity
+)
+
+// String representation of the possible entity type values.
+const (
+	userEntityType    = "user"
+	groupEntityType   = "group"
+	thingEntityType   = "thing"
+	channelEntityType = "channel"
+)
+
+var ErrMissingOccurredAt = errors.New("missing occurred_at")
+
+// String converts entity type to string literal.
+func (e EntityType) String() string {
+	switch e {
+	case UserEntity:
+		return userEntityType
+	case GroupEntity:
+		return groupEntityType
+	case ThingEntity:
+		return thingEntityType
+	case ChannelEntity:
+		return channelEntityType
+	default:
+		return ""
+	}
+}
+
+// AuthString returns the entity type as a string for authorization.
+func (e EntityType) AuthString() string {
+	switch e {
+	case UserEntity:
+		return userEntityType
+	case GroupEntity, ChannelEntity:
+		return groupEntityType
+	case ThingEntity:
+		return thingEntityType
+	default:
+		return ""
+	}
+}
+
+// ToEntityType converts string value to a valid entity type.
+func ToEntityType(entityType string) (EntityType, error) {
+	switch entityType {
+	case "":
+		return EmptyEntity, nil
+	case userEntityType:
+		return UserEntity, nil
+	case groupEntityType:
+		return GroupEntity, nil
+	case thingEntityType:
+		return ThingEntity, nil
+	case channelEntityType:
+		return ChannelEntity, nil
+	default:
+		return EmptyEntity, apiutil.ErrInvalidEntity
+	}
+}
+
+// Query returns the SQL condition for the entity type.
+func (e EntityType) Query() string {
+	switch e {
+	case UserEntity:
+		return "((operation LIKE 'user.%' AND attributes->>'id' = :entity_id) OR (attributes->>'user_id' = :entity_id))"
+	case GroupEntity:
+		return "((operation LIKE 'group.%' AND attributes->>'id' = :entity_id) OR (attributes->>'group_id' = :entity_id))"
+	case ThingEntity:
+		return "((operation LIKE 'thing.%' AND attributes->>'id' = :entity_id) OR (attributes->>'thing_id' = :entity_id))"
+	case ChannelEntity:
+		return "((operation LIKE 'channel.%' AND attributes->>'id' = :entity_id) OR (attributes->>'group_id' = :entity_id))"
+	default:
+		return ""
+	}
+}
 
 // Activity represents an event activity that occurred in the system.
 type Activity struct {
 	Operation  string                 `json:"operation,omitempty" db:"operation,omitempty"`
 	OccurredAt time.Time              `json:"occurred_at,omitempty" db:"occurred_at,omitempty"`
-	Payload    map[string]interface{} `json:"payload,omitempty" db:"payload,omitempty"`
+	Attributes map[string]interface{} `json:"attributes,omitempty" db:"attributes,omitempty"` // This is extra information about the activity for example thing_id, user_id, group_id etc.
+	Metadata   map[string]interface{} `json:"metadata,omitempty" db:"metadata,omitempty"`     // This is decoded metadata from the activity.
 }
 
 // ActivitiesPage represents a page of activities.
@@ -26,13 +115,16 @@ type ActivitiesPage struct {
 
 // Page is used to filter activities.
 type Page struct {
-	Offset      uint64    `json:"offset" db:"offset"`
-	Limit       uint64    `json:"limit" db:"limit"`
-	Operation   string    `json:"operation,omitempty" db:"operation,omitempty"`
-	From        time.Time `json:"from,omitempty" db:"from,omitempty"`
-	To          time.Time `json:"to,omitempty" db:"to,omitempty"`
-	WithPayload bool      `json:"with_payload,omitempty"`
-	Direction   string    `json:"direction,omitempty"`
+	Offset         uint64     `json:"offset" db:"offset"`
+	Limit          uint64     `json:"limit" db:"limit"`
+	Operation      string     `json:"operation,omitempty" db:"operation,omitempty"`
+	From           time.Time  `json:"from,omitempty" db:"from,omitempty"`
+	To             time.Time  `json:"to,omitempty" db:"to,omitempty"`
+	WithAttributes bool       `json:"with_attributes,omitempty"`
+	WithMetadata   bool       `json:"with_metadata,omitempty"`
+	EntityID       string     `json:"entity_id,omitempty" db:"entity_id,omitempty"`
+	EntityType     EntityType `json:"entity_type,omitempty" db:"entity_type,omitempty"`
+	Direction      string     `json:"direction,omitempty"`
 }
 
 func (page ActivitiesPage) MarshalJSON() ([]byte, error) {

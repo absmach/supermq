@@ -5,7 +5,6 @@ package consumer
 
 import (
 	"context"
-	"encoding/json"
 	"time"
 
 	"github.com/absmach/magistrala/bootstrap"
@@ -69,6 +68,9 @@ func (es *eventHandler) Handle(ctx context.Context, event events.Event) error {
 			if thingID == "" {
 				return svcerr.ErrMalformedEntity
 			}
+		}
+
+		for _, thingID := range dte.thingIDs {
 			if err = es.svc.DisconnectThingHandler(ctx, dte.channelID, thingID); err != nil {
 				return err
 			}
@@ -89,29 +91,25 @@ func (es *eventHandler) Handle(ctx context.Context, event events.Event) error {
 
 func decodeRemoveThing(event map[string]interface{}) removeEvent {
 	return removeEvent{
-		id: read(event, "id", ""),
+		id: events.Read(event, "id", ""),
 	}
 }
 
 func decodeUpdateChannel(event map[string]interface{}) updateChannelEvent {
-	strmeta := read(event, "metadata", "{}")
-	var metadata map[string]interface{}
-	if err := json.Unmarshal([]byte(strmeta), &metadata); err != nil {
-		metadata = map[string]interface{}{}
-	}
+	metadata := events.Read(event, "metadata", map[string]interface{}{})
 
 	return updateChannelEvent{
-		id:        read(event, "id", ""),
-		name:      read(event, "name", ""),
+		id:        events.Read(event, "id", ""),
+		name:      events.Read(event, "name", ""),
 		metadata:  metadata,
-		updatedAt: readTime(event, "updated_at", time.Now()),
-		updatedBy: read(event, "updated_by", ""),
+		updatedAt: events.Read(event, "updated_at", time.Now()),
+		updatedBy: events.Read(event, "updated_by", ""),
 	}
 }
 
 func decodeRemoveChannel(event map[string]interface{}) removeEvent {
 	return removeEvent{
-		id: read(event, "id", ""),
+		id: events.Read(event, "id", ""),
 	}
 }
 
@@ -130,6 +128,7 @@ func decodeDisconnectThing(event map[string]interface{}) connectionEvent {
 	if read(event, "memberKind", "") != memberKind && read(event, "relation", "") != relation {
 		return connectionEvent{}
 	}
+
 	return connectionEvent{
 		channelID: read(event, "group_id", ""),
 		thingIDs:  ReadStringSlice(event, "member_ids"),
@@ -144,6 +143,7 @@ func (es *eventHandler) handleUpdateChannel(ctx context.Context, uce updateChann
 		UpdatedAt: uce.updatedAt,
 		UpdatedBy: uce.updatedBy,
 	}
+
 	return es.svc.UpdateChannelHandler(ctx, channel)
 }
 
@@ -173,13 +173,4 @@ func ReadStringSlice(event map[string]interface{}, key string) []string {
 	}
 
 	return res
-}
-
-func readTime(event map[string]interface{}, key string, def time.Time) time.Time {
-	val, ok := event[key].(time.Time)
-	if !ok {
-		return def
-	}
-
-	return val
 }

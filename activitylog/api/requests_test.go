@@ -62,6 +62,52 @@ func TestListActivitiesReqValidate(t *testing.T) {
 			},
 			err: apiutil.ErrInvalidDirection,
 		},
+		{
+			desc: "valid id and entity type",
+			req: listActivitiesReq{
+				token: token,
+				page: activitylog.Page{
+					Limit:      limit,
+					EntityID:   "id",
+					EntityType: activitylog.UserEntity,
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "valid id and empty entity type",
+			req: listActivitiesReq{
+				token: token,
+				page: activitylog.Page{
+					Limit:      limit,
+					EntityID:   "id",
+					EntityType: activitylog.EmptyEntity,
+				},
+			},
+			err: apiutil.ErrMissingEntityType,
+		},
+		{
+			desc: "empty id and empty entity type",
+			req: listActivitiesReq{
+				token: token,
+				page: activitylog.Page{
+					Limit:      limit,
+					EntityType: activitylog.EmptyEntity,
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "empty id and valid entity type",
+			req: listActivitiesReq{
+				token: token,
+				page: activitylog.Page{
+					Limit:      limit,
+					EntityType: activitylog.UserEntity,
+				},
+			},
+			err: apiutil.ErrMissingID,
+		},
 	}
 
 	for _, c := range cases {

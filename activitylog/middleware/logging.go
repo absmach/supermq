@@ -52,6 +52,7 @@ func (lm *loggingMiddleware) ReadAll(ctx context.Context, token string, page act
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("page",
 				slog.String("operation", page.Operation),
+				slog.String("entity_type", page.EntityType.String()),
 				slog.Uint64("offset", page.Offset),
 				slog.Uint64("limit", page.Limit),
 				slog.Uint64("total", activitiesPage.Total),

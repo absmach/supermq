@@ -38,12 +38,13 @@ paths:
         dataset is consumed either by making subsequent requests, or by
         increasing the subset size of the initial request.
       parameters:
+        - $ref: "#/components/parameters/offset"
+        - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/entity_type"
-        - $ref: "#/components/parameters/limit"
-        - $ref: "#/components/parameters/offset"
         - $ref: "#/components/parameters/operation"
-        - $ref: "#/components/parameters/with_payload"
+        - $ref: "#/components/parameters/with_attributes"
+        - $ref: "#/components/parameters/with_metadata"
         - $ref: "#/components/parameters/from"
         - $ref: "#/components/parameters/to"
         - $ref: "#/components/parameters/dir"
@@ -170,7 +171,7 @@ components:
   parameters:
     id:
       name: id
-      description: Unique identifier for an entity, e.g. user, group, domain, etc.
+      description: Unique identifier for an entity, e.g. user, group, domain, etc. Used together with entity_type.
       in: query
       schema:
         type: string
@@ -223,9 +224,18 @@ components:
       required: false
       example: users.create
 
-    with_payload:
-      name: with_payload
-      description: Include activity payload.
+    with_attributes:
+      name: with_attributes
+      description: Include activity attributes.
+      in: query
+      schema:
+        type: boolean
+      required: false
+      example: true
+
+    with_metadata:
+      name: with_metadata
+      description: Include activity metadata.
       in: query
       schema:
         type: boolean
@@ -234,23 +244,23 @@ components:
 
     from:
       name: from
-      description: Start date in nanoseconds.
+      description: Start date in unix time.
       in: query
       schema:
         type: string
         format: int64
       required: false
-      example: 1704974066014408296
+      example: 1966777289
 
     to:
       name: to
-      description: End date in nanoseconds.
+      description: End date in unix time.
       in: query
       schema:
         type: string
         format: int64
       required: false
-      example: 1704974066014408296
+      example: 1966777289
 
     dir:
       name: dir
