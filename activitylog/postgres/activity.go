@@ -50,6 +50,9 @@ func (repo *repository) RetrieveAll(ctx context.Context, page activitylog.Page) 
 	if page.WithMetadata {
 		sq += ", metadata"
 	}
+	if page.Direction == "" {
+		page.Direction = "ASC"
+	}
 	q := fmt.Sprintf("SELECT %s FROM activities %s ORDER BY occurred_at %s LIMIT :limit OFFSET :offset;", sq, query, page.Direction)
 
 	rows, err := repo.db.NamedQueryContext(ctx, q, page)

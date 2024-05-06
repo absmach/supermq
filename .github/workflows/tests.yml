@@ -276,7 +276,7 @@ jobs:
         run: |
           mkdir coverage
 
-      - name: Run pkg activitylog tests
+      - name: Run Activity log tests
         if: steps.changes.outputs.activitylog == 'true' || steps.changes.outputs.workflow == 'true'
         run: |
           go test --race -v -count=1 -coverprofile=coverage/activitylog.out ./activitylog/...

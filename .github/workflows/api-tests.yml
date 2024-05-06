@@ -44,6 +44,7 @@ env:
   TIMESCALE_READER_URL: http://localhost:9011
   SMPP_NOTIFIER_URL: http://localhost:9014
   SMTP_NOTIFIER_URL: http://localhost:9015
+  ACTIVITY_LOG_URL: http://localhost:9021
 
 jobs:
   api-test:
@@ -78,6 +79,11 @@ jobs:
         id: changes
         with:
           filters: |
+            activitylog:
+              - ".github/workflows/api-tests.yml"
+              - "api/openapi/activitylog.yml"
+              - "activitylog/api/**"
+                      
             auth:
               - ".github/workflows/api-tests.yml"
               - "api/openapi/auth.yml"
@@ -182,6 +188,17 @@ jobs:
           checks: all
           report: false
           args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
+
+      - name: Run Activity Log API tests
+        if: steps.changes.outputs.activitylog == 'true'
+        uses: schemathesis/action@v1
+        with:
+          schema: api/openapi/activitylog.yml
+          base-url: ${{ env.ACTIVITY_LOG_URL }}
+          checks: all
+          report: false
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
+
 
       - name: Run Bootstrap API tests
         if: steps.changes.outputs.bootstrap == 'true'

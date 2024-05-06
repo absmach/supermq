@@ -70,7 +70,7 @@ func decodeListActivitiesReq(_ context.Context, r *http.Request) (interface{}, e
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	if from > math.MaxInt32 {
-		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidTime)
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidTimeFormat)
 	}
 	var fromTime time.Time
 	if from != 0 {
@@ -81,7 +81,7 @@ func decodeListActivitiesReq(_ context.Context, r *http.Request) (interface{}, e
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	if to > math.MaxInt32 {
-		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidTime)
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidTimeFormat)
 	}
 	var toTime time.Time
 	if to != 0 {

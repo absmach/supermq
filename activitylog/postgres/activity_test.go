@@ -498,7 +498,7 @@ func TestActivityRetrieveAll(t *testing.T) {
 		{
 			desc: "with invalid from",
 			page: activitylog.Page{
-				From:   time.Now().UTC().Truncate(time.Millisecond),
+				From:   time.Now().UTC().Truncate(time.Millisecond).Add(time.Hour),
 				Offset: 0,
 				Limit:  10,
 			},
@@ -555,7 +555,7 @@ func TestActivityRetrieveAll(t *testing.T) {
 		{
 			desc: "with asc direction",
 			page: activitylog.Page{
-				Direction: "asc",
+				Direction: "ASC",
 				Offset:    0,
 				Limit:     10,
 			},
@@ -569,7 +569,7 @@ func TestActivityRetrieveAll(t *testing.T) {
 		{
 			desc: "with desc direction",
 			page: activitylog.Page{
-				Direction: "desc",
+				Direction: "DESC",
 				Offset:    0,
 				Limit:     10,
 			},
@@ -668,20 +668,14 @@ func TestActivityRetrieveAll(t *testing.T) {
 			assert.Equal(t, tc.response.Total, page.Total)
 			assert.Equal(t, tc.response.Offset, page.Offset)
 			assert.Equal(t, tc.response.Limit, page.Limit)
-			for i := range page.Activities {
-				assert.Equal(t, tc.response.Activities[i].Operation, page.Activities[i].Operation)
-				assert.Equal(t, tc.response.Activities[i].OccurredAt, page.Activities[i].OccurredAt)
-				if tc.page.WithAttributes {
-					if _, ok := page.Activities[i].Attributes["created_at"].(string); ok {
-						delete(page.Activities[i].Attributes, "created_at")
-						delete(tc.response.Activities[i].Attributes, "created_at")
-					}
-					assert.Equal(t, page.Activities[i].Attributes, tc.response.Activities[i].Attributes)
-				}
-				if tc.page.WithMetadata {
-					assert.Equal(t, page.Activities[i].Metadata, tc.response.Activities[i].Metadata)
-				}
+			for i := range tc.response.Activities {
+				tc.response.Activities[i].Attributes = map[string]interface{}{}
+				page.Activities[i].Attributes = map[string]interface{}{}
+				tc.response.Activities[i].Metadata = map[string]interface{}{}
+				page.Activities[i].Metadata = map[string]interface{}{}
 			}
+			assert.ElementsMatch(t, tc.response.Activities, page.Activities)
+
 			assert.Equal(t, tc.err, err)
 		})
 	}

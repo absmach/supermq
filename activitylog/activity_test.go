@@ -143,7 +143,7 @@ func TestToEntityType(t *testing.T) {
 			desc:        "Invalid entity type",
 			entityType:  "invalid",
 			expected:    activitylog.EmptyEntity,
-			expectedErr: apiutil.ErrInvalidEntity,
+			expectedErr: apiutil.ErrInvalidEntityType,
 		},
 	}
 

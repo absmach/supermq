@@ -77,7 +77,7 @@ func ToEntityType(entityType string) (EntityType, error) {
 	case channelEntityType:
 		return ChannelEntity, nil
 	default:
-		return EmptyEntity, apiutil.ErrInvalidEntity
+		return EmptyEntity, apiutil.ErrInvalidEntityType
 	}
 }
 
