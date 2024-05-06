@@ -22,6 +22,10 @@ func Migration() *migrate.MemoryMigrationSource {
 						metadata	JSONB,
 						UNIQUE(operation, occurred_at, attributes)
 					)`,
+					`CREATE INDEX idx_activities_default_user_filter ON activities(operation, (attributes->>'id'), (attributes->>'user_id'), occurred_at DESC);`,
+					`CREATE INDEX idx_activities_default_group_filter ON activities(operation, (attributes->>'id'), (attributes->>'group_id'), occurred_at DESC);`,
+					`CREATE INDEX idx_activities_default_thing_filter ON activities(operation, (attributes->>'id'), (attributes->>'thing_id'), occurred_at DESC);`,
+					`CREATE INDEX idx_activities_default_channel_filter ON activities(operation, (attributes->>'id'), (attributes->>'channel_id'), occurred_at DESC);`,
 				},
 				Down: []string{
 					`DROP TABLE IF EXISTS activities`,

@@ -122,6 +122,7 @@ jobs:
               - "auth.pb.go"
               - "auth_grpc.pb.go"
               - "auth/**"
+              - "pkg/events/**"
 
             http:
               - "http/**"
@@ -278,7 +279,7 @@ jobs:
       - name: Run pkg activitylog tests
         if: steps.changes.outputs.activitylog == 'true' || steps.changes.outputs.workflow == 'true'
         run: |
-          go test --race -v -count=1 -coverprofile=coverage/activitylog.out ./pkg/events/...
+          go test --race -v -count=1 -coverprofile=coverage/activitylog.out ./activitylog/...
 
       - name: Run auth tests
         if: steps.changes.outputs.auth == 'true' || steps.changes.outputs.workflow == 'true'

@@ -20,6 +20,7 @@ import (
 	"github.com/absmach/magistrala/internal"
 	jaegerclient "github.com/absmach/magistrala/internal/clients/jaeger"
 	pgclient "github.com/absmach/magistrala/internal/clients/postgres"
+	"github.com/absmach/magistrala/internal/postgres"
 	"github.com/absmach/magistrala/internal/server"
 	httpserver "github.com/absmach/magistrala/internal/server/http"
 	mglog "github.com/absmach/magistrala/logger"
@@ -27,12 +28,13 @@ import (
 	"github.com/absmach/magistrala/pkg/events/store"
 	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/caarlos0/env/v10"
+	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 )
 
 const (
-	svcName        = "activity-log"
+	svcName        = "activity_log"
 	envPrefixDB    = "MG_ACTIVITY_LOG_"
 	envPrefixHTTP  = "MG_ACTIVITY_LOG_HTTP_"
 	envPrefixAuth  = "MG_AUTH_GRPC_"
@@ -87,7 +89,6 @@ func main() {
 		return
 	}
 	defer db.Close()
-	repo := activitylogpg.NewRepository(db)
 
 	authConfig := auth.Config{}
 	if err := env.ParseWithOptions(&authConfig, env.Options{Prefix: envPrefixAuth}); err != nil {
@@ -119,7 +120,7 @@ func main() {
 	}()
 	tracer := tp.Tracer(svcName)
 
-	svc := newService(repo, ac, logger, tracer)
+	svc := newService(db, dbConfig, ac, logger, tracer)
 
 	subscriber, err := store.NewSubscriber(ctx, cfg.ESURL, logger)
 	if err != nil {
@@ -163,7 +164,10 @@ func main() {
 	}
 }
 
-func newService(repo activitylog.Repository, authClient magistrala.AuthServiceClient, logger *slog.Logger, tracer trace.Tracer) activitylog.Service {
+func newService(db *sqlx.DB, dbConfig pgclient.Config, authClient magistrala.AuthServiceClient, logger *slog.Logger, tracer trace.Tracer) activitylog.Service {
+	database := postgres.NewDatabase(db, dbConfig, tracer)
+	repo := activitylogpg.NewRepository(database)
+
 	svc := activitylog.NewService(repo, authClient)
 	svc = middleware.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics("activitylog", "activity_writer")
