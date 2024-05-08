@@ -379,6 +379,11 @@ func TestClient(t *testing.T) {
 		Metadata:    validMetadata,
 		Status:      mgclients.EnabledStatus.String(),
 	}
+
+	basicUser := sdk.User{
+		Name:   "clientname",
+		Status: mgclients.EnabledStatus.String(),
+	}
 	conf := sdk.Config{
 		UsersURL: ts.URL,
 	}
@@ -393,6 +398,13 @@ func TestClient(t *testing.T) {
 	}{
 		{
 			desc:     "view client successfully",
+			response: user,
+			token:    validToken,
+			clientID: generateUUID(t),
+			err:      nil,
+		},
+		{
+			desc:     "view client successfully as admin",
 			response: user,
 			token:    validToken,
 			clientID: generateUUID(t),
@@ -418,6 +430,13 @@ func TestClient(t *testing.T) {
 			token:    invalidToken,
 			clientID: wrongID,
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "view client as normal user with failed check on admin",
+			response: basicUser,
+			token:    validToken,
+			clientID: generateUUID(t),
+			err:      nil,
 		},
 	}
 
