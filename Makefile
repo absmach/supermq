@@ -1,7 +1,7 @@
 # Copyright (c) Abstract Machines
 # SPDX-License-Identifier: Apache-2.0
 
-MG_DOCKER_IMAGE_NAME_PREFIX ?= magistrala
+MG_DOCKER_IMAGE_NAME_PREFIX ?= rodneydav
 BUILD_DIR = build
 SERVICES = auth users things http coap ws lora influxdb-writer influxdb-reader mongodb-writer \
 	mongodb-reader cassandra-writer cassandra-reader postgres-writer postgres-reader timescale-writer timescale-reader cli \
@@ -48,7 +48,8 @@ endef
 define make_docker
 	$(eval svc=$(subst docker_,,$(1)))
 
-	docker build \
+	docker buildx build \
+		--platform linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x \
 		--no-cache \
 		--build-arg SVC=$(svc) \
 		--build-arg GOARCH=$(GOARCH) \
