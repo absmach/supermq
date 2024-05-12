@@ -33,6 +33,7 @@ import (
 var (
 	id         = generateUUID(&testing.T{})
 	validToken = "token"
+	adminToken = "adminToken"
 	validID    = "d4ebb847-5d0e-4e46-bdd9-b6aceaaa3a22"
 	wrongID    = testsutil.GenerateUUID(&testing.T{})
 )
@@ -406,7 +407,7 @@ func TestClient(t *testing.T) {
 		{
 			desc:     "view client successfully as admin",
 			response: user,
-			token:    validToken,
+			token:    adminToken,
 			clientID: generateUUID(t),
 			err:      nil,
 		},
@@ -442,11 +443,12 @@ func TestClient(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: validToken}).Return(&magistrala.IdentityRes{UserId: validID}, nil)
-		if tc.token != validToken {
-			repoCall = auth.On("Identify", mock.Anything, mock.Anything).Return(&magistrala.IdentityRes{}, svcerr.ErrAuthentication)
+		if tc.token == invalidToken {
+			repoCall = auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: invalidToken}).Return(&magistrala.IdentityRes{}, svcerr.ErrAuthentication)
 		}
 		repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
 		repoCall2 := crepo.On("RetrieveByID", mock.Anything, tc.clientID).Return(convertClient(tc.response), tc.err)
+		adminAuthCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: adminToken}).Return(&magistrala.IdentityRes{UserId: validID}, nil)
 		rClient, err := mgsdk.User(tc.clientID, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		tc.response.Credentials.Secret = ""
@@ -460,6 +462,7 @@ func TestClient(t *testing.T) {
 		repoCall2.Unset()
 		repoCall1.Unset()
 		repoCall.Unset()
+		adminAuthCall.Unset()
 	}
 }
 
