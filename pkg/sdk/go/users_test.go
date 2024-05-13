@@ -452,7 +452,7 @@ func TestClient(t *testing.T) {
 		if tc.token != adminToken {
 			repoCall1 = auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, svcerr.ErrAuthentication)
 			superAdminCall = auth.On("CheckSuperAdmin", mock.Anything, mock.Anything).Return(svcerr.ErrAuthentication)
-			repoCall2 = crepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(convertClient(basicUser), nil)
+			repoCall2 = crepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(convertClient(tc.response), nil)
 		}
 		adminAuthCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: adminToken}).Return(&magistrala.IdentityRes{UserId: validID}, nil)
 		rClient, err := mgsdk.User(tc.clientID, tc.token)
