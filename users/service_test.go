@@ -1059,6 +1059,7 @@ func TestUpdateClientRole(t *testing.T) {
 		},
 		{
 			desc:                 "update client role to user role with failed to delete policy",
+			client:               client2,
 			identifyResponse:     &magistrala.IdentityRes{UserId: client.ID},
 			authorizeResponse:    &magistrala.AuthorizeRes{Authorized: true},
 			deletePolicyResponse: &magistrala.DeletePolicyRes{Deleted: false},
@@ -1068,6 +1069,7 @@ func TestUpdateClientRole(t *testing.T) {
 		},
 		{
 			desc:                 "update client role to user role with failed to delete policy with error",
+			client:               client2,
 			identifyResponse:     &magistrala.IdentityRes{UserId: client.ID},
 			authorizeResponse:    &magistrala.AuthorizeRes{Authorized: true},
 			deletePolicyResponse: &magistrala.DeletePolicyRes{Deleted: false},
@@ -1099,6 +1101,14 @@ func TestUpdateClientRole(t *testing.T) {
 			token:                validToken,
 			updateRoleErr:        svcerr.ErrAuthentication,
 			err:                  svcerr.ErrAuthentication,
+		},
+		{
+			desc:             "Update client role for non-existent user",
+			client:           mgclients.Client{},
+			identifyResponse: &magistrala.IdentityRes{},
+			identifyErr:      svcerr.ErrNotFound,
+			token:            validToken,
+			err:              svcerr.ErrNotFound,
 		},
 	}
 

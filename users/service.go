@@ -686,6 +686,19 @@ func (svc service) addClientPolicyRollback(ctx context.Context, userID string, r
 }
 
 func (svc service) updateClientPolicy(ctx context.Context, userID string, role mgclients.Role) error {
+	res, err := svc.auth.Authorize(ctx, &magistrala.AuthorizeReq{
+		SubjectType: auth.UserType,
+		Subject:     userID,
+		Permission:  auth.MembershipPermission,
+		ObjectType:  auth.PlatformType,
+		Object:      auth.MagistralaObject,
+	})
+	if err != nil {
+		return err
+	}
+	if !res.Authorized {
+		return svcerr.ErrAuthorization
+	}
 	switch role {
 	case mgclients.AdminRole:
 		resp, err := svc.auth.AddPolicy(ctx, &magistrala.AddPolicyReq{
