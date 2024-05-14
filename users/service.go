@@ -515,9 +515,14 @@ func (svc service) ListMembers(ctx context.Context, token, objectKind, objectID 
 		}
 	}
 
+	var c []mgclients.Client
+	for i := range cp.Clients {
+		c = append(c, mgclients.Client{Name: cp.Clients[i].Name, ID: cp.Clients[i].ID})
+	}
+
 	return mgclients.MembersPage{
 		Page:    cp.Page,
-		Members: cp.Clients,
+		Members: c,
 	}, nil
 }
 
