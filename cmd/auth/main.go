@@ -20,6 +20,7 @@ import (
 	domainsgrpcapi "github.com/absmach/magistrala/auth/api/grpc/domains"
 	tokengrpcapi "github.com/absmach/magistrala/auth/api/grpc/token"
 	httpapi "github.com/absmach/magistrala/auth/api/http"
+	"github.com/absmach/magistrala/auth/cache"
 	"github.com/absmach/magistrala/auth/events"
 	"github.com/absmach/magistrala/auth/jwt"
 	apostgres "github.com/absmach/magistrala/auth/postgres"
@@ -39,6 +40,7 @@ import (
 	"github.com/authzed/grpcutil"
 	"github.com/caarlos0/env/v11"
 	"github.com/jmoiron/sqlx"
+	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -69,6 +71,8 @@ type config struct {
 	SpicedbPort         string        `env:"MG_SPICEDB_PORT"                 envDefault:"50051"`
 	SpicedbSchemaFile   string        `env:"MG_SPICEDB_SCHEMA_FILE"          envDefault:"./docker/spicedb/schema.zed"`
 	SpicedbPreSharedKey string        `env:"MG_SPICEDB_PRE_SHARED_KEY"       envDefault:"12345678"`
+	CacheURL            string        `env:"MG_AUTH_CACHE_URL"               envDefault:"redis://localhost:6379/0"`
+	CacheKeyDuration    time.Duration `env:"MG_AUTH_CACHE_KEY_DURATION"      envDefault:"1h"`
 	TraceRatio          float64       `env:"MG_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
 	ESURL               string        `env:"MG_ES_URL"                       envDefault:"nats://localhost:4222"`
 }
@@ -124,6 +128,14 @@ func main() {
 	}()
 	tracer := tp.Tracer(svcName)
 
+	cacheclient, err := redisclient.Connect(cfg.CacheURL)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer cacheclient.Close()
+
 	spicedbclient, err := initSpiceDB(ctx, cfg)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to init spicedb grpc client : %s\n", err.Error()))
@@ -131,7 +143,7 @@ func main() {
 		return
 	}
 
-	svc := newService(ctx, db, tracer, cfg, dbConfig, logger, spicedbclient)
+	svc := newService(ctx, db, tracer, cfg, dbConfig, cacheclient, cfg.CacheKeyDuration, logger, spicedbclient)
 
 	httpServerConfig := server.Config{Port: defSvcHTTPPort}
 	if err := env.ParseWithOptions(&httpServerConfig, env.Options{Prefix: envPrefixHTTP}); err != nil {
@@ -207,7 +219,7 @@ func initSchema(ctx context.Context, client *authzed.ClientWithExperimental, sch
 	return nil
 }
 
-func newService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental) auth.Service {
+func newService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, cacheClient *redis.Client, keyDuration time.Duration, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental) auth.Service {
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 	keysRepo := apostgres.New(database)
 	domainsRepo := apostgres.NewDomainRepository(database)

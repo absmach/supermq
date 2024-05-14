@@ -18,6 +18,7 @@ type policyEvaluator struct {
 	client           *authzed.ClientWithExperimental
 	permissionClient v1.PermissionsServiceClient
 	logger           *slog.Logger
+	cache            auth.Cache
 }
 
 func NewPolicyEvaluator(client *authzed.ClientWithExperimental, logger *slog.Logger) policies.Evaluator {
@@ -25,6 +26,7 @@ func NewPolicyEvaluator(client *authzed.ClientWithExperimental, logger *slog.Log
 		client:           client,
 		permissionClient: client.PermissionsServiceClient,
 		logger:           logger,
+		cache:            cache,
 	}
 }
 
