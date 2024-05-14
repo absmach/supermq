@@ -499,25 +499,25 @@ func (svc service) ListMembers(ctx context.Context, token, objectKind, objectID 
 		return mgclients.MembersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	if pm.ListPerms && len(cp.Clients) > 0 {
+	var c []mgclients.Client
+	for i := range cp.Clients {
+		c = append(c, mgclients.Client{Name: cp.Clients[i].Name, ID: cp.Clients[i].ID})
+	}
+
+	if pm.ListPerms && len(c) > 0 {
 		g, ctx := errgroup.WithContext(ctx)
 
 		for i := range cp.Clients {
 			// Copying loop variable "i" to avoid "loop variable captured by func literal"
 			iter := i
 			g.Go(func() error {
-				return svc.retrieveObjectUsersPermissions(ctx, res.GetDomainId(), objectType, objectID, &cp.Clients[iter])
+				return svc.retrieveObjectUsersPermissions(ctx, res.GetDomainId(), objectType, objectID, &c[iter])
 			})
 		}
 
 		if err := g.Wait(); err != nil {
 			return mgclients.MembersPage{}, err
 		}
-	}
-
-	var c []mgclients.Client
-	for i := range cp.Clients {
-		c = append(c, mgclients.Client{Name: cp.Clients[i].Name, ID: cp.Clients[i].ID})
 	}
 
 	return mgclients.MembersPage{

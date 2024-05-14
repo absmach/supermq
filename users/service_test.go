@@ -32,8 +32,9 @@ var (
 	phasher        = hasher.New()
 	secret         = "strongsecret"
 	validCMetadata = mgclients.Metadata{"role": "client"}
+	clientID       = testsutil.GenerateUUID(&testing.T{})
 	client         = mgclients.Client{
-		ID:          testsutil.GenerateUUID(&testing.T{}),
+		ID:          clientID,
 		Name:        "clientname",
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: mgclients.Credentials{Identity: "clientidentity", Secret: secret},
@@ -42,6 +43,7 @@ var (
 	}
 	basicClient = mgclients.Client{
 		Name: "clientname",
+		ID:   clientID,
 	}
 	validToken      = "token"
 	inValidToken    = "invalid"
@@ -1633,7 +1635,7 @@ func TestListMembers(t *testing.T) {
 	svc, cRepo, auth, _ := newService(true)
 
 	validPolicy := fmt.Sprintf("%s_%s", validID, client.ID)
-	permissionsClient := client
+	permissionsClient := basicClient
 	permissionsClient.Permissions = []string{"read"}
 
 	cases := []struct {
@@ -1731,7 +1733,7 @@ func TestListMembers(t *testing.T) {
 					Offset: 0,
 					Limit:  100,
 				},
-				Members: []mgclients.Client{client},
+				Members: []mgclients.Client{basicClient},
 			},
 			err: nil,
 		},
@@ -1742,7 +1744,7 @@ func TestListMembers(t *testing.T) {
 			objectKind:       authsvc.ThingsKind,
 			objectID:         validID,
 			page:             mgclients.Page{Offset: 0, Limit: 100, Permission: "read", ListPerms: true},
-			identifyResponse: &magistrala.IdentityRes{UserId: client.ID},
+			identifyResponse: &magistrala.IdentityRes{UserId: basicClient.ID},
 			authorizeReq: &magistrala.AuthorizeReq{
 				SubjectType: authsvc.UserType,
 				SubjectKind: authsvc.TokenKind,
@@ -1767,7 +1769,7 @@ func TestListMembers(t *testing.T) {
 					Offset: 0,
 					Limit:  100,
 				},
-				Clients: []mgclients.Client{client},
+				Clients: []mgclients.Client{basicClient},
 			},
 			listPermissionsResponse: &magistrala.ListPermissionsRes{Permissions: []string{"read"}},
 			response: mgclients.MembersPage{
@@ -1961,7 +1963,7 @@ func TestListMembers(t *testing.T) {
 					Offset: 0,
 					Limit:  100,
 				},
-				Clients: []mgclients.Client{client},
+				Clients: []mgclients.Client{basicClient},
 			},
 			response: mgclients.MembersPage{
 				Page: mgclients.Page{
@@ -1969,7 +1971,7 @@ func TestListMembers(t *testing.T) {
 					Offset: 0,
 					Limit:  100,
 				},
-				Members: []mgclients.Client{client},
+				Members: []mgclients.Client{basicClient},
 			},
 			err: nil,
 		},
@@ -2026,7 +2028,7 @@ func TestListMembers(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:             "list members with policies successsfully of the domains kind",
+			desc:             "list members with policies successsfully of the groups kind",
 			token:            validToken,
 			groupID:          validID,
 			objectKind:       authsvc.GroupsKind,
@@ -2065,7 +2067,7 @@ func TestListMembers(t *testing.T) {
 					Offset: 0,
 					Limit:  100,
 				},
-				Members: []mgclients.Client{client},
+				Members: []mgclients.Client{basicClient},
 			},
 			err: nil,
 		},
