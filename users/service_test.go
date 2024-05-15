@@ -574,7 +574,7 @@ func TestListClients(t *testing.T) {
 				Page: mgclients.Page{
 					Total: 1,
 				},
-				Clients: []mgclients.Client{client},
+				Clients: []mgclients.Client{basicClient},
 			},
 			token: validToken,
 			err:   nil,
