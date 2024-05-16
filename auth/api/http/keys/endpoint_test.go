@@ -4,7 +4,6 @@
 package keys_test
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,8 +15,8 @@ import (
 
 	"github.com/absmach/magistrala/auth"
 	httpapi "github.com/absmach/magistrala/auth/api/http"
-	"github.com/absmach/magistrala/auth/jwt"
 	"github.com/absmach/magistrala/auth/mocks"
+	"github.com/absmach/magistrala/internal/testsutil"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
@@ -93,9 +92,7 @@ func toJSON(data interface{}) string {
 }
 
 func TestIssue(t *testing.T) {
-	svc, krepo := newService()
-	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, IssuedAt: time.Now(), Subject: id})
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
+	svc := new(mocks.Service)
 
 	ts := newServer(svc)
 	defer ts.Close()
@@ -110,11 +107,14 @@ func TestIssue(t *testing.T) {
 		req    string
 		ct     string
 		token  string
+		resp   auth.Token
+		err    error
 		status int
 	}{
 		{
 			desc:   "issue login key with empty token",
 			req:    toJSON(lk),
+			resp:   auth.Token{AccessToken: "token"},
 			ct:     contentType,
 			token:  "",
 			status: http.StatusUnauthorized,
@@ -122,29 +122,30 @@ func TestIssue(t *testing.T) {
 		{
 			desc:   "issue API key",
 			req:    toJSON(ak),
+			resp:   auth.Token{AccessToken: "token"},
 			ct:     contentType,
-			token:  token.AccessToken,
+			token:  "token",
 			status: http.StatusCreated,
 		},
 		{
 			desc:   "issue recovery key",
 			req:    toJSON(rk),
 			ct:     contentType,
-			token:  token.AccessToken,
+			token:  "token",
 			status: http.StatusCreated,
 		},
 		{
 			desc:   "issue login key wrong content type",
 			req:    toJSON(lk),
 			ct:     "",
-			token:  token.AccessToken,
+			token:  "token",
 			status: http.StatusUnsupportedMediaType,
 		},
 		{
 			desc:   "issue recovery key wrong content type",
 			req:    toJSON(rk),
 			ct:     "",
-			token:  token.AccessToken,
+			token:  "token",
 			status: http.StatusUnsupportedMediaType,
 		},
 		{
@@ -152,6 +153,7 @@ func TestIssue(t *testing.T) {
 			req:    toJSON(ak),
 			ct:     contentType,
 			token:  "wrong",
+			err:    svcerr.ErrAuthentication,
 			status: http.StatusUnauthorized,
 		},
 		{
@@ -159,27 +161,28 @@ func TestIssue(t *testing.T) {
 			req:    toJSON(rk),
 			ct:     contentType,
 			token:  "",
+			err:    svcerr.ErrAuthentication,
 			status: http.StatusUnauthorized,
 		},
 		{
 			desc:   "issue key with invalid request",
 			req:    "{",
 			ct:     contentType,
-			token:  token.AccessToken,
+			token:  "token",
 			status: http.StatusBadRequest,
 		},
 		{
 			desc:   "issue key with invalid JSON",
 			req:    "{invalid}",
 			ct:     contentType,
-			token:  token.AccessToken,
+			token:  "token",
 			status: http.StatusBadRequest,
 		},
 		{
 			desc:   "issue key with invalid JSON content",
 			req:    `{"Type":{"key":"AccessToken"}}`,
 			ct:     contentType,
-			token:  token.AccessToken,
+			token:  "token",
 			status: http.StatusBadRequest,
 		},
 	}
@@ -193,24 +196,16 @@ func TestIssue(t *testing.T) {
 			token:       tc.token,
 			body:        strings.NewReader(tc.req),
 		}
-		repocall := krepo.On("Save", mock.Anything, mock.Anything).Return("", nil)
+		svcCall := svc.On("Issue", mock.Anything, tc.token, mock.Anything).Return(tc.resp, tc.err)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		repocall.Unset()
+		svcCall.Unset()
 	}
 }
 
 func TestRetrieve(t *testing.T) {
-	svc, krepo := newService()
-	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, IssuedAt: time.Now(), Subject: id})
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	key := auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), Subject: id}
-
-	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	k, err := svc.Issue(context.Background(), token.AccessToken, key)
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repocall.Unset()
+	svc := new(mocks.Service)
 
 	ts := newServer(svc)
 	defer ts.Close()
@@ -226,8 +221,8 @@ func TestRetrieve(t *testing.T) {
 	}{
 		{
 			desc:  "retrieve an existing key",
-			id:    k.AccessToken,
-			token: token.AccessToken,
+			id:    testsutil.GenerateUUID(t),
+			token: "token",
 			key: auth.Key{
 				Subject:   id,
 				Type:      auth.AccessKey,
@@ -240,13 +235,13 @@ func TestRetrieve(t *testing.T) {
 		{
 			desc:   "retrieve a non-existing key",
 			id:     "non-existing",
-			token:  token.AccessToken,
-			status: http.StatusBadRequest,
+			token:  "token",
+			status: http.StatusNotFound,
 			err:    svcerr.ErrNotFound,
 		},
 		{
 			desc:   "retrieve a key with an invalid token",
-			id:     k.AccessToken,
+			id:     testsutil.GenerateUUID(t),
 			token:  "wrong",
 			status: http.StatusUnauthorized,
 			err:    svcerr.ErrAuthentication,
@@ -254,7 +249,7 @@ func TestRetrieve(t *testing.T) {
 		{
 			desc:   "retrieve a key with an empty token",
 			token:  "",
-			id:     k.AccessToken,
+			id:     testsutil.GenerateUUID(t),
 			status: http.StatusUnauthorized,
 			err:    svcerr.ErrAuthentication,
 		},
@@ -267,24 +262,16 @@ func TestRetrieve(t *testing.T) {
 			url:    fmt.Sprintf("%s/keys/%s", ts.URL, tc.id),
 			token:  tc.token,
 		}
-		repocall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(tc.key, tc.err)
+		svcCall := svc.On("RetrieveKey", mock.Anything, tc.token, tc.id).Return(tc.key, tc.err)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		repocall.Unset()
+		svcCall.Unset()
 	}
 }
 
 func TestRevoke(t *testing.T) {
-	svc, krepo := newService()
-	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, IssuedAt: time.Now(), Subject: id})
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	key := auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), Subject: id}
-
-	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	k, err := svc.Issue(context.Background(), token.AccessToken, key)
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repocall.Unset()
+	svc := new(mocks.Service)
 
 	ts := newServer(svc)
 	defer ts.Close()
@@ -294,29 +281,31 @@ func TestRevoke(t *testing.T) {
 		desc   string
 		id     string
 		token  string
+		err    error
 		status int
 	}{
 		{
 			desc:   "revoke an existing key",
-			id:     k.AccessToken,
-			token:  token.AccessToken,
+			id:     testsutil.GenerateUUID(t),
+			token:  "token",
 			status: http.StatusNoContent,
 		},
 		{
 			desc:   "revoke a non-existing key",
 			id:     "non-existing",
-			token:  token.AccessToken,
+			token:  "token",
 			status: http.StatusNoContent,
 		},
 		{
 			desc:   "revoke key with invalid token",
-			id:     k.AccessToken,
+			id:     testsutil.GenerateUUID(t),
 			token:  "wrong",
+			err:    svcerr.ErrAuthentication,
 			status: http.StatusUnauthorized,
 		},
 		{
 			desc:   "revoke key with empty token",
-			id:     k.AccessToken,
+			id:     testsutil.GenerateUUID(t),
 			token:  "",
 			status: http.StatusUnauthorized,
 		},
@@ -329,10 +318,63 @@ func TestRevoke(t *testing.T) {
 			url:    fmt.Sprintf("%s/keys/%s", ts.URL, tc.id),
 			token:  tc.token,
 		}
-		repocall := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		svcCall := svc.On("Revoke", mock.Anything, tc.token, tc.id).Return(tc.err)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		repocall.Unset()
+		svcCall.Unset()
+	}
+}
+
+func TestRevokeToken(t *testing.T) {
+	svc := new(mocks.Service)
+
+	ts := newServer(svc)
+	defer ts.Close()
+	client := ts.Client()
+
+	cases := []struct {
+		desc   string
+		id     string
+		token  string
+		err    error
+		status int
+	}{
+		{
+			desc:   "revoke an existing token",
+			token:  "token",
+			status: http.StatusNoContent,
+		},
+		{
+			desc:   "revoke a non-existing token",
+			token:  "token",
+			err:    svcerr.ErrAuthentication,
+			status: http.StatusUnauthorized,
+		},
+		{
+			desc:   "revoke invalid token",
+			token:  "wrong",
+			err:    svcerr.ErrAuthentication,
+			status: http.StatusUnauthorized,
+		},
+		{
+			desc:   "revoke empty token",
+			token:  "",
+			status: http.StatusUnauthorized,
+		},
+	}
+
+	for _, tc := range cases {
+		req := testRequest{
+			client: client,
+			method: http.MethodDelete,
+			url:    fmt.Sprintf("%s/keys/", ts.URL),
+			token:  tc.token,
+		}
+		svcCall := svc.On("RevokeToken", mock.Anything, tc.token).Return(tc.err)
+		res, err := req.make()
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+		svcCall.Unset()
 	}
 }

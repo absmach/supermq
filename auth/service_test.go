@@ -65,14 +65,14 @@ var (
 	pEvaluator *policymocks.Evaluator
 )
 
-func newService() (auth.Service, string) {
+func newService() (auth.Service, *mocks.TokenRepository, *mocks.Cache, string) {
 	krepo = new(mocks.KeyRepository)
 	drepo = new(mocks.DomainsRepository)
 	pService = new(policymocks.Service)
 	pEvaluator = new(policymocks.Evaluator)
 	idProvider := uuid.NewMock()
 
-	t := jwt.New([]byte(secret))
+	t := jwt.New([]byte(secret), trepo, cache)
 	key := auth.Key{
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(refreshDuration),
@@ -86,10 +86,22 @@ func newService() (auth.Service, string) {
 	return auth.New(krepo, drepo, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), token
 }
 
-func TestIssue(t *testing.T) {
-	svc, accessToken := newService()
+func newMinimalService() auth.Service {
+	krepo = new(mocks.KeyRepository)
+	trepo := new(mocks.TokenRepository)
+	cache := new(mocks.Cache)
+	prepo = new(mocks.PolicyAgent)
+	drepo = new(mocks.DomainsRepository)
+	idProvider := uuid.NewMock()
 
-	n := jwt.New([]byte(secret))
+	t := jwt.New([]byte(secret), trepo, cache)
+
+	return auth.New(krepo, drepo, idProvider, t, prepo, loginDuration, refreshDuration, invalidDuration)
+}
+
+func TestIssue(t *testing.T) {
+	svc, trepo, cache, accessToken := newService()
+	n := jwt.New([]byte(secret), trepo, cache)
 
 	apikey := auth.Key{
 		IssuedAt:  time.Now(),
@@ -382,6 +394,9 @@ func TestIssue(t *testing.T) {
 		checkDOmainPolicyReq policies.Policy
 		checkPolicyErr       error
 		retrieveByIDErr      error
+		cacheContains        bool
+		repoContains         bool
+		cacheSave            error
 		err                  error
 	}{
 		{
@@ -468,15 +483,16 @@ func TestIssue(t *testing.T) {
 				ObjectType:  policies.PlatformType,
 				Permission:  policies.AdminPermission,
 			},
-			token: "",
-			err:   nil,
+			cacheContains: true,
+			repoContains:  false,
+			token:         refreshToken,
+			err:           svcerr.ErrAuthentication,
 		},
 		{
 			desc: "issue invitation key with invalid pService",
 			key: auth.Key{
-				Type:     auth.InvitationKey,
+				Type:     auth.RefreshKey,
 				IssuedAt: time.Now(),
-				Domain:   groupName,
 			},
 			checkPolicyRequest: policies.Policy{
 				SubjectType: policies.UserType,
@@ -490,10 +506,11 @@ func TestIssue(t *testing.T) {
 				ObjectType:  policies.DomainType,
 				Permission:  policies.MembershipPermission,
 			},
-			token:           refreshToken,
-			checkPolicyErr:  svcerr.ErrAuthorization,
-			retrieveByIDErr: repoerr.ErrNotFound,
-			err:             svcerr.ErrDomainAuthorization,
+			cacheContains: false,
+			repoContains:  true,
+			cacheSave:     repoerr.ErrCreateEntity,
+			token:         refreshToken,
+			err:           svcerr.ErrAuthentication,
 		},
 	}
 	for _, tc := range cases4 {
@@ -502,14 +519,17 @@ func TestIssue(t *testing.T) {
 		repoCall2 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDOmainPolicyReq).Return(tc.checkPolicyErr)
 		_, err := svc.Issue(context.Background(), tc.token, tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+		cacheCall.Unset()
+		cacheCall1.Unset()
 		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
+		repoCall3.Unset()
 	}
 }
 
 func TestRevoke(t *testing.T) {
-	svc, _ := newService()
+	svc := newMinimalService()
 	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, errIssueUser)
 	secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, IssuedAt: time.Now(), Subject: id})
 	repocall.Unset()
@@ -562,7 +582,7 @@ func TestRevoke(t *testing.T) {
 }
 
 func TestRetrieve(t *testing.T) {
-	svc, _ := newService()
+	svc := newMinimalService()
 	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, IssuedAt: time.Now(), Subject: id})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
@@ -632,7 +652,7 @@ func TestRetrieve(t *testing.T) {
 }
 
 func TestIdentify(t *testing.T) {
-	svc, _ := newService()
+	svc, trepo, cache, _ := newService()
 
 	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	repocall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
@@ -658,7 +678,7 @@ func TestIdentify(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Issuing expired login key expected to succeed: %s", err))
 	repocall4.Unset()
 
-	te := jwt.New([]byte(secret))
+	te := jwt.New([]byte(secret), trepo, cache)
 	key := auth.Key{
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(refreshDuration),
@@ -737,7 +757,7 @@ func TestIdentify(t *testing.T) {
 }
 
 func TestAuthorize(t *testing.T) {
-	svc, accessToken := newService()
+	svc, trepo, cache, accessToken := newService()
 
 	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	repocall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
@@ -758,7 +778,7 @@ func TestAuthorize(t *testing.T) {
 	repocall2.Unset()
 	repocall3.Unset()
 
-	te := jwt.New([]byte(secret))
+	te := jwt.New([]byte(secret), trepo, cache)
 	key := auth.Key{
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(refreshDuration),
@@ -1244,7 +1264,7 @@ func TestSwitchToPermission(t *testing.T) {
 }
 
 func TestCreateDomain(t *testing.T) {
-	svc, accessToken := newService()
+	svc, _, _, accessToken := newService()
 
 	cases := []struct {
 		desc              string
@@ -1369,7 +1389,7 @@ func TestCreateDomain(t *testing.T) {
 }
 
 func TestRetrieveDomain(t *testing.T) {
-	svc, accessToken := newService()
+	svc, _, _, accessToken := newService()
 
 	cases := []struct {
 		desc           string
@@ -1429,7 +1449,7 @@ func TestRetrieveDomain(t *testing.T) {
 }
 
 func TestRetrieveDomainPermissions(t *testing.T) {
-	svc, accessToken := newService()
+	svc, _, _, accessToken := newService()
 
 	cases := []struct {
 		desc                   string
@@ -1488,7 +1508,7 @@ func TestRetrieveDomainPermissions(t *testing.T) {
 }
 
 func TestUpdateDomain(t *testing.T) {
-	svc, accessToken := newService()
+	svc, _, _, accessToken := newService()
 
 	cases := []struct {
 		desc            string
@@ -1568,7 +1588,7 @@ func TestUpdateDomain(t *testing.T) {
 }
 
 func TestChangeDomainStatus(t *testing.T) {
-	svc, accessToken := newService()
+	svc, _, _, accessToken := newService()
 
 	disabledStatus := auth.DisabledStatus
 
@@ -1645,7 +1665,7 @@ func TestChangeDomainStatus(t *testing.T) {
 }
 
 func TestListDomains(t *testing.T) {
-	svc, accessToken := newService()
+	svc, _, _, accessToken := newService()
 
 	cases := []struct {
 		desc            string
@@ -1711,7 +1731,7 @@ func TestListDomains(t *testing.T) {
 }
 
 func TestAssignUsers(t *testing.T) {
-	svc, accessToken := newService()
+	svc, _, _, accessToken := newService()
 
 	cases := []struct {
 		desc                 string
@@ -2028,7 +2048,7 @@ func TestAssignUsers(t *testing.T) {
 }
 
 func TestUnassignUser(t *testing.T) {
-	svc, accessToken := newService()
+	svc, _, _, accessToken := newService()
 
 	cases := []struct {
 		desc                  string
@@ -2255,7 +2275,7 @@ func TestUnassignUser(t *testing.T) {
 }
 
 func TestListUsersDomains(t *testing.T) {
-	svc, accessToken := newService()
+	svc, _, _, accessToken := newService()
 
 	cases := []struct {
 		desc            string

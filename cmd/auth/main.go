@@ -222,6 +222,7 @@ func initSchema(ctx context.Context, client *authzed.ClientWithExperimental, sch
 func newService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, cacheClient *redis.Client, keyDuration time.Duration, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental) auth.Service {
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 	keysRepo := apostgres.New(database)
+	tokensRepo := apostgres.NewTokensRepository(database)
 	domainsRepo := apostgres.NewDomainRepository(database)
 	idProvider := uuid.New()
 
