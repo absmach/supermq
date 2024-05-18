@@ -504,8 +504,8 @@ func (svc service) ListMembers(ctx context.Context, token, objectKind, objectID 
 		return mgclients.MembersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	for i := range cp.Clients {
-		cp.Clients[i] = mgclients.Client{Name: cp.Clients[i].Name, ID: cp.Clients[i].ID}
+	for i, c := range cp.Clients {
+		cp.Clients[i] = mgclients.Client{ID: c.ID, Name: c.Name}
 	}
 
 	if pm.ListPerms && len(cp.Clients) > 0 {
