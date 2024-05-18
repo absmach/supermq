@@ -1847,7 +1847,7 @@ func TestRetrieveDomain(t *testing.T) {
 			err:      svcerr.ErrAuthentication,
 		},
 		{
-			desc:           "retrieve domain with empty domainID",
+			desc:           "retrieve domain with empty domain id",
 			token:          accessToken,
 			domainID:       "",
 			err:            svcerr.ErrViewEntity,
