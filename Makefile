@@ -115,7 +115,7 @@ endif
 
 install:
 	for file in $(BUILD_DIR)/*; do \
-		cp $$file $(GOBIN)/magistrala-`basename $$file`; \
+		cp $$file /usr/local/go/bin/magistrala-`basename $$file`; \
 	done
 
 mocks:

@@ -36,6 +36,8 @@ var (
 	Contact string = ""
 	// RawOutput raw output mode.
 	RawOutput bool = false
+	// Curl convert to curl command.
+	Curl bool = false
 )
 
 func logJSON(iList ...interface{}) {
