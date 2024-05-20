@@ -35,9 +35,9 @@ func (_m *ConfigRepository) ChangeState(ctx context.Context, owner string, id st
 	return r0
 }
 
-// ConnectThing provides a mock function with given fields: ctx, mgChannel, mgThing
-func (_m *ConfigRepository) ConnectThing(ctx context.Context, mgChannel string, mgThing string) error {
-	ret := _m.Called(ctx, mgChannel, mgThing)
+// ConnectThing provides a mock function with given fields: ctx, channelID, thingID
+func (_m *ConfigRepository) ConnectThing(ctx context.Context, channelID string, thingID string) error {
+	ret := _m.Called(ctx, channelID, thingID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ConnectThing")
@@ -45,7 +45,7 @@ func (_m *ConfigRepository) ConnectThing(ctx context.Context, mgChannel string, 
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, mgChannel, mgThing)
+		r0 = rf(ctx, channelID, thingID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -53,9 +53,9 @@ func (_m *ConfigRepository) ConnectThing(ctx context.Context, mgChannel string, 
 	return r0
 }
 
-// DisconnectThing provides a mock function with given fields: ctx, mgChannel, mgThing
-func (_m *ConfigRepository) DisconnectThing(ctx context.Context, mgChannel string, mgThing string) error {
-	ret := _m.Called(ctx, mgChannel, mgThing)
+// DisconnectThing provides a mock function with given fields: ctx, channelID, thingID
+func (_m *ConfigRepository) DisconnectThing(ctx context.Context, channelID string, thingID string) error {
+	ret := _m.Called(ctx, channelID, thingID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DisconnectThing")
@@ -63,7 +63,7 @@ func (_m *ConfigRepository) DisconnectThing(ctx context.Context, mgChannel strin
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, mgChannel, mgThing)
+		r0 = rf(ctx, channelID, thingID)
 	} else {
 		r0 = ret.Error(0)
 	}

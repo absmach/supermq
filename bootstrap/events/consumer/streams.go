@@ -20,6 +20,9 @@ const (
 	channelPrefix = "group."
 	channelUpdate = channelPrefix + "update"
 	channelRemove = channelPrefix + "remove"
+
+	memberKind = "things"
+	relation   = "group"
 )
 
 type eventHandler struct {
@@ -100,7 +103,7 @@ func decodeRemoveChannel(event map[string]interface{}) removeEvent {
 }
 
 func decodeConnectThing(event map[string]interface{}) connectionEvent {
-	if event["memberKind"] != "things" && event["relation"] != "group" {
+	if event["memberKind"] != memberKind && event["relation"] != relation {
 		return connectionEvent{}
 	}
 
@@ -111,7 +114,7 @@ func decodeConnectThing(event map[string]interface{}) connectionEvent {
 }
 
 func decodeDisconnectThing(event map[string]interface{}) connectionEvent {
-	if event["memberKind"] != "things" && event["relation"] != "group" {
+	if event["memberKind"] != memberKind && event["relation"] != relation {
 		return connectionEvent{}
 	}
 	return connectionEvent{

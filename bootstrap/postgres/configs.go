@@ -64,27 +64,27 @@ func (cr configRepository) Save(ctx context.Context, cfg bootstrap.Config, chsCo
 			err = repoerr.ErrConflict
 		}
 
-		if errRollback := cr.rollback("failed to insert a Config", tx); errRollback != nil {
+		if errRollback := cr.rollback(err, tx); errRollback != nil {
 			return "", errors.Wrap(err, errRollback)
 		}
 	}
 
 	if err := insertChannels(ctx, cfg.Owner, cfg.Channels, tx); err != nil {
-		if errRollback := cr.rollback("failed to insert Channels", tx); errRollback != nil {
+		if errRollback := cr.rollback(err, tx); errRollback != nil {
 			return "", errors.Wrap(err, errRollback)
 		}
 		return "", errors.Wrap(errSaveChannels, err)
 	}
 
 	if err := insertConnections(ctx, cfg, chsConnIDs, tx); err != nil {
-		if errRollback := cr.rollback("failed to insert connections", tx); errRollback != nil {
+		if errRollback := cr.rollback(err, tx); errRollback != nil {
 			return "", errors.Wrap(err, errRollback)
 		}
 		return "", errors.Wrap(errSaveConnections, err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		if errRollback := cr.rollback("failed to commit Config save", tx); errRollback != nil {
+		if errRollback := cr.rollback(err, tx); errRollback != nil {
 			return "", errors.Wrap(err, errRollback)
 		}
 		return "", err
@@ -321,7 +321,7 @@ func (cr configRepository) UpdateConnections(ctx context.Context, owner, id stri
 	}
 
 	if err := insertChannels(ctx, owner, channels, tx); err != nil {
-		if rollbackErr := cr.rollback("failed to insert Channels during the update", tx); rollbackErr != nil {
+		if rollbackErr := cr.rollback(err, tx); rollbackErr != nil {
 			return err
 		}
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
@@ -333,14 +333,14 @@ func (cr configRepository) UpdateConnections(ctx context.Context, owner, id stri
 				return repoerr.ErrNotFound
 			}
 		}
-		if errRollback := cr.rollback("failed to update connections during the update", tx); errRollback != nil {
+		if errRollback := cr.rollback(err, tx); errRollback != nil {
 			return errors.Wrap(err, errRollback)
 		}
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		if errRollback := cr.rollback("failed to commit Config update", tx); errRollback != nil {
+		if errRollback := cr.rollback(err, tx); errRollback != nil {
 			return errors.Wrap(err, errRollback)
 		}
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
@@ -505,13 +505,12 @@ func (cr configRepository) retrieveAll(owner string, filter bootstrap.Filter) (s
 	return fmt.Sprintf(template, f), params
 }
 
-func (cr configRepository) rollback(content string, tx *sqlx.Tx) error {
-	errMsg := errors.New(content)
+func (cr configRepository) rollback(defErr error, tx *sqlx.Tx) error {
 	if err := tx.Rollback(); err != nil {
-		errRollback := errors.New("failed to rollback")
-		return errors.Wrap(errMsg, errors.Wrap(errRollback, err))
+		return errors.Wrap(defErr, errors.Wrap(errors.New("failed to rollback"), err))
 	}
-	return errMsg
+
+	return defErr
 }
 
 func insertChannels(_ context.Context, owner string, channels []bootstrap.Channel, tx *sqlx.Tx) error {
