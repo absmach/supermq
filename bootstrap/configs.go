@@ -114,9 +114,9 @@ type ConfigRepository interface {
 
 	// ConnectHandler changes state of the Config when the corresponding Thing is
 	// connected to the Channel.
-	ConnectThing(ctx context.Context, mgChannel, mgThing string) error
+	ConnectThing(ctx context.Context, channelID, thingID string) error
 
 	// DisconnectHandler changes state of the Config when the corresponding Thing is
 	// disconnected from the Channel.
-	DisconnectThing(ctx context.Context, mgChannel, mgThing string) error
+	DisconnectThing(ctx context.Context, channelID, thingID string) error
 }

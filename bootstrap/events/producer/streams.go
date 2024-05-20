@@ -213,8 +213,8 @@ func (es *eventStore) ConnectThingHandler(ctx context.Context, channelID, thingI
 	}
 
 	ev := connectThingEvent{
-		mgThing:   thingID,
-		mgChannel: channelID,
+		thingID:   thingID,
+		channelID: channelID,
 	}
 
 	return es.Publish(ctx, ev)
@@ -226,8 +226,8 @@ func (es *eventStore) DisconnectThingHandler(ctx context.Context, channelID, thi
 	}
 
 	ev := disconnectThingEvent{
-		mgThing:   thingID,
-		mgChannel: channelID,
+		thingID:   thingID,
+		channelID: channelID,
 	}
 
 	return es.Publish(ctx, ev)

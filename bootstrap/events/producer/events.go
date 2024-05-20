@@ -278,27 +278,27 @@ func (uche updateChannelHandlerEvent) Encode() (map[string]interface{}, error) {
 }
 
 type connectThingEvent struct {
-	mgThing   string
-	mgChannel string
+	thingID   string
+	channelID string
 }
 
 func (cte connectThingEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
-		"thing_id":   cte.mgThing,
-		"channel_id": cte.mgChannel,
+		"thing_id":   cte.thingID,
+		"channel_id": cte.channelID,
 		"operation":  thingConnect,
 	}, nil
 }
 
 type disconnectThingEvent struct {
-	mgThing   string
-	mgChannel string
+	thingID   string
+	channelID string
 }
 
 func (dte disconnectThingEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
-		"thing_id":   dte.mgThing,
-		"channel_id": dte.mgChannel,
+		"thing_id":   dte.thingID,
+		"channel_id": dte.channelID,
 		"operation":  thingDisconnect,
 	}, nil
 }

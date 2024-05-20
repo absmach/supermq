@@ -45,15 +45,15 @@ func (es *eventHandler) Handle(ctx context.Context, event events.Event) error {
 		err = es.svc.RemoveConfigHandler(ctx, rte.id)
 	case thingConnect:
 		cte := decodeConnectThing(msg)
-		for _, mgThing := range cte.mgThing {
-			if err = es.svc.ConnectThingHandler(ctx, cte.mgChannel, mgThing); err != nil {
+		for _, thingID := range cte.thingID {
+			if err = es.svc.ConnectThingHandler(ctx, cte.channelID, thingID); err != nil {
 				return err
 			}
 		}
 	case thingDisconnect:
 		dte := decodeDisconnectThing(msg)
-		for _, mgThing := range dte.mgThing {
-			if err = es.svc.DisconnectThingHandler(ctx, dte.mgChannel, mgThing); err != nil {
+		for _, thingID := range dte.thingID {
+			if err = es.svc.DisconnectThingHandler(ctx, dte.channelID, thingID); err != nil {
 				return err
 			}
 		}
@@ -105,8 +105,8 @@ func decodeConnectThing(event map[string]interface{}) connectionEvent {
 	}
 
 	return connectionEvent{
-		mgChannel: read(event, "group_id", ""),
-		mgThing:   ReadStringSlice(event, "member_ids"),
+		channelID: read(event, "group_id", ""),
+		thingID:   ReadStringSlice(event, "member_ids"),
 	}
 }
 
@@ -115,8 +115,8 @@ func decodeDisconnectThing(event map[string]interface{}) connectionEvent {
 		return connectionEvent{}
 	}
 	return connectionEvent{
-		mgChannel: read(event, "group_id", ""),
-		mgThing:   ReadStringSlice(event, "member_ids"),
+		channelID: read(event, "group_id", ""),
+		thingID:   ReadStringSlice(event, "member_ids"),
 	}
 }
 
