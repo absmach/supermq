@@ -708,6 +708,7 @@ func TestBootstrap(t *testing.T) {
 		repoCall.Unset()
 	}
 }
+
 func TestChangeState(t *testing.T) {
 	svc, boot, auth, sdk := newService()
 	repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: validToken}).Return(&magistrala.IdentityRes{Id: validID}, nil)
@@ -907,6 +908,7 @@ func TestRemoveConfigHandler(t *testing.T) {
 		repoCall.Unset()
 	}
 }
+
 func TestConnectThingsHandler(t *testing.T) {
 	svc, boot, auth, sdk := newService()
 	repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: validToken}).Return(&magistrala.IdentityRes{Id: validID}, nil)
@@ -929,16 +931,46 @@ func TestConnectThingsHandler(t *testing.T) {
 		err       error
 	}{
 		{
-			desc:      "connect",
+			desc:      "connect a thing",
 			channelID: channel.ID,
 			thingID:   config.ThingID,
 			err:       nil,
 		},
 		{
-			desc:      "connect connected",
+			desc:      "connect connected thing",
 			channelID: channel.ID,
 			thingID:   config.ThingID,
 			err:       nil,
+		},
+		{
+			desc:      "connect for a disconnected thing",
+			channelID: channel.ID,
+			thingID:   config.ThingID,
+			err:       err,
+		},
+		{
+			desc:      "connect for an invalid thing",
+			channelID: channel.ID,
+			thingID:   unknown,
+			err:       err,
+		},
+		{
+			desc:      "connect for a random thing",
+			channelID: channel.ID,
+			thingID:   unknown,
+			err:       err,
+		},
+		{
+			desc:      "connect for an empty thing",
+			channelID: channel.ID,
+			thingID:   "",
+			err:       err,
+		},
+		{
+			desc:      "connect with failed connection",
+			channelID: channel.ID,
+			thingID:   config.ThingID,
+			err:       err,
 		},
 	}
 
@@ -949,6 +981,7 @@ func TestConnectThingsHandler(t *testing.T) {
 		repoCall.Unset()
 	}
 }
+
 func TestDisconnectThingsHandler(t *testing.T) {
 	svc, boot, auth, sdk := newService()
 	repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: validToken}).Return(&magistrala.IdentityRes{Id: validID}, nil)
@@ -981,6 +1014,30 @@ func TestDisconnectThingsHandler(t *testing.T) {
 			channelID: channel.ID,
 			thingID:   config.ThingID,
 			err:       nil,
+		},
+		{
+			desc:      "disconnect for an invalid thing",
+			channelID: channel.ID,
+			thingID:   unknown,
+			err:       err,
+		},
+		{
+			desc:      "disconnect for a random thing",
+			channelID: channel.ID,
+			thingID:   unknown,
+			err:       err,
+		},
+		{
+			desc:      "disconnect for an empty thing",
+			channelID: channel.ID,
+			thingID:   "",
+			err:       err,
+		},
+		{
+			desc:      "disconnect with failed disconnection",
+			channelID: channel.ID,
+			thingID:   config.ThingID,
+			err:       err,
 		},
 	}
 
