@@ -955,6 +955,12 @@ func TestConnectThingsHandler(t *testing.T) {
 			err:       err,
 		},
 		{
+			desc:      "connect for an invalid chanel",
+			channelID: unknown,
+			thingID:   config.ThingID,
+			err:       err,
+		},
+		{
 			desc:      "connect for a random thing",
 			channelID: channel.ID,
 			thingID:   unknown,
@@ -963,6 +969,18 @@ func TestConnectThingsHandler(t *testing.T) {
 		{
 			desc:      "connect for an empty thing",
 			channelID: channel.ID,
+			thingID:   "",
+			err:       err,
+		},
+		{
+			desc:      "connect for an empty channel",
+			channelID: "",
+			thingID:   config.ThingID,
+			err:       err,
+		},
+		{
+			desc:      "connect for an empty thing and channel",
+			channelID: "",
 			thingID:   "",
 			err:       err,
 		},
