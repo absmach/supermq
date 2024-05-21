@@ -37,6 +37,15 @@ var (
 	}
 )
 
+type expected uint32
+
+const (
+	usage expected = iota
+	errMsg
+	entity
+	ok
+)
+
 func TestCreateUsersCmd(t *testing.T) {
 	sdkMock := new(sdkmocks.SDK)
 	cli.SetSDK(sdkMock)
@@ -50,6 +59,7 @@ func TestCreateUsersCmd(t *testing.T) {
 		sdkerr errors.SDKError
 		error  string
 		user   mgsdk.User
+		exp    expected
 	}{
 		{
 			desc: "create user successfully with token",
@@ -61,6 +71,7 @@ func TestCreateUsersCmd(t *testing.T) {
 				validToken,
 			},
 			user: user,
+			exp:  entity,
 		},
 		{
 			desc: "create user successfully without token",
@@ -71,21 +82,28 @@ func TestCreateUsersCmd(t *testing.T) {
 				"12345678",
 			},
 			user: user,
+			exp:  entity,
 		},
 		{
 			desc: "create user with invalid args",
 			args: []string{createCommand, user.Name, user.Credentials.Identity},
+			exp:  usage,
 		},
 	}
 
 	for _, tc := range cases {
 		var usr mgsdk.User
 		sdkCall := sdkMock.On("CreateUser", mock.Anything, mock.Anything).Return(tc.user, tc.sdkerr)
-		errRes, out, err := executeCommand(rootCmd, &usr, tc.args...)
+		out, err := executeCommand(rootCmd, &usr, tc.exp, tc.args...)
 
 		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
-		assert.Equal(t, tc.error, errRes, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, errRes))
-		assert.True(t, !strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		if tc.exp == errMsg {
+			assert.Equal(t, tc.error, out, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, out))
+		}
+		if tc.exp == usage {
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		}
+
 		assert.Equal(t, tc.user, usr, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.user, usr))
 		sdkCall.Unset()
 	}
@@ -106,6 +124,7 @@ func TestGetUsersCmd(t *testing.T) {
 		error  string
 		user   mgsdk.User
 		page   mgsdk.UsersPage
+		exp    expected
 	}{
 		{
 			desc: "get users successfully",
@@ -115,6 +134,7 @@ func TestGetUsersCmd(t *testing.T) {
 				validToken,
 			},
 			sdkerr: nil,
+			exp:    entity,
 			page: mgsdk.UsersPage{
 				Users: []mgsdk.User{user},
 			},
@@ -127,6 +147,7 @@ func TestGetUsersCmd(t *testing.T) {
 				validToken,
 			},
 			sdkerr: nil,
+			exp:    entity,
 			user:   user,
 		},
 		{
@@ -139,6 +160,7 @@ func TestGetUsersCmd(t *testing.T) {
 				"--limit=5",
 			},
 			sdkerr: nil,
+			exp:    entity,
 			page: mgsdk.UsersPage{
 				Users: []mgsdk.User{user},
 			},
@@ -152,6 +174,7 @@ func TestGetUsersCmd(t *testing.T) {
 			},
 			sdkerr: errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			error:  fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden).Error()),
+			exp:    errMsg,
 			page:   mgsdk.UsersPage{},
 		},
 		{
@@ -167,32 +190,37 @@ func TestGetUsersCmd(t *testing.T) {
 				all,
 				invalidToken,
 			},
+			exp: usage,
 		},
 	}
 
 	for _, tc := range cases {
 		var page mgsdk.UsersPage
 		var usr mgsdk.User
-		var errRes, out string
+		var out string
 		var err error
 		sdkCall := sdkMock.On("Users", mock.Anything, mock.Anything).Return(tc.page, tc.sdkerr)
 		sdkCall1 := sdkMock.On("User", mock.Anything, mock.Anything).Return(tc.user, tc.sdkerr)
 
 		switch {
 		case tc.args[1] != all:
-			errRes, out, err = executeCommand(rootCmd, &usr, tc.args...)
+			out, err = executeCommand(rootCmd, &usr, tc.exp, tc.args...)
 		default:
-			errRes, out, err = executeCommand(rootCmd, &page, tc.args...)
+			out, err = executeCommand(rootCmd, &page, tc.exp, tc.args...)
 		}
 
 		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
-		assert.True(t, !strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
-		assert.Equal(t, tc.error, errRes, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, errRes))
+		if tc.exp == usage {
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		}
+		if tc.exp == errMsg {
+			assert.Equal(t, tc.error, out, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, out))
+		}
 		switch {
 		case tc.args[1] != all:
-			assert.Equal(t, tc.user, usr, fmt.Sprintf("%v 4unexpected response, expected: %v, got: %v", tc.desc, tc.user, usr))
+			assert.Equal(t, tc.user, usr, fmt.Sprintf("%v unexpected response, expected: %v, got: %v", tc.desc, tc.user, usr))
 		case tc.args[1] == all:
-			assert.Equal(t, tc.page, page, fmt.Sprintf("%v 4unexpected response, expected: %v, got: %v", tc.desc, tc.user, page))
+			assert.Equal(t, tc.page, page, fmt.Sprintf("%v unexpected response, expected: %v, got: %v", tc.desc, tc.user, page))
 		}
 		sdkCall.Unset()
 		sdkCall1.Unset()
@@ -217,6 +245,7 @@ func TestIssueTokenCmd(t *testing.T) {
 		sdkerr errors.SDKError
 		error  string
 		token  mgsdk.Token
+		exp    expected
 	}{
 		{
 			desc: "issue token successfully without domain id",
@@ -226,6 +255,7 @@ func TestIssueTokenCmd(t *testing.T) {
 				"12345678",
 			},
 			sdkerr: nil,
+			exp:    entity,
 			token:  token,
 		},
 		{
@@ -237,6 +267,7 @@ func TestIssueTokenCmd(t *testing.T) {
 				testsutil.GenerateUUID(t),
 			},
 			sdkerr: nil,
+			exp:    entity,
 			token:  token,
 		},
 		{
@@ -248,6 +279,7 @@ func TestIssueTokenCmd(t *testing.T) {
 			},
 			sdkerr: errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			error:  fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden).Error()),
+			exp:    errMsg,
 			token:  mgsdk.Token{},
 		},
 		{
@@ -256,17 +288,24 @@ func TestIssueTokenCmd(t *testing.T) {
 				tokenCommand,
 				"john.doe@example.com",
 			},
+			exp: usage,
 		},
 	}
 
 	for _, tc := range cases {
 		var tkn mgsdk.Token
 		sdkCall := sdkMock.On("CreateToken", mock.Anything, mock.Anything).Return(tc.token, tc.sdkerr)
-		errRes, out, err := executeCommand(rootCmd, &tkn, tc.args...)
+		out, err := executeCommand(rootCmd, &tkn, tc.exp, tc.args...)
 
 		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
-		assert.Equal(t, tc.error, errRes, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, errRes))
-		assert.True(t, !strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+
+		if tc.exp == errMsg {
+			assert.Equal(t, tc.error, out, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, out))
+		}
+		if tc.exp == usage {
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		}
+
 		assert.Equal(t, tc.token, tkn, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.token, tkn))
 		sdkCall.Unset()
 	}
@@ -290,6 +329,7 @@ func TestRefreshIssueTokenCmd(t *testing.T) {
 		sdkerr errors.SDKError
 		error  string
 		token  mgsdk.Token
+		exp    expected
 	}{
 		{
 			desc: "issue refresh token successfully without domain id",
@@ -298,6 +338,7 @@ func TestRefreshIssueTokenCmd(t *testing.T) {
 				validToken,
 			},
 			sdkerr: nil,
+			exp:    entity,
 			token:  token,
 		},
 		{
@@ -308,6 +349,7 @@ func TestRefreshIssueTokenCmd(t *testing.T) {
 				testsutil.GenerateUUID(t),
 			},
 			sdkerr: nil,
+			exp:    entity,
 			token:  token,
 		},
 		{
@@ -318,6 +360,7 @@ func TestRefreshIssueTokenCmd(t *testing.T) {
 				testsutil.GenerateUUID(t),
 				"extra-arg",
 			},
+			exp: usage,
 		},
 		{
 			desc: "failed to issue token successfully",
@@ -327,6 +370,7 @@ func TestRefreshIssueTokenCmd(t *testing.T) {
 			},
 			sdkerr: errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			error:  fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden).Error()),
+			exp:    errMsg,
 			token:  mgsdk.Token{},
 		},
 	}
@@ -334,11 +378,15 @@ func TestRefreshIssueTokenCmd(t *testing.T) {
 	for _, tc := range cases {
 		var tkn mgsdk.Token
 		sdkCall := sdkMock.On("RefreshToken", mock.Anything, mock.Anything).Return(tc.token, tc.sdkerr)
-		errRes, out, err := executeCommand(rootCmd, &tkn, tc.args...)
+		out, err := executeCommand(rootCmd, &tkn, tc.exp, tc.args...)
 
 		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
-		assert.Equal(t, tc.error, errRes, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, errRes))
-		assert.True(t, !strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		if tc.exp == errMsg {
+			assert.Equal(t, tc.error, out, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, out))
+		}
+		if tc.exp == usage {
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		}
 		assert.Equal(t, tc.token, tkn, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.token, tkn))
 		sdkCall.Unset()
 	}
@@ -357,6 +405,7 @@ func TestUpdateUserCmd(t *testing.T) {
 		sdkerr errors.SDKError
 		error  string
 		user   mgsdk.User
+		exp    expected
 	}{
 		{
 			desc: "update user tags successfully",
@@ -368,6 +417,7 @@ func TestUpdateUserCmd(t *testing.T) {
 				validToken,
 			},
 			sdkerr: nil,
+			exp:    entity,
 			user:   user,
 		},
 		{
@@ -379,6 +429,7 @@ func TestUpdateUserCmd(t *testing.T) {
 				"newidentity@example.com",
 				validToken,
 			},
+			exp:  entity,
 			user: user,
 		},
 		{
@@ -389,6 +440,7 @@ func TestUpdateUserCmd(t *testing.T) {
 				"{\"name\":\"new name\", \"metadata\":{\"key\": \"value\"}}",
 				validToken,
 			},
+			exp:  entity,
 			user: user,
 		},
 		{
@@ -400,6 +452,7 @@ func TestUpdateUserCmd(t *testing.T) {
 				"administrator",
 				validToken,
 			},
+			exp:  entity,
 			user: user,
 		},
 		{
@@ -412,6 +465,7 @@ func TestUpdateUserCmd(t *testing.T) {
 				validToken,
 				validToken,
 			},
+			exp: usage,
 		},
 	}
 
@@ -421,11 +475,17 @@ func TestUpdateUserCmd(t *testing.T) {
 		sdkCall1 := sdkMock.On("UpdateUserTags", mock.Anything, mock.Anything).Return(tc.user, tc.sdkerr)
 		sdkCall2 := sdkMock.On("UpdateUserIdentity", mock.Anything, mock.Anything).Return(tc.user, tc.sdkerr)
 		sdkCall3 := sdkMock.On("UpdateUserRole", mock.Anything, mock.Anything).Return(tc.user, tc.sdkerr)
-		errRes, out, err := executeCommand(rootCmd, &usr, tc.args...)
+		out, err := executeCommand(rootCmd, &usr, tc.exp, tc.args...)
 
 		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
-		assert.Equal(t, tc.error, errRes, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, errRes))
-		assert.True(t, !strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
+		if tc.exp == errMsg {
+			assert.Equal(t, tc.error, out, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, out))
+		}
+		if tc.exp == usage {
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		}
+
 		assert.Equal(t, tc.user, usr, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.user, usr))
 
 		sdkCall.Unset()
@@ -448,6 +508,7 @@ func TestGetUserProfileCmd(t *testing.T) {
 		sdkerr errors.SDKError
 		error  string
 		user   mgsdk.User
+		exp    expected
 	}{
 		{
 			desc: "get user profile successfully",
@@ -456,6 +517,7 @@ func TestGetUserProfileCmd(t *testing.T) {
 				validToken,
 			},
 			sdkerr: nil,
+			exp:    entity,
 		},
 		{
 			desc: "get user profile with invalid args",
@@ -464,17 +526,23 @@ func TestGetUserProfileCmd(t *testing.T) {
 				validToken,
 				"extra-arg",
 			},
+			exp: usage,
 		},
 	}
 
 	for _, tc := range cases {
 		var usr mgsdk.User
 		sdkCall := sdkMock.On("UserProfile", mock.Anything, mock.Anything).Return(tc.user, tc.sdkerr)
-		errRes, out, err := executeCommand(rootCmd, &usr, tc.args...)
+		out, err := executeCommand(rootCmd, &usr, tc.exp, tc.args...)
 
 		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
-		assert.Equal(t, tc.error, errRes, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, errRes))
-		assert.True(t, !strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
+		if tc.exp == errMsg {
+			assert.Equal(t, tc.error, out, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, out))
+		}
+		if tc.exp == usage {
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		}
 		assert.Equal(t, tc.user, usr, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.user, usr))
 		sdkCall.Unset()
 	}
@@ -491,6 +559,7 @@ func TestResetPasswordRequestCmd(t *testing.T) {
 		args   []string
 		sdkerr errors.SDKError
 		error  string
+		exp    expected
 	}{
 		{
 			desc: "request password reset successfully",
@@ -499,6 +568,7 @@ func TestResetPasswordRequestCmd(t *testing.T) {
 				"example@mail.com",
 			},
 			sdkerr: nil,
+			exp:    ok,
 		},
 		{
 			desc: "request password reset with invalid args",
@@ -507,16 +577,22 @@ func TestResetPasswordRequestCmd(t *testing.T) {
 				"example@mail.com",
 				"extra-arg",
 			},
+			exp: usage,
 		},
 	}
 
 	for _, tc := range cases {
 		sdkCall := sdkMock.On("ResetPasswordRequest", mock.Anything).Return(tc.sdkerr)
-		errRes, out, err := executeCommand(rootCmd, &mgsdk.User{}, tc.args...)
+		out, err := executeCommand(rootCmd, nil, tc.exp, tc.args...)
 
 		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
-		assert.Equal(t, tc.error, errRes, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, errRes))
-		assert.True(t, !strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+
+		if tc.exp == errMsg {
+			assert.Equal(t, tc.error, out, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, out))
+		}
+		if tc.exp == usage {
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		}
 		sdkCall.Unset()
 	}
 }
@@ -533,6 +609,7 @@ func TestResetPasswordCmd(t *testing.T) {
 		args   []string
 		sdkerr errors.SDKError
 		error  string
+		exp    expected
 	}{
 		{
 			desc: "reset password successfully",
@@ -543,6 +620,7 @@ func TestResetPasswordCmd(t *testing.T) {
 				validRequestToken,
 			},
 			sdkerr: nil,
+			exp:    ok,
 		},
 		{
 			desc: "reset password with invalid args",
@@ -553,16 +631,23 @@ func TestResetPasswordCmd(t *testing.T) {
 				validRequestToken,
 				"extra-arg",
 			},
+			exp: usage,
 		},
 	}
 
 	for _, tc := range cases {
 		sdkCall := sdkMock.On("ResetPassword", mock.Anything, mock.Anything, mock.Anything).Return(tc.sdkerr)
-		errRes, out, err := executeCommand(rootCmd, &mgsdk.User{}, tc.args...)
+		out, err := executeCommand(rootCmd, nil, tc.exp, tc.args...)
 
 		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
-		assert.Equal(t, tc.error, errRes, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, errRes))
-		assert.True(t, !strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+
+		if tc.exp == errMsg {
+			assert.Equal(t, tc.error, out, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, out))
+		}
+		if tc.exp == usage {
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		}
+
 		sdkCall.Unset()
 	}
 }
@@ -579,6 +664,7 @@ func TestUpdatePasswordCmd(t *testing.T) {
 		sdkerr errors.SDKError
 		error  string
 		user   mgsdk.User
+		exp    expected
 	}{
 		{
 			desc: "reset password successfully",
@@ -589,6 +675,7 @@ func TestUpdatePasswordCmd(t *testing.T) {
 				validToken,
 			},
 			sdkerr: nil,
+			exp:    entity,
 			user:   user,
 		},
 		{
@@ -601,17 +688,24 @@ func TestUpdatePasswordCmd(t *testing.T) {
 				validToken,
 			},
 			sdkerr: nil,
+			exp:    usage,
 			user:   user,
 		},
 	}
 
 	for _, tc := range cases {
 		sdkCall := sdkMock.On("UpdatePassword", mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.sdkerr)
-		errRes, out, err := executeCommand(rootCmd, &mgsdk.User{}, tc.args...)
+		out, err := executeCommand(rootCmd, &mgsdk.User{}, tc.exp, tc.args...)
 
 		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
-		assert.Equal(t, tc.error, errRes, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, errRes))
-		assert.True(t, !strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+
+		if tc.exp == errMsg {
+			assert.Equal(t, tc.error, out, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, out))
+		}
+		if tc.exp == usage {
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		}
+
 		sdkCall.Unset()
 	}
 }
@@ -629,6 +723,7 @@ func TestEnableUserCmd(t *testing.T) {
 		sdkerr errors.SDKError
 		error  string
 		user   mgsdk.User
+		exp    expected
 	}{
 		{
 			desc: "enable user successfully",
@@ -639,6 +734,7 @@ func TestEnableUserCmd(t *testing.T) {
 			},
 			sdkerr: nil,
 			user:   user,
+			exp:    entity,
 		},
 		{
 			desc: "enable user with invalid args",
@@ -648,17 +744,25 @@ func TestEnableUserCmd(t *testing.T) {
 				validToken,
 				validToken,
 			},
+			exp: usage,
 		},
 	}
 
 	for _, tc := range cases {
 		var usr mgsdk.User
 		sdkCall := sdkMock.On("EnableUser", mock.Anything, mock.Anything).Return(tc.user, tc.sdkerr)
-		errRes, out, err := executeCommand(rootCmd, &usr, tc.args...)
+		out, err := executeCommand(rootCmd, &usr, tc.exp, tc.args...)
 
 		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
-		assert.Equal(t, tc.error, errRes, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, errRes))
-		assert.True(t, !strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+
+		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
+		if tc.exp == errMsg {
+			assert.Equal(t, tc.error, out, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, out))
+		}
+		if tc.exp == usage {
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		}
+
 		assert.Equal(t, tc.user, usr, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.user, usr))
 		sdkCall.Unset()
 	}
@@ -677,6 +781,7 @@ func TestDisableUserCmd(t *testing.T) {
 		sdkerr errors.SDKError
 		error  string
 		user   mgsdk.User
+		exp    expected
 	}{
 		{
 			desc: "disable user successfully",
@@ -686,6 +791,7 @@ func TestDisableUserCmd(t *testing.T) {
 				validToken,
 			},
 			sdkerr: nil,
+			exp:    entity,
 			user:   user,
 		},
 		{
@@ -696,17 +802,25 @@ func TestDisableUserCmd(t *testing.T) {
 				validToken,
 				validToken,
 			},
+			exp: usage,
 		},
 	}
 
 	for _, tc := range cases {
 		var usr mgsdk.User
 		sdkCall := sdkMock.On("DisableUser", mock.Anything, mock.Anything).Return(tc.user, tc.sdkerr)
-		errRes, out, err := executeCommand(rootCmd, &usr, tc.args...)
+		out, err := executeCommand(rootCmd, &usr, tc.exp, tc.args...)
 
 		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
-		assert.Equal(t, tc.error, errRes, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, errRes))
-		assert.True(t, !strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+
+		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
+		if tc.exp == errMsg {
+			assert.Equal(t, tc.error, out, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, out))
+		}
+		if tc.exp == usage {
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		}
+
 		assert.Equal(t, tc.user, usr, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.user, usr))
 		sdkCall.Unset()
 	}
@@ -731,6 +845,7 @@ func TestListUserChannelsCmd(t *testing.T) {
 		channel mgsdk.Channel
 		page    mgsdk.ChannelsPage
 		output  bool
+		exp     expected
 	}{
 		{
 			desc: "list user channels successfully",
@@ -740,6 +855,7 @@ func TestListUserChannelsCmd(t *testing.T) {
 				validToken,
 			},
 			sdkerr: nil,
+			exp:    entity,
 			page: mgsdk.ChannelsPage{
 				Channels: []mgsdk.Channel{ch},
 			},
@@ -752,17 +868,25 @@ func TestListUserChannelsCmd(t *testing.T) {
 				validToken,
 				validToken,
 			},
+			exp: usage,
 		},
 	}
 
 	for _, tc := range cases {
 		var pg mgsdk.ChannelsPage
 		sdkCall := sdkMock.On("ListUserChannels", mock.Anything, mock.Anything, mock.Anything).Return(tc.page, tc.sdkerr)
-		errRes, out, err := executeCommand(rootCmd, &pg, tc.args...)
+		out, err := executeCommand(rootCmd, &pg, tc.exp, tc.args...)
 
 		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
-		assert.Equal(t, tc.error, errRes, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, errRes))
-		assert.True(t, !strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+
+		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
+		if tc.exp == errMsg {
+			assert.Equal(t, tc.error, out, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, out))
+		}
+		if tc.exp == usage {
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		}
+
 		assert.Equal(t, tc.page, pg, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.page, pg))
 		sdkCall.Unset()
 	}
@@ -786,6 +910,7 @@ func TestListUserThingsCmd(t *testing.T) {
 		error  string
 		thing  mgsdk.Thing
 		page   mgsdk.ThingsPage
+		exp    expected
 	}{
 		{
 			desc: "list user things successfully",
@@ -795,6 +920,7 @@ func TestListUserThingsCmd(t *testing.T) {
 				validToken,
 			},
 			sdkerr: nil,
+			exp:    entity,
 			page: mgsdk.ThingsPage{
 				Things: []mgsdk.Thing{th},
 			},
@@ -807,17 +933,25 @@ func TestListUserThingsCmd(t *testing.T) {
 				validToken,
 				validToken,
 			},
+			exp: usage,
 		},
 	}
 
 	for _, tc := range cases {
 		var pg mgsdk.ThingsPage
 		sdkCall := sdkMock.On("ListUserThings", mock.Anything, mock.Anything, mock.Anything).Return(tc.page, tc.sdkerr)
-		errRes, out, err := executeCommand(rootCmd, &pg, tc.args...)
+		out, err := executeCommand(rootCmd, &pg, tc.exp, tc.args...)
 
 		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
-		assert.Equal(t, tc.error, errRes, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, errRes))
-		assert.True(t, !strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+
+		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
+		if tc.exp == errMsg {
+			assert.Equal(t, tc.error, out, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, out))
+		}
+		if tc.exp == usage {
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		}
+
 		assert.Equal(t, tc.page, pg, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.page, pg))
 		sdkCall.Unset()
 	}
@@ -839,6 +973,7 @@ func TestListUserDomainsCmd(t *testing.T) {
 		args   []string
 		sdkerr errors.SDKError
 		error  string
+		exp    expected
 		page   mgsdk.DomainsPage
 	}{
 		{
@@ -849,6 +984,7 @@ func TestListUserDomainsCmd(t *testing.T) {
 				validToken,
 			},
 			sdkerr: nil,
+			exp:    entity,
 			page: mgsdk.DomainsPage{
 				Domains: []mgsdk.Domain{d},
 			},
@@ -861,17 +997,25 @@ func TestListUserDomainsCmd(t *testing.T) {
 				validToken,
 				validToken,
 			},
+			exp: usage,
 		},
 	}
 
 	for _, tc := range cases {
 		var pg mgsdk.DomainsPage
 		sdkCall := sdkMock.On("ListUserDomains", mock.Anything, mock.Anything, mock.Anything).Return(tc.page, tc.sdkerr)
-		errRes, out, err := executeCommand(rootCmd, &pg, tc.args...)
+		out, err := executeCommand(rootCmd, &pg, tc.exp, tc.args...)
 
 		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
-		assert.Equal(t, tc.error, errRes, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, errRes))
-		assert.True(t, !strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+
+		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
+		if tc.exp == errMsg {
+			assert.Equal(t, tc.error, out, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, out))
+		}
+		if tc.exp == usage {
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		}
+
 		assert.Equal(t, tc.page, pg, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.page, pg))
 		sdkCall.Unset()
 	}
@@ -893,6 +1037,7 @@ func TestListUserGroupsCmd(t *testing.T) {
 		args   []string
 		sdkerr errors.SDKError
 		error  string
+		exp    expected
 		page   mgsdk.GroupsPage
 	}{
 		{
@@ -903,6 +1048,7 @@ func TestListUserGroupsCmd(t *testing.T) {
 				validToken,
 			},
 			sdkerr: nil,
+			exp:    entity,
 			page: mgsdk.GroupsPage{
 				Groups: []mgsdk.Group{g},
 			},
@@ -914,23 +1060,31 @@ func TestListUserGroupsCmd(t *testing.T) {
 				user.ID,
 				validToken,
 			},
+			exp: usage,
 		},
 	}
 
 	for _, tc := range cases {
 		var pg mgsdk.GroupsPage
 		sdkCall := sdkMock.On("ListUserGroups", mock.Anything, mock.Anything, mock.Anything).Return(tc.page, tc.sdkerr)
-		errRes, out, err := executeCommand(rootCmd, &pg, tc.args...)
+		out, err := executeCommand(rootCmd, &pg, tc.exp, tc.args...)
 
 		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
-		assert.Equal(t, tc.error, errRes, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, errRes))
-		assert.True(t, !strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+
+		assert.Nil(t, err, fmt.Sprintf("unexpected error when running command: %s, got error: %v, with args: %v", tc.desc, err, tc.args))
+		if tc.exp == errMsg {
+			assert.Equal(t, tc.error, out, fmt.Sprintf("%s unexpected error response: expected %s got error: %s", tc.desc, tc.error, out))
+		}
+		if tc.exp == usage {
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		}
+
 		assert.Equal(t, tc.page, pg, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.page, pg))
 		sdkCall.Unset()
 	}
 }
 
-func executeCommand(root *cobra.Command, v any, args ...string) (errorRes, out string, err error) {
+func executeCommand(root *cobra.Command, v any, ex expected, args ...string) (out string, err error) {
 	buf := new(bytes.Buffer)
 	root.SetOut(buf)
 	root.SetErr(buf)
@@ -947,7 +1101,7 @@ func executeCommand(root *cobra.Command, v any, args ...string) (errorRes, out s
 
 	_, err = root.ExecuteC()
 	if err != nil {
-		return "", buf.String(), err
+		return buf.String(), err
 	}
 
 	w.Close()
@@ -955,24 +1109,41 @@ func executeCommand(root *cobra.Command, v any, args ...string) (errorRes, out s
 	os.Stdout = o
 	os.Stderr = e
 
-	var outBuf, errBuf bytes.Buffer
-	_, err = outBuf.ReadFrom(r)
-	if err != nil {
-		return "", buf.String(), err
-	}
+	var outBuf bytes.Buffer
 
-	res := outBuf.Bytes()
-
-	_, err = errBuf.ReadFrom(r1)
-	if err != nil {
-		return "", buf.String(), err
+	switch ex {
+	case usage:
+		_, err = outBuf.ReadFrom(r)
+		if err != nil {
+			return "", err
+		}
+		return outBuf.String(), nil
+	case errMsg:
+		var errBuf bytes.Buffer
+		_, err = errBuf.ReadFrom(r1)
+		if err != nil {
+			return "", err
+		}
+		return errBuf.String(), nil
+	case entity:
+		_, err = outBuf.ReadFrom(r)
+		if err != nil {
+			return outBuf.String(), err
+		}
+		res := outBuf.Bytes()
+		if err = json.Unmarshal(res, v); err != nil && len(res) > 0 {
+			return outBuf.String(), err
+		}
+	case ok:
+		_, err = outBuf.ReadFrom(r)
+		if err != nil {
+			return outBuf.String(), err
+		}
+		return outBuf.String(), err
+	default:
+		return "", nil
 	}
-
-	err = json.Unmarshal(res, v)
-	if err != nil && len(res) > 0 {
-		return errBuf.String(), outBuf.String(), nil
-	}
-	return errBuf.String(), buf.String(), nil
+	return "", nil
 }
 
 func setFlags(rootCmd *cobra.Command) *cobra.Command {
