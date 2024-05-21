@@ -1105,10 +1105,10 @@ func TestUpdateClientRole(t *testing.T) {
 		{
 			desc:             "Update client role for non-existent user",
 			client:           mgclients.Client{},
-			identifyResponse: &magistrala.IdentityRes{},
-			identifyErr:      svcerr.ErrNotFound,
 			token:            validToken,
-			err:              svcerr.ErrNotFound,
+			identifyResponse: &magistrala.IdentityRes{},
+			identifyErr:      svcerr.ErrAuthorization,
+			err:              svcerr.ErrAuthorization,
 		},
 	}
 
