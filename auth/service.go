@@ -781,7 +781,7 @@ func (svc service) AssignUsers(ctx context.Context, token, id string, userIds []
 	return svc.addDomainPolicies(ctx, id, relation, userIds...)
 }
 
-func (svc service) UnassignUsers(ctx context.Context, token, id string, userIds []string, relation string) error {
+func (svc service) UnassignUsers(ctx context.Context, token, id string, userIds []string) error {
 	pr := PolicyReq{
 		Subject:     token,
 		SubjectType: UserType,
@@ -794,17 +794,6 @@ func (svc service) UnassignUsers(ctx context.Context, token, id string, userIds 
 		return err
 	}
 
-	if relation != "" {
-		pr.Permission = SwitchToPermission(relation)
-		if err := svc.Authorize(ctx, pr); err != nil {
-			return err
-		}
-
-		if err := svc.removeDomainPolicies(ctx, id, relation, userIds...); err != nil {
-			return errors.Wrap(errRemovePolicies, err)
-		}
-		return nil
-	}
 	pr.Permission = AdminPermission
 	if err := svc.Authorize(ctx, pr); err != nil {
 		pr.SubjectKind = UsersKind
@@ -818,10 +807,15 @@ func (svc service) UnassignUsers(ctx context.Context, token, id string, userIds 
 		}
 	}
 
-	for _, rel := range []string{MemberRelation, ContributorRelation, EditorRelation, GuestRelation} {
-		// Remove only non-admins.
-		if err := svc.removeDomainPolicies(ctx, id, rel, userIds...); err != nil {
-			return err
+	for _, userID := range userIds {
+		if err := svc.DeletePolicy(ctx, PolicyReq{
+			Subject:     EncodeDomainUserID(id, userID),
+			SubjectType: UserType,
+			SubjectKind: UsersKind,
+			Object:      id,
+			ObjectType:  DomainType,
+		}); err != nil {
+			return errors.Wrap(errRemovePolicies, err)
 		}
 	}
 
@@ -965,37 +959,6 @@ func (svc service) createDomainPolicyRollback(ctx context.Context, userID, domai
 	})
 	if errPolicyCopy != nil {
 		err = errors.Wrap(err, errors.Wrap(errRemoveLocalPolicy, errPolicyCopy))
-	}
-	return err
-}
-
-func (svc service) removeDomainPolicies(ctx context.Context, domainID, relation string, userIDs ...string) (err error) {
-	var prs []PolicyReq
-	var pcs []Policy
-
-	for _, userID := range userIDs {
-		prs = append(prs, PolicyReq{
-			Subject:     EncodeDomainUserID(domainID, userID),
-			SubjectType: UserType,
-			SubjectKind: UsersKind,
-			Relation:    relation,
-			Object:      domainID,
-			ObjectType:  DomainType,
-		})
-		pcs = append(pcs, Policy{
-			SubjectType: UserType,
-			SubjectID:   userID,
-			Relation:    relation,
-			ObjectType:  DomainType,
-			ObjectID:    domainID,
-		})
-	}
-	if err := svc.agent.DeletePolicies(ctx, prs); err != nil {
-		return errors.Wrap(errRemovePolicies, err)
-	}
-
-	if err = svc.domains.DeletePolicies(ctx, pcs...); err != nil {
-		return errors.Wrap(errRemovePolicies, err)
 	}
 	return err
 }
