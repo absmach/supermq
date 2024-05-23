@@ -92,6 +92,11 @@ jobs:
               - "auth/**"
               - "pkg/sdk/**"
 
+            cli:
+              - "cli/**"
+              - "cmd/cli/**"
+              - "pkg/sdk/**"
+  
             coap:
               - "coap/**"
               - "cmd/coap/**"
