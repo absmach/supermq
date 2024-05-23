@@ -1103,6 +1103,14 @@ func TestUpdateClientRole(t *testing.T) {
 			err:                  svcerr.ErrAuthentication,
 		},
 		{
+			desc:              "update client role with failed MembershipPermission authorization",
+			client:            client,
+			identifyResponse:  &magistrala.IdentityRes{UserId: client.ID},
+			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
+			token:             validToken,
+			err:               svcerr.ErrAuthorization,
+		},
+		{
 			desc:             "Update client role for non-existent user",
 			client:           mgclients.Client{},
 			token:            validToken,
