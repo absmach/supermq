@@ -103,7 +103,7 @@ func decodeRemoveChannel(event map[string]interface{}) removeEvent {
 }
 
 func decodeConnectThing(event map[string]interface{}) connectionEvent {
-	if event["memberKind"] != memberKind && event["relation"] != relation {
+	if read(event, "memberKind", "") != memberKind && read(event, "relation", "") != relation {
 		return connectionEvent{}
 	}
 
@@ -114,7 +114,7 @@ func decodeConnectThing(event map[string]interface{}) connectionEvent {
 }
 
 func decodeDisconnectThing(event map[string]interface{}) connectionEvent {
-	if event["memberKind"] != memberKind && event["relation"] != relation {
+	if read(event, "memberKind", "") != memberKind && read(event, "relation", "") != relation {
 		return connectionEvent{}
 	}
 	return connectionEvent{
