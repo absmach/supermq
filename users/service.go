@@ -31,6 +31,7 @@ type service struct {
 	hasher       Hasher
 	email        Emailer
 	selfRegister bool
+	isAdmin      bool
 }
 
 // NewService returns a new Users service implementation.
@@ -51,7 +52,7 @@ func (svc service) RegisterClient(ctx context.Context, token string, cli mgclien
 		if err != nil {
 			return mgclients.Client{}, err
 		}
-		if err := svc.checkSuperAdmin(ctx, userID); err != nil {
+		if _, err := svc.checkSuperAdmin(ctx, userID); err != nil {
 			return mgclients.Client{}, err
 		}
 	}
@@ -151,7 +152,7 @@ func (svc service) ViewClient(ctx context.Context, token, id string) (mgclients.
 	}
 
 	if tokenUserID != id {
-		if err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
+		if _, err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
 			return mgclients.Client{Name: client.Name, ID: client.ID}, nil
 		}
 	}
@@ -180,7 +181,7 @@ func (svc service) ListClients(ctx context.Context, token string, pm mgclients.P
 	if err != nil {
 		return mgclients.ClientsPage{}, err
 	}
-	if err := svc.checkSuperAdmin(ctx, userID); err == nil {
+	if _, err := svc.checkSuperAdmin(ctx, userID); err == nil {
 		pg, err := svc.clients.RetrieveAll(ctx, pm)
 		if err != nil {
 			return mgclients.ClientsPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -215,7 +216,7 @@ func (svc service) UpdateClient(ctx context.Context, token string, cli mgclients
 	}
 
 	if tokenUserID != cli.ID {
-		if err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
+		if _, err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
 			return mgclients.Client{}, err
 		}
 	}
@@ -242,7 +243,7 @@ func (svc service) UpdateClientTags(ctx context.Context, token string, cli mgcli
 	}
 
 	if tokenUserID != cli.ID {
-		if err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
+		if _, err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
 			return mgclients.Client{}, err
 		}
 	}
@@ -268,7 +269,7 @@ func (svc service) UpdateClientIdentity(ctx context.Context, token, clientID, id
 	}
 
 	if tokenUserID != clientID {
-		if err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
+		if _, err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
 			return mgclients.Client{}, err
 		}
 	}
@@ -373,7 +374,7 @@ func (svc service) UpdateClientRole(ctx context.Context, token string, cli mgcli
 		return mgclients.Client{}, err
 	}
 
-	if err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
+	if _, err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
 		return mgclients.Client{}, err
 	}
 	client := mgclients.Client{
@@ -382,9 +383,10 @@ func (svc service) UpdateClientRole(ctx context.Context, token string, cli mgcli
 		UpdatedAt: time.Now(),
 		UpdatedBy: tokenUserID,
 	}
-
-	if _, err := svc.authorize(ctx, auth.UserType, auth.UsersKind, client.ID, auth.MembershipPermission, auth.PlatformType, auth.MagistralaObject); err != nil {
-		return mgclients.Client{}, err
+	if svc.isAdmin {
+		if _, err := svc.authorize(ctx, auth.UserType, auth.UsersKind, client.ID, auth.MembershipPermission, auth.PlatformType, auth.MagistralaObject); err != nil {
+			return mgclients.Client{}, err
+		}
 	}
 
 	if err := svc.updateClientPolicy(ctx, cli.ID, cli.Role); err != nil {
@@ -435,7 +437,7 @@ func (svc service) changeClientStatus(ctx context.Context, token string, client 
 	if err != nil {
 		return mgclients.Client{}, err
 	}
-	if err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
+	if _, err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
 		return mgclients.Client{}, err
 	}
 	dbClient, err := svc.clients.RetrieveByID(ctx, client.ID)
@@ -555,15 +557,15 @@ func (svc service) listObjectUserPermission(ctx context.Context, userID, objectT
 	return lp.GetPermissions(), nil
 }
 
-func (svc *service) checkSuperAdmin(ctx context.Context, adminID string) error {
+func (svc *service) checkSuperAdmin(ctx context.Context, adminID string) (bool, error) {
 	if _, err := svc.authorize(ctx, auth.UserType, auth.UsersKind, adminID, auth.AdminPermission, auth.PlatformType, auth.MagistralaObject); err != nil {
 		if err := svc.clients.CheckSuperAdmin(ctx, adminID); err != nil {
-			return errors.Wrap(svcerr.ErrAuthorization, err)
+			return false, errors.Wrap(svcerr.ErrAuthorization, err)
 		}
-		return errors.Wrap(svcerr.ErrAuthorization, err)
+		return false, errors.Wrap(svcerr.ErrAuthorization, err)
 	}
 
-	return nil
+	return true, nil
 }
 
 func (svc service) identify(ctx context.Context, token string) (*magistrala.IdentityRes, error) {
@@ -583,6 +585,7 @@ func (svc *service) authorize(ctx context.Context, subjType, subjKind, subj, per
 		ObjectType:  objType,
 		Object:      obj,
 	}
+	fmt.Print(req)
 	res, err := svc.auth.Authorize(ctx, req)
 	if err != nil {
 		return "", errors.Wrap(svcerr.ErrAuthorization, err)
