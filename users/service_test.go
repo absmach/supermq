@@ -31,7 +31,7 @@ var (
 	phasher        = hasher.New()
 	secret         = "strongsecret"
 	validCMetadata = mgclients.Metadata{"role": "client"}
-	clientID       = "25bbc2f9-8cdc-470b-904e-7d5938c6a2e2"
+	clientID       = testsutil.GenerateUUID(&testing.T{})
 	client         = mgclients.Client{
 		ID:          clientID,
 		Name:        "clientname",
@@ -324,6 +324,7 @@ func TestRegisterClient(t *testing.T) {
 			identifyResponse:  &magistrala.IdentityRes{UserId: wrongID},
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
 			token:             validToken,
+			identifyErr:       svcerr.ErrAuthorization,
 			err:               svcerr.ErrAuthorization,
 		},
 		{
@@ -543,7 +544,7 @@ func TestListClients(t *testing.T) {
 			retrieveAllResponse: mgclients.ClientsPage{},
 			token:               validToken,
 			retrieveAllErr:      repoerr.ErrNotFound,
-			err:                 svcerr.ErrNotFound,
+			err:                 svcerr.ErrViewEntity,
 		},
 		{
 			desc: "list clients as admin with failed check on super admin",
@@ -567,7 +568,7 @@ func TestListClients(t *testing.T) {
 				Page: mgclients.Page{
 					Total: 1,
 				},
-				Clients: []mgclients.Client{client},
+				Clients: []mgclients.Client{basicClient},
 			},
 			response: mgclients.ClientsPage{
 				Page: mgclients.Page{
@@ -588,7 +589,7 @@ func TestListClients(t *testing.T) {
 			retrieveAllResponse: mgclients.ClientsPage{},
 			token:               validToken,
 			retrieveAllErr:      repoerr.ErrNotFound,
-			err:                 svcerr.ErrNotFound,
+			err:                 svcerr.ErrViewEntity,
 		},
 	}
 
@@ -806,6 +807,7 @@ func TestUpdateClientTags(t *testing.T) {
 			client:            client,
 			identifyResponse:  &magistrala.IdentityRes{UserId: wrongID},
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
+			identifyErr:       svcerr.ErrAuthorization,
 			token:             validToken,
 			err:               svcerr.ErrAuthorization,
 		},
@@ -924,6 +926,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 			id:                client.ID,
 			identifyResponse:  &magistrala.IdentityRes{UserId: wrongID},
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
+			identifyErr:       svcerr.ErrAuthorization,
 			err:               svcerr.ErrAuthorization,
 		},
 		{
@@ -976,294 +979,216 @@ func TestUpdateClientRole(t *testing.T) {
 	client.Role = mgclients.AdminRole
 	client2.Role = mgclients.UserRole
 
+	superAdminAuthReq := &magistrala.AuthorizeReq{
+		SubjectType: authsvc.UserType,
+		SubjectKind: authsvc.UsersKind,
+		Subject:     client.ID,
+		Permission:  authsvc.AdminPermission,
+		ObjectType:  authsvc.PlatformType,
+		Object:      authsvc.MagistralaObject,
+	}
+
+	membershipAuthReq := &magistrala.AuthorizeReq{
+		SubjectType: authsvc.UserType,
+		SubjectKind: authsvc.UsersKind,
+		Subject:     client.ID,
+		Permission:  authsvc.MembershipPermission,
+		ObjectType:  authsvc.PlatformType,
+		Object:      authsvc.MagistralaObject,
+	}
+
 	cases := []struct {
 		desc                 string
 		client               mgclients.Client
 		identifyResponse     *magistrala.IdentityRes
-		authorizeReq         *magistrala.AuthorizeReq
-		authorizeReq1        *magistrala.AuthorizeReq
-		authorizeResponse    *magistrala.AuthorizeRes
-		authorizeResponse1   *magistrala.AuthorizeRes
+		superAdminAuthReq    *magistrala.AuthorizeReq
+		membershipAuthReq    *magistrala.AuthorizeReq
+		superAdminAuthRes    *magistrala.AuthorizeRes
+		membershipAuthRes    *magistrala.AuthorizeRes
 		deletePolicyResponse *magistrala.DeletePolicyRes
 		addPolicyResponse    *magistrala.AddPolicyRes
 		updateRoleResponse   mgclients.Client
 		token                string
 		identifyErr          error
 		authorizeErr         error
-		authorizeErr1        error
+		membershipAuthErr    error
 		deletePolicyErr      error
 		addPolicyErr         error
 		updateRoleErr        error
 		checkSuperAdminErr   error
 		err                  error
 	}{
-		// {
-		// 	desc:   "update client role successfully",
-		// 	client: client,
-		// 	authorizeReq: &magistrala.AuthorizeReq{
-		// 		SubjectType: authsvc.UserType,
-		// 		SubjectKind: authsvc.UsersKind,
-		// 		Subject:     client.ID,
-		// 		Permission:  authsvc.AdminPermission,
-		// 		ObjectType:  authsvc.PlatformType,
-		// 		Object:      authsvc.MagistralaObject,
-		// 	},
-		// 	identifyResponse: &magistrala.IdentityRes{UserId: client.ID},
-		// 	authorizeReq1: &magistrala.AuthorizeReq{
-		// 		SubjectType: authsvc.UserType,
-		// 		SubjectKind: authsvc.UsersKind,
-		// 		Subject:     client.ID,
-		// 		Permission:  authsvc.MembershipPermission,
-		// 		ObjectType:  authsvc.PlatformType,
-		// 		Object:      authsvc.MagistralaObject,
-		// 	},
-		// 	authorizeResponse1: &magistrala.AuthorizeRes{Authorized: true},
-		// 	authorizeResponse:  &magistrala.AuthorizeRes{Authorized: true},
-		// 	addPolicyResponse:  &magistrala.AddPolicyRes{Added: true},
-		// 	updateRoleResponse: client,
-		// 	token:              validToken,
-		// 	err:                nil,
-		// },
-		// {
-		// 	desc:   "update client role with invalid token",
-		// 	client: client,
-		// 	authorizeReq: &magistrala.AuthorizeReq{
-		// 		SubjectType: authsvc.UserType,
-		// 		SubjectKind: authsvc.UsersKind,
-		// 		Subject:     client.ID,
-		// 		Permission:  authsvc.AdminPermission,
-		// 		ObjectType:  authsvc.PlatformType,
-		// 		Object:      authsvc.MagistralaObject,
-		// 	},
-		// 	identifyResponse: &magistrala.IdentityRes{},
-		// 	identifyErr:      svcerr.ErrAuthentication,
-		// 	token:            inValidToken,
-		// 	err:              svcerr.ErrAuthentication,
-		// },
-		// {
-		// 	desc:             "update client role with invalid ID",
-		// 	client:           client,
-		// 	identifyResponse: &magistrala.IdentityRes{UserId: wrongID},
-		// 	authorizeReq: &magistrala.AuthorizeReq{
-		// 		SubjectType: authsvc.UserType,
-		// 		SubjectKind: authsvc.UsersKind,
-		// 		Subject:     wrongID,
-		// 		Permission:  authsvc.AdminPermission,
-		// 		ObjectType:  authsvc.PlatformType,
-		// 		Object:      authsvc.MagistralaObject,
-		// 	},
-		// 	authorizeResponse: &magistrala.AuthorizeRes{Authorized: true},
-		// 	authorizeReq1: &magistrala.AuthorizeReq{
-		// 		SubjectType: authsvc.UserType,
-		// 		SubjectKind: authsvc.UsersKind,
-		// 		Subject:     client.ID,
-		// 		Permission:  authsvc.MembershipPermission,
-		// 		ObjectType:  authsvc.PlatformType,
-		// 		Object:      authsvc.MagistralaObject,
-		// 	},
-		// 	authorizeResponse1: &magistrala.AuthorizeRes{Authorized: false},
-		// 	token:              validToken,
-		// 	err:                svcerr.ErrAuthorization,
-		// },
-		// {
-		// 	desc:             "update client role with failed check on super admin",
-		// 	client:           client,
-		// 	identifyResponse: &magistrala.IdentityRes{UserId: client.ID},
-		// 	authorizeReq: &magistrala.AuthorizeReq{
-		// 		SubjectType: authsvc.UserType,
-		// 		SubjectKind: authsvc.UsersKind,
-		// 		Subject:     client.ID,
-		// 		Permission:  authsvc.AdminPermission,
-		// 		ObjectType:  authsvc.PlatformType,
-		// 		Object:      authsvc.MagistralaObject,
-		// 	},
-		// 	authorizeResponse:  &magistrala.AuthorizeRes{Authorized: false},
-		// 	checkSuperAdminErr: svcerr.ErrAuthorization,
-		// 	token:              validToken,
-		// 	err:                svcerr.ErrAuthorization,
-		// },
-		// {
-		// 	desc:             "update client role with failed authorization on add policy",
-		// 	client:           client,
-		// 	identifyResponse: &magistrala.IdentityRes{UserId: client.ID},
-		// 	authorizeReq: &magistrala.AuthorizeReq{
-		// 		SubjectType: authsvc.UserType,
-		// 		SubjectKind: authsvc.UsersKind,
-		// 		Subject:     client.ID,
-		// 		Permission:  authsvc.AdminPermission,
-		// 		ObjectType:  authsvc.PlatformType,
-		// 		Object:      authsvc.MagistralaObject,
-		// 	},
-		// 	authorizeResponse: &magistrala.AuthorizeRes{Authorized: true},
-		// 	addPolicyResponse: &magistrala.AddPolicyRes{Added: false},
-		// 	token:             validToken,
-		// 	err:               svcerr.ErrAuthorization,
-		// },
-		// {
-		// 	desc:   "update client role with failed to add policy",
-		// 	client: client,
-		// 	authorizeReq: &magistrala.AuthorizeReq{
-		// 		SubjectType: authsvc.UserType,
-		// 		SubjectKind: authsvc.UsersKind,
-		// 		Subject:     client.ID,
-		// 		Permission:  authsvc.AdminPermission,
-		// 		ObjectType:  authsvc.PlatformType,
-		// 		Object:      authsvc.MagistralaObject,
-		// 	},
-		// 	identifyResponse:  &magistrala.IdentityRes{UserId: client.ID},
-		// 	authorizeResponse: &magistrala.AuthorizeRes{Authorized: true},
-		// 	addPolicyResponse: &magistrala.AddPolicyRes{},
-		// 	addPolicyErr:      errors.ErrMalformedEntity,
-		// 	token:             validToken,
-		// 	err:               svcerr.ErrAddPolicies,
-		// },
-		// {
-		// 	desc:             "update client role to user role successfully  ",
-		// 	client:           client2,
-		// 	identifyResponse: &magistrala.IdentityRes{UserId: client.ID},
-		// 	authorizeReq: &magistrala.AuthorizeReq{
-		// 		SubjectType: authsvc.UserType,
-		// 		SubjectKind: authsvc.UsersKind,
-		// 		Subject:     client.ID,
-		// 		Permission:  authsvc.AdminPermission,
-		// 		ObjectType:  authsvc.PlatformType,
-		// 		Object:      authsvc.MagistralaObject,
-		// 	},
-		// 	authorizeResponse:    &magistrala.AuthorizeRes{Authorized: true},
-		// 	deletePolicyResponse: &magistrala.DeletePolicyRes{Deleted: true},
-		// 	updateRoleResponse:   client2,
-		// 	token:                validToken,
-		// 	err:                  nil,
-		// },
-		// {
-		// 	desc:   "update client role to user role with failed to delete policy",
-		// 	client: client2,
-		// 	authorizeReq: &magistrala.AuthorizeReq{
-		// 		SubjectType: authsvc.UserType,
-		// 		SubjectKind: authsvc.UsersKind,
-		// 		Subject:     client.ID,
-		// 		Permission:  authsvc.AdminPermission,
-		// 		ObjectType:  authsvc.PlatformType,
-		// 		Object:      authsvc.MagistralaObject,
-		// 	},
-		// 	identifyResponse:     &magistrala.IdentityRes{UserId: client.ID},
-		// 	authorizeResponse:    &magistrala.AuthorizeRes{Authorized: true},
-		// 	deletePolicyResponse: &magistrala.DeletePolicyRes{Deleted: false},
-		// 	updateRoleResponse:   mgclients.Client{},
-		// 	token:                validToken,
-		// 	err:                  svcerr.ErrAuthorization,
-		// },
 		{
-			desc:             "update client role to user role with failed to delete policy with error",
-			identifyResponse: &magistrala.IdentityRes{UserId: client.ID},
-			authorizeReq: &magistrala.AuthorizeReq{
-				SubjectType: authsvc.UserType,
-				SubjectKind: authsvc.UsersKind,
-				Subject:     client.ID,
-				Permission:  authsvc.AdminPermission,
-				ObjectType:  authsvc.PlatformType,
-				Object:      authsvc.MagistralaObject,
-			},
-			authorizeResponse: &magistrala.AuthorizeRes{Authorized: true},
-			authorizeReq1: &magistrala.AuthorizeReq{
-				SubjectType: authsvc.UserType,
-				SubjectKind: authsvc.UsersKind,
-				Subject:     client.ID,
-				Permission:  authsvc.MembershipPermission,
-				ObjectType:  authsvc.PlatformType,
-				Object:      authsvc.MagistralaObject,
-			},
-			authorizeResponse1:   &magistrala.AuthorizeRes{Authorized: true},
+			desc:               "update client role successfully",
+			client:             client,
+			superAdminAuthReq:  superAdminAuthReq,
+			identifyResponse:   &magistrala.IdentityRes{UserId: client.ID},
+			membershipAuthReq:  membershipAuthReq,
+			membershipAuthRes:  &magistrala.AuthorizeRes{Authorized: true},
+			superAdminAuthRes:  &magistrala.AuthorizeRes{Authorized: true},
+			addPolicyResponse:  &magistrala.AddPolicyRes{Added: true},
+			updateRoleResponse: client,
+			token:              validToken,
+			err:                nil,
+		},
+		{
+			desc:              "update client role with invalid token",
+			client:            client,
+			token:             inValidToken,
+			superAdminAuthReq: superAdminAuthReq,
+			superAdminAuthRes: &magistrala.AuthorizeRes{Authorized: true},
+			identifyResponse:  &magistrala.IdentityRes{},
+			identifyErr:       svcerr.ErrAuthentication,
+			err:               svcerr.ErrAuthentication,
+		},
+		{
+			desc:              "update client role with invalid ID",
+			client:            client,
+			identifyResponse:  &magistrala.IdentityRes{UserId: wrongID},
+			superAdminAuthReq: superAdminAuthReq,
+			superAdminAuthRes: &magistrala.AuthorizeRes{Authorized: true},
+			token:             validToken,
+			identifyErr:       svcerr.ErrAuthorization,
+			err:               svcerr.ErrAuthorization,
+		},
+		{
+			desc:               "update client role with failed check on super admin",
+			client:             client,
+			identifyResponse:   &magistrala.IdentityRes{UserId: client.ID},
+			superAdminAuthReq:  superAdminAuthReq,
+			superAdminAuthRes:  &magistrala.AuthorizeRes{Authorized: false},
+			token:              validToken,
+			checkSuperAdminErr: svcerr.ErrAuthorization,
+			err:                svcerr.ErrAuthorization,
+		},
+		{
+			desc:              "update client role with failed authorization on add policy",
+			client:            client,
+			identifyResponse:  &magistrala.IdentityRes{UserId: client.ID},
+			superAdminAuthReq: superAdminAuthReq,
+			superAdminAuthRes: &magistrala.AuthorizeRes{Authorized: true},
+			membershipAuthReq: membershipAuthReq,
+			membershipAuthRes: &magistrala.AuthorizeRes{Authorized: true},
+			addPolicyResponse: &magistrala.AddPolicyRes{Added: false},
+			token:             validToken,
+			authorizeErr:      svcerr.ErrAuthorization,
+			err:               svcerr.ErrAuthorization,
+		},
+		{
+			desc:              "update client role with failed to add policy",
+			client:            client,
+			superAdminAuthReq: superAdminAuthReq,
+			identifyResponse:  &magistrala.IdentityRes{UserId: client.ID},
+			superAdminAuthRes: &magistrala.AuthorizeRes{Authorized: true},
+			membershipAuthReq: membershipAuthReq,
+			membershipAuthRes: &magistrala.AuthorizeRes{Authorized: true},
+			addPolicyResponse: &magistrala.AddPolicyRes{},
+			token:             validToken,
+			addPolicyErr:      errors.ErrMalformedEntity,
+			err:               svcerr.ErrAddPolicies,
+		},
+		{
+			desc:                 "update client role to user role successfully  ",
+			client:               client2,
+			identifyResponse:     &magistrala.IdentityRes{UserId: client.ID},
+			superAdminAuthReq:    superAdminAuthReq,
+			superAdminAuthRes:    &magistrala.AuthorizeRes{Authorized: true},
+			membershipAuthReq:    membershipAuthReq,
+			membershipAuthRes:    &magistrala.AuthorizeRes{Authorized: true},
+			deletePolicyResponse: &magistrala.DeletePolicyRes{Deleted: true},
+			updateRoleResponse:   client2,
+			token:                validToken,
+			err:                  nil,
+		},
+		{
+			desc:                 "update client role to user role with failed to delete policy",
+			client:               client2,
+			superAdminAuthReq:    superAdminAuthReq,
+			identifyResponse:     &magistrala.IdentityRes{UserId: client.ID},
+			superAdminAuthRes:    &magistrala.AuthorizeRes{Authorized: true},
+			membershipAuthReq:    membershipAuthReq,
+			membershipAuthRes:    &magistrala.AuthorizeRes{Authorized: true},
+			deletePolicyResponse: &magistrala.DeletePolicyRes{Deleted: false},
+			updateRoleResponse:   mgclients.Client{},
+			token:                validToken,
+			deletePolicyErr:      svcerr.ErrAuthorization,
+			err:                  svcerr.ErrAuthorization,
+		},
+		{
+			desc:                 "update client role to user role with failed to delete policy with error",
+			client:               client2,
+			identifyResponse:     &magistrala.IdentityRes{UserId: client.ID},
+			superAdminAuthReq:    superAdminAuthReq,
+			superAdminAuthRes:    &magistrala.AuthorizeRes{Authorized: true},
+			membershipAuthReq:    membershipAuthReq,
+			membershipAuthRes:    &magistrala.AuthorizeRes{Authorized: true},
 			deletePolicyResponse: &magistrala.DeletePolicyRes{Deleted: false},
 			updateRoleResponse:   mgclients.Client{},
 			token:                validToken,
 			deletePolicyErr:      svcerr.ErrMalformedEntity,
 			err:                  svcerr.ErrDeletePolicies,
 		},
-		// {
-		// 	desc:   "Update client with failed repo update and roll back",
-		// 	client: client,
-		// 	authorizeReq: &magistrala.AuthorizeReq{
-		// 		SubjectType: authsvc.UserType,
-		// 		SubjectKind: authsvc.UsersKind,
-		// 		Subject:     client.ID,
-		// 		Permission:  authsvc.AdminPermission,
-		// 		ObjectType:  authsvc.PlatformType,
-		// 		Object:      authsvc.MagistralaObject,
-		// 	},
-		// 	identifyResponse:     &magistrala.IdentityRes{UserId: client.ID},
-		// 	authorizeResponse:    &magistrala.AuthorizeRes{Authorized: true},
-		// 	addPolicyResponse:    &magistrala.AddPolicyRes{Added: true},
-		// 	deletePolicyResponse: &magistrala.DeletePolicyRes{Deleted: true},
-		// 	updateRoleResponse:   mgclients.Client{},
-		// 	token:                validToken,
-		// 	updateRoleErr:        svcerr.ErrAuthentication,
-		// 	err:                  svcerr.ErrAuthentication,
-		// },
-		// {
-		// 	desc:             "Update client with failed repo update and failedroll back",
-		// 	client:           client,
-		// 	identifyResponse: &magistrala.IdentityRes{UserId: client.ID},
-		// 	authorizeReq: &magistrala.AuthorizeReq{
-		// 		SubjectType: authsvc.UserType,
-		// 		SubjectKind: authsvc.UsersKind,
-		// 		Subject:     client.ID,
-		// 		Permission:  authsvc.AdminPermission,
-		// 		ObjectType:  authsvc.PlatformType,
-		// 		Object:      authsvc.MagistralaObject,
-		// 	},
-		// 	authorizeResponse:    &magistrala.AuthorizeRes{Authorized: true},
-		// 	addPolicyResponse:    &magistrala.AddPolicyRes{Added: true},
-		// 	deletePolicyResponse: &magistrala.DeletePolicyRes{Deleted: false},
-		// 	updateRoleResponse:   mgclients.Client{},
-		// 	token:                validToken,
-		// 	updateRoleErr:        svcerr.ErrAuthentication,
-		// 	err:                  svcerr.ErrAuthentication,
-		// },
-		// {
-		// 	desc:             "update client role with failed MembershipPermission authorization",
-		// 	client:           client,
-		// 	identifyResponse: &magistrala.IdentityRes{UserId: client.ID},
-		// 	authorizeReq: &magistrala.AuthorizeReq{
-		// 		SubjectType: authsvc.UserType,
-		// 		SubjectKind: authsvc.UsersKind,
-		// 		Subject:     client.ID,
-		// 		Permission:  authsvc.AdminPermission,
-		// 		ObjectType:  authsvc.PlatformType,
-		// 		Object:      authsvc.MagistralaObject,
-		// 	},
-		// 	authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
-		// 	token:             validToken,
-		// 	err:               svcerr.ErrAuthorization,
-		// },
-		// {
-		// 	desc:   "Update client role for non-existent user",
-		// 	client: mgclients.Client{},
-		// 	token:  validToken,
-		// 	authorizeReq: &magistrala.AuthorizeReq{
-		// 		SubjectType: authsvc.UserType,
-		// 		SubjectKind: authsvc.UsersKind,
-		// 		Subject:     client.ID,
-		// 		Permission:  authsvc.AdminPermission,
-		// 		ObjectType:  authsvc.PlatformType,
-		// 		Object:      authsvc.MagistralaObject,
-		// 	},
-		// 	identifyResponse: &magistrala.IdentityRes{},
-		// 	identifyErr:      svcerr.ErrAuthorization,
-		// 	err:              svcerr.ErrAuthorization,
-		// },
+		{
+			desc:                 "Update client with failed repo update and roll back",
+			client:               client,
+			superAdminAuthReq:    superAdminAuthReq,
+			identifyResponse:     &magistrala.IdentityRes{UserId: client.ID},
+			superAdminAuthRes:    &magistrala.AuthorizeRes{Authorized: true},
+			membershipAuthReq:    membershipAuthReq,
+			membershipAuthRes:    &magistrala.AuthorizeRes{Authorized: true},
+			addPolicyResponse:    &magistrala.AddPolicyRes{Added: true},
+			deletePolicyResponse: &magistrala.DeletePolicyRes{Deleted: true},
+			updateRoleResponse:   mgclients.Client{},
+			token:                validToken,
+			updateRoleErr:        svcerr.ErrAuthentication,
+			err:                  svcerr.ErrAuthentication,
+		},
+		{
+			desc:                 "Update client with failed repo update and failedroll back",
+			client:               client,
+			identifyResponse:     &magistrala.IdentityRes{UserId: client.ID},
+			superAdminAuthReq:    superAdminAuthReq,
+			superAdminAuthRes:    &magistrala.AuthorizeRes{Authorized: true},
+			membershipAuthReq:    membershipAuthReq,
+			membershipAuthRes:    &magistrala.AuthorizeRes{Authorized: true},
+			addPolicyResponse:    &magistrala.AddPolicyRes{Added: true},
+			deletePolicyResponse: &magistrala.DeletePolicyRes{Deleted: false},
+			updateRoleResponse:   mgclients.Client{},
+			token:                validToken,
+			updateRoleErr:        svcerr.ErrAuthentication,
+			err:                  svcerr.ErrAuthentication,
+		},
+		{
+			desc:              "update client role with failed MembershipPermission authorization",
+			client:            client,
+			identifyResponse:  &magistrala.IdentityRes{UserId: client.ID},
+			superAdminAuthReq: superAdminAuthReq,
+			superAdminAuthRes: &magistrala.AuthorizeRes{Authorized: true},
+			membershipAuthReq: membershipAuthReq,
+			membershipAuthRes: &magistrala.AuthorizeRes{Authorized: false},
+			token:             validToken,
+			membershipAuthErr: svcerr.ErrAuthorization,
+			err:               svcerr.ErrAuthorization,
+		},
+		{
+			desc:              "Update client role for non-existent user",
+			client:            mgclients.Client{},
+			token:             validToken,
+			superAdminAuthReq: superAdminAuthReq,
+			identifyResponse:  &magistrala.IdentityRes{},
+			identifyErr:       svcerr.ErrAuthorization,
+			err:               svcerr.ErrAuthorization,
+		},
 	}
 
 	for _, tc := range cases {
 		repoCall := auth.On("Identify", context.Background(), &magistrala.IdentityReq{Token: tc.token}).Return(tc.identifyResponse, tc.identifyErr)
-		repoCall1 := auth.On("Authorize", context.Background(), tc.authorizeReq).Return(tc.authorizeResponse, tc.authorizeErr)
+		repoCall1 := auth.On("Authorize", context.Background(), tc.superAdminAuthReq).Return(tc.superAdminAuthRes, tc.authorizeErr)
 		repoCall2 := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
-		repoCall6 := auth.On("Authorize", context.Background(), tc.authorizeReq1).Return(tc.authorizeResponse1, tc.authorizeErr1)
+		repoCall6 := auth.On("Authorize", context.Background(), tc.membershipAuthReq).Return(tc.membershipAuthRes, tc.membershipAuthErr)
 		repoCall3 := auth.On("AddPolicy", context.Background(), mock.Anything).Return(tc.addPolicyResponse, tc.addPolicyErr)
 		repoCall4 := auth.On("DeletePolicy", context.Background(), mock.Anything).Return(tc.deletePolicyResponse, tc.deletePolicyErr)
 		repoCall5 := cRepo.On("UpdateRole", context.Background(), mock.Anything).Return(tc.updateRoleResponse, tc.updateRoleErr)
-
-		fmt.Println("client is", tc.client)
 
 		updatedClient, err := svc.UpdateClientRole(context.Background(), tc.token, tc.client)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -1459,13 +1384,17 @@ func TestEnableClient(t *testing.T) {
 			err:              svcerr.ErrAuthentication,
 		},
 		{
-			desc:              "enable disabled client with failed to authorize",
-			id:                disabledClient1.ID,
-			token:             validToken,
-			client:            disabledClient1,
-			identifyResponse:  &magistrala.IdentityRes{UserId: disabledClient1.ID},
-			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
-			err:               svcerr.ErrAuthorization,
+			desc:                 "enable disabled client with failed to authorize",
+			id:                   disabledClient1.ID,
+			token:                validToken,
+			client:               disabledClient1,
+			identifyResponse:     &magistrala.IdentityRes{UserId: disabledClient1.ID},
+			authorizeResponse:    &magistrala.AuthorizeRes{Authorized: false},
+			retrieveByIDResponse: mgclients.Client{},
+			changeStatusResponse: mgclients.Client{},
+			response:             mgclients.Client{},
+			identifyErr:          svcerr.ErrAuthorization,
+			err:                  svcerr.ErrAuthorization,
 		},
 		{
 			desc:               "enable disabled client with normal user token",
@@ -1654,6 +1583,7 @@ func TestDisableClient(t *testing.T) {
 			client:            enabledClient1,
 			identifyResponse:  &magistrala.IdentityRes{UserId: disabledClient1.ID},
 			authorizeResponse: &magistrala.AuthorizeRes{Authorized: false},
+			identifyErr:       svcerr.ErrAuthorization,
 			err:               svcerr.ErrAuthorization,
 		},
 		{
