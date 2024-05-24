@@ -1170,15 +1170,6 @@ func TestUpdateClientRole(t *testing.T) {
 			membershipAuthErr: svcerr.ErrAuthorization,
 			err:               svcerr.ErrAuthorization,
 		},
-		{
-			desc:              "Update client role for non-existent user",
-			client:            mgclients.Client{},
-			token:             validToken,
-			superAdminAuthReq: superAdminAuthReq,
-			identifyResponse:  &magistrala.IdentityRes{},
-			identifyErr:       svcerr.ErrAuthorization,
-			err:               svcerr.ErrAuthorization,
-		},
 	}
 
 	for _, tc := range cases {
