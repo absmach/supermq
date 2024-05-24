@@ -20,9 +20,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-//	= "valid"
-//
-// invalidToken = "invalid"
 var user = mgsdk.User{
 	Name: "testuser",
 	Credentials: mgsdk.Credentials{
