@@ -20,18 +20,17 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var (
-	//    = "valid"
-	// invalidToken = "invalid"
-	user = mgsdk.User{
-		Name: "testuser",
-		Credentials: mgsdk.Credentials{
-			Secret:   "testpassword",
-			Identity: "identity@example.com",
-		},
-		Status: mgclients.EnabledStatus.String(),
-	}
-)
+//	= "valid"
+//
+// invalidToken = "invalid"
+var user = mgsdk.User{
+	Name: "testuser",
+	Credentials: mgsdk.Credentials{
+		Secret:   "testpassword",
+		Identity: "identity@example.com",
+	},
+	Status: mgclients.EnabledStatus.String(),
+}
 
 func TestCreateUsersCmd(t *testing.T) {
 	sdkMock := new(sdkmocks.SDK)
