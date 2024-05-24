@@ -4,113 +4,118 @@
 package cli_test
 
 import (
+	"fmt"
+	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/absmach/magistrala/cli"
-	// "github.com/absmach/magistrala/internal/testsutil"
-	// mgclients "github.com/absmach/magistrala/pkg/clients"
-	// mgsdk "github.com/absmach/magistrala/pkg/sdk/go".
+	// "github.com/absmach/magistrala/internal/testsutil".
+	mgclients "github.com/absmach/magistrala/pkg/clients"
+	"github.com/absmach/magistrala/pkg/errors"
+	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	mgsdk "github.com/absmach/magistrala/pkg/sdk/go"
 	sdkmocks "github.com/absmach/magistrala/pkg/sdk/mocks"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-// var (
-// 	   = "valid"
-// 	invalidToken = "invalid"
-// 	user         = mgsdk.User{
-// 		Name: "testuser",
-// 		Credentials: mgsdk.Credentials{
-// 			Secret:   "testpassword",
-// 			Identity: "identity@example.com",
-// 		},
-// 		Status: mgclients.EnabledStatus.String(),
-// 	}
-// )
+var (
+	//    = "valid"
+	// invalidToken = "invalid"
+	user = mgsdk.User{
+		Name: "testuser",
+		Credentials: mgsdk.Credentials{
+			Secret:   "testpassword",
+			Identity: "identity@example.com",
+		},
+		Status: mgclients.EnabledStatus.String(),
+	}
+)
 
 func TestCreateUsersCmd(t *testing.T) {
 	sdkMock := new(sdkmocks.SDK)
 	cli.SetSDK(sdkMock)
+	createCommand := "create"
+	usersCmd := cli.NewUsersCmd()
+	rootCmd := setFlags(usersCmd)
+
+	cases := []struct {
+		desc          string
+		args          []string
+		sdkerr        errors.SDKError
+		errLogMessage string
+		user          mgsdk.User
+		logType       outputLog
+	}{
+		{
+			desc: "create user successfully with token",
+			args: []string{
+				createCommand,
+				"john doe",
+				"john.doe@example.com",
+				"12345678",
+				"valid",
+			},
+			user:    user,
+			logType: entityLog,
+		},
+		{
+			desc: "create user successfully without token",
+			args: []string{
+				createCommand,
+				"john doe",
+				"john.doe@example.com",
+				"12345678",
+			},
+			user:    user,
+			logType: entityLog,
+		},
+		{
+			desc: "failed to create user",
+			args: []string{
+				createCommand,
+				"john doe",
+				"john.doe@example.com",
+				"12345678",
+			},
+			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrCreateEntity, http.StatusUnprocessableEntity),
+			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrCreateEntity, http.StatusUnprocessableEntity).Error()),
+			logType:       errLog,
+		},
+		{
+			desc:    "create user with invalid args",
+			args:    []string{createCommand, user.Name, user.Credentials.Identity},
+			logType: usageLog,
+		},
+	}
+
+	for _, tc := range cases {
+		sdkCall := sdkMock.On("CreateUser", mock.Anything, mock.Anything).Return(tc.user, tc.sdkerr)
+		if len(tc.args) == 3 {
+			sdkUser := mgsdk.User{
+				Name: tc.args[0],
+				Credentials: mgsdk.Credentials{
+					Identity: tc.args[1],
+					Secret:   tc.args[2],
+				},
+			}
+			sdkCall = sdkMock.On("CreateUser", mock.Anything, sdkUser).Return(tc.user, tc.sdkerr)
+		}
+		var usr mgsdk.User
+		out := executeCommand(t, rootCmd, &usr, tc.logType, tc.args...)
+
+		switch tc.logType {
+		case errLog:
+			assert.Equal(t, tc.errLogMessage, out, fmt.Sprintf("%s unexpected error response: expected %s got errLogMessage:%s", tc.desc, tc.errLogMessage, out))
+		case usageLog:
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+		}
+		assert.Equal(t, tc.user, usr, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.user, usr))
+
+		sdkCall.Unset()
+	}
 }
-
-// createCommand := "create"
-// usersCmd := cli.NewUsersCmd()
-// rootCmd := setFlags(usersCmd)
-// rootCmd.SetArgs([]string{"create", "john doe"})
-// cases := []struct {
-// 	desc          string
-// 	args          []string
-// 	sdkerr        errors.SDKError
-// 	errLogMessage string
-// 	user          mgsdk.User
-// 	logType       outputLog
-// }{
-// 	{
-// 		desc: "create user successfully with token",
-// 		args: []string{
-// 			createCommand,
-// 			"john doe",
-// 			"john.doe@example.com",
-// 			"12345678",
-// 			,
-// 		},
-// 		user:    user,
-// 		logType: entityLog,
-// 	},
-// 	{
-// 		desc: "create user successfully without token",
-// 		args: []string{
-// 			createCommand,
-// 			"john doe",
-// 			"john.doe@example.com",
-// 			"12345678",
-// 		},
-// 		user:    user,
-// 		logType: entityLog,
-// 	},
-// 	{
-// 		desc: "failed to create user",
-// 		args: []string{
-// 			createCommand,
-// 			"john doe",
-// 			"john.doe@example.com",
-// 			"12345678",
-// 		},
-// 		sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrCreateEntity, http.StatusUnprocessableEntity),
-// 		errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrCreateEntity, http.StatusUnprocessableEntity).Error()),
-// 		logType:       errLog,
-// 	},
-// 	{
-// 		desc:    "create user with invalid args",
-// 		args:    []string{createCommand, user.Name, user.Credentials.Identity},
-// 		logType: usageLog,
-// 	},
-// }
-
-// for _, tc := range cases {
-// 	sdkCall := sdkMock.On("CreateUser", mock.Anything, mock.Anything).Return(tc.user, tc.sdkerr)
-// 	if len(tc.args) == 3 {
-// 		sdkUser := mgsdk.User{
-// 			Name: tc.args[0],
-// 			Credentials: mgsdk.Credentials{
-// 				Identity: tc.args[1],
-// 				Secret:   tc.args[2],
-// 			},
-// 		}
-// 		sdkCall = sdkMock.On("CreateUser", mock.Anything, sdkUser).Return(tc.user, tc.sdkerr)
-// 	}
-// 	var usr mgsdk.User
-// 	out := executeCommand(t, rootCmd, &usr, tc.logType, tc.args...)
-
-// 	switch tc.logType {
-// 	case errLog:
-// 		assert.Equal(t, tc.errLogMessage, out, fmt.Sprintf("%s unexpected error response: expected %s got errLogMessage:%s", tc.desc, tc.errLogMessage, out))
-// 	case usageLog:
-// 		assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
-// 	}
-// 	assert.Equal(t, tc.user, usr, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.user, usr))
-
-// 	sdkCall.Unset()
-// }
-// }
 
 // func TestGetUsersCmd(t *testing.T) {
 // 	sdkMock := new(sdkmocks.SDK)
