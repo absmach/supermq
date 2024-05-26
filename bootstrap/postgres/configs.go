@@ -17,6 +17,7 @@ import (
 	"github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
+	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -465,6 +466,23 @@ func (cr configRepository) RemoveChannel(ctx context.Context, id string) error {
 }
 
 func (cr configRepository) ConnectThing(ctx context.Context, channelID, thingID string) error {
+	if thingID == "" || channelID == "" {
+		return repoerr.ErrMalformedEntity
+	}
+
+	qCheck := `SELECT EXISTS(SELECT 1 FROM configs WHERE magistrala_thing = $1), state FROM configs WHERE magistrala_thing = $1`
+	var exists bool
+	var state bootstrap.State
+	if err := cr.db.QueryRowxContext(ctx, qCheck, thingID).Scan(&exists, &state); err != nil {
+		return svcerr.ErrAddPolicies
+	}
+	if !exists {
+		return svcerr.ErrAddPolicies
+	}
+	if state == bootstrap.Active {
+		return svcerr.ErrAddPolicies
+	}
+
 	q := `UPDATE configs SET state = $1 WHERE EXISTS (
 		SELECT 1 FROM connections WHERE config_id = $2 AND channel_id = $3)`
 	if _, err := cr.db.ExecContext(ctx, q, bootstrap.Active, thingID, channelID); err != nil {
@@ -474,6 +492,9 @@ func (cr configRepository) ConnectThing(ctx context.Context, channelID, thingID 
 }
 
 func (cr configRepository) DisconnectThing(ctx context.Context, channelID, thingID string) error {
+	if thingID == "" || channelID == "" {
+		return repoerr.ErrMalformedEntity
+	}
 	q := `UPDATE configs SET state = $1 WHERE EXISTS (
 		SELECT 1 FROM connections WHERE config_id = $2 AND channel_id = $3)`
 	if _, err := cr.db.ExecContext(ctx, q, bootstrap.Inactive, thingID, channelID); err != nil {
