@@ -36,7 +36,8 @@ var (
 		State:   bootstrap.Inactive,
 	}
 
-	channels = []string{"1", "2"}
+	channels      = []string{"1", "2"}
+	emptyChannels = []string{}
 )
 
 func TestSave(t *testing.T) {
@@ -707,6 +708,7 @@ func TestConnectThing(t *testing.T) {
 	emptyThing.ThingKey = ""
 	emptyThing.ExternalID = ""
 	emptyThing.ExternalKey = ""
+	emptyThing.Channels = []bootstrap.Channel{}
 
 	cases := []struct {
 		desc        string
@@ -723,6 +725,14 @@ func TestConnectThing(t *testing.T) {
 			channels:    c.Channels,
 			connections: channels,
 			err:         nil,
+		},
+		{
+			desc:        "connect with empty channel",
+			owner:       config.Owner,
+			id:          saved,
+			channels:    emptyThing.Channels,
+			connections: emptyChannels,
+			err:         repoerr.ErrMalformedEntity,
 		},
 		{
 			desc:        "connect non-existent thing",
