@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"log/slog"
 	"strings"
 	"time"
@@ -58,14 +59,13 @@ func (cr configRepository) Save(ctx context.Context, cfg bootstrap.Config, chsCo
 	}
 	dbcfg := toDBConfig(cfg)
 
-	defer func(thingID string, err error) (string, error) {
+	defer func(thingID string, err error) {
 		if err != nil {
 			if errRollback := cr.rollback(err, tx); errRollback != nil {
-				return thingID, errors.Wrap(err, errRollback)
+				log.Println(errRollback)
 			}
-			return "", err
+			log.Println(err)
 		}
-		return thingID, err
 	}(thingID, err)
 
 	if _, err := tx.NamedExec(q, dbcfg); err != nil {
