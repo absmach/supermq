@@ -291,7 +291,7 @@ jobs:
       - name: Run cli tests
         if: steps.changes.outputs.cli == 'true' || steps.changes.outputs.workflow == 'true'
         run: |
-          go test --race -v -count=1 -coverprofile=coverage/cli.out ./cli/...
+          go test --race -v -count=1 ./cli/...
 
       - name: Run CoAP tests
         if: steps.changes.outputs.coap == 'true' || steps.changes.outputs.workflow == 'true'
