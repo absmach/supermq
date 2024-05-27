@@ -17,7 +17,6 @@ import (
 	"github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -474,13 +473,13 @@ func (cr configRepository) ConnectThing(ctx context.Context, channelID, thingID 
 	var exists bool
 	var state bootstrap.State
 	if err := cr.db.QueryRowxContext(ctx, qCheck, thingID).Scan(&exists, &state); err != nil {
-		return svcerr.ErrAddPolicies
+		return repoerr.ErrNotFound
 	}
 	if !exists {
-		return svcerr.ErrAddPolicies
+		return repoerr.ErrNotFound
 	}
 	if state == bootstrap.Active {
-		return svcerr.ErrAddPolicies
+		return repoerr.ErrConflict
 	}
 
 	q := `UPDATE configs SET state = $1 WHERE EXISTS (

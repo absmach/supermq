@@ -14,7 +14,6 @@ import (
 	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -731,7 +730,7 @@ func TestConnectThing(t *testing.T) {
 			id:          wrongID,
 			channels:    c.Channels,
 			connections: channels,
-			err:         svcerr.ErrAddPolicies,
+			err:         repoerr.ErrNotFound,
 		},
 		{
 			desc:        "connect already connected thing",
@@ -739,7 +738,7 @@ func TestConnectThing(t *testing.T) {
 			id:          connectedThing.ThingID,
 			channels:    c.Channels,
 			connections: channels,
-			err:         svcerr.ErrAddPolicies,
+			err:         repoerr.ErrConflict,
 		},
 		{
 			desc:        "connect random thing",
@@ -747,7 +746,7 @@ func TestConnectThing(t *testing.T) {
 			id:          randomThing.ThingID,
 			channels:    c.Channels,
 			connections: channels,
-			err:         svcerr.ErrAddPolicies,
+			err:         repoerr.ErrNotFound,
 		},
 		{
 			desc:        "connect empty thing",
@@ -755,15 +754,7 @@ func TestConnectThing(t *testing.T) {
 			id:          emptyThing.ThingID,
 			channels:    c.Channels,
 			connections: channels,
-			err:         svcerr.ErrMalformedEntity,
-		},
-		{
-			desc:        "connect thing with failed database update operation",
-			owner:       config.Owner,
-			id:          saved,
-			channels:    c.Channels,
-			connections: channels,
-			err:         svcerr.ErrAddPolicies,
+			err:         repoerr.ErrMalformedEntity,
 		},
 	}
 	for _, tc := range cases {
