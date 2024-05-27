@@ -64,7 +64,7 @@ func logError(err error) {
 	boldRed := color.New(color.FgRed, color.Bold)
 	boldRed.Fprintf(os.Stderr, "\nerror: ")
 
-	fmt.Fprintf(os.Stdout, "%s\n\n", color.RedString(err.Error()))
+	fmt.Fprintf(os.Stderr, "%s\n\n", color.RedString(err.Error()))
 }
 
 func logOK() {
