@@ -32,8 +32,8 @@ func (tm *tracing) Save(ctx context.Context, activity activitylog.Activity) erro
 	return tm.svc.Save(ctx, activity)
 }
 
-func (tm *tracing) ReadAll(ctx context.Context, token string, page activitylog.Page) (resp activitylog.ActivitiesPage, err error) {
-	ctx, span := tm.tracer.Start(ctx, "read_all", trace.WithAttributes(
+func (tm *tracing) RetrieveAll(ctx context.Context, token string, page activitylog.Page) (resp activitylog.ActivitiesPage, err error) {
+	ctx, span := tm.tracer.Start(ctx, "retrieve_all", trace.WithAttributes(
 		attribute.Int64("offset", int64(page.Offset)),
 		attribute.Int64("limit", int64(page.Limit)),
 		attribute.Int64("total", int64(resp.Total)),
@@ -42,5 +42,5 @@ func (tm *tracing) ReadAll(ctx context.Context, token string, page activitylog.P
 	))
 	defer span.End()
 
-	return tm.svc.ReadAll(ctx, token, page)
+	return tm.svc.RetrieveAll(ctx, token, page)
 }

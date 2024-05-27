@@ -12,14 +12,14 @@ import (
 	"github.com/go-kit/kit/endpoint"
 )
 
-func listActivitiesEndpoint(svc activitylog.Service) endpoint.Endpoint {
+func retrieveActivitiesEndpoint(svc activitylog.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listActivitiesReq)
+		req := request.(retrieveActivitiesReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		page, err := svc.ReadAll(ctx, req.token, req.page)
+		page, err := svc.RetrieveAll(ctx, req.token, req.page)
 		if err != nil {
 			return nil, err
 		}

@@ -271,7 +271,7 @@ func TestListActivitiesEndpoint(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.desc, func(t *testing.T) {
-			repoCall := svc.On("ReadAll", mock.Anything, c.token, mock.Anything).Return(activitylog.ActivitiesPage{}, c.svcErr)
+			repoCall := svc.On("RetrieveAll", mock.Anything, c.token, mock.Anything).Return(activitylog.ActivitiesPage{}, c.svcErr)
 			req := testRequest{
 				client: es.Client(),
 				method: http.MethodGet,

@@ -40,8 +40,8 @@ func MakeHandler(svc activitylog.Service, logger *slog.Logger, svcName, instance
 	mux := chi.NewRouter()
 
 	mux.Get("/activities", otelhttp.NewHandler(kithttp.NewServer(
-		listActivitiesEndpoint(svc),
-		decodeListActivitiesReq,
+		retrieveActivitiesEndpoint(svc),
+		decodeRetrieveActivitiesReq,
 		api.EncodeResponse,
 		opts...,
 	), "list_activities").ServeHTTP)
@@ -52,7 +52,7 @@ func MakeHandler(svc activitylog.Service, logger *slog.Logger, svcName, instance
 	return mux
 }
 
-func decodeListActivitiesReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRetrieveActivitiesReq(_ context.Context, r *http.Request) (interface{}, error) {
 	offset, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -112,7 +112,7 @@ func decodeListActivitiesReq(_ context.Context, r *http.Request) (interface{}, e
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
-	req := listActivitiesReq{
+	req := retrieveActivitiesReq{
 		token: apiutil.ExtractBearerToken(r),
 		page: activitylog.Page{
 			Offset:         offset,

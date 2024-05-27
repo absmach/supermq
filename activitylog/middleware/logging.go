@@ -46,7 +46,7 @@ func (lm *loggingMiddleware) Save(ctx context.Context, activity activitylog.Acti
 	return lm.service.Save(ctx, activity)
 }
 
-func (lm *loggingMiddleware) ReadAll(ctx context.Context, token string, page activitylog.Page) (activitiesPage activitylog.ActivitiesPage, err error) {
+func (lm *loggingMiddleware) RetrieveAll(ctx context.Context, token string, page activitylog.Page) (activitiesPage activitylog.ActivitiesPage, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -60,11 +60,11 @@ func (lm *loggingMiddleware) ReadAll(ctx context.Context, token string, page act
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Read all activities failed to complete successfully", args...)
+			lm.logger.Warn("Retrieve all activities failed to complete successfully", args...)
 			return
 		}
-		lm.logger.Info("Read all activities completed successfully", args...)
+		lm.logger.Info("Retrieve all activities completed successfully", args...)
 	}(time.Now())
 
-	return lm.service.ReadAll(ctx, token, page)
+	return lm.service.RetrieveAll(ctx, token, page)
 }

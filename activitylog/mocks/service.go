@@ -17,12 +17,12 @@ type Service struct {
 	mock.Mock
 }
 
-// ReadAll provides a mock function with given fields: ctx, token, page
-func (_m *Service) ReadAll(ctx context.Context, token string, page activitylog.Page) (activitylog.ActivitiesPage, error) {
+// RetrieveAll provides a mock function with given fields: ctx, token, page
+func (_m *Service) RetrieveAll(ctx context.Context, token string, page activitylog.Page) (activitylog.ActivitiesPage, error) {
 	ret := _m.Called(ctx, token, page)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ReadAll")
+		panic("no return value specified for RetrieveAll")
 	}
 
 	var r0 activitylog.ActivitiesPage

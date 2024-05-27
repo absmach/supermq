@@ -149,8 +149,8 @@ type Service interface {
 	// Save saves the activity to the database.
 	Save(ctx context.Context, activity Activity) error
 
-	// ReadAll retrieves all activities from the database with the given page.
-	ReadAll(ctx context.Context, token string, page Page) (ActivitiesPage, error)
+	// RetrieveAll retrieves all activities from the database with the given page.
+	RetrieveAll(ctx context.Context, token string, page Page) (ActivitiesPage, error)
 }
 
 // Repository provides access to the activity log database.

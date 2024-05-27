@@ -38,11 +38,11 @@ func (mm *metricsMiddleware) Save(ctx context.Context, activity activitylog.Acti
 	return mm.service.Save(ctx, activity)
 }
 
-func (mm *metricsMiddleware) ReadAll(ctx context.Context, token string, page activitylog.Page) (activitylog.ActivitiesPage, error) {
+func (mm *metricsMiddleware) RetrieveAll(ctx context.Context, token string, page activitylog.Page) (activitylog.ActivitiesPage, error) {
 	defer func(begin time.Time) {
-		mm.counter.With("method", "read_all").Add(1)
-		mm.latency.With("method", "read_all").Observe(time.Since(begin).Seconds())
+		mm.counter.With("method", "retrieve_all").Add(1)
+		mm.latency.With("method", "retrieve_all").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.service.ReadAll(ctx, token, page)
+	return mm.service.RetrieveAll(ctx, token, page)
 }

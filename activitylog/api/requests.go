@@ -9,18 +9,16 @@ import (
 	"github.com/absmach/magistrala/internal/apiutil"
 )
 
-const maxLimitSize = 1000
-
-type listActivitiesReq struct {
+type retrieveActivitiesReq struct {
 	token string
 	page  activitylog.Page
 }
 
-func (req listActivitiesReq) validate() error {
+func (req retrieveActivitiesReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
-	if req.page.Limit > maxLimitSize {
+	if req.page.Limit > api.DefLimit {
 		return apiutil.ErrLimitSize
 	}
 	if req.page.Direction != "" && req.page.Direction != api.AscDir && req.page.Direction != api.DescDir {

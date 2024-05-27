@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/absmach/magistrala/activitylog"
+	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/internal/apiutil"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,15 +17,15 @@ var (
 	limit uint64 = 10
 )
 
-func TestListActivitiesReqValidate(t *testing.T) {
+func TestRetrieveActivitiesReqValidate(t *testing.T) {
 	cases := []struct {
 		desc string
-		req  listActivitiesReq
+		req  retrieveActivitiesReq
 		err  error
 	}{
 		{
 			desc: "valid",
-			req: listActivitiesReq{
+			req: retrieveActivitiesReq{
 				token: token,
 				page: activitylog.Page{
 					Limit: limit,
@@ -34,7 +35,7 @@ func TestListActivitiesReqValidate(t *testing.T) {
 		},
 		{
 			desc: "missing token",
-			req: listActivitiesReq{
+			req: retrieveActivitiesReq{
 				page: activitylog.Page{
 					Limit: limit,
 				},
@@ -43,17 +44,17 @@ func TestListActivitiesReqValidate(t *testing.T) {
 		},
 		{
 			desc: "invalid limit size",
-			req: listActivitiesReq{
+			req: retrieveActivitiesReq{
 				token: token,
 				page: activitylog.Page{
-					Limit: maxLimitSize + 1,
+					Limit: api.DefLimit + 1,
 				},
 			},
 			err: apiutil.ErrLimitSize,
 		},
 		{
 			desc: "invalid sorting direction",
-			req: listActivitiesReq{
+			req: retrieveActivitiesReq{
 				token: token,
 				page: activitylog.Page{
 					Limit:     limit,
@@ -64,7 +65,7 @@ func TestListActivitiesReqValidate(t *testing.T) {
 		},
 		{
 			desc: "valid id and entity type",
-			req: listActivitiesReq{
+			req: retrieveActivitiesReq{
 				token: token,
 				page: activitylog.Page{
 					Limit:      limit,
@@ -76,7 +77,7 @@ func TestListActivitiesReqValidate(t *testing.T) {
 		},
 		{
 			desc: "valid id and empty entity type",
-			req: listActivitiesReq{
+			req: retrieveActivitiesReq{
 				token: token,
 				page: activitylog.Page{
 					Limit:      limit,
@@ -88,7 +89,7 @@ func TestListActivitiesReqValidate(t *testing.T) {
 		},
 		{
 			desc: "empty id and empty entity type",
-			req: listActivitiesReq{
+			req: retrieveActivitiesReq{
 				token: token,
 				page: activitylog.Page{
 					Limit:      limit,
@@ -99,7 +100,7 @@ func TestListActivitiesReqValidate(t *testing.T) {
 		},
 		{
 			desc: "empty id and valid entity type",
-			req: listActivitiesReq{
+			req: retrieveActivitiesReq{
 				token: token,
 				page: activitylog.Page{
 					Limit:      limit,
