@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/bootstrap"
+	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/events"
 )
 
@@ -48,14 +49,26 @@ func (es *eventHandler) Handle(ctx context.Context, event events.Event) error {
 		err = es.svc.RemoveConfigHandler(ctx, rte.id)
 	case thingConnect:
 		cte := decodeConnectThing(msg)
+		if cte.channelID == "" {
+			return svcerr.ErrMalformedEntity
+		}
 		for _, thingID := range cte.thingID {
-			if err = es.svc.ConnectThingHandler(ctx, cte.channelID, thingID); err != nil {
+			if thingID == "" {
+				return svcerr.ErrMalformedEntity
+			}
+			if err := es.svc.ConnectThingHandler(ctx, cte.channelID, thingID); err != nil {
 				return err
 			}
 		}
 	case thingDisconnect:
 		dte := decodeDisconnectThing(msg)
+		if dte.channelID == "" {
+			return svcerr.ErrMalformedEntity
+		}
 		for _, thingID := range dte.thingID {
+			if thingID == "" {
+				return svcerr.ErrMalformedEntity
+			}
 			if err = es.svc.DisconnectThingHandler(ctx, dte.channelID, thingID); err != nil {
 				return err
 			}

@@ -48,48 +48,45 @@ func NewConfigRepository(db postgres.Database, log *slog.Logger) bootstrap.Confi
 	return &configRepository{db: db, log: log}
 }
 
-func (cr configRepository) Save(ctx context.Context, cfg bootstrap.Config, chsConnIDs []string) (string, error) {
-	q := `INSERT INTO configs (magistrala_thing, owner, name, client_cert, client_key, ca_cert, magistrala_key, external_id, external_key, content, state)
-		  VALUES (:magistrala_thing, :owner, :name, :client_cert, :client_key, :ca_cert, :magistrala_key, :external_id, :external_key, :content, :state)`
+func (cr configRepository) Save(ctx context.Context, cfg bootstrap.Config, chsConnIDs []string) (thingID string, err error) {
+	q := `INSERT INTO configs (magistrala_thing, owner, name, client_cert, client_key, ca_cert, magistrala_key, external_id, external_key, content, state)  
+          VALUES (:magistrala_thing, :owner, :name, :client_cert, :client_key, :ca_cert, :magistrala_key, :external_id, :external_key, :content, :state)`
 
 	tx, err := cr.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return "", errors.Wrap(repoerr.ErrCreateEntity, err)
 	}
-
 	dbcfg := toDBConfig(cfg)
+
+	defer func(thingID string, err error) (string, error) {
+		if err != nil {
+			if errRollback := cr.rollback(err, tx); errRollback != nil {
+				return thingID, errors.Wrap(err, errRollback)
+			}
+			return "", err
+		}
+		return thingID, err
+	}(thingID, err)
 
 	if _, err := tx.NamedExec(q, dbcfg); err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == pgerrcode.UniqueViolation {
-			err = repoerr.ErrConflict
-		}
-
-		if errRollback := cr.rollback(err, tx); errRollback != nil {
-			return "", errors.Wrap(err, errRollback)
+			return "", repoerr.ErrConflict
+		} else {
+			return "", err
 		}
 	}
 
 	if err := insertChannels(ctx, cfg.Owner, cfg.Channels, tx); err != nil {
-		if errRollback := cr.rollback(err, tx); errRollback != nil {
-			return "", errors.Wrap(err, errRollback)
-		}
 		return "", errors.Wrap(errSaveChannels, err)
 	}
 
 	if err := insertConnections(ctx, cfg, chsConnIDs, tx); err != nil {
-		if errRollback := cr.rollback(err, tx); errRollback != nil {
-			return "", errors.Wrap(err, errRollback)
-		}
 		return "", errors.Wrap(errSaveConnections, err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		if errRollback := cr.rollback(err, tx); errRollback != nil {
-			return "", errors.Wrap(err, errRollback)
-		}
 		return "", err
 	}
-
 	return cfg.ThingID, nil
 }
 
@@ -465,39 +462,31 @@ func (cr configRepository) RemoveChannel(ctx context.Context, id string) error {
 }
 
 func (cr configRepository) ConnectThing(ctx context.Context, channelID, thingID string) error {
-	if thingID == "" || channelID == "" {
-		return repoerr.ErrMalformedEntity
-	}
-
-	qCheck := `SELECT EXISTS(SELECT 1 FROM configs WHERE magistrala_thing = $1), state FROM configs WHERE magistrala_thing = $1`
-	var exists bool
-	var state bootstrap.State
-	if err := cr.db.QueryRowxContext(ctx, qCheck, thingID).Scan(&exists, &state); err != nil {
-		return repoerr.ErrNotFound
-	}
-	if !exists {
-		return repoerr.ErrNotFound
-	}
-	if state == bootstrap.Active {
-		return repoerr.ErrConflict
-	}
-
 	q := `UPDATE configs SET state = $1 WHERE EXISTS (
-		SELECT 1 FROM connections WHERE config_id = $2 AND channel_id = $3)`
-	if _, err := cr.db.ExecContext(ctx, q, bootstrap.Active, thingID, channelID); err != nil {
+		SELECT 1 FROM connections WHERE config_id = $2 AND channel_id = $3)
+		RETURNING *`
+	rows, err := cr.db.QueryContext(ctx, q, bootstrap.Active, thingID, channelID)
+	if err != nil {
 		return errors.Wrap(errConnectThing, err)
+	}
+	defer rows.Close()
+	if ok := rows.Next(); !ok {
+		return repoerr.ErrNotFound
 	}
 	return nil
 }
 
 func (cr configRepository) DisconnectThing(ctx context.Context, channelID, thingID string) error {
-	if thingID == "" || channelID == "" {
-		return repoerr.ErrMalformedEntity
-	}
 	q := `UPDATE configs SET state = $1 WHERE EXISTS (
-		SELECT 1 FROM connections WHERE config_id = $2 AND channel_id = $3)`
-	if _, err := cr.db.ExecContext(ctx, q, bootstrap.Inactive, thingID, channelID); err != nil {
+		SELECT 1 FROM connections WHERE config_id = $2 AND channel_id = $3)
+		RETURNING *`
+	rows, err := cr.db.QueryContext(ctx, q, bootstrap.Inactive, thingID, channelID)
+	if err != nil {
 		return errors.Wrap(errDisconnectThing, err)
+	}
+	defer rows.Close()
+	if ok := rows.Next(); !ok {
+		return repoerr.ErrNotFound
 	}
 	return nil
 }

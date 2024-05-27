@@ -36,8 +36,7 @@ var (
 		State:   bootstrap.Inactive,
 	}
 
-	channels      = []string{"1", "2"}
-	emptyChannels = []string{}
+	channels = []string{"1", "2"}
 )
 
 func TestSave(t *testing.T) {
@@ -727,12 +726,12 @@ func TestConnectThing(t *testing.T) {
 			err:         nil,
 		},
 		{
-			desc:        "connect with empty channel",
+			desc:        "connect already connected thing",
 			owner:       config.Owner,
-			id:          saved,
-			channels:    emptyThing.Channels,
-			connections: emptyChannels,
-			err:         repoerr.ErrMalformedEntity,
+			id:          connectedThing.ThingID,
+			channels:    c.Channels,
+			connections: channels,
+			err:         nil,
 		},
 		{
 			desc:        "connect non-existent thing",
@@ -741,14 +740,6 @@ func TestConnectThing(t *testing.T) {
 			channels:    c.Channels,
 			connections: channels,
 			err:         repoerr.ErrNotFound,
-		},
-		{
-			desc:        "connect already connected thing",
-			owner:       config.Owner,
-			id:          connectedThing.ThingID,
-			channels:    c.Channels,
-			connections: channels,
-			err:         repoerr.ErrConflict,
 		},
 		{
 			desc:        "connect random thing",
@@ -764,7 +755,7 @@ func TestConnectThing(t *testing.T) {
 			id:          emptyThing.ThingID,
 			channels:    c.Channels,
 			connections: channels,
-			err:         repoerr.ErrMalformedEntity,
+			err:         repoerr.ErrNotFound,
 		},
 	}
 	for _, tc := range cases {
@@ -848,7 +839,7 @@ func TestDisconnectThing(t *testing.T) {
 			id:          wrongID,
 			channels:    c.Channels,
 			connections: channels,
-			err:         nil,
+			err:         repoerr.ErrNotFound,
 		},
 		{
 			desc:        "disconnect random thing",
@@ -856,7 +847,7 @@ func TestDisconnectThing(t *testing.T) {
 			id:          randomThing.ThingID,
 			channels:    c.Channels,
 			connections: channels,
-			err:         nil,
+			err:         repoerr.ErrNotFound,
 		},
 		{
 			desc:        "disconnect empty thing",
@@ -864,7 +855,7 @@ func TestDisconnectThing(t *testing.T) {
 			id:          emptyThing.ThingID,
 			channels:    c.Channels,
 			connections: channels,
-			err:         repoerr.ErrMalformedEntity,
+			err:         repoerr.ErrNotFound,
 		},
 	}
 
