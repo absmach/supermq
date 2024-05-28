@@ -8,7 +8,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"log/slog"
 	"strings"
 	"time"
@@ -50,8 +49,8 @@ func NewConfigRepository(db postgres.Database, log *slog.Logger) bootstrap.Confi
 }
 
 func (cr configRepository) Save(ctx context.Context, cfg bootstrap.Config, chsConnIDs []string) (thingID string, err error) {
-	q := `INSERT INTO configs (magistrala_thing, owner, name, client_cert, client_key, ca_cert, magistrala_key, external_id, external_key, content, state)  
-          VALUES (:magistrala_thing, :owner, :name, :client_cert, :client_key, :ca_cert, :magistrala_key, :external_id, :external_key, :content, :state)`
+	q := `INSERT INTO configs (magistrala_thing, owner, name, client_cert, client_key, ca_cert, magistrala_key, external_id, external_key, content, state)
+	VALUES (:magistrala_thing, :owner, :name, :client_cert, :client_key, :ca_cert, :magistrala_key, :external_id, :external_key, :content, :state)`
 
 	tx, err := cr.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -59,14 +58,11 @@ func (cr configRepository) Save(ctx context.Context, cfg bootstrap.Config, chsCo
 	}
 	dbcfg := toDBConfig(cfg)
 
-	defer func(thingID string, err error) {
+	defer func() {
 		if err != nil {
-			if errRollback := cr.rollback(err, tx); errRollback != nil {
-				log.Println(errRollback)
-			}
-			log.Println(err)
+			err = cr.rollback(err, tx)
 		}
-	}(thingID, err)
+	}()
 
 	if _, err := tx.NamedExec(q, dbcfg); err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == pgerrcode.UniqueViolation {
@@ -317,10 +313,13 @@ func (cr configRepository) UpdateConnections(ctx context.Context, owner, id stri
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
-	if err := insertChannels(ctx, owner, channels, tx); err != nil {
-		if rollbackErr := cr.rollback(err, tx); rollbackErr != nil {
-			return err
+	defer func() {
+		if err != nil {
+			err = cr.rollback(err, tx)
 		}
+	}()
+
+	if err := insertChannels(ctx, owner, channels, tx); err != nil {
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
@@ -330,16 +329,10 @@ func (cr configRepository) UpdateConnections(ctx context.Context, owner, id stri
 				return repoerr.ErrNotFound
 			}
 		}
-		if errRollback := cr.rollback(err, tx); errRollback != nil {
-			return errors.Wrap(err, errRollback)
-		}
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		if errRollback := cr.rollback(err, tx); errRollback != nil {
-			return errors.Wrap(err, errRollback)
-		}
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
