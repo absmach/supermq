@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -16,6 +17,7 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/pkg/errors"
+	"moul.io/http2curl"
 )
 
 const (
@@ -1232,6 +1234,13 @@ func (sdk mgSDK) processRequest(method, reqUrl, token string, data []byte, heade
 		}
 		req.Header.Set("Authorization", token)
 	}
+
+	// Convert the http.Request to a curl command and print it
+	cmd, err := http2curl.GetCurlCommand(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(cmd)
 
 	resp, err := sdk.client.Do(req)
 	if err != nil {
