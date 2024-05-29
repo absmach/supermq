@@ -65,11 +65,13 @@ func (cr configRepository) Save(ctx context.Context, cfg bootstrap.Config, chsCo
 	}()
 
 	if _, err := tx.NamedExec(q, dbcfg); err != nil {
-		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == pgerrcode.UniqueViolation {
-			return "", repoerr.ErrConflict
-		} else {
-			return "", err
+		switch pgErr := err.(type) {
+		case *pgconn.PgError:
+			if pgErr.Code == pgerrcode.UniqueViolation {
+				return "", repoerr.ErrConflict
+			}
 		}
+		return "", err
 	}
 
 	if err := insertChannels(ctx, cfg.Owner, cfg.Channels, tx); err != nil {
