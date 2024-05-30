@@ -560,7 +560,7 @@ func (svc *service) checkSuperAdmin(ctx context.Context, adminID string) error {
 		if err := svc.clients.CheckSuperAdmin(ctx, adminID); err != nil {
 			return errors.Wrap(svcerr.ErrAuthorization, err)
 		}
-		return nil
+		return errors.Wrap(svcerr.ErrAuthorization, err)
 	}
 
 	return nil
