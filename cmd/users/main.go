@@ -26,6 +26,7 @@ import (
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/auth"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
+	"github.com/absmach/magistrala/pkg/constraints"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/groups"
 	jaegerclient "github.com/absmach/magistrala/pkg/jaeger"
@@ -214,6 +215,7 @@ func newService(ctx context.Context, authClient magistrala.AuthServiceClient, db
 	gRepo := gpostgres.New(database)
 
 	idp := uuid.New()
+	constraintsProvider := constraints.New()
 	hsr := hasher.New()
 
 	emailerClient, err := emailer.New(c.ResetURL, &ec)
@@ -221,7 +223,7 @@ func newService(ctx context.Context, authClient magistrala.AuthServiceClient, db
 		logger.Error(fmt.Sprintf("failed to configure e-mailing util: %s", err.Error()))
 	}
 
-	csvc := users.NewService(cRepo, authClient, emailerClient, hsr, idp, c.SelfRegister)
+	csvc := users.NewService(cRepo, authClient, emailerClient, hsr, idp, constraintsProvider, c.SelfRegister)
 	gsvc := mggroups.NewService(gRepo, idp, authClient)
 
 	csvc, err = uevents.NewEventStoreMiddleware(ctx, csvc, c.ESURL)

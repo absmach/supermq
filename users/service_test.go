@@ -14,6 +14,7 @@ import (
 	authmocks "github.com/absmach/magistrala/auth/mocks"
 	"github.com/absmach/magistrala/internal/testsutil"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
+	"github.com/absmach/magistrala/pkg/constraints"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
@@ -54,7 +55,7 @@ func newService(selfRegister bool) (users.Service, *mocks.Repository, *authmocks
 	cRepo := new(mocks.Repository)
 	auth := new(authmocks.AuthClient)
 	e := new(mocks.Emailer)
-	return users.NewService(cRepo, auth, e, phasher, idProvider, selfRegister), cRepo, auth, e
+	return users.NewService(cRepo, auth, e, phasher, idProvider, constraintsProvider, selfRegister), cRepo, auth, e
 }
 
 func TestRegisterClient(t *testing.T) {
