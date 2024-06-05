@@ -17,6 +17,7 @@ import (
 	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/clients"
+	"github.com/absmach/magistrala/pkg/constraints"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
@@ -28,10 +29,11 @@ import (
 )
 
 var (
-	idProvider = uuid.New()
-	token      = "token"
-	namegen    = namegenerator.NewGenerator()
-	validGroup = mggroups.Group{
+	idProvider     = uuid.New()
+	constrProvider = constraints.New()
+	token          = "token"
+	namegen        = namegenerator.NewGenerator()
+	validGroup     = mggroups.Group{
 		Name:        namegen.Generate(),
 		Description: namegen.Generate(),
 		Metadata: map[string]interface{}{
@@ -49,7 +51,7 @@ var (
 func TestCreateGroup(t *testing.T) {
 	repo := new(mocks.Repository)
 	authsvc := new(authmocks.AuthClient)
-	svc := groups.NewService(repo, idProvider, authsvc)
+	svc := groups.NewService(repo, idProvider, constrProvider, authsvc)
 
 	cases := []struct {
 		desc          string
@@ -69,6 +71,7 @@ func TestCreateGroup(t *testing.T) {
 		deletePolResp *magistrala.DeletePolicyRes
 		deletePolErr  error
 		err           error
+		totalGroups   uint64
 	}{
 		{
 			desc:  "successfully",
@@ -330,7 +333,7 @@ func TestCreateGroup(t *testing.T) {
 func TestViewGroup(t *testing.T) {
 	repo := new(mocks.Repository)
 	authsvc := new(authmocks.AuthClient)
-	svc := groups.NewService(repo, idProvider, authsvc)
+	svc := groups.NewService(repo, idProvider, constrProvider, authsvc)
 
 	cases := []struct {
 		desc      string
@@ -398,7 +401,7 @@ func TestViewGroup(t *testing.T) {
 func TestViewGroupPerms(t *testing.T) {
 	repo := new(mocks.Repository)
 	authsvc := new(authmocks.AuthClient)
-	svc := groups.NewService(repo, idProvider, authsvc)
+	svc := groups.NewService(repo, idProvider, constrProvider, authsvc)
 
 	cases := []struct {
 		desc     string
@@ -482,7 +485,7 @@ func TestViewGroupPerms(t *testing.T) {
 func TestUpdateGroup(t *testing.T) {
 	repo := new(mocks.Repository)
 	authsvc := new(authmocks.AuthClient)
-	svc := groups.NewService(repo, idProvider, authsvc)
+	svc := groups.NewService(repo, idProvider, constrProvider, authsvc)
 
 	cases := []struct {
 		desc      string
@@ -559,7 +562,7 @@ func TestUpdateGroup(t *testing.T) {
 func TestEnableGroup(t *testing.T) {
 	repo := new(mocks.Repository)
 	authsvc := new(authmocks.AuthClient)
-	svc := groups.NewService(repo, idProvider, authsvc)
+	svc := groups.NewService(repo, idProvider, constrProvider, authsvc)
 
 	cases := []struct {
 		desc         string
@@ -659,7 +662,7 @@ func TestEnableGroup(t *testing.T) {
 func TestDisableGroup(t *testing.T) {
 	repo := new(mocks.Repository)
 	authsvc := new(authmocks.AuthClient)
-	svc := groups.NewService(repo, idProvider, authsvc)
+	svc := groups.NewService(repo, idProvider, constrProvider, authsvc)
 
 	cases := []struct {
 		desc         string
@@ -759,7 +762,7 @@ func TestDisableGroup(t *testing.T) {
 func TestListMembers(t *testing.T) {
 	repo := new(mocks.Repository)
 	authsvc := new(authmocks.AuthClient)
-	svc := groups.NewService(repo, idProvider, authsvc)
+	svc := groups.NewService(repo, idProvider, constrProvider, authsvc)
 
 	cases := []struct {
 		desc            string
@@ -895,7 +898,7 @@ func TestListMembers(t *testing.T) {
 func TestListGroups(t *testing.T) {
 	repo := new(mocks.Repository)
 	authsvc := new(authmocks.AuthClient)
-	svc := groups.NewService(repo, idProvider, authsvc)
+	svc := groups.NewService(repo, idProvider, constrProvider, authsvc)
 
 	cases := []struct {
 		desc                 string
@@ -1647,7 +1650,7 @@ func TestListGroups(t *testing.T) {
 func TestAssign(t *testing.T) {
 	repo := new(mocks.Repository)
 	authsvc := new(authmocks.AuthClient)
-	svc := groups.NewService(repo, idProvider, authsvc)
+	svc := groups.NewService(repo, idProvider, constrProvider, authsvc)
 
 	cases := []struct {
 		desc                    string
@@ -2056,7 +2059,7 @@ func TestAssign(t *testing.T) {
 func TestUnassign(t *testing.T) {
 	repo := new(mocks.Repository)
 	authsvc := new(authmocks.AuthClient)
-	svc := groups.NewService(repo, idProvider, authsvc)
+	svc := groups.NewService(repo, idProvider, constrProvider, authsvc)
 
 	cases := []struct {
 		desc                    string
@@ -2465,7 +2468,7 @@ func TestUnassign(t *testing.T) {
 func TestDeleteGroup(t *testing.T) {
 	repo := new(mocks.Repository)
 	authsvc := new(authmocks.AuthClient)
-	svc := groups.NewService(repo, idProvider, authsvc)
+	svc := groups.NewService(repo, idProvider, constrProvider, authsvc)
 
 	cases := []struct {
 		desc              string

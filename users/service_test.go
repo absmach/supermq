@@ -64,6 +64,7 @@ func TestRegisterClient(t *testing.T) {
 	cases := []struct {
 		desc                      string
 		client                    mgclients.Client
+		total                     uint64
 		identifyResponse          *magistrala.IdentityRes
 		addPoliciesResponse       *magistrala.AddPoliciesRes
 		deletePoliciesResponse    *magistrala.DeletePolicyRes
@@ -267,6 +268,7 @@ func TestRegisterClient(t *testing.T) {
 		authCall := auth.On("AddPolicies", context.Background(), mock.Anything).Return(tc.addPoliciesResponse, tc.addPoliciesResponseErr)
 		authCall1 := auth.On("DeletePolicies", context.Background(), mock.Anything).Return(tc.deletePoliciesResponse, tc.deletePoliciesResponseErr)
 		repoCall := cRepo.On("Save", context.Background(), mock.Anything).Return(tc.client, tc.saveErr)
+		retrieveAllCall := cRepo.On("RetrieveAll", mock.Anything, mgclients.Page{}).Return(mgclients.ClientsPage{Page: mgclients.Page{Total: tc.total}}, nil)
 		expected, err := svc.RegisterClient(context.Background(), tc.token, tc.client)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
@@ -282,6 +284,7 @@ func TestRegisterClient(t *testing.T) {
 		repoCall.Unset()
 		authCall1.Unset()
 		authCall.Unset()
+		retrieveAllCall.Unset()
 	}
 
 	svc, cRepo, auth, _ = newService(false)
@@ -294,6 +297,7 @@ func TestRegisterClient(t *testing.T) {
 		addPoliciesResponse       *magistrala.AddPoliciesRes
 		deletePoliciesResponse    *magistrala.DeletePolicyRes
 		token                     string
+		total                     uint64
 		identifyErr               error
 		authorizeErr              error
 		addPoliciesResponseErr    error
@@ -344,6 +348,7 @@ func TestRegisterClient(t *testing.T) {
 		authCall2 := auth.On("AddPolicies", context.Background(), mock.Anything).Return(tc.addPoliciesResponse, tc.addPoliciesResponseErr)
 		authCall3 := auth.On("DeletePolicies", context.Background(), mock.Anything).Return(tc.deletePoliciesResponse, tc.deletePoliciesResponseErr)
 		repoCall1 := cRepo.On("Save", context.Background(), mock.Anything).Return(tc.client, tc.saveErr)
+		retrieveAllCall := cRepo.On("RetrieveAll", mock.Anything, mgclients.Page{}).Return(mgclients.ClientsPage{Page: mgclients.Page{Total: tc.total}}, nil)
 		expected, err := svc.RegisterClient(context.Background(), tc.token, tc.client)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
@@ -363,6 +368,7 @@ func TestRegisterClient(t *testing.T) {
 		repoCall.Unset()
 		authCall1.Unset()
 		authCall.Unset()
+		retrieveAllCall.Unset()
 	}
 }
 
@@ -2648,6 +2654,7 @@ func TestOAuthCallback(t *testing.T) {
 	cases := []struct {
 		desc                       string
 		client                     mgclients.Client
+		total                      uint64
 		retrieveByIdentityResponse mgclients.Client
 		retrieveByIdentityErr      error
 		addPoliciesResponse        *magistrala.AddPoliciesRes
@@ -2797,6 +2804,7 @@ func TestOAuthCallback(t *testing.T) {
 		authCall := auth.On("Issue", mock.Anything, mock.Anything).Return(tc.issueResponse, tc.issueErr)
 		authCall1 := auth.On("AddPolicies", mock.Anything, mock.Anything).Return(tc.addPoliciesResponse, tc.addPoliciesErr)
 		authCall2 := auth.On("Authorize", mock.Anything, authReq).Return(tc.authorizeResponse, tc.authorizeErr)
+		retrieveAllCall := cRepo.On("RetrieveAll", mock.Anything, mgclients.Page{}).Return(mgclients.ClientsPage{Page: mgclients.Page{Total: tc.total}}, nil)
 		token, err := svc.OAuthCallback(context.Background(), tc.client)
 		if err == nil {
 			assert.Equal(t, tc.issueResponse.AccessToken, token.AccessToken)
@@ -2809,5 +2817,6 @@ func TestOAuthCallback(t *testing.T) {
 		authCall.Unset()
 		authCall1.Unset()
 		authCall2.Unset()
+		retrieveAllCall.Unset()
 	}
 }
