@@ -1170,6 +1170,7 @@ type mgSDK struct {
 
 	msgContentType ContentType
 	client         *http.Client
+	flagsChan      chan bool
 }
 
 // Config contains sdk configuration parameters.
