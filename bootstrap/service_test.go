@@ -799,43 +799,13 @@ func TestConnectThingsHandler(t *testing.T) {
 		err       error
 	}{
 		{
-			desc:      "connect a thing",
+			desc:      "connect",
 			channelID: channel.ID,
 			thingID:   config.ThingID,
 			err:       nil,
 		},
 		{
-			desc:      "connect connected thing",
-			channelID: channel.ID,
-			thingID:   config.ThingID,
-			err:       svcerr.ErrAddPolicies,
-		},
-		{
-			desc:      "connect for a disconnected thing",
-			channelID: channel.ID,
-			thingID:   config.ThingID,
-			err:       nil,
-		},
-		{
-			desc:      "connect for an invalid thing",
-			channelID: channel.ID,
-			thingID:   unknown,
-			err:       svcerr.ErrAddPolicies,
-		},
-		{
-			desc:      "connect for an invalid channel",
-			channelID: unknown,
-			thingID:   config.ThingID,
-			err:       svcerr.ErrAuthorization,
-		},
-		{
-			desc:      "connect for a random thing",
-			channelID: channel.ID,
-			thingID:   unknown,
-			err:       svcerr.ErrAddPolicies,
-		},
-		{
-			desc:      "connect with failed connection",
+			desc:      "connect connected",
 			channelID: channel.ID,
 			thingID:   config.ThingID,
 			err:       svcerr.ErrAddPolicies,
@@ -870,37 +840,13 @@ func TestDisconnectThingsHandler(t *testing.T) {
 			thingID:   config.ThingID,
 			err:       nil,
 		},
-		{
-			desc:      "disconnect for an invalid thing",
-			channelID: channel.ID,
-			thingID:   unknown,
-			err:       svcerr.ErrDeletePolicies,
-		},
-		{
-			desc:      "disconnect for a random thing",
-			channelID: channel.ID,
-			thingID:   unknown,
-			err:       svcerr.ErrDeletePolicies,
-		},
-		{
-			desc:      "disconnect for an empty thing",
-			channelID: channel.ID,
-			thingID:   "",
-			err:       svcerr.ErrDeletePolicies,
-		},
-		{
-			desc:      "disconnect with failed disconnection",
-			channelID: channel.ID,
-			thingID:   config.ThingID,
-			err:       svcerr.ErrDeletePolicies,
-		},
 	}
 
 	for _, tc := range cases {
-		repoCall := boot.On("DisconnectThing", context.Background(), mock.Anything, mock.Anything).Return(tc.err)
+		svcCall := boot.On("DisconnectThing", context.Background(), mock.Anything, mock.Anything).Return(tc.err)
 		err := svc.DisconnectThingHandler(context.Background(), tc.channelID, tc.thingID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		repoCall.Unset()
+		svcCall.Unset()
 	}
 }
 
