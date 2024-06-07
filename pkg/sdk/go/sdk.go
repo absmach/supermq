@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -1170,7 +1169,8 @@ type mgSDK struct {
 
 	msgContentType ContentType
 	client         *http.Client
-	flagsChan      chan bool
+	curlFlag       bool
+	curlFlagChan   chan string
 }
 
 // Config contains sdk configuration parameters.
@@ -1187,9 +1187,11 @@ type Config struct {
 
 	MsgContentType  ContentType
 	TLSVerification bool
+	CurlFlag        bool
+	CurlFlagChan    chan string
 }
 
-// NewSDK returns new magistrala SDK instance.
+// / NewSDK returns new magistrala SDK instance.
 func NewSDK(conf Config) SDK {
 	return &mgSDK{
 		bootstrapURL:   conf.BootstrapURL,
@@ -1210,19 +1212,19 @@ func NewSDK(conf Config) SDK {
 				},
 			},
 		},
+		curlFlag:     conf.CurlFlag,
+		curlFlagChan: make(chan string),
 	}
 }
 
 // processRequest creates and send a new HTTP request, and checks for errors in the HTTP response.
 // It then returns the response headers, the response body, and the associated error(s) (if any).
-func (sdk mgSDK) processRequest(method, reqUrl, token string, data []byte, headers map[string]string, expectedRespCodes ...int) (http.Header, []byte, errors.SDKError) {
+func (sdk *mgSDK) processRequest(method, reqUrl, token string, data []byte, headers map[string]string, expectedRespCodes ...int) (http.Header, []byte, errors.SDKError) {
 	req, err := http.NewRequest(method, reqUrl, bytes.NewReader(data))
 	if err != nil {
 		return make(http.Header), []byte{}, errors.NewSDKError(err)
 	}
 
-	// Sets a default value for the Content-Type.
-	// Overridden if Content-Type is passed in the headers arguments.
 	req.Header.Add("Content-Type", string(CTJSON))
 
 	for key, value := range headers {
@@ -1236,12 +1238,14 @@ func (sdk mgSDK) processRequest(method, reqUrl, token string, data []byte, heade
 		req.Header.Set("Authorization", token)
 	}
 
-	// Convert the http.Request to a curl command and print it
-	cmd, err := http2curl.GetCurlCommand(req)
-	if err != nil {
-		log.Fatal(err)
+	if sdk.curlFlag {
+		curlCommand, err := http2curl.GetCurlCommand(req)
+		if err != nil {
+			return nil, nil, nil
+		}
+		sdk.curlFlagChan <- curlCommand.String()
+		return nil, nil, nil
 	}
-	fmt.Println(cmd)
 
 	resp, err := sdk.client.Do(req)
 	if err != nil {

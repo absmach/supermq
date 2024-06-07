@@ -173,10 +173,10 @@ func main() {
 		"Enables raw output mode for easier parsing of output",
 	)
 	rootCmd.PersistentFlags().BoolVarP(
-		&cli.Curl,
+		&sdkConf.CurlFlag,
 		"curl",
 		"x",
-		cli.Curl,
+		false,
 		"Convert HTTP request to cURL command",
 	)
 
