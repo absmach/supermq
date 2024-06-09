@@ -1193,7 +1193,7 @@ type Config struct {
 
 // / NewSDK returns new magistrala SDK instance.
 func NewSDK(conf Config) SDK {
-	return &mgSDK{
+	sdk := &mgSDK{
 		bootstrapURL:   conf.BootstrapURL,
 		certsURL:       conf.CertsURL,
 		httpAdapterURL: conf.HTTPAdapterURL,
@@ -1213,8 +1213,18 @@ func NewSDK(conf Config) SDK {
 			},
 		},
 		curlFlag:     conf.CurlFlag,
-		curlFlagChan: make(chan string),
+		curlFlagChan: make(chan string, 1),
 	}
+
+	if sdk.curlFlag {
+		go func() {
+			for curlCommand := range sdk.curlFlagChan {
+				fmt.Println(curlCommand)
+			}
+		}()
+	}
+
+	return sdk
 }
 
 // processRequest creates and send a new HTTP request, and checks for errors in the HTTP response.
@@ -1244,7 +1254,7 @@ func (sdk *mgSDK) processRequest(method, reqUrl, token string, data []byte, head
 			return nil, nil, nil
 		}
 		sdk.curlFlagChan <- curlCommand.String()
-		return nil, nil, nil
+		return make(http.Header), []byte("{}"), nil
 	}
 
 	resp, err := sdk.client.Do(req)
