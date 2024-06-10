@@ -30,6 +30,10 @@ jobs:
         with:
           version: v1.57.2
 
+      - name: Fetch tags for the build
+        run: |
+          git fetch --prune --unshallow --tags
+
       - name: Build all Binaries
         run: |
           make all -j $(nproc)

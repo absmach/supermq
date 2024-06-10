@@ -16,6 +16,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - name: Fetch tags for the build
+        run: |
+          git fetch --prune --unshallow --tags
 
       - name: Install Go
         uses: actions/setup-go@v5
