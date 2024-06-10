@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -1154,8 +1155,6 @@ type SDK interface {
 	//  err := sdk.DeleteInvitation("userID", "domainID", "token")
 	//  fmt.Println(err)
 	DeleteInvitation(userID, domainID, token string) (err error)
-
-	GetCurlFlagChan() chan string
 }
 
 type mgSDK struct {
@@ -1172,7 +1171,6 @@ type mgSDK struct {
 	msgContentType ContentType
 	client         *http.Client
 	curlFlag       bool
-	curlFlagChan   chan string
 }
 
 // Config contains sdk configuration parameters.
@@ -1190,7 +1188,6 @@ type Config struct {
 	MsgContentType  ContentType
 	TLSVerification bool
 	CurlFlag        bool
-	CurlFlagChan    chan string
 }
 
 // NewSDK returns new magistrala SDK instance.
@@ -1214,8 +1211,7 @@ func NewSDK(conf Config) SDK {
 				},
 			},
 		},
-		curlFlag:     conf.CurlFlag,
-		curlFlagChan: make(chan string),
+		curlFlag: conf.CurlFlag,
 	}
 
 	return sdk
@@ -1223,7 +1219,7 @@ func NewSDK(conf Config) SDK {
 
 // processRequest creates and send a new HTTP request, and checks for errors in the HTTP response.
 // It then returns the response headers, the response body, and the associated error(s) (if any).
-func (sdk mgSDK) processRequest(method, reqUrl, token string, data []byte, headers map[string]string, expectedRespCodes ...int) (http.Header, []byte, errors.SDKError) {
+func (sdk *mgSDK) processRequest(method, reqUrl, token string, data []byte, headers map[string]string, expectedRespCodes ...int) (http.Header, []byte, errors.SDKError) {
 	req, err := http.NewRequest(method, reqUrl, bytes.NewReader(data))
 	if err != nil {
 		return make(http.Header), []byte{}, errors.NewSDKError(err)
@@ -1249,8 +1245,7 @@ func (sdk mgSDK) processRequest(method, reqUrl, token string, data []byte, heade
 		if err != nil {
 			return nil, nil, errors.NewSDKError(err)
 		}
-		sdk.curlFlagChan <- curlCommand.String()
-		return make(http.Header), []byte(curlCommand.String()), nil
+		log.Println(curlCommand.String())
 	}
 
 	resp, err := sdk.client.Do(req)
@@ -1270,11 +1265,6 @@ func (sdk mgSDK) processRequest(method, reqUrl, token string, data []byte, heade
 	}
 
 	return resp.Header, body, nil
-}
-
-// GetCurlFlagChan returns the curlFlagChan.
-func (sdk *mgSDK) GetCurlFlagChan() chan string {
-	return sdk.curlFlagChan
 }
 
 func (sdk mgSDK) withQueryParams(baseURL, endpoint string, pm PageMetadata) (string, error) {

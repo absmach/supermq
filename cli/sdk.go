@@ -4,8 +4,6 @@
 package cli
 
 import (
-	"fmt"
-
 	mgxsdk "github.com/absmach/magistrala/pkg/sdk/go"
 )
 
@@ -15,13 +13,4 @@ var sdk mgxsdk.SDK
 // SetSDK sets magistrala SDK instance.
 func SetSDK(s mgxsdk.SDK) {
 	sdk = s
-}
-
-func AccessCurlFlagChan() {
-	curlFlagChan := sdk.GetCurlFlagChan()
-	go func() {
-		for curlCommand := range curlFlagChan {
-			fmt.Println(curlCommand)
-		}
-	}()
 }
