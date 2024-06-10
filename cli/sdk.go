@@ -19,7 +19,6 @@ func SetSDK(s mgxsdk.SDK) {
 
 func AccessCurlFlagChan() {
 	curlFlagChan := sdk.GetCurlFlagChan()
-	// Now you can use curlFlagChan
 	go func() {
 		for curlCommand := range curlFlagChan {
 			fmt.Println(curlCommand)

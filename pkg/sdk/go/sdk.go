@@ -1223,12 +1223,14 @@ func NewSDK(conf Config) SDK {
 
 // processRequest creates and send a new HTTP request, and checks for errors in the HTTP response.
 // It then returns the response headers, the response body, and the associated error(s) (if any).
-func (sdk *mgSDK) processRequest(method, reqUrl, token string, data []byte, headers map[string]string, expectedRespCodes ...int) (http.Header, []byte, errors.SDKError) {
+func (sdk mgSDK) processRequest(method, reqUrl, token string, data []byte, headers map[string]string, expectedRespCodes ...int) (http.Header, []byte, errors.SDKError) {
 	req, err := http.NewRequest(method, reqUrl, bytes.NewReader(data))
 	if err != nil {
 		return make(http.Header), []byte{}, errors.NewSDKError(err)
 	}
 
+	// Sets a default value for the Content-Type.
+	// Overridden if Content-Type is passed in the headers arguments.
 	req.Header.Add("Content-Type", string(CTJSON))
 
 	for key, value := range headers {
