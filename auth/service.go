@@ -807,7 +807,15 @@ func (svc service) UnassignUsers(ctx context.Context, token, id string, userIds 
 		}
 	}
 
+	var pcs []Policy
+
 	for _, userID := range userIds {
+		pcs = append(pcs, Policy{
+			SubjectType: UserType,
+			SubjectID:   userID,
+			ObjectType:  DomainType,
+			ObjectID:    id,
+		})
 		if err := svc.DeletePolicy(ctx, PolicyReq{
 			Subject:     EncodeDomainUserID(id, userID),
 			SubjectType: UserType,
@@ -817,6 +825,10 @@ func (svc service) UnassignUsers(ctx context.Context, token, id string, userIds 
 		}); err != nil {
 			return errors.Wrap(errRemovePolicies, err)
 		}
+	}
+
+	if err := svc.domains.DeletePolicies(ctx, pcs...); err != nil {
+		return errors.Wrap(errRemovePolicies, err)
 	}
 
 	return nil
