@@ -1276,6 +1276,7 @@ func (sdk mgSDK) processRequest(method, reqUrl, token string, data []byte, heade
 func (sdk *mgSDK) GetCurlFlagChan() chan string {
 	return sdk.curlFlagChan
 }
+
 func (sdk mgSDK) withQueryParams(baseURL, endpoint string, pm PageMetadata) (string, error) {
 	q, err := pm.query()
 	if err != nil {
