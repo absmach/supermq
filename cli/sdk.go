@@ -3,9 +3,7 @@
 
 package cli
 
-import (
-	mgxsdk "github.com/absmach/magistrala/pkg/sdk/go"
-)
+import mgxsdk "github.com/absmach/magistrala/pkg/sdk/go"
 
 // Keep SDK handle in global var.
 var sdk mgxsdk.SDK

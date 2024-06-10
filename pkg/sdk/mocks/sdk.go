@@ -1176,26 +1176,6 @@ func (_m *SDK) EnableUser(id string, token string) (sdk.User, errors.SDKError) {
 	return r0, r1
 }
 
-// GetCurlFlagChan provides a mock function with given fields:
-func (_m *SDK) GetCurlFlagChan() chan string {
-	ret := _m.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetCurlFlagChan")
-	}
-
-	var r0 chan string
-	if rf, ok := ret.Get(0).(func() chan string); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(chan string)
-		}
-	}
-
-	return r0
-}
-
 // Group provides a mock function with given fields: id, token
 func (_m *SDK) Group(id string, token string) (sdk.Group, errors.SDKError) {
 	ret := _m.Called(id, token)
