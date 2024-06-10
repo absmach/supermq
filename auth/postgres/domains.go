@@ -378,7 +378,6 @@ func (repo domainRepo) DeletePolicies(ctx context.Context, pcs ...auth.Policy) (
 			AND subject_relation = :subject_relation
 			AND object_type = :object_type
 			AND object_id = :object_id
-			AND relation = :relation
 		;`
 
 		dbpc := toDBPolicy(pc)
