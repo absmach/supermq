@@ -1154,6 +1154,8 @@ type SDK interface {
 	//  err := sdk.DeleteInvitation("userID", "domainID", "token")
 	//  fmt.Println(err)
 	DeleteInvitation(userID, domainID, token string) (err error)
+
+	GetCurlFlagChan() chan string
 }
 
 type mgSDK struct {
@@ -1191,7 +1193,7 @@ type Config struct {
 	CurlFlagChan    chan string
 }
 
-// / NewSDK returns new magistrala SDK instance.
+// NewSDK returns new magistrala SDK instance.
 func NewSDK(conf Config) SDK {
 	sdk := &mgSDK{
 		bootstrapURL:   conf.BootstrapURL,
@@ -1213,15 +1215,7 @@ func NewSDK(conf Config) SDK {
 			},
 		},
 		curlFlag:     conf.CurlFlag,
-		curlFlagChan: make(chan string, 1),
-	}
-
-	if sdk.curlFlag {
-		go func() {
-			for curlCommand := range sdk.curlFlagChan {
-				fmt.Println(curlCommand)
-			}
-		}()
+		curlFlagChan: make(chan string),
 	}
 
 	return sdk
@@ -1251,10 +1245,10 @@ func (sdk *mgSDK) processRequest(method, reqUrl, token string, data []byte, head
 	if sdk.curlFlag {
 		curlCommand, err := http2curl.GetCurlCommand(req)
 		if err != nil {
-			return nil, nil, nil
+			return nil, nil, errors.NewSDKError(err)
 		}
 		sdk.curlFlagChan <- curlCommand.String()
-		return make(http.Header), []byte("{}"), nil
+		return make(http.Header), []byte(curlCommand.String()), nil
 	}
 
 	resp, err := sdk.client.Do(req)
@@ -1276,6 +1270,10 @@ func (sdk *mgSDK) processRequest(method, reqUrl, token string, data []byte, head
 	return resp.Header, body, nil
 }
 
+// GetCurlFlagChan returns the curlFlagChan.
+func (sdk *mgSDK) GetCurlFlagChan() chan string {
+	return sdk.curlFlagChan
+}
 func (sdk mgSDK) withQueryParams(baseURL, endpoint string, pm PageMetadata) (string, error) {
 	q, err := pm.query()
 	if err != nil {

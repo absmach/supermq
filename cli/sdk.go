@@ -3,7 +3,11 @@
 
 package cli
 
-import mgxsdk "github.com/absmach/magistrala/pkg/sdk/go"
+import (
+	"fmt"
+
+	mgxsdk "github.com/absmach/magistrala/pkg/sdk/go"
+)
 
 // Keep SDK handle in global var.
 var sdk mgxsdk.SDK
@@ -11,4 +15,14 @@ var sdk mgxsdk.SDK
 // SetSDK sets magistrala SDK instance.
 func SetSDK(s mgxsdk.SDK) {
 	sdk = s
+}
+
+func AccessCurlFlagChan() {
+	curlFlagChan := sdk.GetCurlFlagChan()
+	// Now you can use curlFlagChan
+	go func() {
+		for curlCommand := range curlFlagChan {
+			fmt.Println(curlCommand)
+		}
+	}()
 }
