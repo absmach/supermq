@@ -13,7 +13,7 @@ import (
 	"github.com/absmach/magistrala/invitations"
 	"github.com/absmach/magistrala/journal"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
-	"github.com/absmach/magistrala/pkg/constraints"
+	constraints "github.com/absmach/magistrala/pkg/constraints/config"
 	mggroups "github.com/absmach/magistrala/pkg/groups"
 	sdk "github.com/absmach/magistrala/pkg/sdk/go"
 	"github.com/absmach/magistrala/pkg/uuid"

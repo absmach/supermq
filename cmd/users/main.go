@@ -26,7 +26,7 @@ import (
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/auth"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
-	"github.com/absmach/magistrala/pkg/constraints"
+	constraints "github.com/absmach/magistrala/pkg/constraints/config"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/groups"
 	jaegerclient "github.com/absmach/magistrala/pkg/jaeger"
@@ -215,7 +215,7 @@ func newService(ctx context.Context, authClient magistrala.AuthServiceClient, db
 	gRepo := gpostgres.New(database)
 
 	idp := uuid.New()
-	constraintsProvider := constraints.New()
+	constraintsProvider, _ := constraints.New("users")
 	hsr := hasher.New()
 
 	emailerClient, err := emailer.New(c.ResetURL, &ec)
