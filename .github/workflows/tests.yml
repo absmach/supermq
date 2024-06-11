@@ -16,8 +16,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        with:
-          fetch-tags: true
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -29,10 +27,6 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.57.2
-
-      - name: Fetch tags for the build
-        run: |
-          git fetch --prune --unshallow --tags
 
       - name: Build all Binaries
         run: |
