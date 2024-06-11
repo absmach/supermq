@@ -113,7 +113,7 @@ type service struct {
 	keys                KeyRepository
 	domains             DomainsRepository
 	idProvider          magistrala.IDProvider
-	constraintsProvider magistrala.ConstraintsProvider
+	constraintsProvider magistrala.Constraints
 	agent               PolicyAgent
 	tokenizer           Tokenizer
 	loginDuration       time.Duration
@@ -122,7 +122,7 @@ type service struct {
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, domains DomainsRepository, idp magistrala.IDProvider, constrProvider magistrala.ConstraintsProvider, tokenizer Tokenizer, policyAgent PolicyAgent, loginDuration, refreshDuration, invitationDuration time.Duration) Service {
+func New(keys KeyRepository, domains DomainsRepository, idp magistrala.IDProvider, constrProvider magistrala.Constraints, tokenizer Tokenizer, policyAgent PolicyAgent, loginDuration, refreshDuration, invitationDuration time.Duration) Service {
 	return &service{
 		tokenizer:           tokenizer,
 		domains:             domains,
@@ -596,18 +596,14 @@ func (svc service) CreateDomain(ctx context.Context, token string, d Domain) (do
 	}
 	d.CreatedBy = key.User
 
-	constrs, err := svc.constraintsProvider.Constraints()
-	if err != nil {
-		return Domain{}, err
-	}
-
 	ds, err := svc.domains.ListDomains(ctx, Page{})
 	if err != nil {
 		return Domain{}, err
 	}
 
-	if uint32(ds.Total) >= constrs.Domains {
-		return Domain{}, errors.Wrap(svcerr.ErrCreateEntity, svcerr.ErrLimitReached)
+	err = svc.constraintsProvider.CheckLimits(magistrala.Create, ds.Total)
+	if err != nil {
+		return Domain{}, err
 	}
 
 	domainID, err := svc.idProvider.ID()
