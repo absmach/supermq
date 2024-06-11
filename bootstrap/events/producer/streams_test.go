@@ -1098,7 +1098,7 @@ func TestConnectThingHandler(t *testing.T) {
 
 	lastID := "0"
 	for _, tc := range cases {
-		svcCall := boot.On("ConnectThing", context.Background(), tc.channelID, tc.thingID).Return(tc.err)
+		repoCall := boot.On("ConnectThing", context.Background(), tc.channelID, tc.thingID).Return(tc.err)
 		err := svc.ConnectThingHandler(context.Background(), tc.channelID, tc.thingID)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 
@@ -1117,7 +1117,7 @@ func TestConnectThingHandler(t *testing.T) {
 		}
 
 		test(t, tc.event, event, tc.desc)
-		svcCall.Unset()
+		repoCall.Unset()
 	}
 }
 
@@ -1179,7 +1179,7 @@ func TestDisconnectThingHandler(t *testing.T) {
 
 	lastID := "0"
 	for _, tc := range cases {
-		svcCall := boot.On("DisconnectThing", context.Background(), tc.channelID, tc.thingID).Return(tc.err)
+		repoCall := boot.On("DisconnectThing", context.Background(), tc.channelID, tc.thingID).Return(tc.err)
 		err := svc.DisconnectThingHandler(context.Background(), tc.channelID, tc.thingID)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 
@@ -1198,7 +1198,7 @@ func TestDisconnectThingHandler(t *testing.T) {
 		}
 
 		test(t, tc.event, event, tc.desc)
-		svcCall.Unset()
+		repoCall.Unset()
 	}
 }
 
