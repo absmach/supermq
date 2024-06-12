@@ -28,7 +28,9 @@ func TestRetrieveActivitiesReqValidate(t *testing.T) {
 			req: retrieveActivitiesReq{
 				token: token,
 				page: activitylog.Page{
-					Limit: limit,
+					Limit:      limit,
+					EntityID:   "id",
+					EntityType: activitylog.UserEntity,
 				},
 			},
 			err: nil,
@@ -37,7 +39,9 @@ func TestRetrieveActivitiesReqValidate(t *testing.T) {
 			desc: "missing token",
 			req: retrieveActivitiesReq{
 				page: activitylog.Page{
-					Limit: limit,
+					Limit:      limit,
+					EntityID:   "id",
+					EntityType: activitylog.UserEntity,
 				},
 			},
 			err: apiutil.ErrBearerToken,
@@ -47,7 +51,9 @@ func TestRetrieveActivitiesReqValidate(t *testing.T) {
 			req: retrieveActivitiesReq{
 				token: token,
 				page: activitylog.Page{
-					Limit: api.DefLimit + 1,
+					Limit:      api.DefLimit + 1,
+					EntityID:   "id",
+					EntityType: activitylog.UserEntity,
 				},
 			},
 			err: apiutil.ErrLimitSize,
@@ -57,8 +63,10 @@ func TestRetrieveActivitiesReqValidate(t *testing.T) {
 			req: retrieveActivitiesReq{
 				token: token,
 				page: activitylog.Page{
-					Limit:     limit,
-					Direction: "invalid",
+					Limit:      limit,
+					Direction:  "invalid",
+					EntityID:   "id",
+					EntityType: activitylog.UserEntity,
 				},
 			},
 			err: apiutil.ErrInvalidDirection,
@@ -80,23 +88,21 @@ func TestRetrieveActivitiesReqValidate(t *testing.T) {
 			req: retrieveActivitiesReq{
 				token: token,
 				page: activitylog.Page{
-					Limit:      limit,
-					EntityID:   "id",
-					EntityType: activitylog.EmptyEntity,
+					Limit:    limit,
+					EntityID: "id",
 				},
 			},
-			err: apiutil.ErrMissingEntityType,
+			err: nil,
 		},
 		{
 			desc: "empty id and empty entity type",
 			req: retrieveActivitiesReq{
 				token: token,
 				page: activitylog.Page{
-					Limit:      limit,
-					EntityType: activitylog.EmptyEntity,
+					Limit: limit,
 				},
 			},
-			err: nil,
+			err: apiutil.ErrMissingID,
 		},
 		{
 			desc: "empty id and valid entity type",

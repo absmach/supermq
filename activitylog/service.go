@@ -29,47 +29,31 @@ func (svc *service) Save(ctx context.Context, activity Activity) error {
 }
 
 func (svc *service) RetrieveAll(ctx context.Context, token string, page Page) (ActivitiesPage, error) {
-	userID, domainID, err := svc.identify(ctx, token)
-	if err != nil {
+	if err := svc.authorize(ctx, token, page.EntityID, page.EntityType.AuthString()); err != nil {
 		return ActivitiesPage{}, err
-	}
-	if page.EntityID != "" {
-		if err := svc.authorize(ctx, userID, domainID, auth.ViewPermission, page.EntityID, page.EntityType.AuthString()); err != nil {
-			return ActivitiesPage{}, err
-		}
-
-		return svc.repository.RetrieveAll(ctx, page)
-	}
-
-	if err := svc.authorize(ctx, userID, domainID, auth.AdminPermission, auth.PlatformType, auth.MagistralaObject); err != nil {
-		page.WithAttributes = false
-		page.WithMetadata = false
 	}
 
 	return svc.repository.RetrieveAll(ctx, page)
 }
 
-func (svc *service) identify(ctx context.Context, token string) (string, string, error) {
-	user, err := svc.auth.Identify(ctx, &magistrala.IdentityReq{Token: token})
-	if err != nil {
-		return "", "", errors.Wrap(svcerr.ErrAuthentication, err)
-	}
-	if user.GetUserId() == "" {
-		return "", "", svcerr.ErrAuthentication
+func (svc *service) authorize(ctx context.Context, token, entityID, entityType string) error {
+	permission := auth.ViewPermission
+	objectType := entityType
+	object := entityID
+	// If the entity is a user, we need to check if the user is an admin
+	if entityType == auth.UserType {
+		permission = auth.AdminPermission
+		objectType = auth.PlatformType
+		object = auth.MagistralaObject
 	}
 
-	return user.GetUserId(), user.GetDomainId(), nil
-}
-
-func (svc *service) authorize(ctx context.Context, userID, domainID, permission, entityID, entityType string) error {
 	req := &magistrala.AuthorizeReq{
-		Domain:      domainID,
 		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Subject:     userID,
+		SubjectKind: auth.TokenKind,
+		Subject:     token,
 		Permission:  permission,
-		ObjectType:  entityType,
-		Object:      entityID,
+		ObjectType:  objectType,
+		Object:      object,
 	}
 
 	res, err := svc.auth.Authorize(ctx, req)

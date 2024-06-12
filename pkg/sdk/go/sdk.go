@@ -119,9 +119,9 @@ type PageMetadata struct {
 	Operation       string   `json:"operation,omitempty"`
 	From            int64    `json:"from,omitempty"`
 	To              int64    `json:"to,omitempty"`
-	WithPayload     bool     `json:"with_payload,omitempty"`
+	WithMetadata    bool     `json:"with_metadata,omitempty"`
+	WithAttributes  bool     `json:"with_attributes,omitempty"`
 	ID              string   `json:"id,omitempty"`
-	EntityType      string   `json:"entity_type,omitempty"`
 }
 
 // Credentials represent client credentials: it contains
@@ -1158,9 +1158,9 @@ type SDK interface {
 	// Activities returns a list of activity logs.
 	//
 	// For example:
-	//  activities, _ := sdk.Activities(PageMetadata{Offset: 0, Limit: 10, Operation: "users.create", ID: "userID", EntityType: "user"}, "token")
+	//  activities, _ := sdk.Activities("thingID", "thing", PageMetadata{Offset: 0, Limit: 10, Operation: "users.create"}, "token")
 	//  fmt.Println(activities)
-	Activities(pm PageMetadata, token string) (activities ActivitiesPage, err error)
+	Activities(entityID, entityType string, pm PageMetadata, token string) (activities ActivitiesPage, err error)
 }
 
 type mgSDK struct {
@@ -1379,7 +1379,8 @@ func (pm PageMetadata) query() (string, error) {
 	if pm.To != 0 {
 		q.Add("to", strconv.FormatInt(pm.To, 10))
 	}
-	q.Add("with_payload", strconv.FormatBool(pm.WithPayload))
+	q.Add("with_attributes", strconv.FormatBool(pm.WithAttributes))
+	q.Add("with_metadata", strconv.FormatBool(pm.WithMetadata))
 
 	return q.Encode(), nil
 }

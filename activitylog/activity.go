@@ -9,15 +9,14 @@ import (
 	"errors"
 	"time"
 
+	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/internal/apiutil"
 )
 
 type EntityType uint8
 
 const (
-	// Empty represents an empty entity type. This is the default value.
-	EmptyEntity EntityType = iota
-	UserEntity
+	UserEntity EntityType = iota
 	GroupEntity
 	ThingEntity
 	ChannelEntity
@@ -53,11 +52,11 @@ func (e EntityType) String() string {
 func (e EntityType) AuthString() string {
 	switch e {
 	case UserEntity:
-		return userEntityType
+		return auth.UserType
 	case GroupEntity, ChannelEntity:
-		return groupEntityType
+		return auth.GroupType
 	case ThingEntity:
-		return thingEntityType
+		return auth.ThingType
 	default:
 		return ""
 	}
@@ -66,8 +65,6 @@ func (e EntityType) AuthString() string {
 // ToEntityType converts string value to a valid entity type.
 func ToEntityType(entityType string) (EntityType, error) {
 	switch entityType {
-	case "":
-		return EmptyEntity, nil
 	case userEntityType:
 		return UserEntity, nil
 	case groupEntityType:
@@ -77,7 +74,7 @@ func ToEntityType(entityType string) (EntityType, error) {
 	case channelEntityType:
 		return ChannelEntity, nil
 	default:
-		return EmptyEntity, apiutil.ErrInvalidEntityType
+		return EntityType(0), apiutil.ErrInvalidEntityType
 	}
 }
 

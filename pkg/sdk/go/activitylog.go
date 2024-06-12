@@ -5,9 +5,11 @@ package sdk
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/absmach/magistrala/internal/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
 )
 
@@ -27,11 +29,19 @@ type ActivitiesPage struct {
 	Activities []Activity `json:"activities"`
 }
 
-func (sdk mgSDK) Activities(pm PageMetadata, token string) (activities ActivitiesPage, err error) {
-	url, err := sdk.withQueryParams(sdk.activitiesURL, activitiesEndpoint, pm)
+func (sdk mgSDK) Activities(entityID, entityType string, pm PageMetadata, token string) (activities ActivitiesPage, err error) {
+	if entityID == "" {
+		return ActivitiesPage{}, errors.NewSDKError(apiutil.ErrMissingID)
+	}
+	if entityType == "" {
+		return ActivitiesPage{}, errors.NewSDKError(apiutil.ErrMissingEntityType)
+	}
+
+	url, err := sdk.withQueryParams(sdk.activitiesURL, fmt.Sprintf("%s/%s/%s", activitiesEndpoint, entityType, entityID), pm)
 	if err != nil {
 		return ActivitiesPage{}, errors.NewSDKError(err)
 	}
+	fmt.Println(url)
 
 	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
 	if sdkerr != nil {

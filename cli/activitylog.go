@@ -9,14 +9,14 @@ import (
 )
 
 var cmdActivity = cobra.Command{
-	Use:   "get <user_auth_token>",
+	Use:   "get <entity_id> <entity_type> <user_auth_token>",
 	Short: "Get activities",
 	Long: "Get activities\n" +
 		"Usage:\n" +
-		"\tmagistrala-cli activities get <user_auth_token> - lists all activities\n" +
-		"\tmagistrala-cli activities get <user_auth_token> --offset <offset> --limit <limit> - lists all activities with provided offset and limit\n",
+		"\tmagistrala-cli activities get <entity_id> <entity_type> <user_auth_token> - lists all activities\n" +
+		"\tmagistrala-cli activities get <entity_id> <entity_type> <user_auth_token> --offset <offset> --limit <limit> - lists all activities with provided offset and limit\n",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 1 {
+		if len(args) != 3 {
 			logUsage(cmd.Use)
 			return
 		}
@@ -26,7 +26,7 @@ var cmdActivity = cobra.Command{
 			Limit:  Limit,
 		}
 
-		activities, err := sdk.Activities(pageMetadata, args[0])
+		activities, err := sdk.Activities(args[0], args[1], pageMetadata, args[2])
 		if err != nil {
 			logError(err)
 			return

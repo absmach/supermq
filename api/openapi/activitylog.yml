@@ -27,7 +27,7 @@ tags:
       url: http://docs.mainflux.io/
 
 paths:
-  /activities:
+  /activities/{entity_type}/{id}:
     get:
       tags:
         - activity-log
@@ -38,10 +38,10 @@ paths:
         dataset is consumed either by making subsequent requests, or by
         increasing the subset size of the initial request.
       parameters:
+        - $ref: "#/components/parameters/entity_type"
+        - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/offset"
         - $ref: "#/components/parameters/limit"
-        - $ref: "#/components/parameters/id"
-        - $ref: "#/components/parameters/entity_type"
         - $ref: "#/components/parameters/operation"
         - $ref: "#/components/parameters/with_attributes"
         - $ref: "#/components/parameters/with_metadata"
@@ -82,11 +82,6 @@ components:
     Activity:
       type: object
       properties:
-        id:
-          type: string
-          format: uuid
-          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: Entity unique identifier.
         operation:
           type: string
           example: users.create
@@ -96,17 +91,23 @@ components:
           format: date-time
           example: "2024-01-11T12:05:07.449053Z"
           description: Time when the activity occurred.
-        payload:
+        attributes:
           type: object
-          description: Activity payload.
+          description: Activity attributes.
           example:
             {
-              "created_at": "2024-01-11T12:05:07.435357Z",
-              "metadata": "e30=",
-              "name": "Moors-Mlacak",
-              "owner": "599a7f51-3f16-41b2-8224-3b1044cea83b",
+              "created_at": "2024-06-12T11:34:32.991591Z",
+              "id": "29d425c8-542b-4614-8a4d-a5951945d720",
+              "identity": "Gawne-Havlicek@email.com",
+              "name": "Newgard-Frisina",
               "status": "enabled",
+              "updated_at": "2024-06-12T11:34:33.116795Z",
+              "updated_by": "ad228f20-4741-47c5-bef7-d871b541c019",
             }
+        metadata:
+          type: object
+          description: Activity payload.
+          example: { "Update": "Calvo-Felkins" }
       xml:
         name: activity
 
@@ -143,54 +144,29 @@ components:
           description: Error message
       example: { "error": "malformed entity specification" }
 
-    HealthRes:
-      type: object
-      properties:
-        status:
-          type: string
-          description: Service status.
-          enum:
-            - pass
-        version:
-          type: string
-          description: Service version.
-          example: 0.14.0
-        commit:
-          type: string
-          description: Service commit hash.
-          example: 7d6f4dc4f7f0c1fa3dc24eddfb18bb5073ff4f62
-        description:
-          type: string
-          description: Service description.
-          example: <service_name> service
-        build_time:
-          type: string
-          description: Service build time.
-          example: 1970-01-01_00:00:00
-
   parameters:
-    id:
-      name: id
-      description: Unique identifier for an entity, e.g. user, group, domain, etc. Used together with entity_type.
-      in: query
-      schema:
-        type: string
-        format: uuid
-      required: false
-      example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-
     entity_type:
       name: entity_type
       description: Type of entity, e.g. user, group, thing, etc.
-      in: query
+      in: path
       schema:
         type: string
         enum:
           - user
           - group
           - thing
-      required: false
+      required: true
       example: user
+
+    id:
+      name: id
+      description: Unique identifier for an entity, e.g. user, group, domain, etc. Used together with entity_type.
+      in: path
+      schema:
+        type: string
+        format: uuid
+      required: true
+      example: bb7edb32-2eac-4aad-aebe-ed96fe073879
 
     offset:
       name: offset
@@ -287,7 +263,7 @@ components:
       content:
         application/health+json:
           schema:
-            $ref: "#/components/schemas/HealthRes"
+            $ref: "./schemas/HealthInfo.yml"
 
     ServiceError:
       description: Unexpected server-side error occurred.

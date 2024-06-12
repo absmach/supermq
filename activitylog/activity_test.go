@@ -65,12 +65,6 @@ func TestEntityType(t *testing.T) {
 		queryString string
 	}{
 		{
-			desc:       "EmptyEntity",
-			e:          activitylog.EmptyEntity,
-			str:        "",
-			authString: "",
-		},
-		{
 			desc:       "UserEntity",
 			e:          activitylog.UserEntity,
 			str:        "user",
@@ -100,9 +94,7 @@ func TestEntityType(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			assert.Equal(t, tc.str, tc.e.String())
 			assert.Equal(t, tc.authString, tc.e.AuthString())
-			if tc.e != activitylog.EmptyEntity {
-				assert.NotEmpty(t, tc.e.Query())
-			}
+			assert.NotEmpty(t, tc.e.Query())
 		})
 	}
 }
@@ -114,11 +106,6 @@ func TestToEntityType(t *testing.T) {
 		expected    activitylog.EntityType
 		expectedErr error
 	}{
-		{
-			desc:       "EmptyEntity",
-			entityType: "",
-			expected:   activitylog.EmptyEntity,
-		},
 		{
 			desc:       "UserEntity",
 			entityType: "user",
@@ -142,7 +129,6 @@ func TestToEntityType(t *testing.T) {
 		{
 			desc:        "Invalid entity type",
 			entityType:  "invalid",
-			expected:    activitylog.EmptyEntity,
 			expectedErr: apiutil.ErrInvalidEntityType,
 		},
 	}

@@ -39,7 +39,7 @@ func MakeHandler(svc activitylog.Service, logger *slog.Logger, svcName, instance
 
 	mux := chi.NewRouter()
 
-	mux.Get("/activities", otelhttp.NewHandler(kithttp.NewServer(
+	mux.Get("/activities/{entityType}/{entityID}", otelhttp.NewHandler(kithttp.NewServer(
 		retrieveActivitiesEndpoint(svc),
 		decodeRetrieveActivitiesReq,
 		api.EncodeResponse,
@@ -99,15 +99,8 @@ func decodeRetrieveActivitiesReq(_ context.Context, r *http.Request) (interface{
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	entityID, err := apiutil.ReadStringQuery(r, entityIDKey, "")
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	entity, err := apiutil.ReadStringQuery(r, entityTypeKey, "")
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	entityType, err := activitylog.ToEntityType(entity)
+
+	entityType, err := activitylog.ToEntityType(chi.URLParam(r, "entityType"))
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
@@ -122,7 +115,7 @@ func decodeRetrieveActivitiesReq(_ context.Context, r *http.Request) (interface{
 			To:             toTime,
 			WithAttributes: attributes,
 			WithMetadata:   metadata,
-			EntityID:       entityID,
+			EntityID:       chi.URLParam(r, "entityID"),
 			EntityType:     entityType,
 			Direction:      dir,
 		},

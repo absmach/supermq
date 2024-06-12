@@ -97,7 +97,7 @@ func main() {
 		return
 	}
 
-	ac, acHandler, err := auth.Setup(authConfig)
+	ac, acHandler, err := auth.Setup(ctx, authConfig)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1

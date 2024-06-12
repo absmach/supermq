@@ -103,7 +103,7 @@ func pageQuery(pm activitylog.Page) string {
 	if !pm.To.IsZero() {
 		query = append(query, "occurred_at <= :to")
 	}
-	if pm.EntityType != activitylog.EmptyEntity && pm.EntityID != "" {
+	if pm.EntityID != "" {
 		query = append(query, pm.EntityType.Query())
 	}
 
