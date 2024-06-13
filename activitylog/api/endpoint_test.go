@@ -264,7 +264,7 @@ func TestListActivitiesEndpoint(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.desc, func(t *testing.T) {
-			repoCall := svc.On("RetrieveAll", mock.Anything, c.token, mock.Anything).Return(activitylog.ActivitiesPage{}, c.svcErr)
+			svcCall := svc.On("RetrieveAll", mock.Anything, c.token, mock.Anything).Return(activitylog.ActivitiesPage{}, c.svcErr)
 			req := testRequest{
 				client: es.Client(),
 				method: http.MethodGet,
@@ -276,7 +276,7 @@ func TestListActivitiesEndpoint(t *testing.T) {
 			assert.Nil(t, err, c.desc)
 			defer resp.Body.Close()
 			assert.Equal(t, c.status, resp.StatusCode, c.desc)
-			repoCall.Unset()
+			svcCall.Unset()
 		})
 	}
 }
