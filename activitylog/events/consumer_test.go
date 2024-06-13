@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package activitylog_test
+package events_test
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/activitylog"
+	aevents "github.com/absmach/magistrala/activitylog/events"
 	"github.com/absmach/magistrala/activitylog/mocks"
 	"github.com/absmach/magistrala/internal/testsutil"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
@@ -126,7 +127,7 @@ func TestHandle(t *testing.T) {
 				"number":    float64(rand.Intn(1000)),
 				"metadata":  payload,
 			},
-			err: activitylog.ErrMissingOccurredAt,
+			err: aevents.ErrMissingOccurredAt,
 		},
 		{
 			desc: "with empty occurred_at",
@@ -138,7 +139,7 @@ func TestHandle(t *testing.T) {
 				"number":      float64(rand.Intn(1000)),
 				"metadata":    payload,
 			},
-			err: activitylog.ErrMissingOccurredAt,
+			err: aevents.ErrMissingOccurredAt,
 		},
 		{
 			desc: "with invalid occurred_at",
@@ -150,7 +151,7 @@ func TestHandle(t *testing.T) {
 				"number":      float64(rand.Intn(1000)),
 				"metadata":    payload,
 			},
-			err: activitylog.ErrMissingOccurredAt,
+			err: aevents.ErrMissingOccurredAt,
 		},
 		{
 			desc: "with missing metadata",
@@ -275,7 +276,7 @@ func TestHandle(t *testing.T) {
 				Metadata:   metadata,
 			}
 			repoCall := repo.On("Save", context.Background(), activity).Return(tc.repoErr)
-			err = activitylog.Handle(svc)(context.Background(), NewTestEvent(event, tc.encodeErr))
+			err = aevents.Handle(svc)(context.Background(), NewTestEvent(event, tc.encodeErr))
 			switch {
 			case tc.err == nil:
 				assert.NoError(t, err)

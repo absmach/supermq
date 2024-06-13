@@ -84,7 +84,7 @@ components:
       properties:
         operation:
           type: string
-          example: users.create
+          example: user.create
           description: Activity operation.
         occurred_at:
           type: string
@@ -155,6 +155,7 @@ components:
           - user
           - group
           - thing
+          - channel
       required: true
       example: user
 
@@ -198,7 +199,7 @@ components:
       schema:
         type: string
       required: false
-      example: users.create
+      example: user.create
 
     with_attributes:
       name: with_attributes

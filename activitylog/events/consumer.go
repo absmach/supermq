@@ -1,19 +1,22 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package activitylog
+package events
 
 import (
 	"context"
 	"errors"
 	"time"
 
+	"github.com/absmach/magistrala/activitylog"
 	"github.com/absmach/magistrala/pkg/events"
 	"github.com/absmach/magistrala/pkg/events/store"
 )
 
+var ErrMissingOccurredAt = errors.New("missing occurred_at")
+
 // Start method starts consuming messages received from Event store.
-func Start(ctx context.Context, consumer string, sub events.Subscriber, service Service) error {
+func Start(ctx context.Context, consumer string, sub events.Subscriber, service activitylog.Service) error {
 	subCfg := events.SubscriberConfig{
 		Consumer: consumer,
 		Stream:   store.StreamAllEvents,
@@ -23,7 +26,7 @@ func Start(ctx context.Context, consumer string, sub events.Subscriber, service 
 	return sub.Subscribe(ctx, subCfg)
 }
 
-func Handle(service Service) handleFunc {
+func Handle(service activitylog.Service) handleFunc {
 	return func(ctx context.Context, event events.Event) error {
 		data, err := event.Encode()
 		if err != nil {
@@ -60,7 +63,7 @@ func Handle(service Service) handleFunc {
 			return errors.New("missing attributes")
 		}
 
-		activity := Activity{
+		activity := activitylog.Activity{
 			Operation:  operation,
 			OccurredAt: time.Unix(0, int64(occurredAt)),
 			Attributes: data,

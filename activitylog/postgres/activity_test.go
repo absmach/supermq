@@ -188,7 +188,7 @@ func TestActivitySave(t *testing.T) {
 				Attributes: payload,
 				Metadata:   payload,
 			},
-			err: repoerr.ErrCreateEntity,
+			err: nil,
 		},
 		{
 			desc: "with nil activity attributes",
@@ -251,7 +251,7 @@ func TestActivitySave(t *testing.T) {
 		{
 			desc:     "with empty activity",
 			activity: activitylog.Activity{},
-			err:      repoerr.ErrMalformedEntity,
+			err:      repoerr.ErrCreateEntity,
 		},
 	}
 	for _, tc := range cases {

@@ -123,7 +123,7 @@ type dbActivity struct {
 
 func toDBActivity(activity activitylog.Activity) (dbActivity, error) {
 	if activity.OccurredAt.IsZero() {
-		return dbActivity{}, errors.Wrap(repoerr.ErrMalformedEntity, activitylog.ErrMissingOccurredAt)
+		activity.OccurredAt = time.Now()
 	}
 
 	attributes := []byte("{}")

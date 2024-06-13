@@ -6,7 +6,6 @@ package activitylog
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"time"
 
 	"github.com/absmach/magistrala/auth"
@@ -29,8 +28,6 @@ const (
 	thingEntityType   = "thing"
 	channelEntityType = "channel"
 )
-
-var ErrMissingOccurredAt = errors.New("missing occurred_at")
 
 // String converts entity type to string literal.
 func (e EntityType) String() string {
@@ -83,12 +80,10 @@ func (e EntityType) Query() string {
 	switch e {
 	case UserEntity:
 		return "((operation LIKE 'user.%' AND attributes->>'id' = :entity_id) OR (attributes->>'user_id' = :entity_id))"
-	case GroupEntity:
+	case GroupEntity, ChannelEntity:
 		return "((operation LIKE 'group.%' AND attributes->>'id' = :entity_id) OR (attributes->>'group_id' = :entity_id))"
 	case ThingEntity:
 		return "((operation LIKE 'thing.%' AND attributes->>'id' = :entity_id) OR (attributes->>'thing_id' = :entity_id))"
-	case ChannelEntity:
-		return "((operation LIKE 'channel.%' AND attributes->>'id' = :entity_id) OR (attributes->>'group_id' = :entity_id))"
 	default:
 		return ""
 	}

@@ -15,6 +15,7 @@ import (
 	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/activitylog"
 	"github.com/absmach/magistrala/activitylog/api"
+	"github.com/absmach/magistrala/activitylog/events"
 	"github.com/absmach/magistrala/activitylog/middleware"
 	activitylogpg "github.com/absmach/magistrala/activitylog/postgres"
 	"github.com/absmach/magistrala/internal"
@@ -131,7 +132,7 @@ func main() {
 
 	logger.Info("Subscribed to Event Store")
 
-	if err := activitylog.Start(ctx, svcName, subscriber, svc); err != nil {
+	if err := events.Start(ctx, svcName, subscriber, svc); err != nil {
 		logger.Error("failed to start %s service: %s", svcName, err)
 		exitCode = 1
 		return

@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"math"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/absmach/magistrala"
@@ -103,6 +104,9 @@ func decodeRetrieveActivitiesReq(_ context.Context, r *http.Request) (interface{
 	entityType, err := activitylog.ToEntityType(chi.URLParam(r, "entityType"))
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	if entityType == activitylog.ChannelEntity {
+		operation = strings.ReplaceAll(operation, "channel", "group")
 	}
 
 	req := retrieveActivitiesReq{
