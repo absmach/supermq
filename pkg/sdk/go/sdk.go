@@ -1158,9 +1158,9 @@ type SDK interface {
 	// Activities returns a list of activity logs.
 	//
 	// For example:
-	//  activities, _ := sdk.Activities("thingID", "thing", PageMetadata{Offset: 0, Limit: 10, Operation: "users.create"}, "token")
+	//  activities, _ := sdk.Activities("thing", "thingID", PageMetadata{Offset: 0, Limit: 10, Operation: "users.create"}, "token")
 	//  fmt.Println(activities)
-	Activities(entityID, entityType string, pm PageMetadata, token string) (activities ActivitiesPage, err error)
+	Activities(entityType, entityID string, pm PageMetadata, token string) (activities ActivitiesPage, err error)
 }
 
 type mgSDK struct {

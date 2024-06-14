@@ -29,7 +29,7 @@ type ActivitiesPage struct {
 	Activities []Activity `json:"activities"`
 }
 
-func (sdk mgSDK) Activities(entityID, entityType string, pm PageMetadata, token string) (activities ActivitiesPage, err error) {
+func (sdk mgSDK) Activities(entityType, entityID string, pm PageMetadata, token string) (activities ActivitiesPage, err error) {
 	if entityID == "" {
 		return ActivitiesPage{}, errors.NewSDKError(apiutil.ErrMissingID)
 	}

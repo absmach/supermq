@@ -6,6 +6,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"log/slog"
 	"net/url"
@@ -71,7 +72,7 @@ func main() {
 
 	if cfg.InstanceID == "" {
 		if cfg.InstanceID, err = uuid.New().ID(); err != nil {
-			logger.Error("failed to generate instanceID: %s", err)
+			logger.Error(fmt.Sprintf("failed to generate instanceID: %s", err))
 			exitCode = 1
 			return
 		}
@@ -79,7 +80,7 @@ func main() {
 
 	dbConfig := pgclient.Config{Name: defDB}
 	if err := env.ParseWithOptions(&dbConfig, env.Options{Prefix: envPrefixDB}); err != nil {
-		logger.Error("failed to load %s Postgres configuration : %s", svcName, err)
+		logger.Error(err.Error())
 		exitCode = 1
 		return
 	}
@@ -93,7 +94,7 @@ func main() {
 
 	authConfig := auth.Config{}
 	if err := env.ParseWithOptions(&authConfig, env.Options{Prefix: envPrefixAuth}); err != nil {
-		logger.Error("failed to load %s auth configuration : %s", svcName, err)
+		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
 		exitCode = 1
 		return
 	}
@@ -110,13 +111,13 @@ func main() {
 
 	tp, err := jaegerclient.NewProvider(ctx, svcName, cfg.JaegerURL, cfg.InstanceID, cfg.TraceRatio)
 	if err != nil {
-		logger.Error("Failed to init Jaeger: %s", err)
+		logger.Error(fmt.Sprintf("failed to init Jaeger: %s", err))
 		exitCode = 1
 		return
 	}
 	defer func() {
 		if err := tp.Shutdown(ctx); err != nil {
-			logger.Error("Error shutting down tracer provider: %v", err)
+			logger.Error(fmt.Sprintf("error shutting down tracer provider: %s", err))
 		}
 	}()
 	tracer := tp.Tracer(svcName)
@@ -125,7 +126,7 @@ func main() {
 
 	subscriber, err := store.NewSubscriber(ctx, cfg.ESURL, logger)
 	if err != nil {
-		logger.Error("failed to create subscriber: %s", err)
+		logger.Error(fmt.Sprintf("failed to create subscriber: %s", err))
 		exitCode = 1
 		return
 	}
@@ -140,7 +141,7 @@ func main() {
 
 	httpServerConfig := server.Config{Port: defSvcHTTPPort}
 	if err := env.ParseWithOptions(&httpServerConfig, env.Options{Prefix: envPrefixHTTP}); err != nil {
-		logger.Error("failed to load %s HTTP server configuration : %s", svcName, err)
+		logger.Error(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err.Error()))
 		exitCode = 1
 		return
 	}
@@ -161,7 +162,7 @@ func main() {
 	})
 
 	if err := g.Wait(); err != nil {
-		logger.Error("%s service terminated: %s", svcName, err)
+		logger.Error(fmt.Sprintf("%s service terminated: %s", svcName, err))
 	}
 }
 
