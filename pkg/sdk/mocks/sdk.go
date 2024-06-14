@@ -36,9 +36,9 @@ func (_m *SDK) AcceptInvitation(domainID string, token string) error {
 	return r0
 }
 
-// Activities provides a mock function with given fields: entityID, entityType, pm, token
-func (_m *SDK) Activities(entityID string, entityType string, pm sdk.PageMetadata, token string) (sdk.ActivitiesPage, error) {
-	ret := _m.Called(entityID, entityType, pm, token)
+// Activities provides a mock function with given fields: entityType, entityID, pm, token
+func (_m *SDK) Activities(entityType string, entityID string, pm sdk.PageMetadata, token string) (sdk.ActivitiesPage, error) {
+	ret := _m.Called(entityType, entityID, pm, token)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Activities")
@@ -47,16 +47,16 @@ func (_m *SDK) Activities(entityID string, entityType string, pm sdk.PageMetadat
 	var r0 sdk.ActivitiesPage
 	var r1 error
 	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.ActivitiesPage, error)); ok {
-		return rf(entityID, entityType, pm, token)
+		return rf(entityType, entityID, pm, token)
 	}
 	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.ActivitiesPage); ok {
-		r0 = rf(entityID, entityType, pm, token)
+		r0 = rf(entityType, entityID, pm, token)
 	} else {
 		r0 = ret.Get(0).(sdk.ActivitiesPage)
 	}
 
 	if rf, ok := ret.Get(1).(func(string, string, sdk.PageMetadata, string) error); ok {
-		r1 = rf(entityID, entityType, pm, token)
+		r1 = rf(entityType, entityID, pm, token)
 	} else {
 		r1 = ret.Error(1)
 	}

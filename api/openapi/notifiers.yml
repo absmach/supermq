@@ -43,6 +43,8 @@ paths:
           $ref: "#/components/responses/Create"
         "400":
           description: Failed due to malformed JSON.
+        "401":
+          description: Missing or invalid access token provided.          
         "403":
           description: Failed to perform authorization over the entity.
         "409":

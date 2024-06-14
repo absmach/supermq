@@ -82,14 +82,16 @@ func TestReadAll(t *testing.T) {
 	}
 
 	cases := []struct {
-		desc    string
-		token   string
-		page    activitylog.Page
-		resp    activitylog.ActivitiesPage
-		authRes *magistrala.AuthorizeRes
-		authErr error
-		repoErr error
-		err     error
+		desc        string
+		token       string
+		page        activitylog.Page
+		resp        activitylog.ActivitiesPage
+		identifyRes *magistrala.IdentityRes
+		identifyErr error
+		authRes     *magistrala.AuthorizeRes
+		authErr     error
+		repoErr     error
+		err         error
 	}{
 		{
 			desc:  "successful",
@@ -101,10 +103,11 @@ func TestReadAll(t *testing.T) {
 				Limit:      10,
 				Activities: []activitylog.Activity{validActivity},
 			},
-			authRes: &magistrala.AuthorizeRes{Authorized: true},
-			authErr: nil,
-			repoErr: nil,
-			err:     nil,
+			identifyRes: &magistrala.IdentityRes{Id: testsutil.GenerateUUID(t), UserId: testsutil.GenerateUUID(t)},
+			authRes:     &magistrala.AuthorizeRes{Authorized: true},
+			authErr:     nil,
+			repoErr:     nil,
+			err:         nil,
 		},
 		{
 			desc:  "successful for user",
@@ -121,39 +124,52 @@ func TestReadAll(t *testing.T) {
 				Limit:      10,
 				Activities: []activitylog.Activity{validActivity},
 			},
-			authRes: &magistrala.AuthorizeRes{Authorized: true},
-			authErr: nil,
-			repoErr: nil,
-			err:     nil,
+			identifyRes: &magistrala.IdentityRes{Id: testsutil.GenerateUUID(t), UserId: testsutil.GenerateUUID(t)},
+			authRes:     &magistrala.AuthorizeRes{Authorized: true},
+			authErr:     nil,
+			repoErr:     nil,
+			err:         nil,
 		},
 		{
-			desc:    "with repo error",
-			token:   validToken,
-			page:    validPage,
-			resp:    activitylog.ActivitiesPage{},
-			authRes: &magistrala.AuthorizeRes{Authorized: true},
-			repoErr: repoerr.ErrViewEntity,
-			err:     repoerr.ErrViewEntity,
+			desc:        "with identify error",
+			token:       validToken,
+			page:        validPage,
+			resp:        activitylog.ActivitiesPage{},
+			identifyRes: &magistrala.IdentityRes{},
+			identifyErr: svcerr.ErrAuthentication,
+			err:         svcerr.ErrAuthentication,
 		},
 		{
-			desc:    "with failed to authorize",
-			token:   validToken,
-			page:    validPage,
-			resp:    activitylog.ActivitiesPage{},
-			authRes: &magistrala.AuthorizeRes{Authorized: false},
-			authErr: nil,
-			repoErr: nil,
-			err:     svcerr.ErrAuthorization,
+			desc:        "with repo error",
+			token:       validToken,
+			page:        validPage,
+			resp:        activitylog.ActivitiesPage{},
+			identifyRes: &magistrala.IdentityRes{Id: testsutil.GenerateUUID(t), UserId: testsutil.GenerateUUID(t)},
+			authRes:     &magistrala.AuthorizeRes{Authorized: true},
+			repoErr:     repoerr.ErrViewEntity,
+			err:         repoerr.ErrViewEntity,
 		},
 		{
-			desc:    "with error on authorize",
-			token:   validToken,
-			page:    validPage,
-			resp:    activitylog.ActivitiesPage{},
-			authRes: &magistrala.AuthorizeRes{Authorized: true},
-			authErr: svcerr.ErrAuthorization,
-			repoErr: nil,
-			err:     svcerr.ErrAuthorization,
+			desc:        "with failed to authorize",
+			token:       validToken,
+			page:        validPage,
+			resp:        activitylog.ActivitiesPage{},
+			identifyRes: &magistrala.IdentityRes{Id: testsutil.GenerateUUID(t), UserId: testsutil.GenerateUUID(t)},
+			authRes:     &magistrala.AuthorizeRes{Authorized: false},
+			authErr:     nil,
+			repoErr:     nil,
+			err:         svcerr.ErrAuthorization,
+		},
+		{
+			desc:        "with error on authorize",
+			token:       validToken,
+			page:        validPage,
+			resp:        activitylog.ActivitiesPage{},
+			identifyRes: &magistrala.IdentityRes{Id: testsutil.GenerateUUID(t), UserId: testsutil.GenerateUUID(t)},
+			authRes:     &magistrala.AuthorizeRes{Authorized: true},
+			authErr:     svcerr.ErrAuthorization,
+			repoErr:     nil,
+			err:         svcerr.ErrAuthorization,
 		},
 	}
 
@@ -161,8 +177,8 @@ func TestReadAll(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			authReq := &magistrala.AuthorizeReq{
 				SubjectType: auth.UserType,
-				SubjectKind: auth.TokenKind,
-				Subject:     tc.token,
+				SubjectKind: auth.UsersKind,
+				Subject:     tc.identifyRes.GetId(),
 				ObjectType:  tc.page.EntityType.AuthString(),
 				Object:      tc.page.EntityID,
 				Permission:  auth.ViewPermission,
@@ -171,8 +187,10 @@ func TestReadAll(t *testing.T) {
 				authReq.Permission = auth.AdminPermission
 				authReq.ObjectType = auth.PlatformType
 				authReq.Object = auth.MagistralaObject
+				authReq.Subject = tc.identifyRes.GetUserId()
 			}
-			authCall := authsvc.On("Authorize", context.Background(), authReq).Return(tc.authRes, tc.authErr)
+			authCall := authsvc.On("Identify", context.Background(), &magistrala.IdentityReq{Token: tc.token}).Return(tc.identifyRes, tc.identifyErr)
+			authCall1 := authsvc.On("Authorize", context.Background(), authReq).Return(tc.authRes, tc.authErr)
 			repoCall := repo.On("RetrieveAll", context.Background(), tc.page).Return(tc.resp, tc.repoErr)
 			resp, err := svc.RetrieveAll(context.Background(), tc.token, tc.page)
 			if tc.err == nil {
@@ -181,6 +199,7 @@ func TestReadAll(t *testing.T) {
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 			repoCall.Unset()
 			authCall.Unset()
+			authCall1.Unset()
 		})
 	}
 }

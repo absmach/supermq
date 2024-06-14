@@ -37,20 +37,28 @@ func (svc *service) RetrieveAll(ctx context.Context, token string, page Page) (A
 }
 
 func (svc *service) authorize(ctx context.Context, token, entityID, entityType string) error {
+	user, err := svc.auth.Identify(ctx, &magistrala.IdentityReq{Token: token})
+	if err != nil {
+		return errors.Wrap(svcerr.ErrAuthentication, err)
+	}
+
 	permission := auth.ViewPermission
 	objectType := entityType
 	object := entityID
+	subject := user.GetId()
+
 	// If the entity is a user, we need to check if the user is an admin
 	if entityType == auth.UserType {
 		permission = auth.AdminPermission
 		objectType = auth.PlatformType
 		object = auth.MagistralaObject
+		subject = user.GetUserId()
 	}
 
 	req := &magistrala.AuthorizeReq{
 		SubjectType: auth.UserType,
-		SubjectKind: auth.TokenKind,
-		Subject:     token,
+		SubjectKind: auth.UsersKind,
+		Subject:     subject,
 		Permission:  permission,
 		ObjectType:  objectType,
 		Object:      object,
