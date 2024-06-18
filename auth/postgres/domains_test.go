@@ -187,6 +187,24 @@ func TestSave(t *testing.T) {
 			},
 			err: repoerr.ErrCreateEntity,
 		},
+		{
+			desc: "add domain with empty alias",
+			domain: auth.Domain{
+				ID:    domainID,
+				Name:  "test",
+				Alias: "",
+				Tags:  []string{"test"},
+				Metadata: map[string]interface{}{
+					"test": "test",
+				},
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+				CreatedBy: userID,
+				UpdatedBy: userID,
+				Status:    auth.EnabledStatus,
+			},
+			err: repoerr.ErrCreateEntity,
+		},
 	}
 
 	for _, tc := range cases {
