@@ -9,6 +9,8 @@ import (
 
 	clients "github.com/absmach/magistrala/pkg/clients"
 
+	errors "github.com/absmach/magistrala/pkg/errors"
+
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -18,7 +20,7 @@ type Repository struct {
 }
 
 // ChangeStatus provides a mock function with given fields: ctx, client
-func (_m *Repository) ChangeStatus(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (_m *Repository) ChangeStatus(ctx context.Context, client clients.Client) (clients.Client, errors.Error) {
 	ret := _m.Called(ctx, client)
 
 	if len(ret) == 0 {
@@ -26,8 +28,8 @@ func (_m *Repository) ChangeStatus(ctx context.Context, client clients.Client) (
 	}
 
 	var r0 clients.Client
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) (clients.Client, error)); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) (clients.Client, errors.Error)); ok {
 		return rf(ctx, client)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) clients.Client); ok {
@@ -36,35 +38,39 @@ func (_m *Repository) ChangeStatus(ctx context.Context, client clients.Client) (
 		r0 = ret.Get(0).(clients.Client)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, clients.Client) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, clients.Client) errors.Error); ok {
 		r1 = rf(ctx, client)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // CheckSuperAdmin provides a mock function with given fields: ctx, adminID
-func (_m *Repository) CheckSuperAdmin(ctx context.Context, adminID string) error {
+func (_m *Repository) CheckSuperAdmin(ctx context.Context, adminID string) errors.Error {
 	ret := _m.Called(ctx, adminID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CheckSuperAdmin")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+	var r0 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, string) errors.Error); ok {
 		r0 = rf(ctx, adminID)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.Error)
+		}
 	}
 
 	return r0
 }
 
 // RetrieveAll provides a mock function with given fields: ctx, pm
-func (_m *Repository) RetrieveAll(ctx context.Context, pm clients.Page) (clients.ClientsPage, error) {
+func (_m *Repository) RetrieveAll(ctx context.Context, pm clients.Page) (clients.ClientsPage, errors.Error) {
 	ret := _m.Called(ctx, pm)
 
 	if len(ret) == 0 {
@@ -72,8 +78,8 @@ func (_m *Repository) RetrieveAll(ctx context.Context, pm clients.Page) (clients
 	}
 
 	var r0 clients.ClientsPage
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, clients.Page) (clients.ClientsPage, error)); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, clients.Page) (clients.ClientsPage, errors.Error)); ok {
 		return rf(ctx, pm)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, clients.Page) clients.ClientsPage); ok {
@@ -82,17 +88,19 @@ func (_m *Repository) RetrieveAll(ctx context.Context, pm clients.Page) (clients
 		r0 = ret.Get(0).(clients.ClientsPage)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, clients.Page) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, clients.Page) errors.Error); ok {
 		r1 = rf(ctx, pm)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // RetrieveAllBasicInfo provides a mock function with given fields: ctx, pm
-func (_m *Repository) RetrieveAllBasicInfo(ctx context.Context, pm clients.Page) (clients.ClientsPage, error) {
+func (_m *Repository) RetrieveAllBasicInfo(ctx context.Context, pm clients.Page) (clients.ClientsPage, errors.Error) {
 	ret := _m.Called(ctx, pm)
 
 	if len(ret) == 0 {
@@ -100,8 +108,8 @@ func (_m *Repository) RetrieveAllBasicInfo(ctx context.Context, pm clients.Page)
 	}
 
 	var r0 clients.ClientsPage
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, clients.Page) (clients.ClientsPage, error)); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, clients.Page) (clients.ClientsPage, errors.Error)); ok {
 		return rf(ctx, pm)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, clients.Page) clients.ClientsPage); ok {
@@ -110,17 +118,19 @@ func (_m *Repository) RetrieveAllBasicInfo(ctx context.Context, pm clients.Page)
 		r0 = ret.Get(0).(clients.ClientsPage)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, clients.Page) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, clients.Page) errors.Error); ok {
 		r1 = rf(ctx, pm)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // RetrieveAllByIDs provides a mock function with given fields: ctx, pm
-func (_m *Repository) RetrieveAllByIDs(ctx context.Context, pm clients.Page) (clients.ClientsPage, error) {
+func (_m *Repository) RetrieveAllByIDs(ctx context.Context, pm clients.Page) (clients.ClientsPage, errors.Error) {
 	ret := _m.Called(ctx, pm)
 
 	if len(ret) == 0 {
@@ -128,8 +138,8 @@ func (_m *Repository) RetrieveAllByIDs(ctx context.Context, pm clients.Page) (cl
 	}
 
 	var r0 clients.ClientsPage
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, clients.Page) (clients.ClientsPage, error)); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, clients.Page) (clients.ClientsPage, errors.Error)); ok {
 		return rf(ctx, pm)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, clients.Page) clients.ClientsPage); ok {
@@ -138,17 +148,19 @@ func (_m *Repository) RetrieveAllByIDs(ctx context.Context, pm clients.Page) (cl
 		r0 = ret.Get(0).(clients.ClientsPage)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, clients.Page) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, clients.Page) errors.Error); ok {
 		r1 = rf(ctx, pm)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // RetrieveByID provides a mock function with given fields: ctx, id
-func (_m *Repository) RetrieveByID(ctx context.Context, id string) (clients.Client, error) {
+func (_m *Repository) RetrieveByID(ctx context.Context, id string) (clients.Client, errors.Error) {
 	ret := _m.Called(ctx, id)
 
 	if len(ret) == 0 {
@@ -156,8 +168,8 @@ func (_m *Repository) RetrieveByID(ctx context.Context, id string) (clients.Clie
 	}
 
 	var r0 clients.Client
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (clients.Client, error)); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (clients.Client, errors.Error)); ok {
 		return rf(ctx, id)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string) clients.Client); ok {
@@ -166,17 +178,19 @@ func (_m *Repository) RetrieveByID(ctx context.Context, id string) (clients.Clie
 		r0 = ret.Get(0).(clients.Client)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, string) errors.Error); ok {
 		r1 = rf(ctx, id)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // RetrieveByIdentity provides a mock function with given fields: ctx, identity
-func (_m *Repository) RetrieveByIdentity(ctx context.Context, identity string) (clients.Client, error) {
+func (_m *Repository) RetrieveByIdentity(ctx context.Context, identity string) (clients.Client, errors.Error) {
 	ret := _m.Called(ctx, identity)
 
 	if len(ret) == 0 {
@@ -184,8 +198,8 @@ func (_m *Repository) RetrieveByIdentity(ctx context.Context, identity string) (
 	}
 
 	var r0 clients.Client
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (clients.Client, error)); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (clients.Client, errors.Error)); ok {
 		return rf(ctx, identity)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string) clients.Client); ok {
@@ -194,17 +208,19 @@ func (_m *Repository) RetrieveByIdentity(ctx context.Context, identity string) (
 		r0 = ret.Get(0).(clients.Client)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, string) errors.Error); ok {
 		r1 = rf(ctx, identity)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // Save provides a mock function with given fields: ctx, client
-func (_m *Repository) Save(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (_m *Repository) Save(ctx context.Context, client clients.Client) (clients.Client, errors.Error) {
 	ret := _m.Called(ctx, client)
 
 	if len(ret) == 0 {
@@ -212,8 +228,8 @@ func (_m *Repository) Save(ctx context.Context, client clients.Client) (clients.
 	}
 
 	var r0 clients.Client
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) (clients.Client, error)); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) (clients.Client, errors.Error)); ok {
 		return rf(ctx, client)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) clients.Client); ok {
@@ -222,17 +238,19 @@ func (_m *Repository) Save(ctx context.Context, client clients.Client) (clients.
 		r0 = ret.Get(0).(clients.Client)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, clients.Client) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, clients.Client) errors.Error); ok {
 		r1 = rf(ctx, client)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // Update provides a mock function with given fields: ctx, client
-func (_m *Repository) Update(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (_m *Repository) Update(ctx context.Context, client clients.Client) (clients.Client, errors.Error) {
 	ret := _m.Called(ctx, client)
 
 	if len(ret) == 0 {
@@ -240,8 +258,8 @@ func (_m *Repository) Update(ctx context.Context, client clients.Client) (client
 	}
 
 	var r0 clients.Client
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) (clients.Client, error)); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) (clients.Client, errors.Error)); ok {
 		return rf(ctx, client)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) clients.Client); ok {
@@ -250,17 +268,19 @@ func (_m *Repository) Update(ctx context.Context, client clients.Client) (client
 		r0 = ret.Get(0).(clients.Client)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, clients.Client) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, clients.Client) errors.Error); ok {
 		r1 = rf(ctx, client)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // UpdateIdentity provides a mock function with given fields: ctx, client
-func (_m *Repository) UpdateIdentity(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (_m *Repository) UpdateIdentity(ctx context.Context, client clients.Client) (clients.Client, errors.Error) {
 	ret := _m.Called(ctx, client)
 
 	if len(ret) == 0 {
@@ -268,8 +288,8 @@ func (_m *Repository) UpdateIdentity(ctx context.Context, client clients.Client)
 	}
 
 	var r0 clients.Client
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) (clients.Client, error)); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) (clients.Client, errors.Error)); ok {
 		return rf(ctx, client)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) clients.Client); ok {
@@ -278,17 +298,19 @@ func (_m *Repository) UpdateIdentity(ctx context.Context, client clients.Client)
 		r0 = ret.Get(0).(clients.Client)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, clients.Client) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, clients.Client) errors.Error); ok {
 		r1 = rf(ctx, client)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // UpdateRole provides a mock function with given fields: ctx, client
-func (_m *Repository) UpdateRole(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (_m *Repository) UpdateRole(ctx context.Context, client clients.Client) (clients.Client, errors.Error) {
 	ret := _m.Called(ctx, client)
 
 	if len(ret) == 0 {
@@ -296,8 +318,8 @@ func (_m *Repository) UpdateRole(ctx context.Context, client clients.Client) (cl
 	}
 
 	var r0 clients.Client
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) (clients.Client, error)); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) (clients.Client, errors.Error)); ok {
 		return rf(ctx, client)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) clients.Client); ok {
@@ -306,17 +328,19 @@ func (_m *Repository) UpdateRole(ctx context.Context, client clients.Client) (cl
 		r0 = ret.Get(0).(clients.Client)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, clients.Client) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, clients.Client) errors.Error); ok {
 		r1 = rf(ctx, client)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // UpdateSecret provides a mock function with given fields: ctx, client
-func (_m *Repository) UpdateSecret(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (_m *Repository) UpdateSecret(ctx context.Context, client clients.Client) (clients.Client, errors.Error) {
 	ret := _m.Called(ctx, client)
 
 	if len(ret) == 0 {
@@ -324,8 +348,8 @@ func (_m *Repository) UpdateSecret(ctx context.Context, client clients.Client) (
 	}
 
 	var r0 clients.Client
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) (clients.Client, error)); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) (clients.Client, errors.Error)); ok {
 		return rf(ctx, client)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) clients.Client); ok {
@@ -334,17 +358,19 @@ func (_m *Repository) UpdateSecret(ctx context.Context, client clients.Client) (
 		r0 = ret.Get(0).(clients.Client)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, clients.Client) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, clients.Client) errors.Error); ok {
 		r1 = rf(ctx, client)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // UpdateTags provides a mock function with given fields: ctx, client
-func (_m *Repository) UpdateTags(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (_m *Repository) UpdateTags(ctx context.Context, client clients.Client) (clients.Client, errors.Error) {
 	ret := _m.Called(ctx, client)
 
 	if len(ret) == 0 {
@@ -352,8 +378,8 @@ func (_m *Repository) UpdateTags(ctx context.Context, client clients.Client) (cl
 	}
 
 	var r0 clients.Client
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) (clients.Client, error)); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) (clients.Client, errors.Error)); ok {
 		return rf(ctx, client)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) clients.Client); ok {
@@ -362,10 +388,12 @@ func (_m *Repository) UpdateTags(ctx context.Context, client clients.Client) (cl
 		r0 = ret.Get(0).(clients.Client)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, clients.Client) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, clients.Client) errors.Error); ok {
 		r1 = rf(ctx, client)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1

@@ -6,58 +6,236 @@ package service
 import "github.com/absmach/magistrala/pkg/errors"
 
 // Wrapper for Service errors.
-var (
-	// ErrAuthentication indicates failure occurred while authenticating the entity.
-	ErrAuthentication = errors.New("failed to perform authentication over the entity")
+// ErrAuthentication indicates failure occurred while authenticating the entity.
+type AuthenticationError struct {
+	Err errors.Error
+}
 
-	// ErrAuthorization indicates failure occurred while authorizing the entity.
-	ErrAuthorization = errors.New("failed to perform authorization over the entity")
+func (ae *AuthenticationError) Error() string {
+	return ae.Err.Error()
+}
 
-	// ErrDomainAuthorization indicates failure occurred while authorizing the domain.
-	ErrDomainAuthorization = errors.New("failed to perform authorization over the domain")
+var ErrAuthentication = &AuthenticationError{
+	Err: errors.New("failed to perform authentication over the entity"),
+}
 
-	// ErrLogin indicates wrong login credentials.
-	ErrLogin = errors.New("invalid user id or secret")
+// ErrAuthorization indicates failure occurred while authorizing the entity.
+type AuthorizationError struct {
+	Err errors.Error
+}
 
-	// ErrMalformedEntity indicates a malformed entity specification.
-	ErrMalformedEntity = errors.New("malformed entity specification")
+func (ae *AuthorizationError) Error() string {
+	return ae.Err.Error()
+}
 
-	// ErrNotFound indicates a non-existent entity request.
-	ErrNotFound = errors.New("entity not found")
+var ErrAuthorization = &AuthorizationError{
+	Err: errors.New("failed to perform authorization over the entity"),
+}
 
-	// ErrConflict indicates that entity already exists.
-	ErrConflict = errors.New("entity already exists")
+// ErrDomainAuthorization indicates failure occurred while authorizing the domain.
+type DomainAuthorizationError struct {
+	Err errors.Error
+}
 
-	// ErrCreateEntity indicates error in creating entity or entities.
-	ErrCreateEntity = errors.New("failed to create entity")
+func (dae *DomainAuthorizationError) Error() string {
+	return dae.Err.Error()
+}
 
-	// ErrRemoveEntity indicates error in removing entity.
-	ErrRemoveEntity = errors.New("failed to remove entity")
+var ErrDomainAuthorization = &DomainAuthorizationError{
+	Err: errors.New("failed to perform authorization over the domain"),
+}
 
-	// ErrViewEntity indicates error in viewing entity or entities.
-	ErrViewEntity = errors.New("view entity failed")
+// ErrLogin indicates wrong login credentials.
+type LoginError struct {
+	Err errors.Error
+}
 
-	// ErrUpdateEntity indicates error in updating entity or entities.
-	ErrUpdateEntity = errors.New("update entity failed")
+func (le *LoginError) Error() string {
+	return le.Err.Error()
+}
 
-	// ErrInvalidStatus indicates an invalid status.
-	ErrInvalidStatus = errors.New("invalid status")
+var ErrLogin = &LoginError{
+	Err: errors.New("invalid user id or secret"),
+}
 
-	// ErrInvalidRole indicates that an invalid role.
-	ErrInvalidRole = errors.New("invalid client role")
+// ErrMalformedEntity indicates a malformed entity specification.
+type MalformedEntityError struct {
+	Err errors.Error
+}
 
-	// ErrInvalidPolicy indicates that an invalid policy.
-	ErrInvalidPolicy = errors.New("invalid policy")
+func (mee *MalformedEntityError) Error() string {
+	return mee.Err.Error()
+}
 
-	// ErrEnableClient indicates error in enabling client.
-	ErrEnableClient = errors.New("failed to enable client")
+var ErrMalformedEntity = &MalformedEntityError{
+	Err: errors.New("malformed entity specification"),
+}
 
-	// ErrDisableClient indicates error in disabling client.
-	ErrDisableClient = errors.New("failed to disable client")
+// ErrNotFound indicates a non-existent entity request.
+type NotFoundError struct {
+	Err errors.Error
+}
 
-	// ErrAddPolicies indicates error in adding policies.
-	ErrAddPolicies = errors.New("failed to add policies")
+func (nfe *NotFoundError) Error() string {
+	return nfe.Err.Error()
+}
 
-	// ErrDeletePolicies indicates error in removing policies.
-	ErrDeletePolicies = errors.New("failed to remove policies")
-)
+var ErrNotFound = &NotFoundError{
+	Err: errors.New("entity not found"),
+}
+
+// ErrConflict indicates that entity already exists.
+type ConflictError struct {
+	Err errors.Error
+}
+
+func (ce *ConflictError) Error() string {
+	return ce.Err.Error()
+}
+
+var ErrConflict = &ConflictError{
+	Err: errors.New("entity already exists"),
+}
+
+// ErrCreateEntity indicates error in creating entity or entities.
+type CreateEntityError struct {
+	Err errors.Error
+}
+
+func (cee *CreateEntityError) Error() string {
+	return cee.Err.Error()
+}
+
+var ErrCreateEntity = &CreateEntityError{
+	Err: errors.New("failed to create entity"),
+}
+
+// ErrRemoveEntity indicates error in removing entity.
+type RemoveEntityError struct {
+	Err errors.Error
+}
+
+func (ree *RemoveEntityError) Error() string {
+	return ree.Err.Error()
+}
+
+var ErrRemoveEntity = &RemoveEntityError{
+	Err: errors.New("failed to remove entity"),
+}
+
+// ErrViewEntity indicates error in viewing entity or entities.
+type ViewEntityError struct {
+	Err errors.Error
+}
+
+func (vee *ViewEntityError) Error() string {
+	return vee.Err.Error()
+}
+
+var ErrViewEntity = &ViewEntityError{
+	Err: errors.New("view entity failed"),
+}
+
+// ErrUpdateEntity indicates error in updating entity or entities.
+type UpdateEntityError struct {
+	Err errors.Error
+}
+
+func (uee *UpdateEntityError) Error() string {
+	return uee.Err.Error()
+}
+
+var ErrUpdateEntity = &UpdateEntityError{
+	Err: errors.New("update entity failed"),
+}
+
+// ErrInvalidStatus indicates an invalid status.
+type InvalidStatusError struct {
+	Err errors.Error
+}
+
+func (ise *InvalidStatusError) Error() string {
+	return ise.Err.Error()
+}
+
+var ErrInvalidStatus = &InvalidStatusError{
+	Err: errors.New("invalid status"),
+}
+
+// ErrInvalidRole indicates that an invalid role.
+type InvalidRoleError struct {
+	Err errors.Error
+}
+
+func (ire *InvalidRoleError) Error() string {
+	return ire.Err.Error()
+}
+
+var ErrInvalidRole = &InvalidRoleError{
+	Err: errors.New("invalid client role"),
+}
+
+// ErrInvalidPolicy indicates that an invalid policy.
+type InvalidPolicyError struct {
+	Err errors.Error
+}
+
+func (ipe *InvalidPolicyError) Error() string {
+	return ipe.Err.Error()
+}
+
+var ErrInvalidPolicy = &InvalidPolicyError{
+	Err: errors.New("invalid policy"),
+}
+
+// ErrEnableClient indicates error in enabling client.
+type EnableClientError struct {
+	Err errors.Error
+}
+
+func (ece *EnableClientError) Error() string {
+	return ece.Err.Error()
+}
+
+var ErrEnableClient = &EnableClientError{
+	Err: errors.New("failed to enable client"),
+}
+
+// ErrDisableClient indicates error in disabling client.
+type DisableClientError struct {
+	Err errors.Error
+}
+
+func (dce *DisableClientError) Error() string {
+	return dce.Err.Error()
+}
+
+var ErrDisableClient = &DisableClientError{
+	Err: errors.New("failed to disable client"),
+}
+
+// ErrAddPolicies indicates error in adding policies.
+type AddPoliciesError struct {
+	Err errors.Error
+}
+
+func (ape *AddPoliciesError) Error() string {
+	return ape.Err.Error()
+}
+
+var ErrAddPolicies = &AddPoliciesError{
+	Err: errors.New("failed to add policies"),
+}
+
+// ErrDeletePolicies indicates error in removing policies.
+type DeletePoliciesError struct {
+	Err errors.Error
+}
+
+func (dpe *DeletePoliciesError) Error() string {
+	return dpe.Err.Error()
+}
+
+var ErrDeletePolicies = &DeletePoliciesError{
+	Err: errors.New("failed to remove policies"),
+}

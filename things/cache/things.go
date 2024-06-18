@@ -34,7 +34,7 @@ func NewCache(client *redis.Client, duration time.Duration) things.Cache {
 	}
 }
 
-func (tc *thingCache) Save(ctx context.Context, thingKey, thingID string) error {
+func (tc *thingCache) Save(ctx context.Context, thingKey, thingID string) errors.Error {
 	if thingKey == "" || thingID == "" {
 		return errors.Wrap(repoerr.ErrCreateEntity, errors.New("thing key or thing id is empty"))
 	}
@@ -51,7 +51,7 @@ func (tc *thingCache) Save(ctx context.Context, thingKey, thingID string) error 
 	return nil
 }
 
-func (tc *thingCache) ID(ctx context.Context, thingKey string) (string, error) {
+func (tc *thingCache) ID(ctx context.Context, thingKey string) (string, errors.Error) {
 	if thingKey == "" {
 		return "", repoerr.ErrNotFound
 	}
@@ -65,7 +65,7 @@ func (tc *thingCache) ID(ctx context.Context, thingKey string) (string, error) {
 	return thingID, nil
 }
 
-func (tc *thingCache) Remove(ctx context.Context, thingID string) error {
+func (tc *thingCache) Remove(ctx context.Context, thingID string) errors.Error {
 	tid := fmt.Sprintf("%s:%s", idPrefix, thingID)
 	key, err := tc.client.Get(ctx, tid).Result()
 	// Redis returns Nil Reply when key does not exist.

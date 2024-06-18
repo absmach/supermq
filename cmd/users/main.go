@@ -32,6 +32,7 @@ import (
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/auth"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
+	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/oauth2"
@@ -226,9 +227,9 @@ func newService(ctx context.Context, authClient magistrala.AuthServiceClient, db
 	if err != nil {
 		return nil, nil, err
 	}
-	gsvc, err = gevents.NewEventStoreMiddleware(ctx, gsvc, c.ESURL, streamID)
-	if err != nil {
-		return nil, nil, err
+	gsvc, Err := gevents.NewEventStoreMiddleware(ctx, gsvc, c.ESURL, streamID)
+	if Err != nil {
+		return nil, nil, Err
 	}
 
 	csvc = ctracing.New(csvc, tracer)
@@ -251,14 +252,14 @@ func newService(ctx context.Context, authClient magistrala.AuthServiceClient, db
 	return csvc, gsvc, err
 }
 
-func createAdmin(ctx context.Context, c config, crepo clientspg.Repository, hsr users.Hasher, svc users.Service) (string, error) {
+func createAdmin(ctx context.Context, c config, crepo clientspg.Repository, hsr users.Hasher, svc users.Service) (string, errors.Error) {
 	id, err := uuid.New().ID()
 	if err != nil {
-		return "", err
+		return "", errors.Cast(err)
 	}
-	hash, err := hsr.Hash(c.AdminPassword)
-	if err != nil {
-		return "", err
+	hash, Err := hsr.Hash(c.AdminPassword)
+	if Err != nil {
+		return "", Err
 	}
 
 	client := mgclients.Client{
@@ -282,11 +283,11 @@ func createAdmin(ctx context.Context, c config, crepo clientspg.Repository, hsr 
 	}
 
 	// Create an admin
-	if _, err = crepo.Save(ctx, client); err != nil {
-		return "", err
+	if _, Err = crepo.Save(ctx, client); err != nil {
+		return "", Err
 	}
-	if _, err = svc.IssueToken(ctx, c.AdminEmail, c.AdminPassword, ""); err != nil {
-		return "", err
+	if _, Err = svc.IssueToken(ctx, c.AdminEmail, c.AdminPassword, ""); err != nil {
+		return "", Err
 	}
 	return client.ID, nil
 }

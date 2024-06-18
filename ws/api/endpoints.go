@@ -27,7 +27,7 @@ func handshake(ctx context.Context, svc ws.Service) http.HandlerFunc {
 		}
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			logger.Warn(fmt.Sprintf("Failed to upgrade connection to websocket: %s", err.Error()))
+			logger.WarnContext(ctx, fmt.Sprintf("Failed to upgrade connection to websocket: %s", err.Error()))
 			return
 		}
 		req.conn = conn
@@ -62,7 +62,7 @@ func decodeRequest(r *http.Request) (connReq, error) {
 
 	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
 	if len(channelParts) < 2 {
-		logger.Warn("Empty channel id or malformed url")
+		logger.WarnContext(r.Context(), "Empty channel id or malformed url")
 		return connReq{}, errors.ErrMalformedEntity
 	}
 

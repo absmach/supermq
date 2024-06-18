@@ -37,7 +37,7 @@ func (lm *loggingMiddleware) ConsumeBlocking(ctx context.Context, msgs interface
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Blocking consumer failed to consume messages successfully", args...)
+			lm.logger.WarnContext(ctx, "Blocking consumer failed to consume messages successfully", args...)
 			return
 		}
 		lm.logger.Info("Blocking consumer consumed messages successfully", args...)

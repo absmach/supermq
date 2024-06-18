@@ -29,13 +29,13 @@ type Repository interface {
 
 	// Save persists the client account. A non-nil error is returned to indicate
 	// operation failure.
-	Save(ctx context.Context, client ...mgclients.Client) ([]mgclients.Client, error)
+	Save(ctx context.Context, client ...mgclients.Client) ([]mgclients.Client, errors.Error)
 
 	// RetrieveBySecret retrieves a client based on the secret (key).
-	RetrieveBySecret(ctx context.Context, key string) (mgclients.Client, error)
+	RetrieveBySecret(ctx context.Context, key string) (mgclients.Client, errors.Error)
 
 	// Delete deletes client with given id
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id string) errors.Error
 }
 
 // NewRepository instantiates a PostgreSQL
@@ -46,7 +46,7 @@ func NewRepository(db postgres.Database) Repository {
 	}
 }
 
-func (repo clientRepo) Save(ctx context.Context, cs ...mgclients.Client) ([]mgclients.Client, error) {
+func (repo clientRepo) Save(ctx context.Context, cs ...mgclients.Client) ([]mgclients.Client, errors.Error) {
 	tx, err := repo.DB.BeginTxx(ctx, nil)
 	if err != nil {
 		return []mgclients.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
@@ -63,10 +63,10 @@ func (repo clientRepo) Save(ctx context.Context, cs ...mgclients.Client) ([]mgcl
 			return []mgclients.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
 		}
 
-		row, err := repo.DB.NamedQueryContext(ctx, q, dbcli)
-		if err != nil {
+		row, Err := repo.DB.NamedQueryContext(ctx, q, dbcli)
+		if Err != nil {
 			if err := tx.Rollback(); err != nil {
-				return []mgclients.Client{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+				return []mgclients.Client{}, errors.Cast(postgres.HandleError(repoerr.ErrCreateEntity, Err))
 			}
 			return []mgclients.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
 		}
@@ -93,7 +93,7 @@ func (repo clientRepo) Save(ctx context.Context, cs ...mgclients.Client) ([]mgcl
 	return clients, nil
 }
 
-func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (mgclients.Client, error) {
+func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (mgclients.Client, errors.Error) {
 	q := fmt.Sprintf(`SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id, identity, secret, metadata, created_at, updated_at, updated_by, status
         FROM clients
         WHERE secret = :secret AND status = %d`, mgclients.EnabledStatus)
@@ -104,14 +104,14 @@ func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (mgclie
 
 	rows, err := repo.DB.NamedQueryContext(ctx, q, dbc)
 	if err != nil {
-		return mgclients.Client{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+		return mgclients.Client{}, errors.Cast(postgres.HandleError(repoerr.ErrViewEntity, err))
 	}
 	defer rows.Close()
 
 	dbc = pgclients.DBClient{}
 	if rows.Next() {
 		if err = rows.StructScan(&dbc); err != nil {
-			return mgclients.Client{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+			return mgclients.Client{}, errors.Cast(postgres.HandleError(repoerr.ErrViewEntity, err))
 		}
 
 		client, err := pgclients.ToClient(dbc)
@@ -125,12 +125,12 @@ func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (mgclie
 	return mgclients.Client{}, repoerr.ErrNotFound
 }
 
-func (repo clientRepo) Delete(ctx context.Context, id string) error {
+func (repo clientRepo) Delete(ctx context.Context, id string) errors.Error {
 	q := "DELETE FROM clients AS c  WHERE c.id = $1 ;"
 
 	result, err := repo.DB.ExecContext(ctx, q, id)
 	if err != nil {
-		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
+		return errors.Cast(postgres.HandleError(repoerr.ErrRemoveEntity, err))
 	}
 	if rows, _ := result.RowsAffected(); rows == 0 {
 		return repoerr.ErrNotFound

@@ -28,13 +28,13 @@ type Repository interface {
 
 	// Save persists the client account. A non-nil error is returned to indicate
 	// operation failure.
-	Save(ctx context.Context, client mgclients.Client) (mgclients.Client, error)
+	Save(ctx context.Context, client mgclients.Client) (mgclients.Client, errors.Error)
 
-	RetrieveByID(ctx context.Context, id string) (mgclients.Client, error)
+	RetrieveByID(ctx context.Context, id string) (mgclients.Client, errors.Error)
 
-	UpdateRole(ctx context.Context, client mgclients.Client) (mgclients.Client, error)
+	UpdateRole(ctx context.Context, client mgclients.Client) (mgclients.Client, errors.Error)
 
-	CheckSuperAdmin(ctx context.Context, adminID string) error
+	CheckSuperAdmin(ctx context.Context, adminID string) errors.Error
 }
 
 // NewRepository instantiates a PostgreSQL
@@ -45,7 +45,7 @@ func NewRepository(db postgres.Database) Repository {
 	}
 }
 
-func (repo clientRepo) Save(ctx context.Context, c mgclients.Client) (mgclients.Client, error) {
+func (repo clientRepo) Save(ctx context.Context, c mgclients.Client) (mgclients.Client, errors.Error) {
 	q := `INSERT INTO clients (id, name, tags, identity, secret, metadata, created_at, status, role)
         VALUES (:id, :name, :tags, :identity, :secret, :metadata, :created_at, :status, :role)
         RETURNING id, name, tags, identity, metadata, status, created_at`
@@ -54,9 +54,9 @@ func (repo clientRepo) Save(ctx context.Context, c mgclients.Client) (mgclients.
 		return mgclients.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
 	}
 
-	row, err := repo.DB.NamedQueryContext(ctx, q, dbc)
-	if err != nil {
-		return mgclients.Client{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+	row, Err := repo.DB.NamedQueryContext(ctx, q, dbc)
+	if Err != nil {
+		return mgclients.Client{}, errors.Cast(postgres.HandleError(repoerr.ErrCreateEntity, Err))
 	}
 
 	defer row.Close()
@@ -74,17 +74,17 @@ func (repo clientRepo) Save(ctx context.Context, c mgclients.Client) (mgclients.
 	return client, nil
 }
 
-func (repo clientRepo) CheckSuperAdmin(ctx context.Context, adminID string) error {
+func (repo clientRepo) CheckSuperAdmin(ctx context.Context, adminID string) errors.Error {
 	q := "SELECT 1 FROM clients WHERE id = $1 AND role = $2"
 	rows, err := repo.DB.QueryContext(ctx, q, adminID, mgclients.AdminRole)
 	if err != nil {
-		return postgres.HandleError(repoerr.ErrViewEntity, err)
+		return errors.Cast(postgres.HandleError(repoerr.ErrViewEntity, err))
 	}
 	defer rows.Close()
 
 	if rows.Next() {
 		if err := rows.Err(); err != nil {
-			return postgres.HandleError(repoerr.ErrViewEntity, err)
+			return errors.Cast(postgres.HandleError(repoerr.ErrViewEntity, err))
 		}
 		return nil
 	}
@@ -92,7 +92,7 @@ func (repo clientRepo) CheckSuperAdmin(ctx context.Context, adminID string) erro
 	return repoerr.ErrNotFound
 }
 
-func (repo clientRepo) RetrieveByID(ctx context.Context, id string) (mgclients.Client, error) {
+func (repo clientRepo) RetrieveByID(ctx context.Context, id string) (mgclients.Client, errors.Error) {
 	q := `SELECT id, name, tags, identity, secret, metadata, created_at, updated_at, updated_by, status, role
         FROM clients WHERE id = :id`
 
@@ -102,14 +102,14 @@ func (repo clientRepo) RetrieveByID(ctx context.Context, id string) (mgclients.C
 
 	rows, err := repo.DB.NamedQueryContext(ctx, q, dbc)
 	if err != nil {
-		return mgclients.Client{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+		return mgclients.Client{}, errors.Cast(postgres.HandleError(repoerr.ErrViewEntity, err))
 	}
 	defer rows.Close()
 
 	dbc = pgclients.DBClient{}
 	if rows.Next() {
 		if err = rows.StructScan(&dbc); err != nil {
-			return mgclients.Client{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+			return mgclients.Client{}, errors.Cast(postgres.HandleError(repoerr.ErrViewEntity, err))
 		}
 
 		client, err := pgclients.ToClient(dbc)
@@ -123,7 +123,7 @@ func (repo clientRepo) RetrieveByID(ctx context.Context, id string) (mgclients.C
 	return mgclients.Client{}, repoerr.ErrNotFound
 }
 
-func (repo clientRepo) RetrieveAll(ctx context.Context, pm mgclients.Page) (mgclients.ClientsPage, error) {
+func (repo clientRepo) RetrieveAll(ctx context.Context, pm mgclients.Page) (mgclients.ClientsPage, errors.Error) {
 	query, err := pgclients.PageQuery(pm)
 	if err != nil {
 		return mgclients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
@@ -136,9 +136,9 @@ func (repo clientRepo) RetrieveAll(ctx context.Context, pm mgclients.Page) (mgcl
 	if err != nil {
 		return mgclients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
-	rows, err := repo.DB.NamedQueryContext(ctx, q, dbPage)
-	if err != nil {
-		return mgclients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+	rows, Err := repo.DB.NamedQueryContext(ctx, q, dbPage)
+	if Err != nil {
+		return mgclients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, Err)
 	}
 	defer rows.Close()
 
@@ -151,16 +151,16 @@ func (repo clientRepo) RetrieveAll(ctx context.Context, pm mgclients.Page) (mgcl
 
 		c, err := pgclients.ToClient(dbc)
 		if err != nil {
-			return mgclients.ClientsPage{}, err
+			return mgclients.ClientsPage{}, errors.Cast(err)
 		}
 
 		items = append(items, c)
 	}
 	cq := fmt.Sprintf(`SELECT COUNT(*) FROM clients c %s;`, query)
 
-	total, err := postgres.Total(ctx, repo.DB, cq, dbPage)
-	if err != nil {
-		return mgclients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	total, Err := postgres.Total(ctx, repo.DB, cq, dbPage)
+	if Err != nil {
+		return mgclients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, Err)
 	}
 
 	page := mgclients.ClientsPage{
@@ -175,7 +175,7 @@ func (repo clientRepo) RetrieveAll(ctx context.Context, pm mgclients.Page) (mgcl
 	return page, nil
 }
 
-func (repo clientRepo) UpdateRole(ctx context.Context, client mgclients.Client) (mgclients.Client, error) {
+func (repo clientRepo) UpdateRole(ctx context.Context, client mgclients.Client) (mgclients.Client, errors.Error) {
 	query := `UPDATE clients SET role = :role, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, metadata, status, role, created_at, updated_at, updated_by`
@@ -185,9 +185,9 @@ func (repo clientRepo) UpdateRole(ctx context.Context, client mgclients.Client) 
 		return mgclients.Client{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
-	row, err := repo.DB.NamedQueryContext(ctx, query, dbc)
-	if err != nil {
-		return mgclients.Client{}, postgres.HandleError(err, repoerr.ErrUpdateEntity)
+	row, Err := repo.DB.NamedQueryContext(ctx, query, dbc)
+	if Err != nil {
+		return mgclients.Client{}, errors.Cast(postgres.HandleError(Err, repoerr.ErrUpdateEntity))
 	}
 
 	defer row.Close()
@@ -196,8 +196,9 @@ func (repo clientRepo) UpdateRole(ctx context.Context, client mgclients.Client) 
 	}
 	dbc = pgclients.DBClient{}
 	if err := row.StructScan(&dbc); err != nil {
-		return mgclients.Client{}, err
+		return mgclients.Client{}, errors.Cast(err)
 	}
 
-	return pgclients.ToClient(dbc)
+	cl, err := pgclients.ToClient(dbc)
+	return cl, errors.Cast(err)
 }

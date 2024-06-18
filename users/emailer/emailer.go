@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/absmach/magistrala/internal/email"
+	"github.com/absmach/magistrala/pkg/errors"
 	"github.com/absmach/magistrala/users"
 )
 
@@ -18,12 +19,12 @@ type emailer struct {
 }
 
 // New creates new emailer utility.
-func New(url string, c *email.Config) (users.Emailer, error) {
+func New(url string, c *email.Config) (users.Emailer, errors.Error) {
 	e, err := email.New(c)
-	return &emailer{resetURL: url, agent: e}, err
+	return &emailer{resetURL: url, agent: e}, errors.Cast(err)
 }
 
-func (e *emailer) SendPasswordReset(to []string, host, user, token string) error {
+func (e *emailer) SendPasswordReset(to []string, host, user, token string) errors.Error {
 	url := fmt.Sprintf("%s%s?token=%s", host, e.resetURL, token)
-	return e.agent.Send(to, "", "Password Reset Request", "", user, url, "")
+	return errors.Cast(e.agent.Send(to, "", "Password Reset Request", "", user, url, ""))
 }

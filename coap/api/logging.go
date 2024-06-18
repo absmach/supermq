@@ -39,7 +39,7 @@ func (lm *loggingMiddleware) Publish(ctx context.Context, key string, msg *messa
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Publish message failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Publish message failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Publish message completed successfully", args...)
@@ -61,7 +61,7 @@ func (lm *loggingMiddleware) Subscribe(ctx context.Context, key, chanID, subtopi
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Subscribe failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Subscribe failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Subscribe completed successfully", args...)
@@ -83,7 +83,7 @@ func (lm *loggingMiddleware) Unsubscribe(ctx context.Context, key, chanID, subto
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Unsubscribe failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Unsubscribe failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Unsubscribe completed successfully", args...)

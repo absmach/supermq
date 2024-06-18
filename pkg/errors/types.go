@@ -3,24 +3,81 @@
 
 package errors
 
-import "errors"
+// ErrMalformedEntity indicates a malformed entity specification.
+type MalformedEntityError struct {
+	Err Error
+}
 
-var (
-	// ErrMalformedEntity indicates a malformed entity specification.
-	ErrMalformedEntity = New("malformed entity specification")
+func (mee *MalformedEntityError) Error() string {
+	return mee.Err.Error()
+}
 
-	// ErrUnsupportedContentType indicates invalid content type.
-	ErrUnsupportedContentType = errors.New("invalid content type")
+var ErrMalformedEntity = &MalformedEntityError{
+	Err: New("malformed entity specification"),
+}
 
-	// ErrUnidentified indicates unidentified error.
-	ErrUnidentified = errors.New("unidentified error")
+// ErrUnsupportedContentType indicates invalid content type.
+type UnsupportedContentTypeError struct {
+	Err Error
+}
 
-	// ErrEmptyPath indicates empty file path.
-	ErrEmptyPath = errors.New("empty file path")
+func (ucte *UnsupportedContentTypeError) Error() string {
+	return ucte.Err.Error()
+}
 
-	// ErrStatusAlreadyAssigned indicated that the client or group has already been assigned the status.
-	ErrStatusAlreadyAssigned = errors.New("status already assigned")
+var ErrUnsupportedContentType = &UnsupportedContentTypeError{
+	Err: New("invalid content type"),
+}
 
-	// ErrRollbackTx indicates failed to rollback transaction.
-	ErrRollbackTx = errors.New("failed to rollback transaction")
-)
+// ErrUnidentified indicates unidentified error.
+type UnidentifiedError struct {
+	Err Error
+}
+
+func (ue *UnidentifiedError) Error() string {
+	return ue.Err.Error()
+}
+
+var ErrUnidentified = &UnidentifiedError{
+	Err: New("unidentified error"),
+}
+
+// ErrEmptyPath indicates empty file path.
+type EmptyPathError struct {
+	Err Error
+}
+
+func (epe *EmptyPathError) Error() string {
+	return epe.Err.Error()
+}
+
+var ErrEmptyPath = &EmptyPathError{
+	Err: New("empty file path"),
+}
+
+// ErrStatusAlreadyAssigned indicated that the client or group has already been assigned the status.
+type StatusAlreadyAssignedError struct {
+	Err Error
+}
+
+func (sae *StatusAlreadyAssignedError) Error() string {
+	return sae.Err.Error()
+}
+
+var ErrStatusAlreadyAssigned = &StatusAlreadyAssignedError{
+	Err: New("status already assigned"),
+}
+
+// ErrRollbackTx indicates failed to rollback transaction.
+
+type RollbackTxError struct {
+	Err Error
+}
+
+func (rte *RollbackTxError) Error() string {
+	return rte.Err.Error()
+}
+
+var ErrRollbackTx = &RollbackTxError{
+	Err: New("failed to rollback transaction"),
+}

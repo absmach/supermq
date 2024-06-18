@@ -105,76 +105,71 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 	}
 
 	w.Header().Set("Content-Type", ContentType)
-	switch {
-	case errors.Contains(err, svcerr.ErrAuthorization),
-		errors.Contains(err, svcerr.ErrDomainAuthorization),
-		errors.Contains(err, bootstrap.ErrExternalKey),
-		errors.Contains(err, bootstrap.ErrExternalKeySecure):
+	switch err.(type) {
+	case *svcerr.AuthorizationError, *svcerr.DomainAuthorizationError, *bootstrap.ExternalKeyError, *bootstrap.ExternalKeySecureError:
 		err = unwrap(err)
 		w.WriteHeader(http.StatusForbidden)
 
-	case errors.Contains(err, svcerr.ErrAuthentication),
-		errors.Contains(err, apiutil.ErrBearerToken),
-		errors.Contains(err, svcerr.ErrLogin):
+	case *svcerr.AuthenticationError, *apiutil.BearerTokenError, *svcerr.LoginError:
 		err = unwrap(err)
 		w.WriteHeader(http.StatusUnauthorized)
-	case errors.Contains(err, svcerr.ErrMalformedEntity),
-		errors.Contains(err, apiutil.ErrMalformedPolicy),
-		errors.Contains(err, apiutil.ErrMissingSecret),
-		errors.Contains(err, errors.ErrMalformedEntity),
-		errors.Contains(err, apiutil.ErrMissingID),
-		errors.Contains(err, apiutil.ErrMissingName),
-		errors.Contains(err, apiutil.ErrMissingEmail),
-		errors.Contains(err, apiutil.ErrMissingHost),
-		errors.Contains(err, apiutil.ErrInvalidResetPass),
-		errors.Contains(err, apiutil.ErrEmptyList),
-		errors.Contains(err, apiutil.ErrMissingMemberKind),
-		errors.Contains(err, apiutil.ErrMissingMemberType),
-		errors.Contains(err, apiutil.ErrLimitSize),
-		errors.Contains(err, apiutil.ErrBearerKey),
-		errors.Contains(err, svcerr.ErrInvalidStatus),
-		errors.Contains(err, apiutil.ErrNameSize),
-		errors.Contains(err, apiutil.ErrInvalidIDFormat),
-		errors.Contains(err, apiutil.ErrInvalidQueryParams),
-		errors.Contains(err, apiutil.ErrMissingRelation),
-		errors.Contains(err, apiutil.ErrValidation),
-		errors.Contains(err, apiutil.ErrMissingIdentity),
-		errors.Contains(err, apiutil.ErrMissingPass),
-		errors.Contains(err, apiutil.ErrMissingConfPass),
-		errors.Contains(err, apiutil.ErrPasswordFormat),
-		errors.Contains(err, svcerr.ErrInvalidRole),
-		errors.Contains(err, svcerr.ErrInvalidPolicy),
-		errors.Contains(err, apiutil.ErrInvitationState),
-		errors.Contains(err, apiutil.ErrInvalidAPIKey),
-		errors.Contains(err, svcerr.ErrViewEntity),
-		errors.Contains(err, apiutil.ErrBootstrapState),
-		errors.Contains(err, apiutil.ErrMissingCertData),
-		errors.Contains(err, apiutil.ErrInvalidContact),
-		errors.Contains(err, apiutil.ErrInvalidTopic),
-		errors.Contains(err, bootstrap.ErrAddBootstrap),
-		errors.Contains(err, apiutil.ErrInvalidCertData),
-		errors.Contains(err, apiutil.ErrEmptyMessage):
+	case *svcerr.MalformedEntityError,
+		*apiutil.MalformedPolicyError,
+		*apiutil.MissingSecretError,
+		*errors.MalformedEntityError,
+		*apiutil.MissingIDError,
+		*apiutil.MissingNameError,
+		*apiutil.MissingEmailError,
+		*apiutil.MissingHostError,
+		*apiutil.InvalidResetPassError,
+		*apiutil.EmptyListError,
+		*apiutil.MissingMemberKindError,
+		*apiutil.MissingMemberTypeError,
+		*apiutil.LimitSizeError,
+		*apiutil.BearerKeyError,
+		*svcerr.InvalidStatusError,
+		*apiutil.NameSizeError,
+		*apiutil.InvalidIDFormatError,
+		*apiutil.InvalidQueryParamsError,
+		*apiutil.MissingRelationError,
+		*apiutil.ValidationError,
+		*apiutil.MissingIdentityError,
+		*apiutil.MissingPassError,
+		*apiutil.MissingConfPassError,
+		*apiutil.PasswordFormatError,
+		*svcerr.InvalidRoleError,
+		*svcerr.InvalidPolicyError,
+		*apiutil.InvitationStateError,
+		*apiutil.InvalidAPIKeyError,
+		*svcerr.ViewEntityError,
+		*apiutil.BootstrapStateError,
+		*apiutil.MissingCertDataError,
+		*apiutil.InvalidContactError,
+		*apiutil.InvalidTopicError,
+		*bootstrap.AddBootstrapError,
+		*apiutil.InvalidCertDataError,
+		*apiutil.EmptyMessageError:
 		err = unwrap(err)
 		w.WriteHeader(http.StatusBadRequest)
 
-	case errors.Contains(err, svcerr.ErrCreateEntity),
-		errors.Contains(err, svcerr.ErrUpdateEntity),
-		errors.Contains(err, svcerr.ErrRemoveEntity),
-		errors.Contains(err, svcerr.ErrEnableClient):
+	case *svcerr.CreateEntityError,
+		*svcerr.UpdateEntityError,
+		*svcerr.RemoveEntityError,
+		*svcerr.EnableClientError:
 		err = unwrap(err)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 
-	case errors.Contains(err, svcerr.ErrNotFound),
-		errors.Contains(err, bootstrap.ErrBootstrap):
+	case *svcerr.NotFoundError,
+		*bootstrap.BootstrapError:
 		err = unwrap(err)
 		w.WriteHeader(http.StatusNotFound)
 
-	case errors.Contains(err, errors.ErrStatusAlreadyAssigned),
-		errors.Contains(err, svcerr.ErrConflict):
+	case *errors.StatusAlreadyAssignedError,
+		*svcerr.ConflictError:
 		err = unwrap(err)
 		w.WriteHeader(http.StatusConflict)
 
-	case errors.Contains(err, apiutil.ErrUnsupportedContentType):
+	case *apiutil.UnsupportedContentTypeError:
 		err = unwrap(err)
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 

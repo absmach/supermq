@@ -8,6 +8,7 @@ import (
 
 	"github.com/absmach/magistrala"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
+	"github.com/absmach/magistrala/pkg/errors"
 	"github.com/absmach/magistrala/pkg/events"
 	"github.com/absmach/magistrala/pkg/events/store"
 	"github.com/absmach/magistrala/things"
@@ -24,10 +25,10 @@ type eventStore struct {
 
 // NewEventStoreMiddleware returns wrapper around things service that sends
 // events to event store.
-func NewEventStoreMiddleware(ctx context.Context, svc things.Service, url string) (things.Service, error) {
+func NewEventStoreMiddleware(ctx context.Context, svc things.Service, url string) (things.Service, errors.Error) {
 	publisher, err := store.NewPublisher(ctx, url, streamID)
 	if err != nil {
-		return nil, err
+		return nil, errors.Cast(err)
 	}
 
 	return &eventStore{
@@ -36,7 +37,7 @@ func NewEventStoreMiddleware(ctx context.Context, svc things.Service, url string
 	}, nil
 }
 
-func (es *eventStore) CreateThings(ctx context.Context, token string, thing ...mgclients.Client) ([]mgclients.Client, error) {
+func (es *eventStore) CreateThings(ctx context.Context, token string, thing ...mgclients.Client) ([]mgclients.Client, errors.Error) {
 	sths, err := es.svc.CreateThings(ctx, token, thing...)
 	if err != nil {
 		return sths, err
@@ -47,14 +48,14 @@ func (es *eventStore) CreateThings(ctx context.Context, token string, thing ...m
 			th,
 		}
 		if err := es.Publish(ctx, event); err != nil {
-			return sths, err
+			return sths, errors.Cast(err)
 		}
 	}
 
 	return sths, nil
 }
 
-func (es *eventStore) UpdateClient(ctx context.Context, token string, thing mgclients.Client) (mgclients.Client, error) {
+func (es *eventStore) UpdateClient(ctx context.Context, token string, thing mgclients.Client) (mgclients.Client, errors.Error) {
 	cli, err := es.svc.UpdateClient(ctx, token, thing)
 	if err != nil {
 		return cli, err
@@ -63,7 +64,7 @@ func (es *eventStore) UpdateClient(ctx context.Context, token string, thing mgcl
 	return es.update(ctx, "", cli)
 }
 
-func (es *eventStore) UpdateClientTags(ctx context.Context, token string, thing mgclients.Client) (mgclients.Client, error) {
+func (es *eventStore) UpdateClientTags(ctx context.Context, token string, thing mgclients.Client) (mgclients.Client, errors.Error) {
 	cli, err := es.svc.UpdateClientTags(ctx, token, thing)
 	if err != nil {
 		return cli, err
@@ -72,7 +73,7 @@ func (es *eventStore) UpdateClientTags(ctx context.Context, token string, thing 
 	return es.update(ctx, "tags", cli)
 }
 
-func (es *eventStore) UpdateClientSecret(ctx context.Context, token, id, key string) (mgclients.Client, error) {
+func (es *eventStore) UpdateClientSecret(ctx context.Context, token, id, key string) (mgclients.Client, errors.Error) {
 	cli, err := es.svc.UpdateClientSecret(ctx, token, id, key)
 	if err != nil {
 		return cli, err
@@ -81,19 +82,19 @@ func (es *eventStore) UpdateClientSecret(ctx context.Context, token, id, key str
 	return es.update(ctx, "secret", cli)
 }
 
-func (es *eventStore) update(ctx context.Context, operation string, thing mgclients.Client) (mgclients.Client, error) {
+func (es *eventStore) update(ctx context.Context, operation string, thing mgclients.Client) (mgclients.Client, errors.Error) {
 	event := updateClientEvent{
 		thing, operation,
 	}
 
 	if err := es.Publish(ctx, event); err != nil {
-		return thing, err
+		return thing, errors.Cast(err)
 	}
 
 	return thing, nil
 }
 
-func (es *eventStore) ViewClient(ctx context.Context, token, id string) (mgclients.Client, error) {
+func (es *eventStore) ViewClient(ctx context.Context, token, id string) (mgclients.Client, errors.Error) {
 	cli, err := es.svc.ViewClient(ctx, token, id)
 	if err != nil {
 		return cli, err
@@ -103,13 +104,13 @@ func (es *eventStore) ViewClient(ctx context.Context, token, id string) (mgclien
 		cli,
 	}
 	if err := es.Publish(ctx, event); err != nil {
-		return cli, err
+		return cli, errors.Cast(err)
 	}
 
 	return cli, nil
 }
 
-func (es *eventStore) ViewClientPerms(ctx context.Context, token, id string) ([]string, error) {
+func (es *eventStore) ViewClientPerms(ctx context.Context, token, id string) ([]string, errors.Error) {
 	permissions, err := es.svc.ViewClientPerms(ctx, token, id)
 	if err != nil {
 		return permissions, err
@@ -119,13 +120,13 @@ func (es *eventStore) ViewClientPerms(ctx context.Context, token, id string) ([]
 		permissions,
 	}
 	if err := es.Publish(ctx, event); err != nil {
-		return permissions, err
+		return permissions, errors.Cast(err)
 	}
 
 	return permissions, nil
 }
 
-func (es *eventStore) ListClients(ctx context.Context, token, reqUserID string, pm mgclients.Page) (mgclients.ClientsPage, error) {
+func (es *eventStore) ListClients(ctx context.Context, token, reqUserID string, pm mgclients.Page) (mgclients.ClientsPage, errors.Error) {
 	cp, err := es.svc.ListClients(ctx, token, reqUserID, pm)
 	if err != nil {
 		return cp, err
@@ -135,13 +136,13 @@ func (es *eventStore) ListClients(ctx context.Context, token, reqUserID string, 
 		pm,
 	}
 	if err := es.Publish(ctx, event); err != nil {
-		return cp, err
+		return cp, errors.Cast(err)
 	}
 
 	return cp, nil
 }
 
-func (es *eventStore) ListClientsByGroup(ctx context.Context, token, chID string, pm mgclients.Page) (mgclients.MembersPage, error) {
+func (es *eventStore) ListClientsByGroup(ctx context.Context, token, chID string, pm mgclients.Page) (mgclients.MembersPage, errors.Error) {
 	mp, err := es.svc.ListClientsByGroup(ctx, token, chID, pm)
 	if err != nil {
 		return mp, err
@@ -150,13 +151,13 @@ func (es *eventStore) ListClientsByGroup(ctx context.Context, token, chID string
 		pm, chID,
 	}
 	if err := es.Publish(ctx, event); err != nil {
-		return mp, err
+		return mp, errors.Cast(err)
 	}
 
 	return mp, nil
 }
 
-func (es *eventStore) EnableClient(ctx context.Context, token, id string) (mgclients.Client, error) {
+func (es *eventStore) EnableClient(ctx context.Context, token, id string) (mgclients.Client, errors.Error) {
 	cli, err := es.svc.EnableClient(ctx, token, id)
 	if err != nil {
 		return cli, err
@@ -165,7 +166,7 @@ func (es *eventStore) EnableClient(ctx context.Context, token, id string) (mgcli
 	return es.changeStatus(ctx, cli)
 }
 
-func (es *eventStore) DisableClient(ctx context.Context, token, id string) (mgclients.Client, error) {
+func (es *eventStore) DisableClient(ctx context.Context, token, id string) (mgclients.Client, errors.Error) {
 	cli, err := es.svc.DisableClient(ctx, token, id)
 	if err != nil {
 		return cli, err
@@ -174,7 +175,7 @@ func (es *eventStore) DisableClient(ctx context.Context, token, id string) (mgcl
 	return es.changeStatus(ctx, cli)
 }
 
-func (es *eventStore) changeStatus(ctx context.Context, cli mgclients.Client) (mgclients.Client, error) {
+func (es *eventStore) changeStatus(ctx context.Context, cli mgclients.Client) (mgclients.Client, errors.Error) {
 	event := changeStatusClientEvent{
 		id:        cli.ID,
 		updatedAt: cli.UpdatedAt,
@@ -182,13 +183,13 @@ func (es *eventStore) changeStatus(ctx context.Context, cli mgclients.Client) (m
 		status:    cli.Status.String(),
 	}
 	if err := es.Publish(ctx, event); err != nil {
-		return cli, err
+		return cli, errors.Cast(err)
 	}
 
 	return cli, nil
 }
 
-func (es *eventStore) Identify(ctx context.Context, key string) (string, error) {
+func (es *eventStore) Identify(ctx context.Context, key string) (string, errors.Error) {
 	thingID, err := es.svc.Identify(ctx, key)
 	if err != nil {
 		return thingID, err
@@ -198,12 +199,12 @@ func (es *eventStore) Identify(ctx context.Context, key string) (string, error) 
 	}
 
 	if err := es.Publish(ctx, event); err != nil {
-		return thingID, err
+		return thingID, errors.Cast(err)
 	}
 	return thingID, nil
 }
 
-func (es *eventStore) Authorize(ctx context.Context, req *magistrala.AuthorizeReq) (string, error) {
+func (es *eventStore) Authorize(ctx context.Context, req *magistrala.AuthorizeReq) (string, errors.Error) {
 	thingID, err := es.svc.Authorize(ctx, req)
 	if err != nil {
 		return thingID, err
@@ -216,13 +217,13 @@ func (es *eventStore) Authorize(ctx context.Context, req *magistrala.AuthorizeRe
 	}
 
 	if err := es.Publish(ctx, event); err != nil {
-		return thingID, err
+		return thingID, errors.Cast(err)
 	}
 
 	return thingID, nil
 }
 
-func (es *eventStore) Share(ctx context.Context, token, id, relation string, userids ...string) error {
+func (es *eventStore) Share(ctx context.Context, token, id, relation string, userids ...string) errors.Error {
 	if err := es.svc.Share(ctx, token, id, relation, userids...); err != nil {
 		return err
 	}
@@ -234,10 +235,10 @@ func (es *eventStore) Share(ctx context.Context, token, id, relation string, use
 		userIDs:  userids,
 	}
 
-	return es.Publish(ctx, event)
+	return errors.Cast(es.Publish(ctx, event))
 }
 
-func (es *eventStore) Unshare(ctx context.Context, token, id, relation string, userids ...string) error {
+func (es *eventStore) Unshare(ctx context.Context, token, id, relation string, userids ...string) errors.Error {
 	if err := es.svc.Unshare(ctx, token, id, relation, userids...); err != nil {
 		return err
 	}
@@ -249,10 +250,10 @@ func (es *eventStore) Unshare(ctx context.Context, token, id, relation string, u
 		userIDs:  userids,
 	}
 
-	return es.Publish(ctx, event)
+	return errors.Cast(es.Publish(ctx, event))
 }
 
-func (es *eventStore) DeleteClient(ctx context.Context, token, id string) error {
+func (es *eventStore) DeleteClient(ctx context.Context, token, id string) errors.Error {
 	if err := es.svc.DeleteClient(ctx, token, id); err != nil {
 		return err
 	}
@@ -260,7 +261,7 @@ func (es *eventStore) DeleteClient(ctx context.Context, token, id string) error 
 	event := removeClientEvent{id}
 
 	if err := es.Publish(ctx, event); err != nil {
-		return err
+		return errors.Cast(err)
 	}
 
 	return nil

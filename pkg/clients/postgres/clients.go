@@ -24,7 +24,7 @@ type Repository struct {
 	DB postgres.Database
 }
 
-func (repo *Repository) Update(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (repo *Repository) Update(ctx context.Context, client clients.Client) (clients.Client, errors.Error) {
 	var query []string
 	var upq string
 	if client.Name != "" {
@@ -45,7 +45,7 @@ func (repo *Repository) Update(ctx context.Context, client clients.Client) (clie
 	return repo.update(ctx, client, q)
 }
 
-func (repo *Repository) UpdateTags(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (repo *Repository) UpdateTags(ctx context.Context, client clients.Client) (clients.Client, errors.Error) {
 	q := `UPDATE clients SET tags = :tags, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
@@ -53,7 +53,7 @@ func (repo *Repository) UpdateTags(ctx context.Context, client clients.Client) (
 	return repo.update(ctx, client, q)
 }
 
-func (repo *Repository) UpdateIdentity(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (repo *Repository) UpdateIdentity(ctx context.Context, client clients.Client) (clients.Client, errors.Error) {
 	q := `UPDATE clients SET identity = :identity, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
@@ -61,7 +61,7 @@ func (repo *Repository) UpdateIdentity(ctx context.Context, client clients.Clien
 	return repo.update(ctx, client, q)
 }
 
-func (repo *Repository) UpdateSecret(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (repo *Repository) UpdateSecret(ctx context.Context, client clients.Client) (clients.Client, errors.Error) {
 	q := `UPDATE clients SET secret = :secret, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
@@ -69,15 +69,16 @@ func (repo *Repository) UpdateSecret(ctx context.Context, client clients.Client)
 	return repo.update(ctx, client, q)
 }
 
-func (repo *Repository) UpdateRole(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (repo *Repository) UpdateRole(ctx context.Context, client clients.Client) (clients.Client, errors.Error) {
 	q := `UPDATE clients SET role = :role, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, metadata, COALESCE(domain_id, '') AS domain_id, status, role, created_at, updated_at, updated_by`
 	client.Status = clients.EnabledStatus
-	return repo.update(ctx, client, q)
+	cl, err := repo.update(ctx, client, q)
+	return cl, errors.Cast(err)
 }
 
-func (repo *Repository) ChangeStatus(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (repo *Repository) ChangeStatus(ctx context.Context, client clients.Client) (clients.Client, errors.Error) {
 	q := `UPDATE clients SET status = :status, updated_at = :updated_at, updated_by = :updated_by
 		WHERE id = :id
         RETURNING id, name, tags, identity, metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
@@ -85,7 +86,7 @@ func (repo *Repository) ChangeStatus(ctx context.Context, client clients.Client)
 	return repo.update(ctx, client, q)
 }
 
-func (repo *Repository) RetrieveByID(ctx context.Context, id string) (clients.Client, error) {
+func (repo *Repository) RetrieveByID(ctx context.Context, id string) (clients.Client, errors.Error) {
 	q := `SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id, identity, secret, metadata, created_at, updated_at, updated_by, status
         FROM clients WHERE id = :id`
 
@@ -105,13 +106,14 @@ func (repo *Repository) RetrieveByID(ctx context.Context, id string) (clients.Cl
 			return clients.Client{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
 
-		return ToClient(dbc)
+		cl, err := ToClient(dbc)
+		return cl, errors.Cast(err)
 	}
 
 	return clients.Client{}, repoerr.ErrNotFound
 }
 
-func (repo *Repository) RetrieveByIdentity(ctx context.Context, identity string) (clients.Client, error) {
+func (repo *Repository) RetrieveByIdentity(ctx context.Context, identity string) (clients.Client, errors.Error) {
 	q := `SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id, identity, secret, metadata, created_at, updated_at, updated_by, status
         FROM clients WHERE identity = :identity AND status = :status`
 
@@ -122,7 +124,7 @@ func (repo *Repository) RetrieveByIdentity(ctx context.Context, identity string)
 
 	row, err := repo.DB.NamedQueryContext(ctx, q, dbc)
 	if err != nil {
-		return clients.Client{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+		return clients.Client{}, errors.Cast(postgres.HandleError(repoerr.ErrViewEntity, err))
 	}
 	defer row.Close()
 
@@ -138,7 +140,7 @@ func (repo *Repository) RetrieveByIdentity(ctx context.Context, identity string)
 	return clients.Client{}, repoerr.ErrNotFound
 }
 
-func (repo *Repository) RetrieveAll(ctx context.Context, pm clients.Page) (clients.ClientsPage, error) {
+func (repo *Repository) RetrieveAll(ctx context.Context, pm clients.Page) (clients.ClientsPage, errors.Error) {
 	query, err := PageQuery(pm)
 	if err != nil {
 		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
@@ -151,9 +153,9 @@ func (repo *Repository) RetrieveAll(ctx context.Context, pm clients.Page) (clien
 	if err != nil {
 		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
-	rows, err := repo.DB.NamedQueryContext(ctx, q, dbPage)
-	if err != nil {
-		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+	rows, Err := repo.DB.NamedQueryContext(ctx, q, dbPage)
+	if Err != nil {
+		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, Err)
 	}
 	defer rows.Close()
 
@@ -173,9 +175,9 @@ func (repo *Repository) RetrieveAll(ctx context.Context, pm clients.Page) (clien
 	}
 	cq := fmt.Sprintf(`SELECT COUNT(*) FROM clients c %s;`, query)
 
-	total, err := postgres.Total(ctx, repo.DB, cq, dbPage)
-	if err != nil {
-		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	total, Err := postgres.Total(ctx, repo.DB, cq, dbPage)
+	if Err != nil {
+		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, Err)
 	}
 
 	page := clients.ClientsPage{
@@ -190,7 +192,7 @@ func (repo *Repository) RetrieveAll(ctx context.Context, pm clients.Page) (clien
 	return page, nil
 }
 
-func (repo *Repository) RetrieveAllBasicInfo(ctx context.Context, pm clients.Page) (clients.ClientsPage, error) {
+func (repo *Repository) RetrieveAllBasicInfo(ctx context.Context, pm clients.Page) (clients.ClientsPage, errors.Error) {
 	sq, tq := constructSearchQuery(pm)
 
 	q := fmt.Sprintf(`SELECT c.id, c.name, c.created_at, c.updated_at FROM clients c %s LIMIT :limit OFFSET :offset;`, sq)
@@ -200,9 +202,9 @@ func (repo *Repository) RetrieveAllBasicInfo(ctx context.Context, pm clients.Pag
 		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 
-	rows, err := repo.DB.NamedQueryContext(ctx, q, dbPage)
-	if err != nil {
-		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+	rows, Err := repo.DB.NamedQueryContext(ctx, q, dbPage)
+	if Err != nil {
+		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, Err)
 	}
 	defer rows.Close()
 
@@ -222,9 +224,9 @@ func (repo *Repository) RetrieveAllBasicInfo(ctx context.Context, pm clients.Pag
 	}
 
 	cq := fmt.Sprintf(`SELECT COUNT(*) FROM clients c %s;`, tq)
-	total, err := postgres.Total(ctx, repo.DB, cq, dbPage)
-	if err != nil {
-		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	total, Err := postgres.Total(ctx, repo.DB, cq, dbPage)
+	if Err != nil {
+		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, Err)
 	}
 
 	page := clients.ClientsPage{
@@ -239,7 +241,7 @@ func (repo *Repository) RetrieveAllBasicInfo(ctx context.Context, pm clients.Pag
 	return page, nil
 }
 
-func (repo *Repository) RetrieveAllByIDs(ctx context.Context, pm clients.Page) (clients.ClientsPage, error) {
+func (repo *Repository) RetrieveAllByIDs(ctx context.Context, pm clients.Page) (clients.ClientsPage, errors.Error) {
 	if (len(pm.IDs) == 0) && (pm.Domain == "") {
 		return clients.ClientsPage{
 			Page: clients.Page{Total: pm.Total, Offset: pm.Offset, Limit: pm.Limit},
@@ -257,9 +259,9 @@ func (repo *Repository) RetrieveAllByIDs(ctx context.Context, pm clients.Page) (
 	if err != nil {
 		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
-	rows, err := repo.DB.NamedQueryContext(ctx, q, dbPage)
-	if err != nil {
-		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+	rows, Err := repo.DB.NamedQueryContext(ctx, q, dbPage)
+	if Err != nil {
+		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, Err)
 	}
 	defer rows.Close()
 
@@ -279,9 +281,9 @@ func (repo *Repository) RetrieveAllByIDs(ctx context.Context, pm clients.Page) (
 	}
 	cq := fmt.Sprintf(`SELECT COUNT(*) FROM clients c %s;`, query)
 
-	total, err := postgres.Total(ctx, repo.DB, cq, dbPage)
-	if err != nil {
-		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	total, Err := postgres.Total(ctx, repo.DB, cq, dbPage)
+	if Err != nil {
+		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, Err)
 	}
 
 	page := clients.ClientsPage{
@@ -296,15 +298,15 @@ func (repo *Repository) RetrieveAllByIDs(ctx context.Context, pm clients.Page) (
 	return page, nil
 }
 
-func (repo *Repository) update(ctx context.Context, client clients.Client, query string) (clients.Client, error) {
+func (repo *Repository) update(ctx context.Context, client clients.Client, query string) (clients.Client, errors.Error) {
 	dbc, err := ToDBClient(client)
 	if err != nil {
 		return clients.Client{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
-	row, err := repo.DB.NamedQueryContext(ctx, query, dbc)
-	if err != nil {
-		return clients.Client{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
+	row, Err := repo.DB.NamedQueryContext(ctx, query, dbc)
+	if Err != nil {
+		return clients.Client{}, errors.Cast(postgres.HandleError(repoerr.ErrUpdateEntity, Err))
 	}
 	defer row.Close()
 
@@ -336,7 +338,7 @@ type DBClient struct {
 	Role      *clients.Role    `db:"role,omitempty"`
 }
 
-func ToDBClient(c clients.Client) (DBClient, error) {
+func ToDBClient(c clients.Client) (DBClient, errors.Error) {
 	data := []byte("{}")
 	if len(c.Metadata) > 0 {
 		b, err := json.Marshal(c.Metadata)
@@ -346,8 +348,8 @@ func ToDBClient(c clients.Client) (DBClient, error) {
 		data = b
 	}
 	var tags pgtype.TextArray
-	if err := tags.Set(c.Tags); err != nil {
-		return DBClient{}, err
+	if Err := tags.Set(c.Tags); Err != nil {
+		return DBClient{}, errors.Cast(Err)
 	}
 	var updatedBy *string
 	if c.UpdatedBy != "" {
@@ -374,7 +376,7 @@ func ToDBClient(c clients.Client) (DBClient, error) {
 	}, nil
 }
 
-func ToClient(c DBClient) (clients.Client, error) {
+func ToClient(c DBClient) (clients.Client, errors.Error) {
 	var metadata clients.Metadata
 	if c.Metadata != nil {
 		if err := json.Unmarshal([]byte(c.Metadata), &metadata); err != nil {
@@ -415,7 +417,7 @@ func ToClient(c DBClient) (clients.Client, error) {
 	return cli, nil
 }
 
-func ToDBClientsPage(pm clients.Page) (dbClientsPage, error) {
+func ToDBClientsPage(pm clients.Page) (dbClientsPage, errors.Error) {
 	_, data, err := postgres.CreateMetadataQuery("", pm.Metadata)
 	if err != nil {
 		return dbClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
@@ -448,7 +450,7 @@ type dbClientsPage struct {
 	Role     clients.Role   `db:"role"`
 }
 
-func PageQuery(pm clients.Page) (string, error) {
+func PageQuery(pm clients.Page) (string, errors.Error) {
 	mq, _, err := postgres.CreateMetadataQuery("", pm.Metadata)
 	if err != nil {
 		return "", errors.Wrap(errors.ErrMalformedEntity, err)

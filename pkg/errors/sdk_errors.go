@@ -56,7 +56,7 @@ func NewSDKError(err error) SDKError {
 			statusCode: 0,
 			customError: &customError{
 				msg: e.Msg(),
-				err: cast(e.Err()),
+				err: Cast(e.Err()),
 			},
 		}
 	}
@@ -80,7 +80,7 @@ func NewSDKErrorWithStatus(err error, statusCode int) SDKError {
 			statusCode: statusCode,
 			customError: &customError{
 				msg: e.Msg(),
-				err: cast(e.Err()),
+				err: Cast(e.Err()),
 			},
 		}
 	}

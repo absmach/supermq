@@ -1848,9 +1848,9 @@ func save(ctx context.Context, repo *postgres.Repository, c mgclients.Client) (m
 		return mgclients.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
 	}
 
-	row, err := repo.DB.NamedQueryContext(ctx, q, dbc)
-	if err != nil {
-		return mgclients.Client{}, ipostgres.HandleError(repoerr.ErrCreateEntity, err)
+	row, Err := repo.DB.NamedQueryContext(ctx, q, dbc)
+	if Err != nil {
+		return mgclients.Client{}, ipostgres.HandleError(repoerr.ErrCreateEntity, Err)
 	}
 	defer row.Close()
 

@@ -98,7 +98,7 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 	switch m.Code() {
 	case codes.GET:
 		resp.SetCode(codes.Content)
-		err = handleGet(m, w, msg, key)
+		err = handleGet(m.Context(), m, w, msg, key)
 	case codes.POST:
 		resp.SetCode(codes.Created)
 		err = service.Publish(m.Context(), key, msg)
@@ -122,11 +122,11 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 	}
 }
 
-func handleGet(m *mux.Message, w mux.ResponseWriter, msg *messaging.Message, key string) error {
+func handleGet(ctx context.Context, m *mux.Message, w mux.ResponseWriter, msg *messaging.Message, key string) error {
 	var obs uint32
 	obs, err := m.Options().Observe()
 	if err != nil {
-		logger.Warn(fmt.Sprintf("Error reading observe option: %s", err))
+		logger.WarnContext(ctx, fmt.Sprintf("Error reading observe option: %s", err))
 		return errBadOptions
 	}
 	if obs == startObserve {

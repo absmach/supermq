@@ -25,7 +25,7 @@ func New() users.Hasher {
 	return &bcryptHasher{}
 }
 
-func (bh *bcryptHasher) Hash(pwd string) (string, error) {
+func (bh *bcryptHasher) Hash(pwd string) (string, errors.Error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pwd), cost)
 	if err != nil {
 		return "", errors.Wrap(errHashPassword, err)
@@ -34,7 +34,7 @@ func (bh *bcryptHasher) Hash(pwd string) (string, error) {
 	return string(hash), nil
 }
 
-func (bh *bcryptHasher) Compare(plain, hashed string) error {
+func (bh *bcryptHasher) Compare(plain, hashed string) errors.Error {
 	if err := bcrypt.CompareHashAndPassword([]byte(hashed), []byte(plain)); err != nil {
 		return errors.Wrap(errComparePassword, err)
 	}

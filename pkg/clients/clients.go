@@ -70,37 +70,37 @@ type MembersPage struct {
 // Repository specifies an account persistence API.
 type Repository interface {
 	// RetrieveByID retrieves client by its unique ID.
-	RetrieveByID(ctx context.Context, id string) (Client, error)
+	RetrieveByID(ctx context.Context, id string) (Client, errors.Error)
 
 	// RetrieveByIdentity retrieves client by its unique credentials
-	RetrieveByIdentity(ctx context.Context, identity string) (Client, error)
+	RetrieveByIdentity(ctx context.Context, identity string) (Client, errors.Error)
 
 	// RetrieveAll retrieves all clients.
-	RetrieveAll(ctx context.Context, pm Page) (ClientsPage, error)
+	RetrieveAll(ctx context.Context, pm Page) (ClientsPage, errors.Error)
 
 	// RetrieveAllBasicInfo list all clients only with basic information.
-	RetrieveAllBasicInfo(ctx context.Context, pm Page) (ClientsPage, error)
+	RetrieveAllBasicInfo(ctx context.Context, pm Page) (ClientsPage, errors.Error)
 
 	// RetrieveAllByIDs retrieves for given client IDs .
-	RetrieveAllByIDs(ctx context.Context, pm Page) (ClientsPage, error)
+	RetrieveAllByIDs(ctx context.Context, pm Page) (ClientsPage, errors.Error)
 
 	// Update updates the client name and metadata.
-	Update(ctx context.Context, client Client) (Client, error)
+	Update(ctx context.Context, client Client) (Client, errors.Error)
 
 	// UpdateTags updates the client tags.
-	UpdateTags(ctx context.Context, client Client) (Client, error)
+	UpdateTags(ctx context.Context, client Client) (Client, errors.Error)
 
 	// UpdateIdentity updates identity for client with given id.
-	UpdateIdentity(ctx context.Context, client Client) (Client, error)
+	UpdateIdentity(ctx context.Context, client Client) (Client, errors.Error)
 
 	// UpdateSecret updates secret for client with given identity.
-	UpdateSecret(ctx context.Context, client Client) (Client, error)
+	UpdateSecret(ctx context.Context, client Client) (Client, errors.Error)
 
 	// UpdateRole updates role for client with given id.
-	UpdateRole(ctx context.Context, client Client) (Client, error)
+	UpdateRole(ctx context.Context, client Client) (Client, errors.Error)
 
 	// ChangeStatus changes client status to enabled or disabled
-	ChangeStatus(ctx context.Context, client Client) (Client, error)
+	ChangeStatus(ctx context.Context, client Client) (Client, errors.Error)
 }
 
 // Validate returns an error if client representation is invalid.

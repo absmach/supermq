@@ -83,7 +83,7 @@ func (lm *loggingMiddleware) logAction(action string, topics *[]string, t time.T
 	}
 	if err != nil {
 		args = append(args, slog.Any("error", err))
-		lm.logger.Warn(action+" failed to complete successfully", args...)
+		lm.logger.Error(action+" failed to complete successfully", args...)
 		return
 	}
 	lm.logger.Info(action+" completed successfully", args...)

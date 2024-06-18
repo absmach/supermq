@@ -7,6 +7,7 @@ package mocks
 import (
 	context "context"
 
+	errors "github.com/absmach/magistrala/pkg/errors"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -16,7 +17,7 @@ type Cache struct {
 }
 
 // ID provides a mock function with given fields: ctx, thingSecret
-func (_m *Cache) ID(ctx context.Context, thingSecret string) (string, error) {
+func (_m *Cache) ID(ctx context.Context, thingSecret string) (string, errors.Error) {
 	ret := _m.Called(ctx, thingSecret)
 
 	if len(ret) == 0 {
@@ -24,8 +25,8 @@ func (_m *Cache) ID(ctx context.Context, thingSecret string) (string, error) {
 	}
 
 	var r0 string
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (string, error)); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (string, errors.Error)); ok {
 		return rf(ctx, thingSecret)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string) string); ok {
@@ -34,46 +35,52 @@ func (_m *Cache) ID(ctx context.Context, thingSecret string) (string, error) {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, string) errors.Error); ok {
 		r1 = rf(ctx, thingSecret)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // Remove provides a mock function with given fields: ctx, thingID
-func (_m *Cache) Remove(ctx context.Context, thingID string) error {
+func (_m *Cache) Remove(ctx context.Context, thingID string) errors.Error {
 	ret := _m.Called(ctx, thingID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Remove")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+	var r0 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, string) errors.Error); ok {
 		r0 = rf(ctx, thingID)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.Error)
+		}
 	}
 
 	return r0
 }
 
 // Save provides a mock function with given fields: ctx, thingSecret, thingID
-func (_m *Cache) Save(ctx context.Context, thingSecret string, thingID string) error {
+func (_m *Cache) Save(ctx context.Context, thingSecret string, thingID string) errors.Error {
 	ret := _m.Called(ctx, thingSecret, thingID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Save")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+	var r0 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) errors.Error); ok {
 		r0 = rf(ctx, thingSecret, thingID)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.Error)
+		}
 	}
 
 	return r0

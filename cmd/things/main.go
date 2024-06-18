@@ -237,9 +237,9 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 		return nil, nil, err
 	}
 
-	gsvc, err = gevents.NewEventStoreMiddleware(ctx, gsvc, esURL, streamID)
-	if err != nil {
-		return nil, nil, err
+	gsvc, Err := gevents.NewEventStoreMiddleware(ctx, gsvc, esURL, streamID)
+	if Err != nil {
+		return nil, nil, Err
 	}
 
 	csvc = ctracing.New(csvc, tracer)

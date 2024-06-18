@@ -10,6 +10,7 @@ import (
 
 	"github.com/absmach/magistrala"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
+	"github.com/absmach/magistrala/pkg/errors"
 	"github.com/absmach/magistrala/users"
 )
 
@@ -27,7 +28,7 @@ func LoggingMiddleware(svc users.Service, logger *slog.Logger) users.Service {
 
 // RegisterClient logs the register_client request. It logs the client id and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) RegisterClient(ctx context.Context, token string, client mgclients.Client) (c mgclients.Client, err error) {
+func (lm *loggingMiddleware) RegisterClient(ctx context.Context, token string, client mgclients.Client) (c mgclients.Client, err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -38,7 +39,7 @@ func (lm *loggingMiddleware) RegisterClient(ctx context.Context, token string, c
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Register user failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Register user failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Register user completed successfully", args...)
@@ -48,7 +49,7 @@ func (lm *loggingMiddleware) RegisterClient(ctx context.Context, token string, c
 
 // IssueToken logs the issue_token request. It logs the client identity type and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) IssueToken(ctx context.Context, identity, secret, domainID string) (t *magistrala.Token, err error) {
+func (lm *loggingMiddleware) IssueToken(ctx context.Context, identity, secret, domainID string) (t *magistrala.Token, err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -59,7 +60,7 @@ func (lm *loggingMiddleware) IssueToken(ctx context.Context, identity, secret, d
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Issue token failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Issue token failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Issue token completed successfully", args...)
@@ -69,7 +70,7 @@ func (lm *loggingMiddleware) IssueToken(ctx context.Context, identity, secret, d
 
 // RefreshToken logs the refresh_token request. It logs the refreshtoken, token type and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) RefreshToken(ctx context.Context, refreshToken, domainID string) (t *magistrala.Token, err error) {
+func (lm *loggingMiddleware) RefreshToken(ctx context.Context, refreshToken, domainID string) (t *magistrala.Token, err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -80,7 +81,7 @@ func (lm *loggingMiddleware) RefreshToken(ctx context.Context, refreshToken, dom
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Refresh token failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Refresh token failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Refresh token completed successfully", args...)
@@ -90,7 +91,7 @@ func (lm *loggingMiddleware) RefreshToken(ctx context.Context, refreshToken, dom
 
 // ViewClient logs the view_client request. It logs the client id and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) ViewClient(ctx context.Context, token, id string) (c mgclients.Client, err error) {
+func (lm *loggingMiddleware) ViewClient(ctx context.Context, token, id string) (c mgclients.Client, err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -101,7 +102,7 @@ func (lm *loggingMiddleware) ViewClient(ctx context.Context, token, id string) (
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("View user failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "View user failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("View user completed successfully", args...)
@@ -111,7 +112,7 @@ func (lm *loggingMiddleware) ViewClient(ctx context.Context, token, id string) (
 
 // ViewProfile logs the view_profile request. It logs the client id and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) ViewProfile(ctx context.Context, token string) (c mgclients.Client, err error) {
+func (lm *loggingMiddleware) ViewProfile(ctx context.Context, token string) (c mgclients.Client, err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -122,7 +123,7 @@ func (lm *loggingMiddleware) ViewProfile(ctx context.Context, token string) (c m
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("View profile failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "View profile failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("View profile completed successfully", args...)
@@ -132,7 +133,7 @@ func (lm *loggingMiddleware) ViewProfile(ctx context.Context, token string) (c m
 
 // ListClients logs the list_clients request. It logs the page metadata and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) ListClients(ctx context.Context, token string, pm mgclients.Page) (cp mgclients.ClientsPage, err error) {
+func (lm *loggingMiddleware) ListClients(ctx context.Context, token string, pm mgclients.Page) (cp mgclients.ClientsPage, err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -144,7 +145,7 @@ func (lm *loggingMiddleware) ListClients(ctx context.Context, token string, pm m
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("List users failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "List users failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("List users completed successfully", args...)
@@ -154,7 +155,7 @@ func (lm *loggingMiddleware) ListClients(ctx context.Context, token string, pm m
 
 // UpdateClient logs the update_client request. It logs the client id and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) UpdateClient(ctx context.Context, token string, client mgclients.Client) (c mgclients.Client, err error) {
+func (lm *loggingMiddleware) UpdateClient(ctx context.Context, token string, client mgclients.Client) (c mgclients.Client, err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -166,7 +167,7 @@ func (lm *loggingMiddleware) UpdateClient(ctx context.Context, token string, cli
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Update user failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Update user failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Update user completed successfully", args...)
@@ -176,7 +177,7 @@ func (lm *loggingMiddleware) UpdateClient(ctx context.Context, token string, cli
 
 // UpdateClientTags logs the update_client_tags request. It logs the client id and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) UpdateClientTags(ctx context.Context, token string, client mgclients.Client) (c mgclients.Client, err error) {
+func (lm *loggingMiddleware) UpdateClientTags(ctx context.Context, token string, client mgclients.Client) (c mgclients.Client, err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -188,7 +189,7 @@ func (lm *loggingMiddleware) UpdateClientTags(ctx context.Context, token string,
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Update user tags failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Update user tags failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Update user tags completed successfully", args...)
@@ -198,7 +199,7 @@ func (lm *loggingMiddleware) UpdateClientTags(ctx context.Context, token string,
 
 // UpdateClientIdentity logs the update_identity request. It logs the client id and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) UpdateClientIdentity(ctx context.Context, token, id, identity string) (c mgclients.Client, err error) {
+func (lm *loggingMiddleware) UpdateClientIdentity(ctx context.Context, token, id, identity string) (c mgclients.Client, err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -209,7 +210,7 @@ func (lm *loggingMiddleware) UpdateClientIdentity(ctx context.Context, token, id
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Update client identity failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Update client identity failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Update client identity completed successfully", args...)
@@ -219,7 +220,7 @@ func (lm *loggingMiddleware) UpdateClientIdentity(ctx context.Context, token, id
 
 // UpdateClientSecret logs the update_client_secret request. It logs the client id and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) UpdateClientSecret(ctx context.Context, token, oldSecret, newSecret string) (c mgclients.Client, err error) {
+func (lm *loggingMiddleware) UpdateClientSecret(ctx context.Context, token, oldSecret, newSecret string) (c mgclients.Client, err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -230,7 +231,7 @@ func (lm *loggingMiddleware) UpdateClientSecret(ctx context.Context, token, oldS
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Update user secret failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Update user secret failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Update user secret completed successfully", args...)
@@ -240,7 +241,7 @@ func (lm *loggingMiddleware) UpdateClientSecret(ctx context.Context, token, oldS
 
 // GenerateResetToken logs the generate_reset_token request. It logs the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) GenerateResetToken(ctx context.Context, email, host string) (err error) {
+func (lm *loggingMiddleware) GenerateResetToken(ctx context.Context, email, host string) (err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -248,7 +249,7 @@ func (lm *loggingMiddleware) GenerateResetToken(ctx context.Context, email, host
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Generate reset token failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Generate reset token failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Generate reset token completed successfully", args...)
@@ -258,14 +259,14 @@ func (lm *loggingMiddleware) GenerateResetToken(ctx context.Context, email, host
 
 // ResetSecret logs the reset_secret request. It logs the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) ResetSecret(ctx context.Context, token, secret string) (err error) {
+func (lm *loggingMiddleware) ResetSecret(ctx context.Context, token, secret string) (err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Reset secret failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Reset secret failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Reset secret completed successfully", args...)
@@ -275,7 +276,7 @@ func (lm *loggingMiddleware) ResetSecret(ctx context.Context, token, secret stri
 
 // SendPasswordReset logs the send_password_reset request. It logs the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) SendPasswordReset(ctx context.Context, host, email, user, token string) (err error) {
+func (lm *loggingMiddleware) SendPasswordReset(ctx context.Context, host, email, user, token string) (err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -283,7 +284,7 @@ func (lm *loggingMiddleware) SendPasswordReset(ctx context.Context, host, email,
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Send password reset failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Send password reset failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Send password reset completed successfully", args...)
@@ -293,7 +294,7 @@ func (lm *loggingMiddleware) SendPasswordReset(ctx context.Context, host, email,
 
 // UpdateClientRole logs the update_client_role request. It logs the client id and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) UpdateClientRole(ctx context.Context, token string, client mgclients.Client) (c mgclients.Client, err error) {
+func (lm *loggingMiddleware) UpdateClientRole(ctx context.Context, token string, client mgclients.Client) (c mgclients.Client, err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -305,7 +306,7 @@ func (lm *loggingMiddleware) UpdateClientRole(ctx context.Context, token string,
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Update user role failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Update user role failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Update user role completed successfully", args...)
@@ -315,7 +316,7 @@ func (lm *loggingMiddleware) UpdateClientRole(ctx context.Context, token string,
 
 // EnableClient logs the enable_client request. It logs the client id and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) EnableClient(ctx context.Context, token, id string) (c mgclients.Client, err error) {
+func (lm *loggingMiddleware) EnableClient(ctx context.Context, token, id string) (c mgclients.Client, err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -326,7 +327,7 @@ func (lm *loggingMiddleware) EnableClient(ctx context.Context, token, id string)
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Enable user failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Enable user failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Enable user completed successfully", args...)
@@ -336,7 +337,7 @@ func (lm *loggingMiddleware) EnableClient(ctx context.Context, token, id string)
 
 // DisableClient logs the disable_client request. It logs the client id and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) DisableClient(ctx context.Context, token, id string) (c mgclients.Client, err error) {
+func (lm *loggingMiddleware) DisableClient(ctx context.Context, token, id string) (c mgclients.Client, err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -347,7 +348,7 @@ func (lm *loggingMiddleware) DisableClient(ctx context.Context, token, id string
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Disable user failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Disable user failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Disable user completed successfully", args...)
@@ -357,7 +358,7 @@ func (lm *loggingMiddleware) DisableClient(ctx context.Context, token, id string
 
 // ListMembers logs the list_members request. It logs the group id, and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) ListMembers(ctx context.Context, token, objectKind, objectID string, cp mgclients.Page) (mp mgclients.MembersPage, err error) {
+func (lm *loggingMiddleware) ListMembers(ctx context.Context, token, objectKind, objectID string, cp mgclients.Page) (mp mgclients.MembersPage, err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -373,7 +374,7 @@ func (lm *loggingMiddleware) ListMembers(ctx context.Context, token, objectKind,
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("List members failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "List members failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("List members completed successfully", args...)
@@ -382,7 +383,7 @@ func (lm *loggingMiddleware) ListMembers(ctx context.Context, token, objectKind,
 }
 
 // Identify logs the identify request. It logs the time it took to complete the request.
-func (lm *loggingMiddleware) Identify(ctx context.Context, token string) (id string, err error) {
+func (lm *loggingMiddleware) Identify(ctx context.Context, token string) (id string, err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -390,7 +391,7 @@ func (lm *loggingMiddleware) Identify(ctx context.Context, token string) (id str
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Identify user failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "Identify user failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("Identify user completed successfully", args...)
@@ -398,7 +399,7 @@ func (lm *loggingMiddleware) Identify(ctx context.Context, token string) (id str
 	return lm.svc.Identify(ctx, token)
 }
 
-func (lm *loggingMiddleware) OAuthCallback(ctx context.Context, client mgclients.Client) (token *magistrala.Token, err error) {
+func (lm *loggingMiddleware) OAuthCallback(ctx context.Context, client mgclients.Client) (token *magistrala.Token, err errors.Error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -406,7 +407,7 @@ func (lm *loggingMiddleware) OAuthCallback(ctx context.Context, client mgclients
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("OAuth callback failed to complete successfully", args...)
+			lm.logger.WarnContext(ctx, "OAuth callback failed to complete successfully", args...)
 			return
 		}
 		lm.logger.Info("OAuth callback completed successfully", args...)

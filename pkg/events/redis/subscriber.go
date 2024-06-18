@@ -103,13 +103,13 @@ func (es *subEventStore) handle(ctx context.Context, stream string, msgs []redis
 		}
 
 		if err := h.Handle(ctx, event); err != nil {
-			es.logger.Warn(fmt.Sprintf("failed to handle redis event: %s", err))
+			es.logger.WarnContext(ctx, fmt.Sprintf("failed to handle redis event: %s", err))
 
 			return
 		}
 
 		if err := es.client.XAck(ctx, stream, group, msg.ID).Err(); err != nil {
-			es.logger.Warn(fmt.Sprintf("failed to ack redis event: %s", err))
+			es.logger.WarnContext(ctx, fmt.Sprintf("failed to ack redis event: %s", err))
 
 			return
 		}

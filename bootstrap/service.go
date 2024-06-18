@@ -17,36 +17,215 @@ import (
 	mgsdk "github.com/absmach/magistrala/pkg/sdk/go"
 )
 
-var (
-	// ErrThings indicates failure to communicate with Magistrala Things service.
-	// It can be due to networking error or invalid/unauthenticated request.
-	ErrThings = errors.New("failed to receive response from Things service")
+// ErrThings indicates failure to communicate with Magistrala Things service.
+// It can be due to networking error or invalid/unauthenticated request.
+type ThingsError struct {
+	Err errors.Error
+}
 
-	// ErrExternalKey indicates a non-existent bootstrap configuration for given external key.
-	ErrExternalKey = errors.New("failed to get bootstrap configuration for given external key")
+func (te *ThingsError) Error() string {
+	return te.Err.Error()
+}
 
-	// ErrExternalKeySecure indicates error in getting bootstrap configuration for given encrypted external key.
-	ErrExternalKeySecure = errors.New("failed to get bootstrap configuration for given encrypted external key")
+var ErrThings = &ThingsError{
+	Err: errors.New("failed to receive response from Things service"),
+}
 
-	// ErrBootstrap indicates error in getting bootstrap configuration.
-	ErrBootstrap = errors.New("failed to read bootstrap configuration")
+// ErrExternalKey indicates a non-existent bootstrap configuration for given external key.
+type ExternalKeyError struct {
+	Err errors.Error
+}
 
-	// ErrAddBootstrap indicates error in adding bootstrap configuration.
-	ErrAddBootstrap = errors.New("failed to add bootstrap configuration")
+func (eke *ExternalKeyError) Error() string {
+	return eke.Err.Error()
+}
 
-	errUpdateConnections  = errors.New("failed to update connections")
-	errRemoveBootstrap    = errors.New("failed to remove bootstrap configuration")
-	errChangeState        = errors.New("failed to change state of bootstrap configuration")
-	errUpdateChannel      = errors.New("failed to update channel")
-	errRemoveConfig       = errors.New("failed to remove bootstrap configuration")
-	errRemoveChannel      = errors.New("failed to remove channel")
-	errCreateThing        = errors.New("failed to create thing")
-	errDisconnectThing    = errors.New("failed to disconnect thing")
-	errCheckChannels      = errors.New("failed to check if channels exists")
-	errConnectionChannels = errors.New("failed to check channels connections")
-	errThingNotFound      = errors.New("failed to find thing")
-	errUpdateCert         = errors.New("failed to update cert")
-)
+var ErrExternalKey = &ExternalKeyError{
+	Err: errors.New("failed to get bootstrap configuration for given external key"),
+}
+
+// ErrExternalKeySecure indicates error in getting bootstrap configuration for given encrypted external key.
+type ExternalKeySecureError struct {
+	Err errors.Error
+}
+
+func (ekse *ExternalKeySecureError) Error() string {
+	return ekse.Err.Error()
+}
+
+var ErrExternalKeySecure = &ExternalKeySecureError{
+	Err: errors.New("failed to get bootstrap configuration for given encrypted external key"),
+}
+
+// ErrBootstrap indicates error in getting bootstrap configuration.
+type BootstrapError struct {
+	Err errors.Error
+}
+
+func (be *BootstrapError) Error() string {
+	return be.Err.Error()
+}
+
+var ErrBootstrap = &BootstrapError{
+	Err: errors.New("failed to read bootstrap configuration"),
+}
+
+// ErrAddBootstrap indicates error in adding bootstrap configuration.
+type AddBootstrapError struct {
+	Err errors.Error
+}
+
+func (abe *AddBootstrapError) Error() string {
+	return abe.Err.Error()
+}
+
+var ErrAddBootstrap = &AddBootstrapError{
+	Err: errors.New("failed to add bootstrap configuration"),
+}
+
+type UpdateConnectionsError struct {
+	Err errors.Error
+}
+
+func (uce *UpdateConnectionsError) Error() string {
+	return uce.Err.Error()
+}
+
+var errUpdateConnections = &UpdateConnectionsError{
+	Err: errors.New("failed to update connections"),
+}
+
+type RemoveBootstrapError struct {
+	Err errors.Error
+}
+
+func (rbe *RemoveBootstrapError) Error() string {
+	return rbe.Err.Error()
+}
+
+var errRemoveBootstrap = &RemoveBootstrapError{
+	Err: errors.New("failed to remove bootstrap configuration"),
+}
+
+type ChangeStateError struct {
+	Err errors.Error
+}
+
+func (cse *ChangeStateError) Error() string {
+	return cse.Err.Error()
+}
+
+var errChangeState = &ChangeStateError{
+	Err: errors.New("failed to change state of bootstrap configuration"),
+}
+
+type UpdateChannelError struct {
+	Err errors.Error
+}
+
+func (uce *UpdateChannelError) Error() string {
+	return uce.Err.Error()
+}
+
+var errUpdateChannel = &UpdateChannelError{
+	Err: errors.New("failed to update channel"),
+}
+
+type RemoveConfigError struct {
+	Err errors.Error
+}
+
+func (rce *RemoveConfigError) Error() string {
+	return rce.Err.Error()
+}
+
+var errRemoveConfig = &RemoveConfigError{
+	Err: errors.New("failed to remove bootstrap configuration"),
+}
+
+type RemoveChannelError struct {
+	Err errors.Error
+}
+
+func (rce *RemoveChannelError) Error() string {
+	return rce.Err.Error()
+}
+
+var errRemoveChannel = &RemoveChannelError{
+	Err: errors.New("failed to remove channel"),
+}
+
+type CreateThingError struct {
+	Err errors.Error
+}
+
+func (cte *CreateThingError) Error() string {
+	return cte.Err.Error()
+}
+
+var errCreateThing = &CreateThingError{
+	Err: errors.New("failed to create thing"),
+}
+
+type DisconnectThingError struct {
+	Err errors.Error
+}
+
+func (dte *DisconnectThingError) Error() string {
+	return dte.Err.Error()
+}
+
+var errDisconnectThing = &DisconnectThingError{
+	Err: errors.New("failed to disconnect thing"),
+}
+
+type CheckChannelsError struct {
+	Err errors.Error
+}
+
+func (cce *CheckChannelsError) Error() string {
+	return cce.Err.Error()
+}
+
+var errCheckChannels = &CheckChannelsError{
+	Err: errors.New("failed to check if channels exists"),
+}
+
+type ConnectionChannelsError struct {
+	Err errors.Error
+}
+
+func (cce *ConnectionChannelsError) Error() string {
+	return cce.Err.Error()
+}
+
+var errConnectionChannels = &ConnectionChannelsError{
+	Err: errors.New("failed to check channels connections"),
+}
+
+type ThingNotFoundError struct {
+	Err errors.Error
+}
+
+func (tnfe *ThingNotFoundError) Error() string {
+	return tnfe.Err.Error()
+}
+
+var errThingNotFound = &ThingNotFoundError{
+	Err: errors.New("failed to find thing"),
+}
+
+type UpdateCertError struct {
+	Err errors.Error
+}
+
+func (uce *UpdateCertError) Error() string {
+	return uce.Err.Error()
+}
+
+var errUpdateCert = &UpdateCertError{
+	Err: errors.New("failed to update cert"),
+}
 
 var _ Service = (*bootstrapService)(nil)
 

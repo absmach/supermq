@@ -86,24 +86,24 @@ func Contains(e1, e2 error) bool {
 }
 
 // Wrap returns an Error that wrap err with wrapper.
-func Wrap(wrapper, err error) error {
+func Wrap(wrapper, err error) Error {
 	if wrapper == nil || err == nil {
-		return wrapper
+		return wrapper.(Error)
 	}
 	if w, ok := wrapper.(Error); ok {
 		return &customError{
 			msg: w.Msg(),
-			err: cast(err),
+			err: Cast(err),
 		}
 	}
 	return &customError{
 		msg: wrapper.Error(),
-		err: cast(err),
+		err: Cast(err),
 	}
 }
 
 // Unwrap returns the wrapper and the error by separating the Wrapper from the error.
-func Unwrap(err error) (error, error) {
+func Unwrap(err error) (Error, Error) {
 	if ce, ok := err.(Error); ok {
 		if ce.Err() == nil {
 			return nil, New(ce.Msg())
@@ -111,10 +111,11 @@ func Unwrap(err error) (error, error) {
 		return New(ce.Msg()), ce.Err()
 	}
 
-	return nil, err
+	return nil, Cast(err)
 }
 
-func cast(err error) Error {
+// Cast returns an Error from an error.
+func Cast(err error) Error {
 	if err == nil {
 		return nil
 	}
