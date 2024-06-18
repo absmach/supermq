@@ -30,7 +30,7 @@ func Migration() *migrate.MemoryMigrationSource {
                         name        VARCHAR(254),
                         tags        TEXT[],
                         metadata    JSONB,
-                        alias       VARCHAR(254) NOT NULL UNIQUE CHECK (alias <> ''),
+                        alias       VARCHAR(254) NULL UNIQUE,
                         created_at  TIMESTAMP,
                         updated_at  TIMESTAMP,
                         updated_by  VARCHAR(254),
@@ -49,6 +49,14 @@ func Migration() *migrate.MemoryMigrationSource {
 				},
 				Down: []string{
 					`DROP TABLE IF EXISTS keys`,
+				},
+			},
+			{
+				Id: "auth_2",
+				Up: []string{
+					`ALTER TABLE domains 
+                     ALTER COLUMN alias SET NOT NULL, 
+                     ADD CONSTRAINT alias_not_empty CHECK (alias <> '');`,
 				},
 			},
 		},
