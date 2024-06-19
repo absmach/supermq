@@ -82,7 +82,7 @@ func (res createGroupRes) Empty() bool {
 
 type groupPageRes struct {
 	pageRes
-	Groups []viewGroupRes `json:"groups"`
+	Groups []viewGroupRes `json:"channels"`
 }
 
 type pageRes struct {
