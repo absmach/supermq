@@ -191,9 +191,9 @@ func TestSave(t *testing.T) {
 			desc: "add domain with empty alias",
 			domain: auth.Domain{
 				ID:    domainID,
-				Name:  "test",
+				Name:  "test1",
 				Alias: "",
-				Tags:  []string{"test"},
+				Tags:  []string{"test1"},
 				Metadata: map[string]interface{}{
 					"test": "test",
 				},
