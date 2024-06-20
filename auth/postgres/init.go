@@ -51,14 +51,6 @@ func Migration() *migrate.MemoryMigrationSource {
 					`DROP TABLE IF EXISTS keys`,
 				},
 			},
-			{
-				Id: "auth_2",
-				Up: []string{
-					`ALTER TABLE domains 
-                     ALTER COLUMN alias SET NOT NULL, 
-                     ADD CONSTRAINT alias_not_empty CHECK (alias <> '');`,
-				},
-			},
 		},
 	}
 }
