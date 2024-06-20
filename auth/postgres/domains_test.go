@@ -185,7 +185,7 @@ func TestSave(t *testing.T) {
 				UpdatedBy: userID,
 				Status:    auth.EnabledStatus,
 			},
-			err: nil,
+			err: repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add domain with malformed metadata",
