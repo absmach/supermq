@@ -38,7 +38,7 @@ type MessagesPage struct {
 }
 
 type GroupsPage struct {
-	Groups []Group `json:"groups"`
+	Groups []Group `json:"channels"`
 	PageRes
 }
 
