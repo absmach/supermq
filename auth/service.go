@@ -816,7 +816,7 @@ func (svc service) UnassignUsers(ctx context.Context, token, id string, userIds 
 			ObjectType:  DomainType,
 			ObjectID:    id,
 		})
-		if err := svc.DeletePolicy(ctx, PolicyReq{
+		if err := svc.DeletePolicyFilter(ctx, PolicyReq{
 			Subject:     EncodeDomainUserID(id, userID),
 			SubjectType: UserType,
 			SubjectKind: UsersKind,
