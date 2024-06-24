@@ -114,24 +114,24 @@ func decodeRemoveChannel(event map[string]interface{}) removeEvent {
 }
 
 func decodeConnectThing(event map[string]interface{}) connectionEvent {
-	if read(event, "memberKind", "") != memberKind && read(event, "relation", "") != relation {
+	if events.Read(event, "memberKind", "") != memberKind && events.Read(event, "relation", "") != relation {
 		return connectionEvent{}
 	}
 
 	return connectionEvent{
-		channelID: read(event, "group_id", ""),
-		thingIDs:  ReadStringSlice(event, "member_ids"),
+		channelID: events.Read(event, "group_id", ""),
+		thingIDs:  events.ReadStringSlice(event, "member_ids"),
 	}
 }
 
 func decodeDisconnectThing(event map[string]interface{}) connectionEvent {
-	if read(event, "memberKind", "") != memberKind && read(event, "relation", "") != relation {
+	if events.Read(event, "memberKind", "") != memberKind && events.Read(event, "relation", "") != relation {
 		return connectionEvent{}
 	}
 
 	return connectionEvent{
-		channelID: read(event, "group_id", ""),
-		thingIDs:  ReadStringSlice(event, "member_ids"),
+		channelID: events.Read(event, "group_id", ""),
+		thingIDs:  events.ReadStringSlice(event, "member_ids"),
 	}
 }
 
@@ -145,32 +145,4 @@ func (es *eventHandler) handleUpdateChannel(ctx context.Context, uce updateChann
 	}
 
 	return es.svc.UpdateChannelHandler(ctx, channel)
-}
-
-func read(event map[string]interface{}, key, def string) string {
-	val, ok := event[key].(string)
-	if !ok {
-		return def
-	}
-
-	return val
-}
-
-// ReadStringSlice reads string slice from event map.
-// If value is not a string slice, returns empty slice.
-func ReadStringSlice(event map[string]interface{}, key string) []string {
-	var res []string
-
-	vals, ok := event[key].([]interface{})
-	if !ok {
-		return res
-	}
-
-	for _, v := range vals {
-		if s, ok := v.(string); ok {
-			res = append(res, s)
-		}
-	}
-
-	return res
 }

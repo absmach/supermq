@@ -37,7 +37,7 @@ func (lm *loggingMiddleware) Save(ctx context.Context, activity activitylog.Acti
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Save activity failed to complete successfully", args...)
+			lm.logger.Warn("Save activity failed", args...)
 			return
 		}
 		lm.logger.Info("Save activity completed successfully", args...)
@@ -60,7 +60,7 @@ func (lm *loggingMiddleware) RetrieveAll(ctx context.Context, token string, page
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Retrieve all activities failed to complete successfully", args...)
+			lm.logger.Warn("Retrieve all activities failed", args...)
 			return
 		}
 		lm.logger.Info("Retrieve all activities completed successfully", args...)
