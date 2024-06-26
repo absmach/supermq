@@ -6,7 +6,6 @@ package api
 import (
 	"context"
 
-	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/internal/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
 	"github.com/absmach/magistrala/pkg/groups"
@@ -112,21 +111,21 @@ func DisableGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 	}
 }
 
-func ListGroupsEndpoint(svc groups.Service, memberKind string) endpoint.Endpoint {
+func ListGroupsEndpoint(svc groups.Service, groupType, memberKind string) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listGroupsReq)
 		if memberKind != "" {
 			req.memberKind = memberKind
 		}
 		if err := req.validate(); err != nil {
-			if memberKind == auth.ChannelsKind {
+			if groupType == "channels" {
 				return channelPageRes{}, errors.Wrap(apiutil.ErrValidation, err)
 			}
 			return groupPageRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		page, err := svc.ListGroups(ctx, req.token, req.memberKind, req.memberID, req.Page)
 		if err != nil {
-			if memberKind == auth.ChannelsKind {
+			if groupType == "channels" {
 				return channelPageRes{}, err
 			}
 			return groupPageRes{}, err
@@ -137,7 +136,7 @@ func ListGroupsEndpoint(svc groups.Service, memberKind string) endpoint.Endpoint
 		}
 		filterByID := req.Page.ID != ""
 
-		if memberKind == auth.ChannelsKind {
+		if groupType == "channels" {
 			return buildChannelsResponse(page, filterByID), nil
 		}
 		return buildGroupsResponse(page, filterByID), nil
