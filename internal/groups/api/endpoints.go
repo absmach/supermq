@@ -12,6 +12,8 @@ import (
 	"github.com/go-kit/kit/endpoint"
 )
 
+const groupTypeChannels = "channels"
+
 func CreateGroupEndpoint(svc groups.Service, kind string) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createGroupReq)
@@ -118,14 +120,14 @@ func ListGroupsEndpoint(svc groups.Service, groupType, memberKind string) endpoi
 			req.memberKind = memberKind
 		}
 		if err := req.validate(); err != nil {
-			if groupType == "channels" {
+			if groupType == groupTypeChannels {
 				return channelPageRes{}, errors.Wrap(apiutil.ErrValidation, err)
 			}
 			return groupPageRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		page, err := svc.ListGroups(ctx, req.token, req.memberKind, req.memberID, req.Page)
 		if err != nil {
-			if groupType == "channels" {
+			if groupType == groupTypeChannels {
 				return channelPageRes{}, err
 			}
 			return groupPageRes{}, err
@@ -136,7 +138,7 @@ func ListGroupsEndpoint(svc groups.Service, groupType, memberKind string) endpoi
 		}
 		filterByID := req.Page.ID != ""
 
-		if groupType == "channels" {
+		if groupType == groupTypeChannels {
 			return buildChannelsResponse(page, filterByID), nil
 		}
 		return buildGroupsResponse(page, filterByID), nil
