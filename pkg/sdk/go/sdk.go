@@ -1155,12 +1155,12 @@ type SDK interface {
 	//  fmt.Println(err)
 	DeleteInvitation(userID, domainID, token string) (err error)
 
-	// Activities returns a list of activity logs.
+	// Journal returns a list of journal logs.
 	//
 	// For example:
-	//  activities, _ := sdk.Activities("thing", "thingID", PageMetadata{Offset: 0, Limit: 10, Operation: "users.create"}, "token")
-	//  fmt.Println(activities)
-	Activities(entityType, entityID string, pm PageMetadata, token string) (activities ActivitiesPage, err error)
+	//  journals, _ := sdk.Journal("thing", "thingID", PageMetadata{Offset: 0, Limit: 10, Operation: "users.create"}, "token")
+	//  fmt.Println(journals)
+	Journal(entityType, entityID string, pm PageMetadata, token string) (journal JournalsPage, err error)
 }
 
 type mgSDK struct {
@@ -1172,7 +1172,7 @@ type mgSDK struct {
 	usersURL       string
 	domainsURL     string
 	invitationsURL string
-	activitiesURL  string
+	journalURL     string
 	HostURL        string
 
 	msgContentType ContentType
@@ -1190,7 +1190,7 @@ type Config struct {
 	UsersURL       string
 	DomainsURL     string
 	InvitationsURL string
-	ActivitiesURL  string
+	JournalURL     string
 	HostURL        string
 
 	MsgContentType  ContentType
@@ -1209,7 +1209,7 @@ func NewSDK(conf Config) SDK {
 		usersURL:       conf.UsersURL,
 		domainsURL:     conf.DomainsURL,
 		invitationsURL: conf.InvitationsURL,
-		activitiesURL:  conf.ActivitiesURL,
+		journalURL:     conf.JournalURL,
 		HostURL:        conf.HostURL,
 
 		msgContentType: conf.MsgContentType,

@@ -36,34 +36,6 @@ func (_m *SDK) AcceptInvitation(domainID string, token string) error {
 	return r0
 }
 
-// Activities provides a mock function with given fields: entityType, entityID, pm, token
-func (_m *SDK) Activities(entityType string, entityID string, pm sdk.PageMetadata, token string) (sdk.ActivitiesPage, error) {
-	ret := _m.Called(entityType, entityID, pm, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Activities")
-	}
-
-	var r0 sdk.ActivitiesPage
-	var r1 error
-	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.ActivitiesPage, error)); ok {
-		return rf(entityType, entityID, pm, token)
-	}
-	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.ActivitiesPage); ok {
-		r0 = rf(entityType, entityID, pm, token)
-	} else {
-		r0 = ret.Get(0).(sdk.ActivitiesPage)
-	}
-
-	if rf, ok := ret.Get(1).(func(string, string, sdk.PageMetadata, string) error); ok {
-		r1 = rf(entityType, entityID, pm, token)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // AddBootstrap provides a mock function with given fields: cfg, token
 func (_m *SDK) AddBootstrap(cfg sdk.BootstrapConfig, token string) (string, errors.SDKError) {
 	ret := _m.Called(cfg, token)
@@ -1435,6 +1407,34 @@ func (_m *SDK) IssueCert(thingID string, validity string, token string) (sdk.Cer
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.SDKError)
 		}
+	}
+
+	return r0, r1
+}
+
+// Journal provides a mock function with given fields: entityType, entityID, pm, token
+func (_m *SDK) Journal(entityType string, entityID string, pm sdk.PageMetadata, token string) (sdk.JournalsPage, error) {
+	ret := _m.Called(entityType, entityID, pm, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Journal")
+	}
+
+	var r0 sdk.JournalsPage
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.JournalsPage, error)); ok {
+		return rf(entityType, entityID, pm, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.JournalsPage); ok {
+		r0 = rf(entityType, entityID, pm, token)
+	} else {
+		r0 = ret.Get(0).(sdk.JournalsPage)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, sdk.PageMetadata, string) error); ok {
+		r1 = rf(entityType, entityID, pm, token)
+	} else {
+		r1 = ret.Error(1)
 	}
 
 	return r0, r1

@@ -116,9 +116,9 @@ jobs:
               - "pkg/uuid/**"
               - "pkg/messaging/**"
 
-            activitylog:
-              - "activitylog/**"
-              - "cmd/activitylog/**"
+            journal:
+              - "journal/**"
+              - "cmd/journal/**"
               - "auth.pb.go"
               - "auth_grpc.pb.go"
               - "auth/**"
@@ -276,10 +276,10 @@ jobs:
         run: |
           mkdir coverage
 
-      - name: Run Activity log tests
-        if: steps.changes.outputs.activitylog == 'true' || steps.changes.outputs.workflow == 'true'
+      - name: Run Journal tests
+        if: steps.changes.outputs.journal == 'true' || steps.changes.outputs.workflow == 'true'
         run: |
-          go test --race -v -count=1 -coverprofile=coverage/activitylog.out ./activitylog/...
+          go test --race -v -count=1 -coverprofile=coverage/journal.out ./journal/...
 
       - name: Run auth tests
         if: steps.changes.outputs.auth == 'true' || steps.changes.outputs.workflow == 'true'

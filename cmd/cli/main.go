@@ -50,7 +50,7 @@ func main() {
 	subscriptionsCmd := cli.NewSubscriptionCmd()
 	configCmd := cli.NewConfigCmd()
 	invitationsCmd := cli.NewInvitationsCmd()
-	activitiesCmd := cli.NewActivitiesCmd()
+	journalCmd := cli.NewJournalCmd()
 
 	// Root Commands
 	rootCmd.AddCommand(healthCmd)
@@ -66,7 +66,7 @@ func main() {
 	rootCmd.AddCommand(subscriptionsCmd)
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(invitationsCmd)
-	rootCmd.AddCommand(activitiesCmd)
+	rootCmd.AddCommand(journalCmd)
 
 	// Root Flags
 	rootCmd.PersistentFlags().StringVarP(
@@ -134,11 +134,11 @@ func main() {
 	)
 
 	rootCmd.PersistentFlags().StringVarP(
-		&sdkConf.ActivitiesURL,
-		"activitylog-url",
+		&sdkConf.JournalURL,
+		"journal-url",
 		"a",
-		sdkConf.ActivitiesURL,
-		"Activity Log URL",
+		sdkConf.JournalURL,
+		"Journal Log URL",
 	)
 
 	rootCmd.PersistentFlags().StringVarP(

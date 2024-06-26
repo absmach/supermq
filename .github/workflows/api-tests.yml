@@ -16,6 +16,7 @@ on:
       - "consumers/notifiers/api/**"
       - "http/api/**"
       - "invitations/api/**"
+      - "journal/api/**"
       - "provision/api/**"
       - "readers/api/**"
       - "things/api/**"
@@ -44,7 +45,7 @@ env:
   TIMESCALE_READER_URL: http://localhost:9011
   SMPP_NOTIFIER_URL: http://localhost:9014
   SMTP_NOTIFIER_URL: http://localhost:9015
-  ACTIVITY_LOG_URL: http://localhost:9021
+  JOURNAL_URL: http://localhost:9021
 
 jobs:
   api-test:
@@ -79,10 +80,10 @@ jobs:
         id: changes
         with:
           filters: |
-            activitylog:
+            journal:
               - ".github/workflows/api-tests.yml"
-              - "api/openapi/activitylog.yml"
-              - "activitylog/api/**"
+              - "api/openapi/journal.yml"
+              - "journal/api/**"
                       
             auth:
               - ".github/workflows/api-tests.yml"
@@ -189,12 +190,12 @@ jobs:
           report: false
           args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
-      - name: Run Activity Log API tests
-        if: steps.changes.outputs.activitylog == 'true'
+      - name: Run Journal API tests
+        if: steps.changes.outputs.journal == 'true'
         uses: schemathesis/action@v1
         with:
-          schema: api/openapi/activitylog.yml
-          base-url: ${{ env.ACTIVITY_LOG_URL }}
+          schema: api/openapi/journal.yml
+          base-url: ${{ env.JOURNAL_URL }}
           checks: all
           report: false
           args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
