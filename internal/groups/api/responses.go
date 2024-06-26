@@ -85,11 +85,6 @@ type groupPageRes struct {
 	Groups []viewGroupRes `json:"groups"`
 }
 
-type channelPageRes struct {
-	pageRes
-	Channels []viewGroupRes `json:"channels"`
-}
-
 type pageRes struct {
 	Limit  uint64 `json:"limit,omitempty"`
 	Offset uint64 `json:"offset"`
@@ -106,6 +101,23 @@ func (res groupPageRes) Headers() map[string]string {
 }
 
 func (res groupPageRes) Empty() bool {
+	return false
+}
+
+type channelPageRes struct {
+	pageRes
+	Channels []viewGroupRes `json:"channels"`
+}
+
+func (res channelPageRes) Code() int {
+	return http.StatusOK
+}
+
+func (res channelPageRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res channelPageRes) Empty() bool {
 	return false
 }
 
