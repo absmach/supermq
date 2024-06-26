@@ -306,11 +306,11 @@ func buildChannelsResponse(cp groups.Page, filterByID bool) channelPageRes {
 	}
 
 	for _, channel := range cp.Groups {
-		view := viewGroupRes{
-			Group: channel,
-		}
 		if filterByID && channel.Level == 0 {
 			continue
+		}
+		view := viewGroupRes{
+			Group: channel,
 		}
 		res.Channels = append(res.Channels, view)
 	}
