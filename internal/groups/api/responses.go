@@ -85,6 +85,11 @@ type groupPageRes struct {
 	Groups []viewGroupRes `json:"groups"`
 }
 
+type channelPageRes struct {
+	pageRes
+	Channels []viewGroupRes `json:"channels"`
+}
+
 type pageRes struct {
 	Limit  uint64 `json:"limit,omitempty"`
 	Offset uint64 `json:"offset"`

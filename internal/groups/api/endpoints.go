@@ -6,6 +6,7 @@ package api
 import (
 	"context"
 
+	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/internal/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
 	"github.com/absmach/magistrala/pkg/groups"
@@ -118,10 +119,16 @@ func ListGroupsEndpoint(svc groups.Service, memberKind string) endpoint.Endpoint
 			req.memberKind = memberKind
 		}
 		if err := req.validate(); err != nil {
+			if memberKind == auth.ChannelsKind {
+				return channelPageRes{}, errors.Wrap(apiutil.ErrValidation, err)
+			}
 			return groupPageRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		page, err := svc.ListGroups(ctx, req.token, req.memberKind, req.memberID, req.Page)
 		if err != nil {
+			if memberKind == auth.ChannelsKind {
+				return channelPageRes{}, err
+			}
 			return groupPageRes{}, err
 		}
 
@@ -130,6 +137,9 @@ func ListGroupsEndpoint(svc groups.Service, memberKind string) endpoint.Endpoint
 		}
 		filterByID := req.Page.ID != ""
 
+		if memberKind == auth.ChannelsKind {
+			return buildChannelsResponse(page, filterByID), nil
+		}
 		return buildGroupsResponse(page, filterByID), nil
 	}
 }
@@ -280,6 +290,28 @@ func buildGroupsResponse(gp groups.Page, filterByID bool) groupPageRes {
 			continue
 		}
 		res.Groups = append(res.Groups, view)
+	}
+
+	return res
+}
+
+func buildChannelsResponse(cp groups.Page, filterByID bool) channelPageRes {
+	res := channelPageRes{
+		pageRes: pageRes{
+			Total: cp.Total,
+			Level: cp.Level,
+		},
+		Channels: []viewGroupRes{},
+	}
+
+	for _, channel := range cp.Groups {
+		view := viewGroupRes{
+			Group: channel,
+		}
+		if filterByID && channel.Level == 0 {
+			continue
+		}
+		res.Channels = append(res.Channels, view)
 	}
 
 	return res
