@@ -165,11 +165,11 @@ func TestJournalSave(t *testing.T) {
 			desc: "with empty journal operation",
 			journal: journal.Journal{
 				Operation:  "",
-				OccurredAt: time.Now(),
+				OccurredAt: time.Now().Add(-time.Hour),
 				Attributes: payload,
 				Metadata:   payload,
 			},
-			err: repoerr.ErrCreateEntity,
+			err: nil,
 		},
 		{
 			desc: "with nil journal occurred_at",
