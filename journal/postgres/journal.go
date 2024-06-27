@@ -25,8 +25,8 @@ func NewRepository(db postgres.Database) journal.Repository {
 }
 
 func (repo *repository) Save(ctx context.Context, j journal.Journal) (err error) {
-	q := `INSERT INTO journal (operation, occurred_at, attributes, metadata)
-		VALUES (:operation, :occurred_at, :attributes, :metadata);`
+	q := `INSERT INTO journal (id, operation, occurred_at, attributes, metadata)
+		VALUES (:id, :operation, :occurred_at, :attributes, :metadata);`
 
 	dbJournal, err := toDBJournal(j)
 	if err != nil {
@@ -115,6 +115,7 @@ func pageQuery(pm journal.Page) string {
 }
 
 type dbJournal struct {
+	ID         string    `db:"id"`
 	Operation  string    `db:"operation"`
 	OccurredAt time.Time `db:"occurred_at"`
 	Attributes []byte    `db:"attributes"`
@@ -145,6 +146,7 @@ func toDBJournal(j journal.Journal) (dbJournal, error) {
 	}
 
 	return dbJournal{
+		ID:         j.ID,
 		Operation:  j.Operation,
 		OccurredAt: j.OccurredAt,
 		Attributes: attributes,

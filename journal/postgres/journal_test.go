@@ -82,6 +82,7 @@ func TestJournalSave(t *testing.T) {
 	repo := postgres.NewRepository(database)
 
 	occurredAt := time.Now()
+	id := testsutil.GenerateUUID(t)
 
 	cases := []struct {
 		desc    string
@@ -91,6 +92,7 @@ func TestJournalSave(t *testing.T) {
 		{
 			desc: "new journal successfully",
 			journal: journal.Journal{
+				ID:         id,
 				Operation:  operation,
 				OccurredAt: occurredAt,
 				Attributes: payload,
@@ -101,6 +103,7 @@ func TestJournalSave(t *testing.T) {
 		{
 			desc: "with duplicate journal",
 			journal: journal.Journal{
+				ID:         id,
 				Operation:  operation,
 				OccurredAt: occurredAt,
 				Attributes: payload,
@@ -111,6 +114,7 @@ func TestJournalSave(t *testing.T) {
 		{
 			desc: "with massive journal metadata and attributes",
 			journal: journal.Journal{
+				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation,
 				OccurredAt: time.Now(),
 				Attributes: map[string]interface{}{
@@ -155,6 +159,7 @@ func TestJournalSave(t *testing.T) {
 		{
 			desc: "with nil journal operation",
 			journal: journal.Journal{
+				ID:         testsutil.GenerateUUID(t),
 				OccurredAt: time.Now(),
 				Attributes: payload,
 				Metadata:   payload,
@@ -164,6 +169,7 @@ func TestJournalSave(t *testing.T) {
 		{
 			desc: "with empty journal operation",
 			journal: journal.Journal{
+				ID:         testsutil.GenerateUUID(t),
 				Operation:  "",
 				OccurredAt: time.Now().Add(-time.Hour),
 				Attributes: payload,
@@ -174,6 +180,7 @@ func TestJournalSave(t *testing.T) {
 		{
 			desc: "with nil journal occurred_at",
 			journal: journal.Journal{
+				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation,
 				Attributes: payload,
 				Metadata:   payload,
@@ -183,6 +190,7 @@ func TestJournalSave(t *testing.T) {
 		{
 			desc: "with empty journal occurred_at",
 			journal: journal.Journal{
+				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation,
 				OccurredAt: time.Time{},
 				Attributes: payload,
@@ -193,6 +201,7 @@ func TestJournalSave(t *testing.T) {
 		{
 			desc: "with nil journal attributes",
 			journal: journal.Journal{
+				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation + ".with.nil.attributes",
 				OccurredAt: time.Now(),
 				Metadata:   payload,
@@ -202,6 +211,7 @@ func TestJournalSave(t *testing.T) {
 		{
 			desc: "with invalid journal attributes",
 			journal: journal.Journal{
+				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation,
 				OccurredAt: time.Now(),
 				Attributes: map[string]interface{}{"invalid": make(chan struct{})},
@@ -212,6 +222,7 @@ func TestJournalSave(t *testing.T) {
 		{
 			desc: "with empty journal attributes",
 			journal: journal.Journal{
+				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation + ".with.empty.attributes",
 				OccurredAt: time.Now(),
 				Attributes: map[string]interface{}{},
@@ -222,6 +233,7 @@ func TestJournalSave(t *testing.T) {
 		{
 			desc: "with nil journal metadata",
 			journal: journal.Journal{
+				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation + ".with.nil.metadata",
 				OccurredAt: time.Now(),
 				Attributes: payload,
@@ -231,6 +243,7 @@ func TestJournalSave(t *testing.T) {
 		{
 			desc: "with invalid journal metadata",
 			journal: journal.Journal{
+				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation,
 				OccurredAt: time.Now(),
 				Metadata:   map[string]interface{}{"invalid": make(chan struct{})},
@@ -241,6 +254,7 @@ func TestJournalSave(t *testing.T) {
 		{
 			desc: "with empty journal metadata",
 			journal: journal.Journal{
+				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation + ".with.empty.metadata",
 				OccurredAt: time.Now(),
 				Metadata:   map[string]interface{}{},
@@ -278,6 +292,7 @@ func TestJournalRetrieveAll(t *testing.T) {
 	var items []journal.Journal
 	for i := 0; i < num; i++ {
 		j := journal.Journal{
+			ID:         testsutil.GenerateUUID(t),
 			Operation:  fmt.Sprintf("%s-%d", operation, i),
 			OccurredAt: time.Now().UTC().Truncate(time.Millisecond),
 			Attributes: userAttributesV1,
@@ -295,6 +310,7 @@ func TestJournalRetrieveAll(t *testing.T) {
 		}
 		err := repo.Save(context.Background(), j)
 		require.Nil(t, err, fmt.Sprintf("create journal unexpected error: %s", err))
+		j.ID = ""
 		items = append(items, j)
 	}
 

@@ -19,25 +19,30 @@ import (
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-var validJournal = journal.Journal{
-	Operation:  "user.create",
-	OccurredAt: time.Now().Add(-time.Hour),
-	Attributes: map[string]interface{}{
-		"temperature": rand.Float64(),
-		"humidity":    rand.Float64(),
-	},
-	Metadata: map[string]interface{}{
-		"sensor_id": rand.Intn(1000),
-	},
-}
+var (
+	validJournal = journal.Journal{
+		Operation:  "user.create",
+		OccurredAt: time.Now().Add(-time.Hour),
+		Attributes: map[string]interface{}{
+			"temperature": rand.Float64(),
+			"humidity":    rand.Float64(),
+		},
+		Metadata: map[string]interface{}{
+			"sensor_id": rand.Intn(1000),
+		},
+	}
+	idProvider = uuid.New()
+)
 
 func TestSave(t *testing.T) {
 	repo := new(mocks.Repository)
 	authsvc := new(authmocks.AuthClient)
-	svc := journal.NewService(repo, authsvc)
+	svc := journal.NewService(idProvider, repo, authsvc)
 
 	cases := []struct {
 		desc    string
@@ -60,7 +65,7 @@ func TestSave(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := repo.On("Save", context.Background(), tc.journal).Return(tc.repoErr)
+			repoCall := repo.On("Save", context.Background(), mock.Anything).Return(tc.repoErr)
 			err := svc.Save(context.Background(), tc.journal)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 			repoCall.Unset()
@@ -71,7 +76,7 @@ func TestSave(t *testing.T) {
 func TestReadAll(t *testing.T) {
 	repo := new(mocks.Repository)
 	authsvc := new(authmocks.AuthClient)
-	svc := journal.NewService(repo, authsvc)
+	svc := journal.NewService(idProvider, repo, authsvc)
 
 	validToken := "token"
 	validPage := journal.Page{

@@ -169,8 +169,9 @@ func main() {
 func newService(db *sqlx.DB, dbConfig pgclient.Config, authClient magistrala.AuthServiceClient, logger *slog.Logger, tracer trace.Tracer) journal.Service {
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 	repo := journalpg.NewRepository(database)
+	idp := uuid.New()
 
-	svc := journal.NewService(repo, authClient)
+	svc := journal.NewService(idp, repo, authClient)
 	svc = middleware.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics("journal", "journal_writer")
 	svc = middleware.MetricsMiddleware(svc, counter, latency)

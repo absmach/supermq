@@ -17,8 +17,9 @@ import (
 	aevents "github.com/absmach/magistrala/journal/events"
 	"github.com/absmach/magistrala/journal/mocks"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
-	"github.com/absmach/magistrala/pkg/events"
+	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 var (
@@ -32,6 +33,7 @@ var (
 		},
 		"status": "active",
 	}
+	idProvider = uuid.New()
 )
 
 type testEvent struct {
@@ -49,7 +51,7 @@ func NewTestEvent(data map[string]interface{}, err error) testEvent {
 
 func TestHandle(t *testing.T) {
 	repo := new(mocks.Repository)
-	svc := journal.NewService(repo, nil)
+	svc := journal.NewService(idProvider, repo, nil)
 
 	cases := []struct {
 		desc      string
@@ -260,22 +262,7 @@ func TestHandle(t *testing.T) {
 			err = json.Unmarshal(data, &event)
 			assert.NoError(t, err)
 
-			operation := events.Read(tc.event, "operation", "")
-			delete(tc.event, "operation")
-
-			occurredAt := events.Read(tc.event, "occurred_at", float64(0))
-			delete(tc.event, "occurred_at")
-
-			metadata := events.Read(tc.event, "metadata", map[string]interface{}{})
-			delete(tc.event, "metadata")
-
-			j := journal.Journal{
-				Operation:  operation,
-				OccurredAt: time.Unix(0, int64(occurredAt)),
-				Attributes: tc.event,
-				Metadata:   metadata,
-			}
-			repoCall := repo.On("Save", context.Background(), j).Return(tc.repoErr)
+			repoCall := repo.On("Save", context.Background(), mock.Anything).Return(tc.repoErr)
 			err = aevents.Handle(svc)(context.Background(), NewTestEvent(event, tc.encodeErr))
 			switch {
 			case tc.err == nil:

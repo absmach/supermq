@@ -13,18 +13,26 @@ import (
 )
 
 type service struct {
+	idProvider magistrala.IDProvider
 	auth       magistrala.AuthServiceClient
 	repository Repository
 }
 
-func NewService(repository Repository, authClient magistrala.AuthServiceClient) Service {
+func NewService(idp magistrala.IDProvider, repository Repository, authClient magistrala.AuthServiceClient) Service {
 	return &service{
+		idProvider: idp,
 		auth:       authClient,
 		repository: repository,
 	}
 }
 
 func (svc *service) Save(ctx context.Context, journal Journal) error {
+	id, err := svc.idProvider.ID()
+	if err != nil {
+		return err
+	}
+	journal.ID = id
+
 	return svc.repository.Save(ctx, journal)
 }
 

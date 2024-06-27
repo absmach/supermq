@@ -15,7 +15,7 @@ func Migration() *migrate.MemoryMigrationSource {
 				Id: "journal_01",
 				Up: []string{
 					`CREATE TABLE IF NOT EXISTS journal (
-						id 			UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+						id          VARCHAR(36) PRIMARY KEY,
 						operation	VARCHAR NOT NULL,
 						occurred_at	TIMESTAMP NOT NULL,
 						attributes	JSONB NOT NULL,
