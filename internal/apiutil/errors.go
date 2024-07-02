@@ -164,4 +164,7 @@ var (
 
 	// ErrEmptyMessage indicates empty message.
 	ErrEmptyMessage = errors.New("empty message")
+
+	// ErrInvalidEntityTypeID indicates invalid entity type and ID .
+	ErrInvalidEntityTypeID = errors.New("invalid entity type and entity ID")
 )

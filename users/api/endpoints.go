@@ -71,18 +71,7 @@ func listClientsEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		pm := mgclients.Page{
-			Status:   req.status,
-			Offset:   req.offset,
-			Limit:    req.limit,
-			Name:     req.name,
-			Tag:      req.tag,
-			Metadata: req.metadata,
-			Identity: req.identity,
-			Order:    req.order,
-			Dir:      req.dir,
-		}
-		page, err := svc.ListClients(ctx, req.token, pm)
+		page, err := svc.ListClients(ctx, req.token, req.page)
 		if err != nil {
 			return nil, err
 		}
@@ -100,22 +89,6 @@ func listClientsEndpoint(svc users.Service) endpoint.Endpoint {
 		}
 
 		return res, nil
-	}
-}
-
-func listMembersEndpoint(svc users.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listMembersByObjectReq)
-		if err := req.validate(); err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
-		}
-
-		page, err := svc.ListMembers(ctx, req.token, req.objectKind, req.objectID, req.Page)
-		if err != nil {
-			return nil, err
-		}
-
-		return buildClientsResponse(page), nil
 	}
 }
 

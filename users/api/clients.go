@@ -25,13 +25,12 @@ import (
 
 var (
 	passRegex   = regexp.MustCompile("^.{8,}$")
-	queryKeys   = []string{api.ThingKey, api.ChannelKey, api.DomainKey, api.GroupKey, api.UserKey}
+	queryKeys   = []string{api.ThingKey, api.ChannelKey, api.DomainKey, api.GroupKey}
 	entityTypes = map[string]string{
-		api.ThingKey:   auth.ThingsKind,
-		api.ChannelKey: auth.GroupsKind,
-		api.DomainKey:  auth.DomainsKind,
-		api.GroupKey:   auth.GroupsKind,
-		api.UserKey:    auth.UsersKind,
+		api.ThingKey:   auth.ThingType,
+		api.ChannelKey: auth.GroupType,
+		api.DomainKey:  auth.DomainType,
+		api.GroupKey:   auth.GroupType,
 	}
 )
 
@@ -135,12 +134,6 @@ func clientsHandler(svc users.Service, r *chi.Mux, logger *slog.Logger, pr *rege
 			opts...,
 		), "disable_client").ServeHTTP)
 
-		r.Get("/members", otelhttp.NewHandler(kithttp.NewServer(
-			listMembersEndpoint(svc),
-			decodeListMembers,
-			api.EncodeResponse,
-			opts...,
-		), "list_users_by_entity_id").ServeHTTP)
 	})
 
 	r.Route("/password", func(r chi.Router) {
@@ -182,59 +175,15 @@ func decodeViewProfile(_ context.Context, r *http.Request) (interface{}, error) 
 }
 
 func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) {
-	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefClientStatus)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	o, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	l, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	m, err := apiutil.ReadMetadataQuery(r, api.MetadataKey, nil)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	n, err := apiutil.ReadStringQuery(r, api.NameKey, "")
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	i, err := apiutil.ReadStringQuery(r, api.IdentityKey, "")
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	t, err := apiutil.ReadStringQuery(r, api.TagKey, "")
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	order, err := apiutil.ReadStringQuery(r, api.OrderKey, api.DefOrder)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	dir, err := apiutil.ReadStringQuery(r, api.DirKey, api.DefDir)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	req := listClientsReq{
+		token: apiutil.ExtractBearerToken(r),
 	}
 
-	st, err := mgclients.ToStatus(s)
+	pm, err := queryPageParams(r)
 	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
+		return nil, err
 	}
-	req := listClientsReq{
-		token:    apiutil.ExtractBearerToken(r),
-		status:   st,
-		offset:   o,
-		limit:    l,
-		metadata: m,
-		name:     n,
-		identity: i,
-		tag:      t,
-		order:    order,
-		dir:      dir,
-	}
+	req.page = pm
 
 	return req, nil
 }
@@ -397,36 +346,8 @@ func decodeChangeClientStatus(_ context.Context, r *http.Request) (interface{}, 
 	return req, nil
 }
 
-func decodeListMembers(_ context.Context, r *http.Request) (interface{}, error) {
-	page, err := queryPageParams(r, api.DefPermission)
-	if err != nil {
-		return nil, err
-	}
-
+func queryPageParams(r *http.Request) (mgclients.Page, error) {
 	var entityID, entityType string
-
-	for _, key := range queryKeys {
-		entityID, err = apiutil.ReadStringQuery(r, key, "")
-		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
-		}
-		if entityID != "" {
-			entityType = entityTypes[key]
-			break
-		}
-	}
-
-	req := listMembersByObjectReq{
-		token:      apiutil.ExtractBearerToken(r),
-		Page:       page,
-		objectID:   entityID,
-		objectKind: entityType,
-	}
-
-	return req, nil
-}
-
-func queryPageParams(r *http.Request, defPermission string) (mgclients.Page, error) {
 	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefClientStatus)
 	if err != nil {
 		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -459,11 +380,33 @@ func queryPageParams(r *http.Request, defPermission string) (mgclients.Page, err
 	if err != nil {
 		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	p, err := apiutil.ReadStringQuery(r, api.PermissionKey, defPermission)
+	for _, key := range queryKeys {
+		entityID, err = apiutil.ReadStringQuery(r, key, "")
+		if err != nil {
+			return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		}
+		if entityID != "" {
+			var ok bool
+			entityType, ok = entityTypes[key]
+			if !ok {
+				return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+			}
+			break
+		}
+	}
+	p, err := apiutil.ReadStringQuery(r, api.PermissionKey, api.DefPermission)
 	if err != nil {
 		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	lp, err := apiutil.ReadBoolQuery(r, api.ListPerms, api.DefListPerms)
+	if err != nil {
+		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	order, err := apiutil.ReadStringQuery(r, api.OrderKey, api.DefOrder)
+	if err != nil {
+		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	dir, err := apiutil.ReadStringQuery(r, api.DirKey, api.DefDir)
 	if err != nil {
 		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
@@ -475,8 +418,12 @@ func queryPageParams(r *http.Request, defPermission string) (mgclients.Page, err
 		Identity:   i,
 		Name:       n,
 		Tag:        t,
+		EntityType: entityType,
+		EntityID:   entityID,
 		Permission: p,
 		ListPerms:  lp,
+		Order:      order,
+		Dir:        dir,
 	}, nil
 }
 

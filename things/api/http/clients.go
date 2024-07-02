@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/internal/apiutil"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
@@ -18,6 +19,16 @@ import (
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+)
+
+var (
+	queryKeys   = []string{api.ThingKey, api.ChannelKey, api.DomainKey, api.GroupKey}
+	entityTypes = map[string]string{
+		api.ThingKey:   auth.ThingType,
+		api.ChannelKey: auth.GroupType,
+		api.DomainKey:  auth.DomainType,
+		api.GroupKey:   auth.GroupType,
+	}
 )
 
 func clientsHandler(svc things.Service, r *chi.Mux, logger *slog.Logger) http.Handler {
@@ -115,13 +126,6 @@ func clientsHandler(svc things.Service, r *chi.Mux, logger *slog.Logger) http.Ha
 			api.EncodeResponse,
 			opts...,
 		), "delete_thing").ServeHTTP)
-
-		r.Get("/members", otelhttp.NewHandler(kithttp.NewServer(
-			listMembersEndpoint(svc),
-			decodeListMembersRequest,
-			api.EncodeResponse,
-			opts...,
-		), "list_things_by_member_id").ServeHTTP)
 	})
 
 	return r
@@ -146,59 +150,16 @@ func decodeViewClientPerms(_ context.Context, r *http.Request) (interface{}, err
 }
 
 func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) {
-	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefClientStatus)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	o, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	l, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	m, err := apiutil.ReadMetadataQuery(r, api.MetadataKey, nil)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	n, err := apiutil.ReadStringQuery(r, api.NameKey, "")
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	t, err := apiutil.ReadStringQuery(r, api.TagKey, "")
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	p, err := apiutil.ReadStringQuery(r, api.PermissionKey, api.DefPermission)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	u, err := apiutil.ReadStringQuery(r, api.UserKey, "")
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	req := listClientsReq{
+		token: apiutil.ExtractBearerToken(r),
 	}
 
-	lp, err := apiutil.ReadBoolQuery(r, api.ListPerms, api.DefListPerms)
+	pm, err := queryPageParams(r)
 	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
+		return nil, err
 	}
-	st, err := mgclients.ToStatus(s)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	req := listClientsReq{
-		token:      apiutil.ExtractBearerToken(r),
-		status:     st,
-		offset:     o,
-		limit:      l,
-		metadata:   m,
-		name:       n,
-		tag:        t,
-		permission: p,
-		listPerms:  lp,
-		userID:     u,
-	}
+	req.page = pm
+
 	return req, nil
 }
 
@@ -289,55 +250,6 @@ func decodeChangeClientStatus(_ context.Context, r *http.Request) (interface{}, 
 	return req, nil
 }
 
-func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefClientStatus)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	o, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	l, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	m, err := apiutil.ReadMetadataQuery(r, api.MetadataKey, nil)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	st, err := mgclients.ToStatus(s)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	p, err := apiutil.ReadStringQuery(r, api.PermissionKey, api.DefPermission)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	g, err := apiutil.ReadStringQuery(r, api.ChannelKey, "")
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-
-	lp, err := apiutil.ReadBoolQuery(r, api.ListPerms, api.DefListPerms)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	req := listMembersReq{
-		token: apiutil.ExtractBearerToken(r),
-		Page: mgclients.Page{
-			Status:     st,
-			Offset:     o,
-			Limit:      l,
-			Permission: p,
-			Metadata:   m,
-			ListPerms:  lp,
-		},
-		groupID: g,
-	}
-	return req, nil
-}
-
 func decodeThingShareRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
@@ -377,4 +289,85 @@ func decodeDeleteClientReq(_ context.Context, r *http.Request) (interface{}, err
 	}
 
 	return req, nil
+}
+
+func queryPageParams(r *http.Request) (mgclients.Page, error) {
+	var entityID, entityType string
+	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefClientStatus)
+	if err != nil {
+		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	o, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
+	if err != nil {
+		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	l, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
+	if err != nil {
+		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	m, err := apiutil.ReadMetadataQuery(r, api.MetadataKey, nil)
+	if err != nil {
+		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	n, err := apiutil.ReadStringQuery(r, api.NameKey, "")
+	if err != nil {
+		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	i, err := apiutil.ReadStringQuery(r, api.IdentityKey, "")
+	if err != nil {
+		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	t, err := apiutil.ReadStringQuery(r, api.TagKey, "")
+	if err != nil {
+		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	st, err := mgclients.ToStatus(s)
+	if err != nil {
+		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	for _, key := range queryKeys {
+		entityID, err = apiutil.ReadStringQuery(r, key, "")
+		if err != nil {
+			return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		}
+		if entityID != "" {
+			var ok bool
+			entityType, ok = entityTypes[key]
+			if !ok {
+				return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+			}
+			break
+		}
+	}
+	p, err := apiutil.ReadStringQuery(r, api.PermissionKey, api.DefPermission)
+	if err != nil {
+		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	lp, err := apiutil.ReadBoolQuery(r, api.ListPerms, api.DefListPerms)
+	if err != nil {
+		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	order, err := apiutil.ReadStringQuery(r, api.OrderKey, api.DefOrder)
+	if err != nil {
+		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	dir, err := apiutil.ReadStringQuery(r, api.DirKey, api.DefDir)
+	if err != nil {
+		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	return mgclients.Page{
+		Status:     st,
+		Offset:     o,
+		Limit:      l,
+		Metadata:   m,
+		Identity:   i,
+		Name:       n,
+		Tag:        t,
+		EntityType: entityType,
+		EntityID:   entityID,
+		Permission: p,
+		ListPerms:  lp,
+		Order:      order,
+		Dir:        dir,
+	}, nil
 }

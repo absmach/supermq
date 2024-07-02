@@ -79,6 +79,11 @@ paths:
         - $ref: "#/components/parameters/UserName"
         - $ref: "#/components/parameters/UserIdentity"
         - $ref: "#/components/parameters/Tags"
+        - $ref: "#/components/parameters/Group"
+        - $ref: "#/components/parameters/Domain"
+        - $ref: "#/components/parameters/Channel"
+        - $ref: "#/components/parameters/Thing"
+        - $ref: "#/components/parameters/Permission"
       security:
         - bearerAuth: []
       responses:
@@ -371,48 +376,6 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /users/members:
-    get:
-      operationId: listUsersByEntityID
-      tags:
-        - Users
-      summary: List users in an entity
-      description: |
-        Retrieves a list of users in a group. Due to performance concerns, data
-        is retrieved in subsets. The API must ensure that the entire
-        dataset is consumed either by making subsequent requests, or by
-        increasing the subset size of the initial request.
-      parameters:
-        - $ref: "#/components/parameters/GroupID"
-        - $ref: "#/components/parameters/Limit"
-        - $ref: "#/components/parameters/Offset"
-        - $ref: "#/components/parameters/Level"
-        - $ref: "#/components/parameters/Tree"
-        - $ref: "#/components/parameters/Metadata"
-        - $ref: "#/components/parameters/GroupName"
-        - $ref: "#/components/parameters/ParentID"
-        - $ref: "#/components/parameters/Group"
-        - $ref: "#/components/parameters/Domain"
-        - $ref: "#/components/parameters/Channel"
-        - $ref: "#/components/parameters/Thing"
-        - $ref: "#/components/parameters/User"
-      responses:
-        "200":
-          $ref: "#/components/responses/MembersPageRes"
-        "400":
-          description: Failed due to malformed query parameters.
-        "401":
-          description: |
-            Missing or invalid access token provided.
-            This endpoint is available only for administrators.
-        "403":
-          description: Failed to perform authorization over the entity.
-        "404":
-          description: A non-existent entity request.
-        "422":
-          description: Database can't process request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
 
   /password/reset-request:
     post:
@@ -1540,18 +1503,16 @@ components:
       required: false
       example: bb7edb32-2eac-4aad-aebe-ed96fe073879
 
-    MemberID:
-      name: memberID
-      description: Unique member identifier.
-      in: path
+    Permission:
+      name: permission
+      description: permission .
+      in: query
       schema:
         type: string
-        format: uuid
-        minLength: 36
-        maxLength: 36
-        pattern: "^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
-      required: true
-      example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+        enum: ["admin", "delete", "edit", "view", "share", "publish", "subscribe", "membership", "create", "administrator", "editor", "contributor", "member", "guest"]
+      required: false
+      example: edit
+
 
     ParentID:
       name: parentID

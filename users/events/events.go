@@ -38,7 +38,6 @@ var (
 	_ events.Event = (*viewClientEvent)(nil)
 	_ events.Event = (*viewProfileEvent)(nil)
 	_ events.Event = (*listClientEvent)(nil)
-	_ events.Event = (*listClientByGroupEvent)(nil)
 	_ events.Event = (*identifyClientEvent)(nil)
 	_ events.Event = (*generateResetTokenEvent)(nil)
 	_ events.Event = (*issueTokenEvent)(nil)
@@ -286,59 +285,12 @@ func (lce listClientEvent) Encode() (map[string]interface{}, error) {
 	if lce.Identity != "" {
 		val["identity"] = lce.Identity
 	}
-
-	return val, nil
-}
-
-type listClientByGroupEvent struct {
-	mgclients.Page
-	objectKind string
-	objectID   string
-}
-
-func (lcge listClientByGroupEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
-		"operation":   clientListByGroup,
-		"total":       lcge.Total,
-		"offset":      lcge.Offset,
-		"limit":       lcge.Limit,
-		"object_kind": lcge.objectKind,
-		"object_id":   lcge.objectID,
+	if lce.EntityID != "" {
+		val["entity_id"] = lce.EntityID
 	}
-
-	if lcge.Name != "" {
-		val["name"] = lcge.Name
+	if lce.EntityType != "" {
+		val["entity_type"] = lce.EntityType
 	}
-	if lcge.Order != "" {
-		val["order"] = lcge.Order
-	}
-	if lcge.Dir != "" {
-		val["dir"] = lcge.Dir
-	}
-	if lcge.Metadata != nil {
-		metadata, err := json.Marshal(lcge.Metadata)
-		if err != nil {
-			return map[string]interface{}{}, err
-		}
-
-		val["metadata"] = metadata
-	}
-	if lcge.Domain != "" {
-		val["domain"] = lcge.Domain
-	}
-	if lcge.Tag != "" {
-		val["tag"] = lcge.Tag
-	}
-	if lcge.Permission != "" {
-		val["permission"] = lcge.Permission
-	}
-	if lcge.Status.String() != "" {
-		val["status"] = lcge.Status.String()
-	}
-	if lcge.Identity != "" {
-		val["identity"] = lcge.Identity
-	}
-
 	return val, nil
 }
 
