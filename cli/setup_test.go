@@ -5,8 +5,6 @@ package cli_test
 
 import (
 	"bytes"
-	"encoding/json"
-	"os"
 	"testing"
 
 	"github.com/absmach/magistrala/cli"
@@ -23,49 +21,14 @@ const (
 	okLog
 )
 
-func executeCommand(t *testing.T, root *cobra.Command, entity any, logMessage outputLog, args ...string) (out string) {
+func executeCommand(t *testing.T, root *cobra.Command, args ...string) string {
 	buffer := new(bytes.Buffer)
 	root.SetOut(buffer)
 	root.SetErr(buffer)
 	root.SetArgs(args)
-
-	r, w, err := os.Pipe()
-	assert.NoError(t, err, "Error creating pipe")
-	r1, w1, err := os.Pipe()
-	assert.NoError(t, err, "Error creating pipe")
-
-	os.Stdout = w
-	os.Stderr = w1
-
-	_, err = root.ExecuteC()
+	err := root.Execute()
 	assert.NoError(t, err, "Error executing command")
-
-	w.Close()
-	w1.Close()
-
-	var outputBuffer bytes.Buffer
-	switch logMessage {
-	case usageLog, okLog:
-		_, err = outputBuffer.ReadFrom(r)
-		assert.NoError(t, err, "Error reading from pipe")
-		return outputBuffer.String()
-	case errLog:
-		var errBufffer bytes.Buffer
-		_, err = errBufffer.ReadFrom(r1)
-		assert.NoError(t, err, "Error reading from pipe")
-		return errBufffer.String()
-	case entityLog:
-		_, err = outputBuffer.ReadFrom(r)
-		assert.NoError(t, err, "Error reading from pipe")
-		res := outputBuffer.Bytes()
-		assert.Greater(t, len(res), 0, "Error reading from pipe")
-		err = json.Unmarshal(res, entity)
-		assert.NoError(t, err, "Error unmarshalling entity")
-	default:
-		return ""
-	}
-
-	return ""
+	return buffer.String()
 }
 
 func setFlags(rootCmd *cobra.Command) *cobra.Command {
