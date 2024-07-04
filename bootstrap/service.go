@@ -35,6 +35,9 @@ var (
 	// ErrAddBootstrap indicates error in adding bootstrap configuration.
 	ErrAddBootstrap = errors.New("failed to add bootstrap configuration")
 
+	// ErrNotInSameDomain indicates entities are not in the same domain.
+	errNotInSameDomain = errors.New("entities are not in the same domain")
+
 	errUpdateConnections  = errors.New("failed to update connections")
 	errRemoveBootstrap    = errors.New("failed to remove bootstrap configuration")
 	errChangeState        = errors.New("failed to change state of bootstrap configuration")
@@ -164,7 +167,7 @@ func (bs bootstrapService) Add(ctx context.Context, token string, cfg Config) (C
 
 	for _, channel := range cfg.Channels {
 		if channel.DomainID != mgThing.DomainID {
-			return Config{}, svcerr.ErrAddPolicies
+			return Config{}, errors.Wrap(svcerr.ErrMalformedEntity, errNotInSameDomain)
 		}
 	}
 

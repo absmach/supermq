@@ -522,6 +522,7 @@ func TestUpdateConnections(t *testing.T) {
 		desc         string
 		token        string
 		id           string
+		state        bootstrap.State
 		userID       string
 		domainID     string
 		connections  []string
@@ -542,6 +543,7 @@ func TestUpdateConnections(t *testing.T) {
 			domainID:     domainID,
 			authorizeRes: &magistrala.AuthorizeRes{Authorized: true},
 			id:           c.ThingID,
+			state:        c.State,
 			connections:  []string{ch.ID},
 			err:          nil,
 		},
@@ -552,6 +554,7 @@ func TestUpdateConnections(t *testing.T) {
 			domainID:     domainID,
 			authorizeRes: &magistrala.AuthorizeRes{Authorized: true},
 			id:           activeConf.ThingID,
+			state:        activeConf.State,
 			connections:  []string{ch.ID},
 			err:          nil,
 		},
@@ -561,7 +564,7 @@ func TestUpdateConnections(t *testing.T) {
 			userID:       validID,
 			domainID:     domainID,
 			authorizeRes: &magistrala.AuthorizeRes{Authorized: false},
-			id:           "",
+			id:           nonExisting.ThingID,
 			connections:  []string{"3"},
 			authorizeErr: svcerr.ErrAuthorization,
 			err:          svcerr.ErrAuthorization,

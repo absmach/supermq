@@ -393,7 +393,7 @@ func TestUpdateCert(t *testing.T) {
 			cert:           "cert",
 			certKey:        "certKey",
 			ca:             "",
-			domainID:       "wrong",
+			domainID:       wrongDomainID.DomainID,
 			expectedConfig: bootstrap.Config{},
 			err:            repoerr.ErrNotFound,
 		},
@@ -738,15 +738,12 @@ func TestConnectThing(t *testing.T) {
 
 	emptyThing := c
 	emptyThing.ThingID = ""
-	emptyThing.ThingKey = ""
-	emptyThing.ExternalID = ""
-	emptyThing.ExternalKey = ""
-	emptyThing.Channels = []bootstrap.Channel{}
 
 	cases := []struct {
 		desc        string
 		domainID    string
 		id          string
+		state       bootstrap.State
 		channels    []bootstrap.Channel
 		connections []string
 		err         error
@@ -755,6 +752,7 @@ func TestConnectThing(t *testing.T) {
 			desc:        "connect disconnected thing",
 			domainID:    c.DomainID,
 			id:          saved,
+			state:       bootstrap.Inactive,
 			channels:    c.Channels,
 			connections: channels,
 			err:         nil,
@@ -763,6 +761,7 @@ func TestConnectThing(t *testing.T) {
 			desc:        "connect already connected thing",
 			domainID:    c.DomainID,
 			id:          connectedThing.ThingID,
+			state:       connectedThing.State,
 			channels:    c.Channels,
 			connections: channels,
 			err:         nil,
@@ -839,14 +838,12 @@ func TestDisconnectThing(t *testing.T) {
 
 	emptyThing := c
 	emptyThing.ThingID = ""
-	emptyThing.ThingKey = ""
-	emptyThing.ExternalID = ""
-	emptyThing.ExternalKey = ""
 
 	cases := []struct {
 		desc        string
 		domainID    string
 		id          string
+		state       bootstrap.State
 		channels    []bootstrap.Channel
 		connections []string
 		err         error
@@ -855,6 +852,7 @@ func TestDisconnectThing(t *testing.T) {
 			desc:        "disconnect connected thing",
 			domainID:    c.DomainID,
 			id:          connectedThing.ThingID,
+			state:       connectedThing.State,
 			channels:    c.Channels,
 			connections: channels,
 			err:         nil,
@@ -863,6 +861,7 @@ func TestDisconnectThing(t *testing.T) {
 			desc:        "disconnect already disconnected thing",
 			domainID:    c.DomainID,
 			id:          saved,
+			state:       bootstrap.Inactive,
 			channels:    c.Channels,
 			connections: channels,
 			err:         nil,
