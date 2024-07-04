@@ -115,7 +115,7 @@ func (sdk mgSDK) ListUserThings(pm PageMetadata, token string) (ThingsPage, erro
 }
 
 func (sdk mgSDK) ThingsByChannel(pm PageMetadata, token string) (ThingsPage, errors.SDKError) {
-	url, err := sdk.withQueryParams(sdk.thingsURL, fmt.Sprintf("%s/members", thingsEndpoint), pm)
+	url, err := sdk.withQueryParams(sdk.thingsURL, thingsEndpoint, pm)
 	if err != nil {
 		return ThingsPage{}, errors.NewSDKError(err)
 	}

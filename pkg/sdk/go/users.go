@@ -270,7 +270,7 @@ func (sdk mgSDK) UpdateUserRole(user User, token string) (User, errors.SDKError)
 }
 
 func (sdk mgSDK) ListChannelUsers(pm PageMetadata, token string) (UsersPage, errors.SDKError) {
-	url, err := sdk.withQueryParams(sdk.usersURL, fmt.Sprintf("%s/%s", usersEndpoint, membersEndpoint), pm)
+	url, err := sdk.withQueryParams(sdk.usersURL, usersEndpoint, pm)
 	if err != nil {
 		return UsersPage{}, errors.NewSDKError(err)
 	}
