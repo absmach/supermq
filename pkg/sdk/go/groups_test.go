@@ -507,7 +507,7 @@ func TestListGroups(t *testing.T) {
 }
 
 func TestListGroupsByUser(t *testing.T) {
-	ts, grepo, auth := setupGroups()
+	ts, gsvc := setupGroups()
 	defer ts.Close()
 
 	var grps []sdk.Group
@@ -521,7 +521,7 @@ func TestListGroupsByUser(t *testing.T) {
 			ID:       generateUUID(t),
 			Name:     fmt.Sprintf("group_%d", i),
 			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
-			Status:   clients.EnabledStatus.String(),
+			Status:   mgclients.EnabledStatus.String(),
 		}
 		grps = append(grps, gr)
 	}
@@ -529,7 +529,7 @@ func TestListGroupsByUser(t *testing.T) {
 	cases := []struct {
 		desc     string
 		token    string
-		status   clients.Status
+		status   mgclients.Status
 		total    uint64
 		offset   uint64
 		limit    uint64
@@ -538,7 +538,8 @@ func TestListGroupsByUser(t *testing.T) {
 		userID   string
 		metadata sdk.Metadata
 		err      errors.SDKError
-		response []sdk.Group
+		svcRes   groups.Page
+		response sdk.GroupsPage
 	}{
 		{
 			desc:     "get a list of groups with valid user id",
@@ -548,7 +549,13 @@ func TestListGroupsByUser(t *testing.T) {
 			total:    total,
 			userID:   validID,
 			err:      nil,
-			response: grps[offset:limit],
+			response: sdk.GroupsPage(sdk.GroupsPage{Groups: grps[offset:limit], PageRes: sdk.PageRes{Total: 5, Offset: 0x0, Limit: 0x0}}),
+			svcRes: groups.Page{
+				PageMeta: groups.PageMeta{
+					Total: uint64(len(grps[offset:limit])),
+				},
+				Groups: convertGroups(grps[offset:limit]),
+			},
 		},
 		{
 			desc:     "get a list of groups with invalid token",
@@ -557,7 +564,7 @@ func TestListGroupsByUser(t *testing.T) {
 			limit:    limit,
 			userID:   validID,
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
-			response: nil,
+			response: sdk.GroupsPage(sdk.GroupsPage{Groups: []sdk.Group(nil), PageRes: sdk.PageRes{Total: 0x0, Offset: 0x0, Limit: 0x0}}),
 		},
 		{
 			desc:     "get a list of groups with empty token",
@@ -566,139 +573,46 @@ func TestListGroupsByUser(t *testing.T) {
 			limit:    limit,
 			userID:   validID,
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerToken), http.StatusUnauthorized),
-			response: nil,
+			response: sdk.GroupsPage(sdk.GroupsPage{Groups: []sdk.Group(nil), PageRes: sdk.PageRes{Total: 0x0, Offset: 0x0, Limit: 0x0}}),
 		},
 		{
 			desc:     "get a list of groups with invalid user id",
 			token:    token,
 			offset:   offset,
-			limit:    0,
+			limit:    limit,
 			userID:   "invalid",
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
-			response: nil,
+			response: sdk.GroupsPage(sdk.GroupsPage{Groups: []sdk.Group(nil), PageRes: sdk.PageRes{Total: 0x0, Offset: 0x0, Limit: 0x0}}),
 		},
 	}
 
 	for _, tc := range cases {
-		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID, DomainId: testsutil.GenerateUUID(t)}, nil)
-		repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-		repoCall2 := auth.On("ListAllObjects", mock.Anything, mock.Anything).Return(&magistrala.ListObjectsRes{Policies: toIDs(tc.response)}, nil)
-		repoCall3 := grepo.On("RetrieveByIDs", mock.Anything, mock.Anything, mock.Anything).Return(mggroups.Page{Groups: convertGroups(tc.response)}, tc.err)
-		pm := sdk.PageMetadata{
-			Offset: tc.offset,
-			Limit:  tc.limit,
-			Level:  uint64(tc.level),
-			User:   tc.userID,
-		}
-		page, err := mgsdk.ListUserGroups(pm, tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
-		assert.Equal(t, len(tc.response), len(page.Groups), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
-		if tc.err == nil {
-			ok := repoCall3.Parent.AssertCalled(t, "RetrieveByIDs", mock.Anything, mock.Anything, mock.Anything)
-			assert.True(t, ok, fmt.Sprintf("RetrieveByIDs was not called on %s", tc.desc))
-		}
-		repoCall.Unset()
-		repoCall1.Unset()
-		repoCall2.Unset()
-		repoCall3.Unset()
-	}
-}
-
-func TestListGroupsByUser(t *testing.T) {
-	ts, grepo, auth := setupGroups()
-	defer ts.Close()
-
-	var grps []sdk.Group
-	conf := sdk.Config{
-		UsersURL: ts.URL,
-	}
-	mgsdk := sdk.NewSDK(conf)
-
-	for i := 10; i < 100; i++ {
-		gr := sdk.Group{
-			ID:       generateUUID(t),
-			Name:     fmt.Sprintf("group_%d", i),
-			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
-			Status:   clients.EnabledStatus.String(),
-		}
-		grps = append(grps, gr)
-	}
-
-	cases := []struct {
-		desc     string
-		token    string
-		status   clients.Status
-		total    uint64
-		offset   uint64
-		limit    uint64
-		level    int
-		name     string
-		userID   string
-		metadata sdk.Metadata
-		err      errors.SDKError
-		response []sdk.Group
-	}{
-		{
-			desc:     "get a list of groups with valid user id",
-			token:    token,
-			limit:    limit,
-			offset:   offset,
-			total:    total,
-			userID:   validID,
-			err:      nil,
-			response: grps[offset:limit],
-		},
-		{
-			desc:     "get a list of groups with invalid token",
-			token:    invalidToken,
-			offset:   offset,
-			limit:    limit,
-			userID:   validID,
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
-			response: nil,
-		},
-		{
-			desc:     "get a list of groups with empty token",
-			token:    "",
-			offset:   offset,
-			limit:    limit,
-			userID:   validID,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerToken), http.StatusUnauthorized),
-			response: nil,
-		},
-		{
-			desc:     "get a list of groups with invalid user id",
-			token:    token,
-			offset:   offset,
-			limit:    0,
-			userID:   "invalid",
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
-			response: nil,
-		},
-	}
-
-	for _, tc := range cases {
-		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID, DomainId: testsutil.GenerateUUID(t)}, nil)
-		repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-		repoCall2 := auth.On("ListAllObjects", mock.Anything, mock.Anything).Return(&magistrala.ListObjectsRes{Policies: toIDs(tc.response)}, nil)
-		repoCall3 := grepo.On("RetrieveByIDs", mock.Anything, mock.Anything, mock.Anything).Return(mggroups.Page{Groups: convertGroups(tc.response)}, tc.err)
-		pm := sdk.PageMetadata{
-			Offset: tc.offset,
-			Limit:  tc.limit,
-			Level:  uint64(tc.level),
-			User:   tc.userID,
-		}
-		page, err := mgsdk.ListUserGroups(pm, tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
-		assert.Equal(t, len(tc.response), len(page.Groups), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
-		if tc.err == nil {
-			ok := repoCall3.Parent.AssertCalled(t, "RetrieveByIDs", mock.Anything, mock.Anything, mock.Anything)
-			assert.True(t, ok, fmt.Sprintf("RetrieveByIDs was not called on %s", tc.desc))
-		}
-		repoCall.Unset()
-		repoCall1.Unset()
-		repoCall2.Unset()
-		repoCall3.Unset()
+		t.Run(tc.desc, func(t *testing.T) {
+			pm := sdk.PageMetadata{
+				Offset: tc.offset,
+				Limit:  tc.limit,
+				Level:  uint64(tc.level),
+				User:   tc.userID,
+			}
+			svcReq := groups.Page{
+				PageMeta: groups.PageMeta{
+					Offset: tc.offset,
+					Limit:  tc.limit,
+				},
+				Level:      uint64(tc.level),
+				Permission: auth.ViewPermission,
+				Direction:  -1,
+			}
+			svcCall := gsvc.On("ListGroups", mock.Anything, tc.token, auth.UsersKind, tc.userID, svcReq).Return(tc.svcRes, tc.err)
+			resp, err := mgsdk.ListUserGroups(pm, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "ListGroups", mock.Anything, tc.token, auth.UsersKind, tc.userID, svcReq)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+		})
 	}
 }
 
@@ -959,7 +873,7 @@ func TestListParentGroups(t *testing.T) {
 }
 
 func TestListGroupsByChannel(t *testing.T) {
-	ts, grepo, auth := setupGroups()
+	ts, gsvc := setupGroups()
 	defer ts.Close()
 
 	var grps []sdk.Group
@@ -973,7 +887,7 @@ func TestListGroupsByChannel(t *testing.T) {
 			ID:       generateUUID(t),
 			Name:     fmt.Sprintf("group_%d", i),
 			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
-			Status:   clients.EnabledStatus.String(),
+			Status:   mgclients.EnabledStatus.String(),
 		}
 		grps = append(grps, gr)
 	}
@@ -981,7 +895,7 @@ func TestListGroupsByChannel(t *testing.T) {
 	cases := []struct {
 		desc      string
 		token     string
-		status    clients.Status
+		status    mgclients.Status
 		total     uint64
 		offset    uint64
 		limit     uint64
@@ -990,7 +904,8 @@ func TestListGroupsByChannel(t *testing.T) {
 		channelID string
 		metadata  sdk.Metadata
 		err       errors.SDKError
-		response  []sdk.Group
+		response  sdk.GroupsPage
+		svcRes    groups.Page
 	}{
 		{
 			desc:      "get a list of groups with valid user id",
@@ -1000,7 +915,13 @@ func TestListGroupsByChannel(t *testing.T) {
 			total:     total,
 			channelID: validID,
 			err:       nil,
-			response:  grps[offset:limit],
+			response:  sdk.GroupsPage(sdk.GroupsPage{Groups: grps[offset:limit], PageRes: sdk.PageRes{Total: 5, Offset: 0x0, Limit: 0x0}}),
+			svcRes: groups.Page{
+				PageMeta: groups.PageMeta{
+					Total: uint64(len(grps[offset:limit])),
+				},
+				Groups: convertGroups(grps[offset:limit]),
+			},
 		},
 		{
 			desc:      "get a list of groups with invalid token",
@@ -1009,7 +930,7 @@ func TestListGroupsByChannel(t *testing.T) {
 			limit:     limit,
 			channelID: validID,
 			err:       errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
-			response:  nil,
+			response:  sdk.GroupsPage(sdk.GroupsPage{Groups: []sdk.Group(nil), PageRes: sdk.PageRes{Total: 0x0, Offset: 0x0, Limit: 0x0}}),
 		},
 		{
 			desc:      "get a list of groups with empty token",
@@ -1018,139 +939,45 @@ func TestListGroupsByChannel(t *testing.T) {
 			limit:     limit,
 			channelID: validID,
 			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerToken), http.StatusUnauthorized),
-			response:  nil,
+			response:  sdk.GroupsPage(sdk.GroupsPage{Groups: []sdk.Group(nil), PageRes: sdk.PageRes{Total: 0x0, Offset: 0x0, Limit: 0x0}}),
 		},
 		{
 			desc:      "get a list of groups with invalid user id",
 			token:     token,
+			limit:     limit,
 			channelID: invalidIdentity,
 			err:       errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
-			response:  nil,
+			response:  sdk.GroupsPage(sdk.GroupsPage{Groups: []sdk.Group(nil), PageRes: sdk.PageRes{Total: 0x0, Offset: 0x0, Limit: 0x0}}),
 		},
 	}
 
 	for _, tc := range cases {
-		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID, DomainId: testsutil.GenerateUUID(t)}, nil)
-		repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-		repoCall2 := auth.On("ListAllSubjects", mock.Anything, mock.Anything).Return(&magistrala.ListSubjectsRes{Policies: toIDs(tc.response)}, nil)
-		repoCall3 := auth.On("ListAllObjects", mock.Anything, mock.Anything).Return(&magistrala.ListObjectsRes{Policies: toIDs(tc.response)}, nil)
-		repoCall4 := grepo.On("RetrieveByIDs", mock.Anything, mock.Anything, mock.Anything).Return(mggroups.Page{Groups: convertGroups(tc.response)}, tc.err)
-		pm := sdk.PageMetadata{
-			Offset:  tc.offset,
-			Limit:   tc.limit,
-			Level:   uint64(tc.level),
-			Channel: tc.channelID,
-		}
-		page, err := mgsdk.ListChannelUserGroups(pm, tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
-		assert.Equal(t, len(tc.response), len(page.Groups), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
-		if tc.err == nil {
-			ok := repoCall4.Parent.AssertCalled(t, "RetrieveByIDs", mock.Anything, mock.Anything, mock.Anything)
-			assert.True(t, ok, fmt.Sprintf("RetrieveByIDs was not called on %s", tc.desc))
-		}
-		repoCall.Unset()
-		repoCall1.Unset()
-		repoCall2.Unset()
-		repoCall3.Unset()
-		repoCall4.Unset()
-	}
-}
-
-func TestListGroupsByChannel(t *testing.T) {
-	ts, grepo, auth := setupGroups()
-	defer ts.Close()
-
-	var grps []sdk.Group
-	conf := sdk.Config{
-		UsersURL: ts.URL,
-	}
-	mgsdk := sdk.NewSDK(conf)
-
-	for i := 10; i < 100; i++ {
-		gr := sdk.Group{
-			ID:       generateUUID(t),
-			Name:     fmt.Sprintf("group_%d", i),
-			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
-			Status:   clients.EnabledStatus.String(),
-		}
-		grps = append(grps, gr)
-	}
-
-	cases := []struct {
-		desc      string
-		token     string
-		status    clients.Status
-		total     uint64
-		offset    uint64
-		limit     uint64
-		level     int
-		name      string
-		channelID string
-		metadata  sdk.Metadata
-		err       errors.SDKError
-		response  []sdk.Group
-	}{
-		{
-			desc:      "get a list of groups with valid user id",
-			token:     token,
-			limit:     limit,
-			offset:    offset,
-			total:     total,
-			channelID: validID,
-			err:       nil,
-			response:  grps[offset:limit],
-		},
-		{
-			desc:      "get a list of groups with invalid token",
-			token:     invalidToken,
-			offset:    offset,
-			limit:     limit,
-			channelID: validID,
-			err:       errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
-			response:  nil,
-		},
-		{
-			desc:      "get a list of groups with empty token",
-			token:     "",
-			offset:    offset,
-			limit:     limit,
-			channelID: validID,
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerToken), http.StatusUnauthorized),
-			response:  nil,
-		},
-		{
-			desc:      "get a list of groups with invalid user id",
-			token:     token,
-			channelID: invalidIdentity,
-			err:       errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
-			response:  nil,
-		},
-	}
-
-	for _, tc := range cases {
-		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID, DomainId: testsutil.GenerateUUID(t)}, nil)
-		repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-		repoCall2 := auth.On("ListAllSubjects", mock.Anything, mock.Anything).Return(&magistrala.ListSubjectsRes{Policies: toIDs(tc.response)}, nil)
-		repoCall3 := auth.On("ListAllObjects", mock.Anything, mock.Anything).Return(&magistrala.ListObjectsRes{Policies: toIDs(tc.response)}, nil)
-		repoCall4 := grepo.On("RetrieveByIDs", mock.Anything, mock.Anything, mock.Anything).Return(mggroups.Page{Groups: convertGroups(tc.response)}, tc.err)
-		pm := sdk.PageMetadata{
-			Offset:  tc.offset,
-			Limit:   tc.limit,
-			Level:   uint64(tc.level),
-			Channel: tc.channelID,
-		}
-		page, err := mgsdk.ListChannelUserGroups(pm, tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
-		assert.Equal(t, len(tc.response), len(page.Groups), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
-		if tc.err == nil {
-			ok := repoCall4.Parent.AssertCalled(t, "RetrieveByIDs", mock.Anything, mock.Anything, mock.Anything)
-			assert.True(t, ok, fmt.Sprintf("RetrieveByIDs was not called on %s", tc.desc))
-		}
-		repoCall.Unset()
-		repoCall1.Unset()
-		repoCall2.Unset()
-		repoCall3.Unset()
-		repoCall4.Unset()
+		t.Run(tc.desc, func(t *testing.T) {
+			svcReq := groups.Page{
+				PageMeta: groups.PageMeta{
+					Offset: tc.offset,
+					Limit:  tc.limit,
+				},
+				Level:      uint64(tc.level),
+				Permission: auth.ViewPermission,
+				Direction:  -1,
+			}
+			svcCall := gsvc.On("ListGroups", mock.Anything, tc.token, auth.UsersKind, tc.channelID, svcReq).Return(tc.svcRes, tc.err)
+			pm := sdk.PageMetadata{
+				Offset:  tc.offset,
+				Limit:   tc.limit,
+				Level:   uint64(tc.level),
+				Channel: tc.channelID,
+			}
+			resp, err := mgsdk.ListChannelUserGroups(pm, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "ListGroups", mock.Anything, tc.token, auth.UsersKind, tc.channelID, svcReq)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+		})
 	}
 }
 
