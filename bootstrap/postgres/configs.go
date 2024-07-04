@@ -150,7 +150,7 @@ func (cr configRepository) RetrieveByID(ctx context.Context, domainID, id string
 }
 
 func (cr configRepository) RetrieveAll(ctx context.Context, domainID string, thingIDs []string, filter bootstrap.Filter, offset, limit uint64) bootstrap.ConfigsPage {
-	search, params := cr.buildRetrieveQueryParams(domainID, thingIDs, filter)
+	search, params := buildRetrieveQueryParams(domainID, thingIDs, filter)
 	n := len(params)
 
 	q := `SELECT magistrala_thing, magistrala_key, external_id, external_key, name, content, state
@@ -482,7 +482,7 @@ func (cr configRepository) DisconnectThing(ctx context.Context, channelID, thing
 	return nil
 }
 
-func (cr configRepository) buildRetrieveQueryParams(domainID string, thingIDs []string, filter bootstrap.Filter) (string, []interface{}) {
+func buildRetrieveQueryParams(domainID string, thingIDs []string, filter bootstrap.Filter) (string, []interface{}) {
 	params := []interface{}{}
 	queries := []string{}
 
@@ -506,9 +506,10 @@ func (cr configRepository) buildRetrieveQueryParams(domainID string, thingIDs []
 		counter++
 	}
 
-	f := strings.Join(queries, " AND ")
-
-	return "WHERE " + f, params
+	if len(queries) > 0 {
+		return "WHERE " + strings.Join(queries, " AND "), params
+	}
+	return "", params
 }
 
 func (cr configRepository) rollback(content string, defErr error, tx *sqlx.Tx) error {
