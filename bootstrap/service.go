@@ -165,7 +165,7 @@ func (bs bootstrapService) Add(ctx context.Context, token string, cfg Config) (C
 		return Config{}, errors.Wrap(errThingNotFound, err)
 	}
 
-	for _, channel := range cfg.Channels {
+	for _, channel := range existing {
 		if channel.DomainID != mgThing.DomainID {
 			return Config{}, errors.Wrap(svcerr.ErrMalformedEntity, errNotInSameDomain)
 		}
