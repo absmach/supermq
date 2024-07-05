@@ -154,21 +154,21 @@ func (bs bootstrapService) Add(ctx context.Context, token string, cfg Config) (C
 		return Config{}, errors.Wrap(errCheckChannels, err)
 	}
 
+	cfg.Channels, err = bs.connectionChannels(toConnect, bs.toIDList(existing), token)
+	if err != nil {
+		return Config{}, errors.Wrap(errConnectionChannels, err)
+	}
+
 	id := cfg.ThingID
 	mgThing, err := bs.thing(id, token)
 	if err != nil {
 		return Config{}, errors.Wrap(errThingNotFound, err)
 	}
 
-	for _, channel := range existing {
+	for _, channel := range cfg.Channels {
 		if channel.DomainID != mgThing.DomainID {
 			return Config{}, errors.Wrap(svcerr.ErrMalformedEntity, errNotInSameDomain)
 		}
-	}
-
-	cfg.Channels, err = bs.connectionChannels(toConnect, bs.toIDList(existing), token)
-	if err != nil {
-		return Config{}, errors.Wrap(errConnectionChannels, err)
 	}
 
 	cfg.ThingID = mgThing.ID
