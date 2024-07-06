@@ -33,6 +33,7 @@ var user = mgsdk.User{
 var (
 	validToken   = "valid"
 	invalidToken = ""
+	invalidID    = "invalidID"
 	extraArg     = "extra-arg"
 )
 
@@ -171,6 +172,18 @@ func TestGetUsersCmd(t *testing.T) {
 			logType: entityLog,
 		},
 		{
+			desc: "get user with invalid id",
+			args: []string{
+				getCommand,
+				invalidID,
+				validToken,
+			},
+			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
+			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest).Error()),
+			user:          mgsdk.User{},
+			logType:       errLog,
+		},
+		{
 			desc: "get users successfully with offset and limit",
 			args: []string{
 				getCommand,
@@ -212,6 +225,18 @@ func TestGetUsersCmd(t *testing.T) {
 			},
 			logType: usageLog,
 		},
+		{
+			desc: "get user with failed get operation",
+			args: []string{
+				getCommand,
+				userID,
+				validToken,
+			},
+			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusInternalServerError),
+			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusInternalServerError).Error()),
+			user:          mgsdk.User{},
+			logType:       errLog,
+		},
 	}
 
 	for _, tc := range cases {
@@ -219,6 +244,7 @@ func TestGetUsersCmd(t *testing.T) {
 		sdkCall1 := sdkMock.On("User", tc.args[1], tc.args[2]).Return(tc.user, tc.sdkerr)
 
 		out = executeCommand(t, rootCmd, tc.args...)
+		fmt.Println("out: ", out)
 
 		if tc.logType == entityLog {
 			switch {
@@ -935,6 +961,90 @@ func TestDisableUserCmd(t *testing.T) {
 				t.Fatalf("json.Unmarshal failed: %v", err)
 			}
 			assert.Equal(t, tc.user, usr, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.user, usr))
+		}
+
+		sdkCall.Unset()
+	}
+}
+
+func TestDeleteUserCmd(t *testing.T) {
+	sdkMock := new(sdkmocks.SDK)
+	cli.SetSDK(sdkMock)
+	deleteCommand := "delete"
+	usersCmd := cli.NewUsersCmd()
+	rootCmd := setFlags(usersCmd)
+
+	cases := []struct {
+		desc          string
+		args          []string
+		sdkerr        errors.SDKError
+		errLogMessage string
+		logType       outputLog
+	}{
+		{
+			desc: "delete user successfully",
+			args: []string{
+				deleteCommand,
+				user.ID,
+				validToken,
+			},
+			logType: okLog,
+		},
+		{
+			desc: "delete user with invalid token",
+			args: []string{
+				deleteCommand,
+				user.ID,
+				invalidToken,
+			},
+			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden).Error()),
+			logType:       errLog,
+		},
+		{
+			desc: "delete user with invalid user ID",
+			args: []string{
+				deleteCommand,
+				invalidID,
+				validToken,
+			},
+			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden).Error()),
+			logType:       errLog,
+		},
+		{
+			desc: "delete user with failed to delete",
+			args: []string{
+				deleteCommand,
+				user.ID,
+				validToken,
+			},
+			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity),
+			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity).Error()),
+			logType:       errLog,
+		},
+		{
+			desc: "delete user with invalid args",
+			args: []string{
+				deleteCommand,
+				user.ID,
+				extraArg,
+			},
+			logType: usageLog,
+		},
+	}
+
+	for _, tc := range cases {
+		sdkCall := sdkMock.On("DeleteUser", mock.Anything, mock.Anything).Return(tc.sdkerr)
+		out := executeCommand(t, rootCmd, tc.args...)
+
+		switch tc.logType {
+		case entityLog:
+			assert.True(t, strings.Contains(out, "OK"), fmt.Sprintf("%s unexpected response: expected success message, got: %v", tc.desc, out))
+		case errLog:
+			assert.Equal(t, tc.errLogMessage, out, fmt.Sprintf("%s unexpected error response: expected %s got errLogMessage:%s", tc.desc, tc.errLogMessage, out))
+		case usageLog:
+			assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
 		}
 
 		sdkCall.Unset()
