@@ -20,11 +20,13 @@ import (
 )
 
 const (
-	chanID   = "1"
-	id       = "1"
-	thingKey = "thing_key"
-	subTopic = "subtopic"
-	protocol = "ws"
+	chanID     = "1"
+	invalidID  = "invalidID"
+	invalidKey = "invalidKey"
+	id         = "1"
+	thingKey   = "thing_key"
+	subTopic   = "subtopic"
+	protocol   = "ws"
 )
 
 var msg = messaging.Message{
@@ -77,8 +79,8 @@ func TestSubscribe(t *testing.T) {
 		},
 		{
 			desc:     "subscribe to channel with invalid chanID and invalid thingKey",
-			thingKey: authmocks.InvalidValue,
-			chanID:   authmocks.InvalidValue,
+			thingKey: invalidKey,
+			chanID:   invalidID,
 			subtopic: subTopic,
 			err:      svcerr.ErrAuthorization,
 		},

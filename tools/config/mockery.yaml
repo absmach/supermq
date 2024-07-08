@@ -1,15 +1,15 @@
 # Copyright (c) Abstract Machines
 # SPDX-License-Identifier: Apache-2.0
 
-With-expecter: true
+with-expecter: true
 filename: "{{.InterfaceName}}.go"
 outpkg: "mocks"
-boilerplate-file: "./boilerplate.txt"
+boilerplate-file: "./tools/config/boilerplate.txt"
 packages:
   github.com/absmach/magistrala:
     interfaces:
-      AuthzServiceClient:
-        mockname: "AuthClient"
+      AuthServiceClient:
         config:
-          dir: "{{.InterfaceDir}}/auth/mocks"
+          dir: "./auth/mocks"
+          mockname: "AuthClient"
           filename: "auth_client.go"
