@@ -49,7 +49,7 @@ func Migration() *migrate.MemoryMigrationSource {
 				// Removing unique constraint on user name
 				Id: "clients_03",
 				Up: []string{
-					`ALTER TABLE clients ALTER COLUMN name DROP UNIQUE`,
+					`ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_name_key`,
 				},
 				Down: []string{},
 			},
