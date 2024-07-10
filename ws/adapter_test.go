@@ -82,7 +82,7 @@ func TestSubscribe(t *testing.T) {
 			thingKey: invalidKey,
 			chanID:   invalidID,
 			subtopic: subTopic,
-			err:      svcerr.ErrAuthorization,
+			err:      ws.ErrFailedSubscription,
 		},
 		{
 			desc:     "subscribe to channel with empty channel",
@@ -111,7 +111,7 @@ func TestSubscribe(t *testing.T) {
 		thingID := testsutil.GenerateUUID(t)
 		subConfig := messaging.SubscriberConfig{
 			ID:      thingID,
-			Topic:   "channels." + chanID + "." + subTopic,
+			Topic:   "channels." + tc.chanID + "." + subTopic,
 			Handler: c,
 		}
 		repocall := pubsub.On("Subscribe", mock.Anything, subConfig).Return(tc.err)
