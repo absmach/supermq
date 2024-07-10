@@ -20,7 +20,6 @@ on:
       - "provision/api/**"
       - "readers/api/**"
       - "things/api/**"
-      - "twins/api/**"
       - "users/api/**"
 
 env:
@@ -36,11 +35,7 @@ env:
   AUTH_URL: http://localhost:8189
   BOOTSTRAP_URL: http://localhost:9013
   CERTS_URL: http://localhost:9019
-  TWINS_URL: http://localhost:9018
   PROVISION_URL: http://localhost:9016
-  CASSANDRA_READER_URL: http://localhost:9003
-  INFLUX_READER_URL: http://localhost:9005
-  MONGO_READER_URL: http://localhost:9007
   POSTGRES_READER_URL: http://localhost:9009
   TIMESCALE_READER_URL: http://localhost:9011
   SMPP_NOTIFIER_URL: http://localhost:9014
@@ -130,11 +125,6 @@ jobs:
               - "api/openapi/things.yml"
               - "things/api/**"
 
-            twins:
-              - ".github/workflows/api-tests.yml"
-              - "api/openapi/twins.yml"
-              - "twins/api/**"
-
             users:
               - ".github/workflows/api-tests.yml"
               - "api/openapi/users.yml"
@@ -221,16 +211,6 @@ jobs:
           report: false
           args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
-      - name: Run Twins API tests
-        if: steps.changes.outputs.twins == 'true'
-        uses: schemathesis/action@v1
-        with:
-          schema: api/openapi/twins.yml
-          base-url: ${{ env.TWINS_URL }}
-          checks: all
-          report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
-
       - name: Run Provision API tests
         if: steps.changes.outputs.provision == 'true'
         uses: schemathesis/action@v1
@@ -246,36 +226,6 @@ jobs:
         run: |
           make cli
           ./build/cli provision test
-
-      - name: Run Cassandra Reader API tests
-        if: steps.changes.outputs.readers == 'true'
-        uses: schemathesis/action@v1
-        with:
-          schema: api/openapi/readers.yml
-          base-url: ${{ env.CASSANDRA_READER_URL }}
-          checks: all
-          report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
-
-      - name: Run Influx Reader API tests
-        if: steps.changes.outputs.readers == 'true'
-        uses: schemathesis/action@v1
-        with:
-          schema: api/openapi/readers.yml
-          base-url: ${{ env.INFLUX_READER_URL }}
-          checks: all
-          report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
-
-      - name: Run Mongo Reader API tests
-        if: steps.changes.outputs.readers == 'true'
-        uses: schemathesis/action@v1
-        with:
-          schema: api/openapi/readers.yml
-          base-url: ${{ env.MONGO_READER_URL }}
-          checks: all
-          report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
       - name: Run Postgres Reader API tests
         if: steps.changes.outputs.readers == 'true'

@@ -22,12 +22,10 @@ For more details, check out the [official documentation][docs].
 - Device management and provisioning (Zero Touch provisioning)
 - Mutual TLS Authentication (mTLS) using X.509 Certificates
 - Fine-grained access control (policies, ABAC/RBAC)
-- Message persistence (Cassandra, InfluxDB, MongoDB and PostgresSQL)
+- Message persistence (Timescale and PostgresSQL - see [contrib repository](https://www.github.com/absmach/mg-contrib) for more)
 - Platform logging and instrumentation support (Prometheus and OpenTelemetry)
 - Event sourcing
 - Container-based deployment using [Docker][docker] and [Kubernetes][kubernetes]
-- [LoRaWAN][lora] network integration
-- [OPC UA][opcua] integration
 - Edge [Agent][agent] and [Export][export] services for remote IoT gateway management and edge computing
 - SDK
 - CLI
@@ -167,8 +165,6 @@ By utilizing Magistrala, you actively contribute to its improvement. Together, w
 [cov-url]: https://codecov.io/gh/absmach/magistrala
 [license]: https://img.shields.io/badge/license-Apache%20v2.0-blue.svg
 [twitter]: https://twitter.com/absmach
-[lora]: https://lora-alliance.org/
-[opcua]: https://opcfoundation.org/about/opc-technologies/opc-ua/
 [agent]: https://github.com/absmach/agent
 [export]: https://github.com/absmach/export
 [kubernetes]: https://kubernetes.io/
