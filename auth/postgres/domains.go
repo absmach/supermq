@@ -378,11 +378,7 @@ func (repo domainRepo) DeletePolicies(ctx context.Context, pcs ...auth.Policy) (
 			AND subject_relation = :subject_relation
 			AND object_type = :object_type
 			AND object_id = :object_id
-		`
-		if pc.Relation != "" {
-			q = fmt.Sprintf("%s AND relation = :relation", q)
-		}
-		q = fmt.Sprintf("%s;", q)
+		;`
 
 		dbpc := toDBPolicy(pc)
 		row, err := tx.NamedQuery(q, dbpc)
@@ -392,6 +388,16 @@ func (repo domainRepo) DeletePolicies(ctx context.Context, pcs ...auth.Policy) (
 		defer row.Close()
 	}
 	return tx.Commit()
+}
+
+func (repo domainRepo) DeleteUserPolicies(ctx context.Context, id string) (err error) {
+	q := "DELETE FROM policies WHERE subject_id = $1;"
+
+	if _, err := repo.db.ExecContext(ctx, q, id); err != nil {
+		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
+	}
+
+	return nil
 }
 
 func (repo domainRepo) processRows(rows *sqlx.Rows) ([]auth.Domain, error) {

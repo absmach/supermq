@@ -66,6 +66,9 @@ var (
 	// ErrMalformedPolicyAct indicates missing policies action.
 	ErrMalformedPolicyAct = errors.New("malformed policy action")
 
+	// ErrMissingPolicyEntityType indicates missing policies entity type.
+	ErrMissingPolicyEntityType = errors.New("missing policy entity type")
+
 	// ErrMalformedPolicyPer indicates missing policies relation.
 	ErrMalformedPolicyPer = errors.New("malformed policy permission")
 
@@ -132,6 +135,9 @@ var (
 	// ErrMissingName indicates missing identity name.
 	ErrMissingName = errors.New("missing identity name")
 
+	// ErrMissingName indicates missing alias.
+	ErrMissingAlias = errors.New("missing alias")
+
 	// ErrInvalidLevel indicates an invalid group level.
 	ErrInvalidLevel = errors.New("invalid group level (should be between 0 and 5)")
 
@@ -167,4 +173,13 @@ var (
 
 	// ErrInvalidEntityTypeID indicates invalid entity type and ID .
 	ErrInvalidEntityTypeID = errors.New("invalid entity type and entity ID")
+
+	// ErrMissingEntityType indicates missing entity type.
+	ErrMissingEntityType = errors.New("missing entity type")
+
+	// ErrInvalidEntityType indicates invalid entity type.
+	ErrInvalidEntityType = errors.New("invalid entity type")
+
+	// ErrInvalidTimeFormat indicates invalid time format i.e not unix time.
+	ErrInvalidTimeFormat = errors.New("invalid time format use unix time")
 )

@@ -153,21 +153,32 @@ func (pa *policyAgent) DeletePolicies(ctx context.Context, prs []auth.PolicyReq)
 	return nil
 }
 
-func (pa *policyAgent) DeletePolicy(ctx context.Context, pr auth.PolicyReq) error {
+func (pa *policyAgent) DeletePolicyFilter(ctx context.Context, pr auth.PolicyReq) error {
 	req := &v1.DeleteRelationshipsRequest{
 		RelationshipFilter: &v1.RelationshipFilter{
 			ResourceType:       pr.ObjectType,
 			OptionalResourceId: pr.Object,
-			OptionalRelation:   pr.Relation,
-			OptionalSubjectFilter: &v1.SubjectFilter{
-				OptionalSubjectId: pr.Subject,
-				SubjectType:       pr.SubjectType,
-				OptionalRelation: &v1.SubjectFilter_RelationFilter{
-					Relation: pr.SubjectRelation,
-				},
-			},
 		},
 	}
+
+	if pr.Relation != "" {
+		req.RelationshipFilter.OptionalRelation = pr.Relation
+	}
+
+	if pr.SubjectType != "" {
+		req.RelationshipFilter.OptionalSubjectFilter = &v1.SubjectFilter{
+			SubjectType: pr.SubjectType,
+		}
+		if pr.Subject != "" {
+			req.RelationshipFilter.OptionalSubjectFilter.OptionalSubjectId = pr.Subject
+		}
+		if pr.SubjectRelation != "" {
+			req.RelationshipFilter.OptionalSubjectFilter.OptionalRelation = &v1.SubjectFilter_RelationFilter{
+				Relation: pr.SubjectRelation,
+			}
+		}
+	}
+
 	if _, err := pa.permissionClient.DeleteRelationships(ctx, req); err != nil {
 		return errors.Wrap(errRemovePolicies, handleSpicedbError(err))
 	}
@@ -450,6 +461,7 @@ func (pa *policyAgent) addPolicyPreCondition(ctx context.Context, pr auth.Policy
 	// 2.) user -> thing
 	// 3.) group -> group (both for adding parent_group and channels)
 	// 4.) group (channel) -> thing
+	// 5.) user -> domain
 
 	switch {
 	// 1.) user -> group (both user groups and channels)
@@ -479,6 +491,12 @@ func (pa *policyAgent) addPolicyPreCondition(ctx context.Context, pr auth.Policy
 	// - THING with DOMAIN RELATION to DOMAIN
 	case pr.SubjectType == auth.GroupType && pr.ObjectType == auth.ThingType:
 		return channelThingPreCondition(pr)
+
+	// 5.) user -> domain
+	// Checks :
+	// - User doesn't have any relation with domain
+	case pr.SubjectType == auth.UserType && pr.ObjectType == auth.DomainType:
+		return pa.userDomainPreConditions(ctx, pr)
 
 	// Check thing and group not belongs to other domain before adding to domain
 	case pr.SubjectType == auth.DomainType && pr.Relation == auth.DomainRelation && (pr.ObjectType == auth.ThingType || pr.ObjectType == auth.GroupType):
@@ -798,4 +816,33 @@ func convertGRPCStatusToError(st *status.Status) error {
 	default:
 		return errors.Wrap(fmt.Errorf("unexpected gRPC status: %s (status code:%v)", st.Code().String(), st.Code()), errors.New(st.Message()))
 	}
+}
+
+func (pa *policyAgent) userDomainPreConditions(ctx context.Context, pr auth.PolicyReq) ([]*v1.Precondition, error) {
+	var preconds []*v1.Precondition
+
+	if err := pa.CheckPolicy(ctx, auth.PolicyReq{
+		Subject:     pr.Subject,
+		SubjectType: pr.SubjectType,
+		Permission:  auth.AdminPermission,
+		Object:      auth.MagistralaObject,
+		ObjectType:  auth.PlatformType,
+	}); err == nil {
+		return preconds, fmt.Errorf("use already exists in domain")
+	}
+
+	// user should not have any relation with domain.
+	preconds = append(preconds, &v1.Precondition{
+		Operation: v1.Precondition_OPERATION_MUST_NOT_MATCH,
+		Filter: &v1.RelationshipFilter{
+			ResourceType:       auth.DomainType,
+			OptionalResourceId: pr.Object,
+			OptionalSubjectFilter: &v1.SubjectFilter{
+				SubjectType:       auth.UserType,
+				OptionalSubjectId: pr.Subject,
+			},
+		},
+	})
+
+	return preconds, nil
 }

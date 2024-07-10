@@ -26,7 +26,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.57.2
+          version: v1.59.1
 
       - name: Build all Binaries
         run: |
@@ -115,6 +115,14 @@ jobs:
               - "pkg/ulid/**"
               - "pkg/uuid/**"
               - "pkg/messaging/**"
+
+            journal:
+              - "journal/**"
+              - "cmd/journal/**"
+              - "auth.pb.go"
+              - "auth_grpc.pb.go"
+              - "auth/**"
+              - "pkg/events/**"
 
             http:
               - "http/**"
@@ -267,6 +275,11 @@ jobs:
       - name: Create coverage directory
         run: |
           mkdir coverage
+
+      - name: Run Journal tests
+        if: steps.changes.outputs.journal == 'true' || steps.changes.outputs.workflow == 'true'
+        run: |
+          go test --race -v -count=1 -coverprofile=coverage/journal.out ./journal/...
 
       - name: Run auth tests
         if: steps.changes.outputs.auth == 'true' || steps.changes.outputs.workflow == 'true'

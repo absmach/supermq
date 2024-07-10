@@ -140,7 +140,7 @@ func TestCreateChannel(t *testing.T) {
 		authCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID, DomainId: testsutil.GenerateUUID(t)}, nil)
 		authCall1 := auth.On("AddPolicies", mock.Anything, mock.Anything).Return(&magistrala.AddPoliciesRes{Added: true}, nil)
 		authCall2 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-		authCall3 := auth.On("DeletePolicies", mock.Anything, mock.Anything).Return(&magistrala.DeletePoliciesRes{Deleted: false}, nil)
+		authCall3 := auth.On("DeletePolicies", mock.Anything, mock.Anything).Return(&magistrala.DeletePolicyRes{Deleted: false}, nil)
 		repoCall := grepo.On("Save", mock.Anything, mock.Anything).Return(convertChannel(sdk.Channel{}), tc.err)
 		rChannel, err := mgsdk.CreateChannel(tc.channel, validToken)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
@@ -262,14 +262,14 @@ func TestListChannels(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID, DomainId: testsutil.GenerateUUID(t)}, nil)
-		repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
+		authCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID, DomainId: testsutil.GenerateUUID(t)}, nil)
+		authCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
 		if tc.token == invalidToken {
-			repoCall = auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: invalidToken}).Return(&magistrala.IdentityRes{}, svcerr.ErrAuthentication)
-			repoCall1 = auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: false}, svcerr.ErrAuthorization)
+			authCall = auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: invalidToken}).Return(&magistrala.IdentityRes{}, svcerr.ErrAuthentication)
+			authCall1 = auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: false}, svcerr.ErrAuthorization)
 		}
-		repoCall2 := auth.On("ListAllObjects", mock.Anything, mock.Anything).Return(&magistrala.ListObjectsRes{Policies: toIDs(tc.response)}, nil)
-		repoCall3 := grepo.On("RetrieveByIDs", mock.Anything, mock.Anything, mock.Anything).Return(mggroups.Page{Groups: convertChannels(tc.response)}, tc.err)
+		authCall2 := auth.On("ListAllObjects", mock.Anything, mock.Anything).Return(&magistrala.ListObjectsRes{Policies: toIDs(tc.response)}, nil)
+		repoCall := grepo.On("RetrieveByIDs", mock.Anything, mock.Anything, mock.Anything).Return(mggroups.Page{Groups: convertChannels(tc.response)}, tc.err)
 		pm := sdk.PageMetadata{
 			Offset: tc.offset,
 			Limit:  tc.limit,
@@ -279,13 +279,13 @@ func TestListChannels(t *testing.T) {
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, len(tc.response), len(page.Channels), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
 		if tc.err == nil {
-			ok := repoCall3.Parent.AssertCalled(t, "RetrieveByIDs", mock.Anything, mock.Anything, mock.Anything)
+			ok := repoCall.Parent.AssertCalled(t, "RetrieveByIDs", mock.Anything, mock.Anything, mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("RetrieveByIDs was not called on %s", tc.desc))
 		}
+		authCall.Unset()
+		authCall1.Unset()
+		authCall2.Unset()
 		repoCall.Unset()
-		repoCall1.Unset()
-		repoCall2.Unset()
-		repoCall3.Unset()
 	}
 }
 
@@ -471,8 +471,8 @@ func TestViewChannel(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-		repoCall1 := grepo.On("RetrieveByID", mock.Anything, tc.channelID).Return(convertChannel(tc.response), tc.err)
+		authCall := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
+		repoCall := grepo.On("RetrieveByID", mock.Anything, tc.channelID).Return(convertChannel(tc.response), tc.err)
 		grp, err := mgsdk.Channel(tc.channelID, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		if len(tc.response.Children) == 0 {
@@ -483,11 +483,11 @@ func TestViewChannel(t *testing.T) {
 		}
 		assert.Equal(t, tc.response, grp, fmt.Sprintf("%s: expected metadata %v got %v\n", tc.desc, tc.response, grp))
 		if tc.err == nil {
-			ok := repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, tc.channelID)
+			ok := repoCall.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, tc.channelID)
 			assert.True(t, ok, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
 		}
+		authCall.Unset()
 		repoCall.Unset()
-		repoCall1.Unset()
 	}
 }
 
@@ -638,16 +638,16 @@ func TestUpdateChannel(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-		repoCall1 := grepo.On("Update", mock.Anything, mock.Anything).Return(convertChannel(tc.response), tc.err)
+		authCall := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
+		repoCall := grepo.On("Update", mock.Anything, mock.Anything).Return(convertChannel(tc.response), tc.err)
 		_, err := mgsdk.UpdateChannel(tc.channel, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		if tc.err == nil {
-			ok := repoCall1.Parent.AssertCalled(t, "Update", mock.Anything, mock.Anything)
+			ok := repoCall.Parent.AssertCalled(t, "Update", mock.Anything, mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
 		}
+		authCall.Unset()
 		repoCall.Unset()
-		repoCall1.Unset()
 	}
 }
 
@@ -757,19 +757,20 @@ func TestListChannelsByThing(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID, DomainId: testsutil.GenerateUUID(t)}, nil)
-		repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-		repoCall2 := auth.On("ListAllSubjects", mock.Anything, mock.Anything).Return(&magistrala.ListSubjectsRes{Policies: toIDs(tc.response)}, nil)
-		repoCall3 := auth.On("ListAllObjects", mock.Anything, mock.Anything).Return(&magistrala.ListObjectsRes{Policies: toIDs(tc.response)}, nil)
-		repoCall4 := grepo.On("RetrieveByIDs", mock.Anything, mock.Anything, mock.Anything).Return(mggroups.Page{Groups: convertChannels(tc.response)}, tc.err)
-		page, err := mgsdk.ChannelsByThing(tc.page, tc.token)
+		authCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{Id: validID, DomainId: testsutil.GenerateUUID(t)}, nil)
+		authCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
+		authCall2 := auth.On("ListAllSubjects", mock.Anything, mock.Anything).Return(&magistrala.ListSubjectsRes{Policies: toIDs(tc.response)}, nil)
+		authCall3 := auth.On("ListAllObjects", mock.Anything, mock.Anything).Return(&magistrala.ListObjectsRes{Policies: toIDs(tc.response)}, nil)
+		repoCall := grepo.On("RetrieveByIDs", mock.Anything, mock.Anything, mock.Anything).Return(mggroups.Page{Groups: convertChannels(tc.response)}, tc.err)
+		page, err := mgsdk.ChannelsByThing(tc.clientID, tc.page, tc.token)
+
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page.Channels, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page.Channels))
+		authCall.Unset()
+		authCall1.Unset()
+		authCall2.Unset()
+		authCall3.Unset()
 		repoCall.Unset()
-		repoCall1.Unset()
-		repoCall2.Unset()
-		repoCall3.Unset()
-		repoCall4.Unset()
 	}
 }
 
@@ -791,16 +792,16 @@ func TestEnableChannel(t *testing.T) {
 		Status:    mgclients.Disabled,
 	}
 
-	repoCall := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-	repoCall1 := grepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(mggroups.Group{}, repoerr.ErrNotFound)
-	repoCall2 := grepo.On("ChangeStatus", mock.Anything, mock.Anything).Return(nil)
+	authCall := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
+	repoCall := grepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(mggroups.Group{}, repoerr.ErrNotFound)
+	repoCall1 := grepo.On("ChangeStatus", mock.Anything, mock.Anything).Return(nil)
 	_, err := mgsdk.EnableChannel("wrongID", validToken)
 	assert.Equal(t, errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest), err, fmt.Sprintf("Enable channel with wrong id: expected %v got %v", svcerr.ErrViewEntity, err))
-	ok := repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, "wrongID")
+	ok := repoCall.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, "wrongID")
 	assert.True(t, ok, "RetrieveByID was not called on enabling channel")
+	authCall.Unset()
 	repoCall.Unset()
 	repoCall1.Unset()
-	repoCall2.Unset()
 
 	ch := mggroups.Group{
 		ID:        channel.ID,
@@ -809,19 +810,19 @@ func TestEnableChannel(t *testing.T) {
 		UpdatedAt: creationTime,
 		Status:    mgclients.DisabledStatus,
 	}
-	repoCall = auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-	repoCall1 = grepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(ch, nil)
-	repoCall2 = grepo.On("ChangeStatus", mock.Anything, mock.Anything).Return(ch, nil)
+	authCall = auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
+	repoCall = grepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(ch, nil)
+	repoCall1 = grepo.On("ChangeStatus", mock.Anything, mock.Anything).Return(ch, nil)
 	res, err := mgsdk.EnableChannel(channel.ID, validToken)
 	assert.Nil(t, err, fmt.Sprintf("Enable channel with correct id: expected %v got %v", nil, err))
 	assert.Equal(t, channel, res, fmt.Sprintf("Enable channel with correct id: expected %v got %v", channel, res))
-	ok = repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, channel.ID)
+	ok = repoCall.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, channel.ID)
 	assert.True(t, ok, "RetrieveByID was not called on enabling channel")
-	ok = repoCall2.Parent.AssertCalled(t, "ChangeStatus", mock.Anything, mock.Anything)
+	ok = repoCall1.Parent.AssertCalled(t, "ChangeStatus", mock.Anything, mock.Anything)
 	assert.True(t, ok, "ChangeStatus was not called on enabling channel")
+	authCall.Unset()
 	repoCall.Unset()
 	repoCall1.Unset()
-	repoCall2.Unset()
 }
 
 func TestDisableChannel(t *testing.T) {
@@ -843,16 +844,16 @@ func TestDisableChannel(t *testing.T) {
 		Status:    mgclients.Enabled,
 	}
 
-	repoCall := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-	repoCall1 := grepo.On("ChangeStatus", mock.Anything, mock.Anything).Return(nil)
-	repoCall2 := grepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(mggroups.Group{}, repoerr.ErrNotFound)
+	authCall := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
+	repoCall := grepo.On("ChangeStatus", mock.Anything, mock.Anything).Return(nil)
+	repoCall1 := grepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(mggroups.Group{}, repoerr.ErrNotFound)
 	_, err := mgsdk.DisableChannel("wrongID", validToken)
 	assert.Equal(t, err, errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest), fmt.Sprintf("Disable channel with wrong id: expected %v got %v", svcerr.ErrNotFound, err))
-	ok := repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, "wrongID")
+	ok := repoCall.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, "wrongID")
 	assert.True(t, ok, "Memberships was not called on disabling channel with wrong id")
+	authCall.Unset()
 	repoCall.Unset()
 	repoCall1.Unset()
-	repoCall2.Unset()
 
 	ch := mggroups.Group{
 		ID:        channel.ID,
@@ -863,19 +864,19 @@ func TestDisableChannel(t *testing.T) {
 		Status:    mgclients.EnabledStatus,
 	}
 
-	repoCall = auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-	repoCall1 = grepo.On("ChangeStatus", mock.Anything, mock.Anything).Return(ch, nil)
-	repoCall2 = grepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(ch, nil)
+	authCall = auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
+	repoCall = grepo.On("ChangeStatus", mock.Anything, mock.Anything).Return(ch, nil)
+	repoCall1 = grepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(ch, nil)
 	res, err := mgsdk.DisableChannel(channel.ID, validToken)
 	assert.Nil(t, err, fmt.Sprintf("Disable channel with correct id: expected %v got %v", nil, err))
 	assert.Equal(t, channel, res, fmt.Sprintf("Disable channel with correct id: expected %v got %v", channel, res))
-	ok = repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, channel.ID)
+	ok = repoCall.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, channel.ID)
 	assert.True(t, ok, "RetrieveByID was not called on disabling channel with correct id")
-	ok = repoCall2.Parent.AssertCalled(t, "ChangeStatus", mock.Anything, mock.Anything)
+	ok = repoCall1.Parent.AssertCalled(t, "ChangeStatus", mock.Anything, mock.Anything)
 	assert.True(t, ok, "ChangeStatus was not called on disabling channel with correct id")
+	authCall.Unset()
 	repoCall.Unset()
 	repoCall1.Unset()
-	repoCall2.Unset()
 }
 
 func TestDeleteChannel(t *testing.T) {
@@ -896,27 +897,27 @@ func TestDeleteChannel(t *testing.T) {
 		Status:    mgclients.Enabled,
 	}
 
-	repoCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: validToken}).Return(&magistrala.IdentityRes{Id: validID, DomainId: testsutil.GenerateUUID(t)}, nil)
-	repoCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: false}, nil)
-	repoCall2 := grepo.On("Delete", mock.Anything, mock.Anything).Return(nil)
+	authCall := auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: validToken}).Return(&magistrala.IdentityRes{Id: validID, DomainId: testsutil.GenerateUUID(t)}, nil)
+	authCall1 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: false}, nil)
+	repoCall := grepo.On("Delete", mock.Anything, mock.Anything).Return(nil)
 	err := mgsdk.DeleteChannel("wrongID", validToken)
 	assert.Equal(t, err, errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden), fmt.Sprintf("Delete channel with wrong id: expected %v got %v", svcerr.ErrNotFound, err))
+	authCall.Unset()
+	authCall1.Unset()
 	repoCall.Unset()
-	repoCall1.Unset()
-	repoCall2.Unset()
 
-	repoCall = auth.On("DeletePolicy", mock.Anything, mock.Anything, mock.Anything).Return(&magistrala.DeletePolicyRes{Deleted: true}, nil)
-	repoCall1 = auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: validToken}).Return(&magistrala.IdentityRes{Id: validID, DomainId: testsutil.GenerateUUID(t)}, nil)
-	repoCall2 = auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
-	repoCall3 := grepo.On("Delete", mock.Anything, mock.Anything).Return(nil)
+	authCall = auth.On("DeleteEntityPolicies", mock.Anything, mock.Anything, mock.Anything).Return(&magistrala.DeletePolicyRes{Deleted: true}, nil)
+	authCall1 = auth.On("Identify", mock.Anything, &magistrala.IdentityReq{Token: validToken}).Return(&magistrala.IdentityRes{Id: validID, DomainId: testsutil.GenerateUUID(t)}, nil)
+	authCall2 := auth.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthorizeRes{Authorized: true}, nil)
+	repoCall = grepo.On("Delete", mock.Anything, mock.Anything).Return(nil)
 	err = mgsdk.DeleteChannel(channel.ID, validToken)
 	assert.Nil(t, err, fmt.Sprintf("Delete channel with correct id: expected %v got %v", nil, err))
-	ok := repoCall3.Parent.AssertCalled(t, "Delete", mock.Anything, channel.ID)
+	ok := repoCall.Parent.AssertCalled(t, "Delete", mock.Anything, channel.ID)
 	assert.True(t, ok, "Delete was not called on deleting channel with correct id")
+	authCall.Unset()
+	authCall1.Unset()
+	authCall2.Unset()
 	repoCall.Unset()
-	repoCall1.Unset()
-	repoCall2.Unset()
-	repoCall3.Unset()
 }
 
 func toIDs(objects interface{}) []string {

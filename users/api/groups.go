@@ -64,21 +64,21 @@ func groupsHandler(svc groups.Service, r *chi.Mux, logger *slog.Logger) http.Han
 		), "update_group").ServeHTTP)
 
 		r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
-			gapi.ListGroupsEndpoint(svc, "users"),
+			gapi.ListGroupsEndpoint(svc, "groups", "users"),
 			gapi.DecodeListGroupsRequest,
 			api.EncodeResponse,
 			opts...,
 		), "list_groups").ServeHTTP)
 
 		r.Get("/{groupID}/children", otelhttp.NewHandler(kithttp.NewServer(
-			gapi.ListGroupsEndpoint(svc, "users"),
+			gapi.ListGroupsEndpoint(svc, "groups", "users"),
 			gapi.DecodeListChildrenRequest,
 			api.EncodeResponse,
 			opts...,
 		), "list_children").ServeHTTP)
 
 		r.Get("/{groupID}/parents", otelhttp.NewHandler(kithttp.NewServer(
-			gapi.ListGroupsEndpoint(svc, "users"),
+			gapi.ListGroupsEndpoint(svc, "groups", "users"),
 			gapi.DecodeListParentsRequest,
 			api.EncodeResponse,
 			opts...,
@@ -126,7 +126,6 @@ func groupsHandler(svc groups.Service, r *chi.Mux, logger *slog.Logger) http.Han
 			opts...,
 		), "unassign_groups").ServeHTTP)
 	})
-
 	return r
 }
 

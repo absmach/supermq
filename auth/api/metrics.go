@@ -152,12 +152,12 @@ func (ms *metricsMiddleware) AddPolicies(ctx context.Context, prs []auth.PolicyR
 	return ms.svc.AddPolicies(ctx, prs)
 }
 
-func (ms *metricsMiddleware) DeletePolicy(ctx context.Context, pr auth.PolicyReq) error {
+func (ms *metricsMiddleware) DeletePolicyFilter(ctx context.Context, pr auth.PolicyReq) error {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "delete_policy").Add(1)
-		ms.latency.With("method", "delete_policy").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "delete_policy_filter").Add(1)
+		ms.latency.With("method", "delete_policy_filter").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.DeletePolicy(ctx, pr)
+	return ms.svc.DeletePolicyFilter(ctx, pr)
 }
 
 func (ms *metricsMiddleware) DeletePolicies(ctx context.Context, prs []auth.PolicyReq) error {
@@ -224,12 +224,12 @@ func (ms *metricsMiddleware) AssignUsers(ctx context.Context, token, id string, 
 	return ms.svc.AssignUsers(ctx, token, id, userIds, relation)
 }
 
-func (ms *metricsMiddleware) UnassignUsers(ctx context.Context, token, id string, userIds []string, relation string) error {
+func (ms *metricsMiddleware) UnassignUsers(ctx context.Context, token, id string, userIds []string) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "unassign_users").Add(1)
 		ms.latency.With("method", "unassign_users").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.UnassignUsers(ctx, token, id, userIds, relation)
+	return ms.svc.UnassignUsers(ctx, token, id, userIds)
 }
 
 func (ms *metricsMiddleware) ListUserDomains(ctx context.Context, token, userID string, page auth.Page) (auth.DomainsPage, error) {
@@ -238,4 +238,12 @@ func (ms *metricsMiddleware) ListUserDomains(ctx context.Context, token, userID 
 		ms.latency.With("method", "list_user_domains").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return ms.svc.ListUserDomains(ctx, token, userID, page)
+}
+
+func (ms *metricsMiddleware) DeleteEntityPolicies(ctx context.Context, entityType, id string) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "delete_entity_policies").Add(1)
+		ms.latency.With("method", "delete_entity_policies").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.DeleteEntityPolicies(ctx, entityType, id)
 }

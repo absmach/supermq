@@ -96,7 +96,7 @@ func (tm *tracingMiddleware) AddPolicies(ctx context.Context, prs []auth.PolicyR
 	return tm.svc.AddPolicies(ctx, prs)
 }
 
-func (tm *tracingMiddleware) DeletePolicy(ctx context.Context, pr auth.PolicyReq) error {
+func (tm *tracingMiddleware) DeletePolicyFilter(ctx context.Context, pr auth.PolicyReq) error {
 	ctx, span := tm.tracer.Start(ctx, "delete_policy", trace.WithAttributes(
 		attribute.String("subject", pr.Subject),
 		attribute.String("subject_type", pr.SubjectType),
@@ -108,7 +108,7 @@ func (tm *tracingMiddleware) DeletePolicy(ctx context.Context, pr auth.PolicyReq
 	))
 	defer span.End()
 
-	return tm.svc.DeletePolicy(ctx, pr)
+	return tm.svc.DeletePolicyFilter(ctx, pr)
 }
 
 func (tm *tracingMiddleware) DeletePolicies(ctx context.Context, prs []auth.PolicyReq) error {
@@ -287,14 +287,13 @@ func (tm *tracingMiddleware) AssignUsers(ctx context.Context, token, id string, 
 	return tm.svc.AssignUsers(ctx, token, id, userIds, relation)
 }
 
-func (tm *tracingMiddleware) UnassignUsers(ctx context.Context, token, id string, userIds []string, relation string) error {
+func (tm *tracingMiddleware) UnassignUsers(ctx context.Context, token, id string, userIds []string) error {
 	ctx, span := tm.tracer.Start(ctx, "unassign_users", trace.WithAttributes(
 		attribute.String("id", id),
 		attribute.StringSlice("user_ids", userIds),
-		attribute.String("relation", relation),
 	))
 	defer span.End()
-	return tm.svc.UnassignUsers(ctx, token, id, userIds, relation)
+	return tm.svc.UnassignUsers(ctx, token, id, userIds)
 }
 
 func (tm *tracingMiddleware) ListUserDomains(ctx context.Context, token, userID string, p auth.Page) (auth.DomainsPage, error) {
@@ -303,4 +302,13 @@ func (tm *tracingMiddleware) ListUserDomains(ctx context.Context, token, userID 
 	))
 	defer span.End()
 	return tm.svc.ListUserDomains(ctx, token, userID, p)
+}
+
+func (tm *tracingMiddleware) DeleteEntityPolicies(ctx context.Context, entityType, id string) error {
+	ctx, span := tm.tracer.Start(ctx, "delete_entity_policies", trace.WithAttributes(
+		attribute.String("entity_type", entityType),
+		attribute.String("id", id),
+	))
+	defer span.End()
+	return tm.svc.DeleteEntityPolicies(ctx, entityType, id)
 }

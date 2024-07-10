@@ -41,6 +41,7 @@ var (
 	errRemoveConfig       = errors.New("failed to remove bootstrap configuration")
 	errRemoveChannel      = errors.New("failed to remove channel")
 	errCreateThing        = errors.New("failed to create thing")
+	errConnectThing       = errors.New("failed to connect thing")
 	errDisconnectThing    = errors.New("failed to disconnect thing")
 	errCheckChannels      = errors.New("failed to check if channels exists")
 	errConnectionChannels = errors.New("failed to check channels connections")
@@ -96,14 +97,19 @@ type Service interface {
 	// RemoveChannelHandler removes Channel with id received from an event.
 	RemoveChannelHandler(ctx context.Context, id string) error
 
-	// DisconnectHandler changes state of the Config when connect/disconnect event occurs.
-	DisconnectThingHandler(ctx context.Context, channelID, thingID string) error
+	// ConnectThingHandler changes state of the Config to active when connect event occurs.
+	ConnectThingHandler(ctx context.Context, channelID, ThingID string) error
+
+	// DisconnectThingHandler changes state of the Config to inactive when disconnect event occurs.
+	DisconnectThingHandler(ctx context.Context, channelID, ThingID string) error
 }
 
 // ConfigReader is used to parse Config into format which will be encoded
 // as a JSON and consumed from the client side. The purpose of this interface
 // is to provide convenient way to generate custom configuration response
 // based on the specific Config which will be consumed by the client.
+//
+//go:generate mockery --name ConfigReader --output=./mocks --filename config_reader.go --quiet --note "Copyright (c) Abstract Machines"
 type ConfigReader interface {
 	ReadConfig(Config, bool) (interface{}, error)
 }
@@ -369,6 +375,13 @@ func (bs bootstrapService) RemoveConfigHandler(ctx context.Context, id string) e
 func (bs bootstrapService) RemoveChannelHandler(ctx context.Context, id string) error {
 	if err := bs.configs.RemoveChannel(ctx, id); err != nil {
 		return errors.Wrap(errRemoveChannel, err)
+	}
+	return nil
+}
+
+func (bs bootstrapService) ConnectThingHandler(ctx context.Context, channelID, thingID string) error {
+	if err := bs.configs.ConnectThing(ctx, channelID, thingID); err != nil {
+		return errors.Wrap(errConnectThing, err)
 	}
 	return nil
 }

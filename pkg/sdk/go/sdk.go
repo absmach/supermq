@@ -121,6 +121,12 @@ type PageMetadata struct {
 	Group           string   `json:"group,omitempty"`
 	Thing           string   `json:"thing,omitempty"`
 	Domain          string   `json:"domain,omitempty"`
+	Operation       string   `json:"operation,omitempty"`
+	From            int64    `json:"from,omitempty"`
+	To              int64    `json:"to,omitempty"`
+	WithMetadata    bool     `json:"with_metadata,omitempty"`
+	WithAttributes  bool     `json:"with_attributes,omitempty"`
+	ID              string   `json:"id,omitempty"`
 }
 
 // Credentials represent client credentials: it contains
@@ -258,6 +264,13 @@ type SDK interface {
 	//  user, _ := sdk.DisableUser("userID", "token")
 	//  fmt.Println(user)
 	DisableUser(id, token string) (User, errors.SDKError)
+
+	// DeleteUser deletes a user with the given id.
+	//
+	// example:
+	//  err := sdk.DeleteUser("userID", "token")
+	//  fmt.Println(err)
+	DeleteUser(id, token string) errors.SDKError
 
 	// CreateToken receives credentials and returns user token.
 	//
@@ -939,16 +952,9 @@ type SDK interface {
 	// Whitelist updates Thing state Config with given ID belonging to the user identified by the given token.
 	//
 	// example:
-	//  cfg := sdk.BootstrapConfig{
-	//    ThingID: "thingID",
-	//    Name: "bootstrap",
-	//    ExternalID: "externalID",
-	//    ExternalKey: "externalKey",
-	//    Channels: []string{"channel1", "channel2"},
-	//  }
-	//  err := sdk.Whitelist(cfg, "token")
+	//  err := sdk.Whitelist("thingID", 1, "token")
 	//  fmt.Println(err)
-	Whitelist(cfg BootstrapConfig, token string) errors.SDKError
+	Whitelist(thingID string, state int, token string) errors.SDKError
 
 	// IssueCert issues a certificate for a thing required for mTLS.
 	//
@@ -1165,6 +1171,13 @@ type SDK interface {
 	//  err := sdk.DeleteInvitation("userID", "domainID", "token")
 	//  fmt.Println(err)
 	DeleteInvitation(userID, domainID, token string) (err error)
+
+	// Journal returns a list of journal logs.
+	//
+	// For example:
+	//  journals, _ := sdk.Journal("thing", "thingID", PageMetadata{Offset: 0, Limit: 10, Operation: "users.create"}, "token")
+	//  fmt.Println(journals)
+	Journal(entityType, entityID string, pm PageMetadata, token string) (journal JournalsPage, err error)
 }
 
 type mgSDK struct {
@@ -1176,6 +1189,7 @@ type mgSDK struct {
 	usersURL       string
 	domainsURL     string
 	invitationsURL string
+	journalURL     string
 	HostURL        string
 
 	msgContentType ContentType
@@ -1193,6 +1207,7 @@ type Config struct {
 	UsersURL       string
 	DomainsURL     string
 	InvitationsURL string
+	JournalURL     string
 	HostURL        string
 
 	MsgContentType  ContentType
@@ -1211,6 +1226,7 @@ func NewSDK(conf Config) SDK {
 		usersURL:       conf.UsersURL,
 		domainsURL:     conf.DomainsURL,
 		invitationsURL: conf.InvitationsURL,
+		journalURL:     conf.JournalURL,
 		HostURL:        conf.HostURL,
 
 		msgContentType: conf.MsgContentType,
@@ -1386,6 +1402,18 @@ func (pm PageMetadata) query() (string, error) {
 	if pm.Domain != "" {
 		q.Add("domain", pm.Domain)
 	}
+
+	if pm.Operation != "" {
+		q.Add("operation", pm.Operation)
+	}
+	if pm.From != 0 {
+		q.Add("from", strconv.FormatInt(pm.From, 10))
+	}
+	if pm.To != 0 {
+		q.Add("to", strconv.FormatInt(pm.To, 10))
+	}
+	q.Add("with_attributes", strconv.FormatBool(pm.WithAttributes))
+	q.Add("with_metadata", strconv.FormatBool(pm.WithMetadata))
 
 	return q.Encode(), nil
 }

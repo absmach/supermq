@@ -31,10 +31,6 @@ type deletePolicyRes struct {
 	deleted bool
 }
 
-type deletePoliciesRes struct {
-	deleted bool
-}
-
 type listObjectsRes struct {
 	policies      []string
 	nextPageToken string

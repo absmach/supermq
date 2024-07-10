@@ -170,6 +170,24 @@ func TestSave(t *testing.T) {
 			err: nil,
 		},
 		{
+			desc: "add domain with empty alias",
+			domain: auth.Domain{
+				ID:    testsutil.GenerateUUID(&testing.T{}),
+				Name:  "test1",
+				Alias: "",
+				Tags:  []string{"test"},
+				Metadata: map[string]interface{}{
+					"test": "test",
+				},
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+				CreatedBy: userID,
+				UpdatedBy: userID,
+				Status:    auth.EnabledStatus,
+			},
+			err: repoerr.ErrCreateEntity,
+		},
+		{
 			desc: "add domain with malformed metadata",
 			domain: auth.Domain{
 				ID:    domainID,
@@ -1070,6 +1088,61 @@ func TestCheckPolicy(t *testing.T) {
 	}
 	for _, tc := range cases {
 		err := repo.CheckPolicy(context.Background(), tc.policy)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.err, err))
+	}
+}
+
+func TestDeleteUserPolicies(t *testing.T) {
+	repo := postgres.NewDomainRepository(database)
+
+	domain := auth.Domain{
+		ID:    domainID,
+		Name:  "test",
+		Alias: "test",
+		Tags:  []string{"test"},
+		Metadata: map[string]interface{}{
+			"test": "test",
+		},
+		CreatedBy:  userID,
+		UpdatedBy:  userID,
+		Status:     auth.EnabledStatus,
+		Permission: "admin",
+	}
+
+	policy := auth.Policy{
+		SubjectType:     auth.UserType,
+		SubjectID:       userID,
+		SubjectRelation: "admin",
+		Relation:        "admin",
+		ObjectType:      auth.DomainType,
+		ObjectID:        domainID,
+	}
+
+	_, err := repo.Save(context.Background(), domain)
+	require.Nil(t, err, fmt.Sprintf("failed to save domain %s", domain.ID))
+
+	err = repo.SavePolicies(context.Background(), policy)
+	require.Nil(t, err, fmt.Sprintf("failed to save policy %s", policy.SubjectID))
+
+	cases := []struct {
+		desc string
+		id   string
+		err  error
+	}{
+		{
+			desc: "delete valid user policy",
+			id:   userID,
+			err:  nil,
+		},
+		{
+			desc: "delete invalid user policy",
+			id:   inValid,
+			err:  nil,
+		},
+	}
+
+	for _, tc := range cases {
+		err := repo.DeleteUserPolicies(context.Background(), tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.err, err))
 	}
 }

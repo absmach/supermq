@@ -505,8 +505,10 @@ func (svc service) changeClientStatus(ctx context.Context, token string, client 
 	if err != nil {
 		return mgclients.Client{}, err
 	}
-	if err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
-		return mgclients.Client{}, err
+	if tokenUserID != client.ID {
+		if err := svc.checkSuperAdmin(ctx, tokenUserID); err != nil {
+			return mgclients.Client{}, err
+		}
 	}
 	dbClient, err := svc.clients.RetrieveByID(ctx, client.ID)
 	if err != nil {
@@ -522,6 +524,21 @@ func (svc service) changeClientStatus(ctx context.Context, token string, client 
 		return mgclients.Client{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	return client, nil
+}
+
+
+func (svc service) DeleteClient(ctx context.Context, token, id string) error {
+	client := mgclients.Client{
+		ID:        id,
+		UpdatedAt: time.Now(),
+		Status:    mgclients.DeletedStatus,
+	}
+
+	if _, err := svc.changeClientStatus(ctx, token, client); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (svc service) retrieveObjectUsersPermissions(ctx context.Context, domainID, objectType, objectID string, client *mgclients.Client) error {
@@ -702,7 +719,7 @@ func (svc service) updateClientPolicy(ctx context.Context, userID string, role m
 	case mgclients.UserRole:
 		fallthrough
 	default:
-		resp, err := svc.auth.DeletePolicy(ctx, &magistrala.DeletePolicyReq{
+		resp, err := svc.auth.DeletePolicyFilter(ctx, &magistrala.DeletePolicyFilterReq{
 			SubjectType: auth.UserType,
 			Subject:     userID,
 			Relation:    auth.AdministratorRelation,
