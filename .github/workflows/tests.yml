@@ -146,7 +146,7 @@ jobs:
               - "auth_grpc.pb.go"
               - "auth/**"
               - "pkg/sdk/**"
-            
+
             logger:
               - "logger/**"
 

@@ -38,8 +38,6 @@ env:
   PROVISION_URL: http://localhost:9016
   POSTGRES_READER_URL: http://localhost:9009
   TIMESCALE_READER_URL: http://localhost:9011
-  SMPP_NOTIFIER_URL: http://localhost:9014
-  SMTP_NOTIFIER_URL: http://localhost:9015
   JOURNAL_URL: http://localhost:9021
 
 jobs:
@@ -79,12 +77,12 @@ jobs:
               - ".github/workflows/api-tests.yml"
               - "api/openapi/journal.yml"
               - "journal/api/**"
-                      
+
             auth:
               - ".github/workflows/api-tests.yml"
               - "api/openapi/auth.yml"
               - "auth/api/http/**"
-              
+
             bootstrap:
               - ".github/workflows/api-tests.yml"
               - "api/openapi/bootstrap.yml"
@@ -247,24 +245,8 @@ jobs:
           report: false
           args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
-      - name: Run SMPP Notifier API tests
-        if: steps.changes.outputs.notifiers == 'true'
-        uses: schemathesis/action@v1
-        with:
-          schema: api/openapi/notifiers.yml
-          base-url: ${{ env.SMPP_NOTIFIER_URL }}
-          checks: all
-          report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
-      - name: Run SMTP Notifier API tests
-        if: steps.changes.outputs.notifiers == 'true'
-        uses: schemathesis/action@v1
-        with:
-          schema: api/openapi/notifiers.yml
-          base-url: ${{ env.SMTP_NOTIFIER_URL }}
-          checks: all
-          report: false
+
           args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
       - name: Stop containers
