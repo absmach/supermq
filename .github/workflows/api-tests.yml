@@ -188,7 +188,6 @@ jobs:
           report: false
           args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
-
       - name: Run Bootstrap API tests
         if: steps.changes.outputs.bootstrap == 'true'
         uses: schemathesis/action@v1
@@ -243,10 +242,6 @@ jobs:
           base-url: ${{ env.TIMESCALE_READER_URL }}
           checks: all
           report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
-
-
-
           args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
       - name: Stop containers
