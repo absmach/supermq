@@ -69,8 +69,7 @@ define make_docker_dev
 		-f docker/Dockerfile.dev ./build
 endef
 
-ADDON_SERVICES = bootstrap  certs postgres-reader postgres-writer provision \
-		smpp-notifier smtp-notifier timescale-reader timescale-writer journal
+ADDON_SERVICES = bootstrap certs postgres-reader postgres-writer provision timescale-reader timescale-writer journal
 
 EXTERNAL_SERVICES = vault prometheus
 
@@ -173,7 +172,6 @@ test_api_bootstrap: TEST_API_URL := http://localhost:9013
 test_api_certs: TEST_API_URL := http://localhost:9019
 test_api_provision: TEST_API_URL := http://localhost:9016
 test_api_readers: TEST_API_URL := http://localhost:9009 # This can be the URL of any reader service.
-test_api_notifiers: TEST_API_URL := http://localhost:9014 # This can be the URL of any notifier service.
 test_api_journal: TEST_API_URL := http://localhost:9021
 
 $(TEST_API):

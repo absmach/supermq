@@ -93,11 +93,6 @@ jobs:
               - "api/openapi/certs.yml"
               - "certs/api/**"
 
-            notifiers:
-              - ".github/workflows/api-tests.yml"
-              - "api/openapi/notifiers.yml"
-              - "consumers/notifiers/api/**"
-
             http:
               - ".github/workflows/api-tests.yml"
               - "api/openapi/http.yml"

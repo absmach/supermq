@@ -19,11 +19,11 @@ For extra bits and services see [our contrib repository][contrib].
 
 ## Features
 
-- Multi-protocol connectivity and bridging (HTTP, MQTT, WebSocket and CoAP)
+- Multi-protocol connectivity and bridging (HTTP, MQTT, WebSocket and CoAP; see [contrib repository][contrib] for LoRa and OPC UA)
 - Device management and provisioning (Zero Touch provisioning)
 - Mutual TLS Authentication (mTLS) using X.509 Certificates
 - Fine-grained access control (policies, ABAC/RBAC)
-- Message persistence (Timescale and PostgresSQL - see [contrib repository][contrib] for others such as Cassandra, InfluxDB, MongoDB)
+- Message persistence (Timescale and PostgresSQL - see [contrib repository][contrib] for Cassandra, InfluxDB, and MongoDB support)
 - Platform logging and instrumentation support (Prometheus and OpenTelemetry)
 - Event sourcing
 - Container-based deployment using [Docker][docker] and [Kubernetes][kubernetes]
@@ -118,6 +118,8 @@ Thank you for your interest in Magistrala and the desire to contribute!
 1. Take a look at our [open issues](https://github.com/absmach/magistrala/issues). The [good-first-issue](https://github.com/absmach/magistrala/labels/good-first-issue) label is specifically for issues that are great for getting started.
 2. Checkout the [contribution guide](CONTRIBUTING.md) to learn more about our style and conventions.
 3. Make your changes compatible to our workflow.
+
+Also, explore our [contrib][contrib] repository for extra services such as Cassandra, InfluxDB, MongoDB readers and writers, LoRa, OPC UA support, Digital Twins, and more. If you have a contribution that is not a good fit for the core monorepo (it's specific to your use case, it's an additional feature or a new service, it's optional or an add-on), this is a great place to submit the pull request.
 
 ### We're Hiring
 
