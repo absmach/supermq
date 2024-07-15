@@ -23,7 +23,7 @@ For extra bits and services see [our contrib repository][contrib].
 - Device management and provisioning (Zero Touch provisioning)
 - Mutual TLS Authentication (mTLS) using X.509 Certificates
 - Fine-grained access control (policies, ABAC/RBAC)
-- Message persistence (Timescale and PostgresSQL - see [contrib repository][contrib] for more)
+- Message persistence (Timescale and PostgresSQL - see [contrib repository][contrib] for others such as Cassandra, InfluxDB, MongoDB)
 - Platform logging and instrumentation support (Prometheus and OpenTelemetry)
 - Event sourcing
 - Container-based deployment using [Docker][docker] and [Kubernetes][kubernetes]
