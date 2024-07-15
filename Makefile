@@ -69,7 +69,7 @@ define make_docker_dev
 		-f docker/Dockerfile.dev ./build
 endef
 
-ADDON_SERVICES = bootstrap certs postgres-reader postgres-writer provision timescale-reader timescale-writer journal
+ADDON_SERVICES = bootstrap journal provision certs timescale-reader timescale-writer postgres-reader postgres-writer
 
 EXTERNAL_SERVICES = vault prometheus
 
