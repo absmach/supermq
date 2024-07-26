@@ -307,7 +307,8 @@ func TestCreateGroup(t *testing.T) {
 				Object:      tc.group.Parent,
 				ObjectType:  auth.GroupType,
 			}).Return(tc.authzTknResp, tc.authzTknErr)
-			repocall := repo.On("Save", context.Background(), mock.Anything).Return(tc.repoResp, tc.repoErr)
+			repoCall := repo.On("Save", context.Background(), mock.Anything).Return(tc.repoResp, tc.repoErr)
+			repoCall1 := repo.On("RetrieveAll", mock.Anything, mggroups.Page{}).Return(mggroups.Page{PageMeta: mggroups.PageMeta{Total: tc.totalGroups}}, nil)
 			authcall3 := authsvc.On("AddPolicies", context.Background(), mock.Anything).Return(tc.addPolResp, tc.addPolErr)
 			authCall4 := authsvc.On("DeletePolicies", mock.Anything, mock.Anything).Return(tc.deletePolResp, tc.deletePolErr)
 			got, err := svc.CreateGroup(context.Background(), tc.token, tc.kind, tc.group)
@@ -317,13 +318,14 @@ func TestCreateGroup(t *testing.T) {
 				assert.NotEmpty(t, got.CreatedAt)
 				assert.NotEmpty(t, got.Domain)
 				assert.WithinDuration(t, time.Now(), got.CreatedAt, 2*time.Second)
-				ok := repocall.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything)
+				ok := repoCall.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything)
 				assert.True(t, ok, fmt.Sprintf("Save was not called on %s", tc.desc))
 			}
 			authcall.Unset()
 			authcall1.Unset()
 			authcall2.Unset()
-			repocall.Unset()
+			repoCall.Unset()
+			repoCall1.Unset()
 			authcall3.Unset()
 			authCall4.Unset()
 		})

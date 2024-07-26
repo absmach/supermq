@@ -55,6 +55,9 @@ func newService(selfRegister bool) (users.Service, *mocks.Repository, *authmocks
 	cRepo := new(mocks.Repository)
 	auth := new(authmocks.AuthClient)
 	e := new(mocks.Emailer)
+	constraintsProvider, err := constraints.New("users_test")
+	assert.Nil(&testing.T{}, err, "Unexpected error creating constraints provider: %s", err)
+
 	return users.NewService(cRepo, auth, e, phasher, idProvider, constraintsProvider, selfRegister), cRepo, auth, e
 }
 
