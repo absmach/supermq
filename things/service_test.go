@@ -335,7 +335,7 @@ func TestCreateThings(t *testing.T) {
 		repoCall1 := cRepo.On("Save", context.Background(), mock.Anything).Return([]mgclients.Client{tc.thing}, tc.saveErr)
 		authCall1 := auth.On("AddPolicies", mock.Anything, mock.Anything).Return(tc.addPolicyResponse, tc.addPolicyErr)
 		authCall2 := auth.On("DeletePolicies", mock.Anything, mock.Anything).Return(tc.deletePolicyRes, tc.deletePolicyErr)
-		retrieveAllCall := cRepo.On("RetrieveAll", mock.Anything, mgclients.Page{}).Return(mgclients.ClientsPage{
+		retrieveAllCall := cRepo.On("RetrieveAll", mock.Anything, mgclients.Page{Role: mgclients.AllRole}).Return(mgclients.ClientsPage{
 			Page: mgclients.Page{
 				Total: tc.total,
 			},

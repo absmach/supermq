@@ -70,12 +70,13 @@ func (svc service) CreateThings(ctx context.Context, token string, cls ...mgclie
 	if _, err := svc.authorize(ctx, "", auth.UserType, auth.UsersKind, user.GetId(), auth.CreatePermission, auth.DomainType, user.GetDomainId()); err != nil {
 		return []mgclients.Client{}, err
 	}
-	ths, err := svc.clients.RetrieveAll(ctx, mgclients.Page{})
+	ths, err := svc.clients.RetrieveAll(ctx, mgclients.Page{Role: mgclients.AllRole})
 	if err != nil {
 		return []mgclients.Client{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	err = svc.constraintsProvider.CheckLimits(magistrala.Create, ths.Total)
+	newTotal := uint64(len(cls)) + ths.Total
+	err = svc.constraintsProvider.CheckLimits(magistrala.Create, newTotal)
 	if err != nil {
 		return []mgclients.Client{}, err
 	}
