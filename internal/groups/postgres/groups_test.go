@@ -669,7 +669,7 @@ func TestRetrieveAll(t *testing.T) {
 					Offset: 0,
 					Limit:  uint64(num),
 				},
-				ParentID:        items[15].ID,
+				ParentID:  items[15].ID,
 				Direction: -1,
 				Level:     20,
 			},
