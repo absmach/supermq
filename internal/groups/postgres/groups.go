@@ -322,12 +322,12 @@ func (repo groupRepository) Delete(ctx context.Context, groupID string) error {
 func buildHierachy(gm mggroups.Page) (query, cq string) {
 	switch {
 	case gm.Direction >= 0: // ancestors
-		query = fmt.Sprintf(`SELECT g.id, COALESCE(g.parent_id, '') AS parent_id, g.domain_id, g.name, g.description, g.metadata, g.created_at, g.updated_at, g.updated_by, g.status, g.path, nlevel(g.path) as level FROM groups parent, groups g WHERE parent.id = '%s' AND g.path @> parent.path AND nlevel(parent.path) - nlevel(g.path) <= %d`, gm.ID, gm.Level)
-		cq = fmt.Sprintf(`SELECT COUNT(*) FROM groups parent, groups g WHERE parent.id = '%s' AND g.path @> parent.path`, gm.ID)
+		query = fmt.Sprintf(`SELECT g.id, COALESCE(g.parent_id, '') AS parent_id, g.domain_id, g.name, g.description, g.metadata, g.created_at, g.updated_at, g.updated_by, g.status, g.path, nlevel(g.path) as level FROM groups parent, groups g WHERE parent.id = '%s' AND g.path @> parent.path AND nlevel(parent.path) - nlevel(g.path) <= %d`, gm.ParentID, gm.Level)
+		cq = fmt.Sprintf(`SELECT COUNT(*) FROM groups parent, groups g WHERE parent.id = '%s' AND g.path @> parent.path`, gm.ParentID)
 
 	case gm.Direction < 0: // descendants
-		query = fmt.Sprintf(`SELECT g.id, COALESCE(g.parent_id, '') AS parent_id, g.domain_id, g.name, g.description, g.metadata, g.created_at, g.updated_at, g.updated_by, g.status, g.path, nlevel(g.path) as level FROM groups parent, groups g WHERE parent.id = '%s' AND g.path <@ parent.path AND nlevel(g.path) - nlevel(parent.path) < %d`, gm.ID, gm.Level)
-		cq = fmt.Sprintf(`SELECT COUNT(*) FROM groups parent, groups g WHERE parent.id = '%s' AND g.path <@ parent.path`, gm.ID)
+		query = fmt.Sprintf(`SELECT g.id, COALESCE(g.parent_id, '') AS parent_id, g.domain_id, g.name, g.description, g.metadata, g.created_at, g.updated_at, g.updated_by, g.status, g.path, nlevel(g.path) as level FROM groups parent, groups g WHERE parent.id = '%s' AND g.path <@ parent.path AND nlevel(g.path) - nlevel(parent.path) < %d`, gm.ParentID, gm.Level)
+		cq = fmt.Sprintf(`SELECT COUNT(*) FROM groups parent, groups g WHERE parent.id = '%s' AND g.path <@ parent.path`, gm.ParentID)
 	}
 	return
 }
