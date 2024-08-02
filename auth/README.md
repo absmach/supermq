@@ -89,7 +89,7 @@ The service is configured using the environment variables presented in the follo
 | MG_SPICEDB_PORT                | SpiceDB host port                                                       | 50051                           |
 | MG_SPICEDB_PRE_SHARED_KEY      | SpiceDB pre-shared key                                                  | 12345678                        |
 | MG_SPICEDB_SCHEMA_FILE         | Path to SpiceDB schema file                                             | ./docker/spicedb/schema.zed     |
-| MG_JAEGER_URL                  | Jaeger server URL                                                       | <http://jaeger:4318//v1/traces> |
+| MG_JAEGER_URL                  | Jaeger server URL                                                       | <http://jaeger:4318/v1/traces> |
 | MG_JAEGER_TRACE_RATIO          | Jaeger sampling ratio                                                   | 1.0                             |
 | MG_SEND_TELEMETRY              | Send telemetry to magistrala call home server                           | true                            |
 | MG_AUTH_ADAPTER_INSTANCE_ID    | Adapter instance ID                                                     | ""                              |

@@ -32,7 +32,7 @@ default values.
 | MG_AUTH_GRPC_TIMEOUT                | Auth service gRPC request timeout in seconds  | 1s                            |
 | MG_AUTH_GRPC_CLIENT_TLS             | Auth service gRPC TLS mode flag               | false                         |
 | MG_AUTH_GRPC_CA_CERTS               | Auth service gRPC CA certificates             | ""                            |
-| MG_JAEGER_URL                       | Jaeger server URL                             | http://jaeger:4318//v1/traces |
+| MG_JAEGER_URL                       | Jaeger server URL                             | http://jaeger:4318/v1/traces |
 | MG_SEND_TELEMETRY                   | Send telemetry to magistrala call home server | true                          |
 | MG_POSTGRES_READER_INSTANCE_ID      | Postgres reader instance ID                   |                               |
 

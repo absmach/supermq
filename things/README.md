@@ -43,7 +43,7 @@ default values.
 | MG_THINGS_ES_DB                 | Event store instance name                                               | 0                               |
 | MG_THINGS_STANDALONE_ID         | User ID for standalone mode (no gRPC communication with Auth)           | ""                              |
 | MG_THINGS_STANDALONE_TOKEN      | User token for standalone mode that should be passed in auth header     | ""                              |
-| MG_JAEGER_URL                   | Jaeger server URL                                                       | <http://jaeger:4318//v1/traces> |
+| MG_JAEGER_URL                   | Jaeger server URL                                                       | <http://jaeger:4318/v1/traces> |
 | MG_AUTH_GRPC_URL                | Auth service gRPC URL                                                   | localhost:7001                  |
 | MG_AUTH_GRPC_TIMEOUT            | Auth service gRPC request timeout in seconds                            | 1s                              |
 | MG_AUTH_GRPC_CLIENT_TLS         | Enable TLS for gRPC client                                              | false                           |

@@ -60,7 +60,7 @@ The service is configured using the environment variables presented in the follo
 | MG_CERTS_DB_SSL_KEY                       | Database SSL key                                                            | ""                                                                   |
 | MG_CERTS_DB_SSL_ROOT_CERT                 | Database SSL root certificate                                               | ""                                                                   |
 | MG_THINGS_URL                             | Things service URL                                                          | [localhost:9000](localhost:9000)                                     |
-| MG_JAEGER_URL                             | Jaeger server URL                                                           | [http://localhost:4318//v1/traces](http://localhost:4318//v1/traces) |
+| MG_JAEGER_URL                             | Jaeger server URL                                                           | [http://localhost:4318/v1/traces](http://localhost:4318//v1/traces) |
 | MG_JAEGER_TRACE_RATIO                     | Jaeger sampling ratio                                                       | 1.0                                                                  |
 | MG_SEND_TELEMETRY                         | Send telemetry to magistrala call home server                               | true                                                                 |
 | MG_CERTS_INSTANCE_ID                      | Service instance ID                                                         | ""                                                                   |
