@@ -21,9 +21,9 @@ services:
     restart: on-failure
     command: postgres -c "max_connections=${MG_POSTGRES_MAX_CONNECTIONS}"
     environment:
-      POSTGRES_USER: ${MG_JOURNAL_USER}
-      POSTGRES_PASSWORD: ${MG_JOURNAL_PASS}
-      POSTGRES_DB: ${MG_JOURNAL_NAME}
+      POSTGRES_USER: ${MG_JOURNAL_DB_USER}
+      POSTGRES_PASSWORD: ${MG_JOURNAL_DB_PASS}
+      POSTGRES_DB: ${MG_JOURNAL_DB_NAME}
       MG_POSTGRES_MAX_CONNECTIONS: ${MG_POSTGRES_MAX_CONNECTIONS}
     networks:
       - magistrala-base-net
