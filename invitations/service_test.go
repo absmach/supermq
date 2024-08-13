@@ -889,6 +889,20 @@ func TestRejectInvitation(t *testing.T) {
 			authorised:  true,
 			repoErr:     svcerr.ErrNotFound,
 		},
+		{
+			desc:        "error updating rejection",
+			token:       validToken,
+			tokenUserID: testsutil.GenerateUUID(t),
+			userID:      validInvitation.UserID,
+			domainID:    validInvitation.DomainID,
+			resp:        validInvitation,
+			err:         svcerr.ErrUpdateEntity,
+			authNErr:    nil,
+			domainErr:   nil,
+			adminErr:    nil,
+			authorised:  true,
+			repoErr:     svcerr.ErrUpdateEntity,
+		},
 	}
 
 	for _, tc := range cases {
@@ -897,33 +911,14 @@ func TestRejectInvitation(t *testing.T) {
 			Id:     tc.domainID + "_" + tc.userID,
 		}
 		repocall := authsvc.On("Identify", context.Background(), &magistrala.IdentityReq{Token: tc.token}).Return(idRes, tc.authNErr)
-		domainReq := magistrala.AuthorizeReq{
-			SubjectType: auth.UserType,
-			SubjectKind: auth.UsersKind,
-			Subject:     idRes.GetId(),
-			Permission:  auth.AdminPermission,
-			ObjectType:  auth.DomainType,
-			Object:      tc.domainID,
-		}
-		domaincall := authsvc.On("Authorize", context.Background(), &domainReq).Return(&magistrala.AuthorizeRes{Authorized: tc.authorised}, tc.domainErr)
-		platformReq := magistrala.AuthorizeReq{
-			SubjectType: auth.UserType,
-			SubjectKind: auth.UsersKind,
-			Subject:     idRes.GetId(),
-			Permission:  auth.AdminPermission,
-			ObjectType:  auth.PlatformType,
-			Object:      auth.MagistralaObject,
-		}
-		platformcall := authsvc.On("Authorize", context.Background(), &platformReq).Return(&magistrala.AuthorizeRes{Authorized: tc.authorised}, tc.adminErr)
 		repocall1 := repo.On("Retrieve", context.Background(), mock.Anything, mock.Anything).Return(tc.resp, tc.repoErr)
 		repocall2 := repo.On("Delete", context.Background(), mock.Anything, mock.Anything).Return(tc.repoErr)
-		repo.On("UpdateRejection", context.Background(), mock.Anything).Return(nil).Once()
+		repocall3 := repo.On("UpdateRejection", context.Background(), mock.Anything).Return(tc.repoErr)
 		err := svc.RejectInvitation(context.Background(), tc.token, tc.domainID)
 		assert.Equal(t, tc.err, err, tc.desc)
 		repocall.Unset()
 		repocall1.Unset()
-		domaincall.Unset()
-		platformcall.Unset()
 		repocall2.Unset()
+		repocall3.Unset()
 	}
 }

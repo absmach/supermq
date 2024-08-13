@@ -130,7 +130,7 @@ func (svc *service) AcceptInvitation(ctx context.Context, token, domainID string
 		return err
 	}
 
-	if inv.UserID == user.GetUserId() && inv.ConfirmedAt.IsZero() {
+	if inv.UserID == user.GetUserId() && inv.ConfirmedAt.IsZero() && inv.RejectedAt.IsZero() {
 		req := mgsdk.UsersRelationRequest{
 			Relation: inv.Relation,
 			UserIDs:  []string{user.GetUserId()},
