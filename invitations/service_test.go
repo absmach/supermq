@@ -5,7 +5,6 @@ package invitations_test
 
 import (
 	"context"
-	"math/rand"
 	"testing"
 	"time"
 
@@ -18,6 +17,7 @@ import (
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	sdkmocks "github.com/absmach/magistrala/pkg/sdk/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -577,8 +577,8 @@ func TestListInvitations(t *testing.T) {
 func TestAcceptInvitation(t *testing.T) {
 	repo := new(mocks.Repository)
 	authsvc := new(authmocks.AuthServiceClient)
-	svc := invitations.NewService(repo, authsvc, nil)
-
+	sdksvc := new(sdkmocks.SDK)
+	svc := invitations.NewService(repo, authsvc, sdksvc)
 	userID := testsutil.GenerateUUID(t)
 
 	cases := []struct {
@@ -593,6 +593,8 @@ func TestAcceptInvitation(t *testing.T) {
 		adminErr    error
 		authorised  bool
 		repoErr     error
+		sdkErr      errors.SDKError
+		repoErr1    error
 	}{
 		{
 			desc:        "invalid token",
@@ -611,11 +613,10 @@ func TestAcceptInvitation(t *testing.T) {
 			tokenUserID: userID,
 			domainID:    "",
 			resp: invitations.Invitation{
-				UserID:      userID,
-				DomainID:    testsutil.GenerateUUID(t),
-				Token:       validToken,
-				Relation:    auth.ContributorRelation,
-				ConfirmedAt: time.Now().Add(-time.Second * time.Duration(rand.Intn(100))),
+				UserID:   userID,
+				DomainID: testsutil.GenerateUUID(t),
+				Token:    validToken,
+				Relation: auth.ContributorRelation,
 			},
 			err:        nil,
 			authNErr:   nil,
@@ -635,15 +636,57 @@ func TestAcceptInvitation(t *testing.T) {
 			authorised:  false,
 			repoErr:     svcerr.ErrNotFound,
 		},
+		{
+			desc:        "list invitations successful that have been confirmed with sdk err",
+			token:       validToken,
+			tokenUserID: userID,
+			domainID:    "",
+			resp: invitations.Invitation{
+				UserID:   userID,
+				DomainID: testsutil.GenerateUUID(t),
+				Token:    validToken,
+				Relation: auth.ContributorRelation,
+			},
+			err:        errors.NewSDKError(svcerr.ErrConflict),
+			authNErr:   nil,
+			domainErr:  nil,
+			adminErr:   nil,
+			authorised: true,
+			repoErr:    nil,
+			sdkErr:     errors.NewSDKError(svcerr.ErrConflict),
+		},
+		{
+			desc:        "list invitations successful that have been confirmed with failed update confirmation",
+			token:       validToken,
+			tokenUserID: userID,
+			domainID:    "",
+			resp: invitations.Invitation{
+				UserID:   userID,
+				DomainID: testsutil.GenerateUUID(t),
+				Token:    validToken,
+				Relation: auth.ContributorRelation,
+			},
+			err:        svcerr.ErrUpdateEntity,
+			authNErr:   nil,
+			domainErr:  nil,
+			adminErr:   nil,
+			authorised: true,
+			repoErr:    nil,
+			repoErr1:   svcerr.ErrUpdateEntity,
+		},
 	}
 
 	for _, tc := range cases {
 		repocall := authsvc.On("Identify", context.Background(), &magistrala.IdentityReq{Token: tc.token}).Return(&magistrala.IdentityRes{UserId: tc.tokenUserID}, tc.authNErr)
 		repocall1 := repo.On("Retrieve", context.Background(), mock.Anything, tc.domainID).Return(tc.resp, tc.repoErr)
+		sdkcall := sdksvc.On("AddUserToDomain", mock.Anything, mock.Anything, mock.Anything).Return(tc.sdkErr)
+		repocall2 := repo.On("UpdateConfirmation", context.Background(), mock.Anything).Return(tc.repoErr1)
 		err := svc.AcceptInvitation(context.Background(), tc.token, tc.domainID)
 		assert.Equal(t, tc.err, err, tc.desc)
 		repocall.Unset()
 		repocall1.Unset()
+		sdkcall.Unset()
+		repocall2.Unset()
 	}
 }
 
@@ -815,25 +858,10 @@ func TestRejectInvitation(t *testing.T) {
 		resp        invitations.Invitation
 		err         error
 		authNErr    error
-		domainErr   error
-		adminErr    error
 		authorised  bool
 		repoErr     error
+		repoErr1    error
 	}{
-		{
-			desc:        "reject invitations successful",
-			token:       validToken,
-			tokenUserID: testsutil.GenerateUUID(t),
-			userID:      testsutil.GenerateUUID(t),
-			domainID:    testsutil.GenerateUUID(t),
-			resp:        validInvitation,
-			err:         nil,
-			authNErr:    nil,
-			domainErr:   nil,
-			adminErr:    nil,
-			authorised:  true,
-			repoErr:     nil,
-		},
 		{
 			desc:        "invalid token",
 			token:       "invalid",
@@ -842,10 +870,9 @@ func TestRejectInvitation(t *testing.T) {
 			domainID:    testsutil.GenerateUUID(t),
 			err:         svcerr.ErrAuthentication,
 			authNErr:    svcerr.ErrAuthentication,
-			domainErr:   nil,
-			adminErr:    nil,
 			authorised:  false,
 			repoErr:     nil,
+			repoErr1:    nil,
 		},
 		{
 			desc:        "reject invitations for the same user",
@@ -856,10 +883,9 @@ func TestRejectInvitation(t *testing.T) {
 			resp:        validInvitation,
 			err:         nil,
 			authNErr:    nil,
-			domainErr:   nil,
-			adminErr:    nil,
 			authorised:  true,
 			repoErr:     nil,
+			repoErr1:    nil,
 		},
 		{
 			desc:        "reject invitations for the invited user",
@@ -868,12 +894,11 @@ func TestRejectInvitation(t *testing.T) {
 			userID:      validInvitation.UserID,
 			domainID:    validInvitation.DomainID,
 			resp:        validInvitation,
-			err:         nil,
+			err:         svcerr.ErrAuthorization,
 			authNErr:    nil,
-			domainErr:   nil,
-			adminErr:    nil,
 			authorised:  true,
 			repoErr:     nil,
+			repoErr1:    nil,
 		},
 		{
 			desc:        "error retrieving invitation",
@@ -884,24 +909,22 @@ func TestRejectInvitation(t *testing.T) {
 			resp:        invitations.Invitation{},
 			err:         svcerr.ErrNotFound,
 			authNErr:    nil,
-			domainErr:   nil,
-			adminErr:    nil,
 			authorised:  true,
 			repoErr:     svcerr.ErrNotFound,
+			repoErr1:    nil,
 		},
 		{
 			desc:        "error updating rejection",
 			token:       validToken,
-			tokenUserID: testsutil.GenerateUUID(t),
+			tokenUserID: validInvitation.UserID,
 			userID:      validInvitation.UserID,
 			domainID:    validInvitation.DomainID,
 			resp:        validInvitation,
 			err:         svcerr.ErrUpdateEntity,
 			authNErr:    nil,
-			domainErr:   nil,
-			adminErr:    nil,
 			authorised:  true,
-			repoErr:     svcerr.ErrUpdateEntity,
+			repoErr:     nil,
+			repoErr1:    svcerr.ErrUpdateEntity,
 		},
 	}
 
@@ -912,13 +935,11 @@ func TestRejectInvitation(t *testing.T) {
 		}
 		repocall := authsvc.On("Identify", context.Background(), &magistrala.IdentityReq{Token: tc.token}).Return(idRes, tc.authNErr)
 		repocall1 := repo.On("Retrieve", context.Background(), mock.Anything, mock.Anything).Return(tc.resp, tc.repoErr)
-		repocall2 := repo.On("Delete", context.Background(), mock.Anything, mock.Anything).Return(tc.repoErr)
-		repocall3 := repo.On("UpdateRejection", context.Background(), mock.Anything).Return(tc.repoErr)
+		repocall3 := repo.On("UpdateRejection", context.Background(), mock.Anything).Return(tc.repoErr1)
 		err := svc.RejectInvitation(context.Background(), tc.token, tc.domainID)
 		assert.Equal(t, tc.err, err, tc.desc)
 		repocall.Unset()
 		repocall1.Unset()
-		repocall2.Unset()
 		repocall3.Unset()
 	}
 }

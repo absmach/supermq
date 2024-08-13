@@ -5,6 +5,7 @@ package invitations
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/absmach/magistrala"
@@ -141,12 +142,10 @@ func (svc *service) AcceptInvitation(ctx context.Context, token, domainID string
 
 		inv.ConfirmedAt = time.Now()
 		inv.UpdatedAt = time.Now()
-		if err := svc.repo.UpdateConfirmation(ctx, inv); err != nil {
-			return err
-		}
+		return svc.repo.UpdateConfirmation(ctx, inv)
 	}
 
-	return nil
+	return svcerr.ErrAuthorization
 }
 
 func (svc *service) RejectInvitation(ctx context.Context, token, domainID string) error {
@@ -159,16 +158,15 @@ func (svc *service) RejectInvitation(ctx context.Context, token, domainID string
 	if err != nil {
 		return err
 	}
+	fmt.Println(inv.UserID)
 
 	if inv.UserID == user.GetUserId() && inv.ConfirmedAt.IsZero() && inv.RejectedAt.IsZero() {
 		inv.RejectedAt = time.Now()
 		inv.UpdatedAt = time.Now()
-		if err := svc.repo.UpdateRejection(ctx, inv); err != nil {
-			return err
-		}
+		return svc.repo.UpdateRejection(ctx, inv)
 	}
 
-	return nil
+	return svcerr.ErrAuthorization
 }
 
 func (svc *service) DeleteInvitation(ctx context.Context, token, userID, domainID string) error {
