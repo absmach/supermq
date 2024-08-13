@@ -5,7 +5,6 @@ package invitations
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/absmach/magistrala"
@@ -131,21 +130,30 @@ func (svc *service) AcceptInvitation(ctx context.Context, token, domainID string
 		return err
 	}
 
-	if inv.UserID == user.GetUserId() && inv.ConfirmedAt.IsZero() && inv.RejectedAt.IsZero() {
-		req := mgsdk.UsersRelationRequest{
-			Relation: inv.Relation,
-			UserIDs:  []string{user.GetUserId()},
-		}
-		if sdkerr := svc.sdk.AddUserToDomain(inv.DomainID, req, inv.Token); sdkerr != nil {
-			return sdkerr
-		}
-
-		inv.ConfirmedAt = time.Now()
-		inv.UpdatedAt = time.Now()
-		return svc.repo.UpdateConfirmation(ctx, inv)
+	if inv.UserID != user.GetUserId() {
+		return svcerr.ErrAuthorization
 	}
 
-	return svcerr.ErrAuthorization
+	if !inv.ConfirmedAt.IsZero() {
+		return svcerr.ErrInvitationAlreadyAccepted
+	}
+
+	if !inv.RejectedAt.IsZero() {
+		return svcerr.ErrInvitationAlreadyRejected
+	}
+
+	req := mgsdk.UsersRelationRequest{
+		Relation: inv.Relation,
+		UserIDs:  []string{user.GetUserId()},
+	}
+	if sdkerr := svc.sdk.AddUserToDomain(inv.DomainID, req, inv.Token); sdkerr != nil {
+		return sdkerr
+	}
+
+	inv.ConfirmedAt = time.Now()
+	inv.UpdatedAt = time.Now()
+	return svc.repo.UpdateConfirmation(ctx, inv)
+
 }
 
 func (svc *service) RejectInvitation(ctx context.Context, token, domainID string) error {
@@ -158,15 +166,23 @@ func (svc *service) RejectInvitation(ctx context.Context, token, domainID string
 	if err != nil {
 		return err
 	}
-	fmt.Println(inv.UserID)
 
-	if inv.UserID == user.GetUserId() && inv.ConfirmedAt.IsZero() && inv.RejectedAt.IsZero() {
-		inv.RejectedAt = time.Now()
-		inv.UpdatedAt = time.Now()
-		return svc.repo.UpdateRejection(ctx, inv)
+	if inv.UserID != user.GetUserId() {
+		return svcerr.ErrAuthorization
 	}
 
-	return svcerr.ErrAuthorization
+	if !inv.ConfirmedAt.IsZero() {
+		return svcerr.ErrInvitationAlreadyAccepted
+	}
+
+	if !inv.RejectedAt.IsZero() {
+		return svcerr.ErrInvitationAlreadyRejected
+	}
+
+	inv.RejectedAt = time.Now()
+	inv.UpdatedAt = time.Now()
+	return svc.repo.UpdateRejection(ctx, inv)
+
 }
 
 func (svc *service) DeleteInvitation(ctx context.Context, token, userID, domainID string) error {
