@@ -153,7 +153,6 @@ func (svc *service) AcceptInvitation(ctx context.Context, token, domainID string
 	inv.ConfirmedAt = time.Now()
 	inv.UpdatedAt = time.Now()
 	return svc.repo.UpdateConfirmation(ctx, inv)
-
 }
 
 func (svc *service) RejectInvitation(ctx context.Context, token, domainID string) error {
@@ -182,7 +181,6 @@ func (svc *service) RejectInvitation(ctx context.Context, token, domainID string
 	inv.RejectedAt = time.Now()
 	inv.UpdatedAt = time.Now()
 	return svc.repo.UpdateRejection(ctx, inv)
-
 }
 
 func (svc *service) DeleteInvitation(ctx context.Context, token, userID, domainID string) error {
