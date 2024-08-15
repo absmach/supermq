@@ -62,7 +62,6 @@ func TestReadSenml(t *testing.T) {
 	queryMsgs := []senml.Message{}
 
 	now := float64(time.Now().Unix())
-	fmt.Println("Start generating messages...")
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
 		msg := m
@@ -513,8 +512,6 @@ func TestReadSenml(t *testing.T) {
 
 	for _, tc := range cases {
 		result, err := reader.ReadAll(tc.chanID, tc.pageMeta)
-		fmt.Printf("Retrieved %d messages\n", len(result.Messages))
-		fmt.Printf("Messages: %v\n", result.Messages)
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %s", tc.desc, err))
 		assert.ElementsMatch(t, tc.page.Messages, result.Messages, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.page.Messages, result.Messages))
 		assert.Equal(t, tc.page.Total, result.Total, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.page.Total, result.Total))
@@ -530,45 +527,42 @@ func TestReadMessagesWithAggregation(t *testing.T) {
 
 	now := float64(time.Now().UnixNano())
 	value := 10.0
-	fmt.Println("Start generating messages... ")
 	for i := 0; i < 100; i++ {
-        if i%10 == 0 {
-            value += 10.0 // increase value every 10th value
-        }
-        v := value // use the updated value
-        msg := senml.Message{
-            Channel:   chanID,
-            Publisher: pubID,
-            Time:      now - float64(i*1000000000), // over 100 seconds
-            Value:     &v,
-            Protocol:  mqttProt,
-        }
-        messages = append(messages, msg)
-        fmt.Printf("Updated message value to: %v at index %d\n", v, i)
-    }
+		if i%10 == 0 {
+			value += 10.0 // increase value every 10th value
+		}
+		v := value // use the updated value
+		msg := senml.Message{
+			Channel:   chanID,
+			Publisher: pubID,
+			Time:      now - float64(i*1000000000), // over 100 seconds
+			Value:     &v,
+			Protocol:  mqttProt,
+		}
+		messages = append(messages, msg)
+	}
 
-	fmt.Println("Consuming messages...")
 	err := writer.ConsumeBlocking(context.TODO(), messages)
-	require.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
+	require.Nil(t, err, "expected no error got %s\n", err)
 
 	reader := treader.New(db)
 
 	// Set up cases for aggregation readAll
 	cases := []struct {
-		desc  string
-		chanID string
+		desc     string
+		chanID   string
 		pageMeta readers.PageMetadata
-		page    readers.MessagesPage
-	} {
+		page     readers.MessagesPage
+	}{
 		{
 			desc:   "read message page for existing channel with AVG aggregation over an hour",
 			chanID: chanID,
-			pageMeta : readers.PageMetadata{
+			pageMeta: readers.PageMetadata{
 				Limit:       100,
 				Offset:      0,
 				Aggregation: "AVG",
 				Interval:    "1 hour",
-				From:        now - float64(100000000000),  // 100 seconds ago.
+				From:        now - float64(100000000000), // 100 seconds ago.
 				To:          now,
 			},
 			page: readers.MessagesPage{
@@ -578,12 +572,12 @@ func TestReadMessagesWithAggregation(t *testing.T) {
 		{
 			desc:   "read message page for existing channel with MAX aggregation over an hour",
 			chanID: chanID,
-			pageMeta : readers.PageMetadata{
+			pageMeta: readers.PageMetadata{
 				Limit:       100,
 				Offset:      0,
 				Aggregation: "MAX",
 				Interval:    "1 hour",
-				From:        now - float64(100000000000),  // 100 seconds ago.
+				From:        now - float64(100000000000), // 100 seconds ago.
 				To:          now,
 			},
 			page: readers.MessagesPage{
@@ -593,12 +587,12 @@ func TestReadMessagesWithAggregation(t *testing.T) {
 		{
 			desc:   "read message page for existing channel with MIN aggregation over an hour",
 			chanID: chanID,
-			pageMeta : readers.PageMetadata{
+			pageMeta: readers.PageMetadata{
 				Limit:       100,
 				Offset:      0,
 				Aggregation: "MIN",
 				Interval:    "1 hour",
-				From:        now - float64(100000000000),  // 100 seconds ago.
+				From:        now - float64(100000000000), // 100 seconds ago.
 				To:          now,
 			},
 			page: readers.MessagesPage{
@@ -608,12 +602,12 @@ func TestReadMessagesWithAggregation(t *testing.T) {
 		{
 			desc:   "read message page for existing channel with SUM aggregation over an hour",
 			chanID: chanID,
-			pageMeta : readers.PageMetadata{
+			pageMeta: readers.PageMetadata{
 				Limit:       100,
 				Offset:      0,
 				Aggregation: "SUM",
 				Interval:    "1 hour",
-				From:        now - float64(100000000000),  // 100 seconds ago.
+				From:        now - float64(100000000000), // 100 seconds ago.
 				To:          now,
 			},
 			page: readers.MessagesPage{
@@ -623,12 +617,12 @@ func TestReadMessagesWithAggregation(t *testing.T) {
 		{
 			desc:   "read message page for existing channel with COUNT aggregation over an hour",
 			chanID: chanID,
-			pageMeta : readers.PageMetadata{
+			pageMeta: readers.PageMetadata{
 				Limit:       100,
 				Offset:      0,
 				Aggregation: "COUNT",
 				Interval:    "1 hour",
-				From:        now - float64(100000000000),  // 100 seconds ago.
+				From:        now - float64(100000000000), // 100 seconds ago.
 				To:          now,
 			},
 			page: readers.MessagesPage{
@@ -638,7 +632,7 @@ func TestReadMessagesWithAggregation(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-        fmt.Printf("Testing case: %s\n", tc.desc)
+		fmt.Printf("Testing case: %s\n", tc.desc)
 		// Execute the read with aggregation
 		resultPage, err := reader.ReadAll(tc.chanID, tc.pageMeta)
 		if err != nil {
@@ -650,13 +644,13 @@ func TestReadMessagesWithAggregation(t *testing.T) {
 		assert.NotEmpty(t, resultPage.Messages, "expected non-empty result set")
 		// Validate aggregation results
 		for _, iface := range resultPage.Messages {
-            msg, ok := iface.(senml.Message)
-            require.True(t, ok, "expected message to be of type senml.Message")
-            if ok && msg.Value != nil {
-                assert.GreaterOrEqual(t, *msg.Value, resultPage.Value, "expected aggregated value to be greater or equal to the expected value")
-                fmt.Printf("Aggregated Time: %v, Value: %v\n", msg.Time, *msg.Value)
-            }
-        }
+			msg, ok := iface.(senml.Message)
+			require.True(t, ok, "expected message to be of type senml.Message")
+			if ok && msg.Value != nil {
+				assert.GreaterOrEqual(t, *msg.Value, resultPage.Value, "expected aggregated value to be greater or equal to the expected value")
+				fmt.Printf("Aggregated Time: %v, Value: %v\n", msg.Time, *msg.Value)
+			}
+		}
 	}
 }
 
@@ -823,49 +817,4 @@ func toMap(msg json.Message) map[string]interface{} {
 		"protocol":  msg.Protocol,
 		"payload":   map[string]interface{}(msg.Payload),
 	}
-}
-
-// Calculate expected average value
-func calculateExpectedAvg(messages []senml.Message) float64 {
-    var sum float64
-    for _, m := range messages {
-        sum += *m.Value
-    }
-    return sum / float64(len(messages))
-}
-
-// Calculate expected maximum value
-func calculateExpectedMax(messages []senml.Message) float64 {
-    max := *messages[0].Value
-    for _, m := range messages {
-        if *m.Value > max {
-            max = *m.Value
-        }
-    }
-    return max
-}
-
-// Calculate expected minimum value
-func calculateExpectedMin(messages []senml.Message) float64 {
-    min := *messages[0].Value
-    for _, m := range messages {
-        if *m.Value < min {
-            min = *m.Value
-        }
-    }
-    return min
-}
-
-// Calculate expected sum
-func calculateExpectedSum(messages []senml.Message) float64 {
-    var sum float64
-    for _, m := range messages {
-        sum += *m.Value
-    }
-    return sum
-}
-
-// Calculate expected count
-func calculateExpectedCount(messages []senml.Message) int {
-    return len(messages)
 }
