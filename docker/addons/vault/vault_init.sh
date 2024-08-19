@@ -5,13 +5,24 @@
 set -euo pipefail
 
 scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-export MAGISTRALA_DIR=$scriptdir/../../../
 
 cd $scriptdir
 
+# Default .env file path
+env_file="../../../docker/.env"
+
+# Parse command line arguments
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --env-file) env_file="$2"; shift ;;
+        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+    esac
+    shift
+done
+
 readDotEnv() {
     set -o allexport
-    source $MAGISTRALA_DIR/docker/.env
+    source "$env_file"
     set +o allexport
 }
 
@@ -19,6 +30,7 @@ source vault_cmd.sh
 
 readDotEnv
 
+# Create the data directory inside docker/addons/vault/scripts
 mkdir -p data
 
 vault operator init -address=$MG_VAULT_ADDR 2>&1 | tee >(sed -r 's/\x1b\[[0-9;]*m//g' > data/secrets)

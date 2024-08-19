@@ -5,13 +5,27 @@
 set -euo pipefail
 
 scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-export MAGISTRALA_DIR=$scriptdir/../../../
 
 cd $scriptdir
 
+# Default .env file path
+env_file="../../../docker/.env"
+
+# Default certificate copy path
+certs_copy_path="../../../docker/ssl/certs/"
+
+# Parse command line arguments
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --env-file) env_file="$2"; shift ;;
+        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+    esac
+    shift
+done
+
 readDotEnv() {
     set -o allexport
-    source $MAGISTRALA_DIR/docker/.env
+    source "$env_file"
     set +o allexport
 }
 
@@ -27,25 +41,25 @@ fi
 echo "Copying certificate files"
 
 if [ -e "data/${server_name}.crt" ]; then
-    cp -v data/${server_name}.crt      ${MAGISTRALA_DIR}/docker/ssl/certs/magistrala-server.crt
+    cp -v data/${server_name}.crt      ${certs_copy_path}magistrala-server.crt
 else
     echo "${server_name}.crt file not available"
 fi
 
 if [ -e "data/${server_name}.key" ]; then
-    cp -v data/${server_name}.key      ${MAGISTRALA_DIR}/docker/ssl/certs/magistrala-server.key
+    cp -v data/${server_name}.key      ${certs_copy_path}magistrala-server.key
 else
     echo "${server_name}.key file not available"
 fi
 
 if [ -e "data/${MG_VAULT_PKI_INT_FILE_NAME}.key" ]; then
-    cp -v data/${MG_VAULT_PKI_INT_FILE_NAME}.key    ${MAGISTRALA_DIR}/docker/ssl/certs/ca.key
+    cp -v data/${MG_VAULT_PKI_INT_FILE_NAME}.key    ${certs_copy_path}ca.key
 else
     echo "data/${MG_VAULT_PKI_INT_FILE_NAME}.key file not available"
 fi
 
 if [ -e "data/${MG_VAULT_PKI_INT_FILE_NAME}_bundle.crt" ]; then
-    cp -v data/${MG_VAULT_PKI_INT_FILE_NAME}_bundle.crt     ${MAGISTRALA_DIR}/docker/ssl/certs/ca.crt
+    cp -v data/${MG_VAULT_PKI_INT_FILE_NAME}_bundle.crt     ${certs_copy_path}ca.crt
 else
     echo "data/${MG_VAULT_PKI_INT_FILE_NAME}_bundle.crt file not available"
 fi

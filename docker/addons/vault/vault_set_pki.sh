@@ -4,16 +4,25 @@
 
 set -euo pipefail
 
-scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-export MAGISTRALA_DIR=$scriptdir/../../../
+scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
-SKIP_SERVER_CERT=${1:-}
+# Default .env file path
+env_file="../../../docker/.env"
+SKIP_SERVER_CERT=""
 
-cd $scriptdir
+# Parse command line arguments
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --env-file) env_file="$2"; shift ;;
+        --skip-server-cert) SKIP_SERVER_CERT="--skip-server-cert"; ;;
+        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+    esac
+    shift
+done
 
 readDotEnv() {
     set -o allexport
-    source $MAGISTRALA_DIR/docker/.env
+    source "$env_file"
     set +o allexport
 }
 
@@ -27,8 +36,8 @@ fi
 source vault_cmd.sh
 
 vaultEnablePKI() {
-    vault secrets enable -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR}  -path ${MG_VAULT_PKI_PATH} pki
-    vault secrets tune -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR}  -max-lease-ttl=87600h ${MG_VAULT_PKI_PATH}
+    vault secrets enable -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} -path ${MG_VAULT_PKI_PATH} pki
+    vault secrets tune -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} -max-lease-ttl=87600h ${MG_VAULT_PKI_PATH}
 }
 
 vaultConfigPKIClusterPath() {
@@ -129,7 +138,6 @@ vaultSignIntermediateCSR() {
             | tee >(jq -r .data.certificate >data/${MG_VAULT_PKI_INT_FILE_NAME}.crt) \
                 >(jq -r .data.issuing_ca >data/${MG_VAULT_PKI_INT_FILE_NAME}_issuing_ca.crt)
     fi
-
 }
 
 vaultInjectIntermediateCertificate() {
@@ -178,7 +186,6 @@ vaultGenerateServerCertificate() {
             | tee >(jq -r .data.certificate >data/${server_name}.crt) \
                 >(jq -r .data.private_key >data/${server_name}.key)
     fi
-
 }
 
 vaultSetupThingCertsRole() {
@@ -205,7 +212,7 @@ readDotEnv
 
 mkdir -p data
 
-vault login  -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} ${MG_VAULT_TOKEN}
+vault login -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} ${MG_VAULT_TOKEN}
 
 vaultEnablePKI
 vaultConfigPKIClusterPath

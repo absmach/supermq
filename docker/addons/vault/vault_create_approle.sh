@@ -4,16 +4,27 @@
 
 set -euo pipefail
 
-scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-export MAGISTRALA_DIR=$scriptdir/../../../
+scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 cd $scriptdir
 
 SKIP_ENABLE_APP_ROLE=${1:-}
 
+# Default .env file path
+env_file="../../../docker/.env"
+
+# Parse command line arguments
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --env-file) env_file="$2"; shift ;;
+        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+    esac
+    shift
+done
+
 readDotEnv() {
     set -o allexport
-    source $MAGISTRALA_DIR/docker/.env
+    source "$env_file"
     set +o allexport
 }
 
@@ -23,8 +34,9 @@ vaultCreatePolicyFile() {
     envsubst '
     ${MG_VAULT_PKI_INT_PATH}
     ${MG_VAULT_PKI_INT_THINGS_CERTS_ROLE_NAME}
-    ' <  magistrala_things_certs_issue.template.hcl >  magistrala_things_certs_issue.hcl
+    ' < magistrala_things_certs_issue.template.hcl > magistrala_things_certs_issue.hcl
 }
+
 vaultCreatePolicy() {
     echo "Creating new policy for AppRole"
     if is_container_running "magistrala-vault"; then
@@ -45,18 +57,18 @@ vaultEnableAppRole() {
 }
 
 vaultDeleteRole() {
-    echo "Deleteing old AppRole"
+    echo "Deleting old AppRole"
     vault delete -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} auth/approle/role/magistrala_things_certs_issuer
 }
 
 vaultCreateRole() {
     echo "Creating new AppRole"
     vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} auth/approle/role/magistrala_things_certs_issuer \
-    token_policies=magistrala_things_certs_issue  secret_id_num_uses=0 \
-    secret_id_ttl=0 token_ttl=1h token_max_ttl=3h  token_num_uses=0
+    token_policies=magistrala_things_certs_issue secret_id_num_uses=0 \
+    secret_id_ttl=0 token_ttl=1h token_max_ttl=3h token_num_uses=0
 }
 
-vaultWriteCustomRoleID(){
+vaultWriteCustomRoleID() {
     echo "Writing custom role id"
     vault read -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} auth/approle/role/magistrala_things_certs_issuer/role-id
     vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} auth/approle/role/magistrala_things_certs_issuer/role-id role_id=${MG_VAULT_THINGS_CERTS_ISSUER_ROLEID}
@@ -73,8 +85,8 @@ vaultTestRoleLogin() {
     vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} auth/approle/login \
         role_id=${MG_VAULT_THINGS_CERTS_ISSUER_ROLEID} \
         secret_id=${MG_VAULT_THINGS_CERTS_ISSUER_SECRET}
-
 }
+
 if ! command -v jq &> /dev/null
 then
     echo "jq command could not be found, please install it and try again."
@@ -83,7 +95,7 @@ fi
 
 readDotEnv
 
-vault login  -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} ${MG_VAULT_TOKEN}
+vault login -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} ${MG_VAULT_TOKEN}
 
 vaultCreatePolicyFile
 vaultCreatePolicy
