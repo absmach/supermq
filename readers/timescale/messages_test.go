@@ -529,9 +529,9 @@ func TestReadMessagesWithAggregation(t *testing.T) {
 	value := 10.0
 	for i := 0; i < 100; i++ {
 		if i%10 == 0 {
-			value += 10.0 // increase value every 10th value
+			value += 10.0
 		}
-		v := value // use the updated value
+		v := value
 		msg := senml.Message{
 			Channel:   chanID,
 			Publisher: pubID,
@@ -562,7 +562,7 @@ func TestReadMessagesWithAggregation(t *testing.T) {
 				Offset:      0,
 				Aggregation: "AVG",
 				Interval:    "1 hour",
-				From:        now - float64(100000000000), // 100 seconds ago.
+				From:        now - float64(100000000000),
 				To:          now,
 			},
 			page: readers.MessagesPage{
@@ -577,7 +577,7 @@ func TestReadMessagesWithAggregation(t *testing.T) {
 				Offset:      0,
 				Aggregation: "MAX",
 				Interval:    "1 hour",
-				From:        now - float64(100000000000), // 100 seconds ago.
+				From:        now - float64(100000000000),
 				To:          now,
 			},
 			page: readers.MessagesPage{
@@ -592,7 +592,7 @@ func TestReadMessagesWithAggregation(t *testing.T) {
 				Offset:      0,
 				Aggregation: "MIN",
 				Interval:    "1 hour",
-				From:        now - float64(100000000000), // 100 seconds ago.
+				From:        now - float64(100000000000),
 				To:          now,
 			},
 			page: readers.MessagesPage{
@@ -607,7 +607,7 @@ func TestReadMessagesWithAggregation(t *testing.T) {
 				Offset:      0,
 				Aggregation: "SUM",
 				Interval:    "1 hour",
-				From:        now - float64(100000000000), // 100 seconds ago.
+				From:        now - float64(100000000000),
 				To:          now,
 			},
 			page: readers.MessagesPage{
@@ -622,7 +622,7 @@ func TestReadMessagesWithAggregation(t *testing.T) {
 				Offset:      0,
 				Aggregation: "COUNT",
 				Interval:    "1 hour",
-				From:        now - float64(100000000000), // 100 seconds ago.
+				From:        now - float64(100000000000),
 				To:          now,
 			},
 			page: readers.MessagesPage{
@@ -632,23 +632,17 @@ func TestReadMessagesWithAggregation(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		fmt.Printf("Testing case: %s\n", tc.desc)
-		// Execute the read with aggregation
 		resultPage, err := reader.ReadAll(tc.chanID, tc.pageMeta)
 		if err != nil {
 			fmt.Printf("Error querying database: %v\n", err)
-		} else {
-			fmt.Printf("Retrieved %d messages\n", len(resultPage.Messages))
 		}
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %s", tc.desc, err))
 		assert.NotEmpty(t, resultPage.Messages, "expected non-empty result set")
-		// Validate aggregation results
 		for _, iface := range resultPage.Messages {
 			msg, ok := iface.(senml.Message)
 			require.True(t, ok, "expected message to be of type senml.Message")
 			if ok && msg.Value != nil {
 				assert.GreaterOrEqual(t, *msg.Value, resultPage.Value, "expected aggregated value to be greater or equal to the expected value")
-				fmt.Printf("Aggregated Time: %v, Value: %v\n", msg.Time, *msg.Value)
 			}
 		}
 	}
