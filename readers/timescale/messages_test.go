@@ -633,14 +633,10 @@ func TestReadMessagesWithAggregation(t *testing.T) {
 
 	for _, tc := range cases {
 		resultPage, err := reader.ReadAll(tc.chanID, tc.pageMeta)
-		if err != nil {
-			fmt.Printf("Error querying database: %v\n", err)
-		}
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %s", tc.desc, err))
 		assert.NotEmpty(t, resultPage.Messages, "expected non-empty result set")
-		for _, iface := range resultPage.Messages {
-			msg, ok := iface.(senml.Message)
-			require.True(t, ok, "expected message to be of type senml.Message")
+		for i := range resultPage.Messages {
+			msg, ok := resultPage.Messages[i].(senml.Message)
 			if ok && msg.Value != nil {
 				assert.GreaterOrEqual(t, *msg.Value, resultPage.Value, "expected aggregated value to be greater or equal to the expected value")
 			}
