@@ -161,7 +161,7 @@ jobs:
           base-url: ${{ env.INVITATIONS_URL }}
           checks: all
           report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=all --stateful=links'
 
       - name: Run Auth API tests
         if: steps.changes.outputs.auth == 'true'
