@@ -130,8 +130,8 @@ func (repo *repository) UpdateConfirmation(ctx context.Context, invitation invit
 func (repo *repository) UpdateRejection(ctx context.Context, invitation invitations.Invitation) (err error) {
 	q := `UPDATE invitations SET rejected_at = :rejected_at, updated_at = :updated_at WHERE user_id = :user_id AND domain_id = :domain_id`
 
-	dbinv := toDBInvitation(invitation)
-	result, err := repo.db.NamedExecContext(ctx, q, dbinv)
+	dbInv := toDBInvitation(invitation)
+	result, err := repo.db.NamedExecContext(ctx, q, dbInv)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}

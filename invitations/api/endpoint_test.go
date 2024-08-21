@@ -572,7 +572,7 @@ func TestRejectInvitation(t *testing.T) {
 			svcErr:      nil,
 		},
 		{
-			desc:        "with service error",
+			desc:        "service error",
 			token:       validToken,
 			data:        fmt.Sprintf(`{"domain_id": "%s"}`, validID),
 			status:      http.StatusForbidden,

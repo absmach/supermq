@@ -70,7 +70,7 @@ func (res listInvitationsRes) Empty() bool {
 type acceptInvitationRes struct{}
 
 func (res acceptInvitationRes) Code() int {
-	return http.StatusOK
+	return http.StatusNoContent
 }
 
 func (res acceptInvitationRes) Headers() map[string]string {
