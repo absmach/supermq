@@ -131,7 +131,7 @@ jobs:
           base-url: ${{ env.USERS_URL }}
           checks: all
           report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=all --stateful=links'
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
       - name: Run Things API tests
         if: steps.changes.outputs.things == 'true'
@@ -141,7 +141,7 @@ jobs:
           base-url: ${{ env.THINGS_URL }}
           checks: all
           report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=all --stateful=links'
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
       - name: Run HTTP Adapter API tests
         if: steps.changes.outputs.http == 'true'
@@ -151,7 +151,7 @@ jobs:
           base-url: ${{ env.HTTP_ADAPTER_URL }}
           checks: all
           report: false
-          args: '--header "Authorization: Thing ${{ env.THING_SECRET }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=all --stateful=links'
+          args: '--header "Authorization: Thing ${{ env.THING_SECRET }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
       - name: Run Invitations API tests
         if: steps.changes.outputs.invitations == 'true'
@@ -161,7 +161,7 @@ jobs:
           base-url: ${{ env.INVITATIONS_URL }}
           checks: all
           report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=all --stateful=links'
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
       - name: Run Auth API tests
         if: steps.changes.outputs.auth == 'true'
@@ -171,7 +171,7 @@ jobs:
           base-url: ${{ env.AUTH_URL }}
           checks: all
           report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=all --stateful=links'
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
       - name: Run Journal API tests
         if: steps.changes.outputs.journal == 'true'
@@ -181,7 +181,7 @@ jobs:
           base-url: ${{ env.JOURNAL_URL }}
           checks: all
           report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=all --stateful=links'
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
       - name: Run Bootstrap API tests
         if: steps.changes.outputs.bootstrap == 'true'
@@ -191,7 +191,7 @@ jobs:
           base-url: ${{ env.BOOTSTRAP_URL }}
           checks: all
           report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=all --stateful=links'
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
       - name: Run Certs API tests
         if: steps.changes.outputs.certs == 'true'
@@ -201,7 +201,7 @@ jobs:
           base-url: ${{ env.CERTS_URL }}
           checks: all
           report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=all --stateful=links'
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
       - name: Run Provision API tests
         if: steps.changes.outputs.provision == 'true'
@@ -211,7 +211,7 @@ jobs:
           base-url: ${{ env.PROVISION_URL }}
           checks: all
           report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=all --stateful=links'
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
       - name: Seed Messages
         if: steps.changes.outputs.readers == 'true'
@@ -227,7 +227,7 @@ jobs:
           base-url: ${{ env.POSTGRES_READER_URL }}
           checks: all
           report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=all --stateful=links'
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
       - name: Run Timescale Reader API tests
         if: steps.changes.outputs.readers == 'true'
@@ -237,7 +237,7 @@ jobs:
           base-url: ${{ env.TIMESCALE_READER_URL }}
           checks: all
           report: false
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=all --stateful=links'
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
       - name: Stop containers
         if: always()
