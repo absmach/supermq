@@ -9,7 +9,7 @@ scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 cd $scriptdir
 
 # Default .env file path
-env_file="../../../docker/.env"
+env_file="../../../../docker/.env"
 
 # Parse command line arguments
 while [[ "$#" -gt 0 ]]; do

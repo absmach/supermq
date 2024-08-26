@@ -26,7 +26,7 @@ services:
       - magistrala-vault-volume:/vault/file
       - magistrala-vault-volume:/vault/logs
       - ./config.hcl:/vault/config/config.hcl
-      - ./entrypoint.sh:/entrypoint.sh
+      - ./scripts/entrypoint.sh:/entrypoint.sh
     environment:
       VAULT_ADDR: http://127.0.0.1:${MG_VAULT_PORT}
       MG_VAULT_PORT: ${MG_VAULT_PORT}

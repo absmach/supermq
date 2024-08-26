@@ -5,10 +5,11 @@
 set -euo pipefail
 
 scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+
 cd $scriptdir
 
 # Default .env file path
-env_file="../../../docker/.env"
+env_file="../../../../docker/.env"
 
 # Parse command line arguments
 while [[ "$#" -gt 0 ]]; do
@@ -29,6 +30,7 @@ source vault_cmd.sh
 
 readDotEnv
 
-vault operator unseal -address=${MG_VAULT_ADDR} ${MG_VAULT_UNSEAL_KEY_1}
-vault operator unseal -address=${MG_VAULT_ADDR} ${MG_VAULT_UNSEAL_KEY_2}
-vault operator unseal -address=${MG_VAULT_ADDR} ${MG_VAULT_UNSEAL_KEY_3}
+# Create the data directory inside docker/addons/vault/scripts
+mkdir -p data
+
+vault operator init -address=$MG_VAULT_ADDR 2>&1 | tee >(sed -r 's/\x1b\[[0-9;]*m//g' > data/secrets)

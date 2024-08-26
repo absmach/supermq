@@ -9,10 +9,10 @@ scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $scriptdir
 
 # Default .env file path
-env_file="../../../docker/.env"
+env_file="../../../../docker/.env"
 
 # Default certificate copy path
-certs_copy_path="../../../docker/ssl/certs/"
+certs_copy_path="../../../../docker/ssl/certs/"
 
 # Parse command line arguments
 while [[ "$#" -gt 0 ]]; do

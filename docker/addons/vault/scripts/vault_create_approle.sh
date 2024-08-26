@@ -11,7 +11,7 @@ cd $scriptdir
 SKIP_ENABLE_APP_ROLE=${1:-}
 
 # Default .env file path
-env_file="../../../docker/.env"
+env_file="../../../../docker/.env"
 
 # Parse command line arguments
 while [[ "$#" -gt 0 ]]; do

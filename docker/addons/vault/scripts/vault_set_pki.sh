@@ -7,7 +7,7 @@ set -euo pipefail
 scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 # Default .env file path
-env_file="../../../docker/.env"
+env_file="../../../../docker/.env"
 SKIP_SERVER_CERT=""
 
 # Parse command line arguments
