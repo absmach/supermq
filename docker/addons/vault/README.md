@@ -49,7 +49,7 @@ The following scripts are provided, which work on the running Vault service from
 
 ### 1. `vault_init.sh`
 
-Calls `vault operator init` to perform the initial vault initialization and generates a `docker/addons/vault/data/secrets` file which contains the Vault unseal keys and root tokens.
+Calls `vault operator init` to perform the initial vault initialization and generates a `docker/addons/vault/scripts/data/secrets` file which contains the Vault unseal keys and root tokens.
 
 Example contents for `data/secrets`:
 
@@ -81,7 +81,7 @@ Use 3 out of five keys presented and put it into .env file and than start the co
 
 After the initial setup, the Vault-related environment variables (`MG_VAULT_TOKEN`, `MG_VAULT_UNSEAL_KEY_1`, `MG_VAULT_UNSEAL_KEY_2`, `MG_VAULT_UNSEAL_KEY_3`) need to be updated in the `.env` file.
 
-The `vault_copy_env.sh` script automatically retrieves these values from the `docker/addons/vault/data/secrets` file and updates the corresponding environment variables in your `.env` file.
+The `vault_copy_env.sh` script automatically retrieves these values from the `docker/addons/vault/scripts/data/secrets` file and updates the corresponding environment variables in your `.env` file.
 
 Example:
 
@@ -145,9 +145,9 @@ HA Enabled      false
 
 ### 4. vault_set_pki.sh
 
-The `vault_set_pki.sh` script is responsible for generating the root certificate, intermediate certificate, and HTTPS server certificate. All generated certificates, keys, and CSR files are stored in the `docker/addons/vault/data` directory.
+The `vault_set_pki.sh` script is responsible for generating the root certificate, intermediate certificate, and HTTPS server certificate. All generated certificates, keys, and CSR files are stored in the `docker/addons/vault/scripts/data` directory.
 
-The script pulls necessary parameters for certificate generation from environment variables, which are loaded from `docker/.env`.
+The script pulls necessary parameters for certificate generation from environment variables, which are, by default, loaded from `docker/.env`.
 
 - Environment variables prefixed with `MG_VAULT_PKI` in the `docker/.env` file are used for generating the root CA.
 - Environment variables prefixed with `MG_VAULT_PKI_INT` are used for generating the intermediate CA.
@@ -236,7 +236,7 @@ By default, the `vault_create_approle.sh` script tries to enable the AppRole aut
 
 ### 6. `vault_copy_certs.sh`
 
-This script copies the required certificates and keys from `docker/addons/vault/data` to the `docker/ssl/certs` folder.
+This script copies the required certificates and keys from `docker/addons/vault/scripts/data` to the `docker/ssl/certs` folder.
 
 Example output:
 
