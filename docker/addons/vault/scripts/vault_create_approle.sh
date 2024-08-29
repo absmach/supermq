@@ -5,19 +5,25 @@
 set -euo pipefail
 
 scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-
-cd $scriptdir
+repo_root="$(realpath "$scriptdir/../../../../")"
+env_file="$repo_root/docker/.env"
 
 SKIP_ENABLE_APP_ROLE=${1:-}
 
-# Default .env file path
-env_file="../../../../docker/.env"
-
-# Parse command line arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        --env-file) env_file="$2"; shift ;;
-        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+        --env-file)
+            if [[ "$2" = /* ]]; then
+                env_file="$2"
+            else
+                env_file="$(realpath -m "$repo_root/$2")"
+            fi
+            shift
+            ;;
+        *)
+            echo "Unknown parameter passed: $1"
+            exit 1
+            ;;
     esac
     shift
 done
@@ -28,27 +34,27 @@ readDotEnv() {
     set +o allexport
 }
 
-source vault_cmd.sh
+source "$scriptdir/vault_cmd.sh"
 
 vaultCreatePolicyFile() {
     envsubst '
     ${MG_VAULT_PKI_INT_PATH}
     ${MG_VAULT_PKI_INT_THINGS_CERTS_ROLE_NAME}
-    ' < magistrala_things_certs_issue.template.hcl > magistrala_things_certs_issue.hcl
+    ' < "$scriptdir/magistrala_things_certs_issue.template.hcl" > "$scriptdir/magistrala_things_certs_issue.hcl"
 }
 
 vaultCreatePolicy() {
     echo "Creating new policy for AppRole"
     if is_container_running "magistrala-vault"; then
-        docker cp magistrala_things_certs_issue.hcl magistrala-vault:/vault/magistrala_things_certs_issue.hcl
+        docker cp "$scriptdir/magistrala_things_certs_issue.hcl" magistrala-vault:/vault/magistrala_things_certs_issue.hcl
         vault policy write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} magistrala_things_certs_issue /vault/magistrala_things_certs_issue.hcl
     else
-        vault policy write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} magistrala_things_certs_issue magistrala_things_certs_issue.hcl
+        vault policy write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} magistrala_things_certs_issue "$scriptdir/magistrala_things_certs_issue.hcl"
     fi
 }
 
 vaultEnableAppRole() {
-   if [ "$SKIP_ENABLE_APP_ROLE" == "--skip-enable-approle" ]; then
+    if [ "$SKIP_ENABLE_APP_ROLE" == "--skip-enable-approle" ]; then
         echo "Skipping Enable AppRole"
     else
         echo "Enabling AppRole"
@@ -87,10 +93,9 @@ vaultTestRoleLogin() {
         secret_id=${MG_VAULT_THINGS_CERTS_ISSUER_SECRET}
 }
 
-if ! command -v jq &> /dev/null
-then
+if ! command -v jq &> /dev/null; then
     echo "jq command could not be found, please install it and try again."
-    exit
+    exit 1
 fi
 
 readDotEnv

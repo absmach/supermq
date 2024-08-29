@@ -4,22 +4,33 @@
 
 set -euo pipefail
 
-scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+repo_root="$(realpath "$scriptdir/../../../../")"
+env_file="$repo_root/docker/.env"
+certs_copy_path="$repo_root/docker/ssl/certs/"
 
-cd $scriptdir
-
-# Default .env file path
-env_file="../../../../docker/.env"
-
-# Default certificate copy path
-certs_copy_path="../../../../docker/ssl/certs/"
-
-# Parse command line arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        --env-file) env_file="$2"; shift ;;
-        --certs-copy-path) certs_copy_path="$2"; shift ;;
-        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+        --env-file)
+            if [[ "$2" = /* ]]; then
+                env_file="$2"
+            else
+                env_file="$(realpath -m "$repo_root/$2")"
+            fi
+            shift
+            ;;
+        --certs-copy-path)
+            if [[ "$2" = /* ]]; then
+                certs_copy_path="$2"
+            else
+                certs_copy_path="$(realpath -m "$repo_root/$2")"
+            fi
+            shift
+            ;;
+        *)
+            echo "Unknown parameter passed: $1"
+            exit 1
+            ;;
     esac
     shift
 done
@@ -41,28 +52,30 @@ fi
 
 echo "Copying certificate files to ${certs_copy_path}"
 
-if [ -e "data/${server_name}.crt" ]; then
-    cp -v data/${server_name}.crt      ${certs_copy_path}magistrala-server.crt
+data_dir="$scriptdir/data"
+
+if [ -e "$data_dir/${server_name}.crt" ]; then
+    cp -v "$data_dir/${server_name}.crt" "${certs_copy_path}magistrala-server.crt"
 else
     echo "${server_name}.crt file not available"
 fi
 
-if [ -e "data/${server_name}.key" ]; then
-    cp -v data/${server_name}.key      ${certs_copy_path}magistrala-server.key
+if [ -e "$data_dir/${server_name}.key" ]; then
+    cp -v "$data_dir/${server_name}.key" "${certs_copy_path}magistrala-server.key"
 else
     echo "${server_name}.key file not available"
 fi
 
-if [ -e "data/${MG_VAULT_PKI_INT_FILE_NAME}.key" ]; then
-    cp -v data/${MG_VAULT_PKI_INT_FILE_NAME}.key    ${certs_copy_path}ca.key
+if [ -e "$data_dir/${MG_VAULT_PKI_INT_FILE_NAME}.key" ]; then
+    cp -v "$data_dir/${MG_VAULT_PKI_INT_FILE_NAME}.key" "${certs_copy_path}ca.key"
 else
-    echo "data/${MG_VAULT_PKI_INT_FILE_NAME}.key file not available"
+    echo "$data_dir/${MG_VAULT_PKI_INT_FILE_NAME}.key file not available"
 fi
 
-if [ -e "data/${MG_VAULT_PKI_INT_FILE_NAME}_bundle.crt" ]; then
-    cp -v data/${MG_VAULT_PKI_INT_FILE_NAME}_bundle.crt     ${certs_copy_path}ca.crt
+if [ -e "$data_dir/${MG_VAULT_PKI_INT_FILE_NAME}_bundle.crt" ]; then
+    cp -v "$data_dir/${MG_VAULT_PKI_INT_FILE_NAME}_bundle.crt" "${certs_copy_path}ca.crt"
 else
-    echo "data/${MG_VAULT_PKI_INT_FILE_NAME}_bundle.crt file not available"
+    echo "$data_dir/${MG_VAULT_PKI_INT_FILE_NAME}_bundle.crt file not available"
 fi
 
 exit 0

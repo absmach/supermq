@@ -5,16 +5,23 @@
 set -euo pipefail
 
 scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-cd $scriptdir
+repo_root="$(realpath "$scriptdir/../../../../")"
+env_file="$repo_root/docker/.env"
 
-# Default .env file path
-env_file="../../../../docker/.env"
-
-# Parse command line arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        --env-file) env_file="$2"; shift ;;
-        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+        --env-file)
+            if [[ "$2" = /* ]]; then
+                env_file="$2"
+            else
+                env_file="$(realpath -m "$repo_root/$2")"
+            fi
+            shift
+            ;;
+        *)
+            echo "Unknown parameter passed: $1"
+            exit 1
+            ;;
     esac
     shift
 done
@@ -25,7 +32,7 @@ readDotEnv() {
     set +o allexport
 }
 
-source vault_cmd.sh
+source "$scriptdir/vault_cmd.sh"
 
 readDotEnv
 

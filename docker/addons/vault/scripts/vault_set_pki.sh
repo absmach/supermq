@@ -5,17 +5,27 @@
 set -euo pipefail
 
 scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-
-# Default .env file path
-env_file="../../../../docker/.env"
+repo_root="$(realpath "$scriptdir/../../../../")"
+env_file="$repo_root/docker/.env"
 SKIP_SERVER_CERT=""
 
-# Parse command line arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        --env-file) env_file="$2"; shift ;;
-        --skip-server-cert) SKIP_SERVER_CERT="--skip-server-cert"; ;;
-        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+        --env-file)
+            if [[ "$2" = /* ]]; then
+                env_file="$2"
+            else
+                env_file="$(realpath -m "$repo_root/$2")"
+            fi
+            shift
+            ;;
+        --skip-server-cert)
+            SKIP_SERVER_CERT="--skip-server-cert"
+            ;;
+        *)
+            echo "Unknown parameter passed: $1"
+            exit 1
+            ;;
     esac
     shift
 done
@@ -33,7 +43,7 @@ if [ -n "${MG_NGINX_SERVER_NAME:-}" ]; then
     server_name="$MG_NGINX_SERVER_NAME"
 fi
 
-source vault_cmd.sh
+source "$scriptdir/vault_cmd.sh"
 
 vaultEnablePKI() {
     vault secrets enable -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} -path ${MG_VAULT_PKI_PATH} pki
@@ -67,9 +77,9 @@ vaultGenerateRootCACertificate() {
         province="\"$MG_VAULT_PKI_CA_ST\"" \
         street_address="\"$MG_VAULT_PKI_CA_ADDR\"" \
         postal_code="\"$MG_VAULT_PKI_CA_PO\"" \
-        ttl=87600h | tee >(jq -r .data.certificate >data/${MG_VAULT_PKI_FILE_NAME}_ca.crt) \
-                         >(jq -r .data.issuing_ca  >data/${MG_VAULT_PKI_FILE_NAME}_issuing_ca.crt) \
-                         >(jq -r .data.private_key >data/${MG_VAULT_PKI_FILE_NAME}_ca.key)
+        ttl=87600h | tee >(jq -r .data.certificate >"$repo_root/data/${MG_VAULT_PKI_FILE_NAME}_ca.crt") \
+                         >(jq -r .data.issuing_ca  >"$repo_root/data/${MG_VAULT_PKI_FILE_NAME}_issuing_ca.crt") \
+                         >(jq -r .data.private_key >"$repo_root/data/${MG_VAULT_PKI_FILE_NAME}_ca.key")
 }
 
 vaultSetupRootCAIssuingURLs() {
@@ -106,14 +116,14 @@ vaultGenerateIntermediateCSR() {
         province="\"$MG_VAULT_PKI_INT_CA_ST\"" \
         street_address="\"$MG_VAULT_PKI_INT_CA_ADDR\"" \
         postal_code="\"$MG_VAULT_PKI_INT_CA_PO\"" \
-        | tee >(jq -r .data.csr         >data/${MG_VAULT_PKI_INT_FILE_NAME}.csr) \
-              >(jq -r .data.private_key >data/${MG_VAULT_PKI_INT_FILE_NAME}.key)
+        | tee >(jq -r .data.csr         >"$repo_root/data/${MG_VAULT_PKI_INT_FILE_NAME}.csr") \
+              >(jq -r .data.private_key >"$repo_root/data/${MG_VAULT_PKI_INT_FILE_NAME}.key")
 }
 
 vaultSignIntermediateCSR() {
     echo "Sign intermediate CSR"
     if is_container_running "magistrala-vault"; then
-        docker cp data/${MG_VAULT_PKI_INT_FILE_NAME}.csr magistrala-vault:/vault/${MG_VAULT_PKI_INT_FILE_NAME}.csr
+        docker cp "$repo_root/data/${MG_VAULT_PKI_INT_FILE_NAME}.csr" magistrala-vault:/vault/${MG_VAULT_PKI_INT_FILE_NAME}.csr
         vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} -format=json  ${MG_VAULT_PKI_PATH}/root/sign-intermediate \
             csr=@/vault/${MG_VAULT_PKI_INT_FILE_NAME}.csr  ttl="8760h" \
             ou="\"$MG_VAULT_PKI_INT_CA_OU\""\
@@ -123,11 +133,11 @@ vaultSignIntermediateCSR() {
             province="\"$MG_VAULT_PKI_INT_CA_ST\"" \
             street_address="\"$MG_VAULT_PKI_INT_CA_ADDR\"" \
             postal_code="\"$MG_VAULT_PKI_INT_CA_PO\"" \
-            | tee >(jq -r .data.certificate >data/${MG_VAULT_PKI_INT_FILE_NAME}.crt) \
-                >(jq -r .data.issuing_ca >data/${MG_VAULT_PKI_INT_FILE_NAME}_issuing_ca.crt)
+            | tee >(jq -r .data.certificate >"$repo_root/data/${MG_VAULT_PKI_INT_FILE_NAME}.crt") \
+                >(jq -r .data.issuing_ca >"$repo_root/data/${MG_VAULT_PKI_INT_FILE_NAME}_issuing_ca.crt")
     else
         vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} -format=json  ${MG_VAULT_PKI_PATH}/root/sign-intermediate \
-            csr=@data/${MG_VAULT_PKI_INT_FILE_NAME}.csr  ttl="8760h" \
+            csr=@"$repo_root/data/${MG_VAULT_PKI_INT_FILE_NAME}.csr"  ttl="8760h" \
             ou="\"$MG_VAULT_PKI_INT_CA_OU\""\
             organization="\"$MG_VAULT_PKI_INT_CA_O\"" \
             country="\"$MG_VAULT_PKI_INT_CA_C\"" \
@@ -135,25 +145,25 @@ vaultSignIntermediateCSR() {
             province="\"$MG_VAULT_PKI_INT_CA_ST\"" \
             street_address="\"$MG_VAULT_PKI_INT_CA_ADDR\"" \
             postal_code="\"$MG_VAULT_PKI_INT_CA_PO\"" \
-            | tee >(jq -r .data.certificate >data/${MG_VAULT_PKI_INT_FILE_NAME}.crt) \
-                >(jq -r .data.issuing_ca >data/${MG_VAULT_PKI_INT_FILE_NAME}_issuing_ca.crt)
+            | tee >(jq -r .data.certificate >"$repo_root/data/${MG_VAULT_PKI_INT_FILE_NAME}.crt") \
+                >(jq -r .data.issuing_ca >"$repo_root/data/${MG_VAULT_PKI_INT_FILE_NAME}_issuing_ca.crt")
     fi
 }
 
 vaultInjectIntermediateCertificate() {
     echo "Inject Intermediate Certificate"
     if is_container_running "magistrala-vault"; then
-        docker cp data/${MG_VAULT_PKI_INT_FILE_NAME}.crt magistrala-vault:/vault/${MG_VAULT_PKI_INT_FILE_NAME}.crt
+        docker cp "$repo_root/data/${MG_VAULT_PKI_INT_FILE_NAME}.crt" magistrala-vault:/vault/${MG_VAULT_PKI_INT_FILE_NAME}.crt
         vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} ${MG_VAULT_PKI_INT_PATH}/intermediate/set-signed certificate=@/vault/${MG_VAULT_PKI_INT_FILE_NAME}.crt
     else
-        vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} ${MG_VAULT_PKI_INT_PATH}/intermediate/set-signed certificate=@data/${MG_VAULT_PKI_INT_FILE_NAME}.crt
+        vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} ${MG_VAULT_PKI_INT_PATH}/intermediate/set-signed certificate=@"$repo_root/data/${MG_VAULT_PKI_INT_FILE_NAME}.crt"
     fi
 }
 
 vaultGenerateIntermediateCertificateBundle() {
     echo "Generate intermediate certificate bundle"
-    cat data/${MG_VAULT_PKI_INT_FILE_NAME}.crt data/${MG_VAULT_PKI_FILE_NAME}_ca.crt \
-       > data/${MG_VAULT_PKI_INT_FILE_NAME}_bundle.crt
+    cat "$repo_root/data/${MG_VAULT_PKI_INT_FILE_NAME}.crt" "$repo_root/data/${MG_VAULT_PKI_FILE_NAME}_ca.crt" \
+       > "$repo_root/data/${MG_VAULT_PKI_INT_FILE_NAME}_bundle.crt"
 }
 
 vaultSetupIntermediateIssuingURLs() {
@@ -183,8 +193,8 @@ vaultGenerateServerCertificate() {
         echo "Generate server certificate"
         vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} -format=json ${MG_VAULT_PKI_INT_PATH}/issue/${MG_VAULT_PKI_INT_SERVER_CERTS_ROLE_NAME} \
             common_name="$server_name" ttl="4320h" \
-            | tee >(jq -r .data.certificate >data/${server_name}.crt) \
-                >(jq -r .data.private_key >data/${server_name}.key)
+            | tee >(jq -r .data.certificate >"$repo_root/data/${server_name}.crt") \
+                >(jq -r .data.private_key >"$repo_root/data/${server_name}.key")
     fi
 }
 
@@ -202,15 +212,14 @@ vaultCleanupFiles() {
     fi
 }
 
-if ! command -v jq &> /dev/null
-then
+if ! command -v jq &> /dev/null; then
     echo "jq command could not be found, please install it and try again."
-    exit
+    exit 1
 fi
 
 readDotEnv
 
-mkdir -p data
+mkdir -p "$repo_root/data"
 
 vault login -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} ${MG_VAULT_TOKEN}
 
