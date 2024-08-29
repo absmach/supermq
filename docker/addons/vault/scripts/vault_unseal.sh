@@ -5,16 +5,17 @@
 set -euo pipefail
 
 scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-repo_root="$(realpath "$scriptdir/../../../../")"
-env_file="$repo_root/docker/.env"
+
+# default env file path
+env_file="docker/.env"
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --env-file)
-            if [[ "$2" = /* ]]; then
-                env_file="$2"
-            else
-                env_file="$(realpath -m "$repo_root/$2")"
+            env_file="$2"
+            if [[ ! -f "$env_file" ]]; then
+                echo "Error: .env file not found at $env_file"
+                exit 1
             fi
             shift
             ;;

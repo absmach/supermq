@@ -5,16 +5,17 @@
 set -euo pipefail
 
 scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-repo_root="$(realpath "$scriptdir/../../../../")"
-env_file="$repo_root/docker/.env"
+
+# default env file path
+env_file="docker/.env"
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --env-file)
-            if [[ "$2" = /* ]]; then
-                env_file="$2"
-            else
-                env_file="$(realpath -m "$repo_root/$2")"
+            env_file="$2"
+            if [[ ! -f "$env_file" ]]; then
+                echo "Error: .env file not found at $env_file"
+                exit 1
             fi
             shift
             ;;
@@ -27,26 +28,15 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 write_env() {
-    data_dir="$scriptdir/data"
-
-    if [ -e "$data_dir/secrets" ]; then
-        awk -F ': ' '/Unseal Key 1/ {print "MG_VAULT_UNSEAL_KEY_1=" $2}' "$data_dir/secrets" | sed -i 's,^MG_VAULT_UNSEAL_KEY_1=.*,'"$(
-            awk -F ': ' '/Unseal Key 1/ {print "MG_VAULT_UNSEAL_KEY_1=" $2}' "$data_dir/secrets"
-        )"',' "$env_file"
-        awk -F ': ' '/Unseal Key 2/ {print "MG_VAULT_UNSEAL_KEY_2=" $2}' "$data_dir/secrets" | sed -i 's,^MG_VAULT_UNSEAL_KEY_2=.*,'"$(
-            awk -F ': ' '/Unseal Key 2/ {print "MG_VAULT_UNSEAL_KEY_2=" $2}' "$data_dir/secrets"
-        )"',' "$env_file"
-        awk -F ': ' '/Unseal Key 3/ {print "MG_VAULT_UNSEAL_KEY_3=" $2}' "$data_dir/secrets" | sed -i 's,^MG_VAULT_UNSEAL_KEY_3=.*,'"$(
-            awk -F ': ' '/Unseal Key 3/ {print "MG_VAULT_UNSEAL_KEY_3=" $2}' "$data_dir/secrets"
-        )"',' "$env_file"
-        awk -F ': ' '/Initial Root Token/ {print "MG_VAULT_TOKEN=" $2}' "$data_dir/secrets" | sed -i 's,^MG_VAULT_TOKEN=.*,'"$(
-            awk -F ': ' '/Initial Root Token/ {print "MG_VAULT_TOKEN=" $2}' "$data_dir/secrets"
-        )"',' "$env_file"
+    if [ -e "$scriptdir/data/secrets" ]; then
+        sed -i "s,MG_VAULT_UNSEAL_KEY_1=.*,MG_VAULT_UNSEAL_KEY_1=$(awk -F ": " '$1 == "Unseal Key 1" {print $2}' $scriptdir/data/secrets)," "$env_file"
+        sed -i "s,MG_VAULT_UNSEAL_KEY_2=.*,MG_VAULT_UNSEAL_KEY_2=$(awk -F ": " '$1 == "Unseal Key 2" {print $2}' $scriptdir/data/secrets)," "$env_file"
+        sed -i "s,MG_VAULT_UNSEAL_KEY_3=.*,MG_VAULT_UNSEAL_KEY_3=$(awk -F ": " '$1 == "Unseal Key 3" {print $2}' $scriptdir/data/secrets)," "$env_file"
+        sed -i "s,MG_VAULT_TOKEN=.*,MG_VAULT_TOKEN=$(awk -F ": " '$1 == "Initial Root Token" {print $2}' $scriptdir/data/secrets)," "$env_file"
         echo "Vault environment variables are set successfully in $env_file"
     else
-        echo "Error: Source file '$data_dir/secrets' not found."
+        echo "Error: Source file '$scriptdir/data/secrets' not found."
     fi
 }
 
 write_env
-
