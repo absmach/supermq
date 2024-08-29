@@ -18,6 +18,7 @@ certs_copy_path="../../../../docker/ssl/certs/"
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --env-file) env_file="$2"; shift ;;
+        --certs-copy-path) certs_copy_path="$2"; shift ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
@@ -38,7 +39,7 @@ if [ -n "${MG_NGINX_SERVER_NAME:-}" ]; then
     server_name="$MG_NGINX_SERVER_NAME"
 fi
 
-echo "Copying certificate files"
+echo "Copying certificate files to ${certs_copy_path}"
 
 if [ -e "data/${server_name}.crt" ]; then
     cp -v data/${server_name}.crt      ${certs_copy_path}magistrala-server.crt
