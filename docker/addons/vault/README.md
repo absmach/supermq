@@ -51,32 +51,6 @@ The following scripts are provided, which work on the running Vault service from
 
 Calls `vault operator init` to perform the initial vault initialization and generates a `docker/addons/vault/scripts/data/secrets` file which contains the Vault unseal keys and root tokens.
 
-Example contents for `data/secrets`:
-
-```bash
-Unseal Key 1: `<UNSEAL_KEY_1>`
-Unseal Key 2: `<UNSEAL_KEY_2>`
-Unseal Key 3: `<UNSEAL_KEY_3>`
-Unseal Key 4: `<UNSEAL_KEY_4>`
-Unseal Key 5: `<UNSEAL_KEY_5>`
-
-Initial Root Token: `<ROOT_TOKEN>`
-
-Vault initialized with 5 key shares and a key threshold of 3. Please securely
-distribute the key shares printed above. When the Vault is re-sealed,
-restarted, or stopped, you must supply at least 3 of these keys to unseal it
-before it can start servicing requests.
-
-Vault does not store the generated master key. Without at least 3 key to
-reconstruct the master key, Vault will remain permanently sealed!
-
-It is possible to generate new unseal keys, provided you have a quorum of
-existing unseal keys shares. See "vault operator rekey" for more information.
-bash-4.4
-
-Use 3 out of five keys presented and put it into .env file and than start the composition again Vault should be in unsealed state ( take a note that this is not recommended in terms of security, this is deployment for development) A real production deployment can use Vault auto unseal mode where vault gets unseal keys from some 3rd party KMS ( on AWS for example)
-```
-
 ### 2. `vault_copy_env.sh`
 
 After the initial setup, the Vault-related environment variables (`MG_VAULT_TOKEN`, `MG_VAULT_UNSEAL_KEY_1`, `MG_VAULT_UNSEAL_KEY_2`, `MG_VAULT_UNSEAL_KEY_3`) need to be updated in the `.env` file.
