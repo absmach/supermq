@@ -9,7 +9,7 @@ scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # default env file path
 env_file="docker/.env"
 
-SKIP_ENABLE_APP_ROLE=${1:-}
+SKIP_ENABLE_APP_ROLE=""
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -24,6 +24,9 @@ while [[ "$#" -gt 0 ]]; do
                 exit 1
             fi
             shift
+            ;;
+        --skip-enable-approle)
+            SKIP_ENABLE_APP_ROLE="true"
             ;;
         *)
             echo "Unknown parameter passed: $1"
@@ -59,7 +62,7 @@ vaultCreatePolicy() {
 }
 
 vaultEnableAppRole() {
-    if [ "$SKIP_ENABLE_APP_ROLE" == "--skip-enable-approle" ]; then
+    if [[ "$SKIP_ENABLE_APP_ROLE" == "true" ]]; then
         echo "Skipping Enable AppRole"
     else
         echo "Enabling AppRole"
