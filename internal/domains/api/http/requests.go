@@ -1,11 +1,11 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package domains
+package http
 
 import (
-	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/magistrala/pkg/domains"
 )
 
 type page struct {
@@ -17,7 +17,7 @@ type page struct {
 	metadata   map[string]interface{}
 	tag        string
 	permission string
-	status     auth.Status
+	status     domains.Status
 }
 
 type createDomainReq struct {

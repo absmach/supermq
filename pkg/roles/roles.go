@@ -50,6 +50,8 @@ type OptionalPolicy struct {
 	Relation        string
 	Permission      string
 }
+
+//go:generate mockery --name Roles --output=./mocks --filename roles.go --quiet --note "Copyright (c) Abstract Machines"
 type Roles interface {
 
 	// Get Allowed Operations
@@ -93,6 +95,7 @@ type Roles interface {
 	RemoveAllMembers(ctx context.Context, entityID, roleName string) (err error)
 }
 
+//go:generate mockery --name Repository --output=./mocks --filename rolesRepo.go --quiet --note "Copyright (c) Abstract Machines"
 type Repository interface {
 	Add(ctx context.Context, rps []RoleProvision) ([]Role, error)
 	Remove(ctx context.Context, roleIDs []string) error

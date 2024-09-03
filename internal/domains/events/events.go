@@ -6,37 +6,29 @@ package events
 import (
 	"time"
 
-	"github.com/absmach/magistrala/auth"
+	"github.com/absmach/magistrala/pkg/domains"
 	"github.com/absmach/magistrala/pkg/events"
 )
 
 const (
-	domainPrefix              = "domain."
-	domainCreate              = domainPrefix + "create"
-	domainRetrieve            = domainPrefix + "retrieve"
-	domainRetrievePermissions = domainPrefix + "retrieve_permissions"
-	domainUpdate              = domainPrefix + "update"
-	domainChangeStatus        = domainPrefix + "change_status"
-	domainList                = domainPrefix + "list"
-	domainAssign              = domainPrefix + "assign"
-	domainUnassign            = domainPrefix + "unassign"
-	domainUserList            = domainPrefix + "user_list"
+	domainPrefix       = "domain."
+	domainCreate       = domainPrefix + "create"
+	domainRetrieve     = domainPrefix + "retrieve"
+	domainUpdate       = domainPrefix + "update"
+	domainChangeStatus = domainPrefix + "change_status"
+	domainList         = domainPrefix + "list"
 )
 
 var (
 	_ events.Event = (*createDomainEvent)(nil)
 	_ events.Event = (*retrieveDomainEvent)(nil)
-	_ events.Event = (*retrieveDomainPermissionsEvent)(nil)
 	_ events.Event = (*updateDomainEvent)(nil)
 	_ events.Event = (*changeDomainStatusEvent)(nil)
 	_ events.Event = (*listDomainsEvent)(nil)
-	_ events.Event = (*assignUsersEvent)(nil)
-	_ events.Event = (*unassignUsersEvent)(nil)
-	_ events.Event = (*listUserDomainsEvent)(nil)
 )
 
 type createDomainEvent struct {
-	auth.Domain
+	domains.Domain
 }
 
 func (cde createDomainEvent) Encode() (map[string]interface{}, error) {
@@ -66,7 +58,7 @@ func (cde createDomainEvent) Encode() (map[string]interface{}, error) {
 }
 
 type retrieveDomainEvent struct {
-	auth.Domain
+	domains.Domain
 }
 
 func (rde retrieveDomainEvent) Encode() (map[string]interface{}, error) {
@@ -97,26 +89,8 @@ func (rde retrieveDomainEvent) Encode() (map[string]interface{}, error) {
 	return val, nil
 }
 
-type retrieveDomainPermissionsEvent struct {
-	domainID    string
-	permissions auth.Permissions
-}
-
-func (rpe retrieveDomainPermissionsEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
-		"operation": domainRetrievePermissions,
-		"domain_id": rpe.domainID,
-	}
-
-	if rpe.permissions != nil {
-		val["permissions"] = rpe.permissions
-	}
-
-	return val, nil
-}
-
 type updateDomainEvent struct {
-	auth.Domain
+	domains.Domain
 }
 
 func (ude updateDomainEvent) Encode() (map[string]interface{}, error) {
@@ -146,7 +120,7 @@ func (ude updateDomainEvent) Encode() (map[string]interface{}, error) {
 
 type changeDomainStatusEvent struct {
 	domainID  string
-	status    auth.Status
+	status    domains.Status
 	updatedAt time.Time
 	updatedBy string
 }
@@ -162,7 +136,7 @@ func (cdse changeDomainStatusEvent) Encode() (map[string]interface{}, error) {
 }
 
 type listDomainsEvent struct {
-	auth.Page
+	domains.Page
 	total uint64
 }
 
@@ -172,89 +146,6 @@ func (lde listDomainsEvent) Encode() (map[string]interface{}, error) {
 		"total":     lde.total,
 		"offset":    lde.Offset,
 		"limit":     lde.Limit,
-	}
-
-	if lde.Name != "" {
-		val["name"] = lde.Name
-	}
-	if lde.Order != "" {
-		val["order"] = lde.Order
-	}
-	if lde.Dir != "" {
-		val["dir"] = lde.Dir
-	}
-	if lde.Metadata != nil {
-		val["metadata"] = lde.Metadata
-	}
-	if lde.Tag != "" {
-		val["tag"] = lde.Tag
-	}
-	if lde.Permission != "" {
-		val["permission"] = lde.Permission
-	}
-	if lde.Status.String() != "" {
-		val["status"] = lde.Status.String()
-	}
-	if lde.ID != "" {
-		val["id"] = lde.ID
-	}
-	if len(lde.IDs) > 0 {
-		val["ids"] = lde.IDs
-	}
-	if lde.Identity != "" {
-		val["identity"] = lde.Identity
-	}
-	if lde.SubjectID != "" {
-		val["subject_id"] = lde.SubjectID
-	}
-
-	return val, nil
-}
-
-type assignUsersEvent struct {
-	userIDs  []string
-	domainID string
-	relation string
-}
-
-func (ase assignUsersEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
-		"operation": domainAssign,
-		"user_ids":  ase.userIDs,
-		"domain_id": ase.domainID,
-		"relation":  ase.relation,
-	}
-
-	return val, nil
-}
-
-type unassignUsersEvent struct {
-	userID   string
-	domainID string
-}
-
-func (use unassignUsersEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
-		"operation": domainUnassign,
-		"user_id":   use.userID,
-		"domain_id": use.domainID,
-	}
-
-	return val, nil
-}
-
-type listUserDomainsEvent struct {
-	auth.Page
-	userID string
-}
-
-func (lde listUserDomainsEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
-		"operation": domainUserList,
-		"total":     lde.Total,
-		"offset":    lde.Offset,
-		"limit":     lde.Limit,
-		"user_id":   lde.userID,
 	}
 
 	if lde.Name != "" {

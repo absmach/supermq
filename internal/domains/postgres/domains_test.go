@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/absmach/magistrala/auth"
-	"github.com/absmach/magistrala/auth/postgres"
+	"github.com/absmach/magistrala/internal/domains/postgres"
 	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/pkg/clients"
+	"github.com/absmach/magistrala/pkg/domains"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	"github.com/stretchr/testify/assert"
@@ -28,80 +28,6 @@ var (
 	userID   = testsutil.GenerateUUID(&testing.T{})
 )
 
-func TestAddPolicyCopy(t *testing.T) {
-	repo := postgres.NewDomainRepository(database)
-	cases := []struct {
-		desc string
-		pc   auth.Policy
-		err  error
-	}{
-		{
-			desc: "add a  policy copy",
-			pc: auth.Policy{
-				SubjectType: "unknown",
-				SubjectID:   "unknown",
-				Relation:    "unknown",
-				ObjectType:  "unknown",
-				ObjectID:    "unknown",
-			},
-			err: nil,
-		},
-		{
-			desc: "add again same policy copy",
-			pc: auth.Policy{
-				SubjectType: "unknown",
-				SubjectID:   "unknown",
-				Relation:    "unknown",
-				ObjectType:  "unknown",
-				ObjectID:    "unknown",
-			},
-			err: repoerr.ErrConflict,
-		},
-	}
-
-	for _, tc := range cases {
-		err := repo.SavePolicies(context.Background(), tc.pc)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.err, err))
-	}
-}
-
-func TestDeletePolicyCopy(t *testing.T) {
-	repo := postgres.NewDomainRepository(database)
-	cases := []struct {
-		desc string
-		pc   auth.Policy
-		err  error
-	}{
-		{
-			desc: "delete a  policy copy",
-			pc: auth.Policy{
-				SubjectType: "unknown",
-				SubjectID:   "unknown",
-				Relation:    "unknown",
-				ObjectType:  "unknown",
-				ObjectID:    "unknown",
-			},
-			err: nil,
-		},
-		{
-			desc: "delete a  policy with empty relation",
-			pc: auth.Policy{
-				SubjectType: "unknown",
-				SubjectID:   "unknown",
-				Relation:    "",
-				ObjectType:  "unknown",
-				ObjectID:    "unknown",
-			},
-			err: nil,
-		},
-	}
-
-	for _, tc := range cases {
-		err := repo.DeletePolicies(context.Background(), tc.pc)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.err, err))
-	}
-}
-
 func TestSave(t *testing.T) {
 	t.Cleanup(func() {
 		_, err := db.Exec("DELETE FROM domains")
@@ -112,12 +38,12 @@ func TestSave(t *testing.T) {
 
 	cases := []struct {
 		desc   string
-		domain auth.Domain
+		domain domains.Domain
 		err    error
 	}{
 		{
 			desc: "add new domain with all fields successfully",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:    domainID,
 				Name:  "test",
 				Alias: "test",
@@ -129,13 +55,13 @@ func TestSave(t *testing.T) {
 				UpdatedAt: time.Now(),
 				CreatedBy: userID,
 				UpdatedBy: userID,
-				Status:    auth.EnabledStatus,
+				Status:    domains.EnabledStatus,
 			},
 			err: nil,
 		},
 		{
 			desc: "add the same domain again",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:    domainID,
 				Name:  "test",
 				Alias: "test",
@@ -147,13 +73,13 @@ func TestSave(t *testing.T) {
 				UpdatedAt: time.Now(),
 				CreatedBy: userID,
 				UpdatedBy: userID,
-				Status:    auth.EnabledStatus,
+				Status:    domains.EnabledStatus,
 			},
 			err: repoerr.ErrConflict,
 		},
 		{
 			desc: "add domain with empty ID",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:    "",
 				Name:  "test1",
 				Alias: "test1",
@@ -165,13 +91,13 @@ func TestSave(t *testing.T) {
 				UpdatedAt: time.Now(),
 				CreatedBy: userID,
 				UpdatedBy: userID,
-				Status:    auth.EnabledStatus,
+				Status:    domains.EnabledStatus,
 			},
 			err: nil,
 		},
 		{
 			desc: "add domain with empty alias",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:    testsutil.GenerateUUID(&testing.T{}),
 				Name:  "test1",
 				Alias: "",
@@ -183,13 +109,13 @@ func TestSave(t *testing.T) {
 				UpdatedAt: time.Now(),
 				CreatedBy: userID,
 				UpdatedBy: userID,
-				Status:    auth.EnabledStatus,
+				Status:    domains.EnabledStatus,
 			},
 			err: repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add domain with malformed metadata",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:    domainID,
 				Name:  "test1",
 				Alias: "test1",
@@ -201,7 +127,7 @@ func TestSave(t *testing.T) {
 				UpdatedAt: time.Now(),
 				CreatedBy: userID,
 				UpdatedBy: userID,
-				Status:    auth.EnabledStatus,
+				Status:    domains.EnabledStatus,
 			},
 			err: repoerr.ErrCreateEntity,
 		},
@@ -223,7 +149,7 @@ func TestRetrieveByID(t *testing.T) {
 
 	repo := postgres.NewDomainRepository(database)
 
-	domain := auth.Domain{
+	domain := domains.Domain{
 		ID:    domainID,
 		Name:  "test",
 		Alias: "test",
@@ -233,7 +159,7 @@ func TestRetrieveByID(t *testing.T) {
 		},
 		CreatedBy: userID,
 		UpdatedBy: userID,
-		Status:    auth.EnabledStatus,
+		Status:    domains.EnabledStatus,
 	}
 
 	_, err := repo.Save(context.Background(), domain)
@@ -242,7 +168,7 @@ func TestRetrieveByID(t *testing.T) {
 	cases := []struct {
 		desc     string
 		domainID string
-		response auth.Domain
+		response domains.Domain
 		err      error
 	}{
 		{
@@ -254,95 +180,19 @@ func TestRetrieveByID(t *testing.T) {
 		{
 			desc:     "retrieve non-existing client",
 			domainID: inValid,
-			response: auth.Domain{},
+			response: domains.Domain{},
 			err:      repoerr.ErrNotFound,
 		},
 		{
 			desc:     "retrieve with empty client id",
 			domainID: "",
-			response: auth.Domain{},
+			response: domains.Domain{},
 			err:      repoerr.ErrNotFound,
 		},
 	}
 
 	for _, tc := range cases {
 		d, err := repo.RetrieveByID(context.Background(), tc.domainID)
-		assert.Equal(t, tc.response, d, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, d))
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.err, err))
-	}
-}
-
-func TestRetreivePermissions(t *testing.T) {
-	t.Cleanup(func() {
-		_, err := db.Exec("DELETE FROM domains")
-		require.Nil(t, err, fmt.Sprintf("clean domains unexpected error: %s", err))
-		_, err = db.Exec("DELETE FROM policies")
-		require.Nil(t, err, fmt.Sprintf("clean policies unexpected error: %s", err))
-	})
-
-	repo := postgres.NewDomainRepository(database)
-
-	domain := auth.Domain{
-		ID:    domainID,
-		Name:  "test",
-		Alias: "test",
-		Tags:  []string{"test"},
-		Metadata: map[string]interface{}{
-			"test": "test",
-		},
-		CreatedBy:  userID,
-		UpdatedBy:  userID,
-		Status:     auth.EnabledStatus,
-		Permission: "admin",
-	}
-
-	policy := auth.Policy{
-		SubjectType:     auth.UserType,
-		SubjectID:       userID,
-		SubjectRelation: "admin",
-		Relation:        "admin",
-		ObjectType:      auth.DomainType,
-		ObjectID:        domainID,
-	}
-
-	_, err := repo.Save(context.Background(), domain)
-	require.Nil(t, err, fmt.Sprintf("failed to save domain %s", domain.ID))
-
-	err = repo.SavePolicies(context.Background(), policy)
-	require.Nil(t, err, fmt.Sprintf("failed to save policy %s", policy.SubjectID))
-
-	cases := []struct {
-		desc          string
-		domainID      string
-		policySubject string
-		response      []string
-		err           error
-	}{
-		{
-			desc:          "retrieve existing permissions with valid domaiinID and policySubject",
-			domainID:      domain.ID,
-			policySubject: userID,
-			response:      []string{"admin"},
-			err:           nil,
-		},
-		{
-			desc:          "retreieve permissions with invalid domainID",
-			domainID:      inValid,
-			policySubject: userID,
-			response:      []string{},
-			err:           nil,
-		},
-		{
-			desc:          "retreieve permissions with invalid policySubject",
-			domainID:      domain.ID,
-			policySubject: inValid,
-			response:      []string{},
-			err:           nil,
-		},
-	}
-
-	for _, tc := range cases {
-		d, err := repo.RetrievePermissions(context.Background(), tc.policySubject, tc.domainID)
 		assert.Equal(t, tc.response, d, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, d))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.err, err))
 	}
@@ -356,9 +206,9 @@ func TestRetrieveAllByIDs(t *testing.T) {
 
 	repo := postgres.NewDomainRepository(database)
 
-	items := []auth.Domain{}
+	items := []domains.Domain{}
 	for i := 0; i < 10; i++ {
-		domain := auth.Domain{
+		domain := domains.Domain{
 			ID:    testsutil.GenerateUUID(t),
 			Name:  fmt.Sprintf(`"test%d"`, i),
 			Alias: fmt.Sprintf(`"test%d"`, i),
@@ -368,10 +218,10 @@ func TestRetrieveAllByIDs(t *testing.T) {
 			},
 			CreatedBy: userID,
 			UpdatedBy: userID,
-			Status:    auth.EnabledStatus,
+			Status:    domains.EnabledStatus,
 		}
 		if i%5 == 0 {
-			domain.Status = auth.DisabledStatus
+			domain.Status = domains.DisabledStatus
 			domain.Tags = []string{"test", "admin"}
 			domain.Metadata = map[string]interface{}{
 				"test1": "test1",
@@ -384,33 +234,33 @@ func TestRetrieveAllByIDs(t *testing.T) {
 
 	cases := []struct {
 		desc     string
-		pm       auth.Page
-		response auth.DomainsPage
+		pm       domains.Page
+		response domains.DomainsPage
 		err      error
 	}{
 		{
 			desc: "retrieve by ids successfully",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
 				IDs:    []string{items[1].ID, items[2].ID},
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:   2,
 				Offset:  0,
 				Limit:   10,
-				Domains: []auth.Domain{items[1], items[2]},
+				Domains: []domains.Domain{items[1], items[2]},
 			},
 			err: nil,
 		},
 		{
 			desc: "retrieve by ids with empty ids",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
 				IDs:    []string{},
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:  0,
 				Offset: 0,
 				Limit:  0,
@@ -419,12 +269,12 @@ func TestRetrieveAllByIDs(t *testing.T) {
 		},
 		{
 			desc: "retrieve by ids with invalid ids",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
 				IDs:    []string{inValid},
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:  0,
 				Offset: 0,
 				Limit:  10,
@@ -433,61 +283,61 @@ func TestRetrieveAllByIDs(t *testing.T) {
 		},
 		{
 			desc: "retrieve by ids and status",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
 				IDs:    []string{items[0].ID, items[1].ID},
-				Status: auth.DisabledStatus,
+				Status: domains.DisabledStatus,
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:   1,
 				Offset:  0,
 				Limit:   10,
-				Domains: []auth.Domain{items[0]},
+				Domains: []domains.Domain{items[0]},
 			},
 		},
 		{
 			desc: "retrieve by ids and status with invalid status",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
 				IDs:    []string{items[0].ID, items[1].ID},
 				Status: 5,
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:   2,
 				Offset:  0,
 				Limit:   10,
-				Domains: []auth.Domain{items[0], items[1]},
+				Domains: []domains.Domain{items[0], items[1]},
 			},
 		},
 		{
 			desc: "retrieve by ids and tags",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
 				IDs:    []string{items[0].ID, items[1].ID},
 				Tag:    "test",
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:   1,
 				Offset:  0,
 				Limit:   10,
-				Domains: []auth.Domain{items[1]},
+				Domains: []domains.Domain{items[1]},
 			},
 		},
 		{
 			desc: " retrieve by ids and metadata",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
 				IDs:    []string{items[1].ID, items[2].ID},
 				Metadata: map[string]interface{}{
 					"test": "test",
 				},
-				Status: auth.EnabledStatus,
+				Status: domains.EnabledStatus,
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:   2,
 				Offset:  0,
 				Limit:   10,
@@ -496,16 +346,16 @@ func TestRetrieveAllByIDs(t *testing.T) {
 		},
 		{
 			desc: "retrieve by ids and metadata with invalid metadata",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
 				IDs:    []string{items[1].ID, items[2].ID},
 				Metadata: map[string]interface{}{
 					"test1": "test1",
 				},
-				Status: auth.EnabledStatus,
+				Status: domains.EnabledStatus,
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:  0,
 				Offset: 0,
 				Limit:  10,
@@ -513,42 +363,42 @@ func TestRetrieveAllByIDs(t *testing.T) {
 		},
 		{
 			desc: "retrieve by ids and malfomed metadata",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
 				IDs:    []string{items[1].ID, items[2].ID},
 				Metadata: map[string]interface{}{
 					"key": make(chan int),
 				},
-				Status: auth.EnabledStatus,
+				Status: domains.EnabledStatus,
 			},
-			response: auth.DomainsPage{},
+			response: domains.DomainsPage{},
 			err:      repoerr.ErrViewEntity,
 		},
 		{
 			desc: "retrieve all by ids and id",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
 				ID:     items[1].ID,
 				IDs:    []string{items[1].ID, items[2].ID},
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:   1,
 				Offset:  0,
 				Limit:   10,
-				Domains: []auth.Domain{items[1]},
+				Domains: []domains.Domain{items[1]},
 			},
 		},
 		{
 			desc: "retrieve all by ids and id with invalid id",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
 				ID:     inValid,
 				IDs:    []string{items[1].ID, items[2].ID},
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:  0,
 				Offset: 0,
 				Limit:  10,
@@ -556,23 +406,23 @@ func TestRetrieveAllByIDs(t *testing.T) {
 		},
 		{
 			desc: "retrieve all by ids and name",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
 				Name:   items[1].Name,
 				IDs:    []string{items[1].ID, items[2].ID},
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:   1,
 				Offset:  0,
 				Limit:   10,
-				Domains: []auth.Domain{items[1]},
+				Domains: []domains.Domain{items[1]},
 			},
 		},
 		{
 			desc:     "retrieve all by ids with empty page",
-			pm:       auth.Page{},
-			response: auth.DomainsPage{},
+			pm:       domains.Page{},
+			response: domains.DomainsPage{},
 		},
 	}
 
@@ -591,11 +441,10 @@ func TestListDomains(t *testing.T) {
 
 	repo := postgres.NewDomainRepository(database)
 
-	items := []auth.Domain{}
-	rDomains := []auth.Domain{}
-	policies := []auth.Policy{}
+	items := []domains.Domain{}
+	rDomains := []domains.Domain{}
 	for i := 0; i < 10; i++ {
-		domain := auth.Domain{
+		domain := domains.Domain{
 			ID:    testsutil.GenerateUUID(t),
 			Name:  fmt.Sprintf(`"test%d"`, i),
 			Alias: fmt.Sprintf(`"test%d"`, i),
@@ -605,49 +454,38 @@ func TestListDomains(t *testing.T) {
 			},
 			CreatedBy: userID,
 			UpdatedBy: userID,
-			Status:    auth.EnabledStatus,
+			Status:    domains.EnabledStatus,
 		}
 		if i%5 == 0 {
-			domain.Status = auth.DisabledStatus
+			domain.Status = domains.DisabledStatus
 			domain.Tags = []string{"test", "admin"}
 			domain.Metadata = map[string]interface{}{
 				"test1": "test1",
 			}
 		}
-		policy := auth.Policy{
-			SubjectType:     auth.UserType,
-			SubjectID:       userID,
-			SubjectRelation: auth.AdministratorRelation,
-			Relation:        auth.DomainRelation,
-			ObjectType:      auth.DomainType,
-			ObjectID:        domain.ID,
-		}
+
 		_, err := repo.Save(context.Background(), domain)
 		require.Nil(t, err, fmt.Sprintf("save domain unexpected error: %s", err))
 		items = append(items, domain)
-		policies = append(policies, policy)
 		rDomain := domain
 		rDomain.Permission = "domain"
 		rDomains = append(rDomains, rDomain)
 	}
 
-	err := repo.SavePolicies(context.Background(), policies...)
-	require.Nil(t, err, fmt.Sprintf("failed to save policies %s", policies))
-
 	cases := []struct {
 		desc     string
-		pm       auth.Page
-		response auth.DomainsPage
+		pm       domains.Page
+		response domains.DomainsPage
 		err      error
 	}{
 		{
 			desc: "list all domains successfully",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
-				Status: auth.AllStatus,
+				Status: domains.AllStatus,
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:   10,
 				Offset:  0,
 				Limit:   10,
@@ -657,11 +495,11 @@ func TestListDomains(t *testing.T) {
 		},
 		{
 			desc: "list domains with empty page",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset: 0,
 				Limit:  0,
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:  8,
 				Offset: 0,
 				Limit:  0,
@@ -670,43 +508,43 @@ func TestListDomains(t *testing.T) {
 		},
 		{
 			desc: "list domains with enabled status",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
-				Status: auth.EnabledStatus,
+				Status: domains.EnabledStatus,
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:   8,
 				Offset:  0,
 				Limit:   10,
-				Domains: []auth.Domain{items[1], items[2], items[3], items[4], items[6], items[7], items[8], items[9]},
+				Domains: []domains.Domain{items[1], items[2], items[3], items[4], items[6], items[7], items[8], items[9]},
 			},
 			err: nil,
 		},
 		{
 			desc: "list domains with disabled status",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
-				Status: auth.DisabledStatus,
+				Status: domains.DisabledStatus,
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:   2,
 				Offset:  0,
 				Limit:   10,
-				Domains: []auth.Domain{items[0], items[5]},
+				Domains: []domains.Domain{items[0], items[5]},
 			},
 			err: nil,
 		},
 		{
 			desc: "list domains with subject ID",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset:    0,
 				Limit:     10,
 				SubjectID: userID,
-				Status:    auth.AllStatus,
+				Status:    domains.AllStatus,
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:   10,
 				Offset:  0,
 				Limit:   10,
@@ -716,30 +554,30 @@ func TestListDomains(t *testing.T) {
 		},
 		{
 			desc: "list domains with subject ID and status",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset:    0,
 				Limit:     10,
 				SubjectID: userID,
-				Status:    auth.EnabledStatus,
+				Status:    domains.EnabledStatus,
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:   8,
 				Offset:  0,
 				Limit:   10,
-				Domains: []auth.Domain{rDomains[1], rDomains[2], rDomains[3], rDomains[4], rDomains[6], rDomains[7], rDomains[8], rDomains[9]},
+				Domains: []domains.Domain{rDomains[1], rDomains[2], rDomains[3], rDomains[4], rDomains[6], rDomains[7], rDomains[8], rDomains[9]},
 			},
 			err: nil,
 		},
 		{
 			desc: "list domains with subject Id and permission",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset:     0,
 				Limit:      10,
 				SubjectID:  userID,
 				Permission: "domain",
-				Status:     auth.AllStatus,
+				Status:     domains.AllStatus,
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:   10,
 				Offset:  0,
 				Limit:   10,
@@ -749,14 +587,14 @@ func TestListDomains(t *testing.T) {
 		},
 		{
 			desc: "list domains with subject id and tags",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset:    0,
 				Limit:     10,
 				SubjectID: userID,
 				Tag:       "test",
-				Status:    auth.AllStatus,
+				Status:    domains.AllStatus,
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:   10,
 				Offset:  0,
 				Limit:   10,
@@ -766,34 +604,34 @@ func TestListDomains(t *testing.T) {
 		},
 		{
 			desc: "list domains with subject id and metadata",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset:    0,
 				Limit:     10,
 				SubjectID: userID,
 				Metadata: map[string]interface{}{
 					"test": "test",
 				},
-				Status: auth.AllStatus,
+				Status: domains.AllStatus,
 			},
-			response: auth.DomainsPage{
+			response: domains.DomainsPage{
 				Total:   8,
 				Offset:  0,
 				Limit:   10,
-				Domains: []auth.Domain{rDomains[1], rDomains[2], rDomains[3], rDomains[4], rDomains[6], rDomains[7], rDomains[8], rDomains[9]},
+				Domains: []domains.Domain{rDomains[1], rDomains[2], rDomains[3], rDomains[4], rDomains[6], rDomains[7], rDomains[8], rDomains[9]},
 			},
 		},
 		{
 			desc: "list domains with subject id and metadata with malforned metadata",
-			pm: auth.Page{
+			pm: domains.Page{
 				Offset:    0,
 				Limit:     10,
 				SubjectID: userID,
 				Metadata: map[string]interface{}{
 					"key": make(chan int),
 				},
-				Status: auth.AllStatus,
+				Status: domains.AllStatus,
 			},
-			response: auth.DomainsPage{},
+			response: domains.DomainsPage{},
 			err:      repoerr.ErrViewEntity,
 		},
 	}
@@ -816,12 +654,12 @@ func TestUpdate(t *testing.T) {
 		"test1": "test1",
 	}
 	updatedTags := []string{"test1"}
-	updatedStatus := auth.DisabledStatus
+	updatedStatus := domains.DisabledStatus
 	updatedAlias := "test1"
 
 	repo := postgres.NewDomainRepository(database)
 
-	domain := auth.Domain{
+	domain := domains.Domain{
 		ID:    domainID,
 		Name:  "test",
 		Alias: "test",
@@ -831,7 +669,7 @@ func TestUpdate(t *testing.T) {
 		},
 		CreatedBy: userID,
 		UpdatedBy: userID,
-		Status:    auth.EnabledStatus,
+		Status:    domains.EnabledStatus,
 	}
 
 	_, err := repo.Save(context.Background(), domain)
@@ -840,18 +678,18 @@ func TestUpdate(t *testing.T) {
 	cases := []struct {
 		desc     string
 		domainID string
-		d        auth.DomainReq
-		response auth.Domain
+		d        domains.DomainReq
+		response domains.Domain
 		err      error
 	}{
 		{
 			desc:     "update existing domain name and metadata",
 			domainID: domain.ID,
-			d: auth.DomainReq{
+			d: domains.DomainReq{
 				Name:     &updatedName,
 				Metadata: &updatedMetadata,
 			},
-			response: auth.Domain{
+			response: domains.Domain{
 				ID:    domainID,
 				Name:  "test1",
 				Alias: "test",
@@ -861,7 +699,7 @@ func TestUpdate(t *testing.T) {
 				},
 				CreatedBy: userID,
 				UpdatedBy: userID,
-				Status:    auth.EnabledStatus,
+				Status:    domains.EnabledStatus,
 				UpdatedAt: time.Now(),
 			},
 			err: nil,
@@ -869,14 +707,14 @@ func TestUpdate(t *testing.T) {
 		{
 			desc:     "update existing domain name, metadata, tags, status and alias",
 			domainID: domain.ID,
-			d: auth.DomainReq{
+			d: domains.DomainReq{
 				Name:     &updatedName,
 				Metadata: &updatedMetadata,
 				Tags:     &updatedTags,
 				Status:   &updatedStatus,
 				Alias:    &updatedAlias,
 			},
-			response: auth.Domain{
+			response: domains.Domain{
 				ID:    domainID,
 				Name:  "test1",
 				Alias: "test1",
@@ -886,7 +724,7 @@ func TestUpdate(t *testing.T) {
 				},
 				CreatedBy: userID,
 				UpdatedBy: userID,
-				Status:    auth.DisabledStatus,
+				Status:    domains.DisabledStatus,
 				UpdatedAt: time.Now(),
 			},
 			err: nil,
@@ -894,31 +732,31 @@ func TestUpdate(t *testing.T) {
 		{
 			desc:     "update non-existing domain",
 			domainID: inValid,
-			d: auth.DomainReq{
+			d: domains.DomainReq{
 				Name:     &updatedName,
 				Metadata: &updatedMetadata,
 			},
-			response: auth.Domain{},
+			response: domains.Domain{},
 			err:      repoerr.ErrFailedOpDB,
 		},
 		{
 			desc:     "update domain with empty ID",
 			domainID: "",
-			d: auth.DomainReq{
+			d: domains.DomainReq{
 				Name:     &updatedName,
 				Metadata: &updatedMetadata,
 			},
-			response: auth.Domain{},
+			response: domains.Domain{},
 			err:      repoerr.ErrFailedOpDB,
 		},
 		{
 			desc:     "update domain with malformed metadata",
 			domainID: domainID,
-			d: auth.DomainReq{
+			d: domains.DomainReq{
 				Name:     &updatedName,
 				Metadata: &clients.Metadata{"key": make(chan int)},
 			},
-			response: auth.Domain{},
+			response: domains.Domain{},
 			err:      repoerr.ErrUpdateEntity,
 		},
 	}
@@ -939,7 +777,7 @@ func TestDelete(t *testing.T) {
 
 	repo := postgres.NewDomainRepository(database)
 
-	domain := auth.Domain{
+	domain := domains.Domain{
 		ID:    domainID,
 		Name:  "test",
 		Alias: "test",
@@ -949,7 +787,7 @@ func TestDelete(t *testing.T) {
 		},
 		CreatedBy: userID,
 		UpdatedBy: userID,
-		Status:    auth.EnabledStatus,
+		Status:    domains.EnabledStatus,
 	}
 
 	_, err := repo.Save(context.Background(), domain)
@@ -980,169 +818,5 @@ func TestDelete(t *testing.T) {
 	for _, tc := range cases {
 		err := repo.Delete(context.Background(), tc.domainID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-	}
-}
-
-func TestCheckPolicy(t *testing.T) {
-	t.Cleanup(func() {
-		_, err := db.Exec("DELETE FROM policies")
-		require.Nil(t, err, fmt.Sprintf("clean policies unexpected error: %s", err))
-	})
-
-	repo := postgres.NewDomainRepository(database)
-
-	policy := auth.Policy{
-		SubjectType:     auth.UserType,
-		SubjectID:       userID,
-		SubjectRelation: auth.AdministratorRelation,
-		Relation:        auth.DomainRelation,
-		ObjectType:      auth.DomainType,
-		ObjectID:        domainID,
-	}
-
-	err := repo.SavePolicies(context.Background(), policy)
-	require.Nil(t, err, fmt.Sprintf("failed to save policy %s", policy.SubjectID))
-
-	cases := []struct {
-		desc   string
-		policy auth.Policy
-		err    error
-	}{
-		{
-			desc:   "check valid policy",
-			policy: policy,
-			err:    nil,
-		},
-		{
-			desc: "check policy with invalid subject type",
-			policy: auth.Policy{
-				SubjectType:     inValid,
-				SubjectID:       userID,
-				SubjectRelation: auth.AdministratorRelation,
-				Relation:        auth.DomainRelation,
-				ObjectType:      auth.DomainType,
-				ObjectID:        domainID,
-			},
-			err: repoerr.ErrNotFound,
-		},
-		{
-			desc: "check policy with invalid subject id",
-			policy: auth.Policy{
-				SubjectType:     auth.UserType,
-				SubjectID:       inValid,
-				SubjectRelation: auth.AdministratorRelation,
-				Relation:        auth.DomainRelation,
-				ObjectType:      auth.DomainType,
-				ObjectID:        domainID,
-			},
-			err: repoerr.ErrNotFound,
-		},
-		{
-			desc: "check policy with invalid subject relation",
-			policy: auth.Policy{
-				SubjectType:     auth.UserType,
-				SubjectID:       userID,
-				SubjectRelation: inValid,
-				Relation:        auth.DomainRelation,
-				ObjectType:      auth.DomainType,
-				ObjectID:        domainID,
-			},
-			err: repoerr.ErrNotFound,
-		},
-		{
-			desc: "check policy with invalid relation",
-			policy: auth.Policy{
-				SubjectType:     auth.UserType,
-				SubjectID:       userID,
-				SubjectRelation: auth.AdministratorRelation,
-				Relation:        inValid,
-				ObjectType:      auth.DomainType,
-				ObjectID:        domainID,
-			},
-			err: repoerr.ErrNotFound,
-		},
-		{
-			desc: "check policy with invalid object type",
-			policy: auth.Policy{
-				SubjectType:     auth.UserType,
-				SubjectID:       userID,
-				SubjectRelation: auth.AdministratorRelation,
-				Relation:        auth.DomainRelation,
-				ObjectType:      inValid,
-				ObjectID:        domainID,
-			},
-			err: repoerr.ErrNotFound,
-		},
-		{
-			desc: "check policy with invalid object id",
-			policy: auth.Policy{
-				SubjectType:     auth.UserType,
-				SubjectID:       userID,
-				SubjectRelation: auth.AdministratorRelation,
-				Relation:        auth.DomainRelation,
-				ObjectType:      auth.DomainType,
-				ObjectID:        inValid,
-			},
-			err: repoerr.ErrNotFound,
-		},
-	}
-	for _, tc := range cases {
-		err := repo.CheckPolicy(context.Background(), tc.policy)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.err, err))
-	}
-}
-
-func TestDeleteUserPolicies(t *testing.T) {
-	repo := postgres.NewDomainRepository(database)
-
-	domain := auth.Domain{
-		ID:    domainID,
-		Name:  "test",
-		Alias: "test",
-		Tags:  []string{"test"},
-		Metadata: map[string]interface{}{
-			"test": "test",
-		},
-		CreatedBy:  userID,
-		UpdatedBy:  userID,
-		Status:     auth.EnabledStatus,
-		Permission: "admin",
-	}
-
-	policy := auth.Policy{
-		SubjectType:     auth.UserType,
-		SubjectID:       userID,
-		SubjectRelation: "admin",
-		Relation:        "admin",
-		ObjectType:      auth.DomainType,
-		ObjectID:        domainID,
-	}
-
-	_, err := repo.Save(context.Background(), domain)
-	require.Nil(t, err, fmt.Sprintf("failed to save domain %s", domain.ID))
-
-	err = repo.SavePolicies(context.Background(), policy)
-	require.Nil(t, err, fmt.Sprintf("failed to save policy %s", policy.SubjectID))
-
-	cases := []struct {
-		desc string
-		id   string
-		err  error
-	}{
-		{
-			desc: "delete valid user policy",
-			id:   userID,
-			err:  nil,
-		},
-		{
-			desc: "delete invalid user policy",
-			id:   inValid,
-			err:  nil,
-		},
-	}
-
-	for _, tc := range cases {
-		err := repo.DeleteUserPolicies(context.Background(), tc.id)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.err, err))
 	}
 }

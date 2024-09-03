@@ -20,7 +20,9 @@ import (
 	"github.com/absmach/magistrala/auth/mocks"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/magistrala/pkg/domains"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	"github.com/absmach/magistrala/pkg/roles"
 	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -69,16 +71,15 @@ func (tr testRequest) make() (*http.Response, error) {
 func newService() (auth.Service, *mocks.KeyRepository) {
 	krepo := new(mocks.KeyRepository)
 	prepo := new(mocks.PolicyAgent)
-	drepo := new(mocks.DomainsRepository)
 	idProvider := uuid.NewMock()
 
 	t := jwt.New([]byte(secret))
 
-	return auth.New(krepo, drepo, idProvider, t, prepo, loginDuration, refreshDuration, invalidDuration), krepo
+	return auth.New(krepo, idProvider, t, prepo, loginDuration, refreshDuration, invalidDuration), krepo
 }
 
-func newServer(svc auth.Service) *httptest.Server {
-	mux := httpapi.MakeHandler(svc, mglog.NewMock(), "")
+func newServer(svc auth.Service, dsvc domains.Service, dRoles roles.Roles) *httptest.Server {
+	mux := httpapi.MakeHandler(svc, dsvc, dRoles, mglog.NewMock(), "")
 	return httptest.NewServer(mux)
 }
 

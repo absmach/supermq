@@ -1,20 +1,22 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package domains
+package http
 
 import (
 	"log/slog"
 
-	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/magistrala/pkg/domains"
+	entityRoleHttp "github.com/absmach/magistrala/pkg/entityroles/api/http"
+	"github.com/absmach/magistrala/pkg/roles"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-func MakeHandler(svc auth.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
+func MakeHandler(svc domains.Service, roles roles.Roles, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
@@ -41,13 +43,6 @@ func MakeHandler(svc auth.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
 				api.EncodeResponse,
 				opts...,
 			), "view_domain").ServeHTTP)
-
-			r.Get("/permissions", otelhttp.NewHandler(kithttp.NewServer(
-				retrieveDomainPermissionsEndpoint(svc),
-				decodeRetrieveDomainPermissionsRequest,
-				api.EncodeResponse,
-				opts...,
-			), "view_domain_permissions").ServeHTTP)
 
 			r.Patch("/", otelhttp.NewHandler(kithttp.NewServer(
 				updateDomainEndpoint(svc),
@@ -77,29 +72,10 @@ func MakeHandler(svc auth.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
 				opts...,
 			), "freeze_domain").ServeHTTP)
 
-			r.Route("/users", func(r chi.Router) {
-				r.Post("/assign", otelhttp.NewHandler(kithttp.NewServer(
-					assignDomainUsersEndpoint(svc),
-					decodeAssignUsersRequest,
-					api.EncodeResponse,
-					opts...,
-				), "assign_domain_users").ServeHTTP)
-
-				r.Post("/unassign", otelhttp.NewHandler(kithttp.NewServer(
-					unassignDomainUserEndpoint(svc),
-					decodeUnassignUserRequest,
-					api.EncodeResponse,
-					opts...,
-				), "unassign_domain_users").ServeHTTP)
-			})
 		})
 	})
-	mux.Get("/users/{userID}/domains", otelhttp.NewHandler(kithttp.NewServer(
-		listUserDomainsEndpoint(svc),
-		decodeListUserDomainsRequest,
-		api.EncodeResponse,
-		opts...,
-	), "list_domains_by_user_id").ServeHTTP)
+
+	mux = entityRoleHttp.RolesHandler(roles, "/domains", mux, logger)
 
 	return mux
 }

@@ -12,22 +12,31 @@ import (
 	"os"
 	"time"
 
+	authClient "github.com/absmach/magistrala/pkg/auth"
+
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/auth"
 	api "github.com/absmach/magistrala/auth/api"
 	grpcapi "github.com/absmach/magistrala/auth/api/grpc"
 	httpapi "github.com/absmach/magistrala/auth/api/http"
-	"github.com/absmach/magistrala/auth/events"
 	"github.com/absmach/magistrala/auth/jwt"
 	apostgres "github.com/absmach/magistrala/auth/postgres"
 	"github.com/absmach/magistrala/auth/spicedb"
 	"github.com/absmach/magistrala/auth/tracing"
+	domainsSvc "github.com/absmach/magistrala/internal/domains"
+	dapi "github.com/absmach/magistrala/internal/domains/api"
+	"github.com/absmach/magistrala/internal/domains/events"
+	dpostgres "github.com/absmach/magistrala/internal/domains/postgres"
+	dtracing "github.com/absmach/magistrala/internal/domains/tracing"
 	mglog "github.com/absmach/magistrala/logger"
+	"github.com/absmach/magistrala/pkg/domains"
+	"github.com/absmach/magistrala/pkg/entityroles"
 	"github.com/absmach/magistrala/pkg/jaeger"
 	"github.com/absmach/magistrala/pkg/postgres"
 	pgclient "github.com/absmach/magistrala/pkg/postgres"
 	"github.com/absmach/magistrala/pkg/prometheus"
+	"github.com/absmach/magistrala/pkg/roles"
 	"github.com/absmach/magistrala/pkg/server"
 	grpcserver "github.com/absmach/magistrala/pkg/server/grpc"
 	httpserver "github.com/absmach/magistrala/pkg/server/http"
@@ -129,6 +138,23 @@ func main() {
 		return
 	}
 
+	authConfig := authClient.Config{}
+	if err := env.ParseWithOptions(&authConfig, env.Options{Prefix: envPrefixGrpc}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
+		exitCode = 1
+		return
+	}
+
+	authServiceClient, authHandler, err := authClient.Setup(ctx, authConfig)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer authHandler.Close()
+	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
+
+	dsvc, droles := newDomainService(ctx, db, tracer, cfg, dbConfig, authServiceClient, logger)
 	svc := newService(ctx, db, tracer, cfg, dbConfig, logger, spicedbclient)
 
 	httpServerConfig := server.Config{Port: defSvcHTTPPort}
@@ -137,7 +163,7 @@ func main() {
 		exitCode = 1
 		return
 	}
-	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, logger, cfg.InstanceID), logger)
+	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, dsvc, droles, logger, cfg.InstanceID), logger)
 
 	grpcServerConfig := server.Config{Port: defSvcGRPCPort}
 	if err := env.ParseWithOptions(&grpcServerConfig, env.Options{Prefix: envPrefixGrpc}); err != nil {
@@ -208,22 +234,37 @@ func initSchema(ctx context.Context, client *authzed.ClientWithExperimental, sch
 func newService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental) auth.Service {
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 	keysRepo := apostgres.New(database)
-	domainsRepo := apostgres.NewDomainRepository(database)
 	pa := spicedb.NewPolicyAgent(spicedbClient, logger)
 	idProvider := uuid.New()
 
 	t := jwt.New([]byte(cfg.SecretKey))
 
-	svc := auth.New(keysRepo, domainsRepo, idProvider, t, pa, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration)
-	svc, err := events.NewEventStoreMiddleware(ctx, svc, cfg.ESURL)
-	if err != nil {
-		logger.Error(fmt.Sprintf("failed to init event store middleware : %s", err))
-		return nil
-	}
+	svc := auth.New(keysRepo, idProvider, t, pa, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration)
+
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics("groups", "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)
 	svc = tracing.New(svc, tracer)
 
 	return svc
+}
+
+func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, authClient magistrala.AuthServiceClient, logger *slog.Logger) (domains.Service, roles.Roles) {
+	database := postgres.NewDatabase(db, dbConfig, tracer)
+	domainsRepo := dpostgres.NewDomainRepository(database)
+
+	domainsRolesProvider := entityroles.NewRole("domains")
+	idProvider := uuid.New()
+
+	svc := domainsSvc.New(domainsRepo, authClient, idProvider)
+	svc, err := events.NewEventStoreMiddleware(ctx, svc, cfg.ESURL)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to init event store middleware : %s", err))
+		return nil, nil
+	}
+	svc = dapi.LoggingMiddleware(svc, logger)
+	counter, latency := prometheus.MakeMetrics("groups", "api")
+	svc = dapi.MetricsMiddleware(svc, counter, latency)
+	svc = dtracing.New(svc, tracer)
+	return svc, domainsRolesProvider
 }

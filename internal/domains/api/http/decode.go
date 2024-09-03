@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package domains
+package http
 
 import (
 	"context"
@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/magistrala/pkg/domains"
 	"github.com/absmach/magistrala/pkg/errors"
 	"github.com/go-chi/chi/v5"
 )
@@ -150,7 +150,7 @@ func decodePageRequest(_ context.Context, r *http.Request) (page, error) {
 	if err != nil {
 		return page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	st, err := auth.ToStatus(s)
+	st, err := domains.ToStatus(s)
 	if err != nil {
 		return page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}

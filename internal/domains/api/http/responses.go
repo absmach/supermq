@@ -1,13 +1,13 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package domains
+package http
 
 import (
 	"net/http"
 
 	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/auth"
+	"github.com/absmach/magistrala/pkg/domains"
 )
 
 var (
@@ -19,7 +19,7 @@ var (
 )
 
 type createDomainRes struct {
-	auth.Domain
+	domains.Domain
 }
 
 func (res createDomainRes) Code() int {
@@ -35,7 +35,7 @@ func (res createDomainRes) Empty() bool {
 }
 
 type retrieveDomainRes struct {
-	auth.Domain
+	domains.Domain
 }
 
 func (res retrieveDomainRes) Code() int {
@@ -67,7 +67,7 @@ func (res retrieveDomainPermissionsRes) Empty() bool {
 }
 
 type updateDomainRes struct {
-	auth.Domain
+	domains.Domain
 }
 
 func (res updateDomainRes) Code() int {
@@ -83,7 +83,7 @@ func (res updateDomainRes) Empty() bool {
 }
 
 type listDomainsRes struct {
-	auth.DomainsPage
+	domains.DomainsPage
 }
 
 func (res listDomainsRes) Code() int {
@@ -169,7 +169,7 @@ func (res unassignUsersRes) Empty() bool {
 }
 
 type listUserDomainsRes struct {
-	auth.DomainsPage
+	domains.DomainsPage
 }
 
 func (res listUserDomainsRes) Code() int {

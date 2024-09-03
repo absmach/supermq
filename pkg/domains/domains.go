@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package auth
+package domains
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 
 	"github.com/absmach/magistrala/pkg/clients"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	"github.com/absmach/magistrala/pkg/roles"
 )
 
 // Status represents Domain status.
@@ -85,6 +86,58 @@ func (s *Status) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+const (
+	Update                 roles.Operation = "update"
+	Read                                   = "read"
+	Delete                                 = "delete"
+	ManageRole                             = "manage_role"
+	AddRoleUsers                           = "add_role_users"
+	RemoveRoleUsers                        = "remove_role_users"
+	ViewRoleUsers                          = "view_role_users"
+	ThingCreate                            = "thing_create"
+	ThingUpdate                            = "thing_update"
+	ThingRead                              = "thing_read"
+	ThingDelete                            = "thing_delete"
+	ThingSetParentGroup                    = "thing_set_parent_group"
+	ThingConnectToChannel                  = "thing_connect_to_channel"
+	ThingManageRole                        = "thing_manage_role"
+	ThingAddRoleUsers                      = "thing_add_role_users"
+	ThingRemoveRoleUsers                   = "thing_remove_role_users"
+	ThingViewRoleUsers                     = "thing_view_role_users"
+	ChannelCreate                          = "channel_create"
+	ChannelUpdate                          = "channel_update"
+	ChannelRead                            = "channel_read"
+	ChannelDelete                          = "channel_delete"
+	ChannelSetParentGroup                  = "channel_set_parent_group"
+	ChannelConnectToThing                  = "channel_connect_to_thing"
+	ChannelPublish                         = "channel_publish"
+	ChannelSubscribe                       = "channel_subscribe"
+	ChannelManageRole                      = "channel_manage_role"
+	ChannelAddRoleUsers                    = "channel_add_role_users"
+	ChannelRemoveRoleUsers                 = "channel_remove_role_users"
+	ChannelViewRoleUsers                   = "channel_view_role_users"
+	GroupCreate                            = "group_create"
+	GroupUpdate                            = "group_update"
+	GroupRead                              = "group_read"
+	GroupDelete                            = "group_delete"
+	GroupSetChild                          = "group_set_child"
+	GroupSetParent                         = "group_set_parent"
+	GroupManageRole                        = "group_manage_role"
+	GroupAddRoleUsers                      = "group_add_role_users"
+	GroupRemoveRoleUsers                   = "group_remove_role_users"
+	GroupViewRoleUsers                     = "group_view_role_users"
+)
+
+const (
+	UpdatePermission          = "update_permission"
+	ReadPermission            = "read_permission"
+	DeletePermission          = "delete_permission"
+	ManageRolePermission      = "manage_role_permission"
+	AddRoleUsersPermission    = "add_role_users_permission"
+	RemoveRoleUsersPermission = "remove_role_users_permission"
+	ViewRoleUsersPermission   = "view_role_users_permission"
+)
+
 type DomainReq struct {
 	Name     *string           `json:"name,omitempty"`
 	Metadata *clients.Metadata `json:"metadata,omitempty"`
@@ -154,30 +207,24 @@ type Policy struct {
 	ObjectID        string `json:"object_id,omitempty"`
 }
 
-type Domains interface {
+//go:generate mockery --name Service --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
+type Service interface {
 	CreateDomain(ctx context.Context, token string, d Domain) (Domain, error)
 	RetrieveDomain(ctx context.Context, token string, id string) (Domain, error)
-	RetrieveDomainPermissions(ctx context.Context, token string, id string) (Permissions, error)
 	UpdateDomain(ctx context.Context, token string, id string, d DomainReq) (Domain, error)
 	ChangeDomainStatus(ctx context.Context, token string, id string, d DomainReq) (Domain, error)
 	ListDomains(ctx context.Context, token string, page Page) (DomainsPage, error)
-	AssignUsers(ctx context.Context, token string, id string, userIds []string, relation string) error
-	UnassignUser(ctx context.Context, token string, id string, userID string) error
-	ListUserDomains(ctx context.Context, token string, userID string, page Page) (DomainsPage, error)
 }
 
 // DomainsRepository specifies Domain persistence API.
 //
-//go:generate mockery --name DomainsRepository --output=./mocks --filename domains.go --quiet --note "Copyright (c) Abstract Machines"
+//go:generate mockery --name DomainsRepository --output=./mocks --filename repository.go  --quiet --note "Copyright (c) Abstract Machines"
 type DomainsRepository interface {
 	// Save creates db insert transaction for the given domain.
 	Save(ctx context.Context, d Domain) (Domain, error)
 
 	// RetrieveByID retrieves Domain by its unique ID.
 	RetrieveByID(ctx context.Context, id string) (Domain, error)
-
-	// RetrievePermissions retrieves domain permissions.
-	RetrievePermissions(ctx context.Context, subject, id string) ([]string, error)
 
 	// RetrieveAllByIDs retrieves for given Domain IDs.
 	RetrieveAllByIDs(ctx context.Context, pm Page) (DomainsPage, error)
@@ -188,18 +235,6 @@ type DomainsRepository interface {
 	// Delete
 	Delete(ctx context.Context, id string) error
 
-	// SavePolicies save policies in domains database
-	SavePolicies(ctx context.Context, pcs ...Policy) error
-
-	// DeletePolicies delete policies from domains database
-	DeletePolicies(ctx context.Context, pcs ...Policy) error
-
 	// ListDomains list all the domains
 	ListDomains(ctx context.Context, pm Page) (DomainsPage, error)
-
-	// CheckPolicy check policy in domains database.
-	CheckPolicy(ctx context.Context, pc Policy) error
-
-	// DeleteUserPolicies deletes user policies from domains database.
-	DeleteUserPolicies(ctx context.Context, id string) (err error)
 }

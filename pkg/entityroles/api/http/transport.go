@@ -4,6 +4,7 @@
 package http
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/absmach/magistrala/internal/api"
@@ -14,7 +15,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-func RolesHandler(svc roles.Roles, r *chi.Mux, logger *slog.Logger) *chi.Mux {
+func RolesHandler(svc roles.Roles, entityTypePrefixRootPath string, r *chi.Mux, logger *slog.Logger) *chi.Mux {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
@@ -22,101 +23,105 @@ func RolesHandler(svc roles.Roles, r *chi.Mux, logger *slog.Logger) *chi.Mux {
 	// RoleID - random string, So having roleName in URL make readable. But it have little overhead, it requires additional step to retrieve roleID in each service
 	// http://localhost/things/thingID/roles/roleName
 
-	r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
-		CreateRoleEndpoint(svc),
-		DecodeCreateRole,
-		api.EncodeResponse,
-		opts...,
-	), "create_role").ServeHTTP)
+	r.Route(fmt.Sprintf("%s/{entityID}/roles", entityTypePrefixRootPath), func(r chi.Router) {
 
-	r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
-		ListRolesEndpoint(svc),
-		DecodeListRoles,
-		api.EncodeResponse,
-		opts...,
-	), "list_roles").ServeHTTP)
+		r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
+			CreateRoleEndpoint(svc),
+			DecodeCreateRole,
+			api.EncodeResponse,
+			opts...,
+		), "create_role").ServeHTTP)
 
-	r.Route("/{roleName}", func(r chi.Router) {
 		r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
-			ViewRoleEndpoint(svc),
-			DecodeViewRole,
+			ListRolesEndpoint(svc),
+			DecodeListRoles,
 			api.EncodeResponse,
 			opts...,
-		), "view_role").ServeHTTP)
+		), "list_roles").ServeHTTP)
 
-		r.Put("/", otelhttp.NewHandler(kithttp.NewServer(
-			UpdateRoleEndpoint(svc),
-			DecodeUpdateRole,
-			api.EncodeResponse,
-			opts...,
-		), "update_role").ServeHTTP)
-
-		r.Delete("/", otelhttp.NewHandler(kithttp.NewServer(
-			DeleteRoleEndpoint(svc),
-			DecodeDeleteRole,
-			api.EncodeResponse,
-			opts...,
-		), "delete_role").ServeHTTP)
-
-		r.Route("/operations", func(r chi.Router) {
-			r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
-				AddRoleOperationsEndpoint(svc),
-				DecodeAddRoleOperations,
-				api.EncodeResponse,
-				opts...,
-			), "add_role_operations").ServeHTTP)
-
+		r.Route("/{roleName}", func(r chi.Router) {
 			r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
-				ListRoleOperationsEndpoint(svc),
-				DecodeListRoleOperations,
+				ViewRoleEndpoint(svc),
+				DecodeViewRole,
 				api.EncodeResponse,
 				opts...,
-			), "list_role_operations").ServeHTTP)
+			), "view_role").ServeHTTP)
 
-			r.Post("/delete", otelhttp.NewHandler(kithttp.NewServer(
-				DeleteRoleOperationsEndpoint(svc),
-				DecodeDeleteRoleOperations,
+			r.Put("/", otelhttp.NewHandler(kithttp.NewServer(
+				UpdateRoleEndpoint(svc),
+				DecodeUpdateRole,
 				api.EncodeResponse,
 				opts...,
-			), "delete_role_operations").ServeHTTP)
+			), "update_role").ServeHTTP)
 
-			r.Post("/delete-all", otelhttp.NewHandler(kithttp.NewServer(
-				DeleteAllRoleOperationsEndpoint(svc),
-				DecodeDeleteAllRoleOperations,
+			r.Delete("/", otelhttp.NewHandler(kithttp.NewServer(
+				DeleteRoleEndpoint(svc),
+				DecodeDeleteRole,
 				api.EncodeResponse,
 				opts...,
-			), "delete_all_role_operations").ServeHTTP)
+			), "delete_role").ServeHTTP)
+
+			r.Route("/operations", func(r chi.Router) {
+				r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
+					AddRoleOperationsEndpoint(svc),
+					DecodeAddRoleOperations,
+					api.EncodeResponse,
+					opts...,
+				), "add_role_operations").ServeHTTP)
+
+				r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
+					ListRoleOperationsEndpoint(svc),
+					DecodeListRoleOperations,
+					api.EncodeResponse,
+					opts...,
+				), "list_role_operations").ServeHTTP)
+
+				r.Post("/delete", otelhttp.NewHandler(kithttp.NewServer(
+					DeleteRoleOperationsEndpoint(svc),
+					DecodeDeleteRoleOperations,
+					api.EncodeResponse,
+					opts...,
+				), "delete_role_operations").ServeHTTP)
+
+				r.Post("/delete-all", otelhttp.NewHandler(kithttp.NewServer(
+					DeleteAllRoleOperationsEndpoint(svc),
+					DecodeDeleteAllRoleOperations,
+					api.EncodeResponse,
+					opts...,
+				), "delete_all_role_operations").ServeHTTP)
+			})
+
+			r.Route("/members", func(r chi.Router) {
+				r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
+					AddRoleMembersEndpoint(svc),
+					DecodeAddRoleMembers,
+					api.EncodeResponse,
+					opts...,
+				), "add_role_members").ServeHTTP)
+
+				r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
+					ListRoleMembersEndpoint(svc),
+					DecodeListRoleMembers,
+					api.EncodeResponse,
+					opts...,
+				), "list_role_members").ServeHTTP)
+
+				r.Post("/delete", otelhttp.NewHandler(kithttp.NewServer(
+					DeleteRoleMembersEndpoint(svc),
+					DecodeDeleteRoleMembers,
+					api.EncodeResponse,
+					opts...,
+				), "delete_role_members").ServeHTTP)
+
+				r.Post("/delete-all", otelhttp.NewHandler(kithttp.NewServer(
+					DeleteAllRoleMembersEndpoint(svc),
+					DecodeDeleteAllRoleMembers,
+					api.EncodeResponse,
+					opts...,
+				), "delete_all_role_members").ServeHTTP)
+			})
 		})
 
-		r.Route("/members", func(r chi.Router) {
-			r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
-				AddRoleMembersEndpoint(svc),
-				DecodeAddRoleMembers,
-				api.EncodeResponse,
-				opts...,
-			), "add_role_members").ServeHTTP)
-
-			r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
-				ListRoleMembersEndpoint(svc),
-				DecodeListRoleMembers,
-				api.EncodeResponse,
-				opts...,
-			), "list_role_members").ServeHTTP)
-
-			r.Post("/delete", otelhttp.NewHandler(kithttp.NewServer(
-				DeleteRoleMembersEndpoint(svc),
-				DecodeDeleteRoleMembers,
-				api.EncodeResponse,
-				opts...,
-			), "delete_role_members").ServeHTTP)
-
-			r.Post("/delete-all", otelhttp.NewHandler(kithttp.NewServer(
-				DeleteAllRoleMembersEndpoint(svc),
-				DecodeDeleteAllRoleMembers,
-				api.EncodeResponse,
-				opts...,
-			), "delete_all_role_members").ServeHTTP)
-		})
 	})
 
 	return r

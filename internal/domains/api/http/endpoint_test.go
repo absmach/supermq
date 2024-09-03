@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package domains_test
+package http_test
 
 import (
 	"encoding/json"
@@ -13,13 +13,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/absmach/magistrala/auth"
-	httpapi "github.com/absmach/magistrala/auth/api/http/domains"
-	"github.com/absmach/magistrala/auth/mocks"
+	httpapi "github.com/absmach/magistrala/internal/domains/api/http"
 	"github.com/absmach/magistrala/internal/testsutil"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
+	"github.com/absmach/magistrala/pkg/domains"
+	"github.com/absmach/magistrala/pkg/domains/mocks"
+	"github.com/absmach/magistrala/pkg/entityroles"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/go-chi/chi/v5"
@@ -30,12 +31,12 @@ import (
 var (
 	validCMetadata = mgclients.Metadata{"role": "client"}
 	ID             = testsutil.GenerateUUID(&testing.T{})
-	domain         = auth.Domain{
+	domain         = domains.Domain{
 		ID:       ID,
 		Name:     "domainname",
 		Tags:     []string{"tag1", "tag2"},
 		Metadata: validCMetadata,
-		Status:   auth.EnabledStatus,
+		Status:   domains.EnabledStatus,
 		Alias:    "mydomain",
 	}
 	validToken   = "token"
@@ -91,7 +92,8 @@ func newDomainsServer() (*httptest.Server, *mocks.Service) {
 	logger := mglog.NewMock()
 	mux := chi.NewRouter()
 	svc := new(mocks.Service)
-	httpapi.MakeHandler(svc, mux, logger)
+	roles := entityroles.NewRole("domain")
+	httpapi.MakeHandler(svc, roles, mux, logger)
 	return httptest.NewServer(mux), svc
 }
 
@@ -101,7 +103,7 @@ func TestCreateDomain(t *testing.T) {
 
 	cases := []struct {
 		desc        string
-		domain      auth.Domain
+		domain      domains.Domain
 		token       string
 		contentType string
 		svcErr      error
@@ -110,7 +112,7 @@ func TestCreateDomain(t *testing.T) {
 	}{
 		{
 			desc: "register  a new domain successfully",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:       ID,
 				Name:     "test",
 				Metadata: mgclients.Metadata{"role": "domain"},
@@ -124,7 +126,7 @@ func TestCreateDomain(t *testing.T) {
 		},
 		{
 			desc: "register  a new domain with empty token",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:       ID,
 				Name:     "test",
 				Metadata: mgclients.Metadata{"role": "domain"},
@@ -138,7 +140,7 @@ func TestCreateDomain(t *testing.T) {
 		},
 		{
 			desc: "register  a new domain with invalid token",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:       ID,
 				Name:     "test",
 				Metadata: mgclients.Metadata{"role": "domain"},
@@ -153,7 +155,7 @@ func TestCreateDomain(t *testing.T) {
 		},
 		{
 			desc: "register  a new domain with an empty name",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:       ID,
 				Name:     "",
 				Metadata: mgclients.Metadata{"role": "domain"},
@@ -167,7 +169,7 @@ func TestCreateDomain(t *testing.T) {
 		},
 		{
 			desc: "register a new domain with an empty alias",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:       ID,
 				Name:     "test",
 				Metadata: mgclients.Metadata{"role": "domain"},
@@ -181,7 +183,7 @@ func TestCreateDomain(t *testing.T) {
 		},
 		{
 			desc: "register a  new domain with invalid content type",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:       ID,
 				Name:     "test",
 				Metadata: mgclients.Metadata{"role": "domain"},
@@ -195,7 +197,7 @@ func TestCreateDomain(t *testing.T) {
 		},
 		{
 			desc: "register a  new domain that cant be marshalled",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:   ID,
 				Name: "test",
 				Metadata: map[string]interface{}{
@@ -222,7 +224,7 @@ func TestCreateDomain(t *testing.T) {
 			body:        strings.NewReader(data),
 		}
 
-		svcCall := svc.On("CreateDomain", mock.Anything, mock.Anything, mock.Anything).Return(auth.Domain{}, tc.svcErr)
+		svcCall := svc.On("CreateDomain", mock.Anything, mock.Anything, mock.Anything).Return(domains.Domain{}, tc.svcErr)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		var errRes respBody
@@ -245,7 +247,7 @@ func TestListDomains(t *testing.T) {
 		desc               string
 		token              string
 		query              string
-		listDomainsRequest auth.DomainsPage
+		listDomainsRequest domains.DomainsPage
 		status             int
 		svcErr             error
 		err                error
@@ -254,9 +256,9 @@ func TestListDomains(t *testing.T) {
 			desc:   "list domains with valid token",
 			token:  validToken,
 			status: http.StatusOK,
-			listDomainsRequest: auth.DomainsPage{
+			listDomainsRequest: domains.DomainsPage{
 				Total:   1,
-				Domains: []auth.Domain{domain},
+				Domains: []domains.Domain{domain},
 			},
 			err: nil,
 		},
@@ -276,9 +278,9 @@ func TestListDomains(t *testing.T) {
 		{
 			desc:  "list domains  with offset",
 			token: validToken,
-			listDomainsRequest: auth.DomainsPage{
+			listDomainsRequest: domains.DomainsPage{
 				Total:   1,
-				Domains: []auth.Domain{domain},
+				Domains: []domains.Domain{domain},
 			},
 			query:  "offset=1",
 			status: http.StatusOK,
@@ -294,9 +296,9 @@ func TestListDomains(t *testing.T) {
 		{
 			desc:  "list domains  with limit",
 			token: validToken,
-			listDomainsRequest: auth.DomainsPage{
+			listDomainsRequest: domains.DomainsPage{
 				Total:   1,
-				Domains: []auth.Domain{domain},
+				Domains: []domains.Domain{domain},
 			},
 			query:  "limit=1",
 			status: http.StatusOK,
@@ -312,9 +314,9 @@ func TestListDomains(t *testing.T) {
 		{
 			desc:  "list domains  with name",
 			token: validToken,
-			listDomainsRequest: auth.DomainsPage{
+			listDomainsRequest: domains.DomainsPage{
 				Total:   1,
-				Domains: []auth.Domain{domain},
+				Domains: []domains.Domain{domain},
 			},
 			query:  "name=domainname",
 			status: http.StatusOK,
@@ -337,9 +339,9 @@ func TestListDomains(t *testing.T) {
 		{
 			desc:  "list domains with status",
 			token: validToken,
-			listDomainsRequest: auth.DomainsPage{
+			listDomainsRequest: domains.DomainsPage{
 				Total:   1,
-				Domains: []auth.Domain{domain},
+				Domains: []domains.Domain{domain},
 			},
 			query:  "status=enabled",
 			status: http.StatusOK,
@@ -362,9 +364,9 @@ func TestListDomains(t *testing.T) {
 		{
 			desc:  "list domains  with tags",
 			token: validToken,
-			listDomainsRequest: auth.DomainsPage{
+			listDomainsRequest: domains.DomainsPage{
 				Total:   1,
-				Domains: []auth.Domain{domain},
+				Domains: []domains.Domain{domain},
 			},
 			query:  "tag=tag1,tag2",
 			status: http.StatusOK,
@@ -387,9 +389,9 @@ func TestListDomains(t *testing.T) {
 		{
 			desc:  "list domains  with metadata",
 			token: validToken,
-			listDomainsRequest: auth.DomainsPage{
+			listDomainsRequest: domains.DomainsPage{
 				Total:   1,
-				Domains: []auth.Domain{domain},
+				Domains: []domains.Domain{domain},
 			},
 			query:  "metadata=%7B%22domain%22%3A%20%22example.com%22%7D&",
 			status: http.StatusOK,
@@ -412,9 +414,9 @@ func TestListDomains(t *testing.T) {
 		{
 			desc:  "list domains  with permissions",
 			token: validToken,
-			listDomainsRequest: auth.DomainsPage{
+			listDomainsRequest: domains.DomainsPage{
 				Total:   1,
-				Domains: []auth.Domain{domain},
+				Domains: []domains.Domain{domain},
 			},
 			query:  "permission=view",
 			status: http.StatusOK,
@@ -437,9 +439,9 @@ func TestListDomains(t *testing.T) {
 		{
 			desc:  "list domains  with order",
 			token: validToken,
-			listDomainsRequest: auth.DomainsPage{
+			listDomainsRequest: domains.DomainsPage{
 				Total:   1,
-				Domains: []auth.Domain{domain},
+				Domains: []domains.Domain{domain},
 			},
 			query:  "order=name",
 			status: http.StatusOK,
@@ -461,9 +463,9 @@ func TestListDomains(t *testing.T) {
 		{
 			desc:  "list domains  with dir",
 			token: validToken,
-			listDomainsRequest: auth.DomainsPage{
+			listDomainsRequest: domains.DomainsPage{
 				Total:   1,
-				Domains: []auth.Domain{domain},
+				Domains: []domains.Domain{domain},
 			},
 			query:  "dir=asc",
 			status: http.StatusOK,
@@ -544,7 +546,7 @@ func TestViewDomain(t *testing.T) {
 			token:  tc.token,
 		}
 
-		svcCall := svc.On("RetrieveDomain", mock.Anything, mock.Anything, mock.Anything).Return(auth.Domain{}, tc.svcErr)
+		svcCall := svc.On("RetrieveDomain", mock.Anything, mock.Anything, mock.Anything).Return(domains.Domain{}, tc.svcErr)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		var errRes respBody
@@ -553,73 +555,6 @@ func TestViewDomain(t *testing.T) {
 		if errRes.Err != "" || errRes.Message != "" {
 			err = errors.Wrap(errors.New(errRes.Err), errors.New(errRes.Message))
 		}
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		svcCall.Unset()
-	}
-}
-
-func TestViewDomainPermissions(t *testing.T) {
-	ds, svc := newDomainsServer()
-	defer ds.Close()
-
-	cases := []struct {
-		desc     string
-		token    string
-		domainID string
-		status   int
-		svcErr   error
-		err      error
-	}{
-		{
-			desc:     "view domain permissions successfully",
-			token:    validToken,
-			domainID: id,
-			status:   http.StatusOK,
-			err:      nil,
-		},
-		{
-			desc:     "view domain permissions with empty token",
-			token:    "",
-			domainID: id,
-			status:   http.StatusUnauthorized,
-			err:      apiutil.ErrBearerToken,
-		},
-		{
-			desc:     "view domain permissions with invalid token",
-			token:    inValidToken,
-			domainID: id,
-			status:   http.StatusUnauthorized,
-			svcErr:   svcerr.ErrAuthentication,
-			err:      svcerr.ErrAuthentication,
-		},
-		{
-			desc:     "view domain permissions with empty domainID",
-			token:    validToken,
-			domainID: "",
-			status:   http.StatusBadRequest,
-			err:      apiutil.ErrMissingID,
-		},
-	}
-
-	for _, tc := range cases {
-		req := testRequest{
-			client: ds.Client(),
-			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/domains/%s/permissions", ds.URL, tc.domainID),
-			token:  tc.token,
-		}
-
-		svcCall := svc.On("RetrieveDomainPermissions", mock.Anything, mock.Anything, mock.Anything).Return(auth.Permissions{}, tc.svcErr)
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		var errRes respBody
-		err = json.NewDecoder(res.Body).Decode(&errRes)
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while decoding response body: %s", tc.desc, err))
-		if errRes.Err != "" || errRes.Message != "" {
-			err = errors.Wrap(errors.New(errRes.Err), errors.New(errRes.Message))
-		}
-
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 		svcCall.Unset()
@@ -633,7 +568,7 @@ func TestUpdateDomain(t *testing.T) {
 	cases := []struct {
 		desc        string
 		token       string
-		domain      auth.Domain
+		domain      domains.Domain
 		contentType string
 		status      int
 		svcErr      error
@@ -642,7 +577,7 @@ func TestUpdateDomain(t *testing.T) {
 		{
 			desc:  "update domain successfully",
 			token: validToken,
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:       ID,
 				Name:     "test",
 				Metadata: mgclients.Metadata{"role": "domain"},
@@ -656,7 +591,7 @@ func TestUpdateDomain(t *testing.T) {
 		{
 			desc:  "update domain with empty token",
 			token: "",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:       ID,
 				Name:     "test",
 				Metadata: mgclients.Metadata{"role": "domain"},
@@ -670,7 +605,7 @@ func TestUpdateDomain(t *testing.T) {
 		{
 			desc:  "update domain with invalid token",
 			token: inValidToken,
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:       ID,
 				Name:     "test",
 				Metadata: mgclients.Metadata{"role": "domain"},
@@ -685,7 +620,7 @@ func TestUpdateDomain(t *testing.T) {
 		{
 			desc:  "update domain with invalid content type",
 			token: validToken,
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:       ID,
 				Name:     "test",
 				Metadata: mgclients.Metadata{"role": "domain"},
@@ -699,7 +634,7 @@ func TestUpdateDomain(t *testing.T) {
 		{
 			desc:  "update domain with data that cant be marshalled",
 			token: validToken,
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID:   ID,
 				Name: "test",
 				Metadata: map[string]interface{}{
@@ -725,7 +660,7 @@ func TestUpdateDomain(t *testing.T) {
 			token:       tc.token,
 		}
 
-		svcCall := svc.On("UpdateDomain", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(auth.Domain{}, tc.svcErr)
+		svcCall := svc.On("UpdateDomain", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(domains.Domain{}, tc.svcErr)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		var errRes respBody
@@ -746,12 +681,12 @@ func TestEnableDomain(t *testing.T) {
 	defer ds.Close()
 
 	disabledDomain := domain
-	disabledDomain.Status = auth.DisabledStatus
+	disabledDomain.Status = domains.DisabledStatus
 
 	cases := []struct {
 		desc     string
-		domain   auth.Domain
-		response auth.Domain
+		domain   domains.Domain
+		response domains.Domain
 		token    string
 		status   int
 		svcErr   error
@@ -760,9 +695,9 @@ func TestEnableDomain(t *testing.T) {
 		{
 			desc:   "enable domain with valid token",
 			domain: disabledDomain,
-			response: auth.Domain{
+			response: domains.Domain{
 				ID:     domain.ID,
-				Status: auth.EnabledStatus,
+				Status: domains.EnabledStatus,
 			},
 			token:  validToken,
 			status: http.StatusOK,
@@ -785,7 +720,7 @@ func TestEnableDomain(t *testing.T) {
 		},
 		{
 			desc: "enable domain with empty id",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID: "",
 			},
 			token:  validToken,
@@ -794,7 +729,7 @@ func TestEnableDomain(t *testing.T) {
 		},
 		{
 			desc: "enable domain with invalid id",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID: "invalid",
 			},
 			token:  validToken,
@@ -828,8 +763,8 @@ func TestDisableDomain(t *testing.T) {
 
 	cases := []struct {
 		desc     string
-		domain   auth.Domain
-		response auth.Domain
+		domain   domains.Domain
+		response domains.Domain
 		token    string
 		status   int
 		svcErr   error
@@ -838,9 +773,9 @@ func TestDisableDomain(t *testing.T) {
 		{
 			desc:   "disable domain with valid token",
 			domain: domain,
-			response: auth.Domain{
+			response: domains.Domain{
 				ID:     domain.ID,
-				Status: auth.DisabledStatus,
+				Status: domains.DisabledStatus,
 			},
 			token:  validToken,
 			status: http.StatusOK,
@@ -863,7 +798,7 @@ func TestDisableDomain(t *testing.T) {
 		},
 		{
 			desc: "disable domain with empty id",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID: "",
 			},
 			token:  validToken,
@@ -872,7 +807,7 @@ func TestDisableDomain(t *testing.T) {
 		},
 		{
 			desc: "disable domain with invalid id",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID: "invalid",
 			},
 			token:  validToken,
@@ -906,8 +841,8 @@ func TestFreezeDomain(t *testing.T) {
 
 	cases := []struct {
 		desc     string
-		domain   auth.Domain
-		response auth.Domain
+		domain   domains.Domain
+		response domains.Domain
 		token    string
 		status   int
 		svcErr   error
@@ -916,9 +851,9 @@ func TestFreezeDomain(t *testing.T) {
 		{
 			desc:   "freeze domain with valid token",
 			domain: domain,
-			response: auth.Domain{
+			response: domains.Domain{
 				ID:     domain.ID,
-				Status: auth.FreezeStatus,
+				Status: domains.FreezeStatus,
 			},
 			token:  validToken,
 			status: http.StatusOK,
@@ -941,7 +876,7 @@ func TestFreezeDomain(t *testing.T) {
 		},
 		{
 			desc: "freeze domain with empty id",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID: "",
 			},
 			token:  validToken,
@@ -950,7 +885,7 @@ func TestFreezeDomain(t *testing.T) {
 		},
 		{
 			desc: "freeze domain with invalid id",
-			domain: auth.Domain{
+			domain: domains.Domain{
 				ID: "invalid",
 			},
 			token:  validToken,
@@ -1205,7 +1140,7 @@ func TestListDomainsByUserID(t *testing.T) {
 		desc               string
 		token              string
 		query              string
-		listDomainsRequest auth.DomainsPage
+		listDomainsRequest domains.DomainsPage
 		userID             string
 		status             int
 		svcErr             error
@@ -1215,9 +1150,9 @@ func TestListDomainsByUserID(t *testing.T) {
 			desc:   "list domains by user id with valid token",
 			token:  validToken,
 			status: http.StatusOK,
-			listDomainsRequest: auth.DomainsPage{
+			listDomainsRequest: domains.DomainsPage{
 				Total:   1,
-				Domains: []auth.Domain{domain},
+				Domains: []domains.Domain{domain},
 			},
 			userID: validID,
 			err:    nil,
@@ -1246,9 +1181,9 @@ func TestListDomainsByUserID(t *testing.T) {
 		{
 			desc:  "list domains by user id with offset",
 			token: validToken,
-			listDomainsRequest: auth.DomainsPage{
+			listDomainsRequest: domains.DomainsPage{
 				Total:   1,
-				Domains: []auth.Domain{domain},
+				Domains: []domains.Domain{domain},
 			},
 			query:  "offset=1",
 			userID: validID,
@@ -1265,9 +1200,9 @@ func TestListDomainsByUserID(t *testing.T) {
 		{
 			desc:  "list domains by user id with limit",
 			token: validToken,
-			listDomainsRequest: auth.DomainsPage{
+			listDomainsRequest: domains.DomainsPage{
 				Total:   1,
-				Domains: []auth.Domain{domain},
+				Domains: []domains.Domain{domain},
 			},
 			query:  "limit=1",
 			userID: validID,
