@@ -54,6 +54,15 @@ var (
 	// ErrEmptyList indicates that entity data is empty.
 	ErrEmptyList = errors.New("empty list provided")
 
+	// ErrMissingRoleName indicates that role name are empty
+	ErrMissingRoleName = errors.New("empty role name")
+
+	// ErrMissingRoleOperations indicates that role operations are empty
+	ErrMissingRoleOperations = errors.New("empty role operations")
+
+	// ErrMissingRoleMembers indicates that role members are empty
+	ErrMissingRoleMembers = errors.New("empty role members")
+
 	// ErrMalformedPolicy indicates that policies are malformed.
 	ErrMalformedPolicy = errors.New("malformed policy")
 
