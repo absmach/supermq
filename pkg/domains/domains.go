@@ -88,45 +88,102 @@ func (s *Status) UnmarshalJSON(data []byte) error {
 
 const (
 	Update                 roles.Operation = "update"
-	Read                                   = "read"
-	Delete                                 = "delete"
-	ManageRole                             = "manage_role"
-	AddRoleUsers                           = "add_role_users"
-	RemoveRoleUsers                        = "remove_role_users"
-	ViewRoleUsers                          = "view_role_users"
-	ThingCreate                            = "thing_create"
-	ThingUpdate                            = "thing_update"
-	ThingRead                              = "thing_read"
-	ThingDelete                            = "thing_delete"
-	ThingSetParentGroup                    = "thing_set_parent_group"
-	ThingConnectToChannel                  = "thing_connect_to_channel"
-	ThingManageRole                        = "thing_manage_role"
-	ThingAddRoleUsers                      = "thing_add_role_users"
-	ThingRemoveRoleUsers                   = "thing_remove_role_users"
-	ThingViewRoleUsers                     = "thing_view_role_users"
-	ChannelCreate                          = "channel_create"
-	ChannelUpdate                          = "channel_update"
-	ChannelRead                            = "channel_read"
-	ChannelDelete                          = "channel_delete"
-	ChannelSetParentGroup                  = "channel_set_parent_group"
-	ChannelConnectToThing                  = "channel_connect_to_thing"
-	ChannelPublish                         = "channel_publish"
-	ChannelSubscribe                       = "channel_subscribe"
-	ChannelManageRole                      = "channel_manage_role"
-	ChannelAddRoleUsers                    = "channel_add_role_users"
-	ChannelRemoveRoleUsers                 = "channel_remove_role_users"
-	ChannelViewRoleUsers                   = "channel_view_role_users"
-	GroupCreate                            = "group_create"
-	GroupUpdate                            = "group_update"
-	GroupRead                              = "group_read"
-	GroupDelete                            = "group_delete"
-	GroupSetChild                          = "group_set_child"
-	GroupSetParent                         = "group_set_parent"
-	GroupManageRole                        = "group_manage_role"
-	GroupAddRoleUsers                      = "group_add_role_users"
-	GroupRemoveRoleUsers                   = "group_remove_role_users"
-	GroupViewRoleUsers                     = "group_view_role_users"
+	Read                   roles.Operation = "read"
+	Delete                 roles.Operation = "delete"
+	ManageRole             roles.Operation = "manage_role"
+	AddRoleUsers           roles.Operation = "add_role_users"
+	RemoveRoleUsers        roles.Operation = "remove_role_users"
+	ViewRoleUsers          roles.Operation = "view_role_users"
+	ThingCreate            roles.Operation = "thing_create"
+	ThingUpdate            roles.Operation = "thing_update"
+	ThingRead              roles.Operation = "thing_read"
+	ThingDelete            roles.Operation = "thing_delete"
+	ThingSetParentGroup    roles.Operation = "thing_set_parent_group"
+	ThingConnectToChannel  roles.Operation = "thing_connect_to_channel"
+	ThingManageRole        roles.Operation = "thing_manage_role"
+	ThingAddRoleUsers      roles.Operation = "thing_add_role_users"
+	ThingRemoveRoleUsers   roles.Operation = "thing_remove_role_users"
+	ThingViewRoleUsers     roles.Operation = "thing_view_role_users"
+	ChannelCreate          roles.Operation = "channel_create"
+	ChannelUpdate          roles.Operation = "channel_update"
+	ChannelRead            roles.Operation = "channel_read"
+	ChannelDelete          roles.Operation = "channel_delete"
+	ChannelSetParentGroup  roles.Operation = "channel_set_parent_group"
+	ChannelConnectToThing  roles.Operation = "channel_connect_to_thing"
+	ChannelPublish         roles.Operation = "channel_publish"
+	ChannelSubscribe       roles.Operation = "channel_subscribe"
+	ChannelManageRole      roles.Operation = "channel_manage_role"
+	ChannelAddRoleUsers    roles.Operation = "channel_add_role_users"
+	ChannelRemoveRoleUsers roles.Operation = "channel_remove_role_users"
+	ChannelViewRoleUsers   roles.Operation = "channel_view_role_users"
+	GroupCreate            roles.Operation = "group_create"
+	GroupUpdate            roles.Operation = "group_update"
+	GroupRead              roles.Operation = "group_read"
+	GroupDelete            roles.Operation = "group_delete"
+	GroupSetChild          roles.Operation = "group_set_child"
+	GroupSetParent         roles.Operation = "group_set_parent"
+	GroupManageRole        roles.Operation = "group_manage_role"
+	GroupAddRoleUsers      roles.Operation = "group_add_role_users"
+	GroupRemoveRoleUsers   roles.Operation = "group_remove_role_users"
+	GroupViewRoleUsers     roles.Operation = "group_view_role_users"
 )
+
+func AllowedOperations() []roles.Operation {
+	return []roles.Operation{
+		Update,
+		Read,
+		Delete,
+		ManageRole,
+		AddRoleUsers,
+		RemoveRoleUsers,
+		ViewRoleUsers,
+		ThingCreate,
+		ThingUpdate,
+		ThingRead,
+		ThingDelete,
+		ThingSetParentGroup,
+		ThingConnectToChannel,
+		ThingManageRole,
+		ThingAddRoleUsers,
+		ThingRemoveRoleUsers,
+		ThingViewRoleUsers,
+		ChannelCreate,
+		ChannelUpdate,
+		ChannelRead,
+		ChannelDelete,
+		ChannelSetParentGroup,
+		ChannelConnectToThing,
+		ChannelPublish,
+		ChannelSubscribe,
+		ChannelManageRole,
+		ChannelAddRoleUsers,
+		ChannelRemoveRoleUsers,
+		ChannelViewRoleUsers,
+		GroupCreate,
+		GroupUpdate,
+		GroupRead,
+		GroupDelete,
+		GroupSetChild,
+		GroupSetParent,
+		GroupManageRole,
+		GroupAddRoleUsers,
+		GroupRemoveRoleUsers,
+		GroupViewRoleUsers,
+	}
+}
+
+func memberRoleOperations() []roles.Operation {
+	return []roles.Operation{
+		Read,
+	}
+}
+
+func BuiltInRoles() map[string][]roles.Operation {
+	return map[string][]roles.Operation{
+		"admin":  AllowedOperations(),
+		"member": memberRoleOperations(),
+	}
+}
 
 const (
 	UpdatePermission          = "update_permission"

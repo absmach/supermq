@@ -24,7 +24,7 @@ type identity struct {
 	UserID   string
 }
 type service struct {
-	domains    domains.DomainsRepository
+	repo       domains.DomainsRepository
 	auth       magistrala.AuthServiceClient
 	idProvider magistrala.IDProvider
 	entityroles.RolesSvc
@@ -32,11 +32,13 @@ type service struct {
 
 var _ domains.Service = (*service)(nil)
 
-func New(domains domains.DomainsRepository, auth magistrala.AuthServiceClient, idProvider magistrala.IDProvider) domains.Service {
+func New(repo domains.DomainsRepository, auth magistrala.AuthServiceClient, idProvider magistrala.IDProvider) domains.Service {
+	rolesSvc := entityroles.NewRolesSvc("domains", repo, auth, domains.AllowedOperations(), domains.BuiltInRoles())
 	return &service{
-		domains:    domains,
+		repo:       repo,
 		auth:       auth,
 		idProvider: idProvider,
+		RolesSvc:   rolesSvc,
 	}
 }
 
@@ -69,7 +71,7 @@ func (svc service) CreateDomain(ctx context.Context, token string, d domains.Dom
 			}
 		}
 	}()
-	dom, err := svc.domains.Save(ctx, d)
+	dom, err := svc.repo.Save(ctx, d)
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
@@ -82,7 +84,7 @@ func (svc service) RetrieveDomain(ctx context.Context, token, id string) (domain
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-	domain, err := svc.domains.RetrieveByID(ctx, id)
+	domain, err := svc.repo.RetrieveByID(ctx, id)
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
@@ -125,7 +127,7 @@ func (svc service) UpdateDomain(ctx context.Context, token, id string, d domains
 
 	}
 
-	dom, err := svc.domains.Update(ctx, id, user.UserID, d)
+	dom, err := svc.repo.Update(ctx, id, user.UserID, d)
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
@@ -153,7 +155,7 @@ func (svc service) ChangeDomainStatus(ctx context.Context, token, id string, d d
 
 	}
 
-	dom, err := svc.domains.Update(ctx, id, user.UserID, d)
+	dom, err := svc.repo.Update(ctx, id, user.UserID, d)
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
@@ -177,7 +179,7 @@ func (svc service) ListDomains(ctx context.Context, token string, p domains.Page
 	// 	p.SubjectID = ""
 	// }
 
-	dp, err := svc.domains.ListDomains(ctx, p)
+	dp, err := svc.repo.ListDomains(ctx, p)
 	if err != nil {
 		return domains.DomainsPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
