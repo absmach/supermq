@@ -341,8 +341,148 @@ definition domain {
 
 // Add this realtion and permission in future while adding orgnaization
 definition team {
+	relation organization: organization
+	relation parent_team: team
 
+	relation delete: role#member
+	relation update: role#member
+	relation read: role#member
+
+	relation set_parent: role#member
+	relation set_child: role#member
+
+	relation member: role#member
+
+	relation manage_role: role#member
+	relation add_role_users: role#member
+	relation remove_role_users: role#member
+	relation view_role_users: role#member
+
+	relation subteam_delete: role#member
+	relation subteam_update: role#member
+	relation subteam_read: role#member
+
+	relation subteam_member: role#member
+
+	relation subteam_set_child: role#member
+	relation subteam_set_parent: role#member
+
+	relation subteam_manage_role: role#member
+	relation subteam_add_role_users: role#member
+	relation subteam_remove_role_users: role#member
+	relation subteam_view_role_users: role#member
+
+    // Domain related permission
+
+	relation domain_update: role#member | team#member
+	relation domain_read: role#member | team#member
+	relation domain_delete: role#member | team#member
+
+	relation domain_manage_role: role#member | team#member
+	relation domain_add_role_users: role#member | team#member
+	relation domain_remove_role_users: role#member | team#member
+	relation domain_view_role_users: role#member | team#member
+
+	relation thing_create: role#member | team#member
+	relation thing_update: role#member | team#member
+	relation thing_read: role#member | team#member
+	relation thing_delete: role#member | team#member
+	relation thing_set_parent_group: role#member | team#member
+	relation thing_connect_to_channel: role#member | team#member
+
+	relation thing_manage_role: role#member | team#member
+	relation thing_add_role_users: role#member | team#member
+	relation thing_remove_role_users: role#member | team#member
+	relation thing_view_role_users: role#member | team#member
+
+	relation channel_create: role#member | team#member
+	relation channel_update: role#member | team#member
+	relation channel_read: role#member | team#member
+	relation channel_delete: role#member | team#member
+	relation channel_set_parent_group: role#member | team#member
+	relation channel_connect_to_thing: role#member | team#member
+	relation channel_publish: role#member | team#member
+	relation channel_subscribe: role#member | team#member
+
+	relation channel_manage_role: role#member | team#member
+	relation channel_add_role_users: role#member | team#member
+	relation channel_remove_role_users: role#member | team#member
+	relation channel_view_role_users: role#member | team#member
+
+	relation group_create: role#member | team#member
+	relation group_update: role#member | team#member
+	relation group_read: role#member | team#member
+	relation group_delete: role#member | team#member
+	relation group_set_child: role#member | team#member
+	relation group_set_parent: role#member | team#member
+
+	relation group_manage_role: role#member | team#member
+	relation group_add_role_users: role#member | team#member
+	relation group_remove_role_users: role#member | team#member
+	relation group_view_role_users: role#member | team#member
+
+	permission delete_permission = delete + organization->team_delete + parent_team->subteam_delete + organization->admin
+	permission update_permission = update + organization->team_update + parent_team->subteam_update + organization->admin
+	permission read_permission = read + organization->team_read + parent_team->subteam_read + organization->admin
+
+	permission set_parent_permission = set_parent + organization->team_set_parent + parent_team->subteam_set_parent + organization->admin
+	permission set_child_permisssion = set_child + organization->team_set_child + parent_team->subteam_set_child + organization->admin
+
+    permission membership = member + organization->team_member + parent_team->subteam_member + organization->admin
+
+	permission manage_role_permission = manage_role + organization->team_manage_role + parent_team->subteam_manage_role + organization->admin
+	permission add_role_users_permission = add_role_users + organization->team_add_role_users + parent_team->subteam_add_role_users + organization->admin
+	permission remove_role_users_permission = remove_role_users + organization->team_remove_role_users + parent_team->subteam_remove_role_users + organization->admin
+	permission view_role_users_permission = view_role_users + organization->team_view_role_users + parent_team->subteam_view_role_users + organization->admin
 }
+
+
+definition organization {
+	relation platform: platform
+	relation administrator: user
+
+	relation delete: role#member
+	relation update: role#member
+	relation read: role#member
+
+	relation member: role#member
+
+	relation manage_role: role#member
+	relation add_role_users: role#member
+	relation remove_role_users: role#member
+	relation view_role_users: role#member
+
+	relation team_create: role#member
+
+	relation team_delete: role#member
+	relation team_update: role#member
+	relation team_read: role#member
+
+	relation team_member: role#member  // Will be member of all the teams in the organization
+
+	relation team_set_child: role#member
+	relation team_set_parent: role#member
+
+	relation team_manage_role: role#member
+	relation team_add_role_users: role#member
+	relation team_remove_role_users: role#member
+	relation team_view_role_users: role#member
+
+	permission admin = administrator + platform->administrator
+	permission delete_permission = admin + delete->member
+	permission update_permission = admin + update->member
+	permission read_permission = admin + read->member
+
+	permission membership = admin + member->member
+
+	permission team_create_permission = admin + team_create->member
+
+	permission manage_role_permission = admin + manage_role
+	permission add_role_users_permisson = admin + add_role_users
+	permission remove_role_users_permission = admin + remove_role_users
+	permission view_role_users_permission = admin + view_role_users
+}
+
 
 definition platform {
   relation administrator: user

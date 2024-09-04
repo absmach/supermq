@@ -137,8 +137,31 @@ func main() {
 		exitCode = 1
 		return
 	}
+	svc := newService(ctx, db, tracer, cfg, dbConfig, logger, spicedbclient)
 
-	authConfig := authClient.Config{}
+	grpcServerConfig := server.Config{Port: defSvcGRPCPort}
+	if err := env.ParseWithOptions(&grpcServerConfig, env.Options{Prefix: envPrefixGrpc}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load %s gRPC server configuration : %s", svcName, err.Error()))
+		exitCode = 1
+		return
+	}
+	registerAuthServiceServer := func(srv *grpc.Server) {
+		reflection.Register(srv)
+		magistrala.RegisterAuthServiceServer(srv, grpcapi.NewServer(svc))
+	}
+
+	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerAuthServiceServer, logger)
+
+	if cfg.SendTelemetry {
+		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
+		go chc.CallHome(ctx)
+	}
+	g.Go(func() error {
+		return gs.Start()
+	})
+
+	time.Sleep(1 * time.Second)
+	authConfig := authClient.Config{URL: fmt.Sprintf("%s:%s", grpcServerConfig.Host, grpcServerConfig.Port)}
 	if err := env.ParseWithOptions(&authConfig, env.Options{Prefix: envPrefixGrpc}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
 		exitCode = 1
@@ -155,7 +178,6 @@ func main() {
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
 	dsvc, droles := newDomainService(ctx, db, tracer, cfg, dbConfig, authServiceClient, logger)
-	svc := newService(ctx, db, tracer, cfg, dbConfig, logger, spicedbclient)
 
 	httpServerConfig := server.Config{Port: defSvcHTTPPort}
 	if err := env.ParseWithOptions(&httpServerConfig, env.Options{Prefix: envPrefixHTTP}); err != nil {
@@ -187,9 +209,6 @@ func main() {
 
 	g.Go(func() error {
 		return hs.Start()
-	})
-	g.Go(func() error {
-		return gs.Start()
 	})
 
 	g.Go(func() error {
@@ -231,7 +250,7 @@ func initSchema(ctx context.Context, client *authzed.ClientWithExperimental, sch
 	return nil
 }
 
-func newService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental) auth.Service {
+func newService(_ context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental) auth.Service {
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 	keysRepo := apostgres.New(database)
 	pa := spicedb.NewPolicyAgent(spicedbClient, logger)
@@ -242,7 +261,7 @@ func newService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg confi
 	svc := auth.New(keysRepo, idProvider, t, pa, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration)
 
 	svc = api.LoggingMiddleware(svc, logger)
-	counter, latency := prometheus.MakeMetrics("groups", "api")
+	counter, latency := prometheus.MakeMetrics("auth", "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)
 	svc = tracing.New(svc, tracer)
 
@@ -250,6 +269,11 @@ func newService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg confi
 }
 
 func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, authClient magistrala.AuthServiceClient, logger *slog.Logger) (domains.Service, roles.Roles) {
+	// dlogger, err := mglog.New(os.Stdout, cfg.LogLevel)
+	// if err != nil {
+	// 	log.Fatalf("failed to init logger: %s", err.Error())
+	// }
+
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 	domainsRepo := dpostgres.NewDomainRepository(database)
 
@@ -263,7 +287,7 @@ func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg
 		return nil, nil
 	}
 	svc = dapi.LoggingMiddleware(svc, logger)
-	counter, latency := prometheus.MakeMetrics("groups", "api")
+	counter, latency := prometheus.MakeMetrics("domains", "api")
 	svc = dapi.MetricsMiddleware(svc, counter, latency)
 	svc = dtracing.New(svc, tracer)
 	return svc, domainsRolesProvider
