@@ -39,7 +39,6 @@ func (lm *loggingMiddleware) ListObjects(ctx context.Context, pr auth.PolicyReq,
 		}
 		lm.logger.Info("List objects completed successfully", args...)
 	}(time.Now())
-
 	return lm.svc.ListObjects(ctx, pr, nextPageToken, limit)
 }
 
@@ -61,7 +60,6 @@ func (lm *loggingMiddleware) ListAllObjects(ctx context.Context, pr auth.PolicyR
 		}
 		lm.logger.Info("List all objects completed successfully", args...)
 	}(time.Now())
-
 	return lm.svc.ListAllObjects(ctx, pr)
 }
 
@@ -114,7 +112,6 @@ func (lm *loggingMiddleware) ListAllSubjects(ctx context.Context, pr auth.Policy
 		}
 		lm.logger.Info("List all subjects completed successfully", args...)
 	}(time.Now())
-
 	return lm.svc.ListAllSubjects(ctx, pr)
 }
 
@@ -152,7 +149,6 @@ func (lm *loggingMiddleware) ListPermissions(ctx context.Context, pr auth.Policy
 		}
 		lm.logger.Info("List permissions completed successfully", args...)
 	}(time.Now())
-
 	return lm.svc.ListPermissions(ctx, pr, filterPermissions)
 }
 

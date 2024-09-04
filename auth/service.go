@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala"
+	"github.com/absmach/magistrala/pkg/domains"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 )
@@ -242,14 +243,14 @@ func (svc service) checkDomain(ctx context.Context, subjectType, subject, domain
 	if err := svc.agent.CheckPolicy(ctx, PolicyReq{
 		Subject:     subject,
 		SubjectType: subjectType,
-		Permission:  MembershipPermission,
+		Permission:  domains.MembershipPermission,
 		Object:      domainID,
 		ObjectType:  DomainType,
 	}); err != nil {
 		return svcerr.ErrDomainAuthorization
 	}
 
-	// Add domain status in spiceDB like with new relation called status
+	// ToDo: Add domain status in spiceDB like with new relation called status
 
 	// d, err := svc.domains.RetrieveByID(ctx, domainID)
 	// if err != nil {

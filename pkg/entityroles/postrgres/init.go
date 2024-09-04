@@ -34,9 +34,9 @@ func Migration(entityForeignKeyTableName, entityForeignKeyColumnName string) (*m
 						updated_by  VARCHAR(254),
 						created_by  VARCHAR(254),
                         CONSTRAINT  unique_role_name_entity_id_constraint UNIQUE ( role_name, entity_id),
-						CONSTRAINT  fk_entity_id FOREIGN KEY(entity_id) REFERENCES %s(%s)
-
+						CONSTRAINT  fk_entity_id FOREIGN KEY(entity_id) REFERENCES %s(%s) ON DELETE CASCADE
                     );`, entityForeignKeyTableName, entityForeignKeyColumnName),
+
 					`CREATE TABLE IF NOT EXISTS role_operations (
                         role_id     VARCHAR(254) NOT NULL,
                         operation   VARCHAR(254) NOT NULL,
@@ -44,6 +44,7 @@ func Migration(entityForeignKeyTableName, entityForeignKeyColumnName string) (*m
                         CONSTRAINT  fk_roles_id FOREIGN KEY(role_id) REFERENCES roles(id) ON DELETE CASCADE
 
                     );`,
+
 					`CREATE TABLE IF NOT EXISTS role_members (
                         role_id     VARCHAR(254) NOT NULL,
                         member_id   VARCHAR(254) NOT NULL,

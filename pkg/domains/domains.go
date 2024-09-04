@@ -90,6 +90,7 @@ const (
 	Update                 roles.Operation = "update"
 	Read                   roles.Operation = "read"
 	Delete                 roles.Operation = "delete"
+	Membership             roles.Operation = "membership"
 	ManageRole             roles.Operation = "manage_role"
 	AddRoleUsers           roles.Operation = "add_role_users"
 	RemoveRoleUsers        roles.Operation = "remove_role_users"
@@ -133,6 +134,7 @@ func AllowedOperations() []roles.Operation {
 		Update,
 		Read,
 		Delete,
+		Membership,
 		ManageRole,
 		AddRoleUsers,
 		RemoveRoleUsers,
@@ -188,6 +190,7 @@ func BuiltInRoles() map[string][]roles.Operation {
 const (
 	UpdatePermission          = "update_permission"
 	ReadPermission            = "read_permission"
+	MembershipPermission      = "membership_permission"
 	DeletePermission          = "delete_permission"
 	ManageRolePermission      = "manage_role_permission"
 	AddRoleUsersPermission    = "add_role_users_permission"

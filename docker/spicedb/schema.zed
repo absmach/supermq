@@ -244,6 +244,7 @@ definition domain {
 	relation team: team
 
 	relation update: role#member | team#member
+	relation membership: role#member | team#member
 	relation read: role#member | team#member
 	relation delete: role#member | team#member
 
@@ -292,6 +293,7 @@ definition domain {
 
 	permission update_permission = update + team->domain_update + organization->admin
 	permission read_permission = read + team->domain_read + organization->admin
+	permission membership_permission = membership + team->domain_membership + organization->admin
 	permission delete_permission = delete + team->domain_delete + organization->admin
 
 	permission manage_role_permission = manage_role + team->domain_manage_role + organization->admin
@@ -376,6 +378,7 @@ definition team {
 
 	relation domain_update: role#member | team#member
 	relation domain_read: role#member | team#member
+	relation domain_membership: role#member | team#member
 	relation domain_delete: role#member | team#member
 
 	relation domain_manage_role: role#member | team#member

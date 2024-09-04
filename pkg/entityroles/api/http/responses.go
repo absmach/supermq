@@ -134,7 +134,7 @@ func (res listRoleOperationsRes) Headers() map[string]string {
 }
 
 func (res listRoleOperationsRes) Empty() bool {
-	return false
+	return len(res.Operations) == 0
 }
 
 type deleteRoleOperationsRes struct{}

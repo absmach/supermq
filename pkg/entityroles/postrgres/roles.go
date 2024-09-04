@@ -54,8 +54,8 @@ type dbRoleOperation struct {
 }
 
 type dbRoleMember struct {
-	RoleID string `db:"role_id"`
-	Member string `db:"member"`
+	RoleID   string `db:"role_id"`
+	MemberID string `db:"member_id"`
 }
 
 func toDBRoles(role roles.Role) dbRole {
@@ -138,20 +138,13 @@ func (repo *RolesSvcRepo) AddRoles(ctx context.Context, rps []roles.RoleProvisio
 	for _, rp := range rps {
 
 		q := `INSERT INTO roles (id, name, entity_id, created_by, created_at, updated_by, updated_at)
-        VALUES (:id, :name, :entity_id, :created_by, :created_at, :updated_by, :updated_at)
-        RETURNING id, name, entity_id, created_by, created_at, updated_by, updated_at`
+        VALUES (:id, :name, :entity_id, :created_by, :created_at, :updated_by, :updated_at);`
 
-		row, err := tx.NamedQuery(q, toDBRoles(rp.Role))
-		if err != nil {
+		if _, err := tx.NamedExec(q, toDBRoles(rp.Role)); err != nil {
 			return []roles.Role{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 		}
-		defer row.Close()
-		row.Next()
-		dbr := dbRole{}
-		if err := row.StructScan(&dbr); err != nil {
-			return []roles.Role{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
-		}
-		retRoles = append(retRoles, toRole(dbr))
+
+		retRoles = append(retRoles, rp.Role)
 
 		if len(rp.OptionalOperations) > 0 {
 			opq := `INSERT INTO role_operations (role_id, operation)
@@ -165,24 +158,24 @@ func (repo *RolesSvcRepo) AddRoles(ctx context.Context, rps []roles.RoleProvisio
 					Operation: string(op),
 				})
 			}
-			if _, err := tx.NamedExecContext(ctx, opq, rOps); err != nil {
+			if _, err := tx.NamedExec(opq, rOps); err != nil {
 				return []roles.Role{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 			}
 		}
 
 		if len(rp.OptionalMembers) > 0 {
-			mq := `INSERT INTO role_members (role_id, member)
-					VALUES (:role_id, :member)
-					RETURNING role_id, member`
+			mq := `INSERT INTO role_members (role_id, member_id)
+					VALUES (:role_id, :member_id)
+					RETURNING role_id, member_id`
 
 			rMems := []dbRoleMember{}
 			for _, m := range rp.OptionalMembers {
 				rMems = append(rMems, dbRoleMember{
-					RoleID: rp.ID,
-					Member: m,
+					RoleID:   rp.ID,
+					MemberID: m,
 				})
 			}
-			if _, err := tx.NamedExecContext(ctx, mq, rMems); err != nil {
+			if _, err := tx.NamedExec(mq, rMems); err != nil {
 				return []roles.Role{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 			}
 		}
@@ -196,12 +189,12 @@ func (repo *RolesSvcRepo) AddRoles(ctx context.Context, rps []roles.RoleProvisio
 }
 
 func (repo *RolesSvcRepo) RemoveRoles(ctx context.Context, roleIDs []string) error {
-	q := "DELETE FROM roles  WHERE id IN (:role_id) ;"
+	q := "DELETE FROM roles  WHERE id = ANY(:role_ids) ;"
 
 	params := map[string]interface{}{
-		"role_id": roleIDs,
+		"role_ids": roleIDs,
 	}
-	result, err := repo.db.ExecContext(ctx, q, params)
+	result, err := repo.db.NamedExecContext(ctx, q, params)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}
@@ -450,19 +443,19 @@ func (repo *RolesSvcRepo) RoleRemoveOperations(ctx context.Context, role roles.R
 		}
 	}()
 
-	q := `DELETE FROM role_operations WHERE role_id = :role_id AND operation IN (:operations)`
+	q := `DELETE FROM role_operations WHERE role_id = :role_id AND operation = ANY(:operations)`
 
 	params := map[string]interface{}{
 		"role_id":    role.ID,
 		"operations": operations,
 	}
 
-	if _, err := tx.NamedExecContext(ctx, q, params); err != nil {
+	if _, err := tx.NamedExec(q, params); err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
 	upq := `UPDATE roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`
-	if _, err := tx.NamedExecContext(ctx, upq, toDBRoles(role)); err != nil {
+	if _, err := tx.NamedExec(upq, toDBRoles(role)); err != nil {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 
@@ -490,12 +483,12 @@ func (repo *RolesSvcRepo) RoleRemoveAllOperations(ctx context.Context, role role
 
 	dbrop := dbRoleOperation{RoleID: role.ID}
 
-	if _, err := tx.NamedExecContext(ctx, q, dbrop); err != nil {
+	if _, err := tx.NamedExec(q, dbrop); err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
 	upq := `UPDATE roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`
-	if _, err := tx.NamedExecContext(ctx, upq, toDBRoles(role)); err != nil {
+	if _, err := tx.NamedExec(upq, toDBRoles(role)); err != nil {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 
@@ -507,9 +500,9 @@ func (repo *RolesSvcRepo) RoleRemoveAllOperations(ctx context.Context, role role
 }
 
 func (repo *RolesSvcRepo) RoleAddMembers(ctx context.Context, role roles.Role, members []string) ([]string, error) {
-	mq := `INSERT INTO role_members (role_id, member)
-        VALUES (:role_id, :member)
-        RETURNING role_id, member`
+	mq := `INSERT INTO role_members (role_id, member_id)
+        VALUES (:role_id, :member_id)
+        RETURNING role_id, member_id`
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -526,16 +519,16 @@ func (repo *RolesSvcRepo) RoleAddMembers(ctx context.Context, role roles.Role, m
 	rMems := []dbRoleMember{}
 	for _, m := range members {
 		rMems = append(rMems, dbRoleMember{
-			RoleID: role.ID,
-			Member: m,
+			RoleID:   role.ID,
+			MemberID: m,
 		})
 	}
-	if _, err := tx.NamedExecContext(ctx, mq, rMems); err != nil {
+	if _, err := tx.NamedExec(mq, rMems); err != nil {
 		return []string{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
 	upq := `UPDATE roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`
-	if _, err := tx.NamedExecContext(ctx, upq, toDBRoles(role)); err != nil {
+	if _, err := tx.NamedExec(upq, toDBRoles(role)); err != nil {
 		return []string{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
@@ -547,7 +540,7 @@ func (repo *RolesSvcRepo) RoleAddMembers(ctx context.Context, role roles.Role, m
 }
 
 func (repo *RolesSvcRepo) RoleListMembers(ctx context.Context, roleID string, limit, offset uint64) (roles.MembersPage, error) {
-	q := `SELECT role_id, member FROM role_members WHERE role_id = :role_id ORDER BY created_at LIMIT :limit OFFSET :offset;`
+	q := `SELECT role_id, member_id FROM role_members WHERE role_id = :role_id ORDER BY created_at LIMIT :limit OFFSET :offset;`
 
 	dbrmems := dbRoleMember{
 		RoleID: roleID,
@@ -566,7 +559,7 @@ func (repo *RolesSvcRepo) RoleListMembers(ctx context.Context, roleID string, li
 			return roles.MembersPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
 
-		items = append(items, dbrmems.Member)
+		items = append(items, dbrmems.MemberID)
 	}
 
 	cq := `SELECT COUNT(*) FROM role_members WHERE role_id = :role_id LIMIT :limit OFFSET :offset;`
@@ -627,19 +620,19 @@ func (repo *RolesSvcRepo) RoleRemoveMembers(ctx context.Context, role roles.Role
 		}
 	}()
 
-	q := `DELETE FROM role_members WHERE role_id = :role_id AND member_id IN (:member_id)`
+	q := `DELETE FROM role_members WHERE role_id = :role_id AND member_id = ANY(:member_ids)`
 
 	params := map[string]interface{}{
-		"role_id":   role.ID,
-		"member_id": members,
+		"role_id":    role.ID,
+		"member_ids": members,
 	}
 
-	if _, err := tx.NamedExecContext(ctx, q, params); err != nil {
+	if _, err := tx.NamedExec(q, params); err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
 	upq := `UPDATE roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`
-	if _, err := tx.NamedExecContext(ctx, upq, toDBRoles(role)); err != nil {
+	if _, err := tx.NamedExec(upq, toDBRoles(role)); err != nil {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 
@@ -670,7 +663,7 @@ func (repo *RolesSvcRepo) RoleRemoveAllMembers(ctx context.Context, role roles.R
 	}
 
 	upq := `UPDATE roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`
-	if _, err := tx.NamedExecContext(ctx, upq, toDBRoles(role)); err != nil {
+	if _, err := tx.NamedExec(upq, toDBRoles(role)); err != nil {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 

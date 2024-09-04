@@ -218,12 +218,11 @@ func (r *RolesSvc) AddRole(ctx context.Context, entityID, roleName string, optio
 
 	for _, member := range optionalMembers {
 		prs = append(prs, &magistrala.AddPolicyReq{
-			SubjectType:     "user",
-			SubjectRelation: member,
-			Subject:         id,
-			Relation:        "member",
-			Object:          id,
-			ObjectType:      "role",
+			SubjectType: "user",
+			Subject:     member,
+			Relation:    "member",
+			Object:      id,
+			ObjectType:  "role",
 		})
 	}
 
@@ -245,7 +244,7 @@ func (r *RolesSvc) AddRole(ctx context.Context, entityID, roleName string, optio
 		}()
 	}
 
-	newRoles, err := r.repo.AddRoles(ctx, newRoleProvisions)
+	newRoles, err := r.repo.AddRoles(context.Background(), newRoleProvisions)
 	if err != nil {
 		return roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}

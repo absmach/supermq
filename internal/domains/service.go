@@ -101,7 +101,6 @@ func (svc service) RetrieveDomain(ctx context.Context, token, id string) (domain
 	}
 	if !resp.Authorized {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthorization, err)
-
 	}
 	return domain, nil
 }
