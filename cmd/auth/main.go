@@ -38,6 +38,7 @@ import (
 	"github.com/absmach/magistrala/pkg/server"
 	grpcserver "github.com/absmach/magistrala/pkg/server/grpc"
 	httpserver "github.com/absmach/magistrala/pkg/server/http"
+	"github.com/absmach/magistrala/pkg/sid"
 	"github.com/absmach/magistrala/pkg/uuid"
 	v1 "github.com/authzed/authzed-go/proto/authzed/api/v1"
 	"github.com/authzed/authzed-go/v1"
@@ -184,8 +185,12 @@ func main() {
 	defer authHandler.Close()
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	dsvc := newDomainService(ctx, db, tracer, cfg, dbConfig, authServiceClient, logger)
-
+	dsvc, err := newDomainService(ctx, db, tracer, cfg, dbConfig, authServiceClient, logger)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to create domain service: %s", svcName, err.Error()))
+		exitCode = 1
+		return
+	}
 	httpServerConfig := server.Config{Port: defSvcHTTPPort}
 	if err := env.ParseWithOptions(&httpServerConfig, env.Options{Prefix: envPrefixHTTP}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err.Error()))
@@ -275,7 +280,7 @@ func newService(_ context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config,
 	return svc
 }
 
-func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, authClient magistrala.AuthServiceClient, logger *slog.Logger) domains.Service {
+func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, authClient magistrala.AuthServiceClient, logger *slog.Logger) (domains.Service, error) {
 	// dlogger, err := mglog.New(os.Stdout, cfg.LogLevel)
 	// if err != nil {
 	// 	log.Fatalf("failed to init logger: %s", err.Error())
@@ -285,16 +290,18 @@ func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg
 	domainsRepo := dpostgres.NewDomainRepository(database)
 
 	idProvider := uuid.New()
-
-	svc := domainsSvc.New(domainsRepo, authClient, idProvider)
-	svc, err := events.NewEventStoreMiddleware(ctx, svc, cfg.ESURL)
+	sidProvider, err := sid.New()
 	if err != nil {
-		logger.Error(fmt.Sprintf("failed to init event store middleware : %s", err))
-		return nil
+		return nil, fmt.Errorf("failed to init short id provider : %w", err)
+	}
+	svc := domainsSvc.New(domainsRepo, authClient, idProvider, sidProvider)
+	svc, err = events.NewEventStoreMiddleware(ctx, svc, cfg.ESURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init event store middleware : %w", err)
 	}
 	svc = dapi.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics("domains", "api")
 	svc = dapi.MetricsMiddleware(svc, counter, latency)
 	svc = dtracing.New(svc, tracer)
-	return svc
+	return svc, nil
 }

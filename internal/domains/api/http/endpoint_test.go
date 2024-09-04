@@ -20,7 +20,6 @@ import (
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/domains"
 	"github.com/absmach/magistrala/pkg/domains/mocks"
-	"github.com/absmach/magistrala/pkg/entityroles"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/go-chi/chi/v5"
@@ -92,8 +91,7 @@ func newDomainsServer() (*httptest.Server, *mocks.Service) {
 	logger := mglog.NewMock()
 	mux := chi.NewRouter()
 	svc := new(mocks.Service)
-	roles := entityroles.NewRole("domain")
-	httpapi.MakeHandler(svc, roles, mux, logger)
+	httpapi.MakeHandler(svc, mux, logger)
 	return httptest.NewServer(mux), svc
 }
 

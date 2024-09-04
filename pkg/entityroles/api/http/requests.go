@@ -10,7 +10,7 @@ import (
 
 type createRoleReq struct {
 	token              string
-	EntityID           string   `json:"entity_id"`
+	entityID           string
 	RoleName           string   `json:"role_name"`
 	OptionalOperations []string `json:"optional_operations"`
 	OptionalMembers    []string `json:"optional_members"`
@@ -20,15 +20,16 @@ func (req createRoleReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
+	if err := api.ValidateUUID(req.entityID); err != nil {
+		return err
+	}
 	if len(req.RoleName) == 0 {
 		return apiutil.ErrMissingRoleName
 	}
 	if len(req.RoleName) > 200 {
 		return apiutil.ErrNameSize
 	}
-	if err := api.ValidateUUID(req.EntityID); err != nil {
-		return err
-	}
+
 	return nil
 }
 

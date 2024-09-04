@@ -32,11 +32,11 @@ type service struct {
 
 var _ domains.Service = (*service)(nil)
 
-func New(repo domains.DomainsRepository, auth magistrala.AuthServiceClient, idProvider magistrala.IDProvider) domains.Service {
-	rolesSvc := entityroles.NewRolesSvc("domains", repo, auth, domains.AllowedOperations(), domains.BuiltInRoles())
+func New(repo domains.DomainsRepository, authClient magistrala.AuthServiceClient, idProvider magistrala.IDProvider, sidProvider magistrala.IDProvider) domains.Service {
+	rolesSvc := entityroles.NewRolesSvc(auth.DomainType, repo, sidProvider, authClient, domains.AllowedOperations(), domains.BuiltInRoles())
 	return &service{
 		repo:       repo,
-		auth:       auth,
+		auth:       authClient,
 		idProvider: idProvider,
 		RolesSvc:   rolesSvc,
 	}

@@ -16,64 +16,6 @@ type Roles struct {
 	mock.Mock
 }
 
-// Add provides a mock function with given fields: ctx, entityID, roleName, optionalOperations, optionalMembers
-func (_m *Roles) Add(ctx context.Context, entityID string, roleName string, optionalOperations []roles.Operation, optionalMembers []string) (roles.Role, error) {
-	ret := _m.Called(ctx, entityID, roleName, optionalOperations, optionalMembers)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Add")
-	}
-
-	var r0 roles.Role
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []roles.Operation, []string) (roles.Role, error)); ok {
-		return rf(ctx, entityID, roleName, optionalOperations, optionalMembers)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []roles.Operation, []string) roles.Role); ok {
-		r0 = rf(ctx, entityID, roleName, optionalOperations, optionalMembers)
-	} else {
-		r0 = ret.Get(0).(roles.Role)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, []roles.Operation, []string) error); ok {
-		r1 = rf(ctx, entityID, roleName, optionalOperations, optionalMembers)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// AddMembers provides a mock function with given fields: ctx, entityID, roleName, members
-func (_m *Roles) AddMembers(ctx context.Context, entityID string, roleName string, members []string) ([]string, error) {
-	ret := _m.Called(ctx, entityID, roleName, members)
-
-	if len(ret) == 0 {
-		panic("no return value specified for AddMembers")
-	}
-
-	var r0 []string
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []string) ([]string, error)); ok {
-		return rf(ctx, entityID, roleName, members)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []string) []string); ok {
-		r0 = rf(ctx, entityID, roleName, members)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]string)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, []string) error); ok {
-		r1 = rf(ctx, entityID, roleName, members)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // AddNewEntityRoles provides a mock function with given fields: ctx, entityID, newEntityDefaultRoles, optionalPolicies
 func (_m *Roles) AddNewEntityRoles(ctx context.Context, entityID string, newEntityDefaultRoles map[string][]string, optionalPolicies []roles.OptionalPolicy) ([]roles.Role, error) {
 	ret := _m.Called(ctx, entityID, newEntityDefaultRoles, optionalPolicies)
@@ -104,12 +46,144 @@ func (_m *Roles) AddNewEntityRoles(ctx context.Context, entityID string, newEnti
 	return r0, r1
 }
 
-// AddOperation provides a mock function with given fields: ctx, entityID, roleName, operations
-func (_m *Roles) AddOperation(ctx context.Context, entityID string, roleName string, operations []roles.Operation) ([]roles.Operation, error) {
+// AddRole provides a mock function with given fields: ctx, entityID, roleName, optionalOperations, optionalMembers
+func (_m *Roles) AddRole(ctx context.Context, entityID string, roleName string, optionalOperations []roles.Operation, optionalMembers []string) (roles.Role, error) {
+	ret := _m.Called(ctx, entityID, roleName, optionalOperations, optionalMembers)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddRole")
+	}
+
+	var r0 roles.Role
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, []roles.Operation, []string) (roles.Role, error)); ok {
+		return rf(ctx, entityID, roleName, optionalOperations, optionalMembers)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, []roles.Operation, []string) roles.Role); ok {
+		r0 = rf(ctx, entityID, roleName, optionalOperations, optionalMembers)
+	} else {
+		r0 = ret.Get(0).(roles.Role)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, []roles.Operation, []string) error); ok {
+		r1 = rf(ctx, entityID, roleName, optionalOperations, optionalMembers)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RemoveRole provides a mock function with given fields: ctx, entityID, roleName
+func (_m *Roles) RemoveRole(ctx context.Context, entityID string, roleName string) error {
+	ret := _m.Called(ctx, entityID, roleName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveRole")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, entityID, roleName)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RetrieveAllRoles provides a mock function with given fields: ctx, entityID, limit, offset
+func (_m *Roles) RetrieveAllRoles(ctx context.Context, entityID string, limit uint64, offset uint64) (roles.RolePage, error) {
+	ret := _m.Called(ctx, entityID, limit, offset)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveAllRoles")
+	}
+
+	var r0 roles.RolePage
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, uint64, uint64) (roles.RolePage, error)); ok {
+		return rf(ctx, entityID, limit, offset)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, uint64, uint64) roles.RolePage); ok {
+		r0 = rf(ctx, entityID, limit, offset)
+	} else {
+		r0 = ret.Get(0).(roles.RolePage)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, uint64, uint64) error); ok {
+		r1 = rf(ctx, entityID, limit, offset)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RetrieveRole provides a mock function with given fields: ctx, entityID, roleName
+func (_m *Roles) RetrieveRole(ctx context.Context, entityID string, roleName string) (roles.Role, error) {
+	ret := _m.Called(ctx, entityID, roleName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveRole")
+	}
+
+	var r0 roles.Role
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (roles.Role, error)); ok {
+		return rf(ctx, entityID, roleName)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) roles.Role); ok {
+		r0 = rf(ctx, entityID, roleName)
+	} else {
+		r0 = ret.Get(0).(roles.Role)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, entityID, roleName)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RoleAddMembers provides a mock function with given fields: ctx, entityID, roleName, members
+func (_m *Roles) RoleAddMembers(ctx context.Context, entityID string, roleName string, members []string) ([]string, error) {
+	ret := _m.Called(ctx, entityID, roleName, members)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RoleAddMembers")
+	}
+
+	var r0 []string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, []string) ([]string, error)); ok {
+		return rf(ctx, entityID, roleName, members)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, []string) []string); ok {
+		r0 = rf(ctx, entityID, roleName, members)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, []string) error); ok {
+		r1 = rf(ctx, entityID, roleName, members)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RoleAddOperation provides a mock function with given fields: ctx, entityID, roleName, operations
+func (_m *Roles) RoleAddOperation(ctx context.Context, entityID string, roleName string, operations []roles.Operation) ([]roles.Operation, error) {
 	ret := _m.Called(ctx, entityID, roleName, operations)
 
 	if len(ret) == 0 {
-		panic("no return value specified for AddOperation")
+		panic("no return value specified for RoleAddOperation")
 	}
 
 	var r0 []roles.Operation
@@ -134,12 +208,12 @@ func (_m *Roles) AddOperation(ctx context.Context, entityID string, roleName str
 	return r0, r1
 }
 
-// CheckMembersExists provides a mock function with given fields: ctx, entityID, roleName, members
-func (_m *Roles) CheckMembersExists(ctx context.Context, entityID string, roleName string, members []string) (bool, error) {
+// RoleCheckMembersExists provides a mock function with given fields: ctx, entityID, roleName, members
+func (_m *Roles) RoleCheckMembersExists(ctx context.Context, entityID string, roleName string, members []string) (bool, error) {
 	ret := _m.Called(ctx, entityID, roleName, members)
 
 	if len(ret) == 0 {
-		panic("no return value specified for CheckMembersExists")
+		panic("no return value specified for RoleCheckMembersExists")
 	}
 
 	var r0 bool
@@ -162,12 +236,12 @@ func (_m *Roles) CheckMembersExists(ctx context.Context, entityID string, roleNa
 	return r0, r1
 }
 
-// CheckOperationsExists provides a mock function with given fields: ctx, entityID, roleName, operations
-func (_m *Roles) CheckOperationsExists(ctx context.Context, entityID string, roleName string, operations []roles.Operation) (bool, error) {
+// RoleCheckOperationsExists provides a mock function with given fields: ctx, entityID, roleName, operations
+func (_m *Roles) RoleCheckOperationsExists(ctx context.Context, entityID string, roleName string, operations []roles.Operation) (bool, error) {
 	ret := _m.Called(ctx, entityID, roleName, operations)
 
 	if len(ret) == 0 {
-		panic("no return value specified for CheckOperationsExists")
+		panic("no return value specified for RoleCheckOperationsExists")
 	}
 
 	var r0 bool
@@ -190,12 +264,12 @@ func (_m *Roles) CheckOperationsExists(ctx context.Context, entityID string, rol
 	return r0, r1
 }
 
-// ListMembers provides a mock function with given fields: ctx, entityID, roleName, limit, offset
-func (_m *Roles) ListMembers(ctx context.Context, entityID string, roleName string, limit uint64, offset uint64) (roles.MembersPage, error) {
+// RoleListMembers provides a mock function with given fields: ctx, entityID, roleName, limit, offset
+func (_m *Roles) RoleListMembers(ctx context.Context, entityID string, roleName string, limit uint64, offset uint64) (roles.MembersPage, error) {
 	ret := _m.Called(ctx, entityID, roleName, limit, offset)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ListMembers")
+		panic("no return value specified for RoleListMembers")
 	}
 
 	var r0 roles.MembersPage
@@ -218,12 +292,12 @@ func (_m *Roles) ListMembers(ctx context.Context, entityID string, roleName stri
 	return r0, r1
 }
 
-// ListOperations provides a mock function with given fields: ctx, entityID, roleName
-func (_m *Roles) ListOperations(ctx context.Context, entityID string, roleName string) ([]roles.Operation, error) {
+// RoleListOperations provides a mock function with given fields: ctx, entityID, roleName
+func (_m *Roles) RoleListOperations(ctx context.Context, entityID string, roleName string) ([]roles.Operation, error) {
 	ret := _m.Called(ctx, entityID, roleName)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ListOperations")
+		panic("no return value specified for RoleListOperations")
 	}
 
 	var r0 []roles.Operation
@@ -248,12 +322,12 @@ func (_m *Roles) ListOperations(ctx context.Context, entityID string, roleName s
 	return r0, r1
 }
 
-// Remove provides a mock function with given fields: ctx, entityID, roleName
-func (_m *Roles) Remove(ctx context.Context, entityID string, roleName string) error {
+// RoleRemoveAllMembers provides a mock function with given fields: ctx, entityID, roleName
+func (_m *Roles) RoleRemoveAllMembers(ctx context.Context, entityID string, roleName string) error {
 	ret := _m.Called(ctx, entityID, roleName)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Remove")
+		panic("no return value specified for RoleRemoveAllMembers")
 	}
 
 	var r0 error
@@ -266,12 +340,12 @@ func (_m *Roles) Remove(ctx context.Context, entityID string, roleName string) e
 	return r0
 }
 
-// RemoveAllMembers provides a mock function with given fields: ctx, entityID, roleName
-func (_m *Roles) RemoveAllMembers(ctx context.Context, entityID string, roleName string) error {
+// RoleRemoveAllOperations provides a mock function with given fields: ctx, entityID, roleName
+func (_m *Roles) RoleRemoveAllOperations(ctx context.Context, entityID string, roleName string) error {
 	ret := _m.Called(ctx, entityID, roleName)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RemoveAllMembers")
+		panic("no return value specified for RoleRemoveAllOperations")
 	}
 
 	var r0 error
@@ -284,30 +358,12 @@ func (_m *Roles) RemoveAllMembers(ctx context.Context, entityID string, roleName
 	return r0
 }
 
-// RemoveAllOperations provides a mock function with given fields: ctx, entityID, roleName
-func (_m *Roles) RemoveAllOperations(ctx context.Context, entityID string, roleName string) error {
-	ret := _m.Called(ctx, entityID, roleName)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RemoveAllOperations")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, entityID, roleName)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// RemoveMembers provides a mock function with given fields: ctx, entityID, roleName, members
-func (_m *Roles) RemoveMembers(ctx context.Context, entityID string, roleName string, members []string) error {
+// RoleRemoveMembers provides a mock function with given fields: ctx, entityID, roleName, members
+func (_m *Roles) RoleRemoveMembers(ctx context.Context, entityID string, roleName string, members []string) error {
 	ret := _m.Called(ctx, entityID, roleName, members)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RemoveMembers")
+		panic("no return value specified for RoleRemoveMembers")
 	}
 
 	var r0 error
@@ -320,12 +376,12 @@ func (_m *Roles) RemoveMembers(ctx context.Context, entityID string, roleName st
 	return r0
 }
 
-// RemoveOperations provides a mock function with given fields: ctx, entityID, roleName, operations
-func (_m *Roles) RemoveOperations(ctx context.Context, entityID string, roleName string, operations []roles.Operation) error {
+// RoleRemoveOperations provides a mock function with given fields: ctx, entityID, roleName, operations
+func (_m *Roles) RoleRemoveOperations(ctx context.Context, entityID string, roleName string, operations []roles.Operation) error {
 	ret := _m.Called(ctx, entityID, roleName, operations)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RemoveOperations")
+		panic("no return value specified for RoleRemoveOperations")
 	}
 
 	var r0 error
@@ -338,68 +394,12 @@ func (_m *Roles) RemoveOperations(ctx context.Context, entityID string, roleName
 	return r0
 }
 
-// Retrieve provides a mock function with given fields: ctx, entityID, roleName
-func (_m *Roles) Retrieve(ctx context.Context, entityID string, roleName string) (roles.Role, error) {
-	ret := _m.Called(ctx, entityID, roleName)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Retrieve")
-	}
-
-	var r0 roles.Role
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) (roles.Role, error)); ok {
-		return rf(ctx, entityID, roleName)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) roles.Role); ok {
-		r0 = rf(ctx, entityID, roleName)
-	} else {
-		r0 = ret.Get(0).(roles.Role)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = rf(ctx, entityID, roleName)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// RetrieveAll provides a mock function with given fields: ctx, entityID, limit, offset
-func (_m *Roles) RetrieveAll(ctx context.Context, entityID string, limit uint64, offset uint64) (roles.RolePage, error) {
-	ret := _m.Called(ctx, entityID, limit, offset)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RetrieveAll")
-	}
-
-	var r0 roles.RolePage
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, uint64, uint64) (roles.RolePage, error)); ok {
-		return rf(ctx, entityID, limit, offset)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, uint64, uint64) roles.RolePage); ok {
-		r0 = rf(ctx, entityID, limit, offset)
-	} else {
-		r0 = ret.Get(0).(roles.RolePage)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, uint64, uint64) error); ok {
-		r1 = rf(ctx, entityID, limit, offset)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// UpdateName provides a mock function with given fields: ctx, entityID, oldRoleName, newRoleName
-func (_m *Roles) UpdateName(ctx context.Context, entityID string, oldRoleName string, newRoleName string) (roles.Role, error) {
+// UpdateRoleName provides a mock function with given fields: ctx, entityID, oldRoleName, newRoleName
+func (_m *Roles) UpdateRoleName(ctx context.Context, entityID string, oldRoleName string, newRoleName string) (roles.Role, error) {
 	ret := _m.Called(ctx, entityID, oldRoleName, newRoleName)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateName")
+		panic("no return value specified for UpdateRoleName")
 	}
 
 	var r0 roles.Role

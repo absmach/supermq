@@ -4,9 +4,7 @@
 package http
 
 import (
-	"fmt"
 	"log/slog"
-	"net/http"
 
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
@@ -78,10 +76,5 @@ func MakeHandler(svc domains.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mu
 
 	mux = entityRoleHttp.RolesHandler(svc, "/domains", mux, logger)
 
-	// 👇 the walking function 🚶‍♂️
-	chi.Walk(mux, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
-		fmt.Printf("[%s]: '%s' has %d middlewares\n", method, route, len(middlewares))
-		return nil
-	})
 	return mux
 }

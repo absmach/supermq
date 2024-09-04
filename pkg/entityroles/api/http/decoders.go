@@ -20,7 +20,8 @@ func DecodeCreateRole(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 	req := createRoleReq{
-		token: apiutil.ExtractBearerToken(r),
+		token:    apiutil.ExtractBearerToken(r),
+		entityID: chi.URLParam(r, "entityID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))

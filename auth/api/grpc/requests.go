@@ -55,14 +55,15 @@ func (req refreshReq) validate() error {
 // 2. object - an entity over which action will be executed
 // 3. action - type of action that will be executed (read/write).
 type authReq struct {
-	Domain      string
-	SubjectType string
-	SubjectKind string
-	Subject     string
-	Relation    string
-	Permission  string
-	ObjectType  string
-	Object      string
+	Domain          string
+	SubjectRelation string
+	SubjectType     string
+	SubjectKind     string
+	Subject         string
+	Relation        string
+	Permission      string
+	ObjectType      string
+	Object          string
 }
 
 func (req authReq) validate() error {
@@ -82,15 +83,16 @@ func (req authReq) validate() error {
 }
 
 type policyReq struct {
-	Domain      string
-	SubjectType string
-	Subject     string
-	SubjectKind string
-	Relation    string
-	Permission  string
-	ObjectType  string
-	ObjectKind  string
-	Object      string
+	Domain          string
+	SubjectRelation string
+	SubjectType     string
+	SubjectKind     string
+	Subject         string
+	Relation        string
+	Permission      string
+	ObjectType      string
+	ObjectKind      string
+	Object          string
 }
 
 func (req policyReq) validate() error {
@@ -104,56 +106,60 @@ func (prs policiesReq) validate() error {
 }
 
 type listObjectsReq struct {
-	Domain        string
-	SubjectType   string
-	Subject       string
-	Relation      string
-	Permission    string
-	ObjectType    string
-	Object        string
-	NextPageToken string
-	Limit         uint64
+	Domain          string
+	SubjectRelation string
+	SubjectType     string
+	Subject         string
+	Relation        string
+	Permission      string
+	ObjectType      string
+	Object          string
+	NextPageToken   string
+	Limit           uint64
 }
 
 type countObjectsReq struct {
-	Domain        string
-	SubjectType   string
-	Subject       string
-	Relation      string
-	Permission    string
-	ObjectType    string
-	Object        string
-	NextPageToken string
+	Domain          string
+	SubjectRelation string
+	SubjectType     string
+	Subject         string
+	Relation        string
+	Permission      string
+	ObjectType      string
+	Object          string
+	NextPageToken   string
 }
 
 type listSubjectsReq struct {
-	Domain        string
-	SubjectType   string
-	Subject       string
-	Relation      string
-	Permission    string
-	ObjectType    string
-	Object        string
-	NextPageToken string
-	Limit         uint64
+	Domain          string
+	SubjectRelation string
+	SubjectType     string
+	Subject         string
+	Relation        string
+	Permission      string
+	ObjectType      string
+	Object          string
+	NextPageToken   string
+	Limit           uint64
 }
 
 type countSubjectsReq struct {
-	Domain        string
-	SubjectType   string
-	Subject       string
-	Relation      string
-	Permission    string
-	ObjectType    string
-	Object        string
-	NextPageToken string
+	Domain          string
+	SubjectRelation string
+	SubjectType     string
+	Subject         string
+	Relation        string
+	Permission      string
+	ObjectType      string
+	Object          string
+	NextPageToken   string
 }
 
 type listPermissionsReq struct {
 	Domain            string
+	SubjectRelation   string
 	SubjectType       string
 	Subject           string
-	SubjectRelation   string
 	ObjectType        string
 	Object            string
 	FilterPermissions []string

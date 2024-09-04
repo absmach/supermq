@@ -312,14 +312,15 @@ func encodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}
 func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*magistrala.AuthorizeReq)
 	return authReq{
-		Domain:      req.GetDomain(),
-		SubjectType: req.GetSubjectType(),
-		SubjectKind: req.GetSubjectKind(),
-		Subject:     req.GetSubject(),
-		Relation:    req.GetRelation(),
-		Permission:  req.GetPermission(),
-		ObjectType:  req.GetObjectType(),
-		Object:      req.GetObject(),
+		Domain:          req.GetDomain(),
+		SubjectRelation: req.GetSubjectRelation(),
+		SubjectType:     req.GetSubjectType(),
+		SubjectKind:     req.GetSubjectKind(),
+		Subject:         req.GetSubject(),
+		Relation:        req.GetRelation(),
+		Permission:      req.GetPermission(),
+		ObjectType:      req.GetObjectType(),
+		Object:          req.GetObject(),
 	}, nil
 }
 
@@ -331,15 +332,16 @@ func encodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{
 func decodeAddPolicyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*magistrala.AddPolicyReq)
 	return policyReq{
-		Domain:      req.GetDomain(),
-		SubjectType: req.GetSubjectType(),
-		SubjectKind: req.GetSubjectKind(),
-		Subject:     req.GetSubject(),
-		Relation:    req.GetRelation(),
-		Permission:  req.GetPermission(),
-		ObjectType:  req.GetObjectType(),
-		ObjectKind:  req.GetObjectKind(),
-		Object:      req.GetObject(),
+		Domain:          req.GetDomain(),
+		SubjectRelation: req.GetSubjectRelation(),
+		SubjectType:     req.GetSubjectType(),
+		SubjectKind:     req.GetSubjectKind(),
+		Subject:         req.GetSubject(),
+		Relation:        req.GetRelation(),
+		Permission:      req.GetPermission(),
+		ObjectType:      req.GetObjectType(),
+		ObjectKind:      req.GetObjectKind(),
+		Object:          req.GetObject(),
 	}, nil
 }
 
@@ -353,15 +355,16 @@ func decodeAddPoliciesRequest(_ context.Context, grpcReq interface{}) (interface
 	r := policiesReq{}
 	for _, req := range reqs.AddPoliciesReq {
 		r = append(r, policyReq{
-			Domain:      req.GetDomain(),
-			SubjectType: req.GetSubjectType(),
-			SubjectKind: req.GetSubjectKind(),
-			Subject:     req.GetSubject(),
-			Relation:    req.GetRelation(),
-			Permission:  req.GetPermission(),
-			ObjectType:  req.GetObjectType(),
-			ObjectKind:  req.GetObjectKind(),
-			Object:      req.GetObject(),
+			Domain:          req.GetDomain(),
+			SubjectRelation: req.GetSubjectRelation(),
+			SubjectType:     req.GetSubjectType(),
+			SubjectKind:     req.GetSubjectKind(),
+			Subject:         req.GetSubject(),
+			Relation:        req.GetRelation(),
+			Permission:      req.GetPermission(),
+			ObjectType:      req.GetObjectType(),
+			ObjectKind:      req.GetObjectKind(),
+			Object:          req.GetObject(),
 		})
 	}
 	return r, nil
@@ -375,15 +378,16 @@ func encodeAddPoliciesResponse(_ context.Context, grpcRes interface{}) (interfac
 func decodeDeletePolicyFilterRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*magistrala.DeletePolicyFilterReq)
 	return policyReq{
-		Domain:      req.GetDomain(),
-		SubjectType: req.GetSubjectType(),
-		SubjectKind: req.GetSubjectKind(),
-		Subject:     req.GetSubject(),
-		Relation:    req.GetRelation(),
-		Permission:  req.GetPermission(),
-		ObjectType:  req.GetObjectType(),
-		ObjectKind:  req.GetObjectKind(),
-		Object:      req.GetObject(),
+		Domain:          req.GetDomain(),
+		SubjectRelation: req.GetSubjectRelation(),
+		SubjectType:     req.GetSubjectType(),
+		SubjectKind:     req.GetSubjectKind(),
+		Subject:         req.GetSubject(),
+		Relation:        req.GetRelation(),
+		Permission:      req.GetPermission(),
+		ObjectType:      req.GetObjectType(),
+		ObjectKind:      req.GetObjectKind(),
+		Object:          req.GetObject(),
 	}, nil
 }
 
@@ -397,15 +401,16 @@ func decodeDeletePoliciesRequest(_ context.Context, grpcReq interface{}) (interf
 	r := policiesReq{}
 	for _, req := range reqs.DeletePoliciesReq {
 		r = append(r, policyReq{
-			Domain:      req.GetDomain(),
-			SubjectType: req.GetSubjectType(),
-			SubjectKind: req.GetSubjectKind(),
-			Subject:     req.GetSubject(),
-			Relation:    req.GetRelation(),
-			Permission:  req.GetPermission(),
-			ObjectType:  req.GetObjectType(),
-			ObjectKind:  req.GetObjectKind(),
-			Object:      req.GetObject(),
+			Domain:          req.GetDomain(),
+			SubjectRelation: req.GetSubjectRelation(),
+			SubjectType:     req.GetSubjectType(),
+			SubjectKind:     req.GetSubjectKind(),
+			Subject:         req.GetSubject(),
+			Relation:        req.GetRelation(),
+			Permission:      req.GetPermission(),
+			ObjectType:      req.GetObjectType(),
+			ObjectKind:      req.GetObjectKind(),
+			Object:          req.GetObject(),
 		})
 	}
 	return r, nil
@@ -419,15 +424,16 @@ func encodeDeletePoliciesResponse(_ context.Context, grpcRes interface{}) (inter
 func decodeListObjectsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*magistrala.ListObjectsReq)
 	return listObjectsReq{
-		Domain:        req.GetDomain(),
-		SubjectType:   req.GetSubjectType(),
-		Subject:       req.GetSubject(),
-		Relation:      req.GetRelation(),
-		Permission:    req.GetPermission(),
-		ObjectType:    req.GetObjectType(),
-		Object:        req.GetObject(),
-		NextPageToken: req.GetNextPageToken(),
-		Limit:         req.GetLimit(),
+		Domain:          req.GetDomain(),
+		SubjectRelation: req.GetSubjectRelation(),
+		SubjectType:     req.GetSubjectType(),
+		Subject:         req.GetSubject(),
+		Relation:        req.GetRelation(),
+		Permission:      req.GetPermission(),
+		ObjectType:      req.GetObjectType(),
+		Object:          req.GetObject(),
+		NextPageToken:   req.GetNextPageToken(),
+		Limit:           req.GetLimit(),
 	}, nil
 }
 
@@ -439,13 +445,14 @@ func encodeListObjectsResponse(_ context.Context, grpcRes interface{}) (interfac
 func decodeCountObjectsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*magistrala.CountObjectsReq)
 	return countObjectsReq{
-		Domain:      req.GetDomain(),
-		SubjectType: req.GetSubjectType(),
-		Subject:     req.GetSubject(),
-		Relation:    req.GetRelation(),
-		Permission:  req.GetPermission(),
-		ObjectType:  req.GetObjectType(),
-		Object:      req.GetObject(),
+		Domain:          req.GetDomain(),
+		SubjectRelation: req.GetSubjectRelation(),
+		SubjectType:     req.GetSubjectType(),
+		Subject:         req.GetSubject(),
+		Relation:        req.GetRelation(),
+		Permission:      req.GetPermission(),
+		ObjectType:      req.GetObjectType(),
+		Object:          req.GetObject(),
 	}, nil
 }
 
@@ -457,13 +464,14 @@ func encodeCountObjectsResponse(_ context.Context, grpcRes interface{}) (interfa
 func decodeListSubjectsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*magistrala.ListSubjectsReq)
 	return listSubjectsReq{
-		Domain:      req.GetDomain(),
-		SubjectType: req.GetSubjectType(),
-		Subject:     req.GetSubject(),
-		Relation:    req.GetRelation(),
-		Permission:  req.GetPermission(),
-		ObjectType:  req.GetObjectType(),
-		Object:      req.GetObject(), NextPageToken: req.GetNextPageToken(), Limit: req.GetLimit(),
+		Domain:          req.GetDomain(),
+		SubjectRelation: req.GetSubjectRelation(),
+		SubjectType:     req.GetSubjectType(),
+		Subject:         req.GetSubject(),
+		Relation:        req.GetRelation(),
+		Permission:      req.GetPermission(),
+		ObjectType:      req.GetObjectType(),
+		Object:          req.GetObject(), NextPageToken: req.GetNextPageToken(), Limit: req.GetLimit(),
 	}, nil
 }
 
@@ -475,13 +483,14 @@ func encodeListSubjectsResponse(_ context.Context, grpcRes interface{}) (interfa
 func decodeCountSubjectsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*magistrala.CountSubjectsReq)
 	return countSubjectsReq{
-		Domain:      req.GetDomain(),
-		SubjectType: req.GetSubjectType(),
-		Subject:     req.GetSubject(),
-		Relation:    req.GetRelation(),
-		Permission:  req.GetPermission(),
-		ObjectType:  req.GetObjectType(),
-		Object:      req.GetObject(),
+		Domain:          req.GetDomain(),
+		SubjectRelation: req.GetSubjectRelation(),
+		SubjectType:     req.GetSubjectType(),
+		Subject:         req.GetSubject(),
+		Relation:        req.GetRelation(),
+		Permission:      req.GetPermission(),
+		ObjectType:      req.GetObjectType(),
+		Object:          req.GetObject(),
 	}, nil
 }
 
@@ -494,9 +503,9 @@ func decodeListPermissionsRequest(_ context.Context, grpcReq interface{}) (inter
 	req := grpcReq.(*magistrala.ListPermissionsReq)
 	return listPermissionsReq{
 		Domain:            req.GetDomain(),
+		SubjectRelation:   req.GetSubjectRelation(),
 		SubjectType:       req.GetSubjectType(),
 		Subject:           req.GetSubject(),
-		SubjectRelation:   req.GetSubjectRelation(),
 		ObjectType:        req.GetObjectType(),
 		Object:            req.GetObject(),
 		FilterPermissions: req.GetFilterPermissions(),
@@ -507,9 +516,9 @@ func encodeListPermissionsResponse(_ context.Context, grpcRes interface{}) (inte
 	res := grpcRes.(listPermissionsRes)
 	return &magistrala.ListPermissionsRes{
 		Domain:          res.Domain,
+		SubjectRelation: res.SubjectRelation,
 		SubjectType:     res.SubjectType,
 		Subject:         res.Subject,
-		SubjectRelation: res.SubjectRelation,
 		ObjectType:      res.ObjectType,
 		Object:          res.Object,
 		Permissions:     res.Permissions,

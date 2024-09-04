@@ -94,7 +94,10 @@ func (pa *policyAgent) AddPolicies(ctx context.Context, prs []auth.PolicyReq) er
 			Relationship: &v1.Relationship{
 				Resource: &v1.ObjectReference{ObjectType: pr.ObjectType, ObjectId: pr.Object},
 				Relation: pr.Relation,
-				Subject:  &v1.SubjectReference{Object: &v1.ObjectReference{ObjectType: pr.SubjectType, ObjectId: pr.Subject}, OptionalRelation: pr.SubjectRelation},
+				Subject: &v1.SubjectReference{
+					Object:           &v1.ObjectReference{ObjectType: pr.SubjectType, ObjectId: pr.Subject},
+					OptionalRelation: pr.SubjectRelation,
+				},
 			},
 		})
 	}

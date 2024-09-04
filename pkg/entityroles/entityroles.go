@@ -9,7 +9,6 @@ import (
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/roles"
-	"github.com/teris-io/shortid"
 )
 
 var (
@@ -22,15 +21,18 @@ var _ roles.Roles = (*RolesSvc)(nil)
 type RolesSvc struct {
 	entityType   string
 	repo         roles.Repository
+	idProvider   magistrala.IDProvider
 	auth         magistrala.AuthServiceClient
 	operations   []roles.Operation
 	builtInRoles map[string][]roles.Operation
 }
 
-func NewRolesSvc(entityType string, repo roles.Repository, auth magistrala.AuthServiceClient, operations []roles.Operation, builtInRoles map[string][]roles.Operation) RolesSvc {
+func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala.IDProvider, auth magistrala.AuthServiceClient, operations []roles.Operation, builtInRoles map[string][]roles.Operation) RolesSvc {
+
 	return RolesSvc{
 		entityType:   entityType,
 		repo:         repo,
+		idProvider:   idProvider,
 		auth:         auth,
 		operations:   operations,
 		builtInRoles: builtInRoles,
@@ -56,7 +58,7 @@ func (r *RolesSvc) validateOperations(operations []roles.Operation) error {
 	return nil
 }
 
-func (r *RolesSvc) AddNewEntityRoles(ctx context.Context, entityID string, newEntityDefaultRoleMembers map[string][]string, optionalPolicies []roles.OptionalPolicy) (ros []roles.Role, err error) {
+func (r *RolesSvc) AddNewEntityRoles(ctx context.Context, entityID string, newEntityDefaultRoleMembers map[string][]string, optionalPolicies []roles.OptionalPolicy) (fnRoles []roles.Role, fnErr error) {
 	var newRoleProvisions []roles.RoleProvision
 	prs := []*magistrala.AddPolicyReq{}
 
@@ -67,8 +69,7 @@ func (r *RolesSvc) AddNewEntityRoles(ctx context.Context, entityID string, newEn
 		}
 
 		// There an option to have id as entityID_roleName where in roleName all space are removed with _ and starts with letter and supports only alphanumeric, space and hyphen
-		id, err := shortid.Generate()
-
+		id, err := r.idProvider.ID()
 		if err != nil {
 			return []roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 		}
@@ -127,21 +128,23 @@ func (r *RolesSvc) AddNewEntityRoles(ctx context.Context, entityID string, newEn
 		}
 	}
 
-	resp, err := r.auth.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs})
+	if len(prs) > 0 {
+		resp, err := r.auth.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs})
 
-	if err != nil {
-		return []roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
-	}
-	if !resp.Added {
-		return []roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, errAddPolicies)
-	}
-	defer func() {
 		if err != nil {
-			if errRollBack := r.AddPolicyRollback(ctx, prs); errRollBack != nil {
-				err = errors.Wrap(err, errors.Wrap(errRollbackRoles, errRollBack))
-			}
+			return []roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 		}
-	}()
+		if !resp.Added {
+			return []roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, errAddPolicies)
+		}
+		defer func() {
+			if fnErr != nil {
+				if errRollBack := r.AddPolicyRollback(ctx, prs); errRollBack != nil {
+					fnErr = errors.Wrap(fnErr, errors.Wrap(errRollbackRoles, errRollBack))
+				}
+			}
+		}()
+	}
 
 	newRoles, err := r.repo.AddRoles(ctx, newRoleProvisions)
 	if err != nil {
@@ -175,9 +178,10 @@ func (r *RolesSvc) AddPolicyRollback(ctx context.Context, prs []*magistrala.AddP
 	}
 	return nil
 }
-func (r *RolesSvc) Add(ctx context.Context, entityID, roleName string, optionalOperations []roles.Operation, optionalMembers []string) (roles.Role, error) {
+
+func (r *RolesSvc) AddRole(ctx context.Context, entityID, roleName string, optionalOperations []roles.Operation, optionalMembers []string) (fnRole roles.Role, fnErr error) {
 	// There an option to have id as entityID_roleName where in roleName all space are removed with _ and starts with letter and supports only alphanumeric, space and hyphen
-	id, err := shortid.Generate()
+	id, err := r.idProvider.ID()
 	if err != nil {
 		return roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
@@ -223,21 +227,23 @@ func (r *RolesSvc) Add(ctx context.Context, entityID, roleName string, optionalO
 		})
 	}
 
-	resp, err := r.auth.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs})
+	if len(prs) > 0 {
+		resp, err := r.auth.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs})
 
-	if err != nil {
-		return roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
-	}
-	if !resp.Added {
-		return roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, errAddPolicies)
-	}
-	defer func() {
 		if err != nil {
-			if errRollBack := r.AddPolicyRollback(ctx, prs); errRollBack != nil {
-				err = errors.Wrap(err, errors.Wrap(errRollbackRoles, errRollBack))
-			}
+			return roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 		}
-	}()
+		if !resp.Added {
+			return roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, errAddPolicies)
+		}
+		defer func() {
+			if fnErr != nil {
+				if errRollBack := r.AddPolicyRollback(ctx, prs); errRollBack != nil {
+					fnErr = errors.Wrap(fnErr, errors.Wrap(errRollbackRoles, errRollBack))
+				}
+			}
+		}()
+	}
 
 	newRoles, err := r.repo.AddRoles(ctx, newRoleProvisions)
 	if err != nil {
@@ -248,10 +254,10 @@ func (r *RolesSvc) Add(ctx context.Context, entityID, roleName string, optionalO
 		return roles.Role{}, svcerr.ErrCreateEntity
 	}
 
-	return newRoles[1], nil
+	return newRoles[0], nil
 }
 
-func (r *RolesSvc) Remove(ctx context.Context, entityID, roleName string) error {
+func (r *RolesSvc) RemoveRole(ctx context.Context, entityID, roleName string) error {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
@@ -274,7 +280,7 @@ func (r *RolesSvc) Remove(ctx context.Context, entityID, roleName string) error 
 	return nil
 }
 
-func (r *RolesSvc) UpdateName(ctx context.Context, entityID, oldRoleName, newRoleName string) (roles.Role, error) {
+func (r *RolesSvc) UpdateRoleName(ctx context.Context, entityID, oldRoleName, newRoleName string) (roles.Role, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, oldRoleName)
 	if err != nil {
 		return roles.Role{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
@@ -290,7 +296,7 @@ func (r *RolesSvc) UpdateName(ctx context.Context, entityID, oldRoleName, newRol
 	return ro, nil
 }
 
-func (r *RolesSvc) Retrieve(ctx context.Context, entityID, roleName string) (roles.Role, error) {
+func (r *RolesSvc) RetrieveRole(ctx context.Context, entityID, roleName string) (roles.Role, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return roles.Role{}, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -298,7 +304,7 @@ func (r *RolesSvc) Retrieve(ctx context.Context, entityID, roleName string) (rol
 	return ro, nil
 }
 
-func (r *RolesSvc) RetrieveAll(ctx context.Context, entityID string, limit, offset uint64) (roles.RolePage, error) {
+func (r *RolesSvc) RetrieveAllRoles(ctx context.Context, entityID string, limit, offset uint64) (roles.RolePage, error) {
 	ros, err := r.repo.RetrieveAllRoles(ctx, entityID, limit, offset)
 	if err != nil {
 		return roles.RolePage{}, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -306,7 +312,7 @@ func (r *RolesSvc) RetrieveAll(ctx context.Context, entityID string, limit, offs
 	return ros, nil
 }
 
-func (r *RolesSvc) AddOperation(ctx context.Context, entityID, roleName string, operations []roles.Operation) (ops []roles.Operation, err error) {
+func (r *RolesSvc) RoleAddOperation(ctx context.Context, entityID, roleName string, operations []roles.Operation) (fnOps []roles.Operation, fnErr error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return []roles.Operation{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
@@ -341,9 +347,9 @@ func (r *RolesSvc) AddOperation(ctx context.Context, entityID, roleName string, 
 	}
 
 	defer func() {
-		if err != nil {
+		if fnErr != nil {
 			if errRollBack := r.AddPolicyRollback(ctx, prs); errRollBack != nil {
-				err = errors.Wrap(err, errors.Wrap(errRollbackRoles, errRollBack))
+				fnErr = errors.Wrap(fnErr, errors.Wrap(errRollbackRoles, errRollBack))
 			}
 		}
 	}()
@@ -358,7 +364,7 @@ func (r *RolesSvc) AddOperation(ctx context.Context, entityID, roleName string, 
 	return resOps, nil
 }
 
-func (r *RolesSvc) ListOperations(ctx context.Context, entityID, roleName string) ([]roles.Operation, error) {
+func (r *RolesSvc) RoleListOperations(ctx context.Context, entityID, roleName string) ([]roles.Operation, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return []roles.Operation{}, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -372,7 +378,7 @@ func (r *RolesSvc) ListOperations(ctx context.Context, entityID, roleName string
 
 }
 
-func (r *RolesSvc) CheckOperationsExists(ctx context.Context, entityID, roleName string, operations []roles.Operation) (bool, error) {
+func (r *RolesSvc) RoleCheckOperationsExists(ctx context.Context, entityID, roleName string, operations []roles.Operation) (bool, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return false, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -385,7 +391,7 @@ func (r *RolesSvc) CheckOperationsExists(ctx context.Context, entityID, roleName
 	return result, nil
 }
 
-func (r *RolesSvc) RemoveOperations(ctx context.Context, entityID, roleName string, operations []roles.Operation) (err error) {
+func (r *RolesSvc) RoleRemoveOperations(ctx context.Context, entityID, roleName string, operations []roles.Operation) (err error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
@@ -423,7 +429,7 @@ func (r *RolesSvc) RemoveOperations(ctx context.Context, entityID, roleName stri
 	return nil
 }
 
-func (r *RolesSvc) RemoveAllOperations(ctx context.Context, entityID, roleName string) error {
+func (r *RolesSvc) RoleRemoveAllOperations(ctx context.Context, entityID, roleName string) error {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
@@ -451,7 +457,7 @@ func (r *RolesSvc) RemoveAllOperations(ctx context.Context, entityID, roleName s
 	return nil
 }
 
-func (r *RolesSvc) AddMembers(ctx context.Context, entityID, roleName string, members []string) ([]string, error) {
+func (r *RolesSvc) RoleAddMembers(ctx context.Context, entityID, roleName string, members []string) (fnMems []string, fnErr error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
@@ -481,9 +487,9 @@ func (r *RolesSvc) AddMembers(ctx context.Context, entityID, roleName string, me
 	}
 
 	defer func() {
-		if err != nil {
+		if fnErr != nil {
 			if errRollBack := r.AddPolicyRollback(ctx, prs); errRollBack != nil {
-				err = errors.Wrap(err, errors.Wrap(errRollbackRoles, errRollBack))
+				fnErr = errors.Wrap(fnErr, errors.Wrap(errRollbackRoles, errRollBack))
 			}
 		}
 	}()
@@ -498,7 +504,7 @@ func (r *RolesSvc) AddMembers(ctx context.Context, entityID, roleName string, me
 	return mems, nil
 }
 
-func (r *RolesSvc) ListMembers(ctx context.Context, entityID, roleName string, limit, offset uint64) (roles.MembersPage, error) {
+func (r *RolesSvc) RoleListMembers(ctx context.Context, entityID, roleName string, limit, offset uint64) (roles.MembersPage, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return roles.MembersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -511,7 +517,7 @@ func (r *RolesSvc) ListMembers(ctx context.Context, entityID, roleName string, l
 	return mp, nil
 }
 
-func (r *RolesSvc) CheckMembersExists(ctx context.Context, entityID, roleName string, members []string) (bool, error) {
+func (r *RolesSvc) RoleCheckMembersExists(ctx context.Context, entityID, roleName string, members []string) (bool, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return false, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -524,7 +530,7 @@ func (r *RolesSvc) CheckMembersExists(ctx context.Context, entityID, roleName st
 	return result, nil
 }
 
-func (r *RolesSvc) RemoveMembers(ctx context.Context, entityID, roleName string, members []string) (err error) {
+func (r *RolesSvc) RoleRemoveMembers(ctx context.Context, entityID, roleName string, members []string) (err error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
@@ -561,7 +567,7 @@ func (r *RolesSvc) RemoveMembers(ctx context.Context, entityID, roleName string,
 	return nil
 }
 
-func (r *RolesSvc) RemoveAllMembers(ctx context.Context, entityID, roleName string) (err error) {
+func (r *RolesSvc) RoleRemoveAllMembers(ctx context.Context, entityID, roleName string) (err error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)

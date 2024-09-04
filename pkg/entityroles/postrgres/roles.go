@@ -138,7 +138,7 @@ func (repo *RolesSvcRepo) AddRoles(ctx context.Context, rps []roles.RoleProvisio
 	for _, rp := range rps {
 
 		q := `INSERT INTO roles (id, name, entity_id, created_by, created_at, updated_by, updated_at)
-        VALUES (:id :name :entity_id :created_by :created_at :updated_by :updated_at)
+        VALUES (:id, :name, :entity_id, :created_by, :created_at, :updated_by, :updated_at)
         RETURNING id, name, entity_id, created_by, created_at, updated_by, updated_at`
 
 		row, err := tx.NamedQuery(q, toDBRoles(rp.Role))
@@ -324,7 +324,7 @@ func (repo *RolesSvcRepo) RetrieveAllRoles(ctx context.Context, entityID string,
 
 		items = append(items, toRole(dbr))
 	}
-	cq := `SELECT COUNT(*) FROM roles WHERE entity_id = :entity_id ORDER BY created_at LIMIT :limit OFFSET :offset;`
+	cq := `SELECT COUNT(*) FROM roles WHERE entity_id = :entity_id LIMIT :limit OFFSET :offset;`
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbp)
 	if err != nil {
@@ -569,7 +569,7 @@ func (repo *RolesSvcRepo) RoleListMembers(ctx context.Context, roleID string, li
 		items = append(items, dbrmems.Member)
 	}
 
-	cq := `SELECT COUNT(*) FROM role_members WHERE role_id = :role_id ORDER BY created_at LIMIT :limit OFFSET :offset;`
+	cq := `SELECT COUNT(*) FROM role_members WHERE role_id = :role_id LIMIT :limit OFFSET :offset;`
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbrmems)
 	if err != nil {

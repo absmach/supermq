@@ -27,7 +27,7 @@ func Migration(entityForeignKeyTableName, entityForeignKeyColumnName string) (*m
 				Up: []string{
 					fmt.Sprintf(`CREATE TABLE IF NOT EXISTS roles (
                         id          VARCHAR(254) NOT NULL PRIMARY KEY,
-                        role_name   varchar(200) NOT NULL,
+                        name        varchar(200) NOT NULL,
                         entity_id   VARCHAR(36)  NOT NULL,
 						created_at  TIMESTAMP,
 						updated_at  TIMESTAMP,

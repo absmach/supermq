@@ -80,14 +80,15 @@ func authorizeEndpoint(svc auth.Service) endpoint.Endpoint {
 			return authorizeRes{}, err
 		}
 		err := svc.Authorize(ctx, auth.PolicyReq{
-			Domain:      req.Domain,
-			SubjectType: req.SubjectType,
-			SubjectKind: req.SubjectKind,
-			Subject:     req.Subject,
-			Relation:    req.Relation,
-			Permission:  req.Permission,
-			ObjectType:  req.ObjectType,
-			Object:      req.Object,
+			Domain:          req.Domain,
+			SubjectRelation: req.SubjectRelation,
+			SubjectType:     req.SubjectType,
+			SubjectKind:     req.SubjectKind,
+			Subject:         req.Subject,
+			Relation:        req.Relation,
+			Permission:      req.Permission,
+			ObjectType:      req.ObjectType,
+			Object:          req.Object,
 		})
 		if err != nil {
 			return authorizeRes{authorized: false}, err
@@ -104,15 +105,16 @@ func addPolicyEndpoint(svc auth.Service) endpoint.Endpoint {
 		}
 
 		err := svc.AddPolicy(ctx, auth.PolicyReq{
-			Domain:      req.Domain,
-			SubjectType: req.SubjectType,
-			SubjectKind: req.SubjectKind,
-			Subject:     req.Subject,
-			Relation:    req.Relation,
-			Permission:  req.Permission,
-			ObjectType:  req.ObjectType,
-			ObjectKind:  req.ObjectKind,
-			Object:      req.Object,
+			Domain:          req.Domain,
+			SubjectRelation: req.SubjectRelation,
+			SubjectType:     req.SubjectType,
+			SubjectKind:     req.SubjectKind,
+			Subject:         req.Subject,
+			Relation:        req.Relation,
+			Permission:      req.Permission,
+			ObjectType:      req.ObjectType,
+			ObjectKind:      req.ObjectKind,
+			Object:          req.Object,
 		})
 		if err != nil {
 			return addPolicyRes{}, err
@@ -132,15 +134,16 @@ func addPoliciesEndpoint(svc auth.Service) endpoint.Endpoint {
 
 		for _, req := range reqs {
 			prs = append(prs, auth.PolicyReq{
-				Domain:      req.Domain,
-				SubjectType: req.SubjectType,
-				SubjectKind: req.SubjectKind,
-				Subject:     req.Subject,
-				Relation:    req.Relation,
-				Permission:  req.Permission,
-				ObjectType:  req.ObjectType,
-				ObjectKind:  req.ObjectKind,
-				Object:      req.Object,
+				Domain:          req.Domain,
+				SubjectRelation: req.SubjectRelation,
+				SubjectType:     req.SubjectType,
+				SubjectKind:     req.SubjectKind,
+				Subject:         req.Subject,
+				Relation:        req.Relation,
+				Permission:      req.Permission,
+				ObjectType:      req.ObjectType,
+				ObjectKind:      req.ObjectKind,
+				Object:          req.Object,
 			})
 		}
 
@@ -159,15 +162,16 @@ func deletePolicyFilterEndpoint(svc auth.Service) endpoint.Endpoint {
 		}
 
 		err := svc.DeletePolicyFilter(ctx, auth.PolicyReq{
-			Domain:      req.Domain,
-			SubjectKind: req.SubjectKind,
-			SubjectType: req.SubjectType,
-			Subject:     req.Subject,
-			Relation:    req.Relation,
-			Permission:  req.Permission,
-			ObjectType:  req.ObjectType,
-			ObjectKind:  req.ObjectKind,
-			Object:      req.Object,
+			Domain:          req.Domain,
+			SubjectRelation: req.SubjectRelation,
+			SubjectKind:     req.SubjectKind,
+			SubjectType:     req.SubjectType,
+			Subject:         req.Subject,
+			Relation:        req.Relation,
+			Permission:      req.Permission,
+			ObjectType:      req.ObjectType,
+			ObjectKind:      req.ObjectKind,
+			Object:          req.Object,
 		})
 		if err != nil {
 			return deletePolicyRes{}, err
@@ -187,15 +191,16 @@ func deletePoliciesEndpoint(svc auth.Service) endpoint.Endpoint {
 
 		for _, req := range reqs {
 			prs = append(prs, auth.PolicyReq{
-				Domain:      req.Domain,
-				SubjectType: req.SubjectType,
-				SubjectKind: req.SubjectKind,
-				Subject:     req.Subject,
-				Relation:    req.Relation,
-				Permission:  req.Permission,
-				ObjectType:  req.ObjectType,
-				ObjectKind:  req.ObjectKind,
-				Object:      req.Object,
+				Domain:          req.Domain,
+				SubjectRelation: req.SubjectRelation,
+				SubjectType:     req.SubjectType,
+				SubjectKind:     req.SubjectKind,
+				Subject:         req.Subject,
+				Relation:        req.Relation,
+				Permission:      req.Permission,
+				ObjectType:      req.ObjectType,
+				ObjectKind:      req.ObjectKind,
+				Object:          req.Object,
 			})
 		}
 
@@ -211,13 +216,14 @@ func listObjectsEndpoint(svc auth.Service) endpoint.Endpoint {
 		req := request.(listObjectsReq)
 
 		page, err := svc.ListObjects(ctx, auth.PolicyReq{
-			Domain:      req.Domain,
-			SubjectType: req.SubjectType,
-			Subject:     req.Subject,
-			Relation:    req.Relation,
-			Permission:  req.Permission,
-			ObjectType:  req.ObjectType,
-			Object:      req.Object,
+			Domain:          req.Domain,
+			SubjectRelation: req.SubjectRelation,
+			SubjectType:     req.SubjectType,
+			Subject:         req.Subject,
+			Relation:        req.Relation,
+			Permission:      req.Permission,
+			ObjectType:      req.ObjectType,
+			Object:          req.Object,
 		}, req.NextPageToken, req.Limit)
 		if err != nil {
 			return listObjectsRes{}, err
@@ -231,13 +237,14 @@ func listAllObjectsEndpoint(svc auth.Service) endpoint.Endpoint {
 		req := request.(listObjectsReq)
 
 		page, err := svc.ListAllObjects(ctx, auth.PolicyReq{
-			Domain:      req.Domain,
-			SubjectType: req.SubjectType,
-			Subject:     req.Subject,
-			Relation:    req.Relation,
-			Permission:  req.Permission,
-			ObjectType:  req.ObjectType,
-			Object:      req.Object,
+			Domain:          req.Domain,
+			SubjectRelation: req.SubjectRelation,
+			SubjectType:     req.SubjectType,
+			Subject:         req.Subject,
+			Relation:        req.Relation,
+			Permission:      req.Permission,
+			ObjectType:      req.ObjectType,
+			Object:          req.Object,
 		})
 		if err != nil {
 			return listObjectsRes{}, err
@@ -251,13 +258,14 @@ func countObjectsEndpoint(svc auth.Service) endpoint.Endpoint {
 		req := request.(countObjectsReq)
 
 		count, err := svc.CountObjects(ctx, auth.PolicyReq{
-			Domain:      req.Domain,
-			SubjectType: req.SubjectType,
-			Subject:     req.Subject,
-			Relation:    req.Relation,
-			Permission:  req.Permission,
-			ObjectType:  req.ObjectType,
-			Object:      req.Object,
+			Domain:          req.Domain,
+			SubjectRelation: req.SubjectRelation,
+			SubjectType:     req.SubjectType,
+			Subject:         req.Subject,
+			Relation:        req.Relation,
+			Permission:      req.Permission,
+			ObjectType:      req.ObjectType,
+			Object:          req.Object,
 		})
 		if err != nil {
 			return countObjectsRes{}, err
@@ -271,13 +279,14 @@ func listSubjectsEndpoint(svc auth.Service) endpoint.Endpoint {
 		req := request.(listSubjectsReq)
 
 		page, err := svc.ListSubjects(ctx, auth.PolicyReq{
-			Domain:      req.Domain,
-			SubjectType: req.SubjectType,
-			Subject:     req.Subject,
-			Relation:    req.Relation,
-			Permission:  req.Permission,
-			ObjectType:  req.ObjectType,
-			Object:      req.Object,
+			Domain:          req.Domain,
+			SubjectRelation: req.SubjectRelation,
+			SubjectType:     req.SubjectType,
+			Subject:         req.Subject,
+			Relation:        req.Relation,
+			Permission:      req.Permission,
+			ObjectType:      req.ObjectType,
+			Object:          req.Object,
 		}, req.NextPageToken, req.Limit)
 		if err != nil {
 			return listSubjectsRes{}, err
@@ -291,13 +300,14 @@ func listAllSubjectsEndpoint(svc auth.Service) endpoint.Endpoint {
 		req := request.(listSubjectsReq)
 
 		page, err := svc.ListAllSubjects(ctx, auth.PolicyReq{
-			Domain:      req.Domain,
-			SubjectType: req.SubjectType,
-			Subject:     req.Subject,
-			Relation:    req.Relation,
-			Permission:  req.Permission,
-			ObjectType:  req.ObjectType,
-			Object:      req.Object,
+			Domain:          req.Domain,
+			SubjectRelation: req.SubjectRelation,
+			SubjectType:     req.SubjectType,
+			Subject:         req.Subject,
+			Relation:        req.Relation,
+			Permission:      req.Permission,
+			ObjectType:      req.ObjectType,
+			Object:          req.Object,
 		})
 		if err != nil {
 			return listSubjectsRes{}, err
@@ -311,13 +321,14 @@ func countSubjectsEndpoint(svc auth.Service) endpoint.Endpoint {
 		req := request.(countSubjectsReq)
 
 		count, err := svc.CountSubjects(ctx, auth.PolicyReq{
-			Domain:      req.Domain,
-			SubjectType: req.SubjectType,
-			Subject:     req.Subject,
-			Relation:    req.Relation,
-			Permission:  req.Permission,
-			ObjectType:  req.ObjectType,
-			Object:      req.Object,
+			Domain:          req.Domain,
+			SubjectRelation: req.SubjectRelation,
+			SubjectType:     req.SubjectType,
+			Subject:         req.Subject,
+			Relation:        req.Relation,
+			Permission:      req.Permission,
+			ObjectType:      req.ObjectType,
+			Object:          req.Object,
 		})
 		if err != nil {
 			return countSubjectsRes{}, err

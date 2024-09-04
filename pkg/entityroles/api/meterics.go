@@ -33,48 +33,48 @@ func NewRolesSvcMetricsMiddleware(svcName string, svc roles.Roles, counter metri
 func (rmm *RolesSvcMetricsMiddleware) AddNewEntityRoles(ctx context.Context, entityID string, newEntityDefaultRoles map[string][]string, optionalPolicies []roles.OptionalPolicy) ([]roles.Role, error) {
 	return rmm.svc.AddNewEntityRoles(ctx, entityID, newEntityDefaultRoles, optionalPolicies)
 }
-func (rmm *RolesSvcMetricsMiddleware) Add(ctx context.Context, entityID, roleName string, optionalOperations []roles.Operation, optionalMembers []string) (roles.Role, error) {
-	return rmm.svc.Add(ctx, entityID, roleName, optionalOperations, optionalMembers)
+func (rmm *RolesSvcMetricsMiddleware) AddRole(ctx context.Context, entityID, roleName string, optionalOperations []roles.Operation, optionalMembers []string) (roles.Role, error) {
+	return rmm.svc.AddRole(ctx, entityID, roleName, optionalOperations, optionalMembers)
 }
-func (rmm *RolesSvcMetricsMiddleware) Remove(ctx context.Context, entityID, roleName string) error {
-	return rmm.svc.Remove(ctx, entityID, roleName)
+func (rmm *RolesSvcMetricsMiddleware) RemoveRole(ctx context.Context, entityID, roleName string) error {
+	return rmm.svc.RemoveRole(ctx, entityID, roleName)
 }
-func (rmm *RolesSvcMetricsMiddleware) UpdateName(ctx context.Context, entityID, oldRoleName, newRoleName string) (roles.Role, error) {
-	return rmm.svc.UpdateName(ctx, entityID, oldRoleName, newRoleName)
+func (rmm *RolesSvcMetricsMiddleware) UpdateRoleName(ctx context.Context, entityID, oldRoleName, newRoleName string) (roles.Role, error) {
+	return rmm.svc.UpdateRoleName(ctx, entityID, oldRoleName, newRoleName)
 }
-func (rmm *RolesSvcMetricsMiddleware) Retrieve(ctx context.Context, entityID, roleName string) (roles.Role, error) {
-	return rmm.svc.Retrieve(ctx, entityID, roleName)
+func (rmm *RolesSvcMetricsMiddleware) RetrieveRole(ctx context.Context, entityID, roleName string) (roles.Role, error) {
+	return rmm.svc.RetrieveRole(ctx, entityID, roleName)
 }
-func (rmm *RolesSvcMetricsMiddleware) RetrieveAll(ctx context.Context, entityID string, limit, offset uint64) (roles.RolePage, error) {
-	return rmm.svc.RetrieveAll(ctx, entityID, limit, offset)
+func (rmm *RolesSvcMetricsMiddleware) RetrieveAllRoles(ctx context.Context, entityID string, limit, offset uint64) (roles.RolePage, error) {
+	return rmm.svc.RetrieveAllRoles(ctx, entityID, limit, offset)
 }
-func (rmm *RolesSvcMetricsMiddleware) AddOperation(ctx context.Context, entityID, roleName string, operations []roles.Operation) (ops []roles.Operation, err error) {
-	return rmm.svc.AddOperation(ctx, entityID, roleName, operations)
+func (rmm *RolesSvcMetricsMiddleware) RoleAddOperation(ctx context.Context, entityID, roleName string, operations []roles.Operation) (ops []roles.Operation, err error) {
+	return rmm.svc.RoleAddOperation(ctx, entityID, roleName, operations)
 }
-func (rmm *RolesSvcMetricsMiddleware) ListOperations(ctx context.Context, entityID, roleName string) ([]roles.Operation, error) {
-	return rmm.svc.ListOperations(ctx, entityID, roleName)
+func (rmm *RolesSvcMetricsMiddleware) RoleListOperations(ctx context.Context, entityID, roleName string) ([]roles.Operation, error) {
+	return rmm.svc.RoleListOperations(ctx, entityID, roleName)
 }
-func (rmm *RolesSvcMetricsMiddleware) CheckOperationsExists(ctx context.Context, entityID, roleName string, operations []roles.Operation) (bool, error) {
-	return rmm.svc.CheckOperationsExists(ctx, entityID, roleName, operations)
+func (rmm *RolesSvcMetricsMiddleware) RoleCheckOperationsExists(ctx context.Context, entityID, roleName string, operations []roles.Operation) (bool, error) {
+	return rmm.svc.RoleCheckOperationsExists(ctx, entityID, roleName, operations)
 }
-func (rmm *RolesSvcMetricsMiddleware) RemoveOperations(ctx context.Context, entityID, roleName string, operations []roles.Operation) (err error) {
-	return rmm.svc.RemoveOperations(ctx, entityID, roleName, operations)
+func (rmm *RolesSvcMetricsMiddleware) RoleRemoveOperations(ctx context.Context, entityID, roleName string, operations []roles.Operation) (err error) {
+	return rmm.svc.RoleRemoveOperations(ctx, entityID, roleName, operations)
 }
-func (rmm *RolesSvcMetricsMiddleware) RemoveAllOperations(ctx context.Context, entityID, roleName string) error {
-	return rmm.svc.RemoveAllOperations(ctx, entityID, roleName)
+func (rmm *RolesSvcMetricsMiddleware) RoleRemoveAllOperations(ctx context.Context, entityID, roleName string) error {
+	return rmm.svc.RoleRemoveAllOperations(ctx, entityID, roleName)
 }
-func (rmm *RolesSvcMetricsMiddleware) AddMembers(ctx context.Context, entityID, roleName string, members []string) ([]string, error) {
-	return rmm.svc.AddMembers(ctx, entityID, roleName, members)
+func (rmm *RolesSvcMetricsMiddleware) RoleAddMembers(ctx context.Context, entityID, roleName string, members []string) ([]string, error) {
+	return rmm.svc.RoleAddMembers(ctx, entityID, roleName, members)
 }
-func (rmm *RolesSvcMetricsMiddleware) ListMembers(ctx context.Context, entityID, roleName string, limit, offset uint64) (roles.MembersPage, error) {
-	return rmm.svc.ListMembers(ctx, entityID, roleName, limit, offset)
+func (rmm *RolesSvcMetricsMiddleware) RoleListMembers(ctx context.Context, entityID, roleName string, limit, offset uint64) (roles.MembersPage, error) {
+	return rmm.svc.RoleListMembers(ctx, entityID, roleName, limit, offset)
 }
-func (rmm *RolesSvcMetricsMiddleware) CheckMembersExists(ctx context.Context, entityID, roleName string, members []string) (bool, error) {
-	return rmm.svc.CheckMembersExists(ctx, entityID, roleName, members)
+func (rmm *RolesSvcMetricsMiddleware) RoleCheckMembersExists(ctx context.Context, entityID, roleName string, members []string) (bool, error) {
+	return rmm.svc.RoleCheckMembersExists(ctx, entityID, roleName, members)
 }
-func (rmm *RolesSvcMetricsMiddleware) RemoveMembers(ctx context.Context, entityID, roleName string, members []string) (err error) {
-	return rmm.svc.RemoveMembers(ctx, entityID, roleName, members)
+func (rmm *RolesSvcMetricsMiddleware) RoleRemoveMembers(ctx context.Context, entityID, roleName string, members []string) (err error) {
+	return rmm.svc.RoleRemoveMembers(ctx, entityID, roleName, members)
 }
-func (rmm *RolesSvcMetricsMiddleware) RemoveAllMembers(ctx context.Context, entityID, roleName string) (err error) {
-	return rmm.svc.RemoveAllMembers(ctx, entityID, roleName)
+func (rmm *RolesSvcMetricsMiddleware) RoleRemoveAllMembers(ctx context.Context, entityID, roleName string) (err error) {
+	return rmm.svc.RoleRemoveAllMembers(ctx, entityID, roleName)
 }
