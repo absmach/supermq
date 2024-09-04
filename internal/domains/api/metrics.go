@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/pkg/domains"
+	entityRolesAPI "github.com/absmach/magistrala/pkg/entityroles/api"
 	"github.com/go-kit/kit/metrics"
 )
 
@@ -19,14 +20,18 @@ type metricsMiddleware struct {
 	counter metrics.Counter
 	latency metrics.Histogram
 	svc     domains.Service
+	entityRolesAPI.RolesSvcMetricsMiddleware
 }
 
 // MetricsMiddleware instruments core service by tracking request count and latency.
 func MetricsMiddleware(svc domains.Service, counter metrics.Counter, latency metrics.Histogram) domains.Service {
+	rolesSvcMetricsMiddleware := entityRolesAPI.NewRolesSvcMetricsMiddleware("domains", svc, counter, latency)
+
 	return &metricsMiddleware{
-		counter: counter,
-		latency: latency,
-		svc:     svc,
+		counter:                   counter,
+		latency:                   latency,
+		svc:                       svc,
+		RolesSvcMetricsMiddleware: rolesSvcMetricsMiddleware,
 	}
 }
 

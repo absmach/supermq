@@ -4,13 +4,23 @@
 package postgres
 
 import (
+	"github.com/absmach/magistrala/pkg/errors"
+
+	entityRolesRepo "github.com/absmach/magistrala/pkg/entityroles/postrgres"
 	_ "github.com/jackc/pgx/v5/stdlib" // required for SQL access
 	migrate "github.com/rubenv/sql-migrate"
 )
 
+var errRoleMigration = errors.New("role migration initialization failed")
+
 // Migration of Auth service.
-func Migration() *migrate.MemoryMigrationSource {
-	return &migrate.MemoryMigrationSource{
+func Migration() (*migrate.MemoryMigrationSource, error) {
+	rolesMigration, err := entityRolesRepo.Migration("domains", "id")
+	if err != nil {
+		return &migrate.MemoryMigrationSource{}, errors.Wrap(errRoleMigration, err)
+	}
+
+	domainMigrations := &migrate.MemoryMigrationSource{
 		Migrations: []*migrate.Migration{
 			{
 				Id: "domain_1",
@@ -20,7 +30,7 @@ func Migration() *migrate.MemoryMigrationSource {
                         name        VARCHAR(254),
                         tags        TEXT[],
                         metadata    JSONB,
-                        alias       VARCHAR(254) SET NOT NULL UNIQUE,
+					    alias       VARCHAR(254) NOT NULL UNIQUE,
                         created_at  TIMESTAMP,
                         updated_at  TIMESTAMP,
                         updated_by  VARCHAR(254),
@@ -34,4 +44,8 @@ func Migration() *migrate.MemoryMigrationSource {
 			},
 		},
 	}
+
+	domainMigrations.Migrations = append(domainMigrations.Migrations, rolesMigration.Migrations...)
+
+	return domainMigrations, nil
 }

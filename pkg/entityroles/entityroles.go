@@ -17,9 +17,9 @@ var (
 	errRollbackPolicies = errors.New("failed to rollback roles")
 	errAddPolicies      = errors.New("failed to add policies")
 )
-var _ roles.Roles = (*rolesSvc)(nil)
+var _ roles.Roles = (*RolesSvc)(nil)
 
-type rolesSvc struct {
+type RolesSvc struct {
 	entityType   string
 	db           roles.Repository
 	auth         magistrala.AuthServiceClient
@@ -27,11 +27,11 @@ type rolesSvc struct {
 	builtInRoles map[string][]roles.Operation
 }
 
-func NewRole(entityType string) roles.Roles {
-	return &rolesSvc{entityType: entityType}
+func NewRolesSvc(entityType string) roles.Roles {
+	return &RolesSvc{entityType: entityType}
 }
 
-func (r *rolesSvc) isOperationAllowed(op roles.Operation) bool {
+func (r *RolesSvc) isOperationAllowed(op roles.Operation) bool {
 	for _, aop := range r.operations {
 		if aop == op {
 			return true
@@ -40,7 +40,7 @@ func (r *rolesSvc) isOperationAllowed(op roles.Operation) bool {
 	return false
 }
 
-func (r *rolesSvc) validateOperations(operations []roles.Operation) error {
+func (r *RolesSvc) validateOperations(operations []roles.Operation) error {
 	for _, op := range operations {
 		roOp := roles.Operation(op)
 		if !r.isOperationAllowed(roOp) {
@@ -50,7 +50,7 @@ func (r *rolesSvc) validateOperations(operations []roles.Operation) error {
 	return nil
 }
 
-func (r *rolesSvc) AddNewEntityRoles(ctx context.Context, entityID string, newEntityDefaultRoleMembers map[string][]string, optionalPolicies []roles.OptionalPolicy) (ros []roles.Role, err error) {
+func (r *RolesSvc) AddNewEntityRoles(ctx context.Context, entityID string, newEntityDefaultRoleMembers map[string][]string, optionalPolicies []roles.OptionalPolicy) (ros []roles.Role, err error) {
 	var newRoleProvisions []roles.RoleProvision
 	prs := []*magistrala.AddPolicyReq{}
 
@@ -137,7 +137,7 @@ func (r *rolesSvc) AddNewEntityRoles(ctx context.Context, entityID string, newEn
 		}
 	}()
 
-	newRoles, err := r.db.Add(ctx, newRoleProvisions)
+	newRoles, err := r.db.AddRoles(ctx, newRoleProvisions)
 	if err != nil {
 		return []roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
@@ -145,7 +145,7 @@ func (r *rolesSvc) AddNewEntityRoles(ctx context.Context, entityID string, newEn
 	return newRoles, nil
 }
 
-func (r *rolesSvc) AddPolicyRollback(ctx context.Context, prs []*magistrala.AddPolicyReq) error {
+func (r *RolesSvc) AddPolicyRollback(ctx context.Context, prs []*magistrala.AddPolicyReq) error {
 	delPrs := []*magistrala.DeletePolicyReq{}
 
 	for _, pr := range prs {
@@ -169,7 +169,7 @@ func (r *rolesSvc) AddPolicyRollback(ctx context.Context, prs []*magistrala.AddP
 	}
 	return nil
 }
-func (r *rolesSvc) Add(ctx context.Context, entityID, roleName string, optionalOperations []roles.Operation, optionalMembers []string) (roles.Role, error) {
+func (r *RolesSvc) Add(ctx context.Context, entityID, roleName string, optionalOperations []roles.Operation, optionalMembers []string) (roles.Role, error) {
 	// There an option to have id as entityID_roleName where in roleName all space are removed with _ and starts with letter and supports only alphanumeric, space and hyphen
 	id, err := shortid.Generate()
 	if err != nil {
@@ -233,7 +233,7 @@ func (r *rolesSvc) Add(ctx context.Context, entityID, roleName string, optionalO
 		}
 	}()
 
-	newRoles, err := r.db.Add(ctx, newRoleProvisions)
+	newRoles, err := r.db.AddRoles(ctx, newRoleProvisions)
 	if err != nil {
 		return roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
@@ -245,8 +245,8 @@ func (r *rolesSvc) Add(ctx context.Context, entityID, roleName string, optionalO
 	return newRoles[1], nil
 }
 
-func (r *rolesSvc) Remove(ctx context.Context, entityID, roleName string) error {
-	ro, err := r.db.RetrieveByEntityIDAndName(ctx, entityID, roleName)
+func (r *RolesSvc) Remove(ctx context.Context, entityID, roleName string) error {
+	ro, err := r.db.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
@@ -262,18 +262,18 @@ func (r *rolesSvc) Remove(ctx context.Context, entityID, roleName string) error 
 		return svcerr.ErrRemoveEntity
 	}
 
-	if err := r.db.Remove(ctx, []string{ro.ID}); err != nil {
+	if err := r.db.RemoveRoles(ctx, []string{ro.ID}); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	return nil
 }
 
-func (r *rolesSvc) UpdateName(ctx context.Context, entityID, oldRoleName, newRoleName string) (roles.Role, error) {
-	ro, err := r.db.RetrieveByEntityIDAndName(ctx, entityID, oldRoleName)
+func (r *RolesSvc) UpdateName(ctx context.Context, entityID, oldRoleName, newRoleName string) (roles.Role, error) {
+	ro, err := r.db.RetrieveRoleByEntityIDAndName(ctx, entityID, oldRoleName)
 	if err != nil {
 		return roles.Role{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
-	ro, err = r.db.Update(ctx, roles.Role{
+	ro, err = r.db.UpdateRole(ctx, roles.Role{
 		ID:       ro.ID,
 		EntityID: entityID,
 		Name:     newRoleName,
@@ -284,24 +284,24 @@ func (r *rolesSvc) UpdateName(ctx context.Context, entityID, oldRoleName, newRol
 	return ro, nil
 }
 
-func (r *rolesSvc) Retrieve(ctx context.Context, entityID, roleName string) (roles.Role, error) {
-	ro, err := r.db.RetrieveByEntityIDAndName(ctx, entityID, roleName)
+func (r *RolesSvc) Retrieve(ctx context.Context, entityID, roleName string) (roles.Role, error) {
+	ro, err := r.db.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return roles.Role{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return ro, nil
 }
 
-func (r *rolesSvc) RetrieveAll(ctx context.Context, entityID string, limit, offset uint64) (roles.RolePage, error) {
-	ros, err := r.db.RetrieveAll(ctx, entityID, limit, offset)
+func (r *RolesSvc) RetrieveAll(ctx context.Context, entityID string, limit, offset uint64) (roles.RolePage, error) {
+	ros, err := r.db.RetrieveAllRoles(ctx, entityID, limit, offset)
 	if err != nil {
 		return roles.RolePage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return ros, nil
 }
 
-func (r *rolesSvc) AddOperation(ctx context.Context, entityID, roleName string, operations []roles.Operation) (ops []roles.Operation, err error) {
-	ro, err := r.db.RetrieveByEntityIDAndName(ctx, entityID, roleName)
+func (r *RolesSvc) AddOperation(ctx context.Context, entityID, roleName string, operations []roles.Operation) (ops []roles.Operation, err error) {
+	ro, err := r.db.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return []roles.Operation{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
@@ -345,20 +345,20 @@ func (r *rolesSvc) AddOperation(ctx context.Context, entityID, roleName string, 
 	ro.UpdatedAt = time.Now()
 	// ro.UpdateBy = userID
 
-	resOps, err := r.db.AddOperation(ctx, ro, operations)
+	resOps, err := r.db.RoleAddOperation(ctx, ro, operations)
 	if err != nil {
 		return []roles.Operation{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	return resOps, nil
 }
 
-func (r *rolesSvc) ListOperations(ctx context.Context, entityID, roleName string) ([]roles.Operation, error) {
-	ro, err := r.db.RetrieveByEntityIDAndName(ctx, entityID, roleName)
+func (r *RolesSvc) ListOperations(ctx context.Context, entityID, roleName string) ([]roles.Operation, error) {
+	ro, err := r.db.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return []roles.Operation{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	ops, err := r.db.ListOperations(ctx, ro.ID)
+	ops, err := r.db.RoleListOperations(ctx, ro.ID)
 	if err != nil {
 		return []roles.Operation{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
@@ -366,21 +366,21 @@ func (r *rolesSvc) ListOperations(ctx context.Context, entityID, roleName string
 
 }
 
-func (r *rolesSvc) CheckOperationsExists(ctx context.Context, entityID, roleName string, operations []roles.Operation) (bool, error) {
-	ro, err := r.db.RetrieveByEntityIDAndName(ctx, entityID, roleName)
+func (r *RolesSvc) CheckOperationsExists(ctx context.Context, entityID, roleName string, operations []roles.Operation) (bool, error) {
+	ro, err := r.db.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return false, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	result, err := r.db.CheckOperationsExists(ctx, ro.ID, operations)
+	result, err := r.db.RoleCheckOperationsExists(ctx, ro.ID, operations)
 	if err != nil {
 		return true, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return result, nil
 }
 
-func (r *rolesSvc) RemoveOperations(ctx context.Context, entityID, roleName string, operations []roles.Operation) (err error) {
-	ro, err := r.db.RetrieveByEntityIDAndName(ctx, entityID, roleName)
+func (r *RolesSvc) RemoveOperations(ctx context.Context, entityID, roleName string, operations []roles.Operation) (err error) {
+	ro, err := r.db.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
@@ -411,14 +411,14 @@ func (r *rolesSvc) RemoveOperations(ctx context.Context, entityID, roleName stri
 
 	ro.UpdatedAt = time.Now()
 	// ro.UpdatedBy = userID
-	if err := r.db.RemoveOperations(ctx, ro, operations); err != nil {
+	if err := r.db.RoleRemoveOperations(ctx, ro, operations); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	return nil
 }
 
-func (r *rolesSvc) RemoveAllOperations(ctx context.Context, entityID, roleName string) error {
-	ro, err := r.db.RetrieveByEntityIDAndName(ctx, entityID, roleName)
+func (r *RolesSvc) RemoveAllOperations(ctx context.Context, entityID, roleName string) error {
+	ro, err := r.db.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
@@ -439,14 +439,14 @@ func (r *rolesSvc) RemoveAllOperations(ctx context.Context, entityID, roleName s
 	ro.UpdatedAt = time.Now()
 	// ro.UpdatedBy = userID
 
-	if err := r.db.RemoveAllOperations(ctx, ro); err != nil {
+	if err := r.db.RoleRemoveAllOperations(ctx, ro); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	return nil
 }
 
-func (r *rolesSvc) AddMembers(ctx context.Context, entityID, roleName string, members []string) ([]string, error) {
-	ro, err := r.db.RetrieveByEntityIDAndName(ctx, entityID, roleName)
+func (r *RolesSvc) AddMembers(ctx context.Context, entityID, roleName string, members []string) ([]string, error) {
+	ro, err := r.db.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
@@ -485,41 +485,41 @@ func (r *rolesSvc) AddMembers(ctx context.Context, entityID, roleName string, me
 	ro.UpdatedAt = time.Now()
 	// ro.UpdateBy = userID
 
-	mems, err := r.db.AddMembers(ctx, ro, members)
+	mems, err := r.db.RoleAddMembers(ctx, ro, members)
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	return mems, nil
 }
 
-func (r *rolesSvc) ListMembers(ctx context.Context, entityID, roleName string, limit, offset uint64) (roles.MembersPage, error) {
-	ro, err := r.db.RetrieveByEntityIDAndName(ctx, entityID, roleName)
+func (r *RolesSvc) ListMembers(ctx context.Context, entityID, roleName string, limit, offset uint64) (roles.MembersPage, error) {
+	ro, err := r.db.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return roles.MembersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	mp, err := r.db.ListMembers(ctx, ro.ID, limit, offset)
+	mp, err := r.db.RoleListMembers(ctx, ro.ID, limit, offset)
 	if err != nil {
 		return roles.MembersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return mp, nil
 }
 
-func (r *rolesSvc) CheckMembersExists(ctx context.Context, entityID, roleName string, members []string) (bool, error) {
-	ro, err := r.db.RetrieveByEntityIDAndName(ctx, entityID, roleName)
+func (r *RolesSvc) CheckMembersExists(ctx context.Context, entityID, roleName string, members []string) (bool, error) {
+	ro, err := r.db.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return false, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	result, err := r.db.CheckMembersExists(ctx, ro.ID, members)
+	result, err := r.db.RoleCheckMembersExists(ctx, ro.ID, members)
 	if err != nil {
 		return true, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return result, nil
 }
 
-func (r *rolesSvc) RemoveMembers(ctx context.Context, entityID, roleName string, members []string) (err error) {
-	ro, err := r.db.RetrieveByEntityIDAndName(ctx, entityID, roleName)
+func (r *RolesSvc) RemoveMembers(ctx context.Context, entityID, roleName string, members []string) (err error) {
+	ro, err := r.db.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
@@ -549,14 +549,14 @@ func (r *rolesSvc) RemoveMembers(ctx context.Context, entityID, roleName string,
 
 	ro.UpdatedAt = time.Now()
 	// ro.UpdatedBy = userID
-	if err := r.db.RemoveMembers(ctx, ro, members); err != nil {
+	if err := r.db.RoleRemoveMembers(ctx, ro, members); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	return nil
 }
 
-func (r *rolesSvc) RemoveAllMembers(ctx context.Context, entityID, roleName string) (err error) {
-	ro, err := r.db.RetrieveByEntityIDAndName(ctx, entityID, roleName)
+func (r *RolesSvc) RemoveAllMembers(ctx context.Context, entityID, roleName string) (err error) {
+	ro, err := r.db.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
@@ -578,7 +578,7 @@ func (r *rolesSvc) RemoveAllMembers(ctx context.Context, entityID, roleName stri
 	ro.UpdatedAt = time.Now()
 	// ro.UpdatedBy = userID
 
-	if err := r.db.RemoveAllMembers(ctx, ro); err != nil {
+	if err := r.db.RoleRemoveAllMembers(ctx, ro); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	return nil

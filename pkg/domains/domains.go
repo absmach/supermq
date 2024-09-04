@@ -214,6 +214,7 @@ type Service interface {
 	UpdateDomain(ctx context.Context, token string, id string, d DomainReq) (Domain, error)
 	ChangeDomainStatus(ctx context.Context, token string, id string, d DomainReq) (Domain, error)
 	ListDomains(ctx context.Context, token string, page Page) (DomainsPage, error)
+	roles.Roles
 }
 
 // DomainsRepository specifies Domain persistence API.
@@ -237,4 +238,6 @@ type DomainsRepository interface {
 
 	// ListDomains list all the domains
 	ListDomains(ctx context.Context, pm Page) (DomainsPage, error)
+
+	roles.Repository
 }

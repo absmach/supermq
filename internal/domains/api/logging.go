@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/pkg/domains"
+	entityRolesAPI "github.com/absmach/magistrala/pkg/entityroles/api"
 )
 
 var _ domains.Service = (*loggingMiddleware)(nil)
@@ -18,11 +19,17 @@ var _ domains.Service = (*loggingMiddleware)(nil)
 type loggingMiddleware struct {
 	logger *slog.Logger
 	svc    domains.Service
+	entityRolesAPI.RolesSvcLoggingMiddleware
 }
 
 // LoggingMiddleware adds logging facilities to the core service.
 func LoggingMiddleware(svc domains.Service, logger *slog.Logger) domains.Service {
-	return &loggingMiddleware{logger, svc}
+	rolesSvcLoggingMiddleware := entityRolesAPI.NewRolesSvcLoggingMiddleware("domains", svc, logger)
+	return &loggingMiddleware{
+		logger:                    logger,
+		svc:                       svc,
+		RolesSvcLoggingMiddleware: rolesSvcLoggingMiddleware,
+	}
 }
 
 func (lm *loggingMiddleware) CreateDomain(ctx context.Context, token string, d domains.Domain) (do domains.Domain, err error) {

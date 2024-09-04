@@ -7,6 +7,7 @@ import (
 	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/pkg/domains"
+	"github.com/absmach/magistrala/pkg/entityroles"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 )
@@ -26,6 +27,7 @@ type service struct {
 	domains    domains.DomainsRepository
 	auth       magistrala.AuthServiceClient
 	idProvider magistrala.IDProvider
+	entityroles.RolesSvc
 }
 
 var _ domains.Service = (*service)(nil)

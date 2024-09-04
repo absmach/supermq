@@ -13,6 +13,7 @@ import (
 
 	"github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/domains"
+	entityRolesRepo "github.com/absmach/magistrala/pkg/entityroles/postrgres"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	"github.com/absmach/magistrala/pkg/postgres"
@@ -24,13 +25,16 @@ var _ domains.DomainsRepository = (*domainRepo)(nil)
 
 type domainRepo struct {
 	db postgres.Database
+	entityRolesRepo.RolesSvcRepo
 }
 
 // NewDomainRepository instantiates a PostgreSQL
 // implementation of Domain repository.
 func NewDomainRepository(db postgres.Database) domains.DomainsRepository {
+	rolesSvcRepo := entityRolesRepo.NewRolesSvcRepository(db)
 	return &domainRepo{
-		db: db,
+		db:           db,
+		RolesSvcRepo: rolesSvcRepo,
 	}
 }
 

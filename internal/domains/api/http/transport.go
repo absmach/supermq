@@ -10,13 +10,12 @@ import (
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/domains"
 	entityRoleHttp "github.com/absmach/magistrala/pkg/entityroles/api/http"
-	"github.com/absmach/magistrala/pkg/roles"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-func MakeHandler(svc domains.Service, roles roles.Roles, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
+func MakeHandler(svc domains.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
@@ -75,7 +74,7 @@ func MakeHandler(svc domains.Service, roles roles.Roles, mux *chi.Mux, logger *s
 		})
 	})
 
-	mux = entityRoleHttp.RolesHandler(roles, "/domains", mux, logger)
+	mux = entityRoleHttp.RolesHandler(svc, "/domains", mux, logger)
 
 	return mux
 }

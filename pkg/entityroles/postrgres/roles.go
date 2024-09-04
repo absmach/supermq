@@ -17,16 +17,16 @@ import (
 	"github.com/absmach/magistrala/pkg/roles"
 )
 
-var _ roles.Repository = (*rolesRepo)(nil)
+var _ roles.Repository = (*RolesSvcRepo)(nil)
 
-type rolesRepo struct {
+type RolesSvcRepo struct {
 	db postgres.Database
 }
 
-// NewRolesRepository instantiates a PostgreSQL
+// NewRolesSvcRepository instantiates a PostgreSQL
 // implementation of Roles repository.
-func NewRolesRepository(db postgres.Database) roles.Repository {
-	return &rolesRepo{
+func NewRolesSvcRepository(db postgres.Database) RolesSvcRepo {
+	return RolesSvcRepo{
 		db: db,
 	}
 }
@@ -119,7 +119,7 @@ func toRole(r dbRole) roles.Role {
 	}
 
 }
-func (repo *rolesRepo) Add(ctx context.Context, rps []roles.RoleProvision) ([]roles.Role, error) {
+func (repo *RolesSvcRepo) AddRoles(ctx context.Context, rps []roles.RoleProvision) ([]roles.Role, error) {
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -195,7 +195,7 @@ func (repo *rolesRepo) Add(ctx context.Context, rps []roles.RoleProvision) ([]ro
 	return retRoles, nil
 }
 
-func (repo *rolesRepo) Remove(ctx context.Context, roleIDs []string) error {
+func (repo *RolesSvcRepo) RemoveRoles(ctx context.Context, roleIDs []string) error {
 	q := "DELETE FROM roles  WHERE id IN (:role_id) ;"
 
 	params := map[string]interface{}{
@@ -213,7 +213,7 @@ func (repo *rolesRepo) Remove(ctx context.Context, roleIDs []string) error {
 }
 
 // Update only role name, don't update ID
-func (repo *rolesRepo) Update(ctx context.Context, role roles.Role) (roles.Role, error) {
+func (repo *RolesSvcRepo) UpdateRole(ctx context.Context, role roles.Role) (roles.Role, error) {
 	var query []string
 	var upq string
 	if role.Name != "" {
@@ -247,7 +247,7 @@ func (repo *rolesRepo) Update(ctx context.Context, role roles.Role) (roles.Role,
 	return roles.Role{}, repoerr.ErrNotFound
 }
 
-func (repo *rolesRepo) Retrieve(ctx context.Context, roleID string) (roles.Role, error) {
+func (repo *RolesSvcRepo) RetrieveRole(ctx context.Context, roleID string) (roles.Role, error) {
 	q := `SELECT id, name, entity_id, created_by, created_at, updated_by, updated_at
         FROM roles WHERE id = :id`
 
@@ -273,7 +273,7 @@ func (repo *rolesRepo) Retrieve(ctx context.Context, roleID string) (roles.Role,
 	return roles.Role{}, repoerr.ErrNotFound
 }
 
-func (repo *rolesRepo) RetrieveByEntityIDAndName(ctx context.Context, entityID, roleName string) (roles.Role, error) {
+func (repo *RolesSvcRepo) RetrieveRoleByEntityIDAndName(ctx context.Context, entityID, roleName string) (roles.Role, error) {
 	q := `SELECT id, name, entity_id, created_by, created_at, updated_by, updated_at
         FROM roles WHERE entity_id = :entity_id and name = :name`
 
@@ -299,7 +299,7 @@ func (repo *rolesRepo) RetrieveByEntityIDAndName(ctx context.Context, entityID, 
 
 	return roles.Role{}, repoerr.ErrNotFound
 }
-func (repo *rolesRepo) RetrieveAll(ctx context.Context, entityID string, limit, offset uint64) (roles.RolePage, error) {
+func (repo *RolesSvcRepo) RetrieveAllRoles(ctx context.Context, entityID string, limit, offset uint64) (roles.RolePage, error) {
 	q := `SELECT id, name, entity_id, created_by, created_at, updated_by, updated_at
         FROM roles WHERE entity_id = :entity_id ORDER BY created_at LIMIT :limit OFFSET :offset;`
 
@@ -341,7 +341,7 @@ func (repo *rolesRepo) RetrieveAll(ctx context.Context, entityID string, limit, 
 	return page, nil
 }
 
-func (repo *rolesRepo) AddOperation(ctx context.Context, role roles.Role, operations []roles.Operation) (ops []roles.Operation, err error) {
+func (repo *RolesSvcRepo) RoleAddOperation(ctx context.Context, role roles.Role, operations []roles.Operation) (ops []roles.Operation, err error) {
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -379,10 +379,10 @@ func (repo *rolesRepo) AddOperation(ctx context.Context, role roles.Role, operat
 		return []roles.Operation{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
-	return repo.ListOperations(ctx, role.ID)
+	return repo.RoleListOperations(ctx, role.ID)
 }
 
-func (repo *rolesRepo) ListOperations(ctx context.Context, roleID string) ([]roles.Operation, error) {
+func (repo *RolesSvcRepo) RoleListOperations(ctx context.Context, roleID string) ([]roles.Operation, error) {
 	q := `SELECT role_id, operation FROM role_operations WHERE role_id = :role_id ;`
 
 	dbrop := dbRoleOperation{
@@ -407,7 +407,7 @@ func (repo *rolesRepo) ListOperations(ctx context.Context, roleID string) ([]rol
 	return items, nil
 }
 
-func (repo *rolesRepo) CheckOperationsExists(ctx context.Context, roleID string, operations []roles.Operation) (bool, error) {
+func (repo *RolesSvcRepo) RoleCheckOperationsExists(ctx context.Context, roleID string, operations []roles.Operation) (bool, error) {
 	q := ` SELECT COUNT(*) FROM role_operations WHERE role_id = :role_id AND operation IN (:operations)`
 
 	params := map[string]interface{}{
@@ -436,7 +436,7 @@ func (repo *rolesRepo) CheckOperationsExists(ctx context.Context, roleID string,
 	return true, nil
 }
 
-func (repo *rolesRepo) RemoveOperations(ctx context.Context, role roles.Role, operations []roles.Operation) (err error) {
+func (repo *RolesSvcRepo) RoleRemoveOperations(ctx context.Context, role roles.Role, operations []roles.Operation) (err error) {
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -473,7 +473,7 @@ func (repo *rolesRepo) RemoveOperations(ctx context.Context, role roles.Role, op
 	return nil
 }
 
-func (repo *rolesRepo) RemoveAllOperations(ctx context.Context, role roles.Role) error {
+func (repo *RolesSvcRepo) RoleRemoveAllOperations(ctx context.Context, role roles.Role) error {
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
@@ -506,7 +506,7 @@ func (repo *rolesRepo) RemoveAllOperations(ctx context.Context, role roles.Role)
 	return nil
 }
 
-func (repo *rolesRepo) AddMembers(ctx context.Context, role roles.Role, members []string) ([]string, error) {
+func (repo *RolesSvcRepo) RoleAddMembers(ctx context.Context, role roles.Role, members []string) ([]string, error) {
 	mq := `INSERT INTO role_members (role_id, member)
         VALUES (:role_id, :member)
         RETURNING role_id, member`
@@ -546,7 +546,7 @@ func (repo *rolesRepo) AddMembers(ctx context.Context, role roles.Role, members 
 	return members, nil
 }
 
-func (repo *rolesRepo) ListMembers(ctx context.Context, roleID string, limit, offset uint64) (roles.MembersPage, error) {
+func (repo *RolesSvcRepo) RoleListMembers(ctx context.Context, roleID string, limit, offset uint64) (roles.MembersPage, error) {
 	q := `SELECT role_id, member FROM role_members WHERE role_id = :role_id ORDER BY created_at LIMIT :limit OFFSET :offset;`
 
 	dbrmems := dbRoleMember{
@@ -585,7 +585,7 @@ func (repo *rolesRepo) ListMembers(ctx context.Context, roleID string, limit, of
 
 }
 
-func (repo *rolesRepo) CheckMembersExists(ctx context.Context, roleID string, members []string) (bool, error) {
+func (repo *RolesSvcRepo) RoleCheckMembersExists(ctx context.Context, roleID string, members []string) (bool, error) {
 	q := ` SELECT COUNT(*) FROM role_members WHERE role_id = :role_id AND operation IN (:members)`
 
 	params := map[string]interface{}{
@@ -614,7 +614,7 @@ func (repo *rolesRepo) CheckMembersExists(ctx context.Context, roleID string, me
 	return true, nil
 }
 
-func (repo *rolesRepo) RemoveMembers(ctx context.Context, role roles.Role, members []string) (err error) {
+func (repo *RolesSvcRepo) RoleRemoveMembers(ctx context.Context, role roles.Role, members []string) (err error) {
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
@@ -649,7 +649,7 @@ func (repo *rolesRepo) RemoveMembers(ctx context.Context, role roles.Role, membe
 	return nil
 }
 
-func (repo *rolesRepo) RemoveAllMembers(ctx context.Context, role roles.Role) (err error) {
+func (repo *RolesSvcRepo) RoleRemoveAllMembers(ctx context.Context, role roles.Role) (err error) {
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)

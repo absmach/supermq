@@ -97,20 +97,20 @@ type Roles interface {
 
 //go:generate mockery --name Repository --output=./mocks --filename rolesRepo.go --quiet --note "Copyright (c) Abstract Machines"
 type Repository interface {
-	Add(ctx context.Context, rps []RoleProvision) ([]Role, error)
-	Remove(ctx context.Context, roleIDs []string) error
-	Update(ctx context.Context, ro Role) (Role, error)
-	Retrieve(ctx context.Context, roleID string) (Role, error)
-	RetrieveByEntityIDAndName(ctx context.Context, entityID, roleName string) (Role, error)
-	RetrieveAll(ctx context.Context, entityID string, limit, offset uint64) (RolePage, error)
-	AddOperation(ctx context.Context, role Role, operations []Operation) (ops []Operation, err error)
-	ListOperations(ctx context.Context, roleID string) ([]Operation, error)
-	CheckOperationsExists(ctx context.Context, roleID string, operations []Operation) (bool, error)
-	RemoveOperations(ctx context.Context, role Role, operations []Operation) (err error)
-	RemoveAllOperations(ctx context.Context, role Role) error
-	AddMembers(ctx context.Context, role Role, members []string) ([]string, error)
-	ListMembers(ctx context.Context, roleID string, limit, offset uint64) (MembersPage, error)
-	CheckMembersExists(ctx context.Context, roleID string, members []string) (bool, error)
-	RemoveMembers(ctx context.Context, role Role, members []string) (err error)
-	RemoveAllMembers(ctx context.Context, role Role) (err error)
+	AddRoles(ctx context.Context, rps []RoleProvision) ([]Role, error)
+	RemoveRoles(ctx context.Context, roleIDs []string) error
+	UpdateRole(ctx context.Context, ro Role) (Role, error)
+	RetrieveRole(ctx context.Context, roleID string) (Role, error)
+	RetrieveRoleByEntityIDAndName(ctx context.Context, entityID, roleName string) (Role, error)
+	RetrieveAllRoles(ctx context.Context, entityID string, limit, offset uint64) (RolePage, error)
+	RoleAddOperation(ctx context.Context, role Role, operations []Operation) (ops []Operation, err error)
+	RoleListOperations(ctx context.Context, roleID string) ([]Operation, error)
+	RoleCheckOperationsExists(ctx context.Context, roleID string, operations []Operation) (bool, error)
+	RoleRemoveOperations(ctx context.Context, role Role, operations []Operation) (err error)
+	RoleRemoveAllOperations(ctx context.Context, role Role) error
+	RoleAddMembers(ctx context.Context, role Role, members []string) ([]string, error)
+	RoleListMembers(ctx context.Context, roleID string, limit, offset uint64) (MembersPage, error)
+	RoleCheckMembersExists(ctx context.Context, roleID string, members []string) (bool, error)
+	RoleRemoveMembers(ctx context.Context, role Role, members []string) (err error)
+	RoleRemoveAllMembers(ctx context.Context, role Role) (err error)
 }

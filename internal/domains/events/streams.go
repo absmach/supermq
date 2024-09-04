@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/absmach/magistrala/pkg/domains"
+	entityRolesEvents "github.com/absmach/magistrala/pkg/entityroles/events"
 	"github.com/absmach/magistrala/pkg/events"
 	"github.com/absmach/magistrala/pkg/events/store"
 )
@@ -18,6 +19,7 @@ var _ domains.Service = (*eventStore)(nil)
 type eventStore struct {
 	events.Publisher
 	svc domains.Service
+	entityRolesEvents.RolesSvcEventStoreMiddleware
 }
 
 // NewEventStoreMiddleware returns wrapper around auth service that sends
@@ -28,9 +30,12 @@ func NewEventStoreMiddleware(ctx context.Context, svc domains.Service, url strin
 		return nil, err
 	}
 
+	rolesSvcEventStoreMiddleware := entityRolesEvents.NewRolesSvcEventStoreMiddleware("domains", svc, publisher)
+
 	return &eventStore{
-		svc:       svc,
-		Publisher: publisher,
+		svc:                          svc,
+		Publisher:                    publisher,
+		RolesSvcEventStoreMiddleware: rolesSvcEventStoreMiddleware,
 	}, nil
 }
 

@@ -31,12 +31,10 @@ import (
 	dtracing "github.com/absmach/magistrala/internal/domains/tracing"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/domains"
-	"github.com/absmach/magistrala/pkg/entityroles"
 	"github.com/absmach/magistrala/pkg/jaeger"
 	"github.com/absmach/magistrala/pkg/postgres"
 	pgclient "github.com/absmach/magistrala/pkg/postgres"
 	"github.com/absmach/magistrala/pkg/prometheus"
-	"github.com/absmach/magistrala/pkg/roles"
 	"github.com/absmach/magistrala/pkg/server"
 	grpcserver "github.com/absmach/magistrala/pkg/server/grpc"
 	httpserver "github.com/absmach/magistrala/pkg/server/http"
@@ -110,7 +108,16 @@ func main() {
 		logger.Error(err.Error())
 	}
 
-	db, err := pgclient.Setup(dbConfig, *apostgres.Migration())
+	dm, err := dpostgres.Migration()
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed create migrations for domain: %s", err.Error()))
+		exitCode = 1
+		return
+	}
+	am := apostgres.Migration()
+	am.Migrations = append(am.Migrations, dm.Migrations...)
+
+	db, err := pgclient.Setup(dbConfig, *am)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
@@ -177,7 +184,7 @@ func main() {
 	defer authHandler.Close()
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	dsvc, droles := newDomainService(ctx, db, tracer, cfg, dbConfig, authServiceClient, logger)
+	dsvc := newDomainService(ctx, db, tracer, cfg, dbConfig, authServiceClient, logger)
 
 	httpServerConfig := server.Config{Port: defSvcHTTPPort}
 	if err := env.ParseWithOptions(&httpServerConfig, env.Options{Prefix: envPrefixHTTP}); err != nil {
@@ -185,7 +192,7 @@ func main() {
 		exitCode = 1
 		return
 	}
-	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, dsvc, droles, logger, cfg.InstanceID), logger)
+	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, dsvc, logger, cfg.InstanceID), logger)
 
 	grpcServerConfig := server.Config{Port: defSvcGRPCPort}
 	if err := env.ParseWithOptions(&grpcServerConfig, env.Options{Prefix: envPrefixGrpc}); err != nil {
@@ -268,7 +275,7 @@ func newService(_ context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config,
 	return svc
 }
 
-func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, authClient magistrala.AuthServiceClient, logger *slog.Logger) (domains.Service, roles.Roles) {
+func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, authClient magistrala.AuthServiceClient, logger *slog.Logger) domains.Service {
 	// dlogger, err := mglog.New(os.Stdout, cfg.LogLevel)
 	// if err != nil {
 	// 	log.Fatalf("failed to init logger: %s", err.Error())
@@ -277,18 +284,17 @@ func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 	domainsRepo := dpostgres.NewDomainRepository(database)
 
-	domainsRolesProvider := entityroles.NewRole("domains")
 	idProvider := uuid.New()
 
 	svc := domainsSvc.New(domainsRepo, authClient, idProvider)
 	svc, err := events.NewEventStoreMiddleware(ctx, svc, cfg.ESURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to init event store middleware : %s", err))
-		return nil, nil
+		return nil
 	}
 	svc = dapi.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics("domains", "api")
 	svc = dapi.MetricsMiddleware(svc, counter, latency)
 	svc = dtracing.New(svc, tracer)
-	return svc, domainsRolesProvider
+	return svc
 }

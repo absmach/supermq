@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/absmach/magistrala/pkg/domains"
+	entityRolesTrace "github.com/absmach/magistrala/pkg/entityroles/tracing"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -13,11 +14,12 @@ var _ domains.Service = (*tracingMiddleware)(nil)
 type tracingMiddleware struct {
 	tracer trace.Tracer
 	svc    domains.Service
+	entityRolesTrace.RolesSvcTracingMiddleware
 }
 
 // New returns a new group service with tracing capabilities.
 func New(svc domains.Service, tracer trace.Tracer) domains.Service {
-	return &tracingMiddleware{tracer, svc}
+	return &tracingMiddleware{tracer, svc, entityRolesTrace.NewRolesSvcTracingMiddleware("domain", svc, tracer)}
 }
 
 func (tm *tracingMiddleware) CreateDomain(ctx context.Context, token string, d domains.Domain) (domains.Domain, error) {
