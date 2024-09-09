@@ -129,6 +129,11 @@ const (
 	GroupViewRoleUsers     roles.Operation = "group_view_role_users"
 )
 
+const (
+	BuiltInRoleAdmin      = "admin"
+	BuiltInRoleMembership = "membership"
+)
+
 func AllowedOperations() []roles.Operation {
 	return []roles.Operation{
 		Update,
@@ -174,16 +179,16 @@ func AllowedOperations() []roles.Operation {
 	}
 }
 
-func memberRoleOperations() []roles.Operation {
+func membershipRoleOperations() []roles.Operation {
 	return []roles.Operation{
-		Read,
+		Membership,
 	}
 }
 
-func BuiltInRoles() map[string][]roles.Operation {
-	return map[string][]roles.Operation{
-		"admin":  AllowedOperations(),
-		"member": memberRoleOperations(),
+func BuiltInRoles() map[roles.BuiltInRoleName][]roles.Operation {
+	return map[roles.BuiltInRoleName][]roles.Operation{
+		"admin":      AllowedOperations(),
+		"membership": membershipRoleOperations(),
 	}
 }
 

@@ -106,7 +106,7 @@ func (res deleteRoleRes) Empty() bool {
 }
 
 type addRoleOperationsRes struct {
-	Operations []roles.Operation `json:"operations"`
+	Operations []string `json:"operations"`
 }
 
 func (res addRoleOperationsRes) Code() int {
@@ -122,7 +122,7 @@ func (res addRoleOperationsRes) Empty() bool {
 }
 
 type listRoleOperationsRes struct {
-	Operations []roles.Operation `json:"operations"`
+	Operations []string `json:"operations"`
 }
 
 func (res listRoleOperationsRes) Code() int {
@@ -134,7 +134,7 @@ func (res listRoleOperationsRes) Headers() map[string]string {
 }
 
 func (res listRoleOperationsRes) Empty() bool {
-	return len(res.Operations) == 0
+	return false
 }
 
 type deleteRoleOperationsRes struct{}

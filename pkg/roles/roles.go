@@ -10,6 +10,32 @@ import (
 
 type Operation string
 
+func (op Operation) String() string {
+	return string(op)
+}
+
+type Member string
+
+func (mem Member) String() string {
+	return string(mem)
+}
+
+type RoleName string
+
+func (r RoleName) String() string {
+	return string(r)
+}
+
+type BuiltInRoleName RoleName
+
+func (b BuiltInRoleName) ToRoleName() RoleName {
+	return RoleName(b)
+}
+
+func (b BuiltInRoleName) String() string {
+	return string(b)
+}
+
 type Role struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`
@@ -22,8 +48,8 @@ type Role struct {
 
 type RoleProvision struct {
 	Role
-	OptionalOperations []Operation `json:"-"`
-	OptionalMembers    []string    `json:"-"`
+	OptionalOperations []string `json:"-"`
+	OptionalMembers    []string `json:"-"`
 }
 
 type RolePage struct {
@@ -45,8 +71,10 @@ type OptionalPolicy struct {
 	Subject         string
 	SubjectType     string
 	SubjectRelation string
+	SubjectKind     string
 	Object          string
 	ObjectType      string
+	ObjectKind      string
 	Relation        string
 	Permission      string
 }
@@ -59,40 +87,42 @@ type Roles interface {
 	// List inbuilt roles and its operations
 
 	// AddNewEntityRoles adds roles to a newly creating entity.
-	AddNewEntityRoles(ctx context.Context, entityID string, newEntityDefaultRoles map[string][]string, optionalPolicies []OptionalPolicy) ([]Role, error)
+	// AddNewEntityRoles(ctx context.Context, token, entityID string, newBuiltInRoleMembers map[BuiltInRoleName][]Member, optionalPolicies []OptionalPolicy) ([]RoleProvision, error)
+
+	// RemoveNewEntityRoles(ctx context.Context, token, entityID string, optionalPolicies []OptionalPolicy, newRolesProvision []RoleProvision) error
 
 	// Add New role to entity
-	AddRole(ctx context.Context, entityID, roleName string, optionalOperations []Operation, optionalMembers []string) (Role, error)
+	AddRole(ctx context.Context, token, entityID, roleName string, optionalOperations []string, optionalMembers []string) (Role, error)
 
 	// Remove removes the roles of entity.
-	RemoveRole(ctx context.Context, entityID, roleName string) error
+	RemoveRole(ctx context.Context, token, entityID, roleName string) error
 
 	// UpdateName update the name of the entity role.
-	UpdateRoleName(ctx context.Context, entityID, oldRoleName, newRoleName string) (Role, error)
+	UpdateRoleName(ctx context.Context, token, entityID, oldRoleName, newRoleName string) (Role, error)
 
-	RetrieveRole(ctx context.Context, entityID, roleName string) (Role, error)
+	RetrieveRole(ctx context.Context, token, entityID, roleName string) (Role, error)
 
-	RetrieveAllRoles(ctx context.Context, entityID string, limit, offset uint64) (RolePage, error)
+	RetrieveAllRoles(ctx context.Context, token, entityID string, limit, offset uint64) (RolePage, error)
 
-	RoleAddOperation(ctx context.Context, entityID, roleName string, operations []Operation) (ops []Operation, err error)
+	RoleAddOperations(ctx context.Context, token, entityID, roleName string, operations []string) (ops []string, err error)
 
-	RoleListOperations(ctx context.Context, entityID, roleName string) ([]Operation, error)
+	RoleListOperations(ctx context.Context, token, entityID, roleName string) ([]string, error)
 
-	RoleCheckOperationsExists(ctx context.Context, entityID, roleName string, operations []Operation) (bool, error)
+	RoleCheckOperationsExists(ctx context.Context, token, entityID, roleName string, operations []string) (bool, error)
 
-	RoleRemoveOperations(ctx context.Context, entityID, roleName string, operations []Operation) (err error)
+	RoleRemoveOperations(ctx context.Context, token, entityID, roleName string, operations []string) (err error)
 
-	RoleRemoveAllOperations(ctx context.Context, entityID, roleName string) error
+	RoleRemoveAllOperations(ctx context.Context, token, entityID, roleName string) error
 
-	RoleAddMembers(ctx context.Context, entityID, roleName string, members []string) ([]string, error)
+	RoleAddMembers(ctx context.Context, token, entityID, roleName string, members []string) ([]string, error)
 
-	RoleListMembers(ctx context.Context, entityID, roleName string, limit, offset uint64) (MembersPage, error)
+	RoleListMembers(ctx context.Context, token, entityID, roleName string, limit, offset uint64) (MembersPage, error)
 
-	RoleCheckMembersExists(ctx context.Context, entityID, roleName string, members []string) (bool, error)
+	RoleCheckMembersExists(ctx context.Context, token, entityID, roleName string, members []string) (bool, error)
 
-	RoleRemoveMembers(ctx context.Context, entityID, roleName string, members []string) (err error)
+	RoleRemoveMembers(ctx context.Context, token, entityID, roleName string, members []string) (err error)
 
-	RoleRemoveAllMembers(ctx context.Context, entityID, roleName string) (err error)
+	RoleRemoveAllMembers(ctx context.Context, token, entityID, roleName string) (err error)
 }
 
 //go:generate mockery --name Repository --output=./mocks --filename rolesRepo.go --quiet --note "Copyright (c) Abstract Machines"
@@ -103,10 +133,10 @@ type Repository interface {
 	RetrieveRole(ctx context.Context, roleID string) (Role, error)
 	RetrieveRoleByEntityIDAndName(ctx context.Context, entityID, roleName string) (Role, error)
 	RetrieveAllRoles(ctx context.Context, entityID string, limit, offset uint64) (RolePage, error)
-	RoleAddOperation(ctx context.Context, role Role, operations []Operation) (ops []Operation, err error)
-	RoleListOperations(ctx context.Context, roleID string) ([]Operation, error)
-	RoleCheckOperationsExists(ctx context.Context, roleID string, operations []Operation) (bool, error)
-	RoleRemoveOperations(ctx context.Context, role Role, operations []Operation) (err error)
+	RoleAddOperation(ctx context.Context, role Role, operations []string) (ops []string, err error)
+	RoleListOperations(ctx context.Context, roleID string) ([]string, error)
+	RoleCheckOperationsExists(ctx context.Context, roleID string, operations []string) (bool, error)
+	RoleRemoveOperations(ctx context.Context, role Role, operations []string) (err error)
 	RoleRemoveAllOperations(ctx context.Context, role Role) error
 	RoleAddMembers(ctx context.Context, role Role, members []string) ([]string, error)
 	RoleListMembers(ctx context.Context, roleID string, limit, offset uint64) (MembersPage, error)

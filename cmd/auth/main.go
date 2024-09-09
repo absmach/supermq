@@ -187,7 +187,7 @@ func main() {
 
 	dsvc, err := newDomainService(ctx, db, tracer, cfg, dbConfig, authServiceClient, logger)
 	if err != nil {
-		logger.Error(fmt.Sprintf("failed to create domain service: %s", svcName, err.Error()))
+		logger.Error(fmt.Sprintf("failed to create %s service: %s", svcName, err.Error()))
 		exitCode = 1
 		return
 	}
@@ -281,11 +281,6 @@ func newService(_ context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config,
 }
 
 func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, authClient magistrala.AuthServiceClient, logger *slog.Logger) (domains.Service, error) {
-	// dlogger, err := mglog.New(os.Stdout, cfg.LogLevel)
-	// if err != nil {
-	// 	log.Fatalf("failed to init logger: %s", err.Error())
-	// }
-
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 	domainsRepo := dpostgres.NewDomainRepository(database)
 
@@ -294,10 +289,13 @@ func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg
 	if err != nil {
 		return nil, fmt.Errorf("failed to init short id provider : %w", err)
 	}
-	svc := domainsSvc.New(domainsRepo, authClient, idProvider, sidProvider)
+	svc, err := domainsSvc.New(domainsRepo, authClient, idProvider, sidProvider)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init domain service: %w", err)
+	}
 	svc, err = events.NewEventStoreMiddleware(ctx, svc, cfg.ESURL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to init event store middleware : %w", err)
+		return nil, fmt.Errorf("failed to init domain event store middleware: %w", err)
 	}
 	svc = dapi.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics("domains", "api")

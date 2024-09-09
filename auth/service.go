@@ -515,7 +515,7 @@ func (svc service) checkUserDomain(ctx context.Context, key Key) (subject string
 		if err = svc.Authorize(ctx, PolicyReq{
 			Subject:     domainUserSubject,
 			SubjectType: UserType,
-			Permission:  MembershipPermission,
+			Permission:  domains.MembershipPermission,
 			Object:      key.Domain,
 			ObjectType:  DomainType,
 		}); err != nil {

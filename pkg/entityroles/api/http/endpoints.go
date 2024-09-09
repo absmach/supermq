@@ -15,11 +15,7 @@ func CreateRoleEndpoint(svc roles.Roles) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		roOps := []roles.Operation{}
-		for _, ops := range req.OptionalOperations {
-			roOps = append(roOps, roles.Operation(ops))
-		}
-		ro, err := svc.AddRole(ctx, req.entityID, req.RoleName, roOps, req.OptionalMembers)
+		ro, err := svc.AddRole(ctx, req.token, req.entityID, req.RoleName, req.OptionalMembers, req.OptionalMembers)
 		if err != nil {
 			return nil, err
 		}
@@ -33,7 +29,7 @@ func ListRolesEndpoint(svc roles.Roles) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		ros, err := svc.RetrieveAllRoles(ctx, req.entityID, req.limit, req.offset)
+		ros, err := svc.RetrieveAllRoles(ctx, req.token, req.entityID, req.limit, req.offset)
 		if err != nil {
 			return nil, err
 		}
@@ -47,7 +43,7 @@ func ViewRoleEndpoint(svc roles.Roles) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		ro, err := svc.RetrieveRole(ctx, req.entityID, req.roleName)
+		ro, err := svc.RetrieveRole(ctx, req.token, req.entityID, req.roleName)
 		if err != nil {
 			return nil, err
 		}
@@ -61,7 +57,7 @@ func UpdateRoleEndpoint(svc roles.Roles) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		ro, err := svc.UpdateRoleName(ctx, req.entityID, req.roleName, req.Name)
+		ro, err := svc.UpdateRoleName(ctx, req.token, req.entityID, req.roleName, req.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -74,7 +70,7 @@ func DeleteRoleEndpoint(svc roles.Roles) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		if err := svc.RemoveRole(ctx, req.entityID, req.roleName); err != nil {
+		if err := svc.RemoveRole(ctx, req.token, req.entityID, req.roleName); err != nil {
 			return nil, err
 		}
 		return deleteRoleRes{}, nil
@@ -86,11 +82,8 @@ func AddRoleOperationsEndpoint(svc roles.Roles) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		roOps := []roles.Operation{}
-		for _, ops := range req.Operations {
-			roOps = append(roOps, roles.Operation(ops))
-		}
-		ops, err := svc.RoleAddOperation(ctx, req.entityID, req.roleName, roOps)
+
+		ops, err := svc.RoleAddOperations(ctx, req.token, req.entityID, req.roleName, req.Operations)
 		if err != nil {
 			return nil, err
 		}
@@ -103,7 +96,7 @@ func ListRoleOperationsEndpoint(svc roles.Roles) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		ops, err := svc.RoleListOperations(ctx, req.entityID, req.roleName)
+		ops, err := svc.RoleListOperations(ctx, req.token, req.entityID, req.roleName)
 		if err != nil {
 			return nil, err
 		}
@@ -116,11 +109,8 @@ func DeleteRoleOperationsEndpoint(svc roles.Roles) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		roOps := []roles.Operation{}
-		for _, ops := range req.Operations {
-			roOps = append(roOps, roles.Operation(ops))
-		}
-		if err := svc.RoleRemoveOperations(ctx, req.entityID, req.roleName, roOps); err != nil {
+
+		if err := svc.RoleRemoveOperations(ctx, req.token, req.entityID, req.roleName, req.Operations); err != nil {
 			return nil, err
 		}
 		return deleteRoleOperationsRes{}, nil
@@ -132,7 +122,7 @@ func DeleteAllRoleOperationsEndpoint(svc roles.Roles) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		if err := svc.RoleRemoveAllOperations(ctx, req.entityID, req.roleName); err != nil {
+		if err := svc.RoleRemoveAllOperations(ctx, req.token, req.entityID, req.roleName); err != nil {
 			return nil, err
 		}
 		return deleteAllRoleOperationsRes{}, nil
@@ -144,7 +134,7 @@ func AddRoleMembersEndpoint(svc roles.Roles) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		members, err := svc.RoleAddMembers(ctx, req.entityID, req.roleName, req.Members)
+		members, err := svc.RoleAddMembers(ctx, req.token, req.entityID, req.roleName, req.Members)
 		if err != nil {
 			return nil, err
 		}
@@ -157,7 +147,7 @@ func ListRoleMembersEndpoint(svc roles.Roles) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		mp, err := svc.RoleListMembers(ctx, req.entityID, req.roleName, req.limit, req.offset)
+		mp, err := svc.RoleListMembers(ctx, req.token, req.entityID, req.roleName, req.limit, req.offset)
 		if err != nil {
 			return nil, err
 		}
@@ -170,7 +160,7 @@ func DeleteRoleMembersEndpoint(svc roles.Roles) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		if err := svc.RoleRemoveMembers(ctx, req.entityID, req.roleName, req.Members); err != nil {
+		if err := svc.RoleRemoveMembers(ctx, req.token, req.entityID, req.roleName, req.Members); err != nil {
 			return nil, err
 		}
 		return deleteRoleMembersRes{}, nil
@@ -182,7 +172,7 @@ func DeleteAllRoleMembersEndpoint(svc roles.Roles) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		if err := svc.RoleRemoveAllMembers(ctx, req.entityID, req.roleName); err != nil {
+		if err := svc.RoleRemoveAllMembers(ctx, req.token, req.entityID, req.roleName); err != nil {
 			return nil, err
 		}
 		return deleteAllRoleMemberRes{}, nil

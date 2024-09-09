@@ -35,6 +35,7 @@ type dbPage struct {
 	ID       string `db:"id"`
 	Name     string `db:"name"`
 	EntityID string `db:"entity_id"`
+	RoleID   string `db:"role_id"`
 	Limit    uint64 `db:"limit"`
 	Offset   uint64 `db:"offset"`
 }
@@ -308,7 +309,7 @@ func (repo *RolesSvcRepo) RetrieveAllRoles(ctx context.Context, entityID string,
 	}
 	defer rows.Close()
 
-	var items []roles.Role
+	items := []roles.Role{}
 	for rows.Next() {
 		dbr := dbRole{}
 		if err := rows.StructScan(&dbr); err != nil {
@@ -317,7 +318,7 @@ func (repo *RolesSvcRepo) RetrieveAllRoles(ctx context.Context, entityID string,
 
 		items = append(items, toRole(dbr))
 	}
-	cq := `SELECT COUNT(*) FROM roles WHERE entity_id = :entity_id LIMIT :limit OFFSET :offset;`
+	cq := `SELECT COUNT(*) FROM roles WHERE entity_id = :entity_id`
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbp)
 	if err != nil {
@@ -334,11 +335,11 @@ func (repo *RolesSvcRepo) RetrieveAllRoles(ctx context.Context, entityID string,
 	return page, nil
 }
 
-func (repo *RolesSvcRepo) RoleAddOperation(ctx context.Context, role roles.Role, operations []roles.Operation) (ops []roles.Operation, err error) {
+func (repo *RolesSvcRepo) RoleAddOperation(ctx context.Context, role roles.Role, operations []string) (ops []string, err error) {
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return []roles.Operation{}, errors.Wrap(repoerr.ErrCreateEntity, err)
+		return []string{}, errors.Wrap(repoerr.ErrCreateEntity, err)
 	}
 	defer func() {
 		if err != nil {
@@ -360,22 +361,22 @@ func (repo *RolesSvcRepo) RoleAddOperation(ctx context.Context, role roles.Role,
 		})
 	}
 	if _, err := tx.NamedExecContext(ctx, opq, rOps); err != nil {
-		return []roles.Operation{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+		return []string{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
 	upq := `UPDATE roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`
 	if _, err := tx.NamedExecContext(ctx, upq, toDBRoles(role)); err != nil {
-		return []roles.Operation{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+		return []string{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return []roles.Operation{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+		return []string{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
 	return repo.RoleListOperations(ctx, role.ID)
 }
 
-func (repo *RolesSvcRepo) RoleListOperations(ctx context.Context, roleID string) ([]roles.Operation, error) {
+func (repo *RolesSvcRepo) RoleListOperations(ctx context.Context, roleID string) ([]string, error) {
 	q := `SELECT role_id, operation FROM role_operations WHERE role_id = :role_id ;`
 
 	dbrop := dbRoleOperation{
@@ -384,23 +385,23 @@ func (repo *RolesSvcRepo) RoleListOperations(ctx context.Context, roleID string)
 
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbrop)
 	if err != nil {
-		return []roles.Operation{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return []string{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
 	defer rows.Close()
 
-	var items []roles.Operation
+	items := []string{}
 	for rows.Next() {
 		dbrop = dbRoleOperation{}
 		if err := rows.StructScan(&dbrop); err != nil {
-			return []roles.Operation{}, errors.Wrap(repoerr.ErrViewEntity, err)
+			return []string{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
 
-		items = append(items, roles.Operation(dbrop.Operation))
+		items = append(items, dbrop.Operation)
 	}
 	return items, nil
 }
 
-func (repo *RolesSvcRepo) RoleCheckOperationsExists(ctx context.Context, roleID string, operations []roles.Operation) (bool, error) {
+func (repo *RolesSvcRepo) RoleCheckOperationsExists(ctx context.Context, roleID string, operations []string) (bool, error) {
 	q := ` SELECT COUNT(*) FROM role_operations WHERE role_id = :role_id AND operation IN (:operations)`
 
 	params := map[string]interface{}{
@@ -429,7 +430,7 @@ func (repo *RolesSvcRepo) RoleCheckOperationsExists(ctx context.Context, roleID 
 	return true, nil
 }
 
-func (repo *RolesSvcRepo) RoleRemoveOperations(ctx context.Context, role roles.Role, operations []roles.Operation) (err error) {
+func (repo *RolesSvcRepo) RoleRemoveOperations(ctx context.Context, role roles.Role, operations []string) (err error) {
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -540,21 +541,23 @@ func (repo *RolesSvcRepo) RoleAddMembers(ctx context.Context, role roles.Role, m
 }
 
 func (repo *RolesSvcRepo) RoleListMembers(ctx context.Context, roleID string, limit, offset uint64) (roles.MembersPage, error) {
-	q := `SELECT role_id, member_id FROM role_members WHERE role_id = :role_id ORDER BY created_at LIMIT :limit OFFSET :offset;`
+	q := `SELECT role_id, member_id FROM role_members WHERE role_id = :role_id LIMIT :limit OFFSET :offset;`
 
-	dbrmems := dbRoleMember{
+	dbp := dbPage{
 		RoleID: roleID,
+		Limit:  limit,
+		Offset: offset,
 	}
 
-	rows, err := repo.db.NamedQueryContext(ctx, q, dbrmems)
+	rows, err := repo.db.NamedQueryContext(ctx, q, dbp)
 	if err != nil {
 		return roles.MembersPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
 	defer rows.Close()
 
-	var items []string
+	items := []string{}
 	for rows.Next() {
-		dbrmems = dbRoleMember{}
+		dbrmems := dbRoleMember{}
 		if err := rows.StructScan(&dbrmems); err != nil {
 			return roles.MembersPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
@@ -562,9 +565,9 @@ func (repo *RolesSvcRepo) RoleListMembers(ctx context.Context, roleID string, li
 		items = append(items, dbrmems.MemberID)
 	}
 
-	cq := `SELECT COUNT(*) FROM role_members WHERE role_id = :role_id LIMIT :limit OFFSET :offset;`
+	cq := `SELECT COUNT(*) FROM role_members WHERE role_id = :role_id`
 
-	total, err := postgres.Total(ctx, repo.db, cq, dbrmems)
+	total, err := postgres.Total(ctx, repo.db, cq, dbp)
 	if err != nil {
 		return roles.MembersPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}

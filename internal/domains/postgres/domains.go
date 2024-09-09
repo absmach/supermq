@@ -150,33 +150,32 @@ func (repo domainRepo) RetrieveAllByIDs(ctx context.Context, pm domains.Page) (d
 
 // ListDomains list domains of user.
 func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domains.DomainsPage, error) {
-	var q string
 	query, err := buildPageQuery(pm)
 	if err != nil {
 		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
 	}
 
-	q = `SELECT d.id as id, d.name as name, d.tags as tags, d.alias as alias, d.metadata as metadata, d.created_at as created_at, d.updated_at as updated_at, d.updated_by as updated_by, d.created_by as created_by, d.status as status, pc.relation as relation
+	q := `SELECT d.id as id, d.name as name, d.tags as tags, d.alias as alias, d.metadata as metadata, d.created_at as created_at, d.updated_at as updated_at, d.updated_by as updated_by, d.created_by as created_by, d.status as status
 	FROM domains as d
-	JOIN policies pc
-	ON pc.object_id = d.id`
+	JOIN roles r
+	ON r.entity_id = d.id
+	JOIN role_members rm
+	ON rm.role_id = r.id
+	`
 
-	// The service sends the user ID in the pagemeta subject field, which filters domains by joining with the policies table.
-	// For SuperAdmins, access to domains is granted without the policies filter.
-	// If the user making the request is a super admin, the service will assign an empty value to the pagemeta subject field.
-	// In the repository, when the pagemeta subject is empty, the query should be constructed without applying the policies filter.
 	if pm.SubjectID == "" {
 		q = `SELECT d.id as id, d.name as name, d.tags as tags, d.alias as alias, d.metadata as metadata, d.created_at as created_at, d.updated_at as updated_at, d.updated_by as updated_by, d.created_by as created_by, d.status as status
 		FROM domains as d`
 	}
 
-	q = fmt.Sprintf("%s %s LIMIT %d OFFSET %d", q, query, pm.Limit, pm.Offset)
+	q = fmt.Sprintf("%s %s  LIMIT :limit OFFSET :offset", q, query)
 
 	dbPage, err := toDBClientsPage(pm)
 	if err != nil {
 		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
-
+	fmt.Println(q)
+	fmt.Printf("%+v\n", dbPage)
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
 		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
@@ -188,9 +187,16 @@ func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domain
 		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 
-	cq := "SELECT COUNT(*) FROM domains d JOIN policies pc ON pc.object_id = d.id"
+	cq := `SELECT COUNT(*)
+	FROM domains as d
+	JOIN roles r
+	ON r.entity_id = d.id
+	JOIN role_members rm
+	ON rm.role_id = r.id
+	`
 	if pm.SubjectID == "" {
-		cq = "SELECT COUNT(*) FROM domains d"
+		cq = `SELECT COUNT(*)
+		FROM domains as d`
 	}
 	if query != "" {
 		cq = fmt.Sprintf(" %s %s", cq, query)
@@ -457,11 +463,11 @@ func buildPageQuery(pm domains.Page) (string, error) {
 	}
 
 	if pm.SubjectID != "" {
-		query = append(query, "pc.subject_id = :subject_id")
+		query = append(query, "rm.member_id = :subject_id")
 	}
 
 	if pm.Permission != "" && pm.SubjectID != "" {
-		query = append(query, "pc.relation = :permission")
+		query = append(query, "r.name = :permission")
 	}
 
 	if pm.Tag != "" {

@@ -262,7 +262,7 @@ func (req deleteRoleMembersReq) validate() error {
 		return apiutil.ErrMissingRoleName
 	}
 	if len(req.Members) == 0 {
-		return apiutil.ErrMissingPolicyEntityType
+		return apiutil.ErrMissingRoleMembers
 	}
 	return nil
 }

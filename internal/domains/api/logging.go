@@ -58,7 +58,7 @@ func (lm *loggingMiddleware) RetrieveDomain(ctx context.Context, token, id strin
 			slog.String("domain_id", id),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Retrieve domain failed", args...)
 			return
 		}
@@ -77,7 +77,7 @@ func (lm *loggingMiddleware) UpdateDomain(ctx context.Context, token, id string,
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Update domain failed", args...)
 			return
 		}
@@ -97,7 +97,7 @@ func (lm *loggingMiddleware) ChangeDomainStatus(ctx context.Context, token, id s
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Change domain status failed", args...)
 			return
 		}
@@ -117,7 +117,7 @@ func (lm *loggingMiddleware) ListDomains(ctx context.Context, token string, page
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("List domains failed", args...)
 			return
 		}

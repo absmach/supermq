@@ -33,7 +33,7 @@ func Migration(entityForeignKeyTableName, entityForeignKeyColumnName string) (*m
 						updated_at  TIMESTAMP,
 						updated_by  VARCHAR(254),
 						created_by  VARCHAR(254),
-                        CONSTRAINT  unique_role_name_entity_id_constraint UNIQUE ( role_name, entity_id),
+                        CONSTRAINT  unique_role_name_entity_id_constraint UNIQUE ( name, entity_id),
 						CONSTRAINT  fk_entity_id FOREIGN KEY(entity_id) REFERENCES %s(%s) ON DELETE CASCADE
                     );`, entityForeignKeyTableName, entityForeignKeyColumnName),
 
