@@ -17,6 +17,7 @@ import (
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	"github.com/absmach/magistrala/pkg/sid"
 	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -68,9 +69,10 @@ var (
 func newService() domains.Service {
 	drepo = new(mocks.DomainsRepository)
 	idProvider := uuid.NewMock()
+	sidProvider := sid.NewMock()
 	authMock = new(authmocks.AuthClient)
-
-	return domainSvc.New(drepo, authMock, idProvider)
+	ds, _ := domainSvc.New(drepo, authMock, idProvider, sidProvider)
+	return ds
 }
 
 func TestCreateDomain(t *testing.T) {

@@ -80,11 +80,11 @@ func DecodeDeleteRole(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func DecodeAddRoleOperations(_ context.Context, r *http.Request) (interface{}, error) {
+func DecodeAddRoleCapabilities(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
-	req := addRoleOperationsReq{
+	req := addRoleCapabilitiesReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, "entityID"),
 		roleName: chi.URLParam(r, "roleName"),
@@ -95,8 +95,8 @@ func DecodeAddRoleOperations(_ context.Context, r *http.Request) (interface{}, e
 	return req, nil
 }
 
-func DecodeListRoleOperations(_ context.Context, r *http.Request) (interface{}, error) {
-	req := listRoleOperationsReq{
+func DecodeListRoleCapabilities(_ context.Context, r *http.Request) (interface{}, error) {
+	req := listRoleCapabilitiesReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, "entityID"),
 		roleName: chi.URLParam(r, "roleName"),
@@ -104,11 +104,11 @@ func DecodeListRoleOperations(_ context.Context, r *http.Request) (interface{}, 
 	return req, nil
 }
 
-func DecodeDeleteRoleOperations(_ context.Context, r *http.Request) (interface{}, error) {
+func DecodeDeleteRoleCapabilities(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
-	req := deleteRoleOperationsReq{
+	req := deleteRoleCapabilitiesReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, "entityID"),
 		roleName: chi.URLParam(r, "roleName"),
@@ -119,8 +119,8 @@ func DecodeDeleteRoleOperations(_ context.Context, r *http.Request) (interface{}
 	return req, nil
 }
 
-func DecodeDeleteAllRoleOperations(_ context.Context, r *http.Request) (interface{}, error) {
-	req := deleteAllRoleOperationsReq{
+func DecodeDeleteAllRoleCapabilities(_ context.Context, r *http.Request) (interface{}, error) {
+	req := deleteAllRoleCapabilitiesReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, "entityID"),
 		roleName: chi.URLParam(r, "roleName"),

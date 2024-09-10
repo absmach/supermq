@@ -28,8 +28,8 @@ func NewRolesSvcEventStoreMiddleware(svcName string, svc roles.Roles, publisher 
 	}
 }
 
-func (res *RolesSvcEventStoreMiddleware) AddRole(ctx context.Context, token, entityID, roleName string, optionalOperations []string, optionalMembers []string) (roles.Role, error) {
-	return res.svc.AddRole(ctx, token, entityID, roleName, optionalOperations, optionalMembers)
+func (res *RolesSvcEventStoreMiddleware) AddRole(ctx context.Context, token, entityID, roleName string, optionalCapabilities []string, optionalMembers []string) (roles.Role, error) {
+	return res.svc.AddRole(ctx, token, entityID, roleName, optionalCapabilities, optionalMembers)
 }
 func (res *RolesSvcEventStoreMiddleware) RemoveRole(ctx context.Context, token, entityID, roleName string) error {
 	return res.svc.RemoveRole(ctx, token, entityID, roleName)
@@ -43,20 +43,20 @@ func (res *RolesSvcEventStoreMiddleware) RetrieveRole(ctx context.Context, token
 func (res *RolesSvcEventStoreMiddleware) RetrieveAllRoles(ctx context.Context, token, entityID string, limit, offset uint64) (roles.RolePage, error) {
 	return res.svc.RetrieveAllRoles(ctx, token, entityID, limit, offset)
 }
-func (res *RolesSvcEventStoreMiddleware) RoleAddOperations(ctx context.Context, token, entityID, roleName string, operations []string) (ops []string, err error) {
-	return res.svc.RoleAddOperations(ctx, token, entityID, roleName, operations)
+func (res *RolesSvcEventStoreMiddleware) RoleAddCapabilities(ctx context.Context, token, entityID, roleName string, capabilities []string) (ops []string, err error) {
+	return res.svc.RoleAddCapabilities(ctx, token, entityID, roleName, capabilities)
 }
-func (res *RolesSvcEventStoreMiddleware) RoleListOperations(ctx context.Context, token, entityID, roleName string) ([]string, error) {
-	return res.svc.RoleListOperations(ctx, token, entityID, roleName)
+func (res *RolesSvcEventStoreMiddleware) RoleListCapabilities(ctx context.Context, token, entityID, roleName string) ([]string, error) {
+	return res.svc.RoleListCapabilities(ctx, token, entityID, roleName)
 }
-func (res *RolesSvcEventStoreMiddleware) RoleCheckOperationsExists(ctx context.Context, token, entityID, roleName string, operations []string) (bool, error) {
-	return res.svc.RoleCheckOperationsExists(ctx, token, entityID, roleName, operations)
+func (res *RolesSvcEventStoreMiddleware) RoleCheckCapabilitiesExists(ctx context.Context, token, entityID, roleName string, capabilities []string) (bool, error) {
+	return res.svc.RoleCheckCapabilitiesExists(ctx, token, entityID, roleName, capabilities)
 }
-func (res *RolesSvcEventStoreMiddleware) RoleRemoveOperations(ctx context.Context, token, entityID, roleName string, operations []string) (err error) {
-	return res.svc.RoleRemoveOperations(ctx, token, entityID, roleName, operations)
+func (res *RolesSvcEventStoreMiddleware) RoleRemoveCapabilities(ctx context.Context, token, entityID, roleName string, capabilities []string) (err error) {
+	return res.svc.RoleRemoveCapabilities(ctx, token, entityID, roleName, capabilities)
 }
-func (res *RolesSvcEventStoreMiddleware) RoleRemoveAllOperations(ctx context.Context, token, entityID, roleName string) error {
-	return res.svc.RoleRemoveAllOperations(ctx, token, entityID, roleName)
+func (res *RolesSvcEventStoreMiddleware) RoleRemoveAllCapabilities(ctx context.Context, token, entityID, roleName string) error {
+	return res.svc.RoleRemoveAllCapabilities(ctx, token, entityID, roleName)
 }
 func (res *RolesSvcEventStoreMiddleware) RoleAddMembers(ctx context.Context, token, entityID, roleName string, members []string) ([]string, error) {
 	return res.svc.RoleAddMembers(ctx, token, entityID, roleName, members)

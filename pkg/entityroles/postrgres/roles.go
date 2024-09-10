@@ -49,9 +49,9 @@ type dbRole struct {
 	UpdatedAt sql.NullTime `db:"updated_at"`
 }
 
-type dbRoleOperation struct {
-	RoleID    string `db:"role_id"`
-	Operation string `db:"operation"`
+type dbRoleCapability struct {
+	RoleID     string `db:"role_id"`
+	Capability string `db:"capability"`
 }
 
 type dbRoleMember struct {
@@ -147,19 +147,19 @@ func (repo *RolesSvcRepo) AddRoles(ctx context.Context, rps []roles.RoleProvisio
 
 		retRoles = append(retRoles, rp.Role)
 
-		if len(rp.OptionalOperations) > 0 {
-			opq := `INSERT INTO role_operations (role_id, operation)
-        				VALUES (:role_id, :operation)
-        				RETURNING role_id, operation`
+		if len(rp.OptionalCapabilities) > 0 {
+			capq := `INSERT INTO role_capabilities (role_id, capability)
+        				VALUES (:role_id, :capability)
+        				RETURNING role_id, capability`
 
-			rOps := []dbRoleOperation{}
-			for _, op := range rp.OptionalOperations {
-				rOps = append(rOps, dbRoleOperation{
-					RoleID:    rp.ID,
-					Operation: string(op),
+			rCaps := []dbRoleCapability{}
+			for _, cap := range rp.OptionalCapabilities {
+				rCaps = append(rCaps, dbRoleCapability{
+					RoleID:     rp.ID,
+					Capability: string(cap),
 				})
 			}
-			if _, err := tx.NamedExec(opq, rOps); err != nil {
+			if _, err := tx.NamedExec(capq, rCaps); err != nil {
 				return []roles.Role{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 			}
 		}
@@ -335,7 +335,7 @@ func (repo *RolesSvcRepo) RetrieveAllRoles(ctx context.Context, entityID string,
 	return page, nil
 }
 
-func (repo *RolesSvcRepo) RoleAddOperation(ctx context.Context, role roles.Role, operations []string) (ops []string, err error) {
+func (repo *RolesSvcRepo) RoleAddCapabilities(ctx context.Context, role roles.Role, capabilities []string) (caps []string, err error) {
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -349,18 +349,18 @@ func (repo *RolesSvcRepo) RoleAddOperation(ctx context.Context, role roles.Role,
 		}
 	}()
 
-	opq := `INSERT INTO role_operations (role_id, operation)
-	VALUES (:role_id, :operation)
-	RETURNING role_id, operation`
+	capq := `INSERT INTO role_capabilities (role_id, capability)
+	VALUES (:role_id, :capability)
+	RETURNING role_id, capability`
 
-	rOps := []dbRoleOperation{}
-	for _, op := range operations {
-		rOps = append(rOps, dbRoleOperation{
-			RoleID:    role.ID,
-			Operation: string(op),
+	rCaps := []dbRoleCapability{}
+	for _, cap := range capabilities {
+		rCaps = append(rCaps, dbRoleCapability{
+			RoleID:     role.ID,
+			Capability: string(cap),
 		})
 	}
-	if _, err := tx.NamedExecContext(ctx, opq, rOps); err != nil {
+	if _, err := tx.NamedExecContext(ctx, capq, rCaps); err != nil {
 		return []string{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
@@ -373,17 +373,17 @@ func (repo *RolesSvcRepo) RoleAddOperation(ctx context.Context, role roles.Role,
 		return []string{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
-	return repo.RoleListOperations(ctx, role.ID)
+	return repo.RoleListCapabilities(ctx, role.ID)
 }
 
-func (repo *RolesSvcRepo) RoleListOperations(ctx context.Context, roleID string) ([]string, error) {
-	q := `SELECT role_id, operation FROM role_operations WHERE role_id = :role_id ;`
+func (repo *RolesSvcRepo) RoleListCapabilities(ctx context.Context, roleID string) ([]string, error) {
+	q := `SELECT role_id, capability FROM role_capabilities WHERE role_id = :role_id ;`
 
-	dbrop := dbRoleOperation{
+	dbrcap := dbRoleCapability{
 		RoleID: roleID,
 	}
 
-	rows, err := repo.db.NamedQueryContext(ctx, q, dbrop)
+	rows, err := repo.db.NamedQueryContext(ctx, q, dbrcap)
 	if err != nil {
 		return []string{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
@@ -391,22 +391,22 @@ func (repo *RolesSvcRepo) RoleListOperations(ctx context.Context, roleID string)
 
 	items := []string{}
 	for rows.Next() {
-		dbrop = dbRoleOperation{}
-		if err := rows.StructScan(&dbrop); err != nil {
+		dbrcap = dbRoleCapability{}
+		if err := rows.StructScan(&dbrcap); err != nil {
 			return []string{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
 
-		items = append(items, dbrop.Operation)
+		items = append(items, dbrcap.Capability)
 	}
 	return items, nil
 }
 
-func (repo *RolesSvcRepo) RoleCheckOperationsExists(ctx context.Context, roleID string, operations []string) (bool, error) {
-	q := ` SELECT COUNT(*) FROM role_operations WHERE role_id = :role_id AND operation IN (:operations)`
+func (repo *RolesSvcRepo) RoleCheckCapabilitiesExists(ctx context.Context, roleID string, capabilities []string) (bool, error) {
+	q := ` SELECT COUNT(*) FROM role_capabilities WHERE role_id = :role_id AND capability IN (:capabilities)`
 
 	params := map[string]interface{}{
-		"role_id":    roleID,
-		"operations": operations,
+		"role_id":      roleID,
+		"capabilities": capabilities,
 	}
 	var count int
 	query, err := repo.db.NamedQueryContext(ctx, q, params)
@@ -422,15 +422,15 @@ func (repo *RolesSvcRepo) RoleCheckOperationsExists(ctx context.Context, roleID 
 		}
 	}
 
-	// Check if the count matches the number of operations provided
-	if count != len(operations) {
+	// Check if the count matches the number of capabilities provided
+	if count != len(capabilities) {
 		return false, nil
 	}
 
 	return true, nil
 }
 
-func (repo *RolesSvcRepo) RoleRemoveOperations(ctx context.Context, role roles.Role, operations []string) (err error) {
+func (repo *RolesSvcRepo) RoleRemoveCapabilities(ctx context.Context, role roles.Role, capabilities []string) (err error) {
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -444,11 +444,11 @@ func (repo *RolesSvcRepo) RoleRemoveOperations(ctx context.Context, role roles.R
 		}
 	}()
 
-	q := `DELETE FROM role_operations WHERE role_id = :role_id AND operation = ANY(:operations)`
+	q := `DELETE FROM role_capabilities WHERE role_id = :role_id AND capability = ANY(:capabilities)`
 
 	params := map[string]interface{}{
-		"role_id":    role.ID,
-		"operations": operations,
+		"role_id":      role.ID,
+		"capabilities": capabilities,
 	}
 
 	if _, err := tx.NamedExec(q, params); err != nil {
@@ -467,7 +467,7 @@ func (repo *RolesSvcRepo) RoleRemoveOperations(ctx context.Context, role roles.R
 	return nil
 }
 
-func (repo *RolesSvcRepo) RoleRemoveAllOperations(ctx context.Context, role roles.Role) error {
+func (repo *RolesSvcRepo) RoleRemoveAllCapabilities(ctx context.Context, role roles.Role) error {
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
@@ -480,11 +480,11 @@ func (repo *RolesSvcRepo) RoleRemoveAllOperations(ctx context.Context, role role
 		}
 	}()
 
-	q := `DELETE FROM role_operations WHERE role_id = :role_id `
+	q := `DELETE FROM role_capabilities WHERE role_id = :role_id `
 
-	dbrop := dbRoleOperation{RoleID: role.ID}
+	dbrcap := dbRoleCapability{RoleID: role.ID}
 
-	if _, err := tx.NamedExec(q, dbrop); err != nil {
+	if _, err := tx.NamedExec(q, dbrcap); err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
@@ -582,7 +582,7 @@ func (repo *RolesSvcRepo) RoleListMembers(ctx context.Context, roleID string, li
 }
 
 func (repo *RolesSvcRepo) RoleCheckMembersExists(ctx context.Context, roleID string, members []string) (bool, error) {
-	q := ` SELECT COUNT(*) FROM role_members WHERE role_id = :role_id AND operation IN (:members)`
+	q := ` SELECT COUNT(*) FROM role_members WHERE role_id = :role_id AND capability IN (:members)`
 
 	params := map[string]interface{}{
 		"role_id": roleID,
@@ -602,7 +602,6 @@ func (repo *RolesSvcRepo) RoleCheckMembersExists(ctx context.Context, roleID str
 		}
 	}
 
-	// Check if the count matches the number of operations provided
 	if count != len(members) {
 		return false, nil
 	}
@@ -659,9 +658,9 @@ func (repo *RolesSvcRepo) RoleRemoveAllMembers(ctx context.Context, role roles.R
 	}()
 	q := `DELETE FROM role_members WHERE role_id = :role_id `
 
-	dbrop := dbRoleOperation{RoleID: role.ID}
+	dbrcap := dbRoleCapability{RoleID: role.ID}
 
-	if _, err := repo.db.NamedExecContext(ctx, q, dbrop); err != nil {
+	if _, err := repo.db.NamedExecContext(ctx, q, dbrcap); err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 

@@ -18,19 +18,25 @@ type identity struct {
 	UserID   string
 }
 
-type EntityRoleOperationKey int
+type Permission string
+
+func (p Permission) String() string {
+	return string(p)
+}
+
+type Operation int
 
 const (
-	OpAddRole EntityRoleOperationKey = iota
+	OpAddRole Operation = iota
 	OpRemoveRole
 	OpUpdateRoleName
 	OpRetrieveRole
 	OpRetrieveAllRoles
-	OpRoleAddOperations
-	OpRoleListOperations
-	OpRoleCheckOperationsExists
-	OpRoleRemoveOperations
-	OpRoleRemoveAllOperations
+	OpRoleAddCapabilities
+	OpRoleListCapabilities
+	OpRoleCheckCapabilitiesExists
+	OpRoleRemoveCapabilities
+	OpRoleRemoveAllCapabilities
 	OpRoleAddMembers
 	OpRoleListMembers
 	OpRoleCheckMembersExists
@@ -38,43 +44,41 @@ const (
 	OpRoleRemoveAllMembers
 )
 
-func (erok EntityRoleOperationKey) String() string {
+func (op Operation) String() string {
 	names := [...]string{
 		"OpAddRole",
 		"OpRemoveRole",
 		"OpUpdateRoleName",
 		"OpRetrieveRole",
 		"OpRetrieveAllRoles",
-		"OpRoleAddOperations",
-		"OpRoleListOperations",
-		"OpRoleCheckOperationsExists",
-		"OpRoleRemoveOperations",
-		"OpRoleRemoveAllOperations",
+		"OpRoleAddCapabilities",
+		"OpRoleListCapabilities",
+		"OpRoleCheckCapabilitiesExists",
+		"OpRoleRemoveCapabilities",
+		"OpRoleRemoveAllCapabilities",
 		"OpRoleAddMembers",
 		"OpRoleListMembers",
 		"OpRoleCheckMembersExists",
 		"OpRoleRemoveMembers",
 		"OpRoleRemoveAllMembers",
 	}
-
-	if int(erok) < 0 || int(erok) >= len(names) {
-		return fmt.Sprintf("UnknownEntityRoleOperationKey(%d)", erok)
+	if int(op) < 0 || int(op) >= len(names) {
+		return fmt.Sprintf("UnknownEntityRoleOperationKey(%d)", op)
 	}
-
-	return names[erok]
+	return names[op]
 }
 
-var expectedEntityRoleOperationKey = []EntityRoleOperationKey{
+var expectedOperations = []Operation{
 	OpAddRole,
 	OpRemoveRole,
 	OpUpdateRoleName,
 	OpRetrieveRole,
 	OpRetrieveAllRoles,
-	OpRoleAddOperations,
-	OpRoleListOperations,
-	OpRoleCheckOperationsExists,
-	OpRoleRemoveOperations,
-	OpRoleRemoveAllOperations,
+	OpRoleAddCapabilities,
+	OpRoleListCapabilities,
+	OpRoleCheckCapabilitiesExists,
+	OpRoleRemoveCapabilities,
+	OpRoleRemoveAllCapabilities,
 	OpRoleAddMembers,
 	OpRoleListMembers,
 	OpRoleCheckMembersExists,
@@ -82,42 +86,42 @@ var expectedEntityRoleOperationKey = []EntityRoleOperationKey{
 	OpRoleRemoveAllMembers,
 }
 
-type EntityRolesOperations map[EntityRoleOperationKey]roles.Operation
+type OperationPerm map[Operation]Permission
 
-func NewEntityRolesOperations(newEro map[EntityRoleOperationKey]roles.Operation) (EntityRolesOperations, error) {
-	ero := EntityRolesOperations(newEro)
-	if err := ero.Validate(); err != nil {
-		return EntityRolesOperations{}, err
+func NewOperationPerm(newEop map[Operation]Permission) (OperationPerm, error) {
+	eop := OperationPerm(newEop)
+	if err := eop.Validate(); err != nil {
+		return OperationPerm{}, err
 	}
-	return ero, nil
+	return eop, nil
 }
 
-func (ero EntityRolesOperations) isKeyRequired(erok EntityRoleOperationKey) bool {
-	for _, key := range expectedEntityRoleOperationKey {
-		if key == erok {
+func (opp OperationPerm) isKeyRequired(op Operation) bool {
+	for _, key := range expectedOperations {
+		if key == op {
 			return true
 		}
 	}
 	return false
 }
 
-func (ero EntityRolesOperations) Add(erok EntityRoleOperationKey, op roles.Operation) error {
-	if !ero.isKeyRequired(erok) {
-		return fmt.Errorf("%v is not a valid role operation key", erok)
+func (eop OperationPerm) Add(eo Operation, perm Permission) error {
+	if !eop.isKeyRequired(eo) {
+		return fmt.Errorf("%v is not a valid role operation", eo)
 	}
-	ero[erok] = op
+	eop[eo] = perm
 	return nil
 }
 
-func (ero EntityRolesOperations) Validate() error {
-	for erok := range ero {
-		if !ero.isKeyRequired(erok) {
-			return fmt.Errorf("EntityRolesOperations: \"%s\" is not a valid entity roles operation key", erok.String())
+func (eop OperationPerm) Validate() error {
+	for eo := range eop {
+		if !eop.isKeyRequired(eo) {
+			return fmt.Errorf("OperationPerm: \"%s\" is not a valid entity roles operation", eo.String())
 		}
 	}
-	for _, erok := range expectedEntityRoleOperationKey {
-		if _, ok := ero[erok]; !ok {
-			return fmt.Errorf("EntityRolesOperations: \"%s\" is not provided", erok.String())
+	for _, eeo := range expectedOperations {
+		if _, ok := eop[eeo]; !ok {
+			return fmt.Errorf("OperationPerm: \"%s\" operation is not provided", eeo.String())
 		}
 	}
 	return nil
@@ -135,20 +139,20 @@ type RolesSvc struct {
 	repo         roles.Repository
 	idProvider   magistrala.IDProvider
 	auth         magistrala.AuthServiceClient
-	operations   []roles.Operation
-	builtInRoles map[roles.BuiltInRoleName][]roles.Operation
-	ero          EntityRolesOperations
+	capabilities []roles.Capability
+	builtInRoles map[roles.BuiltInRoleName][]roles.Capability
+	opp          OperationPerm
 }
 
-func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala.IDProvider, auth magistrala.AuthServiceClient, operations []roles.Operation, builtInRoles map[roles.BuiltInRoleName][]roles.Operation, ero EntityRolesOperations) (RolesSvc, error) {
+func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala.IDProvider, auth magistrala.AuthServiceClient, capabilities []roles.Capability, builtInRoles map[roles.BuiltInRoleName][]roles.Capability, opp OperationPerm) (RolesSvc, error) {
 	rolesSvc := RolesSvc{
 		entityType:   entityType,
 		repo:         repo,
 		idProvider:   idProvider,
 		auth:         auth,
-		operations:   operations,
+		capabilities: capabilities,
 		builtInRoles: builtInRoles,
-		ero:          ero,
+		opp:          opp,
 	}
 	if err := rolesSvc.validate(); err != nil {
 		return RolesSvc{}, err
@@ -157,37 +161,26 @@ func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala
 }
 
 func (r RolesSvc) validate() error {
-	for erok, op := range r.ero {
-		if !r.isOperationAllowed(op) {
-			return fmt.Errorf("Invalid EntityRolesOperations: entityroles operation \"%s\" have operation \"%s\" which is not present in entity operations", erok.String(), op)
-		}
+	if err := r.opp.Validate(); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (r RolesSvc) isOperationAllowed(op roles.Operation) bool {
-	for _, aop := range r.operations {
-		if aop == op {
-			return true
-		}
+func toRolesCapabilities(capabilities []string) []roles.Capability {
+	roCapabilities := []roles.Capability{}
+	for _, capability := range capabilities {
+		roCapabilities = append(roCapabilities, roles.Capability(capability))
 	}
-	return false
+	return roCapabilities
 }
 
-func toRolesOperations(ops []string) []roles.Operation {
-	roOps := []roles.Operation{}
-	for _, op := range ops {
-		roOps = append(roOps, roles.Operation(op))
+func roleCapabilitiesToString(roCapabilities []roles.Capability) []string {
+	capabilities := []string{}
+	for _, roCapability := range roCapabilities {
+		capabilities = append(capabilities, roCapability.String())
 	}
-	return roOps
-}
-
-func roleOperationsToString(roOps []roles.Operation) []string {
-	ops := []string{}
-	for _, roOp := range roOps {
-		ops = append(ops, roOp.String())
-	}
-	return ops
+	return capabilities
 }
 
 func roleMembersToString(roMems []roles.Member) []string {
@@ -197,17 +190,26 @@ func roleMembersToString(roMems []roles.Member) []string {
 	}
 	return mems
 }
-func (r RolesSvc) validateOperations(operations []roles.Operation) error {
-	for _, op := range operations {
-		roOp := roles.Operation(op)
-		if !r.isOperationAllowed(roOp) {
-			return errors.Wrap(svcerr.ErrMalformedEntity, fmt.Errorf("invalid operation %s ", op))
+
+func (r RolesSvc) isCapabilityAllowed(capability roles.Capability) bool {
+	for _, cap := range r.capabilities {
+		if cap == capability {
+			return true
+		}
+	}
+	return false
+}
+func (r RolesSvc) validateCapabilities(capabilities []roles.Capability) error {
+	for _, ac := range capabilities {
+		action := roles.Capability(ac)
+		if !r.isCapabilityAllowed(action) {
+			return errors.Wrap(svcerr.ErrMalformedEntity, fmt.Errorf("invalid action %s ", action))
 		}
 	}
 	return nil
 }
 
-func (r RolesSvc) AddRole(ctx context.Context, token, entityID string, roleName string, optionalOperations []string, optionalMembers []string) (fnRole roles.Role, fnErr error) {
+func (r RolesSvc) AddRole(ctx context.Context, token, entityID string, roleName string, optionalCapabilities []string, optionalMembers []string) (fnRole roles.Role, fnErr error) {
 
 	userInfo, err := r.identify(ctx, token)
 	if err != nil {
@@ -221,7 +223,7 @@ func (r RolesSvc) AddRole(ctx context.Context, token, entityID string, roleName 
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.ero[OpAddRole].String(),
+		Permission:  r.opp[OpAddRole].String(),
 	}); err != nil {
 		return roles.Role{}, err
 	}
@@ -232,7 +234,7 @@ func (r RolesSvc) AddRole(ctx context.Context, token, entityID string, roleName 
 		return roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 
-	if err := r.validateOperations(toRolesOperations(optionalOperations)); err != nil {
+	if err := r.validateCapabilities(toRolesCapabilities(optionalCapabilities)); err != nil {
 		return roles.Role{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 	}
 
@@ -245,18 +247,18 @@ func (r RolesSvc) AddRole(ctx context.Context, token, entityID string, roleName 
 				CreatedAt: time.Now(),
 				CreatedBy: userInfo.UserID,
 			},
-			OptionalOperations: optionalOperations,
-			OptionalMembers:    optionalMembers,
+			OptionalCapabilities: optionalCapabilities,
+			OptionalMembers:      optionalMembers,
 		},
 	}
 	prs := []*magistrala.AddPolicyReq{}
 
-	for _, op := range optionalOperations {
+	for _, cap := range optionalCapabilities {
 		prs = append(prs, &magistrala.AddPolicyReq{
 			SubjectType:     "role",
 			SubjectRelation: "member",
 			Subject:         id,
-			Relation:        op,
+			Relation:        cap,
 			Object:          entityID,
 			ObjectType:      r.entityType,
 		})
@@ -316,7 +318,7 @@ func (r RolesSvc) RemoveRole(ctx context.Context, token, entityID, roleName stri
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.ero[OpRemoveRole].String(),
+		Permission:  r.opp[OpRemoveRole].String(),
 	}); err != nil {
 		return err
 	}
@@ -358,7 +360,7 @@ func (r RolesSvc) UpdateRoleName(ctx context.Context, token, entityID, oldRoleNa
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.ero[OpUpdateRoleName].String(),
+		Permission:  r.opp[OpUpdateRoleName].String(),
 	}); err != nil {
 		return roles.Role{}, err
 	}
@@ -389,7 +391,7 @@ func (r RolesSvc) RetrieveRole(ctx context.Context, token, entityID, roleName st
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.ero[OpRetrieveRole].String(),
+		Permission:  r.opp[OpRetrieveRole].String(),
 	}); err != nil {
 		return roles.Role{}, err
 	}
@@ -418,7 +420,7 @@ func (r RolesSvc) RetrieveAllRoles(ctx context.Context, token, entityID string, 
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.ero[OpRetrieveAllRoles].String(),
+		Permission:  r.opp[OpRetrieveAllRoles].String(),
 	}); err != nil {
 		return roles.RolePage{}, err
 	}
@@ -430,7 +432,7 @@ func (r RolesSvc) RetrieveAllRoles(ctx context.Context, token, entityID string, 
 	return ros, nil
 }
 
-func (r RolesSvc) RoleAddOperations(ctx context.Context, token, entityID, roleName string, operations []string) (fnOps []string, fnErr error) {
+func (r RolesSvc) RoleAddCapabilities(ctx context.Context, token, entityID, roleName string, capabilities []string) (fnOps []string, fnErr error) {
 	userInfo, err := r.identify(ctx, token)
 	if err != nil {
 		return []string{}, err
@@ -443,7 +445,7 @@ func (r RolesSvc) RoleAddOperations(ctx context.Context, token, entityID, roleNa
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.ero[OpRoleAddOperations].String(),
+		Permission:  r.opp[OpRoleAddCapabilities].String(),
 	}); err != nil {
 		return []string{}, err
 	}
@@ -453,21 +455,21 @@ func (r RolesSvc) RoleAddOperations(ctx context.Context, token, entityID, roleNa
 		return []string{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 
-	if len(operations) == 0 {
+	if len(capabilities) == 0 {
 		return []string{}, svcerr.ErrMalformedEntity
 	}
 
-	if err := r.validateOperations(toRolesOperations(operations)); err != nil {
+	if err := r.validateCapabilities(toRolesCapabilities(capabilities)); err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 	}
 
 	prs := []*magistrala.AddPolicyReq{}
-	for _, op := range operations {
+	for _, cap := range capabilities {
 		prs = append(prs, &magistrala.AddPolicyReq{
 			SubjectType:     "role",
 			SubjectRelation: "member",
 			Subject:         ro.ID,
-			Relation:        op,
+			Relation:        cap,
 			Object:          entityID,
 			ObjectType:      r.entityType,
 		})
@@ -492,14 +494,14 @@ func (r RolesSvc) RoleAddOperations(ctx context.Context, token, entityID, roleNa
 	ro.UpdatedAt = time.Now()
 	ro.UpdatedBy = userInfo.UserID
 
-	resOps, err := r.repo.RoleAddOperation(ctx, ro, operations)
+	resOps, err := r.repo.RoleAddCapabilities(ctx, ro, capabilities)
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	return resOps, nil
 }
 
-func (r RolesSvc) RoleListOperations(ctx context.Context, token, entityID, roleName string) ([]string, error) {
+func (r RolesSvc) RoleListCapabilities(ctx context.Context, token, entityID, roleName string) ([]string, error) {
 	userInfo, err := r.identify(ctx, token)
 	if err != nil {
 		return []string{}, err
@@ -512,7 +514,7 @@ func (r RolesSvc) RoleListOperations(ctx context.Context, token, entityID, roleN
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.ero[OpRoleListOperations].String(),
+		Permission:  r.opp[OpRoleListCapabilities].String(),
 	}); err != nil {
 		return []string{}, err
 	}
@@ -522,7 +524,7 @@ func (r RolesSvc) RoleListOperations(ctx context.Context, token, entityID, roleN
 		return []string{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	ops, err := r.repo.RoleListOperations(ctx, ro.ID)
+	ops, err := r.repo.RoleListCapabilities(ctx, ro.ID)
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
@@ -530,7 +532,7 @@ func (r RolesSvc) RoleListOperations(ctx context.Context, token, entityID, roleN
 
 }
 
-func (r RolesSvc) RoleCheckOperationsExists(ctx context.Context, token, entityID, roleName string, operations []string) (bool, error) {
+func (r RolesSvc) RoleCheckCapabilitiesExists(ctx context.Context, token, entityID, roleName string, operations []string) (bool, error) {
 	userInfo, err := r.identify(ctx, token)
 	if err != nil {
 		return false, err
@@ -542,7 +544,7 @@ func (r RolesSvc) RoleCheckOperationsExists(ctx context.Context, token, entityID
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.ero[OpRoleCheckOperationsExists].String(),
+		Permission:  r.opp[OpRoleCheckCapabilitiesExists].String(),
 	}); err != nil {
 		return false, err
 	}
@@ -551,14 +553,14 @@ func (r RolesSvc) RoleCheckOperationsExists(ctx context.Context, token, entityID
 		return false, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	result, err := r.repo.RoleCheckOperationsExists(ctx, ro.ID, operations)
+	result, err := r.repo.RoleCheckCapabilitiesExists(ctx, ro.ID, operations)
 	if err != nil {
 		return true, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return result, nil
 }
 
-func (r RolesSvc) RoleRemoveOperations(ctx context.Context, token, entityID, roleName string, operations []string) (err error) {
+func (r RolesSvc) RoleRemoveCapabilities(ctx context.Context, token, entityID, roleName string, operations []string) (err error) {
 	userInfo, err := r.identify(ctx, token)
 	if err != nil {
 		return err
@@ -570,7 +572,7 @@ func (r RolesSvc) RoleRemoveOperations(ctx context.Context, token, entityID, rol
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.ero[OpRoleRemoveOperations].String(),
+		Permission:  r.opp[OpRoleRemoveCapabilities].String(),
 	}); err != nil {
 		return err
 	}
@@ -605,13 +607,13 @@ func (r RolesSvc) RoleRemoveOperations(ctx context.Context, token, entityID, rol
 
 	ro.UpdatedAt = time.Now()
 	ro.UpdatedBy = userInfo.UserID
-	if err := r.repo.RoleRemoveOperations(ctx, ro, operations); err != nil {
+	if err := r.repo.RoleRemoveCapabilities(ctx, ro, operations); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	return nil
 }
 
-func (r RolesSvc) RoleRemoveAllOperations(ctx context.Context, token, entityID, roleName string) error {
+func (r RolesSvc) RoleRemoveAllCapabilities(ctx context.Context, token, entityID, roleName string) error {
 	userInfo, err := r.identify(ctx, token)
 	if err != nil {
 		return err
@@ -623,7 +625,7 @@ func (r RolesSvc) RoleRemoveAllOperations(ctx context.Context, token, entityID, 
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.ero[OpRoleRemoveAllOperations].String(),
+		Permission:  r.opp[OpRoleRemoveAllCapabilities].String(),
 	}); err != nil {
 		return err
 	}
@@ -648,7 +650,7 @@ func (r RolesSvc) RoleRemoveAllOperations(ctx context.Context, token, entityID, 
 	ro.UpdatedAt = time.Now()
 	ro.UpdatedBy = userInfo.UserID
 
-	if err := r.repo.RoleRemoveAllOperations(ctx, ro); err != nil {
+	if err := r.repo.RoleRemoveAllCapabilities(ctx, ro); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	return nil
@@ -666,7 +668,7 @@ func (r RolesSvc) RoleAddMembers(ctx context.Context, token, entityID, roleName 
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.ero[OpRoleAddMembers].String(),
+		Permission:  r.opp[OpRoleAddMembers].String(),
 	}); err != nil {
 		return []string{}, err
 	}
@@ -728,7 +730,7 @@ func (r RolesSvc) RoleListMembers(ctx context.Context, token, entityID, roleName
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.ero[OpRoleListMembers].String(),
+		Permission:  r.opp[OpRoleListMembers].String(),
 	}); err != nil {
 		return roles.MembersPage{}, err
 	}
@@ -756,7 +758,7 @@ func (r RolesSvc) RoleCheckMembersExists(ctx context.Context, token, entityID, r
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.ero[OpRoleCheckMembersExists].String(),
+		Permission:  r.opp[OpRoleCheckMembersExists].String(),
 	}); err != nil {
 		return false, err
 	}
@@ -784,7 +786,7 @@ func (r RolesSvc) RoleRemoveMembers(ctx context.Context, token, entityID, roleNa
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.ero[OpRoleRemoveMembers].String(),
+		Permission:  r.opp[OpRoleRemoveMembers].String(),
 	}); err != nil {
 		return err
 	}
@@ -836,7 +838,7 @@ func (r RolesSvc) RoleRemoveAllMembers(ctx context.Context, token, entityID, rol
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.ero[OpRoleRemoveAllMembers].String(),
+		Permission:  r.opp[OpRoleRemoveAllMembers].String(),
 	}); err != nil {
 		return err
 	}
@@ -873,7 +875,7 @@ func (r RolesSvc) AddNewEntityRoles(ctx context.Context, userID, domainID, entit
 	prs := []*magistrala.AddPolicyReq{}
 
 	for defaultRole, defaultRoleMembers := range newBuiltInRoleMembers {
-		operations, ok := r.builtInRoles[defaultRole]
+		capabilities, ok := r.builtInRoles[defaultRole]
 		if !ok {
 			return []roles.RoleProvision{}, fmt.Errorf("default role %s not found in in-built roles", defaultRole)
 		}
@@ -884,12 +886,12 @@ func (r RolesSvc) AddNewEntityRoles(ctx context.Context, userID, domainID, entit
 			return []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 		}
 
-		if err := r.validateOperations(operations); err != nil {
+		if err := r.validateCapabilities(capabilities); err != nil {
 			return []roles.RoleProvision{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 		}
 
 		members := roleMembersToString(defaultRoleMembers)
-		ops := roleOperationsToString(operations)
+		caps := roleCapabilitiesToString(capabilities)
 
 		newRolesProvision = append(newRolesProvision, roles.RoleProvision{
 			Role: roles.Role{
@@ -899,16 +901,16 @@ func (r RolesSvc) AddNewEntityRoles(ctx context.Context, userID, domainID, entit
 				CreatedAt: time.Now(),
 				CreatedBy: userID,
 			},
-			OptionalOperations: ops,
-			OptionalMembers:    members,
+			OptionalCapabilities: caps,
+			OptionalMembers:      members,
 		})
 
-		for _, op := range ops {
+		for _, cap := range caps {
 			prs = append(prs, &magistrala.AddPolicyReq{
 				SubjectType:     "role",
 				SubjectRelation: "member",
 				Subject:         id,
-				Relation:        op,
+				Relation:        cap,
 				Object:          entityID,
 				ObjectType:      r.entityType,
 			})
@@ -996,12 +998,12 @@ func (r RolesSvc) RemoveNewEntityRoles(ctx context.Context, userID, domainID, en
 
 	roleIDs := []string{}
 	for _, rp := range newRolesProvision {
-		for _, op := range rp.OptionalOperations {
+		for _, cap := range rp.OptionalCapabilities {
 			prs = append(prs, &magistrala.DeletePolicyReq{
 				SubjectType:     "role",
 				SubjectRelation: "member",
 				Subject:         rp.ID,
-				Relation:        op,
+				Relation:        cap,
 				Object:          entityID,
 				ObjectType:      r.entityType,
 			})

@@ -34,28 +34,28 @@ type service struct {
 var _ domains.Service = (*service)(nil)
 
 func New(repo domains.DomainsRepository, authClient magistrala.AuthServiceClient, idProvider magistrala.IDProvider, sidProvider magistrala.IDProvider) (domains.Service, error) {
-	erom := map[entityroles.EntityRoleOperationKey]roles.Operation{
-		entityroles.OpAddRole:                   domains.ManageRole,
-		entityroles.OpRemoveRole:                domains.ManageRole,
-		entityroles.OpUpdateRoleName:            domains.ManageRole,
-		entityroles.OpRetrieveRole:              domains.ManageRole,
-		entityroles.OpRetrieveAllRoles:          domains.ManageRole,
-		entityroles.OpRoleAddOperations:         domains.ManageRole,
-		entityroles.OpRoleListOperations:        domains.ManageRole,
-		entityroles.OpRoleCheckOperationsExists: domains.ManageRole,
-		entityroles.OpRoleRemoveOperations:      domains.ManageRole,
-		entityroles.OpRoleRemoveAllOperations:   domains.ManageRole,
-		entityroles.OpRoleAddMembers:            domains.AddRoleUsers,
-		entityroles.OpRoleListMembers:           domains.ViewRoleUsers,
-		entityroles.OpRoleCheckMembersExists:    domains.ViewRoleUsers,
-		entityroles.OpRoleRemoveMembers:         domains.RemoveRoleUsers,
-		entityroles.OpRoleRemoveAllMembers:      domains.ManageRole,
+	opp := map[entityroles.Operation]entityroles.Permission{
+		entityroles.OpAddRole:                     domains.ManageRolePermission,
+		entityroles.OpRemoveRole:                  domains.ManageRolePermission,
+		entityroles.OpUpdateRoleName:              domains.ManageRolePermission,
+		entityroles.OpRetrieveRole:                domains.ManageRolePermission,
+		entityroles.OpRetrieveAllRoles:            domains.ManageRolePermission,
+		entityroles.OpRoleAddCapabilities:         domains.ManageRolePermission,
+		entityroles.OpRoleListCapabilities:        domains.ManageRolePermission,
+		entityroles.OpRoleCheckCapabilitiesExists: domains.ManageRolePermission,
+		entityroles.OpRoleRemoveCapabilities:      domains.ManageRolePermission,
+		entityroles.OpRoleRemoveAllCapabilities:   domains.ManageRolePermission,
+		entityroles.OpRoleAddMembers:              domains.AddRoleUsersPermission,
+		entityroles.OpRoleListMembers:             domains.ViewRoleUsersPermission,
+		entityroles.OpRoleCheckMembersExists:      domains.ViewRoleUsersPermission,
+		entityroles.OpRoleRemoveMembers:           domains.RemoveRoleUsersPermission,
+		entityroles.OpRoleRemoveAllMembers:        domains.ManageRolePermission,
 	}
-	ero, err := entityroles.NewEntityRolesOperations(erom)
+	opp, err := entityroles.NewOperationPerm(opp)
 	if err != nil {
 		return nil, err
 	}
-	rolesSvc, err := entityroles.NewRolesSvc(auth.DomainType, repo, sidProvider, authClient, domains.AllowedOperations(), domains.BuiltInRoles(), ero)
+	rolesSvc, err := entityroles.NewRolesSvc(auth.DomainType, repo, sidProvider, authClient, domains.AvailableCapabilities(), domains.BuiltInRoles(), opp)
 	if err != nil {
 		return nil, err
 	}
@@ -174,6 +174,7 @@ func (svc service) UpdateDomain(ctx context.Context, token, id string, d domains
 	return dom, nil
 }
 
+// ToDo: Create separate function for enable and disable with separate	 role operations
 func (svc service) ChangeDomainStatus(ctx context.Context, token, id string, d domains.DomainReq) (domains.Domain, error) {
 	user, err := svc.identify(ctx, token)
 	if err != nil {
