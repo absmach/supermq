@@ -43,15 +43,16 @@ const (
 )
 
 const (
-	AdminPermission      = "admin"
-	DeletePermission     = "delete"
-	EditPermission       = "edit"
-	ViewPermission       = "view"
-	MembershipPermission = "membership"
-	SharePermission      = "share"
-	PublishPermission    = "publish"
-	SubscribePermission  = "subscribe"
-	CreatePermission     = "create"
+	AdminPermission            = "admin"
+	DeletePermission           = "delete"
+	EditPermission             = "edit"
+	ViewPermission             = "view"
+	MembershipPermission       = "membership"
+	DomainMembershipPermission = "membership_permission"
+	SharePermission            = "share"
+	PublishPermission          = "publish"
+	SubscribePermission        = "subscribe"
+	CreatePermission           = "create"
 )
 
 const MagistralaObject = "magistrala"

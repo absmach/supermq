@@ -12,6 +12,7 @@ import (
 	"github.com/absmach/magistrala/pkg/clients"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/roles"
+	"github.com/absmach/magistrala/pkg/svcutil"
 )
 
 // Status represents Domain status.
@@ -87,15 +88,76 @@ func (s *Status) UnmarshalJSON(data []byte) error {
 }
 
 const (
-	UpdatePermission          = "update_permission"
-	ReadPermission            = "read_permission"
-	MembershipPermission      = "membership_permission"
-	DeletePermission          = "delete_permission"
-	ManageRolePermission      = "manage_role_permission"
-	AddRoleUsersPermission    = "add_role_users_permission"
-	RemoveRoleUsersPermission = "remove_role_users_permission"
-	ViewRoleUsersPermission   = "view_role_users_permission"
+	createPermission          = "create_permission"
+	updatePermission          = "update_permission"
+	readPermission            = "read_permission"
+	membershipPermission      = "membership_permission"
+	deletePermission          = "delete_permission"
+	manageRolePermission      = "manage_role_permission"
+	addRoleUsersPermission    = "add_role_users_permission"
+	removeRoleUsersPermission = "remove_role_users_permission"
+	viewRoleUsersPermission   = "view_role_users_permission"
 )
+
+const (
+	OpCreateDomain svcutil.Operation = iota
+	OpRetrieveDomain
+	OpUpdateDomain
+	OpChangeDomainStatus
+	OpListDomains
+)
+
+var expectedOperations = []svcutil.Operation{
+	OpCreateDomain,
+	OpRetrieveDomain,
+	OpUpdateDomain,
+	OpChangeDomainStatus,
+	OpListDomains,
+}
+
+var operationNames = []string{
+	"OpCreateDomain",
+	"OpRetrieveDomain",
+	"OpUpdateDomain",
+	"OpChangeDomainStatus",
+	"OpListDomains",
+}
+
+func NewOperationPerm() svcutil.OperationPerm {
+	return svcutil.NewOperationPerm(expectedOperations, operationNames)
+}
+
+func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
+	opPerm := map[svcutil.Operation]svcutil.Permission{
+		OpCreateDomain:       createPermission,
+		OpRetrieveDomain:     readPermission,
+		OpUpdateDomain:       updatePermission,
+		OpChangeDomainStatus: updatePermission,
+		OpListDomains:        deletePermission,
+	}
+	return opPerm
+}
+
+func NewRolesOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
+	opPerm := map[svcutil.Operation]svcutil.Permission{
+		roles.OpAddRole:                     manageRolePermission,
+		roles.OpRemoveRole:                  manageRolePermission,
+		roles.OpUpdateRoleName:              manageRolePermission,
+		roles.OpRetrieveRole:                manageRolePermission,
+		roles.OpRetrieveAllRoles:            manageRolePermission,
+		roles.OpRoleAddCapabilities:         manageRolePermission,
+		roles.OpRoleListCapabilities:        manageRolePermission,
+		roles.OpRoleCheckCapabilitiesExists: manageRolePermission,
+		roles.OpRoleRemoveCapabilities:      manageRolePermission,
+		roles.OpRoleRemoveAllCapabilities:   manageRolePermission,
+		roles.OpRoleAddMembers:              addRoleUsersPermission,
+		roles.OpRoleListMembers:             viewRoleUsersPermission,
+		roles.OpRoleCheckMembersExists:      viewRoleUsersPermission,
+		roles.OpRoleRemoveMembers:           removeRoleUsersPermission,
+		roles.OpRoleRemoveAllMembers:        manageRolePermission,
+	}
+	return opPerm
+}
 
 type DomainReq struct {
 	Name     *string           `json:"name,omitempty"`

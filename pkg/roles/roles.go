@@ -6,6 +6,8 @@ package roles
 import (
 	"context"
 	"time"
+
+	"github.com/absmach/magistrala/pkg/svcutil"
 )
 
 type Capability string
@@ -134,4 +136,62 @@ type Repository interface {
 	RoleCheckMembersExists(ctx context.Context, roleID string, members []string) (bool, error)
 	RoleRemoveMembers(ctx context.Context, role Role, members []string) (err error)
 	RoleRemoveAllMembers(ctx context.Context, role Role) (err error)
+}
+
+const (
+	OpAddRole svcutil.Operation = iota
+	OpRemoveRole
+	OpUpdateRoleName
+	OpRetrieveRole
+	OpRetrieveAllRoles
+	OpRoleAddCapabilities
+	OpRoleListCapabilities
+	OpRoleCheckCapabilitiesExists
+	OpRoleRemoveCapabilities
+	OpRoleRemoveAllCapabilities
+	OpRoleAddMembers
+	OpRoleListMembers
+	OpRoleCheckMembersExists
+	OpRoleRemoveMembers
+	OpRoleRemoveAllMembers
+)
+
+var expectedOperations = []svcutil.Operation{
+	OpAddRole,
+	OpRemoveRole,
+	OpUpdateRoleName,
+	OpRetrieveRole,
+	OpRetrieveAllRoles,
+	OpRoleAddCapabilities,
+	OpRoleListCapabilities,
+	OpRoleCheckCapabilitiesExists,
+	OpRoleRemoveCapabilities,
+	OpRoleRemoveAllCapabilities,
+	OpRoleAddMembers,
+	OpRoleListMembers,
+	OpRoleCheckMembersExists,
+	OpRoleRemoveMembers,
+	OpRoleRemoveAllMembers,
+}
+
+var operationNames = []string{
+	"OpAddRole",
+	"OpRemoveRole",
+	"OpUpdateRoleName",
+	"OpRetrieveRole",
+	"OpRetrieveAllRoles",
+	"OpRoleAddCapabilities",
+	"OpRoleListCapabilities",
+	"OpRoleCheckCapabilitiesExists",
+	"OpRoleRemoveCapabilities",
+	"OpRoleRemoveAllCapabilities",
+	"OpRoleAddMembers",
+	"OpRoleListMembers",
+	"OpRoleCheckMembersExists",
+	"OpRoleRemoveMembers",
+	"OpRoleRemoveAllMembers",
+}
+
+func NewOperationPerm() svcutil.OperationPerm {
+	return svcutil.NewOperationPerm(expectedOperations, operationNames)
 }

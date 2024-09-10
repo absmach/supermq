@@ -11,6 +11,7 @@ import (
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/roles"
+	"github.com/absmach/magistrala/pkg/svcutil"
 )
 
 var (
@@ -28,41 +29,32 @@ type service struct {
 	repo       domains.DomainsRepository
 	auth       magistrala.AuthServiceClient
 	idProvider magistrala.IDProvider
+	opp        svcutil.OperationPerm
 	entityroles.RolesSvc
 }
 
 var _ domains.Service = (*service)(nil)
 
 func New(repo domains.DomainsRepository, authClient magistrala.AuthServiceClient, idProvider magistrala.IDProvider, sidProvider magistrala.IDProvider) (domains.Service, error) {
-	opp := map[entityroles.Operation]entityroles.Permission{
-		entityroles.OpAddRole:                     domains.ManageRolePermission,
-		entityroles.OpRemoveRole:                  domains.ManageRolePermission,
-		entityroles.OpUpdateRoleName:              domains.ManageRolePermission,
-		entityroles.OpRetrieveRole:                domains.ManageRolePermission,
-		entityroles.OpRetrieveAllRoles:            domains.ManageRolePermission,
-		entityroles.OpRoleAddCapabilities:         domains.ManageRolePermission,
-		entityroles.OpRoleListCapabilities:        domains.ManageRolePermission,
-		entityroles.OpRoleCheckCapabilitiesExists: domains.ManageRolePermission,
-		entityroles.OpRoleRemoveCapabilities:      domains.ManageRolePermission,
-		entityroles.OpRoleRemoveAllCapabilities:   domains.ManageRolePermission,
-		entityroles.OpRoleAddMembers:              domains.AddRoleUsersPermission,
-		entityroles.OpRoleListMembers:             domains.ViewRoleUsersPermission,
-		entityroles.OpRoleCheckMembersExists:      domains.ViewRoleUsersPermission,
-		entityroles.OpRoleRemoveMembers:           domains.RemoveRoleUsersPermission,
-		entityroles.OpRoleRemoveAllMembers:        domains.ManageRolePermission,
-	}
-	opp, err := entityroles.NewOperationPerm(opp)
+
+	rolesSvc, err := entityroles.NewRolesSvc(auth.DomainType, repo, sidProvider, authClient, domains.AvailableCapabilities(), domains.BuiltInRoles(), domains.NewRolesOperationPermissionMap())
 	if err != nil {
 		return nil, err
 	}
-	rolesSvc, err := entityroles.NewRolesSvc(auth.DomainType, repo, sidProvider, authClient, domains.AvailableCapabilities(), domains.BuiltInRoles(), opp)
-	if err != nil {
-		return nil, err
+
+	opp := domains.NewOperationPerm()
+	if err := opp.AddOperationPermissionMap(domains.NewOperationPermissionMap()); err != nil {
+		return &service{}, err
 	}
+	if err := opp.Validate(); err != nil {
+		return &service{}, err
+	}
+
 	return &service{
 		repo:       repo,
 		auth:       authClient,
 		idProvider: idProvider,
+		opp:        opp,
 		RolesSvc:   rolesSvc,
 	}, nil
 }
@@ -125,23 +117,19 @@ func (svc service) RetrieveDomain(ctx context.Context, token, id string) (domain
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-	domain, err := svc.repo.RetrieveByID(ctx, id)
-	if err != nil {
-		return domains.Domain{}, errors.Wrap(svcerr.ErrViewEntity, err)
-	}
-	resp, err := svc.auth.Authorize(ctx, &magistrala.AuthorizeReq{
+	if err := svc.authorize(ctx, domains.OpRetrieveDomain, &magistrala.AuthorizeReq{
 		Subject:     user.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      id,
 		ObjectType:  auth.DomainType,
-		Permission:  domains.ReadPermission,
-	})
-	if err != nil {
-		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthorization, err)
+	}); err != nil {
+		return domains.Domain{}, err
 	}
-	if !resp.Authorized {
-		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthorization, err)
+
+	domain, err := svc.repo.RetrieveByID(ctx, id)
+	if err != nil {
+		return domains.Domain{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return domain, nil
 }
@@ -151,20 +139,14 @@ func (svc service) UpdateDomain(ctx context.Context, token, id string, d domains
 	if err != nil {
 		return domains.Domain{}, err
 	}
-	resp, err := svc.auth.Authorize(ctx, &magistrala.AuthorizeReq{
+	if err := svc.authorize(ctx, domains.OpUpdateDomain, &magistrala.AuthorizeReq{
 		Subject:     user.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      id,
 		ObjectType:  auth.DomainType,
-		Permission:  domains.UpdatePermission,
-	})
-	if err != nil {
-		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-	if !resp.Authorized {
-		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthorization, err)
-
+	}); err != nil {
+		return domains.Domain{}, err
 	}
 
 	dom, err := svc.repo.Update(ctx, id, user.UserID, d)
@@ -180,20 +162,14 @@ func (svc service) ChangeDomainStatus(ctx context.Context, token, id string, d d
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-	resp, err := svc.auth.Authorize(ctx, &magistrala.AuthorizeReq{
+	if err := svc.authorize(ctx, domains.OpChangeDomainStatus, &magistrala.AuthorizeReq{
 		Subject:     user.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      id,
 		ObjectType:  auth.DomainType,
-		Permission:  domains.UpdatePermission,
-	})
-	if err != nil {
-		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-	if !resp.Authorized {
-		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthorization, err)
-
+	}); err != nil {
+		return domains.Domain{}, err
 	}
 
 	dom, err := svc.repo.Update(ctx, id, user.UserID, d)
@@ -233,4 +209,20 @@ func (svc service) identify(ctx context.Context, token string) (identity, error)
 		return identity{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
 	return identity{ID: resp.GetId(), DomainID: resp.GetDomainId(), UserID: resp.GetUserId()}, nil
+}
+
+func (svc service) authorize(ctx context.Context, op svcutil.Operation, authReq *magistrala.AuthorizeReq) error {
+	perm, err := svc.opp.GetPermission(op)
+	if err != nil {
+		return err
+	}
+	authReq.Permission = perm.String()
+	resp, err := svc.auth.Authorize(ctx, authReq)
+	if err != nil {
+		return errors.Wrap(svcerr.ErrAuthorization, err)
+	}
+	if !resp.Authorized {
+		return errors.Wrap(svcerr.ErrAuthorization, err)
+	}
+	return nil
 }

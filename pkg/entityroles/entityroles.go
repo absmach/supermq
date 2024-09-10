@@ -10,121 +10,13 @@ import (
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/roles"
+	"github.com/absmach/magistrala/pkg/svcutil"
 )
 
 type identity struct {
 	ID       string
 	DomainID string
 	UserID   string
-}
-
-type Permission string
-
-func (p Permission) String() string {
-	return string(p)
-}
-
-type Operation int
-
-const (
-	OpAddRole Operation = iota
-	OpRemoveRole
-	OpUpdateRoleName
-	OpRetrieveRole
-	OpRetrieveAllRoles
-	OpRoleAddCapabilities
-	OpRoleListCapabilities
-	OpRoleCheckCapabilitiesExists
-	OpRoleRemoveCapabilities
-	OpRoleRemoveAllCapabilities
-	OpRoleAddMembers
-	OpRoleListMembers
-	OpRoleCheckMembersExists
-	OpRoleRemoveMembers
-	OpRoleRemoveAllMembers
-)
-
-func (op Operation) String() string {
-	names := [...]string{
-		"OpAddRole",
-		"OpRemoveRole",
-		"OpUpdateRoleName",
-		"OpRetrieveRole",
-		"OpRetrieveAllRoles",
-		"OpRoleAddCapabilities",
-		"OpRoleListCapabilities",
-		"OpRoleCheckCapabilitiesExists",
-		"OpRoleRemoveCapabilities",
-		"OpRoleRemoveAllCapabilities",
-		"OpRoleAddMembers",
-		"OpRoleListMembers",
-		"OpRoleCheckMembersExists",
-		"OpRoleRemoveMembers",
-		"OpRoleRemoveAllMembers",
-	}
-	if int(op) < 0 || int(op) >= len(names) {
-		return fmt.Sprintf("UnknownEntityRoleOperationKey(%d)", op)
-	}
-	return names[op]
-}
-
-var expectedOperations = []Operation{
-	OpAddRole,
-	OpRemoveRole,
-	OpUpdateRoleName,
-	OpRetrieveRole,
-	OpRetrieveAllRoles,
-	OpRoleAddCapabilities,
-	OpRoleListCapabilities,
-	OpRoleCheckCapabilitiesExists,
-	OpRoleRemoveCapabilities,
-	OpRoleRemoveAllCapabilities,
-	OpRoleAddMembers,
-	OpRoleListMembers,
-	OpRoleCheckMembersExists,
-	OpRoleRemoveMembers,
-	OpRoleRemoveAllMembers,
-}
-
-type OperationPerm map[Operation]Permission
-
-func NewOperationPerm(newEop map[Operation]Permission) (OperationPerm, error) {
-	eop := OperationPerm(newEop)
-	if err := eop.Validate(); err != nil {
-		return OperationPerm{}, err
-	}
-	return eop, nil
-}
-
-func (opp OperationPerm) isKeyRequired(op Operation) bool {
-	for _, key := range expectedOperations {
-		if key == op {
-			return true
-		}
-	}
-	return false
-}
-
-func (eop OperationPerm) Add(eo Operation, perm Permission) error {
-	if !eop.isKeyRequired(eo) {
-		return fmt.Errorf("%v is not a valid role operation", eo)
-	}
-	eop[eo] = perm
-	return nil
-}
-
-func (eop OperationPerm) Validate() error {
-	for eo := range eop {
-		if !eop.isKeyRequired(eo) {
-			return fmt.Errorf("OperationPerm: \"%s\" is not a valid entity roles operation", eo.String())
-		}
-	}
-	for _, eeo := range expectedOperations {
-		if _, ok := eop[eeo]; !ok {
-			return fmt.Errorf("OperationPerm: \"%s\" operation is not provided", eeo.String())
-		}
-	}
-	return nil
 }
 
 var (
@@ -141,10 +33,17 @@ type RolesSvc struct {
 	auth         magistrala.AuthServiceClient
 	capabilities []roles.Capability
 	builtInRoles map[roles.BuiltInRoleName][]roles.Capability
-	opp          OperationPerm
+	opp          svcutil.OperationPerm
 }
 
-func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala.IDProvider, auth magistrala.AuthServiceClient, capabilities []roles.Capability, builtInRoles map[roles.BuiltInRoleName][]roles.Capability, opp OperationPerm) (RolesSvc, error) {
+func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala.IDProvider, auth magistrala.AuthServiceClient, capabilities []roles.Capability, builtInRoles map[roles.BuiltInRoleName][]roles.Capability, opPerm map[svcutil.Operation]svcutil.Permission) (RolesSvc, error) {
+	opp := roles.NewOperationPerm()
+	if err := opp.AddOperationPermissionMap(opPerm); err != nil {
+		return RolesSvc{}, err
+	}
+	if err := opp.Validate(); err != nil {
+		return RolesSvc{}, err
+	}
 	rolesSvc := RolesSvc{
 		entityType:   entityType,
 		repo:         repo,
@@ -216,14 +115,13 @@ func (r RolesSvc) AddRole(ctx context.Context, token, entityID string, roleName 
 		return roles.Role{}, err
 	}
 
-	if err := r.authorize(ctx, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpAddRole, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.opp[OpAddRole].String(),
 	}); err != nil {
 		return roles.Role{}, err
 	}
@@ -311,14 +209,13 @@ func (r RolesSvc) RemoveRole(ctx context.Context, token, entityID, roleName stri
 		return err
 	}
 
-	if err := r.authorize(ctx, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRemoveRole, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.opp[OpRemoveRole].String(),
 	}); err != nil {
 		return err
 	}
@@ -353,14 +250,13 @@ func (r RolesSvc) UpdateRoleName(ctx context.Context, token, entityID, oldRoleNa
 		return roles.Role{}, err
 	}
 
-	if err := r.authorize(ctx, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpUpdateRoleName, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.opp[OpUpdateRoleName].String(),
 	}); err != nil {
 		return roles.Role{}, err
 	}
@@ -384,14 +280,13 @@ func (r RolesSvc) UpdateRoleName(ctx context.Context, token, entityID, oldRoleNa
 
 func (r RolesSvc) RetrieveRole(ctx context.Context, token, entityID, roleName string) (roles.Role, error) {
 	userInfo, err := r.identify(ctx, token)
-	if err := r.authorize(ctx, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRetrieveRole, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.opp[OpRetrieveRole].String(),
 	}); err != nil {
 		return roles.Role{}, err
 	}
@@ -413,14 +308,13 @@ func (r RolesSvc) RetrieveAllRoles(ctx context.Context, token, entityID string, 
 		return roles.RolePage{}, err
 	}
 
-	if err := r.authorize(ctx, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRetrieveAllRoles, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.opp[OpRetrieveAllRoles].String(),
 	}); err != nil {
 		return roles.RolePage{}, err
 	}
@@ -438,14 +332,13 @@ func (r RolesSvc) RoleAddCapabilities(ctx context.Context, token, entityID, role
 		return []string{}, err
 	}
 
-	if err := r.authorize(ctx, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRoleAddCapabilities, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.opp[OpRoleAddCapabilities].String(),
 	}); err != nil {
 		return []string{}, err
 	}
@@ -507,14 +400,13 @@ func (r RolesSvc) RoleListCapabilities(ctx context.Context, token, entityID, rol
 		return []string{}, err
 	}
 
-	if err := r.authorize(ctx, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRoleListCapabilities, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.opp[OpRoleListCapabilities].String(),
 	}); err != nil {
 		return []string{}, err
 	}
@@ -537,14 +429,13 @@ func (r RolesSvc) RoleCheckCapabilitiesExists(ctx context.Context, token, entity
 	if err != nil {
 		return false, err
 	}
-	if err := r.authorize(ctx, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRoleCheckCapabilitiesExists, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.opp[OpRoleCheckCapabilitiesExists].String(),
 	}); err != nil {
 		return false, err
 	}
@@ -565,14 +456,13 @@ func (r RolesSvc) RoleRemoveCapabilities(ctx context.Context, token, entityID, r
 	if err != nil {
 		return err
 	}
-	if err := r.authorize(ctx, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRoleRemoveCapabilities, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.opp[OpRoleRemoveCapabilities].String(),
 	}); err != nil {
 		return err
 	}
@@ -618,14 +508,13 @@ func (r RolesSvc) RoleRemoveAllCapabilities(ctx context.Context, token, entityID
 	if err != nil {
 		return err
 	}
-	if err := r.authorize(ctx, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRoleRemoveAllCapabilities, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.opp[OpRoleRemoveAllCapabilities].String(),
 	}); err != nil {
 		return err
 	}
@@ -661,14 +550,13 @@ func (r RolesSvc) RoleAddMembers(ctx context.Context, token, entityID, roleName 
 	if err != nil {
 		return []string{}, err
 	}
-	if err := r.authorize(ctx, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRoleAddMembers, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.opp[OpRoleAddMembers].String(),
 	}); err != nil {
 		return []string{}, err
 	}
@@ -723,14 +611,13 @@ func (r RolesSvc) RoleListMembers(ctx context.Context, token, entityID, roleName
 	if err != nil {
 		return roles.MembersPage{}, err
 	}
-	if err := r.authorize(ctx, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRoleListMembers, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.opp[OpRoleListMembers].String(),
 	}); err != nil {
 		return roles.MembersPage{}, err
 	}
@@ -751,14 +638,13 @@ func (r RolesSvc) RoleCheckMembersExists(ctx context.Context, token, entityID, r
 	if err != nil {
 		return false, err
 	}
-	if err := r.authorize(ctx, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRoleCheckMembersExists, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.opp[OpRoleCheckMembersExists].String(),
 	}); err != nil {
 		return false, err
 	}
@@ -779,14 +665,13 @@ func (r RolesSvc) RoleRemoveMembers(ctx context.Context, token, entityID, roleNa
 	if err != nil {
 		return err
 	}
-	if err := r.authorize(ctx, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRoleRemoveMembers, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.opp[OpRoleRemoveMembers].String(),
 	}); err != nil {
 		return err
 	}
@@ -831,14 +716,13 @@ func (r RolesSvc) RoleRemoveAllMembers(ctx context.Context, token, entityID, rol
 	if err != nil {
 		return err
 	}
-	if err := r.authorize(ctx, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRoleRemoveAllMembers, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
 		Object:      entityID,
 		ObjectType:  r.entityType,
-		Permission:  r.opp[OpRoleRemoveAllMembers].String(),
 	}); err != nil {
 		return err
 	}
@@ -1062,7 +946,14 @@ func (r RolesSvc) identify(ctx context.Context, token string) (identity, error) 
 	}
 	return identity{ID: resp.GetId(), DomainID: resp.GetDomainId(), UserID: resp.GetUserId()}, nil
 }
-func (r RolesSvc) authorize(ctx context.Context, pr *magistrala.AuthorizeReq) error {
+func (r RolesSvc) authorize(ctx context.Context, op svcutil.Operation, pr *magistrala.AuthorizeReq) error {
+	perm, err := r.opp.GetPermission(op)
+	if err != nil {
+		return err
+	}
+
+	pr.Permission = perm.String()
+
 	resp, err := r.auth.Authorize(ctx, pr)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)

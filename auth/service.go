@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/pkg/domains"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 )
@@ -243,7 +242,7 @@ func (svc service) checkDomain(ctx context.Context, subjectType, subject, domain
 	if err := svc.agent.CheckPolicy(ctx, PolicyReq{
 		Subject:     subject,
 		SubjectType: subjectType,
-		Permission:  domains.MembershipPermission,
+		Permission:  DomainMembershipPermission,
 		Object:      domainID,
 		ObjectType:  DomainType,
 	}); err != nil {
@@ -515,7 +514,7 @@ func (svc service) checkUserDomain(ctx context.Context, key Key) (subject string
 		if err = svc.Authorize(ctx, PolicyReq{
 			Subject:     domainUserSubject,
 			SubjectType: UserType,
-			Permission:  domains.MembershipPermission,
+			Permission:  DomainMembershipPermission,
 			Object:      key.Domain,
 			ObjectType:  DomainType,
 		}); err != nil {
