@@ -846,7 +846,7 @@ func TestDeleteInvitation(t *testing.T) {
 
 func TestRejectInvitation(t *testing.T) {
 	repo := new(mocks.Repository)
-	authsvc := new(authmocks.AuthClient)
+	authsvc := new(authmocks.AuthServiceClient)
 	svc := invitations.NewService(repo, authsvc, nil)
 
 	cases := []struct {
