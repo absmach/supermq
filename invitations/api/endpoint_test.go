@@ -572,9 +572,9 @@ func TestRejectInvitation(t *testing.T) {
 			svcErr:      nil,
 		},
 		{
-			desc:        "service error",
+			desc:        "unauthorized error",
 			token:       validToken,
-			data:        fmt.Sprintf(`{"domain_id": "%s"}`, validID),
+			data:        fmt.Sprintf(`{"domain_id": "%s"}`, "invalid"),
 			status:      http.StatusForbidden,
 			contentType: validContenType,
 			svcErr:      svcerr.ErrAuthorization,

@@ -608,7 +608,7 @@ func TestAcceptInvitation(t *testing.T) {
 			repoErr:     nil,
 		},
 		{
-			desc:        "list invitations successful that have been confirmed",
+			desc:        "list invitations successful that have been accepted",
 			token:       validToken,
 			tokenUserID: userID,
 			domainID:    "",
@@ -637,7 +637,7 @@ func TestAcceptInvitation(t *testing.T) {
 			repoErr:     svcerr.ErrNotFound,
 		},
 		{
-			desc:        "list invitations successful that have been confirmed with sdk err",
+			desc:        "list invitations successful that have been accepted with sdk err",
 			token:       validToken,
 			tokenUserID: userID,
 			domainID:    "",
