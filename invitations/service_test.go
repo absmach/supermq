@@ -608,7 +608,7 @@ func TestAcceptInvitation(t *testing.T) {
 			repoErr:     nil,
 		},
 		{
-			desc:        "list invitations successful that have been accepted",
+			desc:        "accept invitation successful",
 			token:       validToken,
 			tokenUserID: userID,
 			domainID:    "",
@@ -626,7 +626,7 @@ func TestAcceptInvitation(t *testing.T) {
 			repoErr:    nil,
 		},
 		{
-			desc:        "list invitations with failed to retrieve all",
+			desc:        "accept invitation with failed to retrieve all",
 			token:       validToken,
 			tokenUserID: userID,
 			err:         svcerr.ErrNotFound,
@@ -637,7 +637,7 @@ func TestAcceptInvitation(t *testing.T) {
 			repoErr:     svcerr.ErrNotFound,
 		},
 		{
-			desc:        "list invitations successful that have been accepted with sdk err",
+			desc:        "accept invitation with sdk err",
 			token:       validToken,
 			tokenUserID: userID,
 			domainID:    "",
@@ -656,7 +656,7 @@ func TestAcceptInvitation(t *testing.T) {
 			sdkErr:     errors.NewSDKError(svcerr.ErrConflict),
 		},
 		{
-			desc:        "list invitations successful that have been confirmed with failed update confirmation",
+			desc:        "accept invitation with failed update confirmation",
 			token:       validToken,
 			tokenUserID: userID,
 			domainID:    "",
