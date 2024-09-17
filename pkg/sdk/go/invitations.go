@@ -115,7 +115,7 @@ func (sdk mgSDK) RejectInvitation(domainID, token string) (err error) {
 
 	url := sdk.invitationsURL + "/" + invitationsEndpoint + "/" + rejectEndpoint
 
-	_, _, sdkerr := sdk.processRequest(http.MethodDelete, url, token, data, nil, http.StatusNoContent)
+	_, _, sdkerr := sdk.processRequest(http.MethodPost, url, token, data, nil, http.StatusNoContent)
 
 	return sdkerr
 }
