@@ -26,6 +26,7 @@ type Invitation struct {
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at,omitempty"`
 	ConfirmedAt time.Time `json:"confirmed_at,omitempty"`
+	RejectedAt  time.Time `json:"rejected_at,omitempty"`
 	Resend      bool      `json:"resend,omitempty"`
 }
 
