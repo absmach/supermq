@@ -31,12 +31,12 @@ type RolesSvc struct {
 	repo         roles.Repository
 	idProvider   magistrala.IDProvider
 	auth         magistrala.AuthServiceClient
-	capabilities []roles.Capability
-	builtInRoles map[roles.BuiltInRoleName][]roles.Capability
+	actions      []roles.Action
+	builtInRoles map[roles.BuiltInRoleName][]roles.Action
 	opp          svcutil.OperationPerm
 }
 
-func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala.IDProvider, auth magistrala.AuthServiceClient, capabilities []roles.Capability, builtInRoles map[roles.BuiltInRoleName][]roles.Capability, opPerm map[svcutil.Operation]svcutil.Permission) (RolesSvc, error) {
+func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala.IDProvider, auth magistrala.AuthServiceClient, actions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action, opPerm map[svcutil.Operation]svcutil.Permission) (RolesSvc, error) {
 	opp := roles.NewOperationPerm()
 	if err := opp.AddOperationPermissionMap(opPerm); err != nil {
 		return RolesSvc{}, err
@@ -49,7 +49,7 @@ func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala
 		repo:         repo,
 		idProvider:   idProvider,
 		auth:         auth,
-		capabilities: capabilities,
+		actions:      actions,
 		builtInRoles: builtInRoles,
 		opp:          opp,
 	}
@@ -66,20 +66,20 @@ func (r RolesSvc) validate() error {
 	return nil
 }
 
-func toRolesCapabilities(capabilities []string) []roles.Capability {
-	roCapabilities := []roles.Capability{}
-	for _, capability := range capabilities {
-		roCapabilities = append(roCapabilities, roles.Capability(capability))
+func toRolesActions(actions []string) []roles.Action {
+	roActions := []roles.Action{}
+	for _, action := range actions {
+		roActions = append(roActions, roles.Action(action))
 	}
-	return roCapabilities
+	return roActions
 }
 
-func roleCapabilitiesToString(roCapabilities []roles.Capability) []string {
-	capabilities := []string{}
-	for _, roCapability := range roCapabilities {
-		capabilities = append(capabilities, roCapability.String())
+func roleActionsToString(roActions []roles.Action) []string {
+	actions := []string{}
+	for _, roAction := range roActions {
+		actions = append(actions, roAction.String())
 	}
-	return capabilities
+	return actions
 }
 
 func roleMembersToString(roMems []roles.Member) []string {
@@ -90,25 +90,25 @@ func roleMembersToString(roMems []roles.Member) []string {
 	return mems
 }
 
-func (r RolesSvc) isCapabilityAllowed(capability roles.Capability) bool {
-	for _, cap := range r.capabilities {
-		if cap == capability {
+func (r RolesSvc) isActionAllowed(action roles.Action) bool {
+	for _, cap := range r.actions {
+		if cap == action {
 			return true
 		}
 	}
 	return false
 }
-func (r RolesSvc) validateCapabilities(capabilities []roles.Capability) error {
-	for _, ac := range capabilities {
-		action := roles.Capability(ac)
-		if !r.isCapabilityAllowed(action) {
+func (r RolesSvc) validateActions(actions []roles.Action) error {
+	for _, ac := range actions {
+		action := roles.Action(ac)
+		if !r.isActionAllowed(action) {
 			return errors.Wrap(svcerr.ErrMalformedEntity, fmt.Errorf("invalid action %s ", action))
 		}
 	}
 	return nil
 }
 
-func (r RolesSvc) AddRole(ctx context.Context, token, entityID string, roleName string, optionalCapabilities []string, optionalMembers []string) (fnRole roles.Role, fnErr error) {
+func (r RolesSvc) AddRole(ctx context.Context, token, entityID string, roleName string, optionalActions []string, optionalMembers []string) (fnRole roles.Role, fnErr error) {
 
 	userInfo, err := r.identify(ctx, token)
 	if err != nil {
@@ -132,7 +132,7 @@ func (r RolesSvc) AddRole(ctx context.Context, token, entityID string, roleName 
 		return roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 
-	if err := r.validateCapabilities(toRolesCapabilities(optionalCapabilities)); err != nil {
+	if err := r.validateActions(toRolesActions(optionalActions)); err != nil {
 		return roles.Role{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 	}
 
@@ -145,13 +145,13 @@ func (r RolesSvc) AddRole(ctx context.Context, token, entityID string, roleName 
 				CreatedAt: time.Now(),
 				CreatedBy: userInfo.UserID,
 			},
-			OptionalCapabilities: optionalCapabilities,
-			OptionalMembers:      optionalMembers,
+			OptionalActions: optionalActions,
+			OptionalMembers: optionalMembers,
 		},
 	}
 	prs := []*magistrala.AddPolicyReq{}
 
-	for _, cap := range optionalCapabilities {
+	for _, cap := range optionalActions {
 		prs = append(prs, &magistrala.AddPolicyReq{
 			SubjectType:     "role",
 			SubjectRelation: "member",
@@ -326,13 +326,13 @@ func (r RolesSvc) RetrieveAllRoles(ctx context.Context, token, entityID string, 
 	return ros, nil
 }
 
-func (r RolesSvc) RoleAddCapabilities(ctx context.Context, token, entityID, roleName string, capabilities []string) (fnOps []string, fnErr error) {
+func (r RolesSvc) RoleAddActions(ctx context.Context, token, entityID, roleName string, actions []string) (fnOps []string, fnErr error) {
 	userInfo, err := r.identify(ctx, token)
 	if err != nil {
 		return []string{}, err
 	}
 
-	if err := r.authorize(ctx, roles.OpRoleAddCapabilities, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRoleAddActions, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
@@ -348,16 +348,16 @@ func (r RolesSvc) RoleAddCapabilities(ctx context.Context, token, entityID, role
 		return []string{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 
-	if len(capabilities) == 0 {
+	if len(actions) == 0 {
 		return []string{}, svcerr.ErrMalformedEntity
 	}
 
-	if err := r.validateCapabilities(toRolesCapabilities(capabilities)); err != nil {
+	if err := r.validateActions(toRolesActions(actions)); err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 	}
 
 	prs := []*magistrala.AddPolicyReq{}
-	for _, cap := range capabilities {
+	for _, cap := range actions {
 		prs = append(prs, &magistrala.AddPolicyReq{
 			SubjectType:     "role",
 			SubjectRelation: "member",
@@ -387,20 +387,20 @@ func (r RolesSvc) RoleAddCapabilities(ctx context.Context, token, entityID, role
 	ro.UpdatedAt = time.Now()
 	ro.UpdatedBy = userInfo.UserID
 
-	resOps, err := r.repo.RoleAddCapabilities(ctx, ro, capabilities)
+	resOps, err := r.repo.RoleAddActions(ctx, ro, actions)
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	return resOps, nil
 }
 
-func (r RolesSvc) RoleListCapabilities(ctx context.Context, token, entityID, roleName string) ([]string, error) {
+func (r RolesSvc) RoleListActions(ctx context.Context, token, entityID, roleName string) ([]string, error) {
 	userInfo, err := r.identify(ctx, token)
 	if err != nil {
 		return []string{}, err
 	}
 
-	if err := r.authorize(ctx, roles.OpRoleListCapabilities, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRoleListActions, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
@@ -416,7 +416,7 @@ func (r RolesSvc) RoleListCapabilities(ctx context.Context, token, entityID, rol
 		return []string{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	ops, err := r.repo.RoleListCapabilities(ctx, ro.ID)
+	ops, err := r.repo.RoleListActions(ctx, ro.ID)
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
@@ -424,12 +424,12 @@ func (r RolesSvc) RoleListCapabilities(ctx context.Context, token, entityID, rol
 
 }
 
-func (r RolesSvc) RoleCheckCapabilitiesExists(ctx context.Context, token, entityID, roleName string, operations []string) (bool, error) {
+func (r RolesSvc) RoleCheckActionsExists(ctx context.Context, token, entityID, roleName string, operations []string) (bool, error) {
 	userInfo, err := r.identify(ctx, token)
 	if err != nil {
 		return false, err
 	}
-	if err := r.authorize(ctx, roles.OpRoleCheckCapabilitiesExists, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRoleCheckActionsExists, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
@@ -444,19 +444,19 @@ func (r RolesSvc) RoleCheckCapabilitiesExists(ctx context.Context, token, entity
 		return false, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	result, err := r.repo.RoleCheckCapabilitiesExists(ctx, ro.ID, operations)
+	result, err := r.repo.RoleCheckActionsExists(ctx, ro.ID, operations)
 	if err != nil {
 		return true, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return result, nil
 }
 
-func (r RolesSvc) RoleRemoveCapabilities(ctx context.Context, token, entityID, roleName string, operations []string) (err error) {
+func (r RolesSvc) RoleRemoveActions(ctx context.Context, token, entityID, roleName string, operations []string) (err error) {
 	userInfo, err := r.identify(ctx, token)
 	if err != nil {
 		return err
 	}
-	if err := r.authorize(ctx, roles.OpRoleRemoveCapabilities, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRoleRemoveActions, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
@@ -497,18 +497,18 @@ func (r RolesSvc) RoleRemoveCapabilities(ctx context.Context, token, entityID, r
 
 	ro.UpdatedAt = time.Now()
 	ro.UpdatedBy = userInfo.UserID
-	if err := r.repo.RoleRemoveCapabilities(ctx, ro, operations); err != nil {
+	if err := r.repo.RoleRemoveActions(ctx, ro, operations); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	return nil
 }
 
-func (r RolesSvc) RoleRemoveAllCapabilities(ctx context.Context, token, entityID, roleName string) error {
+func (r RolesSvc) RoleRemoveAllActions(ctx context.Context, token, entityID, roleName string) error {
 	userInfo, err := r.identify(ctx, token)
 	if err != nil {
 		return err
 	}
-	if err := r.authorize(ctx, roles.OpRoleRemoveAllCapabilities, &magistrala.AuthorizeReq{
+	if err := r.authorize(ctx, roles.OpRoleRemoveAllActions, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		Subject:     userInfo.ID,
 		SubjectType: auth.UserType,
@@ -539,7 +539,7 @@ func (r RolesSvc) RoleRemoveAllCapabilities(ctx context.Context, token, entityID
 	ro.UpdatedAt = time.Now()
 	ro.UpdatedBy = userInfo.UserID
 
-	if err := r.repo.RoleRemoveAllCapabilities(ctx, ro); err != nil {
+	if err := r.repo.RoleRemoveAllActions(ctx, ro); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	return nil
@@ -759,7 +759,7 @@ func (r RolesSvc) AddNewEntityRoles(ctx context.Context, userID, domainID, entit
 	prs := []*magistrala.AddPolicyReq{}
 
 	for defaultRole, defaultRoleMembers := range newBuiltInRoleMembers {
-		capabilities, ok := r.builtInRoles[defaultRole]
+		actions, ok := r.builtInRoles[defaultRole]
 		if !ok {
 			return []roles.RoleProvision{}, fmt.Errorf("default role %s not found in in-built roles", defaultRole)
 		}
@@ -770,12 +770,12 @@ func (r RolesSvc) AddNewEntityRoles(ctx context.Context, userID, domainID, entit
 			return []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 		}
 
-		if err := r.validateCapabilities(capabilities); err != nil {
+		if err := r.validateActions(actions); err != nil {
 			return []roles.RoleProvision{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 		}
 
 		members := roleMembersToString(defaultRoleMembers)
-		caps := roleCapabilitiesToString(capabilities)
+		caps := roleActionsToString(actions)
 
 		newRolesProvision = append(newRolesProvision, roles.RoleProvision{
 			Role: roles.Role{
@@ -785,8 +785,8 @@ func (r RolesSvc) AddNewEntityRoles(ctx context.Context, userID, domainID, entit
 				CreatedAt: time.Now(),
 				CreatedBy: userID,
 			},
-			OptionalCapabilities: caps,
-			OptionalMembers:      members,
+			OptionalActions: caps,
+			OptionalMembers: members,
 		})
 
 		for _, cap := range caps {
@@ -882,7 +882,7 @@ func (r RolesSvc) RemoveNewEntityRoles(ctx context.Context, userID, domainID, en
 
 	roleIDs := []string{}
 	for _, rp := range newRolesProvision {
-		for _, cap := range rp.OptionalCapabilities {
+		for _, cap := range rp.OptionalActions {
 			prs = append(prs, &magistrala.DeletePolicyReq{
 				SubjectType:     "role",
 				SubjectRelation: "member",

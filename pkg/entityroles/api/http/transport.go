@@ -61,34 +61,34 @@ func RolesHandler(svc roles.Roles, entityTypePrefixRootPath string, r *chi.Mux, 
 				opts...,
 			), "delete_role").ServeHTTP)
 
-			r.Route("/capabilities", func(r chi.Router) {
+			r.Route("/actions", func(r chi.Router) {
 				r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
-					AddRoleCapabilitiesEndpoint(svc),
-					DecodeAddRoleCapabilities,
+					AddRoleActionsEndpoint(svc),
+					DecodeAddRoleActions,
 					api.EncodeResponse,
 					opts...,
-				), "add_role_capabilities").ServeHTTP)
+				), "add_role_actions").ServeHTTP)
 
 				r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
-					ListRoleCapabilitiesEndpoint(svc),
-					DecodeListRoleCapabilities,
+					ListRoleActionsEndpoint(svc),
+					DecodeListRoleActions,
 					api.EncodeResponse,
 					opts...,
-				), "list_role_capabilities").ServeHTTP)
+				), "list_role_actions").ServeHTTP)
 
 				r.Post("/delete", otelhttp.NewHandler(kithttp.NewServer(
-					DeleteRoleCapabilitiesEndpoint(svc),
-					DecodeDeleteRoleCapabilities,
+					DeleteRoleActionsEndpoint(svc),
+					DecodeDeleteRoleActions,
 					api.EncodeResponse,
 					opts...,
-				), "delete_role_capabilities").ServeHTTP)
+				), "delete_role_actions").ServeHTTP)
 
 				r.Post("/delete-all", otelhttp.NewHandler(kithttp.NewServer(
-					DeleteAllRoleCapabilitiesEndpoint(svc),
-					DecodeDeleteAllRoleCapabilities,
+					DeleteAllRoleActionsEndpoint(svc),
+					DecodeDeleteAllRoleActions,
 					api.EncodeResponse,
 					opts...,
-				), "delete_all_role_capabilities").ServeHTTP)
+				), "delete_all_role_actions").ServeHTTP)
 			})
 
 			r.Route("/members", func(r chi.Router) {

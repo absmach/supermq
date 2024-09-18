@@ -76,56 +76,56 @@ func DeleteRoleEndpoint(svc roles.Roles) endpoint.Endpoint {
 		return deleteRoleRes{}, nil
 	}
 }
-func AddRoleCapabilitiesEndpoint(svc roles.Roles) endpoint.Endpoint {
+func AddRoleActionsEndpoint(svc roles.Roles) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(addRoleCapabilitiesReq)
+		req := request.(addRoleActionsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		caps, err := svc.RoleAddCapabilities(ctx, req.token, req.entityID, req.roleName, req.Capabilities)
+		caps, err := svc.RoleAddActions(ctx, req.token, req.entityID, req.roleName, req.Actions)
 		if err != nil {
 			return nil, err
 		}
-		return addRoleCapabilitiesRes{Capabilities: caps}, nil
+		return addRoleActionsRes{Actions: caps}, nil
 	}
 }
-func ListRoleCapabilitiesEndpoint(svc roles.Roles) endpoint.Endpoint {
+func ListRoleActionsEndpoint(svc roles.Roles) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listRoleCapabilitiesReq)
+		req := request.(listRoleActionsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		caps, err := svc.RoleListCapabilities(ctx, req.token, req.entityID, req.roleName)
+		caps, err := svc.RoleListActions(ctx, req.token, req.entityID, req.roleName)
 		if err != nil {
 			return nil, err
 		}
-		return listRoleCapabilitiesRes{Capabilities: caps}, nil
+		return listRoleActionsRes{Actions: caps}, nil
 	}
 }
-func DeleteRoleCapabilitiesEndpoint(svc roles.Roles) endpoint.Endpoint {
+func DeleteRoleActionsEndpoint(svc roles.Roles) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(deleteRoleCapabilitiesReq)
+		req := request.(deleteRoleActionsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		if err := svc.RoleRemoveCapabilities(ctx, req.token, req.entityID, req.roleName, req.Capabilities); err != nil {
+		if err := svc.RoleRemoveActions(ctx, req.token, req.entityID, req.roleName, req.Actions); err != nil {
 			return nil, err
 		}
-		return deleteRoleCapabilitiesRes{}, nil
+		return deleteRoleActionsRes{}, nil
 	}
 }
-func DeleteAllRoleCapabilitiesEndpoint(svc roles.Roles) endpoint.Endpoint {
+func DeleteAllRoleActionsEndpoint(svc roles.Roles) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(deleteAllRoleCapabilitiesReq)
+		req := request.(deleteAllRoleActionsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		if err := svc.RoleRemoveAllCapabilities(ctx, req.token, req.entityID, req.roleName); err != nil {
+		if err := svc.RoleRemoveAllActions(ctx, req.token, req.entityID, req.roleName); err != nil {
 			return nil, err
 		}
-		return deleteAllRoleCapabilitiesRes{}, nil
+		return deleteAllRoleActionsRes{}, nil
 	}
 }
 func AddRoleMembersEndpoint(svc roles.Roles) endpoint.Endpoint {

@@ -30,8 +30,8 @@ func NewRolesSvcMetricsMiddleware(svcName string, svc roles.Roles, counter metri
 	}
 }
 
-func (rmm *RolesSvcMetricsMiddleware) AddRole(ctx context.Context, token, entityID, roleName string, optionalCapabilities []string, optionalMembers []string) (roles.Role, error) {
-	return rmm.svc.AddRole(ctx, token, entityID, roleName, optionalCapabilities, optionalMembers)
+func (rmm *RolesSvcMetricsMiddleware) AddRole(ctx context.Context, token, entityID, roleName string, optionalActions []string, optionalMembers []string) (roles.Role, error) {
+	return rmm.svc.AddRole(ctx, token, entityID, roleName, optionalActions, optionalMembers)
 }
 func (rmm *RolesSvcMetricsMiddleware) RemoveRole(ctx context.Context, token, entityID, roleName string) error {
 	return rmm.svc.RemoveRole(ctx, token, entityID, roleName)
@@ -45,20 +45,20 @@ func (rmm *RolesSvcMetricsMiddleware) RetrieveRole(ctx context.Context, token, e
 func (rmm *RolesSvcMetricsMiddleware) RetrieveAllRoles(ctx context.Context, token, entityID string, limit, offset uint64) (roles.RolePage, error) {
 	return rmm.svc.RetrieveAllRoles(ctx, token, entityID, limit, offset)
 }
-func (rmm *RolesSvcMetricsMiddleware) RoleAddCapabilities(ctx context.Context, token, entityID, roleName string, capabilities []string) (caps []string, err error) {
-	return rmm.svc.RoleAddCapabilities(ctx, token, entityID, roleName, capabilities)
+func (rmm *RolesSvcMetricsMiddleware) RoleAddActions(ctx context.Context, token, entityID, roleName string, actions []string) (caps []string, err error) {
+	return rmm.svc.RoleAddActions(ctx, token, entityID, roleName, actions)
 }
-func (rmm *RolesSvcMetricsMiddleware) RoleListCapabilities(ctx context.Context, token, entityID, roleName string) ([]string, error) {
-	return rmm.svc.RoleListCapabilities(ctx, token, entityID, roleName)
+func (rmm *RolesSvcMetricsMiddleware) RoleListActions(ctx context.Context, token, entityID, roleName string) ([]string, error) {
+	return rmm.svc.RoleListActions(ctx, token, entityID, roleName)
 }
-func (rmm *RolesSvcMetricsMiddleware) RoleCheckCapabilitiesExists(ctx context.Context, token, entityID, roleName string, capabilities []string) (bool, error) {
-	return rmm.svc.RoleCheckCapabilitiesExists(ctx, token, entityID, roleName, capabilities)
+func (rmm *RolesSvcMetricsMiddleware) RoleCheckActionsExists(ctx context.Context, token, entityID, roleName string, actions []string) (bool, error) {
+	return rmm.svc.RoleCheckActionsExists(ctx, token, entityID, roleName, actions)
 }
-func (rmm *RolesSvcMetricsMiddleware) RoleRemoveCapabilities(ctx context.Context, token, entityID, roleName string, capabilities []string) (err error) {
-	return rmm.svc.RoleRemoveCapabilities(ctx, token, entityID, roleName, capabilities)
+func (rmm *RolesSvcMetricsMiddleware) RoleRemoveActions(ctx context.Context, token, entityID, roleName string, actions []string) (err error) {
+	return rmm.svc.RoleRemoveActions(ctx, token, entityID, roleName, actions)
 }
-func (rmm *RolesSvcMetricsMiddleware) RoleRemoveAllCapabilities(ctx context.Context, token, entityID, roleName string) error {
-	return rmm.svc.RoleRemoveAllCapabilities(ctx, token, entityID, roleName)
+func (rmm *RolesSvcMetricsMiddleware) RoleRemoveAllActions(ctx context.Context, token, entityID, roleName string) error {
+	return rmm.svc.RoleRemoveAllActions(ctx, token, entityID, roleName)
 }
 func (rmm *RolesSvcMetricsMiddleware) RoleAddMembers(ctx context.Context, token, entityID, roleName string, members []string) ([]string, error) {
 	return rmm.svc.RoleAddMembers(ctx, token, entityID, roleName, members)

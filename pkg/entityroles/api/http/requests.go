@@ -9,11 +9,11 @@ import (
 )
 
 type createRoleReq struct {
-	token                string
-	entityID             string
-	RoleName             string   `json:"role_name"`
-	OptionalCapabilities []string `json:"optional_capabilities"`
-	OptionalMembers      []string `json:"optional_members"`
+	token           string
+	entityID        string
+	RoleName        string   `json:"role_name"`
+	OptionalActions []string `json:"optional_actions"`
+	OptionalMembers []string `json:"optional_members"`
 }
 
 func (req createRoleReq) validate() error {
@@ -111,14 +111,14 @@ func (req deleteRoleReq) validate() error {
 	return nil
 }
 
-type addRoleCapabilitiesReq struct {
-	token        string
-	entityID     string
-	roleName     string
-	Capabilities []string `json:"capabilities"`
+type addRoleActionsReq struct {
+	token    string
+	entityID string
+	roleName string
+	Actions  []string `json:"actions"`
 }
 
-func (req addRoleCapabilitiesReq) validate() error {
+func (req addRoleActionsReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
@@ -129,19 +129,19 @@ func (req addRoleCapabilitiesReq) validate() error {
 		return apiutil.ErrMissingRoleName
 	}
 
-	if len(req.Capabilities) == 0 {
+	if len(req.Actions) == 0 {
 		return apiutil.ErrMissingPolicyEntityType
 	}
 	return nil
 }
 
-type listRoleCapabilitiesReq struct {
+type listRoleActionsReq struct {
 	token    string
 	entityID string
 	roleName string
 }
 
-func (req listRoleCapabilitiesReq) validate() error {
+func (req listRoleActionsReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
@@ -154,14 +154,14 @@ func (req listRoleCapabilitiesReq) validate() error {
 	return nil
 }
 
-type deleteRoleCapabilitiesReq struct {
-	token        string
-	entityID     string
-	roleName     string
-	Capabilities []string `json:"capabilities"`
+type deleteRoleActionsReq struct {
+	token    string
+	entityID string
+	roleName string
+	Actions  []string `json:"actions"`
 }
 
-func (req deleteRoleCapabilitiesReq) validate() error {
+func (req deleteRoleActionsReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
@@ -172,19 +172,19 @@ func (req deleteRoleCapabilitiesReq) validate() error {
 		return apiutil.ErrMissingRoleName
 	}
 
-	if len(req.Capabilities) == 0 {
+	if len(req.Actions) == 0 {
 		return apiutil.ErrMissingPolicyEntityType
 	}
 	return nil
 }
 
-type deleteAllRoleCapabilitiesReq struct {
+type deleteAllRoleActionsReq struct {
 	token    string
 	entityID string
 	roleName string
 }
 
-func (req deleteAllRoleCapabilitiesReq) validate() error {
+func (req deleteAllRoleActionsReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}

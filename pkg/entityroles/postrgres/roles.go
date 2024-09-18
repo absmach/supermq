@@ -49,9 +49,9 @@ type dbRole struct {
 	UpdatedAt sql.NullTime `db:"updated_at"`
 }
 
-type dbRoleCapability struct {
-	RoleID     string `db:"role_id"`
-	Capability string `db:"capability"`
+type dbRoleAction struct {
+	RoleID string `db:"role_id"`
+	Action string `db:"action"`
 }
 
 type dbRoleMember struct {
@@ -147,16 +147,16 @@ func (repo *RolesSvcRepo) AddRoles(ctx context.Context, rps []roles.RoleProvisio
 
 		retRoles = append(retRoles, rp.Role)
 
-		if len(rp.OptionalCapabilities) > 0 {
-			capq := `INSERT INTO role_capabilities (role_id, capability)
-        				VALUES (:role_id, :capability)
-        				RETURNING role_id, capability`
+		if len(rp.OptionalActions) > 0 {
+			capq := `INSERT INTO role_actions (role_id, action)
+        				VALUES (:role_id, :action)
+        				RETURNING role_id, action`
 
-			rCaps := []dbRoleCapability{}
-			for _, cap := range rp.OptionalCapabilities {
-				rCaps = append(rCaps, dbRoleCapability{
-					RoleID:     rp.ID,
-					Capability: string(cap),
+			rCaps := []dbRoleAction{}
+			for _, cap := range rp.OptionalActions {
+				rCaps = append(rCaps, dbRoleAction{
+					RoleID: rp.ID,
+					Action: string(cap),
 				})
 			}
 			if _, err := tx.NamedExec(capq, rCaps); err != nil {
@@ -335,7 +335,7 @@ func (repo *RolesSvcRepo) RetrieveAllRoles(ctx context.Context, entityID string,
 	return page, nil
 }
 
-func (repo *RolesSvcRepo) RoleAddCapabilities(ctx context.Context, role roles.Role, capabilities []string) (caps []string, err error) {
+func (repo *RolesSvcRepo) RoleAddActions(ctx context.Context, role roles.Role, actions []string) (caps []string, err error) {
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -349,15 +349,15 @@ func (repo *RolesSvcRepo) RoleAddCapabilities(ctx context.Context, role roles.Ro
 		}
 	}()
 
-	capq := `INSERT INTO role_capabilities (role_id, capability)
-	VALUES (:role_id, :capability)
-	RETURNING role_id, capability`
+	capq := `INSERT INTO role_actions (role_id, action)
+	VALUES (:role_id, :action)
+	RETURNING role_id, action`
 
-	rCaps := []dbRoleCapability{}
-	for _, cap := range capabilities {
-		rCaps = append(rCaps, dbRoleCapability{
-			RoleID:     role.ID,
-			Capability: string(cap),
+	rCaps := []dbRoleAction{}
+	for _, cap := range actions {
+		rCaps = append(rCaps, dbRoleAction{
+			RoleID: role.ID,
+			Action: string(cap),
 		})
 	}
 	if _, err := tx.NamedExecContext(ctx, capq, rCaps); err != nil {
@@ -373,13 +373,13 @@ func (repo *RolesSvcRepo) RoleAddCapabilities(ctx context.Context, role roles.Ro
 		return []string{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
-	return repo.RoleListCapabilities(ctx, role.ID)
+	return repo.RoleListActions(ctx, role.ID)
 }
 
-func (repo *RolesSvcRepo) RoleListCapabilities(ctx context.Context, roleID string) ([]string, error) {
-	q := `SELECT role_id, capability FROM role_capabilities WHERE role_id = :role_id ;`
+func (repo *RolesSvcRepo) RoleListActions(ctx context.Context, roleID string) ([]string, error) {
+	q := `SELECT role_id, action FROM role_actions WHERE role_id = :role_id ;`
 
-	dbrcap := dbRoleCapability{
+	dbrcap := dbRoleAction{
 		RoleID: roleID,
 	}
 
@@ -391,22 +391,22 @@ func (repo *RolesSvcRepo) RoleListCapabilities(ctx context.Context, roleID strin
 
 	items := []string{}
 	for rows.Next() {
-		dbrcap = dbRoleCapability{}
+		dbrcap = dbRoleAction{}
 		if err := rows.StructScan(&dbrcap); err != nil {
 			return []string{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
 
-		items = append(items, dbrcap.Capability)
+		items = append(items, dbrcap.Action)
 	}
 	return items, nil
 }
 
-func (repo *RolesSvcRepo) RoleCheckCapabilitiesExists(ctx context.Context, roleID string, capabilities []string) (bool, error) {
-	q := ` SELECT COUNT(*) FROM role_capabilities WHERE role_id = :role_id AND capability IN (:capabilities)`
+func (repo *RolesSvcRepo) RoleCheckActionsExists(ctx context.Context, roleID string, actions []string) (bool, error) {
+	q := ` SELECT COUNT(*) FROM role_actions WHERE role_id = :role_id AND action IN (:actions)`
 
 	params := map[string]interface{}{
-		"role_id":      roleID,
-		"capabilities": capabilities,
+		"role_id": roleID,
+		"actions": actions,
 	}
 	var count int
 	query, err := repo.db.NamedQueryContext(ctx, q, params)
@@ -422,15 +422,15 @@ func (repo *RolesSvcRepo) RoleCheckCapabilitiesExists(ctx context.Context, roleI
 		}
 	}
 
-	// Check if the count matches the number of capabilities provided
-	if count != len(capabilities) {
+	// Check if the count matches the number of actions provided
+	if count != len(actions) {
 		return false, nil
 	}
 
 	return true, nil
 }
 
-func (repo *RolesSvcRepo) RoleRemoveCapabilities(ctx context.Context, role roles.Role, capabilities []string) (err error) {
+func (repo *RolesSvcRepo) RoleRemoveActions(ctx context.Context, role roles.Role, actions []string) (err error) {
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -444,11 +444,11 @@ func (repo *RolesSvcRepo) RoleRemoveCapabilities(ctx context.Context, role roles
 		}
 	}()
 
-	q := `DELETE FROM role_capabilities WHERE role_id = :role_id AND capability = ANY(:capabilities)`
+	q := `DELETE FROM role_actions WHERE role_id = :role_id AND action = ANY(:actions)`
 
 	params := map[string]interface{}{
-		"role_id":      role.ID,
-		"capabilities": capabilities,
+		"role_id": role.ID,
+		"actions": actions,
 	}
 
 	if _, err := tx.NamedExec(q, params); err != nil {
@@ -467,7 +467,7 @@ func (repo *RolesSvcRepo) RoleRemoveCapabilities(ctx context.Context, role roles
 	return nil
 }
 
-func (repo *RolesSvcRepo) RoleRemoveAllCapabilities(ctx context.Context, role roles.Role) error {
+func (repo *RolesSvcRepo) RoleRemoveAllActions(ctx context.Context, role roles.Role) error {
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
@@ -480,9 +480,9 @@ func (repo *RolesSvcRepo) RoleRemoveAllCapabilities(ctx context.Context, role ro
 		}
 	}()
 
-	q := `DELETE FROM role_capabilities WHERE role_id = :role_id `
+	q := `DELETE FROM role_actions WHERE role_id = :role_id `
 
-	dbrcap := dbRoleCapability{RoleID: role.ID}
+	dbrcap := dbRoleAction{RoleID: role.ID}
 
 	if _, err := tx.NamedExec(q, dbrcap); err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
@@ -582,7 +582,7 @@ func (repo *RolesSvcRepo) RoleListMembers(ctx context.Context, roleID string, li
 }
 
 func (repo *RolesSvcRepo) RoleCheckMembersExists(ctx context.Context, roleID string, members []string) (bool, error) {
-	q := ` SELECT COUNT(*) FROM role_members WHERE role_id = :role_id AND capability IN (:members)`
+	q := ` SELECT COUNT(*) FROM role_members WHERE role_id = :role_id AND action IN (:members)`
 
 	params := map[string]interface{}{
 		"role_id": roleID,
@@ -658,7 +658,7 @@ func (repo *RolesSvcRepo) RoleRemoveAllMembers(ctx context.Context, role roles.R
 	}()
 	q := `DELETE FROM role_members WHERE role_id = :role_id `
 
-	dbrcap := dbRoleCapability{RoleID: role.ID}
+	dbrcap := dbRoleAction{RoleID: role.ID}
 
 	if _, err := repo.db.NamedExecContext(ctx, q, dbrcap); err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)

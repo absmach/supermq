@@ -10,10 +10,10 @@ import (
 	"github.com/absmach/magistrala/pkg/svcutil"
 )
 
-type Capability string
+type Action string
 
-func (op Capability) String() string {
-	return string(op)
+func (ac Action) String() string {
+	return string(ac)
 }
 
 type Member string
@@ -50,8 +50,8 @@ type Role struct {
 
 type RoleProvision struct {
 	Role
-	OptionalCapabilities []string `json:"-"`
-	OptionalMembers      []string `json:"-"`
+	OptionalActions []string `json:"-"`
+	OptionalMembers []string `json:"-"`
 }
 
 type RolePage struct {
@@ -85,7 +85,7 @@ type OptionalPolicy struct {
 type Roles interface {
 
 	// Add New role to entity
-	AddRole(ctx context.Context, token, entityID, roleName string, optionalCapabilities []string, optionalMembers []string) (Role, error)
+	AddRole(ctx context.Context, token, entityID, roleName string, optionalActions []string, optionalMembers []string) (Role, error)
 
 	// Remove removes the roles of entity.
 	RemoveRole(ctx context.Context, token, entityID, roleName string) error
@@ -97,15 +97,15 @@ type Roles interface {
 
 	RetrieveAllRoles(ctx context.Context, token, entityID string, limit, offset uint64) (RolePage, error)
 
-	RoleAddCapabilities(ctx context.Context, token, entityID, roleName string, capabilities []string) (ops []string, err error)
+	RoleAddActions(ctx context.Context, token, entityID, roleName string, actions []string) (ops []string, err error)
 
-	RoleListCapabilities(ctx context.Context, token, entityID, roleName string) ([]string, error)
+	RoleListActions(ctx context.Context, token, entityID, roleName string) ([]string, error)
 
-	RoleCheckCapabilitiesExists(ctx context.Context, token, entityID, roleName string, capabilities []string) (bool, error)
+	RoleCheckActionsExists(ctx context.Context, token, entityID, roleName string, actions []string) (bool, error)
 
-	RoleRemoveCapabilities(ctx context.Context, token, entityID, roleName string, capabilities []string) (err error)
+	RoleRemoveActions(ctx context.Context, token, entityID, roleName string, actions []string) (err error)
 
-	RoleRemoveAllCapabilities(ctx context.Context, token, entityID, roleName string) error
+	RoleRemoveAllActions(ctx context.Context, token, entityID, roleName string) error
 
 	RoleAddMembers(ctx context.Context, token, entityID, roleName string, members []string) ([]string, error)
 
@@ -126,11 +126,11 @@ type Repository interface {
 	RetrieveRole(ctx context.Context, roleID string) (Role, error)
 	RetrieveRoleByEntityIDAndName(ctx context.Context, entityID, roleName string) (Role, error)
 	RetrieveAllRoles(ctx context.Context, entityID string, limit, offset uint64) (RolePage, error)
-	RoleAddCapabilities(ctx context.Context, role Role, capabilities []string) (ops []string, err error)
-	RoleListCapabilities(ctx context.Context, roleID string) ([]string, error)
-	RoleCheckCapabilitiesExists(ctx context.Context, roleID string, capabilities []string) (bool, error)
-	RoleRemoveCapabilities(ctx context.Context, role Role, capabilities []string) (err error)
-	RoleRemoveAllCapabilities(ctx context.Context, role Role) error
+	RoleAddActions(ctx context.Context, role Role, actions []string) (ops []string, err error)
+	RoleListActions(ctx context.Context, roleID string) ([]string, error)
+	RoleCheckActionsExists(ctx context.Context, roleID string, actions []string) (bool, error)
+	RoleRemoveActions(ctx context.Context, role Role, actions []string) (err error)
+	RoleRemoveAllActions(ctx context.Context, role Role) error
 	RoleAddMembers(ctx context.Context, role Role, members []string) ([]string, error)
 	RoleListMembers(ctx context.Context, roleID string, limit, offset uint64) (MembersPage, error)
 	RoleCheckMembersExists(ctx context.Context, roleID string, members []string) (bool, error)
@@ -144,11 +144,11 @@ const (
 	OpUpdateRoleName
 	OpRetrieveRole
 	OpRetrieveAllRoles
-	OpRoleAddCapabilities
-	OpRoleListCapabilities
-	OpRoleCheckCapabilitiesExists
-	OpRoleRemoveCapabilities
-	OpRoleRemoveAllCapabilities
+	OpRoleAddActions
+	OpRoleListActions
+	OpRoleCheckActionsExists
+	OpRoleRemoveActions
+	OpRoleRemoveAllActions
 	OpRoleAddMembers
 	OpRoleListMembers
 	OpRoleCheckMembersExists
@@ -162,11 +162,11 @@ var expectedOperations = []svcutil.Operation{
 	OpUpdateRoleName,
 	OpRetrieveRole,
 	OpRetrieveAllRoles,
-	OpRoleAddCapabilities,
-	OpRoleListCapabilities,
-	OpRoleCheckCapabilitiesExists,
-	OpRoleRemoveCapabilities,
-	OpRoleRemoveAllCapabilities,
+	OpRoleAddActions,
+	OpRoleListActions,
+	OpRoleCheckActionsExists,
+	OpRoleRemoveActions,
+	OpRoleRemoveAllActions,
 	OpRoleAddMembers,
 	OpRoleListMembers,
 	OpRoleCheckMembersExists,
@@ -180,11 +180,11 @@ var operationNames = []string{
 	"OpUpdateRoleName",
 	"OpRetrieveRole",
 	"OpRetrieveAllRoles",
-	"OpRoleAddCapabilities",
-	"OpRoleListCapabilities",
-	"OpRoleCheckCapabilitiesExists",
-	"OpRoleRemoveCapabilities",
-	"OpRoleRemoveAllCapabilities",
+	"OpRoleAddActions",
+	"OpRoleListActions",
+	"OpRoleCheckActionsExists",
+	"OpRoleRemoveActions",
+	"OpRoleRemoveAllActions",
 	"OpRoleAddMembers",
 	"OpRoleListMembers",
 	"OpRoleCheckMembersExists",

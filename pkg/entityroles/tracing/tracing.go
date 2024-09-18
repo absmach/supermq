@@ -19,8 +19,8 @@ func NewRolesSvcTracingMiddleware(svcName string, svc roles.Roles, tracer trace.
 	return RolesSvcTracingMiddleware{svcName, svc, tracer}
 }
 
-func (rtm *RolesSvcTracingMiddleware) AddRole(ctx context.Context, token, entityID, roleName string, optionalCapabilities []string, optionalMembers []string) (roles.Role, error) {
-	return rtm.roles.AddRole(ctx, token, entityID, roleName, optionalCapabilities, optionalMembers)
+func (rtm *RolesSvcTracingMiddleware) AddRole(ctx context.Context, token, entityID, roleName string, optionalActions []string, optionalMembers []string) (roles.Role, error) {
+	return rtm.roles.AddRole(ctx, token, entityID, roleName, optionalActions, optionalMembers)
 }
 func (rtm *RolesSvcTracingMiddleware) RemoveRole(ctx context.Context, token, entityID, roleName string) error {
 	return rtm.roles.RemoveRole(ctx, token, entityID, roleName)
@@ -34,20 +34,20 @@ func (rtm *RolesSvcTracingMiddleware) RetrieveRole(ctx context.Context, token, e
 func (rtm *RolesSvcTracingMiddleware) RetrieveAllRoles(ctx context.Context, token, entityID string, limit, offset uint64) (roles.RolePage, error) {
 	return rtm.roles.RetrieveAllRoles(ctx, token, entityID, limit, offset)
 }
-func (rtm *RolesSvcTracingMiddleware) RoleAddCapabilities(ctx context.Context, token, entityID, roleName string, capabilities []string) (ops []string, err error) {
-	return rtm.roles.RoleAddCapabilities(ctx, token, entityID, roleName, capabilities)
+func (rtm *RolesSvcTracingMiddleware) RoleAddActions(ctx context.Context, token, entityID, roleName string, actions []string) (ops []string, err error) {
+	return rtm.roles.RoleAddActions(ctx, token, entityID, roleName, actions)
 }
-func (rtm *RolesSvcTracingMiddleware) RoleListCapabilities(ctx context.Context, token, entityID, roleName string) ([]string, error) {
-	return rtm.roles.RoleListCapabilities(ctx, token, entityID, roleName)
+func (rtm *RolesSvcTracingMiddleware) RoleListActions(ctx context.Context, token, entityID, roleName string) ([]string, error) {
+	return rtm.roles.RoleListActions(ctx, token, entityID, roleName)
 }
-func (rtm *RolesSvcTracingMiddleware) RoleCheckCapabilitiesExists(ctx context.Context, token, entityID, roleName string, capabilities []string) (bool, error) {
-	return rtm.roles.RoleCheckCapabilitiesExists(ctx, token, entityID, roleName, capabilities)
+func (rtm *RolesSvcTracingMiddleware) RoleCheckActionsExists(ctx context.Context, token, entityID, roleName string, actions []string) (bool, error) {
+	return rtm.roles.RoleCheckActionsExists(ctx, token, entityID, roleName, actions)
 }
-func (rtm *RolesSvcTracingMiddleware) RoleRemoveCapabilities(ctx context.Context, token, entityID, roleName string, capabilities []string) (err error) {
-	return rtm.roles.RoleRemoveCapabilities(ctx, token, entityID, roleName, capabilities)
+func (rtm *RolesSvcTracingMiddleware) RoleRemoveActions(ctx context.Context, token, entityID, roleName string, actions []string) (err error) {
+	return rtm.roles.RoleRemoveActions(ctx, token, entityID, roleName, actions)
 }
-func (rtm *RolesSvcTracingMiddleware) RoleRemoveAllCapabilities(ctx context.Context, token, entityID, roleName string) error {
-	return rtm.roles.RoleRemoveAllCapabilities(ctx, token, entityID, roleName)
+func (rtm *RolesSvcTracingMiddleware) RoleRemoveAllActions(ctx context.Context, token, entityID, roleName string) error {
+	return rtm.roles.RoleRemoveAllActions(ctx, token, entityID, roleName)
 }
 func (rtm *RolesSvcTracingMiddleware) RoleAddMembers(ctx context.Context, token, entityID, roleName string, members []string) ([]string, error) {
 	return rtm.roles.RoleAddMembers(ctx, token, entityID, roleName, members)

@@ -37,7 +37,7 @@ var _ domains.Service = (*service)(nil)
 
 func New(repo domains.DomainsRepository, authClient magistrala.AuthServiceClient, idProvider magistrala.IDProvider, sidProvider magistrala.IDProvider) (domains.Service, error) {
 
-	rolesSvc, err := entityroles.NewRolesSvc(auth.DomainType, repo, sidProvider, authClient, domains.AvailableCapabilities(), domains.BuiltInRoles(), domains.NewRolesOperationPermissionMap())
+	rolesSvc, err := entityroles.NewRolesSvc(auth.DomainType, repo, sidProvider, authClient, domains.AvailableActions(), domains.BuiltInRoles(), domains.NewRolesOperationPermissionMap())
 	if err != nil {
 		return nil, err
 	}

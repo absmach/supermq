@@ -16,10 +16,10 @@ var (
 	_ magistrala.Response = (*viewRoleRes)(nil)
 	_ magistrala.Response = (*updateRoleRes)(nil)
 	_ magistrala.Response = (*deleteRoleRes)(nil)
-	_ magistrala.Response = (*addRoleCapabilitiesRes)(nil)
-	_ magistrala.Response = (*listRoleCapabilitiesRes)(nil)
-	_ magistrala.Response = (*deleteRoleCapabilitiesRes)(nil)
-	_ magistrala.Response = (*deleteAllRoleCapabilitiesRes)(nil)
+	_ magistrala.Response = (*addRoleActionsRes)(nil)
+	_ magistrala.Response = (*listRoleActionsRes)(nil)
+	_ magistrala.Response = (*deleteRoleActionsRes)(nil)
+	_ magistrala.Response = (*deleteAllRoleActionsRes)(nil)
 	_ magistrala.Response = (*addRoleMembersRes)(nil)
 	_ magistrala.Response = (*listRoleMembersRes)(nil)
 	_ magistrala.Response = (*deleteRoleMembersRes)(nil)
@@ -105,63 +105,63 @@ func (res deleteRoleRes) Empty() bool {
 	return true
 }
 
-type addRoleCapabilitiesRes struct {
-	Capabilities []string `json:"capabilities"`
+type addRoleActionsRes struct {
+	Actions []string `json:"actions"`
 }
 
-func (res addRoleCapabilitiesRes) Code() int {
+func (res addRoleActionsRes) Code() int {
 	return http.StatusOK
 }
 
-func (res addRoleCapabilitiesRes) Headers() map[string]string {
+func (res addRoleActionsRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res addRoleCapabilitiesRes) Empty() bool {
+func (res addRoleActionsRes) Empty() bool {
 	return false
 }
 
-type listRoleCapabilitiesRes struct {
-	Capabilities []string `json:"capabilities"`
+type listRoleActionsRes struct {
+	Actions []string `json:"actions"`
 }
 
-func (res listRoleCapabilitiesRes) Code() int {
+func (res listRoleActionsRes) Code() int {
 	return http.StatusOK
 }
 
-func (res listRoleCapabilitiesRes) Headers() map[string]string {
+func (res listRoleActionsRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res listRoleCapabilitiesRes) Empty() bool {
+func (res listRoleActionsRes) Empty() bool {
 	return false
 }
 
-type deleteRoleCapabilitiesRes struct{}
+type deleteRoleActionsRes struct{}
 
-func (res deleteRoleCapabilitiesRes) Code() int {
+func (res deleteRoleActionsRes) Code() int {
 	return http.StatusNoContent
 }
 
-func (res deleteRoleCapabilitiesRes) Headers() map[string]string {
+func (res deleteRoleActionsRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res deleteRoleCapabilitiesRes) Empty() bool {
+func (res deleteRoleActionsRes) Empty() bool {
 	return true
 }
 
-type deleteAllRoleCapabilitiesRes struct{}
+type deleteAllRoleActionsRes struct{}
 
-func (res deleteAllRoleCapabilitiesRes) Code() int {
+func (res deleteAllRoleActionsRes) Code() int {
 	return http.StatusNoContent
 }
 
-func (res deleteAllRoleCapabilitiesRes) Headers() map[string]string {
+func (res deleteAllRoleActionsRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res deleteAllRoleCapabilitiesRes) Empty() bool {
+func (res deleteAllRoleActionsRes) Empty() bool {
 	return true
 }
 

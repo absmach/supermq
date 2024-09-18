@@ -140,21 +140,21 @@ func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 
 func NewRolesOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 	opPerm := map[svcutil.Operation]svcutil.Permission{
-		roles.OpAddRole:                     manageRolePermission,
-		roles.OpRemoveRole:                  manageRolePermission,
-		roles.OpUpdateRoleName:              manageRolePermission,
-		roles.OpRetrieveRole:                manageRolePermission,
-		roles.OpRetrieveAllRoles:            manageRolePermission,
-		roles.OpRoleAddCapabilities:         manageRolePermission,
-		roles.OpRoleListCapabilities:        manageRolePermission,
-		roles.OpRoleCheckCapabilitiesExists: manageRolePermission,
-		roles.OpRoleRemoveCapabilities:      manageRolePermission,
-		roles.OpRoleRemoveAllCapabilities:   manageRolePermission,
-		roles.OpRoleAddMembers:              addRoleUsersPermission,
-		roles.OpRoleListMembers:             viewRoleUsersPermission,
-		roles.OpRoleCheckMembersExists:      viewRoleUsersPermission,
-		roles.OpRoleRemoveMembers:           removeRoleUsersPermission,
-		roles.OpRoleRemoveAllMembers:        manageRolePermission,
+		roles.OpAddRole:                manageRolePermission,
+		roles.OpRemoveRole:             manageRolePermission,
+		roles.OpUpdateRoleName:         manageRolePermission,
+		roles.OpRetrieveRole:           manageRolePermission,
+		roles.OpRetrieveAllRoles:       manageRolePermission,
+		roles.OpRoleAddActions:         manageRolePermission,
+		roles.OpRoleListActions:        manageRolePermission,
+		roles.OpRoleCheckActionsExists: manageRolePermission,
+		roles.OpRoleRemoveActions:      manageRolePermission,
+		roles.OpRoleRemoveAllActions:   manageRolePermission,
+		roles.OpRoleAddMembers:         addRoleUsersPermission,
+		roles.OpRoleListMembers:        viewRoleUsersPermission,
+		roles.OpRoleCheckMembersExists: viewRoleUsersPermission,
+		roles.OpRoleRemoveMembers:      removeRoleUsersPermission,
+		roles.OpRoleRemoveAllMembers:   manageRolePermission,
 	}
 	return opPerm
 }

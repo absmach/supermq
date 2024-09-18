@@ -30,7 +30,7 @@ func NewRolesSvcLoggingMiddleware(svcName string, svc roles.Roles, logger *slog.
 	}
 }
 
-func (lm *RolesSvcLoggingMiddleware) AddRole(ctx context.Context, token, entityID, roleName string, optionalCapabilities []string, optionalMembers []string) (ro roles.Role, err error) {
+func (lm *RolesSvcLoggingMiddleware) AddRole(ctx context.Context, token, entityID, roleName string, optionalActions []string, optionalMembers []string) (ro roles.Role, err error) {
 	prefix := fmt.Sprintf("Add %s roles", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -38,7 +38,7 @@ func (lm *RolesSvcLoggingMiddleware) AddRole(ctx context.Context, token, entityI
 			slog.Group(lm.svcName+"_add_role",
 				slog.String("entity_id", entityID),
 				slog.String("role_name", roleName),
-				slog.Any("optional_capabilities", optionalCapabilities),
+				slog.Any("optional_actions", optionalActions),
 				slog.Any("optional_members", optionalMembers),
 			),
 		}
@@ -49,7 +49,7 @@ func (lm *RolesSvcLoggingMiddleware) AddRole(ctx context.Context, token, entityI
 		}
 		lm.logger.Info(prefix+" completed successfully", args...)
 	}(time.Now())
-	return lm.svc.AddRole(ctx, token, entityID, roleName, optionalCapabilities, optionalMembers)
+	return lm.svc.AddRole(ctx, token, entityID, roleName, optionalActions, optionalMembers)
 }
 
 func (lm *RolesSvcLoggingMiddleware) RemoveRole(ctx context.Context, token, entityID, roleName string) (err error) {
@@ -134,15 +134,15 @@ func (lm *RolesSvcLoggingMiddleware) RetrieveAllRoles(ctx context.Context, token
 	return lm.svc.RetrieveAllRoles(ctx, token, entityID, limit, offset)
 }
 
-func (lm *RolesSvcLoggingMiddleware) RoleAddCapabilities(ctx context.Context, token, entityID, roleName string, capabilities []string) (caps []string, err error) {
-	prefix := fmt.Sprintf("%s role add capabilities", lm.svcName)
+func (lm *RolesSvcLoggingMiddleware) RoleAddActions(ctx context.Context, token, entityID, roleName string, actions []string) (caps []string, err error) {
+	prefix := fmt.Sprintf("%s role add actions", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.Group(lm.svcName+"_role_add_capabilities",
+			slog.Group(lm.svcName+"_role_add_actions",
 				slog.String("entity_id", entityID),
 				slog.String("role_name", roleName),
-				slog.Any("capabilities", capabilities),
+				slog.Any("actions", actions),
 			),
 		}
 		if err != nil {
@@ -152,60 +152,15 @@ func (lm *RolesSvcLoggingMiddleware) RoleAddCapabilities(ctx context.Context, to
 		}
 		lm.logger.Info(prefix+" completed successfully", args...)
 	}(time.Now())
-	return lm.svc.RoleAddCapabilities(ctx, token, entityID, roleName, capabilities)
+	return lm.svc.RoleAddActions(ctx, token, entityID, roleName, actions)
 }
 
-func (lm *RolesSvcLoggingMiddleware) RoleListCapabilities(ctx context.Context, token, entityID, roleName string) (roOps []string, err error) {
-	prefix := fmt.Sprintf("%s role list capabilities", lm.svcName)
+func (lm *RolesSvcLoggingMiddleware) RoleListActions(ctx context.Context, token, entityID, roleName string) (roOps []string, err error) {
+	prefix := fmt.Sprintf("%s role list actions", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.Group(lm.svcName+"_list_role_capabilities",
-				slog.String("entity_id", entityID),
-				slog.String("role_name", roleName),
-			),
-		}
-		if err != nil {
-			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn(prefix+" failed", args...)
-			return
-		}
-		lm.logger.Info(prefix+" completed successfully", args...)
-	}(time.Now())
-	return lm.svc.RoleListCapabilities(ctx, token, entityID, roleName)
-}
-
-func (lm *RolesSvcLoggingMiddleware) RoleCheckCapabilitiesExists(ctx context.Context, token, entityID, roleName string, capabilities []string) (bool, error) {
-	return lm.svc.RoleCheckCapabilitiesExists(ctx, token, entityID, roleName, capabilities)
-}
-
-func (lm *RolesSvcLoggingMiddleware) RoleRemoveCapabilities(ctx context.Context, token, entityID, roleName string, capabilities []string) (err error) {
-	prefix := fmt.Sprintf("%s role remove capabilities", lm.svcName)
-	defer func(begin time.Time) {
-		args := []any{
-			slog.String("duration", time.Since(begin).String()),
-			slog.Group(lm.svcName+"_role_remove_capabilities",
-				slog.String("entity_id", entityID),
-				slog.String("role_name", roleName),
-				slog.Any("capabilities", capabilities),
-			),
-		}
-		if err != nil {
-			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn(prefix+" failed", args...)
-			return
-		}
-		lm.logger.Info(prefix+" completed successfully", args...)
-	}(time.Now())
-	return lm.svc.RoleRemoveCapabilities(ctx, token, entityID, roleName, capabilities)
-}
-
-func (lm *RolesSvcLoggingMiddleware) RoleRemoveAllCapabilities(ctx context.Context, token, entityID, roleName string) (err error) {
-	prefix := fmt.Sprintf("%s role remove all capabilities", lm.svcName)
-	defer func(begin time.Time) {
-		args := []any{
-			slog.String("duration", time.Since(begin).String()),
-			slog.Group(lm.svcName+"_role_remove_all_capabilities",
+			slog.Group(lm.svcName+"_list_role_actions",
 				slog.String("entity_id", entityID),
 				slog.String("role_name", roleName),
 			),
@@ -217,7 +172,52 @@ func (lm *RolesSvcLoggingMiddleware) RoleRemoveAllCapabilities(ctx context.Conte
 		}
 		lm.logger.Info(prefix+" completed successfully", args...)
 	}(time.Now())
-	return lm.svc.RoleRemoveAllCapabilities(ctx, token, entityID, roleName)
+	return lm.svc.RoleListActions(ctx, token, entityID, roleName)
+}
+
+func (lm *RolesSvcLoggingMiddleware) RoleCheckActionsExists(ctx context.Context, token, entityID, roleName string, actions []string) (bool, error) {
+	return lm.svc.RoleCheckActionsExists(ctx, token, entityID, roleName, actions)
+}
+
+func (lm *RolesSvcLoggingMiddleware) RoleRemoveActions(ctx context.Context, token, entityID, roleName string, actions []string) (err error) {
+	prefix := fmt.Sprintf("%s role remove actions", lm.svcName)
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.Group(lm.svcName+"_role_remove_actions",
+				slog.String("entity_id", entityID),
+				slog.String("role_name", roleName),
+				slog.Any("actions", actions),
+			),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn(prefix+" failed", args...)
+			return
+		}
+		lm.logger.Info(prefix+" completed successfully", args...)
+	}(time.Now())
+	return lm.svc.RoleRemoveActions(ctx, token, entityID, roleName, actions)
+}
+
+func (lm *RolesSvcLoggingMiddleware) RoleRemoveAllActions(ctx context.Context, token, entityID, roleName string) (err error) {
+	prefix := fmt.Sprintf("%s role remove all actions", lm.svcName)
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.Group(lm.svcName+"_role_remove_all_actions",
+				slog.String("entity_id", entityID),
+				slog.String("role_name", roleName),
+			),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn(prefix+" failed", args...)
+			return
+		}
+		lm.logger.Info(prefix+" completed successfully", args...)
+	}(time.Now())
+	return lm.svc.RoleRemoveAllActions(ctx, token, entityID, roleName)
 }
 
 func (lm *RolesSvcLoggingMiddleware) RoleAddMembers(ctx context.Context, token, entityID, roleName string, members []string) (mems []string, err error) {
