@@ -19,7 +19,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDecodeListGroupsRequest(t *testing.T) {
+func TestDecodelistGroupsRequest(t *testing.T) {
 	cases := []struct {
 		desc   string
 		url    string
