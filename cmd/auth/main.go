@@ -75,6 +75,7 @@ type config struct {
 	CacheKeyDuration    time.Duration `env:"MG_AUTH_CACHE_KEY_DURATION"      envDefault:"1h"`
 	TraceRatio          float64       `env:"MG_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
 	ESURL               string        `env:"MG_ES_URL"                       envDefault:"nats://localhost:4222"`
+	PrivateKeyPath      string        `env:"MG_AUTH_PRIVATE_KEY_PATH"        envDefault:"./keys/private.key"`
 }
 
 func main() {

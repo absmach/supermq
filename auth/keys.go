@@ -96,3 +96,14 @@ type KeyRepository interface {
 	// Remove removes Key with provided ID.
 	Remove(ctx context.Context, issuer string, id string) error
 }
+
+type JWK struct {
+	Kty string `json:"kty"`
+	Kid string `json:"kid"`
+	N   string `json:"n"`
+	E   string `json:"e"`
+}
+
+type JWKS struct {
+	Keys []JWK `json:"keys"`
+}

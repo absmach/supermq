@@ -74,6 +74,9 @@ type Authn interface {
 	// is returned. If token is invalid, or invocation failed for some
 	// other reason, non-nil error value is returned in response.
 	Identify(ctx context.Context, token string) (Key, error)
+
+	// RetrieveJWKS retrieves a JWKs to validate issued tokens.
+	RetrieveJWKS(keyID string) (JWKS, error)
 }
 
 // Service specifies an API that must be fulfilled by the domain service
@@ -900,4 +903,8 @@ func (svc service) DeleteUserFromDomains(ctx context.Context, id string) (err er
 	}
 
 	return nil
+}
+
+func (svc service) RetrieveJWKS(_ string) (JWKS, error) {
+	return svc.tokenizer.RetrieveJWKS(), nil
 }

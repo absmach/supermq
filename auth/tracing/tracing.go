@@ -162,3 +162,7 @@ func (tm *tracingMiddleware) DeleteUserFromDomains(ctx context.Context, id strin
 	defer span.End()
 	return tm.svc.DeleteUserFromDomains(ctx, id)
 }
+
+func (tm *tracingMiddleware) RetrieveJWKS(keyID string) (auth.JWKS, error) {
+	return tm.svc.RetrieveJWKS(keyID)
+}

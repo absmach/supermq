@@ -166,6 +166,8 @@ services:
         target: /auth-grpc-client-ca${MG_AUTH_GRPC_CLIENT_CA_CERTS:+.crt}
         bind:
           create_host_path: true
+      - ./keys/${MG_AUTH_PRIVATE_KEY}:/keys/private.key
+      - ./keys/${MG_AUTH_PUBLIC_KEY}:/keys/public.key
 
   invitations-db:
     image: postgres:16.2-alpine

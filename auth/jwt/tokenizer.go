@@ -5,13 +5,20 @@ package jwt
 
 import (
 	"context"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
+	"math/big"
+	"os"
 	"strconv"
 
 	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
@@ -40,13 +47,13 @@ const (
 	oauthRefreshTokenField = "refresh_token"
 )
 
+var _ auth.Tokenizer = (*tokenizer)(nil)
+
 type tokenizer struct {
 	secret []byte
 	cache  auth.Cache
 	repo   auth.TokenRepository
 }
-
-var _ auth.Tokenizer = (*tokenizer)(nil)
 
 // NewRepository instantiates an implementation of Token repository.
 func New(secret []byte, repo auth.TokenRepository, cache auth.Cache) auth.Tokenizer {
@@ -78,7 +85,7 @@ func (tok *tokenizer) Issue(key auth.Key) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-	signedTkn, err := jwt.Sign(tkn, jwt.WithKey(jwa.HS512, tok.secret))
+	signedTkn, err := jwt.Sign(tkn, jwt.WithKey(jwa.RS256, tok.privateKey))
 	if err != nil {
 		return "", errors.Wrap(ErrSignJWT, err)
 	}
@@ -142,7 +149,7 @@ func (tok *tokenizer) validateToken(token string) (jwt.Token, error) {
 	tkn, err := jwt.Parse(
 		[]byte(token),
 		jwt.WithValidate(true),
-		jwt.WithKey(jwa.HS512, tok.secret),
+		jwt.WithKey(jwa.RS256, tok.publicKey),
 	)
 	if err != nil {
 		if errors.Contains(err, errJWTExpiryKey) {
@@ -162,6 +169,20 @@ func (tok *tokenizer) validateToken(token string) (jwt.Token, error) {
 	}
 
 	return tkn, nil
+}
+
+func (tok *tokenizer) RetrieveJWKS() auth.JWKS {
+	jwk := auth.JWK{
+		Kty: "RSA",
+		Kid: tok.keyID,
+		N:   base64.RawURLEncoding.EncodeToString(tok.publicKey.N.Bytes()),
+		E:   base64.RawURLEncoding.EncodeToString(big.NewInt(int64(tok.publicKey.E)).Bytes()),
+	}
+
+	jwks := auth.JWKS{
+		Keys: []auth.JWK{jwk},
+	}
+	return jwks
 }
 
 func toKey(tkn jwt.Token) (auth.Key, error) {
@@ -191,4 +212,28 @@ func toKey(tkn jwt.Token) (auth.Key, error) {
 	key.ExpiresAt = tkn.Expiration()
 
 	return key, nil
+}
+
+func loadPrivateKey(filePath string) (*rsa.PrivateKey, error) {
+	privKeyBytes, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, errors.Wrap(errReadPrivateKeyFile, err)
+	}
+
+	block, _ := pem.Decode(privKeyBytes)
+	if block == nil || block.Type != "PRIVATE KEY" {
+		return nil, errors.Wrap(errReadPrivateKeyFile, errors.New("invalid file type"))
+	}
+
+	privKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, errors.Wrap(errReadPrivateKeyFile, err)
+	}
+
+	rsaKey, ok := privKey.(*rsa.PrivateKey)
+	if !ok {
+		return nil, errors.Wrap(errReadPrivateKeyFile, errors.New("invalid private key type"))
+	}
+
+	return rsaKey, nil
 }
