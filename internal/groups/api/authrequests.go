@@ -49,7 +49,6 @@ func CreateGroupAuthReq(ctx context.Context, request interface{}) ([]*magistrala
 	}
 
 	return prs, nil
-
 }
 
 func ViewGroupAuthReq(_ context.Context, request interface{}) ([]*magistrala.AuthorizeReq, error) {
