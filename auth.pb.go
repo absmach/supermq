@@ -336,7 +336,7 @@ type AuthZReq struct {
 func (x *AuthZReq) Reset() {
 	*x = AuthZReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_auth_proto_msgTypes[8]
+		mi := &file_auth_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -440,7 +440,7 @@ type AuthZRes struct {
 func (x *AuthZRes) Reset() {
 	*x = AuthZRes{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_auth_proto_msgTypes[9]
+		mi := &file_auth_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -494,7 +494,7 @@ type DeleteUserRes struct {
 func (x *DeleteUserRes) Reset() {
 	*x = DeleteUserRes{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_auth_proto_msgTypes[10]
+		mi := &file_auth_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -541,7 +541,7 @@ type DeleteUserReq struct {
 func (x *DeleteUserReq) Reset() {
 	*x = DeleteUserReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_auth_proto_msgTypes[11]
+		mi := &file_auth_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}

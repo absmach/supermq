@@ -53,6 +53,13 @@ func MakeHandler(svc auth.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
 			api.EncodeResponse,
 			opts...,
 		).ServeHTTP)
+
+		r.Get("/jwks", kithttp.NewServer(
+			(retrieveJWKSEndpoint(svc)),
+			decodeKeyReq,
+			api.EncodeResponse,
+			opts...,
+		).ServeHTTP)
 	})
 	return mux
 }

@@ -167,7 +167,6 @@ services:
         bind:
           create_host_path: true
       - ./keys/${MG_AUTH_PRIVATE_KEY}:/keys/private.key
-      - ./keys/${MG_AUTH_PUBLIC_KEY}:/keys/public.key
 
   invitations-db:
     image: postgres:16.2-alpine
@@ -355,6 +354,7 @@ services:
       MG_SPICEDB_PRE_SHARED_KEY: ${MG_SPICEDB_PRE_SHARED_KEY}
       MG_SPICEDB_HOST: ${MG_SPICEDB_HOST}
       MG_SPICEDB_PORT: ${MG_SPICEDB_PORT}
+      MG_AUTH_GRPC_JWKS_URL: ${MG_AUTH_GRPC_JWKS_URL}
     ports:
       - ${MG_THINGS_HTTP_PORT}:${MG_THINGS_HTTP_PORT}
       - ${MG_THINGS_AUTH_GRPC_PORT}:${MG_THINGS_AUTH_GRPC_PORT}
@@ -475,6 +475,7 @@ services:
       MG_SPICEDB_PRE_SHARED_KEY: ${MG_SPICEDB_PRE_SHARED_KEY}
       MG_SPICEDB_HOST: ${MG_SPICEDB_HOST}
       MG_SPICEDB_PORT: ${MG_SPICEDB_PORT}
+      MG_AUTH_GRPC_JWKS_URL: ${MG_AUTH_GRPC_JWKS_URL}
     ports:
       - ${MG_USERS_HTTP_PORT}:${MG_USERS_HTTP_PORT}
     networks:
