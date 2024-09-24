@@ -23,6 +23,8 @@ import (
 
 var _ domains.DomainsRepository = (*domainRepo)(nil)
 
+const rolesTableNamePrefix = "domains"
+
 type domainRepo struct {
 	db postgres.Database
 	entityRolesRepo.RolesSvcRepo
@@ -31,7 +33,7 @@ type domainRepo struct {
 // NewDomainRepository instantiates a PostgreSQL
 // implementation of Domain repository.
 func NewDomainRepository(db postgres.Database) domains.DomainsRepository {
-	rolesSvcRepo := entityRolesRepo.NewRolesSvcRepository(db)
+	rolesSvcRepo := entityRolesRepo.NewRolesSvcRepository(db, rolesTableNamePrefix)
 	return &domainRepo{
 		db:           db,
 		RolesSvcRepo: rolesSvcRepo,

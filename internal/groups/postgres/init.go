@@ -4,12 +4,20 @@
 package postgres
 
 import (
+	entityRolesRepo "github.com/absmach/magistrala/pkg/entityroles/postrgres"
+	"github.com/absmach/magistrala/pkg/errors"
+	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	_ "github.com/jackc/pgx/v5/stdlib" // required for SQL access
 	migrate "github.com/rubenv/sql-migrate"
 )
 
-func Migration() *migrate.MemoryMigrationSource {
-	return &migrate.MemoryMigrationSource{
+func Migration() (*migrate.MemoryMigrationSource, error) {
+	rolesMigration, err := entityRolesRepo.Migration(rolesTableNamePrefix, "domains", "id")
+	if err != nil {
+		return &migrate.MemoryMigrationSource{}, errors.Wrap(repoerr.ErrRoleMigration, err)
+	}
+
+	groupsMigration := &migrate.MemoryMigrationSource{
 		Migrations: []*migrate.Migration{
 			{
 				Id: "groups_01",
@@ -35,4 +43,8 @@ func Migration() *migrate.MemoryMigrationSource {
 			},
 		},
 	}
+
+	groupsMigration.Migrations = append(groupsMigration.Migrations, rolesMigration.Migrations...)
+
+	return groupsMigration, nil
 }

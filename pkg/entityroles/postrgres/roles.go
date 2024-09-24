@@ -20,14 +20,16 @@ import (
 var _ roles.Repository = (*RolesSvcRepo)(nil)
 
 type RolesSvcRepo struct {
-	db postgres.Database
+	tableNamePrefix string
+	db              postgres.Database
 }
 
 // NewRolesSvcRepository instantiates a PostgreSQL
 // implementation of Roles repository.
-func NewRolesSvcRepository(db postgres.Database) RolesSvcRepo {
+func NewRolesSvcRepository(db postgres.Database, tableNamePrefix string) RolesSvcRepo {
 	return RolesSvcRepo{
-		db: db,
+		tableNamePrefix: tableNamePrefix,
+		db:              db,
 	}
 }
 
@@ -138,8 +140,8 @@ func (repo *RolesSvcRepo) AddRoles(ctx context.Context, rps []roles.RoleProvisio
 
 	for _, rp := range rps {
 
-		q := `INSERT INTO roles (id, name, entity_id, created_by, created_at, updated_by, updated_at)
-        VALUES (:id, :name, :entity_id, :created_by, :created_at, :updated_by, :updated_at);`
+		q := fmt.Sprintf(`INSERT INTO %s_roles (id, name, entity_id, created_by, created_at, updated_by, updated_at)
+        VALUES (:id, :name, :entity_id, :created_by, :created_at, :updated_by, :updated_at);`, repo.tableNamePrefix)
 
 		if _, err := tx.NamedExec(q, toDBRoles(rp.Role)); err != nil {
 			return []roles.Role{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
@@ -148,9 +150,9 @@ func (repo *RolesSvcRepo) AddRoles(ctx context.Context, rps []roles.RoleProvisio
 		retRoles = append(retRoles, rp.Role)
 
 		if len(rp.OptionalActions) > 0 {
-			capq := `INSERT INTO role_actions (role_id, action)
+			capq := fmt.Sprintf(`INSERT INTO %s_role_actions (role_id, action)
         				VALUES (:role_id, :action)
-        				RETURNING role_id, action`
+        				RETURNING role_id, action`, repo.tableNamePrefix)
 
 			rCaps := []dbRoleAction{}
 			for _, cap := range rp.OptionalActions {
@@ -165,9 +167,9 @@ func (repo *RolesSvcRepo) AddRoles(ctx context.Context, rps []roles.RoleProvisio
 		}
 
 		if len(rp.OptionalMembers) > 0 {
-			mq := `INSERT INTO role_members (role_id, member_id)
+			mq := fmt.Sprintf(`INSERT INTO %s_role_members (role_id, member_id)
 					VALUES (:role_id, :member_id)
-					RETURNING role_id, member_id`
+					RETURNING role_id, member_id`, repo.tableNamePrefix)
 
 			rMems := []dbRoleMember{}
 			for _, m := range rp.OptionalMembers {
@@ -190,7 +192,7 @@ func (repo *RolesSvcRepo) AddRoles(ctx context.Context, rps []roles.RoleProvisio
 }
 
 func (repo *RolesSvcRepo) RemoveRoles(ctx context.Context, roleIDs []string) error {
-	q := "DELETE FROM roles  WHERE id = ANY(:role_ids) ;"
+	q := fmt.Sprintf("DELETE FROM %s_roles  WHERE id = ANY(:role_ids) ;", repo.tableNamePrefix)
 
 	params := map[string]interface{}{
 		"role_ids": roleIDs,
@@ -218,10 +220,10 @@ func (repo *RolesSvcRepo) UpdateRole(ctx context.Context, role roles.Role) (role
 		upq = strings.Join(query, " ")
 	}
 
-	q := fmt.Sprintf(`UPDATE roles SET %s updated_at = :updated_at, updated_by = :updated_by
+	q := fmt.Sprintf(`UPDATE %s_roles SET %s updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id
         RETURNING id, name, entity_id, created_by, created_at, updated_by, updated_at`,
-		upq)
+		repo.tableNamePrefix, upq)
 
 	row, err := repo.db.NamedQueryContext(ctx, q, toDBRoles(role))
 
@@ -242,8 +244,8 @@ func (repo *RolesSvcRepo) UpdateRole(ctx context.Context, role roles.Role) (role
 }
 
 func (repo *RolesSvcRepo) RetrieveRole(ctx context.Context, roleID string) (roles.Role, error) {
-	q := `SELECT id, name, entity_id, created_by, created_at, updated_by, updated_at
-        FROM roles WHERE id = :id`
+	q := fmt.Sprintf(`SELECT id, name, entity_id, created_by, created_at, updated_by, updated_at
+        FROM %s_roles WHERE id = :id`, repo.tableNamePrefix)
 
 	dbr := dbRole{
 		ID: roleID,
@@ -268,8 +270,8 @@ func (repo *RolesSvcRepo) RetrieveRole(ctx context.Context, roleID string) (role
 }
 
 func (repo *RolesSvcRepo) RetrieveRoleByEntityIDAndName(ctx context.Context, entityID, roleName string) (roles.Role, error) {
-	q := `SELECT id, name, entity_id, created_by, created_at, updated_by, updated_at
-        FROM roles WHERE entity_id = :entity_id and name = :name`
+	q := fmt.Sprintf(`SELECT id, name, entity_id, created_by, created_at, updated_by, updated_at
+        FROM %s_roles WHERE entity_id = :entity_id and name = :name`, repo.tableNamePrefix)
 
 	dbr := dbRole{
 		EntityID: entityID,
@@ -294,8 +296,8 @@ func (repo *RolesSvcRepo) RetrieveRoleByEntityIDAndName(ctx context.Context, ent
 	return roles.Role{}, repoerr.ErrNotFound
 }
 func (repo *RolesSvcRepo) RetrieveAllRoles(ctx context.Context, entityID string, limit, offset uint64) (roles.RolePage, error) {
-	q := `SELECT id, name, entity_id, created_by, created_at, updated_by, updated_at
-        FROM roles WHERE entity_id = :entity_id ORDER BY created_at LIMIT :limit OFFSET :offset;`
+	q := fmt.Sprintf(`SELECT id, name, entity_id, created_by, created_at, updated_by, updated_at
+        FROM %s_roles WHERE entity_id = :entity_id ORDER BY created_at LIMIT :limit OFFSET :offset;`, repo.tableNamePrefix)
 
 	dbp := dbPage{
 		EntityID: entityID,
@@ -318,7 +320,7 @@ func (repo *RolesSvcRepo) RetrieveAllRoles(ctx context.Context, entityID string,
 
 		items = append(items, toRole(dbr))
 	}
-	cq := `SELECT COUNT(*) FROM roles WHERE entity_id = :entity_id`
+	cq := fmt.Sprintf(`SELECT COUNT(*) FROM %s_roles WHERE entity_id = :entity_id`, repo.tableNamePrefix)
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbp)
 	if err != nil {
@@ -349,9 +351,9 @@ func (repo *RolesSvcRepo) RoleAddActions(ctx context.Context, role roles.Role, a
 		}
 	}()
 
-	capq := `INSERT INTO role_actions (role_id, action)
+	capq := fmt.Sprintf(`INSERT INTO %s_role_actions (role_id, action)
 	VALUES (:role_id, :action)
-	RETURNING role_id, action`
+	RETURNING role_id, action`, repo.tableNamePrefix)
 
 	rCaps := []dbRoleAction{}
 	for _, cap := range actions {
@@ -364,7 +366,7 @@ func (repo *RolesSvcRepo) RoleAddActions(ctx context.Context, role roles.Role, a
 		return []string{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
-	upq := `UPDATE roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`
+	upq := fmt.Sprintf(`UPDATE %s_roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`, repo.tableNamePrefix)
 	if _, err := tx.NamedExecContext(ctx, upq, toDBRoles(role)); err != nil {
 		return []string{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
@@ -377,7 +379,7 @@ func (repo *RolesSvcRepo) RoleAddActions(ctx context.Context, role roles.Role, a
 }
 
 func (repo *RolesSvcRepo) RoleListActions(ctx context.Context, roleID string) ([]string, error) {
-	q := `SELECT role_id, action FROM role_actions WHERE role_id = :role_id ;`
+	q := fmt.Sprintf(`SELECT %s_role_id, action FROM role_actions WHERE role_id = :role_id ;`, repo.tableNamePrefix)
 
 	dbrcap := dbRoleAction{
 		RoleID: roleID,
@@ -402,7 +404,7 @@ func (repo *RolesSvcRepo) RoleListActions(ctx context.Context, roleID string) ([
 }
 
 func (repo *RolesSvcRepo) RoleCheckActionsExists(ctx context.Context, roleID string, actions []string) (bool, error) {
-	q := ` SELECT COUNT(*) FROM role_actions WHERE role_id = :role_id AND action IN (:actions)`
+	q := fmt.Sprintf(`SELECT COUNT(*) FROM %s_role_actions WHERE role_id = :role_id AND action IN (:actions)`, repo.tableNamePrefix)
 
 	params := map[string]interface{}{
 		"role_id": roleID,
@@ -444,7 +446,7 @@ func (repo *RolesSvcRepo) RoleRemoveActions(ctx context.Context, role roles.Role
 		}
 	}()
 
-	q := `DELETE FROM role_actions WHERE role_id = :role_id AND action = ANY(:actions)`
+	q := fmt.Sprintf(`DELETE FROM %s_role_actions WHERE role_id = :role_id AND action = ANY(:actions)`, repo.tableNamePrefix)
 
 	params := map[string]interface{}{
 		"role_id": role.ID,
@@ -455,7 +457,7 @@ func (repo *RolesSvcRepo) RoleRemoveActions(ctx context.Context, role roles.Role
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
-	upq := `UPDATE roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`
+	upq := fmt.Sprintf(`UPDATE %s_roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`, repo.tableNamePrefix)
 	if _, err := tx.NamedExec(upq, toDBRoles(role)); err != nil {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}
@@ -480,7 +482,7 @@ func (repo *RolesSvcRepo) RoleRemoveAllActions(ctx context.Context, role roles.R
 		}
 	}()
 
-	q := `DELETE FROM role_actions WHERE role_id = :role_id `
+	q := fmt.Sprintf(`DELETE FROM %s_role_actions WHERE role_id = :role_id `, repo.tableNamePrefix)
 
 	dbrcap := dbRoleAction{RoleID: role.ID}
 
@@ -488,7 +490,7 @@ func (repo *RolesSvcRepo) RoleRemoveAllActions(ctx context.Context, role roles.R
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
-	upq := `UPDATE roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`
+	upq := fmt.Sprintf(`UPDATE %s_roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`, repo.tableNamePrefix)
 	if _, err := tx.NamedExec(upq, toDBRoles(role)); err != nil {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}
@@ -501,9 +503,9 @@ func (repo *RolesSvcRepo) RoleRemoveAllActions(ctx context.Context, role roles.R
 }
 
 func (repo *RolesSvcRepo) RoleAddMembers(ctx context.Context, role roles.Role, members []string) ([]string, error) {
-	mq := `INSERT INTO role_members (role_id, member_id)
+	mq := fmt.Sprintf(`INSERT INTO %s_role_members (role_id, member_id)
         VALUES (:role_id, :member_id)
-        RETURNING role_id, member_id`
+        RETURNING role_id, member_id`, repo.tableNamePrefix)
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -528,7 +530,7 @@ func (repo *RolesSvcRepo) RoleAddMembers(ctx context.Context, role roles.Role, m
 		return []string{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
-	upq := `UPDATE roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`
+	upq := fmt.Sprintf(`UPDATE %s_roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`, repo.tableNamePrefix)
 	if _, err := tx.NamedExec(upq, toDBRoles(role)); err != nil {
 		return []string{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
@@ -541,7 +543,7 @@ func (repo *RolesSvcRepo) RoleAddMembers(ctx context.Context, role roles.Role, m
 }
 
 func (repo *RolesSvcRepo) RoleListMembers(ctx context.Context, roleID string, limit, offset uint64) (roles.MembersPage, error) {
-	q := `SELECT role_id, member_id FROM role_members WHERE role_id = :role_id LIMIT :limit OFFSET :offset;`
+	q := fmt.Sprintf(`SELECT role_id, member_id FROM %s_role_members WHERE role_id = :role_id LIMIT :limit OFFSET :offset;`, repo.tableNamePrefix)
 
 	dbp := dbPage{
 		RoleID: roleID,
@@ -565,7 +567,7 @@ func (repo *RolesSvcRepo) RoleListMembers(ctx context.Context, roleID string, li
 		items = append(items, dbrmems.MemberID)
 	}
 
-	cq := `SELECT COUNT(*) FROM role_members WHERE role_id = :role_id`
+	cq := fmt.Sprintf(`SELECT COUNT(*) FROM %s_role_members WHERE role_id = :role_id`, repo.tableNamePrefix)
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbp)
 	if err != nil {
@@ -582,7 +584,7 @@ func (repo *RolesSvcRepo) RoleListMembers(ctx context.Context, roleID string, li
 }
 
 func (repo *RolesSvcRepo) RoleCheckMembersExists(ctx context.Context, roleID string, members []string) (bool, error) {
-	q := ` SELECT COUNT(*) FROM role_members WHERE role_id = :role_id AND action IN (:members)`
+	q := fmt.Sprintf(`SELECT COUNT(*) FROM %s_role_members WHERE role_id = :role_id AND action IN (:members)`, repo.tableNamePrefix)
 
 	params := map[string]interface{}{
 		"role_id": roleID,
@@ -622,7 +624,7 @@ func (repo *RolesSvcRepo) RoleRemoveMembers(ctx context.Context, role roles.Role
 		}
 	}()
 
-	q := `DELETE FROM role_members WHERE role_id = :role_id AND member_id = ANY(:member_ids)`
+	q := fmt.Sprintf(`DELETE FROM %s_role_members WHERE role_id = :role_id AND member_id = ANY(:member_ids)`, repo.tableNamePrefix)
 
 	params := map[string]interface{}{
 		"role_id":    role.ID,
@@ -633,7 +635,7 @@ func (repo *RolesSvcRepo) RoleRemoveMembers(ctx context.Context, role roles.Role
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
-	upq := `UPDATE roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`
+	upq := fmt.Sprintf(`UPDATE %s_roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`, repo.tableNamePrefix)
 	if _, err := tx.NamedExec(upq, toDBRoles(role)); err != nil {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}
@@ -656,7 +658,7 @@ func (repo *RolesSvcRepo) RoleRemoveAllMembers(ctx context.Context, role roles.R
 			}
 		}
 	}()
-	q := `DELETE FROM role_members WHERE role_id = :role_id `
+	q := fmt.Sprintf(`DELETE FROM %s_role_members WHERE role_id = :role_id `, repo.tableNamePrefix)
 
 	dbrcap := dbRoleAction{RoleID: role.ID}
 
@@ -664,7 +666,7 @@ func (repo *RolesSvcRepo) RoleRemoveAllMembers(ctx context.Context, role roles.R
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
-	upq := `UPDATE roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`
+	upq := fmt.Sprintf(`UPDATE %s_roles SET updated_at = :updated_at, updated_by = :updated_by WHERE id = :id;`, repo.tableNamePrefix)
 	if _, err := tx.NamedExec(upq, toDBRoles(role)); err != nil {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}

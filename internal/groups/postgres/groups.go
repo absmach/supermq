@@ -22,6 +22,8 @@ import (
 
 var _ mggroups.Repository = (*groupRepository)(nil)
 
+const rolesTableNamePrefix = "groups"
+
 type groupRepository struct {
 	db postgres.Database
 	entityRolesRepo.RolesSvcRepo
@@ -30,7 +32,7 @@ type groupRepository struct {
 // New instantiates a PostgreSQL implementation of group
 // repository.
 func New(db postgres.Database) mggroups.Repository {
-	rolesSvcRepo := entityRolesRepo.NewRolesSvcRepository(db)
+	rolesSvcRepo := entityRolesRepo.NewRolesSvcRepository(db, rolesTableNamePrefix)
 
 	return &groupRepository{
 		db:           db,

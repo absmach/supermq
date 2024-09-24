@@ -7,17 +7,16 @@ import (
 	"github.com/absmach/magistrala/pkg/errors"
 
 	entityRolesRepo "github.com/absmach/magistrala/pkg/entityroles/postrgres"
+	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	_ "github.com/jackc/pgx/v5/stdlib" // required for SQL access
 	migrate "github.com/rubenv/sql-migrate"
 )
 
-var errRoleMigration = errors.New("role migration initialization failed")
-
 // Migration of Auth service.
 func Migration() (*migrate.MemoryMigrationSource, error) {
-	rolesMigration, err := entityRolesRepo.Migration("domains", "id")
+	rolesMigration, err := entityRolesRepo.Migration(rolesTableNamePrefix, "domains", "id")
 	if err != nil {
-		return &migrate.MemoryMigrationSource{}, errors.Wrap(errRoleMigration, err)
+		return &migrate.MemoryMigrationSource{}, errors.Wrap(repoerr.ErrRoleMigration, err)
 	}
 
 	domainMigrations := &migrate.MemoryMigrationSource{

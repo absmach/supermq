@@ -127,7 +127,12 @@ func main() {
 		return
 	}
 	cm := clientspg.Migration()
-	gm := gpostgres.Migration()
+	gm, err := gpostgres.Migration()
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
 	cm.Migrations = append(cm.Migrations, gm.Migrations...)
 	db, err := pgclient.Setup(dbConfig, *cm)
 	if err != nil {
