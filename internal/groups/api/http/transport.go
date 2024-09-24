@@ -5,7 +5,6 @@ package http
 
 import (
 	"log/slog"
-	"net/http"
 
 	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/internal/api"
@@ -18,7 +17,7 @@ import (
 )
 
 // MakeHandler returns a HTTP handler for Groups API endpoints.
-func groupsHandler(svc groups.Service, mux *chi.Mux, logger *slog.Logger) http.Handler {
+func MakeHandler(svc groups.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
