@@ -4,6 +4,8 @@ import "github.com/absmach/magistrala/pkg/roles"
 
 const (
 	Update                 roles.Action = "update"
+	Enable                 roles.Action = "enable"
+	Disable                roles.Action = "disable"
 	Read                   roles.Action = "read"
 	Delete                 roles.Action = "delete"
 	Membership             roles.Action = "membership"
@@ -56,6 +58,8 @@ const (
 func AvailableActions() []roles.Action {
 	return []roles.Action{
 		Update,
+		Enable,
+		Disable,
 		Read,
 		Delete,
 		Membership,

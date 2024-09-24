@@ -6,6 +6,7 @@ package events
 import (
 	"context"
 
+	entityRolesEvents "github.com/absmach/magistrala/pkg/entityroles/events"
 	"github.com/absmach/magistrala/pkg/events"
 	"github.com/absmach/magistrala/pkg/events/store"
 	"github.com/absmach/magistrala/pkg/groups"
@@ -16,6 +17,7 @@ var _ groups.Service = (*eventStore)(nil)
 type eventStore struct {
 	events.Publisher
 	svc groups.Service
+	entityRolesEvents.RolesSvcEventStoreMiddleware
 }
 
 // NewEventStoreMiddleware returns wrapper around things service that sends
@@ -25,10 +27,12 @@ func NewEventStoreMiddleware(ctx context.Context, svc groups.Service, url, strea
 	if err != nil {
 		return nil, err
 	}
+	rsesm := entityRolesEvents.NewRolesSvcEventStoreMiddleware("groups", svc, publisher)
 
 	return &eventStore{
-		svc:       svc,
-		Publisher: publisher,
+		svc:                          svc,
+		Publisher:                    publisher,
+		RolesSvcEventStoreMiddleware: rsesm,
 	}, nil
 }
 
@@ -82,24 +86,8 @@ func (es eventStore) ViewGroup(ctx context.Context, token, id string) (groups.Gr
 	return group, nil
 }
 
-func (es eventStore) ViewGroupPerms(ctx context.Context, token, id string) ([]string, error) {
-	permissions, err := es.svc.ViewGroupPerms(ctx, token, id)
-	if err != nil {
-		return permissions, err
-	}
-	event := viewGroupPermsEvent{
-		permissions,
-	}
-
-	if err := es.Publish(ctx, event); err != nil {
-		return permissions, err
-	}
-
-	return permissions, nil
-}
-
-func (es eventStore) ListGroups(ctx context.Context, token, memberKind, memberID string, pm groups.Page) (groups.Page, error) {
-	gp, err := es.svc.ListGroups(ctx, token, memberKind, memberID, pm)
+func (es eventStore) ListGroups(ctx context.Context, token string, pm groups.Page) (groups.Page, error) {
+	gp, err := es.svc.ListGroups(ctx, token, pm)
 	if err != nil {
 		return gp, err
 	}
@@ -114,22 +102,6 @@ func (es eventStore) ListGroups(ctx context.Context, token, memberKind, memberID
 	return gp, nil
 }
 
-func (es eventStore) ListMembers(ctx context.Context, token, groupID, permission, memberKind string) (groups.MembersPage, error) {
-	mp, err := es.svc.ListMembers(ctx, token, groupID, permission, memberKind)
-	if err != nil {
-		return mp, err
-	}
-	event := listGroupMembershipEvent{
-		groupID, permission, memberKind,
-	}
-
-	if err := es.Publish(ctx, event); err != nil {
-		return mp, err
-	}
-
-	return mp, nil
-}
-
 func (es eventStore) EnableGroup(ctx context.Context, token, id string) (groups.Group, error) {
 	group, err := es.svc.EnableGroup(ctx, token, id)
 	if err != nil {
@@ -137,43 +109,6 @@ func (es eventStore) EnableGroup(ctx context.Context, token, id string) (groups.
 	}
 
 	return es.changeStatus(ctx, group)
-}
-
-func (es eventStore) Assign(ctx context.Context, token, groupID, relation, memberKind string, memberIDs ...string) error {
-	if err := es.svc.Assign(ctx, token, groupID, relation, memberKind, memberIDs...); err != nil {
-		return err
-	}
-
-	event := assignEvent{
-		groupID:    groupID,
-		relation:   relation,
-		memberKind: memberKind,
-		memberIDs:  memberIDs,
-	}
-
-	if err := es.Publish(ctx, event); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (es eventStore) Unassign(ctx context.Context, token, groupID, relation, memberKind string, memberIDs ...string) error {
-	if err := es.svc.Unassign(ctx, token, groupID, relation, memberKind, memberIDs...); err != nil {
-		return err
-	}
-
-	event := unassignEvent{
-		groupID:    groupID,
-		relation:   relation,
-		memberKind: memberKind,
-		memberIDs:  memberIDs,
-	}
-
-	if err := es.Publish(ctx, event); err != nil {
-		return err
-	}
-	return es.svc.Unassign(ctx, token, groupID, relation, memberKind, memberIDs...)
 }
 
 func (es eventStore) DisableGroup(ctx context.Context, token, id string) (groups.Group, error) {
@@ -208,4 +143,87 @@ func (es eventStore) DeleteGroup(ctx context.Context, token, id string) error {
 		return err
 	}
 	return nil
+}
+
+func (es eventStore) ListParentGroups(ctx context.Context, token, id string, gm groups.Page) (groups.Page, error) {
+	g, err := es.svc.ListParentGroups(ctx, token, id, gm)
+	if err != nil {
+		return g, err
+	}
+	if err := es.Publish(ctx, listParentGroupsEvent{id, gm}); err != nil {
+		return g, err
+	}
+	return g, nil
+}
+
+func (es eventStore) AddParentGroup(ctx context.Context, token, id, parentID string) error {
+	if err := es.svc.AddParentGroup(ctx, token, id, parentID); err != nil {
+		return err
+	}
+	if err := es.Publish(ctx, addParentGroupEvent{id, parentID}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (es eventStore) RemoveParentGroup(ctx context.Context, token, id string) error {
+	if err := es.svc.RemoveParentGroup(ctx, token, id); err != nil {
+		return err
+	}
+	if err := es.Publish(ctx, removeParentGroupEvent{id}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (es eventStore) ViewParentGroup(ctx context.Context, token, id string) (groups.Group, error) {
+	g, err := es.svc.ViewParentGroup(ctx, token, id)
+	if err != nil {
+		return g, err
+	}
+	if err := es.Publish(ctx, viewParentGroupEvent{id}); err != nil {
+		return g, err
+	}
+	return g, nil
+}
+
+func (es eventStore) AddChildrenGroups(ctx context.Context, token, id string, childrenGroupIDs []string) error {
+	if err := es.svc.AddChildrenGroups(ctx, token, id, childrenGroupIDs); err != nil {
+		return err
+	}
+	if err := es.Publish(ctx, addChildrenGroupsEvent{id, childrenGroupIDs}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (es eventStore) RemoveChildrenGroups(ctx context.Context, token, id string, childrenGroupIDs []string) error {
+	if err := es.svc.RemoveChildrenGroups(ctx, token, id, childrenGroupIDs); err != nil {
+		return err
+	}
+	if err := es.Publish(ctx, removeChildrenGroupsEvent{id, childrenGroupIDs}); err != nil {
+		return err
+	}
+
+	return nil
+}
+func (es eventStore) RemoveAllChildrenGroups(ctx context.Context, token, id string) error {
+	if err := es.svc.RemoveAllChildrenGroups(ctx, token, id); err != nil {
+		return err
+	}
+	if err := es.Publish(ctx, removeAllChildrenGroupsEvent{id}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (es eventStore) ListChildrenGroups(ctx context.Context, token, id string, gm groups.Page) (groups.Page, error) {
+	g, err := es.svc.ListChildrenGroups(ctx, token, id, gm)
+	if err != nil {
+		return g, err
+	}
+	if err := es.Publish(ctx, listChildrenGroupsEvent{id, gm}); err != nil {
+		return g, err
+	}
+	return g, nil
 }

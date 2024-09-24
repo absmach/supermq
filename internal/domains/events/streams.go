@@ -90,15 +90,52 @@ func (es *eventStore) UpdateDomain(ctx context.Context, token, id string, d doma
 	return domain, nil
 }
 
-func (es *eventStore) ChangeDomainStatus(ctx context.Context, token, id string, d domains.DomainReq) (domains.Domain, error) {
-	domain, err := es.svc.ChangeDomainStatus(ctx, token, id, d)
+func (es *eventStore) EnableDomain(ctx context.Context, token, id string) (domains.Domain, error) {
+	domain, err := es.svc.EnableDomain(ctx, token, id)
 	if err != nil {
 		return domain, err
 	}
 
-	event := changeDomainStatusEvent{
+	event := enableDomainEvent{
 		domainID:  id,
-		status:    domain.Status,
+		updatedAt: domain.UpdatedAt,
+		updatedBy: domain.UpdatedBy,
+	}
+
+	if err := es.Publish(ctx, event); err != nil {
+		return domain, err
+	}
+
+	return domain, nil
+}
+
+func (es *eventStore) DisableDomain(ctx context.Context, token, id string) (domains.Domain, error) {
+	domain, err := es.svc.DisableDomain(ctx, token, id)
+	if err != nil {
+		return domain, err
+	}
+
+	event := disableDomainEvent{
+		domainID:  id,
+		updatedAt: domain.UpdatedAt,
+		updatedBy: domain.UpdatedBy,
+	}
+
+	if err := es.Publish(ctx, event); err != nil {
+		return domain, err
+	}
+
+	return domain, nil
+}
+
+func (es *eventStore) FreezeDomain(ctx context.Context, token, id string) (domains.Domain, error) {
+	domain, err := es.svc.FreezeDomain(ctx, token, id)
+	if err != nil {
+		return domain, err
+	}
+
+	event := freezeDomainEvent{
+		domainID:  id,
 		updatedAt: domain.UpdatedAt,
 		updatedBy: domain.UpdatedBy,
 	}

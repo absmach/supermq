@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package api
+package http
 
 import (
 	"context"
@@ -36,8 +36,8 @@ func TestDecodeListGroupsRequest(t *testing.T) {
 					PageMeta: groups.PageMeta{
 						Limit: 10,
 					},
-					Permission: api.DefPermission,
-					Direction:  -1,
+					Permission:         api.DefPermission,
+					HierarchyDirection: -1,
 				},
 			},
 			err: nil,
@@ -59,15 +59,14 @@ func TestDecodeListGroupsRequest(t *testing.T) {
 							"test": "test",
 						},
 					},
-					Level:      2,
-					ParentID:   "random",
-					Permission: "random",
-					Direction:  -1,
-					ListPerms:  true,
+					Level:              2,
+					ParentID:           "random",
+					Permission:         "random",
+					HierarchyDirection: -1,
+					ListPerms:          true,
+					Tree:               true,
 				},
-				token:      "123",
-				tree:       true,
-				memberKind: "random",
+				token: "123",
 			},
 			err: nil,
 		},
@@ -152,8 +151,8 @@ func TestDecodeListParentsRequest(t *testing.T) {
 					PageMeta: groups.PageMeta{
 						Limit: 10,
 					},
-					Permission: api.DefPermission,
-					Direction:  +1,
+					Permission:         api.DefPermission,
+					HierarchyDirection: +1,
 				},
 			},
 			err: nil,
@@ -175,13 +174,13 @@ func TestDecodeListParentsRequest(t *testing.T) {
 							"test": "test",
 						},
 					},
-					Level:      2,
-					Permission: "random",
-					Direction:  +1,
-					ListPerms:  true,
+					Level:              2,
+					Permission:         "random",
+					HierarchyDirection: +1,
+					ListPerms:          true,
+					Tree:               true,
 				},
 				token: "123",
-				tree:  true,
 			},
 			err: nil,
 		},
@@ -225,7 +224,7 @@ func TestDecodeListParentsRequest(t *testing.T) {
 			URL:    parsedURL,
 			Header: tc.header,
 		}
-		resp, err := DecodeListParentsRequest(context.Background(), req)
+		resp, err := decodeListParentsRequest(context.Background(), req)
 		assert.Equal(t, tc.resp, resp, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.resp, resp))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
 	}
@@ -248,8 +247,8 @@ func TestDecodeListChildrenRequest(t *testing.T) {
 					PageMeta: groups.PageMeta{
 						Limit: 10,
 					},
-					Permission: api.DefPermission,
-					Direction:  -1,
+					Permission:         api.DefPermission,
+					HierarchyDirection: -1,
 				},
 			},
 			err: nil,
@@ -271,13 +270,13 @@ func TestDecodeListChildrenRequest(t *testing.T) {
 							"test": "test",
 						},
 					},
-					Level:      2,
-					Permission: "random",
-					Direction:  -1,
-					ListPerms:  true,
+					Level:              2,
+					Permission:         "random",
+					HierarchyDirection: -1,
+					ListPerms:          true,
+					Tree:               true,
 				},
 				token: "123",
-				tree:  true,
 			},
 			err: nil,
 		},
@@ -321,65 +320,7 @@ func TestDecodeListChildrenRequest(t *testing.T) {
 			URL:    parsedURL,
 			Header: tc.header,
 		}
-		resp, err := DecodeListChildrenRequest(context.Background(), req)
-		assert.Equal(t, tc.resp, resp, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.resp, resp))
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
-	}
-}
-
-func TestDecodeListMembersRequest(t *testing.T) {
-	cases := []struct {
-		desc   string
-		url    string
-		header map[string][]string
-		resp   interface{}
-		err    error
-	}{
-		{
-			desc:   "valid request with no parameters",
-			url:    "http://localhost:8080",
-			header: map[string][]string{},
-			resp: listMembersReq{
-				permission: api.DefPermission,
-			},
-			err: nil,
-		},
-		{
-			desc: "valid request with all parameters",
-			url:  "http://localhost:8080?member_kind=random&permission=random",
-			header: map[string][]string{
-				"Authorization": {"Bearer 123"},
-			},
-			resp: listMembersReq{
-				token:      "123",
-				memberKind: "random",
-				permission: "random",
-			},
-			err: nil,
-		},
-		{
-			desc: "valid request with invalid permission",
-			url:  "http://localhost:8080?permission=random&permission=random",
-			resp: nil,
-			err:  apiutil.ErrValidation,
-		},
-		{
-			desc: "valid request with invalid member kind",
-			url:  "http://localhost:8080?member_kind=random&member_kind=random",
-			resp: nil,
-			err:  apiutil.ErrValidation,
-		},
-	}
-
-	for _, tc := range cases {
-		parsedURL, err := url.Parse(tc.url)
-		assert.NoError(t, err)
-
-		req := &http.Request{
-			URL:    parsedURL,
-			Header: tc.header,
-		}
-		resp, err := DecodeListMembersRequest(context.Background(), req)
+		resp, err := decodeListChildrenGroupsRequest(context.Background(), req)
 		assert.Equal(t, tc.resp, resp, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.resp, resp))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
 	}
@@ -607,40 +548,6 @@ func TestDecodeGroupRequest(t *testing.T) {
 	}
 }
 
-func TestDecodeGroupPermsRequest(t *testing.T) {
-	cases := []struct {
-		desc   string
-		header map[string][]string
-		resp   interface{}
-		err    error
-	}{
-		{
-			desc: "valid request",
-			header: map[string][]string{
-				"Authorization": {"Bearer 123"},
-			},
-			resp: groupPermsReq{
-				token: "123",
-			},
-			err: nil,
-		},
-		{
-			desc: "empty token",
-			resp: groupPermsReq{},
-			err:  nil,
-		},
-	}
-
-	for _, tc := range cases {
-		req, err := http.NewRequest(http.MethodGet, "http://localhost:8080", http.NoBody)
-		assert.NoError(t, err)
-		req.Header = tc.header
-		resp, err := DecodeGroupPermsRequest(context.Background(), req)
-		assert.Equal(t, tc.resp, resp, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.resp, resp))
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
-	}
-}
-
 func TestDecodeChangeGroupStatus(t *testing.T) {
 	cases := []struct {
 		desc   string
@@ -669,115 +576,7 @@ func TestDecodeChangeGroupStatus(t *testing.T) {
 		req, err := http.NewRequest(http.MethodGet, "http://localhost:8080", http.NoBody)
 		assert.NoError(t, err)
 		req.Header = tc.header
-		resp, err := DecodeChangeGroupStatus(context.Background(), req)
-		assert.Equal(t, tc.resp, resp, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.resp, resp))
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
-	}
-}
-
-func TestDecodeAssignMembersRequest(t *testing.T) {
-	cases := []struct {
-		desc   string
-		body   string
-		header map[string][]string
-		resp   interface{}
-		err    error
-	}{
-		{
-			desc: "valid request",
-			body: `{"member_kind": "random", "members": ["random"]}`,
-			header: map[string][]string{
-				"Authorization": {"Bearer 123"},
-				"Content-Type":  {api.ContentType},
-			},
-			resp: assignReq{
-				MemberKind: "random",
-				Members:    []string{"random"},
-				token:      "123",
-			},
-			err: nil,
-		},
-		{
-			desc: "invalid content type",
-			body: `{"member_kind": "random", "members": ["random"]}`,
-			header: map[string][]string{
-				"Authorization": {"Bearer 123"},
-				"Content-Type":  {"text/plain"},
-			},
-			resp: nil,
-			err:  apiutil.ErrUnsupportedContentType,
-		},
-		{
-			desc: "invalid request body",
-			body: `data`,
-			header: map[string][]string{
-				"Authorization": {"Bearer 123"},
-				"Content-Type":  {api.ContentType},
-			},
-			resp: nil,
-			err:  errors.ErrMalformedEntity,
-		},
-	}
-
-	for _, tc := range cases {
-		req, err := http.NewRequest(http.MethodPost, "http://localhost:8080", strings.NewReader(tc.body))
-		assert.NoError(t, err)
-		req.Header = tc.header
-		resp, err := DecodeAssignMembersRequest(context.Background(), req)
-		assert.Equal(t, tc.resp, resp, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.resp, resp))
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
-	}
-}
-
-func TestDecodeUnassignMembersRequest(t *testing.T) {
-	cases := []struct {
-		desc   string
-		body   string
-		header map[string][]string
-		resp   interface{}
-		err    error
-	}{
-		{
-			desc: "valid request",
-			body: `{"member_kind": "random", "members": ["random"]}`,
-			header: map[string][]string{
-				"Authorization": {"Bearer 123"},
-				"Content-Type":  {api.ContentType},
-			},
-			resp: unassignReq{
-				MemberKind: "random",
-				Members:    []string{"random"},
-				token:      "123",
-			},
-			err: nil,
-		},
-		{
-			desc: "invalid content type",
-			body: `{"member_kind": "random", "members": ["random"]}`,
-			header: map[string][]string{
-				"Authorization": {"Bearer 123"},
-				"Content-Type":  {"text/plain"},
-			},
-			resp: nil,
-			err:  apiutil.ErrUnsupportedContentType,
-		},
-		{
-			desc: "invalid request body",
-			body: `data`,
-			header: map[string][]string{
-				"Authorization": {"Bearer 123"},
-				"Content-Type":  {api.ContentType},
-			},
-			resp: nil,
-			err:  errors.ErrMalformedEntity,
-		},
-	}
-
-	for _, tc := range cases {
-		req, err := http.NewRequest(http.MethodPost, "http://localhost:8080", strings.NewReader(tc.body))
-		assert.NoError(t, err)
-		req.Header = tc.header
-		resp, err := DecodeUnassignMembersRequest(context.Background(), req)
+		resp, err := DecodeChangeGroupStatusRequest(context.Background(), req)
 		assert.Equal(t, tc.resp, resp, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.resp, resp))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
 	}

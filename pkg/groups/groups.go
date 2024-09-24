@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/pkg/clients"
+	"github.com/absmach/magistrala/pkg/roles"
+	"github.com/absmach/magistrala/pkg/svcutil"
 )
 
 // MaxLevel represents the maximum group hierarchy level.
@@ -52,13 +54,17 @@ type MembersPage struct {
 // of Groups that belong to the page.
 type Page struct {
 	PageMeta
-	Path       string
-	Level      uint64
-	ParentID   string
-	Permission string
-	ListPerms  bool
-	Direction  int64 // ancestors (+1) or descendants (-1)
-	Groups     []Group
+	Path               string
+	Level              uint64
+	ParentID           string
+	Permission         string
+	ListPerms          bool
+	HierarchyDirection int64 // ancestors (+1) or descendants (-1)
+	Groups             []Group
+	// - `true`  - result is JSON tree representing groups hierarchy,
+	// - `false` - result is JSON array of groups.
+	// ToDo: Tree is build in API layer now, not in service layer. This need to be fine tuned.
+	Tree bool
 }
 
 // Repository specifies a group persistence API.
@@ -89,8 +95,12 @@ type Repository interface {
 	// UnassignParentGroup unassign parent group id fr given group id
 	UnassignParentGroup(ctx context.Context, parentGroupID string, groupIDs ...string) error
 
+	UnassignAllChildrenGroup(ctx context.Context, id string) error
+
 	// Delete a group
 	Delete(ctx context.Context, groupID string) error
+
+	roles.Repository
 }
 
 //go:generate mockery --name Service --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines" --unroll-variadic=false
@@ -104,14 +114,8 @@ type Service interface {
 	// ViewGroup retrieves data about the group identified by ID.
 	ViewGroup(ctx context.Context, token, id string) (Group, error)
 
-	// ViewGroupPerms retrieves permissions on the group id for the given authorized token.
-	ViewGroupPerms(ctx context.Context, token, id string) ([]string, error)
-
 	// ListGroups retrieves
-	ListGroups(ctx context.Context, token, memberKind, memberID string, gm Page) (Page, error)
-
-	// ListMembers retrieves everything that is assigned to a group identified by groupID.
-	ListMembers(ctx context.Context, token, groupID, permission, memberKind string) (MembersPage, error)
+	ListGroups(ctx context.Context, token string, gm Page) (Page, error)
 
 	// EnableGroup logically enables the group identified with the provided ID.
 	EnableGroup(ctx context.Context, token, id string) (Group, error)
@@ -122,9 +126,167 @@ type Service interface {
 	// DeleteGroup delete the given group id
 	DeleteGroup(ctx context.Context, token, id string) error
 
-	// Assign member to group
-	Assign(ctx context.Context, token, groupID, relation, memberKind string, memberIDs ...string) (err error)
+	ListParentGroups(ctx context.Context, token, id string, gm Page) (Page, error)
 
-	// Unassign member from group
-	Unassign(ctx context.Context, token, groupID, relation, memberKind string, memberIDs ...string) (err error)
+	AddParentGroup(ctx context.Context, token, id, parentID string) error
+
+	RemoveParentGroup(ctx context.Context, token, id string) error
+
+	ViewParentGroup(ctx context.Context, token, id string) (Group, error)
+
+	AddChildrenGroups(ctx context.Context, token, id string, childrenGroupIDs []string) error
+
+	RemoveChildrenGroups(ctx context.Context, token, id string, childrenGroupIDs []string) error
+
+	RemoveAllChildrenGroups(ctx context.Context, token, id string) error
+
+	ListChildrenGroups(ctx context.Context, token, id string, gm Page) (Page, error)
+
+	roles.Roles
+}
+
+const (
+	createPermission          = "create_permission"
+	updatePermission          = "update_permission"
+	readPermission            = "read_permission"
+	membershipPermission      = "membership_permission"
+	deletePermission          = "delete_permission"
+	setChildPermission        = "set_child_permission"
+	setParentPermission       = "set_parent_permission"
+	manageRolePermission      = "manage_role_permission"
+	addRoleUsersPermission    = "add_role_users_permission"
+	removeRoleUsersPermission = "remove_role_users_permission"
+	viewRoleUsersPermission   = "view_role_users_permission"
+)
+
+const (
+	OpCreateGroup svcutil.Operation = iota
+	OpViewGroup
+	OpUpdateGroup
+	OpListGroups
+	OpEnableGroup
+	OpDisableGroup
+	OpListParentGroups
+	OpAddParentGroup
+	OpRemoveParentGroup
+	OpViewParentGroup
+	OpAddChildrenGroups
+	OpRemoveChildrenGroups
+	OpRemoveAllChildrenGroups
+	OpListChildrenGroups
+	OpAddChannels
+	OpRemoveChannels
+	OpRemoveAllChannels
+	OpListChannels
+	OpAddThings
+	OpRemoveThings
+	OpRemoveAllThings
+	OpListThings
+	OpDeleteGroup
+)
+
+var expectedOperations = []svcutil.Operation{
+	OpCreateGroup,
+	OpViewGroup,
+	OpUpdateGroup,
+	OpListGroups,
+	OpEnableGroup,
+	OpDisableGroup,
+	OpListParentGroups,
+	OpAddParentGroup,
+	OpRemoveParentGroup,
+	OpViewParentGroup,
+	OpAddChildrenGroups,
+	OpRemoveChildrenGroups,
+	OpRemoveAllChildrenGroups,
+	OpListChildrenGroups,
+	OpAddChannels,
+	OpRemoveChannels,
+	OpRemoveAllChannels,
+	OpListChannels,
+	OpAddThings,
+	OpRemoveThings,
+	OpRemoveAllThings,
+	OpListThings,
+	OpDeleteGroup,
+}
+
+var operationNames = []string{
+	"OpCreateGroup",
+	"OpViewGroup",
+	"OpUpdateGroup",
+	"OpListGroups",
+	"OpEnableGroup",
+	"OpDisableGroup",
+	"OpListParentGroups",
+	"OpAddParentGroup",
+	"OpRemoveParentGroup",
+	"OpViewParentGroup",
+	"OpAddChildrenGroups",
+	"OpRemoveChildrenGroups",
+	"OpRemoveAllChildrenGroups",
+	"OpListChildrenGroups",
+	"OpAddChannels",
+	"OpRemoveChannels",
+	"OpRemoveAllChannels",
+	"OpListChannels",
+	"OpAddThings",
+	"OpRemoveThings",
+	"OpRemoveAllThings",
+	"OpListThings",
+	"OpDeleteGroup",
+}
+
+func NewOperationPerm() svcutil.OperationPerm {
+	return svcutil.NewOperationPerm(expectedOperations, operationNames)
+}
+
+func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
+	opPerm := map[svcutil.Operation]svcutil.Permission{
+		OpCreateGroup:             createPermission,
+		OpViewGroup:               readPermission,
+		OpUpdateGroup:             updatePermission,
+		OpListGroups:              readPermission,
+		OpEnableGroup:             updatePermission,
+		OpDisableGroup:            updatePermission,
+		OpListParentGroups:        updatePermission,
+		OpAddParentGroup:          setParentPermission,
+		OpRemoveParentGroup:       setParentPermission,
+		OpViewParentGroup:         readPermission,
+		OpAddChildrenGroups:       setChildPermission,
+		OpRemoveChildrenGroups:    setChildPermission,
+		OpRemoveAllChildrenGroups: setChildPermission,
+		OpListChildrenGroups:      readPermission,
+		OpAddChannels:             "",
+		OpRemoveChannels:          "",
+		OpRemoveAllChannels:       "",
+		OpListChannels:            "",
+		OpAddThings:               "",
+		OpRemoveThings:            "",
+		OpRemoveAllThings:         "",
+		OpListThings:              "",
+		OpDeleteGroup:             deletePermission,
+	}
+	return opPerm
+}
+
+func NewRolesOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
+	opPerm := map[svcutil.Operation]svcutil.Permission{
+		roles.OpAddRole:                manageRolePermission,
+		roles.OpRemoveRole:             manageRolePermission,
+		roles.OpUpdateRoleName:         manageRolePermission,
+		roles.OpRetrieveRole:           manageRolePermission,
+		roles.OpRetrieveAllRoles:       manageRolePermission,
+		roles.OpRoleAddActions:         manageRolePermission,
+		roles.OpRoleListActions:        manageRolePermission,
+		roles.OpRoleCheckActionsExists: manageRolePermission,
+		roles.OpRoleRemoveActions:      manageRolePermission,
+		roles.OpRoleRemoveAllActions:   manageRolePermission,
+		roles.OpRoleAddMembers:         addRoleUsersPermission,
+		roles.OpRoleListMembers:        viewRoleUsersPermission,
+		roles.OpRoleCheckMembersExists: viewRoleUsersPermission,
+		roles.OpRoleRemoveMembers:      removeRoleUsersPermission,
+		roles.OpRoleRemoveAllMembers:   manageRolePermission,
+	}
+	return opPerm
 }

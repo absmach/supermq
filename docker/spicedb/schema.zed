@@ -13,8 +13,6 @@ definition role {
 	permission add_user = entity->add_role_users_permission
 	permission remove_user = entity->remove_role_users_permission
 	permission view_user = entity->view_role_users_permission
-
-
 }
 
 definition thing {

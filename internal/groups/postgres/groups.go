@@ -12,6 +12,7 @@ import (
 	"time"
 
 	mgclients "github.com/absmach/magistrala/pkg/clients"
+	entityRolesRepo "github.com/absmach/magistrala/pkg/entityroles/postrgres"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	mggroups "github.com/absmach/magistrala/pkg/groups"
@@ -23,13 +24,17 @@ var _ mggroups.Repository = (*groupRepository)(nil)
 
 type groupRepository struct {
 	db postgres.Database
+	entityRolesRepo.RolesSvcRepo
 }
 
 // New instantiates a PostgreSQL implementation of group
 // repository.
 func New(db postgres.Database) mggroups.Repository {
+	rolesSvcRepo := entityRolesRepo.NewRolesSvcRepository(db)
+
 	return &groupRepository{
-		db: db,
+		db:           db,
+		RolesSvcRepo: rolesSvcRepo,
 	}
 }
 
@@ -265,6 +270,7 @@ func (repo groupRepository) AssignParentGroup(ctx context.Context, parentGroupID
 	return nil
 }
 
+// ToDo: Query need to change to ANY
 func (repo groupRepository) UnassignParentGroup(ctx context.Context, parentGroupID string, groupIDs ...string) error {
 	if len(groupIDs) == 0 {
 		return nil
@@ -292,6 +298,23 @@ func (repo groupRepository) UnassignParentGroup(ctx context.Context, parentGroup
 	return nil
 }
 
+func (repo groupRepository) UnassignAllChildrenGroup(ctx context.Context, id string) error {
+
+	query := `
+			UPDATE groups AS g SET
+				parent_id = NULL
+			WHERE g.parent = :parent_id ;
+	`
+
+	row, err := repo.db.NamedQueryContext(ctx, query, dbGroup{ParentID: &id})
+	if err != nil {
+		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
+	}
+	defer row.Close()
+
+	return nil
+}
+
 func (repo groupRepository) Delete(ctx context.Context, groupID string) error {
 	q := "DELETE FROM groups AS g WHERE g.id = $1;"
 
@@ -308,14 +331,14 @@ func (repo groupRepository) Delete(ctx context.Context, groupID string) error {
 func buildHierachy(gm mggroups.Page) string {
 	query := ""
 	switch {
-	case gm.Direction >= 0: // ancestors
+	case gm.HierarchyDirection >= 0: // ancestors
 		query = `WITH RECURSIVE groups_cte as (
 			SELECT id, COALESCE(parent_id, '') AS parent_id, domain_id, name, description, metadata, created_at, updated_at, updated_by, status, 0 as level from groups WHERE id = :parent_id
 			UNION SELECT x.id, COALESCE(x.parent_id, '') AS parent_id, x.domain_id, x.name, x.description, x.metadata, x.created_at, x.updated_at, x.updated_by, x.status, level - 1 from groups x
 			INNER JOIN groups_cte a ON a.parent_id = x.id
 		) SELECT * FROM groups_cte g`
 
-	case gm.Direction < 0: // descendants
+	case gm.HierarchyDirection < 0: // descendants
 		query = `WITH RECURSIVE groups_cte as (
 			SELECT id, COALESCE(parent_id, '') AS parent_id, domain_id, name, description, metadata, created_at, updated_at, updated_by, status, 0 as level, CONCAT('', '', id) as path from groups WHERE id = :parent_id
 			UNION SELECT x.id, COALESCE(x.parent_id, '') AS parent_id, x.domain_id, x.name, x.description, x.metadata, x.created_at, x.updated_at, x.updated_by, x.status, level + 1, CONCAT(path, '.', x.id) as path from groups x

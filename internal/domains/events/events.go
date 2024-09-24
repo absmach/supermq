@@ -11,19 +11,23 @@ import (
 )
 
 const (
-	domainPrefix       = "domain."
-	domainCreate       = domainPrefix + "create"
-	domainRetrieve     = domainPrefix + "retrieve"
-	domainUpdate       = domainPrefix + "update"
-	domainChangeStatus = domainPrefix + "change_status"
-	domainList         = domainPrefix + "list"
+	domainPrefix   = "domain."
+	domainCreate   = domainPrefix + "create"
+	domainRetrieve = domainPrefix + "retrieve"
+	domainUpdate   = domainPrefix + "update"
+	domainEnable   = domainPrefix + "enable"
+	domainDisable  = domainPrefix + "disable"
+	domainFreeze   = domainPrefix + "freeze"
+	domainList     = domainPrefix + "list"
 )
 
 var (
 	_ events.Event = (*createDomainEvent)(nil)
 	_ events.Event = (*retrieveDomainEvent)(nil)
 	_ events.Event = (*updateDomainEvent)(nil)
-	_ events.Event = (*changeDomainStatusEvent)(nil)
+	_ events.Event = (*enableDomainEvent)(nil)
+	_ events.Event = (*disableDomainEvent)(nil)
+	_ events.Event = (*freezeDomainEvent)(nil)
 	_ events.Event = (*listDomainsEvent)(nil)
 )
 
@@ -118,18 +122,46 @@ func (ude updateDomainEvent) Encode() (map[string]interface{}, error) {
 	return val, nil
 }
 
-type changeDomainStatusEvent struct {
+type enableDomainEvent struct {
 	domainID  string
-	status    domains.Status
 	updatedAt time.Time
 	updatedBy string
 }
 
-func (cdse changeDomainStatusEvent) Encode() (map[string]interface{}, error) {
+func (cdse enableDomainEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
-		"operation":  domainChangeStatus,
+		"operation":  domainEnable,
 		"id":         cdse.domainID,
-		"status":     cdse.status.String(),
+		"updated_at": cdse.updatedAt,
+		"updated_by": cdse.updatedBy,
+	}, nil
+}
+
+type disableDomainEvent struct {
+	domainID  string
+	updatedAt time.Time
+	updatedBy string
+}
+
+func (cdse disableDomainEvent) Encode() (map[string]interface{}, error) {
+	return map[string]interface{}{
+		"operation":  domainDisable,
+		"id":         cdse.domainID,
+		"updated_at": cdse.updatedAt,
+		"updated_by": cdse.updatedBy,
+	}, nil
+}
+
+type freezeDomainEvent struct {
+	domainID  string
+	updatedAt time.Time
+	updatedBy string
+}
+
+func (cdse freezeDomainEvent) Encode() (map[string]interface{}, error) {
+	return map[string]interface{}{
+		"operation":  domainFreeze,
+		"id":         cdse.domainID,
 		"updated_at": cdse.updatedAt,
 		"updated_by": cdse.updatedBy,
 	}, nil

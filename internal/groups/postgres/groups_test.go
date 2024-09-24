@@ -638,8 +638,8 @@ func TestRetrieveAll(t *testing.T) {
 					Offset: 0,
 					Limit:  uint64(num),
 				},
-				ParentID:  items[5].ID,
-				Direction: 1,
+				ParentID:           items[5].ID,
+				HierarchyDirection: 1,
 			},
 			response: mggroups.Page{
 				PageMeta: mggroups.PageMeta{
@@ -658,8 +658,8 @@ func TestRetrieveAll(t *testing.T) {
 					Offset: 0,
 					Limit:  uint64(num),
 				},
-				ParentID:  items[150].ID,
-				Direction: -1,
+				ParentID:           items[150].ID,
+				HierarchyDirection: -1,
 			},
 			response: mggroups.Page{
 				PageMeta: mggroups.PageMeta{
@@ -949,8 +949,8 @@ func TestRetrieveByIDs(t *testing.T) {
 					Offset: 0,
 					Limit:  uint64(num),
 				},
-				ParentID:  items[5].ID,
-				Direction: 1,
+				ParentID:           items[5].ID,
+				HierarchyDirection: 1,
 			},
 			ids: getIDs(items[0:20]),
 			response: mggroups.Page{
@@ -970,8 +970,8 @@ func TestRetrieveByIDs(t *testing.T) {
 					Offset: 0,
 					Limit:  uint64(num),
 				},
-				ParentID:  items[15].ID,
-				Direction: -1,
+				ParentID:           items[15].ID,
+				HierarchyDirection: -1,
 			},
 			ids: getIDs(items[0:20]),
 			response: mggroups.Page{

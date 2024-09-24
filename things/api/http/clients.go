@@ -53,13 +53,6 @@ func clientsHandler(svc things.Service, r *chi.Mux, logger *slog.Logger) http.Ha
 			opts...,
 		), "view_thing").ServeHTTP)
 
-		r.Get("/{thingID}/permissions", otelhttp.NewHandler(kithttp.NewServer(
-			viewClientPermsEndpoint(svc),
-			decodeViewClientPerms,
-			api.EncodeResponse,
-			opts...,
-		), "view_thing_permissions").ServeHTTP)
-
 		r.Patch("/{thingID}", otelhttp.NewHandler(kithttp.NewServer(
 			updateClientEndpoint(svc),
 			decodeUpdateClient,
@@ -95,20 +88,6 @@ func clientsHandler(svc things.Service, r *chi.Mux, logger *slog.Logger) http.Ha
 			opts...,
 		), "disable_thing").ServeHTTP)
 
-		r.Post("/{thingID}/share", otelhttp.NewHandler(kithttp.NewServer(
-			thingShareEndpoint(svc),
-			decodeThingShareRequest,
-			api.EncodeResponse,
-			opts...,
-		), "share_thing").ServeHTTP)
-
-		r.Post("/{thingID}/unshare", otelhttp.NewHandler(kithttp.NewServer(
-			thingUnshareEndpoint(svc),
-			decodeThingUnshareRequest,
-			api.EncodeResponse,
-			opts...,
-		), "unshare_thing").ServeHTTP)
-
 		r.Delete("/{thingID}", otelhttp.NewHandler(kithttp.NewServer(
 			deleteClientEndpoint(svc),
 			decodeDeleteClientReq,
@@ -116,18 +95,6 @@ func clientsHandler(svc things.Service, r *chi.Mux, logger *slog.Logger) http.Ha
 			opts...,
 		), "delete_thing").ServeHTTP)
 	})
-
-	// Ideal location: things service,  channels endpoint
-	// Reason for placing here :
-	// SpiceDB provides list of thing ids present in given channel id
-	// and things service can access spiceDB and get the list of thing ids present in given channel id.
-	// Request to get list of things present in channelID ({groupID}) .
-	r.Get("/channels/{groupID}/things", otelhttp.NewHandler(kithttp.NewServer(
-		listMembersEndpoint(svc),
-		decodeListMembersRequest,
-		api.EncodeResponse,
-		opts...,
-	), "list_things_by_channel_id").ServeHTTP)
 
 	r.Get("/users/{userID}/things", otelhttp.NewHandler(kithttp.NewServer(
 		listClientsEndpoint(svc),

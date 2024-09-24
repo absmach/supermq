@@ -40,6 +40,7 @@ const (
 	LevelKey         = "level"
 	TreeKey          = "tree"
 	DirKey           = "dir"
+	HierarchyDirKey  = "hierarchy_dir"
 	ListPerms        = "list_perms"
 	VisibilityKey    = "visibility"
 	SharedByKey      = "shared_by"

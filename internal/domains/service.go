@@ -16,7 +16,7 @@ import (
 
 var (
 	errCreateDomainPolicy = errors.New("failed to create domain policy")
-	errRollbackPolicy     = errors.New("failed to rollback policy")
+	errRollbackRepo       = errors.New("failed to rollback repo")
 	errRemovePolicyEngine = errors.New("failed to remove from policy engine")
 )
 
@@ -78,6 +78,7 @@ func (svc service) CreateDomain(ctx context.Context, token string, d domains.Dom
 
 	d.CreatedAt = time.Now()
 
+	// Domain is created in repo first, because Roles table have foreign key relation with Domain ID
 	dom, err := svc.repo.Save(ctx, d)
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrCreateEntity, err)
@@ -85,7 +86,7 @@ func (svc service) CreateDomain(ctx context.Context, token string, d domains.Dom
 	defer func() {
 		if err != nil {
 			if errRollBack := svc.repo.Delete(ctx, domainID); errRollBack != nil {
-				err = errors.Wrap(err, errors.Wrap(errRollbackPolicy, errRollBack))
+				err = errors.Wrap(err, errors.Wrap(errRollbackRepo, errRollBack))
 			}
 		}
 	}()
@@ -156,13 +157,12 @@ func (svc service) UpdateDomain(ctx context.Context, token, id string, d domains
 	return dom, nil
 }
 
-// ToDo: Create separate function for enable and disable with separate	 role operations
-func (svc service) ChangeDomainStatus(ctx context.Context, token, id string, d domains.DomainReq) (domains.Domain, error) {
+func (svc service) EnableDomain(ctx context.Context, token, id string) (domains.Domain, error) {
 	user, err := svc.identify(ctx, token)
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-	if err := svc.authorize(ctx, domains.OpChangeDomainStatus, &magistrala.AuthorizeReq{
+	if err := svc.authorize(ctx, domains.OpEnableDomain, &magistrala.AuthorizeReq{
 		Subject:     user.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
@@ -172,7 +172,57 @@ func (svc service) ChangeDomainStatus(ctx context.Context, token, id string, d d
 		return domains.Domain{}, err
 	}
 
-	dom, err := svc.repo.Update(ctx, id, user.UserID, d)
+	status := domains.EnabledStatus
+	dom, err := svc.repo.Update(ctx, id, user.UserID, domains.DomainReq{Status: &status})
+	if err != nil {
+		return domains.Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+	}
+	return dom, nil
+}
+
+func (svc service) DisableDomain(ctx context.Context, token, id string) (domains.Domain, error) {
+	user, err := svc.identify(ctx, token)
+	if err != nil {
+		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthentication, err)
+	}
+	if err := svc.authorize(ctx, domains.OpDisableDomain, &magistrala.AuthorizeReq{
+		Subject:     user.ID,
+		SubjectType: auth.UserType,
+		SubjectKind: auth.UsersKind,
+		Object:      id,
+		ObjectType:  auth.DomainType,
+	}); err != nil {
+		return domains.Domain{}, err
+	}
+
+	status := domains.DisabledStatus
+	dom, err := svc.repo.Update(ctx, id, user.UserID, domains.DomainReq{Status: &status})
+	if err != nil {
+		return domains.Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+	}
+	return dom, nil
+}
+
+// Only SuperAdmin can freeze the domain
+func (svc service) FreezeDomain(ctx context.Context, token, id string) (domains.Domain, error) {
+	user, err := svc.identify(ctx, token)
+	if err != nil {
+		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthentication, err)
+	}
+	// Only SuperAdmin can freeze the domain
+	if _, err := svc.auth.Authorize(ctx, &magistrala.AuthorizeReq{
+		Subject:     user.ID,
+		SubjectType: auth.UserType,
+		SubjectKind: auth.UsersKind,
+		Permission:  auth.AdminPermission,
+		Object:      id,
+		ObjectType:  auth.DomainType,
+	}); err != nil {
+		return domains.Domain{}, err
+	}
+
+	status := domains.FreezeStatus
+	dom, err := svc.repo.Update(ctx, id, user.UserID, domains.DomainReq{Status: &status})
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}

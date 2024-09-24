@@ -22,7 +22,6 @@ import (
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/domains"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/pkg/roles"
 	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -78,8 +77,8 @@ func newService() (auth.Service, *mocks.KeyRepository) {
 	return auth.New(krepo, idProvider, t, prepo, loginDuration, refreshDuration, invalidDuration), krepo
 }
 
-func newServer(svc auth.Service, dsvc domains.Service, dRoles roles.Roles) *httptest.Server {
-	mux := httpapi.MakeHandler(svc, dsvc, dRoles, mglog.NewMock(), "")
+func newServer(svc auth.Service, dsvc domains.Service) *httptest.Server {
+	mux := httpapi.MakeHandler(svc, dsvc, mglog.NewMock(), "")
 	return httptest.NewServer(mux)
 }
 

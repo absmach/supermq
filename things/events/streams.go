@@ -109,22 +109,6 @@ func (es *eventStore) ViewClient(ctx context.Context, token, id string) (mgclien
 	return cli, nil
 }
 
-func (es *eventStore) ViewClientPerms(ctx context.Context, token, id string) ([]string, error) {
-	permissions, err := es.svc.ViewClientPerms(ctx, token, id)
-	if err != nil {
-		return permissions, err
-	}
-
-	event := viewClientPermsEvent{
-		permissions,
-	}
-	if err := es.Publish(ctx, event); err != nil {
-		return permissions, err
-	}
-
-	return permissions, nil
-}
-
 func (es *eventStore) ListClients(ctx context.Context, token, reqUserID string, pm mgclients.Page) (mgclients.ClientsPage, error) {
 	cp, err := es.svc.ListClients(ctx, token, reqUserID, pm)
 	if err != nil {
@@ -139,21 +123,6 @@ func (es *eventStore) ListClients(ctx context.Context, token, reqUserID string, 
 	}
 
 	return cp, nil
-}
-
-func (es *eventStore) ListClientsByGroup(ctx context.Context, token, chID string, pm mgclients.Page) (mgclients.MembersPage, error) {
-	mp, err := es.svc.ListClientsByGroup(ctx, token, chID, pm)
-	if err != nil {
-		return mp, err
-	}
-	event := listClientByGroupEvent{
-		pm, chID,
-	}
-	if err := es.Publish(ctx, event); err != nil {
-		return mp, err
-	}
-
-	return mp, nil
 }
 
 func (es *eventStore) EnableClient(ctx context.Context, token, id string) (mgclients.Client, error) {
@@ -220,36 +189,6 @@ func (es *eventStore) Authorize(ctx context.Context, req *magistrala.AuthorizeRe
 	}
 
 	return thingID, nil
-}
-
-func (es *eventStore) Share(ctx context.Context, token, id, relation string, userids ...string) error {
-	if err := es.svc.Share(ctx, token, id, relation, userids...); err != nil {
-		return err
-	}
-
-	event := shareClientEvent{
-		action:   "share",
-		id:       id,
-		relation: relation,
-		userIDs:  userids,
-	}
-
-	return es.Publish(ctx, event)
-}
-
-func (es *eventStore) Unshare(ctx context.Context, token, id, relation string, userids ...string) error {
-	if err := es.svc.Unshare(ctx, token, id, relation, userids...); err != nil {
-		return err
-	}
-
-	event := shareClientEvent{
-		action:   "unshare",
-		id:       id,
-		relation: relation,
-		userIDs:  userids,
-	}
-
-	return es.Publish(ctx, event)
 }
 
 func (es *eventStore) DeleteClient(ctx context.Context, token, id string) error {

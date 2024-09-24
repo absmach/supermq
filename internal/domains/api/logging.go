@@ -86,24 +86,61 @@ func (lm *loggingMiddleware) UpdateDomain(ctx context.Context, token, id string,
 	return lm.svc.UpdateDomain(ctx, token, id, d)
 }
 
-func (lm *loggingMiddleware) ChangeDomainStatus(ctx context.Context, token, id string, d domains.DomainReq) (do domains.Domain, err error) {
+func (lm *loggingMiddleware) EnableDomain(ctx context.Context, token, id string) (do domains.Domain, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("domain",
 				slog.String("id", id),
 				slog.String("name", do.Name),
-				slog.Any("status", d.Status),
 			),
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("Change domain status failed", args...)
+			lm.logger.Warn("Enable domain failed", args...)
 			return
 		}
-		lm.logger.Info("Change domain status completed successfully", args...)
+		lm.logger.Info("Enable domain completed successfully", args...)
 	}(time.Now())
-	return lm.svc.ChangeDomainStatus(ctx, token, id, d)
+	return lm.svc.EnableDomain(ctx, token, id)
+}
+
+func (lm *loggingMiddleware) DisableDomain(ctx context.Context, token, id string) (do domains.Domain, err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.Group("domain",
+				slog.String("id", id),
+				slog.String("name", do.Name),
+			),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn("Disable domain failed", args...)
+			return
+		}
+		lm.logger.Info("Disable domain completed successfully", args...)
+	}(time.Now())
+	return lm.svc.DisableDomain(ctx, token, id)
+}
+
+func (lm *loggingMiddleware) FreezeDomain(ctx context.Context, token, id string) (do domains.Domain, err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.Group("domain",
+				slog.String("id", id),
+				slog.String("name", do.Name),
+			),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn("Freeze domain failed", args...)
+			return
+		}
+		lm.logger.Info("Freeze domain completed successfully", args...)
+	}(time.Now())
+	return lm.svc.FreezeDomain(ctx, token, id)
 }
 
 func (lm *loggingMiddleware) ListDomains(ctx context.Context, token string, page domains.Page) (do domains.DomainsPage, err error) {

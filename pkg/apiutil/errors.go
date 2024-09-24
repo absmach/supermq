@@ -21,6 +21,15 @@ var (
 	// ErrMissingID indicates missing entity ID.
 	ErrMissingID = errors.New("missing entity id")
 
+	// ErrMissingParentGroupID indicates missing parent group ID.
+	ErrMissingParentGroupID = errors.New("missing parent group id")
+
+	// ErrMissingChildrenGroupIDs indicates missing children group IDs.
+	ErrMissingChildrenGroupIDs = errors.New("missing children group ids")
+
+	// ErrInvalidChildGroupID indicates invalid child group ID.
+	ErrInvalidChildGroupID = errors.New("invalid child group id")
+
 	// ErrInvalidAuthKey indicates invalid auth key.
 	ErrInvalidAuthKey = errors.New("invalid auth key")
 

@@ -59,12 +59,28 @@ func (ms *metricsMiddleware) UpdateDomain(ctx context.Context, token, id string,
 	return ms.svc.UpdateDomain(ctx, token, id, d)
 }
 
-func (ms *metricsMiddleware) ChangeDomainStatus(ctx context.Context, token, id string, d domains.DomainReq) (domains.Domain, error) {
+func (ms *metricsMiddleware) EnableDomain(ctx context.Context, token, id string) (domains.Domain, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "change_domain_status").Add(1)
-		ms.latency.With("method", "change_domain_status").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "enable_domain").Add(1)
+		ms.latency.With("method", "enable_domain").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.ChangeDomainStatus(ctx, token, id, d)
+	return ms.svc.EnableDomain(ctx, token, id)
+}
+
+func (ms *metricsMiddleware) DisableDomain(ctx context.Context, token, id string) (domains.Domain, error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "disable_domain").Add(1)
+		ms.latency.With("method", "disable_domain").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.DisableDomain(ctx, token, id)
+}
+
+func (ms *metricsMiddleware) FreezeDomain(ctx context.Context, token, id string) (domains.Domain, error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "freeze_domain").Add(1)
+		ms.latency.With("method", "freeze_domain").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.FreezeDomain(ctx, token, id)
 }
 
 func (ms *metricsMiddleware) ListDomains(ctx context.Context, token string, page domains.Page) (domains.DomainsPage, error) {

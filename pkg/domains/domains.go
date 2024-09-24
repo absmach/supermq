@@ -90,6 +90,8 @@ func (s *Status) UnmarshalJSON(data []byte) error {
 const (
 	createPermission          = "create_permission"
 	updatePermission          = "update_permission"
+	enablePermission          = "enable_permission"
+	disablePermission         = "disable_permission"
 	readPermission            = "read_permission"
 	membershipPermission      = "membership_permission"
 	deletePermission          = "delete_permission"
@@ -103,7 +105,8 @@ const (
 	OpCreateDomain svcutil.Operation = iota
 	OpRetrieveDomain
 	OpUpdateDomain
-	OpChangeDomainStatus
+	OpEnableDomain
+	OpDisableDomain
 	OpListDomains
 )
 
@@ -111,7 +114,8 @@ var expectedOperations = []svcutil.Operation{
 	OpCreateDomain,
 	OpRetrieveDomain,
 	OpUpdateDomain,
-	OpChangeDomainStatus,
+	OpEnableDomain,
+	OpDisableDomain,
 	OpListDomains,
 }
 
@@ -119,7 +123,8 @@ var operationNames = []string{
 	"OpCreateDomain",
 	"OpRetrieveDomain",
 	"OpUpdateDomain",
-	"OpChangeDomainStatus",
+	"OpEnableDomain",
+	"OpDisableDomain",
 	"OpListDomains",
 }
 
@@ -129,11 +134,12 @@ func NewOperationPerm() svcutil.OperationPerm {
 
 func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 	opPerm := map[svcutil.Operation]svcutil.Permission{
-		OpCreateDomain:       createPermission,
-		OpRetrieveDomain:     readPermission,
-		OpUpdateDomain:       updatePermission,
-		OpChangeDomainStatus: updatePermission,
-		OpListDomains:        deletePermission,
+		OpCreateDomain:   createPermission,
+		OpRetrieveDomain: readPermission,
+		OpUpdateDomain:   updatePermission,
+		OpEnableDomain:   enablePermission,
+		OpDisableDomain:  disablePermission,
+		OpListDomains:    deletePermission,
 	}
 	return opPerm
 }
@@ -233,7 +239,9 @@ type Service interface {
 	CreateDomain(ctx context.Context, token string, d Domain) (Domain, error)
 	RetrieveDomain(ctx context.Context, token string, id string) (Domain, error)
 	UpdateDomain(ctx context.Context, token string, id string, d DomainReq) (Domain, error)
-	ChangeDomainStatus(ctx context.Context, token string, id string, d DomainReq) (Domain, error)
+	EnableDomain(ctx context.Context, token string, id string) (Domain, error)
+	DisableDomain(ctx context.Context, token string, id string) (Domain, error)
+	FreezeDomain(ctx context.Context, token string, id string) (Domain, error)
 	ListDomains(ctx context.Context, token string, page Page) (DomainsPage, error)
 	roles.Roles
 }

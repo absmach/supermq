@@ -214,84 +214,6 @@ func (_m *Service) ListClients(ctx context.Context, token string, reqUserID stri
 	return r0, r1
 }
 
-// ListClientsByGroup provides a mock function with given fields: ctx, token, groupID, pm
-func (_m *Service) ListClientsByGroup(ctx context.Context, token string, groupID string, pm clients.Page) (clients.MembersPage, error) {
-	ret := _m.Called(ctx, token, groupID, pm)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ListClientsByGroup")
-	}
-
-	var r0 clients.MembersPage
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, clients.Page) (clients.MembersPage, error)); ok {
-		return rf(ctx, token, groupID, pm)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, clients.Page) clients.MembersPage); ok {
-		r0 = rf(ctx, token, groupID, pm)
-	} else {
-		r0 = ret.Get(0).(clients.MembersPage)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, clients.Page) error); ok {
-		r1 = rf(ctx, token, groupID, pm)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// Share provides a mock function with given fields: ctx, token, id, relation, userids
-func (_m *Service) Share(ctx context.Context, token string, id string, relation string, userids ...string) error {
-	_va := make([]interface{}, len(userids))
-	for _i := range userids {
-		_va[_i] = userids[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, token, id, relation)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Share")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, ...string) error); ok {
-		r0 = rf(ctx, token, id, relation, userids...)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// Unshare provides a mock function with given fields: ctx, token, id, relation, userids
-func (_m *Service) Unshare(ctx context.Context, token string, id string, relation string, userids ...string) error {
-	_va := make([]interface{}, len(userids))
-	for _i := range userids {
-		_va[_i] = userids[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, token, id, relation)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Unshare")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, ...string) error); ok {
-		r0 = rf(ctx, token, id, relation, userids...)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // UpdateClient provides a mock function with given fields: ctx, token, client
 func (_m *Service) UpdateClient(ctx context.Context, token string, client clients.Client) (clients.Client, error) {
 	ret := _m.Called(ctx, token, client)
@@ -393,36 +315,6 @@ func (_m *Service) ViewClient(ctx context.Context, token string, id string) (cli
 		r0 = rf(ctx, token, id)
 	} else {
 		r0 = ret.Get(0).(clients.Client)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = rf(ctx, token, id)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// ViewClientPerms provides a mock function with given fields: ctx, token, id
-func (_m *Service) ViewClientPerms(ctx context.Context, token string, id string) ([]string, error) {
-	ret := _m.Called(ctx, token, id)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ViewClientPerms")
-	}
-
-	var r0 []string
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) ([]string, error)); ok {
-		return rf(ctx, token, id)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) []string); ok {
-		r0 = rf(ctx, token, id)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]string)
-		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {

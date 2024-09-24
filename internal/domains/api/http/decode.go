@@ -38,14 +38,6 @@ func decodeRetrieveDomainRequest(_ context.Context, r *http.Request) (interface{
 	return req, nil
 }
 
-func decodeRetrieveDomainPermissionsRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	req := retrieveDomainPermissionsRequest{
-		token:    apiutil.ExtractBearerToken(r),
-		domainID: chi.URLParam(r, "domainID"),
-	}
-	return req, nil
-}
-
 func decodeUpdateDomainRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
@@ -96,51 +88,6 @@ func decodeFreezeDomainRequest(_ context.Context, r *http.Request) (interface{},
 	req := freezeDomainReq{
 		token:    apiutil.ExtractBearerToken(r),
 		domainID: chi.URLParam(r, "domainID"),
-	}
-	return req, nil
-}
-
-func decodeAssignUsersRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
-	}
-
-	req := assignUsersReq{
-		token:    apiutil.ExtractBearerToken(r),
-		domainID: chi.URLParam(r, "domainID"),
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
-	}
-
-	return req, nil
-}
-
-func decodeUnassignUserRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
-	}
-
-	req := unassignUserReq{
-		token:    apiutil.ExtractBearerToken(r),
-		domainID: chi.URLParam(r, "domainID"),
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
-	}
-
-	return req, nil
-}
-
-func decodeListUserDomainsRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	page, err := decodePageRequest(ctx, r)
-	if err != nil {
-		return nil, err
-	}
-	req := listUserDomainsReq{
-		token:  apiutil.ExtractBearerToken(r),
-		userID: chi.URLParam(r, "userID"),
-		page:   page,
 	}
 	return req, nil
 }

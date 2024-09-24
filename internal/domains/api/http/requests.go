@@ -61,23 +61,6 @@ func (req retrieveDomainRequest) validate() error {
 	return nil
 }
 
-type retrieveDomainPermissionsRequest struct {
-	token    string
-	domainID string
-}
-
-func (req retrieveDomainPermissionsRequest) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
-
-	if req.domainID == "" {
-		return apiutil.ErrMissingID
-	}
-
-	return nil
-}
-
 type updateDomainReq struct {
 	token    string
 	domainID string
@@ -157,73 +140,6 @@ func (req freezeDomainReq) validate() error {
 	}
 
 	if req.domainID == "" {
-		return apiutil.ErrMissingID
-	}
-
-	return nil
-}
-
-type assignUsersReq struct {
-	token    string
-	domainID string
-	UserIDs  []string `json:"user_ids"`
-	Relation string   `json:"relation"`
-}
-
-func (req assignUsersReq) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
-
-	if req.domainID == "" {
-		return apiutil.ErrMissingID
-	}
-
-	if len(req.UserIDs) == 0 {
-		return apiutil.ErrMissingID
-	}
-
-	if req.Relation == "" {
-		return apiutil.ErrMissingRelation
-	}
-
-	return nil
-}
-
-type unassignUserReq struct {
-	token    string
-	domainID string
-	UserID   string `json:"user_id"`
-}
-
-func (req unassignUserReq) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
-
-	if req.domainID == "" {
-		return apiutil.ErrMissingID
-	}
-
-	if req.UserID == "" {
-		return apiutil.ErrMalformedPolicy
-	}
-
-	return nil
-}
-
-type listUserDomainsReq struct {
-	token  string
-	userID string
-	page
-}
-
-func (req listUserDomainsReq) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
-
-	if req.userID == "" {
 		return apiutil.ErrMissingID
 	}
 

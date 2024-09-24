@@ -59,22 +59,6 @@ func (lm *loggingMiddleware) ViewClient(ctx context.Context, token, id string) (
 	return lm.svc.ViewClient(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) ViewClientPerms(ctx context.Context, token, id string) (p []string, err error) {
-	defer func(begin time.Time) {
-		args := []any{
-			slog.String("duration", time.Since(begin).String()),
-			slog.String("thing_id", id),
-		}
-		if err != nil {
-			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("View thing permissions failed", args...)
-			return
-		}
-		lm.logger.Info("View thing permissions completed successfully", args...)
-	}(time.Now())
-	return lm.svc.ViewClientPerms(ctx, token, id)
-}
-
 func (lm *loggingMiddleware) ListClients(ctx context.Context, token, reqUserID string, pm mgclients.Page) (cp mgclients.ClientsPage, err error) {
 	defer func(begin time.Time) {
 		args := []any{
@@ -193,27 +177,6 @@ func (lm *loggingMiddleware) DisableClient(ctx context.Context, token, id string
 	return lm.svc.DisableClient(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) ListClientsByGroup(ctx context.Context, token, channelID string, cp mgclients.Page) (mp mgclients.MembersPage, err error) {
-	defer func(begin time.Time) {
-		args := []any{
-			slog.String("duration", time.Since(begin).String()),
-			slog.String("channel_id", channelID),
-			slog.Group("page",
-				slog.Uint64("offset", cp.Offset),
-				slog.Uint64("limit", cp.Limit),
-				slog.Uint64("total", mp.Total),
-			),
-		}
-		if err != nil {
-			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("List things by group failed", args...)
-			return
-		}
-		lm.logger.Info("List things by group completed successfully", args...)
-	}(time.Now())
-	return lm.svc.ListClientsByGroup(ctx, token, channelID, cp)
-}
-
 func (lm *loggingMiddleware) Identify(ctx context.Context, key string) (id string, err error) {
 	defer func(begin time.Time) {
 		args := []any{
@@ -247,42 +210,6 @@ func (lm *loggingMiddleware) Authorize(ctx context.Context, req *magistrala.Auth
 		lm.logger.Info("Authorize completed successfully", args...)
 	}(time.Now())
 	return lm.svc.Authorize(ctx, req)
-}
-
-func (lm *loggingMiddleware) Share(ctx context.Context, token, id, relation string, userids ...string) (err error) {
-	defer func(begin time.Time) {
-		args := []any{
-			slog.String("duration", time.Since(begin).String()),
-			slog.String("thing_id", id),
-			slog.Any("user_ids", userids),
-			slog.String("relation", relation),
-		}
-		if err != nil {
-			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Share thing failed", args...)
-			return
-		}
-		lm.logger.Info("Share thing completed successfully", args...)
-	}(time.Now())
-	return lm.svc.Share(ctx, token, id, relation, userids...)
-}
-
-func (lm *loggingMiddleware) Unshare(ctx context.Context, token, id, relation string, userids ...string) (err error) {
-	defer func(begin time.Time) {
-		args := []any{
-			slog.String("duration", time.Since(begin).String()),
-			slog.String("thing_id", id),
-			slog.Any("user_ids", userids),
-			slog.String("relation", relation),
-		}
-		if err != nil {
-			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Unshare thing failed", args...)
-			return
-		}
-		lm.logger.Info("Unshare thing completed successfully", args...)
-	}(time.Now())
-	return lm.svc.Unshare(ctx, token, id, relation, userids...)
 }
 
 func (lm *loggingMiddleware) DeleteClient(ctx context.Context, token, id string) (err error) {

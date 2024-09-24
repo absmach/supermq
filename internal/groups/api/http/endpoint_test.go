@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package api
+package http
 
 import (
 	"context"
@@ -19,7 +19,6 @@ import (
 	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/groups/mocks"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 var validGroupResp = groups.Group{
@@ -171,63 +170,6 @@ func TestViewGroupEndpoint(t *testing.T) {
 		assert.Equal(t, tc.resp, resp, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.resp, resp))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
 		response := resp.(viewGroupRes)
-		assert.Equal(t, response.Code(), http.StatusOK)
-		assert.Empty(t, response.Headers())
-		assert.False(t, response.Empty())
-		repoCall.Unset()
-	}
-}
-
-func TestViewGroupPermsEndpoint(t *testing.T) {
-	svc := new(mocks.Service)
-	cases := []struct {
-		desc    string
-		req     groupPermsReq
-		svcResp []string
-		svcErr  error
-		resp    viewGroupPermsRes
-		err     error
-	}{
-		{
-			desc: "successfully",
-			req: groupPermsReq{
-				token: valid,
-				id:    testsutil.GenerateUUID(t),
-			},
-			svcResp: []string{
-				valid,
-			},
-			svcErr: nil,
-			resp:   viewGroupPermsRes{Permissions: []string{valid}},
-			err:    nil,
-		},
-		{
-			desc: "unsuccessfully with invalid request",
-			req: groupPermsReq{
-				id: testsutil.GenerateUUID(t),
-			},
-			resp: viewGroupPermsRes{},
-			err:  apiutil.ErrValidation,
-		},
-		{
-			desc: "unsuccessfully with repo error",
-			req: groupPermsReq{
-				token: valid,
-				id:    testsutil.GenerateUUID(t),
-			},
-			svcResp: []string{},
-			svcErr:  svcerr.ErrAuthorization,
-			resp:    viewGroupPermsRes{},
-			err:     svcerr.ErrAuthorization,
-		},
-	}
-
-	for _, tc := range cases {
-		repoCall := svc.On("ViewGroupPerms", context.Background(), tc.req.token, tc.req.id).Return(tc.svcResp, tc.svcErr)
-		resp, err := ViewGroupPermsEndpoint(svc)(context.Background(), tc.req)
-		assert.Equal(t, tc.resp, resp, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.resp, resp))
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
-		response := resp.(viewGroupPermsRes)
 		assert.Equal(t, response.Code(), http.StatusOK)
 		assert.Empty(t, response.Headers())
 		assert.False(t, response.Empty())
@@ -521,9 +463,7 @@ func TestListGroupsEndpoint(t *testing.T) {
 						Limit: 10,
 					},
 				},
-				token:      valid,
-				memberKind: auth.ThingsKind,
-				memberID:   testsutil.GenerateUUID(t),
+				token: valid,
 			},
 			svcResp: groups.Page{
 				Groups: []groups.Group{validGroupResp},
@@ -546,9 +486,7 @@ func TestListGroupsEndpoint(t *testing.T) {
 						Limit: 10,
 					},
 				},
-				token:      valid,
-				memberKind: auth.ThingsKind,
-				memberID:   testsutil.GenerateUUID(t),
+				token: valid,
 			},
 			svcResp: groups.Page{
 				Groups: []groups.Group{validGroupResp},
@@ -571,11 +509,9 @@ func TestListGroupsEndpoint(t *testing.T) {
 					PageMeta: groups.PageMeta{
 						Limit: 10,
 					},
+					Tree: true,
 				},
-				tree:       true,
-				token:      valid,
-				memberKind: auth.ThingsKind,
-				memberID:   testsutil.GenerateUUID(t),
+				token: valid,
 			},
 			svcResp: groups.Page{
 				Groups: []groups.Group{validGroupResp, childGroup},
@@ -598,13 +534,11 @@ func TestListGroupsEndpoint(t *testing.T) {
 					PageMeta: groups.PageMeta{
 						Limit: 10,
 					},
-					ParentID:  validGroupResp.ID,
-					Direction: -1,
+					ParentID:           validGroupResp.ID,
+					HierarchyDirection: -1,
+					Tree:               false,
 				},
-				tree:       false,
-				token:      valid,
-				memberKind: auth.UsersKind,
-				memberID:   testsutil.GenerateUUID(t),
+				token: valid,
 			},
 			svcResp: groups.Page{
 				Groups: []groups.Group{validGroupResp, childGroup},
@@ -627,13 +561,11 @@ func TestListGroupsEndpoint(t *testing.T) {
 					PageMeta: groups.PageMeta{
 						Limit: 10,
 					},
-					ParentID:  validGroupResp.ID,
-					Direction: 1,
+					ParentID:           validGroupResp.ID,
+					HierarchyDirection: 1,
+					Tree:               false,
 				},
-				tree:       false,
-				token:      valid,
-				memberKind: auth.UsersKind,
-				memberID:   testsutil.GenerateUUID(t),
+				token: valid,
 			},
 			svcResp: groups.Page{
 				Groups: []groups.Group{parentGroup, validGroupResp},
@@ -664,9 +596,7 @@ func TestListGroupsEndpoint(t *testing.T) {
 						Limit: 10,
 					},
 				},
-				token:      valid,
-				memberKind: auth.ThingsKind,
-				memberID:   testsutil.GenerateUUID(t),
+				token: valid,
 			},
 			svcResp: groups.Page{},
 			svcErr:  svcerr.ErrAuthorization,
@@ -676,341 +606,15 @@ func TestListGroupsEndpoint(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		if tc.memberKind != "" {
-			tc.req.memberKind = tc.memberKind
-		}
-		repoCall := svc.On("ListGroups", context.Background(), tc.req.token, tc.req.memberKind, tc.req.memberID, tc.req.Page).Return(tc.svcResp, tc.svcErr)
-		resp, err := ListGroupsEndpoint(svc, mock.Anything, tc.memberKind)(context.Background(), tc.req)
+
+		repoCall := svc.On("ListGroups", context.Background(), tc.req.token, tc.req.Page).Return(tc.svcResp, tc.svcErr)
+		resp, err := ListGroupsEndpoint(svc)(context.Background(), tc.req)
 		assert.Equal(t, tc.resp, resp, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.resp, resp))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
 		response := resp.(groupPageRes)
 		assert.Equal(t, response.Code(), http.StatusOK)
 		assert.Empty(t, response.Headers())
 		assert.False(t, response.Empty())
-		repoCall.Unset()
-	}
-}
-
-func TestListMembersEndpoint(t *testing.T) {
-	svc := new(mocks.Service)
-	cases := []struct {
-		desc       string
-		memberKind string
-		req        listMembersReq
-		svcResp    groups.MembersPage
-		svcErr     error
-		resp       listMembersRes
-		err        error
-	}{
-		{
-			desc:       "successfully",
-			memberKind: auth.ThingsKind,
-			req: listMembersReq{
-				token:      valid,
-				memberKind: auth.ThingsKind,
-				groupID:    testsutil.GenerateUUID(t),
-			},
-			svcResp: groups.MembersPage{
-				Members: []groups.Member{
-					{
-						ID:   valid,
-						Type: valid,
-					},
-				},
-			},
-			svcErr: nil,
-			resp: listMembersRes{
-				Members: []groups.Member{
-					{
-						ID:   valid,
-						Type: valid,
-					},
-				},
-			},
-			err: nil,
-		},
-		{
-			desc: "successfully with empty member kind",
-			req: listMembersReq{
-				token:      valid,
-				memberKind: auth.ThingsKind,
-				groupID:    testsutil.GenerateUUID(t),
-			},
-			svcResp: groups.MembersPage{
-				Members: []groups.Member{
-					{
-						ID:   valid,
-						Type: valid,
-					},
-				},
-			},
-			svcErr: nil,
-			resp: listMembersRes{
-				Members: []groups.Member{
-					{
-						ID:   valid,
-						Type: valid,
-					},
-				},
-			},
-			err: nil,
-		},
-		{
-			desc:       "unsuccessfully with invalid request",
-			memberKind: auth.ThingsKind,
-			req:        listMembersReq{},
-			resp:       listMembersRes{},
-			err:        apiutil.ErrValidation,
-		},
-		{
-			desc:       "unsuccessfully with repo error",
-			memberKind: auth.ThingsKind,
-			req: listMembersReq{
-				token:      valid,
-				memberKind: auth.ThingsKind,
-				groupID:    testsutil.GenerateUUID(t),
-			},
-			svcResp: groups.MembersPage{},
-			svcErr:  svcerr.ErrAuthorization,
-			resp:    listMembersRes{},
-			err:     svcerr.ErrAuthorization,
-		},
-	}
-
-	for _, tc := range cases {
-		if tc.memberKind != "" {
-			tc.req.memberKind = tc.memberKind
-		}
-		repoCall := svc.On("ListMembers", context.Background(), tc.req.token, tc.req.groupID, tc.req.permission, tc.req.memberKind).Return(tc.svcResp, tc.svcErr)
-		resp, err := ListMembersEndpoint(svc, tc.memberKind)(context.Background(), tc.req)
-		assert.Equal(t, tc.resp, resp, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.resp, resp))
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
-		response := resp.(listMembersRes)
-		assert.Equal(t, response.Code(), http.StatusOK)
-		assert.Empty(t, response.Headers())
-		assert.False(t, response.Empty())
-		repoCall.Unset()
-	}
-}
-
-func TestAssignMembersEndpoint(t *testing.T) {
-	svc := new(mocks.Service)
-	cases := []struct {
-		desc       string
-		relation   string
-		memberKind string
-		req        assignReq
-		svcErr     error
-		resp       assignRes
-		err        error
-	}{
-		{
-			desc:       "successfully",
-			relation:   auth.ContributorRelation,
-			memberKind: auth.ThingsKind,
-			req: assignReq{
-				token:      valid,
-				MemberKind: auth.ThingsKind,
-				groupID:    testsutil.GenerateUUID(t),
-				Members: []string{
-					testsutil.GenerateUUID(t),
-					testsutil.GenerateUUID(t),
-				},
-			},
-			svcErr: nil,
-			resp:   assignRes{assigned: true},
-			err:    nil,
-		},
-		{
-			desc:     "successfully with empty member kind",
-			relation: auth.ContributorRelation,
-			req: assignReq{
-				token:      valid,
-				groupID:    testsutil.GenerateUUID(t),
-				MemberKind: auth.ThingsKind,
-				Members: []string{
-					testsutil.GenerateUUID(t),
-					testsutil.GenerateUUID(t),
-				},
-			},
-			svcErr: nil,
-			resp:   assignRes{assigned: true},
-			err:    nil,
-		},
-		{
-			desc:       "successfully with empty relation",
-			memberKind: auth.ThingsKind,
-			req: assignReq{
-				token:      valid,
-				MemberKind: auth.ThingsKind,
-				groupID:    testsutil.GenerateUUID(t),
-				Members: []string{
-					testsutil.GenerateUUID(t),
-					testsutil.GenerateUUID(t),
-				},
-			},
-			svcErr: nil,
-			resp:   assignRes{assigned: true},
-			err:    nil,
-		},
-		{
-			desc:       "unsuccessfully with invalid request",
-			relation:   auth.ContributorRelation,
-			memberKind: auth.ThingsKind,
-			req:        assignReq{},
-			resp:       assignRes{},
-			err:        apiutil.ErrValidation,
-		},
-		{
-			desc:       "unsuccessfully with repo error",
-			relation:   auth.ContributorRelation,
-			memberKind: auth.ThingsKind,
-			req: assignReq{
-				token:      valid,
-				MemberKind: auth.ThingsKind,
-				groupID:    testsutil.GenerateUUID(t),
-				Members: []string{
-					testsutil.GenerateUUID(t),
-					testsutil.GenerateUUID(t),
-				},
-			},
-			svcErr: svcerr.ErrAuthorization,
-			resp:   assignRes{},
-			err:    svcerr.ErrAuthorization,
-		},
-	}
-
-	for _, tc := range cases {
-		if tc.memberKind != "" {
-			tc.req.MemberKind = tc.memberKind
-		}
-		if tc.relation != "" {
-			tc.req.Relation = tc.relation
-		}
-		repoCall := svc.On("Assign", context.Background(), tc.req.token, tc.req.groupID, tc.req.Relation, tc.req.MemberKind, tc.req.Members).Return(tc.svcErr)
-		resp, err := AssignMembersEndpoint(svc, tc.relation, tc.memberKind)(context.Background(), tc.req)
-		assert.Equal(t, tc.resp, resp, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.resp, resp))
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
-		response := resp.(assignRes)
-		switch err {
-		case nil:
-			assert.Equal(t, response.Code(), http.StatusCreated)
-		default:
-			assert.Equal(t, response.Code(), http.StatusBadRequest)
-		}
-		assert.Empty(t, response.Headers())
-		assert.True(t, response.Empty())
-		repoCall.Unset()
-	}
-}
-
-func TestUnassignMembersEndpoint(t *testing.T) {
-	svc := new(mocks.Service)
-	cases := []struct {
-		desc       string
-		relation   string
-		memberKind string
-		req        unassignReq
-		svcErr     error
-		resp       unassignRes
-		err        error
-	}{
-		{
-			desc:       "successfully",
-			relation:   auth.ContributorRelation,
-			memberKind: auth.ThingsKind,
-			req: unassignReq{
-				token:      valid,
-				MemberKind: auth.ThingsKind,
-				groupID:    testsutil.GenerateUUID(t),
-				Members: []string{
-					testsutil.GenerateUUID(t),
-					testsutil.GenerateUUID(t),
-				},
-			},
-			svcErr: nil,
-			resp:   unassignRes{unassigned: true},
-			err:    nil,
-		},
-		{
-			desc:     "successfully with empty member kind",
-			relation: auth.ContributorRelation,
-			req: unassignReq{
-				token:      valid,
-				groupID:    testsutil.GenerateUUID(t),
-				MemberKind: auth.ThingsKind,
-				Members: []string{
-					testsutil.GenerateUUID(t),
-					testsutil.GenerateUUID(t),
-				},
-			},
-			svcErr: nil,
-			resp:   unassignRes{unassigned: true},
-			err:    nil,
-		},
-		{
-			desc:       "successfully with empty relation",
-			memberKind: auth.ThingsKind,
-			req: unassignReq{
-				token:      valid,
-				MemberKind: auth.ThingsKind,
-				groupID:    testsutil.GenerateUUID(t),
-				Members: []string{
-					testsutil.GenerateUUID(t),
-					testsutil.GenerateUUID(t),
-				},
-			},
-			svcErr: nil,
-			resp:   unassignRes{unassigned: true},
-			err:    nil,
-		},
-		{
-			desc:       "unsuccessfully with invalid request",
-			relation:   auth.ContributorRelation,
-			memberKind: auth.ThingsKind,
-			req:        unassignReq{},
-			resp:       unassignRes{},
-			err:        apiutil.ErrValidation,
-		},
-		{
-			desc:       "unsuccessfully with repo error",
-			relation:   auth.ContributorRelation,
-			memberKind: auth.ThingsKind,
-			req: unassignReq{
-				token:      valid,
-				MemberKind: auth.ThingsKind,
-				groupID:    testsutil.GenerateUUID(t),
-				Members: []string{
-					testsutil.GenerateUUID(t),
-					testsutil.GenerateUUID(t),
-				},
-			},
-			svcErr: svcerr.ErrAuthorization,
-			resp:   unassignRes{},
-			err:    svcerr.ErrAuthorization,
-		},
-	}
-
-	for _, tc := range cases {
-		if tc.memberKind != "" {
-			tc.req.MemberKind = tc.memberKind
-		}
-		if tc.relation != "" {
-			tc.req.Relation = tc.relation
-		}
-		repoCall := svc.On("Unassign", context.Background(), tc.req.token, tc.req.groupID, tc.req.Relation, tc.req.MemberKind, tc.req.Members).Return(tc.svcErr)
-		resp, err := UnassignMembersEndpoint(svc, tc.relation, tc.memberKind)(context.Background(), tc.req)
-		assert.Equal(t, tc.resp, resp, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.resp, resp))
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
-		response := resp.(unassignRes)
-		switch err {
-		case nil:
-			assert.Equal(t, response.Code(), http.StatusCreated)
-		default:
-			assert.Equal(t, response.Code(), http.StatusBadRequest)
-		}
-		assert.Empty(t, response.Headers())
-		assert.True(t, response.Empty())
 		repoCall.Unset()
 	}
 }

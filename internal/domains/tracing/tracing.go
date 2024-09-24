@@ -46,12 +46,28 @@ func (tm *tracingMiddleware) UpdateDomain(ctx context.Context, token, id string,
 	return tm.svc.UpdateDomain(ctx, token, id, d)
 }
 
-func (tm *tracingMiddleware) ChangeDomainStatus(ctx context.Context, token, id string, d domains.DomainReq) (domains.Domain, error) {
-	ctx, span := tm.tracer.Start(ctx, "change_domain_status", trace.WithAttributes(
+func (tm *tracingMiddleware) EnableDomain(ctx context.Context, token, id string) (domains.Domain, error) {
+	ctx, span := tm.tracer.Start(ctx, "enable_domain", trace.WithAttributes(
 		attribute.String("id", id),
 	))
 	defer span.End()
-	return tm.svc.ChangeDomainStatus(ctx, token, id, d)
+	return tm.svc.EnableDomain(ctx, token, id)
+}
+
+func (tm *tracingMiddleware) DisableDomain(ctx context.Context, token, id string) (domains.Domain, error) {
+	ctx, span := tm.tracer.Start(ctx, "disable_domain", trace.WithAttributes(
+		attribute.String("id", id),
+	))
+	defer span.End()
+	return tm.svc.DisableDomain(ctx, token, id)
+}
+
+func (tm *tracingMiddleware) FreezeDomain(ctx context.Context, token, id string) (domains.Domain, error) {
+	ctx, span := tm.tracer.Start(ctx, "freeze_domain", trace.WithAttributes(
+		attribute.String("id", id),
+	))
+	defer span.End()
+	return tm.svc.FreezeDomain(ctx, token, id)
 }
 
 func (tm *tracingMiddleware) ListDomains(ctx context.Context, token string, p domains.Page) (domains.DomainsPage, error) {

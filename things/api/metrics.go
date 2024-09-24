@@ -46,14 +46,6 @@ func (ms *metricsMiddleware) ViewClient(ctx context.Context, token, id string) (
 	return ms.svc.ViewClient(ctx, token, id)
 }
 
-func (ms *metricsMiddleware) ViewClientPerms(ctx context.Context, token, id string) ([]string, error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "view_thing_permissions").Add(1)
-		ms.latency.With("method", "view_thing_permissions").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-	return ms.svc.ViewClientPerms(ctx, token, id)
-}
-
 func (ms *metricsMiddleware) ListClients(ctx context.Context, token, reqUserID string, pm mgclients.Page) (mgclients.ClientsPage, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_things").Add(1)
@@ -102,14 +94,6 @@ func (ms *metricsMiddleware) DisableClient(ctx context.Context, token, id string
 	return ms.svc.DisableClient(ctx, token, id)
 }
 
-func (ms *metricsMiddleware) ListClientsByGroup(ctx context.Context, token, groupID string, pm mgclients.Page) (mp mgclients.MembersPage, err error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "list_things_by_channel").Add(1)
-		ms.latency.With("method", "list_things_by_channel").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-	return ms.svc.ListClientsByGroup(ctx, token, groupID, pm)
-}
-
 func (ms *metricsMiddleware) Identify(ctx context.Context, key string) (string, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "identify_thing").Add(1)
@@ -124,22 +108,6 @@ func (ms *metricsMiddleware) Authorize(ctx context.Context, req *magistrala.Auth
 		ms.latency.With("method", "authorize").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return ms.svc.Authorize(ctx, req)
-}
-
-func (ms *metricsMiddleware) Share(ctx context.Context, token, id, relation string, userids ...string) error {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "share").Add(1)
-		ms.latency.With("method", "share").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-	return ms.svc.Share(ctx, token, id, relation, userids...)
-}
-
-func (ms *metricsMiddleware) Unshare(ctx context.Context, token, id, relation string, userids ...string) error {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "unshare").Add(1)
-		ms.latency.With("method", "unshare").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-	return ms.svc.Unshare(ctx, token, id, relation, userids...)
 }
 
 func (ms *metricsMiddleware) DeleteClient(ctx context.Context, token, id string) error {

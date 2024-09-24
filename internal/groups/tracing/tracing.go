@@ -6,6 +6,7 @@ package tracing
 import (
 	"context"
 
+	entityRolesTracing "github.com/absmach/magistrala/pkg/entityroles/tracing"
 	"github.com/absmach/magistrala/pkg/groups"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -16,11 +17,13 @@ var _ groups.Service = (*tracingMiddleware)(nil)
 type tracingMiddleware struct {
 	tracer trace.Tracer
 	gsvc   groups.Service
+	entityRolesTracing.RolesSvcTracingMiddleware
 }
 
 // New returns a new group service with tracing capabilities.
 func New(gsvc groups.Service, tracer trace.Tracer) groups.Service {
-	return &tracingMiddleware{tracer, gsvc}
+	t := entityRolesTracing.NewRolesSvcTracingMiddleware("group", gsvc, tracer)
+	return &tracingMiddleware{tracer, gsvc, t}
 }
 
 // CreateGroup traces the "CreateGroup" operation of the wrapped groups.Service.
@@ -39,28 +42,12 @@ func (tm *tracingMiddleware) ViewGroup(ctx context.Context, token, id string) (g
 	return tm.gsvc.ViewGroup(ctx, token, id)
 }
 
-// ViewGroupPerms traces the "ViewGroupPerms" operation of the wrapped groups.Service.
-func (tm *tracingMiddleware) ViewGroupPerms(ctx context.Context, token, id string) ([]string, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_view_group", trace.WithAttributes(attribute.String("id", id)))
-	defer span.End()
-
-	return tm.gsvc.ViewGroupPerms(ctx, token, id)
-}
-
 // ListGroups traces the "ListGroups" operation of the wrapped groups.Service.
-func (tm *tracingMiddleware) ListGroups(ctx context.Context, token, memberKind, memberID string, gm groups.Page) (groups.Page, error) {
+func (tm *tracingMiddleware) ListGroups(ctx context.Context, token string, gm groups.Page) (groups.Page, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_list_groups")
 	defer span.End()
 
-	return tm.gsvc.ListGroups(ctx, token, memberKind, memberID, gm)
-}
-
-// ListMembers traces the "ListMembers" operation of the wrapped groups.Service.
-func (tm *tracingMiddleware) ListMembers(ctx context.Context, token, groupID, permission, memberKind string) (groups.MembersPage, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_list_members", trace.WithAttributes(attribute.String("groupID", groupID)))
-	defer span.End()
-
-	return tm.gsvc.ListMembers(ctx, token, groupID, permission, memberKind)
+	return tm.gsvc.ListGroups(ctx, token, gm)
 }
 
 // UpdateGroup traces the "UpdateGroup" operation of the wrapped groups.Service.
@@ -87,20 +74,67 @@ func (tm *tracingMiddleware) DisableGroup(ctx context.Context, token, id string)
 	return tm.gsvc.DisableGroup(ctx, token, id)
 }
 
-// Assign traces the "Assign" operation of the wrapped groups.Service.
-func (tm *tracingMiddleware) Assign(ctx context.Context, token, groupID, relation, memberKind string, memberIDs ...string) error {
-	ctx, span := tm.tracer.Start(ctx, "svc_assign", trace.WithAttributes(attribute.String("id", groupID)))
+func (tm *tracingMiddleware) ListParentGroups(ctx context.Context, token, id string, gm groups.Page) (groups.Page, error) {
+	ctx, span := tm.tracer.Start(ctx, "svc_list_parent_groups", trace.WithAttributes(attribute.String("id", id)))
 	defer span.End()
 
-	return tm.gsvc.Assign(ctx, token, groupID, relation, memberKind, memberIDs...)
+	return tm.gsvc.ListParentGroups(ctx, token, id, gm)
 }
 
-// Unassign traces the "Unassign" operation of the wrapped groups.Service.
-func (tm *tracingMiddleware) Unassign(ctx context.Context, token, groupID, relation, memberKind string, memberIDs ...string) error {
-	ctx, span := tm.tracer.Start(ctx, "svc_unassign", trace.WithAttributes(attribute.String("id", groupID)))
+func (tm *tracingMiddleware) AddParentGroup(ctx context.Context, token, id, parentID string) error {
+	ctx, span := tm.tracer.Start(ctx, "svc_add_parent_group",
+		trace.WithAttributes(
+			attribute.String("id", id),
+			attribute.String("parent_id", parentID),
+		))
+	defer span.End()
+	return tm.gsvc.AddParentGroup(ctx, token, id, parentID)
+}
+
+func (tm *tracingMiddleware) RemoveParentGroup(ctx context.Context, token, id string) error {
+	ctx, span := tm.tracer.Start(ctx, "svc_remove_parent_group", trace.WithAttributes(attribute.String("id", id)))
+	defer span.End()
+	return tm.gsvc.RemoveParentGroup(ctx, token, id)
+}
+
+func (tm *tracingMiddleware) ViewParentGroup(ctx context.Context, token, id string) (groups.Group, error) {
+	ctx, span := tm.tracer.Start(ctx, "svc_view_parent_group", trace.WithAttributes(attribute.String("id", id)))
 	defer span.End()
 
-	return tm.gsvc.Unassign(ctx, token, groupID, relation, memberKind, memberIDs...)
+	return tm.gsvc.ViewParentGroup(ctx, token, id)
+}
+
+func (tm *tracingMiddleware) AddChildrenGroups(ctx context.Context, token, id string, childrenGroupIDs []string) error {
+	ctx, span := tm.tracer.Start(ctx, "svc_add_children_groups",
+		trace.WithAttributes(
+			attribute.String("id", id),
+			attribute.StringSlice("children_group_ids", childrenGroupIDs),
+		))
+
+	defer span.End()
+	return tm.gsvc.AddChildrenGroups(ctx, token, id, childrenGroupIDs)
+}
+
+func (tm *tracingMiddleware) RemoveChildrenGroups(ctx context.Context, token, id string, childrenGroupIDs []string) error {
+	ctx, span := tm.tracer.Start(ctx, "svc_remove_children_groups",
+		trace.WithAttributes(
+			attribute.String("id", id),
+			attribute.StringSlice("children_group_ids", childrenGroupIDs),
+		))
+	defer span.End()
+	return tm.gsvc.RemoveChildrenGroups(ctx, token, id, childrenGroupIDs)
+}
+
+func (tm *tracingMiddleware) RemoveAllChildrenGroups(ctx context.Context, token, id string) error {
+	ctx, span := tm.tracer.Start(ctx, "svc_remove_all_children_groups", trace.WithAttributes(attribute.String("id", id)))
+	defer span.End()
+	return tm.gsvc.RemoveAllChildrenGroups(ctx, token, id)
+}
+
+func (tm *tracingMiddleware) ListChildrenGroups(ctx context.Context, token, id string, gm groups.Page) (groups.Page, error) {
+	ctx, span := tm.tracer.Start(ctx, "svc_list_children_groups", trace.WithAttributes(attribute.String("id", id)))
+	defer span.End()
+	return tm.gsvc.ListChildrenGroups(ctx, token, id, gm)
 }
 
 // DeleteGroup traces the "DeleteGroup" operation of the wrapped groups.Service.

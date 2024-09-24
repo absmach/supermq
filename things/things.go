@@ -8,6 +8,8 @@ import (
 
 	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/pkg/clients"
+	"github.com/absmach/magistrala/pkg/roles"
+	"github.com/absmach/magistrala/pkg/svcutil"
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -22,16 +24,8 @@ type Service interface {
 	// ViewClient retrieves client info for a given client ID and an authorized token.
 	ViewClient(ctx context.Context, token, id string) (clients.Client, error)
 
-	// ViewClientPerms retrieves permissions on the client id for the given authorized token.
-	ViewClientPerms(ctx context.Context, token, id string) ([]string, error)
-
 	// ListClients retrieves clients list for a valid auth token.
 	ListClients(ctx context.Context, token string, reqUserID string, pm clients.Page) (clients.ClientsPage, error)
-
-	// ListClientsByGroup retrieves data about subset of things that are
-	// connected or not connected to specified channel and belong to the user identified by
-	// the provided key.
-	ListClientsByGroup(ctx context.Context, token, groupID string, pm clients.Page) (clients.MembersPage, error)
 
 	// UpdateClient updates the client's name and metadata.
 	UpdateClient(ctx context.Context, token string, client clients.Client) (clients.Client, error)
@@ -48,20 +42,14 @@ type Service interface {
 	// DisableClient logically disables the client identified with the provided ID
 	DisableClient(ctx context.Context, token, id string) (clients.Client, error)
 
-	// Share add share policy to thing id with given relation for given user ids
-	Share(ctx context.Context, token, id string, relation string, userids ...string) error
-
-	// Unshare remove share policy to thing id with given relation for given user ids
-	Unshare(ctx context.Context, token, id string, relation string, userids ...string) error
+	// DeleteClient deletes client with given ID.
+	DeleteClient(ctx context.Context, token, id string) error
 
 	// Identify returns thing ID for given thing key.
 	Identify(ctx context.Context, key string) (string, error)
 
 	// Authorize used for AuthZ gRPC server implementation and Things authorization.
 	Authorize(ctx context.Context, req *magistrala.AuthorizeReq) (string, error)
-
-	// DeleteClient deletes client with given ID.
-	DeleteClient(ctx context.Context, token, id string) error
 }
 
 // Cache contains thing caching interface.
@@ -76,4 +64,98 @@ type Cache interface {
 
 	// Removes thing from cache.
 	Remove(ctx context.Context, thingID string) error
+}
+
+const (
+	// this permission is check over domain or group
+	createPermission = "thing_create_permission"
+	// this permission is check over domain or group
+	listPermissions = "thing_list_permission"
+
+	updatePermission           = "update_permission"
+	readPermission             = "read_permission"
+	deletePermission           = "delete_permission"
+	setParentGroupPermission   = "set_parent_group_permission"
+	connectToChannelPermission = "connect_to_channel_permission"
+
+	manageRolePermission      = "manage_role_permission"
+	addRoleUsersPermission    = "add_role_users_permission"
+	removeRoleUsersPermission = "remove_role_users_permission"
+	viewRoleUsersPermission   = "view_role_users_permission"
+)
+
+const (
+	OpCreateThing svcutil.Operation = iota
+	OpListThing
+	OpViewThing
+	OpUpdateThing
+	OpUpdateClientTags
+	OpUpdateClientSecret
+	OpEnableThing
+	OpDisableThing
+	OpDeleteThing
+)
+
+var expectedOperations = []svcutil.Operation{
+	OpCreateThing,
+	OpListThing,
+	OpViewThing,
+	OpUpdateThing,
+	OpUpdateClientTags,
+	OpUpdateClientSecret,
+	OpEnableThing,
+	OpDisableThing,
+	OpDeleteThing,
+}
+
+var operationNames = []string{
+	"OpCreateThing",
+	"OpListThing",
+	"OpViewThing",
+	"OpUpdateThing",
+	"OpUpdateClientTags",
+	"OpUpdateClientSecret",
+	"OpEnableThing",
+	"OpDisableThing",
+	"OpDeleteThing",
+}
+
+func NewOperationPerm() svcutil.OperationPerm {
+	return svcutil.NewOperationPerm(expectedOperations, operationNames)
+}
+
+func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
+	opPerm := map[svcutil.Operation]svcutil.Permission{
+		OpCreateThing:        createPermission,
+		OpListThing:          listPermissions,
+		OpViewThing:          readPermission,
+		OpUpdateThing:        updatePermission,
+		OpUpdateClientTags:   updatePermission,
+		OpUpdateClientSecret: updatePermission,
+		OpEnableThing:        updatePermission,
+		OpDisableThing:       updatePermission,
+		OpDeleteThing:        deletePermission,
+	}
+	return opPerm
+}
+
+func NewRolesOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
+	opPerm := map[svcutil.Operation]svcutil.Permission{
+		roles.OpAddRole:                manageRolePermission,
+		roles.OpRemoveRole:             manageRolePermission,
+		roles.OpUpdateRoleName:         manageRolePermission,
+		roles.OpRetrieveRole:           manageRolePermission,
+		roles.OpRetrieveAllRoles:       manageRolePermission,
+		roles.OpRoleAddActions:         manageRolePermission,
+		roles.OpRoleListActions:        manageRolePermission,
+		roles.OpRoleCheckActionsExists: manageRolePermission,
+		roles.OpRoleRemoveActions:      manageRolePermission,
+		roles.OpRoleRemoveAllActions:   manageRolePermission,
+		roles.OpRoleAddMembers:         addRoleUsersPermission,
+		roles.OpRoleListMembers:        viewRoleUsersPermission,
+		roles.OpRoleCheckMembersExists: viewRoleUsersPermission,
+		roles.OpRoleRemoveMembers:      removeRoleUsersPermission,
+		roles.OpRoleRemoveAllMembers:   manageRolePermission,
+	}
+	return opPerm
 }

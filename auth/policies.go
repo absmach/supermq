@@ -22,6 +22,7 @@ const (
 )
 
 const (
+	ChannelType  = "channel"
 	GroupType    = "group"
 	ThingType    = "thing"
 	UserType     = "user"

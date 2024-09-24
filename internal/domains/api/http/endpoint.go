@@ -109,11 +109,7 @@ func enableDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		enable := domains.EnabledStatus
-		d := domains.DomainReq{
-			Status: &enable,
-		}
-		if _, err := svc.ChangeDomainStatus(ctx, req.token, req.domainID, d); err != nil {
+		if _, err := svc.EnableDomain(ctx, req.token, req.domainID); err != nil {
 			return nil, err
 		}
 		return enableDomainRes{}, nil
@@ -127,11 +123,7 @@ func disableDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		disable := domains.DisabledStatus
-		d := domains.DomainReq{
-			Status: &disable,
-		}
-		if _, err := svc.ChangeDomainStatus(ctx, req.token, req.domainID, d); err != nil {
+		if _, err := svc.DisableDomain(ctx, req.token, req.domainID); err != nil {
 			return nil, err
 		}
 		return disableDomainRes{}, nil
@@ -145,11 +137,7 @@ func freezeDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		freeze := domains.FreezeStatus
-		d := domains.DomainReq{
-			Status: &freeze,
-		}
-		if _, err := svc.ChangeDomainStatus(ctx, req.token, req.domainID, d); err != nil {
+		if _, err := svc.FreezeDomain(ctx, req.token, req.domainID); err != nil {
 			return nil, err
 		}
 		return freezeDomainRes{}, nil
