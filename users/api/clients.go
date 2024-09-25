@@ -242,7 +242,7 @@ func decodeViewProfile(_ context.Context, r *http.Request) (interface{}, error) 
 	return nil, nil
 }
 
-func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefClientStatus)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -304,7 +304,7 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 	return req, nil
 }
 
-func decodeSearchClients(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeSearchUsers(_ context.Context, r *http.Request) (interface{}, error) {
 	o, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -349,7 +349,7 @@ func decodeSearchClients(_ context.Context, r *http.Request) (interface{}, error
 	return req, nil
 }
 
-func decodeUpdateClient(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateUser(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -364,7 +364,7 @@ func decodeUpdateClient(_ context.Context, r *http.Request) (interface{}, error)
 	return req, nil
 }
 
-func decodeUpdateClientTags(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateUserTags(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -379,7 +379,7 @@ func decodeUpdateClientTags(_ context.Context, r *http.Request) (interface{}, er
 	return req, nil
 }
 
-func decodeUpdateClientIdentity(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateUserIdentity(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -394,7 +394,7 @@ func decodeUpdateClientIdentity(_ context.Context, r *http.Request) (interface{}
 	return req, nil
 }
 
-func decodeUpdateClientSecret(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateUserSecret(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -434,7 +434,7 @@ func decodePasswordReset(_ context.Context, r *http.Request) (interface{}, error
 	return req, nil
 }
 
-func decodeUpdateClientRole(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateUserRole(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -455,7 +455,7 @@ func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) 
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
-	req := loginClientReq{}
+	req := loginUserReq{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
 	}
@@ -472,12 +472,12 @@ func decodeRefreshToken(_ context.Context, r *http.Request) (interface{}, error)
 	return req, nil
 }
 
-func decodeCreateClientReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeCreateUserReq(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
-	var c mgclients.Client
+	var c users.User
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
 	}
@@ -549,6 +549,8 @@ func decodeListMembersByDomain(_ context.Context, r *http.Request) (interface{},
 	return req, nil
 }
 
+// mgclients.Page abound here.
+
 func queryPageParams(r *http.Request, defPermission string) (mgclients.Page, error) {
 	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefClientStatus)
 	if err != nil {
@@ -590,6 +592,9 @@ func queryPageParams(r *http.Request, defPermission string) (mgclients.Page, err
 	if err != nil {
 		return mgclients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
+
+	// here's another mgclients.page
+
 	return mgclients.Page{
 		Status:     st,
 		Offset:     o,
@@ -623,7 +628,7 @@ func oauth2CallbackHandler(oauth oauth2.Provider, svc users.Service, tokenClient
 				return
 			}
 
-			client, err := oauth.UserInfo(token.AccessToken)
+			user, err := oauth.UserInfo(token.AccessToken)
 			if err != nil {
 				http.Redirect(w, r, oauth.ErrorURL()+"?error="+err.Error(), http.StatusSeeOther)
 				return
