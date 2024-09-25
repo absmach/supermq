@@ -76,10 +76,10 @@ type Authn interface {
 	Identify(ctx context.Context, token string) (Key, error)
 
 	// RetrieveJWKS retrieves a JWKs to validate issued tokens.
-	RetrieveJWKS(keyID string) (JWKS, error)
+	RetrieveJWKS() (JWKS, error)
 }
 
-// Service specifies an API that must be fulfilled by the domain service
+// Service specifies an API that must be fulfilled by the domain services
 // implementation, and all of its decorators (e.g. logging & metrics).
 // Token is a string value of the actual Key and is used to authenticate
 // an Auth service request.
@@ -905,6 +905,6 @@ func (svc service) DeleteUserFromDomains(ctx context.Context, id string) (err er
 	return nil
 }
 
-func (svc service) RetrieveJWKS(_ string) (JWKS, error) {
-	return svc.tokenizer.RetrieveJWKS(), nil
+func (svc service) RetrieveJWKS() (JWKS, error) {
+	return svc.tokenizer.RetrieveJWKS()
 }

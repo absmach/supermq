@@ -56,6 +56,7 @@ var (
 		CreatedBy:  validID,
 		UpdatedBy:  validID,
 	}
+	privateKeyPath = "../docker/keys/private.key"
 )
 
 var (

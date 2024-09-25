@@ -27,7 +27,7 @@ func setupRedisTokensClient(t *testing.T) auth.Cache {
 	opts, err := redis.ParseURL(redisURL)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on parsing redis URL: %s", err))
 	redisClient := redis.NewClient(opts)
-	return cache.NewPoliciesCache(redisClient, 10*time.Minute)
+	return cache.NewTokensCache(redisClient, 10*time.Minute)
 }
 
 func TestTokenSave(t *testing.T) {

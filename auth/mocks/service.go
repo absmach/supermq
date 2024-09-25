@@ -299,9 +299,9 @@ func (_m *Service) RetrieveDomainPermissions(ctx context.Context, token string, 
 	return r0, r1
 }
 
-// RetrieveJWKS provides a mock function with given fields: keyID
-func (_m *Service) RetrieveJWKS(keyID string) (auth.JWKS, error) {
-	ret := _m.Called(keyID)
+// RetrieveJWKS provides a mock function with given fields:
+func (_m *Service) RetrieveJWKS() (auth.JWKS, error) {
+	ret := _m.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for RetrieveJWKS")
@@ -309,17 +309,17 @@ func (_m *Service) RetrieveJWKS(keyID string) (auth.JWKS, error) {
 
 	var r0 auth.JWKS
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string) (auth.JWKS, error)); ok {
-		return rf(keyID)
+	if rf, ok := ret.Get(0).(func() (auth.JWKS, error)); ok {
+		return rf()
 	}
-	if rf, ok := ret.Get(0).(func(string) auth.JWKS); ok {
-		r0 = rf(keyID)
+	if rf, ok := ret.Get(0).(func() auth.JWKS); ok {
+		r0 = rf()
 	} else {
 		r0 = ret.Get(0).(auth.JWKS)
 	}
 
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(keyID)
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
 	} else {
 		r1 = ret.Error(1)
 	}

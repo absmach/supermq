@@ -35,6 +35,8 @@ var (
 	ErrJSONHandle = errors.New("failed to perform operation JSON")
 	// errRevokedToken indicates that the token is revoked.
 	errRevokedToken = errors.New("token is revoked")
+	// errReadPrivateKeyFile indicates an error in reading private key file.
+	errReadPrivateKeyFile = errors.New("failed to load key from private key file")
 )
 
 const (
@@ -50,18 +52,25 @@ const (
 var _ auth.Tokenizer = (*tokenizer)(nil)
 
 type tokenizer struct {
-	secret []byte
-	cache  auth.Cache
-	repo   auth.TokenRepository
+	privateKey *rsa.PrivateKey
+	publicKey  *rsa.PublicKey
+	cache      auth.Cache
+	repo       auth.TokenRepository
 }
 
 // NewRepository instantiates an implementation of Token repository.
-func New(secret []byte, repo auth.TokenRepository, cache auth.Cache) auth.Tokenizer {
-	return &tokenizer{
-		secret: secret,
-		repo:   repo,
-		cache:  cache,
+func New(privateKeyPath string, repo auth.TokenRepository, cache auth.Cache) (auth.Tokenizer, error) {
+	privateKey, err := loadPrivateKey(privateKeyPath)
+	if err != nil {
+		return nil, err
 	}
+	publicKey := privateKey.Public().(*rsa.PublicKey)
+	return &tokenizer{
+		privateKey: privateKey,
+		publicKey:  publicKey,
+		repo:       repo,
+		cache:      cache,
+	}, nil
 }
 
 func (tok *tokenizer) Issue(key auth.Key) (string, error) {
@@ -171,10 +180,14 @@ func (tok *tokenizer) validateToken(token string) (jwt.Token, error) {
 	return tkn, nil
 }
 
-func (tok *tokenizer) RetrieveJWKS() auth.JWKS {
+func (tok *tokenizer) RetrieveJWKS() (auth.JWKS, error) {
+	keyID, err := uuid.New().ID()
+	if err != nil {
+		return auth.JWKS{}, err
+	}
 	jwk := auth.JWK{
 		Kty: "RSA",
-		Kid: tok.keyID,
+		Kid: keyID,
 		N:   base64.RawURLEncoding.EncodeToString(tok.publicKey.N.Bytes()),
 		E:   base64.RawURLEncoding.EncodeToString(big.NewInt(int64(tok.publicKey.E)).Bytes()),
 	}
@@ -182,7 +195,7 @@ func (tok *tokenizer) RetrieveJWKS() auth.JWKS {
 	jwks := auth.JWKS{
 		Keys: []auth.JWK{jwk},
 	}
-	return jwks
+	return jwks, nil
 }
 
 func toKey(tkn jwt.Token) (auth.Key, error) {
