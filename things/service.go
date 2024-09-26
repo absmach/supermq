@@ -42,9 +42,9 @@ type service struct {
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(uauth magistrala.AuthServiceClient, c postgres.Repository, grepo mggroups.Repository, tcache Cache, idp magistrala.IDProvider, sidProvider magistrala.IDProvider) (Service, error) {
+func NewService(authClient grpcclient.AuthServiceClient, policyClient magistrala.PolicyServiceClient, c postgres.Repository, grepo mggroups.Repository, tcache Cache, idp magistrala.IDProvider, sidProvider magistrala.IDProvider) (Service, error) {
 
-	rolesSvc, err := entityroles.NewRolesSvc(auth.DomainType, c, sidProvider, uauth, AvailableActions(), BuiltInRoles(), NewRolesOperationPermissionMap())
+	rolesSvc, err := entityroles.NewRolesSvc(auth.DomainType, c, sidProvider, authClient, policyClient, AvailableActions(), BuiltInRoles(), NewRolesOperationPermissionMap())
 	if err != nil {
 		return nil, err
 	}
@@ -58,8 +58,8 @@ func NewService(uauth magistrala.AuthServiceClient, c postgres.Repository, grepo
 	}
 
 	return service{
-		auth:        auth,
-		policy:      policy,
+		auth:        authClient,
+		policy:      policyClient,
 		clients:     c,
 		grepo:       grepo,
 		clientCache: tcache,

@@ -6,6 +6,7 @@ import (
 
 	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/auth"
+	grpcclient "github.com/absmach/magistrala/auth/api/grpc"
 	"github.com/absmach/magistrala/pkg/domains"
 	"github.com/absmach/magistrala/pkg/entityroles"
 	"github.com/absmach/magistrala/pkg/errors"
@@ -27,7 +28,8 @@ type identity struct {
 }
 type service struct {
 	repo       domains.DomainsRepository
-	auth       magistrala.AuthServiceClient
+	auth       grpcclient.AuthServiceClient
+	policy     magistrala.PolicyServiceClient
 	idProvider magistrala.IDProvider
 	opp        svcutil.OperationPerm
 	entityroles.RolesSvc
@@ -35,9 +37,9 @@ type service struct {
 
 var _ domains.Service = (*service)(nil)
 
-func New(repo domains.DomainsRepository, authClient magistrala.AuthServiceClient, idProvider magistrala.IDProvider, sidProvider magistrala.IDProvider) (domains.Service, error) {
+func New(repo domains.DomainsRepository, authClient grpcclient.AuthServiceClient, policyClient magistrala.PolicyServiceClient, idProvider magistrala.IDProvider, sidProvider magistrala.IDProvider) (domains.Service, error) {
 
-	rolesSvc, err := entityroles.NewRolesSvc(auth.DomainType, repo, sidProvider, authClient, domains.AvailableActions(), domains.BuiltInRoles(), domains.NewRolesOperationPermissionMap())
+	rolesSvc, err := entityroles.NewRolesSvc(auth.DomainType, repo, sidProvider, authClient, policyClient, domains.AvailableActions(), domains.BuiltInRoles(), domains.NewRolesOperationPermissionMap())
 	if err != nil {
 		return nil, err
 	}
@@ -53,6 +55,7 @@ func New(repo domains.DomainsRepository, authClient magistrala.AuthServiceClient
 	return &service{
 		repo:       repo,
 		auth:       authClient,
+		policy:     policyClient,
 		idProvider: idProvider,
 		opp:        opp,
 		RolesSvc:   rolesSvc,

@@ -44,8 +44,8 @@ type service struct {
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(g groups.Repository, idp magistrala.IDProvider, authClient magistrala.AuthServiceClient) (groups.Service, error) {
-	rolesSvc, err := entityroles.NewRolesSvc("group", g, idp, authClient, groups.AvailableActions(), groups.BuiltInRoles(), groups.NewRolesOperationPermissionMap())
+func NewService(g groups.Repository, idp magistrala.IDProvider, authClient grpcclient.AuthServiceClient, policyClient magistrala.PolicyServiceClient) (groups.Service, error) {
+	rolesSvc, err := entityroles.NewRolesSvc("group", g, idp, authClient, policyClient, groups.AvailableActions(), groups.BuiltInRoles(), groups.NewRolesOperationPermissionMap())
 	if err != nil {
 		return service{}, err
 	}
@@ -57,6 +57,7 @@ func NewService(g groups.Repository, idp magistrala.IDProvider, authClient magis
 		groups:     g,
 		idProvider: idp,
 		auth:       authClient,
+		policy:     policyClient,
 		opp:        opp,
 		RolesSvc:   rolesSvc,
 	}, nil
@@ -411,12 +412,12 @@ func (svc service) AddParentGroup(ctx context.Context, token, id, parentID strin
 		Object:      group.ID,
 	})
 
-	if _, err := svc.auth.AddPolicies(ctx, &addPolicies); err != nil {
+	if _, err := svc.policy.AddPolicies(ctx, &addPolicies); err != nil {
 		return errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
 	defer func() {
 		if err != nil {
-			if _, errRollback := svc.auth.DeletePolicies(ctx, &deletePolicies); errRollback != nil {
+			if _, errRollback := svc.policy.DeletePolicies(ctx, &deletePolicies); errRollback != nil {
 				err = errors.Wrap(err, errors.Wrap(apiutil.ErrRollbackTx, errRollback))
 			}
 		}
@@ -480,12 +481,12 @@ func (svc service) RemoveParentGroup(ctx context.Context, token, id string) erro
 			Object:      group.ID,
 		})
 
-		if _, err := svc.auth.DeletePolicies(ctx, &deletePolicies); err != nil {
+		if _, err := svc.policy.DeletePolicies(ctx, &deletePolicies); err != nil {
 			return errors.Wrap(svcerr.ErrDeletePolicies, err)
 		}
 		defer func() {
 			if err != nil {
-				if _, errRollback := svc.auth.AddPolicies(ctx, &addPolicies); errRollback != nil {
+				if _, errRollback := svc.policy.AddPolicies(ctx, &addPolicies); errRollback != nil {
 					err = errors.Wrap(err, errors.Wrap(apiutil.ErrRollbackTx, errRollback))
 				}
 			}
@@ -695,7 +696,7 @@ func (svc service) RemoveAllChildrenGroups(ctx context.Context, token, id string
 		ObjectType:  auth.GroupType,
 	}
 
-	if _, err := svc.auth.DeletePolicyFilter(ctx, &policy); err != nil {
+	if _, err := svc.policy.DeletePolicyFilter(ctx, &policy); err != nil {
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
 	}
 

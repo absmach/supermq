@@ -236,8 +236,8 @@ func newService(ctx context.Context, authClient authclient.AuthServiceClient, po
 		logger.Error(fmt.Sprintf("failed to configure e-mailing util: %s", err.Error()))
 	}
 
-	csvc := users.NewService(cRepo, authClient, emailerClient, hsr, idp, c.SelfRegister)
-	gsvc, err := mggroups.NewService(gRepo, idp, authClient)
+	csvc := users.NewService(cRepo, authClient, policyClient, emailerClient, hsr, idp, c.SelfRegister)
+	gsvc, err := mggroups.NewService(gRepo, idp, authClient, policyClient)
 	if err != nil {
 		return nil, nil, err
 	}

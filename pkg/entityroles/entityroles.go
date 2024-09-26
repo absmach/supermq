@@ -7,6 +7,7 @@ import (
 
 	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/auth"
+	grpcclient "github.com/absmach/magistrala/auth/api/grpc"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/roles"
@@ -30,13 +31,14 @@ type RolesSvc struct {
 	entityType   string
 	repo         roles.Repository
 	idProvider   magistrala.IDProvider
-	auth         magistrala.AuthServiceClient
+	auth         grpcclient.AuthServiceClient
+	policy       magistrala.PolicyServiceClient
 	actions      []roles.Action
 	builtInRoles map[roles.BuiltInRoleName][]roles.Action
 	opp          svcutil.OperationPerm
 }
 
-func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala.IDProvider, auth magistrala.AuthServiceClient, actions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action, opPerm map[svcutil.Operation]svcutil.Permission) (RolesSvc, error) {
+func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala.IDProvider, auth grpcclient.AuthServiceClient, policyClient magistrala.PolicyServiceClient, actions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action, opPerm map[svcutil.Operation]svcutil.Permission) (RolesSvc, error) {
 	opp := roles.NewOperationPerm()
 	if err := opp.AddOperationPermissionMap(opPerm); err != nil {
 		return RolesSvc{}, err
@@ -49,6 +51,7 @@ func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala
 		repo:         repo,
 		idProvider:   idProvider,
 		auth:         auth,
+		policy:       policyClient,
 		actions:      actions,
 		builtInRoles: builtInRoles,
 		opp:          opp,
@@ -173,7 +176,7 @@ func (r RolesSvc) AddRole(ctx context.Context, token, entityID string, roleName 
 	}
 
 	if len(prs) > 0 {
-		resp, err := r.auth.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs})
+		resp, err := r.policy.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs})
 
 		if err != nil {
 			return roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
@@ -228,7 +231,7 @@ func (r RolesSvc) RemoveRole(ctx context.Context, token, entityID, roleName stri
 		SubjectType: "role",
 		Subject:     ro.ID,
 	}
-	resp, err := r.auth.DeletePolicyFilter(ctx, req)
+	resp, err := r.policy.DeletePolicyFilter(ctx, req)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
@@ -368,7 +371,7 @@ func (r RolesSvc) RoleAddActions(ctx context.Context, token, entityID, roleName 
 		})
 	}
 
-	resp, err := r.auth.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs})
+	resp, err := r.policy.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs})
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
@@ -487,7 +490,7 @@ func (r RolesSvc) RoleRemoveActions(ctx context.Context, token, entityID, roleNa
 		})
 	}
 
-	resp, err := r.auth.DeletePolicies(ctx, &magistrala.DeletePoliciesReq{DeletePoliciesReq: prs})
+	resp, err := r.policy.DeletePolicies(ctx, &magistrala.DeletePoliciesReq{DeletePoliciesReq: prs})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
 	}
@@ -528,7 +531,7 @@ func (r RolesSvc) RoleRemoveAllActions(ctx context.Context, token, entityID, rol
 		Subject:     ro.ID,
 	}
 
-	resp, err := r.auth.DeletePolicyFilter(ctx, prs)
+	resp, err := r.policy.DeletePolicyFilter(ctx, prs)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
 	}
@@ -580,7 +583,7 @@ func (r RolesSvc) RoleAddMembers(ctx context.Context, token, entityID, roleName 
 		})
 	}
 
-	resp, err := r.auth.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs})
+	resp, err := r.policy.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs})
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
@@ -695,7 +698,7 @@ func (r RolesSvc) RoleRemoveMembers(ctx context.Context, token, entityID, roleNa
 		})
 	}
 
-	resp, err := r.auth.DeletePolicies(ctx, &magistrala.DeletePoliciesReq{DeletePoliciesReq: prs})
+	resp, err := r.policy.DeletePolicies(ctx, &magistrala.DeletePoliciesReq{DeletePoliciesReq: prs})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
 	}
@@ -737,7 +740,7 @@ func (r RolesSvc) RoleRemoveAllMembers(ctx context.Context, token, entityID, rol
 		SubjectType: "user",
 	}
 
-	resp, err := r.auth.DeletePolicyFilter(ctx, prs)
+	resp, err := r.policy.DeletePolicyFilter(ctx, prs)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
 	}
@@ -828,7 +831,7 @@ func (r RolesSvc) AddNewEntityRoles(ctx context.Context, userID, domainID, entit
 	}
 
 	if len(prs) > 0 {
-		resp, err := r.auth.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs})
+		resp, err := r.policy.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs})
 
 		if err != nil {
 			return []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
@@ -867,7 +870,7 @@ func (r RolesSvc) addPolicyRollback(ctx context.Context, prs []*magistrala.AddPo
 			ObjectType:      pr.ObjectType,
 		})
 	}
-	resp, err := r.auth.DeletePolicies(ctx, &magistrala.DeletePoliciesReq{DeletePoliciesReq: delPrs})
+	resp, err := r.policy.DeletePolicies(ctx, &magistrala.DeletePoliciesReq{DeletePoliciesReq: delPrs})
 	if err != nil {
 		return errors.Wrap(errRollbackPolicies, err)
 	}
@@ -921,7 +924,7 @@ func (r RolesSvc) RemoveNewEntityRoles(ctx context.Context, userID, domainID, en
 	}
 
 	if len(prs) > 0 {
-		resp, err := r.auth.DeletePolicies(ctx, &magistrala.DeletePoliciesReq{DeletePoliciesReq: prs})
+		resp, err := r.policy.DeletePolicies(ctx, &magistrala.DeletePoliciesReq{DeletePoliciesReq: prs})
 
 		if err != nil {
 			return errors.Wrap(svcerr.ErrDeletePolicies, err)

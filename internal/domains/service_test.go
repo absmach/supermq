@@ -62,16 +62,18 @@ var (
 )
 
 var (
-	drepo    *mocks.DomainsRepository
-	authMock *authmocks.AuthClient
+	drepo      *mocks.DomainsRepository
+	authMock   *authmocks.AuthServiceClient
+	policyMock *authmocks.PolicyServiceClient
 )
 
 func newService() domains.Service {
 	drepo = new(mocks.DomainsRepository)
 	idProvider := uuid.NewMock()
 	sidProvider := sid.NewMock()
-	authMock = new(authmocks.AuthClient)
-	ds, _ := domainSvc.New(drepo, authMock, idProvider, sidProvider)
+	authMock = new(authmocks.AuthServiceClient)
+	policyMock = new(authmocks.PolicyServiceClient)
+	ds, _ := domainSvc.New(drepo, authMock, policyMock, idProvider, sidProvider)
 	return ds
 }
 

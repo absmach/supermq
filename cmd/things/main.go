@@ -32,6 +32,7 @@ import (
 	"github.com/absmach/magistrala/pkg/server"
 	grpcserver "github.com/absmach/magistrala/pkg/server/grpc"
 	httpserver "github.com/absmach/magistrala/pkg/server/http"
+	"github.com/absmach/magistrala/pkg/sid"
 	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/absmach/magistrala/things"
 	"github.com/absmach/magistrala/things/api"
@@ -113,7 +114,12 @@ func main() {
 		return
 	}
 	tm := thingspg.Migration()
-	gm := gpostgres.Migration()
+	gm, err := gpostgres.Migration()
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
 	tm.Migrations = append(tm.Migrations, gm.Migrations...)
 	db, err := pgclient.Setup(dbConfig, *tm)
 	if err != nil {
@@ -240,13 +246,20 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 	gRepo := gpostgres.New(database)
 
 	idp := uuid.New()
+	sidProvider, err := sid.New()
 
 	thingCache := thcache.NewCache(cacheClient, keyDuration)
 
-	csvc := things.NewService(authClient, policyClient, cRepo, gRepo, thingCache, idp)
-	gsvc := mggroups.NewService(gRepo, idp, authClient, policyClient)
+	csvc, err := things.NewService(authClient, policyClient, cRepo, gRepo, thingCache, idp, sidProvider)
+	if err != nil {
+		return nil, nil, err
+	}
+	gsvc, err := mggroups.NewService(gRepo, idp, authClient, policyClient)
+	if err != nil {
+		return nil, nil, err
+	}
 
-	csvc, err := thevents.NewEventStoreMiddleware(ctx, csvc, esURL)
+	csvc, err = thevents.NewEventStoreMiddleware(ctx, csvc, esURL)
 	if err != nil {
 		return nil, nil, err
 	}

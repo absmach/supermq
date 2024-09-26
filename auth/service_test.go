@@ -12,6 +12,8 @@ import (
 	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/auth/jwt"
 	"github.com/absmach/magistrala/auth/mocks"
+	"github.com/absmach/magistrala/pkg/domains"
+	dmocks "github.com/absmach/magistrala/pkg/domains/mocks"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
@@ -51,11 +53,13 @@ var (
 var (
 	krepo *mocks.KeyRepository
 	prepo *mocks.PolicyAgent
+	drepo *dmocks.DomainsRepository
 )
 
 func newService() (auth.Service, string) {
 	krepo = new(mocks.KeyRepository)
 	prepo = new(mocks.PolicyAgent)
+	drepo = new(dmocks.DomainsRepository)
 	idProvider := uuid.NewMock()
 
 	t := jwt.New([]byte(secret))
@@ -125,7 +129,7 @@ func TestIssue(t *testing.T) {
 		desc                   string
 		key                    auth.Key
 		saveResponse           auth.Key
-		retrieveByIDResponse   auth.Domain
+		retrieveByIDResponse   domains.Domain
 		token                  string
 		saveErr                error
 		checkPolicyRequest     auth.PolicyReq
@@ -198,7 +202,7 @@ func TestIssue(t *testing.T) {
 				Object:      groupName,
 			},
 			checkPolicyErr:       repoerr.ErrNotFound,
-			retrieveByIDResponse: auth.Domain{},
+			retrieveByIDResponse: domains.Domain{},
 			retreiveByIDErr:      repoerr.ErrNotFound,
 			err:                  repoerr.ErrNotFound,
 		},
@@ -229,7 +233,7 @@ func TestIssue(t *testing.T) {
 			},
 			checkPolicyErr:       svcerr.ErrAuthorization,
 			checkPolicyErr1:      svcerr.ErrAuthorization,
-			retrieveByIDResponse: auth.Domain{Status: auth.EnabledStatus},
+			retrieveByIDResponse: domains.Domain{Status: domains.EnabledStatus},
 			err:                  svcerr.ErrAuthorization,
 		},
 		{
@@ -259,7 +263,7 @@ func TestIssue(t *testing.T) {
 			},
 			checkPolicyErr:       svcerr.ErrAuthorization,
 			checkPolicyErr1:      svcerr.ErrAuthorization,
-			retrieveByIDResponse: auth.Domain{Status: auth.EnabledStatus},
+			retrieveByIDResponse: domains.Domain{Status: domains.EnabledStatus},
 			err:                  svcerr.ErrAuthorization,
 		},
 		{
@@ -289,7 +293,7 @@ func TestIssue(t *testing.T) {
 			},
 			checkPolicyErr:       svcerr.ErrAuthorization,
 			checkPolicyErr1:      svcerr.ErrAuthorization,
-			retrieveByIDResponse: auth.Domain{Status: auth.EnabledStatus},
+			retrieveByIDResponse: domains.Domain{Status: domains.EnabledStatus},
 			err:                  svcerr.ErrAuthorization,
 		},
 	}
@@ -484,7 +488,7 @@ func TestIssue(t *testing.T) {
 	}
 	for _, tc := range cases4 {
 		repoCall := prepo.On("CheckPolicy", mock.Anything, tc.checkPolicyRequest).Return(tc.checkPolicyErr)
-		repoCall1 := drepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(auth.Domain{}, tc.retrieveByIDErr)
+		repoCall1 := drepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(domains.Domain{}, tc.retrieveByIDErr)
 		repoCall2 := prepo.On("CheckPolicy", mock.Anything, tc.checkDOmainPolicyReq).Return(tc.checkPolicyErr)
 		_, err := svc.Issue(context.Background(), tc.token, tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
@@ -757,7 +761,7 @@ func TestAuthorize(t *testing.T) {
 	cases := []struct {
 		desc                 string
 		policyReq            auth.PolicyReq
-		retrieveDomainRes    auth.Domain
+		retrieveDomainRes    domains.Domain
 		checkPolicyReq3      auth.PolicyReq
 		checkAdminPolicyReq  auth.PolicyReq
 		checkDomainPolicyReq auth.PolicyReq
@@ -853,10 +857,10 @@ func TestAuthorize(t *testing.T) {
 				Permission:  auth.AdminPermission,
 			},
 
-			retrieveDomainRes: auth.Domain{
+			retrieveDomainRes: domains.Domain{
 				ID:     validID,
 				Name:   groupName,
-				Status: auth.DisabledStatus,
+				Status: domains.DisabledStatus,
 			},
 			err: nil,
 		},
@@ -892,10 +896,10 @@ func TestAuthorize(t *testing.T) {
 				Permission:  auth.MembershipPermission,
 			},
 
-			retrieveDomainRes: auth.Domain{
+			retrieveDomainRes: domains.Domain{
 				ID:     validID,
 				Name:   groupName,
-				Status: auth.DisabledStatus,
+				Status: domains.DisabledStatus,
 			},
 			checkPolicyErr1: svcerr.ErrDomainAuthorization,
 			err:             svcerr.ErrDomainAuthorization,
@@ -933,10 +937,10 @@ func TestAuthorize(t *testing.T) {
 				Permission:  auth.MembershipPermission,
 			},
 
-			retrieveDomainRes: auth.Domain{
+			retrieveDomainRes: domains.Domain{
 				ID:     validID,
 				Name:   groupName,
-				Status: auth.FreezeStatus,
+				Status: domains.FreezeStatus,
 			},
 			err: nil,
 		},
@@ -973,10 +977,10 @@ func TestAuthorize(t *testing.T) {
 				Permission:  auth.MembershipPermission,
 			},
 
-			retrieveDomainRes: auth.Domain{
+			retrieveDomainRes: domains.Domain{
 				ID:     validID,
 				Name:   groupName,
-				Status: auth.FreezeStatus,
+				Status: domains.FreezeStatus,
 			},
 			checkPolicyErr1: svcerr.ErrDomainAuthorization,
 			err:             svcerr.ErrDomainAuthorization,
@@ -1014,10 +1018,10 @@ func TestAuthorize(t *testing.T) {
 				Permission:  auth.MembershipPermission,
 			},
 
-			retrieveDomainRes: auth.Domain{
+			retrieveDomainRes: domains.Domain{
 				ID:     validID,
 				Name:   groupName,
-				Status: auth.AllStatus,
+				Status: domains.AllStatus,
 			},
 			err: svcerr.ErrDomainAuthorization,
 		},

@@ -12,8 +12,6 @@ import (
 	"os"
 	"time"
 
-	authClient "github.com/absmach/magistrala/pkg/auth"
-
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/auth"
@@ -31,6 +29,7 @@ import (
 	dtracing "github.com/absmach/magistrala/internal/domains/tracing"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/domains"
+	"github.com/absmach/magistrala/pkg/grpcclient"
 	"github.com/absmach/magistrala/pkg/jaeger"
 	"github.com/absmach/magistrala/pkg/postgres"
 	pgclient "github.com/absmach/magistrala/pkg/postgres"
@@ -155,7 +154,9 @@ func main() {
 	}
 	registerAuthServiceServer := func(srv *grpc.Server) {
 		reflection.Register(srv)
-		magistrala.RegisterAuthServiceServer(srv, grpcapi.NewServer(svc))
+		magistrala.RegisterAuthzServiceServer(srv, grpcapi.NewAuthzServer(svc))
+		magistrala.RegisterAuthnServiceServer(srv, grpcapi.NewAuthnServer(svc))
+		magistrala.RegisterPolicyServiceServer(srv, grpcapi.NewPolicyServer(svc))
 	}
 
 	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerAuthServiceServer, logger)
@@ -169,14 +170,14 @@ func main() {
 	})
 
 	time.Sleep(1 * time.Second)
-	authConfig := authClient.Config{URL: fmt.Sprintf("%s:%s", grpcServerConfig.Host, grpcServerConfig.Port)}
-	if err := env.ParseWithOptions(&authConfig, env.Options{Prefix: envPrefixGrpc}); err != nil {
+	authClientConfig := grpcclient.Config{URL: fmt.Sprintf("%s:%s", grpcServerConfig.Host, grpcServerConfig.Port)}
+	if err := env.ParseWithOptions(&authClientConfig, env.Options{Prefix: envPrefixGrpc}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
 		exitCode = 1
 		return
 	}
 
-	authServiceClient, authHandler, err := authClient.Setup(ctx, authConfig)
+	authClient, authHandler, err := grpcclient.SetupAuthClient(ctx, authClientConfig)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
@@ -185,7 +186,23 @@ func main() {
 	defer authHandler.Close()
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	dsvc, err := newDomainService(ctx, db, tracer, cfg, dbConfig, authServiceClient, logger)
+	policyClientConfig := grpcclient.Config{URL: fmt.Sprintf("%s:%s", grpcServerConfig.Host, grpcServerConfig.Port)}
+	if err := env.ParseWithOptions(&policyClientConfig, env.Options{Prefix: envPrefixGrpc}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
+		exitCode = 1
+		return
+	}
+
+	policyClient, policyHandler, err := grpcclient.SetupPolicyClient(ctx, policyClientConfig)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer policyHandler.Close()
+	logger.Info("PolicyService gRPC client successfully connected to auth gRPC server " + policyHandler.Secure())
+
+	dsvc, err := newDomainService(ctx, db, tracer, cfg, dbConfig, authClient, policyClient, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create %s service: %s", svcName, err.Error()))
 		exitCode = 1
@@ -198,21 +215,6 @@ func main() {
 		return
 	}
 	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, dsvc, logger, cfg.InstanceID), logger)
-
-	grpcServerConfig := server.Config{Port: defSvcGRPCPort}
-	if err := env.ParseWithOptions(&grpcServerConfig, env.Options{Prefix: envPrefixGrpc}); err != nil {
-		logger.Error(fmt.Sprintf("failed to load %s gRPC server configuration : %s", svcName, err.Error()))
-		exitCode = 1
-		return
-	}
-	registerAuthServiceServer := func(srv *grpc.Server) {
-		reflection.Register(srv)
-		magistrala.RegisterAuthzServiceServer(srv, grpcapi.NewAuthzServer(svc))
-		magistrala.RegisterAuthnServiceServer(srv, grpcapi.NewAuthnServer(svc))
-		magistrala.RegisterPolicyServiceServer(srv, grpcapi.NewPolicyServer(svc))
-	}
-
-	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerAuthServiceServer, logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
@@ -280,7 +282,7 @@ func newService(_ context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config,
 	return svc
 }
 
-func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, authClient magistrala.AuthServiceClient, logger *slog.Logger) (domains.Service, error) {
+func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, authClient grpcapi.AuthServiceClient, policyClient magistrala.PolicyServiceClient, logger *slog.Logger) (domains.Service, error) {
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 	domainsRepo := dpostgres.NewDomainRepository(database)
 
@@ -289,7 +291,7 @@ func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg
 	if err != nil {
 		return nil, fmt.Errorf("failed to init short id provider : %w", err)
 	}
-	svc, err := domainsSvc.New(domainsRepo, authClient, idProvider, sidProvider)
+	svc, err := domainsSvc.New(domainsRepo, authClient, policyClient, idProvider, sidProvider)
 	if err != nil {
 		return nil, fmt.Errorf("failed to init domain service: %w", err)
 	}

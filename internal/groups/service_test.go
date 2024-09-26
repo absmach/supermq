@@ -47,8 +47,9 @@ var (
 
 func TestCreateGroup(t *testing.T) {
 	repo := new(mocks.Repository)
-	authsvc := new(authmocks.AuthClient)
-	svc, _ := groups.NewService(repo, idProvider, authsvc)
+	authsvc := new(authmocks.AuthServiceClient)
+	policy := new(authmocks.PolicyServiceClient)
+	svc, _ := groups.NewService(repo, idProvider, authsvc, policy)
 
 	cases := []struct {
 		desc          string
@@ -328,8 +329,9 @@ func TestCreateGroup(t *testing.T) {
 
 func TestViewGroup(t *testing.T) {
 	repo := new(mocks.Repository)
-	authsvc := new(authmocks.AuthClient)
-	svc, _ := groups.NewService(repo, idProvider, authsvc)
+	authsvc := new(authmocks.AuthServiceClient)
+	policy := new(authmocks.PolicyServiceClient)
+	svc, _ := groups.NewService(repo, idProvider, authsvc, policy)
 
 	cases := []struct {
 		desc      string
@@ -398,8 +400,9 @@ func TestViewGroup(t *testing.T) {
 
 func TestUpdateGroup(t *testing.T) {
 	repo := new(mocks.Repository)
-	authsvc := new(authmocks.AuthClient)
-	svc, _ := groups.NewService(repo, idProvider, authsvc)
+	authsvc := new(authmocks.AuthServiceClient)
+	policy := new(authmocks.PolicyServiceClient)
+	svc, _ := groups.NewService(repo, idProvider, authsvc, policy)
 
 	cases := []struct {
 		desc      string
@@ -477,8 +480,9 @@ func TestUpdateGroup(t *testing.T) {
 
 func TestEnableGroup(t *testing.T) {
 	repo := new(mocks.Repository)
-	authsvc := new(authmocks.AuthClient)
-	svc, _ := groups.NewService(repo, idProvider, authsvc)
+	authsvc := new(authmocks.AuthServiceClient)
+	policy := new(authmocks.PolicyServiceClient)
+	svc, _ := groups.NewService(repo, idProvider, authsvc, policy)
 
 	cases := []struct {
 		desc         string
@@ -577,8 +581,9 @@ func TestEnableGroup(t *testing.T) {
 
 func TestDisableGroup(t *testing.T) {
 	repo := new(mocks.Repository)
-	authsvc := new(authmocks.AuthClient)
-	svc, _ := groups.NewService(repo, idProvider, authsvc)
+	authsvc := new(authmocks.AuthServiceClient)
+	policy := new(authmocks.PolicyServiceClient)
+	svc, _ := groups.NewService(repo, idProvider, authsvc, policy)
 
 	cases := []struct {
 		desc         string
@@ -677,8 +682,9 @@ func TestDisableGroup(t *testing.T) {
 
 func TestListGroups(t *testing.T) {
 	repo := new(mocks.Repository)
-	authsvc := new(authmocks.AuthClient)
-	svc, _ := groups.NewService(repo, idProvider, authsvc)
+	authsvc := new(authmocks.AuthServiceClient)
+	policy := new(authmocks.PolicyServiceClient)
+	svc, _ := groups.NewService(repo, idProvider, authsvc, policy)
 
 	cases := []struct {
 		desc                 string
@@ -1404,8 +1410,8 @@ func TestListGroups(t *testing.T) {
 					ObjectType:  auth.GroupType,
 				}).Return(tc.listObjectFilterResp, tc.listObjectFilterErr)
 			}
-			repocall := repo.On("RetrieveByIDs", context.Background(), mock.Anything, mock.Anything).Return(tc.repoResp, tc.repoErr)
-			authcall4 := authsvc.On("ListPermissions", mock.Anything, mock.Anything).Return(tc.listPermResp, tc.listPermErr)
+			repoCall := repo.On("RetrieveByIDs", context.Background(), mock.Anything, mock.Anything).Return(tc.repoResp, tc.repoErr)
+			authCall4 := authsvc.On("ListPermissions", mock.Anything, mock.Anything).Return(tc.listPermResp, tc.listPermErr)
 			got, err := svc.ListGroups(context.Background(), tc.token, tc.page)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
 			if err == nil {
@@ -1429,8 +1435,9 @@ func TestListGroups(t *testing.T) {
 
 func TestDeleteGroup(t *testing.T) {
 	repo := new(mocks.Repository)
-	authsvc := new(authmocks.AuthClient)
-	svc, _ := groups.NewService(repo, idProvider, authsvc)
+	authsvc := new(authmocks.AuthServiceClient)
+	policy := new(authmocks.PolicyServiceClient)
+	svc, _ := groups.NewService(repo, idProvider, authsvc, policy)
 
 	cases := []struct {
 		desc              string
