@@ -34,6 +34,9 @@ func (rtm *RolesSvcTracingMiddleware) RetrieveRole(ctx context.Context, token, e
 func (rtm *RolesSvcTracingMiddleware) RetrieveAllRoles(ctx context.Context, token, entityID string, limit, offset uint64) (roles.RolePage, error) {
 	return rtm.roles.RetrieveAllRoles(ctx, token, entityID, limit, offset)
 }
+func (rtm *RolesSvcTracingMiddleware) ListAvailableActions(ctx context.Context, token string) ([]string, error) {
+	return rtm.roles.ListAvailableActions(ctx, token)
+}
 func (rtm *RolesSvcTracingMiddleware) RoleAddActions(ctx context.Context, token, entityID, roleName string, actions []string) (ops []string, err error) {
 	return rtm.roles.RoleAddActions(ctx, token, entityID, roleName, actions)
 }

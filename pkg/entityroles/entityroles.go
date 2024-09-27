@@ -329,7 +329,18 @@ func (r RolesSvc) RetrieveAllRoles(ctx context.Context, token, entityID string, 
 	return ros, nil
 }
 
-func (r RolesSvc) RoleAddActions(ctx context.Context, token, entityID, roleName string, actions []string) (fnOps []string, fnErr error) {
+func (r RolesSvc) ListAvailableActions(ctx context.Context, token string) ([]string, error) {
+	if _, err := r.identify(ctx, token); err != nil {
+		return []string{}, err
+	}
+	acts := []string{}
+	for _, a := range r.actions {
+		acts = append(acts, string(a))
+	}
+	return acts, nil
+}
+
+func (r RolesSvc) RoleAddActions(ctx context.Context, token, entityID, roleName string, actions []string) (fnActs []string, fnErr error) {
 	userInfo, err := r.identify(ctx, token)
 	if err != nil {
 		return []string{}, err
@@ -390,11 +401,11 @@ func (r RolesSvc) RoleAddActions(ctx context.Context, token, entityID, roleName 
 	ro.UpdatedAt = time.Now()
 	ro.UpdatedBy = userInfo.UserID
 
-	resOps, err := r.repo.RoleAddActions(ctx, ro, actions)
+	resActs, err := r.repo.RoleAddActions(ctx, ro, actions)
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
-	return resOps, nil
+	return resActs, nil
 }
 
 func (r RolesSvc) RoleListActions(ctx context.Context, token, entityID, roleName string) ([]string, error) {
@@ -419,15 +430,15 @@ func (r RolesSvc) RoleListActions(ctx context.Context, token, entityID, roleName
 		return []string{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	ops, err := r.repo.RoleListActions(ctx, ro.ID)
+	acts, err := r.repo.RoleListActions(ctx, ro.ID)
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
-	return ops, nil
+	return acts, nil
 
 }
 
-func (r RolesSvc) RoleCheckActionsExists(ctx context.Context, token, entityID, roleName string, operations []string) (bool, error) {
+func (r RolesSvc) RoleCheckActionsExists(ctx context.Context, token, entityID, roleName string, actions []string) (bool, error) {
 	userInfo, err := r.identify(ctx, token)
 	if err != nil {
 		return false, err
@@ -447,14 +458,14 @@ func (r RolesSvc) RoleCheckActionsExists(ctx context.Context, token, entityID, r
 		return false, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	result, err := r.repo.RoleCheckActionsExists(ctx, ro.ID, operations)
+	result, err := r.repo.RoleCheckActionsExists(ctx, ro.ID, actions)
 	if err != nil {
 		return true, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return result, nil
 }
 
-func (r RolesSvc) RoleRemoveActions(ctx context.Context, token, entityID, roleName string, operations []string) (err error) {
+func (r RolesSvc) RoleRemoveActions(ctx context.Context, token, entityID, roleName string, actions []string) (err error) {
 	userInfo, err := r.identify(ctx, token)
 	if err != nil {
 		return err
@@ -474,12 +485,12 @@ func (r RolesSvc) RoleRemoveActions(ctx context.Context, token, entityID, roleNa
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
-	if len(operations) == 0 {
+	if len(actions) == 0 {
 		return svcerr.ErrMalformedEntity
 	}
 
 	prs := []*magistrala.DeletePolicyReq{}
-	for _, op := range operations {
+	for _, op := range actions {
 		prs = append(prs, &magistrala.DeletePolicyReq{
 			SubjectType:     "role",
 			SubjectRelation: "member",
@@ -500,7 +511,7 @@ func (r RolesSvc) RoleRemoveActions(ctx context.Context, token, entityID, roleNa
 
 	ro.UpdatedAt = time.Now()
 	ro.UpdatedBy = userInfo.UserID
-	if err := r.repo.RoleRemoveActions(ctx, ro, operations); err != nil {
+	if err := r.repo.RoleRemoveActions(ctx, ro, actions); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	return nil

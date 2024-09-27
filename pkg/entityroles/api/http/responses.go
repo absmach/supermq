@@ -16,6 +16,7 @@ var (
 	_ magistrala.Response = (*viewRoleRes)(nil)
 	_ magistrala.Response = (*updateRoleRes)(nil)
 	_ magistrala.Response = (*deleteRoleRes)(nil)
+	_ magistrala.Response = (*listAvailableActionsRes)(nil)
 	_ magistrala.Response = (*addRoleActionsRes)(nil)
 	_ magistrala.Response = (*listRoleActionsRes)(nil)
 	_ magistrala.Response = (*deleteRoleActionsRes)(nil)
@@ -103,6 +104,22 @@ func (res deleteRoleRes) Headers() map[string]string {
 
 func (res deleteRoleRes) Empty() bool {
 	return true
+}
+
+type listAvailableActionsRes struct {
+	AvailableActions []string `json:"available_actions"`
+}
+
+func (res listAvailableActionsRes) Code() int {
+	return http.StatusOK
+}
+
+func (res listAvailableActionsRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res listAvailableActionsRes) Empty() bool {
+	return false
 }
 
 type addRoleActionsRes struct {

@@ -88,7 +88,6 @@ func (s *Status) UnmarshalJSON(data []byte) error {
 }
 
 const (
-	createPermission          = "create_permission"
 	updatePermission          = "update_permission"
 	enablePermission          = "enable_permission"
 	disablePermission         = "disable_permission"
@@ -102,30 +101,24 @@ const (
 )
 
 const (
-	OpCreateDomain svcutil.Operation = iota
+	OpUpdateDomain svcutil.Operation = iota
 	OpRetrieveDomain
-	OpUpdateDomain
 	OpEnableDomain
 	OpDisableDomain
-	OpListDomains
 )
 
 var expectedOperations = []svcutil.Operation{
-	OpCreateDomain,
 	OpRetrieveDomain,
 	OpUpdateDomain,
 	OpEnableDomain,
 	OpDisableDomain,
-	OpListDomains,
 }
 
 var operationNames = []string{
-	"OpCreateDomain",
 	"OpRetrieveDomain",
 	"OpUpdateDomain",
 	"OpEnableDomain",
 	"OpDisableDomain",
-	"OpListDomains",
 }
 
 func NewOperationPerm() svcutil.OperationPerm {
@@ -134,12 +127,10 @@ func NewOperationPerm() svcutil.OperationPerm {
 
 func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 	opPerm := map[svcutil.Operation]svcutil.Permission{
-		OpCreateDomain:   createPermission,
 		OpRetrieveDomain: readPermission,
 		OpUpdateDomain:   updatePermission,
 		OpEnableDomain:   enablePermission,
 		OpDisableDomain:  disablePermission,
-		OpListDomains:    deletePermission,
 	}
 	return opPerm
 }

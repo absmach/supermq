@@ -242,6 +242,8 @@ definition domain {
 	relation team: team
 
 	relation update: role#member | team#member
+	relation enable: role#member | team#member
+	relation disable: role#member | team#member
 	relation membership: role#member | team#member
 	relation read: role#member | team#member
 	relation delete: role#member | team#member
@@ -252,6 +254,12 @@ definition domain {
 	relation view_role_users: role#member | team#member
 
 	relation thing_create: role#member | team#member
+	relation thing_list: role#member | team#member
+	relation channel_create: role#member | team#member
+	relation channel_list: role#member | team#member
+	relation group_create: role#member | team#member
+	relation group_list: role#member | team#member
+
 	relation thing_update: role#member | team#member
 	relation thing_read: role#member | team#member
 	relation thing_delete: role#member | team#member
@@ -263,7 +271,6 @@ definition domain {
 	relation thing_remove_role_users: role#member | team#member
 	relation thing_view_role_users: role#member | team#member
 
-	relation channel_create: role#member | team#member
 	relation channel_update: role#member | team#member
 	relation channel_read: role#member | team#member
 	relation channel_delete: role#member | team#member
@@ -277,7 +284,6 @@ definition domain {
 	relation channel_remove_role_users: role#member | team#member
 	relation channel_view_role_users: role#member | team#member
 
-	relation group_create: role#member | team#member
 	relation group_update: role#member | team#member
 	relation group_read: role#member | team#member
 	relation group_delete: role#member | team#member
@@ -291,6 +297,8 @@ definition domain {
 
 	permission update_permission = update + team->domain_update + organization->admin
 	permission read_permission = read + team->domain_read + organization->admin
+	permission enable_permission = enable + team->domain_update + organization->admin
+	permission disable_permission = disable + team->domain_update + organization->admin
 	permission membership_permission = membership + team->domain_membership + organization->admin
 	permission delete_permission = delete + team->domain_delete + organization->admin
 
@@ -345,6 +353,8 @@ definition team {
 	relation parent_team: team
 
 	relation delete: role#member
+	relation enable: role#member | team#member
+	relation disable: role#member | team#member
 	relation update: role#member
 	relation read: role#member
 
@@ -385,6 +395,12 @@ definition team {
 	relation domain_view_role_users: role#member | team#member
 
 	relation thing_create: role#member | team#member
+	relation thing_list: role#member | team#member
+	relation channel_create: role#member | team#member
+	relation channel_list: role#member | team#member
+	relation group_create: role#member | team#member
+	relation group_list: role#member | team#member
+
 	relation thing_update: role#member | team#member
 	relation thing_read: role#member | team#member
 	relation thing_delete: role#member | team#member
@@ -396,7 +412,6 @@ definition team {
 	relation thing_remove_role_users: role#member | team#member
 	relation thing_view_role_users: role#member | team#member
 
-	relation channel_create: role#member | team#member
 	relation channel_update: role#member | team#member
 	relation channel_read: role#member | team#member
 	relation channel_delete: role#member | team#member
@@ -410,7 +425,6 @@ definition team {
 	relation channel_remove_role_users: role#member | team#member
 	relation channel_view_role_users: role#member | team#member
 
-	relation group_create: role#member | team#member
 	relation group_update: role#member | team#member
 	relation group_read: role#member | team#member
 	relation group_delete: role#member | team#member

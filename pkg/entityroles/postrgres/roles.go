@@ -379,7 +379,7 @@ func (repo *RolesSvcRepo) RoleAddActions(ctx context.Context, role roles.Role, a
 }
 
 func (repo *RolesSvcRepo) RoleListActions(ctx context.Context, roleID string) ([]string, error) {
-	q := fmt.Sprintf(`SELECT %s_role_id, action FROM role_actions WHERE role_id = :role_id ;`, repo.tableNamePrefix)
+	q := fmt.Sprintf(`SELECT role_id, action FROM %s_role_actions WHERE role_id = :role_id ;`, repo.tableNamePrefix)
 
 	dbrcap := dbRoleAction{
 		RoleID: roleID,

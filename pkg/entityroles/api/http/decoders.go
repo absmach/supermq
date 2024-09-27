@@ -79,6 +79,12 @@ func DecodeDeleteRole(_ context.Context, r *http.Request) (interface{}, error) {
 	}
 	return req, nil
 }
+func DecodeListAvailableActions(_ context.Context, r *http.Request) (interface{}, error) {
+	req := listAvailableActionsReq{
+		token: apiutil.ExtractBearerToken(r),
+	}
+	return req, nil
+}
 
 func DecodeAddRoleActions(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {

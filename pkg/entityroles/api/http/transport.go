@@ -124,5 +124,12 @@ func RolesHandler(svc roles.Roles, entityTypePrefixRootPath string, r *chi.Mux, 
 
 	})
 
+	r.Get(fmt.Sprintf("%s/roles/available-actions", entityTypePrefixRootPath), otelhttp.NewHandler(kithttp.NewServer(
+		ListAvailableActionsEndpoint(svc),
+		DecodeListAvailableActions,
+		api.EncodeResponse,
+		opts...,
+	), "list_available_actions").ServeHTTP)
+
 	return r
 }

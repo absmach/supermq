@@ -12,9 +12,14 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 )
 
+const (
+	entityForeignKeyTableName  = "domains"
+	entityForeignKeyColumnName = "id"
+)
+
 // Migration of Auth service.
 func Migration() (*migrate.MemoryMigrationSource, error) {
-	rolesMigration, err := entityRolesRepo.Migration(rolesTableNamePrefix, "domains", "id")
+	rolesMigration, err := entityRolesRepo.Migration(rolesTableNamePrefix, entityForeignKeyTableName, entityForeignKeyColumnName)
 	if err != nil {
 		return &migrate.MemoryMigrationSource{}, errors.Wrap(repoerr.ErrRoleMigration, err)
 	}

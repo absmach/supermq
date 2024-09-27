@@ -76,6 +76,19 @@ func DeleteRoleEndpoint(svc roles.Roles) endpoint.Endpoint {
 		return deleteRoleRes{}, nil
 	}
 }
+func ListAvailableActionsEndpoint(svc roles.Roles) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(listAvailableActionsReq)
+		if err := req.validate(); err != nil {
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
+		}
+		acts, err := svc.ListAvailableActions(ctx, req.token)
+		if err != nil {
+			return nil, err
+		}
+		return listAvailableActionsRes{acts}, nil
+	}
+}
 func AddRoleActionsEndpoint(svc roles.Roles) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(addRoleActionsReq)

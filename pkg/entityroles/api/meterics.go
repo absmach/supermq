@@ -45,6 +45,9 @@ func (rmm *RolesSvcMetricsMiddleware) RetrieveRole(ctx context.Context, token, e
 func (rmm *RolesSvcMetricsMiddleware) RetrieveAllRoles(ctx context.Context, token, entityID string, limit, offset uint64) (roles.RolePage, error) {
 	return rmm.svc.RetrieveAllRoles(ctx, token, entityID, limit, offset)
 }
+func (rmm *RolesSvcMetricsMiddleware) ListAvailableActions(ctx context.Context, token string) ([]string, error) {
+	return rmm.svc.ListAvailableActions(ctx, token)
+}
 func (rmm *RolesSvcMetricsMiddleware) RoleAddActions(ctx context.Context, token, entityID, roleName string, actions []string) (caps []string, err error) {
 	return rmm.svc.RoleAddActions(ctx, token, entityID, roleName, actions)
 }

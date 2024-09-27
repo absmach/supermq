@@ -134,6 +134,23 @@ func (lm *RolesSvcLoggingMiddleware) RetrieveAllRoles(ctx context.Context, token
 	return lm.svc.RetrieveAllRoles(ctx, token, entityID, limit, offset)
 }
 
+func (lm *RolesSvcLoggingMiddleware) ListAvailableActions(ctx context.Context, token string) (acts []string, err error) {
+	prefix := fmt.Sprintf("List %s available actions", lm.svcName)
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.Group(lm.svcName + "_list_available_actions"),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn(prefix+" failed", args...)
+			return
+		}
+		lm.logger.Info(prefix+" completed successfully", args...)
+	}(time.Now())
+	return lm.svc.ListAvailableActions(ctx, token)
+}
+
 func (lm *RolesSvcLoggingMiddleware) RoleAddActions(ctx context.Context, token, entityID, roleName string, actions []string) (caps []string, err error) {
 	prefix := fmt.Sprintf("%s role add actions", lm.svcName)
 	defer func(begin time.Time) {

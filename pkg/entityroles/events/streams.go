@@ -43,6 +43,9 @@ func (res *RolesSvcEventStoreMiddleware) RetrieveRole(ctx context.Context, token
 func (res *RolesSvcEventStoreMiddleware) RetrieveAllRoles(ctx context.Context, token, entityID string, limit, offset uint64) (roles.RolePage, error) {
 	return res.svc.RetrieveAllRoles(ctx, token, entityID, limit, offset)
 }
+func (res *RolesSvcEventStoreMiddleware) ListAvailableActions(ctx context.Context, token string) ([]string, error) {
+	return res.svc.ListAvailableActions(ctx, token)
+}
 func (res *RolesSvcEventStoreMiddleware) RoleAddActions(ctx context.Context, token, entityID, roleName string, actions []string) (ops []string, err error) {
 	return res.svc.RoleAddActions(ctx, token, entityID, roleName, actions)
 }

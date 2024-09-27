@@ -111,6 +111,17 @@ func (req deleteRoleReq) validate() error {
 	return nil
 }
 
+type listAvailableActionsReq struct {
+	token string
+}
+
+func (req listAvailableActionsReq) validate() error {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
+	return nil
+}
+
 type addRoleActionsReq struct {
 	token    string
 	entityID string

@@ -41,16 +41,16 @@ func Migration(rolesTableNamePrefix, entityForeignKeyTableName, entityForeignKey
                         role_id     VARCHAR(254) NOT NULL,
                         action   VARCHAR(254) NOT NULL,
                         CONSTRAINT  unique_domain_role_action_constraint UNIQUE ( role_id, action),
-                        CONSTRAINT  fk_roles_id FOREIGN KEY(role_id) REFERENCES roles(id) ON DELETE CASCADE
+                        CONSTRAINT  fk_%s_roles_id FOREIGN KEY(role_id) REFERENCES %s_roles(id) ON DELETE CASCADE
 
-                    );`, rolesTableNamePrefix),
+                    );`, rolesTableNamePrefix, rolesTableNamePrefix, rolesTableNamePrefix),
 
 					fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s_role_members (
                         role_id     VARCHAR(254) NOT NULL,
                         member_id   VARCHAR(254) NOT NULL,
                         CONSTRAINT  unique_role_member_constraint UNIQUE (role_id, member_id),
-                        CONSTRAINT  fk_roles_id FOREIGN KEY(role_id) REFERENCES roles(id) ON DELETE CASCADE
-                    );`, rolesTableNamePrefix),
+                        CONSTRAINT  fk_%s_roles_id FOREIGN KEY(role_id) REFERENCES %s_roles(id) ON DELETE CASCADE
+                    );`, rolesTableNamePrefix, rolesTableNamePrefix, rolesTableNamePrefix),
 				},
 				Down: []string{
 					fmt.Sprintf(`DROP TABLE IF EXISTS %s_roles`, rolesTableNamePrefix),

@@ -159,10 +159,10 @@ func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domain
 
 	q := `SELECT d.id as id, d.name as name, d.tags as tags, d.alias as alias, d.metadata as metadata, d.created_at as created_at, d.updated_at as updated_at, d.updated_by as updated_by, d.created_by as created_by, d.status as status
 	FROM domains as d
-	JOIN roles r
-	ON r.entity_id = d.id
-	JOIN role_members rm
-	ON rm.role_id = r.id
+	JOIN domains_roles dr
+	ON dr.entity_id = d.id
+	JOIN domains_role_members drm
+	ON drm.role_id = dr.id
 	`
 
 	if pm.SubjectID == "" {
@@ -176,8 +176,6 @@ func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domain
 	if err != nil {
 		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
-	fmt.Println(q)
-	fmt.Printf("%+v\n", dbPage)
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
 		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
@@ -191,10 +189,10 @@ func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domain
 
 	cq := `SELECT COUNT(*)
 	FROM domains as d
-	JOIN roles r
-	ON r.entity_id = d.id
-	JOIN role_members rm
-	ON rm.role_id = r.id
+	JOIN domains_roles dr
+	ON dr.entity_id = d.id
+	JOIN domains_role_members drm
+	ON drm.role_id = dr.id
 	`
 	if pm.SubjectID == "" {
 		cq = `SELECT COUNT(*)
@@ -465,11 +463,11 @@ func buildPageQuery(pm domains.Page) (string, error) {
 	}
 
 	if pm.SubjectID != "" {
-		query = append(query, "rm.member_id = :subject_id")
+		query = append(query, "drm.member_id = :subject_id")
 	}
 
 	if pm.Permission != "" && pm.SubjectID != "" {
-		query = append(query, "r.name = :permission")
+		query = append(query, "dr.name = :permission")
 	}
 
 	if pm.Tag != "" {

@@ -44,6 +44,36 @@ func (_m *Roles) AddRole(ctx context.Context, token string, entityID string, rol
 	return r0, r1
 }
 
+// ListAvailableActions provides a mock function with given fields: ctx, token
+func (_m *Roles) ListAvailableActions(ctx context.Context, token string) ([]string, error) {
+	ret := _m.Called(ctx, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListAvailableActions")
+	}
+
+	var r0 []string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]string, error)); ok {
+		return rf(ctx, token)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) []string); ok {
+		r0 = rf(ctx, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, token)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RemoveRole provides a mock function with given fields: ctx, token, entityID, roleName
 func (_m *Roles) RemoveRole(ctx context.Context, token string, entityID string, roleName string) error {
 	ret := _m.Called(ctx, token, entityID, roleName)
