@@ -836,6 +836,72 @@ func TestUpdateClientSecret(t *testing.T) {
 	}
 }
 
+func TestUpdateClientIdentity(t *testing.T) {
+	svc, cRepo, _, _ := newService()
+
+	client2 := client
+	client2.Credentials.Identity = "updated@example.com"
+
+	cases := []struct {
+		desc                         string
+		identity                     string
+		token                        string
+		id                           string
+		updateClientIdentityResponse mgclients.Client
+		updateClientIdentityErr      error
+		checkSuperAdminErr           error
+		err                          error
+	}{
+		{
+			desc:                         "update client as normal user successfully",
+			identity:                     "updated@example.com",
+			token:                        validToken,
+			id:                           client.ID,
+			updateClientIdentityResponse: client2,
+			err:                          nil,
+		},
+		{
+			desc:                         "update client identity as normal user with repo error on update",
+			identity:                     "updated@example.com",
+			token:                        validToken,
+			id:                           client.ID,
+			updateClientIdentityResponse: mgclients.Client{},
+			updateClientIdentityErr:      errors.ErrMalformedEntity,
+			err:                          svcerr.ErrUpdateEntity,
+		},
+		{
+			desc:     "update client identity as admin successfully",
+			identity: "updated@example.com",
+			token:    validToken,
+			id:       client.ID,
+			err:      nil,
+		},
+		{
+			desc:                         "update client identity as admin with repo error on update",
+			identity:                     "updated@exmaple.com",
+			token:                        validToken,
+			id:                           client.ID,
+			updateClientIdentityResponse: mgclients.Client{},
+			updateClientIdentityErr:      errors.ErrMalformedEntity,
+			err:                          svcerr.ErrUpdateEntity,
+		},
+	}
+
+	for _, tc := range cases {
+		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
+		repoCall1 := cRepo.On("UpdateIdentity", context.Background(), mock.Anything).Return(tc.updateClientIdentityResponse, tc.updateClientIdentityErr)
+		updatedClient, err := svc.UpdateClientIdentity(context.Background(), auth.Session{DomainUserID: validID, UserID: validID, DomainID: validID}, tc.id, tc.identity)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Equal(t, tc.updateClientIdentityResponse, updatedClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateClientIdentityResponse, updatedClient))
+		if tc.err == nil {
+			ok := repoCall1.Parent.AssertCalled(t, "UpdateIdentity", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("UpdateIdentity was not called on %s", tc.desc))
+		}
+		repoCall.Unset()
+		repoCall1.Unset()
+	}
+}
+
 func TestEnableClient(t *testing.T) {
 	svc, cRepo, _, _ := newService()
 
