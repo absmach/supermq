@@ -6,6 +6,8 @@ package auth
 import "context"
 
 // Tokenizer specifies API for encoding and decoding between string and Key.
+//
+//go:generate mockery --name Tokenizer --output=./mocks --filename tokenizer.go --quiet --note "Copyright (c) Abstract Machines"
 type Tokenizer interface {
 	// Issue converts API Key to its string representation.
 	Issue(key Key) (token string, err error)
@@ -15,6 +17,9 @@ type Tokenizer interface {
 
 	// Revoke revokes the token.
 	Revoke(ctx context.Context, token string) error
+
+	// RetrieveJWKS returns the JSON Web Key Set.
+	RetrieveJWKS() (JWKS, error)
 }
 
 // TokenRepository specifies token persistence API.

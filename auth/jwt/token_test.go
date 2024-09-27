@@ -5,7 +5,11 @@ package jwt_test
 
 import (
 	"context"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -32,10 +36,10 @@ const (
 
 var (
 	errInvalidIssuer = errors.New("invalid token issuer value")
-	privateKeyPath   = "./docker/keys/private.key"
+	privateKeyPath   = "../../docker/keys/private.key"
 )
 
-func newToken(issuerName string, key auth.Key, privateKey) string {
+func newToken(issuerName string, key auth.Key) (string, error) {
 	builder := jwt.NewBuilder()
 	builder.
 		Issuer(issuerName).
@@ -53,8 +57,12 @@ func newToken(issuerName string, key auth.Key, privateKey) string {
 		builder.JwtID(key.ID)
 	}
 	tkn, _ := builder.Build()
-	tokn, _ := jwt.Sign(tkn, jwt.WithKey(jwa.HS512, reposecret))
-	return string(tokn)
+	privateKey, err := getPrivateKey(privateKeyPath)
+	if err != nil {
+		return "", err
+	}
+	tokn, _ := jwt.Sign(tkn, jwt.WithKey(jwa.RS256, privateKey))
+	return string(tokn), nil
 }
 
 func TestIssue(t *testing.T) {
@@ -136,39 +144,44 @@ func TestIssue(t *testing.T) {
 func TestParse(t *testing.T) {
 	repo := new(mocks.TokenRepository)
 	cache := new(mocks.Cache)
-	tokenizer := authjwt.New([]byte(secret), repo, cache)
+	tokenizer, err := authjwt.New(privateKeyPath, repo, cache)
+	require.Nil(t, err, fmt.Sprintf("creating tokenizer expected to succeed: %s", err))
 
-	// // 	token, err := tokenizer.Issue(key())
-	// // 	require.Nil(t, err, fmt.Sprintf("issuing key expected to succeed: %s", err))
+	token, err := tokenizer.Issue(key())
+	require.Nil(t, err, fmt.Sprintf("issuing key expected to succeed: %s", err))
 
-	// // 	apiKey := key()
-	// // 	apiKey.Type = auth.APIKey
-	// // 	apiKey.ExpiresAt = time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
-	// // 	apiToken, err := tokenizer.Issue(apiKey)
-	// // 	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+	apiKey := key()
+	apiKey.Type = auth.APIKey
+	apiKey.ExpiresAt = time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
+	apiToken, err := tokenizer.Issue(apiKey)
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
 
-	// // 	expKey := key()
-	// // 	expKey.ExpiresAt = time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
-	// // 	expToken, err := tokenizer.Issue(expKey)
-	// // 	require.Nil(t, err, fmt.Sprintf("issuing expired key expected to succeed: %s", err))
+	expKey := key()
+	expKey.ExpiresAt = time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
+	expToken, err := tokenizer.Issue(expKey)
+	require.Nil(t, err, fmt.Sprintf("issuing expired key expected to succeed: %s", err))
 
-	// // 	emptyDomainKey := key()
-	// // 	emptyDomainKey.Domain = ""
-	// // 	emptyDomainToken, err := tokenizer.Issue(emptyDomainKey)
-	// // 	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+	emptyDomainKey := key()
+	emptyDomainKey.Domain = ""
+	emptyDomainToken, err := tokenizer.Issue(emptyDomainKey)
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
 
-	// // 	emptySubjectKey := key()
-	// // 	emptySubjectKey.Subject = ""
-	// // 	emptySubjectToken, err := tokenizer.Issue(emptySubjectKey)
-	// // 	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+	emptySubjectKey := key()
+	emptySubjectKey.Subject = ""
+	emptySubjectToken, err := tokenizer.Issue(emptySubjectKey)
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
 
-	// // 	emptyKey := key()
-	// // 	emptyKey.Domain = ""
-	// // 	emptyKey.Subject = ""
-	// // 	emptyToken, err := tokenizer.Issue(emptyKey)
-	// // 	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+	emptyKey := key()
+	emptyKey.Domain = ""
+	emptyKey.Subject = ""
+	emptyToken, err := tokenizer.Issue(emptyKey)
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
 
-	inValidToken := newToken("invalid", key())
+	invalidToken, err := newToken("invalid", key())
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+
+	invalidContentToken, err := newToken(issuerName, key())
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
 
 	refreshKey := key()
 	refreshKey.Type = auth.RefreshKey
@@ -211,13 +224,13 @@ func TestParse(t *testing.T) {
 		{
 			desc:  "parse token with invalid issuer",
 			key:   auth.Key{},
-			token: inValidToken,
+			token: invalidToken,
 			err:   errInvalidIssuer,
 		},
 		{
 			desc:  "parse token with invalid content",
 			key:   auth.Key{},
-			token: newToken(issuerName, key()),
+			token: invalidContentToken,
 			err:   authjwt.ErrJSONHandle,
 		},
 		{
@@ -291,7 +304,8 @@ func TestParse(t *testing.T) {
 func TestRevoke(t *testing.T) {
 	repo := new(mocks.TokenRepository)
 	cache := new(mocks.Cache)
-	tokenizer := authjwt.New([]byte(secret), repo, cache)
+	tokenizer, err := authjwt.New(privateKeyPath, repo, cache)
+	require.Nil(t, err, fmt.Sprintf("creating tokenizer expected to succeed: %s", err))
 
 	token, err := tokenizer.Issue(key())
 	require.Nil(t, err, fmt.Sprintf("issuing key expected to succeed: %s", err))
@@ -323,7 +337,11 @@ func TestRevoke(t *testing.T) {
 	emptyToken, err := tokenizer.Issue(emptyKey)
 	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
 
-	inValidToken := newToken("invalid", key())
+	invalidToken, err := newToken("invalid", key())
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+
+	invalidContentToken, err := newToken(issuerName, key())
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
 
 	refreshKey := key()
 	refreshKey.Type = auth.RefreshKey
@@ -365,13 +383,13 @@ func TestRevoke(t *testing.T) {
 		{
 			desc:  "revoke token with invalid issuer",
 			key:   auth.Key{},
-			token: inValidToken,
+			token: invalidToken,
 			err:   errInvalidIssuer,
 		},
 		{
 			desc:  "revoke token with invalid content",
 			key:   auth.Key{},
-			token: newToken(issuerName, key()),
+			token: invalidContentToken,
 			err:   authjwt.ErrJSONHandle,
 		},
 		{
@@ -426,6 +444,18 @@ func TestRevoke(t *testing.T) {
 	}
 }
 
+func TestRetrieveJWKS(t *testing.T) {
+	repo := new(mocks.TokenRepository)
+	cache := new(mocks.Cache)
+	tokenizer, err := authjwt.New(privateKeyPath, repo, cache)
+	require.Nil(t, err, fmt.Sprintf("creating tokenizer expected to succeed: %s", err))
+
+	jwks, err := tokenizer.RetrieveJWKS()
+	require.Nil(t, err, fmt.Sprintf("retrieving JWKS expected to succeed: %s", err))
+	require.NotEmpty(t, jwks, "retrieving JWKS expected to return keys")
+}
+
+
 func key() auth.Key {
 	exp := time.Now().UTC().Add(10 * time.Minute).Round(time.Second)
 	return auth.Key{
@@ -436,4 +466,19 @@ func key() auth.Key {
 		IssuedAt:  time.Now().UTC().Add(-10 * time.Second).Round(time.Second),
 		ExpiresAt: exp,
 	}
+}
+
+func getPrivateKey(filePath string) (*rsa.PrivateKey, error) {
+	privKeyBytes, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+	block, _ := pem.Decode(privKeyBytes)
+	privKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	rsaKey := privKey.(*rsa.PrivateKey)
+
+	return rsaKey, nil
 }
