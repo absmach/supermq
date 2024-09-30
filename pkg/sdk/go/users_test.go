@@ -2276,8 +2276,8 @@ func TestListUserGroups(t *testing.T) {
 		err         errors.SDKError
 	}{
 		{
-			desc:  "list user groups successfully",
-			token: validToken,
+			desc:   "list user groups successfully",
+			token:  validToken,
 			userID: validID,
 			pageMeta: sdk.PageMetadata{
 				Offset: 0,
@@ -2346,8 +2346,8 @@ func TestListUserGroups(t *testing.T) {
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
-			desc:  "list user groups with invalid user id",
-			token: validToken,
+			desc:   "list user groups with invalid user id",
+			token:  validToken,
 			userID: wrongID,
 			pageMeta: sdk.PageMetadata{
 				Offset: 0,
@@ -2361,14 +2361,14 @@ func TestListUserGroups(t *testing.T) {
 				Permission: policies.ViewPermission,
 				Direction:  -1,
 			},
-			svcRes: groups.Page{},
-			svcErr: svcerr.ErrViewEntity,
+			svcRes:   groups.Page{},
+			svcErr:   svcerr.ErrViewEntity,
 			response: sdk.GroupsPage{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
 		},
 		{
-			desc:  "list user groups with page metadata that can't be marshalled",
-			token: validToken,
+			desc:   "list user groups with page metadata that can't be marshalled",
+			token:  validToken,
 			userID: validID,
 			pageMeta: sdk.PageMetadata{
 				Offset: 0,
@@ -2377,15 +2377,15 @@ func TestListUserGroups(t *testing.T) {
 					"test": make(chan int),
 				},
 			},
-			svcReq: groups.Page{},
-			svcRes: groups.Page{},
-			svcErr: nil,
+			svcReq:   groups.Page{},
+			svcRes:   groups.Page{},
+			svcErr:   nil,
 			response: sdk.GroupsPage{},
 			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
 		},
 		{
-			desc:  "list user groups with response that can't be unmarshalled",
-			token: validToken,
+			desc:   "list user groups with response that can't be unmarshalled",
+			token:  validToken,
 			userID: validID,
 			pageMeta: sdk.PageMetadata{
 				Offset: 0,
@@ -2411,7 +2411,7 @@ func TestListUserGroups(t *testing.T) {
 					},
 				}},
 			},
-			svcErr: nil,
+			svcErr:   nil,
 			response: sdk.GroupsPage{},
 			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
 		},

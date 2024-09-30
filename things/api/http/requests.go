@@ -47,7 +47,7 @@ func (req createClientsReq) validate() error {
 }
 
 type viewClientReq struct {
-	id    string
+	id string
 }
 
 func (req viewClientReq) validate() error {
@@ -131,8 +131,8 @@ func (req updateClientReq) validate() error {
 }
 
 type updateClientTagsReq struct {
-	id    string
-	Tags  []string `json:"tags,omitempty"`
+	id   string
+	Tags []string `json:"tags,omitempty"`
 }
 
 func (req updateClientTagsReq) validate() error {
@@ -160,7 +160,7 @@ func (req updateClientCredentialsReq) validate() error {
 }
 
 type changeClientStatusReq struct {
-	id    string
+	id string
 }
 
 func (req changeClientStatusReq) validate() error {

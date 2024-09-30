@@ -518,7 +518,7 @@ func deleteClientEndpoint(svc things.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		
+
 		session, ok := ctx.Value(api.SessionKey).(auth.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthorization

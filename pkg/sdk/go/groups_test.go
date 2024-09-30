@@ -1667,18 +1667,18 @@ func TestDeleteGroup(t *testing.T) {
 		err         errors.SDKError
 	}{
 		{
-			desc:  "delete group successfully",
-			token: validToken,
+			desc:    "delete group successfully",
+			token:   validToken,
 			groupID: group.ID,
 			svcErr:  nil,
-			err: nil,
+			err:     nil,
 		},
 		{
-			desc:  "delete group with invalid group id",
-			token: validToken,
+			desc:    "delete group with invalid group id",
+			token:   validToken,
 			groupID: wrongID,
 			svcErr:  svcerr.ErrRemoveEntity,
-			err: errors.NewSDKErrorWithStatus(svcerr.ErrRemoveEntity, http.StatusUnprocessableEntity),
+			err:     errors.NewSDKErrorWithStatus(svcerr.ErrRemoveEntity, http.StatusUnprocessableEntity),
 		},
 		{
 			desc:        "delete group with invalid token",
@@ -1695,11 +1695,11 @@ func TestDeleteGroup(t *testing.T) {
 			err:     errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
-			desc:  "delete group with empty id",
-			token: validToken,
+			desc:    "delete group with empty id",
+			token:   validToken,
 			groupID: "",
 			svcErr:  nil,
-			err: errors.NewSDKError(apiutil.ErrMissingID),
+			err:     errors.NewSDKError(apiutil.ErrMissingID),
 		},
 	}
 	for _, tc := range cases {
@@ -1743,15 +1743,15 @@ func TestAddUserToGroup(t *testing.T) {
 		err         errors.SDKError
 	}{
 		{
-			desc:  "add user to group successfully",
-			token: validToken,
+			desc:    "add user to group successfully",
+			token:   validToken,
 			groupID: group.ID,
 			addUserReq: sdk.UsersRelationRequest{
 				Relation: "member",
 				UserIDs:  []string{user.ID},
 			},
 			svcErr: nil,
-			err: nil,
+			err:    nil,
 		},
 		{
 			desc:    "add user to group with invalid token",
@@ -1776,48 +1776,48 @@ func TestAddUserToGroup(t *testing.T) {
 			err:    errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
-			desc:  "add user to group with invalid group id",
-			token: validToken,
+			desc:    "add user to group with invalid group id",
+			token:   validToken,
 			groupID: wrongID,
 			addUserReq: sdk.UsersRelationRequest{
 				Relation: "member",
 				UserIDs:  []string{user.ID},
 			},
 			svcErr: svcerr.ErrAuthorization,
-			err: errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			err:    errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
-			desc:  "add user to group with empty group id",
-			token: validToken,
+			desc:    "add user to group with empty group id",
+			token:   validToken,
 			groupID: "",
 			addUserReq: sdk.UsersRelationRequest{
 				Relation: "member",
 				UserIDs:  []string{user.ID},
 			},
 			svcErr: nil,
-			err: errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
 		},
 		{
-			desc:  "add users to group with empty relation",
-			token: validToken,
+			desc:    "add users to group with empty relation",
+			token:   validToken,
 			groupID: group.ID,
 			addUserReq: sdk.UsersRelationRequest{
 				Relation: "",
 				UserIDs:  []string{user.ID},
 			},
 			svcErr: nil,
-			err: errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRelation), http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRelation), http.StatusBadRequest),
 		},
 		{
-			desc:  "add users to group with empty user ids",
-			token: validToken,
+			desc:    "add users to group with empty user ids",
+			token:   validToken,
 			groupID: group.ID,
 			addUserReq: sdk.UsersRelationRequest{
 				Relation: "member",
 				UserIDs:  []string{},
 			},
 			svcErr: nil,
-			err: errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrEmptyList), http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrEmptyList), http.StatusBadRequest),
 		},
 	}
 	for _, tc := range cases {
@@ -1861,15 +1861,15 @@ func TestRemoveUserFromGroup(t *testing.T) {
 		err           errors.SDKError
 	}{
 		{
-			desc:  "remove user from group successfully",
-			token: validToken,
+			desc:    "remove user from group successfully",
+			token:   validToken,
 			groupID: group.ID,
 			removeUserReq: sdk.UsersRelationRequest{
 				Relation: "member",
 				UserIDs:  []string{user.ID},
 			},
 			svcErr: nil,
-			err: nil,
+			err:    nil,
 		},
 		{
 			desc:    "remove user from group with invalid token",
@@ -1894,37 +1894,37 @@ func TestRemoveUserFromGroup(t *testing.T) {
 			err:    errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
-			desc:  "remove user from group with invalid group id",
-			token: validToken,
+			desc:    "remove user from group with invalid group id",
+			token:   validToken,
 			groupID: wrongID,
 			removeUserReq: sdk.UsersRelationRequest{
 				Relation: "member",
 				UserIDs:  []string{user.ID},
 			},
 			svcErr: svcerr.ErrAuthorization,
-			err: errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			err:    errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
-			desc:  "remove user from group with empty group id",
-			token: validToken,
+			desc:    "remove user from group with empty group id",
+			token:   validToken,
 			groupID: "",
 			removeUserReq: sdk.UsersRelationRequest{
 				Relation: "member",
 				UserIDs:  []string{user.ID},
 			},
 			svcErr: nil,
-			err: errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
 		},
 		{
-			desc:  "remove users from group with empty user ids",
-			token: validToken,
+			desc:    "remove users from group with empty user ids",
+			token:   validToken,
 			groupID: group.ID,
 			removeUserReq: sdk.UsersRelationRequest{
 				Relation: "member",
 				UserIDs:  []string{},
 			},
 			svcErr: nil,
-			err: errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrEmptyList), http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrEmptyList), http.StatusBadRequest),
 		},
 	}
 	for _, tc := range cases {
