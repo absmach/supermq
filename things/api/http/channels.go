@@ -27,12 +27,10 @@ func groupsHandler(svc groups.Service, authn mgauthn.Authentication, r *chi.Mux,
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
 
-	checkSuperAdminMiddleware := api.CheckSuperAdminMiddleware(authClient)
 	r.Group(func(r chi.Router) {
 		r.Use(api.AuthenticateMiddleware(authn))
 
 		r.Route("/channels", func(r chi.Router) {
-			authzMiddleware := api.AuthorizeMiddleware(authClient, gapi.CreateGroupAuthReq)
 			r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
 				gapi.CreateGroupEndpoint(svc, policies.NewChannelKind),
 				gapi.DecodeGroupCreate,
@@ -40,7 +38,6 @@ func groupsHandler(svc groups.Service, authn mgauthn.Authentication, r *chi.Mux,
 				opts...,
 			), "create_channel").ServeHTTP)
 
-			authzMiddleware = api.AuthorizeMiddleware(authClient, gapi.ViewGroupAuthReq)
 			r.Get("/{groupID}", otelhttp.NewHandler(kithttp.NewServer(
 				gapi.ViewGroupEndpoint(svc),
 				gapi.DecodeGroupRequest,
@@ -48,7 +45,6 @@ func groupsHandler(svc groups.Service, authn mgauthn.Authentication, r *chi.Mux,
 				opts...,
 			), "view_channel").ServeHTTP)
 
-			authzMiddleware = api.AuthorizeMiddleware(authClient, gapi.DeleteGroupAuthReq)
 			r.Delete("/{groupID}", otelhttp.NewHandler(kithttp.NewServer(
 				gapi.DeleteGroupEndpoint(svc),
 				gapi.DecodeGroupRequest,
@@ -63,7 +59,6 @@ func groupsHandler(svc groups.Service, authn mgauthn.Authentication, r *chi.Mux,
 				opts...,
 			), "view_channel_permissions").ServeHTTP)
 
-			authzMiddleware = api.AuthorizeMiddleware(authClient, gapi.UpdateGroupAuthReq)
 			r.Put("/{groupID}", otelhttp.NewHandler(kithttp.NewServer(
 				gapi.UpdateGroupEndpoint(svc),
 				gapi.DecodeGroupUpdate,
@@ -71,7 +66,6 @@ func groupsHandler(svc groups.Service, authn mgauthn.Authentication, r *chi.Mux,
 				opts...,
 			), "update_channel").ServeHTTP)
 
-			authzMiddleware = api.AuthorizeMiddleware(authClient, gapi.ListGroupsByUserAuthReq)
 			r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
 				gapi.ListGroupsEndpoint(svc, "channels", "users"),
 				gapi.DecodeListGroupsRequest,
@@ -79,7 +73,6 @@ func groupsHandler(svc groups.Service, authn mgauthn.Authentication, r *chi.Mux,
 				opts...,
 			), "list_channels").ServeHTTP)
 
-			authzMiddleware = api.AuthorizeMiddleware(authClient, gapi.ChangeGroupStatusAuthReq)
 			r.Post("/{groupID}/enable", otelhttp.NewHandler(kithttp.NewServer(
 				gapi.EnableGroupEndpoint(svc),
 				gapi.DecodeChangeGroupStatus,
@@ -150,7 +143,6 @@ func groupsHandler(svc groups.Service, authn mgauthn.Authentication, r *chi.Mux,
 		// SpiceDB provides list of channel ids to which thing id attached
 		// and channel service can access spiceDB and get this channel ids list with given thing id.
 		// Request to get list of channels to which thingID ({memberID}) belongs
-		authzMiddleware := api.AuthorizeMiddleware(authClient, gapi.ListGroupsByThingAuthReq)
 		r.Get("/things/{memberID}/channels", otelhttp.NewHandler(kithttp.NewServer(
 			gapi.ListGroupsEndpoint(svc, "channels", "things"),
 			gapi.DecodeListGroupsRequest,
@@ -163,7 +155,6 @@ func groupsHandler(svc groups.Service, authn mgauthn.Authentication, r *chi.Mux,
 		// SpiceDB provides list of channel ids attached to given user id
 		// and channel service can access spiceDB and get this user ids list with given thing id.
 		// Request to get list of channels to which userID ({memberID}) have permission.
-		authzMiddleware = api.AuthorizeMiddleware(authClient, gapi.ListGroupsByUserAuthReq)
 		r.Get("/users/{memberID}/channels", otelhttp.NewHandler(kithttp.NewServer(
 			gapi.ListGroupsEndpoint(svc, "channels", "users"),
 			gapi.DecodeListGroupsRequest,
@@ -175,7 +166,6 @@ func groupsHandler(svc groups.Service, authn mgauthn.Authentication, r *chi.Mux,
 		// SpiceDB provides list of channel ids attached to given user_group id
 		// and channel service can access spiceDB and get this user ids list with given user_group id.
 		// Request to get list of channels to which user_group_id ({memberID}) attached.
-		authzMiddleware = api.AuthorizeMiddleware(authClient, gapi.ListGroupsByGroupAuthReq)
 		r.Get("/groups/{memberID}/channels", otelhttp.NewHandler(kithttp.NewServer(
 			gapi.ListGroupsEndpoint(svc, "channels", "groups"),
 			gapi.DecodeListGroupsRequest,

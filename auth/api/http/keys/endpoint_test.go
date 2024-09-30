@@ -4,6 +4,8 @@
 package keys_test
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,6 +17,7 @@ import (
 
 	"github.com/absmach/magistrala/auth"
 	httpapi "github.com/absmach/magistrala/auth/api/http"
+	"github.com/absmach/magistrala/auth/jwt"
 	"github.com/absmach/magistrala/auth/mocks"
 	"github.com/absmach/magistrala/internal/testsutil"
 	mglog "github.com/absmach/magistrala/logger"
@@ -73,7 +76,7 @@ func newService() (auth.Service, *mocks.KeyRepository) {
 	pService := new(policymocks.Service)
 	pEvaluator := new(policymocks.Evaluator)
 
-	t := jwt.New([]byte(secret))
+	t := jwt.New(getPrivateKey(&testing.T{}), trepo, cache)
 
 	return auth.New(krepo, drepo, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), krepo
 }
@@ -377,4 +380,10 @@ func TestRevokeToken(t *testing.T) {
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 		svcCall.Unset()
 	}
+}
+
+func getPrivateKey(t *testing.T) *rsa.PrivateKey {
+	rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	assert.Nil(t, err, fmt.Sprintf("generating RSA key expected to succeed: %s", err))
+	return rsaKey
 }
