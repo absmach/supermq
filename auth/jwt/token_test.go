@@ -5,11 +5,9 @@ package jwt_test
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -36,7 +34,7 @@ const (
 
 var (
 	errInvalidIssuer = errors.New("invalid token issuer value")
-	privateKeyPath   = "../../docker/keys/private.key"
+	privateKey       = getPrivateKey(&testing.T{})
 )
 
 func newToken(issuerName string, key auth.Key) (string, error) {
@@ -57,10 +55,6 @@ func newToken(issuerName string, key auth.Key) (string, error) {
 		builder.JwtID(key.ID)
 	}
 	tkn, _ := builder.Build()
-	privateKey, err := getPrivateKey(privateKeyPath)
-	if err != nil {
-		return "", err
-	}
 	tokn, _ := jwt.Sign(tkn, jwt.WithKey(jwa.RS256, privateKey))
 	return string(tokn), nil
 }
@@ -68,8 +62,7 @@ func newToken(issuerName string, key auth.Key) (string, error) {
 func TestIssue(t *testing.T) {
 	repo := new(mocks.TokenRepository)
 	cache := new(mocks.Cache)
-	tokenizer, err := authjwt.New(privateKeyPath, repo, cache)
-	require.Nil(t, err, fmt.Sprintf("creating tokenizer expected to succeed: %s", err))
+	tokenizer := authjwt.New(privateKey, repo, cache)
 
 	cases := []struct {
 		desc string
@@ -144,8 +137,7 @@ func TestIssue(t *testing.T) {
 func TestParse(t *testing.T) {
 	repo := new(mocks.TokenRepository)
 	cache := new(mocks.Cache)
-	tokenizer, err := authjwt.New(privateKeyPath, repo, cache)
-	require.Nil(t, err, fmt.Sprintf("creating tokenizer expected to succeed: %s", err))
+	tokenizer := authjwt.New(privateKey, repo, cache)
 
 	token, err := tokenizer.Issue(key())
 	require.Nil(t, err, fmt.Sprintf("issuing key expected to succeed: %s", err))
@@ -304,8 +296,7 @@ func TestParse(t *testing.T) {
 func TestRevoke(t *testing.T) {
 	repo := new(mocks.TokenRepository)
 	cache := new(mocks.Cache)
-	tokenizer, err := authjwt.New(privateKeyPath, repo, cache)
-	require.Nil(t, err, fmt.Sprintf("creating tokenizer expected to succeed: %s", err))
+	tokenizer := authjwt.New(privateKey, repo, cache)
 
 	token, err := tokenizer.Issue(key())
 	require.Nil(t, err, fmt.Sprintf("issuing key expected to succeed: %s", err))
@@ -447,14 +438,12 @@ func TestRevoke(t *testing.T) {
 func TestRetrieveJWKS(t *testing.T) {
 	repo := new(mocks.TokenRepository)
 	cache := new(mocks.Cache)
-	tokenizer, err := authjwt.New(privateKeyPath, repo, cache)
-	require.Nil(t, err, fmt.Sprintf("creating tokenizer expected to succeed: %s", err))
+	tokenizer := authjwt.New(privateKey, repo, cache)
 
 	jwks, err := tokenizer.RetrieveJWKS()
 	require.Nil(t, err, fmt.Sprintf("retrieving JWKS expected to succeed: %s", err))
 	require.NotEmpty(t, jwks, "retrieving JWKS expected to return keys")
 }
-
 
 func key() auth.Key {
 	exp := time.Now().UTC().Add(10 * time.Minute).Round(time.Second)
@@ -468,17 +457,8 @@ func key() auth.Key {
 	}
 }
 
-func getPrivateKey(filePath string) (*rsa.PrivateKey, error) {
-	privKeyBytes, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, err
-	}
-	block, _ := pem.Decode(privKeyBytes)
-	privKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, err
-	}
-	rsaKey := privKey.(*rsa.PrivateKey)
-
-	return rsaKey, nil
+func getPrivateKey(t *testing.T) *rsa.PrivateKey {
+	rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	assert.Nil(t, err, fmt.Sprintf("generating RSA key expected to succeed: %s", err))
+	return rsaKey
 }

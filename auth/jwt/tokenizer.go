@@ -6,13 +6,10 @@ package jwt
 import (
 	"context"
 	"crypto/rsa"
-	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"math/big"
-	"os"
 	"strconv"
 
 	"github.com/absmach/magistrala/auth"
@@ -35,8 +32,6 @@ var (
 	ErrJSONHandle = errors.New("failed to perform operation JSON")
 	// errRevokedToken indicates that the token is revoked.
 	errRevokedToken = errors.New("token is revoked")
-	// errReadPrivateKeyFile indicates an error in reading private key file.
-	errReadPrivateKeyFile = errors.New("failed to load key from private key file")
 )
 
 const (
@@ -59,18 +54,14 @@ type tokenizer struct {
 }
 
 // NewRepository instantiates an implementation of Token repository.
-func New(privateKeyPath string, repo auth.TokenRepository, cache auth.Cache) (auth.Tokenizer, error) {
-	privateKey, err := loadPrivateKey(privateKeyPath)
-	if err != nil {
-		return nil, err
-	}
+func New(privateKey *rsa.PrivateKey, repo auth.TokenRepository, cache auth.Cache) auth.Tokenizer {
 	publicKey := privateKey.Public().(*rsa.PublicKey)
 	return &tokenizer{
 		privateKey: privateKey,
 		publicKey:  publicKey,
 		repo:       repo,
 		cache:      cache,
-	}, nil
+	}
 }
 
 func (tok *tokenizer) Issue(key auth.Key) (string, error) {
@@ -191,10 +182,10 @@ func (tok *tokenizer) RetrieveJWKS() (auth.JWKS, error) {
 		N:   base64.RawURLEncoding.EncodeToString(tok.publicKey.N.Bytes()),
 		E:   base64.RawURLEncoding.EncodeToString(big.NewInt(int64(tok.publicKey.E)).Bytes()),
 	}
-
 	jwks := auth.JWKS{
 		Keys: []auth.JWK{jwk},
 	}
+
 	return jwks, nil
 }
 
@@ -225,28 +216,4 @@ func toKey(tkn jwt.Token) (auth.Key, error) {
 	key.ExpiresAt = tkn.Expiration()
 
 	return key, nil
-}
-
-func loadPrivateKey(filePath string) (*rsa.PrivateKey, error) {
-	privKeyBytes, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, errors.Wrap(errReadPrivateKeyFile, err)
-	}
-
-	block, _ := pem.Decode(privKeyBytes)
-	if block == nil || block.Type != "PRIVATE KEY" {
-		return nil, errors.Wrap(errReadPrivateKeyFile, errors.New("invalid file type"))
-	}
-
-	privKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, errors.Wrap(errReadPrivateKeyFile, err)
-	}
-
-	rsaKey, ok := privKey.(*rsa.PrivateKey)
-	if !ok {
-		return nil, errors.Wrap(errReadPrivateKeyFile, errors.New("invalid private key type"))
-	}
-
-	return rsaKey, nil
 }

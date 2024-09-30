@@ -5,6 +5,8 @@ package auth_test
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"fmt"
 	"testing"
 	"time"
@@ -56,7 +58,7 @@ var (
 		CreatedBy:  validID,
 		UpdatedBy:  validID,
 	}
-	privateKeyPath = "../docker/keys/private.key"
+	privateKey = getPrivateKey(&testing.T{})
 )
 
 var (
@@ -72,9 +74,8 @@ func newService() (auth.Service, *mocks.TokenRepository, *mocks.Cache, string) {
 	pService = new(policymocks.Service)
 	pEvaluator = new(policymocks.Evaluator)
 	idProvider := uuid.NewMock()
+	tokenizer := jwt.New(privateKey, trepo, cache)
 
-	tokenizer, err := jwt.New(privateKeyPath, trepo, cache)
-	assert.Nil(&testing.T{}, err, fmt.Sprintf("Issuing API key expected to succeed: %s", err))
 	key := auth.Key{
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(refreshDuration),
@@ -97,17 +98,14 @@ func newMinimalService() auth.Service {
 	policy = new(policymocks.PolicyClient)
 	idProvider := uuid.NewMock()
 
-	tokenizer, err := jwt.New(privateKeyPath, trepo, cache)
-	assert.Nil(&testing.T{}, err, fmt.Sprintf("Issuing API key expected to succeed: %s", err))
+	tokenizer := jwt.New(privateKey, trepo, cache)
 
 	return auth.New(krepo, drepo, idProvider, tokenizer, prepo, policy, loginDuration, refreshDuration, invalidDuration)
 }
 
 func TestIssue(t *testing.T) {
-	svc, accessToken := newService()
-
-	n, err := jwt.New(privateKeyPath)
-	assert.Nil(t, err, fmt.Sprintf("Issuing API key expected to succeed: %s", err))
+	svc, trepo, cache, accessToken := newService()
+	n := jwt.New(privateKey, trepo, cache)
 
 	apikey := auth.Key{
 		IssuedAt:  time.Now(),
@@ -400,6 +398,9 @@ func TestIssue(t *testing.T) {
 		checkDOmainPolicyReq policies.Policy
 		checkPolicyErr       error
 		retrieveByIDErr      error
+		cacheContains        bool
+		repoContains         bool
+		cacheSave            error
 		err                  error
 	}{
 		{
@@ -522,14 +523,17 @@ func TestIssue(t *testing.T) {
 		repoCall2 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDOmainPolicyReq).Return(tc.checkPolicyErr)
 		_, err := svc.Issue(context.Background(), tc.token, tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+		cacheCall.Unset()
+		cacheCall1.Unset()
 		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
+		repoCall3.Unset()
 	}
 }
 
 func TestRevoke(t *testing.T) {
-	svc, _ := newService(t)
+	svc := newMinimalService()
 	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, errIssueUser)
 	secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, IssuedAt: time.Now(), Subject: id})
 	repocall.Unset()
@@ -582,7 +586,7 @@ func TestRevoke(t *testing.T) {
 }
 
 func TestRetrieve(t *testing.T) {
-	svc, _ := newService(t)
+	svc := newMinimalService()
 	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, IssuedAt: time.Now(), Subject: id})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
@@ -651,8 +655,8 @@ func TestRetrieve(t *testing.T) {
 	}
 }
 
-// func TestIdentify(t *testing.T) {
-// 	svc, _ := newService()
+func TestIdentify(t *testing.T) {
+	svc, trepo, cache, _ := newService()
 
 	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	repocall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
@@ -661,103 +665,118 @@ func TestRetrieve(t *testing.T) {
 	repocall.Unset()
 	repocall1.Unset()
 
-// 	repocall2 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-// 	recoverySecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.RecoveryKey, IssuedAt: time.Now(), Subject: id})
-// 	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))
-// 	repocall2.Unset()
+	repocall2 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
+	recoverySecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.RecoveryKey, IssuedAt: time.Now(), Subject: id})
+	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))
+	repocall2.Unset()
 
-// 	repocall3 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-// 	apiSecret, err := svc.Issue(context.Background(), loginSecret.AccessToken, auth.Key{Type: auth.APIKey, Subject: id, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Minute)})
-// 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-// 	repocall3.Unset()
+	repocall3 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
+	apiSecret, err := svc.Issue(context.Background(), loginSecret.AccessToken, auth.Key{Type: auth.APIKey, Subject: id, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Minute)})
+	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
+	repocall3.Unset()
 
-// 	repocall4 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-// 	exp0 := time.Now().UTC().Add(-10 * time.Second).Round(time.Second)
-// 	exp1 := time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
-// 	expSecret, err := svc.Issue(context.Background(), loginSecret.AccessToken, auth.Key{Type: auth.APIKey, IssuedAt: exp0, ExpiresAt: exp1})
-// 	assert.Nil(t, err, fmt.Sprintf("Issuing expired login key expected to succeed: %s", err))
-// 	repocall4.Unset()
+	repocall4 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
+	exp0 := time.Now().UTC().Add(-10 * time.Second).Round(time.Second)
+	exp1 := time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
+	expSecret, err := svc.Issue(context.Background(), loginSecret.AccessToken, auth.Key{Type: auth.APIKey, IssuedAt: exp0, ExpiresAt: exp1})
+	assert.Nil(t, err, fmt.Sprintf("Issuing expired login key expected to succeed: %s", err))
+	repocall4.Unset()
 
-// 	te := jwt.New([]byte(secret))
-// 	key := auth.Key{
-// 		IssuedAt:  time.Now(),
-// 		ExpiresAt: time.Now().Add(refreshDuration),
-// 		Subject:   id,
-// 		Type:      7,
-// 		User:      email,
-// 		Domain:    groupName,
-// 	}
-// 	invalidTokenType, _ := te.Issue(key)
+	te := jwt.New(privateKey, trepo, cache)
+	key := auth.Key{
+		IssuedAt:  time.Now(),
+		ExpiresAt: time.Now().Add(refreshDuration),
+		Subject:   id,
+		Type:      7,
+		User:      email,
+		Domain:    groupName,
+	}
+	invalidTokenType, _ := te.Issue(key)
 
-// 	cases := []struct {
-// 		desc string
-// 		key  string
-// 		idt  string
-// 		err  error
-// 	}{
-// 		{
-// 			desc: "identify login key",
-// 			key:  loginSecret.AccessToken,
-// 			idt:  id,
-// 			err:  nil,
-// 		},
-// 		{
-// 			desc: "identify refresh key",
-// 			key:  loginSecret.RefreshToken,
-// 			idt:  id,
-// 			err:  nil,
-// 		},
-// 		{
-// 			desc: "identify recovery key",
-// 			key:  recoverySecret.AccessToken,
-// 			idt:  id,
-// 			err:  nil,
-// 		},
-// 		{
-// 			desc: "identify API key",
-// 			key:  apiSecret.AccessToken,
-// 			idt:  id,
-// 			err:  nil,
-// 		},
-// 		{
-// 			desc: "identify expired API key",
-// 			key:  expSecret.AccessToken,
-// 			idt:  "",
-// 			err:  auth.ErrKeyExpired,
-// 		},
-// 		{
-// 			desc: "identify API key with failed to retrieve",
-// 			key:  apiSecret.AccessToken,
-// 			idt:  "",
-// 			err:  svcerr.ErrAuthentication,
-// 		},
-// 		{
-// 			desc: "identify invalid key",
-// 			key:  "invalid",
-// 			idt:  "",
-// 			err:  svcerr.ErrAuthentication,
-// 		},
-// 		{
-// 			desc: "identify invalid key type",
-// 			key:  invalidTokenType,
-// 			idt:  "",
-// 			err:  svcerr.ErrAuthentication,
-// 		},
-// 	}
+	cases := []struct {
+		desc          string
+		key           string
+		idt           string
+		cacheContains bool
+		repoContains  bool
+		err           error
+	}{
+		{
+			desc: "identify login key",
+			key:  loginSecret.AccessToken,
+			idt:  id,
+			err:  nil,
+		},
+		{
+			desc: "identify refresh key",
+			key:  loginSecret.RefreshToken,
+			idt:  id,
+			err:  nil,
+		},
+		{
+			desc:         "identify revoked refresh key",
+			key:          loginSecret.RefreshToken,
+			idt:          "",
+			repoContains: true,
+			err:          svcerr.ErrAuthentication,
+		},
+		{
+			desc: "identify recovery key",
+			key:  recoverySecret.AccessToken,
+			idt:  id,
+			err:  nil,
+		},
+		{
+			desc: "identify API key",
+			key:  apiSecret.AccessToken,
+			idt:  id,
+			err:  nil,
+		},
+		{
+			desc: "identify expired API key",
+			key:  expSecret.AccessToken,
+			idt:  "",
+			err:  auth.ErrKeyExpired,
+		},
+		{
+			desc: "identify API key with failed to retrieve",
+			key:  apiSecret.AccessToken,
+			idt:  "",
+			err:  svcerr.ErrAuthentication,
+		},
+		{
+			desc: "identify invalid key",
+			key:  "invalid",
+			idt:  "",
+			err:  svcerr.ErrAuthentication,
+		},
+		{
+			desc: "identify invalid key type",
+			key:  invalidTokenType,
+			idt:  "",
+			err:  svcerr.ErrAuthentication,
+		},
+	}
 
-// 	for _, tc := range cases {
-// 		repocall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(auth.Key{}, tc.err)
-// 		repocall1 := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
-// 		idt, err := svc.Identify(context.Background(), tc.key)
-// 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-// 		assert.Equal(t, tc.idt, idt.Subject, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.idt, idt))
-// 		repocall.Unset()
-// 		repocall1.Unset()
-// 	}
-// }
+	for _, tc := range cases {
+		cacheCall := cache.On("Contains", context.Background(), "", mock.Anything).Return(tc.cacheContains)
+		repoCall := trepo.On("Contains", context.Background(), mock.Anything).Return(tc.repoContains)
+		repoCall1 := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(auth.Key{}, tc.err)
+		repoCall2 := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
+		cacheCall1 := cache.On("Save", context.Background(), "", mock.Anything).Return(nil)
+		idt, err := svc.Identify(context.Background(), tc.key)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Equal(t, tc.idt, idt.Subject, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.idt, idt))
+		repoCall.Unset()
+		repoCall1.Unset()
+		repoCall2.Unset()
+		cacheCall.Unset()
+		cacheCall1.Unset()
+	}
+}
 
-// func TestAuthorize(t *testing.T) {
-// 	svc, accessToken := newService(t)
+func TestAuthorize(t *testing.T) {
+	svc, trepo, cache, accessToken := newService()
 
 	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	repocall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
@@ -778,15 +797,15 @@ func TestRetrieve(t *testing.T) {
 	repocall2.Unset()
 	repocall3.Unset()
 
-// 	te := jwt.New([]byte(secret))
-// 	key := auth.Key{
-// 		IssuedAt:  time.Now(),
-// 		ExpiresAt: time.Now().Add(refreshDuration),
-// 		Subject:   id,
-// 		Type:      auth.AccessKey,
-// 		User:      email,
-// 	}
-// 	emptyDomain, _ := te.Issue(key)
+	te := jwt.New(privateKey, trepo, cache)
+	key := auth.Key{
+		IssuedAt:  time.Now(),
+		ExpiresAt: time.Now().Add(refreshDuration),
+		Subject:   id,
+		Type:      auth.AccessKey,
+		User:      email,
+	}
+	emptyDomain, _ := te.Issue(key)
 
 	cases := []struct {
 		desc                 string
@@ -1048,13 +1067,13 @@ func TestRetrieve(t *testing.T) {
 				Permission:  policies.MembershipPermission,
 			},
 
-// 			retrieveDomainRes: auth.Domain{
-// 				ID:     validID,
-// 				Name:   groupName,
-// 				Status: auth.AllStatus,
-// 			},
-// 			err: svcerr.ErrDomainAuthorization,
-// 		},
+			retrieveDomainRes: auth.Domain{
+				ID:     validID,
+				Name:   groupName,
+				Status: auth.AllStatus,
+			},
+			err: svcerr.ErrDomainAuthorization,
+		},
 
 		{
 			desc: "authorize an expired token",
@@ -1264,7 +1283,7 @@ func TestSwitchToPermission(t *testing.T) {
 }
 
 func TestCreateDomain(t *testing.T) {
-	svc, accessToken := newService(t)
+	svc, _, _, accessToken := newService()
 
 	cases := []struct {
 		desc              string
@@ -1389,7 +1408,7 @@ func TestCreateDomain(t *testing.T) {
 }
 
 func TestRetrieveDomain(t *testing.T) {
-	svc, accessToken := newService(t)
+	svc, _, _, accessToken := newService()
 
 	cases := []struct {
 		desc           string
@@ -1449,7 +1468,7 @@ func TestRetrieveDomain(t *testing.T) {
 }
 
 func TestRetrieveDomainPermissions(t *testing.T) {
-	svc, accessToken := newService(t)
+	svc, _, _, accessToken := newService()
 
 	cases := []struct {
 		desc                   string
@@ -1508,7 +1527,7 @@ func TestRetrieveDomainPermissions(t *testing.T) {
 }
 
 func TestUpdateDomain(t *testing.T) {
-	svc, accessToken := newService(t)
+	svc, _, _, accessToken := newService()
 
 	cases := []struct {
 		desc            string
@@ -1588,7 +1607,7 @@ func TestUpdateDomain(t *testing.T) {
 }
 
 func TestChangeDomainStatus(t *testing.T) {
-	svc, accessToken := newService(t)
+	svc, _, _, accessToken := newService()
 
 	disabledStatus := auth.DisabledStatus
 
@@ -1665,7 +1684,7 @@ func TestChangeDomainStatus(t *testing.T) {
 }
 
 func TestListDomains(t *testing.T) {
-	svc, accessToken := newService(t)
+	svc, _, _, accessToken := newService()
 
 	cases := []struct {
 		desc            string
@@ -1731,7 +1750,7 @@ func TestListDomains(t *testing.T) {
 }
 
 func TestAssignUsers(t *testing.T) {
-	svc, accessToken := newService(t)
+	svc, _, _, accessToken := newService()
 
 	cases := []struct {
 		desc                 string
@@ -2048,7 +2067,7 @@ func TestAssignUsers(t *testing.T) {
 }
 
 func TestUnassignUser(t *testing.T) {
-	svc, accessToken := newService(t)
+	svc, _, _, accessToken := newService()
 
 	cases := []struct {
 		desc                  string
@@ -2275,7 +2294,7 @@ func TestUnassignUser(t *testing.T) {
 }
 
 func TestListUsersDomains(t *testing.T) {
-	svc, accessToken := newService(t)
+	svc, _, _, accessToken := newService()
 
 	cases := []struct {
 		desc            string
@@ -2433,4 +2452,10 @@ func TestDecodeDomainUserID(t *testing.T) {
 		assert.Equal(t, tc.respUserID, er, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.respUserID, er))
 		assert.Equal(t, tc.respDomainID, ar, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.respDomainID, ar))
 	}
+}
+
+func getPrivateKey(t *testing.T) *rsa.PrivateKey {
+	rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	assert.Nil(t, err, fmt.Sprintf("generating RSA key expected to succeed: %s", err))
+	return rsaKey
 }
