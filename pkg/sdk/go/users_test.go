@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/absmach/magistrala"
-	mgauth "github.com/absmach/magistrala/auth"
 	internalapi "github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/internal/testsutil"
 	mglog "github.com/absmach/magistrala/logger"
@@ -1348,7 +1347,7 @@ func TestUpdateUserIdentity(t *testing.T) {
 }
 
 func TestResetPasswordRequest(t *testing.T) {
-	ts, svc, auth := setupUsers()
+	ts, svc, _ := setupUsers()
 	defer ts.Close()
 
 	defHost := "http://localhost"
@@ -1394,20 +1393,10 @@ func TestResetPasswordRequest(t *testing.T) {
 			issueRes: &magistrala.Token{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingEmail), http.StatusBadRequest),
 		},
-		{
-			desc:     "reset password with issue error",
-			email:    validEmail,
-			svcRes:   convertClient(user),
-			svcErr:   nil,
-			issueRes: &magistrala.Token{},
-			issueErr: svcerr.ErrAuthentication,
-			err:      errors.NewSDKErrorWithStatus(errors.New("failed to issue token"), http.StatusUnauthorized),
-		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			authCall := auth.On("Issue", mock.Anything, &magistrala.IssueReq{UserId: tc.svcRes.ID, Type: uint32(mgauth.RecoveryKey)}).Return(tc.issueRes, tc.issueErr)
-			svcCall := svc.On("GenerateResetToken", mock.Anything, tc.email, defHost).Return(tc.svcRes, tc.svcErr)
+			svcCall := svc.On("GenerateResetToken", mock.Anything, tc.email, defHost).Return(tc.svcErr)
 			svcCall1 := svc.On("SendPasswordReset", mock.Anything, mock.Anything, tc.email, user.Name, tc.issueRes.AccessToken).Return(nil)
 			err := mgsdk.ResetPasswordRequest(tc.email)
 			assert.Equal(t, tc.err, err)
@@ -1417,7 +1406,6 @@ func TestResetPasswordRequest(t *testing.T) {
 			}
 			svcCall.Unset()
 			svcCall1.Unset()
-			authCall.Unset()
 		})
 	}
 }
