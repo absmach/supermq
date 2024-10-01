@@ -86,7 +86,7 @@ func (es eventStore) ViewGroup(ctx context.Context, token, id string) (groups.Gr
 	return group, nil
 }
 
-func (es eventStore) ListGroups(ctx context.Context, token string, pm groups.Page) (groups.Page, error) {
+func (es eventStore) ListGroups(ctx context.Context, token string, pm groups.PageMeta) (groups.Page, error) {
 	gp, err := es.svc.ListGroups(ctx, token, pm)
 	if err != nil {
 		return gp, err
@@ -145,12 +145,12 @@ func (es eventStore) DeleteGroup(ctx context.Context, token, id string) error {
 	return nil
 }
 
-func (es eventStore) ListParentGroups(ctx context.Context, token, id string, gm groups.Page) (groups.Page, error) {
-	g, err := es.svc.ListParentGroups(ctx, token, id, gm)
+func (es eventStore) RetrieveGroupHierarchy(ctx context.Context, token, id string, hm groups.HierarchyPageMeta) (groups.HierarchyPage, error) {
+	g, err := es.svc.RetrieveGroupHierarchy(ctx, token, id, hm)
 	if err != nil {
 		return g, err
 	}
-	if err := es.Publish(ctx, listParentGroupsEvent{id, gm}); err != nil {
+	if err := es.Publish(ctx, retrieveGroupHierarchyEvent{id, hm}); err != nil {
 		return g, err
 	}
 	return g, nil
@@ -217,12 +217,12 @@ func (es eventStore) RemoveAllChildrenGroups(ctx context.Context, token, id stri
 	return nil
 }
 
-func (es eventStore) ListChildrenGroups(ctx context.Context, token, id string, gm groups.Page) (groups.Page, error) {
-	g, err := es.svc.ListChildrenGroups(ctx, token, id, gm)
+func (es eventStore) ListChildrenGroups(ctx context.Context, token, id string, pm groups.PageMeta) (groups.Page, error) {
+	g, err := es.svc.ListChildrenGroups(ctx, token, id, pm)
 	if err != nil {
 		return g, err
 	}
-	if err := es.Publish(ctx, listChildrenGroupsEvent{id, gm}); err != nil {
+	if err := es.Publish(ctx, listChildrenGroupsEvent{id, pm}); err != nil {
 		return g, err
 	}
 	return g, nil

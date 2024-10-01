@@ -214,9 +214,9 @@ func (_m *Service) ListAvailableActions(ctx context.Context, token string) ([]st
 	return r0, r1
 }
 
-// ListChildrenGroups provides a mock function with given fields: ctx, token, id, gm
-func (_m *Service) ListChildrenGroups(ctx context.Context, token string, id string, gm groups.Page) (groups.Page, error) {
-	ret := _m.Called(ctx, token, id, gm)
+// ListChildrenGroups provides a mock function with given fields: ctx, token, id, pm
+func (_m *Service) ListChildrenGroups(ctx context.Context, token string, id string, pm groups.PageMeta) (groups.Page, error) {
+	ret := _m.Called(ctx, token, id, pm)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListChildrenGroups")
@@ -224,17 +224,17 @@ func (_m *Service) ListChildrenGroups(ctx context.Context, token string, id stri
 
 	var r0 groups.Page
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, groups.Page) (groups.Page, error)); ok {
-		return rf(ctx, token, id, gm)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, groups.PageMeta) (groups.Page, error)); ok {
+		return rf(ctx, token, id, pm)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, groups.Page) groups.Page); ok {
-		r0 = rf(ctx, token, id, gm)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, groups.PageMeta) groups.Page); ok {
+		r0 = rf(ctx, token, id, pm)
 	} else {
 		r0 = ret.Get(0).(groups.Page)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, groups.Page) error); ok {
-		r1 = rf(ctx, token, id, gm)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, groups.PageMeta) error); ok {
+		r1 = rf(ctx, token, id, pm)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -242,9 +242,9 @@ func (_m *Service) ListChildrenGroups(ctx context.Context, token string, id stri
 	return r0, r1
 }
 
-// ListGroups provides a mock function with given fields: ctx, token, gm
-func (_m *Service) ListGroups(ctx context.Context, token string, gm groups.Page) (groups.Page, error) {
-	ret := _m.Called(ctx, token, gm)
+// ListGroups provides a mock function with given fields: ctx, token, pm
+func (_m *Service) ListGroups(ctx context.Context, token string, pm groups.PageMeta) (groups.Page, error) {
+	ret := _m.Called(ctx, token, pm)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListGroups")
@@ -252,45 +252,17 @@ func (_m *Service) ListGroups(ctx context.Context, token string, gm groups.Page)
 
 	var r0 groups.Page
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, groups.Page) (groups.Page, error)); ok {
-		return rf(ctx, token, gm)
+	if rf, ok := ret.Get(0).(func(context.Context, string, groups.PageMeta) (groups.Page, error)); ok {
+		return rf(ctx, token, pm)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, groups.Page) groups.Page); ok {
-		r0 = rf(ctx, token, gm)
+	if rf, ok := ret.Get(0).(func(context.Context, string, groups.PageMeta) groups.Page); ok {
+		r0 = rf(ctx, token, pm)
 	} else {
 		r0 = ret.Get(0).(groups.Page)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, groups.Page) error); ok {
-		r1 = rf(ctx, token, gm)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// ListParentGroups provides a mock function with given fields: ctx, token, id, gm
-func (_m *Service) ListParentGroups(ctx context.Context, token string, id string, gm groups.Page) (groups.Page, error) {
-	ret := _m.Called(ctx, token, id, gm)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ListParentGroups")
-	}
-
-	var r0 groups.Page
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, groups.Page) (groups.Page, error)); ok {
-		return rf(ctx, token, id, gm)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, groups.Page) groups.Page); ok {
-		r0 = rf(ctx, token, id, gm)
-	} else {
-		r0 = ret.Get(0).(groups.Page)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, groups.Page) error); ok {
-		r1 = rf(ctx, token, id, gm)
+	if rf, ok := ret.Get(1).(func(context.Context, string, groups.PageMeta) error); ok {
+		r1 = rf(ctx, token, pm)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -391,6 +363,34 @@ func (_m *Service) RetrieveAllRoles(ctx context.Context, token string, entityID 
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string, uint64, uint64) error); ok {
 		r1 = rf(ctx, token, entityID, limit, offset)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RetrieveGroupHierarchy provides a mock function with given fields: ctx, token, id, hm
+func (_m *Service) RetrieveGroupHierarchy(ctx context.Context, token string, id string, hm groups.HierarchyPageMeta) (groups.HierarchyPage, error) {
+	ret := _m.Called(ctx, token, id, hm)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveGroupHierarchy")
+	}
+
+	var r0 groups.HierarchyPage
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, groups.HierarchyPageMeta) (groups.HierarchyPage, error)); ok {
+		return rf(ctx, token, id, hm)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, groups.HierarchyPageMeta) groups.HierarchyPage); ok {
+		r0 = rf(ctx, token, id, hm)
+	} else {
+		r0 = ret.Get(0).(groups.HierarchyPage)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, groups.HierarchyPageMeta) error); ok {
+		r1 = rf(ctx, token, id, hm)
 	} else {
 		r1 = ret.Error(1)
 	}

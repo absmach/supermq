@@ -6,6 +6,7 @@ package http
 import (
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/magistrala/pkg/groups"
 	mggroups "github.com/absmach/magistrala/pkg/groups"
 )
 
@@ -47,16 +48,13 @@ func (req updateGroupReq) validate() error {
 }
 
 type listGroupsReq struct {
-	mggroups.Page
+	mggroups.PageMeta
 	token string
 }
 
 func (req listGroupsReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
-	}
-	if req.Level > mggroups.MaxLevel {
-		return apiutil.ErrInvalidLevel
 	}
 	if req.Limit > api.MaxLimitSize || req.Limit < 1 {
 		return apiutil.ErrLimitSize
@@ -96,21 +94,18 @@ func (req changeGroupStatusReq) validate() error {
 	return nil
 }
 
-type listParentGroupsReq struct {
-	mggroups.Page
+type retrieveGroupHierarchyReq struct {
+	mggroups.HierarchyPageMeta
 	id    string
 	token string
 }
 
-func (req listParentGroupsReq) validate() error {
+func (req retrieveGroupHierarchyReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
-	if req.Level > mggroups.MaxLevel {
-		return apiutil.ErrInvalidLevel
-	}
-	if req.Limit > api.MaxLimitSize || req.Limit < 1 {
-		return apiutil.ErrLimitSize
+	if req.Level > groups.MaxLevel {
+		return apiutil.ErrLevel
 	}
 
 	return nil
@@ -131,6 +126,9 @@ func (req addParentGroupReq) validate() error {
 	}
 	if err := api.ValidateUUID(req.ParentID); err != nil {
 		return err
+	}
+	if req.id == req.ParentID {
+		return apiutil.ErrSelfParentingNotAllowed
 	}
 	return nil
 }
@@ -182,8 +180,11 @@ func (req addChildrenGroupsReq) validate() error {
 		return apiutil.ErrMissingChildrenGroupIDs
 	}
 	for _, childID := range req.ChildrenIDs {
-		if err := api.ValidateUUID(childID); err == nil {
+		if err := api.ValidateUUID(childID); err != nil {
 			return err
+		}
+		if req.id == childID {
+			return apiutil.ErrSelfParentingNotAllowed
 		}
 	}
 	return nil
@@ -206,7 +207,7 @@ func (req removeChildrenGroupsReq) validate() error {
 		return apiutil.ErrMissingChildrenGroupIDs
 	}
 	for _, childID := range req.ChildrenIDs {
-		if err := api.ValidateUUID(childID); err == nil {
+		if err := api.ValidateUUID(childID); err != nil {
 			return err
 		}
 	}
@@ -231,7 +232,7 @@ func (req removeAllChildrenGroupsReq) validate() error {
 type listChildrenGroupsReq struct {
 	token string
 	id    string
-	mggroups.Page
+	mggroups.PageMeta
 }
 
 func (req listChildrenGroupsReq) validate() error {
@@ -240,9 +241,6 @@ func (req listChildrenGroupsReq) validate() error {
 	}
 	if req.id == "" {
 		return apiutil.ErrMissingID
-	}
-	if req.Level > mggroups.MaxLevel {
-		return apiutil.ErrInvalidLevel
 	}
 	if req.Limit > api.MaxLimitSize || req.Limit < 1 {
 		return apiutil.ErrLimitSize

@@ -34,14 +34,14 @@ func DecodeGroupCreate(_ context.Context, r *http.Request) (interface{}, error) 
 }
 
 func DecodeListGroupsRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	page, err := decodePage(r)
+	pm, err := decodePageMeta(r)
 	if err != nil {
 		return nil, err
 	}
 
 	req := listGroupsReq{
-		token: apiutil.ExtractBearerToken(r),
-		Page:  page,
+		token:    apiutil.ExtractBearerToken(r),
+		PageMeta: pm,
 	}
 	return req, nil
 }
@@ -76,42 +76,16 @@ func DecodeChangeGroupStatusRequest(_ context.Context, r *http.Request) (interfa
 	return req, nil
 }
 
-func decodeListParentsRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	pm, err := decodePageMeta(r)
+func decodeRetrieveGroupHierarchy(_ context.Context, r *http.Request) (interface{}, error) {
+	hm, err := decodeHierarchyPageMeta(r)
 	if err != nil {
 		return nil, err
 	}
 
-	level, err := apiutil.ReadNumQuery[uint64](r, api.LevelKey, api.DefLevel)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-
-	tree, err := apiutil.ReadBoolQuery(r, api.TreeKey, false)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	permission, err := apiutil.ReadStringQuery(r, api.PermissionKey, api.DefPermission)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-
-	listPerms, err := apiutil.ReadBoolQuery(r, api.ListPerms, api.DefListPerms)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	req := listParentGroupsReq{
-		token: apiutil.ExtractBearerToken(r),
-		id:    chi.URLParam(r, "groupID"),
-		Page: mggroups.Page{
-			Tree:               tree,
-			Level:              level,
-			ParentID:           chi.URLParam(r, "groupID"),
-			Permission:         permission,
-			PageMeta:           pm,
-			HierarchyDirection: +1,
-			ListPerms:          listPerms,
-		},
+	req := retrieveGroupHierarchyReq{
+		token:             apiutil.ExtractBearerToken(r),
+		id:                chi.URLParam(r, "groupID"),
+		HierarchyPageMeta: hm,
 	}
 	return req, nil
 }
@@ -189,83 +163,33 @@ func decodeListChildrenGroupsRequest(_ context.Context, r *http.Request) (interf
 		return nil, err
 	}
 
-	level, err := apiutil.ReadNumQuery[uint64](r, api.LevelKey, api.DefLevel)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-
-	tree, err := apiutil.ReadBoolQuery(r, api.TreeKey, false)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	permission, err := apiutil.ReadStringQuery(r, api.PermissionKey, api.DefPermission)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-
-	listPerms, err := apiutil.ReadBoolQuery(r, api.ListPerms, api.DefListPerms)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
 	req := listChildrenGroupsReq{
-		token: apiutil.ExtractBearerToken(r),
-		id:    chi.URLParam(r, "groupID"),
-		Page: mggroups.Page{
-			Tree:               tree,
-			Level:              level,
-			ParentID:           chi.URLParam(r, "groupID"),
-			Permission:         permission,
-			PageMeta:           pm,
-			HierarchyDirection: -1,
-			ListPerms:          listPerms,
-		},
+		token:    apiutil.ExtractBearerToken(r),
+		id:       chi.URLParam(r, "groupID"),
+		PageMeta: pm,
 	}
 	return req, nil
 }
 
-func decodePage(r *http.Request) (mggroups.Page, error) {
-	pm, err := decodePageMeta(r)
-	if err != nil {
-		return mggroups.Page{}, err
-	}
-
+func decodeHierarchyPageMeta(r *http.Request) (mggroups.HierarchyPageMeta, error) {
 	level, err := apiutil.ReadNumQuery[uint64](r, api.LevelKey, api.DefLevel)
 	if err != nil {
-		return mggroups.Page{}, errors.Wrap(apiutil.ErrValidation, err)
-	}
-
-	parentID, err := apiutil.ReadStringQuery(r, api.ParentKey, "")
-	if err != nil {
-		return mggroups.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		return mggroups.HierarchyPageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	tree, err := apiutil.ReadBoolQuery(r, api.TreeKey, false)
 	if err != nil {
-		return mggroups.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		return mggroups.HierarchyPageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	hierarchyDir, err := apiutil.ReadNumQuery[int64](r, api.HierarchyDirKey, -1)
+	hierarchyDir, err := apiutil.ReadNumQuery[int64](r, api.DirKey, -1)
 	if err != nil {
-		return mggroups.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		return mggroups.HierarchyPageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
-	permission, err := apiutil.ReadStringQuery(r, api.PermissionKey, api.DefPermission)
-	if err != nil {
-		return mggroups.Page{}, errors.Wrap(apiutil.ErrValidation, err)
-	}
-
-	listPerms, err := apiutil.ReadBoolQuery(r, api.ListPerms, api.DefListPerms)
-	if err != nil {
-		return mggroups.Page{}, errors.Wrap(apiutil.ErrValidation, err)
-	}
-
-	return mggroups.Page{
-		Level:              level,
-		ParentID:           parentID,
-		Permission:         permission,
-		PageMeta:           pm,
-		HierarchyDirection: hierarchyDir,
-		ListPerms:          listPerms,
-		Tree:               tree,
+	return mggroups.HierarchyPageMeta{
+		Level:     level,
+		Direction: hierarchyDir,
+		Tree:      tree,
 	}, nil
 }
 func decodePageMeta(r *http.Request) (mggroups.PageMeta, error) {
@@ -297,14 +221,23 @@ func decodePageMeta(r *http.Request) (mggroups.PageMeta, error) {
 	if err != nil {
 		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-
+	permission, err := apiutil.ReadStringQuery(r, api.PermissionKey, api.DefPermission)
+	if err != nil {
+		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	listPerms, err := apiutil.ReadBoolQuery(r, api.ListPerms, api.DefListPerms)
+	if err != nil {
+		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
 	ret := mggroups.PageMeta{
-		Offset:   offset,
-		Limit:    limit,
-		Name:     name,
-		ID:       id,
-		Metadata: meta,
-		Status:   st,
+		Offset:     offset,
+		Limit:      limit,
+		Name:       name,
+		ID:         id,
+		Metadata:   meta,
+		Status:     st,
+		Permission: permission,
+		ListPerms:  listPerms,
 	}
 	return ret, nil
 }

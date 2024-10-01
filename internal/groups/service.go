@@ -19,7 +19,6 @@ import (
 	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/roles"
 	"github.com/absmach/magistrala/pkg/svcutil"
-	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -63,7 +62,7 @@ func NewService(g groups.Repository, idp magistrala.IDProvider, authClient grpcc
 	}, nil
 }
 
-func (svc service) CreateGroup(ctx context.Context, token, kind string, g groups.Group) (gr groups.Group, err error) {
+func (svc service) CreateGroup(ctx context.Context, token, kind string, g groups.Group) (gr groups.Group, retErr error) {
 	userInfo, err := svc.identify(ctx, token)
 	if err != nil {
 		return groups.Group{}, err
@@ -108,9 +107,9 @@ func (svc service) CreateGroup(ctx context.Context, token, kind string, g groups
 		return groups.Group{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	defer func() {
-		if err != nil {
+		if retErr != nil {
 			if errRollback := svc.groups.Delete(ctx, saved.ID); errRollback != nil {
-				err = errors.Wrap(errors.Wrap(errors.ErrRollbackTx, errRollback), err)
+				retErr = errors.Wrap(retErr, errors.Wrap(errors.ErrRollbackTx, errRollback))
 			}
 		}
 	}()
@@ -170,7 +169,7 @@ func (svc service) ViewGroup(ctx context.Context, token, id string) (groups.Grou
 	return group, nil
 }
 
-func (svc service) ListGroups(ctx context.Context, token string, gm groups.Page) (groups.Page, error) {
+func (svc service) ListGroups(ctx context.Context, token string, pm groups.PageMeta) (groups.Page, error) {
 	userInfo, err := svc.identify(ctx, token)
 	if err != nil {
 		return groups.Page{}, err
@@ -178,44 +177,18 @@ func (svc service) ListGroups(ctx context.Context, token string, gm groups.Page)
 
 	var ids []string
 
-	gm.PageMeta.DomainID = userInfo.DomainID
 	if err := svc.checkSuperAdmin(ctx, userInfo.ID); err != nil {
-		// If domain is disabled , then this authorization will fail for all non-admin domain users
-		if err := svc.authorize(ctx, groups.OpListGroups, &magistrala.AuthorizeReq{
-			Domain:      userInfo.DomainID,
-			SubjectType: auth.UserType,
-			Subject:     userInfo.ID,
-			Object:      userInfo.DomainID,
-			ObjectType:  auth.DomainType,
-		}); err != nil {
-			return groups.Page{}, err
-		}
-		ids, err = svc.listAllGroupsOfUserID(ctx, userInfo.ID, gm.Permission)
+		ids, err = svc.listAllGroupsOfUserID(ctx, userInfo.ID, pm.Permission)
 		if err != nil {
 			return groups.Page{}, err
 		}
 	}
 
-	gp, err := svc.groups.RetrieveByIDs(ctx, gm, ids...)
+	gp, err := svc.groups.RetrieveByIDs(ctx, pm, ids...)
 	if err != nil {
 		return groups.Page{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	if gm.ListPerms && len(gp.Groups) > 0 {
-		g, ctx := errgroup.WithContext(ctx)
-
-		for i := range gp.Groups {
-			// Copying loop variable "i" to avoid "loop variable captured by func literal"
-			iter := i
-			g.Go(func() error {
-				return svc.retrievePermissions(ctx, userInfo.ID, &gp.Groups[iter])
-			})
-		}
-
-		if err := g.Wait(); err != nil {
-			return groups.Page{}, err
-		}
-	}
 	return gp, nil
 }
 
@@ -340,26 +313,68 @@ func (svc service) DisableGroup(ctx context.Context, token, id string) (groups.G
 	return group, nil
 }
 
-func (svc service) ListParentGroups(ctx context.Context, token, id string, gm groups.Page) (groups.Page, error) {
+func (svc service) RetrieveGroupHierarchy(ctx context.Context, token, id string, hm groups.HierarchyPageMeta) (groups.HierarchyPage, error) {
 	userInfo, err := svc.identify(ctx, token)
 	if err != nil {
-		return groups.Page{}, err
+		return groups.HierarchyPage{}, err
 	}
 
-	if err := svc.authorize(ctx, groups.OpListParentGroups, &magistrala.AuthorizeReq{
+	if err := svc.authorize(ctx, groups.OpRetrieveGroupHierarchy, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		SubjectType: auth.UserType,
 		Subject:     userInfo.ID,
 		Object:      id,
 		ObjectType:  auth.GroupType,
 	}); err != nil {
-		return groups.Page{}, err
+		return groups.HierarchyPage{}, err
 	}
 
-	return groups.Page{}, nil
+	hp, err := svc.groups.RetrieveHierarchy(ctx, id, hm)
+	if err != nil {
+		return groups.HierarchyPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
+	}
+	hids := svc.getGroupIDs(hp.Groups)
+	ids, err := svc.filterAllowedGroupIDsOfUserID(ctx, userInfo.ID, "read_permission", hids)
+	if err != nil {
+		return groups.HierarchyPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
+	}
+	hp.Groups = svc.allowedGroups(hp.Groups, ids)
+	return hp, nil
 }
 
-func (svc service) AddParentGroup(ctx context.Context, token, id, parentID string) error {
+func (svc service) allowedGroups(gps []groups.Group, ids []string) []groups.Group {
+	aIDs := make(map[string]struct{}, len(ids))
+
+	for _, id := range ids {
+		aIDs[id] = struct{}{}
+	}
+
+	aGroups := []groups.Group{}
+	for _, g := range gps {
+		ag := g
+		if _, ok := aIDs[g.ID]; !ok {
+			ag = groups.Group{ID: "xxxx-xxxx-xxxx-xxxx", Level: g.Level}
+		}
+		aGroups = append(aGroups, ag)
+	}
+	return aGroups
+}
+func (svc service) getGroupIDs(gps []groups.Group) []string {
+	hids := []string{}
+	for _, g := range gps {
+		hids = append(hids, g.ID)
+		if len(g.Children) > 0 {
+			children := make([]groups.Group, len(g.Children))
+			for i, child := range g.Children {
+				children[i] = *child
+			}
+			cids := svc.getGroupIDs(children)
+			hids = append(hids, cids...)
+		}
+	}
+	return hids
+}
+func (svc service) AddParentGroup(ctx context.Context, token, id, parentID string) (retErr error) {
 	userInfo, err := svc.identify(ctx, token)
 	if err != nil {
 		return err
@@ -416,9 +431,9 @@ func (svc service) AddParentGroup(ctx context.Context, token, id, parentID strin
 		return errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
 	defer func() {
-		if err != nil {
+		if retErr != nil {
 			if _, errRollback := svc.policy.DeletePolicies(ctx, &deletePolicies); errRollback != nil {
-				err = errors.Wrap(err, errors.Wrap(apiutil.ErrRollbackTx, errRollback))
+				retErr = errors.Wrap(retErr, errors.Wrap(apiutil.ErrRollbackTx, errRollback))
 			}
 		}
 	}()
@@ -429,7 +444,7 @@ func (svc service) AddParentGroup(ctx context.Context, token, id, parentID strin
 	return nil
 }
 
-func (svc service) RemoveParentGroup(ctx context.Context, token, id string) error {
+func (svc service) RemoveParentGroup(ctx context.Context, token, id string) (retErr error) {
 	userInfo, err := svc.identify(ctx, token)
 	if err != nil {
 		return err
@@ -485,9 +500,9 @@ func (svc service) RemoveParentGroup(ctx context.Context, token, id string) erro
 			return errors.Wrap(svcerr.ErrDeletePolicies, err)
 		}
 		defer func() {
-			if err != nil {
-				if _, errRollback := svc.policy.AddPolicies(ctx, &addPolicies); errRollback != nil {
-					err = errors.Wrap(err, errors.Wrap(apiutil.ErrRollbackTx, errRollback))
+			if retErr != nil {
+				if _, errRollback := svc.policy.DeletePolicies(ctx, &deletePolicies); errRollback != nil {
+					retErr = errors.Wrap(retErr, errors.Wrap(apiutil.ErrRollbackTx, errRollback))
 				}
 			}
 		}()
@@ -518,6 +533,10 @@ func (svc service) ViewParentGroup(ctx context.Context, token, id string) (group
 	if err != nil {
 		return groups.Group{}, err
 	}
+
+	if g.Parent == "" {
+		return groups.Group{}, nil
+	}
 	if err := svc.authorize(ctx, groups.OpViewGroup, &magistrala.AuthorizeReq{
 		Domain:      userInfo.DomainID,
 		SubjectType: auth.UserType,
@@ -536,7 +555,7 @@ func (svc service) ViewParentGroup(ctx context.Context, token, id string) (group
 
 }
 
-func (svc service) AddChildrenGroups(ctx context.Context, token, parentGroupID string, childrenGroupIDs []string) error {
+func (svc service) AddChildrenGroups(ctx context.Context, token, parentGroupID string, childrenGroupIDs []string) (retErr error) {
 	userInfo, err := svc.identify(ctx, token)
 	if err != nil {
 		return err
@@ -552,7 +571,7 @@ func (svc service) AddChildrenGroups(ctx context.Context, token, parentGroupID s
 		return err
 	}
 
-	childrenGroupsPage, err := svc.groups.RetrieveByIDs(ctx, groups.Page{PageMeta: groups.PageMeta{Limit: 1<<63 - 1}}, childrenGroupIDs...)
+	childrenGroupsPage, err := svc.groups.RetrieveByIDs(ctx, groups.PageMeta{Limit: 1<<63 - 1}, childrenGroupIDs...)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
@@ -561,6 +580,9 @@ func (svc service) AddChildrenGroups(ctx context.Context, token, parentGroupID s
 	}
 
 	for _, childGroup := range childrenGroupsPage.Groups {
+		if childGroup.Parent != "" {
+			return errors.Wrap(svcerr.ErrConflict, fmt.Errorf("%s group already have parent", childGroup.ID))
+		}
 		if err := svc.authorize(ctx, groups.OpAddParentGroup, &magistrala.AuthorizeReq{
 			Domain:      userInfo.DomainID,
 			SubjectType: auth.UserType,
@@ -575,9 +597,6 @@ func (svc service) AddChildrenGroups(ctx context.Context, token, parentGroupID s
 	var addPolicies magistrala.AddPoliciesReq
 	var deletePolicies magistrala.DeletePoliciesReq
 	for _, childGroup := range childrenGroupsPage.Groups {
-		if childGroup.Parent != "" {
-			return errors.Wrap(svcerr.ErrConflict, fmt.Errorf("%s group already have parent", childGroup.ID))
-		}
 		addPolicies.AddPoliciesReq = append(addPolicies.AddPoliciesReq, &magistrala.AddPolicyReq{
 			Domain:      userInfo.DomainID,
 			SubjectType: auth.GroupType,
@@ -600,9 +619,9 @@ func (svc service) AddChildrenGroups(ctx context.Context, token, parentGroupID s
 		return errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
 	defer func() {
-		if err != nil {
+		if retErr != nil {
 			if _, errRollback := svc.policy.DeletePolicies(ctx, &deletePolicies); errRollback != nil {
-				err = errors.Wrap(err, errors.Wrap(apiutil.ErrRollbackTx, errRollback))
+				retErr = errors.Wrap(retErr, errors.Wrap(apiutil.ErrRollbackTx, errRollback))
 			}
 		}
 	}()
@@ -610,7 +629,7 @@ func (svc service) AddChildrenGroups(ctx context.Context, token, parentGroupID s
 	return svc.groups.AssignParentGroup(ctx, parentGroupID, childrenGroupIDs...)
 }
 
-func (svc service) RemoveChildrenGroups(ctx context.Context, token, parentGroupID string, childrenGroupIDs []string) error {
+func (svc service) RemoveChildrenGroups(ctx context.Context, token, parentGroupID string, childrenGroupIDs []string) (retErr error) {
 	userInfo, err := svc.identify(ctx, token)
 	if err != nil {
 		return err
@@ -626,7 +645,7 @@ func (svc service) RemoveChildrenGroups(ctx context.Context, token, parentGroupI
 		return err
 	}
 
-	childrenGroupsPage, err := svc.groups.RetrieveByIDs(ctx, groups.Page{PageMeta: groups.PageMeta{Limit: 1<<63 - 1}}, childrenGroupIDs...)
+	childrenGroupsPage, err := svc.groups.RetrieveByIDs(ctx, groups.PageMeta{Limit: 1<<63 - 1}, childrenGroupIDs...)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
@@ -662,9 +681,9 @@ func (svc service) RemoveChildrenGroups(ctx context.Context, token, parentGroupI
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
 	}
 	defer func() {
-		if err != nil {
+		if retErr != nil {
 			if _, errRollback := svc.policy.AddPolicies(ctx, &addPolicies); errRollback != nil {
-				err = errors.Wrap(err, errors.Wrap(apiutil.ErrRollbackTx, errRollback))
+				retErr = errors.Wrap(retErr, errors.Wrap(apiutil.ErrRollbackTx, errRollback))
 			}
 		}
 	}()
@@ -703,7 +722,7 @@ func (svc service) RemoveAllChildrenGroups(ctx context.Context, token, id string
 	return svc.groups.UnassignAllChildrenGroup(ctx, id)
 }
 
-func (svc service) ListChildrenGroups(ctx context.Context, token, id string, gm groups.Page) (groups.Page, error) {
+func (svc service) ListChildrenGroups(ctx context.Context, token, id string, pm groups.PageMeta) (groups.Page, error) {
 	userInfo, err := svc.identify(ctx, token)
 	if err != nil {
 		return groups.Page{}, err
@@ -718,7 +737,26 @@ func (svc service) ListChildrenGroups(ctx context.Context, token, id string, gm 
 	}); err != nil {
 		return groups.Page{}, err
 	}
-	return groups.Page{}, nil
+
+	cids, err := svc.policy.ListAllObjects(ctx, &magistrala.ListObjectsReq{
+		SubjectType: auth.GroupType,
+		Subject:     id,
+		Permission:  auth.ParentGroupRelation,
+		ObjectType:  auth.GroupType,
+	})
+	if err != nil {
+		return groups.Page{}, err
+	}
+
+	ids, err := svc.filterAllowedGroupIDsOfUserID(ctx, userInfo.ID, pm.Permission, cids.Policies)
+	if err != nil {
+		return groups.Page{}, errors.Wrap(svcerr.ErrViewEntity, err)
+	}
+	gp, err := svc.groups.RetrieveByIDs(ctx, pm, ids...)
+	if err != nil {
+		return groups.Page{}, errors.Wrap(svcerr.ErrViewEntity, err)
+	}
+	return gp, nil
 }
 
 // func (svc service) AddChannels(ctx context.Context, token, id string, channelIDs []string) error {

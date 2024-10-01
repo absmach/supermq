@@ -32,12 +32,9 @@ func TestDecodeListGroupsRequest(t *testing.T) {
 			url:    "http://localhost:8080",
 			header: map[string][]string{},
 			resp: listGroupsReq{
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Limit: 10,
-					},
-					Permission:         api.DefPermission,
-					HierarchyDirection: -1,
+				PageMeta: groups.PageMeta{
+					Limit:      10,
+					Permission: api.DefPermission,
 				},
 			},
 			err: nil,
@@ -49,22 +46,16 @@ func TestDecodeListGroupsRequest(t *testing.T) {
 				"Authorization": {"Bearer 123"},
 			},
 			resp: listGroupsReq{
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Status: clients.EnabledStatus,
-						Offset: 10,
-						Limit:  10,
-						Name:   "random",
-						Metadata: clients.Metadata{
-							"test": "test",
-						},
+				PageMeta: groups.PageMeta{
+					Status:     clients.EnabledStatus,
+					Offset:     10,
+					Limit:      10,
+					Name:       "random",
+					ListPerms:  true,
+					Permission: "random",
+					Metadata: clients.Metadata{
+						"test": "test",
 					},
-					Level:              2,
-					ParentID:           "random",
-					Permission:         "random",
-					HierarchyDirection: -1,
-					ListPerms:          true,
-					Tree:               true,
 				},
 				token: "123",
 			},
@@ -134,7 +125,7 @@ func TestDecodeListGroupsRequest(t *testing.T) {
 	}
 }
 
-func TestDecodeListParentsRequest(t *testing.T) {
+func TestDecodeRetrieveGroupHierarchy(t *testing.T) {
 	cases := []struct {
 		desc   string
 		url    string
@@ -146,14 +137,8 @@ func TestDecodeListParentsRequest(t *testing.T) {
 			desc:   "valid request with no parameters",
 			url:    "http://localhost:8080",
 			header: map[string][]string{},
-			resp: listGroupsReq{
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Limit: 10,
-					},
-					Permission:         api.DefPermission,
-					HierarchyDirection: +1,
-				},
+			resp: retrieveGroupHierarchyReq{
+				HierarchyPageMeta: groups.HierarchyPageMeta{},
 			},
 			err: nil,
 		},
@@ -163,24 +148,8 @@ func TestDecodeListParentsRequest(t *testing.T) {
 			header: map[string][]string{
 				"Authorization": {"Bearer 123"},
 			},
-			resp: listGroupsReq{
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Status: clients.EnabledStatus,
-						Offset: 10,
-						Limit:  10,
-						Name:   "random",
-						Metadata: clients.Metadata{
-							"test": "test",
-						},
-					},
-					Level:              2,
-					Permission:         "random",
-					HierarchyDirection: +1,
-					ListPerms:          true,
-					Tree:               true,
-				},
-				token: "123",
+			resp: retrieveGroupHierarchyReq{
+				HierarchyPageMeta: groups.HierarchyPageMeta{},
 			},
 			err: nil,
 		},
@@ -224,7 +193,7 @@ func TestDecodeListParentsRequest(t *testing.T) {
 			URL:    parsedURL,
 			Header: tc.header,
 		}
-		resp, err := decodeListParentsRequest(context.Background(), req)
+		resp, err := decodeRetrieveGroupHierarchy(context.Background(), req)
 		assert.Equal(t, tc.resp, resp, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.resp, resp))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
 	}
@@ -243,12 +212,9 @@ func TestDecodeListChildrenRequest(t *testing.T) {
 			url:    "http://localhost:8080",
 			header: map[string][]string{},
 			resp: listGroupsReq{
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Limit: 10,
-					},
-					Permission:         api.DefPermission,
-					HierarchyDirection: -1,
+				PageMeta: groups.PageMeta{
+					Limit:      10,
+					Permission: api.DefPermission,
 				},
 			},
 			err: nil,
@@ -260,21 +226,16 @@ func TestDecodeListChildrenRequest(t *testing.T) {
 				"Authorization": {"Bearer 123"},
 			},
 			resp: listGroupsReq{
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Status: clients.EnabledStatus,
-						Offset: 10,
-						Limit:  10,
-						Name:   "random",
-						Metadata: clients.Metadata{
-							"test": "test",
-						},
+				PageMeta: groups.PageMeta{
+					Status: clients.EnabledStatus,
+					Offset: 10,
+					Limit:  10,
+					Name:   "random",
+					Metadata: clients.Metadata{
+						"test": "test",
 					},
-					Level:              2,
-					Permission:         "random",
-					HierarchyDirection: -1,
-					ListPerms:          true,
-					Tree:               true,
+					Permission: "random",
+					ListPerms:  true,
 				},
 				token: "123",
 			},

@@ -79,6 +79,7 @@ definition group {
 
 	relation update: role#member
 	relation read: role#member
+	relation membership: role#member
 	relation delete: role#member
 	relation set_child: role#member
 	relation set_parent: role#member
@@ -89,6 +90,12 @@ definition group {
 	relation view_role_users: role#member
 
 	relation thing_create: role#member
+	relation channel_create: role#member
+	// this allows to add parent for group during the new group creation
+	relation subgroup_create: role#member
+	relation subgroup_thing_create: role#member
+	relation subgroup_channel_create: role#member
+
 	relation thing_update: role#member
 	relation thing_read: role#member
 	relation thing_delete: role#member
@@ -100,7 +107,6 @@ definition group {
 	relation thing_remove_role_users: role#member
 	relation thing_view_role_users: role#member
 
-	relation channel_create: role#member
 	relation channel_update: role#member
 	relation channel_read: role#member
 	relation channel_delete: role#member
@@ -114,9 +120,9 @@ definition group {
 	relation channel_remove_role_users: role#member
 	relation channel_view_role_users: role#member
 
-	relation subgroup_create: role#member // this allows to add parent for group during the new group creation
 	relation subgroup_update: role#member
 	relation subgroup_read: role#member
+	relation subgroup_membership: role#member
 	relation subgroup_delete: role#member
 	relation subgroup_set_child: role#member
 	relation subgroup_set_parent: role#member
@@ -126,7 +132,6 @@ definition group {
 	relation subgroup_remove_role_users: role#member
 	relation subgroup_view_role_users: role#member
 
-	relation subgroup_thing_create: role#member
 	relation subgroup_thing_update: role#member
 	relation subgroup_thing_read: role#member
 	relation subgroup_thing_delete: role#member
@@ -138,7 +143,6 @@ definition group {
 	relation subgroup_thing_remove_role_users: role#member
 	relation subgroup_thing_view_role_users: role#member
 
-	relation subgroup_channel_create: role#member
 	relation subgroup_channel_update: role#member
 	relation subgroup_channel_read: role#member
 	relation subgroup_channel_delete: role#member
@@ -154,7 +158,11 @@ definition group {
 
 	// Subgroup permission
 	permission subgroup_create_permission = subgroup_create + parent_group->subgroup_create_permission
+	permission subgroup_thing_create_permission = subgroup_thing_create + parent_group->subgroup_thing_create_permission
+	permission subgroup_channel_create_permission = subgroup_channel_create + parent_group->subgroup_channel_create_permission
+
 	permission subgroup_update_permission = subgroup_update + parent_group->subgroup_update_permission
+	permission subgroup_membership_permission = subgroup_membership + parent_group->subgroup_membership_permission
 	permission subgroup_read_permission = subgroup_read + parent_group->subgroup_read_permission
 	permission subgroup_delete_permission = subgroup_delete + parent_group->subgroup_delete_permission
 	permission subgroup_set_child_permission = subgroup_set_child + parent_group->subgroup_set_child_permission
@@ -167,6 +175,7 @@ definition group {
 
 	// Group permission
 	permission update_permission = update + parent_group->subgroup_create_permission + domain->group_update_permission
+	permission membership_permission = membership + parent_group->subgroup_membership_permission + domain->group_membership_permission
 	permission read_permission = read + parent_group->subgroup_read_permission + domain->group_read_permission
 	permission delete_permission = delete + parent_group->subgroup_delete_permission + domain->group_delete_permission
 	permission set_child_permission =	set_child + parent_group->subgroup_set_child_permission + domain->group_set_child
@@ -178,7 +187,6 @@ definition group {
 	permission view_role_users_permission = view_role_users + parent_group->subgroup_view_role_users_permission + domain->group_view_role_users_permission
 
 	// Subgroup things permisssion
-	permission subgroup_thing_create_permission = subgroup_thing_create + parent_group->subgroup_thing_create_permission
 	permission subgroup_thing_update_permission = subgroup_thing_update + parent_group->subgroup_thing_update_permission
 	permission subgroup_thing_read_permission = subgroup_thing_read + parent_group->subgroup_thing_read_permission
 	permission subgroup_thing_delete_permission = subgroup_thing_delete + parent_group->subgroup_thing_delete_permission
@@ -204,7 +212,6 @@ definition group {
 	permission thing_view_role_users_permission = thing_view_role_users + parent_group->subgroup_thing_view_role_users + domain->thing_view_role_users_permission
 
 	// Subgroup channels permisssion
-	permission subgroup_channel_create_permission = subgroup_channel_create + parent_group->subgroup_channel_create_permission
 	permission subgroup_channel_update_permission = subgroup_channel_update + parent_group->subgroup_channel_update_permission
 	permission subgroup_channel_read_permission = subgroup_channel_read + parent_group->subgroup_channel_read_permission
 	permission subgroup_channel_delete_permission =  subgroup_channel_delete + parent_group->subgroup_channel_delete_permission
@@ -254,11 +261,8 @@ definition domain {
 	relation view_role_users: role#member | team#member
 
 	relation thing_create: role#member | team#member
-	relation thing_list: role#member | team#member
 	relation channel_create: role#member | team#member
-	relation channel_list: role#member | team#member
 	relation group_create: role#member | team#member
-	relation group_list: role#member | team#member
 
 	relation thing_update: role#member | team#member
 	relation thing_read: role#member | team#member
@@ -285,6 +289,7 @@ definition domain {
 	relation channel_view_role_users: role#member | team#member
 
 	relation group_update: role#member | team#member
+	relation group_membership: role#member | team#member
 	relation group_read: role#member | team#member
 	relation group_delete: role#member | team#member
 	relation group_set_child: role#member | team#member
@@ -308,6 +313,9 @@ definition domain {
 	permission view_role_users_permission = view_role_users + team->domain_view_role_users + organization->admin
 
 	permission thing_create_permission = thing_create + team->thing_create + organization->admin
+	permission channel_create_permission = channel_create + team->channel_create + organization->admin
+	permission group_create_permission = group_create + team->group_create + organization->admin
+
 	permission thing_update_permission = thing_update + team->thing_update + organization->admin
 	permission thing_read_permission = thing_read + team->thing_read + organization->admin
 	permission thing_delete_permission = thing_delete + team->thing_delete + organization->admin
@@ -319,7 +327,6 @@ definition domain {
 	permission thing_remove_role_users_permission = thing_remove_role_users + team->thing_remove_role_users + organization->admin
 	permission thing_view_role_users_permission = thing_view_role_users + team->thing_view_role_users + organization->admin
 
-	permission channel_create_permission = channel_create + team->channel_create + organization->admin
 	permission channel_update_permission = channel_update + team->channel_update + organization->admin
 	permission channel_read_permission = channel_read + team->channel_read + organization->admin
 	permission channel_delete_permission = channel_delete + team->channel_delete + organization->admin
@@ -333,8 +340,8 @@ definition domain {
 	permission channel_remove_role_users_permission = channel_remove_role_users + team->channel_remove_role_users + organization->admin
 	permission channel_view_role_users_permission = channel_view_role_users + team->channel_view_role_users + organization->admin
 
-	permission group_create_permission = group_create + team->group_create + organization->admin
 	permission group_update_permission = group_update + team->group_update + organization->admin
+	permission group_membership_permission = group_membership + team->group_membership + organization->admin
 	permission group_read_permission = group_read + team->group_read + organization->admin
 	permission group_delete_permission = group_delete + team->group_delete + organization->admin
 	permission group_set_child_permission = group_set_child + team->group_set_child + organization->admin
@@ -395,11 +402,8 @@ definition team {
 	relation domain_view_role_users: role#member | team#member
 
 	relation thing_create: role#member | team#member
-	relation thing_list: role#member | team#member
 	relation channel_create: role#member | team#member
-	relation channel_list: role#member | team#member
 	relation group_create: role#member | team#member
-	relation group_list: role#member | team#member
 
 	relation thing_update: role#member | team#member
 	relation thing_read: role#member | team#member
@@ -426,6 +430,7 @@ definition team {
 	relation channel_view_role_users: role#member | team#member
 
 	relation group_update: role#member | team#member
+	relation group_membership: role#member | team#member
 	relation group_read: role#member | team#member
 	relation group_delete: role#member | team#member
 	relation group_set_child: role#member | team#member

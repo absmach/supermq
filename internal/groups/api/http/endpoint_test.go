@@ -458,10 +458,8 @@ func TestListGroupsEndpoint(t *testing.T) {
 			desc:       "successfully",
 			memberKind: auth.ThingsKind,
 			req: listGroupsReq{
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Limit: 10,
-					},
+				PageMeta: groups.PageMeta{
+					Limit: 10,
 				},
 				token: valid,
 			},
@@ -481,10 +479,8 @@ func TestListGroupsEndpoint(t *testing.T) {
 		{
 			desc: "successfully with empty member kind",
 			req: listGroupsReq{
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Limit: 10,
-					},
+				PageMeta: groups.PageMeta{
+					Limit: 10,
 				},
 				token: valid,
 			},
@@ -505,11 +501,8 @@ func TestListGroupsEndpoint(t *testing.T) {
 			desc:       "successfully with tree",
 			memberKind: auth.ThingsKind,
 			req: listGroupsReq{
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Limit: 10,
-					},
-					Tree: true,
+				PageMeta: groups.PageMeta{
+					Limit: 10,
 				},
 				token: valid,
 			},
@@ -526,60 +519,7 @@ func TestListGroupsEndpoint(t *testing.T) {
 			},
 			err: nil,
 		},
-		{
-			desc:       "list children groups successfully without tree",
-			memberKind: auth.UsersKind,
-			req: listGroupsReq{
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Limit: 10,
-					},
-					ParentID:           validGroupResp.ID,
-					HierarchyDirection: -1,
-					Tree:               false,
-				},
-				token: valid,
-			},
-			svcResp: groups.Page{
-				Groups: []groups.Group{validGroupResp, childGroup},
-			},
-			svcErr: nil,
-			resp: groupPageRes{
-				Groups: []viewGroupRes{
-					{
-						Group: childGroup,
-					},
-				},
-			},
-			err: nil,
-		},
-		{
-			desc:       "list parent group successfully without tree",
-			memberKind: auth.UsersKind,
-			req: listGroupsReq{
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Limit: 10,
-					},
-					ParentID:           validGroupResp.ID,
-					HierarchyDirection: 1,
-					Tree:               false,
-				},
-				token: valid,
-			},
-			svcResp: groups.Page{
-				Groups: []groups.Group{parentGroup, validGroupResp},
-			},
-			svcErr: nil,
-			resp: groupPageRes{
-				Groups: []viewGroupRes{
-					{
-						Group: parentGroup,
-					},
-				},
-			},
-			err: nil,
-		},
+
 		{
 			desc:       "unsuccessfully with invalid request",
 			memberKind: auth.ThingsKind,
@@ -591,10 +531,8 @@ func TestListGroupsEndpoint(t *testing.T) {
 			desc:       "unsuccessfully with repo error",
 			memberKind: auth.ThingsKind,
 			req: listGroupsReq{
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Limit: 10,
-					},
+				PageMeta: groups.PageMeta{
+					Limit: 10,
 				},
 				token: valid,
 			},
@@ -607,7 +545,7 @@ func TestListGroupsEndpoint(t *testing.T) {
 
 	for _, tc := range cases {
 
-		repoCall := svc.On("ListGroups", context.Background(), tc.req.token, tc.req.Page).Return(tc.svcResp, tc.svcErr)
+		repoCall := svc.On("ListGroups", context.Background(), tc.req.token, tc.req.PageMeta).Return(tc.svcResp, tc.svcErr)
 		resp, err := ListGroupsEndpoint(svc)(context.Background(), tc.req)
 		assert.Equal(t, tc.resp, resp, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.resp, resp))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))

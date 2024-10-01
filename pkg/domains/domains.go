@@ -101,6 +101,12 @@ const (
 )
 
 const (
+	ThingCreatePermission   = "thing_create_permission"
+	ChannelCreatePermission = "channel_create_permission"
+	GroupCreatePermission   = "group_create_permission"
+)
+
+const (
 	OpUpdateDomain svcutil.Operation = iota
 	OpRetrieveDomain
 	OpEnableDomain

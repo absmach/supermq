@@ -121,10 +121,13 @@ func (svc service) RetrieveDomain(ctx context.Context, token, id string) (domain
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-	if err := svc.authorize(ctx, domains.OpRetrieveDomain, &magistrala.AuthorizeReq{
+
+	permission, _ := svc.opp.GetPermission(domains.OpRetrieveDomain)
+	if _, err := svc.auth.Authorize(ctx, &magistrala.AuthorizeReq{
 		Subject:     user.ID,
 		SubjectType: auth.UserType,
 		SubjectKind: auth.UsersKind,
+		Permission:  permission.String(),
 		Object:      id,
 		ObjectType:  auth.DomainType,
 	}); err != nil {

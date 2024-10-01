@@ -125,10 +125,8 @@ func TestListGroupReqValidation(t *testing.T) {
 			desc: "valid request",
 			req: listGroupsReq{
 				token: valid,
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Limit: 10,
-					},
+				PageMeta: groups.PageMeta{
+					Limit: 10,
 				},
 			},
 			err: nil,
@@ -136,10 +134,8 @@ func TestListGroupReqValidation(t *testing.T) {
 		{
 			desc: "empty token",
 			req: listGroupsReq{
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Limit: 10,
-					},
+				PageMeta: groups.PageMeta{
+					Limit: 10,
 				},
 			},
 			err: apiutil.ErrBearerToken,
@@ -149,11 +145,8 @@ func TestListGroupReqValidation(t *testing.T) {
 			desc: "invalid upper level",
 			req: listGroupsReq{
 				token: valid,
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Limit: 10,
-					},
-					Level: groups.MaxLevel + 1,
+				PageMeta: groups.PageMeta{
+					Limit: 10,
 				},
 			},
 			err: apiutil.ErrInvalidLevel,
@@ -162,10 +155,8 @@ func TestListGroupReqValidation(t *testing.T) {
 			desc: "invalid lower limit",
 			req: listGroupsReq{
 				token: valid,
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Limit: 0,
-					},
+				PageMeta: groups.PageMeta{
+					Limit: 0,
 				},
 			},
 			err: apiutil.ErrLimitSize,
@@ -174,10 +165,8 @@ func TestListGroupReqValidation(t *testing.T) {
 			desc: "invalid upper limit",
 			req: listGroupsReq{
 				token: valid,
-				Page: groups.Page{
-					PageMeta: groups.PageMeta{
-						Limit: api.MaxLimitSize + 1,
-					},
+				PageMeta: groups.PageMeta{
+					Limit: api.MaxLimitSize + 1,
 				},
 			},
 			err: apiutil.ErrLimitSize,

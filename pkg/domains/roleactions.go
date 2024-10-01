@@ -49,6 +49,7 @@ const (
 
 	// Domain Groups Roles: Actions related to Groups present within the Domain
 	GroupUpdate          roles.Action = "group_update"
+	GroupMembership      roles.Action = "group_membership"
 	GroupRead            roles.Action = "group_read"
 	GroupDelete          roles.Action = "group_delete"
 	GroupSetChild        roles.Action = "group_set_child"
@@ -103,6 +104,7 @@ func AvailableActions() []roles.Action {
 		ChannelRemoveRoleUsers,
 		ChannelViewRoleUsers,
 		GroupUpdate,
+		GroupMembership,
 		GroupRead,
 		GroupDelete,
 		GroupSetChild,

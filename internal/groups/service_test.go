@@ -716,8 +716,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.ThingsKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -752,8 +754,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.GroupsKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -788,8 +792,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.ChannelsKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -824,8 +830,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.UsersKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -859,8 +867,10 @@ func TestListGroups(t *testing.T) {
 			token:      token,
 			memberKind: auth.UsersKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -895,8 +905,10 @@ func TestListGroups(t *testing.T) {
 			token:      token,
 			memberKind: auth.UsersKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -914,8 +926,10 @@ func TestListGroups(t *testing.T) {
 			token:      token,
 			memberKind: auth.UsersKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -933,8 +947,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.ThingsKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -952,8 +968,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.ThingsKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -972,8 +990,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.ThingsKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -995,8 +1015,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.GroupsKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -1014,8 +1036,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.GroupsKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -1034,8 +1058,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.GroupsKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -1057,8 +1083,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.ChannelsKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -1076,8 +1104,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.ChannelsKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -1096,8 +1126,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.ChannelsKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -1119,8 +1151,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.UsersKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -1138,8 +1172,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.UsersKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -1158,8 +1194,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.UsersKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -1180,8 +1218,10 @@ func TestListGroups(t *testing.T) {
 			token:      token,
 			memberKind: auth.UsersKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -1217,8 +1257,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: "invalid",
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -1232,8 +1274,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.ThingsKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -1258,8 +1302,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.ThingsKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{
 				Id:       testsutil.GenerateUUID(t),
@@ -1291,8 +1337,10 @@ func TestListGroups(t *testing.T) {
 			memberID:   testsutil.GenerateUUID(t),
 			memberKind: auth.ThingsKind,
 			page: mggroups.Page{
-				Permission: auth.ViewPermission,
-				ListPerms:  true,
+				PageMeta: mggroups.PageMeta{
+					Permission: auth.ViewPermission,
+					ListPerms:  true,
+				},
 			},
 			idResp: &magistrala.IdentityRes{},
 			idErr:  svcerr.ErrAuthentication,
@@ -1412,7 +1460,7 @@ func TestListGroups(t *testing.T) {
 			}
 			repoCall := repo.On("RetrieveByIDs", context.Background(), mock.Anything, mock.Anything).Return(tc.repoResp, tc.repoErr)
 			authCall4 := authsvc.On("ListPermissions", mock.Anything, mock.Anything).Return(tc.listPermResp, tc.listPermErr)
-			got, err := svc.ListGroups(context.Background(), tc.token, tc.page)
+			got, err := svc.ListGroups(context.Background(), tc.token, tc.page.PageMeta)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
 			if err == nil {
 				assert.NotEmpty(t, got)

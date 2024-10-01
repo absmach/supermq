@@ -5,6 +5,7 @@ package tracing
 
 import (
 	"context"
+	"fmt"
 
 	entityRolesTracing "github.com/absmach/magistrala/pkg/entityroles/tracing"
 	"github.com/absmach/magistrala/pkg/groups"
@@ -43,11 +44,21 @@ func (tm *tracingMiddleware) ViewGroup(ctx context.Context, token, id string) (g
 }
 
 // ListGroups traces the "ListGroups" operation of the wrapped groups.Service.
-func (tm *tracingMiddleware) ListGroups(ctx context.Context, token string, gm groups.Page) (groups.Page, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_list_groups")
+func (tm *tracingMiddleware) ListGroups(ctx context.Context, token string, pm groups.PageMeta) (groups.Page, error) {
+	attr := []attribute.KeyValue{
+		attribute.String("name", pm.Name),
+		attribute.String("tag", pm.Tag),
+		attribute.String("status", pm.Status.String()),
+		attribute.Int64("offset", int64(pm.Offset)),
+		attribute.Int64("limit", int64(pm.Limit)),
+	}
+	for k, v := range pm.Metadata {
+		attr = append(attr, attribute.String(k, fmt.Sprintf("%v", v)))
+	}
+	ctx, span := tm.tracer.Start(ctx, "svc_list_groups", trace.WithAttributes(attr...))
 	defer span.End()
 
-	return tm.gsvc.ListGroups(ctx, token, gm)
+	return tm.gsvc.ListGroups(ctx, token, pm)
 }
 
 // UpdateGroup traces the "UpdateGroup" operation of the wrapped groups.Service.
@@ -74,11 +85,17 @@ func (tm *tracingMiddleware) DisableGroup(ctx context.Context, token, id string)
 	return tm.gsvc.DisableGroup(ctx, token, id)
 }
 
-func (tm *tracingMiddleware) ListParentGroups(ctx context.Context, token, id string, gm groups.Page) (groups.Page, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_list_parent_groups", trace.WithAttributes(attribute.String("id", id)))
+func (tm *tracingMiddleware) RetrieveGroupHierarchy(ctx context.Context, token, id string, hm groups.HierarchyPageMeta) (groups.HierarchyPage, error) {
+	ctx, span := tm.tracer.Start(ctx, "svc_list_group_hierarchy",
+		trace.WithAttributes(
+			attribute.String("id", id),
+			attribute.Int64("level", int64(hm.Level)),
+			attribute.Int64("direction", hm.Direction),
+			attribute.Bool("tree", hm.Tree),
+		))
 	defer span.End()
 
-	return tm.gsvc.ListParentGroups(ctx, token, id, gm)
+	return tm.gsvc.RetrieveGroupHierarchy(ctx, token, id, hm)
 }
 
 func (tm *tracingMiddleware) AddParentGroup(ctx context.Context, token, id, parentID string) error {
@@ -131,10 +148,21 @@ func (tm *tracingMiddleware) RemoveAllChildrenGroups(ctx context.Context, token,
 	return tm.gsvc.RemoveAllChildrenGroups(ctx, token, id)
 }
 
-func (tm *tracingMiddleware) ListChildrenGroups(ctx context.Context, token, id string, gm groups.Page) (groups.Page, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_list_children_groups", trace.WithAttributes(attribute.String("id", id)))
+func (tm *tracingMiddleware) ListChildrenGroups(ctx context.Context, token, id string, pm groups.PageMeta) (groups.Page, error) {
+	attr := []attribute.KeyValue{
+		attribute.String("id", id),
+		attribute.String("name", pm.Name),
+		attribute.String("tag", pm.Tag),
+		attribute.String("status", pm.Status.String()),
+		attribute.Int64("offset", int64(pm.Offset)),
+		attribute.Int64("limit", int64(pm.Limit)),
+	}
+	for k, v := range pm.Metadata {
+		attr = append(attr, attribute.String(k, fmt.Sprintf("%v", v)))
+	}
+	ctx, span := tm.tracer.Start(ctx, "svc_list_children_groups", trace.WithAttributes(attr...))
 	defer span.End()
-	return tm.gsvc.ListChildrenGroups(ctx, token, id, gm)
+	return tm.gsvc.ListChildrenGroups(ctx, token, id, pm)
 }
 
 // DeleteGroup traces the "DeleteGroup" operation of the wrapped groups.Service.

@@ -17,7 +17,7 @@ var (
 	_ magistrala.Response = (*changeStatusRes)(nil)
 	_ magistrala.Response = (*viewGroupRes)(nil)
 	_ magistrala.Response = (*updateGroupRes)(nil)
-	_ magistrala.Response = (*listParentGroupsRes)(nil)
+	_ magistrala.Response = (*retrieveGroupHierarchyRes)(nil)
 	_ magistrala.Response = (*addParentGroupRes)(nil)
 	_ magistrala.Response = (*removeParentGroupRes)(nil)
 	_ magistrala.Response = (*viewParentGroupRes)(nil)
@@ -79,7 +79,6 @@ type pageRes struct {
 	Limit  uint64 `json:"limit,omitempty"`
 	Offset uint64 `json:"offset"`
 	Total  uint64 `json:"total"`
-	Level  uint64 `json:"level,omitempty"`
 }
 
 func (res groupPageRes) Code() int {
@@ -146,20 +145,21 @@ func (res deleteGroupRes) Empty() bool {
 	return true
 }
 
-type listParentGroupsRes struct {
-	pageRes
-	Groups []viewGroupRes `json:"groups"`
+type retrieveGroupHierarchyRes struct {
+	Level     uint64         `json:"level"`
+	Direction int64          `json:"direction"`
+	Groups    []viewGroupRes `json:"groups"`
 }
 
-func (res listParentGroupsRes) Code() int {
+func (res retrieveGroupHierarchyRes) Code() int {
 	return http.StatusOK
 }
 
-func (res listParentGroupsRes) Headers() map[string]string {
+func (res retrieveGroupHierarchyRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res listParentGroupsRes) Empty() bool {
+func (res retrieveGroupHierarchyRes) Empty() bool {
 	return false
 }
 
@@ -198,6 +198,9 @@ type viewParentGroupRes struct {
 }
 
 func (res viewParentGroupRes) Code() int {
+	if res.ID == "" {
+		return http.StatusNoContent
+	}
 	return http.StatusOK
 }
 
@@ -206,7 +209,7 @@ func (res viewParentGroupRes) Headers() map[string]string {
 }
 
 func (res viewParentGroupRes) Empty() bool {
-	return false
+	return res.ID == ""
 }
 
 type addChildrenGroupsRes struct {

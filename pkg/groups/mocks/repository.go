@@ -130,9 +130,9 @@ func (_m *Repository) RemoveRoles(ctx context.Context, roleIDs []string) error {
 	return r0
 }
 
-// RetrieveAll provides a mock function with given fields: ctx, gm
-func (_m *Repository) RetrieveAll(ctx context.Context, gm groups.Page) (groups.Page, error) {
-	ret := _m.Called(ctx, gm)
+// RetrieveAll provides a mock function with given fields: ctx, pm
+func (_m *Repository) RetrieveAll(ctx context.Context, pm groups.PageMeta) (groups.Page, error) {
+	ret := _m.Called(ctx, pm)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RetrieveAll")
@@ -140,17 +140,17 @@ func (_m *Repository) RetrieveAll(ctx context.Context, gm groups.Page) (groups.P
 
 	var r0 groups.Page
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, groups.Page) (groups.Page, error)); ok {
-		return rf(ctx, gm)
+	if rf, ok := ret.Get(0).(func(context.Context, groups.PageMeta) (groups.Page, error)); ok {
+		return rf(ctx, pm)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, groups.Page) groups.Page); ok {
-		r0 = rf(ctx, gm)
+	if rf, ok := ret.Get(0).(func(context.Context, groups.PageMeta) groups.Page); ok {
+		r0 = rf(ctx, pm)
 	} else {
 		r0 = ret.Get(0).(groups.Page)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, groups.Page) error); ok {
-		r1 = rf(ctx, gm)
+	if rf, ok := ret.Get(1).(func(context.Context, groups.PageMeta) error); ok {
+		r1 = rf(ctx, pm)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -214,9 +214,9 @@ func (_m *Repository) RetrieveByID(ctx context.Context, id string) (groups.Group
 	return r0, r1
 }
 
-// RetrieveByIDs provides a mock function with given fields: ctx, gm, ids
-func (_m *Repository) RetrieveByIDs(ctx context.Context, gm groups.Page, ids ...string) (groups.Page, error) {
-	ret := _m.Called(ctx, gm, ids)
+// RetrieveByIDs provides a mock function with given fields: ctx, pm, ids
+func (_m *Repository) RetrieveByIDs(ctx context.Context, pm groups.PageMeta, ids ...string) (groups.Page, error) {
+	ret := _m.Called(ctx, pm, ids)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RetrieveByIDs")
@@ -224,17 +224,45 @@ func (_m *Repository) RetrieveByIDs(ctx context.Context, gm groups.Page, ids ...
 
 	var r0 groups.Page
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, groups.Page, ...string) (groups.Page, error)); ok {
-		return rf(ctx, gm, ids...)
+	if rf, ok := ret.Get(0).(func(context.Context, groups.PageMeta, ...string) (groups.Page, error)); ok {
+		return rf(ctx, pm, ids...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, groups.Page, ...string) groups.Page); ok {
-		r0 = rf(ctx, gm, ids...)
+	if rf, ok := ret.Get(0).(func(context.Context, groups.PageMeta, ...string) groups.Page); ok {
+		r0 = rf(ctx, pm, ids...)
 	} else {
 		r0 = ret.Get(0).(groups.Page)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, groups.Page, ...string) error); ok {
-		r1 = rf(ctx, gm, ids...)
+	if rf, ok := ret.Get(1).(func(context.Context, groups.PageMeta, ...string) error); ok {
+		r1 = rf(ctx, pm, ids...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RetrieveHierarchy provides a mock function with given fields: ctx, id, hm
+func (_m *Repository) RetrieveHierarchy(ctx context.Context, id string, hm groups.HierarchyPageMeta) (groups.HierarchyPage, error) {
+	ret := _m.Called(ctx, id, hm)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveHierarchy")
+	}
+
+	var r0 groups.HierarchyPage
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, groups.HierarchyPageMeta) (groups.HierarchyPage, error)); ok {
+		return rf(ctx, id, hm)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, groups.HierarchyPageMeta) groups.HierarchyPage); ok {
+		r0 = rf(ctx, id, hm)
+	} else {
+		r0 = ret.Get(0).(groups.HierarchyPage)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, groups.HierarchyPageMeta) error); ok {
+		r1 = rf(ctx, id, hm)
 	} else {
 		r1 = ret.Error(1)
 	}

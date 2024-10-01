@@ -20,7 +20,7 @@ volumes:
 
 services:
   spicedb:
-    image: "authzed/spicedb:v1.30.0"
+    image: "authzed/spicedb:v1.37.0"
     container_name: magistrala-spicedb
     command: "serve"
     restart: "always"
@@ -38,7 +38,7 @@ services:
       - spicedb-migrate
 
   spicedb-migrate:
-    image: "authzed/spicedb:v1.30.0"
+    image: "authzed/spicedb:v1.37.0"
     container_name: magistrala-spicedb-migrate
     command: "migrate head"
     restart: "on-failure"

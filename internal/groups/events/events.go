@@ -18,7 +18,7 @@ var (
 	groupView                    = groupPrefix + "view"
 	groupList                    = groupPrefix + "list"
 	groupRemove                  = groupPrefix + "remove"
-	groupListParentGroups        = groupPrefix + "list_parent_groups"
+	groupRetrieveGroupHierarchy  = groupPrefix + "retrieve_group_hierarchy"
 	groupAddParentGroup          = groupPrefix + "add_parent_group"
 	groupRemoveParentGroup       = groupPrefix + "remove_parent_group"
 	groupViewParentGroup         = groupPrefix + "view_parent_group"
@@ -43,7 +43,7 @@ var (
 	_ events.Event = (*removeChildrenGroupsEvent)(nil)
 	_ events.Event = (*removeAllChildrenGroupsEvent)(nil)
 	_ events.Event = (*listChildrenGroupsEvent)(nil)
-	_ events.Event = (*listParentGroupsEvent)(nil)
+	_ events.Event = (*retrieveGroupHierarchyEvent)(nil)
 )
 
 type createGroupEvent struct {
@@ -178,7 +178,7 @@ func (vge viewGroupEvent) Encode() (map[string]interface{}, error) {
 }
 
 type listGroupEvent struct {
-	groups.Page
+	groups.PageMeta
 }
 
 func (lge listGroupEvent) Encode() (map[string]interface{}, error) {
@@ -219,33 +219,18 @@ func (rge deleteGroupEvent) Encode() (map[string]interface{}, error) {
 	}, nil
 }
 
-type listParentGroupsEvent struct {
+type retrieveGroupHierarchyEvent struct {
 	id string
-	groups.Page
+	groups.HierarchyPageMeta
 }
 
-func (vcge listParentGroupsEvent) Encode() (map[string]interface{}, error) {
+func (vcge retrieveGroupHierarchyEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
-		"operation": groupListParentGroups,
+		"operation": groupRetrieveGroupHierarchy,
 		"id":        vcge.id,
-		"total":     vcge.Total,
-		"offset":    vcge.Offset,
-		"limit":     vcge.Limit,
-	}
-	if vcge.Name != "" {
-		val["name"] = vcge.Name
-	}
-	if vcge.DomainID != "" {
-		val["domain_id"] = vcge.DomainID
-	}
-	if vcge.Tag != "" {
-		val["tag"] = vcge.Tag
-	}
-	if vcge.Metadata != nil {
-		val["metadata"] = vcge.Metadata
-	}
-	if vcge.Status.String() != "" {
-		val["status"] = vcge.Status.String()
+		"level":     vcge.Level,
+		"direction": vcge.Direction,
+		"tree":      vcge.Tree,
 	}
 	return val, nil
 }
@@ -324,7 +309,7 @@ func (racge removeAllChildrenGroupsEvent) Encode() (map[string]interface{}, erro
 
 type listChildrenGroupsEvent struct {
 	id string
-	groups.Page
+	groups.PageMeta
 }
 
 func (vcge listChildrenGroupsEvent) Encode() (map[string]interface{}, error) {

@@ -73,12 +73,12 @@ func MakeHandler(svc groups.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux
 				opts...,
 			), "disable_group").ServeHTTP)
 
-			r.Get("/parents", otelhttp.NewHandler(kithttp.NewServer(
-				listParentGroupsEndpoint(svc),
-				decodeListParentsRequest,
+			r.Get("/hierarchy", otelhttp.NewHandler(kithttp.NewServer(
+				retrieveGroupHierarchyEndpoint(svc),
+				decodeRetrieveGroupHierarchy,
 				api.EncodeResponse,
 				opts...,
-			), "list_parent_groups").ServeHTTP)
+			), "retrieve_group_hierarchy").ServeHTTP)
 
 			r.Route("/parent", func(r chi.Router) {
 				r.Post("/", otelhttp.NewHandler(kithttp.NewServer(

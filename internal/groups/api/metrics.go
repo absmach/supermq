@@ -60,12 +60,12 @@ func (ms *metricsMiddleware) ViewGroup(ctx context.Context, token, id string) (g
 }
 
 // ListGroups instruments ListGroups method with metrics.
-func (ms *metricsMiddleware) ListGroups(ctx context.Context, token string, gp groups.Page) (cg groups.Page, err error) {
+func (ms *metricsMiddleware) ListGroups(ctx context.Context, token string, pm groups.PageMeta) (cg groups.Page, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_groups").Add(1)
 		ms.latency.With("method", "list_groups").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.ListGroups(ctx, token, gp)
+	return ms.svc.ListGroups(ctx, token, pm)
 }
 
 // EnableGroup instruments EnableGroup method with metrics.
@@ -94,12 +94,12 @@ func (ms *metricsMiddleware) DeleteGroup(ctx context.Context, token, id string) 
 	return ms.svc.DeleteGroup(ctx, token, id)
 }
 
-func (ms *metricsMiddleware) ListParentGroups(ctx context.Context, token, id string, gm groups.Page) (groups.Page, error) {
+func (ms *metricsMiddleware) RetrieveGroupHierarchy(ctx context.Context, token, id string, hm groups.HierarchyPageMeta) (groups.HierarchyPage, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_parent_groups").Add(1)
 		ms.latency.With("method", "list_parent_groups").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.ListParentGroups(ctx, token, id, gm)
+	return ms.svc.RetrieveGroupHierarchy(ctx, token, id, hm)
 }
 
 func (ms *metricsMiddleware) AddParentGroup(ctx context.Context, token, id, parentID string) error {
@@ -150,10 +150,10 @@ func (ms *metricsMiddleware) RemoveAllChildrenGroups(ctx context.Context, token,
 	return ms.svc.RemoveAllChildrenGroups(ctx, token, id)
 }
 
-func (ms *metricsMiddleware) ListChildrenGroups(ctx context.Context, token, id string, gm groups.Page) (groups.Page, error) {
+func (ms *metricsMiddleware) ListChildrenGroups(ctx context.Context, token, id string, pm groups.PageMeta) (groups.Page, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_children_groups").Add(1)
 		ms.latency.With("method", "list_children_groups").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.ListChildrenGroups(ctx, token, id, gm)
+	return ms.svc.ListChildrenGroups(ctx, token, id, pm)
 }

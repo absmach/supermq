@@ -8,12 +8,16 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/pkg/clients"
+	"github.com/absmach/magistrala/pkg/domains"
 	"github.com/absmach/magistrala/pkg/roles"
 	"github.com/absmach/magistrala/pkg/svcutil"
 )
 
 // MaxLevel represents the maximum group hierarchy level.
-const MaxLevel = uint64(5)
+const (
+	MaxLevel      = uint64(20)
+	MaxPathLength = 20
+)
 
 // Group represents the group of Clients.
 // Indicates a level in tree hierarchy. Root node is level 1.
@@ -54,17 +58,20 @@ type MembersPage struct {
 // of Groups that belong to the page.
 type Page struct {
 	PageMeta
-	Path               string
-	Level              uint64
-	ParentID           string
-	Permission         string
-	ListPerms          bool
-	HierarchyDirection int64 // ancestors (+1) or descendants (-1)
-	Groups             []Group
+	Groups []Group
+}
+
+type HierarchyPageMeta struct {
+	Level     uint64 `json:"level"`
+	Direction int64  `json:"direction"` // ancestors (+1) or descendants (-1)
 	// - `true`  - result is JSON tree representing groups hierarchy,
 	// - `false` - result is JSON array of groups.
 	// ToDo: Tree is build in API layer now, not in service layer. This need to be fine tuned.
-	Tree bool
+	Tree bool `json:"tree"`
+}
+type HierarchyPage struct {
+	HierarchyPageMeta
+	Groups []Group
 }
 
 // Repository specifies a group persistence API.
@@ -81,10 +88,12 @@ type Repository interface {
 	RetrieveByID(ctx context.Context, id string) (Group, error)
 
 	// RetrieveAll retrieves all groups.
-	RetrieveAll(ctx context.Context, gm Page) (Page, error)
+	RetrieveAll(ctx context.Context, pm PageMeta) (Page, error)
 
 	// RetrieveByIDs retrieves group by ids and query.
-	RetrieveByIDs(ctx context.Context, gm Page, ids ...string) (Page, error)
+	RetrieveByIDs(ctx context.Context, pm PageMeta, ids ...string) (Page, error)
+
+	RetrieveHierarchy(ctx context.Context, id string, hm HierarchyPageMeta) (HierarchyPage, error)
 
 	// ChangeStatus changes groups status to active or inactive
 	ChangeStatus(ctx context.Context, group Group) (Group, error)
@@ -115,7 +124,7 @@ type Service interface {
 	ViewGroup(ctx context.Context, token, id string) (Group, error)
 
 	// ListGroups retrieves
-	ListGroups(ctx context.Context, token string, gm Page) (Page, error)
+	ListGroups(ctx context.Context, token string, pm PageMeta) (Page, error)
 
 	// EnableGroup logically enables the group identified with the provided ID.
 	EnableGroup(ctx context.Context, token, id string) (Group, error)
@@ -126,7 +135,7 @@ type Service interface {
 	// DeleteGroup delete the given group id
 	DeleteGroup(ctx context.Context, token, id string) error
 
-	ListParentGroups(ctx context.Context, token, id string, gm Page) (Page, error)
+	RetrieveGroupHierarchy(ctx context.Context, token, id string, hm HierarchyPageMeta) (HierarchyPage, error)
 
 	AddParentGroup(ctx context.Context, token, id, parentID string) error
 
@@ -140,13 +149,12 @@ type Service interface {
 
 	RemoveAllChildrenGroups(ctx context.Context, token, id string) error
 
-	ListChildrenGroups(ctx context.Context, token, id string, gm Page) (Page, error)
+	ListChildrenGroups(ctx context.Context, token, id string, pm PageMeta) (Page, error)
 
 	roles.Roles
 }
 
 const (
-	createPermission          = "create_permission"
 	updatePermission          = "update_permission"
 	readPermission            = "read_permission"
 	membershipPermission      = "membership_permission"
@@ -161,12 +169,12 @@ const (
 
 const (
 	OpCreateGroup svcutil.Operation = iota
+	OpListGroups
 	OpViewGroup
 	OpUpdateGroup
-	OpListGroups
 	OpEnableGroup
 	OpDisableGroup
-	OpListParentGroups
+	OpRetrieveGroupHierarchy
 	OpAddParentGroup
 	OpRemoveParentGroup
 	OpViewParentGroup
@@ -187,12 +195,12 @@ const (
 
 var expectedOperations = []svcutil.Operation{
 	OpCreateGroup,
+	OpListGroups,
 	OpViewGroup,
 	OpUpdateGroup,
-	OpListGroups,
 	OpEnableGroup,
 	OpDisableGroup,
-	OpListParentGroups,
+	OpRetrieveGroupHierarchy,
 	OpAddParentGroup,
 	OpRemoveParentGroup,
 	OpViewParentGroup,
@@ -213,12 +221,12 @@ var expectedOperations = []svcutil.Operation{
 
 var operationNames = []string{
 	"OpCreateGroup",
+	"OpListGroups",
 	"OpViewGroup",
 	"OpUpdateGroup",
-	"OpListGroups",
 	"OpEnableGroup",
 	"OpDisableGroup",
-	"OpListParentGroups",
+	"OpRetrieveGroupHierarchy",
 	"OpAddParentGroup",
 	"OpRemoveParentGroup",
 	"OpViewParentGroup",
@@ -243,13 +251,13 @@ func NewOperationPerm() svcutil.OperationPerm {
 
 func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 	opPerm := map[svcutil.Operation]svcutil.Permission{
-		OpCreateGroup:             createPermission,
+		OpCreateGroup:             domains.GroupCreatePermission,
+		OpListGroups:              readPermission,
 		OpViewGroup:               readPermission,
 		OpUpdateGroup:             updatePermission,
-		OpListGroups:              readPermission,
 		OpEnableGroup:             updatePermission,
 		OpDisableGroup:            updatePermission,
-		OpListParentGroups:        updatePermission,
+		OpRetrieveGroupHierarchy:  readPermission,
 		OpAddParentGroup:          setParentPermission,
 		OpRemoveParentGroup:       setParentPermission,
 		OpViewParentGroup:         readPermission,

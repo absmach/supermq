@@ -27,6 +27,9 @@ var (
 	// ErrMissingChildrenGroupIDs indicates missing children group IDs.
 	ErrMissingChildrenGroupIDs = errors.New("missing children group ids")
 
+	// ErrSelfParentingNotAllowed indicates child id is same as parent id.
+	ErrSelfParentingNotAllowed = errors.New("self parenting not allowed")
+
 	// ErrInvalidChildGroupID indicates invalid child group ID.
 	ErrInvalidChildGroupID = errors.New("invalid child group id")
 
@@ -47,6 +50,9 @@ var (
 
 	// ErrLimitSize indicates that an invalid limit.
 	ErrLimitSize = errors.New("invalid limit size")
+
+	// ErrLevel indicates that an invalid level.
+	ErrLevel = errors.New("invalid level")
 
 	// ErrOffsetSize indicates an invalid offset.
 	ErrOffsetSize = errors.New("invalid offset size")

@@ -104,17 +104,24 @@ func ListGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return groupPageRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		page, err := svc.ListGroups(ctx, req.token, req.Page)
+		page, err := svc.ListGroups(ctx, req.token, req.PageMeta)
 		if err != nil {
 			return groupPageRes{}, err
 		}
 
-		if req.Page.Tree {
-			return buildGroupsResponseTree(page), nil
+		groups := []viewGroupRes{}
+		for _, g := range page.Groups {
+			groups = append(groups, toViewGroupRes(g))
 		}
-		filterByID := req.Page.ParentID != ""
 
-		return buildGroupsResponse(page, filterByID), nil
+		return groupPageRes{pageRes: pageRes{
+			Limit:  page.Limit,
+			Offset: page.Offset,
+			Total:  page.Total,
+		},
+			Groups: groups,
+		}, nil
+
 	}
 }
 
@@ -131,30 +138,23 @@ func DeleteGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 	}
 }
 
-func listParentGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
+func retrieveGroupHierarchyEndpoint(svc groups.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listParentGroupsReq)
+		req := request.(retrieveGroupHierarchyReq)
 		if err := req.validate(); err != nil {
-			return listParentGroupsRes{}, errors.Wrap(apiutil.ErrValidation, err)
+			return retrieveGroupHierarchyRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		gp, err := svc.ListParentGroups(ctx, req.token, req.id, req.Page)
+		hp, err := svc.RetrieveGroupHierarchy(ctx, req.token, req.id, req.HierarchyPageMeta)
 		if err != nil {
-			return listParentGroupsRes{}, err
+			return retrieveGroupHierarchyRes{}, err
 		}
-		viewGroups := []viewGroupRes{}
 
-		for _, group := range gp.Groups {
-			viewGroups = append(viewGroups, toViewGroupRes(group))
+		groups := []viewGroupRes{}
+		for _, g := range hp.Groups {
+			groups = append(groups, toViewGroupRes(g))
 		}
-		return listParentGroupsRes{
-			pageRes: pageRes{
-				Limit:  gp.Limit,
-				Offset: gp.Offset,
-				Total:  gp.Total,
-				Level:  gp.Level,
-			},
-			Groups: viewGroups,
-		}, nil
+		return retrieveGroupHierarchyRes{Level: hp.Level, Direction: hp.Direction, Groups: groups}, nil
+
 	}
 }
 
@@ -214,12 +214,12 @@ func removeChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(removeChildrenGroupsReq)
 		if err := req.validate(); err != nil {
-			return removeChildrenGroupsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+			return removeChildrenGroupsRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		if err := svc.RemoveChildrenGroups(ctx, req.token, req.id, req.ChildrenIDs); err != nil {
-			return removeChildrenGroupsReq{}, err
+			return removeChildrenGroupsRes{}, err
 		}
-		return removeChildrenGroupsReq{}, nil
+		return removeChildrenGroupsRes{}, nil
 	}
 }
 
@@ -227,12 +227,12 @@ func removeAllChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(removeAllChildrenGroupsReq)
 		if err := req.validate(); err != nil {
-			return removeChildrenGroupsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+			return removeAllChildrenGroupsRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		if err := svc.RemoveAllChildrenGroups(ctx, req.token, req.id); err != nil {
-			return removeAllChildrenGroupsReq{}, err
+			return removeAllChildrenGroupsRes{}, err
 		}
-		return removeAllChildrenGroupsReq{}, nil
+		return removeAllChildrenGroupsRes{}, nil
 	}
 }
 
@@ -242,7 +242,7 @@ func listChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return listChildrenGroupsRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		gp, err := svc.ListChildrenGroups(ctx, req.token, req.id, req.Page)
+		gp, err := svc.ListChildrenGroups(ctx, req.token, req.id, req.PageMeta)
 		if err != nil {
 			return listChildrenGroupsRes{}, err
 		}
@@ -256,7 +256,6 @@ func listChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 				Limit:  gp.Limit,
 				Offset: gp.Offset,
 				Total:  gp.Total,
-				Level:  gp.Level,
 			},
 			Groups: viewGroups,
 		}, nil
@@ -286,7 +285,6 @@ func buildGroupsResponseTree(page groups.Page) groupPageRes {
 			Limit:  page.Limit,
 			Offset: page.Offset,
 			Total:  page.Total,
-			Level:  page.Level,
 		},
 		Groups: []viewGroupRes{},
 	}
@@ -318,7 +316,6 @@ func buildGroupsResponse(gp groups.Page, filterByID bool) groupPageRes {
 	res := groupPageRes{
 		pageRes: pageRes{
 			Total: gp.Total,
-			Level: gp.Level,
 		},
 		Groups: []viewGroupRes{},
 	}
