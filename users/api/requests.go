@@ -33,7 +33,7 @@ func (req createClientReq) validate() error {
 }
 
 type viewClientReq struct {
-	id    string
+	id string
 }
 
 func (req viewClientReq) validate() error {

@@ -60,6 +60,14 @@ func newService() (users.Service, *authmocks.AuthClient, *mocks.Repository, *pol
 	return users.NewService(authClient, cRepo, policies, e, phasher, idProvider), authClient, cRepo, policies, e
 }
 
+func newServiceMinimal() (users.Service, *mocks.Repository) {
+	cRepo := new(mocks.Repository)
+	policies := new(policymocks.PolicyClient)
+	e := new(mocks.Emailer)
+	authClient := new(authmocks.AuthClient)
+	return users.NewService(authClient, cRepo, policies, e, phasher, idProvider), cRepo
+}
+
 func TestRegisterClient(t *testing.T) {
 	svc, _, cRepo, policies, _ := newService()
 
@@ -279,7 +287,7 @@ func TestRegisterClient(t *testing.T) {
 }
 
 func TestViewClient(t *testing.T) {
-	svc, _, cRepo, _, _ := newService()
+	svc, cRepo := newServiceMinimal()
 
 	cases := []struct {
 		desc                 string
@@ -347,7 +355,7 @@ func TestViewClient(t *testing.T) {
 }
 
 func TestListClients(t *testing.T) {
-	svc, _, cRepo, _, _ := newService()
+	svc, cRepo := newServiceMinimal()
 
 	cases := []struct {
 		desc                string
@@ -427,7 +435,7 @@ func TestListClients(t *testing.T) {
 }
 
 func TestSearchUsers(t *testing.T) {
-	svc, _, cRepo, _, _ := newService()
+	svc, cRepo := newServiceMinimal()
 	cases := []struct {
 		desc        string
 		token       string
@@ -475,7 +483,7 @@ func TestSearchUsers(t *testing.T) {
 }
 
 func TestUpdateClient(t *testing.T) {
-	svc, _, cRepo, _, _ := newService()
+	svc, cRepo := newServiceMinimal()
 
 	client1 := client
 	client2 := client
@@ -569,7 +577,7 @@ func TestUpdateClient(t *testing.T) {
 }
 
 func TestUpdateClientTags(t *testing.T) {
-	svc, _, cRepo, _, _ := newService()
+	svc, cRepo := newServiceMinimal()
 
 	client.Tags = []string{"updated"}
 	adminID := testsutil.GenerateUUID(t)
@@ -844,7 +852,7 @@ func TestUpdateClientSecret(t *testing.T) {
 }
 
 func TestUpdateClientIdentity(t *testing.T) {
-	svc, _, cRepo, _, _ := newService()
+	svc, cRepo := newServiceMinimal()
 
 	client2 := client
 	client2.Credentials.Identity = "updated@example.com"
@@ -910,7 +918,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 }
 
 func TestEnableClient(t *testing.T) {
-	svc, _, cRepo, _, _ := newService()
+	svc, cRepo := newServiceMinimal()
 
 	enabledClient1 := mgclients.Client{ID: testsutil.GenerateUUID(t), Credentials: mgclients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: mgclients.EnabledStatus}
 	disabledClient1 := mgclients.Client{ID: testsutil.GenerateUUID(t), Credentials: mgclients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: mgclients.DisabledStatus}
@@ -991,7 +999,7 @@ func TestEnableClient(t *testing.T) {
 }
 
 func TestDisableClient(t *testing.T) {
-	svc, _, cRepo, _, _ := newService()
+	svc, cRepo := newServiceMinimal()
 
 	enabledClient1 := mgclients.Client{ID: testsutil.GenerateUUID(t), Credentials: mgclients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: mgclients.EnabledStatus}
 	disabledClient1 := mgclients.Client{ID: testsutil.GenerateUUID(t), Credentials: mgclients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: mgclients.DisabledStatus}
@@ -1071,7 +1079,7 @@ func TestDisableClient(t *testing.T) {
 }
 
 func TestDeleteClient(t *testing.T) {
-	svc, _, cRepo, _, _ := newService()
+	svc, cRepo := newServiceMinimal()
 
 	enabledClient1 := mgclients.Client{ID: testsutil.GenerateUUID(t), Credentials: mgclients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: mgclients.EnabledStatus}
 	deletedClient1 := mgclients.Client{ID: testsutil.GenerateUUID(t), Credentials: mgclients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: mgclients.DeletedStatus}
@@ -1664,7 +1672,7 @@ func TestGenerateResetToken(t *testing.T) {
 }
 
 func TestResetSecret(t *testing.T) {
-	svc, _, cRepo, _, _ := newService()
+	svc, cRepo := newServiceMinimal()
 
 	client := mgclients.Client{
 		ID: "clientID",
@@ -1751,7 +1759,7 @@ func TestResetSecret(t *testing.T) {
 }
 
 func TestViewProfile(t *testing.T) {
-	svc, _, cRepo, _, _ := newService()
+	svc, cRepo := newServiceMinimal()
 
 	client := mgclients.Client{
 		ID: "clientID",

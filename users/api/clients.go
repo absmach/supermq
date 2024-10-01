@@ -221,7 +221,7 @@ func clientsHandler(svc users.Service, authClient auth.AuthClient, selfRegister 
 
 func decodeViewClient(_ context.Context, r *http.Request) (interface{}, error) {
 	req := viewClientReq{
-		id:    chi.URLParam(r, "id"),
+		id: chi.URLParam(r, "id"),
 	}
 
 	return req, nil
