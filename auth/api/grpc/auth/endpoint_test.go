@@ -105,6 +105,50 @@ func TestIdentify(t *testing.T) {
 	}
 }
 
+func TestIdentify(t *testing.T) {
+	conn, err := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	assert.Nil(t, err, fmt.Sprintf("Unexpected error creating client connection %s", err))
+	grpcClient := client.NewAuthClient(conn, time.Second, jwksURL)
+
+	cases := []struct {
+		desc   string
+		token  string
+		idt    *magistrala.IdentityRes
+		svcErr error
+		err    error
+	}{
+		{
+			desc:  "identify user with valid user token",
+			token: validToken,
+			idt:   &magistrala.IdentityRes{Id: id, UserId: email, DomainId: domainID},
+			err:   nil,
+		},
+		{
+			desc:   "identify user with invalid user token",
+			token:  "invalid",
+			idt:    &magistrala.IdentityRes{},
+			svcErr: svcerr.ErrAuthentication,
+			err:    svcerr.ErrAuthentication,
+		},
+		{
+			desc:  "identify user with empty token",
+			token: "",
+			idt:   &magistrala.IdentityRes{},
+			err:   apiutil.ErrBearerToken,
+		},
+	}
+
+	for _, tc := range cases {
+		svcCall := svc.On("Identify", mock.Anything, mock.Anything, mock.Anything).Return(auth.Key{Subject: id, User: email, Domain: domainID}, tc.svcErr)
+		idt, err := grpcClient.Identify(context.Background(), &magistrala.IdentityReq{Token: tc.token})
+		if idt != nil {
+			assert.Equal(t, tc.idt, idt, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.idt, idt))
+		}
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		svcCall.Unset()
+	}
+}
+
 func TestAuthorize(t *testing.T) {
 	conn, err := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.Nil(t, err, fmt.Sprintf("Unexpected error creating client connection %s", err))
