@@ -168,7 +168,7 @@ func TestViewGroupEndpoint(t *testing.T) {
 			req: groupReq{
 				id: testsutil.GenerateUUID(t),
 			},
-			svcResp: validGroupResp,
+			svcResp: groups.Group{},
 			svcErr:  nil,
 			resp:    viewGroupRes{},
 			err:     svcerr.ErrAuthorization,
@@ -177,7 +177,7 @@ func TestViewGroupEndpoint(t *testing.T) {
 			desc:    "unsuccessfully with invalid request",
 			session: pauth.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
 			req:     groupReq{},
-			svcResp: validGroupResp,
+			svcResp: groups.Group{},
 			svcErr:  nil,
 			resp:    viewGroupRes{},
 			err:     apiutil.ErrValidation,

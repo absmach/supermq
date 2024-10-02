@@ -4,7 +4,6 @@
 package sdk_test
 
 import (
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -109,7 +108,6 @@ func TestIssueToken(t *testing.T) {
 			svcCall := svc.On("IssueToken", mock.Anything, tc.login.Identity, tc.login.Secret, tc.login.DomainID).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.CreateToken(tc.login)
 			assert.Equal(t, tc.err, err)
-			fmt.Println("err", err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "IssueToken", mock.Anything, tc.login.Identity, tc.login.Secret, tc.login.DomainID)
@@ -182,7 +180,6 @@ func TestRefreshToken(t *testing.T) {
 			authCall := auth.On("Identify", mock.Anything, mock.Anything).Return(&magistrala.IdentityRes{Id: validID, UserId: validID, DomainId: validID}, tc.identifyErr)
 			svcCall := svc.On("RefreshToken", mock.Anything, pauth.Session{DomainUserID: validID, UserID: validID, DomainID: validID}, tc.token, tc.login.DomainID).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.RefreshToken(tc.login, tc.token)
-			fmt.Println("err", err)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
