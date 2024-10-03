@@ -10,6 +10,7 @@ import (
 	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/auth"
 	grpcclient "github.com/absmach/magistrala/auth/api/grpc"
+	"github.com/absmach/magistrala/pkg/apiutil"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
@@ -87,7 +88,7 @@ func (svc service) RegisterClient(ctx context.Context, token string, cli mgclien
 	defer func() {
 		if err != nil {
 			if errRollback := svc.addClientPolicyRollback(ctx, cli.ID, cli.Role); errRollback != nil {
-				err = errors.Wrap(errors.Wrap(errors.ErrRollbackTx, errRollback), err)
+				err = errors.Wrap(errors.Wrap(apiutil.ErrRollbackTx, errRollback), err)
 			}
 		}
 	}()

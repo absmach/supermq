@@ -109,7 +109,7 @@ func (svc service) CreateGroup(ctx context.Context, token, kind string, g groups
 	defer func() {
 		if retErr != nil {
 			if errRollback := svc.groups.Delete(ctx, saved.ID); errRollback != nil {
-				retErr = errors.Wrap(retErr, errors.Wrap(errors.ErrRollbackTx, errRollback))
+				retErr = errors.Wrap(retErr, errors.Wrap(apiutil.ErrRollbackTx, errRollback))
 			}
 		}
 	}()

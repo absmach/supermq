@@ -50,6 +50,8 @@ type Service interface {
 
 	// Authorize used for AuthZ gRPC server implementation and Things authorization.
 	Authorize(ctx context.Context, req *magistrala.AuthorizeReq) (string, error)
+
+	roles.Roles
 }
 
 // Cache contains thing caching interface.

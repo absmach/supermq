@@ -44,7 +44,7 @@ type service struct {
 // NewService returns a new Clients service implementation.
 func NewService(authClient grpcclient.AuthServiceClient, policyClient magistrala.PolicyServiceClient, c postgres.Repository, grepo mggroups.Repository, tcache Cache, idp magistrala.IDProvider, sidProvider magistrala.IDProvider) (Service, error) {
 
-	rolesSvc, err := entityroles.NewRolesSvc(auth.DomainType, c, sidProvider, authClient, policyClient, AvailableActions(), BuiltInRoles(), NewRolesOperationPermissionMap())
+	rolesSvc, err := entityroles.NewRolesSvc(auth.DomainType, c, sidProvider, authClient, policyClient, ThingAvailableActions(), ThingBuiltInRoles(), NewRolesOperationPermissionMap())
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func (svc service) CreateThings(ctx context.Context, token string, cls ...mgclie
 	}()
 
 	newBuiltInRoleMembers := map[roles.BuiltInRoleName][]roles.Member{
-		BuiltInRoleAdmin: {roles.Member(userInfo.UserID)},
+		ThingBuiltInRoleAdmin: {roles.Member(userInfo.UserID)},
 	}
 
 	optionalPolicies := []roles.OptionalPolicy{}

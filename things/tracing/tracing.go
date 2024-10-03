@@ -8,6 +8,7 @@ import (
 
 	"github.com/absmach/magistrala"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
+	entityRolesTrace "github.com/absmach/magistrala/pkg/entityroles/tracing"
 	"github.com/absmach/magistrala/things"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -18,11 +19,12 @@ var _ things.Service = (*tracingMiddleware)(nil)
 type tracingMiddleware struct {
 	tracer trace.Tracer
 	svc    things.Service
+	entityRolesTrace.RolesSvcTracingMiddleware
 }
 
 // New returns a new group service with tracing capabilities.
 func New(svc things.Service, tracer trace.Tracer) things.Service {
-	return &tracingMiddleware{tracer, svc}
+	return &tracingMiddleware{tracer, svc, entityRolesTrace.NewRolesSvcTracingMiddleware("things", svc, tracer)}
 }
 
 // CreateThings traces the "CreateThings" operation of the wrapped policies.Service.

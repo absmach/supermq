@@ -1,3 +1,5 @@
+// Copyright (c) Abstract Machines
+// SPDX-License-Identifier: Apache-2.0
 package things
 
 import "github.com/absmach/magistrala/pkg/roles"
@@ -15,10 +17,10 @@ const (
 )
 
 const (
-	BuiltInRoleAdmin = "admin"
+	ThingBuiltInRoleAdmin = "admin"
 )
 
-func AvailableActions() []roles.Action {
+func ThingAvailableActions() []roles.Action {
 	return []roles.Action{
 		ThingUpdate,
 		ThingRead,
@@ -32,8 +34,8 @@ func AvailableActions() []roles.Action {
 	}
 }
 
-func BuiltInRoles() map[roles.BuiltInRoleName][]roles.Action {
+func ThingBuiltInRoles() map[roles.BuiltInRoleName][]roles.Action {
 	return map[roles.BuiltInRoleName][]roles.Action{
-		BuiltInRoleAdmin: AvailableActions(),
+		ThingBuiltInRoleAdmin: ThingAvailableActions(),
 	}
 }

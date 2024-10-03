@@ -17,10 +17,10 @@ import (
 	"github.com/absmach/magistrala/internal/testsutil"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	cmocks "github.com/absmach/magistrala/pkg/channels/mocks"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	gmocks "github.com/absmach/magistrala/pkg/groups/mocks"
 	httpapi "github.com/absmach/magistrala/things/api/http"
 	"github.com/absmach/magistrala/things/mocks"
 	"github.com/go-chi/chi/v5"
@@ -85,9 +85,9 @@ func toJSON(data interface{}) string {
 	return string(jsonData)
 }
 
-func newThingsServer() (*httptest.Server, *mocks.Service, *gmocks.Service) {
+func newThingsServer() (*httptest.Server, *mocks.Service, *cmocks.Service) {
 	svc := new(mocks.Service)
-	gsvc := new(gmocks.Service)
+	gsvc := new(cmocks.Service)
 
 	logger := mglog.NewMock()
 	mux := chi.NewRouter()

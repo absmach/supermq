@@ -7,9 +7,7 @@ package mocks
 import (
 	context "context"
 
-	clients "github.com/absmach/magistrala/pkg/clients"
-
-	magistrala "github.com/absmach/magistrala"
+	channels "github.com/absmach/magistrala/pkg/channels"
 
 	mock "github.com/stretchr/testify/mock"
 
@@ -49,82 +47,17 @@ func (_m *Service) AddRole(ctx context.Context, token string, entityID string, r
 	return r0, r1
 }
 
-// Authorize provides a mock function with given fields: ctx, req
-func (_m *Service) Authorize(ctx context.Context, req *magistrala.AuthorizeReq) (string, error) {
-	ret := _m.Called(ctx, req)
+// Connect provides a mock function with given fields: ctx, token, chIDs, thIDs
+func (_m *Service) Connect(ctx context.Context, token string, chIDs []string, thIDs []string) error {
+	ret := _m.Called(ctx, token, chIDs, thIDs)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Authorize")
-	}
-
-	var r0 string
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *magistrala.AuthorizeReq) (string, error)); ok {
-		return rf(ctx, req)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, *magistrala.AuthorizeReq) string); ok {
-		r0 = rf(ctx, req)
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, *magistrala.AuthorizeReq) error); ok {
-		r1 = rf(ctx, req)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// CreateThings provides a mock function with given fields: ctx, token, client
-func (_m *Service) CreateThings(ctx context.Context, token string, client ...clients.Client) ([]clients.Client, error) {
-	_va := make([]interface{}, len(client))
-	for _i := range client {
-		_va[_i] = client[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, token)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	if len(ret) == 0 {
-		panic("no return value specified for CreateThings")
-	}
-
-	var r0 []clients.Client
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, ...clients.Client) ([]clients.Client, error)); ok {
-		return rf(ctx, token, client...)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, ...clients.Client) []clients.Client); ok {
-		r0 = rf(ctx, token, client...)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]clients.Client)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, ...clients.Client) error); ok {
-		r1 = rf(ctx, token, client...)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// DeleteClient provides a mock function with given fields: ctx, token, id
-func (_m *Service) DeleteClient(ctx context.Context, token string, id string) error {
-	ret := _m.Called(ctx, token, id)
-
-	if len(ret) == 0 {
-		panic("no return value specified for DeleteClient")
+		panic("no return value specified for Connect")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, token, id)
+	if rf, ok := ret.Get(0).(func(context.Context, string, []string, []string) error); ok {
+		r0 = rf(ctx, token, chIDs, thIDs)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -132,23 +65,60 @@ func (_m *Service) DeleteClient(ctx context.Context, token string, id string) er
 	return r0
 }
 
-// DisableClient provides a mock function with given fields: ctx, token, id
-func (_m *Service) DisableClient(ctx context.Context, token string, id string) (clients.Client, error) {
+// CreateChannels provides a mock function with given fields: ctx, token, _a2
+func (_m *Service) CreateChannels(ctx context.Context, token string, _a2 ...channels.Channel) ([]channels.Channel, error) {
+	_va := make([]interface{}, len(_a2))
+	for _i := range _a2 {
+		_va[_i] = _a2[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, token)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateChannels")
+	}
+
+	var r0 []channels.Channel
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, ...channels.Channel) ([]channels.Channel, error)); ok {
+		return rf(ctx, token, _a2...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, ...channels.Channel) []channels.Channel); ok {
+		r0 = rf(ctx, token, _a2...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]channels.Channel)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, ...channels.Channel) error); ok {
+		r1 = rf(ctx, token, _a2...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DisableChannel provides a mock function with given fields: ctx, token, id
+func (_m *Service) DisableChannel(ctx context.Context, token string, id string) (channels.Channel, error) {
 	ret := _m.Called(ctx, token, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for DisableClient")
+		panic("no return value specified for DisableChannel")
 	}
 
-	var r0 clients.Client
+	var r0 channels.Channel
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) (clients.Client, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (channels.Channel, error)); ok {
 		return rf(ctx, token, id)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) clients.Client); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) channels.Channel); ok {
 		r0 = rf(ctx, token, id)
 	} else {
-		r0 = ret.Get(0).(clients.Client)
+		r0 = ret.Get(0).(channels.Channel)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
@@ -160,55 +130,45 @@ func (_m *Service) DisableClient(ctx context.Context, token string, id string) (
 	return r0, r1
 }
 
-// EnableClient provides a mock function with given fields: ctx, token, id
-func (_m *Service) EnableClient(ctx context.Context, token string, id string) (clients.Client, error) {
+// Disconnect provides a mock function with given fields: ctx, token, chIDs, thIDs
+func (_m *Service) Disconnect(ctx context.Context, token string, chIDs []string, thIDs []string) error {
+	ret := _m.Called(ctx, token, chIDs, thIDs)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Disconnect")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, []string, []string) error); ok {
+		r0 = rf(ctx, token, chIDs, thIDs)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// EnableChannel provides a mock function with given fields: ctx, token, id
+func (_m *Service) EnableChannel(ctx context.Context, token string, id string) (channels.Channel, error) {
 	ret := _m.Called(ctx, token, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for EnableClient")
+		panic("no return value specified for EnableChannel")
 	}
 
-	var r0 clients.Client
+	var r0 channels.Channel
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) (clients.Client, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (channels.Channel, error)); ok {
 		return rf(ctx, token, id)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) clients.Client); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) channels.Channel); ok {
 		r0 = rf(ctx, token, id)
 	} else {
-		r0 = ret.Get(0).(clients.Client)
+		r0 = ret.Get(0).(channels.Channel)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
 		r1 = rf(ctx, token, id)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// Identify provides a mock function with given fields: ctx, key
-func (_m *Service) Identify(ctx context.Context, key string) (string, error) {
-	ret := _m.Called(ctx, key)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Identify")
-	}
-
-	var r0 string
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (string, error)); ok {
-		return rf(ctx, key)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) string); ok {
-		r0 = rf(ctx, key)
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, key)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -246,32 +206,78 @@ func (_m *Service) ListAvailableActions(ctx context.Context, token string) ([]st
 	return r0, r1
 }
 
-// ListClients provides a mock function with given fields: ctx, token, reqUserID, pm
-func (_m *Service) ListClients(ctx context.Context, token string, reqUserID string, pm clients.Page) (clients.ClientsPage, error) {
-	ret := _m.Called(ctx, token, reqUserID, pm)
+// ListChannels provides a mock function with given fields: ctx, token, pm
+func (_m *Service) ListChannels(ctx context.Context, token string, pm channels.PageMetadata) (channels.Page, error) {
+	ret := _m.Called(ctx, token, pm)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ListClients")
+		panic("no return value specified for ListChannels")
 	}
 
-	var r0 clients.ClientsPage
+	var r0 channels.Page
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, clients.Page) (clients.ClientsPage, error)); ok {
-		return rf(ctx, token, reqUserID, pm)
+	if rf, ok := ret.Get(0).(func(context.Context, string, channels.PageMetadata) (channels.Page, error)); ok {
+		return rf(ctx, token, pm)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, clients.Page) clients.ClientsPage); ok {
-		r0 = rf(ctx, token, reqUserID, pm)
+	if rf, ok := ret.Get(0).(func(context.Context, string, channels.PageMetadata) channels.Page); ok {
+		r0 = rf(ctx, token, pm)
 	} else {
-		r0 = ret.Get(0).(clients.ClientsPage)
+		r0 = ret.Get(0).(channels.Page)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, clients.Page) error); ok {
-		r1 = rf(ctx, token, reqUserID, pm)
+	if rf, ok := ret.Get(1).(func(context.Context, string, channels.PageMetadata) error); ok {
+		r1 = rf(ctx, token, pm)
 	} else {
 		r1 = ret.Error(1)
 	}
 
 	return r0, r1
+}
+
+// ListChannelsByThing provides a mock function with given fields: ctx, token, thID, pm
+func (_m *Service) ListChannelsByThing(ctx context.Context, token string, thID string, pm channels.PageMetadata) (channels.Page, error) {
+	ret := _m.Called(ctx, token, thID, pm)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListChannelsByThing")
+	}
+
+	var r0 channels.Page
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, channels.PageMetadata) (channels.Page, error)); ok {
+		return rf(ctx, token, thID, pm)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, channels.PageMetadata) channels.Page); ok {
+		r0 = rf(ctx, token, thID, pm)
+	} else {
+		r0 = ret.Get(0).(channels.Page)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, channels.PageMetadata) error); ok {
+		r1 = rf(ctx, token, thID, pm)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RemoveChannel provides a mock function with given fields: ctx, token, id
+func (_m *Service) RemoveChannel(ctx context.Context, token string, id string) error {
+	ret := _m.Called(ctx, token, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveChannel")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, token, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // RemoveRole provides a mock function with given fields: ctx, token, entityID, roleName
@@ -594,27 +600,27 @@ func (_m *Service) RoleRemoveMembers(ctx context.Context, token string, entityID
 	return r0
 }
 
-// UpdateClient provides a mock function with given fields: ctx, token, client
-func (_m *Service) UpdateClient(ctx context.Context, token string, client clients.Client) (clients.Client, error) {
-	ret := _m.Called(ctx, token, client)
+// UpdateChannel provides a mock function with given fields: ctx, token, channel
+func (_m *Service) UpdateChannel(ctx context.Context, token string, channel channels.Channel) (channels.Channel, error) {
+	ret := _m.Called(ctx, token, channel)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateClient")
+		panic("no return value specified for UpdateChannel")
 	}
 
-	var r0 clients.Client
+	var r0 channels.Channel
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, clients.Client) (clients.Client, error)); ok {
-		return rf(ctx, token, client)
+	if rf, ok := ret.Get(0).(func(context.Context, string, channels.Channel) (channels.Channel, error)); ok {
+		return rf(ctx, token, channel)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, clients.Client) clients.Client); ok {
-		r0 = rf(ctx, token, client)
+	if rf, ok := ret.Get(0).(func(context.Context, string, channels.Channel) channels.Channel); ok {
+		r0 = rf(ctx, token, channel)
 	} else {
-		r0 = ret.Get(0).(clients.Client)
+		r0 = ret.Get(0).(channels.Channel)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, clients.Client) error); ok {
-		r1 = rf(ctx, token, client)
+	if rf, ok := ret.Get(1).(func(context.Context, string, channels.Channel) error); ok {
+		r1 = rf(ctx, token, channel)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -622,55 +628,27 @@ func (_m *Service) UpdateClient(ctx context.Context, token string, client client
 	return r0, r1
 }
 
-// UpdateClientSecret provides a mock function with given fields: ctx, token, id, key
-func (_m *Service) UpdateClientSecret(ctx context.Context, token string, id string, key string) (clients.Client, error) {
-	ret := _m.Called(ctx, token, id, key)
+// UpdateChannelTags provides a mock function with given fields: ctx, token, channel
+func (_m *Service) UpdateChannelTags(ctx context.Context, token string, channel channels.Channel) (channels.Channel, error) {
+	ret := _m.Called(ctx, token, channel)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateClientSecret")
+		panic("no return value specified for UpdateChannelTags")
 	}
 
-	var r0 clients.Client
+	var r0 channels.Channel
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) (clients.Client, error)); ok {
-		return rf(ctx, token, id, key)
+	if rf, ok := ret.Get(0).(func(context.Context, string, channels.Channel) (channels.Channel, error)); ok {
+		return rf(ctx, token, channel)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) clients.Client); ok {
-		r0 = rf(ctx, token, id, key)
+	if rf, ok := ret.Get(0).(func(context.Context, string, channels.Channel) channels.Channel); ok {
+		r0 = rf(ctx, token, channel)
 	} else {
-		r0 = ret.Get(0).(clients.Client)
+		r0 = ret.Get(0).(channels.Channel)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
-		r1 = rf(ctx, token, id, key)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// UpdateClientTags provides a mock function with given fields: ctx, token, client
-func (_m *Service) UpdateClientTags(ctx context.Context, token string, client clients.Client) (clients.Client, error) {
-	ret := _m.Called(ctx, token, client)
-
-	if len(ret) == 0 {
-		panic("no return value specified for UpdateClientTags")
-	}
-
-	var r0 clients.Client
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, clients.Client) (clients.Client, error)); ok {
-		return rf(ctx, token, client)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, clients.Client) clients.Client); ok {
-		r0 = rf(ctx, token, client)
-	} else {
-		r0 = ret.Get(0).(clients.Client)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, clients.Client) error); ok {
-		r1 = rf(ctx, token, client)
+	if rf, ok := ret.Get(1).(func(context.Context, string, channels.Channel) error); ok {
+		r1 = rf(ctx, token, channel)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -706,23 +684,23 @@ func (_m *Service) UpdateRoleName(ctx context.Context, token string, entityID st
 	return r0, r1
 }
 
-// ViewClient provides a mock function with given fields: ctx, token, id
-func (_m *Service) ViewClient(ctx context.Context, token string, id string) (clients.Client, error) {
+// ViewChannel provides a mock function with given fields: ctx, token, id
+func (_m *Service) ViewChannel(ctx context.Context, token string, id string) (channels.Channel, error) {
 	ret := _m.Called(ctx, token, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ViewClient")
+		panic("no return value specified for ViewChannel")
 	}
 
-	var r0 clients.Client
+	var r0 channels.Channel
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) (clients.Client, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (channels.Channel, error)); ok {
 		return rf(ctx, token, id)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) clients.Client); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) channels.Channel); ok {
 		r0 = rf(ctx, token, id)
 	} else {
-		r0 = ret.Get(0).(clients.Client)
+		r0 = ret.Get(0).(channels.Channel)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
