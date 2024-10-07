@@ -28,7 +28,6 @@ import (
 	authsvcAuthz "github.com/absmach/magistrala/pkg/authz/authsvc"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/groups"
-	"github.com/absmach/magistrala/pkg/grpcclient"
 	jaegerclient "github.com/absmach/magistrala/pkg/jaeger"
 	"github.com/absmach/magistrala/pkg/oauth2"
 	googleoauth "github.com/absmach/magistrala/pkg/oauth2/google"
@@ -161,7 +160,7 @@ func main() {
 	}()
 	tracer := tp.Tracer(svcName)
 
-	clientConfig := grpcclient.Config{}
+	clientConfig := authclient.Config{}
 	if err := env.ParseWithOptions(&clientConfig, env.Options{Prefix: envPrefixAuth}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
 		exitCode = 1

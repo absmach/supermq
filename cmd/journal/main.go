@@ -25,7 +25,6 @@ import (
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
 	authsvcAuthz "github.com/absmach/magistrala/pkg/authz/authsvc"
 	"github.com/absmach/magistrala/pkg/events/store"
-	"github.com/absmach/magistrala/pkg/grpcclient"
 	jaegerclient "github.com/absmach/magistrala/pkg/jaeger"
 	"github.com/absmach/magistrala/pkg/postgres"
 	pgclient "github.com/absmach/magistrala/pkg/postgres"
@@ -96,7 +95,7 @@ func main() {
 	}
 	defer db.Close()
 
-	authClientCfg := grpcclient.Config{}
+	authClientCfg := authclient.Config{}
 	if err := env.ParseWithOptions(&authClientCfg, env.Options{Prefix: envPrefixAuth}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
 		exitCode = 1

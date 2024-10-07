@@ -95,7 +95,7 @@ func main() {
 	}
 	defer db.Close()
 
-	authClientCfg := grpcclient.Config{}
+	authClientCfg := authclient.Config{}
 	if err := env.ParseWithOptions(&authClientCfg, env.Options{Prefix: envPrefixAuth}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load auth configuration : %s", err.Error()))
 		exitCode = 1
