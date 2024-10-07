@@ -190,8 +190,11 @@ var (
 	ErrMissingDomainID = errors.New("missing domainID")
 
 	// ErrMissingFullName indicates missing full name.
-	ErrMissingFullName = errors.New("Missing full name. Add two names separated by a space")
+	ErrMissingFullName = errors.New("two names required separated by a space")
 
 	// ErrMissingUserName indicates missing user name.
-	ErrMissingUserName = errors.New("Missing user name")
+	ErrMissingUserName = errors.New("missing user name")
+
+	// ErrMissingProfilePicture indicates missing profile picture.
+	ErrMissingProfilePicture = errors.New("missing profile picture")
 )
