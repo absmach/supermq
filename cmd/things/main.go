@@ -16,14 +16,14 @@ import (
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/magistrala"
 	authclient "github.com/absmach/magistrala/auth/api/grpc"
+	chSvc "github.com/absmach/magistrala/internal/channels"
+	capi "github.com/absmach/magistrala/internal/channels/api"
+	gevents "github.com/absmach/magistrala/internal/channels/events"
+	cpostgres "github.com/absmach/magistrala/internal/channels/postgres"
+	ctracing "github.com/absmach/magistrala/internal/channels/tracing"
 	redisclient "github.com/absmach/magistrala/internal/clients/redis"
-	mggroups "github.com/absmach/magistrala/internal/groups"
-	gapi "github.com/absmach/magistrala/internal/groups/api"
-	gevents "github.com/absmach/magistrala/internal/groups/events"
-	gpostgres "github.com/absmach/magistrala/internal/groups/postgres"
-	gtracing "github.com/absmach/magistrala/internal/groups/tracing"
 	mglog "github.com/absmach/magistrala/logger"
-	"github.com/absmach/magistrala/pkg/groups"
+	"github.com/absmach/magistrala/pkg/channels"
 	"github.com/absmach/magistrala/pkg/grpcclient"
 	jaegerclient "github.com/absmach/magistrala/pkg/jaeger"
 	"github.com/absmach/magistrala/pkg/postgres"
@@ -42,7 +42,7 @@ import (
 	thevents "github.com/absmach/magistrala/things/events"
 	thingspg "github.com/absmach/magistrala/things/postgres"
 	localusers "github.com/absmach/magistrala/things/standalone"
-	ctracing "github.com/absmach/magistrala/things/tracing"
+	ttracing "github.com/absmach/magistrala/things/tracing"
 	"github.com/caarlos0/env/v11"
 	"github.com/go-chi/chi/v5"
 	"github.com/jmoiron/sqlx"
@@ -114,13 +114,13 @@ func main() {
 		return
 	}
 	tm := thingspg.Migration()
-	gm, err := gpostgres.Migration()
+	cm, err := cpostgres.Migration()
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
 		return
 	}
-	tm.Migrations = append(tm.Migrations, gm.Migrations...)
+	tm.Migrations = append(tm.Migrations, cm.Migrations...)
 	db, err := pgclient.Setup(dbConfig, *tm)
 	if err != nil {
 		logger.Error(err.Error())
@@ -189,7 +189,7 @@ func main() {
 		logger.Info("PolicyService gRPC client successfully connected to auth gRPC server " + policyHandler.Secure())
 	}
 
-	csvc, gsvc, err := newService(ctx, db, dbConfig, authClient, policyClient, cacheclient, cfg.CacheKeyDuration, cfg.ESURL, tracer, logger)
+	tsvc, gsvc, err := newService(ctx, db, dbConfig, authClient, policyClient, cacheclient, cfg.CacheKeyDuration, cfg.ESURL, tracer, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
 		exitCode = 1
@@ -203,7 +203,7 @@ func main() {
 		return
 	}
 	mux := chi.NewRouter()
-	httpSvc := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(csvc, gsvc, mux, logger, cfg.InstanceID), logger)
+	httpSvc := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(tsvc, gsvc, mux, logger, cfg.InstanceID), logger)
 
 	grpcServerConfig := server.Config{Port: defSvcAuthGRPCPort}
 	if err := env.ParseWithOptions(&grpcServerConfig, env.Options{Prefix: envPrefixGRPC}); err != nil {
@@ -213,7 +213,7 @@ func main() {
 	}
 	registerThingsServer := func(srv *grpc.Server) {
 		reflection.Register(srv)
-		magistrala.RegisterAuthzServiceServer(srv, grpcapi.NewServer(csvc))
+		magistrala.RegisterAuthzServiceServer(srv, grpcapi.NewServer(tsvc))
 	}
 	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerThingsServer, logger)
 
@@ -240,44 +240,47 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authClient authclient.AuthServiceClient, policyClient magistrala.PolicyServiceClient, cacheClient *redis.Client, keyDuration time.Duration, esURL string, tracer trace.Tracer, logger *slog.Logger) (things.Service, groups.Service, error) {
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authClient authclient.AuthServiceClient, policyClient magistrala.PolicyServiceClient, cacheClient *redis.Client, keyDuration time.Duration, esURL string, tracer trace.Tracer, logger *slog.Logger) (things.Service, channels.Service, error) {
 	database := postgres.NewDatabase(db, dbConfig, tracer)
-	cRepo := thingspg.NewRepository(database)
-	gRepo := gpostgres.New(database)
+	tRepo := thingspg.NewRepository(database)
+	cRepo := cpostgres.NewRepository(database)
 
 	idp := uuid.New()
-	sidProvider, err := sid.New()
+	sidp, err := sid.New()
+	if err != nil {
+		return nil, nil, err
+	}
 
 	thingCache := thcache.NewCache(cacheClient, keyDuration)
 
-	csvc, err := things.NewService(authClient, policyClient, cRepo, gRepo, thingCache, idp, sidProvider)
+	tsvc, err := things.NewService(authClient, policyClient, tRepo, thingCache, idp, sidp)
 	if err != nil {
 		return nil, nil, err
 	}
-	gsvc, err := mggroups.NewService(gRepo, idp, authClient, policyClient)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	csvc, err = thevents.NewEventStoreMiddleware(ctx, csvc, esURL)
+	csvc, err := chSvc.New(cRepo, authClient, policyClient, idp, sidp)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	gsvc, err = gevents.NewEventStoreMiddleware(ctx, gsvc, esURL, streamID)
+	tsvc, err = thevents.NewEventStoreMiddleware(ctx, tsvc, esURL)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	csvc, err = gevents.NewEventStoreMiddleware(ctx, csvc, esURL)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tsvc = ttracing.New(tsvc, tracer)
+	tsvc = api.LoggingMiddleware(tsvc, logger)
+	counter, latency := prometheus.MakeMetrics(svcName, "api")
+	tsvc = api.MetricsMiddleware(tsvc, counter, latency)
 
 	csvc = ctracing.New(csvc, tracer)
-	csvc = api.LoggingMiddleware(csvc, logger)
-	counter, latency := prometheus.MakeMetrics(svcName, "api")
-	csvc = api.MetricsMiddleware(csvc, counter, latency)
-
-	gsvc = gtracing.New(gsvc, tracer)
-	gsvc = gapi.LoggingMiddleware(gsvc, logger)
+	csvc = capi.LoggingMiddleware(csvc, logger)
 	counter, latency = prometheus.MakeMetrics(fmt.Sprintf("%s_groups", svcName), "api")
-	gsvc = gapi.MetricsMiddleware(gsvc, counter, latency)
+	csvc = capi.MetricsMiddleware(csvc, counter, latency)
 
-	return csvc, gsvc, err
+	return tsvc, csvc, err
 }

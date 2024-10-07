@@ -24,9 +24,11 @@ const (
 	OpViewChannel
 	OpUpdateChannel
 	OpUpdateChannelTags
-	OpEnablelChannel
+	OpEnableChannel
 	OpDisableChannel
 	OpDeleteChannel
+	OpConnectThingChannel
+	OpDisconnectThingChannel
 )
 
 var expectedOperations = []svcutil.Operation{
@@ -35,9 +37,11 @@ var expectedOperations = []svcutil.Operation{
 	OpViewChannel,
 	OpUpdateChannel,
 	OpUpdateChannelTags,
-	OpEnablelChannel,
+	OpEnableChannel,
 	OpDisableChannel,
 	OpDeleteChannel,
+	OpConnectThingChannel,
+	OpDisconnectThingChannel,
 }
 
 var operationNames = []string{
@@ -46,9 +50,11 @@ var operationNames = []string{
 	"OpViewChannel",
 	"OpUpdateChannel",
 	"OpUpdateChannelTags",
-	"OpEnablelChannel",
+	"OpEnableChannel",
 	"OpDisableChannel",
 	"OpDeleteChannel",
+	"OpConnectThingChannel",
+	"OpDisconnectThingChannel",
 }
 
 func NewOperationPerm() svcutil.OperationPerm {
@@ -57,14 +63,16 @@ func NewOperationPerm() svcutil.OperationPerm {
 
 func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 	opPerm := map[svcutil.Operation]svcutil.Permission{
-		OpCreateChannel:     "",
-		OpListChannel:       "",
-		OpViewChannel:       "",
-		OpUpdateChannel:     "",
-		OpUpdateChannelTags: "",
-		OpEnablelChannel:    "",
-		OpDisableChannel:    "",
-		OpDeleteChannel:     "",
+		OpCreateChannel:          "",
+		OpListChannel:            "",
+		OpViewChannel:            "",
+		OpUpdateChannel:          "",
+		OpUpdateChannelTags:      "",
+		OpEnableChannel:          "",
+		OpDisableChannel:         "",
+		OpDeleteChannel:          "",
+		OpConnectThingChannel:    "",
+		OpDisconnectThingChannel: "",
 	}
 	return opPerm
 }

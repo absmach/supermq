@@ -15,6 +15,8 @@ import (
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/channels"
 	"github.com/absmach/magistrala/pkg/clients"
+	mgclients "github.com/absmach/magistrala/pkg/clients"
+	clientpg "github.com/absmach/magistrala/pkg/clients/postgres"
 	entityRolesRepo "github.com/absmach/magistrala/pkg/entityroles/postrgres"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
@@ -34,16 +36,16 @@ type channelRepository struct {
 
 // NewChannelRepository instantiates a PostgreSQL implementation of channel
 // repository.
-func NewChannelRepository(db postgres.Database) channelRepository {
+func NewRepository(db postgres.Database) channels.Repository {
 
 	rolesSvcRepo := entityRolesRepo.NewRolesSvcRepository(db, rolesTableNamePrefix)
-	return channelRepository{
+	return &channelRepository{
 		db:           db,
 		RolesSvcRepo: rolesSvcRepo,
 	}
 }
 
-func (cr channelRepository) Save(ctx context.Context, chs ...channels.Channel) (retChs []channels.Channel, retErr error) {
+func (cr *channelRepository) Save(ctx context.Context, chs ...channels.Channel) (retChs []channels.Channel, retErr error) {
 	tx, err := cr.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return []channels.Channel{}, errors.Wrap(repoerr.ErrCreateEntity, err)
@@ -88,7 +90,7 @@ func (cr channelRepository) Save(ctx context.Context, chs ...channels.Channel) (
 	return resChs, nil
 }
 
-func (cr channelRepository) Update(ctx context.Context, channel channels.Channel) (channels.Channel, error) {
+func (cr *channelRepository) Update(ctx context.Context, channel channels.Channel) (channels.Channel, error) {
 	var query []string
 	var upq string
 	if channel.Name != "" {
@@ -108,7 +110,7 @@ func (cr channelRepository) Update(ctx context.Context, channel channels.Channel
 	return cr.update(ctx, channel, q)
 }
 
-func (cr channelRepository) UpdateTags(ctx context.Context, channel channels.Channel) (channels.Channel, error) {
+func (cr *channelRepository) UpdateTags(ctx context.Context, channel channels.Channel) (channels.Channel, error) {
 	q := `UPDATE channels SET tags = :tags, updated_at = :updated_at, updated_by = :updated_by
 	WHERE id = :id AND status = :status
 	RETURNING id, name, tags,  metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
@@ -124,7 +126,7 @@ func (cr *channelRepository) ChangeStatus(ctx context.Context, channel channels.
 	return cr.update(ctx, channel, q)
 }
 
-func (cr channelRepository) RetrieveByID(ctx context.Context, id string) (channels.Channel, error) {
+func (cr *channelRepository) RetrieveByID(ctx context.Context, id string) (channels.Channel, error) {
 	q := `SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id,  metadata, created_at, updated_at, updated_by, status FROM channels WHERE id = :id`
 
 	dbch := dbChannel{
@@ -148,7 +150,7 @@ func (cr channelRepository) RetrieveByID(ctx context.Context, id string) (channe
 	return channels.Channel{}, repoerr.ErrNotFound
 }
 
-func (cr channelRepository) RetrieveAll(ctx context.Context, pm channels.PageMetadata) (channels.Page, error) {
+func (cr *channelRepository) RetrieveAll(ctx context.Context, pm channels.PageMetadata) (channels.Page, error) {
 	query, err := PageQuery(pm)
 	if err != nil {
 		return channels.Page{}, errors.Wrap(repoerr.ErrViewEntity, err)
@@ -200,12 +202,59 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, pm channels.PageMet
 	return page, nil
 }
 
-func (cr channelRepository) RetrieveByThing(ctx context.Context, thID string, pm channels.PageMetadata) (channels.Page, error) {
+func (cr *channelRepository) RetrieveByThing(ctx context.Context, thID string, pm channels.PageMetadata) (channels.Page, error) {
+	query, err := PageQuery(pm)
+	if err != nil {
+		return channels.Page{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+	query = applyOrdering(query, pm)
 
-	return channels.Page{}, nil
+	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.identity, c.metadata, COALESCE(c.domain_id, '') AS domain_id, c.status,
+					c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM clients c JOIN connections conn ON conn.channel_id = c.id  %s ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, query)
+
+	dbPage, err := toDBChannelsPage(pm)
+	if err != nil {
+		return channels.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+	}
+	rows, err := cr.db.NamedQueryContext(ctx, q, dbPage)
+	if err != nil {
+		return channels.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+	}
+	defer rows.Close()
+
+	var items []channels.Channel
+	for rows.Next() {
+		dbch := dbChannel{}
+		if err := rows.StructScan(&dbch); err != nil {
+			return channels.Page{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+
+		ch, err := toChannel(dbch)
+		if err != nil {
+			return channels.Page{}, err
+		}
+
+		items = append(items, ch)
+	}
+	cq := fmt.Sprintf(`SELECT COUNT(*) FROM clients c JOIN connections conn ON conn.channel_id = c.id %s;`, query)
+
+	total, err := postgres.Total(ctx, cr.db, cq, dbPage)
+	if err != nil {
+		return channels.Page{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+
+	page := channels.Page{
+		Channels: items,
+		PageMetadata: channels.PageMetadata{
+			Total:  total,
+			Offset: pm.Offset,
+			Limit:  pm.Limit,
+		},
+	}
+	return page, nil
 }
 
-func (cr channelRepository) Remove(ctx context.Context, ids ...string) error {
+func (cr *channelRepository) Remove(ctx context.Context, ids ...string) error {
 	q := "DELETE FROM channels AS c  WHERE c.id = ANY(:channel_ids) ;"
 	params := map[string]interface{}{
 		"channel_ids": ids,
@@ -220,17 +269,124 @@ func (cr channelRepository) Remove(ctx context.Context, ids ...string) error {
 	return nil
 }
 
-func (cr channelRepository) Connect(ctx context.Context, chIDs, thIDs []string) error {
+func (cr *channelRepository) Connect(ctx context.Context, chIDs, thIDs []string) (retErr error) {
+	cq := `SELECT id, COALESCE(domain_id, '') AS domain_id, status FROM channels WHERE id IN ANY($1::text[]);`
+	rows, err := cr.db.QueryxContext(ctx, cq, chIDs)
+	if err != nil {
+		return errors.Wrap(repoerr.ErrCreateEntity, err)
+	}
+	defer rows.Close()
 
+	var chs []dbChannel
+	for rows.Next() {
+		dbch := dbChannel{}
+		if err := rows.StructScan(&dbch); err != nil {
+			return errors.Wrap(repoerr.ErrCreateEntity, err)
+		}
+
+		if dbch.Status != mgclients.EnabledStatus {
+			return fmt.Errorf("channel %s is not in enabled status", dbch.ID)
+		}
+		chs = append(chs, dbch)
+	}
+
+	tq := `SELECT id, COALESCE(domain_id, '') AS domain_id, status FROM clients WHERE id IN ANY($1::text[]);`
+	rows, err = cr.db.QueryxContext(ctx, tq, chIDs)
+	if err != nil {
+		return errors.Wrap(repoerr.ErrCreateEntity, err)
+	}
+	defer rows.Close()
+
+	var things []clientpg.DBClient
+	for rows.Next() {
+		dbcli := clientpg.DBClient{}
+		if err := rows.StructScan(&dbcli); err != nil {
+			return errors.Wrap(repoerr.ErrCreateEntity, err)
+		}
+
+		if dbcli.Status != mgclients.EnabledStatus {
+			return fmt.Errorf("thing %s is not in enabled status", dbcli.ID)
+		}
+		things = append(things, dbcli)
+	}
+
+	query := `INSERT INTO connections (channel_id, domain_id, thing_id)
+	VALUES (:channel_id, :domain_id, :thing_id)`
+
+	tx, err := cr.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return errors.Wrap(repoerr.ErrCreateEntity, err)
+	}
+	for _, ch := range chs {
+		for _, thing := range things {
+			conn := dbConnection{
+				ChannelID: ch.ID,
+				DomainID:  ch.Domain,
+				ThingID:   thing.ID,
+			}
+			_, err := tx.NamedExec(query, conn)
+			if err != nil {
+				retErr := errors.Wrap(repoerr.ErrCreateEntity, errors.Wrap(fmt.Errorf("failed to insert connection for channel_id: %s, domain_id: %s thing_id %s", conn.ChannelID, conn.DomainID, conn.ThingID), err))
+				if errRollBack := tx.Rollback(); errRollBack != nil {
+					retErr = errors.Wrap(retErr, errors.Wrap(apiutil.ErrRollbackTx, errRollBack))
+				}
+				return retErr
+			}
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return errors.Wrap(repoerr.ErrCreateEntity, err)
+	}
 	return nil
 }
 
-func (cr channelRepository) Disconnect(ctx context.Context, chIDs, thIDs []string) error {
+func (cr *channelRepository) Disconnect(ctx context.Context, chIDs, thIDs []string) error {
+	cq := `SELECT id, COALESCE(domain_id, '') AS domain_id, status FROM channels WHERE id IN ANY($1::text[]);`
+	rows, err := cr.db.QueryxContext(ctx, cq, chIDs)
+	if err != nil {
+		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+	}
+	defer rows.Close()
 
+	var chs []dbChannel
+	for rows.Next() {
+		dbch := dbChannel{}
+		if err := rows.StructScan(&dbch); err != nil {
+			return errors.Wrap(repoerr.ErrRemoveEntity, err)
+		}
+		chs = append(chs, dbch)
+	}
+
+	query := `DELETE FROM connections WHERE channel_id = :channel_id AND domain_id = :domain_id AND thing_id = :thing_id`
+
+	tx, err := cr.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+	}
+	for _, ch := range chs {
+		for _, thID := range thIDs {
+			conn := dbConnection{
+				ChannelID: ch.ID,
+				DomainID:  ch.Domain,
+				ThingID:   thID,
+			}
+			_, err := tx.NamedExec(query, conn)
+			if err != nil {
+				retErr := errors.Wrap(repoerr.ErrRemoveEntity, errors.Wrap(fmt.Errorf("failed to delete connection for channel_id: %s, domain_id: %s thing_id %s", conn.ChannelID, conn.DomainID, conn.ThingID), err))
+				if errRollBack := tx.Rollback(); errRollBack != nil {
+					retErr = errors.Wrap(retErr, errors.Wrap(apiutil.ErrRollbackTx, errRollBack))
+				}
+				return retErr
+			}
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+	}
 	return nil
 }
 
-func (cr channelRepository) update(ctx context.Context, ch channels.Channel, query string) (channels.Channel, error) {
+func (cr *channelRepository) update(ctx context.Context, ch channels.Channel, query string) (channels.Channel, error) {
 	dbch, err := toDBChannel(ch)
 	if err != nil {
 		return channels.Channel{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
@@ -345,11 +501,14 @@ func PageQuery(pm channels.PageMetadata) (string, error) {
 
 	var query []string
 	if pm.Name != "" {
-		query = append(query, "name ILIKE '%' || :name || '%'")
+		query = append(query, "c.name ILIKE '%' || :name || '%'")
 	}
 
+	if pm.ThingID != "" {
+		query = append(query, "conn.thing_id = :thing_id")
+	}
 	if pm.Id != "" {
-		query = append(query, "id ILIKE '%' || :id || '%'")
+		query = append(query, "c.id ILIKE '%' || :id || '%'")
 	}
 	if pm.Tag != "" {
 		query = append(query, "EXISTS (SELECT 1 FROM unnest(tags) AS tag WHERE tag ILIKE '%' || :tag || '%')")
@@ -420,4 +579,10 @@ type dbChannelsPage struct {
 	Metadata []byte         `db:"metadata"`
 	Tag      string         `db:"tag"`
 	Status   clients.Status `db:"status"`
+}
+
+type dbConnection struct {
+	ChannelID string `db:"channel_id"`
+	DomainID  string `db:"domain_id"`
+	ThingID   string `db:"thing_id"`
 }

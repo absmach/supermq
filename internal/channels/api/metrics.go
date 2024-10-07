@@ -7,25 +7,23 @@ import (
 	"context"
 	"time"
 
-	"github.com/absmach/magistrala"
-	mgclients "github.com/absmach/magistrala/pkg/clients"
+	"github.com/absmach/magistrala/pkg/channels"
 	entityRolesAPI "github.com/absmach/magistrala/pkg/entityroles/api"
-	"github.com/absmach/magistrala/things"
 	"github.com/go-kit/kit/metrics"
 )
 
-var _ things.Service = (*metricsMiddleware)(nil)
+var _ channels.Service = (*metricsMiddleware)(nil)
 
 type metricsMiddleware struct {
 	counter metrics.Counter
 	latency metrics.Histogram
-	svc     things.Service
+	svc     channels.Service
 	entityRolesAPI.RolesSvcMetricsMiddleware
 }
 
 // MetricsMiddleware returns a new metrics middleware wrapper.
-func MetricsMiddleware(svc things.Service, counter metrics.Counter, latency metrics.Histogram) things.Service {
-	rolesSvcMetricsMiddleware := entityRolesAPI.NewRolesSvcMetricsMiddleware("things", svc, counter, latency)
+func MetricsMiddleware(svc channels.Service, counter metrics.Counter, latency metrics.Histogram) channels.Service {
+	rolesSvcMetricsMiddleware := entityRolesAPI.NewRolesSvcMetricsMiddleware("channels", svc, counter, latency)
 	return &metricsMiddleware{
 		counter:                   counter,
 		latency:                   latency,
@@ -34,90 +32,89 @@ func MetricsMiddleware(svc things.Service, counter metrics.Counter, latency metr
 	}
 }
 
-func (ms *metricsMiddleware) CreateThings(ctx context.Context, token string, clients ...mgclients.Client) ([]mgclients.Client, error) {
+func (ms *metricsMiddleware) CreateChannels(ctx context.Context, token string, chs ...channels.Channel) ([]channels.Channel, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "register_things").Add(1)
-		ms.latency.With("method", "register_things").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "register_channels").Add(1)
+		ms.latency.With("method", "register_channels").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.CreateThings(ctx, token, clients...)
+	return ms.svc.CreateChannels(ctx, token, chs...)
 }
 
-func (ms *metricsMiddleware) ViewClient(ctx context.Context, token, id string) (mgclients.Client, error) {
+func (ms *metricsMiddleware) ViewChannel(ctx context.Context, token, id string) (channels.Channel, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "view_thing").Add(1)
-		ms.latency.With("method", "view_thing").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "view_channel").Add(1)
+		ms.latency.With("method", "view_channel").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.ViewClient(ctx, token, id)
+	return ms.svc.ViewChannel(ctx, token, id)
 }
 
-func (ms *metricsMiddleware) ListClients(ctx context.Context, token, reqUserID string, pm mgclients.Page) (mgclients.ClientsPage, error) {
+func (ms *metricsMiddleware) ListChannels(ctx context.Context, token string, pm channels.PageMetadata) (channels.Page, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "list_things").Add(1)
-		ms.latency.With("method", "list_things").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "list_channels").Add(1)
+		ms.latency.With("method", "list_channels").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.ListClients(ctx, token, reqUserID, pm)
+	return ms.svc.ListChannels(ctx, token, pm)
 }
 
-func (ms *metricsMiddleware) UpdateClient(ctx context.Context, token string, client mgclients.Client) (mgclients.Client, error) {
+func (ms *metricsMiddleware) ListChannelsByThing(ctx context.Context, token, thingID string, pm channels.PageMetadata) (channels.Page, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "update_thing_name_and_metadata").Add(1)
-		ms.latency.With("method", "update_thing_name_and_metadata").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "list_channels_by_thing").Add(1)
+		ms.latency.With("method", "list_channels_by_thing").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.UpdateClient(ctx, token, client)
+	return ms.svc.ListChannelsByThing(ctx, token, thingID, pm)
 }
 
-func (ms *metricsMiddleware) UpdateClientTags(ctx context.Context, token string, client mgclients.Client) (mgclients.Client, error) {
+func (ms *metricsMiddleware) UpdateChannel(ctx context.Context, token string, channel channels.Channel) (channels.Channel, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "update_thing_tags").Add(1)
-		ms.latency.With("method", "update_thing_tags").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "update_channel").Add(1)
+		ms.latency.With("method", "update_channel").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.UpdateClientTags(ctx, token, client)
+	return ms.svc.UpdateChannel(ctx, token, channel)
 }
 
-func (ms *metricsMiddleware) UpdateClientSecret(ctx context.Context, token, oldSecret, newSecret string) (mgclients.Client, error) {
+func (ms *metricsMiddleware) UpdateChannelTags(ctx context.Context, token string, channel channels.Channel) (channels.Channel, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "update_thing_secret").Add(1)
-		ms.latency.With("method", "update_thing_secret").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "update_channel_tags").Add(1)
+		ms.latency.With("method", "update_channel_tags").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.UpdateClientSecret(ctx, token, oldSecret, newSecret)
+	return ms.svc.UpdateChannelTags(ctx, token, channel)
 }
 
-func (ms *metricsMiddleware) EnableClient(ctx context.Context, token, id string) (mgclients.Client, error) {
+func (ms *metricsMiddleware) EnableChannel(ctx context.Context, token, id string) (channels.Channel, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "enable_thing").Add(1)
-		ms.latency.With("method", "enable_thing").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "enable_channel").Add(1)
+		ms.latency.With("method", "enable_channel").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.EnableClient(ctx, token, id)
+	return ms.svc.EnableChannel(ctx, token, id)
 }
 
-func (ms *metricsMiddleware) DisableClient(ctx context.Context, token, id string) (mgclients.Client, error) {
+func (ms *metricsMiddleware) DisableChannel(ctx context.Context, token, id string) (channels.Channel, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "disable_thing").Add(1)
-		ms.latency.With("method", "disable_thing").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "disable_channel").Add(1)
+		ms.latency.With("method", "disable_channel").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.DisableClient(ctx, token, id)
+	return ms.svc.DisableChannel(ctx, token, id)
 }
 
-func (ms *metricsMiddleware) Identify(ctx context.Context, key string) (string, error) {
+func (ms *metricsMiddleware) RemoveChannel(ctx context.Context, token, id string) error {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "identify_thing").Add(1)
-		ms.latency.With("method", "identify_thing").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "delete_channel").Add(1)
+		ms.latency.With("method", "delete_channel").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.Identify(ctx, key)
+	return ms.svc.RemoveChannel(ctx, token, id)
 }
 
-func (ms *metricsMiddleware) Authorize(ctx context.Context, req *magistrala.AuthorizeReq) (id string, err error) {
+func (ms *metricsMiddleware) Connect(ctx context.Context, token string, chIDs, thIDs []string) error {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "authorize").Add(1)
-		ms.latency.With("method", "authorize").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "connect").Add(1)
+		ms.latency.With("method", "connect").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.Authorize(ctx, req)
+	return ms.svc.Connect(ctx, token, chIDs, thIDs)
 }
-
-func (ms *metricsMiddleware) DeleteClient(ctx context.Context, token, id string) error {
+func (ms *metricsMiddleware) Disconnect(ctx context.Context, token string, chIDs, thIDs []string) error {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "delete_client").Add(1)
-		ms.latency.With("method", "delete_client").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "disconnect").Add(1)
+		ms.latency.With("method", "disconnect").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.DeleteClient(ctx, token, id)
+	return ms.svc.Disconnect(ctx, token, chIDs, thIDs)
 }

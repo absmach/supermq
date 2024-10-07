@@ -41,6 +41,7 @@ type PageMetadata struct {
 	Status     clients.Status   `json:"status,omitempty"`
 	IDs        []string         `json:"ids,omitempty"`
 	ListPerms  bool             `json:"-"`
+	ThingID    string           `json:"-"`
 }
 
 // ChannelsPage contains page related metadata as well as list of channels that
@@ -89,6 +90,10 @@ type Service interface {
 	// Disconnect removes things from the channels list of connected things.
 	Disconnect(ctx context.Context, token string, chIDs, thIDs []string) error
 
+	// SetParentGroup(ctx context.Context, token string, parentGroupID string, id string) error
+
+	// RemoveParentGroup(ctx context.Context, token string, parentGroupID string, id string) error
+
 	roles.Roles
 }
 
@@ -127,19 +132,4 @@ type Repository interface {
 	Disconnect(ctx context.Context, chIDs, thIDs []string) error
 
 	roles.Repository
-}
-
-// Cache contains channel-thing connection caching interface.
-type Cache interface {
-	// Connect channel thing connection.
-	Connect(context.Context, string, string) error
-
-	// HasThing checks if thing is connected to channel.
-	HasThing(context.Context, string, string) bool
-
-	// Disconnects thing from channel.
-	Disconnect(context.Context, string, string) error
-
-	// Removes channel from cache.
-	Remove(context.Context, string) error
 }

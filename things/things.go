@@ -51,6 +51,10 @@ type Service interface {
 	// Authorize used for AuthZ gRPC server implementation and Things authorization.
 	Authorize(ctx context.Context, req *magistrala.AuthorizeReq) (string, error)
 
+	// SetParentGroup(ctx context.Context, token string, parentGroupID string, id string) error
+
+	// RemoveParentGroup(ctx context.Context, token string, parentGroupID string, id string) error
+
 	roles.Roles
 }
 

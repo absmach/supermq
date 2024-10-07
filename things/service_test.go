@@ -16,7 +16,6 @@ import (
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	gmocks "github.com/absmach/magistrala/pkg/groups/mocks"
 	"github.com/absmach/magistrala/pkg/sid"
 	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/absmach/magistrala/things"
@@ -54,8 +53,7 @@ func newService() (things.Service, *mocks.Repository, *authmocks.AuthServiceClie
 	idProvider := uuid.NewMock()
 	sidProvider := sid.NewMock()
 	cRepo := new(mocks.Repository)
-	gRepo := new(gmocks.Repository)
-	tsv, _ := things.NewService(auth, policyClient, cRepo, gRepo, thingCache, idProvider, sidProvider)
+	tsv, _ := things.NewService(auth, policyClient, cRepo, thingCache, idProvider, sidProvider)
 	return tsv, cRepo, auth, policyClient, thingCache
 }
 

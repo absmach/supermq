@@ -13,7 +13,6 @@ import (
 	"github.com/absmach/magistrala/pkg/entityroles"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	mggroups "github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/roles"
 	"github.com/absmach/magistrala/pkg/svcutil"
 	"github.com/absmach/magistrala/things/postgres"
@@ -36,13 +35,12 @@ type service struct {
 	clients     postgres.Repository
 	clientCache Cache
 	idProvider  magistrala.IDProvider
-	grepo       mggroups.Repository
 	opp         svcutil.OperationPerm
 	entityroles.RolesSvc
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(authClient grpcclient.AuthServiceClient, policyClient magistrala.PolicyServiceClient, c postgres.Repository, grepo mggroups.Repository, tcache Cache, idp magistrala.IDProvider, sidProvider magistrala.IDProvider) (Service, error) {
+func NewService(authClient grpcclient.AuthServiceClient, policyClient magistrala.PolicyServiceClient, c postgres.Repository, tcache Cache, idp magistrala.IDProvider, sidProvider magistrala.IDProvider) (Service, error) {
 
 	rolesSvc, err := entityroles.NewRolesSvc(auth.DomainType, c, sidProvider, authClient, policyClient, ThingAvailableActions(), ThingBuiltInRoles(), NewRolesOperationPermissionMap())
 	if err != nil {
@@ -61,7 +59,6 @@ func NewService(authClient grpcclient.AuthServiceClient, policyClient magistrala
 		auth:        authClient,
 		policy:      policyClient,
 		clients:     c,
-		grepo:       grepo,
 		clientCache: tcache,
 		idProvider:  idp,
 		opp:         opp,

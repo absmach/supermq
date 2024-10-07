@@ -14,6 +14,7 @@ import (
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/roles"
 	"github.com/absmach/magistrala/pkg/svcutil"
+	"github.com/absmach/magistrala/things"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -26,7 +27,6 @@ type channelsService struct {
 	auth        grpcclient.AuthServiceClient
 	repo        channels.Repository
 	policy      magistrala.PolicyServiceClient
-	cache       channels.Cache
 	idProvider  magistrala.IDProvider
 	sidProvider magistrala.IDProvider
 	opp         svcutil.OperationPerm
@@ -35,7 +35,7 @@ type channelsService struct {
 
 var _ channels.Service = (*channelsService)(nil)
 
-func New(authClient grpcclient.AuthServiceClient, repo channels.Repository, policyClient magistrala.PolicyServiceClient, cache channels.Cache, idProvider magistrala.IDProvider, sidProvider magistrala.IDProvider) (channels.Service, error) {
+func New(repo channels.Repository, authClient grpcclient.AuthServiceClient, policyClient magistrala.PolicyServiceClient, idProvider magistrala.IDProvider, sidProvider magistrala.IDProvider) (channels.Service, error) {
 	rolesSvc, err := entityroles.NewRolesSvc(auth.DomainType, repo, sidProvider, authClient, policyClient, channels.AvailableActions(), channels.BuiltInRoles(), channels.NewRolesOperationPermissionMap())
 	if err != nil {
 		return nil, err
@@ -52,7 +52,6 @@ func New(authClient grpcclient.AuthServiceClient, repo channels.Repository, poli
 		auth:        authClient,
 		repo:        repo,
 		policy:      policyClient,
-		cache:       cache,
 		idProvider:  idProvider,
 		sidProvider: sidProvider,
 		opp:         opp,
@@ -276,10 +275,6 @@ func (cs channelsService) RemoveChannel(ctx context.Context, token, id string) e
 		return err
 	}
 
-	if err := cs.cache.Remove(ctx, id); err != nil {
-		return errors.Wrap(svcerr.ErrRemoveEntity, err)
-	}
-
 	deleteRes, err := cs.policy.DeleteEntityPolicies(ctx, &magistrala.DeleteEntityPoliciesReq{
 		EntityType: auth.ThingType,
 		Id:         id,
@@ -298,12 +293,100 @@ func (cs channelsService) RemoveChannel(ctx context.Context, token, id string) e
 	return nil
 }
 
-func (cs channelsService) Connect(ctx context.Context, token string, chIDs, thIDs []string) error {
+func (cs channelsService) Connect(ctx context.Context, token string, chIDs, thIDs []string) (retErr error) {
+	userInfo, err := cs.identify(ctx, token)
+	if err != nil {
+		return err
+	}
+	//ToDo: This authorization will be changed with Bulk Authorization. For this we need to add bulk authorization API in auth.
+	for _, chID := range chIDs {
+		if _, err := cs.authorize(ctx, userInfo.DomainID, auth.UserType, auth.UsersKind, userInfo.ID, channels.OpConnectThingChannel, auth.ChannelType, chID); err != nil {
+			return err
+		}
+	}
+
+	for _, thID := range thIDs {
+		if _, err := cs.authorize(ctx, userInfo.DomainID, auth.UserType, auth.UsersKind, userInfo.ID, things.OpConnectChannelThing, auth.ChannelType, thID); err != nil {
+			return err
+		}
+	}
+
+	prs := []*magistrala.AddPolicyReq{}
+	rbPrs := []*magistrala.DeletePolicyReq{}
+	for _, chID := range chIDs {
+		for _, thID := range thIDs {
+			prs = append(prs, &magistrala.AddPolicyReq{
+				SubjectType: auth.ThingType,
+				Subject:     thID,
+				Relation:    "connect",
+				Object:      chID,
+				ObjectType:  auth.ChannelType,
+			})
+			rbPrs = append(rbPrs, &magistrala.DeletePolicyReq{
+				SubjectType: auth.ThingType,
+				Subject:     thID,
+				Relation:    "connect",
+				Object:      chID,
+				ObjectType:  auth.ChannelType,
+			})
+		}
+	}
+	if _, err := cs.policy.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs}); err != nil {
+		return errors.Wrap(svcerr.ErrAddPolicies, err)
+	}
+	defer func() {
+		if retErr != nil {
+			if _, errRollback := cs.policy.DeletePolicies(ctx, &magistrala.DeletePoliciesReq{DeletePoliciesReq: rbPrs}); errRollback != nil {
+				retErr = errors.Wrap(retErr, errRollback)
+			}
+		}
+	}()
+
+	if err := cs.repo.Connect(ctx, chIDs, thIDs); err != nil {
+		return errors.Wrap(svcerr.ErrCreateEntity, err)
+	}
 
 	return nil
 }
 
 func (cs channelsService) Disconnect(ctx context.Context, token string, chIDs, thIDs []string) error {
+	userInfo, err := cs.identify(ctx, token)
+	if err != nil {
+		return err
+	}
+	//ToDo: This authorization will be changed with Bulk Authorization. For this we need to add bulk authorization API in auth.
+	for _, chID := range chIDs {
+		if _, err := cs.authorize(ctx, userInfo.DomainID, auth.UserType, auth.UsersKind, userInfo.ID, channels.OpDisconnectThingChannel, auth.ChannelType, chID); err != nil {
+			return err
+		}
+	}
+
+	for _, thID := range thIDs {
+		if _, err := cs.authorize(ctx, userInfo.DomainID, auth.UserType, auth.UsersKind, userInfo.ID, things.OpDisconnectChannelThing, auth.ChannelType, thID); err != nil {
+			return err
+		}
+	}
+
+	prs := []*magistrala.DeletePolicyReq{}
+	for _, chID := range chIDs {
+		for _, thID := range thIDs {
+
+			prs = append(prs, &magistrala.DeletePolicyReq{
+				SubjectType: auth.ThingType,
+				Subject:     thID,
+				Relation:    "connect",
+				Object:      chID,
+				ObjectType:  auth.ChannelType,
+			})
+		}
+	}
+	if _, err := cs.policy.DeletePolicies(ctx, &magistrala.DeletePoliciesReq{DeletePoliciesReq: prs}); err != nil {
+		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+
+	if err := cs.repo.Disconnect(ctx, chIDs, thIDs); err != nil {
+		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
 
 	return nil
 }
