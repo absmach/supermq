@@ -10,6 +10,8 @@ import (
 
 	context "context"
 
+	magistrala "github.com/absmach/magistrala"
+
 	mock "github.com/stretchr/testify/mock"
 
 	things "github.com/absmach/magistrala/things"
