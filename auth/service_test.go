@@ -38,10 +38,10 @@ const (
 
 var (
 	errIssueUser          = errors.New("failed to issue new login key")
-	errCreateDomainPolicy = errors.New("failed to create domain pManager")
+	errCreateDomainPolicy = errors.New("failed to create domain policy")
 	errRetrieve           = errors.New("failed to retrieve key data")
 	ErrExpiry             = errors.New("token is expired")
-	errRollbackPolicy     = errors.New("failed to rollback pManager")
+	errRollbackPolicy     = errors.New("failed to rollback policy")
 	errAddPolicies        = errors.New("failed to add policies")
 	errPlatform           = errors.New("invalid platform id")
 	inValidToken          = "invalid"
@@ -1283,7 +1283,7 @@ func TestCreateDomain(t *testing.T) {
 			err:   svcerr.ErrInvalidStatus,
 		},
 		{
-			desc: "create domain with failed pManager request",
+			desc: "create domain with failed policy request",
 			d: auth.Domain{
 				Status: auth.EnabledStatus,
 			},
