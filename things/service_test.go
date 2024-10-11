@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/internal/testsutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
