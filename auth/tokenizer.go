@@ -32,3 +32,18 @@ type TokenRepository interface {
 	// Contains checks if token with provided ID exists.
 	Contains(ctx context.Context, id string) (ok bool)
 }
+
+// Cache represents a cache repository. It exposes functionalities
+// through `auth` to perform caching.
+//
+//go:generate mockery --name Cache --output=./mocks --filename cache.go --quiet --note "Copyright (c) Abstract Machines"
+type Cache interface {
+	// Save saves the key-value pair in the cache.
+	Save(ctx context.Context, key, value string) error
+
+	// Contains checks if the key-value pair exists in the cache.
+	Contains(ctx context.Context, key, value string) bool
+
+	// Remove removes the key from the cache.
+	Remove(ctx context.Context, key string) error
+}

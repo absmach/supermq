@@ -317,3 +317,10 @@ func (lm *loggingMiddleware) DeleteUserFromDomains(ctx context.Context, id strin
 	}(time.Now())
 	return lm.svc.DeleteUserFromDomains(ctx, id)
 }
+
+func (m *loggingMiddleware) RetrieveJWKS() (auth.JWKS, error) {
+	defer func(begin time.Time) {
+		m.logger.Info("Retrieve JWKS completed successfully", slog.String("duration", time.Since(begin).String()))
+	}(time.Now())
+	return m.svc.RetrieveJWKS()
+}

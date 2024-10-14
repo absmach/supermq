@@ -223,3 +223,7 @@ func (es *eventStore) Authorize(ctx context.Context, pr policies.Policy) error {
 func (es *eventStore) DeleteUserFromDomains(ctx context.Context, id string) error {
 	return es.svc.DeleteUserFromDomains(ctx, id)
 }
+
+func (es *eventStore) RetrieveJWKS() (auth.JWKS, error) {
+	return es.svc.RetrieveJWKS()
+}

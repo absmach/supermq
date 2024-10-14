@@ -163,3 +163,11 @@ func (ms *metricsMiddleware) DeleteUserFromDomains(ctx context.Context, id strin
 	}(time.Now())
 	return ms.svc.DeleteUserFromDomains(ctx, id)
 }
+
+func (ms *metricsMiddleware) RetrieveJWKS() (auth.JWKS, error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "retrieve_jwks").Add(1)
+		ms.latency.With("method", "retrieve_jwks").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.RetrieveJWKS()
+}

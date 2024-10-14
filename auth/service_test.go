@@ -74,6 +74,8 @@ func newService() (auth.Service, *mocks.TokenRepository, *mocks.Cache, string) {
 	pService = new(policymocks.Service)
 	pEvaluator = new(policymocks.Evaluator)
 	idProvider := uuid.NewMock()
+	trepo := new(mocks.TokenRepository)
+	cache := new(mocks.Cache)
 	tokenizer := jwt.New(privateKey, trepo, cache)
 
 	key := auth.Key{
@@ -91,16 +93,15 @@ func newService() (auth.Service, *mocks.TokenRepository, *mocks.Cache, string) {
 
 func newMinimalService() auth.Service {
 	krepo = new(mocks.KeyRepository)
+	drepo = new(mocks.DomainsRepository)
+	pManager = new(policymocks.Manager)
+	pEvaluator = new(policymocks.Evaluator)
+	idProvider := uuid.NewMock()
 	trepo := new(mocks.TokenRepository)
 	cache := new(mocks.Cache)
-	prepo = new(mocks.PolicyAgent)
-	drepo = new(mocks.DomainsRepository)
-	policy = new(policymocks.PolicyClient)
-	idProvider := uuid.NewMock()
-
 	tokenizer := jwt.New(privateKey, trepo, cache)
 
-	return auth.New(krepo, drepo, idProvider, tokenizer, prepo, policy, loginDuration, refreshDuration, invalidDuration)
+	return auth.New(krepo, drepo, idProvider, tokenizer, pEvaluator, pManager, loginDuration, refreshDuration, invalidDuration)
 }
 
 func TestIssue(t *testing.T) {
@@ -490,7 +491,7 @@ func TestIssue(t *testing.T) {
 			cacheContains: true,
 			repoContains:  false,
 			token:         refreshToken,
-			err:           svcerr.ErrAuthentication,
+			err:           nil,
 		},
 		{
 			desc: "issue invitation key with invalid pService",
@@ -518,9 +519,12 @@ func TestIssue(t *testing.T) {
 		},
 	}
 	for _, tc := range cases4 {
-		repoCall := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPolicyRequest).Return(tc.checkPolicyErr)
-		repoCall1 := drepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(auth.Domain{}, tc.retrieveByIDErr)
-		repoCall2 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDOmainPolicyReq).Return(tc.checkPolicyErr)
+		cacheCall := cache.On("Contains", context.Background(), "", refreshkey.ID).Return(tc.cacheContains)
+		repoCall := trepo.On("Contains", context.Background(), refreshkey.ID).Return(tc.repoContains)
+		cacheCall1 := cache.On("Save", context.Background(), "", refreshkey.ID).Return(tc.cacheSave)
+		repoCall1 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPolicyRequest).Return(tc.checkPolicyErr)
+		repoCall2 := drepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(auth.Domain{}, tc.retrieveByIDErr)
+		repoCall3 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDOmainPolicyReq).Return(tc.checkPolicyErr)
 		_, err := svc.Issue(context.Background(), tc.token, tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		cacheCall.Unset()

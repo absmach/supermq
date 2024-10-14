@@ -4,6 +4,8 @@
 package keys_test
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,11 +17,14 @@ import (
 
 	"github.com/absmach/magistrala/auth"
 	httpapi "github.com/absmach/magistrala/auth/api/http"
+	"github.com/absmach/magistrala/auth/jwt"
 	"github.com/absmach/magistrala/auth/mocks"
 	"github.com/absmach/magistrala/internal/testsutil"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	policymocks "github.com/absmach/magistrala/pkg/policies/mocks"
+	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -70,6 +75,10 @@ func newService() (auth.Service, *mocks.KeyRepository) {
 	idProvider := uuid.NewMock()
 	pService := new(policymocks.Service)
 	pEvaluator := new(policymocks.Evaluator)
+	idProvider := uuid.NewMock()
+	trepo := new(mocks.TokenRepository)
+	cache := new(mocks.Cache)
+	tokenizer := jwt.New(getPrivateKey(&testing.T{}), trepo, cache)
 
 	t := jwt.New(getPrivateKey(&testing.T{}), trepo, cache)
 
@@ -375,4 +384,10 @@ func TestRevokeToken(t *testing.T) {
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 		svcCall.Unset()
 	}
+}
+
+func getPrivateKey(t *testing.T) *rsa.PrivateKey {
+	rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	assert.Nil(t, err, fmt.Sprintf("generating RSA key expected to succeed: %s", err))
+	return rsaKey
 }
