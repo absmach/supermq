@@ -86,7 +86,7 @@ func main() {
 
 	authzCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&authzCfg, env.Options{Prefix: envPrefixAuth}); err != nil {
-		logger.Error(fmt.Sprintf("failed to load %s authz configuration : %s", svcName, err))
+		logger.Error(fmt.Sprintf("failed to load auth gRPC client configuration : %s", err))
 		exitCode = 1
 		return
 	}
@@ -98,8 +98,7 @@ func main() {
 		return
 	}
 	defer authzHandler.Close()
-
-	logger.Info("Authz connected to auth gRPC server " + authzHandler.Secure())
+	logger.Info("Authz successfully connected to auth gRPC server " + authzHandler.Secure())
 
 	thingsClientCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&thingsClientCfg, env.Options{Prefix: envPrefixThings}); err != nil {

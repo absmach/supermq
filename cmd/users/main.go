@@ -89,7 +89,6 @@ type config struct {
 	DeleteAfter         time.Duration `env:"MG_USERS_DELETE_AFTER"        envDefault:"720h"`
 	SpicedbHost         string        `env:"MG_SPICEDB_HOST"              envDefault:"localhost"`
 	SpicedbPort         string        `env:"MG_SPICEDB_PORT"              envDefault:"50051"`
-	SpicedbSchemaFile   string        `env:"MG_SPICEDB_SCHEMA_FILE"       envDefault:"./docker/spicedb/schema.zed"`
 	SpicedbPreSharedKey string        `env:"MG_SPICEDB_PRE_SHARED_KEY"    envDefault:"12345678"`
 	PassRegex           *regexp.Regexp
 }

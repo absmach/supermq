@@ -98,7 +98,7 @@ func main() {
 
 	authClientCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&authClientCfg, env.Options{Prefix: envPrefixAuth}); err != nil {
-		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
+		logger.Error(fmt.Sprintf("failed to load auth gRPC client configuration : %s", err))
 		exitCode = 1
 		return
 	}

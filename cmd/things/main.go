@@ -84,7 +84,6 @@ type config struct {
 	TraceRatio          float64       `env:"MG_JAEGER_TRACE_RATIO"         envDefault:"1.0"`
 	SpicedbHost         string        `env:"MG_SPICEDB_HOST"               envDefault:"localhost"`
 	SpicedbPort         string        `env:"MG_SPICEDB_PORT"               envDefault:"50051"`
-	SpicedbSchemaFile   string        `env:"MG_SPICEDB_SCHEMA_FILE"        envDefault:"./docker/spicedb/schema.zed"`
 	SpicedbPreSharedKey string        `env:"MG_SPICEDB_PRE_SHARED_KEY"     envDefault:"12345678"`
 }
 
@@ -165,7 +164,7 @@ func main() {
 
 	grpcCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&grpcCfg, env.Options{Prefix: envPrefixAuth}); err != nil {
-		logger.Error(err.Error())
+		logger.Error(fmt.Sprintf("failed to load auth gRPC client configuration : %s", err))
 		exitCode = 1
 		return
 	}
@@ -176,6 +175,7 @@ func main() {
 		return
 	}
 	defer authnClient.Close()
+	logger.Info("AuthN  successfully connected to auth gRPC server " + authnClient.Secure())
 
 	authz, authzClient, err := authsvcAuthz.NewAuthorization(ctx, grpcCfg)
 	if err != nil {
@@ -184,6 +184,7 @@ func main() {
 		return
 	}
 	defer authzClient.Close()
+	logger.Info("AuthZ  successfully connected to auth gRPC server " + authnClient.Secure())
 
 	csvc, gsvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cacheclient, cfg.CacheKeyDuration, cfg.ESURL, tracer, logger)
 	if err != nil {

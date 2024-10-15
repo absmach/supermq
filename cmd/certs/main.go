@@ -98,8 +98,8 @@ func main() {
 	}
 
 	grpcCfg := grpcclient.Config{}
-	if err := env.ParseWithOptions(&grpcCfg, env.Options{Prefix: envPrefixAuth}); err != nil {
-		logger.Error(err.Error())
+	if err := env.ParseWithOptions(cfg, env.Options{Prefix: envPrefixAuth}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load auth gRPC client configuration : %s", err))
 		exitCode = 1
 		return
 	}
@@ -110,6 +110,7 @@ func main() {
 		return
 	}
 	defer authnClient.Close()
+	logger.Info("AutN successfully connected to auth gRPC server " + authnClient.Secure())
 
 	tp, err := jaegerclient.NewProvider(ctx, svcName, cfg.JaegerURL, cfg.InstanceID, cfg.TraceRatio)
 	if err != nil {
