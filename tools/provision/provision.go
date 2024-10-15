@@ -44,6 +44,7 @@ type MgConn struct {
 type Config struct {
 	Host     string
 	Username string
+	Identity string
 	Password string
 	Num      int
 	SSL      bool
@@ -74,14 +75,15 @@ func Provision(conf Config) error {
 	s := sdk.NewSDK(sdkConf)
 
 	user := sdk.User{
+		Identity: conf.Identity,
 		Credentials: sdk.Credentials{
 			UserName: conf.Username,
 			Secret:   conf.Password,
 		},
 	}
 
-	if user.Credentials.UserName == "" {
-		user.Credentials.UserName = fmt.Sprintf("%s@email.com", namesgenerator.Generate())
+	if user.Identity == "" {
+		user.Identity = fmt.Sprintf("%s@email.com", namesgenerator.Generate())
 		user.Credentials.Secret = defPass
 	}
 
@@ -93,7 +95,7 @@ func Provision(conf Config) error {
 	var err error
 
 	// Login user
-	token, err := s.CreateToken(sdk.Login{Identity: user.Credentials.UserName, Secret: user.Credentials.Secret})
+	token, err := s.CreateToken(sdk.Login{Identity: user.Identity, Secret: user.Credentials.Secret})
 	if err != nil {
 		return fmt.Errorf("unable to login user: %s", err.Error())
 	}

@@ -147,7 +147,8 @@ func TestRegisterClient(t *testing.T) {
 		{
 			desc: "register a user with an  invalid ID",
 			user: users.User{
-				ID: inValid,
+				ID:       inValid,
+				Identity: "user@example.com",
 				Credentials: users.Credentials{
 					Identity: "user@example.com",
 					Secret:   "12345678",
@@ -161,6 +162,7 @@ func TestRegisterClient(t *testing.T) {
 		{
 			desc: "register a user that can't be marshalled",
 			user: users.User{
+				Identity: "user@example.com",
 				Credentials: users.Credentials{
 					Identity: "user@example.com",
 					Secret:   "12345678",
@@ -177,6 +179,7 @@ func TestRegisterClient(t *testing.T) {
 		{
 			desc: "register user with invalid status",
 			user: users.User{
+				Identity: "newclientwithinvalidstatus@example.com",
 				Credentials: users.Credentials{
 					Identity: "newclientwithinvalidstatus@example.com",
 					Secret:   secret,
@@ -657,6 +660,36 @@ func TestListClients(t *testing.T) {
 			query:    "identity=1&identity=2",
 			status:   http.StatusBadRequest,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			err:      apiutil.ErrInvalidQueryParams,
+		},
+		{
+			desc:     "list users with duplicate list perms",
+			token:    validToken,
+			query:    "list_perms=true&list_perms=true",
+			status:   http.StatusBadRequest,
+			authnRes: mgauthn.Session{UserID: validID, DomainID: validID},
+			err:      apiutil.ErrInvalidQueryParams,
+		},
+		{
+			desc:  "list users with identity",
+			token: validToken,
+			query: fmt.Sprintf("identity=%s", user.Credentials.Identity),
+			listUsersResponse: users.UsersPage{
+				Page: users.Page{
+					Total: 1,
+				},
+				Users: []users.User{user},
+			},
+			status:   http.StatusOK,
+			authnRes: mgauthn.Session{UserID: validID, DomainID: validID},
+			err:      nil,
+		},
+		{
+			desc:     "list users with duplicate identity",
+			token:    validToken,
+			query:    "identity=1&identity=2",
+			status:   http.StatusBadRequest,
+			authnRes: mgauthn.Session{UserID: validID, DomainID: validID},
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
@@ -1295,6 +1328,135 @@ func TestPasswordResetRequest(t *testing.T) {
 	us, svc, _, _ := newUsersServer()
 	defer us.Close()
 
+	cases := []struct {
+		desc        string
+		data        string
+		user        users.User
+		contentType string
+		token       string
+		status      int
+		err         error
+	}{
+		{
+			desc: "update user identity with valid token",
+			data: fmt.Sprintf(`{"identity": "%s"}`, "newclientidentity@example.com"),
+			user: users.User{
+				ID:       user.ID,
+				Identity: "newclientidentity@example.com",
+				Credentials: users.Credentials{
+					Secret: "secret",
+				},
+			},
+			contentType: contentType,
+			token:       validToken,
+			status:      http.StatusOK,
+			err:         nil,
+		},
+		{
+			desc: "update user identity with empty token",
+			data: fmt.Sprintf(`{"identity": "%s"}`, "newclientidentity@example.com"),
+			user: users.User{
+				ID:       user.ID,
+				Identity: "newclientidentity@example.com",
+				Credentials: users.Credentials{
+					Secret: "secret",
+				},
+			},
+			contentType: contentType,
+			token:       "",
+			status:      http.StatusUnauthorized,
+			err:         apiutil.ErrBearerToken,
+		},
+		{
+			desc: "update user identity with invalid token",
+			data: fmt.Sprintf(`{"identity": "%s"}`, "newclientidentity@example.com"),
+			user: users.User{
+				ID:       user.ID,
+				Identity: "newclientidentity@example.com",
+				Credentials: users.Credentials{
+					Secret: "secret",
+				},
+			},
+			contentType: contentType,
+			token:       inValid,
+			status:      http.StatusUnauthorized,
+			err:         svcerr.ErrAuthentication,
+		},
+		{
+			desc: "update user identity with empty id",
+			data: fmt.Sprintf(`{"identity": "%s"}`, "newclientidentity@example.com"),
+			user: users.User{
+				ID:       "",
+				Identity: "newclientidentity@example.com",
+				Credentials: users.Credentials{
+					Secret: "secret",
+				},
+			},
+			contentType: contentType,
+			token:       validToken,
+			status:      http.StatusBadRequest,
+			err:         apiutil.ErrMissingID,
+		},
+		{
+			desc: "update user identity with invalid contentype",
+			data: fmt.Sprintf(`{"identity": "%s"}`, ""),
+			user: users.User{
+				ID:       user.ID,
+				Identity: "newclientidentity@example.com",
+				Credentials: users.Credentials{
+					Secret: "secret",
+				},
+			},
+			contentType: "application/xml",
+			token:       validToken,
+			status:      http.StatusUnsupportedMediaType,
+			err:         apiutil.ErrValidation,
+		},
+		{
+			desc: "update user identity with malformed data",
+			data: fmt.Sprintf(`{"identity": %s}`, "invalid"),
+			user: users.User{
+				ID:       user.ID,
+				Identity: "",
+				Credentials: users.Credentials{
+					Secret: "secret",
+				},
+			},
+			contentType: contentType,
+			token:       validToken,
+			status:      http.StatusBadRequest,
+			err:         apiutil.ErrValidation,
+		},
+	}
+	for _, tc := range cases {
+		req := testRequest{
+			client:      us.Client(),
+			method:      http.MethodPatch,
+			url:         fmt.Sprintf("%s/users/%s/identity", us.URL, tc.user.ID),
+			contentType: tc.contentType,
+			token:       tc.token,
+			body:        strings.NewReader(tc.data),
+		}
+
+		svcCall := svc.On("UpdateUserIdentity", mock.Anything, tc.token, mock.Anything, mock.Anything).Return(users.User{}, tc.err)
+		res, err := req.make()
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		var resBody respBody
+		err = json.NewDecoder(res.Body).Decode(&resBody)
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while decoding response body: %s", tc.desc, err))
+		if resBody.Err != "" || resBody.Message != "" {
+			err = errors.Wrap(errors.New(resBody.Err), errors.New(resBody.Message))
+		}
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+		svcCall.Unset()
+	}
+}
+
+func TestPasswordResetRequest(t *testing.T) {
+	us, svc, _, _ := newUsersServer()
+	defer us.Close()
+
 	testemail := "test@example.com"
 	testhost := "example.com"
 
@@ -1621,7 +1783,8 @@ func TestUpdateClientSecret(t *testing.T) {
 			desc: "update user secret with valid token",
 			data: `{"old_secret": "strongersecret", "new_secret": "strongersecret"}`,
 			user: users.User{
-				ID: user.ID,
+				ID:       user.ID,
+				Identity: "username",
 				Credentials: users.Credentials{
 					Identity: "username",
 					Secret:   "strongersecret",
@@ -1636,7 +1799,8 @@ func TestUpdateClientSecret(t *testing.T) {
 			desc: "update user secret with empty token",
 			data: `{"old_secret": "strongersecret", "new_secret": "strongersecret"}`,
 			user: users.User{
-				ID: user.ID,
+				ID:       user.ID,
+				Identity: "username",
 				Credentials: users.Credentials{
 					Identity: "username",
 					Secret:   "strongersecret",
@@ -1652,7 +1816,8 @@ func TestUpdateClientSecret(t *testing.T) {
 			desc: "update user secret with invalid token",
 			data: `{"old_secret": "strongersecret", "new_secret": "strongersecret"}`,
 			user: users.User{
-				ID: user.ID,
+				ID:       user.ID,
+				Identity: "username",
 				Credentials: users.Credentials{
 					Identity: "username",
 					Secret:   "strongersecret",
@@ -1669,7 +1834,8 @@ func TestUpdateClientSecret(t *testing.T) {
 			desc: "update user secret with empty secret",
 			data: `{"old_secret": "", "new_secret": "strongersecret"}`,
 			user: users.User{
-				ID: user.ID,
+				ID:       user.ID,
+				Identity: "username",
 				Credentials: users.Credentials{
 					Identity: "username",
 					Secret:   "",
@@ -1684,7 +1850,8 @@ func TestUpdateClientSecret(t *testing.T) {
 			desc: "update user secret with invalid contentype",
 			data: `{"old_secret": "strongersecret", "new_secret": "strongersecret"}`,
 			user: users.User{
-				ID: user.ID,
+				ID:       user.ID,
+				Identity: "username",
 				Credentials: users.Credentials{
 					Identity: "username",
 					Secret:   "",
@@ -1699,7 +1866,8 @@ func TestUpdateClientSecret(t *testing.T) {
 			desc: "update user secret with malformed data",
 			data: fmt.Sprintf(`{"secret": %s}`, "invalid"),
 			user: users.User{
-				ID: user.ID,
+				ID:       user.ID,
+				Identity: "username",
 				Credentials: users.Credentials{
 					Identity: "username",
 					Secret:   "",

@@ -25,6 +25,9 @@ func (req createUserReq) validate() error {
 	if req.user.Credentials.UserName == "" {
 		return apiutil.ErrMissingUserName
 	}
+	if req.user.Identity == "" {
+		return apiutil.ErrMissingIdentity
+	}
 	if req.user.Credentials.Secret == "" {
 		return apiutil.ErrMissingPass
 	}
@@ -32,7 +35,7 @@ func (req createUserReq) validate() error {
 		return apiutil.ErrPasswordFormat
 	}
 
-	return nil
+	return req.user.Validate()
 }
 
 type viewClientReq struct {
@@ -208,6 +211,9 @@ type loginUserReq struct {
 }
 
 func (req loginUserReq) validate() error {
+	if req.Identity == "" {
+		return apiutil.ErrMissingIdentity
+	}
 	if req.UserName == "" {
 		return apiutil.ErrMissingUserName
 	}

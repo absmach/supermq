@@ -44,6 +44,9 @@ type Service interface {
 	// UpdateClientIdentity updates the client's identity.
 	UpdateClientIdentity(ctx context.Context, session authn.Session, id, identity string) (clients.Client, error)
 
+	// UpdateUserIdentity updates the user's identity.
+	UpdateUserIdentity(ctx context.Context, token, userID, identity string) (User, error)
+
 	// GenerateResetToken email where mail will be sent.
 	// host is used for generating reset link.
 	GenerateResetToken(ctx context.Context, email, host string) error
