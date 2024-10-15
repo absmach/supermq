@@ -378,10 +378,6 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AuthService_Authorize_Handler,
 		},
 		{
-			MethodName: "Authorize",
-			Handler:    _AuthService_Authorize_Handler,
-		},
-		{
 			MethodName: "Authenticate",
 			Handler:    _AuthService_Authenticate_Handler,
 		},

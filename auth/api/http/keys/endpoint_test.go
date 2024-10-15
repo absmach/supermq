@@ -32,6 +32,8 @@ const (
 	loginDuration   = 30 * time.Minute
 	refreshDuration = 24 * time.Hour
 	invalidDuration = 7 * 24 * time.Hour
+	validToken      = "validToken"
+	invalidToken    = "invalidToken"
 )
 
 type issueRequest struct {
@@ -100,7 +102,7 @@ func TestIssue(t *testing.T) {
 		{
 			desc:   "issue login key with empty token",
 			req:    toJSON(lk),
-			resp:   auth.Token{AccessToken: "token"},
+			resp:   auth.Token{},
 			ct:     contentType,
 			token:  "",
 			status: http.StatusUnauthorized,
@@ -108,30 +110,30 @@ func TestIssue(t *testing.T) {
 		{
 			desc:   "issue API key",
 			req:    toJSON(ak),
-			resp:   auth.Token{AccessToken: "token"},
+			resp:   auth.Token{AccessToken: validToken},
 			ct:     contentType,
-			token:  "token",
+			token:  validToken,
 			status: http.StatusCreated,
 		},
 		{
 			desc:   "issue recovery key",
 			req:    toJSON(rk),
 			ct:     contentType,
-			token:  "token",
+			token:  validToken,
 			status: http.StatusCreated,
 		},
 		{
 			desc:   "issue login key wrong content type",
 			req:    toJSON(lk),
 			ct:     "",
-			token:  "token",
+			token:  validToken,
 			status: http.StatusUnsupportedMediaType,
 		},
 		{
 			desc:   "issue recovery key wrong content type",
 			req:    toJSON(rk),
 			ct:     "",
-			token:  "token",
+			token:  validToken,
 			status: http.StatusUnsupportedMediaType,
 		},
 		{
@@ -154,21 +156,21 @@ func TestIssue(t *testing.T) {
 			desc:   "issue key with invalid request",
 			req:    "{",
 			ct:     contentType,
-			token:  "token",
+			token:  validToken,
 			status: http.StatusBadRequest,
 		},
 		{
 			desc:   "issue key with invalid JSON",
 			req:    "{invalid}",
 			ct:     contentType,
-			token:  "token",
+			token:  validToken,
 			status: http.StatusBadRequest,
 		},
 		{
 			desc:   "issue key with invalid JSON content",
 			req:    `{"Type":{"key":"AccessToken"}}`,
 			ct:     contentType,
-			token:  "token",
+			token:  validToken,
 			status: http.StatusBadRequest,
 		},
 	}
@@ -208,7 +210,7 @@ func TestRetrieve(t *testing.T) {
 		{
 			desc:  "retrieve an existing key",
 			id:    testsutil.GenerateUUID(t),
-			token: "token",
+			token: validToken,
 			key: auth.Key{
 				Subject:   id,
 				Type:      auth.AccessKey,
@@ -221,14 +223,14 @@ func TestRetrieve(t *testing.T) {
 		{
 			desc:   "retrieve a non-existing key",
 			id:     "non-existing",
-			token:  "token",
+			token:  validToken,
 			status: http.StatusNotFound,
 			err:    svcerr.ErrNotFound,
 		},
 		{
 			desc:   "retrieve a key with an invalid token",
 			id:     testsutil.GenerateUUID(t),
-			token:  "wrong",
+			token:  invalidToken,
 			status: http.StatusUnauthorized,
 			err:    svcerr.ErrAuthentication,
 		},
@@ -273,19 +275,19 @@ func TestRevoke(t *testing.T) {
 		{
 			desc:   "revoke an existing key",
 			id:     testsutil.GenerateUUID(t),
-			token:  "token",
+			token:  validToken,
 			status: http.StatusNoContent,
 		},
 		{
 			desc:   "revoke a non-existing key",
 			id:     "non-existing",
-			token:  "token",
+			token:  validToken,
 			status: http.StatusNoContent,
 		},
 		{
 			desc:   "revoke key with invalid token",
 			id:     testsutil.GenerateUUID(t),
-			token:  "wrong",
+			token:  invalidToken,
 			err:    svcerr.ErrAuthentication,
 			status: http.StatusUnauthorized,
 		},
@@ -328,18 +330,18 @@ func TestRevokeToken(t *testing.T) {
 	}{
 		{
 			desc:   "revoke an existing token",
-			token:  "token",
+			token:  validToken,
 			status: http.StatusNoContent,
 		},
 		{
 			desc:   "revoke a non-existing token",
-			token:  "token",
+			token:  validToken,
 			err:    svcerr.ErrAuthentication,
 			status: http.StatusUnauthorized,
 		},
 		{
 			desc:   "revoke invalid token",
-			token:  "wrong",
+			token:  invalidToken,
 			err:    svcerr.ErrAuthentication,
 			status: http.StatusUnauthorized,
 		},

@@ -310,7 +310,7 @@ func (lm *loggingMiddleware) DeleteUserFromDomains(ctx context.Context, id strin
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Delete entity policies failed to complete successfully", args...)
+			lm.logger.Warn("Delete entity policies failed", args...)
 			return
 		}
 		lm.logger.Info("Delete entity policies completed successfully", args...)
@@ -318,9 +318,17 @@ func (lm *loggingMiddleware) DeleteUserFromDomains(ctx context.Context, id strin
 	return lm.svc.DeleteUserFromDomains(ctx, id)
 }
 
-func (m *loggingMiddleware) RetrieveJWKS() (auth.JWKS, error) {
+func (lm *loggingMiddleware) RetrieveJWKS() (jwks auth.JWKS, err error) {
 	defer func(begin time.Time) {
-		m.logger.Info("Retrieve JWKS completed successfully", slog.String("duration", time.Since(begin).String()))
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+		}
+		if err != nil {
+			args = append(args, slog.Any("error", err))
+			lm.logger.Warn("Retrieve JWKS failed", args...)
+			return
+		}
+		lm.logger.Info("Retrieve JWKS completed successfully", args...)
 	}(time.Now())
-	return m.svc.RetrieveJWKS()
+	return lm.svc.RetrieveJWKS()
 }
