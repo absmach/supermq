@@ -22,7 +22,7 @@ import (
 	gpostgres "github.com/absmach/magistrala/internal/groups/postgres"
 	gtracing "github.com/absmach/magistrala/internal/groups/tracing"
 	mglog "github.com/absmach/magistrala/logger"
-	authsvcAuthn "github.com/absmach/magistrala/pkg/authn/authsvc"
+	jwksAuthn "github.com/absmach/magistrala/pkg/authn/jwks"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
 	authsvcAuthz "github.com/absmach/magistrala/pkg/authz/authsvc"
 	"github.com/absmach/magistrala/pkg/groups"
@@ -169,13 +169,9 @@ func main() {
 		exitCode = 1
 		return
 	}
-	authn, authnClient, err := authsvcAuthn.NewAuthentication(ctx, grpcCfg)
-	if err != nil {
-		logger.Error(err.Error())
-		exitCode = 1
-		return
-	}
-	defer authnClient.Close()
+
+	authn := jwksAuthn.NewAuthentication(grpcCfg.JWKSURL)
+	logger.Info("Service is using JWKS authentication")
 
 	authz, authzClient, err := authsvcAuthz.NewAuthorization(ctx, grpcCfg)
 	if err != nil {

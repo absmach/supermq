@@ -72,7 +72,6 @@ func (tr testRequest) make() (*http.Response, error) {
 func newService() (auth.Service, *mocks.KeyRepository) {
 	krepo := new(mocks.KeyRepository)
 	drepo := new(mocks.DomainsRepository)
-	idProvider := uuid.NewMock()
 	pService := new(policymocks.Service)
 	pEvaluator := new(policymocks.Evaluator)
 	idProvider := uuid.NewMock()
@@ -80,9 +79,7 @@ func newService() (auth.Service, *mocks.KeyRepository) {
 	cache := new(mocks.Cache)
 	tokenizer := jwt.New(getPrivateKey(&testing.T{}), trepo, cache)
 
-	t := jwt.New(getPrivateKey(&testing.T{}), trepo, cache)
-
-	return auth.New(krepo, drepo, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), krepo
+	return auth.New(krepo, drepo, idProvider, tokenizer, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), krepo
 }
 
 func newServer(svc auth.Service) *httptest.Server {

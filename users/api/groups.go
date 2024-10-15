@@ -9,7 +9,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/internal/api"
 	gapi "github.com/absmach/magistrala/internal/groups/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
@@ -266,54 +265,4 @@ func unassignGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 		}
 		return unassignUsersRes{}, nil
 	}
-}
-
-func assignGroupsAuthReq(ctx context.Context, request interface{}) ([]*magistrala.AuthorizeReq, error) {
-	req := request.(assignGroupsReq)
-	if err := req.validate(); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-
-	session, ok := ctx.Value(api.SessionKey).(auth.Session)
-	if !ok {
-		return nil, svcerr.ErrAuthorization
-	}
-
-	prs := []*magistrala.AuthorizeReq{
-		{
-			Domain:      session.DomainID,
-			SubjectType: policies.UserType,
-			SubjectKind: policies.UsersKind,
-			Subject:     session.DomainUserID,
-			Permission:  policies.EditPermission,
-			ObjectType:  policies.GroupType,
-			Object:      req.groupID,
-		},
-	}
-	return prs, nil
-}
-
-func assignUsersAuthReq(ctx context.Context, request interface{}) ([]*magistrala.AuthorizeReq, error) {
-	req := request.(assignUsersReq)
-	if err := req.validate(); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-
-	session, ok := ctx.Value(api.SessionKey).(auth.Session)
-	if !ok {
-		return nil, svcerr.ErrAuthorization
-	}
-
-	prs := []*magistrala.AuthorizeReq{
-		{
-			Domain:      session.DomainID,
-			SubjectType: policies.UserType,
-			SubjectKind: policies.UsersKind,
-			Subject:     session.DomainUserID,
-			Permission:  policies.EditPermission,
-			ObjectType:  policies.GroupType,
-			Object:      req.groupID,
-		},
-	}
-	return prs, nil
 }

@@ -88,20 +88,20 @@ func newService() (auth.Service, *mocks.TokenRepository, *mocks.Cache, string) {
 	}
 	token, _ := tokenizer.Issue(key)
 
-	return auth.New(krepo, drepo, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), token
+	return auth.New(krepo, drepo, idProvider, tokenizer, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), trepo, cache, token
 }
 
 func newMinimalService() auth.Service {
 	krepo = new(mocks.KeyRepository)
 	drepo = new(mocks.DomainsRepository)
-	pManager = new(policymocks.Manager)
+	pService = new(policymocks.Service)
 	pEvaluator = new(policymocks.Evaluator)
 	idProvider := uuid.NewMock()
 	trepo := new(mocks.TokenRepository)
 	cache := new(mocks.Cache)
 	tokenizer := jwt.New(privateKey, trepo, cache)
 
-	return auth.New(krepo, drepo, idProvider, tokenizer, pEvaluator, pManager, loginDuration, refreshDuration, invalidDuration)
+	return auth.New(krepo, drepo, idProvider, tokenizer, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration)
 }
 
 func TestIssue(t *testing.T) {

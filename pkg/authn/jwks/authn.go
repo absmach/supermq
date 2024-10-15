@@ -12,10 +12,17 @@ import (
 	"net/http"
 	"time"
 
+	mgauth "github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/errors"
-	"github.com/lestrrat-go/jwx/jwa"
+	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
+)
+
+const (
+	issuerName    = "magistrala.auth"
+	cacheDuration = 5 * time.Minute
 )
 
 var (
@@ -24,38 +31,43 @@ var (
 	// errInvalidIssuer indicates an invalid issuer value.
 	errInvalidIssuer = errors.New("invalid token issuer value")
 	// ErrValidateJWTToken indicates a failure to validate JWT token.
-	ErrValidateJWTToken = errors.New("failed to validate jwt token")
+	errValidateJWTToken = errors.New("failed to validate jwt token")
 
 	jwksCache = struct {
 		jwks     mgauth.JWKS
 		cachedAt time.Time
 	}{}
 )
+
 var _ authn.Authentication = (*authentication)(nil)
 
-type authentication struct{}
+type authentication struct {
+	jwksURL string
+}
 
-func NewAuthentication() authn.Authentication {
-	return authentication{}
+func NewAuthentication(jwksURL string) authn.Authentication {
+	return authentication{
+		jwksURL: jwksURL,
+	}
 }
 
 func (a authentication) Authenticate(ctx context.Context, token string) (authn.Session, error) {
-	jwks, err := fetchJWKS()
+	jwks, err := a.fetchJWKS()
 	if err != nil {
-		return auth.Session{}, err
+		return authn.Session{}, err
 	}
 
-	publicKey, err := createPublicKey(jwks.Keys[0])
+	publicKey, err := decodeJWK(jwks.Keys[0])
 	if err != nil {
-		return auth.Session{}, err
+		return authn.Session{}, err
 	}
 
 	tkn, err := validateToken(token, publicKey)
 	if err != nil {
-		return auth.Session{}, err
+		return authn.Session{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
 
-	res := auth.Session{DomainUserID: tkn.Subject()}
+	res := authn.Session{DomainUserID: tkn.Subject()}
 	pc := tkn.PrivateClaims()
 	if pc["user"] != nil {
 		res.UserID = pc["user"].(string)
@@ -67,8 +79,8 @@ func (a authentication) Authenticate(ctx context.Context, token string) (authn.S
 	return res, nil
 }
 
-func fetchJWKS() (mgauth.JWKS, error) {
-	req, err := http.NewRequest("GET", client.jwksURL, nil)
+func (a authentication) fetchJWKS() (mgauth.JWKS, error) {
+	req, err := http.NewRequest("GET", a.jwksURL, nil)
 	if err != nil {
 		return mgauth.JWKS{}, err
 	}
@@ -115,13 +127,13 @@ func validateToken(token string, publicKey *rsa.PublicKey) (jwt.Token, error) {
 		return nil
 	})
 	if err := jwt.Validate(tkn, jwt.WithValidator(validator)); err != nil {
-		return nil, errors.Wrap(ErrValidateJWTToken, err)
+		return nil, errors.Wrap(errValidateJWTToken, err)
 	}
 
 	return tkn, nil
 }
 
-func createPublicKey(jwk mgauth.JWK) (*rsa.PublicKey, error) {
+func decodeJWK(jwk mgauth.JWK) (*rsa.PublicKey, error) {
 	nBytes, err := base64.RawURLEncoding.DecodeString(jwk.N)
 	if err != nil {
 		return nil, err

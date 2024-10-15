@@ -38,7 +38,7 @@ type Config struct {
 	ClientCert   string        `env:"CLIENT_CERT"      envDefault:""`
 	ClientKey    string        `env:"CLIENT_KEY"       envDefault:""`
 	ServerCAFile string        `env:"SERVER_CA_CERTS"  envDefault:""`
-	JwksURL      string        `env:"JWKS_URL"         envDefault:""`
+	JWKSURL      string        `env:"JWKS_URL"         envDefault:""`
 }
 
 // Handler is used to handle gRPC connection.
