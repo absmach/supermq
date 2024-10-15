@@ -5,7 +5,6 @@ package users
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/absmach/magistrala"
@@ -60,16 +59,16 @@ func (svc service) RegisterClient(ctx context.Context, session authn.Session, cl
 		return User{}, err
 	}
 
-	if u.FirstName != "" || u.LastName != "" {
-		u.Name = fmt.Sprintf("%s %s", u.FirstName, u.LastName)
-	}
-
 	if u.Credentials.Secret != "" {
 		hash, err := svc.hasher.Hash(u.Credentials.Secret)
 		if err != nil {
 			return User{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 		}
 		u.Credentials.Secret = hash
+	}
+
+	if u.Credentials.UserName == "" {
+		return User{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 	}
 
 	if u.Status != DisabledStatus && u.Status != EnabledStatus {
@@ -251,7 +250,7 @@ func (svc service) UpdateClientIdentity(ctx context.Context, session authn.Sessi
 }
 
 func (svc service) GenerateResetToken(ctx context.Context, email, host string) error {
-	user, err := svc.users.RetrieveByIdentity(ctx, email)
+	user, err := svc.users.RetrieveByUserName(ctx, email)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
@@ -264,7 +263,7 @@ func (svc service) GenerateResetToken(ctx context.Context, email, host string) e
 		return errors.Wrap(errRecoveryToken, err)
 	}
 
-	return svc.SendPasswordReset(ctx, host, email, user.Name, token.AccessToken)
+	return svc.SendPasswordReset(ctx, host, email, user.Credentials.UserName, token.AccessToken)
 }
 
 func (svc service) ResetSecret(ctx context.Context, session authn.Session, secret string) error {
@@ -280,7 +279,7 @@ func (svc service) ResetSecret(ctx context.Context, session authn.Session, secre
 	u = User{
 		ID: u.ID,
 		Credentials: Credentials{
-			Identity: u.Credentials.Identity,
+			UserName: u.Credentials.UserName,
 			Secret:   secret,
 		},
 		UpdatedAt: time.Now(),
@@ -455,7 +454,11 @@ func (svc service) ListMembers(ctx context.Context, session authn.Session, objec
 	for i, u := range up.Users {
 		up.Users[i] = User{
 			ID:        u.ID,
-			Name:      u.Name,
+			FirstName: u.FirstName,
+			LastName:  u.LastName,
+			Credentials: Credentials{
+				UserName: u.Credentials.UserName,
+			},
 			CreatedAt: u.CreatedAt,
 			UpdatedAt: u.UpdatedAt,
 			Status:    u.Status,

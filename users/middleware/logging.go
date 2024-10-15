@@ -34,7 +34,7 @@ func (lm *loggingMiddleware) RegisterClient(ctx context.Context, session authn.S
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", u.ID),
-				slog.String("name", u.Name),
+				slog.String("user_name", u.Credentials.UserName),
 			),
 		}
 		if err != nil {
@@ -47,7 +47,7 @@ func (lm *loggingMiddleware) RegisterClient(ctx context.Context, session authn.S
 	return lm.svc.RegisterClient(ctx, session, client, selfRegister)
 }
 
-// IssueToken logs the issue_token request. It logs the user identity type and the time it took to complete the request.
+// IssueToken logs the issue_token request. It logs the user id type and the time it took to complete the request.
 // If the request fails, it logs the error.
 func (lm *loggingMiddleware) IssueToken(ctx context.Context, identity, secret string) (t *magistrala.Token, err error) {
 	defer func(begin time.Time) {
@@ -95,7 +95,7 @@ func (lm *loggingMiddleware) ViewClient(ctx context.Context, session authn.Sessi
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", id),
-				slog.String("name", u.Name),
+				slog.String("user_name", u.Credentials.UserName),
 			),
 		}
 		if err != nil {
@@ -116,7 +116,7 @@ func (lm *loggingMiddleware) ViewProfile(ctx context.Context, session authn.Sess
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", u.ID),
-				slog.String("name", u.Name),
+				slog.String("user_name", u.Credentials.UserName),
 			),
 		}
 		if err != nil {
@@ -138,7 +138,7 @@ func (lm *loggingMiddleware) ViewUserByUserName(ctx context.Context, token, user
 			slog.String("user_name", userName),
 			slog.Group("user",
 				slog.String("id", u.ID),
-				slog.String("name", u.Name),
+				slog.String("user_name", u.Credentials.UserName),
 			),
 		}
 		if err != nil {
@@ -202,7 +202,7 @@ func (lm *loggingMiddleware) UpdateClient(ctx context.Context, session authn.Ses
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", u.ID),
-				slog.String("name", u.Name),
+				slog.String("user_name", u.Credentials.UserName),
 				slog.Any("metadata", u.Metadata),
 			),
 		}
@@ -224,7 +224,7 @@ func (lm *loggingMiddleware) UpdateClientTags(ctx context.Context, session authn
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", u.ID),
-				slog.String("name", u.Name),
+				slog.String("user_name", u.Credentials.UserName),
 				slog.Any("tags", u.Tags),
 			),
 		}
@@ -267,7 +267,7 @@ func (lm *loggingMiddleware) UpdateClientSecret(ctx context.Context, session aut
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", u.ID),
-				slog.String("name", u.Name),
+				slog.String("user_name", u.Credentials.UserName),
 			),
 		}
 		if err != nil {
@@ -288,10 +288,9 @@ func (lm *loggingMiddleware) UpdateUserNames(ctx context.Context, token string, 
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", u.ID),
-				slog.String("name", u.Name),
 				slog.String("first_name", u.FirstName),
 				slog.String("last_name", u.LastName),
-				slog.String("user_name", u.UserName),
+				slog.String("user_name", u.Credentials.UserName),
 			),
 		}
 		if err != nil {
@@ -312,7 +311,7 @@ func (lm *loggingMiddleware) UpdateProfilePicture(ctx context.Context, token str
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", u.ID),
-				slog.String("name", u.Name),
+				slog.String("user_name", u.Credentials.UserName),
 			),
 		}
 		if err != nil {
@@ -322,7 +321,7 @@ func (lm *loggingMiddleware) UpdateProfilePicture(ctx context.Context, token str
 		}
 		lm.logger.Info("Update profile picture completed successfully", args...)
 	}(time.Now())
-	return lm.svc.UpdateProfilePicture(ctx, token, user)
+	return lm.svc.UpdateUser(ctx, token, user)
 }
 
 // GenerateResetToken logs the generate_reset_token request. It logs the time it took to complete the request.
@@ -386,7 +385,7 @@ func (lm *loggingMiddleware) UpdateClientRole(ctx context.Context, session authn
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", u.ID),
-				slog.String("name", u.Name),
+				slog.String("user_name", u.Credentials.UserName),
 				slog.String("role", user.Role.String()),
 			),
 		}
@@ -408,7 +407,7 @@ func (lm *loggingMiddleware) EnableClient(ctx context.Context, session authn.Ses
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", id),
-				slog.String("name", u.Name),
+				slog.String("user_name", u.Credentials.UserName),
 			),
 		}
 		if err != nil {
@@ -429,7 +428,7 @@ func (lm *loggingMiddleware) DisableClient(ctx context.Context, session authn.Se
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", id),
-				slog.String("name", u.Name),
+				slog.String("user_name", u.Credentials.UserName),
 			),
 		}
 		if err != nil {

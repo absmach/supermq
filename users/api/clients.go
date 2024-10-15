@@ -259,11 +259,15 @@ func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	n, err := apiutil.ReadStringQuery(r, api.NameKey, "")
+	n, err := apiutil.ReadStringQuery(r, api.UserNameKey, "")
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	i, err := apiutil.ReadStringQuery(r, api.IdentityKey, "")
+	i, err := apiutil.ReadStringQuery(r, api.FirstNameKey, "")
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	f, err := apiutil.ReadStringQuery(r, api.LastNameKey, "")
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
@@ -300,7 +304,6 @@ func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 		dir:      dir,
 		id:       id,
 	}
-
 	return req, nil
 }
 
@@ -313,7 +316,15 @@ func decodeSearchUsers(_ context.Context, r *http.Request) (interface{}, error) 
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	n, err := apiutil.ReadStringQuery(r, api.NameKey, "")
+	n, err := apiutil.ReadStringQuery(r, api.UserNameKey, "")
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	f, err := apiutil.ReadStringQuery(r, api.FirstNameKey, "")
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	e, err := apiutil.ReadStringQuery(r, api.LastNameKey, "")
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
@@ -339,7 +350,7 @@ func decodeSearchUsers(_ context.Context, r *http.Request) (interface{}, error) 
 		Dir:    dir,
 	}
 
-	for _, field := range []string{req.Name, req.Id} {
+	for _, field := range []string{req.UserName, req.Id} {
 		if field != "" && len(field) < 3 {
 			req = searchClientsReq{}
 			return req, errors.Wrap(apiutil.ErrLenSearchQuery, apiutil.ErrValidation)
@@ -583,11 +594,15 @@ func queryPageParams(r *http.Request, defPermission string) (users.Page, error) 
 	if err != nil {
 		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	n, err := apiutil.ReadStringQuery(r, api.NameKey, "")
+	n, err := apiutil.ReadStringQuery(r, api.UserNameKey, "")
 	if err != nil {
 		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	i, err := apiutil.ReadStringQuery(r, api.IdentityKey, "")
+	f, err := apiutil.ReadStringQuery(r, api.FirstNameKey, "")
+	if err != nil {
+		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	a, err := apiutil.ReadStringQuery(r, api.LastNameKey, "")
 	if err != nil {
 		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
@@ -613,8 +628,9 @@ func queryPageParams(r *http.Request, defPermission string) (users.Page, error) 
 		Offset:     o,
 		Limit:      l,
 		Metadata:   m,
-		Identity:   i,
-		Name:       n,
+		FirstName:  f,
+		UserName:   n,
+		LastName:   a,
 		Tag:        t,
 		Permission: p,
 		ListPerms:  lp,
