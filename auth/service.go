@@ -79,7 +79,7 @@ type Authn interface {
 	RetrieveJWKS() (JWKS, error)
 }
 
-// Service specifies an API that must be fulfilled by the domain services
+// Service specifies an API that must be fulfilled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 // Token is a string value of the actual Key and is used to authenticate
 // an Auth service request.
