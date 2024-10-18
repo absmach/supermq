@@ -6,21 +6,27 @@ package http
 import (
 	"log/slog"
 
+	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/domains"
-	entityRoleHttp "github.com/absmach/magistrala/pkg/entityroles/api/http"
+	entityRoleHttp "github.com/absmach/magistrala/pkg/entityroles/api"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-func MakeHandler(svc domains.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
+func MakeHandler(svc domains.Service, authn authn.Authentication, logger *slog.Logger, instanceID string) *chi.Mux {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
 
+	mux := chi.NewMux()
 	mux.Route("/domains", func(r chi.Router) {
+		r.Use(api.AuthenticateMiddleware(authn))
+
 		r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
 			createDomainEndpoint(svc),
 			decodeCreateDomainRequest,
@@ -74,7 +80,9 @@ func MakeHandler(svc domains.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mu
 		})
 	})
 
-	mux = entityRoleHttp.RolesHandler(svc, "/domains", mux, logger)
+	mux = entityRoleHttp.RolesHandler(svc, authn, "/domains", mux, logger)
+	mux.Get("/health", magistrala.Health("auth", instanceID))
+	mux.Handle("/metrics", promhttp.Handler())
 
 	return mux
 }

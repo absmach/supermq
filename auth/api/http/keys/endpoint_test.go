@@ -20,9 +20,8 @@ import (
 	"github.com/absmach/magistrala/auth/mocks"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/apiutil"
-	"github.com/absmach/magistrala/pkg/domains"
-	dmocks "github.com/absmach/magistrala/pkg/domains/mocks"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	policymocks "github.com/absmach/magistrala/pkg/policies/mocks"
 	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -68,19 +67,18 @@ func (tr testRequest) make() (*http.Response, error) {
 	return tr.client.Do(req)
 }
 
-func newService() (auth.Service, domains.Service, *mocks.KeyRepository) {
+func newService() (auth.Service, *mocks.KeyRepository) {
 	krepo := new(mocks.KeyRepository)
-	prepo := new(mocks.PolicyAgent)
 	idProvider := uuid.NewMock()
-
+	pService := new(policymocks.Service)
+	pEvaluator := new(policymocks.Evaluator)
 	t := jwt.New([]byte(secret))
 
-	dsvc := new(dmocks.Service)
-	return auth.New(krepo, idProvider, t, prepo, loginDuration, refreshDuration, invalidDuration), dsvc, krepo
+	return auth.New(krepo, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), krepo
 }
 
-func newServer(svc auth.Service, dsvc domains.Service) *httptest.Server {
-	mux := httpapi.MakeHandler(svc, dsvc, mglog.NewMock(), "")
+func newServer(svc auth.Service) *httptest.Server {
+	mux := httpapi.MakeHandler(svc, mglog.NewMock(), "")
 	return httptest.NewServer(mux)
 }
 
@@ -93,11 +91,11 @@ func toJSON(data interface{}) string {
 }
 
 func TestIssue(t *testing.T) {
-	svc, dsvc, krepo := newService()
+	svc, krepo := newService()
 	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, IssuedAt: time.Now(), Subject: id})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
-	ts := newServer(svc, dsvc)
+	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
 
@@ -202,7 +200,7 @@ func TestIssue(t *testing.T) {
 }
 
 func TestRetrieve(t *testing.T) {
-	svc, dsvc, krepo := newService()
+	svc, krepo := newService()
 	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, IssuedAt: time.Now(), Subject: id})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	key := auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), Subject: id}
@@ -212,7 +210,7 @@ func TestRetrieve(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	repocall.Unset()
 
-	ts := newServer(svc, dsvc)
+	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
 
@@ -276,7 +274,7 @@ func TestRetrieve(t *testing.T) {
 }
 
 func TestRevoke(t *testing.T) {
-	svc, dsvc, krepo := newService()
+	svc, krepo := newService()
 	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, IssuedAt: time.Now(), Subject: id})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	key := auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), Subject: id}
@@ -286,7 +284,7 @@ func TestRevoke(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	repocall.Unset()
 
-	ts := newServer(svc, dsvc)
+	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
 

@@ -6,10 +6,13 @@ package http
 import (
 	"context"
 
+	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/domains"
 	"github.com/absmach/magistrala/pkg/errors"
+	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/go-kit/kit/endpoint"
 )
 
@@ -20,13 +23,18 @@ func createDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
 		d := domains.Domain{
 			Name:     req.Name,
 			Metadata: req.Metadata,
 			Tags:     req.Tags,
 			Alias:    req.Alias,
 		}
-		domain, err := svc.CreateDomain(ctx, req.token, d)
+		domain, err := svc.CreateDomain(ctx, session, d)
 		if err != nil {
 			return nil, err
 		}
@@ -42,7 +50,12 @@ func retrieveDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		domain, err := svc.RetrieveDomain(ctx, req.token, req.domainID)
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
+		domain, err := svc.RetrieveDomain(ctx, session, req.domainID)
 		if err != nil {
 			return nil, err
 		}
@@ -57,6 +70,11 @@ func updateDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
 		var metadata clients.Metadata
 		if req.Metadata != nil {
 			metadata = *req.Metadata
@@ -67,7 +85,7 @@ func updateDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 			Tags:     req.Tags,
 			Alias:    req.Alias,
 		}
-		domain, err := svc.UpdateDomain(ctx, req.token, req.domainID, d)
+		domain, err := svc.UpdateDomain(ctx, session, req.domainID, d)
 		if err != nil {
 			return nil, err
 		}
@@ -83,6 +101,11 @@ func listDomainsEndpoint(svc domains.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
 		page := domains.Page{
 			Offset:     req.offset,
 			Limit:      req.limit,
@@ -94,7 +117,7 @@ func listDomainsEndpoint(svc domains.Service) endpoint.Endpoint {
 			Permission: req.permission,
 			Status:     req.status,
 		}
-		dp, err := svc.ListDomains(ctx, req.token, page)
+		dp, err := svc.ListDomains(ctx, session, page)
 		if err != nil {
 			return nil, err
 		}
@@ -109,7 +132,12 @@ func enableDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if _, err := svc.EnableDomain(ctx, req.token, req.domainID); err != nil {
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
+		if _, err := svc.EnableDomain(ctx, session, req.domainID); err != nil {
 			return nil, err
 		}
 		return enableDomainRes{}, nil
@@ -123,7 +151,12 @@ func disableDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if _, err := svc.DisableDomain(ctx, req.token, req.domainID); err != nil {
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
+		if _, err := svc.DisableDomain(ctx, session, req.domainID); err != nil {
 			return nil, err
 		}
 		return disableDomainRes{}, nil
@@ -137,7 +170,12 @@ func freezeDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if _, err := svc.FreezeDomain(ctx, req.token, req.domainID); err != nil {
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
+		if _, err := svc.FreezeDomain(ctx, session, req.domainID); err != nil {
 			return nil, err
 		}
 		return freezeDomainRes{}, nil

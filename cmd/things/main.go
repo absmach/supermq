@@ -15,17 +15,22 @@ import (
 
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/magistrala"
-	authclient "github.com/absmach/magistrala/auth/api/grpc"
 	chSvc "github.com/absmach/magistrala/internal/channels"
 	capi "github.com/absmach/magistrala/internal/channels/api"
 	gevents "github.com/absmach/magistrala/internal/channels/events"
 	cpostgres "github.com/absmach/magistrala/internal/channels/postgres"
 	ctracing "github.com/absmach/magistrala/internal/channels/tracing"
 	redisclient "github.com/absmach/magistrala/internal/clients/redis"
+	gevents "github.com/absmach/magistrala/internal/groups/events"
+	gmiddleware "github.com/absmach/magistrala/internal/groups/middleware"
 	mglog "github.com/absmach/magistrala/logger"
-	"github.com/absmach/magistrala/pkg/channels"
+	authsvcAuthn "github.com/absmach/magistrala/pkg/authn/authsvc"
+	mgauthz "github.com/absmach/magistrala/pkg/authz"
+	authsvcAuthz "github.com/absmach/magistrala/pkg/authz/authsvc"
 	"github.com/absmach/magistrala/pkg/grpcclient"
 	jaegerclient "github.com/absmach/magistrala/pkg/jaeger"
+	"github.com/absmach/magistrala/pkg/policies"
+	"github.com/absmach/magistrala/pkg/policies/spicedb"
 	"github.com/absmach/magistrala/pkg/postgres"
 	pgclient "github.com/absmach/magistrala/pkg/postgres"
 	"github.com/absmach/magistrala/pkg/prometheus"
@@ -35,14 +40,16 @@ import (
 	"github.com/absmach/magistrala/pkg/sid"
 	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/absmach/magistrala/things"
-	"github.com/absmach/magistrala/things/api"
 	grpcapi "github.com/absmach/magistrala/things/api/grpc"
 	httpapi "github.com/absmach/magistrala/things/api/http"
 	thcache "github.com/absmach/magistrala/things/cache"
 	thevents "github.com/absmach/magistrala/things/events"
+	tmiddleware "github.com/absmach/magistrala/things/middleware"
 	thingspg "github.com/absmach/magistrala/things/postgres"
-	localusers "github.com/absmach/magistrala/things/standalone"
 	ttracing "github.com/absmach/magistrala/things/tracing"
+	"github.com/absmach/magistrala/ws/api"
+	"github.com/authzed/authzed-go/v1"
+	"github.com/authzed/grpcutil"
 	"github.com/caarlos0/env/v11"
 	"github.com/go-chi/chi/v5"
 	"github.com/jmoiron/sqlx"
@@ -50,6 +57,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -67,16 +75,19 @@ const (
 )
 
 type config struct {
-	LogLevel         string        `env:"MG_THINGS_LOG_LEVEL"           envDefault:"info"`
-	StandaloneID     string        `env:"MG_THINGS_STANDALONE_ID"       envDefault:""`
-	StandaloneToken  string        `env:"MG_THINGS_STANDALONE_TOKEN"    envDefault:""`
-	JaegerURL        url.URL       `env:"MG_JAEGER_URL"                 envDefault:"http://localhost:4318/v1/traces"`
-	CacheKeyDuration time.Duration `env:"MG_THINGS_CACHE_KEY_DURATION"  envDefault:"10m"`
-	SendTelemetry    bool          `env:"MG_SEND_TELEMETRY"             envDefault:"true"`
-	InstanceID       string        `env:"MG_THINGS_INSTANCE_ID"         envDefault:""`
-	ESURL            string        `env:"MG_ES_URL"                     envDefault:"nats://localhost:4222"`
-	CacheURL         string        `env:"MG_THINGS_CACHE_URL"           envDefault:"redis://localhost:6379/0"`
-	TraceRatio       float64       `env:"MG_JAEGER_TRACE_RATIO"         envDefault:"1.0"`
+	LogLevel            string        `env:"MG_THINGS_LOG_LEVEL"           envDefault:"info"`
+	StandaloneID        string        `env:"MG_THINGS_STANDALONE_ID"       envDefault:""`
+	StandaloneToken     string        `env:"MG_THINGS_STANDALONE_TOKEN"    envDefault:""`
+	JaegerURL           url.URL       `env:"MG_JAEGER_URL"                 envDefault:"http://localhost:4318/v1/traces"`
+	CacheKeyDuration    time.Duration `env:"MG_THINGS_CACHE_KEY_DURATION"  envDefault:"10m"`
+	SendTelemetry       bool          `env:"MG_SEND_TELEMETRY"             envDefault:"true"`
+	InstanceID          string        `env:"MG_THINGS_INSTANCE_ID"         envDefault:""`
+	ESURL               string        `env:"MG_ES_URL"                     envDefault:"nats://localhost:4222"`
+	CacheURL            string        `env:"MG_THINGS_CACHE_URL"           envDefault:"redis://localhost:6379/0"`
+	TraceRatio          float64       `env:"MG_JAEGER_TRACE_RATIO"         envDefault:"1.0"`
+	SpicedbHost         string        `env:"MG_SPICEDB_HOST"               envDefault:"localhost"`
+	SpicedbPort         string        `env:"MG_SPICEDB_PORT"               envDefault:"50051"`
+	SpicedbPreSharedKey string        `env:"MG_SPICEDB_PRE_SHARED_KEY"     envDefault:"12345678"`
 }
 
 func main() {
@@ -151,45 +162,39 @@ func main() {
 	}
 	defer cacheclient.Close()
 
-	var (
-		authClient   authclient.AuthServiceClient
-		policyClient magistrala.PolicyServiceClient
-	)
-	switch cfg.StandaloneID != "" && cfg.StandaloneToken != "" {
-	case true:
-		authClient = localusers.NewAuthService(cfg.StandaloneID, cfg.StandaloneToken)
-		policyClient = localusers.NewPolicyService(cfg.StandaloneID, cfg.StandaloneToken)
-		logger.Info("Using standalone auth service")
-	default:
-		clientConfig := grpcclient.Config{}
-		if err := env.ParseWithOptions(&clientConfig, env.Options{Prefix: envPrefixAuth}); err != nil {
-			logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
-			exitCode = 1
-			return
-		}
-
-		authServiceClient, authHandler, err := grpcclient.SetupAuthClient(ctx, clientConfig)
-		if err != nil {
-			logger.Error(err.Error())
-			exitCode = 1
-			return
-		}
-		defer authHandler.Close()
-		authClient = authServiceClient
-		logger.Info("AuthService gRPC client successfully connected to auth gRPC server " + authHandler.Secure())
-
-		policyServiceClient, policyHandler, err := grpcclient.SetupPolicyClient(ctx, clientConfig)
-		if err != nil {
-			logger.Error(err.Error())
-			exitCode = 1
-			return
-		}
-		defer policyHandler.Close()
-		policyClient = policyServiceClient
-		logger.Info("PolicyService gRPC client successfully connected to auth gRPC server " + policyHandler.Secure())
+	policyEvaluator, policyService, err := newSpiceDBPolicyServiceEvaluator(cfg, logger)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
 	}
+	logger.Info("Policy Evaluator and Policy manager are successfully connected to SpiceDB gRPC server")
 
-	tsvc, gsvc, err := newService(ctx, db, dbConfig, authClient, policyClient, cacheclient, cfg.CacheKeyDuration, cfg.ESURL, tracer, logger)
+	grpcCfg := grpcclient.Config{}
+	if err := env.ParseWithOptions(&grpcCfg, env.Options{Prefix: envPrefixAuth}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load auth gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+	authn, authnClient, err := authsvcAuthn.NewAuthentication(ctx, grpcCfg)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer authnClient.Close()
+	logger.Info("AuthN  successfully connected to auth gRPC server " + authnClient.Secure())
+
+	authz, authzClient, err := authsvcAuthz.NewAuthorization(ctx, grpcCfg)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer authzClient.Close()
+	logger.Info("AuthZ  successfully connected to auth gRPC server " + authnClient.Secure())
+
+	csvc, gsvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cacheclient, cfg.CacheKeyDuration, cfg.ESURL, tracer, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
 		exitCode = 1
@@ -203,7 +208,7 @@ func main() {
 		return
 	}
 	mux := chi.NewRouter()
-	httpSvc := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(tsvc, gsvc, mux, logger, cfg.InstanceID), logger)
+	httpSvc := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(csvc, gsvc, authn, mux, logger, cfg.InstanceID), logger)
 
 	grpcServerConfig := server.Config{Port: defSvcAuthGRPCPort}
 	if err := env.ParseWithOptions(&grpcServerConfig, env.Options{Prefix: envPrefixGRPC}); err != nil {
@@ -240,7 +245,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authClient authclient.AuthServiceClient, policyClient magistrala.PolicyServiceClient, cacheClient *redis.Client, keyDuration time.Duration, esURL string, tracer trace.Tracer, logger *slog.Logger) (things.Service, channels.Service, error) {
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, keyDuration time.Duration, esURL string, tracer trace.Tracer, logger *slog.Logger) (things.Service, groups.Service, error) {
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 	tRepo := thingspg.NewRepository(database)
 	cRepo := cpostgres.NewRepository(database)
@@ -272,6 +277,9 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 		return nil, nil, err
 	}
 
+	csvc = tmiddleware.AuthorizationMiddleware(csvc, authz)
+	gsvc = gmiddleware.AuthorizationMiddleware(gsvc, authz)
+
 	tsvc = ttracing.New(tsvc, tracer)
 	tsvc = api.LoggingMiddleware(tsvc, logger)
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
@@ -283,4 +291,34 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 	csvc = capi.MetricsMiddleware(csvc, counter, latency)
 
 	return tsvc, csvc, err
+}
+
+func newSpiceDBPolicyServiceEvaluator(cfg config, logger *slog.Logger) (policies.Evaluator, policies.Service, error) {
+	client, err := authzed.NewClientWithExperimentalAPIs(
+		fmt.Sprintf("%s:%s", cfg.SpicedbHost, cfg.SpicedbPort),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpcutil.WithInsecureBearerToken(cfg.SpicedbPreSharedKey),
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	pe := spicedb.NewPolicyEvaluator(client, logger)
+	ps := spicedb.NewPolicyService(client, logger)
+
+	return pe, ps, nil
+}
+
+func newSpiceDBPolicyServiceEvaluator(cfg config, logger *slog.Logger) (policies.Evaluator, policies.Service, error) {
+	client, err := authzed.NewClientWithExperimentalAPIs(
+		fmt.Sprintf("%s:%s", cfg.SpicedbHost, cfg.SpicedbPort),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpcutil.WithInsecureBearerToken(cfg.SpicedbPreSharedKey),
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	pe := spicedb.NewPolicyEvaluator(client, logger)
+	ps := spicedb.NewPolicyService(client, logger)
+
+	return pe, ps, nil
 }

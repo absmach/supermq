@@ -11,14 +11,15 @@ import (
 )
 
 const (
-	domainPrefix   = "domain."
-	domainCreate   = domainPrefix + "create"
-	domainRetrieve = domainPrefix + "retrieve"
-	domainUpdate   = domainPrefix + "update"
-	domainEnable   = domainPrefix + "enable"
-	domainDisable  = domainPrefix + "disable"
-	domainFreeze   = domainPrefix + "freeze"
-	domainList     = domainPrefix + "list"
+	domainPrefix     = "domain."
+	domainCreate     = domainPrefix + "create"
+	domainRetrieve   = domainPrefix + "retrieve"
+	domainUpdate     = domainPrefix + "update"
+	domainEnable     = domainPrefix + "enable"
+	domainDisable    = domainPrefix + "disable"
+	domainFreeze     = domainPrefix + "freeze"
+	domainList       = domainPrefix + "list"
+	domainUserDelete = domainPrefix + "user_delete"
 )
 
 var (
@@ -214,5 +215,17 @@ func (lde listDomainsEvent) Encode() (map[string]interface{}, error) {
 		val["subject_id"] = lde.SubjectID
 	}
 
+	return val, nil
+}
+
+type deleteUserFromDomainsEvent struct {
+	userID string
+}
+
+func (dude deleteUserFromDomainsEvent) Encode() (map[string]interface{}, error) {
+	val := map[string]interface{}{
+		"operation": domainUserDelete,
+		"user_id":   dude.userID,
+	}
 	return val, nil
 }

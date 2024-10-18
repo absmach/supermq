@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/domains"
 	"github.com/absmach/magistrala/pkg/roles"
@@ -115,57 +116,44 @@ type Repository interface {
 //go:generate mockery --name Service --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines" --unroll-variadic=false
 type Service interface {
 	// CreateGroup creates new  group.
-	CreateGroup(ctx context.Context, token, kind string, g Group) (Group, error)
+	CreateGroup(ctx context.Context, session authn.Session, g Group) (Group, error)
 
 	// UpdateGroup updates the group identified by the provided ID.
-	UpdateGroup(ctx context.Context, token string, g Group) (Group, error)
+	UpdateGroup(ctx context.Context, session authn.Session, g Group) (Group, error)
 
 	// ViewGroup retrieves data about the group identified by ID.
-	ViewGroup(ctx context.Context, token, id string) (Group, error)
+	ViewGroup(ctx context.Context, session authn.Session, id string) (Group, error)
 
 	// ListGroups retrieves
-	ListGroups(ctx context.Context, token string, pm PageMeta) (Page, error)
+	ListGroups(ctx context.Context, session authn.Session, pm PageMeta) (Page, error)
 
 	// EnableGroup logically enables the group identified with the provided ID.
-	EnableGroup(ctx context.Context, token, id string) (Group, error)
+	EnableGroup(ctx context.Context, session authn.Session, id string) (Group, error)
 
 	// DisableGroup logically disables the group identified with the provided ID.
-	DisableGroup(ctx context.Context, token, id string) (Group, error)
+	DisableGroup(ctx context.Context, session authn.Session, id string) (Group, error)
 
 	// DeleteGroup delete the given group id
-	DeleteGroup(ctx context.Context, token, id string) error
+	DeleteGroup(ctx context.Context, session authn.Session, id string) error
 
-	RetrieveGroupHierarchy(ctx context.Context, token, id string, hm HierarchyPageMeta) (HierarchyPage, error)
+	RetrieveGroupHierarchy(ctx context.Context, session authn.Session, id string, hm HierarchyPageMeta) (HierarchyPage, error)
 
-	AddParentGroup(ctx context.Context, token, id, parentID string) error
+	AddParentGroup(ctx context.Context, session authn.Session, id, parentID string) error
 
-	RemoveParentGroup(ctx context.Context, token, id string) error
+	RemoveParentGroup(ctx context.Context, session authn.Session, id string) error
 
-	ViewParentGroup(ctx context.Context, token, id string) (Group, error)
+	ViewParentGroup(ctx context.Context, session authn.Session, id string) (Group, error)
 
-	AddChildrenGroups(ctx context.Context, token, id string, childrenGroupIDs []string) error
+	AddChildrenGroups(ctx context.Context, session authn.Session, id string, childrenGroupIDs []string) error
 
-	RemoveChildrenGroups(ctx context.Context, token, id string, childrenGroupIDs []string) error
+	RemoveChildrenGroups(ctx context.Context, session authn.Session, id string, childrenGroupIDs []string) error
 
-	RemoveAllChildrenGroups(ctx context.Context, token, id string) error
+	RemoveAllChildrenGroups(ctx context.Context, session authn.Session, id string) error
 
-	ListChildrenGroups(ctx context.Context, token, id string, pm PageMeta) (Page, error)
+	ListChildrenGroups(ctx context.Context, session authn.Session, id string, pm PageMeta) (Page, error)
 
 	roles.Roles
 }
-
-const (
-	updatePermission          = "update_permission"
-	readPermission            = "read_permission"
-	membershipPermission      = "membership_permission"
-	deletePermission          = "delete_permission"
-	setChildPermission        = "set_child_permission"
-	setParentPermission       = "set_parent_permission"
-	manageRolePermission      = "manage_role_permission"
-	addRoleUsersPermission    = "add_role_users_permission"
-	removeRoleUsersPermission = "remove_role_users_permission"
-	viewRoleUsersPermission   = "view_role_users_permission"
-)
 
 const (
 	OpCreateGroup svcutil.Operation = iota
@@ -248,6 +236,20 @@ var operationNames = []string{
 func NewOperationPerm() svcutil.OperationPerm {
 	return svcutil.NewOperationPerm(expectedOperations, operationNames)
 }
+
+// Below codes should moved out of service, may be can be kept in `cmd/<svc>/main.go`
+const (
+	updatePermission          = "update_permission"
+	readPermission            = "read_permission"
+	membershipPermission      = "membership_permission"
+	deletePermission          = "delete_permission"
+	setChildPermission        = "set_child_permission"
+	setParentPermission       = "set_parent_permission"
+	manageRolePermission      = "manage_role_permission"
+	addRoleUsersPermission    = "add_role_users_permission"
+	removeRoleUsersPermission = "remove_role_users_permission"
+	viewRoleUsersPermission   = "view_role_users_permission"
+)
 
 func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 	opPerm := map[svcutil.Operation]svcutil.Permission{

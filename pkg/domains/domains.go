@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/clients"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/roles"
@@ -88,25 +89,6 @@ func (s *Status) UnmarshalJSON(data []byte) error {
 }
 
 const (
-	updatePermission          = "update_permission"
-	enablePermission          = "enable_permission"
-	disablePermission         = "disable_permission"
-	readPermission            = "read_permission"
-	membershipPermission      = "membership_permission"
-	deletePermission          = "delete_permission"
-	manageRolePermission      = "manage_role_permission"
-	addRoleUsersPermission    = "add_role_users_permission"
-	removeRoleUsersPermission = "remove_role_users_permission"
-	viewRoleUsersPermission   = "view_role_users_permission"
-)
-
-const (
-	ThingCreatePermission   = "thing_create_permission"
-	ChannelCreatePermission = "channel_create_permission"
-	GroupCreatePermission   = "group_create_permission"
-)
-
-const (
 	OpUpdateDomain svcutil.Operation = iota
 	OpRetrieveDomain
 	OpEnableDomain
@@ -129,37 +111,6 @@ var operationNames = []string{
 
 func NewOperationPerm() svcutil.OperationPerm {
 	return svcutil.NewOperationPerm(expectedOperations, operationNames)
-}
-
-func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
-	opPerm := map[svcutil.Operation]svcutil.Permission{
-		OpRetrieveDomain: readPermission,
-		OpUpdateDomain:   updatePermission,
-		OpEnableDomain:   enablePermission,
-		OpDisableDomain:  disablePermission,
-	}
-	return opPerm
-}
-
-func NewRolesOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
-	opPerm := map[svcutil.Operation]svcutil.Permission{
-		roles.OpAddRole:                manageRolePermission,
-		roles.OpRemoveRole:             manageRolePermission,
-		roles.OpUpdateRoleName:         manageRolePermission,
-		roles.OpRetrieveRole:           manageRolePermission,
-		roles.OpRetrieveAllRoles:       manageRolePermission,
-		roles.OpRoleAddActions:         manageRolePermission,
-		roles.OpRoleListActions:        manageRolePermission,
-		roles.OpRoleCheckActionsExists: manageRolePermission,
-		roles.OpRoleRemoveActions:      manageRolePermission,
-		roles.OpRoleRemoveAllActions:   manageRolePermission,
-		roles.OpRoleAddMembers:         addRoleUsersPermission,
-		roles.OpRoleListMembers:        viewRoleUsersPermission,
-		roles.OpRoleCheckMembersExists: viewRoleUsersPermission,
-		roles.OpRoleRemoveMembers:      removeRoleUsersPermission,
-		roles.OpRoleRemoveAllMembers:   manageRolePermission,
-	}
-	return opPerm
 }
 
 type DomainReq struct {
@@ -233,13 +184,14 @@ type Policy struct {
 
 //go:generate mockery --name Service --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
 type Service interface {
-	CreateDomain(ctx context.Context, token string, d Domain) (Domain, error)
-	RetrieveDomain(ctx context.Context, token string, id string) (Domain, error)
-	UpdateDomain(ctx context.Context, token string, id string, d DomainReq) (Domain, error)
-	EnableDomain(ctx context.Context, token string, id string) (Domain, error)
-	DisableDomain(ctx context.Context, token string, id string) (Domain, error)
-	FreezeDomain(ctx context.Context, token string, id string) (Domain, error)
-	ListDomains(ctx context.Context, token string, page Page) (DomainsPage, error)
+	CreateDomain(ctx context.Context, sesssion authn.Session, d Domain) (Domain, error)
+	RetrieveDomain(ctx context.Context, sesssion authn.Session, id string) (Domain, error)
+	UpdateDomain(ctx context.Context, sesssion authn.Session, id string, d DomainReq) (Domain, error)
+	EnableDomain(ctx context.Context, sesssion authn.Session, id string) (Domain, error)
+	DisableDomain(ctx context.Context, sesssion authn.Session, id string) (Domain, error)
+	FreezeDomain(ctx context.Context, sesssion authn.Session, id string) (Domain, error)
+	ListDomains(ctx context.Context, sesssion authn.Session, page Page) (DomainsPage, error)
+	DeleteUserFromDomains(ctx context.Context, id string) error
 	roles.Roles
 }
 
@@ -266,4 +218,56 @@ type DomainsRepository interface {
 	ListDomains(ctx context.Context, pm Page) (DomainsPage, error)
 
 	roles.Repository
+}
+
+// Below codes should moved out of service, may be can be kept in `cmd/<svc>/main.go`
+
+const (
+	updatePermission          = "update_permission"
+	enablePermission          = "enable_permission"
+	disablePermission         = "disable_permission"
+	readPermission            = "read_permission"
+	membershipPermission      = "membership_permission"
+	deletePermission          = "delete_permission"
+	manageRolePermission      = "manage_role_permission"
+	addRoleUsersPermission    = "add_role_users_permission"
+	removeRoleUsersPermission = "remove_role_users_permission"
+	viewRoleUsersPermission   = "view_role_users_permission"
+)
+
+const (
+	ThingCreatePermission   = "thing_create_permission"
+	ChannelCreatePermission = "channel_create_permission"
+	GroupCreatePermission   = "group_create_permission"
+)
+
+func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
+	opPerm := map[svcutil.Operation]svcutil.Permission{
+		OpRetrieveDomain: readPermission,
+		OpUpdateDomain:   updatePermission,
+		OpEnableDomain:   enablePermission,
+		OpDisableDomain:  disablePermission,
+	}
+	return opPerm
+}
+
+func NewRolesOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
+	opPerm := map[svcutil.Operation]svcutil.Permission{
+		roles.OpAddRole:                manageRolePermission,
+		roles.OpRemoveRole:             manageRolePermission,
+		roles.OpUpdateRoleName:         manageRolePermission,
+		roles.OpRetrieveRole:           manageRolePermission,
+		roles.OpRetrieveAllRoles:       manageRolePermission,
+		roles.OpRoleAddActions:         manageRolePermission,
+		roles.OpRoleListActions:        manageRolePermission,
+		roles.OpRoleCheckActionsExists: manageRolePermission,
+		roles.OpRoleRemoveActions:      manageRolePermission,
+		roles.OpRoleRemoveAllActions:   manageRolePermission,
+		roles.OpRoleAddMembers:         addRoleUsersPermission,
+		roles.OpRoleListMembers:        viewRoleUsersPermission,
+		roles.OpRoleCheckMembersExists: viewRoleUsersPermission,
+		roles.OpRoleRemoveMembers:      removeRoleUsersPermission,
+		roles.OpRoleRemoveAllMembers:   manageRolePermission,
+	}
+	return opPerm
 }

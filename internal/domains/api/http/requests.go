@@ -21,7 +21,6 @@ type page struct {
 }
 
 type createDomainReq struct {
-	token    string
 	Name     string                 `json:"name"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 	Tags     []string               `json:"tags,omitempty"`
@@ -29,10 +28,6 @@ type createDomainReq struct {
 }
 
 func (req createDomainReq) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
-
 	if req.Name == "" {
 		return apiutil.ErrMissingName
 	}
@@ -45,15 +40,10 @@ func (req createDomainReq) validate() error {
 }
 
 type retrieveDomainRequest struct {
-	token    string
 	domainID string
 }
 
 func (req retrieveDomainRequest) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
-
 	if req.domainID == "" {
 		return apiutil.ErrMissingID
 	}
@@ -62,7 +52,6 @@ func (req retrieveDomainRequest) validate() error {
 }
 
 type updateDomainReq struct {
-	token    string
 	domainID string
 	Name     *string                 `json:"name,omitempty"`
 	Metadata *map[string]interface{} `json:"metadata,omitempty"`
@@ -71,10 +60,6 @@ type updateDomainReq struct {
 }
 
 func (req updateDomainReq) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
-
 	if req.domainID == "" {
 		return apiutil.ErrMissingID
 	}
@@ -96,15 +81,10 @@ func (req listDomainsReq) validate() error {
 }
 
 type enableDomainReq struct {
-	token    string
 	domainID string
 }
 
 func (req enableDomainReq) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
-
 	if req.domainID == "" {
 		return apiutil.ErrMissingID
 	}
@@ -113,15 +93,10 @@ func (req enableDomainReq) validate() error {
 }
 
 type disableDomainReq struct {
-	token    string
 	domainID string
 }
 
 func (req disableDomainReq) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
-
 	if req.domainID == "" {
 		return apiutil.ErrMissingID
 	}
@@ -130,15 +105,10 @@ func (req disableDomainReq) validate() error {
 }
 
 type freezeDomainReq struct {
-	token    string
 	domainID string
 }
 
 func (req freezeDomainReq) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
-
 	if req.domainID == "" {
 		return apiutil.ErrMissingID
 	}

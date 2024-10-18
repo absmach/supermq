@@ -5,15 +5,18 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/auth"
-	grpcclient "github.com/absmach/magistrala/auth/api/grpc"
+	"github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/magistrala/pkg/authz"
 	"github.com/absmach/magistrala/pkg/domains"
 	"github.com/absmach/magistrala/pkg/entityroles"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	"github.com/absmach/magistrala/pkg/policies"
 	"github.com/absmach/magistrala/pkg/roles"
 	"github.com/absmach/magistrala/pkg/svcutil"
 )
+
+const defLimit = 100
 
 var (
 	errCreateDomainPolicy = errors.New("failed to create domain policy")
@@ -28,8 +31,8 @@ type identity struct {
 }
 type service struct {
 	repo       domains.DomainsRepository
-	auth       grpcclient.AuthServiceClient
-	policy     magistrala.PolicyServiceClient
+	authz      authz.Authorization
+	policies   policies.Service
 	idProvider magistrala.IDProvider
 	opp        svcutil.OperationPerm
 	entityroles.RolesSvc
@@ -37,9 +40,9 @@ type service struct {
 
 var _ domains.Service = (*service)(nil)
 
-func New(repo domains.DomainsRepository, authClient grpcclient.AuthServiceClient, policyClient magistrala.PolicyServiceClient, idProvider magistrala.IDProvider, sidProvider magistrala.IDProvider) (domains.Service, error) {
+func New(repo domains.DomainsRepository, policiessvc policies.Service, idProvider magistrala.IDProvider, sidProvider magistrala.IDProvider) (domains.Service, error) {
 
-	rolesSvc, err := entityroles.NewRolesSvc(auth.DomainType, repo, sidProvider, authClient, policyClient, domains.AvailableActions(), domains.BuiltInRoles(), domains.NewRolesOperationPermissionMap())
+	rolesSvc, err := entityroles.NewRolesSvc(policies.DomainType, repo, sidProvider, policiessvc, domains.AvailableActions(), domains.BuiltInRoles())
 	if err != nil {
 		return nil, err
 	}
@@ -54,20 +57,16 @@ func New(repo domains.DomainsRepository, authClient grpcclient.AuthServiceClient
 
 	return &service{
 		repo:       repo,
-		auth:       authClient,
-		policy:     policyClient,
+		policies:   policiessvc,
 		idProvider: idProvider,
 		opp:        opp,
 		RolesSvc:   rolesSvc,
 	}, nil
 }
 
-func (svc service) CreateDomain(ctx context.Context, token string, d domains.Domain) (do domains.Domain, err error) {
-	userInfo, err := svc.identify(ctx, token)
-	if err != nil {
-		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthentication, err)
-	}
-	d.CreatedBy = userInfo.UserID
+func (svc service) CreateDomain(ctx context.Context, session authn.Session, d domains.Domain) (do domains.Domain, err error) {
+
+	d.CreatedBy = session.UserID
 
 	domainID, err := svc.idProvider.ID()
 	if err != nil {
@@ -95,45 +94,28 @@ func (svc service) CreateDomain(ctx context.Context, token string, d domains.Dom
 	}()
 
 	newBuiltInRoleMembers := map[roles.BuiltInRoleName][]roles.Member{
-		domains.BuiltInRoleAdmin:      {roles.Member(userInfo.UserID)},
+		domains.BuiltInRoleAdmin:      {roles.Member(session.UserID)},
 		domains.BuiltInRoleMembership: {},
 	}
 
 	optionalPolicies := []roles.OptionalPolicy{
 		{
-			Subject:     auth.MagistralaObject,
-			SubjectType: auth.PlatformType,
+			Subject:     policies.MagistralaObject,
+			SubjectType: policies.PlatformType,
 			Relation:    "organization",
 			Object:      d.ID,
-			ObjectType:  auth.DomainType,
+			ObjectType:  policies.DomainType,
 		},
 	}
 
-	if _, err := svc.AddNewEntityRoles(ctx, userInfo.UserID, domainID, domainID, newBuiltInRoleMembers, optionalPolicies); err != nil {
+	if _, err := svc.AddNewEntityRoles(ctx, session.UserID, domainID, domainID, newBuiltInRoleMembers, optionalPolicies); err != nil {
 		return domains.Domain{}, errors.Wrap(errCreateDomainPolicy, err)
 	}
 
 	return dom, nil
 }
 
-func (svc service) RetrieveDomain(ctx context.Context, token, id string) (domains.Domain, error) {
-	user, err := svc.identify(ctx, token)
-	if err != nil {
-		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthentication, err)
-	}
-
-	permission, _ := svc.opp.GetPermission(domains.OpRetrieveDomain)
-	if _, err := svc.auth.Authorize(ctx, &magistrala.AuthorizeReq{
-		Subject:     user.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Permission:  permission.String(),
-		Object:      id,
-		ObjectType:  auth.DomainType,
-	}); err != nil {
-		return domains.Domain{}, err
-	}
-
+func (svc service) RetrieveDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
 	domain, err := svc.repo.RetrieveByID(ctx, id)
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -141,68 +123,26 @@ func (svc service) RetrieveDomain(ctx context.Context, token, id string) (domain
 	return domain, nil
 }
 
-func (svc service) UpdateDomain(ctx context.Context, token, id string, d domains.DomainReq) (domains.Domain, error) {
-	user, err := svc.identify(ctx, token)
-	if err != nil {
-		return domains.Domain{}, err
-	}
-	if err := svc.authorize(ctx, domains.OpUpdateDomain, &magistrala.AuthorizeReq{
-		Subject:     user.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      id,
-		ObjectType:  auth.DomainType,
-	}); err != nil {
-		return domains.Domain{}, err
-	}
-
-	dom, err := svc.repo.Update(ctx, id, user.UserID, d)
+func (svc service) UpdateDomain(ctx context.Context, session authn.Session, id string, d domains.DomainReq) (domains.Domain, error) {
+	dom, err := svc.repo.Update(ctx, id, session.UserID, d)
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	return dom, nil
 }
 
-func (svc service) EnableDomain(ctx context.Context, token, id string) (domains.Domain, error) {
-	user, err := svc.identify(ctx, token)
-	if err != nil {
-		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthentication, err)
-	}
-	if err := svc.authorize(ctx, domains.OpEnableDomain, &magistrala.AuthorizeReq{
-		Subject:     user.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      id,
-		ObjectType:  auth.DomainType,
-	}); err != nil {
-		return domains.Domain{}, err
-	}
-
+func (svc service) EnableDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
 	status := domains.EnabledStatus
-	dom, err := svc.repo.Update(ctx, id, user.UserID, domains.DomainReq{Status: &status})
+	dom, err := svc.repo.Update(ctx, id, session.UserID, domains.DomainReq{Status: &status})
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	return dom, nil
 }
 
-func (svc service) DisableDomain(ctx context.Context, token, id string) (domains.Domain, error) {
-	user, err := svc.identify(ctx, token)
-	if err != nil {
-		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthentication, err)
-	}
-	if err := svc.authorize(ctx, domains.OpDisableDomain, &magistrala.AuthorizeReq{
-		Subject:     user.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      id,
-		ObjectType:  auth.DomainType,
-	}); err != nil {
-		return domains.Domain{}, err
-	}
-
+func (svc service) DisableDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
 	status := domains.DisabledStatus
-	dom, err := svc.repo.Update(ctx, id, user.UserID, domains.DomainReq{Status: &status})
+	dom, err := svc.repo.Update(ctx, id, session.UserID, domains.DomainReq{Status: &status})
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
@@ -210,45 +150,19 @@ func (svc service) DisableDomain(ctx context.Context, token, id string) (domains
 }
 
 // Only SuperAdmin can freeze the domain
-func (svc service) FreezeDomain(ctx context.Context, token, id string) (domains.Domain, error) {
-	user, err := svc.identify(ctx, token)
-	if err != nil {
-		return domains.Domain{}, errors.Wrap(svcerr.ErrAuthentication, err)
-	}
-	// Only SuperAdmin can freeze the domain
-	if _, err := svc.auth.Authorize(ctx, &magistrala.AuthorizeReq{
-		Subject:     user.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Permission:  auth.AdminPermission,
-		Object:      id,
-		ObjectType:  auth.DomainType,
-	}); err != nil {
-		return domains.Domain{}, err
-	}
-
+func (svc service) FreezeDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
 	status := domains.FreezeStatus
-	dom, err := svc.repo.Update(ctx, id, user.UserID, domains.DomainReq{Status: &status})
+	dom, err := svc.repo.Update(ctx, id, session.UserID, domains.DomainReq{Status: &status})
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	return dom, nil
 }
 
-func (svc service) ListDomains(ctx context.Context, token string, p domains.Page) (domains.DomainsPage, error) {
-	userInfo, err := svc.identify(ctx, token)
-	if err != nil {
-		return domains.DomainsPage{}, errors.Wrap(svcerr.ErrAuthentication, err)
-	}
-	p.SubjectID = userInfo.UserID
+func (svc service) ListDomains(ctx context.Context, session authn.Session, p domains.Page) (domains.DomainsPage, error) {
+	p.SubjectID = session.UserID
 	//ToDo : Check list without below function and confirm and decide to remove or not
-	if _, err := svc.auth.Authorize(ctx, &magistrala.AuthorizeReq{
-		Subject:     userInfo.UserID,
-		SubjectType: auth.UserType,
-		Permission:  auth.AdminPermission,
-		ObjectType:  auth.PlatformType,
-		Object:      auth.MagistralaObject,
-	}); err == nil {
+	if session.SuperAdmin {
 		p.SubjectID = ""
 	}
 
@@ -259,26 +173,43 @@ func (svc service) ListDomains(ctx context.Context, token string, p domains.Page
 	return dp, nil
 }
 
-func (svc service) identify(ctx context.Context, token string) (identity, error) {
-	resp, err := svc.auth.Identify(ctx, &magistrala.IdentityReq{Token: token})
-	if err != nil {
-		return identity{}, errors.Wrap(svcerr.ErrAuthentication, err)
-	}
-	return identity{ID: resp.GetId(), DomainID: resp.GetDomainId(), UserID: resp.GetUserId()}, nil
-}
-
-func (svc service) authorize(ctx context.Context, op svcutil.Operation, authReq *magistrala.AuthorizeReq) error {
-	perm, err := svc.opp.GetPermission(op)
+func (svc service) DeleteUserFromDomains(ctx context.Context, id string) (err error) {
+	domainsPage, err := svc.repo.ListDomains(ctx, domains.Page{SubjectID: id, Limit: defLimit})
 	if err != nil {
 		return err
 	}
-	authReq.Permission = perm.String()
-	resp, err := svc.auth.Authorize(ctx, authReq)
-	if err != nil {
-		return errors.Wrap(svcerr.ErrAuthorization, err)
+
+	if domainsPage.Total > defLimit {
+		for i := defLimit; i < int(domainsPage.Total); i += defLimit {
+			page := domains.Page{SubjectID: id, Offset: uint64(i), Limit: defLimit}
+			dp, err := svc.repo.ListDomains(ctx, page)
+			if err != nil {
+				return err
+			}
+			domainsPage.Domains = append(domainsPage.Domains, dp.Domains...)
+		}
 	}
-	if !resp.Authorized {
-		return errors.Wrap(svcerr.ErrAuthorization, err)
+
+	if err := svc.RemoveMembersFromAllRoles(ctx, authn.Session{}, []string{id}); err != nil {
+		return err
 	}
+	////////////ToDo//////////////
+	// Remove user from all roles in all domains
+	//////////////////////////
+
+	// for _, domain := range domainsPage.Domains {
+	// 	req := policies.Policy{
+	// 		Subject:     policies.EncodeDomainUserID(domain.ID, id),
+	// 		SubjectType: policies.UserType,
+	// 	}
+	// 	if err := svc.policies.DeletePolicyFilter(ctx, req); err != nil {
+	// 		return err
+	// 	}
+	// }
+
+	// if err := svc.repo.DeleteUserPolicies(ctx, id); err != nil {
+	// 	return err
+	// }
+
 	return nil
 }

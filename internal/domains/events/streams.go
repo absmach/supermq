@@ -6,6 +6,7 @@ package events
 import (
 	"context"
 
+	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/domains"
 	entityRolesEvents "github.com/absmach/magistrala/pkg/entityroles/events"
 	"github.com/absmach/magistrala/pkg/events"
@@ -39,8 +40,8 @@ func NewEventStoreMiddleware(ctx context.Context, svc domains.Service, url strin
 	}, nil
 }
 
-func (es *eventStore) CreateDomain(ctx context.Context, token string, domain domains.Domain) (domains.Domain, error) {
-	domain, err := es.svc.CreateDomain(ctx, token, domain)
+func (es *eventStore) CreateDomain(ctx context.Context, session authn.Session, domain domains.Domain) (domains.Domain, error) {
+	domain, err := es.svc.CreateDomain(ctx, session, domain)
 	if err != nil {
 		return domain, err
 	}
@@ -56,8 +57,8 @@ func (es *eventStore) CreateDomain(ctx context.Context, token string, domain dom
 	return domain, nil
 }
 
-func (es *eventStore) RetrieveDomain(ctx context.Context, token, id string) (domains.Domain, error) {
-	domain, err := es.svc.RetrieveDomain(ctx, token, id)
+func (es *eventStore) RetrieveDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
+	domain, err := es.svc.RetrieveDomain(ctx, session, id)
 	if err != nil {
 		return domain, err
 	}
@@ -73,8 +74,8 @@ func (es *eventStore) RetrieveDomain(ctx context.Context, token, id string) (dom
 	return domain, nil
 }
 
-func (es *eventStore) UpdateDomain(ctx context.Context, token, id string, d domains.DomainReq) (domains.Domain, error) {
-	domain, err := es.svc.UpdateDomain(ctx, token, id, d)
+func (es *eventStore) UpdateDomain(ctx context.Context, session authn.Session, id string, d domains.DomainReq) (domains.Domain, error) {
+	domain, err := es.svc.UpdateDomain(ctx, session, id, d)
 	if err != nil {
 		return domain, err
 	}
@@ -90,8 +91,8 @@ func (es *eventStore) UpdateDomain(ctx context.Context, token, id string, d doma
 	return domain, nil
 }
 
-func (es *eventStore) EnableDomain(ctx context.Context, token, id string) (domains.Domain, error) {
-	domain, err := es.svc.EnableDomain(ctx, token, id)
+func (es *eventStore) EnableDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
+	domain, err := es.svc.EnableDomain(ctx, session, id)
 	if err != nil {
 		return domain, err
 	}
@@ -109,8 +110,8 @@ func (es *eventStore) EnableDomain(ctx context.Context, token, id string) (domai
 	return domain, nil
 }
 
-func (es *eventStore) DisableDomain(ctx context.Context, token, id string) (domains.Domain, error) {
-	domain, err := es.svc.DisableDomain(ctx, token, id)
+func (es *eventStore) DisableDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
+	domain, err := es.svc.DisableDomain(ctx, session, id)
 	if err != nil {
 		return domain, err
 	}
@@ -128,8 +129,8 @@ func (es *eventStore) DisableDomain(ctx context.Context, token, id string) (doma
 	return domain, nil
 }
 
-func (es *eventStore) FreezeDomain(ctx context.Context, token, id string) (domains.Domain, error) {
-	domain, err := es.svc.FreezeDomain(ctx, token, id)
+func (es *eventStore) FreezeDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
+	domain, err := es.svc.FreezeDomain(ctx, session, id)
 	if err != nil {
 		return domain, err
 	}
@@ -147,8 +148,8 @@ func (es *eventStore) FreezeDomain(ctx context.Context, token, id string) (domai
 	return domain, nil
 }
 
-func (es *eventStore) ListDomains(ctx context.Context, token string, p domains.Page) (domains.DomainsPage, error) {
-	dp, err := es.svc.ListDomains(ctx, token, p)
+func (es *eventStore) ListDomains(ctx context.Context, session authn.Session, p domains.Page) (domains.DomainsPage, error) {
+	dp, err := es.svc.ListDomains(ctx, session, p)
 	if err != nil {
 		return dp, err
 	}
@@ -162,4 +163,18 @@ func (es *eventStore) ListDomains(ctx context.Context, token string, p domains.P
 	}
 
 	return dp, nil
+}
+
+func (es *eventStore) DeleteUserFromDomains(ctx context.Context, userID string) error {
+	if err := es.svc.DeleteUserFromDomains(ctx, userID); err != nil {
+		return err
+	}
+
+	event := deleteUserFromDomainsEvent{userID}
+
+	if err := es.Publish(ctx, event); err != nil {
+		return err
+	}
+
+	return nil
 }

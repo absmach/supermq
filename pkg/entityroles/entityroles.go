@@ -6,67 +6,36 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/auth"
-	grpcclient "github.com/absmach/magistrala/auth/api/grpc"
+	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	"github.com/absmach/magistrala/pkg/policies"
 	"github.com/absmach/magistrala/pkg/roles"
-	"github.com/absmach/magistrala/pkg/svcutil"
 )
 
-type identity struct {
-	ID       string
-	DomainID string
-	UserID   string
-}
+var errRollbackRoles = errors.New("failed to rollback roles")
 
-var (
-	errRollbackRoles    = errors.New("failed to rollback roles")
-	errRollbackPolicies = errors.New("failed to rollback roles")
-	errAddPolicies      = errors.New("failed to add policies")
-)
 var _ roles.Roles = (*RolesSvc)(nil)
 
 type RolesSvc struct {
 	entityType   string
 	repo         roles.Repository
 	idProvider   magistrala.IDProvider
-	auth         grpcclient.AuthServiceClient
-	policy       magistrala.PolicyServiceClient
+	policy       policies.Service
 	actions      []roles.Action
 	builtInRoles map[roles.BuiltInRoleName][]roles.Action
-	opp          svcutil.OperationPerm
 }
 
-func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala.IDProvider, auth grpcclient.AuthServiceClient, policyClient magistrala.PolicyServiceClient, actions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action, opPerm map[svcutil.Operation]svcutil.Permission) (RolesSvc, error) {
-	opp := roles.NewOperationPerm()
-	if err := opp.AddOperationPermissionMap(opPerm); err != nil {
-		return RolesSvc{}, err
-	}
-	if err := opp.Validate(); err != nil {
-		return RolesSvc{}, err
-	}
+func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala.IDProvider, policyClient policies.Service, actions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action) (RolesSvc, error) {
 	rolesSvc := RolesSvc{
 		entityType:   entityType,
 		repo:         repo,
 		idProvider:   idProvider,
-		auth:         auth,
 		policy:       policyClient,
 		actions:      actions,
 		builtInRoles: builtInRoles,
-		opp:          opp,
-	}
-	if err := rolesSvc.validate(); err != nil {
-		return RolesSvc{}, err
 	}
 	return rolesSvc, nil
-}
-
-func (r RolesSvc) validate() error {
-	if err := r.opp.Validate(); err != nil {
-		return err
-	}
-	return nil
 }
 
 func toRolesActions(actions []string) []roles.Action {
@@ -111,23 +80,7 @@ func (r RolesSvc) validateActions(actions []roles.Action) error {
 	return nil
 }
 
-func (r RolesSvc) AddRole(ctx context.Context, token, entityID string, roleName string, optionalActions []string, optionalMembers []string) (fnRole roles.Role, fnErr error) {
-
-	userInfo, err := r.identify(ctx, token)
-	if err != nil {
-		return roles.Role{}, err
-	}
-
-	if err := r.authorize(ctx, roles.OpAddRole, &magistrala.AuthorizeReq{
-		Domain:      userInfo.DomainID,
-		Subject:     userInfo.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      entityID,
-		ObjectType:  r.entityType,
-	}); err != nil {
-		return roles.Role{}, err
-	}
+func (r RolesSvc) AddRole(ctx context.Context, session authn.Session, entityID string, roleName string, optionalActions []string, optionalMembers []string) (fnRole roles.Role, fnErr error) {
 
 	// ToDo: Research: Discuss: There an option to have id as entityID_roleName where in roleName all space are removed with _ and starts with letter and supports only alphanumeric, space and hyphen
 	id, err := r.idProvider.ID()
@@ -146,16 +99,16 @@ func (r RolesSvc) AddRole(ctx context.Context, token, entityID string, roleName 
 				Name:      roleName,
 				EntityID:  entityID,
 				CreatedAt: time.Now(),
-				CreatedBy: userInfo.UserID,
+				CreatedBy: session.UserID,
 			},
 			OptionalActions: optionalActions,
 			OptionalMembers: optionalMembers,
 		},
 	}
-	prs := []*magistrala.AddPolicyReq{}
+	prs := []policies.Policy{}
 
 	for _, cap := range optionalActions {
-		prs = append(prs, &magistrala.AddPolicyReq{
+		prs = append(prs, policies.Policy{
 			SubjectType:     "role",
 			SubjectRelation: "member",
 			Subject:         id,
@@ -166,9 +119,9 @@ func (r RolesSvc) AddRole(ctx context.Context, token, entityID string, roleName 
 	}
 
 	for _, member := range optionalMembers {
-		prs = append(prs, &magistrala.AddPolicyReq{
+		prs = append(prs, policies.Policy{
 			SubjectType: "user",
-			Subject:     auth.EncodeDomainUserID(userInfo.DomainID, member),
+			Subject:     policies.EncodeDomainUserID(session.DomainID, member),
 			Relation:    "member",
 			Object:      id,
 			ObjectType:  "role",
@@ -176,17 +129,13 @@ func (r RolesSvc) AddRole(ctx context.Context, token, entityID string, roleName 
 	}
 
 	if len(prs) > 0 {
-		resp, err := r.policy.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs})
-
-		if err != nil {
+		if err := r.policy.AddPolicies(ctx, prs); err != nil {
 			return roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 		}
-		if !resp.Added {
-			return roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, errAddPolicies)
-		}
+
 		defer func() {
 			if fnErr != nil {
-				if errRollBack := r.addPolicyRollback(ctx, prs); errRollBack != nil {
+				if errRollBack := r.policy.DeletePolicies(ctx, prs); errRollBack != nil {
 					fnErr = errors.Wrap(fnErr, errors.Wrap(errRollbackRoles, errRollBack))
 				}
 			}
@@ -205,41 +154,19 @@ func (r RolesSvc) AddRole(ctx context.Context, token, entityID string, roleName 
 	return newRoles[0], nil
 }
 
-func (r RolesSvc) RemoveRole(ctx context.Context, token, entityID, roleName string) error {
-
-	userInfo, err := r.identify(ctx, token)
-	if err != nil {
-		return err
-	}
-
-	if err := r.authorize(ctx, roles.OpRemoveRole, &magistrala.AuthorizeReq{
-		Domain:      userInfo.DomainID,
-		Subject:     userInfo.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      entityID,
-		ObjectType:  r.entityType,
-	}); err != nil {
-		return err
-	}
-
+func (r RolesSvc) RemoveRole(ctx context.Context, session authn.Session, entityID, roleName string) error {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
-	req := &magistrala.DeletePolicyFilterReq{
+	req := policies.Policy{
 		SubjectType: "role",
 		Subject:     ro.ID,
 	}
-	resp, err := r.policy.DeletePolicyFilter(ctx, req)
-	if err != nil {
+	// ToDo: Add Role as Object in DeletePolicyFilter
+	if err := r.policy.DeletePolicyFilter(ctx, req); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
-	if !resp.Deleted {
-		return svcerr.ErrRemoveEntity
-	}
-
-	// ToDo: Add Role as Object in DeletePolicyFilter
 
 	if err := r.repo.RemoveRoles(ctx, []string{ro.ID}); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
@@ -247,23 +174,7 @@ func (r RolesSvc) RemoveRole(ctx context.Context, token, entityID, roleName stri
 	return nil
 }
 
-func (r RolesSvc) UpdateRoleName(ctx context.Context, token, entityID, oldRoleName, newRoleName string) (roles.Role, error) {
-	userInfo, err := r.identify(ctx, token)
-	if err != nil {
-		return roles.Role{}, err
-	}
-
-	if err := r.authorize(ctx, roles.OpUpdateRoleName, &magistrala.AuthorizeReq{
-		Domain:      userInfo.DomainID,
-		Subject:     userInfo.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      entityID,
-		ObjectType:  r.entityType,
-	}); err != nil {
-		return roles.Role{}, err
-	}
-
+func (r RolesSvc) UpdateRoleName(ctx context.Context, session authn.Session, entityID, oldRoleName, newRoleName string) (roles.Role, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, oldRoleName)
 	if err != nil {
 		return roles.Role{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
@@ -272,7 +183,7 @@ func (r RolesSvc) UpdateRoleName(ctx context.Context, token, entityID, oldRoleNa
 		ID:        ro.ID,
 		EntityID:  entityID,
 		Name:      newRoleName,
-		UpdatedBy: userInfo.UserID,
+		UpdatedBy: session.UserID,
 		UpdatedAt: time.Now(),
 	})
 	if err != nil {
@@ -281,23 +192,7 @@ func (r RolesSvc) UpdateRoleName(ctx context.Context, token, entityID, oldRoleNa
 	return ro, nil
 }
 
-func (r RolesSvc) RetrieveRole(ctx context.Context, token, entityID, roleName string) (roles.Role, error) {
-	userInfo, err := r.identify(ctx, token)
-	if err := r.authorize(ctx, roles.OpRetrieveRole, &magistrala.AuthorizeReq{
-		Domain:      userInfo.DomainID,
-		Subject:     userInfo.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      entityID,
-		ObjectType:  r.entityType,
-	}); err != nil {
-		return roles.Role{}, err
-	}
-
-	if err != nil {
-		return roles.Role{}, err
-	}
-
+func (r RolesSvc) RetrieveRole(ctx context.Context, session authn.Session, entityID, roleName string) (roles.Role, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return roles.Role{}, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -305,23 +200,7 @@ func (r RolesSvc) RetrieveRole(ctx context.Context, token, entityID, roleName st
 	return ro, nil
 }
 
-func (r RolesSvc) RetrieveAllRoles(ctx context.Context, token, entityID string, limit, offset uint64) (roles.RolePage, error) {
-	userInfo, err := r.identify(ctx, token)
-	if err != nil {
-		return roles.RolePage{}, err
-	}
-
-	if err := r.authorize(ctx, roles.OpRetrieveAllRoles, &magistrala.AuthorizeReq{
-		Domain:      userInfo.DomainID,
-		Subject:     userInfo.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      entityID,
-		ObjectType:  r.entityType,
-	}); err != nil {
-		return roles.RolePage{}, err
-	}
-
+func (r RolesSvc) RetrieveAllRoles(ctx context.Context, session authn.Session, entityID string, limit, offset uint64) (roles.RolePage, error) {
 	ros, err := r.repo.RetrieveAllRoles(ctx, entityID, limit, offset)
 	if err != nil {
 		return roles.RolePage{}, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -329,10 +208,7 @@ func (r RolesSvc) RetrieveAllRoles(ctx context.Context, token, entityID string, 
 	return ros, nil
 }
 
-func (r RolesSvc) ListAvailableActions(ctx context.Context, token string) ([]string, error) {
-	if _, err := r.identify(ctx, token); err != nil {
-		return []string{}, err
-	}
+func (r RolesSvc) ListAvailableActions(ctx context.Context, session authn.Session) ([]string, error) {
 	acts := []string{}
 	for _, a := range r.actions {
 		acts = append(acts, string(a))
@@ -340,23 +216,7 @@ func (r RolesSvc) ListAvailableActions(ctx context.Context, token string) ([]str
 	return acts, nil
 }
 
-func (r RolesSvc) RoleAddActions(ctx context.Context, token, entityID, roleName string, actions []string) (fnActs []string, fnErr error) {
-	userInfo, err := r.identify(ctx, token)
-	if err != nil {
-		return []string{}, err
-	}
-
-	if err := r.authorize(ctx, roles.OpRoleAddActions, &magistrala.AuthorizeReq{
-		Domain:      userInfo.DomainID,
-		Subject:     userInfo.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      entityID,
-		ObjectType:  r.entityType,
-	}); err != nil {
-		return []string{}, err
-	}
-
+func (r RolesSvc) RoleAddActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (fnActs []string, fnErr error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
@@ -370,9 +230,9 @@ func (r RolesSvc) RoleAddActions(ctx context.Context, token, entityID, roleName 
 		return []string{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 	}
 
-	prs := []*magistrala.AddPolicyReq{}
+	prs := []policies.Policy{}
 	for _, cap := range actions {
-		prs = append(prs, &magistrala.AddPolicyReq{
+		prs = append(prs, policies.Policy{
 			SubjectType:     "role",
 			SubjectRelation: "member",
 			Subject:         ro.ID,
@@ -382,24 +242,20 @@ func (r RolesSvc) RoleAddActions(ctx context.Context, token, entityID, roleName 
 		})
 	}
 
-	resp, err := r.policy.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs})
-	if err != nil {
+	if err := r.policy.AddPolicies(ctx, prs); err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrAddPolicies, err)
-	}
-	if !resp.Added {
-		return []string{}, svcerr.ErrAddPolicies
 	}
 
 	defer func() {
 		if fnErr != nil {
-			if errRollBack := r.addPolicyRollback(ctx, prs); errRollBack != nil {
+			if errRollBack := r.policy.DeletePolicies(ctx, prs); errRollBack != nil {
 				fnErr = errors.Wrap(fnErr, errors.Wrap(errRollbackRoles, errRollBack))
 			}
 		}
 	}()
 
 	ro.UpdatedAt = time.Now()
-	ro.UpdatedBy = userInfo.UserID
+	ro.UpdatedBy = session.UserID
 
 	resActs, err := r.repo.RoleAddActions(ctx, ro, actions)
 	if err != nil {
@@ -408,23 +264,7 @@ func (r RolesSvc) RoleAddActions(ctx context.Context, token, entityID, roleName 
 	return resActs, nil
 }
 
-func (r RolesSvc) RoleListActions(ctx context.Context, token, entityID, roleName string) ([]string, error) {
-	userInfo, err := r.identify(ctx, token)
-	if err != nil {
-		return []string{}, err
-	}
-
-	if err := r.authorize(ctx, roles.OpRoleListActions, &magistrala.AuthorizeReq{
-		Domain:      userInfo.DomainID,
-		Subject:     userInfo.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      entityID,
-		ObjectType:  r.entityType,
-	}); err != nil {
-		return []string{}, err
-	}
-
+func (r RolesSvc) RoleListActions(ctx context.Context, session authn.Session, entityID, roleName string) ([]string, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -438,21 +278,7 @@ func (r RolesSvc) RoleListActions(ctx context.Context, token, entityID, roleName
 
 }
 
-func (r RolesSvc) RoleCheckActionsExists(ctx context.Context, token, entityID, roleName string, actions []string) (bool, error) {
-	userInfo, err := r.identify(ctx, token)
-	if err != nil {
-		return false, err
-	}
-	if err := r.authorize(ctx, roles.OpRoleCheckActionsExists, &magistrala.AuthorizeReq{
-		Domain:      userInfo.DomainID,
-		Subject:     userInfo.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      entityID,
-		ObjectType:  r.entityType,
-	}); err != nil {
-		return false, err
-	}
+func (r RolesSvc) RoleCheckActionsExists(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (bool, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return false, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -465,21 +291,7 @@ func (r RolesSvc) RoleCheckActionsExists(ctx context.Context, token, entityID, r
 	return result, nil
 }
 
-func (r RolesSvc) RoleRemoveActions(ctx context.Context, token, entityID, roleName string, actions []string) (err error) {
-	userInfo, err := r.identify(ctx, token)
-	if err != nil {
-		return err
-	}
-	if err := r.authorize(ctx, roles.OpRoleRemoveActions, &magistrala.AuthorizeReq{
-		Domain:      userInfo.DomainID,
-		Subject:     userInfo.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      entityID,
-		ObjectType:  r.entityType,
-	}); err != nil {
-		return err
-	}
+func (r RolesSvc) RoleRemoveActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (err error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
@@ -489,9 +301,9 @@ func (r RolesSvc) RoleRemoveActions(ctx context.Context, token, entityID, roleNa
 		return svcerr.ErrMalformedEntity
 	}
 
-	prs := []*magistrala.DeletePolicyReq{}
+	prs := []policies.Policy{}
 	for _, op := range actions {
-		prs = append(prs, &magistrala.DeletePolicyReq{
+		prs = append(prs, policies.Policy{
 			SubjectType:     "role",
 			SubjectRelation: "member",
 			Subject:         ro.ID,
@@ -501,57 +313,34 @@ func (r RolesSvc) RoleRemoveActions(ctx context.Context, token, entityID, roleNa
 		})
 	}
 
-	resp, err := r.policy.DeletePolicies(ctx, &magistrala.DeletePoliciesReq{DeletePoliciesReq: prs})
-	if err != nil {
+	if err := r.policy.DeletePolicies(ctx, prs); err != nil {
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
 	}
-	if !resp.Deleted {
-		return svcerr.ErrDeletePolicies
-	}
-
 	ro.UpdatedAt = time.Now()
-	ro.UpdatedBy = userInfo.UserID
+	ro.UpdatedBy = session.UserID
 	if err := r.repo.RoleRemoveActions(ctx, ro, actions); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	return nil
 }
 
-func (r RolesSvc) RoleRemoveAllActions(ctx context.Context, token, entityID, roleName string) error {
-	userInfo, err := r.identify(ctx, token)
-	if err != nil {
-		return err
-	}
-	if err := r.authorize(ctx, roles.OpRoleRemoveAllActions, &magistrala.AuthorizeReq{
-		Domain:      userInfo.DomainID,
-		Subject:     userInfo.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      entityID,
-		ObjectType:  r.entityType,
-	}); err != nil {
-		return err
-	}
+func (r RolesSvc) RoleRemoveAllActions(ctx context.Context, session authn.Session, entityID, roleName string) error {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
-	prs := &magistrala.DeletePolicyFilterReq{
+	prs := policies.Policy{
 		SubjectType: "role",
 		Subject:     ro.ID,
 	}
 
-	resp, err := r.policy.DeletePolicyFilter(ctx, prs)
-	if err != nil {
+	if err := r.policy.DeletePolicyFilter(ctx, prs); err != nil {
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
-	}
-	if !resp.Deleted {
-		return svcerr.ErrDeletePolicies
 	}
 
 	ro.UpdatedAt = time.Now()
-	ro.UpdatedBy = userInfo.UserID
+	ro.UpdatedBy = session.UserID
 
 	if err := r.repo.RoleRemoveAllActions(ctx, ro); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
@@ -559,21 +348,7 @@ func (r RolesSvc) RoleRemoveAllActions(ctx context.Context, token, entityID, rol
 	return nil
 }
 
-func (r RolesSvc) RoleAddMembers(ctx context.Context, token, entityID, roleName string, members []string) (fnMems []string, fnErr error) {
-	userInfo, err := r.identify(ctx, token)
-	if err != nil {
-		return []string{}, err
-	}
-	if err := r.authorize(ctx, roles.OpRoleAddMembers, &magistrala.AuthorizeReq{
-		Domain:      userInfo.DomainID,
-		Subject:     userInfo.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      entityID,
-		ObjectType:  r.entityType,
-	}); err != nil {
-		return []string{}, err
-	}
+func (r RolesSvc) RoleAddMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (fnMems []string, fnErr error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
@@ -583,35 +358,31 @@ func (r RolesSvc) RoleAddMembers(ctx context.Context, token, entityID, roleName 
 		return []string{}, svcerr.ErrMalformedEntity
 	}
 
-	prs := []*magistrala.AddPolicyReq{}
+	prs := []policies.Policy{}
 	for _, mem := range members {
-		prs = append(prs, &magistrala.AddPolicyReq{
+		prs = append(prs, policies.Policy{
 			SubjectType: "user",
-			Subject:     auth.EncodeDomainUserID(userInfo.DomainID, mem),
+			Subject:     policies.EncodeDomainUserID(session.DomainID, mem),
 			Relation:    "member",
 			Object:      ro.ID,
 			ObjectType:  "role",
 		})
 	}
 
-	resp, err := r.policy.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs})
-	if err != nil {
+	if err := r.policy.AddPolicies(ctx, prs); err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrAddPolicies, err)
-	}
-	if !resp.Added {
-		return []string{}, svcerr.ErrAddPolicies
 	}
 
 	defer func() {
 		if fnErr != nil {
-			if errRollBack := r.addPolicyRollback(ctx, prs); errRollBack != nil {
+			if errRollBack := r.policy.DeletePolicies(ctx, prs); errRollBack != nil {
 				fnErr = errors.Wrap(fnErr, errors.Wrap(errRollbackRoles, errRollBack))
 			}
 		}
 	}()
 
 	ro.UpdatedAt = time.Now()
-	ro.UpdatedBy = userInfo.UserID
+	ro.UpdatedBy = session.UserID
 
 	mems, err := r.repo.RoleAddMembers(ctx, ro, members)
 	if err != nil {
@@ -620,21 +391,7 @@ func (r RolesSvc) RoleAddMembers(ctx context.Context, token, entityID, roleName 
 	return mems, nil
 }
 
-func (r RolesSvc) RoleListMembers(ctx context.Context, token, entityID, roleName string, limit, offset uint64) (roles.MembersPage, error) {
-	userInfo, err := r.identify(ctx, token)
-	if err != nil {
-		return roles.MembersPage{}, err
-	}
-	if err := r.authorize(ctx, roles.OpRoleListMembers, &magistrala.AuthorizeReq{
-		Domain:      userInfo.DomainID,
-		Subject:     userInfo.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      entityID,
-		ObjectType:  r.entityType,
-	}); err != nil {
-		return roles.MembersPage{}, err
-	}
+func (r RolesSvc) RoleListMembers(ctx context.Context, session authn.Session, entityID, roleName string, limit, offset uint64) (roles.MembersPage, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return roles.MembersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -647,21 +404,7 @@ func (r RolesSvc) RoleListMembers(ctx context.Context, token, entityID, roleName
 	return mp, nil
 }
 
-func (r RolesSvc) RoleCheckMembersExists(ctx context.Context, token, entityID, roleName string, members []string) (bool, error) {
-	userInfo, err := r.identify(ctx, token)
-	if err != nil {
-		return false, err
-	}
-	if err := r.authorize(ctx, roles.OpRoleCheckMembersExists, &magistrala.AuthorizeReq{
-		Domain:      userInfo.DomainID,
-		Subject:     userInfo.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      entityID,
-		ObjectType:  r.entityType,
-	}); err != nil {
-		return false, err
-	}
+func (r RolesSvc) RoleCheckMembersExists(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (bool, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return false, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -674,21 +417,7 @@ func (r RolesSvc) RoleCheckMembersExists(ctx context.Context, token, entityID, r
 	return result, nil
 }
 
-func (r RolesSvc) RoleRemoveMembers(ctx context.Context, token, entityID, roleName string, members []string) (err error) {
-	userInfo, err := r.identify(ctx, token)
-	if err != nil {
-		return err
-	}
-	if err := r.authorize(ctx, roles.OpRoleRemoveMembers, &magistrala.AuthorizeReq{
-		Domain:      userInfo.DomainID,
-		Subject:     userInfo.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      entityID,
-		ObjectType:  r.entityType,
-	}); err != nil {
-		return err
-	}
+func (r RolesSvc) RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (err error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
@@ -698,23 +427,19 @@ func (r RolesSvc) RoleRemoveMembers(ctx context.Context, token, entityID, roleNa
 		return svcerr.ErrMalformedEntity
 	}
 
-	prs := []*magistrala.DeletePolicyReq{}
+	prs := []policies.Policy{}
 	for _, mem := range members {
-		prs = append(prs, &magistrala.DeletePolicyReq{
+		prs = append(prs, policies.Policy{
 			SubjectType: "user",
-			Subject:     auth.EncodeDomainUserID(userInfo.DomainID, mem),
+			Subject:     policies.EncodeDomainUserID(session.DomainID, mem),
 			Relation:    "member",
 			Object:      ro.ID,
 			ObjectType:  "role",
 		})
 	}
 
-	resp, err := r.policy.DeletePolicies(ctx, &magistrala.DeletePoliciesReq{DeletePoliciesReq: prs})
-	if err != nil {
+	if err := r.policy.DeletePolicies(ctx, prs); err != nil {
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
-	}
-	if !resp.Deleted {
-		return svcerr.ErrDeletePolicies
 	}
 
 	ro.UpdatedAt = time.Now()
@@ -725,42 +450,24 @@ func (r RolesSvc) RoleRemoveMembers(ctx context.Context, token, entityID, roleNa
 	return nil
 }
 
-func (r RolesSvc) RoleRemoveAllMembers(ctx context.Context, token, entityID, roleName string) (err error) {
-	userInfo, err := r.identify(ctx, token)
-	if err != nil {
-		return err
-	}
-	if err := r.authorize(ctx, roles.OpRoleRemoveAllMembers, &magistrala.AuthorizeReq{
-		Domain:      userInfo.DomainID,
-		Subject:     userInfo.ID,
-		SubjectType: auth.UserType,
-		SubjectKind: auth.UsersKind,
-		Object:      entityID,
-		ObjectType:  r.entityType,
-	}); err != nil {
-		return err
-	}
+func (r RolesSvc) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleName string) (err error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
-	prs := &magistrala.DeletePolicyFilterReq{
+	prs := policies.Policy{
 		ObjectType:  "role",
 		Object:      ro.ID,
 		SubjectType: "user",
 	}
 
-	resp, err := r.policy.DeletePolicyFilter(ctx, prs)
-	if err != nil {
+	if err := r.policy.DeletePolicyFilter(ctx, prs); err != nil {
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
-	}
-	if !resp.Deleted {
-		return svcerr.ErrDeletePolicies
 	}
 
 	ro.UpdatedAt = time.Now()
-	ro.UpdatedBy = userInfo.UserID
+	ro.UpdatedBy = session.UserID
 
 	if err := r.repo.RoleRemoveAllMembers(ctx, ro); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
@@ -768,9 +475,22 @@ func (r RolesSvc) RoleRemoveAllMembers(ctx context.Context, token, entityID, rol
 	return nil
 }
 
+func (r RolesSvc) RemoveMembersFromAllRoles(ctx context.Context, session authn.Session, members []string) (err error) {
+	return fmt.Errorf("not implemented")
+}
+func (r RolesSvc) RemoveMembersFromRoles(ctx context.Context, session authn.Session, members []string, roleNames []string) (err error) {
+	return fmt.Errorf("not implemented")
+}
+func (r RolesSvc) RemoveActionsFromAllRoles(ctx context.Context, session authn.Session, actions []string) (err error) {
+	return fmt.Errorf("not implemented")
+}
+func (r RolesSvc) RemoveActionsFromRoles(ctx context.Context, session authn.Session, actions []string, roleNames []string) (err error) {
+	return fmt.Errorf("not implemented")
+}
+
 func (r RolesSvc) AddNewEntityRoles(ctx context.Context, userID, domainID, entityID string, newBuiltInRoleMembers map[roles.BuiltInRoleName][]roles.Member, optionalPolicies []roles.OptionalPolicy) (fnRolesProvision []roles.RoleProvision, fnErr error) {
 	var newRolesProvision []roles.RoleProvision
-	prs := []*magistrala.AddPolicyReq{}
+	prs := []policies.Policy{}
 
 	for defaultRole, defaultRoleMembers := range newBuiltInRoleMembers {
 		actions, ok := r.builtInRoles[defaultRole]
@@ -804,7 +524,7 @@ func (r RolesSvc) AddNewEntityRoles(ctx context.Context, userID, domainID, entit
 		})
 
 		for _, cap := range caps {
-			prs = append(prs, &magistrala.AddPolicyReq{
+			prs = append(prs, policies.Policy{
 				SubjectType:     "role",
 				SubjectRelation: "member",
 				Subject:         id,
@@ -815,9 +535,9 @@ func (r RolesSvc) AddNewEntityRoles(ctx context.Context, userID, domainID, entit
 		}
 
 		for _, member := range members {
-			prs = append(prs, &magistrala.AddPolicyReq{
+			prs = append(prs, policies.Policy{
 				SubjectType: "user",
-				Subject:     auth.EncodeDomainUserID(domainID, member),
+				Subject:     policies.EncodeDomainUserID(domainID, member),
 				Relation:    "member",
 				Object:      id,
 				ObjectType:  "role",
@@ -828,7 +548,7 @@ func (r RolesSvc) AddNewEntityRoles(ctx context.Context, userID, domainID, entit
 
 	if len(optionalPolicies) > 0 {
 		for _, policy := range optionalPolicies {
-			prs = append(prs, &magistrala.AddPolicyReq{
+			prs = append(prs, policies.Policy{
 				Domain:          policy.Namespace,
 				SubjectType:     policy.SubjectType,
 				SubjectRelation: policy.SubjectRelation,
@@ -842,17 +562,12 @@ func (r RolesSvc) AddNewEntityRoles(ctx context.Context, userID, domainID, entit
 	}
 
 	if len(prs) > 0 {
-		resp, err := r.policy.AddPolicies(ctx, &magistrala.AddPoliciesReq{AddPoliciesReq: prs})
-
-		if err != nil {
+		if err := r.policy.AddPolicies(ctx, prs); err != nil {
 			return []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
-		}
-		if !resp.Added {
-			return []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, errAddPolicies)
 		}
 		defer func() {
 			if fnErr != nil {
-				if errRollBack := r.addPolicyRollback(ctx, prs); errRollBack != nil {
+				if errRollBack := r.policy.DeletePolicies(ctx, prs); errRollBack != nil {
 					fnErr = errors.Wrap(fnErr, errors.Wrap(errRollbackRoles, errRollBack))
 				}
 			}
@@ -866,38 +581,13 @@ func (r RolesSvc) AddNewEntityRoles(ctx context.Context, userID, domainID, entit
 	return newRolesProvision, nil
 }
 
-func (r RolesSvc) addPolicyRollback(ctx context.Context, prs []*magistrala.AddPolicyReq) error {
-	delPrs := []*magistrala.DeletePolicyReq{}
-
-	for _, pr := range prs {
-		delPrs = append(delPrs, &magistrala.DeletePolicyReq{
-			Domain:          pr.Domain,
-			SubjectType:     pr.SubjectType,
-			SubjectRelation: pr.SubjectRelation,
-			Subject:         pr.Subject,
-			Relation:        pr.Relation,
-			Permission:      pr.Permission,
-			Object:          pr.Object,
-			ObjectType:      pr.ObjectType,
-		})
-	}
-	resp, err := r.policy.DeletePolicies(ctx, &magistrala.DeletePoliciesReq{DeletePoliciesReq: delPrs})
-	if err != nil {
-		return errors.Wrap(errRollbackPolicies, err)
-	}
-	if !resp.Deleted {
-		return errRollbackPolicies
-	}
-	return nil
-}
-
 func (r RolesSvc) RemoveNewEntityRoles(ctx context.Context, userID, domainID, entityID string, optionalPolicies []roles.OptionalPolicy, newRolesProvision []roles.RoleProvision) error {
-	prs := []*magistrala.DeletePolicyReq{}
+	prs := []policies.Policy{}
 
 	roleIDs := []string{}
 	for _, rp := range newRolesProvision {
 		for _, cap := range rp.OptionalActions {
-			prs = append(prs, &magistrala.DeletePolicyReq{
+			prs = append(prs, policies.Policy{
 				SubjectType:     "role",
 				SubjectRelation: "member",
 				Subject:         rp.ID,
@@ -908,9 +598,9 @@ func (r RolesSvc) RemoveNewEntityRoles(ctx context.Context, userID, domainID, en
 		}
 
 		for _, member := range rp.OptionalMembers {
-			prs = append(prs, &magistrala.DeletePolicyReq{
+			prs = append(prs, policies.Policy{
 				SubjectType: "user",
-				Subject:     auth.EncodeDomainUserID(domainID, member),
+				Subject:     policies.EncodeDomainUserID(domainID, member),
 				Relation:    "member",
 				Object:      rp.ID,
 				ObjectType:  "role",
@@ -921,7 +611,7 @@ func (r RolesSvc) RemoveNewEntityRoles(ctx context.Context, userID, domainID, en
 
 	if len(optionalPolicies) > 0 {
 		for _, policy := range optionalPolicies {
-			prs = append(prs, &magistrala.DeletePolicyReq{
+			prs = append(prs, policies.Policy{
 				Domain:          policy.Namespace,
 				SubjectType:     policy.SubjectType,
 				SubjectRelation: policy.SubjectRelation,
@@ -935,45 +625,14 @@ func (r RolesSvc) RemoveNewEntityRoles(ctx context.Context, userID, domainID, en
 	}
 
 	if len(prs) > 0 {
-		resp, err := r.policy.DeletePolicies(ctx, &magistrala.DeletePoliciesReq{DeletePoliciesReq: prs})
-
-		if err != nil {
+		if err := r.policy.DeletePolicies(ctx, prs); err != nil {
 			return errors.Wrap(svcerr.ErrDeletePolicies, err)
 		}
-		if !resp.Deleted {
-			return svcerr.ErrDeletePolicies
-		}
-
 	}
 
 	if err := r.repo.RemoveRoles(ctx, roleIDs); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
-	return nil
-}
-
-func (r RolesSvc) identify(ctx context.Context, token string) (identity, error) {
-	resp, err := r.auth.Identify(ctx, &magistrala.IdentityReq{Token: token})
-	if err != nil {
-		return identity{}, errors.Wrap(svcerr.ErrAuthentication, err)
-	}
-	return identity{ID: resp.GetId(), DomainID: resp.GetDomainId(), UserID: resp.GetUserId()}, nil
-}
-func (r RolesSvc) authorize(ctx context.Context, op svcutil.Operation, pr *magistrala.AuthorizeReq) error {
-	perm, err := r.opp.GetPermission(op)
-	if err != nil {
-		return err
-	}
-
-	pr.Permission = perm.String()
-
-	resp, err := r.auth.Authorize(ctx, pr)
-	if err != nil {
-		return errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-	if !resp.Authorized {
-		return errors.Wrap(svcerr.ErrAuthorization, err)
-	}
 	return nil
 }

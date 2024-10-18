@@ -20,9 +20,7 @@ func decodeCreateDomainRequest(_ context.Context, r *http.Request) (interface{},
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
-	req := createDomainReq{
-		token: apiutil.ExtractBearerToken(r),
-	}
+	req := createDomainReq{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
 	}
@@ -32,7 +30,6 @@ func decodeCreateDomainRequest(_ context.Context, r *http.Request) (interface{},
 
 func decodeRetrieveDomainRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	req := retrieveDomainRequest{
-		token:    apiutil.ExtractBearerToken(r),
 		domainID: chi.URLParam(r, "domainID"),
 	}
 	return req, nil
@@ -44,7 +41,6 @@ func decodeUpdateDomainRequest(_ context.Context, r *http.Request) (interface{},
 	}
 
 	req := updateDomainReq{
-		token:    apiutil.ExtractBearerToken(r),
 		domainID: chi.URLParam(r, "domainID"),
 	}
 
@@ -70,7 +66,6 @@ func decodeListDomainRequest(ctx context.Context, r *http.Request) (interface{},
 
 func decodeEnableDomainRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	req := enableDomainReq{
-		token:    apiutil.ExtractBearerToken(r),
 		domainID: chi.URLParam(r, "domainID"),
 	}
 	return req, nil
@@ -78,7 +73,6 @@ func decodeEnableDomainRequest(_ context.Context, r *http.Request) (interface{},
 
 func decodeDisableDomainRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	req := disableDomainReq{
-		token:    apiutil.ExtractBearerToken(r),
 		domainID: chi.URLParam(r, "domainID"),
 	}
 	return req, nil
@@ -86,7 +80,6 @@ func decodeDisableDomainRequest(_ context.Context, r *http.Request) (interface{}
 
 func decodeFreezeDomainRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	req := freezeDomainReq{
-		token:    apiutil.ExtractBearerToken(r),
 		domainID: chi.URLParam(r, "domainID"),
 	}
 	return req, nil

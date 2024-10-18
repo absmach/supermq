@@ -6,9 +6,12 @@ package http
 import (
 	"context"
 
+	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
+	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/things"
 	"github.com/go-kit/kit/endpoint"
@@ -21,7 +24,12 @@ func createClientEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		client, err := svc.CreateThings(ctx, req.token, req.client)
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
+		client, err := svc.CreateThings(ctx, session, req.client)
 		if err != nil {
 			return nil, err
 		}
@@ -40,7 +48,12 @@ func createClientsEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		page, err := svc.CreateThings(ctx, req.token, req.Clients...)
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
+		page, err := svc.CreateThings(ctx, session, req.Clients...)
 		if err != nil {
 			return nil, err
 		}
@@ -66,7 +79,12 @@ func viewClientEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		c, err := svc.ViewClient(ctx, req.token, req.id)
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
+		c, err := svc.ViewClient(ctx, session, req.id)
 		if err != nil {
 			return nil, err
 		}
@@ -82,6 +100,11 @@ func listClientsEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
 		pm := mgclients.Page{
 			Status:     req.status,
 			Offset:     req.offset,
@@ -94,7 +117,7 @@ func listClientsEndpoint(svc things.Service) endpoint.Endpoint {
 			Role:       mgclients.AllRole, // retrieve all things since things don't have roles
 			Id:         req.id,
 		}
-		page, err := svc.ListClients(ctx, req.token, req.userID, pm)
+		page, err := svc.ListClients(ctx, session, req.userID, pm)
 		if err != nil {
 			return nil, err
 		}
@@ -122,12 +145,17 @@ func updateClientEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
 		cli := mgclients.Client{
 			ID:       req.id,
 			Name:     req.Name,
 			Metadata: req.Metadata,
 		}
-		client, err := svc.UpdateClient(ctx, req.token, cli)
+		client, err := svc.UpdateClient(ctx, session, cli)
 		if err != nil {
 			return nil, err
 		}
@@ -143,11 +171,16 @@ func updateClientTagsEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
 		cli := mgclients.Client{
 			ID:   req.id,
 			Tags: req.Tags,
 		}
-		client, err := svc.UpdateClientTags(ctx, req.token, cli)
+		client, err := svc.UpdateClientTags(ctx, session, cli)
 		if err != nil {
 			return nil, err
 		}
@@ -163,7 +196,12 @@ func updateClientSecretEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		client, err := svc.UpdateClientSecret(ctx, req.token, req.id, req.Secret)
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
+		client, err := svc.UpdateClientSecret(ctx, session, req.id, req.Secret)
 		if err != nil {
 			return nil, err
 		}
@@ -179,7 +217,12 @@ func enableClientEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		client, err := svc.EnableClient(ctx, req.token, req.id)
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
+		client, err := svc.EnableClient(ctx, session, req.id)
 		if err != nil {
 			return nil, err
 		}
@@ -195,7 +238,12 @@ func disableClientEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		client, err := svc.DisableClient(ctx, req.token, req.id)
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
+		client, err := svc.DisableClient(ctx, session, req.id)
 		if err != nil {
 			return nil, err
 		}
@@ -227,15 +275,25 @@ func connectChannelThingEndpoint(svc groups.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
 		return connectChannelThingRes{}, nil
 	}
 }
 
 func disconnectChannelThingEndpoint(svc groups.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(disconnectChannelThingRequest)
+		req := request.(connectChannelThingRequest)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
+		}
+
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
 		}
 
 		return disconnectChannelThingRes{}, nil
@@ -249,15 +307,25 @@ func connectEndpoint(svc groups.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+
 		return connectChannelThingRes{}, nil
 	}
 }
 
 func disconnectEndpoint(svc groups.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(disconnectChannelThingRequest)
+		req := request.(connectChannelThingRequest)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
+		}
+
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
 		}
 
 		return disconnectChannelThingRes{}, nil
@@ -271,7 +339,11 @@ func deleteClientEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		if err := svc.DeleteClient(ctx, req.token, req.id); err != nil {
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthorization
+		}
+		if err := svc.DeleteClient(ctx, session, req.id); err != nil {
 			return nil, err
 		}
 

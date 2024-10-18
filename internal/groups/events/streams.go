@@ -6,6 +6,7 @@ package events
 import (
 	"context"
 
+	"github.com/absmach/magistrala/pkg/authn"
 	entityRolesEvents "github.com/absmach/magistrala/pkg/entityroles/events"
 	"github.com/absmach/magistrala/pkg/events"
 	"github.com/absmach/magistrala/pkg/events/store"
@@ -36,8 +37,8 @@ func NewEventStoreMiddleware(ctx context.Context, svc groups.Service, url, strea
 	}, nil
 }
 
-func (es eventStore) CreateGroup(ctx context.Context, token, kind string, group groups.Group) (groups.Group, error) {
-	group, err := es.svc.CreateGroup(ctx, token, kind, group)
+func (es eventStore) CreateGroup(ctx context.Context, session authn.Session, group groups.Group) (groups.Group, error) {
+	group, err := es.svc.CreateGroup(ctx, session, group)
 	if err != nil {
 		return group, err
 	}
@@ -53,8 +54,8 @@ func (es eventStore) CreateGroup(ctx context.Context, token, kind string, group 
 	return group, nil
 }
 
-func (es eventStore) UpdateGroup(ctx context.Context, token string, group groups.Group) (groups.Group, error) {
-	group, err := es.svc.UpdateGroup(ctx, token, group)
+func (es eventStore) UpdateGroup(ctx context.Context, session authn.Session, group groups.Group) (groups.Group, error) {
+	group, err := es.svc.UpdateGroup(ctx, session, group)
 	if err != nil {
 		return group, err
 	}
@@ -70,8 +71,8 @@ func (es eventStore) UpdateGroup(ctx context.Context, token string, group groups
 	return group, nil
 }
 
-func (es eventStore) ViewGroup(ctx context.Context, token, id string) (groups.Group, error) {
-	group, err := es.svc.ViewGroup(ctx, token, id)
+func (es eventStore) ViewGroup(ctx context.Context, session authn.Session, id string) (groups.Group, error) {
+	group, err := es.svc.ViewGroup(ctx, session, id)
 	if err != nil {
 		return group, err
 	}
@@ -86,8 +87,8 @@ func (es eventStore) ViewGroup(ctx context.Context, token, id string) (groups.Gr
 	return group, nil
 }
 
-func (es eventStore) ListGroups(ctx context.Context, token string, pm groups.PageMeta) (groups.Page, error) {
-	gp, err := es.svc.ListGroups(ctx, token, pm)
+func (es eventStore) ListGroups(ctx context.Context, session authn.Session, pm groups.PageMeta) (groups.Page, error) {
+	gp, err := es.svc.ListGroups(ctx, session, pm)
 	if err != nil {
 		return gp, err
 	}
@@ -102,8 +103,8 @@ func (es eventStore) ListGroups(ctx context.Context, token string, pm groups.Pag
 	return gp, nil
 }
 
-func (es eventStore) EnableGroup(ctx context.Context, token, id string) (groups.Group, error) {
-	group, err := es.svc.EnableGroup(ctx, token, id)
+func (es eventStore) EnableGroup(ctx context.Context, session authn.Session, id string) (groups.Group, error) {
+	group, err := es.svc.EnableGroup(ctx, session, id)
 	if err != nil {
 		return group, err
 	}
@@ -111,8 +112,8 @@ func (es eventStore) EnableGroup(ctx context.Context, token, id string) (groups.
 	return es.changeStatus(ctx, group)
 }
 
-func (es eventStore) DisableGroup(ctx context.Context, token, id string) (groups.Group, error) {
-	group, err := es.svc.DisableGroup(ctx, token, id)
+func (es eventStore) DisableGroup(ctx context.Context, session authn.Session, id string) (groups.Group, error) {
+	group, err := es.svc.DisableGroup(ctx, session, id)
 	if err != nil {
 		return group, err
 	}
@@ -135,8 +136,8 @@ func (es eventStore) changeStatus(ctx context.Context, group groups.Group) (grou
 	return group, nil
 }
 
-func (es eventStore) DeleteGroup(ctx context.Context, token, id string) error {
-	if err := es.svc.DeleteGroup(ctx, token, id); err != nil {
+func (es eventStore) DeleteGroup(ctx context.Context, session authn.Session, id string) error {
+	if err := es.svc.DeleteGroup(ctx, session, id); err != nil {
 		return err
 	}
 	if err := es.Publish(ctx, deleteGroupEvent{id}); err != nil {
@@ -145,8 +146,8 @@ func (es eventStore) DeleteGroup(ctx context.Context, token, id string) error {
 	return nil
 }
 
-func (es eventStore) RetrieveGroupHierarchy(ctx context.Context, token, id string, hm groups.HierarchyPageMeta) (groups.HierarchyPage, error) {
-	g, err := es.svc.RetrieveGroupHierarchy(ctx, token, id, hm)
+func (es eventStore) RetrieveGroupHierarchy(ctx context.Context, session authn.Session, id string, hm groups.HierarchyPageMeta) (groups.HierarchyPage, error) {
+	g, err := es.svc.RetrieveGroupHierarchy(ctx, session, id, hm)
 	if err != nil {
 		return g, err
 	}
@@ -156,8 +157,8 @@ func (es eventStore) RetrieveGroupHierarchy(ctx context.Context, token, id strin
 	return g, nil
 }
 
-func (es eventStore) AddParentGroup(ctx context.Context, token, id, parentID string) error {
-	if err := es.svc.AddParentGroup(ctx, token, id, parentID); err != nil {
+func (es eventStore) AddParentGroup(ctx context.Context, session authn.Session, id, parentID string) error {
+	if err := es.svc.AddParentGroup(ctx, session, id, parentID); err != nil {
 		return err
 	}
 	if err := es.Publish(ctx, addParentGroupEvent{id, parentID}); err != nil {
@@ -166,8 +167,8 @@ func (es eventStore) AddParentGroup(ctx context.Context, token, id, parentID str
 	return nil
 }
 
-func (es eventStore) RemoveParentGroup(ctx context.Context, token, id string) error {
-	if err := es.svc.RemoveParentGroup(ctx, token, id); err != nil {
+func (es eventStore) RemoveParentGroup(ctx context.Context, session authn.Session, id string) error {
+	if err := es.svc.RemoveParentGroup(ctx, session, id); err != nil {
 		return err
 	}
 	if err := es.Publish(ctx, removeParentGroupEvent{id}); err != nil {
@@ -176,8 +177,8 @@ func (es eventStore) RemoveParentGroup(ctx context.Context, token, id string) er
 	return nil
 }
 
-func (es eventStore) ViewParentGroup(ctx context.Context, token, id string) (groups.Group, error) {
-	g, err := es.svc.ViewParentGroup(ctx, token, id)
+func (es eventStore) ViewParentGroup(ctx context.Context, session authn.Session, id string) (groups.Group, error) {
+	g, err := es.svc.ViewParentGroup(ctx, session, id)
 	if err != nil {
 		return g, err
 	}
@@ -187,8 +188,8 @@ func (es eventStore) ViewParentGroup(ctx context.Context, token, id string) (gro
 	return g, nil
 }
 
-func (es eventStore) AddChildrenGroups(ctx context.Context, token, id string, childrenGroupIDs []string) error {
-	if err := es.svc.AddChildrenGroups(ctx, token, id, childrenGroupIDs); err != nil {
+func (es eventStore) AddChildrenGroups(ctx context.Context, session authn.Session, id string, childrenGroupIDs []string) error {
+	if err := es.svc.AddChildrenGroups(ctx, session, id, childrenGroupIDs); err != nil {
 		return err
 	}
 	if err := es.Publish(ctx, addChildrenGroupsEvent{id, childrenGroupIDs}); err != nil {
@@ -197,8 +198,8 @@ func (es eventStore) AddChildrenGroups(ctx context.Context, token, id string, ch
 	return nil
 }
 
-func (es eventStore) RemoveChildrenGroups(ctx context.Context, token, id string, childrenGroupIDs []string) error {
-	if err := es.svc.RemoveChildrenGroups(ctx, token, id, childrenGroupIDs); err != nil {
+func (es eventStore) RemoveChildrenGroups(ctx context.Context, session authn.Session, id string, childrenGroupIDs []string) error {
+	if err := es.svc.RemoveChildrenGroups(ctx, session, id, childrenGroupIDs); err != nil {
 		return err
 	}
 	if err := es.Publish(ctx, removeChildrenGroupsEvent{id, childrenGroupIDs}); err != nil {
@@ -207,8 +208,8 @@ func (es eventStore) RemoveChildrenGroups(ctx context.Context, token, id string,
 
 	return nil
 }
-func (es eventStore) RemoveAllChildrenGroups(ctx context.Context, token, id string) error {
-	if err := es.svc.RemoveAllChildrenGroups(ctx, token, id); err != nil {
+func (es eventStore) RemoveAllChildrenGroups(ctx context.Context, session authn.Session, id string) error {
+	if err := es.svc.RemoveAllChildrenGroups(ctx, session, id); err != nil {
 		return err
 	}
 	if err := es.Publish(ctx, removeAllChildrenGroupsEvent{id}); err != nil {
@@ -217,8 +218,8 @@ func (es eventStore) RemoveAllChildrenGroups(ctx context.Context, token, id stri
 	return nil
 }
 
-func (es eventStore) ListChildrenGroups(ctx context.Context, token, id string, pm groups.PageMeta) (groups.Page, error) {
-	g, err := es.svc.ListChildrenGroups(ctx, token, id, pm)
+func (es eventStore) ListChildrenGroups(ctx context.Context, session authn.Session, id string, pm groups.PageMeta) (groups.Page, error) {
+	g, err := es.svc.ListChildrenGroups(ctx, session, id, pm)
 	if err != nil {
 		return g, err
 	}

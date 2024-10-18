@@ -12,6 +12,7 @@ import (
 
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	"github.com/absmach/magistrala/things"
@@ -20,95 +21,100 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-func clientsHandler(svc things.Service, r *chi.Mux, logger *slog.Logger) *chi.Mux {
+func clientsHandler(svc things.Service, r *chi.Mux, authn mgauthn.Authentication, logger *slog.Logger) *chi.Mux {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
-	r.Route("/things", func(r chi.Router) {
-		r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
-			createClientEndpoint(svc),
-			decodeCreateClientReq,
-			api.EncodeResponse,
-			opts...,
-		), "create_thing").ServeHTTP)
 
-		r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
+	r.Group(func(r chi.Router) {
+		r.Use(api.AuthenticateMiddleware(authn))
+
+		r.Route("/things", func(r chi.Router) {
+			r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
+				createClientEndpoint(svc),
+				decodeCreateClientReq,
+				api.EncodeResponse,
+				opts...,
+			), "create_thing").ServeHTTP)
+
+			r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
+				listClientsEndpoint(svc),
+				decodeListClients,
+				api.EncodeResponse,
+				opts...,
+			), "list_things").ServeHTTP)
+
+			r.Post("/bulk", otelhttp.NewHandler(kithttp.NewServer(
+				createClientsEndpoint(svc),
+				decodeCreateClientsReq,
+				api.EncodeResponse,
+				opts...,
+			), "create_things").ServeHTTP)
+
+			r.Get("/{thingID}", otelhttp.NewHandler(kithttp.NewServer(
+				viewClientEndpoint(svc),
+				decodeViewClient,
+				api.EncodeResponse,
+				opts...,
+			), "view_thing").ServeHTTP)
+
+			r.Patch("/{thingID}", otelhttp.NewHandler(kithttp.NewServer(
+				updateClientEndpoint(svc),
+				decodeUpdateClient,
+				api.EncodeResponse,
+				opts...,
+			), "update_thing").ServeHTTP)
+
+			r.Patch("/{thingID}/tags", otelhttp.NewHandler(kithttp.NewServer(
+				updateClientTagsEndpoint(svc),
+				decodeUpdateClientTags,
+				api.EncodeResponse,
+				opts...,
+			), "update_thing_tags").ServeHTTP)
+
+			r.Patch("/{thingID}/secret", otelhttp.NewHandler(kithttp.NewServer(
+				updateClientSecretEndpoint(svc),
+				decodeUpdateClientCredentials,
+				api.EncodeResponse,
+				opts...,
+			), "update_thing_credentials").ServeHTTP)
+
+			r.Post("/{thingID}/enable", otelhttp.NewHandler(kithttp.NewServer(
+				enableClientEndpoint(svc),
+				decodeChangeClientStatus,
+				api.EncodeResponse,
+				opts...,
+			), "enable_thing").ServeHTTP)
+
+			r.Post("/{thingID}/disable", otelhttp.NewHandler(kithttp.NewServer(
+				disableClientEndpoint(svc),
+				decodeChangeClientStatus,
+				api.EncodeResponse,
+				opts...,
+			), "disable_thing").ServeHTTP)
+
+			r.Delete("/{thingID}", otelhttp.NewHandler(kithttp.NewServer(
+				deleteClientEndpoint(svc),
+				decodeDeleteClientReq,
+				api.EncodeResponse,
+				opts...,
+			), "delete_thing").ServeHTTP)
+		})
+
+		r.Get("/users/{userID}/things", otelhttp.NewHandler(kithttp.NewServer(
 			listClientsEndpoint(svc),
 			decodeListClients,
 			api.EncodeResponse,
 			opts...,
-		), "list_things").ServeHTTP)
-
-		r.Post("/bulk", otelhttp.NewHandler(kithttp.NewServer(
-			createClientsEndpoint(svc),
-			decodeCreateClientsReq,
-			api.EncodeResponse,
-			opts...,
-		), "create_things").ServeHTTP)
-
-		r.Get("/{thingID}", otelhttp.NewHandler(kithttp.NewServer(
-			viewClientEndpoint(svc),
-			decodeViewClient,
-			api.EncodeResponse,
-			opts...,
-		), "view_thing").ServeHTTP)
-
-		r.Patch("/{thingID}", otelhttp.NewHandler(kithttp.NewServer(
-			updateClientEndpoint(svc),
-			decodeUpdateClient,
-			api.EncodeResponse,
-			opts...,
-		), "update_thing").ServeHTTP)
-
-		r.Patch("/{thingID}/tags", otelhttp.NewHandler(kithttp.NewServer(
-			updateClientTagsEndpoint(svc),
-			decodeUpdateClientTags,
-			api.EncodeResponse,
-			opts...,
-		), "update_thing_tags").ServeHTTP)
-
-		r.Patch("/{thingID}/secret", otelhttp.NewHandler(kithttp.NewServer(
-			updateClientSecretEndpoint(svc),
-			decodeUpdateClientCredentials,
-			api.EncodeResponse,
-			opts...,
-		), "update_thing_credentials").ServeHTTP)
-
-		r.Post("/{thingID}/enable", otelhttp.NewHandler(kithttp.NewServer(
-			enableClientEndpoint(svc),
-			decodeChangeClientStatus,
-			api.EncodeResponse,
-			opts...,
-		), "enable_thing").ServeHTTP)
-
-		r.Post("/{thingID}/disable", otelhttp.NewHandler(kithttp.NewServer(
-			disableClientEndpoint(svc),
-			decodeChangeClientStatus,
-			api.EncodeResponse,
-			opts...,
-		), "disable_thing").ServeHTTP)
-
-		r.Delete("/{thingID}", otelhttp.NewHandler(kithttp.NewServer(
-			deleteClientEndpoint(svc),
-			decodeDeleteClientReq,
-			api.EncodeResponse,
-			opts...,
-		), "delete_thing").ServeHTTP)
+		), "list_user_things").ServeHTTP)
 	})
 
-	r.Get("/users/{userID}/things", otelhttp.NewHandler(kithttp.NewServer(
-		listClientsEndpoint(svc),
-		decodeListClients,
-		api.EncodeResponse,
-		opts...,
-	), "list_user_things").ServeHTTP)
 	return r
 }
 
 func decodeViewClient(_ context.Context, r *http.Request) (interface{}, error) {
 	req := viewClientReq{
-		token: apiutil.ExtractBearerToken(r),
-		id:    chi.URLParam(r, "thingID"),
+		id: chi.URLParam(r, "thingID"),
 	}
 
 	return req, nil
@@ -116,8 +122,7 @@ func decodeViewClient(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeViewClientPerms(_ context.Context, r *http.Request) (interface{}, error) {
 	req := viewClientPermsReq{
-		token: apiutil.ExtractBearerToken(r),
-		id:    chi.URLParam(r, "thingID"),
+		id: chi.URLParam(r, "thingID"),
 	}
 
 	return req, nil
@@ -166,7 +171,6 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	req := listClientsReq{
-		token:      apiutil.ExtractBearerToken(r),
 		status:     st,
 		offset:     o,
 		limit:      l,
@@ -187,8 +191,7 @@ func decodeUpdateClient(_ context.Context, r *http.Request) (interface{}, error)
 	}
 
 	req := updateClientReq{
-		token: apiutil.ExtractBearerToken(r),
-		id:    chi.URLParam(r, "thingID"),
+		id: chi.URLParam(r, "thingID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
@@ -203,8 +206,7 @@ func decodeUpdateClientTags(_ context.Context, r *http.Request) (interface{}, er
 	}
 
 	req := updateClientTagsReq{
-		token: apiutil.ExtractBearerToken(r),
-		id:    chi.URLParam(r, "thingID"),
+		id: chi.URLParam(r, "thingID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
@@ -219,8 +221,7 @@ func decodeUpdateClientCredentials(_ context.Context, r *http.Request) (interfac
 	}
 
 	req := updateClientCredentialsReq{
-		token: apiutil.ExtractBearerToken(r),
-		id:    chi.URLParam(r, "thingID"),
+		id: chi.URLParam(r, "thingID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
@@ -240,7 +241,6 @@ func decodeCreateClientReq(_ context.Context, r *http.Request) (interface{}, err
 	}
 	req := createClientReq{
 		client: c,
-		token:  apiutil.ExtractBearerToken(r),
 	}
 
 	return req, nil
@@ -251,7 +251,7 @@ func decodeCreateClientsReq(_ context.Context, r *http.Request) (interface{}, er
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
-	c := createClientsReq{token: apiutil.ExtractBearerToken(r)}
+	c := createClientsReq{}
 	if err := json.NewDecoder(r.Body).Decode(&c.Clients); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
 	}
@@ -261,8 +261,7 @@ func decodeCreateClientsReq(_ context.Context, r *http.Request) (interface{}, er
 
 func decodeChangeClientStatus(_ context.Context, r *http.Request) (interface{}, error) {
 	req := changeClientStatusReq{
-		token: apiutil.ExtractBearerToken(r),
-		id:    chi.URLParam(r, "thingID"),
+		id: chi.URLParam(r, "thingID"),
 	}
 
 	return req, nil
@@ -299,7 +298,6 @@ func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, 
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	req := listMembersReq{
-		token: apiutil.ExtractBearerToken(r),
 		Page: mgclients.Page{
 			Status:     st,
 			Offset:     o,
@@ -319,7 +317,6 @@ func decodeThingShareRequest(_ context.Context, r *http.Request) (interface{}, e
 	}
 
 	req := thingShareRequest{
-		token:   apiutil.ExtractBearerToken(r),
 		thingID: chi.URLParam(r, "thingID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -334,8 +331,7 @@ func decodeThingUnshareRequest(_ context.Context, r *http.Request) (interface{},
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
-	req := thingUnshareRequest{
-		token:   apiutil.ExtractBearerToken(r),
+	req := thingShareRequest{
 		thingID: chi.URLParam(r, "thingID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -347,8 +343,7 @@ func decodeThingUnshareRequest(_ context.Context, r *http.Request) (interface{},
 
 func decodeDeleteClientReq(_ context.Context, r *http.Request) (interface{}, error) {
 	req := deleteClientReq{
-		token: apiutil.ExtractBearerToken(r),
-		id:    chi.URLParam(r, "thingID"),
+		id: chi.URLParam(r, "thingID"),
 	}
 
 	return req, nil

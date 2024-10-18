@@ -17,11 +17,13 @@ import (
 	"github.com/absmach/magistrala/internal/testsutil"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	authnmock "github.com/absmach/magistrala/pkg/authn/mocks"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/domains"
 	"github.com/absmach/magistrala/pkg/domains/mocks"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	policies "github.com/absmach/magistrala/pkg/policies"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -91,7 +93,8 @@ func newDomainsServer() (*httptest.Server, *mocks.Service) {
 	logger := mglog.NewMock()
 	mux := chi.NewRouter()
 	svc := new(mocks.Service)
-	httpapi.MakeHandler(svc, mux, logger)
+	authn := new(authnmock.Authentication)
+	httpapi.MakeHandler(svc, authn, mux, logger)
 	return httptest.NewServer(mux), svc
 }
 
@@ -553,6 +556,73 @@ func TestViewDomain(t *testing.T) {
 		if errRes.Err != "" || errRes.Message != "" {
 			err = errors.Wrap(errors.New(errRes.Err), errors.New(errRes.Message))
 		}
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+		svcCall.Unset()
+	}
+}
+
+func TestViewDomainPermissions(t *testing.T) {
+	ds, svc := newDomainsServer()
+	defer ds.Close()
+
+	cases := []struct {
+		desc     string
+		token    string
+		domainID string
+		status   int
+		svcErr   error
+		err      error
+	}{
+		{
+			desc:     "view domain permissions successfully",
+			token:    validToken,
+			domainID: id,
+			status:   http.StatusOK,
+			err:      nil,
+		},
+		{
+			desc:     "view domain permissions with empty token",
+			token:    "",
+			domainID: id,
+			status:   http.StatusUnauthorized,
+			err:      apiutil.ErrBearerToken,
+		},
+		{
+			desc:     "view domain permissions with invalid token",
+			token:    inValidToken,
+			domainID: id,
+			status:   http.StatusUnauthorized,
+			svcErr:   svcerr.ErrAuthentication,
+			err:      svcerr.ErrAuthentication,
+		},
+		{
+			desc:     "view domain permissions with empty domainID",
+			token:    validToken,
+			domainID: "",
+			status:   http.StatusBadRequest,
+			err:      apiutil.ErrMissingID,
+		},
+	}
+
+	for _, tc := range cases {
+		req := testRequest{
+			client: ds.Client(),
+			method: http.MethodGet,
+			url:    fmt.Sprintf("%s/domains/%s/permissions", ds.URL, tc.domainID),
+			token:  tc.token,
+		}
+
+		svcCall := svc.On("RetrieveDomainPermissions", mock.Anything, mock.Anything, mock.Anything).Return(policies.Permissions{}, tc.svcErr)
+		res, err := req.make()
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		var errRes respBody
+		err = json.NewDecoder(res.Body).Decode(&errRes)
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while decoding response body: %s", tc.desc, err))
+		if errRes.Err != "" || errRes.Message != "" {
+			err = errors.Wrap(errors.New(errRes.Err), errors.New(errRes.Message))
+		}
+
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 		svcCall.Unset()

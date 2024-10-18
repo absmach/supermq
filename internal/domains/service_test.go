@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/auth"
-	authmocks "github.com/absmach/magistrala/auth/mocks"
 	domainSvc "github.com/absmach/magistrala/internal/domains"
 	"github.com/absmach/magistrala/pkg/domains"
 	"github.com/absmach/magistrala/pkg/domains/mocks"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	policiesMocks "github.com/absmach/magistrala/pkg/policies/mocks"
 	"github.com/absmach/magistrala/pkg/sid"
 	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/stretchr/testify/assert"
@@ -63,17 +63,15 @@ var (
 
 var (
 	drepo      *mocks.DomainsRepository
-	authMock   *authmocks.AuthServiceClient
-	policyMock *authmocks.PolicyServiceClient
+	policyMock *policiesMocks.Service
 )
 
 func newService() domains.Service {
 	drepo = new(mocks.DomainsRepository)
 	idProvider := uuid.NewMock()
 	sidProvider := sid.NewMock()
-	authMock = new(authmocks.AuthServiceClient)
-	policyMock = new(authmocks.PolicyServiceClient)
-	ds, _ := domainSvc.New(drepo, authMock, policyMock, idProvider, sidProvider)
+	policyMock = new(policiesMocks.Service)
+	ds, _ := domainSvc.New(drepo, policyMock, idProvider, sidProvider)
 	return ds
 }
 
