@@ -21,7 +21,7 @@ func CreateRoleEndpoint(svc roles.Roles) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		ro, err := svc.AddRole(ctx, session, req.entityID, req.RoleName, req.OptionalMembers, req.OptionalMembers)
@@ -41,7 +41,7 @@ func ListRolesEndpoint(svc roles.Roles) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		ros, err := svc.RetrieveAllRoles(ctx, session, req.entityID, req.limit, req.offset)
@@ -61,7 +61,7 @@ func ViewRoleEndpoint(svc roles.Roles) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		ro, err := svc.RetrieveRole(ctx, session, req.entityID, req.roleName)
@@ -81,7 +81,7 @@ func UpdateRoleEndpoint(svc roles.Roles) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		ro, err := svc.UpdateRoleName(ctx, session, req.entityID, req.roleName, req.Name)
@@ -100,7 +100,7 @@ func DeleteRoleEndpoint(svc roles.Roles) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		if err := svc.RemoveRole(ctx, session, req.entityID, req.roleName); err != nil {
@@ -118,7 +118,7 @@ func ListAvailableActionsEndpoint(svc roles.Roles) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		acts, err := svc.ListAvailableActions(ctx, session)
@@ -137,7 +137,7 @@ func AddRoleActionsEndpoint(svc roles.Roles) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		caps, err := svc.RoleAddActions(ctx, session, req.entityID, req.roleName, req.Actions)
@@ -156,7 +156,7 @@ func ListRoleActionsEndpoint(svc roles.Roles) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		caps, err := svc.RoleListActions(ctx, session, req.entityID, req.roleName)
@@ -175,7 +175,7 @@ func DeleteRoleActionsEndpoint(svc roles.Roles) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		if err := svc.RoleRemoveActions(ctx, session, req.entityID, req.roleName, req.Actions); err != nil {
@@ -193,7 +193,7 @@ func DeleteAllRoleActionsEndpoint(svc roles.Roles) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		if err := svc.RoleRemoveAllActions(ctx, session, req.entityID, req.roleName); err != nil {
@@ -211,7 +211,7 @@ func AddRoleMembersEndpoint(svc roles.Roles) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		members, err := svc.RoleAddMembers(ctx, session, req.entityID, req.roleName, req.Members)
@@ -230,7 +230,7 @@ func ListRoleMembersEndpoint(svc roles.Roles) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		mp, err := svc.RoleListMembers(ctx, session, req.entityID, req.roleName, req.limit, req.offset)
@@ -249,7 +249,7 @@ func DeleteRoleMembersEndpoint(svc roles.Roles) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		if err := svc.RoleRemoveMembers(ctx, session, req.entityID, req.roleName, req.Members); err != nil {
@@ -267,7 +267,7 @@ func DeleteAllRoleMembersEndpoint(svc roles.Roles) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		if err := svc.RoleRemoveAllMembers(ctx, session, req.entityID, req.roleName); err != nil {

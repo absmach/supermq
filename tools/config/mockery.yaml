@@ -15,7 +15,7 @@ packages:
           filename: "things_client.go"
       DomainsServiceClient:
         config:
-          dir: "./pkg/domains/mocks"
+          dir: "./domains/mocks"
           mockname: "DomainsServiceClient"
           filename: "domains_client.go"
       TokenServiceClient:

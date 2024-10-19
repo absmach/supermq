@@ -125,7 +125,6 @@ const (
 	// this permission is check over domain or group
 	createPermission = "thing_create_permission"
 	// this permission is check over domain or group
-	listPermissions = "thing_list_permission"
 
 	updatePermission           = "update_permission"
 	readPermission             = "read_permission"
@@ -142,7 +141,7 @@ const (
 func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 	opPerm := map[svcutil.Operation]svcutil.Permission{
 		OpCreateThing:        createPermission,
-		OpListThing:          listPermissions,
+		OpListThing:          readPermission,
 		OpViewThing:          readPermission,
 		OpUpdateThing:        updatePermission,
 		OpUpdateClientTags:   updatePermission,

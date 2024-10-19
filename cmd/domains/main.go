@@ -14,18 +14,18 @@ import (
 
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/magistrala"
-	domainsSvc "github.com/absmach/magistrala/internal/domains"
-	domainsgrpcapi "github.com/absmach/magistrala/internal/domains/api/grpc"
-	httpapi "github.com/absmach/magistrala/internal/domains/api/http"
-	"github.com/absmach/magistrala/internal/domains/events"
-	dmw "github.com/absmach/magistrala/internal/domains/middleware"
-	dpostgres "github.com/absmach/magistrala/internal/domains/postgres"
-	dtracing "github.com/absmach/magistrala/internal/domains/tracing"
+	"github.com/absmach/magistrala/domains"
+	domainsSvc "github.com/absmach/magistrala/domains"
+	domainsgrpcapi "github.com/absmach/magistrala/domains/api/grpc"
+	httpapi "github.com/absmach/magistrala/domains/api/http"
+	"github.com/absmach/magistrala/domains/events"
+	dmw "github.com/absmach/magistrala/domains/middleware"
+	dpostgres "github.com/absmach/magistrala/domains/postgres"
+	dtracing "github.com/absmach/magistrala/domains/tracing"
 	mglog "github.com/absmach/magistrala/logger"
 	authsvcAuthn "github.com/absmach/magistrala/pkg/authn/authsvc"
 	"github.com/absmach/magistrala/pkg/authz"
 	authsvcAuthz "github.com/absmach/magistrala/pkg/authz/authsvc"
-	"github.com/absmach/magistrala/pkg/domains"
 	"github.com/absmach/magistrala/pkg/grpcclient"
 	"github.com/absmach/magistrala/pkg/jaeger"
 	"github.com/absmach/magistrala/pkg/policies"
@@ -41,6 +41,7 @@ import (
 	"github.com/authzed/authzed-go/v1"
 	"github.com/authzed/grpcutil"
 	"github.com/caarlos0/env/v11"
+	"github.com/go-chi/chi/v5"
 	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
@@ -134,14 +135,14 @@ func main() {
 
 	clientConfig := grpcclient.Config{}
 	if err := env.ParseWithOptions(&clientConfig, env.Options{Prefix: envPrefixAuth}); err != nil {
-		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
+		logger.Error(fmt.Sprintf("failed to load auth gRPC server configuration : %s", err))
 		exitCode = 1
 		return
 	}
 
 	authn, authnHandler, err := authsvcAuthn.NewAuthentication(ctx, clientConfig)
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Error(fmt.Sprintf("authn failed to connect to auth gRPC server : %s", err.Error()))
 		exitCode = 1
 		return
 	}
@@ -150,7 +151,7 @@ func main() {
 
 	authz, authzHandler, err := authsvcAuthz.NewAuthorization(ctx, clientConfig)
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Error(fmt.Sprintf("authz failed to connect to auth gRPC server : %s", err.Error()))
 		exitCode = 1
 		return
 	}
@@ -195,7 +196,8 @@ func main() {
 		exitCode = 1
 		return
 	}
-	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, authn, logger, cfg.InstanceID), logger)
+	mux := chi.NewMux()
+	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, authn, mux, logger, cfg.InstanceID), logger)
 
 	g.Go(func() error {
 		return hs.Start()
@@ -217,7 +219,7 @@ func main() {
 
 func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, authz authz.Authorization, policiessvc policies.Service, logger *slog.Logger) (domains.Service, error) {
 	database := postgres.NewDatabase(db, dbConfig, tracer)
-	domainsRepo := dpostgres.NewDomainRepository(database)
+	domainsRepo := dpostgres.New(database)
 
 	idProvider := uuid.New()
 	sidProvider, err := sid.New()

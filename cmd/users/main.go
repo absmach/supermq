@@ -60,13 +60,14 @@ import (
 )
 
 const (
-	svcName         = "users"
-	envPrefixDB     = "MG_USERS_DB_"
-	envPrefixHTTP   = "MG_USERS_HTTP_"
-	envPrefixAuth   = "MG_AUTH_GRPC_"
-	envPrefixGoogle = "MG_GOOGLE_"
-	defDB           = "users"
-	defSvcHTTPPort  = "9002"
+	svcName          = "users"
+	envPrefixDB      = "MG_USERS_DB_"
+	envPrefixHTTP    = "MG_USERS_HTTP_"
+	envPrefixAuth    = "MG_AUTH_GRPC_"
+	envPrefixDomains = "MG_DOMAINS_GRPC_"
+	envPrefixGoogle  = "MG_GOOGLE_"
+	defDB            = "users"
+	defSvcHTTPPort   = "9002"
 
 	streamID = "magistrala.users"
 )
@@ -165,14 +166,14 @@ func main() {
 	}()
 	tracer := tp.Tracer(svcName)
 
-	clientConfig := grpcclient.Config{}
-	if err := env.ParseWithOptions(&clientConfig, env.Options{Prefix: envPrefixAuth}); err != nil {
+	authClientConfig := grpcclient.Config{}
+	if err := env.ParseWithOptions(&authClientConfig, env.Options{Prefix: envPrefixAuth}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
 		exitCode = 1
 		return
 	}
 
-	tokenClient, tokenHandler, err := grpcclient.SetupTokenClient(ctx, clientConfig)
+	tokenClient, tokenHandler, err := grpcclient.SetupTokenClient(ctx, authClientConfig)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
@@ -181,7 +182,7 @@ func main() {
 	defer tokenHandler.Close()
 	logger.Info("Token service client successfully connected to auth gRPC server " + tokenHandler.Secure())
 
-	authn, authnHandler, err := authsvcAuthn.NewAuthentication(ctx, clientConfig)
+	authn, authnHandler, err := authsvcAuthn.NewAuthentication(ctx, authClientConfig)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
@@ -190,7 +191,7 @@ func main() {
 	defer authnHandler.Close()
 	logger.Info("Authn successfully connected to auth gRPC server " + authnHandler.Secure())
 
-	authz, authzHandler, err := authsvcAuthz.NewAuthorization(ctx, clientConfig)
+	authz, authzHandler, err := authsvcAuthz.NewAuthorization(ctx, authClientConfig)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
@@ -199,14 +200,21 @@ func main() {
 	defer authzHandler.Close()
 	logger.Info("Authz successfully connected to auth gRPC server " + authzHandler.Secure())
 
-	domainsClient, domainsHandler, err := grpcclient.SetupDomainsClient(ctx, clientConfig)
+	domainsClientConfig := grpcclient.Config{}
+	if err := env.ParseWithOptions(&domainsClientConfig, env.Options{Prefix: envPrefixDomains}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
+		exitCode = 1
+		return
+	}
+
+	domainsClient, domainsHandler, err := grpcclient.SetupDomainsClient(ctx, domainsClientConfig)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
 		return
 	}
 	defer domainsHandler.Close()
-	logger.Info("DomainsService gRPC client successfully connected to auth gRPC server " + domainsHandler.Secure())
+	logger.Info("DomainsService gRPC client successfully connected to domains gRPC server " + domainsHandler.Secure())
 
 	policyService, err := newPolicyService(cfg, logger)
 	if err != nil {

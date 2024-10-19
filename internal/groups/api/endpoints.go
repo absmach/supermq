@@ -26,7 +26,7 @@ func CreateGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return createGroupRes{created: false}, svcerr.ErrAuthorization
+			return createGroupRes{created: false}, svcerr.ErrAuthentication
 		}
 
 		group, err := svc.CreateGroup(ctx, session, req.Group)
@@ -47,7 +47,7 @@ func ViewGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return viewGroupRes{}, svcerr.ErrAuthorization
+			return viewGroupRes{}, svcerr.ErrAuthentication
 		}
 		group, err := svc.ViewGroup(ctx, session, req.id)
 		if err != nil {
@@ -67,7 +67,7 @@ func UpdateGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return updateGroupRes{}, svcerr.ErrAuthorization
+			return updateGroupRes{}, svcerr.ErrAuthentication
 		}
 
 		group := groups.Group{
@@ -95,7 +95,7 @@ func EnableGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return changeStatusRes{}, svcerr.ErrAuthorization
+			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
 
 		group, err := svc.EnableGroup(ctx, session, req.id)
@@ -115,7 +115,7 @@ func DisableGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return changeStatusRes{}, svcerr.ErrAuthorization
+			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
 
 		group, err := svc.DisableGroup(ctx, session, req.id)
@@ -136,7 +136,7 @@ func ListGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return groupPageRes{}, svcerr.ErrAuthorization
+			return groupPageRes{}, svcerr.ErrAuthentication
 		}
 
 		page, err := svc.ListGroups(ctx, session, req.PageMeta)
@@ -169,7 +169,7 @@ func DeleteGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return deleteGroupRes{}, svcerr.ErrAuthorization
+			return deleteGroupRes{}, svcerr.ErrAuthentication
 		}
 		if err := svc.DeleteGroup(ctx, session, req.id); err != nil {
 			return deleteGroupRes{}, err
@@ -187,7 +187,7 @@ func retrieveGroupHierarchyEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return changeStatusRes{}, svcerr.ErrAuthorization
+			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
 
 		hp, err := svc.RetrieveGroupHierarchy(ctx, session, req.id, req.HierarchyPageMeta)
@@ -213,7 +213,7 @@ func addParentGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return changeStatusRes{}, svcerr.ErrAuthorization
+			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
 
 		if err := svc.AddParentGroup(ctx, session, req.id, req.ParentID); err != nil {
@@ -232,7 +232,7 @@ func removeParentGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return changeStatusRes{}, svcerr.ErrAuthorization
+			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
 
 		if err := svc.RemoveParentGroup(ctx, session, req.id); err != nil {
@@ -250,7 +250,7 @@ func viewParentGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return changeStatusRes{}, svcerr.ErrAuthorization
+			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
 
 		pg, err := svc.ViewParentGroup(ctx, session, req.id)
@@ -270,7 +270,7 @@ func addChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return changeStatusRes{}, svcerr.ErrAuthorization
+			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
 
 		if err := svc.AddChildrenGroups(ctx, session, req.id, req.ChildrenIDs); err != nil {
@@ -289,7 +289,7 @@ func removeChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return changeStatusRes{}, svcerr.ErrAuthorization
+			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
 
 		if err := svc.RemoveChildrenGroups(ctx, session, req.id, req.ChildrenIDs); err != nil {
@@ -308,7 +308,7 @@ func removeAllChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return changeStatusRes{}, svcerr.ErrAuthorization
+			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
 
 		if err := svc.RemoveAllChildrenGroups(ctx, session, req.id); err != nil {
@@ -327,7 +327,7 @@ func listChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return changeStatusRes{}, svcerr.ErrAuthorization
+			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
 
 		gp, err := svc.ListChildrenGroups(ctx, session, req.id, req.PageMeta)

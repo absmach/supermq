@@ -7,9 +7,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/absmach/magistrala/domains"
 	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/clients"
-	"github.com/absmach/magistrala/pkg/domains"
 	"github.com/absmach/magistrala/pkg/roles"
 	"github.com/absmach/magistrala/pkg/svcutil"
 )

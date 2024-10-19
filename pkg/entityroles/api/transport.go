@@ -16,7 +16,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-func RolesHandler(svc roles.Roles, authn mgauthn.Authentication, entityTypePrefixRootPath string, r *chi.Mux, logger *slog.Logger) *chi.Mux {
+func RolesHandler(svc roles.Roles, authn mgauthn.Authentication, entityTypePrefixRootPath string, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
@@ -24,7 +24,7 @@ func RolesHandler(svc roles.Roles, authn mgauthn.Authentication, entityTypePrefi
 	// RoleID - random string, So having roleName in URL make readable. But it have little overhead, it requires additional step to retrieve roleID in each service
 	// http://localhost/things/thingID/roles/roleName
 
-	r.Route(fmt.Sprintf("%s/{entityID}/roles", entityTypePrefixRootPath), func(r chi.Router) {
+	mux.Route(fmt.Sprintf("%s/{entityID}/roles", entityTypePrefixRootPath), func(r chi.Router) {
 		r.Use(api.AuthenticateMiddleware(authn))
 
 		r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
@@ -126,12 +126,12 @@ func RolesHandler(svc roles.Roles, authn mgauthn.Authentication, entityTypePrefi
 
 	})
 
-	r.Get(fmt.Sprintf("%s/roles/available-actions", entityTypePrefixRootPath), otelhttp.NewHandler(kithttp.NewServer(
+	mux.With(api.AuthenticateMiddleware(authn)).Get(fmt.Sprintf("%s/roles/available-actions", entityTypePrefixRootPath), otelhttp.NewHandler(kithttp.NewServer(
 		ListAvailableActionsEndpoint(svc),
 		DecodeListAvailableActions,
 		api.EncodeResponse,
 		opts...,
 	), "list_available_actions").ServeHTTP)
 
-	return r
+	return mux
 }

@@ -12,7 +12,6 @@ import (
 	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/auth/jwt"
 	"github.com/absmach/magistrala/auth/mocks"
-	"github.com/absmach/magistrala/pkg/domains"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
@@ -129,7 +128,6 @@ func TestIssue(t *testing.T) {
 		desc                   string
 		key                    auth.Key
 		saveResponse           auth.Key
-		retrieveByIDResponse   domains.Domain
 		token                  string
 		saveErr                error
 		checkPolicyRequest     policies.Policy
@@ -201,10 +199,9 @@ func TestIssue(t *testing.T) {
 				Permission:  policies.MembershipPermission,
 				Object:      groupName,
 			},
-			checkPolicyErr:       repoerr.ErrNotFound,
-			retrieveByIDResponse: domains.Domain{},
-			retreiveByIDErr:      repoerr.ErrNotFound,
-			err:                  repoerr.ErrNotFound,
+			checkPolicyErr:  repoerr.ErrNotFound,
+			retreiveByIDErr: repoerr.ErrNotFound,
+			err:             repoerr.ErrNotFound,
 		},
 		{
 			desc: "issue login key with failed check on platform admin with enabled status",
@@ -231,10 +228,9 @@ func TestIssue(t *testing.T) {
 				ObjectType:  policies.DomainType,
 				Permission:  policies.MembershipPermission,
 			},
-			checkPolicyErr:       svcerr.ErrAuthorization,
-			checkPolicyErr1:      svcerr.ErrAuthorization,
-			retrieveByIDResponse: domains.Domain{Status: domains.EnabledStatus},
-			err:                  svcerr.ErrAuthorization,
+			checkPolicyErr:  svcerr.ErrAuthorization,
+			checkPolicyErr1: svcerr.ErrAuthorization,
+			err:             svcerr.ErrAuthorization,
 		},
 		{
 			desc: "issue login key with membership permission",
@@ -261,10 +257,9 @@ func TestIssue(t *testing.T) {
 				ObjectType:  policies.DomainType,
 				Permission:  policies.MembershipPermission,
 			},
-			checkPolicyErr:       svcerr.ErrAuthorization,
-			checkPolicyErr1:      svcerr.ErrAuthorization,
-			retrieveByIDResponse: domains.Domain{Status: domains.EnabledStatus},
-			err:                  svcerr.ErrAuthorization,
+			checkPolicyErr:  svcerr.ErrAuthorization,
+			checkPolicyErr1: svcerr.ErrAuthorization,
+			err:             svcerr.ErrAuthorization,
 		},
 		{
 			desc: "issue login key with membership permission with failed  to authorize",
@@ -291,10 +286,9 @@ func TestIssue(t *testing.T) {
 				ObjectType:  policies.DomainType,
 				Permission:  policies.MembershipPermission,
 			},
-			checkPolicyErr:       svcerr.ErrAuthorization,
-			checkPolicyErr1:      svcerr.ErrAuthorization,
-			retrieveByIDResponse: domains.Domain{Status: domains.EnabledStatus},
-			err:                  svcerr.ErrAuthorization,
+			checkPolicyErr:  svcerr.ErrAuthorization,
+			checkPolicyErr1: svcerr.ErrAuthorization,
+			err:             svcerr.ErrAuthorization,
 		},
 	}
 	for _, tc := range cases2 {

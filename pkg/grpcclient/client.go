@@ -8,7 +8,7 @@ import (
 
 	"github.com/absmach/magistrala"
 	tokengrpc "github.com/absmach/magistrala/auth/api/grpc/token"
-	domainsgrpc "github.com/absmach/magistrala/internal/domains/api/grpc"
+	domainsgrpc "github.com/absmach/magistrala/domains/api/grpc"
 	thingsauth "github.com/absmach/magistrala/things/api/grpc"
 	grpchealth "google.golang.org/grpc/health/grpc_health_v1"
 )
@@ -48,7 +48,7 @@ func SetupDomainsClient(ctx context.Context, cfg Config) (magistrala.DomainsServ
 
 	health := grpchealth.NewHealthClient(client.Connection())
 	resp, err := health.Check(ctx, &grpchealth.HealthCheckRequest{
-		Service: "auth",
+		Service: "domains",
 	})
 	if err != nil || resp.GetStatus() != grpchealth.HealthCheckResponse_SERVING {
 		return nil, nil, ErrSvcNotServing

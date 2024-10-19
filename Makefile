@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 MG_DOCKER_IMAGE_NAME_PREFIX ?= magistrala
-BUILD_DIR = build
+BUILD_DIR ?= build
 SERVICES = auth users things domains http coap ws postgres-writer postgres-reader timescale-writer \
 	timescale-reader cli bootstrap mqtt provision certs invitations journal
 TEST_API_SERVICES = journal auth bootstrap certs http invitations notifiers provision readers things users
@@ -257,3 +257,6 @@ run_addons: check_certs
 	@for SVC in $(RUN_ADDON_ARGS); do \
 		MG_ADDONS_CERTS_PATH_PREFIX="../."  docker compose -f docker/addons/$$SVC/docker-compose.yml -p $(DOCKER_PROJECT) --env-file ./docker/.env $(DOCKER_COMPOSE_COMMAND) $(args) & \
 	done
+
+run_live: check_certs
+	GOPATH=$(go env GOPATH) docker compose  -f docker/docker-compose.yml -f docker/docker-compose-live.yaml   --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
