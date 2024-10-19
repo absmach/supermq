@@ -119,14 +119,6 @@ func (ms *metricsMiddleware) RemoveParentGroup(ctx context.Context, session auth
 	return ms.svc.RemoveParentGroup(ctx, session, id)
 }
 
-func (ms *metricsMiddleware) ViewParentGroup(ctx context.Context, session authn.Session, id string) (groups.Group, error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "view_parent_group").Add(1)
-		ms.latency.With("method", "view_parent_group").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-	return ms.svc.ViewParentGroup(ctx, session, id)
-}
-
 func (ms *metricsMiddleware) AddChildrenGroups(ctx context.Context, session authn.Session, id string, childrenGroupIDs []string) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "add_children_groups").Add(1)

@@ -221,19 +221,6 @@ func (am *authorizationMiddleware) RemoveParentGroup(ctx context.Context, sessio
 	return am.svc.RemoveParentGroup(ctx, session, id)
 }
 
-func (am *authorizationMiddleware) ViewParentGroup(ctx context.Context, session authn.Session, id string) (groups.Group, error) {
-	if err := am.authorize(ctx, groups.OpViewParentGroup, mgauthz.PolicyReq{
-		Domain:      session.DomainID,
-		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
-		Object:      id,
-		ObjectType:  policies.GroupType,
-	}); err != nil {
-		return groups.Group{}, err
-	}
-	return am.svc.ViewParentGroup(ctx, session, id)
-}
-
 func (am *authorizationMiddleware) AddChildrenGroups(ctx context.Context, session authn.Session, id string, childrenGroupIDs []string) error {
 	if err := am.authorize(ctx, groups.OpAddChildrenGroups, mgauthz.PolicyReq{
 		Domain:      session.DomainID,

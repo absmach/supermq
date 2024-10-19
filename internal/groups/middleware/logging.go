@@ -225,22 +225,6 @@ func (lm *loggingMiddleware) RemoveParentGroup(ctx context.Context, session auth
 	return lm.svc.RemoveParentGroup(ctx, session, id)
 }
 
-func (lm *loggingMiddleware) ViewParentGroup(ctx context.Context, session authn.Session, id string) (g groups.Group, err error) {
-	defer func(begin time.Time) {
-		args := []any{
-			slog.String("duration", time.Since(begin).String()),
-			slog.String("group_id", id),
-		}
-		if err != nil {
-			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("View parent group failed", args...)
-			return
-		}
-		lm.logger.Info("View parent group completed successfully", args...)
-	}(time.Now())
-	return lm.svc.ViewParentGroup(ctx, session, id)
-}
-
 func (lm *loggingMiddleware) AddChildrenGroups(ctx context.Context, session authn.Session, id string, childrenGroupIDs []string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{

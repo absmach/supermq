@@ -20,7 +20,6 @@ var (
 	_ magistrala.Response = (*retrieveGroupHierarchyRes)(nil)
 	_ magistrala.Response = (*addParentGroupRes)(nil)
 	_ magistrala.Response = (*removeParentGroupRes)(nil)
-	_ magistrala.Response = (*viewParentGroupRes)(nil)
 	_ magistrala.Response = (*addChildrenGroupsRes)(nil)
 	_ magistrala.Response = (*removeChildrenGroupsRes)(nil)
 	_ magistrala.Response = (*removeAllChildrenGroupsRes)(nil)
@@ -191,25 +190,6 @@ func (res removeParentGroupRes) Headers() map[string]string {
 
 func (res removeParentGroupRes) Empty() bool {
 	return true
-}
-
-type viewParentGroupRes struct {
-	groups.Group `json:",inline"`
-}
-
-func (res viewParentGroupRes) Code() int {
-	if res.ID == "" {
-		return http.StatusNoContent
-	}
-	return http.StatusOK
-}
-
-func (res viewParentGroupRes) Headers() map[string]string {
-	return map[string]string{}
-}
-
-func (res viewParentGroupRes) Empty() bool {
-	return res.ID == ""
 }
 
 type addChildrenGroupsRes struct {

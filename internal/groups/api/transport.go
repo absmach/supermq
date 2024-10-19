@@ -96,12 +96,6 @@ func MakeHandler(svc groups.Service, authn authn.Authentication, mux *chi.Mux, l
 					opts...,
 				), "remove_parent_group").ServeHTTP)
 
-				r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
-					viewParentGroupEndpoint(svc),
-					decodeViewParentGroupRequest,
-					api.EncodeResponse,
-					opts...,
-				), "view_parent_group").ServeHTTP)
 			})
 
 			r.Route("/children", func(r chi.Router) {

@@ -177,17 +177,6 @@ func (es eventStore) RemoveParentGroup(ctx context.Context, session authn.Sessio
 	return nil
 }
 
-func (es eventStore) ViewParentGroup(ctx context.Context, session authn.Session, id string) (groups.Group, error) {
-	g, err := es.svc.ViewParentGroup(ctx, session, id)
-	if err != nil {
-		return g, err
-	}
-	if err := es.Publish(ctx, viewParentGroupEvent{id}); err != nil {
-		return g, err
-	}
-	return g, nil
-}
-
 func (es eventStore) AddChildrenGroups(ctx context.Context, session authn.Session, id string, childrenGroupIDs []string) error {
 	if err := es.svc.AddChildrenGroups(ctx, session, id, childrenGroupIDs); err != nil {
 		return err

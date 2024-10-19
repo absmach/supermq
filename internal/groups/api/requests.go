@@ -117,17 +117,6 @@ func (req removeParentGroupReq) validate() error {
 	return nil
 }
 
-type viewParentGroupReq struct {
-	id string
-}
-
-func (req viewParentGroupReq) validate() error {
-	if req.id == "" {
-		return apiutil.ErrMissingID
-	}
-	return nil
-}
-
 type addChildrenGroupsReq struct {
 	id          string
 	ChildrenIDs []string `json:"children_ids"`

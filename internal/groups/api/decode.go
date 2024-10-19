@@ -105,13 +105,6 @@ func decodeRemoveParentGroupRequest(_ context.Context, r *http.Request) (interfa
 	return req, nil
 }
 
-func decodeViewParentGroupRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	req := viewParentGroupReq{
-		id: chi.URLParam(r, "groupID"),
-	}
-	return req, nil
-}
-
 func decodeAddChildrenGroupsRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)

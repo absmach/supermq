@@ -115,13 +115,6 @@ func (tm *tracingMiddleware) RemoveParentGroup(ctx context.Context, session auth
 	return tm.gsvc.RemoveParentGroup(ctx, session, id)
 }
 
-func (tm *tracingMiddleware) ViewParentGroup(ctx context.Context, session authn.Session, id string) (groups.Group, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_view_parent_group", trace.WithAttributes(attribute.String("id", id)))
-	defer span.End()
-
-	return tm.gsvc.ViewParentGroup(ctx, session, id)
-}
-
 func (tm *tracingMiddleware) AddChildrenGroups(ctx context.Context, session authn.Session, id string, childrenGroupIDs []string) error {
 	ctx, span := tm.tracer.Start(ctx, "svc_add_children_groups",
 		trace.WithAttributes(

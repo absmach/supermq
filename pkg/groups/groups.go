@@ -142,8 +142,6 @@ type Service interface {
 
 	RemoveParentGroup(ctx context.Context, session authn.Session, id string) error
 
-	ViewParentGroup(ctx context.Context, session authn.Session, id string) (Group, error)
-
 	AddChildrenGroups(ctx context.Context, session authn.Session, id string, childrenGroupIDs []string) error
 
 	RemoveChildrenGroups(ctx context.Context, session authn.Session, id string, childrenGroupIDs []string) error

@@ -331,23 +331,6 @@ func Test_removeParentGroupReq_validate(t *testing.T) {
 	}
 }
 
-func Test_viewParentGroupReq_validate(t *testing.T) {
-	tests := []struct {
-		name    string
-		req     viewParentGroupReq
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.req.validate(); (err != nil) != tt.wantErr {
-				t.Errorf("viewParentGroupReq.validate() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
 func Test_addChildrenGroupsReq_validate(t *testing.T) {
 	tests := []struct {
 		name    string

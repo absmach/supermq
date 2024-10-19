@@ -241,25 +241,6 @@ func removeParentGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 		return removeParentGroupRes{}, nil
 	}
 }
-func viewParentGroupEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(viewParentGroupReq)
-		if err := req.validate(); err != nil {
-			return viewParentGroupRes{}, errors.Wrap(apiutil.ErrValidation, err)
-		}
-
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return changeStatusRes{}, svcerr.ErrAuthentication
-		}
-
-		pg, err := svc.ViewParentGroup(ctx, session, req.id)
-		if err != nil {
-			return viewParentGroupRes{}, err
-		}
-		return viewParentGroupRes{pg}, nil
-	}
-}
 
 func addChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
