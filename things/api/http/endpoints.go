@@ -26,7 +26,7 @@ func createClientEndpoint(svc things.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		client, err := svc.CreateThings(ctx, session, req.client)
@@ -50,7 +50,7 @@ func createClientsEndpoint(svc things.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		page, err := svc.CreateThings(ctx, session, req.Clients...)
@@ -81,7 +81,7 @@ func viewClientEndpoint(svc things.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		c, err := svc.ViewClient(ctx, session, req.id)
@@ -102,7 +102,7 @@ func listClientsEndpoint(svc things.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		pm := mgclients.Page{
@@ -147,7 +147,7 @@ func updateClientEndpoint(svc things.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		cli := mgclients.Client{
@@ -173,7 +173,7 @@ func updateClientTagsEndpoint(svc things.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		cli := mgclients.Client{
@@ -198,7 +198,7 @@ func updateClientSecretEndpoint(svc things.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		client, err := svc.UpdateClientSecret(ctx, session, req.id, req.Secret)
@@ -219,7 +219,7 @@ func enableClientEndpoint(svc things.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		client, err := svc.EnableClient(ctx, session, req.id)
@@ -240,7 +240,7 @@ func disableClientEndpoint(svc things.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		client, err := svc.DisableClient(ctx, session, req.id)
@@ -277,8 +277,9 @@ func connectChannelThingEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
+		_ = session
 
 		return connectChannelThingRes{}, nil
 	}
@@ -293,8 +294,9 @@ func disconnectChannelThingEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
+		_ = session
 
 		return disconnectChannelThingRes{}, nil
 	}
@@ -309,9 +311,9 @@ func connectEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
-
+		_ = session
 		return connectChannelThingRes{}, nil
 	}
 }
@@ -325,8 +327,9 @@ func disconnectEndpoint(svc groups.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
+		_ = session
 
 		return disconnectChannelThingRes{}, nil
 	}
@@ -341,7 +344,7 @@ func deleteClientEndpoint(svc things.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 		if err := svc.DeleteClient(ctx, session, req.id); err != nil {
 			return nil, err

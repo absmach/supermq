@@ -94,7 +94,8 @@ func newDomainsServer() (*httptest.Server, *mocks.Service) {
 	mux := chi.NewRouter()
 	svc := new(mocks.Service)
 	authn := new(authnmock.Authentication)
-	httpapi.MakeHandler(svc, authn, logger, "")
+	mux = chi.NewMux()
+	httpapi.MakeHandler(svc, authn, mux, logger, "")
 	return httptest.NewServer(mux), svc
 }
 

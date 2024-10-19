@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/roles"
 )
@@ -54,45 +55,45 @@ type Page struct {
 //go:generate mockery --name Service  --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
 type Service interface {
 	// CreateChannels adds channels to the user identified by the provided key.
-	CreateChannels(ctx context.Context, token string, channels ...Channel) ([]Channel, error)
+	CreateChannels(ctx context.Context, session authn.Session, channels ...Channel) ([]Channel, error)
 
 	// ViewChannel retrieves data about the channel identified by the provided
 	// ID, that belongs to the user identified by the provided key.
-	ViewChannel(ctx context.Context, token, id string) (Channel, error)
+	ViewChannel(ctx context.Context, session authn.Session, id string) (Channel, error)
 
 	// UpdateChannel updates the channel identified by the provided ID, that
 	// belongs to the user identified by the provided key.
-	UpdateChannel(ctx context.Context, token string, channel Channel) (Channel, error)
+	UpdateChannel(ctx context.Context, session authn.Session, channel Channel) (Channel, error)
 
 	// UpdateChannelTags updates the channel's tags.
-	UpdateChannelTags(ctx context.Context, token string, channel Channel) (Channel, error)
+	UpdateChannelTags(ctx context.Context, session authn.Session, channel Channel) (Channel, error)
 
-	EnableChannel(ctx context.Context, token string, id string) (Channel, error)
+	EnableChannel(ctx context.Context, session authn.Session, id string) (Channel, error)
 
-	DisableChannel(ctx context.Context, token string, id string) (Channel, error)
+	DisableChannel(ctx context.Context, session authn.Session, id string) (Channel, error)
 
 	// ListChannels retrieves data about subset of channels that belongs to the
 	// user identified by the provided key.
-	ListChannels(ctx context.Context, token string, pm PageMetadata) (Page, error)
+	ListChannels(ctx context.Context, session authn.Session, pm PageMetadata) (Page, error)
 
 	// ListChannelsByThing retrieves data about subset of channels that have
 	// specified thing connected or not connected to them and belong to the user identified by
 	// the provided key.
-	ListChannelsByThing(ctx context.Context, token, thID string, pm PageMetadata) (Page, error)
+	ListChannelsByThing(ctx context.Context, session authn.Session, thID string, pm PageMetadata) (Page, error)
 
 	// RemoveChannel removes the thing identified by the provided ID, that
 	// belongs to the user identified by the provided key.
-	RemoveChannel(ctx context.Context, token, id string) error
+	RemoveChannel(ctx context.Context, session authn.Session, id string) error
 
 	// Connect adds things to the channels list of connected things.
-	Connect(ctx context.Context, token string, chIDs, thIDs []string) error
+	Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string) error
 
 	// Disconnect removes things from the channels list of connected things.
-	Disconnect(ctx context.Context, token string, chIDs, thIDs []string) error
+	Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string) error
 
-	// SetParentGroup(ctx context.Context, token string, parentGroupID string, id string) error
+	// SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error
 
-	// RemoveParentGroup(ctx context.Context, token string, parentGroupID string, id string) error
+	// RemoveParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error
 
 	roles.Roles
 }

@@ -6,9 +6,12 @@ package http
 import (
 	"context"
 
+	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/channels"
 	"github.com/absmach/magistrala/pkg/errors"
+	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/go-kit/kit/endpoint"
 )
 
@@ -19,7 +22,12 @@ func createChannelEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		channels, err := svc.CreateChannels(ctx, req.token, req.Channel)
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+
+		channels, err := svc.CreateChannels(ctx, session, req.Channel)
 		if err != nil {
 			return nil, err
 		}
@@ -38,7 +46,12 @@ func createChannelsEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		channels, err := svc.CreateChannels(ctx, req.token, req.Channels...)
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+
+		channels, err := svc.CreateChannels(ctx, session, req.Channels...)
 		if err != nil {
 			return nil, err
 		}
@@ -64,7 +77,12 @@ func viewChannelEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		c, err := svc.ViewChannel(ctx, req.token, req.id)
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+
+		c, err := svc.ViewChannel(ctx, session, req.id)
 		if err != nil {
 			return nil, err
 		}
@@ -80,6 +98,11 @@ func listChannelsEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+
 		pm := channels.PageMetadata{
 			Status:     req.status,
 			Offset:     req.offset,
@@ -91,7 +114,7 @@ func listChannelsEndpoint(svc channels.Service) endpoint.Endpoint {
 			ListPerms:  req.listPerms,
 			Id:         req.id,
 		}
-		page, err := svc.ListChannels(ctx, req.token, pm)
+		page, err := svc.ListChannels(ctx, session, pm)
 		if err != nil {
 			return nil, err
 		}
@@ -119,12 +142,17 @@ func updateChannelEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+
 		ch := channels.Channel{
 			ID:       req.id,
 			Name:     req.Name,
 			Metadata: req.Metadata,
 		}
-		ch, err := svc.UpdateChannel(ctx, req.token, ch)
+		ch, err := svc.UpdateChannel(ctx, session, ch)
 		if err != nil {
 			return nil, err
 		}
@@ -140,11 +168,16 @@ func updateChannelTagsEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+
 		ch := channels.Channel{
 			ID:   req.id,
 			Tags: req.Tags,
 		}
-		ch, err := svc.UpdateChannelTags(ctx, req.token, ch)
+		ch, err := svc.UpdateChannelTags(ctx, session, ch)
 		if err != nil {
 			return nil, err
 		}
@@ -160,7 +193,12 @@ func enableChannelEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		ch, err := svc.EnableChannel(ctx, req.token, req.id)
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+
+		ch, err := svc.EnableChannel(ctx, session, req.id)
 		if err != nil {
 			return nil, err
 		}
@@ -176,7 +214,12 @@ func disableChannelEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		ch, err := svc.DisableChannel(ctx, req.token, req.id)
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+
+		ch, err := svc.DisableChannel(ctx, session, req.id)
 		if err != nil {
 			return nil, err
 		}
@@ -192,6 +235,12 @@ func connectChannelThingEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+		_ = session
+
 		return connectChannelThingRes{}, nil
 	}
 }
@@ -202,6 +251,12 @@ func disconnectChannelThingEndpoint(svc channels.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
+
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+		_ = session
 
 		return disconnectChannelThingRes{}, nil
 	}
@@ -214,6 +269,12 @@ func connectEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+		_ = session
+
 		return connectChannelThingRes{}, nil
 	}
 }
@@ -224,6 +285,12 @@ func disconnectEndpoint(svc channels.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
+
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+		_ = session
 
 		return disconnectChannelThingRes{}, nil
 	}
@@ -236,7 +303,12 @@ func deleteChannelEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		if err := svc.RemoveChannel(ctx, req.token, req.id); err != nil {
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+
+		if err := svc.RemoveChannel(ctx, session, req.id); err != nil {
 			return nil, err
 		}
 

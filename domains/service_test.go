@@ -11,6 +11,7 @@ import (
 
 	"github.com/absmach/magistrala/domains"
 	"github.com/absmach/magistrala/domains/mocks"
+	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
@@ -41,11 +42,10 @@ var (
 	errIssueUser          = errors.New("failed to issue new login key")
 	errCreateDomainPolicy = errors.New("failed to create domain policy")
 	errRetrieve           = errors.New("failed to retrieve key data")
-	ErrExpiry             = errors.New("token is expired")
+	ErrExpiry             = errors.New("session is expired")
 	errRollbackPolicy     = errors.New("failed to rollback policy")
 	errAddPolicies        = errors.New("failed to add policies")
 	errPlatform           = errors.New("invalid platform id")
-	inValidToken          = "invalid"
 	inValid               = "invalid"
 	valid                 = "valid"
 	domain                = domains.Domain{
@@ -57,7 +57,8 @@ var (
 		CreatedBy:  validID,
 		UpdatedBy:  validID,
 	}
-	accessToken = "accessToken"
+	validSession   = authn.Session{}
+	inValidSession = authn.Session{}
 )
 
 var (
@@ -80,7 +81,7 @@ func TestCreateDomain(t *testing.T) {
 	cases := []struct {
 		desc              string
 		d                 domains.Domain
-		token             string
+		session           authn.Session
 		userID            string
 		addPolicyErr      error
 		savePolicyErr     error
@@ -94,31 +95,31 @@ func TestCreateDomain(t *testing.T) {
 			d: domains.Domain{
 				Status: domains.EnabledStatus,
 			},
-			token: accessToken,
-			err:   nil,
+			session: validSession,
+			err:     nil,
 		},
 		{
-			desc: "create domain with invalid token",
+			desc: "create domain with invalid session",
 			d: domains.Domain{
 				Status: domains.EnabledStatus,
 			},
-			token: inValidToken,
-			err:   svcerr.ErrAuthentication,
+			session: inValidSession,
+			err:     svcerr.ErrAuthentication,
 		},
 		{
 			desc: "create domain with invalid status",
 			d: domains.Domain{
 				Status: domains.AllStatus,
 			},
-			token: accessToken,
-			err:   svcerr.ErrInvalidStatus,
+			session: validSession,
+			err:     svcerr.ErrInvalidStatus,
 		},
 		{
 			desc: "create domain with failed policy request",
 			d: domains.Domain{
 				Status: domains.EnabledStatus,
 			},
-			token:        accessToken,
+			session:      validSession,
 			addPolicyErr: errors.ErrMalformedEntity,
 			err:          errors.ErrMalformedEntity,
 		},
@@ -127,7 +128,7 @@ func TestCreateDomain(t *testing.T) {
 			d: domains.Domain{
 				Status: domains.EnabledStatus,
 			},
-			token:         accessToken,
+			session:       validSession,
 			savePolicyErr: errors.ErrMalformedEntity,
 			err:           errCreateDomainPolicy,
 		},
@@ -136,7 +137,7 @@ func TestCreateDomain(t *testing.T) {
 			d: domains.Domain{
 				Status: domains.EnabledStatus,
 			},
-			token:         accessToken,
+			session:       validSession,
 			saveDomainErr: errors.ErrMalformedEntity,
 			err:           svcerr.ErrCreateEntity,
 		},
@@ -145,7 +146,7 @@ func TestCreateDomain(t *testing.T) {
 			d: domains.Domain{
 				Status: domains.EnabledStatus,
 			},
-			token:           accessToken,
+			session:         validSession,
 			savePolicyErr:   errors.ErrMalformedEntity,
 			deleteDomainErr: errors.ErrMalformedEntity,
 			err:             errors.ErrMalformedEntity,
@@ -155,7 +156,7 @@ func TestCreateDomain(t *testing.T) {
 			d: domains.Domain{
 				Status: domains.EnabledStatus,
 			},
-			token:             accessToken,
+			session:           validSession,
 			savePolicyErr:     errors.ErrMalformedEntity,
 			deleteDomainErr:   errors.ErrMalformedEntity,
 			deletePoliciesErr: errors.ErrMalformedEntity,
@@ -166,7 +167,7 @@ func TestCreateDomain(t *testing.T) {
 			d: domains.Domain{
 				Status: domains.EnabledStatus,
 			},
-			token:             accessToken,
+			session:           validSession,
 			saveDomainErr:     errors.ErrMalformedEntity,
 			deletePoliciesErr: errors.ErrMalformedEntity,
 			err:               errRollbackPolicy,
@@ -176,7 +177,7 @@ func TestCreateDomain(t *testing.T) {
 			d: domains.Domain{
 				Status: domains.EnabledStatus,
 			},
-			token:           accessToken,
+			session:         validSession,
 			saveDomainErr:   errors.ErrMalformedEntity,
 			deleteDomainErr: errors.ErrMalformedEntity,
 			err:             errors.ErrMalformedEntity,
@@ -185,7 +186,7 @@ func TestCreateDomain(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := drepo.On("Save", mock.Anything, mock.Anything).Return(domains.Domain{}, tc.saveDomainErr)
-		_, err := svc.CreateDomain(context.Background(), tc.token, tc.d)
+		_, err := svc.CreateDomain(context.Background(), tc.session, tc.d)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall.Unset()
 	}
@@ -196,7 +197,7 @@ func TestRetrieveDomain(t *testing.T) {
 
 	cases := []struct {
 		desc           string
-		token          string
+		session        authn.Session
 		domainID       string
 		domainRepoErr  error
 		domainRepoErr1 error
@@ -205,26 +206,26 @@ func TestRetrieveDomain(t *testing.T) {
 	}{
 		{
 			desc:     "retrieve domain successfully",
-			token:    accessToken,
+			session:  validSession,
 			domainID: validID,
 			err:      nil,
 		},
 		{
-			desc:     "retrieve domain with invalid token",
-			token:    inValidToken,
+			desc:     "retrieve domain with invalid session",
+			session:  inValidSession,
 			domainID: validID,
 			err:      svcerr.ErrAuthentication,
 		},
 		{
 			desc:           "retrieve domain with empty domain id",
-			token:          accessToken,
+			session:        validSession,
 			domainID:       "",
 			err:            svcerr.ErrViewEntity,
 			domainRepoErr1: repoerr.ErrNotFound,
 		},
 		{
 			desc:           "retrieve non-existing domain",
-			token:          accessToken,
+			session:        validSession,
 			domainID:       inValid,
 			domainRepoErr:  repoerr.ErrNotFound,
 			err:            svcerr.ErrViewEntity,
@@ -232,7 +233,7 @@ func TestRetrieveDomain(t *testing.T) {
 		},
 		{
 			desc:           "retrieve domain with failed to retrieve by id",
-			token:          accessToken,
+			session:        validSession,
 			domainID:       validID,
 			domainRepoErr1: repoerr.ErrNotFound,
 			err:            svcerr.ErrNotFound,
@@ -242,7 +243,7 @@ func TestRetrieveDomain(t *testing.T) {
 	for _, tc := range cases {
 		repoCall := drepo.On("RetrieveByID", mock.Anything, groupName).Return(domains.Domain{}, tc.domainRepoErr)
 		repoCall1 := drepo.On("RetrieveByID", mock.Anything, tc.domainID).Return(domains.Domain{}, tc.domainRepoErr1)
-		_, err := svc.RetrieveDomain(context.Background(), tc.token, tc.domainID)
+		_, err := svc.RetrieveDomain(context.Background(), tc.session, tc.domainID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -254,7 +255,7 @@ func TestUpdateDomain(t *testing.T) {
 
 	cases := []struct {
 		desc            string
-		token           string
+		session         authn.Session
 		domainID        string
 		domReq          domains.DomainReq
 		checkPolicyErr  error
@@ -264,7 +265,7 @@ func TestUpdateDomain(t *testing.T) {
 	}{
 		{
 			desc:     "update domain successfully",
-			token:    accessToken,
+			session:  validSession,
 			domainID: validID,
 			domReq: domains.DomainReq{
 				Name:  &valid,
@@ -273,8 +274,8 @@ func TestUpdateDomain(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:     "update domain with invalid token",
-			token:    inValidToken,
+			desc:     "update domain with invalid session",
+			session:  inValidSession,
 			domainID: validID,
 			domReq: domains.DomainReq{
 				Name:  &valid,
@@ -284,7 +285,7 @@ func TestUpdateDomain(t *testing.T) {
 		},
 		{
 			desc:     "update domain with empty domainID",
-			token:    accessToken,
+			session:  validSession,
 			domainID: "",
 			domReq: domains.DomainReq{
 				Name:  &valid,
@@ -295,7 +296,7 @@ func TestUpdateDomain(t *testing.T) {
 		},
 		{
 			desc:     "update domain with failed to retrieve by id",
-			token:    accessToken,
+			session:  validSession,
 			domainID: validID,
 			domReq: domains.DomainReq{
 				Name:  &valid,
@@ -306,7 +307,7 @@ func TestUpdateDomain(t *testing.T) {
 		},
 		{
 			desc:     "update domain with failed to update",
-			token:    accessToken,
+			session:  validSession,
 			domainID: validID,
 			domReq: domains.DomainReq{
 				Name:  &valid,
@@ -320,7 +321,7 @@ func TestUpdateDomain(t *testing.T) {
 	for _, tc := range cases {
 		repoCall1 := drepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(domains.Domain{}, tc.retrieveByIDErr)
 		repoCall2 := drepo.On("Update", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(domains.Domain{}, tc.updateErr)
-		_, err := svc.UpdateDomain(context.Background(), tc.token, tc.domainID, tc.domReq)
+		_, err := svc.UpdateDomain(context.Background(), tc.session, tc.domainID, tc.domReq)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall1.Unset()
 		repoCall2.Unset()
@@ -332,7 +333,7 @@ func TestListDomains(t *testing.T) {
 
 	cases := []struct {
 		desc            string
-		token           string
+		session         authn.Session
 		domainID        string
 		authReq         domains.Page
 		listDomainsRes  domains.DomainsPage
@@ -343,7 +344,7 @@ func TestListDomains(t *testing.T) {
 	}{
 		{
 			desc:     "list domains successfully",
-			token:    accessToken,
+			session:  validSession,
 			domainID: validID,
 			authReq: domains.Page{
 				Offset:     0,
@@ -357,8 +358,8 @@ func TestListDomains(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:     "list domains with invalid token",
-			token:    inValidToken,
+			desc:     "list domains with invalid session",
+			session:  inValidSession,
 			domainID: validID,
 			authReq: domains.Page{
 				Offset:     0,
@@ -370,7 +371,7 @@ func TestListDomains(t *testing.T) {
 		},
 		{
 			desc:     "list domains with repository error on list domains",
-			token:    accessToken,
+			session:  validSession,
 			domainID: validID,
 			authReq: domains.Page{
 				Offset:     0,
@@ -385,7 +386,7 @@ func TestListDomains(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall1 := drepo.On("ListDomains", mock.Anything, mock.Anything).Return(tc.listDomainsRes, tc.listDomainErr)
-		_, err := svc.ListDomains(context.Background(), tc.token, domains.Page{})
+		_, err := svc.ListDomains(context.Background(), tc.session, domains.Page{})
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall1.Unset()
 	}

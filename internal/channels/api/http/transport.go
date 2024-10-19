@@ -9,6 +9,7 @@ import (
 	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/channels"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -17,12 +18,14 @@ import (
 )
 
 // MakeHandler returns a HTTP handler for Channels API endpoints.
-func MakeHandler(svc channels.Service, mux *chi.Mux, logger *slog.Logger, instanceID string) *chi.Mux {
+func MakeHandler(svc channels.Service, authn mgauthn.Authentication, mux *chi.Mux, logger *slog.Logger, instanceID string) *chi.Mux {
 
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
 	mux.Route("/channels", func(r chi.Router) {
+		r.Use(api.AuthenticateMiddleware(authn))
+
 		r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
 			createChannelEndpoint(svc),
 			decodeCreateChannelReq,
@@ -99,7 +102,7 @@ func MakeHandler(svc channels.Service, mux *chi.Mux, logger *slog.Logger, instan
 	})
 
 	// Connect channel and thing
-	mux.Post("/connect", otelhttp.NewHandler(kithttp.NewServer(
+	mux.With(api.AuthenticateMiddleware(authn)).Post("/connect", otelhttp.NewHandler(kithttp.NewServer(
 		connectEndpoint(svc),
 		decodeConnectRequest,
 		api.EncodeResponse,
@@ -107,7 +110,7 @@ func MakeHandler(svc channels.Service, mux *chi.Mux, logger *slog.Logger, instan
 	), "connect").ServeHTTP)
 
 	// Disconnect channel and thing
-	mux.Post("/disconnect", otelhttp.NewHandler(kithttp.NewServer(
+	mux.With(api.AuthenticateMiddleware(authn)).Post("/disconnect", otelhttp.NewHandler(kithttp.NewServer(
 		disconnectEndpoint(svc),
 		decodeDisconnectRequest,
 		api.EncodeResponse,

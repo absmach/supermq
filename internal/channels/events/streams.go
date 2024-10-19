@@ -6,6 +6,7 @@ package events
 import (
 	"context"
 
+	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/channels"
 	entityRolesEvents "github.com/absmach/magistrala/pkg/entityroles/events"
 	"github.com/absmach/magistrala/pkg/events"
@@ -38,8 +39,8 @@ func NewEventStoreMiddleware(ctx context.Context, svc channels.Service, url stri
 	}, nil
 }
 
-func (es *eventStore) CreateChannels(ctx context.Context, token string, chs ...channels.Channel) ([]channels.Channel, error) {
-	chs, err := es.svc.CreateChannels(ctx, token, chs...)
+func (es *eventStore) CreateChannels(ctx context.Context, session authn.Session, chs ...channels.Channel) ([]channels.Channel, error) {
+	chs, err := es.svc.CreateChannels(ctx, session, chs...)
 	if err != nil {
 		return chs, err
 	}
@@ -56,8 +57,8 @@ func (es *eventStore) CreateChannels(ctx context.Context, token string, chs ...c
 	return chs, nil
 }
 
-func (es *eventStore) UpdateChannel(ctx context.Context, token string, ch channels.Channel) (channels.Channel, error) {
-	chann, err := es.svc.UpdateChannel(ctx, token, ch)
+func (es *eventStore) UpdateChannel(ctx context.Context, session authn.Session, ch channels.Channel) (channels.Channel, error) {
+	chann, err := es.svc.UpdateChannel(ctx, session, ch)
 	if err != nil {
 		return chann, err
 	}
@@ -65,8 +66,8 @@ func (es *eventStore) UpdateChannel(ctx context.Context, token string, ch channe
 	return es.update(ctx, "", chann)
 }
 
-func (es *eventStore) UpdateChannelTags(ctx context.Context, token string, ch channels.Channel) (channels.Channel, error) {
-	chann, err := es.svc.UpdateChannelTags(ctx, token, ch)
+func (es *eventStore) UpdateChannelTags(ctx context.Context, session authn.Session, ch channels.Channel) (channels.Channel, error) {
+	chann, err := es.svc.UpdateChannelTags(ctx, session, ch)
 	if err != nil {
 		return chann, err
 	}
@@ -86,8 +87,8 @@ func (es *eventStore) update(ctx context.Context, operation string, ch channels.
 	return ch, nil
 }
 
-func (es *eventStore) ViewChannel(ctx context.Context, token, id string) (channels.Channel, error) {
-	chann, err := es.svc.ViewChannel(ctx, token, id)
+func (es *eventStore) ViewChannel(ctx context.Context, session authn.Session, id string) (channels.Channel, error) {
+	chann, err := es.svc.ViewChannel(ctx, session, id)
 	if err != nil {
 		return chann, err
 	}
@@ -102,8 +103,8 @@ func (es *eventStore) ViewChannel(ctx context.Context, token, id string) (channe
 	return chann, nil
 }
 
-func (es *eventStore) ListChannels(ctx context.Context, token string, pm channels.PageMetadata) (channels.Page, error) {
-	cp, err := es.svc.ListChannels(ctx, token, pm)
+func (es *eventStore) ListChannels(ctx context.Context, session authn.Session, pm channels.PageMetadata) (channels.Page, error) {
+	cp, err := es.svc.ListChannels(ctx, session, pm)
 	if err != nil {
 		return cp, err
 	}
@@ -116,8 +117,8 @@ func (es *eventStore) ListChannels(ctx context.Context, token string, pm channel
 
 	return cp, nil
 }
-func (es *eventStore) ListChannelsByThing(ctx context.Context, token, thID string, pm channels.PageMetadata) (channels.Page, error) {
-	cp, err := es.svc.ListChannelsByThing(ctx, token, thID, pm)
+func (es *eventStore) ListChannelsByThing(ctx context.Context, session authn.Session, thID string, pm channels.PageMetadata) (channels.Page, error) {
+	cp, err := es.svc.ListChannelsByThing(ctx, session, thID, pm)
 	if err != nil {
 		return cp, err
 	}
@@ -131,8 +132,8 @@ func (es *eventStore) ListChannelsByThing(ctx context.Context, token, thID strin
 
 	return cp, nil
 }
-func (es *eventStore) EnableChannel(ctx context.Context, token, id string) (channels.Channel, error) {
-	cli, err := es.svc.EnableChannel(ctx, token, id)
+func (es *eventStore) EnableChannel(ctx context.Context, session authn.Session, id string) (channels.Channel, error) {
+	cli, err := es.svc.EnableChannel(ctx, session, id)
 	if err != nil {
 		return cli, err
 	}
@@ -140,8 +141,8 @@ func (es *eventStore) EnableChannel(ctx context.Context, token, id string) (chan
 	return es.changeStatus(ctx, cli)
 }
 
-func (es *eventStore) DisableChannel(ctx context.Context, token, id string) (channels.Channel, error) {
-	cli, err := es.svc.DisableChannel(ctx, token, id)
+func (es *eventStore) DisableChannel(ctx context.Context, session authn.Session, id string) (channels.Channel, error) {
+	cli, err := es.svc.DisableChannel(ctx, session, id)
 	if err != nil {
 		return cli, err
 	}
@@ -163,8 +164,8 @@ func (es *eventStore) changeStatus(ctx context.Context, ch channels.Channel) (ch
 	return ch, nil
 }
 
-func (es *eventStore) RemoveChannel(ctx context.Context, token, id string) error {
-	if err := es.svc.RemoveChannel(ctx, token, id); err != nil {
+func (es *eventStore) RemoveChannel(ctx context.Context, session authn.Session, id string) error {
+	if err := es.svc.RemoveChannel(ctx, session, id); err != nil {
 		return err
 	}
 
@@ -177,8 +178,8 @@ func (es *eventStore) RemoveChannel(ctx context.Context, token, id string) error
 	return nil
 }
 
-func (es *eventStore) Connect(ctx context.Context, token string, chIDs, thIDs []string) error {
-	if err := es.svc.Connect(ctx, token, chIDs, thIDs); err != nil {
+func (es *eventStore) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string) error {
+	if err := es.svc.Connect(ctx, session, chIDs, thIDs); err != nil {
 		return err
 	}
 
@@ -191,8 +192,8 @@ func (es *eventStore) Connect(ctx context.Context, token string, chIDs, thIDs []
 	return nil
 }
 
-func (es *eventStore) Disconnect(ctx context.Context, token string, chIDs, thIDs []string) error {
-	if err := es.svc.Disconnect(ctx, token, chIDs, thIDs); err != nil {
+func (es *eventStore) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string) error {
+	if err := es.svc.Disconnect(ctx, session, chIDs, thIDs); err != nil {
 		return err
 	}
 

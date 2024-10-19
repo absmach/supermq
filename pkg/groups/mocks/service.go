@@ -831,34 +831,6 @@ func (_m *Service) ViewGroup(ctx context.Context, session authn.Session, id stri
 	return r0, r1
 }
 
-// ViewParentGroup provides a mock function with given fields: ctx, session, id
-func (_m *Service) ViewParentGroup(ctx context.Context, session authn.Session, id string) (groups.Group, error) {
-	ret := _m.Called(ctx, session, id)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ViewParentGroup")
-	}
-
-	var r0 groups.Group
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) (groups.Group, error)); ok {
-		return rf(ctx, session, id)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) groups.Group); ok {
-		r0 = rf(ctx, session, id)
-	} else {
-		r0 = ret.Get(0).(groups.Group)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string) error); ok {
-		r1 = rf(ctx, session, id)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // NewService creates a new instance of Service. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewService(t interface {

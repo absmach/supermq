@@ -31,7 +31,7 @@ type identity struct {
 type service struct {
 	repo       Repository
 	authz      authz.Authorization
-	policies   policies.Service
+	policy     policies.Service
 	idProvider magistrala.IDProvider
 	opp        svcutil.OperationPerm
 	entityroles.RolesSvc
@@ -39,9 +39,9 @@ type service struct {
 
 var _ Service = (*service)(nil)
 
-func New(repo Repository, policiessvc policies.Service, idProvider magistrala.IDProvider, sidProvider magistrala.IDProvider) (Service, error) {
+func New(repo Repository, policy policies.Service, idProvider magistrala.IDProvider, sidProvider magistrala.IDProvider) (Service, error) {
 
-	rolesSvc, err := entityroles.NewRolesSvc(policies.DomainType, repo, sidProvider, policiessvc, AvailableActions(), BuiltInRoles())
+	rolesSvc, err := entityroles.NewRolesSvc(policies.DomainType, repo, sidProvider, policy, AvailableActions(), BuiltInRoles())
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func New(repo Repository, policiessvc policies.Service, idProvider magistrala.ID
 
 	return &service{
 		repo:       repo,
-		policies:   policiessvc,
+		policy:     policy,
 		idProvider: idProvider,
 		opp:        opp,
 		RolesSvc:   rolesSvc,

@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package api
+package middleware
 
 import (
 	"context"
@@ -9,8 +9,9 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/channels"
-	entityRolesAPI "github.com/absmach/magistrala/pkg/entityroles/api"
+	entityRolesMW "github.com/absmach/magistrala/pkg/entityroles/middleware"
 )
 
 var _ channels.Service = (*loggingMiddleware)(nil)
@@ -18,15 +19,15 @@ var _ channels.Service = (*loggingMiddleware)(nil)
 type loggingMiddleware struct {
 	logger *slog.Logger
 	svc    channels.Service
-	entityRolesAPI.RolesSvcLoggingMiddleware
+	entityRolesMW.RolesSvcLoggingMiddleware
 }
 
 func LoggingMiddleware(svc channels.Service, logger *slog.Logger) channels.Service {
-	rolesSvcLoggingMiddleware := entityRolesAPI.NewRolesSvcLoggingMiddleware("channels", svc, logger)
+	rolesSvcLoggingMiddleware := entityRolesMW.NewRolesSvcLoggingMiddleware("channels", svc, logger)
 	return &loggingMiddleware{logger, svc, rolesSvcLoggingMiddleware}
 }
 
-func (lm *loggingMiddleware) CreateChannels(ctx context.Context, token string, clients ...channels.Channel) (cs []channels.Channel, err error) {
+func (lm *loggingMiddleware) CreateChannels(ctx context.Context, session authn.Session, clients ...channels.Channel) (cs []channels.Channel, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -38,10 +39,10 @@ func (lm *loggingMiddleware) CreateChannels(ctx context.Context, token string, c
 		}
 		lm.logger.Info(fmt.Sprintf("Create %d channel completed successfully", len(clients)), args...)
 	}(time.Now())
-	return lm.svc.CreateChannels(ctx, token, clients...)
+	return lm.svc.CreateChannels(ctx, session, clients...)
 }
 
-func (lm *loggingMiddleware) ViewChannel(ctx context.Context, token, id string) (c channels.Channel, err error) {
+func (lm *loggingMiddleware) ViewChannel(ctx context.Context, session authn.Session, id string) (c channels.Channel, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -57,10 +58,10 @@ func (lm *loggingMiddleware) ViewChannel(ctx context.Context, token, id string) 
 		}
 		lm.logger.Info("View channel completed successfully", args...)
 	}(time.Now())
-	return lm.svc.ViewChannel(ctx, token, id)
+	return lm.svc.ViewChannel(ctx, session, id)
 }
 
-func (lm *loggingMiddleware) ListChannels(ctx context.Context, token string, pm channels.PageMetadata) (cp channels.Page, err error) {
+func (lm *loggingMiddleware) ListChannels(ctx context.Context, session authn.Session, pm channels.PageMetadata) (cp channels.Page, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -77,10 +78,10 @@ func (lm *loggingMiddleware) ListChannels(ctx context.Context, token string, pm 
 		}
 		lm.logger.Info("List channels completed successfully", args...)
 	}(time.Now())
-	return lm.svc.ListChannels(ctx, token, pm)
+	return lm.svc.ListChannels(ctx, session, pm)
 }
 
-func (lm *loggingMiddleware) ListChannelsByThing(ctx context.Context, token string, thingID string, pm channels.PageMetadata) (cp channels.Page, err error) {
+func (lm *loggingMiddleware) ListChannelsByThing(ctx context.Context, session authn.Session, thingID string, pm channels.PageMetadata) (cp channels.Page, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -98,10 +99,10 @@ func (lm *loggingMiddleware) ListChannelsByThing(ctx context.Context, token stri
 		}
 		lm.logger.Info("List channels by thing completed successfully", args...)
 	}(time.Now())
-	return lm.svc.ListChannelsByThing(ctx, token, thingID, pm)
+	return lm.svc.ListChannelsByThing(ctx, session, thingID, pm)
 }
 
-func (lm *loggingMiddleware) UpdateChannel(ctx context.Context, token string, client channels.Channel) (c channels.Channel, err error) {
+func (lm *loggingMiddleware) UpdateChannel(ctx context.Context, session authn.Session, client channels.Channel) (c channels.Channel, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -118,10 +119,10 @@ func (lm *loggingMiddleware) UpdateChannel(ctx context.Context, token string, cl
 		}
 		lm.logger.Info("Update channel completed successfully", args...)
 	}(time.Now())
-	return lm.svc.UpdateChannel(ctx, token, client)
+	return lm.svc.UpdateChannel(ctx, session, client)
 }
 
-func (lm *loggingMiddleware) UpdateChannelTags(ctx context.Context, token string, client channels.Channel) (c channels.Channel, err error) {
+func (lm *loggingMiddleware) UpdateChannelTags(ctx context.Context, session authn.Session, client channels.Channel) (c channels.Channel, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -138,10 +139,10 @@ func (lm *loggingMiddleware) UpdateChannelTags(ctx context.Context, token string
 		}
 		lm.logger.Info("Update channel tags completed successfully", args...)
 	}(time.Now())
-	return lm.svc.UpdateChannelTags(ctx, token, client)
+	return lm.svc.UpdateChannelTags(ctx, session, client)
 }
 
-func (lm *loggingMiddleware) EnableChannel(ctx context.Context, token, id string) (c channels.Channel, err error) {
+func (lm *loggingMiddleware) EnableChannel(ctx context.Context, session authn.Session, id string) (c channels.Channel, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -157,10 +158,10 @@ func (lm *loggingMiddleware) EnableChannel(ctx context.Context, token, id string
 		}
 		lm.logger.Info("Enable channel completed successfully", args...)
 	}(time.Now())
-	return lm.svc.EnableChannel(ctx, token, id)
+	return lm.svc.EnableChannel(ctx, session, id)
 }
 
-func (lm *loggingMiddleware) DisableChannel(ctx context.Context, token, id string) (c channels.Channel, err error) {
+func (lm *loggingMiddleware) DisableChannel(ctx context.Context, session authn.Session, id string) (c channels.Channel, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -176,10 +177,10 @@ func (lm *loggingMiddleware) DisableChannel(ctx context.Context, token, id strin
 		}
 		lm.logger.Info("Disable channel completed successfully", args...)
 	}(time.Now())
-	return lm.svc.DisableChannel(ctx, token, id)
+	return lm.svc.DisableChannel(ctx, session, id)
 }
 
-func (lm *loggingMiddleware) RemoveChannel(ctx context.Context, token, id string) (err error) {
+func (lm *loggingMiddleware) RemoveChannel(ctx context.Context, session authn.Session, id string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -192,10 +193,10 @@ func (lm *loggingMiddleware) RemoveChannel(ctx context.Context, token, id string
 		}
 		lm.logger.Info("Delete channel completed successfully", args...)
 	}(time.Now())
-	return lm.svc.RemoveChannel(ctx, token, id)
+	return lm.svc.RemoveChannel(ctx, session, id)
 }
 
-func (lm *loggingMiddleware) Connect(ctx context.Context, token string, chIDs, thIDs []string) (err error) {
+func (lm *loggingMiddleware) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -209,10 +210,10 @@ func (lm *loggingMiddleware) Connect(ctx context.Context, token string, chIDs, t
 		}
 		lm.logger.Info("Delete channels and things completed successfully", args...)
 	}(time.Now())
-	return lm.svc.Connect(ctx, token, chIDs, thIDs)
+	return lm.svc.Connect(ctx, session, chIDs, thIDs)
 }
 
-func (lm *loggingMiddleware) Disconnect(ctx context.Context, token string, chIDs, thIDs []string) (err error) {
+func (lm *loggingMiddleware) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -226,5 +227,5 @@ func (lm *loggingMiddleware) Disconnect(ctx context.Context, token string, chIDs
 		}
 		lm.logger.Info("Disconnect channels and things completed successfully", args...)
 	}(time.Now())
-	return lm.svc.Disconnect(ctx, token, chIDs, thIDs)
+	return lm.svc.Disconnect(ctx, session, chIDs, thIDs)
 }

@@ -26,14 +26,22 @@ type authorizationMiddleware struct {
 }
 
 // AuthorizationMiddleware adds authorization to the clients service.
-func AuthorizationMiddleware(entityType string, svc things.Service, authz mgauthz.Authorization, opPerm map[svcutil.Operation]svcutil.Permission) (things.Service, error) {
-	ram, err := entityRolesMW.NewRolesAuthorizationMiddleware(entityType, svc, authz, opPerm)
+func AuthorizationMiddleware(entityType string, svc things.Service, authz mgauthz.Authorization, thingsOpPerm, rolesOpPerm map[svcutil.Operation]svcutil.Permission) (things.Service, error) {
+	opp := things.NewOperationPerm()
+	if err := opp.AddOperationPermissionMap(thingsOpPerm); err != nil {
+		return nil, err
+	}
+	if err := opp.Validate(); err != nil {
+		return nil, err
+	}
+	ram, err := entityRolesMW.NewRolesAuthorizationMiddleware(entityType, svc, authz, rolesOpPerm)
 	if err != nil {
 		return nil, err
 	}
 	return &authorizationMiddleware{
 		svc:                          svc,
 		authz:                        authz,
+		opp:                          opp,
 		RolesAuthorizationMiddleware: ram,
 	}, nil
 }

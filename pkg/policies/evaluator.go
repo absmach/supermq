@@ -23,6 +23,7 @@ const (
 const (
 	GroupType    = "group"
 	ThingType    = "thing"
+	ChannelType  = "channel"
 	UserType     = "user"
 	DomainType   = "domain"
 	PlatformType = "platform"

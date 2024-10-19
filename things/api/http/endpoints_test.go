@@ -89,14 +89,14 @@ func toJSON(data interface{}) string {
 
 func newThingsServer() (*httptest.Server, *mocks.Service, *cmocks.Service, *authnmocks.Authentication) {
 	svc := new(mocks.Service)
-	gsvc := new(cmocks.Service)
+	csvc := new(cmocks.Service)
 	authn := new(authnmocks.Authentication)
 
 	logger := mglog.NewMock()
 	mux := chi.NewRouter()
-	httpapi.MakeHandler(svc, gsvc, authn, mux, logger, "")
+	httpapi.MakeHandler(svc, csvc, authn, mux, logger, "")
 
-	return httptest.NewServer(mux), svc, gsvc, authn
+	return httptest.NewServer(mux), svc, csvc, authn
 }
 
 func TestCreateThing(t *testing.T) {

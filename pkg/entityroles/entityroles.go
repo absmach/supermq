@@ -26,12 +26,12 @@ type RolesSvc struct {
 	builtInRoles map[roles.BuiltInRoleName][]roles.Action
 }
 
-func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala.IDProvider, policyClient policies.Service, actions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action) (RolesSvc, error) {
+func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala.IDProvider, policy policies.Service, actions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action) (RolesSvc, error) {
 	rolesSvc := RolesSvc{
 		entityType:   entityType,
 		repo:         repo,
 		idProvider:   idProvider,
-		policy:       policyClient,
+		policy:       policy,
 		actions:      actions,
 		builtInRoles: builtInRoles,
 	}

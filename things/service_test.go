@@ -59,7 +59,7 @@ func newService() things.Service {
 	idProvider := uuid.NewMock()
 	sidProvider := sid.NewMock()
 	cRepo = new(mocks.Repository)
-	tsv, _ := things.NewService(pEvaluator, pService, cRepo, cache, idProvider, sidProvider)
+	tsv, _ := things.NewService(pService, pEvaluator, cRepo, cache, idProvider, sidProvider)
 	return tsv
 }
 
@@ -944,121 +944,6 @@ func TestDeleteClient(t *testing.T) {
 		repoCall.Unset()
 		policyCall.Unset()
 		repoCall1.Unset()
-	}
-}
-
-func TestShare(t *testing.T) {
-	svc := newService()
-
-	clientID := "clientID"
-
-	cases := []struct {
-		desc           string
-		session        mgauthn.Session
-		clientID       string
-		relation       string
-		userID         string
-		addPoliciesErr error
-		err            error
-	}{
-		{
-			desc:     "share thing successfully",
-			session:  mgauthn.Session{UserID: validID, DomainID: validID},
-			clientID: clientID,
-			err:      nil,
-		},
-		{
-			desc:           "share thing with failed to add policies",
-			session:        mgauthn.Session{UserID: validID, DomainID: validID},
-			clientID:       clientID,
-			addPoliciesErr: svcerr.ErrInvalidPolicy,
-			err:            svcerr.ErrInvalidPolicy,
-		},
-	}
-
-	for _, tc := range cases {
-		policyCall := pService.On("AddPolicies", mock.Anything, mock.Anything).Return(tc.addPoliciesErr)
-		err := svc.Share(context.Background(), tc.session, tc.clientID, tc.relation, tc.userID)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		policyCall.Unset()
-	}
-}
-
-func TestUnShare(t *testing.T) {
-	svc := newService()
-
-	clientID := "clientID"
-
-	cases := []struct {
-		desc              string
-		session           mgauthn.Session
-		clientID          string
-		relation          string
-		userID            string
-		deletePoliciesErr error
-		err               error
-	}{
-		{
-			desc:     "unshare thing successfully",
-			session:  mgauthn.Session{UserID: validID, DomainID: validID},
-			clientID: clientID,
-			err:      nil,
-		},
-		{
-			desc:              "share thing with failed to delete policies",
-			session:           mgauthn.Session{UserID: validID, DomainID: validID},
-			clientID:          clientID,
-			deletePoliciesErr: svcerr.ErrInvalidPolicy,
-			err:               svcerr.ErrInvalidPolicy,
-		},
-	}
-
-	for _, tc := range cases {
-		policyCall := pService.On("DeletePolicies", mock.Anything, mock.Anything).Return(tc.deletePoliciesErr)
-		err := svc.Unshare(context.Background(), tc.session, tc.clientID, tc.relation, tc.userID)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		policyCall.Unset()
-	}
-}
-
-func TestViewClientPerms(t *testing.T) {
-	svc := newService()
-
-	validID := valid
-
-	cases := []struct {
-		desc             string
-		session          mgauthn.Session
-		thingID          string
-		listPermResponse policysvc.Permissions
-		listPermErr      error
-		err              error
-	}{
-		{
-			desc:             "view client permissions successfully",
-			session:          mgauthn.Session{UserID: validID, DomainID: validID},
-			thingID:          validID,
-			listPermResponse: policysvc.Permissions{"admin"},
-			err:              nil,
-		},
-		{
-			desc:             "view permissions with failed retrieve list permissions response",
-			session:          mgauthn.Session{UserID: validID, DomainID: validID},
-			thingID:          validID,
-			listPermResponse: []string{},
-			listPermErr:      svcerr.ErrAuthorization,
-			err:              svcerr.ErrAuthorization,
-		},
-	}
-
-	for _, tc := range cases {
-		policyCall := pService.On("ListPermissions", mock.Anything, mock.Anything, []string{}).Return(tc.listPermResponse, tc.listPermErr)
-		res, err := svc.ViewClientPerms(context.Background(), tc.session, tc.thingID)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		if tc.err == nil {
-			assert.ElementsMatch(t, tc.listPermResponse, res, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.listPermResponse, res))
-		}
-		policyCall.Unset()
 	}
 }
 
