@@ -13,38 +13,19 @@ import (
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	"github.com/absmach/magistrala/pkg/postgres"
-	"github.com/absmach/magistrala/pkg/roles"
+	"github.com/absmach/magistrala/things"
 )
 
-var _ mgclients.Repository = (*clientRepo)(nil)
+var _ things.Repository = (*clientRepo)(nil)
 
 type clientRepo struct {
 	pgclients.Repository
 	entityRolesRepo.RolesSvcRepo
 }
 
-// Repository is the interface that wraps the basic methods for
-// a client repository.
-//
-//go:generate mockery --name Repository --output=../mocks --filename repository.go --quiet --note "Copyright (c) Abstract Machines"
-type Repository interface {
-	mgclients.Repository
-
-	// Save persists the client account. A non-nil error is returned to indicate
-	// operation failure.
-	Save(ctx context.Context, client ...mgclients.Client) ([]mgclients.Client, error)
-
-	// RetrieveBySecret retrieves a client based on the secret (key).
-	RetrieveBySecret(ctx context.Context, key string) (mgclients.Client, error)
-
-	RemoveThings(ctx context.Context, clientIDs ...[]string) error
-
-	roles.Repository
-}
-
 // NewRepository instantiates a PostgreSQL
 // implementation of Clients repository.
-func NewRepository(db postgres.Database) Repository {
+func NewRepository(db postgres.Database) things.Repository {
 	return &clientRepo{
 		Repository: pgclients.Repository{DB: db},
 	}

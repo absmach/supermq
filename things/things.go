@@ -8,6 +8,7 @@ import (
 
 	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/clients"
+	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/roles"
 	"github.com/absmach/magistrala/pkg/svcutil"
 )
@@ -77,6 +78,25 @@ type Cache interface {
 
 	// Removes thing from cache.
 	Remove(ctx context.Context, thingID string) error
+}
+
+// Repository is the interface that wraps the basic methods for
+// a client repository.
+//
+//go:generate mockery --name Repository --output=./mocks --filename repository.go --quiet --note "Copyright (c) Abstract Machines"
+type Repository interface {
+	mgclients.Repository
+
+	// Save persists the client account. A non-nil error is returned to indicate
+	// operation failure.
+	Save(ctx context.Context, client ...mgclients.Client) ([]mgclients.Client, error)
+
+	// RetrieveBySecret retrieves a client based on the secret (key).
+	RetrieveBySecret(ctx context.Context, key string) (mgclients.Client, error)
+
+	RemoveThings(ctx context.Context, clientIDs ...[]string) error
+
+	roles.Repository
 }
 
 const (

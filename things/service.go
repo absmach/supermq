@@ -16,7 +16,6 @@ import (
 	"github.com/absmach/magistrala/pkg/policies"
 	"github.com/absmach/magistrala/pkg/roles"
 	"github.com/absmach/magistrala/pkg/svcutil"
-	"github.com/absmach/magistrala/things/postgres"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -33,7 +32,7 @@ type identity struct {
 type service struct {
 	evaluator   policies.Evaluator
 	policysvc   policies.Service
-	clients     postgres.Repository
+	clients     Repository
 	clientCache Cache
 	idProvider  magistrala.IDProvider
 	opp         svcutil.OperationPerm
@@ -41,7 +40,7 @@ type service struct {
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(policysvc policies.Service, policyEvaluator policies.Evaluator, repo postgres.Repository, tcache Cache, idp magistrala.IDProvider, sidProvider magistrala.IDProvider) (Service, error) {
+func NewService(policysvc policies.Service, policyEvaluator policies.Evaluator, repo Repository, tcache Cache, idp magistrala.IDProvider, sidProvider magistrala.IDProvider) (Service, error) {
 
 	rolesSvc, err := entityroles.NewRolesSvc(policies.DomainType, repo, sidProvider, policysvc, ThingAvailableActions(), ThingBuiltInRoles())
 	if err != nil {
