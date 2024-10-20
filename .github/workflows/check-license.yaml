@@ -21,10 +21,10 @@ jobs:
       - name: Check License Header
         run: |
           CHECK=""
-          for file in $(find . -type f ! -path "./.git/*" ! -path "./build/*" ! -path "./**vernemq**/*" \
-            ! -name "*.crt" ! -name "*.key" ! -name "*.pem" ! -name "*.zed" ! -name "*.hcl" \
-            ! -name "*.md" ! -name "*.json" ! -name "*.csv" ! -name "*.mod" ! -name "*.sum" \
-            ! -name "*.tmpl" ! -name "*.args" ! -name "CODEOWNERS" ! -name "LICENSE" ! -name "MAINTAINERS"); do
+          for file in $(grep -rl --exclude-dir={.git,build,**vernemq**} \
+            --exclude=\*.{crt,key,pem,zed,hcl,md,json,csv,mod,sum,tmpl,args} \
+            --exclude={CODEOWNERS,LICENSE,MAINTAINERS} \
+            .); do
               
               if ! head -n 5 "$file" | grep -q "Copyright (c) Abstract Machines"; then
                 CHECK="$CHECK $file"
