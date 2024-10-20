@@ -28,7 +28,7 @@ jobs:
 
           # Explicitly check auth/service.go for the license header
           echo "Checking for license header in auth/service.go..."
-          if ! grep -q "Copyright (c) Abstract Machines" auth/service.go; then
+          if ! grep "Copyright (c) Abstract Machines" auth/service.go; then
             echo "::error file=auth/service.go::Missing license header in auth/service.go"
             exit 1
           fi
