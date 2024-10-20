@@ -26,7 +26,7 @@ jobs:
             ! -name "*.md" ! -name "*.json" ! -name "*.csv" ! -name "*.mod" ! -name "*.sum" \
             ! -name "*.tmpl" ! -name "*.args" ! -name "CODEOWNERS" ! -name "LICENSE" ! -name "MAINTAINERS"); do
               
-              if ! head -n 3 "$file" | grep -q "Copyright (c) Abstract Machines"; then
+              if ! head -n 5 "$file" | grep -q "Copyright (c) Abstract Machines"; then
                 CHECK="$CHECK $file"
               fi
           done
