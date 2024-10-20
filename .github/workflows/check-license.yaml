@@ -35,4 +35,6 @@ jobs:
             echo "License header check failed. Fix the following files:"
             echo "$CHECK"
             exit 1
+          else
+            echo "All files have the correct license header!"
           fi
