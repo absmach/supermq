@@ -20,27 +20,13 @@ jobs:
 
       - name: Check License Header
         run: |
-          echo "Checking for license headers in..."
-          FILES=$(grep -r --exclude-dir={.git,build,**vernemq**} \
-            --exclude=\*.{crt,key,pem,zed,hcl,md,json,csv,mod,sum,tmpl,args} \
-            --exclude={CODEOWNERS,LICENSE,MAINTAINERS} . -l)
-          echo "$FILES"
-
-          # Explicitly check auth/service.go for the license header
-          echo "Checking for license header in auth/service.go..."
-          if ! grep "Copyright (c) Abstract Machines" auth/service.go; then
-            echo "::error file=auth/service.go::Missing license header in auth/service.go"
-            exit 1
-          fi
-
-          # Continue with the regular check
-          missing_license_files=$(grep -rcL --exclude-dir={.git,build,**vernemq**} \
+          CHECK=$(grep -rcL --exclude-dir={.git,build,**vernemq**} \
             --exclude=\*.{crt,key,pem,zed,hcl,md,json,csv,mod,sum,tmpl,args} \
             --exclude={CODEOWNERS,LICENSE,MAINTAINERS} \
-            --regexp "Copyright (c) Abstract Machines" .)
+            --regexp "^// Copyright \(c\) Abstract Machines" .)
 
-          if [ "$missing_license_files" ]; then
+          if [ "$CHECK" ]; then
             echo "License header check failed. Fix the following files:"
-            echo "$missing_license_files"
+            echo "$CHECK"
             exit 1
           fi
