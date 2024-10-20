@@ -18,14 +18,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Check License Header
+      - name: Run License Header Check
         run: |
-          CHECK=$(grep -rcL --exclude-dir={.git,build,**vernemq**} \
+          set -e  # Stop script on errors to prevent silent failures
+          
+          missing_license_files=$(grep -rcL --exclude-dir={.git,build,**vernemq**} \
             --exclude=\*.{crt,key,pem,zed,hcl,md,json,csv,mod,sum,tmpl,args} \
             --exclude={CODEOWNERS,LICENSE,MAINTAINERS} \
             --regexp "Copyright (c) Abstract Machines" .)
-          if [ "$CHECK" ]; then
-            echo "License header check failed. Fix the following files:"
-            echo "$CHECK"
+          
+          if [ -n "$missing_license_files" ]; then
+            echo "License header check failed. The following files are missing the license header:"
+            echo "$missing_license_files"
             exit 1
+          else
+            echo "All files have the appropriate license headers."
           fi
