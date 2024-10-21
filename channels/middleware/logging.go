@@ -9,9 +9,9 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/absmach/magistrala/channels"
 	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/channels"
-	entityRolesMW "github.com/absmach/magistrala/pkg/entityroles/middleware"
+	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
 )
 
 var _ channels.Service = (*loggingMiddleware)(nil)
@@ -19,12 +19,11 @@ var _ channels.Service = (*loggingMiddleware)(nil)
 type loggingMiddleware struct {
 	logger *slog.Logger
 	svc    channels.Service
-	entityRolesMW.RolesSvcLoggingMiddleware
+	rmMW.RoleManagerLoggingMiddleware
 }
 
 func LoggingMiddleware(svc channels.Service, logger *slog.Logger) channels.Service {
-	rolesSvcLoggingMiddleware := entityRolesMW.NewRolesSvcLoggingMiddleware("channels", svc, logger)
-	return &loggingMiddleware{logger, svc, rolesSvcLoggingMiddleware}
+	return &loggingMiddleware{logger, svc, rmMW.NewRoleManagerLoggingMiddleware("channels", svc, logger)}
 }
 
 func (lm *loggingMiddleware) CreateChannels(ctx context.Context, session authn.Session, clients ...channels.Channel) (cs []channels.Channel, err error) {

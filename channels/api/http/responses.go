@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/pkg/channels"
+	"github.com/absmach/magistrala/channels"
 )
 
 var (

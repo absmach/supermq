@@ -7,10 +7,10 @@ import (
 	"log/slog"
 
 	"github.com/absmach/magistrala"
+	"github.com/absmach/magistrala/channels"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/channels"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -116,7 +116,6 @@ func MakeHandler(svc channels.Service, authn mgauthn.Authentication, mux *chi.Mu
 		api.EncodeResponse,
 		opts...,
 	), "disconnect").ServeHTTP)
-
 	mux.Get("/health", magistrala.Health("channels", instanceID))
 	mux.Handle("/metrics", promhttp.Handler())
 

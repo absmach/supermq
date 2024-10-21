@@ -5,8 +5,8 @@
 package mocks
 
 import (
+	channels "github.com/absmach/magistrala/channels"
 	authn "github.com/absmach/magistrala/pkg/authn"
-	channels "github.com/absmach/magistrala/pkg/channels"
 
 	context "context"
 

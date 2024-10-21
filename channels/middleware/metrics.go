@@ -7,9 +7,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/absmach/magistrala/channels"
 	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/channels"
-	entityRolesMW "github.com/absmach/magistrala/pkg/entityroles/middleware"
+	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
 	"github.com/go-kit/kit/metrics"
 )
 
@@ -19,17 +19,16 @@ type metricsMiddleware struct {
 	counter metrics.Counter
 	latency metrics.Histogram
 	svc     channels.Service
-	entityRolesMW.RolesSvcMetricsMiddleware
+	rmMW.RoleManagerMetricsMiddleware
 }
 
 // MetricsMiddleware returns a new metrics middleware wrapper.
 func MetricsMiddleware(svc channels.Service, counter metrics.Counter, latency metrics.Histogram) channels.Service {
-	rolesSvcMetricsMiddleware := entityRolesMW.NewRolesSvcMetricsMiddleware("channels", svc, counter, latency)
 	return &metricsMiddleware{
-		counter:                   counter,
-		latency:                   latency,
-		svc:                       svc,
-		RolesSvcMetricsMiddleware: rolesSvcMetricsMiddleware,
+		counter:                      counter,
+		latency:                      latency,
+		svc:                          svc,
+		RoleManagerMetricsMiddleware: rmMW.NewRoleManagerMetricsMiddleware("channels", svc, counter, latency),
 	}
 }
 

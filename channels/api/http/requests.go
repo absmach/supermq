@@ -4,9 +4,9 @@
 package http
 
 import (
+	"github.com/absmach/magistrala/channels"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
-	"github.com/absmach/magistrala/pkg/channels"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 )
 

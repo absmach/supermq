@@ -6,9 +6,9 @@ package tracing
 import (
 	"context"
 
+	"github.com/absmach/magistrala/channels"
 	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/channels"
-	entityRolesTrace "github.com/absmach/magistrala/pkg/entityroles/tracing"
+	rmTrace "github.com/absmach/magistrala/pkg/roles/rolemanager/tracing"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -18,12 +18,12 @@ var _ channels.Service = (*tracingMiddleware)(nil)
 type tracingMiddleware struct {
 	tracer trace.Tracer
 	svc    channels.Service
-	entityRolesTrace.RolesSvcTracingMiddleware
+	rmTrace.RoleManagerTracing
 }
 
 // New returns a new group service with tracing capabilities.
 func New(svc channels.Service, tracer trace.Tracer) channels.Service {
-	return &tracingMiddleware{tracer, svc, entityRolesTrace.NewRolesSvcTracingMiddleware("channels", svc, tracer)}
+	return &tracingMiddleware{tracer, svc, rmTrace.NewRoleManagerTracing("channels", svc, tracer)}
 }
 
 // CreateChannels traces the "CreateChannels" operation of the wrapped policies.Service.

@@ -10,6 +10,7 @@ networks:
 volumes:
   magistrala-users-db-volume:
   magistrala-things-db-volume:
+  magistrala-channels-db-volume:
   magistrala-things-redis-volume:
   magistrala-broker-volume:
   magistrala-mqtt-broker-volume:
@@ -206,7 +207,7 @@ services:
       MG_DOMAINS_DB_SSL_CERT: ${MG_DOMAINS_DB_SSL_CERT}
       MG_DOMAINS_DB_SSL_KEY: ${MG_DOMAINS_DB_SSL_KEY}
       MG_DOMAINS_DB_SSL_ROOT_CERT: ${MG_DOMAINS_DB_SSL_ROOT_CERT}
-      MG_DOMAINS_ADAPTER_INSTANCE_ID: ${MG_DOMAINS_ADAPTER_INSTANCE_ID}
+      MG_DOMAINS_INSTANCE_ID: ${MG_DOMAINS_INSTANCE_ID}
       MG_ES_URL: ${MG_ES_URL}
       MG_AUTH_GRPC_URL: ${MG_AUTH_GRPC_URL}
       MG_AUTH_GRPC_TIMEOUT: ${MG_AUTH_GRPC_TIMEOUT}
@@ -455,6 +456,80 @@ services:
         target: /things-grpc-client-ca${MG_THINGS_AUTH_GRPC_CLIENT_CA_CERTS:+.crt}
         bind:
           create_host_path: true
+      # Auth gRPC client certificates
+      - type: bind
+        source: ${MG_AUTH_GRPC_CLIENT_CERT:-ssl/certs/dummy/client_cert}
+        target: /auth-grpc-client${MG_AUTH_GRPC_CLIENT_CERT:+.crt}
+        bind:
+          create_host_path: true
+      - type: bind
+        source: ${MG_AUTH_GRPC_CLIENT_KEY:-ssl/certs/dummy/client_key}
+        target: /auth-grpc-client${MG_AUTH_GRPC_CLIENT_KEY:+.key}
+        bind:
+          create_host_path: true
+      - type: bind
+        source: ${MG_AUTH_GRPC_SERVER_CA_CERTS:-ssl/certs/dummy/server_ca}
+        target: /auth-grpc-server-ca${MG_AUTH_GRPC_SERVER_CA_CERTS:+.crt}
+        bind:
+          create_host_path: true
+
+  channels-db:
+    image: postgres:16.2-alpine
+    container_name: magistrala-channels-db
+    restart: on-failure
+    command: postgres -c "max_connections=${MG_POSTGRES_MAX_CONNECTIONS}"
+    environment:
+      POSTGRES_USER: ${MG_CHANNELS_DB_USER}
+      POSTGRES_PASSWORD: ${MG_CHANNELS_DB_PASS}
+      POSTGRES_DB: ${MG_CHANNELS_DB_NAME}
+      MG_POSTGRES_MAX_CONNECTIONS: ${MG_POSTGRES_MAX_CONNECTIONS}
+    networks:
+      - magistrala-base-net
+    ports:
+      - 6008:5432
+    volumes:
+      - magistrala-channels-db-volume:/var/lib/postgresql/data
+
+  channels:
+    image: magistrala/channels:${MG_RELEASE_TAG}
+    container_name: magistrala-channels
+    depends_on:
+      - channels-db
+      - users
+      - auth
+      - nats
+    restart: on-failure
+    environment:
+      MG_CHANNELS_LOG_LEVEL: ${MG_CHANNELS_LOG_LEVEL}
+      MG_CHANNELS_INSTANCE_ID: ${MG_CHANNELS_INSTANCE_ID}
+      MG_CHANNELS_HTTP_HOST: ${MG_CHANNELS_HTTP_HOST}
+      MG_CHANNELS_HTTP_PORT: ${MG_CHANNELS_HTTP_PORT}
+      MG_ES_URL: ${MG_ES_URL}
+      MG_CHANNELS_DB_HOST: ${MG_CHANNELS_DB_HOST}
+      MG_CHANNELS_DB_PORT: ${MG_CHANNELS_DB_PORT}
+      MG_CHANNELS_DB_USER: ${MG_CHANNELS_DB_USER}
+      MG_CHANNELS_DB_PASS: ${MG_CHANNELS_DB_PASS}
+      MG_CHANNELS_DB_NAME: ${MG_CHANNELS_DB_NAME}
+      MG_CHANNELS_DB_SSL_MODE: ${MG_CHANNELS_DB_SSL_MODE}
+      MG_CHANNELS_DB_SSL_CERT: ${MG_CHANNELS_DB_SSL_CERT}
+      MG_CHANNELS_DB_SSL_KEY: ${MG_CHANNELS_DB_SSL_KEY}
+      MG_CHANNELS_DB_SSL_ROOT_CERT: ${MG_CHANNELS_DB_SSL_ROOT_CERT}
+      MG_AUTH_GRPC_URL: ${MG_AUTH_GRPC_URL}
+      MG_AUTH_GRPC_TIMEOUT: ${MG_AUTH_GRPC_TIMEOUT}
+      MG_AUTH_GRPC_CLIENT_CERT: ${MG_AUTH_GRPC_CLIENT_CERT:+/auth-grpc-client.crt}
+      MG_AUTH_GRPC_CLIENT_KEY: ${MG_AUTH_GRPC_CLIENT_KEY:+/auth-grpc-client.key}
+      MG_AUTH_GRPC_SERVER_CA_CERTS: ${MG_AUTH_GRPC_SERVER_CA_CERTS:+/auth-grpc-server-ca.crt}
+      MG_JAEGER_URL: ${MG_JAEGER_URL}
+      MG_JAEGER_TRACE_RATIO: ${MG_JAEGER_TRACE_RATIO}
+      MG_SEND_TELEMETRY: ${MG_SEND_TELEMETRY}
+      MG_SPICEDB_PRE_SHARED_KEY: ${MG_SPICEDB_PRE_SHARED_KEY}
+      MG_SPICEDB_HOST: ${MG_SPICEDB_HOST}
+      MG_SPICEDB_PORT: ${MG_SPICEDB_PORT}
+    ports:
+      - ${MG_CHANNELS_HTTP_PORT}:${MG_CHANNELS_HTTP_PORT}
+    networks:
+      - magistrala-base-net
+    volumes:
       # Auth gRPC client certificates
       - type: bind
         source: ${MG_AUTH_GRPC_CLIENT_CERT:-ssl/certs/dummy/client_cert}

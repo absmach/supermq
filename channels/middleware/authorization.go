@@ -6,12 +6,12 @@ package middleware
 import (
 	"context"
 
+	"github.com/absmach/magistrala/channels"
 	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/authz"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
-	"github.com/absmach/magistrala/pkg/channels"
-	entityRolesMW "github.com/absmach/magistrala/pkg/entityroles/middleware"
 	"github.com/absmach/magistrala/pkg/policies"
+	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
 	"github.com/absmach/magistrala/pkg/svcutil"
 )
 
@@ -21,11 +21,11 @@ type authorizationMiddleware struct {
 	svc   channels.Service
 	authz mgauthz.Authorization
 	opp   svcutil.OperationPerm
-	entityRolesMW.RolesAuthorizationMiddleware
+	rmMW.RoleManagerAuthorizationMiddleware
 }
 
 // AuthorizationMiddleware adds authorization to the channels service.
-func AuthorizationMiddleware(entityType string, svc channels.Service, authz mgauthz.Authorization, channelsOpPerm, rolesOpPerm map[svcutil.Operation]svcutil.Permission) (channels.Service, error) {
+func AuthorizationMiddleware(svc channels.Service, authz mgauthz.Authorization, channelsOpPerm, rolesOpPerm map[svcutil.Operation]svcutil.Permission) (channels.Service, error) {
 	opp := channels.NewOperationPerm()
 	if err := opp.AddOperationPermissionMap(channelsOpPerm); err != nil {
 		return nil, err
@@ -33,15 +33,15 @@ func AuthorizationMiddleware(entityType string, svc channels.Service, authz mgau
 	if err := opp.Validate(); err != nil {
 		return nil, err
 	}
-	ram, err := entityRolesMW.NewRolesAuthorizationMiddleware(entityType, svc, authz, rolesOpPerm)
+	ram, err := rmMW.NewRoleManagerAuthorizationMiddleware(policies.ChannelType, svc, authz, rolesOpPerm)
 	if err != nil {
 		return nil, err
 	}
 	return &authorizationMiddleware{
-		svc:                          svc,
-		authz:                        authz,
-		RolesAuthorizationMiddleware: ram,
-		opp:                          opp,
+		svc:                                svc,
+		authz:                              authz,
+		RoleManagerAuthorizationMiddleware: ram,
+		opp:                                opp,
 	}, nil
 }
 

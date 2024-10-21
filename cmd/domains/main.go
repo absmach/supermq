@@ -65,7 +65,7 @@ type config struct {
 	LogLevel            string  `env:"MG_DOMAINS_LOG_LEVEL"            envDefault:"info"`
 	JaegerURL           url.URL `env:"MG_JAEGER_URL"                   envDefault:"http://localhost:4318/v1/traces"`
 	SendTelemetry       bool    `env:"MG_SEND_TELEMETRY"               envDefault:"true"`
-	InstanceID          string  `env:"MG_DOMAINS_ADAPTER_INSTANCE_ID"  envDefault:""`
+	InstanceID          string  `env:"MG_DOMAINS_INSTANCE_ID"  envDefault:""`
 	SpicedbHost         string  `env:"MG_SPICEDB_HOST"                 envDefault:"localhost"`
 	SpicedbPort         string  `env:"MG_SPICEDB_PORT"                 envDefault:"50051"`
 	SpicedbPreSharedKey string  `env:"MG_SPICEDB_PRE_SHARED_KEY"       envDefault:"12345678"`

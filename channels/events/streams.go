@@ -6,11 +6,11 @@ package events
 import (
 	"context"
 
+	"github.com/absmach/magistrala/channels"
 	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/channels"
-	entityRolesEvents "github.com/absmach/magistrala/pkg/entityroles/events"
 	"github.com/absmach/magistrala/pkg/events"
 	"github.com/absmach/magistrala/pkg/events/store"
+	rmEvents "github.com/absmach/magistrala/pkg/roles/rolemanager/events"
 )
 
 const streamID = "magistrala.things"
@@ -20,7 +20,7 @@ var _ channels.Service = (*eventStore)(nil)
 type eventStore struct {
 	events.Publisher
 	svc channels.Service
-	entityRolesEvents.RolesSvcEventStoreMiddleware
+	rmEvents.RoleManagerEventStore
 }
 
 // NewEventStoreMiddleware returns wrapper around things service that sends
@@ -31,11 +31,11 @@ func NewEventStoreMiddleware(ctx context.Context, svc channels.Service, url stri
 		return nil, err
 	}
 
-	rolesSvcEventStoreMiddleware := entityRolesEvents.NewRolesSvcEventStoreMiddleware("domains", svc, publisher)
+	rolesSvcEventStoreMiddleware := rmEvents.NewRoleManagerEventStore("channels", svc, publisher)
 	return &eventStore{
-		svc:                          svc,
-		Publisher:                    publisher,
-		RolesSvcEventStoreMiddleware: rolesSvcEventStoreMiddleware,
+		svc:                   svc,
+		Publisher:             publisher,
+		RoleManagerEventStore: rolesSvcEventStoreMiddleware,
 	}, nil
 }
 

@@ -11,17 +11,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/absmach/magistrala/channels"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
-	"github.com/absmach/magistrala/pkg/channels"
 	"github.com/absmach/magistrala/pkg/clients"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	clientpg "github.com/absmach/magistrala/pkg/clients/postgres"
-	entityRolesRepo "github.com/absmach/magistrala/pkg/entityroles/postrgres"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/postgres"
+	rolesPostgres "github.com/absmach/magistrala/pkg/roles/repo/postgres"
 	"github.com/jackc/pgtype"
 )
 
@@ -31,17 +31,17 @@ var _ channels.Repository = (*channelRepository)(nil)
 
 type channelRepository struct {
 	db postgres.Database
-	entityRolesRepo.RolesSvcRepo
+	rolesPostgres.Repository
 }
 
 // NewChannelRepository instantiates a PostgreSQL implementation of channel
 // repository.
 func NewRepository(db postgres.Database) channels.Repository {
 
-	rolesSvcRepo := entityRolesRepo.NewRolesSvcRepository(db, rolesTableNamePrefix)
+	rolesRepo := rolesPostgres.NewRepository(db, rolesTableNamePrefix)
 	return &channelRepository{
-		db:           db,
-		RolesSvcRepo: rolesSvcRepo,
+		db:         db,
+		Repository: rolesRepo,
 	}
 }
 

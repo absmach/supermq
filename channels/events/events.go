@@ -6,7 +6,7 @@ package events
 import (
 	"time"
 
-	"github.com/absmach/magistrala/pkg/channels"
+	"github.com/absmach/magistrala/channels"
 	"github.com/absmach/magistrala/pkg/events"
 )
 
