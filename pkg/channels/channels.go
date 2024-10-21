@@ -95,7 +95,7 @@ type Service interface {
 
 	// RemoveParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error
 
-	roles.Roles
+	roles.RoleManager
 }
 
 // ChannelRepository specifies a channel persistence API.

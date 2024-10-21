@@ -12,12 +12,12 @@ import (
 	"time"
 
 	mgclients "github.com/absmach/magistrala/pkg/clients"
-	entityRolesRepo "github.com/absmach/magistrala/pkg/entityroles/postrgres"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	"github.com/absmach/magistrala/pkg/groups"
 	mggroups "github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/postgres"
+	rolesPostgres "github.com/absmach/magistrala/pkg/roles/repo/postgres"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -33,17 +33,17 @@ var (
 
 type groupRepository struct {
 	db postgres.Database
-	entityRolesRepo.RolesSvcRepo
+	rolesPostgres.Repository
 }
 
 // New instantiates a PostgreSQL implementation of group
 // repository.
 func New(db postgres.Database) mggroups.Repository {
-	rolesSvcRepo := entityRolesRepo.NewRolesSvcRepository(db, rolesTableNamePrefix)
+	roleRepo := rolesPostgres.NewRepository(db, rolesTableNamePrefix)
 
 	return &groupRepository{
-		db:           db,
-		RolesSvcRepo: rolesSvcRepo,
+		db:         db,
+		Repository: roleRepo,
 	}
 }
 

@@ -39,6 +39,7 @@ import (
 	"github.com/absmach/magistrala/pkg/prometheus"
 	"github.com/absmach/magistrala/pkg/server"
 	httpserver "github.com/absmach/magistrala/pkg/server/http"
+	"github.com/absmach/magistrala/pkg/sid"
 	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/absmach/magistrala/users"
 	capi "github.com/absmach/magistrala/users/api"
@@ -271,15 +272,19 @@ func newService(ctx context.Context, authz mgauthz.Authorization, token magistra
 
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 	idp := uuid.New()
+	sid, err := sid.New()
+	if err != nil {
+		return nil, nil, err
+	}
 	hsr := hasher.New()
 
 	// Creating groups service
 	gRepo := gpostgres.New(database)
-	gsvc, err := mggroups.NewService(gRepo, idp, policyService, authz, groups.NewOperationPermissionMap())
+	gsvc, err := mggroups.NewService(gRepo, policyService, idp, sid)
 	if err != nil {
 		return nil, nil, err
 	}
-	gsvc, err = gevents.NewEventStoreMiddleware(ctx, gsvc, c.ESURL, streamID)
+	gsvc, err = gevents.New(ctx, gsvc, c.ESURL, streamID)
 	if err != nil {
 		return nil, nil, err
 	}

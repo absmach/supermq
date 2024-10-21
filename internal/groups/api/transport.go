@@ -9,8 +9,8 @@ import (
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/authn"
-	entityRoleAPI "github.com/absmach/magistrala/pkg/entityroles/api"
 	"github.com/absmach/magistrala/pkg/groups"
+	roleManagerHttp "github.com/absmach/magistrala/pkg/roles/rolemanager/api"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -21,6 +21,7 @@ func MakeHandler(svc groups.Service, authn authn.Authentication, mux *chi.Mux, l
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
+	d := roleManagerHttp.NewDecoder("groupID")
 
 	mux.Route("/groups", func(r chi.Router) {
 		r.Use(api.AuthenticateMiddleware(authn))
@@ -37,6 +38,7 @@ func MakeHandler(svc groups.Service, authn authn.Authentication, mux *chi.Mux, l
 			api.EncodeResponse,
 			opts...,
 		), "list_groups").ServeHTTP)
+		r = roleManagerHttp.EntityAvailableActionsRouter(svc, d, r, opts)
 
 		r.Route("/{groupID}", func(r chi.Router) {
 			r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
@@ -73,6 +75,8 @@ func MakeHandler(svc groups.Service, authn authn.Authentication, mux *chi.Mux, l
 				api.EncodeResponse,
 				opts...,
 			), "disable_group").ServeHTTP)
+
+			r = roleManagerHttp.EntityRoleMangerRouter(svc, d, r, opts)
 
 			r.Get("/hierarchy", otelhttp.NewHandler(kithttp.NewServer(
 				retrieveGroupHierarchyEndpoint(svc),
@@ -130,7 +134,6 @@ func MakeHandler(svc groups.Service, authn authn.Authentication, mux *chi.Mux, l
 		})
 
 	})
-	mux = entityRoleAPI.RolesHandler(svc, authn, "/groups", mux, logger)
 
 	return mux
 }

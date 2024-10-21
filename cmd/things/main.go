@@ -15,23 +15,16 @@ import (
 
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/magistrala"
-	chSvc "github.com/absmach/magistrala/internal/channels"
-	cevents "github.com/absmach/magistrala/internal/channels/events"
-	cmiddleware "github.com/absmach/magistrala/internal/channels/middleware"
-	cmw "github.com/absmach/magistrala/internal/channels/middleware"
-	cpostgres "github.com/absmach/magistrala/internal/channels/postgres"
-	ctracing "github.com/absmach/magistrala/internal/channels/tracing"
 	redisclient "github.com/absmach/magistrala/internal/clients/redis"
 	mglog "github.com/absmach/magistrala/logger"
 	authsvcAuthn "github.com/absmach/magistrala/pkg/authn/authsvc"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
 	authsvcAuthz "github.com/absmach/magistrala/pkg/authz/authsvc"
-	"github.com/absmach/magistrala/pkg/channels"
 	"github.com/absmach/magistrala/pkg/grpcclient"
 	jaegerclient "github.com/absmach/magistrala/pkg/jaeger"
 	"github.com/absmach/magistrala/pkg/policies"
 	"github.com/absmach/magistrala/pkg/policies/spicedb"
-	"github.com/absmach/magistrala/pkg/postgres"
+	pg "github.com/absmach/magistrala/pkg/postgres"
 	pgclient "github.com/absmach/magistrala/pkg/postgres"
 	"github.com/absmach/magistrala/pkg/prometheus"
 	"github.com/absmach/magistrala/pkg/server"
@@ -42,11 +35,11 @@ import (
 	"github.com/absmach/magistrala/things"
 	grpcapi "github.com/absmach/magistrala/things/api/grpc"
 	httpapi "github.com/absmach/magistrala/things/api/http"
-	thcache "github.com/absmach/magistrala/things/cache"
-	thevents "github.com/absmach/magistrala/things/events"
-	tmiddleware "github.com/absmach/magistrala/things/middleware"
-	thingspg "github.com/absmach/magistrala/things/postgres"
-	ttracing "github.com/absmach/magistrala/things/tracing"
+	"github.com/absmach/magistrala/things/cache"
+	"github.com/absmach/magistrala/things/events"
+	"github.com/absmach/magistrala/things/middleware"
+	"github.com/absmach/magistrala/things/postgres"
+	"github.com/absmach/magistrala/things/tracing"
 	"github.com/authzed/authzed-go/v1"
 	"github.com/authzed/grpcutil"
 	"github.com/caarlos0/env/v11"
@@ -123,14 +116,12 @@ func main() {
 		exitCode = 1
 		return
 	}
-	tm := thingspg.Migration()
-	cm, err := cpostgres.Migration()
+	tm, err := postgres.Migration()
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
 		return
 	}
-	tm.Migrations = append(tm.Migrations, cm.Migrations...)
 	db, err := pgclient.Setup(dbConfig, *tm)
 	if err != nil {
 		logger.Error(err.Error())
@@ -193,7 +184,7 @@ func main() {
 	defer authzClient.Close()
 	logger.Info("AuthZ  successfully connected to auth gRPC server " + authnClient.Secure())
 
-	tsvc, csvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cacheclient, cfg.CacheKeyDuration, cfg.ESURL, tracer, logger)
+	svc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cacheclient, cfg.CacheKeyDuration, cfg.ESURL, tracer, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
 		exitCode = 1
@@ -207,7 +198,7 @@ func main() {
 		return
 	}
 	mux := chi.NewRouter()
-	httpSvc := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(tsvc, csvc, authn, mux, logger, cfg.InstanceID), logger)
+	httpSvc := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, authn, mux, logger, cfg.InstanceID), logger)
 
 	grpcServerConfig := server.Config{Port: defSvcAuthGRPCPort}
 	if err := env.ParseWithOptions(&grpcServerConfig, env.Options{Prefix: envPrefixGRPC}); err != nil {
@@ -217,7 +208,7 @@ func main() {
 	}
 	registerThingsServer := func(srv *grpc.Server) {
 		reflection.Register(srv)
-		magistrala.RegisterThingsServiceServer(srv, grpcapi.NewServer(tsvc))
+		magistrala.RegisterThingsServiceServer(srv, grpcapi.NewServer(svc))
 	}
 	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerThingsServer, logger)
 
@@ -244,64 +235,41 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, keyDuration time.Duration, esURL string, tracer trace.Tracer, logger *slog.Logger) (things.Service, channels.Service, error) {
-	database := postgres.NewDatabase(db, dbConfig, tracer)
-	tRepo := thingspg.NewRepository(database)
-	cRepo := cpostgres.NewRepository(database)
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, keyDuration time.Duration, esURL string, tracer trace.Tracer, logger *slog.Logger) (things.Service, error) {
+	database := pg.NewDatabase(db, dbConfig, tracer)
+	repo := postgres.NewRepository(database)
 
 	idp := uuid.New()
 	sidp, err := sid.New()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// Things service
-	thingCache := thcache.NewCache(cacheClient, keyDuration)
+	cache := cache.NewCache(cacheClient, keyDuration)
 
-	tsvc, err := things.NewService(ps, pe, tRepo, thingCache, idp, sidp)
+	tsvc, err := things.NewService(repo, ps, pe, cache, idp, sidp)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	tsvc, err = thevents.NewEventStoreMiddleware(ctx, tsvc, esURL)
+	tsvc, err = events.NewEventStoreMiddleware(ctx, tsvc, esURL)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	tsvc = ttracing.New(tsvc, tracer)
-	tsvc = tmiddleware.LoggingMiddleware(tsvc, logger)
+	tsvc = tracing.New(tsvc, tracer)
+	tsvc = middleware.LoggingMiddleware(tsvc, logger)
 
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
-	tsvc = tmiddleware.MetricsMiddleware(tsvc, counter, latency)
+	tsvc = middleware.MetricsMiddleware(tsvc, counter, latency)
 
-	tsvc, err = tmiddleware.AuthorizationMiddleware(policies.ThingType, tsvc, authz, things.NewOperationPermissionMap(), things.NewRolesOperationPermissionMap())
+	tsvc, err = middleware.AuthorizationMiddleware(policies.ThingType, tsvc, authz, things.NewOperationPermissionMap(), things.NewRolesOperationPermissionMap())
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	// channels service
-	csvc, err := chSvc.New(cRepo, ps, idp, sidp)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	csvc, err = cevents.NewEventStoreMiddleware(ctx, csvc, esURL)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	csvc = ctracing.New(csvc, tracer)
-	csvc = cmiddleware.LoggingMiddleware(csvc, logger)
-
-	counter, latency = prometheus.MakeMetrics("channels", "api")
-	csvc = cmiddleware.MetricsMiddleware(csvc, counter, latency)
-
-	csvc, err = cmw.AuthorizationMiddleware(policies.ChannelType, csvc, authz, channels.NewOperationPermissionMap(), channels.NewRolesOperationPermissionMap())
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return tsvc, csvc, err
+	return tsvc, err
 }
 
 func newSpiceDBPolicyServiceEvaluator(cfg config, logger *slog.Logger) (policies.Evaluator, policies.Service, error) {

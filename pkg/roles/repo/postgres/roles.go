@@ -17,17 +17,17 @@ import (
 	"github.com/absmach/magistrala/pkg/roles"
 )
 
-var _ roles.Repository = (*RolesSvcRepo)(nil)
+var _ roles.Repository = (*Repository)(nil)
 
-type RolesSvcRepo struct {
+type Repository struct {
 	tableNamePrefix string
 	db              postgres.Database
 }
 
-// NewRolesSvcRepository instantiates a PostgreSQL
+// NewRepositorysitory instantiates a PostgreSQL
 // implementation of Roles repository.
-func NewRolesSvcRepository(db postgres.Database, tableNamePrefix string) RolesSvcRepo {
-	return RolesSvcRepo{
+func NewRepository(db postgres.Database, tableNamePrefix string) Repository {
+	return Repository{
 		tableNamePrefix: tableNamePrefix,
 		db:              db,
 	}
@@ -122,7 +122,7 @@ func toRole(r dbRole) roles.Role {
 	}
 
 }
-func (repo *RolesSvcRepo) AddRoles(ctx context.Context, rps []roles.RoleProvision) ([]roles.Role, error) {
+func (repo *Repository) AddRoles(ctx context.Context, rps []roles.RoleProvision) ([]roles.Role, error) {
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -191,7 +191,7 @@ func (repo *RolesSvcRepo) AddRoles(ctx context.Context, rps []roles.RoleProvisio
 	return retRoles, nil
 }
 
-func (repo *RolesSvcRepo) RemoveRoles(ctx context.Context, roleIDs []string) error {
+func (repo *Repository) RemoveRoles(ctx context.Context, roleIDs []string) error {
 	q := fmt.Sprintf("DELETE FROM %s_roles  WHERE id = ANY(:role_ids) ;", repo.tableNamePrefix)
 
 	params := map[string]interface{}{
@@ -209,7 +209,7 @@ func (repo *RolesSvcRepo) RemoveRoles(ctx context.Context, roleIDs []string) err
 }
 
 // Update only role name, don't update ID
-func (repo *RolesSvcRepo) UpdateRole(ctx context.Context, role roles.Role) (roles.Role, error) {
+func (repo *Repository) UpdateRole(ctx context.Context, role roles.Role) (roles.Role, error) {
 	var query []string
 	var upq string
 	if role.Name != "" {
@@ -243,7 +243,7 @@ func (repo *RolesSvcRepo) UpdateRole(ctx context.Context, role roles.Role) (role
 	return roles.Role{}, repoerr.ErrNotFound
 }
 
-func (repo *RolesSvcRepo) RetrieveRole(ctx context.Context, roleID string) (roles.Role, error) {
+func (repo *Repository) RetrieveRole(ctx context.Context, roleID string) (roles.Role, error) {
 	q := fmt.Sprintf(`SELECT id, name, entity_id, created_by, created_at, updated_by, updated_at
         FROM %s_roles WHERE id = :id`, repo.tableNamePrefix)
 
@@ -269,7 +269,7 @@ func (repo *RolesSvcRepo) RetrieveRole(ctx context.Context, roleID string) (role
 	return roles.Role{}, repoerr.ErrNotFound
 }
 
-func (repo *RolesSvcRepo) RetrieveRoleByEntityIDAndName(ctx context.Context, entityID, roleName string) (roles.Role, error) {
+func (repo *Repository) RetrieveRoleByEntityIDAndName(ctx context.Context, entityID, roleName string) (roles.Role, error) {
 	q := fmt.Sprintf(`SELECT id, name, entity_id, created_by, created_at, updated_by, updated_at
         FROM %s_roles WHERE entity_id = :entity_id and name = :name`, repo.tableNamePrefix)
 
@@ -295,7 +295,7 @@ func (repo *RolesSvcRepo) RetrieveRoleByEntityIDAndName(ctx context.Context, ent
 
 	return roles.Role{}, repoerr.ErrNotFound
 }
-func (repo *RolesSvcRepo) RetrieveAllRoles(ctx context.Context, entityID string, limit, offset uint64) (roles.RolePage, error) {
+func (repo *Repository) RetrieveAllRoles(ctx context.Context, entityID string, limit, offset uint64) (roles.RolePage, error) {
 	q := fmt.Sprintf(`SELECT id, name, entity_id, created_by, created_at, updated_by, updated_at
         FROM %s_roles WHERE entity_id = :entity_id ORDER BY created_at LIMIT :limit OFFSET :offset;`, repo.tableNamePrefix)
 
@@ -337,7 +337,7 @@ func (repo *RolesSvcRepo) RetrieveAllRoles(ctx context.Context, entityID string,
 	return page, nil
 }
 
-func (repo *RolesSvcRepo) RoleAddActions(ctx context.Context, role roles.Role, actions []string) (caps []string, err error) {
+func (repo *Repository) RoleAddActions(ctx context.Context, role roles.Role, actions []string) (caps []string, err error) {
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -378,7 +378,7 @@ func (repo *RolesSvcRepo) RoleAddActions(ctx context.Context, role roles.Role, a
 	return repo.RoleListActions(ctx, role.ID)
 }
 
-func (repo *RolesSvcRepo) RoleListActions(ctx context.Context, roleID string) ([]string, error) {
+func (repo *Repository) RoleListActions(ctx context.Context, roleID string) ([]string, error) {
 	q := fmt.Sprintf(`SELECT role_id, action FROM %s_role_actions WHERE role_id = :role_id ;`, repo.tableNamePrefix)
 
 	dbrcap := dbRoleAction{
@@ -403,7 +403,7 @@ func (repo *RolesSvcRepo) RoleListActions(ctx context.Context, roleID string) ([
 	return items, nil
 }
 
-func (repo *RolesSvcRepo) RoleCheckActionsExists(ctx context.Context, roleID string, actions []string) (bool, error) {
+func (repo *Repository) RoleCheckActionsExists(ctx context.Context, roleID string, actions []string) (bool, error) {
 	q := fmt.Sprintf(`SELECT COUNT(*) FROM %s_role_actions WHERE role_id = :role_id AND action IN (:actions)`, repo.tableNamePrefix)
 
 	params := map[string]interface{}{
@@ -432,7 +432,7 @@ func (repo *RolesSvcRepo) RoleCheckActionsExists(ctx context.Context, roleID str
 	return true, nil
 }
 
-func (repo *RolesSvcRepo) RoleRemoveActions(ctx context.Context, role roles.Role, actions []string) (err error) {
+func (repo *Repository) RoleRemoveActions(ctx context.Context, role roles.Role, actions []string) (err error) {
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -469,7 +469,7 @@ func (repo *RolesSvcRepo) RoleRemoveActions(ctx context.Context, role roles.Role
 	return nil
 }
 
-func (repo *RolesSvcRepo) RoleRemoveAllActions(ctx context.Context, role roles.Role) error {
+func (repo *Repository) RoleRemoveAllActions(ctx context.Context, role roles.Role) error {
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
@@ -502,7 +502,7 @@ func (repo *RolesSvcRepo) RoleRemoveAllActions(ctx context.Context, role roles.R
 	return nil
 }
 
-func (repo *RolesSvcRepo) RoleAddMembers(ctx context.Context, role roles.Role, members []string) ([]string, error) {
+func (repo *Repository) RoleAddMembers(ctx context.Context, role roles.Role, members []string) ([]string, error) {
 	mq := fmt.Sprintf(`INSERT INTO %s_role_members (role_id, member_id)
         VALUES (:role_id, :member_id)
         RETURNING role_id, member_id`, repo.tableNamePrefix)
@@ -542,7 +542,7 @@ func (repo *RolesSvcRepo) RoleAddMembers(ctx context.Context, role roles.Role, m
 	return members, nil
 }
 
-func (repo *RolesSvcRepo) RoleListMembers(ctx context.Context, roleID string, limit, offset uint64) (roles.MembersPage, error) {
+func (repo *Repository) RoleListMembers(ctx context.Context, roleID string, limit, offset uint64) (roles.MembersPage, error) {
 	q := fmt.Sprintf(`SELECT role_id, member_id FROM %s_role_members WHERE role_id = :role_id LIMIT :limit OFFSET :offset;`, repo.tableNamePrefix)
 
 	dbp := dbPage{
@@ -583,7 +583,7 @@ func (repo *RolesSvcRepo) RoleListMembers(ctx context.Context, roleID string, li
 
 }
 
-func (repo *RolesSvcRepo) RoleCheckMembersExists(ctx context.Context, roleID string, members []string) (bool, error) {
+func (repo *Repository) RoleCheckMembersExists(ctx context.Context, roleID string, members []string) (bool, error) {
 	q := fmt.Sprintf(`SELECT COUNT(*) FROM %s_role_members WHERE role_id = :role_id AND action IN (:members)`, repo.tableNamePrefix)
 
 	params := map[string]interface{}{
@@ -611,7 +611,7 @@ func (repo *RolesSvcRepo) RoleCheckMembersExists(ctx context.Context, roleID str
 	return true, nil
 }
 
-func (repo *RolesSvcRepo) RoleRemoveMembers(ctx context.Context, role roles.Role, members []string) (err error) {
+func (repo *Repository) RoleRemoveMembers(ctx context.Context, role roles.Role, members []string) (err error) {
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
@@ -646,7 +646,7 @@ func (repo *RolesSvcRepo) RoleRemoveMembers(ctx context.Context, role roles.Role
 	return nil
 }
 
-func (repo *RolesSvcRepo) RoleRemoveAllMembers(ctx context.Context, role roles.Role) (err error) {
+func (repo *Repository) RoleRemoveAllMembers(ctx context.Context, role roles.Role) (err error) {
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)

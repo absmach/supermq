@@ -11,7 +11,7 @@ import (
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/authn"
-	entityRoleHttp "github.com/absmach/magistrala/pkg/entityroles/api"
+	roleManagerHttp "github.com/absmach/magistrala/pkg/roles/rolemanager/api"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -23,6 +23,7 @@ func MakeHandler(svc domains.Service, authn authn.Authentication, mux *chi.Mux, 
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
 
+	d := roleManagerHttp.NewDecoder("domainID")
 	mux.Route("/domains", func(r chi.Router) {
 		r.Use(api.AuthenticateMiddleware(authn))
 
@@ -39,6 +40,8 @@ func MakeHandler(svc domains.Service, authn authn.Authentication, mux *chi.Mux, 
 			api.EncodeResponse,
 			opts...,
 		), "list_domains").ServeHTTP)
+
+		r = roleManagerHttp.EntityAvailableActionsRouter(svc, d, r, opts)
 
 		r.Route("/{domainID}", func(r chi.Router) {
 			r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
@@ -75,11 +78,11 @@ func MakeHandler(svc domains.Service, authn authn.Authentication, mux *chi.Mux, 
 				api.EncodeResponse,
 				opts...,
 			), "freeze_domain").ServeHTTP)
+			roleManagerHttp.EntityRoleMangerRouter(svc, d, r, opts)
 
 		})
 	})
 
-	mux = entityRoleHttp.RolesHandler(svc, authn, "/domains", mux, logger)
 	mux.Get("/health", magistrala.Health("auth", instanceID))
 	mux.Handle("/metrics", promhttp.Handler())
 

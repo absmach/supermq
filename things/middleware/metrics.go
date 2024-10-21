@@ -9,7 +9,7 @@ import (
 
 	"github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
-	entityRolesMW "github.com/absmach/magistrala/pkg/entityroles/middleware"
+	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
 	"github.com/absmach/magistrala/things"
 	"github.com/go-kit/kit/metrics"
 )
@@ -20,17 +20,16 @@ type metricsMiddleware struct {
 	counter metrics.Counter
 	latency metrics.Histogram
 	svc     things.Service
-	entityRolesMW.RolesSvcMetricsMiddleware
+	rmMW.RoleManagerMetricsMiddleware
 }
 
 // MetricsMiddleware returns a new metrics middleware wrapper.
 func MetricsMiddleware(svc things.Service, counter metrics.Counter, latency metrics.Histogram) things.Service {
-	rolesSvcMetricsMiddleware := entityRolesMW.NewRolesSvcMetricsMiddleware("things", svc, counter, latency)
 	return &metricsMiddleware{
-		counter:                   counter,
-		latency:                   latency,
-		svc:                       svc,
-		RolesSvcMetricsMiddleware: rolesSvcMetricsMiddleware,
+		counter:                      counter,
+		latency:                      latency,
+		svc:                          svc,
+		RoleManagerMetricsMiddleware: rmMW.NewRoleManagerMetricsMiddleware("things", svc, counter, latency),
 	}
 }
 

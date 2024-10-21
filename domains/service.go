@@ -6,13 +6,10 @@ import (
 
 	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/authz"
-	"github.com/absmach/magistrala/pkg/entityroles"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/policies"
 	"github.com/absmach/magistrala/pkg/roles"
-	"github.com/absmach/magistrala/pkg/svcutil"
 )
 
 const defLimit = 100
@@ -23,43 +20,27 @@ var (
 	errRemovePolicyEngine = errors.New("failed to remove from policy engine")
 )
 
-type identity struct {
-	ID       string
-	DomainID string
-	UserID   string
-}
 type service struct {
 	repo       Repository
-	authz      authz.Authorization
 	policy     policies.Service
 	idProvider magistrala.IDProvider
-	opp        svcutil.OperationPerm
-	entityroles.RolesSvc
+	roles.ProvisionManageService
 }
 
 var _ Service = (*service)(nil)
 
 func New(repo Repository, policy policies.Service, idProvider magistrala.IDProvider, sidProvider magistrala.IDProvider) (Service, error) {
 
-	rolesSvc, err := entityroles.NewRolesSvc(policies.DomainType, repo, sidProvider, policy, AvailableActions(), BuiltInRoles())
+	rpms, err := roles.NewProvisionManageService(policies.DomainType, repo, policy, sidProvider, AvailableActions(), BuiltInRoles())
 	if err != nil {
 		return nil, err
 	}
 
-	opp := NewOperationPerm()
-	if err := opp.AddOperationPermissionMap(NewOperationPermissionMap()); err != nil {
-		return &service{}, err
-	}
-	if err := opp.Validate(); err != nil {
-		return &service{}, err
-	}
-
 	return &service{
-		repo:       repo,
-		policy:     policy,
-		idProvider: idProvider,
-		opp:        opp,
-		RolesSvc:   rolesSvc,
+		repo:                   repo,
+		policy:                 policy,
+		idProvider:             idProvider,
+		ProvisionManageService: rpms,
 	}, nil
 }
 
@@ -97,7 +78,7 @@ func (svc service) CreateDomain(ctx context.Context, session authn.Session, d Do
 		BuiltInRoleMembership: {},
 	}
 
-	optionalPolicies := []roles.OptionalPolicy{
+	optionalPolicies := []policies.Policy{
 		{
 			Subject:     policies.MagistralaObject,
 			SubjectType: policies.PlatformType,
@@ -107,7 +88,7 @@ func (svc service) CreateDomain(ctx context.Context, session authn.Session, d Do
 		},
 	}
 
-	if _, err := svc.AddNewEntityRoles(ctx, session.UserID, domainID, domainID, newBuiltInRoleMembers, optionalPolicies); err != nil {
+	if _, err := svc.AddNewEntityRoles(ctx, session, []string{domainID}, optionalPolicies, newBuiltInRoleMembers); err != nil {
 		return Domain{}, errors.Wrap(errCreateDomainPolicy, err)
 	}
 
@@ -189,9 +170,9 @@ func (svc service) DeleteUserFromDomains(ctx context.Context, id string) (err er
 		}
 	}
 
-	if err := svc.RemoveMembersFromAllRoles(ctx, authn.Session{}, []string{id}); err != nil {
-		return err
-	}
+	// if err := svc.RemoveMembersFromAllRoles(ctx, authn.Session{}, []string{id}); err != nil {
+	// 	return err
+	// }
 	////////////ToDo//////////////
 	// Remove user from all roles in all domains
 	//////////////////////////

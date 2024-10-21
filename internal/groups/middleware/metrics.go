@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/pkg/authn"
-	entityRolesMW "github.com/absmach/magistrala/pkg/entityroles/middleware"
 	"github.com/absmach/magistrala/pkg/groups"
+	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
 	"github.com/go-kit/kit/metrics"
 )
 
@@ -19,17 +19,17 @@ type metricsMiddleware struct {
 	counter metrics.Counter
 	latency metrics.Histogram
 	svc     groups.Service
-	entityRolesMW.RolesSvcMetricsMiddleware
+	rmMW.RoleManagerMetricsMiddleware
 }
 
 // MetricsMiddleware instruments policies service by tracking request count and latency.
 func MetricsMiddleware(svc groups.Service, counter metrics.Counter, latency metrics.Histogram) groups.Service {
-	rolesSvcMetricsMiddleware := entityRolesMW.NewRolesSvcMetricsMiddleware("group", svc, counter, latency)
+	rmm := rmMW.NewRoleManagerMetricsMiddleware("group", svc, counter, latency)
 	return &metricsMiddleware{
-		counter:                   counter,
-		latency:                   latency,
-		svc:                       svc,
-		RolesSvcMetricsMiddleware: rolesSvcMetricsMiddleware,
+		counter:                      counter,
+		latency:                      latency,
+		svc:                          svc,
+		RoleManagerMetricsMiddleware: rmm,
 	}
 }
 

@@ -10,8 +10,8 @@ import (
 	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/authz"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
-	entityRolesMW "github.com/absmach/magistrala/pkg/entityroles/middleware"
 	"github.com/absmach/magistrala/pkg/policies"
+	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
 	"github.com/absmach/magistrala/pkg/svcutil"
 )
 
@@ -21,7 +21,7 @@ type authorizationMiddleware struct {
 	svc   domains.Service
 	authz mgauthz.Authorization
 	opp   svcutil.OperationPerm
-	entityRolesMW.RolesAuthorizationMiddleware
+	rmMW.RoleManagerAuthorizationMiddleware
 }
 
 // AuthorizationMiddleware adds authorization to the clients service.
@@ -34,15 +34,15 @@ func AuthorizationMiddleware(entityType string, svc domains.Service, authz mgaut
 		return nil, err
 	}
 
-	ram, err := entityRolesMW.NewRolesAuthorizationMiddleware(entityType, svc, authz, rolesOpPerm)
+	ram, err := rmMW.NewRoleManagerAuthorizationMiddleware(entityType, svc, authz, rolesOpPerm)
 	if err != nil {
 		return nil, err
 	}
 	return &authorizationMiddleware{
-		svc:                          svc,
-		authz:                        authz,
-		opp:                          opp,
-		RolesAuthorizationMiddleware: ram,
+		svc:                                svc,
+		authz:                              authz,
+		opp:                                opp,
+		RoleManagerAuthorizationMiddleware: ram,
 	}, nil
 }
 

@@ -12,7 +12,7 @@ import (
 
 	"github.com/absmach/magistrala/domains"
 	"github.com/absmach/magistrala/pkg/authn"
-	entityRolesMW "github.com/absmach/magistrala/pkg/entityroles/middleware"
+	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
 )
 
 var _ domains.Service = (*loggingMiddleware)(nil)
@@ -20,16 +20,16 @@ var _ domains.Service = (*loggingMiddleware)(nil)
 type loggingMiddleware struct {
 	logger *slog.Logger
 	svc    domains.Service
-	entityRolesMW.RolesSvcLoggingMiddleware
+	rmMW.RoleManagerLoggingMiddleware
 }
 
 // LoggingMiddleware adds logging facilities to the core service.
 func LoggingMiddleware(svc domains.Service, logger *slog.Logger) domains.Service {
-	rolesSvcLoggingMiddleware := entityRolesMW.NewRolesSvcLoggingMiddleware("domains", svc, logger)
+	rmlm := rmMW.NewRoleManagerLoggingMiddleware("domains", svc, logger)
 	return &loggingMiddleware{
-		logger:                    logger,
-		svc:                       svc,
-		RolesSvcLoggingMiddleware: rolesSvcLoggingMiddleware,
+		logger:                       logger,
+		svc:                          svc,
+		RoleManagerLoggingMiddleware: rmlm,
 	}
 }
 

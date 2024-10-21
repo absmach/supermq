@@ -20,7 +20,7 @@ const (
 	ThingBuiltInRoleAdmin = "admin"
 )
 
-func ThingAvailableActions() []roles.Action {
+func AvailableActions() []roles.Action {
 	return []roles.Action{
 		ThingUpdate,
 		ThingRead,
@@ -34,8 +34,8 @@ func ThingAvailableActions() []roles.Action {
 	}
 }
 
-func ThingBuiltInRoles() map[roles.BuiltInRoleName][]roles.Action {
+func BuiltInRoles() map[roles.BuiltInRoleName][]roles.Action {
 	return map[roles.BuiltInRoleName][]roles.Action{
-		ThingBuiltInRoleAdmin: ThingAvailableActions(),
+		ThingBuiltInRoleAdmin: AvailableActions(),
 	}
 }

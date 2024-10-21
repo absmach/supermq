@@ -8,9 +8,9 @@ import (
 
 	"github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
-	entityRolesEvents "github.com/absmach/magistrala/pkg/entityroles/events"
 	"github.com/absmach/magistrala/pkg/events"
 	"github.com/absmach/magistrala/pkg/events/store"
+	rmEvents "github.com/absmach/magistrala/pkg/roles/rolemanager/events"
 	"github.com/absmach/magistrala/things"
 )
 
@@ -21,7 +21,7 @@ var _ things.Service = (*eventStore)(nil)
 type eventStore struct {
 	events.Publisher
 	svc things.Service
-	entityRolesEvents.RolesSvcEventStoreMiddleware
+	rmEvents.RoleManagerEventStore
 }
 
 // NewEventStoreMiddleware returns wrapper around things service that sends
@@ -31,12 +31,12 @@ func NewEventStoreMiddleware(ctx context.Context, svc things.Service, url string
 	if err != nil {
 		return nil, err
 	}
+	res := rmEvents.NewRoleManagerEventStore("domains", svc, publisher)
 
-	rolesSvcEventStoreMiddleware := entityRolesEvents.NewRolesSvcEventStoreMiddleware("domains", svc, publisher)
 	return &eventStore{
-		svc:                          svc,
-		Publisher:                    publisher,
-		RolesSvcEventStoreMiddleware: rolesSvcEventStoreMiddleware,
+		svc:                   svc,
+		Publisher:             publisher,
+		RoleManagerEventStore: res,
 	}, nil
 }
 
@@ -64,7 +64,7 @@ func (es *eventStore) UpdateClient(ctx context.Context, session authn.Session, t
 		return cli, err
 	}
 
-	return es.update(ctx, "", cli)
+	return es.updateThing(ctx, "", cli)
 }
 
 func (es *eventStore) UpdateClientTags(ctx context.Context, session authn.Session, thing mgclients.Client) (mgclients.Client, error) {
@@ -73,7 +73,7 @@ func (es *eventStore) UpdateClientTags(ctx context.Context, session authn.Sessio
 		return cli, err
 	}
 
-	return es.update(ctx, "tags", cli)
+	return es.updateThing(ctx, "tags", cli)
 }
 
 func (es *eventStore) UpdateClientSecret(ctx context.Context, session authn.Session, id, key string) (mgclients.Client, error) {
@@ -82,10 +82,10 @@ func (es *eventStore) UpdateClientSecret(ctx context.Context, session authn.Sess
 		return cli, err
 	}
 
-	return es.update(ctx, "secret", cli)
+	return es.updateThing(ctx, "secret", cli)
 }
 
-func (es *eventStore) update(ctx context.Context, operation string, thing mgclients.Client) (mgclients.Client, error) {
+func (es *eventStore) updateThing(ctx context.Context, operation string, thing mgclients.Client) (mgclients.Client, error) {
 	event := updateClientEvent{
 		thing, operation,
 	}
@@ -135,7 +135,7 @@ func (es *eventStore) EnableClient(ctx context.Context, session authn.Session, i
 		return cli, err
 	}
 
-	return es.changeStatus(ctx, cli)
+	return es.changeThingStatus(ctx, cli)
 }
 
 func (es *eventStore) DisableClient(ctx context.Context, session authn.Session, id string) (mgclients.Client, error) {
@@ -144,10 +144,10 @@ func (es *eventStore) DisableClient(ctx context.Context, session authn.Session, 
 		return cli, err
 	}
 
-	return es.changeStatus(ctx, cli)
+	return es.changeThingStatus(ctx, cli)
 }
 
-func (es *eventStore) changeStatus(ctx context.Context, cli mgclients.Client) (mgclients.Client, error) {
+func (es *eventStore) changeThingStatus(ctx context.Context, cli mgclients.Client) (mgclients.Client, error) {
 	event := changeStatusClientEvent{
 		id:        cli.ID,
 		updatedAt: cli.UpdatedAt,

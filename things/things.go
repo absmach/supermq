@@ -63,7 +63,7 @@ type Service interface {
 
 	// RemoveParentGroup(ctx context.Context, token string, parentGroupID string, id string) error
 
-	roles.Roles
+	roles.RoleManager
 }
 
 // Cache contains thing caching interface.

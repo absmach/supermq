@@ -12,7 +12,6 @@ import (
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/things"
 	"github.com/go-kit/kit/endpoint"
 )
@@ -59,7 +58,7 @@ func createClientsEndpoint(svc things.Service) endpoint.Endpoint {
 		}
 
 		res := clientsPageRes{
-			pageRes: pageRes{
+			clientsPageMetaRes: clientsPageMetaRes{
 				Total: uint64(len(page)),
 			},
 			Clients: []viewClientRes{},
@@ -123,7 +122,7 @@ func listClientsEndpoint(svc things.Service) endpoint.Endpoint {
 		}
 
 		res := clientsPageRes{
-			pageRes: pageRes{
+			clientsPageMetaRes: clientsPageMetaRes{
 				Total:  page.Total,
 				Offset: page.Offset,
 				Limit:  page.Limit,
@@ -254,7 +253,7 @@ func disableClientEndpoint(svc things.Service) endpoint.Endpoint {
 
 func buildClientsResponse(cp mgclients.MembersPage) clientsPageRes {
 	res := clientsPageRes{
-		pageRes: pageRes{
+		clientsPageMetaRes: clientsPageMetaRes{
 			Total:  cp.Total,
 			Offset: cp.Offset,
 			Limit:  cp.Limit,
@@ -266,73 +265,6 @@ func buildClientsResponse(cp mgclients.MembersPage) clientsPageRes {
 	}
 
 	return res
-}
-
-func connectChannelThingEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(connectChannelThingRequest)
-		if err := req.validate(); err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
-		}
-
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-		_ = session
-
-		return connectChannelThingRes{}, nil
-	}
-}
-
-func disconnectChannelThingEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(connectChannelThingRequest)
-		if err := req.validate(); err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
-		}
-
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-		_ = session
-
-		return disconnectChannelThingRes{}, nil
-	}
-}
-
-func connectEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(connectChannelThingRequest)
-		if err := req.validate(); err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
-		}
-
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-		_ = session
-		return connectChannelThingRes{}, nil
-	}
-}
-
-func disconnectEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(connectChannelThingRequest)
-		if err := req.validate(); err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
-		}
-
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-		_ = session
-
-		return disconnectChannelThingRes{}, nil
-	}
 }
 
 func deleteClientEndpoint(svc things.Service) endpoint.Endpoint {

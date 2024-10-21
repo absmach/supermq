@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/pkg/authn"
-	entityRolesMW "github.com/absmach/magistrala/pkg/entityroles/middleware"
 	"github.com/absmach/magistrala/pkg/groups"
+	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
 )
 
 var _ groups.Service = (*loggingMiddleware)(nil)
@@ -18,13 +18,12 @@ var _ groups.Service = (*loggingMiddleware)(nil)
 type loggingMiddleware struct {
 	logger *slog.Logger
 	svc    groups.Service
-	entityRolesMW.RolesSvcLoggingMiddleware
+	rmMW.RoleManagerLoggingMiddleware
 }
 
 // LoggingMiddleware adds logging facilities to the groups service.
 func LoggingMiddleware(svc groups.Service, logger *slog.Logger) groups.Service {
-	l := entityRolesMW.NewRolesSvcLoggingMiddleware("groups", svc, logger)
-	return &loggingMiddleware{logger, svc, l}
+	return &loggingMiddleware{logger, svc, rmMW.NewRoleManagerLoggingMiddleware("groups", svc, logger)}
 }
 
 // CreateGroup logs the create_group request. It logs the group name, id and token and the time it took to complete the request.

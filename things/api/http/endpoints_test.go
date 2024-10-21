@@ -19,7 +19,6 @@ import (
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	authnmocks "github.com/absmach/magistrala/pkg/authn/mocks"
-	cmocks "github.com/absmach/magistrala/pkg/channels/mocks"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
@@ -87,20 +86,19 @@ func toJSON(data interface{}) string {
 	return string(jsonData)
 }
 
-func newThingsServer() (*httptest.Server, *mocks.Service, *cmocks.Service, *authnmocks.Authentication) {
+func newThingsServer() (*httptest.Server, *mocks.Service, *authnmocks.Authentication) {
 	svc := new(mocks.Service)
-	csvc := new(cmocks.Service)
 	authn := new(authnmocks.Authentication)
 
 	logger := mglog.NewMock()
 	mux := chi.NewRouter()
-	httpapi.MakeHandler(svc, csvc, authn, mux, logger, "")
+	httpapi.MakeHandler(svc, authn, mux, logger, "")
 
-	return httptest.NewServer(mux), svc, csvc, authn
+	return httptest.NewServer(mux), svc, authn
 }
 
 func TestCreateThing(t *testing.T) {
-	ts, svc, _, authn := newThingsServer()
+	ts, svc, authn := newThingsServer()
 	defer ts.Close()
 
 	cases := []struct {
@@ -234,7 +232,7 @@ func TestCreateThing(t *testing.T) {
 }
 
 func TestCreateThings(t *testing.T) {
-	ts, svc, _, authn := newThingsServer()
+	ts, svc, authn := newThingsServer()
 	defer ts.Close()
 
 	num := 3
@@ -397,7 +395,7 @@ func TestCreateThings(t *testing.T) {
 }
 
 func TestListThings(t *testing.T) {
-	ts, svc, _, authn := newThingsServer()
+	ts, svc, authn := newThingsServer()
 	defer ts.Close()
 
 	cases := []struct {
@@ -716,7 +714,7 @@ func TestListThings(t *testing.T) {
 }
 
 func TestViewThing(t *testing.T) {
-	ts, svc, _, authn := newThingsServer()
+	ts, svc, authn := newThingsServer()
 	defer ts.Close()
 
 	cases := []struct {
@@ -789,7 +787,7 @@ func TestViewThing(t *testing.T) {
 }
 
 func TestViewThingPerms(t *testing.T) {
-	ts, svc, _, authn := newThingsServer()
+	ts, svc, authn := newThingsServer()
 	defer ts.Close()
 
 	cases := []struct {
@@ -878,7 +876,7 @@ func TestViewThingPerms(t *testing.T) {
 }
 
 func TestUpdateThing(t *testing.T) {
-	ts, svc, _, authn := newThingsServer()
+	ts, svc, authn := newThingsServer()
 	defer ts.Close()
 
 	newName := "newname"
@@ -1012,7 +1010,7 @@ func TestUpdateThing(t *testing.T) {
 }
 
 func TestUpdateThingsTags(t *testing.T) {
-	ts, svc, _, authn := newThingsServer()
+	ts, svc, authn := newThingsServer()
 	defer ts.Close()
 
 	newTag := "newtag"
@@ -1136,7 +1134,7 @@ func TestUpdateThingsTags(t *testing.T) {
 }
 
 func TestUpdateClientSecret(t *testing.T) {
-	ts, svc, _, authn := newThingsServer()
+	ts, svc, authn := newThingsServer()
 	defer ts.Close()
 
 	cases := []struct {
@@ -1296,7 +1294,7 @@ func TestUpdateClientSecret(t *testing.T) {
 }
 
 func TestEnableThing(t *testing.T) {
-	ts, svc, _, authn := newThingsServer()
+	ts, svc, authn := newThingsServer()
 	defer ts.Close()
 
 	cases := []struct {
@@ -1375,7 +1373,7 @@ func TestEnableThing(t *testing.T) {
 }
 
 func TestDisableThing(t *testing.T) {
-	ts, svc, _, authn := newThingsServer()
+	ts, svc, authn := newThingsServer()
 	defer ts.Close()
 
 	cases := []struct {
@@ -1454,7 +1452,7 @@ func TestDisableThing(t *testing.T) {
 }
 
 func TestShareThing(t *testing.T) {
-	ts, svc, _, authn := newThingsServer()
+	ts, svc, authn := newThingsServer()
 	defer ts.Close()
 
 	cases := []struct {
@@ -1598,7 +1596,7 @@ func TestShareThing(t *testing.T) {
 }
 
 func TestUnShareThing(t *testing.T) {
-	ts, svc, _, authn := newThingsServer()
+	ts, svc, authn := newThingsServer()
 	defer ts.Close()
 
 	cases := []struct {
@@ -1742,7 +1740,7 @@ func TestUnShareThing(t *testing.T) {
 }
 
 func TestDeleteThing(t *testing.T) {
-	ts, svc, _, authn := newThingsServer()
+	ts, svc, authn := newThingsServer()
 	defer ts.Close()
 
 	cases := []struct {
@@ -1809,7 +1807,7 @@ func TestDeleteThing(t *testing.T) {
 }
 
 func TestListMembers(t *testing.T) {
-	ts, svc, _, authn := newThingsServer()
+	ts, svc, authn := newThingsServer()
 	defer ts.Close()
 
 	cases := []struct {
@@ -2173,932 +2171,6 @@ func TestListMembers(t *testing.T) {
 			err = errors.Wrap(errors.New(bodyRes.Err), errors.New(bodyRes.Message))
 		}
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		svcCall.Unset()
-		authCall.Unset()
-	}
-}
-
-func TestAssignUsers(t *testing.T) {
-	ts, _, gsvc, authn := newThingsServer()
-	defer ts.Close()
-
-	cases := []struct {
-		desc        string
-		token       string
-		groupID     string
-		reqBody     interface{}
-		contentType string
-		status      int
-		authnRes    mgauthn.Session
-		authnErr    error
-		err         error
-	}{
-		{
-			desc:     "assign users to a group successfully",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: groupReqBody{
-				Relation: "member",
-				UserIDs:  []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusCreated,
-
-			err: nil,
-		},
-		{
-			desc:     "assign users to a group with invalid token",
-			token:    inValidToken,
-			authnRes: mgauthn.Session{},
-			groupID:  validID,
-			reqBody: groupReqBody{
-				Relation: "member",
-				UserIDs:  []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusUnauthorized,
-			authnErr:    svcerr.ErrAuthentication,
-			err:         svcerr.ErrAuthentication,
-		},
-		{
-			desc:    "assign users to a group with empty token",
-			token:   "",
-			groupID: validID,
-			reqBody: groupReqBody{
-				Relation: "member",
-				UserIDs:  []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusUnauthorized,
-			err:         apiutil.ErrBearerToken,
-		},
-		{
-			desc:     "assign users to a group with empty group id",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  "",
-			reqBody: groupReqBody{
-				Relation: "member",
-				UserIDs:  []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "assign users to a group with empty relation",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: groupReqBody{
-				Relation: "",
-				UserIDs:  []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "assign users to a group with empty user ids",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: groupReqBody{
-				Relation: "member",
-				UserIDs:  []string{},
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "assign users to a group with invalid request body",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: map[string]interface{}{
-				"relation": make(chan int),
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: nil,
-		},
-		{
-			desc:     "assign users to a group with invalid content type",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: groupReqBody{
-				Relation: "member",
-				UserIDs:  []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: "application/xml",
-			status:      http.StatusUnsupportedMediaType,
-
-			err: apiutil.ErrValidation,
-		},
-	}
-
-	for _, tc := range cases {
-		data := toJSON(tc.reqBody)
-		req := testRequest{
-			client:      ts.Client(),
-			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/channels/%s/users/assign", ts.URL, tc.groupID),
-			token:       tc.token,
-			contentType: tc.contentType,
-			body:        strings.NewReader(data),
-		}
-
-		authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-		svcCall := gsvc.On("Assign", mock.Anything, tc.authnRes, tc.groupID, mock.Anything, "users", mock.Anything).Return(tc.err)
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		svcCall.Unset()
-		authCall.Unset()
-	}
-}
-
-func TestUnassignUsers(t *testing.T) {
-	ts, _, gsvc, authn := newThingsServer()
-	defer ts.Close()
-
-	cases := []struct {
-		desc        string
-		token       string
-		groupID     string
-		reqBody     interface{}
-		contentType string
-		status      int
-		authnRes    mgauthn.Session
-		authnErr    error
-		err         error
-	}{
-		{
-			desc:     "unassign users from a group successfully",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: groupReqBody{
-				Relation: "member",
-				UserIDs:  []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusNoContent,
-
-			err: nil,
-		},
-		{
-			desc:    "unassign users from a group with invalid token",
-			token:   inValidToken,
-			groupID: validID,
-			reqBody: groupReqBody{
-				Relation: "member",
-				UserIDs:  []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusUnauthorized,
-			authnErr:    svcerr.ErrAuthentication,
-			err:         svcerr.ErrAuthentication,
-		},
-		{
-			desc:    "unassign users from a group with empty token",
-			token:   "",
-			groupID: validID,
-			reqBody: groupReqBody{
-				Relation: "member",
-				UserIDs:  []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusUnauthorized,
-			err:         apiutil.ErrBearerToken,
-		},
-		{
-			desc:     "unassign users from a group with empty group id",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  "",
-			reqBody: groupReqBody{
-				Relation: "member",
-				UserIDs:  []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "unassign users from a group with empty relation",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: groupReqBody{
-				Relation: "",
-				UserIDs:  []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "unassign users from a group with empty user ids",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: groupReqBody{
-				Relation: "member",
-				UserIDs:  []string{},
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "unassign users from a group with invalid request body",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: map[string]interface{}{
-				"relation": make(chan int),
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: nil,
-		},
-		{
-			desc:     "unassign users from a group with invalid content type",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: groupReqBody{
-				Relation: "member",
-				UserIDs:  []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: "application/xml",
-			status:      http.StatusUnsupportedMediaType,
-
-			err: apiutil.ErrValidation,
-		},
-	}
-
-	for _, tc := range cases {
-		data := toJSON(tc.reqBody)
-		req := testRequest{
-			client:      ts.Client(),
-			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/channels/%s/users/unassign", ts.URL, tc.groupID),
-			token:       tc.token,
-			contentType: tc.contentType,
-			body:        strings.NewReader(data),
-		}
-
-		authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-		svcCall := gsvc.On("Unassign", mock.Anything, tc.authnRes, tc.groupID, mock.Anything, "users", mock.Anything).Return(tc.err)
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		svcCall.Unset()
-		authCall.Unset()
-	}
-}
-
-func TestAssignGroupsToChannel(t *testing.T) {
-	ts, _, gsvc, authn := newThingsServer()
-	defer ts.Close()
-
-	cases := []struct {
-		desc        string
-		token       string
-		groupID     string
-		reqBody     interface{}
-		contentType string
-		status      int
-		authnRes    mgauthn.Session
-		authnErr    error
-		err         error
-	}{
-		{
-			desc:     "assign groups to a channel successfully",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: groupReqBody{
-				GroupIDs: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusCreated,
-
-			err: nil,
-		},
-		{
-			desc:    "assign groups to a channel with invalid token",
-			token:   inValidToken,
-			groupID: validID,
-			reqBody: groupReqBody{
-				GroupIDs: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusUnauthorized,
-			authnErr:    svcerr.ErrAuthentication,
-			err:         svcerr.ErrAuthentication,
-		},
-		{
-			desc:    "assign groups to a channel with empty token",
-			token:   "",
-			groupID: validID,
-			reqBody: groupReqBody{
-				GroupIDs: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusUnauthorized,
-			err:         apiutil.ErrBearerToken,
-		},
-		{
-			desc:     "assign groups to a channel with empty group id",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  "",
-			reqBody: groupReqBody{
-				GroupIDs: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "assign groups to a channel with empty group ids",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: groupReqBody{
-				GroupIDs: []string{},
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "assign groups to a channel with invalid request body",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: map[string]interface{}{
-				"group_ids": make(chan int),
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "assign groups to a channel with invalid content type",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: groupReqBody{
-				GroupIDs: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: "application/xml",
-			status:      http.StatusUnsupportedMediaType,
-
-			err: apiutil.ErrValidation,
-		},
-	}
-
-	for _, tc := range cases {
-		data := toJSON(tc.reqBody)
-		req := testRequest{
-			client:      ts.Client(),
-			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/channels/%s/groups/assign", ts.URL, tc.groupID),
-			token:       tc.token,
-			contentType: tc.contentType,
-			body:        strings.NewReader(data),
-		}
-
-		authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-		svcCall := gsvc.On("Assign", mock.Anything, tc.authnRes, tc.groupID, mock.Anything, "channels", mock.Anything).Return(tc.err)
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		svcCall.Unset()
-		authCall.Unset()
-	}
-}
-
-func TestUnassignGroupsFromChannel(t *testing.T) {
-	ts, _, gsvc, authn := newThingsServer()
-	defer ts.Close()
-
-	cases := []struct {
-		desc        string
-		token       string
-		groupID     string
-		reqBody     interface{}
-		contentType string
-		status      int
-		authnRes    mgauthn.Session
-		authnErr    error
-		err         error
-	}{
-		{
-			desc:     "unassign groups from a channel successfully",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: groupReqBody{
-				GroupIDs: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusNoContent,
-
-			err: nil,
-		},
-		{
-			desc:     "unassign groups from a channel with invalid token",
-			token:    inValidToken,
-			authnRes: mgauthn.Session{},
-			groupID:  validID,
-			reqBody: groupReqBody{
-				GroupIDs: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusUnauthorized,
-			authnErr:    svcerr.ErrAuthentication,
-			err:         svcerr.ErrAuthentication,
-		},
-		{
-			desc:    "unassign groups from a channel with empty token",
-			token:   "",
-			groupID: validID,
-			reqBody: groupReqBody{
-				GroupIDs: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusUnauthorized,
-			err:         apiutil.ErrBearerToken,
-		},
-		{
-			desc:     "unassign groups from a channel with empty group id",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  "",
-			reqBody: groupReqBody{
-				GroupIDs: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "unassign groups from a channel with empty group ids",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: groupReqBody{
-				GroupIDs: []string{},
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "unassign groups from a channel with invalid request body",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: map[string]interface{}{
-				"group_ids": make(chan int),
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "unassign groups from a channel with invalid content type",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			groupID:  validID,
-			reqBody: groupReqBody{
-				GroupIDs: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
-			},
-			contentType: "application/xml",
-			status:      http.StatusUnsupportedMediaType,
-
-			err: apiutil.ErrValidation,
-		},
-	}
-	for _, tc := range cases {
-		data := toJSON(tc.reqBody)
-		req := testRequest{
-			client:      ts.Client(),
-			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/channels/%s/groups/unassign", ts.URL, tc.groupID),
-			token:       tc.token,
-			contentType: tc.contentType,
-			body:        strings.NewReader(data),
-		}
-
-		authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-		svcCall := gsvc.On("Unassign", mock.Anything, tc.authnRes, tc.groupID, mock.Anything, "channels", mock.Anything).Return(tc.err)
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		svcCall.Unset()
-		authCall.Unset()
-	}
-}
-
-func TestConnectThingToChannel(t *testing.T) {
-	ts, _, gsvc, authn := newThingsServer()
-	defer ts.Close()
-
-	cases := []struct {
-		desc        string
-		token       string
-		channelID   string
-		thingID     string
-		contentType string
-		status      int
-		authnRes    mgauthn.Session
-		authnErr    error
-		err         error
-	}{
-		{
-			desc:        "connect thing to a channel successfully",
-			token:       validToken,
-			authnRes:    mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			channelID:   validID,
-			thingID:     validID,
-			contentType: contentType,
-			status:      http.StatusCreated,
-
-			err: nil,
-		},
-		{
-			desc:        "connect thing to a channel with invalid token",
-			token:       inValidToken,
-			channelID:   validID,
-			thingID:     validID,
-			contentType: contentType,
-			status:      http.StatusUnauthorized,
-			authnErr:    svcerr.ErrAuthentication,
-			err:         svcerr.ErrAuthentication,
-		},
-		{
-			desc:        "connect thing to a channel with empty channel id",
-			token:       validToken,
-			channelID:   "",
-			thingID:     validID,
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
-		},
-		{
-			desc:        "connect thing to a channel with empty thing id",
-			token:       validToken,
-			authnRes:    mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			channelID:   validID,
-			thingID:     "",
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-	}
-	for _, tc := range cases {
-		req := testRequest{
-			client:      ts.Client(),
-			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/channels/%s/things/%s/connect", ts.URL, tc.channelID, tc.thingID),
-			token:       tc.token,
-			contentType: tc.contentType,
-		}
-
-		authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-		svcCall := gsvc.On("Assign", mock.Anything, tc.authnRes, tc.channelID, "group", "things", []string{tc.thingID}).Return(tc.err)
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		svcCall.Unset()
-		authCall.Unset()
-	}
-}
-
-func TestDisconnectThingFromChannel(t *testing.T) {
-	ts, _, gsvc, authn := newThingsServer()
-	defer ts.Close()
-
-	cases := []struct {
-		desc        string
-		token       string
-		channelID   string
-		thingID     string
-		contentType string
-		status      int
-		authnRes    mgauthn.Session
-		authnErr    error
-		err         error
-	}{
-		{
-			desc:        "disconnect thing from a channel successfully",
-			token:       validToken,
-			authnRes:    mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			channelID:   validID,
-			thingID:     validID,
-			contentType: contentType,
-			status:      http.StatusNoContent,
-
-			err: nil,
-		},
-		{
-			desc:        "disconnect thing from a channel with invalid token",
-			token:       inValidToken,
-			channelID:   validID,
-			thingID:     validID,
-			contentType: contentType,
-			status:      http.StatusUnauthorized,
-			authnErr:    svcerr.ErrAuthentication,
-			err:         svcerr.ErrAuthentication,
-		},
-		{
-			desc:        "disconnect thing from a channel with empty channel id",
-			token:       validToken,
-			authnRes:    mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			channelID:   "",
-			thingID:     validID,
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:        "disconnect thing from a channel with empty thing id",
-			token:       validToken,
-			authnRes:    mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			channelID:   validID,
-			thingID:     "",
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-	}
-
-	for _, tc := range cases {
-		req := testRequest{
-			client:      ts.Client(),
-			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/channels/%s/things/%s/disconnect", ts.URL, tc.channelID, tc.thingID),
-			token:       tc.token,
-			contentType: tc.contentType,
-		}
-
-		authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-		svcCall := gsvc.On("Unassign", mock.Anything, tc.authnRes, tc.channelID, "group", "things", []string{tc.thingID}).Return(tc.err)
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		svcCall.Unset()
-		authCall.Unset()
-	}
-}
-
-func TestConnect(t *testing.T) {
-	ts, _, gsvc, authn := newThingsServer()
-	defer ts.Close()
-
-	cases := []struct {
-		desc        string
-		token       string
-		reqBody     interface{}
-		contentType string
-		status      int
-		authnRes    mgauthn.Session
-		authnErr    error
-		err         error
-	}{
-		{
-			desc:     "connect thing to a channel successfully",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			reqBody: groupReqBody{
-				ChannelID: validID,
-				ThingID:   validID,
-			},
-			contentType: contentType,
-			status:      http.StatusCreated,
-
-			err: nil,
-		},
-		{
-			desc:  "connect thing to a channel with invalid token",
-			token: inValidToken,
-			reqBody: groupReqBody{
-				ChannelID: validID,
-				ThingID:   validID,
-			},
-			contentType: contentType,
-			status:      http.StatusUnauthorized,
-			authnErr:    svcerr.ErrAuthentication,
-			err:         svcerr.ErrAuthentication,
-		},
-		{
-			desc:     "connect thing to a channel with empty channel id",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			reqBody: groupReqBody{
-				ChannelID: "",
-				ThingID:   validID,
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "connect thing to a channel with empty thing id",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			reqBody: groupReqBody{
-				ChannelID: validID,
-				ThingID:   "",
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "connect thing to a channel with invalid request body",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			reqBody: map[string]interface{}{
-				"channel_id": make(chan int),
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "connect thing to a channel with invalid content type",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			reqBody: groupReqBody{
-				ChannelID: validID,
-				ThingID:   validID,
-			},
-			contentType: "application/xml",
-			status:      http.StatusUnsupportedMediaType,
-
-			err: apiutil.ErrValidation,
-		},
-	}
-
-	for _, tc := range cases {
-		data := toJSON(tc.reqBody)
-		req := testRequest{
-			client:      ts.Client(),
-			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/connect", ts.URL),
-			token:       tc.token,
-			contentType: tc.contentType,
-			body:        strings.NewReader(data),
-		}
-
-		authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-		svcCall := gsvc.On("Assign", mock.Anything, tc.authnRes, mock.Anything, "group", "things", mock.Anything).Return(tc.err)
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		svcCall.Unset()
-		authCall.Unset()
-	}
-}
-
-func TestDisconnect(t *testing.T) {
-	ts, _, gsvc, authn := newThingsServer()
-	defer ts.Close()
-
-	cases := []struct {
-		desc        string
-		token       string
-		reqBody     interface{}
-		contentType string
-		status      int
-		authnRes    mgauthn.Session
-		authnErr    error
-		err         error
-	}{
-		{
-			desc:     "Disconnect thing from a channel successfully",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			reqBody: groupReqBody{
-				ChannelID: validID,
-				ThingID:   validID,
-			},
-			contentType: contentType,
-			status:      http.StatusNoContent,
-
-			err: nil,
-		},
-		{
-			desc:     "Disconnect thing from a channel with invalid token",
-			token:    inValidToken,
-			authnRes: mgauthn.Session{},
-			reqBody: groupReqBody{
-				ChannelID: validID,
-				ThingID:   validID,
-			},
-			contentType: contentType,
-			status:      http.StatusUnauthorized,
-			authnErr:    svcerr.ErrAuthentication,
-			err:         svcerr.ErrAuthentication,
-		},
-		{
-			desc:     "Disconnect thing from a channel with empty channel id",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			reqBody: groupReqBody{
-				ChannelID: "",
-				ThingID:   validID,
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "Disconnect thing from a channel with empty thing id",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			reqBody: groupReqBody{
-				ChannelID: validID,
-				ThingID:   "",
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "Disconnect thing from a channel with invalid request body",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			reqBody: map[string]interface{}{
-				"channel_id": make(chan int),
-			},
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
-		},
-		{
-			desc:     "Disconnect thing from a channel with invalid content type",
-			token:    validToken,
-			authnRes: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			reqBody: groupReqBody{
-				ChannelID: validID,
-				ThingID:   validID,
-			},
-			contentType: "application/xml",
-			status:      http.StatusUnsupportedMediaType,
-
-			err: apiutil.ErrValidation,
-		},
-	}
-	for _, tc := range cases {
-		data := toJSON(tc.reqBody)
-		req := testRequest{
-			client:      ts.Client(),
-			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/disconnect", ts.URL),
-			token:       tc.token,
-			contentType: tc.contentType,
-			body:        strings.NewReader(data),
-		}
-
-		authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-		svcCall := gsvc.On("Unassign", mock.Anything, tc.authnRes, mock.Anything, "group", "things", mock.Anything).Return(tc.err)
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 		svcCall.Unset()
 		authCall.Unset()

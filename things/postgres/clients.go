@@ -9,29 +9,40 @@ import (
 
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	pgclients "github.com/absmach/magistrala/pkg/clients/postgres"
-	entityRolesRepo "github.com/absmach/magistrala/pkg/entityroles/postrgres"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	"github.com/absmach/magistrala/pkg/postgres"
+	rolesPostgres "github.com/absmach/magistrala/pkg/roles/repo/postgres"
 	"github.com/absmach/magistrala/things"
 )
 
-var _ things.Repository = (*clientRepo)(nil)
+const thingsRolesTableNamePrefix = "things"
 
-type clientRepo struct {
-	pgclients.Repository
-	entityRolesRepo.RolesSvcRepo
+var _ things.Repository = (*thingsRepo)(nil)
+
+type thingsRepo struct {
+	clientsRepo
+	rolesPostgres.Repository
 }
 
 // NewRepository instantiates a PostgreSQL
 // implementation of Clients repository.
 func NewRepository(db postgres.Database) things.Repository {
-	return &clientRepo{
-		Repository: pgclients.Repository{DB: db},
+	repo := rolesPostgres.NewRepository(db, thingsRolesTableNamePrefix)
+
+	return &thingsRepo{
+		clientsRepo{
+			pgclients.Repository{DB: db},
+		},
+		repo,
 	}
 }
 
-func (repo clientRepo) Save(ctx context.Context, cs ...mgclients.Client) ([]mgclients.Client, error) {
+type clientsRepo struct {
+	pgclients.Repository
+}
+
+func (repo *clientsRepo) Save(ctx context.Context, cs ...mgclients.Client) ([]mgclients.Client, error) {
 	tx, err := repo.DB.BeginTxx(ctx, nil)
 	if err != nil {
 		return []mgclients.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
@@ -78,7 +89,7 @@ func (repo clientRepo) Save(ctx context.Context, cs ...mgclients.Client) ([]mgcl
 	return clients, nil
 }
 
-func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (mgclients.Client, error) {
+func (repo *clientsRepo) RetrieveBySecret(ctx context.Context, key string) (mgclients.Client, error) {
 	q := fmt.Sprintf(`SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id, identity, secret, metadata, created_at, updated_at, updated_by, status
         FROM clients
         WHERE secret = :secret AND status = %d`, mgclients.EnabledStatus)
@@ -110,7 +121,7 @@ func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (mgclie
 	return mgclients.Client{}, repoerr.ErrNotFound
 }
 
-func (repo clientRepo) RemoveThings(ctx context.Context, clientIDs ...[]string) error {
+func (repo *clientsRepo) RemoveThings(ctx context.Context, clientIDs ...[]string) error {
 	q := "DELETE FROM clients AS c  WHERE c.id = ANY(:client_ids) ;"
 
 	params := map[string]interface{}{

@@ -15,23 +15,23 @@ import (
 	"github.com/absmach/magistrala/pkg/roles"
 )
 
-var _ roles.Roles = (*RolesSvcLoggingMiddleware)(nil)
+var _ roles.RoleManager = (*RoleManagerLoggingMiddleware)(nil)
 
-type RolesSvcLoggingMiddleware struct {
+type RoleManagerLoggingMiddleware struct {
 	svcName string
-	svc     roles.Roles
+	svc     roles.RoleManager
 	logger  *slog.Logger
 }
 
-func NewRolesSvcLoggingMiddleware(svcName string, svc roles.Roles, logger *slog.Logger) RolesSvcLoggingMiddleware {
-	return RolesSvcLoggingMiddleware{
+func NewRoleManagerLoggingMiddleware(svcName string, svc roles.RoleManager, logger *slog.Logger) RoleManagerLoggingMiddleware {
+	return RoleManagerLoggingMiddleware{
 		svcName: svcName,
 		svc:     svc,
 		logger:  logger,
 	}
 }
 
-func (lm *RolesSvcLoggingMiddleware) AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (ro roles.Role, err error) {
+func (lm *RoleManagerLoggingMiddleware) AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (ro roles.Role, err error) {
 	prefix := fmt.Sprintf("Add %s roles", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -53,7 +53,7 @@ func (lm *RolesSvcLoggingMiddleware) AddRole(ctx context.Context, session authn.
 	return lm.svc.AddRole(ctx, session, entityID, roleName, optionalActions, optionalMembers)
 }
 
-func (lm *RolesSvcLoggingMiddleware) RemoveRole(ctx context.Context, session authn.Session, entityID, roleName string) (err error) {
+func (lm *RoleManagerLoggingMiddleware) RemoveRole(ctx context.Context, session authn.Session, entityID, roleName string) (err error) {
 	prefix := fmt.Sprintf("Delete %s role", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -73,7 +73,7 @@ func (lm *RolesSvcLoggingMiddleware) RemoveRole(ctx context.Context, session aut
 	return lm.svc.RemoveRole(ctx, session, entityID, roleName)
 }
 
-func (lm *RolesSvcLoggingMiddleware) UpdateRoleName(ctx context.Context, session authn.Session, entityID, oldRoleName, newRoleName string) (ro roles.Role, err error) {
+func (lm *RoleManagerLoggingMiddleware) UpdateRoleName(ctx context.Context, session authn.Session, entityID, oldRoleName, newRoleName string) (ro roles.Role, err error) {
 	prefix := fmt.Sprintf("Update %s role name", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -94,7 +94,7 @@ func (lm *RolesSvcLoggingMiddleware) UpdateRoleName(ctx context.Context, session
 	return lm.svc.UpdateRoleName(ctx, session, entityID, oldRoleName, newRoleName)
 }
 
-func (lm *RolesSvcLoggingMiddleware) RetrieveRole(ctx context.Context, session authn.Session, entityID, roleName string) (ro roles.Role, err error) {
+func (lm *RoleManagerLoggingMiddleware) RetrieveRole(ctx context.Context, session authn.Session, entityID, roleName string) (ro roles.Role, err error) {
 	prefix := fmt.Sprintf("Retrieve %s role", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -114,7 +114,7 @@ func (lm *RolesSvcLoggingMiddleware) RetrieveRole(ctx context.Context, session a
 	return lm.svc.RetrieveRole(ctx, session, entityID, roleName)
 }
 
-func (lm *RolesSvcLoggingMiddleware) RetrieveAllRoles(ctx context.Context, session authn.Session, entityID string, limit, offset uint64) (rp roles.RolePage, err error) {
+func (lm *RoleManagerLoggingMiddleware) RetrieveAllRoles(ctx context.Context, session authn.Session, entityID string, limit, offset uint64) (rp roles.RolePage, err error) {
 	prefix := fmt.Sprintf("List %s roles", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -135,7 +135,7 @@ func (lm *RolesSvcLoggingMiddleware) RetrieveAllRoles(ctx context.Context, sessi
 	return lm.svc.RetrieveAllRoles(ctx, session, entityID, limit, offset)
 }
 
-func (lm *RolesSvcLoggingMiddleware) ListAvailableActions(ctx context.Context, session authn.Session) (acts []string, err error) {
+func (lm *RoleManagerLoggingMiddleware) ListAvailableActions(ctx context.Context, session authn.Session) (acts []string, err error) {
 	prefix := fmt.Sprintf("List %s available actions", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -152,7 +152,7 @@ func (lm *RolesSvcLoggingMiddleware) ListAvailableActions(ctx context.Context, s
 	return lm.svc.ListAvailableActions(ctx, session)
 }
 
-func (lm *RolesSvcLoggingMiddleware) RoleAddActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (caps []string, err error) {
+func (lm *RoleManagerLoggingMiddleware) RoleAddActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (caps []string, err error) {
 	prefix := fmt.Sprintf("%s role add actions", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -173,7 +173,7 @@ func (lm *RolesSvcLoggingMiddleware) RoleAddActions(ctx context.Context, session
 	return lm.svc.RoleAddActions(ctx, session, entityID, roleName, actions)
 }
 
-func (lm *RolesSvcLoggingMiddleware) RoleListActions(ctx context.Context, session authn.Session, entityID, roleName string) (roOps []string, err error) {
+func (lm *RoleManagerLoggingMiddleware) RoleListActions(ctx context.Context, session authn.Session, entityID, roleName string) (roOps []string, err error) {
 	prefix := fmt.Sprintf("%s role list actions", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -193,11 +193,11 @@ func (lm *RolesSvcLoggingMiddleware) RoleListActions(ctx context.Context, sessio
 	return lm.svc.RoleListActions(ctx, session, entityID, roleName)
 }
 
-func (lm *RolesSvcLoggingMiddleware) RoleCheckActionsExists(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (bool, error) {
+func (lm *RoleManagerLoggingMiddleware) RoleCheckActionsExists(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (bool, error) {
 	return lm.svc.RoleCheckActionsExists(ctx, session, entityID, roleName, actions)
 }
 
-func (lm *RolesSvcLoggingMiddleware) RoleRemoveActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (err error) {
+func (lm *RoleManagerLoggingMiddleware) RoleRemoveActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (err error) {
 	prefix := fmt.Sprintf("%s role remove actions", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -218,7 +218,7 @@ func (lm *RolesSvcLoggingMiddleware) RoleRemoveActions(ctx context.Context, sess
 	return lm.svc.RoleRemoveActions(ctx, session, entityID, roleName, actions)
 }
 
-func (lm *RolesSvcLoggingMiddleware) RoleRemoveAllActions(ctx context.Context, session authn.Session, entityID, roleName string) (err error) {
+func (lm *RoleManagerLoggingMiddleware) RoleRemoveAllActions(ctx context.Context, session authn.Session, entityID, roleName string) (err error) {
 	prefix := fmt.Sprintf("%s role remove all actions", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -238,7 +238,7 @@ func (lm *RolesSvcLoggingMiddleware) RoleRemoveAllActions(ctx context.Context, s
 	return lm.svc.RoleRemoveAllActions(ctx, session, entityID, roleName)
 }
 
-func (lm *RolesSvcLoggingMiddleware) RoleAddMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (mems []string, err error) {
+func (lm *RoleManagerLoggingMiddleware) RoleAddMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (mems []string, err error) {
 	prefix := fmt.Sprintf("%s role add members", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -259,7 +259,7 @@ func (lm *RolesSvcLoggingMiddleware) RoleAddMembers(ctx context.Context, session
 	return lm.svc.RoleAddMembers(ctx, session, entityID, roleName, members)
 }
 
-func (lm *RolesSvcLoggingMiddleware) RoleListMembers(ctx context.Context, session authn.Session, entityID, roleName string, limit, offset uint64) (mp roles.MembersPage, err error) {
+func (lm *RoleManagerLoggingMiddleware) RoleListMembers(ctx context.Context, session authn.Session, entityID, roleName string, limit, offset uint64) (mp roles.MembersPage, err error) {
 	prefix := fmt.Sprintf("%s role list members", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -281,11 +281,11 @@ func (lm *RolesSvcLoggingMiddleware) RoleListMembers(ctx context.Context, sessio
 	return lm.svc.RoleListMembers(ctx, session, entityID, roleName, limit, offset)
 }
 
-func (lm *RolesSvcLoggingMiddleware) RoleCheckMembersExists(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (bool, error) {
+func (lm *RoleManagerLoggingMiddleware) RoleCheckMembersExists(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (bool, error) {
 	return lm.svc.RoleCheckMembersExists(ctx, session, entityID, roleName, members)
 }
 
-func (lm *RolesSvcLoggingMiddleware) RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (err error) {
+func (lm *RoleManagerLoggingMiddleware) RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (err error) {
 	prefix := fmt.Sprintf("%s role remove members", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -306,7 +306,7 @@ func (lm *RolesSvcLoggingMiddleware) RoleRemoveMembers(ctx context.Context, sess
 	return lm.svc.RoleRemoveMembers(ctx, session, entityID, roleName, members)
 }
 
-func (lm *RolesSvcLoggingMiddleware) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleName string) (err error) {
+func (lm *RoleManagerLoggingMiddleware) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleName string) (err error) {
 	prefix := fmt.Sprintf("%s role remove all members", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -326,7 +326,7 @@ func (lm *RolesSvcLoggingMiddleware) RoleRemoveAllMembers(ctx context.Context, s
 	return lm.svc.RoleRemoveAllMembers(ctx, session, entityID, roleName)
 }
 
-func (lm *RolesSvcLoggingMiddleware) RemoveMembersFromAllRoles(ctx context.Context, session authn.Session, members []string) (err error) {
+func (lm *RoleManagerLoggingMiddleware) RemoveMembersFromAllRoles(ctx context.Context, session authn.Session, members []string) (err error) {
 	prefix := fmt.Sprintf("%s remove members from all roles", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -344,7 +344,7 @@ func (lm *RolesSvcLoggingMiddleware) RemoveMembersFromAllRoles(ctx context.Conte
 	}(time.Now())
 	return lm.svc.RemoveMembersFromAllRoles(ctx, session, members)
 }
-func (lm *RolesSvcLoggingMiddleware) RemoveMembersFromRoles(ctx context.Context, session authn.Session, members []string, roleNames []string) (err error) {
+func (lm *RoleManagerLoggingMiddleware) RemoveMembersFromRoles(ctx context.Context, session authn.Session, members []string, roleNames []string) (err error) {
 	prefix := fmt.Sprintf("%s remove members from roles", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -363,7 +363,7 @@ func (lm *RolesSvcLoggingMiddleware) RemoveMembersFromRoles(ctx context.Context,
 	}(time.Now())
 	return lm.svc.RemoveMembersFromRoles(ctx, session, members, roleNames)
 }
-func (lm *RolesSvcLoggingMiddleware) RemoveActionsFromAllRoles(ctx context.Context, session authn.Session, actions []string) (err error) {
+func (lm *RoleManagerLoggingMiddleware) RemoveActionsFromAllRoles(ctx context.Context, session authn.Session, actions []string) (err error) {
 	prefix := fmt.Sprintf("%s remove actions from all roles", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
@@ -381,7 +381,7 @@ func (lm *RolesSvcLoggingMiddleware) RemoveActionsFromAllRoles(ctx context.Conte
 	}(time.Now())
 	return lm.svc.RemoveActionsFromAllRoles(ctx, session, actions)
 }
-func (lm *RolesSvcLoggingMiddleware) RemoveActionsFromRoles(ctx context.Context, session authn.Session, actions []string, roleNames []string) (err error) {
+func (lm *RoleManagerLoggingMiddleware) RemoveActionsFromRoles(ctx context.Context, session authn.Session, actions []string, roleNames []string) (err error) {
 	prefix := fmt.Sprintf("%s remove actions from roles", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{

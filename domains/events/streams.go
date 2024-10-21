@@ -8,9 +8,9 @@ import (
 
 	"github.com/absmach/magistrala/domains"
 	"github.com/absmach/magistrala/pkg/authn"
-	entityRolesEvents "github.com/absmach/magistrala/pkg/entityroles/events"
 	"github.com/absmach/magistrala/pkg/events"
 	"github.com/absmach/magistrala/pkg/events/store"
+	rmEvents "github.com/absmach/magistrala/pkg/roles/rolemanager/events"
 )
 
 const streamID = "magistrala.domains"
@@ -20,7 +20,7 @@ var _ domains.Service = (*eventStore)(nil)
 type eventStore struct {
 	events.Publisher
 	svc domains.Service
-	entityRolesEvents.RolesSvcEventStoreMiddleware
+	rmEvents.RoleManagerEventStore
 }
 
 // NewEventStoreMiddleware returns wrapper around auth service that sends
@@ -31,12 +31,12 @@ func NewEventStoreMiddleware(ctx context.Context, svc domains.Service, url strin
 		return nil, err
 	}
 
-	rolesSvcEventStoreMiddleware := entityRolesEvents.NewRolesSvcEventStoreMiddleware("domains", svc, publisher)
+	res := rmEvents.NewRoleManagerEventStore("domains", svc, publisher)
 
 	return &eventStore{
-		svc:                          svc,
-		Publisher:                    publisher,
-		RolesSvcEventStoreMiddleware: rolesSvcEventStoreMiddleware,
+		svc:                   svc,
+		Publisher:             publisher,
+		RoleManagerEventStore: res,
 	}, nil
 }
 

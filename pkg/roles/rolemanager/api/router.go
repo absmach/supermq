@@ -4,39 +4,26 @@
 package http
 
 import (
-	"fmt"
-	"log/slog"
-
 	"github.com/absmach/magistrala/internal/api"
-	"github.com/absmach/magistrala/pkg/apiutil"
-	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/roles"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-func RolesHandler(svc roles.Roles, authn mgauthn.Authentication, entityTypePrefixRootPath string, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
-	opts := []kithttp.ServerOption{
-		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
-	}
-
-	// RoleID - random string, So having roleName in URL make readable. But it have little overhead, it requires additional step to retrieve roleID in each service
-	// http://localhost/things/thingID/roles/roleName
-
-	mux.Route(fmt.Sprintf("%s/{entityID}/roles", entityTypePrefixRootPath), func(r chi.Router) {
-		r.Use(api.AuthenticateMiddleware(authn))
+func EntityRoleMangerRouter(svc roles.RoleManager, d Decoder, r chi.Router, opts []kithttp.ServerOption) chi.Router {
+	r.Route("/roles", func(r chi.Router) {
 
 		r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
 			CreateRoleEndpoint(svc),
-			DecodeCreateRole,
+			d.DecodeCreateRole,
 			api.EncodeResponse,
 			opts...,
 		), "create_role").ServeHTTP)
 
 		r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
 			ListRolesEndpoint(svc),
-			DecodeListRoles,
+			d.DecodeListRoles,
 			api.EncodeResponse,
 			opts...,
 		), "list_roles").ServeHTTP)
@@ -44,21 +31,21 @@ func RolesHandler(svc roles.Roles, authn mgauthn.Authentication, entityTypePrefi
 		r.Route("/{roleName}", func(r chi.Router) {
 			r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
 				ViewRoleEndpoint(svc),
-				DecodeViewRole,
+				d.DecodeViewRole,
 				api.EncodeResponse,
 				opts...,
 			), "view_role").ServeHTTP)
 
 			r.Put("/", otelhttp.NewHandler(kithttp.NewServer(
 				UpdateRoleEndpoint(svc),
-				DecodeUpdateRole,
+				d.DecodeUpdateRole,
 				api.EncodeResponse,
 				opts...,
 			), "update_role").ServeHTTP)
 
 			r.Delete("/", otelhttp.NewHandler(kithttp.NewServer(
 				DeleteRoleEndpoint(svc),
-				DecodeDeleteRole,
+				d.DecodeDeleteRole,
 				api.EncodeResponse,
 				opts...,
 			), "delete_role").ServeHTTP)
@@ -66,28 +53,28 @@ func RolesHandler(svc roles.Roles, authn mgauthn.Authentication, entityTypePrefi
 			r.Route("/actions", func(r chi.Router) {
 				r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
 					AddRoleActionsEndpoint(svc),
-					DecodeAddRoleActions,
+					d.DecodeAddRoleActions,
 					api.EncodeResponse,
 					opts...,
 				), "add_role_actions").ServeHTTP)
 
 				r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
 					ListRoleActionsEndpoint(svc),
-					DecodeListRoleActions,
+					d.DecodeListRoleActions,
 					api.EncodeResponse,
 					opts...,
 				), "list_role_actions").ServeHTTP)
 
 				r.Post("/delete", otelhttp.NewHandler(kithttp.NewServer(
 					DeleteRoleActionsEndpoint(svc),
-					DecodeDeleteRoleActions,
+					d.DecodeDeleteRoleActions,
 					api.EncodeResponse,
 					opts...,
 				), "delete_role_actions").ServeHTTP)
 
 				r.Post("/delete-all", otelhttp.NewHandler(kithttp.NewServer(
 					DeleteAllRoleActionsEndpoint(svc),
-					DecodeDeleteAllRoleActions,
+					d.DecodeDeleteAllRoleActions,
 					api.EncodeResponse,
 					opts...,
 				), "delete_all_role_actions").ServeHTTP)
@@ -96,28 +83,28 @@ func RolesHandler(svc roles.Roles, authn mgauthn.Authentication, entityTypePrefi
 			r.Route("/members", func(r chi.Router) {
 				r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
 					AddRoleMembersEndpoint(svc),
-					DecodeAddRoleMembers,
+					d.DecodeAddRoleMembers,
 					api.EncodeResponse,
 					opts...,
 				), "add_role_members").ServeHTTP)
 
 				r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
 					ListRoleMembersEndpoint(svc),
-					DecodeListRoleMembers,
+					d.DecodeListRoleMembers,
 					api.EncodeResponse,
 					opts...,
 				), "list_role_members").ServeHTTP)
 
 				r.Post("/delete", otelhttp.NewHandler(kithttp.NewServer(
 					DeleteRoleMembersEndpoint(svc),
-					DecodeDeleteRoleMembers,
+					d.DecodeDeleteRoleMembers,
 					api.EncodeResponse,
 					opts...,
 				), "delete_role_members").ServeHTTP)
 
 				r.Post("/delete-all", otelhttp.NewHandler(kithttp.NewServer(
 					DeleteAllRoleMembersEndpoint(svc),
-					DecodeDeleteAllRoleMembers,
+					d.DecodeDeleteAllRoleMembers,
 					api.EncodeResponse,
 					opts...,
 				), "delete_all_role_members").ServeHTTP)
@@ -126,12 +113,16 @@ func RolesHandler(svc roles.Roles, authn mgauthn.Authentication, entityTypePrefi
 
 	})
 
-	mux.With(api.AuthenticateMiddleware(authn)).Get(fmt.Sprintf("%s/roles/available-actions", entityTypePrefixRootPath), otelhttp.NewHandler(kithttp.NewServer(
+	return r
+}
+
+func EntityAvailableActionsRouter(svc roles.RoleManager, d Decoder, r chi.Router, opts []kithttp.ServerOption) chi.Router {
+	r.Get("/roles/available-actions", otelhttp.NewHandler(kithttp.NewServer(
 		ListAvailableActionsEndpoint(svc),
-		DecodeListAvailableActions,
+		d.DecodeListAvailableActions,
 		api.EncodeResponse,
 		opts...,
 	), "list_available_actions").ServeHTTP)
 
-	return mux
+	return r
 }

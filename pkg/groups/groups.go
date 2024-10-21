@@ -150,7 +150,7 @@ type Service interface {
 
 	ListChildrenGroups(ctx context.Context, session authn.Session, id string, pm PageMeta) (Page, error)
 
-	roles.Roles
+	roles.RoleManager
 }
 
 const (

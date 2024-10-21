@@ -192,7 +192,7 @@ type Service interface {
 	FreezeDomain(ctx context.Context, sesssion authn.Session, id string) (Domain, error)
 	ListDomains(ctx context.Context, sesssion authn.Session, page Page) (DomainsPage, error)
 	DeleteUserFromDomains(ctx context.Context, id string) error
-	roles.Roles
+	roles.RoleManager
 }
 
 // Repository specifies Domain persistence API.

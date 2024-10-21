@@ -11,7 +11,7 @@ import (
 
 	"github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
-	entityRolesMW "github.com/absmach/magistrala/pkg/entityroles/middleware"
+	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
 	"github.com/absmach/magistrala/things"
 )
 
@@ -20,14 +20,18 @@ var _ things.Service = (*loggingMiddleware)(nil)
 type loggingMiddleware struct {
 	logger *slog.Logger
 	svc    things.Service
-	entityRolesMW.RolesSvcLoggingMiddleware
+	rmMW.RoleManagerLoggingMiddleware
 }
 
 func LoggingMiddleware(svc things.Service, logger *slog.Logger) things.Service {
-	rolesSvcLoggingMiddleware := entityRolesMW.NewRolesSvcLoggingMiddleware("things", svc, logger)
-	return &loggingMiddleware{logger, svc, rolesSvcLoggingMiddleware}
+	return &loggingMiddleware{
+		logger:                       logger,
+		svc:                          svc,
+		RoleManagerLoggingMiddleware: rmMW.NewRoleManagerLoggingMiddleware("things", svc, logger),
+	}
 }
 
+// Things service
 func (lm *loggingMiddleware) CreateThings(ctx context.Context, session authn.Session, clients ...mgclients.Client) (cs []mgclients.Client, err error) {
 	defer func(begin time.Time) {
 		args := []any{

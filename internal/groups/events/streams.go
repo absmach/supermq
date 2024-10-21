@@ -7,10 +7,10 @@ import (
 	"context"
 
 	"github.com/absmach/magistrala/pkg/authn"
-	entityRolesEvents "github.com/absmach/magistrala/pkg/entityroles/events"
 	"github.com/absmach/magistrala/pkg/events"
 	"github.com/absmach/magistrala/pkg/events/store"
 	"github.com/absmach/magistrala/pkg/groups"
+	rmEvents "github.com/absmach/magistrala/pkg/roles/rolemanager/events"
 )
 
 var _ groups.Service = (*eventStore)(nil)
@@ -18,22 +18,22 @@ var _ groups.Service = (*eventStore)(nil)
 type eventStore struct {
 	events.Publisher
 	svc groups.Service
-	entityRolesEvents.RolesSvcEventStoreMiddleware
+	rmEvents.RoleManagerEventStore
 }
 
 // NewEventStoreMiddleware returns wrapper around things service that sends
 // events to event store.
-func NewEventStoreMiddleware(ctx context.Context, svc groups.Service, url, streamID string) (groups.Service, error) {
+func New(ctx context.Context, svc groups.Service, url, streamID string) (groups.Service, error) {
 	publisher, err := store.NewPublisher(ctx, url, streamID)
 	if err != nil {
 		return nil, err
 	}
-	rsesm := entityRolesEvents.NewRolesSvcEventStoreMiddleware("groups", svc, publisher)
+	rmes := rmEvents.NewRoleManagerEventStore("groups", svc, publisher)
 
 	return &eventStore{
-		svc:                          svc,
-		Publisher:                    publisher,
-		RolesSvcEventStoreMiddleware: rsesm,
+		svc:                   svc,
+		Publisher:             publisher,
+		RoleManagerEventStore: rmes,
 	}, nil
 }
 

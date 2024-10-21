@@ -1,4 +1,4 @@
-package entityroles
+package roles
 
 import (
 	"context"
@@ -10,43 +10,47 @@ import (
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/policies"
-	"github.com/absmach/magistrala/pkg/roles"
 )
 
 var errRollbackRoles = errors.New("failed to rollback roles")
 
-var _ roles.Roles = (*RolesSvc)(nil)
-
-type RolesSvc struct {
-	entityType   string
-	repo         roles.Repository
-	idProvider   magistrala.IDProvider
-	policy       policies.Service
-	actions      []roles.Action
-	builtInRoles map[roles.BuiltInRoleName][]roles.Action
+type roleProvisionerManger interface {
+	RoleManager
+	Provisioner
 }
 
-func NewRolesSvc(entityType string, repo roles.Repository, idProvider magistrala.IDProvider, policy policies.Service, actions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action) (RolesSvc, error) {
-	rolesSvc := RolesSvc{
+var _ roleProvisionerManger = (*ProvisionManageService)(nil)
+
+type ProvisionManageService struct {
+	entityType   string
+	repo         Repository
+	sidProvider  magistrala.IDProvider
+	policy       policies.Service
+	actions      []Action
+	builtInRoles map[BuiltInRoleName][]Action
+}
+
+func NewProvisionManageService(entityType string, repo Repository, policy policies.Service, sidProvider magistrala.IDProvider, actions []Action, builtInRoles map[BuiltInRoleName][]Action) (ProvisionManageService, error) {
+	rm := ProvisionManageService{
 		entityType:   entityType,
 		repo:         repo,
-		idProvider:   idProvider,
+		sidProvider:  sidProvider,
 		policy:       policy,
 		actions:      actions,
 		builtInRoles: builtInRoles,
 	}
-	return rolesSvc, nil
+	return rm, nil
 }
 
-func toRolesActions(actions []string) []roles.Action {
-	roActions := []roles.Action{}
+func toRolesActions(actions []string) []Action {
+	roActions := []Action{}
 	for _, action := range actions {
-		roActions = append(roActions, roles.Action(action))
+		roActions = append(roActions, Action(action))
 	}
 	return roActions
 }
 
-func roleActionsToString(roActions []roles.Action) []string {
+func roleActionsToString(roActions []Action) []string {
 	actions := []string{}
 	for _, roAction := range roActions {
 		actions = append(actions, roAction.String())
@@ -54,7 +58,7 @@ func roleActionsToString(roActions []roles.Action) []string {
 	return actions
 }
 
-func roleMembersToString(roMems []roles.Member) []string {
+func roleMembersToString(roMems []Member) []string {
 	mems := []string{}
 	for _, roMem := range roMems {
 		mems = append(mems, roMem.String())
@@ -62,7 +66,7 @@ func roleMembersToString(roMems []roles.Member) []string {
 	return mems
 }
 
-func (r RolesSvc) isActionAllowed(action roles.Action) bool {
+func (r ProvisionManageService) isActionAllowed(action Action) bool {
 	for _, cap := range r.actions {
 		if cap == action {
 			return true
@@ -70,9 +74,9 @@ func (r RolesSvc) isActionAllowed(action roles.Action) bool {
 	}
 	return false
 }
-func (r RolesSvc) validateActions(actions []roles.Action) error {
+func (r ProvisionManageService) validateActions(actions []Action) error {
 	for _, ac := range actions {
-		action := roles.Action(ac)
+		action := Action(ac)
 		if !r.isActionAllowed(action) {
 			return errors.Wrap(svcerr.ErrMalformedEntity, fmt.Errorf("invalid action %s ", action))
 		}
@@ -80,21 +84,107 @@ func (r RolesSvc) validateActions(actions []roles.Action) error {
 	return nil
 }
 
-func (r RolesSvc) AddRole(ctx context.Context, session authn.Session, entityID string, roleName string, optionalActions []string, optionalMembers []string) (fnRole roles.Role, fnErr error) {
+func (r ProvisionManageService) RemoveEntityRoles(ctx context.Context, session authn.Session, entityIDs []string, optionalEntityPolicies []policies.Policy) error {
+	return nil
+}
+
+func (r ProvisionManageService) AddNewEntityRoles(ctx context.Context, session authn.Session, entityIDs []string, optionalEntityPolicies []policies.Policy, newBuiltInRoleMembers map[BuiltInRoleName][]Member) (retRolesProvision []RoleProvision, retErr error) {
+	var newRolesProvision []RoleProvision
+	prs := []policies.Policy{}
+
+	for _, entityID := range entityIDs {
+
+		for defaultRole, defaultRoleMembers := range newBuiltInRoleMembers {
+			actions, ok := r.builtInRoles[defaultRole]
+			if !ok {
+				return []RoleProvision{}, fmt.Errorf("default role %s not found in in-built roles", defaultRole)
+			}
+
+			// There an option to have id as entityID_roleName where in roleName all space are removed with _ and starts with letter and supports only alphanumeric, space and hyphen
+			id, err := r.sidProvider.ID()
+			if err != nil {
+				return []RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+			}
+
+			if err := r.validateActions(actions); err != nil {
+				return []RoleProvision{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
+			}
+
+			members := roleMembersToString(defaultRoleMembers)
+			caps := roleActionsToString(actions)
+
+			newRolesProvision = append(newRolesProvision, RoleProvision{
+				Role: Role{
+					ID:        id,
+					Name:      defaultRole.String(),
+					EntityID:  entityID,
+					CreatedAt: time.Now(),
+					CreatedBy: session.UserID,
+				},
+				OptionalActions: caps,
+				OptionalMembers: members,
+			})
+
+			for _, cap := range caps {
+				prs = append(prs, policies.Policy{
+					SubjectType:     "role",
+					SubjectRelation: "member",
+					Subject:         id,
+					Relation:        cap,
+					Object:          entityID,
+					ObjectType:      r.entityType,
+				})
+			}
+
+			for _, member := range members {
+				prs = append(prs, policies.Policy{
+					SubjectType: "user",
+					Subject:     policies.EncodeDomainUserID(session.DomainID, member),
+					Relation:    "member",
+					Object:      id,
+					ObjectType:  "role",
+				})
+			}
+
+		}
+		prs = append(prs, optionalEntityPolicies...)
+	}
+
+	if len(prs) > 0 {
+		if err := r.policy.AddPolicies(ctx, prs); err != nil {
+			return []RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+		}
+		defer func() {
+			if retErr != nil {
+				if errRollBack := r.policy.DeletePolicies(ctx, prs); errRollBack != nil {
+					retErr = errors.Wrap(retErr, errors.Wrap(errRollbackRoles, errRollBack))
+				}
+			}
+		}()
+	}
+
+	if _, err := r.repo.AddRoles(ctx, newRolesProvision); err != nil {
+		return []RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+	}
+
+	return newRolesProvision, nil
+}
+
+func (r ProvisionManageService) AddRole(ctx context.Context, session authn.Session, entityID string, roleName string, optionalActions []string, optionalMembers []string) (retRole Role, retErr error) {
 
 	// ToDo: Research: Discuss: There an option to have id as entityID_roleName where in roleName all space are removed with _ and starts with letter and supports only alphanumeric, space and hyphen
-	id, err := r.idProvider.ID()
+	id, err := r.sidProvider.ID()
 	if err != nil {
-		return roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+		return Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 
 	if err := r.validateActions(toRolesActions(optionalActions)); err != nil {
-		return roles.Role{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
+		return Role{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 	}
 
-	newRoleProvisions := []roles.RoleProvision{
+	newRoleProvisions := []RoleProvision{
 		{
-			Role: roles.Role{
+			Role: Role{
 				ID:        id,
 				Name:      roleName,
 				EntityID:  entityID,
@@ -130,13 +220,13 @@ func (r RolesSvc) AddRole(ctx context.Context, session authn.Session, entityID s
 
 	if len(prs) > 0 {
 		if err := r.policy.AddPolicies(ctx, prs); err != nil {
-			return roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+			return Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 		}
 
 		defer func() {
-			if fnErr != nil {
+			if retErr != nil {
 				if errRollBack := r.policy.DeletePolicies(ctx, prs); errRollBack != nil {
-					fnErr = errors.Wrap(fnErr, errors.Wrap(errRollbackRoles, errRollBack))
+					retErr = errors.Wrap(retErr, errors.Wrap(errRollbackRoles, errRollBack))
 				}
 			}
 		}()
@@ -144,17 +234,17 @@ func (r RolesSvc) AddRole(ctx context.Context, session authn.Session, entityID s
 
 	newRoles, err := r.repo.AddRoles(context.Background(), newRoleProvisions)
 	if err != nil {
-		return roles.Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+		return Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 
 	if len(newRoles) == 0 {
-		return roles.Role{}, svcerr.ErrCreateEntity
+		return Role{}, svcerr.ErrCreateEntity
 	}
 
 	return newRoles[0], nil
 }
 
-func (r RolesSvc) RemoveRole(ctx context.Context, session authn.Session, entityID, roleName string) error {
+func (r ProvisionManageService) RemoveRole(ctx context.Context, session authn.Session, entityID, roleName string) error {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
@@ -174,12 +264,12 @@ func (r RolesSvc) RemoveRole(ctx context.Context, session authn.Session, entityI
 	return nil
 }
 
-func (r RolesSvc) UpdateRoleName(ctx context.Context, session authn.Session, entityID, oldRoleName, newRoleName string) (roles.Role, error) {
+func (r ProvisionManageService) UpdateRoleName(ctx context.Context, session authn.Session, entityID, oldRoleName, newRoleName string) (Role, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, oldRoleName)
 	if err != nil {
-		return roles.Role{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return Role{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
-	ro, err = r.repo.UpdateRole(ctx, roles.Role{
+	ro, err = r.repo.UpdateRole(ctx, Role{
 		ID:        ro.ID,
 		EntityID:  entityID,
 		Name:      newRoleName,
@@ -187,28 +277,28 @@ func (r RolesSvc) UpdateRoleName(ctx context.Context, session authn.Session, ent
 		UpdatedAt: time.Now(),
 	})
 	if err != nil {
-		return roles.Role{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return Role{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	return ro, nil
 }
 
-func (r RolesSvc) RetrieveRole(ctx context.Context, session authn.Session, entityID, roleName string) (roles.Role, error) {
+func (r ProvisionManageService) RetrieveRole(ctx context.Context, session authn.Session, entityID, roleName string) (Role, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
-		return roles.Role{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		return Role{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return ro, nil
 }
 
-func (r RolesSvc) RetrieveAllRoles(ctx context.Context, session authn.Session, entityID string, limit, offset uint64) (roles.RolePage, error) {
+func (r ProvisionManageService) RetrieveAllRoles(ctx context.Context, session authn.Session, entityID string, limit, offset uint64) (RolePage, error) {
 	ros, err := r.repo.RetrieveAllRoles(ctx, entityID, limit, offset)
 	if err != nil {
-		return roles.RolePage{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		return RolePage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return ros, nil
 }
 
-func (r RolesSvc) ListAvailableActions(ctx context.Context, session authn.Session) ([]string, error) {
+func (r ProvisionManageService) ListAvailableActions(ctx context.Context, session authn.Session) ([]string, error) {
 	acts := []string{}
 	for _, a := range r.actions {
 		acts = append(acts, string(a))
@@ -216,7 +306,7 @@ func (r RolesSvc) ListAvailableActions(ctx context.Context, session authn.Sessio
 	return acts, nil
 }
 
-func (r RolesSvc) RoleAddActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (fnActs []string, fnErr error) {
+func (r ProvisionManageService) RoleAddActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (retActs []string, retErr error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
@@ -247,9 +337,9 @@ func (r RolesSvc) RoleAddActions(ctx context.Context, session authn.Session, ent
 	}
 
 	defer func() {
-		if fnErr != nil {
+		if retErr != nil {
 			if errRollBack := r.policy.DeletePolicies(ctx, prs); errRollBack != nil {
-				fnErr = errors.Wrap(fnErr, errors.Wrap(errRollbackRoles, errRollBack))
+				retErr = errors.Wrap(retErr, errors.Wrap(errRollbackRoles, errRollBack))
 			}
 		}
 	}()
@@ -264,7 +354,7 @@ func (r RolesSvc) RoleAddActions(ctx context.Context, session authn.Session, ent
 	return resActs, nil
 }
 
-func (r RolesSvc) RoleListActions(ctx context.Context, session authn.Session, entityID, roleName string) ([]string, error) {
+func (r ProvisionManageService) RoleListActions(ctx context.Context, session authn.Session, entityID, roleName string) ([]string, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -278,7 +368,7 @@ func (r RolesSvc) RoleListActions(ctx context.Context, session authn.Session, en
 
 }
 
-func (r RolesSvc) RoleCheckActionsExists(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (bool, error) {
+func (r ProvisionManageService) RoleCheckActionsExists(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (bool, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return false, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -291,7 +381,7 @@ func (r RolesSvc) RoleCheckActionsExists(ctx context.Context, session authn.Sess
 	return result, nil
 }
 
-func (r RolesSvc) RoleRemoveActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (err error) {
+func (r ProvisionManageService) RoleRemoveActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (err error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
@@ -324,7 +414,7 @@ func (r RolesSvc) RoleRemoveActions(ctx context.Context, session authn.Session, 
 	return nil
 }
 
-func (r RolesSvc) RoleRemoveAllActions(ctx context.Context, session authn.Session, entityID, roleName string) error {
+func (r ProvisionManageService) RoleRemoveAllActions(ctx context.Context, session authn.Session, entityID, roleName string) error {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
@@ -348,7 +438,7 @@ func (r RolesSvc) RoleRemoveAllActions(ctx context.Context, session authn.Sessio
 	return nil
 }
 
-func (r RolesSvc) RoleAddMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (fnMems []string, fnErr error) {
+func (r ProvisionManageService) RoleAddMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (retMems []string, retErr error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
@@ -374,9 +464,9 @@ func (r RolesSvc) RoleAddMembers(ctx context.Context, session authn.Session, ent
 	}
 
 	defer func() {
-		if fnErr != nil {
+		if retErr != nil {
 			if errRollBack := r.policy.DeletePolicies(ctx, prs); errRollBack != nil {
-				fnErr = errors.Wrap(fnErr, errors.Wrap(errRollbackRoles, errRollBack))
+				retErr = errors.Wrap(retErr, errors.Wrap(errRollbackRoles, errRollBack))
 			}
 		}
 	}()
@@ -391,20 +481,20 @@ func (r RolesSvc) RoleAddMembers(ctx context.Context, session authn.Session, ent
 	return mems, nil
 }
 
-func (r RolesSvc) RoleListMembers(ctx context.Context, session authn.Session, entityID, roleName string, limit, offset uint64) (roles.MembersPage, error) {
+func (r ProvisionManageService) RoleListMembers(ctx context.Context, session authn.Session, entityID, roleName string, limit, offset uint64) (MembersPage, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
-		return roles.MembersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		return MembersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
 	mp, err := r.repo.RoleListMembers(ctx, ro.ID, limit, offset)
 	if err != nil {
-		return roles.MembersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		return MembersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return mp, nil
 }
 
-func (r RolesSvc) RoleCheckMembersExists(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (bool, error) {
+func (r ProvisionManageService) RoleCheckMembersExists(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (bool, error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return false, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -417,7 +507,7 @@ func (r RolesSvc) RoleCheckMembersExists(ctx context.Context, session authn.Sess
 	return result, nil
 }
 
-func (r RolesSvc) RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (err error) {
+func (r ProvisionManageService) RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (err error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
@@ -450,7 +540,7 @@ func (r RolesSvc) RoleRemoveMembers(ctx context.Context, session authn.Session, 
 	return nil
 }
 
-func (r RolesSvc) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleName string) (err error) {
+func (r ProvisionManageService) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleName string) (err error) {
 	ro, err := r.repo.RetrieveRoleByEntityIDAndName(ctx, entityID, roleName)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
@@ -475,164 +565,15 @@ func (r RolesSvc) RoleRemoveAllMembers(ctx context.Context, session authn.Sessio
 	return nil
 }
 
-func (r RolesSvc) RemoveMembersFromAllRoles(ctx context.Context, session authn.Session, members []string) (err error) {
+func (r ProvisionManageService) RemoveMembersFromAllRoles(ctx context.Context, session authn.Session, members []string) (err error) {
 	return fmt.Errorf("not implemented")
 }
-func (r RolesSvc) RemoveMembersFromRoles(ctx context.Context, session authn.Session, members []string, roleNames []string) (err error) {
+func (r ProvisionManageService) RemoveMembersFromRoles(ctx context.Context, session authn.Session, members []string, roleNames []string) (err error) {
 	return fmt.Errorf("not implemented")
 }
-func (r RolesSvc) RemoveActionsFromAllRoles(ctx context.Context, session authn.Session, actions []string) (err error) {
+func (r ProvisionManageService) RemoveActionsFromAllRoles(ctx context.Context, session authn.Session, actions []string) (err error) {
 	return fmt.Errorf("not implemented")
 }
-func (r RolesSvc) RemoveActionsFromRoles(ctx context.Context, session authn.Session, actions []string, roleNames []string) (err error) {
+func (r ProvisionManageService) RemoveActionsFromRoles(ctx context.Context, session authn.Session, actions []string, roleNames []string) (err error) {
 	return fmt.Errorf("not implemented")
-}
-
-func (r RolesSvc) AddNewEntityRoles(ctx context.Context, userID, domainID, entityID string, newBuiltInRoleMembers map[roles.BuiltInRoleName][]roles.Member, optionalPolicies []roles.OptionalPolicy) (fnRolesProvision []roles.RoleProvision, fnErr error) {
-	var newRolesProvision []roles.RoleProvision
-	prs := []policies.Policy{}
-
-	for defaultRole, defaultRoleMembers := range newBuiltInRoleMembers {
-		actions, ok := r.builtInRoles[defaultRole]
-		if !ok {
-			return []roles.RoleProvision{}, fmt.Errorf("default role %s not found in in-built roles", defaultRole)
-		}
-
-		// There an option to have id as entityID_roleName where in roleName all space are removed with _ and starts with letter and supports only alphanumeric, space and hyphen
-		id, err := r.idProvider.ID()
-		if err != nil {
-			return []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
-		}
-
-		if err := r.validateActions(actions); err != nil {
-			return []roles.RoleProvision{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
-		}
-
-		members := roleMembersToString(defaultRoleMembers)
-		caps := roleActionsToString(actions)
-
-		newRolesProvision = append(newRolesProvision, roles.RoleProvision{
-			Role: roles.Role{
-				ID:        id,
-				Name:      defaultRole.String(),
-				EntityID:  entityID,
-				CreatedAt: time.Now(),
-				CreatedBy: userID,
-			},
-			OptionalActions: caps,
-			OptionalMembers: members,
-		})
-
-		for _, cap := range caps {
-			prs = append(prs, policies.Policy{
-				SubjectType:     "role",
-				SubjectRelation: "member",
-				Subject:         id,
-				Relation:        cap,
-				Object:          entityID,
-				ObjectType:      r.entityType,
-			})
-		}
-
-		for _, member := range members {
-			prs = append(prs, policies.Policy{
-				SubjectType: "user",
-				Subject:     policies.EncodeDomainUserID(domainID, member),
-				Relation:    "member",
-				Object:      id,
-				ObjectType:  "role",
-			})
-		}
-
-	}
-
-	if len(optionalPolicies) > 0 {
-		for _, policy := range optionalPolicies {
-			prs = append(prs, policies.Policy{
-				Domain:          policy.Namespace,
-				SubjectType:     policy.SubjectType,
-				SubjectRelation: policy.SubjectRelation,
-				Subject:         policy.Subject,
-				Relation:        policy.Relation,
-				Permission:      policy.Permission,
-				Object:          policy.Object,
-				ObjectType:      policy.ObjectType,
-			})
-		}
-	}
-
-	if len(prs) > 0 {
-		if err := r.policy.AddPolicies(ctx, prs); err != nil {
-			return []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
-		}
-		defer func() {
-			if fnErr != nil {
-				if errRollBack := r.policy.DeletePolicies(ctx, prs); errRollBack != nil {
-					fnErr = errors.Wrap(fnErr, errors.Wrap(errRollbackRoles, errRollBack))
-				}
-			}
-		}()
-	}
-
-	if _, err := r.repo.AddRoles(ctx, newRolesProvision); err != nil {
-		return []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
-	}
-
-	return newRolesProvision, nil
-}
-
-func (r RolesSvc) RemoveNewEntityRoles(ctx context.Context, userID, domainID, entityID string, optionalPolicies []roles.OptionalPolicy, newRolesProvision []roles.RoleProvision) error {
-	prs := []policies.Policy{}
-
-	roleIDs := []string{}
-	for _, rp := range newRolesProvision {
-		for _, cap := range rp.OptionalActions {
-			prs = append(prs, policies.Policy{
-				SubjectType:     "role",
-				SubjectRelation: "member",
-				Subject:         rp.ID,
-				Relation:        cap,
-				Object:          entityID,
-				ObjectType:      r.entityType,
-			})
-		}
-
-		for _, member := range rp.OptionalMembers {
-			prs = append(prs, policies.Policy{
-				SubjectType: "user",
-				Subject:     policies.EncodeDomainUserID(domainID, member),
-				Relation:    "member",
-				Object:      rp.ID,
-				ObjectType:  "role",
-			})
-		}
-		roleIDs = append(roleIDs, rp.ID)
-	}
-
-	if len(optionalPolicies) > 0 {
-		for _, policy := range optionalPolicies {
-			prs = append(prs, policies.Policy{
-				Domain:          policy.Namespace,
-				SubjectType:     policy.SubjectType,
-				SubjectRelation: policy.SubjectRelation,
-				Subject:         policy.Subject,
-				Relation:        policy.Relation,
-				Permission:      policy.Permission,
-				Object:          policy.Object,
-				ObjectType:      policy.ObjectType,
-			})
-		}
-	}
-
-	if len(prs) > 0 {
-		if err := r.policy.DeletePolicies(ctx, prs); err != nil {
-			return errors.Wrap(svcerr.ErrDeletePolicies, err)
-		}
-	}
-
-	if err := r.repo.RemoveRoles(ctx, roleIDs); err != nil {
-		return errors.Wrap(svcerr.ErrRemoveEntity, err)
-	}
-
-	return nil
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/magistrala/pkg/policies"
 	"github.com/absmach/magistrala/pkg/svcutil"
 )
 
@@ -69,21 +70,14 @@ type MembersPage struct {
 	Members []string `json:"members"`
 }
 
-type OptionalPolicy struct {
-	Namespace       string
-	Subject         string
-	SubjectType     string
-	SubjectRelation string
-	SubjectKind     string
-	Object          string
-	ObjectType      string
-	ObjectKind      string
-	Relation        string
-	Permission      string
+//go:generate mockery --name Provisioner --output=./mocks --filename provisioner.go --quiet --note "Copyright (c) Abstract Machines"
+type Provisioner interface {
+	AddNewEntityRoles(ctx context.Context, session authn.Session, entityIDs []string, optionalEntityPolicies []policies.Policy, newBuiltInRoleMembers map[BuiltInRoleName][]Member) ([]RoleProvision, error)
+	RemoveEntityRoles(ctx context.Context, session authn.Session, entityIDs []string, optionalEntityPolicies []policies.Policy) error
 }
 
-//go:generate mockery --name Roles --output=./mocks --filename roles.go --quiet --note "Copyright (c) Abstract Machines"
-type Roles interface {
+//go:generate mockery --name RoleManager --output=./mocks --filename rolemanager.go --quiet --note "Copyright (c) Abstract Machines"
+type RoleManager interface {
 
 	// Add New role to entity
 	AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (Role, error)
@@ -147,6 +141,52 @@ type Repository interface {
 	RoleCheckMembersExists(ctx context.Context, roleID string, members []string) (bool, error)
 	RoleRemoveMembers(ctx context.Context, role Role, members []string) (err error)
 	RoleRemoveAllMembers(ctx context.Context, role Role) (err error)
+}
+
+type Roles interface {
+
+	// Add New role to entity
+	AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (Role, error)
+
+	// Remove removes the roles of entity.
+	RemoveRole(ctx context.Context, session authn.Session, entityID, roleName string) error
+
+	// UpdateName update the name of the entity role.
+	UpdateRoleName(ctx context.Context, session authn.Session, entityID, oldRoleName, newRoleName string) (Role, error)
+
+	RetrieveRole(ctx context.Context, session authn.Session, entityID, roleName string) (Role, error)
+
+	RetrieveAllRoles(ctx context.Context, session authn.Session, entityID string, limit, offset uint64) (RolePage, error)
+
+	ListAvailableActions(ctx context.Context, session authn.Session) ([]string, error)
+
+	RoleAddActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (ops []string, err error)
+
+	RoleListActions(ctx context.Context, session authn.Session, entityID, roleName string) ([]string, error)
+
+	RoleCheckActionsExists(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (bool, error)
+
+	RoleRemoveActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (err error)
+
+	RoleRemoveAllActions(ctx context.Context, session authn.Session, entityID, roleName string) error
+
+	RoleAddMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) ([]string, error)
+
+	RoleListMembers(ctx context.Context, session authn.Session, entityID, roleName string, limit, offset uint64) (MembersPage, error)
+
+	RoleCheckMembersExists(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (bool, error)
+
+	RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (err error)
+
+	RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleName string) (err error)
+
+	RemoveMembersFromAllRoles(ctx context.Context, session authn.Session, members []string) (err error)
+
+	RemoveMembersFromRoles(ctx context.Context, session authn.Session, members []string, roleNames []string) (err error)
+
+	RemoveActionsFromAllRoles(ctx context.Context, session authn.Session, actions []string) (err error)
+
+	RemoveActionsFromRoles(ctx context.Context, session authn.Session, actions []string, roleNames []string) (err error)
 }
 
 const (
