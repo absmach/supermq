@@ -33,7 +33,8 @@ services:
                   "--build.stop_on_error", "true",
                   "--build.send_interrupt", "true",
                   "--build.exclude_dir", ".vscode,.git,.docker,.github,api,build,tools,scripts",
-                  "--build.exclude_regex", "[\"_test\\.go\"" ]
+                  "--build.exclude_regex", "[\"_test\\.go\"" ,
+                  "--tmp_dir", "/tmp",]
   things:
     image: magistrala/things-dev
     build:
@@ -48,7 +49,8 @@ services:
                   "--build.stop_on_error", "true",
                   "--build.send_interrupt", "true",
                   "--build.exclude_dir", ".vscode,.git,.docker,.github,api,build,tools,scripts",
-                  "--build.exclude_regex", "[\"_test\\.go\"" ]
+                  "--build.exclude_regex", "[\"_test\\.go\"" ,
+                  "--tmp_dir", "/tmp",]
 
   channels:
     image: magistrala/channels-dev
@@ -64,4 +66,5 @@ services:
                   "--build.stop_on_error", "true",
                   "--build.send_interrupt", "true",
                   "--build.exclude_dir", ".vscode,.git,.docker,.github,api,build,tools,scripts",
-                  "--build.exclude_regex", "[\"_test\\.go\"" ]
+                  "--build.exclude_regex", "[\"_test\\.go\"" ,
+                  "--tmp_dir", "/tmp",]
