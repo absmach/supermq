@@ -625,12 +625,13 @@ func (svc service) ListChildrenGroups(ctx context.Context, session mgauthn.Sessi
 // 	return nil
 // }
 
-// func (svc service) ListThings(ctx context.Context, session mgauthn.Session, id, gm groups.Page) (groups.Page, error) {
-// 	return groups.Page{}, nil
-// }
+//	func (svc service) ListThings(ctx context.Context, session mgauthn.Session, id, gm groups.Page) (groups.Page, error) {
+//		return groups.Page{}, nil
+//	}
 
 func (svc service) DeleteGroup(ctx context.Context, session mgauthn.Session, id string) error {
-	if _, err := svc.repo.ChangeStatus(ctx, groups.Group{ID: id, Status: mgclients.DeletedStatus}); err != nil {
+	g, err := svc.repo.ChangeStatus(ctx, groups.Group{ID: id, Status: mgclients.DeletedStatus})
+	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
@@ -647,13 +648,22 @@ func (svc service) DeleteGroup(ctx context.Context, session mgauthn.Session, id 
 	deletePolicies := []policies.Policy{
 		{
 			SubjectType: policies.DomainType,
-			Subject:     session.DomainUserID,
+			Subject:     session.DomainID,
 			Relation:    policies.DomainRelation,
 			ObjectType:  policies.GroupType,
 			Object:      id,
 		},
 	}
-
+	if g.Parent != "" {
+		deletePolicies = append(deletePolicies, policies.Policy{
+			Domain:      session.DomainID,
+			SubjectType: policies.GroupType,
+			Subject:     g.Parent,
+			Relation:    policies.ParentGroupRelation,
+			ObjectType:  policies.GroupType,
+			Object:      id,
+		})
+	}
 	if err := svc.RemoveEntitiesRoles(ctx, session.DomainID, session.DomainUserID, []string{id}, filterDeletePolicies, deletePolicies); err != nil {
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
 	}

@@ -89,7 +89,7 @@ func (svc service) CreateChannels(ctx context.Context, session authn.Session, ch
 			policies.Policy{
 				Domain:      session.DomainID,
 				SubjectType: policies.UserType,
-				Subject:     session.DomainUserID,
+				Subject:     session.DomainID,
 				Relation:    policies.DomainRelation,
 				ObjectType:  policies.ChannelType,
 				Object:      chID,
@@ -228,7 +228,7 @@ func (svc service) RemoveChannel(ctx context.Context, session authn.Session, id 
 	deletePolicies := []policies.Policy{
 		{
 			SubjectType: policies.DomainType,
-			Subject:     session.DomainUserID,
+			Subject:     session.DomainID,
 			Relation:    policies.DomainRelation,
 			ObjectType:  policies.ChannelType,
 			Object:      id,

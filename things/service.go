@@ -122,7 +122,7 @@ func (svc service) CreateThings(ctx context.Context, session authn.Session, cls 
 			policies.Policy{
 				Domain:      session.DomainID,
 				SubjectType: policies.DomainType,
-				Subject:     session.DomainUserID,
+				Subject:     session.DomainID,
 				Relation:    policies.DomainRelation,
 				ObjectType:  policies.ThingType,
 				Object:      clientID,
@@ -354,7 +354,7 @@ func (svc service) DeleteClient(ctx context.Context, session authn.Session, id s
 	deletePolicies := []policies.Policy{
 		{
 			SubjectType: policies.DomainType,
-			Subject:     session.DomainUserID,
+			Subject:     session.DomainID,
 			Relation:    policies.DomainRelation,
 			ObjectType:  policies.ThingType,
 			Object:      id,
