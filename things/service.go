@@ -406,3 +406,18 @@ func (svc service) Identify(ctx context.Context, key string) (string, error) {
 
 	return client.ID, nil
 }
+
+func (svc service) RetrieveById(ctx context.Context, ids string) (mgclients.Client, error) {
+	return svc.repo.RetrieveByID(ctx, ids)
+}
+
+func (svc service) RetrieveByIds(ctx context.Context, ids []string) (mgclients.ClientsPage, error) {
+	return svc.repo.RetrieveByIds(ctx, ids)
+}
+
+func (svc service) AddConnections(ctx context.Context, conns []Connection) (err error) {
+	return svc.repo.AddConnections(ctx, conns)
+}
+func (svc service) RemoveConnections(ctx context.Context, conns []Connection) (err error) {
+	return svc.repo.RemoveConnections(ctx, conns)
+}

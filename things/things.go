@@ -20,6 +20,12 @@ type AuthzReq struct {
 	Permission string
 }
 
+type Connection struct {
+	ThingID   string `json:"thing_id"`
+	ChannelID string `json:"channel_id"`
+	DomainID  string `json:"domain_id"`
+}
+
 // Service specifies an API that must be fullfiled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 //
@@ -63,6 +69,15 @@ type Service interface {
 
 	// RemoveParentGroup(ctx context.Context, token string, parentGroupID string, id string) error
 
+	// For internal communication
+	RetrieveById(ctx context.Context, id string) (clients.Client, error)
+
+	RetrieveByIds(ctx context.Context, ids []string) (clients.ClientsPage, error)
+
+	AddConnections(ctx context.Context, conns []Connection) error
+
+	RemoveConnections(ctx context.Context, conns []Connection) error
+
 	roles.RoleManager
 }
 
@@ -95,6 +110,12 @@ type Repository interface {
 	RetrieveBySecret(ctx context.Context, key string) (mgclients.Client, error)
 
 	RemoveThings(ctx context.Context, clientIDs ...[]string) error
+
+	RetrieveByIds(ctx context.Context, ids []string) (mgclients.ClientsPage, error)
+
+	AddConnections(ctx context.Context, conns []Connection) error
+
+	RemoveConnections(ctx context.Context, conns []Connection) error
 
 	roles.Repository
 }

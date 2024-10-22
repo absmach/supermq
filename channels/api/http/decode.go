@@ -18,8 +18,7 @@ import (
 
 func decodeViewChannel(_ context.Context, r *http.Request) (interface{}, error) {
 	req := viewChannelReq{
-		token: apiutil.ExtractBearerToken(r),
-		id:    chi.URLParam(r, "channelID"),
+		id: chi.URLParam(r, "channelID"),
 	}
 
 	return req, nil
@@ -30,7 +29,7 @@ func decodeCreateChannelReq(_ context.Context, r *http.Request) (interface{}, er
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
-	req := createChannelReq{token: apiutil.ExtractBearerToken(r)}
+	req := createChannelReq{}
 	if err := json.NewDecoder(r.Body).Decode(&req.Channel); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
 	}
@@ -43,7 +42,7 @@ func decodeCreateChannelsReq(_ context.Context, r *http.Request) (interface{}, e
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
-	req := createChannelsReq{token: apiutil.ExtractBearerToken(r)}
+	req := createChannelsReq{}
 	if err := json.NewDecoder(r.Body).Decode(&req.Channels); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
 	}
@@ -94,7 +93,6 @@ func decodeListChannels(_ context.Context, r *http.Request) (interface{}, error)
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	req := listChannelsReq{
-		token:      apiutil.ExtractBearerToken(r),
 		status:     st,
 		offset:     o,
 		limit:      l,
@@ -115,8 +113,7 @@ func decodeUpdateChannel(_ context.Context, r *http.Request) (interface{}, error
 	}
 
 	req := updateChannelReq{
-		token: apiutil.ExtractBearerToken(r),
-		id:    chi.URLParam(r, "channelID"),
+		id: chi.URLParam(r, "channelID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
@@ -131,8 +128,7 @@ func decodeUpdateChannelTags(_ context.Context, r *http.Request) (interface{}, e
 	}
 
 	req := updateChannelTagsReq{
-		token: apiutil.ExtractBearerToken(r),
-		id:    chi.URLParam(r, "channelID"),
+		id: chi.URLParam(r, "channelID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
@@ -143,8 +139,7 @@ func decodeUpdateChannelTags(_ context.Context, r *http.Request) (interface{}, e
 
 func decodeChangeChannelStatus(_ context.Context, r *http.Request) (interface{}, error) {
 	req := changeChannelStatusReq{
-		token: apiutil.ExtractBearerToken(r),
-		id:    chi.URLParam(r, "channelID"),
+		id: chi.URLParam(r, "channelID"),
 	}
 
 	return req, nil
@@ -152,27 +147,34 @@ func decodeChangeChannelStatus(_ context.Context, r *http.Request) (interface{},
 
 func decodeDeleteChannelReq(_ context.Context, r *http.Request) (interface{}, error) {
 	req := deleteChannelReq{
-		token: apiutil.ExtractBearerToken(r),
-		id:    chi.URLParam(r, "channelID"),
+		id: chi.URLParam(r, "channelID"),
 	}
 	return req, nil
 }
 
-func decodeConnectChannelThingRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	req := connectChannelThingRequest{
-		token:     apiutil.ExtractBearerToken(r),
-		ThingID:   chi.URLParam(r, "thingID"),
-		ChannelID: chi.URLParam(r, "groupID"),
+func decodeConnectChannelThingsRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
+	}
+	req := connectChannelThingsRequest{
+		channelID: chi.URLParam(r, "channelID"),
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
 	}
 
 	return req, nil
 }
 
-func decodeDisconnectChannelThingRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	req := disconnectChannelThingRequest{
-		token:     apiutil.ExtractBearerToken(r),
-		ThingID:   chi.URLParam(r, "thingID"),
-		ChannelID: chi.URLParam(r, "groupID"),
+func decodeDisconnectChannelThingsRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
+	}
+	req := disconnectChannelThingsRequest{
+		channelID: chi.URLParam(r, "channelID"),
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
 	}
 
 	return req, nil
@@ -183,9 +185,7 @@ func decodeConnectRequest(_ context.Context, r *http.Request) (interface{}, erro
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
-	req := connectChannelThingRequest{
-		token: apiutil.ExtractBearerToken(r),
-	}
+	req := connectRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
 	}
@@ -198,9 +198,7 @@ func decodeDisconnectRequest(_ context.Context, r *http.Request) (interface{}, e
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
-	req := disconnectChannelThingRequest{
-		token: apiutil.ExtractBearerToken(r),
-	}
+	req := disconnectRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
 	}

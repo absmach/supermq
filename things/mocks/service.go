@@ -22,6 +22,24 @@ type Service struct {
 	mock.Mock
 }
 
+// AddConnections provides a mock function with given fields: ctx, conns
+func (_m *Service) AddConnections(ctx context.Context, conns []things.Connection) error {
+	ret := _m.Called(ctx, conns)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddConnections")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, []things.Connection) error); ok {
+		r0 = rf(ctx, conns)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // AddRole provides a mock function with given fields: ctx, session, entityID, roleName, optionalActions, optionalMembers
 func (_m *Service) AddRole(ctx context.Context, session authn.Session, entityID string, roleName string, optionalActions []string, optionalMembers []string) (roles.Role, error) {
 	ret := _m.Called(ctx, session, entityID, roleName, optionalActions, optionalMembers)
@@ -275,6 +293,24 @@ func (_m *Service) ListClients(ctx context.Context, session authn.Session, reqUs
 	return r0, r1
 }
 
+// RemoveConnections provides a mock function with given fields: ctx, conns
+func (_m *Service) RemoveConnections(ctx context.Context, conns []things.Connection) error {
+	ret := _m.Called(ctx, conns)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveConnections")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, []things.Connection) error); ok {
+		r0 = rf(ctx, conns)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // RemoveMemberFromAllRoles provides a mock function with given fields: ctx, session, memberID
 func (_m *Service) RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, memberID string) error {
 	ret := _m.Called(ctx, session, memberID)
@@ -332,6 +368,62 @@ func (_m *Service) RetrieveAllRoles(ctx context.Context, session authn.Session, 
 
 	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string, uint64, uint64) error); ok {
 		r1 = rf(ctx, session, entityID, limit, offset)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RetrieveById provides a mock function with given fields: ctx, id
+func (_m *Service) RetrieveById(ctx context.Context, id string) (clients.Client, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveById")
+	}
+
+	var r0 clients.Client
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (clients.Client, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) clients.Client); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(clients.Client)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RetrieveByIds provides a mock function with given fields: ctx, ids
+func (_m *Service) RetrieveByIds(ctx context.Context, ids []string) (clients.ClientsPage, error) {
+	ret := _m.Called(ctx, ids)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveByIds")
+	}
+
+	var r0 clients.ClientsPage
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []string) (clients.ClientsPage, error)); ok {
+		return rf(ctx, ids)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []string) clients.ClientsPage); ok {
+		r0 = rf(ctx, ids)
+	} else {
+		r0 = ret.Get(0).(clients.ClientsPage)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []string) error); ok {
+		r1 = rf(ctx, ids)
 	} else {
 		r1 = ret.Error(1)
 	}

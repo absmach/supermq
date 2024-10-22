@@ -12,13 +12,9 @@ import (
 
 type createChannelReq struct {
 	Channel channels.Channel
-	token   string
 }
 
 func (req createChannelReq) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
 	if len(req.Channel.Name) > api.MaxNameSize {
 		return apiutil.ErrNameSize
 	}
@@ -30,14 +26,10 @@ func (req createChannelReq) validate() error {
 }
 
 type createChannelsReq struct {
-	token    string
 	Channels []channels.Channel
 }
 
 func (req createChannelsReq) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
 	if len(req.Channels) == 0 {
 		return apiutil.ErrEmptyList
 	}
@@ -56,14 +48,11 @@ func (req createChannelsReq) validate() error {
 }
 
 type viewChannelReq struct {
-	token string
-	id    string
+	id string
 }
 
 func (req viewChannelReq) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
+
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
@@ -71,7 +60,6 @@ func (req viewChannelReq) validate() error {
 }
 
 type listChannelsReq struct {
-	token      string
 	status     mgclients.Status
 	offset     uint64
 	limit      uint64
@@ -103,7 +91,6 @@ func (req listChannelsReq) validate() error {
 }
 
 type updateChannelReq struct {
-	token    string
 	id       string
 	Name     string                 `json:"name,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
@@ -111,9 +98,6 @@ type updateChannelReq struct {
 }
 
 func (req updateChannelReq) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
@@ -125,15 +109,11 @@ func (req updateChannelReq) validate() error {
 }
 
 type updateChannelTagsReq struct {
-	id    string
-	token string
-	Tags  []string `json:"tags,omitempty"`
+	id   string
+	Tags []string `json:"tags,omitempty"`
 }
 
 func (req updateChannelTagsReq) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
@@ -142,8 +122,7 @@ func (req updateChannelTagsReq) validate() error {
 }
 
 type changeChannelStatusReq struct {
-	token string
-	id    string
+	id string
 }
 
 func (req changeChannelStatusReq) validate() error {
@@ -154,41 +133,118 @@ func (req changeChannelStatusReq) validate() error {
 	return nil
 }
 
-type connectChannelThingRequest struct {
-	token     string
-	ThingID   string `json:"thing_id,omitempty"`
-	ChannelID string `json:"channel_id,omitempty"`
+type connectChannelThingsRequest struct {
+	channelID string
+	ThingIds  []string `json:"thing_ids,omitempty"`
 }
 
-func (req *connectChannelThingRequest) validate() error {
-	if req.ThingID == "" || req.ChannelID == "" {
+func (req *connectChannelThingsRequest) validate() error {
+
+	if req.channelID == "" {
 		return apiutil.ErrMissingID
+	}
+
+	if err := api.ValidateUUID(req.channelID); err != nil {
+		return err
+	}
+
+	if len(req.ThingIds) == 0 {
+		return apiutil.ErrMissingID
+	}
+
+	for _, tid := range req.ThingIds {
+		if err := api.ValidateUUID(tid); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-type disconnectChannelThingRequest struct {
-	token     string
-	ThingID   string `json:"thing_id,omitempty"`
-	ChannelID string `json:"channel_id,omitempty"`
+type disconnectChannelThingsRequest struct {
+	channelID string
+	ThingIds  []string `json:"thing_ids,omitempty"`
 }
 
-func (req *disconnectChannelThingRequest) validate() error {
-	if req.ThingID == "" || req.ChannelID == "" {
+func (req *disconnectChannelThingsRequest) validate() error {
+	if req.channelID == "" {
 		return apiutil.ErrMissingID
+	}
+
+	if err := api.ValidateUUID(req.channelID); err != nil {
+		return err
+	}
+
+	if len(req.ThingIds) == 0 {
+		return apiutil.ErrMissingID
+	}
+
+	for _, tid := range req.ThingIds {
+		if err := api.ValidateUUID(tid); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type connectRequest struct {
+	ChannelIds []string `json:"channel_ids,omitempty"`
+	ThingIds   []string `json:"thing_ids,omitempty"`
+}
+
+func (req *connectRequest) validate() error {
+	if len(req.ChannelIds) == 0 {
+		return apiutil.ErrMissingID
+	}
+	for _, cid := range req.ChannelIds {
+		if err := api.ValidateUUID(cid); err != nil {
+			return err
+		}
+	}
+
+	if len(req.ThingIds) == 0 {
+		return apiutil.ErrMissingID
+	}
+
+	for _, tid := range req.ThingIds {
+		if err := api.ValidateUUID(tid); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type disconnectRequest struct {
+	ChannelIds []string `json:"channel_ids,omitempty"`
+	ThingIds   []string `json:"thing_ids,omitempty"`
+}
+
+func (req *disconnectRequest) validate() error {
+	if len(req.ChannelIds) == 0 {
+		return apiutil.ErrMissingID
+	}
+	for _, cid := range req.ChannelIds {
+		if err := api.ValidateUUID(cid); err != nil {
+			return err
+		}
+	}
+
+	if len(req.ThingIds) == 0 {
+		return apiutil.ErrMissingID
+	}
+
+	for _, tid := range req.ThingIds {
+		if err := api.ValidateUUID(tid); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 type deleteChannelReq struct {
-	token string
-	id    string
+	id string
 }
 
 func (req deleteChannelReq) validate() error {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}

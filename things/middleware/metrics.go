@@ -120,3 +120,33 @@ func (ms *metricsMiddleware) DeleteClient(ctx context.Context, session authn.Ses
 	}(time.Now())
 	return ms.svc.DeleteClient(ctx, session, id)
 }
+
+func (ms *metricsMiddleware) RetrieveById(ctx context.Context, id string) (mgclients.Client, error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "retrieve_by_id").Add(1)
+		ms.latency.With("method", "retrieve_by_id").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.RetrieveById(ctx, id)
+}
+
+func (ms *metricsMiddleware) RetrieveByIds(ctx context.Context, ids []string) (mgclients.ClientsPage, error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "retrieve_by_ids").Add(1)
+		ms.latency.With("method", "retrieve_by_ids").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.RetrieveByIds(ctx, ids)
+}
+func (ms *metricsMiddleware) AddConnections(ctx context.Context, conns []things.Connection) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "add_connections").Add(1)
+		ms.latency.With("method", "add_connections").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.AddConnections(ctx, conns)
+}
+func (ms *metricsMiddleware) RemoveConnections(ctx context.Context, conns []things.Connection) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "remove_connections").Add(1)
+		ms.latency.With("method", "remove_connections").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.RemoveConnections(ctx, conns)
+}

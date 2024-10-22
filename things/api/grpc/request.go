@@ -9,3 +9,11 @@ type authorizeReq struct {
 	ChannelID  string
 	Permission string
 }
+
+type getEntitiesBasicReq struct {
+	Ids []string
+}
+
+type getEntityBasicReq struct {
+	Id string
+}

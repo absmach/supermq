@@ -47,12 +47,13 @@ import (
 )
 
 const (
-	svcName        = "channels"
-	envPrefixDB    = "MG_CHANNELS_DB_"
-	envPrefixHTTP  = "MG_CHANNELS_HTTP_"
-	envPrefixAuth  = "MG_AUTH_GRPC_"
-	defDB          = "channels"
-	defSvcHTTPPort = "9005"
+	svcName         = "channels"
+	envPrefixDB     = "MG_CHANNELS_DB_"
+	envPrefixHTTP   = "MG_CHANNELS_HTTP_"
+	envPrefixAuth   = "MG_AUTH_GRPC_"
+	envPrefixThings = "MG_THINGS_AUTH_GRPC_"
+	defDB           = "channels"
+	defSvcHTTPPort  = "9005"
 )
 
 type config struct {
@@ -160,7 +161,22 @@ func main() {
 	defer authzClient.Close()
 	logger.Info("AuthZ  successfully connected to auth gRPC server " + authnClient.Secure())
 
-	svc, err := newService(ctx, db, dbConfig, authz, policyService, cfg.ESURL, tracer, logger)
+	thgrpcCfg := grpcclient.Config{BypassHealthCheck: true}
+	if err := env.ParseWithOptions(&thgrpcCfg, env.Options{Prefix: envPrefixThings}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load things gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+	thingsClient, thingsHandler, err := grpcclient.SetupThingsClient(ctx, thgrpcCfg)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to connect to things gRPC server: %s", err))
+		exitCode = 1
+		return
+	}
+	defer thingsHandler.Close()
+	logger.Info("Things gRPC client successfully connected to things gRPC server " + authnClient.Secure())
+
+	svc, err := newService(ctx, db, dbConfig, authz, policyService, cfg.ESURL, tracer, thingsClient, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
 		exitCode = 1
@@ -195,7 +211,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, ps policies.Service, esURL string, tracer trace.Tracer, logger *slog.Logger) (channels.Service, error) {
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, ps policies.Service, esURL string, tracer trace.Tracer, thingsClient magistrala.ThingsServiceClient, logger *slog.Logger) (channels.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	cRepo := postgres.NewRepository(database)
 
@@ -205,7 +221,7 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 		return nil, err
 	}
 
-	svc, err := channels.New(cRepo, ps, idp, sidp)
+	svc, err := channels.New(cRepo, ps, idp, thingsClient, sidp)
 	if err != nil {
 		return nil, err
 	}

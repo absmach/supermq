@@ -52,6 +52,12 @@ type Page struct {
 	Channels []Channel
 }
 
+type Connection struct {
+	ThingID   string
+	ChannelID string
+	DomainID  string
+}
+
 //go:generate mockery --name Service  --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
 type Service interface {
 	// CreateChannels adds channels to the user identified by the provided key.
@@ -120,17 +126,12 @@ type Repository interface {
 	// RetrieveAll retrieves the subset of channels.
 	RetrieveAll(ctx context.Context, pm PageMetadata) (Page, error)
 
-	// RetrieveByThing retrieves the subset of channels and have specified thing connected or not connected to them.
-	RetrieveByThing(ctx context.Context, thID string, pm PageMetadata) (Page, error)
-
 	// Remove removes the channel having the provided identifier
 	Remove(ctx context.Context, ids ...string) error
 
-	// Connect adds things to the channels list of connected things.
-	Connect(ctx context.Context, chIDs, thIDs []string) error
+	AddConnections(ctx context.Context, conns []Connection) error
 
-	// Disconnect removes things from the channels list of connected things.
-	Disconnect(ctx context.Context, chIDs, thIDs []string) error
+	RemoveConnections(ctx context.Context, conns []Connection) error
 
 	roles.Repository
 }

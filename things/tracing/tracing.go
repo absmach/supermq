@@ -118,3 +118,26 @@ func (tm *tracingMiddleware) DeleteClient(ctx context.Context, session authn.Ses
 	defer span.End()
 	return tm.svc.DeleteClient(ctx, session, id)
 }
+
+func (tm *tracingMiddleware) RetrieveById(ctx context.Context, id string) (mgclients.Client, error) {
+	ctx, span := tm.tracer.Start(ctx, "retrieve_by_id", trace.WithAttributes(attribute.String("id", id)))
+	defer span.End()
+	return tm.svc.RetrieveById(ctx, id)
+}
+
+func (tm *tracingMiddleware) RetrieveByIds(ctx context.Context, ids []string) (mgclients.ClientsPage, error) {
+	ctx, span := tm.tracer.Start(ctx, "retrieve_by_ids", trace.WithAttributes(attribute.StringSlice("ids", ids)))
+	defer span.End()
+	return tm.svc.RetrieveByIds(ctx, ids)
+}
+
+func (tm *tracingMiddleware) AddConnections(ctx context.Context, conns []things.Connection) error {
+	ctx, span := tm.tracer.Start(ctx, "add_connections")
+	defer span.End()
+	return tm.svc.AddConnections(ctx, conns)
+}
+func (tm *tracingMiddleware) RemoveConnections(ctx context.Context, conns []things.Connection) error {
+	ctx, span := tm.tracer.Start(ctx, "remove_connections")
+	defer span.End()
+	return tm.svc.RemoveConnections(ctx, conns)
+}

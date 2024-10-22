@@ -258,34 +258,6 @@ func (_m *Repository) RetrieveByID(ctx context.Context, id string) (channels.Cha
 	return r0, r1
 }
 
-// RetrieveByThing provides a mock function with given fields: ctx, thID, pm
-func (_m *Repository) RetrieveByThing(ctx context.Context, thID string, pm channels.PageMetadata) (channels.Page, error) {
-	ret := _m.Called(ctx, thID, pm)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RetrieveByThing")
-	}
-
-	var r0 channels.Page
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, channels.PageMetadata) (channels.Page, error)); ok {
-		return rf(ctx, thID, pm)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, channels.PageMetadata) channels.Page); ok {
-		r0 = rf(ctx, thID, pm)
-	} else {
-		r0 = ret.Get(0).(channels.Page)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, channels.PageMetadata) error); ok {
-		r1 = rf(ctx, thID, pm)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // RetrieveEntitiesRolesActionsMembers provides a mock function with given fields: ctx, entityIDs
 func (_m *Repository) RetrieveEntitiesRolesActionsMembers(ctx context.Context, entityIDs []string) ([]roles.EntityActionRole, []roles.EntityMemberRole, error) {
 	ret := _m.Called(ctx, entityIDs)

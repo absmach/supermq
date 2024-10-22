@@ -68,12 +68,14 @@ func SetupThingsClient(ctx context.Context, cfg Config) (magistrala.ThingsServic
 		return nil, nil, err
 	}
 
-	health := grpchealth.NewHealthClient(client.Connection())
-	resp, err := health.Check(ctx, &grpchealth.HealthCheckRequest{
-		Service: "things",
-	})
-	if err != nil || resp.GetStatus() != grpchealth.HealthCheckResponse_SERVING {
-		return nil, nil, ErrSvcNotServing
+	if !cfg.BypassHealthCheck {
+		health := grpchealth.NewHealthClient(client.Connection())
+		resp, err := health.Check(ctx, &grpchealth.HealthCheckRequest{
+			Service: "things",
+		})
+		if err != nil || resp.GetStatus() != grpchealth.HealthCheckResponse_SERVING {
+			return nil, nil, ErrSvcNotServing
+		}
 	}
 
 	return thingsauth.NewClient(client.Connection(), cfg.Timeout), client, nil

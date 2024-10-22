@@ -10,6 +10,7 @@ import (
 	"github.com/absmach/magistrala/pkg/authz"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
 	"github.com/absmach/magistrala/pkg/clients"
+	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/policies"
 	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
 	"github.com/absmach/magistrala/pkg/svcutil"
@@ -198,4 +199,19 @@ func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, userID s
 		return err
 	}
 	return nil
+}
+
+func (am *authorizationMiddleware) RetrieveById(ctx context.Context, id string) (mgclients.Client, error) {
+	return am.svc.RetrieveById(ctx, id)
+}
+
+func (am *authorizationMiddleware) RetrieveByIds(ctx context.Context, ids []string) (mgclients.ClientsPage, error) {
+	return am.svc.RetrieveByIds(ctx, ids)
+}
+
+func (am *authorizationMiddleware) AddConnections(ctx context.Context, conns []things.Connection) (err error) {
+	return am.svc.AddConnections(ctx, conns)
+}
+func (am *authorizationMiddleware) RemoveConnections(ctx context.Context, conns []things.Connection) (err error) {
+	return am.svc.RemoveConnections(ctx, conns)
 }

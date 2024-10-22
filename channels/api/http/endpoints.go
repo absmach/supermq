@@ -228,9 +228,9 @@ func disableChannelEndpoint(svc channels.Service) endpoint.Endpoint {
 	}
 }
 
-func connectChannelThingEndpoint(svc channels.Service) endpoint.Endpoint {
+func connectChannelThingsEndpoint(svc channels.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(connectChannelThingRequest)
+		req := request.(connectChannelThingsRequest)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
@@ -239,15 +239,18 @@ func connectChannelThingEndpoint(svc channels.Service) endpoint.Endpoint {
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
-		_ = session
 
-		return connectChannelThingRes{}, nil
+		if err := svc.Connect(ctx, session, []string{req.channelID}, req.ThingIds); err != nil {
+			return nil, err
+		}
+
+		return connectChannelThingsRes{}, nil
 	}
 }
 
-func disconnectChannelThingEndpoint(svc channels.Service) endpoint.Endpoint {
+func disconnectChannelThingsEndpoint(svc channels.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(disconnectChannelThingRequest)
+		req := request.(disconnectChannelThingsRequest)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
@@ -256,15 +259,18 @@ func disconnectChannelThingEndpoint(svc channels.Service) endpoint.Endpoint {
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
-		_ = session
 
-		return disconnectChannelThingRes{}, nil
+		if err := svc.Disconnect(ctx, session, []string{req.channelID}, req.ThingIds); err != nil {
+			return nil, err
+		}
+
+		return disconnectChannelThingsRes{}, nil
 	}
 }
 
 func connectEndpoint(svc channels.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(connectChannelThingRequest)
+		req := request.(connectRequest)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
@@ -273,15 +279,18 @@ func connectEndpoint(svc channels.Service) endpoint.Endpoint {
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
-		_ = session
 
-		return connectChannelThingRes{}, nil
+		if err := svc.Connect(ctx, session, req.ChannelIds, req.ThingIds); err != nil {
+			return nil, err
+		}
+
+		return connectRes{}, nil
 	}
 }
 
 func disconnectEndpoint(svc channels.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(disconnectChannelThingRequest)
+		req := request.(disconnectRequest)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
@@ -290,9 +299,12 @@ func disconnectEndpoint(svc channels.Service) endpoint.Endpoint {
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
-		_ = session
 
-		return disconnectChannelThingRes{}, nil
+		if err := svc.Disconnect(ctx, session, req.ChannelIds, req.ThingIds); err != nil {
+			return nil, err
+		}
+
+		return disconnectRes{}, nil
 	}
 }
 

@@ -32,7 +32,7 @@ func (lm *loggingMiddleware) CreateChannels(ctx context.Context, session authn.S
 			slog.String("duration", time.Since(begin).String()),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn(fmt.Sprintf("Create %d channels failed", len(clients)), args...)
 			return
 		}
@@ -51,7 +51,7 @@ func (lm *loggingMiddleware) ViewChannel(ctx context.Context, session authn.Sess
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("View channel failed", args...)
 			return
 		}
@@ -71,7 +71,7 @@ func (lm *loggingMiddleware) ListChannels(ctx context.Context, session authn.Ses
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("List channels failed", args...)
 			return
 		}
@@ -92,7 +92,7 @@ func (lm *loggingMiddleware) ListChannelsByThing(ctx context.Context, session au
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("List channels by thing failed", args...)
 			return
 		}
@@ -112,7 +112,7 @@ func (lm *loggingMiddleware) UpdateChannel(ctx context.Context, session authn.Se
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Update channel failed", args...)
 			return
 		}
@@ -151,7 +151,7 @@ func (lm *loggingMiddleware) EnableChannel(ctx context.Context, session authn.Se
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Enable channel failed", args...)
 			return
 		}
@@ -170,7 +170,7 @@ func (lm *loggingMiddleware) DisableChannel(ctx context.Context, session authn.S
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Disable channel failed", args...)
 			return
 		}
@@ -186,7 +186,7 @@ func (lm *loggingMiddleware) RemoveChannel(ctx context.Context, session authn.Se
 			slog.String("channel_id", id),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Delete channel failed", args...)
 			return
 		}
@@ -203,11 +203,11 @@ func (lm *loggingMiddleware) Connect(ctx context.Context, session authn.Session,
 			slog.Any("thing_ids", thIDs),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Connect channels and things failed", args...)
 			return
 		}
-		lm.logger.Info("Delete channels and things completed successfully", args...)
+		lm.logger.Info("Connect channels and things completed successfully", args...)
 	}(time.Now())
 	return lm.svc.Connect(ctx, session, chIDs, thIDs)
 }
@@ -220,7 +220,7 @@ func (lm *loggingMiddleware) Disconnect(ctx context.Context, session authn.Sessi
 			slog.Any("thing_ids", thIDs),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Disconnect channels and things failed", args...)
 			return
 		}

@@ -29,6 +29,80 @@ func (_m *ThingsServiceClient) EXPECT() *ThingsServiceClient_Expecter {
 	return &ThingsServiceClient_Expecter{mock: &_m.Mock}
 }
 
+// AddConnections provides a mock function with given fields: ctx, in, opts
+func (_m *ThingsServiceClient) AddConnections(ctx context.Context, in *magistrala.ConnectionsReq, opts ...grpc.CallOption) (*magistrala.ConnectionsRes, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddConnections")
+	}
+
+	var r0 *magistrala.ConnectionsRes
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *magistrala.ConnectionsReq, ...grpc.CallOption) (*magistrala.ConnectionsRes, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *magistrala.ConnectionsReq, ...grpc.CallOption) *magistrala.ConnectionsRes); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*magistrala.ConnectionsRes)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *magistrala.ConnectionsReq, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ThingsServiceClient_AddConnections_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddConnections'
+type ThingsServiceClient_AddConnections_Call struct {
+	*mock.Call
+}
+
+// AddConnections is a helper method to define mock.On call
+//   - ctx context.Context
+//   - in *magistrala.ConnectionsReq
+//   - opts ...grpc.CallOption
+func (_e *ThingsServiceClient_Expecter) AddConnections(ctx interface{}, in interface{}, opts ...interface{}) *ThingsServiceClient_AddConnections_Call {
+	return &ThingsServiceClient_AddConnections_Call{Call: _e.mock.On("AddConnections",
+		append([]interface{}{ctx, in}, opts...)...)}
+}
+
+func (_c *ThingsServiceClient_AddConnections_Call) Run(run func(ctx context.Context, in *magistrala.ConnectionsReq, opts ...grpc.CallOption)) *ThingsServiceClient_AddConnections_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		variadicArgs := make([]grpc.CallOption, len(args)-2)
+		for i, a := range args[2:] {
+			if a != nil {
+				variadicArgs[i] = a.(grpc.CallOption)
+			}
+		}
+		run(args[0].(context.Context), args[1].(*magistrala.ConnectionsReq), variadicArgs...)
+	})
+	return _c
+}
+
+func (_c *ThingsServiceClient_AddConnections_Call) Return(_a0 *magistrala.ConnectionsRes, _a1 error) *ThingsServiceClient_AddConnections_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ThingsServiceClient_AddConnections_Call) RunAndReturn(run func(context.Context, *magistrala.ConnectionsReq, ...grpc.CallOption) (*magistrala.ConnectionsRes, error)) *ThingsServiceClient_AddConnections_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Authorize provides a mock function with given fields: ctx, in, opts
 func (_m *ThingsServiceClient) Authorize(ctx context.Context, in *magistrala.ThingsAuthzReq, opts ...grpc.CallOption) (*magistrala.ThingsAuthzRes, error) {
 	_va := make([]interface{}, len(opts))
@@ -99,6 +173,228 @@ func (_c *ThingsServiceClient_Authorize_Call) Return(_a0 *magistrala.ThingsAuthz
 }
 
 func (_c *ThingsServiceClient_Authorize_Call) RunAndReturn(run func(context.Context, *magistrala.ThingsAuthzReq, ...grpc.CallOption) (*magistrala.ThingsAuthzRes, error)) *ThingsServiceClient_Authorize_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetEntitiesBasic provides a mock function with given fields: ctx, in, opts
+func (_m *ThingsServiceClient) GetEntitiesBasic(ctx context.Context, in *magistrala.EntitiesReq, opts ...grpc.CallOption) (*magistrala.EntitiesBasicRes, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetEntitiesBasic")
+	}
+
+	var r0 *magistrala.EntitiesBasicRes
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *magistrala.EntitiesReq, ...grpc.CallOption) (*magistrala.EntitiesBasicRes, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *magistrala.EntitiesReq, ...grpc.CallOption) *magistrala.EntitiesBasicRes); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*magistrala.EntitiesBasicRes)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *magistrala.EntitiesReq, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ThingsServiceClient_GetEntitiesBasic_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetEntitiesBasic'
+type ThingsServiceClient_GetEntitiesBasic_Call struct {
+	*mock.Call
+}
+
+// GetEntitiesBasic is a helper method to define mock.On call
+//   - ctx context.Context
+//   - in *magistrala.EntitiesReq
+//   - opts ...grpc.CallOption
+func (_e *ThingsServiceClient_Expecter) GetEntitiesBasic(ctx interface{}, in interface{}, opts ...interface{}) *ThingsServiceClient_GetEntitiesBasic_Call {
+	return &ThingsServiceClient_GetEntitiesBasic_Call{Call: _e.mock.On("GetEntitiesBasic",
+		append([]interface{}{ctx, in}, opts...)...)}
+}
+
+func (_c *ThingsServiceClient_GetEntitiesBasic_Call) Run(run func(ctx context.Context, in *magistrala.EntitiesReq, opts ...grpc.CallOption)) *ThingsServiceClient_GetEntitiesBasic_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		variadicArgs := make([]grpc.CallOption, len(args)-2)
+		for i, a := range args[2:] {
+			if a != nil {
+				variadicArgs[i] = a.(grpc.CallOption)
+			}
+		}
+		run(args[0].(context.Context), args[1].(*magistrala.EntitiesReq), variadicArgs...)
+	})
+	return _c
+}
+
+func (_c *ThingsServiceClient_GetEntitiesBasic_Call) Return(_a0 *magistrala.EntitiesBasicRes, _a1 error) *ThingsServiceClient_GetEntitiesBasic_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ThingsServiceClient_GetEntitiesBasic_Call) RunAndReturn(run func(context.Context, *magistrala.EntitiesReq, ...grpc.CallOption) (*magistrala.EntitiesBasicRes, error)) *ThingsServiceClient_GetEntitiesBasic_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetEntityBasic provides a mock function with given fields: ctx, in, opts
+func (_m *ThingsServiceClient) GetEntityBasic(ctx context.Context, in *magistrala.EntityReq, opts ...grpc.CallOption) (*magistrala.EntityBasic, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetEntityBasic")
+	}
+
+	var r0 *magistrala.EntityBasic
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *magistrala.EntityReq, ...grpc.CallOption) (*magistrala.EntityBasic, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *magistrala.EntityReq, ...grpc.CallOption) *magistrala.EntityBasic); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*magistrala.EntityBasic)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *magistrala.EntityReq, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ThingsServiceClient_GetEntityBasic_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetEntityBasic'
+type ThingsServiceClient_GetEntityBasic_Call struct {
+	*mock.Call
+}
+
+// GetEntityBasic is a helper method to define mock.On call
+//   - ctx context.Context
+//   - in *magistrala.EntityReq
+//   - opts ...grpc.CallOption
+func (_e *ThingsServiceClient_Expecter) GetEntityBasic(ctx interface{}, in interface{}, opts ...interface{}) *ThingsServiceClient_GetEntityBasic_Call {
+	return &ThingsServiceClient_GetEntityBasic_Call{Call: _e.mock.On("GetEntityBasic",
+		append([]interface{}{ctx, in}, opts...)...)}
+}
+
+func (_c *ThingsServiceClient_GetEntityBasic_Call) Run(run func(ctx context.Context, in *magistrala.EntityReq, opts ...grpc.CallOption)) *ThingsServiceClient_GetEntityBasic_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		variadicArgs := make([]grpc.CallOption, len(args)-2)
+		for i, a := range args[2:] {
+			if a != nil {
+				variadicArgs[i] = a.(grpc.CallOption)
+			}
+		}
+		run(args[0].(context.Context), args[1].(*magistrala.EntityReq), variadicArgs...)
+	})
+	return _c
+}
+
+func (_c *ThingsServiceClient_GetEntityBasic_Call) Return(_a0 *magistrala.EntityBasic, _a1 error) *ThingsServiceClient_GetEntityBasic_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ThingsServiceClient_GetEntityBasic_Call) RunAndReturn(run func(context.Context, *magistrala.EntityReq, ...grpc.CallOption) (*magistrala.EntityBasic, error)) *ThingsServiceClient_GetEntityBasic_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveConnections provides a mock function with given fields: ctx, in, opts
+func (_m *ThingsServiceClient) RemoveConnections(ctx context.Context, in *magistrala.ConnectionsReq, opts ...grpc.CallOption) (*magistrala.ConnectionsRes, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveConnections")
+	}
+
+	var r0 *magistrala.ConnectionsRes
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *magistrala.ConnectionsReq, ...grpc.CallOption) (*magistrala.ConnectionsRes, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *magistrala.ConnectionsReq, ...grpc.CallOption) *magistrala.ConnectionsRes); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*magistrala.ConnectionsRes)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *magistrala.ConnectionsReq, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ThingsServiceClient_RemoveConnections_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveConnections'
+type ThingsServiceClient_RemoveConnections_Call struct {
+	*mock.Call
+}
+
+// RemoveConnections is a helper method to define mock.On call
+//   - ctx context.Context
+//   - in *magistrala.ConnectionsReq
+//   - opts ...grpc.CallOption
+func (_e *ThingsServiceClient_Expecter) RemoveConnections(ctx interface{}, in interface{}, opts ...interface{}) *ThingsServiceClient_RemoveConnections_Call {
+	return &ThingsServiceClient_RemoveConnections_Call{Call: _e.mock.On("RemoveConnections",
+		append([]interface{}{ctx, in}, opts...)...)}
+}
+
+func (_c *ThingsServiceClient_RemoveConnections_Call) Run(run func(ctx context.Context, in *magistrala.ConnectionsReq, opts ...grpc.CallOption)) *ThingsServiceClient_RemoveConnections_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		variadicArgs := make([]grpc.CallOption, len(args)-2)
+		for i, a := range args[2:] {
+			if a != nil {
+				variadicArgs[i] = a.(grpc.CallOption)
+			}
+		}
+		run(args[0].(context.Context), args[1].(*magistrala.ConnectionsReq), variadicArgs...)
+	})
+	return _c
+}
+
+func (_c *ThingsServiceClient_RemoveConnections_Call) Return(_a0 *magistrala.ConnectionsRes, _a1 error) *ThingsServiceClient_RemoveConnections_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ThingsServiceClient_RemoveConnections_Call) RunAndReturn(run func(context.Context, *magistrala.ConnectionsReq, ...grpc.CallOption) (*magistrala.ConnectionsRes, error)) *ThingsServiceClient_RemoveConnections_Call {
 	_c.Call.Return(run)
 	return _c
 }

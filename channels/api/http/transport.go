@@ -47,6 +47,20 @@ func MakeHandler(svc channels.Service, authn mgauthn.Authentication, mux *chi.Mu
 			opts...,
 		), "list_channels").ServeHTTP)
 
+		r.Post("/connect", otelhttp.NewHandler(kithttp.NewServer(
+			connectEndpoint(svc),
+			decodeConnectRequest,
+			api.EncodeResponse,
+			opts...,
+		), "connect").ServeHTTP)
+
+		r.Post("/disconnect", otelhttp.NewHandler(kithttp.NewServer(
+			disconnectEndpoint(svc),
+			decodeDisconnectRequest,
+			api.EncodeResponse,
+			opts...,
+		), "disconnect").ServeHTTP)
+
 		r.Route("/{channelID}", func(r chi.Router) {
 
 			r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
@@ -56,12 +70,19 @@ func MakeHandler(svc channels.Service, authn mgauthn.Authentication, mux *chi.Mu
 				opts...,
 			), "view_channel").ServeHTTP)
 
-			r.Put("/", otelhttp.NewHandler(kithttp.NewServer(
+			r.Patch("/", otelhttp.NewHandler(kithttp.NewServer(
 				updateChannelEndpoint(svc),
 				decodeUpdateChannel,
 				api.EncodeResponse,
 				opts...,
-			), "update_channel").ServeHTTP)
+			), "update_channel_name_and_metadata").ServeHTTP)
+
+			r.Patch("/tags", otelhttp.NewHandler(kithttp.NewServer(
+				updateChannelTagsEndpoint(svc),
+				decodeUpdateChannelTags,
+				api.EncodeResponse,
+				opts...,
+			), "update_channel_tag").ServeHTTP)
 
 			r.Delete("/", otelhttp.NewHandler(kithttp.NewServer(
 				deleteChannelEndpoint(svc),
@@ -84,16 +105,16 @@ func MakeHandler(svc channels.Service, authn mgauthn.Authentication, mux *chi.Mu
 				opts...,
 			), "disable_channel").ServeHTTP)
 
-			r.Post("/things/{thingID}/connect", otelhttp.NewHandler(kithttp.NewServer(
-				connectChannelThingEndpoint(svc),
-				decodeConnectChannelThingRequest,
+			r.Post("/connect", otelhttp.NewHandler(kithttp.NewServer(
+				connectChannelThingsEndpoint(svc),
+				decodeConnectChannelThingsRequest,
 				api.EncodeResponse,
 				opts...,
 			), "connect_channel_thing").ServeHTTP)
 
-			r.Post("/things/{thingID}/disconnect", otelhttp.NewHandler(kithttp.NewServer(
-				disconnectChannelThingEndpoint(svc),
-				decodeDisconnectChannelThingRequest,
+			r.Post("/disconnect", otelhttp.NewHandler(kithttp.NewServer(
+				disconnectChannelThingsEndpoint(svc),
+				decodeDisconnectChannelThingsRequest,
 				api.EncodeResponse,
 				opts...,
 			), "disconnect_channel_thing").ServeHTTP)
@@ -101,21 +122,6 @@ func MakeHandler(svc channels.Service, authn mgauthn.Authentication, mux *chi.Mu
 
 	})
 
-	// Connect channel and thing
-	mux.With(api.AuthenticateMiddleware(authn)).Post("/connect", otelhttp.NewHandler(kithttp.NewServer(
-		connectEndpoint(svc),
-		decodeConnectRequest,
-		api.EncodeResponse,
-		opts...,
-	), "connect").ServeHTTP)
-
-	// Disconnect channel and thing
-	mux.With(api.AuthenticateMiddleware(authn)).Post("/disconnect", otelhttp.NewHandler(kithttp.NewServer(
-		disconnectEndpoint(svc),
-		decodeDisconnectRequest,
-		api.EncodeResponse,
-		opts...,
-	), "disconnect").ServeHTTP)
 	mux.Get("/health", magistrala.Health("channels", instanceID))
 	mux.Handle("/metrics", promhttp.Handler())
 

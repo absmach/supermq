@@ -208,3 +208,17 @@ func (es *eventStore) DeleteClient(ctx context.Context, session authn.Session, i
 
 	return nil
 }
+
+func (es *eventStore) RetrieveById(ctx context.Context, id string) (mgclients.Client, error) {
+	return es.svc.RetrieveById(ctx, id)
+}
+func (es *eventStore) RetrieveByIds(ctx context.Context, ids []string) (mgclients.ClientsPage, error) {
+	return es.svc.RetrieveByIds(ctx, ids)
+}
+
+func (es *eventStore) AddConnections(ctx context.Context, conns []things.Connection) (err error) {
+	return es.svc.AddConnections(ctx, conns)
+}
+func (es *eventStore) RemoveConnections(ctx context.Context, conns []things.Connection) (err error) {
+	return es.svc.RemoveConnections(ctx, conns)
+}

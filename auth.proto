@@ -12,6 +12,10 @@ service ThingsService {
   // Authorize checks if the thing is authorized to perform
   // the action on the channel.
   rpc Authorize(ThingsAuthzReq) returns (ThingsAuthzRes) {}
+  rpc GetEntityBasic(EntityReq) returns (EntityBasic) {}
+  rpc GetEntitiesBasic(EntitiesReq) returns (EntitiesBasicRes) {}
+  rpc AddConnections(ConnectionsReq)returns(ConnectionsRes) {}
+  rpc RemoveConnections(ConnectionsReq)returns(ConnectionsRes) {}
 }
 
 service TokenService {
@@ -95,4 +99,41 @@ message ThingsAuthzReq {
 message ThingsAuthzRes {
   bool authorized = 1;
   string id = 2;
+}
+
+
+message EntitiesReq {
+  repeated string ids = 1;
+}
+
+message EntitiesBasicRes {
+  uint64 total = 1;
+  uint64 limit = 2;
+  uint64 offset =3;
+  repeated EntityBasic entities = 4;
+}
+
+message EntityReq{
+  string id = 1;
+}
+
+message EntityBasic {
+  string id = 1;
+  string domain_id = 3;
+  uint32 status = 4;
+}
+
+
+message ConnectionsReq {
+  repeated Connection connections = 1;
+}
+
+message Connection {
+  string thing_id = 1;
+  string channel_id = 2;
+  string domain_id  = 3;
+}
+
+message ConnectionsRes {
+  bool ok = 1;
 }

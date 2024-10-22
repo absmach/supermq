@@ -17,8 +17,10 @@ var (
 	_ magistrala.Response = (*channelsPageRes)(nil)
 	_ magistrala.Response = (*updateChannelRes)(nil)
 	_ magistrala.Response = (*deleteChannelRes)(nil)
-	_ magistrala.Response = (*connectChannelThingRes)(nil)
-	_ magistrala.Response = (*disconnectChannelThingRes)(nil)
+	_ magistrala.Response = (*connectChannelThingsRes)(nil)
+	_ magistrala.Response = (*disconnectChannelThingsRes)(nil)
+	_ magistrala.Response = (*connectRes)(nil)
+	_ magistrala.Response = (*disconnectRes)(nil)
 	_ magistrala.Response = (*changeChannelStatusRes)(nil)
 )
 
@@ -134,30 +136,58 @@ func (res deleteChannelRes) Empty() bool {
 	return true
 }
 
-type connectChannelThingRes struct{}
+type connectChannelThingsRes struct{}
 
-func (res connectChannelThingRes) Code() int {
+func (res connectChannelThingsRes) Code() int {
 	return http.StatusCreated
 }
 
-func (res connectChannelThingRes) Headers() map[string]string {
+func (res connectChannelThingsRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res connectChannelThingRes) Empty() bool {
+func (res connectChannelThingsRes) Empty() bool {
 	return true
 }
 
-type disconnectChannelThingRes struct{}
+type disconnectChannelThingsRes struct{}
 
-func (res disconnectChannelThingRes) Code() int {
+func (res disconnectChannelThingsRes) Code() int {
 	return http.StatusNoContent
 }
 
-func (res disconnectChannelThingRes) Headers() map[string]string {
+func (res disconnectChannelThingsRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res disconnectChannelThingRes) Empty() bool {
+func (res disconnectChannelThingsRes) Empty() bool {
+	return true
+}
+
+type connectRes struct{}
+
+func (res connectRes) Code() int {
+	return http.StatusCreated
+}
+
+func (res connectRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res connectRes) Empty() bool {
+	return true
+}
+
+type disconnectRes struct{}
+
+func (res disconnectRes) Code() int {
+	return http.StatusNoContent
+}
+
+func (res disconnectRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res disconnectRes) Empty() bool {
 	return true
 }

@@ -15,8 +15,6 @@ import (
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/clients"
-	mgclients "github.com/absmach/magistrala/pkg/clients"
-	clientpg "github.com/absmach/magistrala/pkg/clients/postgres"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	"github.com/absmach/magistrala/pkg/groups"
@@ -49,49 +47,43 @@ func NewRepository(db postgres.Database) channels.Repository {
 	}
 }
 
-func (cr *channelRepository) Save(ctx context.Context, chs ...channels.Channel) (retChs []channels.Channel, retErr error) {
-	tx, err := cr.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return []channels.Channel{}, errors.Wrap(repoerr.ErrCreateEntity, err)
-	}
-	defer func() {
-		if retErr != nil {
-			if errRollback := tx.Rollback(); errRollback != nil {
-				retErr = errors.Wrap(retErr, errors.Wrap(apiutil.ErrRollbackTx, errRollback))
-			}
-		}
-	}()
-	var resChs []channels.Channel
+func (cr *channelRepository) Save(ctx context.Context, chs ...channels.Channel) ([]channels.Channel, error) {
+
+	var dbchs []dbChannel
 	for _, ch := range chs {
-		q := `INSERT INTO channels (id, name, tags, domain_id,  metadata, created_at, updated_at, updated_by, status)
-        VALUES (:id, :name, :tags, :domain_id,  :metadata, :created_at, :updated_at, :updated_by, :status)
-        RETURNING id, name, tags,  metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
 		dbch, err := toDBChannel(ch)
 		if err != nil {
 			return []channels.Channel{}, errors.Wrap(repoerr.ErrCreateEntity, err)
 		}
-		row, err := tx.NamedQuery(q, dbch)
-		if err != nil {
-			return []channels.Channel{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
-		}
-		defer row.Close()
-		if row.Next() {
-			dbch = dbChannel{}
-			if err := row.StructScan(&dbch); err != nil {
-				return []channels.Channel{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
-			}
+		dbchs = append(dbchs, dbch)
+	}
 
-			client, err := toChannel(dbch)
-			if err != nil {
-				return []channels.Channel{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
-			}
-			resChs = append(resChs, client)
+	q := `INSERT INTO channels (id, name, tags, domain_id,  metadata, created_at, updated_at, updated_by, status)
+	VALUES (:id, :name, :tags, :domain_id,  :metadata, :created_at, :updated_at, :updated_by, :status)
+	RETURNING id, name, tags,  metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
+
+	row, err := cr.db.NamedQueryContext(ctx, q, dbchs)
+	if err != nil {
+		return []channels.Channel{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+	}
+
+	defer row.Close()
+
+	var reChs []channels.Channel
+
+	for row.Next() {
+		dbch := dbChannel{}
+		if err := row.StructScan(&dbch); err != nil {
+			return []channels.Channel{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
 		}
+
+		ch, err := toChannel(dbch)
+		if err != nil {
+			return []channels.Channel{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
+		}
+		reChs = append(reChs, ch)
 	}
-	if err = tx.Commit(); err != nil {
-		return []channels.Channel{}, errors.Wrap(repoerr.ErrCreateEntity, err)
-	}
-	return resChs, nil
+	return reChs, nil
 }
 
 func (cr *channelRepository) Update(ctx context.Context, channel channels.Channel) (channels.Channel, error) {
@@ -125,7 +117,7 @@ func (cr *channelRepository) UpdateTags(ctx context.Context, channel channels.Ch
 func (cr *channelRepository) ChangeStatus(ctx context.Context, channel channels.Channel) (channels.Channel, error) {
 	q := `UPDATE channels SET status = :status, updated_at = :updated_at, updated_by = :updated_by
 		WHERE id = :id
-        RETURNING id, name, tags, identity, metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
+        RETURNING id, name, tags, metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
 
 	return cr.update(ctx, channel, q)
 }
@@ -161,8 +153,8 @@ func (cr *channelRepository) RetrieveAll(ctx context.Context, pm channels.PageMe
 	}
 	query = applyOrdering(query, pm)
 
-	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.identity, c.metadata, COALESCE(c.domain_id, '') AS domain_id, c.status,
-					c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM clients c %s ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, query)
+	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags,  c.metadata, COALESCE(c.domain_id, '') AS domain_id, c.status,
+					c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM channels c %s ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, query)
 
 	dbPage, err := toDBChannelsPage(pm)
 	if err != nil {
@@ -188,59 +180,7 @@ func (cr *channelRepository) RetrieveAll(ctx context.Context, pm channels.PageMe
 
 		items = append(items, ch)
 	}
-	cq := fmt.Sprintf(`SELECT COUNT(*) FROM clients c %s;`, query)
-
-	total, err := postgres.Total(ctx, cr.db, cq, dbPage)
-	if err != nil {
-		return channels.Page{}, errors.Wrap(repoerr.ErrViewEntity, err)
-	}
-
-	page := channels.Page{
-		Channels: items,
-		PageMetadata: channels.PageMetadata{
-			Total:  total,
-			Offset: pm.Offset,
-			Limit:  pm.Limit,
-		},
-	}
-	return page, nil
-}
-
-func (cr *channelRepository) RetrieveByThing(ctx context.Context, thID string, pm channels.PageMetadata) (channels.Page, error) {
-	query, err := PageQuery(pm)
-	if err != nil {
-		return channels.Page{}, errors.Wrap(repoerr.ErrViewEntity, err)
-	}
-	query = applyOrdering(query, pm)
-
-	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.identity, c.metadata, COALESCE(c.domain_id, '') AS domain_id, c.status,
-					c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM clients c JOIN connections conn ON conn.channel_id = c.id  %s ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, query)
-
-	dbPage, err := toDBChannelsPage(pm)
-	if err != nil {
-		return channels.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
-	}
-	rows, err := cr.db.NamedQueryContext(ctx, q, dbPage)
-	if err != nil {
-		return channels.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
-	}
-	defer rows.Close()
-
-	var items []channels.Channel
-	for rows.Next() {
-		dbch := dbChannel{}
-		if err := rows.StructScan(&dbch); err != nil {
-			return channels.Page{}, errors.Wrap(repoerr.ErrViewEntity, err)
-		}
-
-		ch, err := toChannel(dbch)
-		if err != nil {
-			return channels.Page{}, err
-		}
-
-		items = append(items, ch)
-	}
-	cq := fmt.Sprintf(`SELECT COUNT(*) FROM clients c JOIN connections conn ON conn.channel_id = c.id %s;`, query)
+	cq := fmt.Sprintf(`SELECT COUNT(*) FROM channels c %s;`, query)
 
 	total, err := postgres.Total(ctx, cr.db, cq, dbPage)
 	if err != nil {
@@ -273,115 +213,40 @@ func (cr *channelRepository) Remove(ctx context.Context, ids ...string) error {
 	return nil
 }
 
-func (cr *channelRepository) Connect(ctx context.Context, chIDs, thIDs []string) (retErr error) {
-	cq := `SELECT id, COALESCE(domain_id, '') AS domain_id, status FROM channels WHERE id IN ANY($1::text[]);`
-	rows, err := cr.db.QueryxContext(ctx, cq, chIDs)
-	if err != nil {
-		return errors.Wrap(repoerr.ErrCreateEntity, err)
-	}
-	defer rows.Close()
+func (cr *channelRepository) AddConnections(ctx context.Context, conns []channels.Connection) error {
 
-	var chs []dbChannel
-	for rows.Next() {
-		dbch := dbChannel{}
-		if err := rows.StructScan(&dbch); err != nil {
-			return errors.Wrap(repoerr.ErrCreateEntity, err)
-		}
+	dbConns := toDBConnections(conns)
 
-		if dbch.Status != mgclients.EnabledStatus {
-			return fmt.Errorf("channel %s is not in enabled status", dbch.ID)
-		}
-		chs = append(chs, dbch)
+	q := `INSERT INTO connections (channel_id, domain_id, thing_id)
+			VALUES (:channel_id, :domain_id, :thing_id);`
+
+	if _, err := cr.db.NamedExecContext(ctx, q, dbConns); err != nil {
+		return postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
-	tq := `SELECT id, COALESCE(domain_id, '') AS domain_id, status FROM clients WHERE id IN ANY($1::text[]);`
-	rows, err = cr.db.QueryxContext(ctx, tq, chIDs)
-	if err != nil {
-		return errors.Wrap(repoerr.ErrCreateEntity, err)
-	}
-	defer rows.Close()
-
-	var things []clientpg.DBClient
-	for rows.Next() {
-		dbcli := clientpg.DBClient{}
-		if err := rows.StructScan(&dbcli); err != nil {
-			return errors.Wrap(repoerr.ErrCreateEntity, err)
-		}
-
-		if dbcli.Status != mgclients.EnabledStatus {
-			return fmt.Errorf("thing %s is not in enabled status", dbcli.ID)
-		}
-		things = append(things, dbcli)
-	}
-
-	query := `INSERT INTO connections (channel_id, domain_id, thing_id)
-	VALUES (:channel_id, :domain_id, :thing_id)`
-
-	tx, err := cr.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return errors.Wrap(repoerr.ErrCreateEntity, err)
-	}
-	for _, ch := range chs {
-		for _, thing := range things {
-			conn := dbConnection{
-				ChannelID: ch.ID,
-				DomainID:  ch.Domain,
-				ThingID:   thing.ID,
-			}
-			_, err := tx.NamedExec(query, conn)
-			if err != nil {
-				retErr := errors.Wrap(repoerr.ErrCreateEntity, errors.Wrap(fmt.Errorf("failed to insert connection for channel_id: %s, domain_id: %s thing_id %s", conn.ChannelID, conn.DomainID, conn.ThingID), err))
-				if errRollBack := tx.Rollback(); errRollBack != nil {
-					retErr = errors.Wrap(retErr, errors.Wrap(apiutil.ErrRollbackTx, errRollBack))
-				}
-				return retErr
-			}
-		}
-	}
-	if err := tx.Commit(); err != nil {
-		return errors.Wrap(repoerr.ErrCreateEntity, err)
-	}
 	return nil
+
 }
 
-func (cr *channelRepository) Disconnect(ctx context.Context, chIDs, thIDs []string) error {
-	cq := `SELECT id, COALESCE(domain_id, '') AS domain_id, status FROM channels WHERE id IN ANY($1::text[]);`
-	rows, err := cr.db.QueryxContext(ctx, cq, chIDs)
+func (cr *channelRepository) RemoveConnections(ctx context.Context, conns []channels.Connection) (retErr error) {
+	tx, err := cr.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
-	defer rows.Close()
-
-	var chs []dbChannel
-	for rows.Next() {
-		dbch := dbChannel{}
-		if err := rows.StructScan(&dbch); err != nil {
-			return errors.Wrap(repoerr.ErrRemoveEntity, err)
+	defer func() {
+		if retErr != nil {
+			if errRollBack := tx.Rollback(); errRollBack != nil {
+				retErr = errors.Wrap(retErr, errors.Wrap(apiutil.ErrRollbackTx, errRollBack))
+			}
 		}
-		chs = append(chs, dbch)
-	}
+	}()
 
 	query := `DELETE FROM connections WHERE channel_id = :channel_id AND domain_id = :domain_id AND thing_id = :thing_id`
 
-	tx, err := cr.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return errors.Wrap(repoerr.ErrRemoveEntity, err)
-	}
-	for _, ch := range chs {
-		for _, thID := range thIDs {
-			conn := dbConnection{
-				ChannelID: ch.ID,
-				DomainID:  ch.Domain,
-				ThingID:   thID,
-			}
-			_, err := tx.NamedExec(query, conn)
-			if err != nil {
-				retErr := errors.Wrap(repoerr.ErrRemoveEntity, errors.Wrap(fmt.Errorf("failed to delete connection for channel_id: %s, domain_id: %s thing_id %s", conn.ChannelID, conn.DomainID, conn.ThingID), err))
-				if errRollBack := tx.Rollback(); errRollBack != nil {
-					retErr = errors.Wrap(retErr, errors.Wrap(apiutil.ErrRollbackTx, errRollBack))
-				}
-				return retErr
-			}
+	for _, conn := range conns {
+		dbConn := toDBConnection(conn)
+		if _, err := tx.NamedExec(query, dbConn); err != nil {
+			return errors.Wrap(repoerr.ErrRemoveEntity, errors.Wrap(fmt.Errorf("failed to delete connection for channel_id: %s, domain_id: %s thing_id %s", conn.ChannelID, conn.DomainID, conn.ThingID), err))
 		}
 	}
 	if err := tx.Commit(); err != nil {
@@ -546,7 +411,7 @@ func PageQuery(pm channels.PageMetadata) (string, error) {
 
 func applyOrdering(emq string, pm channels.PageMetadata) string {
 	switch pm.Order {
-	case "name", "identity", "created_at", "updated_at":
+	case "name", "created_at", "updated_at":
 		emq = fmt.Sprintf("%s ORDER BY %s", emq, pm.Order)
 		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
 			emq = fmt.Sprintf("%s %s", emq, pm.Dir)
@@ -589,4 +454,20 @@ type dbConnection struct {
 	ChannelID string `db:"channel_id"`
 	DomainID  string `db:"domain_id"`
 	ThingID   string `db:"thing_id"`
+}
+
+func toDBConnections(conns []channels.Connection) []dbConnection {
+	var dbconns []dbConnection
+	for _, conn := range conns {
+		dbconns = append(dbconns, toDBConnection(conn))
+	}
+	return dbconns
+}
+
+func toDBConnection(conn channels.Connection) dbConnection {
+	return dbConnection{
+		ThingID:   conn.ThingID,
+		ChannelID: conn.ChannelID,
+		DomainID:  conn.DomainID,
+	}
 }

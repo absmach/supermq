@@ -234,3 +234,66 @@ func (lm *loggingMiddleware) DeleteClient(ctx context.Context, session authn.Ses
 	}(time.Now())
 	return lm.svc.DeleteClient(ctx, session, id)
 }
+
+func (lm *loggingMiddleware) RetrieveById(ctx context.Context, id string) (c mgclients.Client, err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.String("id", id),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn("Retrieve thing by id failed", args...)
+			return
+		}
+		lm.logger.Info("Retrieve thing by id completed successfully", args...)
+	}(time.Now())
+	return lm.svc.RetrieveById(ctx, id)
+}
+
+func (lm *loggingMiddleware) RetrieveByIds(ctx context.Context, ids []string) (cp mgclients.ClientsPage, err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.Any("ids", ids),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn("Retrieve things by ids failed", args...)
+			return
+		}
+		lm.logger.Info("Retrieve things by ids completed successfully", args...)
+	}(time.Now())
+	return lm.svc.RetrieveByIds(ctx, ids)
+}
+
+func (lm *loggingMiddleware) AddConnections(ctx context.Context, conns []things.Connection) (err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.Any("conns", conns),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn("Add connections failed", args...)
+			return
+		}
+		lm.logger.Info("Add connections completed successfully", args...)
+	}(time.Now())
+	return lm.svc.AddConnections(ctx, conns)
+}
+func (lm *loggingMiddleware) RemoveConnections(ctx context.Context, conns []things.Connection) (err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.Any("conns", conns),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn("Remove connections failed", args...)
+			return
+		}
+		lm.logger.Info("Remove connections completed successfully", args...)
+	}(time.Now())
+	return lm.svc.RemoveConnections(ctx, conns)
+}

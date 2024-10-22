@@ -6,11 +6,17 @@ import (
 )
 
 const (
-	updatePermission           = "update_permission"
-	readPermission             = "read_permission"
-	deletePermission           = "delete_permission"
-	setParentGroupPermission   = "set_parent_group_permission"
+	// this permission is check over domain or group
+	createPermission = "channel_create_permission"
+
+	// this permission is check over thing for connection
 	connectToChannelPermission = "connect_to_channel_permission"
+
+	updatePermission         = "update_permission"
+	readPermission           = "read_permission"
+	deletePermission         = "delete_permission"
+	setParentGroupPermission = "set_parent_group_permission"
+	connectToThingPermission = "connect_to_thing_permission"
 
 	manageRolePermission      = "manage_role_permission"
 	addRoleUsersPermission    = "add_role_users_permission"
@@ -27,8 +33,10 @@ const (
 	OpEnableChannel
 	OpDisableChannel
 	OpDeleteChannel
-	OpConnectThingChannel
-	OpDisconnectThingChannel
+	OpConnectChannelToThing
+	OpDisconnectChannelToThing
+	OpConnectThingToChannel
+	OpDisconnectThingToChannel
 )
 
 var expectedOperations = []svcutil.Operation{
@@ -40,8 +48,10 @@ var expectedOperations = []svcutil.Operation{
 	OpEnableChannel,
 	OpDisableChannel,
 	OpDeleteChannel,
-	OpConnectThingChannel,
-	OpDisconnectThingChannel,
+	OpConnectChannelToThing,
+	OpDisconnectChannelToThing,
+	OpConnectThingToChannel,
+	OpDisconnectThingToChannel,
 }
 
 var operationNames = []string{
@@ -53,8 +63,10 @@ var operationNames = []string{
 	"OpEnableChannel",
 	"OpDisableChannel",
 	"OpDeleteChannel",
-	"OpConnectThingChannel",
-	"OpDisconnectThingChannel",
+	"OpConnectChannelToThing",
+	"OpDisconnectChannelToThing",
+	"OpConnectThingToChannel",
+	"OpDisconnectThingToChannel",
 }
 
 func NewOperationPerm() svcutil.OperationPerm {
@@ -63,16 +75,18 @@ func NewOperationPerm() svcutil.OperationPerm {
 
 func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 	opPerm := map[svcutil.Operation]svcutil.Permission{
-		OpCreateChannel:          "",
-		OpListChannel:            "",
-		OpViewChannel:            "",
-		OpUpdateChannel:          "",
-		OpUpdateChannelTags:      "",
-		OpEnableChannel:          "",
-		OpDisableChannel:         "",
-		OpDeleteChannel:          "",
-		OpConnectThingChannel:    "",
-		OpDisconnectThingChannel: "",
+		OpCreateChannel:            createPermission,
+		OpListChannel:              readPermission,
+		OpViewChannel:              readPermission,
+		OpUpdateChannel:            updatePermission,
+		OpUpdateChannelTags:        updatePermission,
+		OpEnableChannel:            updatePermission,
+		OpDisableChannel:           updatePermission,
+		OpDeleteChannel:            deletePermission,
+		OpConnectChannelToThing:    connectToThingPermission,
+		OpDisconnectChannelToThing: connectToThingPermission,
+		OpConnectThingToChannel:    connectToChannelPermission,
+		OpDisconnectThingToChannel: connectToChannelPermission,
 	}
 	return opPerm
 }
