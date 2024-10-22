@@ -77,15 +77,6 @@ func (res *RoleManagerEventStore) RoleRemoveMembers(ctx context.Context, session
 func (res *RoleManagerEventStore) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleName string) (err error) {
 	return res.svc.RoleRemoveAllMembers(ctx, session, entityID, roleName)
 }
-func (res *RoleManagerEventStore) RemoveMembersFromAllRoles(ctx context.Context, session authn.Session, members []string) (err error) {
-	return res.svc.RemoveMembersFromAllRoles(ctx, session, members)
-}
-func (res *RoleManagerEventStore) RemoveMembersFromRoles(ctx context.Context, session authn.Session, members []string, roleNames []string) (err error) {
-	return res.svc.RemoveMembersFromRoles(ctx, session, members, roleNames)
-}
-func (res *RoleManagerEventStore) RemoveActionsFromAllRoles(ctx context.Context, session authn.Session, actions []string) (err error) {
-	return res.svc.RemoveActionsFromAllRoles(ctx, session, actions)
-}
-func (res *RoleManagerEventStore) RemoveActionsFromRoles(ctx context.Context, session authn.Session, actions []string, roleNames []string) (err error) {
-	return res.svc.RemoveActionsFromRoles(ctx, session, actions, roleNames)
+func (res *RoleManagerEventStore) RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, membersID string) (err error) {
+	return res.svc.RemoveMemberFromAllRoles(ctx, session, membersID)
 }

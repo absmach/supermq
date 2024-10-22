@@ -20,16 +20,20 @@ import (
 var _ roles.Repository = (*Repository)(nil)
 
 type Repository struct {
-	tableNamePrefix string
-	db              postgres.Database
+	db                 postgres.Database
+	tableNamePrefix    string
+	entityTableName    string
+	entityIDColumnName string
 }
 
-// NewRepositorysitory instantiates a PostgreSQL
+// NewRepository instantiates a PostgreSQL
 // implementation of Roles repository.
-func NewRepository(db postgres.Database, tableNamePrefix string) Repository {
+func NewRepository(db postgres.Database, tableNamePrefix, entityTableName, entityIDColumnName string) Repository {
 	return Repository{
-		tableNamePrefix: tableNamePrefix,
-		db:              db,
+		db:                 db,
+		tableNamePrefix:    tableNamePrefix,
+		entityTableName:    entityTableName,
+		entityIDColumnName: entityIDColumnName,
 	}
 }
 
@@ -49,6 +53,41 @@ type dbRole struct {
 	CreatedAt sql.NullTime `db:"created_at"`
 	UpdatedBy *string      `db:"updated_by"`
 	UpdatedAt sql.NullTime `db:"updated_at"`
+}
+
+type dbEntityActionRole struct {
+	EntityID string `db:"entity_id"`
+	Action   string `db:"action"`
+	RoleID   string `db:"role_id"`
+}
+type dbEntityMemberRole struct {
+	EntityID string `db:"entity_id"`
+	MemberID string `db:"member_id"`
+	RoleID   string `db:"role_id"`
+}
+
+func dbToEntityActionRole(dbs []dbEntityActionRole) []roles.EntityActionRole {
+	var r []roles.EntityActionRole
+	for _, d := range dbs {
+		r = append(r, roles.EntityActionRole{
+			EntityID: d.EntityID,
+			Action:   d.Action,
+			RoleID:   d.RoleID,
+		})
+	}
+	return r
+}
+
+func dbToEntityMemberRole(dbs []dbEntityMemberRole) []roles.EntityMemberRole {
+	var r []roles.EntityMemberRole
+	for _, d := range dbs {
+		r = append(r, roles.EntityMemberRole{
+			EntityID: d.EntityID,
+			MemberID: d.MemberID,
+			RoleID:   d.RoleID,
+		})
+	}
+	return r
 }
 
 type dbRoleAction struct {
@@ -674,5 +713,61 @@ func (repo *Repository) RoleRemoveAllMembers(ctx context.Context, role roles.Rol
 	if err := tx.Commit(); err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
+	return nil
+}
+
+func (repo *Repository) RetrieveEntitiesRolesActionsMembers(ctx context.Context, entityIDs []string) ([]roles.EntityActionRole, []roles.EntityMemberRole, error) {
+	params := map[string]interface{}{
+		"entity_ids": entityIDs,
+	}
+
+	thingsActionsRolesQuery := fmt.Sprintf(`SELECT e.%s AS entity_id , tra."action" AS "action", tr.id AS role_id
+								FROM %s e
+								JOIN things_roles tr ON tr.entity_id  = e.%s
+								JOIN things_role_actions tra  ON tra.role_id  = tr.id
+								WHERE e.%s = ANY(:entity_ids);
+							`, repo.entityIDColumnName, repo.entityTableName, repo.entityIDColumnName, repo.entityIDColumnName)
+
+	rows, err := repo.db.NamedQueryContext(ctx, thingsActionsRolesQuery, params)
+	if err != nil {
+		return []roles.EntityActionRole{}, []roles.EntityMemberRole{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+	}
+
+	defer rows.Close()
+	dbears := []dbEntityActionRole{}
+	for rows.Next() {
+		dbear := dbEntityActionRole{}
+		if err = rows.StructScan(&dbear); err != nil {
+			return []roles.EntityActionRole{}, []roles.EntityMemberRole{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+		}
+
+		dbears = append(dbears, dbear)
+	}
+	thingsMembersRolesQuery := fmt.Sprintf(`SELECT e.%s AS entity_id , trm.member_id AS member_id, tr.id AS role_id
+								FROM %s e
+								JOIN things_roles tr ON tr.entity_id  = e.%s
+								JOIN things_role_members trm ON trm.role_id = tr.id
+								WHERE e.%s = ANY(:entity_ids);
+								`, repo.entityIDColumnName, repo.entityTableName, repo.entityIDColumnName, repo.entityIDColumnName)
+
+	rows, err = repo.db.NamedQueryContext(ctx, thingsMembersRolesQuery, params)
+	if err != nil {
+		return []roles.EntityActionRole{}, []roles.EntityMemberRole{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+	}
+
+	defer rows.Close()
+	dbemrs := []dbEntityMemberRole{}
+	for rows.Next() {
+		dbemr := dbEntityMemberRole{}
+		if err = rows.StructScan(&dbemr); err != nil {
+			return []roles.EntityActionRole{}, []roles.EntityMemberRole{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+		}
+
+		dbemrs = append(dbemrs, dbemr)
+	}
+	return dbToEntityActionRole(dbears), dbToEntityMemberRole(dbemrs), nil
+}
+func (repo *Repository) RemoveMemberFromAllRoles(ctx context.Context, memberID string) (err error) {
+
 	return nil
 }

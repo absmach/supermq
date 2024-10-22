@@ -19,14 +19,14 @@ var (
 	errRollbackRepo           = errors.New("failed to rollback repo")
 )
 
-type channelsService struct {
+type service struct {
 	repo       Repository
 	policy     policies.Service
 	idProvider magistrala.IDProvider
 	roles.ProvisionManageService
 }
 
-var _ Service = (*channelsService)(nil)
+var _ Service = (*service)(nil)
 
 func New(repo Repository, policy policies.Service, idProvider magistrala.IDProvider, sidProvider magistrala.IDProvider) (Service, error) {
 	rpms, err := roles.NewProvisionManageService(policies.ChannelType, repo, policy, sidProvider, AvailableActions(), BuiltInRoles())
@@ -34,7 +34,7 @@ func New(repo Repository, policy policies.Service, idProvider magistrala.IDProvi
 		return nil, err
 	}
 
-	return channelsService{
+	return service{
 		repo:                   repo,
 		policy:                 policy,
 		idProvider:             idProvider,
@@ -42,11 +42,11 @@ func New(repo Repository, policy policies.Service, idProvider magistrala.IDProvi
 	}, nil
 }
 
-func (cs channelsService) CreateChannels(ctx context.Context, session authn.Session, chs ...Channel) ([]Channel, error) {
+func (svc service) CreateChannels(ctx context.Context, session authn.Session, chs ...Channel) ([]Channel, error) {
 	var clients []Channel
 	for _, c := range chs {
 		if c.ID == "" {
-			clientID, err := cs.idProvider.ID()
+			clientID, err := svc.idProvider.ID()
 			if err != nil {
 				return []Channel{}, err
 			}
@@ -61,7 +61,7 @@ func (cs channelsService) CreateChannels(ctx context.Context, session authn.Sess
 		clients = append(clients, c)
 	}
 
-	saved, err := cs.repo.Save(ctx, clients...)
+	saved, err := svc.repo.Save(ctx, clients...)
 	if err != nil {
 		return nil, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
@@ -72,7 +72,7 @@ func (cs channelsService) CreateChannels(ctx context.Context, session authn.Sess
 
 	defer func() {
 		if err != nil {
-			if errRollBack := cs.repo.Remove(ctx, chIDs...); errRollBack != nil {
+			if errRollBack := svc.repo.Remove(ctx, chIDs...); errRollBack != nil {
 				err = errors.Wrap(err, errors.Wrap(errRollbackRepo, errRollBack))
 			}
 		}
@@ -90,27 +90,19 @@ func (cs channelsService) CreateChannels(ctx context.Context, session authn.Sess
 				Domain:      session.DomainID,
 				SubjectType: policies.UserType,
 				Subject:     session.DomainUserID,
-				Relation:    policies.AdministratorRelation,
-				ObjectType:  policies.ChannelType,
-				Object:      chID,
-			},
-			policies.Policy{
-				Domain:      session.DomainID,
-				SubjectType: policies.UserType,
-				Subject:     session.DomainUserID,
 				Relation:    policies.DomainRelation,
 				ObjectType:  policies.ChannelType,
 				Object:      chID,
 			},
 		)
 	}
-	if _, err := cs.AddNewEntityRoles(ctx, session, chIDs, optionalPolicies, newBuiltInRoleMembers); err != nil {
+	if _, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, chIDs, optionalPolicies, newBuiltInRoleMembers); err != nil {
 		return []Channel{}, errors.Wrap(errCreateChannelsPolicies, err)
 	}
 	return saved, nil
 }
 
-func (cs channelsService) UpdateChannel(ctx context.Context, session authn.Session, ch Channel) (Channel, error) {
+func (svc service) UpdateChannel(ctx context.Context, session authn.Session, ch Channel) (Channel, error) {
 	channel := Channel{
 		ID:        ch.ID,
 		Name:      ch.Name,
@@ -118,14 +110,14 @@ func (cs channelsService) UpdateChannel(ctx context.Context, session authn.Sessi
 		UpdatedAt: time.Now(),
 		UpdatedBy: session.UserID,
 	}
-	channel, err := cs.repo.Update(ctx, channel)
+	channel, err := svc.repo.Update(ctx, channel)
 	if err != nil {
 		return Channel{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	return channel, nil
 }
 
-func (cs channelsService) UpdateChannelTags(ctx context.Context, session authn.Session, ch Channel) (Channel, error) {
+func (svc service) UpdateChannelTags(ctx context.Context, session authn.Session, ch Channel) (Channel, error) {
 
 	channel := Channel{
 		ID:        ch.ID,
@@ -133,20 +125,20 @@ func (cs channelsService) UpdateChannelTags(ctx context.Context, session authn.S
 		UpdatedAt: time.Now(),
 		UpdatedBy: session.UserID,
 	}
-	channel, err := cs.repo.UpdateTags(ctx, channel)
+	channel, err := svc.repo.UpdateTags(ctx, channel)
 	if err != nil {
 		return Channel{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	return channel, nil
 }
 
-func (cs channelsService) EnableChannel(ctx context.Context, session authn.Session, id string) (Channel, error) {
+func (svc service) EnableChannel(ctx context.Context, session authn.Session, id string) (Channel, error) {
 	channel := Channel{
 		ID:        id,
 		Status:    mgclients.EnabledStatus,
 		UpdatedAt: time.Now(),
 	}
-	ch, err := cs.changeChannelStatus(ctx, session.UserID, channel)
+	ch, err := svc.changeChannelStatus(ctx, session.UserID, channel)
 	if err != nil {
 		return Channel{}, errors.Wrap(mgclients.ErrEnableClient, err)
 	}
@@ -154,13 +146,13 @@ func (cs channelsService) EnableChannel(ctx context.Context, session authn.Sessi
 	return ch, nil
 }
 
-func (cs channelsService) DisableChannel(ctx context.Context, session authn.Session, id string) (Channel, error) {
+func (svc service) DisableChannel(ctx context.Context, session authn.Session, id string) (Channel, error) {
 	channel := Channel{
 		ID:        id,
 		Status:    mgclients.DisabledStatus,
 		UpdatedAt: time.Now(),
 	}
-	ch, err := cs.changeChannelStatus(ctx, session.UserID, channel)
+	ch, err := svc.changeChannelStatus(ctx, session.UserID, channel)
 	if err != nil {
 		return Channel{}, errors.Wrap(mgclients.ErrDisableClient, err)
 	}
@@ -168,19 +160,19 @@ func (cs channelsService) DisableChannel(ctx context.Context, session authn.Sess
 	return ch, nil
 }
 
-func (cs channelsService) ViewChannel(ctx context.Context, session authn.Session, id string) (Channel, error) {
-	channel, err := cs.repo.RetrieveByID(ctx, id)
+func (svc service) ViewChannel(ctx context.Context, session authn.Session, id string) (Channel, error) {
+	channel, err := svc.repo.RetrieveByID(ctx, id)
 	if err != nil {
 		return Channel{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return channel, nil
 }
 
-func (cs channelsService) ListChannels(ctx context.Context, session authn.Session, pm PageMetadata) (Page, error) {
+func (svc service) ListChannels(ctx context.Context, session authn.Session, pm PageMetadata) (Page, error) {
 	var ids []string
 	var err error
 	if !session.SuperAdmin {
-		ids, err = cs.listChannelIDs(ctx, session.DomainUserID, pm.Permission)
+		ids, err = svc.listChannelIDs(ctx, session.DomainUserID, pm.Permission)
 		if err != nil {
 			return Page{}, errors.Wrap(svcerr.ErrNotFound, err)
 		}
@@ -190,7 +182,7 @@ func (cs channelsService) ListChannels(ctx context.Context, session authn.Sessio
 	}
 	pm.IDs = ids
 
-	cp, err := cs.repo.RetrieveAll(ctx, pm)
+	cp, err := svc.repo.RetrieveAll(ctx, pm)
 	if err != nil {
 		return Page{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
@@ -202,7 +194,7 @@ func (cs channelsService) ListChannels(ctx context.Context, session authn.Sessio
 			// Copying loop variable "i" to avoid "loop variable captured by func literal"
 			iter := i
 			g.Go(func() error {
-				return cs.retrievePermissions(ctx, session.DomainUserID, &cp.Channels[iter])
+				return svc.retrievePermissions(ctx, session.DomainUserID, &cp.Channels[iter])
 			})
 		}
 
@@ -213,35 +205,48 @@ func (cs channelsService) ListChannels(ctx context.Context, session authn.Sessio
 	return cp, nil
 }
 
-func (cs channelsService) ListChannelsByThing(ctx context.Context, session authn.Session, thID string, pm PageMetadata) (Page, error) {
+func (svc service) ListChannelsByThing(ctx context.Context, session authn.Session, thID string, pm PageMetadata) (Page, error) {
 
 	return Page{}, nil
 }
 
-func (cs channelsService) RemoveChannel(ctx context.Context, session authn.Session, id string) error {
-
-	if err := cs.policy.DeletePolicyFilter(ctx, policies.Policy{
-		SubjectType: policies.ThingType,
-		Subject:     id,
-	}); err != nil {
+func (svc service) RemoveChannel(ctx context.Context, session authn.Session, id string) error {
+	if _, err := svc.repo.ChangeStatus(ctx, Channel{ID: id, Status: mgclients.DeletedStatus}); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
-	if err := cs.policy.DeletePolicyFilter(ctx, policies.Policy{
-		ObjectType: policies.ThingType,
-		Object:     id,
-	}); err != nil {
-		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	filterDeletePolicies := []policies.Policy{
+		{
+			SubjectType: policies.ChannelType,
+			Subject:     id,
+		},
+		{
+			ObjectType: policies.ChannelType,
+			Object:     id,
+		},
+	}
+	deletePolicies := []policies.Policy{
+		{
+			SubjectType: policies.DomainType,
+			Subject:     session.DomainUserID,
+			Relation:    policies.DomainRelation,
+			ObjectType:  policies.ChannelType,
+			Object:      id,
+		},
 	}
 
-	if err := cs.repo.Remove(ctx, id); err != nil {
+	if err := svc.RemoveEntitiesRoles(ctx, session.DomainID, session.DomainUserID, []string{id}, filterDeletePolicies, deletePolicies); err != nil {
+		return errors.Wrap(svcerr.ErrDeletePolicies, err)
+	}
+
+	if err := svc.repo.Remove(ctx, id); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
 	return nil
 }
 
-func (cs channelsService) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string) (retErr error) {
+func (svc service) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string) (retErr error) {
 
 	prs := []policies.Policy{}
 	for _, chID := range chIDs {
@@ -255,25 +260,25 @@ func (cs channelsService) Connect(ctx context.Context, session authn.Session, ch
 			})
 		}
 	}
-	if err := cs.policy.AddPolicies(ctx, prs); err != nil {
+	if err := svc.policy.AddPolicies(ctx, prs); err != nil {
 		return errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
 	defer func() {
 		if retErr != nil {
-			if errRollback := cs.policy.DeletePolicies(ctx, prs); errRollback != nil {
+			if errRollback := svc.policy.DeletePolicies(ctx, prs); errRollback != nil {
 				retErr = errors.Wrap(retErr, errRollback)
 			}
 		}
 	}()
 
-	if err := cs.repo.Connect(ctx, chIDs, thIDs); err != nil {
+	if err := svc.repo.Connect(ctx, chIDs, thIDs); err != nil {
 		return errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 
 	return nil
 }
 
-func (cs channelsService) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string) (retErr error) {
+func (svc service) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string) (retErr error) {
 
 	prs := []policies.Policy{}
 	for _, chID := range chIDs {
@@ -288,17 +293,17 @@ func (cs channelsService) Disconnect(ctx context.Context, session authn.Session,
 			})
 		}
 	}
-	if err := cs.policy.DeletePolicies(ctx, prs); err != nil {
+	if err := svc.policy.DeletePolicies(ctx, prs); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	defer func() {
 		if retErr != nil {
-			if errRollback := cs.policy.AddPolicies(ctx, prs); errRollback != nil {
+			if errRollback := svc.policy.AddPolicies(ctx, prs); errRollback != nil {
 				retErr = errors.Wrap(retErr, errRollback)
 			}
 		}
 	}()
-	if err := cs.repo.Disconnect(ctx, chIDs, thIDs); err != nil {
+	if err := svc.repo.Disconnect(ctx, chIDs, thIDs); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
@@ -311,8 +316,8 @@ type identity struct {
 	UserID   string
 }
 
-func (cs channelsService) listChannelIDs(ctx context.Context, userID, permission string) ([]string, error) {
-	tids, err := cs.policy.ListAllObjects(ctx, policies.Policy{
+func (svc service) listChannelIDs(ctx context.Context, userID, permission string) ([]string, error) {
+	tids, err := svc.policy.ListAllObjects(ctx, policies.Policy{
 		SubjectType: policies.UserType,
 		Subject:     userID,
 		Permission:  permission,
@@ -324,8 +329,8 @@ func (cs channelsService) listChannelIDs(ctx context.Context, userID, permission
 	return tids.Policies, nil
 }
 
-func (cs channelsService) retrievePermissions(ctx context.Context, userID string, channel *Channel) error {
-	permissions, err := cs.listUserThingPermission(ctx, userID, channel.ID)
+func (svc service) retrievePermissions(ctx context.Context, userID string, channel *Channel) error {
+	permissions, err := svc.listUserThingPermission(ctx, userID, channel.ID)
 	if err != nil {
 		return err
 	}
@@ -333,8 +338,8 @@ func (cs channelsService) retrievePermissions(ctx context.Context, userID string
 	return nil
 }
 
-func (cs channelsService) listUserThingPermission(ctx context.Context, userID, thingID string) ([]string, error) {
-	lp, err := cs.policy.ListPermissions(ctx, policies.Policy{
+func (svc service) listUserThingPermission(ctx context.Context, userID, thingID string) ([]string, error) {
+	lp, err := svc.policy.ListPermissions(ctx, policies.Policy{
 		SubjectType: policies.UserType,
 		Subject:     userID,
 		Object:      thingID,
@@ -346,9 +351,9 @@ func (cs channelsService) listUserThingPermission(ctx context.Context, userID, t
 	return lp, nil
 }
 
-func (cs channelsService) changeChannelStatus(ctx context.Context, userID string, channel Channel) (Channel, error) {
+func (svc service) changeChannelStatus(ctx context.Context, userID string, channel Channel) (Channel, error) {
 
-	dbchannel, err := cs.repo.RetrieveByID(ctx, channel.ID)
+	dbchannel, err := svc.repo.RetrieveByID(ctx, channel.ID)
 	if err != nil {
 		return Channel{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
@@ -358,7 +363,7 @@ func (cs channelsService) changeChannelStatus(ctx context.Context, userID string
 
 	channel.UpdatedBy = userID
 
-	channel, err = cs.repo.ChangeStatus(ctx, channel)
+	channel, err = svc.repo.ChangeStatus(ctx, channel)
 	if err != nil {
 		return Channel{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}

@@ -21,6 +21,7 @@ const (
 )
 
 const (
+	RoleType     = "role"
 	GroupType    = "group"
 	ThingType    = "thing"
 	ChannelType  = "channel"

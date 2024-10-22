@@ -253,19 +253,6 @@ func (ram RoleManagerAuthorizationMiddleware) RoleRemoveAllMembers(ctx context.C
 	return ram.svc.RoleRemoveAllMembers(ctx, session, entityID, roleName)
 }
 
-func (ram RoleManagerAuthorizationMiddleware) RemoveMembersFromAllRoles(ctx context.Context, session authn.Session, members []string) (err error) {
-	return ram.svc.RemoveMembersFromAllRoles(ctx, session, members)
-}
-func (ram RoleManagerAuthorizationMiddleware) RemoveMembersFromRoles(ctx context.Context, session authn.Session, members []string, roleNames []string) (err error) {
-	return ram.svc.RemoveMembersFromRoles(ctx, session, members, roleNames)
-}
-func (ram RoleManagerAuthorizationMiddleware) RemoveActionsFromAllRoles(ctx context.Context, session authn.Session, actions []string) (err error) {
-	return ram.svc.RemoveActionsFromAllRoles(ctx, session, actions)
-}
-func (ram RoleManagerAuthorizationMiddleware) RemoveActionsFromRoles(ctx context.Context, session authn.Session, actions []string, roleNames []string) (err error) {
-	return ram.svc.RemoveActionsFromRoles(ctx, session, actions, roleNames)
-}
-
 func (ram RoleManagerAuthorizationMiddleware) authorize(ctx context.Context, op svcutil.Operation, pr mgauthz.PolicyReq) error {
 	perm, err := ram.opp.GetPermission(op)
 	if err != nil {
@@ -279,4 +266,8 @@ func (ram RoleManagerAuthorizationMiddleware) authorize(ctx context.Context, op 
 	}
 
 	return nil
+}
+
+func (ram RoleManagerAuthorizationMiddleware) RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, memberID string) (err error) {
+	return ram.svc.RemoveMemberFromAllRoles(ctx, session, memberID)
 }

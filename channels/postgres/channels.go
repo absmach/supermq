@@ -25,7 +25,11 @@ import (
 	"github.com/jackc/pgtype"
 )
 
-const rolesTableNamePrefix = "channels"
+const (
+	rolesTableNamePrefix = "channels"
+	entityTableName      = "channels"
+	entityIDColumnName   = "id"
+)
 
 var _ channels.Repository = (*channelRepository)(nil)
 
@@ -38,7 +42,7 @@ type channelRepository struct {
 // repository.
 func NewRepository(db postgres.Database) channels.Repository {
 
-	rolesRepo := rolesPostgres.NewRepository(db, rolesTableNamePrefix)
+	rolesRepo := rolesPostgres.NewRepository(db, rolesTableNamePrefix, entityTableName, entityIDColumnName)
 	return &channelRepository{
 		db:         db,
 		Repository: rolesRepo,

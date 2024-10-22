@@ -70,10 +70,21 @@ type MembersPage struct {
 	Members []string `json:"members"`
 }
 
+type EntityActionRole struct {
+	EntityID string `json:"entity_id"`
+	Action   string `json:"action"`
+	RoleID   string `json:"role_id"`
+}
+type EntityMemberRole struct {
+	EntityID string `json:"entity_id"`
+	MemberID string `json:"member_id"`
+	RoleID   string `json:"role_id"`
+}
+
 //go:generate mockery --name Provisioner --output=./mocks --filename provisioner.go --quiet --note "Copyright (c) Abstract Machines"
 type Provisioner interface {
-	AddNewEntityRoles(ctx context.Context, session authn.Session, entityIDs []string, optionalEntityPolicies []policies.Policy, newBuiltInRoleMembers map[BuiltInRoleName][]Member) ([]RoleProvision, error)
-	RemoveEntityRoles(ctx context.Context, session authn.Session, entityIDs []string, optionalEntityPolicies []policies.Policy) error
+	AddNewEntitiesRoles(ctx context.Context, domainID, userID string, entityIDs []string, optionalEntityPolicies []policies.Policy, newBuiltInRoleMembers map[BuiltInRoleName][]Member) ([]RoleProvision, error)
+	RemoveEntitiesRoles(ctx context.Context, domainID, userID string, entityIDs []string, optionalFilterDeletePolicies []policies.Policy, optionalDeletePolicies []policies.Policy) error
 }
 
 //go:generate mockery --name RoleManager --output=./mocks --filename rolemanager.go --quiet --note "Copyright (c) Abstract Machines"
@@ -114,13 +125,7 @@ type RoleManager interface {
 
 	RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleName string) (err error)
 
-	RemoveMembersFromAllRoles(ctx context.Context, session authn.Session, members []string) (err error)
-
-	RemoveMembersFromRoles(ctx context.Context, session authn.Session, members []string, roleNames []string) (err error)
-
-	RemoveActionsFromAllRoles(ctx context.Context, session authn.Session, actions []string) (err error)
-
-	RemoveActionsFromRoles(ctx context.Context, session authn.Session, actions []string, roleNames []string) (err error)
+	RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, memberID string) (err error)
 }
 
 //go:generate mockery --name Repository --output=./mocks --filename rolesRepo.go --quiet --note "Copyright (c) Abstract Machines"
@@ -141,6 +146,8 @@ type Repository interface {
 	RoleCheckMembersExists(ctx context.Context, roleID string, members []string) (bool, error)
 	RoleRemoveMembers(ctx context.Context, role Role, members []string) (err error)
 	RoleRemoveAllMembers(ctx context.Context, role Role) (err error)
+	RetrieveEntitiesRolesActionsMembers(ctx context.Context, entityIDs []string) ([]EntityActionRole, []EntityMemberRole, error)
+	RemoveMemberFromAllRoles(ctx context.Context, members string) (err error)
 }
 
 type Roles interface {

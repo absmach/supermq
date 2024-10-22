@@ -68,15 +68,6 @@ func (rtm *RoleManagerTracing) RoleRemoveMembers(ctx context.Context, session au
 func (rtm *RoleManagerTracing) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleName string) (err error) {
 	return rtm.roles.RoleRemoveAllMembers(ctx, session, entityID, roleName)
 }
-func (rtm *RoleManagerTracing) RemoveMembersFromAllRoles(ctx context.Context, session authn.Session, members []string) (err error) {
-	return rtm.roles.RemoveMembersFromAllRoles(ctx, session, members)
-}
-func (rtm *RoleManagerTracing) RemoveMembersFromRoles(ctx context.Context, session authn.Session, members []string, roleNames []string) (err error) {
-	return rtm.roles.RemoveMembersFromRoles(ctx, session, members, roleNames)
-}
-func (rtm *RoleManagerTracing) RemoveActionsFromAllRoles(ctx context.Context, session authn.Session, actions []string) (err error) {
-	return rtm.roles.RemoveActionsFromAllRoles(ctx, session, actions)
-}
-func (rtm *RoleManagerTracing) RemoveActionsFromRoles(ctx context.Context, session authn.Session, actions []string, roleNames []string) (err error) {
-	return rtm.roles.RemoveActionsFromRoles(ctx, session, actions, roleNames)
+func (rtm *RoleManagerTracing) RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, memberID string) (err error) {
+	return rtm.roles.RemoveMemberFromAllRoles(ctx, session, memberID)
 }

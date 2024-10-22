@@ -79,15 +79,6 @@ func (rmm *RoleManagerMetricsMiddleware) RoleRemoveMembers(ctx context.Context, 
 func (rmm *RoleManagerMetricsMiddleware) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleName string) (err error) {
 	return rmm.svc.RoleRemoveAllMembers(ctx, session, entityID, roleName)
 }
-func (rmm *RoleManagerMetricsMiddleware) RemoveMembersFromAllRoles(ctx context.Context, session authn.Session, members []string) (err error) {
-	return rmm.svc.RemoveMembersFromAllRoles(ctx, session, members)
-}
-func (rmm *RoleManagerMetricsMiddleware) RemoveMembersFromRoles(ctx context.Context, session authn.Session, members []string, roleNames []string) (err error) {
-	return rmm.svc.RemoveMembersFromRoles(ctx, session, members, roleNames)
-}
-func (rmm *RoleManagerMetricsMiddleware) RemoveActionsFromAllRoles(ctx context.Context, session authn.Session, actions []string) (err error) {
-	return rmm.svc.RemoveActionsFromAllRoles(ctx, session, actions)
-}
-func (rmm *RoleManagerMetricsMiddleware) RemoveActionsFromRoles(ctx context.Context, session authn.Session, actions []string, roleNames []string) (err error) {
-	return rmm.svc.RemoveActionsFromRoles(ctx, session, actions, roleNames)
+func (rmm *RoleManagerMetricsMiddleware) RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, memberID string) (err error) {
+	return rmm.svc.RemoveMemberFromAllRoles(ctx, session, memberID)
 }

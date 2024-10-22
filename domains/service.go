@@ -88,7 +88,7 @@ func (svc service) CreateDomain(ctx context.Context, session authn.Session, d Do
 		},
 	}
 
-	if _, err := svc.AddNewEntityRoles(ctx, session, []string{domainID}, optionalPolicies, newBuiltInRoleMembers); err != nil {
+	if _, err := svc.AddNewEntitiesRoles(ctx, domainID, session.UserID, []string{domainID}, optionalPolicies, newBuiltInRoleMembers); err != nil {
 		return Domain{}, errors.Wrap(errCreateDomainPolicy, err)
 	}
 

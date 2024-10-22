@@ -96,7 +96,7 @@ func (svc service) CreateGroup(ctx context.Context, session mgauthn.Session, g g
 		groups.BuiltInRoleAdmin:      {roles.Member(session.UserID)},
 		groups.BuiltInRoleMembership: {},
 	}
-	if _, err := svc.AddNewEntityRoles(ctx, session, []string{saved.ID}, oprs, newBuiltInRoleMembers); err != nil {
+	if _, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, []string{saved.ID}, oprs, newBuiltInRoleMembers); err != nil {
 		return groups.Group{}, errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
 
@@ -630,17 +630,31 @@ func (svc service) ListChildrenGroups(ctx context.Context, session mgauthn.Sessi
 // }
 
 func (svc service) DeleteGroup(ctx context.Context, session mgauthn.Session, id string) error {
-	if err := svc.policy.DeletePolicyFilter(ctx, policies.Policy{
-		SubjectType: policies.GroupType,
-		Subject:     id,
-	}); err != nil {
-		return errors.Wrap(svcerr.ErrDeletePolicies, err)
+	if _, err := svc.repo.ChangeStatus(ctx, groups.Group{ID: id, Status: mgclients.DeletedStatus}); err != nil {
+		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
-	if err := svc.policy.DeletePolicyFilter(ctx, policies.Policy{
-		ObjectType: policies.GroupType,
-		Object:     id,
-	}); err != nil {
+	filterDeletePolicies := []policies.Policy{
+		{
+			SubjectType: policies.GroupType,
+			Subject:     id,
+		},
+		{
+			ObjectType: policies.GroupType,
+			Object:     id,
+		},
+	}
+	deletePolicies := []policies.Policy{
+		{
+			SubjectType: policies.DomainType,
+			Subject:     session.DomainUserID,
+			Relation:    policies.DomainRelation,
+			ObjectType:  policies.GroupType,
+			Object:      id,
+		},
+	}
+
+	if err := svc.RemoveEntitiesRoles(ctx, session.DomainID, session.DomainUserID, []string{id}, filterDeletePolicies, deletePolicies); err != nil {
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
 	}
 

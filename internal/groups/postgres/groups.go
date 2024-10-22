@@ -23,7 +23,11 @@ import (
 
 var _ mggroups.Repository = (*groupRepository)(nil)
 
-const rolesTableNamePrefix = "groups"
+const (
+	rolesTableNamePrefix = "groups"
+	entityTableName      = "groups"
+	entityIDColumnName   = "id"
+)
 
 var (
 	errParentGroupID   = errors.New("parent group id is empty")
@@ -39,7 +43,7 @@ type groupRepository struct {
 // New instantiates a PostgreSQL implementation of group
 // repository.
 func New(db postgres.Database) mggroups.Repository {
-	roleRepo := rolesPostgres.NewRepository(db, rolesTableNamePrefix)
+	roleRepo := rolesPostgres.NewRepository(db, rolesTableNamePrefix, entityTableName, entityIDColumnName)
 
 	return &groupRepository{
 		db:         db,

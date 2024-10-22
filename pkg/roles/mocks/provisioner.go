@@ -7,11 +7,8 @@ package mocks
 import (
 	context "context"
 
-	authn "github.com/absmach/magistrala/pkg/authn"
-
-	mock "github.com/stretchr/testify/mock"
-
 	policies "github.com/absmach/magistrala/pkg/policies"
+	mock "github.com/stretchr/testify/mock"
 
 	roles "github.com/absmach/magistrala/pkg/roles"
 )
@@ -21,29 +18,29 @@ type Provisioner struct {
 	mock.Mock
 }
 
-// AddNewEntityRoles provides a mock function with given fields: ctx, session, entityID, optionalEntityPolicies, newBuiltInRoleMembers
-func (_m *Provisioner) AddNewEntityRoles(ctx context.Context, session authn.Session, entityID string, optionalEntityPolicies []policies.Policy, newBuiltInRoleMembers map[roles.BuiltInRoleName][]roles.Member) ([]roles.RoleProvision, error) {
-	ret := _m.Called(ctx, session, entityID, optionalEntityPolicies, newBuiltInRoleMembers)
+// AddNewEntitiesRoles provides a mock function with given fields: ctx, domainID, userID, entityIDs, optionalEntityPolicies, newBuiltInRoleMembers
+func (_m *Provisioner) AddNewEntitiesRoles(ctx context.Context, domainID string, userID string, entityIDs []string, optionalEntityPolicies []policies.Policy, newBuiltInRoleMembers map[roles.BuiltInRoleName][]roles.Member) ([]roles.RoleProvision, error) {
+	ret := _m.Called(ctx, domainID, userID, entityIDs, optionalEntityPolicies, newBuiltInRoleMembers)
 
 	if len(ret) == 0 {
-		panic("no return value specified for AddNewEntityRoles")
+		panic("no return value specified for AddNewEntitiesRoles")
 	}
 
 	var r0 []roles.RoleProvision
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, []policies.Policy, map[roles.BuiltInRoleName][]roles.Member) ([]roles.RoleProvision, error)); ok {
-		return rf(ctx, session, entityID, optionalEntityPolicies, newBuiltInRoleMembers)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, []string, []policies.Policy, map[roles.BuiltInRoleName][]roles.Member) ([]roles.RoleProvision, error)); ok {
+		return rf(ctx, domainID, userID, entityIDs, optionalEntityPolicies, newBuiltInRoleMembers)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, []policies.Policy, map[roles.BuiltInRoleName][]roles.Member) []roles.RoleProvision); ok {
-		r0 = rf(ctx, session, entityID, optionalEntityPolicies, newBuiltInRoleMembers)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, []string, []policies.Policy, map[roles.BuiltInRoleName][]roles.Member) []roles.RoleProvision); ok {
+		r0 = rf(ctx, domainID, userID, entityIDs, optionalEntityPolicies, newBuiltInRoleMembers)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]roles.RoleProvision)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string, []policies.Policy, map[roles.BuiltInRoleName][]roles.Member) error); ok {
-		r1 = rf(ctx, session, entityID, optionalEntityPolicies, newBuiltInRoleMembers)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, []string, []policies.Policy, map[roles.BuiltInRoleName][]roles.Member) error); ok {
+		r1 = rf(ctx, domainID, userID, entityIDs, optionalEntityPolicies, newBuiltInRoleMembers)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -51,17 +48,17 @@ func (_m *Provisioner) AddNewEntityRoles(ctx context.Context, session authn.Sess
 	return r0, r1
 }
 
-// RemoveEntityRoles provides a mock function with given fields: ctx, session, entityID, optionalEntityPolicies
-func (_m *Provisioner) RemoveEntityRoles(ctx context.Context, session authn.Session, entityID string, optionalEntityPolicies []policies.Policy) error {
-	ret := _m.Called(ctx, session, entityID, optionalEntityPolicies)
+// RemoveEntitiesRoles provides a mock function with given fields: ctx, domainID, userID, entityIDs, optionalFilterDeletePolicies, optionalDeletePolicies
+func (_m *Provisioner) RemoveEntitiesRoles(ctx context.Context, domainID string, userID string, entityIDs []string, optionalFilterDeletePolicies []policies.Policy, optionalDeletePolicies []policies.Policy) error {
+	ret := _m.Called(ctx, domainID, userID, entityIDs, optionalFilterDeletePolicies, optionalDeletePolicies)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RemoveEntityRoles")
+		panic("no return value specified for RemoveEntitiesRoles")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, []policies.Policy) error); ok {
-		r0 = rf(ctx, session, entityID, optionalEntityPolicies)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, []string, []policies.Policy, []policies.Policy) error); ok {
+		r0 = rf(ctx, domainID, userID, entityIDs, optionalFilterDeletePolicies, optionalDeletePolicies)
 	} else {
 		r0 = ret.Error(0)
 	}

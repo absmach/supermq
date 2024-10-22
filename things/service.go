@@ -17,11 +17,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var (
-	errCreateThingsPolicies   = errors.New("failed to create things policies")
-	errCreateChannelsPolicies = errors.New("failed to create channels policies")
-	errRollbackRepo           = errors.New("failed to rollback repo")
-)
+var errRollbackRepo = errors.New("failed to rollback repo")
 
 var _ Service = (*service)(nil)
 
@@ -73,7 +69,7 @@ func (svc service) Authorize(ctx context.Context, req AuthzReq) (string, error) 
 
 // Things service
 
-func (svc service) CreateThings(ctx context.Context, session authn.Session, cls ...mgclients.Client) ([]mgclients.Client, error) {
+func (svc service) CreateThings(ctx context.Context, session authn.Session, cls ...mgclients.Client) (retThings []mgclients.Client, retErr error) {
 	var clients []mgclients.Client
 	for _, c := range cls {
 		if c.ID == "" {
@@ -108,9 +104,9 @@ func (svc service) CreateThings(ctx context.Context, session authn.Session, cls 
 	}
 
 	defer func() {
-		if err != nil {
+		if retErr != nil {
 			if errRollBack := svc.repo.RemoveThings(ctx, clientIDs); errRollBack != nil {
-				err = errors.Wrap(err, errors.Wrap(errRollbackRepo, errRollBack))
+				retErr = errors.Wrap(retErr, errors.Wrap(errRollbackRepo, errRollBack))
 			}
 		}
 	}()
@@ -125,16 +121,7 @@ func (svc service) CreateThings(ctx context.Context, session authn.Session, cls 
 		optionalPolicies = append(optionalPolicies,
 			policies.Policy{
 				Domain:      session.DomainID,
-				SubjectType: policies.UserType,
-				Subject:     session.DomainUserID,
-				Relation:    policies.AdministratorRelation,
-				ObjectKind:  policies.NewThingKind,
-				ObjectType:  policies.ThingType,
-				Object:      clientID,
-			},
-			policies.Policy{
-				Domain:      session.DomainID,
-				SubjectType: policies.UserType,
+				SubjectType: policies.DomainType,
 				Subject:     session.DomainUserID,
 				Relation:    policies.DomainRelation,
 				ObjectType:  policies.ThingType,
@@ -143,8 +130,8 @@ func (svc service) CreateThings(ctx context.Context, session authn.Session, cls 
 		)
 	}
 
-	if _, err := svc.AddNewEntityRoles(ctx, session, clientIDs, optionalPolicies, newBuiltInRoleMembers); err != nil {
-		return []mgclients.Client{}, errors.Wrap(errCreateThingsPolicies, err)
+	if _, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, clientIDs, optionalPolicies, newBuiltInRoleMembers); err != nil {
+		return []mgclients.Client{}, errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
 
 	return saved, nil
@@ -346,17 +333,36 @@ func (svc service) DisableClient(ctx context.Context, session authn.Session, id 
 }
 
 func (svc service) DeleteClient(ctx context.Context, session authn.Session, id string) error {
+	if _, err := svc.repo.ChangeStatus(ctx, mgclients.Client{ID: id, Status: mgclients.DeletedStatus}); err != nil {
+		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+
 	if err := svc.cache.Remove(ctx, id); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
-	req := policies.Policy{
-		Object:     id,
-		ObjectType: policies.ThingType,
+	filterDeletePolicies := []policies.Policy{
+		{
+			SubjectType: policies.ThingType,
+			Subject:     id,
+		},
+		{
+			ObjectType: policies.ThingType,
+			Object:     id,
+		},
+	}
+	deletePolicies := []policies.Policy{
+		{
+			SubjectType: policies.DomainType,
+			Subject:     session.DomainUserID,
+			Relation:    policies.DomainRelation,
+			ObjectType:  policies.ThingType,
+			Object:      id,
+		},
 	}
 
-	if err := svc.policy.DeletePolicyFilter(ctx, req); err != nil {
-		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	if err := svc.RemoveEntitiesRoles(ctx, session.DomainID, session.DomainUserID, []string{id}, filterDeletePolicies, deletePolicies); err != nil {
+		return errors.Wrap(svcerr.ErrDeletePolicies, err)
 	}
 
 	if err := svc.repo.Delete(ctx, id); err != nil {
@@ -399,60 +405,4 @@ func (svc service) Identify(ctx context.Context, key string) (string, error) {
 	}
 
 	return client.ID, nil
-}
-
-func (svc service) addThingPolicies(ctx context.Context, userID, domainID string, things []mgclients.Client) error {
-	policyList := []policies.Policy{}
-	for _, thing := range things {
-		policyList = append(policyList, policies.Policy{
-			Domain:      domainID,
-			SubjectType: policies.UserType,
-			Subject:     userID,
-			Relation:    policies.AdministratorRelation,
-			ObjectKind:  policies.NewThingKind,
-			ObjectType:  policies.ThingType,
-			Object:      thing.ID,
-		})
-		policyList = append(policyList, policies.Policy{
-			Domain:      domainID,
-			SubjectType: policies.DomainType,
-			Subject:     domainID,
-			Relation:    policies.DomainRelation,
-			ObjectType:  policies.ThingType,
-			Object:      thing.ID,
-		})
-	}
-	if err := svc.policy.AddPolicies(ctx, policyList); err != nil {
-		return errors.Wrap(svcerr.ErrCreateEntity, err)
-	}
-
-	return nil
-}
-
-func (svc service) addThingPoliciesRollback(ctx context.Context, userID, domainID string, things []mgclients.Client) error {
-	policyList := []policies.Policy{}
-	for _, thing := range things {
-		policyList = append(policyList, policies.Policy{
-			Domain:      domainID,
-			SubjectType: policies.UserType,
-			Subject:     userID,
-			Relation:    policies.AdministratorRelation,
-			ObjectKind:  policies.NewThingKind,
-			ObjectType:  policies.ThingType,
-			Object:      thing.ID,
-		})
-		policyList = append(policyList, policies.Policy{
-			Domain:      domainID,
-			SubjectType: policies.DomainType,
-			Subject:     domainID,
-			Relation:    policies.DomainRelation,
-			ObjectType:  policies.ThingType,
-			Object:      thing.ID,
-		})
-	}
-	if err := svc.policy.DeletePolicies(ctx, policyList); err != nil {
-		return errors.Wrap(svcerr.ErrRemoveEntity, err)
-	}
-
-	return nil
 }

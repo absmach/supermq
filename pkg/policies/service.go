@@ -26,6 +26,9 @@ type Policy struct {
 	// SubjectRelation contains subject relations.
 	SubjectRelation string `json:"subject_relation,omitempty"`
 
+	// ObjectPrefix contains the Optional Object Prefix which is used for delete with filter.
+	ObjectPrefix string `json:"object_prefix"`
+
 	// Object contains the object ID.
 	Object string `json:"object"`
 

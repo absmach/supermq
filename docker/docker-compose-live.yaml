@@ -34,3 +34,34 @@ services:
                   "--build.send_interrupt", "true",
                   "--build.exclude_dir", ".vscode,.git,.docker,.github,api,build,tools,scripts",
                   "--build.exclude_regex", "[\"_test\\.go\"" ]
+  things:
+    image: magistrala/things-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.livereload
+    volumes:
+      - ../:/go/src/github.com/absmach/magistrala
+    working_dir: /go/src/github.com/absmach/magistrala
+    entrypoint: [ "air",
+                  "--build.cmd", "BUILD_DIR=/tmp make things",
+                  "--build.bin", "/tmp/things",
+                  "--build.stop_on_error", "true",
+                  "--build.send_interrupt", "true",
+                  "--build.exclude_dir", ".vscode,.git,.docker,.github,api,build,tools,scripts",
+                  "--build.exclude_regex", "[\"_test\\.go\"" ]
+
+  channels:
+    image: magistrala/channels-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.livereload
+    volumes:
+      - ../:/go/src/github.com/absmach/magistrala
+    working_dir: /go/src/github.com/absmach/magistrala
+    entrypoint: [ "air",
+                  "--build.cmd", "BUILD_DIR=/tmp make channels",
+                  "--build.bin", "/tmp/channels",
+                  "--build.stop_on_error", "true",
+                  "--build.send_interrupt", "true",
+                  "--build.exclude_dir", ".vscode,.git,.docker,.github,api,build,tools,scripts",
+                  "--build.exclude_regex", "[\"_test\\.go\"" ]

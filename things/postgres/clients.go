@@ -16,7 +16,11 @@ import (
 	"github.com/absmach/magistrala/things"
 )
 
-const thingsRolesTableNamePrefix = "things"
+const (
+	entityTableName      = "clients"
+	entityIDColumnName   = "id"
+	rolesTableNamePrefix = "things"
+)
 
 var _ things.Repository = (*thingsRepo)(nil)
 
@@ -28,7 +32,7 @@ type thingsRepo struct {
 // NewRepository instantiates a PostgreSQL
 // implementation of Clients repository.
 func NewRepository(db postgres.Database) things.Repository {
-	repo := rolesPostgres.NewRepository(db, thingsRolesTableNamePrefix)
+	repo := rolesPostgres.NewRepository(db, rolesTableNamePrefix, entityTableName, entityIDColumnName)
 
 	return &thingsRepo{
 		clientsRepo{
@@ -42,45 +46,53 @@ type clientsRepo struct {
 	pgclients.Repository
 }
 
-func (repo *clientsRepo) Save(ctx context.Context, cs ...mgclients.Client) ([]mgclients.Client, error) {
+func (repo *clientsRepo) Save(ctx context.Context, cs ...mgclients.Client) (retClients []mgclients.Client, retErr error) {
 	tx, err := repo.DB.BeginTxx(ctx, nil)
 	if err != nil {
 		return []mgclients.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
 	}
-	var clients []mgclients.Client
 
+	defer func() {
+		if retErr != nil {
+			if err := tx.Rollback(); err != nil {
+				retErr = errors.Wrap(retErr, errors.Wrap(errors.ErrRollbackTx, err))
+			}
+		}
+	}()
+
+	var dbClients []pgclients.DBClient
 	for _, cli := range cs {
-		q := `INSERT INTO clients (id, name, tags, domain_id, identity, secret, metadata, created_at, updated_at, updated_by, status)
-        VALUES (:id, :name, :tags, :domain_id, :identity, :secret, :metadata, :created_at, :updated_at, :updated_by, :status)
-        RETURNING id, name, tags, identity, secret, metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
-
 		dbcli, err := pgclients.ToDBClient(cli)
 		if err != nil {
 			return []mgclients.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
 		}
+		dbClients = append(dbClients, dbcli)
+	}
 
-		row, err := repo.DB.NamedQueryContext(ctx, q, dbcli)
+	q := `INSERT INTO clients (id, name, tags, domain_id, identity, secret, metadata, created_at, updated_at, updated_by, status)
+	VALUES (:id, :name, :tags, :domain_id, :identity, :secret, :metadata, :created_at, :updated_at, :updated_by, :status)
+	RETURNING id, name, tags, identity, secret, metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
+
+	row, err := repo.DB.NamedQueryContext(ctx, q, dbClients)
+	if err != nil {
+		return []mgclients.Client{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+	}
+
+	defer row.Close()
+
+	var clients []mgclients.Client
+
+	for row.Next() {
+		dbcli := pgclients.DBClient{}
+		if err := row.StructScan(&dbcli); err != nil {
+			return []mgclients.Client{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
+		}
+
+		client, err := pgclients.ToClient(dbcli)
 		if err != nil {
-			if err := tx.Rollback(); err != nil {
-				return []mgclients.Client{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
-			}
-			return []mgclients.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
+			return []mgclients.Client{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
 		}
-
-		defer row.Close()
-
-		if row.Next() {
-			dbcli = pgclients.DBClient{}
-			if err := row.StructScan(&dbcli); err != nil {
-				return []mgclients.Client{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
-			}
-
-			client, err := pgclients.ToClient(dbcli)
-			if err != nil {
-				return []mgclients.Client{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
-			}
-			clients = append(clients, client)
-		}
+		clients = append(clients, client)
 	}
 	if err = tx.Commit(); err != nil {
 		return []mgclients.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)

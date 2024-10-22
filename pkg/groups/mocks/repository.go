@@ -112,6 +112,24 @@ func (_m *Repository) Delete(ctx context.Context, groupID string) error {
 	return r0
 }
 
+// RemoveMemberFromAllRoles provides a mock function with given fields: ctx, members
+func (_m *Repository) RemoveMemberFromAllRoles(ctx context.Context, members string) error {
+	ret := _m.Called(ctx, members)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveMemberFromAllRoles")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, members)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // RemoveRoles provides a mock function with given fields: ctx, roleIDs
 func (_m *Repository) RemoveRoles(ctx context.Context, roleIDs []string) error {
 	ret := _m.Called(ctx, roleIDs)
@@ -240,6 +258,45 @@ func (_m *Repository) RetrieveByIDs(ctx context.Context, pm groups.PageMeta, ids
 	}
 
 	return r0, r1
+}
+
+// RetrieveEntitiesRolesActionsMembers provides a mock function with given fields: ctx, entityIDs
+func (_m *Repository) RetrieveEntitiesRolesActionsMembers(ctx context.Context, entityIDs []string) ([]roles.EntityActionRole, []roles.EntityMemberRole, error) {
+	ret := _m.Called(ctx, entityIDs)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveEntitiesRolesActionsMembers")
+	}
+
+	var r0 []roles.EntityActionRole
+	var r1 []roles.EntityMemberRole
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, []string) ([]roles.EntityActionRole, []roles.EntityMemberRole, error)); ok {
+		return rf(ctx, entityIDs)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []string) []roles.EntityActionRole); ok {
+		r0 = rf(ctx, entityIDs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]roles.EntityActionRole)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []string) []roles.EntityMemberRole); ok {
+		r1 = rf(ctx, entityIDs)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]roles.EntityMemberRole)
+		}
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, []string) error); ok {
+		r2 = rf(ctx, entityIDs)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // RetrieveHierarchy provides a mock function with given fields: ctx, id, hm

@@ -77,71 +77,17 @@ func (_m *RoleManager) ListAvailableActions(ctx context.Context, session authn.S
 	return r0, r1
 }
 
-// RemoveActionsFromAllRoles provides a mock function with given fields: ctx, session, actions
-func (_m *RoleManager) RemoveActionsFromAllRoles(ctx context.Context, session authn.Session, actions []string) error {
-	ret := _m.Called(ctx, session, actions)
+// RemoveMemberFromAllRoles provides a mock function with given fields: ctx, session, memberID
+func (_m *RoleManager) RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, memberID string) error {
+	ret := _m.Called(ctx, session, memberID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RemoveActionsFromAllRoles")
+		panic("no return value specified for RemoveMemberFromAllRoles")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, []string) error); ok {
-		r0 = rf(ctx, session, actions)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// RemoveActionsFromRoles provides a mock function with given fields: ctx, session, actions, roleNames
-func (_m *RoleManager) RemoveActionsFromRoles(ctx context.Context, session authn.Session, actions []string, roleNames []string) error {
-	ret := _m.Called(ctx, session, actions, roleNames)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RemoveActionsFromRoles")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, []string, []string) error); ok {
-		r0 = rf(ctx, session, actions, roleNames)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// RemoveMembersFromAllRoles provides a mock function with given fields: ctx, session, members
-func (_m *RoleManager) RemoveMembersFromAllRoles(ctx context.Context, session authn.Session, members []string) error {
-	ret := _m.Called(ctx, session, members)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RemoveMembersFromAllRoles")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, []string) error); ok {
-		r0 = rf(ctx, session, members)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// RemoveMembersFromRoles provides a mock function with given fields: ctx, session, members, roleNames
-func (_m *RoleManager) RemoveMembersFromRoles(ctx context.Context, session authn.Session, members []string, roleNames []string) error {
-	ret := _m.Called(ctx, session, members, roleNames)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RemoveMembersFromRoles")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, []string, []string) error); ok {
-		r0 = rf(ctx, session, members, roleNames)
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) error); ok {
+		r0 = rf(ctx, session, memberID)
 	} else {
 		r0 = ret.Error(0)
 	}

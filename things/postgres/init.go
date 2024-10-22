@@ -11,13 +11,8 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 )
 
-const (
-	thingsForeignKeyTableName  = "clients"
-	thingsForeignKeyColumnName = "id"
-)
-
 func Migration() (*migrate.MemoryMigrationSource, error) {
-	thingsRolesMigration, err := rolesPostgres.Migration(thingsRolesTableNamePrefix, thingsForeignKeyTableName, thingsForeignKeyColumnName)
+	thingsRolesMigration, err := rolesPostgres.Migration(rolesTableNamePrefix, entityTableName, entityIDColumnName)
 	if err != nil {
 		return &migrate.MemoryMigrationSource{}, errors.Wrap(repoerr.ErrRoleMigration, err)
 	}

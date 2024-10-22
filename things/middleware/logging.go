@@ -38,7 +38,7 @@ func (lm *loggingMiddleware) CreateThings(ctx context.Context, session authn.Ses
 			slog.String("duration", time.Since(begin).String()),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn(fmt.Sprintf("Create %d things failed", len(clients)), args...)
 			return
 		}
@@ -57,7 +57,7 @@ func (lm *loggingMiddleware) ViewClient(ctx context.Context, session authn.Sessi
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("View thing failed", args...)
 			return
 		}
@@ -78,7 +78,7 @@ func (lm *loggingMiddleware) ListClients(ctx context.Context, session authn.Sess
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("List things failed", args...)
 			return
 		}
@@ -98,7 +98,7 @@ func (lm *loggingMiddleware) UpdateClient(ctx context.Context, session authn.Ses
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Update thing failed", args...)
 			return
 		}
@@ -137,7 +137,7 @@ func (lm *loggingMiddleware) UpdateClientSecret(ctx context.Context, session aut
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Update thing secret failed", args...)
 			return
 		}
@@ -156,7 +156,7 @@ func (lm *loggingMiddleware) EnableClient(ctx context.Context, session authn.Ses
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Enable thing failed", args...)
 			return
 		}
@@ -175,7 +175,7 @@ func (lm *loggingMiddleware) DisableClient(ctx context.Context, session authn.Se
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Disable thing failed", args...)
 			return
 		}
@@ -191,7 +191,7 @@ func (lm *loggingMiddleware) Identify(ctx context.Context, key string) (id strin
 			slog.String("thing_id", id),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Identify thing failed", args...)
 			return
 		}
@@ -210,7 +210,7 @@ func (lm *loggingMiddleware) Authorize(ctx context.Context, req things.AuthzReq)
 			slog.String("prmission", req.Permission),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Authorize failed", args...)
 			return
 		}
@@ -226,7 +226,7 @@ func (lm *loggingMiddleware) DeleteClient(ctx context.Context, session authn.Ses
 			slog.String("thing_id", id),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Delete thing failed", args...)
 			return
 		}

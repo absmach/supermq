@@ -12,7 +12,11 @@ import (
 	"github.com/absmach/magistrala/pkg/policies"
 )
 
-var errRollbackRoles = errors.New("failed to rollback roles")
+var (
+	errRemoveOptionalDeletePolicies       = errors.New("failed to delete the additional requested policies")
+	errRemoveOptionalFilterDeletePolicies = errors.New("failed to filter delete the additional requested policies")
+	errRollbackRoles                      = errors.New("failed to rollback roles")
+)
 
 type roleProvisionerManger interface {
 	RoleManager
@@ -84,16 +88,56 @@ func (r ProvisionManageService) validateActions(actions []Action) error {
 	return nil
 }
 
-func (r ProvisionManageService) RemoveEntityRoles(ctx context.Context, session authn.Session, entityIDs []string, optionalEntityPolicies []policies.Policy) error {
+func (r ProvisionManageService) RemoveEntitiesRoles(ctx context.Context, domainID, userID string, entityIDs []string, optionalFilterDeletePolicies []policies.Policy, optionalDeletePolicies []policies.Policy) error {
+	ears, emrs, err := r.repo.RetrieveEntitiesRolesActionsMembers(ctx, entityIDs)
+	if err != nil {
+		return err
+	}
+
+	deletePolicies := []policies.Policy{}
+	for _, ear := range ears {
+		deletePolicies = append(deletePolicies, policies.Policy{
+			Subject:         ear.RoleID,
+			SubjectRelation: policies.MemberRelation,
+			SubjectType:     policies.RoleType,
+			Relation:        ear.Action,
+			ObjectType:      r.entityType,
+			Object:          ear.EntityID,
+		})
+	}
+	for _, emr := range emrs {
+		deletePolicies = append(deletePolicies, policies.Policy{
+			Subject:     policies.EncodeDomainUserID(domainID, emr.MemberID),
+			SubjectType: policies.UserType,
+			Relation:    policies.MemberRelation,
+			ObjectType:  policies.RoleType,
+			Object:      emr.RoleID,
+		})
+	}
+
+	if err := r.policy.DeletePolicies(ctx, deletePolicies); err != nil {
+		return errors.Wrap(svcerr.ErrDeletePolicies, err)
+	}
+
+	if len(optionalDeletePolicies) > 1 {
+		if err := r.policy.DeletePolicies(ctx, optionalDeletePolicies); err != nil {
+			return errors.Wrap(errRemoveOptionalDeletePolicies, err)
+		}
+	}
+
+	for _, optionalFilterDeletePolicy := range optionalFilterDeletePolicies {
+		if err := r.policy.DeletePolicyFilter(ctx, optionalFilterDeletePolicy); err != nil {
+			return errors.Wrap(errRemoveOptionalFilterDeletePolicies, err)
+		}
+	}
 	return nil
 }
 
-func (r ProvisionManageService) AddNewEntityRoles(ctx context.Context, session authn.Session, entityIDs []string, optionalEntityPolicies []policies.Policy, newBuiltInRoleMembers map[BuiltInRoleName][]Member) (retRolesProvision []RoleProvision, retErr error) {
+func (r ProvisionManageService) AddNewEntitiesRoles(ctx context.Context, domainID, userID string, entityIDs []string, optionalEntityPolicies []policies.Policy, newBuiltInRoleMembers map[BuiltInRoleName][]Member) (retRolesProvision []RoleProvision, retErr error) {
 	var newRolesProvision []RoleProvision
 	prs := []policies.Policy{}
 
 	for _, entityID := range entityIDs {
-
 		for defaultRole, defaultRoleMembers := range newBuiltInRoleMembers {
 			actions, ok := r.builtInRoles[defaultRole]
 			if !ok {
@@ -101,11 +145,12 @@ func (r ProvisionManageService) AddNewEntityRoles(ctx context.Context, session a
 			}
 
 			// There an option to have id as entityID_roleName where in roleName all space are removed with _ and starts with letter and supports only alphanumeric, space and hyphen
-			id, err := r.sidProvider.ID()
+			sid, err := r.sidProvider.ID()
 			if err != nil {
 				return []RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 			}
 
+			id := r.entityType + "_" + sid
 			if err := r.validateActions(actions); err != nil {
 				return []RoleProvision{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 			}
@@ -119,7 +164,7 @@ func (r ProvisionManageService) AddNewEntityRoles(ctx context.Context, session a
 					Name:      defaultRole.String(),
 					EntityID:  entityID,
 					CreatedAt: time.Now(),
-					CreatedBy: session.UserID,
+					CreatedBy: userID,
 				},
 				OptionalActions: caps,
 				OptionalMembers: members,
@@ -127,8 +172,8 @@ func (r ProvisionManageService) AddNewEntityRoles(ctx context.Context, session a
 
 			for _, cap := range caps {
 				prs = append(prs, policies.Policy{
-					SubjectType:     "role",
-					SubjectRelation: "member",
+					SubjectType:     policies.RoleType,
+					SubjectRelation: policies.MemberRelation,
 					Subject:         id,
 					Relation:        cap,
 					Object:          entityID,
@@ -138,17 +183,16 @@ func (r ProvisionManageService) AddNewEntityRoles(ctx context.Context, session a
 
 			for _, member := range members {
 				prs = append(prs, policies.Policy{
-					SubjectType: "user",
-					Subject:     policies.EncodeDomainUserID(session.DomainID, member),
-					Relation:    "member",
+					SubjectType: policies.UserType,
+					Subject:     policies.EncodeDomainUserID(domainID, member),
+					Relation:    policies.MemberRelation,
 					Object:      id,
-					ObjectType:  "role",
+					ObjectType:  policies.RoleType,
 				})
 			}
-
 		}
-		prs = append(prs, optionalEntityPolicies...)
 	}
+	prs = append(prs, optionalEntityPolicies...)
 
 	if len(prs) > 0 {
 		if err := r.policy.AddPolicies(ctx, prs); err != nil {
@@ -172,11 +216,13 @@ func (r ProvisionManageService) AddNewEntityRoles(ctx context.Context, session a
 
 func (r ProvisionManageService) AddRole(ctx context.Context, session authn.Session, entityID string, roleName string, optionalActions []string, optionalMembers []string) (retRole Role, retErr error) {
 
-	// ToDo: Research: Discuss: There an option to have id as entityID_roleName where in roleName all space are removed with _ and starts with letter and supports only alphanumeric, space and hyphen
-	id, err := r.sidProvider.ID()
+	// ToDo: Research: Discuss: There an option to have id as eentityType_entityID_roleName where in roleName all space are removed with _ and starts with letter and supports only alphanumeric, space and hyphen
+	sid, err := r.sidProvider.ID()
 	if err != nil {
 		return Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
+
+	id := r.entityType + "_" + sid
 
 	if err := r.validateActions(toRolesActions(optionalActions)); err != nil {
 		return Role{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
@@ -199,8 +245,8 @@ func (r ProvisionManageService) AddRole(ctx context.Context, session authn.Sessi
 
 	for _, cap := range optionalActions {
 		prs = append(prs, policies.Policy{
-			SubjectType:     "role",
-			SubjectRelation: "member",
+			SubjectType:     policies.RoleType,
+			SubjectRelation: policies.MemberRelation,
 			Subject:         id,
 			Relation:        cap,
 			Object:          entityID,
@@ -210,11 +256,11 @@ func (r ProvisionManageService) AddRole(ctx context.Context, session authn.Sessi
 
 	for _, member := range optionalMembers {
 		prs = append(prs, policies.Policy{
-			SubjectType: "user",
+			SubjectType: policies.UserType,
 			Subject:     policies.EncodeDomainUserID(session.DomainID, member),
-			Relation:    "member",
+			Relation:    policies.MemberRelation,
 			Object:      id,
-			ObjectType:  "role",
+			ObjectType:  policies.RoleType,
 		})
 	}
 
@@ -250,7 +296,7 @@ func (r ProvisionManageService) RemoveRole(ctx context.Context, session authn.Se
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	req := policies.Policy{
-		SubjectType: "role",
+		SubjectType: policies.RoleType,
 		Subject:     ro.ID,
 	}
 	// ToDo: Add Role as Object in DeletePolicyFilter
@@ -323,8 +369,8 @@ func (r ProvisionManageService) RoleAddActions(ctx context.Context, session auth
 	prs := []policies.Policy{}
 	for _, cap := range actions {
 		prs = append(prs, policies.Policy{
-			SubjectType:     "role",
-			SubjectRelation: "member",
+			SubjectType:     policies.RoleType,
+			SubjectRelation: policies.MemberRelation,
 			Subject:         ro.ID,
 			Relation:        cap,
 			Object:          entityID,
@@ -394,8 +440,8 @@ func (r ProvisionManageService) RoleRemoveActions(ctx context.Context, session a
 	prs := []policies.Policy{}
 	for _, op := range actions {
 		prs = append(prs, policies.Policy{
-			SubjectType:     "role",
-			SubjectRelation: "member",
+			SubjectType:     policies.RoleType,
+			SubjectRelation: policies.MemberRelation,
 			Subject:         ro.ID,
 			Relation:        op,
 			Object:          entityID,
@@ -421,7 +467,7 @@ func (r ProvisionManageService) RoleRemoveAllActions(ctx context.Context, sessio
 	}
 
 	prs := policies.Policy{
-		SubjectType: "role",
+		SubjectType: policies.RoleType,
 		Subject:     ro.ID,
 	}
 
@@ -451,11 +497,11 @@ func (r ProvisionManageService) RoleAddMembers(ctx context.Context, session auth
 	prs := []policies.Policy{}
 	for _, mem := range members {
 		prs = append(prs, policies.Policy{
-			SubjectType: "user",
+			SubjectType: policies.UserType,
 			Subject:     policies.EncodeDomainUserID(session.DomainID, mem),
-			Relation:    "member",
+			Relation:    policies.MemberRelation,
 			Object:      ro.ID,
-			ObjectType:  "role",
+			ObjectType:  policies.RoleType,
 		})
 	}
 
@@ -520,11 +566,11 @@ func (r ProvisionManageService) RoleRemoveMembers(ctx context.Context, session a
 	prs := []policies.Policy{}
 	for _, mem := range members {
 		prs = append(prs, policies.Policy{
-			SubjectType: "user",
+			SubjectType: policies.UserType,
 			Subject:     policies.EncodeDomainUserID(session.DomainID, mem),
-			Relation:    "member",
+			Relation:    policies.MemberRelation,
 			Object:      ro.ID,
-			ObjectType:  "role",
+			ObjectType:  policies.RoleType,
 		})
 	}
 
@@ -547,9 +593,9 @@ func (r ProvisionManageService) RoleRemoveAllMembers(ctx context.Context, sessio
 	}
 
 	prs := policies.Policy{
-		ObjectType:  "role",
+		ObjectType:  policies.RoleType,
 		Object:      ro.ID,
-		SubjectType: "user",
+		SubjectType: policies.UserType,
 	}
 
 	if err := r.policy.DeletePolicyFilter(ctx, prs); err != nil {
@@ -565,15 +611,20 @@ func (r ProvisionManageService) RoleRemoveAllMembers(ctx context.Context, sessio
 	return nil
 }
 
-func (r ProvisionManageService) RemoveMembersFromAllRoles(ctx context.Context, session authn.Session, members []string) (err error) {
-	return fmt.Errorf("not implemented")
-}
-func (r ProvisionManageService) RemoveMembersFromRoles(ctx context.Context, session authn.Session, members []string, roleNames []string) (err error) {
-	return fmt.Errorf("not implemented")
-}
-func (r ProvisionManageService) RemoveActionsFromAllRoles(ctx context.Context, session authn.Session, actions []string) (err error) {
-	return fmt.Errorf("not implemented")
-}
-func (r ProvisionManageService) RemoveActionsFromRoles(ctx context.Context, session authn.Session, actions []string, roleNames []string) (err error) {
+func (r ProvisionManageService) RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, member string) (err error) {
+	if err := r.repo.RemoveMemberFromAllRoles(ctx, member); err != nil {
+		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+
+	prs := policies.Policy{
+		ObjectType:   policies.RoleType,
+		ObjectPrefix: r.entityType + "_",
+		SubjectType:  policies.UserType,
+	}
+
+	if err := r.policy.DeletePolicyFilter(ctx, prs); err != nil {
+		return errors.Wrap(svcerr.ErrDeletePolicies, err)
+	}
+
 	return fmt.Errorf("not implemented")
 }

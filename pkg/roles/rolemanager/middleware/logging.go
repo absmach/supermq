@@ -326,13 +326,13 @@ func (lm *RoleManagerLoggingMiddleware) RoleRemoveAllMembers(ctx context.Context
 	return lm.svc.RoleRemoveAllMembers(ctx, session, entityID, roleName)
 }
 
-func (lm *RoleManagerLoggingMiddleware) RemoveMembersFromAllRoles(ctx context.Context, session authn.Session, members []string) (err error) {
+func (lm *RoleManagerLoggingMiddleware) RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, memberID string) (err error) {
 	prefix := fmt.Sprintf("%s remove members from all roles", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group(lm.svcName+"_remove_members_from_all_roles",
-				slog.Any("members", members),
+				slog.Any("member_id", memberID),
 			),
 		}
 		if err != nil {
@@ -342,61 +342,5 @@ func (lm *RoleManagerLoggingMiddleware) RemoveMembersFromAllRoles(ctx context.Co
 		}
 		lm.logger.Info(prefix+" completed successfully", args...)
 	}(time.Now())
-	return lm.svc.RemoveMembersFromAllRoles(ctx, session, members)
-}
-func (lm *RoleManagerLoggingMiddleware) RemoveMembersFromRoles(ctx context.Context, session authn.Session, members []string, roleNames []string) (err error) {
-	prefix := fmt.Sprintf("%s remove members from roles", lm.svcName)
-	defer func(begin time.Time) {
-		args := []any{
-			slog.String("duration", time.Since(begin).String()),
-			slog.Group(lm.svcName+"_remove_members_from_roles",
-				slog.Any("members", members),
-				slog.Any("roleNames", roleNames),
-			),
-		}
-		if err != nil {
-			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn(prefix+" failed", args...)
-			return
-		}
-		lm.logger.Info(prefix+" completed successfully", args...)
-	}(time.Now())
-	return lm.svc.RemoveMembersFromRoles(ctx, session, members, roleNames)
-}
-func (lm *RoleManagerLoggingMiddleware) RemoveActionsFromAllRoles(ctx context.Context, session authn.Session, actions []string) (err error) {
-	prefix := fmt.Sprintf("%s remove actions from all roles", lm.svcName)
-	defer func(begin time.Time) {
-		args := []any{
-			slog.String("duration", time.Since(begin).String()),
-			slog.Group(lm.svcName+"_remove_actions_from_all_roles",
-				slog.Any("actions", actions),
-			),
-		}
-		if err != nil {
-			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn(prefix+" failed", args...)
-			return
-		}
-		lm.logger.Info(prefix+" completed successfully", args...)
-	}(time.Now())
-	return lm.svc.RemoveActionsFromAllRoles(ctx, session, actions)
-}
-func (lm *RoleManagerLoggingMiddleware) RemoveActionsFromRoles(ctx context.Context, session authn.Session, actions []string, roleNames []string) (err error) {
-	prefix := fmt.Sprintf("%s remove actions from roles", lm.svcName)
-	defer func(begin time.Time) {
-		args := []any{
-			slog.String("duration", time.Since(begin).String()),
-			slog.Group(lm.svcName+"_remove_actions_from_roles",
-				slog.Any("actions", actions),
-				slog.Any("roleNames", roleNames),
-			),
-		}
-		if err != nil {
-			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn(prefix+" failed", args...)
-			return
-		}
-		lm.logger.Info(prefix+" completed successfully", args...)
-	}(time.Now())
-	return lm.svc.RemoveActionsFromRoles(ctx, session, actions, roleNames)
+	return lm.svc.RemoveMemberFromAllRoles(ctx, session, memberID)
 }

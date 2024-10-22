@@ -9,7 +9,7 @@ const (
 	ThingRead             roles.Action = "read"
 	ThingDelete           roles.Action = "delete"
 	ThingSetParentGroup   roles.Action = "set_parent_group"
-	ThingConnectToChannel roles.Action = "connect_to_thing"
+	ThingConnectToChannel roles.Action = "connect_to_channel"
 	ThingManageRole       roles.Action = "manage_role"
 	ThingAddRoleUsers     roles.Action = "add_role_users"
 	ThingRemoveRoleUsers  roles.Action = "remove_role_users"

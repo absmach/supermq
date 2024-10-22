@@ -11,12 +11,12 @@ import (
 )
 
 // Migration of Auth service.
-func Migration(rolesTableNamePrefix, entityForeignKeyTableName, entityForeignKeyColumnName string) (*migrate.MemoryMigrationSource, error) {
+func Migration(rolesTableNamePrefix, entityTableName, entityIDColumnName string) (*migrate.MemoryMigrationSource, error) {
 
 	// ToDo: need to add check in database to check table exists and column exits as primary key. For this Migration function need database.
 	// ToDo: Add entity name in all table prefix. This helps when all entities uses same database
 	// ToDo: Add table name prefix option in service and repo. So each entity can have its own tables in same database
-	if entityForeignKeyTableName == "" || entityForeignKeyColumnName == "" {
+	if entityTableName == "" || entityIDColumnName == "" {
 		return nil, fmt.Errorf("invalid entity Table Name or column name")
 	}
 
@@ -35,7 +35,7 @@ func Migration(rolesTableNamePrefix, entityForeignKeyTableName, entityForeignKey
 						created_by  VARCHAR(254),
                         CONSTRAINT  unique_role_name_entity_id_constraint UNIQUE ( name, entity_id),
 						CONSTRAINT  fk_entity_id FOREIGN KEY(entity_id) REFERENCES %s(%s) ON DELETE CASCADE
-                    );`, rolesTableNamePrefix, entityForeignKeyTableName, entityForeignKeyColumnName),
+                    );`, rolesTableNamePrefix, entityTableName, entityIDColumnName),
 
 					fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s_role_actions (
                         role_id     VARCHAR(254) NOT NULL,
