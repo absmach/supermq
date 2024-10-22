@@ -45,7 +45,7 @@ const (
 	DirKey           = "dir"
 	ListPerms        = "list_perms"
 	VisibilityKey    = "visibility"
-	IdentityKey      = "identity"
+	EmailKey         = "email"
 	SharedByKey      = "shared_by"
 	TokenKey         = "token"
 	DefPermission    = "view"
@@ -143,7 +143,6 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, apiutil.ErrInvalidQueryParams),
 		errors.Contains(err, apiutil.ErrMissingRelation),
 		errors.Contains(err, apiutil.ErrValidation),
-		errors.Contains(err, apiutil.ErrMissingIdentity),
 		errors.Contains(err, apiutil.ErrMissingPass),
 		errors.Contains(err, apiutil.ErrMissingConfPass),
 		errors.Contains(err, apiutil.ErrPasswordFormat),

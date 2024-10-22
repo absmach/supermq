@@ -111,7 +111,7 @@ func (repo *Repository) RetrieveByID(ctx context.Context, id string) (clients.Cl
 	return clients.Client{}, repoerr.ErrNotFound
 }
 
-func (repo *Repository) RetrieveByIdentity(ctx context.Context, identity string) (clients.Client, error) {
+func (repo *Repository) RetrieveByEmail(ctx context.Context, identity string) (clients.Client, error) {
 	q := `SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id, identity, secret, metadata, created_at, updated_at, updated_by, status
         FROM clients WHERE identity = :identity AND status = :status`
 

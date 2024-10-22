@@ -72,8 +72,8 @@ type Repository interface {
 	// RetrieveByID retrieves client by its unique ID.
 	RetrieveByID(ctx context.Context, id string) (Client, error)
 
-	// RetrieveByIdentity retrieves client by its unique credentials
-	RetrieveByIdentity(ctx context.Context, identity string) (Client, error)
+	// RetrieveByEmail retrieves client by its unique credentials
+	RetrieveByEmail(ctx context.Context, identity string) (Client, error)
 
 	// RetrieveAll retrieves all clients.
 	RetrieveAll(ctx context.Context, pm Page) (ClientsPage, error)

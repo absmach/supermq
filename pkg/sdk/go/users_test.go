@@ -243,12 +243,12 @@ func TestCreateUser(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("RegisterUser", mock.Anything, mgauthn.Session{}, tc.svcReq, true).Return(tc.svcRes, tc.svcErr)
+			svcCall := svc.On("Register", mock.Anything, mgauthn.Session{}, tc.svcReq, true).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.CreateUser(tc.createSdkUserReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "RegisterUser", mock.Anything, authn.Session{}, tc.svcReq, true)
+				ok := svcCall.Parent.AssertCalled(t, "Register", mock.Anything, authn.Session{}, tc.svcReq, true)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1189,7 +1189,7 @@ func TestUpdateUserTags(t *testing.T) {
 	}
 }
 
-func TestUpdateUserIdentity(t *testing.T) {
+func TestUpdateUserEmail(t *testing.T) {
 	ts, svc, auth := setupUsers()
 	defer ts.Close()
 
@@ -1198,9 +1198,9 @@ func TestUpdateUserIdentity(t *testing.T) {
 	}
 	mgsdk := sdk.NewSDK(conf)
 
-	updatedIdentity := "updatedIdentity@email.com"
+	updatedEmail := "updatedEmail@email.com"
 	updatedUser := user
-	updatedUser.Identity = updatedIdentity
+	updatedUser.Email = updatedEmail
 
 	cases := []struct {
 		desc            string
@@ -1215,99 +1215,99 @@ func TestUpdateUserIdentity(t *testing.T) {
 		err             errors.SDKError
 	}{
 		{
-			desc:  "update user Identity with valid token",
+			desc:  "update user Email with valid token",
 			token: validToken,
 			updateUserReq: sdk.User{
-				ID:       user.ID,
-				Identity: updatedIdentity,
+				ID:    user.ID,
+				Email: updatedEmail,
 				Credentials: sdk.Credentials{
 					Secret: user.Credentials.Secret,
 				},
 			},
-			svcReq:   updatedIdentity,
+			svcReq:   updatedEmail,
 			svcRes:   convertUser(updatedUser),
 			svcErr:   nil,
 			response: updatedUser,
 			err:      nil,
 		},
 		{
-			desc:  "update user Identity with invalid token",
+			desc:  "update user Email with invalid token",
 			token: invalidToken,
 			updateUserReq: sdk.User{
-				ID:       user.ID,
-				Identity: updatedIdentity,
+				ID:    user.ID,
+				Email: updatedEmail,
 				Credentials: sdk.Credentials{
 					Secret: user.Credentials.Secret,
 				},
 			},
-			svcReq:          updatedIdentity,
+			svcReq:          updatedEmail,
 			svcRes:          users.User{},
 			authenticateErr: svcerr.ErrAuthentication,
 			response:        sdk.User{},
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
-			desc:  "update user Identity with empty token",
+			desc:  "update user Email with empty token",
 			token: "",
 			updateUserReq: sdk.User{
-				ID:       user.ID,
-				Identity: updatedIdentity,
+				ID:    user.ID,
+				Email: updatedEmail,
 				Credentials: sdk.Credentials{
 					Secret: user.Credentials.Secret,
 				},
 			},
-			svcReq:   updatedIdentity,
+			svcReq:   updatedEmail,
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
-			desc:  "update user Identity with invalid id",
+			desc:  "update user Email with invalid id",
 			token: validToken,
 			updateUserReq: sdk.User{
-				ID:       wrongID,
-				Identity: updatedIdentity,
+				ID:    wrongID,
+				Email: updatedEmail,
 				Credentials: sdk.Credentials{
 					Secret: user.Credentials.Secret,
 				},
 			},
-			svcReq:   updatedIdentity,
+			svcReq:   updatedEmail,
 			svcRes:   users.User{},
 			svcErr:   svcerr.ErrUpdateEntity,
 			response: sdk.User{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity),
 		},
 		{
-			desc:  "update user Identity with empty id",
+			desc:  "update user Email with empty id",
 			token: validToken,
 			updateUserReq: sdk.User{
-				ID:       "",
-				Identity: updatedIdentity,
+				ID:    "",
+				Email: updatedEmail,
 				Credentials: sdk.Credentials{
 					Secret: user.Credentials.Secret,
 				},
 			},
-			svcReq:   updatedIdentity,
+			svcReq:   updatedEmail,
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
 		},
 		{
-			desc:  "update user Identity with response that can't be unmarshalled",
+			desc:  "update user Email with response that can't be unmarshalled",
 			token: validToken,
 			updateUserReq: sdk.User{
-				ID:       user.ID,
-				Identity: updatedIdentity,
+				ID:    user.ID,
+				Email: updatedEmail,
 				Credentials: sdk.Credentials{
 					Secret: user.Credentials.Secret,
 				},
 			},
-			svcReq: updatedIdentity,
+			svcReq: updatedEmail,
 			svcRes: users.User{
 				ID:        id,
-				FirstName: updatedIdentity,
+				FirstName: updatedEmail,
 				Metadata: users.Metadata{
 					"key": make(chan int),
 				},
@@ -1323,12 +1323,12 @@ func TestUpdateUserIdentity(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := svc.On("UpdateUserIdentity", mock.Anything, tc.session, tc.updateUserReq.ID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateUserIdentity(tc.updateUserReq, tc.token)
+			svcCall := svc.On("UpdateUserEmail", mock.Anything, tc.session, tc.updateUserReq.ID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.UpdateUserEmail(tc.updateUserReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "UpdateUserIdentity", mock.Anything, tc.session, tc.updateUserReq.ID, tc.svcReq)
+				ok := svcCall.Parent.AssertCalled(t, "UpdateUserEmail", mock.Anything, tc.session, tc.updateUserReq.ID, tc.svcReq)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()

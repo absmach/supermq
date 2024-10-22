@@ -135,7 +135,7 @@ func createUser(s sdk.SDK, conf Config) (string, string, error) {
 	user := sdk.User{
 		FirstName: fmt.Sprintf("%s%s", conf.Prefix, namesgenerator.Generate()),
 		LastName:  fmt.Sprintf("%s%s", conf.Prefix, namesgenerator.Generate()),
-		Identity:  fmt.Sprintf("%s%s@email.com", conf.Prefix, namesgenerator.Generate()),
+		Email:     fmt.Sprintf("%s%s@email.com", conf.Prefix, namesgenerator.Generate()),
 		Credentials: sdk.Credentials{
 			UserName: fmt.Sprintf("%s%s", conf.Prefix, namesgenerator.Generate()),
 			Secret:   defPass,
@@ -149,8 +149,8 @@ func createUser(s sdk.SDK, conf Config) (string, string, error) {
 	}
 
 	login := sdk.Login{
-		Identity: user.Identity,
-		Secret:   user.Credentials.Secret,
+		Email:  user.Email,
+		Secret: user.Credentials.Secret,
 	}
 	token, err := s.CreateToken(login)
 	if err != nil {
@@ -170,7 +170,7 @@ func createUser(s sdk.SDK, conf Config) (string, string, error) {
 	}
 
 	login = sdk.Login{
-		Identity: user.Identity,
+		Email:    user.Email,
 		Secret:   user.Credentials.Secret,
 	}
 	token, err = s.CreateToken(login)
@@ -189,7 +189,7 @@ func createUsers(s sdk.SDK, conf Config, token string) ([]sdk.User, error) {
 		user := sdk.User{
 			FirstName: fmt.Sprintf("%s%s", conf.Prefix, namesgenerator.Generate()),
 			LastName:  fmt.Sprintf("%s%s", conf.Prefix, namesgenerator.Generate()),
-			Identity:  fmt.Sprintf("%s%s@email.com", conf.Prefix, namesgenerator.Generate()),
+			Email:     fmt.Sprintf("%s%s@email.com", conf.Prefix, namesgenerator.Generate()),
 			Credentials: sdk.Credentials{
 				UserName: fmt.Sprintf("%s%s", conf.Prefix, namesgenerator.Generate()),
 				Secret:   defPass,
@@ -387,7 +387,7 @@ func update(s sdk.SDK, domainID, token string, users []sdk.User, groups []sdk.Gr
 		}
 		user = rUser
 		user.Credentials.UserName = namesgenerator.Generate()
-		rUser, err = s.UpdateUserNames(user, token)
+		rUser, err = s.UpdateUserName(user, token)
 		if err != nil {
 			return fmt.Errorf("failed to update user identity %w", err)
 		}
@@ -395,12 +395,12 @@ func update(s sdk.SDK, domainID, token string, users []sdk.User, groups []sdk.Gr
 			return fmt.Errorf("failed to update user name before %s after %s", user.Credentials.UserName, rUser.Credentials.UserName)
 		}
 		user = rUser
-		rUser, err = s.UpdateUserIdentity(user, token)
+		rUser, err = s.UpdateUserEmail(user, token)
 		if err != nil {
 			return fmt.Errorf("failed to update user identity %w", err)
 		}
-		if rUser.Identity != user.Identity {
-			return fmt.Errorf("failed to update user identity before %s after %s", user.Identity, rUser.Identity)
+		if rUser.Email != user.Email {
+			return fmt.Errorf("failed to update user identity before %s after %s", user.Email, rUser.Email)
 		}
 		user = rUser
 		user.Tags = []string{namesgenerator.Generate()}

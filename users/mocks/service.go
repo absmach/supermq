@@ -21,12 +21,12 @@ type Service struct {
 	mock.Mock
 }
 
-// DeleteUser provides a mock function with given fields: ctx, session, id
-func (_m *Service) DeleteUser(ctx context.Context, session authn.Session, id string) error {
+// Delete provides a mock function with given fields: ctx, session, id
+func (_m *Service) Delete(ctx context.Context, session authn.Session, id string) error {
 	ret := _m.Called(ctx, session, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for DeleteUser")
+		panic("no return value specified for Delete")
 	}
 
 	var r0 error
@@ -39,12 +39,12 @@ func (_m *Service) DeleteUser(ctx context.Context, session authn.Session, id str
 	return r0
 }
 
-// DisableUser provides a mock function with given fields: ctx, session, id
-func (_m *Service) DisableUser(ctx context.Context, session authn.Session, id string) (users.User, error) {
+// Disable provides a mock function with given fields: ctx, session, id
+func (_m *Service) Disable(ctx context.Context, session authn.Session, id string) (users.User, error) {
 	ret := _m.Called(ctx, session, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for DisableUser")
+		panic("no return value specified for Disable")
 	}
 
 	var r0 users.User
@@ -67,12 +67,12 @@ func (_m *Service) DisableUser(ctx context.Context, session authn.Session, id st
 	return r0, r1
 }
 
-// EnableUser provides a mock function with given fields: ctx, session, id
-func (_m *Service) EnableUser(ctx context.Context, session authn.Session, id string) (users.User, error) {
+// Enable provides a mock function with given fields: ctx, session, id
+func (_m *Service) Enable(ctx context.Context, session authn.Session, id string) (users.User, error) {
 	ret := _m.Called(ctx, session, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for EnableUser")
+		panic("no return value specified for Enable")
 	}
 
 	var r0 users.User
@@ -303,12 +303,12 @@ func (_m *Service) RefreshToken(ctx context.Context, session authn.Session, refr
 	return r0, r1
 }
 
-// RegisterUser provides a mock function with given fields: ctx, session, user, selfRegister
-func (_m *Service) RegisterUser(ctx context.Context, session authn.Session, user users.User, selfRegister bool) (users.User, error) {
+// Register provides a mock function with given fields: ctx, session, user, selfRegister
+func (_m *Service) Register(ctx context.Context, session authn.Session, user users.User, selfRegister bool) (users.User, error) {
 	ret := _m.Called(ctx, session, user, selfRegister)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RegisterUser")
+		panic("no return value specified for Register")
 	}
 
 	var r0 users.User
@@ -395,6 +395,62 @@ func (_m *Service) SendPasswordReset(ctx context.Context, host string, email str
 	return r0
 }
 
+// Update provides a mock function with given fields: ctx, session, user
+func (_m *Service) Update(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+	ret := _m.Called(ctx, session, user)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Update")
+	}
+
+	var r0 users.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, users.User) (users.User, error)); ok {
+		return rf(ctx, session, user)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, users.User) users.User); ok {
+		r0 = rf(ctx, session, user)
+	} else {
+		r0 = ret.Get(0).(users.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, users.User) error); ok {
+		r1 = rf(ctx, session, user)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateEmail provides a mock function with given fields: ctx, session, id, email
+func (_m *Service) UpdateEmail(ctx context.Context, session authn.Session, id string, email string) (users.User, error) {
+	ret := _m.Called(ctx, session, id, email)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateEmail")
+	}
+
+	var r0 users.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, string) (users.User, error)); ok {
+		return rf(ctx, session, id, email)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, string) users.User); ok {
+		r0 = rf(ctx, session, id, email)
+	} else {
+		r0 = ret.Get(0).(users.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string, string) error); ok {
+		r1 = rf(ctx, session, id, email)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UpdateProfilePicture provides a mock function with given fields: ctx, session, user
 func (_m *Service) UpdateProfilePicture(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
 	ret := _m.Called(ctx, session, user)
@@ -423,12 +479,12 @@ func (_m *Service) UpdateProfilePicture(ctx context.Context, session authn.Sessi
 	return r0, r1
 }
 
-// UpdateUser provides a mock function with given fields: ctx, session, user
-func (_m *Service) UpdateUser(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+// UpdateRole provides a mock function with given fields: ctx, session, user
+func (_m *Service) UpdateRole(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
 	ret := _m.Called(ctx, session, user)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateUser")
+		panic("no return value specified for UpdateRole")
 	}
 
 	var r0 users.User
@@ -451,96 +507,12 @@ func (_m *Service) UpdateUser(ctx context.Context, session authn.Session, user u
 	return r0, r1
 }
 
-// UpdateUserIdentity provides a mock function with given fields: ctx, session, id, identity
-func (_m *Service) UpdateUserIdentity(ctx context.Context, session authn.Session, id string, identity string) (users.User, error) {
-	ret := _m.Called(ctx, session, id, identity)
-
-	if len(ret) == 0 {
-		panic("no return value specified for UpdateUserIdentity")
-	}
-
-	var r0 users.User
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, string) (users.User, error)); ok {
-		return rf(ctx, session, id, identity)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, string) users.User); ok {
-		r0 = rf(ctx, session, id, identity)
-	} else {
-		r0 = ret.Get(0).(users.User)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string, string) error); ok {
-		r1 = rf(ctx, session, id, identity)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// UpdateUserNames provides a mock function with given fields: ctx, session, usr
-func (_m *Service) UpdateUserNames(ctx context.Context, session authn.Session, usr users.User) (users.User, error) {
-	ret := _m.Called(ctx, session, usr)
-
-	if len(ret) == 0 {
-		panic("no return value specified for UpdateUserNames")
-	}
-
-	var r0 users.User
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, users.User) (users.User, error)); ok {
-		return rf(ctx, session, usr)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, users.User) users.User); ok {
-		r0 = rf(ctx, session, usr)
-	} else {
-		r0 = ret.Get(0).(users.User)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, users.User) error); ok {
-		r1 = rf(ctx, session, usr)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// UpdateUserRole provides a mock function with given fields: ctx, session, user
-func (_m *Service) UpdateUserRole(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
-	ret := _m.Called(ctx, session, user)
-
-	if len(ret) == 0 {
-		panic("no return value specified for UpdateUserRole")
-	}
-
-	var r0 users.User
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, users.User) (users.User, error)); ok {
-		return rf(ctx, session, user)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, users.User) users.User); ok {
-		r0 = rf(ctx, session, user)
-	} else {
-		r0 = ret.Get(0).(users.User)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, users.User) error); ok {
-		r1 = rf(ctx, session, user)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// UpdateUserSecret provides a mock function with given fields: ctx, session, oldSecret, newSecret
-func (_m *Service) UpdateUserSecret(ctx context.Context, session authn.Session, oldSecret string, newSecret string) (users.User, error) {
+// UpdateSecret provides a mock function with given fields: ctx, session, oldSecret, newSecret
+func (_m *Service) UpdateSecret(ctx context.Context, session authn.Session, oldSecret string, newSecret string) (users.User, error) {
 	ret := _m.Called(ctx, session, oldSecret, newSecret)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateUserSecret")
+		panic("no return value specified for UpdateSecret")
 	}
 
 	var r0 users.User
@@ -563,12 +535,12 @@ func (_m *Service) UpdateUserSecret(ctx context.Context, session authn.Session, 
 	return r0, r1
 }
 
-// UpdateUserTags provides a mock function with given fields: ctx, session, user
-func (_m *Service) UpdateUserTags(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+// UpdateTags provides a mock function with given fields: ctx, session, user
+func (_m *Service) UpdateTags(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
 	ret := _m.Called(ctx, session, user)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateUserTags")
+		panic("no return value specified for UpdateTags")
 	}
 
 	var r0 users.User
@@ -584,6 +556,90 @@ func (_m *Service) UpdateUserTags(ctx context.Context, session authn.Session, us
 
 	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, users.User) error); ok {
 		r1 = rf(ctx, session, user)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateUserName provides a mock function with given fields: ctx, session, usr
+func (_m *Service) UpdateUserName(ctx context.Context, session authn.Session, usr users.User) (users.User, error) {
+	ret := _m.Called(ctx, session, usr)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateUserName")
+	}
+
+	var r0 users.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, users.User) (users.User, error)); ok {
+		return rf(ctx, session, usr)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, users.User) users.User); ok {
+		r0 = rf(ctx, session, usr)
+	} else {
+		r0 = ret.Get(0).(users.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, users.User) error); ok {
+		r1 = rf(ctx, session, usr)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// View provides a mock function with given fields: ctx, session, id
+func (_m *Service) View(ctx context.Context, session authn.Session, id string) (users.User, error) {
+	ret := _m.Called(ctx, session, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for View")
+	}
+
+	var r0 users.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) (users.User, error)); ok {
+		return rf(ctx, session, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) users.User); ok {
+		r0 = rf(ctx, session, id)
+	} else {
+		r0 = ret.Get(0).(users.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string) error); ok {
+		r1 = rf(ctx, session, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ViewByUserName provides a mock function with given fields: ctx, session, userName
+func (_m *Service) ViewByUserName(ctx context.Context, session authn.Session, userName string) (users.User, error) {
+	ret := _m.Called(ctx, session, userName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ViewByUserName")
+	}
+
+	var r0 users.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) (users.User, error)); ok {
+		return rf(ctx, session, userName)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) users.User); ok {
+		r0 = rf(ctx, session, userName)
+	} else {
+		r0 = ret.Get(0).(users.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string) error); ok {
+		r1 = rf(ctx, session, userName)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -612,62 +668,6 @@ func (_m *Service) ViewProfile(ctx context.Context, session authn.Session) (user
 
 	if rf, ok := ret.Get(1).(func(context.Context, authn.Session) error); ok {
 		r1 = rf(ctx, session)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// ViewUser provides a mock function with given fields: ctx, session, id
-func (_m *Service) ViewUser(ctx context.Context, session authn.Session, id string) (users.User, error) {
-	ret := _m.Called(ctx, session, id)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ViewUser")
-	}
-
-	var r0 users.User
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) (users.User, error)); ok {
-		return rf(ctx, session, id)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) users.User); ok {
-		r0 = rf(ctx, session, id)
-	} else {
-		r0 = ret.Get(0).(users.User)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string) error); ok {
-		r1 = rf(ctx, session, id)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// ViewUserByUserName provides a mock function with given fields: ctx, session, userName
-func (_m *Service) ViewUserByUserName(ctx context.Context, session authn.Session, userName string) (users.User, error) {
-	ret := _m.Called(ctx, session, userName)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ViewUserByUserName")
-	}
-
-	var r0 users.User
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) (users.User, error)); ok {
-		return rf(ctx, session, userName)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) users.User); ok {
-		r0 = rf(ctx, session, userName)
-	} else {
-		r0 = ret.Get(0).(users.User)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string) error); ok {
-		r1 = rf(ctx, session, userName)
 	} else {
 		r1 = ret.Error(1)
 	}

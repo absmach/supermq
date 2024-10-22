@@ -4,6 +4,7 @@
 package api
 
 import (
+	"net/url"
 	"strings"
 	"testing"
 
@@ -39,7 +40,7 @@ func TestCreateUserReqValidate(t *testing.T) {
 					ID:        validID,
 					FirstName: valid,
 					LastName:  valid,
-					Identity:  "example@domain.com",
+					Email:     "example@domain.com",
 					Credentials: users.Credentials{
 						UserName: "example",
 						Secret:   secret,
@@ -60,7 +61,7 @@ func TestCreateUserReqValidate(t *testing.T) {
 			err: apiutil.ErrNameSize,
 		},
 		{
-			desc: "missing identity in request",
+			desc: "missing email in request",
 			req: createUserReq{
 				user: users.User{
 					ID:        validID,
@@ -72,7 +73,7 @@ func TestCreateUserReqValidate(t *testing.T) {
 					},
 				},
 			},
-			err: apiutil.ErrMissingIdentity,
+			err: apiutil.ErrMissingEmail,
 		},
 		{
 			desc: "missing secret in request",
@@ -81,7 +82,7 @@ func TestCreateUserReqValidate(t *testing.T) {
 					ID:        validID,
 					FirstName: valid,
 					LastName:  valid,
-					Identity:  "example@domain.com",
+					Email:     "example@domain.com",
 					Credentials: users.Credentials{
 						UserName: "example",
 					},
@@ -96,7 +97,7 @@ func TestCreateUserReqValidate(t *testing.T) {
 					ID:        validID,
 					FirstName: valid,
 					LastName:  valid,
-					Identity:  "example@domain.com",
+					Email:     "example@domain.com",
 					Credentials: users.Credentials{
 						UserName: "example",
 						Secret:   "invalid",
@@ -361,6 +362,12 @@ func TestUpdateUserNamesReqValidate(t *testing.T) {
 }
 
 func TestUpdateProfilePictureReqValidate(t *testing.T) {
+	base64EncodedString := "https://example.com/profile.jpg"
+
+	parsedURL, err := url.Parse(base64EncodedString)
+	if err != nil {
+		t.Fatalf("Error parsing URL: %v", err)
+	}
 	cases := []struct {
 		desc string
 		req  updateProfilePictureReq
@@ -370,7 +377,7 @@ func TestUpdateProfilePictureReqValidate(t *testing.T) {
 			desc: "valid request",
 			req: updateProfilePictureReq{
 				id:             validID,
-				ProfilePicture: "base64encodedstring",
+				ProfilePicture: *parsedURL,
 			},
 			err: nil,
 		},
@@ -378,7 +385,7 @@ func TestUpdateProfilePictureReqValidate(t *testing.T) {
 			desc: "empty ID",
 			req: updateProfilePictureReq{
 				id:             "",
-				ProfilePicture: "base64encodedstring",
+				ProfilePicture: *parsedURL,
 			},
 			err: apiutil.ErrMissingID,
 		},
@@ -445,25 +452,25 @@ func TestViewUserByUserNameReqValidate(t *testing.T) {
 	}
 }
 
-func TestUpdateUserIdentityReqValidate(t *testing.T) {
+func TestUpdateUserEmailReqValidate(t *testing.T) {
 	cases := []struct {
 		desc string
-		req  updateUserIdentityReq
+		req  updateUserEmailReq
 		err  error
 	}{
 		{
 			desc: "valid request",
-			req: updateUserIdentityReq{
-				id:       validID,
-				Identity: "example@example.com",
+			req: updateUserEmailReq{
+				id:    validID,
+				Email: "example@example.com",
 			},
 			err: nil,
 		},
 		{
 			desc: "empty id",
-			req: updateUserIdentityReq{
-				id:       "",
-				Identity: "example@example.com",
+			req: updateUserEmailReq{
+				id:    "",
+				Email: "example@example.com",
 			},
 			err: apiutil.ErrMissingID,
 		},
@@ -555,24 +562,24 @@ func TestLoginUserReqValidate(t *testing.T) {
 		{
 			desc: "valid request",
 			req: loginUserReq{
-				Identity: "eaxmple,example.com",
-				Secret:   secret,
+				Email:  "eaxmple,example.com",
+				Secret: secret,
 			},
 			err: nil,
 		},
 		{
-			desc: "empty identity",
+			desc: "empty email",
 			req: loginUserReq{
-				Identity: "",
-				Secret:   secret,
+				Email:  "",
+				Secret: secret,
 			},
-			err: apiutil.ErrMissingIdentity,
+			err: apiutil.ErrMissingEmail,
 		},
 		{
 			desc: "empty secret",
 			req: loginUserReq{
-				Secret:   "",
-				Identity: "eaxmple,example.com",
+				Secret: "",
+				Email:  "eaxmple,example.com",
 			},
 			err: apiutil.ErrMissingPass,
 		},

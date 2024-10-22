@@ -4,6 +4,8 @@
 package api
 
 import (
+	"net/url"
+
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
@@ -26,7 +28,7 @@ func (req createUserReq) validate() error {
 	if req.user.Credentials.UserName == "" {
 		return apiutil.ErrMissingUserName
 	}
-	if req.user.Identity == "" {
+	if req.user.Email == "" {
 		return apiutil.ErrMissingIdentity
 	}
 	if req.user.Credentials.Secret == "" {
@@ -74,7 +76,7 @@ type listUsersReq struct {
 	tag       string
 	firstName string
 	lastName  string
-	identity  string
+	email     string
 	metadata  users.Metadata
 	order     string
 	dir       string
@@ -129,9 +131,12 @@ func (req listMembersByObjectReq) validate() error {
 }
 
 type updateUserReq struct {
-	id       string
-	UserName string         `json:"user_name,omitempty"`
-	Metadata users.Metadata `json:"metadata,omitempty"`
+	id             string
+	FirstName      string         `json:"first_name,omitempty"`
+	LastName       string         `json:"last_name,omitempty"`
+	UserName       string         `json:"user_name,omitempty"`
+	ProfilePicture url.URL        `json:"profile_picture,omitempty"` // URL of the picture
+	Metadata       users.Metadata `json:"metadata,omitempty"`
 }
 
 func (req updateUserReq) validate() error {
@@ -169,12 +174,12 @@ func (req updateUserRoleReq) validate() error {
 	return nil
 }
 
-type updateUserIdentityReq struct {
-	id       string
-	Identity string `json:"identity,omitempty"`
+type updateUserEmailReq struct {
+	id    string
+	Email string `json:"email,omitempty"`
 }
 
-func (req updateUserIdentityReq) validate() error {
+func (req updateUserEmailReq) validate() error {
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
@@ -203,9 +208,6 @@ type updateUserNamesReq struct {
 }
 
 func (req updateUserNamesReq) validate() error {
-	if req.User.ID == "" {
-		return apiutil.ErrMissingID
-	}
 	if len(req.User.Credentials.UserName) > api.MaxNameSize {
 		return apiutil.ErrNameSize
 	}
@@ -225,7 +227,7 @@ func (req updateUserNamesReq) validate() error {
 
 type updateProfilePictureReq struct {
 	id             string
-	ProfilePicture string `json:"profile_picture,omitempty"`
+	ProfilePicture url.URL `json:"profile_picture,omitempty"`
 }
 
 func (req updateProfilePictureReq) validate() error {
@@ -249,12 +251,12 @@ func (req changeUserStatusReq) validate() error {
 }
 
 type loginUserReq struct {
-	Identity string `json:"identity,omitempty"`
+	Email    string `json:"email,omitempty"`
 	Secret   string `json:"secret,omitempty"`
 }
 
 func (req loginUserReq) validate() error {
-	if req.Identity == "" {
+	if req.Email == "" {
 		return apiutil.ErrMissingIdentity
 	}
 	if req.Secret == "" {

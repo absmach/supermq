@@ -39,7 +39,7 @@ var (
 		LastName:    "lastname",
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: users.Credentials{UserName: "username", Secret: secret},
-		Identity:    "useridentity@email.com",
+		Email:       "useremail@email.com",
 		Metadata:    validCMetadata,
 		Status:      users.EnabledStatus,
 	}
@@ -73,7 +73,7 @@ func newServiceMinimal() (users.Service, *mocks.Repository) {
 	return users.NewService(tokenUser, cRepo, policies, e, phasher, idProvider), cRepo
 }
 
-func TestRegisterUser(t *testing.T) {
+func TestRegister(t *testing.T) {
 	svc, _, cRepo, policies, _ := newService()
 
 	cases := []struct {
@@ -99,7 +99,7 @@ func TestRegisterUser(t *testing.T) {
 			desc: "register a new enabled user with name",
 			user: users.User{
 				FirstName: "userWithName",
-				Identity:  "newuserwithname@example.com",
+				Email:     "newuserwithname@example.com",
 				Credentials: users.Credentials{
 					Secret: secret,
 				},
@@ -111,7 +111,7 @@ func TestRegisterUser(t *testing.T) {
 			desc: "register a new disabled user with name",
 			user: users.User{
 				FirstName: "userWithName",
-				Identity:  "newuserwithname@example.com",
+				Email:     "newuserwithname@example.com",
 				Credentials: users.Credentials{
 					Secret: secret,
 				},
@@ -123,7 +123,7 @@ func TestRegisterUser(t *testing.T) {
 			user: users.User{
 				FirstName: "newuserwithallfields",
 				Tags:      []string{"tag1", "tag2"},
-				Identity:  "newuserwithallfields@example.com",
+				Email:     "newuserwithallfields@example.com",
 				Credentials: users.Credentials{
 					Secret: secret,
 				},
@@ -135,9 +135,9 @@ func TestRegisterUser(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc: "register a new user with missing identity",
+			desc: "register a new user with missing email",
 			user: users.User{
-				FirstName: "userWithMissingIdentity",
+				FirstName: "userWithMissingEmail",
 				Credentials: users.Credentials{
 					Secret: secret,
 				},
@@ -149,7 +149,7 @@ func TestRegisterUser(t *testing.T) {
 			desc: "register a new user with missing secret",
 			user: users.User{
 				FirstName: "userWithMissingSecret",
-				Identity:  "userwithmissingsecret@example.com",
+				Email:     "userwithmissingsecret@example.com",
 				Credentials: users.Credentials{
 					Secret: "",
 				},
@@ -160,7 +160,7 @@ func TestRegisterUser(t *testing.T) {
 			desc: " register a user with a secret that is too long",
 			user: users.User{
 				FirstName: "clientWithLongSecret",
-				Identity:  "clientwithlongsecret@example.com",
+				Email:     "clientwithlongsecret@example.com",
 				Credentials: users.Credentials{
 					Secret: strings.Repeat("a", 73),
 				},
@@ -171,7 +171,7 @@ func TestRegisterUser(t *testing.T) {
 			desc: "register a new user with invalid status",
 			user: users.User{
 				FirstName: "userWithInvalidStatus",
-				Identity:  "user with invalid status",
+				Email:     "user with invalid status",
 				Credentials: users.Credentials{
 					Secret: secret,
 				},
@@ -183,7 +183,7 @@ func TestRegisterUser(t *testing.T) {
 			desc: "register a new user with invalid role",
 			user: users.User{
 				FirstName: "clientWithInvalidRole",
-				Identity:  "clientwithinvalidrole@example.com",
+				Email:     "clientwithinvalidrole@example.com",
 				Credentials: users.Credentials{
 					Secret: secret,
 				},
@@ -195,7 +195,7 @@ func TestRegisterUser(t *testing.T) {
 			desc: "register a new user with failed to add policies with err",
 			user: users.User{
 				FirstName: "clientWithFailedToAddPolicies",
-				Identity:  "clientwithfailedpolicies@example.com",
+				Email:     "clientwithfailedpolicies@example.com",
 				Credentials: users.Credentials{
 					Secret: secret,
 				},
@@ -208,7 +208,7 @@ func TestRegisterUser(t *testing.T) {
 			desc: "register a new user with failed to delete policies with err",
 			user: users.User{
 				FirstName: "clientWithFailedToDeletePolicies",
-				Identity:  "clientwithfailedtodelete@example.com",
+				Email:     "clientwithfailedtodelete@example.com",
 				Credentials: users.Credentials{
 					Secret: secret,
 				},
@@ -224,7 +224,7 @@ func TestRegisterUser(t *testing.T) {
 		policyCall := policies.On("AddPolicies", context.Background(), mock.Anything).Return(tc.addPoliciesResponseErr)
 		policyCall1 := policies.On("DeletePolicies", context.Background(), mock.Anything).Return(tc.deletePoliciesResponseErr)
 		repoCall := cRepo.On("Save", context.Background(), mock.Anything).Return(tc.user, tc.saveErr)
-		expected, err := svc.RegisterUser(context.Background(), authn.Session{}, tc.user, true)
+		expected, err := svc.Register(context.Background(), authn.Session{}, tc.user, true)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
 			tc.user.ID = expected.ID
@@ -272,7 +272,7 @@ func TestRegisterUser(t *testing.T) {
 		policyCall := policies.On("AddPolicies", context.Background(), mock.Anything).Return(tc.addPoliciesResponseErr)
 		policyCall1 := policies.On("DeletePolicies", context.Background(), mock.Anything).Return(tc.deletePoliciesResponseErr)
 		repoCall1 := cRepo.On("Save", context.Background(), mock.Anything).Return(tc.user, tc.saveErr)
-		expected, err := svc.RegisterUser(context.Background(), authn.Session{UserID: validID}, tc.user, false)
+		expected, err := svc.Register(context.Background(), authn.Session{UserID: validID}, tc.user, false)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
 			tc.user.ID = expected.ID
@@ -351,7 +351,7 @@ func TestViewUser(t *testing.T) {
 	for _, tc := range cases {
 		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
 		repoCall1 := cRepo.On("RetrieveByID", context.Background(), tc.clientID).Return(tc.retrieveByIDResponse, tc.retrieveByIDErr)
-		rUser, err := svc.ViewUser(context.Background(), authn.Session{UserID: tc.reqUserID}, tc.clientID)
+		rUser, err := svc.View(context.Background(), authn.Session{UserID: tc.reqUserID}, tc.clientID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		tc.response.Credentials.Secret = ""
 		assert.Equal(t, tc.response, rUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, rUser))
@@ -584,7 +584,7 @@ func TestUpdateUser(t *testing.T) {
 	for _, tc := range cases {
 		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
 		repoCall1 := cRepo.On("Update", context.Background(), mock.Anything).Return(tc.updateResponse, tc.err)
-		updatedUser, err := svc.UpdateUser(context.Background(), tc.session, tc.user)
+		updatedUser, err := svc.Update(context.Background(), tc.session, tc.user)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateResponse, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateResponse, updatedUser))
 		if tc.err == nil {
@@ -652,7 +652,7 @@ func TestUpdateUserTags(t *testing.T) {
 	for _, tc := range cases {
 		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
 		repoCall1 := cRepo.On("Update", context.Background(), mock.Anything).Return(tc.updateUserTagsResponse, tc.updateUserTagsErr)
-		updatedUser, err := svc.UpdateUserTags(context.Background(), tc.session, tc.user)
+		updatedUser, err := svc.UpdateTags(context.Background(), tc.session, tc.user)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateUserTagsResponse, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateUserTagsResponse, updatedUser))
 
@@ -748,7 +748,7 @@ func TestUpdateUserRole(t *testing.T) {
 		policyCall1 := policies.On("DeletePolicyFilter", context.Background(), mock.Anything).Return(tc.deletePolicyErr)
 		repoCall1 := cRepo.On("Update", context.Background(), mock.Anything).Return(tc.updateRoleResponse, tc.updateRoleErr)
 
-		updatedUser, err := svc.UpdateUserRole(context.Background(), tc.session, tc.user)
+		updatedUser, err := svc.UpdateRole(context.Background(), tc.session, tc.user)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateRoleResponse, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateRoleResponse, updatedUser))
 		if tc.err == nil {
@@ -772,32 +772,32 @@ func TestUpdateUserSecret(t *testing.T) {
 	responseUser.Credentials.Secret = newSecret
 
 	cases := []struct {
-		desc                       string
-		oldSecret                  string
-		newSecret                  string
-		session                    authn.Session
-		retrieveByIDResponse       users.User
-		retrieveByIdentityResponse users.User
-		updateSecretResponse       users.User
-		issueResponse              *magistrala.Token
-		response                   users.User
-		retrieveByIDErr            error
-		retrieveByIdentityErr      error
-		updateSecretErr            error
-		issueErr                   error
-		err                        error
+		desc                    string
+		oldSecret               string
+		newSecret               string
+		session                 authn.Session
+		retrieveByIDResponse    users.User
+		retrieveByEmailResponse users.User
+		updateSecretResponse    users.User
+		issueResponse           *magistrala.Token
+		response                users.User
+		retrieveByIDErr         error
+		retrieveByIdentityErr   error
+		updateSecretErr         error
+		issueErr                error
+		err                     error
 	}{
 		{
-			desc:                       "update user secret with valid token",
-			oldSecret:                  user.Credentials.Secret,
-			newSecret:                  newSecret,
-			session:                    authn.Session{UserID: user.ID},
-			retrieveByIdentityResponse: rUser,
-			retrieveByIDResponse:       user,
-			updateSecretResponse:       responseUser,
-			issueResponse:              &magistrala.Token{AccessToken: validToken},
-			response:                   responseUser,
-			err:                        nil,
+			desc:                    "update user secret with valid token",
+			oldSecret:               user.Credentials.Secret,
+			newSecret:               newSecret,
+			session:                 authn.Session{UserID: user.ID},
+			retrieveByEmailResponse: rUser,
+			retrieveByIDResponse:    user,
+			updateSecretResponse:    responseUser,
+			issueResponse:           &magistrala.Token{AccessToken: validToken},
+			response:                responseUser,
+			err:                     nil,
 		},
 		{
 			desc:                 "update user secret with failed to retrieve user by ID",
@@ -809,59 +809,59 @@ func TestUpdateUserSecret(t *testing.T) {
 			err:                  repoerr.ErrNotFound,
 		},
 		{
-			desc:                       "update user secret with failed to retrieve user by identity",
-			oldSecret:                  user.Credentials.Secret,
-			newSecret:                  newSecret,
-			session:                    authn.Session{UserID: user.ID},
-			retrieveByIDResponse:       user,
-			retrieveByIdentityResponse: users.User{},
-			retrieveByIdentityErr:      repoerr.ErrNotFound,
-			err:                        repoerr.ErrNotFound,
+			desc:                    "update user secret with failed to retrieve user by email",
+			oldSecret:               user.Credentials.Secret,
+			newSecret:               newSecret,
+			session:                 authn.Session{UserID: user.ID},
+			retrieveByIDResponse:    user,
+			retrieveByEmailResponse: users.User{},
+			retrieveByIdentityErr:   repoerr.ErrNotFound,
+			err:                     repoerr.ErrNotFound,
 		},
 		{
-			desc:                       "update user secret with invalod old secret",
-			oldSecret:                  "invalid",
-			newSecret:                  newSecret,
-			session:                    authn.Session{UserID: user.ID},
-			retrieveByIDResponse:       user,
-			retrieveByIdentityResponse: rUser,
-			err:                        svcerr.ErrLogin,
+			desc:                    "update user secret with invalod old secret",
+			oldSecret:               "invalid",
+			newSecret:               newSecret,
+			session:                 authn.Session{UserID: user.ID},
+			retrieveByIDResponse:    user,
+			retrieveByEmailResponse: rUser,
+			err:                     svcerr.ErrLogin,
 		},
 		{
-			desc:                       "update user secret with too long new secret",
-			oldSecret:                  user.Credentials.Secret,
-			newSecret:                  strings.Repeat("a", 73),
-			session:                    authn.Session{UserID: user.ID},
-			retrieveByIDResponse:       user,
-			retrieveByIdentityResponse: rUser,
-			err:                        repoerr.ErrMalformedEntity,
+			desc:                    "update user secret with too long new secret",
+			oldSecret:               user.Credentials.Secret,
+			newSecret:               strings.Repeat("a", 73),
+			session:                 authn.Session{UserID: user.ID},
+			retrieveByIDResponse:    user,
+			retrieveByEmailResponse: rUser,
+			err:                     repoerr.ErrMalformedEntity,
 		},
 		{
-			desc:                       "update user secret with failed to update secret",
-			oldSecret:                  user.Credentials.Secret,
-			newSecret:                  newSecret,
-			session:                    authn.Session{UserID: user.ID},
-			retrieveByIDResponse:       user,
-			retrieveByIdentityResponse: rUser,
-			updateSecretResponse:       users.User{},
-			updateSecretErr:            repoerr.ErrMalformedEntity,
-			err:                        svcerr.ErrUpdateEntity,
+			desc:                    "update user secret with failed to update secret",
+			oldSecret:               user.Credentials.Secret,
+			newSecret:               newSecret,
+			session:                 authn.Session{UserID: user.ID},
+			retrieveByIDResponse:    user,
+			retrieveByEmailResponse: rUser,
+			updateSecretResponse:    users.User{},
+			updateSecretErr:         repoerr.ErrMalformedEntity,
+			err:                     svcerr.ErrUpdateEntity,
 		},
 	}
 
 	for _, tc := range cases {
 		repoCall := cRepo.On("RetrieveByID", context.Background(), user.ID).Return(tc.retrieveByIDResponse, tc.retrieveByIDErr)
-		repoCall1 := cRepo.On("RetrieveByIdentity", context.Background(), user.Identity).Return(tc.retrieveByIdentityResponse, tc.retrieveByIdentityErr)
+		repoCall1 := cRepo.On("RetrieveByEmail", context.Background(), user.Email).Return(tc.retrieveByEmailResponse, tc.retrieveByIdentityErr)
 		repoCall2 := cRepo.On("UpdateSecret", context.Background(), mock.Anything).Return(tc.updateSecretResponse, tc.updateSecretErr)
 		authCall := authUser.On("Issue", context.Background(), mock.Anything).Return(tc.issueResponse, tc.issueErr)
-		updatedUser, err := svc.UpdateUserSecret(context.Background(), tc.session, tc.oldSecret, tc.newSecret)
+		updatedUser, err := svc.UpdateSecret(context.Background(), tc.session, tc.oldSecret, tc.newSecret)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, updatedUser))
 		if tc.err == nil {
 			ok := repoCall.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.response.ID)
 			assert.True(t, ok, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
-			ok = repoCall1.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.response.Identity)
-			assert.True(t, ok, fmt.Sprintf("RetrieveByIdentity was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "RetrieveByEmail", context.Background(), tc.response.Email)
+			assert.True(t, ok, fmt.Sprintf("RetrieveByEmail was not called on %s", tc.desc))
 			ok = repoCall2.Parent.AssertCalled(t, "UpdateSecret", context.Background(), mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("UpdateSecret was not called on %s", tc.desc))
 		}
@@ -876,74 +876,74 @@ func TestUpdateUserIdentity(t *testing.T) {
 	svc, cRepo := newServiceMinimal()
 
 	user2 := user
-	user2.Identity = "updated@example.com"
+	user2.Email = "updated@example.com"
 
 	cases := []struct {
-		desc                       string
-		identity                   string
-		token                      string
-		reqUserID                  string
-		id                         string
-		updateUserIdentityResponse users.User
-		updateUserIdentityErr      error
-		checkSuperAdminErr         error
-		err                        error
+		desc                string
+		email               string
+		token               string
+		reqUserID           string
+		id                  string
+		updateEmailResponse users.User
+		updateEmailErr      error
+		checkSuperAdminErr  error
+		err                 error
 	}{
 		{
-			desc:                       "update user as normal user successfully",
-			identity:                   "updated@example.com",
-			token:                      validToken,
-			reqUserID:                  user.ID,
-			id:                         user.ID,
-			updateUserIdentityResponse: user2,
-			err:                        nil,
+			desc:                "update user as normal user successfully",
+			email:               "updated@example.com",
+			token:               validToken,
+			reqUserID:           user.ID,
+			id:                  user.ID,
+			updateEmailResponse: user2,
+			err:                 nil,
 		},
 		{
-			desc:                       "update user identity as normal user with repo error on update",
-			identity:                   "updated@example.com",
-			token:                      validToken,
-			reqUserID:                  user.ID,
-			id:                         user.ID,
-			updateUserIdentityResponse: users.User{},
-			updateUserIdentityErr:      errors.ErrMalformedEntity,
-			err:                        svcerr.ErrUpdateEntity,
+			desc:                "update user email as normal user with repo error on update",
+			email:               "updated@example.com",
+			token:               validToken,
+			reqUserID:           user.ID,
+			id:                  user.ID,
+			updateEmailResponse: users.User{},
+			updateEmailErr:      errors.ErrMalformedEntity,
+			err:                 svcerr.ErrUpdateEntity,
 		},
 		{
-			desc:     "update user identity as admin successfully",
-			identity: "updated@example.com",
-			token:    validToken,
-			id:       user.ID,
-			err:      nil,
+			desc:  "update user email as admin successfully",
+			email: "updated@example.com",
+			token: validToken,
+			id:    user.ID,
+			err:   nil,
 		},
 		{
-			desc:                       "update user identity as admin with repo error on update",
-			identity:                   "updated@exmaple.com",
-			token:                      validToken,
-			reqUserID:                  user.ID,
-			id:                         user.ID,
-			updateUserIdentityResponse: users.User{},
-			updateUserIdentityErr:      errors.ErrMalformedEntity,
-			err:                        svcerr.ErrUpdateEntity,
+			desc:                "update user email as admin with repo error on update",
+			email:               "updated@exmaple.com",
+			token:               validToken,
+			reqUserID:           user.ID,
+			id:                  user.ID,
+			updateEmailResponse: users.User{},
+			updateEmailErr:      errors.ErrMalformedEntity,
+			err:                 svcerr.ErrUpdateEntity,
 		},
 		{
-			desc:                       "update user as admin user with failed check on super admin",
-			identity:                   "updated@exmaple.com",
-			token:                      validToken,
-			reqUserID:                  user.ID,
-			id:                         "",
-			updateUserIdentityResponse: users.User{},
-			updateUserIdentityErr:      errors.ErrMalformedEntity,
-			checkSuperAdminErr:         svcerr.ErrAuthorization,
-			err:                        svcerr.ErrAuthorization,
+			desc:                "update user as admin user with failed check on super admin",
+			email:               "updated@exmaple.com",
+			token:               validToken,
+			reqUserID:           user.ID,
+			id:                  "",
+			updateEmailResponse: users.User{},
+			updateEmailErr:      errors.ErrMalformedEntity,
+			checkSuperAdminErr:  svcerr.ErrAuthorization,
+			err:                 svcerr.ErrAuthorization,
 		},
 	}
 
 	for _, tc := range cases {
 		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
-		repoCall1 := cRepo.On("Update", context.Background(), mock.Anything).Return(tc.updateUserIdentityResponse, tc.updateUserIdentityErr)
-		updatedUser, err := svc.UpdateUserIdentity(context.Background(), authn.Session{DomainUserID: tc.reqUserID, UserID: validID, DomainID: validID}, tc.id, tc.identity)
+		repoCall1 := cRepo.On("Update", context.Background(), mock.Anything).Return(tc.updateEmailResponse, tc.updateEmailErr)
+		updatedUser, err := svc.UpdateEmail(context.Background(), authn.Session{DomainUserID: tc.reqUserID, UserID: validID, DomainID: validID}, tc.id, tc.email)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		assert.Equal(t, tc.updateUserIdentityResponse, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateUserIdentityResponse, updatedUser))
+		assert.Equal(t, tc.updateEmailResponse, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateEmailResponse, updatedUser))
 		if tc.err == nil {
 			ok := repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
@@ -1020,7 +1020,7 @@ func TestEnableUser(t *testing.T) {
 		repoCall1 := cRepo.On("RetrieveByID", context.Background(), tc.id).Return(tc.retrieveByIDResponse, tc.retrieveByIDErr)
 		repoCall2 := cRepo.On("ChangeStatus", context.Background(), mock.Anything).Return(tc.changeStatusResponse, tc.changeStatusErr)
 
-		_, err := svc.EnableUser(context.Background(), authn.Session{}, tc.id)
+		_, err := svc.Enable(context.Background(), authn.Session{}, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if tc.err == nil {
 			ok := repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.id)
@@ -1100,7 +1100,7 @@ func TestDisableUser(t *testing.T) {
 		repoCall1 := cRepo.On("RetrieveByID", context.Background(), tc.id).Return(tc.retrieveByIDResponse, tc.retrieveByIDErr)
 		repoCall2 := cRepo.On("ChangeStatus", context.Background(), mock.Anything).Return(tc.changeStatusResponse, tc.changeStatusErr)
 
-		_, err := svc.DisableUser(context.Background(), authn.Session{}, tc.id)
+		_, err := svc.Disable(context.Background(), authn.Session{}, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if tc.err == nil {
 			ok := repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.id)
@@ -1178,7 +1178,7 @@ func TestDeleteUser(t *testing.T) {
 		repoCall2 := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
 		repoCall3 := cRepo.On("RetrieveByID", context.Background(), tc.id).Return(tc.retrieveByIDResponse, tc.retrieveByIDErr)
 		repoCall4 := cRepo.On("ChangeStatus", context.Background(), mock.Anything).Return(tc.changeStatusResponse, tc.changeStatusErr)
-		err := svc.DeleteUser(context.Background(), tc.session, tc.id)
+		err := svc.Delete(context.Background(), tc.session, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if tc.err == nil {
 			ok := repoCall3.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.id)
@@ -1503,11 +1503,11 @@ func TestIssueToken(t *testing.T) {
 		err                        error
 	}{
 		{
-			desc:                       "issue token for an existing user",
-			user:                       user,
-			retrieveByIdentityResponse: rUser,
-			issueResponse:              &magistrala.Token{AccessToken: validToken, RefreshToken: &validToken, AccessType: "3"},
-			err:                        nil,
+			desc:                    "issue token for an existing user",
+			user:                    user,
+			retrieveByEmailResponse: rUser,
+			issueResponse:           &magistrala.Token{AccessToken: validToken, RefreshToken: &validToken, AccessType: "3"},
+			err:                     nil,
 		},
 		{
 			desc:                       "issue token for non-empty domain id",
@@ -1517,33 +1517,33 @@ func TestIssueToken(t *testing.T) {
 			err:                        nil,
 		},
 		{
-			desc:                       "issue token for a non-existing user",
-			user:                       user,
-			retrieveByIdentityResponse: users.User{},
-			retrieveByIdentityErr:      repoerr.ErrNotFound,
-			err:                        repoerr.ErrNotFound,
+			desc:                    "issue token for a non-existing user",
+			user:                    user,
+			retrieveByEmailResponse: users.User{},
+			retrieveByIdentityErr:   repoerr.ErrNotFound,
+			err:                     repoerr.ErrNotFound,
 		},
 		{
-			desc:                       "issue token for a user with wrong secret",
-			user:                       user,
-			retrieveByIdentityResponse: rUser3,
-			err:                        svcerr.ErrLogin,
+			desc:                    "issue token for a user with wrong secret",
+			user:                    user,
+			retrieveByEmailResponse: rUser3,
+			err:                     svcerr.ErrLogin,
 		},
 		{
-			desc:                       "issue token with empty domain id",
-			user:                       user,
-			retrieveByIdentityResponse: rUser,
-			issueResponse:              &magistrala.Token{},
-			issueErr:                   svcerr.ErrAuthentication,
-			err:                        svcerr.ErrAuthentication,
+			desc:                    "issue token with empty domain id",
+			user:                    user,
+			retrieveByEmailResponse: rUser,
+			issueResponse:           &magistrala.Token{},
+			issueErr:                svcerr.ErrAuthentication,
+			err:                     svcerr.ErrAuthentication,
 		},
 		{
-			desc:                       "issue token with grpc error",
-			user:                       user,
-			retrieveByIdentityResponse: rUser,
-			issueResponse:              &magistrala.Token{},
-			issueErr:                   svcerr.ErrAuthentication,
-			err:                        svcerr.ErrAuthentication,
+			desc:                    "issue token with grpc error",
+			user:                    user,
+			retrieveByEmailResponse: rUser,
+			issueResponse:           &magistrala.Token{},
+			issueErr:                svcerr.ErrAuthentication,
+			err:                     svcerr.ErrAuthentication,
 		},
 	}
 
@@ -1643,42 +1643,42 @@ func TestGenerateResetToken(t *testing.T) {
 	svc, auth, cRepo, _, e := newService()
 
 	cases := []struct {
-		desc                       string
-		email                      string
-		host                       string
-		retrieveByIdentityResponse users.User
-		issueResponse              *magistrala.Token
-		retrieveByIdentityErr      error
-		issueErr                   error
-		err                        error
+		desc                    string
+		email                   string
+		host                    string
+		retrieveByEmailResponse users.User
+		issueResponse           *magistrala.Token
+		retrieveByIdentityErr   error
+		issueErr                error
+		err                     error
 	}{
 		{
-			desc:                       "generate reset token for existing user",
-			email:                      "existingemail@example.com",
-			host:                       "examplehost",
-			retrieveByIdentityResponse: user,
-			issueResponse:              &magistrala.Token{AccessToken: validToken, RefreshToken: &validToken, AccessType: "3"},
-			err:                        nil,
+			desc:                    "generate reset token for existing user",
+			email:                   "existingemail@example.com",
+			host:                    "examplehost",
+			retrieveByEmailResponse: user,
+			issueResponse:           &magistrala.Token{AccessToken: validToken, RefreshToken: &validToken, AccessType: "3"},
+			err:                     nil,
 		},
 		{
 			desc:  "generate reset token for user with non-existing user",
 			email: "example@example.com",
 			host:  "examplehost",
-			retrieveByIdentityResponse: users.User{
-				ID:       testsutil.GenerateUUID(t),
-				Identity: "",
+			retrieveByEmailResponse: users.User{
+				ID:    testsutil.GenerateUUID(t),
+				Email: "",
 			},
 			retrieveByIdentityErr: repoerr.ErrNotFound,
 			err:                   repoerr.ErrNotFound,
 		},
 		{
-			desc:                       "generate reset token with failed to issue token",
-			email:                      "existingemail@example.com",
-			host:                       "examplehost",
-			retrieveByIdentityResponse: user,
-			issueResponse:              &magistrala.Token{},
-			issueErr:                   svcerr.ErrAuthorization,
-			err:                        svcerr.ErrAuthorization,
+			desc:                    "generate reset token with failed to issue token",
+			email:                   "existingemail@example.com",
+			host:                    "examplehost",
+			retrieveByEmailResponse: user,
+			issueResponse:           &magistrala.Token{},
+			issueErr:                svcerr.ErrAuthorization,
+			err:                     svcerr.ErrAuthorization,
 		},
 	}
 
@@ -1701,8 +1701,8 @@ func TestResetSecret(t *testing.T) {
 	svc, cRepo := newServiceMinimal()
 
 	user := users.User{
-		ID:       "userID",
-		Identity: "test@example.com",
+		ID:    "userID",
+		Email: "test@example.com",
 		Credentials: users.Credentials{
 			Secret: "Strongsecret",
 		},
@@ -1724,8 +1724,8 @@ func TestResetSecret(t *testing.T) {
 			session:              authn.Session{UserID: validID, SuperAdmin: true},
 			retrieveByIDResponse: user,
 			updateSecretResponse: users.User{
-				ID:       "userID",
-				Identity: "test@example.com",
+				ID:    "userID",
+				Email: "test@example.com",
 				Credentials: users.Credentials{
 					Secret: "newStrongSecret",
 				},
@@ -1741,12 +1741,12 @@ func TestResetSecret(t *testing.T) {
 			err:                  repoerr.ErrNotFound,
 		},
 		{
-			desc:      "reset secret with empty identity",
+			desc:      "reset secret with empty email",
 			session:   authn.Session{UserID: validID, SuperAdmin: true},
 			newSecret: "newStrongSecret",
 			retrieveByIDResponse: users.User{
-				ID:       "userID",
-				Identity: "",
+				ID:    "userID",
+				Email: "",
 			},
 			err: nil,
 		},
@@ -1788,8 +1788,8 @@ func TestViewProfile(t *testing.T) {
 	svc, cRepo := newServiceMinimal()
 
 	user := users.User{
-		ID:       "userID",
-		Identity: "existingIdentity",
+		ID:    "userID",
+		Email: "existingIdentity",
 		Credentials: users.Credentials{
 			Secret: "Strongsecret",
 		},
@@ -1834,22 +1834,22 @@ func TestOAuthCallback(t *testing.T) {
 	svc, _, cRepo, policies, _ := newService()
 
 	cases := []struct {
-		desc                       string
-		user                       users.User
-		retrieveByIdentityResponse users.User
-		retrieveByIdentityErr      error
-		saveResponse               users.User
-		saveErr                    error
-		addPoliciesErr             error
-		deletePoliciesErr          error
-		err                        error
+		desc                    string
+		user                    users.User
+		retrieveByEmailResponse users.User
+		retrieveByIdentityErr   error
+		saveResponse            users.User
+		saveErr                 error
+		addPoliciesErr          error
+		deletePoliciesErr       error
+		err                     error
 	}{
 		{
 			desc: "oauth signin callback with successfully",
 			user: users.User{
-				Identity: "test@example.com",
+				Email: "test@example.com",
 			},
-			retrieveByIdentityResponse: users.User{
+			retrieveByEmailResponse: users.User{
 				ID:   testsutil.GenerateUUID(t),
 				Role: users.UserRole,
 			},
@@ -1858,7 +1858,7 @@ func TestOAuthCallback(t *testing.T) {
 		{
 			desc: "oauth signup callback with successfully",
 			user: users.User{
-				Identity: "test@example.com",
+				Email: "test@example.com",
 			},
 			retrieveByIdentityErr: repoerr.ErrNotFound,
 			saveResponse: users.User{
@@ -1870,7 +1870,7 @@ func TestOAuthCallback(t *testing.T) {
 		{
 			desc: "oauth signup callback with unknown error",
 			user: users.User{
-				Identity: "test@example.com",
+				Email: "test@example.com",
 			},
 			retrieveByIdentityErr: repoerr.ErrMalformedEntity,
 			err:                   repoerr.ErrMalformedEntity,
@@ -1878,7 +1878,7 @@ func TestOAuthCallback(t *testing.T) {
 		{
 			desc: "oauth signup callback with failed to register user",
 			user: users.User{
-				Identity: "test@example.com",
+				Email: "test@example.com",
 			},
 			addPoliciesErr:        svcerr.ErrAuthorization,
 			retrieveByIdentityErr: repoerr.ErrNotFound,
@@ -1887,9 +1887,9 @@ func TestOAuthCallback(t *testing.T) {
 		{
 			desc: "oauth signin callback with user not in the platform",
 			user: users.User{
-				Identity: "test@example.com",
+				Email: "test@example.com",
 			},
-			retrieveByIdentityResponse: users.User{
+			retrieveByEmailResponse: users.User{
 				ID:   testsutil.GenerateUUID(t),
 				Role: users.UserRole,
 			},

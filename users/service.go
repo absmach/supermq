@@ -5,6 +5,7 @@ package users
 
 import (
 	"context"
+	"net/url"
 	"time"
 
 	"github.com/absmach/magistrala"
@@ -46,7 +47,7 @@ func NewService(token magistrala.TokenServiceClient, urepo Repository, policySer
 	}
 }
 
-func (svc service) RegisterUser(ctx context.Context, session authn.Session, u User, selfRegister bool) (uc User, err error) {
+func (svc service) Register(ctx context.Context, session authn.Session, u User, selfRegister bool) (uc User, err error) {
 	if !selfRegister {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
 			return User{}, err
@@ -93,7 +94,7 @@ func (svc service) RegisterUser(ctx context.Context, session authn.Session, u Us
 }
 
 func (svc service) IssueToken(ctx context.Context, identity, secret string) (*magistrala.Token, error) {
-	dbUser, err := svc.users.RetrieveByIdentity(ctx, identity)
+	dbUser, err := svc.users.RetrieveByEmail(ctx, identity)
 	if err != nil {
 		return &magistrala.Token{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
@@ -121,7 +122,7 @@ func (svc service) RefreshToken(ctx context.Context, session authn.Session, refr
 	return svc.token.Refresh(ctx, &magistrala.RefreshReq{RefreshToken: refreshToken})
 }
 
-func (svc service) ViewUser(ctx context.Context, session authn.Session, id string) (User, error) {
+func (svc service) View(ctx context.Context, session authn.Session, id string) (User, error) {
 	user, err := svc.users.RetrieveByID(ctx, id)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -153,7 +154,7 @@ func (svc service) ViewProfile(ctx context.Context, session authn.Session) (User
 	return user, nil
 }
 
-func (svc service) ViewUserByUserName(ctx context.Context, session authn.Session, userName string) (User, error) {
+func (svc service) ViewByUserName(ctx context.Context, session authn.Session, userName string) (User, error) {
 	_, err := svc.Identify(ctx, session)
 	if err != nil {
 		return User{}, err
@@ -198,10 +199,16 @@ func (svc service) SearchUsers(ctx context.Context, pm Page) (UsersPage, error) 
 	return cp, nil
 }
 
-func (svc service) UpdateUser(ctx context.Context, session authn.Session, usr User) (User, error) {
+func (svc service) Update(ctx context.Context, session authn.Session, usr User) (User, error) {
 	if session.UserID != usr.ID {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
 			return User{}, err
+		}
+	}
+
+	if usr.ProfilePicture.String() != "" {
+		usr.ProfilePicture = url.URL{
+			Path: usr.ProfilePicture.String(),
 		}
 	}
 
@@ -224,7 +231,7 @@ func (svc service) UpdateUser(ctx context.Context, session authn.Session, usr Us
 	return user, nil
 }
 
-func (svc service) UpdateUserTags(ctx context.Context, session authn.Session, usr User) (User, error) {
+func (svc service) UpdateTags(ctx context.Context, session authn.Session, usr User) (User, error) {
 	if session.UserID != usr.ID {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
 			return User{}, err
@@ -267,7 +274,7 @@ func (svc service) UpdateProfilePicture(ctx context.Context, session authn.Sessi
 	return user, nil
 }
 
-func (svc service) UpdateUserIdentity(ctx context.Context, session authn.Session, userID, identity string) (User, error) {
+func (svc service) UpdateEmail(ctx context.Context, session authn.Session, userID, email string) (User, error) {
 	if session.UserID != userID {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
 			return User{}, err
@@ -276,7 +283,7 @@ func (svc service) UpdateUserIdentity(ctx context.Context, session authn.Session
 
 	user := User{
 		ID:        userID,
-		Identity:  identity,
+		Email:     email,
 		UpdatedAt: time.Now(),
 		UpdatedBy: session.UserID,
 	}
@@ -288,7 +295,7 @@ func (svc service) UpdateUserIdentity(ctx context.Context, session authn.Session
 }
 
 func (svc service) GenerateResetToken(ctx context.Context, email, host string) error {
-	user, err := svc.users.RetrieveByIdentity(ctx, email)
+	user, err := svc.users.RetrieveByEmail(ctx, email)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
@@ -315,8 +322,8 @@ func (svc service) ResetSecret(ctx context.Context, session authn.Session, secre
 		return errors.Wrap(svcerr.ErrMalformedEntity, err)
 	}
 	u = User{
-		ID:       u.ID,
-		Identity: u.Identity,
+		ID:    u.ID,
+		Email: u.Email,
 		Credentials: Credentials{
 			Secret: secret,
 		},
@@ -329,12 +336,12 @@ func (svc service) ResetSecret(ctx context.Context, session authn.Session, secre
 	return nil
 }
 
-func (svc service) UpdateUserSecret(ctx context.Context, session authn.Session, oldSecret, newSecret string) (User, error) {
+func (svc service) UpdateSecret(ctx context.Context, session authn.Session, oldSecret, newSecret string) (User, error) {
 	dbUser, err := svc.users.RetrieveByID(ctx, session.UserID)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
-	if _, err := svc.IssueToken(ctx, dbUser.Credentials.Identity, oldSecret); err != nil {
+	if _, err := svc.IssueToken(ctx, dbUser.Credentials.Email, oldSecret); err != nil {
 		return User{}, err
 	}
 	newSecret, err = svc.hasher.Hash(newSecret)
@@ -353,7 +360,7 @@ func (svc service) UpdateUserSecret(ctx context.Context, session authn.Session, 
 	return dbUser, nil
 }
 
-func (svc service) UpdateUserNames(ctx context.Context, session authn.Session, usr User) (User, error) {
+func (svc service) UpdateUserName(ctx context.Context, session authn.Session, usr User) (User, error) {
 	if session.UserID != usr.ID {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
 			return User{}, err
@@ -367,7 +374,7 @@ func (svc service) UpdateUserNames(ctx context.Context, session authn.Session, u
 	usr.UpdatedAt = time.Now()
 	usr.UpdatedBy = session.UserID
 
-	updatedUser, err := svc.users.UpdateUserNames(ctx, usr)
+	updatedUser, err := svc.users.UpdateUserName(ctx, usr)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
@@ -379,7 +386,7 @@ func (svc service) SendPasswordReset(_ context.Context, host, email, user, token
 	return svc.email.SendPasswordReset(to, host, user, token)
 }
 
-func (svc service) UpdateUserRole(ctx context.Context, session authn.Session, usr User) (User, error) {
+func (svc service) UpdateRole(ctx context.Context, session authn.Session, usr User) (User, error) {
 	if err := svc.checkSuperAdmin(ctx, session); err != nil {
 		return User{}, err
 	}
@@ -405,7 +412,7 @@ func (svc service) UpdateUserRole(ctx context.Context, session authn.Session, us
 	return client, nil
 }
 
-func (svc service) EnableUser(ctx context.Context, session authn.Session, id string) (User, error) {
+func (svc service) Enable(ctx context.Context, session authn.Session, id string) (User, error) {
 	client := User{
 		ID:        id,
 		UpdatedAt: time.Now(),
@@ -419,7 +426,7 @@ func (svc service) EnableUser(ctx context.Context, session authn.Session, id str
 	return user, nil
 }
 
-func (svc service) DisableUser(ctx context.Context, session authn.Session, id string) (User, error) {
+func (svc service) Disable(ctx context.Context, session authn.Session, id string) (User, error) {
 	user := User{
 		ID:        id,
 		UpdatedAt: time.Now(),
@@ -455,7 +462,7 @@ func (svc service) changeUserStatus(ctx context.Context, session authn.Session, 
 	return user, nil
 }
 
-func (svc service) DeleteUser(ctx context.Context, session authn.Session, id string) error {
+func (svc service) Delete(ctx context.Context, session authn.Session, id string) error {
 	client := User{
 		ID:        id,
 		UpdatedAt: time.Now(),
@@ -580,11 +587,11 @@ func (svc *service) checkSuperAdmin(ctx context.Context, session authn.Session) 
 }
 
 func (svc service) OAuthCallback(ctx context.Context, user User) (User, error) {
-	ruser, err := svc.users.RetrieveByIdentity(ctx, user.Identity)
+	ruser, err := svc.users.RetrieveByEmail(ctx, user.Email)
 	if err != nil {
 		switch errors.Contains(err, repoerr.ErrNotFound) {
 		case true:
-			ruser, err = svc.RegisterUser(ctx, authn.Session{}, user, true)
+			ruser, err = svc.Register(ctx, authn.Session{}, user, true)
 			if err != nil {
 				return User{}, err
 			}

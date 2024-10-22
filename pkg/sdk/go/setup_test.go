@@ -24,6 +24,8 @@ import (
 const (
 	invalidIdentity = "invalididentity"
 	Identity        = "identity"
+	Email           = "email"
+	InvalidEmail    = "invalidemail"
 	secret          = "strongsecret"
 	invalidToken    = "invalid"
 	contentType     = "application/senml+json"
@@ -150,6 +152,7 @@ func convertUser(c sdk.User) users.User {
 		LastName:       c.LastName,
 		Tags:           c.Tags,
 		DomainID:       c.Domain,
+		Email:          c.Email,
 		Credentials:    users.Credentials(c.Credentials),
 		Metadata:       users.Metadata(c.Metadata),
 		CreatedAt:      c.CreatedAt,

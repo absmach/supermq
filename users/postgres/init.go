@@ -53,6 +53,7 @@ func Migration() *migrate.MemoryMigrationSource {
 						ADD COLUMN first_name VARCHAR(254), 
 						ADD COLUMN last_name VARCHAR(254), 
 						ADD COLUMN profile_picture TEXT,
+						RENAME COLUMN identity TO email,
 						DROP COLUMN name`,
 				},
 				Down: []string{
@@ -60,7 +61,9 @@ func Migration() *migrate.MemoryMigrationSource {
 						DROP COLUMN user_name,
 						DROP COLUMN first_name,
 						DROP COLUMN last_name,
-						DROP COLUMN profile_picture`,
+						DROP COLUMN profile_picture,
+						RENAME COLUMN email TO identity,
+            			ADD COLUMN name VARCHAR(254) NOT NULL UNIQUE`,
 				},
 			},
 		},

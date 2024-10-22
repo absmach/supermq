@@ -2686,12 +2686,12 @@ func (_m *SDK) UpdateUser(user sdk.User, token string) (sdk.User, errors.SDKErro
 	return r0, r1
 }
 
-// UpdateUserIdentity provides a mock function with given fields: user, token
-func (_m *SDK) UpdateUserIdentity(user sdk.User, token string) (sdk.User, errors.SDKError) {
+// UpdateUserEmail provides a mock function with given fields: user, token
+func (_m *SDK) UpdateUserEmail(user sdk.User, token string) (sdk.User, errors.SDKError) {
 	ret := _m.Called(user, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateUserIdentity")
+		panic("no return value specified for UpdateUserEmail")
 	}
 
 	var r0 sdk.User
@@ -2716,12 +2716,12 @@ func (_m *SDK) UpdateUserIdentity(user sdk.User, token string) (sdk.User, errors
 	return r0, r1
 }
 
-// UpdateUserNames provides a mock function with given fields: user, token
-func (_m *SDK) UpdateUserNames(user sdk.User, token string) (sdk.User, errors.SDKError) {
+// UpdateUserName provides a mock function with given fields: user, token
+func (_m *SDK) UpdateUserName(user sdk.User, token string) (sdk.User, errors.SDKError) {
 	ret := _m.Called(user, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateUserNames")
+		panic("no return value specified for UpdateUserName")
 	}
 
 	var r0 sdk.User

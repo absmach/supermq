@@ -14,7 +14,6 @@ import (
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	"github.com/absmach/magistrala/users"
-	"github.com/absmach/magistrala/users/mocks"
 	cpostgres "github.com/absmach/magistrala/users/postgres"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -34,8 +33,7 @@ func TestUsersSave(t *testing.T) {
 		require.Nil(t, err, fmt.Sprintf("clean clients unexpected error: %s", err))
 	})
 
-	storageClient := new(mocks.Storage)
-	repo := cpostgres.NewRepository(database, storageClient)
+	repo := cpostgres.NewRepository(database)
 
 	uid := testsutil.GenerateUUID(t)
 
@@ -43,7 +41,7 @@ func TestUsersSave(t *testing.T) {
 	last_name := namesgen.Generate()
 	user_name := namesgen.Generate()
 
-	clientIdentity := first_name + "@example.com"
+	clientEmail := first_name + "@example.com"
 
 	cases := []struct {
 		desc   string
@@ -56,31 +54,29 @@ func TestUsersSave(t *testing.T) {
 				ID:        uid,
 				FirstName: first_name,
 				LastName:  last_name,
-				Identity:  clientIdentity,
+				Email:     clientEmail,
 				Credentials: users.Credentials{
 					UserName: user_name,
 					Secret:   password,
 				},
-				Metadata:       users.Metadata{},
-				Status:         users.EnabledStatus,
-				ProfilePicture: "",
+				Metadata: users.Metadata{},
+				Status:   users.EnabledStatus,
 			},
 			err: nil,
 		},
 		{
-			desc: "add user with duplicate user identity",
+			desc: "add user with duplicate user email",
 			client: users.User{
 				ID:        testsutil.GenerateUUID(t),
 				FirstName: first_name,
 				LastName:  last_name,
-				Identity:  clientIdentity,
+				Email:     clientEmail,
 				Credentials: users.Credentials{
 					UserName: namesgen.Generate(),
 					Secret:   password,
 				},
-				Metadata:       users.Metadata{},
-				Status:         users.EnabledStatus,
-				ProfilePicture: "",
+				Metadata: users.Metadata{},
+				Status:   users.EnabledStatus,
 			},
 			err: repoerr.ErrConflict,
 		},
@@ -90,14 +86,13 @@ func TestUsersSave(t *testing.T) {
 				ID:        testsutil.GenerateUUID(t),
 				FirstName: namesgen.Generate(),
 				LastName:  last_name,
-				Identity:  namesgen.Generate() + "@example.com",
+				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
 					UserName: user_name,
 					Secret:   password,
 				},
-				Metadata:       users.Metadata{},
-				Status:         users.EnabledStatus,
-				ProfilePicture: "",
+				Metadata: users.Metadata{},
+				Status:   users.EnabledStatus,
 			},
 			err: repoerr.ErrConflict,
 		},
@@ -107,14 +102,13 @@ func TestUsersSave(t *testing.T) {
 				ID:        invalidName,
 				FirstName: namesgen.Generate(),
 				LastName:  namesgen.Generate(),
-				Identity:  namesgen.Generate() + "@example.com",
+				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
 					UserName: user_name,
 					Secret:   password,
 				},
-				Metadata:       users.Metadata{},
-				Status:         users.EnabledStatus,
-				ProfilePicture: "",
+				Metadata: users.Metadata{},
+				Status:   users.EnabledStatus,
 			},
 			err: errors.ErrMalformedEntity,
 		},
@@ -124,27 +118,25 @@ func TestUsersSave(t *testing.T) {
 				ID:        testsutil.GenerateUUID(t),
 				FirstName: invalidName,
 				LastName:  namesgen.Generate(),
-				Identity:  namesgen.Generate() + "@example.com",
+				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
 					UserName: user_name,
 					Secret:   password,
 				},
-				Metadata:       users.Metadata{},
-				Status:         users.EnabledStatus,
-				ProfilePicture: "",
+				Metadata: users.Metadata{},
+				Status:   users.EnabledStatus,
 			},
 			err: errors.ErrMalformedEntity,
 		},
 		{
 			desc: "add user with a missing user name",
 			client: users.User{
-				ID:       testsutil.GenerateUUID(t),
-				Identity: namesgen.Generate() + "@example.com",
+				ID:    testsutil.GenerateUUID(t),
+				Email: namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
 					Secret: password,
 				},
-				Metadata:       users.Metadata{},
-				ProfilePicture: "",
+				Metadata: users.Metadata{},
 			},
 			err: nil,
 		},
@@ -154,7 +146,7 @@ func TestUsersSave(t *testing.T) {
 				ID:        testsutil.GenerateUUID(t),
 				FirstName: namesgen.Generate(),
 				LastName:  namesgen.Generate(),
-				Identity:  namesgen.Generate() + "@example.com",
+				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
 					UserName: namesgen.Generate(),
 				},
@@ -167,7 +159,7 @@ func TestUsersSave(t *testing.T) {
 			client: users.User{
 				ID:        testsutil.GenerateUUID(t),
 				FirstName: namesgen.Generate(),
-				Identity:  namesgen.Generate() + "@example.com",
+				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
 					UserName: user_name,
 					Secret:   password,
@@ -175,7 +167,6 @@ func TestUsersSave(t *testing.T) {
 				Metadata: map[string]interface{}{
 					"key": make(chan int),
 				},
-				ProfilePicture: "",
 			},
 			err: errors.ErrMalformedEntity,
 		},
@@ -197,9 +188,7 @@ func TestIsPlatformAdmin(t *testing.T) {
 		require.Nil(t, err, fmt.Sprintf("clean clients unexpected error: %s", err))
 	})
 
-	storageClient := new(mocks.Storage)
-
-	repo := cpostgres.NewRepository(database, storageClient)
+	repo := cpostgres.NewRepository(database)
 
 	cases := []struct {
 		desc   string
@@ -211,7 +200,7 @@ func TestIsPlatformAdmin(t *testing.T) {
 			client: users.User{
 				ID:        testsutil.GenerateUUID(t),
 				FirstName: namesgen.Generate(),
-				Identity:  namesgen.Generate() + "@example.com",
+				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
 					UserName: namesgen.Generate(),
 					Secret:   password,
@@ -227,7 +216,7 @@ func TestIsPlatformAdmin(t *testing.T) {
 			client: users.User{
 				ID:        testsutil.GenerateUUID(t),
 				FirstName: namesgen.Generate(),
-				Identity:  namesgen.Generate() + "@example.com",
+				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
 					UserName: namesgen.Generate(),
 					Secret:   password,
@@ -254,9 +243,7 @@ func TestRetrieveByID(t *testing.T) {
 		require.Nil(t, err, fmt.Sprintf("clean clients unexpected error: %s", err))
 	})
 
-	storageClient := new(mocks.Storage)
-
-	repo := cpostgres.NewRepository(database, storageClient)
+	repo := cpostgres.NewRepository(database)
 
 	client := users.User{
 		ID:        testsutil.GenerateUUID(t),
@@ -306,9 +293,7 @@ func TestRetrieveAll(t *testing.T) {
 		require.Nil(t, err, fmt.Sprintf("clean clients unexpected error: %s", err))
 	})
 
-	storageClient := new(mocks.Storage)
-
-	repo := cpostgres.NewRepository(database, storageClient)
+	repo := cpostgres.NewRepository(database)
 
 	num := 200
 	var items, enabledClients []users.User
@@ -316,7 +301,7 @@ func TestRetrieveAll(t *testing.T) {
 		client := users.User{
 			ID:        testsutil.GenerateUUID(t),
 			FirstName: namesgen.Generate(),
-			Identity:  namesgen.Generate() + "@example.com",
+			Email:     namesgen.Generate() + "@example.com",
 			Credentials: users.Credentials{
 				UserName: namesgen.Generate(),
 				Secret:   "",

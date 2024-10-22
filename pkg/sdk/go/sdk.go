@@ -95,6 +95,7 @@ type PageMetadata struct {
 	Direction       string   `json:"direction,omitempty"`
 	Level           uint64   `json:"level,omitempty"`
 	Identity        string   `json:"identity,omitempty"`
+	Email           string   `json:"email,omitempty"`
 	UserName        string   `json:"user_name,omitempty"`
 	LastName        string   `json:"last_name,omitempty"`
 	FirstName       string   `json:"first_name,omitempty"`
@@ -128,7 +129,7 @@ type PageMetadata struct {
 }
 
 // Credentials represent client credentials: it contains
-// "identity" which can be a username, email, generated name;
+// "username" which can be a username, generated name;
 // and "secret" which can be a password or access token.
 type Credentials struct {
 	UserName string `json:"user_name,omitempty"` // username or generated login ID
@@ -144,7 +145,7 @@ type SDK interface {
 	// example:
 	//  user := sdk.User{
 	//    Name:	 "John Doe",
-	// 		Identity: "john.doe@example",
+	// 		Email: "john.doe@example",
 	//    Credentials: sdk.Credentials{
 	//      UserName: "john.doe",
 	//      Secret:   "12345678",
@@ -213,18 +214,18 @@ type SDK interface {
 	//  fmt.Println(user)
 	UpdateUser(user User, token string) (User, errors.SDKError)
 
-	// UpdateUserIdentity updates the user's identity
+	// UpdateUserEmail updates the user's email
 	//
 	// example:
 	//  user := sdk.User{
 	//    ID:   "userID",
 	//    Credentials: sdk.Credentials{
-	//      Identity: "john.doe@example",
+	//      Email: "john.doe@example",
 	//    },
 	//  }
-	//  user, _ := sdk.UpdateUserIdentity(user, "token")
+	//  user, _ := sdk.UpdateUserEmail(user, "token")
 	//  fmt.Println(user)
-	UpdateUserIdentity(user User, token string) (User, errors.SDKError)
+	UpdateUserEmail(user User, token string) (User, errors.SDKError)
 
 	// UpdateUserTags updates the user's tags.
 	//
@@ -237,16 +238,16 @@ type SDK interface {
 	//  fmt.Println(user)
 	UpdateUserTags(user User, token string) (User, errors.SDKError)
 
-	// UpdateUserNames updates the user's names ie Name, FirstName, LastName and UserName.
+	// UpdateUserName updates the user's names ie Name, FirstName, LastName and UserName.
 	//
 	// example:
 	//  user := sdk.User{
 	//    ID:   "userID",
 	//    Name: "John Doe",
 	//  }
-	//  user, _ := sdk.UpdateUserNames(user, "token")
+	//  user, _ := sdk.UpdateUserName(user, "token")
 	//  fmt.Println(user)
-	UpdateUserNames(user User, token string) (User, errors.SDKError)
+	UpdateUserName(user User, token string) (User, errors.SDKError)
 
 	// UpdateProfilePicture updates the user's profile picture.
 	//
@@ -316,7 +317,7 @@ type SDK interface {
 	//
 	// example:
 	//  lt := sdk.Login{
-	//      Identity: "john.doe@example",
+	//      Email: "john.doe@example",
 	//      Secret:   "12345678",
 	//  }
 	//  token, _ := sdk.CreateToken(lt)
@@ -1358,6 +1359,9 @@ func (pm PageMetadata) query() (string, error) {
 	}
 	if pm.Level != 0 {
 		q.Add("level", strconv.FormatUint(pm.Level, 10))
+	}
+	if pm.Email != "" {
+		q.Add("email", pm.Email)
 	}
 	if pm.Identity != "" {
 		q.Add("identity", pm.Identity)

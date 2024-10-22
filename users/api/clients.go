@@ -64,7 +64,7 @@ func usersHandler(svc users.Service, authn mgauthn.Authentication, tokenClient m
 			), "view_profile").ServeHTTP)
 
 			r.Get("/{id}", otelhttp.NewHandler(kithttp.NewServer(
-				viewUserEndpoint(svc),
+				viewEndpoint(svc),
 				decodeViewUser,
 				api.EncodeResponse,
 				opts...,
@@ -85,25 +85,25 @@ func usersHandler(svc users.Service, authn mgauthn.Authentication, tokenClient m
 			), "search_users").ServeHTTP)
 
 			r.Get("/username", otelhttp.NewHandler(kithttp.NewServer(
-				viewUserByUserNameEndpoint(svc),
+				viewByUserNameEndpoint(svc),
 				decodeViewUserByUserName,
 				api.EncodeResponse,
 				opts...,
 			), "view_user_by_username").ServeHTTP)
 
 			r.Patch("/secret", otelhttp.NewHandler(kithttp.NewServer(
-				updateUserSecretEndpoint(svc),
+				updateSecretEndpoint(svc),
 				decodeUpdateUserSecret,
 				api.EncodeResponse,
 				opts...,
 			), "update_user_secret").ServeHTTP)
 
 			r.Patch("/{id}", otelhttp.NewHandler(kithttp.NewServer(
-				updateUserEndpoint(svc),
+				updateEndpoint(svc),
 				decodeUpdateUser,
 				api.EncodeResponse,
 				opts...,
-			), "update_user").ServeHTTP)
+			), "update_user_name_and_metadata").ServeHTTP)
 
 			r.Patch("/{id}/names", otelhttp.NewHandler(kithttp.NewServer(
 				updateUserNamesEndpoint(svc),
@@ -120,21 +120,21 @@ func usersHandler(svc users.Service, authn mgauthn.Authentication, tokenClient m
 			), "update_profile_picture").ServeHTTP)
 
 			r.Patch("/{id}/tags", otelhttp.NewHandler(kithttp.NewServer(
-				updateUserTagsEndpoint(svc),
+				updateTagsEndpoint(svc),
 				decodeUpdateUserTags,
 				api.EncodeResponse,
 				opts...,
 			), "update_user_tags").ServeHTTP)
 
-			r.Patch("/{id}/identity", otelhttp.NewHandler(kithttp.NewServer(
-				updateUserIdentityEndpoint(svc),
-				decodeUpdateUserIdentity,
+			r.Patch("/{id}/email", otelhttp.NewHandler(kithttp.NewServer(
+				updateEmailEndpoint(svc),
+				decodeUpdateUserEmail,
 				api.EncodeResponse,
 				opts...,
-			), "update_user_identity").ServeHTTP)
+			), "update_user_email").ServeHTTP)
 
 			r.Patch("/{id}/role", otelhttp.NewHandler(kithttp.NewServer(
-				updateUserRoleEndpoint(svc),
+				updateRoleEndpoint(svc),
 				decodeUpdateUserRole,
 				api.EncodeResponse,
 				opts...,
@@ -148,21 +148,21 @@ func usersHandler(svc users.Service, authn mgauthn.Authentication, tokenClient m
 			), "update_client_role").ServeHTTP)
 
 			r.Post("/{id}/enable", otelhttp.NewHandler(kithttp.NewServer(
-				enableUserEndpoint(svc),
+				enableEndpoint(svc),
 				decodeChangeUserStatus,
 				api.EncodeResponse,
 				opts...,
 			), "enable_user").ServeHTTP)
 
 			r.Post("/{id}/disable", otelhttp.NewHandler(kithttp.NewServer(
-				disableUserEndpoint(svc),
+				disableEndpoint(svc),
 				decodeChangeUserStatus,
 				api.EncodeResponse,
 				opts...,
 			), "disable_user").ServeHTTP)
 
 			r.Delete("/{id}", otelhttp.NewHandler(kithttp.NewServer(
-				deleteUserEndpoint(svc),
+				deleteEndpoint(svc),
 				decodeChangeUserStatus,
 				api.EncodeResponse,
 				opts...,
@@ -291,7 +291,7 @@ func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	d, err := apiutil.ReadStringQuery(r, api.IdentityKey, "")
+	d, err := apiutil.ReadStringQuery(r, api.EmailKey, "")
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
@@ -336,7 +336,7 @@ func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 		order:     order,
 		dir:       dir,
 		id:        id,
-		identity:  d,
+		email:     d,
 	}
 
 	return req, nil
@@ -427,12 +427,12 @@ func decodeUpdateUserTags(_ context.Context, r *http.Request) (interface{}, erro
 	return req, nil
 }
 
-func decodeUpdateUserIdentity(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateUserEmail(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
-	req := updateUserIdentityReq{
+	req := updateUserEmailReq{
 		id: chi.URLParam(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -659,7 +659,7 @@ func queryPageParams(r *http.Request, defPermission string) (users.Page, error) 
 	if err != nil {
 		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	i, err := apiutil.ReadStringQuery(r, api.IdentityKey, "")
+	i, err := apiutil.ReadStringQuery(r, api.EmailKey, "")
 	if err != nil {
 		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
@@ -687,7 +687,7 @@ func queryPageParams(r *http.Request, defPermission string) (users.Page, error) 
 		FirstName:  f,
 		UserName:   n,
 		LastName:   a,
-		Identity:   i,
+		Email:      i,
 		Tag:        t,
 		Permission: p,
 		ListPerms:  lp,

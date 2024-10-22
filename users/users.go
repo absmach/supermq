@@ -6,6 +6,7 @@ package users
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -39,13 +40,13 @@ type User struct {
 	CreatedAt      time.Time   `json:"created_at,omitempty"`
 	UpdatedAt      time.Time   `json:"updated_at,omitempty"`
 	UpdatedBy      string      `json:"updated_by,omitempty"`
-	Status         Status      `json:"status,omitempty"` // 1 for enabled, 0 for disabled
-	Role           Role        `json:"role,omitempty"`   // 1 for admin, 0 for normal user
-	ProfilePicture string      `json:"profile_picture,omitempty"`
+	Status         Status      `json:"status,omitempty"`          // 1 for enabled, 0 for disabled
+	Role           Role        `json:"role,omitempty"`            // 1 for admin, 0 for normal user
+	ProfilePicture url.URL     `json:"profile_picture,omitempty"` // profile picture URL
 	DomainID       string      `json:"domain_id,omitempty"`
 	Credentials    Credentials `json:"credentials,omitempty"`
 	Permissions    []string    `json:"permissions,omitempty"`
-	Identity       string      `json:"identity,omitempty"`
+	Email          string      `json:"email,omitempty"`
 }
 
 type Credentials struct {
@@ -84,16 +85,16 @@ type Repository interface {
 	// RetrieveAll retrieves all users.
 	RetrieveAll(ctx context.Context, pm Page) (UsersPage, error)
 
-	// RetrieveByIdentity retrieves user by its unique credentials.
-	RetrieveByIdentity(ctx context.Context, identity string) (User, error)
+	// RetrieveByEmail retrieves user by its unique credentials.
+	RetrieveByEmail(ctx context.Context, email string) (User, error)
 
 	// Update updates the user name and metadata.
 	Update(ctx context.Context, user User) (User, error)
 
-	// UpdateUserNames updates the User's names.
-	UpdateUserNames(ctx context.Context, user User) (User, error)
+	// UpdateUserName updates the User's names.
+	UpdateUserName(ctx context.Context, user User) (User, error)
 
-	// UpdateSecret updates secret for user with given identity.
+	// UpdateSecret updates secret for user with given email.
 	UpdateSecret(ctx context.Context, user User) (User, error)
 
 	// ChangeStatus changes user status to enabled or disabled
@@ -117,7 +118,7 @@ type Repository interface {
 
 // Validate returns an error if user representation is invalid.
 func (u User) Validate() error {
-	if !isEmail(u.Identity) {
+	if !isEmail(u.Email) {
 		return errors.ErrMalformedEntity
 	}
 	return nil
@@ -203,5 +204,5 @@ type Page struct {
 	UserName   string   `json:"user_name,omitempty"`
 	FirstName  string   `json:"first_name,omitempty"`
 	LastName   string   `json:"last_name,omitempty"`
-	Identity   string   `json:"identity,omitempty"`
+	Email      string   `json:"email,omitempty"`
 }

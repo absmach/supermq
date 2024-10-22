@@ -41,8 +41,8 @@ func TestIssueToken(t *testing.T) {
 		{
 			desc: "issue token successfully",
 			login: sdk.Login{
-				Identity: client.Identity,
-				Secret:   client.Credentials.Secret,
+				Email:  client.Email,
+				Secret: client.Credentials.Secret,
 			},
 			svcRes: &magistrala.Token{
 				AccessToken:  token.AccessToken,
@@ -54,10 +54,10 @@ func TestIssueToken(t *testing.T) {
 			err:      nil,
 		},
 		{
-			desc: "issue token with invalid identity",
+			desc: "issue token with invalid email",
 			login: sdk.Login{
-				Identity: invalidIdentity,
-				Secret:   client.Credentials.Secret,
+				Email:  invalidIdentity,
+				Secret: client.Credentials.Secret,
 			},
 			svcRes:   &magistrala.Token{},
 			svcErr:   svcerr.ErrAuthentication,
@@ -67,8 +67,8 @@ func TestIssueToken(t *testing.T) {
 		{
 			desc: "issue token with invalid secret",
 			login: sdk.Login{
-				Identity: client.Identity,
-				Secret:   "invalid",
+				Email:  client.Email,
+				Secret: "invalid",
 			},
 			svcRes:   &magistrala.Token{},
 			svcErr:   svcerr.ErrLogin,
@@ -76,21 +76,21 @@ func TestIssueToken(t *testing.T) {
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrLogin, http.StatusUnauthorized),
 		},
 		{
-			desc: "issue token with empty identity",
+			desc: "issue token with empty email",
 			login: sdk.Login{
-				Identity: "",
-				Secret:   client.Credentials.Secret,
+				Email:  "",
+				Secret: client.Credentials.Secret,
 			},
 			svcRes:   &magistrala.Token{},
 			svcErr:   nil,
 			response: sdk.Token{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingIdentity), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingEmail), http.StatusBadRequest),
 		},
 		{
 			desc: "issue token with empty secret",
 			login: sdk.Login{
-				Identity: client.Identity,
-				Secret:   "",
+				Email:  client.Email,
+				Secret: "",
 			},
 			svcRes:   &magistrala.Token{},
 			svcErr:   nil,

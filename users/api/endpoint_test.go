@@ -40,8 +40,8 @@ var (
 		ID:          testsutil.GenerateUUID(&testing.T{}),
 		FirstName:   "username",
 		Tags:        []string{"tag1", "tag2"},
-		Identity:    "useridentity@example.com",
-		Credentials: users.Credentials{UserName: "useridentity", Secret: secret},
+		Email:       "useremail@example.com",
+		Credentials: users.Credentials{UserName: "useremail", Secret: secret},
 		Metadata:    validCMetadata,
 		Status:      users.EnabledStatus,
 	}
@@ -108,7 +108,7 @@ func toJSON(data interface{}) string {
 	return string(jsonData)
 }
 
-func TestRegisterUser(t *testing.T) {
+func TestRegister(t *testing.T) {
 	us, svc, _, _ := newUsersServer()
 	defer us.Close()
 
@@ -147,8 +147,8 @@ func TestRegisterUser(t *testing.T) {
 		{
 			desc: "register a user with an invalid ID",
 			user: users.User{
-				ID:       inValid,
-				Identity: "user@example.com",
+				ID:    inValid,
+				Email: "user@example.com",
 				Credentials: users.Credentials{
 					Secret: "12345678",
 				},
@@ -161,7 +161,7 @@ func TestRegisterUser(t *testing.T) {
 		{
 			desc: "register a user that can't be marshalled",
 			user: users.User{
-				Identity: "user@example.com",
+				Email: "user@example.com",
 				Credentials: users.Credentials{
 					Secret: "12345678",
 				},
@@ -177,9 +177,9 @@ func TestRegisterUser(t *testing.T) {
 		{
 			desc: "register user with invalid status",
 			user: users.User{
-				Identity: "newclientwithinvalidstatus@example.com",
+				Email: "newclientwithinvalidstatus@example.com",
 				Credentials: users.Credentials{
-					UserName: "useridentity",
+					UserName: "useremail",
 					Secret:   secret,
 				},
 				Status: users.AllStatus,
@@ -193,7 +193,7 @@ func TestRegisterUser(t *testing.T) {
 			desc: "register a user with name too long",
 			user: users.User{
 				FirstName: strings.Repeat("a", 1025),
-				Identity:  "newclientwithinvalidname@example.com",
+				Email:     "newclientwithinvalidname@example.com",
 				Credentials: users.Credentials{
 					Secret: secret,
 				},
@@ -233,7 +233,7 @@ func TestRegisterUser(t *testing.T) {
 				body:        strings.NewReader(data),
 			}
 
-			svcCall := svc.On("RegisterUser", mock.Anything, mgauthn.Session{}, tc.user, true).Return(tc.user, tc.err)
+			svcCall := svc.On("Register", mock.Anything, mgauthn.Session{}, tc.user, true).Return(tc.user, tc.err)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			var errRes respBody
@@ -249,7 +249,7 @@ func TestRegisterUser(t *testing.T) {
 	}
 }
 
-func TestViewUser(t *testing.T) {
+func TestView(t *testing.T) {
 	us, svc, _, authn := newUsersServer()
 	defer us.Close()
 
@@ -308,7 +308,7 @@ func TestViewUser(t *testing.T) {
 			}
 
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-			svcCall := svc.On("ViewUser", mock.Anything, tc.authnRes, tc.id).Return(users.User{}, tc.err)
+			svcCall := svc.On("View", mock.Anything, tc.authnRes, tc.id).Return(users.User{}, tc.err)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			var errRes respBody
@@ -639,9 +639,9 @@ func TestListUsers(t *testing.T) {
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
-			desc:  "list users with identity",
+			desc:  "list users with email",
 			token: validToken,
-			query: fmt.Sprintf("identity=%s", user.Identity),
+			query: fmt.Sprintf("email=%s", user.Email),
 			listUsersResponse: users.UsersPage{
 				Page: users.Page{
 					Total: 1,
@@ -665,27 +665,29 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "list_perms=true&list_perms=true",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: validID},
+			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
-			desc:  "list users with identity",
+			desc:  "list users with email",
 			token: validToken,
-			query: fmt.Sprintf("identity=%s", user.Identity),
+			query: fmt.Sprintf("email=%s", user.Email),
 			listUsersResponse: users.UsersPage{
 				Page: users.Page{
 					Total: 1,
 				},
-				Users: []users.User{user},
+				Users: []users.User{
+					user,
+				},
 			},
 			status:   http.StatusOK,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: validID},
 			err:      nil,
 		},
 		{
-			desc:     "list users with duplicate identity",
+			desc:     "list users with duplicate email",
 			token:    validToken,
-			query:    "identity=1&identity=2",
+			query:    "email=1&email=2",
 			status:   http.StatusBadRequest,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: validID},
 			err:      apiutil.ErrInvalidQueryParams,
@@ -886,7 +888,7 @@ func TestSearchUsers(t *testing.T) {
 	}
 }
 
-func TestUpdateUser(t *testing.T) {
+func TestUpdate(t *testing.T) {
 	us, svc, _, authn := newUsersServer()
 	defer us.Close()
 
@@ -1008,7 +1010,7 @@ func TestUpdateUser(t *testing.T) {
 				body:        strings.NewReader(tc.data),
 			}
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-			svcCall := svc.On("UpdateUser", mock.Anything, tc.authnRes, mock.Anything).Return(tc.userResponse, tc.err)
+			svcCall := svc.On("Update", mock.Anything, tc.authnRes, mock.Anything).Return(tc.userResponse, tc.err)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			var resBody respBody
@@ -1025,7 +1027,7 @@ func TestUpdateUser(t *testing.T) {
 	}
 }
 
-func TestUpdateUserTags(t *testing.T) {
+func TestUpdateTags(t *testing.T) {
 	us, svc, _, authn := newUsersServer()
 	defer us.Close()
 
@@ -1146,7 +1148,7 @@ func TestUpdateUserTags(t *testing.T) {
 			}
 
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-			svcCall := svc.On("UpdateUserTags", mock.Anything, tc.authnRes, mock.Anything).Return(tc.userResponse, tc.err)
+			svcCall := svc.On("UpdateTags", mock.Anything, tc.authnRes, mock.Anything).Return(tc.userResponse, tc.err)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			var resBody respBody
@@ -1166,7 +1168,7 @@ func TestUpdateUserTags(t *testing.T) {
 	}
 }
 
-func TestUpdateUserIdentity(t *testing.T) {
+func TestUpdateEmail(t *testing.T) {
 	us, svc, _, authn := newUsersServer()
 	defer us.Close()
 
@@ -1182,11 +1184,11 @@ func TestUpdateUserIdentity(t *testing.T) {
 		err         error
 	}{
 		{
-			desc: "update user identity as admin with valid token",
-			data: fmt.Sprintf(`{"identity": "%s"}`, "newuseridentity@example.com"),
+			desc: "update user email as admin with valid token",
+			data: fmt.Sprintf(`{"email": "%s"}`, "newuseremail@example.com"),
 			user: users.User{
-				ID:       user.ID,
-				Identity: "newuseridentity@example.com",
+				ID:    user.ID,
+				Email: "newuseremail@example.com",
 				Credentials: users.Credentials{
 					Secret: "secret",
 				},
@@ -1198,11 +1200,11 @@ func TestUpdateUserIdentity(t *testing.T) {
 			err:         nil,
 		},
 		{
-			desc: "update user identity as normal user with valid token",
-			data: fmt.Sprintf(`{"identity": "%s"}`, "newuseridentity@example.com"),
+			desc: "update user email as normal user with valid token",
+			data: fmt.Sprintf(`{"email": "%s"}`, "newuseremail@example.com"),
 			user: users.User{
-				ID:       user.ID,
-				Identity: "newuseridentity@example.com",
+				ID:    user.ID,
+				Email: "newuseremail@example.com",
 				Credentials: users.Credentials{
 					Secret: "secret",
 				},
@@ -1214,11 +1216,11 @@ func TestUpdateUserIdentity(t *testing.T) {
 			err:         nil,
 		},
 		{
-			desc: "update user identity with empty token",
-			data: fmt.Sprintf(`{"identity": "%s"}`, "newuseridentity@example.com"),
+			desc: "update user email with empty token",
+			data: fmt.Sprintf(`{"email": "%s"}`, "newuseremail@example.com"),
 			user: users.User{
-				ID:       user.ID,
-				Identity: "newuseridentity@example.com",
+				ID:    user.ID,
+				Email: "newuseremail@example.com",
 				Credentials: users.Credentials{
 					Secret: "secret",
 				},
@@ -1230,11 +1232,11 @@ func TestUpdateUserIdentity(t *testing.T) {
 			err:         apiutil.ErrBearerToken,
 		},
 		{
-			desc: "update user identity with invalid token",
-			data: fmt.Sprintf(`{"identity": "%s"}`, "newuseridentity@example.com"),
+			desc: "update user email with invalid token",
+			data: fmt.Sprintf(`{"email": "%s"}`, "newuseremail@example.com"),
 			user: users.User{
-				ID:       user.ID,
-				Identity: "newuseridentity@example.com",
+				ID:    user.ID,
+				Email: "newuseremail@example.com",
 				Credentials: users.Credentials{
 					Secret: "secret",
 				},
@@ -1246,11 +1248,11 @@ func TestUpdateUserIdentity(t *testing.T) {
 			err:         svcerr.ErrAuthentication,
 		},
 		{
-			desc: "update user identity with empty id",
-			data: fmt.Sprintf(`{"identity": "%s"}`, "newuseridentity@example.com"),
+			desc: "update user email with empty id",
+			data: fmt.Sprintf(`{"email": "%s"}`, "newuseremail@example.com"),
 			user: users.User{
-				ID:       "",
-				Identity: "newuseridentity@example.com",
+				ID:    "",
+				Email: "newuseremail@example.com",
 				Credentials: users.Credentials{
 					Secret: "secret",
 				},
@@ -1262,11 +1264,11 @@ func TestUpdateUserIdentity(t *testing.T) {
 			err:         apiutil.ErrMissingID,
 		},
 		{
-			desc: "update user identity with invalid contentype",
-			data: fmt.Sprintf(`{"identity": "%s"}`, ""),
+			desc: "update user email with invalid contentype",
+			data: fmt.Sprintf(`{"email": "%s"}`, ""),
 			user: users.User{
-				ID:       user.ID,
-				Identity: "newuseridentity@example.com",
+				ID:    user.ID,
+				Email: "newuseremail@example.com",
 				Credentials: users.Credentials{
 					Secret: "secret",
 				},
@@ -1277,11 +1279,11 @@ func TestUpdateUserIdentity(t *testing.T) {
 			err:         apiutil.ErrValidation,
 		},
 		{
-			desc: "update user identity with malformed data",
-			data: fmt.Sprintf(`{"identity": %s}`, "invalid"),
+			desc: "update user email with malformed data",
+			data: fmt.Sprintf(`{"email": %s}`, "invalid"),
 			user: users.User{
-				ID:       user.ID,
-				Identity: "",
+				ID:    user.ID,
+				Email: "",
 				Credentials: users.Credentials{
 					Secret: "secret",
 				},
@@ -1296,14 +1298,14 @@ func TestUpdateUserIdentity(t *testing.T) {
 		req := testRequest{
 			user:        us.Client(),
 			method:      http.MethodPatch,
-			url:         fmt.Sprintf("%s/users/%s/identity", us.URL, tc.user.ID),
+			url:         fmt.Sprintf("%s/users/%s/email", us.URL, tc.user.ID),
 			contentType: tc.contentType,
 			token:       tc.token,
 			body:        strings.NewReader(tc.data),
 		}
 
 		authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-		svcCall := svc.On("UpdateUserIdentity", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(users.User{}, tc.err)
+		svcCall := svc.On("UpdateEmail", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(users.User{}, tc.err)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		var resBody respBody
@@ -1630,7 +1632,7 @@ func TestUpdateUserRole(t *testing.T) {
 	}
 }
 
-func TestUpdateUserSecret(t *testing.T) {
+func TestUpdateSecret(t *testing.T) {
 	us, svc, _, authn := newUsersServer()
 	defer us.Close()
 
@@ -1649,8 +1651,8 @@ func TestUpdateUserSecret(t *testing.T) {
 			desc: "update user secret with valid token",
 			data: `{"old_secret": "strongersecret", "new_secret": "strongersecret"}`,
 			user: users.User{
-				ID:       user.ID,
-				Identity: "username",
+				ID:    user.ID,
+				Email: "username",
 				Credentials: users.Credentials{
 					Secret: "strongersecret",
 				},
@@ -1664,8 +1666,8 @@ func TestUpdateUserSecret(t *testing.T) {
 			desc: "update user secret with empty token",
 			data: `{"old_secret": "strongersecret", "new_secret": "strongersecret"}`,
 			user: users.User{
-				ID:       user.ID,
-				Identity: "username",
+				ID:    user.ID,
+				Email: "username",
 				Credentials: users.Credentials{
 					Secret: "strongersecret",
 				},
@@ -1680,8 +1682,8 @@ func TestUpdateUserSecret(t *testing.T) {
 			desc: "update user secret with invalid token",
 			data: `{"old_secret": "strongersecret", "new_secret": "strongersecret"}`,
 			user: users.User{
-				ID:       user.ID,
-				Identity: "username",
+				ID:    user.ID,
+				Email: "username",
 				Credentials: users.Credentials{
 					Secret: "strongersecret",
 				},
@@ -1697,8 +1699,8 @@ func TestUpdateUserSecret(t *testing.T) {
 			desc: "update user secret with empty secret",
 			data: `{"old_secret": "", "new_secret": "strongersecret"}`,
 			user: users.User{
-				ID:       user.ID,
-				Identity: "username",
+				ID:    user.ID,
+				Email: "username",
 				Credentials: users.Credentials{
 					Secret: "",
 				},
@@ -1712,8 +1714,8 @@ func TestUpdateUserSecret(t *testing.T) {
 			desc: "update user secret with invalid contentype",
 			data: `{"old_secret": "strongersecret", "new_secret": "strongersecret"}`,
 			user: users.User{
-				ID:       user.ID,
-				Identity: "username",
+				ID:    user.ID,
+				Email: "username",
 				Credentials: users.Credentials{
 					Secret: "",
 				},
@@ -1727,8 +1729,8 @@ func TestUpdateUserSecret(t *testing.T) {
 			desc: "update user secret with malformed data",
 			data: fmt.Sprintf(`{"secret": %s}`, "invalid"),
 			user: users.User{
-				ID:       user.ID,
-				Identity: "username",
+				ID:    user.ID,
+				Email: "username",
 				Credentials: users.Credentials{
 					Secret: "",
 				},
@@ -1752,7 +1754,7 @@ func TestUpdateUserSecret(t *testing.T) {
 			}
 
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-			svcCall := svc.On("UpdateUserSecret", mock.Anything, tc.authnRes, mock.Anything, mock.Anything).Return(tc.user, tc.err)
+			svcCall := svc.On("UpdateSecret", mock.Anything, tc.authnRes, mock.Anything, mock.Anything).Return(tc.user, tc.err)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			var resBody respBody
@@ -1773,7 +1775,7 @@ func TestIssueToken(t *testing.T) {
 	us, svc, _, _ := newUsersServer()
 	defer us.Close()
 
-	validIdentity := "valid"
+	validEmail := "valid"
 
 	cases := []struct {
 		desc        string
@@ -1783,50 +1785,50 @@ func TestIssueToken(t *testing.T) {
 		err         error
 	}{
 		{
-			desc:        "issue token with valid identity and secret",
-			data:        fmt.Sprintf(`{"identity": "%s", "secret": "%s", "domainID": "%s"}`, validIdentity, secret, validID),
+			desc:        "issue token with valid email and secret",
+			data:        fmt.Sprintf(`{"email": "%s", "secret": "%s", "domainID": "%s"}`, validEmail, secret, validID),
 			contentType: contentType,
 			status:      http.StatusCreated,
 			err:         nil,
 		},
 		{
-			desc:        "issue token with empty identity",
-			data:        fmt.Sprintf(`{"identity": "%s", "secret": "%s", "domainID": "%s"}`, "", secret, validID),
+			desc:        "issue token with empty email",
+			data:        fmt.Sprintf(`{"email": "%s", "secret": "%s", "domainID": "%s"}`, "", secret, validID),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
 		},
 		{
 			desc:        "issue token with empty secret",
-			data:        fmt.Sprintf(`{"identity": "%s", "secret": "%s", "domainID": "%s"}`, validIdentity, "", validID),
+			data:        fmt.Sprintf(`{"email": "%s", "secret": "%s", "domainID": "%s"}`, validEmail, "", validID),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
 		},
 		{
 			desc:        "issue token with empty domain",
-			data:        fmt.Sprintf(`{"identity": "%s", "secret": "%s", "domainID": "%s"}`, validIdentity, secret, ""),
+			data:        fmt.Sprintf(`{"email": "%s", "secret": "%s", "domainID": "%s"}`, validEmail, secret, ""),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
 		},
 		{
-			desc:        "issue token with invalid identity",
-			data:        fmt.Sprintf(`{"identity": "%s", "secret": "%s", "domainID": "%s"}`, "invalid", secret, validID),
+			desc:        "issue token with invalid email",
+			data:        fmt.Sprintf(`{"email": "%s", "secret": "%s", "domainID": "%s"}`, "invalid", secret, validID),
 			contentType: contentType,
 			status:      http.StatusUnauthorized,
 			err:         svcerr.ErrAuthentication,
 		},
 		{
 			desc:        "issues token with malformed data",
-			data:        fmt.Sprintf(`{"identity": %s, "secret": %s, "domainID": %s}`, validIdentity, secret, validID),
+			data:        fmt.Sprintf(`{"email": %s, "secret": %s, "domainID": %s}`, validEmail, secret, validID),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
 		},
 		{
 			desc:        "issue token with invalid contentype",
-			data:        fmt.Sprintf(`{"identity": "%s", "secret": "%s", "domainID": "%s"}`, "invalid", secret, validID),
+			data:        fmt.Sprintf(`{"email": "%s", "secret": "%s", "domainID": "%s"}`, "invalid", secret, validID),
 			contentType: "application/xml",
 			status:      http.StatusUnsupportedMediaType,
 			err:         apiutil.ErrValidation,
@@ -1961,7 +1963,7 @@ func TestRefreshToken(t *testing.T) {
 	}
 }
 
-func TestEnableUser(t *testing.T) {
+func TestEnable(t *testing.T) {
 	us, svc, _, authn := newUsersServer()
 	defer us.Close()
 	cases := []struct {
@@ -2031,7 +2033,7 @@ func TestEnableUser(t *testing.T) {
 			}
 
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-			svcCall := svc.On("EnableUser", mock.Anything, tc.authnRes, mock.Anything).Return(users.User{}, tc.err)
+			svcCall := svc.On("Enable", mock.Anything, tc.authnRes, mock.Anything).Return(users.User{}, tc.err)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			if tc.err != nil {
@@ -2050,7 +2052,7 @@ func TestEnableUser(t *testing.T) {
 	}
 }
 
-func TestDisableUser(t *testing.T) {
+func TestDisable(t *testing.T) {
 	us, svc, _, authn := newUsersServer()
 	defer us.Close()
 
@@ -2121,7 +2123,7 @@ func TestDisableUser(t *testing.T) {
 			}
 
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-			svcCall := svc.On("DisableUser", mock.Anything, mock.Anything, mock.Anything).Return(users.User{}, tc.err)
+			svcCall := svc.On("Disable", mock.Anything, mock.Anything, mock.Anything).Return(users.User{}, tc.err)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
@@ -2131,7 +2133,7 @@ func TestDisableUser(t *testing.T) {
 	}
 }
 
-func TestDeleteUser(t *testing.T) {
+func TestDelete(t *testing.T) {
 	us, svc, _, authn := newUsersServer()
 	defer us.Close()
 
@@ -2188,7 +2190,7 @@ func TestDeleteUser(t *testing.T) {
 				body:        strings.NewReader(data),
 			}
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-			repoCall := svc.On("DeleteUser", mock.Anything, tc.authnRes, tc.user.ID).Return(tc.err)
+			repoCall := svc.On("Delete", mock.Anything, tc.authnRes, tc.user.ID).Return(tc.err)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
@@ -2465,10 +2467,10 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			err:               apiutil.ErrInvalidQueryParams,
 		},
 		{
-			desc:    "list users with identity",
+			desc:    "list users with email",
 			token:   validToken,
 			groupID: validID,
-			query:   fmt.Sprintf("identity=%s", user.Identity),
+			query:   fmt.Sprintf("email=%s", user.Email),
 			listUsersResponse: users.UsersPage{
 				Page: users.Page{
 					Total: 1,
@@ -2482,19 +2484,19 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			err:      nil,
 		},
 		{
-			desc:     "list users with invalid identity",
+			desc:     "list users with invalid email",
 			token:    validToken,
 			groupID:  validID,
-			query:    "identity=invalid",
+			query:    "email=invalid",
 			status:   http.StatusBadRequest,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:     "list users with duplicate identity",
+			desc:     "list users with duplicate email",
 			token:    validToken,
 			groupID:  validID,
-			query:    "identity=1&identity=2",
+			query:    "email=1&email=2",
 			status:   http.StatusBadRequest,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrInvalidQueryParams,
@@ -2778,10 +2780,10 @@ func TestListUsersByChannelID(t *testing.T) {
 			err:       apiutil.ErrInvalidQueryParams,
 		},
 		{
-			desc:      "list users with identity",
+			desc:      "list users with email",
 			token:     validToken,
 			channelID: validID,
-			query:     fmt.Sprintf("identity=%s", user.Identity),
+			query:     fmt.Sprintf("email=%s", user.Email),
 			listUsersResponse: users.UsersPage{
 				Page: users.Page{
 					Total: 1,
@@ -2795,19 +2797,19 @@ func TestListUsersByChannelID(t *testing.T) {
 			err:      nil,
 		},
 		{
-			desc:      "list users with invalid identity",
+			desc:      "list users with invalid email",
 			token:     validToken,
 			channelID: validID,
-			query:     "identity=invalid",
+			query:     "email=invalid",
 			status:    http.StatusBadRequest,
 			authnRes:  mgauthn.Session{UserID: validID, DomainID: domainID},
 			err:       apiutil.ErrValidation,
 		},
 		{
-			desc:      "list users with duplicate identity",
+			desc:      "list users with duplicate email",
 			token:     validToken,
 			channelID: validID,
-			query:     "identity=1&identity=2",
+			query:     "email=1&email=2",
 			status:    http.StatusBadRequest,
 			err:       apiutil.ErrInvalidQueryParams,
 		},
@@ -3115,10 +3117,10 @@ func TestListUsersByDomainID(t *testing.T) {
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
-			desc:     "list users with identity",
+			desc:     "list users with email",
 			token:    validToken,
 			domainID: validID,
-			query:    fmt.Sprintf("identity=%s", user.Identity),
+			query:    fmt.Sprintf("email=%s", user.Email),
 			listUsersResponse: users.UsersPage{
 				Page: users.Page{
 					Total: 1,
@@ -3132,18 +3134,18 @@ func TestListUsersByDomainID(t *testing.T) {
 			err:      nil,
 		},
 		{
-			desc:     "list users with invalid identity",
+			desc:     "list users with invalid email",
 			token:    validToken,
 			domainID: validID,
-			query:    "identity=invalid",
+			query:    "email=invalid",
 			status:   http.StatusBadRequest,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:   "list users with duplicate identity",
+			desc:   "list users with duplicate email",
 			token:  validToken,
-			query:  "identity=1&identity=2",
+			query:  "email=1&email=2",
 			status: http.StatusBadRequest,
 			err:    apiutil.ErrInvalidQueryParams,
 		},
@@ -3462,10 +3464,10 @@ func TestListUsersByThingID(t *testing.T) {
 			err:    apiutil.ErrInvalidQueryParams,
 		},
 		{
-			desc:    "list users with identity",
+			desc:    "list users with email",
 			token:   validToken,
 			thingID: validID,
-			query:   fmt.Sprintf("identity=%s", user.Identity),
+			query:   fmt.Sprintf("email=%s", user.Email),
 			listUsersResponse: users.UsersPage{
 				Page: users.Page{
 					Total: 1,
@@ -3479,18 +3481,18 @@ func TestListUsersByThingID(t *testing.T) {
 			err:      nil,
 		},
 		{
-			desc:     "list users with invalid identity",
+			desc:     "list users with invalid email",
 			token:    validToken,
 			thingID:  validID,
-			query:    "identity=invalid",
+			query:    "email=invalid",
 			status:   http.StatusBadRequest,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:   "list users with duplicate identity",
+			desc:   "list users with duplicate email",
 			token:  validToken,
-			query:  "identity=1&identity=2",
+			query:  "email=1&email=2",
 			status: http.StatusBadRequest,
 			err:    apiutil.ErrInvalidQueryParams,
 		},

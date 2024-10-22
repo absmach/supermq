@@ -15,18 +15,18 @@ import (
 //
 //go:generate mockery --name Service --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
 type Service interface {
-	// RegisterUser creates new user. In case of the failed registration, a
+	// Register creates new user. In case of the failed registration, a
 	// non-nil error value is returned.
-	RegisterUser(ctx context.Context, session authn.Session, user User, selfRegister bool) (User, error)
+	Register(ctx context.Context, session authn.Session, user User, selfRegister bool) (User, error)
 
-	// ViewUser retrieves user info for a given user ID and an authorized token.
-	ViewUser(ctx context.Context, session authn.Session, id string) (User, error)
+	// View retrieves user info for a given user ID and an authorized token.
+	View(ctx context.Context, session authn.Session, id string) (User, error)
 
 	// ViewProfile retrieves user info for a given token.
 	ViewProfile(ctx context.Context, session authn.Session) (User, error)
 
 	// ViewUserByUserName retrieves user info for a given user name.
-	ViewUserByUserName(ctx context.Context, session authn.Session, userName string) (User, error)
+	ViewByUserName(ctx context.Context, session authn.Session, userName string) (User, error)
 
 	// ListUsers retrieves users list for a valid auth token.
 	ListUsers(ctx context.Context, session authn.Session, pm Page) (UsersPage, error)
@@ -37,17 +37,17 @@ type Service interface {
 	// SearchUsers searches for users with provided filters for a valid auth token.
 	SearchUsers(ctx context.Context, pm Page) (UsersPage, error)
 
-	// UpdateUser updates the user's name and metadata.
-	UpdateUser(ctx context.Context, session authn.Session, user User) (User, error)
+	// Update updates the user's name and metadata.
+	Update(ctx context.Context, session authn.Session, user User) (User, error)
 
-	// UpdateUserTags updates the user's tags.
-	UpdateUserTags(ctx context.Context, session authn.Session, user User) (User, error)
+	// UpdateTags updates the user's tags.
+	UpdateTags(ctx context.Context, session authn.Session, user User) (User, error)
 
-	// UpdateUserIdentity updates the user's identity.
-	UpdateUserIdentity(ctx context.Context, session authn.Session, id, identity string) (User, error)
+	// UpdateEmail updates the user's email.
+	UpdateEmail(ctx context.Context, session authn.Session, id, email string) (User, error)
 
-	// UpdateUserNames updates the user's names.
-	UpdateUserNames(ctx context.Context, session authn.Session, usr User) (User, error)
+	// UpdateUserName updates the user's names.
+	UpdateUserName(ctx context.Context, session authn.Session, usr User) (User, error)
 
 	// UpdateProfile updates the user's profile picture.
 	UpdateProfilePicture(ctx context.Context, session authn.Session, user User) (User, error)
@@ -56,8 +56,8 @@ type Service interface {
 	// host is used for generating reset link.
 	GenerateResetToken(ctx context.Context, email, host string) error
 
-	// UpdateUserSecret updates the user's secret.
-	UpdateUserSecret(ctx context.Context, session authn.Session, oldSecret, newSecret string) (User, error)
+	// UpdateSecret updates the user's secret.
+	UpdateSecret(ctx context.Context, session authn.Session, oldSecret, newSecret string) (User, error)
 
 	// ResetSecret change users secret in reset flow.
 	// token can be authentication token or secret reset token.
@@ -66,17 +66,17 @@ type Service interface {
 	// SendPasswordReset sends reset password link to email.
 	SendPasswordReset(ctx context.Context, host, email, user, token string) error
 
-	// UpdateUserRole updates the user's Role.
-	UpdateUserRole(ctx context.Context, session authn.Session, user User) (User, error)
+	// UpdateRole updates the user's Role.
+	UpdateRole(ctx context.Context, session authn.Session, user User) (User, error)
 
-	// EnableUser logically enableds the user identified with the provided ID.
-	EnableUser(ctx context.Context, session authn.Session, id string) (User, error)
+	// Enable logically enableds the user identified with the provided ID.
+	Enable(ctx context.Context, session authn.Session, id string) (User, error)
 
-	// DisableUser logically disables the user identified with the provided ID.
-	DisableUser(ctx context.Context, session authn.Session, id string) (User, error)
+	// Disable logically disables the user identified with the provided ID.
+	Disable(ctx context.Context, session authn.Session, id string) (User, error)
 
-	// DeleteUser deletes user with given ID.
-	DeleteUser(ctx context.Context, session authn.Session, id string) error
+	// Delete deletes user with given ID.
+	Delete(ctx context.Context, session authn.Session, id string) error
 
 	// Identify returns the user id from the given token.
 	Identify(ctx context.Context, session authn.Session) (string, error)

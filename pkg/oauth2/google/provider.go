@@ -120,7 +120,7 @@ func (cfg *config) UserInfo(accessToken string) (uclient.User, error) {
 		ID:        user.ID,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
-		Identity:  user.Email,
+		Email:     user.Email,
 		Metadata: map[string]interface{}{
 			"oauth_provider":  providerName,
 			"profile_picture": user.Picture,

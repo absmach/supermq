@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/absmach/magistrala/pkg/apiutil"
@@ -32,7 +33,7 @@ type User struct {
 	UserName       string      `json:"user_name,omitempty"`
 	FirstName      string      `json:"first_name,omitempty"`
 	LastName       string      `json:"last_name,omitempty"`
-	Identity       string      `json:"identity,omitempty"`
+	Email          string      `json:"email,omitempty"`
 	Credentials    Credentials `json:"credentials"`
 	Tags           []string    `json:"tags,omitempty"`
 	Domain         string      `json:"-"` // ignoring Domain Field, since it will be always empty for users
@@ -41,7 +42,7 @@ type User struct {
 	UpdatedAt      time.Time   `json:"updated_at,omitempty"`
 	Status         string      `json:"status,omitempty"`
 	Role           string      `json:"role,omitempty"`
-	ProfilePicture string      `json:"profile_picture,omitempty"`
+	ProfilePicture url.URL     `json:"profile_picture,omitempty"`
 }
 
 func (sdk mgSDK) CreateUser(user User, token string) (User, errors.SDKError) {
@@ -202,15 +203,15 @@ func (sdk mgSDK) UpdateUserTags(user User, token string) (User, errors.SDKError)
 	return user, nil
 }
 
-func (sdk mgSDK) UpdateUserIdentity(user User, token string) (User, errors.SDKError) {
-	ucir := updateUserIdentityReq{token: token, id: user.ID, Identity: user.Identity}
+func (sdk mgSDK) UpdateUserEmail(user User, token string) (User, errors.SDKError) {
+	ucir := updateUserEmailReq{token: token, id: user.ID, Email: user.Email}
 
 	data, err := json.Marshal(ucir)
 	if err != nil {
 		return User{}, errors.NewSDKError(err)
 	}
 
-	url := fmt.Sprintf("%s/%s/%s/identity", sdk.usersURL, usersEndpoint, user.ID)
+	url := fmt.Sprintf("%s/%s/%s/email", sdk.usersURL, usersEndpoint, user.ID)
 
 	_, body, sdkerr := sdk.processRequest(http.MethodPatch, url, token, data, nil, http.StatusOK)
 	if sdkerr != nil {
@@ -300,7 +301,7 @@ func (sdk mgSDK) UpdateUserRole(user User, token string) (User, errors.SDKError)
 	return user, nil
 }
 
-func (sdk mgSDK) UpdateUserNames(user User, token string) (User, errors.SDKError) {
+func (sdk mgSDK) UpdateUserName(user User, token string) (User, errors.SDKError) {
 	data, err := json.Marshal(user)
 	if err != nil {
 		return User{}, errors.NewSDKError(err)

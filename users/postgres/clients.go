@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -18,35 +19,23 @@ import (
 	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/postgres"
 	"github.com/absmach/magistrala/users"
-	"github.com/absmach/magistrala/users/storage"
 	"github.com/jackc/pgtype"
 )
 
 type userRepo struct {
 	Repository users.UserRepository
-	gcStorage  storage.Storage
 }
 
-func NewRepository(db postgres.Database, gcp storage.Storage) users.Repository {
+func NewRepository(db postgres.Database) users.Repository {
 	return &userRepo{
 		Repository: users.UserRepository{DB: db},
-		gcStorage:  gcp,
 	}
 }
 
 func (repo *userRepo) Save(ctx context.Context, c users.User) (users.User, error) {
-	if c.ProfilePicture != "" {
-		profilePictureURL, err := repo.gcStorage.UploadProfilePicture(ctx, strings.NewReader(c.ProfilePicture), c.ID)
-		if err != nil {
-			return users.User{}, errors.Wrap(repoerr.ErrCreateEntity, err)
-		}
-
-		c.ProfilePicture = profilePictureURL
-	}
-
-	q := `INSERT INTO clients (id, tags, identity, secret, metadata, created_at, status, role, first_name, last_name, user_name, profile_picture)
-        VALUES (:id, :tags, :identity, :secret, :metadata, :created_at, :status, :role, :first_name, :last_name, :user_name, :profile_picture)
-        RETURNING id, tags, identity, metadata, created_at, status, first_name, last_name, user_name, profile_picture`
+	q := `INSERT INTO clients (id, tags, email, secret, metadata, created_at, status, role, first_name, last_name, user_name, profile_picture)
+        VALUES (:id, :tags, :email, :secret, :metadata, :created_at, :status, :role, :first_name, :last_name, :user_name, :profile_picture)
+        RETURNING id, tags, email, metadata, created_at, status, first_name, last_name, user_name, profile_picture`
 
 	dbc, err := toDBUser(c)
 	if err != nil {
@@ -94,7 +83,7 @@ func (repo *userRepo) CheckSuperAdmin(ctx context.Context, adminID string) error
 }
 
 func (repo *userRepo) RetrieveByID(ctx context.Context, id string) (users.User, error) {
-	q := `SELECT id, tags, identity, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, user_name, profile_picture
+	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, user_name, profile_picture
         FROM clients WHERE id = :id`
 
 	dbc := DBUser{
@@ -125,7 +114,7 @@ func (repo *userRepo) RetrieveByID(ctx context.Context, id string) (users.User, 
 }
 
 func (repo *userRepo) RetrieveByUserName(ctx context.Context, userName string) (users.User, error) {
-	q := `SELECT id, tags, identity, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, user_name, profile_picture
+	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, user_name, profile_picture
         FROM clients WHERE user_name = :user_name`
 
 	dbc := DBUser{
@@ -161,7 +150,7 @@ func (repo *userRepo) RetrieveAll(ctx context.Context, pm users.Page) (users.Use
 		return users.UsersPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
 
-	q := fmt.Sprintf(`SELECT c.id, c.tags, c.identity, c.metadata, c.status, c.role, c.first_name, c.last_name, c.user_name,
+	q := fmt.Sprintf(`SELECT c.id, c.tags, c.email, c.metadata, c.status, c.role, c.first_name, c.last_name, c.user_name,
     c.created_at, c.updated_at, c.profile_picture, COALESCE(c.updated_by, '') AS updated_by 
     FROM clients c %s ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, query)
 
@@ -210,14 +199,14 @@ func (repo *userRepo) RetrieveAll(ctx context.Context, pm users.Page) (users.Use
 	return page, nil
 }
 
-func (repo *userRepo) UpdateUserNames(ctx context.Context, user users.User) (users.User, error) {
+func (repo *userRepo) UpdateUserName(ctx context.Context, user users.User) (users.User, error) {
 	if user.FirstName != "" && user.LastName != "" {
 		return users.User{}, repoerr.ErrMissingNames
 	}
 
-	q := `UPDATE clients SET first_name = :first_name, last_name = :last_name, user_name = :user_name, identity = :identity, updated_at = :updated_at, updated_by = :updated_by,
+	q := `UPDATE clients SET first_name = :first_name, last_name = :last_name, user_name = :user_name, email = :email, updated_at = :updated_at, updated_by = :updated_by,
         WHERE id = :id AND status = :status
-		RETURNING id, tags, metadata, status, created_at, updated_at, updated_by, first_name, last_name, user_name, identity`
+		RETURNING id, tags, metadata, status, created_at, updated_at, updated_by, first_name, last_name, user_name, email`
 
 	dbc, err := toDBUser(user)
 	if err != nil {
@@ -272,19 +261,12 @@ func (repo *userRepo) Update(ctx context.Context, user users.User) (users.User, 
 		query = append(query, "role = :role,")
 	}
 
-	profilePictureURL, err := repo.gcStorage.UploadProfilePicture(ctx, strings.NewReader(user.ProfilePicture), user.ID)
-	if err != nil {
-		return users.User{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-
-	user.ProfilePicture = profilePictureURL
-
-	if user.ProfilePicture != "" {
+	if user.ProfilePicture.String() != "" {
 		query = append(query, "profile_picture = :profile_picture,")
 	}
 
-	if user.Identity != "" {
-		query = append(query, "identity = :identity,")
+	if user.Email != "" {
+		query = append(query, "email = :email,")
 	}
 
 	if len(query) > 0 {
@@ -293,7 +275,8 @@ func (repo *userRepo) Update(ctx context.Context, user users.User) (users.User, 
 
 	q := fmt.Sprintf(`UPDATE clients SET %s updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
-        RETURNING id, tags, secret, metadata, status, created_at, updated_at, updated_by, last_name, first_name, user_name, profile_picture, identity`, upq)
+        RETURNING id, tags, secret, metadata, status, created_at, updated_at, updated_by, last_name, first_name, user_name, profile_picture, email`, upq)
+
 	user.Status = users.EnabledStatus
 	return repo.update(ctx, user, q)
 }
@@ -327,7 +310,7 @@ func (repo *userRepo) update(ctx context.Context, user users.User, query string)
 func (repo *userRepo) UpdateSecret(ctx context.Context, user users.User) (users.User, error) {
 	q := `UPDATE clients SET secret = :secret, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
-        RETURNING id, tags, identity, metadata, status, created_at, updated_at, updated_by, first_name, last_name, user_name`
+        RETURNING id, tags, email, metadata, status, created_at, updated_at, updated_by, first_name, last_name, user_name`
 	user.Status = users.EnabledStatus
 	return repo.update(ctx, user, q)
 }
@@ -335,31 +318,13 @@ func (repo *userRepo) UpdateSecret(ctx context.Context, user users.User) (users.
 func (repo *userRepo) ChangeStatus(ctx context.Context, user users.User) (users.User, error) {
 	q := `UPDATE clients SET status = :status, updated_at = :updated_at, updated_by = :updated_by
 		WHERE id = :id
-        RETURNING id, tags, identity, metadata, status, created_at, updated_at, updated_by, first_name, last_name, user_name`
+        RETURNING id, tags, email, metadata, status, created_at, updated_at, updated_by, first_name, last_name, user_name`
 
 	return repo.update(ctx, user, q)
 }
 
 func (repo *userRepo) Delete(ctx context.Context, id string) error {
-	var profilePictureURL string
-
-	q := `SELECT profile_picture FROM clients WHERE id = $1`
-
-	err := repo.Repository.DB.QueryRowxContext(ctx, q, id).Scan(&profilePictureURL)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return repoerr.ErrNotFound
-		}
-		return postgres.HandleError(repoerr.ErrViewEntity, err)
-	}
-
-	if profilePictureURL != "" {
-		if err := repo.gcStorage.DeleteProfilePicture(ctx, profilePictureURL); err != nil {
-			return errors.Wrap(repoerr.ErrRemoveEntity, fmt.Errorf("failed to delete profile picture: %v", err))
-		}
-	}
-
-	q = "DELETE FROM clients AS c  WHERE c.id = $1 ;"
+	q := "DELETE FROM clients AS c  WHERE c.id = $1 ;"
 
 	result, err := repo.Repository.DB.ExecContext(ctx, q, id)
 	if err != nil {
@@ -439,7 +404,7 @@ func (repo *userRepo) RetrieveAllByIDs(ctx context.Context, pm users.Page) (user
 	}
 	query = applyOrdering(query, pm)
 
-	q := fmt.Sprintf(`SELECT c.id, c.user_name, c.tags, c.identity, c.metadata, c.status, c.role, c.first_name, c.last_name, c.user_name,
+	q := fmt.Sprintf(`SELECT c.id, c.user_name, c.tags, c.email, c.metadata, c.status, c.role, c.first_name, c.last_name, c.user_name,
 					c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM clients c %s ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, query)
 
 	dbPage, err := ToDBUsersPage(pm)
@@ -485,13 +450,13 @@ func (repo *userRepo) RetrieveAllByIDs(ctx context.Context, pm users.Page) (user
 	return page, nil
 }
 
-func (repo *userRepo) RetrieveByIdentity(ctx context.Context, identity string) (users.User, error) {
-	q := `SELECT id, tags, identity, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, user_name
-        FROM clients WHERE identity = :identity AND status = :status`
+func (repo *userRepo) RetrieveByEmail(ctx context.Context, email string) (users.User, error) {
+	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, user_name
+        FROM clients WHERE email = :email AND status = :status`
 
 	dbc := DBUser{
-		Identity: identity,
-		Status:   users.EnabledStatus,
+		Email:  email,
+		Status: users.EnabledStatus,
 	}
 
 	row, err := repo.Repository.DB.NamedQueryContext(ctx, q, dbc)
@@ -527,8 +492,8 @@ type DBUser struct {
 	UserName       string           `db:"user_name, omitempty"`
 	FirstName      string           `db:"first_name, omitempty"`
 	LastName       string           `db:"last_name, omitempty"`
-	ProfilePicture string           `db:"profile_picture, omitempty"`
-	Identity       string           `db:"identity,omitempty"`
+	ProfilePicture url.URL          `db:"profile_picture, omitempty"`
+	Email          string           `db:"email,omitempty"`
 }
 
 func toDBUser(u users.User) (DBUser, error) {
@@ -567,7 +532,7 @@ func toDBUser(u users.User) (DBUser, error) {
 		FirstName:      u.FirstName,
 		UserName:       u.Credentials.UserName,
 		ProfilePicture: u.ProfilePicture,
-		Identity:       u.Identity,
+		Email:          u.Email,
 	}, nil
 }
 
@@ -599,7 +564,7 @@ func ToUser(dbu DBUser) (users.User, error) {
 			UserName: dbu.UserName,
 			Secret:   dbu.Secret,
 		},
-		Identity:       dbu.Identity,
+		Email:          dbu.Email,
 		Metadata:       metadata,
 		CreatedAt:      dbu.CreatedAt,
 		UpdatedAt:      updatedAt,
@@ -622,7 +587,7 @@ type DBUsersPage struct {
 	LastName  string       `db:"last_name"`
 	UserName  string       `db:"user_name"`
 	Id        string       `db:"id"`
-	Identity  string       `db:"identity"`
+	Email     string       `db:"email"`
 	Metadata  []byte       `db:"metadata"`
 	Tag       string       `db:"tag"`
 	GroupID   string       `db:"group_id"`
@@ -640,7 +605,7 @@ func ToDBUsersPage(pm users.Page) (DBUsersPage, error) {
 		FirstName: pm.FirstName,
 		LastName:  pm.LastName,
 		UserName:  pm.UserName,
-		Identity:  pm.Identity,
+		Email:     pm.Email,
 		Id:        pm.Id,
 		Metadata:  data,
 		Total:     pm.Total,
@@ -677,8 +642,8 @@ func PageQuery(pm users.Page) (string, error) {
 	if pm.Role != users.AllRole {
 		query = append(query, "c.role = :role")
 	}
-	if pm.Identity != "" {
-		query = append(query, "identity ILIKE '%' || :identity || '%'")
+	if pm.Email != "" {
+		query = append(query, "email ILIKE '%' || :email || '%'")
 	}
 	// If there are search params presents, use search and ignore other options.
 	// Always combine role with search params, so len(query) > 1.
@@ -710,7 +675,7 @@ func PageQuery(pm users.Page) (string, error) {
 
 func applyOrdering(emq string, pm users.Page) string {
 	switch pm.Order {
-	case "user_name", "first_name", "identity", "last_name", "created_at", "updated_at":
+	case "user_name", "first_name", "email", "last_name", "created_at", "updated_at":
 		emq = fmt.Sprintf("%s ORDER BY %s", emq, pm.Order)
 		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
 			emq = fmt.Sprintf("%s %s", emq, pm.Dir)

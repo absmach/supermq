@@ -36,8 +36,8 @@ func NewEventStoreMiddleware(ctx context.Context, svc users.Service, url string)
 	}, nil
 }
 
-func (es *eventStore) RegisterUser(ctx context.Context, session authn.Session, user users.User, selfRegister bool) (users.User, error) {
-	user, err := es.svc.RegisterUser(ctx, session, user, selfRegister)
+func (es *eventStore) Register(ctx context.Context, session authn.Session, user users.User, selfRegister bool) (users.User, error) {
+	user, err := es.svc.Register(ctx, session, user, selfRegister)
 	if err != nil {
 		return user, err
 	}
@@ -53,8 +53,8 @@ func (es *eventStore) RegisterUser(ctx context.Context, session authn.Session, u
 	return user, nil
 }
 
-func (es *eventStore) UpdateUser(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
-	user, err := es.svc.UpdateUser(ctx, session, user)
+func (es *eventStore) Update(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+	user, err := es.svc.Update(ctx, session, user)
 	if err != nil {
 		return user, err
 	}
@@ -62,8 +62,8 @@ func (es *eventStore) UpdateUser(ctx context.Context, session authn.Session, use
 	return es.update(ctx, "", user)
 }
 
-func (es *eventStore) UpdateUserRole(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
-	user, err := es.svc.UpdateUserRole(ctx, session, user)
+func (es *eventStore) UpdateRole(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+	user, err := es.svc.UpdateRole(ctx, session, user)
 	if err != nil {
 		return user, err
 	}
@@ -71,8 +71,8 @@ func (es *eventStore) UpdateUserRole(ctx context.Context, session authn.Session,
 	return es.update(ctx, "role", user)
 }
 
-func (es *eventStore) UpdateUserTags(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
-	user, err := es.svc.UpdateUserTags(ctx, session, user)
+func (es *eventStore) UpdateTags(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+	user, err := es.svc.UpdateTags(ctx, session, user)
 	if err != nil {
 		return user, err
 	}
@@ -80,8 +80,8 @@ func (es *eventStore) UpdateUserTags(ctx context.Context, session authn.Session,
 	return es.update(ctx, "tags", user)
 }
 
-func (es *eventStore) UpdateUserSecret(ctx context.Context, session authn.Session, oldSecret, newSecret string) (users.User, error) {
-	user, err := es.svc.UpdateUserSecret(ctx, session, oldSecret, newSecret)
+func (es *eventStore) UpdateSecret(ctx context.Context, session authn.Session, oldSecret, newSecret string) (users.User, error) {
+	user, err := es.svc.UpdateSecret(ctx, session, oldSecret, newSecret)
 	if err != nil {
 		return user, err
 	}
@@ -89,8 +89,8 @@ func (es *eventStore) UpdateUserSecret(ctx context.Context, session authn.Sessio
 	return es.update(ctx, "secret", user)
 }
 
-func (es *eventStore) UpdateUserNames(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
-	user, err := es.svc.UpdateUserNames(ctx, session, user)
+func (es *eventStore) UpdateUserName(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+	user, err := es.svc.UpdateUserName(ctx, session, user)
 	if err != nil {
 		return user, err
 	}
@@ -107,7 +107,7 @@ func (es *eventStore) UpdateUserNames(ctx context.Context, session authn.Session
 }
 
 func (es *eventStore) UpdateProfilePicture(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
-	user, err := es.svc.UpdateUser(ctx, session, user)
+	user, err := es.svc.Update(ctx, session, user)
 	if err != nil {
 		return user, err
 	}
@@ -123,13 +123,13 @@ func (es *eventStore) UpdateProfilePicture(ctx context.Context, session authn.Se
 	return es.update(ctx, "profile_picture", user)
 }
 
-func (es *eventStore) UpdateUserIdentity(ctx context.Context, session authn.Session, id, identity string) (users.User, error) {
-	user, err := es.svc.UpdateUserIdentity(ctx, session, id, identity)
+func (es *eventStore) UpdateEmail(ctx context.Context, session authn.Session, id, email string) (users.User, error) {
+	user, err := es.svc.UpdateEmail(ctx, session, id, email)
 	if err != nil {
 		return user, err
 	}
 
-	return es.update(ctx, "identity", user)
+	return es.update(ctx, "email", user)
 }
 
 func (es *eventStore) update(ctx context.Context, operation string, user users.User) (users.User, error) {
@@ -144,8 +144,8 @@ func (es *eventStore) update(ctx context.Context, operation string, user users.U
 	return user, nil
 }
 
-func (es *eventStore) ViewUser(ctx context.Context, session authn.Session, id string) (users.User, error) {
-	user, err := es.svc.ViewUser(ctx, session, id)
+func (es *eventStore) View(ctx context.Context, session authn.Session, id string) (users.User, error) {
+	user, err := es.svc.View(ctx, session, id)
 	if err != nil {
 		return user, err
 	}
@@ -178,8 +178,8 @@ func (es *eventStore) ViewProfile(ctx context.Context, session authn.Session) (u
 	return user, nil
 }
 
-func (es *eventStore) ViewUserByUserName(ctx context.Context, session authn.Session, userName string) (users.User, error) {
-	user, err := es.svc.ViewUserByUserName(ctx, session, userName)
+func (es *eventStore) ViewByUserName(ctx context.Context, session authn.Session, userName string) (users.User, error) {
+	user, err := es.svc.ViewByUserName(ctx, session, userName)
 	if err != nil {
 		return user, err
 	}
@@ -243,8 +243,8 @@ func (es *eventStore) ListMembers(ctx context.Context, session authn.Session, ob
 	return mp, nil
 }
 
-func (es *eventStore) EnableUser(ctx context.Context, session authn.Session, id string) (users.User, error) {
-	user, err := es.svc.EnableUser(ctx, session, id)
+func (es *eventStore) Enable(ctx context.Context, session authn.Session, id string) (users.User, error) {
+	user, err := es.svc.Enable(ctx, session, id)
 	if err != nil {
 		return user, err
 	}
@@ -252,8 +252,8 @@ func (es *eventStore) EnableUser(ctx context.Context, session authn.Session, id 
 	return es.delete(ctx, user)
 }
 
-func (es *eventStore) DisableUser(ctx context.Context, session authn.Session, id string) (users.User, error) {
-	user, err := es.svc.DisableUser(ctx, session, id)
+func (es *eventStore) Disable(ctx context.Context, session authn.Session, id string) (users.User, error) {
+	user, err := es.svc.Disable(ctx, session, id)
 	if err != nil {
 		return user, err
 	}
@@ -380,8 +380,8 @@ func (es *eventStore) OAuthCallback(ctx context.Context, user users.User) (users
 	return token, nil
 }
 
-func (es *eventStore) DeleteUser(ctx context.Context, session authn.Session, id string) error {
-	if err := es.svc.DeleteUser(ctx, session, id); err != nil {
+func (es *eventStore) Delete(ctx context.Context, session authn.Session, id string) error {
+	if err := es.svc.Delete(ctx, session, id); err != nil {
 		return err
 	}
 

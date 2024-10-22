@@ -136,6 +136,34 @@ func (_m *Repository) RetrieveAllByIDs(ctx context.Context, pm users.Page) (user
 	return r0, r1
 }
 
+// RetrieveByEmail provides a mock function with given fields: ctx, email
+func (_m *Repository) RetrieveByEmail(ctx context.Context, email string) (users.User, error) {
+	ret := _m.Called(ctx, email)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveByEmail")
+	}
+
+	var r0 users.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (users.User, error)); ok {
+		return rf(ctx, email)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) users.User); ok {
+		r0 = rf(ctx, email)
+	} else {
+		r0 = ret.Get(0).(users.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, email)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RetrieveByID provides a mock function with given fields: ctx, id
 func (_m *Repository) RetrieveByID(ctx context.Context, id string) (users.User, error) {
 	ret := _m.Called(ctx, id)
@@ -157,34 +185,6 @@ func (_m *Repository) RetrieveByID(ctx context.Context, id string) (users.User, 
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(ctx, id)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// RetrieveByIdentity provides a mock function with given fields: ctx, identity
-func (_m *Repository) RetrieveByIdentity(ctx context.Context, identity string) (users.User, error) {
-	ret := _m.Called(ctx, identity)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RetrieveByIdentity")
-	}
-
-	var r0 users.User
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (users.User, error)); ok {
-		return rf(ctx, identity)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) users.User); ok {
-		r0 = rf(ctx, identity)
-	} else {
-		r0 = ret.Get(0).(users.User)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, identity)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -332,12 +332,12 @@ func (_m *Repository) UpdateSecret(ctx context.Context, user users.User) (users.
 	return r0, r1
 }
 
-// UpdateUserNames provides a mock function with given fields: ctx, user
-func (_m *Repository) UpdateUserNames(ctx context.Context, user users.User) (users.User, error) {
+// UpdateUserName provides a mock function with given fields: ctx, user
+func (_m *Repository) UpdateUserName(ctx context.Context, user users.User) (users.User, error) {
 	ret := _m.Called(ctx, user)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateUserNames")
+		panic("no return value specified for UpdateUserName")
 	}
 
 	var r0 users.User

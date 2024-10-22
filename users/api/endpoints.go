@@ -31,7 +31,7 @@ func registrationEndpoint(svc users.Service, selfRegister bool) endpoint.Endpoin
 			}
 		}
 
-		user, err := svc.RegisterUser(ctx, session, req.user, selfRegister)
+		user, err := svc.Register(ctx, session, req.user, selfRegister)
 		if err != nil {
 			return nil, err
 		}
@@ -43,7 +43,7 @@ func registrationEndpoint(svc users.Service, selfRegister bool) endpoint.Endpoin
 	}
 }
 
-func viewUserEndpoint(svc users.Service) endpoint.Endpoint {
+func viewEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewUserReq)
 		if err := req.validate(); err != nil {
@@ -54,7 +54,7 @@ func viewUserEndpoint(svc users.Service) endpoint.Endpoint {
 		if !ok {
 			return nil, svcerr.ErrAuthorization
 		}
-		user, err := svc.ViewUser(ctx, session, req.id)
+		user, err := svc.View(ctx, session, req.id)
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +78,7 @@ func viewProfileEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func viewUserByUserNameEndpoint(svc users.Service) endpoint.Endpoint {
+func viewByUserNameEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewUserByUserNameReq)
 		if err := req.validate(); err != nil {
@@ -90,7 +90,7 @@ func viewUserByUserNameEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthorization
 		}
 
-		user, err := svc.ViewUserByUserName(ctx, session, req.userName)
+		user, err := svc.ViewByUserName(ctx, session, req.userName)
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +120,7 @@ func listUsersEndpoint(svc users.Service) endpoint.Endpoint {
 			Metadata:  req.metadata,
 			FirstName: req.firstName,
 			LastName:  req.lastName,
-			Identity:  req.identity,
+			Email:     req.email,
 			Order:     req.order,
 			Dir:       req.dir,
 			Id:        req.id,
@@ -272,7 +272,7 @@ func listMembersByDomainEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func updateUserEndpoint(svc users.Service) endpoint.Endpoint {
+func updateEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(updateUserReq)
 		if err := req.validate(); err != nil {
@@ -289,10 +289,12 @@ func updateUserEndpoint(svc users.Service) endpoint.Endpoint {
 			Credentials: users.Credentials{
 				UserName: req.UserName,
 			},
-			Metadata: req.Metadata,
+			FirstName: req.FirstName,
+			LastName:  req.LastName,
+			Metadata:  req.Metadata,
 		}
 
-		user, err := svc.UpdateUser(ctx, session, user)
+		user, err := svc.Update(ctx, session, user)
 		if err != nil {
 			return nil, err
 		}
@@ -301,7 +303,7 @@ func updateUserEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func updateUserTagsEndpoint(svc users.Service) endpoint.Endpoint {
+func updateTagsEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(updateUserTagsReq)
 		if err := req.validate(); err != nil {
@@ -318,7 +320,7 @@ func updateUserTagsEndpoint(svc users.Service) endpoint.Endpoint {
 			Tags: req.Tags,
 		}
 
-		user, err := svc.UpdateUserTags(ctx, session, user)
+		user, err := svc.UpdateTags(ctx, session, user)
 		if err != nil {
 			return nil, err
 		}
@@ -327,9 +329,9 @@ func updateUserTagsEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func updateUserIdentityEndpoint(svc users.Service) endpoint.Endpoint {
+func updateEmailEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(updateUserIdentityReq)
+		req := request.(updateUserEmailReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
@@ -339,7 +341,7 @@ func updateUserIdentityEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthorization
 		}
 
-		user, err := svc.UpdateUserIdentity(ctx, session, req.id, req.Identity)
+		user, err := svc.UpdateEmail(ctx, session, req.id, req.Email)
 		if err != nil {
 			return nil, err
 		}
@@ -395,7 +397,7 @@ func passwordResetEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func updateUserSecretEndpoint(svc users.Service) endpoint.Endpoint {
+func updateSecretEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(updateUserSecretReq)
 		if err := req.validate(); err != nil {
@@ -406,7 +408,7 @@ func updateUserSecretEndpoint(svc users.Service) endpoint.Endpoint {
 		if !ok {
 			return nil, svcerr.ErrAuthorization
 		}
-		user, err := svc.UpdateUserSecret(ctx, session, req.OldSecret, req.NewSecret)
+		user, err := svc.UpdateSecret(ctx, session, req.OldSecret, req.NewSecret)
 		if err != nil {
 			return nil, err
 		}
@@ -427,7 +429,7 @@ func updateUserNamesEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthorization
 		}
 
-		user, err := svc.UpdateUserNames(ctx, session, req.User)
+		user, err := svc.UpdateUserName(ctx, session, req.User)
 		if err != nil {
 			return nil, err
 		}
@@ -453,7 +455,7 @@ func updateProfilePictureEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthorization
 		}
 
-		user, err := svc.UpdateUser(ctx, session, user)
+		user, err := svc.Update(ctx, session, user)
 		if err != nil {
 			return nil, err
 		}
@@ -462,7 +464,7 @@ func updateProfilePictureEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func updateUserRoleEndpoint(svc users.Service) endpoint.Endpoint {
+func updateRoleEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(updateUserRoleReq)
 		if err := req.validate(); err != nil {
@@ -479,7 +481,7 @@ func updateUserRoleEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthorization
 		}
 
-		user, err := svc.UpdateUserRole(ctx, session, user)
+		user, err := svc.Update(ctx, session, user)
 		if err != nil {
 			return nil, err
 		}
@@ -495,7 +497,7 @@ func issueTokenEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		token, err := svc.IssueToken(ctx, req.Identity, req.Secret)
+		token, err := svc.IssueToken(ctx, req.Email, req.Secret)
 		if err != nil {
 			return nil, err
 		}
@@ -533,7 +535,7 @@ func refreshTokenEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func enableUserEndpoint(svc users.Service) endpoint.Endpoint {
+func enableEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(changeUserStatusReq)
 		if err := req.validate(); err != nil {
@@ -545,7 +547,7 @@ func enableUserEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthorization
 		}
 
-		user, err := svc.EnableUser(ctx, session, req.id)
+		user, err := svc.Enable(ctx, session, req.id)
 		if err != nil {
 			return nil, err
 		}
@@ -554,7 +556,7 @@ func enableUserEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func disableUserEndpoint(svc users.Service) endpoint.Endpoint {
+func disableEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(changeUserStatusReq)
 		if err := req.validate(); err != nil {
@@ -566,7 +568,7 @@ func disableUserEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthorization
 		}
 
-		user, err := svc.DisableUser(ctx, session, req.id)
+		user, err := svc.Disable(ctx, session, req.id)
 		if err != nil {
 			return nil, err
 		}
@@ -575,7 +577,7 @@ func disableUserEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func deleteUserEndpoint(svc users.Service) endpoint.Endpoint {
+func deleteEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(changeUserStatusReq)
 		if err := req.validate(); err != nil {
@@ -587,7 +589,7 @@ func deleteUserEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthorization
 		}
 
-		if err := svc.DeleteUser(ctx, session, req.id); err != nil {
+		if err := svc.Delete(ctx, session, req.id); err != nil {
 			return nil, err
 		}
 
