@@ -115,6 +115,52 @@ func (_m *Repository) Delete(ctx context.Context, id string) error {
 	return r0
 }
 
+// DoesThingHaveConnections provides a mock function with given fields: ctx, id
+func (_m *Repository) DoesThingHaveConnections(ctx context.Context, id string) (bool, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DoesThingHaveConnections")
+	}
+
+	var r0 bool
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (bool, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) bool); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RemoveChannelConnections provides a mock function with given fields: ctx, channelID
+func (_m *Repository) RemoveChannelConnections(ctx context.Context, channelID string) error {
+	ret := _m.Called(ctx, channelID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveChannelConnections")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, channelID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // RemoveConnections provides a mock function with given fields: ctx, conns
 func (_m *Repository) RemoveConnections(ctx context.Context, conns []things.Connection) error {
 	ret := _m.Called(ctx, conns)
@@ -162,6 +208,24 @@ func (_m *Repository) RemoveRoles(ctx context.Context, roleIDs []string) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, []string) error); ok {
 		r0 = rf(ctx, roleIDs)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemoveThingConnections provides a mock function with given fields: ctx, thingID
+func (_m *Repository) RemoveThingConnections(ctx context.Context, thingID string) error {
+	ret := _m.Called(ctx, thingID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveThingConnections")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, thingID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -789,6 +853,34 @@ func (_m *Repository) SearchClients(ctx context.Context, pm clients.Page) (clien
 
 	if rf, ok := ret.Get(1).(func(context.Context, clients.Page) error); ok {
 		r1 = rf(ctx, pm)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ThingConnectionsCount provides a mock function with given fields: ctx, id
+func (_m *Repository) ThingConnectionsCount(ctx context.Context, id string) (uint64, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ThingConnectionsCount")
+	}
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (uint64, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) uint64); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, id)
 	} else {
 		r1 = ret.Error(1)
 	}

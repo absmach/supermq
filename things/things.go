@@ -78,6 +78,8 @@ type Service interface {
 
 	RemoveConnections(ctx context.Context, conns []Connection) error
 
+	RemoveChannelConnections(ctx context.Context, channelID string) error
+
 	roles.RoleManager
 }
 
@@ -116,6 +118,14 @@ type Repository interface {
 	AddConnections(ctx context.Context, conns []Connection) error
 
 	RemoveConnections(ctx context.Context, conns []Connection) error
+
+	ThingConnectionsCount(ctx context.Context, id string) (uint64, error)
+
+	DoesThingHaveConnections(ctx context.Context, id string) (bool, error)
+
+	RemoveChannelConnections(ctx context.Context, channelID string) error
+
+	RemoveThingConnections(ctx context.Context, thingID string) error
 
 	roles.Repository
 }

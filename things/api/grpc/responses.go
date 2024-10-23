@@ -14,14 +14,14 @@ type authorizeRes struct {
 	authorized bool
 }
 
-type getEntitiesBasicRes struct {
+type retrieveEntitiesRes struct {
 	total  uint64
 	limit  uint64
 	offset uint64
 	things []thingBasic
 }
 
-type getEntityBasicRes thingBasic
+type retrieveEntityRes thingBasic
 
 type connectionsReq struct {
 	connections []connection
@@ -35,3 +35,5 @@ type connection struct {
 type connectionsRes struct {
 	ok bool
 }
+
+type removeChannelConnectionsRes struct{}

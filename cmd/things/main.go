@@ -16,6 +16,7 @@ import (
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/magistrala"
 	redisclient "github.com/absmach/magistrala/internal/clients/redis"
+	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	authsvcAuthn "github.com/absmach/magistrala/pkg/authn/authsvc"
@@ -60,6 +61,7 @@ const (
 	envPrefixHTTP      = "MG_THINGS_HTTP_"
 	envPrefixGRPC      = "MG_THINGS_AUTH_GRPC_"
 	envPrefixAuth      = "MG_AUTH_GRPC_"
+	envPrefixChannels  = "MG_CHANNELS_GRPC_"
 	defDB              = "things"
 	defSvcHTTPPort     = "9000"
 	defSvcAuthGRPCPort = "7000"
@@ -185,7 +187,22 @@ func main() {
 	defer authzClient.Close()
 	logger.Info("AuthZ  successfully connected to auth gRPC server " + authnClient.Secure())
 
-	svc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cacheclient, cfg.CacheKeyDuration, cfg.ESURL, tracer, logger)
+	chgrpccfg := grpcclient.Config{BypassHealthCheck: true}
+	if err := env.ParseWithOptions(&chgrpccfg, env.Options{Prefix: envPrefixChannels}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load channels gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+	channelsgRPC, channelsClient, err := grpcclient.SetupChannelsClient(ctx, chgrpccfg)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	logger.Info("Channels gRPC client successfully connected to channels gRPC server " + channelsClient.Secure())
+	defer channelsClient.Close()
+
+	svc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cacheclient, cfg.CacheKeyDuration, cfg.ESURL, channelsgRPC, tracer, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
 		exitCode = 1
@@ -236,7 +253,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, keyDuration time.Duration, esURL string, tracer trace.Tracer, logger *slog.Logger) (things.Service, error) {
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, keyDuration time.Duration, esURL string, channels grpcChannelsV1.ChannelsServiceClient, tracer trace.Tracer, logger *slog.Logger) (things.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	repo := postgres.NewRepository(database)
 
@@ -249,7 +266,7 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 	// Things service
 	cache := cache.NewCache(cacheClient, keyDuration)
 
-	tsvc, err := things.NewService(repo, ps, pe, cache, idp, sidp)
+	tsvc, err := things.NewService(repo, ps, pe, cache, channels, idp, sidp)
 	if err != nil {
 		return nil, err
 	}

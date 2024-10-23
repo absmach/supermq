@@ -141,3 +141,9 @@ func (tm *tracingMiddleware) RemoveConnections(ctx context.Context, conns []thin
 	defer span.End()
 	return tm.svc.RemoveConnections(ctx, conns)
 }
+
+func (tm *tracingMiddleware) RemoveChannelConnections(ctx context.Context, channelID string) error {
+	ctx, span := tm.tracer.Start(ctx, "remove_channel_connections", trace.WithAttributes(attribute.String("channel_id", channelID)))
+	defer span.End()
+	return tm.svc.RemoveChannelConnections(ctx, channelID)
+}

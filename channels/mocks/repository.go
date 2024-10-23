@@ -19,6 +19,24 @@ type Repository struct {
 	mock.Mock
 }
 
+// AddConnections provides a mock function with given fields: ctx, conns
+func (_m *Repository) AddConnections(ctx context.Context, conns []channels.Connection) error {
+	ret := _m.Called(ctx, conns)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddConnections")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, []channels.Connection) error); ok {
+		r0 = rf(ctx, conns)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // AddRoles provides a mock function with given fields: ctx, rps
 func (_m *Repository) AddRoles(ctx context.Context, rps []roles.RoleProvision) ([]roles.Role, error) {
 	ret := _m.Called(ctx, rps)
@@ -77,17 +95,45 @@ func (_m *Repository) ChangeStatus(ctx context.Context, channel channels.Channel
 	return r0, r1
 }
 
-// Connect provides a mock function with given fields: ctx, chIDs, thIDs
-func (_m *Repository) Connect(ctx context.Context, chIDs []string, thIDs []string) error {
-	ret := _m.Called(ctx, chIDs, thIDs)
+// ChannelConnectionsCount provides a mock function with given fields: ctx, id
+func (_m *Repository) ChannelConnectionsCount(ctx context.Context, id string) (uint64, error) {
+	ret := _m.Called(ctx, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Connect")
+		panic("no return value specified for ChannelConnectionsCount")
+	}
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (uint64, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) uint64); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CheckConnection provides a mock function with given fields: ctx, conn
+func (_m *Repository) CheckConnection(ctx context.Context, conn channels.Connection) error {
+	ret := _m.Called(ctx, conn)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CheckConnection")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []string, []string) error); ok {
-		r0 = rf(ctx, chIDs, thIDs)
+	if rf, ok := ret.Get(0).(func(context.Context, channels.Connection) error); ok {
+		r0 = rf(ctx, conn)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -95,22 +141,32 @@ func (_m *Repository) Connect(ctx context.Context, chIDs []string, thIDs []strin
 	return r0
 }
 
-// Disconnect provides a mock function with given fields: ctx, chIDs, thIDs
-func (_m *Repository) Disconnect(ctx context.Context, chIDs []string, thIDs []string) error {
-	ret := _m.Called(ctx, chIDs, thIDs)
+// DoesChannelHaveConnections provides a mock function with given fields: ctx, id
+func (_m *Repository) DoesChannelHaveConnections(ctx context.Context, id string) (bool, error) {
+	ret := _m.Called(ctx, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Disconnect")
+		panic("no return value specified for DoesChannelHaveConnections")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []string, []string) error); ok {
-		r0 = rf(ctx, chIDs, thIDs)
+	var r0 bool
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (bool, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) bool); ok {
+		r0 = rf(ctx, id)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(bool)
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // Remove provides a mock function with given fields: ctx, ids
@@ -131,6 +187,42 @@ func (_m *Repository) Remove(ctx context.Context, ids ...string) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, ...string) error); ok {
 		r0 = rf(ctx, ids...)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemoveChannelConnections provides a mock function with given fields: ctx, channelID
+func (_m *Repository) RemoveChannelConnections(ctx context.Context, channelID string) error {
+	ret := _m.Called(ctx, channelID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveChannelConnections")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, channelID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemoveConnections provides a mock function with given fields: ctx, conns
+func (_m *Repository) RemoveConnections(ctx context.Context, conns []channels.Connection) error {
+	ret := _m.Called(ctx, conns)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveConnections")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, []channels.Connection) error); ok {
+		r0 = rf(ctx, conns)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -167,6 +259,24 @@ func (_m *Repository) RemoveRoles(ctx context.Context, roleIDs []string) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, []string) error); ok {
 		r0 = rf(ctx, roleIDs)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemoveThingConnections provides a mock function with given fields: ctx, thingID
+func (_m *Repository) RemoveThingConnections(ctx context.Context, thingID string) error {
+	ret := _m.Called(ctx, thingID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveThingConnections")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, thingID)
 	} else {
 		r0 = ret.Error(0)
 	}

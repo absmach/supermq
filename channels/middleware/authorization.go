@@ -215,3 +215,7 @@ func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, userID s
 	}
 	return nil
 }
+
+func (am *authorizationMiddleware) RemoveThingConnections(ctx context.Context, thingID string) error {
+	return am.svc.RemoveThingConnections(ctx, thingID)
+}

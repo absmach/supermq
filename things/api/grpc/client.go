@@ -25,12 +25,13 @@ const svcName = "things.v1.ThingsService"
 var _ grpcThingsV1.ThingsServiceClient = (*grpcClient)(nil)
 
 type grpcClient struct {
-	timeout             time.Duration
-	authorize           endpoint.Endpoint
-	RetrieveEntityEP    endpoint.Endpoint
-	RetrieveEntitiesEP  endpoint.Endpoint
-	AddConnectionsEP    endpoint.Endpoint
-	RemoveConnectionsEP endpoint.Endpoint
+	timeout                  time.Duration
+	authorize                endpoint.Endpoint
+	retrieveEntity           endpoint.Endpoint
+	retrieveEntities         endpoint.Endpoint
+	addConnections           endpoint.Endpoint
+	removeConnections        endpoint.Endpoint
+	removeChannelConnections endpoint.Endpoint
 }
 
 // NewClient returns new gRPC client instance.
@@ -45,7 +46,7 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) grpcThingsV1.Things
 			grpcThingsV1.AuthzRes{},
 		).Endpoint(),
 
-		RetrieveEntityEP: kitgrpc.NewClient(
+		retrieveEntity: kitgrpc.NewClient(
 			conn,
 			svcName,
 			"RetrieveEntity",
@@ -54,7 +55,7 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) grpcThingsV1.Things
 			grpcCommonV1.RetrieveEntityRes{},
 		).Endpoint(),
 
-		RetrieveEntitiesEP: kitgrpc.NewClient(
+		retrieveEntities: kitgrpc.NewClient(
 			conn,
 			svcName,
 			"RetrieveEntities",
@@ -63,7 +64,7 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) grpcThingsV1.Things
 			grpcCommonV1.RetrieveEntitiesRes{},
 		).Endpoint(),
 
-		AddConnectionsEP: kitgrpc.NewClient(
+		addConnections: kitgrpc.NewClient(
 			conn,
 			svcName,
 			"AddConnections",
@@ -72,13 +73,22 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) grpcThingsV1.Things
 			grpcCommonV1.AddConnectionsRes{},
 		).Endpoint(),
 
-		RemoveConnectionsEP: kitgrpc.NewClient(
+		removeConnections: kitgrpc.NewClient(
 			conn,
 			svcName,
 			"RemoveConnections",
 			encodeRemoveConnectionsRequest,
 			decodeRemoveConnectionsResponse,
 			grpcCommonV1.RemoveConnectionsRes{},
+		).Endpoint(),
+
+		removeChannelConnections: kitgrpc.NewClient(
+			conn,
+			svcName,
+			"RemoveChannelConnections",
+			encodeRemoveChannelConnectionsRequest,
+			decodeRemoveChannelConnectionsResponse,
+			grpcThingsV1.RemoveChannelConnectionsRes{},
 		).Endpoint(),
 		timeout: timeout,
 	}
@@ -121,12 +131,12 @@ func (client grpcClient) RetrieveEntity(ctx context.Context, req *grpcCommonV1.R
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
-	res, err := client.RetrieveEntityEP(ctx, req.GetId())
+	res, err := client.retrieveEntity(ctx, req.GetId())
 	if err != nil {
 		return &grpcCommonV1.RetrieveEntityRes{}, decodeError(err)
 	}
 
-	ebr := res.(getEntityBasicRes)
+	ebr := res.(retrieveEntityRes)
 
 	return &grpcCommonV1.RetrieveEntityRes{Entity: &grpcCommonV1.EntityBasic{Id: ebr.id, DomainId: ebr.domain, Status: uint32(ebr.status)}}, nil
 }
@@ -141,7 +151,7 @@ func encodeRetrieveEntityRequest(_ context.Context, grpcReq interface{}) (interf
 func decodeRetrieveEntityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(*grpcCommonV1.RetrieveEntityRes)
 
-	return getEntityBasicRes{
+	return retrieveEntityRes{
 		id:     res.Entity.GetId(),
 		domain: res.Entity.GetDomainId(),
 		status: uint8(res.Entity.GetStatus()),
@@ -152,12 +162,12 @@ func (client grpcClient) RetrieveEntities(ctx context.Context, req *grpcCommonV1
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
-	res, err := client.RetrieveEntitiesEP(ctx, req.GetIds())
+	res, err := client.retrieveEntities(ctx, req.GetIds())
 	if err != nil {
 		return &grpcCommonV1.RetrieveEntitiesRes{}, decodeError(err)
 	}
 
-	ep := res.(getEntitiesBasicRes)
+	ep := res.(retrieveEntitiesRes)
 
 	entities := []*grpcCommonV1.EntityBasic{}
 	for _, thing := range ep.things {
@@ -189,7 +199,7 @@ func decodeRetrieveEntitiesResponse(_ context.Context, grpcRes interface{}) (int
 			status: uint8(entity.GetStatus()),
 		})
 	}
-	return getEntitiesBasicRes{total: res.GetTotal(), limit: res.GetLimit(), offset: res.GetOffset(), things: ths}, nil
+	return retrieveEntitiesRes{total: res.GetTotal(), limit: res.GetLimit(), offset: res.GetOffset(), things: ths}, nil
 }
 
 func (client grpcClient) AddConnections(ctx context.Context, req *grpcCommonV1.AddConnectionsReq, _ ...grpc.CallOption) (r *grpcCommonV1.AddConnectionsRes, err error) {
@@ -205,7 +215,7 @@ func (client grpcClient) AddConnections(ctx context.Context, req *grpcCommonV1.A
 		})
 	}
 
-	res, err := client.AddConnectionsEP(ctx, conns)
+	res, err := client.addConnections(ctx, conns)
 	if err != nil {
 		return &grpcCommonV1.AddConnectionsRes{}, decodeError(err)
 	}
@@ -251,7 +261,7 @@ func (client grpcClient) RemoveConnections(ctx context.Context, req *grpcCommonV
 		})
 	}
 
-	res, err := client.RemoveConnectionsEP(ctx, conns)
+	res, err := client.removeConnections(ctx, conns)
 	if err != nil {
 		return &grpcCommonV1.RemoveConnectionsRes{}, decodeError(err)
 	}
@@ -283,7 +293,24 @@ func decodeRemoveConnectionsResponse(_ context.Context, grpcRes interface{}) (in
 
 	return connectionsRes{ok: res.GetOk()}, nil
 }
+func (client grpcClient) RemoveChannelConnections(ctx context.Context, req *grpcThingsV1.RemoveChannelConnectionsReq, _ ...grpc.CallOption) (r *grpcThingsV1.RemoveChannelConnectionsRes, err error) {
+	ctx, cancel := context.WithTimeout(ctx, client.timeout)
+	defer cancel()
 
+	if _, err := client.removeChannelConnections(ctx, req); err != nil {
+		return &grpcThingsV1.RemoveChannelConnectionsRes{}, decodeError(err)
+	}
+
+	return &grpcThingsV1.RemoveChannelConnectionsRes{}, nil
+}
+
+func encodeRemoveChannelConnectionsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	return grpcReq.(*grpcThingsV1.RemoveChannelConnectionsReq), nil
+}
+
+func decodeRemoveChannelConnectionsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	return grpcRes.(*grpcThingsV1.RemoveChannelConnectionsRes), nil
+}
 func decodeError(err error) error {
 	if st, ok := status.FromError(err); ok {
 		switch st.Code() {

@@ -222,3 +222,6 @@ func (es *eventStore) AddConnections(ctx context.Context, conns []things.Connect
 func (es *eventStore) RemoveConnections(ctx context.Context, conns []things.Connection) (err error) {
 	return es.svc.RemoveConnections(ctx, conns)
 }
+func (es *eventStore) RemoveChannelConnections(ctx context.Context, channelID string) error {
+	return es.svc.RemoveChannelConnections(ctx, channelID)
+}

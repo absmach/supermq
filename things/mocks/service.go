@@ -293,6 +293,24 @@ func (_m *Service) ListClients(ctx context.Context, session authn.Session, reqUs
 	return r0, r1
 }
 
+// RemoveChannelConnections provides a mock function with given fields: ctx, channelID
+func (_m *Service) RemoveChannelConnections(ctx context.Context, channelID string) error {
+	ret := _m.Called(ctx, channelID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveChannelConnections")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, channelID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // RemoveConnections provides a mock function with given fields: ctx, conns
 func (_m *Service) RemoveConnections(ctx context.Context, conns []things.Connection) error {
 	ret := _m.Called(ctx, conns)

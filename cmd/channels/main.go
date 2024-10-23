@@ -15,11 +15,14 @@ import (
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/channels"
+	grpcapi "github.com/absmach/magistrala/channels/api/grpc"
 	httpapi "github.com/absmach/magistrala/channels/api/http"
 	"github.com/absmach/magistrala/channels/events"
 	"github.com/absmach/magistrala/channels/middleware"
 	"github.com/absmach/magistrala/channels/postgres"
 	"github.com/absmach/magistrala/channels/tracing"
+	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	authsvcAuthn "github.com/absmach/magistrala/pkg/authn/authsvc"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
@@ -32,6 +35,7 @@ import (
 	pgclient "github.com/absmach/magistrala/pkg/postgres"
 	"github.com/absmach/magistrala/pkg/prometheus"
 	"github.com/absmach/magistrala/pkg/server"
+	grpcserver "github.com/absmach/magistrala/pkg/server/grpc"
 	httpserver "github.com/absmach/magistrala/pkg/server/http"
 	"github.com/absmach/magistrala/pkg/sid"
 	"github.com/absmach/magistrala/pkg/uuid"
@@ -44,16 +48,19 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
 )
 
 const (
 	svcName         = "channels"
 	envPrefixDB     = "MG_CHANNELS_DB_"
 	envPrefixHTTP   = "MG_CHANNELS_HTTP_"
+	envPrefixGRPC   = "MG_CHANNELS_GRPC_"
 	envPrefixAuth   = "MG_AUTH_GRPC_"
 	envPrefixThings = "MG_THINGS_AUTH_GRPC_"
 	defDB           = "channels"
 	defSvcHTTPPort  = "9005"
+	defSvcGRPCPort  = "7005"
 )
 
 type config struct {
@@ -183,6 +190,19 @@ func main() {
 		return
 	}
 
+	grpcServerConfig := server.Config{Port: defSvcGRPCPort}
+	if err := env.ParseWithOptions(&grpcServerConfig, env.Options{Prefix: envPrefixGRPC}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load %s gRPC server configuration : %s", svcName, err))
+		exitCode = 1
+		return
+	}
+	registerChannelsServer := func(srv *grpc.Server) {
+		reflection.Register(srv)
+		grpcChannelsV1.RegisterChannelsServiceServer(srv, grpcapi.NewServer(svc))
+	}
+
+	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerChannelsServer, logger)
+
 	httpServerConfig := server.Config{Port: defSvcHTTPPort}
 	if err := env.ParseWithOptions(&httpServerConfig, env.Options{Prefix: envPrefixHTTP}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
@@ -203,6 +223,10 @@ func main() {
 	})
 
 	g.Go(func() error {
+		return gs.Start()
+	})
+
+	g.Go(func() error {
 		return server.StopSignalHandler(ctx, cancel, logger, svcName, httpSvc)
 	})
 
@@ -211,7 +235,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, ps policies.Service, esURL string, tracer trace.Tracer, thingsClient magistrala.ThingsServiceClient, logger *slog.Logger) (channels.Service, error) {
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, ps policies.Service, esURL string, tracer trace.Tracer, thingsClient grpcThingsV1.ThingsServiceClient, logger *slog.Logger) (channels.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	cRepo := postgres.NewRepository(database)
 

@@ -228,3 +228,19 @@ func (lm *loggingMiddleware) Disconnect(ctx context.Context, session authn.Sessi
 	}(time.Now())
 	return lm.svc.Disconnect(ctx, session, chIDs, thIDs)
 }
+
+func (lm *loggingMiddleware) RemoveThingConnections(ctx context.Context, thingID string) (err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.Any("thing_id", thingID),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn("Remove thing connections failed", args...)
+			return
+		}
+		lm.logger.Info("Remove thing connections completed successfully", args...)
+	}(time.Now())
+	return lm.svc.RemoveThingConnections(ctx, thingID)
+}

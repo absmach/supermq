@@ -297,3 +297,19 @@ func (lm *loggingMiddleware) RemoveConnections(ctx context.Context, conns []thin
 	}(time.Now())
 	return lm.svc.RemoveConnections(ctx, conns)
 }
+
+func (lm *loggingMiddleware) RemoveChannelConnections(ctx context.Context, channelID string) (err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.String("channel_id", channelID),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn("Remove channel connections failed", args...)
+			return
+		}
+		lm.logger.Info("Remove channel connections completed successfully", args...)
+	}(time.Now())
+	return lm.svc.RemoveChannelConnections(ctx, channelID)
+}

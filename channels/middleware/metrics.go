@@ -118,3 +118,11 @@ func (ms *metricsMiddleware) Disconnect(ctx context.Context, session authn.Sessi
 	}(time.Now())
 	return ms.svc.Disconnect(ctx, session, chIDs, thIDs)
 }
+
+func (ms *metricsMiddleware) RemoveThingConnections(ctx context.Context, thingID string) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "remove_thing_connections").Add(1)
+		ms.latency.With("method", "remove_thing_connections").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.RemoveThingConnections(ctx, thingID)
+}

@@ -423,6 +423,12 @@ services:
       MG_AUTH_GRPC_CLIENT_CERT: ${MG_AUTH_GRPC_CLIENT_CERT:+/auth-grpc-client.crt}
       MG_AUTH_GRPC_CLIENT_KEY: ${MG_AUTH_GRPC_CLIENT_KEY:+/auth-grpc-client.key}
       MG_AUTH_GRPC_SERVER_CA_CERTS: ${MG_AUTH_GRPC_SERVER_CA_CERTS:+/auth-grpc-server-ca.crt}
+      MG_CHANNELS_URL: ${MG_CHANNELS_URL}
+      MG_CHANNELS_GRPC_URL: ${MG_CHANNELS_GRPC_URL}
+      MG_CHANNELS_GRPC_TIMEOUT: ${MG_CHANNELS_GRPC_TIMEOUT}
+      MG_CHANNELS_GRPC_CLIENT_CERT: ${MG_CHANNELS_GRPC_CLIENT_CERT:+/channels-grpc-client.crt}
+      MG_CHANNELS_GRPC_CLIENT_KEY: ${MG_CHANNELS_GRPC_CLIENT_KEY:+/channels-grpc-client.key}
+      MG_CHANNELS_GRPC_SERVER_CA_CERTS: ${MG_CHANNELS_GRPC_SERVER_CA_CERTS:+/channels-grpc-server-ca.crt}
       MG_JAEGER_URL: ${MG_JAEGER_URL}
       MG_JAEGER_TRACE_RATIO: ${MG_JAEGER_TRACE_RATIO}
       MG_SEND_TELEMETRY: ${MG_SEND_TELEMETRY}
@@ -472,6 +478,22 @@ services:
         target: /auth-grpc-server-ca${MG_AUTH_GRPC_SERVER_CA_CERTS:+.crt}
         bind:
           create_host_path: true
+      # Channel gRPC client certificates
+      - type: bind
+        source: ${MG_CHANNELS_GRPC_CLIENT_CERT:-ssl/certs/dummy/client_cert}
+        target: /channels-grpc-client${MG_CHANNELS_GRPC_CLIENT_CERT:+.crt}
+        bind:
+          create_host_path: true
+      - type: bind
+        source: ${MG_CHANNELS_GRPC_CLIENT_KEY:-ssl/certs/dummy/client_key}
+        target: /channels-grpc-client${MG_CHANNELS_GRPC_CLIENT_KEY:+.key}
+        bind:
+          create_host_path: true
+      - type: bind
+        source: ${MG_CHANNELS_GRPC_SERVER_CA_CERTS:-ssl/certs/dummy/server_ca}
+        target: /channels-grpc-server-ca${MG_CHANNELS_GRPC_SERVER_CA_CERTS:+.crt}
+        bind:
+          create_host_path: true
 
   channels-db:
     image: postgres:16.2-alpine
@@ -504,7 +526,15 @@ services:
       MG_CHANNELS_INSTANCE_ID: ${MG_CHANNELS_INSTANCE_ID}
       MG_CHANNELS_HTTP_HOST: ${MG_CHANNELS_HTTP_HOST}
       MG_CHANNELS_HTTP_PORT: ${MG_CHANNELS_HTTP_PORT}
-      MG_ES_URL: ${MG_ES_URL}
+      MG_CHANNELS_GRPC_HOST: ${MG_CHANNELS_GRPC_HOST}
+      MG_CHANNELS_GRPC_PORT: ${MG_CHANNELS_GRPC_PORT}
+      ## Compose supports parameter expansion in environment,
+      ## Eg: ${VAR:+replacement} or ${VAR+replacement} -> replacement if VAR is set and non-empty, otherwise empty
+      ## Eg :${VAR:-default} or ${VAR-default}  -> value of VAR if set and non-empty, otherwise default
+      MG_CHANNELS_GRPC_SERVER_CERT: ${MG_CHANNELS_GRPC_SERVER_CERT:+/channels-grpc-server.crt}
+      MG_CHANNELS_GRPC_SERVER_KEY: ${MG_CHANNELS_GRPC_SERVER_KEY:+/channels-grpc-server.key}
+      MG_CHANNELS_GRPC_SERVER_CA_CERTS: ${MG_CHANNELS_GRPC_SERVER_CA_CERTS:+/channels-grpc-server-ca.crt}
+      MG_CHANNELS_GRPC_CLIENT_CA_CERTS: ${MG_CHANNELS_GRPC_CLIENT_CA_CERTS:+/channels-grpc-client-ca.crt}
       MG_CHANNELS_DB_HOST: ${MG_CHANNELS_DB_HOST}
       MG_CHANNELS_DB_PORT: ${MG_CHANNELS_DB_PORT}
       MG_CHANNELS_DB_USER: ${MG_CHANNELS_DB_USER}
@@ -524,6 +554,7 @@ services:
       MG_THINGS_AUTH_GRPC_CLIENT_CERT: ${MG_THINGS_AUTH_GRPC_CLIENT_CERT:+/things-grpc-client.crt}
       MG_THINGS_AUTH_GRPC_CLIENT_KEY: ${MG_THINGS_AUTH_GRPC_CLIENT_KEY:+/things-grpc-client.key}
       MG_THINGS_AUTH_GRPC_SERVER_CA_CERTS: ${MG_THINGS_AUTH_GRPC_SERVER_CA_CERTS:+/things-grpc-server-ca.crt}
+      MG_ES_URL: ${MG_ES_URL}
       MG_JAEGER_URL: ${MG_JAEGER_URL}
       MG_JAEGER_TRACE_RATIO: ${MG_JAEGER_TRACE_RATIO}
       MG_SEND_TELEMETRY: ${MG_SEND_TELEMETRY}
@@ -532,6 +563,7 @@ services:
       MG_SPICEDB_PORT: ${MG_SPICEDB_PORT}
     ports:
       - ${MG_CHANNELS_HTTP_PORT}:${MG_CHANNELS_HTTP_PORT}
+      - ${MG_CHANNELS_GRPC_PORT}:${MG_CHANNELS_GRPC_PORT}
     networks:
       - magistrala-base-net
     volumes:

@@ -10,10 +10,14 @@ type authorizeReq struct {
 	Permission string
 }
 
-type getEntitiesBasicReq struct {
+type retrieveEntitiesReq struct {
 	Ids []string
 }
 
-type getEntityBasicReq struct {
+type retrieveEntityReq struct {
 	Id string
+}
+
+type removeChannelConnectionsReq struct {
+	channelID string
 }

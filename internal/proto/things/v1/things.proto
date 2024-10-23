@@ -17,6 +17,7 @@ service ThingsService {
   rpc RetrieveEntities(common.v1.RetrieveEntitiesReq) returns (common.v1.RetrieveEntitiesRes) {}
   rpc AddConnections(common.v1.AddConnectionsReq)returns(common.v1.AddConnectionsRes) {}
   rpc RemoveConnections(common.v1.RemoveConnectionsReq)returns(common.v1.RemoveConnectionsRes) {}
+  rpc RemoveChannelConnections(RemoveChannelConnectionsReq)returns(RemoveChannelConnectionsRes) {}
 }
 
 
@@ -32,3 +33,8 @@ message AuthzRes {
   string id = 2;
 }
 
+message RemoveChannelConnectionsReq {
+  string channel_id = 1;
+}
+
+message RemoveChannelConnectionsRes {}

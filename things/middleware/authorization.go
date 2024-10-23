@@ -215,3 +215,6 @@ func (am *authorizationMiddleware) AddConnections(ctx context.Context, conns []t
 func (am *authorizationMiddleware) RemoveConnections(ctx context.Context, conns []things.Connection) (err error) {
 	return am.svc.RemoveConnections(ctx, conns)
 }
+func (am *authorizationMiddleware) RemoveChannelConnections(ctx context.Context, channelID string) error {
+	return am.svc.RemoveChannelConnections(ctx, channelID)
+}

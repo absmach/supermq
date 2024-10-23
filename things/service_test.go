@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	chmocks "github.com/absmach/magistrala/channels/mocks"
 	"github.com/absmach/magistrala/internal/testsutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
@@ -58,7 +59,8 @@ func newService() things.Service {
 	idProvider := uuid.NewMock()
 	sidProvider := uuid.NewMock()
 	repo = new(thmocks.Repository)
-	tsv, _ := things.NewService(repo, pService, pEvaluator, cache, idProvider, sidProvider)
+	chgRPCClient := new(chmocks.ChannelsServiceClient)
+	tsv, _ := things.NewService(repo, pService, pEvaluator, cache, chgRPCClient, idProvider, sidProvider)
 	return tsv
 }
 

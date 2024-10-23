@@ -255,6 +255,65 @@ func (cr *channelRepository) RemoveConnections(ctx context.Context, conns []chan
 	return nil
 }
 
+func (cr *channelRepository) CheckConnection(ctx context.Context, conn channels.Connection) error {
+	query := `SELECT 1 FROM connections WHERE channel_id = :channel_id AND domain_id = :domain_id AND thing_id = :thing_id LIMIT 1`
+	dbConn := toDBConnection(conn)
+	rows, err := cr.db.NamedQueryContext(ctx, query, dbConn)
+	if err != nil {
+		return postgres.HandleError(repoerr.ErrViewEntity, err)
+	}
+	defer rows.Close()
+
+	if !rows.Next() {
+		return repoerr.ErrNotFound
+	}
+	return nil
+}
+
+func (cr *channelRepository) ChannelConnectionsCount(ctx context.Context, id string) (uint64, error) {
+	query := `SELECT COUNT(*) FROM connections WHERE channel_id = :channel_id`
+	dbConn := dbConnection{ChannelID: id}
+
+	total, err := postgres.Total(ctx, cr.db, query, dbConn)
+	if err != nil {
+		return 0, postgres.HandleError(repoerr.ErrViewEntity, err)
+	}
+	return total, nil
+}
+
+func (cr *channelRepository) DoesChannelHaveConnections(ctx context.Context, id string) (bool, error) {
+	query := `SELECT 1 FROM connections WHERE channel_id = :channel_id`
+	dbConn := dbConnection{ChannelID: id}
+
+	rows, err := cr.db.NamedQueryContext(ctx, query, dbConn)
+	if err != nil {
+		return false, postgres.HandleError(repoerr.ErrViewEntity, err)
+	}
+	defer rows.Close()
+
+	return rows.Next(), nil
+}
+
+func (cr *channelRepository) RemoveThingConnections(ctx context.Context, thingID string) error {
+	query := `DELETE FROM connections WHERE thing_id = :thing_id`
+
+	dbConn := dbConnection{ThingID: thingID}
+	if _, err := cr.db.NamedExecContext(ctx, query, dbConn); err != nil {
+		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+	}
+	return nil
+}
+
+func (cr *channelRepository) RemoveChannelConnections(ctx context.Context, channelID string) error {
+	query := `DELETE FROM connections WHERE channel_id = :channel_id`
+
+	dbConn := dbConnection{ChannelID: channelID}
+	if _, err := cr.db.NamedExecContext(ctx, query, dbConn); err != nil {
+		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+	}
+	return nil
+}
+
 func (cr *channelRepository) update(ctx context.Context, ch channels.Channel, query string) (channels.Channel, error) {
 	dbch, err := toDBChannel(ch)
 	if err != nil {

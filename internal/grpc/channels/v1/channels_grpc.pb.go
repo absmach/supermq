@@ -11,7 +11,6 @@ package v1
 
 import (
 	context "context"
-	v1 "github.com/absmach/magistrala/internal/grpc/common/v1"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -23,139 +22,101 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ThingsService_AddConnections_FullMethodName    = "/channels.v1.ThingsService/AddConnections"
-	ThingsService_RemoveConnections_FullMethodName = "/channels.v1.ThingsService/RemoveConnections"
+	ChannelsService_RemoveThingConnections_FullMethodName = "/channels.v1.ChannelsService/RemoveThingConnections"
 )
 
-// ThingsServiceClient is the client API for ThingsService service.
+// ChannelsServiceClient is the client API for ChannelsService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type ThingsServiceClient interface {
-	AddConnections(ctx context.Context, in *v1.AddConnectionsReq, opts ...grpc.CallOption) (*v1.AddConnectionsRes, error)
-	RemoveConnections(ctx context.Context, in *v1.RemoveConnectionsReq, opts ...grpc.CallOption) (*v1.RemoveConnectionsRes, error)
+type ChannelsServiceClient interface {
+	RemoveThingConnections(ctx context.Context, in *RemoveThingConnectionsReq, opts ...grpc.CallOption) (*RemoveThingConnectionsRes, error)
 }
 
-type thingsServiceClient struct {
+type channelsServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewThingsServiceClient(cc grpc.ClientConnInterface) ThingsServiceClient {
-	return &thingsServiceClient{cc}
+func NewChannelsServiceClient(cc grpc.ClientConnInterface) ChannelsServiceClient {
+	return &channelsServiceClient{cc}
 }
 
-func (c *thingsServiceClient) AddConnections(ctx context.Context, in *v1.AddConnectionsReq, opts ...grpc.CallOption) (*v1.AddConnectionsRes, error) {
+func (c *channelsServiceClient) RemoveThingConnections(ctx context.Context, in *RemoveThingConnectionsReq, opts ...grpc.CallOption) (*RemoveThingConnectionsRes, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(v1.AddConnectionsRes)
-	err := c.cc.Invoke(ctx, ThingsService_AddConnections_FullMethodName, in, out, cOpts...)
+	out := new(RemoveThingConnectionsRes)
+	err := c.cc.Invoke(ctx, ChannelsService_RemoveThingConnections_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *thingsServiceClient) RemoveConnections(ctx context.Context, in *v1.RemoveConnectionsReq, opts ...grpc.CallOption) (*v1.RemoveConnectionsRes, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(v1.RemoveConnectionsRes)
-	err := c.cc.Invoke(ctx, ThingsService_RemoveConnections_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// ThingsServiceServer is the server API for ThingsService service.
-// All implementations must embed UnimplementedThingsServiceServer
+// ChannelsServiceServer is the server API for ChannelsService service.
+// All implementations must embed UnimplementedChannelsServiceServer
 // for forward compatibility.
-type ThingsServiceServer interface {
-	AddConnections(context.Context, *v1.AddConnectionsReq) (*v1.AddConnectionsRes, error)
-	RemoveConnections(context.Context, *v1.RemoveConnectionsReq) (*v1.RemoveConnectionsRes, error)
-	mustEmbedUnimplementedThingsServiceServer()
+type ChannelsServiceServer interface {
+	RemoveThingConnections(context.Context, *RemoveThingConnectionsReq) (*RemoveThingConnectionsRes, error)
+	mustEmbedUnimplementedChannelsServiceServer()
 }
 
-// UnimplementedThingsServiceServer must be embedded to have
+// UnimplementedChannelsServiceServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedThingsServiceServer struct{}
+type UnimplementedChannelsServiceServer struct{}
 
-func (UnimplementedThingsServiceServer) AddConnections(context.Context, *v1.AddConnectionsReq) (*v1.AddConnectionsRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddConnections not implemented")
+func (UnimplementedChannelsServiceServer) RemoveThingConnections(context.Context, *RemoveThingConnectionsReq) (*RemoveThingConnectionsRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveThingConnections not implemented")
 }
-func (UnimplementedThingsServiceServer) RemoveConnections(context.Context, *v1.RemoveConnectionsReq) (*v1.RemoveConnectionsRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveConnections not implemented")
-}
-func (UnimplementedThingsServiceServer) mustEmbedUnimplementedThingsServiceServer() {}
-func (UnimplementedThingsServiceServer) testEmbeddedByValue()                       {}
+func (UnimplementedChannelsServiceServer) mustEmbedUnimplementedChannelsServiceServer() {}
+func (UnimplementedChannelsServiceServer) testEmbeddedByValue()                         {}
 
-// UnsafeThingsServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ThingsServiceServer will
+// UnsafeChannelsServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ChannelsServiceServer will
 // result in compilation errors.
-type UnsafeThingsServiceServer interface {
-	mustEmbedUnimplementedThingsServiceServer()
+type UnsafeChannelsServiceServer interface {
+	mustEmbedUnimplementedChannelsServiceServer()
 }
 
-func RegisterThingsServiceServer(s grpc.ServiceRegistrar, srv ThingsServiceServer) {
-	// If the following call pancis, it indicates UnimplementedThingsServiceServer was
+func RegisterChannelsServiceServer(s grpc.ServiceRegistrar, srv ChannelsServiceServer) {
+	// If the following call pancis, it indicates UnimplementedChannelsServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&ThingsService_ServiceDesc, srv)
+	s.RegisterService(&ChannelsService_ServiceDesc, srv)
 }
 
-func _ThingsService_AddConnections_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.AddConnectionsReq)
+func _ChannelsService_RemoveThingConnections_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveThingConnectionsReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ThingsServiceServer).AddConnections(ctx, in)
+		return srv.(ChannelsServiceServer).RemoveThingConnections(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ThingsService_AddConnections_FullMethodName,
+		FullMethod: ChannelsService_RemoveThingConnections_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ThingsServiceServer).AddConnections(ctx, req.(*v1.AddConnectionsReq))
+		return srv.(ChannelsServiceServer).RemoveThingConnections(ctx, req.(*RemoveThingConnectionsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ThingsService_RemoveConnections_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.RemoveConnectionsReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ThingsServiceServer).RemoveConnections(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ThingsService_RemoveConnections_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ThingsServiceServer).RemoveConnections(ctx, req.(*v1.RemoveConnectionsReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-// ThingsService_ServiceDesc is the grpc.ServiceDesc for ThingsService service.
+// ChannelsService_ServiceDesc is the grpc.ServiceDesc for ChannelsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var ThingsService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "channels.v1.ThingsService",
-	HandlerType: (*ThingsServiceServer)(nil),
+var ChannelsService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "channels.v1.ChannelsService",
+	HandlerType: (*ChannelsServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AddConnections",
-			Handler:    _ThingsService_AddConnections_Handler,
-		},
-		{
-			MethodName: "RemoveConnections",
-			Handler:    _ThingsService_RemoveConnections_Handler,
+			MethodName: "RemoveThingConnections",
+			Handler:    _ChannelsService_RemoveThingConnections_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -43,6 +43,7 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 						thing_id      VARCHAR(36),
 						FOREIGN KEY (channel_id, domain_id) REFERENCES channels (id, domain_id) ON DELETE CASCADE ON UPDATE CASCADE,
 						PRIMARY KEY (channel_id, domain_id, thing_id)
+						UNIQUE		(channel_id, thing_id)
 					)`,
 				},
 				Down: []string{

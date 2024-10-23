@@ -8,6 +8,7 @@ import (
 
 	"github.com/absmach/magistrala"
 	mgauth "github.com/absmach/magistrala/auth"
+	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	"github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
@@ -24,6 +25,7 @@ var _ Service = (*service)(nil)
 type service struct {
 	repo       Repository
 	policy     policies.Service
+	channels   grpcChannelsV1.ChannelsServiceClient
 	evaluator  policies.Evaluator
 	cache      Cache
 	idProvider magistrala.IDProvider
@@ -31,7 +33,7 @@ type service struct {
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(repo Repository, policy policies.Service, evaluator policies.Evaluator, cache Cache, idProvider magistrala.IDProvider, sIDProvider magistrala.IDProvider) (Service, error) {
+func NewService(repo Repository, policy policies.Service, evaluator policies.Evaluator, cache Cache, channels grpcChannelsV1.ChannelsServiceClient, idProvider magistrala.IDProvider, sIDProvider magistrala.IDProvider) (Service, error) {
 	rpms, err := roles.NewProvisionManageService(policies.ThingType, repo, policy, sIDProvider, AvailableActions(), BuiltInRoles())
 	if err != nil {
 		return service{}, err
@@ -41,6 +43,7 @@ func NewService(repo Repository, policy policies.Service, evaluator policies.Eva
 		policy:                 policy,
 		evaluator:              evaluator,
 		cache:                  cache,
+		channels:               channels,
 		idProvider:             idProvider,
 		ProvisionManageService: rpms,
 	}, nil
@@ -333,6 +336,17 @@ func (svc service) DisableClient(ctx context.Context, session authn.Session, id 
 }
 
 func (svc service) DeleteClient(ctx context.Context, session authn.Session, id string) error {
+
+	ok, err := svc.repo.DoesThingHaveConnections(ctx, id)
+	if err != nil {
+		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+	if ok {
+		if _, err := svc.channels.RemoveThingConnections(ctx, &grpcChannelsV1.RemoveThingConnectionsReq{ThingId: id}); err != nil {
+			return errors.Wrap(svcerr.ErrRemoveEntity, err)
+		}
+	}
+
 	if _, err := svc.repo.ChangeStatus(ctx, mgclients.Client{ID: id, Status: mgclients.DeletedStatus}); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
@@ -418,6 +432,11 @@ func (svc service) RetrieveByIds(ctx context.Context, ids []string) (mgclients.C
 func (svc service) AddConnections(ctx context.Context, conns []Connection) (err error) {
 	return svc.repo.AddConnections(ctx, conns)
 }
+
 func (svc service) RemoveConnections(ctx context.Context, conns []Connection) (err error) {
 	return svc.repo.RemoveConnections(ctx, conns)
+}
+
+func (svc service) RemoveChannelConnections(ctx context.Context, channelID string) error {
+	return svc.repo.RemoveChannelConnections(ctx, channelID)
 }

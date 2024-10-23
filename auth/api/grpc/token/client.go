@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const tokenSvcName = "grpcTokenV1.TokenService"
+const tokenSvcName = "token.v1.TokenService"
 
 type tokenGrpcClient struct {
 	issue   endpoint.Endpoint

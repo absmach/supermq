@@ -29,7 +29,7 @@ packages:
           filename: "token_client.go"
   github.com/absmach/magistrala/internal/grpc/channels/v1:
     interfaces:
-      TokenServiceClient:
+      ChannelsServiceClient:
         config:
           dir: "./channels/mocks"
           mockname: "ChannelsServiceClient"

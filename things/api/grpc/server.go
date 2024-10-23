@@ -22,11 +22,12 @@ var _ grpcThingsV1.ThingsServiceServer = (*grpcServer)(nil)
 
 type grpcServer struct {
 	grpcThingsV1.UnimplementedThingsServiceServer
-	authorize         kitgrpc.Handler
-	retrieveEntity    kitgrpc.Handler
-	retrieveEntities  kitgrpc.Handler
-	addConnections    kitgrpc.Handler
-	removeConnections kitgrpc.Handler
+	authorize                kitgrpc.Handler
+	retrieveEntity           kitgrpc.Handler
+	retrieveEntities         kitgrpc.Handler
+	addConnections           kitgrpc.Handler
+	removeConnections        kitgrpc.Handler
+	removeChannelConnections kitgrpc.Handler
 }
 
 // NewServer returns new AuthServiceServer instance.
@@ -38,14 +39,14 @@ func NewServer(svc things.Service) grpcThingsV1.ThingsServiceServer {
 			encodeAuthorizeResponse,
 		),
 		retrieveEntity: kitgrpc.NewServer(
-			getEntityBasicEndpoint(svc),
+			retrieveEntityEndpoint(svc),
 			decodeRetrieveEntityRequest,
 			encodeRetrieveEntityResponse,
 		),
 		retrieveEntities: kitgrpc.NewServer(
-			getEntitiesBasicEndpoint(svc),
-			decodeGetEntitiesBasicRequest,
-			encodeGetEntitiesBasicResponse,
+			retrieveEntitiesEndpoint(svc),
+			decodeRetrieveEntitiesRequest,
+			encodeRetrieveEntitiesResponse,
 		),
 		addConnections: kitgrpc.NewServer(
 			addConnectionsEndpoint(svc),
@@ -56,6 +57,11 @@ func NewServer(svc things.Service) grpcThingsV1.ThingsServiceServer {
 			removeConnectionsEndpoint(svc),
 			decodeRemoveConnectionsRequest,
 			encodeRemoveConnectionsResponse,
+		),
+		removeChannelConnections: kitgrpc.NewServer(
+			removeChannelConnectionsEndpoint(svc),
+			decodeRemoveChannelConnectionsRequest,
+			encodeRemoveChannelConnectionsResponse,
 		),
 	}
 }
@@ -93,13 +99,13 @@ func (s *grpcServer) RetrieveEntity(ctx context.Context, req *grpcCommonV1.Retri
 
 func decodeRetrieveEntityRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*grpcCommonV1.RetrieveEntityReq)
-	return getEntityBasicReq{
+	return retrieveEntityReq{
 		Id: req.GetId(),
 	}, nil
 }
 
 func encodeRetrieveEntityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
-	res := grpcRes.(getEntityBasicRes)
+	res := grpcRes.(retrieveEntityRes)
 
 	return &grpcCommonV1.RetrieveEntityRes{
 		Entity: &grpcCommonV1.EntityBasic{
@@ -118,15 +124,15 @@ func (s *grpcServer) RetrieveEntities(ctx context.Context, req *grpcCommonV1.Ret
 	return res.(*grpcCommonV1.RetrieveEntitiesRes), nil
 }
 
-func decodeGetEntitiesBasicRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeRetrieveEntitiesRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*grpcCommonV1.RetrieveEntitiesReq)
-	return getEntitiesBasicReq{
+	return retrieveEntitiesReq{
 		Ids: req.GetIds(),
 	}, nil
 }
 
-func encodeGetEntitiesBasicResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
-	res := grpcRes.(getEntitiesBasicRes)
+func encodeRetrieveEntitiesResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(retrieveEntitiesRes)
 
 	entities := []*grpcCommonV1.EntityBasic{}
 	for _, thing := range res.things {
@@ -197,6 +203,27 @@ func encodeRemoveConnectionsResponse(_ context.Context, grpcRes interface{}) (in
 	res := grpcRes.(connectionsRes)
 
 	return &grpcCommonV1.RemoveConnectionsRes{Ok: res.ok}, nil
+}
+
+func (s *grpcServer) RemoveChannelConnections(ctx context.Context, req *grpcThingsV1.RemoveChannelConnectionsReq) (*grpcThingsV1.RemoveChannelConnectionsRes, error) {
+	_, res, err := s.removeChannelConnections.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, encodeError(err)
+	}
+	return res.(*grpcThingsV1.RemoveChannelConnectionsRes), nil
+}
+
+func decodeRemoveChannelConnectionsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*grpcThingsV1.RemoveChannelConnectionsReq)
+
+	return removeChannelConnectionsReq{
+		channelID: req.GetChannelId(),
+	}, nil
+}
+
+func encodeRemoveChannelConnectionsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	_ = grpcRes.(removeChannelConnectionsRes)
+	return &grpcThingsV1.RemoveChannelConnectionsRes{}, nil
 }
 
 func encodeError(err error) error {

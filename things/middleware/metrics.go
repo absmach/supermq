@@ -150,3 +150,10 @@ func (ms *metricsMiddleware) RemoveConnections(ctx context.Context, conns []thin
 	}(time.Now())
 	return ms.svc.RemoveConnections(ctx, conns)
 }
+func (ms *metricsMiddleware) RemoveChannelConnections(ctx context.Context, channelID string) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "remove_channel_connections").Add(1)
+		ms.latency.With("method", "remove_channel_connections").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.RemoveChannelConnections(ctx, channelID)
+}
