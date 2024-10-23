@@ -195,8 +195,8 @@ func newService(db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, logg
 	svc := certs.New(sdk, repo, pkiAgent)
 	svc = httpapi.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
-	svc = httpapi.MetricsMiddleware(svc, counter, latency)
-	svc = tracing.New(svc, tracer)
+	svc = middleware.Metrics(svc, counter, latency)
+	svc = middleware.Tracing(svc, tracer)
 
 	return svc
 }

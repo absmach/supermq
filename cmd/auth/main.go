@@ -17,13 +17,13 @@ import (
 	grpcAuthV1 "github.com/absmach/supermq/api/grpc/auth/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	"github.com/absmach/supermq/auth"
-	api "github.com/absmach/supermq/auth/api"
 	authgrpcapi "github.com/absmach/supermq/auth/api/grpc/auth"
 	tokengrpcapi "github.com/absmach/supermq/auth/api/grpc/token"
 	httpapi "github.com/absmach/supermq/auth/api/http"
 	"github.com/absmach/supermq/auth/cache"
 	"github.com/absmach/supermq/auth/hasher"
 	"github.com/absmach/supermq/auth/jwt"
+	"github.com/absmach/supermq/auth/middleware"
 	apostgres "github.com/absmach/supermq/auth/postgres"
 	"github.com/absmach/supermq/auth/tracing"
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
@@ -247,8 +247,8 @@ func newService(db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.
 	svc := auth.New(keysRepo, patsRepo, nil, hasher, idProvider, t, pEvaluator, pService, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics("auth", "api")
-	svc = api.MetricsMiddleware(svc, counter, latency)
-	svc = tracing.New(svc, tracer)
+	svc = middleware.Metrics(svc, counter, latency)
+	svc = middleware.Tracing(svc, tracer)
 
 	return svc, nil
 }
