@@ -29,7 +29,7 @@ func (req createUserReq) validate() error {
 		return apiutil.ErrMissingUserName
 	}
 	if req.user.Email == "" {
-		return apiutil.ErrMissingIdentity
+		return apiutil.ErrMissingEmail
 	}
 	if req.user.Credentials.Secret == "" {
 		return apiutil.ErrMissingPass
@@ -51,18 +51,6 @@ type viewUserReq struct {
 func (req viewUserReq) validate() error {
 	if req.id == "" {
 		return apiutil.ErrMissingID
-	}
-
-	return nil
-}
-
-type viewUserByUserNameReq struct {
-	userName string
-}
-
-func (req viewUserByUserNameReq) validate() error {
-	if req.userName == "" {
-		return apiutil.ErrMissingUserName
 	}
 
 	return nil
@@ -203,23 +191,17 @@ func (req updateUserSecretReq) validate() error {
 	return nil
 }
 
-type updateUserNamesReq struct {
-	User users.User
+type updateUserNameReq struct {
+	id       string
+	UserName string
 }
 
-func (req updateUserNamesReq) validate() error {
-	if len(req.User.Credentials.UserName) > api.MaxNameSize {
-		return apiutil.ErrNameSize
+func (req updateUserNameReq) validate() error {
+	if req.id == "" {
+		return apiutil.ErrMissingID
 	}
-	if len(req.User.FirstName) > api.MaxNameSize {
+	if len(req.UserName) > api.MaxNameSize {
 		return apiutil.ErrNameSize
-	}
-	if len(req.User.LastName) > api.MaxNameSize {
-		return apiutil.ErrNameSize
-	}
-
-	if req.User.FirstName == "" && req.User.LastName == "" {
-		return apiutil.ErrMissingFullName
 	}
 
 	return nil
@@ -257,7 +239,7 @@ type loginUserReq struct {
 
 func (req loginUserReq) validate() error {
 	if req.Email == "" {
-		return apiutil.ErrMissingIdentity
+		return apiutil.ErrMissingEmail
 	}
 	if req.Secret == "" {
 		return apiutil.ErrMissingPass

@@ -114,7 +114,7 @@ func TestRetrieveByIdentity(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.desc, func(t *testing.T) {
-			cli, err := repo.RetrieveByEmail(context.Background(), c.identity)
+			cli, err := repo.RetrieveByIdentity(context.Background(), c.identity)
 			assert.True(t, errors.Contains(err, c.err), fmt.Sprintf("expected %s got %s\n", c.err, err))
 			if err == nil {
 				assert.Equal(t, client.ID, cli.ID)

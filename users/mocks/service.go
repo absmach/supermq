@@ -619,34 +619,6 @@ func (_m *Service) View(ctx context.Context, session authn.Session, id string) (
 	return r0, r1
 }
 
-// ViewByUserName provides a mock function with given fields: ctx, session, userName
-func (_m *Service) ViewByUserName(ctx context.Context, session authn.Session, userName string) (users.User, error) {
-	ret := _m.Called(ctx, session, userName)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ViewByUserName")
-	}
-
-	var r0 users.User
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) (users.User, error)); ok {
-		return rf(ctx, session, userName)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) users.User); ok {
-		r0 = rf(ctx, session, userName)
-	} else {
-		r0 = ret.Get(0).(users.User)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string) error); ok {
-		r1 = rf(ctx, session, userName)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // ViewProfile provides a mock function with given fields: ctx, session
 func (_m *Service) ViewProfile(ctx context.Context, session authn.Session) (users.User, error) {
 	ret := _m.Called(ctx, session)

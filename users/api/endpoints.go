@@ -78,27 +78,6 @@ func viewProfileEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func viewByUserNameEndpoint(svc users.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(viewUserByUserNameReq)
-		if err := req.validate(); err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
-		}
-
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthorization
-		}
-
-		user, err := svc.ViewByUserName(ctx, session, req.userName)
-		if err != nil {
-			return nil, err
-		}
-
-		return viewUserRes{User: user}, nil
-	}
-}
-
 func listUsersEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listUsersReq)
@@ -417,11 +396,16 @@ func updateSecretEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func updateUserNamesEndpoint(svc users.Service) endpoint.Endpoint {
+func updateUserNameEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(updateUserNamesReq)
+		req := request.(updateUserNameReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
+		}
+
+		user := users.User{
+			ID:          req.id,
+			Credentials: users.Credentials{UserName: req.UserName},
 		}
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
@@ -429,7 +413,7 @@ func updateUserNamesEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthorization
 		}
 
-		user, err := svc.UpdateUserName(ctx, session, req.User)
+		user, err := svc.UpdateUserName(ctx, session, user)
 		if err != nil {
 			return nil, err
 		}

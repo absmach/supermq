@@ -1516,7 +1516,7 @@ func TestPasswordReset(t *testing.T) {
 	}
 }
 
-func TestUpdateUserRole(t *testing.T) {
+func TestUpdateRole(t *testing.T) {
 	us, svc, _, authn := newUsersServer()
 	defer us.Close()
 
@@ -1615,7 +1615,7 @@ func TestUpdateUserRole(t *testing.T) {
 			}
 
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-			svcCall := svc.On("UpdateUserRole", mock.Anything, tc.authnRes, mock.Anything).Return(users.User{}, tc.err)
+			svcCall := svc.On("Update", mock.Anything, tc.authnRes, mock.Anything).Return(users.User{}, tc.err)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			var resBody respBody
@@ -2315,7 +2315,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:    "list users with name",
+			desc:    "list users with user name",
 			token:   validToken,
 			groupID: validID,
 			listUsersResponse: users.UsersPage{
@@ -2324,25 +2324,25 @@ func TestListUsersByUserGroupId(t *testing.T) {
 				},
 				Users: []users.User{user},
 			},
-			query:    "name=username",
+			query:    "user_name=username",
 			status:   http.StatusOK,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
-			desc:     "list users with invalid name",
+			desc:     "list users with invalid user name",
 			token:    validToken,
 			groupID:  validID,
-			query:    "name=invalid",
+			query:    "user_name=invalid",
 			status:   http.StatusBadRequest,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:    "list users with duplicate name",
+			desc:    "list users with duplicate user name",
 			token:   validToken,
 			groupID: validID,
-			query:   "name=1&name=2",
+			query:   "user_name=1&user_name=2",
 			status:  http.StatusBadRequest,
 			err:     apiutil.ErrInvalidQueryParams,
 		},
@@ -2632,7 +2632,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			err:       apiutil.ErrValidation,
 		},
 		{
-			desc:      "list users with name",
+			desc:      "list users with user name",
 			token:     validToken,
 			channelID: validID,
 			listUsersResponse: users.UsersPage{
@@ -2641,24 +2641,24 @@ func TestListUsersByChannelID(t *testing.T) {
 				},
 				Users: []users.User{user},
 			},
-			query:    "name=username",
+			query:    "user_name=username",
 			status:   http.StatusOK,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
-			desc:      "list users with invalid name",
+			desc:      "list users with invalid user name",
 			token:     validToken,
 			channelID: validID,
-			query:     "name=invalid",
+			query:     "user_name=invalid",
 			status:    http.StatusBadRequest,
 			authnRes:  mgauthn.Session{UserID: validID, DomainID: domainID},
 			err:       apiutil.ErrValidation,
 		},
 		{
-			desc:   "list users with duplicate name",
+			desc:   "list users with duplicate user name",
 			token:  validToken,
-			query:  "name=1&name=2",
+			query:  "user_name=1&user_name=2",
 			status: http.StatusBadRequest,
 			err:    apiutil.ErrInvalidQueryParams,
 		},
@@ -2969,7 +2969,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:     "list users with name",
+			desc:     "list users with user name",
 			token:    validToken,
 			domainID: validID,
 			listUsersResponse: users.UsersPage{
@@ -2978,25 +2978,25 @@ func TestListUsersByDomainID(t *testing.T) {
 				},
 				Users: []users.User{user},
 			},
-			query:    "name=username",
+			query:    "user_name=username",
 			status:   http.StatusOK,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
-			desc:     "list users with invalid name",
+			desc:     "list users with invalid user name",
 			token:    validToken,
 			domainID: validID,
-			query:    "name=invalid",
+			query:    "user_name=invalid",
 			status:   http.StatusBadRequest,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:     "list users with duplicate name",
+			desc:     "list users with duplicate user name",
 			token:    validToken,
 			domainID: validID,
-			query:    "name=1&name=2",
+			query:    "user_name=1&user_name=2",
 			status:   http.StatusBadRequest,
 			err:      apiutil.ErrInvalidQueryParams,
 		},
@@ -3330,19 +3330,19 @@ func TestListUsersByThingID(t *testing.T) {
 			err:      nil,
 		},
 		{
-			desc:     "list users with invalid name",
+			desc:     "list users with invalid user name",
 			token:    validToken,
 			thingID:  validID,
-			query:    "name=invalid",
+			query:    "user_name=invalid",
 			status:   http.StatusBadRequest,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:    "list users with duplicate name",
+			desc:    "list users with duplicate user name",
 			token:   validToken,
 			thingID: validID,
-			query:   "name=1&name=2",
+			query:   "user_name=1&user_name=2",
 			status:  http.StatusBadRequest,
 			err:     apiutil.ErrInvalidQueryParams,
 		},

@@ -36,7 +36,6 @@ type User struct {
 	Email          string      `json:"email,omitempty"`
 	Credentials    Credentials `json:"credentials"`
 	Tags           []string    `json:"tags,omitempty"`
-	Domain         string      `json:"-"` // ignoring Domain Field, since it will be always empty for users
 	Metadata       Metadata    `json:"metadata,omitempty"`
 	CreatedAt      time.Time   `json:"created_at,omitempty"`
 	UpdatedAt      time.Time   `json:"updated_at,omitempty"`
@@ -109,25 +108,6 @@ func (sdk mgSDK) User(id, token string) (User, errors.SDKError) {
 		return User{}, errors.NewSDKError(apiutil.ErrMissingID)
 	}
 	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, id)
-
-	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return User{}, sdkerr
-	}
-
-	var user User
-	if err := json.Unmarshal(body, &user); err != nil {
-		return User{}, errors.NewSDKError(err)
-	}
-
-	return user, nil
-}
-
-func (sdk mgSDK) UserByUserName(userName, token string) (User, errors.SDKError) {
-	if userName == "" {
-		return User{}, errors.NewSDKError(apiutil.ErrMissingUserName)
-	}
-	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, userName)
 
 	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
 	if sdkerr != nil {
@@ -307,7 +287,7 @@ func (sdk mgSDK) UpdateUserName(user User, token string) (User, errors.SDKError)
 		return User{}, errors.NewSDKError(err)
 	}
 
-	url := fmt.Sprintf("%s/%s/%s/names", sdk.usersURL, usersEndpoint, user.ID)
+	url := fmt.Sprintf("%s/%s/%s/name", sdk.usersURL, usersEndpoint, user.ID)
 
 	_, body, sdkerr := sdk.processRequest(http.MethodPatch, url, token, data, nil, http.StatusOK)
 	if sdkerr != nil {

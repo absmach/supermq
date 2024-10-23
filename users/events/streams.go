@@ -95,7 +95,7 @@ func (es *eventStore) UpdateUserName(ctx context.Context, session authn.Session,
 		return user, err
 	}
 
-	event := updateUserNamesEvent{
+	event := updateUserNameEvent{
 		user,
 	}
 
@@ -168,23 +168,6 @@ func (es *eventStore) ViewProfile(ctx context.Context, session authn.Session) (u
 	}
 
 	event := viewProfileEvent{
-		user,
-	}
-
-	if err := es.Publish(ctx, event); err != nil {
-		return user, err
-	}
-
-	return user, nil
-}
-
-func (es *eventStore) ViewByUserName(ctx context.Context, session authn.Session, userName string) (users.User, error) {
-	user, err := es.svc.ViewByUserName(ctx, session, userName)
-	if err != nil {
-		return user, err
-	}
-
-	event := viewUserByUserNameEvent{
 		user,
 	}
 

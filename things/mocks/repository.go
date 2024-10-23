@@ -119,34 +119,6 @@ func (_m *Repository) RetrieveAllByIDs(ctx context.Context, pm clients.Page) (cl
 	return r0, r1
 }
 
-// RetrieveByEmail provides a mock function with given fields: ctx, identity
-func (_m *Repository) RetrieveByEmail(ctx context.Context, identity string) (clients.Client, error) {
-	ret := _m.Called(ctx, identity)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RetrieveByEmail")
-	}
-
-	var r0 clients.Client
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (clients.Client, error)); ok {
-		return rf(ctx, identity)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) clients.Client); ok {
-		r0 = rf(ctx, identity)
-	} else {
-		r0 = ret.Get(0).(clients.Client)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, identity)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // RetrieveByID provides a mock function with given fields: ctx, id
 func (_m *Repository) RetrieveByID(ctx context.Context, id string) (clients.Client, error) {
 	ret := _m.Called(ctx, id)
@@ -168,6 +140,34 @@ func (_m *Repository) RetrieveByID(ctx context.Context, id string) (clients.Clie
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RetrieveByIdentity provides a mock function with given fields: ctx, identity
+func (_m *Repository) RetrieveByIdentity(ctx context.Context, identity string) (clients.Client, error) {
+	ret := _m.Called(ctx, identity)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveByIdentity")
+	}
+
+	var r0 clients.Client
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (clients.Client, error)); ok {
+		return rf(ctx, identity)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) clients.Client); ok {
+		r0 = rf(ctx, identity)
+	} else {
+		r0 = ret.Get(0).(clients.Client)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, identity)
 	} else {
 		r1 = ret.Error(1)
 	}

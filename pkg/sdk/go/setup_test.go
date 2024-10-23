@@ -151,7 +151,6 @@ func convertUser(c sdk.User) users.User {
 		FirstName:      c.FirstName,
 		LastName:       c.LastName,
 		Tags:           c.Tags,
-		DomainID:       c.Domain,
 		Email:          c.Email,
 		Credentials:    users.Credentials(c.Credentials),
 		Metadata:       users.Metadata(c.Metadata),
@@ -176,7 +175,7 @@ func convertThing(c sdk.Thing) mgclients.Client {
 		Name:        c.Name,
 		Tags:        c.Tags,
 		Domain:      c.DomainID,
-		Credentials: mgclients.Credentials(c.Credentials), // small fix
+		Credentials: mgclients.Credentials(c.Credentials),
 		Metadata:    mgclients.Metadata(c.Metadata),
 		CreatedAt:   c.CreatedAt,
 		UpdatedAt:   c.UpdatedAt,
@@ -238,6 +237,7 @@ func generateTestUser(t *testing.T) sdk.User {
 		ID:        generateUUID(t),
 		FirstName: "clientname",
 		LastName:  "clientlastname",
+		Email:     "clientemail@example.com",
 		Credentials: sdk.Credentials{
 			UserName: "clientusername",
 			Secret:   secret,

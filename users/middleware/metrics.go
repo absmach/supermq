@@ -75,15 +75,6 @@ func (ms *metricsMiddleware) ViewProfile(ctx context.Context, session authn.Sess
 	return ms.svc.ViewProfile(ctx, session)
 }
 
-// ViewByUserName instruments ViewByUserName method with metrics.
-func (ms *metricsMiddleware) ViewByUserName(ctx context.Context, session authn.Session, userName string) (users.User, error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "view_user_by_username").Add(1)
-		ms.latency.With("method", "view_user_by_username").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-	return ms.svc.ViewByUserName(ctx, session, userName)
-}
-
 // ListUsers instruments ListUsers method with metrics.
 func (ms *metricsMiddleware) ListUsers(ctx context.Context, session authn.Session, pm users.Page) (users.UsersPage, error) {
 	defer func(begin time.Time) {
@@ -105,8 +96,8 @@ func (ms *metricsMiddleware) SearchUsers(ctx context.Context, pm users.Page) (mp
 // Update instruments Update method with metrics.
 func (ms *metricsMiddleware) Update(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "update_user_name_and_metadata").Add(1)
-		ms.latency.With("method", "update_user_name_and_metadata").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "update_user").Add(1)
+		ms.latency.With("method", "update_user").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return ms.svc.Update(ctx, session, user)
 }

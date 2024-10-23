@@ -113,37 +113,6 @@ func (repo *userRepo) RetrieveByID(ctx context.Context, id string) (users.User, 
 	return users.User{}, repoerr.ErrNotFound
 }
 
-func (repo *userRepo) RetrieveByUserName(ctx context.Context, userName string) (users.User, error) {
-	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, user_name, profile_picture
-        FROM clients WHERE user_name = :user_name`
-
-	dbc := DBUser{
-		UserName: userName,
-	}
-
-	rows, err := repo.Repository.DB.NamedQueryContext(ctx, q, dbc)
-	if err != nil {
-		return users.User{}, postgres.HandleError(repoerr.ErrViewEntity, err)
-	}
-	defer rows.Close()
-
-	dbc = DBUser{}
-	if rows.Next() {
-		if err = rows.StructScan(&dbc); err != nil {
-			return users.User{}, postgres.HandleError(repoerr.ErrViewEntity, err)
-		}
-
-		user, err := ToUser(dbc)
-		if err != nil {
-			return users.User{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
-		}
-
-		return user, nil
-	}
-
-	return users.User{}, repoerr.ErrNotFound
-}
-
 func (repo *userRepo) RetrieveAll(ctx context.Context, pm users.Page) (users.UsersPage, error) {
 	query, err := PageQuery(pm)
 	if err != nil {
@@ -492,7 +461,7 @@ type DBUser struct {
 	UserName       string           `db:"user_name, omitempty"`
 	FirstName      string           `db:"first_name, omitempty"`
 	LastName       string           `db:"last_name, omitempty"`
-	ProfilePicture url.URL          `db:"profile_picture, omitempty"`
+	ProfilePicture string           `db:"profile_picture, omitempty"`
 	Email          string           `db:"email,omitempty"`
 }
 
@@ -531,7 +500,7 @@ func toDBUser(u users.User) (DBUser, error) {
 		LastName:       u.LastName,
 		FirstName:      u.FirstName,
 		UserName:       u.Credentials.UserName,
-		ProfilePicture: u.ProfilePicture,
+		ProfilePicture: u.ProfilePicture.String(),
 		Email:          u.Email,
 	}, nil
 }
@@ -556,6 +525,11 @@ func ToUser(dbu DBUser) (users.User, error) {
 		updatedAt = dbu.UpdatedAt.Time
 	}
 
+	profilePicture, err := url.Parse(dbu.ProfilePicture)
+	if err != nil {
+		return users.User{}, errors.Wrap(repoerr.ErrMalformedEntity, err)
+	}
+
 	user := users.User{
 		ID:        dbu.ID,
 		FirstName: dbu.FirstName,
@@ -571,7 +545,7 @@ func ToUser(dbu DBUser) (users.User, error) {
 		UpdatedBy:      updatedBy,
 		Status:         dbu.Status,
 		Tags:           tags,
-		ProfilePicture: dbu.ProfilePicture,
+		ProfilePicture: *profilePicture,
 	}
 	if dbu.Role != nil {
 		user.Role = *dbu.Role

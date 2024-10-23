@@ -145,7 +145,7 @@ type SDK interface {
 	// example:
 	//  user := sdk.User{
 	//    Name:	 "John Doe",
-	// 		Email: "john.doe@example",
+	// 	  Email: "john.doe@example",
 	//    Credentials: sdk.Credentials{
 	//      UserName: "john.doe",
 	//      Secret:   "12345678",
@@ -192,13 +192,6 @@ type SDK interface {
 	//  user, _ := sdk.UserProfile("token")
 	//  fmt.Println(user)
 	UserProfile(token string) (User, errors.SDKError)
-
-	// UserByUserName returns user object by username.
-	//
-	// example:
-	//  user, _ := sdk.UserByUserName("username", "token")
-	//  fmt.Println(user)
-	UserByUserName(userName, token string) (User, errors.SDKError)
 
 	// UpdateUser updates existing user.
 	//

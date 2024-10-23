@@ -154,19 +154,6 @@ func (svc service) ViewProfile(ctx context.Context, session authn.Session) (User
 	return user, nil
 }
 
-func (svc service) ViewByUserName(ctx context.Context, session authn.Session, userName string) (User, error) {
-	_, err := svc.Identify(ctx, session)
-	if err != nil {
-		return User{}, err
-	}
-
-	user, err := svc.users.RetrieveByUserName(ctx, userName)
-	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
-	}
-	return user, nil
-}
-
 func (svc service) ListUsers(ctx context.Context, session authn.Session, pm Page) (UsersPage, error) {
 	if err := svc.checkSuperAdmin(ctx, session); err != nil {
 		return UsersPage{}, err

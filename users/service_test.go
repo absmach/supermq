@@ -782,7 +782,7 @@ func TestUpdateUserSecret(t *testing.T) {
 		issueResponse           *magistrala.Token
 		response                users.User
 		retrieveByIDErr         error
-		retrieveByIdentityErr   error
+		retrieveByEmailErr      error
 		updateSecretErr         error
 		issueErr                error
 		err                     error
@@ -815,7 +815,7 @@ func TestUpdateUserSecret(t *testing.T) {
 			session:                 authn.Session{UserID: user.ID},
 			retrieveByIDResponse:    user,
 			retrieveByEmailResponse: users.User{},
-			retrieveByIdentityErr:   repoerr.ErrNotFound,
+			retrieveByEmailErr:      repoerr.ErrNotFound,
 			err:                     repoerr.ErrNotFound,
 		},
 		{
@@ -851,7 +851,7 @@ func TestUpdateUserSecret(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := cRepo.On("RetrieveByID", context.Background(), user.ID).Return(tc.retrieveByIDResponse, tc.retrieveByIDErr)
-		repoCall1 := cRepo.On("RetrieveByEmail", context.Background(), user.Email).Return(tc.retrieveByEmailResponse, tc.retrieveByIdentityErr)
+		repoCall1 := cRepo.On("RetrieveByEmail", context.Background(), user.Email).Return(tc.retrieveByEmailResponse, tc.retrieveByEmailErr)
 		repoCall2 := cRepo.On("UpdateSecret", context.Background(), mock.Anything).Return(tc.updateSecretResponse, tc.updateSecretErr)
 		authCall := authUser.On("Issue", context.Background(), mock.Anything).Return(tc.issueResponse, tc.issueErr)
 		updatedUser, err := svc.UpdateSecret(context.Background(), tc.session, tc.oldSecret, tc.newSecret)
@@ -872,7 +872,7 @@ func TestUpdateUserSecret(t *testing.T) {
 	}
 }
 
-func TestUpdateUserIdentity(t *testing.T) {
+func TestUpdateUserEmail(t *testing.T) {
 	svc, cRepo := newServiceMinimal()
 
 	user2 := user
@@ -1520,7 +1520,7 @@ func TestIssueToken(t *testing.T) {
 			desc:                    "issue token for a non-existing user",
 			user:                    user,
 			retrieveByEmailResponse: users.User{},
-			retrieveByIdentityErr:   repoerr.ErrNotFound,
+			retrieveByEmailErr:      repoerr.ErrNotFound,
 			err:                     repoerr.ErrNotFound,
 		},
 		{
@@ -1648,7 +1648,7 @@ func TestGenerateResetToken(t *testing.T) {
 		host                    string
 		retrieveByEmailResponse users.User
 		issueResponse           *magistrala.Token
-		retrieveByIdentityErr   error
+		retrieveByEmailErr      error
 		issueErr                error
 		err                     error
 	}{
@@ -1668,8 +1668,8 @@ func TestGenerateResetToken(t *testing.T) {
 				ID:    testsutil.GenerateUUID(t),
 				Email: "",
 			},
-			retrieveByIdentityErr: repoerr.ErrNotFound,
-			err:                   repoerr.ErrNotFound,
+			retrieveByEmailErr: repoerr.ErrNotFound,
+			err:                repoerr.ErrNotFound,
 		},
 		{
 			desc:                    "generate reset token with failed to issue token",
@@ -1837,7 +1837,7 @@ func TestOAuthCallback(t *testing.T) {
 		desc                    string
 		user                    users.User
 		retrieveByEmailResponse users.User
-		retrieveByIdentityErr   error
+		retrieveByEmailErr      error
 		saveResponse            users.User
 		saveErr                 error
 		addPoliciesErr          error
@@ -1860,7 +1860,7 @@ func TestOAuthCallback(t *testing.T) {
 			user: users.User{
 				Email: "test@example.com",
 			},
-			retrieveByIdentityErr: repoerr.ErrNotFound,
+			retrieveByEmailErr: repoerr.ErrNotFound,
 			saveResponse: users.User{
 				ID:   testsutil.GenerateUUID(t),
 				Role: users.UserRole,
@@ -1872,17 +1872,17 @@ func TestOAuthCallback(t *testing.T) {
 			user: users.User{
 				Email: "test@example.com",
 			},
-			retrieveByIdentityErr: repoerr.ErrMalformedEntity,
-			err:                   repoerr.ErrMalformedEntity,
+			retrieveByEmailErr: repoerr.ErrMalformedEntity,
+			err:                repoerr.ErrMalformedEntity,
 		},
 		{
 			desc: "oauth signup callback with failed to register user",
 			user: users.User{
 				Email: "test@example.com",
 			},
-			addPoliciesErr:        svcerr.ErrAuthorization,
-			retrieveByIdentityErr: repoerr.ErrNotFound,
-			err:                   svcerr.ErrAuthorization,
+			addPoliciesErr:     svcerr.ErrAuthorization,
+			retrieveByEmailErr: repoerr.ErrNotFound,
+			err:                svcerr.ErrAuthorization,
 		},
 		{
 			desc: "oauth signin callback with user not in the platform",

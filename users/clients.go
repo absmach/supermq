@@ -25,9 +25,6 @@ type Service interface {
 	// ViewProfile retrieves user info for a given token.
 	ViewProfile(ctx context.Context, session authn.Session) (User, error)
 
-	// ViewUserByUserName retrieves user info for a given user name.
-	ViewByUserName(ctx context.Context, session authn.Session, userName string) (User, error)
-
 	// ListUsers retrieves users list for a valid auth token.
 	ListUsers(ctx context.Context, session authn.Session, pm Page) (UsersPage, error)
 

@@ -302,57 +302,35 @@ func TestUpdateUserTagsReqValidate(t *testing.T) {
 	}
 }
 
-func TestUpdateUserNamesReqValidate(t *testing.T) {
+func TestUpdateUserNameReqValidate(t *testing.T) {
 	cases := []struct {
 		desc string
-		req  updateUserNamesReq
+		req  updateUserNameReq
 		err  error
 	}{
 		{
 			desc: "valid request",
-			req: updateUserNamesReq{
-				User: users.User{
-					ID:        validID,
-					FirstName: "First",
-					LastName:  "Last",
-					Credentials: users.Credentials{
-						UserName: "validUsername",
-					},
-				},
+			req: updateUserNameReq{
+				id:       validID,
+				UserName: "validUsername",
 			},
 			err: nil,
 		},
 		{
 			desc: "missing user ID",
-			req: updateUserNamesReq{
-				User: users.User{
-					FirstName: "First",
-					LastName:  "Last",
-					Credentials: users.Credentials{
-						UserName: "validUsername",
-					},
-				},
+			req: updateUserNameReq{
+				id:       "",
+				UserName: "validUsername",
 			},
 			err: apiutil.ErrMissingID,
 		},
 		{
 			desc: "name too long",
-			req: updateUserNamesReq{
-				User: users.User{
-					ID:        validID,
-					FirstName: strings.Repeat("a", api.MaxNameSize+1),
-				},
+			req: updateUserNameReq{
+				id:       validID,
+				UserName: strings.Repeat("a", api.MaxNameSize+1),
 			},
 			err: apiutil.ErrNameSize,
-		},
-		{
-			desc: "missing full name",
-			req: updateUserNamesReq{
-				User: users.User{
-					ID: validID,
-				},
-			},
-			err: apiutil.ErrMissingFullName,
 		},
 	}
 	for _, tc := range cases {
@@ -417,33 +395,6 @@ func TestUpdateUserRoleReqValidate(t *testing.T) {
 				Role: "admin",
 			},
 			err: apiutil.ErrMissingID,
-		},
-	}
-	for _, c := range cases {
-		err := c.req.validate()
-		assert.Equal(t, c.err, err, "%s: expected %s got %s\n", c.desc, c.err, err)
-	}
-}
-
-func TestViewUserByUserNameReqValidate(t *testing.T) {
-	cases := []struct {
-		desc string
-		req  viewUserByUserNameReq
-		err  error
-	}{
-		{
-			desc: "valid request",
-			req: viewUserByUserNameReq{
-				userName: name,
-			},
-			err: nil,
-		},
-		{
-			desc: "empty userName",
-			req: viewUserByUserNameReq{
-				userName: "",
-			},
-			err: apiutil.ErrMissingUserName,
 		},
 	}
 	for _, c := range cases {

@@ -86,7 +86,7 @@ func (tm *tracingMiddleware) SearchUsers(ctx context.Context, pm users.Page) (us
 
 // Update traces the "Update" operation of the wrapped users.Service.
 func (tm *tracingMiddleware) Update(ctx context.Context, session authn.Session, cli users.User) (users.User, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_update_user_name_and_metadata", trace.WithAttributes(
+	ctx, span := tm.tracer.Start(ctx, "svc_update_user", trace.WithAttributes(
 		attribute.String("id", cli.ID),
 		attribute.String("first_name", cli.FirstName),
 		attribute.String("last_name", cli.LastName),
@@ -183,13 +183,6 @@ func (tm *tracingMiddleware) ViewProfile(ctx context.Context, session authn.Sess
 	defer span.End()
 
 	return tm.svc.ViewProfile(ctx, session)
-}
-
-func (tm *tracingMiddleware) ViewByUserName(ctx context.Context, session authn.Session, userName string) (users.User, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_view_user_by_username", trace.WithAttributes(attribute.String("username", userName)))
-	defer span.End()
-
-	return tm.svc.ViewByUserName(ctx, session, userName)
 }
 
 // UpdateRole traces the "UpdateRole" operation of the wrapped users.Service.

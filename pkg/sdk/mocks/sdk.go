@@ -2836,36 +2836,6 @@ func (_m *SDK) User(id string, token string) (sdk.User, errors.SDKError) {
 	return r0, r1
 }
 
-// UserByUserName provides a mock function with given fields: userName, token
-func (_m *SDK) UserByUserName(userName string, token string) (sdk.User, errors.SDKError) {
-	ret := _m.Called(userName, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for UserByUserName")
-	}
-
-	var r0 sdk.User
-	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, string) (sdk.User, errors.SDKError)); ok {
-		return rf(userName, token)
-	}
-	if rf, ok := ret.Get(0).(func(string, string) sdk.User); ok {
-		r0 = rf(userName, token)
-	} else {
-		r0 = ret.Get(0).(sdk.User)
-	}
-
-	if rf, ok := ret.Get(1).(func(string, string) errors.SDKError); ok {
-		r1 = rf(userName, token)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.SDKError)
-		}
-	}
-
-	return r0, r1
-}
-
 // UserProfile provides a mock function with given fields: token
 func (_m *SDK) UserProfile(token string) (sdk.User, errors.SDKError) {
 	ret := _m.Called(token)

@@ -43,7 +43,6 @@ type User struct {
 	Status         Status      `json:"status,omitempty"`          // 1 for enabled, 0 for disabled
 	Role           Role        `json:"role,omitempty"`            // 1 for admin, 0 for normal user
 	ProfilePicture url.URL     `json:"profile_picture,omitempty"` // profile picture URL
-	DomainID       string      `json:"domain_id,omitempty"`
 	Credentials    Credentials `json:"credentials,omitempty"`
 	Permissions    []string    `json:"permissions,omitempty"`
 	Email          string      `json:"email,omitempty"`
@@ -78,9 +77,6 @@ type UserRepository struct {
 type Repository interface {
 	// RetrieveByID retrieves user by their unique ID.
 	RetrieveByID(ctx context.Context, id string) (User, error)
-
-	// RetrieveByUserName retrieves user by their user name
-	RetrieveByUserName(ctx context.Context, userName string) (User, error)
 
 	// RetrieveAll retrieves all users.
 	RetrieveAll(ctx context.Context, pm Page) (UsersPage, error)

@@ -55,10 +55,6 @@ func (am *authorizationMiddleware) ViewProfile(ctx context.Context, session auth
 	return am.svc.ViewProfile(ctx, session)
 }
 
-func (am *authorizationMiddleware) ViewByUserName(ctx context.Context, session authn.Session, userName string) (users.User, error) {
-	return am.svc.ViewByUserName(ctx, session, userName)
-}
-
 func (am *authorizationMiddleware) ListUsers(ctx context.Context, session authn.Session, pm users.Page) (users.UsersPage, error) {
 	if err := am.checkSuperAdmin(ctx, session.UserID); err == nil {
 		session.SuperAdmin = true

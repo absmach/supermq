@@ -128,28 +128,6 @@ func (lm *loggingMiddleware) ViewProfile(ctx context.Context, session authn.Sess
 	return lm.svc.ViewProfile(ctx, session)
 }
 
-// ViewByUserName logs the view_user_by_username request. It logs the user name and the time it took to complete the request.
-// If the request fails, it logs the error.
-func (lm *loggingMiddleware) ViewByUserName(ctx context.Context, session authn.Session, userName string) (u users.User, err error) {
-	defer func(begin time.Time) {
-		args := []any{
-			slog.String("duration", time.Since(begin).String()),
-			slog.String("user_name", userName),
-			slog.Group("user",
-				slog.String("id", u.ID),
-				slog.String("user_name", u.Credentials.UserName),
-			),
-		}
-		if err != nil {
-			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("View user by username failed", args...)
-			return
-		}
-		lm.logger.Info("View user by username completed successfully", args...)
-	}(time.Now())
-	return lm.svc.ViewByUserName(ctx, session, userName)
-}
-
 // ListUsers logs the list_users request. It logs the page metadata and the time it took to complete the request.
 // If the request fails, it logs the error.
 func (lm *loggingMiddleware) ListUsers(ctx context.Context, session authn.Session, pm users.Page) (cp users.UsersPage, err error) {

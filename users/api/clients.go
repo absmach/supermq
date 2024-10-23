@@ -27,7 +27,7 @@ import (
 
 var passRegex = regexp.MustCompile("^.{8,}$")
 
-// MakeHandler returns a HTTP handler for API endpoints.
+// usersHandler returns a HTTP handler for API endpoints.
 func usersHandler(svc users.Service, authn mgauthn.Authentication, tokenClient magistrala.TokenServiceClient, selfRegister bool, r *chi.Mux, logger *slog.Logger, pr *regexp.Regexp, providers ...oauth2.Provider) http.Handler {
 	passRegex = pr
 
@@ -84,13 +84,6 @@ func usersHandler(svc users.Service, authn mgauthn.Authentication, tokenClient m
 				opts...,
 			), "search_users").ServeHTTP)
 
-			r.Get("/username", otelhttp.NewHandler(kithttp.NewServer(
-				viewByUserNameEndpoint(svc),
-				decodeViewUserByUserName,
-				api.EncodeResponse,
-				opts...,
-			), "view_user_by_username").ServeHTTP)
-
 			r.Patch("/secret", otelhttp.NewHandler(kithttp.NewServer(
 				updateSecretEndpoint(svc),
 				decodeUpdateUserSecret,
@@ -103,14 +96,14 @@ func usersHandler(svc users.Service, authn mgauthn.Authentication, tokenClient m
 				decodeUpdateUser,
 				api.EncodeResponse,
 				opts...,
-			), "update_user_name_and_metadata").ServeHTTP)
+			), "update_user").ServeHTTP)
 
-			r.Patch("/{id}/names", otelhttp.NewHandler(kithttp.NewServer(
-				updateUserNamesEndpoint(svc),
-				decodeUpdateUserNames,
+			r.Patch("/{id}/name", otelhttp.NewHandler(kithttp.NewServer(
+				updateUserNameEndpoint(svc),
+				decodeUpdateUserName,
 				api.EncodeResponse,
 				opts...,
-			), "update_user_names").ServeHTTP)
+			), "update_user_name").ServeHTTP)
 
 			r.Patch("/{id}/picture", otelhttp.NewHandler(kithttp.NewServer(
 				updateProfilePictureEndpoint(svc),
@@ -260,14 +253,6 @@ func decodeViewUser(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeViewProfile(_ context.Context, r *http.Request) (interface{}, error) {
 	return nil, nil
-}
-
-func decodeViewUserByUserName(_ context.Context, r *http.Request) (interface{}, error) {
-	req := viewUserByUserNameReq{
-		userName: chi.URLParam(r, "username"),
-	}
-
-	return req, nil
 }
 
 func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
@@ -455,15 +440,13 @@ func decodeUpdateUserSecret(_ context.Context, r *http.Request) (interface{}, er
 	return req, nil
 }
 
-func decodeUpdateUserNames(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateUserName(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
-	var c users.User
-
-	req := updateUserNamesReq{
-		User: c,
+	req := updateUserNameReq{
+		id: chi.URLParam(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))

@@ -29,7 +29,7 @@ const (
 	oauthCallback            = userPrefix + "oauth_callback"
 	addClientPolicy          = userPrefix + "add_policy"
 	deleteUser               = userPrefix + "delete"
-	userUpdateUserNames      = userPrefix + "update_user_names"
+	userUpdateUserName       = userPrefix + "update_user_name"
 	userUpdateProfilePicture = userPrefix + "update_profile_picture"
 )
 
@@ -37,11 +37,10 @@ var (
 	_ events.Event = (*createUserEvent)(nil)
 	_ events.Event = (*updateUserEvent)(nil)
 	_ events.Event = (*updateProfilePictureEvent)(nil)
-	_ events.Event = (*updateUserNamesEvent)(nil)
+	_ events.Event = (*updateUserNameEvent)(nil)
 	_ events.Event = (*removeUserEvent)(nil)
 	_ events.Event = (*viewUserEvent)(nil)
 	_ events.Event = (*viewProfileEvent)(nil)
-	_ events.Event = (*viewUserByUserNameEvent)(nil)
 	_ events.Event = (*listUserEvent)(nil)
 	_ events.Event = (*listUserByGroupEvent)(nil)
 	_ events.Event = (*searchUserEvent)(nil)
@@ -76,9 +75,6 @@ func (uce createUserEvent) Encode() (map[string]interface{}, error) {
 	}
 	if len(uce.Tags) > 0 {
 		val["tags"] = uce.Tags
-	}
-	if uce.DomainID != "" {
-		val["domain"] = uce.DomainID
 	}
 	if uce.Metadata != nil {
 		val["metadata"] = uce.Metadata
@@ -139,13 +135,13 @@ func (uce updateUserEvent) Encode() (map[string]interface{}, error) {
 	return val, nil
 }
 
-type updateUserNamesEvent struct {
+type updateUserNameEvent struct {
 	users.User
 }
 
-func (une updateUserNamesEvent) Encode() (map[string]interface{}, error) {
+func (une updateUserNameEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
-		"operation":  userUpdateUserNames,
+		"operation":  userUpdateUserName,
 		"updated_at": une.UpdatedAt,
 		"updated_by": une.UpdatedBy,
 	}
@@ -223,9 +219,6 @@ func (vue viewUserEvent) Encode() (map[string]interface{}, error) {
 	if len(vue.Tags) > 0 {
 		val["tags"] = vue.Tags
 	}
-	if vue.DomainID != "" {
-		val["domain"] = vue.DomainID
-	}
 	if vue.Email != "" {
 		val["email"] = vue.Email
 	}
@@ -267,9 +260,6 @@ func (vpe viewProfileEvent) Encode() (map[string]interface{}, error) {
 	if len(vpe.Tags) > 0 {
 		val["tags"] = vpe.Tags
 	}
-	if vpe.DomainID != "" {
-		val["domain"] = vpe.DomainID
-	}
 	if vpe.Credentials.UserName != "" {
 		val["user_name"] = vpe.Credentials.UserName
 	}
@@ -290,27 +280,6 @@ func (vpe viewProfileEvent) Encode() (map[string]interface{}, error) {
 	}
 	if vpe.Email != "" {
 		val["email"] = vpe.Email
-	}
-
-	return val, nil
-}
-
-type viewUserByUserNameEvent struct {
-	users.User
-}
-
-func (vue viewUserByUserNameEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
-		"operation": userView,
-		"user_name": vue.Credentials.UserName,
-	}
-
-	if vue.ID != "" {
-		val["id"] = vue.ID
-	}
-
-	if vue.Credentials.UserName != "" {
-		val["user_name"] = vue.Credentials.UserName
 	}
 
 	return val, nil
