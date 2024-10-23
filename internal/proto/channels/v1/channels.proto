@@ -1,0 +1,14 @@
+// Copyright (c) Abstract Machines
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+package channels.v1;
+option go_package = "github.com/absmach/magistrala/internal/grpc/channels/v1";
+
+import "common/v1/common.proto";
+
+service ThingsService {
+  rpc AddConnections(common.v1.AddConnectionsReq)returns(common.v1.AddConnectionsRes) {}
+  rpc RemoveConnections(common.v1.RemoveConnectionsReq)returns(common.v1.RemoveConnectionsRes) {}
+}

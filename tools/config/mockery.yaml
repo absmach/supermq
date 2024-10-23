@@ -6,23 +6,34 @@ filename: "{{.InterfaceName}}.go"
 outpkg: "mocks"
 boilerplate-file: "./tools/config/boilerplate.txt"
 packages:
-  github.com/absmach/magistrala:
+  github.com/absmach/magistrala/internal/grpc/things/v1:
     interfaces:
       ThingsServiceClient:
         config:
           dir: "./things/mocks"
           mockname: "ThingsServiceClient"
           filename: "things_client.go"
+  github.com/absmach/magistrala/internal/grpc/domains/v1:
+    interfaces:
       DomainsServiceClient:
         config:
           dir: "./domains/mocks"
           mockname: "DomainsServiceClient"
           filename: "domains_client.go"
+  github.com/absmach/magistrala/internal/grpc/token/v1:
+    interfaces:
       TokenServiceClient:
         config:
           dir: "./auth/mocks"
           mockname: "TokenServiceClient"
           filename: "token_client.go"
+  github.com/absmach/magistrala/internal/grpc/channels/v1:
+    interfaces:
+      TokenServiceClient:
+        config:
+          dir: "./channels/mocks"
+          mockname: "ChannelsServiceClient"
+          filename: "channels_client.go"
 
   github.com/absmach/magistrala/certs/pki/amcerts:
     interfaces:

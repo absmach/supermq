@@ -6,7 +6,7 @@ package api
 import (
 	"context"
 
-	"github.com/absmach/magistrala"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
 	"github.com/absmach/magistrala/pkg/errors"
@@ -15,7 +15,7 @@ import (
 	"github.com/go-kit/kit/endpoint"
 )
 
-func listMessagesEndpoint(svc readers.MessageRepository, authz mgauthz.Authorization, thingsClient magistrala.ThingsServiceClient) endpoint.Endpoint {
+func listMessagesEndpoint(svc readers.MessageRepository, authz mgauthz.Authorization, thingsClient grpcThingsV1.ThingsServiceClient) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listMessagesReq)
 		if err := req.validate(); err != nil {

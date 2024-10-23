@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/absmach/magistrala"
 	authmocks "github.com/absmach/magistrala/auth/mocks"
+	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
 	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/invitations"
 	"github.com/absmach/magistrala/invitations/mocks"
@@ -108,7 +108,7 @@ func TestSendInvitation(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repocall1 := token.On("Issue", context.Background(), mock.Anything).Return(&magistrala.Token{AccessToken: tc.req.Token}, tc.issueErr)
+		repocall1 := token.On("Issue", context.Background(), mock.Anything).Return(&grpcTokenV1.Token{AccessToken: tc.req.Token}, tc.issueErr)
 		repocall2 := repo.On("Create", context.Background(), mock.Anything).Return(tc.repoErr)
 		if tc.req.Resend {
 			repocall2 = repo.On("UpdateToken", context.Background(), mock.Anything).Return(tc.repoErr)

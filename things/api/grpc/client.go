@@ -8,7 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/absmach/magistrala"
+	grpcCommonV1 "github.com/absmach/magistrala/internal/grpc/common/v1"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/things"
@@ -19,21 +20,21 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const svcName = "magistrala.ThingsService"
+const svcName = "things.v1.ThingsService"
 
-var _ magistrala.ThingsServiceClient = (*grpcClient)(nil)
+var _ grpcThingsV1.ThingsServiceClient = (*grpcClient)(nil)
 
 type grpcClient struct {
-	timeout           time.Duration
-	authorize         endpoint.Endpoint
-	getEntityBasic    endpoint.Endpoint
-	getEntitiesBasic  endpoint.Endpoint
-	addConnections    endpoint.Endpoint
-	removeConnections endpoint.Endpoint
+	timeout             time.Duration
+	authorize           endpoint.Endpoint
+	RetrieveEntityEP    endpoint.Endpoint
+	RetrieveEntitiesEP  endpoint.Endpoint
+	AddConnectionsEP    endpoint.Endpoint
+	RemoveConnectionsEP endpoint.Endpoint
 }
 
 // NewClient returns new gRPC client instance.
-func NewClient(conn *grpc.ClientConn, timeout time.Duration) magistrala.ThingsServiceClient {
+func NewClient(conn *grpc.ClientConn, timeout time.Duration) grpcThingsV1.ThingsServiceClient {
 	return &grpcClient{
 		authorize: kitgrpc.NewClient(
 			conn,
@@ -41,182 +42,143 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) magistrala.ThingsSe
 			"Authorize",
 			encodeAuthorizeRequest,
 			decodeAuthorizeResponse,
-			magistrala.ThingsAuthzRes{},
+			grpcThingsV1.AuthzRes{},
 		).Endpoint(),
 
-		getEntityBasic: kitgrpc.NewClient(
+		RetrieveEntityEP: kitgrpc.NewClient(
 			conn,
 			svcName,
-			"GetEntityBasic",
-			encodeGetEntityBasicRequest,
-			decodeGetEntityBasicResponse,
-			magistrala.EntityBasic{},
+			"RetrieveEntity",
+			encodeRetrieveEntityRequest,
+			decodeRetrieveEntityResponse,
+			grpcCommonV1.RetrieveEntityRes{},
 		).Endpoint(),
 
-		getEntitiesBasic: kitgrpc.NewClient(
+		RetrieveEntitiesEP: kitgrpc.NewClient(
 			conn,
 			svcName,
-			"GetEntitiesBasic",
-			encodeGetEntitiesBasicRequest,
-			decodeGetEntitiesBasicResponse,
-			magistrala.EntitiesBasicRes{},
+			"RetrieveEntities",
+			encodeRetrieveEntitiesRequest,
+			decodeRetrieveEntitiesResponse,
+			grpcCommonV1.RetrieveEntitiesRes{},
 		).Endpoint(),
 
-		addConnections: kitgrpc.NewClient(
+		AddConnectionsEP: kitgrpc.NewClient(
 			conn,
 			svcName,
 			"AddConnections",
-			encodeConnectionsRequest,
-			decodeConnectionsResponse,
-			magistrala.ConnectionsRes{},
+			encodeAddConnectionsRequest,
+			decodeAddConnectionsResponse,
+			grpcCommonV1.AddConnectionsRes{},
 		).Endpoint(),
 
-		removeConnections: kitgrpc.NewClient(
+		RemoveConnectionsEP: kitgrpc.NewClient(
 			conn,
 			svcName,
 			"RemoveConnections",
-			encodeConnectionsRequest,
-			decodeConnectionsResponse,
-			magistrala.ConnectionsRes{},
+			encodeRemoveConnectionsRequest,
+			decodeRemoveConnectionsResponse,
+			grpcCommonV1.RemoveConnectionsRes{},
 		).Endpoint(),
 		timeout: timeout,
 	}
 }
 
-func (client grpcClient) Authorize(ctx context.Context, req *magistrala.ThingsAuthzReq, _ ...grpc.CallOption) (r *magistrala.ThingsAuthzRes, err error) {
+func (client grpcClient) Authorize(ctx context.Context, req *grpcThingsV1.AuthzReq, _ ...grpc.CallOption) (r *grpcThingsV1.AuthzRes, err error) {
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
 	res, err := client.authorize(ctx, things.AuthzReq{
-		ThingID:    req.GetThingID(),
+		ThingID:    req.GetThingId(),
 		ThingKey:   req.GetThingKey(),
-		ChannelID:  req.GetChannelID(),
+		ChannelID:  req.GetChannelId(),
 		Permission: req.GetPermission(),
 	})
 	if err != nil {
-		return &magistrala.ThingsAuthzRes{}, decodeError(err)
+		return &grpcThingsV1.AuthzRes{}, decodeError(err)
 	}
 
 	ar := res.(authorizeRes)
-	return &magistrala.ThingsAuthzRes{Authorized: ar.authorized, Id: ar.id}, nil
-}
-
-func (client grpcClient) GetEntityBasic(ctx context.Context, req *magistrala.EntityReq, _ ...grpc.CallOption) (r *magistrala.EntityBasic, err error) {
-	ctx, cancel := context.WithTimeout(ctx, client.timeout)
-	defer cancel()
-
-	res, err := client.getEntityBasic(ctx, req.GetId())
-	if err != nil {
-		return &magistrala.EntityBasic{}, decodeError(err)
-	}
-
-	thing := res.(thingBasic)
-
-	return &magistrala.EntityBasic{Id: thing.id, DomainId: thing.domain, Status: uint32(thing.status)}, nil
-}
-
-func (client grpcClient) GetEntitiesBasic(ctx context.Context, req *magistrala.EntitiesReq, _ ...grpc.CallOption) (r *magistrala.EntitiesBasicRes, err error) {
-	ctx, cancel := context.WithTimeout(ctx, client.timeout)
-	defer cancel()
-
-	res, err := client.getEntitiesBasic(ctx, req.GetIds())
-	if err != nil {
-		return &magistrala.EntitiesBasicRes{}, decodeError(err)
-	}
-
-	ep := res.(getEntitiesBasicRes)
-
-	entities := []*magistrala.EntityBasic{}
-	for _, thing := range ep.things {
-		entities = append(entities, &magistrala.EntityBasic{
-			Id:       thing.id,
-			DomainId: thing.domain,
-			Status:   uint32(thing.status),
-		})
-	}
-	return &magistrala.EntitiesBasicRes{Total: ep.total, Limit: ep.limit, Offset: ep.offset, Entities: entities}, nil
-}
-
-func (client grpcClient) AddConnections(ctx context.Context, req *magistrala.ConnectionsReq, _ ...grpc.CallOption) (r *magistrala.ConnectionsRes, err error) {
-	ctx, cancel := context.WithTimeout(ctx, client.timeout)
-	defer cancel()
-	conns := []things.Connection{}
-
-	for _, c := range req.Connections {
-		conns = append(conns, things.Connection{
-			ThingID:   c.GetThingId(),
-			ChannelID: c.GetChannelId(),
-			DomainID:  c.GetDomainId(),
-		})
-	}
-
-	res, err := client.addConnections(ctx, conns)
-	if err != nil {
-		return &magistrala.ConnectionsRes{}, decodeError(err)
-	}
-
-	cr := res.(connectionsRes)
-
-	return &magistrala.ConnectionsRes{Ok: cr.ok}, nil
-}
-
-func (client grpcClient) RemoveConnections(ctx context.Context, req *magistrala.ConnectionsReq, _ ...grpc.CallOption) (r *magistrala.ConnectionsRes, err error) {
-	ctx, cancel := context.WithTimeout(ctx, client.timeout)
-	defer cancel()
-	conns := []things.Connection{}
-
-	for _, c := range req.Connections {
-		conns = append(conns, things.Connection{
-			ThingID:   c.GetThingId(),
-			ChannelID: c.GetChannelId(),
-			DomainID:  c.GetDomainId(),
-		})
-	}
-
-	res, err := client.removeConnections(ctx, conns)
-	if err != nil {
-		return &magistrala.ConnectionsRes{}, decodeError(err)
-	}
-
-	cr := res.(connectionsRes)
-
-	return &magistrala.ConnectionsRes{Ok: cr.ok}, nil
-}
-
-func decodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
-	res := grpcRes.(*magistrala.ThingsAuthzRes)
-	return authorizeRes{authorized: res.Authorized, id: res.Id}, nil
+	return &grpcThingsV1.AuthzRes{Authorized: ar.authorized, Id: ar.id}, nil
 }
 
 func encodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(things.AuthzReq)
-	return &magistrala.ThingsAuthzReq{
-		ChannelID:  req.ChannelID,
-		ThingID:    req.ThingID,
+	return &grpcThingsV1.AuthzReq{
+		ChannelId:  req.ChannelID,
+		ThingId:    req.ThingID,
 		ThingKey:   req.ThingKey,
 		Permission: req.Permission,
 	}, nil
 }
 
-func decodeGetEntityBasicResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
-	res := grpcRes.(*magistrala.EntityBasic)
-
-	return thingBasic{
-		id:     res.GetId(),
-		domain: res.GetDomainId(),
-		status: uint8(res.GetStatus()),
-	}, nil
+func decodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(*grpcThingsV1.AuthzRes)
+	return authorizeRes{authorized: res.Authorized, id: res.Id}, nil
 }
 
-func encodeGetEntityBasicRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func (client grpcClient) RetrieveEntity(ctx context.Context, req *grpcCommonV1.RetrieveEntityReq, _ ...grpc.CallOption) (r *grpcCommonV1.RetrieveEntityRes, err error) {
+	ctx, cancel := context.WithTimeout(ctx, client.timeout)
+	defer cancel()
+
+	res, err := client.RetrieveEntityEP(ctx, req.GetId())
+	if err != nil {
+		return &grpcCommonV1.RetrieveEntityRes{}, decodeError(err)
+	}
+
+	ebr := res.(getEntityBasicRes)
+
+	return &grpcCommonV1.RetrieveEntityRes{Entity: &grpcCommonV1.EntityBasic{Id: ebr.id, DomainId: ebr.domain, Status: uint32(ebr.status)}}, nil
+}
+
+func encodeRetrieveEntityRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(string)
-	return &magistrala.EntityReq{
+	return &grpcCommonV1.RetrieveEntityReq{
 		Id: req,
 	}, nil
 }
 
-func decodeGetEntitiesBasicResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
-	res := grpcRes.(*magistrala.EntitiesBasicRes)
+func decodeRetrieveEntityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(*grpcCommonV1.RetrieveEntityRes)
+
+	return getEntityBasicRes{
+		id:     res.Entity.GetId(),
+		domain: res.Entity.GetDomainId(),
+		status: uint8(res.Entity.GetStatus()),
+	}, nil
+}
+
+func (client grpcClient) RetrieveEntities(ctx context.Context, req *grpcCommonV1.RetrieveEntitiesReq, _ ...grpc.CallOption) (r *grpcCommonV1.RetrieveEntitiesRes, err error) {
+	ctx, cancel := context.WithTimeout(ctx, client.timeout)
+	defer cancel()
+
+	res, err := client.RetrieveEntitiesEP(ctx, req.GetIds())
+	if err != nil {
+		return &grpcCommonV1.RetrieveEntitiesRes{}, decodeError(err)
+	}
+
+	ep := res.(getEntitiesBasicRes)
+
+	entities := []*grpcCommonV1.EntityBasic{}
+	for _, thing := range ep.things {
+		entities = append(entities, &grpcCommonV1.EntityBasic{
+			Id:       thing.id,
+			DomainId: thing.domain,
+			Status:   uint32(thing.status),
+		})
+	}
+	return &grpcCommonV1.RetrieveEntitiesRes{Total: ep.total, Limit: ep.limit, Offset: ep.offset, Entities: entities}, nil
+}
+
+func encodeRetrieveEntitiesRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.([]string)
+	return &grpcCommonV1.RetrieveEntitiesReq{
+		Ids: req,
+	}, nil
+}
+
+func decodeRetrieveEntitiesResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(*grpcCommonV1.RetrieveEntitiesRes)
 
 	ths := []thingBasic{}
 
@@ -230,35 +192,98 @@ func decodeGetEntitiesBasicResponse(_ context.Context, grpcRes interface{}) (int
 	return getEntitiesBasicRes{total: res.GetTotal(), limit: res.GetLimit(), offset: res.GetOffset(), things: ths}, nil
 }
 
-func encodeGetEntitiesBasicRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.([]string)
-	return &magistrala.EntitiesReq{
-		Ids: req,
-	}, nil
+func (client grpcClient) AddConnections(ctx context.Context, req *grpcCommonV1.AddConnectionsReq, _ ...grpc.CallOption) (r *grpcCommonV1.AddConnectionsRes, err error) {
+	ctx, cancel := context.WithTimeout(ctx, client.timeout)
+	defer cancel()
+
+	conns := []things.Connection{}
+	for _, c := range req.Connections {
+		conns = append(conns, things.Connection{
+			ThingID:   c.GetThingId(),
+			ChannelID: c.GetChannelId(),
+			DomainID:  c.GetDomainId(),
+		})
+	}
+
+	res, err := client.AddConnectionsEP(ctx, conns)
+	if err != nil {
+		return &grpcCommonV1.AddConnectionsRes{}, decodeError(err)
+	}
+
+	cr := res.(connectionsRes)
+
+	return &grpcCommonV1.AddConnectionsRes{Ok: cr.ok}, nil
 }
 
-func decodeConnectionsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
-	res := grpcRes.(*magistrala.ConnectionsRes)
-
-	return connectionsRes{ok: res.GetOk()}, nil
-}
-
-func encodeConnectionsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func encodeAddConnectionsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.([]things.Connection)
 
-	conns := []*magistrala.Connection{}
+	conns := []*grpcCommonV1.Connection{}
 
 	for _, r := range req {
-		conns = append(conns, &magistrala.Connection{
+		conns = append(conns, &grpcCommonV1.Connection{
 			ThingId:   r.ThingID,
 			ChannelId: r.ChannelID,
 			DomainId:  r.DomainID,
 		})
 	}
-	return &magistrala.ConnectionsReq{
+	return &grpcCommonV1.AddConnectionsReq{
 		Connections: conns,
 	}, nil
 }
+
+func decodeAddConnectionsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(*grpcCommonV1.AddConnectionsRes)
+
+	return connectionsRes{ok: res.GetOk()}, nil
+}
+
+func (client grpcClient) RemoveConnections(ctx context.Context, req *grpcCommonV1.RemoveConnectionsReq, _ ...grpc.CallOption) (r *grpcCommonV1.RemoveConnectionsRes, err error) {
+	ctx, cancel := context.WithTimeout(ctx, client.timeout)
+	defer cancel()
+
+	conns := []things.Connection{}
+	for _, c := range req.Connections {
+		conns = append(conns, things.Connection{
+			ThingID:   c.GetThingId(),
+			ChannelID: c.GetChannelId(),
+			DomainID:  c.GetDomainId(),
+		})
+	}
+
+	res, err := client.RemoveConnectionsEP(ctx, conns)
+	if err != nil {
+		return &grpcCommonV1.RemoveConnectionsRes{}, decodeError(err)
+	}
+
+	cr := res.(connectionsRes)
+
+	return &grpcCommonV1.RemoveConnectionsRes{Ok: cr.ok}, nil
+}
+
+func encodeRemoveConnectionsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.([]things.Connection)
+
+	conns := []*grpcCommonV1.Connection{}
+
+	for _, r := range req {
+		conns = append(conns, &grpcCommonV1.Connection{
+			ThingId:   r.ThingID,
+			ChannelId: r.ChannelID,
+			DomainId:  r.DomainID,
+		})
+	}
+	return &grpcCommonV1.RemoveConnectionsReq{
+		Connections: conns,
+	}, nil
+}
+
+func decodeRemoveConnectionsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(*grpcCommonV1.RemoveConnectionsRes)
+
+	return connectionsRes{ok: res.GetOk()}, nil
+}
+
 func decodeError(err error) error {
 	if st, ok := status.FromError(err); ok {
 		switch st.Code() {

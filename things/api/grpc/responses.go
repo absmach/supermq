@@ -3,6 +3,12 @@
 
 package grpc
 
+type thingBasic struct {
+	id     string
+	domain string
+	status uint8
+}
+
 type authorizeRes struct {
 	id         string
 	authorized bool
@@ -15,11 +21,7 @@ type getEntitiesBasicRes struct {
 	things []thingBasic
 }
 
-type thingBasic struct {
-	id     string
-	domain string
-	status uint8
-}
+type getEntityBasicRes thingBasic
 
 type connectionsReq struct {
 	connections []connection

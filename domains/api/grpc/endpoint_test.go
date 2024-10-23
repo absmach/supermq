@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/domains"
 	grpcapi "github.com/absmach/magistrala/domains/api/grpc"
+	grpcDomainsV1 "github.com/absmach/magistrala/internal/grpc/domains/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -47,7 +47,7 @@ var authAddr = fmt.Sprintf("localhost:%d", port)
 func startGRPCServer(svc domains.Service, port int) *grpc.Server {
 	listener, _ := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	server := grpc.NewServer()
-	magistrala.RegisterDomainsServiceServer(server, grpcapi.NewDomainsServer(svc))
+	grpcDomainsV1.RegisterDomainsServiceServer(server, grpcapi.NewDomainsServer(svc))
 	go func() {
 		err := server.Serve(listener)
 		assert.Nil(&testing.T{}, err, fmt.Sprintf(`"Unexpected error creating auth server %s"`, err))
@@ -64,33 +64,33 @@ func TestDeleteUserFromDomains(t *testing.T) {
 	cases := []struct {
 		desc          string
 		token         string
-		deleteUserReq *magistrala.DeleteUserReq
-		deleteUserRes *magistrala.DeleteUserRes
+		deleteUserReq *grpcDomainsV1.DeleteUserReq
+		deleteUserRes *grpcDomainsV1.DeleteUserRes
 		err           error
 	}{
 		{
 			desc:  "delete valid req",
 			token: validToken,
-			deleteUserReq: &magistrala.DeleteUserReq{
+			deleteUserReq: &grpcDomainsV1.DeleteUserReq{
 				Id: id,
 			},
-			deleteUserRes: &magistrala.DeleteUserRes{Deleted: true},
+			deleteUserRes: &grpcDomainsV1.DeleteUserRes{Deleted: true},
 			err:           nil,
 		},
 		{
 			desc:          "delete invalid req with invalid token",
 			token:         inValidToken,
-			deleteUserReq: &magistrala.DeleteUserReq{},
-			deleteUserRes: &magistrala.DeleteUserRes{Deleted: false},
+			deleteUserReq: &grpcDomainsV1.DeleteUserReq{},
+			deleteUserRes: &grpcDomainsV1.DeleteUserRes{Deleted: false},
 			err:           apiutil.ErrMissingID,
 		},
 		{
 			desc:  "delete invalid req with invalid token",
 			token: inValidToken,
-			deleteUserReq: &magistrala.DeleteUserReq{
+			deleteUserReq: &grpcDomainsV1.DeleteUserReq{
 				Id: id,
 			},
-			deleteUserRes: &magistrala.DeleteUserRes{Deleted: false},
+			deleteUserRes: &grpcDomainsV1.DeleteUserRes{Deleted: false},
 			err:           apiutil.ErrMissingPolicyEntityType,
 		},
 	}

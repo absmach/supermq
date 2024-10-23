@@ -14,7 +14,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/absmach/magistrala"
+	grpcDomainsV1 "github.com/absmach/magistrala/internal/grpc/domains/v1"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/policies"
@@ -25,14 +25,14 @@ const defLimit = uint64(100)
 
 type handler struct {
 	clients       postgres.Repository
-	domains       magistrala.DomainsServiceClient
+	domains       grpcDomainsV1.DomainsServiceClient
 	policies      policies.Service
 	checkInterval time.Duration
 	deleteAfter   time.Duration
 	logger        *slog.Logger
 }
 
-func NewDeleteHandler(ctx context.Context, clients postgres.Repository, policyService policies.Service, domainsClient magistrala.DomainsServiceClient, defCheckInterval, deleteAfter time.Duration, logger *slog.Logger) {
+func NewDeleteHandler(ctx context.Context, clients postgres.Repository, policyService policies.Service, domainsClient grpcDomainsV1.DomainsServiceClient, defCheckInterval, deleteAfter time.Duration, logger *slog.Logger) {
 	handler := &handler{
 		clients:       clients,
 		domains:       domainsClient,
@@ -75,7 +75,7 @@ func (h *handler) handle(ctx context.Context) {
 				continue
 			}
 
-			deletedRes, err := h.domains.DeleteUserFromDomains(ctx, &magistrala.DeleteUserReq{
+			deletedRes, err := h.domains.DeleteUserFromDomains(ctx, &grpcDomainsV1.DeleteUserReq{
 				Id: u.ID,
 			})
 			if err != nil {

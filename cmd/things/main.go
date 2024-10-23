@@ -16,6 +16,7 @@ import (
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/magistrala"
 	redisclient "github.com/absmach/magistrala/internal/clients/redis"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	authsvcAuthn "github.com/absmach/magistrala/pkg/authn/authsvc"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
@@ -208,7 +209,7 @@ func main() {
 	}
 	registerThingsServer := func(srv *grpc.Server) {
 		reflection.Register(srv)
-		magistrala.RegisterThingsServiceServer(srv, grpcapi.NewServer(svc))
+		grpcThingsV1.RegisterThingsServiceServer(srv, grpcapi.NewServer(svc))
 	}
 	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerThingsServer, logger)
 

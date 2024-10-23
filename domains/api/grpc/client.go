@@ -7,16 +7,16 @@ import (
 	"context"
 	"time"
 
-	"github.com/absmach/magistrala"
 	grpcapi "github.com/absmach/magistrala/auth/api/grpc"
+	grpcDomainsV1 "github.com/absmach/magistrala/internal/grpc/domains/v1"
 	"github.com/go-kit/kit/endpoint"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc"
 )
 
-const domainsSvcName = "magistrala.DomainsService"
+const domainsSvcName = "domains.v1.DomainsService"
 
-var _ magistrala.DomainsServiceClient = (*domainsGrpcClient)(nil)
+var _ grpcDomainsV1.DomainsServiceClient = (*domainsGrpcClient)(nil)
 
 type domainsGrpcClient struct {
 	deleteUserFromDomains endpoint.Endpoint
@@ -24,7 +24,7 @@ type domainsGrpcClient struct {
 }
 
 // NewDomainsClient returns new domains gRPC client instance.
-func NewDomainsClient(conn *grpc.ClientConn, timeout time.Duration) magistrala.DomainsServiceClient {
+func NewDomainsClient(conn *grpc.ClientConn, timeout time.Duration) grpcDomainsV1.DomainsServiceClient {
 	return &domainsGrpcClient{
 		deleteUserFromDomains: kitgrpc.NewClient(
 			conn,
@@ -32,14 +32,14 @@ func NewDomainsClient(conn *grpc.ClientConn, timeout time.Duration) magistrala.D
 			"DeleteUserFromDomains",
 			encodeDeleteUserRequest,
 			decodeDeleteUserResponse,
-			magistrala.DeleteUserRes{},
+			grpcDomainsV1.DeleteUserRes{},
 		).Endpoint(),
 
 		timeout: timeout,
 	}
 }
 
-func (client domainsGrpcClient) DeleteUserFromDomains(ctx context.Context, in *magistrala.DeleteUserReq, opts ...grpc.CallOption) (*magistrala.DeleteUserRes, error) {
+func (client domainsGrpcClient) DeleteUserFromDomains(ctx context.Context, in *grpcDomainsV1.DeleteUserReq, opts ...grpc.CallOption) (*grpcDomainsV1.DeleteUserRes, error) {
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
@@ -47,21 +47,21 @@ func (client domainsGrpcClient) DeleteUserFromDomains(ctx context.Context, in *m
 		ID: in.GetId(),
 	})
 	if err != nil {
-		return &magistrala.DeleteUserRes{}, grpcapi.DecodeError(err)
+		return &grpcDomainsV1.DeleteUserRes{}, grpcapi.DecodeError(err)
 	}
 
 	dpr := res.(deleteUserRes)
-	return &magistrala.DeleteUserRes{Deleted: dpr.deleted}, nil
+	return &grpcDomainsV1.DeleteUserRes{Deleted: dpr.deleted}, nil
 }
 
 func decodeDeleteUserResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
-	res := grpcRes.(*magistrala.DeleteUserRes)
+	res := grpcRes.(*grpcDomainsV1.DeleteUserRes)
 	return deleteUserRes{deleted: res.GetDeleted()}, nil
 }
 
 func encodeDeleteUserRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(deleteUserPoliciesReq)
-	return &magistrala.DeleteUserReq{
+	return &grpcDomainsV1.DeleteUserReq{
 		Id: req.ID,
 	}, nil
 }

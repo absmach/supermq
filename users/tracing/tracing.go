@@ -6,7 +6,7 @@ package tracing
 import (
 	"context"
 
-	"github.com/absmach/magistrala"
+	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
 	"github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/users"
@@ -35,7 +35,7 @@ func (tm *tracingMiddleware) RegisterClient(ctx context.Context, session authn.S
 }
 
 // IssueToken traces the "IssueToken" operation of the wrapped clients.Service.
-func (tm *tracingMiddleware) IssueToken(ctx context.Context, identity, secret, domainID string) (*magistrala.Token, error) {
+func (tm *tracingMiddleware) IssueToken(ctx context.Context, identity, secret, domainID string) (*grpcTokenV1.Token, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_issue_token", trace.WithAttributes(attribute.String("identity", identity)))
 	defer span.End()
 
@@ -43,7 +43,7 @@ func (tm *tracingMiddleware) IssueToken(ctx context.Context, identity, secret, d
 }
 
 // RefreshToken traces the "RefreshToken" operation of the wrapped clients.Service.
-func (tm *tracingMiddleware) RefreshToken(ctx context.Context, session authn.Session, refreshToken, domainID string) (*magistrala.Token, error) {
+func (tm *tracingMiddleware) RefreshToken(ctx context.Context, session authn.Session, refreshToken, domainID string) (*grpcTokenV1.Token, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_refresh_token", trace.WithAttributes(attribute.String("refresh_token", refreshToken)))
 	defer span.End()
 

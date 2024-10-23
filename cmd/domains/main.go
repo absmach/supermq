@@ -22,6 +22,7 @@ import (
 	dmw "github.com/absmach/magistrala/domains/middleware"
 	dpostgres "github.com/absmach/magistrala/domains/postgres"
 	dtracing "github.com/absmach/magistrala/domains/tracing"
+	grpcDomainsV1 "github.com/absmach/magistrala/internal/grpc/domains/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	authsvcAuthn "github.com/absmach/magistrala/pkg/authn/authsvc"
 	"github.com/absmach/magistrala/pkg/authz"
@@ -181,7 +182,7 @@ func main() {
 	}
 	registerDomainsServiceServer := func(srv *grpc.Server) {
 		reflection.Register(srv)
-		magistrala.RegisterDomainsServiceServer(srv, domainsgrpcapi.NewDomainsServer(svc))
+		grpcDomainsV1.RegisterDomainsServiceServer(srv, domainsgrpcapi.NewDomainsServer(svc))
 	}
 
 	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerDomainsServiceServer, logger)

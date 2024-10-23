@@ -22,6 +22,8 @@ import (
 	"github.com/absmach/magistrala/auth/jwt"
 	apostgres "github.com/absmach/magistrala/auth/postgres"
 	"github.com/absmach/magistrala/auth/tracing"
+	grpcAuthV1 "github.com/absmach/magistrala/internal/grpc/auth/v1"
+	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/jaeger"
 	"github.com/absmach/magistrala/pkg/policies/spicedb"
@@ -139,8 +141,8 @@ func main() {
 	}
 	registerAuthServiceServer := func(srv *grpc.Server) {
 		reflection.Register(srv)
-		magistrala.RegisterTokenServiceServer(srv, tokengrpcapi.NewTokenServer(svc))
-		magistrala.RegisterAuthServiceServer(srv, authgrpcapi.NewAuthServer(svc))
+		grpcTokenV1.RegisterTokenServiceServer(srv, tokengrpcapi.NewTokenServer(svc))
+		grpcAuthV1.RegisterAuthServiceServer(srv, authgrpcapi.NewAuthServer(svc))
 	}
 
 	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerAuthServiceServer, logger)

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/absmach/magistrala"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/policies"
@@ -39,7 +39,7 @@ func startGRPCServer(svc *mocks.Service, port int) {
 		panic(fmt.Sprintf("failed to obtain port: %s", err))
 	}
 	server := grpc.NewServer()
-	magistrala.RegisterThingsServiceServer(server, grpcapi.NewServer(svc))
+	grpcThingsV1.RegisterThingsServiceServer(server, grpcapi.NewServer(svc))
 	go func() {
 		if err := server.Serve(listener); err != nil {
 			panic(fmt.Sprintf("failed to serve: %s", err))
@@ -56,8 +56,8 @@ func TestAuthorize(t *testing.T) {
 
 	cases := []struct {
 		desc         string
-		req          *magistrala.ThingsAuthzReq
-		res          *magistrala.ThingsAuthzRes
+		req          *grpcThingsV1.AuthzReq
+		res          *grpcThingsV1.AuthzRes
 		thingID      string
 		identifyKey  string
 		authorizeReq things.AuthzReq
@@ -70,9 +70,9 @@ func TestAuthorize(t *testing.T) {
 		{
 			desc:    "authorize successfully",
 			thingID: thingID,
-			req: &magistrala.ThingsAuthzReq{
+			req: &grpcThingsV1.AuthzReq{
 				ThingKey:   thingKey,
-				ChannelID:  channelID,
+				ChannelId:  channelID,
 				Permission: policies.PublishPermission,
 			},
 			authorizeReq: things.AuthzReq{
@@ -82,14 +82,14 @@ func TestAuthorize(t *testing.T) {
 			},
 			authorizeRes: thingID,
 			identifyKey:  thingKey,
-			res:          &magistrala.ThingsAuthzRes{Authorized: true, Id: thingID},
+			res:          &grpcThingsV1.AuthzRes{Authorized: true, Id: thingID},
 			err:          nil,
 		},
 		{
 			desc: "authorize with invalid key",
-			req: &magistrala.ThingsAuthzReq{
+			req: &grpcThingsV1.AuthzReq{
 				ThingKey:   invalid,
-				ChannelID:  channelID,
+				ChannelId:  channelID,
 				Permission: policies.PublishPermission,
 			},
 			authorizeReq: things.AuthzReq{
@@ -100,15 +100,15 @@ func TestAuthorize(t *testing.T) {
 			authorizeErr: svcerr.ErrAuthentication,
 			identifyKey:  invalid,
 			identifyErr:  svcerr.ErrAuthentication,
-			res:          &magistrala.ThingsAuthzRes{},
+			res:          &grpcThingsV1.AuthzRes{},
 			err:          svcerr.ErrAuthentication,
 		},
 		{
 			desc:    "authorize with failed authorization",
 			thingID: thingID,
-			req: &magistrala.ThingsAuthzReq{
+			req: &grpcThingsV1.AuthzReq{
 				ThingKey:   thingKey,
-				ChannelID:  channelID,
+				ChannelId:  channelID,
 				Permission: policies.PublishPermission,
 			},
 			authorizeReq: things.AuthzReq{
@@ -118,16 +118,16 @@ func TestAuthorize(t *testing.T) {
 			},
 			authorizeErr: svcerr.ErrAuthorization,
 			identifyKey:  thingKey,
-			res:          &magistrala.ThingsAuthzRes{Authorized: false},
+			res:          &grpcThingsV1.AuthzRes{Authorized: false},
 			err:          svcerr.ErrAuthorization,
 		},
 
 		{
 			desc:    "authorize with invalid permission",
 			thingID: thingID,
-			req: &magistrala.ThingsAuthzReq{
+			req: &grpcThingsV1.AuthzReq{
 				ThingKey:   thingKey,
-				ChannelID:  channelID,
+				ChannelId:  channelID,
 				Permission: invalid,
 			},
 			authorizeReq: things.AuthzReq{
@@ -137,15 +137,15 @@ func TestAuthorize(t *testing.T) {
 			},
 			identifyKey:  thingKey,
 			authorizeErr: svcerr.ErrAuthorization,
-			res:          &magistrala.ThingsAuthzRes{Authorized: false},
+			res:          &grpcThingsV1.AuthzRes{Authorized: false},
 			err:          svcerr.ErrAuthorization,
 		},
 		{
 			desc:    "authorize with invalid channel ID",
 			thingID: thingID,
-			req: &magistrala.ThingsAuthzReq{
+			req: &grpcThingsV1.AuthzReq{
 				ThingKey:   thingKey,
-				ChannelID:  invalid,
+				ChannelId:  invalid,
 				Permission: policies.PublishPermission,
 			},
 			authorizeReq: things.AuthzReq{
@@ -155,15 +155,15 @@ func TestAuthorize(t *testing.T) {
 			},
 			identifyKey:  thingKey,
 			authorizeErr: svcerr.ErrAuthorization,
-			res:          &magistrala.ThingsAuthzRes{Authorized: false},
+			res:          &grpcThingsV1.AuthzRes{Authorized: false},
 			err:          svcerr.ErrAuthorization,
 		},
 		{
 			desc:    "authorize with empty channel ID",
 			thingID: thingID,
-			req: &magistrala.ThingsAuthzReq{
+			req: &grpcThingsV1.AuthzReq{
 				ThingKey:   thingKey,
-				ChannelID:  "",
+				ChannelId:  "",
 				Permission: policies.PublishPermission,
 			},
 			authorizeReq: things.AuthzReq{
@@ -173,15 +173,15 @@ func TestAuthorize(t *testing.T) {
 			},
 			authorizeErr: svcerr.ErrAuthorization,
 			identifyKey:  thingKey,
-			res:          &magistrala.ThingsAuthzRes{Authorized: false},
+			res:          &grpcThingsV1.AuthzRes{Authorized: false},
 			err:          svcerr.ErrAuthorization,
 		},
 		{
 			desc:    "authorize with empty permission",
 			thingID: thingID,
-			req: &magistrala.ThingsAuthzReq{
+			req: &grpcThingsV1.AuthzReq{
 				ThingKey:   thingKey,
-				ChannelID:  channelID,
+				ChannelId:  channelID,
 				Permission: "",
 			},
 			authorizeReq: things.AuthzReq{
@@ -191,7 +191,7 @@ func TestAuthorize(t *testing.T) {
 			},
 			identifyKey:  thingKey,
 			authorizeErr: svcerr.ErrAuthorization,
-			res:          &magistrala.ThingsAuthzRes{Authorized: false},
+			res:          &grpcThingsV1.AuthzRes{Authorized: false},
 			err:          svcerr.ErrAuthorization,
 		},
 	}
