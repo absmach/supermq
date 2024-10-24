@@ -41,6 +41,7 @@ import (
 	"github.com/absmach/magistrala/things/events"
 	"github.com/absmach/magistrala/things/middleware"
 	"github.com/absmach/magistrala/things/postgres"
+	pThings "github.com/absmach/magistrala/things/private"
 	"github.com/absmach/magistrala/things/tracing"
 	"github.com/authzed/authzed-go/v1"
 	"github.com/authzed/grpcutil"
@@ -202,7 +203,7 @@ func main() {
 	logger.Info("Channels gRPC client successfully connected to channels gRPC server " + channelsClient.Secure())
 	defer channelsClient.Close()
 
-	svc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cacheclient, cfg.CacheKeyDuration, cfg.ESURL, channelsgRPC, tracer, logger)
+	svc, psvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cacheclient, cfg.CacheKeyDuration, cfg.ESURL, channelsgRPC, tracer, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
 		exitCode = 1
@@ -224,9 +225,10 @@ func main() {
 		exitCode = 1
 		return
 	}
+
 	registerThingsServer := func(srv *grpc.Server) {
 		reflection.Register(srv)
-		grpcThingsV1.RegisterThingsServiceServer(srv, grpcapi.NewServer(svc))
+		grpcThingsV1.RegisterThingsServiceServer(srv, grpcapi.NewServer(psvc))
 	}
 	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerThingsServer, logger)
 
@@ -253,27 +255,27 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, keyDuration time.Duration, esURL string, channels grpcChannelsV1.ChannelsServiceClient, tracer trace.Tracer, logger *slog.Logger) (things.Service, error) {
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, keyDuration time.Duration, esURL string, channels grpcChannelsV1.ChannelsServiceClient, tracer trace.Tracer, logger *slog.Logger) (things.Service, pThings.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	repo := postgres.NewRepository(database)
 
 	idp := uuid.New()
 	sidp, err := sid.New()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Things service
 	cache := cache.NewCache(cacheClient, keyDuration)
 
-	tsvc, err := things.NewService(repo, ps, pe, cache, channels, idp, sidp)
+	tsvc, err := things.NewService(repo, ps, cache, channels, idp, sidp)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	tsvc, err = events.NewEventStoreMiddleware(ctx, tsvc, esURL)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	tsvc = tracing.New(tsvc, tracer)
@@ -284,10 +286,12 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 
 	tsvc, err = middleware.AuthorizationMiddleware(policies.ThingType, tsvc, authz, things.NewOperationPermissionMap(), things.NewRolesOperationPermissionMap())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return tsvc, err
+	isvc := pThings.New(repo, cache, pe)
+
+	return tsvc, isvc, err
 }
 
 func newSpiceDBPolicyServiceEvaluator(cfg config, logger *slog.Logger) (policies.Evaluator, policies.Service, error) {

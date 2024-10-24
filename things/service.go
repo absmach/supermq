@@ -26,14 +26,13 @@ type service struct {
 	repo       Repository
 	policy     policies.Service
 	channels   grpcChannelsV1.ChannelsServiceClient
-	evaluator  policies.Evaluator
 	cache      Cache
 	idProvider magistrala.IDProvider
 	roles.ProvisionManageService
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(repo Repository, policy policies.Service, evaluator policies.Evaluator, cache Cache, channels grpcChannelsV1.ChannelsServiceClient, idProvider magistrala.IDProvider, sIDProvider magistrala.IDProvider) (Service, error) {
+func NewService(repo Repository, policy policies.Service, cache Cache, channels grpcChannelsV1.ChannelsServiceClient, idProvider magistrala.IDProvider, sIDProvider magistrala.IDProvider) (Service, error) {
 	rpms, err := roles.NewProvisionManageService(policies.ThingType, repo, policy, sIDProvider, AvailableActions(), BuiltInRoles())
 	if err != nil {
 		return service{}, err
@@ -41,36 +40,12 @@ func NewService(repo Repository, policy policies.Service, evaluator policies.Eva
 	return service{
 		repo:                   repo,
 		policy:                 policy,
-		evaluator:              evaluator,
 		cache:                  cache,
 		channels:               channels,
 		idProvider:             idProvider,
 		ProvisionManageService: rpms,
 	}, nil
 }
-
-func (svc service) Authorize(ctx context.Context, req AuthzReq) (string, error) {
-	thingID, err := svc.Identify(ctx, req.ThingKey)
-	if err != nil {
-		return "", err
-	}
-
-	r := policies.Policy{
-		SubjectType: policies.GroupType,
-		Subject:     req.ChannelID,
-		ObjectType:  policies.ThingType,
-		Object:      thingID,
-		Permission:  req.Permission,
-	}
-	err = svc.evaluator.CheckPolicy(ctx, r)
-	if err != nil {
-		return "", errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-
-	return thingID, nil
-}
-
-// Things service
 
 func (svc service) CreateThings(ctx context.Context, session authn.Session, cls ...mgclients.Client) (retThings []mgclients.Client, retErr error) {
 	var clients []mgclients.Client
@@ -402,41 +377,4 @@ func (svc service) changeClientStatus(ctx context.Context, session authn.Session
 		return mgclients.Client{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	return client, nil
-}
-
-func (svc service) Identify(ctx context.Context, key string) (string, error) {
-	id, err := svc.cache.ID(ctx, key)
-	if err == nil {
-		return id, nil
-	}
-
-	client, err := svc.repo.RetrieveBySecret(ctx, key)
-	if err != nil {
-		return "", errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-	if err := svc.cache.Save(ctx, key, client.ID); err != nil {
-		return "", errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-
-	return client.ID, nil
-}
-
-func (svc service) RetrieveById(ctx context.Context, ids string) (mgclients.Client, error) {
-	return svc.repo.RetrieveByID(ctx, ids)
-}
-
-func (svc service) RetrieveByIds(ctx context.Context, ids []string) (mgclients.ClientsPage, error) {
-	return svc.repo.RetrieveByIds(ctx, ids)
-}
-
-func (svc service) AddConnections(ctx context.Context, conns []Connection) (err error) {
-	return svc.repo.AddConnections(ctx, conns)
-}
-
-func (svc service) RemoveConnections(ctx context.Context, conns []Connection) (err error) {
-	return svc.repo.RemoveConnections(ctx, conns)
-}
-
-func (svc service) RemoveChannelConnections(ctx context.Context, channelID string) error {
-	return svc.repo.RemoveChannelConnections(ctx, channelID)
 }

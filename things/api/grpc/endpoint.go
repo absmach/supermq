@@ -7,10 +7,11 @@ import (
 	"context"
 
 	"github.com/absmach/magistrala/things"
+	pThings "github.com/absmach/magistrala/things/private"
 	"github.com/go-kit/kit/endpoint"
 )
 
-func authorizeEndpoint(svc things.Service) endpoint.Endpoint {
+func authorizeEndpoint(svc pThings.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(authorizeReq)
 
@@ -30,7 +31,7 @@ func authorizeEndpoint(svc things.Service) endpoint.Endpoint {
 	}
 }
 
-func retrieveEntityEndpoint(svc things.Service) endpoint.Endpoint {
+func retrieveEntityEndpoint(svc pThings.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 
 		req := request.(retrieveEntityReq)
@@ -44,7 +45,7 @@ func retrieveEntityEndpoint(svc things.Service) endpoint.Endpoint {
 
 	}
 }
-func retrieveEntitiesEndpoint(svc things.Service) endpoint.Endpoint {
+func retrieveEntitiesEndpoint(svc pThings.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 
 		req := request.(retrieveEntitiesReq)
@@ -67,7 +68,7 @@ func retrieveEntitiesEndpoint(svc things.Service) endpoint.Endpoint {
 	}
 }
 
-func addConnectionsEndpoint(svc things.Service) endpoint.Endpoint {
+func addConnectionsEndpoint(svc pThings.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 
 		req := request.(connectionsReq)
@@ -90,7 +91,7 @@ func addConnectionsEndpoint(svc things.Service) endpoint.Endpoint {
 	}
 }
 
-func removeConnectionsEndpoint(svc things.Service) endpoint.Endpoint {
+func removeConnectionsEndpoint(svc pThings.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 
 		req := request.(connectionsReq)
@@ -112,7 +113,7 @@ func removeConnectionsEndpoint(svc things.Service) endpoint.Endpoint {
 
 	}
 }
-func removeChannelConnectionsEndpoint(svc things.Service) endpoint.Endpoint {
+func removeChannelConnectionsEndpoint(svc pThings.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(removeChannelConnectionsReq)
 

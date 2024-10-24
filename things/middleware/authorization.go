@@ -10,7 +10,6 @@ import (
 	"github.com/absmach/magistrala/pkg/authz"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
 	"github.com/absmach/magistrala/pkg/clients"
-	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/policies"
 	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
 	"github.com/absmach/magistrala/pkg/svcutil"
@@ -151,14 +150,6 @@ func (am *authorizationMiddleware) DisableClient(ctx context.Context, session au
 	return am.svc.DisableClient(ctx, session, id)
 }
 
-func (am *authorizationMiddleware) Identify(ctx context.Context, key string) (string, error) {
-	return am.svc.Identify(ctx, key)
-}
-
-func (am *authorizationMiddleware) Authorize(ctx context.Context, req things.AuthzReq) (string, error) {
-	return am.svc.Authorize(ctx, req)
-}
-
 func (am *authorizationMiddleware) DeleteClient(ctx context.Context, session authn.Session, id string) error {
 	if err := am.authorize(ctx, things.OpDeleteThing, authz.PolicyReq{
 		Domain:      session.DomainID,
@@ -199,22 +190,4 @@ func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, userID s
 		return err
 	}
 	return nil
-}
-
-func (am *authorizationMiddleware) RetrieveById(ctx context.Context, id string) (mgclients.Client, error) {
-	return am.svc.RetrieveById(ctx, id)
-}
-
-func (am *authorizationMiddleware) RetrieveByIds(ctx context.Context, ids []string) (mgclients.ClientsPage, error) {
-	return am.svc.RetrieveByIds(ctx, ids)
-}
-
-func (am *authorizationMiddleware) AddConnections(ctx context.Context, conns []things.Connection) (err error) {
-	return am.svc.AddConnections(ctx, conns)
-}
-func (am *authorizationMiddleware) RemoveConnections(ctx context.Context, conns []things.Connection) (err error) {
-	return am.svc.RemoveConnections(ctx, conns)
-}
-func (am *authorizationMiddleware) RemoveChannelConnections(ctx context.Context, channelID string) error {
-	return am.svc.RemoveChannelConnections(ctx, channelID)
 }

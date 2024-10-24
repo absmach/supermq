@@ -20,12 +20,6 @@ type AuthzReq struct {
 	Permission string
 }
 
-type Connection struct {
-	ThingID   string `json:"thing_id"`
-	ChannelID string `json:"channel_id"`
-	DomainID  string `json:"domain_id"`
-}
-
 // Service specifies an API that must be fullfiled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 //
@@ -59,26 +53,9 @@ type Service interface {
 	// DeleteClient deletes client with given ID.
 	DeleteClient(ctx context.Context, session authn.Session, id string) error
 
-	// Identify returns thing ID for given thing key.
-	Identify(ctx context.Context, key string) (string, error)
-
-	// Authorize used for Things authorization.
-	Authorize(ctx context.Context, req AuthzReq) (string, error)
-
 	// SetParentGroup(ctx context.Context, token string, parentGroupID string, id string) error
 
 	// RemoveParentGroup(ctx context.Context, token string, parentGroupID string, id string) error
-
-	// For internal communication
-	RetrieveById(ctx context.Context, id string) (clients.Client, error)
-
-	RetrieveByIds(ctx context.Context, ids []string) (clients.ClientsPage, error)
-
-	AddConnections(ctx context.Context, conns []Connection) error
-
-	RemoveConnections(ctx context.Context, conns []Connection) error
-
-	RemoveChannelConnections(ctx context.Context, channelID string) error
 
 	roles.RoleManager
 }

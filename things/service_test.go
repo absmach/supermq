@@ -15,7 +15,6 @@ import (
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/pkg/policies"
 	policysvc "github.com/absmach/magistrala/pkg/policies"
 	policymocks "github.com/absmach/magistrala/pkg/policies/mocks"
 	"github.com/absmach/magistrala/pkg/uuid"
@@ -54,13 +53,12 @@ var (
 
 func newService() things.Service {
 	pService = new(policymocks.Service)
-	pEvaluator = new(policymocks.Evaluator)
 	cache = new(thmocks.Cache)
 	idProvider := uuid.NewMock()
 	sidProvider := uuid.NewMock()
 	repo = new(thmocks.Repository)
 	chgRPCClient := new(chmocks.ChannelsServiceClient)
-	tsv, _ := things.NewService(repo, pService, pEvaluator, cache, chgRPCClient, idProvider, sidProvider)
+	tsv, _ := things.NewService(repo, pService, cache, chgRPCClient, idProvider, sidProvider)
 	return tsv
 }
 
@@ -945,165 +943,5 @@ func TestDeleteClient(t *testing.T) {
 		repoCall.Unset()
 		policyCall.Unset()
 		repoCall1.Unset()
-	}
-}
-
-func TestIdentify(t *testing.T) {
-	svc := newService()
-
-	valid := valid
-
-	cases := []struct {
-		desc                string
-		key                 string
-		cacheIDResponse     string
-		cacheIDErr          error
-		repoIDResponse      mgclients.Client
-		retrieveBySecretErr error
-		saveErr             error
-		err                 error
-	}{
-		{
-			desc:            "identify client with valid key from cache",
-			key:             valid,
-			cacheIDResponse: client.ID,
-			err:             nil,
-		},
-		{
-			desc:            "identify client with valid key from repo",
-			key:             valid,
-			cacheIDResponse: "",
-			cacheIDErr:      repoerr.ErrNotFound,
-			repoIDResponse:  client,
-			err:             nil,
-		},
-		{
-			desc:                "identify client with invalid key",
-			key:                 invalid,
-			cacheIDResponse:     "",
-			cacheIDErr:          repoerr.ErrNotFound,
-			repoIDResponse:      mgclients.Client{},
-			retrieveBySecretErr: repoerr.ErrNotFound,
-			err:                 repoerr.ErrNotFound,
-		},
-		{
-			desc:            "identify client with failed to save to cache",
-			key:             valid,
-			cacheIDResponse: "",
-			cacheIDErr:      repoerr.ErrNotFound,
-			repoIDResponse:  client,
-			saveErr:         errors.ErrMalformedEntity,
-			err:             svcerr.ErrAuthorization,
-		},
-	}
-
-	for _, tc := range cases {
-		repoCall := cache.On("ID", mock.Anything, tc.key).Return(tc.cacheIDResponse, tc.cacheIDErr)
-		repoCall1 := repo.On("RetrieveBySecret", mock.Anything, mock.Anything).Return(tc.repoIDResponse, tc.retrieveBySecretErr)
-		repoCall2 := cache.On("Save", mock.Anything, mock.Anything, mock.Anything).Return(tc.saveErr)
-		_, err := svc.Identify(context.Background(), tc.key)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		repoCall.Unset()
-		repoCall1.Unset()
-		repoCall2.Unset()
-	}
-}
-
-func TestAuthorize(t *testing.T) {
-	svc := newService()
-
-	cases := []struct {
-		desc                string
-		request             things.AuthzReq
-		cacheIDRes          string
-		cacheIDErr          error
-		retrieveBySecretRes mgclients.Client
-		retrieveBySecretErr error
-		cacheSaveErr        error
-		checkPolicyErr      error
-		id                  string
-		err                 error
-	}{
-		{
-			desc:                "authorize client with valid key not in cache",
-			request:             things.AuthzReq{ThingKey: valid, ChannelID: valid, Permission: policies.PublishPermission},
-			cacheIDRes:          "",
-			cacheIDErr:          repoerr.ErrNotFound,
-			retrieveBySecretRes: mgclients.Client{ID: valid},
-			retrieveBySecretErr: nil,
-			cacheSaveErr:        nil,
-			checkPolicyErr:      nil,
-			id:                  valid,
-			err:                 nil,
-		},
-		{
-			desc:           "authorize client with valid key in cache",
-			request:        things.AuthzReq{ThingKey: valid, ChannelID: valid, Permission: policies.PublishPermission},
-			cacheIDRes:     valid,
-			checkPolicyErr: nil,
-			id:             valid,
-		},
-		{
-			desc:                "authorize client with invalid key not in cache for non existing client",
-			request:             things.AuthzReq{ThingKey: valid, ChannelID: valid, Permission: policies.PublishPermission},
-			cacheIDRes:          "",
-			cacheIDErr:          repoerr.ErrNotFound,
-			retrieveBySecretRes: mgclients.Client{},
-			retrieveBySecretErr: repoerr.ErrNotFound,
-			err:                 repoerr.ErrNotFound,
-		},
-		{
-			desc:                "authorize client with valid key not in cache with failed to save to cache",
-			request:             things.AuthzReq{ThingKey: valid, ChannelID: valid, Permission: policies.PublishPermission},
-			cacheIDRes:          "",
-			cacheIDErr:          repoerr.ErrNotFound,
-			retrieveBySecretRes: mgclients.Client{ID: valid},
-			cacheSaveErr:        errors.ErrMalformedEntity,
-			err:                 svcerr.ErrAuthorization,
-		},
-		{
-			desc:                "authorize client with valid key not in cache and failed to authorize",
-			request:             things.AuthzReq{ThingKey: valid, ChannelID: valid, Permission: policies.PublishPermission},
-			cacheIDRes:          "",
-			cacheIDErr:          repoerr.ErrNotFound,
-			retrieveBySecretRes: mgclients.Client{ID: valid},
-			retrieveBySecretErr: nil,
-			cacheSaveErr:        nil,
-			checkPolicyErr:      svcerr.ErrAuthorization,
-			err:                 svcerr.ErrAuthorization,
-		},
-		{
-			desc:                "authorize client with valid key not in cache and not authorize",
-			request:             things.AuthzReq{ThingKey: valid, ChannelID: valid, Permission: policies.PublishPermission},
-			cacheIDRes:          "",
-			cacheIDErr:          repoerr.ErrNotFound,
-			retrieveBySecretRes: mgclients.Client{ID: valid},
-			retrieveBySecretErr: nil,
-			cacheSaveErr:        nil,
-			checkPolicyErr:      svcerr.ErrAuthorization,
-			err:                 svcerr.ErrAuthorization,
-		},
-	}
-
-	for _, tc := range cases {
-		cacheCall := cache.On("ID", context.Background(), tc.request.ThingKey).Return(tc.cacheIDRes, tc.cacheIDErr)
-		repoCall := repo.On("RetrieveBySecret", context.Background(), tc.request.ThingKey).Return(tc.retrieveBySecretRes, tc.retrieveBySecretErr)
-		cacheCall1 := cache.On("Save", context.Background(), tc.request.ThingKey, tc.retrieveBySecretRes.ID).Return(tc.cacheSaveErr)
-		policyCall := pEvaluator.On("CheckPolicy", context.Background(), policies.Policy{
-			SubjectType: policies.GroupType,
-			Subject:     tc.request.ChannelID,
-			ObjectType:  policies.ThingType,
-			Object:      valid,
-			Permission:  tc.request.Permission,
-		}).Return(tc.checkPolicyErr)
-		id, err := svc.Authorize(context.Background(), tc.request)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		if tc.err == nil {
-			assert.Equal(t, tc.id, id, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.id, id))
-		}
-		cacheCall.Unset()
-		cacheCall1.Unset()
-		repoCall.Unset()
-		policyCall.Unset()
 	}
 }

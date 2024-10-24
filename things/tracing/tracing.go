@@ -96,54 +96,9 @@ func (tm *tracingMiddleware) DisableClient(ctx context.Context, session authn.Se
 	return tm.svc.DisableClient(ctx, session, id)
 }
 
-// ListMemberships traces the "ListMemberships" operation of the wrapped policies.Service.
-func (tm *tracingMiddleware) Identify(ctx context.Context, key string) (string, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_identify", trace.WithAttributes(attribute.String("key", key)))
-	defer span.End()
-
-	return tm.svc.Identify(ctx, key)
-}
-
-// Authorize traces the "Authorize" operation of the wrapped things.Service.
-func (tm *tracingMiddleware) Authorize(ctx context.Context, req things.AuthzReq) (string, error) {
-	ctx, span := tm.tracer.Start(ctx, "connect", trace.WithAttributes(attribute.String("thingKey", req.ThingKey), attribute.String("channelID", req.ChannelID)))
-	defer span.End()
-
-	return tm.svc.Authorize(ctx, req)
-}
-
 // DeleteClient traces the "DeleteClient" operation of the wrapped things.Service.
 func (tm *tracingMiddleware) DeleteClient(ctx context.Context, session authn.Session, id string) error {
 	ctx, span := tm.tracer.Start(ctx, "delete_client", trace.WithAttributes(attribute.String("id", id)))
 	defer span.End()
 	return tm.svc.DeleteClient(ctx, session, id)
-}
-
-func (tm *tracingMiddleware) RetrieveById(ctx context.Context, id string) (mgclients.Client, error) {
-	ctx, span := tm.tracer.Start(ctx, "retrieve_by_id", trace.WithAttributes(attribute.String("id", id)))
-	defer span.End()
-	return tm.svc.RetrieveById(ctx, id)
-}
-
-func (tm *tracingMiddleware) RetrieveByIds(ctx context.Context, ids []string) (mgclients.ClientsPage, error) {
-	ctx, span := tm.tracer.Start(ctx, "retrieve_by_ids", trace.WithAttributes(attribute.StringSlice("ids", ids)))
-	defer span.End()
-	return tm.svc.RetrieveByIds(ctx, ids)
-}
-
-func (tm *tracingMiddleware) AddConnections(ctx context.Context, conns []things.Connection) error {
-	ctx, span := tm.tracer.Start(ctx, "add_connections")
-	defer span.End()
-	return tm.svc.AddConnections(ctx, conns)
-}
-func (tm *tracingMiddleware) RemoveConnections(ctx context.Context, conns []things.Connection) error {
-	ctx, span := tm.tracer.Start(ctx, "remove_connections")
-	defer span.End()
-	return tm.svc.RemoveConnections(ctx, conns)
-}
-
-func (tm *tracingMiddleware) RemoveChannelConnections(ctx context.Context, channelID string) error {
-	ctx, span := tm.tracer.Start(ctx, "remove_channel_connections", trace.WithAttributes(attribute.String("channel_id", channelID)))
-	defer span.End()
-	return tm.svc.RemoveChannelConnections(ctx, channelID)
 }

@@ -161,40 +161,6 @@ func (es *eventStore) changeThingStatus(ctx context.Context, cli mgclients.Clien
 	return cli, nil
 }
 
-func (es *eventStore) Identify(ctx context.Context, key string) (string, error) {
-	thingID, err := es.svc.Identify(ctx, key)
-	if err != nil {
-		return thingID, err
-	}
-	event := identifyClientEvent{
-		thingID: thingID,
-	}
-
-	if err := es.Publish(ctx, event); err != nil {
-		return thingID, err
-	}
-	return thingID, nil
-}
-
-func (es *eventStore) Authorize(ctx context.Context, req things.AuthzReq) (string, error) {
-	thingID, err := es.svc.Authorize(ctx, req)
-	if err != nil {
-		return thingID, err
-	}
-
-	event := authorizeClientEvent{
-		thingID:    thingID,
-		channelID:  req.ChannelID,
-		permission: req.Permission,
-	}
-
-	if err := es.Publish(ctx, event); err != nil {
-		return thingID, err
-	}
-
-	return thingID, nil
-}
-
 func (es *eventStore) DeleteClient(ctx context.Context, session authn.Session, id string) error {
 	if err := es.svc.DeleteClient(ctx, session, id); err != nil {
 		return err
@@ -207,21 +173,4 @@ func (es *eventStore) DeleteClient(ctx context.Context, session authn.Session, i
 	}
 
 	return nil
-}
-
-func (es *eventStore) RetrieveById(ctx context.Context, id string) (mgclients.Client, error) {
-	return es.svc.RetrieveById(ctx, id)
-}
-func (es *eventStore) RetrieveByIds(ctx context.Context, ids []string) (mgclients.ClientsPage, error) {
-	return es.svc.RetrieveByIds(ctx, ids)
-}
-
-func (es *eventStore) AddConnections(ctx context.Context, conns []things.Connection) (err error) {
-	return es.svc.AddConnections(ctx, conns)
-}
-func (es *eventStore) RemoveConnections(ctx context.Context, conns []things.Connection) (err error) {
-	return es.svc.RemoveConnections(ctx, conns)
-}
-func (es *eventStore) RemoveChannelConnections(ctx context.Context, channelID string) error {
-	return es.svc.RemoveChannelConnections(ctx, channelID)
 }
