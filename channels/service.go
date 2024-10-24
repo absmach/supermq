@@ -8,6 +8,7 @@ import (
 	"github.com/absmach/magistrala"
 	grpcCommonV1 "github.com/absmach/magistrala/internal/grpc/common/v1"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
@@ -23,6 +24,7 @@ var (
 	errRollbackRepo            = errors.New("failed to rollback repo")
 	errAddConnectionsThings    = errors.New("failed to add connections in things service")
 	errRemoveConnectionsThings = errors.New("failed to remove connections from things service")
+	errSetParentGroup          = errors.New("channel already have parent")
 )
 
 type service struct {
@@ -379,6 +381,81 @@ func (svc service) Disconnect(ctx context.Context, session authn.Session, chIDs,
 
 	if err := svc.repo.RemoveConnections(ctx, conns); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+
+	return nil
+}
+
+func (svc service) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) (retErr error) {
+	ch, err := svc.repo.RetrieveByID(ctx, id)
+	if err != nil {
+		return errors.Wrap(svcerr.ErrViewEntity, err)
+	}
+
+	var pols []policies.Policy
+	if ch.ParentGroup != "" {
+		return errors.Wrap(svcerr.ErrConflict, errSetParentGroup)
+	}
+	pols = append(pols, policies.Policy{
+		Domain:      session.DomainID,
+		SubjectType: policies.GroupType,
+		Subject:     parentGroupID,
+		Relation:    policies.ParentGroupRelation,
+		ObjectType:  policies.ChannelType,
+		Object:      id,
+	})
+
+	if err := svc.policy.AddPolicies(ctx, pols); err != nil {
+		return errors.Wrap(svcerr.ErrAddPolicies, err)
+	}
+	defer func() {
+		if retErr != nil {
+			if errRollback := svc.policy.DeletePolicies(ctx, pols); errRollback != nil {
+				retErr = errors.Wrap(retErr, errors.Wrap(apiutil.ErrRollbackTx, errRollback))
+			}
+		}
+	}()
+	ch = Channel{ID: id, ParentGroup: parentGroupID, UpdatedBy: session.UserID, UpdatedAt: time.Now()}
+
+	if err := svc.repo.SetParentGroup(ctx, ch); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (svc service) RemoveParentGroup(ctx context.Context, session authn.Session, id string) (retErr error) {
+	ch, err := svc.repo.RetrieveByID(ctx, id)
+	if err != nil {
+		return errors.Wrap(svcerr.ErrViewEntity, err)
+	}
+
+	if ch.ParentGroup != "" {
+		var pols []policies.Policy
+		pols = append(pols, policies.Policy{
+			Domain:      session.DomainID,
+			SubjectType: policies.GroupType,
+			Subject:     ch.ParentGroup,
+			Relation:    policies.ParentGroupRelation,
+			ObjectType:  policies.ChannelType,
+			Object:      id,
+		})
+
+		if err := svc.policy.DeletePolicies(ctx, pols); err != nil {
+			return errors.Wrap(svcerr.ErrAddPolicies, err)
+		}
+		defer func() {
+			if retErr != nil {
+				if errRollback := svc.policy.AddPolicies(ctx, pols); errRollback != nil {
+					retErr = errors.Wrap(retErr, errors.Wrap(apiutil.ErrRollbackTx, errRollback))
+				}
+			}
+		}()
+
+		ch := Channel{ID: id, UpdatedBy: session.UserID, UpdatedAt: time.Now()}
+
+		if err := svc.repo.RemoveParentGroup(ctx, ch); err != nil {
+			return err
+		}
 	}
 
 	return nil

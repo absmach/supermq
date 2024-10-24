@@ -119,6 +119,22 @@ func (ms *metricsMiddleware) Disconnect(ctx context.Context, session authn.Sessi
 	return ms.svc.Disconnect(ctx, session, chIDs, thIDs)
 }
 
+func (ms *metricsMiddleware) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) (err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "set_parent_group").Add(1)
+		ms.latency.With("method", "set_parent_group").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.SetParentGroup(ctx, session, parentGroupID, id)
+}
+
+func (ms *metricsMiddleware) RemoveParentGroup(ctx context.Context, session authn.Session, id string) (err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "remove_parent_group").Add(1)
+		ms.latency.With("method", "remove_parent_group").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.RemoveParentGroup(ctx, session, id)
+}
+
 func (ms *metricsMiddleware) RemoveThingConnections(ctx context.Context, thingID string) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "remove_thing_connections").Add(1)

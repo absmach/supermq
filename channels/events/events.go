@@ -20,6 +20,8 @@ const (
 	channelList         = channelPrefix + "list"
 	channelConnect      = channelPrefix + "connect"
 	channelDisconnect   = channelPrefix + "disconnect"
+	channelSetParent    = channelPrefix + "set_parent"
+	channelRemoveParent = channelPrefix + "remove_parent"
 )
 
 var (
@@ -278,5 +280,29 @@ func (de disconnectEvent) Encode() (map[string]interface{}, error) {
 		"operation":   channelDisconnect,
 		"thing_ids":   de.thIDs,
 		"channel_ids": de.chIDs,
+	}, nil
+}
+
+type setParentGroupEvent struct {
+	id            string
+	parentGroupID string
+}
+
+func (spge setParentGroupEvent) Encode() (map[string]interface{}, error) {
+	return map[string]interface{}{
+		"operation":       channelSetParent,
+		"id":              spge.id,
+		"parent_group_id": spge.parentGroupID,
+	}, nil
+}
+
+type removeParentGroupEvent struct {
+	id string
+}
+
+func (rpge removeParentGroupEvent) Encode() (map[string]interface{}, error) {
+	return map[string]interface{}{
+		"operation": channelRemoveParent,
+		"id":        rpge.id,
 	}, nil
 }

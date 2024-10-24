@@ -5,13 +5,84 @@ import (
 	"github.com/absmach/magistrala/pkg/svcutil"
 )
 
+// Internal Operations
 const (
-	// this permission is check over domain or group
-	createPermission = "channel_create_permission"
+	OpViewChannel svcutil.Operation = iota
+	OpUpdateChannel
+	OpUpdateChannelTags
+	OpEnableChannel
+	OpDisableChannel
+	OpDeleteChannel
+	OpSetParentGroup
+	OpRemoveParentGroup
+	OpConnectThing
+	OpDisconnectThing
+)
 
-	// this permission is check over thing for connection
-	connectToChannelPermission = "connect_to_channel_permission"
+var expectedOperations = []svcutil.Operation{
+	OpViewChannel,
+	OpUpdateChannel,
+	OpUpdateChannelTags,
+	OpEnableChannel,
+	OpDisableChannel,
+	OpDeleteChannel,
+	OpSetParentGroup,
+	OpRemoveParentGroup,
+	OpConnectThing,
+	OpDisconnectThing,
+}
 
+var operationNames = []string{
+	"OpViewChannel",
+	"OpUpdateChannel",
+	"OpUpdateChannelTags",
+	"OpEnableChannel",
+	"OpDisableChannel",
+	"OpDeleteChannel",
+	"OpSetParentGroup",
+	"OpRemoveParentGroup",
+	"OpConnectThing",
+	"OpDisconnectThing",
+}
+
+func NewOperationPerm() svcutil.OperationPerm {
+	return svcutil.NewOperationPerm(expectedOperations, operationNames)
+}
+
+// External Operations
+const (
+	DomainOpCreateChannel svcutil.ExternalOperation = iota
+	DomainOpListChannel
+	GroupOpSetChildChannel
+	GroupsOpRemoveChildChannel
+	ThingsOpConnectChannel
+	ThingsOpDisconnectChannel
+)
+
+var expectedExternalOperations = []svcutil.ExternalOperation{
+	DomainOpCreateChannel,
+	DomainOpListChannel,
+	GroupOpSetChildChannel,
+	GroupsOpRemoveChildChannel,
+	ThingsOpConnectChannel,
+	ThingsOpDisconnectChannel,
+}
+var externalOperationNames = []string{
+	"DomainOpCreateChannel",
+	"DomainOpListChannel",
+	"GroupOpSetChildChannel",
+	"GroupsOpRemoveChildChannel",
+	"ThingsOpConnectChannel",
+	"ThingsOpDisconnectChannel",
+}
+
+func NewExternalOperationPerm() svcutil.ExternalOperationPerm {
+	return svcutil.NewExternalOperationPerm(expectedExternalOperations, externalOperationNames)
+}
+
+// Below codes should moved out of service, may be can be kept in `cmd/<svc>/main.go`
+
+const (
 	updatePermission         = "update_permission"
 	readPermission           = "read_permission"
 	deletePermission         = "delete_permission"
@@ -24,69 +95,18 @@ const (
 	viewRoleUsersPermission   = "view_role_users_permission"
 )
 
-const (
-	OpCreateChannel svcutil.Operation = iota
-	OpListChannel
-	OpViewChannel
-	OpUpdateChannel
-	OpUpdateChannelTags
-	OpEnableChannel
-	OpDisableChannel
-	OpDeleteChannel
-	OpConnectChannelToThing
-	OpDisconnectChannelToThing
-	OpConnectThingToChannel
-	OpDisconnectThingToChannel
-)
-
-var expectedOperations = []svcutil.Operation{
-	OpCreateChannel,
-	OpListChannel,
-	OpViewChannel,
-	OpUpdateChannel,
-	OpUpdateChannelTags,
-	OpEnableChannel,
-	OpDisableChannel,
-	OpDeleteChannel,
-	OpConnectChannelToThing,
-	OpDisconnectChannelToThing,
-	OpConnectThingToChannel,
-	OpDisconnectThingToChannel,
-}
-
-var operationNames = []string{
-	"OpCreateChannel",
-	"OpListChannel",
-	"OpViewChannel",
-	"OpUpdateChannel",
-	"OpUpdateChannelTags",
-	"OpEnableChannel",
-	"OpDisableChannel",
-	"OpDeleteChannel",
-	"OpConnectChannelToThing",
-	"OpDisconnectChannelToThing",
-	"OpConnectThingToChannel",
-	"OpDisconnectThingToChannel",
-}
-
-func NewOperationPerm() svcutil.OperationPerm {
-	return svcutil.NewOperationPerm(expectedOperations, operationNames)
-}
-
 func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 	opPerm := map[svcutil.Operation]svcutil.Permission{
-		OpCreateChannel:            createPermission,
-		OpListChannel:              readPermission,
-		OpViewChannel:              readPermission,
-		OpUpdateChannel:            updatePermission,
-		OpUpdateChannelTags:        updatePermission,
-		OpEnableChannel:            updatePermission,
-		OpDisableChannel:           updatePermission,
-		OpDeleteChannel:            deletePermission,
-		OpConnectChannelToThing:    connectToThingPermission,
-		OpDisconnectChannelToThing: connectToThingPermission,
-		OpConnectThingToChannel:    connectToChannelPermission,
-		OpDisconnectThingToChannel: connectToChannelPermission,
+		OpViewChannel:       readPermission,
+		OpUpdateChannel:     updatePermission,
+		OpUpdateChannelTags: updatePermission,
+		OpEnableChannel:     updatePermission,
+		OpDisableChannel:    updatePermission,
+		OpDeleteChannel:     deletePermission,
+		OpSetParentGroup:    setParentGroupPermission,
+		OpRemoveParentGroup: setParentGroupPermission,
+		OpConnectThing:      connectToThingPermission,
+		OpDisconnectThing:   connectToThingPermission,
 	}
 	return opPerm
 }
@@ -110,4 +130,29 @@ func NewRolesOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 		roles.OpRoleRemoveAllMembers:   manageRolePermission,
 	}
 	return opPerm
+}
+
+const (
+	// External Permission
+	// Domains
+	domainCreateChannelPermission = "channel_create_permission"
+	domainListChanelPermission    = "list_channels_permission"
+	// Groups
+	groupSetChildChannelPermission    = "channel_create_permission"
+	groupRemoveChildChannelPermission = "channel_create_permission"
+	// Thing
+	thingsConnectChannelPermission    = "connect_to_channel_permission"
+	thingsDisconnectChannelPermission = "connect_to_channel_permission"
+)
+
+func NewExternalOperationPermissionMap() map[svcutil.ExternalOperation]svcutil.Permission {
+	extOpPerm := map[svcutil.ExternalOperation]svcutil.Permission{
+		DomainOpCreateChannel:      domainCreateChannelPermission,
+		DomainOpListChannel:        domainListChanelPermission,
+		GroupOpSetChildChannel:     groupSetChildChannelPermission,
+		GroupsOpRemoveChildChannel: groupRemoveChildChannelPermission,
+		ThingsOpConnectChannel:     thingsConnectChannelPermission,
+		ThingsOpDisconnectChannel:  thingsDisconnectChannelPermission,
+	}
+	return extOpPerm
 }

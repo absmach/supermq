@@ -114,6 +114,23 @@ func (tm *tracingMiddleware) Disconnect(ctx context.Context, session authn.Sessi
 	return tm.svc.Disconnect(ctx, session, chIDs, thIDs)
 }
 
+func (tm *tracingMiddleware) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error {
+	ctx, span := tm.tracer.Start(ctx, "set_parent_group", trace.WithAttributes(
+		attribute.String("parent_group_id", parentGroupID),
+		attribute.String("id", id),
+	))
+	defer span.End()
+	return tm.svc.SetParentGroup(ctx, session, parentGroupID, id)
+}
+
+func (tm *tracingMiddleware) RemoveParentGroup(ctx context.Context, session authn.Session, id string) error {
+	ctx, span := tm.tracer.Start(ctx, "remove_parent_group", trace.WithAttributes(
+		attribute.String("id", id),
+	))
+	defer span.End()
+	return tm.svc.RemoveParentGroup(ctx, session, id)
+}
+
 func (tm *tracingMiddleware) RemoveThingConnections(ctx context.Context, thingID string) error {
 	ctx, span := tm.tracer.Start(ctx, "remove_thing_connections", trace.WithAttributes(
 		attribute.String("thing_id", thingID),

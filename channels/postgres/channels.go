@@ -58,9 +58,9 @@ func (cr *channelRepository) Save(ctx context.Context, chs ...channels.Channel) 
 		dbchs = append(dbchs, dbch)
 	}
 
-	q := `INSERT INTO channels (id, name, tags, domain_id,  metadata, created_at, updated_at, updated_by, status)
-	VALUES (:id, :name, :tags, :domain_id,  :metadata, :created_at, :updated_at, :updated_by, :status)
-	RETURNING id, name, tags,  metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
+	q := `INSERT INTO channels (id, name, tags, domain_id, parent_group_id,  metadata, created_at, updated_at, updated_by, status)
+	VALUES (:id, :name, :tags, :domain_id,  :parent_group_id, :metadata, :created_at, :updated_at, :updated_by, :status)
+	RETURNING id, name, tags,  metadata, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, status, created_at, updated_at, updated_by`
 
 	row, err := cr.db.NamedQueryContext(ctx, q, dbchs)
 	if err != nil {
@@ -100,7 +100,7 @@ func (cr *channelRepository) Update(ctx context.Context, channel channels.Channe
 	}
 	q := fmt.Sprintf(`UPDATE channels SET %s updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
-        RETURNING id, name, tags, metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`,
+        RETURNING id, name, tags, metadata, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, status, created_at, updated_at, updated_by`,
 		upq)
 	channel.Status = clients.EnabledStatus
 	return cr.update(ctx, channel, q)
@@ -109,7 +109,7 @@ func (cr *channelRepository) Update(ctx context.Context, channel channels.Channe
 func (cr *channelRepository) UpdateTags(ctx context.Context, channel channels.Channel) (channels.Channel, error) {
 	q := `UPDATE channels SET tags = :tags, updated_at = :updated_at, updated_by = :updated_by
 	WHERE id = :id AND status = :status
-	RETURNING id, name, tags,  metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
+	RETURNING id, name, tags,  metadata, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, status, created_at, updated_at, updated_by`
 	channel.Status = clients.EnabledStatus
 	return cr.update(ctx, channel, q)
 }
@@ -117,13 +117,13 @@ func (cr *channelRepository) UpdateTags(ctx context.Context, channel channels.Ch
 func (cr *channelRepository) ChangeStatus(ctx context.Context, channel channels.Channel) (channels.Channel, error) {
 	q := `UPDATE channels SET status = :status, updated_at = :updated_at, updated_by = :updated_by
 		WHERE id = :id
-        RETURNING id, name, tags, metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
+        RETURNING id, name, tags, metadata, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, status, created_at, updated_at, updated_by`
 
 	return cr.update(ctx, channel, q)
 }
 
 func (cr *channelRepository) RetrieveByID(ctx context.Context, id string) (channels.Channel, error) {
-	q := `SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id,  metadata, created_at, updated_at, updated_by, status FROM channels WHERE id = :id`
+	q := `SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id,  metadata, created_at, updated_at, updated_by, status FROM channels WHERE id = :id`
 
 	dbch := dbChannel{
 		ID: id,
@@ -153,7 +153,7 @@ func (cr *channelRepository) RetrieveAll(ctx context.Context, pm channels.PageMe
 	}
 	query = applyOrdering(query, pm)
 
-	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags,  c.metadata, COALESCE(c.domain_id, '') AS domain_id, c.status,
+	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags,  c.metadata, COALESCE(c.domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, c.status,
 					c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM channels c %s ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, query)
 
 	dbPage, err := toDBChannelsPage(pm)
@@ -204,6 +204,38 @@ func (cr *channelRepository) Remove(ctx context.Context, ids ...string) error {
 		"channel_ids": ids,
 	}
 	result, err := cr.db.NamedExecContext(ctx, q, params)
+	if err != nil {
+		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
+	}
+	if rows, _ := result.RowsAffected(); rows == 0 {
+		return repoerr.ErrNotFound
+	}
+	return nil
+}
+
+func (cr *channelRepository) SetParentGroup(ctx context.Context, ch channels.Channel) error {
+	q := "UPDATE channels SET parent_group_id = :parent_group_id, updated_at = :updated_at, updated_by = :updated_by WHERE id = :id"
+	dbCh, err := toDBChannel(ch)
+	if err != nil {
+		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+	}
+	result, err := cr.db.NamedExecContext(ctx, q, dbCh)
+	if err != nil {
+		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
+	}
+	if rows, _ := result.RowsAffected(); rows == 0 {
+		return repoerr.ErrNotFound
+	}
+	return nil
+}
+
+func (cr *channelRepository) RemoveParentGroup(ctx context.Context, ch channels.Channel) error {
+	q := "UPDATE channels SET parent_group_id = NULL, updated_at = :updated_at, updated_by = :updated_by WHERE id = :id"
+	dbCh, err := toDBChannel(ch)
+	if err != nil {
+		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+	}
+	result, err := cr.db.NamedExecContext(ctx, q, dbCh)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}
@@ -339,17 +371,18 @@ func (cr *channelRepository) update(ctx context.Context, ch channels.Channel, qu
 }
 
 type dbChannel struct {
-	ID        string           `db:"id"`
-	Name      string           `db:"name,omitempty"`
-	Tags      pgtype.TextArray `db:"tags,omitempty"`
-	Domain    string           `db:"domain_id"`
-	Metadata  []byte           `db:"metadata,omitempty"`
-	CreatedAt time.Time        `db:"created_at,omitempty"`
-	UpdatedAt sql.NullTime     `db:"updated_at,omitempty"`
-	UpdatedBy *string          `db:"updated_by,omitempty"`
-	Groups    []groups.Group   `db:"groups,omitempty"`
-	Status    clients.Status   `db:"status,omitempty"`
-	Role      *clients.Role    `db:"role,omitempty"`
+	ID          string           `db:"id"`
+	Name        string           `db:"name,omitempty"`
+	ParentGroup sql.NullString   `db:"parent_group_id,omitempty"`
+	Tags        pgtype.TextArray `db:"tags,omitempty"`
+	Domain      string           `db:"domain_id"`
+	Metadata    []byte           `db:"metadata,omitempty"`
+	CreatedAt   time.Time        `db:"created_at,omitempty"`
+	UpdatedAt   sql.NullTime     `db:"updated_at,omitempty"`
+	UpdatedBy   *string          `db:"updated_by,omitempty"`
+	Groups      []groups.Group   `db:"groups,omitempty"`
+	Status      clients.Status   `db:"status,omitempty"`
+	Role        *clients.Role    `db:"role,omitempty"`
 }
 
 func toDBChannel(ch channels.Channel) (dbChannel, error) {
@@ -374,16 +407,28 @@ func toDBChannel(ch channels.Channel) (dbChannel, error) {
 		updatedAt = sql.NullTime{Time: ch.UpdatedAt, Valid: true}
 	}
 	return dbChannel{
-		ID:        ch.ID,
-		Name:      ch.Name,
-		Domain:    ch.Domain,
-		Tags:      tags,
-		Metadata:  data,
-		CreatedAt: ch.CreatedAt,
-		UpdatedAt: updatedAt,
-		UpdatedBy: updatedBy,
-		Status:    ch.Status,
+		ID:          ch.ID,
+		Name:        ch.Name,
+		ParentGroup: nullString(ch.ParentGroup),
+		Domain:      ch.Domain,
+		Tags:        tags,
+		Metadata:    data,
+		CreatedAt:   ch.CreatedAt,
+		UpdatedAt:   updatedAt,
+		UpdatedBy:   updatedBy,
+		Status:      ch.Status,
 	}, nil
+}
+
+func nullString(s string) sql.NullString {
+	if s == "" {
+		return sql.NullString{}
+	}
+
+	return sql.NullString{
+		String: s,
+		Valid:  true,
+	}
 }
 
 func toChannel(ch dbChannel) (channels.Channel, error) {
@@ -406,16 +451,21 @@ func toChannel(ch dbChannel) (channels.Channel, error) {
 		updatedAt = ch.UpdatedAt.Time
 	}
 
+	parentGroup := ""
+	if ch.ParentGroup.Valid {
+		parentGroup = ch.ParentGroup.String
+	}
 	newCh := channels.Channel{
-		ID:        ch.ID,
-		Name:      ch.Name,
-		Tags:      tags,
-		Domain:    ch.Domain,
-		Metadata:  metadata,
-		CreatedAt: ch.CreatedAt,
-		UpdatedAt: updatedAt,
-		UpdatedBy: updatedBy,
-		Status:    ch.Status,
+		ID:          ch.ID,
+		Name:        ch.Name,
+		Tags:        tags,
+		Domain:      ch.Domain,
+		ParentGroup: parentGroup,
+		Metadata:    metadata,
+		CreatedAt:   ch.CreatedAt,
+		UpdatedAt:   updatedAt,
+		UpdatedBy:   updatedBy,
+		Status:      ch.Status,
 	}
 
 	return newCh, nil

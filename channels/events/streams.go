@@ -206,6 +206,34 @@ func (es *eventStore) Disconnect(ctx context.Context, session authn.Session, chI
 	return nil
 }
 
+func (es *eventStore) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) (err error) {
+	if err := es.svc.SetParentGroup(ctx, session, parentGroupID, id); err != nil {
+		return err
+	}
+
+	event := setParentGroupEvent{parentGroupID: parentGroupID, id: id}
+
+	if err := es.Publish(ctx, event); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (es *eventStore) RemoveParentGroup(ctx context.Context, session authn.Session, id string) (err error) {
+	if err := es.svc.RemoveParentGroup(ctx, session, id); err != nil {
+		return err
+	}
+
+	event := removeParentGroupEvent{id: id}
+
+	if err := es.Publish(ctx, event); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (es *eventStore) RemoveThingConnections(ctx context.Context, thingID string) error {
 	return es.svc.RemoveThingConnections(ctx, thingID)
 }

@@ -18,6 +18,7 @@ type Channel struct {
 	ID          string           `json:"id"`
 	Name        string           `json:"name,omitempty"`
 	Tags        []string         `json:"tags,omitempty"`
+	ParentGroup string           `json:"parent_group_id,omitempty"`
 	Domain      string           `json:"domain_id,omitempty"`
 	Metadata    clients.Metadata `json:"metadata,omitempty"`
 	CreatedAt   time.Time        `json:"created_at,omitempty"`
@@ -97,11 +98,12 @@ type Service interface {
 	// Disconnect removes things from the channels list of connected things.
 	Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string) error
 
-	// SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error
+	SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error
 
-	// RemoveParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error
+	RemoveParentGroup(ctx context.Context, session authn.Session, id string) error
 
 	RemoveThingConnections(ctx context.Context, thingID string) error
+
 	roles.RoleManager
 }
 
@@ -129,6 +131,12 @@ type Repository interface {
 
 	// Remove removes the channel having the provided identifier
 	Remove(ctx context.Context, ids ...string) error
+
+	// SetParentGroup set parent group id to a given channel id
+	SetParentGroup(ctx context.Context, ch Channel) error
+
+	// RemoveParentGroup remove parent group id fr given chanel id
+	RemoveParentGroup(ctx context.Context, ch Channel) error
 
 	AddConnections(ctx context.Context, conns []Connection) error
 

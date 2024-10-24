@@ -24,26 +24,26 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 				// STATUS 0 to imply enabled and 1 to imply disabled
 				Up: []string{
 					`CREATE TABLE IF NOT EXISTS channels (
-						id			VARCHAR(36) PRIMARY KEY,
-						name		VARCHAR(1024),
-						domain_id	VARCHAR(36) NOT NULL,
-						tags		TEXT[],
-						metadata	JSONB,
-						created_by  VARCHAR(254),
-						created_at	TIMESTAMP,
-						updated_at	TIMESTAMP,
-						updated_by  VARCHAR(254),
-						status		SMALLINT NOT NULL DEFAULT 0 CHECK (status >= 0),
-						UNIQUE		(domain_id, name),
-						UNIQUE		(domain_id, id)
+						id                 VARCHAR(36) PRIMARY KEY,
+						name               VARCHAR(1024),
+						domain_id          VARCHAR(36) NOT NULL,
+						parent_group_id    VARCHAR(36) DEFAULT NULL,
+						tags               TEXT[],
+						metadata           JSONB,
+						created_by         VARCHAR(254),
+						created_at         TIMESTAMP,
+						updated_at         TIMESTAMP,
+						updated_by         VARCHAR(254),
+						status             SMALLINT NOT NULL DEFAULT 0 CHECK (status >= 0),
+						UNIQUE             (domain_id, name),
 					)`,
 					`CREATE TABLE IF NOT EXISTS connections (
 						channel_id    VARCHAR(36),
-						domain_id 	  VARCHAR(36),
+						domain_id     VARCHAR(36),
 						thing_id      VARCHAR(36),
-						FOREIGN KEY (channel_id, domain_id) REFERENCES channels (id, domain_id) ON DELETE CASCADE ON UPDATE CASCADE,
-						PRIMARY KEY (channel_id, domain_id, thing_id)
-						UNIQUE		(channel_id, thing_id)
+						FOREIGN KEY   (channel_id, domain_id) REFERENCES channels (id, domain_id) ON DELETE CASCADE ON UPDATE CASCADE,
+						PRIMARY KEY   (channel_id, domain_id, thing_id)
+						UNIQUE        (channel_id, thing_id)
 					)`,
 				},
 				Down: []string{
