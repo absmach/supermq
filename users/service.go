@@ -9,6 +9,8 @@ import (
 
 	"github.com/absmach/magistrala"
 	mgauth "github.com/absmach/magistrala/auth"
+	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
+	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
@@ -27,7 +29,7 @@ var (
 )
 
 type service struct {
-	token      magistrala.TokenServiceClient
+	token      grpcTokenV1.TokenServiceClient
 	clients    postgres.Repository
 	idProvider magistrala.IDProvider
 	policies   policies.Service
@@ -36,7 +38,7 @@ type service struct {
 }
 
 // NewService returns a new Users service implementation.
-func NewService(token magistrala.TokenServiceClient, crepo postgres.Repository, policyService policies.Service, emailer Emailer, hasher Hasher, idp magistrala.IDProvider) Service {
+func NewService(token grpcTokenV1.TokenServiceClient, crepo postgres.Repository, policyService policies.Service, emailer Emailer, hasher Hasher, idp magistrala.IDProvider) Service {
 	return service{
 		token:      token,
 		clients:    crepo,
@@ -82,7 +84,7 @@ func (svc service) RegisterClient(ctx context.Context, session authn.Session, cl
 	defer func() {
 		if err != nil {
 			if errRollback := svc.addClientPolicyRollback(ctx, cli.ID, cli.Role); errRollback != nil {
-				err = errors.Wrap(errors.Wrap(errors.ErrRollbackTx, errRollback), err)
+				err = errors.Wrap(errors.Wrap(apiutil.ErrRollbackTx, errRollback), err)
 			}
 		}
 	}()
@@ -93,33 +95,33 @@ func (svc service) RegisterClient(ctx context.Context, session authn.Session, cl
 	return client, nil
 }
 
-func (svc service) IssueToken(ctx context.Context, identity, secret string) (*magistrala.Token, error) {
+func (svc service) IssueToken(ctx context.Context, identity, secret string) (*grpcTokenV1.Token, error) {
 	dbUser, err := svc.clients.RetrieveByIdentity(ctx, identity)
 	if err != nil {
-		return &magistrala.Token{}, errors.Wrap(svcerr.ErrAuthentication, err)
+		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
 	if err := svc.hasher.Compare(secret, dbUser.Credentials.Secret); err != nil {
-		return &magistrala.Token{}, errors.Wrap(svcerr.ErrLogin, err)
+		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrLogin, err)
 	}
 
-	token, err := svc.token.Issue(ctx, &magistrala.IssueReq{UserId: dbUser.ID, Type: uint32(mgauth.AccessKey)})
+	token, err := svc.token.Issue(ctx, &grpcTokenV1.IssueReq{UserId: dbUser.ID, Type: uint32(mgauth.AccessKey)})
 	if err != nil {
-		return &magistrala.Token{}, errors.Wrap(errIssueToken, err)
+		return &grpcTokenV1.Token{}, errors.Wrap(errIssueToken, err)
 	}
 
 	return token, err
 }
 
-func (svc service) RefreshToken(ctx context.Context, session authn.Session, refreshToken string) (*magistrala.Token, error) {
+func (svc service) RefreshToken(ctx context.Context, session authn.Session, refreshToken string) (*grpcTokenV1.Token, error) {
 	dbUser, err := svc.clients.RetrieveByID(ctx, session.UserID)
 	if err != nil {
-		return &magistrala.Token{}, errors.Wrap(svcerr.ErrAuthentication, err)
+		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
 	if dbUser.Status == mgclients.DisabledStatus {
-		return &magistrala.Token{}, errors.Wrap(svcerr.ErrAuthentication, errLoginDisableUser)
+		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrAuthentication, errLoginDisableUser)
 	}
 
-	return svc.token.Refresh(ctx, &magistrala.RefreshReq{RefreshToken: refreshToken})
+	return svc.token.Refresh(ctx, &grpcTokenV1.RefreshReq{RefreshToken: refreshToken})
 }
 
 func (svc service) ViewClient(ctx context.Context, session authn.Session, id string) (mgclients.Client, error) {
@@ -249,7 +251,7 @@ func (svc service) GenerateResetToken(ctx context.Context, email, host string) e
 	if err != nil {
 		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
-	issueReq := &magistrala.IssueReq{
+	issueReq := &grpcTokenV1.IssueReq{
 		UserId: client.ID,
 		Type:   uint32(mgauth.RecoveryKey),
 	}

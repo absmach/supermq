@@ -9,3 +9,15 @@ type authorizeReq struct {
 	ChannelID  string
 	Permission string
 }
+
+type retrieveEntitiesReq struct {
+	Ids []string
+}
+
+type retrieveEntityReq struct {
+	Id string
+}
+
+type removeChannelConnectionsReq struct {
+	channelID string
+}

@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 MG_DOCKER_IMAGE_NAME_PREFIX ?= magistrala
-BUILD_DIR = build
-SERVICES = auth users things http coap ws postgres-writer postgres-reader timescale-writer \
+BUILD_DIR ?= build
+SERVICES = auth users things channels domains http coap ws postgres-writer postgres-reader timescale-writer \
 	timescale-reader cli bootstrap mqtt provision certs invitations journal
 TEST_API_SERVICES = journal auth bootstrap certs http invitations notifiers provision readers things users
 TEST_API = $(addprefix test_api_,$(TEST_API_SERVICES))
@@ -19,10 +19,14 @@ empty:=
 space:= $(empty) $(empty)
 # Docker compose project name should follow this guidelines: https://docs.docker.com/compose/reference/#use--p-to-specify-a-project-name
 DOCKER_PROJECT ?= $(shell echo $(subst $(space),,$(USER_REPO)) | tr -c -s '[:alnum:][=-=]' '_' | tr '[:upper:]' '[:lower:]')
-DOCKER_COMPOSE_COMMANDS_SUPPORTED := up down config
+DOCKER_COMPOSE_COMMANDS_SUPPORTED := up down config restart
 DEFAULT_DOCKER_COMPOSE_COMMAND  := up
 GRPC_MTLS_CERT_FILES_EXISTS = 0
 MOCKERY_VERSION=v2.43.2
+INTERNAL_PROTO_GEN_OUT_DIR=internal/grpc
+INTERNAL_PROTO_DIR=internal/proto
+INTERNAL_PROTO_FILES := $(shell find $(INTERNAL_PROTO_DIR) -name "*.proto" | sed 's|$(INTERNAL_PROTO_DIR)/||')
+
 ifneq ($(MG_MESSAGE_BROKER_TYPE),)
     MG_MESSAGE_BROKER_TYPE := $(MG_MESSAGE_BROKER_TYPE)
 else
@@ -179,7 +183,8 @@ $(TEST_API):
 
 proto:
 	protoc -I. --go_out=. --go_opt=paths=source_relative pkg/messaging/*.proto
-	protoc -I. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative ./*.proto
+	mkdir -p $(INTERNAL_PROTO_GEN_OUT_DIR)
+	protoc -I $(INTERNAL_PROTO_DIR) --go_out=$(INTERNAL_PROTO_GEN_OUT_DIR) --go_opt=paths=source_relative --go-grpc_out=$(INTERNAL_PROTO_GEN_OUT_DIR) --go-grpc_opt=paths=source_relative $(INTERNAL_PROTO_FILES)
 
 $(FILTERED_SERVICES):
 	$(call compile_service,$(@))
@@ -257,3 +262,6 @@ run_addons: check_certs
 	@for SVC in $(RUN_ADDON_ARGS); do \
 		MG_ADDONS_CERTS_PATH_PREFIX="../."  docker compose -f docker/addons/$$SVC/docker-compose.yml -p $(DOCKER_PROJECT) --env-file ./docker/.env $(DOCKER_COMPOSE_COMMAND) $(args) & \
 	done
+
+run_live: check_certs
+	GOPATH=$(go env GOPATH) docker compose  -f docker/docker-compose.yml -f docker/docker-compose-live.yaml   --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)

@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/absmach/magistrala"
 	server "github.com/absmach/magistrala/http"
 	"github.com/absmach/magistrala/http/api"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	pubsub "github.com/absmach/magistrala/pkg/messaging/mocks"
@@ -30,7 +30,7 @@ const (
 	invalidValue = "invalid"
 )
 
-func newService(things magistrala.ThingsServiceClient) (session.Handler, *pubsub.PubSub) {
+func newService(things grpcThingsV1.ThingsServiceClient) (session.Handler, *pubsub.PubSub) {
 	pub := new(pubsub.PubSub)
 	return server.NewHandler(pub, mglog.NewMock(), things), pub
 }
@@ -99,8 +99,8 @@ func TestPublish(t *testing.T) {
 
 	defer ts.Close()
 
-	things.On("Authorize", mock.Anything, &magistrala.ThingsAuthzReq{ThingKey: thingKey, ChannelID: chanID, Permission: "publish"}).Return(&magistrala.ThingsAuthzRes{Authorized: true, Id: ""}, nil)
-	things.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.ThingsAuthzRes{Authorized: false, Id: ""}, nil)
+	things.On("Authorize", mock.Anything, &grpcThingsV1.AuthzReq{ThingKey: thingKey, ChannelId: chanID, Permission: "publish"}).Return(&grpcThingsV1.AuthzRes{Authorized: true, Id: ""}, nil)
+	things.On("Authorize", mock.Anything, mock.Anything).Return(&grpcThingsV1.AuthzRes{Authorized: false, Id: ""}, nil)
 
 	cases := map[string]struct {
 		chanID      string

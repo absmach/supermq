@@ -21,8 +21,10 @@ const (
 )
 
 const (
+	RoleType     = "role"
 	GroupType    = "group"
 	ThingType    = "thing"
+	ChannelType  = "channel"
 	UserType     = "user"
 	DomainType   = "domain"
 	PlatformType = "platform"

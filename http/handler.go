@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/absmach/magistrala"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
@@ -47,12 +47,12 @@ var channelRegExp = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]
 // Event implements events.Event interface.
 type handler struct {
 	publisher messaging.Publisher
-	things    magistrala.ThingsServiceClient
+	things    grpcThingsV1.ThingsServiceClient
 	logger    *slog.Logger
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(publisher messaging.Publisher, logger *slog.Logger, thingsClient magistrala.ThingsServiceClient) session.Handler {
+func NewHandler(publisher messaging.Publisher, logger *slog.Logger, thingsClient grpcThingsV1.ThingsServiceClient) session.Handler {
 	return &handler{
 		logger:    logger,
 		publisher: publisher,
@@ -140,9 +140,9 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 	default:
 		tok = string(s.Password)
 	}
-	ar := &magistrala.ThingsAuthzReq{
+	ar := &grpcThingsV1.AuthzReq{
 		ThingKey:   tok,
-		ChannelID:  msg.Channel,
+		ChannelId:  msg.Channel,
 		Permission: policies.PublishPermission,
 	}
 	res, err := h.things.Authorize(ctx, ar)

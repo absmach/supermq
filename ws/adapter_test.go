@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/absmach/magistrala"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/internal/testsutil"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/messaging"
@@ -115,7 +115,7 @@ func TestSubscribe(t *testing.T) {
 			Handler: c,
 		}
 		repocall := pubsub.On("Subscribe", mock.Anything, subConfig).Return(tc.err)
-		repocall1 := things.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.ThingsAuthzRes{Authorized: true, Id: thingID}, nil)
+		repocall1 := things.On("Authorize", mock.Anything, mock.Anything).Return(&grpcThingsV1.AuthzRes{Authorized: true, Id: thingID}, nil)
 		err := svc.Subscribe(context.Background(), tc.thingKey, tc.chanID, tc.subtopic, c)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		repocall1.Parent.AssertCalled(t, "Authorize", mock.Anything, mock.Anything)
