@@ -23,9 +23,9 @@ func clientsHandler(svc things.Service, authn mgauthn.Authentication, r *chi.Mux
 	d := roleManagerHttp.NewDecoder("thingID")
 
 	r.Group(func(r chi.Router) {
-		r.Use(api.AuthenticateMiddleware(authn))
+		r.Use(api.AuthenticateMiddlewareDomain(authn))
 
-		r.Route("/things", func(r chi.Router) {
+		r.Route("/{domainID}/things", func(r chi.Router) {
 			r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
 				createClientEndpoint(svc),
 				decodeCreateClientReq,
@@ -102,13 +102,12 @@ func clientsHandler(svc things.Service, authn mgauthn.Authentication, r *chi.Mux
 
 		})
 
-		r.Get("/users/{userID}/things", otelhttp.NewHandler(kithttp.NewServer(
+		r.Get("/{domainID}/users/{userID}/things", otelhttp.NewHandler(kithttp.NewServer(
 			listClientsEndpoint(svc),
 			decodeListClients,
 			api.EncodeResponse,
 			opts...,
 		), "list_user_things").ServeHTTP)
 	})
-
 	return r
 }

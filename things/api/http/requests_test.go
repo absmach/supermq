@@ -60,8 +60,10 @@ func TestCreateThingReqValidate(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		err := tc.req.validate()
-		assert.Equal(t, tc.err, err)
+		t.Run(tc.desc, func(t *testing.T) {
+			err := tc.req.validate()
+			assert.Equal(t, tc.err, err)
+		})
 	}
 }
 
@@ -115,9 +117,11 @@ func TestCreateThingsReqValidate(t *testing.T) {
 			err: apiutil.ErrInvalidIDFormat,
 		},
 	}
-	for _, c := range cases {
-		err := c.req.validate()
-		assert.Equal(t, c.err, err, "%s: expected %s got %s\n", c.desc, c.err, err)
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := tc.req.validate()
+			assert.Equal(t, tc.err, err, "%s: expected %s got %s\n", tc.desc, tc.err, err)
+		})
 	}
 }
 
@@ -142,9 +146,11 @@ func TestViewClientReqValidate(t *testing.T) {
 			err: apiutil.ErrMissingID,
 		},
 	}
-	for _, c := range cases {
-		err := c.req.validate()
-		assert.Equal(t, c.err, err, "%s: expected %s got %s\n", c.desc, c.err, err)
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := tc.req.validate()
+			assert.Equal(t, tc.err, err, "%s: expected %s got %s\n", tc.desc, tc.err, err)
+		})
 	}
 }
 
@@ -169,9 +175,11 @@ func TestViewClientPermsReq(t *testing.T) {
 			err: apiutil.ErrMissingID,
 		},
 	}
-	for _, c := range cases {
-		err := c.req.validate()
-		assert.Equal(t, c.err, err, "%s: expected %s got %s\n", c.desc, c.err, err)
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := tc.req.validate()
+			assert.Equal(t, tc.err, err, "%s: expected %s got %s\n", tc.desc, tc.err, err)
+		})
 	}
 }
 
@@ -219,9 +227,11 @@ func TestListClientsReqValidate(t *testing.T) {
 			err: apiutil.ErrNameSize,
 		},
 	}
-	for _, c := range cases {
-		err := c.req.validate()
-		assert.Equal(t, c.err, err, "%s: expected %s got %s\n", c.desc, c.err, err)
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := tc.req.validate()
+			assert.Equal(t, tc.err, err, "%s: expected %s got %s\n", tc.desc, tc.err, err)
+		})
 	}
 }
 
@@ -246,9 +256,11 @@ func TestListMembersReqValidate(t *testing.T) {
 			err: apiutil.ErrMissingID,
 		},
 	}
-	for _, c := range cases {
-		err := c.req.validate()
-		assert.Equal(t, c.err, err, "%s: expected %s got %s\n", c.desc, c.err, err)
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := tc.req.validate()
+			assert.Equal(t, tc.err, err, "%s: expected %s got %s\n", tc.desc, tc.err, err)
+		})
 	}
 }
 
@@ -283,9 +295,11 @@ func TestUpdateClientReqValidate(t *testing.T) {
 			err: apiutil.ErrNameSize,
 		},
 	}
-	for _, c := range cases {
-		err := c.req.validate()
-		assert.Equal(t, c.err, err, "%s: expected %s got %s\n", c.desc, c.err, err)
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := tc.req.validate()
+			assert.Equal(t, tc.err, err, "%s: expected %s got %s\n", tc.desc, tc.err, err)
+		})
 	}
 }
 
@@ -312,9 +326,11 @@ func TestUpdateClientTagsReqValidate(t *testing.T) {
 			err: apiutil.ErrMissingID,
 		},
 	}
-	for _, c := range cases {
-		err := c.req.validate()
-		assert.Equal(t, c.err, err, "%s: expected %s got %s\n", c.desc, c.err, err)
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := tc.req.validate()
+			assert.Equal(t, tc.err, err, "%s: expected %s got %s\n", tc.desc, tc.err, err)
+		})
 	}
 }
 
@@ -349,9 +365,11 @@ func TestUpdateClientCredentialsReqValidate(t *testing.T) {
 			err: apiutil.ErrMissingSecret,
 		},
 	}
-	for _, c := range cases {
-		err := c.req.validate()
-		assert.Equal(t, c.err, err, "%s: expected %s got %s\n", c.desc, c.err, err)
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := tc.req.validate()
+			assert.Equal(t, tc.err, err, "%s: expected %s got %s\n", tc.desc, tc.err, err)
+		})
 	}
 }
 
@@ -376,9 +394,11 @@ func TestChangeClientStatusReqValidate(t *testing.T) {
 			err: apiutil.ErrMissingID,
 		},
 	}
-	for _, c := range cases {
-		err := c.req.validate()
-		assert.Equal(t, c.err, err, "%s: expected %s got %s\n", c.desc, c.err, err)
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := tc.req.validate()
+			assert.Equal(t, tc.err, err, "%s: expected %s got %s\n", tc.desc, tc.err, err)
+		})
 	}
 }
 
@@ -403,8 +423,10 @@ func TestDeleteClientReqValidate(t *testing.T) {
 			err: apiutil.ErrMissingID,
 		},
 	}
-	for _, c := range cases {
-		err := c.req.validate()
-		assert.Equal(t, c.err, err, "%s: expected %s got %s\n", c.desc, c.err, err)
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := tc.req.validate()
+			assert.Equal(t, tc.err, err, "%s: expected %s got %s\n", tc.desc, tc.err, err)
+		})
 	}
 }
