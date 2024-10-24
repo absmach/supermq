@@ -234,7 +234,8 @@ func (svc service) RemoveChannel(ctx context.Context, session authn.Session, id 
 			return errors.Wrap(svcerr.ErrRemoveEntity, err)
 		}
 	}
-	if _, err := svc.repo.ChangeStatus(ctx, Channel{ID: id, Status: mgclients.DeletedStatus}); err != nil {
+	ch, err := svc.repo.ChangeStatus(ctx, Channel{ID: id, Status: mgclients.DeletedStatus})
+	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
@@ -257,7 +258,15 @@ func (svc service) RemoveChannel(ctx context.Context, session authn.Session, id 
 			Object:      id,
 		},
 	}
-
+	if ch.ParentGroup != "" {
+		deletePolicies = append(deletePolicies, policies.Policy{
+			SubjectType: policies.GroupType,
+			Subject:     ch.ParentGroup,
+			Relation:    policies.ParentGroupRelation,
+			ObjectType:  policies.ChannelType,
+			Object:      id,
+		})
+	}
 	if err := svc.RemoveEntitiesRoles(ctx, session.DomainID, session.DomainUserID, []string{id}, filterDeletePolicies, deletePolicies); err != nil {
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
 	}
