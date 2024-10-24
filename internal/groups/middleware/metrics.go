@@ -9,6 +9,7 @@ import (
 
 	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/groups"
+	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
 	"github.com/go-kit/kit/metrics"
 )
 
@@ -18,24 +19,27 @@ type metricsMiddleware struct {
 	counter metrics.Counter
 	latency metrics.Histogram
 	svc     groups.Service
+	rmMW.RoleManagerMetricsMiddleware
 }
 
 // MetricsMiddleware instruments policies service by tracking request count and latency.
 func MetricsMiddleware(svc groups.Service, counter metrics.Counter, latency metrics.Histogram) groups.Service {
+	rmm := rmMW.NewRoleManagerMetricsMiddleware("group", svc, counter, latency)
 	return &metricsMiddleware{
-		counter: counter,
-		latency: latency,
-		svc:     svc,
+		counter:                      counter,
+		latency:                      latency,
+		svc:                          svc,
+		RoleManagerMetricsMiddleware: rmm,
 	}
 }
 
 // CreateGroup instruments CreateGroup method with metrics.
-func (ms *metricsMiddleware) CreateGroup(ctx context.Context, session authn.Session, kind string, g groups.Group) (groups.Group, error) {
+func (ms *metricsMiddleware) CreateGroup(ctx context.Context, session authn.Session, g groups.Group) (groups.Group, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "create_group").Add(1)
 		ms.latency.With("method", "create_group").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.CreateGroup(ctx, session, kind, g)
+	return ms.svc.CreateGroup(ctx, session, g)
 }
 
 // UpdateGroup instruments UpdateGroup method with metrics.
@@ -56,22 +60,13 @@ func (ms *metricsMiddleware) ViewGroup(ctx context.Context, session authn.Sessio
 	return ms.svc.ViewGroup(ctx, session, id)
 }
 
-// ViewGroupPerms instruments ViewGroup method with metrics.
-func (ms *metricsMiddleware) ViewGroupPerms(ctx context.Context, session authn.Session, id string) (p []string, err error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "view_group_perms").Add(1)
-		ms.latency.With("method", "view_group_perms").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-	return ms.svc.ViewGroupPerms(ctx, session, id)
-}
-
 // ListGroups instruments ListGroups method with metrics.
-func (ms *metricsMiddleware) ListGroups(ctx context.Context, session authn.Session, memberKind, memberID string, gp groups.Page) (cg groups.Page, err error) {
+func (ms *metricsMiddleware) ListGroups(ctx context.Context, session authn.Session, pm groups.PageMeta) (cg groups.Page, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_groups").Add(1)
 		ms.latency.With("method", "list_groups").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.ListGroups(ctx, session, memberKind, memberID, gp)
+	return ms.svc.ListGroups(ctx, session, pm)
 }
 
 // EnableGroup instruments EnableGroup method with metrics.
@@ -92,39 +87,66 @@ func (ms *metricsMiddleware) DisableGroup(ctx context.Context, session authn.Ses
 	return ms.svc.DisableGroup(ctx, session, id)
 }
 
-// ListMembers instruments ListMembers method with metrics.
-func (ms *metricsMiddleware) ListMembers(ctx context.Context, session authn.Session, groupID, permission, memberKind string) (mp groups.MembersPage, err error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "list_memberships").Add(1)
-		ms.latency.With("method", "list_memberships").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-	return ms.svc.ListMembers(ctx, session, groupID, permission, memberKind)
-}
-
-// Assign instruments Assign method with metrics.
-func (ms *metricsMiddleware) Assign(ctx context.Context, session authn.Session, groupID, relation, memberKind string, memberIDs ...string) (err error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "assign").Add(1)
-		ms.latency.With("method", "assign").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	return ms.svc.Assign(ctx, session, groupID, relation, memberKind, memberIDs...)
-}
-
-// Unassign instruments Unassign method with metrics.
-func (ms *metricsMiddleware) Unassign(ctx context.Context, session authn.Session, groupID, relation, memberKind string, memberIDs ...string) (err error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "unassign").Add(1)
-		ms.latency.With("method", "unassign").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	return ms.svc.Unassign(ctx, session, groupID, relation, memberKind, memberIDs...)
-}
-
 func (ms *metricsMiddleware) DeleteGroup(ctx context.Context, session authn.Session, id string) (err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "delete_group").Add(1)
 		ms.latency.With("method", "delete_group").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return ms.svc.DeleteGroup(ctx, session, id)
+}
+
+func (ms *metricsMiddleware) RetrieveGroupHierarchy(ctx context.Context, session authn.Session, id string, hm groups.HierarchyPageMeta) (groups.HierarchyPage, error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "list_parent_groups").Add(1)
+		ms.latency.With("method", "list_parent_groups").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.RetrieveGroupHierarchy(ctx, session, id, hm)
+}
+
+func (ms *metricsMiddleware) AddParentGroup(ctx context.Context, session authn.Session, id, parentID string) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "add_parent_group").Add(1)
+		ms.latency.With("method", "add_parent_group").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.AddParentGroup(ctx, session, id, parentID)
+}
+
+func (ms *metricsMiddleware) RemoveParentGroup(ctx context.Context, session authn.Session, id string) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "remove_parent_group").Add(1)
+		ms.latency.With("method", "remove_parent_group").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.RemoveParentGroup(ctx, session, id)
+}
+
+func (ms *metricsMiddleware) AddChildrenGroups(ctx context.Context, session authn.Session, id string, childrenGroupIDs []string) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "add_children_groups").Add(1)
+		ms.latency.With("method", "add_children_groups").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.AddChildrenGroups(ctx, session, id, childrenGroupIDs)
+}
+
+func (ms *metricsMiddleware) RemoveChildrenGroups(ctx context.Context, session authn.Session, id string, childrenGroupIDs []string) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "remove_children_groups").Add(1)
+		ms.latency.With("method", "remove_children_groups").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.RemoveChildrenGroups(ctx, session, id, childrenGroupIDs)
+}
+
+func (ms *metricsMiddleware) RemoveAllChildrenGroups(ctx context.Context, session authn.Session, id string) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "remove_all_children_groups").Add(1)
+		ms.latency.With("method", "remove_all_children_groups").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.RemoveAllChildrenGroups(ctx, session, id)
+}
+
+func (ms *metricsMiddleware) ListChildrenGroups(ctx context.Context, session authn.Session, id string, pm groups.PageMeta) (groups.Page, error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "list_children_groups").Add(1)
+		ms.latency.With("method", "list_children_groups").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.ListChildrenGroups(ctx, session, id, pm)
 }

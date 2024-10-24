@@ -7,90 +7,88 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/magistrala/pkg/clients"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	pgclients "github.com/absmach/magistrala/pkg/clients/postgres"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	"github.com/absmach/magistrala/pkg/postgres"
+	rolesPostgres "github.com/absmach/magistrala/pkg/roles/repo/postgres"
+	"github.com/absmach/magistrala/things"
 )
 
-var _ mgclients.Repository = (*clientRepo)(nil)
+const (
+	entityTableName      = "clients"
+	entityIDColumnName   = "id"
+	rolesTableNamePrefix = "things"
+)
 
-type clientRepo struct {
-	pgclients.Repository
-}
+var _ things.Repository = (*thingsRepo)(nil)
 
-// Repository is the interface that wraps the basic methods for
-// a client repository.
-//
-//go:generate mockery --name Repository --output=../mocks --filename repository.go --quiet --note "Copyright (c) Abstract Machines"
-type Repository interface {
-	mgclients.Repository
-
-	// Save persists the client account. A non-nil error is returned to indicate
-	// operation failure.
-	Save(ctx context.Context, client ...mgclients.Client) ([]mgclients.Client, error)
-
-	// RetrieveBySecret retrieves a client based on the secret (key).
-	RetrieveBySecret(ctx context.Context, key string) (mgclients.Client, error)
+type thingsRepo struct {
+	clientsRepo
+	rolesPostgres.Repository
 }
 
 // NewRepository instantiates a PostgreSQL
 // implementation of Clients repository.
-func NewRepository(db postgres.Database) Repository {
-	return &clientRepo{
-		Repository: pgclients.Repository{DB: db},
+func NewRepository(db postgres.Database) things.Repository {
+	repo := rolesPostgres.NewRepository(db, rolesTableNamePrefix, entityTableName, entityIDColumnName)
+
+	return &thingsRepo{
+		clientsRepo{
+			pgclients.Repository{DB: db},
+		},
+		repo,
 	}
 }
 
-func (repo clientRepo) Save(ctx context.Context, cs ...mgclients.Client) ([]mgclients.Client, error) {
-	tx, err := repo.DB.BeginTxx(ctx, nil)
-	if err != nil {
-		return []mgclients.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
-	}
-	var clients []mgclients.Client
+type clientsRepo struct {
+	pgclients.Repository
+}
 
+func (repo *clientsRepo) Save(ctx context.Context, cs ...mgclients.Client) (retClients []mgclients.Client, retErr error) {
+
+	var dbClients []pgclients.DBClient
 	for _, cli := range cs {
-		q := `INSERT INTO clients (id, name, tags, domain_id, identity, secret, metadata, created_at, updated_at, updated_by, status)
-        VALUES (:id, :name, :tags, :domain_id, :identity, :secret, :metadata, :created_at, :updated_at, :updated_by, :status)
-        RETURNING id, name, tags, identity, secret, metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
-
 		dbcli, err := pgclients.ToDBClient(cli)
 		if err != nil {
 			return []mgclients.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
 		}
-
-		row, err := repo.DB.NamedQueryContext(ctx, q, dbcli)
-		if err != nil {
-			if err := tx.Rollback(); err != nil {
-				return []mgclients.Client{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
-			}
-			return []mgclients.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
-		}
-
-		defer row.Close()
-
-		if row.Next() {
-			dbcli = pgclients.DBClient{}
-			if err := row.StructScan(&dbcli); err != nil {
-				return []mgclients.Client{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
-			}
-
-			client, err := pgclients.ToClient(dbcli)
-			if err != nil {
-				return []mgclients.Client{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
-			}
-			clients = append(clients, client)
-		}
+		dbClients = append(dbClients, dbcli)
 	}
-	if err = tx.Commit(); err != nil {
-		return []mgclients.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
+
+	q := `INSERT INTO clients (id, name, tags, domain_id, identity, secret, metadata, created_at, updated_at, updated_by, status)
+	VALUES (:id, :name, :tags, :domain_id, :identity, :secret, :metadata, :created_at, :updated_at, :updated_by, :status)
+	RETURNING id, name, tags, identity, secret, metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
+
+	row, err := repo.DB.NamedQueryContext(ctx, q, dbClients)
+	if err != nil {
+		return []mgclients.Client{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+	}
+
+	defer row.Close()
+
+	var clients []mgclients.Client
+
+	for row.Next() {
+		dbcli := pgclients.DBClient{}
+		if err := row.StructScan(&dbcli); err != nil {
+			return []mgclients.Client{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
+		}
+
+		client, err := pgclients.ToClient(dbcli)
+		if err != nil {
+			return []mgclients.Client{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
+		}
+		clients = append(clients, client)
 	}
 
 	return clients, nil
 }
 
-func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (mgclients.Client, error) {
+func (repo *clientsRepo) RetrieveBySecret(ctx context.Context, key string) (mgclients.Client, error) {
 	q := fmt.Sprintf(`SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id, identity, secret, metadata, created_at, updated_at, updated_by, status
         FROM clients
         WHERE secret = :secret AND status = %d`, mgclients.EnabledStatus)
@@ -120,4 +118,187 @@ func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (mgclie
 	}
 
 	return mgclients.Client{}, repoerr.ErrNotFound
+}
+
+func (repo *clientsRepo) RemoveThings(ctx context.Context, clientIDs ...[]string) error {
+	q := "DELETE FROM clients AS c  WHERE c.id = ANY(:client_ids) ;"
+
+	params := map[string]interface{}{
+		"client_ids": clientIDs,
+	}
+	result, err := repo.DB.NamedExecContext(ctx, q, params)
+	if err != nil {
+		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
+	}
+	if rows, _ := result.RowsAffected(); rows == 0 {
+		return repoerr.ErrNotFound
+	}
+
+	return nil
+}
+
+func (repo *clientsRepo) RetrieveByIds(ctx context.Context, ids []string) (mgclients.ClientsPage, error) {
+	if len(ids) == 0 {
+		return clients.ClientsPage{}, nil
+	}
+
+	// To avoid adding c.Role in query adding Roles: mgclients.AllRole
+	pm := mgclients.Page{IDs: ids, Role: mgclients.AllRole}
+	query, err := pgclients.PageQuery(pm)
+	if err != nil {
+		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+
+	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.identity, c.metadata, COALESCE(c.domain_id, '') AS domain_id, c.status,
+					c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM clients c %s ORDER BY c.created_at`, query)
+
+	dbPage, err := pgclients.ToDBClientsPage(pm)
+	if err != nil {
+		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+	}
+	rows, err := repo.DB.NamedQueryContext(ctx, q, dbPage)
+	if err != nil {
+		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+	}
+	defer rows.Close()
+
+	var items []clients.Client
+	for rows.Next() {
+		dbc := pgclients.DBClient{}
+		if err := rows.StructScan(&dbc); err != nil {
+			return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+
+		c, err := pgclients.ToClient(dbc)
+		if err != nil {
+			return clients.ClientsPage{}, err
+		}
+
+		items = append(items, c)
+	}
+	cq := fmt.Sprintf(`SELECT COUNT(*) FROM clients c %s;`, query)
+
+	total, err := postgres.Total(ctx, repo.DB, cq, dbPage)
+	if err != nil {
+		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+
+	page := clients.ClientsPage{
+		Clients: items,
+		Page: clients.Page{
+			Total:  total,
+			Offset: pm.Offset,
+			Limit:  total,
+		},
+	}
+
+	return page, nil
+}
+
+func (repo *clientsRepo) AddConnections(ctx context.Context, conns []things.Connection) error {
+
+	dbConns := toDBConnections(conns)
+
+	q := `INSERT INTO connections (channel_id, domain_id, thing_id)
+			VALUES (:channel_id, :domain_id, :thing_id);`
+
+	if _, err := repo.DB.NamedExecContext(ctx, q, dbConns); err != nil {
+		return postgres.HandleError(repoerr.ErrCreateEntity, err)
+	}
+
+	return nil
+
+}
+
+func (repo *clientsRepo) RemoveConnections(ctx context.Context, conns []things.Connection) (retErr error) {
+	tx, err := repo.DB.BeginTxx(ctx, nil)
+	if err != nil {
+		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+	}
+	defer func() {
+		if retErr != nil {
+			if errRollBack := tx.Rollback(); errRollBack != nil {
+				retErr = errors.Wrap(retErr, errors.Wrap(apiutil.ErrRollbackTx, errRollBack))
+			}
+		}
+	}()
+
+	query := `DELETE FROM connections WHERE channel_id = :channel_id AND domain_id = :domain_id AND thing_id = :thing_id`
+
+	for _, conn := range conns {
+		dbConn := toDBConnection(conn)
+		if _, err := tx.NamedExec(query, dbConn); err != nil {
+			return errors.Wrap(repoerr.ErrRemoveEntity, errors.Wrap(fmt.Errorf("failed to delete connection for channel_id: %s, domain_id: %s thing_id %s", conn.ChannelID, conn.DomainID, conn.ThingID), err))
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+	}
+	return nil
+}
+
+func (repo *clientsRepo) ThingConnectionsCount(ctx context.Context, id string) (uint64, error) {
+	query := `SELECT COUNT(*) FROM connections WHERE thing_id = :thing_id`
+	dbConn := dbConnection{ThingID: id}
+
+	total, err := postgres.Total(ctx, repo.DB, query, dbConn)
+	if err != nil {
+		return 0, postgres.HandleError(repoerr.ErrViewEntity, err)
+	}
+	return total, nil
+}
+
+func (repo *clientsRepo) DoesThingHaveConnections(ctx context.Context, id string) (bool, error) {
+	query := `SELECT 1 FROM connections WHERE thing_id = :thing_id`
+	dbConn := dbConnection{ThingID: id}
+
+	rows, err := repo.DB.NamedQueryContext(ctx, query, dbConn)
+	if err != nil {
+		return false, postgres.HandleError(repoerr.ErrViewEntity, err)
+	}
+	defer rows.Close()
+
+	return rows.Next(), nil
+}
+
+func (repo *clientsRepo) RemoveChannelConnections(ctx context.Context, channelID string) error {
+	query := `DELETE FROM connections WHERE channel_id = :channel_id`
+
+	dbConn := dbConnection{ChannelID: channelID}
+	if _, err := repo.DB.NamedExecContext(ctx, query, dbConn); err != nil {
+		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+	}
+	return nil
+}
+
+func (repo *clientsRepo) RemoveThingConnections(ctx context.Context, thingID string) error {
+	query := `DELETE FROM connections WHERE thing_id = :thing_id`
+
+	dbConn := dbConnection{ThingID: thingID}
+	if _, err := repo.DB.NamedExecContext(ctx, query, dbConn); err != nil {
+		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+	}
+	return nil
+}
+
+type dbConnection struct {
+	ThingID   string `db:"thing_id"`
+	ChannelID string `db:"channel_id"`
+	DomainID  string `db:"domain_id"`
+}
+
+func toDBConnections(conns []things.Connection) []dbConnection {
+	var dbconns []dbConnection
+	for _, conn := range conns {
+		dbconns = append(dbconns, toDBConnection(conn))
+	}
+	return dbconns
+}
+
+func toDBConnection(conn things.Connection) dbConnection {
+	return dbConnection{
+		ThingID:   conn.ThingID,
+		ChannelID: conn.ChannelID,
+		DomainID:  conn.DomainID,
+	}
 }

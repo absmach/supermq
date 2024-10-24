@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/absmach/magistrala"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
 	"github.com/absmach/magistrala/pkg/errors"
@@ -55,7 +56,7 @@ const (
 var errUserAccess = errors.New("user has no permission")
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc readers.MessageRepository, authz mgauthz.Authorization, things magistrala.ThingsServiceClient, svcName, instanceID string) http.Handler {
+func MakeHandler(svc readers.MessageRepository, authz mgauthz.Authorization, things grpcThingsV1.ThingsServiceClient, svcName, instanceID string) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}
@@ -242,7 +243,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	}
 }
 
-func authorize(ctx context.Context, req listMessagesReq, authz mgauthz.Authorization, things magistrala.ThingsServiceClient) (err error) {
+func authorize(ctx context.Context, req listMessagesReq, authz mgauthz.Authorization, things grpcThingsV1.ThingsServiceClient) (err error) {
 	switch {
 	case req.token != "":
 		if err = authz.Authorize(ctx, mgauthz.PolicyReq{
@@ -261,9 +262,9 @@ func authorize(ctx context.Context, req listMessagesReq, authz mgauthz.Authoriza
 		}
 		return nil
 	case req.key != "":
-		if _, err = things.Authorize(ctx, &magistrala.ThingsAuthzReq{
+		if _, err = things.Authorize(ctx, &grpcThingsV1.AuthzReq{
 			ThingKey:   req.key,
-			ChannelID:  req.chanID,
+			ChannelId:  req.chanID,
 			Permission: subscribePermission,
 		}); err != nil {
 			e, ok := status.FromError(err)

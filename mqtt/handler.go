@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/absmach/magistrala"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/mqtt/events"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
@@ -58,13 +58,13 @@ var channelRegExp = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]
 // Event implements events.Event interface.
 type handler struct {
 	publisher messaging.Publisher
-	things    magistrala.ThingsServiceClient
+	things    grpcThingsV1.ThingsServiceClient
 	logger    *slog.Logger
 	es        events.EventStore
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(publisher messaging.Publisher, es events.EventStore, logger *slog.Logger, thingsClient magistrala.ThingsServiceClient) session.Handler {
+func NewHandler(publisher messaging.Publisher, es events.EventStore, logger *slog.Logger, thingsClient grpcThingsV1.ThingsServiceClient) session.Handler {
 	return &handler{
 		es:        es,
 		logger:    logger,
@@ -224,10 +224,10 @@ func (h *handler) authAccess(ctx context.Context, password, topic, action string
 
 	chanID := channelParts[1]
 
-	ar := &magistrala.ThingsAuthzReq{
+	ar := &grpcThingsV1.AuthzReq{
 		Permission: action,
 		ThingKey:   password,
-		ChannelID:  chanID,
+		ChannelId:  chanID,
 	}
 	res, err := h.things.Authorize(ctx, ar)
 	if err != nil {

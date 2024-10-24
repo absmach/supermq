@@ -11,9 +11,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/absmach/magistrala"
 	mgauth "github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/internal/api"
+	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
@@ -29,7 +29,7 @@ import (
 var passRegex = regexp.MustCompile("^.{8,}$")
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func clientsHandler(svc users.Service, authn mgauthn.Authentication, tokenClient magistrala.TokenServiceClient, selfRegister bool, r *chi.Mux, logger *slog.Logger, pr *regexp.Regexp, providers ...oauth2.Provider) http.Handler {
+func clientsHandler(svc users.Service, authn mgauthn.Authentication, tokenClient grpcTokenV1.TokenServiceClient, selfRegister bool, r *chi.Mux, logger *slog.Logger, pr *regexp.Regexp, providers ...oauth2.Provider) *chi.Mux {
 	passRegex = pr
 
 	opts := []kithttp.ServerOption{
@@ -603,7 +603,7 @@ func queryPageParams(r *http.Request, defPermission string) (mgclients.Page, err
 }
 
 // oauth2CallbackHandler is a http.HandlerFunc that handles OAuth2 callbacks.
-func oauth2CallbackHandler(oauth oauth2.Provider, svc users.Service, tokenClient magistrala.TokenServiceClient) http.HandlerFunc {
+func oauth2CallbackHandler(oauth oauth2.Provider, svc users.Service, tokenClient grpcTokenV1.TokenServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !oauth.IsEnabled() {
 			http.Redirect(w, r, oauth.ErrorURL()+"?error=oauth%20provider%20is%20disabled", http.StatusSeeOther)
@@ -638,7 +638,7 @@ func oauth2CallbackHandler(oauth oauth2.Provider, svc users.Service, tokenClient
 				return
 			}
 
-			jwt, err := tokenClient.Issue(r.Context(), &magistrala.IssueReq{
+			jwt, err := tokenClient.Issue(r.Context(), &grpcTokenV1.IssueReq{
 				UserId: client.ID,
 				Type:   uint32(mgauth.AccessKey),
 			})

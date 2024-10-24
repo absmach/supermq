@@ -142,8 +142,9 @@ func (ps *policyService) AddPolicies(ctx context.Context, prs []policies.Policy)
 func (ps *policyService) DeletePolicyFilter(ctx context.Context, pr policies.Policy) error {
 	req := &v1.DeleteRelationshipsRequest{
 		RelationshipFilter: &v1.RelationshipFilter{
-			ResourceType:       pr.ObjectType,
-			OptionalResourceId: pr.Object,
+			ResourceType:             pr.ObjectType,
+			OptionalResourceId:       pr.Object,
+			OptionalResourceIdPrefix: pr.ObjectPrefix,
 		},
 	}
 

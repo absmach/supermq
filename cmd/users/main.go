@@ -22,6 +22,8 @@ import (
 	gmiddleware "github.com/absmach/magistrala/internal/groups/middleware"
 	gpostgres "github.com/absmach/magistrala/internal/groups/postgres"
 	gtracing "github.com/absmach/magistrala/internal/groups/tracing"
+	grpcDomainsV1 "github.com/absmach/magistrala/internal/grpc/domains/v1"
+	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	authsvcAuthn "github.com/absmach/magistrala/pkg/authn/authsvc"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
@@ -39,6 +41,7 @@ import (
 	"github.com/absmach/magistrala/pkg/prometheus"
 	"github.com/absmach/magistrala/pkg/server"
 	httpserver "github.com/absmach/magistrala/pkg/server/http"
+	"github.com/absmach/magistrala/pkg/sid"
 	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/absmach/magistrala/users"
 	capi "github.com/absmach/magistrala/users/api"
@@ -60,13 +63,14 @@ import (
 )
 
 const (
-	svcName         = "users"
-	envPrefixDB     = "MG_USERS_DB_"
-	envPrefixHTTP   = "MG_USERS_HTTP_"
-	envPrefixAuth   = "MG_AUTH_GRPC_"
-	envPrefixGoogle = "MG_GOOGLE_"
-	defDB           = "users"
-	defSvcHTTPPort  = "9002"
+	svcName          = "users"
+	envPrefixDB      = "MG_USERS_DB_"
+	envPrefixHTTP    = "MG_USERS_HTTP_"
+	envPrefixAuth    = "MG_AUTH_GRPC_"
+	envPrefixDomains = "MG_DOMAINS_GRPC_"
+	envPrefixGoogle  = "MG_GOOGLE_"
+	defDB            = "users"
+	defSvcHTTPPort   = "9002"
 
 	streamID = "magistrala.users"
 )
@@ -137,7 +141,12 @@ func main() {
 		return
 	}
 	cm := clientspg.Migration()
-	gm := gpostgres.Migration()
+	gm, err := gpostgres.Migration()
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
 	cm.Migrations = append(cm.Migrations, gm.Migrations...)
 	db, err := pgclient.Setup(dbConfig, *cm)
 	if err != nil {
@@ -160,14 +169,14 @@ func main() {
 	}()
 	tracer := tp.Tracer(svcName)
 
-	clientConfig := grpcclient.Config{}
-	if err := env.ParseWithOptions(&clientConfig, env.Options{Prefix: envPrefixAuth}); err != nil {
+	authClientConfig := grpcclient.Config{}
+	if err := env.ParseWithOptions(&authClientConfig, env.Options{Prefix: envPrefixAuth}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
 		exitCode = 1
 		return
 	}
 
-	tokenClient, tokenHandler, err := grpcclient.SetupTokenClient(ctx, clientConfig)
+	tokenClient, tokenHandler, err := grpcclient.SetupTokenClient(ctx, authClientConfig)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
@@ -176,7 +185,7 @@ func main() {
 	defer tokenHandler.Close()
 	logger.Info("Token service client successfully connected to auth gRPC server " + tokenHandler.Secure())
 
-	authn, authnHandler, err := authsvcAuthn.NewAuthentication(ctx, clientConfig)
+	authn, authnHandler, err := authsvcAuthn.NewAuthentication(ctx, authClientConfig)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
@@ -185,7 +194,7 @@ func main() {
 	defer authnHandler.Close()
 	logger.Info("Authn successfully connected to auth gRPC server " + authnHandler.Secure())
 
-	authz, authzHandler, err := authsvcAuthz.NewAuthorization(ctx, clientConfig)
+	authz, authzHandler, err := authsvcAuthz.NewAuthorization(ctx, authClientConfig)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
@@ -194,14 +203,21 @@ func main() {
 	defer authzHandler.Close()
 	logger.Info("Authz successfully connected to auth gRPC server " + authzHandler.Secure())
 
-	domainsClient, domainsHandler, err := grpcclient.SetupDomainsClient(ctx, clientConfig)
+	domainsClientConfig := grpcclient.Config{}
+	if err := env.ParseWithOptions(&domainsClientConfig, env.Options{Prefix: envPrefixDomains}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
+		exitCode = 1
+		return
+	}
+
+	domainsClient, domainsHandler, err := grpcclient.SetupDomainsClient(ctx, domainsClientConfig)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
 		return
 	}
 	defer domainsHandler.Close()
-	logger.Info("DomainsService gRPC client successfully connected to auth gRPC server " + domainsHandler.Secure())
+	logger.Info("DomainsService gRPC client successfully connected to domains gRPC server " + domainsHandler.Secure())
 
 	policyService, err := newPolicyService(cfg, logger)
 	if err != nil {
@@ -234,7 +250,7 @@ func main() {
 	oauthProvider := googleoauth.NewProvider(oauthConfig, cfg.OAuthUIRedirectURL, cfg.OAuthUIErrorURL)
 
 	mux := chi.NewRouter()
-	httpSrv := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, capi.MakeHandler(csvc, authn, tokenClient, cfg.SelfRegister, gsvc, mux, logger, cfg.InstanceID, cfg.PassRegex, oauthProvider), logger)
+	httpSrv := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, capi.MakeHandler(csvc, gsvc, authn, tokenClient, cfg.SelfRegister, mux, logger, cfg.InstanceID, cfg.PassRegex, oauthProvider), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
@@ -254,43 +270,56 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, authz mgauthz.Authorization, token magistrala.TokenServiceClient, policyService policies.Service, domainsClient magistrala.DomainsServiceClient, db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, c config, ec email.Config, logger *slog.Logger) (users.Service, groups.Service, error) {
-	database := postgres.NewDatabase(db, dbConfig, tracer)
-	cRepo := clientspg.NewRepository(database)
-	gRepo := gpostgres.New(database)
+func newService(ctx context.Context, authz mgauthz.Authorization, token grpcTokenV1.TokenServiceClient, policyService policies.Service, domainsClient grpcDomainsV1.DomainsServiceClient, db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, c config, ec email.Config, logger *slog.Logger) (users.Service, groups.Service, error) {
 
+	database := postgres.NewDatabase(db, dbConfig, tracer)
 	idp := uuid.New()
+	sid, err := sid.New()
+	if err != nil {
+		return nil, nil, err
+	}
 	hsr := hasher.New()
 
+	// Creating groups service
+	gRepo := gpostgres.New(database)
+	gsvc, err := mggroups.NewService(gRepo, policyService, idp, sid)
+	if err != nil {
+		return nil, nil, err
+	}
+	gsvc, err = gevents.New(ctx, gsvc, c.ESURL, streamID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	gsvc, err = gmiddleware.AuthorizationMiddleware(policies.GroupType, gsvc, authz, groups.NewOperationPermissionMap(), groups.NewRolesOperationPermissionMap())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	gsvc = gtracing.New(gsvc, tracer)
+	gsvc = gmiddleware.LoggingMiddleware(gsvc, logger)
+	counter, latency := prometheus.MakeMetrics("groups", "api")
+	gsvc = gmiddleware.MetricsMiddleware(gsvc, counter, latency)
+
+	// Creating users service
+	cRepo := clientspg.NewRepository(database)
 	emailerClient, err := emailer.New(c.ResetURL, &ec)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to configure e-mailing util: %s", err.Error()))
 	}
 
 	csvc := users.NewService(token, cRepo, policyService, emailerClient, hsr, idp)
-	gsvc := mggroups.NewService(gRepo, idp, policyService)
 
 	csvc, err = uevents.NewEventStoreMiddleware(ctx, csvc, c.ESURL)
 	if err != nil {
 		return nil, nil, err
 	}
-	gsvc, err = gevents.NewEventStoreMiddleware(ctx, gsvc, c.ESURL, streamID)
-	if err != nil {
-		return nil, nil, err
-	}
-
 	csvc = cmiddleware.AuthorizationMiddleware(csvc, authz, c.SelfRegister)
-	gsvc = gmiddleware.AuthorizationMiddleware(gsvc, authz)
 
 	csvc = ctracing.New(csvc, tracer)
 	csvc = cmiddleware.LoggingMiddleware(csvc, logger)
-	counter, latency := prometheus.MakeMetrics(svcName, "api")
+	counter, latency = prometheus.MakeMetrics(svcName, "api")
 	csvc = cmiddleware.MetricsMiddleware(csvc, counter, latency)
-
-	gsvc = gtracing.New(gsvc, tracer)
-	gsvc = gmiddleware.LoggingMiddleware(gsvc, logger)
-	counter, latency = prometheus.MakeMetrics("groups", "api")
-	gsvc = gmiddleware.MetricsMiddleware(gsvc, counter, latency)
 
 	clientID, err := createAdmin(ctx, c, cRepo, hsr, csvc)
 	if err != nil {

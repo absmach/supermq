@@ -6,56 +6,224 @@ package grpc
 import (
 	"context"
 
-	"github.com/absmach/magistrala"
 	mgauth "github.com/absmach/magistrala/auth"
+	grpcCommonV1 "github.com/absmach/magistrala/internal/grpc/common/v1"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/things"
+	things "github.com/absmach/magistrala/things/private"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-var _ magistrala.ThingsServiceServer = (*grpcServer)(nil)
+var _ grpcThingsV1.ThingsServiceServer = (*grpcServer)(nil)
 
 type grpcServer struct {
-	magistrala.UnimplementedThingsServiceServer
-	authorize kitgrpc.Handler
+	grpcThingsV1.UnimplementedThingsServiceServer
+	authorize                kitgrpc.Handler
+	retrieveEntity           kitgrpc.Handler
+	retrieveEntities         kitgrpc.Handler
+	addConnections           kitgrpc.Handler
+	removeConnections        kitgrpc.Handler
+	removeChannelConnections kitgrpc.Handler
 }
 
 // NewServer returns new AuthServiceServer instance.
-func NewServer(svc things.Service) magistrala.ThingsServiceServer {
+func NewServer(svc things.Service) grpcThingsV1.ThingsServiceServer {
 	return &grpcServer{
 		authorize: kitgrpc.NewServer(
-			(authorizeEndpoint(svc)),
+			authorizeEndpoint(svc),
 			decodeAuthorizeRequest,
 			encodeAuthorizeResponse,
+		),
+		retrieveEntity: kitgrpc.NewServer(
+			retrieveEntityEndpoint(svc),
+			decodeRetrieveEntityRequest,
+			encodeRetrieveEntityResponse,
+		),
+		retrieveEntities: kitgrpc.NewServer(
+			retrieveEntitiesEndpoint(svc),
+			decodeRetrieveEntitiesRequest,
+			encodeRetrieveEntitiesResponse,
+		),
+		addConnections: kitgrpc.NewServer(
+			addConnectionsEndpoint(svc),
+			decodeAddConnectionsRequest,
+			encodeAddConnectionsResponse,
+		),
+		removeConnections: kitgrpc.NewServer(
+			removeConnectionsEndpoint(svc),
+			decodeRemoveConnectionsRequest,
+			encodeRemoveConnectionsResponse,
+		),
+		removeChannelConnections: kitgrpc.NewServer(
+			removeChannelConnectionsEndpoint(svc),
+			decodeRemoveChannelConnectionsRequest,
+			encodeRemoveChannelConnectionsResponse,
 		),
 	}
 }
 
-func (s *grpcServer) Authorize(ctx context.Context, req *magistrala.ThingsAuthzReq) (*magistrala.ThingsAuthzRes, error) {
+func (s *grpcServer) Authorize(ctx context.Context, req *grpcThingsV1.AuthzReq) (*grpcThingsV1.AuthzRes, error) {
 	_, res, err := s.authorize.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, encodeError(err)
 	}
-	return res.(*magistrala.ThingsAuthzRes), nil
+	return res.(*grpcThingsV1.AuthzRes), nil
 }
 
 func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*magistrala.ThingsAuthzReq)
+	req := grpcReq.(*grpcThingsV1.AuthzReq)
 	return authorizeReq{
-		ThingID:    req.GetThingID(),
+		ThingID:    req.GetThingId(),
 		ThingKey:   req.GetThingKey(),
-		ChannelID:  req.GetChannelID(),
+		ChannelID:  req.GetChannelId(),
 		Permission: req.GetPermission(),
 	}, nil
 }
 
 func encodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(authorizeRes)
-	return &magistrala.ThingsAuthzRes{Authorized: res.authorized, Id: res.id}, nil
+	return &grpcThingsV1.AuthzRes{Authorized: res.authorized, Id: res.id}, nil
+}
+
+func (s *grpcServer) RetrieveEntity(ctx context.Context, req *grpcCommonV1.RetrieveEntityReq) (*grpcCommonV1.RetrieveEntityRes, error) {
+	_, res, err := s.retrieveEntity.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, encodeError(err)
+	}
+	return res.(*grpcCommonV1.RetrieveEntityRes), nil
+}
+
+func decodeRetrieveEntityRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*grpcCommonV1.RetrieveEntityReq)
+	return retrieveEntityReq{
+		Id: req.GetId(),
+	}, nil
+}
+
+func encodeRetrieveEntityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(retrieveEntityRes)
+
+	return &grpcCommonV1.RetrieveEntityRes{
+		Entity: &grpcCommonV1.EntityBasic{
+			Id:       res.id,
+			DomainId: res.domain,
+			Status:   uint32(res.status),
+		},
+	}, nil
+}
+
+func (s *grpcServer) RetrieveEntities(ctx context.Context, req *grpcCommonV1.RetrieveEntitiesReq) (*grpcCommonV1.RetrieveEntitiesRes, error) {
+	_, res, err := s.retrieveEntities.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, encodeError(err)
+	}
+	return res.(*grpcCommonV1.RetrieveEntitiesRes), nil
+}
+
+func decodeRetrieveEntitiesRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*grpcCommonV1.RetrieveEntitiesReq)
+	return retrieveEntitiesReq{
+		Ids: req.GetIds(),
+	}, nil
+}
+
+func encodeRetrieveEntitiesResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(retrieveEntitiesRes)
+
+	entities := []*grpcCommonV1.EntityBasic{}
+	for _, thing := range res.things {
+		entities = append(entities, &grpcCommonV1.EntityBasic{
+			Id:       thing.id,
+			DomainId: thing.domain,
+			Status:   uint32(thing.status),
+		})
+	}
+	return &grpcCommonV1.RetrieveEntitiesRes{Total: res.total, Limit: res.limit, Offset: res.offset, Entities: entities}, nil
+}
+
+func (s *grpcServer) AddConnections(ctx context.Context, req *grpcCommonV1.AddConnectionsReq) (*grpcCommonV1.AddConnectionsRes, error) {
+	_, res, err := s.addConnections.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, encodeError(err)
+	}
+	return res.(*grpcCommonV1.AddConnectionsRes), nil
+}
+
+func decodeAddConnectionsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*grpcCommonV1.AddConnectionsReq)
+
+	conns := []connection{}
+	for _, c := range req.Connections {
+		conns = append(conns, connection{
+			thingID:   c.GetThingId(),
+			channelID: c.GetChannelId(),
+			domainID:  c.GetDomainId(),
+		})
+	}
+	return connectionsReq{
+		connections: conns,
+	}, nil
+}
+
+func encodeAddConnectionsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(connectionsRes)
+
+	return &grpcCommonV1.AddConnectionsRes{Ok: res.ok}, nil
+}
+
+func (s *grpcServer) RemoveConnections(ctx context.Context, req *grpcCommonV1.RemoveConnectionsReq) (*grpcCommonV1.RemoveConnectionsRes, error) {
+	_, res, err := s.removeConnections.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, encodeError(err)
+	}
+	return res.(*grpcCommonV1.RemoveConnectionsRes), nil
+}
+
+func decodeRemoveConnectionsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*grpcCommonV1.RemoveConnectionsReq)
+
+	conns := []connection{}
+	for _, c := range req.Connections {
+		conns = append(conns, connection{
+			thingID:   c.GetThingId(),
+			channelID: c.GetChannelId(),
+			domainID:  c.GetDomainId(),
+		})
+	}
+	return connectionsReq{
+		connections: conns,
+	}, nil
+}
+
+func encodeRemoveConnectionsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(connectionsRes)
+
+	return &grpcCommonV1.RemoveConnectionsRes{Ok: res.ok}, nil
+}
+
+func (s *grpcServer) RemoveChannelConnections(ctx context.Context, req *grpcThingsV1.RemoveChannelConnectionsReq) (*grpcThingsV1.RemoveChannelConnectionsRes, error) {
+	_, res, err := s.removeChannelConnections.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, encodeError(err)
+	}
+	return res.(*grpcThingsV1.RemoveChannelConnectionsRes), nil
+}
+
+func decodeRemoveChannelConnectionsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*grpcThingsV1.RemoveChannelConnectionsReq)
+
+	return removeChannelConnectionsReq{
+		channelID: req.GetChannelId(),
+	}, nil
+}
+
+func encodeRemoveChannelConnectionsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	_ = grpcRes.(removeChannelConnectionsRes)
+	return &grpcThingsV1.RemoveChannelConnectionsRes{}, nil
 }
 
 func encodeError(err error) error {

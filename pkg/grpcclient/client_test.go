@@ -9,10 +9,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/absmach/magistrala"
-	domainsgrpcapi "github.com/absmach/magistrala/auth/api/grpc/domains"
 	tokengrpcapi "github.com/absmach/magistrala/auth/api/grpc/token"
 	"github.com/absmach/magistrala/auth/mocks"
+	domainsgrpcapi "github.com/absmach/magistrala/domains/api/grpc"
+	domainsMocks "github.com/absmach/magistrala/domains/mocks"
+	grpcDomainsV1 "github.com/absmach/magistrala/internal/grpc/domains/v1"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/errors"
 	"github.com/absmach/magistrala/pkg/grpcclient"
@@ -28,7 +31,7 @@ func TestSetupToken(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	registerAuthServiceServer := func(srv *grpc.Server) {
-		magistrala.RegisterTokenServiceServer(srv, tokengrpcapi.NewTokenServer(new(mocks.Service)))
+		grpcTokenV1.RegisterTokenServiceServer(srv, tokengrpcapi.NewTokenServer(new(mocks.Service)))
 	}
 	gs := grpcserver.NewServer(ctx, cancel, "auth", server.Config{Port: "12345"}, registerAuthServiceServer, mglog.NewMock())
 	go func() {
@@ -80,7 +83,7 @@ func TestSetupThingsClient(t *testing.T) {
 	defer cancel()
 
 	registerThingsServiceServer := func(srv *grpc.Server) {
-		magistrala.RegisterThingsServiceServer(srv, thingsgrpcapi.NewServer(new(thmocks.Service)))
+		grpcThingsV1.RegisterThingsServiceServer(srv, thingsgrpcapi.NewServer(new(thmocks.Service)))
 	}
 	gs := grpcserver.NewServer(ctx, cancel, "things", server.Config{Port: "12345"}, registerThingsServiceServer, mglog.NewMock())
 	go func() {
@@ -131,7 +134,7 @@ func TestSetupDomainsClient(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	registerDomainsServiceServer := func(srv *grpc.Server) {
-		magistrala.RegisterDomainsServiceServer(srv, domainsgrpcapi.NewDomainsServer(new(mocks.Service)))
+		grpcDomainsV1.RegisterDomainsServiceServer(srv, domainsgrpcapi.NewDomainsServer(new(domainsMocks.Service)))
 	}
 	gs := grpcserver.NewServer(ctx, cancel, "auth", server.Config{Port: "12345"}, registerDomainsServiceServer, mglog.NewMock())
 	go func() {

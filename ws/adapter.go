@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/absmach/magistrala"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/messaging"
@@ -41,12 +41,12 @@ type Service interface {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	things magistrala.ThingsServiceClient
+	things grpcThingsV1.ThingsServiceClient
 	pubsub messaging.PubSub
 }
 
 // New instantiates the WS adapter implementation.
-func New(thingsClient magistrala.ThingsServiceClient, pubsub messaging.PubSub) Service {
+func New(thingsClient grpcThingsV1.ThingsServiceClient, pubsub messaging.PubSub) Service {
 	return &adapterService{
 		things: thingsClient,
 		pubsub: pubsub,
@@ -85,10 +85,10 @@ func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subt
 // authorize checks if the thingKey is authorized to access the channel
 // and returns the thingID if it is.
 func (svc *adapterService) authorize(ctx context.Context, thingKey, chanID, action string) (string, error) {
-	ar := &magistrala.ThingsAuthzReq{
+	ar := &grpcThingsV1.AuthzReq{
 		Permission: action,
 		ThingKey:   thingKey,
-		ChannelID:  chanID,
+		ChannelId:  chanID,
 	}
 	res, err := svc.things.Authorize(ctx, ar)
 	if err != nil {

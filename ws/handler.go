@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/absmach/magistrala"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/messaging"
@@ -51,12 +51,12 @@ var channelRegExp = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]
 // Event implements events.Event interface.
 type handler struct {
 	pubsub messaging.PubSub
-	things magistrala.ThingsServiceClient
+	things grpcThingsV1.ThingsServiceClient
 	logger *slog.Logger
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(pubsub messaging.PubSub, logger *slog.Logger, thingsClient magistrala.ThingsServiceClient) session.Handler {
+func NewHandler(pubsub messaging.PubSub, logger *slog.Logger, thingsClient grpcThingsV1.ThingsServiceClient) session.Handler {
 	return &handler{
 		logger: logger,
 		pubsub: pubsub,
@@ -160,10 +160,10 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		token = string(s.Password)
 	}
 
-	ar := &magistrala.ThingsAuthzReq{
+	ar := &grpcThingsV1.AuthzReq{
 		Permission: policies.PublishPermission,
 		ThingKey:   token,
-		ChannelID:  chanID,
+		ChannelId:  chanID,
 	}
 	res, err := h.things.Authorize(ctx, ar)
 	if err != nil {
@@ -229,10 +229,10 @@ func (h *handler) authAccess(ctx context.Context, password, topic, action string
 
 	chanID := channelParts[1]
 
-	ar := &magistrala.ThingsAuthzReq{
+	ar := &grpcThingsV1.AuthzReq{
 		Permission: action,
 		ThingKey:   password,
-		ChannelID:  chanID,
+		ChannelId:  chanID,
 	}
 	res, err := h.things.Authorize(ctx, ar)
 	if err != nil {

@@ -8,7 +8,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/absmach/magistrala"
+	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
 	"github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/users"
@@ -49,7 +49,7 @@ func (lm *loggingMiddleware) RegisterClient(ctx context.Context, session authn.S
 
 // IssueToken logs the issue_token request. It logs the client identity type and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) IssueToken(ctx context.Context, identity, secret, domainID string) (t *magistrala.Token, err error) {
+func (lm *loggingMiddleware) IssueToken(ctx context.Context, identity, secret, domainID string) (t *grpcTokenV1.Token, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -70,7 +70,7 @@ func (lm *loggingMiddleware) IssueToken(ctx context.Context, identity, secret, d
 
 // RefreshToken logs the refresh_token request. It logs the refreshtoken, token type and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) RefreshToken(ctx context.Context, session authn.Session, refreshToken, domainID string) (t *magistrala.Token, err error) {
+func (lm *loggingMiddleware) RefreshToken(ctx context.Context, session authn.Session, refreshToken, domainID string) (t *grpcTokenV1.Token, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),

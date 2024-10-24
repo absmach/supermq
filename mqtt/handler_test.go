@@ -10,7 +10,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/absmach/magistrala"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/internal/testsutil"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/mqtt"
@@ -161,7 +161,7 @@ func TestAuthPublish(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repocall := things.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.ThingsAuthzRes{Authorized: true, Id: testsutil.GenerateUUID(t)}, tc.err)
+		repocall := things.On("Authorize", mock.Anything, mock.Anything).Return(&grpcThingsV1.AuthzRes{Authorized: true, Id: testsutil.GenerateUUID(t)}, tc.err)
 		ctx := context.TODO()
 		if tc.session != nil {
 			ctx = session.NewContext(ctx, tc.session)
@@ -214,7 +214,7 @@ func TestAuthSubscribe(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repocall := things.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.ThingsAuthzRes{Authorized: true, Id: testsutil.GenerateUUID(t)}, tc.err)
+		repocall := things.On("Authorize", mock.Anything, mock.Anything).Return(&grpcThingsV1.AuthzRes{Authorized: true, Id: testsutil.GenerateUUID(t)}, tc.err)
 		ctx := context.TODO()
 		if tc.session != nil {
 			ctx = session.NewContext(ctx, tc.session)

@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/bootstrap"
 	"github.com/absmach/magistrala/bootstrap/events/producer"
 	"github.com/absmach/magistrala/bootstrap/mocks"
 	"github.com/absmach/magistrala/internal/testsutil"
+	"github.com/absmach/magistrala/pkg/authn"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
@@ -990,7 +990,7 @@ func TestChangeState(t *testing.T) {
 		token           string
 		session         mgauthn.Session
 		state           bootstrap.State
-		authResponse    *magistrala.AuthZRes
+		authResponse    authn.Session
 		authorizeErr    error
 		connectErr      error
 		retrieveErr     error
@@ -1006,7 +1006,7 @@ func TestChangeState(t *testing.T) {
 			userID:       validID,
 			domainID:     domainID,
 			state:        bootstrap.Active,
-			authResponse: &magistrala.AuthZRes{Authorized: true},
+			authResponse: authn.Session{},
 			err:          nil,
 			event: map[string]interface{}{
 				"thing_id":  config.ThingID,

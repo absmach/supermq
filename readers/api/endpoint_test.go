@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/absmach/magistrala"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	authzmocks "github.com/absmach/magistrala/pkg/authz/mocks"
@@ -971,7 +971,7 @@ func TestReadAll(t *testing.T) {
 		authCall := authz.On("Authorize", mock.Anything, mock.Anything).Return(tc.err)
 		repo.On("ReadAll", chanID, tc.res.PageMetadata).Return(readers.MessagesPage{Total: tc.res.Total, Messages: fromSenml(tc.res.Messages)}, nil)
 		if tc.key != "" {
-			authCall = things.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.ThingsAuthzRes{Authorized: tc.authResponse}, tc.err)
+			authCall = things.On("Authorize", mock.Anything, mock.Anything).Return(&grpcThingsV1.AuthzRes{Authorized: tc.authResponse}, tc.err)
 		}
 		req := testRequest{
 			client: ts.Client(),

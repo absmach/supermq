@@ -26,6 +26,9 @@ type Policy struct {
 	// SubjectRelation contains subject relations.
 	SubjectRelation string `json:"subject_relation,omitempty"`
 
+	// ObjectPrefix contains the Optional Object Prefix which is used for delete with filter.
+	ObjectPrefix string `json:"object_prefix"`
+
 	// Object contains the object ID.
 	Object string `json:"object"`
 
@@ -101,4 +104,11 @@ type Service interface {
 
 	// ListPermissions lists permission betweeen given subject and object .
 	ListPermissions(ctx context.Context, pr Policy, permissionsFilter []string) (Permissions, error)
+}
+
+func EncodeDomainUserID(domainID, userID string) string {
+	if domainID == "" || userID == "" {
+		return ""
+	}
+	return domainID + "_" + userID
 }

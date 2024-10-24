@@ -16,35 +16,33 @@ import (
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/magistrala"
 	redisclient "github.com/absmach/magistrala/internal/clients/redis"
-	mggroups "github.com/absmach/magistrala/internal/groups"
-	gevents "github.com/absmach/magistrala/internal/groups/events"
-	gmiddleware "github.com/absmach/magistrala/internal/groups/middleware"
-	gpostgres "github.com/absmach/magistrala/internal/groups/postgres"
-	gtracing "github.com/absmach/magistrala/internal/groups/tracing"
+	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	authsvcAuthn "github.com/absmach/magistrala/pkg/authn/authsvc"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
 	authsvcAuthz "github.com/absmach/magistrala/pkg/authz/authsvc"
-	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/grpcclient"
 	jaegerclient "github.com/absmach/magistrala/pkg/jaeger"
 	"github.com/absmach/magistrala/pkg/policies"
 	"github.com/absmach/magistrala/pkg/policies/spicedb"
-	"github.com/absmach/magistrala/pkg/postgres"
+	pg "github.com/absmach/magistrala/pkg/postgres"
 	pgclient "github.com/absmach/magistrala/pkg/postgres"
 	"github.com/absmach/magistrala/pkg/prometheus"
 	"github.com/absmach/magistrala/pkg/server"
 	grpcserver "github.com/absmach/magistrala/pkg/server/grpc"
 	httpserver "github.com/absmach/magistrala/pkg/server/http"
+	"github.com/absmach/magistrala/pkg/sid"
 	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/absmach/magistrala/things"
 	grpcapi "github.com/absmach/magistrala/things/api/grpc"
 	httpapi "github.com/absmach/magistrala/things/api/http"
-	thcache "github.com/absmach/magistrala/things/cache"
-	thevents "github.com/absmach/magistrala/things/events"
-	tmiddleware "github.com/absmach/magistrala/things/middleware"
-	thingspg "github.com/absmach/magistrala/things/postgres"
-	ctracing "github.com/absmach/magistrala/things/tracing"
+	"github.com/absmach/magistrala/things/cache"
+	"github.com/absmach/magistrala/things/events"
+	"github.com/absmach/magistrala/things/middleware"
+	"github.com/absmach/magistrala/things/postgres"
+	pThings "github.com/absmach/magistrala/things/private"
+	"github.com/absmach/magistrala/things/tracing"
 	"github.com/authzed/authzed-go/v1"
 	"github.com/authzed/grpcutil"
 	"github.com/caarlos0/env/v11"
@@ -64,6 +62,7 @@ const (
 	envPrefixHTTP      = "MG_THINGS_HTTP_"
 	envPrefixGRPC      = "MG_THINGS_AUTH_GRPC_"
 	envPrefixAuth      = "MG_AUTH_GRPC_"
+	envPrefixChannels  = "MG_CHANNELS_GRPC_"
 	defDB              = "things"
 	defSvcHTTPPort     = "9000"
 	defSvcAuthGRPCPort = "7000"
@@ -121,9 +120,12 @@ func main() {
 		exitCode = 1
 		return
 	}
-	tm := thingspg.Migration()
-	gm := gpostgres.Migration()
-	tm.Migrations = append(tm.Migrations, gm.Migrations...)
+	tm, err := postgres.Migration()
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
 	db, err := pgclient.Setup(dbConfig, *tm)
 	if err != nil {
 		logger.Error(err.Error())
@@ -186,7 +188,22 @@ func main() {
 	defer authzClient.Close()
 	logger.Info("AuthZ  successfully connected to auth gRPC server " + authnClient.Secure())
 
-	csvc, gsvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cacheclient, cfg.CacheKeyDuration, cfg.ESURL, tracer, logger)
+	chgrpccfg := grpcclient.Config{BypassHealthCheck: true}
+	if err := env.ParseWithOptions(&chgrpccfg, env.Options{Prefix: envPrefixChannels}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load channels gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+	channelsgRPC, channelsClient, err := grpcclient.SetupChannelsClient(ctx, chgrpccfg)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	logger.Info("Channels gRPC client successfully connected to channels gRPC server " + channelsClient.Secure())
+	defer channelsClient.Close()
+
+	svc, psvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cacheclient, cfg.CacheKeyDuration, cfg.ESURL, channelsgRPC, tracer, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
 		exitCode = 1
@@ -200,7 +217,7 @@ func main() {
 		return
 	}
 	mux := chi.NewRouter()
-	httpSvc := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(csvc, gsvc, authn, mux, logger, cfg.InstanceID), logger)
+	httpSvc := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, authn, mux, logger, cfg.InstanceID), logger)
 
 	grpcServerConfig := server.Config{Port: defSvcAuthGRPCPort}
 	if err := env.ParseWithOptions(&grpcServerConfig, env.Options{Prefix: envPrefixGRPC}); err != nil {
@@ -208,9 +225,10 @@ func main() {
 		exitCode = 1
 		return
 	}
+
 	registerThingsServer := func(srv *grpc.Server) {
 		reflection.Register(srv)
-		magistrala.RegisterThingsServiceServer(srv, grpcapi.NewServer(csvc))
+		grpcThingsV1.RegisterThingsServiceServer(srv, grpcapi.NewServer(psvc))
 	}
 	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerThingsServer, logger)
 
@@ -237,42 +255,43 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, keyDuration time.Duration, esURL string, tracer trace.Tracer, logger *slog.Logger) (things.Service, groups.Service, error) {
-	database := postgres.NewDatabase(db, dbConfig, tracer)
-	cRepo := thingspg.NewRepository(database)
-	gRepo := gpostgres.New(database)
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, keyDuration time.Duration, esURL string, channels grpcChannelsV1.ChannelsServiceClient, tracer trace.Tracer, logger *slog.Logger) (things.Service, pThings.Service, error) {
+	database := pg.NewDatabase(db, dbConfig, tracer)
+	repo := postgres.NewRepository(database)
 
 	idp := uuid.New()
-
-	thingCache := thcache.NewCache(cacheClient, keyDuration)
-
-	csvc := things.NewService(pe, ps, cRepo, gRepo, thingCache, idp)
-	gsvc := mggroups.NewService(gRepo, idp, ps)
-
-	csvc, err := thevents.NewEventStoreMiddleware(ctx, csvc, esURL)
+	sidp, err := sid.New()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	gsvc, err = gevents.NewEventStoreMiddleware(ctx, gsvc, esURL, streamID)
+	// Things service
+	cache := cache.NewCache(cacheClient, keyDuration)
+
+	tsvc, err := things.NewService(repo, ps, cache, channels, idp, sidp)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	csvc = tmiddleware.AuthorizationMiddleware(csvc, authz)
-	gsvc = gmiddleware.AuthorizationMiddleware(gsvc, authz)
+	tsvc, err = events.NewEventStoreMiddleware(ctx, tsvc, esURL)
+	if err != nil {
+		return nil, nil, err
+	}
 
-	csvc = ctracing.New(csvc, tracer)
-	csvc = tmiddleware.LoggingMiddleware(csvc, logger)
+	tsvc = tracing.New(tsvc, tracer)
+	tsvc = middleware.LoggingMiddleware(tsvc, logger)
+
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
-	csvc = tmiddleware.MetricsMiddleware(csvc, counter, latency)
+	tsvc = middleware.MetricsMiddleware(tsvc, counter, latency)
 
-	gsvc = gtracing.New(gsvc, tracer)
-	gsvc = gmiddleware.LoggingMiddleware(gsvc, logger)
-	counter, latency = prometheus.MakeMetrics(fmt.Sprintf("%s_groups", svcName), "api")
-	gsvc = gmiddleware.MetricsMiddleware(gsvc, counter, latency)
+	tsvc, err = middleware.AuthorizationMiddleware(policies.ThingType, tsvc, authz, things.NewOperationPermissionMap(), things.NewRolesOperationPermissionMap())
+	if err != nil {
+		return nil, nil, err
+	}
 
-	return csvc, gsvc, err
+	isvc := pThings.New(repo, cache, pe)
+
+	return tsvc, isvc, err
 }
 
 func newSpiceDBPolicyServiceEvaluator(cfg config, logger *slog.Logger) (policies.Evaluator, policies.Service, error) {
