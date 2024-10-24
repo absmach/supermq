@@ -20,6 +20,12 @@ type AuthzReq struct {
 	Permission string
 }
 
+type Connection struct {
+	ThingID   string
+	ChannelID string
+	DomainID  string
+}
+
 // Service specifies an API that must be fullfiled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 //
