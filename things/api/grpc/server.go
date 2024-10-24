@@ -12,7 +12,7 @@ import (
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	pThings "github.com/absmach/magistrala/things/private"
+	things "github.com/absmach/magistrala/things/private"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -31,7 +31,7 @@ type grpcServer struct {
 }
 
 // NewServer returns new AuthServiceServer instance.
-func NewServer(svc pThings.Service) grpcThingsV1.ThingsServiceServer {
+func NewServer(svc things.Service) grpcThingsV1.ThingsServiceServer {
 	return &grpcServer{
 		authorize: kitgrpc.NewServer(
 			authorizeEndpoint(svc),

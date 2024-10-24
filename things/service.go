@@ -6,7 +6,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/absmach/magistrala"
+	mg "github.com/absmach/magistrala"
 	mgauth "github.com/absmach/magistrala/auth"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	"github.com/absmach/magistrala/pkg/authn"
@@ -27,12 +27,12 @@ type service struct {
 	policy     policies.Service
 	channels   grpcChannelsV1.ChannelsServiceClient
 	cache      Cache
-	idProvider magistrala.IDProvider
+	idProvider mg.IDProvider
 	roles.ProvisionManageService
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(repo Repository, policy policies.Service, cache Cache, channels grpcChannelsV1.ChannelsServiceClient, idProvider magistrala.IDProvider, sIDProvider magistrala.IDProvider) (Service, error) {
+func NewService(repo Repository, policy policies.Service, cache Cache, channels grpcChannelsV1.ChannelsServiceClient, idProvider mg.IDProvider, sIDProvider mg.IDProvider) (Service, error) {
 	rpms, err := roles.NewProvisionManageService(policies.ThingType, repo, policy, sIDProvider, AvailableActions(), BuiltInRoles())
 	if err != nil {
 		return service{}, err
