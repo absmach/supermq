@@ -239,6 +239,26 @@ func (svc service) RemoveChannel(ctx context.Context, session authn.Session, id 
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
+	deletePolicies := []policies.Policy{
+		{
+			SubjectType: policies.DomainType,
+			Subject:     session.DomainID,
+			Relation:    policies.DomainRelation,
+			ObjectType:  policies.ChannelType,
+			Object:      id,
+		},
+	}
+
+	if ch.ParentGroup != "" {
+		deletePolicies = append(deletePolicies, policies.Policy{
+			SubjectType: policies.GroupType,
+			Subject:     ch.ParentGroup,
+			Relation:    policies.ParentGroupRelation,
+			ObjectType:  policies.ChannelType,
+			Object:      id,
+		})
+	}
+
 	filterDeletePolicies := []policies.Policy{
 		{
 			SubjectType: policies.ChannelType,
@@ -249,24 +269,7 @@ func (svc service) RemoveChannel(ctx context.Context, session authn.Session, id 
 			Object:     id,
 		},
 	}
-	deletePolicies := []policies.Policy{
-		{
-			SubjectType: policies.DomainType,
-			Subject:     session.DomainID,
-			Relation:    policies.DomainRelation,
-			ObjectType:  policies.ChannelType,
-			Object:      id,
-		},
-	}
-	if ch.ParentGroup != "" {
-		deletePolicies = append(deletePolicies, policies.Policy{
-			SubjectType: policies.GroupType,
-			Subject:     ch.ParentGroup,
-			Relation:    policies.ParentGroupRelation,
-			ObjectType:  policies.ChannelType,
-			Object:      id,
-		})
-	}
+
 	if err := svc.RemoveEntitiesRoles(ctx, session.DomainID, session.DomainUserID, []string{id}, filterDeletePolicies, deletePolicies); err != nil {
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
 	}
