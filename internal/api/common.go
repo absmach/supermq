@@ -30,7 +30,7 @@ const (
 	ParentKey        = "parent_id"
 	OwnerKey         = "owner_id"
 	ClientKey        = "client"
-	UserNameKey      = "user_name"
+	UsernameKey      = "username"
 	NameKey          = "name"
 	GroupKey         = "group"
 	ActionKey        = "action"
@@ -168,7 +168,7 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, apiutil.ErrLenSearchQuery),
 		errors.Contains(err, apiutil.ErrMissingDomainID),
 		errors.Contains(err, certs.ErrFailedReadFromPKI),
-		errors.Contains(err, apiutil.ErrMissingUserName):
+		errors.Contains(err, apiutil.ErrMissingUsername):
 		err = unwrap(err)
 		w.WriteHeader(http.StatusBadRequest)
 

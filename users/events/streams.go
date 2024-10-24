@@ -89,13 +89,13 @@ func (es *eventStore) UpdateSecret(ctx context.Context, session authn.Session, o
 	return es.update(ctx, "secret", user)
 }
 
-func (es *eventStore) UpdateUserName(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
-	user, err := es.svc.UpdateUserName(ctx, session, user)
+func (es *eventStore) UpdateUsername(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+	user, err := es.svc.UpdateUsername(ctx, session, user)
 	if err != nil {
 		return user, err
 	}
 
-	event := updateUserNameEvent{
+	event := updateUsernameEvent{
 		user,
 	}
 

@@ -12,7 +12,6 @@ import (
 
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
-	"github.com/absmach/magistrala/users"
 )
 
 const (
@@ -30,7 +29,7 @@ const (
 // User represents magistrala user its credentials.
 type User struct {
 	ID             string      `json:"id"`
-	UserName       string      `json:"user_name,omitempty"`
+	Username       string      `json:"username,omitempty"`
 	FirstName      string      `json:"first_name,omitempty"`
 	LastName       string      `json:"last_name,omitempty"`
 	Email          string      `json:"email,omitempty"`
@@ -281,7 +280,7 @@ func (sdk mgSDK) UpdateUserRole(user User, token string) (User, errors.SDKError)
 	return user, nil
 }
 
-func (sdk mgSDK) UpdateUserName(user User, token string) (User, errors.SDKError) {
+func (sdk mgSDK) UpdateUsername(user User, token string) (User, errors.SDKError) {
 	data, err := json.Marshal(user)
 	if err != nil {
 		return User{}, errors.NewSDKError(err)
@@ -395,11 +394,11 @@ func (sdk mgSDK) SearchUsers(pm PageMetadata, token string) (UsersPage, errors.S
 }
 
 func (sdk mgSDK) EnableUser(id, token string) (User, errors.SDKError) {
-	return sdk.changeUserStatus(token, id, users.EnabledStatus.String())
+	return sdk.changeUserStatus(token, id, enableEndpoint)
 }
 
 func (sdk mgSDK) DisableUser(id, token string) (User, errors.SDKError) {
-	return sdk.changeUserStatus(token, id, users.DisabledStatus.String())
+	return sdk.changeUserStatus(token, id, disableEndpoint)
 }
 
 func (sdk mgSDK) changeUserStatus(token, id, status string) (User, errors.SDKError) {

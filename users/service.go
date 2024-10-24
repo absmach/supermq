@@ -134,7 +134,7 @@ func (svc service) View(ctx context.Context, session authn.Session, id string) (
 				FirstName:   user.FirstName,
 				LastName:    user.LastName,
 				ID:          user.ID,
-				Credentials: Credentials{UserName: user.Credentials.UserName},
+				Credentials: Credentials{Username: user.Credentials.Username},
 			}, nil
 		}
 	}
@@ -173,7 +173,7 @@ func (svc service) SearchUsers(ctx context.Context, pm Page) (UsersPage, error) 
 		Limit:     pm.Limit,
 		FirstName: pm.FirstName,
 		LastName:  pm.LastName,
-		UserName:  pm.UserName,
+		Username:  pm.Username,
 		Id:        pm.Id,
 		Role:      UserRole,
 	}
@@ -295,7 +295,7 @@ func (svc service) GenerateResetToken(ctx context.Context, email, host string) e
 		return errors.Wrap(errRecoveryToken, err)
 	}
 
-	return svc.SendPasswordReset(ctx, host, email, user.Credentials.UserName, token.AccessToken)
+	return svc.SendPasswordReset(ctx, host, email, user.Credentials.Username, token.AccessToken)
 }
 
 func (svc service) ResetSecret(ctx context.Context, session authn.Session, secret string) error {
@@ -347,7 +347,7 @@ func (svc service) UpdateSecret(ctx context.Context, session authn.Session, oldS
 	return dbUser, nil
 }
 
-func (svc service) UpdateUserName(ctx context.Context, session authn.Session, usr User) (User, error) {
+func (svc service) UpdateUsername(ctx context.Context, session authn.Session, usr User) (User, error) {
 	if session.UserID != usr.ID {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
 			return User{}, err
@@ -361,7 +361,7 @@ func (svc service) UpdateUserName(ctx context.Context, session authn.Session, us
 	usr.UpdatedAt = time.Now()
 	usr.UpdatedBy = session.UserID
 
-	updatedUser, err := svc.users.UpdateUserName(ctx, usr)
+	updatedUser, err := svc.users.UpdateUsername(ctx, usr)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
@@ -510,7 +510,7 @@ func (svc service) ListMembers(ctx context.Context, session authn.Session, objec
 			FirstName: u.FirstName,
 			LastName:  u.LastName,
 			Credentials: Credentials{
-				UserName: u.Credentials.UserName,
+				Username: u.Credentials.Username,
 			},
 			CreatedAt: u.CreatedAt,
 			UpdatedAt: u.UpdatedAt,

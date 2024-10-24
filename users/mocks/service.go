@@ -563,12 +563,12 @@ func (_m *Service) UpdateTags(ctx context.Context, session authn.Session, user u
 	return r0, r1
 }
 
-// UpdateUserName provides a mock function with given fields: ctx, session, usr
-func (_m *Service) UpdateUserName(ctx context.Context, session authn.Session, usr users.User) (users.User, error) {
+// UpdateUsername provides a mock function with given fields: ctx, session, usr
+func (_m *Service) UpdateUsername(ctx context.Context, session authn.Session, usr users.User) (users.User, error) {
 	ret := _m.Called(ctx, session, usr)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateUserName")
+		panic("no return value specified for UpdateUsername")
 	}
 
 	var r0 users.User

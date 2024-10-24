@@ -239,7 +239,7 @@ func generateTestUser(t *testing.T) sdk.User {
 		LastName:  "clientlastname",
 		Email:     "clientemail@example.com",
 		Credentials: sdk.Credentials{
-			UserName: "clientusername",
+			Username: "clientusername",
 			Secret:   secret,
 		},
 		Tags:      []string{"tag1", "tag2"},

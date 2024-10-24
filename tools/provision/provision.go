@@ -77,7 +77,7 @@ func Provision(conf Config) error {
 	user := sdk.User{
 		Email: conf.Email,
 		Credentials: sdk.Credentials{
-			UserName: conf.Username,
+			Username: conf.Username,
 			Secret:   conf.Password,
 		},
 	}

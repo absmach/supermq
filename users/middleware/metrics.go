@@ -129,13 +129,13 @@ func (ms *metricsMiddleware) UpdateSecret(ctx context.Context, session authn.Ses
 	return ms.svc.UpdateSecret(ctx, session, oldSecret, newSecret)
 }
 
-// UpdateUserName instruments UpdateUserName method with metrics.
-func (ms *metricsMiddleware) UpdateUserName(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+// UpdateUsername instruments UpdateUsername method with metrics.
+func (ms *metricsMiddleware) UpdateUsername(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "update_user_names").Add(1)
-		ms.latency.With("method", "update_user_names").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "update_usernames").Add(1)
+		ms.latency.With("method", "update_usernames").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.UpdateUserName(ctx, session, user)
+	return ms.svc.UpdateUsername(ctx, session, user)
 }
 
 // UpdateProfilePicture instruments UpdateProfilePicture method with metrics.

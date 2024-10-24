@@ -304,12 +304,12 @@ func (_m *Repository) UpdateSecret(ctx context.Context, user users.User) (users.
 	return r0, r1
 }
 
-// UpdateUserName provides a mock function with given fields: ctx, user
-func (_m *Repository) UpdateUserName(ctx context.Context, user users.User) (users.User, error) {
+// UpdateUsername provides a mock function with given fields: ctx, user
+func (_m *Repository) UpdateUsername(ctx context.Context, user users.User) (users.User, error) {
 	ret := _m.Called(ctx, user)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateUserName")
+		panic("no return value specified for UpdateUsername")
 	}
 
 	var r0 users.User

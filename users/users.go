@@ -5,30 +5,14 @@ package users
 
 import (
 	"context"
-	"fmt"
+	"net/mail"
 	"net/url"
-	"regexp"
-	"strings"
 	"time"
 
+	"github.com/absmach/magistrala"
+	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/errors"
 	"github.com/absmach/magistrala/pkg/postgres"
-	"golang.org/x/net/idna"
-)
-
-const (
-	maxLocalLen  = 64
-	maxDomainLen = 255
-	maxTLDLen    = 24 // longest TLD currently in existence
-
-	atSeparator  = "@"
-	dotSeparator = "."
-)
-
-var (
-	userRegexp    = regexp.MustCompile("^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~.-]+$")
-	hostRegexp    = regexp.MustCompile(`^[^\s]+\.[^\s]+$`)
-	userDotRegexp = regexp.MustCompile("(^[.]{1})|([.]{1}$)|([.]{2,})")
 )
 
 type User struct {
@@ -49,8 +33,8 @@ type User struct {
 }
 
 type Credentials struct {
-	UserName string `json:"user_name,omitempty"` // username or profile name
-	Secret   string `json:"secret,omitempty"`    // password or token
+	Username string `json:"username,omitempty"` // username or profile name
+	Secret   string `json:"secret,omitempty"`   // password or token
 }
 
 type UsersPage struct {
@@ -87,8 +71,8 @@ type Repository interface {
 	// Update updates the user name and metadata.
 	Update(ctx context.Context, user User) (User, error)
 
-	// UpdateUserName updates the User's names.
-	UpdateUserName(ctx context.Context, user User) (User, error)
+	// UpdateUsername updates the User's names.
+	UpdateUsername(ctx context.Context, user User) (User, error)
 
 	// UpdateSecret updates secret for user with given email.
 	UpdateSecret(ctx context.Context, user User) (User, error)
@@ -121,64 +105,8 @@ func (u User) Validate() error {
 }
 
 func isEmail(email string) bool {
-	if email == "" {
-		return false
-	}
-
-	es := strings.Split(email, atSeparator)
-	if len(es) != 2 {
-		return false
-	}
-	local, host := es[0], es[1]
-
-	if local == "" || len(local) > maxLocalLen {
-		return false
-	}
-
-	hs := strings.Split(host, dotSeparator)
-	if len(hs) < 2 {
-		return false
-	}
-	domain, ext := hs[0], hs[1]
-
-	// Check subdomain and validate
-	if len(hs) > 2 {
-		if domain == "" {
-			return false
-		}
-
-		for i := 1; i < len(hs)-1; i++ {
-			sub := hs[i]
-			if sub == "" {
-				return false
-			}
-			domain = fmt.Sprintf("%s.%s", domain, sub)
-		}
-
-		ext = hs[len(hs)-1]
-	}
-
-	if domain == "" || len(domain) > maxDomainLen {
-		return false
-	}
-	if ext == "" || len(ext) > maxTLDLen {
-		return false
-	}
-
-	punyLocal, err := idna.ToASCII(local)
-	if err != nil {
-		return false
-	}
-	punyHost, err := idna.ToASCII(host)
-	if err != nil {
-		return false
-	}
-
-	if userDotRegexp.MatchString(punyLocal) || !userRegexp.MatchString(punyLocal) || !hostRegexp.MatchString(punyHost) {
-		return false
-	}
-
-	return true
+	_, err := mail.ParseAddress(email)
+	return err == nil
 }
 
 // Page contains page metadata that helps navigation.
@@ -197,8 +125,92 @@ type Page struct {
 	IDs        []string `json:"ids,omitempty"`
 	Role       Role     `json:"-"`
 	ListPerms  bool     `json:"-"`
-	UserName   string   `json:"user_name,omitempty"`
+	Username   string   `json:"username,omitempty"`
 	FirstName  string   `json:"first_name,omitempty"`
 	LastName   string   `json:"last_name,omitempty"`
 	Email      string   `json:"email,omitempty"`
+}
+
+// Service specifies an API that must be fullfiled by the domain service
+// implementation, and all of its decorators (e.g. logging & metrics).
+//
+//go:generate mockery --name Service --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
+type Service interface {
+	// Register creates new user. In case of the failed registration, a
+	// non-nil error value is returned.
+	Register(ctx context.Context, session authn.Session, user User, selfRegister bool) (User, error)
+
+	// View retrieves user info for a given user ID and an authorized token.
+	View(ctx context.Context, session authn.Session, id string) (User, error)
+
+	// ViewProfile retrieves user info for a given token.
+	ViewProfile(ctx context.Context, session authn.Session) (User, error)
+
+	// ListUsers retrieves users list for a valid auth token.
+	ListUsers(ctx context.Context, session authn.Session, pm Page) (UsersPage, error)
+
+	// ListMembers retrieves everything that is assigned to a group/thing identified by objectID.
+	ListMembers(ctx context.Context, session authn.Session, objectKind, objectID string, pm Page) (MembersPage, error)
+
+	// SearchUsers searches for users with provided filters for a valid auth token.
+	SearchUsers(ctx context.Context, pm Page) (UsersPage, error)
+
+	// Update updates the user's name and metadata.
+	Update(ctx context.Context, session authn.Session, user User) (User, error)
+
+	// UpdateTags updates the user's tags.
+	UpdateTags(ctx context.Context, session authn.Session, user User) (User, error)
+
+	// UpdateEmail updates the user's email.
+	UpdateEmail(ctx context.Context, session authn.Session, id, email string) (User, error)
+
+	// UpdateUsername updates the user's names.
+	UpdateUsername(ctx context.Context, session authn.Session, usr User) (User, error)
+
+	// UpdateProfile updates the user's profile picture.
+	UpdateProfilePicture(ctx context.Context, session authn.Session, user User) (User, error)
+
+	// GenerateResetToken email where mail will be sent.
+	// host is used for generating reset link.
+	GenerateResetToken(ctx context.Context, email, host string) error
+
+	// UpdateSecret updates the user's secret.
+	UpdateSecret(ctx context.Context, session authn.Session, oldSecret, newSecret string) (User, error)
+
+	// ResetSecret change users secret in reset flow.
+	// token can be authentication token or secret reset token.
+	ResetSecret(ctx context.Context, session authn.Session, secret string) error
+
+	// SendPasswordReset sends reset password link to email.
+	SendPasswordReset(ctx context.Context, host, email, user, token string) error
+
+	// UpdateRole updates the user's Role.
+	UpdateRole(ctx context.Context, session authn.Session, user User) (User, error)
+
+	// Enable logically enables the user identified with the provided ID.
+	Enable(ctx context.Context, session authn.Session, id string) (User, error)
+
+	// Disable logically disables the user identified with the provided ID.
+	Disable(ctx context.Context, session authn.Session, id string) (User, error)
+
+	// Delete deletes user with given ID.
+	Delete(ctx context.Context, session authn.Session, id string) error
+
+	// Identify returns the user id from the given token.
+	Identify(ctx context.Context, session authn.Session) (string, error)
+
+	// IssueToken issues a new access and refresh token.
+	IssueToken(ctx context.Context, identity, secret, domainID string) (*magistrala.Token, error)
+
+	// RefreshToken refreshes expired access tokens.
+	// After an access token expires, the refresh token is used to get
+	// a new pair of access and refresh tokens.
+	RefreshToken(ctx context.Context, session authn.Session, refreshToken, domainID string) (*magistrala.Token, error)
+
+	// OAuthCallback handles the callback from any supported OAuth provider.
+	// It processes the OAuth tokens and either signs in or signs up the user based on the provided state.
+	OAuthCallback(ctx context.Context, user User) (User, error)
+
+	// OAuthAddUserPolicy adds a policy to the user for an OAuth request.
+	OAuthAddUserPolicy(ctx context.Context, user User) error
 }

@@ -94,7 +94,7 @@ func listUsersEndpoint(svc users.Service) endpoint.Endpoint {
 			Status:    req.status,
 			Offset:    req.offset,
 			Limit:     req.limit,
-			UserName:  req.userName,
+			Username:  req.userName,
 			Tag:       req.tag,
 			Metadata:  req.metadata,
 			FirstName: req.firstName,
@@ -136,7 +136,7 @@ func searchUsersEndpoint(svc users.Service) endpoint.Endpoint {
 		pm := users.Page{
 			Offset:   req.Offset,
 			Limit:    req.Limit,
-			UserName: req.UserName,
+			Username: req.Username,
 			Id:       req.Id,
 			Order:    req.Order,
 			Dir:      req.Dir,
@@ -266,7 +266,7 @@ func updateEndpoint(svc users.Service) endpoint.Endpoint {
 		user := users.User{
 			ID: req.id,
 			Credentials: users.Credentials{
-				UserName: req.UserName,
+				Username: req.Username,
 			},
 			FirstName: req.FirstName,
 			LastName:  req.LastName,
@@ -396,16 +396,16 @@ func updateSecretEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func updateUserNameEndpoint(svc users.Service) endpoint.Endpoint {
+func updateUsernameEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(updateUserNameReq)
+		req := request.(updateUsernameReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		user := users.User{
 			ID:          req.id,
-			Credentials: users.Credentials{UserName: req.UserName},
+			Credentials: users.Credentials{Username: req.Username},
 		}
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
@@ -413,7 +413,7 @@ func updateUserNameEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthorization
 		}
 
-		user, err := svc.UpdateUserName(ctx, session, user)
+		user, err := svc.UpdateUsername(ctx, session, user)
 		if err != nil {
 			return nil, err
 		}

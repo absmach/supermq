@@ -115,12 +115,12 @@ func (am *authorizationMiddleware) UpdateEmail(ctx context.Context, session auth
 	return am.svc.UpdateEmail(ctx, session, id, email)
 }
 
-func (am *authorizationMiddleware) UpdateUserName(ctx context.Context, session authn.Session, usr users.User) (users.User, error) {
+func (am *authorizationMiddleware) UpdateUsername(ctx context.Context, session authn.Session, usr users.User) (users.User, error) {
 	if err := am.checkSuperAdmin(ctx, session.UserID); err == nil {
 		session.SuperAdmin = true
 	}
 
-	return am.svc.UpdateUserName(ctx, session, usr)
+	return am.svc.UpdateUsername(ctx, session, usr)
 }
 
 func (am *authorizationMiddleware) UpdateProfilePicture(ctx context.Context, session authn.Session, user users.User) (users.User, error) {

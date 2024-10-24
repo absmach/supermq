@@ -129,7 +129,7 @@ func TestCreateUser(t *testing.T) {
 			svcRes:           users.User{},
 			svcErr:           nil,
 			response:         sdk.User{},
-			err:              errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingUserName), http.StatusBadRequest),
+			err:              errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingUsername), http.StatusBadRequest),
 		},
 		{
 			desc:  "register user with first name too long",
@@ -152,7 +152,7 @@ func TestCreateUser(t *testing.T) {
 			createSdkUserReq: sdk.User{
 				FirstName: createSdkUserReq.FirstName,
 				Credentials: sdk.Credentials{
-					UserName: "",
+					Username: "",
 					Secret:   createSdkUserReq.Credentials.Secret,
 				},
 				Metadata: createSdkUserReq.Metadata,
@@ -162,7 +162,7 @@ func TestCreateUser(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingUserName), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingUsername), http.StatusBadRequest),
 		},
 		{
 			desc:  "register user with empty secret",
@@ -172,7 +172,7 @@ func TestCreateUser(t *testing.T) {
 				LastName:  createSdkUserReq.LastName,
 				Email:     createSdkUserReq.Email,
 				Credentials: sdk.Credentials{
-					UserName: createSdkUserReq.Credentials.UserName,
+					Username: createSdkUserReq.Credentials.Username,
 					Secret:   "",
 				},
 				Metadata: createSdkUserReq.Metadata,
@@ -192,7 +192,7 @@ func TestCreateUser(t *testing.T) {
 				LastName:  createSdkUserReq.LastName,
 				Email:     createSdkUserReq.Email,
 				Credentials: sdk.Credentials{
-					UserName: createSdkUserReq.Credentials.UserName,
+					Username: createSdkUserReq.Credentials.Username,
 					Secret:   "weak",
 				},
 				Metadata: createSdkUserReq.Metadata,
@@ -209,7 +209,7 @@ func TestCreateUser(t *testing.T) {
 			token: validToken,
 			createSdkUserReq: sdk.User{
 				Credentials: sdk.Credentials{
-					UserName: "user",
+					Username: "user",
 					Secret:   "12345678",
 				},
 				Email: createSdkUserReq.Email,
@@ -234,7 +234,7 @@ func TestCreateUser(t *testing.T) {
 				LastName:  createSdkUserReq.LastName,
 				Email:     createSdkUserReq.Email,
 				Credentials: users.Credentials{
-					UserName: createSdkUserReq.Credentials.UserName,
+					Username: createSdkUserReq.Credentials.Username,
 					Secret:   createSdkUserReq.Credentials.Secret,
 				},
 				Metadata: users.Metadata{
@@ -250,7 +250,6 @@ func TestCreateUser(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			svcCall := svc.On("Register", mock.Anything, mgauthn.Session{}, tc.svcReq, true).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.CreateUser(tc.createSdkUserReq, tc.token)
-			fmt.Println("error:", err)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -277,7 +276,7 @@ func TestListUsers(t *testing.T) {
 			ID:        generateUUID(t),
 			FirstName: fmt.Sprintf("user_%d", i),
 			Credentials: sdk.Credentials{
-				UserName: fmt.Sprintf("UserName_%d", i),
+				Username: fmt.Sprintf("Username_%d", i),
 				Secret:   fmt.Sprintf("password_%d", i),
 			},
 			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
@@ -582,7 +581,7 @@ func TestSearchUsers(t *testing.T) {
 			FirstName: fmt.Sprintf("user_%d", i),
 			Email:     fmt.Sprintf("email_%d", i),
 			Credentials: sdk.Credentials{
-				UserName: fmt.Sprintf("UserName_%d", i),
+				Username: fmt.Sprintf("Username_%d", i),
 				Secret:   fmt.Sprintf("password_%d", i),
 			},
 			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
@@ -611,7 +610,7 @@ func TestSearchUsers(t *testing.T) {
 			page: sdk.PageMetadata{
 				Offset:   offset,
 				Limit:    limit,
-				UserName: "user_20",
+				Username: "user_20",
 			},
 			response: []sdk.User{cls[10]},
 			searchreturn: users.UsersPage{
@@ -629,7 +628,7 @@ func TestSearchUsers(t *testing.T) {
 			page: sdk.PageMetadata{
 				Offset:   offset,
 				Limit:    limit,
-				UserName: "user_10",
+				Username: "user_10",
 			},
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 			response:        nil,
@@ -641,7 +640,7 @@ func TestSearchUsers(t *testing.T) {
 			page: sdk.PageMetadata{
 				Offset:   offset,
 				Limit:    limit,
-				UserName: "user_10",
+				Username: "user_10",
 			},
 			err:             errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 			response:        nil,
@@ -663,7 +662,7 @@ func TestSearchUsers(t *testing.T) {
 			page: sdk.PageMetadata{
 				Offset:   offset,
 				Limit:    limit,
-				UserName: "a",
+				Username: "a",
 			},
 			err: errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrLenSearchQuery, apiutil.ErrValidation), http.StatusBadRequest),
 		},
@@ -673,7 +672,7 @@ func TestSearchUsers(t *testing.T) {
 			page: sdk.PageMetadata{
 				Offset:   offset,
 				Limit:    0,
-				UserName: "user_10",
+				Username: "user_10",
 			},
 			err: errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusBadRequest),
 		},
@@ -1395,7 +1394,7 @@ func TestResetPasswordRequest(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			svcCall := svc.On("GenerateResetToken", mock.Anything, tc.email, defHost).Return(tc.svcErr)
-			svcCall1 := svc.On("SendPasswordReset", mock.Anything, mock.Anything, tc.email, user.Credentials.UserName, tc.issueRes.AccessToken).Return(nil)
+			svcCall1 := svc.On("SendPasswordReset", mock.Anything, mock.Anything, tc.email, user.Credentials.Username, tc.issueRes.AccessToken).Return(nil)
 			err := mgsdk.ResetPasswordRequest(tc.email)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
@@ -1652,8 +1651,6 @@ func TestUpdateUserRole(t *testing.T) {
 	mgsdk := sdk.NewSDK(conf)
 
 	updatedRole := users.AdminRole.String()
-	updatedUser := user
-	updatedUser.Role = updatedRole
 
 	cases := []struct {
 		desc            string
@@ -1800,183 +1797,183 @@ func TestUpdateUserRole(t *testing.T) {
 	}
 }
 
-// func TestEnableUser(t *testing.T) {
-// 	ts, svc, auth := setupUsers()
-// 	defer ts.Close()
+func TestEnableUser(t *testing.T) {
+	ts, svc, auth := setupUsers()
+	defer ts.Close()
 
-// 	conf := sdk.Config{
-// 		UsersURL: ts.URL,
-// 	}
-// 	mgsdk := sdk.NewSDK(conf)
+	conf := sdk.Config{
+		UsersURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
 
-// 	enabledUser := user
-// 	enabledUser.Status = users.EnabledStatus.String()
+	enabledUser := user
+	enabledUser.Status = users.EnabledStatus.String()
 
-// 	cases := []struct {
-// 		desc            string
-// 		token           string
-// 		session         mgauthn.Session
-// 		userID          string
-// 		svcRes          users.User
-// 		svcErr          error
-// 		authenticateErr error
-// 		response        sdk.User
-// 		err             errors.SDKError
-// 	}{
-// 		{
-// 			desc:     "enable user with valid token",
-// 			token:    validToken,
-// 			userID:   user.ID,
-// 			svcRes:   convertUser(enabledUser),
-// 			svcErr:   nil,
-// 			response: enabledUser,
-// 			err:      nil,
-// 		},
-// 		{
-// 			desc:            "enable user with invalid token",
-// 			token:           invalidToken,
-// 			userID:          user.ID,
-// 			svcRes:          users.User{},
-// 			authenticateErr: svcerr.ErrAuthentication,
-// 			response:        sdk.User{},
-// 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
-// 		},
-// 		{
-// 			desc:     "enable user with empty token",
-// 			token:    "",
-// 			userID:   user.ID,
-// 			svcRes:   users.User{},
-// 			svcErr:   nil,
-// 			response: sdk.User{},
-// 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
-// 		},
-// 	}
+	cases := []struct {
+		desc            string
+		token           string
+		session         mgauthn.Session
+		userID          string
+		svcRes          users.User
+		svcErr          error
+		authenticateErr error
+		response        sdk.User
+		err             errors.SDKError
+	}{
+		{
+			desc:     "enable user with valid token",
+			token:    validToken,
+			userID:   user.ID,
+			svcRes:   convertUser(enabledUser),
+			svcErr:   nil,
+			response: enabledUser,
+			err:      nil,
+		},
+		{
+			desc:            "enable user with invalid token",
+			token:           invalidToken,
+			userID:          user.ID,
+			svcRes:          users.User{},
+			authenticateErr: svcerr.ErrAuthentication,
+			response:        sdk.User{},
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "enable user with empty token",
+			token:    "",
+			userID:   user.ID,
+			svcRes:   users.User{},
+			svcErr:   nil,
+			response: sdk.User{},
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+	}
 
-// 	for _, tc := range cases {
-// 		t.Run(tc.desc, func(t *testing.T) {
-// 			if tc.token == validToken {
-// 				tc.session = mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: domainID}
-// 			}
-// 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-// 			svcCall :=svc.On("Enable", mock.Anything, tc.session, tc.userID).Return(tc.svcRes, tc.svcErr)
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := svc.On("Enable", mock.Anything, tc.session, tc.userID).Return(tc.svcRes, tc.svcErr)
 
-// 			resp, err := mgsdk.EnableUser(tc.userID, tc.token)
-// 			assert.Equal(t, tc.err, err)
-// 			assert.Equal(t, tc.response, resp)
-// 			if tc.err == nil {
-// 				ok := svcCall.Parent.AssertCalled(t, "Enable", mock.Anything, tc.session, tc.userID)
-// 				assert.True(t, ok)
-// 			}
-// 			svcCall.Unset()
-// 			authCall.Unset()
-// 		})
-// 	}
-// }
+			resp, err := mgsdk.EnableUser(tc.userID, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "Enable", mock.Anything, tc.session, tc.userID)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
 
-// func TestDisableUser(t *testing.T) {
-// 	ts, svc, auth := setupUsers()
-// 	defer ts.Close()
+func TestDisableUser(t *testing.T) {
+	ts, svc, auth := setupUsers()
+	defer ts.Close()
 
-// 	conf := sdk.Config{
-// 		UsersURL: ts.URL,
-// 	}
-// 	mgsdk := sdk.NewSDK(conf)
+	conf := sdk.Config{
+		UsersURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
 
-// 	disabledUser := user
-// 	disabledUser.Status = users.DisabledStatus.String()
+	disabledUser := user
+	disabledUser.Status = users.DisabledStatus.String()
 
-// 	cases := []struct {
-// 		desc            string
-// 		token           string
-// 		session         mgauthn.Session
-// 		userID          string
-// 		svcRes          users.User
-// 		svcErr          error
-// 		authenticateErr error
-// 		response        sdk.User
-// 		err             errors.SDKError
-// 	}{
-// 		{
-// 			desc:   "disable user with valid token",
-// 			token:  validToken,
-// 			userID: user.ID,
-// 			svcRes: convertUser(disabledUser),
-// 			svcErr: nil,
+	cases := []struct {
+		desc            string
+		token           string
+		session         mgauthn.Session
+		userID          string
+		svcRes          users.User
+		svcErr          error
+		authenticateErr error
+		response        sdk.User
+		err             errors.SDKError
+	}{
+		{
+			desc:   "disable user with valid token",
+			token:  validToken,
+			userID: user.ID,
+			svcRes: convertUser(disabledUser),
+			svcErr: nil,
 
-// 			response: disabledUser,
-// 			err:      nil,
-// 		},
-// 		{
-// 			desc:            "disable user with invalid token",
-// 			token:           invalidToken,
-// 			userID:          user.ID,
-// 			svcRes:          users.User{},
-// 			authenticateErr: svcerr.ErrAuthentication,
-// 			response:        sdk.User{},
-// 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
-// 		},
-// 		{
-// 			desc:     "disable user with empty token",
-// 			token:    "",
-// 			userID:   user.ID,
-// 			svcRes:   users.User{},
-// 			svcErr:   nil,
-// 			response: sdk.User{},
-// 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
-// 		},
-// 		{
-// 			desc:     "disable user with invalid id",
-// 			token:    validToken,
-// 			userID:   wrongID,
-// 			svcRes:   users.User{},
-// 			svcErr:   svcerr.ErrUpdateEntity,
-// 			response: sdk.User{},
-// 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity),
-// 		},
-// 		{
-// 			desc:     "disable user with empty id",
-// 			token:    validToken,
-// 			userID:   "",
-// 			svcRes:   users.User{},
-// 			svcErr:   nil,
-// 			response: sdk.User{},
-// 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
-// 		},
-// 		{
-// 			desc:   "disable user with response that can't be unmarshalled",
-// 			token:  validToken,
-// 			userID: user.ID,
-// 			svcRes: users.User{
-// 				ID:     id,
-// 				Status: users.DisabledStatus,
-// 				Metadata: users.Metadata{
-// 					"key": make(chan int),
-// 				},
-// 			},
-// 			svcErr:   nil,
-// 			response: sdk.User{},
-// 			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
-// 		},
-// 	}
-// 	for _, tc := range cases {
-// 		t.Run(tc.desc, func(t *testing.T) {
-// 			if tc.token == validToken {
-// 				tc.session = mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: domainID}
-// 			}
-// 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-// 			svcCall := svc.On("Disable", mock.Anything, tc.session, tc.userID).Return(tc.svcRes, tc.svcErr)
-// 			resp, err := mgsdk.DisableUser(tc.userID, tc.token)
-// 			assert.Equal(t, tc.err, err)
-// 			assert.Equal(t, tc.response, resp)
-// 			if tc.err == nil {
-// 				ok := svcCall.Parent.AssertCalled(t, "Disable", mock.Anything, tc.session, tc.userID)
-// 				assert.True(t, ok)
-// 			}
-// 			svcCall.Unset()
-// 			authCall.Unset()
-// 		})
-// 	}
-// }
+			response: disabledUser,
+			err:      nil,
+		},
+		{
+			desc:            "disable user with invalid token",
+			token:           invalidToken,
+			userID:          user.ID,
+			svcRes:          users.User{},
+			authenticateErr: svcerr.ErrAuthentication,
+			response:        sdk.User{},
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "disable user with empty token",
+			token:    "",
+			userID:   user.ID,
+			svcRes:   users.User{},
+			svcErr:   nil,
+			response: sdk.User{},
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "disable user with invalid id",
+			token:    validToken,
+			userID:   wrongID,
+			svcRes:   users.User{},
+			svcErr:   svcerr.ErrUpdateEntity,
+			response: sdk.User{},
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity),
+		},
+		{
+			desc:     "disable user with empty id",
+			token:    validToken,
+			userID:   "",
+			svcRes:   users.User{},
+			svcErr:   nil,
+			response: sdk.User{},
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+		},
+		{
+			desc:   "disable user with response that can't be unmarshalled",
+			token:  validToken,
+			userID: user.ID,
+			svcRes: users.User{
+				ID:     id,
+				Status: users.DisabledStatus,
+				Metadata: users.Metadata{
+					"key": make(chan int),
+				},
+			},
+			svcErr:   nil,
+			response: sdk.User{},
+			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := svc.On("Disable", mock.Anything, tc.session, tc.userID).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.DisableUser(tc.userID, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "Disable", mock.Anything, tc.session, tc.userID)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
 
 func TestListMembers(t *testing.T) {
 	ts, svc, auth := setupUsers()

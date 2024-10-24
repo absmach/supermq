@@ -138,7 +138,7 @@ var cmdProvision = []cobra.Command{
 				FirstName: name,
 				Email:     fmt.Sprintf("%s@email.com", name),
 				Credentials: mgxsdk.Credentials{
-					UserName: name,
+					Username: name,
 					Secret:   "12345678",
 				},
 				Status: mgxsdk.EnabledStatus,

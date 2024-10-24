@@ -29,7 +29,7 @@ const (
 	oauthCallback            = userPrefix + "oauth_callback"
 	addClientPolicy          = userPrefix + "add_policy"
 	deleteUser               = userPrefix + "delete"
-	userUpdateUserName       = userPrefix + "update_user_name"
+	userUpdateUsername       = userPrefix + "update_username"
 	userUpdateProfilePicture = userPrefix + "update_profile_picture"
 )
 
@@ -37,7 +37,7 @@ var (
 	_ events.Event = (*createUserEvent)(nil)
 	_ events.Event = (*updateUserEvent)(nil)
 	_ events.Event = (*updateProfilePictureEvent)(nil)
-	_ events.Event = (*updateUserNameEvent)(nil)
+	_ events.Event = (*updateUsernameEvent)(nil)
 	_ events.Event = (*removeUserEvent)(nil)
 	_ events.Event = (*viewUserEvent)(nil)
 	_ events.Event = (*viewProfileEvent)(nil)
@@ -79,8 +79,8 @@ func (uce createUserEvent) Encode() (map[string]interface{}, error) {
 	if uce.Metadata != nil {
 		val["metadata"] = uce.Metadata
 	}
-	if uce.Credentials.UserName != "" {
-		val["user_name"] = uce.Credentials.UserName
+	if uce.Credentials.Username != "" {
+		val["username"] = uce.Credentials.Username
 	}
 	if uce.Email != "" {
 		val["email"] = uce.Email
@@ -116,8 +116,8 @@ func (uce updateUserEvent) Encode() (map[string]interface{}, error) {
 	if len(uce.Tags) > 0 {
 		val["tags"] = uce.Tags
 	}
-	if uce.Credentials.UserName != "" {
-		val["user_name"] = uce.Credentials.UserName
+	if uce.Credentials.Username != "" {
+		val["username"] = uce.Credentials.Username
 	}
 	if uce.Email != "" {
 		val["email"] = uce.Email
@@ -135,13 +135,13 @@ func (uce updateUserEvent) Encode() (map[string]interface{}, error) {
 	return val, nil
 }
 
-type updateUserNameEvent struct {
+type updateUsernameEvent struct {
 	users.User
 }
 
-func (une updateUserNameEvent) Encode() (map[string]interface{}, error) {
+func (une updateUsernameEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
-		"operation":  userUpdateUserName,
+		"operation":  userUpdateUsername,
 		"updated_at": une.UpdatedAt,
 		"updated_by": une.UpdatedBy,
 	}
@@ -155,8 +155,8 @@ func (une updateUserNameEvent) Encode() (map[string]interface{}, error) {
 	if une.LastName != "" {
 		val["last_name"] = une.LastName
 	}
-	if une.Credentials.UserName != "" {
-		val["user_name"] = une.Credentials.UserName
+	if une.Credentials.Username != "" {
+		val["username"] = une.Credentials.Username
 	}
 
 	return val, nil
@@ -222,8 +222,8 @@ func (vue viewUserEvent) Encode() (map[string]interface{}, error) {
 	if vue.Email != "" {
 		val["email"] = vue.Email
 	}
-	if vue.Credentials.UserName != "" {
-		val["email"] = vue.Credentials.UserName
+	if vue.Credentials.Username != "" {
+		val["email"] = vue.Credentials.Username
 	}
 	if vue.Metadata != nil {
 		val["metadata"] = vue.Metadata
@@ -260,8 +260,8 @@ func (vpe viewProfileEvent) Encode() (map[string]interface{}, error) {
 	if len(vpe.Tags) > 0 {
 		val["tags"] = vpe.Tags
 	}
-	if vpe.Credentials.UserName != "" {
-		val["user_name"] = vpe.Credentials.UserName
+	if vpe.Credentials.Username != "" {
+		val["username"] = vpe.Credentials.Username
 	}
 	if vpe.Metadata != nil {
 		val["metadata"] = vpe.Metadata
@@ -324,8 +324,8 @@ func (lue listUserEvent) Encode() (map[string]interface{}, error) {
 	if lue.Status.String() != "" {
 		val["status"] = lue.Status.String()
 	}
-	if lue.UserName != "" {
-		val["user_name"] = lue.UserName
+	if lue.Username != "" {
+		val["username"] = lue.Username
 	}
 	if lue.Email != "" {
 		val["email"] = lue.Email
@@ -350,8 +350,8 @@ func (lcge listUserByGroupEvent) Encode() (map[string]interface{}, error) {
 		"object_id":   lcge.objectID,
 	}
 
-	if lcge.UserName != "" {
-		val["user_name"] = lcge.UserName
+	if lcge.Username != "" {
+		val["username"] = lcge.Username
 	}
 	if lcge.Order != "" {
 		val["order"] = lcge.Order
@@ -398,8 +398,8 @@ func (sce searchUserEvent) Encode() (map[string]interface{}, error) {
 		"offset":    sce.Offset,
 		"limit":     sce.Limit,
 	}
-	if sce.UserName != "" {
-		val["user_name"] = sce.UserName
+	if sce.Username != "" {
+		val["username"] = sce.Username
 	}
 	if sce.FirstName != "" {
 		val["first_name"] = sce.FirstName

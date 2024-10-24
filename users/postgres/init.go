@@ -48,8 +48,8 @@ func Migration() *migrate.MemoryMigrationSource {
 			{
 				Id: "clients_03",
 				Up: []string{
-					`ALTER TABLE clients 
-                        ADD COLUMN user_name VARCHAR(254) UNIQUE, 
+					`ALTER TABLE clients
+                        ADD COLUMN username VARCHAR(254) UNIQUE, 
                         ADD COLUMN first_name VARCHAR(254), 
                         ADD COLUMN last_name VARCHAR(254), 
                         ADD COLUMN profile_picture TEXT`,
@@ -58,12 +58,21 @@ func Migration() *migrate.MemoryMigrationSource {
 				},
 				Down: []string{
 					`ALTER TABLE clients
-                        DROP COLUMN user_name,
+                        DROP COLUMN username,
                         DROP COLUMN first_name,
                         DROP COLUMN last_name,
                         DROP COLUMN profile_picture`,
 					`ALTER TABLE clients RENAME COLUMN email TO identity`,
 					`ALTER TABLE clients ADD COLUMN name VARCHAR(254) NOT NULL UNIQUE`,
+				},
+			},
+			{
+				Id: "clients_04",
+				Up: []string{
+					`ALTER TABLE IF EXISTS clients RENAME TO users`,
+				},
+				Down: []string{
+					`ALTER TABLE IF EXISTS users RENAME TO clients`,
 				},
 			},
 		},

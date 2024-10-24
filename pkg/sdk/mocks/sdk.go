@@ -2686,36 +2686,6 @@ func (_m *SDK) UpdateUserEmail(user sdk.User, token string) (sdk.User, errors.SD
 	return r0, r1
 }
 
-// UpdateUserName provides a mock function with given fields: user, token
-func (_m *SDK) UpdateUserName(user sdk.User, token string) (sdk.User, errors.SDKError) {
-	ret := _m.Called(user, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for UpdateUserName")
-	}
-
-	var r0 sdk.User
-	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(sdk.User, string) (sdk.User, errors.SDKError)); ok {
-		return rf(user, token)
-	}
-	if rf, ok := ret.Get(0).(func(sdk.User, string) sdk.User); ok {
-		r0 = rf(user, token)
-	} else {
-		r0 = ret.Get(0).(sdk.User)
-	}
-
-	if rf, ok := ret.Get(1).(func(sdk.User, string) errors.SDKError); ok {
-		r1 = rf(user, token)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.SDKError)
-		}
-	}
-
-	return r0, r1
-}
-
 // UpdateUserRole provides a mock function with given fields: user, token
 func (_m *SDK) UpdateUserRole(user sdk.User, token string) (sdk.User, errors.SDKError) {
 	ret := _m.Called(user, token)
@@ -2752,6 +2722,36 @@ func (_m *SDK) UpdateUserTags(user sdk.User, token string) (sdk.User, errors.SDK
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateUserTags")
+	}
+
+	var r0 sdk.User
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(sdk.User, string) (sdk.User, errors.SDKError)); ok {
+		return rf(user, token)
+	}
+	if rf, ok := ret.Get(0).(func(sdk.User, string) sdk.User); ok {
+		r0 = rf(user, token)
+	} else {
+		r0 = ret.Get(0).(sdk.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(sdk.User, string) errors.SDKError); ok {
+		r1 = rf(user, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// UpdateUsername provides a mock function with given fields: user, token
+func (_m *SDK) UpdateUsername(user sdk.User, token string) (sdk.User, errors.SDKError) {
+	ret := _m.Called(user, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateUsername")
 	}
 
 	var r0 sdk.User

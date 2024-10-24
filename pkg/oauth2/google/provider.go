@@ -104,7 +104,7 @@ func (cfg *config) UserInfo(accessToken string) (uclient.User, error) {
 		ID        string `json:"id"`
 		FirstName string `json:"first_name"`
 		LastName  string `json:"last_name"`
-		UserName  string `json:"username"`
+		Username  string `json:"username"`
 		Email     string `json:"email"`
 		Picture   string `json:"picture"`
 	}

@@ -99,11 +99,11 @@ func usersHandler(svc users.Service, authn mgauthn.Authentication, tokenClient m
 			), "update_user").ServeHTTP)
 
 			r.Patch("/{id}/name", otelhttp.NewHandler(kithttp.NewServer(
-				updateUserNameEndpoint(svc),
-				decodeUpdateUserName,
+				updateUsernameEndpoint(svc),
+				decodeUpdateUsername,
 				api.EncodeResponse,
 				opts...,
-			), "update_user_name").ServeHTTP)
+			), "update_username").ServeHTTP)
 
 			r.Patch("/{id}/picture", otelhttp.NewHandler(kithttp.NewServer(
 				updateProfilePictureEndpoint(svc),
@@ -265,7 +265,7 @@ func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	n, err := apiutil.ReadStringQuery(r, api.UserNameKey, "")
+	n, err := apiutil.ReadStringQuery(r, api.UsernameKey, "")
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
@@ -329,7 +329,7 @@ func decodeSearchUsers(_ context.Context, r *http.Request) (interface{}, error) 
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	n, err := apiutil.ReadStringQuery(r, api.UserNameKey, "")
+	n, err := apiutil.ReadStringQuery(r, api.UsernameKey, "")
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
@@ -357,7 +357,7 @@ func decodeSearchUsers(_ context.Context, r *http.Request) (interface{}, error) 
 	req := searchUsersReq{
 		Offset:    o,
 		Limit:     l,
-		UserName:  n,
+		Username:  n,
 		FirstName: f,
 		LastName:  e,
 		Id:        id,
@@ -365,7 +365,7 @@ func decodeSearchUsers(_ context.Context, r *http.Request) (interface{}, error) 
 		Dir:       dir,
 	}
 
-	for _, field := range []string{req.UserName, req.Id} {
+	for _, field := range []string{req.Username, req.Id} {
 		if field != "" && len(field) < 3 {
 			req = searchUsersReq{}
 			return req, errors.Wrap(apiutil.ErrLenSearchQuery, apiutil.ErrValidation)
@@ -433,12 +433,12 @@ func decodeUpdateUserSecret(_ context.Context, r *http.Request) (interface{}, er
 	return req, nil
 }
 
-func decodeUpdateUserName(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateUsername(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
-	req := updateUserNameReq{
+	req := updateUsernameReq{
 		id: chi.URLParam(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -623,7 +623,7 @@ func queryPageParams(r *http.Request, defPermission string) (users.Page, error) 
 	if err != nil {
 		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	n, err := apiutil.ReadStringQuery(r, api.UserNameKey, "")
+	n, err := apiutil.ReadStringQuery(r, api.UsernameKey, "")
 	if err != nil {
 		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
@@ -661,7 +661,7 @@ func queryPageParams(r *http.Request, defPermission string) (users.Page, error) 
 		Limit:      l,
 		Metadata:   m,
 		FirstName:  f,
-		UserName:   n,
+		Username:   n,
 		LastName:   a,
 		Email:      i,
 		Tag:        t,

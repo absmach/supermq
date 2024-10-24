@@ -42,7 +42,7 @@ func TestCreateUserReqValidate(t *testing.T) {
 					LastName:  valid,
 					Email:     "example@domain.com",
 					Credentials: users.Credentials{
-						UserName: "example",
+						Username: "example",
 						Secret:   secret,
 					},
 				},
@@ -68,7 +68,7 @@ func TestCreateUserReqValidate(t *testing.T) {
 					FirstName: valid,
 					LastName:  valid,
 					Credentials: users.Credentials{
-						UserName: "example",
+						Username: "example",
 						Secret:   secret,
 					},
 				},
@@ -84,7 +84,7 @@ func TestCreateUserReqValidate(t *testing.T) {
 					LastName:  valid,
 					Email:     "example@domain.com",
 					Credentials: users.Credentials{
-						UserName: "example",
+						Username: "example",
 					},
 				},
 			},
@@ -99,7 +99,7 @@ func TestCreateUserReqValidate(t *testing.T) {
 					LastName:  valid,
 					Email:     "example@domain.com",
 					Credentials: users.Credentials{
-						UserName: "example",
+						Username: "example",
 						Secret:   "invalid",
 					},
 				},
@@ -191,7 +191,7 @@ func TestSearchUsersReqValidate(t *testing.T) {
 		{
 			desc: "valid request",
 			req: searchUsersReq{
-				UserName: name,
+				Username: name,
 			},
 			err: nil,
 		},
@@ -254,7 +254,7 @@ func TestUpdateUserReqValidate(t *testing.T) {
 			desc: "valid request",
 			req: updateUserReq{
 				id:       validID,
-				UserName: valid,
+				Username: valid,
 			},
 			err: nil,
 		},
@@ -262,7 +262,7 @@ func TestUpdateUserReqValidate(t *testing.T) {
 			desc: "empty id",
 			req: updateUserReq{
 				id:       "",
-				UserName: valid,
+				Username: valid,
 			},
 			err: apiutil.ErrMissingID,
 		},
@@ -302,33 +302,33 @@ func TestUpdateUserTagsReqValidate(t *testing.T) {
 	}
 }
 
-func TestUpdateUserNameReqValidate(t *testing.T) {
+func TestUpdateUsernameReqValidate(t *testing.T) {
 	cases := []struct {
 		desc string
-		req  updateUserNameReq
+		req  updateUsernameReq
 		err  error
 	}{
 		{
 			desc: "valid request",
-			req: updateUserNameReq{
+			req: updateUsernameReq{
 				id:       validID,
-				UserName: "validUsername",
+				Username: "validUsername",
 			},
 			err: nil,
 		},
 		{
 			desc: "missing user ID",
-			req: updateUserNameReq{
+			req: updateUsernameReq{
 				id:       "",
-				UserName: "validUsername",
+				Username: "validUsername",
 			},
 			err: apiutil.ErrMissingID,
 		},
 		{
 			desc: "name too long",
-			req: updateUserNameReq{
+			req: updateUsernameReq{
 				id:       validID,
-				UserName: strings.Repeat("a", api.MaxNameSize+1),
+				Username: strings.Repeat("a", api.MaxNameSize+1),
 			},
 			err: apiutil.ErrNameSize,
 		},

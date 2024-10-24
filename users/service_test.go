@@ -38,14 +38,14 @@ var (
 		FirstName:   "firstname",
 		LastName:    "lastname",
 		Tags:        []string{"tag1", "tag2"},
-		Credentials: users.Credentials{UserName: "username", Secret: secret},
+		Credentials: users.Credentials{Username: "username", Secret: secret},
 		Email:       "useremail@email.com",
 		Metadata:    validCMetadata,
 		Status:      users.EnabledStatus,
 	}
 	basicUser = users.User{
 		Credentials: users.Credentials{
-			UserName: "username",
+			Username: "username",
 		},
 		ID:        userID,
 		FirstName: "firstname",
@@ -956,8 +956,8 @@ func TestUpdateUserEmail(t *testing.T) {
 func TestEnableUser(t *testing.T) {
 	svc, cRepo := newServiceMinimal()
 
-	enabledUser1 := users.User{ID: testsutil.GenerateUUID(t), Credentials: users.Credentials{UserName: "user1@example.com", Secret: "password"}, Status: users.EnabledStatus}
-	disabledUser1 := users.User{ID: testsutil.GenerateUUID(t), Credentials: users.Credentials{UserName: "user3@example.com", Secret: "password"}, Status: users.DisabledStatus}
+	enabledUser1 := users.User{ID: testsutil.GenerateUUID(t), Credentials: users.Credentials{Username: "user1@example.com", Secret: "password"}, Status: users.EnabledStatus}
+	disabledUser1 := users.User{ID: testsutil.GenerateUUID(t), Credentials: users.Credentials{Username: "user3@example.com", Secret: "password"}, Status: users.DisabledStatus}
 	endisabledUser1 := disabledUser1
 	endisabledUser1.Status = users.EnabledStatus
 
@@ -1037,8 +1037,8 @@ func TestEnableUser(t *testing.T) {
 func TestDisableUser(t *testing.T) {
 	svc, cRepo := newServiceMinimal()
 
-	enabledUser1 := users.User{ID: testsutil.GenerateUUID(t), Credentials: users.Credentials{UserName: "client1@example.com", Secret: "password"}, Status: users.EnabledStatus}
-	disabledUser1 := users.User{ID: testsutil.GenerateUUID(t), Credentials: users.Credentials{UserName: "client3@example.com", Secret: "password"}, Status: users.DisabledStatus}
+	enabledUser1 := users.User{ID: testsutil.GenerateUUID(t), Credentials: users.Credentials{Username: "client1@example.com", Secret: "password"}, Status: users.EnabledStatus}
+	disabledUser1 := users.User{ID: testsutil.GenerateUUID(t), Credentials: users.Credentials{Username: "client3@example.com", Secret: "password"}, Status: users.DisabledStatus}
 	disenabledUser1 := enabledUser1
 	disenabledUser1.Status = users.DisabledStatus
 
@@ -1117,8 +1117,8 @@ func TestDisableUser(t *testing.T) {
 func TestDeleteUser(t *testing.T) {
 	svc, cRepo := newServiceMinimal()
 
-	enabledUser1 := users.User{ID: testsutil.GenerateUUID(t), Credentials: users.Credentials{UserName: "user1@example.com", Secret: "password"}, Status: users.EnabledStatus}
-	deletedUser1 := users.User{ID: testsutil.GenerateUUID(t), Credentials: users.Credentials{UserName: "user3@example.com", Secret: "password"}, Status: users.DeletedStatus}
+	enabledUser1 := users.User{ID: testsutil.GenerateUUID(t), Credentials: users.Credentials{Username: "user1@example.com", Secret: "password"}, Status: users.EnabledStatus}
+	deletedUser1 := users.User{ID: testsutil.GenerateUUID(t), Credentials: users.Credentials{Username: "user3@example.com", Secret: "password"}, Status: users.DeletedStatus}
 	disenabledUser1 := enabledUser1
 	disenabledUser1.Status = users.DeletedStatus
 

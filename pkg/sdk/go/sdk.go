@@ -96,7 +96,7 @@ type PageMetadata struct {
 	Level           uint64   `json:"level,omitempty"`
 	Identity        string   `json:"identity,omitempty"`
 	Email           string   `json:"email,omitempty"`
-	UserName        string   `json:"user_name,omitempty"`
+	Username        string   `json:"username,omitempty"`
 	LastName        string   `json:"last_name,omitempty"`
 	FirstName       string   `json:"first_name,omitempty"`
 	Name            string   `json:"name,omitempty"`
@@ -132,8 +132,8 @@ type PageMetadata struct {
 // "username" which can be a username, generated name;
 // and "secret" which can be a password or access token.
 type Credentials struct {
-	UserName string `json:"user_name,omitempty"` // username or generated login ID
-	Secret   string `json:"secret,omitempty"`    // password or token
+	Username string `json:"username,omitempty"` // username or generated login ID
+	Secret   string `json:"secret,omitempty"`   // password or token
 }
 
 // SDK contains Magistrala API.
@@ -147,7 +147,7 @@ type SDK interface {
 	//    Name:	 "John Doe",
 	// 	  Email: "john.doe@example",
 	//    Credentials: sdk.Credentials{
-	//      UserName: "john.doe",
+	//      Username: "john.doe",
 	//      Secret:   "12345678",
 	//    },
 	//  }
@@ -231,16 +231,16 @@ type SDK interface {
 	//  fmt.Println(user)
 	UpdateUserTags(user User, token string) (User, errors.SDKError)
 
-	// UpdateUserName updates the user's names ie Name, FirstName, LastName and UserName.
+	// UpdateUsername updates the user's names ie Name, FirstName, LastName and Username.
 	//
 	// example:
 	//  user := sdk.User{
 	//    ID:   "userID",
 	//    Name: "John Doe",
 	//  }
-	//  user, _ := sdk.UpdateUserName(user, "token")
+	//  user, _ := sdk.UpdateUsername(user, "token")
 	//  fmt.Println(user)
-	UpdateUserName(user User, token string) (User, errors.SDKError)
+	UpdateUsername(user User, token string) (User, errors.SDKError)
 
 	// UpdateProfilePicture updates the user's profile picture.
 	//
@@ -1359,14 +1359,17 @@ func (pm PageMetadata) query() (string, error) {
 	if pm.Identity != "" {
 		q.Add("identity", pm.Identity)
 	}
-	if pm.UserName != "" {
-		q.Add("user_name", pm.UserName)
+	if pm.Username != "" {
+		q.Add("username", pm.Username)
 	}
 	if pm.FirstName != "" {
 		q.Add("first_name", pm.FirstName)
 	}
 	if pm.LastName != "" {
 		q.Add("last_name", pm.LastName)
+	}
+	if pm.Name != "" {
+		q.Add("name", pm.Name)
 	}
 	if pm.ID != "" {
 		q.Add("id", pm.ID)

@@ -36,8 +36,8 @@ var (
 	Contact string = ""
 	// RawOutput raw output mode.
 	RawOutput bool = false
-	// UserName query parameter.
-	UserName string = ""
+	// Username query parameter.
+	Username string = ""
 	// FirstName query parameter.
 	FirstName string = ""
 	// LastName query parameter.

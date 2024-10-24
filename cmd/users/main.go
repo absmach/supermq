@@ -319,7 +319,7 @@ func createAdmin(ctx context.Context, c config, urepo users.Repository, hsr user
 		ID:    id,
 		Email: c.AdminEmail,
 		Credentials: users.Credentials{
-			UserName: "admin",
+			Username: "admin",
 			Secret:   hash,
 		},
 		Metadata: users.Metadata{

@@ -25,8 +25,8 @@ func (req createUserReq) validate() error {
 	if len(req.user.LastName) > api.MaxNameSize {
 		return apiutil.ErrNameSize
 	}
-	if req.user.Credentials.UserName == "" {
-		return apiutil.ErrMissingUserName
+	if req.user.Credentials.Username == "" {
+		return apiutil.ErrMissingUsername
 	}
 	if req.user.Email == "" {
 		return apiutil.ErrMissingEmail
@@ -85,7 +85,7 @@ func (req listUsersReq) validate() error {
 type searchUsersReq struct {
 	Offset    uint64
 	Limit     uint64
-	UserName  string
+	Username  string
 	FirstName string
 	LastName  string
 	Id        string
@@ -94,7 +94,7 @@ type searchUsersReq struct {
 }
 
 func (req searchUsersReq) validate() error {
-	if req.UserName == "" && req.Id == "" {
+	if req.Username == "" && req.Id == "" {
 		return apiutil.ErrEmptySearchQuery
 	}
 
@@ -122,7 +122,7 @@ type updateUserReq struct {
 	id             string
 	FirstName      string         `json:"first_name,omitempty"`
 	LastName       string         `json:"last_name,omitempty"`
-	UserName       string         `json:"user_name,omitempty"`
+	Username       string         `json:"username,omitempty"`
 	ProfilePicture url.URL        `json:"profile_picture,omitempty"` // URL of the picture
 	Metadata       users.Metadata `json:"metadata,omitempty"`
 }
@@ -191,16 +191,16 @@ func (req updateUserSecretReq) validate() error {
 	return nil
 }
 
-type updateUserNameReq struct {
+type updateUsernameReq struct {
 	id       string
-	UserName string
+	Username string
 }
 
-func (req updateUserNameReq) validate() error {
+func (req updateUsernameReq) validate() error {
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
-	if len(req.UserName) > api.MaxNameSize {
+	if len(req.Username) > api.MaxNameSize {
 		return apiutil.ErrNameSize
 	}
 

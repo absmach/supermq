@@ -29,8 +29,8 @@ var (
 
 func TestUsersSave(t *testing.T) {
 	t.Cleanup(func() {
-		_, err := db.Exec("DELETE FROM clients")
-		require.Nil(t, err, fmt.Sprintf("clean clients unexpected error: %s", err))
+		_, err := db.Exec("DELETE FROM users")
+		require.Nil(t, err, fmt.Sprintf("clean users unexpected error: %s", err))
 	})
 
 	repo := cpostgres.NewRepository(database)
@@ -39,7 +39,7 @@ func TestUsersSave(t *testing.T) {
 
 	first_name := namesgen.Generate()
 	last_name := namesgen.Generate()
-	user_name := namesgen.Generate()
+	username := namesgen.Generate()
 
 	clientEmail := first_name + "@example.com"
 
@@ -56,7 +56,7 @@ func TestUsersSave(t *testing.T) {
 				LastName:  last_name,
 				Email:     clientEmail,
 				Credentials: users.Credentials{
-					UserName: user_name,
+					Username: username,
 					Secret:   password,
 				},
 				Metadata: users.Metadata{},
@@ -72,7 +72,7 @@ func TestUsersSave(t *testing.T) {
 				LastName:  last_name,
 				Email:     clientEmail,
 				Credentials: users.Credentials{
-					UserName: namesgen.Generate(),
+					Username: namesgen.Generate(),
 					Secret:   password,
 				},
 				Metadata: users.Metadata{},
@@ -88,7 +88,7 @@ func TestUsersSave(t *testing.T) {
 				LastName:  last_name,
 				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
-					UserName: user_name,
+					Username: username,
 					Secret:   password,
 				},
 				Metadata: users.Metadata{},
@@ -104,7 +104,7 @@ func TestUsersSave(t *testing.T) {
 				LastName:  namesgen.Generate(),
 				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
-					UserName: user_name,
+					Username: username,
 					Secret:   password,
 				},
 				Metadata: users.Metadata{},
@@ -120,7 +120,7 @@ func TestUsersSave(t *testing.T) {
 				LastName:  namesgen.Generate(),
 				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
-					UserName: user_name,
+					Username: username,
 					Secret:   password,
 				},
 				Metadata: users.Metadata{},
@@ -148,7 +148,7 @@ func TestUsersSave(t *testing.T) {
 				LastName:  namesgen.Generate(),
 				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
-					UserName: namesgen.Generate(),
+					Username: namesgen.Generate(),
 				},
 				Metadata: users.Metadata{},
 			},
@@ -161,7 +161,7 @@ func TestUsersSave(t *testing.T) {
 				FirstName: namesgen.Generate(),
 				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
-					UserName: user_name,
+					Username: username,
 					Secret:   password,
 				},
 				Metadata: map[string]interface{}{
@@ -184,8 +184,8 @@ func TestUsersSave(t *testing.T) {
 
 func TestIsPlatformAdmin(t *testing.T) {
 	t.Cleanup(func() {
-		_, err := db.Exec("DELETE FROM clients")
-		require.Nil(t, err, fmt.Sprintf("clean clients unexpected error: %s", err))
+		_, err := db.Exec("DELETE FROM users")
+		require.Nil(t, err, fmt.Sprintf("clean users unexpected error: %s", err))
 	})
 
 	repo := cpostgres.NewRepository(database)
@@ -202,7 +202,7 @@ func TestIsPlatformAdmin(t *testing.T) {
 				FirstName: namesgen.Generate(),
 				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
-					UserName: namesgen.Generate(),
+					Username: namesgen.Generate(),
 					Secret:   password,
 				},
 				Metadata: users.Metadata{},
@@ -218,7 +218,7 @@ func TestIsPlatformAdmin(t *testing.T) {
 				FirstName: namesgen.Generate(),
 				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
-					UserName: namesgen.Generate(),
+					Username: namesgen.Generate(),
 					Secret:   password,
 				},
 				Metadata: users.Metadata{},
@@ -239,8 +239,8 @@ func TestIsPlatformAdmin(t *testing.T) {
 
 func TestRetrieveByID(t *testing.T) {
 	t.Cleanup(func() {
-		_, err := db.Exec("DELETE FROM clients")
-		require.Nil(t, err, fmt.Sprintf("clean clients unexpected error: %s", err))
+		_, err := db.Exec("DELETE FROM users")
+		require.Nil(t, err, fmt.Sprintf("clean users unexpected error: %s", err))
 	})
 
 	repo := cpostgres.NewRepository(database)
@@ -249,7 +249,7 @@ func TestRetrieveByID(t *testing.T) {
 		ID:        testsutil.GenerateUUID(t),
 		FirstName: namesgen.Generate(),
 		Credentials: users.Credentials{
-			UserName: namesgen.Generate(),
+			Username: namesgen.Generate(),
 			Secret:   password,
 		},
 		Metadata: users.Metadata{},
@@ -265,17 +265,17 @@ func TestRetrieveByID(t *testing.T) {
 		err      error
 	}{
 		{
-			desc:     "retrieve existing client",
+			desc:     "retrieve existing user",
 			clientID: client.ID,
 			err:      nil,
 		},
 		{
-			desc:     "retrieve non-existing client",
+			desc:     "retrieve non-existing user",
 			clientID: invalidName,
 			err:      repoerr.ErrNotFound,
 		},
 		{
-			desc:     "retrieve with empty client id",
+			desc:     "retrieve with empty user id",
 			clientID: "",
 			err:      repoerr.ErrNotFound,
 		},
@@ -289,8 +289,8 @@ func TestRetrieveByID(t *testing.T) {
 
 func TestRetrieveAll(t *testing.T) {
 	t.Cleanup(func() {
-		_, err := db.Exec("DELETE FROM clients")
-		require.Nil(t, err, fmt.Sprintf("clean clients unexpected error: %s", err))
+		_, err := db.Exec("DELETE FROM users")
+		require.Nil(t, err, fmt.Sprintf("clean users unexpected error: %s", err))
 	})
 
 	repo := cpostgres.NewRepository(database)
@@ -303,7 +303,7 @@ func TestRetrieveAll(t *testing.T) {
 			FirstName: namesgen.Generate(),
 			Email:     namesgen.Generate() + "@example.com",
 			Credentials: users.Credentials{
-				UserName: namesgen.Generate(),
+				Username: namesgen.Generate(),
 				Secret:   "",
 			},
 			Metadata: users.Metadata{},
@@ -319,7 +319,7 @@ func TestRetrieveAll(t *testing.T) {
 			client.Status = users.DisabledStatus
 		}
 		_, err := repo.Save(context.Background(), client)
-		require.Nil(t, err, fmt.Sprintf("failed to save client %s", client.ID))
+		require.Nil(t, err, fmt.Sprintf("failed to save user %s", client.ID))
 		items = append(items, client)
 		if client.Status == users.EnabledStatus {
 			enabledClients = append(enabledClients, client)
@@ -494,7 +494,7 @@ func TestRetrieveAll(t *testing.T) {
 		{
 			desc: "retrieve with client User Name",
 			pageMeta: users.Page{
-				UserName: items[0].Credentials.UserName,
+				Username: items[0].Credentials.Username,
 				Offset:   0,
 				Limit:    3,
 				Role:     users.AllRole,
