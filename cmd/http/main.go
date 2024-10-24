@@ -18,6 +18,7 @@ import (
 	"github.com/absmach/magistrala"
 	adapter "github.com/absmach/magistrala/http"
 	"github.com/absmach/magistrala/http/api"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/grpcclient"
 	jaegerclient "github.com/absmach/magistrala/pkg/jaeger"
@@ -153,7 +154,7 @@ func main() {
 	}
 }
 
-func newService(pub messaging.Publisher, tc magistrala.ThingsServiceClient, logger *slog.Logger, tracer trace.Tracer) session.Handler {
+func newService(pub messaging.Publisher, tc grpcThingsV1.ThingsServiceClient, logger *slog.Logger, tracer trace.Tracer) session.Handler {
 	svc := adapter.NewHandler(pub, logger, tc)
 	svc = handler.NewTracing(tracer, svc)
 	svc = handler.LoggingMiddleware(svc, logger)

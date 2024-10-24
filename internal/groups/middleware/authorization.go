@@ -9,107 +9,134 @@ import (
 	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/authz"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	"github.com/absmach/magistrala/pkg/errors"
 	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/policies"
+	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
+	"github.com/absmach/magistrala/pkg/svcutil"
 )
+
+var errParentUnAuthz = errors.New("parent group unauthorized")
 
 var _ groups.Service = (*authorizationMiddleware)(nil)
 
 type authorizationMiddleware struct {
 	svc   groups.Service
 	authz mgauthz.Authorization
+	opp   svcutil.OperationPerm
+	rmMW.RoleManagerAuthorizationMiddleware
 }
 
 // AuthorizationMiddleware adds authorization to the clients service.
-func AuthorizationMiddleware(svc groups.Service, authz mgauthz.Authorization) groups.Service {
-	return &authorizationMiddleware{
-		svc:   svc,
-		authz: authz,
+func AuthorizationMiddleware(entityType string, svc groups.Service, authz mgauthz.Authorization, groupsOpPerm, rolesOpPerm map[svcutil.Operation]svcutil.Permission) (groups.Service, error) {
+	opp := groups.NewOperationPerm()
+	if err := opp.AddOperationPermissionMap(groupsOpPerm); err != nil {
+		return nil, err
 	}
+	if err := opp.Validate(); err != nil {
+		return nil, err
+	}
+
+	ram, err := rmMW.NewRoleManagerAuthorizationMiddleware(entityType, svc, authz, rolesOpPerm)
+	if err != nil {
+		return nil, err
+	}
+	return &authorizationMiddleware{
+		svc:                                svc,
+		authz:                              authz,
+		opp:                                opp,
+		RoleManagerAuthorizationMiddleware: ram,
+	}, nil
 }
 
-func (am *authorizationMiddleware) CreateGroup(ctx context.Context, session authn.Session, kind string, g groups.Group) (groups.Group, error) {
-	if err := am.authorize(ctx, "", policies.UserType, policies.UsersKind, session.DomainUserID, policies.CreatePermission, policies.DomainType, session.DomainID); err != nil {
-		return groups.Group{}, err
+func (am *authorizationMiddleware) CreateGroup(ctx context.Context, session authn.Session, g groups.Group) (groups.Group, error) {
+
+	if err := am.authorize(ctx, groups.OpCreateGroup, mgauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		SubjectKind: policies.UsersKind,
+		Subject:     session.DomainUserID,
+		Object:      session.DomainID,
+		ObjectType:  policies.DomainType,
+	}); err != nil {
+		return groups.Group{}, errors.Wrap(errParentUnAuthz, err)
 	}
+
 	if g.Parent != "" {
-		if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, policies.EditPermission, policies.GroupType, g.Parent); err != nil {
-			return groups.Group{}, err
+		if err := am.authorize(ctx, groups.OpAddChildrenGroups, mgauthz.PolicyReq{
+			Domain:      session.DomainID,
+			SubjectType: policies.UserType,
+			SubjectKind: policies.UsersKind,
+			Subject:     session.DomainUserID,
+			Object:      g.Parent,
+			ObjectType:  policies.GroupType,
+		}); err != nil {
+			return groups.Group{}, errors.Wrap(errParentUnAuthz, err)
 		}
 	}
 
-	return am.svc.CreateGroup(ctx, session, kind, g)
+	return am.svc.CreateGroup(ctx, session, g)
 }
 
 func (am *authorizationMiddleware) UpdateGroup(ctx context.Context, session authn.Session, g groups.Group) (groups.Group, error) {
-	if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, policies.EditPermission, policies.GroupType, g.ID); err != nil {
-		return groups.Group{}, err
+	if err := am.authorize(ctx, groups.OpUpdateGroup, mgauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		SubjectKind: policies.UsersKind,
+		Subject:     session.DomainUserID,
+		Object:      g.ID,
+		ObjectType:  policies.GroupType,
+	}); err != nil {
+		return groups.Group{}, errors.Wrap(errParentUnAuthz, err)
 	}
 
 	return am.svc.UpdateGroup(ctx, session, g)
 }
 
 func (am *authorizationMiddleware) ViewGroup(ctx context.Context, session authn.Session, id string) (groups.Group, error) {
-	if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, policies.ViewPermission, policies.GroupType, id); err != nil {
-		return groups.Group{}, err
+	if err := am.authorize(ctx, groups.OpViewGroup, mgauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		SubjectKind: policies.UsersKind,
+		Subject:     session.DomainUserID,
+		Object:      id,
+		ObjectType:  policies.GroupType,
+	}); err != nil {
+		return groups.Group{}, errors.Wrap(errParentUnAuthz, err)
 	}
 
 	return am.svc.ViewGroup(ctx, session, id)
 }
 
-func (am *authorizationMiddleware) ViewGroupPerms(ctx context.Context, session authn.Session, id string) ([]string, error) {
-	return am.svc.ViewGroupPerms(ctx, session, id)
-}
-
-func (am *authorizationMiddleware) ListGroups(ctx context.Context, session authn.Session, memberKind, memberID string, gm groups.Page) (groups.Page, error) {
-	switch memberKind {
-	case policies.ThingsKind:
-		if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, policies.ViewPermission, policies.ThingType, memberID); err != nil {
-			return groups.Page{}, err
-		}
-	case policies.GroupsKind:
-		if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, gm.Permission, policies.GroupType, memberID); err != nil {
-			return groups.Page{}, err
-		}
-	case policies.ChannelsKind:
-		if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, policies.ViewPermission, policies.GroupType, memberID); err != nil {
-			return groups.Page{}, err
-		}
-	case policies.UsersKind:
-		switch {
-		case memberID != "" && session.UserID != memberID:
-			if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, policies.AdminPermission, policies.DomainType, session.DomainID); err != nil {
-				return groups.Page{}, err
-			}
-		default:
-			err := am.checkSuperAdmin(ctx, session.UserID)
-			switch {
-			case err == nil:
-				session.SuperAdmin = true
-			default:
-				if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, policies.MembershipPermission, policies.DomainType, session.DomainID); err != nil {
-					return groups.Page{}, err
-				}
-			}
-		}
+func (am *authorizationMiddleware) ListGroups(ctx context.Context, session authn.Session, gm groups.PageMeta) (groups.Page, error) {
+	err := am.checkSuperAdmin(ctx, session.UserID)
+	switch {
+	case err == nil:
+		session.SuperAdmin = true
 	default:
-		return groups.Page{}, svcerr.ErrAuthorization
+		if err := am.authorize(ctx, groups.OpListGroups, mgauthz.PolicyReq{
+			Domain:      session.DomainID,
+			SubjectType: policies.UserType,
+			SubjectKind: policies.UsersKind,
+			Subject:     session.DomainUserID,
+			Object:      session.DomainID,
+			ObjectType:  policies.DomainType,
+		}); err != nil {
+			return groups.Page{}, errors.Wrap(errParentUnAuthz, err)
+		}
 	}
 
-	return am.svc.ListGroups(ctx, session, memberKind, memberID, gm)
-}
-
-func (am *authorizationMiddleware) ListMembers(ctx context.Context, session authn.Session, groupID, permission, memberKind string) (groups.MembersPage, error) {
-	if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, policies.ViewPermission, policies.GroupType, groupID); err != nil {
-		return groups.MembersPage{}, err
-	}
-
-	return am.svc.ListMembers(ctx, session, groupID, permission, memberKind)
+	return am.svc.ListGroups(ctx, session, gm)
 }
 
 func (am *authorizationMiddleware) EnableGroup(ctx context.Context, session authn.Session, id string) (groups.Group, error) {
-	if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, policies.EditPermission, policies.GroupType, id); err != nil {
+	if err := am.authorize(ctx, groups.OpEnableGroup, mgauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		Subject:     session.DomainUserID,
+		Object:      id,
+		ObjectType:  policies.GroupType,
+	}); err != nil {
 		return groups.Group{}, err
 	}
 
@@ -117,7 +144,13 @@ func (am *authorizationMiddleware) EnableGroup(ctx context.Context, session auth
 }
 
 func (am *authorizationMiddleware) DisableGroup(ctx context.Context, session authn.Session, id string) (groups.Group, error) {
-	if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, policies.EditPermission, policies.GroupType, id); err != nil {
+	if err := am.authorize(ctx, groups.OpDisableGroup, mgauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		Subject:     session.DomainUserID,
+		Object:      id,
+		ObjectType:  policies.GroupType,
+	}); err != nil {
 		return groups.Group{}, err
 	}
 
@@ -125,27 +158,134 @@ func (am *authorizationMiddleware) DisableGroup(ctx context.Context, session aut
 }
 
 func (am *authorizationMiddleware) DeleteGroup(ctx context.Context, session authn.Session, id string) error {
-	if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, policies.DeletePermission, policies.GroupType, id); err != nil {
+	if err := am.authorize(ctx, groups.OpDeleteGroup, mgauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		Subject:     session.DomainUserID,
+		Object:      id,
+		ObjectType:  policies.GroupType,
+	}); err != nil {
 		return err
 	}
 
 	return am.svc.DeleteGroup(ctx, session, id)
 }
 
-func (am *authorizationMiddleware) Assign(ctx context.Context, session authn.Session, groupID, relation, memberKind string, memberIDs ...string) (err error) {
-	if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, policies.EditPermission, policies.GroupType, groupID); err != nil {
-		return err
+func (am *authorizationMiddleware) RetrieveGroupHierarchy(ctx context.Context, session authn.Session, id string, hm groups.HierarchyPageMeta) (groups.HierarchyPage, error) {
+	if err := am.authorize(ctx, groups.OpRetrieveGroupHierarchy, mgauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		Subject:     session.DomainUserID,
+		Object:      id,
+		ObjectType:  policies.GroupType,
+	}); err != nil {
+		return groups.HierarchyPage{}, err
 	}
-
-	return am.svc.Assign(ctx, session, groupID, relation, memberKind, memberIDs...)
+	return am.svc.RetrieveGroupHierarchy(ctx, session, id, hm)
 }
 
-func (am *authorizationMiddleware) Unassign(ctx context.Context, session authn.Session, groupID, relation, memberKind string, memberIDs ...string) (err error) {
-	if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, policies.EditPermission, policies.GroupType, groupID); err != nil {
+func (am *authorizationMiddleware) AddParentGroup(ctx context.Context, session authn.Session, id, parentID string) error {
+	if err := am.authorize(ctx, groups.OpAddParentGroup, mgauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		Subject:     session.DomainUserID,
+		Object:      id,
+		ObjectType:  policies.GroupType,
+	}); err != nil {
 		return err
 	}
 
-	return am.svc.Unassign(ctx, session, groupID, relation, memberKind, memberIDs...)
+	if err := am.authorize(ctx, groups.OpAddChildrenGroups, mgauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		Subject:     session.DomainUserID,
+		Object:      parentID,
+		ObjectType:  policies.GroupType,
+	}); err != nil {
+		return err
+	}
+	return am.svc.AddParentGroup(ctx, session, id, parentID)
+}
+
+func (am *authorizationMiddleware) RemoveParentGroup(ctx context.Context, session authn.Session, id string) error {
+	if err := am.authorize(ctx, groups.OpRemoveParentGroup, mgauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		Subject:     session.DomainUserID,
+		Object:      id,
+		ObjectType:  policies.GroupType,
+	}); err != nil {
+		return err
+	}
+
+	return am.svc.RemoveParentGroup(ctx, session, id)
+}
+
+func (am *authorizationMiddleware) AddChildrenGroups(ctx context.Context, session authn.Session, id string, childrenGroupIDs []string) error {
+	if err := am.authorize(ctx, groups.OpAddChildrenGroups, mgauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		Subject:     session.DomainUserID,
+		Object:      id,
+		ObjectType:  policies.GroupType,
+	}); err != nil {
+		return err
+	}
+
+	for _, childID := range childrenGroupIDs {
+		if err := am.authorize(ctx, groups.OpAddParentGroup, mgauthz.PolicyReq{
+			Domain:      session.DomainID,
+			SubjectType: policies.UserType,
+			Subject:     session.DomainUserID,
+			Object:      childID,
+			ObjectType:  policies.GroupType,
+		}); err != nil {
+			return err
+		}
+	}
+
+	return am.svc.AddChildrenGroups(ctx, session, id, childrenGroupIDs)
+}
+
+func (am *authorizationMiddleware) RemoveChildrenGroups(ctx context.Context, session authn.Session, id string, childrenGroupIDs []string) error {
+	if err := am.authorize(ctx, groups.OpRemoveChildrenGroups, mgauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		Subject:     session.DomainUserID,
+		Object:      id,
+		ObjectType:  policies.GroupType,
+	}); err != nil {
+		return err
+	}
+
+	return am.svc.RemoveChildrenGroups(ctx, session, id, childrenGroupIDs)
+}
+
+func (am *authorizationMiddleware) RemoveAllChildrenGroups(ctx context.Context, session authn.Session, id string) error {
+	if err := am.authorize(ctx, groups.OpRemoveAllChildrenGroups, mgauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		Subject:     session.DomainUserID,
+		Object:      id,
+		ObjectType:  policies.GroupType,
+	}); err != nil {
+		return err
+	}
+	return am.svc.RemoveAllChildrenGroups(ctx, session, id)
+}
+
+func (am *authorizationMiddleware) ListChildrenGroups(ctx context.Context, session authn.Session, id string, pm groups.PageMeta) (groups.Page, error) {
+	if err := am.authorize(ctx, groups.OpListChildrenGroups, mgauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		Subject:     session.DomainUserID,
+		Object:      id,
+		ObjectType:  policies.GroupType,
+	}); err != nil {
+		return groups.Page{}, err
+	}
+
+	return am.svc.ListChildrenGroups(ctx, session, id, pm)
 }
 
 func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, adminID string) error {
@@ -161,19 +301,14 @@ func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, adminID 
 	return nil
 }
 
-func (am *authorizationMiddleware) authorize(ctx context.Context, domain, subjType, subjKind, subj, perm, objType, obj string) error {
-	req := authz.PolicyReq{
-		Domain:      domain,
-		SubjectType: subjType,
-		SubjectKind: subjKind,
-		Subject:     subj,
-		Permission:  perm,
-		ObjectType:  objType,
-		Object:      obj,
-	}
-	if err := am.authz.Authorize(ctx, req); err != nil {
+func (am *authorizationMiddleware) authorize(ctx context.Context, op svcutil.Operation, pr authz.PolicyReq) error {
+	perm, err := am.opp.GetPermission(op)
+	if err != nil {
 		return err
 	}
-
+	pr.Permission = perm.String()
+	if err := am.authz.Authorize(ctx, pr); err != nil {
+		return err
+	}
 	return nil
 }

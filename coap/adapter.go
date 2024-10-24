@@ -10,7 +10,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/absmach/magistrala"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/messaging"
@@ -37,12 +37,12 @@ var _ Service = (*adapterService)(nil)
 
 // Observers is a map of maps,.
 type adapterService struct {
-	things magistrala.ThingsServiceClient
+	things grpcThingsV1.ThingsServiceClient
 	pubsub messaging.PubSub
 }
 
 // New instantiates the CoAP adapter implementation.
-func New(thingsClient magistrala.ThingsServiceClient, pubsub messaging.PubSub) Service {
+func New(thingsClient grpcThingsV1.ThingsServiceClient, pubsub messaging.PubSub) Service {
 	as := &adapterService{
 		things: thingsClient,
 		pubsub: pubsub,
@@ -52,10 +52,10 @@ func New(thingsClient magistrala.ThingsServiceClient, pubsub messaging.PubSub) S
 }
 
 func (svc *adapterService) Publish(ctx context.Context, key string, msg *messaging.Message) error {
-	ar := &magistrala.ThingsAuthzReq{
+	ar := &grpcThingsV1.AuthzReq{
 		Permission: policies.PublishPermission,
 		ThingKey:   key,
-		ChannelID:  msg.GetChannel(),
+		ChannelId:  msg.GetChannel(),
 	}
 	res, err := svc.things.Authorize(ctx, ar)
 	if err != nil {
@@ -70,10 +70,10 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 }
 
 func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic string, c Client) error {
-	ar := &magistrala.ThingsAuthzReq{
+	ar := &grpcThingsV1.AuthzReq{
 		Permission: policies.SubscribePermission,
 		ThingKey:   key,
-		ChannelID:  chanID,
+		ChannelId:  chanID,
 	}
 	res, err := svc.things.Authorize(ctx, ar)
 	if err != nil {
@@ -95,10 +95,10 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 }
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopic, token string) error {
-	ar := &magistrala.ThingsAuthzReq{
+	ar := &grpcThingsV1.AuthzReq{
 		Permission: policies.SubscribePermission,
 		ThingKey:   key,
-		ChannelID:  chanID,
+		ChannelId:  chanID,
 	}
 	res, err := svc.things.Authorize(ctx, ar)
 	if err != nil {

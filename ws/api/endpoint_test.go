@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/absmach/magistrala"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/messaging/mocks"
 	thmocks "github.com/absmach/magistrala/things/mocks"
@@ -36,7 +36,7 @@ const (
 
 var msg = []byte(`[{"n":"current","t":-1,"v":1.6}]`)
 
-func newService(things magistrala.ThingsServiceClient) (ws.Service, *mocks.PubSub) {
+func newService(things grpcThingsV1.ThingsServiceClient) (ws.Service, *mocks.PubSub) {
 	pubsub := new(mocks.PubSub)
 	return ws.New(things, pubsub), pubsub
 }
@@ -98,9 +98,9 @@ func TestHandshake(t *testing.T) {
 	ts, err := newProxyHTPPServer(handler, target)
 	require.Nil(t, err)
 	defer ts.Close()
-	things.On("Authorize", mock.Anything, &magistrala.ThingsAuthzReq{ThingKey: thingKey, ChannelID: id, Permission: "publish"}).Return(&magistrala.ThingsAuthzRes{Authorized: true, Id: "1"}, nil)
-	things.On("Authorize", mock.Anything, &magistrala.ThingsAuthzReq{ThingKey: thingKey, ChannelID: id, Permission: "subscribe"}).Return(&magistrala.ThingsAuthzRes{Authorized: true, Id: "2"}, nil)
-	things.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.AuthZRes{Authorized: false, Id: "3"}, nil)
+	things.On("Authorize", mock.Anything, &grpcThingsV1.AuthzReq{ThingKey: thingKey, ChannelId: id, Permission: "publish"}).Return(&grpcThingsV1.AuthzRes{Authorized: true, Id: "1"}, nil)
+	things.On("Authorize", mock.Anything, &grpcThingsV1.AuthzReq{ThingKey: thingKey, ChannelId: id, Permission: "subscribe"}).Return(&grpcThingsV1.AuthzRes{Authorized: true, Id: "2"}, nil)
+	things.On("Authorize", mock.Anything, mock.Anything).Return(&grpcThingsV1.AuthzRes{Authorized: false, Id: "3"}, nil)
 	pubsub.On("Subscribe", mock.Anything, mock.Anything).Return(nil)
 	pubsub.On("Publish", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 

@@ -28,7 +28,7 @@ func registrationEndpoint(svc users.Service, selfRegister bool) endpoint.Endpoin
 		if !selfRegister {
 			session, ok = ctx.Value(api.SessionKey).(authn.Session)
 			if !ok {
-				return nil, svcerr.ErrAuthorization
+				return nil, svcerr.ErrAuthentication
 			}
 		}
 
@@ -53,7 +53,7 @@ func viewClientEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 		client, err := svc.ViewClient(ctx, session, req.id)
 		if err != nil {
@@ -68,7 +68,7 @@ func viewProfileEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 		client, err := svc.ViewProfile(ctx, session)
 		if err != nil {
@@ -88,7 +88,7 @@ func listClientsEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		pm := mgclients.Page{
@@ -171,7 +171,7 @@ func listMembersByGroupEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		page, err := svc.ListMembers(ctx, session, req.objectKind, req.objectID, req.Page)
@@ -194,7 +194,7 @@ func listMembersByChannelEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		page, err := svc.ListMembers(ctx, session, req.objectKind, req.objectID, req.Page)
@@ -216,7 +216,7 @@ func listMembersByThingEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		page, err := svc.ListMembers(ctx, session, req.objectKind, req.objectID, req.Page)
@@ -238,7 +238,7 @@ func listMembersByDomainEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		page, err := svc.ListMembers(ctx, session, req.objectKind, req.objectID, req.Page)
@@ -259,7 +259,7 @@ func updateClientEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		client := mgclients.Client{
@@ -286,7 +286,7 @@ func updateClientTagsEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		client := mgclients.Client{
@@ -312,7 +312,7 @@ func updateClientIdentityEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		client, err := svc.UpdateClientIdentity(ctx, session, req.id, req.Identity)
@@ -361,7 +361,7 @@ func passwordResetEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 		if err := svc.ResetSecret(ctx, session, req.Password); err != nil {
 			return nil, err
@@ -380,7 +380,7 @@ func updateClientSecretEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 		client, err := svc.UpdateClientSecret(ctx, session, req.OldSecret, req.NewSecret)
 		if err != nil {
@@ -405,7 +405,7 @@ func updateClientRoleEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		client, err := svc.UpdateClientRole(ctx, session, client)
@@ -446,7 +446,7 @@ func refreshTokenEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		token, err := svc.RefreshToken(ctx, session, req.RefreshToken)
@@ -471,7 +471,7 @@ func enableClientEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		client, err := svc.EnableClient(ctx, session, req.id)
@@ -492,7 +492,7 @@ func disableClientEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		client, err := svc.DisableClient(ctx, session, req.id)
@@ -513,7 +513,7 @@ func deleteClientEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
-			return nil, svcerr.ErrAuthorization
+			return nil, svcerr.ErrAuthentication
 		}
 
 		if err := svc.DeleteClient(ctx, session, req.id); err != nil {

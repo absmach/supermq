@@ -1,0 +1,18 @@
+// Copyright (c) Abstract Machines
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+package channels.v1;
+option go_package = "github.com/absmach/magistrala/internal/grpc/channels/v1";
+
+
+service ChannelsService {
+  rpc RemoveThingConnections(RemoveThingConnectionsReq)returns(RemoveThingConnectionsRes) {}
+}
+
+message RemoveThingConnectionsReq {
+  string thing_id = 1;
+}
+
+message RemoveThingConnectionsRes {}

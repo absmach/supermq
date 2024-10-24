@@ -1,0 +1,40 @@
+// Copyright (c) Abstract Machines
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+package things.v1;
+option go_package = "github.com/absmach/magistrala/internal/grpc/things/v1";
+
+import "common/v1/common.proto";
+
+// ThingsService is a service that provides things authorization functionalities
+// for magistrala services.
+service ThingsService {
+  // Authorize checks if the thing is authorized to perform
+  rpc Authorize(AuthzReq) returns (AuthzRes) {}
+  rpc RetrieveEntity(common.v1.RetrieveEntityReq) returns (common.v1.RetrieveEntityRes) {}
+  rpc RetrieveEntities(common.v1.RetrieveEntitiesReq) returns (common.v1.RetrieveEntitiesRes) {}
+  rpc AddConnections(common.v1.AddConnectionsReq)returns(common.v1.AddConnectionsRes) {}
+  rpc RemoveConnections(common.v1.RemoveConnectionsReq)returns(common.v1.RemoveConnectionsRes) {}
+  rpc RemoveChannelConnections(RemoveChannelConnectionsReq)returns(RemoveChannelConnectionsRes) {}
+}
+
+
+message AuthzReq {
+  string channel_id = 1;
+  string thing_id = 2;
+  string thing_key = 3;
+  string permission = 4;
+}
+
+message AuthzRes {
+  bool authorized = 1;
+  string id = 2;
+}
+
+message RemoveChannelConnectionsReq {
+  string channel_id = 1;
+}
+
+message RemoveChannelConnectionsRes {}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
+	rmTrace "github.com/absmach/magistrala/pkg/roles/rolemanager/tracing"
 	"github.com/absmach/magistrala/things"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -18,11 +19,16 @@ var _ things.Service = (*tracingMiddleware)(nil)
 type tracingMiddleware struct {
 	tracer trace.Tracer
 	svc    things.Service
+	rmTrace.RoleManagerTracing
 }
 
 // New returns a new group service with tracing capabilities.
 func New(svc things.Service, tracer trace.Tracer) things.Service {
-	return &tracingMiddleware{tracer, svc}
+	return &tracingMiddleware{
+		tracer:             tracer,
+		svc:                svc,
+		RoleManagerTracing: rmTrace.NewRoleManagerTracing("group", svc, tracer),
+	}
 }
 
 // CreateThings traces the "CreateThings" operation of the wrapped policies.Service.
@@ -38,13 +44,6 @@ func (tm *tracingMiddleware) ViewClient(ctx context.Context, session authn.Sessi
 	ctx, span := tm.tracer.Start(ctx, "svc_view_client", trace.WithAttributes(attribute.String("id", id)))
 	defer span.End()
 	return tm.svc.ViewClient(ctx, session, id)
-}
-
-// ViewClientPerms traces the "ViewClientPerms" operation of the wrapped policies.Service.
-func (tm *tracingMiddleware) ViewClientPerms(ctx context.Context, session authn.Session, id string) ([]string, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_view_client_permissions", trace.WithAttributes(attribute.String("id", id)))
-	defer span.End()
-	return tm.svc.ViewClientPerms(ctx, session, id)
 }
 
 // ListClients traces the "ListClients" operation of the wrapped policies.Service.
@@ -95,44 +94,6 @@ func (tm *tracingMiddleware) DisableClient(ctx context.Context, session authn.Se
 	defer span.End()
 
 	return tm.svc.DisableClient(ctx, session, id)
-}
-
-// ListClientsByGroup traces the "ListClientsByGroup" operation of the wrapped policies.Service.
-func (tm *tracingMiddleware) ListClientsByGroup(ctx context.Context, session authn.Session, groupID string, pm mgclients.Page) (mgclients.MembersPage, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_list_things_by_channel", trace.WithAttributes(attribute.String("groupID", groupID)))
-	defer span.End()
-
-	return tm.svc.ListClientsByGroup(ctx, session, groupID, pm)
-}
-
-// ListMemberships traces the "ListMemberships" operation of the wrapped policies.Service.
-func (tm *tracingMiddleware) Identify(ctx context.Context, key string) (string, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_identify", trace.WithAttributes(attribute.String("key", key)))
-	defer span.End()
-
-	return tm.svc.Identify(ctx, key)
-}
-
-// Authorize traces the "Authorize" operation of the wrapped things.Service.
-func (tm *tracingMiddleware) Authorize(ctx context.Context, req things.AuthzReq) (string, error) {
-	ctx, span := tm.tracer.Start(ctx, "connect", trace.WithAttributes(attribute.String("thingKey", req.ThingKey), attribute.String("channelID", req.ChannelID)))
-	defer span.End()
-
-	return tm.svc.Authorize(ctx, req)
-}
-
-// Share traces the "Share" operation of the wrapped things.Service.
-func (tm *tracingMiddleware) Share(ctx context.Context, session authn.Session, id, relation string, userids ...string) error {
-	ctx, span := tm.tracer.Start(ctx, "share", trace.WithAttributes(attribute.String("id", id), attribute.String("relation", relation), attribute.StringSlice("user_ids", userids)))
-	defer span.End()
-	return tm.svc.Share(ctx, session, id, relation, userids...)
-}
-
-// Unshare traces the "Unshare" operation of the wrapped things.Service.
-func (tm *tracingMiddleware) Unshare(ctx context.Context, session authn.Session, id, relation string, userids ...string) error {
-	ctx, span := tm.tracer.Start(ctx, "unshare", trace.WithAttributes(attribute.String("id", id), attribute.String("relation", relation), attribute.StringSlice("user_ids", userids)))
-	defer span.End()
-	return tm.svc.Unshare(ctx, session, id, relation, userids...)
 }
 
 // DeleteClient traces the "DeleteClient" operation of the wrapped things.Service.

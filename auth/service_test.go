@@ -47,27 +47,16 @@ var (
 	inValidToken          = "invalid"
 	inValid               = "invalid"
 	valid                 = "valid"
-	domain                = auth.Domain{
-		ID:         validID,
-		Name:       groupName,
-		Tags:       []string{"tag1", "tag2"},
-		Alias:      "test",
-		Permission: policies.AdminPermission,
-		CreatedBy:  validID,
-		UpdatedBy:  validID,
-	}
 )
 
 var (
 	krepo      *mocks.KeyRepository
-	drepo      *mocks.DomainsRepository
 	pService   *policymocks.Service
 	pEvaluator *policymocks.Evaluator
 )
 
 func newService() (auth.Service, string) {
 	krepo = new(mocks.KeyRepository)
-	drepo = new(mocks.DomainsRepository)
 	pService = new(policymocks.Service)
 	pEvaluator = new(policymocks.Evaluator)
 	idProvider := uuid.NewMock()
@@ -83,7 +72,7 @@ func newService() (auth.Service, string) {
 	}
 	token, _ := t.Issue(key)
 
-	return auth.New(krepo, drepo, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), token
+	return auth.New(krepo, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), token
 }
 
 func TestIssue(t *testing.T) {
@@ -139,7 +128,6 @@ func TestIssue(t *testing.T) {
 		desc                   string
 		key                    auth.Key
 		saveResponse           auth.Key
-		retrieveByIDResponse   auth.Domain
 		token                  string
 		saveErr                error
 		checkPolicyRequest     policies.Policy
@@ -211,10 +199,9 @@ func TestIssue(t *testing.T) {
 				Permission:  policies.MembershipPermission,
 				Object:      groupName,
 			},
-			checkPolicyErr:       repoerr.ErrNotFound,
-			retrieveByIDResponse: auth.Domain{},
-			retreiveByIDErr:      repoerr.ErrNotFound,
-			err:                  repoerr.ErrNotFound,
+			checkPolicyErr:  repoerr.ErrNotFound,
+			retreiveByIDErr: repoerr.ErrNotFound,
+			err:             repoerr.ErrNotFound,
 		},
 		{
 			desc: "issue login key with failed check on platform admin with enabled status",
@@ -241,10 +228,9 @@ func TestIssue(t *testing.T) {
 				ObjectType:  policies.DomainType,
 				Permission:  policies.MembershipPermission,
 			},
-			checkPolicyErr:       svcerr.ErrAuthorization,
-			checkPolicyErr1:      svcerr.ErrAuthorization,
-			retrieveByIDResponse: auth.Domain{Status: auth.EnabledStatus},
-			err:                  svcerr.ErrAuthorization,
+			checkPolicyErr:  svcerr.ErrAuthorization,
+			checkPolicyErr1: svcerr.ErrAuthorization,
+			err:             svcerr.ErrAuthorization,
 		},
 		{
 			desc: "issue login key with membership permission",
@@ -271,10 +257,9 @@ func TestIssue(t *testing.T) {
 				ObjectType:  policies.DomainType,
 				Permission:  policies.MembershipPermission,
 			},
-			checkPolicyErr:       svcerr.ErrAuthorization,
-			checkPolicyErr1:      svcerr.ErrAuthorization,
-			retrieveByIDResponse: auth.Domain{Status: auth.EnabledStatus},
-			err:                  svcerr.ErrAuthorization,
+			checkPolicyErr:  svcerr.ErrAuthorization,
+			checkPolicyErr1: svcerr.ErrAuthorization,
+			err:             svcerr.ErrAuthorization,
 		},
 		{
 			desc: "issue login key with membership permission with failed  to authorize",
@@ -301,27 +286,22 @@ func TestIssue(t *testing.T) {
 				ObjectType:  policies.DomainType,
 				Permission:  policies.MembershipPermission,
 			},
-			checkPolicyErr:       svcerr.ErrAuthorization,
-			checkPolicyErr1:      svcerr.ErrAuthorization,
-			retrieveByIDResponse: auth.Domain{Status: auth.EnabledStatus},
-			err:                  svcerr.ErrAuthorization,
+			checkPolicyErr:  svcerr.ErrAuthorization,
+			checkPolicyErr1: svcerr.ErrAuthorization,
+			err:             svcerr.ErrAuthorization,
 		},
 	}
 	for _, tc := range cases2 {
-		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, tc.saveErr)
-			repoCall1 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPolicyRequest).Return(tc.checkPolicyErr)
-			repoCall2 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPlatformPolicyReq).Return(tc.checkPolicyErr1)
-			repoCall3 := drepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(tc.retrieveByIDResponse, tc.retreiveByIDErr)
-			repoCall4 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDomainPolicyReq).Return(tc.checkPolicyErr)
-			_, err := svc.Issue(context.Background(), tc.token, tc.key)
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-			repoCall.Unset()
-			repoCall1.Unset()
-			repoCall2.Unset()
-			repoCall3.Unset()
-			repoCall4.Unset()
-		})
+		repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, tc.saveErr)
+		repoCall1 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPolicyRequest).Return(tc.checkPolicyErr)
+		repoCall2 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPlatformPolicyReq).Return(tc.checkPolicyErr1)
+		repoCall4 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDomainPolicyReq).Return(tc.checkPolicyErr)
+		_, err := svc.Issue(context.Background(), tc.token, tc.key)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+		repoCall.Unset()
+		repoCall1.Unset()
+		repoCall2.Unset()
+		repoCall4.Unset()
 	}
 
 	cases3 := []struct {
@@ -407,7 +387,6 @@ func TestIssue(t *testing.T) {
 			key: auth.Key{
 				Type:     auth.RefreshKey,
 				IssuedAt: time.Now(),
-				Domain:   groupName,
 			},
 			checkPolicyRequest: policies.Policy{
 				Subject:     email,
@@ -501,12 +480,10 @@ func TestIssue(t *testing.T) {
 	}
 	for _, tc := range cases4 {
 		repoCall := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPolicyRequest).Return(tc.checkPolicyErr)
-		repoCall1 := drepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(auth.Domain{}, tc.retrieveByIDErr)
 		repoCall2 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDOmainPolicyReq).Return(tc.checkPolicyErr)
 		_, err := svc.Issue(context.Background(), tc.token, tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall.Unset()
-		repoCall1.Unset()
 		repoCall2.Unset()
 	}
 }
@@ -557,12 +534,10 @@ func TestRevoke(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			repocall := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
-			err := svc.Revoke(context.Background(), tc.token, tc.id)
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-			repocall.Unset()
-		})
+		repocall := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
+		err := svc.Revoke(context.Background(), tc.token, tc.id)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+		repocall.Unset()
 	}
 }
 
@@ -629,12 +604,10 @@ func TestRetrieve(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			repocall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(auth.Key{}, tc.err)
-			_, err := svc.RetrieveKey(context.Background(), tc.token, tc.id)
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-			repocall.Unset()
-		})
+		repocall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(auth.Key{}, tc.err)
+		_, err := svc.RetrieveKey(context.Background(), tc.token, tc.id)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+		repocall.Unset()
 	}
 }
 
@@ -733,15 +706,13 @@ func TestIdentify(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			repocall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(auth.Key{}, tc.err)
-			repocall1 := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
-			idt, err := svc.Identify(context.Background(), tc.key)
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-			assert.Equal(t, tc.idt, idt.Subject, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.idt, idt))
-			repocall.Unset()
-			repocall1.Unset()
-		})
+		repocall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(auth.Key{}, tc.err)
+		repocall1 := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
+		idt, err := svc.Identify(context.Background(), tc.key)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Equal(t, tc.idt, idt.Subject, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.idt, idt))
+		repocall.Unset()
+		repocall1.Unset()
 	}
 }
 
@@ -780,7 +751,6 @@ func TestAuthorize(t *testing.T) {
 	cases := []struct {
 		desc                 string
 		policyReq            policies.Policy
-		retrieveDomainRes    auth.Domain
 		checkPolicyReq3      policies.Policy
 		checkAdminPolicyReq  policies.Policy
 		checkDomainPolicyReq policies.Policy
@@ -800,7 +770,7 @@ func TestAuthorize(t *testing.T) {
 				Permission:  policies.AdminPermission,
 			},
 			checkPolicyReq3: policies.Policy{
-				Domain:      "",
+				Domain:      groupName,
 				Subject:     id,
 				SubjectType: policies.UserType,
 				SubjectKind: policies.TokenKind,
@@ -876,11 +846,6 @@ func TestAuthorize(t *testing.T) {
 				Permission:  policies.AdminPermission,
 			},
 
-			retrieveDomainRes: auth.Domain{
-				ID:     validID,
-				Name:   groupName,
-				Status: auth.DisabledStatus,
-			},
 			err: nil,
 		},
 		{
@@ -915,11 +880,6 @@ func TestAuthorize(t *testing.T) {
 				Permission:  policies.MembershipPermission,
 			},
 
-			retrieveDomainRes: auth.Domain{
-				ID:     validID,
-				Name:   groupName,
-				Status: auth.DisabledStatus,
-			},
 			checkPolicyErr1: svcerr.ErrDomainAuthorization,
 			err:             svcerr.ErrDomainAuthorization,
 		},
@@ -956,11 +916,6 @@ func TestAuthorize(t *testing.T) {
 				Permission:  policies.MembershipPermission,
 			},
 
-			retrieveDomainRes: auth.Domain{
-				ID:     validID,
-				Name:   groupName,
-				Status: auth.FreezeStatus,
-			},
 			err: nil,
 		},
 		{
@@ -996,11 +951,6 @@ func TestAuthorize(t *testing.T) {
 				Permission:  policies.MembershipPermission,
 			},
 
-			retrieveDomainRes: auth.Domain{
-				ID:     validID,
-				Name:   groupName,
-				Status: auth.FreezeStatus,
-			},
 			checkPolicyErr1: svcerr.ErrDomainAuthorization,
 			err:             svcerr.ErrDomainAuthorization,
 		},
@@ -1037,11 +987,6 @@ func TestAuthorize(t *testing.T) {
 				Permission:  policies.MembershipPermission,
 			},
 
-			retrieveDomainRes: auth.Domain{
-				ID:     validID,
-				Name:   groupName,
-				Status: auth.AllStatus,
-			},
 			err: svcerr.ErrDomainAuthorization,
 		},
 
@@ -1173,20 +1118,16 @@ func TestAuthorize(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPolicyReq3).Return(tc.checkPolicyErr)
-			repoCall1 := drepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(tc.retrieveDomainRes, nil)
-			repoCall2 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkAdminPolicyReq).Return(tc.checkPolicyErr1)
-			repoCall3 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDomainPolicyReq).Return(tc.checkPolicyErr1)
-			repoCall4 := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-			err := svc.Authorize(context.Background(), tc.policyReq)
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-			repoCall.Unset()
-			repoCall1.Unset()
-			repoCall2.Unset()
-			repoCall3.Unset()
-			repoCall4.Unset()
-		})
+		repoCall := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPolicyReq3).Return(tc.checkPolicyErr)
+		repoCall2 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkAdminPolicyReq).Return(tc.checkPolicyErr1)
+		repoCall3 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDomainPolicyReq).Return(tc.checkPolicyErr1)
+		repoCall4 := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		err := svc.Authorize(context.Background(), tc.policyReq)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+		repoCall.Unset()
+		repoCall2.Unset()
+		repoCall3.Unset()
+		repoCall4.Unset()
 	}
 	cases2 := []struct {
 		desc      string
@@ -1206,10 +1147,8 @@ func TestAuthorize(t *testing.T) {
 		},
 	}
 	for _, tc := range cases2 {
-		t.Run(tc.desc, func(t *testing.T) {
-			err := svc.Authorize(context.Background(), tc.policyReq)
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-		})
+		err := svc.Authorize(context.Background(), tc.policyReq)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -1251,1095 +1190,8 @@ func TestSwitchToPermission(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			result := auth.SwitchToPermission(tc.relation)
-			assert.Equal(t, tc.result, result, fmt.Sprintf("switching to permission expected to succeed: %s", result))
-		})
-	}
-}
-
-func TestCreateDomain(t *testing.T) {
-	svc, accessToken := newService()
-
-	cases := []struct {
-		desc              string
-		d                 auth.Domain
-		token             string
-		userID            string
-		addPolicyErr      error
-		savePolicyErr     error
-		saveDomainErr     error
-		deleteDomainErr   error
-		deletePoliciesErr error
-		err               error
-	}{
-		{
-			desc: "create domain successfully",
-			d: auth.Domain{
-				Status: auth.EnabledStatus,
-			},
-			token: accessToken,
-			err:   nil,
-		},
-		{
-			desc: "create domain with invalid token",
-			d: auth.Domain{
-				Status: auth.EnabledStatus,
-			},
-			token: inValidToken,
-			err:   svcerr.ErrAuthentication,
-		},
-		{
-			desc: "create domain with invalid status",
-			d: auth.Domain{
-				Status: auth.AllStatus,
-			},
-			token: accessToken,
-			err:   svcerr.ErrInvalidStatus,
-		},
-		{
-			desc: "create domain with failed policy request",
-			d: auth.Domain{
-				Status: auth.EnabledStatus,
-			},
-			token:        accessToken,
-			addPolicyErr: errors.ErrMalformedEntity,
-			err:          errors.ErrMalformedEntity,
-		},
-		{
-			desc: "create domain with failed save policyrequest",
-			d: auth.Domain{
-				Status: auth.EnabledStatus,
-			},
-			token:         accessToken,
-			savePolicyErr: errors.ErrMalformedEntity,
-			err:           errCreateDomainPolicy,
-		},
-		{
-			desc: "create domain with failed save domain request",
-			d: auth.Domain{
-				Status: auth.EnabledStatus,
-			},
-			token:         accessToken,
-			saveDomainErr: errors.ErrMalformedEntity,
-			err:           svcerr.ErrCreateEntity,
-		},
-		{
-			desc: "create domain with rollback error",
-			d: auth.Domain{
-				Status: auth.EnabledStatus,
-			},
-			token:           accessToken,
-			savePolicyErr:   errors.ErrMalformedEntity,
-			deleteDomainErr: errors.ErrMalformedEntity,
-			err:             errors.ErrMalformedEntity,
-		},
-		{
-			desc: "create domain with rollback error and failed to delete policies",
-			d: auth.Domain{
-				Status: auth.EnabledStatus,
-			},
-			token:             accessToken,
-			savePolicyErr:     errors.ErrMalformedEntity,
-			deleteDomainErr:   errors.ErrMalformedEntity,
-			deletePoliciesErr: errors.ErrMalformedEntity,
-			err:               errors.ErrMalformedEntity,
-		},
-		{
-			desc: "create domain with failed to create and failed rollback",
-			d: auth.Domain{
-				Status: auth.EnabledStatus,
-			},
-			token:             accessToken,
-			saveDomainErr:     errors.ErrMalformedEntity,
-			deletePoliciesErr: errors.ErrMalformedEntity,
-			err:               errRollbackPolicy,
-		},
-		{
-			desc: "create domain with failed to create and failed rollback",
-			d: auth.Domain{
-				Status: auth.EnabledStatus,
-			},
-			token:           accessToken,
-			saveDomainErr:   errors.ErrMalformedEntity,
-			deleteDomainErr: errors.ErrMalformedEntity,
-			err:             errors.ErrMalformedEntity,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := pService.On("AddPolicies", mock.Anything, mock.Anything).Return(tc.addPolicyErr)
-			repoCall1 := drepo.On("SavePolicies", mock.Anything, mock.Anything).Return(tc.savePolicyErr)
-			repoCall2 := pService.On("DeletePolicies", mock.Anything, mock.Anything).Return(tc.deletePoliciesErr)
-			repoCall3 := drepo.On("DeletePolicies", mock.Anything, mock.Anything).Return(tc.deleteDomainErr)
-			repoCall4 := drepo.On("Save", mock.Anything, mock.Anything).Return(auth.Domain{}, tc.saveDomainErr)
-			_, err := svc.CreateDomain(context.Background(), tc.token, tc.d)
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-			repoCall.Unset()
-			repoCall1.Unset()
-			repoCall2.Unset()
-			repoCall3.Unset()
-			repoCall4.Unset()
-		})
-	}
-}
-
-func TestRetrieveDomain(t *testing.T) {
-	svc, accessToken := newService()
-
-	cases := []struct {
-		desc           string
-		token          string
-		domainID       string
-		domainRepoErr  error
-		domainRepoErr1 error
-		checkPolicyErr error
-		err            error
-	}{
-		{
-			desc:     "retrieve domain successfully",
-			token:    accessToken,
-			domainID: validID,
-			err:      nil,
-		},
-		{
-			desc:     "retrieve domain with invalid token",
-			token:    inValidToken,
-			domainID: validID,
-			err:      svcerr.ErrAuthentication,
-		},
-		{
-			desc:           "retrieve domain with empty domain id",
-			token:          accessToken,
-			domainID:       "",
-			err:            svcerr.ErrViewEntity,
-			domainRepoErr1: repoerr.ErrNotFound,
-		},
-		{
-			desc:           "retrieve non-existing domain",
-			token:          accessToken,
-			domainID:       inValid,
-			domainRepoErr:  repoerr.ErrNotFound,
-			err:            svcerr.ErrViewEntity,
-			domainRepoErr1: repoerr.ErrNotFound,
-		},
-		{
-			desc:           "retrieve domain with failed to retrieve by id",
-			token:          accessToken,
-			domainID:       validID,
-			domainRepoErr1: repoerr.ErrNotFound,
-			err:            svcerr.ErrNotFound,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := drepo.On("RetrieveByID", mock.Anything, groupName).Return(auth.Domain{}, tc.domainRepoErr)
-			repoCall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(tc.checkPolicyErr)
-			repoCall2 := drepo.On("RetrieveByID", mock.Anything, tc.domainID).Return(auth.Domain{}, tc.domainRepoErr1)
-			_, err := svc.RetrieveDomain(context.Background(), tc.token, tc.domainID)
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-			repoCall.Unset()
-			repoCall1.Unset()
-			repoCall2.Unset()
-		})
-	}
-}
-
-func TestRetrieveDomainPermissions(t *testing.T) {
-	svc, accessToken := newService()
-
-	cases := []struct {
-		desc                   string
-		token                  string
-		domainID               string
-		retreivePermissionsErr error
-		retreiveByIDErr        error
-		checkPolicyErr         error
-		err                    error
-	}{
-		{
-			desc:     "retrieve domain permissions successfully",
-			token:    accessToken,
-			domainID: validID,
-			err:      nil,
-		},
-		{
-			desc:     "retrieve domain permissions with invalid token",
-			token:    inValidToken,
-			domainID: validID,
-			err:      svcerr.ErrAuthentication,
-		},
-		{
-			desc:           "retrieve domain permissions with empty domainID",
-			token:          accessToken,
-			domainID:       "",
-			checkPolicyErr: svcerr.ErrAuthorization,
-			err:            svcerr.ErrDomainAuthorization,
-		},
-		{
-			desc:                   "retrieve domain permissions with failed to retrieve permissions",
-			token:                  accessToken,
-			domainID:               validID,
-			retreivePermissionsErr: repoerr.ErrNotFound,
-			err:                    svcerr.ErrNotFound,
-		},
-		{
-			desc:            "retrieve domain permissions with failed to retrieve by id",
-			token:           accessToken,
-			domainID:        validID,
-			retreiveByIDErr: repoerr.ErrNotFound,
-			err:             svcerr.ErrNotFound,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := pService.On("ListPermissions", mock.Anything, mock.Anything, mock.Anything).Return(policies.Permissions{}, tc.retreivePermissionsErr)
-			repoCall1 := drepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(auth.Domain{}, tc.retreiveByIDErr)
-			repoCall2 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(tc.checkPolicyErr)
-			_, err := svc.RetrieveDomainPermissions(context.Background(), tc.token, tc.domainID)
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-			repoCall.Unset()
-			repoCall1.Unset()
-			repoCall2.Unset()
-		})
-	}
-}
-
-func TestUpdateDomain(t *testing.T) {
-	svc, accessToken := newService()
-
-	cases := []struct {
-		desc            string
-		token           string
-		domainID        string
-		domReq          auth.DomainReq
-		checkPolicyErr  error
-		retrieveByIDErr error
-		updateErr       error
-		err             error
-	}{
-		{
-			desc:     "update domain successfully",
-			token:    accessToken,
-			domainID: validID,
-			domReq: auth.DomainReq{
-				Name:  &valid,
-				Alias: &valid,
-			},
-			err: nil,
-		},
-		{
-			desc:     "update domain with invalid token",
-			token:    inValidToken,
-			domainID: validID,
-			domReq: auth.DomainReq{
-				Name:  &valid,
-				Alias: &valid,
-			},
-			err: svcerr.ErrAuthentication,
-		},
-		{
-			desc:     "update domain with empty domainID",
-			token:    accessToken,
-			domainID: "",
-			domReq: auth.DomainReq{
-				Name:  &valid,
-				Alias: &valid,
-			},
-			checkPolicyErr: svcerr.ErrAuthorization,
-			err:            svcerr.ErrDomainAuthorization,
-		},
-		{
-			desc:     "update domain with failed to retrieve by id",
-			token:    accessToken,
-			domainID: validID,
-			domReq: auth.DomainReq{
-				Name:  &valid,
-				Alias: &valid,
-			},
-			retrieveByIDErr: repoerr.ErrNotFound,
-			err:             svcerr.ErrNotFound,
-		},
-		{
-			desc:     "update domain with failed to update",
-			token:    accessToken,
-			domainID: validID,
-			domReq: auth.DomainReq{
-				Name:  &valid,
-				Alias: &valid,
-			},
-			updateErr: errors.ErrMalformedEntity,
-			err:       errors.ErrMalformedEntity,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(tc.checkPolicyErr)
-			repoCall1 := drepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(auth.Domain{}, tc.retrieveByIDErr)
-			repoCall2 := drepo.On("Update", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(auth.Domain{}, tc.updateErr)
-			_, err := svc.UpdateDomain(context.Background(), tc.token, tc.domainID, tc.domReq)
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-			repoCall.Unset()
-			repoCall1.Unset()
-			repoCall2.Unset()
-		})
-	}
-}
-
-func TestChangeDomainStatus(t *testing.T) {
-	svc, accessToken := newService()
-
-	disabledStatus := auth.DisabledStatus
-
-	cases := []struct {
-		desc             string
-		token            string
-		domainID         string
-		domainReq        auth.DomainReq
-		retreieveByIDErr error
-		checkPolicyErr   error
-		updateErr        error
-		err              error
-	}{
-		{
-			desc:     "change domain status successfully",
-			token:    accessToken,
-			domainID: validID,
-			domainReq: auth.DomainReq{
-				Status: &disabledStatus,
-			},
-			err: nil,
-		},
-		{
-			desc:     "change domain status with invalid token",
-			token:    inValidToken,
-			domainID: validID,
-			domainReq: auth.DomainReq{
-				Status: &disabledStatus,
-			},
-			err: svcerr.ErrAuthentication,
-		},
-		{
-			desc:     "change domain status with empty domainID",
-			token:    accessToken,
-			domainID: "",
-			domainReq: auth.DomainReq{
-				Status: &disabledStatus,
-			},
-			retreieveByIDErr: repoerr.ErrNotFound,
-			err:              svcerr.ErrNotFound,
-		},
-		{
-			desc:     "change domain status with unauthorized domain ID",
-			token:    accessToken,
-			domainID: validID,
-			domainReq: auth.DomainReq{
-				Status: &disabledStatus,
-			},
-			checkPolicyErr: svcerr.ErrAuthorization,
-			err:            svcerr.ErrDomainAuthorization,
-		},
-		{
-			desc:     "change domain status with repository error on update",
-			token:    accessToken,
-			domainID: validID,
-			domainReq: auth.DomainReq{
-				Status: &disabledStatus,
-			},
-			updateErr: errors.ErrMalformedEntity,
-			err:       errors.ErrMalformedEntity,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := drepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(auth.Domain{}, tc.retreieveByIDErr)
-			repoCall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(tc.checkPolicyErr)
-			repoCall2 := drepo.On("Update", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(auth.Domain{}, tc.updateErr)
-			_, err := svc.ChangeDomainStatus(context.Background(), tc.token, tc.domainID, tc.domainReq)
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-			repoCall.Unset()
-			repoCall1.Unset()
-			repoCall2.Unset()
-		})
-	}
-}
-
-func TestListDomains(t *testing.T) {
-	svc, accessToken := newService()
-
-	cases := []struct {
-		desc            string
-		token           string
-		domainID        string
-		authReq         auth.Page
-		listDomainsRes  auth.DomainsPage
-		retreiveByIDErr error
-		checkPolicyErr  error
-		listDomainErr   error
-		err             error
-	}{
-		{
-			desc:     "list domains successfully",
-			token:    accessToken,
-			domainID: validID,
-			authReq: auth.Page{
-				Offset:     0,
-				Limit:      10,
-				Permission: policies.AdminPermission,
-				Status:     auth.EnabledStatus,
-			},
-			listDomainsRes: auth.DomainsPage{
-				Domains: []auth.Domain{domain},
-			},
-			err: nil,
-		},
-		{
-			desc:     "list domains with invalid token",
-			token:    inValidToken,
-			domainID: validID,
-			authReq: auth.Page{
-				Offset:     0,
-				Limit:      10,
-				Permission: policies.AdminPermission,
-				Status:     auth.EnabledStatus,
-			},
-			err: svcerr.ErrAuthentication,
-		},
-		{
-			desc:     "list domains with repository error on list domains",
-			token:    accessToken,
-			domainID: validID,
-			authReq: auth.Page{
-				Offset:     0,
-				Limit:      10,
-				Permission: policies.AdminPermission,
-				Status:     auth.EnabledStatus,
-			},
-			listDomainErr: errors.ErrMalformedEntity,
-			err:           svcerr.ErrViewEntity,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(tc.checkPolicyErr)
-			repoCall1 := drepo.On("ListDomains", mock.Anything, mock.Anything).Return(tc.listDomainsRes, tc.listDomainErr)
-			_, err := svc.ListDomains(context.Background(), tc.token, auth.Page{})
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-			repoCall.Unset()
-			repoCall1.Unset()
-		})
-	}
-}
-
-func TestAssignUsers(t *testing.T) {
-	svc, accessToken := newService()
-
-	cases := []struct {
-		desc                 string
-		token                string
-		domainID             string
-		userIDs              []string
-		relation             string
-		checkPolicyReq3      policies.Policy
-		checkAdminPolicyReq  policies.Policy
-		checkDomainPolicyReq policies.Policy
-		checkPolicyReq33     policies.Policy
-		checkpolicyErr       error
-		checkPolicyErr1      error
-		checkPolicyErr2      error
-		addPoliciesErr       error
-		savePoliciesErr      error
-		deletePoliciesErr    error
-		err                  error
-	}{
-		{
-			desc:     "assign users successfully",
-			token:    accessToken,
-			domainID: validID,
-			userIDs:  []string{validID},
-			relation: policies.ContributorRelation,
-			checkPolicyReq3: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.SharePermission,
-			},
-			checkAdminPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.ViewPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				Subject:     validID,
-				SubjectType: policies.UserType,
-				Object:      policies.MagistralaObject,
-				ObjectType:  policies.PlatformType,
-				Permission:  policies.MembershipPermission,
-			},
-			checkPolicyReq33: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			err: nil,
-		},
-		{
-			desc:     "assign users with invalid token",
-			token:    inValidToken,
-			domainID: validID,
-			userIDs:  []string{validID},
-			relation: policies.ContributorRelation,
-			checkPolicyReq3: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.SharePermission,
-			},
-			checkAdminPolicyReq: policies.Policy{
-				Domain:      groupName,
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.ViewPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				Subject:     validID,
-				SubjectType: policies.UserType,
-				Object:      policies.MagistralaObject,
-				ObjectType:  policies.PlatformType,
-				Permission:  policies.MembershipPermission,
-			},
-			err: svcerr.ErrAuthentication,
-		},
-		{
-			desc:     "assign users with invalid domainID",
-			token:    accessToken,
-			domainID: inValid,
-			relation: policies.ContributorRelation,
-			checkPolicyReq3: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      inValid,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.SharePermission,
-			},
-			checkAdminPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      inValid,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.ViewPermission,
-			},
-			checkPolicyReq33: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				Object:      inValid,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			checkPolicyErr1: svcerr.ErrAuthorization,
-			err:             svcerr.ErrAuthorization,
-		},
-		{
-			desc:     "assign users with invalid userIDs",
-			token:    accessToken,
-			userIDs:  []string{inValid},
-			domainID: validID,
-			relation: policies.ContributorRelation,
-			checkPolicyReq3: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.SharePermission,
-			},
-			checkAdminPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.ViewPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				Subject:     inValid,
-				SubjectType: policies.UserType,
-				Object:      policies.MagistralaObject,
-				ObjectType:  policies.PlatformType,
-				Permission:  policies.MembershipPermission,
-			},
-			checkPolicyReq33: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			checkPolicyErr2: svcerr.ErrMalformedEntity,
-			err:             svcerr.ErrDomainAuthorization,
-		},
-		{
-			desc:     "assign users with failed to add policies to agent",
-			token:    accessToken,
-			domainID: validID,
-			userIDs:  []string{validID},
-			relation: policies.ContributorRelation,
-			checkPolicyReq3: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.SharePermission,
-			},
-			checkAdminPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.ViewPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				Subject:     validID,
-				SubjectType: policies.UserType,
-				Object:      policies.MagistralaObject,
-				ObjectType:  policies.PlatformType,
-				Permission:  policies.MembershipPermission,
-			},
-			checkPolicyReq33: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			addPoliciesErr: svcerr.ErrAuthorization,
-			err:            errAddPolicies,
-		},
-		{
-			desc:     "assign users with failed to save policies to domain",
-			token:    accessToken,
-			domainID: validID,
-			userIDs:  []string{validID},
-			relation: policies.ContributorRelation,
-			checkPolicyReq3: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.SharePermission,
-			},
-			checkAdminPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.ViewPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				Subject:     validID,
-				SubjectType: policies.UserType,
-				Object:      policies.MagistralaObject,
-				ObjectType:  policies.PlatformType,
-				Permission:  policies.MembershipPermission,
-			},
-			checkPolicyReq33: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			savePoliciesErr: repoerr.ErrCreateEntity,
-			err:             errAddPolicies,
-		},
-		{
-			desc:     "assign users with failed to save policies to domain and failed to delete",
-			token:    accessToken,
-			domainID: validID,
-			userIDs:  []string{validID},
-			relation: policies.ContributorRelation,
-			checkPolicyReq3: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.SharePermission,
-			},
-			checkAdminPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.ViewPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				Subject:     validID,
-				SubjectType: policies.UserType,
-				Object:      policies.MagistralaObject,
-				ObjectType:  policies.PlatformType,
-				Permission:  policies.MembershipPermission,
-			},
-			checkPolicyReq33: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			savePoliciesErr:   repoerr.ErrCreateEntity,
-			deletePoliciesErr: svcerr.ErrDomainAuthorization,
-			err:               errAddPolicies,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := drepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(auth.Domain{}, nil)
-			repoCall1 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPolicyReq3).Return(tc.checkpolicyErr)
-			repoCall2 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkAdminPolicyReq).Return(tc.checkPolicyErr1)
-			repoCall3 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDomainPolicyReq).Return(tc.checkPolicyErr2)
-			repoCall4 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPolicyReq33).Return(tc.checkPolicyErr2)
-			repoCall5 := pService.On("AddPolicies", mock.Anything, mock.Anything).Return(tc.addPoliciesErr)
-			repoCall6 := drepo.On("SavePolicies", mock.Anything, mock.Anything, mock.Anything).Return(tc.savePoliciesErr)
-			repoCall7 := pService.On("DeletePolicies", mock.Anything, mock.Anything).Return(tc.deletePoliciesErr)
-			err := svc.AssignUsers(context.Background(), tc.token, tc.domainID, tc.userIDs, tc.relation)
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-			repoCall.Unset()
-			repoCall1.Unset()
-			repoCall2.Unset()
-			repoCall3.Unset()
-			repoCall4.Unset()
-			repoCall5.Unset()
-			repoCall6.Unset()
-			repoCall7.Unset()
-		})
-	}
-}
-
-func TestUnassignUser(t *testing.T) {
-	svc, accessToken := newService()
-
-	cases := []struct {
-		desc                  string
-		token                 string
-		domainID              string
-		userID                string
-		checkPolicyReq        policies.Policy
-		checkAdminPolicyReq   policies.Policy
-		checkDomainPolicyReq  policies.Policy
-		checkPolicyErr        error
-		checkPolicyErr1       error
-		deletePolicyFilterErr error
-		deletePoliciesErr     error
-		err                   error
-	}{
-		{
-			desc:     "unassign user successfully",
-			token:    accessToken,
-			domainID: validID,
-			userID:   validID,
-			checkPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			checkAdminPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.AdminPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.SharePermission,
-			},
-			err: nil,
-		},
-		{
-			desc:     "unassign users with invalid token",
-			token:    inValidToken,
-			domainID: validID,
-			userID:   validID,
-			checkPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.SharePermission,
-			},
-			checkAdminPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.AdminPermission,
-			},
-			err: svcerr.ErrAuthentication,
-		},
-		{
-			desc:     "unassign users with invalid domainID",
-			token:    accessToken,
-			domainID: inValid,
-			userID:   validID,
-			checkPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      inValid,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.SharePermission,
-			},
-			checkAdminPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      inValid,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.AdminPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				Object:      inValid,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			checkPolicyErr1: svcerr.ErrAuthorization,
-			err:             svcerr.ErrDomainAuthorization,
-		},
-		{
-			desc:     "unassign users with failed to delete policies from agent",
-			token:    accessToken,
-			domainID: validID,
-			userID:   validID,
-			checkPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.SharePermission,
-			},
-			checkAdminPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.AdminPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			deletePolicyFilterErr: errors.ErrMalformedEntity,
-			err:                   errors.ErrMalformedEntity,
-		},
-		{
-			desc:     "unassign users with failed to delete policies from domain",
-			token:    accessToken,
-			domainID: validID,
-			userID:   validID,
-			checkPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.SharePermission,
-			},
-			checkAdminPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.AdminPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			deletePoliciesErr:     errors.ErrMalformedEntity,
-			deletePolicyFilterErr: errors.ErrMalformedEntity,
-			err:                   errors.ErrMalformedEntity,
-		},
-		{
-			desc:     "unassign user with failed to delete pService from domain",
-			token:    accessToken,
-			domainID: validID,
-			userID:   validID,
-			checkPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			checkAdminPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.AdminPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.SharePermission,
-			},
-			deletePoliciesErr: errors.ErrMalformedEntity,
-			err:               errors.ErrMalformedEntity,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := drepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(auth.Domain{}, nil)
-			repoCall1 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPolicyReq).Return(tc.checkPolicyErr)
-			repoCall2 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkAdminPolicyReq).Return(tc.checkPolicyErr1)
-			repoCall3 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDomainPolicyReq).Return(tc.checkPolicyErr1)
-			repoCall4 := pService.On("DeletePolicyFilter", mock.Anything, mock.Anything).Return(tc.deletePolicyFilterErr)
-			repoCall5 := drepo.On("DeletePolicies", mock.Anything, mock.Anything, mock.Anything).Return(tc.deletePoliciesErr)
-			err := svc.UnassignUser(context.Background(), tc.token, tc.domainID, tc.userID)
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-			repoCall.Unset()
-			repoCall1.Unset()
-			repoCall2.Unset()
-			repoCall3.Unset()
-			repoCall4.Unset()
-			repoCall5.Unset()
-		})
-	}
-}
-
-func TestListUsersDomains(t *testing.T) {
-	svc, accessToken := newService()
-
-	cases := []struct {
-		desc            string
-		token           string
-		userID          string
-		page            auth.Page
-		retreiveByIDErr error
-		checkPolicyErr  error
-		listDomainErr   error
-		err             error
-	}{
-		{
-			desc:   "list users domains successfully",
-			token:  accessToken,
-			userID: validID,
-			page: auth.Page{
-				Offset:     0,
-				Limit:      10,
-				Permission: policies.AdminPermission,
-			},
-			err: nil,
-		},
-		{
-			desc:   "list users domains successfully was admin",
-			token:  accessToken,
-			userID: email,
-			page: auth.Page{
-				Offset:     0,
-				Limit:      10,
-				Permission: policies.AdminPermission,
-			},
-			err: nil,
-		},
-		{
-			desc:   "list users domains with invalid token",
-			token:  inValidToken,
-			userID: validID,
-			page: auth.Page{
-				Offset:     0,
-				Limit:      10,
-				Permission: policies.AdminPermission,
-			},
-			err: svcerr.ErrAuthentication,
-		},
-		{
-			desc:   "list users domains with invalid domainID",
-			token:  accessToken,
-			userID: inValid,
-			page: auth.Page{
-				Offset:     0,
-				Limit:      10,
-				Permission: policies.AdminPermission,
-			},
-			checkPolicyErr: svcerr.ErrAuthorization,
-			err:            svcerr.ErrAuthorization,
-		},
-		{
-			desc:   "list users domains with repository error on list domains",
-			token:  accessToken,
-			userID: validID,
-			page: auth.Page{
-				Offset:     0,
-				Limit:      10,
-				Permission: policies.AdminPermission,
-			},
-			listDomainErr: repoerr.ErrNotFound,
-			err:           svcerr.ErrViewEntity,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(tc.checkPolicyErr)
-			repoCall1 := drepo.On("ListDomains", mock.Anything, mock.Anything).Return(auth.DomainsPage{}, tc.listDomainErr)
-			_, err := svc.ListUserDomains(context.Background(), tc.token, tc.userID, tc.page)
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-			repoCall.Unset()
-			repoCall1.Unset()
-		})
+		result := auth.SwitchToPermission(tc.relation)
+		assert.Equal(t, tc.result, result, fmt.Sprintf("switching to permission expected to succeed: %s", result))
 	}
 }
 
@@ -2377,10 +1229,8 @@ func TestEncodeDomainUserID(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			ar := auth.EncodeDomainUserID(tc.domainID, tc.userID)
-			assert.Equal(t, tc.response, ar, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.response, ar))
-		})
+		ar := auth.EncodeDomainUserID(tc.domainID, tc.userID)
+		assert.Equal(t, tc.response, ar, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.response, ar))
 	}
 }
 
@@ -2418,10 +1268,8 @@ func TestDecodeDomainUserID(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			ar, er := auth.DecodeDomainUserID(tc.domainUserID)
-			assert.Equal(t, tc.respUserID, er, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.respUserID, er))
-			assert.Equal(t, tc.respDomainID, ar, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.respDomainID, ar))
-		})
+		ar, er := auth.DecodeDomainUserID(tc.domainUserID)
+		assert.Equal(t, tc.respUserID, er, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.respUserID, er))
+		assert.Equal(t, tc.respDomainID, ar, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.respDomainID, ar))
 	}
 }

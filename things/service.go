@@ -6,61 +6,48 @@ import (
 	"context"
 	"time"
 
-	"github.com/absmach/magistrala"
+	mg "github.com/absmach/magistrala"
 	mgauth "github.com/absmach/magistrala/auth"
+	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	"github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	mggroups "github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/policies"
-	"github.com/absmach/magistrala/things/postgres"
+	"github.com/absmach/magistrala/pkg/roles"
 	"golang.org/x/sync/errgroup"
 )
 
+var errRollbackRepo = errors.New("failed to rollback repo")
+
+var _ Service = (*service)(nil)
+
 type service struct {
-	evaluator   policies.Evaluator
-	policysvc   policies.Service
-	clients     postgres.Repository
-	clientCache Cache
-	idProvider  magistrala.IDProvider
-	grepo       mggroups.Repository
+	repo       Repository
+	policy     policies.Service
+	channels   grpcChannelsV1.ChannelsServiceClient
+	cache      Cache
+	idProvider mg.IDProvider
+	roles.ProvisionManageService
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(policyEvaluator policies.Evaluator, policyService policies.Service, c postgres.Repository, grepo mggroups.Repository, tcache Cache, idp magistrala.IDProvider) Service {
+func NewService(repo Repository, policy policies.Service, cache Cache, channels grpcChannelsV1.ChannelsServiceClient, idProvider mg.IDProvider, sIDProvider mg.IDProvider) (Service, error) {
+	rpms, err := roles.NewProvisionManageService(policies.ThingType, repo, policy, sIDProvider, AvailableActions(), BuiltInRoles())
+	if err != nil {
+		return service{}, err
+	}
 	return service{
-		evaluator:   policyEvaluator,
-		policysvc:   policyService,
-		clients:     c,
-		grepo:       grepo,
-		clientCache: tcache,
-		idProvider:  idp,
-	}
+		repo:                   repo,
+		policy:                 policy,
+		cache:                  cache,
+		channels:               channels,
+		idProvider:             idProvider,
+		ProvisionManageService: rpms,
+	}, nil
 }
 
-func (svc service) Authorize(ctx context.Context, req AuthzReq) (string, error) {
-	thingID, err := svc.Identify(ctx, req.ThingKey)
-	if err != nil {
-		return "", err
-	}
-
-	r := policies.Policy{
-		SubjectType: policies.GroupType,
-		Subject:     req.ChannelID,
-		ObjectType:  policies.ThingType,
-		Object:      thingID,
-		Permission:  req.Permission,
-	}
-	err = svc.evaluator.CheckPolicy(ctx, r)
-	if err != nil {
-		return "", errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-
-	return thingID, nil
-}
-
-func (svc service) CreateThings(ctx context.Context, session authn.Session, cls ...mgclients.Client) ([]mgclients.Client, error) {
+func (svc service) CreateThings(ctx context.Context, session authn.Session, cls ...mgclients.Client) (retThings []mgclients.Client, retErr error) {
 	var clients []mgclients.Client
 	for _, c := range cls {
 		if c.ID == "" {
@@ -85,43 +72,55 @@ func (svc service) CreateThings(ctx context.Context, session authn.Session, cls 
 		clients = append(clients, c)
 	}
 
-	err := svc.addThingPolicies(ctx, session.DomainUserID, session.DomainID, clients)
+	saved, err := svc.repo.Save(ctx, clients...)
 	if err != nil {
-		return []mgclients.Client{}, err
+		return nil, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
+	clientIDs := []string{}
+	for _, c := range saved {
+		clientIDs = append(clientIDs, c.ID)
+	}
+
 	defer func() {
-		if err != nil {
-			if errRollback := svc.addThingPoliciesRollback(ctx, session.DomainUserID, session.DomainID, clients); errRollback != nil {
-				err = errors.Wrap(errors.Wrap(errors.ErrRollbackTx, errRollback), err)
+		if retErr != nil {
+			if errRollBack := svc.repo.RemoveThings(ctx, clientIDs); errRollBack != nil {
+				retErr = errors.Wrap(retErr, errors.Wrap(errRollbackRepo, errRollBack))
 			}
 		}
 	}()
 
-	saved, err := svc.clients.Save(ctx, clients...)
-	if err != nil {
-		return nil, errors.Wrap(svcerr.ErrCreateEntity, err)
+	newBuiltInRoleMembers := map[roles.BuiltInRoleName][]roles.Member{
+		ThingBuiltInRoleAdmin: {roles.Member(session.UserID)},
+	}
+
+	optionalPolicies := []policies.Policy{}
+
+	for _, clientID := range clientIDs {
+		optionalPolicies = append(optionalPolicies,
+			policies.Policy{
+				Domain:      session.DomainID,
+				SubjectType: policies.DomainType,
+				Subject:     session.DomainID,
+				Relation:    policies.DomainRelation,
+				ObjectType:  policies.ThingType,
+				Object:      clientID,
+			},
+		)
+	}
+
+	if _, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, clientIDs, optionalPolicies, newBuiltInRoleMembers); err != nil {
+		return []mgclients.Client{}, errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
 
 	return saved, nil
 }
 
 func (svc service) ViewClient(ctx context.Context, session authn.Session, id string) (mgclients.Client, error) {
-	client, err := svc.clients.RetrieveByID(ctx, id)
+	client, err := svc.repo.RetrieveByID(ctx, id)
 	if err != nil {
 		return mgclients.Client{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return client, nil
-}
-
-func (svc service) ViewClientPerms(ctx context.Context, session authn.Session, id string) ([]string, error) {
-	permissions, err := svc.listUserThingPermission(ctx, session.DomainUserID, id)
-	if err != nil {
-		return nil, err
-	}
-	if len(permissions) == 0 {
-		return nil, svcerr.ErrAuthorization
-	}
-	return permissions, nil
 }
 
 func (svc service) ListClients(ctx context.Context, session authn.Session, reqUserID string, pm mgclients.Page) (mgclients.ClientsPage, error) {
@@ -153,7 +152,7 @@ func (svc service) ListClients(ctx context.Context, session authn.Session, reqUs
 		return mgclients.ClientsPage{}, nil
 	}
 	pm.IDs = ids
-	tp, err := svc.clients.SearchClients(ctx, pm)
+	tp, err := svc.repo.SearchClients(ctx, pm)
 	if err != nil {
 		return mgclients.ClientsPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
@@ -187,7 +186,7 @@ func (svc service) retrievePermissions(ctx context.Context, userID string, clien
 }
 
 func (svc service) listUserThingPermission(ctx context.Context, userID, thingID string) ([]string, error) {
-	permissions, err := svc.policysvc.ListPermissions(ctx, policies.Policy{
+	permissions, err := svc.policy.ListPermissions(ctx, policies.Policy{
 		SubjectType: policies.UserType,
 		Subject:     userID,
 		Object:      thingID,
@@ -200,7 +199,7 @@ func (svc service) listUserThingPermission(ctx context.Context, userID, thingID 
 }
 
 func (svc service) listClientIDs(ctx context.Context, userID, permission string) ([]string, error) {
-	tids, err := svc.policysvc.ListAllObjects(ctx, policies.Policy{
+	tids, err := svc.policy.ListAllObjects(ctx, policies.Policy{
 		SubjectType: policies.UserType,
 		Subject:     userID,
 		Permission:  permission,
@@ -214,7 +213,7 @@ func (svc service) listClientIDs(ctx context.Context, userID, permission string)
 
 func (svc service) filterAllowedThingIDs(ctx context.Context, userID, permission string, thingIDs []string) ([]string, error) {
 	var ids []string
-	tids, err := svc.policysvc.ListAllObjects(ctx, policies.Policy{
+	tids, err := svc.policy.ListAllObjects(ctx, policies.Policy{
 		SubjectType: policies.UserType,
 		Subject:     userID,
 		Permission:  permission,
@@ -241,7 +240,7 @@ func (svc service) UpdateClient(ctx context.Context, session authn.Session, cli 
 		UpdatedAt: time.Now(),
 		UpdatedBy: session.UserID,
 	}
-	client, err := svc.clients.Update(ctx, client)
+	client, err := svc.repo.Update(ctx, client)
 	if err != nil {
 		return mgclients.Client{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
@@ -255,7 +254,7 @@ func (svc service) UpdateClientTags(ctx context.Context, session authn.Session, 
 		UpdatedAt: time.Now(),
 		UpdatedBy: session.UserID,
 	}
-	client, err := svc.clients.UpdateTags(ctx, client)
+	client, err := svc.repo.UpdateTags(ctx, client)
 	if err != nil {
 		return mgclients.Client{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
@@ -272,7 +271,7 @@ func (svc service) UpdateClientSecret(ctx context.Context, session authn.Session
 		UpdatedBy: session.UserID,
 		Status:    mgclients.EnabledStatus,
 	}
-	client, err := svc.clients.UpdateSecret(ctx, client)
+	client, err := svc.repo.UpdateSecret(ctx, client)
 	if err != nil {
 		return mgclients.Client{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
@@ -304,64 +303,58 @@ func (svc service) DisableClient(ctx context.Context, session authn.Session, id 
 		return mgclients.Client{}, errors.Wrap(mgclients.ErrDisableClient, err)
 	}
 
-	if err := svc.clientCache.Remove(ctx, client.ID); err != nil {
+	if err := svc.cache.Remove(ctx, client.ID); err != nil {
 		return client, errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
 	return client, nil
 }
 
-func (svc service) Share(ctx context.Context, session authn.Session, id, relation string, userids ...string) error {
-	policyList := []policies.Policy{}
-	for _, userid := range userids {
-		policyList = append(policyList, policies.Policy{
-			SubjectType: policies.UserType,
-			Subject:     mgauth.EncodeDomainUserID(session.DomainID, userid),
-			Relation:    relation,
-			ObjectType:  policies.ThingType,
-			Object:      id,
-		})
-	}
-	if err := svc.policysvc.AddPolicies(ctx, policyList); err != nil {
-		return errors.Wrap(svcerr.ErrUpdateEntity, err)
-	}
-
-	return nil
-}
-
-func (svc service) Unshare(ctx context.Context, session authn.Session, id, relation string, userids ...string) error {
-	policyList := []policies.Policy{}
-	for _, userid := range userids {
-		policyList = append(policyList, policies.Policy{
-			SubjectType: policies.UserType,
-			Subject:     mgauth.EncodeDomainUserID(session.DomainID, userid),
-			Relation:    relation,
-			ObjectType:  policies.ThingType,
-			Object:      id,
-		})
-	}
-	if err := svc.policysvc.DeletePolicies(ctx, policyList); err != nil {
-		return errors.Wrap(svcerr.ErrUpdateEntity, err)
-	}
-
-	return nil
-}
-
 func (svc service) DeleteClient(ctx context.Context, session authn.Session, id string) error {
-	if err := svc.clientCache.Remove(ctx, id); err != nil {
+
+	ok, err := svc.repo.DoesThingHaveConnections(ctx, id)
+	if err != nil {
+		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+	if ok {
+		if _, err := svc.channels.RemoveThingConnections(ctx, &grpcChannelsV1.RemoveThingConnectionsReq{ThingId: id}); err != nil {
+			return errors.Wrap(svcerr.ErrRemoveEntity, err)
+		}
+	}
+
+	if _, err := svc.repo.ChangeStatus(ctx, mgclients.Client{ID: id, Status: mgclients.DeletedStatus}); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
-	req := policies.Policy{
-		Object:     id,
-		ObjectType: policies.ThingType,
-	}
-
-	if err := svc.policysvc.DeletePolicyFilter(ctx, req); err != nil {
+	if err := svc.cache.Remove(ctx, id); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
-	if err := svc.clients.Delete(ctx, id); err != nil {
+	filterDeletePolicies := []policies.Policy{
+		{
+			SubjectType: policies.ThingType,
+			Subject:     id,
+		},
+		{
+			ObjectType: policies.ThingType,
+			Object:     id,
+		},
+	}
+	deletePolicies := []policies.Policy{
+		{
+			SubjectType: policies.DomainType,
+			Subject:     session.DomainID,
+			Relation:    policies.DomainRelation,
+			ObjectType:  policies.ThingType,
+			Object:      id,
+		},
+	}
+
+	if err := svc.RemoveEntitiesRoles(ctx, session.DomainID, session.DomainUserID, []string{id}, filterDeletePolicies, deletePolicies); err != nil {
+		return errors.Wrap(svcerr.ErrDeletePolicies, err)
+	}
+
+	if err := svc.repo.Delete(ctx, id); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
@@ -369,7 +362,7 @@ func (svc service) DeleteClient(ctx context.Context, session authn.Session, id s
 }
 
 func (svc service) changeClientStatus(ctx context.Context, session authn.Session, client mgclients.Client) (mgclients.Client, error) {
-	dbClient, err := svc.clients.RetrieveByID(ctx, client.ID)
+	dbClient, err := svc.repo.RetrieveByID(ctx, client.ID)
 	if err != nil {
 		return mgclients.Client{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
@@ -379,122 +372,9 @@ func (svc service) changeClientStatus(ctx context.Context, session authn.Session
 
 	client.UpdatedBy = session.UserID
 
-	client, err = svc.clients.ChangeStatus(ctx, client)
+	client, err = svc.repo.ChangeStatus(ctx, client)
 	if err != nil {
 		return mgclients.Client{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	return client, nil
-}
-
-func (svc service) ListClientsByGroup(ctx context.Context, session authn.Session, groupID string, pm mgclients.Page) (mgclients.MembersPage, error) {
-	tids, err := svc.policysvc.ListAllObjects(ctx, policies.Policy{
-		SubjectType: policies.GroupType,
-		Subject:     groupID,
-		Permission:  policies.GroupRelation,
-		ObjectType:  policies.ThingType,
-	})
-	if err != nil {
-		return mgclients.MembersPage{}, errors.Wrap(svcerr.ErrNotFound, err)
-	}
-
-	pm.IDs = tids.Policies
-
-	cp, err := svc.clients.RetrieveAllByIDs(ctx, pm)
-	if err != nil {
-		return mgclients.MembersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
-	}
-
-	if pm.ListPerms && len(cp.Clients) > 0 {
-		g, ctx := errgroup.WithContext(ctx)
-
-		for i := range cp.Clients {
-			// Copying loop variable "i" to avoid "loop variable captured by func literal"
-			iter := i
-			g.Go(func() error {
-				return svc.retrievePermissions(ctx, session.DomainUserID, &cp.Clients[iter])
-			})
-		}
-
-		if err := g.Wait(); err != nil {
-			return mgclients.MembersPage{}, err
-		}
-	}
-
-	return mgclients.MembersPage{
-		Page:    cp.Page,
-		Members: cp.Clients,
-	}, nil
-}
-
-func (svc service) Identify(ctx context.Context, key string) (string, error) {
-	id, err := svc.clientCache.ID(ctx, key)
-	if err == nil {
-		return id, nil
-	}
-
-	client, err := svc.clients.RetrieveBySecret(ctx, key)
-	if err != nil {
-		return "", errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-	if err := svc.clientCache.Save(ctx, key, client.ID); err != nil {
-		return "", errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-
-	return client.ID, nil
-}
-
-func (svc service) addThingPolicies(ctx context.Context, userID, domainID string, things []mgclients.Client) error {
-	policyList := []policies.Policy{}
-	for _, thing := range things {
-		policyList = append(policyList, policies.Policy{
-			Domain:      domainID,
-			SubjectType: policies.UserType,
-			Subject:     userID,
-			Relation:    policies.AdministratorRelation,
-			ObjectKind:  policies.NewThingKind,
-			ObjectType:  policies.ThingType,
-			Object:      thing.ID,
-		})
-		policyList = append(policyList, policies.Policy{
-			Domain:      domainID,
-			SubjectType: policies.DomainType,
-			Subject:     domainID,
-			Relation:    policies.DomainRelation,
-			ObjectType:  policies.ThingType,
-			Object:      thing.ID,
-		})
-	}
-	if err := svc.policysvc.AddPolicies(ctx, policyList); err != nil {
-		return errors.Wrap(svcerr.ErrCreateEntity, err)
-	}
-
-	return nil
-}
-
-func (svc service) addThingPoliciesRollback(ctx context.Context, userID, domainID string, things []mgclients.Client) error {
-	policyList := []policies.Policy{}
-	for _, thing := range things {
-		policyList = append(policyList, policies.Policy{
-			Domain:      domainID,
-			SubjectType: policies.UserType,
-			Subject:     userID,
-			Relation:    policies.AdministratorRelation,
-			ObjectKind:  policies.NewThingKind,
-			ObjectType:  policies.ThingType,
-			Object:      thing.ID,
-		})
-		policyList = append(policyList, policies.Policy{
-			Domain:      domainID,
-			SubjectType: policies.DomainType,
-			Subject:     domainID,
-			Relation:    policies.DomainRelation,
-			ObjectType:  policies.ThingType,
-			Object:      thing.ID,
-		})
-	}
-	if err := svc.policysvc.DeletePolicies(ctx, policyList); err != nil {
-		return errors.Wrap(svcerr.ErrRemoveEntity, err)
-	}
-
-	return nil
 }
