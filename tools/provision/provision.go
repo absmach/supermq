@@ -114,7 +114,7 @@ func Provision(conf Config) error {
 	}
 	// Login to domain
 	token, err = s.CreateToken(sdk.Login{
-		Identity: user.Credentials.Identity,
+		Email:    user.Email,
 		Secret:   user.Credentials.Secret,
 	})
 	if err != nil {

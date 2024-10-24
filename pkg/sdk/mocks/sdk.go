@@ -2536,36 +2536,6 @@ func (_m *SDK) UpdateProfilePicture(user sdk.User, token string) (sdk.User, erro
 	return r0, r1
 }
 
-// UpdateProfilePicture provides a mock function with given fields: user, token
-func (_m *SDK) UpdateProfilePicture(user sdk.User, token string) (sdk.User, errors.SDKError) {
-	ret := _m.Called(user, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for UpdateProfilePicture")
-	}
-
-	var r0 sdk.User
-	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(sdk.User, string) (sdk.User, errors.SDKError)); ok {
-		return rf(user, token)
-	}
-	if rf, ok := ret.Get(0).(func(sdk.User, string) sdk.User); ok {
-		r0 = rf(user, token)
-	} else {
-		r0 = ret.Get(0).(sdk.User)
-	}
-
-	if rf, ok := ret.Get(1).(func(sdk.User, string) errors.SDKError); ok {
-		r1 = rf(user, token)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.SDKError)
-		}
-	}
-
-	return r0, r1
-}
-
 // UpdateThing provides a mock function with given fields: thing, domainID, token
 func (_m *SDK) UpdateThing(thing sdk.Thing, domainID string, token string) (sdk.Thing, errors.SDKError) {
 	ret := _m.Called(thing, domainID, token)

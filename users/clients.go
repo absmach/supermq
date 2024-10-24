@@ -66,7 +66,7 @@ type Service interface {
 	// UpdateRole updates the user's Role.
 	UpdateRole(ctx context.Context, session authn.Session, user User) (User, error)
 
-	// Enable logically enableds the user identified with the provided ID.
+	// Enable logically enables the user identified with the provided ID.
 	Enable(ctx context.Context, session authn.Session, id string) (User, error)
 
 	// Disable logically disables the user identified with the provided ID.

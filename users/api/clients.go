@@ -133,13 +133,6 @@ func usersHandler(svc users.Service, authn mgauthn.Authentication, tokenClient m
 				opts...,
 			), "update_user_role").ServeHTTP)
 
-			r.Patch("/{id}/role", otelhttp.NewHandler(kithttp.NewServer(
-				updateClientRoleEndpoint(svc),
-				decodeUpdateClientRole,
-				api.EncodeResponse,
-				opts...,
-			), "update_client_role").ServeHTTP)
-
 			r.Post("/{id}/enable", otelhttp.NewHandler(kithttp.NewServer(
 				enableEndpoint(svc),
 				decodeChangeUserStatus,
