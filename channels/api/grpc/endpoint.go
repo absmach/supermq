@@ -6,7 +6,7 @@ package grpc
 import (
 	"context"
 
-	"github.com/absmach/magistrala/channels"
+	channels "github.com/absmach/magistrala/channels/private"
 	"github.com/go-kit/kit/endpoint"
 )
 
@@ -19,5 +19,17 @@ func removeThingConnectionsEndpoint(svc channels.Service) endpoint.Endpoint {
 		}
 
 		return removeThingConnectionsRes{}, nil
+	}
+}
+
+func unsetParentGroupFormChannelsEndpoint(svc channels.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(unsetParentGroupFormChannelsReq)
+
+		if err := svc.UnsetParentGroupFormChannels(ctx, req.parentGroupID); err != nil {
+			return unsetParentGroupFormChannelsRes{}, err
+		}
+
+		return unsetParentGroupFormChannelsRes{}, nil
 	}
 }

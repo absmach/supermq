@@ -35,14 +35,15 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 						updated_at         TIMESTAMP,
 						updated_by         VARCHAR(254),
 						status             SMALLINT NOT NULL DEFAULT 0 CHECK (status >= 0),
-						UNIQUE             (domain_id, name),
+						UNIQUE 			   (id, domain_id),
+						UNIQUE             (domain_id, name)
 					)`,
 					`CREATE TABLE IF NOT EXISTS connections (
 						channel_id    VARCHAR(36),
 						domain_id     VARCHAR(36),
 						thing_id      VARCHAR(36),
 						FOREIGN KEY   (channel_id, domain_id) REFERENCES channels (id, domain_id) ON DELETE CASCADE ON UPDATE CASCADE,
-						PRIMARY KEY   (channel_id, domain_id, thing_id)
+						PRIMARY KEY   (channel_id, domain_id, thing_id),
 						UNIQUE        (channel_id, thing_id)
 					)`,
 				},

@@ -6,3 +6,7 @@ package grpc
 type removeThingConnectionsReq struct {
 	thingID string
 }
+
+type unsetParentGroupFormChannelsReq struct {
+	parentGroupID string
+}

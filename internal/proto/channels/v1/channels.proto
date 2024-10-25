@@ -9,6 +9,7 @@ option go_package = "github.com/absmach/magistrala/internal/grpc/channels/v1";
 
 service ChannelsService {
   rpc RemoveThingConnections(RemoveThingConnectionsReq)returns(RemoveThingConnectionsRes) {}
+  rpc UnsetParentGroupFormChannels(UnsetParentGroupFormChannelsReq)returns(UnsetParentGroupFormChannelsRes){}
 }
 
 message RemoveThingConnectionsReq {
@@ -16,3 +17,9 @@ message RemoveThingConnectionsReq {
 }
 
 message RemoveThingConnectionsRes {}
+
+message UnsetParentGroupFormChannelsReq {
+  string parent_group_id = 1;
+}
+
+message UnsetParentGroupFormChannelsRes {}

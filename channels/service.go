@@ -404,6 +404,7 @@ func (svc service) SetParentGroup(ctx context.Context, session authn.Session, pa
 		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
+	//ToDo: retrieve parent group and check they are in same domain
 	var pols []policies.Policy
 	if ch.ParentGroup != "" {
 		return errors.Wrap(svcerr.ErrConflict, errSetParentGroup)
@@ -471,10 +472,6 @@ func (svc service) RemoveParentGroup(ctx context.Context, session authn.Session,
 	}
 
 	return nil
-}
-
-func (svc service) RemoveThingConnections(ctx context.Context, thingID string) error {
-	return svc.repo.RemoveThingConnections(ctx, thingID)
 }
 
 func (svc service) listChannelIDs(ctx context.Context, userID, permission string) ([]string, error) {

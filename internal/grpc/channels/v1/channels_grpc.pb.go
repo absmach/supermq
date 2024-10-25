@@ -22,7 +22,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ChannelsService_RemoveThingConnections_FullMethodName = "/channels.v1.ChannelsService/RemoveThingConnections"
+	ChannelsService_RemoveThingConnections_FullMethodName       = "/channels.v1.ChannelsService/RemoveThingConnections"
+	ChannelsService_UnsetParentGroupFormChannels_FullMethodName = "/channels.v1.ChannelsService/UnsetParentGroupFormChannels"
 )
 
 // ChannelsServiceClient is the client API for ChannelsService service.
@@ -30,6 +31,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ChannelsServiceClient interface {
 	RemoveThingConnections(ctx context.Context, in *RemoveThingConnectionsReq, opts ...grpc.CallOption) (*RemoveThingConnectionsRes, error)
+	UnsetParentGroupFormChannels(ctx context.Context, in *UnsetParentGroupFormChannelsReq, opts ...grpc.CallOption) (*UnsetParentGroupFormChannelsRes, error)
 }
 
 type channelsServiceClient struct {
@@ -50,11 +52,22 @@ func (c *channelsServiceClient) RemoveThingConnections(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *channelsServiceClient) UnsetParentGroupFormChannels(ctx context.Context, in *UnsetParentGroupFormChannelsReq, opts ...grpc.CallOption) (*UnsetParentGroupFormChannelsRes, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UnsetParentGroupFormChannelsRes)
+	err := c.cc.Invoke(ctx, ChannelsService_UnsetParentGroupFormChannels_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChannelsServiceServer is the server API for ChannelsService service.
 // All implementations must embed UnimplementedChannelsServiceServer
 // for forward compatibility.
 type ChannelsServiceServer interface {
 	RemoveThingConnections(context.Context, *RemoveThingConnectionsReq) (*RemoveThingConnectionsRes, error)
+	UnsetParentGroupFormChannels(context.Context, *UnsetParentGroupFormChannelsReq) (*UnsetParentGroupFormChannelsRes, error)
 	mustEmbedUnimplementedChannelsServiceServer()
 }
 
@@ -67,6 +80,9 @@ type UnimplementedChannelsServiceServer struct{}
 
 func (UnimplementedChannelsServiceServer) RemoveThingConnections(context.Context, *RemoveThingConnectionsReq) (*RemoveThingConnectionsRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveThingConnections not implemented")
+}
+func (UnimplementedChannelsServiceServer) UnsetParentGroupFormChannels(context.Context, *UnsetParentGroupFormChannelsReq) (*UnsetParentGroupFormChannelsRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnsetParentGroupFormChannels not implemented")
 }
 func (UnimplementedChannelsServiceServer) mustEmbedUnimplementedChannelsServiceServer() {}
 func (UnimplementedChannelsServiceServer) testEmbeddedByValue()                         {}
@@ -107,6 +123,24 @@ func _ChannelsService_RemoveThingConnections_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChannelsService_UnsetParentGroupFormChannels_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnsetParentGroupFormChannelsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChannelsServiceServer).UnsetParentGroupFormChannels(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChannelsService_UnsetParentGroupFormChannels_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChannelsServiceServer).UnsetParentGroupFormChannels(ctx, req.(*UnsetParentGroupFormChannelsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ChannelsService_ServiceDesc is the grpc.ServiceDesc for ChannelsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -117,6 +151,10 @@ var ChannelsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveThingConnections",
 			Handler:    _ChannelsService_RemoveThingConnections_Handler,
+		},
+		{
+			MethodName: "UnsetParentGroupFormChannels",
+			Handler:    _ChannelsService_UnsetParentGroupFormChannels_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

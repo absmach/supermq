@@ -248,6 +248,24 @@ func (_m *Repository) RemoveMemberFromAllRoles(ctx context.Context, members stri
 	return r0
 }
 
+// RemoveParentGroup provides a mock function with given fields: ctx, ch
+func (_m *Repository) RemoveParentGroup(ctx context.Context, ch channels.Channel) error {
+	ret := _m.Called(ctx, ch)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveParentGroup")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, channels.Channel) error); ok {
+		r0 = rf(ctx, ch)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // RemoveRoles provides a mock function with given fields: ctx, roleIDs
 func (_m *Repository) RemoveRoles(ctx context.Context, roleIDs []string) error {
 	ret := _m.Called(ctx, roleIDs)
@@ -744,6 +762,42 @@ func (_m *Repository) Save(ctx context.Context, chs ...channels.Channel) ([]chan
 	}
 
 	return r0, r1
+}
+
+// SetParentGroup provides a mock function with given fields: ctx, ch
+func (_m *Repository) SetParentGroup(ctx context.Context, ch channels.Channel) error {
+	ret := _m.Called(ctx, ch)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetParentGroup")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, channels.Channel) error); ok {
+		r0 = rf(ctx, ch)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UnsetParentGroupFormChannels provides a mock function with given fields: ctx, parentGroupID
+func (_m *Repository) UnsetParentGroupFormChannels(ctx context.Context, parentGroupID string) error {
+	ret := _m.Called(ctx, parentGroupID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UnsetParentGroupFormChannels")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, parentGroupID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // Update provides a mock function with given fields: ctx, c

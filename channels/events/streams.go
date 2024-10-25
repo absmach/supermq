@@ -233,7 +233,3 @@ func (es *eventStore) RemoveParentGroup(ctx context.Context, session authn.Sessi
 
 	return nil
 }
-
-func (es *eventStore) RemoveThingConnections(ctx context.Context, thingID string) error {
-	return es.svc.RemoveThingConnections(ctx, thingID)
-}

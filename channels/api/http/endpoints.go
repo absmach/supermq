@@ -186,6 +186,46 @@ func updateChannelTagsEndpoint(svc channels.Service) endpoint.Endpoint {
 	}
 }
 
+func setChannelParentGroupEndpoint(svc channels.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(setChannelParentGroupReq)
+		if err := req.validate(); err != nil {
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
+		}
+
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+
+		if err := svc.SetParentGroup(ctx, session, req.ParentGroupID, req.id); err != nil {
+			return nil, err
+		}
+
+		return setChannelParentGroupRes{}, nil
+	}
+}
+
+func removeChannelParentGroupEndpoint(svc channels.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(removeChannelParentGroupReq)
+		if err := req.validate(); err != nil {
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
+		}
+
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+
+		if err := svc.RemoveParentGroup(ctx, session, req.id); err != nil {
+			return nil, err
+		}
+
+		return removeChannelParentGroupRes{}, nil
+	}
+}
+
 func enableChannelEndpoint(svc channels.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(changeChannelStatusReq)

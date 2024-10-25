@@ -130,11 +130,3 @@ func (tm *tracingMiddleware) RemoveParentGroup(ctx context.Context, session auth
 	defer span.End()
 	return tm.svc.RemoveParentGroup(ctx, session, id)
 }
-
-func (tm *tracingMiddleware) RemoveThingConnections(ctx context.Context, thingID string) error {
-	ctx, span := tm.tracer.Start(ctx, "remove_thing_connections", trace.WithAttributes(
-		attribute.String("thing_id", thingID),
-	))
-	defer span.End()
-	return tm.svc.RemoveThingConnections(ctx, thingID)
-}

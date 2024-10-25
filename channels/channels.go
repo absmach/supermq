@@ -102,8 +102,6 @@ type Service interface {
 
 	RemoveParentGroup(ctx context.Context, session authn.Session, id string) error
 
-	RemoveThingConnections(ctx context.Context, thingID string) error
-
 	roles.RoleManager
 }
 
@@ -151,6 +149,10 @@ type Repository interface {
 	RemoveThingConnections(ctx context.Context, thingID string) error
 
 	RemoveChannelConnections(ctx context.Context, channelID string) error
+
+	RetrieveParentGroupChannels(ctx context.Context, parentGroupID string) ([]Channel, error)
+
+	UnsetParentGroupFormChannels(ctx context.Context, parentGroupID string) error
 
 	roles.Repository
 }

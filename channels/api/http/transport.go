@@ -105,6 +105,20 @@ func MakeHandler(svc channels.Service, authn mgauthn.Authentication, mux *chi.Mu
 				opts...,
 			), "disable_channel").ServeHTTP)
 
+			r.Post("/parent", otelhttp.NewHandler(kithttp.NewServer(
+				setChannelParentGroupEndpoint(svc),
+				decodeSetChannelParentGroupStatus,
+				api.EncodeResponse,
+				opts...,
+			), "set_channel_parent_group").ServeHTTP)
+
+			r.Delete("/parent", otelhttp.NewHandler(kithttp.NewServer(
+				removeChannelParentGroupEndpoint(svc),
+				decodeRemoveChannelParentGroupStatus,
+				api.EncodeResponse,
+				opts...,
+			), "remove_channel_parent_group").ServeHTTP)
+
 			r.Post("/connect", otelhttp.NewHandler(kithttp.NewServer(
 				connectChannelThingsEndpoint(svc),
 				decodeConnectChannelThingsRequest,

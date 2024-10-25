@@ -137,6 +137,28 @@ func decodeUpdateChannelTags(_ context.Context, r *http.Request) (interface{}, e
 	return req, nil
 }
 
+func decodeSetChannelParentGroupStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
+	}
+
+	req := setChannelParentGroupReq{
+		id: chi.URLParam(r, "channelID"),
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+	}
+	return req, nil
+}
+
+func decodeRemoveChannelParentGroupStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	req := removeChannelParentGroupReq{
+		id: chi.URLParam(r, "channelID"),
+	}
+
+	return req, nil
+}
+
 func decodeChangeChannelStatus(_ context.Context, r *http.Request) (interface{}, error) {
 	req := changeChannelStatusReq{
 		id: chi.URLParam(r, "channelID"),
