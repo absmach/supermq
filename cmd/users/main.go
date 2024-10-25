@@ -35,6 +35,7 @@ import (
 	"github.com/absmach/magistrala/pkg/prometheus"
 	"github.com/absmach/magistrala/pkg/server"
 	httpserver "github.com/absmach/magistrala/pkg/server/http"
+	"github.com/absmach/magistrala/pkg/sid"
 	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/absmach/magistrala/users"
 	"github.com/absmach/magistrala/users/api"
@@ -259,6 +260,10 @@ func newService(ctx context.Context, authz mgauthz.Authorization, token grpcToke
 
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	idp := uuid.New()
+	sid, err := sid.New()
+	if err != nil {
+		return nil, nil, err
+	}
 	hsr := hasher.New()
 
 	// Creating users service
