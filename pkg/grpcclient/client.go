@@ -33,7 +33,7 @@ func SetupTokenClient(ctx context.Context, cfg Config) (grpcTokenV1.TokenService
 
 	health := grpchealth.NewHealthClient(client.Connection())
 	resp, err := health.Check(ctx, &grpchealth.HealthCheckRequest{
-		Service: "token",
+		Service: "auth",
 	})
 	if err != nil || resp.GetStatus() != grpchealth.HealthCheckResponse_SERVING {
 		return nil, nil, ErrSvcNotServing
