@@ -9,10 +9,8 @@ import (
 	"regexp"
 
 	"github.com/absmach/magistrala"
-	groupsHTTP "github.com/absmach/magistrala/internal/groups/api"
 	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/oauth2"
 	"github.com/absmach/magistrala/users"
 	"github.com/go-chi/chi/v5"
@@ -20,9 +18,8 @@ import (
 )
 
 // MakeHandler returns a HTTP handler for Users and Groups API endpoints.
-func MakeHandler(cls users.Service, grps groups.Service, authn mgauthn.Authentication, tokensvc grpcTokenV1.TokenServiceClient, selfRegister bool, mux *chi.Mux, logger *slog.Logger, instanceID string, pr *regexp.Regexp, providers ...oauth2.Provider) http.Handler {
+func MakeHandler(cls users.Service, authn mgauthn.Authentication, tokensvc grpcTokenV1.TokenServiceClient, selfRegister bool, mux *chi.Mux, logger *slog.Logger, instanceID string, pr *regexp.Regexp, providers ...oauth2.Provider) http.Handler {
 	mux = clientsHandler(cls, authn, tokensvc, selfRegister, mux, logger, pr, providers...)
-	mux = groupsHTTP.MakeHandler(grps, authn, mux, logger)
 
 	mux.Get("/health", magistrala.Health("users", instanceID))
 	mux.Handle("/metrics", promhttp.Handler())

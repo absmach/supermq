@@ -22,7 +22,7 @@ import (
 	"github.com/absmach/magistrala/pkg/server"
 	grpcserver "github.com/absmach/magistrala/pkg/server/grpc"
 	thingsgrpcapi "github.com/absmach/magistrala/things/api/grpc"
-	thmocks "github.com/absmach/magistrala/things/mocks"
+	thmocks "github.com/absmach/magistrala/things/private/mocks"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )

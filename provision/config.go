@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/absmach/magistrala/groups"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
-	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/pelletier/go-toml"
 )
 
