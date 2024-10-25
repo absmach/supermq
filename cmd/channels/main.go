@@ -171,7 +171,7 @@ func main() {
 	defer authzClient.Close()
 	logger.Info("AuthZ  successfully connected to auth gRPC server " + authzClient.Secure())
 
-	thgrpcCfg := grpcclient.Config{BypassHealthCheck: true}
+	thgrpcCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&thgrpcCfg, env.Options{Prefix: envPrefixThings}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load things gRPC client configuration : %s", err))
 		exitCode = 1
@@ -186,15 +186,15 @@ func main() {
 	defer thingsHandler.Close()
 	logger.Info("Things gRPC client successfully connected to things gRPC server " + thingsHandler.Secure())
 
-	gpgrpcCfg := grpcclient.Config{BypassHealthCheck: true}
-	if err := env.ParseWithOptions(&gpgrpcCfg, env.Options{Prefix: envPrefixGroups}); err != nil {
+	groupsgRPCCfg := grpcclient.Config{}
+	if err := env.ParseWithOptions(&groupsgRPCCfg, env.Options{Prefix: envPrefixGroups}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load groups gRPC client configuration : %s", err))
 		exitCode = 1
 		return
 	}
-	groupsClient, groupsHandler, err := grpcclient.SetupGroupsClient(ctx, gpgrpcCfg)
+	groupsClient, groupsHandler, err := grpcclient.SetupGroupsClient(ctx, groupsgRPCCfg)
 	if err != nil {
-		logger.Error(fmt.Sprintf("failed to connect to things gRPC server: %s", err))
+		logger.Error(fmt.Sprintf("failed to connect to groups gRPC server: %s", err))
 		exitCode = 1
 		return
 	}

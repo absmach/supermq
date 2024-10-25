@@ -22,7 +22,9 @@ import (
 	"github.com/absmach/magistrala/groups/postgres"
 	pgroups "github.com/absmach/magistrala/groups/private"
 	"github.com/absmach/magistrala/groups/tracing"
+	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcGroupsV1 "github.com/absmach/magistrala/internal/grpc/groups/v1"
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	authsvcAuthn "github.com/absmach/magistrala/pkg/authn/authsvc"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
@@ -52,15 +54,17 @@ import (
 )
 
 const (
-	svcName          = "groups"
-	envPrefixDB      = "MG_GROUPS_DB_"
-	envPrefixHTTP    = "MG_GROUPS_HTTP_"
-	envPrefixgRPC    = "MG_GROUPS_GRPC_"
-	envPrefixAuth    = "MG_AUTH_GRPC_"
-	envPrefixDomains = "MG_DOMAINS_GRPC_"
-	defDB            = "groups"
-	defSvcHTTPPort   = "9004"
-	defSvcgRPCPort   = "7004"
+	svcName           = "groups"
+	envPrefixDB       = "MG_GROUPS_DB_"
+	envPrefixHTTP     = "MG_GROUPS_HTTP_"
+	envPrefixgRPC     = "MG_GROUPS_GRPC_"
+	envPrefixAuth     = "MG_AUTH_GRPC_"
+	envPrefixDomains  = "MG_DOMAINS_GRPC_"
+	envPrefixChannels = "MG_CHANNELS_GRPC_"
+	envPrefixThings   = "MG_THINGS_GRPC_"
+	defDB             = "groups"
+	defSvcHTTPPort    = "9004"
+	defSvcgRPCPort    = "7004"
 )
 
 type config struct {
@@ -166,7 +170,37 @@ func main() {
 	}
 	logger.Info("Policy client successfully connected to spicedb gRPC server")
 
-	svc, psvc, err := newService(ctx, authz, policyService, db, dbConfig, tracer, logger, cfg)
+	chgrpcCfg := grpcclient.Config{}
+	if err := env.ParseWithOptions(&chgrpcCfg, env.Options{Prefix: envPrefixChannels}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load channels gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+	channelsClient, channelsHandler, err := grpcclient.SetupChannelsClient(ctx, chgrpcCfg)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to connect to channels gRPC server: %s", err))
+		exitCode = 1
+		return
+	}
+	defer channelsHandler.Close()
+	logger.Info("Groups gRPC client successfully connected to channels gRPC server " + channelsHandler.Secure())
+
+	thgrpcCfg := grpcclient.Config{}
+	if err := env.ParseWithOptions(&thgrpcCfg, env.Options{Prefix: envPrefixThings}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load things gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+	thingsClient, thingsHandler, err := grpcclient.SetupThingsClient(ctx, thgrpcCfg)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to connect to things gRPC server: %s", err))
+		exitCode = 1
+		return
+	}
+	defer thingsHandler.Close()
+	logger.Info("Things gRPC client successfully connected to things gRPC server " + thingsHandler.Secure())
+
+	svc, psvc, err := newService(ctx, authz, policyService, db, dbConfig, channelsClient, thingsClient, tracer, logger, cfg)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to setup service: %s", err))
 		exitCode = 1
@@ -190,12 +224,11 @@ func main() {
 		return
 	}
 
-	fmt.Printf("%+v\n", grpcServerConfig)
-	registerThingsServer := func(srv *grpc.Server) {
+	registerGroupsServer := func(srv *grpc.Server) {
 		reflection.Register(srv)
 		grpcGroupsV1.RegisterGroupsServiceServer(srv, grpcapi.NewServer(psvc))
 	}
-	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerThingsServer, logger)
+	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerGroupsServer, logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
@@ -219,7 +252,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, authz mgauthz.Authorization, policy policies.Service, db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, logger *slog.Logger, c config) (groups.Service, pgroups.Service, error) {
+func newService(ctx context.Context, authz mgauthz.Authorization, policy policies.Service, db *sqlx.DB, dbConfig pgclient.Config, channels grpcChannelsV1.ChannelsServiceClient, things grpcThingsV1.ThingsServiceClient, tracer trace.Tracer, logger *slog.Logger, c config) (groups.Service, pgroups.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	idp := uuid.New()
 	sid, err := sid.New()
@@ -229,7 +262,7 @@ func newService(ctx context.Context, authz mgauthz.Authorization, policy policie
 
 	// Creating groups service
 	repo := postgres.New(database)
-	svc, err := groups.NewService(repo, policy, idp, sid)
+	svc, err := groups.NewService(repo, policy, idp, channels, things, sid)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -5,7 +5,6 @@ package grpcclient
 
 import (
 	"context"
-	"fmt"
 
 	tokengrpc "github.com/absmach/magistrala/auth/api/grpc/token"
 	channelsgrpc "github.com/absmach/magistrala/channels/api/grpc"
@@ -33,6 +32,7 @@ func SetupTokenClient(ctx context.Context, cfg Config) (grpcTokenV1.TokenService
 
 	health := grpchealth.NewHealthClient(client.Connection())
 	resp, err := health.Check(ctx, &grpchealth.HealthCheckRequest{
+		// Health Service name is the svcName provided during gRPC server creation `grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerAuthServiceServer, logger)`
 		Service: "auth",
 	})
 	if err != nil || resp.GetStatus() != grpchealth.HealthCheckResponse_SERVING {
@@ -53,15 +53,6 @@ func SetupDomainsClient(ctx context.Context, cfg Config) (grpcDomainsV1.DomainsS
 		return nil, nil, err
 	}
 
-	health := grpchealth.NewHealthClient(client.Connection())
-	resp, err := health.Check(ctx, &grpchealth.HealthCheckRequest{
-		Service: "domains",
-	})
-	fmt.Printf("%+v\n", err)
-	if err != nil || resp.GetStatus() != grpchealth.HealthCheckResponse_SERVING {
-		return nil, nil, ErrSvcNotServing
-	}
-
 	return domainsgrpc.NewDomainsClient(client.Connection(), cfg.Timeout), client, nil
 }
 
@@ -74,16 +65,6 @@ func SetupThingsClient(ctx context.Context, cfg Config) (grpcThingsV1.ThingsServ
 	client, err := NewHandler(cfg)
 	if err != nil {
 		return nil, nil, err
-	}
-
-	if !cfg.BypassHealthCheck {
-		health := grpchealth.NewHealthClient(client.Connection())
-		resp, err := health.Check(ctx, &grpchealth.HealthCheckRequest{
-			Service: "things",
-		})
-		if err != nil || resp.GetStatus() != grpchealth.HealthCheckResponse_SERVING {
-			return nil, nil, ErrSvcNotServing
-		}
 	}
 
 	return thingsauth.NewClient(client.Connection(), cfg.Timeout), client, nil
@@ -100,16 +81,6 @@ func SetupChannelsClient(ctx context.Context, cfg Config) (grpcChannelsV1.Channe
 		return nil, nil, err
 	}
 
-	if !cfg.BypassHealthCheck {
-		health := grpchealth.NewHealthClient(client.Connection())
-		resp, err := health.Check(ctx, &grpchealth.HealthCheckRequest{
-			Service: "channels",
-		})
-		if err != nil || resp.GetStatus() != grpchealth.HealthCheckResponse_SERVING {
-			return nil, nil, ErrSvcNotServing
-		}
-	}
-
 	return channelsgrpc.NewClient(client.Connection(), cfg.Timeout), client, nil
 }
 
@@ -122,16 +93,6 @@ func SetupGroupsClient(ctx context.Context, cfg Config) (grpcGroupsV1.GroupsServ
 	client, err := NewHandler(cfg)
 	if err != nil {
 		return nil, nil, err
-	}
-
-	if !cfg.BypassHealthCheck {
-		health := grpchealth.NewHealthClient(client.Connection())
-		resp, err := health.Check(ctx, &grpchealth.HealthCheckRequest{
-			Service: "groups",
-		})
-		if err != nil || resp.GetStatus() != grpchealth.HealthCheckResponse_SERVING {
-			return nil, nil, ErrSvcNotServing
-		}
 	}
 
 	return groupsgrpc.NewClient(client.Connection(), cfg.Timeout), client, nil

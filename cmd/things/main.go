@@ -188,7 +188,7 @@ func main() {
 	defer authzClient.Close()
 	logger.Info("AuthZ  successfully connected to auth gRPC server " + authnClient.Secure())
 
-	chgrpccfg := grpcclient.Config{BypassHealthCheck: true}
+	chgrpccfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&chgrpccfg, env.Options{Prefix: envPrefixChannels}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load channels gRPC client configuration : %s", err))
 		exitCode = 1

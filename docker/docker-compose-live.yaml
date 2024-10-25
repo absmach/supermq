@@ -9,6 +9,7 @@ services:
       dockerfile: Dockerfile.livereload
     volumes:
       - ../:/go/src/github.com/absmach/magistrala
+      - $GOPATH/pkg/mod/cache:/go/pkg/mod/cache
     working_dir: /go/src/github.com/absmach/magistrala
     entrypoint: [ "air",
                   "--build.cmd", "BUILD_DIR=/tmp make domains",
@@ -27,6 +28,7 @@ services:
       dockerfile: Dockerfile.livereload
     volumes:
       - ../:/go/src/github.com/absmach/magistrala
+      - $GOPATH/pkg/mod/cache:/go/pkg/mod/cache
     working_dir: /go/src/github.com/absmach/magistrala
     entrypoint: [ "air",
                   "--build.cmd", "BUILD_DIR=/tmp make users",
@@ -43,6 +45,7 @@ services:
       dockerfile: Dockerfile.livereload
     volumes:
       - ../:/go/src/github.com/absmach/magistrala
+      - $GOPATH/pkg/mod/cache:/go/pkg/mod/cache
     working_dir: /go/src/github.com/absmach/magistrala
     entrypoint: [ "air",
                   "--build.cmd", "BUILD_DIR=/tmp make things",
@@ -60,6 +63,7 @@ services:
       dockerfile: Dockerfile.livereload
     volumes:
       - ../:/go/src/github.com/absmach/magistrala
+      - $GOPATH/pkg/mod/cache:/go/pkg/mod/cache
     working_dir: /go/src/github.com/absmach/magistrala
     entrypoint: [ "air",
                   "--build.cmd", "BUILD_DIR=/tmp make channels",
@@ -80,6 +84,7 @@ services:
       dockerfile: Dockerfile.livereload
     volumes:
       - ../:/go/src/github.com/absmach/magistrala
+      - $GOPATH/pkg/mod/cache:/go/pkg/mod/cache
     working_dir: /go/src/github.com/absmach/magistrala
     entrypoint: [ "air",
                   "--build.cmd", "BUILD_DIR=/tmp make groups",
