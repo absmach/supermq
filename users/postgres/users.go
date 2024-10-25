@@ -120,7 +120,7 @@ func (repo *userRepo) RetrieveAll(ctx context.Context, pm users.Page) (users.Use
 	}
 
 	q := fmt.Sprintf(`SELECT u.id, u.tags, u.email, u.metadata, u.status, u.role, u.first_name, u.last_name, u.username,
-    u.created_at, u.updated_at, u.profile_picture, COALESCE(u.updated_by, '') AS updated_by 
+    u.created_at, u.updated_at, u.profile_picture, COALESCE(u.updated_by, '') AS updated_by
     FROM users u %s ORDER BY u.created_at LIMIT :limit OFFSET :offset;`, query)
 
 	dbPage, err := ToDBUsersPage(pm)
@@ -191,9 +191,9 @@ func (repo *userRepo) UpdateUsername(ctx context.Context, user users.User) (user
 
 	dbc = DBUser{
 		ID:        user.ID,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Username:  user.Credentials.Username,
+		FirstName: stringToNullString(user.FirstName),
+		LastName:  stringToNullString(user.LastName),
+		Username:  stringToNullString(user.Credentials.Username),
 		UpdatedAt: sql.NullTime{Time: time.Now(), Valid: true},
 	}
 
@@ -456,10 +456,10 @@ type DBUser struct {
 	Groups         []groups.Group   `db:"groups,omitempty"`
 	Status         users.Status     `db:"status,omitempty"`
 	Role           *users.Role      `db:"role,omitempty"`
-	Username       string           `db:"username, omitempty"`
-	FirstName      string           `db:"first_name, omitempty"`
-	LastName       string           `db:"last_name, omitempty"`
-	ProfilePicture string           `db:"profile_picture, omitempty"`
+	Username       sql.NullString   `db:"username, omitempty"`
+	FirstName      sql.NullString   `db:"first_name, omitempty"`
+	LastName       sql.NullString   `db:"last_name, omitempty"`
+	ProfilePicture sql.NullString   `db:"profile_picture, omitempty"`
 	Email          string           `db:"email,omitempty"`
 }
 
@@ -495,10 +495,10 @@ func toDBUser(u users.User) (DBUser, error) {
 		UpdatedBy:      updatedBy,
 		Status:         u.Status,
 		Role:           &u.Role,
-		LastName:       u.LastName,
-		FirstName:      u.FirstName,
-		Username:       u.Credentials.Username,
-		ProfilePicture: u.ProfilePicture.String(),
+		LastName:       stringToNullString(u.LastName),
+		FirstName:      stringToNullString(u.FirstName),
+		Username:       stringToNullString(u.Credentials.Username),
+		ProfilePicture: stringToNullString(u.ProfilePicture.String()),
 		Email:          u.Email,
 	}, nil
 }
@@ -523,17 +523,17 @@ func ToUser(dbu DBUser) (users.User, error) {
 		updatedAt = dbu.UpdatedAt.Time
 	}
 
-	profilePicture, err := url.Parse(dbu.ProfilePicture)
+	profilePicture, err := url.Parse(nullStringString(dbu.ProfilePicture))
 	if err != nil {
 		return users.User{}, errors.Wrap(repoerr.ErrMalformedEntity, err)
 	}
 
 	user := users.User{
 		ID:        dbu.ID,
-		FirstName: dbu.FirstName,
-		LastName:  dbu.LastName,
+		FirstName: nullStringString(dbu.FirstName),
+		LastName:  nullStringString(dbu.LastName),
 		Credentials: users.Credentials{
-			Username: dbu.Username,
+			Username: nullStringString(dbu.Username),
 			Secret:   dbu.Secret,
 		},
 		Email:          dbu.Email,
@@ -654,4 +654,22 @@ func applyOrdering(emq string, pm users.Page) string {
 		}
 	}
 	return emq
+}
+
+func stringToNullString(s string) sql.NullString {
+	if s == "" {
+		return sql.NullString{}
+	}
+
+	return sql.NullString{
+		String: s,
+		Valid:  true,
+	}
+}
+
+func nullStringString(ns sql.NullString) string {
+	if ns.Valid {
+		return ns.String
+	}
+	return ""
 }
