@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"github.com/0x6flab/namegenerator"
-	"github.com/absmach/magistrala/internal/groups/postgres"
+	"github.com/absmach/magistrala/groups"
+	"github.com/absmach/magistrala/groups/postgres"
 	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
-	mggroups "github.com/absmach/magistrala/pkg/groups"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,7 +24,7 @@ import (
 var (
 	namegen    = namegenerator.NewGenerator()
 	invalidID  = strings.Repeat("a", 37)
-	validGroup = mggroups.Group{
+	validGroup = groups.Group{
 		ID:          testsutil.GenerateUUID(&testing.T{}),
 		Domain:      testsutil.GenerateUUID(&testing.T{}),
 		Name:        namegen.Generate(),
@@ -45,7 +45,7 @@ func TestSave(t *testing.T) {
 
 	cases := []struct {
 		desc  string
-		group mggroups.Group
+		group groups.Group
 		err   error
 	}{
 		{
@@ -60,7 +60,7 @@ func TestSave(t *testing.T) {
 		},
 		{
 			desc: "add group with invalid ID",
-			group: mggroups.Group{
+			group: groups.Group{
 				ID:          invalidID,
 				Domain:      testsutil.GenerateUUID(t),
 				Name:        namegen.Generate(),
@@ -73,7 +73,7 @@ func TestSave(t *testing.T) {
 		},
 		{
 			desc: "add group with invalid domain",
-			group: mggroups.Group{
+			group: groups.Group{
 				ID:          testsutil.GenerateUUID(t),
 				Domain:      invalidID,
 				Name:        namegen.Generate(),
@@ -86,7 +86,7 @@ func TestSave(t *testing.T) {
 		},
 		{
 			desc: "add group with invalid parent",
-			group: mggroups.Group{
+			group: groups.Group{
 				ID:          testsutil.GenerateUUID(t),
 				Parent:      invalidID,
 				Name:        namegen.Generate(),
@@ -99,7 +99,7 @@ func TestSave(t *testing.T) {
 		},
 		{
 			desc: "add group with invalid name",
-			group: mggroups.Group{
+			group: groups.Group{
 				ID:          testsutil.GenerateUUID(t),
 				Domain:      testsutil.GenerateUUID(t),
 				Name:        strings.Repeat("a", 1025),
@@ -112,7 +112,7 @@ func TestSave(t *testing.T) {
 		},
 		{
 			desc: "add group with invalid description",
-			group: mggroups.Group{
+			group: groups.Group{
 				ID:          testsutil.GenerateUUID(t),
 				Domain:      testsutil.GenerateUUID(t),
 				Name:        namegen.Generate(),
@@ -125,7 +125,7 @@ func TestSave(t *testing.T) {
 		},
 		{
 			desc: "add group with invalid metadata",
-			group: mggroups.Group{
+			group: groups.Group{
 				ID:          testsutil.GenerateUUID(t),
 				Domain:      testsutil.GenerateUUID(t),
 				Name:        namegen.Generate(),
@@ -140,7 +140,7 @@ func TestSave(t *testing.T) {
 		},
 		{
 			desc: "add group with empty domain",
-			group: mggroups.Group{
+			group: groups.Group{
 				ID:          testsutil.GenerateUUID(t),
 				Name:        namegen.Generate(),
 				Description: strings.Repeat("a", 64),
@@ -152,7 +152,7 @@ func TestSave(t *testing.T) {
 		},
 		{
 			desc: "add group with empty name",
-			group: mggroups.Group{
+			group: groups.Group{
 				ID:          testsutil.GenerateUUID(t),
 				Domain:      testsutil.GenerateUUID(t),
 				Description: strings.Repeat("a", 64),
@@ -188,12 +188,12 @@ func TestUpdate(t *testing.T) {
 
 	cases := []struct {
 		desc  string
-		group mggroups.Group
+		group groups.Group
 		err   error
 	}{
 		{
 			desc: "update group successfully",
-			group: mggroups.Group{
+			group: groups.Group{
 				ID:          group.ID,
 				Name:        namegen.Generate(),
 				Description: strings.Repeat("a", 64),
@@ -205,7 +205,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			desc: "update group name",
-			group: mggroups.Group{
+			group: groups.Group{
 				ID:        group.ID,
 				Name:      namegen.Generate(),
 				UpdatedAt: time.Now().UTC().Truncate(time.Microsecond),
@@ -215,7 +215,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			desc: "update group description",
-			group: mggroups.Group{
+			group: groups.Group{
 				ID:          group.ID,
 				Description: strings.Repeat("a", 64),
 				UpdatedAt:   time.Now().UTC().Truncate(time.Microsecond),
@@ -225,7 +225,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			desc: "update group metadata",
-			group: mggroups.Group{
+			group: groups.Group{
 				ID:        group.ID,
 				Metadata:  map[string]interface{}{"key": "value"},
 				UpdatedAt: time.Now().UTC().Truncate(time.Microsecond),
@@ -235,7 +235,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			desc: "update group with invalid ID",
-			group: mggroups.Group{
+			group: groups.Group{
 				ID:          testsutil.GenerateUUID(t),
 				Name:        namegen.Generate(),
 				Description: strings.Repeat("a", 64),
@@ -247,7 +247,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			desc: "update group with empty ID",
-			group: mggroups.Group{
+			group: groups.Group{
 				Name:        namegen.Generate(),
 				Description: strings.Repeat("a", 64),
 				Metadata:    map[string]interface{}{"key": "value"},
@@ -284,12 +284,12 @@ func TestChangeStatus(t *testing.T) {
 
 	cases := []struct {
 		desc  string
-		group mggroups.Group
+		group groups.Group
 		err   error
 	}{
 		{
 			desc: "change status group successfully",
-			group: mggroups.Group{
+			group: groups.Group{
 				ID:        group.ID,
 				Status:    clients.DisabledStatus,
 				UpdatedAt: time.Now().UTC().Truncate(time.Microsecond),
@@ -299,7 +299,7 @@ func TestChangeStatus(t *testing.T) {
 		},
 		{
 			desc: "change status group with invalid ID",
-			group: mggroups.Group{
+			group: groups.Group{
 				ID:        testsutil.GenerateUUID(t),
 				Status:    clients.DisabledStatus,
 				UpdatedAt: time.Now().UTC().Truncate(time.Microsecond),
@@ -309,7 +309,7 @@ func TestChangeStatus(t *testing.T) {
 		},
 		{
 			desc: "change status group with empty ID",
-			group: mggroups.Group{
+			group: groups.Group{
 				Status:    clients.DisabledStatus,
 				UpdatedAt: time.Now().UTC().Truncate(time.Microsecond),
 				UpdatedBy: testsutil.GenerateUUID(t),
@@ -345,7 +345,7 @@ func TestRetrieveByID(t *testing.T) {
 	cases := []struct {
 		desc  string
 		id    string
-		group mggroups.Group
+		group groups.Group
 		err   error
 	}{
 		{
@@ -357,13 +357,13 @@ func TestRetrieveByID(t *testing.T) {
 		{
 			desc:  "retrieve group by id with invalid ID",
 			id:    invalidID,
-			group: mggroups.Group{},
+			group: groups.Group{},
 			err:   repoerr.ErrNotFound,
 		},
 		{
 			desc:  "retrieve group by id with empty ID",
 			id:    "",
-			group: mggroups.Group{},
+			group: groups.Group{},
 			err:   repoerr.ErrNotFound,
 		},
 	}
@@ -388,11 +388,11 @@ func TestRetrieveAll(t *testing.T) {
 	repo := postgres.New(database)
 	num := 200
 
-	var items []mggroups.Group
+	var items []groups.Group
 	parentID := ""
 	for i := 0; i < num; i++ {
 		name := namegen.Generate()
-		group := mggroups.Group{
+		group := groups.Group{
 			ID:          testsutil.GenerateUUID(t),
 			Domain:      testsutil.GenerateUUID(t),
 			Parent:      parentID,
@@ -410,20 +410,20 @@ func TestRetrieveAll(t *testing.T) {
 
 	cases := []struct {
 		desc     string
-		page     mggroups.Page
-		response mggroups.Page
+		page     groups.Page
+		response groups.Page
 		err      error
 	}{
 		{
 			desc: "retrieve groups successfully",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  10,
 				},
 			},
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  uint64(num),
 					Offset: 0,
 					Limit:  10,
@@ -434,14 +434,14 @@ func TestRetrieveAll(t *testing.T) {
 		},
 		{
 			desc: "retrieve groups with offset",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 10,
 					Limit:  10,
 				},
 			},
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  uint64(num),
 					Offset: 10,
 					Limit:  10,
@@ -452,14 +452,14 @@ func TestRetrieveAll(t *testing.T) {
 		},
 		{
 			desc: "retrieve groups with limit",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  50,
 				},
 			},
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  uint64(num),
 					Offset: 0,
 					Limit:  50,
@@ -470,14 +470,14 @@ func TestRetrieveAll(t *testing.T) {
 		},
 		{
 			desc: "retrieve groups with offset and limit",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 50,
 					Limit:  50,
 				},
 			},
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  uint64(num),
 					Offset: 50,
 					Limit:  50,
@@ -488,32 +488,32 @@ func TestRetrieveAll(t *testing.T) {
 		},
 		{
 			desc: "retrieve groups with offset out of range",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 1000,
 					Limit:  50,
 				},
 			},
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  uint64(num),
 					Offset: 1000,
 					Limit:  50,
 				},
-				Groups: []mggroups.Group(nil),
+				Groups: []groups.Group(nil),
 			},
 			err: nil,
 		},
 		{
 			desc: "retrieve groups with offset and limit out of range",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 170,
 					Limit:  50,
 				},
 			},
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  uint64(num),
 					Offset: 170,
 					Limit:  50,
@@ -524,14 +524,14 @@ func TestRetrieveAll(t *testing.T) {
 		},
 		{
 			desc: "retrieve groups with limit out of range",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  1000,
 				},
 			},
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  uint64(num),
 					Offset: 0,
 					Limit:  1000,
@@ -542,78 +542,78 @@ func TestRetrieveAll(t *testing.T) {
 		},
 		{
 			desc: "retrieve groups with empty page",
-			page: mggroups.Page{},
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{},
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  uint64(num),
 					Offset: 0,
 					Limit:  0,
 				},
-				Groups: []mggroups.Group(nil),
+				Groups: []groups.Group(nil),
 			},
 			err: nil,
 		},
 		{
 			desc: "retrieve groups with name",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  10,
 					Name:   items[0].Name,
 				},
 			},
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  1,
 					Offset: 0,
 					Limit:  10,
 				},
-				Groups: []mggroups.Group{items[0]},
+				Groups: []groups.Group{items[0]},
 			},
 			err: nil,
 		},
 		{
 			desc: "retrieve groups with domain",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset:   0,
 					Limit:    10,
 					DomainID: items[0].Domain,
 				},
 			},
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  1,
 					Offset: 0,
 					Limit:  10,
 				},
-				Groups: []mggroups.Group{items[0]},
+				Groups: []groups.Group{items[0]},
 			},
 			err: nil,
 		},
 		{
 			desc: "retrieve groups with metadata",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset:   0,
 					Limit:    10,
 					Metadata: items[0].Metadata,
 				},
 			},
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  1,
 					Offset: 0,
 					Limit:  10,
 				},
-				Groups: []mggroups.Group{items[0]},
+				Groups: []groups.Group{items[0]},
 			},
 			err: nil,
 		},
 		{
 			desc: "retrieve groups with invalid metadata",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  10,
 					Metadata: map[string]interface{}{
@@ -621,26 +621,26 @@ func TestRetrieveAll(t *testing.T) {
 					},
 				},
 			},
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  0,
 					Offset: 0,
 					Limit:  10,
 				},
-				Groups: []mggroups.Group(nil),
+				Groups: []groups.Group(nil),
 			},
 			err: errors.ErrMalformedEntity,
 		},
 		{
 			desc: "retrieve parent groups",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  uint64(num),
 				},
 			},
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  uint64(num),
 					Offset: 0,
 					Limit:  uint64(num),
@@ -651,14 +651,14 @@ func TestRetrieveAll(t *testing.T) {
 		},
 		{
 			desc: "retrieve children groups",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  uint64(num),
 				},
 			},
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  uint64(num),
 					Offset: 0,
 					Limit:  uint64(num),
@@ -696,11 +696,11 @@ func TestRetrieveByIDs(t *testing.T) {
 	repo := postgres.New(database)
 	num := 200
 
-	var items []mggroups.Group
+	var items []groups.Group
 	parentID := ""
 	for i := 0; i < num; i++ {
 		name := namegen.Generate()
-		group := mggroups.Group{
+		group := groups.Group{
 			ID:          testsutil.GenerateUUID(t),
 			Domain:      testsutil.GenerateUUID(t),
 			Parent:      parentID,
@@ -718,22 +718,22 @@ func TestRetrieveByIDs(t *testing.T) {
 
 	cases := []struct {
 		desc     string
-		page     mggroups.Page
+		page     groups.Page
 		ids      []string
-		response mggroups.Page
+		response groups.Page
 		err      error
 	}{
 		{
 			desc: "retrieve groups successfully",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  10,
 				},
 			},
 			ids: getIDs(items[0:3]),
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  3,
 					Offset: 0,
 					Limit:  10,
@@ -744,53 +744,53 @@ func TestRetrieveByIDs(t *testing.T) {
 		},
 		{
 			desc: "retrieve groups with empty ids",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  10,
 				},
 			},
 			ids: []string{},
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  10,
 				},
-				Groups: []mggroups.Group(nil),
+				Groups: []groups.Group(nil),
 			},
 			err: nil,
 		},
 		{
 			desc: "retrieve groups with empty ids but with domain",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset:   0,
 					Limit:    10,
 					DomainID: items[0].Domain,
 				},
 			},
 			ids: []string{},
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  1,
 					Offset: 0,
 					Limit:  10,
 				},
-				Groups: []mggroups.Group{items[0]},
+				Groups: []groups.Group{items[0]},
 			},
 			err: nil,
 		},
 		{
 			desc: "retrieve groups with offset",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 10,
 					Limit:  10,
 				},
 			},
 			ids: getIDs(items[0:20]),
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  20,
 					Offset: 10,
 					Limit:  10,
@@ -801,34 +801,34 @@ func TestRetrieveByIDs(t *testing.T) {
 		},
 		{
 			desc: "retrieve groups with offset out of range",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 1000,
 					Limit:  50,
 				},
 			},
 			ids: getIDs(items[0:20]),
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  20,
 					Offset: 1000,
 					Limit:  50,
 				},
-				Groups: []mggroups.Group(nil),
+				Groups: []groups.Group(nil),
 			},
 			err: nil,
 		},
 		{
 			desc: "retrieve groups with offset and limit out of range",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 15,
 					Limit:  10,
 				},
 			},
 			ids: getIDs(items[0:20]),
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  20,
 					Offset: 15,
 					Limit:  10,
@@ -839,15 +839,15 @@ func TestRetrieveByIDs(t *testing.T) {
 		},
 		{
 			desc: "retrieve groups with limit out of range",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  1000,
 				},
 			},
 			ids: getIDs(items[0:20]),
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  20,
 					Offset: 0,
 					Limit:  1000,
@@ -858,68 +858,68 @@ func TestRetrieveByIDs(t *testing.T) {
 		},
 		{
 			desc: "retrieve groups with name",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  10,
 					Name:   items[0].Name,
 				},
 			},
 			ids: getIDs(items[0:20]),
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  1,
 					Offset: 0,
 					Limit:  10,
 				},
-				Groups: []mggroups.Group{items[0]},
+				Groups: []groups.Group{items[0]},
 			},
 			err: nil,
 		},
 		{
 			desc: "retrieve groups with domain",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset:   0,
 					Limit:    10,
 					DomainID: items[0].Domain,
 				},
 			},
 			ids: getIDs(items[0:20]),
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  1,
 					Offset: 0,
 					Limit:  10,
 				},
-				Groups: []mggroups.Group{items[0]},
+				Groups: []groups.Group{items[0]},
 			},
 			err: nil,
 		},
 		{
 			desc: "retrieve groups with metadata",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset:   0,
 					Limit:    10,
 					Metadata: items[0].Metadata,
 				},
 			},
 			ids: getIDs(items[0:20]),
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  1,
 					Offset: 0,
 					Limit:  10,
 				},
-				Groups: []mggroups.Group{items[0]},
+				Groups: []groups.Group{items[0]},
 			},
 			err: nil,
 		},
 		{
 			desc: "retrieve groups with invalid metadata",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  10,
 					Metadata: map[string]interface{}{
@@ -928,27 +928,27 @@ func TestRetrieveByIDs(t *testing.T) {
 				},
 			},
 			ids: getIDs(items[0:20]),
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  0,
 					Offset: 0,
 					Limit:  10,
 				},
-				Groups: []mggroups.Group(nil),
+				Groups: []groups.Group(nil),
 			},
 			err: errors.ErrMalformedEntity,
 		},
 		{
 			desc: "retrieve parent groups",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  uint64(num),
 				},
 			},
 			ids: getIDs(items[0:20]),
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  20,
 					Offset: 0,
 					Limit:  uint64(num),
@@ -959,15 +959,15 @@ func TestRetrieveByIDs(t *testing.T) {
 		},
 		{
 			desc: "retrieve children groups",
-			page: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  uint64(num),
 				},
 			},
 			ids: getIDs(items[0:20]),
-			response: mggroups.Page{
-				PageMeta: mggroups.PageMeta{
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
 					Total:  20,
 					Offset: 0,
 					Limit:  uint64(num),
@@ -1049,11 +1049,11 @@ func TestAssignParentGroup(t *testing.T) {
 
 	num := 10
 
-	var items []mggroups.Group
+	var items []groups.Group
 	parentID := ""
 	for i := 0; i < num; i++ {
 		name := namegen.Generate()
-		group := mggroups.Group{
+		group := groups.Group{
 			ID:          testsutil.GenerateUUID(t),
 			Domain:      testsutil.GenerateUUID(t),
 			Parent:      parentID,
@@ -1127,11 +1127,11 @@ func TestUnassignParentGroup(t *testing.T) {
 
 	num := 10
 
-	var items []mggroups.Group
+	var items []groups.Group
 	parentID := ""
 	for i := 0; i < num; i++ {
 		name := namegen.Generate()
-		group := mggroups.Group{
+		group := groups.Group{
 			ID:          testsutil.GenerateUUID(t),
 			Domain:      testsutil.GenerateUUID(t),
 			Parent:      parentID,
@@ -1195,7 +1195,7 @@ func TestUnassignParentGroup(t *testing.T) {
 	}
 }
 
-func getIDs(groups []mggroups.Group) []string {
+func getIDs(groups []groups.Group) []string {
 	var ids []string
 	for _, group := range groups {
 		ids = append(ids, group.ID)
