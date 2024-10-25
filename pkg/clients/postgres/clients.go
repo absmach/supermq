@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/absmach/magistrala/groups"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
-	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/postgres"
 	"github.com/jackc/pgtype"
 )
