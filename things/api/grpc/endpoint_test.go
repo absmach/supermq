@@ -16,7 +16,7 @@ import (
 	"github.com/absmach/magistrala/pkg/policies"
 	"github.com/absmach/magistrala/things"
 	grpcapi "github.com/absmach/magistrala/things/api/grpc"
-	"github.com/absmach/magistrala/things/mocks"
+	"github.com/absmach/magistrala/things/private/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc"

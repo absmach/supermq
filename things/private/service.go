@@ -10,6 +10,7 @@ import (
 	"github.com/absmach/magistrala/things"
 )
 
+//go:generate mockery --name Service  --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
 type Service interface {
 	// Identify returns thing ID for given thing key.
 	Identify(ctx context.Context, key string) (string, error)
