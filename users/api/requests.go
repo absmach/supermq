@@ -233,8 +233,8 @@ func (req changeUserStatusReq) validate() error {
 }
 
 type loginUserReq struct {
-	Email    string `json:"email,omitempty"`
-	Secret   string `json:"secret,omitempty"`
+	Email  string `json:"email,omitempty"`
+	Secret string `json:"secret,omitempty"`
 }
 
 func (req loginUserReq) validate() error {

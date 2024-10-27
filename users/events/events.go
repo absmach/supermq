@@ -442,7 +442,7 @@ func (grte generateResetTokenEvent) Encode() (map[string]interface{}, error) {
 }
 
 type issueTokenEvent struct {
-	email    string
+	email string
 }
 
 func (ite issueTokenEvent) Encode() (map[string]interface{}, error) {

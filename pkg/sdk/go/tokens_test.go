@@ -100,12 +100,12 @@ func TestIssueToken(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("IssueToken", mock.Anything, tc.login.Identity, tc.login.Secret).Return(tc.svcRes, tc.svcErr)
+			svcCall := svc.On("IssueToken", mock.Anything, tc.login.Email, tc.login.Secret).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.CreateToken(tc.login)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "IssueToken", mock.Anything, tc.login.Identity, tc.login.Secret)
+				ok := svcCall.Parent.AssertCalled(t, "IssueToken", mock.Anything, tc.login.Email, tc.login.Secret)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()

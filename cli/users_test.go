@@ -310,17 +310,6 @@ func TestIssueTokenCmd(t *testing.T) {
 			token:   token,
 		},
 		{
-			desc: "issue token successfully with domain id",
-			args: []string{
-				user.Email,
-				user.Credentials.Secret,
-				domainID,
-			},
-			sdkerr:  nil,
-			logType: entityLog,
-			token:   token,
-		},
-		{
 			desc: "issue token with failed authentication",
 			args: []string{
 				user.Email,
@@ -334,7 +323,7 @@ func TestIssueTokenCmd(t *testing.T) {
 		{
 			desc: "issue token with invalid args",
 			args: []string{
-				user.Credentials.Identity,
+				user.Email,
 				user.Credentials.Secret,
 				extraArg,
 			},
@@ -345,8 +334,8 @@ func TestIssueTokenCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			lg := mgsdk.Login{
-				Identity: tc.args[0],
-				Secret:   tc.args[1],
+				Email:  tc.args[0],
+				Secret: tc.args[1],
 			}
 			sdkCall := sdkMock.On("CreateToken", lg).Return(tc.token, tc.sdkerr)
 

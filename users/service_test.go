@@ -1494,13 +1494,13 @@ func TestIssueToken(t *testing.T) {
 	rUser3.Credentials.Secret, _ = phasher.Hash("wrongsecret")
 
 	cases := []struct {
-		desc                       string
-		user                       users.User
-		retrieveByIdentityResponse users.User
-		issueResponse              *magistrala.Token
-		retrieveByIdentityErr      error
-		issueErr                   error
-		err                        error
+		desc                    string
+		user                    users.User
+		retrieveByEmailResponse users.User
+		issueResponse           *magistrala.Token
+		retrieveByEmailErr      error
+		issueErr                error
+		err                     error
 	}{
 		{
 			desc:                    "issue token for an existing user",
@@ -1510,11 +1510,11 @@ func TestIssueToken(t *testing.T) {
 			err:                     nil,
 		},
 		{
-			desc:                       "issue token for non-empty domain id",
-			user:                       user,
-			retrieveByIdentityResponse: rUser,
-			issueResponse:              &magistrala.Token{AccessToken: validToken, RefreshToken: &validToken, AccessType: "3"},
-			err:                        nil,
+			desc:                    "issue token for non-empty domain id",
+			user:                    user,
+			retrieveByEmailResponse: rUser,
+			issueResponse:           &magistrala.Token{AccessToken: validToken, RefreshToken: &validToken, AccessType: "3"},
+			err:                     nil,
 		},
 		{
 			desc:                    "issue token for a non-existing user",
@@ -1549,15 +1549,15 @@ func TestIssueToken(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := cRepo.On("RetrieveByIdentity", context.Background(), tc.user.Identity).Return(tc.retrieveByIdentityResponse, tc.retrieveByIdentityErr)
+			repoCall := cRepo.On("RetrieveByEmail", context.Background(), tc.user.Email).Return(tc.retrieveByEmailResponse, tc.retrieveByEmailErr)
 			authCall := auth.On("Issue", context.Background(), &magistrala.IssueReq{UserId: tc.user.ID, Type: uint32(mgauth.AccessKey)}).Return(tc.issueResponse, tc.issueErr)
-			token, err := svc.IssueToken(context.Background(), tc.user.Identity, tc.user.Credentials.Secret)
+			token, err := svc.IssueToken(context.Background(), tc.user.Email, tc.user.Credentials.Secret)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 			if err == nil {
 				assert.NotEmpty(t, token.GetAccessToken(), fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.GetAccessToken()))
 				assert.NotEmpty(t, token.GetRefreshToken(), fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.GetRefreshToken()))
-				ok := repoCall.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.user.Identity)
-				assert.True(t, ok, fmt.Sprintf("RetrieveByIdentity was not called on %s", tc.desc))
+				ok := repoCall.Parent.AssertCalled(t, "RetrieveByEmail", context.Background(), tc.user.Email)
+				assert.True(t, ok, fmt.Sprintf("RetrieveByEmail was not called on %s", tc.desc))
 				ok = authCall.Parent.AssertCalled(t, "Issue", context.Background(), &magistrala.IssueReq{UserId: tc.user.ID, Type: uint32(mgauth.AccessKey)})
 				assert.True(t, ok, fmt.Sprintf("Issue was not called on %s", tc.desc))
 			}
@@ -1606,7 +1606,7 @@ func TestRefreshToken(t *testing.T) {
 		{
 			desc:     "refresh token with refresh token for a disable user",
 			session:  authn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
-			repoResp: mgclients.Client{Status: mgclients.DisabledStatus},
+			repoResp: users.User{Status: users.DisabledStatus},
 			err:      svcerr.ErrAuthentication,
 		},
 		{
@@ -1684,12 +1684,12 @@ func TestGenerateResetToken(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := cRepo.On("RetrieveByIdentity", context.Background(), tc.email).Return(tc.retrieveByIdentityResponse, tc.retrieveByIdentityErr)
+			repoCall := cRepo.On("RetrieveByEmail", context.Background(), tc.email).Return(tc.retrieveByEmailResponse, tc.retrieveByEmailErr)
 			authCall := auth.On("Issue", context.Background(), mock.Anything).Return(tc.issueResponse, tc.issueErr)
-			svcCall := e.On("SendPasswordReset", []string{tc.email}, tc.host, client.Name, validToken).Return(tc.err)
+			svcCall := e.On("SendPasswordReset", []string{tc.email}, tc.host, user.Credentials.Username, validToken).Return(tc.err)
 			err := svc.GenerateResetToken(context.Background(), tc.email, tc.host)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-			repoCall.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.email)
+			repoCall.Parent.AssertCalled(t, "RetrieveByEmail", context.Background(), tc.email)
 			repoCall.Unset()
 			authCall.Unset()
 			svcCall.Unset()
@@ -1789,7 +1789,7 @@ func TestViewProfile(t *testing.T) {
 
 	user := users.User{
 		ID:    "userID",
-		Email: "existingIdentity",
+		Email: "existingEmail",
 		Credentials: users.Credentials{
 			Secret: "Strongsecret",
 		},
@@ -1898,12 +1898,12 @@ func TestOAuthCallback(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := cRepo.On("RetrieveByIdentity", context.Background(), tc.client.Credentials.Identity).Return(tc.retrieveByIdentityResponse, tc.retrieveByIdentityErr)
+			repoCall := cRepo.On("RetrieveByEmail", context.Background(), tc.user.Email).Return(tc.retrieveByEmailResponse, tc.retrieveByEmailErr)
 			repoCall1 := cRepo.On("Save", context.Background(), mock.Anything).Return(tc.saveResponse, tc.saveErr)
 			policyCall := policies.On("AddPolicies", context.Background(), mock.Anything).Return(tc.addPoliciesErr)
-			_, err := svc.OAuthCallback(context.Background(), tc.client)
+			_, err := svc.OAuthCallback(context.Background(), tc.user)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-			repoCall.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.user.Credentials.Identity)
+			repoCall.Parent.AssertCalled(t, "RetrieveByEmail", context.Background(), tc.user.Email)
 			repoCall.Unset()
 			repoCall1.Unset()
 			policyCall.Unset()

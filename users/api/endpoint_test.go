@@ -2514,7 +2514,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			}
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
 			svcCall := svc.On("ListMembers", mock.Anything, mgauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID}, mock.Anything, mock.Anything, mock.Anything).Return(
-				mgclients.MembersPage{
+				users.MembersPage{
 					Page:    tc.listUsersResponse.Page,
 					Members: tc.listUsersResponse.Users,
 				},
@@ -2852,7 +2852,7 @@ func TestListUsersByChannelID(t *testing.T) {
 
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
 			svcCall := svc.On("ListMembers", mock.Anything, mgauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID}, mock.Anything, mock.Anything, mock.Anything).Return(
-				mgclients.MembersPage{
+				users.MembersPage{
 					Page:    tc.listUsersResponse.Page,
 					Members: tc.listUsersResponse.Users,
 				},
@@ -3196,7 +3196,7 @@ func TestListUsersByDomainID(t *testing.T) {
 
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
 			svcCall := svc.On("ListMembers", mock.Anything, mgauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID}, mock.Anything, mock.Anything, mock.Anything).Return(
-				mgclients.MembersPage{
+				users.MembersPage{
 					Page:    tc.listUsersResponse.Page,
 					Members: tc.listUsersResponse.Users,
 				},
@@ -3510,7 +3510,7 @@ func TestListUsersByThingID(t *testing.T) {
 
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
 			svcCall := svc.On("ListMembers", mock.Anything, mgauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID}, mock.Anything, mock.Anything, mock.Anything).Return(
-				mgclients.MembersPage{
+				users.MembersPage{
 					Page:    tc.listUsersResponse.Page,
 					Members: tc.listUsersResponse.Users,
 				},
