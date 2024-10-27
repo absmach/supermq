@@ -1494,70 +1494,70 @@ func TestIssueToken(t *testing.T) {
 	rUser3.Credentials.Secret, _ = phasher.Hash("wrongsecret")
 
 	cases := []struct {
-		desc                    string
-		user                    users.User
-		retrieveByEmailResponse users.User
-		issueResponse           *magistrala.Token
-		retrieveByEmailErr      error
-		issueErr                error
-		err                     error
+		desc                       string
+		user                       users.User
+		retrieveByUsernameResponse users.User
+		issueResponse              *magistrala.Token
+		retrieveByUsernameErr      error
+		issueErr                   error
+		err                        error
 	}{
 		{
-			desc:                    "issue token for an existing user",
-			user:                    user,
-			retrieveByEmailResponse: rUser,
-			issueResponse:           &magistrala.Token{AccessToken: validToken, RefreshToken: &validToken, AccessType: "3"},
-			err:                     nil,
+			desc:                       "issue token for an existing user",
+			user:                       user,
+			retrieveByUsernameResponse: rUser,
+			issueResponse:              &magistrala.Token{AccessToken: validToken, RefreshToken: &validToken, AccessType: "3"},
+			err:                        nil,
 		},
 		{
-			desc:                    "issue token for non-empty domain id",
-			user:                    user,
-			retrieveByEmailResponse: rUser,
-			issueResponse:           &magistrala.Token{AccessToken: validToken, RefreshToken: &validToken, AccessType: "3"},
-			err:                     nil,
+			desc:                       "issue token for non-empty domain id",
+			user:                       user,
+			retrieveByUsernameResponse: rUser,
+			issueResponse:              &magistrala.Token{AccessToken: validToken, RefreshToken: &validToken, AccessType: "3"},
+			err:                        nil,
 		},
 		{
-			desc:                    "issue token for a non-existing user",
-			user:                    user,
-			retrieveByEmailResponse: users.User{},
-			retrieveByEmailErr:      repoerr.ErrNotFound,
-			err:                     repoerr.ErrNotFound,
+			desc:                       "issue token for a non-existing user",
+			user:                       user,
+			retrieveByUsernameResponse: users.User{},
+			retrieveByUsernameErr:      repoerr.ErrNotFound,
+			err:                        repoerr.ErrNotFound,
 		},
 		{
-			desc:                    "issue token for a user with wrong secret",
-			user:                    user,
-			retrieveByEmailResponse: rUser3,
-			err:                     svcerr.ErrLogin,
+			desc:                       "issue token for a user with wrong secret",
+			user:                       user,
+			retrieveByUsernameResponse: rUser3,
+			err:                        svcerr.ErrLogin,
 		},
 		{
-			desc:                    "issue token with empty domain id",
-			user:                    user,
-			retrieveByEmailResponse: rUser,
-			issueResponse:           &magistrala.Token{},
-			issueErr:                svcerr.ErrAuthentication,
-			err:                     svcerr.ErrAuthentication,
+			desc:                       "issue token with empty domain id",
+			user:                       user,
+			retrieveByUsernameResponse: rUser,
+			issueResponse:              &magistrala.Token{},
+			issueErr:                   svcerr.ErrAuthentication,
+			err:                        svcerr.ErrAuthentication,
 		},
 		{
-			desc:                    "issue token with grpc error",
-			user:                    user,
-			retrieveByEmailResponse: rUser,
-			issueResponse:           &magistrala.Token{},
-			issueErr:                svcerr.ErrAuthentication,
-			err:                     svcerr.ErrAuthentication,
+			desc:                       "issue token with grpc error",
+			user:                       user,
+			retrieveByUsernameResponse: rUser,
+			issueResponse:              &magistrala.Token{},
+			issueErr:                   svcerr.ErrAuthentication,
+			err:                        svcerr.ErrAuthentication,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := cRepo.On("RetrieveByEmail", context.Background(), tc.user.Email).Return(tc.retrieveByEmailResponse, tc.retrieveByEmailErr)
+			repoCall := cRepo.On("RetrieveByUsername", context.Background(), tc.user.Credentials.Username).Return(tc.retrieveByUsernameResponse, tc.retrieveByUsernameErr)
 			authCall := auth.On("Issue", context.Background(), &magistrala.IssueReq{UserId: tc.user.ID, Type: uint32(mgauth.AccessKey)}).Return(tc.issueResponse, tc.issueErr)
-			token, err := svc.IssueToken(context.Background(), tc.user.Email, tc.user.Credentials.Secret)
+			token, err := svc.IssueToken(context.Background(), tc.user.Credentials.Username, tc.user.Credentials.Secret)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 			if err == nil {
 				assert.NotEmpty(t, token.GetAccessToken(), fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.GetAccessToken()))
 				assert.NotEmpty(t, token.GetRefreshToken(), fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.GetRefreshToken()))
-				ok := repoCall.Parent.AssertCalled(t, "RetrieveByEmail", context.Background(), tc.user.Email)
-				assert.True(t, ok, fmt.Sprintf("RetrieveByEmail was not called on %s", tc.desc))
+				ok := repoCall.Parent.AssertCalled(t, "RetrieveByUsername", context.Background(), tc.user.Credentials.Username)
+				assert.True(t, ok, fmt.Sprintf("RetrieveByUsername was not called on %s", tc.desc))
 				ok = authCall.Parent.AssertCalled(t, "Issue", context.Background(), &magistrala.IssueReq{UserId: tc.user.ID, Type: uint32(mgauth.AccessKey)})
 				assert.True(t, ok, fmt.Sprintf("Issue was not called on %s", tc.desc))
 			}

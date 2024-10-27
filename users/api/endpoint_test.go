@@ -1776,7 +1776,7 @@ func TestIssueToken(t *testing.T) {
 	us, svc, _, _ := newUsersServer()
 	defer us.Close()
 
-	validEmail := "valid"
+	validUsername := "valid"
 
 	cases := []struct {
 		desc        string
@@ -1786,50 +1786,50 @@ func TestIssueToken(t *testing.T) {
 		err         error
 	}{
 		{
-			desc:        "issue token with valid email and secret",
-			data:        fmt.Sprintf(`{"email": "%s", "secret": "%s", "domainID": "%s"}`, validEmail, secret, validID),
+			desc:        "issue token with valid username and secret",
+			data:        fmt.Sprintf(`{"username": "%s", "secret": "%s", "domainID": "%s"}`, validUsername, secret, validID),
 			contentType: contentType,
 			status:      http.StatusCreated,
 			err:         nil,
 		},
 		{
-			desc:        "issue token with empty email",
-			data:        fmt.Sprintf(`{"email": "%s", "secret": "%s", "domainID": "%s"}`, "", secret, validID),
+			desc:        "issue token with empty username",
+			data:        fmt.Sprintf(`{"username": "%s", "secret": "%s", "domainID": "%s"}`, "", secret, validID),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
 		},
 		{
 			desc:        "issue token with empty secret",
-			data:        fmt.Sprintf(`{"email": "%s", "secret": "%s", "domainID": "%s"}`, validEmail, "", validID),
+			data:        fmt.Sprintf(`{"username": "%s", "secret": "%s", "domainID": "%s"}`, validUsername, "", validID),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
 		},
 		{
 			desc:        "issue token with empty domain",
-			data:        fmt.Sprintf(`{"email": "%s", "secret": "%s", "domainID": "%s"}`, validEmail, secret, ""),
+			data:        fmt.Sprintf(`{"username": "%s", "secret": "%s", "domainID": "%s"}`, validUsername, secret, ""),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
 		},
 		{
 			desc:        "issue token with invalid email",
-			data:        fmt.Sprintf(`{"email": "%s", "secret": "%s", "domainID": "%s"}`, "invalid", secret, validID),
+			data:        fmt.Sprintf(`{"username": "%s", "secret": "%s", "domainID": "%s"}`, "invalid", secret, validID),
 			contentType: contentType,
 			status:      http.StatusUnauthorized,
 			err:         svcerr.ErrAuthentication,
 		},
 		{
 			desc:        "issues token with malformed data",
-			data:        fmt.Sprintf(`{"email": %s, "secret": %s, "domainID": %s}`, validEmail, secret, validID),
+			data:        fmt.Sprintf(`{"username": %s, "secret": %s, "domainID": %s}`, validUsername, secret, validID),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
 		},
 		{
 			desc:        "issue token with invalid contentype",
-			data:        fmt.Sprintf(`{"email": "%s", "secret": "%s", "domainID": "%s"}`, "invalid", secret, validID),
+			data:        fmt.Sprintf(`{"username": "%s", "secret": "%s", "domainID": "%s"}`, "invalid", secret, validID),
 			contentType: "application/xml",
 			status:      http.StatusUnsupportedMediaType,
 			err:         apiutil.ErrValidation,

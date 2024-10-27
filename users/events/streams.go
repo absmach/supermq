@@ -290,14 +290,14 @@ func (es *eventStore) GenerateResetToken(ctx context.Context, email, host string
 	return es.Publish(ctx, event)
 }
 
-func (es *eventStore) IssueToken(ctx context.Context, email, secret string) (*magistrala.Token, error) {
-	token, err := es.svc.IssueToken(ctx, email, secret)
+func (es *eventStore) IssueToken(ctx context.Context, username, secret string) (*magistrala.Token, error) {
+	token, err := es.svc.IssueToken(ctx, username, secret)
 	if err != nil {
 		return token, err
 	}
 
 	event := issueTokenEvent{
-		email: email,
+		username: username,
 	}
 
 	if err := es.Publish(ctx, event); err != nil {

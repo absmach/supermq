@@ -46,9 +46,9 @@ func (lm *loggingMiddleware) Register(ctx context.Context, session authn.Session
 	return lm.svc.Register(ctx, session, user, selfRegister)
 }
 
-// IssueToken logs the issue_token request. It logs the user email type and the time it took to complete the request.
+// IssueToken logs the issue_token request. It logs the username type and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) IssueToken(ctx context.Context, email, secret string) (t *magistrala.Token, err error) {
+func (lm *loggingMiddleware) IssueToken(ctx context.Context, username, secret string) (t *magistrala.Token, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -63,7 +63,7 @@ func (lm *loggingMiddleware) IssueToken(ctx context.Context, email, secret strin
 		}
 		lm.logger.Info("Issue token completed successfully", args...)
 	}(time.Now())
-	return lm.svc.IssueToken(ctx, email, secret)
+	return lm.svc.IssueToken(ctx, username, secret)
 }
 
 // RefreshToken logs the refresh_token request. It logs the refreshtoken, token type and the time it took to complete the request.

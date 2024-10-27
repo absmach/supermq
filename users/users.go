@@ -68,6 +68,9 @@ type Repository interface {
 	// RetrieveByEmail retrieves user by its unique credentials.
 	RetrieveByEmail(ctx context.Context, email string) (User, error)
 
+	// RetrieveByUsername retrieves user by its unique credentials.
+	RetrieveByUsername(ctx context.Context, username string) (User, error)
+
 	// Update updates the user name and metadata.
 	Update(ctx context.Context, user User) (User, error)
 
@@ -200,7 +203,7 @@ type Service interface {
 	Identify(ctx context.Context, session authn.Session) (string, error)
 
 	// IssueToken issues a new access and refresh token.
-	IssueToken(ctx context.Context, email, secret string) (*magistrala.Token, error)
+	IssueToken(ctx context.Context, username, secret string) (*magistrala.Token, error)
 
 	// RefreshToken refreshes expired access tokens.
 	// After an access token expires, the refresh token is used to get

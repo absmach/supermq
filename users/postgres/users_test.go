@@ -129,7 +129,7 @@ func TestUsersSave(t *testing.T) {
 			err: errors.ErrMalformedEntity,
 		},
 		{
-			desc: "add user with a missing user name",
+			desc: "add user with a missing username",
 			client: users.User{
 				ID:    testsutil.GenerateUUID(t),
 				Email: namesgen.Generate() + "@example.com",

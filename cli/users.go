@@ -105,8 +105,8 @@ var cmdUsers = []cobra.Command{
 			}
 
 			lg := mgxsdk.Login{
-				Email:  args[0],
-				Secret: args[1],
+				Username: args[0],
+				Secret:   args[1],
 			}
 
 			token, err := sdk.CreateToken(lg)

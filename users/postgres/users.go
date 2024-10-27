@@ -444,6 +444,33 @@ func (repo *userRepo) RetrieveByEmail(ctx context.Context, email string) (users.
 	return users.User{}, repoerr.ErrNotFound
 }
 
+func (repo *userRepo) RetrieveByUsername(ctx context.Context, username string) (users.User, error) {
+	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, username
+		FROM users WHERE username = :username AND status = :status`
+
+	dbc := DBUser{
+		Username: sql.NullString{String: username, Valid: username != ""},
+		Status:   users.EnabledStatus,
+	}
+
+	row, err := repo.Repository.DB.NamedQueryContext(ctx, q, dbc)
+	if err != nil {
+		return users.User{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+	}
+	defer row.Close()
+
+	dbc = DBUser{}
+	if row.Next() {
+		if err := row.StructScan(&dbc); err != nil {
+			return users.User{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+
+		return ToUser(dbc)
+	}
+
+	return users.User{}, repoerr.ErrNotFound
+}
+
 type DBUser struct {
 	ID             string           `db:"id"`
 	Domain         string           `db:"domain_id"`

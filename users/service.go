@@ -93,8 +93,8 @@ func (svc service) Register(ctx context.Context, session authn.Session, u User, 
 	return user, nil
 }
 
-func (svc service) IssueToken(ctx context.Context, email, secret string) (*magistrala.Token, error) {
-	dbUser, err := svc.users.RetrieveByEmail(ctx, email)
+func (svc service) IssueToken(ctx context.Context, username, secret string) (*magistrala.Token, error) {
+	dbUser, err := svc.users.RetrieveByUsername(ctx, username)
 	if err != nil {
 		return &magistrala.Token{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
@@ -328,7 +328,7 @@ func (svc service) UpdateSecret(ctx context.Context, session authn.Session, oldS
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
-	if _, err := svc.IssueToken(ctx, dbUser.Email, oldSecret); err != nil {
+	if _, err := svc.IssueToken(ctx, dbUser.Credentials.Username, oldSecret); err != nil {
 		return User{}, err
 	}
 	newSecret, err = svc.hasher.Hash(newSecret)

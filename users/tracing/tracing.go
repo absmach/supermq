@@ -34,11 +34,11 @@ func (tm *tracingMiddleware) Register(ctx context.Context, session authn.Session
 }
 
 // IssueToken traces the "IssueToken" operation of the wrapped users.Service.
-func (tm *tracingMiddleware) IssueToken(ctx context.Context, email, secret string) (*magistrala.Token, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_issue_token", trace.WithAttributes(attribute.String("email", email)))
+func (tm *tracingMiddleware) IssueToken(ctx context.Context, username, secret string) (*magistrala.Token, error) {
+	ctx, span := tm.tracer.Start(ctx, "svc_issue_token", trace.WithAttributes(attribute.String("username", username)))
 	defer span.End()
 
-	return tm.svc.IssueToken(ctx, email, secret)
+	return tm.svc.IssueToken(ctx, username, secret)
 }
 
 // RefreshToken traces the "RefreshToken" operation of the wrapped users.Service.

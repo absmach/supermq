@@ -442,13 +442,13 @@ func (grte generateResetTokenEvent) Encode() (map[string]interface{}, error) {
 }
 
 type issueTokenEvent struct {
-	email string
+	username string
 }
 
 func (ite issueTokenEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"operation": issueToken,
-		"email":     ite.email,
+		"username":  ite.username,
 	}, nil
 }
 
