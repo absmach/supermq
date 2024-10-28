@@ -12,12 +12,13 @@ import "common/v1/common.proto";
 // for magistrala services.
 service ThingsService {
   // Authorize checks if the thing is authorized to perform
-  rpc Authorize(AuthzReq) returns (AuthzRes) {}
+  rpc Authenticate(AuthzReq) returns (AuthzRes) {}
   rpc RetrieveEntity(common.v1.RetrieveEntityReq) returns (common.v1.RetrieveEntityRes) {}
   rpc RetrieveEntities(common.v1.RetrieveEntitiesReq) returns (common.v1.RetrieveEntitiesRes) {}
   rpc AddConnections(common.v1.AddConnectionsReq)returns(common.v1.AddConnectionsRes) {}
   rpc RemoveConnections(common.v1.RemoveConnectionsReq)returns(common.v1.RemoveConnectionsRes) {}
   rpc RemoveChannelConnections(RemoveChannelConnectionsReq)returns(RemoveChannelConnectionsRes) {}
+  rpc UnsetParentGroupFromThings(UnsetParentGroupFromThingsReq)returns(UnsetParentGroupFromThingsRes){}
 }
 
 
@@ -38,3 +39,9 @@ message RemoveChannelConnectionsReq {
 }
 
 message RemoveChannelConnectionsRes {}
+
+message UnsetParentGroupFromThingsReq {
+  string parent_group_id = 1;
+}
+
+message UnsetParentGroupFromThingsRes {}

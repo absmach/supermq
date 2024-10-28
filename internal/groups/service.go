@@ -9,6 +9,9 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala"
+	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
+
+	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
@@ -20,21 +23,21 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var (
-	errMemberKind = errors.New("invalid member kind")
-	errGroupIDs   = errors.New("invalid group ids")
-)
+var errGroupIDs = errors.New("invalid group ids")
 
 type service struct {
 	repo       groups.Repository
 	policy     policies.Service
 	idProvider magistrala.IDProvider
+	channels   grpcChannelsV1.ChannelsServiceClient
+	things     grpcThingsV1.ThingsServiceClient
+
 	roles.ProvisionManageService
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(repo groups.Repository, policy policies.Service, idp magistrala.IDProvider, sidProvider magistrala.IDProvider) (groups.Service, error) {
-	rpms, err := roles.NewProvisionManageService(policies.GroupType, repo, policy, sidProvider, groups.AvailableActions(), groups.BuiltInRoles())
+func NewService(repo groups.Repository, policy policies.Service, idp magistrala.IDProvider, channels grpcChannelsV1.ChannelsServiceClient, things grpcThingsV1.ThingsServiceClient, sidProvider magistrala.IDProvider) (groups.Service, error) {
+	rpms, err := roles.NewProvisionManageService(policies.GroupType, repo, policy, sidProvider, AvailableActions(), BuiltInRoles())
 	if err != nil {
 		return service{}, err
 	}
@@ -42,6 +45,8 @@ func NewService(repo groups.Repository, policy policies.Service, idp magistrala.
 		repo:                   repo,
 		policy:                 policy,
 		idProvider:             idp,
+		channels:               channels,
+		things:                 things,
 		ProvisionManageService: rpms,
 	}, nil
 }
@@ -93,8 +98,8 @@ func (svc service) CreateGroup(ctx context.Context, session mgauthn.Session, g g
 		})
 	}
 	newBuiltInRoleMembers := map[roles.BuiltInRoleName][]roles.Member{
-		groups.BuiltInRoleAdmin:      {roles.Member(session.UserID)},
-		groups.BuiltInRoleMembership: {},
+		BuiltInRoleAdmin:      {roles.Member(session.UserID)},
+		BuiltInRoleMembership: {},
 	}
 	if _, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, []string{saved.ID}, oprs, newBuiltInRoleMembers); err != nil {
 		return groups.Group{}, errors.Wrap(svcerr.ErrAddPolicies, err)
@@ -450,186 +455,15 @@ func (svc service) ListChildrenGroups(ctx context.Context, session mgauthn.Sessi
 	return gp, nil
 }
 
-// func (svc service) AddChannels(ctx context.Context, session mgauthn.Session, id string, channelIDs []string) error {
-// 	userInfo, err := svc.identify(ctx, token)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	if err := svc.authorize(ctx, groups.OpAddChannels, mgauthz.PolicyReq{
-// 		Domain:      session.DomainID,
-// 		SubjectType: policies.UserType,
-// 		Subject:     session.DomainUserID,
-// 		Object:      id,
-// 		ObjectType:  policies.GroupType,
-// 	}); err != nil {
-// 		return err
-// 	}
-
-// 	policies := magistrala.AddPoliciesReq{}
-
-// 	for _, channelID := range channelIDs {
-// 		policies.AddPoliciesReq = append(policies.AddPoliciesReq, &magistrala.AddPolicyReq{
-// 			Domain:      session.DomainID,
-// 			SubjectType: policies.GroupType,
-// 			SubjectKind: policies.ChannelsKind,
-// 			Subject:     id,
-// 			Relation:    policies.ParentGroupRelation,
-// 			ObjectType:  policies.ThingType,
-// 			Object:      channelID,
-// 		})
-// 	}
-
-// 	if _, err := svc.policy.AddPolicies(ctx, &policies); err != nil {
-// 		return errors.Wrap(svcerr.ErrAddPolicies, err)
-// 	}
-
-// 	return nil
-// }
-
-// func (svc service) RemoveChannels(ctx context.Context, session mgauthn.Session, id string, channelIDs []string) error {
-// 	userInfo, err := svc.identify(ctx, token)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	if err := svc.authorize(ctx, groups.OpAddChannels, mgauthz.PolicyReq{
-// 		Domain:      session.DomainID,
-// 		SubjectType: policies.UserType,
-// 		Subject:     session.DomainUserID,
-// 		Object:      id,
-// 		ObjectType:  policies.GroupType,
-// 	}); err != nil {
-// 		return err
-// 	}
-// 	policies := magistrala.DeletePoliciesReq{}
-
-// 	for _, channelID := range channelIDs {
-// 		policies.DeletePoliciesReq = append(policies.DeletePoliciesReq, &magistrala.DeletePolicyReq{
-// 			Domain:      session.DomainID,
-// 			SubjectType: policies.GroupType,
-// 			Subject:     id,
-// 			Relation:    policies.ParentGroupRelation,
-// 			ObjectType:  policies.ChannelType,
-// 			Object:      channelID,
-// 		})
-// 	}
-// 	if _, err := svc.policy.DeletePolicies(ctx, &policies); err != nil {
-// 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
-// 	}
-
-// 	return nil
-// }
-
-// func (svc service) ListChannels(ctx context.Context, session mgauthn.Session, id, gm groups.Page) (groups.Page, error) {
-// 	return groups.Page{}, nil
-// }
-
-// func (svc service) AddThings(ctx context.Context, session mgauthn.Session, id string, thingIDs []string) error {
-// 	userInfo, err := svc.identify(ctx, token)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	if err := svc.authorize(ctx, groups.OpAddChannels, mgauthz.PolicyReq{
-// 		Domain:      session.DomainID,
-// 		SubjectType: policies.UserType,
-// 		Subject:     session.DomainUserID,
-// 		Object:      id,
-// 		ObjectType:  policies.GroupType,
-// 	}); err != nil {
-// 		return err
-// 	}
-// 	policies := magistrala.AddPoliciesReq{}
-
-// 	for _, thingID := range thingIDs {
-// 		policies.AddPoliciesReq = append(policies.AddPoliciesReq, &magistrala.AddPolicyReq{
-// 			Domain:      session.DomainID,
-// 			SubjectType: policies.GroupType,
-// 			SubjectKind: policies.ChannelsKind,
-// 			Subject:     id,
-// 			Relation:    policies.ParentGroupRelation,
-// 			ObjectType:  policies.ThingType,
-// 			Object:      thingID,
-// 		})
-// 	}
-
-// 	if _, err := svc.policy.AddPolicies(ctx, &policies); err != nil {
-// 		return errors.Wrap(svcerr.ErrAddPolicies, err)
-// 	}
-
-// 	return nil
-// }
-
-// func (svc service) RemoveThings(ctx context.Context, session mgauthn.Session, id string, thingIDs []string) error {
-// 	userInfo, err := svc.identify(ctx, token)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	if err := svc.authorize(ctx, groups.OpRemoveAllChannels, mgauthz.PolicyReq{
-// 		Domain:      session.DomainID,
-// 		SubjectType: policies.UserType,
-// 		Subject:     session.DomainUserID,
-// 		Object:      id,
-// 		ObjectType:  policies.GroupType,
-// 	}); err != nil {
-// 		return err
-// 	}
-// 	policies := magistrala.DeletePoliciesReq{}
-
-// 	for _, thingID := range thingIDs {
-// 		policies.DeletePoliciesReq = append(policies.DeletePoliciesReq, &magistrala.DeletePolicyReq{
-// 			Domain:      session.DomainID,
-// 			SubjectType: policies.GroupType,
-// 			Subject:     id,
-// 			Relation:    policies.ParentGroupRelation,
-// 			ObjectType:  policies.ThingType,
-// 			Object:      thingID,
-// 		})
-// 	}
-// 	if _, err := svc.policy.DeletePolicies(ctx, &policies); err != nil {
-// 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
-// 	}
-
-// 	return nil
-// }
-
-// func (svc service) RemoveAllThings(ctx context.Context, session mgauthn.Session, id string) error {
-// 	userInfo, err := svc.identify(ctx, token)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	if err := svc.authorize(ctx, groups.OpRemoveAllThings, mgauthz.PolicyReq{
-// 		Domain:      session.DomainID,
-// 		SubjectType: policies.UserType,
-// 		Subject:     session.DomainUserID,
-// 		Object:      id,
-// 		ObjectType:  policies.GroupType,
-// 	}); err != nil {
-// 		return err
-// 	}
-
-// 	policy := magistrala.DeletePolicyFilterReq{
-// 		Domain:      session.DomainID,
-// 		SubjectType: policies.GroupType,
-// 		Subject:     id,
-// 		Relation:    policies.ParentGroupRelation,
-// 		ObjectType:  policies.ThingType,
-// 	}
-
-// 	if _, err := svc.policy.DeletePolicyFilter(ctx, &policy); err != nil {
-// 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
-// 	}
-// 	return nil
-// }
-
-//	func (svc service) ListThings(ctx context.Context, session mgauthn.Session, id, gm groups.Page) (groups.Page, error) {
-//		return groups.Page{}, nil
-//	}
-
 func (svc service) DeleteGroup(ctx context.Context, session mgauthn.Session, id string) error {
+	if _, err := svc.channels.UnsetParentGroupFromChannels(ctx, &grpcChannelsV1.UnsetParentGroupFromChannelsReq{ParentGroupId: id}); err != nil {
+		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+
+	if _, err := svc.things.UnsetParentGroupFromThings(ctx, &grpcThingsV1.UnsetParentGroupFromThingsReq{ParentGroupId: id}); err != nil {
+		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+
 	g, err := svc.repo.ChangeStatus(ctx, groups.Group{ID: id, Status: mgclients.DeletedStatus})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)

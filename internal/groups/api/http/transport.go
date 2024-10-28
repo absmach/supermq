@@ -17,7 +17,7 @@ import (
 )
 
 // MakeHandler returns a HTTP handler for Groups API endpoints.
-func MakeHandler(svc groups.Service, authn authn.Authentication, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
+func MakeHandler(svc groups.Service, authn authn.Authentication, mux *chi.Mux, logger *slog.Logger, instanceID string) *chi.Mux {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
@@ -99,6 +99,7 @@ func MakeHandler(svc groups.Service, authn authn.Authentication, mux *chi.Mux, l
 					api.EncodeResponse,
 					opts...,
 				), "remove_parent_group").ServeHTTP)
+
 			})
 
 			r.Route("/children", func(r chi.Router) {
@@ -131,6 +132,7 @@ func MakeHandler(svc groups.Service, authn authn.Authentication, mux *chi.Mux, l
 				), "list_children_groups").ServeHTTP)
 			})
 		})
+
 	})
 
 	return mux

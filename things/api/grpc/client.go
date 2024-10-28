@@ -25,13 +25,14 @@ const svcName = "things.v1.ThingsService"
 var _ grpcThingsV1.ThingsServiceClient = (*grpcClient)(nil)
 
 type grpcClient struct {
-	timeout                  time.Duration
-	authorize                endpoint.Endpoint
-	retrieveEntity           endpoint.Endpoint
-	retrieveEntities         endpoint.Endpoint
-	addConnections           endpoint.Endpoint
-	removeConnections        endpoint.Endpoint
-	removeChannelConnections endpoint.Endpoint
+	timeout                    time.Duration
+	authorize                  endpoint.Endpoint
+	retrieveEntity             endpoint.Endpoint
+	retrieveEntities           endpoint.Endpoint
+	addConnections             endpoint.Endpoint
+	removeConnections          endpoint.Endpoint
+	removeChannelConnections   endpoint.Endpoint
+	unsetParentGroupFromThings endpoint.Endpoint
 }
 
 // NewClient returns new gRPC client instance.
@@ -90,6 +91,16 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) grpcThingsV1.Things
 			decodeRemoveChannelConnectionsResponse,
 			grpcThingsV1.RemoveChannelConnectionsRes{},
 		).Endpoint(),
+
+		unsetParentGroupFromThings: kitgrpc.NewClient(
+			conn,
+			svcName,
+			"UnsetParentGroupFromThings",
+			encodeUnsetParentGroupFromThingsRequest,
+			decodeUnsetParentGroupFromThingsResponse,
+			grpcThingsV1.UnsetParentGroupFromThingsRes{},
+		).Endpoint(),
+
 		timeout: timeout,
 	}
 }
@@ -310,6 +321,25 @@ func encodeRemoveChannelConnectionsRequest(_ context.Context, grpcReq interface{
 
 func decodeRemoveChannelConnectionsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	return grpcRes.(*grpcThingsV1.RemoveChannelConnectionsRes), nil
+}
+
+func (client grpcClient) UnsetParentGroupFromThings(ctx context.Context, req *grpcThingsV1.UnsetParentGroupFromThingsReq, _ ...grpc.CallOption) (r *grpcThingsV1.UnsetParentGroupFromThingsRes, err error) {
+	ctx, cancel := context.WithTimeout(ctx, client.timeout)
+	defer cancel()
+
+	if _, err := client.unsetParentGroupFromThings(ctx, req); err != nil {
+		return &grpcThingsV1.UnsetParentGroupFromThingsRes{}, decodeError(err)
+	}
+
+	return &grpcThingsV1.UnsetParentGroupFromThingsRes{}, nil
+}
+
+func encodeUnsetParentGroupFromThingsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	return grpcReq.(*grpcThingsV1.UnsetParentGroupFromThingsReq), nil
+}
+
+func decodeUnsetParentGroupFromThingsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	return grpcRes.(*grpcThingsV1.UnsetParentGroupFromThingsRes), nil
 }
 func decodeError(err error) error {
 	if st, ok := status.FromError(err); ok {

@@ -335,24 +335,6 @@ func (_m *Service) RemoveRole(ctx context.Context, session authn.Session, entity
 	return r0
 }
 
-// RemoveThingConnections provides a mock function with given fields: ctx, thingID
-func (_m *Service) RemoveThingConnections(ctx context.Context, thingID string) error {
-	ret := _m.Called(ctx, thingID)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RemoveThingConnections")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(ctx, thingID)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // RetrieveAllRoles provides a mock function with given fields: ctx, session, entityID, limit, offset
 func (_m *Service) RetrieveAllRoles(ctx context.Context, session authn.Session, entityID string, limit uint64, offset uint64) (roles.RolePage, error) {
 	ret := _m.Called(ctx, session, entityID, limit, offset)

@@ -90,14 +90,16 @@ func (am *authorizationMiddleware) CreateChannels(ctx context.Context, session a
 	}
 
 	for _, ch := range chs {
-		if err := am.extAuthorize(ctx, channels.GroupOpSetChildChannel, authz.PolicyReq{
-			Domain:      session.DomainID,
-			SubjectType: policies.UserType,
-			Subject:     session.DomainUserID,
-			ObjectType:  policies.GroupType,
-			Object:      ch.ParentGroup,
-		}); err != nil {
-			return []channels.Channel{}, errors.Wrap(err, errors.Wrap(errGroupSetChildChannels, fmt.Errorf("channel name %s parent group id %s", ch.Name, ch.ParentGroup)))
+		if ch.ParentGroup != "" {
+			if err := am.extAuthorize(ctx, channels.GroupOpSetChildChannel, authz.PolicyReq{
+				Domain:      session.DomainID,
+				SubjectType: policies.UserType,
+				Subject:     session.DomainUserID,
+				ObjectType:  policies.GroupType,
+				Object:      ch.ParentGroup,
+			}); err != nil {
+				return []channels.Channel{}, errors.Wrap(err, errors.Wrap(errGroupSetChildChannels, fmt.Errorf("channel name %s parent group id %s", ch.Name, ch.ParentGroup)))
+			}
 		}
 
 	}
@@ -343,8 +345,4 @@ func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, userID s
 		return err
 	}
 	return nil
-}
-
-func (am *authorizationMiddleware) RemoveThingConnections(ctx context.Context, thingID string) error {
-	return am.svc.RemoveThingConnections(ctx, thingID)
 }

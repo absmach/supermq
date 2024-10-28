@@ -122,6 +122,34 @@ func (res updateChannelRes) Empty() bool {
 	return false
 }
 
+type setChannelParentGroupRes struct{}
+
+func (res setChannelParentGroupRes) Code() int {
+	return http.StatusAccepted
+}
+
+func (res setChannelParentGroupRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res setChannelParentGroupRes) Empty() bool {
+	return true
+}
+
+type removeChannelParentGroupRes struct{}
+
+func (res removeChannelParentGroupRes) Code() int {
+	return http.StatusNoContent
+}
+
+func (res removeChannelParentGroupRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res removeChannelParentGroupRes) Empty() bool {
+	return true
+}
+
 type deleteChannelRes struct{}
 
 func (res deleteChannelRes) Code() int {

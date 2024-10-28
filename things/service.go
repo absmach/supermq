@@ -4,11 +4,15 @@ package things
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	mg "github.com/absmach/magistrala"
 	mgauth "github.com/absmach/magistrala/auth"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
+	grpcCommonV1 "github.com/absmach/magistrala/internal/grpc/common/v1"
+	grpcGroupsV1 "github.com/absmach/magistrala/internal/grpc/groups/v1"
+	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/authn"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
@@ -18,21 +22,24 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var errRollbackRepo = errors.New("failed to rollback repo")
-
+var (
+	errRollbackRepo   = errors.New("failed to rollback repo")
+	errSetParentGroup = errors.New("thing already have parent")
+)
 var _ Service = (*service)(nil)
 
 type service struct {
 	repo       Repository
 	policy     policies.Service
 	channels   grpcChannelsV1.ChannelsServiceClient
+	groups     grpcGroupsV1.GroupsServiceClient
 	cache      Cache
 	idProvider mg.IDProvider
 	roles.ProvisionManageService
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(repo Repository, policy policies.Service, cache Cache, channels grpcChannelsV1.ChannelsServiceClient, idProvider mg.IDProvider, sIDProvider mg.IDProvider) (Service, error) {
+func NewService(repo Repository, policy policies.Service, cache Cache, channels grpcChannelsV1.ChannelsServiceClient, groups grpcGroupsV1.GroupsServiceClient, idProvider mg.IDProvider, sIDProvider mg.IDProvider) (Service, error) {
 	rpms, err := roles.NewProvisionManageService(policies.ThingType, repo, policy, sIDProvider, AvailableActions(), BuiltInRoles())
 	if err != nil {
 		return service{}, err
@@ -40,8 +47,9 @@ func NewService(repo Repository, policy policies.Service, cache Cache, channels 
 	return service{
 		repo:                   repo,
 		policy:                 policy,
-		cache:                  cache,
 		channels:               channels,
+		groups:                 groups,
+		cache:                  cache,
 		idProvider:             idProvider,
 		ProvisionManageService: rpms,
 	}, nil
@@ -308,6 +316,97 @@ func (svc service) DisableClient(ctx context.Context, session authn.Session, id 
 	}
 
 	return client, nil
+}
+
+func (svc service) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) (retErr error) {
+	th, err := svc.repo.RetrieveByID(ctx, id)
+	if err != nil {
+		return errors.Wrap(svcerr.ErrUpdateEntity, err)
+	}
+	switch th.ParentGroup {
+	case parentGroupID:
+		return nil
+	case "":
+		// No action needed, proceed to next code after switch
+	default:
+		return errors.Wrap(svcerr.ErrConflict, errSetParentGroup)
+	}
+
+	resp, err := svc.groups.RetrieveEntity(ctx, &grpcCommonV1.RetrieveEntityReq{Id: parentGroupID})
+	if err != nil {
+		return errors.Wrap(svcerr.ErrUpdateEntity, err)
+	}
+	if resp.GetEntity().GetDomainId() != session.DomainID {
+		return errors.Wrap(svcerr.ErrUpdateEntity, fmt.Errorf("parent group id %s has invalid domain id", parentGroupID))
+	}
+	if resp.GetEntity().GetStatus() != uint32(mgclients.EnabledStatus) {
+		return errors.Wrap(svcerr.ErrUpdateEntity, fmt.Errorf("parent group id %s is not in enabled state", parentGroupID))
+	}
+
+	var pols []policies.Policy
+
+	pols = append(pols, policies.Policy{
+		Domain:      session.DomainID,
+		SubjectType: policies.GroupType,
+		Subject:     parentGroupID,
+		Relation:    policies.ParentGroupRelation,
+		ObjectType:  policies.ThingType,
+		Object:      id,
+	})
+
+	if err := svc.policy.AddPolicies(ctx, pols); err != nil {
+		return errors.Wrap(svcerr.ErrAddPolicies, err)
+	}
+	defer func() {
+		if retErr != nil {
+			if errRollback := svc.policy.DeletePolicies(ctx, pols); errRollback != nil {
+				retErr = errors.Wrap(retErr, errors.Wrap(apiutil.ErrRollbackTx, errRollback))
+			}
+		}
+	}()
+	th = mgclients.Client{ID: id, ParentGroup: parentGroupID, UpdatedBy: session.UserID, UpdatedAt: time.Now()}
+
+	if err := svc.repo.SetParentGroup(ctx, th); err != nil {
+		return errors.Wrap(svcerr.ErrUpdateEntity, err)
+	}
+	return nil
+}
+
+func (svc service) RemoveParentGroup(ctx context.Context, session authn.Session, id string) (retErr error) {
+	th, err := svc.repo.RetrieveByID(ctx, id)
+	if err != nil {
+		return errors.Wrap(svcerr.ErrViewEntity, err)
+	}
+
+	if th.ParentGroup != "" {
+		var pols []policies.Policy
+		pols = append(pols, policies.Policy{
+			Domain:      session.DomainID,
+			SubjectType: policies.GroupType,
+			Subject:     th.ParentGroup,
+			Relation:    policies.ParentGroupRelation,
+			ObjectType:  policies.ThingType,
+			Object:      id,
+		})
+
+		if err := svc.policy.DeletePolicies(ctx, pols); err != nil {
+			return errors.Wrap(svcerr.ErrAddPolicies, err)
+		}
+		defer func() {
+			if retErr != nil {
+				if errRollback := svc.policy.AddPolicies(ctx, pols); errRollback != nil {
+					retErr = errors.Wrap(retErr, errors.Wrap(apiutil.ErrRollbackTx, errRollback))
+				}
+			}
+		}()
+
+		th := mgclients.Client{ID: id, UpdatedBy: session.UserID, UpdatedAt: time.Now()}
+
+		if err := svc.repo.RemoveParentGroup(ctx, th); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (svc service) DeleteClient(ctx context.Context, session authn.Session, id string) error {

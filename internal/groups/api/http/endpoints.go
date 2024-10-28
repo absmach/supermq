@@ -172,7 +172,6 @@ func DeleteGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 		if !ok {
 			return deleteGroupRes{}, svcerr.ErrAuthentication
 		}
-
 		if err := svc.DeleteGroup(ctx, session, req.id); err != nil {
 			return deleteGroupRes{}, err
 		}

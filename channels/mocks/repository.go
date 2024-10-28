@@ -425,6 +425,36 @@ func (_m *Repository) RetrieveEntitiesRolesActionsMembers(ctx context.Context, e
 	return r0, r1, r2
 }
 
+// RetrieveParentGroupChannels provides a mock function with given fields: ctx, parentGroupID
+func (_m *Repository) RetrieveParentGroupChannels(ctx context.Context, parentGroupID string) ([]channels.Channel, error) {
+	ret := _m.Called(ctx, parentGroupID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveParentGroupChannels")
+	}
+
+	var r0 []channels.Channel
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]channels.Channel, error)); ok {
+		return rf(ctx, parentGroupID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) []channels.Channel); ok {
+		r0 = rf(ctx, parentGroupID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]channels.Channel)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, parentGroupID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RetrieveRole provides a mock function with given fields: ctx, roleID
 func (_m *Repository) RetrieveRole(ctx context.Context, roleID string) (roles.Role, error) {
 	ret := _m.Called(ctx, roleID)
@@ -775,6 +805,24 @@ func (_m *Repository) SetParentGroup(ctx context.Context, ch channels.Channel) e
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, channels.Channel) error); ok {
 		r0 = rf(ctx, ch)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UnsetParentGroupFromChannels provides a mock function with given fields: ctx, parentGroupID
+func (_m *Repository) UnsetParentGroupFromChannels(ctx context.Context, parentGroupID string) error {
+	ret := _m.Called(ctx, parentGroupID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UnsetParentGroupFromChannels")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, parentGroupID)
 	} else {
 		r0 = ret.Error(0)
 	}

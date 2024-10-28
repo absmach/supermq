@@ -23,8 +23,9 @@ const svcName = "channels.v1.ChannelsService"
 var _ grpcChannelsV1.ChannelsServiceClient = (*grpcClient)(nil)
 
 type grpcClient struct {
-	timeout                time.Duration
-	removeThingConnections endpoint.Endpoint
+	timeout                      time.Duration
+	removeThingConnections       endpoint.Endpoint
+	unsetParentGroupFromChannels endpoint.Endpoint
 }
 
 // NewClient returns new gRPC client instance.
@@ -37,6 +38,14 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) grpcChannelsV1.Chan
 			encodeRemoveThingConnectionsRequest,
 			decodeRemoveThingConnectionsResponse,
 			grpcChannelsV1.RemoveThingConnectionsRes{},
+		).Endpoint(),
+		unsetParentGroupFromChannels: kitgrpc.NewClient(
+			conn,
+			svcName,
+			"UnsetParentGroupFromChannels",
+			encodeUnsetParentGroupFromChannelsRequest,
+			decodeUnsetParentGroupFromChannelsResponse,
+			grpcChannelsV1.UnsetParentGroupFromChannelsRes{},
 		).Endpoint(),
 		timeout: timeout,
 	}
@@ -60,6 +69,26 @@ func encodeRemoveThingConnectionsRequest(_ context.Context, grpcReq interface{})
 func decodeRemoveThingConnectionsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	return grpcRes.(*grpcChannelsV1.RemoveThingConnectionsRes), nil
 }
+
+func (client grpcClient) UnsetParentGroupFromChannels(ctx context.Context, req *grpcChannelsV1.UnsetParentGroupFromChannelsReq, _ ...grpc.CallOption) (r *grpcChannelsV1.UnsetParentGroupFromChannelsRes, err error) {
+	ctx, cancel := context.WithTimeout(ctx, client.timeout)
+	defer cancel()
+
+	if _, err := client.unsetParentGroupFromChannels(ctx, req); err != nil {
+		return &grpcChannelsV1.UnsetParentGroupFromChannelsRes{}, decodeError(err)
+	}
+
+	return &grpcChannelsV1.UnsetParentGroupFromChannelsRes{}, nil
+}
+
+func encodeUnsetParentGroupFromChannelsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	return grpcReq.(*grpcChannelsV1.UnsetParentGroupFromChannelsReq), nil
+}
+
+func decodeUnsetParentGroupFromChannelsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	return grpcRes.(*grpcChannelsV1.UnsetParentGroupFromChannelsRes), nil
+}
+
 func decodeError(err error) error {
 	if st, ok := status.FromError(err); ok {
 		switch st.Code() {

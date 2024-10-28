@@ -168,6 +168,28 @@ func decodeChangeClientStatus(_ context.Context, r *http.Request) (interface{}, 
 	return req, nil
 }
 
+func decodeSetThingParentGroupStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
+	}
+
+	req := setThingParentGroupReq{
+		id: chi.URLParam(r, "thingID"),
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+	}
+	return req, nil
+}
+
+func decodeRemoveThingParentGroupStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	req := removeThingParentGroupReq{
+		id: chi.URLParam(r, "thingID"),
+	}
+
+	return req, nil
+}
+
 func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefClientStatus)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/absmach/magistrala"
 	grpcCommonV1 "github.com/absmach/magistrala/internal/grpc/common/v1"
+	grpcGroupsV1 "github.com/absmach/magistrala/internal/grpc/groups/v1"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/authn"
@@ -32,12 +33,13 @@ type service struct {
 	policy     policies.Service
 	idProvider magistrala.IDProvider
 	things     grpcThingsV1.ThingsServiceClient
+	groups     grpcGroupsV1.GroupsServiceClient
 	roles.ProvisionManageService
 }
 
 var _ Service = (*service)(nil)
 
-func New(repo Repository, policy policies.Service, idProvider magistrala.IDProvider, things grpcThingsV1.ThingsServiceClient, sidProvider magistrala.IDProvider) (Service, error) {
+func New(repo Repository, policy policies.Service, idProvider magistrala.IDProvider, things grpcThingsV1.ThingsServiceClient, groups grpcGroupsV1.GroupsServiceClient, sidProvider magistrala.IDProvider) (Service, error) {
 	rpms, err := roles.NewProvisionManageService(policies.ChannelType, repo, policy, sidProvider, AvailableActions(), BuiltInRoles())
 	if err != nil {
 		return nil, err
@@ -48,6 +50,7 @@ func New(repo Repository, policy policies.Service, idProvider magistrala.IDProvi
 		policy:                 policy,
 		idProvider:             idProvider,
 		things:                 things,
+		groups:                 groups,
 		ProvisionManageService: rpms,
 	}, nil
 }
@@ -301,7 +304,7 @@ func (svc service) Connect(ctx context.Context, session authn.Session, chIDs, th
 		if err != nil {
 			return errors.Wrap(svcerr.ErrCreateEntity, err)
 		}
-		if resp.GetEntity().GetStatus() != 0 {
+		if resp.GetEntity().GetStatus() != uint32(mgclients.EnabledStatus) {
 			return errors.Wrap(svcerr.ErrCreateEntity, fmt.Errorf("thing id %s is not in enabled state", thID))
 		}
 		if resp.GetEntity().GetDomainId() != session.DomainID {
@@ -401,7 +404,18 @@ func (svc service) Disconnect(ctx context.Context, session authn.Session, chIDs,
 func (svc service) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) (retErr error) {
 	ch, err := svc.repo.RetrieveByID(ctx, id)
 	if err != nil {
-		return errors.Wrap(svcerr.ErrViewEntity, err)
+		return errors.Wrap(svcerr.ErrUpdateEntity, err)
+	}
+
+	resp, err := svc.groups.RetrieveEntity(ctx, &grpcCommonV1.RetrieveEntityReq{Id: parentGroupID})
+	if err != nil {
+		return errors.Wrap(svcerr.ErrUpdateEntity, err)
+	}
+	if resp.GetEntity().GetDomainId() != session.DomainID {
+		return errors.Wrap(svcerr.ErrUpdateEntity, fmt.Errorf("parent group id %s has invalid domain id", parentGroupID))
+	}
+	if resp.GetEntity().GetStatus() != uint32(mgclients.EnabledStatus) {
+		return errors.Wrap(svcerr.ErrUpdateEntity, fmt.Errorf("parent group id %s is not in enabled state", parentGroupID))
 	}
 
 	var pols []policies.Policy
@@ -430,7 +444,7 @@ func (svc service) SetParentGroup(ctx context.Context, session authn.Session, pa
 	ch = Channel{ID: id, ParentGroup: parentGroupID, UpdatedBy: session.UserID, UpdatedAt: time.Now()}
 
 	if err := svc.repo.SetParentGroup(ctx, ch); err != nil {
-		return err
+		return errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	return nil
 }
@@ -471,10 +485,6 @@ func (svc service) RemoveParentGroup(ctx context.Context, session authn.Session,
 	}
 
 	return nil
-}
-
-func (svc service) RemoveThingConnections(ctx context.Context, thingID string) error {
-	return svc.repo.RemoveThingConnections(ctx, thingID)
 }
 
 func (svc service) listChannelIDs(ctx context.Context, userID, permission string) ([]string, error) {

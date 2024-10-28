@@ -103,6 +103,80 @@ func (_c *ChannelsServiceClient_RemoveThingConnections_Call) RunAndReturn(run fu
 	return _c
 }
 
+// UnsetParentGroupFromChannels provides a mock function with given fields: ctx, in, opts
+func (_m *ChannelsServiceClient) UnsetParentGroupFromChannels(ctx context.Context, in *v1.UnsetParentGroupFromChannelsReq, opts ...grpc.CallOption) (*v1.UnsetParentGroupFromChannelsRes, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UnsetParentGroupFromChannels")
+	}
+
+	var r0 *v1.UnsetParentGroupFromChannelsRes
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *v1.UnsetParentGroupFromChannelsReq, ...grpc.CallOption) (*v1.UnsetParentGroupFromChannelsRes, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *v1.UnsetParentGroupFromChannelsReq, ...grpc.CallOption) *v1.UnsetParentGroupFromChannelsRes); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*v1.UnsetParentGroupFromChannelsRes)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *v1.UnsetParentGroupFromChannelsReq, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ChannelsServiceClient_UnsetParentGroupFromChannels_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UnsetParentGroupFromChannels'
+type ChannelsServiceClient_UnsetParentGroupFromChannels_Call struct {
+	*mock.Call
+}
+
+// UnsetParentGroupFromChannels is a helper method to define mock.On call
+//   - ctx context.Context
+//   - in *v1.UnsetParentGroupFromChannelsReq
+//   - opts ...grpc.CallOption
+func (_e *ChannelsServiceClient_Expecter) UnsetParentGroupFromChannels(ctx interface{}, in interface{}, opts ...interface{}) *ChannelsServiceClient_UnsetParentGroupFromChannels_Call {
+	return &ChannelsServiceClient_UnsetParentGroupFromChannels_Call{Call: _e.mock.On("UnsetParentGroupFromChannels",
+		append([]interface{}{ctx, in}, opts...)...)}
+}
+
+func (_c *ChannelsServiceClient_UnsetParentGroupFromChannels_Call) Run(run func(ctx context.Context, in *v1.UnsetParentGroupFromChannelsReq, opts ...grpc.CallOption)) *ChannelsServiceClient_UnsetParentGroupFromChannels_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		variadicArgs := make([]grpc.CallOption, len(args)-2)
+		for i, a := range args[2:] {
+			if a != nil {
+				variadicArgs[i] = a.(grpc.CallOption)
+			}
+		}
+		run(args[0].(context.Context), args[1].(*v1.UnsetParentGroupFromChannelsReq), variadicArgs...)
+	})
+	return _c
+}
+
+func (_c *ChannelsServiceClient_UnsetParentGroupFromChannels_Call) Return(_a0 *v1.UnsetParentGroupFromChannelsRes, _a1 error) *ChannelsServiceClient_UnsetParentGroupFromChannels_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ChannelsServiceClient_UnsetParentGroupFromChannels_Call) RunAndReturn(run func(context.Context, *v1.UnsetParentGroupFromChannelsReq, ...grpc.CallOption) (*v1.UnsetParentGroupFromChannelsRes, error)) *ChannelsServiceClient_UnsetParentGroupFromChannels_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewChannelsServiceClient creates a new instance of ChannelsServiceClient. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewChannelsServiceClient(t interface {

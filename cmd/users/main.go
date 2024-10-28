@@ -17,11 +17,6 @@ import (
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/internal/email"
-	mggroups "github.com/absmach/magistrala/internal/groups"
-	gevents "github.com/absmach/magistrala/internal/groups/events"
-	gmiddleware "github.com/absmach/magistrala/internal/groups/middleware"
-	gpostgres "github.com/absmach/magistrala/internal/groups/postgres"
-	gtracing "github.com/absmach/magistrala/internal/groups/tracing"
 	grpcDomainsV1 "github.com/absmach/magistrala/internal/grpc/domains/v1"
 	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
 	mglog "github.com/absmach/magistrala/logger"
@@ -29,28 +24,26 @@ import (
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
 	authsvcAuthz "github.com/absmach/magistrala/pkg/authz/authsvc"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
-	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/grpcclient"
 	jaegerclient "github.com/absmach/magistrala/pkg/jaeger"
 	"github.com/absmach/magistrala/pkg/oauth2"
 	googleoauth "github.com/absmach/magistrala/pkg/oauth2/google"
 	"github.com/absmach/magistrala/pkg/policies"
 	"github.com/absmach/magistrala/pkg/policies/spicedb"
-	"github.com/absmach/magistrala/pkg/postgres"
+	pg "github.com/absmach/magistrala/pkg/postgres"
 	pgclient "github.com/absmach/magistrala/pkg/postgres"
 	"github.com/absmach/magistrala/pkg/prometheus"
 	"github.com/absmach/magistrala/pkg/server"
 	httpserver "github.com/absmach/magistrala/pkg/server/http"
-	"github.com/absmach/magistrala/pkg/sid"
 	"github.com/absmach/magistrala/pkg/uuid"
 	"github.com/absmach/magistrala/users"
-	capi "github.com/absmach/magistrala/users/api"
+	"github.com/absmach/magistrala/users/api"
 	"github.com/absmach/magistrala/users/emailer"
-	uevents "github.com/absmach/magistrala/users/events"
+	"github.com/absmach/magistrala/users/events"
 	"github.com/absmach/magistrala/users/hasher"
-	cmiddleware "github.com/absmach/magistrala/users/middleware"
-	clientspg "github.com/absmach/magistrala/users/postgres"
-	ctracing "github.com/absmach/magistrala/users/tracing"
+	"github.com/absmach/magistrala/users/middleware"
+	"github.com/absmach/magistrala/users/postgres"
+	"github.com/absmach/magistrala/users/tracing"
 	"github.com/authzed/authzed-go/v1"
 	"github.com/authzed/grpcutil"
 	"github.com/caarlos0/env/v11"
@@ -71,8 +64,6 @@ const (
 	envPrefixGoogle  = "MG_GOOGLE_"
 	defDB            = "users"
 	defSvcHTTPPort   = "9002"
-
-	streamID = "magistrala.users"
 )
 
 type config struct {
@@ -140,15 +131,9 @@ func main() {
 		exitCode = 1
 		return
 	}
-	cm := clientspg.Migration()
-	gm, err := gpostgres.Migration()
-	if err != nil {
-		logger.Error(err.Error())
-		exitCode = 1
-		return
-	}
-	cm.Migrations = append(cm.Migrations, gm.Migrations...)
-	db, err := pgclient.Setup(dbConfig, *cm)
+
+	migration := postgres.Migration()
+	db, err := pgclient.Setup(dbConfig, *migration)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
@@ -178,7 +163,7 @@ func main() {
 
 	tokenClient, tokenHandler, err := grpcclient.SetupTokenClient(ctx, authClientConfig)
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Error("failed to create token gRPC client " + err.Error())
 		exitCode = 1
 		return
 	}
@@ -187,7 +172,7 @@ func main() {
 
 	authn, authnHandler, err := authsvcAuthn.NewAuthentication(ctx, authClientConfig)
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Error("failed to create authn " + err.Error())
 		exitCode = 1
 		return
 	}
@@ -196,7 +181,7 @@ func main() {
 
 	authz, authzHandler, err := authsvcAuthz.NewAuthorization(ctx, authClientConfig)
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Error("failed to create authz " + err.Error())
 		exitCode = 1
 		return
 	}
@@ -212,7 +197,7 @@ func main() {
 
 	domainsClient, domainsHandler, err := grpcclient.SetupDomainsClient(ctx, domainsClientConfig)
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Error("failed to setup domain gRPC clients " + err.Error())
 		exitCode = 1
 		return
 	}
@@ -221,13 +206,13 @@ func main() {
 
 	policyService, err := newPolicyService(cfg, logger)
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Error("failed to create new policies service " + err.Error())
 		exitCode = 1
 		return
 	}
 	logger.Info("Policy client successfully connected to spicedb gRPC server")
 
-	csvc, gsvc, err := newService(ctx, authz, tokenClient, policyService, domainsClient, db, dbConfig, tracer, cfg, ec, logger)
+	csvc, err := newService(ctx, authz, tokenClient, policyService, domainsClient, db, dbConfig, tracer, cfg, ec, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to setup service: %s", err))
 		exitCode = 1
@@ -250,7 +235,7 @@ func main() {
 	oauthProvider := googleoauth.NewProvider(oauthConfig, cfg.OAuthUIRedirectURL, cfg.OAuthUIErrorURL)
 
 	mux := chi.NewRouter()
-	httpSrv := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, capi.MakeHandler(csvc, gsvc, authn, tokenClient, cfg.SelfRegister, mux, logger, cfg.InstanceID, cfg.PassRegex, oauthProvider), logger)
+	httpSrv := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(csvc, authn, tokenClient, cfg.SelfRegister, mux, logger, cfg.InstanceID, cfg.PassRegex, oauthProvider), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
@@ -270,71 +255,46 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, authz mgauthz.Authorization, token grpcTokenV1.TokenServiceClient, policyService policies.Service, domainsClient grpcDomainsV1.DomainsServiceClient, db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, c config, ec email.Config, logger *slog.Logger) (users.Service, groups.Service, error) {
+func newService(ctx context.Context, authz mgauthz.Authorization, token grpcTokenV1.TokenServiceClient, policyService policies.Service, domainsClient grpcDomainsV1.DomainsServiceClient, db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, c config, ec email.Config, logger *slog.Logger) (users.Service, error) {
 
-	database := postgres.NewDatabase(db, dbConfig, tracer)
+	database := pg.NewDatabase(db, dbConfig, tracer)
 	idp := uuid.New()
-	sid, err := sid.New()
-	if err != nil {
-		return nil, nil, err
-	}
 	hsr := hasher.New()
 
-	// Creating groups service
-	gRepo := gpostgres.New(database)
-	gsvc, err := mggroups.NewService(gRepo, policyService, idp, sid)
-	if err != nil {
-		return nil, nil, err
-	}
-	gsvc, err = gevents.New(ctx, gsvc, c.ESURL, streamID)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	gsvc, err = gmiddleware.AuthorizationMiddleware(policies.GroupType, gsvc, authz, groups.NewOperationPermissionMap(), groups.NewRolesOperationPermissionMap())
-	if err != nil {
-		return nil, nil, err
-	}
-
-	gsvc = gtracing.New(gsvc, tracer)
-	gsvc = gmiddleware.LoggingMiddleware(gsvc, logger)
-	counter, latency := prometheus.MakeMetrics("groups", "api")
-	gsvc = gmiddleware.MetricsMiddleware(gsvc, counter, latency)
-
 	// Creating users service
-	cRepo := clientspg.NewRepository(database)
+	repo := postgres.NewRepository(database)
 	emailerClient, err := emailer.New(c.ResetURL, &ec)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to configure e-mailing util: %s", err.Error()))
 	}
 
-	csvc := users.NewService(token, cRepo, policyService, emailerClient, hsr, idp)
+	svc := users.NewService(token, repo, policyService, emailerClient, hsr, idp)
 
-	csvc, err = uevents.NewEventStoreMiddleware(ctx, csvc, c.ESURL)
+	svc, err = events.NewEventStoreMiddleware(ctx, svc, c.ESURL)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	csvc = cmiddleware.AuthorizationMiddleware(csvc, authz, c.SelfRegister)
+	svc = middleware.AuthorizationMiddleware(svc, authz, c.SelfRegister)
 
-	csvc = ctracing.New(csvc, tracer)
-	csvc = cmiddleware.LoggingMiddleware(csvc, logger)
-	counter, latency = prometheus.MakeMetrics(svcName, "api")
-	csvc = cmiddleware.MetricsMiddleware(csvc, counter, latency)
+	svc = tracing.New(svc, tracer)
+	svc = middleware.LoggingMiddleware(svc, logger)
+	counter, latency := prometheus.MakeMetrics(svcName, "api")
+	svc = middleware.MetricsMiddleware(svc, counter, latency)
 
-	clientID, err := createAdmin(ctx, c, cRepo, hsr, csvc)
+	clientID, err := createAdmin(ctx, c, repo, hsr, svc)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create admin client: %s", err))
 	}
 	if err := createAdminPolicy(ctx, clientID, authz, policyService); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	users.NewDeleteHandler(ctx, cRepo, policyService, domainsClient, c.DeleteInterval, c.DeleteAfter, logger)
+	users.NewDeleteHandler(ctx, repo, policyService, domainsClient, c.DeleteInterval, c.DeleteAfter, logger)
 
-	return csvc, gsvc, err
+	return svc, err
 }
 
-func createAdmin(ctx context.Context, c config, crepo clientspg.Repository, hsr users.Hasher, svc users.Service) (string, error) {
+func createAdmin(ctx context.Context, c config, repo postgres.Repository, hsr users.Hasher, svc users.Service) (string, error) {
 	id, err := uuid.New().ID()
 	if err != nil {
 		return "", err
@@ -360,12 +320,12 @@ func createAdmin(ctx context.Context, c config, crepo clientspg.Repository, hsr 
 		Status:    mgclients.EnabledStatus,
 	}
 
-	if c, err := crepo.RetrieveByIdentity(ctx, client.Credentials.Identity); err == nil {
+	if c, err := repo.RetrieveByIdentity(ctx, client.Credentials.Identity); err == nil {
 		return c.ID, nil
 	}
 
 	// Create an admin
-	if _, err = crepo.Save(ctx, client); err != nil {
+	if _, err = repo.Save(ctx, client); err != nil {
 		return "", err
 	}
 	if _, err = svc.IssueToken(ctx, c.AdminEmail, c.AdminPassword); err != nil {

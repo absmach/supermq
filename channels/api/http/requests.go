@@ -121,6 +121,34 @@ func (req updateChannelTagsReq) validate() error {
 	return nil
 }
 
+type setChannelParentGroupReq struct {
+	id            string
+	ParentGroupID string `json:"parent_group_id"`
+}
+
+func (req setChannelParentGroupReq) validate() error {
+	if req.id == "" {
+		return apiutil.ErrMissingID
+	}
+	if req.ParentGroupID == "" {
+		return apiutil.ErrMissingParentGroupID
+	}
+
+	return nil
+}
+
+type removeChannelParentGroupReq struct {
+	id string
+}
+
+func (req removeChannelParentGroupReq) validate() error {
+	if req.id == "" {
+		return apiutil.ErrMissingID
+	}
+
+	return nil
+}
+
 type changeChannelStatusReq struct {
 	id string
 }

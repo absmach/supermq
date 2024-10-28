@@ -134,6 +134,36 @@ func (res changeClientStatusRes) Empty() bool {
 	return false
 }
 
+type setParentGroupRes struct {
+}
+
+func (res setParentGroupRes) Code() int {
+	return http.StatusAccepted
+}
+
+func (res setParentGroupRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res setParentGroupRes) Empty() bool {
+	return true
+}
+
+type removeParentGroupRes struct {
+}
+
+func (res removeParentGroupRes) Code() int {
+	return http.StatusNoContent
+}
+
+func (res removeParentGroupRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res removeParentGroupRes) Empty() bool {
+	return true
+}
+
 type deleteClientRes struct{}
 
 func (res deleteClientRes) Code() int {

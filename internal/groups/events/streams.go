@@ -13,6 +13,8 @@ import (
 	rmEvents "github.com/absmach/magistrala/pkg/roles/rolemanager/events"
 )
 
+const streamID = "magistrala.groups"
+
 var _ groups.Service = (*eventStore)(nil)
 
 type eventStore struct {
@@ -23,7 +25,7 @@ type eventStore struct {
 
 // NewEventStoreMiddleware returns wrapper around things service that sends
 // events to event store.
-func New(ctx context.Context, svc groups.Service, url, streamID string) (groups.Service, error) {
+func New(ctx context.Context, svc groups.Service, url string) (groups.Service, error) {
 	publisher, err := store.NewPublisher(ctx, url, streamID)
 	if err != nil {
 		return nil, err

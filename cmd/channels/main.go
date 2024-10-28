@@ -20,8 +20,10 @@ import (
 	"github.com/absmach/magistrala/channels/events"
 	"github.com/absmach/magistrala/channels/middleware"
 	"github.com/absmach/magistrala/channels/postgres"
+	pChannels "github.com/absmach/magistrala/channels/private"
 	"github.com/absmach/magistrala/channels/tracing"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
+	grpcGroupsV1 "github.com/absmach/magistrala/internal/grpc/groups/v1"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	authsvcAuthn "github.com/absmach/magistrala/pkg/authn/authsvc"
@@ -58,6 +60,7 @@ const (
 	envPrefixGRPC   = "MG_CHANNELS_GRPC_"
 	envPrefixAuth   = "MG_AUTH_GRPC_"
 	envPrefixThings = "MG_THINGS_AUTH_GRPC_"
+	envPrefixGroups = "MG_GROUPS_GRPC_"
 	defDB           = "channels"
 	defSvcHTTPPort  = "9005"
 	defSvcGRPCPort  = "7005"
@@ -166,9 +169,9 @@ func main() {
 		return
 	}
 	defer authzClient.Close()
-	logger.Info("AuthZ  successfully connected to auth gRPC server " + authnClient.Secure())
+	logger.Info("AuthZ  successfully connected to auth gRPC server " + authzClient.Secure())
 
-	thgrpcCfg := grpcclient.Config{BypassHealthCheck: true}
+	thgrpcCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&thgrpcCfg, env.Options{Prefix: envPrefixThings}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load things gRPC client configuration : %s", err))
 		exitCode = 1
@@ -181,9 +184,24 @@ func main() {
 		return
 	}
 	defer thingsHandler.Close()
-	logger.Info("Things gRPC client successfully connected to things gRPC server " + authnClient.Secure())
+	logger.Info("Things gRPC client successfully connected to things gRPC server " + thingsHandler.Secure())
 
-	svc, err := newService(ctx, db, dbConfig, authz, policyService, cfg.ESURL, tracer, thingsClient, logger)
+	groupsgRPCCfg := grpcclient.Config{}
+	if err := env.ParseWithOptions(&groupsgRPCCfg, env.Options{Prefix: envPrefixGroups}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load groups gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+	groupsClient, groupsHandler, err := grpcclient.SetupGroupsClient(ctx, groupsgRPCCfg)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to connect to groups gRPC server: %s", err))
+		exitCode = 1
+		return
+	}
+	defer groupsHandler.Close()
+	logger.Info("Groups gRPC client successfully connected to groups gRPC server " + groupsHandler.Secure())
+
+	svc, psvc, err := newService(ctx, db, dbConfig, authz, policyService, cfg.ESURL, tracer, thingsClient, groupsClient, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
 		exitCode = 1
@@ -198,7 +216,7 @@ func main() {
 	}
 	registerChannelsServer := func(srv *grpc.Server) {
 		reflection.Register(srv)
-		grpcChannelsV1.RegisterChannelsServiceServer(srv, grpcapi.NewServer(svc))
+		grpcChannelsV1.RegisterChannelsServiceServer(srv, grpcapi.NewServer(psvc))
 	}
 
 	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerChannelsServer, logger)
@@ -235,38 +253,39 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, ps policies.Service, esURL string, tracer trace.Tracer, thingsClient grpcThingsV1.ThingsServiceClient, logger *slog.Logger) (channels.Service, error) {
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, ps policies.Service, esURL string, tracer trace.Tracer, thingsClient grpcThingsV1.ThingsServiceClient, groupsClient grpcGroupsV1.GroupsServiceClient, logger *slog.Logger) (channels.Service, pChannels.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
-	cRepo := postgres.NewRepository(database)
+	repo := postgres.NewRepository(database)
 
 	idp := uuid.New()
 	sidp, err := sid.New()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	svc, err := channels.New(cRepo, ps, idp, thingsClient, sidp)
+	svc, err := channels.New(repo, ps, idp, thingsClient, groupsClient, sidp)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	svc, err = events.NewEventStoreMiddleware(ctx, svc, esURL)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	svc = tracing.New(svc, tracer)
-	svc = middleware.LoggingMiddleware(svc, logger)
 
 	counter, latency := prometheus.MakeMetrics("channels", "api")
 	svc = middleware.MetricsMiddleware(svc, counter, latency)
 
-	svc, err = middleware.AuthorizationMiddleware(svc, cRepo, authz, channels.NewOperationPermissionMap(), channels.NewRolesOperationPermissionMap(), channels.NewExternalOperationPermissionMap())
+	svc, err = middleware.AuthorizationMiddleware(svc, repo, authz, channels.NewOperationPermissionMap(), channels.NewRolesOperationPermissionMap(), channels.NewExternalOperationPermissionMap())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+	svc = middleware.LoggingMiddleware(svc, logger)
 
-	return svc, err
+	psvc := pChannels.New(repo, ps)
+	return svc, psvc, err
 }
 
 func newSpiceDBPolicyServiceEvaluator(cfg config, logger *slog.Logger) (policies.Service, error) {

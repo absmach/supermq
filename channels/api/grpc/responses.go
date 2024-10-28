@@ -4,3 +4,5 @@
 package grpc
 
 type removeThingConnectionsRes struct{}
+
+type unsetParentGroupFromChannelsRes struct{}

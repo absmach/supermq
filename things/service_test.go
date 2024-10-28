@@ -15,6 +15,7 @@ import (
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	gpmocks "github.com/absmach/magistrala/pkg/groups/mocks"
 	policysvc "github.com/absmach/magistrala/pkg/policies"
 	policymocks "github.com/absmach/magistrala/pkg/policies/mocks"
 	"github.com/absmach/magistrala/pkg/uuid"
@@ -58,7 +59,8 @@ func newService() things.Service {
 	sidProvider := uuid.NewMock()
 	repo = new(thmocks.Repository)
 	chgRPCClient := new(chmocks.ChannelsServiceClient)
-	tsv, _ := things.NewService(repo, pService, cache, chgRPCClient, idProvider, sidProvider)
+	gpgRPCClient := new(gpmocks.GroupsServiceClient)
+	tsv, _ := things.NewService(repo, pService, cache, chgRPCClient, gpgRPCClient, idProvider, sidProvider)
 	return tsv
 }
 

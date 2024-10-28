@@ -1,158 +1,43 @@
+// Copyright (c) Abstract Machines
+// SPDX-License-Identifier: Apache-2.0
 package channels
 
-import (
-	"github.com/absmach/magistrala/pkg/roles"
-	"github.com/absmach/magistrala/pkg/svcutil"
-)
-
-// Internal Operations
-const (
-	OpViewChannel svcutil.Operation = iota
-	OpUpdateChannel
-	OpUpdateChannelTags
-	OpEnableChannel
-	OpDisableChannel
-	OpDeleteChannel
-	OpSetParentGroup
-	OpRemoveParentGroup
-	OpConnectThing
-	OpDisconnectThing
-)
-
-var expectedOperations = []svcutil.Operation{
-	OpViewChannel,
-	OpUpdateChannel,
-	OpUpdateChannelTags,
-	OpEnableChannel,
-	OpDisableChannel,
-	OpDeleteChannel,
-	OpSetParentGroup,
-	OpRemoveParentGroup,
-	OpConnectThing,
-	OpDisconnectThing,
-}
-
-var operationNames = []string{
-	"OpViewChannel",
-	"OpUpdateChannel",
-	"OpUpdateChannelTags",
-	"OpEnableChannel",
-	"OpDisableChannel",
-	"OpDeleteChannel",
-	"OpSetParentGroup",
-	"OpRemoveParentGroup",
-	"OpConnectThing",
-	"OpDisconnectThing",
-}
-
-func NewOperationPerm() svcutil.OperationPerm {
-	return svcutil.NewOperationPerm(expectedOperations, operationNames)
-}
-
-// External Operations
-const (
-	DomainOpCreateChannel svcutil.ExternalOperation = iota
-	DomainOpListChannel
-	GroupOpSetChildChannel
-	GroupsOpRemoveChildChannel
-	ThingsOpConnectChannel
-	ThingsOpDisconnectChannel
-)
-
-var expectedExternalOperations = []svcutil.ExternalOperation{
-	DomainOpCreateChannel,
-	DomainOpListChannel,
-	GroupOpSetChildChannel,
-	GroupsOpRemoveChildChannel,
-	ThingsOpConnectChannel,
-	ThingsOpDisconnectChannel,
-}
-var externalOperationNames = []string{
-	"DomainOpCreateChannel",
-	"DomainOpListChannel",
-	"GroupOpSetChildChannel",
-	"GroupsOpRemoveChildChannel",
-	"ThingsOpConnectChannel",
-	"ThingsOpDisconnectChannel",
-}
-
-func NewExternalOperationPerm() svcutil.ExternalOperationPerm {
-	return svcutil.NewExternalOperationPerm(expectedExternalOperations, externalOperationNames)
-}
+import "github.com/absmach/magistrala/pkg/roles"
 
 // Below codes should moved out of service, may be can be kept in `cmd/<svc>/main.go`
 
 const (
-	updatePermission         = "update_permission"
-	readPermission           = "read_permission"
-	deletePermission         = "delete_permission"
-	setParentGroupPermission = "set_parent_group_permission"
-	connectToThingPermission = "connect_to_thing_permission"
-
-	manageRolePermission      = "manage_role_permission"
-	addRoleUsersPermission    = "add_role_users_permission"
-	removeRoleUsersPermission = "remove_role_users_permission"
-	viewRoleUsersPermission   = "view_role_users_permission"
+	ChannelUpdate           roles.Action = "update"
+	ChannelRead             roles.Action = "read"
+	ChannelDelete           roles.Action = "delete"
+	ChannelSetParentGroup   roles.Action = "set_parent_group"
+	ChannelConnectToChannel roles.Action = "connect_to_thing"
+	ChannelManageRole       roles.Action = "manage_role"
+	ChannelAddRoleUsers     roles.Action = "add_role_users"
+	ChannelRemoveRoleUsers  roles.Action = "remove_role_users"
+	ChannelViewRoleUsers    roles.Action = "view_role_users"
 )
-
-func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
-	opPerm := map[svcutil.Operation]svcutil.Permission{
-		OpViewChannel:       readPermission,
-		OpUpdateChannel:     updatePermission,
-		OpUpdateChannelTags: updatePermission,
-		OpEnableChannel:     updatePermission,
-		OpDisableChannel:    updatePermission,
-		OpDeleteChannel:     deletePermission,
-		OpSetParentGroup:    setParentGroupPermission,
-		OpRemoveParentGroup: setParentGroupPermission,
-		OpConnectThing:      connectToThingPermission,
-		OpDisconnectThing:   connectToThingPermission,
-	}
-	return opPerm
-}
-
-func NewRolesOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
-	opPerm := map[svcutil.Operation]svcutil.Permission{
-		roles.OpAddRole:                manageRolePermission,
-		roles.OpRemoveRole:             manageRolePermission,
-		roles.OpUpdateRoleName:         manageRolePermission,
-		roles.OpRetrieveRole:           manageRolePermission,
-		roles.OpRetrieveAllRoles:       manageRolePermission,
-		roles.OpRoleAddActions:         manageRolePermission,
-		roles.OpRoleListActions:        manageRolePermission,
-		roles.OpRoleCheckActionsExists: manageRolePermission,
-		roles.OpRoleRemoveActions:      manageRolePermission,
-		roles.OpRoleRemoveAllActions:   manageRolePermission,
-		roles.OpRoleAddMembers:         addRoleUsersPermission,
-		roles.OpRoleListMembers:        viewRoleUsersPermission,
-		roles.OpRoleCheckMembersExists: viewRoleUsersPermission,
-		roles.OpRoleRemoveMembers:      removeRoleUsersPermission,
-		roles.OpRoleRemoveAllMembers:   manageRolePermission,
-	}
-	return opPerm
-}
 
 const (
-	// External Permission
-	// Domains
-	domainCreateChannelPermission = "channel_create_permission"
-	domainListChanelPermission    = "list_channels_permission"
-	// Groups
-	groupSetChildChannelPermission    = "channel_create_permission"
-	groupRemoveChildChannelPermission = "channel_create_permission"
-	// Thing
-	thingsConnectChannelPermission    = "connect_to_channel_permission"
-	thingsDisconnectChannelPermission = "connect_to_channel_permission"
+	BuiltInRoleAdmin = "admin"
 )
 
-func NewExternalOperationPermissionMap() map[svcutil.ExternalOperation]svcutil.Permission {
-	extOpPerm := map[svcutil.ExternalOperation]svcutil.Permission{
-		DomainOpCreateChannel:      domainCreateChannelPermission,
-		DomainOpListChannel:        domainListChanelPermission,
-		GroupOpSetChildChannel:     groupSetChildChannelPermission,
-		GroupsOpRemoveChildChannel: groupRemoveChildChannelPermission,
-		ThingsOpConnectChannel:     thingsConnectChannelPermission,
-		ThingsOpDisconnectChannel:  thingsDisconnectChannelPermission,
+func AvailableActions() []roles.Action {
+	return []roles.Action{
+		ChannelUpdate,
+		ChannelRead,
+		ChannelDelete,
+		ChannelSetParentGroup,
+		ChannelConnectToChannel,
+		ChannelManageRole,
+		ChannelAddRoleUsers,
+		ChannelRemoveRoleUsers,
+		ChannelViewRoleUsers,
 	}
-	return extOpPerm
+}
+
+func BuiltInRoles() map[roles.BuiltInRoleName][]roles.Action {
+	return map[roles.BuiltInRoleName][]roles.Action{
+		BuiltInRoleAdmin: AvailableActions(),
+	}
 }

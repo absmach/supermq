@@ -1,8 +1,11 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
+
 package things
 
 import "github.com/absmach/magistrala/pkg/roles"
+
+// Below codes should moved out of service, may be can be kept in `cmd/<svc>/main.go`
 
 const (
 	ThingUpdate           roles.Action = "update"

@@ -17,7 +17,6 @@ import (
 	"github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
-	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/postgres"
 	rolesPostgres "github.com/absmach/magistrala/pkg/roles/repo/postgres"
 	"github.com/jackc/pgtype"
@@ -346,6 +345,43 @@ func (cr *channelRepository) RemoveChannelConnections(ctx context.Context, chann
 	return nil
 }
 
+func (cr *channelRepository) RetrieveParentGroupChannels(ctx context.Context, parentGroupID string) ([]channels.Channel, error) {
+	query := `SELECT c.id, c.name, c.tags,  c.metadata, COALESCE(c.domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, c.status,
+					c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM channels c WHERE c.parent_group_id = :parent_group_id ;`
+
+	rows, err := cr.db.NamedQueryContext(ctx, query, dbChannel{ParentGroup: nullString(parentGroupID)})
+	if err != nil {
+		return []channels.Channel{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+	defer rows.Close()
+
+	var chs []channels.Channel
+	for rows.Next() {
+		dbch := dbChannel{}
+		if err := rows.StructScan(&dbch); err != nil {
+			return []channels.Channel{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+
+		ch, err := toChannel(dbch)
+		if err != nil {
+			return []channels.Channel{}, err
+		}
+
+		chs = append(chs, ch)
+	}
+	return chs, nil
+}
+
+func (cr *channelRepository) UnsetParentGroupFromChannels(ctx context.Context, parentGroupID string) error {
+	query := "UPDATE channels SET parent_group_id = NULL WHERE parent_group_id = :parent_group_id"
+
+	dbCh := dbChannel{ParentGroup: nullString(parentGroupID)}
+	if _, err := cr.db.NamedExecContext(ctx, query, dbCh); err != nil {
+		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+	}
+	return nil
+}
+
 func (cr *channelRepository) update(ctx context.Context, ch channels.Channel, query string) (channels.Channel, error) {
 	dbch, err := toDBChannel(ch)
 	if err != nil {
@@ -380,7 +416,6 @@ type dbChannel struct {
 	CreatedAt   time.Time        `db:"created_at,omitempty"`
 	UpdatedAt   sql.NullTime     `db:"updated_at,omitempty"`
 	UpdatedBy   *string          `db:"updated_by,omitempty"`
-	Groups      []groups.Group   `db:"groups,omitempty"`
 	Status      clients.Status   `db:"status,omitempty"`
 	Role        *clients.Role    `db:"role,omitempty"`
 }

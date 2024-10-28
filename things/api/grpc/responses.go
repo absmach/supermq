@@ -37,3 +37,5 @@ type connectionsRes struct {
 }
 
 type removeChannelConnectionsRes struct{}
+
+type unsetParentGroupFromThingsRes struct{}

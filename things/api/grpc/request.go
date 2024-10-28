@@ -21,3 +21,7 @@ type retrieveEntityReq struct {
 type removeChannelConnectionsReq struct {
 	channelID string
 }
+
+type unsetParentGroupFromThingsReq struct {
+	parentGroupID string
+}

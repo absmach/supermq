@@ -17,7 +17,6 @@ import (
 	"github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	"github.com/absmach/magistrala/pkg/groups"
-	mggroups "github.com/absmach/magistrala/pkg/groups"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -760,7 +759,7 @@ func Test_decodeHierarchyPageMeta(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    mggroups.HierarchyPageMeta
+		want    groups.HierarchyPageMeta
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -786,7 +785,7 @@ func Test_decodePageMeta(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    mggroups.PageMeta
+		want    groups.PageMeta
 		wantErr bool
 	}{
 		// TODO: Add test cases.

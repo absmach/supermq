@@ -197,6 +197,24 @@ func (_m *Repository) RemoveMemberFromAllRoles(ctx context.Context, members stri
 	return r0
 }
 
+// RemoveParentGroup provides a mock function with given fields: ctx, th
+func (_m *Repository) RemoveParentGroup(ctx context.Context, th clients.Client) error {
+	ret := _m.Called(ctx, th)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveParentGroup")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) error); ok {
+		r0 = rf(ctx, th)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // RemoveRoles provides a mock function with given fields: ctx, roleIDs
 func (_m *Repository) RemoveRoles(ctx context.Context, roleIDs []string) error {
 	ret := _m.Called(ctx, roleIDs)
@@ -491,6 +509,36 @@ func (_m *Repository) RetrieveEntitiesRolesActionsMembers(ctx context.Context, e
 	}
 
 	return r0, r1, r2
+}
+
+// RetrieveParentGroupThings provides a mock function with given fields: ctx, parentGroupID
+func (_m *Repository) RetrieveParentGroupThings(ctx context.Context, parentGroupID string) ([]clients.Client, error) {
+	ret := _m.Called(ctx, parentGroupID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveParentGroupThings")
+	}
+
+	var r0 []clients.Client
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]clients.Client, error)); ok {
+		return rf(ctx, parentGroupID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) []clients.Client); ok {
+		r0 = rf(ctx, parentGroupID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]clients.Client)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, parentGroupID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // RetrieveRole provides a mock function with given fields: ctx, roleID
@@ -860,6 +908,24 @@ func (_m *Repository) SearchClients(ctx context.Context, pm clients.Page) (clien
 	return r0, r1
 }
 
+// SetParentGroup provides a mock function with given fields: ctx, th
+func (_m *Repository) SetParentGroup(ctx context.Context, th clients.Client) error {
+	ret := _m.Called(ctx, th)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetParentGroup")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, clients.Client) error); ok {
+		r0 = rf(ctx, th)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // ThingConnectionsCount provides a mock function with given fields: ctx, id
 func (_m *Repository) ThingConnectionsCount(ctx context.Context, id string) (uint64, error) {
 	ret := _m.Called(ctx, id)
@@ -886,6 +952,24 @@ func (_m *Repository) ThingConnectionsCount(ctx context.Context, id string) (uin
 	}
 
 	return r0, r1
+}
+
+// UnsetParentGroupFromThings provides a mock function with given fields: ctx, parentGroupID
+func (_m *Repository) UnsetParentGroupFromThings(ctx context.Context, parentGroupID string) error {
+	ret := _m.Called(ctx, parentGroupID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UnsetParentGroupFromThings")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, parentGroupID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // Update provides a mock function with given fields: ctx, client
