@@ -22,6 +22,7 @@ var _ grpcChannelsV1.ChannelsServiceServer = (*grpcServer)(nil)
 type grpcServer struct {
 	grpcChannelsV1.UnimplementedChannelsServiceServer
 
+	authorize                    kitgrpc.Handler
 	removeThingConnections       kitgrpc.Handler
 	unsetParentGroupFromChannels kitgrpc.Handler
 }
@@ -29,6 +30,11 @@ type grpcServer struct {
 // NewServer returns new AuthServiceServer instance.
 func NewServer(svc channels.Service) grpcChannelsV1.ChannelsServiceServer {
 	return &grpcServer{
+		authorize: kitgrpc.NewServer(
+			authorizeEndpoint(svc),
+			decodeAuthorizeRequest,
+			encodeAuthorizeResponse,
+		),
 		removeThingConnections: kitgrpc.NewServer(
 			removeThingConnectionsEndpoint(svc),
 			decodeRemoveThingConnectionsRequest,
@@ -40,6 +46,31 @@ func NewServer(svc channels.Service) grpcChannelsV1.ChannelsServiceServer {
 			encodeUnsetParentGroupFromChannelsResponse,
 		),
 	}
+}
+
+func (s *grpcServer) Authorize(ctx context.Context, req *grpcChannelsV1.AuthzReq) (*grpcChannelsV1.AuthzRes, error) {
+	_, res, err := s.removeThingConnections.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, encodeError(err)
+	}
+	return res.(*grpcChannelsV1.AuthzRes), nil
+}
+
+func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*grpcChannelsV1.AuthzReq)
+
+	return authorizeReq{
+		domainID:   req.GetDomainId(),
+		clientID:   req.GetClientId(),
+		clientType: req.GetClientType(),
+		channelID:  req.GetChannelId(),
+		permission: req.GetPermission(),
+	}, nil
+}
+
+func encodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(authorizeRes)
+	return &grpcChannelsV1.AuthzRes{Authorized: res.authorized}, nil
 }
 
 func (s *grpcServer) RemoveThingConnections(ctx context.Context, req *grpcChannelsV1.RemoveThingConnectionsReq) (*grpcChannelsV1.RemoveThingConnectionsRes, error) {

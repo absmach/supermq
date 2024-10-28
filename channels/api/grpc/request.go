@@ -3,6 +3,13 @@
 
 package grpc
 
+type authorizeReq struct {
+	domainID   string
+	channelID  string
+	clientID   string
+	clientType string
+	permission string
+}
 type removeThingConnectionsReq struct {
 	thingID string
 }

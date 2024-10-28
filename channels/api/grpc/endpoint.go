@@ -6,9 +6,28 @@ package grpc
 import (
 	"context"
 
+	ch "github.com/absmach/magistrala/channels"
 	channels "github.com/absmach/magistrala/channels/private"
 	"github.com/go-kit/kit/endpoint"
 )
+
+func authorizeEndpoint(svc channels.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(authorizeReq)
+
+		if err := svc.Authorize(ctx, ch.AuthzReq{
+			DomainID:   req.domainID,
+			ClientID:   req.clientID,
+			ClientType: req.clientType,
+			ChannelID:  req.channelID,
+			Permission: req.permission,
+		}); err != nil {
+			return authorizeRes{}, err
+		}
+
+		return authorizeRes{authorized: true}, nil
+	}
+}
 
 func removeThingConnectionsEndpoint(svc channels.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {

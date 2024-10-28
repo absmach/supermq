@@ -3,6 +3,10 @@
 
 package grpc
 
+type authorizeRes struct {
+	authorized bool
+}
+
 type removeThingConnectionsRes struct{}
 
 type unsetParentGroupFromChannelsRes struct{}

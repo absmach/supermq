@@ -24,6 +24,7 @@ var _ grpcChannelsV1.ChannelsServiceClient = (*grpcClient)(nil)
 
 type grpcClient struct {
 	timeout                      time.Duration
+	authorize                    endpoint.Endpoint
 	removeThingConnections       endpoint.Endpoint
 	unsetParentGroupFromChannels endpoint.Endpoint
 }
@@ -31,6 +32,14 @@ type grpcClient struct {
 // NewClient returns new gRPC client instance.
 func NewClient(conn *grpc.ClientConn, timeout time.Duration) grpcChannelsV1.ChannelsServiceClient {
 	return &grpcClient{
+		authorize: kitgrpc.NewClient(
+			conn,
+			svcName,
+			"Authorize",
+			encodeAuthorizeRequest,
+			decodeAuthorizeResponse,
+			grpcChannelsV1.AuthzRes{},
+		).Endpoint(),
 		removeThingConnections: kitgrpc.NewClient(
 			conn,
 			svcName,
@@ -49,6 +58,44 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) grpcChannelsV1.Chan
 		).Endpoint(),
 		timeout: timeout,
 	}
+}
+
+func (client grpcClient) Authorize(ctx context.Context, req *grpcChannelsV1.AuthzReq, _ ...grpc.CallOption) (r *grpcChannelsV1.AuthzRes, err error) {
+	ctx, cancel := context.WithTimeout(ctx, client.timeout)
+	defer cancel()
+
+	res, err := client.removeThingConnections(ctx, authorizeReq{
+		domainID:   req.GetDomainId(),
+		clientID:   req.GetClientId(),
+		clientType: req.GetClientType(),
+		channelID:  req.GetChannelId(),
+		permission: req.GetPermission(),
+	})
+	if err != nil {
+		return &grpcChannelsV1.AuthzRes{}, decodeError(err)
+	}
+
+	ar := res.(authorizeRes)
+
+	return &grpcChannelsV1.AuthzRes{Authorized: ar.authorized}, nil
+}
+
+func encodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(authorizeReq)
+
+	return &grpcChannelsV1.AuthzReq{
+		DomainId:   req.domainID,
+		ClientId:   req.clientID,
+		ClientType: req.clientType,
+		ChannelId:  req.channelID,
+		Permission: req.permission,
+	}, nil
+}
+
+func decodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(*grpcChannelsV1.AuthzRes)
+
+	return authorizeRes{authorized: res.GetAuthorized()}, nil
 }
 
 func (client grpcClient) RemoveThingConnections(ctx context.Context, req *grpcChannelsV1.RemoveThingConnectionsReq, _ ...grpc.CallOption) (r *grpcChannelsV1.RemoveThingConnectionsRes, err error) {
