@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/absmach/magistrala/channels"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
-	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/pelletier/go-toml"
 )
 
@@ -63,7 +63,7 @@ type Config struct {
 	Server        ServiceConf        `toml:"server"    mapstructure:"server"`
 	Bootstrap     Bootstrap          `toml:"bootstrap" mapstructure:"bootstrap"`
 	Things        []mgclients.Client `toml:"things"    mapstructure:"things"`
-	Channels      []groups.Group     `toml:"channels"  mapstructure:"channels"`
+	Channels      []channels.Channel `toml:"channels"  mapstructure:"channels"`
 	Cert          Cert               `toml:"cert"      mapstructure:"cert"`
 	BSContent     string             `env:"MG_PROVISION_BS_CONTENT" envDefault:""`
 	SendTelemetry bool               `env:"MG_SEND_TELEMETRY"           envDefault:"true"`

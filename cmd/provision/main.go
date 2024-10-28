@@ -14,10 +14,10 @@ import (
 
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/magistrala"
+	"github.com/absmach/magistrala/channels"
 	mglog "github.com/absmach/magistrala/logger"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
-	mggroups "github.com/absmach/magistrala/pkg/groups"
 	mgsdk "github.com/absmach/magistrala/pkg/sdk/go"
 	"github.com/absmach/magistrala/pkg/server"
 	httpserver "github.com/absmach/magistrala/pkg/server/http"
@@ -138,7 +138,7 @@ func loadConfig() (provision.Config, error) {
 
 	cfg.Bootstrap.Content = content
 	// This is default conf for provision if there is no config file
-	cfg.Channels = []mggroups.Group{
+	cfg.Channels = []channels.Channel{
 		{
 			Name:     "control-channel",
 			Metadata: map[string]interface{}{"type": "control"},
