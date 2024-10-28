@@ -317,8 +317,10 @@ func createAdmin(ctx context.Context, c config, urepo users.Repository, hsr user
 	}
 
 	user := users.User{
-		ID:    id,
-		Email: c.AdminEmail,
+		ID:        id,
+		Email:     c.AdminEmail,
+		FirstName: "jane",
+		LastName:  "doe",
 		Credentials: users.Credentials{
 			Username: "admin",
 			Secret:   hash,

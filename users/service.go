@@ -213,9 +213,6 @@ func (svc service) Update(ctx context.Context, session authn.Session, usr User) 
 		FirstName:      usr.FirstName,
 		LastName:       usr.LastName,
 		Metadata:       usr.Metadata,
-		Tags:           usr.Tags,
-		Role:           usr.Role,
-		ProfilePicture: usr.ProfilePicture,
 		UpdatedAt:      time.Now(),
 		UpdatedBy:      session.UserID,
 	}
