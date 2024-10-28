@@ -152,7 +152,7 @@ type Repository interface {
 
 	RetrieveParentGroupChannels(ctx context.Context, parentGroupID string) ([]Channel, error)
 
-	UnsetParentGroupFormChannels(ctx context.Context, parentGroupID string) error
+	UnsetParentGroupFromChannels(ctx context.Context, parentGroupID string) error
 
 	roles.Repository
 }

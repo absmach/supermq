@@ -36,8 +36,8 @@ func NewServer(svc channels.Service) grpcChannelsV1.ChannelsServiceServer {
 		),
 		unsetParentGroupFormChannels: kitgrpc.NewServer(
 			unsetParentGroupFormChannelsEndpoint(svc),
-			decodeUnsetParentGroupFormChannelsRequest,
-			encodeUnsetParentGroupFormChannelsResponse,
+			decodeUnsetParentGroupFromChannelsRequest,
+			encodeUnsetParentGroupFromChannelsResponse,
 		),
 	}
 }
@@ -63,25 +63,25 @@ func encodeRemoveThingConnectionsResponse(_ context.Context, grpcRes interface{}
 	return &grpcChannelsV1.RemoveThingConnectionsRes{}, nil
 }
 
-func (s *grpcServer) UnsetParentGroupFormChannels(ctx context.Context, req *grpcChannelsV1.UnsetParentGroupFormChannelsReq) (*grpcChannelsV1.UnsetParentGroupFormChannelsRes, error) {
+func (s *grpcServer) UnsetParentGroupFromChannels(ctx context.Context, req *grpcChannelsV1.UnsetParentGroupFromChannelsReq) (*grpcChannelsV1.UnsetParentGroupFromChannelsRes, error) {
 	_, res, err := s.unsetParentGroupFormChannels.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, encodeError(err)
 	}
-	return res.(*grpcChannelsV1.UnsetParentGroupFormChannelsRes), nil
+	return res.(*grpcChannelsV1.UnsetParentGroupFromChannelsRes), nil
 }
 
-func decodeUnsetParentGroupFormChannelsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*grpcChannelsV1.UnsetParentGroupFormChannelsReq)
+func decodeUnsetParentGroupFromChannelsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*grpcChannelsV1.UnsetParentGroupFromChannelsReq)
 
 	return unsetParentGroupFormChannelsReq{
 		parentGroupID: req.GetParentGroupId(),
 	}, nil
 }
 
-func encodeUnsetParentGroupFormChannelsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeUnsetParentGroupFromChannelsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	_ = grpcRes.(unsetParentGroupFormChannelsRes)
-	return &grpcChannelsV1.UnsetParentGroupFormChannelsRes{}, nil
+	return &grpcChannelsV1.UnsetParentGroupFromChannelsRes{}, nil
 }
 
 func encodeError(err error) error {

@@ -954,12 +954,12 @@ func (_m *Repository) ThingConnectionsCount(ctx context.Context, id string) (uin
 	return r0, r1
 }
 
-// UnsetParentGroupFormThings provides a mock function with given fields: ctx, parentGroupID
-func (_m *Repository) UnsetParentGroupFormThings(ctx context.Context, parentGroupID string) error {
+// UnsetParentGroupFromThings provides a mock function with given fields: ctx, parentGroupID
+func (_m *Repository) UnsetParentGroupFromThings(ctx context.Context, parentGroupID string) error {
 	ret := _m.Called(ctx, parentGroupID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UnsetParentGroupFormThings")
+		panic("no return value specified for UnsetParentGroupFromThings")
 	}
 
 	var r0 error

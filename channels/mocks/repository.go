@@ -812,12 +812,12 @@ func (_m *Repository) SetParentGroup(ctx context.Context, ch channels.Channel) e
 	return r0
 }
 
-// UnsetParentGroupFormChannels provides a mock function with given fields: ctx, parentGroupID
-func (_m *Repository) UnsetParentGroupFormChannels(ctx context.Context, parentGroupID string) error {
+// UnsetParentGroupFromChannels provides a mock function with given fields: ctx, parentGroupID
+func (_m *Repository) UnsetParentGroupFromChannels(ctx context.Context, parentGroupID string) error {
 	ret := _m.Called(ctx, parentGroupID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UnsetParentGroupFormChannels")
+		panic("no return value specified for UnsetParentGroupFromChannels")
 	}
 
 	var r0 error

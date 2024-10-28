@@ -29,7 +29,7 @@ const (
 	ThingsService_AddConnections_FullMethodName             = "/things.v1.ThingsService/AddConnections"
 	ThingsService_RemoveConnections_FullMethodName          = "/things.v1.ThingsService/RemoveConnections"
 	ThingsService_RemoveChannelConnections_FullMethodName   = "/things.v1.ThingsService/RemoveChannelConnections"
-	ThingsService_UnsetParentGroupFormThings_FullMethodName = "/things.v1.ThingsService/UnsetParentGroupFormThings"
+	ThingsService_UnsetParentGroupFromThings_FullMethodName = "/things.v1.ThingsService/UnsetParentGroupFromThings"
 )
 
 // ThingsServiceClient is the client API for ThingsService service.
@@ -46,7 +46,7 @@ type ThingsServiceClient interface {
 	AddConnections(ctx context.Context, in *v1.AddConnectionsReq, opts ...grpc.CallOption) (*v1.AddConnectionsRes, error)
 	RemoveConnections(ctx context.Context, in *v1.RemoveConnectionsReq, opts ...grpc.CallOption) (*v1.RemoveConnectionsRes, error)
 	RemoveChannelConnections(ctx context.Context, in *RemoveChannelConnectionsReq, opts ...grpc.CallOption) (*RemoveChannelConnectionsRes, error)
-	UnsetParentGroupFormThings(ctx context.Context, in *UnsetParentGroupFormThingsReq, opts ...grpc.CallOption) (*UnsetParentGroupFormThingsRes, error)
+	UnsetParentGroupFromThings(ctx context.Context, in *UnsetParentGroupFromThingsReq, opts ...grpc.CallOption) (*UnsetParentGroupFromThingsRes, error)
 }
 
 type thingsServiceClient struct {
@@ -117,10 +117,10 @@ func (c *thingsServiceClient) RemoveChannelConnections(ctx context.Context, in *
 	return out, nil
 }
 
-func (c *thingsServiceClient) UnsetParentGroupFormThings(ctx context.Context, in *UnsetParentGroupFormThingsReq, opts ...grpc.CallOption) (*UnsetParentGroupFormThingsRes, error) {
+func (c *thingsServiceClient) UnsetParentGroupFromThings(ctx context.Context, in *UnsetParentGroupFromThingsReq, opts ...grpc.CallOption) (*UnsetParentGroupFromThingsRes, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UnsetParentGroupFormThingsRes)
-	err := c.cc.Invoke(ctx, ThingsService_UnsetParentGroupFormThings_FullMethodName, in, out, cOpts...)
+	out := new(UnsetParentGroupFromThingsRes)
+	err := c.cc.Invoke(ctx, ThingsService_UnsetParentGroupFromThings_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ type ThingsServiceServer interface {
 	AddConnections(context.Context, *v1.AddConnectionsReq) (*v1.AddConnectionsRes, error)
 	RemoveConnections(context.Context, *v1.RemoveConnectionsReq) (*v1.RemoveConnectionsRes, error)
 	RemoveChannelConnections(context.Context, *RemoveChannelConnectionsReq) (*RemoveChannelConnectionsRes, error)
-	UnsetParentGroupFormThings(context.Context, *UnsetParentGroupFormThingsReq) (*UnsetParentGroupFormThingsRes, error)
+	UnsetParentGroupFromThings(context.Context, *UnsetParentGroupFromThingsReq) (*UnsetParentGroupFromThingsRes, error)
 	mustEmbedUnimplementedThingsServiceServer()
 }
 
@@ -170,8 +170,8 @@ func (UnimplementedThingsServiceServer) RemoveConnections(context.Context, *v1.R
 func (UnimplementedThingsServiceServer) RemoveChannelConnections(context.Context, *RemoveChannelConnectionsReq) (*RemoveChannelConnectionsRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveChannelConnections not implemented")
 }
-func (UnimplementedThingsServiceServer) UnsetParentGroupFormThings(context.Context, *UnsetParentGroupFormThingsReq) (*UnsetParentGroupFormThingsRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UnsetParentGroupFormThings not implemented")
+func (UnimplementedThingsServiceServer) UnsetParentGroupFromThings(context.Context, *UnsetParentGroupFromThingsReq) (*UnsetParentGroupFromThingsRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnsetParentGroupFromThings not implemented")
 }
 func (UnimplementedThingsServiceServer) mustEmbedUnimplementedThingsServiceServer() {}
 func (UnimplementedThingsServiceServer) testEmbeddedByValue()                       {}
@@ -302,20 +302,20 @@ func _ThingsService_RemoveChannelConnections_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ThingsService_UnsetParentGroupFormThings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UnsetParentGroupFormThingsReq)
+func _ThingsService_UnsetParentGroupFromThings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnsetParentGroupFromThingsReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ThingsServiceServer).UnsetParentGroupFormThings(ctx, in)
+		return srv.(ThingsServiceServer).UnsetParentGroupFromThings(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ThingsService_UnsetParentGroupFormThings_FullMethodName,
+		FullMethod: ThingsService_UnsetParentGroupFromThings_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ThingsServiceServer).UnsetParentGroupFormThings(ctx, req.(*UnsetParentGroupFormThingsReq))
+		return srv.(ThingsServiceServer).UnsetParentGroupFromThings(ctx, req.(*UnsetParentGroupFromThingsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -352,8 +352,8 @@ var ThingsService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ThingsService_RemoveChannelConnections_Handler,
 		},
 		{
-			MethodName: "UnsetParentGroupFormThings",
-			Handler:    _ThingsService_UnsetParentGroupFormThings_Handler,
+			MethodName: "UnsetParentGroupFromThings",
+			Handler:    _ThingsService_UnsetParentGroupFromThings_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

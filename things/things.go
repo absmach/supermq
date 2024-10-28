@@ -117,7 +117,7 @@ type Repository interface {
 
 	RetrieveParentGroupThings(ctx context.Context, parentGroupID string) ([]clients.Client, error)
 
-	UnsetParentGroupFormThings(ctx context.Context, parentGroupID string) error
+	UnsetParentGroupFromThings(ctx context.Context, parentGroupID string) error
 
 	roles.Repository
 }

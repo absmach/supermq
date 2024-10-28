@@ -104,7 +104,7 @@ func (*RemoveThingConnectionsRes) Descriptor() ([]byte, []int) {
 	return file_channels_v1_channels_proto_rawDescGZIP(), []int{1}
 }
 
-type UnsetParentGroupFormChannelsReq struct {
+type UnsetParentGroupFromChannelsReq struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -112,20 +112,20 @@ type UnsetParentGroupFormChannelsReq struct {
 	ParentGroupId string `protobuf:"bytes,1,opt,name=parent_group_id,json=parentGroupId,proto3" json:"parent_group_id,omitempty"`
 }
 
-func (x *UnsetParentGroupFormChannelsReq) Reset() {
-	*x = UnsetParentGroupFormChannelsReq{}
+func (x *UnsetParentGroupFromChannelsReq) Reset() {
+	*x = UnsetParentGroupFromChannelsReq{}
 	mi := &file_channels_v1_channels_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UnsetParentGroupFormChannelsReq) String() string {
+func (x *UnsetParentGroupFromChannelsReq) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UnsetParentGroupFormChannelsReq) ProtoMessage() {}
+func (*UnsetParentGroupFromChannelsReq) ProtoMessage() {}
 
-func (x *UnsetParentGroupFormChannelsReq) ProtoReflect() protoreflect.Message {
+func (x *UnsetParentGroupFromChannelsReq) ProtoReflect() protoreflect.Message {
 	mi := &file_channels_v1_channels_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -137,38 +137,38 @@ func (x *UnsetParentGroupFormChannelsReq) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UnsetParentGroupFormChannelsReq.ProtoReflect.Descriptor instead.
-func (*UnsetParentGroupFormChannelsReq) Descriptor() ([]byte, []int) {
+// Deprecated: Use UnsetParentGroupFromChannelsReq.ProtoReflect.Descriptor instead.
+func (*UnsetParentGroupFromChannelsReq) Descriptor() ([]byte, []int) {
 	return file_channels_v1_channels_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *UnsetParentGroupFormChannelsReq) GetParentGroupId() string {
+func (x *UnsetParentGroupFromChannelsReq) GetParentGroupId() string {
 	if x != nil {
 		return x.ParentGroupId
 	}
 	return ""
 }
 
-type UnsetParentGroupFormChannelsRes struct {
+type UnsetParentGroupFromChannelsRes struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *UnsetParentGroupFormChannelsRes) Reset() {
-	*x = UnsetParentGroupFormChannelsRes{}
+func (x *UnsetParentGroupFromChannelsRes) Reset() {
+	*x = UnsetParentGroupFromChannelsRes{}
 	mi := &file_channels_v1_channels_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UnsetParentGroupFormChannelsRes) String() string {
+func (x *UnsetParentGroupFromChannelsRes) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UnsetParentGroupFormChannelsRes) ProtoMessage() {}
+func (*UnsetParentGroupFromChannelsRes) ProtoMessage() {}
 
-func (x *UnsetParentGroupFormChannelsRes) ProtoReflect() protoreflect.Message {
+func (x *UnsetParentGroupFromChannelsRes) ProtoReflect() protoreflect.Message {
 	mi := &file_channels_v1_channels_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -180,8 +180,8 @@ func (x *UnsetParentGroupFormChannelsRes) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UnsetParentGroupFormChannelsRes.ProtoReflect.Descriptor instead.
-func (*UnsetParentGroupFormChannelsRes) Descriptor() ([]byte, []int) {
+// Deprecated: Use UnsetParentGroupFromChannelsRes.ProtoReflect.Descriptor instead.
+func (*UnsetParentGroupFromChannelsRes) Descriptor() ([]byte, []int) {
 	return file_channels_v1_channels_proto_rawDescGZIP(), []int{3}
 }
 
@@ -241,14 +241,14 @@ var file_channels_v1_channels_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_channels_v1_channels_proto_goTypes = []any{
 	(*RemoveThingConnectionsReq)(nil),       // 0: channels.v1.RemoveThingConnectionsReq
 	(*RemoveThingConnectionsRes)(nil),       // 1: channels.v1.RemoveThingConnectionsRes
-	(*UnsetParentGroupFormChannelsReq)(nil), // 2: channels.v1.UnsetParentGroupFormChannelsReq
-	(*UnsetParentGroupFormChannelsRes)(nil), // 3: channels.v1.UnsetParentGroupFormChannelsRes
+	(*UnsetParentGroupFromChannelsReq)(nil), // 2: channels.v1.UnsetParentGroupFromChannelsReq
+	(*UnsetParentGroupFromChannelsRes)(nil), // 3: channels.v1.UnsetParentGroupFromChannelsRes
 }
 var file_channels_v1_channels_proto_depIdxs = []int32{
 	0, // 0: channels.v1.ChannelsService.RemoveThingConnections:input_type -> channels.v1.RemoveThingConnectionsReq
-	2, // 1: channels.v1.ChannelsService.UnsetParentGroupFormChannels:input_type -> channels.v1.UnsetParentGroupFormChannelsReq
+	2, // 1: channels.v1.ChannelsService.UnsetParentGroupFromChannels:input_type -> channels.v1.UnsetParentGroupFromChannelsReq
 	1, // 2: channels.v1.ChannelsService.RemoveThingConnections:output_type -> channels.v1.RemoveThingConnectionsRes
-	3, // 3: channels.v1.ChannelsService.UnsetParentGroupFormChannels:output_type -> channels.v1.UnsetParentGroupFormChannelsRes
+	3, // 3: channels.v1.ChannelsService.UnsetParentGroupFromChannels:output_type -> channels.v1.UnsetParentGroupFromChannelsRes
 	2, // [2:4] is the sub-list for method output_type
 	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

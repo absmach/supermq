@@ -347,7 +347,7 @@ func (repo *clientsRepo) RetrieveParentGroupThings(ctx context.Context, parentGr
 	return ths, nil
 }
 
-func (repo *clientsRepo) UnsetParentGroupFormThings(ctx context.Context, parentGroupID string) error {
+func (repo *clientsRepo) UnsetParentGroupFromThings(ctx context.Context, parentGroupID string) error {
 	query := "UPDATE clients SET parent_group_id = NULL WHERE parent_group_id = :parent_group_id"
 
 	params := map[string]interface{}{

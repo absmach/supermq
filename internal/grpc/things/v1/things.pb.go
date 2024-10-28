@@ -227,7 +227,7 @@ func (*RemoveChannelConnectionsRes) Descriptor() ([]byte, []int) {
 	return file_things_v1_things_proto_rawDescGZIP(), []int{3}
 }
 
-type UnsetParentGroupFormThingsReq struct {
+type UnsetParentGroupFromThingsReq struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -235,20 +235,20 @@ type UnsetParentGroupFormThingsReq struct {
 	ParentGroupId string `protobuf:"bytes,1,opt,name=parent_group_id,json=parentGroupId,proto3" json:"parent_group_id,omitempty"`
 }
 
-func (x *UnsetParentGroupFormThingsReq) Reset() {
-	*x = UnsetParentGroupFormThingsReq{}
+func (x *UnsetParentGroupFromThingsReq) Reset() {
+	*x = UnsetParentGroupFromThingsReq{}
 	mi := &file_things_v1_things_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UnsetParentGroupFormThingsReq) String() string {
+func (x *UnsetParentGroupFromThingsReq) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UnsetParentGroupFormThingsReq) ProtoMessage() {}
+func (*UnsetParentGroupFromThingsReq) ProtoMessage() {}
 
-func (x *UnsetParentGroupFormThingsReq) ProtoReflect() protoreflect.Message {
+func (x *UnsetParentGroupFromThingsReq) ProtoReflect() protoreflect.Message {
 	mi := &file_things_v1_things_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -260,38 +260,38 @@ func (x *UnsetParentGroupFormThingsReq) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UnsetParentGroupFormThingsReq.ProtoReflect.Descriptor instead.
-func (*UnsetParentGroupFormThingsReq) Descriptor() ([]byte, []int) {
+// Deprecated: Use UnsetParentGroupFromThingsReq.ProtoReflect.Descriptor instead.
+func (*UnsetParentGroupFromThingsReq) Descriptor() ([]byte, []int) {
 	return file_things_v1_things_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *UnsetParentGroupFormThingsReq) GetParentGroupId() string {
+func (x *UnsetParentGroupFromThingsReq) GetParentGroupId() string {
 	if x != nil {
 		return x.ParentGroupId
 	}
 	return ""
 }
 
-type UnsetParentGroupFormThingsRes struct {
+type UnsetParentGroupFromThingsRes struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *UnsetParentGroupFormThingsRes) Reset() {
-	*x = UnsetParentGroupFormThingsRes{}
+func (x *UnsetParentGroupFromThingsRes) Reset() {
+	*x = UnsetParentGroupFromThingsRes{}
 	mi := &file_things_v1_things_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UnsetParentGroupFormThingsRes) String() string {
+func (x *UnsetParentGroupFromThingsRes) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UnsetParentGroupFormThingsRes) ProtoMessage() {}
+func (*UnsetParentGroupFromThingsRes) ProtoMessage() {}
 
-func (x *UnsetParentGroupFormThingsRes) ProtoReflect() protoreflect.Message {
+func (x *UnsetParentGroupFromThingsRes) ProtoReflect() protoreflect.Message {
 	mi := &file_things_v1_things_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -303,8 +303,8 @@ func (x *UnsetParentGroupFormThingsRes) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UnsetParentGroupFormThingsRes.ProtoReflect.Descriptor instead.
-func (*UnsetParentGroupFormThingsRes) Descriptor() ([]byte, []int) {
+// Deprecated: Use UnsetParentGroupFromThingsRes.ProtoReflect.Descriptor instead.
+func (*UnsetParentGroupFromThingsRes) Descriptor() ([]byte, []int) {
 	return file_things_v1_things_proto_rawDescGZIP(), []int{5}
 }
 
@@ -403,8 +403,8 @@ var file_things_v1_things_proto_goTypes = []any{
 	(*AuthzRes)(nil),                      // 1: things.v1.AuthzRes
 	(*RemoveChannelConnectionsReq)(nil),   // 2: things.v1.RemoveChannelConnectionsReq
 	(*RemoveChannelConnectionsRes)(nil),   // 3: things.v1.RemoveChannelConnectionsRes
-	(*UnsetParentGroupFormThingsReq)(nil), // 4: things.v1.UnsetParentGroupFormThingsReq
-	(*UnsetParentGroupFormThingsRes)(nil), // 5: things.v1.UnsetParentGroupFormThingsRes
+	(*UnsetParentGroupFromThingsReq)(nil), // 4: things.v1.UnsetParentGroupFromThingsReq
+	(*UnsetParentGroupFromThingsRes)(nil), // 5: things.v1.UnsetParentGroupFromThingsRes
 	(*v1.RetrieveEntityReq)(nil),          // 6: common.v1.RetrieveEntityReq
 	(*v1.RetrieveEntitiesReq)(nil),        // 7: common.v1.RetrieveEntitiesReq
 	(*v1.AddConnectionsReq)(nil),          // 8: common.v1.AddConnectionsReq
@@ -421,14 +421,14 @@ var file_things_v1_things_proto_depIdxs = []int32{
 	8,  // 3: things.v1.ThingsService.AddConnections:input_type -> common.v1.AddConnectionsReq
 	9,  // 4: things.v1.ThingsService.RemoveConnections:input_type -> common.v1.RemoveConnectionsReq
 	2,  // 5: things.v1.ThingsService.RemoveChannelConnections:input_type -> things.v1.RemoveChannelConnectionsReq
-	4,  // 6: things.v1.ThingsService.UnsetParentGroupFormThings:input_type -> things.v1.UnsetParentGroupFormThingsReq
+	4,  // 6: things.v1.ThingsService.UnsetParentGroupFromThings:input_type -> things.v1.UnsetParentGroupFromThingsReq
 	1,  // 7: things.v1.ThingsService.Authorize:output_type -> things.v1.AuthzRes
 	10, // 8: things.v1.ThingsService.RetrieveEntity:output_type -> common.v1.RetrieveEntityRes
 	11, // 9: things.v1.ThingsService.RetrieveEntities:output_type -> common.v1.RetrieveEntitiesRes
 	12, // 10: things.v1.ThingsService.AddConnections:output_type -> common.v1.AddConnectionsRes
 	13, // 11: things.v1.ThingsService.RemoveConnections:output_type -> common.v1.RemoveConnectionsRes
 	3,  // 12: things.v1.ThingsService.RemoveChannelConnections:output_type -> things.v1.RemoveChannelConnectionsRes
-	5,  // 13: things.v1.ThingsService.UnsetParentGroupFormThings:output_type -> things.v1.UnsetParentGroupFormThingsRes
+	5,  // 13: things.v1.ThingsService.UnsetParentGroupFromThings:output_type -> things.v1.UnsetParentGroupFromThingsRes
 	7,  // [7:14] is the sub-list for method output_type
 	0,  // [0:7] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name

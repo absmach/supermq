@@ -372,7 +372,7 @@ func (cr *channelRepository) RetrieveParentGroupChannels(ctx context.Context, pa
 	return chs, nil
 }
 
-func (cr *channelRepository) UnsetParentGroupFormChannels(ctx context.Context, parentGroupID string) error {
+func (cr *channelRepository) UnsetParentGroupFromChannels(ctx context.Context, parentGroupID string) error {
 	query := "UPDATE channels SET parent_group_id = NULL WHERE parent_group_id = :parent_group_id"
 
 	dbCh := dbChannel{ParentGroup: nullString(parentGroupID)}

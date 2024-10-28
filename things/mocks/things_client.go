@@ -475,8 +475,8 @@ func (_c *ThingsServiceClient_RetrieveEntity_Call) RunAndReturn(run func(context
 	return _c
 }
 
-// UnsetParentGroupFormThings provides a mock function with given fields: ctx, in, opts
-func (_m *ThingsServiceClient) UnsetParentGroupFormThings(ctx context.Context, in *thingsv1.UnsetParentGroupFormThingsReq, opts ...grpc.CallOption) (*thingsv1.UnsetParentGroupFormThingsRes, error) {
+// UnsetParentGroupFromThings provides a mock function with given fields: ctx, in, opts
+func (_m *ThingsServiceClient) UnsetParentGroupFromThings(ctx context.Context, in *thingsv1.UnsetParentGroupFromThingsReq, opts ...grpc.CallOption) (*thingsv1.UnsetParentGroupFromThingsRes, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -487,23 +487,23 @@ func (_m *ThingsServiceClient) UnsetParentGroupFormThings(ctx context.Context, i
 	ret := _m.Called(_ca...)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UnsetParentGroupFormThings")
+		panic("no return value specified for UnsetParentGroupFromThings")
 	}
 
-	var r0 *thingsv1.UnsetParentGroupFormThingsRes
+	var r0 *thingsv1.UnsetParentGroupFromThingsRes
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *thingsv1.UnsetParentGroupFormThingsReq, ...grpc.CallOption) (*thingsv1.UnsetParentGroupFormThingsRes, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *thingsv1.UnsetParentGroupFromThingsReq, ...grpc.CallOption) (*thingsv1.UnsetParentGroupFromThingsRes, error)); ok {
 		return rf(ctx, in, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *thingsv1.UnsetParentGroupFormThingsReq, ...grpc.CallOption) *thingsv1.UnsetParentGroupFormThingsRes); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *thingsv1.UnsetParentGroupFromThingsReq, ...grpc.CallOption) *thingsv1.UnsetParentGroupFromThingsRes); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*thingsv1.UnsetParentGroupFormThingsRes)
+			r0 = ret.Get(0).(*thingsv1.UnsetParentGroupFromThingsRes)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *thingsv1.UnsetParentGroupFormThingsReq, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *thingsv1.UnsetParentGroupFromThingsReq, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -512,21 +512,21 @@ func (_m *ThingsServiceClient) UnsetParentGroupFormThings(ctx context.Context, i
 	return r0, r1
 }
 
-// ThingsServiceClient_UnsetParentGroupFormThings_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UnsetParentGroupFormThings'
-type ThingsServiceClient_UnsetParentGroupFormThings_Call struct {
+// ThingsServiceClient_UnsetParentGroupFromThings_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UnsetParentGroupFromThings'
+type ThingsServiceClient_UnsetParentGroupFromThings_Call struct {
 	*mock.Call
 }
 
-// UnsetParentGroupFormThings is a helper method to define mock.On call
+// UnsetParentGroupFromThings is a helper method to define mock.On call
 //   - ctx context.Context
-//   - in *thingsv1.UnsetParentGroupFormThingsReq
+//   - in *thingsv1.UnsetParentGroupFromThingsReq
 //   - opts ...grpc.CallOption
-func (_e *ThingsServiceClient_Expecter) UnsetParentGroupFormThings(ctx interface{}, in interface{}, opts ...interface{}) *ThingsServiceClient_UnsetParentGroupFormThings_Call {
-	return &ThingsServiceClient_UnsetParentGroupFormThings_Call{Call: _e.mock.On("UnsetParentGroupFormThings",
+func (_e *ThingsServiceClient_Expecter) UnsetParentGroupFromThings(ctx interface{}, in interface{}, opts ...interface{}) *ThingsServiceClient_UnsetParentGroupFromThings_Call {
+	return &ThingsServiceClient_UnsetParentGroupFromThings_Call{Call: _e.mock.On("UnsetParentGroupFromThings",
 		append([]interface{}{ctx, in}, opts...)...)}
 }
 
-func (_c *ThingsServiceClient_UnsetParentGroupFormThings_Call) Run(run func(ctx context.Context, in *thingsv1.UnsetParentGroupFormThingsReq, opts ...grpc.CallOption)) *ThingsServiceClient_UnsetParentGroupFormThings_Call {
+func (_c *ThingsServiceClient_UnsetParentGroupFromThings_Call) Run(run func(ctx context.Context, in *thingsv1.UnsetParentGroupFromThingsReq, opts ...grpc.CallOption)) *ThingsServiceClient_UnsetParentGroupFromThings_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		variadicArgs := make([]grpc.CallOption, len(args)-2)
 		for i, a := range args[2:] {
@@ -534,17 +534,17 @@ func (_c *ThingsServiceClient_UnsetParentGroupFormThings_Call) Run(run func(ctx 
 				variadicArgs[i] = a.(grpc.CallOption)
 			}
 		}
-		run(args[0].(context.Context), args[1].(*thingsv1.UnsetParentGroupFormThingsReq), variadicArgs...)
+		run(args[0].(context.Context), args[1].(*thingsv1.UnsetParentGroupFromThingsReq), variadicArgs...)
 	})
 	return _c
 }
 
-func (_c *ThingsServiceClient_UnsetParentGroupFormThings_Call) Return(_a0 *thingsv1.UnsetParentGroupFormThingsRes, _a1 error) *ThingsServiceClient_UnsetParentGroupFormThings_Call {
+func (_c *ThingsServiceClient_UnsetParentGroupFromThings_Call) Return(_a0 *thingsv1.UnsetParentGroupFromThingsRes, _a1 error) *ThingsServiceClient_UnsetParentGroupFromThings_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *ThingsServiceClient_UnsetParentGroupFormThings_Call) RunAndReturn(run func(context.Context, *thingsv1.UnsetParentGroupFormThingsReq, ...grpc.CallOption) (*thingsv1.UnsetParentGroupFormThingsRes, error)) *ThingsServiceClient_UnsetParentGroupFormThings_Call {
+func (_c *ThingsServiceClient_UnsetParentGroupFromThings_Call) RunAndReturn(run func(context.Context, *thingsv1.UnsetParentGroupFromThingsReq, ...grpc.CallOption) (*thingsv1.UnsetParentGroupFromThingsRes, error)) *ThingsServiceClient_UnsetParentGroupFromThings_Call {
 	_c.Call.Return(run)
 	return _c
 }

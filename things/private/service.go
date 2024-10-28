@@ -28,7 +28,7 @@ type Service interface {
 
 	RemoveChannelConnections(ctx context.Context, channelID string) error
 
-	UnsetParentGroupFormThings(ctx context.Context, parentGroupID string) error
+	UnsetParentGroupFromThings(ctx context.Context, parentGroupID string) error
 }
 
 var _ Service = (*service)(nil)
@@ -107,7 +107,7 @@ func (svc service) RemoveChannelConnections(ctx context.Context, channelID strin
 	return svc.repo.RemoveChannelConnections(ctx, channelID)
 }
 
-func (svc service) UnsetParentGroupFormThings(ctx context.Context, parentGroupID string) (retErr error) {
+func (svc service) UnsetParentGroupFromThings(ctx context.Context, parentGroupID string) (retErr error) {
 	ths, err := svc.repo.RetrieveParentGroupThings(ctx, parentGroupID)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrViewEntity, err)
@@ -136,7 +136,7 @@ func (svc service) UnsetParentGroupFormThings(ctx context.Context, parentGroupID
 			}
 		}()
 
-		if err := svc.repo.UnsetParentGroupFormThings(ctx, parentGroupID); err != nil {
+		if err := svc.repo.UnsetParentGroupFromThings(ctx, parentGroupID); err != nil {
 			return errors.Wrap(svcerr.ErrRemoveEntity, err)
 		}
 	}

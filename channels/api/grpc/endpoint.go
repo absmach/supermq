@@ -26,7 +26,7 @@ func unsetParentGroupFormChannelsEndpoint(svc channels.Service) endpoint.Endpoin
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(unsetParentGroupFormChannelsReq)
 
-		if err := svc.UnsetParentGroupFormChannels(ctx, req.parentGroupID); err != nil {
+		if err := svc.UnsetParentGroupFromChannels(ctx, req.parentGroupID); err != nil {
 			return unsetParentGroupFormChannelsRes{}, err
 		}
 

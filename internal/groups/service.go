@@ -456,11 +456,11 @@ func (svc service) ListChildrenGroups(ctx context.Context, session mgauthn.Sessi
 }
 
 func (svc service) DeleteGroup(ctx context.Context, session mgauthn.Session, id string) error {
-	if _, err := svc.channels.UnsetParentGroupFormChannels(ctx, &grpcChannelsV1.UnsetParentGroupFormChannelsReq{ParentGroupId: id}); err != nil {
+	if _, err := svc.channels.UnsetParentGroupFromChannels(ctx, &grpcChannelsV1.UnsetParentGroupFromChannelsReq{ParentGroupId: id}); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
-	if _, err := svc.things.UnsetParentGroupFormThings(ctx, &grpcThingsV1.UnsetParentGroupFormThingsReq{ParentGroupId: id}); err != nil {
+	if _, err := svc.things.UnsetParentGroupFromThings(ctx, &grpcThingsV1.UnsetParentGroupFromThingsReq{ParentGroupId: id}); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 

@@ -66,8 +66,8 @@ func NewServer(svc things.Service) grpcThingsV1.ThingsServiceServer {
 		),
 		unsetParentGroupFormThings: kitgrpc.NewServer(
 			unsetParentGroupFormThingsEndpoint(svc),
-			decodeUnsetParentGroupFormThingsRequest,
-			encodeUnsetParentGroupFormThingsResponse,
+			decodeUnsetParentGroupFromThingsRequest,
+			encodeUnsetParentGroupFromThingsResponse,
 		),
 	}
 }
@@ -232,25 +232,25 @@ func encodeRemoveChannelConnectionsResponse(_ context.Context, grpcRes interface
 	return &grpcThingsV1.RemoveChannelConnectionsRes{}, nil
 }
 
-func (s *grpcServer) UnsetParentGroupFormThings(ctx context.Context, req *grpcThingsV1.UnsetParentGroupFormThingsReq) (*grpcThingsV1.UnsetParentGroupFormThingsRes, error) {
+func (s *grpcServer) UnsetParentGroupFromThings(ctx context.Context, req *grpcThingsV1.UnsetParentGroupFromThingsReq) (*grpcThingsV1.UnsetParentGroupFromThingsRes, error) {
 	_, res, err := s.unsetParentGroupFormThings.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, encodeError(err)
 	}
-	return res.(*grpcThingsV1.UnsetParentGroupFormThingsRes), nil
+	return res.(*grpcThingsV1.UnsetParentGroupFromThingsRes), nil
 }
 
-func decodeUnsetParentGroupFormThingsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*grpcThingsV1.UnsetParentGroupFormThingsReq)
+func decodeUnsetParentGroupFromThingsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*grpcThingsV1.UnsetParentGroupFromThingsReq)
 
 	return unsetParentGroupFormThingsReq{
 		parentGroupID: req.GetParentGroupId(),
 	}, nil
 }
 
-func encodeUnsetParentGroupFormThingsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeUnsetParentGroupFromThingsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	_ = grpcRes.(unsetParentGroupFormThingsRes)
-	return &grpcThingsV1.UnsetParentGroupFormThingsRes{}, nil
+	return &grpcThingsV1.UnsetParentGroupFromThingsRes{}, nil
 }
 
 func encodeError(err error) error {
