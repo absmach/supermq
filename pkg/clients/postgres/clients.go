@@ -491,9 +491,6 @@ func PageQuery(pm clients.Page) (string, error) {
 	if pm.Tag != "" {
 		query = append(query, "EXISTS (SELECT 1 FROM unnest(tags) AS tag WHERE tag ILIKE '%' || :tag || '%')")
 	}
-	if pm.Role != clients.AllRole {
-		query = append(query, "c.role = :role")
-	}
 	// If there are search params presents, use search and ignore other options.
 	// Always combine role with search params, so len(query) > 1.
 	if len(query) > 1 {

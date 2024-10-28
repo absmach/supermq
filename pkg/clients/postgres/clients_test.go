@@ -35,7 +35,7 @@ func TestRetrieveByID(t *testing.T) {
 	})
 	repo := &pgclients.Repository{database}
 
-	client := generateClient(t, mgclients.EnabledStatus, mgclients.UserRole, repo)
+	client := generateClient(t, mgclients.EnabledStatus, repo)
 
 	cases := []struct {
 		desc     string
@@ -85,7 +85,7 @@ func TestRetrieveByIdentity(t *testing.T) {
 	})
 	repo := &pgclients.Repository{database}
 
-	client := generateClient(t, mgclients.EnabledStatus, mgclients.UserRole, repo)
+	client := generateClient(t, mgclients.EnabledStatus, repo)
 
 	cases := []struct {
 		desc     string
@@ -154,7 +154,6 @@ func TestRetrieveAll(t *testing.T) {
 			},
 			Status:    mgclients.EnabledStatus,
 			CreatedAt: time.Now().UTC().Truncate(time.Millisecond),
-			Role:      mgclients.UserRole,
 		}
 		if i%50 == 0 {
 			client.Status = mgclients.DisabledStatus
@@ -522,73 +521,6 @@ func TestRetrieveAll(t *testing.T) {
 			},
 		},
 		{
-			desc: "with user role",
-			pm: mgclients.Page{
-				Offset: 0,
-				Limit:  10,
-				Role:   mgclients.UserRole,
-				Status: mgclients.AllStatus,
-			},
-			response: mgclients.ClientsPage{
-				Page: mgclients.Page{
-					Total:  196,
-					Offset: 0,
-					Limit:  10,
-				},
-				Clients: expectedClients[1:11],
-			},
-		},
-		{
-			desc: "with admin role",
-			pm: mgclients.Page{
-				Offset: 0,
-				Limit:  nClients,
-				Role:   mgclients.AdminRole,
-				Status: mgclients.AllStatus,
-			},
-			response: mgclients.ClientsPage{
-				Page: mgclients.Page{
-					Total:  4,
-					Offset: 0,
-					Limit:  nClients,
-				},
-				Clients: disabledClients,
-			},
-		},
-		{
-			desc: "with combined role",
-			pm: mgclients.Page{
-				Offset: 0,
-				Limit:  nClients,
-				Status: mgclients.AllStatus,
-				Role:   mgclients.AllRole,
-			},
-			response: mgclients.ClientsPage{
-				Page: mgclients.Page{
-					Total:  nClients,
-					Offset: 0,
-					Limit:  nClients,
-				},
-				Clients: expectedClients,
-			},
-		},
-		{
-			desc: "with the wrong role",
-			pm: mgclients.Page{
-				Offset: 0,
-				Limit:  nClients,
-				Role:   10,
-			},
-			response: mgclients.ClientsPage{
-				Page: mgclients.Page{
-					Total:  0,
-					Offset: 0,
-					Limit:  nClients,
-				},
-				Clients: []mgclients.Client(nil),
-			},
-		},
-		{
 			desc: "with tag",
 			pm: mgclients.Page{
 				Offset: 0,
@@ -679,7 +611,7 @@ func TestRetrieveByIDs(t *testing.T) {
 			Name:   name,
 			Credentials: mgclients.Credentials{
 				Identity: name + emailSuffix,
-				Secret:   password,
+				Secret:   testsutil.GenerateUUID(t),
 			},
 			Tags:      namegen.GenerateMultiple(5),
 			Metadata:  map[string]interface{}{"name": name},
@@ -943,7 +875,7 @@ func TestSearchClients(t *testing.T) {
 			Name: username,
 			Credentials: mgclients.Credentials{
 				Identity: username,
-				Secret:   password,
+				Secret:   fmt.Sprintf("%s%d", password, i),
 			},
 			Metadata:  mgclients.Metadata{},
 			Status:    mgclients.EnabledStatus,
@@ -1311,8 +1243,8 @@ func TestUpdate(t *testing.T) {
 	})
 	repo := &pgclients.Repository{database}
 
-	client1 := generateClient(t, mgclients.EnabledStatus, mgclients.UserRole, repo)
-	client2 := generateClient(t, mgclients.DisabledStatus, mgclients.UserRole, repo)
+	client1 := generateClient(t, mgclients.EnabledStatus, repo)
+	client2 := generateClient(t, mgclients.DisabledStatus, repo)
 
 	cases := []struct {
 		desc   string
@@ -1487,8 +1419,8 @@ func TestUpdateTags(t *testing.T) {
 	})
 	repo := &pgclients.Repository{database}
 
-	client1 := generateClient(t, mgclients.EnabledStatus, mgclients.UserRole, repo)
-	client2 := generateClient(t, mgclients.DisabledStatus, mgclients.UserRole, repo)
+	client1 := generateClient(t, mgclients.EnabledStatus, repo)
+	client2 := generateClient(t, mgclients.DisabledStatus, repo)
 
 	cases := []struct {
 		desc   string
@@ -1547,8 +1479,8 @@ func TestUpdateSecret(t *testing.T) {
 	})
 	repo := &pgclients.Repository{database}
 
-	client1 := generateClient(t, mgclients.EnabledStatus, mgclients.UserRole, repo)
-	client2 := generateClient(t, mgclients.DisabledStatus, mgclients.UserRole, repo)
+	client1 := generateClient(t, mgclients.EnabledStatus, repo)
+	client2 := generateClient(t, mgclients.DisabledStatus, repo)
 
 	cases := []struct {
 		desc   string
@@ -1615,8 +1547,8 @@ func TestUpdateIdentity(t *testing.T) {
 	})
 	repo := &pgclients.Repository{database}
 
-	client1 := generateClient(t, mgclients.EnabledStatus, mgclients.UserRole, repo)
-	client2 := generateClient(t, mgclients.DisabledStatus, mgclients.UserRole, repo)
+	client1 := generateClient(t, mgclients.EnabledStatus, repo)
+	client2 := generateClient(t, mgclients.DisabledStatus, repo)
 
 	cases := []struct {
 		desc   string
@@ -1681,8 +1613,8 @@ func TestChangeStatus(t *testing.T) {
 	})
 	repo := &pgclients.Repository{database}
 
-	client1 := generateClient(t, mgclients.EnabledStatus, mgclients.UserRole, repo)
-	client2 := generateClient(t, mgclients.DisabledStatus, mgclients.UserRole, repo)
+	client1 := generateClient(t, mgclients.EnabledStatus, repo)
+	client2 := generateClient(t, mgclients.DisabledStatus, repo)
 
 	cases := []struct {
 		desc   string
@@ -1735,67 +1667,6 @@ func TestChangeStatus(t *testing.T) {
 	}
 }
 
-func TestUpdateRole(t *testing.T) {
-	t.Cleanup(func() {
-		_, err := db.Exec("DELETE FROM clients")
-		require.Nil(t, err, fmt.Sprintf("clean clients unexpected error: %s", err))
-	})
-	repo := &pgclients.Repository{database}
-
-	client1 := generateClient(t, mgclients.EnabledStatus, mgclients.UserRole, repo)
-	client2 := generateClient(t, mgclients.DisabledStatus, mgclients.UserRole, repo)
-
-	cases := []struct {
-		desc   string
-		client mgclients.Client
-		err    error
-	}{
-		{
-			desc: "for an enabled client",
-			client: mgclients.Client{
-				ID:   client1.ID,
-				Role: mgclients.AdminRole,
-			},
-			err: nil,
-		},
-		{
-			desc: "for a disabled client",
-			client: mgclients.Client{
-				ID:   client2.ID,
-				Role: mgclients.AdminRole,
-			},
-			err: repoerr.ErrNotFound,
-		},
-		{
-			desc: "for invalid client",
-			client: mgclients.Client{
-				ID:   testsutil.GenerateUUID(t),
-				Role: mgclients.AdminRole,
-			},
-			err: repoerr.ErrNotFound,
-		},
-		{
-			desc:   "for empty client",
-			client: mgclients.Client{},
-			err:    repoerr.ErrNotFound,
-		},
-	}
-
-	for _, c := range cases {
-		t.Run(c.desc, func(t *testing.T) {
-			c.client.UpdatedAt = time.Now().UTC().Truncate(time.Millisecond)
-			c.client.UpdatedBy = testsutil.GenerateUUID(t)
-			expected, err := repo.UpdateRole(context.Background(), c.client)
-			assert.True(t, errors.Contains(err, c.err), fmt.Sprintf("expected %s to contain %s\n", err, c.err))
-			if err == nil {
-				assert.Equal(t, c.client.Role, expected.Role)
-				assert.Equal(t, c.client.UpdatedAt, expected.UpdatedAt)
-				assert.Equal(t, c.client.UpdatedBy, expected.UpdatedBy)
-			}
-		})
-	}
-}
-
 func TestDelete(t *testing.T) {
 	t.Cleanup(func() {
 		_, err := db.Exec("DELETE FROM clients")
@@ -1803,7 +1674,7 @@ func TestDelete(t *testing.T) {
 	})
 	repo := &pgclients.Repository{database}
 
-	client := generateClient(t, mgclients.EnabledStatus, mgclients.UserRole, repo)
+	client := generateClient(t, mgclients.EnabledStatus, repo)
 
 	cases := []struct {
 		desc string
@@ -1852,20 +1723,19 @@ func findClients(clis []mgclients.Client, query string, offset, limit uint64) []
 	return rclients[offset:limit]
 }
 
-func generateClient(t *testing.T, status mgclients.Status, role mgclients.Role, repo *pgclients.Repository) mgclients.Client {
+func generateClient(t *testing.T, status mgclients.Status, repo *pgclients.Repository) mgclients.Client {
 	client := mgclients.Client{
 		ID:   testsutil.GenerateUUID(t),
 		Name: namegen.Generate(),
 		Credentials: mgclients.Credentials{
 			Identity: namegen.Generate() + emailSuffix,
-			Secret:   password,
+			Secret:   testsutil.GenerateUUID(t),
 		},
 		Tags: namegen.GenerateMultiple(5),
 		Metadata: mgclients.Metadata{
 			"name": namegen.Generate(),
 		},
 		Status:    status,
-		Role:      role,
 		CreatedAt: time.Now().UTC().Truncate(time.Millisecond),
 	}
 	_, err := save(context.Background(), repo, client)
@@ -1875,8 +1745,8 @@ func generateClient(t *testing.T, status mgclients.Status, role mgclients.Role, 
 }
 
 func save(ctx context.Context, repo *pgclients.Repository, c mgclients.Client) (mgclients.Client, error) {
-	q := `INSERT INTO clients (id, name, tags, domain_id, identity, secret, metadata, created_at, status, role)
-        VALUES (:id, :name, :tags, :domain_id, :identity, :secret, :metadata, :created_at, :status, :role)
+	q := `INSERT INTO clients (id, name, tags, domain_id, identity, secret, metadata, created_at, status)
+        VALUES (:id, :name, :tags, :domain_id, :identity, :secret, :metadata, :created_at, :status)
         RETURNING id, name, tags, identity, metadata, COALESCE(domain_id, '') AS domain_id, status, created_at`
 	dbc, err := pgclients.ToDBClient(c)
 	if err != nil {
