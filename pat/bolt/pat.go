@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/absmach/magistrala/auth"
+	"github.com/absmach/magistrala/pat"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	bolt "go.etcd.io/bbolt"
@@ -52,14 +52,14 @@ type patRepo struct {
 
 // NewPATSRepository instantiates a bolt
 // implementation of PAT repository.
-func NewPATSRepository(db *bolt.DB, bucketName string) auth.PATSRepository {
+func NewPATSRepository(db *bolt.DB, bucketName string) pat.PATSRepository {
 	return &patRepo{
 		db:         db,
 		bucketName: bucketName,
 	}
 }
 
-func (pr *patRepo) Save(ctx context.Context, pat auth.PAT) error {
+func (pr *patRepo) Save(ctx context.Context, pat pat.PAT) error {
 	idxKey := []byte(pat.User + keySeparator + patKey + keySeparator + pat.ID)
 	kv, err := patToKeyValue(pat)
 	if err != nil {
@@ -87,7 +87,7 @@ func (pr *patRepo) Save(ctx context.Context, pat auth.PAT) error {
 	})
 }
 
-func (pr *patRepo) Retrieve(ctx context.Context, userID, patID string) (auth.PAT, error) {
+func (pr *patRepo) Retrieve(ctx context.Context, userID, patID string) (pat.PAT, error) {
 	prefix := []byte(patID + keySeparator)
 	kv := map[string][]byte{}
 	if err := pr.db.View(func(tx *bolt.Tx) error {
@@ -101,7 +101,7 @@ func (pr *patRepo) Retrieve(ctx context.Context, userID, patID string) (auth.PAT
 		}
 		return nil
 	}); err != nil {
-		return auth.PAT{}, err
+		return pat.PAT{}, err
 	}
 
 	return keyValueToPAT(kv)
@@ -126,15 +126,15 @@ func (pr *patRepo) RetrieveSecretAndRevokeStatus(ctx context.Context, userID, pa
 	return secretHash, revoked, nil
 }
 
-func (pr *patRepo) UpdateName(ctx context.Context, userID, patID, name string) (auth.PAT, error) {
+func (pr *patRepo) UpdateName(ctx context.Context, userID, patID, name string) (pat.PAT, error) {
 	return pr.updatePATField(ctx, userID, patID, nameKey, []byte(name))
 }
 
-func (pr *patRepo) UpdateDescription(ctx context.Context, userID, patID, description string) (auth.PAT, error) {
+func (pr *patRepo) UpdateDescription(ctx context.Context, userID, patID, description string) (pat.PAT, error) {
 	return pr.updatePATField(ctx, userID, patID, descriptionKey, []byte(description))
 }
 
-func (pr *patRepo) UpdateTokenHash(ctx context.Context, userID, patID, tokenHash string, expiryAt time.Time) (auth.PAT, error) {
+func (pr *patRepo) UpdateTokenHash(ctx context.Context, userID, patID, tokenHash string, expiryAt time.Time) (pat.PAT, error) {
 	prefix := []byte(patID + keySeparator)
 	kv := map[string][]byte{}
 	if err := pr.db.Update(func(tx *bolt.Tx) error {
@@ -157,12 +157,12 @@ func (pr *patRepo) UpdateTokenHash(ctx context.Context, userID, patID, tokenHash
 		}
 		return nil
 	}); err != nil {
-		return auth.PAT{}, err
+		return pat.PAT{}, err
 	}
 	return keyValueToPAT(kv)
 }
 
-func (pr *patRepo) RetrieveAll(ctx context.Context, userID string, pm auth.PATSPageMeta) (auth.PATSPage, error) {
+func (pr *patRepo) RetrieveAll(ctx context.Context, userID string, pm pat.PATSPageMeta) (pat.PATSPage, error) {
 	prefix := []byte(userID + keySeparator + patKey + keySeparator)
 
 	patIDs := []string{}
@@ -179,14 +179,14 @@ func (pr *patRepo) RetrieveAll(ctx context.Context, userID string, pm auth.PATSP
 		}
 		return nil
 	}); err != nil {
-		return auth.PATSPage{}, err
+		return pat.PATSPage{}, err
 	}
 
 	total := len(patIDs)
 
-	var pats []auth.PAT
+	var pats []pat.PAT
 
-	patsPage := auth.PATSPage{
+	patsPage := pat.PATSPage{
 		Total:  uint64(total),
 		Limit:  pm.Limit,
 		Offset: pm.Offset,
@@ -282,7 +282,7 @@ func (pr *patRepo) Remove(ctx context.Context, userID, patID string) error {
 	return nil
 }
 
-func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (auth.Scope, error) {
+func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, platformEntityType pat.PlatformEntityType, optionalDomainID string, optionalDomainEntityType pat.DomainEntityType, operation pat.OperationType, entityIDs ...string) (pat.Scope, error) {
 	prefix := []byte(patID + keySeparator + scopeKey)
 	var rKV map[string][]byte
 	if err := pr.db.Update(func(tx *bolt.Tx) error {
@@ -306,15 +306,15 @@ func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, plat
 		}
 		return nil
 	}); err != nil {
-		return auth.Scope{}, err
+		return pat.Scope{}, err
 	}
 
 	return parseKeyValueToScope(rKV)
 }
 
-func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (auth.Scope, error) {
+func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, platformEntityType pat.PlatformEntityType, optionalDomainID string, optionalDomainEntityType pat.DomainEntityType, operation pat.OperationType, entityIDs ...string) (pat.Scope, error) {
 	if len(entityIDs) == 0 {
-		return auth.Scope{}, repoerr.ErrMalformedEntity
+		return pat.Scope{}, repoerr.ErrMalformedEntity
 	}
 	prefix := []byte(patID + keySeparator + scopeKey)
 	var rKV map[string][]byte
@@ -339,12 +339,12 @@ func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, p
 		}
 		return nil
 	}); err != nil {
-		return auth.Scope{}, err
+		return pat.Scope{}, err
 	}
 	return parseKeyValueToScope(rKV)
 }
 
-func (pr *patRepo) CheckScopeEntry(ctx context.Context, userID, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) error {
+func (pr *patRepo) CheckScopeEntry(ctx context.Context, userID, patID string, platformEntityType pat.PlatformEntityType, optionalDomainID string, optionalDomainEntityType pat.DomainEntityType, operation pat.OperationType, entityIDs ...string) error {
 	return pr.db.Update(func(tx *bolt.Tx) error {
 		b, err := pr.retrieveUserBucket(tx, userID, patID, repoerr.ErrViewEntity)
 		if err != nil {
@@ -373,7 +373,7 @@ func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, userID, patID string
 	return nil
 }
 
-func (pr *patRepo) updatePATField(_ context.Context, userID, patID, key string, value []byte) (auth.PAT, error) {
+func (pr *patRepo) updatePATField(_ context.Context, userID, patID, key string, value []byte) (pat.PAT, error) {
 	prefix := []byte(patID + keySeparator)
 	kv := map[string][]byte{}
 	if err := pr.db.Update(func(tx *bolt.Tx) error {
@@ -393,7 +393,7 @@ func (pr *patRepo) updatePATField(_ context.Context, userID, patID, key string, 
 		}
 		return nil
 	}); err != nil {
-		return auth.PAT{}, err
+		return pat.PAT{}, err
 	}
 	return keyValueToPAT(kv)
 }
@@ -433,7 +433,7 @@ func (pr *patRepo) retrieveRootBucket(tx *bolt.Tx) (*bolt.Bucket, error) {
 	return rootBucket, nil
 }
 
-func patToKeyValue(pat auth.PAT) (map[string][]byte, error) {
+func patToKeyValue(pat pat.PAT) (map[string][]byte, error) {
 	kv := map[string][]byte{
 		idKey:          []byte(pat.ID),
 		userKey:        []byte(pat.User),
@@ -457,10 +457,10 @@ func patToKeyValue(pat auth.PAT) (map[string][]byte, error) {
 	return kv, nil
 }
 
-func scopeToKeyValue(scope auth.Scope) (map[string][]byte, error) {
+func scopeToKeyValue(scope pat.Scope) (map[string][]byte, error) {
 	kv := map[string][]byte{}
 	for opType, scopeValue := range scope.Users {
-		tempKV, err := scopeEntryToKeyValue(auth.PlatformUsersScope, "", auth.DomainNullScope, opType, scopeValue.Values()...)
+		tempKV, err := scopeEntryToKeyValue(pat.PlatformUsersScope, "", pat.DomainNullScope, opType, scopeValue.Values()...)
 		if err != nil {
 			return nil, err
 		}
@@ -470,7 +470,7 @@ func scopeToKeyValue(scope auth.Scope) (map[string][]byte, error) {
 	}
 	for domainID, domainScope := range scope.Domains {
 		for opType, scopeValue := range domainScope.DomainManagement {
-			tempKV, err := scopeEntryToKeyValue(auth.PlatformDomainsScope, domainID, auth.DomainManagementScope, opType, scopeValue.Values()...)
+			tempKV, err := scopeEntryToKeyValue(pat.PlatformDomainsScope, domainID, pat.DomainManagementScope, opType, scopeValue.Values()...)
 			if err != nil {
 				return nil, errors.Wrap(repoerr.ErrCreateEntity, err)
 			}
@@ -480,7 +480,7 @@ func scopeToKeyValue(scope auth.Scope) (map[string][]byte, error) {
 		}
 		for entityType, scope := range domainScope.Entities {
 			for opType, scopeValue := range scope {
-				tempKV, err := scopeEntryToKeyValue(auth.PlatformDomainsScope, domainID, entityType, opType, scopeValue.Values()...)
+				tempKV, err := scopeEntryToKeyValue(pat.PlatformDomainsScope, domainID, entityType, opType, scopeValue.Values()...)
 				if err != nil {
 					return nil, errors.Wrap(repoerr.ErrCreateEntity, err)
 				}
@@ -493,7 +493,7 @@ func scopeToKeyValue(scope auth.Scope) (map[string][]byte, error) {
 	return kv, nil
 }
 
-func scopeEntryToKeyValue(platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (map[string][]byte, error) {
+func scopeEntryToKeyValue(platformEntityType pat.PlatformEntityType, optionalDomainID string, optionalDomainEntityType pat.DomainEntityType, operation pat.OperationType, entityIDs ...string) (map[string][]byte, error) {
 	if len(entityIDs) == 0 {
 		return nil, repoerr.ErrMalformedEntity
 	}
@@ -518,7 +518,7 @@ func scopeEntryToKeyValue(platformEntityType auth.PlatformEntityType, optionalDo
 	return kv, nil
 }
 
-func scopeRootKey(platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType) (string, error) {
+func scopeRootKey(platformEntityType pat.PlatformEntityType, optionalDomainID string, optionalDomainEntityType pat.DomainEntityType, operation pat.OperationType) (string, error) {
 	op, err := operation.ValidString()
 	if err != nil {
 		return "", errors.Wrap(repoerr.ErrMalformedEntity, err)
@@ -532,9 +532,9 @@ func scopeRootKey(platformEntityType auth.PlatformEntityType, optionalDomainID s
 	rootKey.WriteString(keySeparator)
 
 	switch platformEntityType {
-	case auth.PlatformUsersScope:
+	case pat.PlatformUsersScope:
 		rootKey.WriteString(op)
-	case auth.PlatformDomainsScope:
+	case pat.PlatformDomainsScope:
 		if optionalDomainID == "" {
 			return "", fmt.Errorf("failed to add platform %s scope: invalid domain id", platformEntityType.String())
 		}
@@ -554,8 +554,8 @@ func scopeRootKey(platformEntityType auth.PlatformEntityType, optionalDomainID s
 	return rootKey.String(), nil
 }
 
-func keyValueToBasicPAT(kv map[string][]byte) auth.PAT {
-	var pat auth.PAT
+func keyValueToBasicPAT(kv map[string][]byte) pat.PAT {
+	var pat pat.PAT
 	for k, v := range kv {
 		switch {
 		case strings.HasSuffix(k, keySeparator+idKey):
@@ -583,157 +583,157 @@ func keyValueToBasicPAT(kv map[string][]byte) auth.PAT {
 	return pat
 }
 
-func keyValueToPAT(kv map[string][]byte) (auth.PAT, error) {
-	pat := keyValueToBasicPAT(kv)
+func keyValueToPAT(kv map[string][]byte) (pat.PAT, error) {
+	res := keyValueToBasicPAT(kv)
 	scope, err := parseKeyValueToScope(kv)
 	if err != nil {
-		return auth.PAT{}, err
+		return pat.PAT{}, err
 	}
-	pat.Scope = scope
-	return pat, nil
+	res.Scope = scope
+	return res, nil
 }
 
-func parseKeyValueToScope(kv map[string][]byte) (auth.Scope, error) {
-	scope := auth.Scope{
-		Domains: make(map[string]auth.DomainScope),
+func parseKeyValueToScope(kv map[string][]byte) (pat.Scope, error) {
+	scope := pat.Scope{
+		Domains: make(map[string]pat.DomainScope),
 	}
 	for key, value := range kv {
 		if strings.Index(key, keySeparator+scopeKey+keySeparator) > 0 {
 			keyParts := strings.Split(key, keySeparator)
 
-			platformEntityType, err := auth.ParsePlatformEntityType(keyParts[2])
+			platformEntityType, err := pat.ParsePlatformEntityType(keyParts[2])
 			if err != nil {
-				return auth.Scope{}, errors.Wrap(repoerr.ErrViewEntity, err)
+				return pat.Scope{}, errors.Wrap(repoerr.ErrViewEntity, err)
 			}
 
 			switch platformEntityType {
-			case auth.PlatformUsersScope:
+			case pat.PlatformUsersScope:
 				scope.Users, err = parseOperation(platformEntityType, scope.Users, key, keyParts, value)
 				if err != nil {
-					return auth.Scope{}, errors.Wrap(repoerr.ErrViewEntity, err)
+					return pat.Scope{}, errors.Wrap(repoerr.ErrViewEntity, err)
 				}
 
-			case auth.PlatformDomainsScope:
+			case pat.PlatformDomainsScope:
 				if len(keyParts) < 6 {
-					return auth.Scope{}, fmt.Errorf("invalid scope key format: %s", key)
+					return pat.Scope{}, fmt.Errorf("invalid scope key format: %s", key)
 				}
 				domainID := keyParts[3]
 				if scope.Domains == nil {
-					scope.Domains = make(map[string]auth.DomainScope)
+					scope.Domains = make(map[string]pat.DomainScope)
 				}
 				if _, ok := scope.Domains[domainID]; !ok {
-					scope.Domains[domainID] = auth.DomainScope{}
+					scope.Domains[domainID] = pat.DomainScope{}
 				}
 				domainScope := scope.Domains[domainID]
 
 				entityType := keyParts[4]
 
 				switch entityType {
-				case auth.DomainManagementScope.String():
+				case pat.DomainManagementScope.String():
 					domainScope.DomainManagement, err = parseOperation(platformEntityType, domainScope.DomainManagement, key, keyParts, value)
 					if err != nil {
-						return auth.Scope{}, errors.Wrap(repoerr.ErrViewEntity, err)
+						return pat.Scope{}, errors.Wrap(repoerr.ErrViewEntity, err)
 					}
 				default:
-					etype, err := auth.ParseDomainEntityType(entityType)
+					etype, err := pat.ParseDomainEntityType(entityType)
 					if err != nil {
-						return auth.Scope{}, fmt.Errorf("key %s invalid entity type %s : %w", key, entityType, err)
+						return pat.Scope{}, fmt.Errorf("key %s invalid entity type %s : %w", key, entityType, err)
 					}
 					if domainScope.Entities == nil {
-						domainScope.Entities = make(map[auth.DomainEntityType]auth.OperationScope)
+						domainScope.Entities = make(map[pat.DomainEntityType]pat.OperationScope)
 					}
 					if _, ok := domainScope.Entities[etype]; !ok {
-						domainScope.Entities[etype] = auth.OperationScope{}
+						domainScope.Entities[etype] = pat.OperationScope{}
 					}
 					entityOperationScope := domainScope.Entities[etype]
 					entityOperationScope, err = parseOperation(platformEntityType, entityOperationScope, key, keyParts, value)
 					if err != nil {
-						return auth.Scope{}, errors.Wrap(repoerr.ErrViewEntity, err)
+						return pat.Scope{}, errors.Wrap(repoerr.ErrViewEntity, err)
 					}
 					domainScope.Entities[etype] = entityOperationScope
 				}
 				scope.Domains[domainID] = domainScope
 			default:
-				return auth.Scope{}, errors.Wrap(repoerr.ErrViewEntity, fmt.Errorf("invalid platform entity type : %s", platformEntityType.String()))
+				return pat.Scope{}, errors.Wrap(repoerr.ErrViewEntity, fmt.Errorf("invalid platform entity type : %s", platformEntityType.String()))
 			}
 		}
 	}
 	return scope, nil
 }
 
-func parseOperation(platformEntityType auth.PlatformEntityType, opScope auth.OperationScope, key string, keyParts []string, value []byte) (auth.OperationScope, error) {
+func parseOperation(platformEntityType pat.PlatformEntityType, opScope pat.OperationScope, key string, keyParts []string, value []byte) (pat.OperationScope, error) {
 	if opScope == nil {
-		opScope = make(map[auth.OperationType]auth.ScopeValue)
+		opScope = make(map[pat.OperationType]pat.ScopeValue)
 	}
 
 	if err := validateOperation(platformEntityType, opScope, key, keyParts, value); err != nil {
-		return auth.OperationScope{}, err
+		return pat.OperationScope{}, err
 	}
 
 	switch string(value) {
 	case string(entityValue):
-		opType, err := auth.ParseOperationType(keyParts[len(keyParts)-2])
+		opType, err := pat.ParseOperationType(keyParts[len(keyParts)-2])
 		if err != nil {
-			return auth.OperationScope{}, errors.Wrap(repoerr.ErrViewEntity, err)
+			return pat.OperationScope{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
 		entityID := keyParts[len(keyParts)-1]
 
 		if _, oValueExists := opScope[opType]; !oValueExists {
-			opScope[opType] = &auth.SelectedIDs{}
+			opScope[opType] = &pat.SelectedIDs{}
 		}
 		oValue := opScope[opType]
 		if err := oValue.AddValues(entityID); err != nil {
-			return auth.OperationScope{}, fmt.Errorf("failed to add scope key %s with entity value %v : %w", key, entityID, err)
+			return pat.OperationScope{}, fmt.Errorf("failed to add scope key %s with entity value %v : %w", key, entityID, err)
 		}
 		opScope[opType] = oValue
 	case string(anyIDValue):
-		opType, err := auth.ParseOperationType(keyParts[len(keyParts)-1])
+		opType, err := pat.ParseOperationType(keyParts[len(keyParts)-1])
 		if err != nil {
-			return auth.OperationScope{}, errors.Wrap(repoerr.ErrViewEntity, err)
+			return pat.OperationScope{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
 		if oValue, oValueExists := opScope[opType]; oValueExists && oValue != nil {
-			if _, ok := oValue.(*auth.AnyIDs); !ok {
-				return auth.OperationScope{}, fmt.Errorf("failed to add scope key %s with entity anyIDs scope value : key already initialized with different type", key)
+			if _, ok := oValue.(*pat.AnyIDs); !ok {
+				return pat.OperationScope{}, fmt.Errorf("failed to add scope key %s with entity anyIDs scope value : key already initialized with different type", key)
 			}
 		}
-		opScope[opType] = &auth.AnyIDs{}
+		opScope[opType] = &pat.AnyIDs{}
 	case string(selectedIDsValue):
-		opType, err := auth.ParseOperationType(keyParts[len(keyParts)-1])
+		opType, err := pat.ParseOperationType(keyParts[len(keyParts)-1])
 		if err != nil {
-			return auth.OperationScope{}, errors.Wrap(repoerr.ErrViewEntity, err)
+			return pat.OperationScope{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
 		oValue, oValueExists := opScope[opType]
 		if oValueExists && oValue != nil {
-			if _, ok := oValue.(*auth.SelectedIDs); !ok {
-				return auth.OperationScope{}, fmt.Errorf("failed to add scope key %s with entity selectedIDs scope value : key already initialized with different type", key)
+			if _, ok := oValue.(*pat.SelectedIDs); !ok {
+				return pat.OperationScope{}, fmt.Errorf("failed to add scope key %s with entity selectedIDs scope value : key already initialized with different type", key)
 			}
 		}
 		if !oValueExists {
-			opScope[opType] = &auth.SelectedIDs{}
+			opScope[opType] = &pat.SelectedIDs{}
 		}
 	default:
-		return auth.OperationScope{}, fmt.Errorf("key %s have invalid value %v", key, value)
+		return pat.OperationScope{}, fmt.Errorf("key %s have invalid value %v", key, value)
 	}
 	return opScope, nil
 }
 
-func validateOperation(platformEntityType auth.PlatformEntityType, opScope auth.OperationScope, key string, keyParts []string, value []byte) error {
+func validateOperation(platformEntityType pat.PlatformEntityType, _ pat.OperationScope, key string, keyParts []string, value []byte) error {
 	expectedKeyPartsLength := 0
 	switch string(value) {
 	case string(entityValue):
 		switch platformEntityType {
-		case auth.PlatformDomainsScope:
+		case pat.PlatformDomainsScope:
 			expectedKeyPartsLength = 7
-		case auth.PlatformUsersScope:
+		case pat.PlatformUsersScope:
 			expectedKeyPartsLength = 5
 		default:
 			return fmt.Errorf("invalid platform entity type : %s", platformEntityType.String())
 		}
 	case string(selectedIDsValue), string(anyIDValue):
 		switch platformEntityType {
-		case auth.PlatformDomainsScope:
+		case pat.PlatformDomainsScope:
 			expectedKeyPartsLength = 6
-		case auth.PlatformUsersScope:
+		case pat.PlatformUsersScope:
 			expectedKeyPartsLength = 4
 		default:
 			return fmt.Errorf("invalid platform entity type : %s", platformEntityType.String())

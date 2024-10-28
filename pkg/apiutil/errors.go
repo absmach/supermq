@@ -241,4 +241,7 @@ var (
 	ErrInvalidProfilePictureURL = errors.New("invalid profile picture url")
 
 	ErrMultipleEntitiesFilter = errors.New("multiple entities are provided in filter are not supported")
+
+	// ErrMissingDescription indicates missing description.
+	ErrMissingDescription = errors.New("missing description")
 )

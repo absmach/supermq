@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/errors"
 )
 
@@ -662,41 +663,41 @@ func (pat PAT) Expired() bool {
 }
 
 // PATS specifies function which are required for Personal access Token implementation.
-//go:generate mockery --name PATS --output=./mocks --filename pats.go --quiet --note "Copyright (c) Abstract Machines"
+//go:generate mockery --name Service --output=./mocks --filename pats.go --quiet --note "Copyright (c) Abstract Machines"
 
-type PATS interface {
+type Service interface {
 	// Create function creates new PAT for given valid inputs.
-	CreatePAT(ctx context.Context, token, name, description string, duration time.Duration, scope Scope) (PAT, error)
+	CreatePAT(ctx context.Context, session authn.Session, name, description string, duration time.Duration, scope Scope) (PAT, error)
 
 	// UpdateName function updates the name for the given PAT ID.
-	UpdatePATName(ctx context.Context, token, patID, name string) (PAT, error)
+	UpdatePATName(ctx context.Context, session authn.Session, patID, name string) (PAT, error)
 
 	// UpdateDescription function updates the description for the given PAT ID.
-	UpdatePATDescription(ctx context.Context, token, patID, description string) (PAT, error)
+	UpdatePATDescription(ctx context.Context, session authn.Session, patID, description string) (PAT, error)
 
 	// Retrieve function retrieves the PAT for given ID.
-	RetrievePAT(ctx context.Context, token, patID string) (PAT, error)
+	RetrievePAT(ctx context.Context, session authn.Session, patID string) (PAT, error)
 
 	// List function lists all the PATs for the user.
-	ListPATS(ctx context.Context, token string, pm PATSPageMeta) (PATSPage, error)
+	ListPATS(ctx context.Context, session authn.Session, pm PATSPageMeta) (PATSPage, error)
 
 	// Delete function deletes the PAT for given ID.
-	DeletePAT(ctx context.Context, token, patID string) error
+	DeletePAT(ctx context.Context, session authn.Session, patID string) error
 
 	// ResetSecret function reset the secret and creates new secret for the given ID.
-	ResetPATSecret(ctx context.Context, token, patID string, duration time.Duration) (PAT, error)
+	ResetPATSecret(ctx context.Context, session authn.Session, patID string, duration time.Duration) (PAT, error)
 
 	// RevokeSecret function revokes the secret for the given ID.
-	RevokePATSecret(ctx context.Context, token, patID string) error
+	RevokePATSecret(ctx context.Context, session authn.Session, patID string) error
 
 	// AddScope function adds a new scope entry.
-	AddPATScopeEntry(ctx context.Context, token, patID string, platformEntityType PlatformEntityType, optionalDomainID string, optionalDomainEntityType DomainEntityType, operation OperationType, entityIDs ...string) (Scope, error)
+	AddPATScopeEntry(ctx context.Context, session authn.Session, patID string, platformEntityType PlatformEntityType, optionalDomainID string, optionalDomainEntityType DomainEntityType, operation OperationType, entityIDs ...string) (Scope, error)
 
 	// RemoveScope function removes a scope entry.
-	RemovePATScopeEntry(ctx context.Context, token, patID string, platformEntityType PlatformEntityType, optionalDomainID string, optionalDomainEntityType DomainEntityType, operation OperationType, entityIDs ...string) (Scope, error)
+	RemovePATScopeEntry(ctx context.Context, session authn.Session, patID string, platformEntityType PlatformEntityType, optionalDomainID string, optionalDomainEntityType DomainEntityType, operation OperationType, entityIDs ...string) (Scope, error)
 
 	// ClearAllScope function removes all scope entry.
-	ClearPATAllScopeEntry(ctx context.Context, token, patID string) error
+	ClearPATAllScopeEntry(ctx context.Context, session authn.Session, patID string) error
 
 	// IdentifyPAT function will valid the secret.
 	IdentifyPAT(ctx context.Context, paToken string) (PAT, error)
