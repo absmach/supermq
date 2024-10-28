@@ -596,7 +596,7 @@ func TestUpdateUser(t *testing.T) {
 	}
 }
 
-func TestUpdateUserTags(t *testing.T) {
+func TestUpdateTags(t *testing.T) {
 	svc, cRepo := newServiceMinimal()
 
 	user.Tags = []string{"updated"}
@@ -665,7 +665,7 @@ func TestUpdateUserTags(t *testing.T) {
 	}
 }
 
-func TestUpdateUserRole(t *testing.T) {
+func TestUpdateRole(t *testing.T) {
 	svc, _, cRepo, policies, _ := newService()
 
 	user2 := user
@@ -762,7 +762,7 @@ func TestUpdateUserRole(t *testing.T) {
 	}
 }
 
-func TestUpdateUserSecret(t *testing.T) {
+func TestUpdateSecret(t *testing.T) {
 	svc, authUser, cRepo, _, _ := newService()
 
 	newSecret := "newstrongSecret"
@@ -851,7 +851,7 @@ func TestUpdateUserSecret(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := cRepo.On("RetrieveByID", context.Background(), user.ID).Return(tc.retrieveByIDResponse, tc.retrieveByIDErr)
-		repoCall1 := cRepo.On("RetrieveByEmail", context.Background(), user.Email).Return(tc.retrieveByEmailResponse, tc.retrieveByEmailErr)
+		repoCall1 := cRepo.On("RetrieveByUsername", context.Background(), user.Credentials.Username).Return(tc.retrieveByEmailResponse, tc.retrieveByEmailErr)
 		repoCall2 := cRepo.On("UpdateSecret", context.Background(), mock.Anything).Return(tc.updateSecretResponse, tc.updateSecretErr)
 		authCall := authUser.On("Issue", context.Background(), mock.Anything).Return(tc.issueResponse, tc.issueErr)
 		updatedUser, err := svc.UpdateSecret(context.Background(), tc.session, tc.oldSecret, tc.newSecret)
@@ -860,8 +860,8 @@ func TestUpdateUserSecret(t *testing.T) {
 		if tc.err == nil {
 			ok := repoCall.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.response.ID)
 			assert.True(t, ok, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
-			ok = repoCall1.Parent.AssertCalled(t, "RetrieveByEmail", context.Background(), tc.response.Email)
-			assert.True(t, ok, fmt.Sprintf("RetrieveByEmail was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "RetrieveByUsername", context.Background(), tc.response.Credentials.Username)
+			assert.True(t, ok, fmt.Sprintf("RetrieveByUsername was not called on %s", tc.desc))
 			ok = repoCall2.Parent.AssertCalled(t, "UpdateSecret", context.Background(), mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("UpdateSecret was not called on %s", tc.desc))
 		}
@@ -872,7 +872,7 @@ func TestUpdateUserSecret(t *testing.T) {
 	}
 }
 
-func TestUpdateUserEmail(t *testing.T) {
+func TestUpdateEmail(t *testing.T) {
 	svc, cRepo := newServiceMinimal()
 
 	user2 := user

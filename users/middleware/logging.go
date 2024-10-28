@@ -261,14 +261,12 @@ func (lm *loggingMiddleware) UpdateSecret(ctx context.Context, session authn.Ses
 
 // UpdateUsername logs the update_usernames request. It logs the user id and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) UpdateUsername(ctx context.Context, session authn.Session, user users.User) (u users.User, err error) {
+func (lm *loggingMiddleware) UpdateUsername(ctx context.Context, session authn.Session, id, username string) (u users.User, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", u.ID),
-				slog.String("first_name", u.FirstName),
-				slog.String("last_name", u.LastName),
 				slog.String("username", u.Credentials.Username),
 			),
 		}
@@ -279,7 +277,7 @@ func (lm *loggingMiddleware) UpdateUsername(ctx context.Context, session authn.S
 		}
 		lm.logger.Info("Update user names completed successfully", args...)
 	}(time.Now())
-	return lm.svc.UpdateUsername(ctx, session, user)
+	return lm.svc.UpdateUsername(ctx, session, id, username)
 }
 
 // UpdateProfilePicture logs the update_profile_picture request. It logs the user id and the time it took to complete the request.

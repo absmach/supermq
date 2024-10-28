@@ -168,7 +168,7 @@ type Service interface {
 	UpdateEmail(ctx context.Context, session authn.Session, id, email string) (User, error)
 
 	// UpdateUsername updates the user's names.
-	UpdateUsername(ctx context.Context, session authn.Session, usr User) (User, error)
+	UpdateUsername(ctx context.Context, session authn.Session, id, username string) (User, error)
 
 	// UpdateProfile updates the user's profile picture.
 	UpdateProfilePicture(ctx context.Context, session authn.Session, user User) (User, error)

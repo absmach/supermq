@@ -41,8 +41,8 @@ func TestIssueToken(t *testing.T) {
 		{
 			desc: "issue token successfully",
 			login: sdk.Login{
-				Email:  client.Email,
-				Secret: client.Credentials.Secret,
+				Username: client.Credentials.Username,
+				Secret:   client.Credentials.Secret,
 			},
 			svcRes: &magistrala.Token{
 				AccessToken:  token.AccessToken,
@@ -54,10 +54,10 @@ func TestIssueToken(t *testing.T) {
 			err:      nil,
 		},
 		{
-			desc: "issue token with invalid email",
+			desc: "issue token with invalid username",
 			login: sdk.Login{
-				Email:  invalidIdentity,
-				Secret: client.Credentials.Secret,
+				Username: invalidIdentity,
+				Secret:   client.Credentials.Secret,
 			},
 			svcRes:   &magistrala.Token{},
 			svcErr:   svcerr.ErrAuthentication,
@@ -67,8 +67,8 @@ func TestIssueToken(t *testing.T) {
 		{
 			desc: "issue token with invalid secret",
 			login: sdk.Login{
-				Email:  client.Email,
-				Secret: "invalid",
+				Username: client.Credentials.Username,
+				Secret:   "invalid",
 			},
 			svcRes:   &magistrala.Token{},
 			svcErr:   svcerr.ErrLogin,
@@ -76,21 +76,21 @@ func TestIssueToken(t *testing.T) {
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrLogin, http.StatusUnauthorized),
 		},
 		{
-			desc: "issue token with empty email",
+			desc: "issue token with empty username",
 			login: sdk.Login{
-				Email:  "",
-				Secret: client.Credentials.Secret,
+				Username: "",
+				Secret:   client.Credentials.Secret,
 			},
 			svcRes:   &magistrala.Token{},
 			svcErr:   nil,
 			response: sdk.Token{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingEmail), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingUsername), http.StatusBadRequest),
 		},
 		{
 			desc: "issue token with empty secret",
 			login: sdk.Login{
-				Email:  client.Email,
-				Secret: "",
+				Username: client.Credentials.Username,
+				Secret:   "",
 			},
 			svcRes:   &magistrala.Token{},
 			svcErr:   nil,
@@ -100,12 +100,12 @@ func TestIssueToken(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("IssueToken", mock.Anything, tc.login.Email, tc.login.Secret).Return(tc.svcRes, tc.svcErr)
+			svcCall := svc.On("IssueToken", mock.Anything, tc.login.Username, tc.login.Secret).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.CreateToken(tc.login)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "IssueToken", mock.Anything, tc.login.Email, tc.login.Secret)
+				ok := svcCall.Parent.AssertCalled(t, "IssueToken", mock.Anything, tc.login.Username, tc.login.Secret)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()

@@ -563,9 +563,9 @@ func (_m *Service) UpdateTags(ctx context.Context, session authn.Session, user u
 	return r0, r1
 }
 
-// UpdateUsername provides a mock function with given fields: ctx, session, usr
-func (_m *Service) UpdateUsername(ctx context.Context, session authn.Session, usr users.User) (users.User, error) {
-	ret := _m.Called(ctx, session, usr)
+// UpdateUsername provides a mock function with given fields: ctx, session, id, username
+func (_m *Service) UpdateUsername(ctx context.Context, session authn.Session, id string, username string) (users.User, error) {
+	ret := _m.Called(ctx, session, id, username)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateUsername")
@@ -573,17 +573,17 @@ func (_m *Service) UpdateUsername(ctx context.Context, session authn.Session, us
 
 	var r0 users.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, users.User) (users.User, error)); ok {
-		return rf(ctx, session, usr)
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, string) (users.User, error)); ok {
+		return rf(ctx, session, id, username)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, users.User) users.User); ok {
-		r0 = rf(ctx, session, usr)
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, string) users.User); ok {
+		r0 = rf(ctx, session, id, username)
 	} else {
 		r0 = ret.Get(0).(users.User)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, users.User) error); ok {
-		r1 = rf(ctx, session, usr)
+	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string, string) error); ok {
+		r1 = rf(ctx, session, id, username)
 	} else {
 		r1 = ret.Error(1)
 	}

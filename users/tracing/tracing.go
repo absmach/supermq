@@ -127,16 +127,14 @@ func (tm *tracingMiddleware) UpdateSecret(ctx context.Context, session authn.Ses
 }
 
 // UpdateUsername traces the "UpdateUsername" operation of the wrapped users.Service.
-func (tm *tracingMiddleware) UpdateUsername(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+func (tm *tracingMiddleware) UpdateUsername(ctx context.Context, session authn.Session, id, username string) (users.User, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_update_usernames", trace.WithAttributes(
-		attribute.String("id", user.ID),
-		attribute.String("first_name", user.FirstName),
-		attribute.String("last_name", user.LastName),
-		attribute.String("username", user.Credentials.Username),
+		attribute.String("id", id),
+		attribute.String("username", username),
 	))
 	defer span.End()
 
-	return tm.svc.UpdateUsername(ctx, session, user)
+	return tm.svc.UpdateUsername(ctx, session, id, username)
 }
 
 // UpdateProfilePicture traces the "UpdateProfilePicture" operation of the wrapped users.Service.

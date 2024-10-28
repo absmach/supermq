@@ -169,11 +169,7 @@ func (repo *userRepo) RetrieveAll(ctx context.Context, pm users.Page) (users.Use
 }
 
 func (repo *userRepo) UpdateUsername(ctx context.Context, user users.User) (users.User, error) {
-	if user.FirstName != "" && user.LastName != "" {
-		return users.User{}, repoerr.ErrMissingNames
-	}
-
-	q := `UPDATE users SET first_name = :first_name, last_name = :last_name, username = :username, email = :email, updated_at = :updated_at, updated_by = :updated_by,
+	q := `UPDATE users SET username = :username, updated_at = :updated_at, updated_by = :updated_by,
         WHERE id = :id AND status = :status
 		RETURNING id, tags, metadata, status, created_at, updated_at, updated_by, first_name, last_name, username, email`
 
@@ -191,8 +187,6 @@ func (repo *userRepo) UpdateUsername(ctx context.Context, user users.User) (user
 
 	dbc = DBUser{
 		ID:        user.ID,
-		FirstName: stringToNullString(user.FirstName),
-		LastName:  stringToNullString(user.LastName),
 		Username:  stringToNullString(user.Credentials.Username),
 		UpdatedAt: sql.NullTime{Time: time.Now(), Valid: true},
 	}

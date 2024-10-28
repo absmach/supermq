@@ -347,20 +347,21 @@ func (svc service) UpdateSecret(ctx context.Context, session authn.Session, oldS
 	return dbUser, nil
 }
 
-func (svc service) UpdateUsername(ctx context.Context, session authn.Session, usr User) (User, error) {
-	if session.UserID != usr.ID {
+func (svc service) UpdateUsername(ctx context.Context, session authn.Session, id, username string) (User, error) {
+	if session.UserID != id {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
 			return User{}, err
 		}
 	}
 
-	if usr.FirstName == "" || usr.LastName == "" {
-		return User{}, errors.Wrap(svcerr.ErrMalformedEntity, svcerr.ErrMissingNames)
+	usr := User{
+		ID: id,
+		Credentials: Credentials{
+			Username: username,
+		},
+		UpdatedAt: time.Now(),
+		UpdatedBy: session.UserID,
 	}
-
-	usr.UpdatedAt = time.Now()
-	usr.UpdatedBy = session.UserID
-
 	updatedUser, err := svc.users.UpdateUsername(ctx, usr)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)

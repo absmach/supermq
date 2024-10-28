@@ -403,17 +403,12 @@ func updateUsernameEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		user := users.User{
-			ID:          req.id,
-			Credentials: users.Credentials{Username: req.Username},
-		}
-
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthorization
 		}
 
-		user, err := svc.UpdateUsername(ctx, session, user)
+		user, err := svc.UpdateUsername(ctx, session, req.id, req.Username)
 		if err != nil {
 			return nil, err
 		}
