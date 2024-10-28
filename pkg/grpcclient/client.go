@@ -9,7 +9,7 @@ import (
 	tokengrpc "github.com/absmach/magistrala/auth/api/grpc/token"
 	channelsgrpc "github.com/absmach/magistrala/channels/api/grpc"
 	domainsgrpc "github.com/absmach/magistrala/domains/api/grpc"
-	groupsgrpc "github.com/absmach/magistrala/internal/groups/api/grpc"
+	groupsgrpc "github.com/absmach/magistrala/groups/api/grpc"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcDomainsV1 "github.com/absmach/magistrala/internal/grpc/domains/v1"
 	grpcGroupsV1 "github.com/absmach/magistrala/internal/grpc/groups/v1"

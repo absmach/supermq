@@ -8,9 +8,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/absmach/magistrala/channels"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
-	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/provision"
 	"github.com/pelletier/go-toml"
 	"github.com/stretchr/testify/assert"
@@ -42,7 +42,7 @@ var (
 				Permissions: []string{"test"},
 			},
 		},
-		Channels: []groups.Group{
+		Channels: []channels.Channel{
 			{
 				ID:   "1234567890",
 				Name: "test",
