@@ -22,14 +22,14 @@ func removeThingConnectionsEndpoint(svc channels.Service) endpoint.Endpoint {
 	}
 }
 
-func unsetParentGroupFormChannelsEndpoint(svc channels.Service) endpoint.Endpoint {
+func unsetParentGroupFromChannelsEndpoint(svc channels.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(unsetParentGroupFormChannelsReq)
+		req := request.(unsetParentGroupFromChannelsReq)
 
 		if err := svc.UnsetParentGroupFromChannels(ctx, req.parentGroupID); err != nil {
-			return unsetParentGroupFormChannelsRes{}, err
+			return unsetParentGroupFromChannelsRes{}, err
 		}
 
-		return unsetParentGroupFormChannelsRes{}, nil
+		return unsetParentGroupFromChannelsRes{}, nil
 	}
 }

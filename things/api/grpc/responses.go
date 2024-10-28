@@ -38,4 +38,4 @@ type connectionsRes struct {
 
 type removeChannelConnectionsRes struct{}
 
-type unsetParentGroupFormThingsRes struct{}
+type unsetParentGroupFromThingsRes struct{}

@@ -32,7 +32,7 @@ type grpcClient struct {
 	addConnections             endpoint.Endpoint
 	removeConnections          endpoint.Endpoint
 	removeChannelConnections   endpoint.Endpoint
-	unsetParentGroupFormThings endpoint.Endpoint
+	unsetParentGroupFromThings endpoint.Endpoint
 }
 
 // NewClient returns new gRPC client instance.
@@ -92,7 +92,7 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) grpcThingsV1.Things
 			grpcThingsV1.RemoveChannelConnectionsRes{},
 		).Endpoint(),
 
-		unsetParentGroupFormThings: kitgrpc.NewClient(
+		unsetParentGroupFromThings: kitgrpc.NewClient(
 			conn,
 			svcName,
 			"UnsetParentGroupFromThings",
@@ -327,7 +327,7 @@ func (client grpcClient) UnsetParentGroupFromThings(ctx context.Context, req *gr
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
-	if _, err := client.unsetParentGroupFormThings(ctx, req); err != nil {
+	if _, err := client.unsetParentGroupFromThings(ctx, req); err != nil {
 		return &grpcThingsV1.UnsetParentGroupFromThingsRes{}, decodeError(err)
 	}
 

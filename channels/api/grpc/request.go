@@ -7,6 +7,6 @@ type removeThingConnectionsReq struct {
 	thingID string
 }
 
-type unsetParentGroupFormChannelsReq struct {
+type unsetParentGroupFromChannelsReq struct {
 	parentGroupID string
 }

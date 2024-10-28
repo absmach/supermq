@@ -22,6 +22,6 @@ type removeChannelConnectionsReq struct {
 	channelID string
 }
 
-type unsetParentGroupFormThingsReq struct {
+type unsetParentGroupFromThingsReq struct {
 	parentGroupID string
 }

@@ -125,14 +125,14 @@ func removeChannelConnectionsEndpoint(svc pThings.Service) endpoint.Endpoint {
 	}
 }
 
-func unsetParentGroupFormThingsEndpoint(svc pThings.Service) endpoint.Endpoint {
+func unsetParentGroupFromThingsEndpoint(svc pThings.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(unsetParentGroupFormThingsReq)
+		req := request.(unsetParentGroupFromThingsReq)
 
 		if err := svc.UnsetParentGroupFromThings(ctx, req.parentGroupID); err != nil {
-			return unsetParentGroupFormThingsRes{}, err
+			return unsetParentGroupFromThingsRes{}, err
 		}
 
-		return unsetParentGroupFormThingsRes{}, nil
+		return unsetParentGroupFromThingsRes{}, nil
 	}
 }
