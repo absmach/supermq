@@ -14,14 +14,13 @@ import (
 
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/groups"
-	grpcapi "github.com/absmach/magistrala/groups/api/grpc"
-	httpapi "github.com/absmach/magistrala/groups/api/http"
-	"github.com/absmach/magistrala/groups/events"
-	"github.com/absmach/magistrala/groups/middleware"
-	"github.com/absmach/magistrala/groups/postgres"
-	pgroups "github.com/absmach/magistrala/groups/private"
-	"github.com/absmach/magistrala/groups/tracing"
+	gpsvc "github.com/absmach/magistrala/internal/groups"
+	grpcapi "github.com/absmach/magistrala/internal/groups/api/grpc"
+	httpapi "github.com/absmach/magistrala/internal/groups/api/http"
+	"github.com/absmach/magistrala/internal/groups/events"
+	"github.com/absmach/magistrala/internal/groups/middleware"
+	"github.com/absmach/magistrala/internal/groups/postgres"
+	"github.com/absmach/magistrala/internal/groups/tracing"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcGroupsV1 "github.com/absmach/magistrala/internal/grpc/groups/v1"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
@@ -29,6 +28,8 @@ import (
 	authsvcAuthn "github.com/absmach/magistrala/pkg/authn/authsvc"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
 	authsvcAuthz "github.com/absmach/magistrala/pkg/authz/authsvc"
+	"github.com/absmach/magistrala/pkg/groups"
+	pgroups "github.com/absmach/magistrala/pkg/groups/private"
 	"github.com/absmach/magistrala/pkg/grpcclient"
 	jaegerclient "github.com/absmach/magistrala/pkg/jaeger"
 	"github.com/absmach/magistrala/pkg/policies"
@@ -262,7 +263,7 @@ func newService(ctx context.Context, authz mgauthz.Authorization, policy policie
 
 	// Creating groups service
 	repo := postgres.New(database)
-	svc, err := groups.NewService(repo, policy, idp, channels, things, sid)
+	svc, err := gpsvc.NewService(repo, policy, idp, channels, things, sid)
 	if err != nil {
 		return nil, nil, err
 	}

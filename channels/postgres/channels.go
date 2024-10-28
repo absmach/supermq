@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/channels"
-	"github.com/absmach/magistrala/groups"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/clients"
@@ -417,7 +416,6 @@ type dbChannel struct {
 	CreatedAt   time.Time        `db:"created_at,omitempty"`
 	UpdatedAt   sql.NullTime     `db:"updated_at,omitempty"`
 	UpdatedBy   *string          `db:"updated_by,omitempty"`
-	Groups      []groups.Group   `db:"groups,omitempty"`
 	Status      clients.Status   `db:"status,omitempty"`
 	Role        *clients.Role    `db:"role,omitempty"`
 }
