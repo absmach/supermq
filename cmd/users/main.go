@@ -328,7 +328,7 @@ func createAdmin(ctx context.Context, c config, repo postgres.Repository, hsr us
 	if _, err = repo.Save(ctx, client); err != nil {
 		return "", err
 	}
-	if _, err = svc.IssueToken(ctx, c.AdminEmail, c.AdminPassword, ""); err != nil {
+	if _, err = svc.IssueToken(ctx, c.AdminEmail, c.AdminPassword); err != nil {
 		return "", err
 	}
 	return client.ID, nil

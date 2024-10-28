@@ -95,7 +95,7 @@ func (svc service) RegisterClient(ctx context.Context, session authn.Session, cl
 	return client, nil
 }
 
-func (svc service) IssueToken(ctx context.Context, identity, secret, domainID string) (*grpcTokenV1.Token, error) {
+func (svc service) IssueToken(ctx context.Context, identity, secret string) (*grpcTokenV1.Token, error) {
 	dbUser, err := svc.clients.RetrieveByIdentity(ctx, identity)
 	if err != nil {
 		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrAuthentication, err)
@@ -104,12 +104,7 @@ func (svc service) IssueToken(ctx context.Context, identity, secret, domainID st
 		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrLogin, err)
 	}
 
-	var d string
-	if domainID != "" {
-		d = domainID
-	}
-
-	token, err := svc.token.Issue(ctx, &grpcTokenV1.IssueReq{UserId: dbUser.ID, DomainId: &d, Type: uint32(mgauth.AccessKey)})
+	token, err := svc.token.Issue(ctx, &grpcTokenV1.IssueReq{UserId: dbUser.ID, Type: uint32(mgauth.AccessKey)})
 	if err != nil {
 		return &grpcTokenV1.Token{}, errors.Wrap(errIssueToken, err)
 	}
@@ -117,12 +112,7 @@ func (svc service) IssueToken(ctx context.Context, identity, secret, domainID st
 	return token, err
 }
 
-func (svc service) RefreshToken(ctx context.Context, session authn.Session, refreshToken, domainID string) (*grpcTokenV1.Token, error) {
-	var d string
-	if domainID != "" {
-		d = domainID
-	}
-
+func (svc service) RefreshToken(ctx context.Context, session authn.Session, refreshToken string) (*grpcTokenV1.Token, error) {
 	dbUser, err := svc.clients.RetrieveByID(ctx, session.UserID)
 	if err != nil {
 		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrAuthentication, err)
@@ -131,7 +121,7 @@ func (svc service) RefreshToken(ctx context.Context, session authn.Session, refr
 		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrAuthentication, errLoginDisableUser)
 	}
 
-	return svc.token.Refresh(ctx, &grpcTokenV1.RefreshReq{RefreshToken: refreshToken, DomainId: &d})
+	return svc.token.Refresh(ctx, &grpcTokenV1.RefreshReq{RefreshToken: refreshToken})
 }
 
 func (svc service) ViewClient(ctx context.Context, session authn.Session, id string) (mgclients.Client, error) {
@@ -303,7 +293,7 @@ func (svc service) UpdateClientSecret(ctx context.Context, session authn.Session
 	if err != nil {
 		return mgclients.Client{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
-	if _, err := svc.IssueToken(ctx, dbClient.Credentials.Identity, oldSecret, ""); err != nil {
+	if _, err := svc.IssueToken(ctx, dbClient.Credentials.Identity, oldSecret); err != nil {
 		return mgclients.Client{}, err
 	}
 	newSecret, err = svc.hasher.Hash(newSecret)

@@ -41,21 +41,21 @@ func (ms *metricsMiddleware) RegisterClient(ctx context.Context, session authn.S
 }
 
 // IssueToken instruments IssueToken method with metrics.
-func (ms *metricsMiddleware) IssueToken(ctx context.Context, identity, secret, domainID string) (*grpcTokenV1.Token, error) {
+func (ms *metricsMiddleware) IssueToken(ctx context.Context, identity, secret string) (*grpcTokenV1.Token, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "issue_token").Add(1)
 		ms.latency.With("method", "issue_token").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.IssueToken(ctx, identity, secret, domainID)
+	return ms.svc.IssueToken(ctx, identity, secret)
 }
 
 // RefreshToken instruments RefreshToken method with metrics.
-func (ms *metricsMiddleware) RefreshToken(ctx context.Context, session authn.Session, refreshToken, domainID string) (token *grpcTokenV1.Token, err error) {
+func (ms *metricsMiddleware) RefreshToken(ctx context.Context, session authn.Session, refreshToken string) (token *grpcTokenV1.Token, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "refresh_token").Add(1)
 		ms.latency.With("method", "refresh_token").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.RefreshToken(ctx, session, refreshToken, domainID)
+	return ms.svc.RefreshToken(ctx, session, refreshToken)
 }
 
 // ViewClient instruments ViewClient method with metrics.

@@ -13,13 +13,11 @@ service TokenService {
 
 message IssueReq {
   string user_id = 1;
-  optional string domain_id = 2;
   uint32 type = 3;
 }
 
 message RefreshReq {
   string refresh_token = 1;
-  optional string domain_id = 2;
 }
 
 // If a token is not carrying any information itself, the type

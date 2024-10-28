@@ -24,7 +24,7 @@ func MakeHandler(svc channels.Service, authn mgauthn.Authentication, mux *chi.Mu
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
 	mux.Route("/channels", func(r chi.Router) {
-		r.Use(api.AuthenticateMiddleware(authn))
+		r.Use(api.AuthenticateMiddleware(authn, true))
 
 		r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
 			createChannelEndpoint(svc),

@@ -24,7 +24,7 @@ func MakeHandler(svc groups.Service, authn authn.Authentication, mux *chi.Mux, l
 	d := roleManagerHttp.NewDecoder("groupID")
 
 	mux.Route("/groups", func(r chi.Router) {
-		r.Use(api.AuthenticateMiddleware(authn))
+		r.Use(api.AuthenticateMiddleware(authn, true))
 		r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
 			CreateGroupEndpoint(svc),
 			DecodeGroupCreate,

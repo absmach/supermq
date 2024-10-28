@@ -23,7 +23,7 @@ func clientsHandler(svc things.Service, authn mgauthn.Authentication, r *chi.Mux
 	d := roleManagerHttp.NewDecoder("thingID")
 
 	r.Group(func(r chi.Router) {
-		r.Use(api.AuthenticateMiddlewareDomain(authn))
+		r.Use(api.AuthenticateMiddleware(authn, true))
 
 		r.Route("/{domainID}/things", func(r chi.Router) {
 			r.Post("/", otelhttp.NewHandler(kithttp.NewServer(

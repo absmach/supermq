@@ -53,9 +53,8 @@ func (client tokenGrpcClient) Issue(ctx context.Context, req *grpcTokenV1.IssueR
 	defer cancel()
 
 	res, err := client.issue(ctx, issueReq{
-		userID:   req.GetUserId(),
-		domainID: req.GetDomainId(),
-		keyType:  auth.KeyType(req.GetType()),
+		userID:  req.GetUserId(),
+		keyType: auth.KeyType(req.GetType()),
 	})
 	if err != nil {
 		return &grpcTokenV1.Token{}, grpcapi.DecodeError(err)
@@ -66,9 +65,8 @@ func (client tokenGrpcClient) Issue(ctx context.Context, req *grpcTokenV1.IssueR
 func encodeIssueRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(issueReq)
 	return &grpcTokenV1.IssueReq{
-		UserId:   req.userID,
-		DomainId: &req.domainID,
-		Type:     uint32(req.keyType),
+		UserId: req.userID,
+		Type:   uint32(req.keyType),
 	}, nil
 }
 
@@ -80,7 +78,7 @@ func (client tokenGrpcClient) Refresh(ctx context.Context, req *grpcTokenV1.Refr
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
-	res, err := client.refresh(ctx, refreshReq{refreshToken: req.GetRefreshToken(), domainID: req.GetDomainId()})
+	res, err := client.refresh(ctx, refreshReq{refreshToken: req.GetRefreshToken()})
 	if err != nil {
 		return &grpcTokenV1.Token{}, grpcapi.DecodeError(err)
 	}
@@ -89,7 +87,7 @@ func (client tokenGrpcClient) Refresh(ctx context.Context, req *grpcTokenV1.Refr
 
 func encodeRefreshRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(refreshReq)
-	return &grpcTokenV1.RefreshReq{RefreshToken: req.refreshToken, DomainId: &req.domainID}, nil
+	return &grpcTokenV1.RefreshReq{RefreshToken: req.refreshToken}, nil
 }
 
 func decodeRefreshResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {

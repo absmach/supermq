@@ -49,6 +49,7 @@ func ViewGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 		if !ok {
 			return viewGroupRes{}, svcerr.ErrAuthentication
 		}
+
 		group, err := svc.ViewGroup(ctx, session, req.id)
 		if err != nil {
 			return viewGroupRes{}, err

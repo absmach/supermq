@@ -297,6 +297,7 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
 	tsvc = middleware.MetricsMiddleware(tsvc, counter, latency)
+	tsvc = middleware.MetricsMiddleware(tsvc, counter, latency)
 
 	tsvc, err = middleware.AuthorizationMiddleware(policies.ThingType, tsvc, authz, repo, things.NewOperationPermissionMap(), things.NewRolesOperationPermissionMap(), things.NewExternalOperationPermissionMap())
 	if err != nil {
