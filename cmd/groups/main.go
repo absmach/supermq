@@ -61,7 +61,7 @@ const (
 	envPrefixAuth     = "MG_AUTH_GRPC_"
 	envPrefixDomains  = "MG_DOMAINS_GRPC_"
 	envPrefixChannels = "MG_CHANNELS_GRPC_"
-	envPrefixThings   = "MG_THINGS_GRPC_"
+	envPrefixThings   = "MG_THINGS_AUTH_GRPC_"
 	defDB             = "groups"
 	defSvcHTTPPort    = "9004"
 	defSvcgRPCPort    = "7004"

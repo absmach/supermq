@@ -17,6 +17,7 @@ import (
 	"github.com/absmach/magistrala"
 	redisclient "github.com/absmach/magistrala/internal/clients/redis"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
+	grpcGroupsV1 "github.com/absmach/magistrala/internal/grpc/groups/v1"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	authsvcAuthn "github.com/absmach/magistrala/pkg/authn/authsvc"
@@ -63,11 +64,10 @@ const (
 	envPrefixGRPC      = "MG_THINGS_AUTH_GRPC_"
 	envPrefixAuth      = "MG_AUTH_GRPC_"
 	envPrefixChannels  = "MG_CHANNELS_GRPC_"
+	envPrefixGroups    = "MG_GROUPS_GRPC_"
 	defDB              = "things"
 	defSvcHTTPPort     = "9000"
 	defSvcAuthGRPCPort = "7000"
-
-	streamID = "magistrala.things"
 )
 
 type config struct {
@@ -203,7 +203,22 @@ func main() {
 	logger.Info("Channels gRPC client successfully connected to channels gRPC server " + channelsClient.Secure())
 	defer channelsClient.Close()
 
-	svc, psvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cacheclient, cfg.CacheKeyDuration, cfg.ESURL, channelsgRPC, tracer, logger)
+	groupsgRPCCfg := grpcclient.Config{}
+	if err := env.ParseWithOptions(&groupsgRPCCfg, env.Options{Prefix: envPrefixGroups}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load groups gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+	groupsClient, groupsHandler, err := grpcclient.SetupGroupsClient(ctx, groupsgRPCCfg)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to connect to groups gRPC server: %s", err))
+		exitCode = 1
+		return
+	}
+	defer groupsHandler.Close()
+	logger.Info("Groups gRPC client successfully connected to groups gRPC server " + groupsHandler.Secure())
+
+	svc, psvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cacheclient, cfg.CacheKeyDuration, cfg.ESURL, channelsgRPC, groupsClient, tracer, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
 		exitCode = 1
@@ -255,7 +270,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, keyDuration time.Duration, esURL string, channels grpcChannelsV1.ChannelsServiceClient, tracer trace.Tracer, logger *slog.Logger) (things.Service, pThings.Service, error) {
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, keyDuration time.Duration, esURL string, channels grpcChannelsV1.ChannelsServiceClient, groups grpcGroupsV1.GroupsServiceClient, tracer trace.Tracer, logger *slog.Logger) (things.Service, pThings.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	repo := postgres.NewRepository(database)
 
@@ -268,7 +283,7 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 	// Things service
 	cache := cache.NewCache(cacheClient, keyDuration)
 
-	tsvc, err := things.NewService(repo, ps, cache, channels, idp, sidp)
+	tsvc, err := things.NewService(repo, ps, cache, channels, groups, idp, sidp)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -279,17 +294,17 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 	}
 
 	tsvc = tracing.New(tsvc, tracer)
-	tsvc = middleware.LoggingMiddleware(tsvc, logger)
 
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
 	tsvc = middleware.MetricsMiddleware(tsvc, counter, latency)
 
-	tsvc, err = middleware.AuthorizationMiddleware(policies.ThingType, tsvc, authz, things.NewOperationPermissionMap(), things.NewRolesOperationPermissionMap())
+	tsvc, err = middleware.AuthorizationMiddleware(policies.ThingType, tsvc, authz, repo, things.NewOperationPermissionMap(), things.NewRolesOperationPermissionMap(), things.NewExternalOperationPermissionMap())
 	if err != nil {
 		return nil, nil, err
 	}
+	tsvc = middleware.LoggingMiddleware(tsvc, logger)
 
-	isvc := pThings.New(repo, cache, pe)
+	isvc := pThings.New(repo, cache, pe, ps)
 
 	return tsvc, isvc, err
 }

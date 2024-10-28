@@ -91,6 +91,20 @@ func clientsHandler(svc things.Service, authn mgauthn.Authentication, r *chi.Mux
 					opts...,
 				), "disable_thing").ServeHTTP)
 
+				r.Post("/parent", otelhttp.NewHandler(kithttp.NewServer(
+					setThingParentGroupEndpoint(svc),
+					decodeSetThingParentGroupStatus,
+					api.EncodeResponse,
+					opts...,
+				), "set_thing_parent_group").ServeHTTP)
+
+				r.Delete("/parent", otelhttp.NewHandler(kithttp.NewServer(
+					removeThingParentGroupEndpoint(svc),
+					decodeRemoveThingParentGroupStatus,
+					api.EncodeResponse,
+					opts...,
+				), "remove_thing_parent_group").ServeHTTP)
+
 				r.Delete("/", otelhttp.NewHandler(kithttp.NewServer(
 					deleteClientEndpoint(svc),
 					decodeDeleteClientReq,

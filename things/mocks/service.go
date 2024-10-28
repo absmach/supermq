@@ -235,6 +235,24 @@ func (_m *Service) RemoveMemberFromAllRoles(ctx context.Context, session authn.S
 	return r0
 }
 
+// RemoveParentGroup provides a mock function with given fields: ctx, session, id
+func (_m *Service) RemoveParentGroup(ctx context.Context, session authn.Session, id string) error {
+	ret := _m.Called(ctx, session, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveParentGroup")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) error); ok {
+		r0 = rf(ctx, session, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // RemoveRole provides a mock function with given fields: ctx, session, entityID, roleName
 func (_m *Service) RemoveRole(ctx context.Context, session authn.Session, entityID string, roleName string) error {
 	ret := _m.Called(ctx, session, entityID, roleName)
@@ -548,6 +566,24 @@ func (_m *Service) RoleRemoveMembers(ctx context.Context, session authn.Session,
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, string, []string) error); ok {
 		r0 = rf(ctx, session, entityID, roleName, members)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SetParentGroup provides a mock function with given fields: ctx, session, parentGroupID, id
+func (_m *Service) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error {
+	ret := _m.Called(ctx, session, parentGroupID, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetParentGroup")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, string) error); ok {
+		r0 = rf(ctx, session, parentGroupID, id)
 	} else {
 		r0 = ret.Error(0)
 	}

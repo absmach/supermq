@@ -199,3 +199,36 @@ func (lm *loggingMiddleware) DeleteClient(ctx context.Context, session authn.Ses
 	}(time.Now())
 	return lm.svc.DeleteClient(ctx, session, id)
 }
+
+func (lm *loggingMiddleware) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) (err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.String("parent_group_id", parentGroupID),
+			slog.String("thing_id", id),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn("Set parent group to thing failed", args...)
+			return
+		}
+		lm.logger.Info("Set parent group to thing completed successfully", args...)
+	}(time.Now())
+	return lm.svc.SetParentGroup(ctx, session, parentGroupID, id)
+}
+
+func (lm *loggingMiddleware) RemoveParentGroup(ctx context.Context, session authn.Session, id string) (err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.String("thing_id", id),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn("Remove parent group from thing failed", args...)
+			return
+		}
+		lm.logger.Info("Remove parent group from thing completed successfully", args...)
+	}(time.Now())
+	return lm.svc.RemoveParentGroup(ctx, session, id)
+}

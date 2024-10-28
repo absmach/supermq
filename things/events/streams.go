@@ -31,7 +31,7 @@ func NewEventStoreMiddleware(ctx context.Context, svc things.Service, url string
 	if err != nil {
 		return nil, err
 	}
-	res := rmEvents.NewRoleManagerEventStore("domains", svc, publisher)
+	res := rmEvents.NewRoleManagerEventStore("things", svc, publisher)
 
 	return &eventStore{
 		svc:                   svc,
@@ -167,6 +167,34 @@ func (es *eventStore) DeleteClient(ctx context.Context, session authn.Session, i
 	}
 
 	event := removeClientEvent{id}
+
+	if err := es.Publish(ctx, event); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (es *eventStore) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) (err error) {
+	if err := es.svc.SetParentGroup(ctx, session, parentGroupID, id); err != nil {
+		return err
+	}
+
+	event := setParentGroupEvent{parentGroupID: parentGroupID, id: id}
+
+	if err := es.Publish(ctx, event); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (es *eventStore) RemoveParentGroup(ctx context.Context, session authn.Session, id string) (err error) {
+	if err := es.svc.RemoveParentGroup(ctx, session, id); err != nil {
+		return err
+	}
+
+	event := removeParentGroupEvent{id: id}
 
 	if err := es.Publish(ctx, event); err != nil {
 		return err

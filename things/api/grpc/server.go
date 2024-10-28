@@ -22,12 +22,13 @@ var _ grpcThingsV1.ThingsServiceServer = (*grpcServer)(nil)
 
 type grpcServer struct {
 	grpcThingsV1.UnimplementedThingsServiceServer
-	authorize                kitgrpc.Handler
-	retrieveEntity           kitgrpc.Handler
-	retrieveEntities         kitgrpc.Handler
-	addConnections           kitgrpc.Handler
-	removeConnections        kitgrpc.Handler
-	removeChannelConnections kitgrpc.Handler
+	authorize                  kitgrpc.Handler
+	retrieveEntity             kitgrpc.Handler
+	retrieveEntities           kitgrpc.Handler
+	addConnections             kitgrpc.Handler
+	removeConnections          kitgrpc.Handler
+	removeChannelConnections   kitgrpc.Handler
+	unsetParentGroupFormThings kitgrpc.Handler
 }
 
 // NewServer returns new AuthServiceServer instance.
@@ -62,6 +63,11 @@ func NewServer(svc things.Service) grpcThingsV1.ThingsServiceServer {
 			removeChannelConnectionsEndpoint(svc),
 			decodeRemoveChannelConnectionsRequest,
 			encodeRemoveChannelConnectionsResponse,
+		),
+		unsetParentGroupFormThings: kitgrpc.NewServer(
+			unsetParentGroupFormThingsEndpoint(svc),
+			decodeUnsetParentGroupFormThingsRequest,
+			encodeUnsetParentGroupFormThingsResponse,
 		),
 	}
 }
@@ -224,6 +230,27 @@ func decodeRemoveChannelConnectionsRequest(_ context.Context, grpcReq interface{
 func encodeRemoveChannelConnectionsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	_ = grpcRes.(removeChannelConnectionsRes)
 	return &grpcThingsV1.RemoveChannelConnectionsRes{}, nil
+}
+
+func (s *grpcServer) UnsetParentGroupFormThings(ctx context.Context, req *grpcThingsV1.UnsetParentGroupFormThingsReq) (*grpcThingsV1.UnsetParentGroupFormThingsRes, error) {
+	_, res, err := s.unsetParentGroupFormThings.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, encodeError(err)
+	}
+	return res.(*grpcThingsV1.UnsetParentGroupFormThingsRes), nil
+}
+
+func decodeUnsetParentGroupFormThingsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*grpcThingsV1.UnsetParentGroupFormThingsReq)
+
+	return unsetParentGroupFormThingsReq{
+		parentGroupID: req.GetParentGroupId(),
+	}, nil
+}
+
+func encodeUnsetParentGroupFormThingsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	_ = grpcRes.(unsetParentGroupFormThingsRes)
+	return &grpcThingsV1.UnsetParentGroupFormThingsRes{}, nil
 }
 
 func encodeError(err error) error {

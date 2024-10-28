@@ -59,9 +59,9 @@ func (repo *clientsRepo) Save(ctx context.Context, cs ...mgclients.Client) (retC
 		dbClients = append(dbClients, dbcli)
 	}
 
-	q := `INSERT INTO clients (id, name, tags, domain_id, identity, secret, metadata, created_at, updated_at, updated_by, status)
-	VALUES (:id, :name, :tags, :domain_id, :identity, :secret, :metadata, :created_at, :updated_at, :updated_by, :status)
-	RETURNING id, name, tags, identity, secret, metadata, COALESCE(domain_id, '') AS domain_id, status, created_at, updated_at, updated_by`
+	q := `INSERT INTO clients (id, name, tags, domain_id, parent_group_id,  identity, secret, metadata, created_at, updated_at, updated_by, status)
+	VALUES (:id, :name, :tags, :domain_id,  :parent_group_id, :identity, :secret, :metadata, :created_at, :updated_at, :updated_by, :status)
+	RETURNING id, name, tags, identity, secret, metadata, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, status, created_at, updated_at, updated_by`
 
 	row, err := repo.DB.NamedQueryContext(ctx, q, dbClients)
 	if err != nil {
@@ -89,7 +89,7 @@ func (repo *clientsRepo) Save(ctx context.Context, cs ...mgclients.Client) (retC
 }
 
 func (repo *clientsRepo) RetrieveBySecret(ctx context.Context, key string) (mgclients.Client, error) {
-	q := fmt.Sprintf(`SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id, identity, secret, metadata, created_at, updated_at, updated_by, status
+	q := fmt.Sprintf(`SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id,  COALESCE(parent_group_id, '') AS parent_group_id, identity, secret, metadata, created_at, updated_at, updated_by, status
         FROM clients
         WHERE secret = :secret AND status = %d`, mgclients.EnabledStatus)
 
@@ -149,7 +149,7 @@ func (repo *clientsRepo) RetrieveByIds(ctx context.Context, ids []string) (mgcli
 		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
 
-	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.identity, c.metadata, COALESCE(c.domain_id, '') AS domain_id, c.status,
+	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.identity, c.metadata, COALESCE(c.domain_id, '') AS domain_id,  COALESCE(parent_group_id, '') AS parent_group_id, c.status,
 					c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM clients c %s ORDER BY c.created_at`, query)
 
 	dbPage, err := pgclients.ToDBClientsPage(pm)
@@ -237,6 +237,41 @@ func (repo *clientsRepo) RemoveConnections(ctx context.Context, conns []things.C
 	return nil
 }
 
+func (repo *clientsRepo) SetParentGroup(ctx context.Context, th clients.Client) error {
+	q := "UPDATE clients SET parent_group_id = :parent_group_id, updated_at = :updated_at, updated_by = :updated_by WHERE id = :id"
+
+	params := map[string]interface{}{
+		"parent_group_id": th.ParentGroup,
+		"updated_at":      th.UpdatedAt,
+		"updated_by":      th.UpdatedBy,
+		"id":              th.ID,
+	}
+	result, err := repo.DB.NamedExecContext(ctx, q, params)
+	if err != nil {
+		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
+	}
+	if rows, _ := result.RowsAffected(); rows == 0 {
+		return repoerr.ErrNotFound
+	}
+	return nil
+}
+
+func (repo *clientsRepo) RemoveParentGroup(ctx context.Context, th clients.Client) error {
+	q := "UPDATE clients SET parent_group_id = NULL, updated_at = :updated_at, updated_by = :updated_by WHERE id = :id"
+	dbCh, err := pgclients.ToDBClient(th)
+	if err != nil {
+		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+	}
+	result, err := repo.DB.NamedExecContext(ctx, q, dbCh)
+	if err != nil {
+		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
+	}
+	if rows, _ := result.RowsAffected(); rows == 0 {
+		return repoerr.ErrNotFound
+	}
+	return nil
+}
+
 func (repo *clientsRepo) ThingConnectionsCount(ctx context.Context, id string) (uint64, error) {
 	query := `SELECT COUNT(*) FROM connections WHERE thing_id = :thing_id`
 	dbConn := dbConnection{ThingID: id}
@@ -276,6 +311,49 @@ func (repo *clientsRepo) RemoveThingConnections(ctx context.Context, thingID str
 
 	dbConn := dbConnection{ThingID: thingID}
 	if _, err := repo.DB.NamedExecContext(ctx, query, dbConn); err != nil {
+		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+	}
+	return nil
+}
+
+func (repo *clientsRepo) RetrieveParentGroupThings(ctx context.Context, parentGroupID string) ([]clients.Client, error) {
+	query := `SELECT c.id, c.name, c.tags,  c.metadata, COALESCE(c.domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, c.status,
+					c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM clients c WHERE c.parent_group_id = :parent_group_id ;`
+
+	params := map[string]interface{}{
+		"parent_group_id": parentGroupID,
+	}
+
+	rows, err := repo.DB.NamedQueryContext(ctx, query, params)
+	if err != nil {
+		return []clients.Client{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+	defer rows.Close()
+
+	var ths []clients.Client
+	for rows.Next() {
+		dbTh := pgclients.DBClient{}
+		if err := rows.StructScan(&dbTh); err != nil {
+			return []clients.Client{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+
+		th, err := pgclients.ToClient(dbTh)
+		if err != nil {
+			return []clients.Client{}, err
+		}
+
+		ths = append(ths, th)
+	}
+	return ths, nil
+}
+
+func (repo *clientsRepo) UnsetParentGroupFormThings(ctx context.Context, parentGroupID string) error {
+	query := "UPDATE clients SET parent_group_id = NULL WHERE parent_group_id = :parent_group_id"
+
+	params := map[string]interface{}{
+		"parent_group_id": parentGroupID,
+	}
+	if _, err := repo.DB.NamedExecContext(ctx, query, params); err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 	return nil

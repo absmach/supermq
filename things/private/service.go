@@ -27,18 +27,26 @@ type Service interface {
 	RemoveConnections(ctx context.Context, conns []things.Connection) error
 
 	RemoveChannelConnections(ctx context.Context, channelID string) error
+
+	UnsetParentGroupFormThings(ctx context.Context, parentGroupID string) error
 }
 
 var _ Service = (*service)(nil)
 
-func New(repo things.Repository, cache things.Cache, evaluator policies.Evaluator) Service {
-	return service{repo, cache, evaluator}
+func New(repo things.Repository, cache things.Cache, evaluator policies.Evaluator, policy policies.Service) Service {
+	return service{
+		repo:      repo,
+		cache:     cache,
+		evaluator: evaluator,
+		policy:    policy,
+	}
 }
 
 type service struct {
 	repo      things.Repository
 	cache     things.Cache
 	evaluator policies.Evaluator
+	policy    policies.Service
 }
 
 func (svc service) Identify(ctx context.Context, key string) (string, error) {
@@ -97,4 +105,40 @@ func (svc service) RemoveConnections(ctx context.Context, conns []things.Connect
 
 func (svc service) RemoveChannelConnections(ctx context.Context, channelID string) error {
 	return svc.repo.RemoveChannelConnections(ctx, channelID)
+}
+
+func (svc service) UnsetParentGroupFormThings(ctx context.Context, parentGroupID string) (retErr error) {
+	ths, err := svc.repo.RetrieveParentGroupThings(ctx, parentGroupID)
+	if err != nil {
+		return errors.Wrap(svcerr.ErrViewEntity, err)
+	}
+
+	if len(ths) > 0 {
+		prs := []policies.Policy{}
+		for _, th := range ths {
+			prs = append(prs, policies.Policy{
+				SubjectType: policies.GroupType,
+				Subject:     th.ParentGroup,
+				Relation:    policies.ParentGroupRelation,
+				ObjectType:  policies.ThingType,
+				Object:      th.ID,
+			})
+		}
+
+		if err := svc.policy.DeletePolicies(ctx, prs); err != nil {
+			return errors.Wrap(svcerr.ErrDeletePolicies, err)
+		}
+		defer func() {
+			if retErr != nil {
+				if errRollback := svc.policy.AddPolicies(ctx, prs); err != nil {
+					retErr = errors.Wrap(retErr, errors.Wrap(errors.ErrRollbackTx, errRollback))
+				}
+			}
+		}()
+
+		if err := svc.repo.UnsetParentGroupFormThings(ctx, parentGroupID); err != nil {
+			return errors.Wrap(svcerr.ErrRemoveEntity, err)
+		}
+	}
+	return nil
 }

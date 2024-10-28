@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	gpostgres "github.com/absmach/magistrala/internal/groups/postgres"
+	gpostgres "github.com/absmach/magistrala/groups/postgres"
 	"github.com/absmach/magistrala/pkg/postgres"
 	pgclient "github.com/absmach/magistrala/pkg/postgres"
 	"github.com/jmoiron/sqlx"

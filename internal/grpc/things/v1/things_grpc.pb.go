@@ -23,12 +23,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ThingsService_Authorize_FullMethodName                = "/things.v1.ThingsService/Authorize"
-	ThingsService_RetrieveEntity_FullMethodName           = "/things.v1.ThingsService/RetrieveEntity"
-	ThingsService_RetrieveEntities_FullMethodName         = "/things.v1.ThingsService/RetrieveEntities"
-	ThingsService_AddConnections_FullMethodName           = "/things.v1.ThingsService/AddConnections"
-	ThingsService_RemoveConnections_FullMethodName        = "/things.v1.ThingsService/RemoveConnections"
-	ThingsService_RemoveChannelConnections_FullMethodName = "/things.v1.ThingsService/RemoveChannelConnections"
+	ThingsService_Authorize_FullMethodName                  = "/things.v1.ThingsService/Authorize"
+	ThingsService_RetrieveEntity_FullMethodName             = "/things.v1.ThingsService/RetrieveEntity"
+	ThingsService_RetrieveEntities_FullMethodName           = "/things.v1.ThingsService/RetrieveEntities"
+	ThingsService_AddConnections_FullMethodName             = "/things.v1.ThingsService/AddConnections"
+	ThingsService_RemoveConnections_FullMethodName          = "/things.v1.ThingsService/RemoveConnections"
+	ThingsService_RemoveChannelConnections_FullMethodName   = "/things.v1.ThingsService/RemoveChannelConnections"
+	ThingsService_UnsetParentGroupFormThings_FullMethodName = "/things.v1.ThingsService/UnsetParentGroupFormThings"
 )
 
 // ThingsServiceClient is the client API for ThingsService service.
@@ -45,6 +46,7 @@ type ThingsServiceClient interface {
 	AddConnections(ctx context.Context, in *v1.AddConnectionsReq, opts ...grpc.CallOption) (*v1.AddConnectionsRes, error)
 	RemoveConnections(ctx context.Context, in *v1.RemoveConnectionsReq, opts ...grpc.CallOption) (*v1.RemoveConnectionsRes, error)
 	RemoveChannelConnections(ctx context.Context, in *RemoveChannelConnectionsReq, opts ...grpc.CallOption) (*RemoveChannelConnectionsRes, error)
+	UnsetParentGroupFormThings(ctx context.Context, in *UnsetParentGroupFormThingsReq, opts ...grpc.CallOption) (*UnsetParentGroupFormThingsRes, error)
 }
 
 type thingsServiceClient struct {
@@ -115,6 +117,16 @@ func (c *thingsServiceClient) RemoveChannelConnections(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *thingsServiceClient) UnsetParentGroupFormThings(ctx context.Context, in *UnsetParentGroupFormThingsReq, opts ...grpc.CallOption) (*UnsetParentGroupFormThingsRes, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UnsetParentGroupFormThingsRes)
+	err := c.cc.Invoke(ctx, ThingsService_UnsetParentGroupFormThings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ThingsServiceServer is the server API for ThingsService service.
 // All implementations must embed UnimplementedThingsServiceServer
 // for forward compatibility.
@@ -129,6 +141,7 @@ type ThingsServiceServer interface {
 	AddConnections(context.Context, *v1.AddConnectionsReq) (*v1.AddConnectionsRes, error)
 	RemoveConnections(context.Context, *v1.RemoveConnectionsReq) (*v1.RemoveConnectionsRes, error)
 	RemoveChannelConnections(context.Context, *RemoveChannelConnectionsReq) (*RemoveChannelConnectionsRes, error)
+	UnsetParentGroupFormThings(context.Context, *UnsetParentGroupFormThingsReq) (*UnsetParentGroupFormThingsRes, error)
 	mustEmbedUnimplementedThingsServiceServer()
 }
 
@@ -156,6 +169,9 @@ func (UnimplementedThingsServiceServer) RemoveConnections(context.Context, *v1.R
 }
 func (UnimplementedThingsServiceServer) RemoveChannelConnections(context.Context, *RemoveChannelConnectionsReq) (*RemoveChannelConnectionsRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveChannelConnections not implemented")
+}
+func (UnimplementedThingsServiceServer) UnsetParentGroupFormThings(context.Context, *UnsetParentGroupFormThingsReq) (*UnsetParentGroupFormThingsRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnsetParentGroupFormThings not implemented")
 }
 func (UnimplementedThingsServiceServer) mustEmbedUnimplementedThingsServiceServer() {}
 func (UnimplementedThingsServiceServer) testEmbeddedByValue()                       {}
@@ -286,6 +302,24 @@ func _ThingsService_RemoveChannelConnections_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ThingsService_UnsetParentGroupFormThings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnsetParentGroupFormThingsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ThingsServiceServer).UnsetParentGroupFormThings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ThingsService_UnsetParentGroupFormThings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ThingsServiceServer).UnsetParentGroupFormThings(ctx, req.(*UnsetParentGroupFormThingsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ThingsService_ServiceDesc is the grpc.ServiceDesc for ThingsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -316,6 +350,10 @@ var ThingsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveChannelConnections",
 			Handler:    _ThingsService_RemoveChannelConnections_Handler,
+		},
+		{
+			MethodName: "UnsetParentGroupFormThings",
+			Handler:    _ThingsService_UnsetParentGroupFormThings_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

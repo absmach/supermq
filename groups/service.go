@@ -10,6 +10,7 @@ import (
 
 	"github.com/absmach/magistrala"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
+
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
@@ -21,10 +22,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var (
-	errMemberKind = errors.New("invalid member kind")
-	errGroupIDs   = errors.New("invalid group ids")
-)
+var errGroupIDs = errors.New("invalid group ids")
 
 type service struct {
 	repo       Repository
@@ -461,10 +459,9 @@ func (svc service) DeleteGroup(ctx context.Context, session mgauthn.Session, id 
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
-	// ToDo: Remove things parents
-	// if _, err := svc.things.UnsetParentGroupFormChannels(ctx & grpcThingssV1.UnsetParentGroupFormThingsReq{ParentGroupId: id}); err != nil {
-	// 	return errors.Wrap(svcerr.ErrRemoveEntity, err)
-	// }
+	if _, err := svc.things.UnsetParentGroupFormThings(ctx, &grpcThingsV1.UnsetParentGroupFormThingsReq{ParentGroupId: id}); err != nil {
+		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
 
 	g, err := svc.repo.ChangeStatus(ctx, Group{ID: id, Status: mgclients.DeletedStatus})
 	if err != nil {

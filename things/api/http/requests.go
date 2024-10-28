@@ -175,6 +175,32 @@ func (req changeClientStatusReq) validate() error {
 	return nil
 }
 
+type setThingParentGroupReq struct {
+	id            string
+	ParentGroupID string `json:"parent_group_id"`
+}
+
+func (req setThingParentGroupReq) validate() error {
+	if req.id == "" {
+		return apiutil.ErrMissingID
+	}
+	if req.ParentGroupID == "" {
+		return apiutil.ErrMissingParentGroupID
+	}
+	return nil
+}
+
+type removeThingParentGroupReq struct {
+	id string
+}
+
+func (req removeThingParentGroupReq) validate() error {
+	if req.id == "" {
+		return apiutil.ErrMissingID
+	}
+	return nil
+}
+
 type deleteClientReq struct {
 	id string
 }

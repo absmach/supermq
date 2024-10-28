@@ -86,7 +86,7 @@ func (repo *Repository) ChangeStatus(ctx context.Context, client clients.Client)
 }
 
 func (repo *Repository) RetrieveByID(ctx context.Context, id string) (clients.Client, error) {
-	q := `SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id, identity, secret, metadata, created_at, updated_at, updated_by, status
+	q := `SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id,  COALESCE(parent_group_id, '') AS parent_group_id, identity, secret, metadata, created_at, updated_at, updated_by, status
         FROM clients WHERE id = :id`
 
 	dbc := DBClient{
@@ -343,19 +343,20 @@ func (repo *Repository) Delete(ctx context.Context, id string) error {
 }
 
 type DBClient struct {
-	ID        string           `db:"id"`
-	Name      string           `db:"name,omitempty"`
-	Tags      pgtype.TextArray `db:"tags,omitempty"`
-	Identity  string           `db:"identity"`
-	Domain    string           `db:"domain_id"`
-	Secret    string           `db:"secret"`
-	Metadata  []byte           `db:"metadata,omitempty"`
-	CreatedAt time.Time        `db:"created_at,omitempty"`
-	UpdatedAt sql.NullTime     `db:"updated_at,omitempty"`
-	UpdatedBy *string          `db:"updated_by,omitempty"`
-	Groups    []groups.Group   `db:"groups,omitempty"`
-	Status    clients.Status   `db:"status,omitempty"`
-	Role      *clients.Role    `db:"role,omitempty"`
+	ID          string           `db:"id"`
+	Name        string           `db:"name,omitempty"`
+	Tags        pgtype.TextArray `db:"tags,omitempty"`
+	Identity    string           `db:"identity"`
+	Domain      string           `db:"domain_id"`
+	ParentGroup sql.NullString   `db:"parent_group_id"`
+	Secret      string           `db:"secret"`
+	Metadata    []byte           `db:"metadata,omitempty"`
+	CreatedAt   time.Time        `db:"created_at,omitempty"`
+	UpdatedAt   sql.NullTime     `db:"updated_at,omitempty"`
+	UpdatedBy   *string          `db:"updated_by,omitempty"`
+	Groups      []groups.Group   `db:"groups,omitempty"`
+	Status      clients.Status   `db:"status,omitempty"`
+	Role        *clients.Role    `db:"role,omitempty"`
 }
 
 func ToDBClient(c clients.Client) (DBClient, error) {
@@ -381,18 +382,19 @@ func ToDBClient(c clients.Client) (DBClient, error) {
 	}
 
 	return DBClient{
-		ID:        c.ID,
-		Name:      c.Name,
-		Tags:      tags,
-		Domain:    c.Domain,
-		Identity:  c.Credentials.Identity,
-		Secret:    c.Credentials.Secret,
-		Metadata:  data,
-		CreatedAt: c.CreatedAt,
-		UpdatedAt: updatedAt,
-		UpdatedBy: updatedBy,
-		Status:    c.Status,
-		Role:      &c.Role,
+		ID:          c.ID,
+		Name:        c.Name,
+		Tags:        tags,
+		Domain:      c.Domain,
+		ParentGroup: nullString(c.ParentGroup),
+		Identity:    c.Credentials.Identity,
+		Secret:      c.Credentials.Secret,
+		Metadata:    data,
+		CreatedAt:   c.CreatedAt,
+		UpdatedAt:   updatedAt,
+		UpdatedBy:   updatedBy,
+		Status:      c.Status,
+		Role:        &c.Role,
 	}, nil
 }
 
@@ -433,6 +435,9 @@ func ToClient(c DBClient) (clients.Client, error) {
 	}
 	if c.Role != nil {
 		cli.Role = *c.Role
+	}
+	if c.ParentGroup.Valid {
+		cli.ParentGroup = c.ParentGroup.String
 	}
 	return cli, nil
 }
@@ -529,4 +534,15 @@ func applyOrdering(emq string, pm clients.Page) string {
 		}
 	}
 	return emq
+}
+
+func nullString(s string) sql.NullString {
+	if s == "" {
+		return sql.NullString{}
+	}
+
+	return sql.NullString{
+		String: s,
+		Valid:  true,
+	}
 }

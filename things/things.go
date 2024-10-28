@@ -10,7 +10,6 @@ import (
 	"github.com/absmach/magistrala/pkg/clients"
 	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/roles"
-	"github.com/absmach/magistrala/pkg/svcutil"
 )
 
 type AuthzReq struct {
@@ -29,7 +28,7 @@ type Connection struct {
 // Service specifies an API that must be fullfiled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 //
-//go:generate mockery --name Service --filename service.go --quiet --note "Copyright (c) Abstract Machines"
+//go:generate mockery --name Service --output=./mocks --filename service.go  --quiet --note "Copyright (c) Abstract Machines"
 type Service interface {
 	// CreateThings creates new client. In case of the failed registration, a
 	// non-nil error value is returned.
@@ -59,16 +58,16 @@ type Service interface {
 	// DeleteClient deletes client with given ID.
 	DeleteClient(ctx context.Context, session authn.Session, id string) error
 
-	// SetParentGroup(ctx context.Context, token string, parentGroupID string, id string) error
+	SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error
 
-	// RemoveParentGroup(ctx context.Context, token string, parentGroupID string, id string) error
+	RemoveParentGroup(ctx context.Context, session authn.Session, id string) error
 
 	roles.RoleManager
 }
 
 // Cache contains thing caching interface.
 //
-//go:generate mockery --name Cache --filename cache.go --quiet --note "Copyright (c) Abstract Machines"
+//go:generate mockery --name Cache --output=./mocks --filename cache.go --quiet --note "Copyright (c) Abstract Machines"
 type Cache interface {
 	// Save stores pair thing secret, thing id.
 	Save(ctx context.Context, thingSecret, thingID string) error
@@ -110,100 +109,15 @@ type Repository interface {
 
 	RemoveThingConnections(ctx context.Context, thingID string) error
 
+	// SetParentGroup set parent group id to a given channel id
+	SetParentGroup(ctx context.Context, th clients.Client) error
+
+	// RemoveParentGroup remove parent group id fr given chanel id
+	RemoveParentGroup(ctx context.Context, th clients.Client) error
+
+	RetrieveParentGroupThings(ctx context.Context, parentGroupID string) ([]clients.Client, error)
+
+	UnsetParentGroupFormThings(ctx context.Context, parentGroupID string) error
+
 	roles.Repository
-}
-
-const (
-	OpCreateThing svcutil.Operation = iota
-	OpListThing
-	OpViewThing
-	OpUpdateThing
-	OpUpdateClientTags
-	OpUpdateClientSecret
-	OpEnableThing
-	OpDisableThing
-	OpDeleteThing
-)
-
-var expectedOperations = []svcutil.Operation{
-	OpCreateThing,
-	OpListThing,
-	OpViewThing,
-	OpUpdateThing,
-	OpUpdateClientTags,
-	OpUpdateClientSecret,
-	OpEnableThing,
-	OpDisableThing,
-	OpDeleteThing,
-}
-
-var operationNames = []string{
-	"OpCreateThing",
-	"OpListThing",
-	"OpViewThing",
-	"OpUpdateThing",
-	"OpUpdateClientTags",
-	"OpUpdateClientSecret",
-	"OpEnableThing",
-	"OpDisableThing",
-	"OpDeleteThing",
-}
-
-func NewOperationPerm() svcutil.OperationPerm {
-	return svcutil.NewOperationPerm(expectedOperations, operationNames)
-}
-
-// Below codes should moved out of service, may be can be kept in `cmd/<svc>/main.go`
-
-const (
-	// this permission is check over domain or group
-	createPermission = "thing_create_permission"
-	// this permission is check over domain or group
-
-	updatePermission           = "update_permission"
-	readPermission             = "read_permission"
-	deletePermission           = "delete_permission"
-	setParentGroupPermission   = "set_parent_group_permission"
-	connectToChannelPermission = "connect_to_channel_permission"
-
-	manageRolePermission      = "manage_role_permission"
-	addRoleUsersPermission    = "add_role_users_permission"
-	removeRoleUsersPermission = "remove_role_users_permission"
-	viewRoleUsersPermission   = "view_role_users_permission"
-)
-
-func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
-	opPerm := map[svcutil.Operation]svcutil.Permission{
-		OpCreateThing:        createPermission,
-		OpListThing:          readPermission,
-		OpViewThing:          readPermission,
-		OpUpdateThing:        updatePermission,
-		OpUpdateClientTags:   updatePermission,
-		OpUpdateClientSecret: updatePermission,
-		OpEnableThing:        updatePermission,
-		OpDisableThing:       updatePermission,
-		OpDeleteThing:        deletePermission,
-	}
-	return opPerm
-}
-
-func NewRolesOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
-	opPerm := map[svcutil.Operation]svcutil.Permission{
-		roles.OpAddRole:                manageRolePermission,
-		roles.OpRemoveRole:             manageRolePermission,
-		roles.OpUpdateRoleName:         manageRolePermission,
-		roles.OpRetrieveRole:           manageRolePermission,
-		roles.OpRetrieveAllRoles:       manageRolePermission,
-		roles.OpRoleAddActions:         manageRolePermission,
-		roles.OpRoleListActions:        manageRolePermission,
-		roles.OpRoleCheckActionsExists: manageRolePermission,
-		roles.OpRoleRemoveActions:      manageRolePermission,
-		roles.OpRoleRemoveAllActions:   manageRolePermission,
-		roles.OpRoleAddMembers:         addRoleUsersPermission,
-		roles.OpRoleListMembers:        viewRoleUsersPermission,
-		roles.OpRoleCheckMembersExists: viewRoleUsersPermission,
-		roles.OpRoleRemoveMembers:      removeRoleUsersPermission,
-		roles.OpRoleRemoveAllMembers:   manageRolePermission,
-	}
-	return opPerm
 }

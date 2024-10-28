@@ -22,6 +22,8 @@ const (
 	clientListByGroup  = clientPrefix + "list_by_channel"
 	clientIdentify     = clientPrefix + "identify"
 	clientAuthorize    = clientPrefix + "authorize"
+	clientSetParent    = clientPrefix + "set_parent"
+	clientRemoveParent = clientPrefix + "remove_parent"
 )
 
 var (
@@ -332,5 +334,29 @@ func (dce removeClientEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"operation": clientRemove,
 		"id":        dce.id,
+	}, nil
+}
+
+type setParentGroupEvent struct {
+	id            string
+	parentGroupID string
+}
+
+func (spge setParentGroupEvent) Encode() (map[string]interface{}, error) {
+	return map[string]interface{}{
+		"operation":       clientSetParent,
+		"id":              spge.id,
+		"parent_group_id": spge.parentGroupID,
+	}, nil
+}
+
+type removeParentGroupEvent struct {
+	id string
+}
+
+func (rpge removeParentGroupEvent) Encode() (map[string]interface{}, error) {
+	return map[string]interface{}{
+		"operation": clientRemoveParent,
+		"id":        rpge.id,
 	}, nil
 }

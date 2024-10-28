@@ -6,6 +6,7 @@ import (
 )
 
 // Internal Operations
+
 const (
 	OpViewChannel svcutil.Operation = iota
 	OpUpdateChannel

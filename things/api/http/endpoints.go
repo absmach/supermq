@@ -267,6 +267,44 @@ func buildClientsResponse(cp mgclients.MembersPage) clientsPageRes {
 	return res
 }
 
+func setThingParentGroupEndpoint(svc things.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(setThingParentGroupReq)
+		if err := req.validate(); err != nil {
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
+		}
+
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+		if err := svc.SetParentGroup(ctx, session, req.ParentGroupID, req.id); err != nil {
+			return nil, err
+		}
+
+		return setParentGroupRes{}, nil
+	}
+}
+
+func removeThingParentGroupEndpoint(svc things.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(removeThingParentGroupReq)
+		if err := req.validate(); err != nil {
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
+		}
+
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+		if err := svc.RemoveParentGroup(ctx, session, req.id); err != nil {
+			return nil, err
+		}
+
+		return removeParentGroupRes{}, nil
+	}
+}
+
 func deleteClientEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(deleteClientReq)

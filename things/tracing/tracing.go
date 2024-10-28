@@ -102,3 +102,18 @@ func (tm *tracingMiddleware) DeleteClient(ctx context.Context, session authn.Ses
 	defer span.End()
 	return tm.svc.DeleteClient(ctx, session, id)
 }
+
+func (tm *tracingMiddleware) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error {
+	ctx, span := tm.tracer.Start(ctx, "set_parent_group", trace.WithAttributes(
+		attribute.String("id", id),
+		attribute.String("parent_group_id", parentGroupID),
+	))
+	defer span.End()
+	return tm.svc.SetParentGroup(ctx, session, parentGroupID, id)
+}
+
+func (tm *tracingMiddleware) RemoveParentGroup(ctx context.Context, session authn.Session, id string) error {
+	ctx, span := tm.tracer.Start(ctx, "remove_parent_group", trace.WithAttributes(attribute.String("id", id)))
+	defer span.End()
+	return tm.svc.RemoveParentGroup(ctx, session, id)
+}

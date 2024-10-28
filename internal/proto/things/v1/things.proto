@@ -18,6 +18,7 @@ service ThingsService {
   rpc AddConnections(common.v1.AddConnectionsReq)returns(common.v1.AddConnectionsRes) {}
   rpc RemoveConnections(common.v1.RemoveConnectionsReq)returns(common.v1.RemoveConnectionsRes) {}
   rpc RemoveChannelConnections(RemoveChannelConnectionsReq)returns(RemoveChannelConnectionsRes) {}
+  rpc UnsetParentGroupFormThings(UnsetParentGroupFormThingsReq)returns(UnsetParentGroupFormThingsRes){}
 }
 
 
@@ -38,3 +39,9 @@ message RemoveChannelConnectionsReq {
 }
 
 message RemoveChannelConnectionsRes {}
+
+message UnsetParentGroupFormThingsReq {
+  string parent_group_id = 1;
+}
+
+message UnsetParentGroupFormThingsRes {}
