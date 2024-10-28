@@ -105,8 +105,8 @@ func (_c *ThingsServiceClient_AddConnections_Call) RunAndReturn(run func(context
 	return _c
 }
 
-// Authenticate provides a mock function with given fields: ctx, in, opts
-func (_m *ThingsServiceClient) Authenticate(ctx context.Context, in *thingsv1.AuthzReq, opts ...grpc.CallOption) (*thingsv1.AuthzRes, error) {
+// Authorize provides a mock function with given fields: ctx, in, opts
+func (_m *ThingsServiceClient) Authorize(ctx context.Context, in *thingsv1.AuthzReq, opts ...grpc.CallOption) (*thingsv1.AuthzRes, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -117,7 +117,7 @@ func (_m *ThingsServiceClient) Authenticate(ctx context.Context, in *thingsv1.Au
 	ret := _m.Called(_ca...)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Authenticate")
+		panic("no return value specified for Authorize")
 	}
 
 	var r0 *thingsv1.AuthzRes
@@ -142,21 +142,21 @@ func (_m *ThingsServiceClient) Authenticate(ctx context.Context, in *thingsv1.Au
 	return r0, r1
 }
 
-// ThingsServiceClient_Authenticate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Authenticate'
-type ThingsServiceClient_Authenticate_Call struct {
+// ThingsServiceClient_Authorize_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Authorize'
+type ThingsServiceClient_Authorize_Call struct {
 	*mock.Call
 }
 
-// Authenticate is a helper method to define mock.On call
+// Authorize is a helper method to define mock.On call
 //   - ctx context.Context
 //   - in *thingsv1.AuthzReq
 //   - opts ...grpc.CallOption
-func (_e *ThingsServiceClient_Expecter) Authenticate(ctx interface{}, in interface{}, opts ...interface{}) *ThingsServiceClient_Authenticate_Call {
-	return &ThingsServiceClient_Authenticate_Call{Call: _e.mock.On("Authenticate",
+func (_e *ThingsServiceClient_Expecter) Authorize(ctx interface{}, in interface{}, opts ...interface{}) *ThingsServiceClient_Authorize_Call {
+	return &ThingsServiceClient_Authorize_Call{Call: _e.mock.On("Authorize",
 		append([]interface{}{ctx, in}, opts...)...)}
 }
 
-func (_c *ThingsServiceClient_Authenticate_Call) Run(run func(ctx context.Context, in *thingsv1.AuthzReq, opts ...grpc.CallOption)) *ThingsServiceClient_Authenticate_Call {
+func (_c *ThingsServiceClient_Authorize_Call) Run(run func(ctx context.Context, in *thingsv1.AuthzReq, opts ...grpc.CallOption)) *ThingsServiceClient_Authorize_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		variadicArgs := make([]grpc.CallOption, len(args)-2)
 		for i, a := range args[2:] {
@@ -169,12 +169,12 @@ func (_c *ThingsServiceClient_Authenticate_Call) Run(run func(ctx context.Contex
 	return _c
 }
 
-func (_c *ThingsServiceClient_Authenticate_Call) Return(_a0 *thingsv1.AuthzRes, _a1 error) *ThingsServiceClient_Authenticate_Call {
+func (_c *ThingsServiceClient_Authorize_Call) Return(_a0 *thingsv1.AuthzRes, _a1 error) *ThingsServiceClient_Authorize_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *ThingsServiceClient_Authenticate_Call) RunAndReturn(run func(context.Context, *thingsv1.AuthzReq, ...grpc.CallOption) (*thingsv1.AuthzRes, error)) *ThingsServiceClient_Authenticate_Call {
+func (_c *ThingsServiceClient_Authorize_Call) RunAndReturn(run func(context.Context, *thingsv1.AuthzReq, ...grpc.CallOption) (*thingsv1.AuthzRes, error)) *ThingsServiceClient_Authorize_Call {
 	_c.Call.Return(run)
 	return _c
 }

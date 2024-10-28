@@ -12,7 +12,7 @@ import "common/v1/common.proto";
 // for magistrala services.
 service ThingsService {
   // Authorize checks if the thing is authorized to perform
-  rpc Authenticate(AuthzReq) returns (AuthzRes) {}
+  rpc Authorize(AuthzReq) returns (AuthzRes) {}
   rpc RetrieveEntity(common.v1.RetrieveEntityReq) returns (common.v1.RetrieveEntityRes) {}
   rpc RetrieveEntities(common.v1.RetrieveEntitiesReq) returns (common.v1.RetrieveEntitiesRes) {}
   rpc AddConnections(common.v1.AddConnectionsReq)returns(common.v1.AddConnectionsRes) {}
