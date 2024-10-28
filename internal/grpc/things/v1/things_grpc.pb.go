@@ -23,7 +23,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ThingsService_Authorize_FullMethodName                  = "/things.v1.ThingsService/Authorize"
+	ThingsService_Authenticate_FullMethodName               = "/things.v1.ThingsService/Authenticate"
 	ThingsService_RetrieveEntity_FullMethodName             = "/things.v1.ThingsService/RetrieveEntity"
 	ThingsService_RetrieveEntities_FullMethodName           = "/things.v1.ThingsService/RetrieveEntities"
 	ThingsService_AddConnections_FullMethodName             = "/things.v1.ThingsService/AddConnections"
@@ -40,7 +40,7 @@ const (
 // for magistrala services.
 type ThingsServiceClient interface {
 	// Authorize checks if the thing is authorized to perform
-	Authorize(ctx context.Context, in *AuthzReq, opts ...grpc.CallOption) (*AuthzRes, error)
+	Authenticate(ctx context.Context, in *AuthzReq, opts ...grpc.CallOption) (*AuthzRes, error)
 	RetrieveEntity(ctx context.Context, in *v1.RetrieveEntityReq, opts ...grpc.CallOption) (*v1.RetrieveEntityRes, error)
 	RetrieveEntities(ctx context.Context, in *v1.RetrieveEntitiesReq, opts ...grpc.CallOption) (*v1.RetrieveEntitiesRes, error)
 	AddConnections(ctx context.Context, in *v1.AddConnectionsReq, opts ...grpc.CallOption) (*v1.AddConnectionsRes, error)
@@ -57,10 +57,10 @@ func NewThingsServiceClient(cc grpc.ClientConnInterface) ThingsServiceClient {
 	return &thingsServiceClient{cc}
 }
 
-func (c *thingsServiceClient) Authorize(ctx context.Context, in *AuthzReq, opts ...grpc.CallOption) (*AuthzRes, error) {
+func (c *thingsServiceClient) Authenticate(ctx context.Context, in *AuthzReq, opts ...grpc.CallOption) (*AuthzRes, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AuthzRes)
-	err := c.cc.Invoke(ctx, ThingsService_Authorize_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ThingsService_Authenticate_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func (c *thingsServiceClient) UnsetParentGroupFromThings(ctx context.Context, in
 // for magistrala services.
 type ThingsServiceServer interface {
 	// Authorize checks if the thing is authorized to perform
-	Authorize(context.Context, *AuthzReq) (*AuthzRes, error)
+	Authenticate(context.Context, *AuthzReq) (*AuthzRes, error)
 	RetrieveEntity(context.Context, *v1.RetrieveEntityReq) (*v1.RetrieveEntityRes, error)
 	RetrieveEntities(context.Context, *v1.RetrieveEntitiesReq) (*v1.RetrieveEntitiesRes, error)
 	AddConnections(context.Context, *v1.AddConnectionsReq) (*v1.AddConnectionsRes, error)
@@ -152,8 +152,8 @@ type ThingsServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedThingsServiceServer struct{}
 
-func (UnimplementedThingsServiceServer) Authorize(context.Context, *AuthzReq) (*AuthzRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Authorize not implemented")
+func (UnimplementedThingsServiceServer) Authenticate(context.Context, *AuthzReq) (*AuthzRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Authenticate not implemented")
 }
 func (UnimplementedThingsServiceServer) RetrieveEntity(context.Context, *v1.RetrieveEntityReq) (*v1.RetrieveEntityRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RetrieveEntity not implemented")
@@ -194,20 +194,20 @@ func RegisterThingsServiceServer(s grpc.ServiceRegistrar, srv ThingsServiceServe
 	s.RegisterService(&ThingsService_ServiceDesc, srv)
 }
 
-func _ThingsService_Authorize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ThingsService_Authenticate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AuthzReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ThingsServiceServer).Authorize(ctx, in)
+		return srv.(ThingsServiceServer).Authenticate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ThingsService_Authorize_FullMethodName,
+		FullMethod: ThingsService_Authenticate_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ThingsServiceServer).Authorize(ctx, req.(*AuthzReq))
+		return srv.(ThingsServiceServer).Authenticate(ctx, req.(*AuthzReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -328,8 +328,8 @@ var ThingsService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ThingsServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Authorize",
-			Handler:    _ThingsService_Authorize_Handler,
+			MethodName: "Authenticate",
+			Handler:    _ThingsService_Authenticate_Handler,
 		},
 		{
 			MethodName: "RetrieveEntity",
