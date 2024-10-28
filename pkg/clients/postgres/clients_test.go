@@ -157,7 +157,6 @@ func TestRetrieveAll(t *testing.T) {
 		}
 		if i%50 == 0 {
 			client.Status = mgclients.DisabledStatus
-			client.Role = mgclients.AdminRole
 		}
 		client, err := save(context.Background(), repo, client)
 		require.Nil(t, err, fmt.Sprintf("add new client: expected nil got %s\n", err))

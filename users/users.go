@@ -167,7 +167,7 @@ type Service interface {
 	// UpdateEmail updates the user's email.
 	UpdateEmail(ctx context.Context, session authn.Session, id, email string) (User, error)
 
-	// UpdateUsername updates the user's names.
+	// UpdateUsername updates the user's username.
 	UpdateUsername(ctx context.Context, session authn.Session, id, username string) (User, error)
 
 	// UpdateProfile updates the user's profile picture.
@@ -203,7 +203,7 @@ type Service interface {
 	Identify(ctx context.Context, session authn.Session) (string, error)
 
 	// IssueToken issues a new access and refresh token.
-	IssueToken(ctx context.Context, username, secret string) (*magistrala.Token, error)
+	IssueToken(ctx context.Context, email, username, secret string) (*magistrala.Token, error)
 
 	// RefreshToken refreshes expired access tokens.
 	// After an access token expires, the refresh token is used to get

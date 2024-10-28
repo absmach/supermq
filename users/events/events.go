@@ -443,12 +443,14 @@ func (grte generateResetTokenEvent) Encode() (map[string]interface{}, error) {
 
 type issueTokenEvent struct {
 	username string
+	email    string
 }
 
 func (ite issueTokenEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"operation": issueToken,
 		"username":  ite.username,
+		"email":     ite.email,
 	}, nil
 }
 

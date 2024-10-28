@@ -1777,6 +1777,7 @@ func TestIssueToken(t *testing.T) {
 	defer us.Close()
 
 	validUsername := "valid"
+	validEmail := "valid@email.com"
 
 	cases := []struct {
 		desc        string
@@ -1793,8 +1794,15 @@ func TestIssueToken(t *testing.T) {
 			err:         nil,
 		},
 		{
-			desc:        "issue token with empty username",
-			data:        fmt.Sprintf(`{"username": "%s", "secret": "%s", "domainID": "%s"}`, "", secret, validID),
+			desc:        "issue token with valid email and secret",
+			data:        fmt.Sprintf(`{"email": "%s", "secret": "%s", "domainID": "%s"}`, validEmail, secret, validID),
+			contentType: contentType,
+			status:      http.StatusCreated,
+			err:         nil,
+		},
+		{
+			desc:        "issue token with empty username and email",
+			data:        fmt.Sprintf(`{"email": "%s", username": "%s", "secret": "%s", "domainID": "%s"}`, "", "", secret, validID),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,

@@ -16,17 +16,17 @@ import (
 
 var cmdUsers = []cobra.Command{
 	{
-		Use:   "create <first_name> <last_name> <email> <password> <user_auth_token>",
+		Use:   "create <first_name> <last_name> <email> <username> <password> <user_auth_token>",
 		Short: "Create user",
-		Long: "Create user with provided firstname, lastname and password. Token is optional\n" +
+		Long: "Create user with provided firstname, lastname, email, username and password. Token is optional\n" +
 			"For example:\n" +
-			"\tmagistrala-cli users create user lastly user@example.com 12345678 $USER_AUTH_TOKEN\n",
+			"\tmagistrala-cli users create jane doe janedoe@example.com jane_doe 12345678 $USER_AUTH_TOKEN\n",
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) < 4 || len(args) > 5 {
+			if len(args) < 5 || len(args) > 6 {
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			if len(args) == 4 {
+			if len(args) == 5 {
 				args = append(args, "")
 			}
 
@@ -35,11 +35,12 @@ var cmdUsers = []cobra.Command{
 				LastName:  args[1],
 				Email:     args[2],
 				Credentials: mgxsdk.Credentials{
-					Secret: args[3],
+					Username: args[3],
+					Secret:   args[4],
 				},
 				Status: users.EnabledStatus.String(),
 			}
-			user, err := sdk.CreateUser(user, args[4])
+			user, err := sdk.CreateUser(user, args[5])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return

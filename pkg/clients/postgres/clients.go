@@ -392,7 +392,6 @@ func ToDBClient(c clients.Client) (DBClient, error) {
 		UpdatedAt: updatedAt,
 		UpdatedBy: updatedBy,
 		Status:    c.Status,
-		Role:      &c.Role,
 	}, nil
 }
 
@@ -430,9 +429,6 @@ func ToClient(c DBClient) (clients.Client, error) {
 		UpdatedAt: updatedAt,
 		UpdatedBy: updatedBy,
 		Status:    c.Status,
-	}
-	if c.Role != nil {
-		cli.Role = *c.Role
 	}
 	return cli, nil
 }

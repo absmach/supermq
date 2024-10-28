@@ -476,7 +476,7 @@ func issueTokenEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		token, err := svc.IssueToken(ctx, req.Username, req.Secret)
+		token, err := svc.IssueToken(ctx, req.Email, req.Username, req.Secret)
 		if err != nil {
 			return nil, err
 		}

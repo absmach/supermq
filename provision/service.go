@@ -39,6 +39,7 @@ var (
 	ErrFailedBootstrap          = errors.New("failed to create bootstrap config")
 	ErrFailedBootstrapValidate  = errors.New("failed to validate bootstrap config creation")
 	ErrGatewayUpdate            = errors.New("failed to updated gateway metadata")
+	ErrMissingLoginCredential   = errors.New("missing email and username")
 
 	limit  uint = 10
 	offset uint = 0
@@ -288,14 +289,20 @@ func (ps *provisionService) createTokenIfEmpty(token string) (string, error) {
 		return ps.conf.Server.MgAPIKey, nil
 	}
 
+	// If no username or email is provided to create access token.
+	if ps.conf.Server.MgEmail == "" && ps.conf.Server.MgUsername == "" {
+		return token, ErrMissingLoginCredential
+	}
+
 	// If no API key use username and password provided to create access token.
-	if ps.conf.Server.MgUser == "" || ps.conf.Server.MgPass == "" {
+	if ps.conf.Server.MgEmail == "" || ps.conf.Server.MgPass == "" {
 		return token, ErrMissingCredentials
 	}
 
 	u := sdk.Login{
-		Email:  ps.conf.Server.MgUser,
-		Secret: ps.conf.Server.MgPass,
+		Email:    ps.conf.Server.MgEmail,
+		Username: ps.conf.Server.MgUsername,
+		Secret:   ps.conf.Server.MgPass,
 	}
 	tkn, err := ps.sdk.CreateToken(u)
 	if err != nil {

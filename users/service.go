@@ -93,11 +93,20 @@ func (svc service) Register(ctx context.Context, session authn.Session, u User, 
 	return user, nil
 }
 
-func (svc service) IssueToken(ctx context.Context, username, secret string) (*magistrala.Token, error) {
-	dbUser, err := svc.users.RetrieveByUsername(ctx, username)
+func (svc service) IssueToken(ctx context.Context, email, username, secret string) (*magistrala.Token, error) {
+	var dbUser User
+	var err error
+
+	if username != "" {
+		dbUser, err = svc.users.RetrieveByUsername(ctx, username)
+	} else {
+		dbUser, err = svc.users.RetrieveByEmail(ctx, email)
+	}
+
 	if err != nil {
 		return &magistrala.Token{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
+
 	if err := svc.hasher.Compare(secret, dbUser.Credentials.Secret); err != nil {
 		return &magistrala.Token{}, errors.Wrap(svcerr.ErrLogin, err)
 	}
@@ -328,7 +337,7 @@ func (svc service) UpdateSecret(ctx context.Context, session authn.Session, oldS
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
-	if _, err := svc.IssueToken(ctx, dbUser.Credentials.Username, oldSecret); err != nil {
+	if _, err := svc.IssueToken(ctx, dbUser.Email, dbUser.Credentials.Username, oldSecret); err != nil {
 		return User{}, err
 	}
 	newSecret, err = svc.hasher.Hash(newSecret)

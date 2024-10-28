@@ -233,13 +233,14 @@ func (req changeUserStatusReq) validate() error {
 }
 
 type loginUserReq struct {
+	Email    string `json:"email,omitempty"`
 	Username string `json:"username,omitempty"`
 	Secret   string `json:"secret,omitempty"`
 }
 
 func (req loginUserReq) validate() error {
-	if req.Username == "" {
-		return apiutil.ErrMissingUsername
+	if req.Username == "" && req.Email == "" {
+		return apiutil.ErrMissingLoginCredentials
 	}
 	if req.Secret == "" {
 		return apiutil.ErrMissingPass

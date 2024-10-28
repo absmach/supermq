@@ -340,7 +340,7 @@ func createAdmin(ctx context.Context, c config, urepo users.Repository, hsr user
 	if _, err = urepo.Save(ctx, user); err != nil {
 		return "", err
 	}
-	if _, err = svc.IssueToken(ctx, c.AdminUsername, c.AdminPassword); err != nil {
+	if _, err = svc.IssueToken(ctx, c.AdminEmail, c.AdminUsername, c.AdminPassword); err != nil {
 		return "", err
 	}
 	return user.ID, nil

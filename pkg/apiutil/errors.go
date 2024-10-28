@@ -191,4 +191,7 @@ var (
 
 	// ErrMissingUsername indicates missing user name.
 	ErrMissingUsername = errors.New("missing username")
+
+	// ErrMissingLoginCredentials indicates missing username and email.
+	ErrMissingLoginCredentials = errors.New("missing username and email")
 )
