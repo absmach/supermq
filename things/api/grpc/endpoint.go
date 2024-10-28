@@ -11,22 +11,17 @@ import (
 	"github.com/go-kit/kit/endpoint"
 )
 
-func authorizeEndpoint(svc pThings.Service) endpoint.Endpoint {
+func authenticateEndpoint(svc pThings.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(authorizeReq)
+		req := request.(authenticateReq)
 
-		thingID, err := svc.Authorize(ctx, things.AuthzReq{
-			ChannelID:  req.ChannelID,
-			ThingID:    req.ThingID,
-			ThingKey:   req.ThingKey,
-			Permission: req.Permission,
-		})
+		thingID, err := svc.Authenticate(ctx, req.ThingKey)
 		if err != nil {
-			return authorizeRes{}, err
+			return authenticateRes{}, err
 		}
-		return authorizeRes{
-			authorized: true,
-			id:         thingID,
+		return authenticateRes{
+			authenticated: true,
+			id:            thingID,
 		}, err
 	}
 }

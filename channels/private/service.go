@@ -10,20 +10,51 @@ import (
 )
 
 type Service interface {
-	UnsetParentGroupFromChannels(ctx context.Context, parentGroupID string) error
-
+	Authorize(ctx context.Context, req channels.AuthzReq) error
+	UnsetParentGroupFormChannels(ctx context.Context, parentGroupID string) error
 	RemoveThingConnections(ctx context.Context, thingID string) error
 }
 
 type service struct {
-	repo   channels.Repository
-	policy policies.Service
+	repo      channels.Repository
+	evaluator policies.Evaluator
+	policy    policies.Service
 }
 
 var _ Service = (*service)(nil)
 
-func New(repo channels.Repository, policy policies.Service) Service {
-	return service{repo, policy}
+func New(repo channels.Repository, evaluator policies.Evaluator, policy policies.Service) Service {
+	return service{repo, evaluator, policy}
+}
+
+func (svc service) Authorize(ctx context.Context, req channels.AuthzReq) error {
+
+	switch req.ClientType {
+	case policies.UserType:
+		// Check spiceDB
+		pr := policies.Policy{
+			Subject:     req.ClientID,
+			SubjectType: policies.UserType,
+			Object:      req.ChannelID,
+			ObjectType:  policies.ChannelType,
+		}
+		if err := svc.evaluator.CheckPolicy(ctx, pr); err != nil {
+			return errors.Wrap(svcerr.ErrAuthorization, err)
+		}
+		return nil
+	case policies.ThingType:
+		//Optimization: Add cache
+		if err := svc.repo.ThingAuthorize(ctx, channels.Connection{
+			ChannelID: req.ChannelID,
+			ThingID:   req.ClientID,
+		}); err != nil {
+			return errors.Wrap(svcerr.ErrAuthorization, err)
+		}
+		return nil
+	default:
+		return svcerr.ErrAuthentication
+	}
+
 }
 
 func (svc service) RemoveThingConnections(ctx context.Context, thingID string) error {

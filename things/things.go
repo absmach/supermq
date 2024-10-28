@@ -12,13 +12,6 @@ import (
 	"github.com/absmach/magistrala/pkg/roles"
 )
 
-type AuthzReq struct {
-	ChannelID  string
-	ThingID    string
-	ThingKey   string
-	Permission string
-}
-
 type Connection struct {
 	ThingID   string
 	ChannelID string

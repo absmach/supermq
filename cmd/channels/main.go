@@ -139,7 +139,7 @@ func main() {
 	}()
 	tracer := tp.Tracer(svcName)
 
-	policyService, err := newSpiceDBPolicyServiceEvaluator(cfg, logger)
+	policyEvaluator, policyService, err := newSpiceDBPolicyServiceEvaluator(cfg, logger)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
@@ -201,7 +201,7 @@ func main() {
 	defer groupsHandler.Close()
 	logger.Info("Groups gRPC client successfully connected to groups gRPC server " + groupsHandler.Secure())
 
-	svc, psvc, err := newService(ctx, db, dbConfig, authz, policyService, cfg.ESURL, tracer, thingsClient, groupsClient, logger)
+	svc, psvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cfg.ESURL, tracer, thingsClient, groupsClient, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
 		exitCode = 1
@@ -253,7 +253,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, ps policies.Service, esURL string, tracer trace.Tracer, thingsClient grpcThingsV1.ThingsServiceClient, groupsClient grpcGroupsV1.GroupsServiceClient, logger *slog.Logger) (channels.Service, pChannels.Service, error) {
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, pe policies.Evaluator, ps policies.Service, esURL string, tracer trace.Tracer, thingsClient grpcThingsV1.ThingsServiceClient, groupsClient grpcGroupsV1.GroupsServiceClient, logger *slog.Logger) (channels.Service, pChannels.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	repo := postgres.NewRepository(database)
 
@@ -284,20 +284,21 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 	}
 	svc = middleware.LoggingMiddleware(svc, logger)
 
-	psvc := pChannels.New(repo, ps)
+	psvc := pChannels.New(repo, pe, ps)
 	return svc, psvc, err
 }
 
-func newSpiceDBPolicyServiceEvaluator(cfg config, logger *slog.Logger) (policies.Service, error) {
+func newSpiceDBPolicyServiceEvaluator(cfg config, logger *slog.Logger) (policies.Evaluator, policies.Service, error) {
 	client, err := authzed.NewClientWithExperimentalAPIs(
 		fmt.Sprintf("%s:%s", cfg.SpicedbHost, cfg.SpicedbPort),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpcutil.WithInsecureBearerToken(cfg.SpicedbPreSharedKey),
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	ps := spicedb.NewPolicyService(client, logger)
 
-	return ps, nil
+	pe := spicedb.NewPolicyEvaluator(client, logger)
+	return pe, ps, nil
 }

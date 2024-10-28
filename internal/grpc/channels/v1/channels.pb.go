@@ -185,6 +185,128 @@ func (*UnsetParentGroupFromChannelsRes) Descriptor() ([]byte, []int) {
 	return file_channels_v1_channels_proto_rawDescGZIP(), []int{3}
 }
 
+type AuthzReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	DomainId   string `protobuf:"bytes,1,opt,name=domain_id,json=domainId,proto3" json:"domain_id,omitempty"`
+	ClientId   string `protobuf:"bytes,2,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	ClientType string `protobuf:"bytes,3,opt,name=client_type,json=clientType,proto3" json:"client_type,omitempty"`
+	ChannelId  string `protobuf:"bytes,4,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
+	Permission string `protobuf:"bytes,5,opt,name=permission,proto3" json:"permission,omitempty"`
+}
+
+func (x *AuthzReq) Reset() {
+	*x = AuthzReq{}
+	mi := &file_channels_v1_channels_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuthzReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthzReq) ProtoMessage() {}
+
+func (x *AuthzReq) ProtoReflect() protoreflect.Message {
+	mi := &file_channels_v1_channels_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthzReq.ProtoReflect.Descriptor instead.
+func (*AuthzReq) Descriptor() ([]byte, []int) {
+	return file_channels_v1_channels_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *AuthzReq) GetDomainId() string {
+	if x != nil {
+		return x.DomainId
+	}
+	return ""
+}
+
+func (x *AuthzReq) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+func (x *AuthzReq) GetClientType() string {
+	if x != nil {
+		return x.ClientType
+	}
+	return ""
+}
+
+func (x *AuthzReq) GetChannelId() string {
+	if x != nil {
+		return x.ChannelId
+	}
+	return ""
+}
+
+func (x *AuthzReq) GetPermission() string {
+	if x != nil {
+		return x.Permission
+	}
+	return ""
+}
+
+type AuthzRes struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Authorized bool `protobuf:"varint,1,opt,name=authorized,proto3" json:"authorized,omitempty"`
+}
+
+func (x *AuthzRes) Reset() {
+	*x = AuthzRes{}
+	mi := &file_channels_v1_channels_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuthzRes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthzRes) ProtoMessage() {}
+
+func (x *AuthzRes) ProtoReflect() protoreflect.Message {
+	mi := &file_channels_v1_channels_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthzRes.ProtoReflect.Descriptor instead.
+func (*AuthzRes) Descriptor() ([]byte, []int) {
+	return file_channels_v1_channels_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *AuthzRes) GetAuthorized() bool {
+	if x != nil {
+		return x.Authorized
+	}
+	return false
+}
+
 var File_channels_v1_channels_proto protoreflect.FileDescriptor
 
 var file_channels_v1_channels_proto_rawDesc = []byte{
@@ -202,8 +324,25 @@ var file_channels_v1_channels_proto_rawDesc = []byte{
 	0x70, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x70, 0x61, 0x72, 0x65,
 	0x6e, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64, 0x22, 0x21, 0x0a, 0x1f, 0x55, 0x6e, 0x73,
 	0x65, 0x74, 0x50, 0x61, 0x72, 0x65, 0x6e, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x46, 0x72, 0x6f,
-	0x6d, 0x43, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x73, 0x52, 0x65, 0x73, 0x32, 0xfb, 0x01, 0x0a,
-	0x0f, 0x43, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x73, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
+	0x6d, 0x43, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x73, 0x52, 0x65, 0x73, 0x22, 0xa4, 0x01, 0x0a,
+	0x08, 0x41, 0x75, 0x74, 0x68, 0x7a, 0x52, 0x65, 0x71, 0x12, 0x1b, 0x0a, 0x09, 0x64, 0x6f, 0x6d,
+	0x61, 0x69, 0x6e, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x64, 0x6f,
+	0x6d, 0x61, 0x69, 0x6e, 0x49, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74,
+	0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x63, 0x6c, 0x69, 0x65, 0x6e,
+	0x74, 0x49, 0x64, 0x12, 0x1f, 0x0a, 0x0b, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x74, 0x79,
+	0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74,
+	0x54, 0x79, 0x70, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x63, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x5f,
+	0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x63, 0x68, 0x61, 0x6e, 0x6e, 0x65,
+	0x6c, 0x49, 0x64, 0x12, 0x1e, 0x0a, 0x0a, 0x70, 0x65, 0x72, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f,
+	0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x70, 0x65, 0x72, 0x6d, 0x69, 0x73, 0x73,
+	0x69, 0x6f, 0x6e, 0x22, 0x2a, 0x0a, 0x08, 0x41, 0x75, 0x74, 0x68, 0x7a, 0x52, 0x65, 0x73, 0x12,
+	0x1e, 0x0a, 0x0a, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x65, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x08, 0x52, 0x0a, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x65, 0x64, 0x32,
+	0xb8, 0x02, 0x0a, 0x0f, 0x43, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x73, 0x53, 0x65, 0x72, 0x76,
+	0x69, 0x63, 0x65, 0x12, 0x3b, 0x0a, 0x09, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x65,
+	0x12, 0x15, 0x2e, 0x63, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x41,
+	0x75, 0x74, 0x68, 0x7a, 0x52, 0x65, 0x71, 0x1a, 0x15, 0x2e, 0x63, 0x68, 0x61, 0x6e, 0x6e, 0x65,
+	0x6c, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x7a, 0x52, 0x65, 0x73, 0x22, 0x00,
 	0x12, 0x6a, 0x0a, 0x16, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x54, 0x68, 0x69, 0x6e, 0x67, 0x43,
 	0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x26, 0x2e, 0x63, 0x68, 0x61,
 	0x6e, 0x6e, 0x65, 0x6c, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x54,
@@ -237,20 +376,24 @@ func file_channels_v1_channels_proto_rawDescGZIP() []byte {
 	return file_channels_v1_channels_proto_rawDescData
 }
 
-var file_channels_v1_channels_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_channels_v1_channels_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_channels_v1_channels_proto_goTypes = []any{
 	(*RemoveThingConnectionsReq)(nil),       // 0: channels.v1.RemoveThingConnectionsReq
 	(*RemoveThingConnectionsRes)(nil),       // 1: channels.v1.RemoveThingConnectionsRes
 	(*UnsetParentGroupFromChannelsReq)(nil), // 2: channels.v1.UnsetParentGroupFromChannelsReq
 	(*UnsetParentGroupFromChannelsRes)(nil), // 3: channels.v1.UnsetParentGroupFromChannelsRes
+	(*AuthzReq)(nil),                        // 4: channels.v1.AuthzReq
+	(*AuthzRes)(nil),                        // 5: channels.v1.AuthzRes
 }
 var file_channels_v1_channels_proto_depIdxs = []int32{
-	0, // 0: channels.v1.ChannelsService.RemoveThingConnections:input_type -> channels.v1.RemoveThingConnectionsReq
-	2, // 1: channels.v1.ChannelsService.UnsetParentGroupFromChannels:input_type -> channels.v1.UnsetParentGroupFromChannelsReq
-	1, // 2: channels.v1.ChannelsService.RemoveThingConnections:output_type -> channels.v1.RemoveThingConnectionsRes
-	3, // 3: channels.v1.ChannelsService.UnsetParentGroupFromChannels:output_type -> channels.v1.UnsetParentGroupFromChannelsRes
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	4, // 0: channels.v1.ChannelsService.Authorize:input_type -> channels.v1.AuthzReq
+	0, // 1: channels.v1.ChannelsService.RemoveThingConnections:input_type -> channels.v1.RemoveThingConnectionsReq
+	2, // 2: channels.v1.ChannelsService.UnsetParentGroupFromChannels:input_type -> channels.v1.UnsetParentGroupFromChannelsReq
+	5, // 3: channels.v1.ChannelsService.Authorize:output_type -> channels.v1.AuthzRes
+	1, // 4: channels.v1.ChannelsService.RemoveThingConnections:output_type -> channels.v1.RemoveThingConnectionsRes
+	3, // 5: channels.v1.ChannelsService.UnsetParentGroupFromChannels:output_type -> channels.v1.UnsetParentGroupFromChannelsRes
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -267,7 +410,7 @@ func file_channels_v1_channels_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_channels_v1_channels_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

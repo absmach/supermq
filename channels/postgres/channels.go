@@ -301,6 +301,21 @@ func (cr *channelRepository) CheckConnection(ctx context.Context, conn channels.
 	return nil
 }
 
+func (cr *channelRepository) ThingAuthorize(ctx context.Context, conn channels.Connection) error {
+	query := `SELECT 1 FROM connections WHERE channel_id = :channel_id AND thing_id = :thing_id LIMIT 1`
+	dbConn := toDBConnection(conn)
+	rows, err := cr.db.NamedQueryContext(ctx, query, dbConn)
+	if err != nil {
+		return postgres.HandleError(repoerr.ErrViewEntity, err)
+	}
+	defer rows.Close()
+
+	if !rows.Next() {
+		return repoerr.ErrNotFound
+	}
+	return nil
+}
+
 func (cr *channelRepository) ChannelConnectionsCount(ctx context.Context, id string) (uint64, error) {
 	query := `SELECT COUNT(*) FROM connections WHERE channel_id = :channel_id`
 	dbConn := dbConnection{ChannelID: id}

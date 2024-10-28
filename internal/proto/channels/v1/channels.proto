@@ -8,6 +8,7 @@ option go_package = "github.com/absmach/magistrala/internal/grpc/channels/v1";
 
 
 service ChannelsService {
+  rpc Authorize(AuthzReq)returns(AuthzRes) {}
   rpc RemoveThingConnections(RemoveThingConnectionsReq)returns(RemoveThingConnectionsRes) {}
   rpc UnsetParentGroupFromChannels(UnsetParentGroupFromChannelsReq)returns(UnsetParentGroupFromChannelsRes){}
 }
@@ -23,3 +24,15 @@ message UnsetParentGroupFromChannelsReq {
 }
 
 message UnsetParentGroupFromChannelsRes {}
+
+message AuthzReq {
+  string domain_id = 1;
+  string client_id = 2;
+  string client_type = 3;
+  string channel_id = 4;
+  string permission = 5;
+}
+
+message AuthzRes {
+  bool authorized = 1;
+}

@@ -59,6 +59,14 @@ type Connection struct {
 	DomainID  string
 }
 
+type AuthzReq struct {
+	DomainID   string
+	ChannelID  string
+	ClientID   string
+	ClientType string
+	Permission string
+}
+
 //go:generate mockery --name Service  --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
 type Service interface {
 	// CreateChannels adds channels to the user identified by the provided key.
@@ -141,6 +149,8 @@ type Repository interface {
 	RemoveConnections(ctx context.Context, conns []Connection) error
 
 	CheckConnection(ctx context.Context, conn Connection) error
+
+	ThingAuthorize(ctx context.Context, conn Connection) error
 
 	ChannelConnectionsCount(ctx context.Context, id string) (uint64, error)
 

@@ -22,7 +22,7 @@ var _ grpcThingsV1.ThingsServiceServer = (*grpcServer)(nil)
 
 type grpcServer struct {
 	grpcThingsV1.UnimplementedThingsServiceServer
-	authorize                  kitgrpc.Handler
+	authenticate               kitgrpc.Handler
 	retrieveEntity             kitgrpc.Handler
 	retrieveEntities           kitgrpc.Handler
 	addConnections             kitgrpc.Handler
@@ -34,8 +34,8 @@ type grpcServer struct {
 // NewServer returns new AuthServiceServer instance.
 func NewServer(svc things.Service) grpcThingsV1.ThingsServiceServer {
 	return &grpcServer{
-		authorize: kitgrpc.NewServer(
-			authorizeEndpoint(svc),
+		authenticate: kitgrpc.NewServer(
+			authenticateEndpoint(svc),
 			decodeAuthorizeRequest,
 			encodeAuthorizeResponse,
 		),
@@ -72,27 +72,25 @@ func NewServer(svc things.Service) grpcThingsV1.ThingsServiceServer {
 	}
 }
 
-func (s *grpcServer) Authorize(ctx context.Context, req *grpcThingsV1.AuthzReq) (*grpcThingsV1.AuthzRes, error) {
-	_, res, err := s.authorize.ServeGRPC(ctx, req)
+func (s *grpcServer) Authenticate(ctx context.Context, req *grpcThingsV1.AuthnReq) (*grpcThingsV1.AuthnRes, error) {
+	_, res, err := s.authenticate.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, encodeError(err)
 	}
-	return res.(*grpcThingsV1.AuthzRes), nil
+	return res.(*grpcThingsV1.AuthnRes), nil
 }
 
 func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*grpcThingsV1.AuthzReq)
-	return authorizeReq{
-		ThingID:    req.GetThingId(),
-		ThingKey:   req.GetThingKey(),
-		ChannelID:  req.GetChannelId(),
-		Permission: req.GetPermission(),
+	req := grpcReq.(*grpcThingsV1.AuthnReq)
+	return authenticateReq{
+		ThingID:  req.GetThingId(),
+		ThingKey: req.GetThingKey(),
 	}, nil
 }
 
 func encodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
-	res := grpcRes.(authorizeRes)
-	return &grpcThingsV1.AuthzRes{Authorized: res.authorized, Id: res.id}, nil
+	res := grpcRes.(authenticateRes)
+	return &grpcThingsV1.AuthnRes{Authenticated: res.authenticated, Id: res.id}, nil
 }
 
 func (s *grpcServer) RetrieveEntity(ctx context.Context, req *grpcCommonV1.RetrieveEntityReq) (*grpcCommonV1.RetrieveEntityRes, error) {

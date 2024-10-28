@@ -12,7 +12,7 @@ import "common/v1/common.proto";
 // for magistrala services.
 service ThingsService {
   // Authorize checks if the thing is authorized to perform
-  rpc Authorize(AuthzReq) returns (AuthzRes) {}
+  rpc Authenticate(AuthnReq) returns (AuthnRes) {}
   rpc RetrieveEntity(common.v1.RetrieveEntityReq) returns (common.v1.RetrieveEntityRes) {}
   rpc RetrieveEntities(common.v1.RetrieveEntitiesReq) returns (common.v1.RetrieveEntitiesRes) {}
   rpc AddConnections(common.v1.AddConnectionsReq)returns(common.v1.AddConnectionsRes) {}
@@ -22,15 +22,13 @@ service ThingsService {
 }
 
 
-message AuthzReq {
-  string channel_id = 1;
-  string thing_id = 2;
-  string thing_key = 3;
-  string permission = 4;
+message AuthnReq {
+  string thing_id = 1;
+  string thing_key = 2;
 }
 
-message AuthzRes {
-  bool authorized = 1;
+message AuthnRes {
+  bool authenticated = 1;
   string id = 2;
 }
 

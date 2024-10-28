@@ -9,9 +9,9 @@ type thingBasic struct {
 	status uint8
 }
 
-type authorizeRes struct {
-	id         string
-	authorized bool
+type authenticateRes struct {
+	id            string
+	authenticated bool
 }
 
 type retrieveEntitiesRes struct {

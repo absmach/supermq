@@ -37,40 +37,12 @@ func (_m *Service) AddConnections(ctx context.Context, conns []things.Connection
 	return r0
 }
 
-// Authorize provides a mock function with given fields: ctx, req
-func (_m *Service) Authorize(ctx context.Context, req things.AuthzReq) (string, error) {
-	ret := _m.Called(ctx, req)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Authorize")
-	}
-
-	var r0 string
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, things.AuthzReq) (string, error)); ok {
-		return rf(ctx, req)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, things.AuthzReq) string); ok {
-		r0 = rf(ctx, req)
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, things.AuthzReq) error); ok {
-		r1 = rf(ctx, req)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// Identify provides a mock function with given fields: ctx, key
-func (_m *Service) Identify(ctx context.Context, key string) (string, error) {
+// Authenticate provides a mock function with given fields: ctx, key
+func (_m *Service) Authenticate(ctx context.Context, key string) (string, error) {
 	ret := _m.Called(ctx, key)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Identify")
+		panic("no return value specified for Authenticate")
 	}
 
 	var r0 string

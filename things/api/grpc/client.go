@@ -26,7 +26,7 @@ var _ grpcThingsV1.ThingsServiceClient = (*grpcClient)(nil)
 
 type grpcClient struct {
 	timeout                    time.Duration
-	authorize                  endpoint.Endpoint
+	authenticate               endpoint.Endpoint
 	retrieveEntity             endpoint.Endpoint
 	retrieveEntities           endpoint.Endpoint
 	addConnections             endpoint.Endpoint
@@ -38,13 +38,13 @@ type grpcClient struct {
 // NewClient returns new gRPC client instance.
 func NewClient(conn *grpc.ClientConn, timeout time.Duration) grpcThingsV1.ThingsServiceClient {
 	return &grpcClient{
-		authorize: kitgrpc.NewClient(
+		authenticate: kitgrpc.NewClient(
 			conn,
 			svcName,
-			"Authorize",
-			encodeAuthorizeRequest,
-			decodeAuthorizeResponse,
-			grpcThingsV1.AuthzRes{},
+			"Authenticate",
+			encodeAuthenticateRequest,
+			decodeAuthenticateResponse,
+			grpcThingsV1.AuthnRes{},
 		).Endpoint(),
 
 		retrieveEntity: kitgrpc.NewClient(
@@ -105,37 +105,33 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) grpcThingsV1.Things
 	}
 }
 
-func (client grpcClient) Authorize(ctx context.Context, req *grpcThingsV1.AuthzReq, _ ...grpc.CallOption) (r *grpcThingsV1.AuthzRes, err error) {
+func (client grpcClient) Authenticate(ctx context.Context, req *grpcThingsV1.AuthnReq, _ ...grpc.CallOption) (r *grpcThingsV1.AuthnRes, err error) {
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
-	res, err := client.authorize(ctx, things.AuthzReq{
-		ThingID:    req.GetThingId(),
-		ThingKey:   req.GetThingKey(),
-		ChannelID:  req.GetChannelId(),
-		Permission: req.GetPermission(),
+	res, err := client.authenticate(ctx, authenticateReq{
+		ThingID:  req.GetThingId(),
+		ThingKey: req.GetThingKey(),
 	})
 	if err != nil {
-		return &grpcThingsV1.AuthzRes{}, decodeError(err)
+		return &grpcThingsV1.AuthnRes{}, decodeError(err)
 	}
 
-	ar := res.(authorizeRes)
-	return &grpcThingsV1.AuthzRes{Authorized: ar.authorized, Id: ar.id}, nil
+	ar := res.(authenticateRes)
+	return &grpcThingsV1.AuthnRes{Authenticated: ar.authenticated, Id: ar.id}, nil
 }
 
-func encodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(things.AuthzReq)
-	return &grpcThingsV1.AuthzReq{
-		ChannelId:  req.ChannelID,
-		ThingId:    req.ThingID,
-		ThingKey:   req.ThingKey,
-		Permission: req.Permission,
+func encodeAuthenticateRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(authenticateReq)
+	return &grpcThingsV1.AuthnReq{
+		ThingId:  req.ThingID,
+		ThingKey: req.ThingKey,
 	}, nil
 }
 
-func decodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
-	res := grpcRes.(*grpcThingsV1.AuthzRes)
-	return authorizeRes{authorized: res.Authorized, id: res.Id}, nil
+func decodeAuthenticateResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(*grpcThingsV1.AuthnRes)
+	return authenticateRes{authenticated: res.GetAuthenticated(), id: res.GetId()}, nil
 }
 
 func (client grpcClient) RetrieveEntity(ctx context.Context, req *grpcCommonV1.RetrieveEntityReq, _ ...grpc.CallOption) (r *grpcCommonV1.RetrieveEntityRes, err error) {

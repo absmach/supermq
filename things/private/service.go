@@ -12,11 +12,8 @@ import (
 
 //go:generate mockery --name Service  --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
 type Service interface {
-	// Identify returns thing ID for given thing key.
-	Identify(ctx context.Context, key string) (string, error)
-
-	// Authorize used for Things authorization.
-	Authorize(ctx context.Context, req things.AuthzReq) (string, error)
+	// Authenticate returns thing ID for given thing key.
+	Authenticate(ctx context.Context, key string) (string, error)
 
 	RetrieveById(ctx context.Context, id string) (clients.Client, error)
 
@@ -49,7 +46,7 @@ type service struct {
 	policy    policies.Service
 }
 
-func (svc service) Identify(ctx context.Context, key string) (string, error) {
+func (svc service) Authenticate(ctx context.Context, key string) (string, error) {
 	id, err := svc.cache.ID(ctx, key)
 	if err == nil {
 		return id, nil
@@ -64,27 +61,6 @@ func (svc service) Identify(ctx context.Context, key string) (string, error) {
 	}
 
 	return client.ID, nil
-}
-
-func (svc service) Authorize(ctx context.Context, req things.AuthzReq) (string, error) {
-	thingID, err := svc.Identify(ctx, req.ThingKey)
-	if err != nil {
-		return "", err
-	}
-
-	r := policies.Policy{
-		SubjectType: policies.GroupType,
-		Subject:     req.ChannelID,
-		ObjectType:  policies.ThingType,
-		Object:      thingID,
-		Permission:  req.Permission,
-	}
-	err = svc.evaluator.CheckPolicy(ctx, r)
-	if err != nil {
-		return "", errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-
-	return thingID, nil
 }
 
 func (svc service) RetrieveById(ctx context.Context, ids string) (clients.Client, error) {
