@@ -75,6 +75,8 @@ type config struct {
 	AdminEmail          string        `env:"MG_USERS_ADMIN_EMAIL"         envDefault:"admin@example.com"`
 	AdminPassword       string        `env:"MG_USERS_ADMIN_PASSWORD"      envDefault:"12345678"`
 	AdminUsername       string        `env:"MG_USERS_ADMIN_USERNAME"      envDefault:"admin"`
+	AdminFirstName      string        `env:"MG_USERS_ADMIN_FIRST_NAME"    envDefault:"super"`
+	AdminLastName       string        `env:"MG_USERS_ADMIN_LAST_NAME"     envDefault:"admin"`
 	PassRegexText       string        `env:"MG_USERS_PASS_REGEX"          envDefault:"^.{8,}$"`
 	ResetURL            string        `env:"MG_TOKEN_RESET_ENDPOINT"      envDefault:"/reset-request"`
 	JaegerURL           url.URL       `env:"MG_JAEGER_URL"                envDefault:"http://localhost:4318/v1/traces"`
@@ -319,8 +321,8 @@ func createAdmin(ctx context.Context, c config, urepo users.Repository, hsr user
 	user := users.User{
 		ID:        id,
 		Email:     c.AdminEmail,
-		FirstName: "jane",
-		LastName:  "doe",
+		FirstName: c.AdminFirstName,
+		LastName:  c.AdminLastName,
 		Credentials: users.Credentials{
 			Username: "admin",
 			Secret:   hash,
@@ -342,7 +344,7 @@ func createAdmin(ctx context.Context, c config, urepo users.Repository, hsr user
 	if _, err = urepo.Save(ctx, user); err != nil {
 		return "", err
 	}
-	if _, err = svc.IssueToken(ctx, c.AdminEmail, c.AdminUsername, c.AdminPassword); err != nil {
+	if _, err = svc.IssueToken(ctx, c.AdminUsername, c.AdminPassword); err != nil {
 		return "", err
 	}
 	return user.ID, nil

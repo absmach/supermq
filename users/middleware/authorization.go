@@ -182,8 +182,8 @@ func (am *authorizationMiddleware) Identify(ctx context.Context, session authn.S
 	return am.svc.Identify(ctx, session)
 }
 
-func (am *authorizationMiddleware) IssueToken(ctx context.Context, email, username, secret string) (*magistrala.Token, error) {
-	return am.svc.IssueToken(ctx, email, username, secret)
+func (am *authorizationMiddleware) IssueToken(ctx context.Context, username, secret string) (*magistrala.Token, error) {
+	return am.svc.IssueToken(ctx, username, secret)
 }
 
 func (am *authorizationMiddleware) RefreshToken(ctx context.Context, session authn.Session, refreshToken string) (*magistrala.Token, error) {

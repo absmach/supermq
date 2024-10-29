@@ -23,10 +23,11 @@ import (
 
 var user = mgsdk.User{
 	ID:        testsutil.GenerateUUID(&testing.T{}),
-	FirstName: "testuser",
+	FirstName: "testuserfirstname",
+	LastName:  "testuserfirstname",
 	Credentials: mgsdk.Credentials{
 		Secret:   "testpassword",
-		Username: "identity",
+		Username: "testusername",
 	},
 	Status: mgclients.EnabledStatus.String(),
 }
@@ -61,6 +62,7 @@ func TestCreateUsersCmd(t *testing.T) {
 				user.LastName,
 				user.Email,
 				user.Credentials.Secret,
+				user.Credentials.Username,
 				validToken,
 			},
 			user:    user,
@@ -73,6 +75,7 @@ func TestCreateUsersCmd(t *testing.T) {
 				user.LastName,
 				user.Email,
 				user.Credentials.Secret,
+				user.Credentials.Username,
 			},
 			user:    user,
 			logType: entityLog,
@@ -84,6 +87,7 @@ func TestCreateUsersCmd(t *testing.T) {
 				user.LastName,
 				user.Email,
 				user.Credentials.Secret,
+				user.Credentials.Username,
 				validToken,
 			},
 			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrCreateEntity, http.StatusUnprocessableEntity),

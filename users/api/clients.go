@@ -98,7 +98,7 @@ func usersHandler(svc users.Service, authn mgauthn.Authentication, tokenClient m
 				opts...,
 			), "update_user").ServeHTTP)
 
-			r.Patch("/{id}/name", otelhttp.NewHandler(kithttp.NewServer(
+			r.Patch("/{id}/username", otelhttp.NewHandler(kithttp.NewServer(
 				updateUsernameEndpoint(svc),
 				decodeUpdateUsername,
 				api.EncodeResponse,

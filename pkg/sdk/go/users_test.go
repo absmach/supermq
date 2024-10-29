@@ -122,14 +122,22 @@ func TestCreateUser(t *testing.T) {
 			err:              errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
-			desc:             "register empty user",
-			token:            validToken,
-			createSdkUserReq: sdk.User{},
-			svcReq:           users.User{},
-			svcRes:           users.User{},
-			svcErr:           nil,
-			response:         sdk.User{},
-			err:              errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingUsername), http.StatusBadRequest),
+			desc:  "register empty credentials user",
+			token: validToken,
+			createSdkUserReq: sdk.User{
+				FirstName: createSdkUserReq.FirstName,
+				LastName:  createSdkUserReq.LastName,
+				Email:     createSdkUserReq.Email,
+				Credentials: sdk.Credentials{
+					Username: "",
+					Secret:   "",
+				},
+			},
+			svcReq:   users.User{},
+			svcRes:   users.User{},
+			svcErr:   nil,
+			response: sdk.User{},
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingUsername), http.StatusBadRequest),
 		},
 		{
 			desc:  "register user with first name too long",
@@ -151,6 +159,8 @@ func TestCreateUser(t *testing.T) {
 			token: validToken,
 			createSdkUserReq: sdk.User{
 				FirstName: createSdkUserReq.FirstName,
+				LastName:  createSdkUserReq.LastName,
+				Email:     createSdkUserReq.Email,
 				Credentials: sdk.Credentials{
 					Username: "",
 					Secret:   createSdkUserReq.Credentials.Secret,
@@ -212,7 +222,9 @@ func TestCreateUser(t *testing.T) {
 					Username: "user",
 					Secret:   "12345678",
 				},
-				Email: createSdkUserReq.Email,
+				FirstName: createSdkUserReq.FirstName,
+				LastName:  createSdkUserReq.LastName,
+				Email:     createSdkUserReq.Email,
 				Metadata: map[string]interface{}{
 					"test": make(chan int),
 				},

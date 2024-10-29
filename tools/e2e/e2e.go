@@ -149,7 +149,6 @@ func createUser(s sdk.SDK, conf Config) (string, string, error) {
 	}
 
 	login := sdk.Login{
-		Email:    user.Email,
 		Username: user.Credentials.Username,
 		Secret:   user.Credentials.Secret,
 	}
@@ -171,7 +170,6 @@ func createUser(s sdk.SDK, conf Config) (string, string, error) {
 	}
 
 	login = sdk.Login{
-		Email:    user.Email,
 		Username: user.Credentials.Username,
 		Secret:   user.Credentials.Secret,
 	}

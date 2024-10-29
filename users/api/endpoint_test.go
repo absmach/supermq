@@ -38,10 +38,11 @@ var (
 	validCMetadata = users.Metadata{"role": "user"}
 	user           = users.User{
 		ID:          testsutil.GenerateUUID(&testing.T{}),
-		FirstName:   "username",
-		Tags:        []string{"tag1", "tag2"},
+		LastName:    "doe",
+		FirstName:   "jane",
+		Tags:        []string{"foo", "bar"},
 		Email:       "useremail@example.com",
-		Credentials: users.Credentials{Username: "useremail", Secret: secret},
+		Credentials: users.Credentials{Username: "username", Secret: secret},
 		Metadata:    validCMetadata,
 		Status:      users.EnabledStatus,
 	}
@@ -177,9 +178,11 @@ func TestRegister(t *testing.T) {
 		{
 			desc: "register user with invalid status",
 			user: users.User{
-				Email: "newclientwithinvalidstatus@example.com",
+				Email:     "newclientwithinvalidstatus@example.com",
+				FirstName: "newclientwithinvalidstatus",
+				LastName:  "newclientwithinvalidstatus",
 				Credentials: users.Credentials{
-					Username: "useremail",
+					Username: "username",
 					Secret:   secret,
 				},
 				Status: users.AllStatus,
@@ -193,6 +196,7 @@ func TestRegister(t *testing.T) {
 			desc: "register a user with name too long",
 			user: users.User{
 				FirstName: strings.Repeat("a", 1025),
+				LastName:  "newclientwithnametoolong",
 				Email:     "newclientwithinvalidname@example.com",
 				Credentials: users.Credentials{
 					Secret: secret,
@@ -1777,7 +1781,6 @@ func TestIssueToken(t *testing.T) {
 	defer us.Close()
 
 	validUsername := "valid"
-	validEmail := "valid@email.com"
 
 	cases := []struct {
 		desc        string
@@ -1794,15 +1797,8 @@ func TestIssueToken(t *testing.T) {
 			err:         nil,
 		},
 		{
-			desc:        "issue token with valid email and secret",
-			data:        fmt.Sprintf(`{"email": "%s", "secret": "%s", "domainID": "%s"}`, validEmail, secret, validID),
-			contentType: contentType,
-			status:      http.StatusCreated,
-			err:         nil,
-		},
-		{
-			desc:        "issue token with empty username and email",
-			data:        fmt.Sprintf(`{"email": "%s", username": "%s", "secret": "%s", "domainID": "%s"}`, "", "", secret, validID),
+			desc:        "issue token with empty username",
+			data:        fmt.Sprintf(`{"username": "%s", "secret": "%s", "domainID": "%s"}`, "", secret, validID),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,

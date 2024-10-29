@@ -46,9 +46,9 @@ func (lm *loggingMiddleware) Register(ctx context.Context, session authn.Session
 	return lm.svc.Register(ctx, session, user, selfRegister)
 }
 
-// IssueToken logs the issue_token request. It logs the username and email type and the time it took to complete the request.
+// IssueToken logs the issue_token request. It logs the username type and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) IssueToken(ctx context.Context, email, username, secret string) (t *magistrala.Token, err error) {
+func (lm *loggingMiddleware) IssueToken(ctx context.Context, username, secret string) (t *magistrala.Token, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -63,7 +63,7 @@ func (lm *loggingMiddleware) IssueToken(ctx context.Context, email, username, se
 		}
 		lm.logger.Info("Issue token completed successfully", args...)
 	}(time.Now())
-	return lm.svc.IssueToken(ctx, email, username, secret)
+	return lm.svc.IssueToken(ctx, username, secret)
 }
 
 // RefreshToken logs the refresh_token request. It logs the refreshtoken, token type and the time it took to complete the request.
@@ -94,7 +94,6 @@ func (lm *loggingMiddleware) View(ctx context.Context, session authn.Session, id
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", id),
-				slog.String("username", c.Credentials.Username),
 			),
 		}
 		if err != nil {
@@ -203,7 +202,6 @@ func (lm *loggingMiddleware) UpdateTags(ctx context.Context, session authn.Sessi
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", c.ID),
-				slog.String("username", c.Credentials.Username),
 				slog.Any("tags", c.Tags),
 			),
 		}
@@ -217,7 +215,7 @@ func (lm *loggingMiddleware) UpdateTags(ctx context.Context, session authn.Sessi
 	return lm.svc.UpdateTags(ctx, session, user)
 }
 
-// UpdateEmail logs the update_identity request. It logs the user id and the time it took to complete the request.
+// UpdateEmail logs the update_user_email request. It logs the user id and the time it took to complete the request.
 // If the request fails, it logs the error.
 func (lm *loggingMiddleware) UpdateEmail(ctx context.Context, session authn.Session, id, email string) (c users.User, err error) {
 	defer func(begin time.Time) {
@@ -225,7 +223,7 @@ func (lm *loggingMiddleware) UpdateEmail(ctx context.Context, session authn.Sess
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", c.ID),
-				slog.String("username", c.Credentials.Username),
+				slog.String("email", c.Email),
 			),
 		}
 		if err != nil {
@@ -246,7 +244,6 @@ func (lm *loggingMiddleware) UpdateSecret(ctx context.Context, session authn.Ses
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", c.ID),
-				slog.String("username", c.Credentials.Username),
 			),
 		}
 		if err != nil {
@@ -288,7 +285,6 @@ func (lm *loggingMiddleware) UpdateProfilePicture(ctx context.Context, session a
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", u.ID),
-				slog.String("username", u.Credentials.Username),
 			),
 		}
 		if err != nil {
@@ -362,7 +358,6 @@ func (lm *loggingMiddleware) UpdateRole(ctx context.Context, session authn.Sessi
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", c.ID),
-				slog.String("username", c.Credentials.Username),
 				slog.String("role", user.Role.String()),
 			),
 		}
@@ -384,7 +379,6 @@ func (lm *loggingMiddleware) Enable(ctx context.Context, session authn.Session, 
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", id),
-				slog.String("username", c.Credentials.Username),
 			),
 		}
 		if err != nil {
@@ -405,7 +399,6 @@ func (lm *loggingMiddleware) Disable(ctx context.Context, session authn.Session,
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
 				slog.String("id", id),
-				slog.String("username", c.Credentials.Username),
 			),
 		}
 		if err != nil {

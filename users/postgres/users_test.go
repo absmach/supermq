@@ -116,11 +116,11 @@ func TestUsersSave(t *testing.T) {
 			desc: "add user with invalid user name",
 			client: users.User{
 				ID:        testsutil.GenerateUUID(t),
-				FirstName: invalidName,
-				LastName:  namesgen.Generate(),
+				FirstName: first_name,
+				LastName:  last_name,
 				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
-					Username: username,
+					Username: invalidName,
 					Secret:   password,
 				},
 				Metadata: users.Metadata{},
@@ -131,8 +131,10 @@ func TestUsersSave(t *testing.T) {
 		{
 			desc: "add user with a missing username",
 			client: users.User{
-				ID:    testsutil.GenerateUUID(t),
-				Email: namesgen.Generate() + "@example.com",
+				ID:        testsutil.GenerateUUID(t),
+				FirstName: first_name,
+				LastName:  last_name,
+				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
 					Secret: password,
 				},
@@ -190,6 +192,11 @@ func TestIsPlatformAdmin(t *testing.T) {
 
 	repo := cpostgres.NewRepository(database)
 
+	first_name := namesgen.Generate()
+	last_name := namesgen.Generate()
+	username := namesgen.Generate()
+	clientEmail := first_name + "@example.com"
+
 	cases := []struct {
 		desc   string
 		client users.User
@@ -199,10 +206,11 @@ func TestIsPlatformAdmin(t *testing.T) {
 			desc: "authorize check for super user",
 			client: users.User{
 				ID:        testsutil.GenerateUUID(t),
-				FirstName: namesgen.Generate(),
-				Email:     namesgen.Generate() + "@example.com",
+				FirstName: first_name,
+				LastName:  last_name,
+				Email:     clientEmail,
 				Credentials: users.Credentials{
-					Username: namesgen.Generate(),
+					Username: username,
 					Secret:   password,
 				},
 				Metadata: users.Metadata{},
@@ -215,7 +223,8 @@ func TestIsPlatformAdmin(t *testing.T) {
 			desc: "unauthorize user",
 			client: users.User{
 				ID:        testsutil.GenerateUUID(t),
-				FirstName: namesgen.Generate(),
+				FirstName: first_name,
+				LastName:  last_name,
 				Email:     namesgen.Generate() + "@example.com",
 				Credentials: users.Credentials{
 					Username: namesgen.Generate(),
@@ -248,6 +257,8 @@ func TestRetrieveByID(t *testing.T) {
 	client := users.User{
 		ID:        testsutil.GenerateUUID(t),
 		FirstName: namesgen.Generate(),
+		LastName:  namesgen.Generate(),
+		Email:     namesgen.Generate() + "@example.com",
 		Credentials: users.Credentials{
 			Username: namesgen.Generate(),
 			Secret:   password,
@@ -301,6 +312,7 @@ func TestRetrieveAll(t *testing.T) {
 		client := users.User{
 			ID:        testsutil.GenerateUUID(t),
 			FirstName: namesgen.Generate(),
+			LastName:  namesgen.Generate(),
 			Email:     namesgen.Generate() + "@example.com",
 			Credentials: users.Credentials{
 				Username: namesgen.Generate(),
@@ -309,7 +321,6 @@ func TestRetrieveAll(t *testing.T) {
 			Metadata: users.Metadata{},
 			Status:   users.EnabledStatus,
 			Tags:     []string{"tag1"},
-			LastName: namesgen.Generate(),
 		}
 		if i%50 == 0 {
 			client.Metadata = map[string]interface{}{

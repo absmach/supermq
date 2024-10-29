@@ -76,16 +76,15 @@ func TestIssueToken(t *testing.T) {
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrLogin, http.StatusUnauthorized),
 		},
 		{
-			desc: "issue token with empty username and email",
+			desc: "issue token with empty username",
 			login: sdk.Login{
 				Username: "",
-				Email:    "",
 				Secret:   client.Credentials.Secret,
 			},
 			svcRes:   &magistrala.Token{},
 			svcErr:   nil,
 			response: sdk.Token{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingLoginCredentials), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingUsername), http.StatusBadRequest),
 		},
 		{
 			desc: "issue token with empty secret",

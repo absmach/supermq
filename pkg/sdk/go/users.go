@@ -286,7 +286,7 @@ func (sdk mgSDK) UpdateUsername(user User, token string) (User, errors.SDKError)
 		return User{}, errors.NewSDKError(err)
 	}
 
-	url := fmt.Sprintf("%s/%s/%s/name", sdk.usersURL, usersEndpoint, user.ID)
+	url := fmt.Sprintf("%s/%s/%s/username", sdk.usersURL, usersEndpoint, user.ID)
 
 	_, body, sdkerr := sdk.processRequest(http.MethodPatch, url, token, data, nil, http.StatusOK)
 	if sdkerr != nil {

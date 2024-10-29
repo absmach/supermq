@@ -5,6 +5,8 @@ package users
 
 import (
 	"context"
+	"log"
+	"net/mail"
 	"net/url"
 	"time"
 
@@ -93,14 +95,14 @@ func (svc service) Register(ctx context.Context, session authn.Session, u User, 
 	return user, nil
 }
 
-func (svc service) IssueToken(ctx context.Context, email, username, secret string) (*magistrala.Token, error) {
+func (svc service) IssueToken(ctx context.Context, username, secret string) (*magistrala.Token, error) {
 	var dbUser User
 	var err error
 
-	if username != "" {
+	if _, parseErr := mail.ParseAddress(username); parseErr != nil {
 		dbUser, err = svc.users.RetrieveByUsername(ctx, username)
 	} else {
-		dbUser, err = svc.users.RetrieveByEmail(ctx, email)
+		dbUser, err = svc.users.RetrieveByEmail(ctx, username)
 	}
 
 	if err != nil {
@@ -116,7 +118,7 @@ func (svc service) IssueToken(ctx context.Context, email, username, secret strin
 		return &magistrala.Token{}, errors.Wrap(errIssueToken, err)
 	}
 
-	return token, err
+	return token, nil
 }
 
 func (svc service) RefreshToken(ctx context.Context, session authn.Session, refreshToken string) (*magistrala.Token, error) {
@@ -177,6 +179,7 @@ func (svc service) ListUsers(ctx context.Context, session authn.Session, pm Page
 }
 
 func (svc service) SearchUsers(ctx context.Context, pm Page) (UsersPage, error) {
+	log.Printf("svc:SearchUsers called with Page: %+v\n", pm)
 	page := Page{
 		Offset:    pm.Offset,
 		Limit:     pm.Limit,
@@ -186,12 +189,15 @@ func (svc service) SearchUsers(ctx context.Context, pm Page) (UsersPage, error) 
 		Id:        pm.Id,
 		Role:      UserRole,
 	}
+	log.Printf("svc:Constructed Page for search: %+v\n", page)
 
 	cp, err := svc.users.SearchUsers(ctx, page)
 	if err != nil {
+		log.Printf("svc:Error in svc.users.SearchUsers: %v\n", err)
 		return UsersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
+	log.Printf("svc:SearchUsers result: %+v\n", cp)
 	return cp, nil
 }
 
@@ -209,12 +215,12 @@ func (svc service) Update(ctx context.Context, session authn.Session, usr User) 
 	}
 
 	user := User{
-		ID:             usr.ID,
-		FirstName:      usr.FirstName,
-		LastName:       usr.LastName,
-		Metadata:       usr.Metadata,
-		UpdatedAt:      time.Now(),
-		UpdatedBy:      session.UserID,
+		ID:        usr.ID,
+		FirstName: usr.FirstName,
+		LastName:  usr.LastName,
+		Metadata:  usr.Metadata,
+		UpdatedAt: time.Now(),
+		UpdatedBy: session.UserID,
 	}
 
 	user, err := svc.users.Update(ctx, user)
@@ -334,7 +340,7 @@ func (svc service) UpdateSecret(ctx context.Context, session authn.Session, oldS
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
-	if _, err := svc.IssueToken(ctx, dbUser.Email, dbUser.Credentials.Username, oldSecret); err != nil {
+	if _, err := svc.IssueToken(ctx, dbUser.Credentials.Username, oldSecret); err != nil {
 		return User{}, err
 	}
 	newSecret, err = svc.hasher.Hash(newSecret)

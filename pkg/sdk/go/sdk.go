@@ -231,12 +231,14 @@ type SDK interface {
 	//  fmt.Println(user)
 	UpdateUserTags(user User, token string) (User, errors.SDKError)
 
-	// UpdateUsername updates the user's names ie Name, FirstName, LastName and Username.
+	// UpdateUsername updates the user's Username.
 	//
 	// example:
 	//  user := sdk.User{
 	//    ID:   "userID",
-	//    Name: "John Doe",
+	//    Credentials: sdk.Credentials{
+	//	  	Username: "john.doe",
+	//		},
 	//  }
 	//  user, _ := sdk.UpdateUsername(user, "token")
 	//  fmt.Println(user)
@@ -247,7 +249,7 @@ type SDK interface {
 	// example:
 	//  user := sdk.User{
 	//    ID:            "userID",
-	//    ProfilePicture: "profile_picture",
+	//    ProfilePicture: "https://cloudstorage.example.com/bucket-name/user-images/profile-picture.jpg",
 	//  }
 	//  user, _ := sdk.UpdateProfilePicture(user, "token")
 	//  fmt.Println(user)

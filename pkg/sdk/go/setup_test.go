@@ -235,11 +235,11 @@ func generateTestUser(t *testing.T) sdk.User {
 	assert.Nil(t, err, fmt.Sprintf("Unexpected error parsing time: %v", err))
 	return sdk.User{
 		ID:        generateUUID(t),
-		FirstName: "clientname",
-		LastName:  "clientlastname",
-		Email:     "clientemail@example.com",
+		FirstName: "userfirstname",
+		LastName:  "userlastname",
+		Email:     "useremail@example.com",
 		Credentials: sdk.Credentials{
-			Username: "clientusername",
+			Username: "username",
 			Secret:   secret,
 		},
 		Tags:      []string{"tag1", "tag2"},

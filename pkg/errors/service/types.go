@@ -73,6 +73,6 @@ var (
 	// ErrParentGroupAuthorization indicates failure occurred while authorizing the parent group.
 	ErrParentGroupAuthorization = errors.New("failed to authorize parent group")
 
-	// ErrMissingNames indicates that the user's names are missing.
-	ErrMissingNames = errors.New("missing usernames")
+	// ErrMissingUsername indicates that the user's names are missing.
+	ErrMissingUsername = errors.New("missing usernames")
 )

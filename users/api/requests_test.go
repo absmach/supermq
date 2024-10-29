@@ -519,21 +519,12 @@ func TestLoginUserReqValidate(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc: "valid request with email",
-			req: loginUserReq{
-				Email:  "example@example.com",
-				Secret: secret,
-			},
-			err: nil,
-		},
-		{
-			desc: "empty Username and Email",
+			desc: "empty Username",
 			req: loginUserReq{
 				Username: "",
-				Email:    "",
 				Secret:   secret,
 			},
-			err: apiutil.ErrMissingLoginCredentials,
+			err: apiutil.ErrMissingUsername,
 		},
 		{
 			desc: "empty secret",

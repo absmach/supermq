@@ -192,6 +192,9 @@ var (
 	// ErrMissingUsername indicates missing user name.
 	ErrMissingUsername = errors.New("missing username")
 
-	// ErrMissingLoginCredentials indicates missing username and email.
-	ErrMissingLoginCredentials = errors.New("missing username and email")
+	// ErrMissingFirstName indicates missing first name.
+	ErrMissingFirstName = errors.New("missing first name")
+
+	// ErrMissingLastName indicates missing last name.
+	ErrMissingLastName = errors.New("missing last name")
 )

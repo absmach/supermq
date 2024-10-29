@@ -25,6 +25,12 @@ func (req createUserReq) validate() error {
 	if len(req.user.LastName) > api.MaxNameSize {
 		return apiutil.ErrNameSize
 	}
+	if req.user.FirstName == "" {
+		return apiutil.ErrMissingFirstName
+	}
+	if req.user.LastName == "" {
+		return apiutil.ErrMissingLastName
+	}
 	if req.user.Credentials.Username == "" {
 		return apiutil.ErrMissingUsername
 	}
@@ -94,7 +100,7 @@ type searchUsersReq struct {
 }
 
 func (req searchUsersReq) validate() error {
-	if req.Username == "" && req.Id == "" {
+	if req.Username == "" && req.Id == "" && req.FirstName == "" && req.LastName == "" {
 		return apiutil.ErrEmptySearchQuery
 	}
 
@@ -233,14 +239,13 @@ func (req changeUserStatusReq) validate() error {
 }
 
 type loginUserReq struct {
-	Email    string `json:"email,omitempty"`
 	Username string `json:"username,omitempty"`
 	Secret   string `json:"secret,omitempty"`
 }
 
 func (req loginUserReq) validate() error {
-	if req.Username == "" && req.Email == "" {
-		return apiutil.ErrMissingLoginCredentials
+	if req.Username == "" {
+		return apiutil.ErrMissingUsername
 	}
 	if req.Secret == "" {
 		return apiutil.ErrMissingPass

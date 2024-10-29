@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 	"time"
@@ -211,9 +212,6 @@ func (repo *userRepo) Update(ctx context.Context, user users.User) (users.User, 
 	if user.LastName != "" {
 		query = append(query, "last_name = :last_name,")
 	}
-	if user.Credentials.Username != "" {
-		query = append(query, "username = :username,")
-	}
 	if user.Metadata != nil {
 		query = append(query, "metadata = :metadata,")
 	}
@@ -299,23 +297,29 @@ func (repo *userRepo) Delete(ctx context.Context, id string) error {
 }
 
 func (repo *userRepo) SearchUsers(ctx context.Context, pm users.Page) (users.UsersPage, error) {
+	log.Printf("repo:SearchUsers called with Page: %+v\n", pm)
+
 	query, err := PageQuery(pm)
 	if err != nil {
+		log.Printf("repo:Error in PageQuery: %v\n", err)
 		return users.UsersPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
 
 	tq := query
 	query = applyOrdering(query, pm)
 
-	q := fmt.Sprintf(`SELECT u.id, u.username, u.first_name, u.username, u.created_at, u.updated_at FROM users u %s LIMIT :limit OFFSET :offset;`, query)
+	q := fmt.Sprintf(`SELECT u.id, u.username, u.first_name, u.last_name, u.created_at, u.updated_at FROM users u %s LIMIT :limit OFFSET :offset;`, query)
 
+	log.Printf("Constructed query: %s\n", q)
 	dbPage, err := ToDBUsersPage(pm)
 	if err != nil {
+		log.Printf("repo:Error in ToDBUsersPage: %v\n", err)
 		return users.UsersPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 
 	rows, err := repo.Repository.DB.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
+		log.Printf("repo:Error in NamedQueryContext: %v\n", err)
 		return users.UsersPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 	defer rows.Close()
@@ -324,11 +328,13 @@ func (repo *userRepo) SearchUsers(ctx context.Context, pm users.Page) (users.Use
 	for rows.Next() {
 		dbc := DBUser{}
 		if err := rows.StructScan(&dbc); err != nil {
+			log.Printf("repo:Error in StructScan: %v\n", err)
 			return users.UsersPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
 
 		c, err := ToUser(dbc)
 		if err != nil {
+			log.Printf("repo:Error in ToUser: %v\n", err)
 			return users.UsersPage{}, err
 		}
 
@@ -336,8 +342,11 @@ func (repo *userRepo) SearchUsers(ctx context.Context, pm users.Page) (users.Use
 	}
 
 	cq := fmt.Sprintf(`SELECT COUNT(*) FROM users c %s;`, tq)
+	log.Printf("repo:Constructed count query: %s\n", cq)
+
 	total, err := postgres.Total(ctx, repo.Repository.DB, cq, dbPage)
 	if err != nil {
+		log.Printf("repo:Error in Total: %v\n", err)
 		return users.UsersPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
 
@@ -350,6 +359,7 @@ func (repo *userRepo) SearchUsers(ctx context.Context, pm users.Page) (users.Use
 		},
 	}
 
+	log.Printf("repo:SearchUsers result: %+v\n", page)
 	return page, nil
 }
 

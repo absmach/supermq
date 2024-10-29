@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
-	"strings"
 
 	mgxsdk "github.com/absmach/magistrala/pkg/sdk/go"
 	"github.com/absmach/magistrala/users"
@@ -95,11 +94,11 @@ var cmdUsers = []cobra.Command{
 		},
 	},
 	{
-		Use:   "token <email|username> <password>",
+		Use:   "token <username> <password>",
 		Short: "Get token",
-		Long: "Generate a new token with either username or email and password\n" +
+		Long: "Generate a new token with username and password\n" +
 			"For example:\n" +
-			"\tmagistrala-cli users token user@example.com 12345678\n",
+			"\tmagistrala-cli users token jane.doe 12345678\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -107,15 +106,8 @@ var cmdUsers = []cobra.Command{
 			}
 
 			loginReq := mgxsdk.Login{
-				Username: "",
-				Email:    "",
+				Username: args[0],
 				Secret:   args[1],
-			}
-
-			if isEmail(args[0]) {
-				loginReq.Email = args[0]
-			} else {
-				loginReq.Username = args[0]
 			}
 
 			token, err := sdk.CreateToken(loginReq)
@@ -542,8 +534,4 @@ func NewUsersCmd() *cobra.Command {
 	}
 
 	return &cmd
-}
-
-func isEmail(s string) bool {
-	return strings.Contains(s, "@")
 }
