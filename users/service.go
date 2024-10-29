@@ -5,7 +5,6 @@ package users
 
 import (
 	"context"
-	"log"
 	"net/mail"
 	"time"
 
@@ -178,7 +177,6 @@ func (svc service) ListUsers(ctx context.Context, session authn.Session, pm Page
 }
 
 func (svc service) SearchUsers(ctx context.Context, pm Page) (UsersPage, error) {
-	log.Printf("svc:SearchUsers called with Page: %+v\n", pm)
 	page := Page{
 		Offset:    pm.Offset,
 		Limit:     pm.Limit,
@@ -188,15 +186,12 @@ func (svc service) SearchUsers(ctx context.Context, pm Page) (UsersPage, error) 
 		Id:        pm.Id,
 		Role:      UserRole,
 	}
-	log.Printf("svc:Constructed Page for search: %+v\n", page)
 
 	cp, err := svc.users.SearchUsers(ctx, page)
 	if err != nil {
-		log.Printf("svc:Error in svc.users.SearchUsers: %v\n", err)
 		return UsersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	log.Printf("svc:SearchUsers result: %+v\n", cp)
 	return cp, nil
 }
 
