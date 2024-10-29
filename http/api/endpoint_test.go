@@ -11,11 +11,15 @@ import (
 	"strings"
 	"testing"
 
+	chmocks "github.com/absmach/magistrala/channels/mocks"
 	server "github.com/absmach/magistrala/http"
 	"github.com/absmach/magistrala/http/api"
+	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	mgauthn "github.com/absmach/magistrala/pkg/authn"
+	authnMocks "github.com/absmach/magistrala/pkg/authn/mocks"
 	pubsub "github.com/absmach/magistrala/pkg/messaging/mocks"
 	thmocks "github.com/absmach/magistrala/things/mocks"
 	"github.com/absmach/mproxy"
@@ -30,9 +34,9 @@ const (
 	invalidValue = "invalid"
 )
 
-func newService(things grpcThingsV1.ThingsServiceClient) (session.Handler, *pubsub.PubSub) {
+func newService(authn mgauthn.Authentication, things grpcThingsV1.ThingsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) (session.Handler, *pubsub.PubSub) {
 	pub := new(pubsub.PubSub)
-	return server.NewHandler(pub, mglog.NewMock(), things), pub
+	return server.NewHandler(pub, authn, things, channels, mglog.NewMock()), pub
 }
 
 func newTargetHTTPServer() *httptest.Server {
@@ -82,6 +86,8 @@ func (tr testRequest) make() (*http.Response, error) {
 
 func TestPublish(t *testing.T) {
 	things := new(thmocks.ThingsServiceClient)
+	authn := new(authnMocks.Authentication)
+	channels := new(chmocks.ChannelsServiceClient)
 	chanID := "1"
 	ctSenmlJSON := "application/senml+json"
 	ctSenmlCBOR := "application/senml+cbor"
@@ -91,16 +97,13 @@ func TestPublish(t *testing.T) {
 	msg := `[{"n":"current","t":-1,"v":1.6}]`
 	msgJSON := `{"field1":"val1","field2":"val2"}`
 	msgCBOR := `81A3616E6763757272656E746174206176FB3FF999999999999A`
-	svc, pub := newService(things)
+	svc, pub := newService(authn, things, channels)
 	target := newTargetHTTPServer()
 	defer target.Close()
 	ts, err := newProxyHTPPServer(svc, target)
 	assert.Nil(t, err, fmt.Sprintf("failed to create proxy server with err: %v", err))
 
 	defer ts.Close()
-
-	things.On("Authorize", mock.Anything, &grpcThingsV1.AuthzReq{ThingKey: thingKey, ChannelId: chanID, Permission: "publish"}).Return(&grpcThingsV1.AuthzRes{Authorized: true, Id: ""}, nil)
-	things.On("Authorize", mock.Anything, mock.Anything).Return(&grpcThingsV1.AuthzRes{Authorized: false, Id: ""}, nil)
 
 	cases := map[string]struct {
 		chanID      string

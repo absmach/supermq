@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 
+	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
@@ -37,51 +38,79 @@ var _ Service = (*adapterService)(nil)
 
 // Observers is a map of maps,.
 type adapterService struct {
-	things grpcThingsV1.ThingsServiceClient
-	pubsub messaging.PubSub
+	things   grpcThingsV1.ThingsServiceClient
+	channels grpcChannelsV1.ChannelsServiceClient
+	pubsub   messaging.PubSub
 }
 
 // New instantiates the CoAP adapter implementation.
-func New(thingsClient grpcThingsV1.ThingsServiceClient, pubsub messaging.PubSub) Service {
+func New(things grpcThingsV1.ThingsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, pubsub messaging.PubSub) Service {
 	as := &adapterService{
-		things: thingsClient,
-		pubsub: pubsub,
+		things:   things,
+		channels: channels,
+		pubsub:   pubsub,
 	}
 
 	return as
 }
 
 func (svc *adapterService) Publish(ctx context.Context, key string, msg *messaging.Message) error {
-	ar := &grpcThingsV1.AuthzReq{
-		Permission: policies.PublishPermission,
-		ThingKey:   key,
-		ChannelId:  msg.GetChannel(),
+
+	authnRes, err := svc.things.Authenticate(ctx, &grpcThingsV1.AuthnReq{
+		ThingKey: key,
+	})
+	if err != nil {
+		return errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-	res, err := svc.things.Authorize(ctx, ar)
+	if !authnRes.Authenticated {
+		return svcerr.ErrAuthentication
+	}
+
+	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
+		DomainId:   "",
+		ClientId:   authnRes.GetId(),
+		ClientType: policies.ThingType,
+		Permission: policies.PublishPermission,
+		ChannelId:  msg.GetChannel(),
+	})
+
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)
 	}
-	if !res.GetAuthorized() {
+	if !authzRes.Authorized {
 		return svcerr.ErrAuthorization
 	}
-	msg.Publisher = res.GetId()
+
+	msg.Publisher = authnRes.GetId()
 
 	return svc.pubsub.Publish(ctx, msg.GetChannel(), msg)
 }
 
 func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic string, c Client) error {
-	ar := &grpcThingsV1.AuthzReq{
-		Permission: policies.SubscribePermission,
-		ThingKey:   key,
-		ChannelId:  chanID,
+	authnRes, err := svc.things.Authenticate(ctx, &grpcThingsV1.AuthnReq{
+		ThingKey: key,
+	})
+	if err != nil {
+		return errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-	res, err := svc.things.Authorize(ctx, ar)
+	if !authnRes.Authenticated {
+		return svcerr.ErrAuthentication
+	}
+
+	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
+		ClientId:   authnRes.GetId(),
+		ClientType: policies.ThingType,
+		Permission: policies.SubscribePermission,
+		ChannelId:  chanID,
+	})
+
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)
 	}
-	if !res.GetAuthorized() {
+	if !authzRes.Authorized {
 		return svcerr.ErrAuthorization
 	}
+
 	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
@@ -95,18 +124,31 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 }
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopic, token string) error {
-	ar := &grpcThingsV1.AuthzReq{
-		Permission: policies.SubscribePermission,
-		ThingKey:   key,
-		ChannelId:  chanID,
+	authnRes, err := svc.things.Authenticate(ctx, &grpcThingsV1.AuthnReq{
+		ThingKey: key,
+	})
+	if err != nil {
+		return errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-	res, err := svc.things.Authorize(ctx, ar)
+	if !authnRes.Authenticated {
+		return svcerr.ErrAuthentication
+	}
+
+	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
+		DomainId:   "",
+		ClientId:   authnRes.GetId(),
+		ClientType: policies.ThingType,
+		Permission: policies.SubscribePermission,
+		ChannelId:  chanID,
+	})
+
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)
 	}
-	if !res.GetAuthorized() {
+	if !authzRes.Authorized {
 		return svcerr.ErrAuthorization
 	}
+
 	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)

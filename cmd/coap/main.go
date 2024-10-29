@@ -31,12 +31,13 @@ import (
 )
 
 const (
-	svcName         = "coap_adapter"
-	envPrefix       = "MG_COAP_ADAPTER_"
-	envPrefixHTTP   = "MG_COAP_ADAPTER_HTTP_"
-	envPrefixThings = "MG_THINGS_AUTH_GRPC_"
-	defSvcHTTPPort  = "5683"
-	defSvcCoAPPort  = "5683"
+	svcName           = "coap_adapter"
+	envPrefix         = "MG_COAP_ADAPTER_"
+	envPrefixHTTP     = "MG_COAP_ADAPTER_HTTP_"
+	envPrefixThings   = "MG_THINGS_AUTH_GRPC_"
+	envPrefixChannels = "MG_CHANNELS_GRPC_"
+	defSvcHTTPPort    = "5683"
+	defSvcCoAPPort    = "5683"
 )
 
 type config struct {
@@ -104,6 +105,22 @@ func main() {
 
 	logger.Info("Things service gRPC client successfully connected to things gRPC server " + thingsHandler.Secure())
 
+	channelsClientCfg := grpcclient.Config{}
+	if err := env.ParseWithOptions(&channelsClientCfg, env.Options{Prefix: envPrefixChannels}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load channels gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+
+	channelsClient, channelsHandler, err := grpcclient.SetupChannelsClient(ctx, channelsClientCfg)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer channelsHandler.Close()
+	logger.Info("Channels service gRPC client successfully connected to channels gRPC server " + channelsHandler.Secure())
+
 	tp, err := jaegerclient.NewProvider(ctx, svcName, cfg.JaegerURL, cfg.InstanceID, cfg.TraceRatio)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to init Jaeger: %s", err))
@@ -126,7 +143,7 @@ func main() {
 	defer nps.Close()
 	nps = brokerstracing.NewPubSub(coapServerConfig, tracer, nps)
 
-	svc := coap.New(thingsClient, nps)
+	svc := coap.New(thingsClient, channelsClient, nps)
 
 	svc = tracing.New(tracer, svc)
 

@@ -812,6 +812,24 @@ func (_m *Repository) SetParentGroup(ctx context.Context, ch channels.Channel) e
 	return r0
 }
 
+// ThingAuthorize provides a mock function with given fields: ctx, conn
+func (_m *Repository) ThingAuthorize(ctx context.Context, conn channels.Connection) error {
+	ret := _m.Called(ctx, conn)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ThingAuthorize")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, channels.Connection) error); ok {
+		r0 = rf(ctx, conn)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UnsetParentGroupFromChannels provides a mock function with given fields: ctx, parentGroupID
 func (_m *Repository) UnsetParentGroupFromChannels(ctx context.Context, parentGroupID string) error {
 	ret := _m.Called(ctx, parentGroupID)

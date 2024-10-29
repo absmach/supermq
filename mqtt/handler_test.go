@@ -10,8 +10,7 @@ import (
 	"log"
 	"testing"
 
-	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
-	"github.com/absmach/magistrala/internal/testsutil"
+	chmocks "github.com/absmach/magistrala/channels/mocks"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/mqtt"
 	"github.com/absmach/magistrala/mqtt/mocks"
@@ -65,7 +64,7 @@ var (
 )
 
 func TestAuthConnect(t *testing.T) {
-	handler, _, eventStore := newHandler()
+	handler, _, _, eventStore := newHandler()
 
 	cases := []struct {
 		desc    string
@@ -121,7 +120,7 @@ func TestAuthConnect(t *testing.T) {
 }
 
 func TestAuthPublish(t *testing.T) {
-	handler, things, _ := newHandler()
+	handler, _, _, _ := newHandler()
 
 	cases := []struct {
 		desc    string
@@ -161,19 +160,17 @@ func TestAuthPublish(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repocall := things.On("Authorize", mock.Anything, mock.Anything).Return(&grpcThingsV1.AuthzRes{Authorized: true, Id: testsutil.GenerateUUID(t)}, tc.err)
 		ctx := context.TODO()
 		if tc.session != nil {
 			ctx = session.NewContext(ctx, tc.session)
 		}
 		err := handler.AuthPublish(ctx, tc.topic, &tc.payload)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		repocall.Unset()
 	}
 }
 
 func TestAuthSubscribe(t *testing.T) {
-	handler, things, _ := newHandler()
+	handler, _, _, _ := newHandler()
 
 	cases := []struct {
 		desc    string
@@ -214,19 +211,17 @@ func TestAuthSubscribe(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repocall := things.On("Authorize", mock.Anything, mock.Anything).Return(&grpcThingsV1.AuthzRes{Authorized: true, Id: testsutil.GenerateUUID(t)}, tc.err)
 		ctx := context.TODO()
 		if tc.session != nil {
 			ctx = session.NewContext(ctx, tc.session)
 		}
 		err := handler.AuthSubscribe(ctx, tc.topic)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		repocall.Unset()
 	}
 }
 
 func TestConnect(t *testing.T) {
-	handler, _, _ := newHandler()
+	handler, _, _, _ := newHandler()
 	logBuffer.Reset()
 
 	cases := []struct {
@@ -260,7 +255,7 @@ func TestConnect(t *testing.T) {
 }
 
 func TestPublish(t *testing.T) {
-	handler, _, _ := newHandler()
+	handler, _, _, _ := newHandler()
 	logBuffer.Reset()
 
 	malformedSubtopics := topic + "/" + subtopic + "%"
@@ -339,7 +334,7 @@ func TestPublish(t *testing.T) {
 }
 
 func TestSubscribe(t *testing.T) {
-	handler, _, _ := newHandler()
+	handler, _, _, _ := newHandler()
 	logBuffer.Reset()
 
 	cases := []struct {
@@ -375,7 +370,7 @@ func TestSubscribe(t *testing.T) {
 }
 
 func TestUnsubscribe(t *testing.T) {
-	handler, _, _ := newHandler()
+	handler, _, _, _ := newHandler()
 	logBuffer.Reset()
 
 	cases := []struct {
@@ -411,7 +406,7 @@ func TestUnsubscribe(t *testing.T) {
 }
 
 func TestDisconnect(t *testing.T) {
-	handler, _, eventStore := newHandler()
+	handler, _, _, eventStore := newHandler()
 	logBuffer.Reset()
 
 	cases := []struct {
@@ -450,12 +445,13 @@ func TestDisconnect(t *testing.T) {
 	}
 }
 
-func newHandler() (session.Handler, *thmocks.ThingsServiceClient, *mocks.EventStore) {
+func newHandler() (session.Handler, *thmocks.ThingsServiceClient, *chmocks.ChannelsServiceClient, *mocks.EventStore) {
 	logger, err := mglog.New(&logBuffer, "debug")
 	if err != nil {
 		log.Fatalf("failed to create logger: %s", err)
 	}
 	things := new(thmocks.ThingsServiceClient)
+	channels := new(chmocks.ChannelsServiceClient)
 	eventStore := new(mocks.EventStore)
-	return mqtt.NewHandler(mocks.NewPublisher(), eventStore, logger, things), things, eventStore
+	return mqtt.NewHandler(mocks.NewPublisher(), eventStore, logger, things, channels), things, channels, eventStore
 }

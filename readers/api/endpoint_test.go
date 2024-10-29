@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	chmocks "github.com/absmach/magistrala/channels/mocks"
 	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/pkg/apiutil"
-	authzmocks "github.com/absmach/magistrala/pkg/authz/mocks"
+	authnmocks "github.com/absmach/magistrala/pkg/authn/mocks"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/transformers/senml"
 	"github.com/absmach/magistrala/readers"
@@ -22,7 +22,6 @@ import (
 	"github.com/absmach/magistrala/readers/mocks"
 	thmocks "github.com/absmach/magistrala/things/mocks"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 const (
@@ -49,8 +48,8 @@ var (
 	sum float64 = 42
 )
 
-func newServer(repo *mocks.MessageRepository, authz *authzmocks.Authorization, thingsAuthzClient *thmocks.ThingsServiceClient) *httptest.Server {
-	mux := api.MakeHandler(repo, authz, thingsAuthzClient, svcName, instanceID)
+func newServer(repo *mocks.MessageRepository, authn *authnmocks.Authentication, things *thmocks.ThingsServiceClient, channels *chmocks.ChannelsServiceClient) *httptest.Server {
+	mux := api.MakeHandler(repo, authn, things, channels, svcName, instanceID)
 	return httptest.NewServer(mux)
 }
 
@@ -128,9 +127,10 @@ func TestReadAll(t *testing.T) {
 	}
 
 	repo := new(mocks.MessageRepository)
-	authz := new(authzmocks.Authorization)
+	authn := new(authnmocks.Authentication)
 	things := new(thmocks.ThingsServiceClient)
-	ts := newServer(repo, authz, things)
+	channels := new(chmocks.ChannelsServiceClient)
+	ts := newServer(repo, authn, things, channels)
 	defer ts.Close()
 
 	cases := []struct {
@@ -968,11 +968,7 @@ func TestReadAll(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		authCall := authz.On("Authorize", mock.Anything, mock.Anything).Return(tc.err)
 		repo.On("ReadAll", chanID, tc.res.PageMetadata).Return(readers.MessagesPage{Total: tc.res.Total, Messages: fromSenml(tc.res.Messages)}, nil)
-		if tc.key != "" {
-			authCall = things.On("Authorize", mock.Anything, mock.Anything).Return(&grpcThingsV1.AuthzRes{Authorized: tc.authResponse}, tc.err)
-		}
 		req := testRequest{
 			client: ts.Client(),
 			method: http.MethodGet,
@@ -991,7 +987,6 @@ func TestReadAll(t *testing.T) {
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected %d got %d", tc.desc, tc.status, res.StatusCode))
 		assert.Equal(t, tc.res.Total, page.Total, fmt.Sprintf("%s: expected %d got %d", tc.desc, tc.res.Total, page.Total))
 		assert.ElementsMatch(t, tc.res.Messages, page.Messages, fmt.Sprintf("%s: got incorrect body from response", tc.desc))
-		authCall.Unset()
 	}
 }
 

@@ -12,8 +12,11 @@ import (
 	"strings"
 	"testing"
 
+	chmocks "github.com/absmach/magistrala/channels/mocks"
+	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
+	authnMocks "github.com/absmach/magistrala/pkg/authn/mocks"
 	"github.com/absmach/magistrala/pkg/messaging/mocks"
 	thmocks "github.com/absmach/magistrala/things/mocks"
 	"github.com/absmach/magistrala/ws"
@@ -36,9 +39,9 @@ const (
 
 var msg = []byte(`[{"n":"current","t":-1,"v":1.6}]`)
 
-func newService(things grpcThingsV1.ThingsServiceClient) (ws.Service, *mocks.PubSub) {
+func newService(things grpcThingsV1.ThingsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) (ws.Service, *mocks.PubSub) {
 	pubsub := new(mocks.PubSub)
-	return ws.New(things, pubsub), pubsub
+	return ws.New(things, channels, pubsub), pubsub
 }
 
 func newHTTPServer(svc ws.Service) *httptest.Server {
@@ -91,16 +94,15 @@ func handshake(tsURL, chanID, subtopic, thingKey string, addHeader bool) (*webso
 
 func TestHandshake(t *testing.T) {
 	things := new(thmocks.ThingsServiceClient)
-	svc, pubsub := newService(things)
+	channels := new(chmocks.ChannelsServiceClient)
+	authn := new(authnMocks.Authentication)
+	svc, pubsub := newService(things, channels)
 	target := newHTTPServer(svc)
 	defer target.Close()
-	handler := ws.NewHandler(pubsub, mglog.NewMock(), things)
+	handler := ws.NewHandler(pubsub, mglog.NewMock(), authn, things, channels)
 	ts, err := newProxyHTPPServer(handler, target)
 	require.Nil(t, err)
 	defer ts.Close()
-	things.On("Authorize", mock.Anything, &grpcThingsV1.AuthzReq{ThingKey: thingKey, ChannelId: id, Permission: "publish"}).Return(&grpcThingsV1.AuthzRes{Authorized: true, Id: "1"}, nil)
-	things.On("Authorize", mock.Anything, &grpcThingsV1.AuthzReq{ThingKey: thingKey, ChannelId: id, Permission: "subscribe"}).Return(&grpcThingsV1.AuthzRes{Authorized: true, Id: "2"}, nil)
-	things.On("Authorize", mock.Anything, mock.Anything).Return(&grpcThingsV1.AuthzRes{Authorized: false, Id: "3"}, nil)
 	pubsub.On("Subscribe", mock.Anything, mock.Anything).Return(nil)
 	pubsub.On("Publish", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 

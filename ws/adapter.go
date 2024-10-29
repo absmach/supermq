@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
@@ -41,15 +42,17 @@ type Service interface {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	things grpcThingsV1.ThingsServiceClient
-	pubsub messaging.PubSub
+	things   grpcThingsV1.ThingsServiceClient
+	channels grpcChannelsV1.ChannelsServiceClient
+	pubsub   messaging.PubSub
 }
 
 // New instantiates the WS adapter implementation.
-func New(thingsClient grpcThingsV1.ThingsServiceClient, pubsub messaging.PubSub) Service {
+func New(things grpcThingsV1.ThingsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, pubsub messaging.PubSub) Service {
 	return &adapterService{
-		things: thingsClient,
-		pubsub: pubsub,
+		things:   things,
+		channels: channels,
+		pubsub:   pubsub,
 	}
 }
 
@@ -85,18 +88,30 @@ func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subt
 // authorize checks if the thingKey is authorized to access the channel
 // and returns the thingID if it is.
 func (svc *adapterService) authorize(ctx context.Context, thingKey, chanID, action string) (string, error) {
-	ar := &grpcThingsV1.AuthzReq{
+	authnReq := &grpcThingsV1.AuthnReq{
+		ThingKey: thingKey,
+	}
+	authnRes, err := svc.things.Authenticate(ctx, authnReq)
+	if err != nil {
+		return "", errors.Wrap(svcerr.ErrAuthentication, err)
+	}
+	if !authnRes.GetAuthenticated() {
+		return "", errors.Wrap(svcerr.ErrAuthentication, err)
+	}
+
+	authzReq := &grpcChannelsV1.AuthzReq{
+		ClientType: policies.ThingType,
+		ClientId:   authnRes.GetId(),
 		Permission: action,
-		ThingKey:   thingKey,
 		ChannelId:  chanID,
 	}
-	res, err := svc.things.Authorize(ctx, ar)
+	authzRes, err := svc.channels.Authorize(ctx, authzReq)
 	if err != nil {
 		return "", errors.Wrap(svcerr.ErrAuthorization, err)
 	}
-	if !res.GetAuthorized() {
+	if !authzRes.GetAuthorized() {
 		return "", errors.Wrap(svcerr.ErrAuthorization, err)
 	}
 
-	return res.GetId(), nil
+	return authnRes.GetId(), nil
 }

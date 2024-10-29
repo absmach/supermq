@@ -9,17 +9,17 @@ import (
 	"net/http"
 
 	"github.com/absmach/magistrala"
+	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
-	mgauthz "github.com/absmach/magistrala/pkg/authz"
+	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	"github.com/absmach/magistrala/pkg/policies"
 	"github.com/absmach/magistrala/readers"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -56,14 +56,14 @@ const (
 var errUserAccess = errors.New("user has no permission")
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc readers.MessageRepository, authz mgauthz.Authorization, things grpcThingsV1.ThingsServiceClient, svcName, instanceID string) http.Handler {
+func MakeHandler(svc readers.MessageRepository, authn mgauthn.Authentication, things grpcThingsV1.ThingsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, svcName, instanceID string) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}
 
 	mux := chi.NewRouter()
 	mux.Get("/channels/{chanID}/messages", kithttp.NewServer(
-		listMessagesEndpoint(svc, authz, things),
+		listMessagesEndpoint(svc, authn, things, channels),
 		decodeList,
 		encodeResponse,
 		opts...,
@@ -243,38 +243,55 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	}
 }
 
-func authorize(ctx context.Context, req listMessagesReq, authz mgauthz.Authorization, things grpcThingsV1.ThingsServiceClient) (err error) {
+func authnAuthz(ctx context.Context, req listMessagesReq, authn mgauthn.Authentication, things grpcThingsV1.ThingsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) error {
+	clientID, clientType, err := authenticate(ctx, req, authn, things)
+	if err != nil {
+		return nil
+	}
+	if err := authorize(ctx, clientID, clientType, req.chanID, channels); err != nil {
+		return err
+	}
+	return nil
+}
+
+func authenticate(ctx context.Context, req listMessagesReq, authn mgauthn.Authentication, things grpcThingsV1.ThingsServiceClient) (clientID string, clientType string, err error) {
 	switch {
 	case req.token != "":
-		if err = authz.Authorize(ctx, mgauthz.PolicyReq{
-			SubjectType: userType,
-			SubjectKind: tokenKind,
-			Subject:     req.token,
-			Permission:  viewPermission,
-			ObjectType:  groupType,
-			Object:      req.chanID,
-		}); err != nil {
-			e, ok := status.FromError(err)
-			if ok && e.Code() == codes.PermissionDenied {
-				return errors.Wrap(errUserAccess, err)
-			}
-			return err
+		session, err := authn.Authenticate(ctx, req.token)
+		if err != nil {
+			return "", "", err
 		}
-		return nil
+
+		return session.DomainUserID, policies.UserType, nil
 	case req.key != "":
-		if _, err = things.Authorize(ctx, &grpcThingsV1.AuthzReq{
-			ThingKey:   req.key,
-			ChannelId:  req.chanID,
-			Permission: subscribePermission,
-		}); err != nil {
-			e, ok := status.FromError(err)
-			if ok && e.Code() == codes.PermissionDenied {
-				return errors.Wrap(errUserAccess, err)
-			}
-			return err
+		res, err := things.Authenticate(ctx, &grpcThingsV1.AuthnReq{
+			ThingKey: req.key,
+		})
+		if err != nil {
+			return "", "", err
 		}
-		return nil
+		if !res.GetAuthenticated() {
+			return "", "", svcerr.ErrAuthentication
+		}
+		return res.GetId(), policies.ThingType, nil
 	default:
+		return "", "", svcerr.ErrAuthentication
+	}
+}
+
+func authorize(ctx context.Context, clientID, clientType, chanID string, channels grpcChannelsV1.ChannelsServiceClient) (err error) {
+	res, err := channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
+		ClientId:   clientID,
+		ClientType: clientType,
+		Permission: viewPermission,
+		ChannelId:  chanID,
+	})
+
+	if err != nil {
+		return errors.Wrap(svcerr.ErrAuthorization, err)
+	}
+	if !res.GetAuthorized() {
 		return svcerr.ErrAuthorization
 	}
+	return nil
 }

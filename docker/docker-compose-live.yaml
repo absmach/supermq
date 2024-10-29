@@ -94,3 +94,21 @@ services:
                   "--build.exclude_dir", ".vscode,.git,.docker,.github,api,build,tools,scripts",
                   "--build.exclude_regex", "[\"_test\\.go\"" ,
                   "-tmp_dir", "/tmp",]
+
+  http-adapter:
+    image: magistrala/http-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.livereload
+    volumes:
+      - ../:/go/src/github.com/absmach/magistrala
+      - $GOPATH/pkg/mod/cache:/go/pkg/mod/cache
+    working_dir: /go/src/github.com/absmach/magistrala
+    entrypoint: [ "air",
+                  "--build.cmd", "BUILD_DIR=/tmp make http",
+                  "--build.bin", "/tmp/http",
+                  "--build.stop_on_error", "true",
+                  "--build.send_interrupt", "true",
+                  "--build.exclude_dir", ".vscode,.git,.docker,.github,api,build,tools,scripts",
+                  "--build.exclude_regex", "[\"_test\\.go\"" ,
+                  "-tmp_dir", "/tmp",]

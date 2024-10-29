@@ -64,7 +64,7 @@ func (client grpcClient) Authorize(ctx context.Context, req *grpcChannelsV1.Auth
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
-	res, err := client.removeThingConnections(ctx, authorizeReq{
+	res, err := client.authorize(ctx, authorizeReq{
 		domainID:   req.GetDomainId(),
 		clientID:   req.GetClientId(),
 		clientType: req.GetClientType(),

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/mqtt/events"
 	"github.com/absmach/magistrala/pkg/errors"
@@ -53,23 +54,26 @@ var (
 	ErrFailedPublishToMsgBroker     = errors.New("failed to publish to magistrala message broker")
 )
 
+var errInvalidUserId = errors.New("invalid user id")
 var channelRegExp = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]*)?(\?.*)?$`)
 
 // Event implements events.Event interface.
 type handler struct {
 	publisher messaging.Publisher
 	things    grpcThingsV1.ThingsServiceClient
+	channels  grpcChannelsV1.ChannelsServiceClient
 	logger    *slog.Logger
 	es        events.EventStore
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(publisher messaging.Publisher, es events.EventStore, logger *slog.Logger, thingsClient grpcThingsV1.ThingsServiceClient) session.Handler {
+func NewHandler(publisher messaging.Publisher, es events.EventStore, logger *slog.Logger, thingsClient grpcThingsV1.ThingsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) session.Handler {
 	return &handler{
 		es:        es,
 		logger:    logger,
 		publisher: publisher,
 		things:    thingsClient,
+		channels:  channels,
 	}
 }
 
@@ -86,6 +90,18 @@ func (h *handler) AuthConnect(ctx context.Context) error {
 	}
 
 	pwd := string(s.Password)
+
+	res, err := h.things.Authenticate(ctx, &grpcThingsV1.AuthnReq{ThingKey: pwd})
+	if err != nil {
+		return errors.Wrap(svcerr.ErrAuthentication, err)
+	}
+	if !res.GetAuthenticated() {
+		return svcerr.ErrAuthentication
+	}
+
+	if s.Username != "" && res.GetId() != s.Username {
+		return errInvalidUserId
+	}
 
 	if err := h.es.Connect(ctx, pwd); err != nil {
 		h.logger.Error(errors.Wrap(ErrFailedPublishConnectEvent, err).Error())
@@ -105,7 +121,7 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 		return ErrClientNotInitialized
 	}
 
-	return h.authAccess(ctx, string(s.Password), *topic, policies.PublishPermission)
+	return h.authAccess(ctx, string(s.Username), *topic, policies.PublishPermission)
 }
 
 // AuthSubscribe is called on device subscribe,
@@ -119,8 +135,8 @@ func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
 		return ErrMissingTopicSub
 	}
 
-	for _, v := range *topics {
-		if err := h.authAccess(ctx, string(s.Password), v, policies.SubscribePermission); err != nil {
+	for _, topic := range *topics {
+		if err := h.authAccess(ctx, string(s.Username), topic, policies.SubscribePermission); err != nil {
 			return err
 		}
 	}
@@ -210,7 +226,7 @@ func (h *handler) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func (h *handler) authAccess(ctx context.Context, password, topic, action string) error {
+func (h *handler) authAccess(ctx context.Context, thingID, topic, action string) error {
 	// Topics are in the format:
 	// channels/<channel_id>/messages/<subtopic>/.../ct/<content_type>
 	if !channelRegExp.MatchString(topic) {
@@ -224,12 +240,13 @@ func (h *handler) authAccess(ctx context.Context, password, topic, action string
 
 	chanID := channelParts[1]
 
-	ar := &grpcThingsV1.AuthzReq{
+	ar := &grpcChannelsV1.AuthzReq{
 		Permission: action,
-		ThingKey:   password,
+		ClientId:   thingID,
+		ClientType: policies.ThingType,
 		ChannelId:  chanID,
 	}
-	res, err := h.things.Authorize(ctx, ar)
+	res, err := h.channels.Authorize(ctx, ar)
 	if err != nil {
 		return err
 	}

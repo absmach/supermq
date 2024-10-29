@@ -23,7 +23,7 @@ func MakeHandler(svc channels.Service, authn mgauthn.Authentication, mux *chi.Mu
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
-	mux.Route("/channels", func(r chi.Router) {
+	mux.Route("/{domainID}/channels", func(r chi.Router) {
 		r.Use(api.AuthenticateMiddleware(authn, true))
 
 		r.Post("/", otelhttp.NewHandler(kithttp.NewServer(

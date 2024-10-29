@@ -42,9 +42,10 @@ import (
 )
 
 const (
-	svcName         = "mqtt"
-	envPrefixThings = "MG_THINGS_AUTH_GRPC_"
-	wsPathPrefix    = "/mqtt"
+	svcName           = "mqtt"
+	envPrefixThings   = "MG_THINGS_AUTH_GRPC_"
+	envPrefixChannels = "MG_CHANNELS_GRPC"
+	wsPathPrefix      = "/mqtt"
 )
 
 type config struct {
@@ -179,10 +180,25 @@ func main() {
 		return
 	}
 	defer thingsHandler.Close()
-
 	logger.Info("Things service gRPC client successfully connected to things gRPC server " + thingsHandler.Secure())
 
-	h := mqtt.NewHandler(np, es, logger, thingsClient)
+	channelsClientCfg := grpcclient.Config{}
+	if err := env.ParseWithOptions(&channelsClientCfg, env.Options{Prefix: envPrefixChannels}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load channels gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+
+	channelsClient, channelsHandler, err := grpcclient.SetupChannelsClient(ctx, channelsClientCfg)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer channelsHandler.Close()
+	logger.Info("Channels service gRPC client successfully connected to channels gRPC server " + channelsHandler.Secure())
+
+	h := mqtt.NewHandler(np, es, logger, thingsClient, channelsClient)
 	h = handler.NewTracing(tracer, h)
 
 	if cfg.SendTelemetry {

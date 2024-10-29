@@ -49,7 +49,7 @@ func NewServer(svc channels.Service) grpcChannelsV1.ChannelsServiceServer {
 }
 
 func (s *grpcServer) Authorize(ctx context.Context, req *grpcChannelsV1.AuthzReq) (*grpcChannelsV1.AuthzRes, error) {
-	_, res, err := s.removeThingConnections.ServeGRPC(ctx, req)
+	_, res, err := s.authorize.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, encodeError(err)
 	}

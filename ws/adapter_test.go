@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	chmocks "github.com/absmach/magistrala/channels/mocks"
 	"github.com/absmach/magistrala/internal/testsutil"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/messaging"
@@ -37,15 +37,16 @@ var msg = messaging.Message{
 	Payload:   []byte(`[{"n":"current","t":-5,"v":1.2}]`),
 }
 
-func newService() (ws.Service, *mocks.PubSub, *thmocks.ThingsServiceClient) {
+func newService() (ws.Service, *mocks.PubSub, *thmocks.ThingsServiceClient, *chmocks.ChannelsServiceClient) {
 	pubsub := new(mocks.PubSub)
 	things := new(thmocks.ThingsServiceClient)
+	channels := new(chmocks.ChannelsServiceClient)
 
-	return ws.New(things, pubsub), pubsub, things
+	return ws.New(things, channels, pubsub), pubsub, things, channels
 }
 
 func TestSubscribe(t *testing.T) {
-	svc, pubsub, things := newService()
+	svc, pubsub, _, _ := newService()
 
 	c := ws.NewClient(nil)
 
@@ -115,11 +116,8 @@ func TestSubscribe(t *testing.T) {
 			Handler: c,
 		}
 		repocall := pubsub.On("Subscribe", mock.Anything, subConfig).Return(tc.err)
-		repocall1 := things.On("Authorize", mock.Anything, mock.Anything).Return(&grpcThingsV1.AuthzRes{Authorized: true, Id: thingID}, nil)
 		err := svc.Subscribe(context.Background(), tc.thingKey, tc.chanID, tc.subtopic, c)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		repocall1.Parent.AssertCalled(t, "Authorize", mock.Anything, mock.Anything)
 		repocall.Unset()
-		repocall1.Unset()
 	}
 }

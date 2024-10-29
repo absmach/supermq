@@ -11,7 +11,7 @@ import (
 
 type Service interface {
 	Authorize(ctx context.Context, req channels.AuthzReq) error
-	UnsetParentGroupFormChannels(ctx context.Context, parentGroupID string) error
+	UnsetParentGroupFromChannels(ctx context.Context, parentGroupID string) error
 	RemoveThingConnections(ctx context.Context, thingID string) error
 }
 
@@ -31,7 +31,6 @@ func (svc service) Authorize(ctx context.Context, req channels.AuthzReq) error {
 
 	switch req.ClientType {
 	case policies.UserType:
-		// Check spiceDB
 		pr := policies.Policy{
 			Subject:     req.ClientID,
 			SubjectType: policies.UserType,
