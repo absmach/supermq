@@ -355,7 +355,7 @@ func TestUpdateProfilePictureReqValidate(t *testing.T) {
 			desc: "valid request",
 			req: updateProfilePictureReq{
 				id:             validID,
-				ProfilePicture: *parsedURL,
+				ProfilePicture: parsedURL.String(),
 			},
 			err: nil,
 		},
@@ -363,7 +363,7 @@ func TestUpdateProfilePictureReqValidate(t *testing.T) {
 			desc: "empty ID",
 			req: updateProfilePictureReq{
 				id:             "",
-				ProfilePicture: *parsedURL,
+				ProfilePicture: parsedURL.String(),
 			},
 			err: apiutil.ErrMissingID,
 		},

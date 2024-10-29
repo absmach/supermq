@@ -574,7 +574,7 @@ func ToUser(dbu DBUser) (users.User, error) {
 		UpdatedBy:      updatedBy,
 		Status:         dbu.Status,
 		Tags:           tags,
-		ProfilePicture: *profilePicture,
+		ProfilePicture: profilePicture,
 	}
 	if dbu.Role != nil {
 		user.Role = *dbu.Role

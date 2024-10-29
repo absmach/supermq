@@ -26,7 +26,7 @@ type User struct {
 	UpdatedBy      string      `json:"updated_by,omitempty"`
 	Status         Status      `json:"status,omitempty"`          // 1 for enabled, 0 for disabled
 	Role           Role        `json:"role,omitempty"`            // 1 for admin, 0 for normal user
-	ProfilePicture url.URL     `json:"profile_picture,omitempty"` // profile picture URL
+	ProfilePicture *url.URL    `json:"profile_picture,omitempty"` // profile picture URL
 	Credentials    Credentials `json:"credentials,omitempty"`
 	Permissions    []string    `json:"permissions,omitempty"`
 	Email          string      `json:"email,omitempty"`

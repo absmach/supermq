@@ -7,7 +7,6 @@ import (
 	"context"
 	"log"
 	"net/mail"
-	"net/url"
 	"time"
 
 	"github.com/absmach/magistrala"
@@ -205,12 +204,6 @@ func (svc service) Update(ctx context.Context, session authn.Session, usr User) 
 	if session.UserID != usr.ID {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
 			return User{}, err
-		}
-	}
-
-	if usr.ProfilePicture.String() != "" {
-		usr.ProfilePicture = url.URL{
-			Path: usr.ProfilePicture.String(),
 		}
 	}
 

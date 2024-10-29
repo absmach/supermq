@@ -15,7 +15,8 @@ import (
 const maxLimitSize = 100
 
 type createUserReq struct {
-	user users.User
+	user           users.User
+	ProfilePicture string `json:"profile_picture,omitempty"` // profile picture URL
 }
 
 func (req createUserReq) validate() error {
@@ -215,7 +216,7 @@ func (req updateUsernameReq) validate() error {
 
 type updateProfilePictureReq struct {
 	id             string
-	ProfilePicture url.URL `json:"profile_picture,omitempty"`
+	ProfilePicture string `json:"profile_picture,omitempty"`
 }
 
 func (req updateProfilePictureReq) validate() error {
