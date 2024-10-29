@@ -44,7 +44,7 @@ import (
 const (
 	svcName           = "mqtt"
 	envPrefixThings   = "MG_THINGS_AUTH_GRPC_"
-	envPrefixChannels = "MG_CHANNELS_GRPC"
+	envPrefixChannels = "MG_CHANNELS_GRPC_"
 	wsPathPrefix      = "/mqtt"
 )
 

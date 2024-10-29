@@ -67,7 +67,6 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 	}
 
 	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
-		DomainId:   "",
 		ClientId:   authnRes.GetId(),
 		ClientType: policies.ThingType,
 		Permission: policies.PublishPermission,
