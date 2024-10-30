@@ -53,7 +53,7 @@ paths:
         "403":
           description: Failed to perform authorization over the entity.
         "409":
-          description: Failed due to using an existing username.
+          description: Failed due to using an existing identity.
         "415":
           description: Missing or invalid content type.
         "422":
@@ -172,7 +172,7 @@ paths:
         "401":
           description: Missing or invalid access token provided.
         "409":
-          description: Failed due to using an existing username.
+          description: Failed due to using an existing identity.
         "415":
           description: Missing or invalid content type.
         "422":
@@ -472,7 +472,7 @@ paths:
       operationId: searchUsers
       summary: Search users
       description: |
-        Search users by page metadata parameters such as username, FirstName, LastName and Email.
+        Search users by name and identity.
       tags:
         - Users
       parameters:
@@ -705,7 +705,7 @@ paths:
         "404":
           description: A non-existent entity request.
         "409":
-          description: Failed due to using an existing username.
+          description: Failed due to using an existing identity.
         "415":
           description: Missing or invalid content type.
         "422":
@@ -1376,7 +1376,7 @@ components:
         email:
           type: string
           example: user@magistrala.com
-          description: User's Email address.
+          description: User's email address.
         tags:
           type: array
           minItems: 0
@@ -1541,7 +1541,7 @@ components:
         email:
           type: string
           example: user@magistrala.com
-          description: User email for example email address.
+          description: User email address.
       required:
         - email
 
@@ -1655,21 +1655,17 @@ components:
     IssueToken:
       type: object
       properties:
-        email:
+        identity:
           type: string
           example: user@magistrala.com
-          description: User email address.
-        username:
-          type: string
-          example: "admin"
-          description: User's username for example 'admin' will be used as its unique identifier.
+          description: User identity - email address.
         secret:
           type: string
           example: password
           minimum: 8
           description: User secret password.
       required:
-        - username
+        - identity
         - secret
 
     Error:
@@ -1760,7 +1756,7 @@ components:
       in: query
       schema:
         type: string
-        pattern: "^[^\u0000-\u001F]*$"
+        format: email
       required: false
       example: "admin@example.com"
 
