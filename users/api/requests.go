@@ -4,10 +4,12 @@
 package api
 
 import (
+	"net/mail"
 	"net/url"
 
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/users"
 )
@@ -15,40 +17,47 @@ import (
 const maxLimitSize = 100
 
 type createUserReq struct {
-	user           users.User
-	ProfilePicture string `json:"profile_picture,omitempty"` // profile picture URL
+	users.User
 }
 
 func (req createUserReq) validate() error {
-	if len(req.user.FirstName) > api.MaxNameSize {
+	if len(req.User.FirstName) > api.MaxNameSize {
 		return apiutil.ErrNameSize
 	}
-	if len(req.user.LastName) > api.MaxNameSize {
+	if len(req.User.LastName) > api.MaxNameSize {
 		return apiutil.ErrNameSize
 	}
-	if req.user.FirstName == "" {
+	if req.User.FirstName == "" {
 		return apiutil.ErrMissingFirstName
 	}
-	if req.user.LastName == "" {
+	if req.User.LastName == "" {
 		return apiutil.ErrMissingLastName
 	}
-	if req.user.Credentials.Username == "" {
+	if req.User.Credentials.Username == "" {
 		return apiutil.ErrMissingUsername
 	}
-	if req.user.Email == "" {
+	// Usrename must not be a valid email format due to username/email login.
+	if _, err := mail.ParseAddress(req.User.Credentials.Username); err == nil {
+		return apiutil.ErrInvalidUsername
+	}
+	if req.User.Email == "" {
 		return apiutil.ErrMissingEmail
 	}
-	if req.user.Credentials.Secret == "" {
+	// Email must be in a valid format.
+	if _, err := mail.ParseAddress(req.User.Email); err != nil {
+		return apiutil.ErrInvalidEmail
+	}
+	if req.User.Credentials.Secret == "" {
 		return apiutil.ErrMissingPass
 	}
-	if !passRegex.MatchString(req.user.Credentials.Secret) {
+	if !passRegex.MatchString(req.User.Credentials.Secret) {
 		return apiutil.ErrPasswordFormat
 	}
-	if req.user.Status == users.AllStatus {
+	if req.User.Status == users.AllStatus {
 		return svcerr.ErrInvalidStatus
 	}
 
-	return req.user.Validate()
+	return req.User.Validate()
 }
 
 type viewUserReq struct {
@@ -223,7 +232,9 @@ func (req updateProfilePictureReq) validate() error {
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
-
+	if _, err := url.Parse(req.ProfilePicture); err != nil {
+		return errors.Wrap(apiutil.ErrValidation, err)
+	}
 	return nil
 }
 

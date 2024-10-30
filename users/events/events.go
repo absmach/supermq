@@ -176,8 +176,8 @@ func (uppe updateProfilePictureEvent) Encode() (map[string]interface{}, error) {
 	if uppe.ID != "" {
 		val["id"] = uppe.ID
 	}
-	if uppe.ProfilePicture.String() != "" {
-		val["profile_picture"] = uppe.ProfilePicture.String()
+	if uppe.ProfilePicture != "" {
+		val["profile_picture"] = uppe.ProfilePicture
 	}
 
 	return val, nil

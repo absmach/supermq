@@ -1839,13 +1839,11 @@ func TestOAuthCallback(t *testing.T) {
 		retrieveByEmailResponse users.User
 		retrieveByEmailErr      error
 		saveResponse            users.User
-		saveErr                 error
 		addPoliciesErr          error
-		deletePoliciesErr       error
 		err                     error
 	}{
 		{
-			desc: "oauth signin callback with successfully",
+			desc: "oauth signin callback with already existing user",
 			user: users.User{
 				Email: "test@example.com",
 			},
@@ -1856,7 +1854,7 @@ func TestOAuthCallback(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc: "oauth signup callback with successfully",
+			desc: "oauth signup callback with user not found",
 			user: users.User{
 				Email: "test@example.com",
 			},
@@ -1868,7 +1866,7 @@ func TestOAuthCallback(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc: "oauth signup callback with unknown error",
+			desc: "oauth signup callback with malformed entity",
 			user: users.User{
 				Email: "test@example.com",
 			},
@@ -1899,7 +1897,7 @@ func TestOAuthCallback(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := cRepo.On("RetrieveByEmail", context.Background(), tc.user.Email).Return(tc.retrieveByEmailResponse, tc.retrieveByEmailErr)
-			repoCall1 := cRepo.On("Save", context.Background(), mock.Anything).Return(tc.saveResponse, tc.saveErr)
+			repoCall1 := cRepo.On("Save", context.Background(), mock.Anything).Return(tc.saveResponse, nil)
 			policyCall := policies.On("AddPolicies", context.Background(), mock.Anything).Return(tc.addPoliciesErr)
 			_, err := svc.OAuthCallback(context.Background(), tc.user)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))

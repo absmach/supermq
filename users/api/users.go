@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"regexp"
 	"strings"
 
@@ -538,13 +537,6 @@ func decodeCreateUserReq(_ context.Context, r *http.Request) (interface{}, error
 	var req createUserReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
-	}
-	if req.ProfilePicture != "" {
-		pp, err := url.Parse(req.ProfilePicture)
-		if err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
-		}
-		req.user.ProfilePicture = pp
 	}
 
 	return req, nil

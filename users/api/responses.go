@@ -37,8 +37,8 @@ type pageRes struct {
 }
 
 type createUserRes struct {
-	users.User `json:",inline"`
-	created    bool
+	users.User
+	created bool
 }
 
 func (res createUserRes) Code() int {

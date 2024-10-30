@@ -130,6 +130,7 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, apiutil.ErrMissingName),
 		errors.Contains(err, apiutil.ErrMissingAlias),
 		errors.Contains(err, apiutil.ErrMissingEmail),
+		errors.Contains(err, apiutil.ErrInvalidEmail),
 		errors.Contains(err, apiutil.ErrMissingHost),
 		errors.Contains(err, apiutil.ErrInvalidResetPass),
 		errors.Contains(err, apiutil.ErrEmptyList),
@@ -170,7 +171,8 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, certs.ErrFailedReadFromPKI),
 		errors.Contains(err, apiutil.ErrMissingUsername),
 		errors.Contains(err, apiutil.ErrMissingFirstName),
-		errors.Contains(err, apiutil.ErrMissingLastName):
+		errors.Contains(err, apiutil.ErrMissingLastName),
+		errors.Contains(err, apiutil.ErrInvalidUsername):
 		err = unwrap(err)
 		w.WriteHeader(http.StatusBadRequest)
 

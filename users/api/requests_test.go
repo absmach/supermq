@@ -36,7 +36,7 @@ func TestCreateUserReqValidate(t *testing.T) {
 		{
 			desc: "valid request",
 			req: createUserReq{
-				user: users.User{
+				User: users.User{
 					ID:        validID,
 					FirstName: valid,
 					LastName:  valid,
@@ -52,7 +52,7 @@ func TestCreateUserReqValidate(t *testing.T) {
 		{
 			desc: "name too long",
 			req: createUserReq{
-				user: users.User{
+				User: users.User{
 					ID:        validID,
 					FirstName: strings.Repeat("a", api.MaxNameSize+1),
 					LastName:  valid,
@@ -63,7 +63,7 @@ func TestCreateUserReqValidate(t *testing.T) {
 		{
 			desc: "missing email in request",
 			req: createUserReq{
-				user: users.User{
+				User: users.User{
 					ID:        validID,
 					FirstName: valid,
 					LastName:  valid,
@@ -78,7 +78,7 @@ func TestCreateUserReqValidate(t *testing.T) {
 		{
 			desc: "missing secret in request",
 			req: createUserReq{
-				user: users.User{
+				User: users.User{
 					ID:        validID,
 					FirstName: valid,
 					LastName:  valid,
@@ -93,7 +93,7 @@ func TestCreateUserReqValidate(t *testing.T) {
 		{
 			desc: "invalid secret in request",
 			req: createUserReq{
-				user: users.User{
+				User: users.User{
 					ID:        validID,
 					FirstName: valid,
 					LastName:  valid,

@@ -6,7 +6,6 @@ package users
 import (
 	"context"
 	"net/mail"
-	"net/url"
 	"time"
 
 	"github.com/absmach/magistrala"
@@ -24,9 +23,9 @@ type User struct {
 	CreatedAt      time.Time   `json:"created_at,omitempty"`
 	UpdatedAt      time.Time   `json:"updated_at,omitempty"`
 	UpdatedBy      string      `json:"updated_by,omitempty"`
-	Status         Status      `json:"status,omitempty"`          // 1 for enabled, 0 for disabled
-	Role           Role        `json:"role,omitempty"`            // 1 for admin, 0 for normal user
-	ProfilePicture *url.URL    `json:"profile_picture,omitempty"` // profile picture URL
+	Status         Status      `json:"status"`                    // 0 for enabled, 1 for disabled
+	Role           Role        `json:"role"`                      // 0 for normal user, 1 for admin
+	ProfilePicture string      `json:"profile_picture,omitempty"` // profile picture URL
 	Credentials    Credentials `json:"credentials,omitempty"`
 	Permissions    []string    `json:"permissions,omitempty"`
 	Email          string      `json:"email,omitempty"`

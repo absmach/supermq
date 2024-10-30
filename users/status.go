@@ -74,17 +74,6 @@ func (s Status) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.String())
 }
 
-func (u User) MarshalJSON() ([]byte, error) {
-	type Alias User
-	return json.Marshal(&struct {
-		Alias
-		Status string `json:"status,omitempty"`
-	}{
-		Alias:  (Alias)(u),
-		Status: u.Status.String(),
-	})
-}
-
 // Custom Unmarshaler for User/Groups.
 func (s *Status) UnmarshalJSON(data []byte) error {
 	str := strings.Trim(string(data), "\"")

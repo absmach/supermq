@@ -8,7 +8,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
@@ -37,12 +36,12 @@ func (repo *userRepo) Save(ctx context.Context, c users.User) (users.User, error
         VALUES (:id, :tags, :email, :secret, :metadata, :created_at, :status, :role, :first_name, :last_name, :username, :profile_picture)
         RETURNING id, tags, email, metadata, created_at, status, first_name, last_name, username, profile_picture`
 
-	dbc, err := toDBUser(c)
+	dbu, err := toDBUser(c)
 	if err != nil {
 		return users.User{}, errors.Wrap(repoerr.ErrCreateEntity, err)
 	}
 
-	row, err := repo.Repository.DB.NamedQueryContext(ctx, q, dbc)
+	row, err := repo.Repository.DB.NamedQueryContext(ctx, q, dbu)
 	if err != nil {
 		return users.User{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
@@ -51,12 +50,12 @@ func (repo *userRepo) Save(ctx context.Context, c users.User) (users.User, error
 
 	row.Next()
 
-	dbc = DBUser{}
-	if err := row.StructScan(&dbc); err != nil {
+	dbu = DBUser{}
+	if err := row.StructScan(&dbu); err != nil {
 		return users.User{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
 	}
 
-	user, err := ToUser(dbc)
+	user, err := ToUser(dbu)
 	if err != nil {
 		return users.User{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
 	}
@@ -221,7 +220,7 @@ func (repo *userRepo) Update(ctx context.Context, user users.User) (users.User, 
 		query = append(query, "role = :role,")
 	}
 
-	if user.ProfilePicture.String() != "" {
+	if user.ProfilePicture != "" {
 		query = append(query, "profile_picture = :profile_picture,")
 	}
 
@@ -518,7 +517,7 @@ func toDBUser(u users.User) (DBUser, error) {
 		LastName:       stringToNullString(u.LastName),
 		FirstName:      stringToNullString(u.FirstName),
 		Username:       stringToNullString(u.Credentials.Username),
-		ProfilePicture: stringToNullString(u.ProfilePicture.String()),
+		ProfilePicture: stringToNullString(u.ProfilePicture),
 		Email:          u.Email,
 	}, nil
 }
@@ -543,11 +542,6 @@ func ToUser(dbu DBUser) (users.User, error) {
 		updatedAt = dbu.UpdatedAt.Time
 	}
 
-	profilePicture, err := url.Parse(nullStringString(dbu.ProfilePicture))
-	if err != nil {
-		return users.User{}, errors.Wrap(repoerr.ErrMalformedEntity, err)
-	}
-
 	user := users.User{
 		ID:        dbu.ID,
 		FirstName: nullStringString(dbu.FirstName),
@@ -563,7 +557,7 @@ func ToUser(dbu DBUser) (users.User, error) {
 		UpdatedBy:      updatedBy,
 		Status:         dbu.Status,
 		Tags:           tags,
-		ProfilePicture: profilePicture,
+		ProfilePicture: nullStringString(dbu.ProfilePicture),
 	}
 	if dbu.Role != nil {
 		user.Role = *dbu.Role

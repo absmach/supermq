@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/absmach/magistrala/pkg/apiutil"
@@ -40,7 +39,7 @@ type User struct {
 	UpdatedAt      time.Time   `json:"updated_at,omitempty"`
 	Status         string      `json:"status,omitempty"`
 	Role           string      `json:"role,omitempty"`
-	ProfilePicture *url.URL    `json:"profile_picture,omitempty"`
+	ProfilePicture string      `json:"profile_picture,omitempty"`
 }
 
 func (sdk mgSDK) CreateUser(user User, token string) (User, errors.SDKError) {

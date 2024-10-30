@@ -5,7 +5,6 @@ package api
 
 import (
 	"context"
-	"net/url"
 
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
@@ -32,7 +31,7 @@ func registrationEndpoint(svc users.Service, selfRegister bool) endpoint.Endpoin
 			}
 		}
 
-		user, err := svc.Register(ctx, session, req.user, selfRegister)
+		user, err := svc.Register(ctx, session, req.User, selfRegister)
 		if err != nil {
 			return nil, err
 		}
@@ -427,17 +426,9 @@ func updateProfilePictureEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		var ppURL *url.URL
-		if req.ProfilePicture != "" {
-			pp, err := url.Parse(req.ProfilePicture)
-			if err != nil {
-				return nil, errors.Wrap(apiutil.ErrValidation, err)
-			}
-			ppURL = pp
-		}
 		user := users.User{
 			ID:             req.id,
-			ProfilePicture: ppURL,
+			ProfilePicture: req.ProfilePicture,
 		}
 
 		session, ok := ctx.Value(api.SessionKey).(authn.Session)
