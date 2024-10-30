@@ -71,6 +71,7 @@ const (
 	// MaxNameSize limits name size to prevent making them too complex.
 	MaxLimitSize = 100
 	MaxNameSize  = 1024
+	MaxIDSize    = 36
 	NameOrder    = "name"
 	IDOrder      = "id"
 	AscDir       = "asc"

@@ -3,12 +3,14 @@
 
 package grpc
 
+import "github.com/absmach/magistrala/pkg/connections"
+
 type authorizeReq struct {
 	domainID   string
 	channelID  string
 	clientID   string
 	clientType string
-	permission string
+	connType   connections.ConnType
 }
 type removeThingConnectionsReq struct {
 	thingID string

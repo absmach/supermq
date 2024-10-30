@@ -8,6 +8,8 @@ import (
 	channels "github.com/absmach/magistrala/channels"
 	authn "github.com/absmach/magistrala/pkg/authn"
 
+	connections "github.com/absmach/magistrala/pkg/connections"
+
 	context "context"
 
 	mock "github.com/stretchr/testify/mock"
@@ -48,17 +50,17 @@ func (_m *Service) AddRole(ctx context.Context, session authn.Session, entityID 
 	return r0, r1
 }
 
-// Connect provides a mock function with given fields: ctx, session, chIDs, thIDs
-func (_m *Service) Connect(ctx context.Context, session authn.Session, chIDs []string, thIDs []string) error {
-	ret := _m.Called(ctx, session, chIDs, thIDs)
+// Connect provides a mock function with given fields: ctx, session, chIDs, thIDs, connType
+func (_m *Service) Connect(ctx context.Context, session authn.Session, chIDs []string, thIDs []string, connType []connections.ConnType) error {
+	ret := _m.Called(ctx, session, chIDs, thIDs, connType)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Connect")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, []string, []string) error); ok {
-		r0 = rf(ctx, session, chIDs, thIDs)
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, []string, []string, []connections.ConnType) error); ok {
+		r0 = rf(ctx, session, chIDs, thIDs, connType)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -131,17 +133,17 @@ func (_m *Service) DisableChannel(ctx context.Context, session authn.Session, id
 	return r0, r1
 }
 
-// Disconnect provides a mock function with given fields: ctx, session, chIDs, thIDs
-func (_m *Service) Disconnect(ctx context.Context, session authn.Session, chIDs []string, thIDs []string) error {
-	ret := _m.Called(ctx, session, chIDs, thIDs)
+// Disconnect provides a mock function with given fields: ctx, session, chIDs, thIDs, connType
+func (_m *Service) Disconnect(ctx context.Context, session authn.Session, chIDs []string, thIDs []string, connType []connections.ConnType) error {
+	ret := _m.Called(ctx, session, chIDs, thIDs, connType)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Disconnect")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, []string, []string) error); ok {
-		r0 = rf(ctx, session, chIDs, thIDs)
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, []string, []string, []connections.ConnType) error); ok {
+		r0 = rf(ctx, session, chIDs, thIDs, connType)
 	} else {
 		r0 = ret.Error(0)
 	}

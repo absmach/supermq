@@ -9,6 +9,7 @@ import (
 	"time"
 
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/go-kit/kit/endpoint"
@@ -69,7 +70,7 @@ func (client grpcClient) Authorize(ctx context.Context, req *grpcChannelsV1.Auth
 		clientID:   req.GetClientId(),
 		clientType: req.GetClientType(),
 		channelID:  req.GetChannelId(),
-		permission: req.GetPermission(),
+		connType:   connections.ConnType(req.GetType()),
 	})
 	if err != nil {
 		return &grpcChannelsV1.AuthzRes{}, decodeError(err)
@@ -88,7 +89,7 @@ func encodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}
 		ClientId:   req.clientID,
 		ClientType: req.clientType,
 		ChannelId:  req.channelID,
-		Permission: req.permission,
+		Type:       uint32(req.connType),
 	}, nil
 }
 

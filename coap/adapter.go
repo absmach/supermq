@@ -12,11 +12,14 @@ import (
 
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/messaging"
 	"github.com/absmach/magistrala/pkg/policies"
 )
+
+var errFailedToDisconnectClient = errors.New("failed to disconnect client")
 
 const chansPrefix = "channels"
 
@@ -32,6 +35,9 @@ type Service interface {
 
 	// Unsubscribe method is used to stop observing resource.
 	Unsubscribe(ctx context.Context, key, chanID, subptopic, token string) error
+
+	// DisconnectHandler method is used to disconnected the client
+	DisconnectHandler(ctx context.Context, chanID, subptopic, token string) error
 }
 
 var _ Service = (*adapterService)(nil)
@@ -69,7 +75,7 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
 		ClientId:   authnRes.GetId(),
 		ClientType: policies.ThingType,
-		Permission: policies.PublishPermission,
+		Type:       uint32(connections.Publish),
 		ChannelId:  msg.GetChannel(),
 	})
 
@@ -96,10 +102,11 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 		return svcerr.ErrAuthentication
 	}
 
+	thingID := authnRes.GetId()
 	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
-		ClientId:   authnRes.GetId(),
+		ClientId:   thingID,
 		ClientType: policies.ThingType,
-		Permission: policies.SubscribePermission,
+		Type:       uint32(connections.Subscribe),
 		ChannelId:  chanID,
 	})
 
@@ -114,10 +121,12 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
+
+	authzc := newAuthzClient(thingID, chanID, subtopic, svc.channels, c)
 	subCfg := messaging.SubscriberConfig{
 		ID:      c.Token(),
 		Topic:   subject,
-		Handler: c,
+		Handler: authzc,
 	}
 	return svc.pubsub.Subscribe(ctx, subCfg)
 }
@@ -137,7 +146,7 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopi
 		DomainId:   "",
 		ClientId:   authnRes.GetId(),
 		ClientType: policies.ThingType,
-		Permission: policies.SubscribePermission,
+		Type:       uint32(connections.Subscribe),
 		ChannelId:  chanID,
 	})
 
@@ -154,4 +163,54 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopi
 	}
 
 	return svc.pubsub.Unsubscribe(ctx, token, subject)
+}
+
+func (svc *adapterService) DisconnectHandler(ctx context.Context, chanID, subtopic, token string) error {
+	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
+	if subtopic != "" {
+		subject = fmt.Sprintf("%s.%s", subject, subtopic)
+	}
+
+	return svc.pubsub.Unsubscribe(ctx, token, subject)
+}
+
+type authzClient interface {
+	// Handle handles incoming messages.
+	Handle(m *messaging.Message) error
+
+	// Cancel cancels the client.
+	Cancel() error
+}
+
+type ac struct {
+	thingID   string
+	channelID string
+	subTopic  string
+	channels  grpcChannelsV1.ChannelsServiceClient
+	client    Client
+}
+
+func newAuthzClient(thingID, channelID, subTopic string, channels grpcChannelsV1.ChannelsServiceClient, client Client) authzClient {
+	return ac{thingID, channelID, subTopic, channels, client}
+}
+
+func (a ac) Handle(m *messaging.Message) error {
+	res, err := a.channels.Authorize(context.Background(), &grpcChannelsV1.AuthzReq{ClientId: a.thingID, ClientType: policies.ThingType, ChannelId: a.channelID, Type: uint32(connections.Subscribe)})
+	if err != nil {
+		if disErr := a.Cancel(); disErr != nil {
+			return errors.Wrap(err, errors.Wrap(errFailedToDisconnectClient, disErr))
+		}
+		return err
+	}
+	if !res.GetAuthorized() {
+		err := svcerr.ErrAuthorization
+		if disErr := a.Cancel(); disErr != nil {
+			return errors.Wrap(err, errors.Wrap(errFailedToDisconnectClient, disErr))
+		}
+		return err
+	}
+	return a.client.Handle(m)
+}
+func (a ac) Cancel() error {
+	return a.client.Cancel()
 }

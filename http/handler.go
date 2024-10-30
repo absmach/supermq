@@ -17,6 +17,7 @@ import (
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/messaging"
@@ -170,7 +171,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		ClientId:   clientID,
 		ClientType: clientType,
 		ChannelId:  msg.Channel,
-		Permission: policies.PublishPermission,
+		Type:       uint32(connections.Publish),
 	}
 	res, err := h.channels.Authorize(ctx, ar)
 	if err != nil {

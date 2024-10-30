@@ -280,7 +280,7 @@ func connectChannelThingsEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		if err := svc.Connect(ctx, session, []string{req.channelID}, req.ThingIds); err != nil {
+		if err := svc.Connect(ctx, session, []string{req.channelID}, req.ThingIds, req.Types); err != nil {
 			return nil, err
 		}
 
@@ -300,7 +300,7 @@ func disconnectChannelThingsEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		if err := svc.Disconnect(ctx, session, []string{req.channelID}, req.ThingIds); err != nil {
+		if err := svc.Disconnect(ctx, session, []string{req.channelID}, req.ThingIds, req.Types); err != nil {
 			return nil, err
 		}
 
@@ -320,7 +320,7 @@ func connectEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		if err := svc.Connect(ctx, session, req.ChannelIds, req.ThingIds); err != nil {
+		if err := svc.Connect(ctx, session, req.ChannelIds, req.ThingIds, req.Types); err != nil {
 			return nil, err
 		}
 
@@ -340,7 +340,7 @@ func disconnectEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		if err := svc.Disconnect(ctx, session, req.ChannelIds, req.ThingIds); err != nil {
+		if err := svc.Disconnect(ctx, session, req.ChannelIds, req.ThingIds, req.Types); err != nil {
 			return nil, err
 		}
 

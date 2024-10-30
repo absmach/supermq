@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/postgres"
 	"github.com/absmach/magistrala/pkg/roles"
 )
@@ -16,6 +17,7 @@ type Connection struct {
 	ThingID   string
 	ChannelID string
 	DomainID  string
+	Type      connections.ConnType
 }
 
 type ClientRepository struct {

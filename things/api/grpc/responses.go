@@ -3,6 +3,8 @@
 
 package grpc
 
+import "github.com/absmach/magistrala/pkg/connections"
+
 type thingBasic struct {
 	id     string
 	domain string
@@ -31,6 +33,7 @@ type connection struct {
 	thingID   string
 	channelID string
 	domainID  string
+	connType  connections.ConnType
 }
 type connectionsRes struct {
 	ok bool

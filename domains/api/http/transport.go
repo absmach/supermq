@@ -25,25 +25,27 @@ func MakeHandler(svc domains.Service, authn authn.Authentication, mux *chi.Mux, 
 
 	d := roleManagerHttp.NewDecoder("domainID")
 	mux.Route("/domains", func(r chi.Router) {
-		r.Use(api.AuthenticateMiddleware(authn, false))
+		r.Group(func(r chi.Router) {
+			r.Use(api.AuthenticateMiddleware(authn, false))
+			r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
+				createDomainEndpoint(svc),
+				decodeCreateDomainRequest,
+				api.EncodeResponse,
+				opts...,
+			), "create_domain").ServeHTTP)
 
-		r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
-			createDomainEndpoint(svc),
-			decodeCreateDomainRequest,
-			api.EncodeResponse,
-			opts...,
-		), "create_domain").ServeHTTP)
+			r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
+				listDomainsEndpoint(svc),
+				decodeListDomainRequest,
+				api.EncodeResponse,
+				opts...,
+			), "list_domains").ServeHTTP)
 
-		r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
-			listDomainsEndpoint(svc),
-			decodeListDomainRequest,
-			api.EncodeResponse,
-			opts...,
-		), "list_domains").ServeHTTP)
-
-		r = roleManagerHttp.EntityAvailableActionsRouter(svc, d, r, opts)
+			roleManagerHttp.EntityAvailableActionsRouter(svc, d, r, opts)
+		})
 
 		r.Route("/{domainID}", func(r chi.Router) {
+			r.Use(api.AuthenticateMiddleware(authn, true))
 			r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
 				retrieveDomainEndpoint(svc),
 				decodeRetrieveDomainRequest,

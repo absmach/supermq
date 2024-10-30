@@ -75,6 +75,7 @@ func addConnectionsEndpoint(svc pThings.Service) endpoint.Endpoint {
 				ThingID:   c.thingID,
 				ChannelID: c.channelID,
 				DomainID:  c.domainID,
+				Type:      c.connType,
 			})
 		}
 		if err := svc.AddConnections(ctx, conns); err != nil {
@@ -98,6 +99,7 @@ func removeConnectionsEndpoint(svc pThings.Service) endpoint.Endpoint {
 				ThingID:   c.thingID,
 				ChannelID: c.channelID,
 				DomainID:  c.domainID,
+				Type:      c.connType,
 			})
 		}
 		if err := svc.RemoveConnections(ctx, conns); err != nil {

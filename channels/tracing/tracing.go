@@ -8,6 +8,7 @@ import (
 
 	"github.com/absmach/magistrala/channels"
 	"github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/magistrala/pkg/connections"
 	rmTrace "github.com/absmach/magistrala/pkg/roles/rolemanager/tracing"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -96,22 +97,22 @@ func (tm *tracingMiddleware) RemoveChannel(ctx context.Context, session authn.Se
 	return tm.svc.RemoveChannel(ctx, session, id)
 }
 
-func (tm *tracingMiddleware) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string) error {
+func (tm *tracingMiddleware) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) error {
 	ctx, span := tm.tracer.Start(ctx, "connect", trace.WithAttributes(
 		attribute.StringSlice("channel_ids", chIDs),
 		attribute.StringSlice("thing_ids", thIDs),
 	))
 	defer span.End()
-	return tm.svc.Connect(ctx, session, chIDs, thIDs)
+	return tm.svc.Connect(ctx, session, chIDs, thIDs, connTypes)
 }
 
-func (tm *tracingMiddleware) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string) error {
+func (tm *tracingMiddleware) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) error {
 	ctx, span := tm.tracer.Start(ctx, "disconnect", trace.WithAttributes(
 		attribute.StringSlice("channel_ids", chIDs),
 		attribute.StringSlice("thing_ids", thIDs),
 	))
 	defer span.End()
-	return tm.svc.Disconnect(ctx, session, chIDs, thIDs)
+	return tm.svc.Disconnect(ctx, session, chIDs, thIDs, connTypes)
 }
 
 func (tm *tracingMiddleware) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error {

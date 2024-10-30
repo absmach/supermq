@@ -10,6 +10,7 @@ import (
 	channels "github.com/absmach/magistrala/channels/private"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
@@ -59,12 +60,16 @@ func (s *grpcServer) Authorize(ctx context.Context, req *grpcChannelsV1.AuthzReq
 func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*grpcChannelsV1.AuthzReq)
 
+	connType := connections.ConnType(req.GetType())
+	if err := connections.CheckConnType(connType); err != nil {
+		return nil, err
+	}
 	return authorizeReq{
 		domainID:   req.GetDomainId(),
 		clientID:   req.GetClientId(),
 		clientType: req.GetClientType(),
 		channelID:  req.GetChannelId(),
-		permission: req.GetPermission(),
+		connType:   connType,
 	}, nil
 }
 

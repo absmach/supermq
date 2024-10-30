@@ -13,6 +13,7 @@ import (
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/policies"
@@ -283,7 +284,7 @@ func authorize(ctx context.Context, clientID, clientType, chanID string, channel
 	res, err := channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
 		ClientId:   clientID,
 		ClientType: clientType,
-		Permission: viewPermission,
+		Type:       uint32(connections.Subscribe),
 		ChannelId:  chanID,
 	})
 

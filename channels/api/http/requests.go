@@ -4,9 +4,12 @@
 package http
 
 import (
+	"strings"
+
 	"github.com/absmach/magistrala/channels"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/magistrala/pkg/connections"
 	mgclients "github.com/absmach/magistrala/things"
 )
 
@@ -19,7 +22,9 @@ func (req createChannelReq) validate() error {
 		return apiutil.ErrNameSize
 	}
 	if req.Channel.ID != "" {
-		return api.ValidateUUID(req.Channel.ID)
+		if strings.TrimSpace(req.Channel.ID) == "" {
+			return apiutil.ErrMissingChannelID
+		}
 	}
 
 	return nil
@@ -35,8 +40,8 @@ func (req createChannelsReq) validate() error {
 	}
 	for _, channel := range req.Channels {
 		if channel.ID != "" {
-			if err := api.ValidateUUID(channel.ID); err != nil {
-				return err
+			if strings.TrimSpace(channel.ID) == "" {
+				return apiutil.ErrMissingChannelID
 			}
 		}
 		if len(channel.Name) > api.MaxNameSize {
@@ -163,17 +168,14 @@ func (req changeChannelStatusReq) validate() error {
 
 type connectChannelThingsRequest struct {
 	channelID string
-	ThingIds  []string `json:"thing_ids,omitempty"`
+	ThingIds  []string               `json:"thing_ids,omitempty"`
+	Types     []connections.ConnType `json:"types,omitempty"`
 }
 
 func (req *connectChannelThingsRequest) validate() error {
 
-	if req.channelID == "" {
+	if req.channelID == "" || strings.TrimSpace(req.channelID) == "" {
 		return apiutil.ErrMissingID
-	}
-
-	if err := api.ValidateUUID(req.channelID); err != nil {
-		return err
 	}
 
 	if len(req.ThingIds) == 0 {
@@ -185,12 +187,18 @@ func (req *connectChannelThingsRequest) validate() error {
 			return err
 		}
 	}
+
+	if len(req.Types) == 0 {
+		return apiutil.ErrMissingConnectionType
+	}
+
 	return nil
 }
 
 type disconnectChannelThingsRequest struct {
 	channelID string
-	ThingIds  []string `json:"thing_ids,omitempty"`
+	ThingIds  []string               `json:"thing_ids,omitempty"`
+	Types     []connections.ConnType `json:"types,omitempty"`
 }
 
 func (req *disconnectChannelThingsRequest) validate() error {
@@ -211,12 +219,18 @@ func (req *disconnectChannelThingsRequest) validate() error {
 			return err
 		}
 	}
+
+	if len(req.Types) == 0 {
+		return apiutil.ErrMissingConnectionType
+	}
+
 	return nil
 }
 
 type connectRequest struct {
-	ChannelIds []string `json:"channel_ids,omitempty"`
-	ThingIds   []string `json:"thing_ids,omitempty"`
+	ChannelIds []string               `json:"channel_ids,omitempty"`
+	ThingIds   []string               `json:"thing_ids,omitempty"`
+	Types      []connections.ConnType `json:"types,omitempty"`
 }
 
 func (req *connectRequest) validate() error {
@@ -224,8 +238,8 @@ func (req *connectRequest) validate() error {
 		return apiutil.ErrMissingID
 	}
 	for _, cid := range req.ChannelIds {
-		if err := api.ValidateUUID(cid); err != nil {
-			return err
+		if strings.TrimSpace(cid) == "" {
+			return apiutil.ErrMissingChannelID
 		}
 	}
 
@@ -234,16 +248,22 @@ func (req *connectRequest) validate() error {
 	}
 
 	for _, tid := range req.ThingIds {
-		if err := api.ValidateUUID(tid); err != nil {
-			return err
+		if strings.TrimSpace(tid) == "" {
+			return apiutil.ErrMissingChannelID
 		}
 	}
+
+	if len(req.Types) == 0 {
+		return apiutil.ErrMissingConnectionType
+	}
+
 	return nil
 }
 
 type disconnectRequest struct {
-	ChannelIds []string `json:"channel_ids,omitempty"`
-	ThingIds   []string `json:"thing_ids,omitempty"`
+	ChannelIds []string               `json:"channel_ids,omitempty"`
+	ThingIds   []string               `json:"thing_ids,omitempty"`
+	Types      []connections.ConnType `json:"types,omitempty"`
 }
 
 func (req *disconnectRequest) validate() error {
@@ -265,6 +285,11 @@ func (req *disconnectRequest) validate() error {
 			return err
 		}
 	}
+
+	if len(req.Types) == 0 {
+		return apiutil.ErrMissingConnectionType
+	}
+
 	return nil
 }
 

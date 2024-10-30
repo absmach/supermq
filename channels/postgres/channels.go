@@ -14,6 +14,7 @@ import (
 	"github.com/absmach/magistrala/channels"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	"github.com/absmach/magistrala/pkg/postgres"
@@ -248,8 +249,8 @@ func (cr *channelRepository) AddConnections(ctx context.Context, conns []channel
 
 	dbConns := toDBConnections(conns)
 
-	q := `INSERT INTO connections (channel_id, domain_id, thing_id)
-			VALUES (:channel_id, :domain_id, :thing_id);`
+	q := `INSERT INTO connections (channel_id, domain_id, thing_id, type)
+			VALUES (:channel_id, :domain_id, :thing_id, :type );`
 
 	if _, err := cr.db.NamedExecContext(ctx, q, dbConns); err != nil {
 		return postgres.HandleError(repoerr.ErrCreateEntity, err)
@@ -275,6 +276,9 @@ func (cr *channelRepository) RemoveConnections(ctx context.Context, conns []chan
 	query := `DELETE FROM connections WHERE channel_id = :channel_id AND domain_id = :domain_id AND thing_id = :thing_id`
 
 	for _, conn := range conns {
+		if uint8(conn.Type) > 0 {
+			query = query + " AND type = :type "
+		}
 		dbConn := toDBConnection(conn)
 		if _, err := tx.NamedExec(query, dbConn); err != nil {
 			return errors.Wrap(repoerr.ErrRemoveEntity, errors.Wrap(fmt.Errorf("failed to delete connection for channel_id: %s, domain_id: %s thing_id %s", conn.ChannelID, conn.DomainID, conn.ThingID), err))
@@ -287,7 +291,7 @@ func (cr *channelRepository) RemoveConnections(ctx context.Context, conns []chan
 }
 
 func (cr *channelRepository) CheckConnection(ctx context.Context, conn channels.Connection) error {
-	query := `SELECT 1 FROM connections WHERE channel_id = :channel_id AND domain_id = :domain_id AND thing_id = :thing_id LIMIT 1`
+	query := `SELECT 1 FROM connections WHERE channel_id = :channel_id AND domain_id = :domain_id AND thing_id = :thing_id AND type = :type LIMIT 1`
 	dbConn := toDBConnection(conn)
 	rows, err := cr.db.NamedQueryContext(ctx, query, dbConn)
 	if err != nil {
@@ -302,7 +306,7 @@ func (cr *channelRepository) CheckConnection(ctx context.Context, conn channels.
 }
 
 func (cr *channelRepository) ThingAuthorize(ctx context.Context, conn channels.Connection) error {
-	query := `SELECT 1 FROM connections WHERE channel_id = :channel_id AND thing_id = :thing_id LIMIT 1`
+	query := `SELECT 1 FROM connections WHERE channel_id = :channel_id AND thing_id = :thing_id AND type = :type LIMIT 1`
 	dbConn := toDBConnection(conn)
 	rows, err := cr.db.NamedQueryContext(ctx, query, dbConn)
 	if err != nil {
@@ -364,7 +368,7 @@ func (cr *channelRepository) RetrieveParentGroupChannels(ctx context.Context, pa
 	query := `SELECT c.id, c.name, c.tags,  c.metadata, COALESCE(c.domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, c.status,
 					c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM channels c WHERE c.parent_group_id = :parent_group_id ;`
 
-	rows, err := cr.db.NamedQueryContext(ctx, query, dbChannel{ParentGroup: nullString(parentGroupID)})
+	rows, err := cr.db.NamedQueryContext(ctx, query, dbChannel{ParentGroup: toNullString(parentGroupID)})
 	if err != nil {
 		return []channels.Channel{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
@@ -390,8 +394,7 @@ func (cr *channelRepository) RetrieveParentGroupChannels(ctx context.Context, pa
 func (cr *channelRepository) UnsetParentGroupFromChannels(ctx context.Context, parentGroupID string) error {
 	query := "UPDATE channels SET parent_group_id = NULL WHERE parent_group_id = :parent_group_id"
 
-	dbCh := dbChannel{ParentGroup: nullString(parentGroupID)}
-	if _, err := cr.db.NamedExecContext(ctx, query, dbCh); err != nil {
+	if _, err := cr.db.NamedExecContext(ctx, query, dbChannel{ParentGroup: toNullString(parentGroupID)}); err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 	return nil
@@ -459,7 +462,7 @@ func toDBChannel(ch channels.Channel) (dbChannel, error) {
 	return dbChannel{
 		ID:          ch.ID,
 		Name:        ch.Name,
-		ParentGroup: nullString(ch.ParentGroup),
+		ParentGroup: toNullString(ch.ParentGroup),
 		Domain:      ch.Domain,
 		Tags:        tags,
 		Metadata:    data,
@@ -470,7 +473,7 @@ func toDBChannel(ch channels.Channel) (dbChannel, error) {
 	}, nil
 }
 
-func nullString(s string) sql.NullString {
+func toNullString(s string) sql.NullString {
 	if s == "" {
 		return sql.NullString{}
 	}
@@ -479,6 +482,13 @@ func nullString(s string) sql.NullString {
 		String: s,
 		Valid:  true,
 	}
+}
+
+func toString(s sql.NullString) string {
+	if s.Valid {
+		return s.String
+	}
+	return ""
 }
 
 func toChannel(ch dbChannel) (channels.Channel, error) {
@@ -501,16 +511,12 @@ func toChannel(ch dbChannel) (channels.Channel, error) {
 		updatedAt = ch.UpdatedAt.Time
 	}
 
-	parentGroup := ""
-	if ch.ParentGroup.Valid {
-		parentGroup = ch.ParentGroup.String
-	}
 	newCh := channels.Channel{
 		ID:          ch.ID,
 		Name:        ch.Name,
 		Tags:        tags,
 		Domain:      ch.Domain,
-		ParentGroup: parentGroup,
+		ParentGroup: toString(ch.ParentGroup),
 		Metadata:    metadata,
 		CreatedAt:   ch.CreatedAt,
 		UpdatedAt:   updatedAt,
@@ -610,9 +616,10 @@ type dbChannelsPage struct {
 }
 
 type dbConnection struct {
-	ChannelID string `db:"channel_id"`
-	DomainID  string `db:"domain_id"`
-	ThingID   string `db:"thing_id"`
+	ChannelID string               `db:"channel_id"`
+	DomainID  string               `db:"domain_id"`
+	ThingID   string               `db:"thing_id"`
+	Type      connections.ConnType `db:"type"`
 }
 
 func toDBConnections(conns []channels.Connection) []dbConnection {
@@ -628,5 +635,6 @@ func toDBConnection(conn channels.Connection) dbConnection {
 		ThingID:   conn.ThingID,
 		ChannelID: conn.ChannelID,
 		DomainID:  conn.DomainID,
+		Type:      conn.Type,
 	}
 }

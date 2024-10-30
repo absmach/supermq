@@ -1370,7 +1370,7 @@ func TestUpdateEmail(t *testing.T) {
 }
 
 func TestUpdateUsername(t *testing.T) {
-	us, svc, _, authn := newUsersServer()
+	us, svc, authn := newUsersServer()
 	defer us.Close()
 
 	newusername := "newusername"
@@ -1518,7 +1518,7 @@ func TestUpdateUsername(t *testing.T) {
 }
 
 func TestUpdateProfilePicture(t *testing.T) {
-	us, svc, _, authn := newUsersServer()
+	us, svc, authn := newUsersServer()
 	defer us.Close()
 
 	newprofilepicture := "https://example.com/newprofilepicture"

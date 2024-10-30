@@ -9,6 +9,7 @@ import (
 
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/messaging"
@@ -61,7 +62,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subt
 		return svcerr.ErrAuthentication
 	}
 
-	thingID, err := svc.authorize(ctx, thingKey, chanID, policies.SubscribePermission)
+	thingID, err := svc.authorize(ctx, thingKey, chanID, connections.Subscribe)
 	if err != nil {
 		return svcerr.ErrAuthorization
 	}
@@ -87,7 +88,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subt
 
 // authorize checks if the thingKey is authorized to access the channel
 // and returns the thingID if it is.
-func (svc *adapterService) authorize(ctx context.Context, thingKey, chanID, action string) (string, error) {
+func (svc *adapterService) authorize(ctx context.Context, thingKey, chanID string, msgType connections.ConnType) (string, error) {
 	authnReq := &grpcThingsV1.AuthnReq{
 		ThingKey: thingKey,
 	}
@@ -102,7 +103,7 @@ func (svc *adapterService) authorize(ctx context.Context, thingKey, chanID, acti
 	authzReq := &grpcChannelsV1.AuthzReq{
 		ClientType: policies.ThingType,
 		ClientId:   authnRes.GetId(),
-		Permission: action,
+		Type:       uint32(msgType),
 		ChannelId:  chanID,
 	}
 	authzRes, err := svc.channels.Authorize(ctx, authzReq)

@@ -10,6 +10,7 @@ import (
 	grpcCommonV1 "github.com/absmach/magistrala/internal/grpc/common/v1"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	things "github.com/absmach/magistrala/things/private"
@@ -162,10 +163,15 @@ func decodeAddConnectionsRequest(_ context.Context, grpcReq interface{}) (interf
 
 	conns := []connection{}
 	for _, c := range req.Connections {
+		connType := connections.ConnType(c.GetType())
+		if err := connections.CheckConnType(connType); err != nil {
+			return nil, err
+		}
 		conns = append(conns, connection{
 			thingID:   c.GetThingId(),
 			channelID: c.GetChannelId(),
 			domainID:  c.GetDomainId(),
+			connType:  connType,
 		})
 	}
 	return connectionsReq{
@@ -192,10 +198,15 @@ func decodeRemoveConnectionsRequest(_ context.Context, grpcReq interface{}) (int
 
 	conns := []connection{}
 	for _, c := range req.Connections {
+		connType := connections.ConnType(c.GetType())
+		if err := connections.CheckConnType(connType); err != nil {
+			return nil, err
+		}
 		conns = append(conns, connection{
 			thingID:   c.GetThingId(),
 			channelID: c.GetChannelId(),
 			domainID:  c.GetDomainId(),
+			connType:  connType,
 		})
 	}
 	return connectionsReq{

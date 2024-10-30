@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/channels"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/events"
 )
 
@@ -260,6 +261,7 @@ func (dce removeChannelEvent) Encode() (map[string]interface{}, error) {
 type connectEvent struct {
 	chIDs []string
 	thIDs []string
+	types []connections.ConnType
 }
 
 func (ce connectEvent) Encode() (map[string]interface{}, error) {
@@ -267,12 +269,14 @@ func (ce connectEvent) Encode() (map[string]interface{}, error) {
 		"operation":   channelConnect,
 		"thing_ids":   ce.thIDs,
 		"channel_ids": ce.chIDs,
+		"types":       ce.types,
 	}, nil
 }
 
 type disconnectEvent struct {
 	chIDs []string
 	thIDs []string
+	types []connections.ConnType
 }
 
 func (de disconnectEvent) Encode() (map[string]interface{}, error) {
@@ -280,6 +284,7 @@ func (de disconnectEvent) Encode() (map[string]interface{}, error) {
 		"operation":   channelDisconnect,
 		"thing_ids":   de.thIDs,
 		"channel_ids": de.chIDs,
+		"types":       de.types,
 	}, nil
 }
 

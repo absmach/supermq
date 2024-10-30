@@ -15,6 +15,7 @@ import (
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/mqtt/events"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/messaging"
@@ -121,7 +122,7 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 		return ErrClientNotInitialized
 	}
 
-	return h.authAccess(ctx, string(s.Username), *topic, policies.PublishPermission)
+	return h.authAccess(ctx, string(s.Username), *topic, connections.Publish)
 }
 
 // AuthSubscribe is called on device subscribe,
@@ -136,7 +137,7 @@ func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
 	}
 
 	for _, topic := range *topics {
-		if err := h.authAccess(ctx, string(s.Username), topic, policies.SubscribePermission); err != nil {
+		if err := h.authAccess(ctx, string(s.Username), topic, connections.Subscribe); err != nil {
 			return err
 		}
 	}
@@ -226,7 +227,7 @@ func (h *handler) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func (h *handler) authAccess(ctx context.Context, thingID, topic, action string) error {
+func (h *handler) authAccess(ctx context.Context, thingID, topic string, msgType connections.ConnType) error {
 	// Topics are in the format:
 	// channels/<channel_id>/messages/<subtopic>/.../ct/<content_type>
 	if !channelRegExp.MatchString(topic) {
@@ -241,7 +242,7 @@ func (h *handler) authAccess(ctx context.Context, thingID, topic, action string)
 	chanID := channelParts[1]
 
 	ar := &grpcChannelsV1.AuthzReq{
-		Permission: action,
+		Type:       uint32(msgType),
 		ClientId:   thingID,
 		ClientType: policies.ThingType,
 		ChannelId:  chanID,

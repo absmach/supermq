@@ -20,7 +20,7 @@ func authorizeEndpoint(svc channels.Service) endpoint.Endpoint {
 			ClientID:   req.clientID,
 			ClientType: req.clientType,
 			ChannelID:  req.channelID,
-			Permission: req.permission,
+			Type:       req.connType,
 		}); err != nil {
 			return authorizeRes{}, err
 		}

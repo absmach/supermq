@@ -9,6 +9,7 @@ import (
 
 	"github.com/absmach/magistrala/channels"
 	"github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/magistrala/pkg/connections"
 	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
 	"github.com/go-kit/kit/metrics"
 )
@@ -104,19 +105,19 @@ func (ms *metricsMiddleware) RemoveChannel(ctx context.Context, session authn.Se
 	return ms.svc.RemoveChannel(ctx, session, id)
 }
 
-func (ms *metricsMiddleware) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string) error {
+func (ms *metricsMiddleware) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "connect").Add(1)
 		ms.latency.With("method", "connect").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.Connect(ctx, session, chIDs, thIDs)
+	return ms.svc.Connect(ctx, session, chIDs, thIDs, connTypes)
 }
-func (ms *metricsMiddleware) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string) error {
+func (ms *metricsMiddleware) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "disconnect").Add(1)
 		ms.latency.With("method", "disconnect").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.Disconnect(ctx, session, chIDs, thIDs)
+	return ms.svc.Disconnect(ctx, session, chIDs, thIDs, connTypes)
 }
 
 func (ms *metricsMiddleware) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) (err error) {

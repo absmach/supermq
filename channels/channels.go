@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/roles"
 	clients "github.com/absmach/magistrala/things"
 )
@@ -57,6 +58,7 @@ type Connection struct {
 	ThingID   string
 	ChannelID string
 	DomainID  string
+	Type      connections.ConnType
 }
 
 type AuthzReq struct {
@@ -64,7 +66,7 @@ type AuthzReq struct {
 	ChannelID  string
 	ClientID   string
 	ClientType string
-	Permission string
+	Type       connections.ConnType
 }
 
 //go:generate mockery --name Service  --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
@@ -101,10 +103,10 @@ type Service interface {
 	RemoveChannel(ctx context.Context, session authn.Session, id string) error
 
 	// Connect adds things to the channels list of connected things.
-	Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string) error
+	Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connType []connections.ConnType) error
 
 	// Disconnect removes things from the channels list of connected things.
-	Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string) error
+	Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connType []connections.ConnType) error
 
 	SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error
 

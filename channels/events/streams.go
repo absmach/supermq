@@ -8,6 +8,7 @@ import (
 
 	"github.com/absmach/magistrala/channels"
 	"github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/events"
 	"github.com/absmach/magistrala/pkg/events/store"
 	rmEvents "github.com/absmach/magistrala/pkg/roles/rolemanager/events"
@@ -178,12 +179,12 @@ func (es *eventStore) RemoveChannel(ctx context.Context, session authn.Session, 
 	return nil
 }
 
-func (es *eventStore) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string) error {
-	if err := es.svc.Connect(ctx, session, chIDs, thIDs); err != nil {
+func (es *eventStore) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) error {
+	if err := es.svc.Connect(ctx, session, chIDs, thIDs, connTypes); err != nil {
 		return err
 	}
 
-	event := connectEvent{chIDs, thIDs}
+	event := connectEvent{chIDs, thIDs, connTypes}
 
 	if err := es.Publish(ctx, event); err != nil {
 		return err
@@ -192,12 +193,12 @@ func (es *eventStore) Connect(ctx context.Context, session authn.Session, chIDs,
 	return nil
 }
 
-func (es *eventStore) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string) error {
-	if err := es.svc.Disconnect(ctx, session, chIDs, thIDs); err != nil {
+func (es *eventStore) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) error {
+	if err := es.svc.Disconnect(ctx, session, chIDs, thIDs, connTypes); err != nil {
 		return err
 	}
 
-	event := disconnectEvent{chIDs, thIDs}
+	event := disconnectEvent{chIDs, thIDs, connTypes}
 
 	if err := es.Publish(ctx, event); err != nil {
 		return err

@@ -21,6 +21,15 @@ var (
 	// ErrMissingID indicates missing entity ID.
 	ErrMissingID = errors.New("missing entity id")
 
+	// ErrMissingThingID indicates missing thing ID.
+	ErrMissingThingID = errors.New("missing thing id")
+
+	// ErrMissingChannelID indicates missing thing ID.
+	ErrMissingChannelID = errors.New("missing channel id")
+
+	// ErrMissingConnectionType indicates missing connection tpye.
+	ErrMissingConnectionType = errors.New("missing connection type")
+
 	// ErrMissingParentGroupID indicates missing parent group ID.
 	ErrMissingParentGroupID = errors.New("missing parent group id")
 

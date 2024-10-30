@@ -13,6 +13,7 @@ import (
 
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	"github.com/absmach/magistrala/pkg/postgres"
@@ -45,47 +46,41 @@ func NewRepository(db postgres.Database) things.Repository {
 	}
 }
 
-func (repo *clientRepo) Save(ctx context.Context, th ...things.Client) ([]things.Client, error) {
-	tx, err := repo.DB.BeginTxx(ctx, nil)
+func (repo *clientRepo) Save(ctx context.Context, clients ...things.Client) ([]things.Client, error) {
+	var dbClients []DBClient
+
+	for _, client := range clients {
+		dbcli, err := ToDBClient(client)
+		if err != nil {
+			return []things.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
+		}
+		dbClients = append(dbClients, dbcli)
+	}
+	q := `INSERT INTO clients (id, name, tags, domain_id, parent_group_id, identity, secret, metadata, created_at, updated_at, updated_by, status)
+	VALUES (:id, :name, :tags, :domain_id, :parent_group_id, :identity, :secret, :metadata, :created_at, :updated_at, :updated_by, :status)
+	RETURNING id, name, tags, identity, secret, metadata, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS  parent_group_id, status, created_at, updated_at, updated_by`
+
+	row, err := repo.DB.NamedQueryContext(ctx, q, dbClients)
 	if err != nil {
-		return []things.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
+		return []things.Client{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
-	var clients []things.Client
 
-	for _, thi := range th {
-		q := `INSERT INTO clients (id, name, tags, domain_id, parent_group_id, identity, secret, metadata, created_at, updated_at, updated_by, status)
-        VALUES (:id, :name, :tags, :domain_id, :identity, :secret, :metadata, :created_at, :updated_at, :updated_by, :status)
-        RETURNING id, name, tags, identity, secret, metadata, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS  parent_group_id, status, created_at, updated_at, updated_by`
+	defer row.Close()
 
-		dbcli, err := ToDBClient(thi)
+	var reClients []things.Client
+	for row.Next() {
+		dbcli := DBClient{}
+		if err := row.StructScan(&dbcli); err != nil {
+			return []things.Client{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
+		}
+
+		client, err := ToClient(dbcli)
 		if err != nil {
-			return []things.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
+			return []things.Client{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
 		}
-
-		row, err := repo.DB.NamedQueryContext(ctx, q, dbcli)
-		if err != nil {
-			if err := tx.Rollback(); err != nil {
-				return []things.Client{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
-			}
-			return []things.Client{}, errors.Wrap(repoerr.ErrCreateEntity, err)
-		}
-
-		defer row.Close()
-
-		for row.Next() {
-			dbthi := DBClient{}
-			if err := row.StructScan(&dbthi); err != nil {
-				return []things.Client{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
-			}
-
-			client, err := ToClient(dbcli)
-			if err != nil {
-				return []things.Client{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
-			}
-			clients = append(clients, client)
-		}
+		reClients = append(reClients, client)
 	}
-	return clients, nil
+	return reClients, nil
 }
 
 func (repo *clientRepo) RetrieveBySecret(ctx context.Context, key string) (things.Client, error) {
@@ -407,17 +402,18 @@ func (repo *clientRepo) Delete(ctx context.Context, clientIDs ...string) error {
 }
 
 type DBClient struct {
-	ID        string           `db:"id"`
-	Name      string           `db:"name,omitempty"`
-	Tags      pgtype.TextArray `db:"tags,omitempty"`
-	Identity  string           `db:"identity"`
-	Domain    string           `db:"domain_id"`
-	Secret    string           `db:"secret"`
-	Metadata  []byte           `db:"metadata,omitempty"`
-	CreatedAt time.Time        `db:"created_at,omitempty"`
-	UpdatedAt sql.NullTime     `db:"updated_at,omitempty"`
-	UpdatedBy *string          `db:"updated_by,omitempty"`
-	Status    things.Status    `db:"status,omitempty"`
+	ID          string           `db:"id"`
+	Name        string           `db:"name,omitempty"`
+	Tags        pgtype.TextArray `db:"tags,omitempty"`
+	Identity    string           `db:"identity"`
+	Domain      string           `db:"domain_id"`
+	ParentGroup sql.NullString   `db:"parent_group_id,omitempty"`
+	Secret      string           `db:"secret"`
+	Metadata    []byte           `db:"metadata,omitempty"`
+	CreatedAt   time.Time        `db:"created_at,omitempty"`
+	UpdatedAt   sql.NullTime     `db:"updated_at,omitempty"`
+	UpdatedBy   *string          `db:"updated_by,omitempty"`
+	Status      things.Status    `db:"status,omitempty"`
 }
 
 func ToDBClient(c things.Client) (DBClient, error) {
@@ -443,17 +439,18 @@ func ToDBClient(c things.Client) (DBClient, error) {
 	}
 
 	return DBClient{
-		ID:        c.ID,
-		Name:      c.Name,
-		Tags:      tags,
-		Domain:    c.Domain,
-		Identity:  c.Credentials.Identity,
-		Secret:    c.Credentials.Secret,
-		Metadata:  data,
-		CreatedAt: c.CreatedAt,
-		UpdatedAt: updatedAt,
-		UpdatedBy: updatedBy,
-		Status:    c.Status,
+		ID:          c.ID,
+		Name:        c.Name,
+		Tags:        tags,
+		Domain:      c.Domain,
+		ParentGroup: toNullString(c.ParentGroup),
+		Identity:    c.Credentials.Identity,
+		Secret:      c.Credentials.Secret,
+		Metadata:    data,
+		CreatedAt:   c.CreatedAt,
+		UpdatedAt:   updatedAt,
+		UpdatedBy:   updatedBy,
+		Status:      c.Status,
 	}, nil
 }
 
@@ -478,10 +475,11 @@ func ToClient(t DBClient) (things.Client, error) {
 	}
 
 	thg := things.Client{
-		ID:     t.ID,
-		Name:   t.Name,
-		Tags:   tags,
-		Domain: t.Domain,
+		ID:          t.ID,
+		Name:        t.Name,
+		Tags:        tags,
+		Domain:      t.Domain,
+		ParentGroup: toString(t.ParentGroup),
 		Credentials: things.Credentials{
 			Identity: t.Identity,
 			Secret:   t.Secret,
@@ -584,6 +582,24 @@ func applyOrdering(emq string, pm things.Page) string {
 	return emq
 }
 
+func toNullString(s string) sql.NullString {
+	if s == "" {
+		return sql.NullString{}
+	}
+
+	return sql.NullString{
+		String: s,
+		Valid:  true,
+	}
+}
+
+func toString(s sql.NullString) string {
+	if s.Valid {
+		return s.String
+	}
+	return ""
+}
+
 func (repo *clientRepo) RetrieveByIds(ctx context.Context, ids []string) (things.ClientsPage, error) {
 	if len(ids) == 0 {
 		return things.ClientsPage{}, nil
@@ -645,8 +661,8 @@ func (repo *clientRepo) AddConnections(ctx context.Context, conns []things.Conne
 
 	dbConns := toDBConnections(conns)
 
-	q := `INSERT INTO connections (channel_id, domain_id, thing_id)
-			VALUES (:channel_id, :domain_id, :thing_id);`
+	q := `INSERT INTO connections (channel_id, domain_id, thing_id, type)
+			VALUES (:channel_id, :domain_id, :thing_id, :type);`
 
 	if _, err := repo.DB.NamedExecContext(ctx, q, dbConns); err != nil {
 		return postgres.HandleError(repoerr.ErrCreateEntity, err)
@@ -672,6 +688,9 @@ func (repo *clientRepo) RemoveConnections(ctx context.Context, conns []things.Co
 	query := `DELETE FROM connections WHERE channel_id = :channel_id AND domain_id = :domain_id AND thing_id = :thing_id`
 
 	for _, conn := range conns {
+		if uint8(conn.Type) > 0 {
+			query = query + " AND type = :type "
+		}
 		dbConn := toDBConnection(conn)
 		if _, err := tx.NamedExec(query, dbConn); err != nil {
 			return errors.Wrap(repoerr.ErrRemoveEntity, errors.Wrap(fmt.Errorf("failed to delete connection for channel_id: %s, domain_id: %s thing_id %s", conn.ChannelID, conn.DomainID, conn.ThingID), err))
@@ -686,13 +705,11 @@ func (repo *clientRepo) RemoveConnections(ctx context.Context, conns []things.Co
 func (repo *clientRepo) SetParentGroup(ctx context.Context, th things.Client) error {
 	q := "UPDATE clients SET parent_group_id = :parent_group_id, updated_at = :updated_at, updated_by = :updated_by WHERE id = :id"
 
-	params := map[string]interface{}{
-		"parent_group_id": th.ParentGroup,
-		"updated_at":      th.UpdatedAt,
-		"updated_by":      th.UpdatedBy,
-		"id":              th.ID,
+	dbcli, err := ToDBClient(th)
+	if err != nil {
+		return errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
-	result, err := repo.DB.NamedExecContext(ctx, q, params)
+	result, err := repo.DB.NamedExecContext(ctx, q, dbcli)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
@@ -704,11 +721,11 @@ func (repo *clientRepo) SetParentGroup(ctx context.Context, th things.Client) er
 
 func (repo *clientRepo) RemoveParentGroup(ctx context.Context, th things.Client) error {
 	q := "UPDATE clients SET parent_group_id = NULL, updated_at = :updated_at, updated_by = :updated_by WHERE id = :id"
-	dbCh, err := ToDBClient(th)
+	dbcli, err := ToDBClient(th)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
-	result, err := repo.DB.NamedExecContext(ctx, q, dbCh)
+	result, err := repo.DB.NamedExecContext(ctx, q, dbcli)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}
@@ -766,11 +783,7 @@ func (repo *clientRepo) RetrieveParentGroupThings(ctx context.Context, parentGro
 	query := `SELECT c.id, c.name, c.tags,  c.metadata, COALESCE(c.domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, c.status,
 					c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM clients c WHERE c.parent_group_id = :parent_group_id ;`
 
-	params := map[string]interface{}{
-		"parent_group_id": parentGroupID,
-	}
-
-	rows, err := repo.DB.NamedQueryContext(ctx, query, params)
+	rows, err := repo.DB.NamedQueryContext(ctx, query, DBClient{ParentGroup: toNullString(parentGroupID)})
 	if err != nil {
 		return []things.Client{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
@@ -796,19 +809,17 @@ func (repo *clientRepo) RetrieveParentGroupThings(ctx context.Context, parentGro
 func (repo *clientRepo) UnsetParentGroupFromThings(ctx context.Context, parentGroupID string) error {
 	query := "UPDATE clients SET parent_group_id = NULL WHERE parent_group_id = :parent_group_id"
 
-	params := map[string]interface{}{
-		"parent_group_id": parentGroupID,
-	}
-	if _, err := repo.DB.NamedExecContext(ctx, query, params); err != nil {
+	if _, err := repo.DB.NamedExecContext(ctx, query, DBClient{ParentGroup: toNullString(parentGroupID)}); err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 	return nil
 }
 
 type dbConnection struct {
-	ThingID   string `db:"thing_id"`
-	ChannelID string `db:"channel_id"`
-	DomainID  string `db:"domain_id"`
+	ThingID   string               `db:"thing_id"`
+	ChannelID string               `db:"channel_id"`
+	DomainID  string               `db:"domain_id"`
+	Type      connections.ConnType `db:"type"`
 }
 
 func toDBConnections(conns []things.Connection) []dbConnection {
@@ -824,5 +835,6 @@ func toDBConnection(conn things.Connection) dbConnection {
 		ThingID:   conn.ThingID,
 		ChannelID: conn.ChannelID,
 		DomainID:  conn.DomainID,
+		Type:      conn.Type,
 	}
 }

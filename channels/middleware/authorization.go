@@ -11,6 +11,7 @@ import (
 	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/authz"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/policies"
@@ -196,7 +197,7 @@ func (am *authorizationMiddleware) RemoveChannel(ctx context.Context, session au
 	return am.svc.RemoveChannel(ctx, session, id)
 }
 
-func (am *authorizationMiddleware) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string) error {
+func (am *authorizationMiddleware) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) error {
 	//ToDo: This authorization will be changed with Bulk Authorization. For this we need to add bulk authorization API in policies.
 	for _, chID := range chIDs {
 		if err := am.authorize(ctx, channels.OpConnectThing, authz.PolicyReq{
@@ -221,9 +222,9 @@ func (am *authorizationMiddleware) Connect(ctx context.Context, session authn.Se
 			return errors.Wrap(err, errThingConnectChannels)
 		}
 	}
-	return am.svc.Connect(ctx, session, chIDs, thIDs)
+	return am.svc.Connect(ctx, session, chIDs, thIDs, connTypes)
 }
-func (am *authorizationMiddleware) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string) error {
+func (am *authorizationMiddleware) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) error {
 	//ToDo: This authorization will be changed with Bulk Authorization. For this we need to add bulk authorization API in policies.
 	for _, chID := range chIDs {
 		if err := am.authorize(ctx, channels.OpDisconnectThing, authz.PolicyReq{
@@ -248,7 +249,7 @@ func (am *authorizationMiddleware) Disconnect(ctx context.Context, session authn
 			return errors.Wrap(err, errThingDisConnectChannels)
 		}
 	}
-	return am.svc.Disconnect(ctx, session, chIDs, thIDs)
+	return am.svc.Disconnect(ctx, session, chIDs, thIDs, connTypes)
 }
 
 func (am *authorizationMiddleware) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error {

@@ -46,6 +46,7 @@ func (svc service) Authorize(ctx context.Context, req channels.AuthzReq) error {
 		if err := svc.repo.ThingAuthorize(ctx, channels.Connection{
 			ChannelID: req.ChannelID,
 			ThingID:   req.ClientID,
+			Type:      req.Type,
 		}); err != nil {
 			return errors.Wrap(svcerr.ErrAuthorization, err)
 		}

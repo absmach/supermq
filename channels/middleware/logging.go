@@ -11,6 +11,7 @@ import (
 
 	"github.com/absmach/magistrala/channels"
 	"github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/magistrala/pkg/connections"
 	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
 )
 
@@ -195,7 +196,7 @@ func (lm *loggingMiddleware) RemoveChannel(ctx context.Context, session authn.Se
 	return lm.svc.RemoveChannel(ctx, session, id)
 }
 
-func (lm *loggingMiddleware) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string) (err error) {
+func (lm *loggingMiddleware) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -209,10 +210,10 @@ func (lm *loggingMiddleware) Connect(ctx context.Context, session authn.Session,
 		}
 		lm.logger.Info("Connect channels and things completed successfully", args...)
 	}(time.Now())
-	return lm.svc.Connect(ctx, session, chIDs, thIDs)
+	return lm.svc.Connect(ctx, session, chIDs, thIDs, connTypes)
 }
 
-func (lm *loggingMiddleware) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string) (err error) {
+func (lm *loggingMiddleware) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -226,7 +227,7 @@ func (lm *loggingMiddleware) Disconnect(ctx context.Context, session authn.Sessi
 		}
 		lm.logger.Info("Disconnect channels and things completed successfully", args...)
 	}(time.Now())
-	return lm.svc.Disconnect(ctx, session, chIDs, thIDs)
+	return lm.svc.Disconnect(ctx, session, chIDs, thIDs, connTypes)
 }
 
 func (lm *loggingMiddleware) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) (err error) {

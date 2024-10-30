@@ -16,6 +16,7 @@ import (
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/messaging"
@@ -96,7 +97,7 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 		token = string(s.Password)
 	}
 
-	return h.authAccess(ctx, token, *topic, policies.PublishPermission)
+	return h.authAccess(ctx, token, *topic, connections.Publish)
 }
 
 // AuthSubscribe is called on device publish,
@@ -119,7 +120,7 @@ func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
 	}
 
 	for _, topic := range *topics {
-		if err := h.authAccess(ctx, token, topic, policies.SubscribePermission); err != nil {
+		if err := h.authAccess(ctx, token, topic, connections.Subscribe); err != nil {
 			return err
 		}
 	}
@@ -183,7 +184,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 	}
 
 	ar := &grpcChannelsV1.AuthzReq{
-		Permission: policies.PublishPermission,
+		Type:       uint32(connections.Publish),
 		ClientId:   clientID,
 		ClientType: clientType,
 		ChannelId:  chanID,
@@ -241,7 +242,7 @@ func (h *handler) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func (h *handler) authAccess(ctx context.Context, token, topic, action string) error {
+func (h *handler) authAccess(ctx context.Context, token, topic string, msgType connections.ConnType) error {
 	var clientID, clientType string
 	switch {
 	case strings.HasPrefix(token, "Thing"):
@@ -278,7 +279,7 @@ func (h *handler) authAccess(ctx context.Context, token, topic, action string) e
 	chanID := channelParts[1]
 
 	ar := &grpcChannelsV1.AuthzReq{
-		Permission: action,
+		Type:       uint32(msgType),
 		ClientId:   clientID,
 		ClientType: clientType,
 		ChannelId:  chanID,

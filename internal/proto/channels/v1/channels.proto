@@ -30,7 +30,7 @@ message AuthzReq {
   string client_id = 2;
   string client_type = 3;
   string channel_id = 4;
-  string permission = 5;
+  uint32 type = 5;
 }
 
 message AuthzRes {

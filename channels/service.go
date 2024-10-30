@@ -11,6 +11,7 @@ import (
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
@@ -284,7 +285,7 @@ func (svc service) RemoveChannel(ctx context.Context, session authn.Session, id 
 	return nil
 }
 
-func (svc service) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string) (retErr error) {
+func (svc service) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) (retErr error) {
 
 	for _, chID := range chIDs {
 		c, err := svc.repo.RetrieveByID(ctx, chID)
@@ -316,16 +317,20 @@ func (svc service) Connect(ctx context.Context, session authn.Session, chIDs, th
 	thConns := []*grpcCommonV1.Connection{}
 	for _, chID := range chIDs {
 		for _, thID := range thIDs {
-			conns = append(conns, Connection{
-				ThingID:   thID,
-				ChannelID: chID,
-				DomainID:  session.DomainID,
-			})
-			thConns = append(thConns, &grpcCommonV1.Connection{
-				ThingId:   thID,
-				ChannelId: chID,
-				DomainId:  session.DomainID,
-			})
+			for _, connType := range connTypes {
+				conns = append(conns, Connection{
+					ThingID:   thID,
+					ChannelID: chID,
+					DomainID:  session.DomainID,
+					Type:      connType,
+				})
+				thConns = append(thConns, &grpcCommonV1.Connection{
+					ThingId:   thID,
+					ChannelId: chID,
+					DomainId:  session.DomainID,
+					Type:      uint32(connType),
+				})
+			}
 		}
 	}
 
@@ -334,7 +339,7 @@ func (svc service) Connect(ctx context.Context, session authn.Session, chIDs, th
 
 		switch {
 		case err == nil:
-			return errors.Wrap(svcerr.ErrConflict, fmt.Errorf("channel %s and thing %s are already connected in domain %s", conn.ChannelID, conn.ThingID, conn.DomainID))
+			return errors.Wrap(svcerr.ErrConflict, fmt.Errorf("channel %s and thing %s are already connected for type %s in domain %s ", conn.ChannelID, conn.ThingID, conn.Type.String(), conn.DomainID))
 		case err != repoerr.ErrNotFound:
 			return errors.Wrap(svcerr.ErrCreateEntity, err)
 		}
@@ -350,7 +355,7 @@ func (svc service) Connect(ctx context.Context, session authn.Session, chIDs, th
 	return nil
 }
 
-func (svc service) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string) (retErr error) {
+func (svc service) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) (retErr error) {
 
 	for _, chID := range chIDs {
 		c, err := svc.repo.RetrieveByID(ctx, chID)
@@ -377,16 +382,20 @@ func (svc service) Disconnect(ctx context.Context, session authn.Session, chIDs,
 	thConns := []*grpcCommonV1.Connection{}
 	for _, chID := range chIDs {
 		for _, thID := range thIDs {
-			conns = append(conns, Connection{
-				ThingID:   thID,
-				ChannelID: chID,
-				DomainID:  session.DomainID,
-			})
-			thConns = append(thConns, &grpcCommonV1.Connection{
-				ThingId:   thID,
-				ChannelId: chID,
-				DomainId:  session.DomainID,
-			})
+			for _, connType := range connTypes {
+				conns = append(conns, Connection{
+					ThingID:   thID,
+					ChannelID: chID,
+					DomainID:  session.DomainID,
+					Type:      connType,
+				})
+				thConns = append(thConns, &grpcCommonV1.Connection{
+					ThingId:   thID,
+					ChannelId: chID,
+					DomainId:  session.DomainID,
+					Type:      uint32(connType),
+				})
+			}
 		}
 	}
 
