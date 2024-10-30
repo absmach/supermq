@@ -268,7 +268,7 @@ func TestRetrieveByID(t *testing.T) {
 	}
 
 	_, err := repo.Save(context.Background(), user)
-	require.Nil(t, err, fmt.Sprintf("failed to save client %s", user.ID))
+	require.Nil(t, err, fmt.Sprintf("failed to save users %s", user.ID))
 
 	cases := []struct {
 		desc   string

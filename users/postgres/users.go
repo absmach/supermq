@@ -126,7 +126,6 @@ func (repo *userRepo) RetrieveAll(ctx context.Context, pm users.Page) (users.Use
 	if err != nil {
 		return users.UsersPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
-
 	rows, err := repo.Repository.DB.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
 		return users.UsersPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
@@ -230,12 +229,11 @@ func (repo *userRepo) Update(ctx context.Context, user users.User) (users.User, 
 
 	if len(query) > 0 {
 		upq = strings.Join(query, " ")
-		upq = strings.TrimSuffix(upq, ",")
 	}
 
 	q := fmt.Sprintf(`UPDATE users SET %s updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
-        RETURNING id, tags, secret, metadata, status, created_at, updated_at, updated_by, last_name, first_name, username, profile_picture, email`, upq)
+        RETURNING id, tags, metadata, status, created_at, updated_at, updated_by, last_name, first_name, username, profile_picture, email`, upq)
 
 	user.Status = users.EnabledStatus
 	return repo.update(ctx, user, q)
@@ -332,7 +330,7 @@ func (repo *userRepo) SearchUsers(ctx context.Context, pm users.Page) (users.Use
 		items = append(items, c)
 	}
 
-	cq := fmt.Sprintf(`SELECT COUNT(*) FROM users c %s;`, tq)
+	cq := fmt.Sprintf(`SELECT COUNT(*) FROM users u %s;`, tq)
 
 	total, err := postgres.Total(ctx, repo.Repository.DB, cq, dbPage)
 	if err != nil {
@@ -619,6 +617,9 @@ func PageQuery(pm users.Page) (string, error) {
 	if pm.Username != "" {
 		query = append(query, "username ILIKE '%' || :username || '%'")
 	}
+	if pm.Email != "" {
+		query = append(query, "email ILIKE '%' || :email || '%'")
+	}
 	if pm.Id != "" {
 		query = append(query, "id ILIKE '%' || :id || '%'")
 	}
@@ -627,9 +628,6 @@ func PageQuery(pm users.Page) (string, error) {
 	}
 	if pm.Role != users.AllRole {
 		query = append(query, "u.role = :role")
-	}
-	if pm.Email != "" {
-		query = append(query, "email ILIKE '%' || :email || '%'")
 	}
 	// If there are search params presents, use search and ignore other options.
 	// Always combine role with search params, so len(query) > 1.
@@ -647,15 +645,12 @@ func PageQuery(pm users.Page) (string, error) {
 	if pm.Status != users.AllStatus {
 		query = append(query, "u.status = :status")
 	}
-	if pm.Domain != "" {
-		query = append(query, "u.domain_id = :domain_id")
-	}
+
 	var emq string
 	if len(query) > 0 {
 		emq = fmt.Sprintf("WHERE %s", strings.Join(query, " AND "))
-	} else if mq != "" {
-		emq = fmt.Sprintf("WHERE %s", mq)
 	}
+
 	return emq, nil
 }
 
