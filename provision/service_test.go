@@ -111,7 +111,7 @@ func TestCert(t *testing.T) {
 			desc: "empty token with username and password",
 			config: provision.Config{
 				Server: provision.ServiceConf{
-					MgEmail:    "test@example.com",
+					MgUsername: "testUsername",
 					MgPass:     "12345678",
 					MgDomainID: testsutil.GenerateUUID(t),
 				},
@@ -132,7 +132,7 @@ func TestCert(t *testing.T) {
 			desc: "empty token with username and invalid password",
 			config: provision.Config{
 				Server: provision.ServiceConf{
-					MgEmail:    "test@example.com",
+					MgUsername: "testUsername",
 					MgPass:     "12345678",
 					MgDomainID: testsutil.GenerateUUID(t),
 				},
