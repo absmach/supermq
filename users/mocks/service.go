@@ -141,9 +141,9 @@ func (_m *Service) Identify(ctx context.Context, session authn.Session) (string,
 	return r0, r1
 }
 
-// IssueToken provides a mock function with given fields: ctx, username, secret
-func (_m *Service) IssueToken(ctx context.Context, username string, secret string) (*magistrala.Token, error) {
-	ret := _m.Called(ctx, username, secret)
+// IssueToken provides a mock function with given fields: ctx, identity, secret
+func (_m *Service) IssueToken(ctx context.Context, identity string, secret string) (*magistrala.Token, error) {
+	ret := _m.Called(ctx, identity, secret)
 
 	if len(ret) == 0 {
 		panic("no return value specified for IssueToken")
@@ -152,10 +152,10 @@ func (_m *Service) IssueToken(ctx context.Context, username string, secret strin
 	var r0 *magistrala.Token
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) (*magistrala.Token, error)); ok {
-		return rf(ctx, username, secret)
+		return rf(ctx, identity, secret)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) *magistrala.Token); ok {
-		r0 = rf(ctx, username, secret)
+		r0 = rf(ctx, identity, secret)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*magistrala.Token)
@@ -163,7 +163,7 @@ func (_m *Service) IssueToken(ctx context.Context, username string, secret strin
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = rf(ctx, username, secret)
+		r1 = rf(ctx, identity, secret)
 	} else {
 		r1 = ret.Error(1)
 	}

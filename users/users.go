@@ -202,7 +202,7 @@ type Service interface {
 	Identify(ctx context.Context, session authn.Session) (string, error)
 
 	// IssueToken issues a new access and refresh token when provided with either a username or email.
-	IssueToken(ctx context.Context, username, secret string) (*magistrala.Token, error)
+	IssueToken(ctx context.Context, identity, secret string) (*magistrala.Token, error)
 
 	// RefreshToken refreshes expired access tokens.
 	// After an access token expires, the refresh token is used to get

@@ -93,14 +93,14 @@ func (svc service) Register(ctx context.Context, session authn.Session, u User, 
 	return user, nil
 }
 
-func (svc service) IssueToken(ctx context.Context, username, secret string) (*magistrala.Token, error) {
+func (svc service) IssueToken(ctx context.Context, identity, secret string) (*magistrala.Token, error) {
 	var dbUser User
 	var err error
 
-	if _, parseErr := mail.ParseAddress(username); parseErr != nil {
-		dbUser, err = svc.users.RetrieveByUsername(ctx, username)
+	if _, parseErr := mail.ParseAddress(identity); parseErr != nil {
+		dbUser, err = svc.users.RetrieveByUsername(ctx, identity)
 	} else {
-		dbUser, err = svc.users.RetrieveByEmail(ctx, username)
+		dbUser, err = svc.users.RetrieveByEmail(ctx, identity)
 	}
 
 	if err != nil {
