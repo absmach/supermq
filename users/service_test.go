@@ -159,8 +159,8 @@ func TestRegister(t *testing.T) {
 		{
 			desc: " register a user with a secret that is too long",
 			user: users.User{
-				FirstName: "clientWithLongSecret",
-				Email:     "clientwithlongsecret@example.com",
+				FirstName: "userWithLongSecret",
+				Email:     "userwithlongsecret@example.com",
 				Credentials: users.Credentials{
 					Secret: strings.Repeat("a", 73),
 				},
@@ -182,8 +182,8 @@ func TestRegister(t *testing.T) {
 		{
 			desc: "register a new user with invalid role",
 			user: users.User{
-				FirstName: "clientWithInvalidRole",
-				Email:     "clientwithinvalidrole@example.com",
+				FirstName: "userWithInvalidRole",
+				Email:     "userwithinvalidrole@example.com",
 				Credentials: users.Credentials{
 					Secret: secret,
 				},
@@ -194,8 +194,8 @@ func TestRegister(t *testing.T) {
 		{
 			desc: "register a new user with failed to add policies with err",
 			user: users.User{
-				FirstName: "clientWithFailedToAddPolicies",
-				Email:     "clientwithfailedpolicies@example.com",
+				FirstName: "userWithFailedToAddPolicies",
+				Email:     "userwithfailedpolicies@example.com",
 				Credentials: users.Credentials{
 					Secret: secret,
 				},
@@ -207,8 +207,8 @@ func TestRegister(t *testing.T) {
 		{
 			desc: "register a new user with failed to delete policies with err",
 			user: users.User{
-				FirstName: "clientWithFailedToDeletePolicies",
-				Email:     "clientwithfailedtodelete@example.com",
+				FirstName: "userWithFailedToDeletePolicies",
+				Email:     "userwithfailedtodelete@example.com",
 				Credentials: users.Credentials{
 					Secret: secret,
 				},
@@ -298,7 +298,7 @@ func TestViewUser(t *testing.T) {
 		desc                 string
 		token                string
 		reqUserID            string
-		clientID             string
+		userID               string
 		retrieveByIDResponse users.User
 		response             users.User
 		identifyErr          error
@@ -313,7 +313,7 @@ func TestViewUser(t *testing.T) {
 			response:             user,
 			token:                validToken,
 			reqUserID:            user.ID,
-			clientID:             user.ID,
+			userID:               user.ID,
 			err:                  nil,
 			checkSuperAdminErr:   svcerr.ErrAuthorization,
 		},
@@ -322,7 +322,7 @@ func TestViewUser(t *testing.T) {
 			retrieveByIDResponse: users.User{},
 			token:                validToken,
 			reqUserID:            user.ID,
-			clientID:             user.ID,
+			userID:               user.ID,
 			retrieveByIDErr:      repoerr.ErrNotFound,
 			err:                  svcerr.ErrNotFound,
 			checkSuperAdminErr:   svcerr.ErrAuthorization,
@@ -333,7 +333,7 @@ func TestViewUser(t *testing.T) {
 			response:             user,
 			token:                validToken,
 			reqUserID:            user.ID,
-			clientID:             user.ID,
+			userID:               user.ID,
 			err:                  nil,
 		},
 		{
@@ -342,7 +342,7 @@ func TestViewUser(t *testing.T) {
 			retrieveByIDResponse: basicUser,
 			response:             basicUser,
 			reqUserID:            user.ID,
-			clientID:             "",
+			userID:               "",
 			checkSuperAdminErr:   svcerr.ErrAuthorization,
 			err:                  nil,
 		},
@@ -350,13 +350,13 @@ func TestViewUser(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
-		repoCall1 := cRepo.On("RetrieveByID", context.Background(), tc.clientID).Return(tc.retrieveByIDResponse, tc.retrieveByIDErr)
-		rUser, err := svc.View(context.Background(), authn.Session{UserID: tc.reqUserID}, tc.clientID)
+		repoCall1 := cRepo.On("RetrieveByID", context.Background(), tc.userID).Return(tc.retrieveByIDResponse, tc.retrieveByIDErr)
+		rUser, err := svc.View(context.Background(), authn.Session{UserID: tc.reqUserID}, tc.userID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		tc.response.Credentials.Secret = ""
 		assert.Equal(t, tc.response, rUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, rUser))
 		if tc.err == nil {
-			ok := repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.clientID)
+			ok := repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.userID)
 			assert.True(t, ok, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
 		}
 		repoCall1.Unset()
@@ -457,7 +457,7 @@ func TestSearchUsers(t *testing.T) {
 		{
 			desc:  "search clients with valid token",
 			token: validToken,
-			page:  users.Page{Offset: 0, FirstName: "clientname", Limit: 100},
+			page:  users.Page{Offset: 0, FirstName: "username", Limit: 100},
 			response: users.UsersPage{
 				Page:  users.Page{Total: 1, Offset: 0, Limit: 100},
 				Users: []users.User{user},
@@ -1037,8 +1037,8 @@ func TestEnableUser(t *testing.T) {
 func TestDisableUser(t *testing.T) {
 	svc, cRepo := newServiceMinimal()
 
-	enabledUser1 := users.User{ID: testsutil.GenerateUUID(t), Credentials: users.Credentials{Username: "client1@example.com", Secret: "password"}, Status: users.EnabledStatus}
-	disabledUser1 := users.User{ID: testsutil.GenerateUUID(t), Credentials: users.Credentials{Username: "client3@example.com", Secret: "password"}, Status: users.DisabledStatus}
+	enabledUser1 := users.User{ID: testsutil.GenerateUUID(t), Credentials: users.Credentials{Username: "user1@example.com", Secret: "password"}, Status: users.EnabledStatus}
+	disabledUser1 := users.User{ID: testsutil.GenerateUUID(t), Credentials: users.Credentials{Username: "user3@example.com", Secret: "password"}, Status: users.DisabledStatus}
 	disenabledUser1 := enabledUser1
 	disenabledUser1.Status = users.DisabledStatus
 

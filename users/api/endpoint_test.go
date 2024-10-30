@@ -196,8 +196,8 @@ func TestRegister(t *testing.T) {
 			desc: "register a user with name too long",
 			user: users.User{
 				FirstName: strings.Repeat("a", 1025),
-				LastName:  "newclientwithnametoolong",
-				Email:     "newclientwithinvalidname@example.com",
+				LastName:  "newuserwithnametoolong",
+				Email:     "newuserwithinvalidname@example.com",
 				Credentials: users.Credentials{
 					Secret: secret,
 				},
@@ -1528,7 +1528,7 @@ func TestUpdateRole(t *testing.T) {
 	cases := []struct {
 		desc        string
 		data        string
-		clientID    string
+		userID      string
 		token       string
 		contentType string
 		authnRes    mgauthn.Session
@@ -1539,7 +1539,7 @@ func TestUpdateRole(t *testing.T) {
 		{
 			desc:        "update user role as admin with valid token",
 			data:        fmt.Sprintf(`{"role": "%s"}`, "admin"),
-			clientID:    user.ID,
+			userID:      user.ID,
 			token:       validToken,
 			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: contentType,
@@ -1549,7 +1549,7 @@ func TestUpdateRole(t *testing.T) {
 		{
 			desc:        "update user role as normal user with valid token",
 			data:        fmt.Sprintf(`{"role": "%s"}`, "admin"),
-			clientID:    user.ID,
+			userID:      user.ID,
 			token:       validToken,
 			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: contentType,
@@ -1559,7 +1559,7 @@ func TestUpdateRole(t *testing.T) {
 		{
 			desc:        "update user role with invalid token",
 			data:        fmt.Sprintf(`{"role": "%s"}`, "admin"),
-			clientID:    user.ID,
+			userID:      user.ID,
 			token:       inValidToken,
 			contentType: contentType,
 			status:      http.StatusUnauthorized,
@@ -1569,7 +1569,7 @@ func TestUpdateRole(t *testing.T) {
 		{
 			desc:        "update user role with empty token",
 			data:        fmt.Sprintf(`{"role": "%s"}`, "admin"),
-			clientID:    user.ID,
+			userID:      user.ID,
 			token:       "",
 			contentType: contentType,
 			status:      http.StatusUnauthorized,
@@ -1579,7 +1579,7 @@ func TestUpdateRole(t *testing.T) {
 		{
 			desc:        "update user with invalid role",
 			data:        fmt.Sprintf(`{"role": "%s"}`, "invalid"),
-			clientID:    user.ID,
+			userID:      user.ID,
 			token:       validToken,
 			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: contentType,
@@ -1589,7 +1589,7 @@ func TestUpdateRole(t *testing.T) {
 		{
 			desc:        "update user with invalid contentype",
 			data:        fmt.Sprintf(`{"role": "%s"}`, "admin"),
-			clientID:    user.ID,
+			userID:      user.ID,
 			token:       validToken,
 			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: "application/xml",
@@ -1599,7 +1599,7 @@ func TestUpdateRole(t *testing.T) {
 		{
 			desc:        "update user with malformed data",
 			data:        fmt.Sprintf(`{"role": %s}`, "admin"),
-			clientID:    user.ID,
+			userID:      user.ID,
 			token:       validToken,
 			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: contentType,
@@ -1613,7 +1613,7 @@ func TestUpdateRole(t *testing.T) {
 			req := testRequest{
 				user:        us.Client(),
 				method:      http.MethodPatch,
-				url:         fmt.Sprintf("%s/users/%s/role", us.URL, tc.clientID),
+				url:         fmt.Sprintf("%s/users/%s/role", us.URL, tc.userID),
 				contentType: tc.contentType,
 				token:       tc.token,
 				body:        strings.NewReader(tc.data),

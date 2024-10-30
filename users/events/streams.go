@@ -377,14 +377,14 @@ func (es *eventStore) Delete(ctx context.Context, session authn.Session, id stri
 	return es.Publish(ctx, event)
 }
 
-func (es *eventStore) OAuthAddUserPolicy(ctx context.Context, client users.User) error {
-	if err := es.svc.OAuthAddUserPolicy(ctx, client); err != nil {
+func (es *eventStore) OAuthAddUserPolicy(ctx context.Context, user users.User) error {
+	if err := es.svc.OAuthAddUserPolicy(ctx, user); err != nil {
 		return err
 	}
 
 	event := addUserPolicyEvent{
-		id:   client.ID,
-		role: client.Role.String(),
+		id:   user.ID,
+		role: user.Role.String(),
 	}
 
 	return es.Publish(ctx, event)

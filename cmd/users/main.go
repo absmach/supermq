@@ -295,11 +295,11 @@ func newService(ctx context.Context, authz mgauthz.Authorization, token magistra
 	counter, latency = prometheus.MakeMetrics("groups", "api")
 	gsvc = gmiddleware.MetricsMiddleware(gsvc, counter, latency)
 
-	clientID, err := createAdmin(ctx, c, cRepo, hsr, csvc)
+	userID, err := createAdmin(ctx, c, cRepo, hsr, csvc)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create admin client: %s", err))
 	}
-	if err := createAdminPolicy(ctx, clientID, authz, policyService); err != nil {
+	if err := createAdminPolicy(ctx, userID, authz, policyService); err != nil {
 		return nil, nil, err
 	}
 
@@ -350,17 +350,17 @@ func createAdmin(ctx context.Context, c config, urepo users.Repository, hsr user
 	return user.ID, nil
 }
 
-func createAdminPolicy(ctx context.Context, clientID string, authz mgauthz.Authorization, policyService policies.Service) error {
+func createAdminPolicy(ctx context.Context, userID string, authz mgauthz.Authorization, policyService policies.Service) error {
 	if err := authz.Authorize(ctx, mgauthz.PolicyReq{
 		SubjectType: policies.UserType,
-		Subject:     clientID,
+		Subject:     userID,
 		Permission:  policies.AdministratorRelation,
 		Object:      policies.MagistralaObject,
 		ObjectType:  policies.PlatformType,
 	}); err != nil {
 		err := policyService.AddPolicy(ctx, policies.Policy{
 			SubjectType: policies.UserType,
-			Subject:     clientID,
+			Subject:     userID,
 			Relation:    policies.AdministratorRelation,
 			Object:      policies.MagistralaObject,
 			ObjectType:  policies.PlatformType,

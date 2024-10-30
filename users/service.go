@@ -389,7 +389,7 @@ func (svc service) UpdateRole(ctx context.Context, session authn.Session, usr Us
 		return User{}, err
 	}
 
-	client, err := svc.users.Update(ctx, user)
+	u, err := svc.users.Update(ctx, user)
 	if err != nil {
 		// If failed to update role in DB, then revert back to platform admin policies in spicedb
 		if errRollback := svc.updateUserPolicy(ctx, usr.ID, UserRole); errRollback != nil {
@@ -397,16 +397,16 @@ func (svc service) UpdateRole(ctx context.Context, session authn.Session, usr Us
 		}
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
-	return client, nil
+	return u, nil
 }
 
 func (svc service) Enable(ctx context.Context, session authn.Session, id string) (User, error) {
-	client := User{
+	u := User{
 		ID:        id,
 		UpdatedAt: time.Now(),
 		Status:    EnabledStatus,
 	}
-	user, err := svc.changeUserStatus(ctx, session, client)
+	user, err := svc.changeUserStatus(ctx, session, u)
 	if err != nil {
 		return User{}, errors.Wrap(mgclients.ErrEnableClient, err)
 	}
@@ -434,11 +434,11 @@ func (svc service) changeUserStatus(ctx context.Context, session authn.Session, 
 			return User{}, err
 		}
 	}
-	dbClient, err := svc.users.RetrieveByID(ctx, user.ID)
+	dbu, err := svc.users.RetrieveByID(ctx, user.ID)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
-	if dbClient.Status == user.Status {
+	if dbu.Status == user.Status {
 		return User{}, errors.ErrStatusAlreadyAssigned
 	}
 	user.UpdatedBy = session.UserID
@@ -451,13 +451,13 @@ func (svc service) changeUserStatus(ctx context.Context, session authn.Session, 
 }
 
 func (svc service) Delete(ctx context.Context, session authn.Session, id string) error {
-	client := User{
+	user := User{
 		ID:        id,
 		UpdatedAt: time.Now(),
 		Status:    DeletedStatus,
 	}
 
-	if _, err := svc.changeUserStatus(ctx, session, client); err != nil {
+	if _, err := svc.changeUserStatus(ctx, session, user); err != nil {
 		return err
 	}
 
@@ -541,13 +541,13 @@ func (svc service) ListMembers(ctx context.Context, session authn.Session, objec
 	}, nil
 }
 
-func (svc service) retrieveObjectUsersPermissions(ctx context.Context, domainID, objectType, objectID string, client *User) error {
-	userID := mgauth.EncodeDomainUserID(domainID, client.ID)
+func (svc service) retrieveObjectUsersPermissions(ctx context.Context, domainID, objectType, objectID string, user *User) error {
+	userID := mgauth.EncodeDomainUserID(domainID, user.ID)
 	permissions, err := svc.listObjectUserPermission(ctx, userID, objectType, objectID)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)
 	}
-	client.Permissions = permissions
+	user.Permissions = permissions
 	return nil
 }
 

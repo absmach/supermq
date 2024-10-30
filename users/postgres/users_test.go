@@ -41,20 +41,20 @@ func TestUsersSave(t *testing.T) {
 	last_name := namesgen.Generate()
 	username := namesgen.Generate()
 
-	clientEmail := first_name + "@example.com"
+	email := first_name + "@example.com"
 
 	cases := []struct {
-		desc   string
-		client users.User
-		err    error
+		desc string
+		user users.User
+		err  error
 	}{
 		{
 			desc: "add new user successfully",
-			client: users.User{
+			user: users.User{
 				ID:        uid,
 				FirstName: first_name,
 				LastName:  last_name,
-				Email:     clientEmail,
+				Email:     email,
 				Credentials: users.Credentials{
 					Username: username,
 					Secret:   password,
@@ -66,11 +66,11 @@ func TestUsersSave(t *testing.T) {
 		},
 		{
 			desc: "add user with duplicate user email",
-			client: users.User{
+			user: users.User{
 				ID:        testsutil.GenerateUUID(t),
 				FirstName: first_name,
 				LastName:  last_name,
-				Email:     clientEmail,
+				Email:     email,
 				Credentials: users.Credentials{
 					Username: namesgen.Generate(),
 					Secret:   password,
@@ -82,7 +82,7 @@ func TestUsersSave(t *testing.T) {
 		},
 		{
 			desc: "add user with duplicate user name",
-			client: users.User{
+			user: users.User{
 				ID:        testsutil.GenerateUUID(t),
 				FirstName: namesgen.Generate(),
 				LastName:  last_name,
@@ -98,7 +98,7 @@ func TestUsersSave(t *testing.T) {
 		},
 		{
 			desc: "add user with invalid user id",
-			client: users.User{
+			user: users.User{
 				ID:        invalidName,
 				FirstName: namesgen.Generate(),
 				LastName:  namesgen.Generate(),
@@ -114,7 +114,7 @@ func TestUsersSave(t *testing.T) {
 		},
 		{
 			desc: "add user with invalid user name",
-			client: users.User{
+			user: users.User{
 				ID:        testsutil.GenerateUUID(t),
 				FirstName: first_name,
 				LastName:  last_name,
@@ -130,7 +130,7 @@ func TestUsersSave(t *testing.T) {
 		},
 		{
 			desc: "add user with a missing username",
-			client: users.User{
+			user: users.User{
 				ID:        testsutil.GenerateUUID(t),
 				FirstName: first_name,
 				LastName:  last_name,
@@ -144,7 +144,7 @@ func TestUsersSave(t *testing.T) {
 		},
 		{
 			desc: "add user with a missing user secret",
-			client: users.User{
+			user: users.User{
 				ID:        testsutil.GenerateUUID(t),
 				FirstName: namesgen.Generate(),
 				LastName:  namesgen.Generate(),
@@ -158,7 +158,7 @@ func TestUsersSave(t *testing.T) {
 		},
 		{
 			desc: "add a user with invalid metadata",
-			client: users.User{
+			user: users.User{
 				ID:        testsutil.GenerateUUID(t),
 				FirstName: namesgen.Generate(),
 				Email:     namesgen.Generate() + "@example.com",
@@ -175,11 +175,11 @@ func TestUsersSave(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		rUser, err := repo.Save(context.Background(), tc.client)
+		rUser, err := repo.Save(context.Background(), tc.user)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
-			rUser.Credentials.Secret = tc.client.Credentials.Secret
-			assert.Equal(t, tc.client, rUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.client, rUser))
+			rUser.Credentials.Secret = tc.user.Credentials.Secret
+			assert.Equal(t, tc.user, rUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.user, rUser))
 		}
 	}
 }
@@ -195,20 +195,20 @@ func TestIsPlatformAdmin(t *testing.T) {
 	first_name := namesgen.Generate()
 	last_name := namesgen.Generate()
 	username := namesgen.Generate()
-	clientEmail := first_name + "@example.com"
+	email := first_name + "@example.com"
 
 	cases := []struct {
-		desc   string
-		client users.User
-		err    error
+		desc string
+		user users.User
+		err  error
 	}{
 		{
 			desc: "authorize check for super user",
-			client: users.User{
+			user: users.User{
 				ID:        testsutil.GenerateUUID(t),
 				FirstName: first_name,
 				LastName:  last_name,
-				Email:     clientEmail,
+				Email:     email,
 				Credentials: users.Credentials{
 					Username: username,
 					Secret:   password,
@@ -221,7 +221,7 @@ func TestIsPlatformAdmin(t *testing.T) {
 		},
 		{
 			desc: "unauthorize user",
-			client: users.User{
+			user: users.User{
 				ID:        testsutil.GenerateUUID(t),
 				FirstName: first_name,
 				LastName:  last_name,
@@ -239,9 +239,9 @@ func TestIsPlatformAdmin(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, err := repo.Save(context.Background(), tc.client)
+		_, err := repo.Save(context.Background(), tc.user)
 		require.Nil(t, err, fmt.Sprintf("%s: save user unexpected error: %s", tc.desc, err))
-		err = repo.CheckSuperAdmin(context.Background(), tc.client.ID)
+		err = repo.CheckSuperAdmin(context.Background(), tc.user.ID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.err, err))
 	}
 }
@@ -254,7 +254,7 @@ func TestRetrieveByID(t *testing.T) {
 
 	repo := cpostgres.NewRepository(database)
 
-	client := users.User{
+	user := users.User{
 		ID:        testsutil.GenerateUUID(t),
 		FirstName: namesgen.Generate(),
 		LastName:  namesgen.Generate(),
@@ -267,33 +267,33 @@ func TestRetrieveByID(t *testing.T) {
 		Status:   users.EnabledStatus,
 	}
 
-	_, err := repo.Save(context.Background(), client)
-	require.Nil(t, err, fmt.Sprintf("failed to save client %s", client.ID))
+	_, err := repo.Save(context.Background(), user)
+	require.Nil(t, err, fmt.Sprintf("failed to save client %s", user.ID))
 
 	cases := []struct {
-		desc     string
-		clientID string
-		err      error
+		desc   string
+		userID string
+		err    error
 	}{
 		{
-			desc:     "retrieve existing user",
-			clientID: client.ID,
-			err:      nil,
+			desc:   "retrieve existing user",
+			userID: user.ID,
+			err:    nil,
 		},
 		{
-			desc:     "retrieve non-existing user",
-			clientID: invalidName,
-			err:      repoerr.ErrNotFound,
+			desc:   "retrieve non-existing user",
+			userID: invalidName,
+			err:    repoerr.ErrNotFound,
 		},
 		{
-			desc:     "retrieve with empty user id",
-			clientID: "",
-			err:      repoerr.ErrNotFound,
+			desc:   "retrieve with empty user id",
+			userID: "",
+			err:    repoerr.ErrNotFound,
 		},
 	}
 
 	for _, tc := range cases {
-		_, err := repo.RetrieveByID(context.Background(), tc.clientID)
+		_, err := repo.RetrieveByID(context.Background(), tc.userID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.err, err))
 	}
 }
@@ -307,9 +307,9 @@ func TestRetrieveAll(t *testing.T) {
 	repo := cpostgres.NewRepository(database)
 
 	num := 200
-	var items, enabledClients []users.User
+	var items, enabledUsers []users.User
 	for i := 0; i < num; i++ {
-		client := users.User{
+		user := users.User{
 			ID:        testsutil.GenerateUUID(t),
 			FirstName: namesgen.Generate(),
 			LastName:  namesgen.Generate(),
@@ -323,17 +323,17 @@ func TestRetrieveAll(t *testing.T) {
 			Tags:     []string{"tag1"},
 		}
 		if i%50 == 0 {
-			client.Metadata = map[string]interface{}{
+			user.Metadata = map[string]interface{}{
 				"key": "value",
 			}
-			client.Role = users.AdminRole
-			client.Status = users.DisabledStatus
+			user.Role = users.AdminRole
+			user.Status = users.DisabledStatus
 		}
-		_, err := repo.Save(context.Background(), client)
-		require.Nil(t, err, fmt.Sprintf("failed to save user %s", client.ID))
-		items = append(items, client)
-		if client.Status == users.EnabledStatus {
-			enabledClients = append(enabledClients, client)
+		_, err := repo.Save(context.Background(), user)
+		require.Nil(t, err, fmt.Sprintf("failed to save user %s", user.ID))
+		items = append(items, user)
+		if user.Status == users.EnabledStatus {
+			enabledUsers = append(enabledUsers, user)
 		}
 	}
 
@@ -437,7 +437,7 @@ func TestRetrieveAll(t *testing.T) {
 			pageMeta: users.Page{},
 			page: users.UsersPage{
 				Page: users.Page{
-					Total:  196, // No of enabled clients.
+					Total:  196, // number of enabled users
 					Offset: 0,
 					Limit:  0,
 				},
@@ -465,7 +465,7 @@ func TestRetrieveAll(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc: "retrieve with invalid client id",
+			desc: "retrieve with invalid user id",
 			pageMeta: users.Page{
 				IDs:    []string{invalidName},
 				Offset: 0,
@@ -484,7 +484,7 @@ func TestRetrieveAll(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc: "retrieve with client name",
+			desc: "retrieve with first name",
 			pageMeta: users.Page{
 				FirstName: items[0].FirstName,
 				Offset:    0,
@@ -503,7 +503,7 @@ func TestRetrieveAll(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc: "retrieve with client User Name",
+			desc: "retrieve with username",
 			pageMeta: users.Page{
 				Username: items[0].Credentials.Username,
 				Offset:   0,
@@ -535,7 +535,7 @@ func TestRetrieveAll(t *testing.T) {
 					Offset: 0,
 					Limit:  200,
 				},
-				Users: enabledClients,
+				Users: enabledUsers,
 			},
 			err: nil,
 		},
@@ -593,7 +593,7 @@ func TestRetrieveAll(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc: "retrieve with invalid client name",
+			desc: "retrieve with invalid first name",
 			pageMeta: users.Page{
 				FirstName: invalidName,
 				Offset:    0,
