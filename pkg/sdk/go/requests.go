@@ -51,3 +51,8 @@ type UsersRelationRequest struct {
 type UserGroupsRequest struct {
 	UserGroupIDs []string `json:"group_ids"`
 }
+
+type UpdateUsernameReq struct {
+	id       string
+	Username string `json:"username"`
+}

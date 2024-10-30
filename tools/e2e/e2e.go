@@ -389,7 +389,7 @@ func update(s sdk.SDK, domainID, token string, users []sdk.User, groups []sdk.Gr
 		user.Credentials.Username = namesgenerator.Generate()
 		rUser, err = s.UpdateUsername(user, token)
 		if err != nil {
-			return fmt.Errorf("failed to update user identity %w", err)
+			return fmt.Errorf("failed to update username %w", err)
 		}
 		if rUser.Credentials.Username != user.Credentials.Username {
 			return fmt.Errorf("failed to update user name before %s after %s", user.Credentials.Username, rUser.Credentials.Username)

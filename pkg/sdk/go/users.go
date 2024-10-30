@@ -280,7 +280,8 @@ func (sdk mgSDK) UpdateUserRole(user User, token string) (User, errors.SDKError)
 }
 
 func (sdk mgSDK) UpdateUsername(user User, token string) (User, errors.SDKError) {
-	data, err := json.Marshal(user)
+	uur := UpdateUsernameReq{id: user.ID, Username: user.Credentials.Username}
+	data, err := json.Marshal(uur)
 	if err != nil {
 		return User{}, errors.NewSDKError(err)
 	}
