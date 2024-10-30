@@ -266,10 +266,7 @@ func updateEndpoint(svc users.Service) endpoint.Endpoint {
 		}
 
 		user := users.User{
-			ID: req.id,
-			Credentials: users.Credentials{
-				Username: req.Username,
-			},
+			ID:        req.id,
 			FirstName: req.FirstName,
 			LastName:  req.LastName,
 			Metadata:  req.Metadata,
@@ -312,7 +309,7 @@ func updateTagsEndpoint(svc users.Service) endpoint.Endpoint {
 
 func updateEmailEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(updateUserEmailReq)
+		req := request.(updateEmailReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
@@ -462,7 +459,7 @@ func updateRoleEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthorization
 		}
 
-		user, err := svc.Update(ctx, session, user)
+		user, err := svc.UpdateRole(ctx, session, user)
 		if err != nil {
 			return nil, err
 		}

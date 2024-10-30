@@ -20,15 +20,15 @@ type User struct {
 	LastName       string      `json:"last_name,omitempty"`
 	Tags           []string    `json:"tags,omitempty"`
 	Metadata       Metadata    `json:"metadata,omitempty"`
-	CreatedAt      time.Time   `json:"created_at,omitempty"`
-	UpdatedAt      time.Time   `json:"updated_at,omitempty"`
-	UpdatedBy      string      `json:"updated_by,omitempty"`
 	Status         Status      `json:"status"`                    // 0 for enabled, 1 for disabled
 	Role           Role        `json:"role"`                      // 0 for normal user, 1 for admin
 	ProfilePicture string      `json:"profile_picture,omitempty"` // profile picture URL
 	Credentials    Credentials `json:"credentials,omitempty"`
 	Permissions    []string    `json:"permissions,omitempty"`
 	Email          string      `json:"email,omitempty"`
+	CreatedAt      time.Time   `json:"created_at,omitempty"`
+	UpdatedAt      time.Time   `json:"updated_at,omitempty"`
+	UpdatedBy      string      `json:"updated_by,omitempty"`
 }
 
 type Credentials struct {

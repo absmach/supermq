@@ -410,7 +410,7 @@ func decodeUpdateUserEmail(_ context.Context, r *http.Request) (interface{}, err
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
-	req := updateUserEmailReq{
+	req := updateEmailReq{
 		id: chi.URLParam(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

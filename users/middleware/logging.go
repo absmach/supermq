@@ -32,8 +32,9 @@ func (lm *loggingMiddleware) Register(ctx context.Context, session authn.Session
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
-				slog.String("id", u.ID),
-				slog.String("username", u.Credentials.Username),
+				slog.String("username", user.Credentials.Username),
+				slog.String("first_name", user.FirstName),
+				slog.String("last_name", user.LastName),
 			),
 		}
 		if err != nil {
@@ -41,6 +42,7 @@ func (lm *loggingMiddleware) Register(ctx context.Context, session authn.Session
 			lm.logger.Warn("Register user failed", args...)
 			return
 		}
+		args = append(args, slog.String("user_id", u.ID))
 		lm.logger.Info("Register user completed successfully", args...)
 	}(time.Now())
 	return lm.svc.Register(ctx, session, user, selfRegister)
@@ -357,7 +359,7 @@ func (lm *loggingMiddleware) UpdateRole(ctx context.Context, session authn.Sessi
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("user",
-				slog.String("id", c.ID),
+				slog.String("id", user.ID),
 				slog.String("role", user.Role.String()),
 			),
 		}

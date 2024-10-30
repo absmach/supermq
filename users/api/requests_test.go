@@ -253,16 +253,14 @@ func TestUpdateUserReqValidate(t *testing.T) {
 		{
 			desc: "valid request",
 			req: updateUserReq{
-				id:       validID,
-				Username: valid,
+				id: validID,
 			},
 			err: nil,
 		},
 		{
 			desc: "empty id",
 			req: updateUserReq{
-				id:       "",
-				Username: valid,
+				id: "",
 			},
 			err: apiutil.ErrMissingID,
 		},
@@ -406,12 +404,12 @@ func TestUpdateUserRoleReqValidate(t *testing.T) {
 func TestUpdateUserEmailReqValidate(t *testing.T) {
 	cases := []struct {
 		desc string
-		req  updateUserEmailReq
+		req  updateEmailReq
 		err  error
 	}{
 		{
 			desc: "valid request",
-			req: updateUserEmailReq{
+			req: updateEmailReq{
 				id:    validID,
 				Email: "example@example.com",
 			},
@@ -419,7 +417,7 @@ func TestUpdateUserEmailReqValidate(t *testing.T) {
 		},
 		{
 			desc: "empty id",
-			req: updateUserEmailReq{
+			req: updateEmailReq{
 				id:    "",
 				Email: "example@example.com",
 			},

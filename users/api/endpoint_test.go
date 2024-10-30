@@ -1620,7 +1620,7 @@ func TestUpdateRole(t *testing.T) {
 			}
 
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-			svcCall := svc.On("Update", mock.Anything, tc.authnRes, mock.Anything).Return(users.User{}, tc.err)
+			svcCall := svc.On("UpdateRole", mock.Anything, tc.authnRes, mock.Anything).Return(users.User{}, tc.err)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			var resBody respBody

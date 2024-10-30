@@ -9,7 +9,6 @@ import (
 
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
-	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/users"
 )
@@ -36,7 +35,7 @@ func (req createUserReq) validate() error {
 	if req.User.Credentials.Username == "" {
 		return apiutil.ErrMissingUsername
 	}
-	// Usrename must not be a valid email format due to username/email login.
+	// Username must not be a valid email format due to username/email login.
 	if _, err := mail.ParseAddress(req.User.Credentials.Username); err == nil {
 		return apiutil.ErrInvalidUsername
 	}
@@ -55,6 +54,11 @@ func (req createUserReq) validate() error {
 	}
 	if req.User.Status == users.AllStatus {
 		return svcerr.ErrInvalidStatus
+	}
+	if req.User.ProfilePicture != "" {
+		if _, err := url.Parse(req.User.ProfilePicture); err != nil {
+			return apiutil.ErrInvalidProfilePictureURL
+		}
 	}
 
 	return req.User.Validate()
@@ -135,12 +139,10 @@ func (req listMembersByObjectReq) validate() error {
 }
 
 type updateUserReq struct {
-	id             string
-	FirstName      string         `json:"first_name,omitempty"`
-	LastName       string         `json:"last_name,omitempty"`
-	Username       string         `json:"username,omitempty"`
-	ProfilePicture url.URL        `json:"profile_picture,omitempty"` // URL of the picture
-	Metadata       users.Metadata `json:"metadata,omitempty"`
+	id        string
+	FirstName string         `json:"first_name,omitempty"`
+	LastName  string         `json:"last_name,omitempty"`
+	Metadata  users.Metadata `json:"metadata,omitempty"`
 }
 
 func (req updateUserReq) validate() error {
@@ -178,14 +180,17 @@ func (req updateUserRoleReq) validate() error {
 	return nil
 }
 
-type updateUserEmailReq struct {
+type updateEmailReq struct {
 	id    string
 	Email string `json:"email,omitempty"`
 }
 
-func (req updateUserEmailReq) validate() error {
+func (req updateEmailReq) validate() error {
 	if req.id == "" {
 		return apiutil.ErrMissingID
+	}
+	if _, err := mail.ParseAddress(req.Email); err != nil {
+		return apiutil.ErrInvalidEmail
 	}
 
 	return nil
@@ -233,7 +238,7 @@ func (req updateProfilePictureReq) validate() error {
 		return apiutil.ErrMissingID
 	}
 	if _, err := url.Parse(req.ProfilePicture); err != nil {
-		return errors.Wrap(apiutil.ErrValidation, err)
+		return apiutil.ErrInvalidProfilePictureURL
 	}
 	return nil
 }

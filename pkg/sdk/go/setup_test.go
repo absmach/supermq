@@ -247,6 +247,7 @@ func generateTestUser(t *testing.T) sdk.User {
 		CreatedAt: createdAt,
 		UpdatedAt: createdAt,
 		Status:    users.EnabledStatus.String(),
+		Role:      users.UserRole.String(),
 	}
 }
 

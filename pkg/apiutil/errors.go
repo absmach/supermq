@@ -203,4 +203,7 @@ var (
 
 	// ErrMissingLastName indicates missing last name.
 	ErrMissingLastName = errors.New("missing last name")
+
+	// ErrInvalidProfilePictureURL indicates that the profile picture url is invalid.
+	ErrInvalidProfilePictureURL = errors.New("invalid profile picture url")
 )

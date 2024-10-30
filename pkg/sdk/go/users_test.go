@@ -59,6 +59,7 @@ func TestCreateUser(t *testing.T) {
 	createSdkUserReq := sdk.User{
 		FirstName:   user.FirstName,
 		LastName:    user.LastName,
+		Username:    user.Username,
 		Email:       user.Email,
 		Tags:        user.Tags,
 		Credentials: user.Credentials,
@@ -293,6 +294,7 @@ func TestListUsers(t *testing.T) {
 			},
 			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
 			Status:   users.EnabledStatus.String(),
+			Role:     users.UserRole.String(),
 		}
 		if i == 50 {
 			cl.Status = users.DisabledStatus.String()
@@ -598,6 +600,7 @@ func TestSearchUsers(t *testing.T) {
 			},
 			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
 			Status:   users.EnabledStatus.String(),
+			Role:     users.UserRole.String(),
 		}
 		if i == 50 {
 			cl.Status = users.DisabledStatus.String()
