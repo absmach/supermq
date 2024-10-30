@@ -17,6 +17,7 @@ volumes:
   supermq-mqtt-broker-volume:
   supermq-spicedb-db-volume:
   supermq-auth-db-volume:
+  supermq-pat-db-volume:
   supermq-domains-db-volume:
   supermq-invitations-db-volume:
   supermq-ui-db-volume:
@@ -136,6 +137,7 @@ services:
       - supermq-base-net
     volumes:
       - ./spicedb/schema.zed:${SMQ_SPICEDB_SCHEMA_FILE}
+      - supermq-pat-db-volume:/supermq-data
       # Auth gRPC mTLS server certificates
       - type: bind
         source: ${SMQ_AUTH_GRPC_SERVER_CERT:-ssl/certs/dummy/server_cert}

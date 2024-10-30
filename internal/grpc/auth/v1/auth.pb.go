@@ -33,9 +33,16 @@ type AuthNReq struct {
 
 func (x *AuthNReq) Reset() {
 	*x = AuthNReq{}
-	mi := &file_auth_v1_auth_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_auth_v1_auth_proto_msgTypes[0]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_auth_v1_auth_proto_msgTypes[0]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *AuthNReq) String() string {
@@ -46,7 +53,8 @@ func (*AuthNReq) ProtoMessage() {}
 
 func (x *AuthNReq) ProtoReflect() protoreflect.Message {
 	mi := &file_auth_v1_auth_proto_msgTypes[0]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -80,9 +88,16 @@ type AuthNRes struct {
 
 func (x *AuthNRes) Reset() {
 	*x = AuthNRes{}
-	mi := &file_auth_v1_auth_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_auth_v1_auth_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_auth_v1_auth_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *AuthNRes) String() string {
@@ -93,7 +108,8 @@ func (*AuthNRes) ProtoMessage() {}
 
 func (x *AuthNRes) ProtoReflect() protoreflect.Message {
 	mi := &file_auth_v1_auth_proto_msgTypes[1]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -147,9 +163,16 @@ type AuthZReq struct {
 
 func (x *AuthZReq) Reset() {
 	*x = AuthZReq{}
-	mi := &file_auth_v1_auth_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_auth_v1_auth_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_auth_v1_auth_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *AuthZReq) String() string {
@@ -160,7 +183,8 @@ func (*AuthZReq) ProtoMessage() {}
 
 func (x *AuthZReq) ProtoReflect() protoreflect.Message {
 	mi := &file_auth_v1_auth_proto_msgTypes[2]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -238,6 +262,93 @@ func (x *AuthZReq) GetObjectType() string {
 	return ""
 }
 
+type AuthZpatReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	PaToken                  string   `protobuf:"bytes,1,opt,name=paToken,proto3" json:"paToken,omitempty"`                                                                       // PaToken
+	PlatformEntityType       string   `protobuf:"bytes,2,opt,name=platform_entity_type,json=platformEntityType,proto3" json:"platform_entity_type,omitempty"`                     // Platform entity type
+	OptionalDomainID         string   `protobuf:"bytes,3,opt,name=optional_domainID,json=optionalDomainID,proto3" json:"optional_domainID,omitempty"`                             // Optional domain id
+	OptionalDomainEntityType string   `protobuf:"bytes,4,opt,name=optional_domain_entity_type,json=optionalDomainEntityType,proto3" json:"optional_domain_entity_type,omitempty"` // Optional domain entity type
+	Operation                string   `protobuf:"bytes,5,opt,name=operation,proto3" json:"operation,omitempty"`                                                                   // Operation
+	EntityIDs                []string `protobuf:"bytes,6,rep,name=entityIDs,proto3" json:"entityIDs,omitempty"`                                                                   // EntityIDs
+}
+
+func (x *AuthZpatReq) Reset() {
+	*x = AuthZpatReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_auth_v1_auth_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AuthZpatReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthZpatReq) ProtoMessage() {}
+
+func (x *AuthZpatReq) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthZpatReq.ProtoReflect.Descriptor instead.
+func (*AuthZpatReq) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *AuthZpatReq) GetPaToken() string {
+	if x != nil {
+		return x.PaToken
+	}
+	return ""
+}
+
+func (x *AuthZpatReq) GetPlatformEntityType() string {
+	if x != nil {
+		return x.PlatformEntityType
+	}
+	return ""
+}
+
+func (x *AuthZpatReq) GetOptionalDomainID() string {
+	if x != nil {
+		return x.OptionalDomainID
+	}
+	return ""
+}
+
+func (x *AuthZpatReq) GetOptionalDomainEntityType() string {
+	if x != nil {
+		return x.OptionalDomainEntityType
+	}
+	return ""
+}
+
+func (x *AuthZpatReq) GetOperation() string {
+	if x != nil {
+		return x.Operation
+	}
+	return ""
+}
+
+func (x *AuthZpatReq) GetEntityIDs() []string {
+	if x != nil {
+		return x.EntityIDs
+	}
+	return nil
+}
+
 type AuthZRes struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -249,9 +360,11 @@ type AuthZRes struct {
 
 func (x *AuthZRes) Reset() {
 	*x = AuthZRes{}
-	mi := &file_auth_v1_auth_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_auth_v1_auth_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *AuthZRes) String() string {
@@ -261,8 +374,8 @@ func (x *AuthZRes) String() string {
 func (*AuthZRes) ProtoMessage() {}
 
 func (x *AuthZRes) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_v1_auth_proto_msgTypes[3]
-	if x != nil {
+	mi := &file_auth_v1_auth_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -274,7 +387,7 @@ func (x *AuthZRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AuthZRes.ProtoReflect.Descriptor instead.
 func (*AuthZRes) Descriptor() ([]byte, []int) {
-	return file_auth_v1_auth_proto_rawDescGZIP(), []int{3}
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *AuthZRes) GetAuthorized() bool {
@@ -321,13 +434,33 @@ var file_auth_v1_auth_proto_rawDesc = []byte{
 	0x06, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x18, 0x08, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x6f,
 	0x62, 0x6a, 0x65, 0x63, 0x74, 0x12, 0x1f, 0x0a, 0x0b, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x5f,
 	0x74, 0x79, 0x70, 0x65, 0x18, 0x09, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x6f, 0x62, 0x6a, 0x65,
-	0x63, 0x74, 0x54, 0x79, 0x70, 0x65, 0x22, 0x3a, 0x0a, 0x08, 0x41, 0x75, 0x74, 0x68, 0x5a, 0x52,
-	0x65, 0x73, 0x12, 0x1e, 0x0a, 0x0a, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x65, 0x64,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0a, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a,
-	0x65, 0x64, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02,
-	0x69, 0x64, 0x32, 0x7a, 0x0a, 0x0b, 0x41, 0x75, 0x74, 0x68, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63,
-	0x65, 0x12, 0x33, 0x0a, 0x09, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x65, 0x12, 0x11,
-	0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x5a, 0x52, 0x65,
+	0x63, 0x74, 0x54, 0x79, 0x70, 0x65, 0x22, 0x81, 0x02, 0x0a, 0x0b, 0x41, 0x75, 0x74, 0x68, 0x5a,
+	0x70, 0x61, 0x74, 0x52, 0x65, 0x71, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x54, 0x6f, 0x6b, 0x65,
+	0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x70, 0x61, 0x54, 0x6f, 0x6b, 0x65, 0x6e,
+	0x12, 0x30, 0x0a, 0x14, 0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d, 0x5f, 0x65, 0x6e, 0x74,
+	0x69, 0x74, 0x79, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x12,
+	0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x54, 0x79,
+	0x70, 0x65, 0x12, 0x2b, 0x0a, 0x11, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x61, 0x6c, 0x5f, 0x64,
+	0x6f, 0x6d, 0x61, 0x69, 0x6e, 0x49, 0x44, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x10, 0x6f,
+	0x70, 0x74, 0x69, 0x6f, 0x6e, 0x61, 0x6c, 0x44, 0x6f, 0x6d, 0x61, 0x69, 0x6e, 0x49, 0x44, 0x12,
+	0x3d, 0x0a, 0x1b, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x61, 0x6c, 0x5f, 0x64, 0x6f, 0x6d, 0x61,
+	0x69, 0x6e, 0x5f, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x04,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x18, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x61, 0x6c, 0x44, 0x6f,
+	0x6d, 0x61, 0x69, 0x6e, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x54, 0x79, 0x70, 0x65, 0x12, 0x1c,
+	0x0a, 0x09, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x09, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1c, 0x0a, 0x09,
+	0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x49, 0x44, 0x73, 0x18, 0x06, 0x20, 0x03, 0x28, 0x09, 0x52,
+	0x09, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x49, 0x44, 0x73, 0x22, 0x3a, 0x0a, 0x08, 0x41, 0x75,
+	0x74, 0x68, 0x5a, 0x52, 0x65, 0x73, 0x12, 0x1e, 0x0a, 0x0a, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72,
+	0x69, 0x7a, 0x65, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0a, 0x61, 0x75, 0x74, 0x68,
+	0x6f, 0x72, 0x69, 0x7a, 0x65, 0x64, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x32, 0xb5, 0x01, 0x0a, 0x0b, 0x41, 0x75, 0x74, 0x68, 0x53,
+	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x33, 0x0a, 0x09, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72,
+	0x69, 0x7a, 0x65, 0x12, 0x11, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x75,
+	0x74, 0x68, 0x5a, 0x52, 0x65, 0x71, 0x1a, 0x11, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31,
+	0x2e, 0x41, 0x75, 0x74, 0x68, 0x5a, 0x52, 0x65, 0x73, 0x22, 0x00, 0x12, 0x39, 0x0a, 0x0c, 0x41,
+	0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x65, 0x50, 0x41, 0x54, 0x12, 0x14, 0x2e, 0x61, 0x75,
+	0x74, 0x68, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x5a, 0x70, 0x61, 0x74, 0x52, 0x65,
 	0x71, 0x1a, 0x11, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x75, 0x74, 0x68,
 	0x5a, 0x52, 0x65, 0x73, 0x22, 0x00, 0x12, 0x36, 0x0a, 0x0c, 0x41, 0x75, 0x74, 0x68, 0x65, 0x6e,
 	0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x12, 0x11, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31,
@@ -351,20 +484,23 @@ func file_auth_v1_auth_proto_rawDescGZIP() []byte {
 	return file_auth_v1_auth_proto_rawDescData
 }
 
-var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_auth_v1_auth_proto_goTypes = []any{
-	(*AuthNReq)(nil), // 0: auth.v1.AuthNReq
-	(*AuthNRes)(nil), // 1: auth.v1.AuthNRes
-	(*AuthZReq)(nil), // 2: auth.v1.AuthZReq
-	(*AuthZRes)(nil), // 3: auth.v1.AuthZRes
+	(*AuthNReq)(nil),    // 0: auth.v1.AuthNReq
+	(*AuthNRes)(nil),    // 1: auth.v1.AuthNRes
+	(*AuthZReq)(nil),    // 2: auth.v1.AuthZReq
+	(*AuthZpatReq)(nil), // 3: auth.v1.AuthZpatReq
+	(*AuthZRes)(nil),    // 4: auth.v1.AuthZRes
 }
 var file_auth_v1_auth_proto_depIdxs = []int32{
 	2, // 0: auth.v1.AuthService.Authorize:input_type -> auth.v1.AuthZReq
-	0, // 1: auth.v1.AuthService.Authenticate:input_type -> auth.v1.AuthNReq
-	3, // 2: auth.v1.AuthService.Authorize:output_type -> auth.v1.AuthZRes
-	1, // 3: auth.v1.AuthService.Authenticate:output_type -> auth.v1.AuthNRes
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	3, // 1: auth.v1.AuthService.AuthorizePAT:input_type -> auth.v1.AuthZpatReq
+	0, // 2: auth.v1.AuthService.Authenticate:input_type -> auth.v1.AuthNReq
+	4, // 3: auth.v1.AuthService.Authorize:output_type -> auth.v1.AuthZRes
+	4, // 4: auth.v1.AuthService.AuthorizePAT:output_type -> auth.v1.AuthZRes
+	1, // 5: auth.v1.AuthService.Authenticate:output_type -> auth.v1.AuthNRes
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -375,13 +511,75 @@ func file_auth_v1_auth_proto_init() {
 	if File_auth_v1_auth_proto != nil {
 		return
 	}
+	if !protoimpl.UnsafeEnabled {
+		file_auth_v1_auth_proto_msgTypes[0].Exporter = func(v any, i int) any {
+			switch v := v.(*AuthNReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_auth_v1_auth_proto_msgTypes[1].Exporter = func(v any, i int) any {
+			switch v := v.(*AuthNRes); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_auth_v1_auth_proto_msgTypes[2].Exporter = func(v any, i int) any {
+			switch v := v.(*AuthZReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_auth_v1_auth_proto_msgTypes[3].Exporter = func(v any, i int) any {
+			switch v := v.(*AuthZpatReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_auth_v1_auth_proto_msgTypes[4].Exporter = func(v any, i int) any {
+			switch v := v.(*AuthZRes); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_auth_v1_auth_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	AuthService_Authorize_FullMethodName    = "/auth.v1.AuthService/Authorize"
+	AuthService_AuthorizePAT_FullMethodName = "/auth.v1.AuthService/AuthorizePAT"
 	AuthService_Authenticate_FullMethodName = "/auth.v1.AuthService/Authenticate"
 )
 
@@ -34,6 +35,7 @@ const (
 // and authorization functionalities for SuperMQ services.
 type AuthServiceClient interface {
 	Authorize(ctx context.Context, in *AuthZReq, opts ...grpc.CallOption) (*AuthZRes, error)
+	AuthorizePAT(ctx context.Context, in *AuthZpatReq, opts ...grpc.CallOption) (*AuthZRes, error)
 	Authenticate(ctx context.Context, in *AuthNReq, opts ...grpc.CallOption) (*AuthNRes, error)
 }
 
@@ -49,6 +51,16 @@ func (c *authServiceClient) Authorize(ctx context.Context, in *AuthZReq, opts ..
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AuthZRes)
 	err := c.cc.Invoke(ctx, AuthService_Authorize_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) AuthorizePAT(ctx context.Context, in *AuthZpatReq, opts ...grpc.CallOption) (*AuthZRes, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AuthZRes)
+	err := c.cc.Invoke(ctx, AuthService_AuthorizePAT_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +85,7 @@ func (c *authServiceClient) Authenticate(ctx context.Context, in *AuthNReq, opts
 // and authorization functionalities for SuperMQ services.
 type AuthServiceServer interface {
 	Authorize(context.Context, *AuthZReq) (*AuthZRes, error)
+	AuthorizePAT(context.Context, *AuthZpatReq) (*AuthZRes, error)
 	Authenticate(context.Context, *AuthNReq) (*AuthNRes, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
@@ -86,6 +99,9 @@ type UnimplementedAuthServiceServer struct{}
 
 func (UnimplementedAuthServiceServer) Authorize(context.Context, *AuthZReq) (*AuthZRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Authorize not implemented")
+}
+func (UnimplementedAuthServiceServer) AuthorizePAT(context.Context, *AuthZpatReq) (*AuthZRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AuthorizePAT not implemented")
 }
 func (UnimplementedAuthServiceServer) Authenticate(context.Context, *AuthNReq) (*AuthNRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Authenticate not implemented")
@@ -129,6 +145,24 @@ func _AuthService_Authorize_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_AuthorizePAT_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthZpatReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).AuthorizePAT(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_AuthorizePAT_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).AuthorizePAT(ctx, req.(*AuthZpatReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AuthService_Authenticate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AuthNReq)
 	if err := dec(in); err != nil {
@@ -157,6 +191,10 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Authorize",
 			Handler:    _AuthService_Authorize_Handler,
+		},
+		{
+			MethodName: "AuthorizePAT",
+			Handler:    _AuthService_AuthorizePAT_Handler,
 		},
 		{
 			MethodName: "Authenticate",

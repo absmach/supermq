@@ -50,3 +50,18 @@ func authorizeEndpoint(svc auth.Service) endpoint.Endpoint {
 		return authorizeRes{authorized: true}, nil
 	}
 }
+
+func authorizePATEndpoint(svc auth.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(authPATReq)
+
+		if err := req.validate(); err != nil {
+			return authorizeRes{}, err
+		}
+		err := svc.AuthorizePAT(ctx, req.paToken, req.platformEntityType, req.optionalDomainID,req.optionalDomainEntityType, req.operation, req.entityIDs)
+		if err != nil {
+			return authorizeRes{authorized: false}, err
+		}
+		return authorizeRes{authorized: true}, nil
+	}
+}

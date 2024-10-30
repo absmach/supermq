@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq"
+	"github.com/absmach/supermq/pat"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
@@ -81,6 +82,8 @@ var _ Service = (*service)(nil)
 
 type service struct {
 	keys               KeyRepository
+	pats               pat.PATSRepository
+	hasher             pat.Hasher
 	idProvider         supermq.IDProvider
 	evaluator          policies.Evaluator
 	policysvc          policies.Service
@@ -91,10 +94,12 @@ type service struct {
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, idp supermq.IDProvider, tokenizer Tokenizer, policyEvaluator policies.Evaluator, policyService policies.Service, loginDuration, refreshDuration, invitationDuration time.Duration) Service {
+func New(keys KeyRepository, pats pat.PATSRepository, hasher pat.Hasher, idp supermq.IDProvider, tokenizer Tokenizer, policyEvaluator policies.Evaluator, policyService policies.Service, loginDuration, refreshDuration, invitationDuration time.Duration) Service {
 	return &service{
 		tokenizer:          tokenizer,
 		keys:               keys,
+		pats:               pats,
+		hasher:             hasher,
 		idProvider:         idp,
 		evaluator:          policyEvaluator,
 		policysvc:          policyService,
@@ -145,6 +150,21 @@ func (svc service) RetrieveKey(ctx context.Context, token, id string) (Key, erro
 }
 
 func (svc service) Identify(ctx context.Context, token string) (Key, error) {
+	if strings.HasPrefix(token, "pat"+"_") {
+		pat, err := svc.IdentifyPAT(ctx, token)
+		if err != nil {
+			return Key{}, err
+		}
+		return Key{
+			ID:        pat.ID,
+			Type:      PersonalAccessToken,
+			Subject:   pat.User,
+			User:      pat.User,
+			IssuedAt:  pat.IssuedAt,
+			ExpiresAt: pat.ExpiresAt,
+		}, nil
+	}
+
 	key, err := svc.tokenizer.Parse(token)
 	if errors.Contains(err, ErrExpiry) {
 		err = svc.keys.Remove(ctx, key.Issuer, key.ID)

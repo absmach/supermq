@@ -42,5 +42,5 @@ func (a authentication) Authenticate(ctx context.Context, token string) (authn.S
 	if err != nil {
 		return authn.Session{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
-	return authn.Session{DomainUserID: res.GetId(), UserID: res.GetUserId(), DomainID: res.GetDomainId()}, nil
+	return authn.Session{ID: res.GetId(), UserID: res.GetUserId(), DomainID: res.GetDomainId()}, nil
 }

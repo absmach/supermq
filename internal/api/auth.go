@@ -6,6 +6,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/absmach/supermq/pkg/apiutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
@@ -14,7 +15,10 @@ import (
 
 type sessionKeyType string
 
-const SessionKey = sessionKeyType("session")
+const (
+	SessionKey = sessionKeyType("session")
+	seperator  = "_"
+)
 
 func AuthenticateMiddleware(authn smqauthn.Authentication, domainCheck bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -31,6 +35,11 @@ func AuthenticateMiddleware(authn smqauthn.Authentication, domainCheck bool) fun
 				return
 			}
 
+			resp.Type = mgauthn.AccessToken
+			if strings.HasPrefix(token, "pat"+seperator) {
+				resp.Type = mgauthn.PersonalAccessToken
+			}
+
 			if domainCheck {
 				domain := chi.URLParam(r, "domainID")
 				if domain == "" {
@@ -38,7 +47,7 @@ func AuthenticateMiddleware(authn smqauthn.Authentication, domainCheck bool) fun
 					return
 				}
 				resp.DomainID = domain
-				resp.DomainUserID = domain + "_" + resp.UserID
+				resp.DomainUserID = domain + seperator + resp.UserID
 			}
 
 			ctx := context.WithValue(r.Context(), SessionKey, resp)
