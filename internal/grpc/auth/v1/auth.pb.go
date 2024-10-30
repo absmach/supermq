@@ -291,6 +291,93 @@ func (x *AuthZReq) GetObjectType() string {
 	return ""
 }
 
+type AuthZpatReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	PaToken                  string   `protobuf:"bytes,1,opt,name=paToken,proto3" json:"paToken,omitempty"`                                                                       // PaToken
+	PlatformEntityType       string   `protobuf:"bytes,2,opt,name=platform_entity_type,json=platformEntityType,proto3" json:"platform_entity_type,omitempty"`                     // Platform entity type
+	OptionalDomainID         string   `protobuf:"bytes,3,opt,name=optional_domainID,json=optionalDomainID,proto3" json:"optional_domainID,omitempty"`                             // Optional domain id
+	OptionalDomainEntityType string   `protobuf:"bytes,4,opt,name=optional_domain_entity_type,json=optionalDomainEntityType,proto3" json:"optional_domain_entity_type,omitempty"` // Optional domain entity type
+	Operation                string   `protobuf:"bytes,5,opt,name=operation,proto3" json:"operation,omitempty"`                                                                   // Operation
+	EntityIDs                []string `protobuf:"bytes,6,rep,name=entityIDs,proto3" json:"entityIDs,omitempty"`                                                                   // EntityIDs
+}
+
+func (x *AuthZpatReq) Reset() {
+	*x = AuthZpatReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_auth_v1_auth_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AuthZpatReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthZpatReq) ProtoMessage() {}
+
+func (x *AuthZpatReq) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthZpatReq.ProtoReflect.Descriptor instead.
+func (*AuthZpatReq) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *AuthZpatReq) GetPaToken() string {
+	if x != nil {
+		return x.PaToken
+	}
+	return ""
+}
+
+func (x *AuthZpatReq) GetPlatformEntityType() string {
+	if x != nil {
+		return x.PlatformEntityType
+	}
+	return ""
+}
+
+func (x *AuthZpatReq) GetOptionalDomainID() string {
+	if x != nil {
+		return x.OptionalDomainID
+	}
+	return ""
+}
+
+func (x *AuthZpatReq) GetOptionalDomainEntityType() string {
+	if x != nil {
+		return x.OptionalDomainEntityType
+	}
+	return ""
+}
+
+func (x *AuthZpatReq) GetOperation() string {
+	if x != nil {
+		return x.Operation
+	}
+	return ""
+}
+
+func (x *AuthZpatReq) GetEntityIDs() []string {
+	if x != nil {
+		return x.EntityIDs
+	}
+	return nil
+}
+
 type AuthZRes struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

@@ -19,6 +19,7 @@ type authGrpcServer struct {
 	authorize       kitgrpc.Handler
 	authenticate    kitgrpc.Handler
 	authenticatePAT kitgrpc.Handler
+	authorizePAT    kitgrpc.Handler
 }
 
 // NewAuthServer returns new AuthnServiceServer instance.
@@ -40,6 +41,12 @@ func NewAuthServer(svc auth.Service) grpcAuthV1.AuthServiceServer {
 			(authenticatePATEndpoint(svc)),
 			decodeAuthenticateRequest,
 			encodeAuthenticatePATResponse,
+		),
+
+		authorizePAT: kitgrpc.NewServer(
+			(authorizePATEndpoint(svc)),
+			decodeAuthorizePATRequest,
+			encodeAuthorizeResponse,
 		),
 	}
 }
@@ -100,4 +107,16 @@ func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}
 func encodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(authorizeRes)
 	return &grpcAuthV1.AuthZRes{Authorized: res.authorized, Id: res.id}, nil
+}
+
+func decodeAuthorizePATRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*grpcAuthV1.AuthZpatReq)
+	return authPATReq{
+		paToken:                  req.GetPaToken(),
+		platformEntityType:       req.GetPlatformEntityType(),
+		optionalDomainID:         req.GetOptionalDomainID(),
+		optionalDomainEntityType: req.GetOptionalDomainEntityType(),
+		operation:                req.GetOperation(),
+		entityIDs:                req.GetEntityIDs(),
+	}, nil
 }
