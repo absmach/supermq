@@ -17,7 +17,6 @@ import (
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	authnmocks "github.com/absmach/magistrala/pkg/authn/mocks"
-	mgclients "github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/groups"
@@ -25,6 +24,7 @@ import (
 	oauth2mocks "github.com/absmach/magistrala/pkg/oauth2/mocks"
 	policies "github.com/absmach/magistrala/pkg/policies"
 	sdk "github.com/absmach/magistrala/pkg/sdk/go"
+	"github.com/absmach/magistrala/things"
 	"github.com/absmach/magistrala/users/api"
 	umocks "github.com/absmach/magistrala/users/mocks"
 	"github.com/go-chi/chi/v5"
@@ -74,7 +74,7 @@ func TestCreateGroup(t *testing.T) {
 	psdkGroup.ParentID = pGroup.Parent
 
 	uGroup := group
-	uGroup.Metadata = mgclients.Metadata{
+	uGroup.Metadata = groups.Metadata{
 		"key": make(chan int),
 	}
 	cases := []struct {
@@ -98,7 +98,7 @@ func TestCreateGroup(t *testing.T) {
 			svcReq: groups.Group{
 				Name:        gName,
 				Description: description,
-				Metadata:    mgclients.Metadata{"role": "client"},
+				Metadata:    groups.Metadata{"role": "client"},
 			},
 			svcRes:   group,
 			svcErr:   nil,
@@ -113,7 +113,7 @@ func TestCreateGroup(t *testing.T) {
 			svcReq: groups.Group{
 				Name:        gName,
 				Description: description,
-				Metadata:    mgclients.Metadata{"role": "client"},
+				Metadata:    groups.Metadata{"role": "client"},
 			},
 			svcRes:   group,
 			svcErr:   nil,
@@ -133,7 +133,7 @@ func TestCreateGroup(t *testing.T) {
 			svcReq: groups.Group{
 				Name:        gName,
 				Description: description,
-				Metadata:    mgclients.Metadata{"role": "client"},
+				Metadata:    groups.Metadata{"role": "client"},
 				Parent:      pGroup.Parent,
 			},
 			svcRes:   pGroup,
@@ -154,7 +154,7 @@ func TestCreateGroup(t *testing.T) {
 			svcReq: groups.Group{
 				Name:        gName,
 				Description: description,
-				Metadata:    mgclients.Metadata{"role": "client"},
+				Metadata:    groups.Metadata{"role": "client"},
 				Parent:      wrongID,
 			},
 			svcRes:   groups.Group{},
@@ -174,7 +174,7 @@ func TestCreateGroup(t *testing.T) {
 			svcReq: groups.Group{
 				Name:        gName,
 				Description: description,
-				Metadata:    mgclients.Metadata{"role": "client"},
+				Metadata:    groups.Metadata{"role": "client"},
 			},
 			svcRes:          groups.Group{},
 			authenticateErr: svcerr.ErrAuthentication,
@@ -254,7 +254,7 @@ func TestCreateGroup(t *testing.T) {
 			svcReq: groups.Group{
 				Name:        gName,
 				Description: description,
-				Metadata:    mgclients.Metadata{"role": "client"},
+				Metadata:    groups.Metadata{"role": "client"},
 			},
 			svcRes:   uGroup,
 			svcErr:   nil,
@@ -297,7 +297,7 @@ func TestListGroups(t *testing.T) {
 			ID:       generateUUID(t),
 			Name:     fmt.Sprintf("group_%d", i),
 			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
-			Status:   mgclients.EnabledStatus.String(),
+			Status:   things.EnabledStatus.String(),
 		}
 		grps = append(grps, gr)
 	}
@@ -440,7 +440,7 @@ func TestListGroups(t *testing.T) {
 				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  10,
-					Metadata: mgclients.Metadata{
+					Metadata: groups.Metadata{
 						"name": "user_89",
 					},
 				},
@@ -517,7 +517,7 @@ func TestListGroups(t *testing.T) {
 				Groups: []groups.Group{{
 					ID:   generateUUID(t),
 					Name: "group_1",
-					Metadata: mgclients.Metadata{
+					Metadata: groups.Metadata{
 						"key": make(chan int),
 					},
 				}},
@@ -563,7 +563,7 @@ func TestListParentGroups(t *testing.T) {
 			ID:       generateUUID(t),
 			Name:     fmt.Sprintf("group_%d", i),
 			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
-			Status:   mgclients.EnabledStatus.String(),
+			Status:   things.EnabledStatus.String(),
 			ParentID: parentID,
 			Level:    1,
 		}
@@ -721,7 +721,7 @@ func TestListParentGroups(t *testing.T) {
 				PageMeta: groups.PageMeta{
 					Offset: offset,
 					Limit:  limit,
-					Metadata: mgclients.Metadata{
+					Metadata: groups.Metadata{
 						"name": "user_89",
 					},
 				},
@@ -789,7 +789,7 @@ func TestListParentGroups(t *testing.T) {
 				Groups: []groups.Group{{
 					ID:   generateUUID(t),
 					Name: "group_1",
-					Metadata: mgclients.Metadata{
+					Metadata: groups.Metadata{
 						"key": make(chan int),
 					},
 					Level: 1,
@@ -836,7 +836,7 @@ func TestListChildrenGroups(t *testing.T) {
 			ID:       generateUUID(t),
 			Name:     fmt.Sprintf("group_%d", i),
 			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
-			Status:   mgclients.EnabledStatus.String(),
+			Status:   things.EnabledStatus.String(),
 			ParentID: parentID,
 			Level:    -1,
 		}
@@ -994,7 +994,7 @@ func TestListChildrenGroups(t *testing.T) {
 				PageMeta: groups.PageMeta{
 					Offset: offset,
 					Limit:  limit,
-					Metadata: mgclients.Metadata{
+					Metadata: groups.Metadata{
 						"name": "user_89",
 					},
 				},
@@ -1061,7 +1061,7 @@ func TestListChildrenGroups(t *testing.T) {
 				Groups: []groups.Group{{
 					ID:   generateUUID(t),
 					Name: "group_1",
-					Metadata: mgclients.Metadata{
+					Metadata: groups.Metadata{
 						"key": make(chan int),
 					},
 					Level: -1,
@@ -1161,7 +1161,7 @@ func TestViewGroup(t *testing.T) {
 			svcRes: groups.Group{
 				ID:   group.ID,
 				Name: "group_1",
-				Metadata: mgclients.Metadata{
+				Metadata: groups.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -1338,7 +1338,7 @@ func TestUpdateGroup(t *testing.T) {
 				ID:          group.ID,
 				Name:        updatedName,
 				Description: updatedDescription,
-				Metadata:    mgclients.Metadata{"key": "value"},
+				Metadata:    groups.Metadata{"key": "value"},
 			},
 			svcRes:   convertGroup(upGroup),
 			svcErr:   nil,
@@ -1359,7 +1359,7 @@ func TestUpdateGroup(t *testing.T) {
 				ID:          wrongID,
 				Name:        updatedName,
 				Description: updatedDescription,
-				Metadata:    mgclients.Metadata{"key": "value"},
+				Metadata:    groups.Metadata{"key": "value"},
 			},
 			svcRes:   groups.Group{},
 			svcErr:   svcerr.ErrNotFound,
@@ -1380,7 +1380,7 @@ func TestUpdateGroup(t *testing.T) {
 				ID:          group.ID,
 				Name:        updatedName,
 				Description: updatedDescription,
-				Metadata:    mgclients.Metadata{"key": "value"},
+				Metadata:    groups.Metadata{"key": "value"},
 			},
 			svcRes:          groups.Group{},
 			authenticateErr: svcerr.ErrAuthentication,
@@ -1449,12 +1449,12 @@ func TestUpdateGroup(t *testing.T) {
 				ID:          group.ID,
 				Name:        updatedName,
 				Description: updatedDescription,
-				Metadata:    mgclients.Metadata{"key": "value"},
+				Metadata:    groups.Metadata{"key": "value"},
 			},
 			svcRes: groups.Group{
 				ID:   group.ID,
 				Name: updatedName,
-				Metadata: mgclients.Metadata{
+				Metadata: groups.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -1494,7 +1494,7 @@ func TestEnableGroup(t *testing.T) {
 	mgsdk := sdk.NewSDK(conf)
 
 	enGroup := sdkGroup
-	enGroup.Status = mgclients.EnabledStatus.String()
+	enGroup.Status = things.EnabledStatus.String()
 
 	cases := []struct {
 		desc            string
@@ -1566,7 +1566,7 @@ func TestEnableGroup(t *testing.T) {
 			svcRes: groups.Group{
 				ID:   group.ID,
 				Name: "group_1",
-				Metadata: mgclients.Metadata{
+				Metadata: groups.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -1605,7 +1605,7 @@ func TestDisableGroup(t *testing.T) {
 	mgsdk := sdk.NewSDK(conf)
 
 	disGroup := sdkGroup
-	disGroup.Status = mgclients.DisabledStatus.String()
+	disGroup.Status = things.DisabledStatus.String()
 
 	cases := []struct {
 		desc            string
@@ -1677,7 +1677,7 @@ func TestDisableGroup(t *testing.T) {
 			svcRes: groups.Group{
 				ID:   group.ID,
 				Name: "group_1",
-				Metadata: mgclients.Metadata{
+				Metadata: groups.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -2033,7 +2033,7 @@ func generateTestGroup(t *testing.T) sdk.Group {
 		Metadata:    sdk.Metadata{"role": "client"},
 		CreatedAt:   createdAt,
 		UpdatedAt:   updatedAt,
-		Status:      mgclients.EnabledStatus.String(),
+		Status:      things.EnabledStatus.String(),
 	}
 	return gr
 }

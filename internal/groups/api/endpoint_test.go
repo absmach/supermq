@@ -14,12 +14,12 @@ import (
 	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/groups/mocks"
 	"github.com/absmach/magistrala/pkg/policies"
+	"github.com/absmach/magistrala/things"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -31,14 +31,14 @@ var (
 		Description: valid,
 		Domain:      testsutil.GenerateUUID(&testing.T{}),
 		Parent:      testsutil.GenerateUUID(&testing.T{}),
-		Metadata: clients.Metadata{
+		Metadata: groups.Metadata{
 			"name": "test",
 		},
 		Children:  []*groups.Group{},
 		CreatedAt: time.Now().Add(-1 * time.Second),
 		UpdatedAt: time.Now(),
 		UpdatedBy: testsutil.GenerateUUID(&testing.T{}),
-		Status:    clients.EnabledStatus,
+		Status:    things.EnabledStatus,
 	}
 	validID = testsutil.GenerateUUID(&testing.T{})
 )
@@ -564,7 +564,7 @@ func TestListGroupsEndpoint(t *testing.T) {
 		Description: valid,
 		Domain:      testsutil.GenerateUUID(t),
 		Parent:      validGroupResp.ID,
-		Metadata: clients.Metadata{
+		Metadata: groups.Metadata{
 			"name": "test",
 		},
 		Level:     -1,
@@ -572,14 +572,14 @@ func TestListGroupsEndpoint(t *testing.T) {
 		CreatedAt: time.Now().Add(-1 * time.Second),
 		UpdatedAt: time.Now(),
 		UpdatedBy: testsutil.GenerateUUID(t),
-		Status:    clients.EnabledStatus,
+		Status:    things.EnabledStatus,
 	}
 	parentGroup := groups.Group{
 		ID:          testsutil.GenerateUUID(t),
 		Name:        valid,
 		Description: valid,
 		Domain:      testsutil.GenerateUUID(t),
-		Metadata: clients.Metadata{
+		Metadata: groups.Metadata{
 			"name": "test",
 		},
 		Level:     1,
@@ -587,7 +587,7 @@ func TestListGroupsEndpoint(t *testing.T) {
 		CreatedAt: time.Now().Add(-1 * time.Second),
 		UpdatedAt: time.Now(),
 		UpdatedBy: testsutil.GenerateUUID(t),
-		Status:    clients.EnabledStatus,
+		Status:    things.EnabledStatus,
 	}
 
 	validGroupResp.Children = append(validGroupResp.Children, &childGroup)

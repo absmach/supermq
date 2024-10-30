@@ -13,10 +13,10 @@ import (
 	"github.com/0x6flab/namegenerator"
 	"github.com/absmach/magistrala/internal/groups/postgres"
 	"github.com/absmach/magistrala/internal/testsutil"
-	"github.com/absmach/magistrala/pkg/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	mggroups "github.com/absmach/magistrala/pkg/groups"
+	"github.com/absmach/magistrala/things"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -31,7 +31,7 @@ var (
 		Description: strings.Repeat("a", 64),
 		Metadata:    map[string]interface{}{"key": "value"},
 		CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
-		Status:      clients.EnabledStatus,
+		Status:      things.EnabledStatus,
 	}
 )
 
@@ -67,7 +67,7 @@ func TestSave(t *testing.T) {
 				Description: strings.Repeat("a", 64),
 				Metadata:    map[string]interface{}{"key": "value"},
 				CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
-				Status:      clients.EnabledStatus,
+				Status:      things.EnabledStatus,
 			},
 			err: repoerr.ErrMalformedEntity,
 		},
@@ -80,7 +80,7 @@ func TestSave(t *testing.T) {
 				Description: strings.Repeat("a", 64),
 				Metadata:    map[string]interface{}{"key": "value"},
 				CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
-				Status:      clients.EnabledStatus,
+				Status:      things.EnabledStatus,
 			},
 			err: repoerr.ErrMalformedEntity,
 		},
@@ -93,7 +93,7 @@ func TestSave(t *testing.T) {
 				Description: strings.Repeat("a", 64),
 				Metadata:    map[string]interface{}{"key": "value"},
 				CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
-				Status:      clients.EnabledStatus,
+				Status:      things.EnabledStatus,
 			},
 			err: repoerr.ErrMalformedEntity,
 		},
@@ -106,7 +106,7 @@ func TestSave(t *testing.T) {
 				Description: strings.Repeat("a", 64),
 				Metadata:    map[string]interface{}{"key": "value"},
 				CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
-				Status:      clients.EnabledStatus,
+				Status:      things.EnabledStatus,
 			},
 			err: repoerr.ErrMalformedEntity,
 		},
@@ -119,7 +119,7 @@ func TestSave(t *testing.T) {
 				Description: strings.Repeat("a", 1025),
 				Metadata:    map[string]interface{}{"key": "value"},
 				CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
-				Status:      clients.EnabledStatus,
+				Status:      things.EnabledStatus,
 			},
 			err: repoerr.ErrMalformedEntity,
 		},
@@ -134,7 +134,7 @@ func TestSave(t *testing.T) {
 					"key": make(chan int),
 				},
 				CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
-				Status:    clients.EnabledStatus,
+				Status:    things.EnabledStatus,
 			},
 			err: repoerr.ErrMalformedEntity,
 		},
@@ -146,7 +146,7 @@ func TestSave(t *testing.T) {
 				Description: strings.Repeat("a", 64),
 				Metadata:    map[string]interface{}{"key": "value"},
 				CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
-				Status:      clients.EnabledStatus,
+				Status:      things.EnabledStatus,
 			},
 			err: repoerr.ErrMalformedEntity,
 		},
@@ -158,7 +158,7 @@ func TestSave(t *testing.T) {
 				Description: strings.Repeat("a", 64),
 				Metadata:    map[string]interface{}{"key": "value"},
 				CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
-				Status:      clients.EnabledStatus,
+				Status:      things.EnabledStatus,
 			},
 			err: repoerr.ErrMalformedEntity,
 		},
@@ -291,7 +291,7 @@ func TestChangeStatus(t *testing.T) {
 			desc: "change status group successfully",
 			group: mggroups.Group{
 				ID:        group.ID,
-				Status:    clients.DisabledStatus,
+				Status:    things.DisabledStatus,
 				UpdatedAt: time.Now().UTC().Truncate(time.Microsecond),
 				UpdatedBy: testsutil.GenerateUUID(t),
 			},
@@ -301,7 +301,7 @@ func TestChangeStatus(t *testing.T) {
 			desc: "change status group with invalid ID",
 			group: mggroups.Group{
 				ID:        testsutil.GenerateUUID(t),
-				Status:    clients.DisabledStatus,
+				Status:    things.DisabledStatus,
 				UpdatedAt: time.Now().UTC().Truncate(time.Microsecond),
 				UpdatedBy: testsutil.GenerateUUID(t),
 			},
@@ -310,7 +310,7 @@ func TestChangeStatus(t *testing.T) {
 		{
 			desc: "change status group with empty ID",
 			group: mggroups.Group{
-				Status:    clients.DisabledStatus,
+				Status:    things.DisabledStatus,
 				UpdatedAt: time.Now().UTC().Truncate(time.Microsecond),
 				UpdatedBy: testsutil.GenerateUUID(t),
 			},
@@ -400,7 +400,7 @@ func TestRetrieveAll(t *testing.T) {
 			Description: strings.Repeat("a", 64),
 			Metadata:    map[string]interface{}{"name": name},
 			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
-			Status:      clients.EnabledStatus,
+			Status:      things.EnabledStatus,
 		}
 		_, err := repo.Save(context.Background(), group)
 		require.Nil(t, err, fmt.Sprintf("create invitation unexpected error: %s", err))
@@ -712,7 +712,7 @@ func TestRetrieveByIDs(t *testing.T) {
 			Description: strings.Repeat("a", 64),
 			Metadata:    map[string]interface{}{"name": name},
 			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
-			Status:      clients.EnabledStatus,
+			Status:      things.EnabledStatus,
 		}
 		_, err := repo.Save(context.Background(), group)
 		require.Nil(t, err, fmt.Sprintf("create invitation unexpected error: %s", err))
@@ -1069,7 +1069,7 @@ func TestAssignParentGroup(t *testing.T) {
 			Description: strings.Repeat("a", 64),
 			Metadata:    map[string]interface{}{"name": name},
 			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
-			Status:      clients.EnabledStatus,
+			Status:      things.EnabledStatus,
 		}
 		_, err := repo.Save(context.Background(), group)
 		require.Nil(t, err, fmt.Sprintf("create invitation unexpected error: %s", err))
@@ -1147,7 +1147,7 @@ func TestUnassignParentGroup(t *testing.T) {
 			Description: strings.Repeat("a", 64),
 			Metadata:    map[string]interface{}{"name": name},
 			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
-			Status:      clients.EnabledStatus,
+			Status:      things.EnabledStatus,
 		}
 		_, err := repo.Save(context.Background(), group)
 		require.Nil(t, err, fmt.Sprintf("create invitation unexpected error: %s", err))
