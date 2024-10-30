@@ -5,7 +5,6 @@ package events
 
 import (
 	"context"
-	"log"
 
 	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/pkg/authn"
@@ -203,7 +202,6 @@ func (es *eventStore) SearchUsers(ctx context.Context, pm users.Page) (users.Use
 	event := searchUserEvent{
 		pm,
 	}
-	log.Println("SearchUsers event on stream", event)
 
 	if err := es.Publish(ctx, event); err != nil {
 		return cp, err
