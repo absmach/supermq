@@ -53,7 +53,7 @@ paths:
         "403":
           description: Failed to perform authorization over the entity.
         "409":
-          description: Failed due to using an existing identity.
+          description: Failed due to using an existing username.
         "415":
           description: Missing or invalid content type.
         "422":
@@ -79,7 +79,7 @@ paths:
         - $ref: "#/components/parameters/FirstName"
         - $ref: "#/components/parameters/LastName"
         - $ref: "#/components/parameters/Username"
-        - $ref: "#/components/parameters/UserEmail"
+        - $ref: "#/components/parameters/Email"
         - $ref: "#/components/parameters/Tags"
       security:
         - bearerAuth: []
@@ -172,7 +172,7 @@ paths:
         "401":
           description: Missing or invalid access token provided.
         "409":
-          description: Failed due to using an existing identity.
+          description: Failed due to using an existing username.
         "415":
           description: Missing or invalid content type.
         "422":
@@ -472,7 +472,7 @@ paths:
       operationId: searchUsers
       summary: Search users
       description: |
-        Search users by name and identity.
+        Search users by page metadata parameters such as username, FirstName, LastName and Email.
       tags:
         - Users
       parameters:
@@ -481,7 +481,7 @@ paths:
         - $ref: "#/components/parameters/Username"
         - $ref: "#/components/parameters/FirstName"
         - $ref: "#/components/parameters/LastName"
-        - $ref: "#/components/parameters/UserEmail"
+        - $ref: "#/components/parameters/Email"
         - $ref: "#/components/parameters/UserID"
       security:
         - bearerAuth: []
@@ -705,7 +705,7 @@ paths:
         "404":
           description: A non-existent entity request.
         "409":
-          description: Failed due to using an existing identity.
+          description: Failed due to using an existing username.
         "415":
           description: Missing or invalid content type.
         "422":
@@ -1535,7 +1535,7 @@ components:
       required:
         - profile_picture
 
-    UserEmail:
+    Email:
       type: object
       properties:
         email:
@@ -1655,17 +1655,21 @@ components:
     IssueToken:
       type: object
       properties:
-        identity:
+        email:
           type: string
           example: user@magistrala.com
-          description: User Identity for example email address.
+          description: User email address.
+        username:
+          type: string
+          example: "admin"
+          description: User's username for example 'admin' will be used as its unique identifier.
         secret:
           type: string
           example: password
           minimum: 8
           description: User secret password.
       required:
-        - identity
+        - username
         - secret
 
     Error:
@@ -1750,7 +1754,7 @@ components:
       required: false
       example: "Doe"
 
-    UserEmail:
+    Email:
       name: email
       description: User's email address.
       in: query
@@ -1949,7 +1953,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/UserEmail"
+            $ref: "#/components/schemas/Email"
 
     UserUpdateSecretReq:
       description: Secret change data. User can change its secret.
