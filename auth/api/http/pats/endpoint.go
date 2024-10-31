@@ -6,10 +6,7 @@ package pats
 import (
 	"context"
 
-	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/auth"
-	"github.com/absmach/magistrala/pkg/authn"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/go-kit/kit/endpoint"
 )
 
@@ -20,17 +17,12 @@ func createPATEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-
-		res, err := svc.CreatePAT(ctx, session, req.Name, req.Description, req.Duration, req.Scope)
+		pat, err := svc.CreatePAT(ctx, req.token, req.Name, req.Description, req.Duration, req.Scope)
 		if err != nil {
 			return nil, err
 		}
 
-		return createPatRes{res}, nil
+		return createPatRes{pat}, nil
 	}
 }
 
@@ -41,17 +33,12 @@ func retrievePATEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-
-		res, err := svc.RetrievePAT(ctx, session, req.id)
+		pat, err := svc.RetrievePAT(ctx, req.token, req.id)
 		if err != nil {
 			return nil, err
 		}
 
-		return retrievePatRes{res}, nil
+		return retrievePatRes{pat}, nil
 	}
 }
 
@@ -62,16 +49,12 @@ func updatePATNameEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-		res, err := svc.UpdatePATName(ctx, session, req.id, req.Name)
+		pat, err := svc.UpdatePATName(ctx, req.token, req.id, req.Name)
 		if err != nil {
 			return nil, err
 		}
 
-		return updatePatNameRes{res}, nil
+		return updatePatNameRes{pat}, nil
 	}
 }
 
@@ -82,17 +65,12 @@ func updatePATDescriptionEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-
-		res, err := svc.UpdatePATDescription(ctx, session, req.id, req.Description)
+		pat, err := svc.UpdatePATDescription(ctx, req.token, req.id, req.Description)
 		if err != nil {
 			return nil, err
 		}
 
-		return updatePatDescriptionRes{res}, nil
+		return updatePatDescriptionRes{pat}, nil
 	}
 }
 
@@ -103,16 +81,11 @@ func listPATSEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-
 		pm := auth.PATSPageMeta{
 			Limit:  req.limit,
 			Offset: req.offset,
 		}
-		patsPage, err := svc.ListPATS(ctx, session, pm)
+		patsPage, err := svc.ListPATS(ctx, req.token, pm)
 		if err != nil {
 			return nil, err
 		}
@@ -128,12 +101,7 @@ func deletePATEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-
-		if err := svc.DeletePAT(ctx, session, req.id); err != nil {
+		if err := svc.DeletePAT(ctx, req.token, req.id); err != nil {
 			return nil, err
 		}
 
@@ -148,17 +116,12 @@ func resetPATSecretEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-
-		res, err := svc.ResetPATSecret(ctx, session, req.id, req.Duration)
+		pat, err := svc.ResetPATSecret(ctx, req.token, req.id, req.Duration)
 		if err != nil {
 			return nil, err
 		}
 
-		return resetPatSecretRes{res}, nil
+		return resetPatSecretRes{pat}, nil
 	}
 }
 
@@ -169,12 +132,7 @@ func revokePATSecretEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-
-		if err := svc.RevokePATSecret(ctx, session, req.id); err != nil {
+		if err := svc.RevokePATSecret(ctx, req.token, req.id); err != nil {
 			return nil, err
 		}
 
@@ -189,12 +147,7 @@ func addPATScopeEntryEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-
-		scope, err := svc.AddPATScopeEntry(ctx, session, req.id, req.PlatformEntityType, req.OptionalDomainID, req.OptionalDomainEntityType, req.Operation, req.EntityIDs...)
+		scope, err := svc.AddPATScopeEntry(ctx, req.token, req.id, req.PlatformEntityType, req.OptionalDomainID, req.OptionalDomainEntityType, req.Operation, req.EntityIDs...)
 		if err != nil {
 			return nil, err
 		}
@@ -210,12 +163,7 @@ func removePATScopeEntryEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-
-		scope, err := svc.RemovePATScopeEntry(ctx, session, req.id, req.PlatformEntityType, req.OptionalDomainID, req.OptionalDomainEntityType, req.Operation, req.EntityIDs...)
+		scope, err := svc.RemovePATScopeEntry(ctx, req.token, req.id, req.PlatformEntityType, req.OptionalDomainID, req.OptionalDomainEntityType, req.Operation, req.EntityIDs...)
 		if err != nil {
 			return nil, err
 		}
@@ -230,12 +178,7 @@ func clearPATAllScopeEntryEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-
-		if err := svc.ClearPATAllScopeEntry(ctx, session, req.id); err != nil {
+		if err := svc.ClearPATAllScopeEntry(ctx, req.token, req.id); err != nil {
 			return nil, err
 		}
 

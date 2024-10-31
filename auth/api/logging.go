@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/auth"
-	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/policies"
 )
 
@@ -126,7 +125,7 @@ func (lm *loggingMiddleware) Authorize(ctx context.Context, pr policies.Policy) 
 	return lm.svc.Authorize(ctx, pr)
 }
 
-func (lm *loggingMiddleware) CreatePAT(ctx context.Context, session authn.Session, name, description string, duration time.Duration, scope auth.Scope) (pa auth.PAT, err error) {
+func (lm *loggingMiddleware) CreatePAT(ctx context.Context, token, name, description string, duration time.Duration, scope auth.Scope) (pa auth.PAT, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -142,10 +141,10 @@ func (lm *loggingMiddleware) CreatePAT(ctx context.Context, session authn.Sessio
 		}
 		lm.logger.Info("Create PAT completed successfully", args...)
 	}(time.Now())
-	return lm.svc.CreatePAT(ctx, session, name, description, duration, scope)
+	return lm.svc.CreatePAT(ctx, token, name, description, duration, scope)
 }
 
-func (lm *loggingMiddleware) UpdatePATName(ctx context.Context, session authn.Session, patID, name string) (pa auth.PAT, err error) {
+func (lm *loggingMiddleware) UpdatePATName(ctx context.Context, token, patID, name string) (pa auth.PAT, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -159,10 +158,10 @@ func (lm *loggingMiddleware) UpdatePATName(ctx context.Context, session authn.Se
 		}
 		lm.logger.Info("Update PAT name completed successfully", args...)
 	}(time.Now())
-	return lm.svc.UpdatePATName(ctx, session, patID, name)
+	return lm.svc.UpdatePATName(ctx, token, patID, name)
 }
 
-func (lm *loggingMiddleware) UpdatePATDescription(ctx context.Context, session authn.Session, patID, description string) (pa auth.PAT, err error) {
+func (lm *loggingMiddleware) UpdatePATDescription(ctx context.Context, token, patID, description string) (pa auth.PAT, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -176,10 +175,10 @@ func (lm *loggingMiddleware) UpdatePATDescription(ctx context.Context, session a
 		}
 		lm.logger.Info("Update PAT description completed successfully", args...)
 	}(time.Now())
-	return lm.svc.UpdatePATDescription(ctx, session, patID, description)
+	return lm.svc.UpdatePATDescription(ctx, token, patID, description)
 }
 
-func (lm *loggingMiddleware) RetrievePAT(ctx context.Context, session authn.Session, patID string) (pa auth.PAT, err error) {
+func (lm *loggingMiddleware) RetrievePAT(ctx context.Context, token, patID string) (pa auth.PAT, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -192,10 +191,10 @@ func (lm *loggingMiddleware) RetrievePAT(ctx context.Context, session authn.Sess
 		}
 		lm.logger.Info("Retrieve PAT completed successfully", args...)
 	}(time.Now())
-	return lm.svc.RetrievePAT(ctx, session, patID)
+	return lm.svc.RetrievePAT(ctx, token, patID)
 }
 
-func (lm *loggingMiddleware) ListPATS(ctx context.Context, session authn.Session, pm auth.PATSPageMeta) (pp auth.PATSPage, err error) {
+func (lm *loggingMiddleware) ListPATS(ctx context.Context, token string, pm auth.PATSPageMeta) (pp auth.PATSPage, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -209,10 +208,10 @@ func (lm *loggingMiddleware) ListPATS(ctx context.Context, session authn.Session
 		}
 		lm.logger.Info("List PATS completed successfully", args...)
 	}(time.Now())
-	return lm.svc.ListPATS(ctx, session, pm)
+	return lm.svc.ListPATS(ctx, token, pm)
 }
 
-func (lm *loggingMiddleware) DeletePAT(ctx context.Context, session authn.Session, patID string) (err error) {
+func (lm *loggingMiddleware) DeletePAT(ctx context.Context, token, patID string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -225,10 +224,10 @@ func (lm *loggingMiddleware) DeletePAT(ctx context.Context, session authn.Sessio
 		}
 		lm.logger.Info("Delete PAT completed successfully", args...)
 	}(time.Now())
-	return lm.svc.DeletePAT(ctx, session, patID)
+	return lm.svc.DeletePAT(ctx, token, patID)
 }
 
-func (lm *loggingMiddleware) ResetPATSecret(ctx context.Context, session authn.Session, patID string, duration time.Duration) (pa auth.PAT, err error) {
+func (lm *loggingMiddleware) ResetPATSecret(ctx context.Context, token, patID string, duration time.Duration) (pa auth.PAT, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -242,10 +241,10 @@ func (lm *loggingMiddleware) ResetPATSecret(ctx context.Context, session authn.S
 		}
 		lm.logger.Info("Reset PAT secret completed successfully", args...)
 	}(time.Now())
-	return lm.svc.ResetPATSecret(ctx, session, patID, duration)
+	return lm.svc.ResetPATSecret(ctx, token, patID, duration)
 }
 
-func (lm *loggingMiddleware) RevokePATSecret(ctx context.Context, session authn.Session, patID string) (err error) {
+func (lm *loggingMiddleware) RevokePATSecret(ctx context.Context, token, patID string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -258,10 +257,10 @@ func (lm *loggingMiddleware) RevokePATSecret(ctx context.Context, session authn.
 		}
 		lm.logger.Info("Revoke PAT secret completed successfully", args...)
 	}(time.Now())
-	return lm.svc.RevokePATSecret(ctx, session, patID)
+	return lm.svc.RevokePATSecret(ctx, token, patID)
 }
 
-func (lm *loggingMiddleware) AddPATScopeEntry(ctx context.Context, session authn.Session, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (sc auth.Scope, err error) {
+func (lm *loggingMiddleware) AddPATScopeEntry(ctx context.Context, token, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (sc auth.Scope, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -279,10 +278,10 @@ func (lm *loggingMiddleware) AddPATScopeEntry(ctx context.Context, session authn
 		}
 		lm.logger.Info("Add entry to PAT scope completed successfully", args...)
 	}(time.Now())
-	return lm.svc.AddPATScopeEntry(ctx, session, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	return lm.svc.AddPATScopeEntry(ctx, token, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
 }
 
-func (lm *loggingMiddleware) RemovePATScopeEntry(ctx context.Context, session authn.Session, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (sc auth.Scope, err error) {
+func (lm *loggingMiddleware) RemovePATScopeEntry(ctx context.Context, token, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (sc auth.Scope, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -300,10 +299,10 @@ func (lm *loggingMiddleware) RemovePATScopeEntry(ctx context.Context, session au
 		}
 		lm.logger.Info("Remove entry from PAT scope completed successfully", args...)
 	}(time.Now())
-	return lm.svc.RemovePATScopeEntry(ctx, session, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	return lm.svc.RemovePATScopeEntry(ctx, token, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
 }
 
-func (lm *loggingMiddleware) ClearPATAllScopeEntry(ctx context.Context, session authn.Session, patID string) (err error) {
+func (lm *loggingMiddleware) ClearPATAllScopeEntry(ctx context.Context, token, patID string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -316,7 +315,7 @@ func (lm *loggingMiddleware) ClearPATAllScopeEntry(ctx context.Context, session 
 		}
 		lm.logger.Info("Clear all entry from PAT scope completed successfully", args...)
 	}(time.Now())
-	return lm.svc.ClearPATAllScopeEntry(ctx, session, patID)
+	return lm.svc.ClearPATAllScopeEntry(ctx, token, patID)
 }
 
 func (lm *loggingMiddleware) IdentifyPAT(ctx context.Context, paToken string) (pa auth.PAT, err error) {
