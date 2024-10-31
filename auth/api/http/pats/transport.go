@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/internal/api"
-	"github.com/absmach/magistrala/pat"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/errors"
@@ -25,7 +25,7 @@ const (
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc pat.Service, mux *chi.Mux, authn mgauthn.Authentication, logger *slog.Logger) *chi.Mux {
+func MakeHandler(svc auth.Service, mux *chi.Mux, authn mgauthn.Authentication, logger *slog.Logger) *chi.Mux {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/absmach/magistrala/pat"
+	"github.com/absmach/magistrala/auth"
 	"github.com/absmach/magistrala/pkg/apiutil"
 )
 
@@ -17,7 +17,7 @@ type createPatReq struct {
 	Name        string        `json:"name,omitempty"`
 	Description string        `json:"description,omitempty"`
 	Duration    time.Duration `json:"duration,omitempty"`
-	Scope       pat.Scope    `json:"scope,omitempty"`
+	Scope       auth.Scope    `json:"scope,omitempty"`
 }
 
 func (cpr *createPatReq) UnmarshalJSON(data []byte) error {
@@ -25,7 +25,7 @@ func (cpr *createPatReq) UnmarshalJSON(data []byte) error {
 		Name        string     `json:"name,omitempty"`
 		Description string     `json:"description,omitempty"`
 		Duration    string     `json:"duration,omitempty"`
-		Scope       pat.Scope `json:"scope,omitempty"`
+		Scope       auth.Scope `json:"scope,omitempty"`
 	}
 	if err := json.Unmarshal(data, &temp); err != nil {
 		return err
@@ -184,10 +184,10 @@ func (req revokePatSecretReq) validate() (err error) {
 type addPatScopeEntryReq struct {
 	token                    string
 	id                       string
-	PlatformEntityType       pat.PlatformEntityType `json:"platform_entity_type,omitempty"`
+	PlatformEntityType       auth.PlatformEntityType `json:"platform_entity_type,omitempty"`
 	OptionalDomainID         string                  `json:"optional_domain_id,omitempty"`
-	OptionalDomainEntityType pat.DomainEntityType   `json:"optional_domain_entity_type,omitempty"`
-	Operation                pat.OperationType      `json:"operation,omitempty"`
+	OptionalDomainEntityType auth.DomainEntityType   `json:"optional_domain_entity_type,omitempty"`
+	Operation                auth.OperationType      `json:"operation,omitempty"`
 	EntityIDs                []string                `json:"entity_ids,omitempty"`
 }
 
@@ -204,15 +204,15 @@ func (apser *addPatScopeEntryReq) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	pet, err := pat.ParsePlatformEntityType(temp.PlatformEntityType)
+	pet, err := auth.ParsePlatformEntityType(temp.PlatformEntityType)
 	if err != nil {
 		return err
 	}
-	odt, err := pat.ParseDomainEntityType(temp.OptionalDomainEntityType)
+	odt, err := auth.ParseDomainEntityType(temp.OptionalDomainEntityType)
 	if err != nil {
 		return err
 	}
-	op, err := pat.ParseOperationType(temp.Operation)
+	op, err := auth.ParseOperationType(temp.Operation)
 	if err != nil {
 		return err
 	}
@@ -237,10 +237,10 @@ func (req addPatScopeEntryReq) validate() (err error) {
 type removePatScopeEntryReq struct {
 	token                    string
 	id                       string
-	PlatformEntityType       pat.PlatformEntityType `json:"platform_entity_type,omitempty"`
+	PlatformEntityType       auth.PlatformEntityType `json:"platform_entity_type,omitempty"`
 	OptionalDomainID         string                  `json:"optional_domain_id,omitempty"`
-	OptionalDomainEntityType pat.DomainEntityType   `json:"optional_domain_entity_type,omitempty"`
-	Operation                pat.OperationType      `json:"operation,omitempty"`
+	OptionalDomainEntityType auth.DomainEntityType   `json:"optional_domain_entity_type,omitempty"`
+	Operation                auth.OperationType      `json:"operation,omitempty"`
 	EntityIDs                []string                `json:"entity_ids,omitempty"`
 }
 
@@ -257,15 +257,15 @@ func (rpser *removePatScopeEntryReq) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	pet, err := pat.ParsePlatformEntityType(temp.PlatformEntityType)
+	pet, err := auth.ParsePlatformEntityType(temp.PlatformEntityType)
 	if err != nil {
 		return err
 	}
-	odt, err := pat.ParseDomainEntityType(temp.OptionalDomainEntityType)
+	odt, err := auth.ParseDomainEntityType(temp.OptionalDomainEntityType)
 	if err != nil {
 		return err
 	}
-	op, err := pat.ParseOperationType(temp.Operation)
+	op, err := auth.ParseOperationType(temp.Operation)
 	if err != nil {
 		return err
 	}
@@ -304,10 +304,10 @@ func (req clearAllScopeEntryReq) validate() (err error) {
 
 type authorizePATReq struct {
 	token                    string
-	PlatformEntityType       pat.PlatformEntityType `json:"platform_entity_type,omitempty"`
+	PlatformEntityType       auth.PlatformEntityType `json:"platform_entity_type,omitempty"`
 	OptionalDomainID         string                  `json:"optional_domain_id,omitempty"`
-	OptionalDomainEntityType pat.DomainEntityType   `json:"optional_domain_entity_type,omitempty"`
-	Operation                pat.OperationType      `json:"operation,omitempty"`
+	OptionalDomainEntityType auth.DomainEntityType   `json:"optional_domain_entity_type,omitempty"`
+	Operation                auth.OperationType      `json:"operation,omitempty"`
 	EntityIDs                []string                `json:"entity_ids,omitempty"`
 }
 
@@ -327,14 +327,14 @@ func (tcpsr *authorizePATReq) UnmarshalJSON(data []byte) error {
 	tcpsr.OptionalDomainID = temp.OptionalDomainID
 	tcpsr.EntityIDs = temp.EntityIDs
 
-	pet, err := pat.ParsePlatformEntityType(temp.PlatformEntityType)
+	pet, err := auth.ParsePlatformEntityType(temp.PlatformEntityType)
 	if err != nil {
 		return err
 	}
 	tcpsr.PlatformEntityType = pet
 
 	if temp.OptionalDomainEntityType != "" {
-		odt, err := pat.ParseDomainEntityType(temp.OptionalDomainEntityType)
+		odt, err := auth.ParseDomainEntityType(temp.OptionalDomainEntityType)
 		if err != nil {
 			return err
 		}
@@ -342,7 +342,7 @@ func (tcpsr *authorizePATReq) UnmarshalJSON(data []byte) error {
 	}
 
 	if temp.OptionalDomainID != "" {
-		op, err := pat.ParseOperationType(temp.Operation)
+		op, err := auth.ParseOperationType(temp.Operation)
 		if err != nil {
 			return err
 		}

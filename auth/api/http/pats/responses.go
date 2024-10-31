@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/pat"
+	"github.com/absmach/magistrala/auth"
 )
 
 var (
@@ -24,7 +24,7 @@ var (
 )
 
 type createPatRes struct {
-	pat.PAT
+	auth.PAT
 }
 
 func (res createPatRes) Code() int {
@@ -40,7 +40,7 @@ func (res createPatRes) Empty() bool {
 }
 
 type retrievePatRes struct {
-	pat.PAT
+	auth.PAT
 }
 
 func (res retrievePatRes) Code() int {
@@ -56,7 +56,7 @@ func (res retrievePatRes) Empty() bool {
 }
 
 type updatePatNameRes struct {
-	pat.PAT
+	auth.PAT
 }
 
 func (res updatePatNameRes) Code() int {
@@ -72,7 +72,7 @@ func (res updatePatNameRes) Empty() bool {
 }
 
 type updatePatDescriptionRes struct {
-	pat.PAT
+	auth.PAT
 }
 
 func (res updatePatDescriptionRes) Code() int {
@@ -88,7 +88,7 @@ func (res updatePatDescriptionRes) Empty() bool {
 }
 
 type listPatsRes struct {
-	pat.PATSPage
+	auth.PATSPage
 }
 
 func (res listPatsRes) Code() int {
@@ -118,7 +118,7 @@ func (res deletePatRes) Empty() bool {
 }
 
 type resetPatSecretRes struct {
-	pat.PAT
+	auth.PAT
 }
 
 func (res resetPatSecretRes) Code() int {
@@ -148,7 +148,7 @@ func (res revokePatSecretRes) Empty() bool {
 }
 
 type addPatScopeEntryRes struct {
-	pat.Scope
+	auth.Scope
 }
 
 func (res addPatScopeEntryRes) Code() int {
@@ -164,7 +164,7 @@ func (res addPatScopeEntryRes) Empty() bool {
 }
 
 type removePatScopeEntryRes struct {
-	pat.Scope
+	auth.Scope
 }
 
 func (res removePatScopeEntryRes) Code() int {

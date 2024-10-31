@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package pat
+package auth
 
 // Hasher specifies an API for generating hashes of an arbitrary textual
 // content.

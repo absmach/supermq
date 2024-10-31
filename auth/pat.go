@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package pat
+package auth
 
 import (
 	"context"
@@ -665,7 +665,7 @@ func (pat PAT) Expired() bool {
 // PATS specifies function which are required for Personal access Token implementation.
 //go:generate mockery --name Service --output=./mocks --filename pats.go --quiet --note "Copyright (c) Abstract Machines"
 
-type Service interface {
+type PATS interface {
 	// Create function creates new PAT for given valid inputs.
 	CreatePAT(ctx context.Context, session authn.Session, name, description string, duration time.Duration, scope Scope) (PAT, error)
 
