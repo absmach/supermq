@@ -150,7 +150,7 @@ type Client struct {
 	Identity    string      `json:"identity,omitempty"`
 }
 
-// ClientsPage contains page related metadata as well as list
+// ClientsPage contains page related metadata as well as list.
 type ClientsPage struct {
 	Page
 	Clients []Client
@@ -181,7 +181,6 @@ type Page struct {
 	Status     Status   `json:"status,omitempty"`
 	IDs        []string `json:"ids,omitempty"`
 	Identity   string   `json:"identity,omitempty"`
-	Role       Role     `json:"role,omitempty"`
 	ListPerms  bool     `json:"-"`
 }
 

@@ -170,7 +170,6 @@ func listMembersEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthorization
 		}
 
-		req.Page.Role = things.AllRole // retrieve all things since things don't have roles
 		page, err := svc.ListClientsByGroup(ctx, session, req.groupID, req.Page)
 		if err != nil {
 			return nil, err

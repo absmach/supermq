@@ -19,7 +19,6 @@ import (
 	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/groups/mocks"
 	"github.com/absmach/magistrala/pkg/policies"
-	"github.com/absmach/magistrala/things"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -38,7 +37,7 @@ var (
 		CreatedAt: time.Now().Add(-1 * time.Second),
 		UpdatedAt: time.Now(),
 		UpdatedBy: testsutil.GenerateUUID(&testing.T{}),
-		Status:    things.EnabledStatus,
+		Status:    groups.EnabledStatus,
 	}
 	validID = testsutil.GenerateUUID(&testing.T{})
 )
@@ -572,7 +571,7 @@ func TestListGroupsEndpoint(t *testing.T) {
 		CreatedAt: time.Now().Add(-1 * time.Second),
 		UpdatedAt: time.Now(),
 		UpdatedBy: testsutil.GenerateUUID(t),
-		Status:    things.EnabledStatus,
+		Status:    groups.EnabledStatus,
 	}
 	parentGroup := groups.Group{
 		ID:          testsutil.GenerateUUID(t),
@@ -587,7 +586,7 @@ func TestListGroupsEndpoint(t *testing.T) {
 		CreatedAt: time.Now().Add(-1 * time.Second),
 		UpdatedAt: time.Now(),
 		UpdatedBy: testsutil.GenerateUUID(t),
-		Status:    things.EnabledStatus,
+		Status:    groups.EnabledStatus,
 	}
 
 	validGroupResp.Children = append(validGroupResp.Children, &childGroup)

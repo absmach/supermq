@@ -13,7 +13,6 @@ import (
 	"github.com/absmach/magistrala/pkg/errors"
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	gmocks "github.com/absmach/magistrala/pkg/groups/mocks"
 	"github.com/absmach/magistrala/pkg/policies"
 	policysvc "github.com/absmach/magistrala/pkg/policies"
 	policymocks "github.com/absmach/magistrala/pkg/policies/mocks"
@@ -57,9 +56,8 @@ func newService() things.Service {
 	cache = new(mocks.Cache)
 	idProvider := uuid.NewMock()
 	cRepo = new(mocks.Repository)
-	gRepo := new(gmocks.Repository)
 
-	return things.NewService(pEvaluator, pService, cRepo, gRepo, cache, idProvider)
+	return things.NewService(pEvaluator, pService, cRepo, cache, idProvider)
 }
 
 func TestCreateClients(t *testing.T) {
@@ -336,7 +334,7 @@ func TestViewClient(t *testing.T) {
 	}
 }
 
-func TestListThings(t *testing.T) {
+func TestListClients(t *testing.T) {
 	svc := newService()
 
 	adminID := testsutil.GenerateUUID(t)
@@ -462,7 +460,7 @@ func TestListThings(t *testing.T) {
 
 	for _, tc := range cases {
 		listAllObjectsCall := pService.On("ListAllObjects", mock.Anything, mock.Anything).Return(tc.listObjectsResponse, tc.listObjectsErr)
-		retrieveAllCall := cRepo.On("SearchThings", mock.Anything, mock.Anything).Return(tc.retrieveAllResponse, tc.retrieveAllErr)
+		retrieveAllCall := cRepo.On("SearchClients", mock.Anything, mock.Anything).Return(tc.retrieveAllResponse, tc.retrieveAllErr)
 		listPermissionsCall := pService.On("ListPermissions", mock.Anything, mock.Anything, mock.Anything).Return(tc.listPermissionsResponse, tc.listPermissionsErr)
 		page, err := svc.ListClients(context.Background(), tc.session, tc.id, tc.page)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -589,7 +587,7 @@ func TestListThings(t *testing.T) {
 			Permission:  "",
 			ObjectType:  policysvc.ThingType,
 		}).Return(tc.listObjectsResponse, tc.listObjectsErr)
-		retrieveAllCall := cRepo.On("SearchThings", mock.Anything, mock.Anything).Return(tc.retrieveAllResponse, tc.retrieveAllErr)
+		retrieveAllCall := cRepo.On("SearchClients", mock.Anything, mock.Anything).Return(tc.retrieveAllResponse, tc.retrieveAllErr)
 		listPermissionsCall := pService.On("ListPermissions", mock.Anything, mock.Anything, mock.Anything).Return(tc.listPermissionsResponse, tc.listPermissionsErr)
 		page, err := svc.ListClients(context.Background(), tc.session, tc.id, tc.page)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -601,7 +599,7 @@ func TestListThings(t *testing.T) {
 	}
 }
 
-func TestUpdateThing(t *testing.T) {
+func TestUpdateClient(t *testing.T) {
 	svc := newService()
 
 	thing1 := thing

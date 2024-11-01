@@ -72,7 +72,7 @@ func (repo groupRepository) Update(ctx context.Context, g mggroups.Group) (mggro
 	if len(query) > 0 {
 		upq = strings.Join(query, " ")
 	}
-	g.Status = things.EnabledStatus
+	g.Status = mggroups.EnabledStatus
 	q := fmt.Sprintf(`UPDATE groups SET %s updated_at = :updated_at, updated_by = :updated_by
 		WHERE id = :id AND status = :status
 		RETURNING id, name, description, domain_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, updated_at, updated_by, status`, upq)
@@ -355,18 +355,18 @@ func buildQuery(gm mggroups.Page, ids ...string) string {
 }
 
 type dbGroup struct {
-	ID          string        `db:"id"`
-	ParentID    *string       `db:"parent_id,omitempty"`
-	DomainID    string        `db:"domain_id,omitempty"`
-	Name        string        `db:"name"`
-	Description string        `db:"description,omitempty"`
-	Level       int           `db:"level"`
-	Path        string        `db:"path,omitempty"`
-	Metadata    []byte        `db:"metadata,omitempty"`
-	CreatedAt   time.Time     `db:"created_at"`
-	UpdatedAt   sql.NullTime  `db:"updated_at,omitempty"`
-	UpdatedBy   *string       `db:"updated_by,omitempty"`
-	Status      things.Status `db:"status"`
+	ID          string          `db:"id"`
+	ParentID    *string         `db:"parent_id,omitempty"`
+	DomainID    string          `db:"domain_id,omitempty"`
+	Name        string          `db:"name"`
+	Description string          `db:"description,omitempty"`
+	Level       int             `db:"level"`
+	Path        string          `db:"path,omitempty"`
+	Metadata    []byte          `db:"metadata,omitempty"`
+	CreatedAt   time.Time       `db:"created_at"`
+	UpdatedAt   sql.NullTime    `db:"updated_at,omitempty"`
+	UpdatedBy   *string         `db:"updated_by,omitempty"`
+	Status      mggroups.Status `db:"status"`
 }
 
 func toDBGroup(g mggroups.Group) (dbGroup, error) {

@@ -193,12 +193,12 @@ func TestCreateThing(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("CreateThings", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			svcCall := tsvc.On("CreateClients", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.CreateThing(tc.createThingReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "CreateThings", mock.Anything, tc.session, tc.svcReq)
+				ok := svcCall.Parent.AssertCalled(t, "CreateClients", mock.Anything, tc.session, tc.svcReq)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -304,12 +304,12 @@ func TestCreateThings(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("CreateThings", mock.Anything, tc.session, tc.svcReq[0], tc.svcReq[1], tc.svcReq[2]).Return(tc.svcRes, tc.svcErr)
+			svcCall := tsvc.On("CreateClients", mock.Anything, tc.session, tc.svcReq[0], tc.svcReq[1], tc.svcReq[2]).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.CreateThings(tc.createThingsRequest, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "CreateThings", mock.Anything, tc.session, tc.svcReq[0], tc.svcReq[1], tc.svcReq[2])
+				ok := svcCall.Parent.AssertCalled(t, "CreateClients", mock.Anything, tc.session, tc.svcReq[0], tc.svcReq[1], tc.svcReq[2])
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -362,7 +362,6 @@ func TestListThings(t *testing.T) {
 				Offset:     0,
 				Limit:      100,
 				Permission: policies.ViewPermission,
-				Role:       mgthings.AllRole,
 			},
 			svcRes: mgthings.ClientsPage{
 				Page: mgthings.Page{
@@ -393,7 +392,6 @@ func TestListThings(t *testing.T) {
 				Offset:     0,
 				Limit:      100,
 				Permission: policies.ViewPermission,
-				Role:       mgthings.AllRole,
 			},
 			svcRes:          mgthings.ClientsPage{},
 			authenticateErr: svcerr.ErrAuthentication,
@@ -442,7 +440,6 @@ func TestListThings(t *testing.T) {
 				Offset:     0,
 				Limit:      100,
 				Permission: policies.ViewPermission,
-				Role:       mgthings.AllRole,
 				Status:     mgthings.DisabledStatus,
 			},
 			svcRes: mgthings.ClientsPage{
@@ -476,7 +473,6 @@ func TestListThings(t *testing.T) {
 				Offset:     0,
 				Limit:      100,
 				Permission: policies.ViewPermission,
-				Role:       mgthings.AllRole,
 				Tag:        "tag1",
 			},
 			svcRes: mgthings.ClientsPage{
@@ -526,7 +522,6 @@ func TestListThings(t *testing.T) {
 				Offset:     0,
 				Limit:      100,
 				Permission: policies.ViewPermission,
-				Role:       mgthings.AllRole,
 			},
 			svcRes: mgthings.ClientsPage{
 				Page: mgthings.Page{
@@ -613,7 +608,6 @@ func TestListThingsByChannel(t *testing.T) {
 				Offset:     0,
 				Limit:      100,
 				Permission: policies.ViewPermission,
-				Role:       mgthings.AllRole,
 			},
 			svcRes: mgthings.MembersPage{
 				Page: mgthings.Page{
@@ -645,7 +639,6 @@ func TestListThingsByChannel(t *testing.T) {
 				Offset:     0,
 				Limit:      100,
 				Permission: policies.ViewPermission,
-				Role:       mgthings.AllRole,
 			},
 			svcRes:          mgthings.MembersPage{},
 			authenticateErr: svcerr.ErrAuthentication,
@@ -681,7 +674,6 @@ func TestListThingsByChannel(t *testing.T) {
 				Offset:     0,
 				Limit:      100,
 				Permission: policies.ViewPermission,
-				Role:       mgthings.AllRole,
 				Status:     mgthings.DisabledStatus,
 			},
 			svcRes: mgthings.MembersPage{
@@ -748,7 +740,6 @@ func TestListThingsByChannel(t *testing.T) {
 				Offset:     0,
 				Limit:      100,
 				Permission: policies.ViewPermission,
-				Role:       mgthings.AllRole,
 			},
 			svcRes: mgthings.MembersPage{
 				Page: mgthings.Page{
@@ -886,12 +877,12 @@ func TestViewThing(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("ViewClient", mock.Anything, tc.session, tc.thingID).Return(tc.svcRes, tc.svcErr)
+			svcCall := tsvc.On("View", mock.Anything, tc.session, tc.thingID).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.Thing(tc.thingID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "ViewClient", mock.Anything, tc.session, tc.thingID)
+				ok := svcCall.Parent.AssertCalled(t, "View", mock.Anything, tc.session, tc.thingID)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -981,12 +972,12 @@ func TestViewThingPermissions(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("ViewClientPerms", mock.Anything, tc.session, tc.thingID).Return(tc.svcRes, tc.svcErr)
+			svcCall := tsvc.On("ViewPerms", mock.Anything, tc.session, tc.thingID).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.ThingPermissions(tc.thingID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "ViewClientPerms", mock.Anything, tc.session, tc.thingID)
+				ok := svcCall.Parent.AssertCalled(t, "ViewPerms", mock.Anything, tc.session, tc.thingID)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1139,12 +1130,12 @@ func TestUpdateThing(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("UpdateClient", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			svcCall := tsvc.On("Update", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.UpdateThing(tc.updateThingReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "UpdateClient", mock.Anything, tc.session, tc.svcReq)
+				ok := svcCall.Parent.AssertCalled(t, "Update", mock.Anything, tc.session, tc.svcReq)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1291,12 +1282,12 @@ func TestUpdateThingTags(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("UpdateClientTags", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			svcCall := tsvc.On("UpdateTags", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.UpdateThingTags(tc.updateThingReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "UpdateClientTags", mock.Anything, tc.session, tc.svcReq)
+				ok := svcCall.Parent.AssertCalled(t, "UpdateTags", mock.Anything, tc.session, tc.svcReq)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1423,12 +1414,12 @@ func TestUpdateThingSecret(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("UpdateClientSecret", mock.Anything, tc.session, tc.thingID, tc.newSecret).Return(tc.svcRes, tc.svcErr)
+			svcCall := tsvc.On("UpdateSecret", mock.Anything, tc.session, tc.thingID, tc.newSecret).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.UpdateThingSecret(tc.thingID, tc.newSecret, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "UpdateClientSecret", mock.Anything, tc.session, tc.thingID, tc.newSecret)
+				ok := svcCall.Parent.AssertCalled(t, "UpdateSecret", mock.Anything, tc.session, tc.thingID, tc.newSecret)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1526,12 +1517,12 @@ func TestEnableThing(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("EnableClient", mock.Anything, tc.session, tc.thingID).Return(tc.svcRes, tc.svcErr)
+			svcCall := tsvc.On("Enable", mock.Anything, tc.session, tc.thingID).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.EnableThing(tc.thingID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "EnableClient", mock.Anything, tc.session, tc.thingID)
+				ok := svcCall.Parent.AssertCalled(t, "Enable", mock.Anything, tc.session, tc.thingID)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1629,12 +1620,12 @@ func TestDisableThing(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("DisableClient", mock.Anything, tc.session, tc.thingID).Return(tc.svcRes, tc.svcErr)
+			svcCall := tsvc.On("Disable", mock.Anything, tc.session, tc.thingID).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.DisableThing(tc.thingID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "DisableClient", mock.Anything, tc.session, tc.thingID)
+				ok := svcCall.Parent.AssertCalled(t, "Disable", mock.Anything, tc.session, tc.thingID)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1926,11 +1917,11 @@ func TestDeleteThing(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("DeleteClient", mock.Anything, tc.session, tc.thingID).Return(tc.svcErr)
+			svcCall := tsvc.On("Delete", mock.Anything, tc.session, tc.thingID).Return(tc.svcErr)
 			err := mgsdk.DeleteThing(tc.thingID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "DeleteClient", mock.Anything, tc.session, tc.thingID)
+				ok := svcCall.Parent.AssertCalled(t, "Delete", mock.Anything, tc.session, tc.thingID)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1984,7 +1975,6 @@ func TestListUserThings(t *testing.T) {
 				Offset:     0,
 				Limit:      100,
 				Permission: policies.ViewPermission,
-				Role:       mgthings.AllRole,
 			},
 			svcRes: mgthings.ClientsPage{
 				Page: mgthings.Page{
@@ -2016,7 +2006,6 @@ func TestListUserThings(t *testing.T) {
 				Offset:     0,
 				Limit:      100,
 				Permission: policies.ViewPermission,
-				Role:       mgthings.AllRole,
 			},
 			svcRes:          mgthings.ClientsPage{},
 			authenticateErr: svcerr.ErrAuthentication,
@@ -2068,7 +2057,6 @@ func TestListUserThings(t *testing.T) {
 				Offset:     0,
 				Limit:      100,
 				Permission: policies.ViewPermission,
-				Role:       mgthings.AllRole,
 				Status:     mgthings.DisabledStatus,
 			},
 			svcRes: mgthings.ClientsPage{
@@ -2103,7 +2091,6 @@ func TestListUserThings(t *testing.T) {
 				Offset:     0,
 				Limit:      100,
 				Permission: policies.ViewPermission,
-				Role:       mgthings.AllRole,
 				Tag:        "tag1",
 			},
 			svcRes: mgthings.ClientsPage{
@@ -2154,7 +2141,6 @@ func TestListUserThings(t *testing.T) {
 				Offset:     0,
 				Limit:      100,
 				Permission: policies.ViewPermission,
-				Role:       mgthings.AllRole,
 			},
 			svcRes: mgthings.ClientsPage{
 				Page: mgthings.Page{

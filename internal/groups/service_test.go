@@ -24,7 +24,6 @@ import (
 	policysvc "github.com/absmach/magistrala/pkg/policies"
 	policymocks "github.com/absmach/magistrala/pkg/policies/mocks"
 	"github.com/absmach/magistrala/pkg/uuid"
-	"github.com/absmach/magistrala/things"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -38,7 +37,7 @@ var (
 		Metadata: map[string]interface{}{
 			"key": "value",
 		},
-		Status: things.Status(groups.EnabledStatus),
+		Status: mggroups.EnabledStatus,
 	}
 	allowedIDs = []string{
 		testsutil.GenerateUUID(&testing.T{}),
@@ -83,7 +82,7 @@ func TestCreateGroup(t *testing.T) {
 			group: mggroups.Group{
 				Name:        namegen.Generate(),
 				Description: namegen.Generate(),
-				Status:      things.Status(100),
+				Status:      mggroups.Status(100),
 			},
 			err: svcerr.ErrInvalidStatus,
 		},
@@ -94,7 +93,7 @@ func TestCreateGroup(t *testing.T) {
 			group: mggroups.Group{
 				Name:        namegen.Generate(),
 				Description: namegen.Generate(),
-				Status:      things.Status(groups.EnabledStatus),
+				Status:      mggroups.EnabledStatus,
 				Parent:      testsutil.GenerateUUID(t),
 			},
 			repoResp: mggroups.Group{
@@ -131,7 +130,7 @@ func TestCreateGroup(t *testing.T) {
 			group: mggroups.Group{
 				Name:        namegen.Generate(),
 				Description: namegen.Generate(),
-				Status:      things.Status(groups.EnabledStatus),
+				Status:      mggroups.EnabledStatus,
 				Parent:      testsutil.GenerateUUID(t),
 			},
 			repoErr:      errors.ErrMalformedEntity,
@@ -327,7 +326,7 @@ func TestEnableGroup(t *testing.T) {
 			session: authn.Session{UserID: validID, DomainID: validID, DomainUserID: validID},
 			id:      testsutil.GenerateUUID(t),
 			retrieveResp: mggroups.Group{
-				Status: things.Status(groups.DisabledStatus),
+				Status: mggroups.DisabledStatus,
 			},
 			changeResp: validGroup,
 		},
@@ -336,7 +335,7 @@ func TestEnableGroup(t *testing.T) {
 			session: authn.Session{UserID: validID, DomainID: validID, DomainUserID: validID},
 			id:      testsutil.GenerateUUID(t),
 			retrieveResp: mggroups.Group{
-				Status: things.Status(groups.EnabledStatus),
+				Status: mggroups.EnabledStatus,
 			},
 			err: errors.ErrStatusAlreadyAssigned,
 		},
@@ -387,7 +386,7 @@ func TestDisableGroup(t *testing.T) {
 			session: authn.Session{UserID: validID, DomainID: validID, DomainUserID: validID},
 			id:      testsutil.GenerateUUID(t),
 			retrieveResp: mggroups.Group{
-				Status: things.Status(groups.EnabledStatus),
+				Status: mggroups.EnabledStatus,
 			},
 			changeResp: validGroup,
 		},
@@ -396,7 +395,7 @@ func TestDisableGroup(t *testing.T) {
 			session: authn.Session{UserID: validID, DomainID: validID, DomainUserID: validID},
 			id:      testsutil.GenerateUUID(t),
 			retrieveResp: mggroups.Group{
-				Status: things.Status(groups.DisabledStatus),
+				Status: mggroups.DisabledStatus,
 			},
 			err: errors.ErrStatusAlreadyAssigned,
 		},

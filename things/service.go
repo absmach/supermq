@@ -11,7 +11,6 @@ import (
 	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	mggroups "github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/policies"
 	"golang.org/x/sync/errgroup"
 )
@@ -22,16 +21,14 @@ type service struct {
 	clients     Repository
 	clientCache Cache
 	idProvider  magistrala.IDProvider
-	grepo       mggroups.Repository
 }
 
 // NewService returns a new Things service implementation.
-func NewService(policyEvaluator policies.Evaluator, policyService policies.Service, c Repository, grepo mggroups.Repository, tcache Cache, idp magistrala.IDProvider) Service {
+func NewService(policyEvaluator policies.Evaluator, policyService policies.Service, c Repository, tcache Cache, idp magistrala.IDProvider) Service {
 	return service{
 		evaluator:   policyEvaluator,
 		policysvc:   policyService,
 		clients:     c,
-		grepo:       grepo,
 		clientCache: tcache,
 		idProvider:  idp,
 	}
@@ -58,9 +55,9 @@ func (svc service) Authorize(ctx context.Context, req AuthzReq) (string, error) 
 	return thingID, nil
 }
 
-func (svc service) CreateClients(ctx context.Context, session authn.Session, thi ...Client) ([]Client, error) {
+func (svc service) CreateClients(ctx context.Context, session authn.Session, cli ...Client) ([]Client, error) {
 	var clients []Client
-	for _, c := range thi {
+	for _, c := range cli {
 		if c.ID == "" {
 			clientID, err := svc.idProvider.ID()
 			if err != nil {
@@ -112,7 +109,7 @@ func (svc service) View(ctx context.Context, session authn.Session, id string) (
 }
 
 func (svc service) ViewPerms(ctx context.Context, session authn.Session, id string) ([]string, error) {
-	permissions, err := svc.listUserThingPermission(ctx, session.DomainUserID, id)
+	permissions, err := svc.listUserClientPermission(ctx, session.DomainUserID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -127,11 +124,11 @@ func (svc service) ListClients(ctx context.Context, session authn.Session, reqUs
 	var err error
 	switch {
 	case (reqUserID != "" && reqUserID != session.UserID):
-		rtids, err := svc.listThingIDs(ctx, mgauth.EncodeDomainUserID(session.DomainID, reqUserID), pm.Permission)
+		rtids, err := svc.listClientIDs(ctx, mgauth.EncodeDomainUserID(session.DomainID, reqUserID), pm.Permission)
 		if err != nil {
 			return ClientsPage{}, errors.Wrap(svcerr.ErrNotFound, err)
 		}
-		ids, err = svc.filterAllowedThingIDs(ctx, session.DomainUserID, pm.Permission, rtids)
+		ids, err = svc.filterAllowedClientIDs(ctx, session.DomainUserID, pm.Permission, rtids)
 		if err != nil {
 			return ClientsPage{}, errors.Wrap(svcerr.ErrNotFound, err)
 		}
@@ -140,7 +137,7 @@ func (svc service) ListClients(ctx context.Context, session authn.Session, reqUs
 		case true:
 			pm.Domain = session.DomainID
 		default:
-			ids, err = svc.listThingIDs(ctx, session.DomainUserID, pm.Permission)
+			ids, err = svc.listClientIDs(ctx, session.DomainUserID, pm.Permission)
 			if err != nil {
 				return ClientsPage{}, errors.Wrap(svcerr.ErrNotFound, err)
 			}
@@ -174,9 +171,9 @@ func (svc service) ListClients(ctx context.Context, session authn.Session, reqUs
 	return tp, nil
 }
 
-// Experimental functions used for async calling of svc.listUserThingPermission. This might be helpful during listing of large number of entities.
+// Experimental functions used for async calling of svc.listUserClientPermission. This might be helpful during listing of large number of entities.
 func (svc service) retrievePermissions(ctx context.Context, userID string, client *Client) error {
-	permissions, err := svc.listUserThingPermission(ctx, userID, client.ID)
+	permissions, err := svc.listUserClientPermission(ctx, userID, client.ID)
 	if err != nil {
 		return err
 	}
@@ -184,7 +181,7 @@ func (svc service) retrievePermissions(ctx context.Context, userID string, clien
 	return nil
 }
 
-func (svc service) listUserThingPermission(ctx context.Context, userID, thingID string) ([]string, error) {
+func (svc service) listUserClientPermission(ctx context.Context, userID, thingID string) ([]string, error) {
 	permissions, err := svc.policysvc.ListPermissions(ctx, policies.Policy{
 		SubjectType: policies.UserType,
 		Subject:     userID,
@@ -197,7 +194,7 @@ func (svc service) listUserThingPermission(ctx context.Context, userID, thingID 
 	return permissions, nil
 }
 
-func (svc service) listThingIDs(ctx context.Context, userID, permission string) ([]string, error) {
+func (svc service) listClientIDs(ctx context.Context, userID, permission string) ([]string, error) {
 	tids, err := svc.policysvc.ListAllObjects(ctx, policies.Policy{
 		SubjectType: policies.UserType,
 		Subject:     userID,
@@ -210,7 +207,7 @@ func (svc service) listThingIDs(ctx context.Context, userID, permission string) 
 	return tids.Policies, nil
 }
 
-func (svc service) filterAllowedThingIDs(ctx context.Context, userID, permission string, thingIDs []string) ([]string, error) {
+func (svc service) filterAllowedClientIDs(ctx context.Context, userID, permission string, thingIDs []string) ([]string, error) {
 	var ids []string
 	tids, err := svc.policysvc.ListAllObjects(ctx, policies.Policy{
 		SubjectType: policies.UserType,

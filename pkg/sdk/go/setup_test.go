@@ -96,9 +96,9 @@ func convertChannels(cs []sdk.Channel) []mggroups.Group {
 
 func convertGroup(g sdk.Group) mggroups.Group {
 	if g.Status == "" {
-		g.Status = things.EnabledStatus.String()
+		g.Status = mggroups.EnabledStatus.String()
 	}
-	status, err := things.ToStatus(g.Status)
+	status, err := mggroups.ToStatus(g.Status)
 	if err != nil {
 		return mggroups.Group{}
 	}
@@ -185,9 +185,9 @@ func convertThing(c sdk.Thing) things.Client {
 
 func convertChannel(g sdk.Channel) mggroups.Group {
 	if g.Status == "" {
-		g.Status = things.EnabledStatus.String()
+		g.Status = mggroups.EnabledStatus.String()
 	}
-	status, err := things.ToStatus(g.Status)
+	status, err := mggroups.ToStatus(g.Status)
 	if err != nil {
 		return mggroups.Group{}
 	}

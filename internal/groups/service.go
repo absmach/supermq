@@ -16,7 +16,6 @@ import (
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/policies"
-	"github.com/absmach/magistrala/things"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -45,7 +44,7 @@ func (svc service) CreateGroup(ctx context.Context, session authn.Session, kind 
 	if err != nil {
 		return groups.Group{}, err
 	}
-	if g.Status != things.EnabledStatus && g.Status != things.DisabledStatus {
+	if g.Status != groups.EnabledStatus && g.Status != groups.DisabledStatus {
 		return groups.Group{}, svcerr.ErrInvalidStatus
 	}
 
@@ -282,7 +281,7 @@ func (svc service) UpdateGroup(ctx context.Context, session authn.Session, g gro
 func (svc service) EnableGroup(ctx context.Context, session authn.Session, id string) (groups.Group, error) {
 	group := groups.Group{
 		ID:        id,
-		Status:    things.EnabledStatus,
+		Status:    groups.EnabledStatus,
 		UpdatedAt: time.Now(),
 	}
 	group, err := svc.changeGroupStatus(ctx, session, group)
@@ -295,7 +294,7 @@ func (svc service) EnableGroup(ctx context.Context, session authn.Session, id st
 func (svc service) DisableGroup(ctx context.Context, session authn.Session, id string) (groups.Group, error) {
 	group := groups.Group{
 		ID:        id,
-		Status:    things.DisabledStatus,
+		Status:    groups.DisabledStatus,
 		UpdatedAt: time.Now(),
 	}
 	group, err := svc.changeGroupStatus(ctx, session, group)

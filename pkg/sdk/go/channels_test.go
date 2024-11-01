@@ -66,7 +66,7 @@ func TestCreateChannel(t *testing.T) {
 	createGroupReq := groups.Group{
 		Name:     channel.Name,
 		Metadata: groups.Metadata{"role": "client"},
-		Status:   things.EnabledStatus,
+		Status:   groups.EnabledStatus,
 	}
 
 	channelReq := sdk.Channel{
@@ -155,7 +155,7 @@ func TestCreateChannel(t *testing.T) {
 			createGroupReq: groups.Group{
 				Name:   channel.Name,
 				Parent: parentID,
-				Status: things.EnabledStatus,
+				Status: groups.EnabledStatus,
 			},
 			svcRes:   pGroup,
 			svcErr:   nil,
@@ -174,7 +174,7 @@ func TestCreateChannel(t *testing.T) {
 			createGroupReq: groups.Group{
 				Name:   channel.Name,
 				Parent: wrongID,
-				Status: things.EnabledStatus,
+				Status: groups.EnabledStatus,
 			},
 			svcRes:   groups.Group{},
 			svcErr:   svcerr.ErrCreateEntity,
@@ -216,7 +216,7 @@ func TestCreateChannel(t *testing.T) {
 				Metadata:    groups.Metadata{"role": "client"},
 				CreatedAt:   group.CreatedAt,
 				UpdatedAt:   group.UpdatedAt,
-				Status:      things.EnabledStatus,
+				Status:      groups.EnabledStatus,
 			},
 			svcRes:   pGroup,
 			svcErr:   nil,
@@ -1302,7 +1302,7 @@ func TestDisableChannel(t *testing.T) {
 
 	group := convertChannel(channel)
 	dGroup := group
-	dGroup.Status = things.DisabledStatus
+	dGroup.Status = groups.DisabledStatus
 	dChannel := channel
 	dChannel.Status = things.DisabledStatus.String()
 
