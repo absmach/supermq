@@ -24,7 +24,6 @@ import (
 	oauth2mocks "github.com/absmach/magistrala/pkg/oauth2/mocks"
 	policies "github.com/absmach/magistrala/pkg/policies"
 	sdk "github.com/absmach/magistrala/pkg/sdk/go"
-	"github.com/absmach/magistrala/things"
 	thapi "github.com/absmach/magistrala/things/api/http"
 	thmocks "github.com/absmach/magistrala/things/mocks"
 	usapi "github.com/absmach/magistrala/users/api"
@@ -72,7 +71,7 @@ func TestCreateChannel(t *testing.T) {
 	channelReq := sdk.Channel{
 		Name:     channel.Name,
 		Metadata: validMetadata,
-		Status:   things.EnabledStatus.String(),
+		Status:   groups.EnabledStatus.String(),
 	}
 
 	channelKind := "new_channel"
@@ -148,7 +147,7 @@ func TestCreateChannel(t *testing.T) {
 			channelReq: sdk.Channel{
 				Name:     channel.Name,
 				ParentID: parentID,
-				Status:   things.EnabledStatus.String(),
+				Status:   groups.EnabledStatus.String(),
 			},
 			domainID: domainID,
 			token:    validToken,
@@ -167,7 +166,7 @@ func TestCreateChannel(t *testing.T) {
 			channelReq: sdk.Channel{
 				Name:     channel.Name,
 				ParentID: wrongID,
-				Status:   things.EnabledStatus.String(),
+				Status:   groups.EnabledStatus.String(),
 			},
 			domainID: domainID,
 			token:    validToken,
@@ -184,7 +183,7 @@ func TestCreateChannel(t *testing.T) {
 		{
 			desc: "create channel with missing name",
 			channelReq: sdk.Channel{
-				Status: things.EnabledStatus.String(),
+				Status: groups.EnabledStatus.String(),
 			},
 			domainID:       domainID,
 			token:          validToken,
@@ -204,7 +203,7 @@ func TestCreateChannel(t *testing.T) {
 				Metadata:    validMetadata,
 				CreatedAt:   group.CreatedAt,
 				UpdatedAt:   group.UpdatedAt,
-				Status:      things.EnabledStatus.String(),
+				Status:      groups.EnabledStatus.String(),
 			},
 			domainID: domainID,
 			token:    validToken,
@@ -270,7 +269,7 @@ func TestListChannels(t *testing.T) {
 			ID:       generateUUID(t),
 			Name:     fmt.Sprintf("channel_%d", i),
 			Metadata: sdk.Metadata{"name": fmt.Sprintf("thing_%d", i)},
-			Status:   things.EnabledStatus.String(),
+			Status:   groups.EnabledStatus.String(),
 		}
 		chs = append(chs, gr)
 	}
@@ -280,7 +279,7 @@ func TestListChannels(t *testing.T) {
 		domainID        string
 		token           string
 		session         mgauthn.Session
-		status          things.Status
+		status          groups.Status
 		total           uint64
 		offset          uint64
 		limit           uint64
@@ -955,7 +954,7 @@ func TestListChannelsByThing(t *testing.T) {
 			ID:       generateUUID(t),
 			Name:     fmt.Sprintf("membership_%d@example.com", i),
 			Metadata: sdk.Metadata{"role": "channel"},
-			Status:   things.EnabledStatus.String(),
+			Status:   groups.EnabledStatus.String(),
 		}
 		aChannels = append(aChannels, channel)
 	}
@@ -1304,7 +1303,7 @@ func TestDisableChannel(t *testing.T) {
 	dGroup := group
 	dGroup.Status = groups.DisabledStatus
 	dChannel := channel
-	dChannel.Status = things.DisabledStatus.String()
+	dChannel.Status = groups.DisabledStatus.String()
 
 	cases := []struct {
 		desc            string
@@ -2051,7 +2050,7 @@ func TestListChannelUserGroups(t *testing.T) {
 			ID:       generateUUID(t),
 			Name:     fmt.Sprintf("group_%d", i),
 			Metadata: sdk.Metadata{"role": "group"},
-			Status:   things.EnabledStatus.String(),
+			Status:   groups.EnabledStatus.String(),
 		}
 		aGroups = append(aGroups, group)
 	}
@@ -2704,7 +2703,7 @@ func TestListGroupChannels(t *testing.T) {
 		ID:       testsutil.GenerateUUID(t),
 		Name:     "group_channel",
 		Metadata: sdk.Metadata{"role": "group"},
-		Status:   things.EnabledStatus.String(),
+		Status:   groups.EnabledStatus.String(),
 	}
 
 	cases := []struct {
@@ -2895,7 +2894,7 @@ func generateTestChannel(t *testing.T) sdk.Channel {
 		Metadata:    sdk.Metadata{"role": "client"},
 		CreatedAt:   createdAt,
 		UpdatedAt:   updatedAt,
-		Status:      things.EnabledStatus.String(),
+		Status:      groups.EnabledStatus.String(),
 	}
 	return ch
 }

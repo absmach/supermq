@@ -24,7 +24,6 @@ import (
 	oauth2mocks "github.com/absmach/magistrala/pkg/oauth2/mocks"
 	policies "github.com/absmach/magistrala/pkg/policies"
 	sdk "github.com/absmach/magistrala/pkg/sdk/go"
-	"github.com/absmach/magistrala/things"
 	"github.com/absmach/magistrala/users/api"
 	umocks "github.com/absmach/magistrala/users/mocks"
 	"github.com/go-chi/chi/v5"
@@ -297,7 +296,7 @@ func TestListGroups(t *testing.T) {
 			ID:       generateUUID(t),
 			Name:     fmt.Sprintf("group_%d", i),
 			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
-			Status:   things.EnabledStatus.String(),
+			Status:   groups.EnabledStatus.String(),
 		}
 		grps = append(grps, gr)
 	}
@@ -563,7 +562,7 @@ func TestListParentGroups(t *testing.T) {
 			ID:       generateUUID(t),
 			Name:     fmt.Sprintf("group_%d", i),
 			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
-			Status:   things.EnabledStatus.String(),
+			Status:   groups.EnabledStatus.String(),
 			ParentID: parentID,
 			Level:    1,
 		}
@@ -836,7 +835,7 @@ func TestListChildrenGroups(t *testing.T) {
 			ID:       generateUUID(t),
 			Name:     fmt.Sprintf("group_%d", i),
 			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
-			Status:   things.EnabledStatus.String(),
+			Status:   groups.EnabledStatus.String(),
 			ParentID: parentID,
 			Level:    -1,
 		}
@@ -1494,7 +1493,7 @@ func TestEnableGroup(t *testing.T) {
 	mgsdk := sdk.NewSDK(conf)
 
 	enGroup := sdkGroup
-	enGroup.Status = things.EnabledStatus.String()
+	enGroup.Status = groups.EnabledStatus.String()
 
 	cases := []struct {
 		desc            string
@@ -1605,7 +1604,7 @@ func TestDisableGroup(t *testing.T) {
 	mgsdk := sdk.NewSDK(conf)
 
 	disGroup := sdkGroup
-	disGroup.Status = things.DisabledStatus.String()
+	disGroup.Status = groups.DisabledStatus.String()
 
 	cases := []struct {
 		desc            string
@@ -2033,7 +2032,7 @@ func generateTestGroup(t *testing.T) sdk.Group {
 		Metadata:    sdk.Metadata{"role": "client"},
 		CreatedAt:   createdAt,
 		UpdatedAt:   updatedAt,
-		Status:      things.EnabledStatus.String(),
+		Status:      groups.EnabledStatus.String(),
 	}
 	return gr
 }

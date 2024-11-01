@@ -16,7 +16,6 @@ import (
 	"github.com/absmach/magistrala/pkg/groups"
 	mggroups "github.com/absmach/magistrala/pkg/groups"
 	"github.com/absmach/magistrala/pkg/postgres"
-	"github.com/absmach/magistrala/things"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -338,7 +337,7 @@ func buildQuery(gm mggroups.Page, ids ...string) string {
 	if gm.PageMeta.ID != "" {
 		queries = append(queries, "g.id ILIKE '%' || :id || '%'")
 	}
-	if gm.Status != things.AllStatus {
+	if gm.Status != mggroups.AllStatus {
 		queries = append(queries, "g.status = :status")
 	}
 	if gm.DomainID != "" {
@@ -470,20 +469,20 @@ func toDBGroupPage(pm mggroups.Page) (dbGroupPage, error) {
 }
 
 type dbGroupPage struct {
-	ClientID string        `db:"client_id"`
-	ID       string        `db:"id"`
-	Name     string        `db:"name"`
-	ParentID string        `db:"parent_id"`
-	DomainID string        `db:"domain_id"`
-	Metadata []byte        `db:"metadata"`
-	Path     string        `db:"path"`
-	Level    uint64        `db:"level"`
-	Total    uint64        `db:"total"`
-	Limit    uint64        `db:"limit"`
-	Offset   uint64        `db:"offset"`
-	Subject  string        `db:"subject"`
-	Action   string        `db:"action"`
-	Status   things.Status `db:"status"`
+	ClientID string          `db:"client_id"`
+	ID       string          `db:"id"`
+	Name     string          `db:"name"`
+	ParentID string          `db:"parent_id"`
+	DomainID string          `db:"domain_id"`
+	Metadata []byte          `db:"metadata"`
+	Path     string          `db:"path"`
+	Level    uint64          `db:"level"`
+	Total    uint64          `db:"total"`
+	Limit    uint64          `db:"limit"`
+	Offset   uint64          `db:"offset"`
+	Subject  string          `db:"subject"`
+	Action   string          `db:"action"`
+	Status   mggroups.Status `db:"status"`
 }
 
 func (repo groupRepository) processRows(rows *sqlx.Rows) ([]mggroups.Group, error) {

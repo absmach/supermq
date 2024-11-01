@@ -13,7 +13,6 @@ import (
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
 	mggroups "github.com/absmach/magistrala/pkg/groups"
-	"github.com/absmach/magistrala/things"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -245,7 +244,7 @@ func decodePageMeta(r *http.Request) (mggroups.PageMeta, error) {
 	if err != nil {
 		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	st, err := things.ToStatus(s)
+	st, err := mggroups.ToStatus(s)
 	if err != nil {
 		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}

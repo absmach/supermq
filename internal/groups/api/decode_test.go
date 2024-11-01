@@ -15,7 +15,6 @@ import (
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
 	"github.com/absmach/magistrala/pkg/groups"
-	"github.com/absmach/magistrala/things"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -51,7 +50,7 @@ func TestDecodeListGroupsRequest(t *testing.T) {
 			resp: listGroupsReq{
 				Page: groups.Page{
 					PageMeta: groups.PageMeta{
-						Status: things.EnabledStatus,
+						Status: groups.EnabledStatus,
 						Offset: 10,
 						Limit:  10,
 						Name:   "random",
@@ -166,7 +165,7 @@ func TestDecodeListParentsRequest(t *testing.T) {
 			resp: listGroupsReq{
 				Page: groups.Page{
 					PageMeta: groups.PageMeta{
-						Status: things.EnabledStatus,
+						Status: groups.EnabledStatus,
 						Offset: 10,
 						Limit:  10,
 						Name:   "random",
@@ -261,7 +260,7 @@ func TestDecodeListChildrenRequest(t *testing.T) {
 			resp: listGroupsReq{
 				Page: groups.Page{
 					PageMeta: groups.PageMeta{
-						Status: things.EnabledStatus,
+						Status: groups.EnabledStatus,
 						Offset: 10,
 						Limit:  10,
 						Name:   "random",
@@ -400,7 +399,7 @@ func TestDecodePageMeta(t *testing.T) {
 			desc: "valid request with all parameters",
 			url:  "http://localhost:8080?status=enabled&offset=10&limit=10&name=random&metadata={\"test\":\"test\"}",
 			resp: groups.PageMeta{
-				Status: things.EnabledStatus,
+				Status: groups.EnabledStatus,
 				Offset: 10,
 				Limit:  10,
 				Name:   "random",
