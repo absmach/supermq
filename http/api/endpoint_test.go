@@ -20,7 +20,7 @@ import (
 	thmocks "github.com/absmach/magistrala/things/mocks"
 	"github.com/absmach/mgate"
 	proxy "github.com/absmach/mgate/pkg/http"
-	"github.com/absmach/mproxy/pkg/session"
+	"github.com/absmach/mgate/pkg/session"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

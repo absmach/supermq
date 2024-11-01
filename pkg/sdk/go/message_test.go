@@ -25,7 +25,7 @@ import (
 	readersmocks "github.com/absmach/magistrala/readers/mocks"
 	thmocks "github.com/absmach/magistrala/things/mocks"
 	"github.com/absmach/mgate"
-	proxy "github.com/absmach/mproxy/pkg/http"
+	proxy "github.com/absmach/mgate/pkg/http"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
