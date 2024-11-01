@@ -1969,7 +1969,7 @@ func TestListMembers(t *testing.T) {
 				Page: things.Page{
 					Total: 1,
 				},
-				Clients: []things.Client{client},
+				Members: []things.Client{client},
 			},
 			status: http.StatusOK,
 
@@ -2004,7 +2004,7 @@ func TestListMembers(t *testing.T) {
 					Offset: 1,
 					Total:  1,
 				},
-				Clients: []things.Client{client},
+				Members: []things.Client{client},
 			},
 			status: http.StatusOK,
 
@@ -2033,7 +2033,7 @@ func TestListMembers(t *testing.T) {
 					Limit: 1,
 					Total: 1,
 				},
-				Clients: []things.Client{client},
+				Members: []things.Client{client},
 			},
 			status: http.StatusOK,
 
@@ -2072,7 +2072,7 @@ func TestListMembers(t *testing.T) {
 				Page: things.Page{
 					Total: 1,
 				},
-				Clients: []things.Client{client},
+				Members: []things.Client{client},
 			},
 			status: http.StatusOK,
 
@@ -2111,7 +2111,7 @@ func TestListMembers(t *testing.T) {
 				Page: things.Page{
 					Total: 1,
 				},
-				Clients: []things.Client{client},
+				Members: []things.Client{client},
 			},
 			status: http.StatusOK,
 
@@ -2156,7 +2156,7 @@ func TestListMembers(t *testing.T) {
 				Page: things.Page{
 					Total: 1,
 				},
-				Clients: []things.Client{client},
+				Members: []things.Client{client},
 			},
 			domainID: domainID,
 			token:    validToken,
@@ -2197,7 +2197,7 @@ func TestListMembers(t *testing.T) {
 				Page: things.Page{
 					Total: 1,
 				},
-				Clients: []things.Client{client},
+				Members: []things.Client{client},
 			},
 			groupID: client.ID,
 			query:   "metadata=%7B%22domain%22%3A%20%22example.com%22%7D&",
@@ -2234,7 +2234,7 @@ func TestListMembers(t *testing.T) {
 				Page: things.Page{
 					Total: 1,
 				},
-				Clients: []things.Client{client},
+				Members: []things.Client{client},
 			},
 			domainID: domainID,
 			token:    validToken,
@@ -2265,7 +2265,7 @@ func TestListMembers(t *testing.T) {
 				Page: things.Page{
 					Total: 1,
 				},
-				Clients: []things.Client{client},
+				Members: []things.Client{client},
 			},
 			groupID: client.ID,
 			status:  http.StatusOK,
@@ -2307,7 +2307,7 @@ func TestListMembers(t *testing.T) {
 					Limit:  1,
 					Total:  1,
 				},
-				Clients: []things.Client{client},
+				Members: []things.Client{client},
 			},
 			status: http.StatusOK,
 

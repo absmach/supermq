@@ -615,7 +615,7 @@ func TestListThingsByChannel(t *testing.T) {
 					Limit:  100,
 					Total:  uint64(len(things)),
 				},
-				Clients: convertThings(things...),
+				Members: convertThings(things...),
 			},
 			svcErr: nil,
 			response: sdk.ThingsPage{
@@ -682,7 +682,7 @@ func TestListThingsByChannel(t *testing.T) {
 					Limit:  100,
 					Total:  1,
 				},
-				Clients: convertThings(things[50]),
+				Members: convertThings(things[50]),
 			},
 			svcErr: nil,
 			response: sdk.ThingsPage{
@@ -747,7 +747,7 @@ func TestListThingsByChannel(t *testing.T) {
 					Limit:  100,
 					Total:  1,
 				},
-				Clients: []mgthings.Client{{
+				Members: []mgthings.Client{{
 					Name:        things[0].Name,
 					Tags:        things[0].Tags,
 					Credentials: mgthings.Credentials(things[0].Credentials),

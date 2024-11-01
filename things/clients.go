@@ -161,7 +161,7 @@ type ClientsPage struct {
 
 type MembersPage struct {
 	Page
-	Clients []Client
+	Members []Client
 }
 
 // Page contains the page metadata that helps navigation.

@@ -945,7 +945,7 @@ func TestListMembers(t *testing.T) {
 					Offset: 0,
 					Limit:  0,
 				},
-				Clients: []things.Client{},
+				Members: []things.Client{},
 			},
 			err: nil,
 		},
@@ -970,7 +970,7 @@ func TestListMembers(t *testing.T) {
 				Page: things.Page{
 					Total: nThings - 6 - 1,
 				},
-				Clients: aThings[6 : nThings-1],
+				Members: aThings[6 : nThings-1],
 			},
 			err: nil,
 		},
@@ -1010,7 +1010,7 @@ func TestListMembers(t *testing.T) {
 				Page: things.Page{
 					Total: 1,
 				},
-				Clients: []things.Client{aThings[0]},
+				Members: []things.Client{aThings[0]},
 			},
 			err: nil,
 		},

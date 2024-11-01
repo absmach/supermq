@@ -35,7 +35,7 @@ func NewService(policyEvaluator policies.Evaluator, policyService policies.Servi
 }
 
 func (svc service) Authorize(ctx context.Context, req AuthzReq) (string, error) {
-	thingID, err := svc.Identify(ctx, req.ClientKey)
+	clientID, err := svc.Identify(ctx, req.ClientKey)
 	if err != nil {
 		return "", err
 	}
@@ -44,7 +44,7 @@ func (svc service) Authorize(ctx context.Context, req AuthzReq) (string, error) 
 		SubjectType: policies.GroupType,
 		Subject:     req.ChannelID,
 		ObjectType:  policies.ThingType,
-		Object:      thingID,
+		Object:      clientID,
 		Permission:  req.Permission,
 	}
 	err = svc.evaluator.CheckPolicy(ctx, r)
@@ -52,7 +52,7 @@ func (svc service) Authorize(ctx context.Context, req AuthzReq) (string, error) 
 		return "", errors.Wrap(svcerr.ErrAuthorization, err)
 	}
 
-	return thingID, nil
+	return clientID, nil
 }
 
 func (svc service) CreateClients(ctx context.Context, session authn.Session, cli ...Client) ([]Client, error) {
@@ -101,11 +101,11 @@ func (svc service) CreateClients(ctx context.Context, session authn.Session, cli
 }
 
 func (svc service) View(ctx context.Context, session authn.Session, id string) (Client, error) {
-	thing, err := svc.clients.RetrieveByID(ctx, id)
+	client, err := svc.clients.RetrieveByID(ctx, id)
 	if err != nil {
 		return Client{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
-	return thing, nil
+	return client, nil
 }
 
 func (svc service) ViewPerms(ctx context.Context, session authn.Session, id string) ([]string, error) {
@@ -181,11 +181,11 @@ func (svc service) retrievePermissions(ctx context.Context, userID string, clien
 	return nil
 }
 
-func (svc service) listUserClientPermission(ctx context.Context, userID, thingID string) ([]string, error) {
+func (svc service) listUserClientPermission(ctx context.Context, userID, clientID string) ([]string, error) {
 	permissions, err := svc.policysvc.ListPermissions(ctx, policies.Policy{
 		SubjectType: policies.UserType,
 		Subject:     userID,
-		Object:      thingID,
+		Object:      clientID,
 		ObjectType:  policies.ThingType,
 	}, []string{})
 	if err != nil {
@@ -207,7 +207,7 @@ func (svc service) listClientIDs(ctx context.Context, userID, permission string)
 	return tids.Policies, nil
 }
 
-func (svc service) filterAllowedClientIDs(ctx context.Context, userID, permission string, thingIDs []string) ([]string, error) {
+func (svc service) filterAllowedClientIDs(ctx context.Context, userID, permission string, clientIDs []string) ([]string, error) {
 	var ids []string
 	tids, err := svc.policysvc.ListAllObjects(ctx, policies.Policy{
 		SubjectType: policies.UserType,
@@ -218,10 +218,10 @@ func (svc service) filterAllowedClientIDs(ctx context.Context, userID, permissio
 	if err != nil {
 		return nil, errors.Wrap(svcerr.ErrNotFound, err)
 	}
-	for _, thingID := range thingIDs {
+	for _, clientID := range clientIDs {
 		for _, tid := range tids.Policies {
-			if thingID == tid {
-				ids = append(ids, thingID)
+			if clientID == tid {
+				ids = append(ids, clientID)
 			}
 		}
 	}
@@ -244,21 +244,21 @@ func (svc service) Update(ctx context.Context, session authn.Session, thi Client
 }
 
 func (svc service) UpdateTags(ctx context.Context, session authn.Session, thi Client) (Client, error) {
-	thing := Client{
+	client := Client{
 		ID:        thi.ID,
 		Tags:      thi.Tags,
 		UpdatedAt: time.Now(),
 		UpdatedBy: session.UserID,
 	}
-	thing, err := svc.clients.UpdateTags(ctx, thing)
+	client, err := svc.clients.UpdateTags(ctx, client)
 	if err != nil {
 		return Client{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
-	return thing, nil
+	return client, nil
 }
 
 func (svc service) UpdateSecret(ctx context.Context, session authn.Session, id, key string) (Client, error) {
-	thing := Client{
+	client := Client{
 		ID: id,
 		Credentials: Credentials{
 			Secret: key,
@@ -267,43 +267,43 @@ func (svc service) UpdateSecret(ctx context.Context, session authn.Session, id, 
 		UpdatedBy: session.UserID,
 		Status:    EnabledStatus,
 	}
-	thing, err := svc.clients.UpdateSecret(ctx, thing)
+	client, err := svc.clients.UpdateSecret(ctx, client)
 	if err != nil {
 		return Client{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
-	return thing, nil
+	return client, nil
 }
 
 func (svc service) Enable(ctx context.Context, session authn.Session, id string) (Client, error) {
-	thing := Client{
+	client := Client{
 		ID:        id,
 		Status:    EnabledStatus,
 		UpdatedAt: time.Now(),
 	}
-	thing, err := svc.changeClientStatus(ctx, session, thing)
+	client, err := svc.changeClientStatus(ctx, session, client)
 	if err != nil {
 		return Client{}, errors.Wrap(ErrEnableClient, err)
 	}
 
-	return thing, nil
+	return client, nil
 }
 
 func (svc service) Disable(ctx context.Context, session authn.Session, id string) (Client, error) {
-	thing := Client{
+	client := Client{
 		ID:        id,
 		Status:    DisabledStatus,
 		UpdatedAt: time.Now(),
 	}
-	thing, err := svc.changeClientStatus(ctx, session, thing)
+	client, err := svc.changeClientStatus(ctx, session, client)
 	if err != nil {
 		return Client{}, errors.Wrap(ErrDisableClient, err)
 	}
 
-	if err := svc.clientCache.Remove(ctx, thing.ID); err != nil {
-		return thing, errors.Wrap(svcerr.ErrRemoveEntity, err)
+	if err := svc.clientCache.Remove(ctx, client.ID); err != nil {
+		return client, errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
-	return thing, nil
+	return client, nil
 }
 
 func (svc service) Share(ctx context.Context, session authn.Session, id, relation string, userids ...string) error {
@@ -363,22 +363,22 @@ func (svc service) Delete(ctx context.Context, session authn.Session, id string)
 	return nil
 }
 
-func (svc service) changeClientStatus(ctx context.Context, session authn.Session, thing Client) (Client, error) {
-	dbThing, err := svc.clients.RetrieveByID(ctx, thing.ID)
+func (svc service) changeClientStatus(ctx context.Context, session authn.Session, client Client) (Client, error) {
+	dbClient, err := svc.clients.RetrieveByID(ctx, client.ID)
 	if err != nil {
 		return Client{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
-	if dbThing.Status == thing.Status {
+	if dbClient.Status == client.Status {
 		return Client{}, errors.ErrStatusAlreadyAssigned
 	}
 
-	thing.UpdatedBy = session.UserID
+	client.UpdatedBy = session.UserID
 
-	thing, err = svc.clients.ChangeStatus(ctx, thing)
+	client, err = svc.clients.ChangeStatus(ctx, client)
 	if err != nil {
 		return Client{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
-	return thing, nil
+	return client, nil
 }
 
 func (svc service) ListClientsByGroup(ctx context.Context, session authn.Session, groupID string, pm Page) (MembersPage, error) {
@@ -417,7 +417,7 @@ func (svc service) ListClientsByGroup(ctx context.Context, session authn.Session
 
 	return MembersPage{
 		Page:    cp.Page,
-		Clients: cp.Clients,
+		Members: cp.Clients,
 	}, nil
 }
 
@@ -427,20 +427,20 @@ func (svc service) Identify(ctx context.Context, key string) (string, error) {
 		return id, nil
 	}
 
-	thing, err := svc.clients.RetrieveBySecret(ctx, key)
+	client, err := svc.clients.RetrieveBySecret(ctx, key)
 	if err != nil {
 		return "", errors.Wrap(svcerr.ErrAuthorization, err)
 	}
-	if err := svc.clientCache.Save(ctx, key, thing.ID); err != nil {
+	if err := svc.clientCache.Save(ctx, key, client.ID); err != nil {
 		return "", errors.Wrap(svcerr.ErrAuthorization, err)
 	}
 
-	return thing.ID, nil
+	return client.ID, nil
 }
 
 func (svc service) addClientPolicies(ctx context.Context, userID, domainID string, clients []Client) error {
 	policyList := []policies.Policy{}
-	for _, thing := range clients {
+	for _, client := range clients {
 		policyList = append(policyList, policies.Policy{
 			Domain:      domainID,
 			SubjectType: policies.UserType,
@@ -448,7 +448,7 @@ func (svc service) addClientPolicies(ctx context.Context, userID, domainID strin
 			Relation:    policies.AdministratorRelation,
 			ObjectKind:  policies.NewThingKind,
 			ObjectType:  policies.ThingType,
-			Object:      thing.ID,
+			Object:      client.ID,
 		})
 		policyList = append(policyList, policies.Policy{
 			Domain:      domainID,
@@ -456,7 +456,7 @@ func (svc service) addClientPolicies(ctx context.Context, userID, domainID strin
 			Subject:     domainID,
 			Relation:    policies.DomainRelation,
 			ObjectType:  policies.ThingType,
-			Object:      thing.ID,
+			Object:      client.ID,
 		})
 	}
 	if err := svc.policysvc.AddPolicies(ctx, policyList); err != nil {
@@ -468,7 +468,7 @@ func (svc service) addClientPolicies(ctx context.Context, userID, domainID strin
 
 func (svc service) addClientPoliciesRollback(ctx context.Context, userID, domainID string, clients []Client) error {
 	policyList := []policies.Policy{}
-	for _, thing := range clients {
+	for _, client := range clients {
 		policyList = append(policyList, policies.Policy{
 			Domain:      domainID,
 			SubjectType: policies.UserType,
@@ -476,7 +476,7 @@ func (svc service) addClientPoliciesRollback(ctx context.Context, userID, domain
 			Relation:    policies.AdministratorRelation,
 			ObjectKind:  policies.NewThingKind,
 			ObjectType:  policies.ThingType,
-			Object:      thing.ID,
+			Object:      client.ID,
 		})
 		policyList = append(policyList, policies.Policy{
 			Domain:      domainID,
@@ -484,7 +484,7 @@ func (svc service) addClientPoliciesRollback(ctx context.Context, userID, domain
 			Subject:     domainID,
 			Relation:    policies.DomainRelation,
 			ObjectType:  policies.ThingType,
-			Object:      thing.ID,
+			Object:      client.ID,
 		})
 	}
 	if err := svc.policysvc.DeletePolicies(ctx, policyList); err != nil {

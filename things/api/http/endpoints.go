@@ -302,7 +302,7 @@ func buildClientsResponse(cp things.MembersPage) clientsPageRes {
 		},
 		Clients: []viewClientRes{},
 	}
-	for _, c := range cp.Clients {
+	for _, c := range cp.Members {
 		res.Clients = append(res.Clients, viewClientRes{Client: c})
 	}
 
