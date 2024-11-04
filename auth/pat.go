@@ -514,17 +514,17 @@ func (ds *DomainScope) Check(domainEntityType DomainEntityType, operation Operat
 //	        "domain_1": {
 //	            "entities": {
 //	                "groups": {
-//	                    "create": {}, // this for all groups in domain
+//	                    "create": ["*"] // this for all groups in domain
 //	                },
 //	                "channels": {
 //	                    // for particular channel in domain
-//	                    "delete": {
-//	                        "channel1": {},
-//	                        "channel2":{}
-//	                    }
+//	                    "delete": [
+//	                        "channel1",
+//	                        "channel2"
+//	                    ]
 //	                },
 //	                "things": {
-//	                    "update": {} // this for all things in domain
+//	                    "update": ["*"] // this for all things in domain
 //	                }
 //	            }
 //	        }
