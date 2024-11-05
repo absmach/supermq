@@ -7,7 +7,7 @@ import (
 	"context"
 
 	mgauth "github.com/absmach/magistrala/auth"
-	things "github.com/absmach/magistrala/clients/private"
+	clients "github.com/absmach/magistrala/clients/private"
 	grpcCommonV1 "github.com/absmach/magistrala/internal/grpc/common/v1"
 	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
@@ -33,7 +33,7 @@ type grpcServer struct {
 }
 
 // NewServer returns new AuthServiceServer instance.
-func NewServer(svc things.Service) grpcClientsV1.ClientsServiceServer {
+func NewServer(svc clients.Service) grpcClientsV1.ClientsServiceServer {
 	return &grpcServer{
 		authenticate: kitgrpc.NewServer(
 			authenticateEndpoint(svc),

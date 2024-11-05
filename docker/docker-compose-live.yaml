@@ -38,7 +38,7 @@ services:
                   "--build.exclude_dir", ".vscode,.git,.docker,.github,api,build,tools,scripts",
                   "--build.exclude_regex", "[\"_test\\.go\"" ,
                   "--tmp_dir", "/tmp",]
-  things:
+  clients:
     image: magistrala/clients-dev
     build:
       context: .

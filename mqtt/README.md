@@ -20,10 +20,10 @@ The service is configured using the environment variables presented in the follo
 | MG_MQTT_ADAPTER_WS_TARGET_PORT           | MQTT broker port for MQTT over WS                                                  | 8080                               |
 | MG_MQTT_ADAPTER_WS_TARGET_PATH           | MQTT broker MQTT over WS path                                                      | /mqtt                              |
 | MG_MQTT_ADAPTER_INSTANCE                 | Instance name for MQTT adapter                                                     | ""                                 |
-| MG_THINGS_AUTH_GRPC_URL                  | Things service Auth gRPC URL                                                       | <localhost:7000>                   |
-| MG_THINGS_AUTH_GRPC_TIMEOUT              | Things service Auth gRPC request timeout in seconds                                | 1s                                 |
-| MG_THINGS_AUTH_GRPC_CLIENT_CERT          | Path to the PEM encoded things service Auth gRPC client certificate file           | ""                                 |
-| MG_THINGS_AUTH_GRPC_CLIENT_KEY           | Path to the PEM encoded things service Auth gRPC client key file                   | ""                                 |
+| MG_CLIENTS_AUTH_GRPC_URL                  | Things service Auth gRPC URL                                                       | <localhost:7000>                   |
+| MG_CLIENTS_AUTH_GRPC_TIMEOUT              | Things service Auth gRPC request timeout in seconds                                | 1s                                 |
+| MG_CLIENTS_AUTH_GRPC_CLIENT_CERT          | Path to the PEM encoded things service Auth gRPC client certificate file           | ""                                 |
+| MG_CLIENTS_AUTH_GRPC_CLIENT_KEY           | Path to the PEM encoded things service Auth gRPC client key file                   | ""                                 |
 | MG_THINGS_AUTH_GRPC_SERVER_CERTS         | Path to the PEM encoded things server Auth gRPC server trusted CA certificate file | ""                                 |
 | MG_ES_URL                                | Event sourcing URL                                                                 | <nats://localhost:4222>            |
 | MG_MESSAGE_BROKER_URL                    | Message broker instance URL                                                        | <nats://localhost:4222>            |
@@ -64,10 +64,10 @@ MG_MQTT_ADAPTER_WS_TARGET_HOST=localhost \
 MG_MQTT_ADAPTER_WS_TARGET_PORT=8080 \
 MG_MQTT_ADAPTER_WS_TARGET_PATH=/mqtt \
 MG_MQTT_ADAPTER_INSTANCE="" \
-MG_THINGS_AUTH_GRPC_URL=localhost:7000 \
-MG_THINGS_AUTH_GRPC_TIMEOUT=1s \
-MG_THINGS_AUTH_GRPC_CLIENT_CERT="" \
-MG_THINGS_AUTH_GRPC_CLIENT_KEY="" \
+MG_CLIENTS_AUTH_GRPC_URL=localhost:7000 \
+MG_CLIENTS_AUTH_GRPC_TIMEOUT=1s \
+MG_CLIENTS_AUTH_GRPC_CLIENT_CERT="" \
+MG_CLIENTS_AUTH_GRPC_CLIENT_KEY="" \
 MG_THINGS_AUTH_GRPC_SERVER_CERTS="" \
 MG_ES_URL=nats://localhost:4222 \
 MG_MESSAGE_BROKER_URL=nats://localhost:4222 \
@@ -78,6 +78,6 @@ MG_MQTT_ADAPTER_INSTANCE_ID="" \
 $GOBIN/magistrala-mqtt
 ```
 
-Setting `MG_THINGS_AUTH_GRPC_CLIENT_CERT` and `MG_THINGS_AUTH_GRPC_CLIENT_KEY` will enable TLS against the things service. The service expects a file in PEM format for both the certificate and the key. Setting `MG_THINGS_AUTH_GRPC_SERVER_CERTS` will enable TLS against the things service trusting only those CAs that are provided. The service expects a file in PEM format of trusted CAs.
+Setting `MG_CLIENTS_AUTH_GRPC_CLIENT_CERT` and `MG_CLIENTS_AUTH_GRPC_CLIENT_KEY` will enable TLS against the things service. The service expects a file in PEM format for both the certificate and the key. Setting `MG_THINGS_AUTH_GRPC_SERVER_CERTS` will enable TLS against the things service trusting only those CAs that are provided. The service expects a file in PEM format of trusted CAs.
 
 For more information about service capabilities and its usage, please check out the API documentation [API](https://github.com/absmach/magistrala/blob/main/api/asyncapi/mqtt.yml).

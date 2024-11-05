@@ -16,7 +16,7 @@ import (
 	server "github.com/absmach/magistrala/http"
 	"github.com/absmach/magistrala/http/api"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
-	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
@@ -34,7 +34,7 @@ const (
 	invalidValue = "invalid"
 )
 
-func newService(authn mgauthn.Authentication, things grpcThingsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) (session.Handler, *pubsub.PubSub) {
+func newService(authn mgauthn.Authentication, things grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) (session.Handler, *pubsub.PubSub) {
 	pub := new(pubsub.PubSub)
 	return server.NewHandler(pub, authn, things, channels, mglog.NewMock()), pub
 }

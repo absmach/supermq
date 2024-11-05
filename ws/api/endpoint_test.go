@@ -15,7 +15,7 @@ import (
 	chmocks "github.com/absmach/magistrala/channels/mocks"
 	thmocks "github.com/absmach/magistrala/clients/mocks"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
-	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	authnMocks "github.com/absmach/magistrala/pkg/authn/mocks"
 	"github.com/absmach/magistrala/pkg/messaging/mocks"
@@ -39,7 +39,7 @@ const (
 
 var msg = []byte(`[{"n":"current","t":-1,"v":1.6}]`)
 
-func newService(things grpcThingsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) (ws.Service, *mocks.PubSub) {
+func newService(things grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) (ws.Service, *mocks.PubSub) {
 	pubsub := new(mocks.PubSub)
 	return ws.New(things, channels, pubsub), pubsub
 }

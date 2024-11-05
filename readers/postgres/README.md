@@ -24,8 +24,8 @@ default values.
 | MG_POSTGRES_SSL_CERT                | Postgres SSL certificate path                 | ""                            |
 | MG_POSTGRES_SSL_KEY                 | Postgres SSL key                              | ""                            |
 | MG_POSTGRES_SSL_ROOT_CERT           | Postgres SSL root certificate path            | ""                            |
-| MG_THINGS_AUTH_GRPC_URL             | Things service Auth gRPC URL                  | localhost:7000                |
-| MG_THINGS_AUTH_GRPC_TIMEOUT         | Things service Auth gRPC timeout in seconds   | 1s                            |
+| MG_CLIENTS_AUTH_GRPC_URL             | Things service Auth gRPC URL                  | localhost:7000                |
+| MG_CLIENTS_AUTH_GRPC_TIMEOUT         | Things service Auth gRPC timeout in seconds   | 1s                            |
 | MG_THINGS_AUTH_GRPC_CLIENT_TLS      | Things service Auth gRPC TLS mode flag        | false                         |
 | MG_THINGS_AUTH_GRPC_CA_CERTS        | Things service Auth gRPC CA certificates      | ""                            |
 | MG_AUTH_GRPC_URL                    | Auth service gRPC URL                         | localhost:7001                |
@@ -70,8 +70,8 @@ MG_POSTGRES_SSL_MODE=[Postgres SSL mode] \
 MG_POSTGRES_SSL_CERT=[Postgres SSL cert] \
 MG_POSTGRES_SSL_KEY=[Postgres SSL key] \
 MG_POSTGRES_SSL_ROOT_CERT=[Postgres SSL Root cert] \
-MG_THINGS_AUTH_GRPC_URL=[Things service Auth GRPC URL] \
-MG_THINGS_AUTH_GRPC_TIMEOUT=[Things service Auth gRPC request timeout in seconds] \
+MG_CLIENTS_AUTH_GRPC_URL=[Things service Auth GRPC URL] \
+MG_CLIENTS_AUTH_GRPC_TIMEOUT=[Things service Auth gRPC request timeout in seconds] \
 MG_THINGS_AUTH_GRPC_CLIENT_TLS=[Things service Auth gRPC TLS mode flag] \
 MG_THINGS_AUTH_GRPC_CA_CERTS=[Things service Auth gRPC CA certificates] \
 MG_AUTH_GRPC_URL=[Auth service gRPC URL] \

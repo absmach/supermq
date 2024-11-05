@@ -249,23 +249,7 @@ func disableClientEndpoint(svc clients.Service) endpoint.Endpoint {
 	}
 }
 
-func buildClientsResponse(cp clients.MembersPage) clientsPageRes {
-	res := clientsPageRes{
-		clientsPageMetaRes: clientsPageMetaRes{
-			Total:  cp.Total,
-			Offset: cp.Offset,
-			Limit:  cp.Limit,
-		},
-		Clients: []viewClientRes{},
-	}
-	for _, c := range cp.Members {
-		res.Clients = append(res.Clients, viewClientRes{Client: c})
-	}
-
-	return res
-}
-
-func setThingParentGroupEndpoint(svc clients.Service) endpoint.Endpoint {
+func setClientParentGroupEndpoint(svc clients.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(setThingParentGroupReq)
 		if err := req.validate(); err != nil {
@@ -284,7 +268,7 @@ func setThingParentGroupEndpoint(svc clients.Service) endpoint.Endpoint {
 	}
 }
 
-func removeThingParentGroupEndpoint(svc clients.Service) endpoint.Endpoint {
+func removeClientParentGroupEndpoint(svc clients.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(removeThingParentGroupReq)
 		if err := req.validate(); err != nil {

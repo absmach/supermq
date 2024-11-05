@@ -24,8 +24,8 @@ default values.
 | MG_TIMESCALE_SSL_CERT                | Timescale SSL certificate path                | ""                            |
 | MG_TIMESCALE_SSL_KEY                 | Timescale SSL key                             | ""                            |
 | MG_TIMESCALE_SSL_ROOT_CERT           | Timescale SSL root certificate path           | ""                            |
-| MG_THINGS_AUTH_GRPC_URL              | Things service Auth gRPC URL                  | localhost:7000                |
-| MG_THINGS_AUTH_GRPC_TIMEOUT          | Things service Auth gRPC timeout in seconds   | 1s                            |
+| MG_CLIENTS_AUTH_GRPC_URL              | Things service Auth gRPC URL                  | localhost:7000                |
+| MG_CLIENTS_AUTH_GRPC_TIMEOUT          | Things service Auth gRPC timeout in seconds   | 1s                            |
 | MG_THINGS_AUTH_GRPC_CLIENT_TLS       | Things service Auth gRPC TLS enabled flag     | false                         |
 | MG_THINGS_AUTH_GRPC_CA_CERTS         | Things service Auth gRPC CA certificates      | ""                            |
 | MG_AUTH_GRPC_URL                     | Auth service gRPC URL                         | localhost:7001                |
@@ -69,8 +69,8 @@ MG_TIMESCALE_SSL_MODE=[Timescale SSL mode] \
 MG_TIMESCALE_SSL_CERT=[Timescale SSL cert] \
 MG_TIMESCALE_SSL_KEY=[Timescale SSL key] \
 MG_TIMESCALE_SSL_ROOT_CERT=[Timescale SSL Root cert] \
-MG_THINGS_AUTH_GRPC_URL=[Things service Auth GRPC URL] \
-MG_THINGS_AUTH_GRPC_TIMEOUT=[Things service Auth gRPC request timeout in seconds] \
+MG_CLIENTS_AUTH_GRPC_URL=[Things service Auth GRPC URL] \
+MG_CLIENTS_AUTH_GRPC_TIMEOUT=[Things service Auth gRPC request timeout in seconds] \
 MG_THINGS_AUTH_GRPC_CLIENT_TLS=[Things service Auth gRPC TLS enabled flag] \
 MG_THINGS_AUTH_GRPC_CA_CERTS=[Things service Auth gRPC CA certificates] \
 MG_AUTH_GRPC_URL=[Auth service Auth gRPC URL] \
