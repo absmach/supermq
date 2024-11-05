@@ -24,7 +24,7 @@ func (c *ConnType) UnmarshalJSON(bytes []byte) error {
 		return err
 	}
 
-	nc, err := StringToConnType(cstr)
+	nc, err := ParseConnType(cstr)
 	if err != nil {
 		return err
 	}
@@ -42,6 +42,7 @@ func CheckConnType(c ConnType) error {
 		return fmt.Errorf("Unknown connection type %d", c)
 	}
 }
+
 func (c ConnType) String() string {
 	switch c {
 	case Publish:
@@ -60,7 +61,8 @@ func NewType(c uint) (ConnType, error) {
 	return ConnType(c), nil
 
 }
-func StringToConnType(c string) (ConnType, error) {
+
+func ParseConnType(c string) (ConnType, error) {
 	switch strings.ToLower(c) {
 	case "publish":
 		return Publish, nil
