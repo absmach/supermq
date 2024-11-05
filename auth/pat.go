@@ -23,14 +23,22 @@ const (
 	ListOp
 	UpdateOp
 	DeleteOp
+	ShareOp
+	UnshareOp
+	PublishOp
+	SubscribeOp
 )
 
 const (
-	createOpStr = "create"
-	readOpStr   = "read"
-	listOpStr   = "list"
-	updateOpStr = "update"
-	deleteOpStr = "delete"
+	createOpStr    = "create"
+	readOpStr      = "read"
+	listOpStr      = "list"
+	updateOpStr    = "update"
+	deleteOpStr    = "delete"
+	shareOpStr     = "share"
+	UnshareOpStr   = "unshare"
+	PublishOpStr   = "publish"
+	SubscribeOpStr = "subscribe"
 )
 
 func (ot OperationType) String() string {
@@ -45,6 +53,14 @@ func (ot OperationType) String() string {
 		return updateOpStr
 	case DeleteOp:
 		return deleteOpStr
+	case ShareOp:
+		return shareOpStr
+	case UnshareOp:
+		return UnshareOpStr
+	case PublishOp:
+		return PublishOpStr
+	case SubscribeOp:
+		return SubscribeOpStr
 	default:
 		return fmt.Sprintf("unknown operation type %d", ot)
 	}
@@ -70,6 +86,14 @@ func ParseOperationType(ot string) (OperationType, error) {
 		return UpdateOp, nil
 	case deleteOpStr:
 		return DeleteOp, nil
+	case shareOpStr:
+		return ShareOp, nil
+	case UnshareOpStr:
+		return UnshareOp, nil
+	case PublishOpStr:
+		return PublishOp, nil
+	case SubscribeOpStr:
+		return SubscribeOp, nil
 	default:
 		return 0, fmt.Errorf("unknown operation type %s", ot)
 	}
@@ -163,11 +187,15 @@ type PlatformEntityType uint32
 const (
 	PlatformUsersScope PlatformEntityType = iota
 	PlatformDomainsScope
+	PlatformDashBoardScope
+	PlatformMesagingScope
 )
 
 const (
-	platformUsersScopeStr   = "users"
-	platformDomainsScopeStr = "domains"
+	platformUsersScopeStr     = "users"
+	platformDomainsScopeStr   = "domains"
+	PlatformDashBoardScopeStr = "dashboard"
+	PlatformMesagingScopeStr  = "messaging"
 )
 
 func (pet PlatformEntityType) String() string {
@@ -176,6 +204,10 @@ func (pet PlatformEntityType) String() string {
 		return platformUsersScopeStr
 	case PlatformDomainsScope:
 		return platformDomainsScopeStr
+	case PlatformDashBoardScope:
+		return PlatformDashBoardScopeStr
+	case PlatformMesagingScope:
+		return PlatformMesagingScopeStr
 	default:
 		return fmt.Sprintf("unknown platform entity type %d", pet)
 	}
@@ -501,14 +533,12 @@ func (ds *DomainScope) Check(domainEntityType DomainEntityType, operation Operat
 // Example Scope as JSON
 //
 //	{
-//	    "platform": {
-//	        "users": {
-//	            "create": {},
-//	            "read": {},
-//	            "list": {},
-//	            "update": {},
-//	            "delete": {}
-//	        }
+//	    "users": {
+//	            "create": ["*"],
+//	            "read": ["*"],
+//	            "list": ["*"],
+//	            "update": ["*"],
+//	            "delete": ["*"]
 //	    },
 //	    "domains": {
 //	        "domain_1": {
@@ -531,8 +561,10 @@ func (ds *DomainScope) Check(domainEntityType DomainEntityType, operation Operat
 //	    }
 //	}
 type Scope struct {
-	Users   OperationScope         `json:"users,omitempty"`
-	Domains map[string]DomainScope `json:"domains,omitempty"`
+	Users     OperationScope         `json:"users,omitempty"`
+	Domains   map[string]DomainScope `json:"domains,omitempty"`
+	Dashboard OperationScope         `json:"dashboard,omitempty"`
+	Messaging OperationScope         `json:"messaging,omitempty"`
 }
 
 // Add entry in Domain scope.
@@ -543,6 +575,14 @@ func (s *Scope) Add(platformEntityType PlatformEntityType, optionalDomainID stri
 	switch platformEntityType {
 	case PlatformUsersScope:
 		if err := s.Users.Add(operation, entityIDs...); err != nil {
+			return fmt.Errorf("failed to add platform %s scope: %w", platformEntityType.String(), err)
+		}
+	case PlatformDashBoardScope:
+		if err := s.Dashboard.Add(operation, entityIDs...); err != nil {
+			return fmt.Errorf("failed to add platform %s scope: %w", platformEntityType.String(), err)
+		}
+	case PlatformMesagingScope:
+		if err := s.Messaging.Add(operation, entityIDs...); err != nil {
 			return fmt.Errorf("failed to add platform %s scope: %w", platformEntityType.String(), err)
 		}
 	case PlatformDomainsScope:
@@ -577,6 +617,14 @@ func (s *Scope) Delete(platformEntityType PlatformEntityType, optionalDomainID s
 		if err := s.Users.Delete(operation, entityIDs...); err != nil {
 			return fmt.Errorf("failed to delete platform %s scope: %w", platformEntityType.String(), err)
 		}
+	case PlatformDashBoardScope:
+		if err := s.Dashboard.Delete(operation, entityIDs...); err != nil {
+			return fmt.Errorf("failed to delete platform %s scope: %w", platformEntityType.String(), err)
+		}
+	case PlatformMesagingScope:
+		if err := s.Messaging.Delete(operation, entityIDs...); err != nil {
+			return fmt.Errorf("failed to delete platform %s scope: %w", platformEntityType.String(), err)
+		}
 	case PlatformDomainsScope:
 		if optionalDomainID == "" {
 			return fmt.Errorf("failed to delete platform %s scope: invalid domain id", platformEntityType.String())
@@ -602,6 +650,10 @@ func (s *Scope) Check(platformEntityType PlatformEntityType, optionalDomainID st
 	switch platformEntityType {
 	case PlatformUsersScope:
 		return s.Users.Check(operation, entityIDs...)
+	case PlatformDashBoardScope:
+		return s.Dashboard.Check(operation, entityIDs...)
+	case PlatformMesagingScope:
+		return s.Messaging.Check(operation, entityIDs...)
 	case PlatformDomainsScope:
 		ds, ok := s.Domains[optionalDomainID]
 		if !ok {

@@ -468,6 +468,24 @@ func scopeToKeyValue(scope auth.Scope) (map[string][]byte, error) {
 			kv[k] = v
 		}
 	}
+	for opType, scopeValue := range scope.Dashboard {
+		tempKV, err := scopeEntryToKeyValue(auth.PlatformDashBoardScope, "", auth.DomainNullScope, opType, scopeValue.Values()...)
+		if err != nil {
+			return nil, err
+		}
+		for k, v := range tempKV {
+			kv[k] = v
+		}
+	}
+	for opType, scopeValue := range scope.Messaging {
+		tempKV, err := scopeEntryToKeyValue(auth.PlatformMesagingScope, "", auth.DomainNullScope, opType, scopeValue.Values()...)
+		if err != nil {
+			return nil, err
+		}
+		for k, v := range tempKV {
+			kv[k] = v
+		}
+	}
 	for domainID, domainScope := range scope.Domains {
 		for opType, scopeValue := range domainScope.DomainManagement {
 			tempKV, err := scopeEntryToKeyValue(auth.PlatformDomainsScope, domainID, auth.DomainManagementScope, opType, scopeValue.Values()...)
@@ -533,6 +551,10 @@ func scopeRootKey(platformEntityType auth.PlatformEntityType, optionalDomainID s
 
 	switch platformEntityType {
 	case auth.PlatformUsersScope:
+		rootKey.WriteString(op)
+	case auth.PlatformDashBoardScope:
+		rootKey.WriteString(op)
+	case auth.PlatformMesagingScope:
 		rootKey.WriteString(op)
 	case auth.PlatformDomainsScope:
 		if optionalDomainID == "" {
@@ -609,6 +631,18 @@ func parseKeyValueToScope(kv map[string][]byte) (auth.Scope, error) {
 			switch platformEntityType {
 			case auth.PlatformUsersScope:
 				scope.Users, err = parseOperation(platformEntityType, scope.Users, key, keyParts, value)
+				if err != nil {
+					return auth.Scope{}, errors.Wrap(repoerr.ErrViewEntity, err)
+				}
+
+			case auth.PlatformDashBoardScope:
+				scope.Dashboard, err = parseOperation(platformEntityType, scope.Dashboard, key, keyParts, value)
+				if err != nil {
+					return auth.Scope{}, errors.Wrap(repoerr.ErrViewEntity, err)
+				}
+
+			case auth.PlatformMesagingScope:
+				scope.Messaging, err = parseOperation(platformEntityType, scope.Messaging, key, keyParts, value)
 				if err != nil {
 					return auth.Scope{}, errors.Wrap(repoerr.ErrViewEntity, err)
 				}
@@ -724,7 +758,7 @@ func validateOperation(platformEntityType auth.PlatformEntityType, opScope auth.
 		switch platformEntityType {
 		case auth.PlatformDomainsScope:
 			expectedKeyPartsLength = 7
-		case auth.PlatformUsersScope:
+		case auth.PlatformUsersScope, auth.PlatformDashBoardScope, auth.PlatformMesagingScope:
 			expectedKeyPartsLength = 5
 		default:
 			return fmt.Errorf("invalid platform entity type : %s", platformEntityType.String())
@@ -733,7 +767,7 @@ func validateOperation(platformEntityType auth.PlatformEntityType, opScope auth.
 		switch platformEntityType {
 		case auth.PlatformDomainsScope:
 			expectedKeyPartsLength = 6
-		case auth.PlatformUsersScope:
+		case auth.PlatformUsersScope, auth.PlatformDashBoardScope, auth.PlatformMesagingScope:
 			expectedKeyPartsLength = 4
 		default:
 			return fmt.Errorf("invalid platform entity type : %s", platformEntityType.String())
