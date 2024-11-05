@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/absmach/magistrala/things"
+	"github.com/absmach/magistrala/clients"
 )
 
 // Config represents Configuration entity. It wraps information about external entity
@@ -41,7 +41,7 @@ type Channel struct {
 	CreatedAt   time.Time              `json:"created_at"`
 	UpdatedAt   time.Time              `json:"updated_at,omitempty"`
 	UpdatedBy   string                 `json:"updated_by,omitempty"`
-	Status      things.Status          `json:"status"`
+	Status      clients.Status         `json:"status"`
 }
 
 // Filter is used for the search filters.

@@ -11,6 +11,8 @@ import (
 
 	tokengrpcapi "github.com/absmach/magistrala/auth/api/grpc/token"
 	"github.com/absmach/magistrala/auth/mocks"
+	thingsgrpcapi "github.com/absmach/magistrala/clients/api/grpc"
+	thmocks "github.com/absmach/magistrala/clients/private/mocks"
 	domainsgrpcapi "github.com/absmach/magistrala/domains/api/grpc"
 	domainsMocks "github.com/absmach/magistrala/domains/mocks"
 	grpcDomainsV1 "github.com/absmach/magistrala/internal/grpc/domains/v1"
@@ -21,8 +23,6 @@ import (
 	"github.com/absmach/magistrala/pkg/grpcclient"
 	"github.com/absmach/magistrala/pkg/server"
 	grpcserver "github.com/absmach/magistrala/pkg/server/grpc"
-	thingsgrpcapi "github.com/absmach/magistrala/things/api/grpc"
-	thmocks "github.com/absmach/magistrala/things/private/mocks"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )

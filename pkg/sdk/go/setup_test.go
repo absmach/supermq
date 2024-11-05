@@ -10,13 +10,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/absmach/magistrala/clients"
 	mggroups "github.com/absmach/magistrala/groups"
 	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/invitations"
 	"github.com/absmach/magistrala/journal"
 	sdk "github.com/absmach/magistrala/pkg/sdk/go"
 	"github.com/absmach/magistrala/pkg/uuid"
-	"github.com/absmach/magistrala/things"
 	"github.com/absmach/magistrala/users"
 	"github.com/stretchr/testify/assert"
 )

@@ -6,8 +6,8 @@ package cli
 import (
 	"encoding/json"
 
+	"github.com/absmach/magistrala/clients"
 	mgxsdk "github.com/absmach/magistrala/pkg/sdk/go"
-	"github.com/absmach/magistrala/things"
 	"github.com/spf13/cobra"
 )
 
@@ -29,7 +29,7 @@ var cmdThings = []cobra.Command{
 				logErrorCmd(*cmd, err)
 				return
 			}
-			thing.Status = things.EnabledStatus.String()
+			thing.Status = clients.EnabledStatus.String()
 			thing, err := sdk.CreateThing(thing, args[1], args[2])
 			if err != nil {
 				logErrorCmd(*cmd, err)

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/channels"
+	clients "github.com/absmach/magistrala/clients"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/connections"
@@ -19,7 +20,6 @@ import (
 	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
 	"github.com/absmach/magistrala/pkg/postgres"
 	rolesPostgres "github.com/absmach/magistrala/pkg/roles/repo/postgres"
-	clients "github.com/absmach/magistrala/things"
 	"github.com/jackc/pgtype"
 )
 
@@ -39,7 +39,6 @@ type channelRepository struct {
 // NewChannelRepository instantiates a PostgreSQL implementation of channel
 // repository.
 func NewRepository(db postgres.Database) channels.Repository {
-
 	rolesRepo := rolesPostgres.NewRepository(db, rolesTableNamePrefix, entityTableName, entityIDColumnName)
 	return &channelRepository{
 		db:         db,
@@ -48,7 +47,6 @@ func NewRepository(db postgres.Database) channels.Repository {
 }
 
 func (cr *channelRepository) Save(ctx context.Context, chs ...channels.Channel) ([]channels.Channel, error) {
-
 	var dbchs []dbChannel
 	for _, ch := range chs {
 		dbch, err := toDBChannel(ch)
@@ -246,7 +244,6 @@ func (cr *channelRepository) RemoveParentGroup(ctx context.Context, ch channels.
 }
 
 func (cr *channelRepository) AddConnections(ctx context.Context, conns []channels.Connection) error {
-
 	dbConns := toDBConnections(conns)
 
 	q := `INSERT INTO connections (channel_id, domain_id, thing_id, type)
@@ -257,7 +254,6 @@ func (cr *channelRepository) AddConnections(ctx context.Context, conns []channel
 	}
 
 	return nil
-
 }
 
 func (cr *channelRepository) RemoveConnections(ctx context.Context, conns []channels.Connection) (retErr error) {

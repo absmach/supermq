@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
-	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
@@ -43,13 +43,13 @@ type Service interface {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	things   grpcThingsV1.ThingsServiceClient
+	things   grpcClientsV1.ClientsServiceClient
 	channels grpcChannelsV1.ChannelsServiceClient
 	pubsub   messaging.PubSub
 }
 
 // New instantiates the WS adapter implementation.
-func New(things grpcThingsV1.ThingsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, pubsub messaging.PubSub) Service {
+func New(things grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, pubsub messaging.PubSub) Service {
 	return &adapterService{
 		things:   things,
 		channels: channels,
@@ -89,7 +89,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subt
 // authorize checks if the thingKey is authorized to access the channel
 // and returns the thingID if it is.
 func (svc *adapterService) authorize(ctx context.Context, thingKey, chanID string, msgType connections.ConnType) (string, error) {
-	authnReq := &grpcThingsV1.AuthnReq{
+	authnReq := &grpcClientsV1.AuthnReq{
 		ThingKey: thingKey,
 	}
 	authnRes, err := svc.things.Authenticate(ctx, authnReq)

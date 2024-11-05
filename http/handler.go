@@ -14,7 +14,7 @@ import (
 	"time"
 
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
-	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/connections"
@@ -60,14 +60,14 @@ var channelRegExp = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]
 // Event implements events.Event interface.
 type handler struct {
 	publisher messaging.Publisher
-	things    grpcThingsV1.ThingsServiceClient
+	things    grpcClientsV1.ClientsServiceClient
 	channels  grpcChannelsV1.ChannelsServiceClient
 	authn     mgauthn.Authentication
 	logger    *slog.Logger
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(publisher messaging.Publisher, authn mgauthn.Authentication, things grpcThingsV1.ThingsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, logger *slog.Logger) session.Handler {
+func NewHandler(publisher messaging.Publisher, authn mgauthn.Authentication, things grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, logger *slog.Logger) session.Handler {
 	return &handler{
 		publisher: publisher,
 		authn:     authn,
@@ -130,7 +130,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 	case strings.HasPrefix(string(s.Password), "Thing"):
 		thingKey := strings.TrimPrefix(string(s.Password), apiutil.ThingPrefix)
 
-		authnRes, err := h.things.Authenticate(ctx, &grpcThingsV1.AuthnReq{ThingKey: thingKey})
+		authnRes, err := h.things.Authenticate(ctx, &grpcClientsV1.AuthnReq{ThingKey: thingKey})
 		if err != nil {
 			h.logger.Info(fmt.Sprintf(logInfoFailedAuthNThing, thingKey, *topic, err))
 			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)

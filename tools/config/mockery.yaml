@@ -8,11 +8,11 @@ boilerplate-file: "./tools/config/boilerplate.txt"
 packages:
   github.com/absmach/magistrala/internal/grpc/things/v1:
     interfaces:
-      ThingsServiceClient:
+      ClientsServiceClient:
         config:
-          dir: "./things/mocks"
-          mockname: "ThingsServiceClient"
-          filename: "things_client.go"
+          dir: "./clients/mocks"
+          mockname: "ClientsServiceClient"
+          filename: "clients_client.go"
   github.com/absmach/magistrala/internal/grpc/domains/v1:
     interfaces:
       DomainsServiceClient:

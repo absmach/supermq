@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala"
+	mgclients "github.com/absmach/magistrala/clients"
 	grpcCommonV1 "github.com/absmach/magistrala/internal/grpc/common/v1"
 	grpcGroupsV1 "github.com/absmach/magistrala/internal/grpc/groups/v1"
-	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/connections"
@@ -17,7 +18,6 @@ import (
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/policies"
 	"github.com/absmach/magistrala/pkg/roles"
-	mgclients "github.com/absmach/magistrala/things"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -33,14 +33,14 @@ type service struct {
 	repo       Repository
 	policy     policies.Service
 	idProvider magistrala.IDProvider
-	things     grpcThingsV1.ThingsServiceClient
+	things     grpcClientsV1.ClientsServiceClient
 	groups     grpcGroupsV1.GroupsServiceClient
 	roles.ProvisionManageService
 }
 
 var _ Service = (*service)(nil)
 
-func New(repo Repository, policy policies.Service, idProvider magistrala.IDProvider, things grpcThingsV1.ThingsServiceClient, groups grpcGroupsV1.GroupsServiceClient, sidProvider magistrala.IDProvider) (Service, error) {
+func New(repo Repository, policy policies.Service, idProvider magistrala.IDProvider, things grpcClientsV1.ClientsServiceClient, groups grpcGroupsV1.GroupsServiceClient, sidProvider magistrala.IDProvider) (Service, error) {
 	rpms, err := roles.NewProvisionManageService(policies.ChannelType, repo, policy, sidProvider, AvailableActions(), BuiltInRoles())
 	if err != nil {
 		return nil, err
@@ -131,7 +131,6 @@ func (svc service) UpdateChannel(ctx context.Context, session authn.Session, ch 
 }
 
 func (svc service) UpdateChannelTags(ctx context.Context, session authn.Session, ch Channel) (Channel, error) {
-
 	channel := Channel{
 		ID:        ch.ID,
 		Tags:      ch.Tags,
@@ -223,7 +222,6 @@ func (svc service) ListChannels(ctx context.Context, session authn.Session, pm P
 }
 
 func (svc service) ListChannelsByThing(ctx context.Context, session authn.Session, thID string, pm PageMetadata) (Page, error) {
-
 	return Page{}, nil
 }
 
@@ -234,7 +232,7 @@ func (svc service) RemoveChannel(ctx context.Context, session authn.Session, id 
 	}
 
 	if ok {
-		if _, err := svc.things.RemoveChannelConnections(ctx, &grpcThingsV1.RemoveChannelConnectionsReq{ChannelId: id}); err != nil {
+		if _, err := svc.things.RemoveChannelConnections(ctx, &grpcClientsV1.RemoveChannelConnectionsReq{ChannelId: id}); err != nil {
 			return errors.Wrap(svcerr.ErrRemoveEntity, err)
 		}
 	}
@@ -286,7 +284,6 @@ func (svc service) RemoveChannel(ctx context.Context, session authn.Session, id 
 }
 
 func (svc service) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) (retErr error) {
-
 	for _, chID := range chIDs {
 		c, err := svc.repo.RetrieveByID(ctx, chID)
 		if err != nil {
@@ -356,7 +353,6 @@ func (svc service) Connect(ctx context.Context, session authn.Session, chIDs, th
 }
 
 func (svc service) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) (retErr error) {
-
 	for _, chID := range chIDs {
 		c, err := svc.repo.RetrieveByID(ctx, chID)
 		if err != nil {
@@ -532,7 +528,6 @@ func (svc service) listUserThingPermission(ctx context.Context, userID, thingID 
 }
 
 func (svc service) changeChannelStatus(ctx context.Context, userID string, channel Channel) (Channel, error) {
-
 	dbchannel, err := svc.repo.RetrieveByID(ctx, channel.ID)
 	if err != nil {
 		return Channel{}, errors.Wrap(svcerr.ErrViewEntity, err)

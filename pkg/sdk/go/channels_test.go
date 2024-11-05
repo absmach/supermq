@@ -12,6 +12,8 @@ import (
 	"time"
 
 	authmocks "github.com/absmach/magistrala/auth/mocks"
+	thapi "github.com/absmach/magistrala/clients/api/http"
+	thmocks "github.com/absmach/magistrala/clients/mocks"
 	"github.com/absmach/magistrala/groups"
 	gmocks "github.com/absmach/magistrala/groups/mocks"
 	"github.com/absmach/magistrala/internal/testsutil"
@@ -24,8 +26,6 @@ import (
 	oauth2mocks "github.com/absmach/magistrala/pkg/oauth2/mocks"
 	policies "github.com/absmach/magistrala/pkg/policies"
 	sdk "github.com/absmach/magistrala/pkg/sdk/go"
-	thapi "github.com/absmach/magistrala/things/api/http"
-	thmocks "github.com/absmach/magistrala/things/mocks"
 	usapi "github.com/absmach/magistrala/users/api"
 	usmocks "github.com/absmach/magistrala/users/mocks"
 	"github.com/go-chi/chi/v5"

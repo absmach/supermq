@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"net"
 
+	grpcapi "github.com/absmach/magistrala/clients/api/grpc"
+	"github.com/absmach/magistrala/clients/private/mocks"
 	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
-	grpcapi "github.com/absmach/magistrala/things/api/grpc"
-	"github.com/absmach/magistrala/things/private/mocks"
 	"google.golang.org/grpc"
 )
 

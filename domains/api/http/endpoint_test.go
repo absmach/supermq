@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	mgclients "github.com/absmach/magistrala/clients"
 	"github.com/absmach/magistrala/domains"
 	httpapi "github.com/absmach/magistrala/domains/api/http"
 	"github.com/absmach/magistrala/domains/mocks"
@@ -23,7 +24,6 @@ import (
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	policies "github.com/absmach/magistrala/pkg/policies"
-	mgclients "github.com/absmach/magistrala/things"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

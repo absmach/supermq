@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/absmach/magistrala/channels"
+	mgclients "github.com/absmach/magistrala/clients"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/connections"
-	mgclients "github.com/absmach/magistrala/things"
 )
 
 type createChannelReq struct {
@@ -57,7 +57,6 @@ type viewChannelReq struct {
 }
 
 func (req viewChannelReq) validate() error {
-
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
@@ -173,7 +172,6 @@ type connectChannelThingsRequest struct {
 }
 
 func (req *connectChannelThingsRequest) validate() error {
-
 	if req.channelID == "" || strings.TrimSpace(req.channelID) == "" {
 		return apiutil.ErrMissingID
 	}

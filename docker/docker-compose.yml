@@ -400,7 +400,7 @@ services:
       - magistrala-things-redis-volume:/data
 
   things:
-    image: magistrala/things:${MG_RELEASE_TAG}
+    image: magistrala/clients:${MG_RELEASE_TAG}
     container_name: magistrala-things
     depends_on:
       - things-db

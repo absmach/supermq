@@ -7,10 +7,10 @@ import (
 	"context"
 	"time"
 
+	clients "github.com/absmach/magistrala/clients"
 	"github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/roles"
-	clients "github.com/absmach/magistrala/things"
 )
 
 // Channel represents a Mainflux "communication group". This group contains the

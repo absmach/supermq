@@ -11,11 +11,11 @@ import (
 	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/bootstrap"
 	"github.com/absmach/magistrala/certs"
+	"github.com/absmach/magistrala/clients"
 	"github.com/absmach/magistrala/groups"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/things"
 	"github.com/absmach/magistrala/users"
 	"github.com/gofrs/uuid/v5"
 )
@@ -58,7 +58,7 @@ const (
 	DefLimit         = 10
 	DefLevel         = 0
 	DefStatus        = "enabled"
-	DefClientStatus  = things.Enabled
+	DefClientStatus  = clients.Enabled
 	DefUserStatus    = users.Enabled
 	DefGroupStatus   = groups.Enabled
 	DefListPerms     = false

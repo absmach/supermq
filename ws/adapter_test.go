@@ -9,11 +9,11 @@ import (
 	"testing"
 
 	chmocks "github.com/absmach/magistrala/channels/mocks"
+	thmocks "github.com/absmach/magistrala/clients/mocks"
 	"github.com/absmach/magistrala/internal/testsutil"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/messaging"
 	"github.com/absmach/magistrala/pkg/messaging/mocks"
-	thmocks "github.com/absmach/magistrala/things/mocks"
 	"github.com/absmach/magistrala/ws"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

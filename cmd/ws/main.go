@@ -15,7 +15,7 @@ import (
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/magistrala"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
-	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/authn/authsvc"
 	"github.com/absmach/magistrala/pkg/grpcclient"
@@ -191,7 +191,7 @@ func main() {
 	}
 }
 
-func newService(thingsClient grpcThingsV1.ThingsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, nps messaging.PubSub, logger *slog.Logger, tracer trace.Tracer) ws.Service {
+func newService(thingsClient grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, nps messaging.PubSub, logger *slog.Logger, tracer trace.Tracer) ws.Service {
 	svc := ws.New(thingsClient, channels, nps)
 	svc = tracing.New(tracer, svc)
 	svc = api.LoggingMiddleware(svc, logger)

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	chmocks "github.com/absmach/magistrala/channels/mocks"
+	thmocks "github.com/absmach/magistrala/clients/mocks"
 	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	authnmocks "github.com/absmach/magistrala/pkg/authn/mocks"
@@ -20,7 +21,6 @@ import (
 	"github.com/absmach/magistrala/readers"
 	"github.com/absmach/magistrala/readers/api"
 	"github.com/absmach/magistrala/readers/mocks"
-	thmocks "github.com/absmach/magistrala/things/mocks"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"strings"
 
+	mgclients "github.com/absmach/magistrala/clients"
 	"github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
-	mgclients "github.com/absmach/magistrala/things"
 	"github.com/go-chi/chi/v5"
 )
 

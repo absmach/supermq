@@ -8,14 +8,14 @@ import (
 
 	tokengrpc "github.com/absmach/magistrala/auth/api/grpc/token"
 	channelsgrpc "github.com/absmach/magistrala/channels/api/grpc"
+	thingsauth "github.com/absmach/magistrala/clients/api/grpc"
 	domainsgrpc "github.com/absmach/magistrala/domains/api/grpc"
 	groupsgrpc "github.com/absmach/magistrala/groups/api/grpc"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcDomainsV1 "github.com/absmach/magistrala/internal/grpc/domains/v1"
 	grpcGroupsV1 "github.com/absmach/magistrala/internal/grpc/groups/v1"
-	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
-	thingsauth "github.com/absmach/magistrala/things/api/grpc"
 	grpchealth "google.golang.org/grpc/health/grpc_health_v1"
 )
 
@@ -61,7 +61,7 @@ func SetupDomainsClient(ctx context.Context, cfg Config) (grpcDomainsV1.DomainsS
 // For example:
 //
 // thingClient, thingHandler, err := grpcclient.SetupThings(ctx, grpcclient.Config{}).
-func SetupThingsClient(ctx context.Context, cfg Config) (grpcThingsV1.ThingsServiceClient, Handler, error) {
+func SetupThingsClient(ctx context.Context, cfg Config) (grpcClientsV1.ClientsServiceClient, Handler, error) {
 	client, err := NewHandler(cfg)
 	if err != nil {
 		return nil, nil, err

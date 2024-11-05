@@ -39,7 +39,7 @@ services:
                   "--build.exclude_regex", "[\"_test\\.go\"" ,
                   "--tmp_dir", "/tmp",]
   things:
-    image: magistrala/things-dev
+    image: magistrala/clients-dev
     build:
       context: .
       dockerfile: Dockerfile.livereload

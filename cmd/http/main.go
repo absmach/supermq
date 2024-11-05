@@ -19,7 +19,7 @@ import (
 	adapter "github.com/absmach/magistrala/http"
 	"github.com/absmach/magistrala/http/api"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
-	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/authn/authsvc"
@@ -190,7 +190,7 @@ func main() {
 	}
 }
 
-func newService(pub messaging.Publisher, authn mgauthn.Authentication, things grpcThingsV1.ThingsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, logger *slog.Logger, tracer trace.Tracer) session.Handler {
+func newService(pub messaging.Publisher, authn mgauthn.Authentication, things grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, logger *slog.Logger, tracer trace.Tracer) session.Handler {
 	svc := adapter.NewHandler(pub, authn, things, channels, logger)
 	svc = handler.NewTracing(tracer, svc)
 	svc = handler.LoggingMiddleware(svc, logger)

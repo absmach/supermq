@@ -13,7 +13,7 @@ import (
 	"time"
 
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
-	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/mqtt/events"
 	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
@@ -55,20 +55,22 @@ var (
 	ErrFailedPublishToMsgBroker     = errors.New("failed to publish to magistrala message broker")
 )
 
-var errInvalidUserId = errors.New("invalid user id")
-var channelRegExp = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]*)?(\?.*)?$`)
+var (
+	errInvalidUserId = errors.New("invalid user id")
+	channelRegExp    = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]*)?(\?.*)?$`)
+)
 
 // Event implements events.Event interface.
 type handler struct {
 	publisher messaging.Publisher
-	things    grpcThingsV1.ThingsServiceClient
+	things    grpcClientsV1.ClientsServiceClient
 	channels  grpcChannelsV1.ChannelsServiceClient
 	logger    *slog.Logger
 	es        events.EventStore
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(publisher messaging.Publisher, es events.EventStore, logger *slog.Logger, thingsClient grpcThingsV1.ThingsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) session.Handler {
+func NewHandler(publisher messaging.Publisher, es events.EventStore, logger *slog.Logger, thingsClient grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) session.Handler {
 	return &handler{
 		es:        es,
 		logger:    logger,
@@ -92,7 +94,7 @@ func (h *handler) AuthConnect(ctx context.Context) error {
 
 	pwd := string(s.Password)
 
-	res, err := h.things.Authenticate(ctx, &grpcThingsV1.AuthnReq{ThingKey: pwd})
+	res, err := h.things.Authenticate(ctx, &grpcClientsV1.AuthnReq{ThingKey: pwd})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthentication, err)
 	}

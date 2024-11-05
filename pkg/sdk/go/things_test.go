@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	api "github.com/absmach/magistrala/clients/api/http"
+	"github.com/absmach/magistrala/clients/mocks"
 	gmocks "github.com/absmach/magistrala/groups/mocks"
 	"github.com/absmach/magistrala/internal/testsutil"
 	mglog "github.com/absmach/magistrala/logger"
@@ -21,9 +23,6 @@ import (
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	policies "github.com/absmach/magistrala/pkg/policies"
 	sdk "github.com/absmach/magistrala/pkg/sdk/go"
-	mgthings "github.com/absmach/magistrala/things"
-	api "github.com/absmach/magistrala/things/api/http"
-	"github.com/absmach/magistrala/things/mocks"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

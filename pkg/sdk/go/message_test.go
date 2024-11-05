@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/absmach/magistrala"
+	thmocks "github.com/absmach/magistrala/clients/mocks"
 	adapter "github.com/absmach/magistrala/http"
 	"github.com/absmach/magistrala/http/api"
 	mglog "github.com/absmach/magistrala/logger"
@@ -23,7 +24,6 @@ import (
 	"github.com/absmach/magistrala/readers"
 	readersapi "github.com/absmach/magistrala/readers/api"
 	readersmocks "github.com/absmach/magistrala/readers/mocks"
-	thmocks "github.com/absmach/magistrala/things/mocks"
 	"github.com/absmach/mgate"
 	proxy "github.com/absmach/mgate/pkg/http"
 	"github.com/stretchr/testify/assert"

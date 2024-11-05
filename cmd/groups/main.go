@@ -25,7 +25,7 @@ import (
 	"github.com/absmach/magistrala/groups/tracing"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcGroupsV1 "github.com/absmach/magistrala/internal/grpc/groups/v1"
-	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	authsvcAuthn "github.com/absmach/magistrala/pkg/authn/authsvc"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
@@ -253,7 +253,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, authz mgauthz.Authorization, policy policies.Service, db *sqlx.DB, dbConfig pgclient.Config, channels grpcChannelsV1.ChannelsServiceClient, things grpcThingsV1.ThingsServiceClient, tracer trace.Tracer, logger *slog.Logger, c config) (groups.Service, pgroups.Service, error) {
+func newService(ctx context.Context, authz mgauthz.Authorization, policy policies.Service, db *sqlx.DB, dbConfig pgclient.Config, channels grpcChannelsV1.ChannelsServiceClient, things grpcClientsV1.ClientsServiceClient, tracer trace.Tracer, logger *slog.Logger, c config) (groups.Service, pgroups.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	idp := uuid.New()
 	sid, err := sid.New()

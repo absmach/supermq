@@ -11,13 +11,13 @@ import (
 	"testing"
 
 	"github.com/absmach/magistrala/cli"
+	"github.com/absmach/magistrala/clients"
 	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	sdk "github.com/absmach/magistrala/pkg/sdk/go"
 	sdkmocks "github.com/absmach/magistrala/pkg/sdk/mocks"
-	"github.com/absmach/magistrala/things"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

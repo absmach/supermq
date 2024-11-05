@@ -10,7 +10,7 @@ import (
 
 	"github.com/absmach/magistrala"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
-	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/connections"
@@ -57,7 +57,7 @@ const (
 var errUserAccess = errors.New("user has no permission")
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc readers.MessageRepository, authn mgauthn.Authentication, things grpcThingsV1.ThingsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, svcName, instanceID string) http.Handler {
+func MakeHandler(svc readers.MessageRepository, authn mgauthn.Authentication, things grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, svcName, instanceID string) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}
@@ -244,7 +244,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	}
 }
 
-func authnAuthz(ctx context.Context, req listMessagesReq, authn mgauthn.Authentication, things grpcThingsV1.ThingsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) error {
+func authnAuthz(ctx context.Context, req listMessagesReq, authn mgauthn.Authentication, things grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) error {
 	clientID, clientType, err := authenticate(ctx, req, authn, things)
 	if err != nil {
 		return nil
@@ -255,7 +255,7 @@ func authnAuthz(ctx context.Context, req listMessagesReq, authn mgauthn.Authenti
 	return nil
 }
 
-func authenticate(ctx context.Context, req listMessagesReq, authn mgauthn.Authentication, things grpcThingsV1.ThingsServiceClient) (clientID string, clientType string, err error) {
+func authenticate(ctx context.Context, req listMessagesReq, authn mgauthn.Authentication, things grpcClientsV1.ClientsServiceClient) (clientID string, clientType string, err error) {
 	switch {
 	case req.token != "":
 		session, err := authn.Authenticate(ctx, req.token)
@@ -265,7 +265,7 @@ func authenticate(ctx context.Context, req listMessagesReq, authn mgauthn.Authen
 
 		return session.DomainUserID, policies.UserType, nil
 	case req.key != "":
-		res, err := things.Authenticate(ctx, &grpcThingsV1.AuthnReq{
+		res, err := things.Authenticate(ctx, &grpcClientsV1.AuthnReq{
 			ThingKey: req.key,
 		})
 		if err != nil {
@@ -287,7 +287,6 @@ func authorize(ctx context.Context, clientID, clientType, chanID string, channel
 		Type:       uint32(connections.Subscribe),
 		ChannelId:  chanID,
 	})
-
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)
 	}

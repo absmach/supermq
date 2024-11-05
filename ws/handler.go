@@ -13,7 +13,7 @@ import (
 	"time"
 
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
-	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	"github.com/absmach/magistrala/pkg/connections"
@@ -55,14 +55,14 @@ var channelRegExp = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]
 // Event implements events.Event interface.
 type handler struct {
 	pubsub   messaging.PubSub
-	things   grpcThingsV1.ThingsServiceClient
+	things   grpcClientsV1.ClientsServiceClient
 	channels grpcChannelsV1.ChannelsServiceClient
 	authn    mgauthn.Authentication
 	logger   *slog.Logger
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(pubsub messaging.PubSub, logger *slog.Logger, authn mgauthn.Authentication, things grpcThingsV1.ThingsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) session.Handler {
+func NewHandler(pubsub messaging.PubSub, logger *slog.Logger, authn mgauthn.Authentication, things grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) session.Handler {
 	return &handler{
 		logger:   logger,
 		pubsub:   pubsub,
@@ -164,7 +164,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 	switch {
 	case strings.HasPrefix(string(s.Password), "Thing"):
 		thingKey := extractThingKey(string(s.Password))
-		authnRes, err := h.things.Authenticate(ctx, &grpcThingsV1.AuthnReq{ThingKey: thingKey})
+		authnRes, err := h.things.Authenticate(ctx, &grpcClientsV1.AuthnReq{ThingKey: thingKey})
 		if err != nil {
 			return errors.Wrap(svcerr.ErrAuthentication, err)
 		}
@@ -247,7 +247,7 @@ func (h *handler) authAccess(ctx context.Context, token, topic string, msgType c
 	switch {
 	case strings.HasPrefix(token, "Thing"):
 		thingKey := extractThingKey(token)
-		authnRes, err := h.things.Authenticate(ctx, &grpcThingsV1.AuthnReq{ThingKey: thingKey})
+		authnRes, err := h.things.Authenticate(ctx, &grpcClientsV1.AuthnReq{ThingKey: thingKey})
 		if err != nil {
 			return errors.Wrap(svcerr.ErrAuthentication, err)
 		}

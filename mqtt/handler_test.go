@@ -11,12 +11,12 @@ import (
 	"testing"
 
 	chmocks "github.com/absmach/magistrala/channels/mocks"
+	thmocks "github.com/absmach/magistrala/clients/mocks"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/mqtt"
 	"github.com/absmach/magistrala/mqtt/mocks"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	thmocks "github.com/absmach/magistrala/things/mocks"
 	"github.com/absmach/mgate/pkg/session"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

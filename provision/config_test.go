@@ -9,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/absmach/magistrala/channels"
+	"github.com/absmach/magistrala/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	"github.com/absmach/magistrala/provision"
-	"github.com/absmach/magistrala/things"
 	"github.com/pelletier/go-toml"
 	"github.com/stretchr/testify/assert"
 )

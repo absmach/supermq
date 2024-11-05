@@ -24,7 +24,7 @@ import (
 	"github.com/absmach/magistrala/channels/tracing"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcGroupsV1 "github.com/absmach/magistrala/internal/grpc/groups/v1"
-	grpcThingsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	authsvcAuthn "github.com/absmach/magistrala/pkg/authn/authsvc"
 	mgauthz "github.com/absmach/magistrala/pkg/authz"
@@ -253,7 +253,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, pe policies.Evaluator, ps policies.Service, esURL string, tracer trace.Tracer, thingsClient grpcThingsV1.ThingsServiceClient, groupsClient grpcGroupsV1.GroupsServiceClient, logger *slog.Logger) (channels.Service, pChannels.Service, error) {
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz mgauthz.Authorization, pe policies.Evaluator, ps policies.Service, esURL string, tracer trace.Tracer, thingsClient grpcClientsV1.ClientsServiceClient, groupsClient grpcGroupsV1.GroupsServiceClient, logger *slog.Logger) (channels.Service, pChannels.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	repo := postgres.NewRepository(database)
 
