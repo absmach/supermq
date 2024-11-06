@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	chmocks "github.com/absmach/magistrala/channels/mocks"
-	thmocks "github.com/absmach/magistrala/clients/mocks"
+	climocks "github.com/absmach/magistrala/clients/mocks"
 	server "github.com/absmach/magistrala/http"
 	"github.com/absmach/magistrala/http/api"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
@@ -85,7 +85,7 @@ func (tr testRequest) make() (*http.Response, error) {
 }
 
 func TestPublish(t *testing.T) {
-	things := new(thmocks.ThingsServiceClient)
+	things := new(climocks.ThingsServiceClient)
 	authn := new(authnMocks.Authentication)
 	channels := new(chmocks.ChannelsServiceClient)
 	chanID := "1"

@@ -5,7 +5,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v5.28.2
-// source: things/v1/things.proto
+// source: clients/v1/clients.proto
 
 package v1
 
@@ -357,5 +357,5 @@ var ClientsService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "things/v1/things.proto",
+	Metadata: "clients/v1/clients.proto",
 }

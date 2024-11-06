@@ -13,7 +13,7 @@ import (
 	"testing"
 
 	chmocks "github.com/absmach/magistrala/channels/mocks"
-	thmocks "github.com/absmach/magistrala/clients/mocks"
+	climocks "github.com/absmach/magistrala/clients/mocks"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	mglog "github.com/absmach/magistrala/logger"
@@ -93,7 +93,7 @@ func handshake(tsURL, chanID, subtopic, thingKey string, addHeader bool) (*webso
 }
 
 func TestHandshake(t *testing.T) {
-	things := new(thmocks.ThingsServiceClient)
+	things := new(climocks.ThingsServiceClient)
 	channels := new(chmocks.ChannelsServiceClient)
 	authn := new(authnMocks.Authentication)
 	svc, pubsub := newService(things, channels)

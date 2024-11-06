@@ -12,7 +12,7 @@ import (
 	tokengrpcapi "github.com/absmach/magistrala/auth/api/grpc/token"
 	"github.com/absmach/magistrala/auth/mocks"
 	thingsgrpcapi "github.com/absmach/magistrala/clients/api/grpc"
-	thmocks "github.com/absmach/magistrala/clients/private/mocks"
+	climocks "github.com/absmach/magistrala/clients/private/mocks"
 	domainsgrpcapi "github.com/absmach/magistrala/domains/api/grpc"
 	domainsMocks "github.com/absmach/magistrala/domains/mocks"
 	grpcDomainsV1 "github.com/absmach/magistrala/internal/grpc/domains/v1"
@@ -83,7 +83,7 @@ func TestSetupThingsClient(t *testing.T) {
 	defer cancel()
 
 	registerThingsServiceServer := func(srv *grpc.Server) {
-		grpcClientsV1.RegisterClientsServiceServer(srv, thingsgrpcapi.NewServer(new(thmocks.Service)))
+		grpcClientsV1.RegisterClientsServiceServer(srv, thingsgrpcapi.NewServer(new(climocks.Service)))
 	}
 	gs := grpcserver.NewServer(ctx, cancel, "things", server.Config{Port: "12345"}, registerThingsServiceServer, mglog.NewMock())
 	go func() {

@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/absmach/magistrala"
-	thmocks "github.com/absmach/magistrala/clients/mocks"
+	climocks "github.com/absmach/magistrala/clients/mocks"
 	adapter "github.com/absmach/magistrala/http"
 	"github.com/absmach/magistrala/http/api"
 	mglog "github.com/absmach/magistrala/logger"
@@ -30,8 +30,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func setupMessages() (*httptest.Server, *thmocks.ThingsServiceClient, *pubsub.PubSub) {
-	things := new(thmocks.ThingsServiceClient)
+func setupMessages() (*httptest.Server, *climocks.ThingsServiceClient, *pubsub.PubSub) {
+	things := new(climocks.ThingsServiceClient)
 	pub := new(pubsub.PubSub)
 	handler := adapter.NewHandler(pub, mglog.NewMock(), things)
 
@@ -53,7 +53,7 @@ func setupMessages() (*httptest.Server, *thmocks.ThingsServiceClient, *pubsub.Pu
 func setupReader() (*httptest.Server, *authzmocks.Authorization, *readersmocks.MessageRepository) {
 	repo := new(readersmocks.MessageRepository)
 	authz := new(authzmocks.Authorization)
-	things := new(thmocks.ThingsServiceClient)
+	things := new(climocks.ThingsServiceClient)
 
 	mux := readersapi.MakeHandler(repo, authz, things, "test", "")
 	return httptest.NewServer(mux), authz, repo

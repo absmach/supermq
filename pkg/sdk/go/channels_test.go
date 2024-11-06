@@ -13,7 +13,7 @@ import (
 
 	authmocks "github.com/absmach/magistrala/auth/mocks"
 	thapi "github.com/absmach/magistrala/clients/api/http"
-	thmocks "github.com/absmach/magistrala/clients/mocks"
+	climocks "github.com/absmach/magistrala/clients/mocks"
 	"github.com/absmach/magistrala/groups"
 	gmocks "github.com/absmach/magistrala/groups/mocks"
 	"github.com/absmach/magistrala/internal/testsutil"
@@ -41,7 +41,7 @@ var (
 )
 
 func setupChannels() (*httptest.Server, *gmocks.Service, *authnmocks.Authentication) {
-	tsvc := new(thmocks.Service)
+	tsvc := new(climocks.Service)
 	usvc := new(usmocks.Service)
 	gsvc := new(gmocks.Service)
 	logger := mglog.NewMock()

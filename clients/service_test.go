@@ -10,7 +10,7 @@ import (
 
 	chmocks "github.com/absmach/magistrala/channels/mocks"
 	"github.com/absmach/magistrala/clients"
-	thmocks "github.com/absmach/magistrala/clients/mocks"
+	climocks "github.com/absmach/magistrala/clients/mocks"
 	gpmocks "github.com/absmach/magistrala/groups/mocks"
 	"github.com/absmach/magistrala/internal/testsutil"
 	mgauthn "github.com/absmach/magistrala/pkg/authn"
@@ -47,16 +47,16 @@ var (
 var (
 	pService   *policymocks.Service
 	pEvaluator *policymocks.Evaluator
-	cache      *thmocks.Cache
-	repo       *thmocks.Repository
+	cache      *climocks.Cache
+	repo       *climocks.Repository
 )
 
 func newService() clients.Service {
 	pService = new(policymocks.Service)
-	cache = new(thmocks.Cache)
+	cache = new(climocks.Cache)
 	idProvider := uuid.NewMock()
 	sidProvider := uuid.NewMock()
-	repo = new(thmocks.Repository)
+	repo = new(climocks.Repository)
 	chgRPCClient := new(chmocks.ChannelsServiceClient)
 	gpgRPCClient := new(gpmocks.GroupsServiceClient)
 	tsv, _ := clients.NewService(repo, pService, cache, chgRPCClient, gpgRPCClient, idProvider, sidProvider)

@@ -40,7 +40,7 @@ import (
 const (
 	svcName           = "ws-adapter"
 	envPrefixHTTP     = "MG_WS_ADAPTER_HTTP_"
-	envPrefixThings   = "MG_THINGS_AUTH_GRPC_"
+	envPrefixClients  = "MG_CLIENTS_AUTH_GRPC_"
 	envPrefixChannels = "MG_CHANNELS_GRPC_"
 	envPrefixAuth     = "MG_AUTH_GRPC_"
 	defSvcHTTPPort    = "8190"
@@ -95,7 +95,7 @@ func main() {
 	}
 
 	thingsClientCfg := grpcclient.Config{}
-	if err := env.ParseWithOptions(&thingsClientCfg, env.Options{Prefix: envPrefixThings}); err != nil {
+	if err := env.ParseWithOptions(&thingsClientCfg, env.Options{Prefix: envPrefixClients}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
 		exitCode = 1
 		return
