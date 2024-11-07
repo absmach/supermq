@@ -37,10 +37,10 @@ func (lm *loggingMiddleware) CreateClients(ctx context.Context, session authn.Se
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn(fmt.Sprintf("Create %d things failed", len(clients)), args...)
+			lm.logger.Warn(fmt.Sprintf("Create %d clients failed", len(clients)), args...)
 			return
 		}
-		lm.logger.Info(fmt.Sprintf("Create %d things completed successfully", len(clients)), args...)
+		lm.logger.Info(fmt.Sprintf("Create %d clients completed successfully", len(clients)), args...)
 	}(time.Now())
 	return lm.svc.CreateClients(ctx, session, clients...)
 }
@@ -77,10 +77,10 @@ func (lm *loggingMiddleware) ListClients(ctx context.Context, session authn.Sess
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("List things failed", args...)
+			lm.logger.Warn("List clients failed", args...)
 			return
 		}
-		lm.logger.Info("List things completed successfully", args...)
+		lm.logger.Info("List clients completed successfully", args...)
 	}(time.Now())
 	return lm.svc.ListClients(ctx, session, reqUserID, pm)
 }

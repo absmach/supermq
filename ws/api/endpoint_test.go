@@ -15,7 +15,7 @@ import (
 	chmocks "github.com/absmach/magistrala/channels/mocks"
 	climocks "github.com/absmach/magistrala/clients/mocks"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
-	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/clients/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	authnMocks "github.com/absmach/magistrala/pkg/authn/mocks"
 	"github.com/absmach/magistrala/pkg/messaging/mocks"

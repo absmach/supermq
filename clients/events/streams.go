@@ -23,7 +23,7 @@ type eventStore struct {
 	rmEvents.RoleManagerEventStore
 }
 
-// NewEventStoreMiddleware returns wrapper around things service that sends
+// NewEventStoreMiddleware returns wrapper around clients service that sends
 // events to event store.
 func NewEventStoreMiddleware(ctx context.Context, svc clients.Service, url string) (clients.Service, error) {
 	publisher, err := store.NewPublisher(ctx, url, streamID)

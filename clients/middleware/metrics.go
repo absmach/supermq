@@ -32,12 +32,12 @@ func MetricsMiddleware(svc clients.Service, counter metrics.Counter, latency met
 	}
 }
 
-func (ms *metricsMiddleware) CreateClients(ctx context.Context, session authn.Session, things ...clients.Client) ([]clients.Client, error) {
+func (ms *metricsMiddleware) CreateClients(ctx context.Context, session authn.Session, clients ...clients.Client) ([]clients.Client, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "register_clients").Add(1)
 		ms.latency.With("method", "register_clients").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.CreateClients(ctx, session, things...)
+	return ms.svc.CreateClients(ctx, session, clients...)
 }
 
 func (ms *metricsMiddleware) View(ctx context.Context, session authn.Session, id string) (clients.Client, error) {

@@ -362,7 +362,7 @@ func TestListClients(t *testing.T) {
 		err                     error
 	}{
 		{
-			desc:     "list all things successfully as non admin",
+			desc:     "list all clients successfully as non admin",
 			userKind: "non-admin",
 			session:  mgauthn.Session{UserID: nonAdminID, DomainID: domainID, SuperAdmin: false},
 			id:       nonAdminID,
@@ -392,7 +392,7 @@ func TestListClients(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:     "list all things as non admin with failed to retrieve all",
+			desc:     "list all clients as non admin with failed to retrieve all",
 			userKind: "non-admin",
 			session:  mgauthn.Session{UserID: nonAdminID, DomainID: domainID, SuperAdmin: false},
 			id:       nonAdminID,
@@ -408,7 +408,7 @@ func TestListClients(t *testing.T) {
 			err:                 svcerr.ErrNotFound,
 		},
 		{
-			desc:     "list all things as non admin with failed to list permissions",
+			desc:     "list all clients as non admin with failed to list permissions",
 			userKind: "non-admin",
 			session:  mgauthn.Session{UserID: nonAdminID, DomainID: domainID, SuperAdmin: false},
 			id:       nonAdminID,
@@ -432,7 +432,7 @@ func TestListClients(t *testing.T) {
 			err:                     svcerr.ErrNotFound,
 		},
 		{
-			desc:     "list all things as non admin with failed super admin",
+			desc:     "list all clients as non admin with failed super admin",
 			userKind: "non-admin",
 			session:  mgauthn.Session{UserID: nonAdminID, DomainID: domainID, SuperAdmin: false},
 			id:       nonAdminID,
@@ -446,7 +446,7 @@ func TestListClients(t *testing.T) {
 			err:                 nil,
 		},
 		{
-			desc:     "list all things as non admin with failed to list objects",
+			desc:     "list all clients as non admin with failed to list objects",
 			userKind: "non-admin",
 			id:       nonAdminID,
 			page: clients.Page{
@@ -490,7 +490,7 @@ func TestListClients(t *testing.T) {
 		err                     error
 	}{
 		{
-			desc:     "list all things as admin successfully",
+			desc:     "list all clients as admin successfully",
 			userKind: "admin",
 			id:       adminID,
 			session:  mgauthn.Session{UserID: adminID, DomainID: domainID, SuperAdmin: true},
@@ -521,7 +521,7 @@ func TestListClients(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:     "list all things as admin with failed to retrieve all",
+			desc:     "list all clients as admin with failed to retrieve all",
 			userKind: "admin",
 			id:       adminID,
 			session:  mgauthn.Session{UserID: adminID, DomainID: domainID, SuperAdmin: true},
@@ -537,7 +537,7 @@ func TestListClients(t *testing.T) {
 			err:                 svcerr.ErrNotFound,
 		},
 		{
-			desc:     "list all things as admin with failed to list permissions",
+			desc:     "list all clients as admin with failed to list permissions",
 			userKind: "admin",
 			id:       adminID,
 			session:  mgauthn.Session{UserID: adminID, DomainID: domainID, SuperAdmin: true},
@@ -561,7 +561,7 @@ func TestListClients(t *testing.T) {
 			err:                     svcerr.ErrNotFound,
 		},
 		{
-			desc:     "list all things as admin with failed to list things",
+			desc:     "list all clients as admin with failed to list things",
 			userKind: "admin",
 			id:       adminID,
 			session:  mgauthn.Session{UserID: adminID, DomainID: domainID, SuperAdmin: true},

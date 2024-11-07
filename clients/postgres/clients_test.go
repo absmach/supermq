@@ -63,7 +63,7 @@ func TestClientsSave(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc: "add multiple things successfully",
+			desc: "add multiple clients successfully",
 			clients: []clients.Client{
 				{
 					ID:     testsutil.GenerateUUID(t),
@@ -116,7 +116,7 @@ func TestClientsSave(t *testing.T) {
 			err: repoerr.ErrCreateEntity,
 		},
 		{
-			desc: "add multiple things with one client having duplicate secret",
+			desc: "add multiple clients with one client having duplicate secret",
 			clients: []clients.Client{
 				{
 					ID:     testsutil.GenerateUUID(t),
@@ -176,7 +176,7 @@ func TestClientsSave(t *testing.T) {
 			err: repoerr.ErrCreateEntity,
 		},
 		{
-			desc: "add multiple things with one client having invalid client id",
+			desc: "add multiple clients with one client having invalid client id",
 			clients: []clients.Client{
 				{
 					ID:     testsutil.GenerateUUID(t),

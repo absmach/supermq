@@ -275,7 +275,7 @@ func TestCreateThings(t *testing.T) {
 		len         int
 	}{
 		{
-			desc:        "create things with valid token",
+			desc:        "create clients with valid token",
 			client:      items,
 			domainID:    domainID,
 			token:       validToken,
@@ -286,7 +286,7 @@ func TestCreateThings(t *testing.T) {
 			len:         3,
 		},
 		{
-			desc:        "create things with invalid token",
+			desc:        "create clients with invalid token",
 			client:      items,
 			token:       inValidToken,
 			contentType: contentType,
@@ -296,7 +296,7 @@ func TestCreateThings(t *testing.T) {
 			len:         0,
 		},
 		{
-			desc:        "create things with empty token",
+			desc:        "create clients with empty token",
 			client:      items,
 			token:       "",
 			contentType: contentType,
@@ -305,7 +305,7 @@ func TestCreateThings(t *testing.T) {
 			len:         0,
 		},
 		{
-			desc:        "create things with empty request",
+			desc:        "create clients with empty request",
 			client:      []clients.Client{},
 			domainID:    domainID,
 			token:       validToken,
@@ -316,7 +316,7 @@ func TestCreateThings(t *testing.T) {
 			len:         0,
 		},
 		{
-			desc: "create things with invalid IDs",
+			desc: "create clients with invalid IDs",
 			client: []clients.Client{
 				{
 					ID: inValid,
@@ -336,7 +336,7 @@ func TestCreateThings(t *testing.T) {
 			err:         apiutil.ErrValidation,
 		},
 		{
-			desc: "create things with invalid contentype",
+			desc: "create clients with invalid contentype",
 			client: []clients.Client{
 				{
 					ID: testsutil.GenerateUUID(t),
@@ -371,7 +371,7 @@ func TestCreateThings(t *testing.T) {
 			err:         errors.ErrMalformedEntity,
 		},
 		{
-			desc:        "create things with service error",
+			desc:        "create clients with service error",
 			client:      items,
 			contentType: contentType,
 			domainID:    domainID,
@@ -430,7 +430,7 @@ func TestListThings(t *testing.T) {
 		err                error
 	}{
 		{
-			desc:     "list things as admin with valid token",
+			desc:     "list clients as admin with valid token",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -444,7 +444,7 @@ func TestListThings(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:     "list things as non admin with valid token",
+			desc:     "list clients as non admin with valid token",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -458,14 +458,14 @@ func TestListThings(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:     "list things with empty token",
+			desc:     "list clients with empty token",
 			domainID: domainID,
 			token:    "",
 			status:   http.StatusUnauthorized,
 			err:      apiutil.ErrBearerToken,
 		},
 		{
-			desc:     "list things with invalid token",
+			desc:     "list clients with invalid token",
 			domainID: domainID,
 			token:    inValidToken,
 			status:   http.StatusUnauthorized,
@@ -473,7 +473,7 @@ func TestListThings(t *testing.T) {
 			err:      svcerr.ErrAuthentication,
 		},
 		{
-			desc:     "list things with offset",
+			desc:     "list clients with offset",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -489,7 +489,7 @@ func TestListThings(t *testing.T) {
 			err:    nil,
 		},
 		{
-			desc:     "list things with invalid offset",
+			desc:     "list clients with invalid offset",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -498,7 +498,7 @@ func TestListThings(t *testing.T) {
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:     "list things with limit",
+			desc:     "list clients with limit",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -514,7 +514,7 @@ func TestListThings(t *testing.T) {
 			err:    nil,
 		},
 		{
-			desc:     "list things with invalid limit",
+			desc:     "list clients with invalid limit",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -523,7 +523,7 @@ func TestListThings(t *testing.T) {
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:     "list things with limit greater than max",
+			desc:     "list clients with limit greater than max",
 			token:    validToken,
 			domainID: domainID,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -532,7 +532,7 @@ func TestListThings(t *testing.T) {
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:     "list things with name",
+			desc:     "list clients with name",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -547,7 +547,7 @@ func TestListThings(t *testing.T) {
 			err:    nil,
 		},
 		{
-			desc:     "list things with invalid name",
+			desc:     "list clients with invalid name",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -556,7 +556,7 @@ func TestListThings(t *testing.T) {
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:     "list things with duplicate name",
+			desc:     "list clients with duplicate name",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -565,7 +565,7 @@ func TestListThings(t *testing.T) {
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
-			desc:     "list things with status",
+			desc:     "list clients with status",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -580,7 +580,7 @@ func TestListThings(t *testing.T) {
 			err:    nil,
 		},
 		{
-			desc:     "list things with invalid status",
+			desc:     "list clients with invalid status",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -589,7 +589,7 @@ func TestListThings(t *testing.T) {
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:     "list things with duplicate status",
+			desc:     "list clients with duplicate status",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -598,7 +598,7 @@ func TestListThings(t *testing.T) {
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
-			desc:     "list things with tags",
+			desc:     "list clients with tags",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -613,7 +613,7 @@ func TestListThings(t *testing.T) {
 			err:    nil,
 		},
 		{
-			desc:     "list things with invalid tags",
+			desc:     "list clients with invalid tags",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -622,7 +622,7 @@ func TestListThings(t *testing.T) {
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:     "list things with duplicate tags",
+			desc:     "list clients with duplicate tags",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -631,7 +631,7 @@ func TestListThings(t *testing.T) {
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
-			desc:     "list things with metadata",
+			desc:     "list clients with metadata",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -646,7 +646,7 @@ func TestListThings(t *testing.T) {
 			err:    nil,
 		},
 		{
-			desc:     "list things with invalid metadata",
+			desc:     "list clients with invalid metadata",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -655,7 +655,7 @@ func TestListThings(t *testing.T) {
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:     "list things with duplicate metadata",
+			desc:     "list clients with duplicate metadata",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -664,7 +664,7 @@ func TestListThings(t *testing.T) {
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
-			desc:     "list things with permissions",
+			desc:     "list clients with permissions",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -679,7 +679,7 @@ func TestListThings(t *testing.T) {
 			err:    nil,
 		},
 		{
-			desc:     "list things with invalid permissions",
+			desc:     "list clients with invalid permissions",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -688,7 +688,7 @@ func TestListThings(t *testing.T) {
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:     "list things with duplicate permissions",
+			desc:     "list clients with duplicate permissions",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -697,7 +697,7 @@ func TestListThings(t *testing.T) {
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
-			desc:     "list things with list perms",
+			desc:     "list clients with list perms",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -712,7 +712,7 @@ func TestListThings(t *testing.T) {
 			err:    nil,
 		},
 		{
-			desc:     "list things with invalid list perms",
+			desc:     "list clients with invalid list perms",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -721,7 +721,7 @@ func TestListThings(t *testing.T) {
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:     "list things with duplicate list perms",
+			desc:     "list clients with duplicate list perms",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
@@ -1161,7 +1161,7 @@ func TestUpdateThingsTags(t *testing.T) {
 			err:         apiutil.ErrValidation,
 		},
 		{
-			desc:        "update things tags with empty id",
+			desc:        "update clients tags with empty id",
 			id:          "",
 			data:        fmt.Sprintf(`{"tags":["%s"]}`, newTag),
 			contentType: contentType,
@@ -1173,7 +1173,7 @@ func TestUpdateThingsTags(t *testing.T) {
 			err: apiutil.ErrValidation,
 		},
 		{
-			desc:        "update things with malfomed data",
+			desc:        "update clients with malfomed data",
 			id:          client.ID,
 			data:        fmt.Sprintf(`{"tags":[%s]}`, newTag),
 			contentType: contentType,

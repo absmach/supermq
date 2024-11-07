@@ -17,7 +17,7 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 		return &migrate.MemoryMigrationSource{}, errors.Wrap(repoerr.ErrRoleMigration, err)
 	}
 
-	thingsMigration := &migrate.MemoryMigrationSource{
+	clientsMigration := &migrate.MemoryMigrationSource{
 		Migrations: []*migrate.Migration{
 			{
 				Id: "clients_01",
@@ -58,7 +58,7 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 		},
 	}
 
-	thingsMigration.Migrations = append(thingsMigration.Migrations, thingsRolesMigration.Migrations...)
+	clientsMigration.Migrations = append(clientsMigration.Migrations, thingsRolesMigration.Migrations...)
 
-	return thingsMigration, nil
+	return clientsMigration, nil
 }

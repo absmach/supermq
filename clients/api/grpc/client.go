@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/absmach/magistrala/clients"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/clients/v1"
 	grpcCommonV1 "github.com/absmach/magistrala/internal/grpc/common/v1"
-	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"

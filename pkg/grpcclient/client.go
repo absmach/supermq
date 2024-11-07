@@ -12,9 +12,9 @@ import (
 	domainsgrpc "github.com/absmach/magistrala/domains/api/grpc"
 	groupsgrpc "github.com/absmach/magistrala/groups/api/grpc"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/clients/v1"
 	grpcDomainsV1 "github.com/absmach/magistrala/internal/grpc/domains/v1"
 	grpcGroupsV1 "github.com/absmach/magistrala/internal/grpc/groups/v1"
-	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
 	grpchealth "google.golang.org/grpc/health/grpc_health_v1"
 )
