@@ -109,4 +109,3 @@ func encodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}
 		Object:      req.Object,
 	}, nil
 }
-
