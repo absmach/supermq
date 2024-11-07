@@ -62,7 +62,7 @@ func Provision(conf Config) error {
 
 	msgContentType := string(sdk.CTJSONSenML)
 	sdkConf := sdk.Config{
-		ThingsURL:       conf.Host,
+		ClientsURL:      conf.Host,
 		UsersURL:        conf.Host,
 		ReaderURL:       defReaderURL,
 		HTTPAdapterURL:  fmt.Sprintf("%s/http", conf.Host),
@@ -147,7 +147,7 @@ func Provision(conf Config) error {
 	}
 
 	//  Create things and channels
-	things := make([]sdk.Thing, conf.Num)
+	things := make([]sdk.Client, conf.Num)
 	channels := make([]sdk.Channel, conf.Num)
 	cIDs := []string{}
 	tIDs := []string{}
@@ -155,7 +155,7 @@ func Provision(conf Config) error {
 	fmt.Println("# List of things that can be connected to MQTT broker")
 
 	for i := 0; i < conf.Num; i++ {
-		things[i] = sdk.Thing{Name: fmt.Sprintf("%s-thing-%d", conf.Prefix, i)}
+		things[i] = sdk.Client{Name: fmt.Sprintf("%s-thing-%d", conf.Prefix, i)}
 		channels[i] = sdk.Channel{Name: fmt.Sprintf("%s-channel-%d", conf.Prefix, i)}
 	}
 
@@ -258,7 +258,7 @@ func Provision(conf Config) error {
 	for _, cID := range cIDs {
 		for _, tID := range tIDs {
 			conIDs := sdk.Connection{
-				ThingID:   tID,
+				ClientID:  tID,
 				ChannelID: cID,
 			}
 			if err := s.Connect(conIDs, domain.ID, token.AccessToken); err != nil {

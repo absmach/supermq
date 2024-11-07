@@ -5,7 +5,7 @@ openapi: 3.0.1
 info:
   title: Magistrala Bootstrap service
   description: |
-    HTTP API for managing platform things configuration.
+    HTTP API for managing platform clients configuration.
     Some useful links:
     - [The Magistrala repository](https://github.com/absmach/magistrala)
   contact:
@@ -27,7 +27,7 @@ tags:
       url: https://docs.magistrala.abstractmachines.fr/
 
 paths:
-  /{domainID}/things/configs:
+  /{domainID}/clients/configs:
     post:
       operationId: createConfig
       summary: Adds new config
@@ -60,7 +60,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
         "503":
-          description: Failed to receive response from the things service.
+          description: Failed to receive response from the clients service.
     get:
       operationId: getConfigs
       summary: Retrieves managed configs
@@ -88,7 +88,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  /{domainID}/things/configs/{configId}:
+  /{domainID}/clients/configs/{configId}:
     get:
       operationId: getConfig
       summary: Retrieves config info (with channels).
@@ -167,7 +167,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  /{domainID}/things/configs/certs/{configId}:
+  /{domainID}/clients/configs/certs/{configId}:
     patch:
       operationId: updateConfigCerts
       summary: Updates certs
@@ -199,7 +199,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  /{domainID}/things/configs/connections/{configId}:
+  /{domainID}/clients/configs/connections/{configId}:
     put:
       operationId: updateConfigConnections
       summary: Updates channels the thing is connected to
@@ -230,7 +230,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  /things/bootstrap/{externalId}:
+  /clients/bootstrap/{externalId}:
     get:
       operationId: getBootstrapConfig
       summary: Retrieves configuration.
@@ -255,7 +255,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  /things/bootstrap/secure/{externalId}:
+  /clients/bootstrap/secure/{externalId}:
     get:
       operationId: getSecureBootstrapConfig
       summary: Retrieves configuration.
@@ -281,7 +281,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  /{domainID}/things/state/{configId}:
+  /{domainID}/clients/state/{configId}:
     put:
       operationId: updateConfigState
       summary: Updates Config state.
@@ -603,7 +603,7 @@ components:
             text/plain:
               schema:
                 type: string
-                description: Created configuration's relative URL (i.e. /things/configs/{configId}).
+                description: Created configuration's relative URL (i.e. /clients/configs/{configId}).
     ConfigListRes:
       description: Data retrieved. Configs from this list don't contain channels.
       content:
@@ -673,14 +673,14 @@ components:
       scheme: bearer
       bearerFormat: string
       description: |
-        * Things access: "Authorization: Thing <external_key>"
+        * Clients access: "Authorization: Thing <external_key>"
 
     bootstrapEncAuth:
       type: http
       scheme: bearer
       bearerFormat: aes-sha256-uuid
       description: |
-        * Things access: "Authorization: Thing <external_enc_key>"
+        * Clients access: "Authorization: Thing <external_enc_key>"
         Hex-encoded configuration external key encrypted using
         the AES algorithm and SHA256 sum of the external key
         itself as an encryption key.

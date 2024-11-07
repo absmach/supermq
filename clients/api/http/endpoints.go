@@ -27,7 +27,7 @@ func createClientEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		thing, err := svc.CreateClients(ctx, session, req.thing)
+		thing, err := svc.CreateClients(ctx, session, req.client)
 		if err != nil {
 			return nil, err
 		}

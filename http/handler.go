@@ -67,11 +67,11 @@ type handler struct {
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(publisher messaging.Publisher, authn mgauthn.Authentication, things grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, logger *slog.Logger) session.Handler {
+func NewHandler(publisher messaging.Publisher, authn mgauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, logger *slog.Logger) session.Handler {
 	return &handler{
 		publisher: publisher,
 		authn:     authn,
-		things:    things,
+		things:    clients,
 		channels:  channels,
 		logger:    logger,
 	}

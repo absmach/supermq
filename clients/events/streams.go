@@ -39,8 +39,8 @@ func NewEventStoreMiddleware(ctx context.Context, svc clients.Service, url strin
 	}, nil
 }
 
-func (es *eventStore) CreateClients(ctx context.Context, session authn.Session, thing ...clients.Client) ([]clients.Client, error) {
-	sths, err := es.svc.CreateClients(ctx, session, thing...)
+func (es *eventStore) CreateClients(ctx context.Context, session authn.Session, clients ...clients.Client) ([]clients.Client, error) {
+	sths, err := es.svc.CreateClients(ctx, session, clients...)
 	if err != nil {
 		return sths, err
 	}
@@ -57,8 +57,8 @@ func (es *eventStore) CreateClients(ctx context.Context, session authn.Session, 
 	return sths, nil
 }
 
-func (es *eventStore) Update(ctx context.Context, session authn.Session, thing clients.Client) (clients.Client, error) {
-	cli, err := es.svc.Update(ctx, session, thing)
+func (es *eventStore) Update(ctx context.Context, session authn.Session, client clients.Client) (clients.Client, error) {
+	cli, err := es.svc.Update(ctx, session, client)
 	if err != nil {
 		return cli, err
 	}
@@ -66,8 +66,8 @@ func (es *eventStore) Update(ctx context.Context, session authn.Session, thing c
 	return es.update(ctx, "", cli)
 }
 
-func (es *eventStore) UpdateTags(ctx context.Context, session authn.Session, thing clients.Client) (clients.Client, error) {
-	cli, err := es.svc.UpdateTags(ctx, session, thing)
+func (es *eventStore) UpdateTags(ctx context.Context, session authn.Session, client clients.Client) (clients.Client, error) {
+	cli, err := es.svc.UpdateTags(ctx, session, client)
 	if err != nil {
 		return cli, err
 	}
@@ -84,16 +84,16 @@ func (es *eventStore) UpdateSecret(ctx context.Context, session authn.Session, i
 	return es.update(ctx, "secret", cli)
 }
 
-func (es *eventStore) update(ctx context.Context, operation string, thing clients.Client) (clients.Client, error) {
+func (es *eventStore) update(ctx context.Context, operation string, client clients.Client) (clients.Client, error) {
 	event := updateClientEvent{
-		thing, operation,
+		client, operation,
 	}
 
 	if err := es.Publish(ctx, event); err != nil {
-		return thing, err
+		return client, err
 	}
 
-	return thing, nil
+	return client, nil
 }
 
 func (es *eventStore) View(ctx context.Context, session authn.Session, id string) (clients.Client, error) {

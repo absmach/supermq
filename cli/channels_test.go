@@ -374,14 +374,14 @@ func TestListConnectionsCmd(t *testing.T) {
 	channelCmd := cli.NewChannelsCmd()
 	rootCmd := setFlags(channelCmd)
 
-	var tp mgsdk.ThingsPage
+	var tp mgsdk.ClientsPage
 	cases := []struct {
 		desc          string
 		args          []string
 		sdkErr        errors.SDKError
 		errLogMessage string
 		logType       outputLog
-		page          mgsdk.ThingsPage
+		page          mgsdk.ClientsPage
 	}{
 		{
 			desc: "list connections successfully",
@@ -390,13 +390,13 @@ func TestListConnectionsCmd(t *testing.T) {
 				domainID,
 				token,
 			},
-			page: mgsdk.ThingsPage{
+			page: mgsdk.ClientsPage{
 				PageRes: mgsdk.PageRes{
 					Total:  1,
 					Offset: 0,
 					Limit:  10,
 				},
-				Things: []mgsdk.Thing{thing},
+				Clients: []mgsdk.Client{thing},
 			},
 			logType: entityLog,
 		},

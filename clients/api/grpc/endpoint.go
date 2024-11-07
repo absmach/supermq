@@ -45,15 +45,15 @@ func retrieveEntitiesEndpoint(svc pThings.Service) endpoint.Endpoint {
 		if err != nil {
 			return retrieveEntitiesRes{}, err
 		}
-		thingsBasic := []thingBasic{}
-		for _, thing := range tp.Clients {
-			thingsBasic = append(thingsBasic, thingBasic{id: thing.ID, domain: thing.Domain, status: uint8(thing.Status)})
+		thingsBasic := []enitity{}
+		for _, client := range tp.Clients {
+			thingsBasic = append(thingsBasic, enitity{id: client.ID, domain: client.Domain, status: uint8(client.Status)})
 		}
 		return retrieveEntitiesRes{
-			total:  tp.Total,
-			limit:  tp.Limit,
-			offset: tp.Offset,
-			things: thingsBasic,
+			total:   tp.Total,
+			limit:   tp.Limit,
+			offset:  tp.Offset,
+			clients: thingsBasic,
 		}, nil
 	}
 }
@@ -66,7 +66,7 @@ func addConnectionsEndpoint(svc pThings.Service) endpoint.Endpoint {
 
 		for _, c := range req.connections {
 			conns = append(conns, clients.Connection{
-				ThingID:   c.thingID,
+				ThingID:   c.clientID,
 				ChannelID: c.channelID,
 				DomainID:  c.domainID,
 				Type:      c.connType,
@@ -88,7 +88,7 @@ func removeConnectionsEndpoint(svc pThings.Service) endpoint.Endpoint {
 
 		for _, c := range req.connections {
 			conns = append(conns, clients.Connection{
-				ThingID:   c.thingID,
+				ThingID:   c.clientID,
 				ChannelID: c.channelID,
 				DomainID:  c.domainID,
 				Type:      c.connType,

@@ -21,7 +21,7 @@ import (
 )
 
 var cert = mgsdk.Cert{
-	ThingID: thing.ID,
+	ClientID: thing.ID,
 }
 
 func TestGetCertCmd(t *testing.T) {

@@ -50,7 +50,7 @@ func dec(in []byte) ([]byte, error) {
 
 func TestReadConfig(t *testing.T) {
 	cfg := bootstrap.Config{
-		ThingID:    "mg_id",
+		ClientID:   "mg_id",
 		ClientCert: "client_cert",
 		ClientKey:  "client_key",
 		CACert:     "ca_cert",

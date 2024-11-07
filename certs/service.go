@@ -67,10 +67,10 @@ type Revoke struct {
 	RevocationTime time.Time `mapstructure:"revocation_time"`
 }
 
-func (cs *certsService) IssueCert(ctx context.Context, domainID, token, thingID, ttl string) (Cert, error) {
+func (cs *certsService) IssueCert(ctx context.Context, domainID, token, clientID, ttl string) (Cert, error) {
 	var err error
 
-	thing, err := cs.sdk.Thing(thingID, domainID, token)
+	thing, err := cs.sdk.Client(clientID, domainID, token)
 	if err != nil {
 		return Cert{}, errors.Wrap(ErrFailedCertCreation, err)
 	}
@@ -90,11 +90,11 @@ func (cs *certsService) IssueCert(ctx context.Context, domainID, token, thingID,
 	}, err
 }
 
-func (cs *certsService) RevokeCert(ctx context.Context, domainID, token, thingID string) (Revoke, error) {
+func (cs *certsService) RevokeCert(ctx context.Context, domainID, token, clientID string) (Revoke, error) {
 	var revoke Revoke
 	var err error
 
-	thing, err := cs.sdk.Thing(thingID, domainID, token)
+	thing, err := cs.sdk.Client(clientID, domainID, token)
 	if err != nil {
 		return revoke, errors.Wrap(ErrFailedCertRevocation, err)
 	}

@@ -11,7 +11,7 @@ import (
 
 //go:generate mockery --name Service  --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
 type Service interface {
-	// Authenticate returns thing ID for given thing key.
+	// Authenticate returns client ID for given client key.
 	Authenticate(ctx context.Context, key string) (string, error)
 
 	RetrieveById(ctx context.Context, id string) (clients.Client, error)

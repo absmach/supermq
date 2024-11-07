@@ -56,7 +56,7 @@ func SetupDomainsClient(ctx context.Context, cfg Config) (grpcDomainsV1.DomainsS
 	return domainsgrpc.NewDomainsClient(client.Connection(), cfg.Timeout), client, nil
 }
 
-// SetupThingsClient loads things gRPC configuration and creates new things gRPC client.
+// SetupThingsClient loads clients gRPC configuration and creates new clients gRPC client.
 //
 // For example:
 //

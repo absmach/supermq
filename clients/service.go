@@ -23,7 +23,7 @@ import (
 
 var (
 	errRollbackRepo   = errors.New("failed to rollback repo")
-	errSetParentGroup = errors.New("thing already have parent")
+	errSetParentGroup = errors.New("client already have parent")
 )
 var _ Service = (*service)(nil)
 

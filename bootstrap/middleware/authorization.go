@@ -45,7 +45,7 @@ func (am *authorizationMiddleware) View(ctx context.Context, session mgauthn.Ses
 }
 
 func (am *authorizationMiddleware) Update(ctx context.Context, session mgauthn.Session, cfg bootstrap.Config) error {
-	if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, policies.EditPermission, policies.ThingType, cfg.ThingID); err != nil {
+	if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, policies.EditPermission, policies.ThingType, cfg.ClientID); err != nil {
 		return err
 	}
 

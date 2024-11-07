@@ -114,7 +114,7 @@ func TestCreateThing(t *testing.T) {
 		err         error
 	}{
 		{
-			desc:        "register  a new thing with a valid token",
+			desc:        "register  a new client with a valid token",
 			client:      client,
 			domainID:    domainID,
 			token:       validToken,
@@ -134,7 +134,7 @@ func TestCreateThing(t *testing.T) {
 			err:         svcerr.ErrConflict,
 		},
 		{
-			desc:        "register a new thing with an empty token",
+			desc:        "register a new client with an empty token",
 			client:      client,
 			domainID:    domainID,
 			token:       "",
@@ -144,7 +144,7 @@ func TestCreateThing(t *testing.T) {
 			err:         apiutil.ErrBearerToken,
 		},
 		{
-			desc: "register a thing with an  invalid ID",
+			desc: "register a client with an  invalid ID",
 			client: clients.Client{
 				ID: inValid,
 				Credentials: clients.Credentials{
@@ -160,7 +160,7 @@ func TestCreateThing(t *testing.T) {
 			err:         apiutil.ErrValidation,
 		},
 		{
-			desc: "register a thing that can't be marshalled",
+			desc: "register a client that can't be marshalled",
 			client: clients.Client{
 				Credentials: clients.Credentials{
 					Identity: "user@example.com",
@@ -178,7 +178,7 @@ func TestCreateThing(t *testing.T) {
 			err:         errors.ErrMalformedEntity,
 		},
 		{
-			desc: "register thing with invalid status",
+			desc: "register client with invalid status",
 			client: clients.Client{
 				ID: testsutil.GenerateUUID(t),
 				Credentials: clients.Credentials{
@@ -195,7 +195,7 @@ func TestCreateThing(t *testing.T) {
 			err:         svcerr.ErrInvalidStatus,
 		},
 		{
-			desc: "create thing with invalid contentype",
+			desc: "create client with invalid contentype",
 			client: clients.Client{
 				ID: testsutil.GenerateUUID(t),
 				Credentials: clients.Credentials{
@@ -350,7 +350,7 @@ func TestCreateThings(t *testing.T) {
 			err:         apiutil.ErrValidation,
 		},
 		{
-			desc: "create a thing that can't be marshalled",
+			desc: "create a client that can't be marshalled",
 			client: []clients.Client{
 				{
 					ID: testsutil.GenerateUUID(t),
@@ -856,7 +856,7 @@ func TestViewThingPerms(t *testing.T) {
 		err      error
 	}{
 		{
-			desc:     "view thing permissions with valid token",
+			desc:     "view client permissions with valid token",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
@@ -867,7 +867,7 @@ func TestViewThingPerms(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:     "view thing permissions with invalid token",
+			desc:     "view client permissions with invalid token",
 			domainID: domainID,
 			token:    inValidToken,
 			thingID:  client.ID,
@@ -877,7 +877,7 @@ func TestViewThingPerms(t *testing.T) {
 			err:      svcerr.ErrAuthentication,
 		},
 		{
-			desc:     "view thing permissions with empty token",
+			desc:     "view client permissions with empty token",
 			domainID: domainID,
 			token:    "",
 			thingID:  client.ID,
@@ -886,7 +886,7 @@ func TestViewThingPerms(t *testing.T) {
 			err:      apiutil.ErrBearerToken,
 		},
 		{
-			desc:     "view thing permissions with invalid id",
+			desc:     "view client permissions with invalid id",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
@@ -897,7 +897,7 @@ func TestViewThingPerms(t *testing.T) {
 			err: svcerr.ErrAuthorization,
 		},
 		{
-			desc:     "view thing permissions with empty id",
+			desc:     "view client permissions with empty id",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
@@ -959,7 +959,7 @@ func TestUpdateThing(t *testing.T) {
 		err            error
 	}{
 		{
-			desc:        "update thing with valid token",
+			desc:        "update client with valid token",
 			domainID:    domainID,
 			id:          client.ID,
 			authnRes:    mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
@@ -977,7 +977,7 @@ func TestUpdateThing(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:        "update thing with invalid token",
+			desc:        "update client with invalid token",
 			id:          client.ID,
 			data:        fmt.Sprintf(`{"name":"%s","tags":["%s"],"metadata":%s}`, newName, newTag, toJSON(newMetadata)),
 			domainID:    domainID,
@@ -988,7 +988,7 @@ func TestUpdateThing(t *testing.T) {
 			err:         svcerr.ErrAuthentication,
 		},
 		{
-			desc:        "update thing with empty token",
+			desc:        "update client with empty token",
 			id:          client.ID,
 			data:        fmt.Sprintf(`{"name":"%s","tags":["%s"],"metadata":%s}`, newName, newTag, toJSON(newMetadata)),
 			domainID:    domainID,
@@ -998,7 +998,7 @@ func TestUpdateThing(t *testing.T) {
 			err:         apiutil.ErrBearerToken,
 		},
 		{
-			desc:        "update thing with invalid contentype",
+			desc:        "update client with invalid contentype",
 			id:          client.ID,
 			data:        fmt.Sprintf(`{"name":"%s","tags":["%s"],"metadata":%s}`, newName, newTag, toJSON(newMetadata)),
 			domainID:    domainID,
@@ -1010,7 +1010,7 @@ func TestUpdateThing(t *testing.T) {
 			err: apiutil.ErrValidation,
 		},
 		{
-			desc:        "update thing with malformed data",
+			desc:        "update client with malformed data",
 			id:          client.ID,
 			data:        fmt.Sprintf(`{"name":%s}`, "invalid"),
 			domainID:    domainID,
@@ -1022,7 +1022,7 @@ func TestUpdateThing(t *testing.T) {
 			err: apiutil.ErrValidation,
 		},
 		{
-			desc:        "update thing with empty id",
+			desc:        "update client with empty id",
 			id:          " ",
 			data:        fmt.Sprintf(`{"name":"%s","tags":["%s"],"metadata":%s}`, newName, newTag, toJSON(newMetadata)),
 			domainID:    domainID,
@@ -1034,7 +1034,7 @@ func TestUpdateThing(t *testing.T) {
 			err: apiutil.ErrMissingID,
 		},
 		{
-			desc:           "update thing with name that is too long",
+			desc:           "update client with name that is too long",
 			id:             client.ID,
 			authnRes:       mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			data:           fmt.Sprintf(`{"name":"%s","tags":["%s"],"metadata":%s}`, strings.Repeat("a", api.MaxNameSize+1), newTag, toJSON(newMetadata)),
@@ -1101,7 +1101,7 @@ func TestUpdateThingsTags(t *testing.T) {
 		err            error
 	}{
 		{
-			desc:        "update thing tags with valid token",
+			desc:        "update client tags with valid token",
 			id:          client.ID,
 			data:        fmt.Sprintf(`{"tags":["%s"]}`, newTag),
 			contentType: contentType,
@@ -1117,7 +1117,7 @@ func TestUpdateThingsTags(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:        "update thing tags with empty token",
+			desc:        "update client tags with empty token",
 			id:          client.ID,
 			data:        fmt.Sprintf(`{"tags":["%s"]}`, newTag),
 			contentType: contentType,
@@ -1127,7 +1127,7 @@ func TestUpdateThingsTags(t *testing.T) {
 			err:         apiutil.ErrBearerToken,
 		},
 		{
-			desc:        "update thing tags with invalid token",
+			desc:        "update client tags with invalid token",
 			id:          client.ID,
 			data:        fmt.Sprintf(`{"tags":["%s"]}`, newTag),
 			contentType: contentType,
@@ -1138,7 +1138,7 @@ func TestUpdateThingsTags(t *testing.T) {
 			err:         svcerr.ErrAuthentication,
 		},
 		{
-			desc:        "update thing tags with invalid id",
+			desc:        "update client tags with invalid id",
 			id:          client.ID,
 			data:        fmt.Sprintf(`{"tags":["%s"]}`, newTag),
 			contentType: contentType,
@@ -1150,7 +1150,7 @@ func TestUpdateThingsTags(t *testing.T) {
 			err: svcerr.ErrAuthorization,
 		},
 		{
-			desc:        "update thing tags with invalid contentype",
+			desc:        "update client tags with invalid contentype",
 			id:          client.ID,
 			data:        fmt.Sprintf(`{"tags":["%s"]}`, newTag),
 			contentType: "application/xml",
@@ -1232,7 +1232,7 @@ func TestUpdateClientSecret(t *testing.T) {
 		err         error
 	}{
 		{
-			desc: "update thing secret with valid token",
+			desc: "update client secret with valid token",
 			data: fmt.Sprintf(`{"secret": "%s"}`, "strongersecret"),
 			client: clients.Client{
 				ID: client.ID,
@@ -1249,7 +1249,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			err:         nil,
 		},
 		{
-			desc: "update thing secret with empty token",
+			desc: "update client secret with empty token",
 			data: fmt.Sprintf(`{"secret": "%s"}`, "strongersecret"),
 			client: clients.Client{
 				ID: client.ID,
@@ -1265,7 +1265,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			err:         apiutil.ErrBearerToken,
 		},
 		{
-			desc: "update thing secret with invalid token",
+			desc: "update client secret with invalid token",
 			data: fmt.Sprintf(`{"secret": "%s"}`, "strongersecret"),
 			client: clients.Client{
 				ID: client.ID,
@@ -1282,7 +1282,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			err:         svcerr.ErrAuthentication,
 		},
 		{
-			desc: "update thing secret with empty id",
+			desc: "update client secret with empty id",
 			data: fmt.Sprintf(`{"secret": "%s"}`, "strongersecret"),
 			client: clients.Client{
 				ID: "",
@@ -1299,7 +1299,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			err:         apiutil.ErrValidation,
 		},
 		{
-			desc: "update thing secret with empty secret",
+			desc: "update client secret with empty secret",
 			data: fmt.Sprintf(`{"secret": "%s"}`, ""),
 			client: clients.Client{
 				ID: client.ID,
@@ -1317,7 +1317,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			err: apiutil.ErrValidation,
 		},
 		{
-			desc: "update thing secret with invalid contentype",
+			desc: "update client secret with invalid contentype",
 			data: fmt.Sprintf(`{"secret": "%s"}`, ""),
 			client: clients.Client{
 				ID: client.ID,
@@ -1335,7 +1335,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			err: apiutil.ErrValidation,
 		},
 		{
-			desc: "update thing secret with malformed data",
+			desc: "update client secret with malformed data",
 			data: fmt.Sprintf(`{"secret": %s}`, "invalid"),
 			client: clients.Client{
 				ID: client.ID,
@@ -1399,7 +1399,7 @@ func TestEnableThing(t *testing.T) {
 		err      error
 	}{
 		{
-			desc:   "enable thing with valid token",
+			desc:   "enable client with valid token",
 			client: client,
 			response: clients.Client{
 				ID:     client.ID,
@@ -1413,7 +1413,7 @@ func TestEnableThing(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:     "enable thing with invalid token",
+			desc:     "enable client with invalid token",
 			client:   client,
 			domainID: domainID,
 			token:    inValidToken,
@@ -1422,7 +1422,7 @@ func TestEnableThing(t *testing.T) {
 			err:      svcerr.ErrAuthentication,
 		},
 		{
-			desc: "enable thing with empty id",
+			desc: "enable client with empty id",
 			client: clients.Client{
 				ID: "",
 			},
@@ -1484,7 +1484,7 @@ func TestDisableThing(t *testing.T) {
 		err      error
 	}{
 		{
-			desc:   "disable thing with valid token",
+			desc:   "disable client with valid token",
 			client: client,
 			response: clients.Client{
 				ID:     client.ID,
@@ -1498,7 +1498,7 @@ func TestDisableThing(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:     "disable thing with invalid token",
+			desc:     "disable client with invalid token",
 			client:   client,
 			domainID: domainID,
 			token:    inValidToken,
@@ -1507,7 +1507,7 @@ func TestDisableThing(t *testing.T) {
 			err:      svcerr.ErrAuthentication,
 		},
 		{
-			desc: "disable thing with empty id",
+			desc: "disable client with empty id",
 			client: clients.Client{
 				ID: "",
 			},
@@ -1570,7 +1570,7 @@ func TestShareThing(t *testing.T) {
 		err         error
 	}{
 		{
-			desc:        "share thing with valid token",
+			desc:        "share client with valid token",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : ["%s", "%s"]}`, "editor", validID, validID),
 			thingID:     client.ID,
 			domainID:    domainID,
@@ -1582,7 +1582,7 @@ func TestShareThing(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:        "share thing with invalid token",
+			desc:        "share client with invalid token",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : ["%s", "%s"]}`, "editor", validID, validID),
 			thingID:     client.ID,
 			domainID:    domainID,
@@ -1593,7 +1593,7 @@ func TestShareThing(t *testing.T) {
 			err:         svcerr.ErrAuthentication,
 		},
 		{
-			desc:        "share thing with empty token",
+			desc:        "share client with empty token",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : ["%s", "%s"]}`, "editor", validID, validID),
 			thingID:     client.ID,
 			domainID:    domainID,
@@ -1603,7 +1603,7 @@ func TestShareThing(t *testing.T) {
 			err:         apiutil.ErrBearerToken,
 		},
 		{
-			desc:        "share thing with empty id",
+			desc:        "share client with empty id",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : ["%s", "%s"]}`, "editor", validID, validID),
 			thingID:     " ",
 			domainID:    domainID,
@@ -1615,7 +1615,7 @@ func TestShareThing(t *testing.T) {
 			err: apiutil.ErrMissingID,
 		},
 		{
-			desc:        "share thing with missing relation",
+			desc:        "share client with missing relation",
 			data:        fmt.Sprintf(`{"relation": "%s", user_ids" : ["%s", "%s"]}`, " ", validID, validID),
 			thingID:     client.ID,
 			domainID:    domainID,
@@ -1627,7 +1627,7 @@ func TestShareThing(t *testing.T) {
 			err: apiutil.ErrMissingRelation,
 		},
 		{
-			desc:        "share thing with malformed data",
+			desc:        "share client with malformed data",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : [%s, "%s"]}`, "editor", "invalid", validID),
 			thingID:     client.ID,
 			domainID:    domainID,
@@ -1639,7 +1639,7 @@ func TestShareThing(t *testing.T) {
 			err: apiutil.ErrValidation,
 		},
 		{
-			desc:        "share thing with empty thing id",
+			desc:        "share client with empty client id",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : ["%s", "%s"]}`, "editor", validID, validID),
 			thingID:     "",
 			domainID:    domainID,
@@ -1651,7 +1651,7 @@ func TestShareThing(t *testing.T) {
 			err: apiutil.ErrValidation,
 		},
 		{
-			desc:        "share thing with empty relation",
+			desc:        "share client with empty relation",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : ["%s", "%s"]}`, " ", validID, validID),
 			thingID:     client.ID,
 			domainID:    domainID,
@@ -1663,7 +1663,7 @@ func TestShareThing(t *testing.T) {
 			err: apiutil.ErrMissingRelation,
 		},
 		{
-			desc:        "share thing with empty user ids",
+			desc:        "share client with empty user ids",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : [" ", " "]}`, "editor"),
 			thingID:     client.ID,
 			domainID:    domainID,
@@ -1675,7 +1675,7 @@ func TestShareThing(t *testing.T) {
 			err: apiutil.ErrValidation,
 		},
 		{
-			desc:        "share thing with invalid content type",
+			desc:        "share client with invalid content type",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : ["%s", "%s"]}`, "editor", validID, validID),
 			thingID:     client.ID,
 			domainID:    domainID,
@@ -1727,7 +1727,7 @@ func TestUnShareThing(t *testing.T) {
 		err         error
 	}{
 		{
-			desc:        "unshare thing with valid token",
+			desc:        "unshare client with valid token",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : ["%s", "%s"]}`, "editor", validID, validID),
 			thingID:     client.ID,
 			domainID:    domainID,
@@ -1739,7 +1739,7 @@ func TestUnShareThing(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:        "unshare thing with invalid token",
+			desc:        "unshare client with invalid token",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : ["%s", "%s"]}`, "editor", validID, validID),
 			thingID:     client.ID,
 			domainID:    domainID,
@@ -1750,7 +1750,7 @@ func TestUnShareThing(t *testing.T) {
 			err:         svcerr.ErrAuthentication,
 		},
 		{
-			desc:        "unshare thing with empty token",
+			desc:        "unshare client with empty token",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : ["%s", "%s"]}`, "editor", validID, validID),
 			thingID:     client.ID,
 			domainID:    domainID,
@@ -1760,7 +1760,7 @@ func TestUnShareThing(t *testing.T) {
 			err:         apiutil.ErrBearerToken,
 		},
 		{
-			desc:        "unshare thing with empty id",
+			desc:        "unshare client with empty id",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : ["%s", "%s"]}`, "editor", validID, validID),
 			thingID:     " ",
 			domainID:    domainID,
@@ -1772,7 +1772,7 @@ func TestUnShareThing(t *testing.T) {
 			err: apiutil.ErrMissingID,
 		},
 		{
-			desc:        "unshare thing with missing relation",
+			desc:        "unshare client with missing relation",
 			data:        fmt.Sprintf(`{"relation": "%s", user_ids" : ["%s", "%s"]}`, " ", validID, validID),
 			thingID:     client.ID,
 			domainID:    domainID,
@@ -1784,7 +1784,7 @@ func TestUnShareThing(t *testing.T) {
 			err: apiutil.ErrMissingRelation,
 		},
 		{
-			desc:        "unshare thing with malformed data",
+			desc:        "unshare client with malformed data",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : [%s, "%s"]}`, "editor", "invalid", validID),
 			thingID:     client.ID,
 			domainID:    domainID,
@@ -1796,7 +1796,7 @@ func TestUnShareThing(t *testing.T) {
 			err: apiutil.ErrValidation,
 		},
 		{
-			desc:        "unshare thing with empty thing id",
+			desc:        "unshare client with empty client id",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : ["%s", "%s"]}`, "editor", validID, validID),
 			thingID:     "",
 			domainID:    domainID,
@@ -1808,7 +1808,7 @@ func TestUnShareThing(t *testing.T) {
 			err: apiutil.ErrValidation,
 		},
 		{
-			desc:        "unshare thing with empty relation",
+			desc:        "unshare client with empty relation",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : ["%s", "%s"]}`, " ", validID, validID),
 			thingID:     client.ID,
 			domainID:    domainID,
@@ -1820,7 +1820,7 @@ func TestUnShareThing(t *testing.T) {
 			err: apiutil.ErrMissingRelation,
 		},
 		{
-			desc:        "unshare thing with empty user ids",
+			desc:        "unshare client with empty user ids",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : [" ", " "]}`, "editor"),
 			thingID:     client.ID,
 			domainID:    domainID,
@@ -1832,7 +1832,7 @@ func TestUnShareThing(t *testing.T) {
 			err: apiutil.ErrValidation,
 		},
 		{
-			desc:        "unshare thing with invalid content type",
+			desc:        "unshare client with invalid content type",
 			data:        fmt.Sprintf(`{"relation": "%s", "user_ids" : ["%s", "%s"]}`, "editor", validID, validID),
 			thingID:     client.ID,
 			domainID:    domainID,
@@ -1882,7 +1882,7 @@ func TestDeleteThing(t *testing.T) {
 		err      error
 	}{
 		{
-			desc:     "delete thing with valid token",
+			desc:     "delete client with valid token",
 			id:       client.ID,
 			domainID: domainID,
 			token:    validToken,
@@ -1892,7 +1892,7 @@ func TestDeleteThing(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:     "delete thing with invalid token",
+			desc:     "delete client with invalid token",
 			id:       client.ID,
 			domainID: domainID,
 			token:    inValidToken,
@@ -1902,7 +1902,7 @@ func TestDeleteThing(t *testing.T) {
 			err:      svcerr.ErrAuthentication,
 		},
 		{
-			desc:     "delete thing with empty token",
+			desc:     "delete client with empty token",
 			id:       client.ID,
 			domainID: domainID,
 			token:    "",
@@ -1910,7 +1910,7 @@ func TestDeleteThing(t *testing.T) {
 			err:      apiutil.ErrBearerToken,
 		},
 		{
-			desc:     "delete thing with empty id",
+			desc:     "delete client with empty id",
 			id:       " ",
 			domainID: domainID,
 			token:    validToken,

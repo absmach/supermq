@@ -47,7 +47,7 @@ func MakeHandler(svc bootstrap.Service, authn mgauthn.Authentication, reader boo
 
 	r := chi.NewRouter()
 
-	r.Route("/{domainID}/things", func(r chi.Router) {
+	r.Route("/{domainID}/clients", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Use(api.AuthenticateMiddleware(authn, true))
 
@@ -103,7 +103,7 @@ func MakeHandler(svc bootstrap.Service, authn mgauthn.Authentication, reader boo
 			opts...), "update_state").ServeHTTP)
 	})
 
-	r.Route("/things/bootstrap", func(r chi.Router) {
+	r.Route("/clients/bootstrap", func(r chi.Router) {
 		r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
 			bootstrapEndpoint(svc, reader, false),
 			decodeBootstrapRequest,

@@ -108,7 +108,7 @@ type testRequest struct {
 
 func newConfig() bootstrap.Config {
 	return bootstrap.Config{
-		ThingID:     addThingID,
+		ClientID:    addThingID,
 		ThingKey:    addThingKey,
 		ExternalID:  addExternalID,
 		ExternalKey: addExternalKey,
@@ -237,7 +237,7 @@ func TestAdd(t *testing.T) {
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusCreated,
-			location:    "/things/configs/" + c.ThingID,
+			location:    "/things/configs/" + c.ClientID,
 			err:         nil,
 		},
 		{
@@ -359,7 +359,7 @@ func TestView(t *testing.T) {
 	}
 
 	data := config{
-		ThingID:     c.ThingID,
+		ThingID:     c.ClientID,
 		ThingKey:    c.ThingKey,
 		State:       c.State,
 		Channels:    channels,
@@ -382,7 +382,7 @@ func TestView(t *testing.T) {
 		{
 			desc:            "view a config with invalid token",
 			token:           invalidToken,
-			id:              c.ThingID,
+			id:              c.ClientID,
 			status:          http.StatusUnauthorized,
 			res:             config{},
 			authenticateErr: svcerr.ErrAuthentication,
@@ -391,7 +391,7 @@ func TestView(t *testing.T) {
 		{
 			desc:   "view a config",
 			token:  validToken,
-			id:     c.ThingID,
+			id:     c.ClientID,
 			status: http.StatusOK,
 			res:    data,
 			err:    nil,
@@ -407,7 +407,7 @@ func TestView(t *testing.T) {
 		{
 			desc:   "view a config with an empty token",
 			token:  "",
-			id:     c.ThingID,
+			id:     c.ClientID,
 			status: http.StatusUnauthorized,
 			res:    config{},
 			err:    apiutil.ErrBearerToken,
@@ -415,7 +415,7 @@ func TestView(t *testing.T) {
 		{
 			desc:   "view config without authorization",
 			token:  validToken,
-			id:     c.ThingID,
+			id:     c.ClientID,
 			status: http.StatusForbidden,
 			res:    config{},
 			err:    svcerr.ErrAuthorization,
@@ -476,7 +476,7 @@ func TestUpdate(t *testing.T) {
 		{
 			desc:            "update with invalid token",
 			req:             data,
-			id:              c.ThingID,
+			id:              c.ClientID,
 			token:           invalidToken,
 			contentType:     contentType,
 			status:          http.StatusUnauthorized,
@@ -486,7 +486,7 @@ func TestUpdate(t *testing.T) {
 		{
 			desc:        "update with an empty token",
 			req:         data,
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       "",
 			contentType: contentType,
 			status:      http.StatusUnauthorized,
@@ -495,7 +495,7 @@ func TestUpdate(t *testing.T) {
 		{
 			desc:        "update a valid config",
 			req:         data,
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusOK,
@@ -504,7 +504,7 @@ func TestUpdate(t *testing.T) {
 		{
 			desc:        "update a config with wrong content type",
 			req:         data,
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       validToken,
 			contentType: "",
 			status:      http.StatusUnsupportedMediaType,
@@ -522,7 +522,7 @@ func TestUpdate(t *testing.T) {
 		{
 			desc:        "update a config with invalid request format",
 			req:         "}",
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
@@ -530,7 +530,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			desc:        "update a config with an empty request",
-			id:          c.ThingID,
+			id:          c.ClientID,
 			req:         "",
 			token:       validToken,
 			contentType: contentType,
@@ -584,7 +584,7 @@ func TestUpdateCert(t *testing.T) {
 		{
 			desc:            "update with invalid token",
 			req:             data,
-			id:              c.ThingID,
+			id:              c.ClientID,
 			token:           invalidToken,
 			contentType:     contentType,
 			status:          http.StatusUnauthorized,
@@ -594,7 +594,7 @@ func TestUpdateCert(t *testing.T) {
 		{
 			desc:        "update with an empty token",
 			req:         data,
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       "",
 			contentType: contentType,
 			status:      http.StatusUnauthorized,
@@ -603,7 +603,7 @@ func TestUpdateCert(t *testing.T) {
 		{
 			desc:        "update a valid config",
 			req:         data,
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusOK,
@@ -612,7 +612,7 @@ func TestUpdateCert(t *testing.T) {
 		{
 			desc:        "update a config with wrong content type",
 			req:         data,
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       validToken,
 			contentType: "",
 			status:      http.StatusUnsupportedMediaType,
@@ -638,7 +638,7 @@ func TestUpdateCert(t *testing.T) {
 		},
 		{
 			desc:        "update a config with an empty request",
-			id:          c.ThingID,
+			id:          c.ClientID,
 			req:         "",
 			token:       validToken,
 			contentType: contentType,
@@ -696,7 +696,7 @@ func TestUpdateConnections(t *testing.T) {
 		{
 			desc:            "update connections with invalid token",
 			req:             data,
-			id:              c.ThingID,
+			id:              c.ClientID,
 			token:           invalidToken,
 			contentType:     contentType,
 			status:          http.StatusUnauthorized,
@@ -706,7 +706,7 @@ func TestUpdateConnections(t *testing.T) {
 		{
 			desc:        "update connections with an empty token",
 			req:         data,
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       "",
 			contentType: contentType,
 			status:      http.StatusUnauthorized,
@@ -715,7 +715,7 @@ func TestUpdateConnections(t *testing.T) {
 		{
 			desc:        "update connections valid config",
 			req:         data,
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusOK,
@@ -724,7 +724,7 @@ func TestUpdateConnections(t *testing.T) {
 		{
 			desc:        "update connections with wrong content type",
 			req:         data,
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       validToken,
 			contentType: "",
 			status:      http.StatusUnsupportedMediaType,
@@ -742,7 +742,7 @@ func TestUpdateConnections(t *testing.T) {
 		{
 			desc:        "update connections with invalid channels",
 			req:         wrongData,
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusNotFound,
@@ -751,7 +751,7 @@ func TestUpdateConnections(t *testing.T) {
 		{
 			desc:        "update a config with invalid request format",
 			req:         "}",
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
@@ -759,7 +759,7 @@ func TestUpdateConnections(t *testing.T) {
 		},
 		{
 			desc:        "update a config with an empty request",
-			id:          c.ThingID,
+			id:          c.ClientID,
 			req:         "",
 			token:       validToken,
 			contentType: contentType,
@@ -815,7 +815,7 @@ func TestList(t *testing.T) {
 			channels = append(channels, channel{ID: ch.ID, Name: ch.Name, Metadata: ch.Metadata})
 		}
 		s := config{
-			ThingID:     c.ThingID,
+			ThingID:     c.ClientID,
 			ThingKey:    c.ThingKey,
 			Channels:    channels,
 			ExternalID:  c.ExternalID,
@@ -1084,7 +1084,7 @@ func TestRemove(t *testing.T) {
 	}{
 		{
 			desc:            "remove with invalid token",
-			id:              c.ThingID,
+			id:              c.ClientID,
 			token:           invalidToken,
 			status:          http.StatusUnauthorized,
 			authenticateErr: svcerr.ErrAuthentication,
@@ -1092,7 +1092,7 @@ func TestRemove(t *testing.T) {
 		},
 		{
 			desc:   "remove with an empty token",
-			id:     c.ThingID,
+			id:     c.ClientID,
 			token:  "",
 			status: http.StatusUnauthorized,
 			err:    apiutil.ErrBearerToken,
@@ -1106,7 +1106,7 @@ func TestRemove(t *testing.T) {
 		},
 		{
 			desc:   "remove config",
-			id:     c.ThingID,
+			id:     c.ClientID,
 			token:  validToken,
 			status: http.StatusNoContent,
 			err:    nil,
@@ -1164,7 +1164,7 @@ func TestBootstrap(t *testing.T) {
 		ClientKey  string    `json:"client_key"`
 		CACert     string    `json:"ca_cert"`
 	}{
-		ThingID:    c.ThingID,
+		ThingID:    c.ClientID,
 		ThingKey:   c.ThingKey,
 		Channels:   channels,
 		Content:    c.Content,
@@ -1296,7 +1296,7 @@ func TestChangeState(t *testing.T) {
 	}{
 		{
 			desc:            "change state with invalid token",
-			id:              c.ThingID,
+			id:              c.ClientID,
 			token:           invalidToken,
 			state:           active,
 			contentType:     contentType,
@@ -1306,7 +1306,7 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:        "change state with an empty token",
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       "",
 			state:       active,
 			contentType: contentType,
@@ -1315,7 +1315,7 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:        "change state with invalid content type",
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       validToken,
 			state:       active,
 			contentType: "",
@@ -1324,7 +1324,7 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:        "change state to active",
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       validToken,
 			state:       active,
 			contentType: contentType,
@@ -1333,7 +1333,7 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:        "change state to inactive",
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       validToken,
 			state:       inactive,
 			contentType: contentType,
@@ -1351,7 +1351,7 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:        "change state to invalid value",
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       validToken,
 			state:       fmt.Sprintf("{\"state\": %d}", -3),
 			contentType: contentType,
@@ -1360,7 +1360,7 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:        "change state with invalid data",
-			id:          c.ThingID,
+			id:          c.ClientID,
 			token:       validToken,
 			state:       "",
 			contentType: contentType,

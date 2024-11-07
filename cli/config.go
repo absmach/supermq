@@ -171,8 +171,8 @@ func ParseConfig(sdkConf mgxsdk.Config) (mgxsdk.Config, error) {
 		RawOutput = rawOutput || RawOutput
 	}
 
-	if sdkConf.ThingsURL == "" && config.Remotes.ThingsURL != "" {
-		sdkConf.ThingsURL = config.Remotes.ThingsURL
+	if sdkConf.ClientsURL == "" && config.Remotes.ThingsURL != "" {
+		sdkConf.ClientsURL = config.Remotes.ThingsURL
 	}
 
 	if sdkConf.UsersURL == "" && config.Remotes.UsersURL != "" {

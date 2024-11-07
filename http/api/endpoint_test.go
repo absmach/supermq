@@ -85,7 +85,7 @@ func (tr testRequest) make() (*http.Response, error) {
 }
 
 func TestPublish(t *testing.T) {
-	things := new(climocks.ThingsServiceClient)
+	things := new(climocks.ClientsServiceClient)
 	authn := new(authnMocks.Authentication)
 	channels := new(chmocks.ChannelsServiceClient)
 	chanID := "1"

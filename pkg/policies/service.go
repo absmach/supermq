@@ -20,7 +20,7 @@ type Policy struct {
 	SubjectType string `json:"subject_type"`
 
 	// SubjectKind contains the subject kind. Supported subject kinds are
-	// token, users, platform, things, channels, groups, domain.
+	// token, users, platform, clients,  channels, groups, domain.
 	SubjectKind string `json:"subject_kind"`
 
 	// SubjectRelation contains subject relations.
@@ -33,7 +33,7 @@ type Policy struct {
 	Object string `json:"object"`
 
 	// ObjectKind contains the object kind. Supported object kinds are
-	// users, platform, things, channels, groups, domain.
+	// users, platform, clients,  channels, groups, domain.
 	ObjectKind string `json:"object_kind"`
 
 	// ObjectType contains the object type. Supported object types are

@@ -32,7 +32,7 @@ func (lm *loggingMiddleware) Add(ctx context.Context, session mgauthn.Session, t
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.String("thing_id", saved.ThingID),
+			slog.String("thing_id", saved.ClientID),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
@@ -71,7 +71,7 @@ func (lm *loggingMiddleware) Update(ctx context.Context, session mgauthn.Session
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("config",
-				slog.String("thing_id", cfg.ThingID),
+				slog.String("thing_id", cfg.ClientID),
 				slog.String("name", cfg.Name),
 			),
 		}
@@ -92,7 +92,7 @@ func (lm *loggingMiddleware) UpdateCert(ctx context.Context, session mgauthn.Ses
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.String("thing_id", cfg.ThingID),
+			slog.String("thing_id", cfg.ClientID),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))

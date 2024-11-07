@@ -140,11 +140,11 @@ func encodeRetrieveEntitiesResponse(_ context.Context, grpcRes interface{}) (int
 	res := grpcRes.(retrieveEntitiesRes)
 
 	entities := []*grpcCommonV1.EntityBasic{}
-	for _, thing := range res.things {
+	for _, c := range res.clients {
 		entities = append(entities, &grpcCommonV1.EntityBasic{
-			Id:       thing.id,
-			DomainId: thing.domain,
-			Status:   uint32(thing.status),
+			Id:       c.id,
+			DomainId: c.domain,
+			Status:   uint32(c.status),
 		})
 	}
 	return &grpcCommonV1.RetrieveEntitiesRes{Total: res.total, Limit: res.limit, Offset: res.offset, Entities: entities}, nil
@@ -168,7 +168,7 @@ func decodeAddConnectionsRequest(_ context.Context, grpcReq interface{}) (interf
 			return nil, err
 		}
 		conns = append(conns, connection{
-			thingID:   c.GetThingId(),
+			clientID:  c.GetThingId(),
 			channelID: c.GetChannelId(),
 			domainID:  c.GetDomainId(),
 			connType:  connType,
@@ -203,7 +203,7 @@ func decodeRemoveConnectionsRequest(_ context.Context, grpcReq interface{}) (int
 			return nil, err
 		}
 		conns = append(conns, connection{
-			thingID:   c.GetThingId(),
+			clientID:  c.GetThingId(),
 			channelID: c.GetChannelId(),
 			domainID:  c.GetDomainId(),
 			connType:  connType,

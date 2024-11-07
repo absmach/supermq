@@ -178,11 +178,11 @@ func (client grpcClient) RetrieveEntities(ctx context.Context, req *grpcCommonV1
 	ep := res.(retrieveEntitiesRes)
 
 	entities := []*grpcCommonV1.EntityBasic{}
-	for _, thing := range ep.things {
+	for _, c := range ep.clients {
 		entities = append(entities, &grpcCommonV1.EntityBasic{
-			Id:       thing.id,
-			DomainId: thing.domain,
-			Status:   uint32(thing.status),
+			Id:       c.id,
+			DomainId: c.domain,
+			Status:   uint32(c.status),
 		})
 	}
 	return &grpcCommonV1.RetrieveEntitiesRes{Total: ep.total, Limit: ep.limit, Offset: ep.offset, Entities: entities}, nil
@@ -198,16 +198,16 @@ func encodeRetrieveEntitiesRequest(_ context.Context, grpcReq interface{}) (inte
 func decodeRetrieveEntitiesResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(*grpcCommonV1.RetrieveEntitiesRes)
 
-	ths := []thingBasic{}
+	ths := []enitity{}
 
-	for _, entity := range res.Entities {
-		ths = append(ths, thingBasic{
-			id:     entity.GetId(),
-			domain: entity.GetDomainId(),
-			status: uint8(entity.GetStatus()),
+	for _, e := range res.Entities {
+		ths = append(ths, enitity{
+			id:     e.GetId(),
+			domain: e.GetDomainId(),
+			status: uint8(e.GetStatus()),
 		})
 	}
-	return retrieveEntitiesRes{total: res.GetTotal(), limit: res.GetLimit(), offset: res.GetOffset(), things: ths}, nil
+	return retrieveEntitiesRes{total: res.GetTotal(), limit: res.GetLimit(), offset: res.GetOffset(), clients: ths}, nil
 }
 
 func (client grpcClient) AddConnections(ctx context.Context, req *grpcCommonV1.AddConnectionsReq, _ ...grpc.CallOption) (r *grpcCommonV1.AddConnectionsRes, err error) {

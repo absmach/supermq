@@ -27,13 +27,13 @@ func (sdk *MgxSDK) Channels(token string) ([]things.Channel, error)
     Channels - gets all channels
 
 func (sdk *MgxSDK) Connect(struct{[]string, []string}, token string) error
-    Connect - connect things to channels
+    Connect - connect clients to channels
 
 func (sdk *MgxSDK) CreateChannel(data, token string) (string, error)
     CreateChannel - creates new channel and generates UUID
 
 func (sdk *MgxSDK) CreateThing(data, token string) (string, error)
-    CreateThing - creates new thing and generates thing UUID
+    CreateThing - creates new client and generates client UUID
 
 func (sdk *MgxSDK) CreateToken(user, pwd string) (string, error)
     CreateToken - create user token
@@ -56,8 +56,8 @@ func (sdk *MgxSDK) DeleteChannel(id, token string) error
 func (sdk *MgxSDK) DeleteThing(id, token string) error
     DeleteThing - removes thing
 
-func (sdk *MgxSDK) DisconnectThing(thingID, chanID, token string) error
-    DisconnectThing - connect thing to a channel
+func (sdk *MgxSDK) DisconnectClient(clientID, chanID, token string) error
+    DisconnectClient - connect client to a channel
 
 func (sdk *MgxSDK) SendMessage(chanID, msg, token string) error
     SendMessage - send message on Magistrala channel
@@ -67,7 +67,7 @@ func (sdk *MgxSDK) SetContentType(ct ContentType) error
     JSON, custom JSON and custom binary (octet-stream).
 
 func (sdk *MgxSDK) Thing(id, token string) (Thing, error)
-    Thing - gets thing by ID
+    Thing - gets client by ID
 
 func (sdk *MgxSDK) Things(token string) ([]Thing, error)
     Things - gets all things
@@ -75,9 +75,9 @@ func (sdk *MgxSDK) Things(token string) ([]Thing, error)
 func (sdk *MgxSDK) UpdateChannel(channel Channel, token string) error
     UpdateChannel - update a channel
 
-func (sdk *MgxSDK) UpdateThing(thing Thing, token string) error
-    UpdateThing - updates thing by ID
+func (sdk *MgxSDK) UpdateThing(client Thing, token string) error
+    UpdateThing - updates client by ID
 
 func (sdk *MgxSDK) Health() (magistrala.Health, error)
-    Health - things service health check
+    Health - clients service health check
 ````

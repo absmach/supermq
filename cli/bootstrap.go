@@ -190,7 +190,7 @@ var cmdBootstrap = []cobra.Command{
 				return
 			}
 
-			if err := sdk.Whitelist(cfg.ThingID, cfg.State, args[1], args[2]); err != nil {
+			if err := sdk.Whitelist(cfg.ClientID, cfg.State, args[1], args[2]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}

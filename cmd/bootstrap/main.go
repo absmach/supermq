@@ -205,7 +205,7 @@ func newService(ctx context.Context, authz mgauthz.Authorization, policySvc poli
 	repoConfig := bootstrappg.NewConfigRepository(database, logger)
 
 	config := mgsdk.Config{
-		ThingsURL: cfg.ThingsURL,
+		ClientsURL: cfg.ThingsURL,
 	}
 
 	sdk := mgsdk.NewSDK(config)

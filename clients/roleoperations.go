@@ -144,8 +144,8 @@ func NewRolesOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 const (
 	// External Permission
 	// Domains
-	domainCreateThingPermission = "thing_create_permission"
-	domainListThingPermission   = "list_things_permission"
+	domainCreateClientPermission = "clients_create_permission"
+	domainListClientsPermission  = "list_clients_permission"
 	// Groups
 	groupSetChildThingPermission    = "thing_create_permission"
 	groupRemoveChildThingPermission = "thing_create_permission"
@@ -156,8 +156,8 @@ const (
 
 func NewExternalOperationPermissionMap() map[svcutil.ExternalOperation]svcutil.Permission {
 	extOpPerm := map[svcutil.ExternalOperation]svcutil.Permission{
-		DomainOpCreateThing:         domainCreateThingPermission,
-		DomainOpListThing:           domainListThingPermission,
+		DomainOpCreateThing:         domainCreateClientPermission,
+		DomainOpListThing:           domainListClientsPermission,
 		GroupOpSetChildThing:        groupSetChildThingPermission,
 		GroupsOpRemoveChildThing:    groupRemoveChildThingPermission,
 		ChannelsOpConnectChannel:    channelsConnectThingPermission,

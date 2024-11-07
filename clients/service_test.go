@@ -28,7 +28,7 @@ var (
 	secret         = "strongsecret"
 	validTMetadata = clients.Metadata{"role": "thing"}
 	ID             = "6e5e10b3-d4df-4758-b426-4929d55ad740"
-	thing          = clients.Client{
+	client         = clients.Client{
 		ID:          ID,
 		Name:        "thingname",
 		Tags:        []string{"tag1", "tag2"},
@@ -68,7 +68,7 @@ func TestCreateClients(t *testing.T) {
 
 	cases := []struct {
 		desc            string
-		thing           clients.Client
+		client          clients.Client
 		token           string
 		addPolicyErr    error
 		deletePolicyErr error
@@ -76,21 +76,21 @@ func TestCreateClients(t *testing.T) {
 		err             error
 	}{
 		{
-			desc:  "create a new thing successfully",
-			thing: thing,
-			token: validToken,
-			err:   nil,
+			desc:   "create a new client successfully",
+			client: client,
+			token:  validToken,
+			err:    nil,
 		},
 		{
 			desc:    "create an existing thing",
-			thing:   thing,
+			client:  client,
 			token:   validToken,
 			saveErr: repoerr.ErrConflict,
 			err:     repoerr.ErrConflict,
 		},
 		{
-			desc: "create a new thing without secret",
-			thing: clients.Client{
+			desc: "create a new client without secret",
+			client: clients.Client{
 				Name: "thingWithoutSecret",
 				Credentials: clients.Credentials{
 					Identity: "newthingwithoutsecret@example.com",
@@ -101,8 +101,8 @@ func TestCreateClients(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc: "create a new thing without identity",
-			thing: clients.Client{
+			desc: "create a new client without identity",
+			client: clients.Client{
 				Name: "thingWithoutIdentity",
 				Credentials: clients.Credentials{
 					Identity: "newthingwithoutsecret@example.com",
@@ -113,8 +113,8 @@ func TestCreateClients(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc: "create a new enabled thing with name",
-			thing: clients.Client{
+			desc: "create a new enabled client with name",
+			client: clients.Client{
 				Name: "thingWithName",
 				Credentials: clients.Credentials{
 					Identity: "newthingwithname@example.com",
@@ -127,8 +127,8 @@ func TestCreateClients(t *testing.T) {
 		},
 
 		{
-			desc: "create a new disabled thing with name",
-			thing: clients.Client{
+			desc: "create a new disabled client with name",
+			client: clients.Client{
 				Name: "thingWithName",
 				Credentials: clients.Credentials{
 					Identity: "newthingwithname@example.com",
@@ -139,8 +139,8 @@ func TestCreateClients(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc: "create a new enabled thing with tags",
-			thing: clients.Client{
+			desc: "create a new enabled client with tags",
+			client: clients.Client{
 				Tags: []string{"tag1", "tag2"},
 				Credentials: clients.Credentials{
 					Identity: "newthingwithtags@example.com",
@@ -152,8 +152,8 @@ func TestCreateClients(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc: "create a new disabled thing with tags",
-			thing: clients.Client{
+			desc: "create a new disabled client with tags",
+			client: clients.Client{
 				Tags: []string{"tag1", "tag2"},
 				Credentials: clients.Credentials{
 					Identity: "newthingwithtags@example.com",
@@ -165,8 +165,8 @@ func TestCreateClients(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc: "create a new enabled thing with metadata",
-			thing: clients.Client{
+			desc: "create a new enabled client with metadata",
+			client: clients.Client{
 				Credentials: clients.Credentials{
 					Identity: "newthingwithmetadata@example.com",
 					Secret:   secret,
@@ -178,8 +178,8 @@ func TestCreateClients(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc: "create a new disabled thing with metadata",
-			thing: clients.Client{
+			desc: "create a new disabled client with metadata",
+			client: clients.Client{
 				Credentials: clients.Credentials{
 					Identity: "newthingwithmetadata@example.com",
 					Secret:   secret,
@@ -191,7 +191,7 @@ func TestCreateClients(t *testing.T) {
 		},
 		{
 			desc: "create a new disabled thing",
-			thing: clients.Client{
+			client: clients.Client{
 				Credentials: clients.Credentials{
 					Identity: "newthingwithvalidstatus@example.com",
 					Secret:   secret,
@@ -201,8 +201,8 @@ func TestCreateClients(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc: "create a new thing with valid disabled status",
-			thing: clients.Client{
+			desc: "create a new client with valid disabled status",
+			client: clients.Client{
 				Credentials: clients.Credentials{
 					Identity: "newthingwithvalidstatus@example.com",
 					Secret:   secret,
@@ -213,8 +213,8 @@ func TestCreateClients(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc: "create a new thing with all fields",
-			thing: clients.Client{
+			desc: "create a new client with all fields",
+			client: clients.Client{
 				Name: "newthingwithallfields",
 				Tags: []string{"tag1", "tag2"},
 				Credentials: clients.Credentials{
@@ -230,8 +230,8 @@ func TestCreateClients(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc: "create a new thing with invalid status",
-			thing: clients.Client{
+			desc: "create a new client with invalid status",
+			client: clients.Client{
 				Credentials: clients.Credentials{
 					Identity: "newthingwithinvalidstatus@example.com",
 					Secret:   secret,
@@ -242,8 +242,8 @@ func TestCreateClients(t *testing.T) {
 			err:   svcerr.ErrInvalidStatus,
 		},
 		{
-			desc: "create a new thing with failed add policies response",
-			thing: clients.Client{
+			desc: "create a new client with failed add policies response",
+			client: clients.Client{
 				Credentials: clients.Credentials{
 					Identity: "newthingwithfailedpolicy@example.com",
 					Secret:   secret,
@@ -255,8 +255,8 @@ func TestCreateClients(t *testing.T) {
 			err:          svcerr.ErrInvalidPolicy,
 		},
 		{
-			desc: "create a new thing with failed delete policies response",
-			thing: clients.Client{
+			desc: "create a new client with failed delete policies response",
+			client: clients.Client{
 				Credentials: clients.Credentials{
 					Identity: "newthingwithfailedpolicy@example.com",
 					Secret:   secret,
@@ -271,19 +271,19 @@ func TestCreateClients(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := repo.On("Save", context.Background(), mock.Anything).Return([]clients.Client{tc.thing}, tc.saveErr)
+		repoCall := repo.On("Save", context.Background(), mock.Anything).Return([]clients.Client{tc.client}, tc.saveErr)
 		policyCall := pService.On("AddPolicies", mock.Anything, mock.Anything).Return(tc.addPolicyErr)
 		policyCall1 := pService.On("DeletePolicies", mock.Anything, mock.Anything).Return(tc.deletePolicyErr)
-		expected, err := svc.CreateClients(context.Background(), mgauthn.Session{}, tc.thing)
+		expected, err := svc.CreateClients(context.Background(), mgauthn.Session{}, tc.client)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
-			tc.thing.ID = expected[0].ID
-			tc.thing.CreatedAt = expected[0].CreatedAt
-			tc.thing.UpdatedAt = expected[0].UpdatedAt
-			tc.thing.Credentials.Secret = expected[0].Credentials.Secret
-			tc.thing.Domain = expected[0].Domain
-			tc.thing.UpdatedBy = expected[0].UpdatedBy
-			assert.Equal(t, tc.thing, expected[0], fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.thing, expected[0]))
+			tc.client.ID = expected[0].ID
+			tc.client.CreatedAt = expected[0].CreatedAt
+			tc.client.UpdatedAt = expected[0].UpdatedAt
+			tc.client.Credentials.Secret = expected[0].Credentials.Secret
+			tc.client.Domain = expected[0].Domain
+			tc.client.UpdatedBy = expected[0].UpdatedBy
+			assert.Equal(t, tc.client, expected[0], fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.client, expected[0]))
 		}
 		repoCall.Unset()
 		policyCall.Unset()
@@ -302,26 +302,26 @@ func TestViewClient(t *testing.T) {
 		err         error
 	}{
 		{
-			desc:     "view thing successfully",
-			response: thing,
-			clientID: thing.ID,
+			desc:     "view client successfully",
+			response: client,
+			clientID: client.ID,
 			err:      nil,
 		},
 		{
-			desc:     "view thing with an invalid token",
+			desc:     "view client with an invalid token",
 			response: clients.Client{},
 			clientID: "",
 			err:      svcerr.ErrAuthorization,
 		},
 		{
-			desc:        "view thing with valid token and invalid thing id",
+			desc:        "view client with valid token and invalid client id",
 			response:    clients.Client{},
 			clientID:    wrongID,
 			retrieveErr: svcerr.ErrNotFound,
 			err:         svcerr.ErrNotFound,
 		},
 		{
-			desc:     "view thing with an invalid token and invalid thing id",
+			desc:     "view client with an invalid token and invalid client id",
 			response: clients.Client{},
 			clientID: wrongID,
 			err:      svcerr.ErrAuthorization,
@@ -343,7 +343,7 @@ func TestListClients(t *testing.T) {
 	adminID := testsutil.GenerateUUID(t)
 	domainID := testsutil.GenerateUUID(t)
 	nonAdminID := testsutil.GenerateUUID(t)
-	thing.Permissions = []string{"read", "write"}
+	client.Permissions = []string{"read", "write"}
 
 	cases := []struct {
 		desc                    string
@@ -371,14 +371,14 @@ func TestListClients(t *testing.T) {
 				Limit:     100,
 				ListPerms: true,
 			},
-			listObjectsResponse: policysvc.PolicyPage{Policies: []string{thing.ID, thing.ID}},
+			listObjectsResponse: policysvc.PolicyPage{Policies: []string{client.ID, client.ID}},
 			retrieveAllResponse: clients.ClientsPage{
 				Page: clients.Page{
 					Total:  2,
 					Offset: 0,
 					Limit:  100,
 				},
-				Clients: []clients.Client{thing, thing},
+				Clients: []clients.Client{client, client},
 			},
 			listPermissionsResponse: []string{"read", "write"},
 			response: clients.ClientsPage{
@@ -387,7 +387,7 @@ func TestListClients(t *testing.T) {
 					Offset: 0,
 					Limit:  100,
 				},
-				Clients: []clients.Client{thing, thing},
+				Clients: []clients.Client{client, client},
 			},
 			err: nil,
 		},
@@ -401,7 +401,7 @@ func TestListClients(t *testing.T) {
 				Limit:     100,
 				ListPerms: true,
 			},
-			listObjectsResponse: policysvc.PolicyPage{Policies: []string{thing.ID, thing.ID}},
+			listObjectsResponse: policysvc.PolicyPage{Policies: []string{client.ID, client.ID}},
 			retrieveAllResponse: clients.ClientsPage{},
 			response:            clients.ClientsPage{},
 			retrieveAllErr:      repoerr.ErrNotFound,
@@ -417,14 +417,14 @@ func TestListClients(t *testing.T) {
 				Limit:     100,
 				ListPerms: true,
 			},
-			listObjectsResponse: policysvc.PolicyPage{Policies: []string{thing.ID, thing.ID}},
+			listObjectsResponse: policysvc.PolicyPage{Policies: []string{client.ID, client.ID}},
 			retrieveAllResponse: clients.ClientsPage{
 				Page: clients.Page{
 					Total:  2,
 					Offset: 0,
 					Limit:  100,
 				},
-				Clients: []clients.Client{thing, thing},
+				Clients: []clients.Client{client, client},
 			},
 			listPermissionsResponse: []string{},
 			response:                clients.ClientsPage{},
@@ -500,14 +500,14 @@ func TestListClients(t *testing.T) {
 				ListPerms: true,
 				Domain:    domainID,
 			},
-			listObjectsResponse: policysvc.PolicyPage{Policies: []string{thing.ID, thing.ID}},
+			listObjectsResponse: policysvc.PolicyPage{Policies: []string{client.ID, client.ID}},
 			retrieveAllResponse: clients.ClientsPage{
 				Page: clients.Page{
 					Total:  2,
 					Offset: 0,
 					Limit:  100,
 				},
-				Clients: []clients.Client{thing, thing},
+				Clients: []clients.Client{client, client},
 			},
 			listPermissionsResponse: []string{"read", "write"},
 			response: clients.ClientsPage{
@@ -516,7 +516,7 @@ func TestListClients(t *testing.T) {
 					Offset: 0,
 					Limit:  100,
 				},
-				Clients: []clients.Client{thing, thing},
+				Clients: []clients.Client{client, client},
 			},
 			err: nil,
 		},
@@ -554,7 +554,7 @@ func TestListClients(t *testing.T) {
 					Offset: 0,
 					Limit:  100,
 				},
-				Clients: []clients.Client{thing, thing},
+				Clients: []clients.Client{client, client},
 			},
 			listPermissionsResponse: []string{},
 			listPermissionsErr:      svcerr.ErrNotFound,
@@ -605,36 +605,36 @@ func TestListClients(t *testing.T) {
 func TestUpdateClient(t *testing.T) {
 	svc := newService()
 
-	thing1 := thing
-	thing2 := thing
+	thing1 := client
+	thing2 := client
 	thing1.Name = "Updated thing"
 	thing2.Metadata = clients.Metadata{"role": "test"}
 
 	cases := []struct {
 		desc           string
-		thing          clients.Client
+		client         clients.Client
 		session        mgauthn.Session
 		updateResponse clients.Client
 		updateErr      error
 		err            error
 	}{
 		{
-			desc:           "update thing name successfully",
-			thing:          thing1,
+			desc:           "update client name successfully",
+			client:         thing1,
 			session:        mgauthn.Session{UserID: validID},
 			updateResponse: thing1,
 			err:            nil,
 		},
 		{
-			desc:           "update thing metadata with valid token",
-			thing:          thing2,
+			desc:           "update client metadata with valid token",
+			client:         thing2,
 			updateResponse: thing2,
 			session:        mgauthn.Session{UserID: validID},
 			err:            nil,
 		},
 		{
-			desc:           "update thing with failed to update repo",
-			thing:          thing1,
+			desc:           "update client with failed to update repo",
+			client:         thing1,
 			updateResponse: clients.Client{},
 			session:        mgauthn.Session{UserID: validID},
 			updateErr:      repoerr.ErrMalformedEntity,
@@ -644,7 +644,7 @@ func TestUpdateClient(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall1 := repo.On("Update", context.Background(), mock.Anything).Return(tc.updateResponse, tc.updateErr)
-		updatedThing, err := svc.Update(context.Background(), tc.session, tc.thing)
+		updatedThing, err := svc.Update(context.Background(), tc.session, tc.client)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateResponse, updatedThing, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateResponse, updatedThing))
 		repoCall1.Unset()
@@ -654,26 +654,26 @@ func TestUpdateClient(t *testing.T) {
 func TestUpdateTags(t *testing.T) {
 	svc := newService()
 
-	thing.Tags = []string{"updated"}
+	client.Tags = []string{"updated"}
 
 	cases := []struct {
 		desc           string
-		thing          clients.Client
+		client         clients.Client
 		session        mgauthn.Session
 		updateResponse clients.Client
 		updateErr      error
 		err            error
 	}{
 		{
-			desc:           "update thing tags successfully",
-			thing:          thing,
+			desc:           "update client tags successfully",
+			client:         client,
 			session:        mgauthn.Session{UserID: validID},
-			updateResponse: thing,
+			updateResponse: client,
 			err:            nil,
 		},
 		{
-			desc:           "update thing tags with failed to update repo",
-			thing:          thing,
+			desc:           "update client tags with failed to update repo",
+			client:         client,
 			updateResponse: clients.Client{},
 			session:        mgauthn.Session{UserID: validID},
 			updateErr:      repoerr.ErrMalformedEntity,
@@ -683,7 +683,7 @@ func TestUpdateTags(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall1 := repo.On("UpdateTags", context.Background(), mock.Anything).Return(tc.updateResponse, tc.updateErr)
-		updatedThing, err := svc.UpdateTags(context.Background(), tc.session, tc.thing)
+		updatedThing, err := svc.UpdateTags(context.Background(), tc.session, tc.client)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateResponse, updatedThing, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateResponse, updatedThing))
 		repoCall1.Unset()
@@ -695,7 +695,7 @@ func TestUpdateSecret(t *testing.T) {
 
 	cases := []struct {
 		desc                 string
-		thing                clients.Client
+		client               clients.Client
 		newSecret            string
 		updateSecretResponse clients.Client
 		session              mgauthn.Session
@@ -703,22 +703,22 @@ func TestUpdateSecret(t *testing.T) {
 		err                  error
 	}{
 		{
-			desc:      "update thing secret successfully",
-			thing:     thing,
+			desc:      "update client secret successfully",
+			client:    client,
 			newSecret: "newSecret",
 			session:   mgauthn.Session{UserID: validID},
 			updateSecretResponse: clients.Client{
-				ID: thing.ID,
+				ID: client.ID,
 				Credentials: clients.Credentials{
-					Identity: thing.Credentials.Identity,
+					Identity: client.Credentials.Identity,
 					Secret:   "newSecret",
 				},
 			},
 			err: nil,
 		},
 		{
-			desc:                 "update thing secret with failed to update repo",
-			thing:                thing,
+			desc:                 "update client secret with failed to update repo",
+			client:               client,
 			newSecret:            "newSecret",
 			session:              mgauthn.Session{UserID: validID},
 			updateSecretResponse: clients.Client{},
@@ -729,7 +729,7 @@ func TestUpdateSecret(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := repo.On("UpdateSecret", context.Background(), mock.Anything).Return(tc.updateSecretResponse, tc.updateErr)
-		updatedThing, err := svc.UpdateSecret(context.Background(), tc.session, tc.thing.ID, tc.newSecret)
+		updatedThing, err := svc.UpdateSecret(context.Background(), tc.session, tc.client.ID, tc.newSecret)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateSecretResponse, updatedThing, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateSecretResponse, updatedThing))
 		repoCall.Unset()
@@ -748,7 +748,7 @@ func TestEnable(t *testing.T) {
 		desc                 string
 		id                   string
 		session              mgauthn.Session
-		thing                clients.Client
+		client               clients.Client
 		changeStatusResponse clients.Client
 		retrieveByIDResponse clients.Client
 		changeStatusErr      error
@@ -759,16 +759,16 @@ func TestEnable(t *testing.T) {
 			desc:                 "enable disabled thing",
 			id:                   disabledThing1.ID,
 			session:              mgauthn.Session{UserID: validID},
-			thing:                disabledThing1,
+			client:               disabledThing1,
 			changeStatusResponse: endisabledThing1,
 			retrieveByIDResponse: disabledThing1,
 			err:                  nil,
 		},
 		{
-			desc:                 "enable disabled thing with failed to update repo",
+			desc:                 "enable disabled client with failed to update repo",
 			id:                   disabledThing1.ID,
 			session:              mgauthn.Session{UserID: validID},
-			thing:                disabledThing1,
+			client:               disabledThing1,
 			changeStatusResponse: clients.Client{},
 			retrieveByIDResponse: disabledThing1,
 			changeStatusErr:      repoerr.ErrMalformedEntity,
@@ -778,7 +778,7 @@ func TestEnable(t *testing.T) {
 			desc:                 "enable enabled thing",
 			id:                   enabledThing1.ID,
 			session:              mgauthn.Session{UserID: validID},
-			thing:                enabledThing1,
+			client:               enabledThing1,
 			changeStatusResponse: enabledThing1,
 			retrieveByIDResponse: enabledThing1,
 			changeStatusErr:      errors.ErrStatusAlreadyAssigned,
@@ -788,7 +788,7 @@ func TestEnable(t *testing.T) {
 			desc:                 "enable non-existing thing",
 			id:                   wrongID,
 			session:              mgauthn.Session{UserID: validID},
-			thing:                clients.Client{},
+			client:               clients.Client{},
 			changeStatusResponse: clients.Client{},
 			retrieveByIDResponse: clients.Client{},
 			retrieveIDErr:        repoerr.ErrNotFound,
@@ -818,7 +818,7 @@ func TestDisable(t *testing.T) {
 		desc                 string
 		id                   string
 		session              mgauthn.Session
-		thing                clients.Client
+		client               clients.Client
 		changeStatusResponse clients.Client
 		retrieveByIDResponse clients.Client
 		changeStatusErr      error
@@ -830,16 +830,16 @@ func TestDisable(t *testing.T) {
 			desc:                 "disable enabled thing",
 			id:                   enabledThing1.ID,
 			session:              mgauthn.Session{UserID: validID},
-			thing:                enabledThing1,
+			client:               enabledThing1,
 			changeStatusResponse: disenabledClient1,
 			retrieveByIDResponse: enabledThing1,
 			err:                  nil,
 		},
 		{
-			desc:                 "disable thing with failed to update repo",
+			desc:                 "disable client with failed to update repo",
 			id:                   enabledThing1.ID,
 			session:              mgauthn.Session{UserID: validID},
-			thing:                enabledThing1,
+			client:               enabledThing1,
 			changeStatusResponse: clients.Client{},
 			retrieveByIDResponse: enabledThing1,
 			changeStatusErr:      repoerr.ErrMalformedEntity,
@@ -849,7 +849,7 @@ func TestDisable(t *testing.T) {
 			desc:                 "disable disabled thing",
 			id:                   disabledThing1.ID,
 			session:              mgauthn.Session{UserID: validID},
-			thing:                disabledThing1,
+			client:               disabledThing1,
 			changeStatusResponse: clients.Client{},
 			retrieveByIDResponse: disabledThing1,
 			changeStatusErr:      errors.ErrStatusAlreadyAssigned,
@@ -858,7 +858,7 @@ func TestDisable(t *testing.T) {
 		{
 			desc:                 "disable non-existing thing",
 			id:                   wrongID,
-			thing:                clients.Client{},
+			client:               clients.Client{},
 			session:              mgauthn.Session{UserID: validID},
 			changeStatusResponse: clients.Client{},
 			retrieveByIDResponse: clients.Client{},
@@ -866,10 +866,10 @@ func TestDisable(t *testing.T) {
 			err:                  repoerr.ErrNotFound,
 		},
 		{
-			desc:                 "disable thing with failed to remove from cache",
+			desc:                 "disable client with failed to remove from cache",
 			id:                   enabledThing1.ID,
 			session:              mgauthn.Session{UserID: validID},
-			thing:                disabledThing1,
+			client:               disabledThing1,
 			changeStatusResponse: disenabledClient1,
 			retrieveByIDResponse: enabledThing1,
 			removeErr:            svcerr.ErrRemoveEntity,

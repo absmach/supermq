@@ -115,13 +115,13 @@ func (repo *clientRepo) RetrieveBySecret(ctx context.Context, key string) (clien
 	return clients.Client{}, repoerr.ErrNotFound
 }
 
-func (repo *clientRepo) Update(ctx context.Context, thing clients.Client) (clients.Client, error) {
+func (repo *clientRepo) Update(ctx context.Context, client clients.Client) (clients.Client, error) {
 	var query []string
 	var upq string
-	if thing.Name != "" {
+	if client.Name != "" {
 		query = append(query, "name = :name,")
 	}
-	if thing.Metadata != nil {
+	if client.Metadata != nil {
 		query = append(query, "metadata = :metadata,")
 	}
 	if len(query) > 0 {
@@ -132,40 +132,40 @@ func (repo *clientRepo) Update(ctx context.Context, thing clients.Client) (clien
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, secret,  metadata, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, status, created_at, updated_at, updated_by`,
 		upq)
-	thing.Status = clients.EnabledStatus
-	return repo.update(ctx, thing, q)
+	client.Status = clients.EnabledStatus
+	return repo.update(ctx, client, q)
 }
 
-func (repo *clientRepo) UpdateTags(ctx context.Context, thing clients.Client) (clients.Client, error) {
+func (repo *clientRepo) UpdateTags(ctx context.Context, client clients.Client) (clients.Client, error) {
 	q := `UPDATE clients SET tags = :tags, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, metadata, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, status, created_at, updated_at, updated_by`
-	thing.Status = clients.EnabledStatus
-	return repo.update(ctx, thing, q)
+	client.Status = clients.EnabledStatus
+	return repo.update(ctx, client, q)
 }
 
-func (repo *clientRepo) UpdateIdentity(ctx context.Context, thing clients.Client) (clients.Client, error) {
+func (repo *clientRepo) UpdateIdentity(ctx context.Context, client clients.Client) (clients.Client, error) {
 	q := `UPDATE clients SET identity = :identity, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, metadata, COALESCE(domain_id, '') AS domain_id, status, COALESCE(parent_group_id, '') AS parent_group_id, created_at, updated_at, updated_by`
-	thing.Status = clients.EnabledStatus
-	return repo.update(ctx, thing, q)
+	client.Status = clients.EnabledStatus
+	return repo.update(ctx, client, q)
 }
 
-func (repo *clientRepo) UpdateSecret(ctx context.Context, thing clients.Client) (clients.Client, error) {
+func (repo *clientRepo) UpdateSecret(ctx context.Context, client clients.Client) (clients.Client, error) {
 	q := `UPDATE clients SET secret = :secret, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, name, tags, identity, metadata, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, status, created_at, updated_at, updated_by`
-	thing.Status = clients.EnabledStatus
-	return repo.update(ctx, thing, q)
+	client.Status = clients.EnabledStatus
+	return repo.update(ctx, client, q)
 }
 
-func (repo *clientRepo) ChangeStatus(ctx context.Context, thing clients.Client) (clients.Client, error) {
+func (repo *clientRepo) ChangeStatus(ctx context.Context, client clients.Client) (clients.Client, error) {
 	q := `UPDATE clients SET status = :status, updated_at = :updated_at, updated_by = :updated_by
 		WHERE id = :id
         RETURNING id, name, tags, identity, metadata, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, status, created_at, updated_at, updated_by`
 
-	return repo.update(ctx, thing, q)
+	return repo.update(ctx, client, q)
 }
 
 func (repo *clientRepo) RetrieveByID(ctx context.Context, id string) (clients.Client, error) {
@@ -360,8 +360,8 @@ func (repo *clientRepo) RetrieveAllByIDs(ctx context.Context, pm clients.Page) (
 	return page, nil
 }
 
-func (repo *clientRepo) update(ctx context.Context, thing clients.Client, query string) (clients.Client, error) {
-	dbc, err := ToDBClient(thing)
+func (repo *clientRepo) update(ctx context.Context, client clients.Client, query string) (clients.Client, error) {
+	dbc, err := ToDBClient(client)
 	if err != nil {
 		return clients.Client{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}

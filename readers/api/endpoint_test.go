@@ -48,7 +48,7 @@ var (
 	sum float64 = 42
 )
 
-func newServer(repo *mocks.MessageRepository, authn *authnmocks.Authentication, things *climocks.ThingsServiceClient, channels *chmocks.ChannelsServiceClient) *httptest.Server {
+func newServer(repo *mocks.MessageRepository, authn *authnmocks.Authentication, things *climocks.ClientsServiceClient, channels *chmocks.ChannelsServiceClient) *httptest.Server {
 	mux := api.MakeHandler(repo, authn, things, channels, svcName, instanceID)
 	return httptest.NewServer(mux)
 }
@@ -128,7 +128,7 @@ func TestReadAll(t *testing.T) {
 
 	repo := new(mocks.MessageRepository)
 	authn := new(authnmocks.Authentication)
-	things := new(climocks.ThingsServiceClient)
+	things := new(climocks.ClientsServiceClient)
 	channels := new(chmocks.ChannelsServiceClient)
 	ts := newServer(repo, authn, things, channels)
 	defer ts.Close()

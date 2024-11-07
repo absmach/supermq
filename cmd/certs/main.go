@@ -155,7 +155,7 @@ func main() {
 
 func newService(tracer trace.Tracer, logger *slog.Logger, cfg config, pkiAgent pki.Agent) certs.Service {
 	config := mgsdk.Config{
-		ThingsURL: cfg.ThingsURL,
+		ClientsURL: cfg.ThingsURL,
 	}
 	sdk := mgsdk.NewSDK(config)
 	svc := certs.New(sdk, pkiAgent)

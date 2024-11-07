@@ -31,7 +31,7 @@ func TestCreateThingReqValidate(t *testing.T) {
 		{
 			desc: "valid request",
 			req: createClientReq{
-				thing: clients.Client{
+				client: clients.Client{
 					ID:   validID,
 					Name: valid,
 				},
@@ -41,7 +41,7 @@ func TestCreateThingReqValidate(t *testing.T) {
 		{
 			desc: "name too long",
 			req: createClientReq{
-				thing: clients.Client{
+				client: clients.Client{
 					ID:   validID,
 					Name: strings.Repeat("a", api.MaxNameSize+1),
 				},
@@ -51,7 +51,7 @@ func TestCreateThingReqValidate(t *testing.T) {
 		{
 			desc: "invalid id",
 			req: createClientReq{
-				thing: clients.Client{
+				client: clients.Client{
 					ID:   invalid,
 					Name: valid,
 				},

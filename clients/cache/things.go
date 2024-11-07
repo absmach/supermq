@@ -26,7 +26,7 @@ type thingCache struct {
 	keyDuration time.Duration
 }
 
-// NewCache returns redis thing cache implementation.
+// NewCache returns redis client cache implementation.
 func NewCache(client *redis.Client, duration time.Duration) clients.Cache {
 	return &thingCache{
 		client:      client,
@@ -36,7 +36,7 @@ func NewCache(client *redis.Client, duration time.Duration) clients.Cache {
 
 func (tc *thingCache) Save(ctx context.Context, thingKey, thingID string) error {
 	if thingKey == "" || thingID == "" {
-		return errors.Wrap(repoerr.ErrCreateEntity, errors.New("thing key or thing id is empty"))
+		return errors.Wrap(repoerr.ErrCreateEntity, errors.New("client key or client id is empty"))
 	}
 	tkey := fmt.Sprintf("%s:%s", keyPrefix, thingKey)
 	if err := tc.client.Set(ctx, tkey, thingID, tc.keyDuration).Err(); err != nil {

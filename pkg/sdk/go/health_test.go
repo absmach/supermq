@@ -38,7 +38,7 @@ func TestHealth(t *testing.T) {
 	defer httpAdapterTs.Close()
 
 	sdkConf := sdk.Config{
-		ThingsURL:       thingsTs.URL,
+		ClientsURL:      thingsTs.URL,
 		UsersURL:        usersTs.URL,
 		CertsURL:        certsTs.URL,
 		BootstrapURL:    bootstrapTs.URL,
@@ -58,11 +58,11 @@ func TestHealth(t *testing.T) {
 		err         errors.SDKError
 	}{
 		{
-			desc:        "get things service health check",
+			desc:        "get clients service health check",
 			service:     "things",
 			empty:       false,
 			err:         nil,
-			description: "things service",
+			description: "clients service",
 			status:      "pass",
 		},
 		{

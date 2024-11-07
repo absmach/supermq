@@ -76,7 +76,7 @@ var (
 	}
 
 	config = bootstrap.Config{
-		ThingID:     testsutil.GenerateUUID(&testing.T{}),
+		ClientID:    testsutil.GenerateUUID(&testing.T{}),
 		ThingKey:    testsutil.GenerateUUID(&testing.T{}),
 		ExternalID:  testsutil.GenerateUUID(&testing.T{}),
 		ExternalKey: testsutil.GenerateUUID(&testing.T{}),
@@ -192,7 +192,7 @@ func TestAdd(t *testing.T) {
 	lastID := "0"
 	for _, tc := range cases {
 		tc.session = mgauthn.Session{UserID: validID, DomainID: tc.domainID, DomainUserID: validID}
-		sdkCall := tv.sdk.On("Thing", tc.config.ThingID, tc.domainID, tc.token).Return(mgsdk.Thing{ID: tc.config.ThingID, Credentials: mgsdk.ClientCredentials{Secret: tc.config.ThingKey}}, errors.NewSDKError(tc.thingErr))
+		sdkCall := tv.sdk.On("Thing", tc.config.ClientID, tc.domainID, tc.token).Return(mgsdk.Client{ID: tc.config.ClientID, Credentials: mgsdk.ClientCredentials{Secret: tc.config.ThingKey}}, errors.NewSDKError(tc.thingErr))
 		repoCall := tv.boot.On("ListExisting", context.Background(), domainID, mock.Anything).Return(tc.config.Channels, tc.listErr)
 		repoCall1 := tv.boot.On("Save", context.Background(), mock.Anything, mock.Anything).Return(mock.Anything, tc.saveErr)
 
@@ -226,7 +226,7 @@ func TestView(t *testing.T) {
 	tv := newTestVariable(t, redisURL)
 
 	nonExisting := config
-	nonExisting.ThingID = unknownThingID
+	nonExisting.ClientID = unknownThingID
 
 	cases := []struct {
 		desc        string
@@ -247,7 +247,7 @@ func TestView(t *testing.T) {
 			domainID: domainID,
 			err:      nil,
 			event: map[string]interface{}{
-				"thing_id":    config.ThingID,
+				"thing_id":    config.ClientID,
 				"domain_id":   config.DomainID,
 				"name":        config.Name,
 				"channels":    config.Channels,
@@ -272,8 +272,8 @@ func TestView(t *testing.T) {
 	lastID := "0"
 	for _, tc := range cases {
 		tc.session = mgauthn.Session{UserID: validID, DomainID: tc.domainID, DomainUserID: validID}
-		repoCall := tv.boot.On("RetrieveByID", context.Background(), tc.domainID, tc.config.ThingID).Return(config, tc.retrieveErr)
-		_, err := tv.svc.View(context.Background(), tc.session, tc.config.ThingID)
+		repoCall := tv.boot.On("RetrieveByID", context.Background(), tc.domainID, tc.config.ClientID).Return(config, tc.retrieveErr)
+		_, err := tv.svc.View(context.Background(), tc.session, tc.config.ClientID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 
 		streams := redisClient.XRead(context.Background(), &redis.XReadArgs{
@@ -316,7 +316,7 @@ func TestUpdate(t *testing.T) {
 	modified.Name = "new name"
 
 	nonExisting := config
-	nonExisting.ThingID = unknownThingID
+	nonExisting.ClientID = unknownThingID
 
 	channels := []string{modified.Channels[0].ID, modified.Channels[1].ID}
 
@@ -345,7 +345,7 @@ func TestUpdate(t *testing.T) {
 				"operation":   configUpdate,
 				"channels":    channels,
 				"external_id": modified.ExternalID,
-				"thing_id":    modified.ThingID,
+				"thing_id":    modified.ClientID,
 				"domain_id":   domainID,
 				"state":       "0",
 				"occurred_at": time.Now().UnixNano(),
@@ -413,14 +413,14 @@ func TestUpdateConnections(t *testing.T) {
 	}{
 		{
 			desc:        "update connections successfully",
-			configID:    config.ThingID,
+			configID:    config.ClientID,
 			token:       validToken,
 			id:          validID,
 			domainID:    domainID,
 			connections: []string{config.Channels[0].ID},
 			err:         nil,
 			event: map[string]interface{}{
-				"thing_id":  config.ThingID,
+				"thing_id":  config.ClientID,
 				"channels":  "2",
 				"timestamp": time.Now().Unix(),
 				"operation": thingUpdateConnections,
@@ -428,7 +428,7 @@ func TestUpdateConnections(t *testing.T) {
 		},
 		{
 			desc:        "update connections with failed channel fetch",
-			configID:    config.ThingID,
+			configID:    config.ClientID,
 			token:       validToken,
 			id:          validID,
 			domainID:    domainID,
@@ -439,7 +439,7 @@ func TestUpdateConnections(t *testing.T) {
 		},
 		{
 			desc:        "update connections with failed RetrieveByID",
-			configID:    config.ThingID,
+			configID:    config.ClientID,
 			token:       validToken,
 			id:          validID,
 			domainID:    domainID,
@@ -450,7 +450,7 @@ func TestUpdateConnections(t *testing.T) {
 		},
 		{
 			desc:        "update connections with failed ListExisting",
-			configID:    config.ThingID,
+			configID:    config.ClientID,
 			token:       validToken,
 			id:          validID,
 			domainID:    domainID,
@@ -461,7 +461,7 @@ func TestUpdateConnections(t *testing.T) {
 		},
 		{
 			desc:        "update connections with failed UpdateConnections",
-			configID:    config.ThingID,
+			configID:    config.ClientID,
 			token:       validToken,
 			id:          validID,
 			domainID:    domainID,
@@ -524,7 +524,7 @@ func TestUpdateCert(t *testing.T) {
 	}{
 		{
 			desc:       "update cert successfully",
-			configID:   config.ThingID,
+			configID:   config.ClientID,
 			userID:     validID,
 			domainID:   domainID,
 			token:      validToken,
@@ -555,7 +555,7 @@ func TestUpdateCert(t *testing.T) {
 		},
 		{
 			desc:       "update cert with empty client certificate",
-			configID:   config.ThingID,
+			configID:   config.ClientID,
 			token:      validToken,
 			userID:     validID,
 			domainID:   domainID,
@@ -567,7 +567,7 @@ func TestUpdateCert(t *testing.T) {
 		},
 		{
 			desc:       "update cert with empty client key",
-			configID:   config.ThingID,
+			configID:   config.ClientID,
 			token:      validToken,
 			userID:     validID,
 			domainID:   domainID,
@@ -579,7 +579,7 @@ func TestUpdateCert(t *testing.T) {
 		},
 		{
 			desc:       "update cert with empty CA certificate",
-			configID:   config.ThingID,
+			configID:   config.ClientID,
 			token:      validToken,
 			userID:     validID,
 			domainID:   domainID,
@@ -591,7 +591,7 @@ func TestUpdateCert(t *testing.T) {
 		},
 		{
 			desc:       "successful update without CA certificate",
-			configID:   config.ThingID,
+			configID:   config.ClientID,
 			token:      validToken,
 			userID:     validID,
 			domainID:   domainID,
@@ -687,7 +687,7 @@ func TestList(t *testing.T) {
 			listObjectsResponse: policysvc.PolicyPage{},
 			err:                 nil,
 			event: map[string]interface{}{
-				"thing_id":    c.ThingID,
+				"thing_id":    c.ClientID,
 				"domain_id":   c.DomainID,
 				"name":        c.Name,
 				"channels":    c.Channels,
@@ -715,7 +715,7 @@ func TestList(t *testing.T) {
 			listObjectsResponse: policysvc.PolicyPage{},
 			err:                 nil,
 			event: map[string]interface{}{
-				"thing_id":    c.ThingID,
+				"thing_id":    c.ClientID,
 				"domain_id":   c.DomainID,
 				"name":        c.Name,
 				"channels":    c.Channels,
@@ -743,7 +743,7 @@ func TestList(t *testing.T) {
 			listObjectsResponse: policysvc.PolicyPage{},
 			err:                 nil,
 			event: map[string]interface{}{
-				"thing_id":    c.ThingID,
+				"thing_id":    c.ClientID,
 				"domain_id":   c.DomainID,
 				"name":        c.Name,
 				"channels":    c.Channels,
@@ -851,7 +851,7 @@ func TestRemove(t *testing.T) {
 	tv := newTestVariable(t, redisURL)
 
 	nonExisting := config
-	nonExisting.ThingID = unknownThingID
+	nonExisting.ClientID = unknownThingID
 
 	cases := []struct {
 		desc      string
@@ -866,20 +866,20 @@ func TestRemove(t *testing.T) {
 	}{
 		{
 			desc:     "remove config successfully",
-			configID: config.ThingID,
+			configID: config.ClientID,
 			token:    validToken,
 			userID:   validID,
 			domainID: domainID,
 			err:      nil,
 			event: map[string]interface{}{
-				"thing_id":  config.ThingID,
+				"thing_id":  config.ClientID,
 				"timestamp": time.Now().Unix(),
 				"operation": configRemove,
 			},
 		},
 		{
 			desc:      "remove config with failed removal",
-			configID:  nonExisting.ThingID,
+			configID:  nonExisting.ClientID,
 			token:     validToken,
 			userID:    validID,
 			domainID:  domainID,
@@ -1001,7 +1001,7 @@ func TestChangeState(t *testing.T) {
 	}{
 		{
 			desc:         "change state to active",
-			id:           config.ThingID,
+			id:           config.ClientID,
 			token:        validToken,
 			userID:       validID,
 			domainID:     domainID,
@@ -1009,7 +1009,7 @@ func TestChangeState(t *testing.T) {
 			authResponse: authn.Session{},
 			err:          nil,
 			event: map[string]interface{}{
-				"thing_id":  config.ThingID,
+				"thing_id":  config.ClientID,
 				"state":     bootstrap.Active.String(),
 				"timestamp": time.Now().Unix(),
 				"operation": thingStateChange,
@@ -1028,7 +1028,7 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:       "change state with failed connect",
-			id:         config.ThingID,
+			id:         config.ClientID,
 			token:      validToken,
 			userID:     validID,
 			domainID:   domainID,
@@ -1039,7 +1039,7 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:     "change state unsuccessfully",
-			id:       config.ThingID,
+			id:       config.ClientID,
 			token:    validToken,
 			userID:   validID,
 			domainID: domainID,

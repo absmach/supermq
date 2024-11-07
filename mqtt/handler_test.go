@@ -445,12 +445,12 @@ func TestDisconnect(t *testing.T) {
 	}
 }
 
-func newHandler() (session.Handler, *climocks.ThingsServiceClient, *chmocks.ChannelsServiceClient, *mocks.EventStore) {
+func newHandler() (session.Handler, *climocks.ClientsServiceClient, *chmocks.ChannelsServiceClient, *mocks.EventStore) {
 	logger, err := mglog.New(&logBuffer, "debug")
 	if err != nil {
 		log.Fatalf("failed to create logger: %s", err)
 	}
-	things := new(climocks.ThingsServiceClient)
+	things := new(climocks.ClientsServiceClient)
 	channels := new(chmocks.ChannelsServiceClient)
 	eventStore := new(mocks.EventStore)
 	return mqtt.NewHandler(mocks.NewPublisher(), eventStore, logger, things, channels), things, channels, eventStore

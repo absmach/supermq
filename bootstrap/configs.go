@@ -16,7 +16,7 @@ import (
 // MGKey is key of corresponding Magistrala Thing.
 // MGChannels is a list of Magistrala Channels corresponding Magistrala Thing connects to.
 type Config struct {
-	ThingID     string    `json:"thing_id"`
+	ClientID    string    `json:"client_id"`
 	DomainID    string    `json:"domain_id,omitempty"`
 	Name        string    `json:"name,omitempty"`
 	ClientCert  string    `json:"client_cert,omitempty"`

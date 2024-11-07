@@ -10,15 +10,15 @@ import (
 )
 
 type createClientReq struct {
-	thing clients.Client
+	client clients.Client
 }
 
 func (req createClientReq) validate() error {
-	if len(req.thing.Name) > api.MaxNameSize {
+	if len(req.client.Name) > api.MaxNameSize {
 		return apiutil.ErrNameSize
 	}
-	if req.thing.ID != "" {
-		return api.ValidateUUID(req.thing.ID)
+	if req.client.ID != "" {
+		return api.ValidateUUID(req.client.ID)
 	}
 
 	return nil
@@ -32,13 +32,13 @@ func (req createClientsReq) validate() error {
 	if len(req.Things) == 0 {
 		return apiutil.ErrEmptyList
 	}
-	for _, thing := range req.Things {
-		if thing.ID != "" {
-			if err := api.ValidateUUID(thing.ID); err != nil {
+	for _, c := range req.Things {
+		if c.ID != "" {
+			if err := api.ValidateUUID(c.ID); err != nil {
 				return err
 			}
 		}
-		if len(thing.Name) > api.MaxNameSize {
+		if len(c.Name) > api.MaxNameSize {
 			return apiutil.ErrNameSize
 		}
 	}

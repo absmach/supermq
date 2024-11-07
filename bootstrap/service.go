@@ -44,12 +44,12 @@ var (
 	errUpdateChannel      = errors.New("failed to update channel")
 	errRemoveConfig       = errors.New("failed to remove bootstrap configuration")
 	errRemoveChannel      = errors.New("failed to remove channel")
-	errCreateThing        = errors.New("failed to create thing")
-	errConnectThing       = errors.New("failed to connect thing")
-	errDisconnectThing    = errors.New("failed to disconnect thing")
+	errCreateClient       = errors.New("failed to create client")
+	errConnectClient      = errors.New("failed to connect client")
+	errDisconnectClient   = errors.New("failed to disconnect client")
 	errCheckChannels      = errors.New("failed to check if channels exists")
 	errConnectionChannels = errors.New("failed to check channels connections")
-	errThingNotFound      = errors.New("failed to find thing")
+	errClientNotFound     = errors.New("failed to find client")
 	errUpdateCert         = errors.New("failed to update cert")
 )
 
@@ -151,10 +151,10 @@ func (bs bootstrapService) Add(ctx context.Context, session mgauthn.Session, tok
 		return Config{}, errors.Wrap(errConnectionChannels, err)
 	}
 
-	id := cfg.ThingID
-	mgThing, err := bs.thing(session.DomainID, id, token)
+	id := cfg.ClientID
+	mgThing, err := bs.client(session.DomainID, id, token)
 	if err != nil {
-		return Config{}, errors.Wrap(errThingNotFound, err)
+		return Config{}, errors.Wrap(errClientNotFound, err)
 	}
 
 	for _, channel := range cfg.Channels {
@@ -163,7 +163,7 @@ func (bs bootstrapService) Add(ctx context.Context, session mgauthn.Session, tok
 		}
 	}
 
-	cfg.ThingID = mgThing.ID
+	cfg.ClientID = mgThing.ID
 	cfg.DomainID = session.DomainID
 	cfg.State = Inactive
 	cfg.ThingKey = mgThing.Credentials.Secret
@@ -173,14 +173,14 @@ func (bs bootstrapService) Add(ctx context.Context, session mgauthn.Session, tok
 		// If id is empty, then a new thing has been created function - bs.thing(id, token)
 		// So, on bootstrap config save error , delete the newly created thing.
 		if id == "" {
-			if errT := bs.sdk.DeleteThing(cfg.ThingID, cfg.DomainID, token); errT != nil {
+			if errT := bs.sdk.DeleteClient(cfg.ClientID, cfg.DomainID, token); errT != nil {
 				err = errors.Wrap(err, errT)
 			}
 		}
 		return Config{}, errors.Wrap(ErrAddBootstrap, err)
 	}
 
-	cfg.ThingID = saved
+	cfg.ClientID = saved
 	cfg.Channels = append(cfg.Channels, existing...)
 
 	return cfg, nil
@@ -238,7 +238,7 @@ func (bs bootstrapService) UpdateConnections(ctx context.Context, session mgauth
 	}
 
 	for _, c := range disconnect {
-		if err := bs.sdk.DisconnectThing(id, c, session.DomainID, token); err != nil {
+		if err := bs.sdk.DisconnectClient(id, c, session.DomainID, token); err != nil {
 			if errors.Contains(err, repoerr.ErrNotFound) {
 				continue
 			}
@@ -249,7 +249,7 @@ func (bs bootstrapService) UpdateConnections(ctx context.Context, session mgauth
 	for _, c := range connect {
 		conIDs := mgsdk.Connection{
 			ChannelID: c,
-			ThingID:   id,
+			ClientID:  id,
 		}
 		if err := bs.sdk.Connect(conIDs, session.DomainID, token); err != nil {
 			return ErrThings
@@ -338,7 +338,7 @@ func (bs bootstrapService) ChangeState(ctx context.Context, session mgauthn.Sess
 		for _, c := range cfg.Channels {
 			conIDs := mgsdk.Connection{
 				ChannelID: c.ID,
-				ThingID:   cfg.ThingID,
+				ClientID:  cfg.ClientID,
 			}
 			if err := bs.sdk.Connect(conIDs, session.DomainID, token); err != nil {
 				// Ignore conflict errors as they indicate the connection already exists.
@@ -350,7 +350,7 @@ func (bs bootstrapService) ChangeState(ctx context.Context, session mgauthn.Sess
 		}
 	case Inactive:
 		for _, c := range cfg.Channels {
-			if err := bs.sdk.DisconnectThing(cfg.ThingID, c.ID, session.DomainID, token); err != nil {
+			if err := bs.sdk.DisconnectClient(cfg.ClientID, c.ID, session.DomainID, token); err != nil {
 				if errors.Contains(err, repoerr.ErrNotFound) {
 					continue
 				}
@@ -387,37 +387,37 @@ func (bs bootstrapService) RemoveChannelHandler(ctx context.Context, id string) 
 
 func (bs bootstrapService) ConnectThingHandler(ctx context.Context, channelID, thingID string) error {
 	if err := bs.configs.ConnectThing(ctx, channelID, thingID); err != nil {
-		return errors.Wrap(errConnectThing, err)
+		return errors.Wrap(errConnectClient, err)
 	}
 	return nil
 }
 
 func (bs bootstrapService) DisconnectThingHandler(ctx context.Context, channelID, thingID string) error {
 	if err := bs.configs.DisconnectThing(ctx, channelID, thingID); err != nil {
-		return errors.Wrap(errDisconnectThing, err)
+		return errors.Wrap(errDisconnectClient, err)
 	}
 	return nil
 }
 
-// Method thing retrieves Magistrala Thing creating one if an empty ID is passed.
-func (bs bootstrapService) thing(domainID, id, token string) (mgsdk.Thing, error) {
-	// If Thing ID is not provided, then create new thing.
+// Method client retrieves Magistrala Client creating one if an empty ID is passed.
+func (bs bootstrapService) client(domainID, id, token string) (mgsdk.Client, error) {
+	// If Client ID is not provided, then create new client.
 	if id == "" {
 		id, err := bs.idProvider.ID()
 		if err != nil {
-			return mgsdk.Thing{}, errors.Wrap(errCreateThing, err)
+			return mgsdk.Client{}, errors.Wrap(errCreateClient, err)
 		}
-		thing, sdkErr := bs.sdk.CreateThing(mgsdk.Thing{ID: id, Name: "Bootstrapped Thing " + id}, domainID, token)
+		thing, sdkErr := bs.sdk.CreateClient(mgsdk.Client{ID: id, Name: "Bootstrapped Client " + id}, domainID, token)
 		if sdkErr != nil {
-			return mgsdk.Thing{}, errors.Wrap(errCreateThing, sdkErr)
+			return mgsdk.Client{}, errors.Wrap(errCreateClient, sdkErr)
 		}
 		return thing, nil
 	}
 
-	// If Thing ID is provided, then retrieve thing
-	thing, sdkErr := bs.sdk.Thing(id, domainID, token)
+	// If Client ID is provided, then retrieve thing
+	thing, sdkErr := bs.sdk.Client(id, domainID, token)
 	if sdkErr != nil {
-		return mgsdk.Thing{}, errors.Wrap(ErrThings, sdkErr)
+		return mgsdk.Client{}, errors.Wrap(ErrThings, sdkErr)
 	}
 	return thing, nil
 }

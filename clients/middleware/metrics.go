@@ -56,20 +56,20 @@ func (ms *metricsMiddleware) ListClients(ctx context.Context, session authn.Sess
 	return ms.svc.ListClients(ctx, session, reqUserID, pm)
 }
 
-func (ms *metricsMiddleware) Update(ctx context.Context, session authn.Session, thing clients.Client) (clients.Client, error) {
+func (ms *metricsMiddleware) Update(ctx context.Context, session authn.Session, client clients.Client) (clients.Client, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "update_client").Add(1)
 		ms.latency.With("method", "update_client").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.Update(ctx, session, thing)
+	return ms.svc.Update(ctx, session, client)
 }
 
-func (ms *metricsMiddleware) UpdateTags(ctx context.Context, session authn.Session, thing clients.Client) (clients.Client, error) {
+func (ms *metricsMiddleware) UpdateTags(ctx context.Context, session authn.Session, client clients.Client) (clients.Client, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "update_client_tags").Add(1)
 		ms.latency.With("method", "update_client_tags").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.UpdateTags(ctx, session, thing)
+	return ms.svc.UpdateTags(ctx, session, client)
 }
 
 func (ms *metricsMiddleware) UpdateSecret(ctx context.Context, session authn.Session, oldSecret, newSecret string) (clients.Client, error) {

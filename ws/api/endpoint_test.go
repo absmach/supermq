@@ -93,7 +93,7 @@ func handshake(tsURL, chanID, subtopic, thingKey string, addHeader bool) (*webso
 }
 
 func TestHandshake(t *testing.T) {
-	things := new(climocks.ThingsServiceClient)
+	things := new(climocks.ClientsServiceClient)
 	channels := new(chmocks.ChannelsServiceClient)
 	authn := new(authnMocks.Authentication)
 	svc, pubsub := newService(things, channels)

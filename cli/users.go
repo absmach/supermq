@@ -414,7 +414,7 @@ var cmdUsers = []cobra.Command{
 				Limit:  Limit,
 			}
 
-			tp, err := sdk.ListUserThings(args[0], pm, args[1])
+			tp, err := sdk.ListUserClients(args[0], pm, args[1])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return

@@ -50,7 +50,7 @@ var (
 	}
 
 	config = bootstrap.Config{
-		ThingID:     testsutil.GenerateUUID(&testing.T{}),
+		ClientID:    testsutil.GenerateUUID(&testing.T{}),
 		ThingKey:    testsutil.GenerateUUID(&testing.T{}),
 		ExternalID:  testsutil.GenerateUUID(&testing.T{}),
 		ExternalKey: testsutil.GenerateUUID(&testing.T{}),
@@ -92,7 +92,7 @@ func TestAdd(t *testing.T) {
 	svc := newService()
 
 	neID := config
-	neID.ThingID = "non-existent"
+	neID.ClientID = "non-existent"
 
 	wrongChannels := config
 	ch := channel
@@ -152,9 +152,9 @@ func TestAdd(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			tc.session = mgauthn.Session{UserID: tc.userID, DomainID: tc.domainID, DomainUserID: validID}
-			repoCall := sdk.On("Thing", tc.config.ThingID, mock.Anything, tc.token).Return(mgsdk.Thing{ID: tc.config.ThingID, Credentials: mgsdk.ClientCredentials{Secret: tc.config.ThingKey}}, tc.thingErr)
-			repoCall1 := sdk.On("CreateThing", mock.Anything, tc.domainID, tc.token).Return(mgsdk.Thing{}, tc.createThingErr)
-			repoCall2 := sdk.On("DeleteThing", tc.config.ThingID, tc.domainID, tc.token).Return(tc.deleteThingErr)
+			repoCall := sdk.On("Thing", tc.config.ClientID, mock.Anything, tc.token).Return(mgsdk.Client{ID: tc.config.ClientID, Credentials: mgsdk.ClientCredentials{Secret: tc.config.ThingKey}}, tc.thingErr)
+			repoCall1 := sdk.On("CreateThing", mock.Anything, tc.domainID, tc.token).Return(mgsdk.Client{}, tc.createThingErr)
+			repoCall2 := sdk.On("DeleteThing", tc.config.ClientID, tc.domainID, tc.token).Return(tc.deleteThingErr)
 			repoCall3 := boot.On("ListExisting", context.Background(), tc.domainID, mock.Anything).Return(tc.config.Channels, tc.listExistingErr)
 			repoCall4 := boot.On("Save", context.Background(), mock.Anything, mock.Anything).Return(mock.Anything, tc.saveErr)
 			_, err := svc.Add(context.Background(), tc.session, tc.token, tc.config)
@@ -186,7 +186,7 @@ func TestView(t *testing.T) {
 	}{
 		{
 			desc:        "view an existing config",
-			configID:    config.ThingID,
+			configID:    config.ClientID,
 			userID:      validID,
 			thingDomain: domainID,
 			domain:      domainID,
@@ -205,7 +205,7 @@ func TestView(t *testing.T) {
 		},
 		{
 			desc:        "view a config with invalid domain",
-			configID:    config.ThingID,
+			configID:    config.ClientID,
 			userID:      validID,
 			thingDomain: invalidDomainID,
 			domain:      invalidDomainID,
@@ -239,7 +239,7 @@ func TestUpdate(t *testing.T) {
 	modifiedCreated.Name = "new name"
 
 	nonExisting := c
-	nonExisting.ThingID = unknown
+	nonExisting.ClientID = unknown
 
 	cases := []struct {
 		desc      string
@@ -318,7 +318,7 @@ func TestUpdateCert(t *testing.T) {
 			desc:       "update certs for the valid config",
 			userID:     validID,
 			domainID:   domainID,
-			thingID:    c.ThingID,
+			thingID:    c.ClientID,
 			clientCert: "newCert",
 			clientKey:  "newKey",
 			caCert:     "newCert",
@@ -332,7 +332,7 @@ func TestUpdateCert(t *testing.T) {
 				Content:     c.Content,
 				State:       c.State,
 				DomainID:    c.DomainID,
-				ThingID:     c.ThingID,
+				ClientID:    c.ClientID,
 				ClientCert:  "newCert",
 				CACert:      "newCert",
 				ClientKey:   "newKey",
@@ -404,7 +404,7 @@ func TestUpdateConnections(t *testing.T) {
 			token:       validToken,
 			userID:      validID,
 			domainID:    domainID,
-			id:          c.ThingID,
+			id:          c.ClientID,
 			state:       c.State,
 			connections: []string{ch.ID},
 			err:         nil,
@@ -414,7 +414,7 @@ func TestUpdateConnections(t *testing.T) {
 			token:       validToken,
 			userID:      validID,
 			domainID:    domainID,
-			id:          activeConf.ThingID,
+			id:          activeConf.ClientID,
 			state:       activeConf.State,
 			connections: []string{ch.ID},
 			err:         nil,
@@ -424,7 +424,7 @@ func TestUpdateConnections(t *testing.T) {
 			token:       validToken,
 			userID:      validID,
 			domainID:    domainID,
-			id:          c.ThingID,
+			id:          c.ClientID,
 			connections: []string{"wrong"},
 			channelErr:  errors.NewSDKError(svcerr.ErrNotFound),
 			err:         svcerr.ErrNotFound,
@@ -752,7 +752,7 @@ func TestRemove(t *testing.T) {
 	}{
 		{
 			desc:     "remove an existing config",
-			id:       c.ThingID,
+			id:       c.ClientID,
 			token:    validToken,
 			userID:   validID,
 			domainID: domainID,
@@ -760,7 +760,7 @@ func TestRemove(t *testing.T) {
 		},
 		{
 			desc:     "remove removed config",
-			id:       c.ThingID,
+			id:       c.ClientID,
 			token:    validToken,
 			userID:   validID,
 			domainID: domainID,
@@ -768,7 +768,7 @@ func TestRemove(t *testing.T) {
 		},
 		{
 			desc:      "remove a config with failed remove",
-			id:        c.ThingID,
+			id:        c.ClientID,
 			token:     validToken,
 			userID:    validID,
 			domainID:  domainID,
@@ -889,7 +889,7 @@ func TestChangeState(t *testing.T) {
 		{
 			desc:     "change state to Active",
 			state:    bootstrap.Active,
-			id:       c.ThingID,
+			id:       c.ClientID,
 			token:    validToken,
 			userID:   validID,
 			domainID: domainID,
@@ -898,7 +898,7 @@ func TestChangeState(t *testing.T) {
 		{
 			desc:     "change state to current state",
 			state:    bootstrap.Active,
-			id:       c.ThingID,
+			id:       c.ClientID,
 			token:    validToken,
 			userID:   validID,
 			domainID: domainID,
@@ -907,7 +907,7 @@ func TestChangeState(t *testing.T) {
 		{
 			desc:     "change state to Inactive",
 			state:    bootstrap.Inactive,
-			id:       c.ThingID,
+			id:       c.ClientID,
 			token:    validToken,
 			userID:   validID,
 			domainID: domainID,
@@ -916,7 +916,7 @@ func TestChangeState(t *testing.T) {
 		{
 			desc:       "change state with failed Connect",
 			state:      bootstrap.Active,
-			id:         c.ThingID,
+			id:         c.ClientID,
 			token:      validToken,
 			userID:     validID,
 			domainID:   domainID,
@@ -926,7 +926,7 @@ func TestChangeState(t *testing.T) {
 		{
 			desc:     "change state with invalid state",
 			state:    bootstrap.State(2),
-			id:       c.ThingID,
+			id:       c.ClientID,
 			token:    validToken,
 			userID:   validID,
 			domainID: domainID,
@@ -1026,7 +1026,7 @@ func TestRemoveConfigHandler(t *testing.T) {
 	}{
 		{
 			desc: "remove an existing config",
-			id:   config.ThingID,
+			id:   config.ClientID,
 			err:  nil,
 		},
 		{
@@ -1058,13 +1058,13 @@ func TestConnectThingsHandler(t *testing.T) {
 		{
 			desc:      "connect",
 			channelID: channel.ID,
-			thingID:   config.ThingID,
+			thingID:   config.ClientID,
 			err:       nil,
 		},
 		{
 			desc:      "connect connected",
 			channelID: channel.ID,
-			thingID:   config.ThingID,
+			thingID:   config.ClientID,
 			err:       svcerr.ErrAddPolicies,
 		},
 	}
@@ -1091,13 +1091,13 @@ func TestDisconnectThingsHandler(t *testing.T) {
 		{
 			desc:      "disconnect",
 			channelID: channel.ID,
-			thingID:   config.ThingID,
+			thingID:   config.ClientID,
 			err:       nil,
 		},
 		{
 			desc:      "disconnect disconnected",
 			channelID: channel.ID,
-			thingID:   config.ThingID,
+			thingID:   config.ClientID,
 			err:       nil,
 		},
 	}

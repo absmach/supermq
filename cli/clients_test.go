@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/absmach/magistrala/cli"
-	"github.com/absmach/magistrala/clients"
 	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
@@ -30,7 +29,7 @@ var (
 	all                = "all"
 )
 
-var thing = sdk.Thing{
+var thing = sdk.Client{
 	ID:   testsutil.GenerateUUID(&testing.T{}),
 	Name: "testthing",
 	Credentials: sdk.ClientCredentials{
@@ -47,14 +46,14 @@ func TestCreateThingsCmd(t *testing.T) {
 	thingsCmd := cli.NewThingsCmd()
 	rootCmd := setFlags(thingsCmd)
 
-	var tg sdk.Thing
+	var tg sdk.Client
 
 	cases := []struct {
 		desc          string
 		args          []string
 		sdkErr        errors.SDKError
 		errLogMessage string
-		thing         sdk.Thing
+		thing         sdk.Client
 		logType       outputLog
 	}{
 		{
@@ -137,16 +136,16 @@ func TestGetThingsCmd(t *testing.T) {
 	thingsCmd := cli.NewThingsCmd()
 	rootCmd := setFlags(thingsCmd)
 
-	var tg sdk.Thing
-	var page sdk.ThingsPage
+	var tg sdk.Client
+	var page sdk.ClientsPage
 
 	cases := []struct {
 		desc          string
 		args          []string
 		sdkErr        errors.SDKError
 		errLogMessage string
-		thing         sdk.Thing
-		page          sdk.ThingsPage
+		thing         sdk.Client
+		page          sdk.ClientsPage
 		logType       outputLog
 	}{
 		{
@@ -157,8 +156,8 @@ func TestGetThingsCmd(t *testing.T) {
 				token,
 			},
 			logType: entityLog,
-			page: sdk.ThingsPage{
-				Things: []sdk.Thing{thing},
+			page: sdk.ClientsPage{
+				Clients: []sdk.Client{thing},
 			},
 		},
 		{
@@ -180,7 +179,7 @@ func TestGetThingsCmd(t *testing.T) {
 			},
 			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden)),
-			page:          sdk.ThingsPage{},
+			page:          sdk.ClientsPage{},
 			logType:       errLog,
 		},
 		{
@@ -279,7 +278,7 @@ func TestUpdateThingCmd(t *testing.T) {
 		args          []string
 		sdkErr        errors.SDKError
 		errLogMessage string
-		thing         sdk.Thing
+		thing         sdk.Client
 		logType       outputLog
 	}{
 		{
@@ -290,7 +289,7 @@ func TestUpdateThingCmd(t *testing.T) {
 				domainID,
 				token,
 			},
-			thing: sdk.Thing{
+			thing: sdk.Client{
 				Name: "thingName",
 				Metadata: map[string]interface{}{
 					"metadata": map[string]interface{}{
@@ -336,7 +335,7 @@ func TestUpdateThingCmd(t *testing.T) {
 				domainID,
 				token,
 			},
-			thing: sdk.Thing{
+			thing: sdk.Client{
 				Name:     thing.Name,
 				ID:       thing.ID,
 				DomainID: thing.DomainID,
@@ -380,7 +379,7 @@ func TestUpdateThingCmd(t *testing.T) {
 				domainID,
 				token,
 			},
-			thing: sdk.Thing{
+			thing: sdk.Client{
 				Name:     thing.Name,
 				ID:       thing.ID,
 				DomainID: thing.DomainID,
@@ -433,20 +432,20 @@ func TestUpdateThingCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			var tg sdk.Thing
+			var tg sdk.Client
 			sdkCall := sdkMock.On("UpdateThing", mock.Anything, mock.Anything, mock.Anything).Return(tc.thing, tc.sdkErr)
 			sdkCall1 := sdkMock.On("UpdateThingTags", mock.Anything, mock.Anything, mock.Anything).Return(tc.thing, tc.sdkErr)
 			sdkCall2 := sdkMock.On("UpdateThingSecret", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.thing, tc.sdkErr)
 
 			switch {
 			case tc.args[0] == tagUpdateType:
-				var th sdk.Thing
+				var th sdk.Client
 				th.Tags = []string{"tag1", "tag2"}
 				th.ID = tc.args[1]
 
 				sdkCall1 = sdkMock.On("UpdateThingTags", th, tc.args[3]).Return(tc.thing, tc.sdkErr)
 			case tc.args[0] == secretUpdateType:
-				var th sdk.Thing
+				var th sdk.Client
 				th.Credentials.Secret = tc.args[2]
 				th.ID = tc.args[1]
 
@@ -551,14 +550,14 @@ func TestEnableThingCmd(t *testing.T) {
 	cli.SetSDK(sdkMock)
 	thingsCmd := cli.NewThingsCmd()
 	rootCmd := setFlags(thingsCmd)
-	var tg sdk.Thing
+	var tg sdk.Client
 
 	cases := []struct {
 		desc          string
 		args          []string
 		sdkErr        errors.SDKError
 		errLogMessage string
-		thing         sdk.Thing
+		thing         sdk.Client
 		logType       outputLog
 	}{
 		{
@@ -633,14 +632,14 @@ func TestDisablethingCmd(t *testing.T) {
 	thingsCmd := cli.NewThingsCmd()
 	rootCmd := setFlags(thingsCmd)
 
-	var tg sdk.Thing
+	var tg sdk.Client
 
 	cases := []struct {
 		desc          string
 		args          []string
 		sdkErr        errors.SDKError
 		errLogMessage string
-		thing         sdk.Thing
+		thing         sdk.Client
 		logType       outputLog
 	}{
 		{

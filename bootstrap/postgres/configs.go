@@ -86,7 +86,7 @@ func (cr configRepository) Save(ctx context.Context, cfg bootstrap.Config, chsCo
 		return "", commitErr
 	}
 
-	return cfg.ThingID, nil
+	return cfg.ClientID, nil
 }
 
 func (cr configRepository) RetrieveByID(ctx context.Context, domainID, id string) (bootstrap.Config, error) {
@@ -169,7 +169,7 @@ func (cr configRepository) RetrieveAll(ctx context.Context, domainID string, thi
 
 	for rows.Next() {
 		c := bootstrap.Config{DomainID: domainID}
-		if err := rows.Scan(&c.ThingID, &c.ThingKey, &c.ExternalID, &c.ExternalKey, &name, &content, &c.State); err != nil {
+		if err := rows.Scan(&c.ClientID, &c.ThingKey, &c.ExternalID, &c.ExternalKey, &name, &content, &c.State); err != nil {
 			cr.log.Error(fmt.Sprintf("Failed to read retrieved config due to %s", err))
 			return bootstrap.ConfigsPage{}
 		}
@@ -260,7 +260,7 @@ func (cr configRepository) Update(ctx context.Context, cfg bootstrap.Config) err
 	dbcfg := dbConfig{
 		Name:     nullString(cfg.Name),
 		Content:  nullString(cfg.Content),
-		ThingID:  cfg.ThingID,
+		ThingID:  cfg.ClientID,
 		DomainID: cfg.DomainID,
 	}
 
@@ -560,7 +560,7 @@ func insertConnections(_ context.Context, cfg bootstrap.Config, connections []st
 	conns := []dbConnection{}
 	for _, conn := range connections {
 		dbconn := dbConnection{
-			Config:   cfg.ThingID,
+			Config:   cfg.ClientID,
 			Channel:  conn,
 			DomainID: cfg.DomainID,
 		}
@@ -659,7 +659,7 @@ type dbConfig struct {
 
 func toDBConfig(cfg bootstrap.Config) dbConfig {
 	return dbConfig{
-		ThingID:     cfg.ThingID,
+		ThingID:     cfg.ClientID,
 		DomainID:    cfg.DomainID,
 		Name:        nullString(cfg.Name),
 		ClientCert:  nullString(cfg.ClientCert),
@@ -675,7 +675,7 @@ func toDBConfig(cfg bootstrap.Config) dbConfig {
 
 func toConfig(dbcfg dbConfig) bootstrap.Config {
 	cfg := bootstrap.Config{
-		ThingID:     dbcfg.ThingID,
+		ClientID:    dbcfg.ThingID,
 		DomainID:    dbcfg.DomainID,
 		ThingKey:    dbcfg.ThingKey,
 		ExternalID:  dbcfg.ExternalID,

@@ -1223,20 +1223,20 @@ func TestListUserThingsCmd(t *testing.T) {
 	cli.SetSDK(sdkMock)
 	usersCmd := cli.NewUsersCmd()
 	rootCmd := setFlags(usersCmd)
-	th := mgsdk.Thing{
+	th := mgsdk.Client{
 		ID:   testsutil.GenerateUUID(t),
 		Name: "testthing",
 	}
 
-	var pg mgsdk.ThingsPage
+	var pg mgsdk.ClientsPage
 
 	cases := []struct {
 		desc          string
 		args          []string
 		sdkerr        errors.SDKError
 		errLogMessage string
-		thing         mgsdk.Thing
-		page          mgsdk.ThingsPage
+		thing         mgsdk.Client
+		page          mgsdk.ClientsPage
 		logType       outputLog
 	}{
 		{
@@ -1247,8 +1247,8 @@ func TestListUserThingsCmd(t *testing.T) {
 			},
 			sdkerr:  nil,
 			logType: entityLog,
-			page: mgsdk.ThingsPage{
-				Things: []mgsdk.Thing{th},
+			page: mgsdk.ClientsPage{
+				Clients: []mgsdk.Client{th},
 			},
 		},
 		{

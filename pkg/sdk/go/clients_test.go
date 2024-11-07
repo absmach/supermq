@@ -28,7 +28,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func setupThings() (*httptest.Server, *mocks.Service, *authnmocks.Authentication) {
+func setupClients() (*httptest.Server, *mocks.Service, *authnmocks.Authentication) {
 	tsvc := new(mocks.Service)
 	gsvc := new(gmocks.Service)
 
@@ -40,21 +40,21 @@ func setupThings() (*httptest.Server, *mocks.Service, *authnmocks.Authentication
 	return httptest.NewServer(mux), tsvc, authn
 }
 
-func TestCreateThing(t *testing.T) {
-	ts, tsvc, auth := setupThings()
+func TestCreateClient(t *testing.T) {
+	ts, tsvc, auth := setupClients()
 	defer ts.Close()
 
-	thing := generateTestThing(t)
-	createThingReq := sdk.Thing{
-		Name:        thing.Name,
-		Tags:        thing.Tags,
-		Credentials: thing.Credentials,
-		Metadata:    thing.Metadata,
-		Status:      thing.Status,
+	client := generateTestClient(t)
+	createClientReq := sdk.Client{
+		Name:        client.Name,
+		Tags:        client.Tags,
+		Credentials: client.Credentials,
+		Metadata:    client.Metadata,
+		Status:      client.Status,
 	}
 
 	conf := sdk.Config{
-		ThingsURL: ts.URL,
+		ClientsURL: ts.URL,
 	}
 
 	mgsdk := sdk.NewSDK(conf)
@@ -64,98 +64,98 @@ func TestCreateThing(t *testing.T) {
 		domainID        string
 		token           string
 		session         mgauthn.Session
-		createThingReq  sdk.Thing
+		createClientReq sdk.Client
 		svcReq          mgthings.Client
 		svcRes          []mgthings.Client
 		svcErr          error
 		authenticateErr error
-		response        sdk.Thing
+		response        sdk.Client
 		err             errors.SDKError
 	}{
 		{
-			desc:           "create new thing successfully",
-			domainID:       domainID,
-			token:          validToken,
-			createThingReq: createThingReq,
-			svcReq:         convertThing(createThingReq),
-			svcRes:         []mgthings.Client{convertThing(thing)},
-			svcErr:         nil,
-			response:       thing,
-			err:            nil,
+			desc:            "create new client successfully",
+			domainID:        domainID,
+			token:           validToken,
+			createClientReq: createClientReq,
+			svcReq:          convertClient(createClientReq),
+			svcRes:          []mgthings.Client{convertClient(client)},
+			svcErr:          nil,
+			response:        client,
+			err:             nil,
 		},
 		{
-			desc:            "create new thing with invalid token",
+			desc:            "create new client with invalid token",
 			domainID:        domainID,
 			token:           invalidToken,
-			createThingReq:  createThingReq,
-			svcReq:          convertThing(createThingReq),
+			createClientReq: createClientReq,
+			svcReq:          convertClient(createClientReq),
 			svcRes:          []mgthings.Client{},
 			authenticateErr: svcerr.ErrAuthentication,
-			response:        sdk.Thing{},
+			response:        sdk.Client{},
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
-			desc:           "create new thing with empty token",
-			domainID:       domainID,
-			token:          "",
-			createThingReq: createThingReq,
-			svcReq:         convertThing(createThingReq),
-			svcRes:         []mgthings.Client{},
-			svcErr:         nil,
-			response:       sdk.Thing{},
-			err:            errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+			desc:            "create new client with empty token",
+			domainID:        domainID,
+			token:           "",
+			createClientReq: createClientReq,
+			svcReq:          convertClient(createClientReq),
+			svcRes:          []mgthings.Client{},
+			svcErr:          nil,
+			response:        sdk.Client{},
+			err:             errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
-			desc:           "create an existing thing",
-			domainID:       domainID,
-			token:          validToken,
-			createThingReq: createThingReq,
-			svcReq:         convertThing(createThingReq),
-			svcRes:         []mgthings.Client{},
-			svcErr:         svcerr.ErrCreateEntity,
-			response:       sdk.Thing{},
-			err:            errors.NewSDKErrorWithStatus(svcerr.ErrCreateEntity, http.StatusUnprocessableEntity),
+			desc:            "create an existing thing",
+			domainID:        domainID,
+			token:           validToken,
+			createClientReq: createClientReq,
+			svcReq:          convertClient(createClientReq),
+			svcRes:          []mgthings.Client{},
+			svcErr:          svcerr.ErrCreateEntity,
+			response:        sdk.Client{},
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrCreateEntity, http.StatusUnprocessableEntity),
 		},
 		{
-			desc:     "create a thing with name too long",
+			desc:     "create a client with name too long",
 			domainID: domainID,
 			token:    validToken,
-			createThingReq: sdk.Thing{
+			createClientReq: sdk.Client{
 				Name:        strings.Repeat("a", 1025),
-				Tags:        thing.Tags,
-				Credentials: thing.Credentials,
-				Metadata:    thing.Metadata,
-				Status:      thing.Status,
+				Tags:        client.Tags,
+				Credentials: client.Credentials,
+				Metadata:    client.Metadata,
+				Status:      client.Status,
 			},
 			svcReq:   mgthings.Client{},
 			svcRes:   []mgthings.Client{},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrNameSize), http.StatusBadRequest),
 		},
 		{
-			desc:     "create a thing with invalid id",
+			desc:     "create a client with invalid id",
 			domainID: domainID,
 			token:    validToken,
-			createThingReq: sdk.Thing{
+			createClientReq: sdk.Client{
 				ID:          "123456789",
-				Name:        thing.Name,
-				Tags:        thing.Tags,
-				Credentials: thing.Credentials,
-				Metadata:    thing.Metadata,
-				Status:      thing.Status,
+				Name:        client.Name,
+				Tags:        client.Tags,
+				Credentials: client.Credentials,
+				Metadata:    client.Metadata,
+				Status:      client.Status,
 			},
 			svcReq:   mgthings.Client{},
 			svcRes:   []mgthings.Client{},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidIDFormat), http.StatusBadRequest),
 		},
 		{
-			desc:     "create a thing with a request that can't be marshalled",
+			desc:     "create a client with a request that can't be marshalled",
 			domainID: domainID,
 			token:    validToken,
-			createThingReq: sdk.Thing{
+			createClientReq: sdk.Client{
 				Name: "test",
 				Metadata: map[string]interface{}{
 					"test": make(chan int),
@@ -164,25 +164,25 @@ func TestCreateThing(t *testing.T) {
 			svcReq:   mgthings.Client{},
 			svcRes:   []mgthings.Client{},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
 		},
 		{
-			desc:           "create a thing with a response that can't be unmarshalled",
-			domainID:       domainID,
-			token:          validToken,
-			createThingReq: createThingReq,
-			svcReq:         convertThing(createThingReq),
+			desc:            "create a client with a response that can't be unmarshalled",
+			domainID:        domainID,
+			token:           validToken,
+			createClientReq: createClientReq,
+			svcReq:          convertClient(createClientReq),
 			svcRes: []mgthings.Client{{
-				Name:        thing.Name,
-				Tags:        thing.Tags,
-				Credentials: mgthings.Credentials(thing.Credentials),
+				Name:        client.Name,
+				Tags:        client.Tags,
+				Credentials: mgthings.Credentials(client.Credentials),
 				Metadata: mgthings.Metadata{
 					"test": make(chan int),
 				},
 			}},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
 		},
 	}
@@ -193,7 +193,7 @@ func TestCreateThing(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("CreateClients", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.CreateThing(tc.createThingReq, tc.domainID, tc.token)
+			resp, err := mgsdk.CreateClient(tc.createClientReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -206,94 +206,94 @@ func TestCreateThing(t *testing.T) {
 	}
 }
 
-func TestCreateThings(t *testing.T) {
-	ts, tsvc, auth := setupThings()
+func TestCreateClients(t *testing.T) {
+	ts, tsvc, auth := setupClients()
 	defer ts.Close()
 
-	things := []sdk.Thing{}
+	clients := []sdk.Client{}
 	for i := 0; i < 3; i++ {
-		thing := generateTestThing(t)
-		things = append(things, thing)
+		client := generateTestClient(t)
+		clients = append(clients, client)
 	}
 
 	conf := sdk.Config{
-		ThingsURL: ts.URL,
+		ClientsURL: ts.URL,
 	}
 	mgsdk := sdk.NewSDK(conf)
 
 	cases := []struct {
-		desc                string
-		domainID            string
-		token               string
-		session             mgauthn.Session
-		createThingsRequest []sdk.Thing
-		svcReq              []mgthings.Client
-		svcRes              []mgthings.Client
-		svcErr              error
-		authenticateErr     error
-		response            []sdk.Thing
-		err                 errors.SDKError
+		desc                 string
+		domainID             string
+		token                string
+		session              mgauthn.Session
+		createClientsRequest []sdk.Client
+		svcReq               []mgthings.Client
+		svcRes               []mgthings.Client
+		svcErr               error
+		authenticateErr      error
+		response             []sdk.Client
+		err                  errors.SDKError
 	}{
 		{
-			desc:                "create new things successfully",
-			domainID:            domainID,
-			token:               validToken,
-			createThingsRequest: things,
-			svcReq:              convertThings(things...),
-			svcRes:              convertThings(things...),
-			svcErr:              nil,
-			response:            things,
-			err:                 nil,
+			desc:                 "create new clients successfully",
+			domainID:             domainID,
+			token:                validToken,
+			createClientsRequest: clients,
+			svcReq:               convertClients(clients...),
+			svcRes:               convertClients(clients...),
+			svcErr:               nil,
+			response:             clients,
+			err:                  nil,
 		},
 		{
-			desc:                "create new things with invalid token",
-			domainID:            domainID,
-			token:               invalidToken,
-			createThingsRequest: things,
-			svcReq:              convertThings(things...),
-			svcRes:              []mgthings.Client{},
-			authenticateErr:     svcerr.ErrAuthentication,
-			response:            []sdk.Thing{},
-			err:                 errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+			desc:                 "create new clients with invalid token",
+			domainID:             domainID,
+			token:                invalidToken,
+			createClientsRequest: clients,
+			svcReq:               convertClients(clients...),
+			svcRes:               []mgthings.Client{},
+			authenticateErr:      svcerr.ErrAuthentication,
+			response:             []sdk.Client{},
+			err:                  errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
-			desc:                "create new things with empty token",
-			domainID:            domainID,
-			token:               "",
-			createThingsRequest: things,
-			svcReq:              convertThings(things...),
-			svcRes:              []mgthings.Client{},
-			svcErr:              nil,
-			response:            []sdk.Thing{},
-			err:                 errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+			desc:                 "create new clients with empty token",
+			domainID:             domainID,
+			token:                "",
+			createClientsRequest: clients,
+			svcReq:               convertClients(clients...),
+			svcRes:               []mgthings.Client{},
+			svcErr:               nil,
+			response:             []sdk.Client{},
+			err:                  errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
-			desc:                "create new things with a request that can't be marshalled",
-			domainID:            domainID,
-			token:               validToken,
-			createThingsRequest: []sdk.Thing{{Name: "test", Metadata: map[string]interface{}{"test": make(chan int)}}},
-			svcReq:              convertThings(things...),
-			svcRes:              []mgthings.Client{},
-			svcErr:              nil,
-			response:            []sdk.Thing{},
-			err:                 errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			desc:                 "create new clients with a request that can't be marshalled",
+			domainID:             domainID,
+			token:                validToken,
+			createClientsRequest: []sdk.Client{{Name: "test", Metadata: map[string]interface{}{"test": make(chan int)}}},
+			svcReq:               convertClients(clients...),
+			svcRes:               []mgthings.Client{},
+			svcErr:               nil,
+			response:             []sdk.Client{},
+			err:                  errors.NewSDKError(errors.New("json: unsupported type: chan int")),
 		},
 		{
-			desc:                "create new things with a response that can't be unmarshalled",
-			domainID:            domainID,
-			token:               validToken,
-			createThingsRequest: things,
-			svcReq:              convertThings(things...),
+			desc:                 "create new clients with a response that can't be unmarshalled",
+			domainID:             domainID,
+			token:                validToken,
+			createClientsRequest: clients,
+			svcReq:               convertClients(clients...),
 			svcRes: []mgthings.Client{{
-				Name:        things[0].Name,
-				Tags:        things[0].Tags,
-				Credentials: mgthings.Credentials(things[0].Credentials),
+				Name:        clients[0].Name,
+				Tags:        clients[0].Tags,
+				Credentials: mgthings.Credentials(clients[0].Credentials),
 				Metadata: mgthings.Metadata{
 					"test": make(chan int),
 				},
 			}},
 			svcErr:   nil,
-			response: []sdk.Thing{},
+			response: []sdk.Client{},
 			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
 		},
 	}
@@ -304,7 +304,7 @@ func TestCreateThings(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("CreateClients", mock.Anything, tc.session, tc.svcReq[0], tc.svcReq[1], tc.svcReq[2]).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.CreateThings(tc.createThingsRequest, tc.domainID, tc.token)
+			resp, err := mgsdk.CreateClients(tc.createClientsRequest, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -317,22 +317,22 @@ func TestCreateThings(t *testing.T) {
 	}
 }
 
-func TestListThings(t *testing.T) {
-	ts, tsvc, auth := setupThings()
+func TestListClients(t *testing.T) {
+	ts, tsvc, auth := setupClients()
 	defer ts.Close()
 
-	var things []sdk.Thing
+	var clients []sdk.Client
 	for i := 10; i < 100; i++ {
-		thing := generateTestThing(t)
+		c := generateTestClient(t)
 		if i == 50 {
-			thing.Status = mgthings.DisabledStatus.String()
-			thing.Tags = []string{"tag1", "tag2"}
+			c.Status = mgthings.DisabledStatus.String()
+			c.Tags = []string{"tag1", "tag2"}
 		}
-		things = append(things, thing)
+		clients = append(clients, c)
 	}
 
 	conf := sdk.Config{
-		ThingsURL: ts.URL,
+		ClientsURL: ts.URL,
 	}
 	mgsdk := sdk.NewSDK(conf)
 
@@ -346,11 +346,11 @@ func TestListThings(t *testing.T) {
 		svcRes          mgthings.ClientsPage
 		svcErr          error
 		authenticateErr error
-		response        sdk.ThingsPage
+		response        sdk.ClientsPage
 		err             errors.SDKError
 	}{
 		{
-			desc:     "list all things successfully",
+			desc:     "list all clients successfully",
 			domainID: domainID,
 			token:    validToken,
 			pageMeta: sdk.PageMetadata{
@@ -366,21 +366,21 @@ func TestListThings(t *testing.T) {
 				Page: mgthings.Page{
 					Offset: 0,
 					Limit:  100,
-					Total:  uint64(len(things)),
+					Total:  uint64(len(clients)),
 				},
-				Clients: convertThings(things...),
+				Clients: convertClients(clients...),
 			},
 			svcErr: nil,
-			response: sdk.ThingsPage{
+			response: sdk.ClientsPage{
 				PageRes: sdk.PageRes{
 					Limit: 100,
-					Total: uint64(len(things)),
+					Total: uint64(len(clients)),
 				},
-				Things: things,
+				Clients: clients,
 			},
 		},
 		{
-			desc:     "list all things with an invalid token",
+			desc:     "list all clients with an invalid token",
 			domainID: domainID,
 			token:    invalidToken,
 			pageMeta: sdk.PageMetadata{
@@ -394,11 +394,11 @@ func TestListThings(t *testing.T) {
 			},
 			svcRes:          mgthings.ClientsPage{},
 			authenticateErr: svcerr.ErrAuthentication,
-			response:        sdk.ThingsPage{},
+			response:        sdk.ClientsPage{},
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
-			desc:     "list all things with limit greater than max",
+			desc:     "list all clients with limit greater than max",
 			domainID: domainID,
 			token:    validToken,
 			pageMeta: sdk.PageMetadata{
@@ -408,11 +408,11 @@ func TestListThings(t *testing.T) {
 			svcReq:   mgthings.Page{},
 			svcRes:   mgthings.ClientsPage{},
 			svcErr:   nil,
-			response: sdk.ThingsPage{},
+			response: sdk.ClientsPage{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusBadRequest),
 		},
 		{
-			desc:     "list all things with name size greater than max",
+			desc:     "list all clients with name size greater than max",
 			domainID: domainID,
 			token:    validToken,
 			pageMeta: sdk.PageMetadata{
@@ -423,11 +423,11 @@ func TestListThings(t *testing.T) {
 			svcReq:   mgthings.Page{},
 			svcRes:   mgthings.ClientsPage{},
 			svcErr:   nil,
-			response: sdk.ThingsPage{},
+			response: sdk.ClientsPage{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrNameSize), http.StatusBadRequest),
 		},
 		{
-			desc:     "list all things with status",
+			desc:     "list all clients with status",
 			domainID: domainID,
 			token:    validToken,
 			pageMeta: sdk.PageMetadata{
@@ -447,20 +447,20 @@ func TestListThings(t *testing.T) {
 					Limit:  100,
 					Total:  1,
 				},
-				Clients: convertThings(things[50]),
+				Clients: convertClients(clients[50]),
 			},
 			svcErr: nil,
-			response: sdk.ThingsPage{
+			response: sdk.ClientsPage{
 				PageRes: sdk.PageRes{
 					Limit: 100,
 					Total: 1,
 				},
-				Things: []sdk.Thing{things[50]},
+				Clients: []sdk.Client{clients[50]},
 			},
 			err: nil,
 		},
 		{
-			desc:     "list all things with tags",
+			desc:     "list all clients with tags",
 			domainID: domainID,
 			token:    validToken,
 			pageMeta: sdk.PageMetadata{
@@ -480,20 +480,20 @@ func TestListThings(t *testing.T) {
 					Limit:  100,
 					Total:  1,
 				},
-				Clients: convertThings(things[50]),
+				Clients: convertClients(clients[50]),
 			},
 			svcErr: nil,
-			response: sdk.ThingsPage{
+			response: sdk.ClientsPage{
 				PageRes: sdk.PageRes{
 					Limit: 100,
 					Total: 1,
 				},
-				Things: []sdk.Thing{things[50]},
+				Clients: []sdk.Client{clients[50]},
 			},
 			err: nil,
 		},
 		{
-			desc:     "list all things with invalid metadata",
+			desc:     "list all clients with invalid metadata",
 			domainID: domainID,
 			token:    validToken,
 			pageMeta: sdk.PageMetadata{
@@ -506,11 +506,11 @@ func TestListThings(t *testing.T) {
 			svcReq:   mgthings.Page{},
 			svcRes:   mgthings.ClientsPage{},
 			svcErr:   nil,
-			response: sdk.ThingsPage{},
+			response: sdk.ClientsPage{},
 			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
 		},
 		{
-			desc:     "list all things with response that can't be unmarshalled",
+			desc:     "list all clients with response that can't be unmarshalled",
 			domainID: domainID,
 			token:    validToken,
 			pageMeta: sdk.PageMetadata{
@@ -529,16 +529,16 @@ func TestListThings(t *testing.T) {
 					Total:  1,
 				},
 				Clients: []mgthings.Client{{
-					Name:        things[0].Name,
-					Tags:        things[0].Tags,
-					Credentials: mgthings.Credentials(things[0].Credentials),
+					Name:        clients[0].Name,
+					Tags:        clients[0].Tags,
+					Credentials: mgthings.Credentials(clients[0].Credentials),
 					Metadata: mgthings.Metadata{
 						"test": make(chan int),
 					},
 				}},
 			},
 			svcErr:   nil,
-			response: sdk.ThingsPage{},
+			response: sdk.ClientsPage{},
 			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
 		},
 	}
@@ -549,7 +549,7 @@ func TestListThings(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("ListClients", mock.Anything, tc.session, mock.Anything, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.Things(tc.pageMeta, tc.domainID, tc.token)
+			resp, err := mgsdk.Clients(tc.pageMeta, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -562,21 +562,21 @@ func TestListThings(t *testing.T) {
 	}
 }
 
-func TestListThingsByChannel(t *testing.T) {
-	ts, tsvc, auth := setupThings()
+func TestListClientsByChannel(t *testing.T) {
+	ts, tsvc, auth := setupClients()
 	defer ts.Close()
 
-	var things []sdk.Thing
+	var clients []sdk.Client
 	for i := 10; i < 100; i++ {
-		thing := generateTestThing(t)
+		c := generateTestClient(t)
 		if i == 50 {
-			thing.Status = mgthings.DisabledStatus.String()
+			c.Status = mgthings.DisabledStatus.String()
 		}
-		things = append(things, thing)
+		clients = append(clients, c)
 	}
 
 	conf := sdk.Config{
-		ThingsURL: ts.URL,
+		ClientsURL: ts.URL,
 	}
 	mgsdk := sdk.NewSDK(conf)
 
@@ -591,11 +591,11 @@ func TestListThingsByChannel(t *testing.T) {
 		svcRes          mgthings.MembersPage
 		svcErr          error
 		authenticateErr error
-		response        sdk.ThingsPage
+		response        sdk.ClientsPage
 		err             errors.SDKError
 	}{
 		{
-			desc:      "list things successfully",
+			desc:      "list clients successfully",
 			domainID:  domainID,
 			token:     validToken,
 			channelID: validID,
@@ -612,21 +612,21 @@ func TestListThingsByChannel(t *testing.T) {
 				Page: mgthings.Page{
 					Offset: 0,
 					Limit:  100,
-					Total:  uint64(len(things)),
+					Total:  uint64(len(clients)),
 				},
-				Members: convertThings(things...),
+				Members: convertClients(clients...),
 			},
 			svcErr: nil,
-			response: sdk.ThingsPage{
+			response: sdk.ClientsPage{
 				PageRes: sdk.PageRes{
 					Limit: 100,
-					Total: uint64(len(things)),
+					Total: uint64(len(clients)),
 				},
-				Things: things,
+				Clients: clients,
 			},
 		},
 		{
-			desc:      "list things with an invalid token",
+			desc:      "list clients with an invalid token",
 			domainID:  domainID,
 			token:     invalidToken,
 			channelID: validID,
@@ -641,11 +641,11 @@ func TestListThingsByChannel(t *testing.T) {
 			},
 			svcRes:          mgthings.MembersPage{},
 			authenticateErr: svcerr.ErrAuthentication,
-			response:        sdk.ThingsPage{},
+			response:        sdk.ClientsPage{},
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
-			desc:      "list things with empty token",
+			desc:      "list clients with empty token",
 			domainID:  domainID,
 			token:     "",
 			channelID: validID,
@@ -656,11 +656,11 @@ func TestListThingsByChannel(t *testing.T) {
 			svcReq:   mgthings.Page{},
 			svcRes:   mgthings.MembersPage{},
 			svcErr:   nil,
-			response: sdk.ThingsPage{},
+			response: sdk.ClientsPage{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
-			desc:      "list things with status",
+			desc:      "list clients with status",
 			domainID:  domainID,
 			token:     validToken,
 			channelID: validID,
@@ -681,20 +681,20 @@ func TestListThingsByChannel(t *testing.T) {
 					Limit:  100,
 					Total:  1,
 				},
-				Members: convertThings(things[50]),
+				Members: convertClients(clients[50]),
 			},
 			svcErr: nil,
-			response: sdk.ThingsPage{
+			response: sdk.ClientsPage{
 				PageRes: sdk.PageRes{
 					Limit: 100,
 					Total: 1,
 				},
-				Things: []sdk.Thing{things[50]},
+				Clients: []sdk.Client{clients[50]},
 			},
 			err: nil,
 		},
 		{
-			desc:      "list things with empty channel id",
+			desc:      "list clients with empty channel id",
 			domainID:  domainID,
 			token:     validToken,
 			channelID: "",
@@ -705,11 +705,11 @@ func TestListThingsByChannel(t *testing.T) {
 			svcReq:   mgthings.Page{},
 			svcRes:   mgthings.MembersPage{},
 			svcErr:   nil,
-			response: sdk.ThingsPage{},
+			response: sdk.ClientsPage{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
 		},
 		{
-			desc:      "list things with invalid metadata",
+			desc:      "list clients with invalid metadata",
 			domainID:  domainID,
 			token:     validToken,
 			channelID: validID,
@@ -723,11 +723,11 @@ func TestListThingsByChannel(t *testing.T) {
 			svcReq:   mgthings.Page{},
 			svcRes:   mgthings.MembersPage{},
 			svcErr:   nil,
-			response: sdk.ThingsPage{},
+			response: sdk.ClientsPage{},
 			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
 		},
 		{
-			desc:      "list things with response that can't be unmarshalled",
+			desc:      "list clients with response that can't be unmarshalled",
 			domainID:  domainID,
 			token:     validToken,
 			channelID: validID,
@@ -747,16 +747,16 @@ func TestListThingsByChannel(t *testing.T) {
 					Total:  1,
 				},
 				Members: []mgthings.Client{{
-					Name:        things[0].Name,
-					Tags:        things[0].Tags,
-					Credentials: mgthings.Credentials(things[0].Credentials),
+					Name:        clients[0].Name,
+					Tags:        clients[0].Tags,
+					Credentials: mgthings.Credentials(clients[0].Credentials),
 					Metadata: mgthings.Metadata{
 						"test": make(chan int),
 					},
 				}},
 			},
 			svcErr:   nil,
-			response: sdk.ThingsPage{},
+			response: sdk.ClientsPage{},
 			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
 		},
 	}
@@ -767,7 +767,7 @@ func TestListThingsByChannel(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("ListClientsByGroup", mock.Anything, tc.session, tc.channelID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.ThingsByChannel(tc.channelID, tc.pageMeta, tc.domainID, tc.token)
+			resp, err := mgsdk.ClientsByChannel(tc.channelID, tc.pageMeta, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -780,13 +780,13 @@ func TestListThingsByChannel(t *testing.T) {
 	}
 }
 
-func TestViewThing(t *testing.T) {
-	ts, tsvc, auth := setupThings()
+func TestViewClient(t *testing.T) {
+	ts, tsvc, auth := setupClients()
 	defer ts.Close()
 
-	thing := generateTestThing(t)
+	client := generateTestClient(t)
 	conf := sdk.Config{
-		ThingsURL: ts.URL,
+		ClientsURL: ts.URL,
 	}
 	mgsdk := sdk.NewSDK(conf)
 
@@ -795,78 +795,78 @@ func TestViewThing(t *testing.T) {
 		domainID        string
 		token           string
 		session         mgauthn.Session
-		thingID         string
+		clientID        string
 		svcRes          mgthings.Client
 		svcErr          error
 		authenticateErr error
-		response        sdk.Thing
+		response        sdk.Client
 		err             errors.SDKError
 	}{
 		{
-			desc:     "view thing successfully",
+			desc:     "view client successfully",
 			domainID: domainID,
 			token:    validToken,
-			thingID:  thing.ID,
-			svcRes:   convertThing(thing),
+			clientID: client.ID,
+			svcRes:   convertClient(client),
 			svcErr:   nil,
-			response: thing,
+			response: client,
 			err:      nil,
 		},
 		{
-			desc:            "view thing with an invalid token",
+			desc:            "view client with an invalid token",
 			domainID:        domainID,
 			token:           invalidToken,
-			thingID:         thing.ID,
+			clientID:        client.ID,
 			svcRes:          mgthings.Client{},
 			authenticateErr: svcerr.ErrAuthorization,
-			response:        sdk.Thing{},
+			response:        sdk.Client{},
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
-			desc:     "view thing with empty token",
+			desc:     "view client with empty token",
 			domainID: domainID,
 			token:    "",
-			thingID:  thing.ID,
+			clientID: client.ID,
 			svcRes:   mgthings.Client{},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
-			desc:     "view thing with an invalid thing id",
+			desc:     "view client with an invalid client id",
 			domainID: domainID,
 			token:    validToken,
-			thingID:  wrongID,
+			clientID: wrongID,
 			svcRes:   mgthings.Client{},
 			svcErr:   svcerr.ErrViewEntity,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
 		},
 		{
-			desc:     "view thing with empty thing id",
+			desc:     "view client with empty client id",
 			domainID: domainID,
 			token:    validToken,
-			thingID:  "",
+			clientID: "",
 			svcRes:   mgthings.Client{},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKError(apiutil.ErrMissingID),
 		},
 		{
-			desc:     "view thing with response that can't be unmarshalled",
+			desc:     "view client with response that can't be unmarshalled",
 			domainID: domainID,
 			token:    validToken,
-			thingID:  thing.ID,
+			clientID: client.ID,
 			svcRes: mgthings.Client{
-				Name:        thing.Name,
-				Tags:        thing.Tags,
-				Credentials: mgthings.Credentials(thing.Credentials),
+				Name:        client.Name,
+				Tags:        client.Tags,
+				Credentials: mgthings.Credentials(client.Credentials),
 				Metadata: mgthings.Metadata{
 					"test": make(chan int),
 				},
 			},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
 		},
 	}
@@ -876,12 +876,12 @@ func TestViewThing(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("View", mock.Anything, tc.session, tc.thingID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.Thing(tc.thingID, tc.domainID, tc.token)
+			svcCall := tsvc.On("View", mock.Anything, tc.session, tc.clientID).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.Client(tc.clientID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "View", mock.Anything, tc.session, tc.thingID)
+				ok := svcCall.Parent.AssertCalled(t, "View", mock.Anything, tc.session, tc.clientID)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -890,15 +890,15 @@ func TestViewThing(t *testing.T) {
 	}
 }
 
-func TestViewThingPermissions(t *testing.T) {
-	ts, tsvc, auth := setupThings()
+func TestViewClientPermissions(t *testing.T) {
+	ts, tsvc, auth := setupClients()
 	defer ts.Close()
 
-	thing := sdk.Thing{
+	client := sdk.Client{
 		Permissions: []string{policies.ViewPermission},
 	}
 	conf := sdk.Config{
-		ThingsURL: ts.URL,
+		ClientsURL: ts.URL,
 	}
 	mgsdk := sdk.NewSDK(conf)
 
@@ -907,61 +907,61 @@ func TestViewThingPermissions(t *testing.T) {
 		domainID        string
 		token           string
 		session         mgauthn.Session
-		thingID         string
+		clientID        string
 		svcRes          []string
 		svcErr          error
 		authenticateErr error
-		response        sdk.Thing
+		response        sdk.Client
 		err             errors.SDKError
 	}{
 		{
-			desc:     "view thing permissions successfully",
+			desc:     "view client permissions successfully",
 			domainID: domainID,
 			token:    validToken,
-			thingID:  validID,
+			clientID: validID,
 			svcRes:   []string{policies.ViewPermission},
 			svcErr:   nil,
-			response: thing,
+			response: client,
 			err:      nil,
 		},
 		{
-			desc:            "view thing permissions with an invalid token",
+			desc:            "view client permissions with an invalid token",
 			domainID:        domainID,
 			token:           invalidToken,
-			thingID:         validID,
+			clientID:        validID,
 			svcRes:          []string{},
 			authenticateErr: svcerr.ErrAuthorization,
-			response:        sdk.Thing{},
+			response:        sdk.Client{},
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
-			desc:     "view thing permissions with empty token",
+			desc:     "view client permissions with empty token",
 			domainID: domainID,
 			token:    "",
-			thingID:  thing.ID,
+			clientID: client.ID,
 			svcRes:   []string{},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
-			desc:     "view thing permissions with an invalid thing id",
+			desc:     "view client permissions with an invalid client id",
 			domainID: domainID,
 			token:    validToken,
-			thingID:  wrongID,
+			clientID: wrongID,
 			svcRes:   []string{},
 			svcErr:   svcerr.ErrViewEntity,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
 		},
 		{
-			desc:     "view thing permissions with empty thing id",
+			desc:     "view client permissions with empty client id",
 			domainID: domainID,
 			token:    validToken,
-			thingID:  "",
+			clientID: "",
 			svcRes:   []string{},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
 		},
 	}
@@ -971,12 +971,12 @@ func TestViewThingPermissions(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("ViewPerms", mock.Anything, tc.session, tc.thingID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.ThingPermissions(tc.thingID, tc.domainID, tc.token)
+			svcCall := tsvc.On("ViewPerms", mock.Anything, tc.session, tc.clientID).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.ClientPermissions(tc.clientID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "ViewPerms", mock.Anything, tc.session, tc.thingID)
+				ok := svcCall.Parent.AssertCalled(t, "ViewPerms", mock.Anything, tc.session, tc.clientID)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -985,24 +985,24 @@ func TestViewThingPermissions(t *testing.T) {
 	}
 }
 
-func TestUpdateThing(t *testing.T) {
-	ts, tsvc, auth := setupThings()
+func TestUpdateClient(t *testing.T) {
+	ts, tsvc, auth := setupClients()
 	defer ts.Close()
 
-	thing := generateTestThing(t)
-	updatedThing := thing
-	updatedThing.Name = "newName"
-	updatedThing.Metadata = map[string]interface{}{
+	client := generateTestClient(t)
+	updatedClient := thing
+	updatedClient.Name = "newName"
+	updatedClient.Metadata = map[string]interface{}{
 		"newKey": "newValue",
 	}
-	updateThingReq := sdk.Thing{
+	updateClientReq := sdk.Client{
 		ID:       thing.ID,
-		Name:     updatedThing.Name,
-		Metadata: updatedThing.Metadata,
+		Name:     updatedClient.Name,
+		Metadata: updatedClient.Metadata,
 	}
 
 	conf := sdk.Config{
-		ThingsURL: ts.URL,
+		ClientsURL: ts.URL,
 	}
 	mgsdk := sdk.NewSDK(conf)
 
@@ -1011,88 +1011,88 @@ func TestUpdateThing(t *testing.T) {
 		domainID        string
 		token           string
 		session         mgauthn.Session
-		updateThingReq  sdk.Thing
+		updateClientReq sdk.Client
 		svcReq          mgthings.Client
 		svcRes          mgthings.Client
 		svcErr          error
 		authenticateErr error
-		response        sdk.Thing
+		response        sdk.Client
 		err             errors.SDKError
 	}{
 		{
-			desc:           "update thing successfully",
-			domainID:       domainID,
-			token:          validToken,
-			updateThingReq: updateThingReq,
-			svcReq:         convertThing(updateThingReq),
-			svcRes:         convertThing(updatedThing),
-			svcErr:         nil,
-			response:       updatedThing,
-			err:            nil,
+			desc:            "update client successfully",
+			domainID:        domainID,
+			token:           validToken,
+			updateClientReq: updateClientReq,
+			svcReq:          convertClient(updateClientReq),
+			svcRes:          convertClient(updatedClient),
+			svcErr:          nil,
+			response:        updatedClient,
+			err:             nil,
 		},
 		{
-			desc:            "update thing with an invalid token",
+			desc:            "update client with an invalid token",
 			domainID:        domainID,
 			token:           invalidToken,
-			updateThingReq:  updateThingReq,
-			svcReq:          convertThing(updateThingReq),
+			updateClientReq: updateClientReq,
+			svcReq:          convertClient(updateClientReq),
 			svcRes:          mgthings.Client{},
 			authenticateErr: svcerr.ErrAuthorization,
-			response:        sdk.Thing{},
+			response:        sdk.Client{},
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
-			desc:           "update thing with empty token",
-			domainID:       domainID,
-			token:          "",
-			updateThingReq: updateThingReq,
-			svcReq:         convertThing(updateThingReq),
-			svcRes:         mgthings.Client{},
-			svcErr:         nil,
-			response:       sdk.Thing{},
-			err:            errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+			desc:            "update client with empty token",
+			domainID:        domainID,
+			token:           "",
+			updateClientReq: updateClientReq,
+			svcReq:          convertClient(updateClientReq),
+			svcRes:          mgthings.Client{},
+			svcErr:          nil,
+			response:        sdk.Client{},
+			err:             errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
-			desc:     "update thing with an invalid thing id",
+			desc:     "update client with an invalid client id",
 			domainID: domainID,
 			token:    validToken,
-			updateThingReq: sdk.Thing{
+			updateClientReq: sdk.Client{
 				ID:   wrongID,
-				Name: updatedThing.Name,
+				Name: updatedClient.Name,
 			},
-			svcReq: convertThing(sdk.Thing{
+			svcReq: convertClient(sdk.Client{
 				ID:   wrongID,
-				Name: updatedThing.Name,
+				Name: updatedClient.Name,
 			}),
 			svcRes:   mgthings.Client{},
 			svcErr:   svcerr.ErrUpdateEntity,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity),
 		},
 		{
-			desc:     "update thing with empty thing id",
+			desc:     "update client with empty client id",
 			domainID: domainID,
 			token:    validToken,
 
-			updateThingReq: sdk.Thing{
+			updateClientReq: sdk.Client{
 				ID:   "",
-				Name: updatedThing.Name,
+				Name: updatedClient.Name,
 			},
-			svcReq: convertThing(sdk.Thing{
+			svcReq: convertClient(sdk.Client{
 				ID:   "",
-				Name: updatedThing.Name,
+				Name: updatedClient.Name,
 			}),
 			svcRes:   mgthings.Client{},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKError(apiutil.ErrMissingID),
 		},
 		{
-			desc:     "update thing with a request that can't be marshalled",
+			desc:     "update client with a request that can't be marshalled",
 			domainID: domainID,
 			token:    validToken,
 
-			updateThingReq: sdk.Thing{
+			updateClientReq: sdk.Client{
 				ID: "test",
 				Metadata: map[string]interface{}{
 					"test": make(chan int),
@@ -1101,25 +1101,25 @@ func TestUpdateThing(t *testing.T) {
 			svcReq:   mgthings.Client{},
 			svcRes:   mgthings.Client{},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
 		},
 		{
-			desc:           "update thing with a response that can't be unmarshalled",
-			domainID:       domainID,
-			token:          validToken,
-			updateThingReq: updateThingReq,
-			svcReq:         convertThing(updateThingReq),
+			desc:            "update client with a response that can't be unmarshalled",
+			domainID:        domainID,
+			token:           validToken,
+			updateClientReq: updateClientReq,
+			svcReq:          convertClient(updateClientReq),
 			svcRes: mgthings.Client{
-				Name:        updatedThing.Name,
-				Tags:        updatedThing.Tags,
-				Credentials: mgthings.Credentials(updatedThing.Credentials),
+				Name:        updatedClient.Name,
+				Tags:        updatedClient.Tags,
+				Credentials: mgthings.Credentials(updatedClient.Credentials),
 				Metadata: mgthings.Metadata{
 					"test": make(chan int),
 				},
 			},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
 		},
 	}
@@ -1130,7 +1130,7 @@ func TestUpdateThing(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("Update", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateThing(tc.updateThingReq, tc.domainID, tc.token)
+			resp, err := mgsdk.UpdateClient(tc.updateClientReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1143,20 +1143,20 @@ func TestUpdateThing(t *testing.T) {
 	}
 }
 
-func TestUpdateThingTags(t *testing.T) {
-	ts, tsvc, auth := setupThings()
+func TestUpdateClientTags(t *testing.T) {
+	ts, tsvc, auth := setupClients()
 	defer ts.Close()
 
-	thing := generateTestThing(t)
-	updatedThing := thing
-	updatedThing.Tags = []string{"newTag1", "newTag2"}
-	updateThingReq := sdk.Thing{
+	client := generateTestClient(t)
+	updatedClient := thing
+	updatedClient.Tags = []string{"newTag1", "newTag2"}
+	updateClientReq := sdk.Client{
 		ID:   thing.ID,
-		Tags: updatedThing.Tags,
+		Tags: updatedClient.Tags,
 	}
 
 	conf := sdk.Config{
-		ThingsURL: ts.URL,
+		ClientsURL: ts.URL,
 	}
 	mgsdk := sdk.NewSDK(conf)
 
@@ -1165,86 +1165,86 @@ func TestUpdateThingTags(t *testing.T) {
 		domainID        string
 		token           string
 		session         mgauthn.Session
-		updateThingReq  sdk.Thing
+		updateClientReq sdk.Client
 		svcReq          mgthings.Client
 		svcRes          mgthings.Client
 		svcErr          error
 		authenticateErr error
-		response        sdk.Thing
+		response        sdk.Client
 		err             errors.SDKError
 	}{
 		{
-			desc:           "update thing tags successfully",
-			domainID:       domainID,
-			token:          validToken,
-			updateThingReq: updateThingReq,
-			svcReq:         convertThing(updateThingReq),
-			svcRes:         convertThing(updatedThing),
-			svcErr:         nil,
-			response:       updatedThing,
-			err:            nil,
+			desc:            "update client tags successfully",
+			domainID:        domainID,
+			token:           validToken,
+			updateClientReq: updateClientReq,
+			svcReq:          convertClient(updateClientReq),
+			svcRes:          convertClient(updatedClient),
+			svcErr:          nil,
+			response:        updatedClient,
+			err:             nil,
 		},
 		{
-			desc:            "update thing tags with an invalid token",
+			desc:            "update client tags with an invalid token",
 			domainID:        domainID,
 			token:           invalidToken,
-			updateThingReq:  updateThingReq,
-			svcReq:          convertThing(updateThingReq),
+			updateClientReq: updateClientReq,
+			svcReq:          convertClient(updateClientReq),
 			svcRes:          mgthings.Client{},
 			authenticateErr: svcerr.ErrAuthorization,
-			response:        sdk.Thing{},
+			response:        sdk.Client{},
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
-			desc:           "update thing tags with empty token",
-			domainID:       domainID,
-			token:          "",
-			updateThingReq: updateThingReq,
-			svcReq:         convertThing(updateThingReq),
-			svcRes:         mgthings.Client{},
-			svcErr:         nil,
-			response:       sdk.Thing{},
-			err:            errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+			desc:            "update client tags with empty token",
+			domainID:        domainID,
+			token:           "",
+			updateClientReq: updateClientReq,
+			svcReq:          convertClient(updateClientReq),
+			svcRes:          mgthings.Client{},
+			svcErr:          nil,
+			response:        sdk.Client{},
+			err:             errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
-			desc:     "update thing tags with an invalid thing id",
+			desc:     "update client tags with an invalid client id",
 			domainID: domainID,
 			token:    validToken,
-			updateThingReq: sdk.Thing{
+			updateClientReq: sdk.Client{
 				ID:   wrongID,
-				Tags: updatedThing.Tags,
+				Tags: updatedClient.Tags,
 			},
-			svcReq: convertThing(sdk.Thing{
+			svcReq: convertClient(sdk.Client{
 				ID:   wrongID,
-				Tags: updatedThing.Tags,
+				Tags: updatedClient.Tags,
 			}),
 			svcRes:   mgthings.Client{},
 			svcErr:   svcerr.ErrUpdateEntity,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity),
 		},
 		{
-			desc:     "update thing tags with empty thing id",
+			desc:     "update client tags with empty client id",
 			domainID: domainID,
 			token:    validToken,
-			updateThingReq: sdk.Thing{
+			updateClientReq: sdk.Client{
 				ID:   "",
-				Tags: updatedThing.Tags,
+				Tags: updatedClient.Tags,
 			},
-			svcReq: convertThing(sdk.Thing{
+			svcReq: convertClient(sdk.Client{
 				ID:   "",
-				Tags: updatedThing.Tags,
+				Tags: updatedClient.Tags,
 			}),
 			svcRes:   mgthings.Client{},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
 		},
 		{
-			desc:     "update thing tags with a request that can't be marshalled",
+			desc:     "update client tags with a request that can't be marshalled",
 			domainID: domainID,
 			token:    validToken,
-			updateThingReq: sdk.Thing{
+			updateClientReq: sdk.Client{
 				ID: "test",
 				Metadata: map[string]interface{}{
 					"test": make(chan int),
@@ -1253,25 +1253,25 @@ func TestUpdateThingTags(t *testing.T) {
 			svcReq:   mgthings.Client{},
 			svcRes:   mgthings.Client{},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
 		},
 		{
-			desc:           "update thing tags with a response that can't be unmarshalled",
-			domainID:       domainID,
-			token:          validToken,
-			updateThingReq: updateThingReq,
-			svcReq:         convertThing(updateThingReq),
+			desc:            "update client tags with a response that can't be unmarshalled",
+			domainID:        domainID,
+			token:           validToken,
+			updateClientReq: updateClientReq,
+			svcReq:          convertClient(updateClientReq),
 			svcRes: mgthings.Client{
-				Name:        updatedThing.Name,
-				Tags:        updatedThing.Tags,
-				Credentials: mgthings.Credentials(updatedThing.Credentials),
+				Name:        updatedClient.Name,
+				Tags:        updatedClient.Tags,
+				Credentials: mgthings.Credentials(updatedClient.Credentials),
 				Metadata: mgthings.Metadata{
 					"test": make(chan int),
 				},
 			},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
 		},
 	}
@@ -1282,7 +1282,7 @@ func TestUpdateThingTags(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("UpdateTags", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateThingTags(tc.updateThingReq, tc.domainID, tc.token)
+			resp, err := mgsdk.UpdateClientTags(tc.updateClientReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1295,17 +1295,17 @@ func TestUpdateThingTags(t *testing.T) {
 	}
 }
 
-func TestUpdateThingSecret(t *testing.T) {
-	ts, tsvc, auth := setupThings()
+func TestUpdateClientSecret(t *testing.T) {
+	ts, tsvc, auth := setupClients()
 	defer ts.Close()
 
-	thing := generateTestThing(t)
+	client := generateTestClient(t)
 	newSecret := generateUUID(t)
-	updatedThing := thing
-	updatedThing.Credentials.Secret = newSecret
+	updatedClient := thing
+	updatedClient.Credentials.Secret = newSecret
 
 	conf := sdk.Config{
-		ThingsURL: ts.URL,
+		ClientsURL: ts.URL,
 	}
 	mgsdk := sdk.NewSDK(conf)
 
@@ -1314,96 +1314,96 @@ func TestUpdateThingSecret(t *testing.T) {
 		domainID        string
 		token           string
 		session         mgauthn.Session
-		thingID         string
+		clientID        string
 		newSecret       string
 		svcRes          mgthings.Client
 		svcErr          error
 		authenticateErr error
-		response        sdk.Thing
+		response        sdk.Client
 		err             errors.SDKError
 	}{
 		{
-			desc:      "update thing secret successfully",
+			desc:      "update client secret successfully",
 			domainID:  domainID,
 			token:     validToken,
-			thingID:   thing.ID,
+			clientID:  thing.ID,
 			newSecret: newSecret,
-			svcRes:    convertThing(updatedThing),
+			svcRes:    convertClient(updatedClient),
 			svcErr:    nil,
-			response:  updatedThing,
+			response:  updatedClient,
 			err:       nil,
 		},
 		{
-			desc:            "update thing secret with an invalid token",
+			desc:            "update client secret with an invalid token",
 			domainID:        domainID,
 			token:           invalidToken,
-			thingID:         thing.ID,
+			clientID:        thing.ID,
 			newSecret:       newSecret,
 			svcRes:          mgthings.Client{},
 			authenticateErr: svcerr.ErrAuthorization,
-			response:        sdk.Thing{},
+			response:        sdk.Client{},
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
-			desc:      "update thing secret with empty token",
+			desc:      "update client secret with empty token",
 			domainID:  domainID,
 			token:     "",
-			thingID:   thing.ID,
+			clientID:  thing.ID,
 			newSecret: newSecret,
 			svcRes:    mgthings.Client{},
 			svcErr:    nil,
-			response:  sdk.Thing{},
+			response:  sdk.Client{},
 			err:       errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
-			desc:      "update thing secret with an invalid thing id",
+			desc:      "update client secret with an invalid client id",
 			domainID:  domainID,
 			token:     validToken,
-			thingID:   wrongID,
+			clientID:  wrongID,
 			newSecret: newSecret,
 			svcRes:    mgthings.Client{},
 			svcErr:    svcerr.ErrUpdateEntity,
-			response:  sdk.Thing{},
+			response:  sdk.Client{},
 			err:       errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity),
 		},
 		{
-			desc:      "update thing secret with empty thing id",
+			desc:      "update client secret with empty client id",
 			domainID:  domainID,
 			token:     validToken,
-			thingID:   "",
+			clientID:  "",
 			newSecret: newSecret,
 			svcRes:    mgthings.Client{},
 			svcErr:    nil,
-			response:  sdk.Thing{},
+			response:  sdk.Client{},
 			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
 		},
 		{
-			desc:      "update thing with empty new secret",
+			desc:      "update client with empty new secret",
 			domainID:  domainID,
 			token:     validToken,
-			thingID:   thing.ID,
+			clientID:  thing.ID,
 			newSecret: "",
 			svcRes:    mgthings.Client{},
 			svcErr:    nil,
-			response:  sdk.Thing{},
+			response:  sdk.Client{},
 			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingSecret), http.StatusBadRequest),
 		},
 		{
-			desc:      "update thing secret with a response that can't be unmarshalled",
+			desc:      "update client secret with a response that can't be unmarshalled",
 			domainID:  domainID,
 			token:     validToken,
-			thingID:   thing.ID,
+			clientID:  thing.ID,
 			newSecret: newSecret,
 			svcRes: mgthings.Client{
-				Name:        updatedThing.Name,
-				Tags:        updatedThing.Tags,
-				Credentials: mgthings.Credentials(updatedThing.Credentials),
+				Name:        updatedClient.Name,
+				Tags:        updatedClient.Tags,
+				Credentials: mgthings.Credentials(updatedClient.Credentials),
 				Metadata: mgthings.Metadata{
 					"test": make(chan int),
 				},
 			},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
 		},
 	}
@@ -1413,12 +1413,12 @@ func TestUpdateThingSecret(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("UpdateSecret", mock.Anything, tc.session, tc.thingID, tc.newSecret).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateThingSecret(tc.thingID, tc.newSecret, tc.domainID, tc.token)
+			svcCall := tsvc.On("UpdateSecret", mock.Anything, tc.session, tc.clientID, tc.newSecret).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.UpdateClientSecret(tc.clientID, tc.newSecret, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "UpdateSecret", mock.Anything, tc.session, tc.thingID, tc.newSecret)
+				ok := svcCall.Parent.AssertCalled(t, "UpdateSecret", mock.Anything, tc.session, tc.clientID, tc.newSecret)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1427,16 +1427,16 @@ func TestUpdateThingSecret(t *testing.T) {
 	}
 }
 
-func TestEnableThing(t *testing.T) {
-	ts, tsvc, auth := setupThings()
+func TestEnableClient(t *testing.T) {
+	ts, tsvc, auth := setupClients()
 	defer ts.Close()
 
-	thing := generateTestThing(t)
-	enabledThing := thing
-	enabledThing.Status = mgthings.EnabledStatus.String()
+	client := generateTestClient(t)
+	enabledClient := thing
+	enabledClient.Status = mgthings.EnabledStatus.String()
 
 	conf := sdk.Config{
-		ThingsURL: ts.URL,
+		ClientsURL: ts.URL,
 	}
 	mgsdk := sdk.NewSDK(conf)
 
@@ -1449,64 +1449,64 @@ func TestEnableThing(t *testing.T) {
 		svcRes          mgthings.Client
 		svcErr          error
 		authenticateErr error
-		response        sdk.Thing
+		response        sdk.Client
 		err             errors.SDKError
 	}{
 		{
-			desc:     "enable thing successfully",
+			desc:     "enable client successfully",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  thing.ID,
-			svcRes:   convertThing(enabledThing),
+			svcRes:   convertClient(enabledClient),
 			svcErr:   nil,
-			response: enabledThing,
+			response: enabledClient,
 			err:      nil,
 		},
 		{
-			desc:            "enable thing with an invalid token",
+			desc:            "enable client with an invalid token",
 			domainID:        domainID,
 			token:           invalidToken,
 			thingID:         thing.ID,
 			svcRes:          mgthings.Client{},
 			authenticateErr: svcerr.ErrAuthorization,
-			response:        sdk.Thing{},
+			response:        sdk.Client{},
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
-			desc:     "enable thing with an invalid thing id",
+			desc:     "enable client with an invalid client id",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  wrongID,
 			svcRes:   mgthings.Client{},
 			svcErr:   svcerr.ErrEnableClient,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrEnableClient, http.StatusUnprocessableEntity),
 		},
 		{
-			desc:     "enable thing with empty thing id",
+			desc:     "enable client with empty client id",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  "",
 			svcRes:   mgthings.Client{},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
 		},
 		{
-			desc:     "enable thing with a response that can't be unmarshalled",
+			desc:     "enable client with a response that can't be unmarshalled",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  thing.ID,
 			svcRes: mgthings.Client{
-				Name:        enabledThing.Name,
-				Tags:        enabledThing.Tags,
-				Credentials: mgthings.Credentials(enabledThing.Credentials),
+				Name:        enabledClient.Name,
+				Tags:        enabledClient.Tags,
+				Credentials: mgthings.Credentials(enabledClient.Credentials),
 				Metadata: mgthings.Metadata{
 					"test": make(chan int),
 				},
 			},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
 		},
 	}
@@ -1517,7 +1517,7 @@ func TestEnableThing(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("Enable", mock.Anything, tc.session, tc.thingID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.EnableThing(tc.thingID, tc.domainID, tc.token)
+			resp, err := mgsdk.EnableClient(tc.thingID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1530,16 +1530,16 @@ func TestEnableThing(t *testing.T) {
 	}
 }
 
-func TestDisableThing(t *testing.T) {
-	ts, tsvc, auth := setupThings()
+func TestDisableClient(t *testing.T) {
+	ts, tsvc, auth := setupClients()
 	defer ts.Close()
 
-	thing := generateTestThing(t)
-	disabledThing := thing
-	disabledThing.Status = mgthings.DisabledStatus.String()
+	client := generateTestClient(t)
+	disabledClient := thing
+	disabledClient.Status = mgthings.DisabledStatus.String()
 
 	conf := sdk.Config{
-		ThingsURL: ts.URL,
+		ClientsURL: ts.URL,
 	}
 	mgsdk := sdk.NewSDK(conf)
 
@@ -1552,64 +1552,64 @@ func TestDisableThing(t *testing.T) {
 		svcRes          mgthings.Client
 		svcErr          error
 		authenticateErr error
-		response        sdk.Thing
+		response        sdk.Client
 		err             errors.SDKError
 	}{
 		{
-			desc:     "disable thing successfully",
+			desc:     "disable client successfully",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  thing.ID,
-			svcRes:   convertThing(disabledThing),
+			svcRes:   convertClient(disabledClient),
 			svcErr:   nil,
-			response: disabledThing,
+			response: disabledClient,
 			err:      nil,
 		},
 		{
-			desc:            "disable thing with an invalid token",
+			desc:            "disable client with an invalid token",
 			domainID:        domainID,
 			token:           invalidToken,
 			thingID:         thing.ID,
 			svcRes:          mgthings.Client{},
 			authenticateErr: svcerr.ErrAuthorization,
-			response:        sdk.Thing{},
+			response:        sdk.Client{},
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
-			desc:     "disable thing with an invalid thing id",
+			desc:     "disable client with an invalid client id",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  wrongID,
 			svcRes:   mgthings.Client{},
 			svcErr:   svcerr.ErrDisableClient,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrDisableClient, http.StatusInternalServerError),
 		},
 		{
-			desc:     "disable thing with empty thing id",
+			desc:     "disable client with empty client id",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  "",
 			svcRes:   mgthings.Client{},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
 		},
 		{
-			desc:     "disable thing with a response that can't be unmarshalled",
+			desc:     "disable client with a response that can't be unmarshalled",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  thing.ID,
 			svcRes: mgthings.Client{
-				Name:        disabledThing.Name,
-				Tags:        disabledThing.Tags,
-				Credentials: mgthings.Credentials(disabledThing.Credentials),
+				Name:        disabledClient.Name,
+				Tags:        disabledClient.Tags,
+				Credentials: mgthings.Credentials(disabledClient.Credentials),
 				Metadata: mgthings.Metadata{
 					"test": make(chan int),
 				},
 			},
 			svcErr:   nil,
-			response: sdk.Thing{},
+			response: sdk.Client{},
 			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
 		},
 	}
@@ -1620,7 +1620,7 @@ func TestDisableThing(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("Disable", mock.Anything, tc.session, tc.thingID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.DisableThing(tc.thingID, tc.domainID, tc.token)
+			resp, err := mgsdk.DisableClient(tc.thingID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1633,14 +1633,14 @@ func TestDisableThing(t *testing.T) {
 	}
 }
 
-func TestShareThing(t *testing.T) {
-	ts, tsvc, auth := setupThings()
+func TestShareClient(t *testing.T) {
+	ts, tsvc, auth := setupClients()
 	defer ts.Close()
 
-	thing := generateTestThing(t)
+	client := generateTestClient(t)
 
 	conf := sdk.Config{
-		ThingsURL: ts.URL,
+		ClientsURL: ts.URL,
 	}
 	mgsdk := sdk.NewSDK(conf)
 
@@ -1656,7 +1656,7 @@ func TestShareThing(t *testing.T) {
 		err             errors.SDKError
 	}{
 		{
-			desc:     "share thing successfully",
+			desc:     "share client successfully",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  thing.ID,
@@ -1668,7 +1668,7 @@ func TestShareThing(t *testing.T) {
 			err:    nil,
 		},
 		{
-			desc:     "share thing with an invalid token",
+			desc:     "share client with an invalid token",
 			domainID: domainID,
 			token:    invalidToken,
 			thingID:  thing.ID,
@@ -1680,7 +1680,7 @@ func TestShareThing(t *testing.T) {
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
-			desc:     "share thing with empty token",
+			desc:     "share client with empty token",
 			domainID: domainID,
 			token:    "",
 			thingID:  thing.ID,
@@ -1692,7 +1692,7 @@ func TestShareThing(t *testing.T) {
 			err:    errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
-			desc:     "share thing with an invalid thing id",
+			desc:     "share client with an invalid client id",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  wrongID,
@@ -1704,7 +1704,7 @@ func TestShareThing(t *testing.T) {
 			err:    errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity),
 		},
 		{
-			desc:     "share thing with empty thing id",
+			desc:     "share client with empty client id",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  "",
@@ -1716,7 +1716,7 @@ func TestShareThing(t *testing.T) {
 			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
 		},
 		{
-			desc:     "share thing with empty relation",
+			desc:     "share client with empty relation",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  thing.ID,
@@ -1735,7 +1735,7 @@ func TestShareThing(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("Share", mock.Anything, tc.session, tc.thingID, tc.shareReq.Relation, tc.shareReq.UserIDs[0]).Return(tc.svcErr)
-			err := mgsdk.ShareThing(tc.thingID, tc.shareReq, tc.domainID, tc.token)
+			err := mgsdk.ShareClient(tc.thingID, tc.shareReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "Share", mock.Anything, tc.session, tc.thingID, tc.shareReq.Relation, tc.shareReq.UserIDs[0])
@@ -1747,14 +1747,14 @@ func TestShareThing(t *testing.T) {
 	}
 }
 
-func TestUnshareThing(t *testing.T) {
-	ts, tsvc, auth := setupThings()
+func TestUnshareClient(t *testing.T) {
+	ts, tsvc, auth := setupClients()
 	defer ts.Close()
 
-	thing := generateTestThing(t)
+	client := generateTestClient(t)
 
 	conf := sdk.Config{
-		ThingsURL: ts.URL,
+		ClientsURL: ts.URL,
 	}
 	mgsdk := sdk.NewSDK(conf)
 
@@ -1770,7 +1770,7 @@ func TestUnshareThing(t *testing.T) {
 		err             errors.SDKError
 	}{
 		{
-			desc:     "unshare thing successfully",
+			desc:     "unshare client successfully",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  thing.ID,
@@ -1782,7 +1782,7 @@ func TestUnshareThing(t *testing.T) {
 			err:    nil,
 		},
 		{
-			desc:     "unshare thing with an invalid token",
+			desc:     "unshare client with an invalid token",
 			domainID: domainID,
 			token:    invalidToken,
 			thingID:  thing.ID,
@@ -1794,7 +1794,7 @@ func TestUnshareThing(t *testing.T) {
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
-			desc:     "unshare thing with empty token",
+			desc:     "unshare client with empty token",
 			domainID: domainID,
 			token:    "",
 			thingID:  thing.ID,
@@ -1805,7 +1805,7 @@ func TestUnshareThing(t *testing.T) {
 			err: errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
-			desc:     "unshare thing with an invalid thing id",
+			desc:     "unshare client with an invalid client id",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  wrongID,
@@ -1817,7 +1817,7 @@ func TestUnshareThing(t *testing.T) {
 			err:    errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity),
 		},
 		{
-			desc:     "unshare thing with empty thing id",
+			desc:     "unshare client with empty client id",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  "",
@@ -1836,7 +1836,7 @@ func TestUnshareThing(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("Unshare", mock.Anything, tc.session, tc.thingID, tc.shareReq.Relation, tc.shareReq.UserIDs[0]).Return(tc.svcErr)
-			err := mgsdk.UnshareThing(tc.thingID, tc.shareReq, tc.domainID, tc.token)
+			err := mgsdk.UnshareClient(tc.thingID, tc.shareReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "Unshare", mock.Anything, tc.session, tc.thingID, tc.shareReq.Relation, tc.shareReq.UserIDs[0])
@@ -1848,14 +1848,14 @@ func TestUnshareThing(t *testing.T) {
 	}
 }
 
-func TestDeleteThing(t *testing.T) {
-	ts, tsvc, auth := setupThings()
+func TestDeleteClient(t *testing.T) {
+	ts, tsvc, auth := setupClients()
 	defer ts.Close()
 
-	thing := generateTestThing(t)
+	client := generateTestClient(t)
 
 	conf := sdk.Config{
-		ThingsURL: ts.URL,
+		ClientsURL: ts.URL,
 	}
 	mgsdk := sdk.NewSDK(conf)
 
@@ -1870,7 +1870,7 @@ func TestDeleteThing(t *testing.T) {
 		err             errors.SDKError
 	}{
 		{
-			desc:     "delete thing successfully",
+			desc:     "delete client successfully",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  thing.ID,
@@ -1878,7 +1878,7 @@ func TestDeleteThing(t *testing.T) {
 			err:      nil,
 		},
 		{
-			desc:            "delete thing with an invalid token",
+			desc:            "delete client with an invalid token",
 			domainID:        domainID,
 			token:           invalidToken,
 			thingID:         thing.ID,
@@ -1886,7 +1886,7 @@ func TestDeleteThing(t *testing.T) {
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
-			desc:     "delete thing with empty token",
+			desc:     "delete client with empty token",
 			domainID: domainID,
 			token:    "",
 			thingID:  thing.ID,
@@ -1894,7 +1894,7 @@ func TestDeleteThing(t *testing.T) {
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
-			desc:     "delete thing with an invalid thing id",
+			desc:     "delete client with an invalid client id",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  wrongID,
@@ -1902,7 +1902,7 @@ func TestDeleteThing(t *testing.T) {
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrRemoveEntity, http.StatusUnprocessableEntity),
 		},
 		{
-			desc:     "delete thing with empty thing id",
+			desc:     "delete client with empty client id",
 			domainID: domainID,
 			token:    validToken,
 			thingID:  "",
@@ -1917,7 +1917,7 @@ func TestDeleteThing(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("Delete", mock.Anything, tc.session, tc.thingID).Return(tc.svcErr)
-			err := mgsdk.DeleteThing(tc.thingID, tc.domainID, tc.token)
+			err := mgsdk.DeleteClient(tc.thingID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "Delete", mock.Anything, tc.session, tc.thingID)
@@ -1929,22 +1929,22 @@ func TestDeleteThing(t *testing.T) {
 	}
 }
 
-func TestListUserThings(t *testing.T) {
-	ts, tsvc, auth := setupThings()
+func TestListUserClients(t *testing.T) {
+	ts, tsvc, auth := setupClients()
 	defer ts.Close()
 
-	var things []sdk.Thing
+	var clients []sdk.Client
 	for i := 10; i < 100; i++ {
-		thing := generateTestThing(t)
+		c := generateTestClient(t)
 		if i == 50 {
-			thing.Status = mgthings.DisabledStatus.String()
-			thing.Tags = []string{"tag1", "tag2"}
+			c.Status = mgthings.DisabledStatus.String()
+			c.Tags = []string{"tag1", "tag2"}
 		}
-		things = append(things, thing)
+		clients = append(clients, c)
 	}
 
 	conf := sdk.Config{
-		ThingsURL: ts.URL,
+		ClientsURL: ts.URL,
 	}
 	mgsdk := sdk.NewSDK(conf)
 
@@ -1958,11 +1958,11 @@ func TestListUserThings(t *testing.T) {
 		svcRes          mgthings.ClientsPage
 		svcErr          error
 		authenticateErr error
-		response        sdk.ThingsPage
+		response        sdk.ClientsPage
 		err             errors.SDKError
 	}{
 		{
-			desc:   "list user things successfully",
+			desc:   "list user clients successfully",
 			token:  validToken,
 			userID: validID,
 			pageMeta: sdk.PageMetadata{
@@ -1979,21 +1979,21 @@ func TestListUserThings(t *testing.T) {
 				Page: mgthings.Page{
 					Offset: 0,
 					Limit:  100,
-					Total:  uint64(len(things)),
+					Total:  uint64(len(clients)),
 				},
-				Clients: convertThings(things...),
+				Clients: convertClients(clients...),
 			},
 			svcErr: nil,
-			response: sdk.ThingsPage{
+			response: sdk.ClientsPage{
 				PageRes: sdk.PageRes{
 					Limit: 100,
-					Total: uint64(len(things)),
+					Total: uint64(len(clients)),
 				},
-				Things: things,
+				Clients: clients,
 			},
 		},
 		{
-			desc:   "list user things with an invalid token",
+			desc:   "list user clients with an invalid token",
 			token:  invalidToken,
 			userID: validID,
 			pageMeta: sdk.PageMetadata{
@@ -2008,11 +2008,11 @@ func TestListUserThings(t *testing.T) {
 			},
 			svcRes:          mgthings.ClientsPage{},
 			authenticateErr: svcerr.ErrAuthentication,
-			response:        sdk.ThingsPage{},
+			response:        sdk.ClientsPage{},
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
-			desc:   "list user things with limit greater than max",
+			desc:   "list user clients with limit greater than max",
 			token:  validToken,
 			userID: validID,
 			pageMeta: sdk.PageMetadata{
@@ -2023,11 +2023,11 @@ func TestListUserThings(t *testing.T) {
 			svcReq:   mgthings.Page{},
 			svcRes:   mgthings.ClientsPage{},
 			svcErr:   nil,
-			response: sdk.ThingsPage{},
+			response: sdk.ClientsPage{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusBadRequest),
 		},
 		{
-			desc:   "list user things with name size greater than max",
+			desc:   "list user clients with name size greater than max",
 			token:  validToken,
 			userID: validID,
 			pageMeta: sdk.PageMetadata{
@@ -2039,11 +2039,11 @@ func TestListUserThings(t *testing.T) {
 			svcReq:   mgthings.Page{},
 			svcRes:   mgthings.ClientsPage{},
 			svcErr:   nil,
-			response: sdk.ThingsPage{},
+			response: sdk.ClientsPage{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrNameSize), http.StatusBadRequest),
 		},
 		{
-			desc:   "list user things with status",
+			desc:   "list user clients with status",
 			token:  validToken,
 			userID: validID,
 			pageMeta: sdk.PageMetadata{
@@ -2064,20 +2064,20 @@ func TestListUserThings(t *testing.T) {
 					Limit:  100,
 					Total:  1,
 				},
-				Clients: convertThings(things[50]),
+				Clients: convertClients(clients[50]),
 			},
 			svcErr: nil,
-			response: sdk.ThingsPage{
+			response: sdk.ClientsPage{
 				PageRes: sdk.PageRes{
 					Limit: 100,
 					Total: 1,
 				},
-				Things: []sdk.Thing{things[50]},
+				Clients: []sdk.Client{clients[50]},
 			},
 			err: nil,
 		},
 		{
-			desc:   "list user things with tags",
+			desc:   "list user clients with tags",
 			token:  validToken,
 			userID: validID,
 			pageMeta: sdk.PageMetadata{
@@ -2098,20 +2098,20 @@ func TestListUserThings(t *testing.T) {
 					Limit:  100,
 					Total:  1,
 				},
-				Clients: convertThings(things[50]),
+				Clients: convertClients(clients[50]),
 			},
 			svcErr: nil,
-			response: sdk.ThingsPage{
+			response: sdk.ClientsPage{
 				PageRes: sdk.PageRes{
 					Limit: 100,
 					Total: 1,
 				},
-				Things: []sdk.Thing{things[50]},
+				Clients: []sdk.Client{clients[50]},
 			},
 			err: nil,
 		},
 		{
-			desc:   "list user things with invalid metadata",
+			desc:   "list user clients with invalid metadata",
 			token:  validToken,
 			userID: validID,
 			pageMeta: sdk.PageMetadata{
@@ -2125,11 +2125,11 @@ func TestListUserThings(t *testing.T) {
 			svcReq:   mgthings.Page{},
 			svcRes:   mgthings.ClientsPage{},
 			svcErr:   nil,
-			response: sdk.ThingsPage{},
+			response: sdk.ClientsPage{},
 			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
 		},
 		{
-			desc:  "list user things with response that can't be unmarshalled",
+			desc:  "list user clients with response that can't be unmarshalled",
 			token: validToken,
 			pageMeta: sdk.PageMetadata{
 				Offset:   0,
@@ -2148,16 +2148,16 @@ func TestListUserThings(t *testing.T) {
 					Total:  1,
 				},
 				Clients: []mgthings.Client{{
-					Name:        things[0].Name,
-					Tags:        things[0].Tags,
-					Credentials: mgthings.Credentials(things[0].Credentials),
+					Name:        clients[0].Name,
+					Tags:        clients[0].Tags,
+					Credentials: mgthings.Credentials(clients[0].Credentials),
 					Metadata: mgthings.Metadata{
 						"test": make(chan int),
 					},
 				}},
 			},
 			svcErr:   nil,
-			response: sdk.ThingsPage{},
+			response: sdk.ClientsPage{},
 			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
 		},
 	}
@@ -2168,7 +2168,7 @@ func TestListUserThings(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("ListClients", mock.Anything, tc.session, tc.userID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.ListUserThings(tc.userID, tc.pageMeta, tc.token)
+			resp, err := mgsdk.ListUserClients(tc.userID, tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2181,11 +2181,11 @@ func TestListUserThings(t *testing.T) {
 	}
 }
 
-func generateTestThing(t *testing.T) sdk.Thing {
+func generateTestClient(t *testing.T) sdk.Client {
 	createdAt, err := time.Parse(time.RFC3339, "2023-03-03T00:00:00Z")
 	assert.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 	updatedAt := createdAt
-	return sdk.Thing{
+	return sdk.Client{
 		ID:   testsutil.GenerateUUID(t),
 		Name: "clientname",
 		Credentials: sdk.ClientCredentials{

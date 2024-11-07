@@ -19,11 +19,11 @@ import (
 )
 
 const (
-	configsEndpoint        = "things/configs"
-	bootstrapEndpoint      = "things/bootstrap"
-	whitelistEndpoint      = "things/state"
-	bootstrapCertsEndpoint = "things/configs/certs"
-	bootstrapConnEndpoint  = "things/configs/connections"
+	configsEndpoint        = "clientss/configs"
+	bootstrapEndpoint      = "clientss/bootstrap"
+	whitelistEndpoint      = "clientss/state"
+	bootstrapCertsEndpoint = "clientss/configs/certs"
+	bootstrapConnEndpoint  = "clientss/configs/connections"
 	secureEndpoint         = "secure"
 )
 
@@ -33,17 +33,17 @@ const (
 // MGKey is key of corresponding Magistrala Thing.
 // MGChannels is a list of Magistrala Channels corresponding Magistrala Thing connects to.
 type BootstrapConfig struct {
-	Channels    interface{} `json:"channels,omitempty"`
-	ExternalID  string      `json:"external_id,omitempty"`
-	ExternalKey string      `json:"external_key,omitempty"`
-	ThingID     string      `json:"thing_id,omitempty"`
-	ThingKey    string      `json:"thing_key,omitempty"`
-	Name        string      `json:"name,omitempty"`
-	ClientCert  string      `json:"client_cert,omitempty"`
-	ClientKey   string      `json:"client_key,omitempty"`
-	CACert      string      `json:"ca_cert,omitempty"`
-	Content     string      `json:"content,omitempty"`
-	State       int         `json:"state,omitempty"`
+	Channels     interface{} `json:"channels,omitempty"`
+	ExternalID   string      `json:"external_id,omitempty"`
+	ExternalKey  string      `json:"external_key,omitempty"`
+	ClientID     string      `json:"client_id,omitempty"`
+	ClientSecret string      `json:"client_secret,omitempty"`
+	Name         string      `json:"name,omitempty"`
+	ClientCert   string      `json:"client_cert,omitempty"`
+	ClientKey    string      `json:"client_key,omitempty"`
+	CACert       string      `json:"ca_cert,omitempty"`
+	Content      string      `json:"content,omitempty"`
+	State        int         `json:"state,omitempty"`
 }
 
 func (ts *BootstrapConfig) UnmarshalJSON(data []byte) error {
@@ -67,27 +67,27 @@ func (ts *BootstrapConfig) UnmarshalJSON(data []byte) error {
 	}
 
 	if err := json.Unmarshal(data, &struct {
-		ExternalID  *string `json:"external_id,omitempty"`
-		ExternalKey *string `json:"external_key,omitempty"`
-		ThingID     *string `json:"thing_id,omitempty"`
-		ThingKey    *string `json:"thing_key,omitempty"`
-		Name        *string `json:"name,omitempty"`
-		ClientCert  *string `json:"client_cert,omitempty"`
-		ClientKey   *string `json:"client_key,omitempty"`
-		CACert      *string `json:"ca_cert,omitempty"`
-		Content     *string `json:"content,omitempty"`
-		State       *int    `json:"state,omitempty"`
+		ExternalID   *string `json:"external_id,omitempty"`
+		ExternalKey  *string `json:"external_key,omitempty"`
+		ClientID     *string `json:"client_id,omitempty"`
+		ClientSecret *string `json:"client_key,omitempty"`
+		Name         *string `json:"name,omitempty"`
+		ClientCert   *string `json:"client_cert,omitempty"`
+		ClientKey    *string `json:"client_key,omitempty"`
+		CACert       *string `json:"ca_cert,omitempty"`
+		Content      *string `json:"content,omitempty"`
+		State        *int    `json:"state,omitempty"`
 	}{
-		ExternalID:  &ts.ExternalID,
-		ExternalKey: &ts.ExternalKey,
-		ThingID:     &ts.ThingID,
-		ThingKey:    &ts.ThingKey,
-		Name:        &ts.Name,
-		ClientCert:  &ts.ClientCert,
-		ClientKey:   &ts.ClientKey,
-		CACert:      &ts.CACert,
-		Content:     &ts.Content,
-		State:       &ts.State,
+		ExternalID:   &ts.ExternalID,
+		ExternalKey:  &ts.ExternalKey,
+		ClientID:     &ts.ClientID,
+		ClientSecret: &ts.ClientSecret,
+		Name:         &ts.Name,
+		ClientCert:   &ts.ClientCert,
+		ClientKey:    &ts.ClientKey,
+		CACert:       &ts.CACert,
+		Content:      &ts.Content,
+		State:        &ts.State,
 	}); err != nil {
 		return err
 	}
@@ -170,10 +170,10 @@ func (sdk mgSDK) ViewBootstrap(id, domainID, token string) (BootstrapConfig, err
 }
 
 func (sdk mgSDK) UpdateBootstrap(cfg BootstrapConfig, domainID, token string) errors.SDKError {
-	if cfg.ThingID == "" {
+	if cfg.ClientID == "" {
 		return errors.NewSDKError(apiutil.ErrMissingID)
 	}
-	url := fmt.Sprintf("%s/%s/%s/%s", sdk.bootstrapURL, domainID, configsEndpoint, cfg.ThingID)
+	url := fmt.Sprintf("%s/%s/%s/%s", sdk.bootstrapURL, domainID, configsEndpoint, cfg.ClientID)
 
 	data, err := json.Marshal(cfg)
 	if err != nil {

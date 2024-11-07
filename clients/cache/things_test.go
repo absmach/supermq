@@ -35,49 +35,49 @@ func TestSave(t *testing.T) {
 		err  error
 	}{
 		{
-			desc: "Save thing to cache",
+			desc: "Save client to cache",
 			key:  testKey,
 			id:   testID,
 			err:  nil,
 		},
 		{
-			desc: "Save already cached thing to cache",
+			desc: "Save already cached client to cache",
 			key:  testKey,
 			id:   testID,
 			err:  nil,
 		},
 		{
-			desc: "Save another thing to cache",
+			desc: "Save another client to cache",
 			key:  testKey2,
 			id:   testID2,
 			err:  nil,
 		},
 		{
-			desc: "Save thing with long key ",
+			desc: "Save client with long key ",
 			key:  strings.Repeat("a", 513*1024*1024),
 			id:   testID,
 			err:  repoerr.ErrCreateEntity,
 		},
 		{
-			desc: "Save thing with long id ",
+			desc: "Save client with long id ",
 			key:  testKey,
 			id:   strings.Repeat("a", 513*1024*1024),
 			err:  repoerr.ErrCreateEntity,
 		},
 		{
-			desc: "Save thing with empty key",
+			desc: "Save client with empty key",
 			key:  "",
 			id:   testID,
 			err:  repoerr.ErrCreateEntity,
 		},
 		{
-			desc: "Save thing with empty id",
+			desc: "Save client with empty id",
 			key:  testKey,
 			id:   "",
 			err:  repoerr.ErrCreateEntity,
 		},
 		{
-			desc: "Save thing with empty key and id",
+			desc: "Save client with empty key and id",
 			key:  "",
 			id:   "",
 			err:  repoerr.ErrCreateEntity,
@@ -109,19 +109,19 @@ func TestID(t *testing.T) {
 		err  error
 	}{
 		{
-			desc: "Get thing ID from cache",
+			desc: "Get client ID from cache",
 			key:  testKey,
 			id:   testID,
 			err:  nil,
 		},
 		{
-			desc: "Get thing ID from cache for non existing thing",
+			desc: "Get client ID from cache for non existing thing",
 			key:  "nonExistingKey",
 			id:   "",
 			err:  repoerr.ErrNotFound,
 		},
 		{
-			desc: "Get thing ID from cache for empty key",
+			desc: "Get client ID from cache for empty key",
 			key:  "",
 			id:   "",
 			err:  repoerr.ErrNotFound,
@@ -151,22 +151,22 @@ func TestRemove(t *testing.T) {
 		err  error
 	}{
 		{
-			desc: "Remove existing thing from cache",
+			desc: "Remove existing client from cache",
 			key:  testID,
 			err:  nil,
 		},
 		{
-			desc: "Remove non existing thing from cache",
+			desc: "Remove non existing client from cache",
 			key:  testID2,
 			err:  nil,
 		},
 		{
-			desc: "Remove thing with empty ID from cache",
+			desc: "Remove client with empty ID from cache",
 			key:  "",
 			err:  nil,
 		},
 		{
-			desc: "Remove thing with long id from cache",
+			desc: "Remove client with long id from cache",
 			key:  strings.Repeat("a", 513*1024*1024),
 			err:  repoerr.ErrRemoveEntity,
 		},

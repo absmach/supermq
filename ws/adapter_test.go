@@ -37,9 +37,9 @@ var msg = messaging.Message{
 	Payload:   []byte(`[{"n":"current","t":-5,"v":1.2}]`),
 }
 
-func newService() (ws.Service, *mocks.PubSub, *climocks.ThingsServiceClient, *chmocks.ChannelsServiceClient) {
+func newService() (ws.Service, *mocks.PubSub, *climocks.ClientsServiceClient, *chmocks.ChannelsServiceClient) {
 	pubsub := new(mocks.PubSub)
-	things := new(climocks.ThingsServiceClient)
+	things := new(climocks.ClientsServiceClient)
 	channels := new(chmocks.ChannelsServiceClient)
 
 	return ws.New(things, channels, pubsub), pubsub, things, channels

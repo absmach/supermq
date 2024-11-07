@@ -78,7 +78,7 @@ type provisionService struct {
 
 // Result represent what is created with additional info.
 type Result struct {
-	Things      []sdk.Thing       `json:"things,omitempty"`
+	Things      []sdk.Client      `json:"things,omitempty"`
 	Channels    []sdk.Channel     `json:"channels,omitempty"`
 	ClientCert  map[string]string `json:"client_cert,omitempty"`
 	ClientKey   map[string]string `json:"client_key,omitempty"`
@@ -114,7 +114,7 @@ func (ps *provisionService) Mapping(token string) (map[string]interface{}, error
 // provision layout specified in config.toml.
 func (ps *provisionService) Provision(domainID, token, name, externalID, externalKey string) (res Result, err error) {
 	var channels []sdk.Channel
-	var things []sdk.Thing
+	var things []sdk.Client
 	defer ps.recover(&err, &things, &channels, &domainID, &token)
 
 	token, err = ps.createTokenIfEmpty(token)
@@ -135,26 +135,26 @@ func (ps *provisionService) Provision(domainID, token, name, externalID, externa
 			thing.Metadata[externalIDKey] = externalID
 		}
 
-		th := sdk.Thing{
+		cli := sdk.Client{
 			Metadata: thing.Metadata,
 		}
 		if name == "" {
 			name = thing.Name
 		}
-		th.Name = name
-		th, err := ps.sdk.CreateThing(th, domainID, token)
+		cli.Name = name
+		cli, err := ps.sdk.CreateClient(cli, domainID, token)
 		if err != nil {
 			res.Error = err.Error()
 			return res, errors.Wrap(ErrFailedThingCreation, err)
 		}
 
 		// Get newly created thing (in order to get the key).
-		th, err = ps.sdk.Thing(th.ID, domainID, token)
+		cli, err = ps.sdk.Client(cli.ID, domainID, token)
 		if err != nil {
-			e := errors.Wrap(err, fmt.Errorf("thing id: %s", th.ID))
+			e := errors.Wrap(err, fmt.Errorf("thing id: %s", cli.ID))
 			return res, errors.Wrap(ErrFailedThingRetrieval, e)
 		}
-		things = append(things, th)
+		things = append(things, cli)
 	}
 
 	for _, channel := range ps.conf.Channels {
@@ -197,7 +197,7 @@ func (ps *provisionService) Provision(domainID, token, name, externalID, externa
 
 		if ps.conf.Bootstrap.Provision && needsBootstrap(thing) {
 			bsReq := sdk.BootstrapConfig{
-				ThingID:     thing.ID,
+				ClientID:    thing.ID,
 				ExternalID:  externalID,
 				ExternalKey: externalKey,
 				Channels:    chanIDs,
@@ -235,7 +235,7 @@ func (ps *provisionService) Provision(domainID, token, name, externalID, externa
 			res.CACert = ""
 
 			if needsBootstrap(thing) {
-				if _, err = ps.sdk.UpdateBootstrapCerts(bsConfig.ThingID, cert.Certificate, cert.Key, "", domainID, token); err != nil {
+				if _, err = ps.sdk.UpdateBootstrapCerts(bsConfig.ClientID, cert.Certificate, cert.Key, "", domainID, token); err != nil {
 					return Result{}, errors.Wrap(ErrFailedCertCreation, err)
 				}
 			}
@@ -256,13 +256,13 @@ func (ps *provisionService) Provision(domainID, token, name, externalID, externa
 	return res, nil
 }
 
-func (ps *provisionService) Cert(domainID, token, thingID, ttl string) (string, string, error) {
+func (ps *provisionService) Cert(domainID, token, clientID, ttl string) (string, string, error) {
 	token, err := ps.createTokenIfEmpty(token)
 	if err != nil {
 		return "", "", errors.Wrap(ErrFailedToCreateToken, err)
 	}
 
-	th, err := ps.sdk.Thing(thingID, domainID, token)
+	th, err := ps.sdk.Client(clientID, domainID, token)
 	if err != nil {
 		return "", "", errors.Wrap(ErrUnauthorized, err)
 	}
@@ -319,10 +319,10 @@ func (ps *provisionService) updateGateway(domainID, token string, bs sdk.Bootstr
 	}
 	gw.ExternalID = bs.ExternalID
 	gw.ExternalKey = bs.ExternalKey
-	gw.CfgID = bs.ThingID
+	gw.CfgID = bs.ClientID
 	gw.Type = gateway
 
-	th, sdkerr := ps.sdk.Thing(bs.ThingID, domainID, token)
+	c, sdkerr := ps.sdk.Client(bs.ClientID, domainID, token)
 	if sdkerr != nil {
 		return errors.Wrap(ErrGatewayUpdate, sdkerr)
 	}
@@ -330,10 +330,10 @@ func (ps *provisionService) updateGateway(domainID, token string, bs sdk.Bootstr
 	if err != nil {
 		return errors.Wrap(ErrGatewayUpdate, err)
 	}
-	if err := json.Unmarshal(b, &th.Metadata); err != nil {
+	if err := json.Unmarshal(b, &c.Metadata); err != nil {
 		return errors.Wrap(ErrGatewayUpdate, err)
 	}
-	if _, err := ps.sdk.UpdateThing(th, domainID, token); err != nil {
+	if _, err := ps.sdk.UpdateClient(c, domainID, token); err != nil {
 		return errors.Wrap(ErrGatewayUpdate, err)
 	}
 	return nil
@@ -345,9 +345,9 @@ func (ps *provisionService) errLog(err error) {
 	}
 }
 
-func clean(ps *provisionService, things []sdk.Thing, channels []sdk.Channel, domainID, token string) {
-	for _, t := range things {
-		err := ps.sdk.DeleteThing(t.ID, domainID, token)
+func clean(ps *provisionService, clients []sdk.Client, channels []sdk.Channel, domainID, token string) {
+	for _, t := range clients {
+		err := ps.sdk.DeleteClient(t.ID, domainID, token)
 		ps.errLog(err)
 	}
 	for _, c := range channels {
@@ -356,28 +356,28 @@ func clean(ps *provisionService, things []sdk.Thing, channels []sdk.Channel, dom
 	}
 }
 
-func (ps *provisionService) recover(e *error, ths *[]sdk.Thing, chs *[]sdk.Channel, dm, tkn *string) {
+func (ps *provisionService) recover(e *error, ths *[]sdk.Client, chs *[]sdk.Channel, dm, tkn *string) {
 	if e == nil {
 		return
 	}
-	things, channels, domainID, token, err := *ths, *chs, *dm, *tkn, *e
+	clients, channels, domainID, token, err := *ths, *chs, *dm, *tkn, *e
 
 	if errors.Contains(err, ErrFailedThingRetrieval) || errors.Contains(err, ErrFailedChannelCreation) {
-		for _, th := range things {
-			err := ps.sdk.DeleteThing(th.ID, domainID, token)
+		for _, c := range clients {
+			err := ps.sdk.DeleteClient(c.ID, domainID, token)
 			ps.errLog(err)
 		}
 		return
 	}
 
 	if errors.Contains(err, ErrFailedBootstrap) || errors.Contains(err, ErrFailedChannelRetrieval) {
-		clean(ps, things, channels, domainID, token)
+		clean(ps, clients, channels, domainID, token)
 		return
 	}
 
 	if errors.Contains(err, ErrFailedBootstrapValidate) || errors.Contains(err, ErrFailedCertCreation) {
-		clean(ps, things, channels, domainID, token)
-		for _, th := range things {
+		clean(ps, clients, channels, domainID, token)
+		for _, th := range clients {
 			if needsBootstrap(th) {
 				ps.errLog(ps.sdk.RemoveBootstrap(th.ID, domainID, token))
 			}
@@ -386,19 +386,19 @@ func (ps *provisionService) recover(e *error, ths *[]sdk.Thing, chs *[]sdk.Chann
 	}
 
 	if errors.Contains(err, ErrFailedBootstrapValidate) || errors.Contains(err, ErrFailedCertCreation) {
-		clean(ps, things, channels, domainID, token)
-		for _, th := range things {
+		clean(ps, clients, channels, domainID, token)
+		for _, th := range clients {
 			if needsBootstrap(th) {
 				bs, err := ps.sdk.ViewBootstrap(th.ID, domainID, token)
 				ps.errLog(errors.Wrap(ErrFailedBootstrapRetrieval, err))
-				ps.errLog(ps.sdk.RemoveBootstrap(bs.ThingID, domainID, token))
+				ps.errLog(ps.sdk.RemoveBootstrap(bs.ClientID, domainID, token))
 			}
 		}
 	}
 
 	if errors.Contains(err, ErrThingUpdate) || errors.Contains(err, ErrGatewayUpdate) {
-		clean(ps, things, channels, domainID, token)
-		for _, th := range things {
+		clean(ps, clients, channels, domainID, token)
+		for _, th := range clients {
 			if ps.conf.Bootstrap.X509Provision && needsBootstrap(th) {
 				_, err := ps.sdk.RevokeCert(th.ID, domainID, token)
 				ps.errLog(err)
@@ -406,14 +406,14 @@ func (ps *provisionService) recover(e *error, ths *[]sdk.Thing, chs *[]sdk.Chann
 			if needsBootstrap(th) {
 				bs, err := ps.sdk.ViewBootstrap(th.ID, domainID, token)
 				ps.errLog(errors.Wrap(ErrFailedBootstrapRetrieval, err))
-				ps.errLog(ps.sdk.RemoveBootstrap(bs.ThingID, domainID, token))
+				ps.errLog(ps.sdk.RemoveBootstrap(bs.ClientID, domainID, token))
 			}
 		}
 		return
 	}
 }
 
-func needsBootstrap(th sdk.Thing) bool {
+func needsBootstrap(th sdk.Client) bool {
 	if th.Metadata == nil {
 		return false
 	}

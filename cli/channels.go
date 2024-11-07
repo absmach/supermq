@@ -127,7 +127,7 @@ var cmdChannels = []cobra.Command{
 	{
 		Use:   "connections <channel_id> <domain_id> <user_auth_token>",
 		Short: "Connections list",
-		Long:  `List of Things connected to a Channel`,
+		Long:  `List of Clients connected to a Channel`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -137,7 +137,7 @@ var cmdChannels = []cobra.Command{
 				Offset: Offset,
 				Limit:  Limit,
 			}
-			cl, err := sdk.ThingsByChannel(args[0], pm, args[1], args[2])
+			cl, err := sdk.ClientsByChannel(args[0], pm, args[1], args[2])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return

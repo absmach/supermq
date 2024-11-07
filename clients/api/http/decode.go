@@ -141,7 +141,7 @@ func decodeCreateClientReq(_ context.Context, r *http.Request) (interface{}, err
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
 	}
 	req := createClientReq{
-		thing: c,
+		client: c,
 	}
 
 	return req, nil

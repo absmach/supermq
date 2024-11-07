@@ -20,7 +20,7 @@ import (
 )
 
 var bootConfig = mgsdk.BootstrapConfig{
-	ThingID:     thing.ID,
+	ClientID:    thing.ID,
 	Channels:    []string{channel.ID},
 	Name:        "Test Bootstrap",
 	ExternalID:  "09:6:0:sb:sa",

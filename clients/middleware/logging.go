@@ -56,10 +56,10 @@ func (lm *loggingMiddleware) View(ctx context.Context, session authn.Session, id
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("View thing failed", args...)
+			lm.logger.Warn("View client failed", args...)
 			return
 		}
-		lm.logger.Info("View thing completed successfully", args...)
+		lm.logger.Info("View client completed successfully", args...)
 	}(time.Now())
 	return lm.svc.View(ctx, session, id)
 }
@@ -97,10 +97,10 @@ func (lm *loggingMiddleware) Update(ctx context.Context, session authn.Session, 
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("Update thing failed", args...)
+			lm.logger.Warn("Update client failed", args...)
 			return
 		}
-		lm.logger.Info("Update thing completed successfully", args...)
+		lm.logger.Info("Update client completed successfully", args...)
 	}(time.Now())
 	return lm.svc.Update(ctx, session, client)
 }
@@ -117,10 +117,10 @@ func (lm *loggingMiddleware) UpdateTags(ctx context.Context, session authn.Sessi
 		}
 		if err != nil {
 			args := append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("Update thing tags failed", args...)
+			lm.logger.Warn("Update client tags failed", args...)
 			return
 		}
-		lm.logger.Info("Update thing tags completed successfully", args...)
+		lm.logger.Info("Update client tags completed successfully", args...)
 	}(time.Now())
 	return lm.svc.UpdateTags(ctx, session, client)
 }
@@ -136,10 +136,10 @@ func (lm *loggingMiddleware) UpdateSecret(ctx context.Context, session authn.Ses
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("Update thing secret failed", args...)
+			lm.logger.Warn("Update client secret failed", args...)
 			return
 		}
-		lm.logger.Info("Update thing secret completed successfully", args...)
+		lm.logger.Info("Update client secret completed successfully", args...)
 	}(time.Now())
 	return lm.svc.UpdateSecret(ctx, session, oldSecret, newSecret)
 }
@@ -155,10 +155,10 @@ func (lm *loggingMiddleware) Enable(ctx context.Context, session authn.Session, 
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("Enable thing failed", args...)
+			lm.logger.Warn("Enable client failed", args...)
 			return
 		}
-		lm.logger.Info("Enable thing completed successfully", args...)
+		lm.logger.Info("Enable client completed successfully", args...)
 	}(time.Now())
 	return lm.svc.Enable(ctx, session, id)
 }
@@ -174,10 +174,10 @@ func (lm *loggingMiddleware) Disable(ctx context.Context, session authn.Session,
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("Disable thing failed", args...)
+			lm.logger.Warn("Disable client failed", args...)
 			return
 		}
-		lm.logger.Info("Disable thing completed successfully", args...)
+		lm.logger.Info("Disable client completed successfully", args...)
 	}(time.Now())
 	return lm.svc.Disable(ctx, session, id)
 }
@@ -190,10 +190,10 @@ func (lm *loggingMiddleware) Delete(ctx context.Context, session authn.Session, 
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("Delete thing failed", args...)
+			lm.logger.Warn("Delete client failed", args...)
 			return
 		}
-		lm.logger.Info("Delete thing completed successfully", args...)
+		lm.logger.Info("Delete client completed successfully", args...)
 	}(time.Now())
 	return lm.svc.Delete(ctx, session, id)
 }
@@ -207,10 +207,10 @@ func (lm *loggingMiddleware) SetParentGroup(ctx context.Context, session authn.S
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("Set parent group to thing failed", args...)
+			lm.logger.Warn("Set parent group to client failed", args...)
 			return
 		}
-		lm.logger.Info("Set parent group to thing completed successfully", args...)
+		lm.logger.Info("Set parent group to client completed successfully", args...)
 	}(time.Now())
 	return lm.svc.SetParentGroup(ctx, session, parentGroupID, id)
 }
@@ -223,10 +223,10 @@ func (lm *loggingMiddleware) RemoveParentGroup(ctx context.Context, session auth
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("Remove parent group from thing failed", args...)
+			lm.logger.Warn("Remove parent group from client failed", args...)
 			return
 		}
-		lm.logger.Info("Remove parent group from thing completed successfully", args...)
+		lm.logger.Info("Remove parent group from client completed successfully", args...)
 	}(time.Now())
 	return lm.svc.RemoveParentGroup(ctx, session, id)
 }

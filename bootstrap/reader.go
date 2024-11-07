@@ -61,7 +61,7 @@ func (r reader) ReadConfig(cfg Config, secure bool) (interface{}, error) {
 
 	res := bootstrapRes{
 		ThingKey:   cfg.ThingKey,
-		ThingID:    cfg.ThingID,
+		ThingID:    cfg.ClientID,
 		Channels:   channels,
 		Content:    cfg.Content,
 		ClientCert: cfg.ClientCert,

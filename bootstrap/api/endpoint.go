@@ -33,7 +33,7 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		config := bootstrap.Config{
-			ThingID:     req.ThingID,
+			ClientID:    req.ThingID,
 			ExternalID:  req.ExternalID,
 			ExternalKey: req.ExternalKey,
 			Channels:    channels,
@@ -50,7 +50,7 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		res := configRes{
-			id:      saved.ThingID,
+			id:      saved.ClientID,
 			created: true,
 		}
 
@@ -76,7 +76,7 @@ func updateCertEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		res := updateConfigRes{
-			ThingID:    cfg.ThingID,
+			ThingID:    cfg.ClientID,
 			ClientCert: cfg.ClientCert,
 			CACert:     cfg.CACert,
 			ClientKey:  cfg.ClientKey,
@@ -113,7 +113,7 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		res := viewRes{
-			ThingID:     config.ThingID,
+			ThingID:     config.ClientID,
 			ThingKey:    config.ThingKey,
 			Channels:    channels,
 			ExternalID:  config.ExternalID,
@@ -140,9 +140,9 @@ func updateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		config := bootstrap.Config{
-			ThingID: req.id,
-			Name:    req.Name,
-			Content: req.Content,
+			ClientID: req.id,
+			Name:     req.Name,
+			Content:  req.Content,
 		}
 
 		if err := svc.Update(ctx, session, config); err != nil {
@@ -150,7 +150,7 @@ func updateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		res := configRes{
-			id:      config.ThingID,
+			id:      config.ClientID,
 			created: false,
 		}
 
@@ -217,7 +217,7 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			}
 
 			view := viewRes{
-				ThingID:     cfg.ThingID,
+				ThingID:     cfg.ClientID,
 				ThingKey:    cfg.ThingKey,
 				Channels:    channels,
 				ExternalID:  cfg.ExternalID,
