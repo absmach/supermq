@@ -23,7 +23,7 @@ type eventStore struct {
 	rmEvents.RoleManagerEventStore
 }
 
-// NewEventStoreMiddleware returns wrapper around things service that sends
+// NewEventStoreMiddleware returns wrapper around clients service that sends
 // events to event store.
 func New(ctx context.Context, svc groups.Service, url string) (groups.Service, error) {
 	publisher, err := store.NewPublisher(ctx, url, streamID)
@@ -199,6 +199,7 @@ func (es eventStore) RemoveChildrenGroups(ctx context.Context, session authn.Ses
 
 	return nil
 }
+
 func (es eventStore) RemoveAllChildrenGroups(ctx context.Context, session authn.Session, id string) error {
 	if err := es.svc.RemoveAllChildrenGroups(ctx, session, id); err != nil {
 		return err

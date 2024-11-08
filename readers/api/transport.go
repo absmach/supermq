@@ -57,14 +57,14 @@ const (
 var errUserAccess = errors.New("user has no permission")
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc readers.MessageRepository, authn mgauthn.Authentication, things grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, svcName, instanceID string) http.Handler {
+func MakeHandler(svc readers.MessageRepository, authn mgauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, svcName, instanceID string) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}
 
 	mux := chi.NewRouter()
 	mux.Get("/channels/{chanID}/messages", kithttp.NewServer(
-		listMessagesEndpoint(svc, authn, things, channels),
+		listMessagesEndpoint(svc, authn, clients, channels),
 		decodeList,
 		encodeResponse,
 		opts...,
@@ -244,8 +244,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	}
 }
 
-func authnAuthz(ctx context.Context, req listMessagesReq, authn mgauthn.Authentication, things grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) error {
-	clientID, clientType, err := authenticate(ctx, req, authn, things)
+func authnAuthz(ctx context.Context, req listMessagesReq, authn mgauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) error {
+	clientID, clientType, err := authenticate(ctx, req, authn, clients)
 	if err != nil {
 		return nil
 	}
@@ -255,7 +255,7 @@ func authnAuthz(ctx context.Context, req listMessagesReq, authn mgauthn.Authenti
 	return nil
 }
 
-func authenticate(ctx context.Context, req listMessagesReq, authn mgauthn.Authentication, things grpcClientsV1.ClientsServiceClient) (clientID string, clientType string, err error) {
+func authenticate(ctx context.Context, req listMessagesReq, authn mgauthn.Authentication, clients grpcClientsV1.ClientsServiceClient) (clientID string, clientType string, err error) {
 	switch {
 	case req.token != "":
 		session, err := authn.Authenticate(ctx, req.token)
@@ -265,7 +265,7 @@ func authenticate(ctx context.Context, req listMessagesReq, authn mgauthn.Authen
 
 		return session.DomainUserID, policies.UserType, nil
 	case req.key != "":
-		res, err := things.Authenticate(ctx, &grpcClientsV1.AuthnReq{
+		res, err := clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{
 			ClientSecret: req.key,
 		})
 		if err != nil {

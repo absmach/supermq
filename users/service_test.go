@@ -1355,7 +1355,7 @@ func TestListMembers(t *testing.T) {
 		err                     error
 	}{
 		{
-			desc:                    "list members with no policies successfully of the things kind",
+			desc:                    "list members with no policies successfully of the clients kind",
 			groupID:                 validID,
 			objectKind:              policysvc.ClientsKind,
 			objectID:                validID,
@@ -1377,7 +1377,7 @@ func TestListMembers(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:       "list members with policies successsfully of the things kind",
+			desc:       "list members with policies successsfully of the clients kind",
 			groupID:    validID,
 			objectKind: policysvc.ClientsKind,
 			objectID:   validID,
@@ -1408,7 +1408,7 @@ func TestListMembers(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:       "list members with policies successsfully of the things kind with permissions",
+			desc:       "list members with policies successsfully of the clients kind with permissions",
 			groupID:    validID,
 			objectKind: policysvc.ClientsKind,
 			objectID:   validID,
@@ -1440,7 +1440,7 @@ func TestListMembers(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:       "list members with policies of the things kind with permissionswith failed list permissions",
+			desc:       "list members with policies of the clients kind with permissionswith failed list permissions",
 			groupID:    validID,
 			objectKind: policysvc.ClientsKind,
 			objectID:   validID,
@@ -1466,7 +1466,7 @@ func TestListMembers(t *testing.T) {
 			err:                     svcerr.ErrNotFound,
 		},
 		{
-			desc:       "list members with of the things kind with failed to list all subjects",
+			desc:       "list members with of the clients kind with failed to list all subjects",
 			groupID:    validID,
 			objectKind: policysvc.ClientsKind,
 			objectID:   validID,
@@ -1482,7 +1482,7 @@ func TestListMembers(t *testing.T) {
 			err:                     repoerr.ErrNotFound,
 		},
 		{
-			desc:       "list members with of the things kind with failed to retrieve all",
+			desc:       "list members with of the clients kind with failed to retrieve all",
 			groupID:    validID,
 			objectKind: policysvc.ClientsKind,
 			objectID:   validID,

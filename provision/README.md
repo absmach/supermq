@@ -5,9 +5,9 @@ Provision service is used to setup initial applications configuration i.e. thing
 
 For gateways to communicate with [Magistrala][magistrala] configuration is required (mqtt host, thing, channels, certificates...). To get the configuration gateway will send a request to [Bootstrap][bootstrap] service providing `<external_id>` and `<external_key>` in request. To make a request to [Bootstrap][bootstrap] service you can use [Agent][agent] service on a gateway.
 
-To create bootstrap configuration you can use [Bootstrap][bootstrap] or `Provision` service. [Magistrala UI][mgxui] uses [Bootstrap][bootstrap] service for creating gateway configurations. `Provision` service should provide an easy way of provisioning your gateways i.e creating bootstrap configuration and as many things and channels that your setup requires.
+To create bootstrap configuration you can use [Bootstrap][bootstrap] or `Provision` service. [Magistrala UI][mgxui] uses [Bootstrap][bootstrap] service for creating gateway configurations. `Provision` service should provide an easy way of provisioning your gateways i.e creating bootstrap configuration and as many clients and channels that your setup requires.
 
-Also you may use provision service to create certificates for each thing. Each service running on gateway may require more than one thing and channel for communication. Let's say that you are using services [Agent][agent] and [Export][export] on a gateway you will need two channels for `Agent` (`data` and `control`) and one for `Export` and one thing. Additionally if you enabled mtls each service will need its own thing and certificate for access to [Magistrala][magistrala]. Your setup could require any number of things and channels this kind of setup we can call `provision layout`.
+Also you may use provision service to create certificates for each thing. Each service running on gateway may require more than one thing and channel for communication. Let's say that you are using services [Agent][agent] and [Export][export] on a gateway you will need two channels for `Agent` (`data` and `control`) and one for `Export` and one thing. Additionally if you enabled mtls each service will need its own thing and certificate for access to [Magistrala][magistrala]. Your setup could require any number of clients and channels this kind of setup we can call `provision layout`.
 
 Provision service provides a way of specifying this `provision layout` and creating a setup according to that layout by serving requests on `/mapping` endpoint. Provision layout is configured in [config.toml](configs/config.toml).
 
@@ -47,7 +47,7 @@ For the purposes of running provision as an add-on in docker composition environ
 Configuration can be specified in [config.toml](configs/config.toml). Config file can specify all the settings that environment variables can configure and in addition
 `/mapping` endpoint provision layout can be configured.
 
-In `config.toml` we can enlist array of things and channels that we want to create and make connections between them which we call provision layout.
+In `config.toml` we can enlist array of clients and channels that we want to create and make connections between them which we call provision layout.
 
 Metadata can be whatever suits your needs except that at least one thing needs to have `external_id` (which is populated with value from [request](#example)). Thing that has `external_id` will be used for creating bootstrap configuration which can be fetched with [Agent][agent].
 For channels metadata `type` is reserved for `control` and `data` which we use with [Agent][agent].
@@ -171,7 +171,7 @@ Response contains created clients, channels and certificates if any:
 
 ## Certificates
 
-Provision service has `/certs` endpoint that can be used to generate certificates for things when mTLS is required:
+Provision service has `/certs` endpoint that can be used to generate certificates for clients when mTLS is required:
 
 - `users_token` - users authentication token or API token
 - `client_id` - id of the thing for which certificate is going to be generated

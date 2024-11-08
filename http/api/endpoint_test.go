@@ -34,9 +34,9 @@ const (
 	invalidValue = "invalid"
 )
 
-func newService(authn mgauthn.Authentication, things grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) (session.Handler, *pubsub.PubSub) {
+func newService(authn mgauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) (session.Handler, *pubsub.PubSub) {
 	pub := new(pubsub.PubSub)
-	return server.NewHandler(pub, authn, things, channels, mglog.NewMock()), pub
+	return server.NewHandler(pub, authn, clients, channels, mglog.NewMock()), pub
 }
 
 func newTargetHTTPServer() *httptest.Server {

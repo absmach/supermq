@@ -34,7 +34,7 @@ type service struct {
 }
 
 // NewService returns a new groups service implementation.
-func NewService(repo Repository, policy policies.Service, idp magistrala.IDProvider, channels grpcChannelsV1.ChannelsServiceClient, things grpcClientsV1.ClientsServiceClient, sidProvider magistrala.IDProvider) (Service, error) {
+func NewService(repo Repository, policy policies.Service, idp magistrala.IDProvider, channels grpcChannelsV1.ChannelsServiceClient, clients grpcClientsV1.ClientsServiceClient, sidProvider magistrala.IDProvider) (Service, error) {
 	rpms, err := roles.NewProvisionManageService(policies.GroupType, repo, policy, sidProvider, AvailableActions(), BuiltInRoles())
 	if err != nil {
 		return service{}, err
@@ -44,7 +44,7 @@ func NewService(repo Repository, policy policies.Service, idp magistrala.IDProvi
 		policy:                 policy,
 		idProvider:             idp,
 		channels:               channels,
-		things:                 things,
+		things:                 clients,
 		ProvisionManageService: rpms,
 	}, nil
 }

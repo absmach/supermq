@@ -20,7 +20,7 @@ const (
 	ChannelCreate roles.Action = "channel_create"
 	GroupCreate   roles.Action = "group_create"
 
-	// Domain Things Roles: Actions related to things present within the Domain
+	// Domain Things Roles: Actions related to clients present within the Domain
 	ClientUpdate           roles.Action = "client_update"
 	ClientRead             roles.Action = "client_read"
 	ClientDelete           roles.Action = "client_delete"

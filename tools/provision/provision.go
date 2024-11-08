@@ -152,7 +152,7 @@ func Provision(conf Config) error {
 	cIDs := []string{}
 	tIDs := []string{}
 
-	fmt.Println("# List of things that can be connected to MQTT broker")
+	fmt.Println("# List of clients that can be connected to MQTT broker")
 
 	for i := 0; i < conf.Num; i++ {
 		clients[i] = sdk.Client{Name: fmt.Sprintf("%s-thing-%d", conf.Prefix, i)}
@@ -249,8 +249,8 @@ func Provision(conf Config) error {
 		fmt.Println("")
 	}
 
-	fmt.Printf("# List of channels that things can publish to\n" +
-		"# each channel is connected to each thing from things list\n")
+	fmt.Printf("# List of channels that clients can publish to\n" +
+		"# each channel is connected to each thing from clients list\n")
 	for i := 0; i < conf.Num; i++ {
 		fmt.Printf("[[channels]]\nchannel_id = \"%s\"\n\n", cIDs[i])
 	}
@@ -262,7 +262,7 @@ func Provision(conf Config) error {
 				ChannelID: cID,
 			}
 			if err := s.Connect(conIDs, domain.ID, token.AccessToken); err != nil {
-				log.Fatalf("Failed to connect things %s to channels %s: %s", tID, cID, err)
+				log.Fatalf("Failed to connect clients %s to channels %s: %s", tID, cID, err)
 			}
 		}
 	}

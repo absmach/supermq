@@ -63,7 +63,7 @@ type Service interface {
 	// one created with Provision method.
 	Mapping(token string) (map[string]interface{}, error)
 
-	// Certs creates certificate for things that communicate over mTLS
+	// Certs creates certificate for clients that communicate over mTLS
 	// A duration string is a possibly signed sequence of decimal numbers,
 	// each with optional fraction and a unit suffix, such as "300ms", "-1.5h" or "2h45m".
 	// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
@@ -78,7 +78,7 @@ type provisionService struct {
 
 // Result represent what is created with additional info.
 type Result struct {
-	Things      []sdk.Client      `json:"things,omitempty"`
+	Clients     []sdk.Client      `json:"clients,omitempty"`
 	Channels    []sdk.Channel     `json:"channels,omitempty"`
 	ClientCert  map[string]string `json:"client_cert,omitempty"`
 	ClientKey   map[string]string `json:"client_key,omitempty"`
@@ -114,8 +114,8 @@ func (ps *provisionService) Mapping(token string) (map[string]interface{}, error
 // provision layout specified in config.toml.
 func (ps *provisionService) Provision(domainID, token, name, externalID, externalKey string) (res Result, err error) {
 	var channels []sdk.Channel
-	var things []sdk.Client
-	defer ps.recover(&err, &things, &channels, &domainID, &token)
+	var clients []sdk.Client
+	defer ps.recover(&err, &clients, &channels, &domainID, &token)
 
 	token, err = ps.createTokenIfEmpty(token)
 	if err != nil {
@@ -154,7 +154,7 @@ func (ps *provisionService) Provision(domainID, token, name, externalID, externa
 			e := errors.Wrap(err, fmt.Errorf("thing id: %s", cli.ID))
 			return res, errors.Wrap(ErrFailedThingRetrieval, e)
 		}
-		things = append(things, cli)
+		clients = append(clients, cli)
 	}
 
 	for _, channel := range ps.conf.Channels {
@@ -175,7 +175,7 @@ func (ps *provisionService) Provision(domainID, token, name, externalID, externa
 	}
 
 	res = Result{
-		Things:      things,
+		Clients:     clients,
 		Channels:    channels,
 		Whitelisted: map[string]bool{},
 		ClientCert:  map[string]string{},
@@ -184,7 +184,7 @@ func (ps *provisionService) Provision(domainID, token, name, externalID, externa
 
 	var cert sdk.Cert
 	var bsConfig sdk.BootstrapConfig
-	for _, thing := range things {
+	for _, thing := range clients {
 		var chanIDs []string
 
 		for _, ch := range channels {

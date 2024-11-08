@@ -188,7 +188,7 @@ func usersHandler(svc users.Service, authn mgauthn.Authentication, tokenClient g
 			opts...,
 		), "list_users_by_user_group_id").ServeHTTP)
 
-		// Ideal location: things service, channels endpoint.
+		// Ideal location: clients service, channels endpoint.
 		// Reason for placing here :
 		// SpiceDB provides list of user ids in given channel_id
 		// and users service can access spiceDB and get the user list with channel_id.

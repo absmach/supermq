@@ -2,10 +2,10 @@
 
 A simple MQTT benchmarking tool for Magistrala platform.
 
-It connects Magistrala things as subscribers over a number of channels and
-uses other Magistrala things to publish messages and create MQTT load.
+It connects Magistrala clients as subscribers over a number of channels and
+uses other Magistrala clients to publish messages and create MQTT load.
 
-Magistrala things used must be pre-provisioned first, and Magistrala `provision` tool can be used for this purpose.
+Magistrala clients used must be pre-provisioned first, and Magistrala `provision` tool can be used for this purpose.
 
 ## Installation
 

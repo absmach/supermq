@@ -188,18 +188,18 @@ func main() {
 
 	thgrpcCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&thgrpcCfg, env.Options{Prefix: envPrefixThings}); err != nil {
-		logger.Error(fmt.Sprintf("failed to load things gRPC client configuration : %s", err))
+		logger.Error(fmt.Sprintf("failed to load clients gRPC client configuration : %s", err))
 		exitCode = 1
 		return
 	}
 	thingsClient, thingsHandler, err := grpcclient.SetupClientsClient(ctx, thgrpcCfg)
 	if err != nil {
-		logger.Error(fmt.Sprintf("failed to connect to things gRPC server: %s", err))
+		logger.Error(fmt.Sprintf("failed to connect to clients gRPC server: %s", err))
 		exitCode = 1
 		return
 	}
 	defer thingsHandler.Close()
-	logger.Info("Things gRPC client successfully connected to things gRPC server " + thingsHandler.Secure())
+	logger.Info("Things gRPC client successfully connected to clients gRPC server " + thingsHandler.Secure())
 
 	svc, psvc, err := newService(ctx, authz, policyService, db, dbConfig, channelsClient, thingsClient, tracer, logger, cfg)
 	if err != nil {
@@ -253,7 +253,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, authz mgauthz.Authorization, policy policies.Service, db *sqlx.DB, dbConfig pgclient.Config, channels grpcChannelsV1.ChannelsServiceClient, things grpcClientsV1.ClientsServiceClient, tracer trace.Tracer, logger *slog.Logger, c config) (groups.Service, pgroups.Service, error) {
+func newService(ctx context.Context, authz mgauthz.Authorization, policy policies.Service, db *sqlx.DB, dbConfig pgclient.Config, channels grpcChannelsV1.ChannelsServiceClient, clients grpcClientsV1.ClientsServiceClient, tracer trace.Tracer, logger *slog.Logger, c config) (groups.Service, pgroups.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	idp := uuid.New()
 	sid, err := sid.New()
@@ -263,7 +263,7 @@ func newService(ctx context.Context, authz mgauthz.Authorization, policy policie
 
 	// Creating groups service
 	repo := postgres.New(database)
-	svc, err := gpsvc.NewService(repo, policy, idp, channels, things, sid)
+	svc, err := gpsvc.NewService(repo, policy, idp, channels, clients, sid)
 	if err != nil {
 		return nil, nil, err
 	}

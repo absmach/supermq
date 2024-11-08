@@ -87,7 +87,7 @@ func main() {
 
 	thingsClientCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&thingsClientCfg, env.Options{Prefix: envPrefixThings}); err != nil {
-		logger.Error(fmt.Sprintf("failed to load things gRPC client configuration : %s", err))
+		logger.Error(fmt.Sprintf("failed to load clients gRPC client configuration : %s", err))
 		exitCode = 1
 		return
 	}
@@ -99,7 +99,7 @@ func main() {
 		return
 	}
 	defer thingsHandler.Close()
-	logger.Info("Things service gRPC client successfully connected to things gRPC server " + thingsHandler.Secure())
+	logger.Info("Things service gRPC client successfully connected to clients gRPC server " + thingsHandler.Secure())
 
 	channelsClientCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&channelsClientCfg, env.Options{Prefix: envPrefixChannels}); err != nil {

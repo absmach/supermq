@@ -1,6 +1,6 @@
 # Magistrala Things and Channels Provisioning Tool
 
-A simple utility to create a list of channels and things connected to these channels with possibility to create certificates for mTLS use case.
+A simple utility to create a list of channels and clients connected to these channels with possibility to create certificates for mTLS use case.
 
 This tool is useful for testing, and it creates a TOML format output (on stdout, can be redirected into the file as needed)
 that can be used by Magistrala MQTT benchmarking tool (`mqtt-bench`).
@@ -14,22 +14,22 @@ make
 ### Usage
 ```
 ./provision --help
-Tool for provisioning series of Magistrala channels and things and connecting them together.
+Tool for provisioning series of Magistrala channels and clients and connecting them together.
 Complete documentation is available at https://docs.magistrala.abstractmachines.fr
 
 Usage:
   provision [flags]
 
 Flags:
-      --ca string         CA for creating and signing things certificate (default "ca.crt")
-      --cakey string      ca.key for creating and signing things certificate (default "ca.key")
+      --ca string         CA for creating and signing clients certificate (default "ca.crt")
+      --cakey string      ca.key for creating and signing clients certificate (default "ca.key")
   -h, --help              help for provision
       --host string       address for magistrala instance (default "https://localhost")
-      --num int           number of channels and things to create and connect (default 10)
+      --num int           number of channels and clients to create and connect (default 10)
   -p, --password string   magistrala users password
       --ssl               create certificates for mTLS access
   -u, --username string   magistrala user
-      --prefix string     name prefix for things and channels
+      --prefix string     name prefix for clients and channels
 ```
 
 Example:
@@ -44,7 +44,7 @@ go run tools/provision/cmd/main.go  --host http://localhost --num 10 -u test@mag
 
 ```
 
->`ca.crt` and `ca.key` are used for creating things certificate and for HTTPS,
+>`ca.crt` and `ca.key` are used for creating clients certificate and for HTTPS,
 > if you are provisioning on remote server you will have to get these files to your local
 > directory so that you can create certificates for things
 
@@ -52,7 +52,7 @@ go run tools/provision/cmd/main.go  --host http://localhost --num 10 -u test@mag
 Example of output:
 
 ```
-# List of things that can be connected to MQTT broker
+# List of clients that can be connected to MQTT broker
 [[things]]
 client_id = "0eac601b-6d54-4767-b8b7-594aaf9990d3"
 thing_key = "07713103-513f-43c7-b7fe-500c1af23d7d"
@@ -137,8 +137,8 @@ uCRt+TFMyEfqilipmNsV7esgbroiyEGXGMI8JdBY9OsnK6ZSlXaMnQ9vq2kK
 -----END RSA PRIVATE KEY-----
 """
 
-# List of channels that things can publish to
-# each channel is connected to each thing from things list
+# List of channels that clients can publish to
+# each channel is connected to each thing from clients list
 # Things connected to channel 1f18afa1-29c4-4634-99d1-68dfa1b74e6a: 0eac601b-6d54-4767-b8b7-594aaf9990d3
 [[channels]]
 channel_id = "1f18afa1-29c4-4634-99d1-68dfa1b74e6a"

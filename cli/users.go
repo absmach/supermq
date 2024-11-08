@@ -400,9 +400,9 @@ var cmdUsers = []cobra.Command{
 	{
 		Use:   "things <user_id> <user_auth_token>",
 		Short: "List things",
-		Long: "List things of user\n" +
+		Long: "List clients of user\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli users things <user_id> <user_auth_token>\n",
+			"\tmagistrala-cli users clients <user_id> <user_auth_token>\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -524,7 +524,7 @@ var cmdUsers = []cobra.Command{
 // NewUsersCmd returns users command.
 func NewUsersCmd() *cobra.Command {
 	cmd := cobra.Command{
-		Use:   "users [create | get | update | token | password | enable | disable | delete | channels | things | groups | search]",
+		Use:   "users [create | get | update | token | password | enable | disable | delete | channels | clients | groups | search]",
 		Short: "Users management",
 		Long:  `Users management: create accounts and tokens"`,
 	}

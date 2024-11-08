@@ -50,9 +50,9 @@ func (_m *Service) AddRole(ctx context.Context, session authn.Session, entityID 
 	return r0, r1
 }
 
-// Connect provides a mock function with given fields: ctx, session, chIDs, thIDs, connType
-func (_m *Service) Connect(ctx context.Context, session authn.Session, chIDs []string, thIDs []string, connType []connections.ConnType) error {
-	ret := _m.Called(ctx, session, chIDs, thIDs, connType)
+// Connect provides a mock function with given fields: ctx, session, chIDs, clIDs, connType
+func (_m *Service) Connect(ctx context.Context, session authn.Session, chIDs []string, clIDs []string, connType []connections.ConnType) error {
+	ret := _m.Called(ctx, session, chIDs, clIDs, connType)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Connect")
@@ -60,7 +60,7 @@ func (_m *Service) Connect(ctx context.Context, session authn.Session, chIDs []s
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, []string, []string, []connections.ConnType) error); ok {
-		r0 = rf(ctx, session, chIDs, thIDs, connType)
+		r0 = rf(ctx, session, chIDs, clIDs, connType)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -133,9 +133,9 @@ func (_m *Service) DisableChannel(ctx context.Context, session authn.Session, id
 	return r0, r1
 }
 
-// Disconnect provides a mock function with given fields: ctx, session, chIDs, thIDs, connType
-func (_m *Service) Disconnect(ctx context.Context, session authn.Session, chIDs []string, thIDs []string, connType []connections.ConnType) error {
-	ret := _m.Called(ctx, session, chIDs, thIDs, connType)
+// Disconnect provides a mock function with given fields: ctx, session, chIDs, clIDs, connType
+func (_m *Service) Disconnect(ctx context.Context, session authn.Session, chIDs []string, clIDs []string, connType []connections.ConnType) error {
+	ret := _m.Called(ctx, session, chIDs, clIDs, connType)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Disconnect")
@@ -143,7 +143,7 @@ func (_m *Service) Disconnect(ctx context.Context, session authn.Session, chIDs 
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, []string, []string, []connections.ConnType) error); ok {
-		r0 = rf(ctx, session, chIDs, thIDs, connType)
+		r0 = rf(ctx, session, chIDs, clIDs, connType)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -237,27 +237,27 @@ func (_m *Service) ListChannels(ctx context.Context, session authn.Session, pm c
 	return r0, r1
 }
 
-// ListChannelsByThing provides a mock function with given fields: ctx, session, thID, pm
-func (_m *Service) ListChannelsByThing(ctx context.Context, session authn.Session, thID string, pm channels.PageMetadata) (channels.Page, error) {
-	ret := _m.Called(ctx, session, thID, pm)
+// ListChannelsByClient provides a mock function with given fields: ctx, session, id, pm
+func (_m *Service) ListChannelsByClient(ctx context.Context, session authn.Session, id string, pm channels.PageMetadata) (channels.Page, error) {
+	ret := _m.Called(ctx, session, id, pm)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ListChannelsByThing")
+		panic("no return value specified for ListChannelsByClient")
 	}
 
 	var r0 channels.Page
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, channels.PageMetadata) (channels.Page, error)); ok {
-		return rf(ctx, session, thID, pm)
+		return rf(ctx, session, id, pm)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, channels.PageMetadata) channels.Page); ok {
-		r0 = rf(ctx, session, thID, pm)
+		r0 = rf(ctx, session, id, pm)
 	} else {
 		r0 = ret.Get(0).(channels.Page)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string, channels.PageMetadata) error); ok {
-		r1 = rf(ctx, session, thID, pm)
+		r1 = rf(ctx, session, id, pm)
 	} else {
 		r1 = ret.Error(1)
 	}

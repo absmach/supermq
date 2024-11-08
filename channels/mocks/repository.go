@@ -141,6 +141,24 @@ func (_m *Repository) CheckConnection(ctx context.Context, conn channels.Connect
 	return r0
 }
 
+// ClientAuthorize provides a mock function with given fields: ctx, conn
+func (_m *Repository) ClientAuthorize(ctx context.Context, conn channels.Connection) error {
+	ret := _m.Called(ctx, conn)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ClientAuthorize")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, channels.Connection) error); ok {
+		r0 = rf(ctx, conn)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DoesChannelHaveConnections provides a mock function with given fields: ctx, id
 func (_m *Repository) DoesChannelHaveConnections(ctx context.Context, id string) (bool, error) {
 	ret := _m.Called(ctx, id)
@@ -205,6 +223,24 @@ func (_m *Repository) RemoveChannelConnections(ctx context.Context, channelID st
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
 		r0 = rf(ctx, channelID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemoveClientConnections provides a mock function with given fields: ctx, clientID
+func (_m *Repository) RemoveClientConnections(ctx context.Context, clientID string) error {
+	ret := _m.Called(ctx, clientID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveClientConnections")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, clientID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -277,24 +313,6 @@ func (_m *Repository) RemoveRoles(ctx context.Context, roleIDs []string) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, []string) error); ok {
 		r0 = rf(ctx, roleIDs)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// RemoveThingConnections provides a mock function with given fields: ctx, thingID
-func (_m *Repository) RemoveThingConnections(ctx context.Context, thingID string) error {
-	ret := _m.Called(ctx, thingID)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RemoveThingConnections")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(ctx, thingID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -805,24 +823,6 @@ func (_m *Repository) SetParentGroup(ctx context.Context, ch channels.Channel) e
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, channels.Channel) error); ok {
 		r0 = rf(ctx, ch)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// ThingAuthorize provides a mock function with given fields: ctx, conn
-func (_m *Repository) ThingAuthorize(ctx context.Context, conn channels.Connection) error {
-	ret := _m.Called(ctx, conn)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ThingAuthorize")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, channels.Connection) error); ok {
-		r0 = rf(ctx, conn)
 	} else {
 		r0 = ret.Error(0)
 	}

@@ -16,14 +16,14 @@ import (
 	"github.com/go-kit/kit/endpoint"
 )
 
-func listMessagesEndpoint(svc readers.MessageRepository, authn mgauthn.Authentication, things grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) endpoint.Endpoint {
+func listMessagesEndpoint(svc readers.MessageRepository, authn mgauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listMessagesReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		if err := authnAuthz(ctx, req, authn, things, channels); err != nil {
+		if err := authnAuthz(ctx, req, authn, clients, channels); err != nil {
 			return nil, errors.Wrap(svcerr.ErrAuthorization, err)
 		}
 

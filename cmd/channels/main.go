@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-// Package main contains things main function to start the things service.
+// Package main contains clients main function to start the clients service.
 package main
 
 import (
@@ -173,18 +173,18 @@ func main() {
 
 	thgrpcCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&thgrpcCfg, env.Options{Prefix: envPrefixClients}); err != nil {
-		logger.Error(fmt.Sprintf("failed to load things gRPC client configuration : %s", err))
+		logger.Error(fmt.Sprintf("failed to load clients gRPC client configuration : %s", err))
 		exitCode = 1
 		return
 	}
 	clientsClient, clientsHandler, err := grpcclient.SetupClientsClient(ctx, thgrpcCfg)
 	if err != nil {
-		logger.Error(fmt.Sprintf("failed to connect to things gRPC server: %s", err))
+		logger.Error(fmt.Sprintf("failed to connect to clients gRPC server: %s", err))
 		exitCode = 1
 		return
 	}
 	defer clientsHandler.Close()
-	logger.Info("Things gRPC client successfully connected to things gRPC server " + clientsHandler.Secure())
+	logger.Info("Things gRPC client successfully connected to clients gRPC server " + clientsHandler.Secure())
 
 	groupsgRPCCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&groupsgRPCCfg, env.Options{Prefix: envPrefixGroups}); err != nil {

@@ -17,7 +17,7 @@ var cmdClients = []cobra.Command{
 		Short: "Create thing",
 		Long: "Creates new thing with provided name and metadata\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli things create '{\"name\":\"new thing\", \"metadata\":{\"key\": \"value\"}}' $DOMAINID $USERTOKEN\n",
+			"\tmagistrala-cli clients create '{\"name\":\"new thing\", \"metadata\":{\"key\": \"value\"}}' $DOMAINID $USERTOKEN\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -42,11 +42,11 @@ var cmdClients = []cobra.Command{
 	{
 		Use:   "get [all | <client_id>] <domain_id> <user_auth_token>",
 		Short: "Get things",
-		Long: "Get all things or get thing by id. Clients can be filtered by name or metadata\n" +
+		Long: "Get all clients or get thing by id. Clients can be filtered by name or metadata\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli things get all $DOMAINID $USERTOKEN - lists all things\n" +
-			"\tmagistrala-cli things get all $DOMAINID $USERTOKEN --offset=10 --limit=10 - lists all things with offset and limit\n" +
-			"\tmagistrala-cli things get <client_id> $DOMAINID $USERTOKEN - shows thing with provided <client_id>\n",
+			"\tmagistrala-cli clients get all $DOMAINID $USERTOKEN - lists all things\n" +
+			"\tmagistrala-cli clients get all $DOMAINID $USERTOKEN --offset=10 --limit=10 - lists all clients with offset and limit\n" +
+			"\tmagistrala-cli clients get <client_id> $DOMAINID $USERTOKEN - shows thing with provided <client_id>\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -160,7 +160,7 @@ var cmdClients = []cobra.Command{
 		Short: "Change thing status to enabled",
 		Long: "Change thing status to enabled\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli things enable <client_id> $DOMAINID $USERTOKEN\n",
+			"\tmagistrala-cli clients enable <client_id> $DOMAINID $USERTOKEN\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -181,7 +181,7 @@ var cmdClients = []cobra.Command{
 		Short: "Change thing status to disabled",
 		Long: "Change thing status to disabled\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli things disable <client_id> $DOMAINID $USERTOKEN\n",
+			"\tmagistrala-cli clients disable <client_id> $DOMAINID $USERTOKEN\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -202,7 +202,7 @@ var cmdClients = []cobra.Command{
 		Short: "Share thing with a user",
 		Long: "Share thing with a user\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli things share <client_id> <user_id> <relation> $DOMAINID $USERTOKEN\n",
+			"\tmagistrala-cli clients share <client_id> <user_id> <relation> $DOMAINID $USERTOKEN\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 5 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -226,7 +226,7 @@ var cmdClients = []cobra.Command{
 		Short: "Unshare thing with a user",
 		Long: "Unshare thing with a user\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli things share  <client_id> <user_id> <relation> $DOMAINID $USERTOKEN\n",
+			"\tmagistrala-cli clients share  <client_id> <user_id> <relation> $DOMAINID $USERTOKEN\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 5 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -250,7 +250,7 @@ var cmdClients = []cobra.Command{
 		Short: "Connect thing",
 		Long: "Connect thing to the channel\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli things connect <client_id> <channel_id> $DOMAINID $USERTOKEN\n",
+			"\tmagistrala-cli clients connect <client_id> <channel_id> $DOMAINID $USERTOKEN\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 4 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -274,7 +274,7 @@ var cmdClients = []cobra.Command{
 		Short: "Disconnect thing",
 		Long: "Disconnect thing to the channel\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli things disconnect <client_id> <channel_id> $DOMAINID $USERTOKEN\n",
+			"\tmagistrala-cli clients disconnect <client_id> <channel_id> $DOMAINID $USERTOKEN\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 4 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -322,7 +322,7 @@ var cmdClients = []cobra.Command{
 		Short: "List users",
 		Long: "List users of a thing\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli things users <client_id> $DOMAINID $USERTOKEN\n",
+			"\tmagistrala-cli clients users <client_id> $DOMAINID $USERTOKEN\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -343,7 +343,7 @@ var cmdClients = []cobra.Command{
 	},
 }
 
-// NewClientsCmd returns things command.
+// NewClientsCmd returns clients command.
 func NewClientsCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "things [create | get | update | delete | share | connect | disconnect | connections | not-connected | users ]",

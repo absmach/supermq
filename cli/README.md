@@ -75,19 +75,19 @@ magistrala-cli users disable <user_id> <user_token>
 #### Create Thing
 
 ```bash
-magistrala-cli things create '{"name":"myThing"}' <user_token>
+magistrala-cli clients create '{"name":"myThing"}' <user_token>
 ```
 
 #### Create Thing with metadata
 
 ```bash
-magistrala-cli things create '{"name":"myThing", "metadata": {"key1":"value1"}}' <user_token>
+magistrala-cli clients create '{"name":"myThing", "metadata": {"key1":"value1"}}' <user_token>
 ```
 
 #### Bulk Provision Things
 
 ```bash
-magistrala-cli provision things <file> <user_token>
+magistrala-cli provision clients <file> <user_token>
 ```
 
 - `file` - A CSV or JSON file containing thing names (must have extension `.csv` or `.json`)
@@ -131,43 +131,43 @@ With JSON you can be able to specify more fields of the channels you want to cre
 #### Update Thing
 
 ```bash
-magistrala-cli things update <client_id> '{"name":"value1", "metadata":{"key1": "value2"}}' <user_token>
+magistrala-cli clients update <client_id> '{"name":"value1", "metadata":{"key1": "value2"}}' <user_token>
 ```
 
 #### Identify Thing
 
 ```bash
-magistrala-cli things identify <client_key>
+magistrala-cli clients identify <client_key>
 ```
 
 #### Enable Thing
 
 ```bash
-magistrala-cli things enable <client_id> <user_token>
+magistrala-cli clients enable <client_id> <user_token>
 ```
 
 #### Disable Thing
 
 ```bash
-magistrala-cli things disable <client_id> <user_token>
+magistrala-cli clients disable <client_id> <user_token>
 ```
 
 #### Get Thing
 
 ```bash
-magistrala-cli things get <client_id> <user_token>
+magistrala-cli clients get <client_id> <user_token>
 ```
 
 #### Get Things
 
 ```bash
-magistrala-cli things get all <user_token>
+magistrala-cli clients get all <user_token>
 ```
 
 #### Get a subset list of provisioned Things
 
 ```bash
-magistrala-cli things get all --offset=1 --limit=5 <user_token>
+magistrala-cli clients get all --offset=1 --limit=5 <user_token>
 ```
 
 #### Create Channel
@@ -260,7 +260,7 @@ magistrala-cli channels get all --offset=1 --limit=5 <user_token>
 #### Connect Thing to Channel
 
 ```bash
-magistrala-cli things connect <client_id> <channel_id> <user_token>
+magistrala-cli clients connect <client_id> <channel_id> <user_token>
 ```
 
 #### Bulk Connect Things to Channels
@@ -293,13 +293,13 @@ A comparable JSON file would be
 #### Disconnect Thing from Channel
 
 ```bash
-magistrala-cli things disconnect <client_id> <channel_id> <user_token>
+magistrala-cli clients disconnect <client_id> <channel_id> <user_token>
 ```
 
 #### Get a subset list of Channels connected to Thing
 
 ```bash
-magistrala-cli things connections <client_id> <user_token>
+magistrala-cli clients connections <client_id> <user_token>
 ```
 
 #### Get a subset list of Things connected to Channel

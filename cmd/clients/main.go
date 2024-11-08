@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-// Package main contains things main function to start the things service.
+// Package main contains clients main function to start the clients service.
 package main
 
 import (
@@ -90,7 +90,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
 
-	// Create new things configuration
+	// Create new clients configuration
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("failed to load %s configuration : %s", svcName, err)

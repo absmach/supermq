@@ -93,7 +93,7 @@ var cmdProvision = []cobra.Command{
 	{
 		Use:   "connect <connections_file> <domain_id> <user_token>",
 		Short: "Provision connections",
-		Long:  `Bulk connect things to channels`,
+		Long:  `Bulk connect clients to channels`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -118,8 +118,8 @@ var cmdProvision = []cobra.Command{
 	{
 		Use:   "test",
 		Short: "test",
-		Long: `Provisions test setup: one test user, two things and two channels. \
-						Connect both things to one of the channels, \
+		Long: `Provisions test setup: one test user, two clients and two channels. \
+						Connect both clients to one of the channels, \
 						and only on thing to other channel.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			numThings := 2
@@ -202,7 +202,7 @@ var cmdProvision = []cobra.Command{
 				channels = append(channels, c)
 			}
 
-			// Connect things to channels - first thing to both channels, second only to first
+			// Connect clients to channels - first thing to both channels, second only to first
 			conIDs := mgxsdk.Connection{
 				ChannelID: channels[0].ID,
 				ClientID:  clients[0].ID,
@@ -252,9 +252,9 @@ var cmdProvision = []cobra.Command{
 // NewProvisionCmd returns provision command.
 func NewProvisionCmd() *cobra.Command {
 	cmd := cobra.Command{
-		Use:   "provision [things | channels | connect | test]",
-		Short: "Provision things and channels from a config file",
-		Long:  `Provision things and channels: use json or csv file to bulk provision things and channels`,
+		Use:   "provision [clients | channels | connect | test]",
+		Short: "Provision clients and channels from a config file",
+		Long:  `Provision clients and channels: use json or csv file to bulk provision clients and channels`,
 	}
 
 	for i := range cmdProvision {

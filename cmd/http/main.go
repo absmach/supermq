@@ -95,19 +95,19 @@ func main() {
 
 	thingsClientCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&thingsClientCfg, env.Options{Prefix: envPrefixThings}); err != nil {
-		logger.Error(fmt.Sprintf("failed to load things gRPC client configuration : %s", err))
+		logger.Error(fmt.Sprintf("failed to load clients gRPC client configuration : %s", err))
 		exitCode = 1
 		return
 	}
 
-	thingsClient, thingsHandler, err := grpcclient.SetupClientsClient(ctx, thingsClientCfg)
+	clientsClient, thingsHandler, err := grpcclient.SetupClientsClient(ctx, thingsClientCfg)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1
 		return
 	}
 	defer thingsHandler.Close()
-	logger.Info("Things service gRPC client successfully connected to things gRPC server " + thingsHandler.Secure())
+	logger.Info("Things service gRPC client successfully connected to clients gRPC server " + thingsHandler.Secure())
 
 	channelsClientCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&channelsClientCfg, env.Options{Prefix: envPrefixChannels}); err != nil {
@@ -163,7 +163,7 @@ func main() {
 	defer pub.Close()
 	pub = brokerstracing.NewPublisher(httpServerConfig, tracer, pub)
 
-	svc := newService(pub, authn, thingsClient, channelsClient, logger, tracer)
+	svc := newService(pub, authn, clientsClient, channelsClient, logger, tracer)
 	targetServerCfg := server.Config{Port: targetHTTPPort}
 
 	hs := httpserver.NewServer(ctx, cancel, svcName, targetServerCfg, api.MakeHandler(logger, cfg.InstanceID), logger)
@@ -190,8 +190,8 @@ func main() {
 	}
 }
 
-func newService(pub messaging.Publisher, authn mgauthn.Authentication, things grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, logger *slog.Logger, tracer trace.Tracer) session.Handler {
-	svc := adapter.NewHandler(pub, authn, things, channels, logger)
+func newService(pub messaging.Publisher, authn mgauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, logger *slog.Logger, tracer trace.Tracer) session.Handler {
+	svc := adapter.NewHandler(pub, authn, clients, channels, logger)
 	svc = handler.NewTracing(tracer, svc)
 	svc = handler.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics(svcName, "api")

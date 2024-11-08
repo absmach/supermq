@@ -166,7 +166,7 @@ func main() {
 	}
 
 	if err = subscribeToThingsES(ctx, svc, cfg, logger); err != nil {
-		logger.Error(fmt.Sprintf("failed to subscribe to things event store: %s", err))
+		logger.Error(fmt.Sprintf("failed to subscribe to clients event store: %s", err))
 		exitCode = 1
 		return
 	}

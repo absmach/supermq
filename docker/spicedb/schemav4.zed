@@ -179,7 +179,7 @@ definition group {
 	permission remove_role_users_permission = remove_role_users + parent_group->subgroup_remove_role_users_permission + domain->group_remove_role_users_permission
 	permission view_role_users_permission = view_role_users + parent_group->subgroup_view_role_users_permission + domain->group_view_role_users_permission
 
-	// Subgroup things permisssion
+	// Subgroup clients permisssion
 	permission subgroup_thing_create_permission = subgroup_thing_create + parent_group->subgroup_thing_create_permission
 	permission subgroup_thing_update_permission = subgroup_thing_update + parent_group->subgroup_thing_update_permission
 	permission subgroup_thing_read_permission = subgroup_thing_read + parent_group->subgroup_thing_read_permission
@@ -192,7 +192,7 @@ definition group {
 	permission subgroup_thing_remove_role_users_permission = subgroup_thing_remove_role_users + parent_group->subgroup_thing_remove_role_users_permission
 	permission subgroup_thing_view_role_users_permission = subgroup_thing_view_role_users + parent_group->subgroup_thing_view_role_users_permission
 
-	// Group things permisssion
+	// Group clients permisssion
 	permission thing_create_permission = thing_create + parent_group->subgroup_thing_create + domain->thing_create_permission
 	permission thing_update_permission = thing_update + parent_group->subgroup_thing_update + domain->thing_update_permission
 	permission thing_read_permission = thing_read + parent_group->subgroup_thing_read + domain->thing_read_permission

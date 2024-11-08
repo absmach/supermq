@@ -69,7 +69,7 @@ The service is configured using the environment variables presented in the follo
 
 The service is distributed as Docker container. Check the [`certs`](https://github.com/absmach/magistrala/blob/main/docker/addons/bootstrap/docker-compose.yml) service section in docker-compose file to see how the service is deployed.
 
-Running this service outside of container requires working instance of the auth service, things service, postgres database, vault and Jaeger server.
+Running this service outside of container requires working instance of the auth service, clients service, postgres database, vault and Jaeger server.
 To start the service outside of the container, execute the following shell script:
 
 ```bash

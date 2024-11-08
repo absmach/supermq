@@ -25,7 +25,7 @@ func doProvision(svc provision.Service) endpoint.Endpoint {
 		}
 
 		provisionResponse := provisionRes{
-			Clients:     res.Things,
+			Clients:     res.Clients,
 			Channels:    res.Channels,
 			ClientCert:  res.ClientCert,
 			ClientKey:   res.ClientKey,

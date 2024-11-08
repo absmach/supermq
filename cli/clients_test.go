@@ -149,7 +149,7 @@ func TestGetThingsCmd(t *testing.T) {
 		logType       outputLog
 	}{
 		{
-			desc: "get all things successfully",
+			desc: "get all clients successfully",
 			args: []string{
 				all,
 				domainID,
@@ -171,7 +171,7 @@ func TestGetThingsCmd(t *testing.T) {
 			thing:   thing,
 		},
 		{
-			desc: "get things with invalid token",
+			desc: "get clients with invalid token",
 			args: []string{
 				all,
 				domainID,
@@ -183,7 +183,7 @@ func TestGetThingsCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "get things with invalid args",
+			desc: "get clients with invalid args",
 			args: []string{
 				all,
 				invalidToken,

@@ -1240,7 +1240,7 @@ func TestListUserThingsCmd(t *testing.T) {
 		logType       outputLog
 	}{
 		{
-			desc: "list user things successfully",
+			desc: "list user clients successfully",
 			args: []string{
 				user.ID,
 				validToken,
@@ -1252,7 +1252,7 @@ func TestListUserThingsCmd(t *testing.T) {
 			},
 		},
 		{
-			desc: "list user things with invalid args",
+			desc: "list user clients with invalid args",
 			args: []string{
 				user.ID,
 				validToken,
@@ -1261,7 +1261,7 @@ func TestListUserThingsCmd(t *testing.T) {
 			logType: usageLog,
 		},
 		{
-			desc: "list user things with invalid token",
+			desc: "list user clients with invalid token",
 			args: []string{
 				user.ID,
 				invalidToken,

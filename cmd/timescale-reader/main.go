@@ -100,7 +100,7 @@ func main() {
 	}
 	defer thingsHandler.Close()
 
-	logger.Info("ThingsService gRPC client successfully connected to things gRPC server " + thingsHandler.Secure())
+	logger.Info("ThingsService gRPC client successfully connected to clients gRPC server " + thingsHandler.Secure())
 
 	channelsClientCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&channelsClientCfg, env.Options{Prefix: envPrefixChannels}); err != nil {
