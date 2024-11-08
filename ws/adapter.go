@@ -90,7 +90,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subt
 // and returns the thingID if it is.
 func (svc *adapterService) authorize(ctx context.Context, thingKey, chanID string, msgType connections.ConnType) (string, error) {
 	authnReq := &grpcClientsV1.AuthnReq{
-		ThingKey: thingKey,
+		ClientSecret: thingKey,
 	}
 	authnRes, err := svc.things.Authenticate(ctx, authnReq)
 	if err != nil {

@@ -266,7 +266,7 @@ func authenticate(ctx context.Context, req listMessagesReq, authn mgauthn.Authen
 		return session.DomainUserID, policies.UserType, nil
 	case req.key != "":
 		res, err := things.Authenticate(ctx, &grpcClientsV1.AuthnReq{
-			ThingKey: req.key,
+			ClientSecret: req.key,
 		})
 		if err != nil {
 			return "", "", err

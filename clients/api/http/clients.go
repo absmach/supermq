@@ -38,14 +38,14 @@ func clientsHandler(svc clients.Service, authn mgauthn.Authentication, r *chi.Mu
 				decodeListClients,
 				api.EncodeResponse,
 				opts...,
-			), "list_things").ServeHTTP)
+			), "list_clients").ServeHTTP)
 
 			r.Post("/bulk", otelhttp.NewHandler(kithttp.NewServer(
 				createClientsEndpoint(svc),
 				decodeCreateClientsReq,
 				api.EncodeResponse,
 				opts...,
-			), "create_things").ServeHTTP)
+			), "create_clients").ServeHTTP)
 			r = roleManagerHttp.EntityAvailableActionsRouter(svc, d, r, opts)
 
 			r.Route("/{clientID}", func(r chi.Router) {

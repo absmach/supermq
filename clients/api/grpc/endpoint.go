@@ -14,14 +14,13 @@ import (
 func authenticateEndpoint(svc pThings.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(authenticateReq)
-
-		thingID, err := svc.Authenticate(ctx, req.ThingKey)
+		id, err := svc.Authenticate(ctx, req.ClientSecret)
 		if err != nil {
 			return authenticateRes{}, err
 		}
 		return authenticateRes{
 			authenticated: true,
-			id:            thingID,
+			id:            id,
 		}, err
 	}
 }
@@ -72,6 +71,7 @@ func addConnectionsEndpoint(svc pThings.Service) endpoint.Endpoint {
 				Type:      c.connType,
 			})
 		}
+
 		if err := svc.AddConnections(ctx, conns); err != nil {
 			return connectionsRes{ok: false}, err
 		}

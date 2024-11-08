@@ -70,7 +70,7 @@ func (tr testRequest) make() (*http.Response, error) {
 		req.Header.Set("Authorization", apiutil.BearerPrefix+tr.token)
 	}
 	if tr.key != "" {
-		req.Header.Set("Authorization", apiutil.ThingPrefix+tr.key)
+		req.Header.Set("Authorization", apiutil.ClientPrefix+tr.key)
 	}
 
 	return tr.client.Do(req)

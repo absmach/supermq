@@ -34,7 +34,7 @@ const (
 	envPrefixDB       = "MG_TIMESCALE_"
 	envPrefixHTTP     = "MG_TIMESCALE_READER_HTTP_"
 	envPrefixAuth     = "MG_AUTH_GRPC_"
-	envPrefixThings   = "MG_THINGS_AUTH_GRPC_"
+	envPrefixThings   = "MG_CLIENTS_AUTH_GRPC_"
 	envPrefixChannels = "MG_CHANNELS_GRPC_"
 	defDB             = "messages"
 	defSvcHTTPPort    = "9011"

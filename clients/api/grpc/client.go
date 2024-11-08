@@ -111,8 +111,8 @@ func (client grpcClient) Authenticate(ctx context.Context, req *grpcClientsV1.Au
 	defer cancel()
 
 	res, err := client.authenticate(ctx, authenticateReq{
-		ThingID:  req.GetClientId(),
-		ThingKey: req.GetThingKey(),
+		ClientID:     req.GetClientId(),
+		ClientSecret: req.GetClientSecret(),
 	})
 	if err != nil {
 		return &grpcClientsV1.AuthnRes{}, decodeError(err)
@@ -125,8 +125,8 @@ func (client grpcClient) Authenticate(ctx context.Context, req *grpcClientsV1.Au
 func encodeAuthenticateRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(authenticateReq)
 	return &grpcClientsV1.AuthnReq{
-		ClientId: req.ThingID,
-		ThingKey: req.ThingKey,
+		ClientId:     req.ClientID,
+		ClientSecret: req.ClientSecret,
 	}, nil
 }
 

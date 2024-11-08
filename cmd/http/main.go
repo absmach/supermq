@@ -44,7 +44,7 @@ import (
 const (
 	svcName           = "http_adapter"
 	envPrefix         = "MG_HTTP_ADAPTER_"
-	envPrefixThings   = "MG_THINGS_AUTH_GRPC_"
+	envPrefixThings   = "MG_CLIENTS_AUTH_GRPC_"
 	envPrefixChannels = "MG_CHANNELS_GRPC_"
 	envPrefixAuth     = "MG_AUTH_GRPC_"
 	defSvcHTTPPort    = "80"

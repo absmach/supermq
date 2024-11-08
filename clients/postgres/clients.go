@@ -659,7 +659,6 @@ func (repo *clientRepo) RetrieveByIds(ctx context.Context, ids []string) (client
 
 func (repo *clientRepo) AddConnections(ctx context.Context, conns []clients.Connection) error {
 	dbConns := toDBConnections(conns)
-
 	q := `INSERT INTO connections (channel_id, domain_id, client_id, type)
 			VALUES (:channel_id, :domain_id, :client_id, :type);`
 	if _, err := repo.DB.NamedExecContext(ctx, q, dbConns); err != nil {

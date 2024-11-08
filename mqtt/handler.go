@@ -94,7 +94,7 @@ func (h *handler) AuthConnect(ctx context.Context) error {
 
 	pwd := string(s.Password)
 
-	res, err := h.things.Authenticate(ctx, &grpcClientsV1.AuthnReq{ThingKey: pwd})
+	res, err := h.things.Authenticate(ctx, &grpcClientsV1.AuthnReq{ClientSecret: pwd})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthentication, err)
 	}

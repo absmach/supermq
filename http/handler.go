@@ -60,7 +60,7 @@ var channelRegExp = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]
 // Event implements events.Event interface.
 type handler struct {
 	publisher messaging.Publisher
-	things    grpcClientsV1.ClientsServiceClient
+	clients   grpcClientsV1.ClientsServiceClient
 	channels  grpcChannelsV1.ChannelsServiceClient
 	authn     mgauthn.Authentication
 	logger    *slog.Logger
@@ -71,7 +71,7 @@ func NewHandler(publisher messaging.Publisher, authn mgauthn.Authentication, cli
 	return &handler{
 		publisher: publisher,
 		authn:     authn,
-		things:    clients,
+		clients:   clients,
 		channels:  channels,
 		logger:    logger,
 	}
@@ -89,8 +89,8 @@ func (h *handler) AuthConnect(ctx context.Context) error {
 	switch {
 	case string(s.Password) == "":
 		return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerKey))
-	case strings.HasPrefix(string(s.Password), apiutil.ThingPrefix):
-		tok = strings.TrimPrefix(string(s.Password), apiutil.ThingPrefix)
+	case strings.HasPrefix(string(s.Password), apiutil.ClientPrefix):
+		tok = strings.TrimPrefix(string(s.Password), apiutil.ClientPrefix)
 	default:
 		tok = string(s.Password)
 	}
@@ -127,16 +127,15 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 
 	var clientID, clientType string
 	switch {
-	case strings.HasPrefix(string(s.Password), "Thing"):
-		thingKey := strings.TrimPrefix(string(s.Password), apiutil.ThingPrefix)
-
-		authnRes, err := h.things.Authenticate(ctx, &grpcClientsV1.AuthnReq{ThingKey: thingKey})
+	case strings.HasPrefix(string(s.Password), "Client"):
+		secret := strings.TrimPrefix(string(s.Password), apiutil.ClientPrefix)
+		authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{ClientSecret: secret})
 		if err != nil {
-			h.logger.Info(fmt.Sprintf(logInfoFailedAuthNThing, thingKey, *topic, err))
+			h.logger.Info(fmt.Sprintf(logInfoFailedAuthNThing, secret, *topic, err))
 			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
 		}
 		if !authnRes.Authenticated {
-			h.logger.Info(fmt.Sprintf(logInfoFailedAuthNThing, thingKey, *topic, svcerr.ErrAuthentication))
+			h.logger.Info(fmt.Sprintf(logInfoFailedAuthNThing, secret, *topic, svcerr.ErrAuthentication))
 			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
 		}
 		clientType = policies.ClientType

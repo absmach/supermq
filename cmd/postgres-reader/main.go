@@ -34,7 +34,7 @@ const (
 	envPrefixDB       = "MG_POSTGRES_"
 	envPrefixHTTP     = "MG_POSTGRES_READER_HTTP_"
 	envPrefixAuth     = "MG_AUTH_GRPC_"
-	envPrefixThings   = "MG_THINGS_AUTH_GRPC_"
+	envPrefixThings   = "MG_CLIENTS_AUTH_GRPC_"
 	envPrefixChannels = "MG_CHANNELS_GRPC_"
 	defDB             = "magistrala"
 	defSvcHTTPPort    = "9009"

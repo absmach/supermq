@@ -24,7 +24,7 @@ service ClientsService {
 
 message AuthnReq {
   string client_id = 1;
-  string thing_key = 2;
+  string client_secret = 2;
 }
 
 message AuthnRes {

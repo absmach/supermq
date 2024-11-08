@@ -62,7 +62,7 @@ func New(things grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.Chan
 
 func (svc *adapterService) Publish(ctx context.Context, key string, msg *messaging.Message) error {
 	authnRes, err := svc.things.Authenticate(ctx, &grpcClientsV1.AuthnReq{
-		ThingKey: key,
+		ClientSecret: key,
 	})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthentication, err)
@@ -91,7 +91,7 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 
 func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic string, c Client) error {
 	authnRes, err := svc.things.Authenticate(ctx, &grpcClientsV1.AuthnReq{
-		ThingKey: key,
+		ClientSecret: key,
 	})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthentication, err)
@@ -130,7 +130,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopic, token string) error {
 	authnRes, err := svc.things.Authenticate(ctx, &grpcClientsV1.AuthnReq{
-		ThingKey: key,
+		ClientSecret: key,
 	})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthentication, err)

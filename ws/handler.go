@@ -164,7 +164,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 	switch {
 	case strings.HasPrefix(string(s.Password), "Thing"):
 		thingKey := extractThingKey(string(s.Password))
-		authnRes, err := h.things.Authenticate(ctx, &grpcClientsV1.AuthnReq{ThingKey: thingKey})
+		authnRes, err := h.things.Authenticate(ctx, &grpcClientsV1.AuthnReq{ClientSecret: thingKey})
 		if err != nil {
 			return errors.Wrap(svcerr.ErrAuthentication, err)
 		}
@@ -247,7 +247,7 @@ func (h *handler) authAccess(ctx context.Context, token, topic string, msgType c
 	switch {
 	case strings.HasPrefix(token, "Thing"):
 		thingKey := extractThingKey(token)
-		authnRes, err := h.things.Authenticate(ctx, &grpcClientsV1.AuthnReq{ThingKey: thingKey})
+		authnRes, err := h.things.Authenticate(ctx, &grpcClientsV1.AuthnReq{ClientSecret: thingKey})
 		if err != nil {
 			return errors.Wrap(svcerr.ErrAuthentication, err)
 		}
@@ -326,11 +326,11 @@ func parseSubtopic(subtopic string) (string, error) {
 
 // extractThingKey returns value of the thing key. If there is no thing key - an empty value is returned.
 func extractThingKey(topic string) string {
-	if !strings.HasPrefix(topic, apiutil.ThingPrefix) {
+	if !strings.HasPrefix(topic, apiutil.ClientPrefix) {
 		return ""
 	}
 
-	return strings.TrimPrefix(topic, apiutil.ThingPrefix)
+	return strings.TrimPrefix(topic, apiutil.ClientPrefix)
 }
 
 // extractBearerToken
