@@ -108,7 +108,7 @@ func (sdk mgSDK) AddBootstrap(cfg BootstrapConfig, domainID, token string) (stri
 		return "", sdkerr
 	}
 
-	id := strings.TrimPrefix(headers.Get("Location"), "/things/configs/")
+	id := strings.TrimPrefix(headers.Get("Location"), "/clients/configs/")
 
 	return id, nil
 }

@@ -237,7 +237,7 @@ func TestAdd(t *testing.T) {
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusCreated,
-			location:    "/things/configs/" + c.ClientID,
+			location:    "/clients/configs/" + c.ClientID,
 			err:         nil,
 		},
 		{
@@ -332,7 +332,7 @@ func TestAdd(t *testing.T) {
 			req := testRequest{
 				client:      bs.Client(),
 				method:      http.MethodPost,
-				url:         fmt.Sprintf("%s/%s/things/configs", bs.URL, tc.domainID),
+				url:         fmt.Sprintf("%s/%s/clients/configs", bs.URL, tc.domainID),
 				contentType: tc.contentType,
 				token:       tc.token,
 				body:        strings.NewReader(tc.req),
@@ -432,7 +432,7 @@ func TestView(t *testing.T) {
 			req := testRequest{
 				client: bs.Client(),
 				method: http.MethodGet,
-				url:    fmt.Sprintf("%s/%s/things/configs/%s", bs.URL, domainID, tc.id),
+				url:    fmt.Sprintf("%s/%s/clients/configs/%s", bs.URL, domainID, tc.id),
 				token:  tc.token,
 			}
 			res, err := req.make()
@@ -549,7 +549,7 @@ func TestUpdate(t *testing.T) {
 			req := testRequest{
 				client:      bs.Client(),
 				method:      http.MethodPut,
-				url:         fmt.Sprintf("%s/%s/things/configs/%s", bs.URL, domainID, tc.id),
+				url:         fmt.Sprintf("%s/%s/clients/configs/%s", bs.URL, domainID, tc.id),
 				contentType: tc.contentType,
 				token:       tc.token,
 				body:        strings.NewReader(tc.req),
@@ -657,7 +657,7 @@ func TestUpdateCert(t *testing.T) {
 			req := testRequest{
 				client:      bs.Client(),
 				method:      http.MethodPatch,
-				url:         fmt.Sprintf("%s/%s/things/configs/certs/%s", bs.URL, domainID, tc.id),
+				url:         fmt.Sprintf("%s/%s/clients/configs/certs/%s", bs.URL, domainID, tc.id),
 				contentType: tc.contentType,
 				token:       tc.token,
 				body:        strings.NewReader(tc.req),
@@ -778,7 +778,7 @@ func TestUpdateConnections(t *testing.T) {
 			req := testRequest{
 				client:      bs.Client(),
 				method:      http.MethodPut,
-				url:         fmt.Sprintf("%s/%s/things/configs/connections/%s", bs.URL, domainID, tc.id),
+				url:         fmt.Sprintf("%s/%s/clients/configs/connections/%s", bs.URL, domainID, tc.id),
 				contentType: tc.contentType,
 				token:       tc.token,
 				body:        strings.NewReader(tc.req),
@@ -800,7 +800,7 @@ func TestList(t *testing.T) {
 
 	bs, svc, auth := newBootstrapServer()
 	defer bs.Close()
-	path := fmt.Sprintf("%s/%s/%s", bs.URL, domainID, "things/configs")
+	path := fmt.Sprintf("%s/%s/%s", bs.URL, domainID, "clients/configs")
 
 	c := newConfig()
 
@@ -1130,7 +1130,7 @@ func TestRemove(t *testing.T) {
 			req := testRequest{
 				client: bs.Client(),
 				method: http.MethodDelete,
-				url:    fmt.Sprintf("%s/%s/things/configs/%s", bs.URL, domainID, tc.id),
+				url:    fmt.Sprintf("%s/%s/clients/configs/%s", bs.URL, domainID, tc.id),
 				token:  tc.token,
 			}
 			res, err := req.make()
@@ -1255,7 +1255,7 @@ func TestBootstrap(t *testing.T) {
 			req := testRequest{
 				client: bs.Client(),
 				method: http.MethodGet,
-				url:    fmt.Sprintf("%s/things/bootstrap/%s", bs.URL, tc.externalID),
+				url:    fmt.Sprintf("%s/clients/bootstrap/%s", bs.URL, tc.externalID),
 				key:    tc.externalKey,
 			}
 			res, err := req.make()
@@ -1379,7 +1379,7 @@ func TestChangeState(t *testing.T) {
 			req := testRequest{
 				client:      bs.Client(),
 				method:      http.MethodPut,
-				url:         fmt.Sprintf("%s/%s/things/state/%s", bs.URL, domainID, tc.id),
+				url:         fmt.Sprintf("%s/%s/clients/state/%s", bs.URL, domainID, tc.id),
 				token:       tc.token,
 				contentType: tc.contentType,
 				body:        strings.NewReader(tc.state),

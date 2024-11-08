@@ -56,8 +56,8 @@ const (
 	DomainOpListChannel
 	GroupOpSetChildChannel
 	GroupsOpRemoveChildChannel
-	ThingsOpConnectChannel
-	ThingsOpDisconnectChannel
+	ClientsOpConnectChannel
+	ClientsOpDisconnectChannel
 )
 
 var expectedExternalOperations = []svcutil.ExternalOperation{
@@ -65,8 +65,8 @@ var expectedExternalOperations = []svcutil.ExternalOperation{
 	DomainOpListChannel,
 	GroupOpSetChildChannel,
 	GroupsOpRemoveChildChannel,
-	ThingsOpConnectChannel,
-	ThingsOpDisconnectChannel,
+	ClientsOpConnectChannel,
+	ClientsOpDisconnectChannel,
 }
 
 var externalOperationNames = []string{
@@ -142,9 +142,9 @@ const (
 	// Groups
 	groupSetChildChannelPermission    = "channel_create_permission"
 	groupRemoveChildChannelPermission = "channel_create_permission"
-	// Thing
-	thingsConnectChannelPermission    = "connect_to_channel_permission"
-	thingsDisconnectChannelPermission = "connect_to_channel_permission"
+	// Client
+	clientsConnectChannelPermission    = "connect_to_channel_permission"
+	clientsDisconnectChannelPermission = "connect_to_channel_permission"
 )
 
 func NewExternalOperationPermissionMap() map[svcutil.ExternalOperation]svcutil.Permission {
@@ -153,8 +153,8 @@ func NewExternalOperationPermissionMap() map[svcutil.ExternalOperation]svcutil.P
 		DomainOpListChannel:        domainListChanelPermission,
 		GroupOpSetChildChannel:     groupSetChildChannelPermission,
 		GroupsOpRemoveChildChannel: groupRemoveChildChannelPermission,
-		ThingsOpConnectChannel:     thingsConnectChannelPermission,
-		ThingsOpDisconnectChannel:  thingsDisconnectChannelPermission,
+		ClientsOpConnectChannel:    clientsConnectChannelPermission,
+		ClientsOpDisconnectChannel: clientsDisconnectChannelPermission,
 	}
 	return extOpPerm
 }

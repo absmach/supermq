@@ -1,6 +1,6 @@
 # Auth - Authentication and Authorization service
 
-Auth service provides authentication features as an API for managing authentication keys as well as administering groups of entities - `things` and `users`.
+Auth service provides authentication features as an API for managing authentication keys as well as administering groups of entities - `clients` and `users`.
 
 ## Authentication
 
@@ -40,7 +40,7 @@ The following actions are supported:
 
 ## Domains
 
-Domains are used to group users and things. Each domain has a unique alias that is used to identify the domain. Domains are used to group users and their entities.
+Domains are used to group users and clients. Each domain has a unique alias that is used to identify the domain. Domains are used to group users and their entities.
 
 Domain consists of the following fields:
 

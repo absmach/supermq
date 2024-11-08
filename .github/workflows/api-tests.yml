@@ -19,7 +19,7 @@ on:
       - "journal/api/**"
       - "provision/api/**"
       - "readers/api/**"
-      - "things/api/**"
+      - "clients/api/**"
       - "users/api/**"
 
 env:
@@ -113,10 +113,10 @@ jobs:
               - "api/openapi/readers.yml"
               - "readers/api/**"
 
-            things:
+            clients:
               - ".github/workflows/api-tests.yml"
-              - "api/openapi/things.yml"
-              - "things/api/**"
+              - "api/openapi/clients.yml"
+              - "clients/api/**"
 
             users:
               - ".github/workflows/api-tests.yml"
@@ -134,7 +134,7 @@ jobs:
           args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
       - name: Run Clients API tests
-        if: steps.changes.outputs.things == 'true'
+        if: steps.changes.outputs.clients == 'true'
         uses: schemathesis/action@v1
         with:
           schema: api/openapi/clients.yml

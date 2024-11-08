@@ -210,7 +210,7 @@ func (am *authorizationMiddleware) Connect(ctx context.Context, session authn.Se
 	}
 
 	for _, thID := range thIDs {
-		if err := am.extAuthorize(ctx, channels.ThingsOpConnectChannel, authz.PolicyReq{
+		if err := am.extAuthorize(ctx, channels.ClientsOpConnectChannel, authz.PolicyReq{
 			Domain:      session.DomainID,
 			SubjectType: policies.UserType,
 			Subject:     session.DomainUserID,
@@ -238,7 +238,7 @@ func (am *authorizationMiddleware) Disconnect(ctx context.Context, session authn
 	}
 
 	for _, thID := range thIDs {
-		if err := am.extAuthorize(ctx, channels.ThingsOpDisconnectChannel, authz.PolicyReq{
+		if err := am.extAuthorize(ctx, channels.ClientsOpDisconnectChannel, authz.PolicyReq{
 			Domain:      session.DomainID,
 			SubjectType: policies.UserType,
 			Subject:     session.DomainUserID,

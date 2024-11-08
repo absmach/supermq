@@ -13,8 +13,8 @@ import (
 	"github.com/absmach/magistrala/pkg/roles"
 )
 
-// Channel represents a Mainflux "communication group". This group contains the
-// things that can exchange messages between each other.
+// Channel represents a Mainflux "communication topic". This topic
+// contains the clients that can exchange messages between each other.
 type Channel struct {
 	ID          string           `json:"id"`
 	Name        string           `json:"name,omitempty"`
@@ -102,10 +102,10 @@ type Service interface {
 	// belongs to the user identified by the provided key.
 	RemoveChannel(ctx context.Context, session authn.Session, id string) error
 
-	// Connect adds things to the channels list of connected things.
+	// Connect adds clients to the channels list of connected clients.
 	Connect(ctx context.Context, session authn.Session, chIDs, clIDs []string, connType []connections.ConnType) error
 
-	// Disconnect removes things from the channels list of connected things.
+	// Disconnect removes clients from the channels list of connected clients.
 	Disconnect(ctx context.Context, session authn.Session, chIDs, clIDs []string, connType []connections.ConnType) error
 
 	SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error
