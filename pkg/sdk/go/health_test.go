@@ -59,7 +59,7 @@ func TestHealth(t *testing.T) {
 	}{
 		{
 			desc:        "get clients service health check",
-			service:     "things",
+			service:     "clients",
 			empty:       false,
 			err:         nil,
 			description: "clients service",

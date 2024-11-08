@@ -81,11 +81,11 @@ func (lm *loggingMiddleware) ListChannels(ctx context.Context, session authn.Ses
 	return lm.svc.ListChannels(ctx, session, pm)
 }
 
-func (lm *loggingMiddleware) ListChannelsByThing(ctx context.Context, session authn.Session, thingID string, pm channels.PageMetadata) (cp channels.Page, err error) {
+func (lm *loggingMiddleware) ListChannelsByClient(ctx context.Context, session authn.Session, clientID string, pm channels.PageMetadata) (cp channels.Page, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.String("thing_id", thingID),
+			slog.String("client_id", clientID),
 			slog.Group("page",
 				slog.Uint64("limit", pm.Limit),
 				slog.Uint64("offset", pm.Offset),
@@ -99,7 +99,7 @@ func (lm *loggingMiddleware) ListChannelsByThing(ctx context.Context, session au
 		}
 		lm.logger.Info("List channels by thing completed successfully", args...)
 	}(time.Now())
-	return lm.svc.ListChannelsByThing(ctx, session, thingID, pm)
+	return lm.svc.ListChannelsByClient(ctx, session, clientID, pm)
 }
 
 func (lm *loggingMiddleware) UpdateChannel(ctx context.Context, session authn.Session, client channels.Channel) (c channels.Channel, err error) {
@@ -201,7 +201,7 @@ func (lm *loggingMiddleware) Connect(ctx context.Context, session authn.Session,
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.Any("channel_ids", chIDs),
-			slog.Any("thing_ids", thIDs),
+			slog.Any("client_ids", thIDs),
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
@@ -218,7 +218,7 @@ func (lm *loggingMiddleware) Disconnect(ctx context.Context, session authn.Sessi
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.Any("channel_ids", chIDs),
-			slog.Any("thing_ids", thIDs),
+			slog.Any("client_ids", thIDs),
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))

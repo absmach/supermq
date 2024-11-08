@@ -33,7 +33,7 @@ const (
 )
 
 var (
-	fullMatch    = []string{"state", "external_id", "thing_id", "thing_key"}
+	fullMatch    = []string{"state", "external_id", "client_id", "thing_key"}
 	partialMatch = []string{"name"}
 	// ErrBootstrap indicates error in getting bootstrap configuration.
 	ErrBootstrap = errors.New("failed to read bootstrap configuration")

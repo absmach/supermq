@@ -16,27 +16,27 @@ const (
 	ViewRoleUsers   roles.Action = "view_role_users"
 
 	// Domain Roles : Actions related to entity creation and entity listing within domain
-	ThingCreate   roles.Action = "thing_create"
+	ClientCreate  roles.Action = "client_create"
 	ChannelCreate roles.Action = "channel_create"
 	GroupCreate   roles.Action = "group_create"
 
 	// Domain Things Roles: Actions related to things present within the Domain
-	ThingUpdate           roles.Action = "thing_update"
-	ThingRead             roles.Action = "thing_read"
-	ThingDelete           roles.Action = "thing_delete"
-	ThingSetParentGroup   roles.Action = "thing_set_parent_group"
-	ThingConnectToChannel roles.Action = "thing_connect_to_channel"
-	ThingManageRole       roles.Action = "thing_manage_role"
-	ThingAddRoleUsers     roles.Action = "thing_add_role_users"
-	ThingRemoveRoleUsers  roles.Action = "thing_remove_role_users"
-	ThingViewRoleUsers    roles.Action = "thing_view_role_users"
+	ClientUpdate           roles.Action = "client_update"
+	ClientRead             roles.Action = "client_read"
+	ClientDelete           roles.Action = "client_delete"
+	ClientSetParentGroup   roles.Action = "client_set_parent_group"
+	ClientConnectToChannel roles.Action = "client_connect_to_channel"
+	ClientManageRole       roles.Action = "client_manage_role"
+	ClientAddRoleUsers     roles.Action = "client_add_role_users"
+	ClientRemoveRoleUsers  roles.Action = "client_remove_role_users"
+	ClientViewRoleUsers    roles.Action = "client_view_role_users"
 
 	// Domain Channels Roles: Actions related to channels present within the Domain
 	ChannelUpdate          roles.Action = "channel_update"
 	ChannelRead            roles.Action = "channel_read"
 	ChannelDelete          roles.Action = "channel_delete"
 	ChannelSetParentGroup  roles.Action = "channel_set_parent_group"
-	ChannelConnectToThing  roles.Action = "channel_connect_to_thing"
+	ChannelConnectToThing  roles.Action = "channel_connect_to_client"
 	ChannelPublish         roles.Action = "channel_publish"
 	ChannelSubscribe       roles.Action = "channel_subscribe"
 	ChannelManageRole      roles.Action = "channel_manage_role"
@@ -74,18 +74,18 @@ func AvailableActions() []roles.Action {
 		AddRoleUsers,
 		RemoveRoleUsers,
 		ViewRoleUsers,
-		ThingCreate,
+		ClientCreate,
 		ChannelCreate,
 		GroupCreate,
-		ThingUpdate,
-		ThingRead,
-		ThingDelete,
-		ThingSetParentGroup,
-		ThingConnectToChannel,
-		ThingManageRole,
-		ThingAddRoleUsers,
-		ThingRemoveRoleUsers,
-		ThingViewRoleUsers,
+		ClientUpdate,
+		ClientRead,
+		ClientDelete,
+		ClientSetParentGroup,
+		ClientConnectToChannel,
+		ClientManageRole,
+		ClientAddRoleUsers,
+		ClientRemoveRoleUsers,
+		ClientViewRoleUsers,
 		ChannelUpdate,
 		ChannelRead,
 		ChannelDelete,

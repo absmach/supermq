@@ -45,7 +45,7 @@ func TestGetCertCmd(t *testing.T) {
 		{
 			desc: "get cert successfully",
 			args: []string{
-				"thing",
+				"client",
 				thing.ID,
 				domainID,
 				validToken,
@@ -73,7 +73,7 @@ func TestGetCertCmd(t *testing.T) {
 		{
 			desc: "get cert with invalid token",
 			args: []string{
-				"thing",
+				"client",
 				thing.ID,
 				domainID,
 				invalidToken,
@@ -109,7 +109,7 @@ func TestGetCertCmd(t *testing.T) {
 			out := executeCommand(t, rootCmd, append([]string{getCmd}, tc.args...)...)
 			switch tc.logType {
 			case entityLog:
-				if tc.args[1] == "thing" {
+				if tc.args[1] == "client" {
 					err := json.Unmarshal([]byte(out), &cts)
 					assert.Nil(t, err)
 					assert.Equal(t, tc.serials, cts, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.serials, cts))

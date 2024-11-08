@@ -35,12 +35,12 @@ func (_m *ConfigRepository) ChangeState(ctx context.Context, domainID string, id
 	return r0
 }
 
-// ConnectThing provides a mock function with given fields: ctx, channelID, thingID
-func (_m *ConfigRepository) ConnectThing(ctx context.Context, channelID string, thingID string) error {
+// ConnectClient provides a mock function with given fields: ctx, channelID, thingID
+func (_m *ConfigRepository) ConnectClient(ctx context.Context, channelID string, thingID string) error {
 	ret := _m.Called(ctx, channelID, thingID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ConnectThing")
+		panic("no return value specified for ConnectClient")
 	}
 
 	var r0 error
@@ -53,12 +53,12 @@ func (_m *ConfigRepository) ConnectThing(ctx context.Context, channelID string, 
 	return r0
 }
 
-// DisconnectThing provides a mock function with given fields: ctx, channelID, thingID
-func (_m *ConfigRepository) DisconnectThing(ctx context.Context, channelID string, thingID string) error {
+// DisconnectClient provides a mock function with given fields: ctx, channelID, thingID
+func (_m *ConfigRepository) DisconnectClient(ctx context.Context, channelID string, thingID string) error {
 	ret := _m.Called(ctx, channelID, thingID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for DisconnectThing")
+		panic("no return value specified for DisconnectClient")
 	}
 
 	var r0 error
@@ -137,12 +137,12 @@ func (_m *ConfigRepository) RemoveChannel(ctx context.Context, id string) error 
 	return r0
 }
 
-// RemoveThing provides a mock function with given fields: ctx, id
-func (_m *ConfigRepository) RemoveThing(ctx context.Context, id string) error {
+// RemoveClient provides a mock function with given fields: ctx, id
+func (_m *ConfigRepository) RemoveClient(ctx context.Context, id string) error {
 	ret := _m.Called(ctx, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RemoveThing")
+		panic("no return value specified for RemoveClient")
 	}
 
 	var r0 error

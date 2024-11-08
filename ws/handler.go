@@ -171,7 +171,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		if !authnRes.Authenticated {
 			return svcerr.ErrAuthentication
 		}
-		clientType = policies.ThingType
+		clientType = policies.ClientType
 		clientID = authnRes.GetId()
 	default:
 		token := string(s.Password)
@@ -205,7 +205,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		Created:  time.Now().UnixNano(),
 	}
 
-	if clientType == policies.ThingType {
+	if clientType == policies.ClientType {
 		msg.Publisher = clientID
 	}
 
@@ -254,7 +254,7 @@ func (h *handler) authAccess(ctx context.Context, token, topic string, msgType c
 		if !authnRes.Authenticated {
 			return svcerr.ErrAuthentication
 		}
-		clientType = policies.ThingType
+		clientType = policies.ClientType
 		clientID = authnRes.GetId()
 	default:
 		authnSession, err := h.authn.Authenticate(ctx, extractBearerToken(token))

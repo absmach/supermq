@@ -44,10 +44,10 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 					`CREATE TABLE IF NOT EXISTS connections (
 						channel_id    VARCHAR(36),
 						domain_id 	  VARCHAR(36),
-						thing_id      VARCHAR(36),
+						client_id     VARCHAR(36),
 						type          SMALLINT NOT NULL CHECK (type IN (1, 2)),
-						FOREIGN KEY   (thing_id, domain_id) REFERENCES clients (id, domain_id) ON DELETE CASCADE ON UPDATE CASCADE,
-						PRIMARY KEY   (channel_id, domain_id, thing_id, type)
+						FOREIGN KEY   (client_id, domain_id) REFERENCES clients (id, domain_id) ON DELETE CASCADE ON UPDATE CASCADE,
+						PRIMARY KEY   (channel_id, domain_id, client_id, type)
 					)`,
 				},
 				Down: []string{

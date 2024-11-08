@@ -26,7 +26,7 @@ import (
 
 var (
 	secret         = "strongsecret"
-	validTMetadata = clients.Metadata{"role": "thing"}
+	validTMetadata = clients.Metadata{"role": "client"}
 	ID             = "6e5e10b3-d4df-4758-b426-4929d55ad740"
 	client         = clients.Client{
 		ID:          ID,
@@ -582,13 +582,13 @@ func TestListClients(t *testing.T) {
 			SubjectType: policysvc.UserType,
 			Subject:     tc.session.DomainID + "_" + adminID,
 			Permission:  "",
-			ObjectType:  policysvc.ThingType,
+			ObjectType:  policysvc.ClientType,
 		}).Return(tc.listObjectsResponse, tc.listObjectsErr)
 		listAllObjectsCall2 := pService.On("ListAllObjects", context.Background(), policysvc.Policy{
 			SubjectType: policysvc.UserType,
 			Subject:     tc.session.UserID,
 			Permission:  "",
-			ObjectType:  policysvc.ThingType,
+			ObjectType:  policysvc.ClientType,
 		}).Return(tc.listObjectsResponse, tc.listObjectsErr)
 		retrieveAllCall := repo.On("SearchClients", mock.Anything, mock.Anything).Return(tc.retrieveAllResponse, tc.retrieveAllErr)
 		listPermissionsCall := pService.On("ListPermissions", mock.Anything, mock.Anything, mock.Anything).Return(tc.listPermissionsResponse, tc.listPermissionsErr)

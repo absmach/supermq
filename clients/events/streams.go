@@ -30,7 +30,7 @@ func NewEventStoreMiddleware(ctx context.Context, svc clients.Service, url strin
 	if err != nil {
 		return nil, err
 	}
-	res := rmEvents.NewRoleManagerEventStore("things", svc, publisher)
+	res := rmEvents.NewRoleManagerEventStore("clients", svc, publisher)
 
 	return &eventStore{
 		svc:                   svc,

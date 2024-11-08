@@ -16,7 +16,7 @@ import (
 
 const (
 	keyPrefix = "thing_key"
-	idPrefix  = "thing_id"
+	idPrefix  = "client_id"
 )
 
 var _ clients.Cache = (*thingCache)(nil)

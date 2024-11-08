@@ -1275,7 +1275,7 @@ func TestListUserThingsCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			sdkCall := sdkMock.On("ListUserThings", tc.args[0], mock.Anything, tc.args[1]).Return(tc.page, tc.sdkerr)
-			out := executeCommand(t, rootCmd, append([]string{thsCmd}, tc.args...)...)
+			out := executeCommand(t, rootCmd, append([]string{cliCmd}, tc.args...)...)
 
 			switch tc.logType {
 			case errLog:

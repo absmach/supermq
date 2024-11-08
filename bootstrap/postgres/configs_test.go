@@ -23,11 +23,11 @@ const numConfigs = 10
 
 var (
 	config = bootstrap.Config{
-		ClientID:    "mg-thing",
-		ThingKey:    "mg-key",
-		ExternalID:  "external-id",
-		ExternalKey: "external-key",
-		DomainID:    testsutil.GenerateUUID(&testing.T{}),
+		ClientID:     "mg-thing",
+		ClientSecret: "mg-key",
+		ExternalID:   "external-id",
+		ExternalKey:  "external-key",
+		DomainID:     testsutil.GenerateUUID(&testing.T{}),
 		Channels: []bootstrap.Channel{
 			{ID: "1", Name: "name 1", Metadata: map[string]interface{}{"meta": 1.0}},
 			{ID: "2", Name: "name 2", Metadata: map[string]interface{}{"meta": 2.0}},
@@ -48,17 +48,17 @@ func TestSave(t *testing.T) {
 
 	duplicateThing := config
 	duplicateThing.ExternalID = diff
-	duplicateThing.ThingKey = diff
+	duplicateThing.ClientSecret = diff
 	duplicateThing.Channels = []bootstrap.Channel{}
 
 	duplicateExternal := config
 	duplicateExternal.ClientID = diff
-	duplicateExternal.ThingKey = diff
+	duplicateExternal.ClientSecret = diff
 	duplicateExternal.Channels = []bootstrap.Channel{}
 
 	duplicateChannels := config
 	duplicateChannels.ExternalID = diff
-	duplicateChannels.ThingKey = diff
+	duplicateChannels.ClientSecret = diff
 	duplicateChannels.ClientID = diff
 
 	cases := []struct {
@@ -110,7 +110,7 @@ func TestRetrieveByID(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.ThingKey = uid.String()
+	c.ClientSecret = uid.String()
 	c.ClientID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
@@ -173,7 +173,7 @@ func TestRetrieveAll(t *testing.T) {
 		c.ExternalID = uid.String()
 		c.Name = fmt.Sprintf("name %d", i)
 		c.ClientID = uid.String()
-		c.ThingKey = uid.String()
+		c.ClientSecret = uid.String()
 
 		thingIDs[i] = c.ClientID
 
@@ -281,7 +281,7 @@ func TestRetrieveByExternalID(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.ThingKey = uid.String()
+	c.ClientSecret = uid.String()
 	c.ClientID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
@@ -319,7 +319,7 @@ func TestUpdate(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.ThingKey = uid.String()
+	c.ClientSecret = uid.String()
 	c.ClientID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
@@ -364,7 +364,7 @@ func TestUpdateCert(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.ThingKey = uid.String()
+	c.ClientSecret = uid.String()
 	c.ClientID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
@@ -430,7 +430,7 @@ func TestUpdateConnections(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.ThingKey = uid.String()
+	c.ClientSecret = uid.String()
 	c.ClientID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
@@ -439,7 +439,7 @@ func TestUpdateConnections(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err = uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.ThingKey = uid.String()
+	c.ClientSecret = uid.String()
 	c.ClientID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
@@ -503,7 +503,7 @@ func TestRemove(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.ThingKey = uid.String()
+	c.ClientSecret = uid.String()
 	c.ClientID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
@@ -530,7 +530,7 @@ func TestChangeState(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.ThingKey = uid.String()
+	c.ClientSecret = uid.String()
 	c.ClientID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
@@ -586,7 +586,7 @@ func TestListExisting(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.ThingKey = uid.String()
+	c.ClientSecret = uid.String()
 	c.ClientID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
@@ -637,7 +637,7 @@ func TestRemoveThing(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.ThingKey = uid.String()
+	c.ClientSecret = uid.String()
 	c.ClientID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
@@ -658,7 +658,7 @@ func TestUpdateChannel(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.ThingKey = uid.String()
+	c.ClientSecret = uid.String()
 	c.ClientID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
@@ -695,7 +695,7 @@ func TestRemoveChannel(t *testing.T) {
 	c := config
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.ThingKey = uid.String()
+	c.ClientSecret = uid.String()
 	c.ClientID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
@@ -719,7 +719,7 @@ func TestConnectThing(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.ThingKey = uid.String()
+	c.ClientSecret = uid.String()
 	c.ClientID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
@@ -818,7 +818,7 @@ func TestDisconnectThing(t *testing.T) {
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
 	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
-	c.ThingKey = uid.String()
+	c.ClientSecret = uid.String()
 	c.ClientID = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()

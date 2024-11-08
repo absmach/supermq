@@ -165,22 +165,22 @@ func (req changeChannelStatusReq) validate() error {
 	return nil
 }
 
-type connectChannelThingsRequest struct {
+type connectChannelClientsRequest struct {
 	channelID string
-	ThingIds  []string               `json:"thing_ids,omitempty"`
+	ClientIDs []string               `json:"client_ids,omitempty"`
 	Types     []connections.ConnType `json:"types,omitempty"`
 }
 
-func (req *connectChannelThingsRequest) validate() error {
+func (req *connectChannelClientsRequest) validate() error {
 	if req.channelID == "" || strings.TrimSpace(req.channelID) == "" {
 		return apiutil.ErrMissingID
 	}
 
-	if len(req.ThingIds) == 0 {
+	if len(req.ClientIDs) == 0 {
 		return apiutil.ErrMissingID
 	}
 
-	for _, tid := range req.ThingIds {
+	for _, tid := range req.ClientIDs {
 		if err := api.ValidateUUID(tid); err != nil {
 			return err
 		}
@@ -193,13 +193,13 @@ func (req *connectChannelThingsRequest) validate() error {
 	return nil
 }
 
-type disconnectChannelThingsRequest struct {
+type disconnectChannelClientsRequest struct {
 	channelID string
-	ThingIds  []string               `json:"thing_ids,omitempty"`
+	ClientIds []string               `json:"client_ids,omitempty"`
 	Types     []connections.ConnType `json:"types,omitempty"`
 }
 
-func (req *disconnectChannelThingsRequest) validate() error {
+func (req *disconnectChannelClientsRequest) validate() error {
 	if req.channelID == "" {
 		return apiutil.ErrMissingID
 	}
@@ -208,11 +208,11 @@ func (req *disconnectChannelThingsRequest) validate() error {
 		return err
 	}
 
-	if len(req.ThingIds) == 0 {
+	if len(req.ClientIds) == 0 {
 		return apiutil.ErrMissingID
 	}
 
-	for _, tid := range req.ThingIds {
+	for _, tid := range req.ClientIds {
 		if err := api.ValidateUUID(tid); err != nil {
 			return err
 		}
@@ -227,7 +227,7 @@ func (req *disconnectChannelThingsRequest) validate() error {
 
 type connectRequest struct {
 	ChannelIds []string               `json:"channel_ids,omitempty"`
-	ThingIds   []string               `json:"thing_ids,omitempty"`
+	ClientIds  []string               `json:"client_ids,omitempty"`
 	Types      []connections.ConnType `json:"types,omitempty"`
 }
 
@@ -241,11 +241,11 @@ func (req *connectRequest) validate() error {
 		}
 	}
 
-	if len(req.ThingIds) == 0 {
+	if len(req.ClientIds) == 0 {
 		return apiutil.ErrMissingID
 	}
 
-	for _, tid := range req.ThingIds {
+	for _, tid := range req.ClientIds {
 		if strings.TrimSpace(tid) == "" {
 			return apiutil.ErrMissingChannelID
 		}
@@ -260,7 +260,7 @@ func (req *connectRequest) validate() error {
 
 type disconnectRequest struct {
 	ChannelIds []string               `json:"channel_ids,omitempty"`
-	ThingIds   []string               `json:"thing_ids,omitempty"`
+	ClientIds  []string               `json:"client_ids,omitempty"`
 	Types      []connections.ConnType `json:"types,omitempty"`
 }
 
@@ -274,11 +274,11 @@ func (req *disconnectRequest) validate() error {
 		}
 	}
 
-	if len(req.ThingIds) == 0 {
+	if len(req.ClientIds) == 0 {
 		return apiutil.ErrMissingID
 	}
 
-	for _, tid := range req.ThingIds {
+	for _, tid := range req.ClientIds {
 		if err := api.ValidateUUID(tid); err != nil {
 			return err
 		}

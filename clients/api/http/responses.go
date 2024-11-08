@@ -103,7 +103,7 @@ func (res viewClientPermsRes) Empty() bool {
 
 type clientsPageRes struct {
 	clientsPageMetaRes
-	Clients []viewClientRes `json:"things"`
+	Clients []viewClientRes `json:"clients"`
 }
 
 func (res clientsPageRes) Code() int {

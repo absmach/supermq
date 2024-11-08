@@ -210,7 +210,7 @@ type listChannelByThingEvent struct {
 func (lcte listChannelByThingEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
 		"operation": channelList,
-		"thing_id":  lcte.thingID,
+		"client_id": lcte.thingID,
 		"total":     lcte.Total,
 		"offset":    lcte.Offset,
 		"limit":     lcte.Limit,
@@ -267,7 +267,7 @@ type connectEvent struct {
 func (ce connectEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"operation":   channelConnect,
-		"thing_ids":   ce.thIDs,
+		"client_ids":  ce.thIDs,
 		"channel_ids": ce.chIDs,
 		"types":       ce.types,
 	}, nil
@@ -282,7 +282,7 @@ type disconnectEvent struct {
 func (de disconnectEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"operation":   channelDisconnect,
-		"thing_ids":   de.thIDs,
+		"client_ids":  de.thIDs,
 		"channel_ids": de.chIDs,
 		"types":       de.types,
 	}, nil

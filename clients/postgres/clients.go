@@ -25,7 +25,7 @@ import (
 const (
 	entityTableName      = "clients"
 	entityIDColumnName   = "id"
-	rolesTableNamePrefix = "things"
+	rolesTableNamePrefix = "clients"
 )
 
 var _ clients.Repository = (*clientRepo)(nil)
@@ -660,9 +660,8 @@ func (repo *clientRepo) RetrieveByIds(ctx context.Context, ids []string) (client
 func (repo *clientRepo) AddConnections(ctx context.Context, conns []clients.Connection) error {
 	dbConns := toDBConnections(conns)
 
-	q := `INSERT INTO connections (channel_id, domain_id, thing_id, type)
-			VALUES (:channel_id, :domain_id, :thing_id, :type);`
-
+	q := `INSERT INTO connections (channel_id, domain_id, client_id, type)
+			VALUES (:channel_id, :domain_id, :client_id, :type);`
 	if _, err := repo.DB.NamedExecContext(ctx, q, dbConns); err != nil {
 		return postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
@@ -683,7 +682,7 @@ func (repo *clientRepo) RemoveConnections(ctx context.Context, conns []clients.C
 		}
 	}()
 
-	query := `DELETE FROM connections WHERE channel_id = :channel_id AND domain_id = :domain_id AND thing_id = :thing_id`
+	query := `DELETE FROM connections WHERE channel_id = :channel_id AND domain_id = :domain_id AND client_id = :client_id`
 
 	for _, conn := range conns {
 		if uint8(conn.Type) > 0 {
@@ -691,7 +690,7 @@ func (repo *clientRepo) RemoveConnections(ctx context.Context, conns []clients.C
 		}
 		dbConn := toDBConnection(conn)
 		if _, err := tx.NamedExec(query, dbConn); err != nil {
-			return errors.Wrap(repoerr.ErrRemoveEntity, errors.Wrap(fmt.Errorf("failed to delete connection for channel_id: %s, domain_id: %s thing_id %s", conn.ChannelID, conn.DomainID, conn.ThingID), err))
+			return errors.Wrap(repoerr.ErrRemoveEntity, errors.Wrap(fmt.Errorf("failed to delete connection for channel_id: %s, domain_id: %s client_id %s", conn.ChannelID, conn.DomainID, conn.ClientID), err))
 		}
 	}
 	if err := tx.Commit(); err != nil {
@@ -734,8 +733,8 @@ func (repo *clientRepo) RemoveParentGroup(ctx context.Context, th clients.Client
 }
 
 func (repo *clientRepo) ThingConnectionsCount(ctx context.Context, id string) (uint64, error) {
-	query := `SELECT COUNT(*) FROM connections WHERE thing_id = :thing_id`
-	dbConn := dbConnection{ThingID: id}
+	query := `SELECT COUNT(*) FROM connections WHERE client_id = :client_id`
+	dbConn := dbConnection{ClientID: id}
 
 	total, err := postgres.Total(ctx, repo.DB, query, dbConn)
 	if err != nil {
@@ -745,8 +744,8 @@ func (repo *clientRepo) ThingConnectionsCount(ctx context.Context, id string) (u
 }
 
 func (repo *clientRepo) DoesThingHaveConnections(ctx context.Context, id string) (bool, error) {
-	query := `SELECT 1 FROM connections WHERE thing_id = :thing_id`
-	dbConn := dbConnection{ThingID: id}
+	query := `SELECT 1 FROM connections WHERE client_id = :client_id`
+	dbConn := dbConnection{ClientID: id}
 
 	rows, err := repo.DB.NamedQueryContext(ctx, query, dbConn)
 	if err != nil {
@@ -768,9 +767,9 @@ func (repo *clientRepo) RemoveChannelConnections(ctx context.Context, channelID 
 }
 
 func (repo *clientRepo) RemoveThingConnections(ctx context.Context, thingID string) error {
-	query := `DELETE FROM connections WHERE thing_id = :thing_id`
+	query := `DELETE FROM connections WHERE client_id = :client_id`
 
-	dbConn := dbConnection{ThingID: thingID}
+	dbConn := dbConnection{ClientID: thingID}
 	if _, err := repo.DB.NamedExecContext(ctx, query, dbConn); err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
@@ -814,7 +813,7 @@ func (repo *clientRepo) UnsetParentGroupFromClient(ctx context.Context, parentGr
 }
 
 type dbConnection struct {
-	ThingID   string               `db:"thing_id"`
+	ClientID  string               `db:"client_id"`
 	ChannelID string               `db:"channel_id"`
 	DomainID  string               `db:"domain_id"`
 	Type      connections.ConnType `db:"type"`
@@ -830,7 +829,7 @@ func toDBConnections(conns []clients.Connection) []dbConnection {
 
 func toDBConnection(conn clients.Connection) dbConnection {
 	return dbConnection{
-		ThingID:   conn.ThingID,
+		ClientID:  conn.ClientID,
 		ChannelID: conn.ChannelID,
 		DomainID:  conn.DomainID,
 		Type:      conn.Type,

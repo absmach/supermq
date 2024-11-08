@@ -68,6 +68,7 @@ var expectedExternalOperations = []svcutil.ExternalOperation{
 	ThingsOpConnectChannel,
 	ThingsOpDisconnectChannel,
 }
+
 var externalOperationNames = []string{
 	"DomainOpCreateChannel",
 	"DomainOpListChannel",
@@ -88,7 +89,7 @@ const (
 	readPermission           = "read_permission"
 	deletePermission         = "delete_permission"
 	setParentGroupPermission = "set_parent_group_permission"
-	connectToThingPermission = "connect_to_thing_permission"
+	connectToThingPermission = "connect_to_client_permission"
 
 	manageRolePermission      = "manage_role_permission"
 	addRoleUsersPermission    = "add_role_users_permission"

@@ -174,11 +174,11 @@ func decodeDeleteChannelReq(_ context.Context, r *http.Request) (interface{}, er
 	return req, nil
 }
 
-func decodeConnectChannelThingsRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeConnectChannelClientRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
-	req := connectChannelThingsRequest{
+	req := connectChannelClientsRequest{
 		channelID: chi.URLParam(r, "channelID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -188,11 +188,11 @@ func decodeConnectChannelThingsRequest(_ context.Context, r *http.Request) (inte
 	return req, nil
 }
 
-func decodeDisconnectChannelThingsRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeDisconnectChannelClientsRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
-	req := disconnectChannelThingsRequest{
+	req := disconnectChannelClientsRequest{
 		channelID: chi.URLParam(r, "channelID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

@@ -141,4 +141,4 @@ components:
       scheme: bearer
       bearerFormat: uuid
       description: |
-        * Thing access: "Authorization: Thing <thing_key>"
+        * Thing access: "Authorization: Thing <client_key>"

@@ -114,7 +114,7 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 
 		res := viewRes{
 			ThingID:     config.ClientID,
-			ThingKey:    config.ThingKey,
+			ThingKey:    config.ClientSecret,
 			Channels:    channels,
 			ExternalID:  config.ExternalID,
 			ExternalKey: config.ExternalKey,
@@ -218,7 +218,7 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 
 			view := viewRes{
 				ThingID:     cfg.ClientID,
-				ThingKey:    cfg.ThingKey,
+				ThingKey:    cfg.ClientSecret,
 				Channels:    channels,
 				ExternalID:  cfg.ExternalID,
 				ExternalKey: cfg.ExternalKey,

@@ -1168,12 +1168,12 @@ func TestListChannelsByThing(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := gsvc.On("ListGroups", mock.Anything, tc.session, policies.ThingsKind, tc.ClientID, tc.listGroupsReq).Return(tc.svcRes, tc.svcErr)
+			svcCall := gsvc.On("ListGroups", mock.Anything, tc.session, policies.ClientsKind, tc.ClientID, tc.listGroupsReq).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.ChannelsByThing(tc.ClientID, tc.pageMeta, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "ListGroups", mock.Anything, tc.session, policies.ThingsKind, tc.ClientID, tc.listGroupsReq)
+				ok := svcCall.Parent.AssertCalled(t, "ListGroups", mock.Anything, tc.session, policies.ClientsKind, tc.ClientID, tc.listGroupsReq)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -2379,11 +2379,11 @@ func TestConnect(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := gsvc.On("Assign", mock.Anything, tc.session, tc.connection.ChannelID, policies.GroupRelation, policies.ThingsKind, []string{tc.connection.ClientID}).Return(tc.svcErr)
+			svcCall := gsvc.On("Assign", mock.Anything, tc.session, tc.connection.ChannelID, policies.GroupRelation, policies.ClientsKind, []string{tc.connection.ClientID}).Return(tc.svcErr)
 			err := mgsdk.Connect(tc.connection, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "Assign", mock.Anything, tc.session, tc.connection.ChannelID, policies.GroupRelation, policies.ThingsKind, []string{tc.connection.ClientID})
+				ok := svcCall.Parent.AssertCalled(t, "Assign", mock.Anything, tc.session, tc.connection.ChannelID, policies.GroupRelation, policies.ClientsKind, []string{tc.connection.ClientID})
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -2486,11 +2486,11 @@ func TestDisconnect(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := gsvc.On("Unassign", mock.Anything, tc.session, tc.disconnect.ChannelID, policies.GroupRelation, policies.ThingsKind, []string{tc.disconnect.ClientID}).Return(tc.svcErr)
+			svcCall := gsvc.On("Unassign", mock.Anything, tc.session, tc.disconnect.ChannelID, policies.GroupRelation, policies.ClientsKind, []string{tc.disconnect.ClientID}).Return(tc.svcErr)
 			err := mgsdk.Disconnect(tc.disconnect, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "Unassign", mock.Anything, tc.session, tc.disconnect.ChannelID, policies.GroupRelation, policies.ThingsKind, []string{tc.disconnect.ClientID})
+				ok := svcCall.Parent.AssertCalled(t, "Unassign", mock.Anything, tc.session, tc.disconnect.ChannelID, policies.GroupRelation, policies.ClientsKind, []string{tc.disconnect.ClientID})
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -2582,11 +2582,11 @@ func TestConnectThing(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := gsvc.On("Assign", mock.Anything, tc.session, tc.channelID, policies.GroupRelation, policies.ThingsKind, []string{tc.clientID}).Return(tc.svcErr)
+			svcCall := gsvc.On("Assign", mock.Anything, tc.session, tc.channelID, policies.GroupRelation, policies.ClientsKind, []string{tc.clientID}).Return(tc.svcErr)
 			err := mgsdk.ConnectThing(tc.clientID, tc.channelID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "Assign", mock.Anything, tc.session, tc.channelID, policies.GroupRelation, policies.ThingsKind, []string{tc.clientID})
+				ok := svcCall.Parent.AssertCalled(t, "Assign", mock.Anything, tc.session, tc.channelID, policies.GroupRelation, policies.ClientsKind, []string{tc.clientID})
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -2677,11 +2677,11 @@ func TestDisconnectClient(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := gsvc.On("Unassign", mock.Anything, tc.session, tc.channelID, policies.GroupRelation, policies.ThingsKind, []string{tc.clientID}).Return(tc.svcErr)
+			svcCall := gsvc.On("Unassign", mock.Anything, tc.session, tc.channelID, policies.GroupRelation, policies.ClientsKind, []string{tc.clientID}).Return(tc.svcErr)
 			err := mgsdk.DisconnectClient(tc.clientID, tc.channelID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "Unassign", mock.Anything, tc.session, tc.channelID, policies.GroupRelation, policies.ThingsKind, []string{tc.clientID})
+				ok := svcCall.Parent.AssertCalled(t, "Unassign", mock.Anything, tc.session, tc.channelID, policies.GroupRelation, policies.ClientsKind, []string{tc.clientID})
 				assert.True(t, ok)
 			}
 			svcCall.Unset()

@@ -12,7 +12,7 @@ import (
 type Service interface {
 	Authorize(ctx context.Context, req channels.AuthzReq) error
 	UnsetParentGroupFromChannels(ctx context.Context, parentGroupID string) error
-	RemoveThingConnections(ctx context.Context, thingID string) error
+	RemoveClientConnections(ctx context.Context, clientID string) error
 }
 
 type service struct {
@@ -28,7 +28,6 @@ func New(repo channels.Repository, evaluator policies.Evaluator, policy policies
 }
 
 func (svc service) Authorize(ctx context.Context, req channels.AuthzReq) error {
-
 	switch req.ClientType {
 	case policies.UserType:
 		pr := policies.Policy{
@@ -41,11 +40,11 @@ func (svc service) Authorize(ctx context.Context, req channels.AuthzReq) error {
 			return errors.Wrap(svcerr.ErrAuthorization, err)
 		}
 		return nil
-	case policies.ThingType:
-		//Optimization: Add cache
-		if err := svc.repo.ThingAuthorize(ctx, channels.Connection{
+	case policies.ClientType:
+		// Optimization: Add cache
+		if err := svc.repo.ClientAuthorize(ctx, channels.Connection{
 			ChannelID: req.ChannelID,
-			ThingID:   req.ClientID,
+			ClientID:  req.ClientID,
 			Type:      req.Type,
 		}); err != nil {
 			return errors.Wrap(svcerr.ErrAuthorization, err)
@@ -54,11 +53,10 @@ func (svc service) Authorize(ctx context.Context, req channels.AuthzReq) error {
 	default:
 		return svcerr.ErrAuthentication
 	}
-
 }
 
-func (svc service) RemoveThingConnections(ctx context.Context, thingID string) error {
-	return svc.repo.RemoveThingConnections(ctx, thingID)
+func (svc service) RemoveClientConnections(ctx context.Context, clientID string) error {
+	return svc.repo.RemoveClientConnections(ctx, clientID)
 }
 
 func (svc service) UnsetParentGroupFromChannels(ctx context.Context, parentGroupID string) (retErr error) {

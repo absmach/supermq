@@ -2357,5 +2357,5 @@ type groupReqBody struct {
 	UserIDs   []string `json:"user_ids"`
 	GroupIDs  []string `json:"group_ids"`
 	ChannelID string   `json:"channel_id"`
-	ThingID   string   `json:"thing_id"`
+	ThingID   string   `json:"client_id"`
 }

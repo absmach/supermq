@@ -16,18 +16,18 @@ import (
 // MGKey is key of corresponding Magistrala Thing.
 // MGChannels is a list of Magistrala Channels corresponding Magistrala Thing connects to.
 type Config struct {
-	ClientID    string    `json:"client_id"`
-	DomainID    string    `json:"domain_id,omitempty"`
-	Name        string    `json:"name,omitempty"`
-	ClientCert  string    `json:"client_cert,omitempty"`
-	ClientKey   string    `json:"client_key,omitempty"`
-	CACert      string    `json:"ca_cert,omitempty"`
-	ThingKey    string    `json:"thing_key"`
-	Channels    []Channel `json:"channels,omitempty"`
-	ExternalID  string    `json:"external_id"`
-	ExternalKey string    `json:"external_key"`
-	Content     string    `json:"content,omitempty"`
-	State       State     `json:"state"`
+	ClientID     string    `json:"client_id"`
+	ClientSecret string    `json:"client_secret"`
+	DomainID     string    `json:"domain_id,omitempty"`
+	Name         string    `json:"name,omitempty"`
+	ClientCert   string    `json:"client_cert,omitempty"`
+	ClientKey    string    `json:"client_key,omitempty"`
+	CACert       string    `json:"ca_cert,omitempty"`
+	Channels     []Channel `json:"channels,omitempty"`
+	ExternalID   string    `json:"external_id"`
+	ExternalKey  string    `json:"external_key"`
+	Content      string    `json:"content,omitempty"`
+	State        State     `json:"state"`
 }
 
 // Channel represents Magistrala channel corresponding Magistrala Thing is connected to.
@@ -103,8 +103,8 @@ type ConfigRepository interface {
 	// Methods RemoveThing, UpdateChannel, and RemoveChannel are related to
 	// event sourcing. That's why these methods surpass ownership check.
 
-	// RemoveThing removes Config of the Thing with the given ID.
-	RemoveThing(ctx context.Context, id string) error
+	// RemoveClient removes Config of the Client with the given ID.
+	RemoveClient(ctx context.Context, id string) error
 
 	// UpdateChannel updates channel with the given ID.
 	UpdateChannel(ctx context.Context, c Channel) error
@@ -112,9 +112,9 @@ type ConfigRepository interface {
 	// RemoveChannel removes channel with the given ID.
 	RemoveChannel(ctx context.Context, id string) error
 
-	// ConnectThing changes state of the Config when the corresponding Thing is connected to the Channel.
-	ConnectThing(ctx context.Context, channelID, thingID string) error
+	// ConnectClient changes state of the Config when the corresponding Client is connected to the Channel.
+	ConnectClient(ctx context.Context, channelID, thingID string) error
 
-	// DisconnectThing changes state of the Config when the corresponding Thing is disconnected from the Channel.
-	DisconnectThing(ctx context.Context, channelID, thingID string) error
+	// DisconnectClient changes state of the Config when the corresponding Client is disconnected from the Channel.
+	DisconnectClient(ctx context.Context, channelID, thingID string) error
 }

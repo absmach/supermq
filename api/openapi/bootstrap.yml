@@ -330,11 +330,11 @@ components:
     Config:
       type: object
       properties:
-        thing_id:
+        client_id:
           type: string
           format: uuid
           description: Corresponding Magistrala Thing ID.
-        magistrala_key:
+        magistrala_secret:
           type: string
           format: uuid
           description: Corresponding Magistrala Thing key.
@@ -402,7 +402,7 @@ components:
     BootstrapConfig:
       type: object
       properties:
-        thing_id:
+        client_id:
           type: string
           format: uuid
           description: Corresponding Magistrala Thing ID.
@@ -428,14 +428,14 @@ components:
           type: string
           description: Issuing CA certificate.
       required:
-        - thing_id
+        - client_id
         - thing_key
         - channels
         - content
     ConfigUpdateCerts:
       type: object
       properties:
-        thing_id:
+        client_id:
           type: string
           format: uuid
           description: Corresponding Magistrala Thing ID.
@@ -449,7 +449,7 @@ components:
           type: string
           description: Issuing CA certificate.
       required:
-        - thing_id
+        - client_id
         - thing_key
         - channels
         - content
@@ -519,7 +519,7 @@ components:
               external_key:
                 type: string
                 description: External key.
-              thing_id:
+              client_id:
                 type: string
                 format: uuid
                 description: ID of the corresponding Magistrala Thing.

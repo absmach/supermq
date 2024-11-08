@@ -11,7 +11,7 @@ import (
 	"fmt"
 
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
-	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/clients/v1"
 	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
@@ -73,7 +73,7 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 
 	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
 		ClientId:   authnRes.GetId(),
-		ClientType: policies.ThingType,
+		ClientType: policies.ClientType,
 		Type:       uint32(connections.Publish),
 		ChannelId:  msg.GetChannel(),
 	})
@@ -103,7 +103,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 	thingID := authnRes.GetId()
 	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
 		ClientId:   thingID,
-		ClientType: policies.ThingType,
+		ClientType: policies.ClientType,
 		Type:       uint32(connections.Subscribe),
 		ChannelId:  chanID,
 	})
@@ -142,7 +142,7 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopi
 	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
 		DomainId:   "",
 		ClientId:   authnRes.GetId(),
-		ClientType: policies.ThingType,
+		ClientType: policies.ClientType,
 		Type:       uint32(connections.Subscribe),
 		ChannelId:  chanID,
 	})
@@ -191,7 +191,7 @@ func newAuthzClient(thingID, channelID, subTopic string, channels grpcChannelsV1
 }
 
 func (a ac) Handle(m *messaging.Message) error {
-	res, err := a.channels.Authorize(context.Background(), &grpcChannelsV1.AuthzReq{ClientId: a.thingID, ClientType: policies.ThingType, ChannelId: a.channelID, Type: uint32(connections.Subscribe)})
+	res, err := a.channels.Authorize(context.Background(), &grpcChannelsV1.AuthzReq{ClientId: a.thingID, ClientType: policies.ClientType, ChannelId: a.channelID, Type: uint32(connections.Subscribe)})
 	if err != nil {
 		if disErr := a.Cancel(); disErr != nil {
 			return errors.Wrap(err, errors.Wrap(errFailedToDisconnectClient, disErr))

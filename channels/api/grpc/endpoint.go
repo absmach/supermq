@@ -33,7 +33,7 @@ func removeThingConnectionsEndpoint(svc channels.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(removeThingConnectionsReq)
 
-		if err := svc.RemoveThingConnections(ctx, req.thingID); err != nil {
+		if err := svc.RemoveClientConnections(ctx, req.clientID); err != nil {
 			return removeThingConnectionsRes{}, err
 		}
 

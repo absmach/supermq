@@ -15,28 +15,28 @@ const (
 	RemoveRoleUsers = "remove_role_users"
 	ViewRoleUsers   = "view_role_users"
 
-	ThingCreate           = "thing_create"
+	ClientCreate          = "client_create"
 	ChannelCreate         = "channel_create"
 	SubgroupCreate        = "subgroup_create"
-	SubgroupThingCreate   = "subgroup_thing_create"
+	SubgroupThingCreate   = "subgroup_client_create"
 	SubgroupChannelCreate = "subgroup_channel_create"
 
-	ThingUpdate           = "thing_update"
-	ThingRead             = "thing_read"
-	ThingDelete           = "thing_delete"
-	ThingSetParentGroup   = "thing_set_parent_group"
-	ThingConnectToChannel = "thing_connect_to_channel"
+	ClientUpdate           = "client_update"
+	ClientRead             = "client_read"
+	ClientDelete           = "client_delete"
+	ClientSetParentGroup   = "client_set_parent_group"
+	ClientConnectToChannel = "client_connect_to_channel"
 
-	ThingManageRole      = "thing_manage_role"
-	ThingAddRoleUsers    = "thing_add_role_users"
-	ThingRemoveRoleUsers = "thing_remove_role_users"
-	ThingViewRoleUsers   = "thing_view_role_users"
+	ClientManageRole      = "client_manage_role"
+	ClientAddRoleUsers    = "client_add_role_users"
+	ClientRemoveRoleUsers = "client_remove_role_users"
+	ClientViewRoleUsers   = "client_view_role_users"
 
 	ChannelUpdate         = "channel_update"
 	ChannelRead           = "channel_read"
 	ChannelDelete         = "channel_delete"
 	ChannelSetParentGroup = "channel_set_parent_group"
-	ChannelConnectToThing = "channel_connect_to_thing"
+	ChannelConnectToThing = "channel_connect_to_client"
 	ChannelPublish        = "channel_publish"
 	ChannelSubscribe      = "channel_subscribe"
 
@@ -57,22 +57,22 @@ const (
 	SubgroupRemoveRoleUsers = "subgroup_remove_role_users"
 	SubgroupViewRoleUsers   = "subgroup_view_role_users"
 
-	SubgroupThingUpdate           = "subgroup_thing_update"
-	SubgroupThingRead             = "subgroup_thing_read"
-	SubgroupThingDelete           = "subgroup_thing_delete"
-	SubgroupThingSetParentGroup   = "subgroup_thing_set_parent_group"
-	SubgroupThingConnectToChannel = "subgroup_thing_connect_to_channel"
+	SubgroupClientUpdate           = "subgroup_client_update"
+	SubgroupClientRead             = "subgroup_client_read"
+	SubgroupClientDelete           = "subgroup_client_delete"
+	SubgroupClientSetParentGroup   = "subgroup_client_set_parent_group"
+	SubgroupClientConnectToChannel = "subgroup_client_connect_to_channel"
 
-	SubgroupThingManageRole      = "subgroup_thing_manage_role"
-	SubgroupThingAddRoleUsers    = "subgroup_thing_add_role_users"
-	SubgroupThingRemoveRoleUsers = "subgroup_thing_remove_role_users"
-	SubgroupThingViewRoleUsers   = "subgroup_thing_view_role_users"
+	SubgroupClientManageRole      = "subgroup_client_manage_role"
+	SubgroupClientAddRoleUsers    = "subgroup_client_add_role_users"
+	SubgroupClientRemoveRoleUsers = "subgroup_client_remove_role_users"
+	SubgroupClientViewRoleUsers   = "subgroup_client_view_role_users"
 
 	SubgroupChannelUpdate         = "subgroup_channel_update"
 	SubgroupChannelRead           = "subgroup_channel_read"
 	SubgroupChannelDelete         = "subgroup_channel_delete"
 	SubgroupChannelSetParentGroup = "subgroup_channel_set_parent_group"
-	SubgroupChannelConnectToThing = "subgroup_channel_connect_to_thing"
+	SubgroupChannelConnectToThing = "subgroup_channel_connect_to_client"
 	SubgroupChannelPublish        = "subgroup_channel_publish"
 	SubgroupChannelSubscribe      = "subgroup_channel_subscribe"
 
@@ -99,20 +99,20 @@ func AvailableActions() []roles.Action {
 		AddRoleUsers,
 		RemoveRoleUsers,
 		ViewRoleUsers,
-		ThingCreate,
+		ClientCreate,
 		ChannelCreate,
 		SubgroupCreate,
 		SubgroupThingCreate,
 		SubgroupChannelCreate,
-		ThingUpdate,
-		ThingRead,
-		ThingDelete,
-		ThingSetParentGroup,
-		ThingConnectToChannel,
-		ThingManageRole,
-		ThingAddRoleUsers,
-		ThingRemoveRoleUsers,
-		ThingViewRoleUsers,
+		ClientUpdate,
+		ClientRead,
+		ClientDelete,
+		ClientSetParentGroup,
+		ClientConnectToChannel,
+		ClientManageRole,
+		ClientAddRoleUsers,
+		ClientRemoveRoleUsers,
+		ClientViewRoleUsers,
 		ChannelUpdate,
 		ChannelRead,
 		ChannelDelete,
@@ -134,15 +134,15 @@ func AvailableActions() []roles.Action {
 		SubgroupAddRoleUsers,
 		SubgroupRemoveRoleUsers,
 		SubgroupViewRoleUsers,
-		SubgroupThingUpdate,
-		SubgroupThingRead,
-		SubgroupThingDelete,
-		SubgroupThingSetParentGroup,
-		SubgroupThingConnectToChannel,
-		SubgroupThingManageRole,
-		SubgroupThingAddRoleUsers,
-		SubgroupThingRemoveRoleUsers,
-		SubgroupThingViewRoleUsers,
+		SubgroupClientUpdate,
+		SubgroupClientRead,
+		SubgroupClientDelete,
+		SubgroupClientSetParentGroup,
+		SubgroupClientConnectToChannel,
+		SubgroupClientManageRole,
+		SubgroupClientAddRoleUsers,
+		SubgroupClientRemoveRoleUsers,
+		SubgroupClientViewRoleUsers,
 		SubgroupChannelUpdate,
 		SubgroupChannelRead,
 		SubgroupChannelDelete,

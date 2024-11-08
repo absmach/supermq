@@ -168,7 +168,7 @@ components:
     Cert:
       type: object
       properties:
-        thing_id:
+        client_id:
           type: string
           format: uuid
           description: Corresponding Magistrala Thing ID.
@@ -248,10 +248,10 @@ components:
           schema:
             type: object
             required:
-              - thing_id
+              - client_id
               - ttl
             properties:
-              thing_id:
+              client_id:
                 type: string
                 format: uuid
               ttl:
@@ -271,7 +271,7 @@ components:
         serial:
           operationId: getSerials
           parameters:
-            thingID: $response.body#/thing_id
+            thingID: $response.body#/client_id
         delete:
           operationId: revokeCert
           parameters:

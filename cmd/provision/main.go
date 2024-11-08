@@ -149,7 +149,7 @@ func loadConfig() (provision.Config, error) {
 	}
 	cfg.Things = []clients.Client{
 		{
-			Name:     "thing",
+			Name:     "client",
 			Metadata: map[string]interface{}{"external_id": "xxxxxx"},
 		},
 	}

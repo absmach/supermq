@@ -84,7 +84,7 @@ func (s *grpcServer) Authenticate(ctx context.Context, req *grpcClientsV1.AuthnR
 func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*grpcClientsV1.AuthnReq)
 	return authenticateReq{
-		ThingID:  req.GetThingId(),
+		ThingID:  req.GetClientId(),
 		ThingKey: req.GetThingKey(),
 	}, nil
 }
@@ -168,7 +168,7 @@ func decodeAddConnectionsRequest(_ context.Context, grpcReq interface{}) (interf
 			return nil, err
 		}
 		conns = append(conns, connection{
-			clientID:  c.GetThingId(),
+			clientID:  c.GetClientId(),
 			channelID: c.GetChannelId(),
 			domainID:  c.GetDomainId(),
 			connType:  connType,
@@ -203,7 +203,7 @@ func decodeRemoveConnectionsRequest(_ context.Context, grpcReq interface{}) (int
 			return nil, err
 		}
 		conns = append(conns, connection{
-			clientID:  c.GetThingId(),
+			clientID:  c.GetClientId(),
 			channelID: c.GetChannelId(),
 			domainID:  c.GetDomainId(),
 			connType:  connType,

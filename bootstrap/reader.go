@@ -16,7 +16,7 @@ import (
 // This is used as a response from ConfigReader and can easily be
 // replace with any other response format.
 type bootstrapRes struct {
-	ThingID    string       `json:"thing_id"`
+	ThingID    string       `json:"client_id"`
 	ThingKey   string       `json:"thing_key"`
 	Channels   []channelRes `json:"channels"`
 	Content    string       `json:"content,omitempty"`
@@ -60,7 +60,7 @@ func (r reader) ReadConfig(cfg Config, secure bool) (interface{}, error) {
 	}
 
 	res := bootstrapRes{
-		ThingKey:   cfg.ThingKey,
+		ThingKey:   cfg.ClientSecret,
 		ThingID:    cfg.ClientID,
 		Channels:   channels,
 		Content:    cfg.Content,

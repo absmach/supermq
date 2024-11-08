@@ -18,7 +18,7 @@ USER_REPO ?= $(shell git remote get-url origin | sed -e 's/.*\/\([^/]*\)\/\([^/]
 empty:=
 space:= $(empty) $(empty)
 # Docker compose project name should follow this guidelines: https://docs.docker.com/compose/reference/#use--p-to-specify-a-project-name
-DOCKER_PROJECT ?= tst #$(shell echo $(subst $(space),,$(USER_REPO)) | tr -c -s '[:alnum:][=-=]' '_' | tr '[:upper:]' '[:lower:]')
+DOCKER_PROJECT ?= $(shell echo $(subst $(space),,$(USER_REPO)) | tr -c -s '[:alnum:][=-=]' '_' | tr '[:upper:]' '[:lower:]')
 DOCKER_COMPOSE_COMMANDS_SUPPORTED := up down config restart
 DEFAULT_DOCKER_COMPOSE_COMMAND  := up
 GRPC_MTLS_CERT_FILES_EXISTS = 0
@@ -142,8 +142,8 @@ define test_api_service
 		exit 1; \
 	fi
 
-	@if [ "$(svc)" = "http" ] && [ -z "$(THING_SECRET)" ]; then \
-		echo "THING_SECRET is not set"; \
+	@if [ "$(svc)" = "http" ] && [ -z "$(CLIENT_SECRET)" ]; then \
+		echo "CLIENT_SECRET is not set"; \
 		echo "Please set it to a valid secret"; \
 		exit 1; \
 	fi
@@ -152,7 +152,7 @@ define test_api_service
 		st run api/openapi/$(svc).yml \
 		--checks all \
 		--base-url $(2) \
-		--header "Authorization: Thing $(THING_SECRET)" \
+		--header "Authorization: Client $(CLIENT_SECRET)" \
 		--contrib-openapi-formats-uuid \
 		--hypothesis-suppress-health-check=filter_too_much \
 		--stateful=links; \

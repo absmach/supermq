@@ -25,7 +25,7 @@ const (
 const (
 	userEntityType    = "user"
 	groupEntityType   = "group"
-	thingEntityType   = "thing"
+	clientEntityType  = "client"
 	channelEntityType = "channel"
 )
 
@@ -37,7 +37,7 @@ func (e EntityType) String() string {
 	case GroupEntity:
 		return groupEntityType
 	case ThingEntity:
-		return thingEntityType
+		return clientEntityType
 	case ChannelEntity:
 		return channelEntityType
 	default:
@@ -53,7 +53,7 @@ func (e EntityType) AuthString() string {
 	case GroupEntity, ChannelEntity:
 		return policies.GroupType
 	case ThingEntity:
-		return policies.ThingType
+		return policies.ClientType
 	default:
 		return ""
 	}
@@ -66,7 +66,7 @@ func ToEntityType(entityType string) (EntityType, error) {
 		return UserEntity, nil
 	case groupEntityType:
 		return GroupEntity, nil
-	case thingEntityType:
+	case clientEntityType:
 		return ThingEntity, nil
 	case channelEntityType:
 		return ChannelEntity, nil
@@ -83,7 +83,7 @@ func (e EntityType) Query() string {
 	case GroupEntity, ChannelEntity:
 		return "((operation LIKE 'group.%' AND attributes->>'id' = :entity_id) OR (attributes->>'group_id' = :entity_id))"
 	case ThingEntity:
-		return "((operation LIKE 'thing.%' AND attributes->>'id' = :entity_id) OR (attributes->>'thing_id' = :entity_id))"
+		return "((operation LIKE 'thing.%' AND attributes->>'id' = :entity_id) OR (attributes->>'client_id' = :entity_id))"
 	default:
 		return ""
 	}
@@ -94,7 +94,7 @@ type Journal struct {
 	ID         string                 `json:"id,omitempty" db:"id"`
 	Operation  string                 `json:"operation,omitempty" db:"operation,omitempty"`
 	OccurredAt time.Time              `json:"occurred_at,omitempty" db:"occurred_at,omitempty"`
-	Attributes map[string]interface{} `json:"attributes,omitempty" db:"attributes,omitempty"` // This is extra information about the journal for example thing_id, user_id, group_id etc.
+	Attributes map[string]interface{} `json:"attributes,omitempty" db:"attributes,omitempty"` // This is extra information about the journal for example client_id, user_id, group_id etc.
 	Metadata   map[string]interface{} `json:"metadata,omitempty" db:"metadata,omitempty"`     // This is decoded metadata from the journal.
 }
 

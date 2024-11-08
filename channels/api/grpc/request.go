@@ -13,7 +13,7 @@ type authorizeReq struct {
 	connType   connections.ConnType
 }
 type removeThingConnectionsReq struct {
-	thingID string
+	clientID string
 }
 
 type unsetParentGroupFromChannelsReq struct {

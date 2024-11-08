@@ -245,7 +245,7 @@ const (
 )
 
 const (
-	ThingCreatePermission   = "thing_create_permission"
+	ClientCreatePermission  = "client_create_permission"
 	ChannelCreatePermission = "channel_create_permission"
 	GroupCreatePermission   = "group_create_permission"
 )

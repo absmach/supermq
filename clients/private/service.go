@@ -95,7 +95,7 @@ func (svc service) UnsetParentGroupFromClient(ctx context.Context, parentGroupID
 				SubjectType: policies.GroupType,
 				Subject:     th.ParentGroup,
 				Relation:    policies.ParentGroupRelation,
-				ObjectType:  policies.ThingType,
+				ObjectType:  policies.ClientType,
 				Object:      th.ID,
 			})
 		}

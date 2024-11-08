@@ -23,13 +23,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ClientsService_Authenticate_FullMethodName               = "/things.v1.ClientsService/Authenticate"
-	ClientsService_RetrieveEntity_FullMethodName             = "/things.v1.ClientsService/RetrieveEntity"
-	ClientsService_RetrieveEntities_FullMethodName           = "/things.v1.ClientsService/RetrieveEntities"
-	ClientsService_AddConnections_FullMethodName             = "/things.v1.ClientsService/AddConnections"
-	ClientsService_RemoveConnections_FullMethodName          = "/things.v1.ClientsService/RemoveConnections"
-	ClientsService_RemoveChannelConnections_FullMethodName   = "/things.v1.ClientsService/RemoveChannelConnections"
-	ClientsService_UnsetParentGroupFromClient_FullMethodName = "/things.v1.ClientsService/UnsetParentGroupFromClient"
+	ClientsService_Authenticate_FullMethodName               = "/clients.v1.ClientsService/Authenticate"
+	ClientsService_RetrieveEntity_FullMethodName             = "/clients.v1.ClientsService/RetrieveEntity"
+	ClientsService_RetrieveEntities_FullMethodName           = "/clients.v1.ClientsService/RetrieveEntities"
+	ClientsService_AddConnections_FullMethodName             = "/clients.v1.ClientsService/AddConnections"
+	ClientsService_RemoveConnections_FullMethodName          = "/clients.v1.ClientsService/RemoveConnections"
+	ClientsService_RemoveChannelConnections_FullMethodName   = "/clients.v1.ClientsService/RemoveChannelConnections"
+	ClientsService_UnsetParentGroupFromClient_FullMethodName = "/clients.v1.ClientsService/UnsetParentGroupFromClient"
 )
 
 // ClientsServiceClient is the client API for ClientsService service.
@@ -324,7 +324,7 @@ func _ClientsService_UnsetParentGroupFromClient_Handler(srv interface{}, ctx con
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var ClientsService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "things.v1.ClientsService",
+	ServiceName: "clients.v1.ClientsService",
 	HandlerType: (*ClientsServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

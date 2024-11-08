@@ -49,10 +49,10 @@ func (tm *tracingMiddleware) ListChannels(ctx context.Context, session authn.Ses
 	return tm.svc.ListChannels(ctx, session, pm)
 }
 
-func (tm *tracingMiddleware) ListChannelsByThing(ctx context.Context, session authn.Session, thingID string, pm channels.PageMetadata) (channels.Page, error) {
+func (tm *tracingMiddleware) ListChannelsByClient(ctx context.Context, session authn.Session, clientID string, pm channels.PageMetadata) (channels.Page, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_list_channels")
 	defer span.End()
-	return tm.svc.ListChannelsByThing(ctx, session, thingID, pm)
+	return tm.svc.ListChannelsByClient(ctx, session, clientID, pm)
 }
 
 // UpdateChannel traces the "UpdateChannel" operation of the wrapped policies.Service.
@@ -100,7 +100,7 @@ func (tm *tracingMiddleware) RemoveChannel(ctx context.Context, session authn.Se
 func (tm *tracingMiddleware) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) error {
 	ctx, span := tm.tracer.Start(ctx, "connect", trace.WithAttributes(
 		attribute.StringSlice("channel_ids", chIDs),
-		attribute.StringSlice("thing_ids", thIDs),
+		attribute.StringSlice("client_ids", thIDs),
 	))
 	defer span.End()
 	return tm.svc.Connect(ctx, session, chIDs, thIDs, connTypes)
@@ -109,7 +109,7 @@ func (tm *tracingMiddleware) Connect(ctx context.Context, session authn.Session,
 func (tm *tracingMiddleware) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) error {
 	ctx, span := tm.tracer.Start(ctx, "disconnect", trace.WithAttributes(
 		attribute.StringSlice("channel_ids", chIDs),
-		attribute.StringSlice("thing_ids", thIDs),
+		attribute.StringSlice("client_ids", thIDs),
 	))
 	defer span.End()
 	return tm.svc.Disconnect(ctx, session, chIDs, thIDs, connTypes)

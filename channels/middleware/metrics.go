@@ -57,12 +57,12 @@ func (ms *metricsMiddleware) ListChannels(ctx context.Context, session authn.Ses
 	return ms.svc.ListChannels(ctx, session, pm)
 }
 
-func (ms *metricsMiddleware) ListChannelsByThing(ctx context.Context, session authn.Session, thingID string, pm channels.PageMetadata) (channels.Page, error) {
+func (ms *metricsMiddleware) ListChannelsByClient(ctx context.Context, session authn.Session, clientID string, pm channels.PageMetadata) (channels.Page, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_channels_by_thing").Add(1)
 		ms.latency.With("method", "list_channels_by_thing").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.ListChannelsByThing(ctx, session, thingID, pm)
+	return ms.svc.ListChannelsByClient(ctx, session, clientID, pm)
 }
 
 func (ms *metricsMiddleware) UpdateChannel(ctx context.Context, session authn.Session, channel channels.Channel) (channels.Channel, error) {
@@ -112,6 +112,7 @@ func (ms *metricsMiddleware) Connect(ctx context.Context, session authn.Session,
 	}(time.Now())
 	return ms.svc.Connect(ctx, session, chIDs, thIDs, connTypes)
 }
+
 func (ms *metricsMiddleware) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "disconnect").Add(1)

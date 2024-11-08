@@ -76,8 +76,8 @@ func (am *authorizationMiddleware) ListMembers(ctx context.Context, session auth
 		if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.UserID, mgauth.SwitchToPermission(pm.Permission), policies.DomainType, objectID); err != nil {
 			return users.MembersPage{}, err
 		}
-	case policies.ThingsKind:
-		if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.UserID, mgauth.SwitchToPermission(pm.Permission), policies.ThingType, objectID); err != nil {
+	case policies.ClientsKind:
+		if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.UserID, mgauth.SwitchToPermission(pm.Permission), policies.ClientType, objectID); err != nil {
 			return users.MembersPage{}, err
 		}
 	default:

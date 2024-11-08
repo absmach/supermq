@@ -33,8 +33,8 @@ func TestCreateBootstrapConfigCmd(t *testing.T) {
 	bootCmd := cli.NewBootstrapCmd()
 	rootCmd := setFlags(bootCmd)
 
-	jsonConfig := fmt.Sprintf("{\"external_id\":\"09:6:0:sb:sa\", \"thing_id\": \"%s\", \"external_key\":\"key\", \"name\": \"%s\", \"channels\":[\"%s\"]}", thing.ID, "Test Bootstrap", channel.ID)
-	invalidJson := fmt.Sprintf("{\"external_id\":\"09:6:0:sb:sa\", \"thing_id\": \"%s\", \"external_key\":\"key\", \"name\": \"%s\", \"channels\":[\"%s\"]", thing.ID, "Test Bootdtrap", channel.ID)
+	jsonConfig := fmt.Sprintf("{\"external_id\":\"09:6:0:sb:sa\", \"client_id\": \"%s\", \"external_key\":\"key\", \"name\": \"%s\", \"channels\":[\"%s\"]}", thing.ID, "Test Bootstrap", channel.ID)
+	invalidJson := fmt.Sprintf("{\"external_id\":\"09:6:0:sb:sa\", \"client_id\": \"%s\", \"external_key\":\"key\", \"name\": \"%s\", \"channels\":[\"%s\"]", thing.ID, "Test Bootdtrap", channel.ID)
 	cases := []struct {
 		desc          string
 		args          []string
@@ -462,7 +462,7 @@ func TestWhitelistConfigCmd(t *testing.T) {
 	bootCmd := cli.NewBootstrapCmd()
 	rootCmd := setFlags(bootCmd)
 
-	jsonConfig := fmt.Sprintf("{\"thing_id\": \"%s\", \"state\":%d}", thing.ID, 1)
+	jsonConfig := fmt.Sprintf("{\"client_id\": \"%s\", \"state\":%d}", thing.ID, 1)
 
 	cases := []struct {
 		desc          string
@@ -493,7 +493,7 @@ func TestWhitelistConfigCmd(t *testing.T) {
 		{
 			desc: "whitelist config with invalid json",
 			args: []string{
-				fmt.Sprintf("{\"thing_id\": \"%s\", \"state\":%d", thing.ID, 1),
+				fmt.Sprintf("{\"client_id\": \"%s\", \"state\":%d", thing.ID, 1),
 				domainID,
 				validToken,
 			},

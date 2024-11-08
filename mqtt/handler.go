@@ -246,7 +246,7 @@ func (h *handler) authAccess(ctx context.Context, thingID, topic string, msgType
 	ar := &grpcChannelsV1.AuthzReq{
 		Type:       uint32(msgType),
 		ClientId:   thingID,
-		ClientType: policies.ThingType,
+		ClientType: policies.ClientType,
 		ChannelId:  chanID,
 	}
 	res, err := h.channels.Authorize(ctx, ar)

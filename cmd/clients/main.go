@@ -283,31 +283,31 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 	// Things service
 	cache := cache.NewCache(cacheClient, keyDuration)
 
-	tsvc, err := clients.NewService(repo, ps, cache, channels, groups, idp, sidp)
+	csvc, err := clients.NewService(repo, ps, cache, channels, groups, idp, sidp)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	tsvc, err = events.NewEventStoreMiddleware(ctx, tsvc, esURL)
+	csvc, err = events.NewEventStoreMiddleware(ctx, csvc, esURL)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	tsvc = tracing.New(tsvc, tracer)
+	csvc = tracing.New(csvc, tracer)
 
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
-	tsvc = middleware.MetricsMiddleware(tsvc, counter, latency)
-	tsvc = middleware.MetricsMiddleware(tsvc, counter, latency)
+	csvc = middleware.MetricsMiddleware(csvc, counter, latency)
+	csvc = middleware.MetricsMiddleware(csvc, counter, latency)
 
-	tsvc, err = middleware.AuthorizationMiddleware(policies.ThingType, tsvc, authz, repo, clients.NewOperationPermissionMap(), clients.NewRolesOperationPermissionMap(), clients.NewExternalOperationPermissionMap())
+	csvc, err = middleware.AuthorizationMiddleware(policies.ClientType, csvc, authz, repo, clients.NewOperationPermissionMap(), clients.NewRolesOperationPermissionMap(), clients.NewExternalOperationPermissionMap())
 	if err != nil {
 		return nil, nil, err
 	}
-	tsvc = middleware.LoggingMiddleware(tsvc, logger)
+	csvc = middleware.LoggingMiddleware(csvc, logger)
 
 	isvc := pThings.New(repo, cache, pe, ps)
 
-	return tsvc, isvc, err
+	return csvc, isvc, err
 }
 
 func newSpiceDBPolicyServiceEvaluator(cfg config, logger *slog.Logger) (policies.Evaluator, policies.Service, error) {

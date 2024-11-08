@@ -32,7 +32,7 @@ func (lm *loggingMiddleware) Add(ctx context.Context, session mgauthn.Session, t
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.String("thing_id", saved.ClientID),
+			slog.String("client_id", saved.ClientID),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
@@ -51,7 +51,7 @@ func (lm *loggingMiddleware) View(ctx context.Context, session mgauthn.Session, 
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.String("thing_id", id),
+			slog.String("client_id", id),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
@@ -71,7 +71,7 @@ func (lm *loggingMiddleware) Update(ctx context.Context, session mgauthn.Session
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("config",
-				slog.String("thing_id", cfg.ClientID),
+				slog.String("client_id", cfg.ClientID),
 				slog.String("name", cfg.Name),
 			),
 		}
@@ -92,7 +92,7 @@ func (lm *loggingMiddleware) UpdateCert(ctx context.Context, session mgauthn.Ses
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.String("thing_id", cfg.ClientID),
+			slog.String("client_id", cfg.ClientID),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
@@ -111,7 +111,7 @@ func (lm *loggingMiddleware) UpdateConnections(ctx context.Context, session mgau
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.String("thing_id", id),
+			slog.String("client_id", id),
 			slog.Any("connections", connections),
 		}
 		if err != nil {
@@ -155,7 +155,7 @@ func (lm *loggingMiddleware) Remove(ctx context.Context, session mgauthn.Session
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.String("thing_id", id),
+			slog.String("client_id", id),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
@@ -258,38 +258,38 @@ func (lm *loggingMiddleware) RemoveChannelHandler(ctx context.Context, id string
 	return lm.svc.RemoveChannelHandler(ctx, id)
 }
 
-func (lm *loggingMiddleware) ConnectThingHandler(ctx context.Context, channelID, thingID string) (err error) {
+func (lm *loggingMiddleware) ConnectClientHandler(ctx context.Context, channelID, clientID string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.String("channel_id", channelID),
-			slog.String("thing_id", thingID),
+			slog.String("client_id", clientID),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
 			lm.logger.Warn("Connect thing handler failed", args...)
 			return
 		}
-		lm.logger.Info("Connect thing handler completed successfully", args...)
+		lm.logger.Info("Connect client handler completed successfully", args...)
 	}(time.Now())
 
-	return lm.svc.ConnectThingHandler(ctx, channelID, thingID)
+	return lm.svc.ConnectClientHandler(ctx, channelID, clientID)
 }
 
-func (lm *loggingMiddleware) DisconnectThingHandler(ctx context.Context, channelID, thingID string) (err error) {
+func (lm *loggingMiddleware) DisconnectClientHandler(ctx context.Context, channelID, clientID string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.String("channel_id", channelID),
-			slog.String("thing_id", thingID),
+			slog.String("client_id", clientID),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
 			lm.logger.Warn("Disconnect thing handler failed", args...)
 			return
 		}
-		lm.logger.Info("Disconnect thing handler completed successfully", args...)
+		lm.logger.Info("Disconnect client handler completed successfully", args...)
 	}(time.Now())
 
-	return lm.svc.DisconnectThingHandler(ctx, channelID, thingID)
+	return lm.svc.DisconnectClientHandler(ctx, channelID, clientID)
 }

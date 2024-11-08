@@ -92,17 +92,17 @@ func (_m *Service) ChangeState(ctx context.Context, session authn.Session, token
 	return r0
 }
 
-// ConnectThingHandler provides a mock function with given fields: ctx, channelID, ThingID
-func (_m *Service) ConnectThingHandler(ctx context.Context, channelID string, ThingID string) error {
-	ret := _m.Called(ctx, channelID, ThingID)
+// ConnectClientHandler provides a mock function with given fields: ctx, channelID, clientID
+func (_m *Service) ConnectClientHandler(ctx context.Context, channelID string, clientID string) error {
+	ret := _m.Called(ctx, channelID, clientID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ConnectThingHandler")
+		panic("no return value specified for ConnectClientHandler")
 	}
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, channelID, ThingID)
+		r0 = rf(ctx, channelID, clientID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -110,17 +110,17 @@ func (_m *Service) ConnectThingHandler(ctx context.Context, channelID string, Th
 	return r0
 }
 
-// DisconnectThingHandler provides a mock function with given fields: ctx, channelID, ThingID
-func (_m *Service) DisconnectThingHandler(ctx context.Context, channelID string, ThingID string) error {
-	ret := _m.Called(ctx, channelID, ThingID)
+// DisconnectClientHandler provides a mock function with given fields: ctx, channelID, clientID
+func (_m *Service) DisconnectClientHandler(ctx context.Context, channelID string, clientID string) error {
+	ret := _m.Called(ctx, channelID, clientID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for DisconnectThingHandler")
+		panic("no return value specified for DisconnectClientHandler")
 	}
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, channelID, ThingID)
+		r0 = rf(ctx, channelID, clientID)
 	} else {
 		r0 = ret.Error(0)
 	}

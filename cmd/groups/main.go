@@ -192,7 +192,7 @@ func main() {
 		exitCode = 1
 		return
 	}
-	thingsClient, thingsHandler, err := grpcclient.SetupThingsClient(ctx, thgrpcCfg)
+	thingsClient, thingsHandler, err := grpcclient.SetupClientsClient(ctx, thgrpcCfg)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to connect to things gRPC server: %s", err))
 		exitCode = 1

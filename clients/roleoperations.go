@@ -39,13 +39,13 @@ var expectedOperations = []svcutil.Operation{
 }
 
 var operationNames = []string{
-	"OpViewThing",
-	"OpUpdateThing",
-	"OpUpdateThingTags",
-	"OpUpdateThingSecret",
-	"OpEnableThing",
-	"OpDisableThing",
-	"OpDeleteThing",
+	"OpViewClient",
+	"OpUpdateClient",
+	"OpUpdateClientTags",
+	"OpUpdateClientSecret",
+	"OpEnableClient",
+	"OpDisableClient",
+	"OpDeleteClient",
 	"OpSetParentGroup",
 	"OpRemoveParentGroup",
 	"OpConnectToChannel",
@@ -58,28 +58,28 @@ func NewOperationPerm() svcutil.OperationPerm {
 
 // External Operations
 const (
-	DomainOpCreateThing svcutil.ExternalOperation = iota
-	DomainOpListThing
-	GroupOpSetChildThing
-	GroupsOpRemoveChildThing
+	DomainOpCreateClient svcutil.ExternalOperation = iota
+	DomainOpListClients
+	GroupOpSetChildClient
+	GroupsOpRemoveChildClient
 	ChannelsOpConnectChannel
 	ChannelsOpDisconnectChannel
 )
 
 var expectedExternalOperations = []svcutil.ExternalOperation{
-	DomainOpCreateThing,
-	DomainOpListThing,
-	GroupOpSetChildThing,
-	GroupsOpRemoveChildThing,
+	DomainOpCreateClient,
+	DomainOpListClients,
+	GroupOpSetChildClient,
+	GroupsOpRemoveChildClient,
 	ChannelsOpConnectChannel,
 	ChannelsOpDisconnectChannel,
 }
 
 var externalOperationNames = []string{
-	"DomainOpCreateThing",
-	"DomainOpListThing",
-	"GroupOpSetChildThing",
-	"GroupsOpRemoveChildThing",
+	"DomainOpCreateClient",
+	"DomainOpListClients",
+	"GroupOpSetChildClient",
+	"GroupsOpRemoveChildClient",
 	"ChannelsOpConnectChannel",
 	"ChannelsOpDisconnectChannel",
 }
@@ -144,24 +144,24 @@ func NewRolesOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 const (
 	// External Permission
 	// Domains
-	domainCreateClientPermission = "clients_create_permission"
+	domainCreateClientPermission = "client_create_permission"
 	domainListClientsPermission  = "list_clients_permission"
 	// Groups
-	groupSetChildThingPermission    = "thing_create_permission"
-	groupRemoveChildThingPermission = "thing_create_permission"
+	groupSetChildClientPermission    = "client_create_permission"
+	groupRemoveChildClientPermission = "client_create_permission"
 	// Channels
-	channelsConnectThingPermission    = "connect_to_thing_permission"
-	channelsDisconnectThingPermission = "connect_to_thing_permission"
+	channelsConnectClientPermission    = "connect_to_client_permission"
+	channelsDisconnectClientPermission = "connect_to_client_permission"
 )
 
 func NewExternalOperationPermissionMap() map[svcutil.ExternalOperation]svcutil.Permission {
 	extOpPerm := map[svcutil.ExternalOperation]svcutil.Permission{
-		DomainOpCreateThing:         domainCreateClientPermission,
-		DomainOpListThing:           domainListClientsPermission,
-		GroupOpSetChildThing:        groupSetChildThingPermission,
-		GroupsOpRemoveChildThing:    groupRemoveChildThingPermission,
-		ChannelsOpConnectChannel:    channelsConnectThingPermission,
-		ChannelsOpDisconnectChannel: channelsDisconnectThingPermission,
+		DomainOpCreateClient:        domainCreateClientPermission,
+		DomainOpListClients:         domainListClientsPermission,
+		GroupOpSetChildClient:       groupSetChildClientPermission,
+		GroupsOpRemoveChildClient:   groupRemoveChildClientPermission,
+		ChannelsOpConnectChannel:    channelsConnectClientPermission,
+		ChannelsOpDisconnectChannel: channelsDisconnectClientPermission,
 	}
 	return extOpPerm
 }

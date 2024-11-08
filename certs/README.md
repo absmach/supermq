@@ -20,10 +20,10 @@ MG_CERTS_VAULT_THINGS_CERTS_PKI_PATH=<vault_things_certs_pki_path>
 MG_CERTS_VAULT_THINGS_CERTS_PKI_ROLE_NAME=<vault_things_certs_issue_role_name>
 ```
 
-The certificates can also be revoked using `certs` service. To revoke a certificate you need to provide `thing_id` of the thing for which the certificate was issued.
+The certificates can also be revoked using `certs` service. To revoke a certificate you need to provide `client_id` of the thing for which the certificate was issued.
 
 ```bash
-curl -s -S -X DELETE http://localhost:9019/certs/revoke -H "Authorization: Bearer $TOK" -H 'Content-Type: application/json'   -d '{"thing_id":"c30b8842-507c-4bcd-973c-74008cef3be5"}'
+curl -s -S -X DELETE http://localhost:9019/certs/revoke -H "Authorization: Bearer $TOK" -H 'Content-Type: application/json'   -d '{"client_id":"c30b8842-507c-4bcd-973c-74008cef3be5"}'
 ```
 
 ## Configuration
@@ -49,7 +49,7 @@ The service is configured using the environment variables presented in the follo
 | MG_CERTS_VAULT_APPROLE_ROLEID             | Vault AppRole auth RoleID                                                   | magistrala                                                           |
 | MG_CERTS_VAULT_APPROLE_SECRET             | Vault AppRole auth Secret                                                   | magistrala                                                           |
 | MG_CERTS_VAULT_THINGS_CERTS_PKI_PATH      | Vault PKI path for issuing Things Certificates                              | pki_int                                                              |
-| MG_CERTS_VAULT_THINGS_CERTS_PKI_ROLE_NAME | Vault PKI Role Name for issuing Things Certificates                         | magistrala_things_certs                                              |
+| MG_CERTS_VAULT_THINGS_CERTS_PKI_ROLE_NAME | Vault PKI Role Name for issuing Things Certificates                         | magistrala_clients_certs                                              |
 | MG_CERTS_DB_HOST                          | Database host                                                               | localhost                                                            |
 | MG_CERTS_DB_PORT                          | Database port                                                               | 5432                                                                 |
 | MG_CERTS_DB_PASS                          | Database password                                                           | magistrala                                                           |
@@ -102,7 +102,7 @@ MG_CERTS_VAULT_NAMESPACE=magistrala \
 MG_CERTS_VAULT_APPROLE_ROLEID=magistrala \
 MG_CERTS_VAULT_APPROLE_SECRET=magistrala \
 MG_CERTS_VAULT_THINGS_CERTS_PKI_PATH=pki_int \
-MG_CERTS_VAULT_THINGS_CERTS_PKI_ROLE_NAME=magistrala_things_certs \
+MG_CERTS_VAULT_THINGS_CERTS_PKI_ROLE_NAME=magistrala_clients_certs \
 MG_CERTS_DB_HOST=localhost \
 MG_CERTS_DB_PORT=5432 \
 MG_CERTS_DB_PASS=magistrala \

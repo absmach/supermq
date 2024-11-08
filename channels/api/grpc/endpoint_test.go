@@ -9,7 +9,7 @@ import (
 
 	grpcapi "github.com/absmach/magistrala/clients/api/grpc"
 	"github.com/absmach/magistrala/clients/private/mocks"
-	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/things/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/clients/v1"
 	"google.golang.org/grpc"
 )
 

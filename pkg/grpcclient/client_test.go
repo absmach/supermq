@@ -85,7 +85,7 @@ func TestSetupThingsClient(t *testing.T) {
 	registerThingsServiceServer := func(srv *grpc.Server) {
 		grpcClientsV1.RegisterClientsServiceServer(srv, thingsgrpcapi.NewServer(new(climocks.Service)))
 	}
-	gs := grpcserver.NewServer(ctx, cancel, "things", server.Config{Port: "12345"}, registerThingsServiceServer, mglog.NewMock())
+	gs := grpcserver.NewServer(ctx, cancel, "clients", server.Config{Port: "12345"}, registerThingsServiceServer, mglog.NewMock())
 	go func() {
 		err := gs.Start()
 		assert.Nil(t, err, fmt.Sprintf(`"Unexpected error creating server %s"`, err))
@@ -120,7 +120,7 @@ func TestSetupThingsClient(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.desc, func(t *testing.T) {
-			client, handler, err := grpcclient.SetupThingsClient(context.Background(), c.config)
+			client, handler, err := grpcclient.SetupClientsClient(context.Background(), c.config)
 			assert.True(t, errors.Contains(err, c.err), fmt.Sprintf("expected %s to contain %s", err, c.err))
 			if err == nil {
 				assert.NotNil(t, client)

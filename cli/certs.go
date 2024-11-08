@@ -9,7 +9,7 @@ import (
 
 var cmdCerts = []cobra.Command{
 	{
-		Use:   "get [<cert_serial> | thing <thing_id> ] <domain_id> <user_auth_token>",
+		Use:   "get [<cert_serial> | client <client_id> ] <domain_id> <user_auth_token>",
 		Short: "Get certificate",
 		Long:  `Gets a certificate for a given cert ID.`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -17,7 +17,7 @@ var cmdCerts = []cobra.Command{
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			if args[0] == "thing" {
+			if args[0] == "client" {
 				cert, err := sdk.ViewCertByThing(args[1], args[2], args[3])
 				if err != nil {
 					logErrorCmd(*cmd, err)
@@ -35,7 +35,7 @@ var cmdCerts = []cobra.Command{
 		},
 	},
 	{
-		Use:   "revoke <thing_id> <domain_id> <user_auth_token>",
+		Use:   "revoke <client_id> <domain_id> <user_auth_token>",
 		Short: "Revoke certificate",
 		Long:  `Revokes a certificate for a given thing ID.`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -58,7 +58,7 @@ func NewCertsCmd() *cobra.Command {
 	var ttl string
 
 	issueCmd := cobra.Command{
-		Use:   "issue <thing_id> <domain_id> <user_auth_token> [--ttl=8760h]",
+		Use:   "issue <client_id> <domain_id> <user_auth_token> [--ttl=8760h]",
 		Short: "Issue certificate",
 		Long:  `Issues new certificate for a thing`,
 		Run: func(cmd *cobra.Command, args []string) {

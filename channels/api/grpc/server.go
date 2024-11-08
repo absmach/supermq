@@ -90,7 +90,7 @@ func decodeRemoveThingConnectionsRequest(_ context.Context, grpcReq interface{})
 	req := grpcReq.(*grpcChannelsV1.RemoveThingConnectionsReq)
 
 	return removeThingConnectionsReq{
-		thingID: req.GetThingId(),
+		clientID: req.GetClientId(),
 	}, nil
 }
 

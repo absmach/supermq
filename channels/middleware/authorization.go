@@ -102,7 +102,6 @@ func (am *authorizationMiddleware) CreateChannels(ctx context.Context, session a
 				return []channels.Channel{}, errors.Wrap(err, errors.Wrap(errGroupSetChildChannels, fmt.Errorf("channel name %s parent group id %s", ch.Name, ch.ParentGroup)))
 			}
 		}
-
 	}
 	return am.svc.CreateChannels(ctx, session, chs...)
 }
@@ -127,9 +126,8 @@ func (am *authorizationMiddleware) ListChannels(ctx context.Context, session aut
 	return am.svc.ListChannels(ctx, session, pm)
 }
 
-func (am *authorizationMiddleware) ListChannelsByThing(ctx context.Context, session authn.Session, thingID string, pm channels.PageMetadata) (channels.Page, error) {
-
-	return am.svc.ListChannelsByThing(ctx, session, thingID, pm)
+func (am *authorizationMiddleware) ListChannelsByClient(ctx context.Context, session authn.Session, clientID string, pm channels.PageMetadata) (channels.Page, error) {
+	return am.svc.ListChannelsByClient(ctx, session, clientID, pm)
 }
 
 func (am *authorizationMiddleware) UpdateChannel(ctx context.Context, session authn.Session, channel channels.Channel) (channels.Channel, error) {
@@ -198,7 +196,7 @@ func (am *authorizationMiddleware) RemoveChannel(ctx context.Context, session au
 }
 
 func (am *authorizationMiddleware) Connect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) error {
-	//ToDo: This authorization will be changed with Bulk Authorization. For this we need to add bulk authorization API in policies.
+	// ToDo: This authorization will be changed with Bulk Authorization. For this we need to add bulk authorization API in policies.
 	for _, chID := range chIDs {
 		if err := am.authorize(ctx, channels.OpConnectThing, authz.PolicyReq{
 			Domain:      session.DomainID,
@@ -216,7 +214,7 @@ func (am *authorizationMiddleware) Connect(ctx context.Context, session authn.Se
 			Domain:      session.DomainID,
 			SubjectType: policies.UserType,
 			Subject:     session.DomainUserID,
-			ObjectType:  policies.ThingType,
+			ObjectType:  policies.ClientType,
 			Object:      thID,
 		}); err != nil {
 			return errors.Wrap(err, errThingConnectChannels)
@@ -224,8 +222,9 @@ func (am *authorizationMiddleware) Connect(ctx context.Context, session authn.Se
 	}
 	return am.svc.Connect(ctx, session, chIDs, thIDs, connTypes)
 }
+
 func (am *authorizationMiddleware) Disconnect(ctx context.Context, session authn.Session, chIDs, thIDs []string, connTypes []connections.ConnType) error {
-	//ToDo: This authorization will be changed with Bulk Authorization. For this we need to add bulk authorization API in policies.
+	// ToDo: This authorization will be changed with Bulk Authorization. For this we need to add bulk authorization API in policies.
 	for _, chID := range chIDs {
 		if err := am.authorize(ctx, channels.OpDisconnectThing, authz.PolicyReq{
 			Domain:      session.DomainID,
@@ -243,7 +242,7 @@ func (am *authorizationMiddleware) Disconnect(ctx context.Context, session authn
 			Domain:      session.DomainID,
 			SubjectType: policies.UserType,
 			Subject:     session.DomainUserID,
-			ObjectType:  policies.ThingType,
+			ObjectType:  policies.ClientType,
 			Object:      thID,
 		}); err != nil {
 			return errors.Wrap(err, errThingDisConnectChannels)

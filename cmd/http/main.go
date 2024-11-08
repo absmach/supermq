@@ -100,7 +100,7 @@ func main() {
 		return
 	}
 
-	thingsClient, thingsHandler, err := grpcclient.SetupThingsClient(ctx, thingsClientCfg)
+	thingsClient, thingsHandler, err := grpcclient.SetupClientsClient(ctx, thingsClientCfg)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1

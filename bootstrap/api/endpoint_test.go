@@ -56,7 +56,7 @@ var (
 	addThingID     = testsutil.GenerateUUID(&testing.T{})
 	addThingKey    = testsutil.GenerateUUID(&testing.T{})
 	addReq         = struct {
-		ThingID     string   `json:"thing_id"`
+		ThingID     string   `json:"client_id"`
 		ThingKey    string   `json:"thing_key"`
 		ExternalID  string   `json:"external_id"`
 		ExternalKey string   `json:"external_key"`
@@ -108,10 +108,10 @@ type testRequest struct {
 
 func newConfig() bootstrap.Config {
 	return bootstrap.Config{
-		ClientID:    addThingID,
-		ThingKey:    addThingKey,
-		ExternalID:  addExternalID,
-		ExternalKey: addExternalKey,
+		ClientID:     addThingID,
+		ClientSecret: addThingKey,
+		ExternalID:   addExternalID,
+		ExternalKey:  addExternalKey,
 		Channels: []bootstrap.Channel{
 			{
 				ID:       "1",
@@ -360,7 +360,7 @@ func TestView(t *testing.T) {
 
 	data := config{
 		ThingID:     c.ClientID,
-		ThingKey:    c.ThingKey,
+		ThingKey:    c.ClientSecret,
 		State:       c.State,
 		Channels:    channels,
 		ExternalID:  c.ExternalID,
@@ -630,7 +630,7 @@ func TestUpdateCert(t *testing.T) {
 		{
 			desc:        "update a config with invalid request format",
 			req:         "}",
-			id:          c.ThingKey,
+			id:          c.ClientSecret,
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
@@ -806,7 +806,7 @@ func TestList(t *testing.T) {
 
 	for i := 0; i < configNum; i++ {
 		c.ExternalID = strconv.Itoa(i)
-		c.ThingKey = c.ExternalID
+		c.ClientSecret = c.ExternalID
 		c.Name = fmt.Sprintf("%s-%d", addName, i)
 		c.ExternalKey = fmt.Sprintf("%s%s", addExternalKey, strconv.Itoa(i))
 
@@ -816,7 +816,7 @@ func TestList(t *testing.T) {
 		}
 		s := config{
 			ThingID:     c.ClientID,
-			ThingKey:    c.ThingKey,
+			ThingKey:    c.ClientSecret,
 			Channels:    channels,
 			ExternalID:  c.ExternalID,
 			ExternalKey: c.ExternalKey,
@@ -1156,7 +1156,7 @@ func TestBootstrap(t *testing.T) {
 	}
 
 	s := struct {
-		ThingID    string    `json:"thing_id"`
+		ThingID    string    `json:"client_id"`
 		ThingKey   string    `json:"thing_key"`
 		Channels   []channel `json:"channels"`
 		Content    string    `json:"content"`
@@ -1165,7 +1165,7 @@ func TestBootstrap(t *testing.T) {
 		CACert     string    `json:"ca_cert"`
 	}{
 		ThingID:    c.ClientID,
-		ThingKey:   c.ThingKey,
+		ThingKey:   c.ClientSecret,
 		Channels:   channels,
 		Content:    c.Content,
 		ClientCert: c.ClientCert,
@@ -1400,7 +1400,7 @@ type channel struct {
 }
 
 type config struct {
-	ThingID     string          `json:"thing_id,omitempty"`
+	ThingID     string          `json:"client_id,omitempty"`
 	ThingKey    string          `json:"thing_key,omitempty"`
 	Channels    []channel       `json:"channels,omitempty"`
 	ExternalID  string          `json:"external_id"`

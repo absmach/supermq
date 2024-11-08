@@ -76,12 +76,12 @@ var (
 	}
 
 	config = bootstrap.Config{
-		ClientID:    testsutil.GenerateUUID(&testing.T{}),
-		ThingKey:    testsutil.GenerateUUID(&testing.T{}),
-		ExternalID:  testsutil.GenerateUUID(&testing.T{}),
-		ExternalKey: testsutil.GenerateUUID(&testing.T{}),
-		Channels:    []bootstrap.Channel{channel},
-		Content:     "config",
+		ClientID:     testsutil.GenerateUUID(&testing.T{}),
+		ClientSecret: testsutil.GenerateUUID(&testing.T{}),
+		ExternalID:   testsutil.GenerateUUID(&testing.T{}),
+		ExternalKey:  testsutil.GenerateUUID(&testing.T{}),
+		Channels:     []bootstrap.Channel{channel},
+		Content:      "config",
 	}
 )
 
@@ -146,7 +146,7 @@ func TestAdd(t *testing.T) {
 			domainID: domainID,
 			channel:  config.Channels,
 			event: map[string]interface{}{
-				"thing_id":    "1",
+				"client_id":   "1",
 				"domain_id":   domainID,
 				"name":        config.Name,
 				"channels":    channels,
@@ -192,7 +192,7 @@ func TestAdd(t *testing.T) {
 	lastID := "0"
 	for _, tc := range cases {
 		tc.session = mgauthn.Session{UserID: validID, DomainID: tc.domainID, DomainUserID: validID}
-		sdkCall := tv.sdk.On("Thing", tc.config.ClientID, tc.domainID, tc.token).Return(mgsdk.Client{ID: tc.config.ClientID, Credentials: mgsdk.ClientCredentials{Secret: tc.config.ThingKey}}, errors.NewSDKError(tc.thingErr))
+		sdkCall := tv.sdk.On("Thing", tc.config.ClientID, tc.domainID, tc.token).Return(mgsdk.Client{ID: tc.config.ClientID, Credentials: mgsdk.ClientCredentials{Secret: tc.config.ClientSecret}}, errors.NewSDKError(tc.thingErr))
 		repoCall := tv.boot.On("ListExisting", context.Background(), domainID, mock.Anything).Return(tc.config.Channels, tc.listErr)
 		repoCall1 := tv.boot.On("Save", context.Background(), mock.Anything, mock.Anything).Return(mock.Anything, tc.saveErr)
 
@@ -247,7 +247,7 @@ func TestView(t *testing.T) {
 			domainID: domainID,
 			err:      nil,
 			event: map[string]interface{}{
-				"thing_id":    config.ClientID,
+				"client_id":   config.ClientID,
 				"domain_id":   config.DomainID,
 				"name":        config.Name,
 				"channels":    config.Channels,
@@ -345,7 +345,7 @@ func TestUpdate(t *testing.T) {
 				"operation":   configUpdate,
 				"channels":    channels,
 				"external_id": modified.ExternalID,
-				"thing_id":    modified.ClientID,
+				"client_id":   modified.ClientID,
 				"domain_id":   domainID,
 				"state":       "0",
 				"occurred_at": time.Now().UnixNano(),
@@ -420,7 +420,7 @@ func TestUpdateConnections(t *testing.T) {
 			connections: []string{config.Channels[0].ID},
 			err:         nil,
 			event: map[string]interface{}{
-				"thing_id":  config.ClientID,
+				"client_id": config.ClientID,
 				"channels":  "2",
 				"timestamp": time.Now().Unix(),
 				"operation": thingUpdateConnections,
@@ -533,7 +533,7 @@ func TestUpdateCert(t *testing.T) {
 			caCert:     "caCert",
 			err:        nil,
 			event: map[string]interface{}{
-				"thing_key":   config.ThingKey,
+				"thing_key":   config.ClientSecret,
 				"client_cert": "clientCert",
 				"client_key":  "clientKey",
 				"ca_cert":     "caCert",
@@ -600,7 +600,7 @@ func TestUpdateCert(t *testing.T) {
 			caCert:     "",
 			err:        nil,
 			event: map[string]interface{}{
-				"thing_key":   config.ThingKey,
+				"thing_key":   config.ClientSecret,
 				"client_cert": "clientCert",
 				"client_key":  "clientKey",
 				"ca_cert":     "caCert",
@@ -687,7 +687,7 @@ func TestList(t *testing.T) {
 			listObjectsResponse: policysvc.PolicyPage{},
 			err:                 nil,
 			event: map[string]interface{}{
-				"thing_id":    c.ClientID,
+				"client_id":   c.ClientID,
 				"domain_id":   c.DomainID,
 				"name":        c.Name,
 				"channels":    c.Channels,
@@ -715,7 +715,7 @@ func TestList(t *testing.T) {
 			listObjectsResponse: policysvc.PolicyPage{},
 			err:                 nil,
 			event: map[string]interface{}{
-				"thing_id":    c.ClientID,
+				"client_id":   c.ClientID,
 				"domain_id":   c.DomainID,
 				"name":        c.Name,
 				"channels":    c.Channels,
@@ -743,7 +743,7 @@ func TestList(t *testing.T) {
 			listObjectsResponse: policysvc.PolicyPage{},
 			err:                 nil,
 			event: map[string]interface{}{
-				"thing_id":    c.ClientID,
+				"client_id":   c.ClientID,
 				"domain_id":   c.DomainID,
 				"name":        c.Name,
 				"channels":    c.Channels,
@@ -818,7 +818,7 @@ func TestList(t *testing.T) {
 			SubjectType: policysvc.UserType,
 			Subject:     tc.userID,
 			Permission:  policysvc.ViewPermission,
-			ObjectType:  policysvc.ThingType,
+			ObjectType:  policysvc.ClientType,
 		}).Return(tc.listObjectsResponse, tc.listObjectsErr)
 		repoCall := tv.boot.On("RetrieveAll", context.Background(), mock.Anything, mock.Anything, tc.filter, tc.offset, tc.limit).Return(tc.config, tc.retrieveErr)
 
@@ -872,7 +872,7 @@ func TestRemove(t *testing.T) {
 			domainID: domainID,
 			err:      nil,
 			event: map[string]interface{}{
-				"thing_id":  config.ClientID,
+				"client_id": config.ClientID,
 				"timestamp": time.Now().Unix(),
 				"operation": configRemove,
 			},
@@ -1009,7 +1009,7 @@ func TestChangeState(t *testing.T) {
 			authResponse: authn.Session{},
 			err:          nil,
 			event: map[string]interface{}{
-				"thing_id":  config.ClientID,
+				"client_id": config.ClientID,
 				"state":     bootstrap.Active.String(),
 				"timestamp": time.Now().Unix(),
 				"operation": thingStateChange,
@@ -1033,8 +1033,8 @@ func TestChangeState(t *testing.T) {
 			userID:     validID,
 			domainID:   domainID,
 			state:      bootstrap.Active,
-			connectErr: bootstrap.ErrThings,
-			err:        bootstrap.ErrThings,
+			connectErr: bootstrap.ErrClients,
+			err:        bootstrap.ErrClients,
 			event:      nil,
 		},
 		{
@@ -1304,7 +1304,7 @@ func TestConnectThingHandler(t *testing.T) {
 			err:       nil,
 			event: map[string]interface{}{
 				"channel_id":  channel.ID,
-				"thing_id":    "1",
+				"client_id":   "1",
 				"operation":   thingConnect,
 				"timestamp":   time.Now().UnixNano(),
 				"occurred_at": time.Now().UnixNano(),
@@ -1378,7 +1378,7 @@ func TestDisconnectThingHandler(t *testing.T) {
 			err:       nil,
 			event: map[string]interface{}{
 				"channel_id":  channel.ID,
-				"thing_id":    "1",
+				"client_id":   "1",
 				"operation":   thingDisconnect,
 				"timestamp":   time.Now().UnixNano(),
 				"occurred_at": time.Now().UnixNano(),
@@ -1409,7 +1409,7 @@ func TestDisconnectThingHandler(t *testing.T) {
 			err:       nil,
 			event: map[string]interface{}{
 				"channel_id":  channel.ID,
-				"thing_id":    "1",
+				"client_id":   "1",
 				"operation":   thingDisconnect,
 				"timestamp":   time.Now().UnixNano(),
 				"occurred_at": time.Now().UnixNano(),

@@ -56,7 +56,7 @@
       workers = 10
 
 [[things]]
-  name = "thing"
+  name = "client"
 
   [things.metadata]
     external_id = "xxxxxx"

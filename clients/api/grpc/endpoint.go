@@ -66,7 +66,7 @@ func addConnectionsEndpoint(svc pThings.Service) endpoint.Endpoint {
 
 		for _, c := range req.connections {
 			conns = append(conns, clients.Connection{
-				ThingID:   c.clientID,
+				ClientID:  c.clientID,
 				ChannelID: c.channelID,
 				DomainID:  c.domainID,
 				Type:      c.connType,
@@ -88,7 +88,7 @@ func removeConnectionsEndpoint(svc pThings.Service) endpoint.Endpoint {
 
 		for _, c := range req.connections {
 			conns = append(conns, clients.Connection{
-				ThingID:   c.clientID,
+				ClientID:  c.clientID,
 				ChannelID: c.channelID,
 				DomainID:  c.domainID,
 				Type:      c.connType,

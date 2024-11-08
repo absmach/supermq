@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const svcName = "things.v1.ThingsService"
+const svcName = "clients.v1.ClientsService"
 
 var _ grpcClientsV1.ClientsServiceClient = (*grpcClient)(nil)
 
@@ -111,7 +111,7 @@ func (client grpcClient) Authenticate(ctx context.Context, req *grpcClientsV1.Au
 	defer cancel()
 
 	res, err := client.authenticate(ctx, authenticateReq{
-		ThingID:  req.GetThingId(),
+		ThingID:  req.GetClientId(),
 		ThingKey: req.GetThingKey(),
 	})
 	if err != nil {
@@ -125,7 +125,7 @@ func (client grpcClient) Authenticate(ctx context.Context, req *grpcClientsV1.Au
 func encodeAuthenticateRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(authenticateReq)
 	return &grpcClientsV1.AuthnReq{
-		ThingId:  req.ThingID,
+		ClientId: req.ThingID,
 		ThingKey: req.ThingKey,
 	}, nil
 }
@@ -217,7 +217,7 @@ func (client grpcClient) AddConnections(ctx context.Context, req *grpcCommonV1.A
 	conns := []clients.Connection{}
 	for _, c := range req.Connections {
 		conns = append(conns, clients.Connection{
-			ThingID:   c.GetThingId(),
+			ClientID:  c.GetClientId(),
 			ChannelID: c.GetChannelId(),
 			DomainID:  c.GetDomainId(),
 			Type:      connections.ConnType(c.GetType()),
@@ -241,7 +241,7 @@ func encodeAddConnectionsRequest(_ context.Context, grpcReq interface{}) (interf
 
 	for _, r := range req {
 		conns = append(conns, &grpcCommonV1.Connection{
-			ThingId:   r.ThingID,
+			ClientId:  r.ClientID,
 			ChannelId: r.ChannelID,
 			DomainId:  r.DomainID,
 			Type:      uint32(r.Type),
@@ -265,7 +265,7 @@ func (client grpcClient) RemoveConnections(ctx context.Context, req *grpcCommonV
 	conns := []clients.Connection{}
 	for _, c := range req.Connections {
 		conns = append(conns, clients.Connection{
-			ThingID:   c.GetThingId(),
+			ClientID:  c.GetClientId(),
 			ChannelID: c.GetChannelId(),
 			DomainID:  c.GetDomainId(),
 			Type:      connections.ConnType(c.GetType()),
@@ -289,7 +289,7 @@ func encodeRemoveConnectionsRequest(_ context.Context, grpcReq interface{}) (int
 
 	for _, r := range req {
 		conns = append(conns, &grpcCommonV1.Connection{
-			ThingId:   r.ThingID,
+			ClientId:  r.ClientID,
 			ChannelId: r.ChannelID,
 			DomainId:  r.DomainID,
 			Type:      uint32(r.Type),

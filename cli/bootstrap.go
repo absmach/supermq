@@ -37,11 +37,11 @@ var cmdBootstrap = []cobra.Command{
 		},
 	},
 	{
-		Use:   "get [all | <thing_id>] <domain_id> <user_auth_token>",
+		Use:   "get [all | <client_id>] <domain_id> <user_auth_token>",
 		Short: "Get config",
 		Long: `Get Thing Config with given ID belonging to the user identified by the given key.
 				all - lists all config
-				<thing_id> - view config of <thing_id>`,
+				<client_id> - view config of <client_id>`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -128,7 +128,7 @@ var cmdBootstrap = []cobra.Command{
 		},
 	},
 	{
-		Use:   "remove <thing_id> <domain_id> <user_auth_token>",
+		Use:   "remove <client_id> <domain_id> <user_auth_token>",
 		Short: "Remove config",
 		Long:  `Removes Config with specified key that belongs to the user identified by the given key`,
 		Run: func(cmd *cobra.Command, args []string) {

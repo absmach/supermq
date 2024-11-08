@@ -6,7 +6,7 @@ filename: "{{.InterfaceName}}.go"
 outpkg: "mocks"
 boilerplate-file: "./tools/config/boilerplate.txt"
 packages:
-  github.com/absmach/magistrala/internal/grpc/things/v1:
+  github.com/absmach/magistrala/internal/grpc/clients/v1:
     interfaces:
       ClientsServiceClient:
         config:

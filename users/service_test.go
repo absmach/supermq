@@ -1357,7 +1357,7 @@ func TestListMembers(t *testing.T) {
 		{
 			desc:                    "list members with no policies successfully of the things kind",
 			groupID:                 validID,
-			objectKind:              policysvc.ThingsKind,
+			objectKind:              policysvc.ClientsKind,
 			objectID:                validID,
 			page:                    users.Page{Offset: 0, Limit: 100, Permission: "read"},
 			listAllSubjectsResponse: policysvc.PolicyPage{},
@@ -1365,7 +1365,7 @@ func TestListMembers(t *testing.T) {
 				SubjectType: policysvc.UserType,
 				Permission:  "read",
 				Object:      validID,
-				ObjectType:  policysvc.ThingType,
+				ObjectType:  policysvc.ClientType,
 			},
 			response: users.MembersPage{
 				Page: users.Page{
@@ -1379,14 +1379,14 @@ func TestListMembers(t *testing.T) {
 		{
 			desc:       "list members with policies successsfully of the things kind",
 			groupID:    validID,
-			objectKind: policysvc.ThingsKind,
+			objectKind: policysvc.ClientsKind,
 			objectID:   validID,
 			page:       users.Page{Offset: 0, Limit: 100, Permission: "read"},
 			listAllSubjectsReq: policysvc.Policy{
 				SubjectType: policysvc.UserType,
 				Permission:  "read",
 				Object:      validID,
-				ObjectType:  policysvc.ThingType,
+				ObjectType:  policysvc.ClientType,
 			},
 			listAllSubjectsResponse: policysvc.PolicyPage{Policies: []string{validPolicy}},
 			retrieveAllResponse: users.UsersPage{
@@ -1410,14 +1410,14 @@ func TestListMembers(t *testing.T) {
 		{
 			desc:       "list members with policies successsfully of the things kind with permissions",
 			groupID:    validID,
-			objectKind: policysvc.ThingsKind,
+			objectKind: policysvc.ClientsKind,
 			objectID:   validID,
 			page:       users.Page{Offset: 0, Limit: 100, Permission: "read", ListPerms: true},
 			listAllSubjectsReq: policysvc.Policy{
 				SubjectType: policysvc.UserType,
 				Permission:  "read",
 				Object:      validID,
-				ObjectType:  policysvc.ThingType,
+				ObjectType:  policysvc.ClientType,
 			},
 			listAllSubjectsResponse: policysvc.PolicyPage{Policies: []string{validPolicy}},
 			retrieveAllResponse: users.UsersPage{
@@ -1442,14 +1442,14 @@ func TestListMembers(t *testing.T) {
 		{
 			desc:       "list members with policies of the things kind with permissionswith failed list permissions",
 			groupID:    validID,
-			objectKind: policysvc.ThingsKind,
+			objectKind: policysvc.ClientsKind,
 			objectID:   validID,
 			page:       users.Page{Offset: 0, Limit: 100, Permission: "read", ListPerms: true},
 			listAllSubjectsReq: policysvc.Policy{
 				SubjectType: policysvc.UserType,
 				Permission:  "read",
 				Object:      validID,
-				ObjectType:  policysvc.ThingType,
+				ObjectType:  policysvc.ClientType,
 			},
 			listAllSubjectsResponse: policysvc.PolicyPage{Policies: []string{validPolicy}},
 			retrieveAllResponse: users.UsersPage{
@@ -1468,14 +1468,14 @@ func TestListMembers(t *testing.T) {
 		{
 			desc:       "list members with of the things kind with failed to list all subjects",
 			groupID:    validID,
-			objectKind: policysvc.ThingsKind,
+			objectKind: policysvc.ClientsKind,
 			objectID:   validID,
 			page:       users.Page{Offset: 0, Limit: 100, Permission: "read"},
 			listAllSubjectsReq: policysvc.Policy{
 				SubjectType: policysvc.UserType,
 				Permission:  "read",
 				Object:      validID,
-				ObjectType:  policysvc.ThingType,
+				ObjectType:  policysvc.ClientType,
 			},
 			listAllSubjectsErr:      repoerr.ErrNotFound,
 			listAllSubjectsResponse: policysvc.PolicyPage{},
@@ -1484,14 +1484,14 @@ func TestListMembers(t *testing.T) {
 		{
 			desc:       "list members with of the things kind with failed to retrieve all",
 			groupID:    validID,
-			objectKind: policysvc.ThingsKind,
+			objectKind: policysvc.ClientsKind,
 			objectID:   validID,
 			page:       users.Page{Offset: 0, Limit: 100, Permission: "read"},
 			listAllSubjectsReq: policysvc.Policy{
 				SubjectType: policysvc.UserType,
 				Permission:  "read",
 				Object:      validID,
-				ObjectType:  policysvc.ThingType,
+				ObjectType:  policysvc.ClientType,
 			},
 			listAllSubjectsResponse: policysvc.PolicyPage{Policies: []string{validPolicy}},
 			retrieveAllResponse:     users.UsersPage{},

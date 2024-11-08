@@ -131,31 +131,31 @@ With JSON you can be able to specify more fields of the channels you want to cre
 #### Update Thing
 
 ```bash
-magistrala-cli things update <thing_id> '{"name":"value1", "metadata":{"key1": "value2"}}' <user_token>
+magistrala-cli things update <client_id> '{"name":"value1", "metadata":{"key1": "value2"}}' <user_token>
 ```
 
 #### Identify Thing
 
 ```bash
-magistrala-cli things identify <thing_key>
+magistrala-cli things identify <client_key>
 ```
 
 #### Enable Thing
 
 ```bash
-magistrala-cli things enable <thing_id> <user_token>
+magistrala-cli things enable <client_id> <user_token>
 ```
 
 #### Disable Thing
 
 ```bash
-magistrala-cli things disable <thing_id> <user_token>
+magistrala-cli things disable <client_id> <user_token>
 ```
 
 #### Get Thing
 
 ```bash
-magistrala-cli things get <thing_id> <user_token>
+magistrala-cli things get <client_id> <user_token>
 ```
 
 #### Get Things
@@ -260,7 +260,7 @@ magistrala-cli channels get all --offset=1 --limit=5 <user_token>
 #### Connect Thing to Channel
 
 ```bash
-magistrala-cli things connect <thing_id> <channel_id> <user_token>
+magistrala-cli things connect <client_id> <channel_id> <user_token>
 ```
 
 #### Bulk Connect Things to Channels
@@ -275,8 +275,8 @@ magistrala-cli provision connect <file> <user_token>
 An example CSV file might be
 
 ```csv
-<thing_id1>,<channel_id1>
-<thing_id2>,<channel_id2>
+<client_id1>,<channel_id1>
+<client_id2>,<channel_id2>
 ```
 
 in which the first column is thing IDs and the second column is channel IDs. A connection will be created for each thing to each channel. This example would result in 4 connections being created.
@@ -285,7 +285,7 @@ A comparable JSON file would be
 
 ```json
 {
-  "client_ids": ["<thing_id1>", "<thing_id2>"],
+  "client_ids": ["<client_id1>", "<client_id2>"],
   "group_ids": ["<channel_id1>", "<channel_id2>"]
 }
 ```
@@ -293,13 +293,13 @@ A comparable JSON file would be
 #### Disconnect Thing from Channel
 
 ```bash
-magistrala-cli things disconnect <thing_id> <channel_id> <user_token>
+magistrala-cli things disconnect <client_id> <channel_id> <user_token>
 ```
 
 #### Get a subset list of Channels connected to Thing
 
 ```bash
-magistrala-cli things connections <thing_id> <user_token>
+magistrala-cli things connections <client_id> <user_token>
 ```
 
 #### Get a subset list of Things connected to Channel
@@ -333,19 +333,19 @@ magistrala-cli bootstrap create '{"external_id": "myExtID", "external_key": "myE
 #### View configuration
 
 ```bash
-magistrala-cli bootstrap get <thing_id> <user_token> -b <bootstrap-url>
+magistrala-cli bootstrap get <client_id> <user_token> -b <bootstrap-url>
 ```
 
 #### Update configuration
 
 ```bash
-magistrala-cli bootstrap update '{"thing_id":"<thing_id>", "name": "newName", "content": "newContent"}' <user_token> -b <bootstrap-url>
+magistrala-cli bootstrap update '{"client_id":"<client_id>", "name": "newName", "content": "newContent"}' <user_token> -b <bootstrap-url>
 ```
 
 #### Remove configuration
 
 ```bash
-magistrala-cli bootstrap remove <thing_id> <user_token> -b <bootstrap-url>
+magistrala-cli bootstrap remove <client_id> <user_token> -b <bootstrap-url>
 ```
 
 #### Bootstrap configuration

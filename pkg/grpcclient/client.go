@@ -8,7 +8,7 @@ import (
 
 	tokengrpc "github.com/absmach/magistrala/auth/api/grpc/token"
 	channelsgrpc "github.com/absmach/magistrala/channels/api/grpc"
-	thingsauth "github.com/absmach/magistrala/clients/api/grpc"
+	clientsauth "github.com/absmach/magistrala/clients/api/grpc"
 	domainsgrpc "github.com/absmach/magistrala/domains/api/grpc"
 	groupsgrpc "github.com/absmach/magistrala/groups/api/grpc"
 	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
@@ -56,18 +56,18 @@ func SetupDomainsClient(ctx context.Context, cfg Config) (grpcDomainsV1.DomainsS
 	return domainsgrpc.NewDomainsClient(client.Connection(), cfg.Timeout), client, nil
 }
 
-// SetupThingsClient loads clients gRPC configuration and creates new clients gRPC client.
+// SetupClientsClient loads clients gRPC configuration and creates new clients gRPC client.
 //
 // For example:
 //
 // thingClient, thingHandler, err := grpcclient.SetupThings(ctx, grpcclient.Config{}).
-func SetupThingsClient(ctx context.Context, cfg Config) (grpcClientsV1.ClientsServiceClient, Handler, error) {
+func SetupClientsClient(ctx context.Context, cfg Config) (grpcClientsV1.ClientsServiceClient, Handler, error) {
 	client, err := NewHandler(cfg)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return thingsauth.NewClient(client.Connection(), cfg.Timeout), client, nil
+	return clientsauth.NewClient(client.Connection(), cfg.Timeout), client, nil
 }
 
 // SetupChannelsClient loads channels gRPC configuration and creates new channels gRPC client.

@@ -212,7 +212,7 @@ func listMembersByChannelEndpoint(svc users.Service) endpoint.Endpoint {
 func listMembersByThingEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listMembersByObjectReq)
-		req.objectKind = "things"
+		req.objectKind = "clients"
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}

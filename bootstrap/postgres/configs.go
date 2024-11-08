@@ -24,12 +24,12 @@ import (
 )
 
 var (
-	errSaveChannels    = errors.New("failed to insert channels to database")
-	errSaveConnections = errors.New("failed to insert connections to database")
-	errUpdateChannels  = errors.New("failed to update channels in bootstrap configuration database")
-	errRemoveChannels  = errors.New("failed to remove channels from bootstrap configuration in database")
-	errConnectThing    = errors.New("failed to connect thing in bootstrap configuration in database")
-	errDisconnectThing = errors.New("failed to disconnect thing in bootstrap configuration in database")
+	errSaveChannels     = errors.New("failed to insert channels to database")
+	errSaveConnections  = errors.New("failed to insert connections to database")
+	errUpdateChannels   = errors.New("failed to update channels in bootstrap configuration database")
+	errRemoveChannels   = errors.New("failed to remove channels from bootstrap configuration in database")
+	errConnectClient    = errors.New("failed to connect client in bootstrap configuration in database")
+	errDisconnectClient = errors.New("failed to disconnect client in bootstrap configuration in database")
 )
 
 const cleanupQuery = `DELETE FROM channels ch WHERE NOT EXISTS (
@@ -49,8 +49,8 @@ func NewConfigRepository(db postgres.Database, log *slog.Logger) bootstrap.Confi
 }
 
 func (cr configRepository) Save(ctx context.Context, cfg bootstrap.Config, chsConnIDs []string) (thingID string, err error) {
-	q := `INSERT INTO configs (magistrala_thing, domain_id, name, client_cert, client_key, ca_cert, magistrala_key, external_id, external_key, content, state)
-	VALUES (:magistrala_thing, :domain_id, :name, :client_cert, :client_key, :ca_cert, :magistrala_key, :external_id, :external_key, :content, :state)`
+	q := `INSERT INTO configs (magistrala_client, domain_id, name, client_cert, client_key, ca_cert, magistrala_secret, external_id, external_key, content, state)
+	VALUES (:magistrala_client, :domain_id, :name, :client_cert, :client_key, :ca_cert, :magistrala_secret, :external_id, :external_key, :content, :state)`
 
 	tx, err := cr.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -90,12 +90,12 @@ func (cr configRepository) Save(ctx context.Context, cfg bootstrap.Config, chsCo
 }
 
 func (cr configRepository) RetrieveByID(ctx context.Context, domainID, id string) (bootstrap.Config, error) {
-	q := `SELECT magistrala_thing, magistrala_key, external_id, external_key, name, content, state, client_cert, ca_cert
+	q := `SELECT magistrala_client, magistrala_secret, external_id, external_key, name, content, state, client_cert, ca_cert
 		  FROM configs
-		  WHERE magistrala_thing = :magistrala_thing AND domain_id = :domain_id`
+		  WHERE magistrala_client = :magistrala_client AND domain_id = :domain_id`
 
 	dbcfg := dbConfig{
-		ThingID:  id,
+		ClientID: id,
 		DomainID: domainID,
 	}
 	row, err := cr.db.NamedQueryContext(ctx, q, dbcfg)
@@ -118,7 +118,7 @@ func (cr configRepository) RetrieveByID(ctx context.Context, domainID, id string
 	q = `SELECT magistrala_channel, name, metadata FROM channels ch
 		 INNER JOIN connections conn
 		 ON ch.magistrala_channel = conn.channel_id AND ch.domain_id = conn.domain_id
-		 WHERE conn.config_id = :magistrala_thing AND conn.domain_id = :domain_id`
+		 WHERE conn.config_id = :magistrala_client AND conn.domain_id = :domain_id`
 
 	rows, err := cr.db.NamedQueryContext(ctx, q, dbcfg)
 	if err != nil {
@@ -153,8 +153,8 @@ func (cr configRepository) RetrieveAll(ctx context.Context, domainID string, thi
 	search, params := buildRetrieveQueryParams(domainID, thingIDs, filter)
 	n := len(params)
 
-	q := `SELECT magistrala_thing, magistrala_key, external_id, external_key, name, content, state
-		  FROM configs %s ORDER BY magistrala_thing LIMIT $%d OFFSET $%d`
+	q := `SELECT magistrala_client, magistrala_secret, external_id, external_key, name, content, state
+		  FROM configs %s ORDER BY magistrala_client LIMIT $%d OFFSET $%d`
 	q = fmt.Sprintf(q, search, n+1, n+2)
 
 	rows, err := cr.db.QueryContext(ctx, q, append(params, limit, offset)...)
@@ -169,7 +169,7 @@ func (cr configRepository) RetrieveAll(ctx context.Context, domainID string, thi
 
 	for rows.Next() {
 		c := bootstrap.Config{DomainID: domainID}
-		if err := rows.Scan(&c.ClientID, &c.ThingKey, &c.ExternalID, &c.ExternalKey, &name, &content, &c.State); err != nil {
+		if err := rows.Scan(&c.ClientID, &c.ClientSecret, &c.ExternalID, &c.ExternalKey, &name, &content, &c.State); err != nil {
 			cr.log.Error(fmt.Sprintf("Failed to read retrieved config due to %s", err))
 			return bootstrap.ConfigsPage{}
 		}
@@ -196,7 +196,7 @@ func (cr configRepository) RetrieveAll(ctx context.Context, domainID string, thi
 }
 
 func (cr configRepository) RetrieveByExternalID(ctx context.Context, externalID string) (bootstrap.Config, error) {
-	q := `SELECT magistrala_thing, magistrala_key, external_key, domain_id, name, client_cert, client_key, ca_cert, content, state
+	q := `SELECT magistrala_client, magistrala_secret, external_key, domain_id, name, client_cert, client_key, ca_cert, content, state
 		  FROM configs
 		  WHERE external_id = :external_id`
 	dbcfg := dbConfig{
@@ -222,7 +222,7 @@ func (cr configRepository) RetrieveByExternalID(ctx context.Context, externalID 
 	q = `SELECT magistrala_channel, name, metadata FROM channels ch
      INNER JOIN connections conn
      ON ch.magistrala_channel = conn.channel_id AND ch.domain_id = conn.domain_id
-     WHERE conn.config_id = :magistrala_thing AND conn.domain_id = :domain_id`
+     WHERE conn.config_id = :magistrala_client AND conn.domain_id = :domain_id`
 
 	rows, err := cr.db.NamedQueryContext(ctx, q, dbcfg)
 	if err != nil {
@@ -255,12 +255,12 @@ func (cr configRepository) RetrieveByExternalID(ctx context.Context, externalID 
 }
 
 func (cr configRepository) Update(ctx context.Context, cfg bootstrap.Config) error {
-	q := `UPDATE configs SET name = :name, content = :content WHERE magistrala_thing = :magistrala_thing AND domain_id = :domain_id `
+	q := `UPDATE configs SET name = :name, content = :content WHERE magistrala_client = :magistrala_client AND domain_id = :domain_id `
 
 	dbcfg := dbConfig{
 		Name:     nullString(cfg.Name),
 		Content:  nullString(cfg.Content),
-		ThingID:  cfg.ClientID,
+		ClientID: cfg.ClientID,
 		DomainID: cfg.DomainID,
 	}
 
@@ -282,11 +282,11 @@ func (cr configRepository) Update(ctx context.Context, cfg bootstrap.Config) err
 }
 
 func (cr configRepository) UpdateCert(ctx context.Context, domainID, thingID, clientCert, clientKey, caCert string) (bootstrap.Config, error) {
-	q := `UPDATE configs SET client_cert = :client_cert, client_key = :client_key, ca_cert = :ca_cert WHERE magistrala_thing = :magistrala_thing AND domain_id = :domain_id 
-	RETURNING magistrala_thing, client_cert, client_key, ca_cert`
+	q := `UPDATE configs SET client_cert = :client_cert, client_key = :client_key, ca_cert = :ca_cert WHERE magistrala_client = :magistrala_client AND domain_id = :domain_id 
+	RETURNING magistrala_client, client_cert, client_key, ca_cert`
 
 	dbcfg := dbConfig{
-		ThingID:    thingID,
+		ClientID:   thingID,
 		ClientCert: nullString(clientCert),
 		DomainID:   domainID,
 		ClientKey:  nullString(clientKey),
@@ -345,9 +345,9 @@ func (cr configRepository) UpdateConnections(ctx context.Context, domainID, id s
 }
 
 func (cr configRepository) Remove(ctx context.Context, domainID, id string) error {
-	q := `DELETE FROM configs WHERE magistrala_thing = :magistrala_thing AND domain_id = :domain_id`
+	q := `DELETE FROM configs WHERE magistrala_client = :magistrala_client AND domain_id = :domain_id`
 	dbcfg := dbConfig{
-		ThingID:  id,
+		ClientID: id,
 		DomainID: domainID,
 	}
 
@@ -363,10 +363,10 @@ func (cr configRepository) Remove(ctx context.Context, domainID, id string) erro
 }
 
 func (cr configRepository) ChangeState(ctx context.Context, domainID, id string, state bootstrap.State) error {
-	q := `UPDATE configs SET state = :state WHERE magistrala_thing = :magistrala_thing AND domain_id = :domain_id;`
+	q := `UPDATE configs SET state = :state WHERE magistrala_client = :magistrala_client AND domain_id = :domain_id;`
 
 	dbcfg := dbConfig{
-		ThingID:  id,
+		ClientID: id,
 		State:    state,
 		DomainID: domainID,
 	}
@@ -424,8 +424,8 @@ func (cr configRepository) ListExisting(ctx context.Context, domainID string, id
 	return channels, nil
 }
 
-func (cr configRepository) RemoveThing(ctx context.Context, id string) error {
-	q := `DELETE FROM configs WHERE magistrala_thing = $1`
+func (cr configRepository) RemoveClient(ctx context.Context, id string) error {
+	q := `DELETE FROM configs WHERE magistrala_client = $1`
 	_, err := cr.db.ExecContext(ctx, q, id)
 
 	if _, err := cr.db.ExecContext(ctx, cleanupQuery); err != nil {
@@ -459,14 +459,14 @@ func (cr configRepository) RemoveChannel(ctx context.Context, id string) error {
 	return nil
 }
 
-func (cr configRepository) ConnectThing(ctx context.Context, channelID, thingID string) error {
+func (cr configRepository) ConnectClient(ctx context.Context, channelID, clientID string) error {
 	q := `UPDATE configs SET state = $1
-		WHERE magistrala_thing = $2
+		WHERE magistrala_client = $2
 		AND EXISTS (SELECT 1 FROM connections WHERE config_id = $2 AND channel_id = $3)`
 
-	result, err := cr.db.ExecContext(ctx, q, bootstrap.Active, thingID, channelID)
+	result, err := cr.db.ExecContext(ctx, q, bootstrap.Active, clientID, channelID)
 	if err != nil {
-		return errors.Wrap(errConnectThing, err)
+		return errors.Wrap(errConnectClient, err)
 	}
 	if rows, _ := result.RowsAffected(); rows == 0 {
 		return repoerr.ErrNotFound
@@ -474,13 +474,13 @@ func (cr configRepository) ConnectThing(ctx context.Context, channelID, thingID 
 	return nil
 }
 
-func (cr configRepository) DisconnectThing(ctx context.Context, channelID, thingID string) error {
+func (cr configRepository) DisconnectClient(ctx context.Context, channelID, thingID string) error {
 	q := `UPDATE configs SET state = $1
-		WHERE magistrala_thing = $2
+		WHERE magistrala_client = $2
 		AND EXISTS (SELECT 1 FROM connections WHERE config_id = $2 AND channel_id = $3)`
 	_, err := cr.db.ExecContext(ctx, q, bootstrap.Inactive, thingID, channelID)
 	if err != nil {
-		return errors.Wrap(errDisconnectThing, err)
+		return errors.Wrap(errDisconnectClient, err)
 	}
 	return nil
 }
@@ -490,7 +490,7 @@ func buildRetrieveQueryParams(domainID string, thingIDs []string, filter bootstr
 	queries := []string{}
 
 	if len(thingIDs) != 0 {
-		queries = append(queries, fmt.Sprintf("magistrala_thing IN ('%s')", strings.Join(thingIDs, "','")))
+		queries = append(queries, fmt.Sprintf("magistrala_client IN ('%s')", strings.Join(thingIDs, "','")))
 	} else if domainID != "" {
 		params = append(params, domainID)
 		queries = append(queries, fmt.Sprintf("domain_id = $%d", len(params)))
@@ -644,43 +644,43 @@ func nullTime(t time.Time) sql.NullTime {
 }
 
 type dbConfig struct {
-	ThingID     string          `db:"magistrala_thing"`
-	DomainID    string          `db:"domain_id"`
-	Name        sql.NullString  `db:"name"`
-	ClientCert  sql.NullString  `db:"client_cert"`
-	ClientKey   sql.NullString  `db:"client_key"`
-	CaCert      sql.NullString  `db:"ca_cert"`
-	ThingKey    string          `db:"magistrala_key"`
-	ExternalID  string          `db:"external_id"`
-	ExternalKey string          `db:"external_key"`
-	Content     sql.NullString  `db:"content"`
-	State       bootstrap.State `db:"state"`
+	DomainID     string          `db:"domain_id"`
+	ClientID     string          `db:"magistrala_client"`
+	ClientSecret string          `db:"magistrala_secret"`
+	Name         sql.NullString  `db:"name"`
+	ClientCert   sql.NullString  `db:"client_cert"`
+	ClientKey    sql.NullString  `db:"client_key"`
+	CaCert       sql.NullString  `db:"ca_cert"`
+	ExternalID   string          `db:"external_id"`
+	ExternalKey  string          `db:"external_key"`
+	Content      sql.NullString  `db:"content"`
+	State        bootstrap.State `db:"state"`
 }
 
 func toDBConfig(cfg bootstrap.Config) dbConfig {
 	return dbConfig{
-		ThingID:     cfg.ClientID,
-		DomainID:    cfg.DomainID,
-		Name:        nullString(cfg.Name),
-		ClientCert:  nullString(cfg.ClientCert),
-		ClientKey:   nullString(cfg.ClientKey),
-		CaCert:      nullString(cfg.CACert),
-		ThingKey:    cfg.ThingKey,
-		ExternalID:  cfg.ExternalID,
-		ExternalKey: cfg.ExternalKey,
-		Content:     nullString(cfg.Content),
-		State:       cfg.State,
+		ClientID:     cfg.ClientID,
+		DomainID:     cfg.DomainID,
+		Name:         nullString(cfg.Name),
+		ClientCert:   nullString(cfg.ClientCert),
+		ClientKey:    nullString(cfg.ClientKey),
+		CaCert:       nullString(cfg.CACert),
+		ClientSecret: cfg.ClientSecret,
+		ExternalID:   cfg.ExternalID,
+		ExternalKey:  cfg.ExternalKey,
+		Content:      nullString(cfg.Content),
+		State:        cfg.State,
 	}
 }
 
 func toConfig(dbcfg dbConfig) bootstrap.Config {
 	cfg := bootstrap.Config{
-		ClientID:    dbcfg.ThingID,
-		DomainID:    dbcfg.DomainID,
-		ThingKey:    dbcfg.ThingKey,
-		ExternalID:  dbcfg.ExternalID,
-		ExternalKey: dbcfg.ExternalKey,
-		State:       dbcfg.State,
+		ClientID:     dbcfg.ClientID,
+		DomainID:     dbcfg.DomainID,
+		ClientSecret: dbcfg.ClientSecret,
+		ExternalID:   dbcfg.ExternalID,
+		ExternalKey:  dbcfg.ExternalKey,
+		State:        dbcfg.State,
 	}
 
 	if dbcfg.Name.Valid {

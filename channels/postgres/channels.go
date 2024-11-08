@@ -245,9 +245,8 @@ func (cr *channelRepository) RemoveParentGroup(ctx context.Context, ch channels.
 
 func (cr *channelRepository) AddConnections(ctx context.Context, conns []channels.Connection) error {
 	dbConns := toDBConnections(conns)
-
-	q := `INSERT INTO connections (channel_id, domain_id, thing_id, type)
-			VALUES (:channel_id, :domain_id, :thing_id, :type );`
+	q := `INSERT INTO connections (channel_id, domain_id, client_id, type)
+			VALUES (:channel_id, :domain_id, :client_id, :type );`
 
 	if _, err := cr.db.NamedExecContext(ctx, q, dbConns); err != nil {
 		return postgres.HandleError(repoerr.ErrCreateEntity, err)
@@ -269,7 +268,7 @@ func (cr *channelRepository) RemoveConnections(ctx context.Context, conns []chan
 		}
 	}()
 
-	query := `DELETE FROM connections WHERE channel_id = :channel_id AND domain_id = :domain_id AND thing_id = :thing_id`
+	query := `DELETE FROM connections WHERE channel_id = :channel_id AND domain_id = :domain_id AND client_id = :client_id`
 
 	for _, conn := range conns {
 		if uint8(conn.Type) > 0 {
@@ -277,7 +276,7 @@ func (cr *channelRepository) RemoveConnections(ctx context.Context, conns []chan
 		}
 		dbConn := toDBConnection(conn)
 		if _, err := tx.NamedExec(query, dbConn); err != nil {
-			return errors.Wrap(repoerr.ErrRemoveEntity, errors.Wrap(fmt.Errorf("failed to delete connection for channel_id: %s, domain_id: %s thing_id %s", conn.ChannelID, conn.DomainID, conn.ThingID), err))
+			return errors.Wrap(repoerr.ErrRemoveEntity, errors.Wrap(fmt.Errorf("failed to delete connection for channel_id: %s, domain_id: %s client_id %s", conn.ChannelID, conn.DomainID, conn.ClientID), err))
 		}
 	}
 	if err := tx.Commit(); err != nil {
@@ -287,7 +286,7 @@ func (cr *channelRepository) RemoveConnections(ctx context.Context, conns []chan
 }
 
 func (cr *channelRepository) CheckConnection(ctx context.Context, conn channels.Connection) error {
-	query := `SELECT 1 FROM connections WHERE channel_id = :channel_id AND domain_id = :domain_id AND thing_id = :thing_id AND type = :type LIMIT 1`
+	query := `SELECT 1 FROM connections WHERE channel_id = :channel_id AND domain_id = :domain_id AND client_id = :client_id AND type = :type LIMIT 1`
 	dbConn := toDBConnection(conn)
 	rows, err := cr.db.NamedQueryContext(ctx, query, dbConn)
 	if err != nil {
@@ -301,8 +300,8 @@ func (cr *channelRepository) CheckConnection(ctx context.Context, conn channels.
 	return nil
 }
 
-func (cr *channelRepository) ThingAuthorize(ctx context.Context, conn channels.Connection) error {
-	query := `SELECT 1 FROM connections WHERE channel_id = :channel_id AND thing_id = :thing_id AND type = :type LIMIT 1`
+func (cr *channelRepository) ClientAuthorize(ctx context.Context, conn channels.Connection) error {
+	query := `SELECT 1 FROM connections WHERE channel_id = :channel_id AND client_id = :client_id AND type = :type LIMIT 1`
 	dbConn := toDBConnection(conn)
 	rows, err := cr.db.NamedQueryContext(ctx, query, dbConn)
 	if err != nil {
@@ -340,10 +339,10 @@ func (cr *channelRepository) DoesChannelHaveConnections(ctx context.Context, id 
 	return rows.Next(), nil
 }
 
-func (cr *channelRepository) RemoveThingConnections(ctx context.Context, thingID string) error {
-	query := `DELETE FROM connections WHERE thing_id = :thing_id`
+func (cr *channelRepository) RemoveClientConnections(ctx context.Context, clientID string) error {
+	query := `DELETE FROM connections WHERE client_id = :client_id`
 
-	dbConn := dbConnection{ThingID: thingID}
+	dbConn := dbConnection{ClientID: clientID}
 	if _, err := cr.db.NamedExecContext(ctx, query, dbConn); err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
@@ -534,8 +533,8 @@ func PageQuery(pm channels.PageMetadata) (string, error) {
 		query = append(query, "c.name ILIKE '%' || :name || '%'")
 	}
 
-	if pm.ThingID != "" {
-		query = append(query, "conn.thing_id = :thing_id")
+	if pm.ClientID != "" {
+		query = append(query, "conn.client_id = :client_id")
 	}
 	if pm.Id != "" {
 		query = append(query, "c.id ILIKE '%' || :id || '%'")
@@ -614,7 +613,7 @@ type dbChannelsPage struct {
 type dbConnection struct {
 	ChannelID string               `db:"channel_id"`
 	DomainID  string               `db:"domain_id"`
-	ThingID   string               `db:"thing_id"`
+	ClientID  string               `db:"client_id"`
 	Type      connections.ConnType `db:"type"`
 }
 
@@ -628,7 +627,7 @@ func toDBConnections(conns []channels.Connection) []dbConnection {
 
 func toDBConnection(conn channels.Connection) dbConnection {
 	return dbConnection{
-		ThingID:   conn.ThingID,
+		ClientID:  conn.ClientID,
 		ChannelID: conn.ChannelID,
 		DomainID:  conn.DomainID,
 		Type:      conn.Type,

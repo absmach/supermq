@@ -205,7 +205,7 @@ func usersHandler(svc users.Service, authn mgauthn.Authentication, tokenClient g
 			decodeListMembersByThing,
 			api.EncodeResponse,
 			opts...,
-		), "list_users_by_thing_id").ServeHTTP)
+		), "list_users_by_client_id").ServeHTTP)
 
 		r.Get("/{domainID}/users", otelhttp.NewHandler(kithttp.NewServer(
 			listMembersByDomainEndpoint(svc),

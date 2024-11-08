@@ -499,7 +499,7 @@ type SDK interface {
 	//		Relation: "contributor", // available options: "owner", "admin", "editor", "contributor", "guest"
 	//  	UserIDs: ["user_id_1", "user_id_2", "user_id_3"]
 	// }
-	//  err := sdk.ShareThing("thing_id", req, "domainID","token")
+	//  err := sdk.ShareThing("client_id", req, "domainID","token")
 	//  fmt.Println(err)
 	ShareClient(id string, req UsersRelationRequest, domainID, token string) errors.SDKError
 
@@ -510,7 +510,7 @@ type SDK interface {
 	//		Relation: "contributor", // available options: "owner", "admin", "editor", "contributor", "guest"
 	//  	UserIDs: ["user_id_1", "user_id_2", "user_id_3"]
 	// }
-	//  err := sdk.UnshareThing("thing_id", req, "domainID", "token")
+	//  err := sdk.UnshareThing("client_id", req, "domainID", "token")
 	//  fmt.Println(err)
 	UnshareClient(id string, req UsersRelationRequest, domainID, token string) errors.SDKError
 
@@ -522,7 +522,7 @@ type SDK interface {
 	//		Limit:  10,
 	//		Permission: "edit", // available Options:  "administrator", "administrator", "delete", edit", "view", "share", "owner", "owner", "admin", "editor", "contributor", "editor", "viewer", "guest", "create"
 	//	}
-	//  users, _ := sdk.ListThingUsers("thing_id", pm, "domainID", "token")
+	//  users, _ := sdk.ListThingUsers("client_id", pm, "domainID", "token")
 	//  fmt.Println(users)
 	ListClientUsers(id string, pm PageMetadata, domainID, token string) (UsersPage, errors.SDKError)
 
@@ -834,7 +834,7 @@ type SDK interface {
 	// example:
 	//  conns := sdk.Connection{
 	//    ChannelID: "channel_id_1",
-	//    ThingID:   "thing_id_1",
+	//    ThingID:   "client_id_1",
 	//  }
 	//  err := sdk.Connect(conns, "domainID", "token")
 	//  fmt.Println(err)
@@ -845,7 +845,7 @@ type SDK interface {
 	// example:
 	//  conns := sdk.Connection{
 	//    ChannelID: "channel_id_1",
-	//    ThingID:   "thing_id_1",
+	//    ThingID:   "client_id_1",
 	//  }
 	//  err := sdk.Disconnect(conns, "domainID", "token")
 	//  fmt.Println(err)
@@ -1210,7 +1210,7 @@ type SDK interface {
 	// Journal returns a list of journal logs.
 	//
 	// For example:
-	//  journals, _ := sdk.Journal("thing", "thingID", PageMetadata{Offset: 0, Limit: 10, Operation: "users.create"}, "token")
+	//  journals, _ := sdk.Journal("client", "thingID", PageMetadata{Offset: 0, Limit: 10, Operation: "users.create"}, "token")
 	//  fmt.Println(journals)
 	Journal(entityType, entityID string, pm PageMetadata, token string) (journal JournalsPage, err error)
 }

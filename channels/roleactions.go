@@ -11,7 +11,7 @@ const (
 	ChannelRead             roles.Action = "read"
 	ChannelDelete           roles.Action = "delete"
 	ChannelSetParentGroup   roles.Action = "set_parent_group"
-	ChannelConnectToChannel roles.Action = "connect_to_thing"
+	ChannelConnectToChannel roles.Action = "connect_to_client"
 	ChannelManageRole       roles.Action = "manage_role"
 	ChannelAddRoleUsers     roles.Action = "add_role_users"
 	ChannelRemoveRoleUsers  roles.Action = "remove_role_users"

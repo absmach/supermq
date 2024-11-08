@@ -19,7 +19,6 @@ import (
 
 // MakeHandler returns a HTTP handler for Channels API endpoints.
 func MakeHandler(svc channels.Service, authn mgauthn.Authentication, mux *chi.Mux, logger *slog.Logger, instanceID string) *chi.Mux {
-
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
@@ -62,7 +61,6 @@ func MakeHandler(svc channels.Service, authn mgauthn.Authentication, mux *chi.Mu
 		), "disconnect").ServeHTTP)
 
 		r.Route("/{channelID}", func(r chi.Router) {
-
 			r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
 				viewChannelEndpoint(svc),
 				decodeViewChannel,
@@ -120,20 +118,19 @@ func MakeHandler(svc channels.Service, authn mgauthn.Authentication, mux *chi.Mu
 			), "remove_channel_parent_group").ServeHTTP)
 
 			r.Post("/connect", otelhttp.NewHandler(kithttp.NewServer(
-				connectChannelThingsEndpoint(svc),
-				decodeConnectChannelThingsRequest,
+				connectChannelClientEndpoint(svc),
+				decodeConnectChannelClientRequest,
 				api.EncodeResponse,
 				opts...,
-			), "connect_channel_thing").ServeHTTP)
+			), "connect_channel_client").ServeHTTP)
 
 			r.Post("/disconnect", otelhttp.NewHandler(kithttp.NewServer(
-				disconnectChannelThingsEndpoint(svc),
-				decodeDisconnectChannelThingsRequest,
+				disconnectChannelClientsEndpoint(svc),
+				decodeDisconnectChannelClientsRequest,
 				api.EncodeResponse,
 				opts...,
-			), "disconnect_channel_thing").ServeHTTP)
+			), "disconnect_channel_client").ServeHTTP)
 		})
-
 	})
 
 	mux.Get("/health", magistrala.Health("channels", instanceID))

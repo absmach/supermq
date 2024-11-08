@@ -3,8 +3,8 @@
 
 syntax = "proto3";
 
-package things.v1;
-option go_package = "github.com/absmach/magistrala/internal/grpc/things/v1";
+package clients.v1;
+option go_package = "github.com/absmach/magistrala/internal/grpc/clients/v1";
 
 import "common/v1/common.proto";
 
@@ -23,7 +23,7 @@ service ClientsService {
 
 
 message AuthnReq {
-  string thing_id = 1;
+  string client_id = 1;
   string thing_key = 2;
 }
 

@@ -14,7 +14,7 @@ import (
 )
 
 type Connection struct {
-	ThingID   string
+	ClientID  string
 	ChannelID string
 	DomainID  string
 	Type      connections.ConnType

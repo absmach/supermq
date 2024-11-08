@@ -46,7 +46,7 @@ func (lm *loggingMiddleware) Cert(domainID, token, thingID, duration string) (ce
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.String("thing_id", thingID),
+			slog.String("client_id", thingID),
 			slog.String("ttl", duration),
 		}
 		if err != nil {

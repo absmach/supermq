@@ -65,7 +65,7 @@ definition channel {
 	permission read_permission = read + parent_group->channel_read_permission + domain->channel_read_permission
 	permission delete_permission = delete + parent_group->channel_delete_permission + domain->channel_delete_permission
 	permission set_parent_group_permission = set_parent_group + parent_group->channel_set_parent_group_permission + domain->channel_set_parent_group_permission
-	permission connect_to_thing_permission = connect_to_thing + parent_group->channel_connect_to_thing_permission + domain->channel_connect_to_thing
+	permission connect_to_thing_permission = connect_to_thing + parent_group->channel_connect_to_client_permission + domain->channel_connect_to_client
 	permission publish_permission = publish + parent_group->channel_publish_permission + domain->channel_publish_permission
 	permission subscribe_permission = subscribe + parent_group->channel_subscribe_permission + domain->channel_subscribe_permission
 
@@ -107,7 +107,7 @@ definition group {
 	relation channel_read: role#member
 	relation channel_delete: role#member
 	relation channel_set_parent_group: role#member
-	relation channel_connect_to_thing: role#member
+	relation channel_connect_to_client: role#member
 	relation channel_publish: role#member
 	relation channel_subscribe: role#member
 
@@ -145,7 +145,7 @@ definition group {
 	relation subgroup_channel_read: role#member
 	relation subgroup_channel_delete: role#member
 	relation subgroup_channel_set_parent_group: role#member
-	relation subgroup_channel_connect_to_thing: role#member
+	relation subgroup_channel_connect_to_client: role#member
 	relation subgroup_channel_publish: role#member
 	relation subgroup_channel_subscribe: role#member
 
@@ -211,7 +211,7 @@ definition group {
 	permission subgroup_channel_read_permission = subgroup_channel_read + parent_group->subgroup_channel_read_permission
 	permission subgroup_channel_delete_permission =  subgroup_channel_delete + parent_group->subgroup_channel_delete_permission
 	permission subgroup_channel_set_parent_group_permission = subgroup_channel_set_parent_group + parent_group->subgroup_channel_set_parent_group_permission
-	permission subgroup_channel_connect_to_thing_permission = subgroup_channel_connect_to_thing + parent_group->subgroup_channel_connect_to_thing_permission
+	permission subgroup_channel_connect_to_client_permission = subgroup_channel_connect_to_client + parent_group->subgroup_channel_connect_to_client_permission
 	permission subgroup_channel_publish_permission = subgroup_channel_publish + parent_group->subgroup_channel_publish_permission
 	permission subgroup_channel_subscribe_permission = subgroup_channel_subscribe + parent_group->subgroup_channel_subscribe_permission
 
@@ -226,7 +226,7 @@ definition group {
 	permission channel_read_permission = channel_read + parent_group->subgroup_channel_read + domain->channel_read_permission
 	permission channel_delete_permission = channel_delete + parent_group->subgroup_channel_delete_permission + domain->channel_delete_permission
 	permission channel_set_parent_group_permission = channel_set_parent_group + parent_group->subgroup_channel_set_parent_group + domain->channel_set_parent_group_permission
-	permission channel_connect_to_thing_permission = channel_connect_to_thing + parent_group->subgroup_channel_connect_to_thing + domain->channel_connect_to_thing_permission
+	permission channel_connect_to_client_permission = channel_connect_to_client + parent_group->subgroup_channel_connect_to_client + domain->channel_connect_to_client_permission
 	permission channel_publish_permission = channel_publish + parent_group->subgroup_channel_publish + domain->channel_publish_permission
 	permission channel_subscribe_permission = channel_subscribe + parent_group->subgroup_channel_subscribe + domain->channel_subscribe_permission
 
@@ -268,7 +268,7 @@ definition domain {
 	relation channel_read: role#member | team#member
 	relation channel_delete: role#member | team#member
 	relation channel_set_parent_group: role#member | team#member
-	relation channel_connect_to_thing: role#member | team#member
+	relation channel_connect_to_client: role#member | team#member
 	relation channel_publish: role#member | team#member
 	relation channel_subscribe: role#member | team#member
 
@@ -315,7 +315,7 @@ definition domain {
 	permission channel_read_permission = channel_read + team->channel_read + organization->admin
 	permission channel_delete_permission = channel_delete + team->channel_delete + organization->admin
 	permission channel_set_parent_group_permission = channel_set_parent_group + team->channel_set_parent_group + organization->admin
-	permission channel_connect_to_thing_permission = channel_connect_to_thing + team->channel_connect_to_thing + organization->admin
+	permission channel_connect_to_client_permission = channel_connect_to_client + team->channel_connect_to_client + organization->admin
 	permission channel_publish_permission = channel_publish + team->channel_publish + organization->admin
 	permission channel_subscribe_permission = channel_subscribe + team->channel_subscribe + organization->admin
 
@@ -399,7 +399,7 @@ definition team {
 	relation channel_read: role#member | team#member
 	relation channel_delete: role#member | team#member
 	relation channel_set_parent_group: role#member | team#member
-	relation channel_connect_to_thing: role#member | team#member
+	relation channel_connect_to_client: role#member | team#member
 	relation channel_publish: role#member | team#member
 	relation channel_subscribe: role#member | team#member
 

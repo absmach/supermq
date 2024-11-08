@@ -139,7 +139,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 			h.logger.Info(fmt.Sprintf(logInfoFailedAuthNThing, thingKey, *topic, svcerr.ErrAuthentication))
 			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
 		}
-		clientType = policies.ThingType
+		clientType = policies.ClientType
 		clientID = authnRes.GetId()
 	case strings.HasPrefix(string(s.Password), apiutil.BearerPrefix):
 		token := strings.TrimPrefix(string(s.Password), apiutil.BearerPrefix)
@@ -181,7 +181,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthorization)
 	}
 
-	if clientType == policies.ThingType {
+	if clientType == policies.ClientType {
 		msg.Publisher = clientID
 	}
 

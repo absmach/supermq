@@ -48,15 +48,15 @@ var (
 		"id":         entityID,
 		"status":     "enabled",
 		"created_at": time.Now().Add(-time.Hour),
-		"name":       "thing",
+		"name":       "client",
 		"tags":       []interface{}{"tag1", "tag2"},
 		"domain":     testsutil.GenerateUUID(&testing.T{}),
 		"metadata":   payload,
 		"identity":   testsutil.GenerateUUID(&testing.T{}),
 	}
 	thingAttributesV2 = map[string]interface{}{
-		"thing_id": entityID,
-		"metadata": payload,
+		"client_id": entityID,
+		"metadata":  payload,
 	}
 	userAttributesV1 = map[string]interface{}{
 		"id":         entityID,
@@ -710,7 +710,7 @@ func extractEntities(journals []journal.Journal, entityType journal.EntityType, 
 				entities = append(entities, j)
 			}
 		case journal.ThingEntity:
-			if strings.HasPrefix(j.Operation, "thing.") && j.Attributes["id"] == entityID || j.Attributes["thing_id"] == entityID {
+			if strings.HasPrefix(j.Operation, "thing.") && j.Attributes["id"] == entityID || j.Attributes["client_id"] == entityID {
 				entities = append(entities, j)
 			}
 		case journal.ChannelEntity:

@@ -298,7 +298,7 @@ func (ps *policyService) CountSubjects(ctx context.Context, pr policies.Policy) 
 func (ps *policyService) ListPermissions(ctx context.Context, pr policies.Policy, permissionsFilter []string) (policies.Permissions, error) {
 	if len(permissionsFilter) == 0 {
 		switch pr.ObjectType {
-		case policies.ThingType:
+		case policies.ClientType:
 			permissionsFilter = defThingsFilterPermissions
 		case policies.GroupType:
 			permissionsFilter = defGroupsFilterPermissions
@@ -346,7 +346,7 @@ func (ps *policyService) addPolicyPreCondition(ctx context.Context, pr policies.
 	// Checks :
 	// - USER with ANY RELATION to DOMAIN
 	// - THING with DOMAIN RELATION to DOMAIN
-	case pr.SubjectType == policies.UserType && pr.ObjectType == policies.ThingType:
+	case pr.SubjectType == policies.UserType && pr.ObjectType == policies.ClientType:
 		return ps.userThingPreConditions(ctx, pr)
 
 	// 3.) group -> group (both for adding parent_group and channels)
@@ -370,7 +370,7 @@ func (ps *policyService) addPolicyPreCondition(ctx context.Context, pr policies.
 		return ps.userDomainPreConditions(ctx, pr)
 
 	// Check thing and group not belongs to other domain before adding to domain
-	case pr.SubjectType == policies.DomainType && pr.Relation == policies.DomainRelation && (pr.ObjectType == policies.ThingType || pr.ObjectType == policies.GroupType):
+	case pr.SubjectType == policies.DomainType && pr.Relation == policies.DomainRelation && (pr.ObjectType == policies.ClientType || pr.ObjectType == policies.GroupType):
 		preconds := []*v1.Precondition{
 			{
 				Operation: v1.Precondition_OPERATION_MUST_NOT_MATCH,
@@ -471,7 +471,7 @@ func (ps *policyService) userThingPreConditions(ctx context.Context, pr policies
 	preconds = append(preconds, &v1.Precondition{
 		Operation: v1.Precondition_OPERATION_MUST_NOT_MATCH,
 		Filter: &v1.RelationshipFilter{
-			ResourceType:       policies.ThingType,
+			ResourceType:       policies.ClientType,
 			OptionalResourceId: pr.Object,
 			OptionalSubjectFilter: &v1.SubjectFilter{
 				SubjectType:       policies.UserType,
@@ -507,12 +507,12 @@ func (ps *policyService) userThingPreConditions(ctx context.Context, pr policies
 	switch {
 	// For New thing
 	// - THING without DOMAIN RELATION to ANY DOMAIN
-	case pr.ObjectKind == policies.NewThingKind:
+	case pr.ObjectKind == policies.NewClientKind:
 		preconds = append(preconds,
 			&v1.Precondition{
 				Operation: v1.Precondition_OPERATION_MUST_NOT_MATCH,
 				Filter: &v1.RelationshipFilter{
-					ResourceType:       policies.ThingType,
+					ResourceType:       policies.ClientType,
 					OptionalResourceId: pr.Object,
 					OptionalRelation:   policies.DomainRelation,
 					OptionalSubjectFilter: &v1.SubjectFilter{
@@ -528,7 +528,7 @@ func (ps *policyService) userThingPreConditions(ctx context.Context, pr policies
 			&v1.Precondition{
 				Operation: v1.Precondition_OPERATION_MUST_MATCH,
 				Filter: &v1.RelationshipFilter{
-					ResourceType:       policies.ThingType,
+					ResourceType:       policies.ClientType,
 					OptionalResourceId: pr.Object,
 					OptionalRelation:   policies.DomainRelation,
 					OptionalSubjectFilter: &v1.SubjectFilter{
@@ -879,7 +879,7 @@ func channelThingPreCondition(pr policies.Policy) ([]*v1.Precondition, error) {
 		{
 			Operation: v1.Precondition_OPERATION_MUST_MATCH,
 			Filter: &v1.RelationshipFilter{
-				ResourceType:       policies.ThingType,
+				ResourceType:       policies.ClientType,
 				OptionalResourceId: pr.Object,
 				OptionalRelation:   policies.DomainRelation,
 				OptionalSubjectFilter: &v1.SubjectFilter{

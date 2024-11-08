@@ -101,7 +101,7 @@ func (svc *adapterService) authorize(ctx context.Context, thingKey, chanID strin
 	}
 
 	authzReq := &grpcChannelsV1.AuthzReq{
-		ClientType: policies.ThingType,
+		ClientType: policies.ClientType,
 		ClientId:   authnRes.GetId(),
 		Type:       uint32(msgType),
 		ChannelId:  chanID,

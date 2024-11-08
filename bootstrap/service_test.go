@@ -50,12 +50,12 @@ var (
 	}
 
 	config = bootstrap.Config{
-		ClientID:    testsutil.GenerateUUID(&testing.T{}),
-		ThingKey:    testsutil.GenerateUUID(&testing.T{}),
-		ExternalID:  testsutil.GenerateUUID(&testing.T{}),
-		ExternalKey: testsutil.GenerateUUID(&testing.T{}),
-		Channels:    []bootstrap.Channel{channel},
-		Content:     "config",
+		ClientID:     testsutil.GenerateUUID(&testing.T{}),
+		ClientSecret: testsutil.GenerateUUID(&testing.T{}),
+		ExternalID:   testsutil.GenerateUUID(&testing.T{}),
+		ExternalKey:  testsutil.GenerateUUID(&testing.T{}),
+		Channels:     []bootstrap.Channel{channel},
+		Content:      "config",
 	}
 )
 
@@ -152,7 +152,7 @@ func TestAdd(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			tc.session = mgauthn.Session{UserID: tc.userID, DomainID: tc.domainID, DomainUserID: validID}
-			repoCall := sdk.On("Thing", tc.config.ClientID, mock.Anything, tc.token).Return(mgsdk.Client{ID: tc.config.ClientID, Credentials: mgsdk.ClientCredentials{Secret: tc.config.ThingKey}}, tc.thingErr)
+			repoCall := sdk.On("Thing", tc.config.ClientID, mock.Anything, tc.token).Return(mgsdk.Client{ID: tc.config.ClientID, Credentials: mgsdk.ClientCredentials{Secret: tc.config.ClientSecret}}, tc.thingErr)
 			repoCall1 := sdk.On("CreateThing", mock.Anything, tc.domainID, tc.token).Return(mgsdk.Client{}, tc.createThingErr)
 			repoCall2 := sdk.On("DeleteThing", tc.config.ClientID, tc.domainID, tc.token).Return(tc.deleteThingErr)
 			repoCall3 := boot.On("ListExisting", context.Background(), tc.domainID, mock.Anything).Return(tc.config.Channels, tc.listExistingErr)
@@ -324,18 +324,18 @@ func TestUpdateCert(t *testing.T) {
 			caCert:     "newCert",
 			token:      validToken,
 			expectedConfig: bootstrap.Config{
-				Name:        c.Name,
-				ThingKey:    c.ThingKey,
-				Channels:    c.Channels,
-				ExternalID:  c.ExternalID,
-				ExternalKey: c.ExternalKey,
-				Content:     c.Content,
-				State:       c.State,
-				DomainID:    c.DomainID,
-				ClientID:    c.ClientID,
-				ClientCert:  "newCert",
-				CACert:      "newCert",
-				ClientKey:   "newKey",
+				Name:         c.Name,
+				ClientSecret: c.ClientSecret,
+				Channels:     c.Channels,
+				ExternalID:   c.ExternalID,
+				ExternalKey:  c.ExternalKey,
+				Content:      c.Content,
+				State:        c.State,
+				DomainID:     c.DomainID,
+				ClientID:     c.ClientID,
+				ClientCert:   "newCert",
+				CACert:       "newCert",
+				ClientKey:    "newKey",
 			},
 			err: nil,
 		},
@@ -722,7 +722,7 @@ func TestList(t *testing.T) {
 				SubjectType: policysvc.UserType,
 				Subject:     tc.userID,
 				Permission:  policysvc.ViewPermission,
-				ObjectType:  policysvc.ThingType,
+				ObjectType:  policysvc.ClientType,
 			}).Return(tc.listObjectsResponse, tc.listObjectsErr)
 			repoCall := boot.On("RetrieveAll", context.Background(), mock.Anything, mock.Anything, tc.filter, tc.offset, tc.limit).Return(tc.config, tc.retrieveErr)
 
@@ -920,8 +920,8 @@ func TestChangeState(t *testing.T) {
 			token:      validToken,
 			userID:     validID,
 			domainID:   domainID,
-			connectErr: errors.NewSDKError(bootstrap.ErrThings),
-			err:        bootstrap.ErrThings,
+			connectErr: errors.NewSDKError(bootstrap.ErrClients),
+			err:        bootstrap.ErrClients,
 		},
 		{
 			desc:     "change state with invalid state",

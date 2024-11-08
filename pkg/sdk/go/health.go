@@ -32,7 +32,7 @@ type HealthInfo struct {
 func (sdk mgSDK) Health(service string) (HealthInfo, errors.SDKError) {
 	var url string
 	switch service {
-	case "things":
+	case "clients":
 		url = fmt.Sprintf("%s/health", sdk.clientsURL)
 	case "users":
 		url = fmt.Sprintf("%s/health", sdk.usersURL)

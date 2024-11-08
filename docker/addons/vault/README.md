@@ -28,7 +28,7 @@ When the Vault service is started, some initialization steps need to be done to 
 | MG_VAULT_PKI_CLUSTER_AIA_PATH           | Vault Root CA Cluster AIA Path                                                | http://localhost                      |
 | MG_VAULT_PKI_INT_PATH                   | Vault secrets engine path for Intermediate CA                                 | pki_int                               |
 | MG_VAULT_PKI_INT_SERVER_CERTS_ROLE_NAME | Vault Intermediate CA role name to issue server certificate                   | magistrala_server_certs               |
-| MG_VAULT_PKI_INT_THINGS_CERTS_ROLE_NAME | Vault Intermediate CA role name to issue Things certificates                  | magistrala_things_certs               |
+| MG_VAULT_PKI_INT_THINGS_CERTS_ROLE_NAME | Vault Intermediate CA role name to issue Things certificates                  | magistrala_clients_certs               |
 | MG_VAULT_PKI_INT_FILE_NAME              | Intermediate CA Certificates name used by`vault_set_pki.sh`                   | mg_root                               |
 | MG_VAULT_PKI_INT_CA_CN                  | Common name used for Intermediate CA creation by`vault_set_pki.sh`            | Magistrala Root Certificate Authority |
 | MG_VAULT_PKI_INT_CA_OU                  | Organization unit used for Root CA creation by`vault_set_pki.sh`              | Magistrala                            |
@@ -169,19 +169,19 @@ token_policies       ["root"]
 identity_policies    []
 policies             ["root"]
 Creating new policy for AppRole
-Successfully copied 2.56kB to magistrala-vault:/vault/magistrala_things_certs_issue.hcl
-Success! Uploaded policy: magistrala_things_certs_issue
+Successfully copied 2.56kB to magistrala-vault:/vault/magistrala_clients_certs_issue.hcl
+Success! Uploaded policy: magistrala_clients_certs_issue
 Enabling AppRole
 Success! Enabled approle auth method at: approle/
 Deleting old AppRole
-Success! Data deleted (if it existed) at: auth/approle/role/magistrala_things_certs_issuer
+Success! Data deleted (if it existed) at: auth/approle/role/magistrala_clients_certs_issuer
 Creating new AppRole
-Success! Data written to: auth/approle/role/magistrala_things_certs_issuer
+Success! Data written to: auth/approle/role/magistrala_clients_certs_issuer
 Writing custom role ID
 Key        Value
 ---        -----
 role_id    f23942b3-62b9-7456-784f-220ca3f703b9
-Success! Data written to: auth/approle/role/magistrala_things_certs_issuer/role-id
+Success! Data written to: auth/approle/role/magistrala_clients_certs_issuer/role-id
 Writing custom secret
 Key                   Value
 ---                   -----
@@ -196,10 +196,10 @@ token                   <token_value>
 token_accessor          9cuwS4mrLHKhJQMv0pl9Bbg9
 token_duration          1h
 token_renewable         true
-token_policies          ["default" "magistrala_things_certs_issue"]
+token_policies          ["default" "magistrala_clients_certs_issue"]
 identity_policies       []
-policies                ["default" "magistrala_things_certs_issue"]
-token_meta_role_name    magistrala_things_certs_issuer
+policies                ["default" "magistrala_clients_certs_issue"]
+token_meta_role_name    magistrala_clients_certs_issuer
 ```
 
 By default, the `vault_create_approle.sh` script tries to enable the AppRole authentication method. Certs service uses the approle credentials to issue and revoke things certificate from vault intermedate CA. If AppRole is already enabled, you can skip this step by passing the `--skip-enable-approle` argument:

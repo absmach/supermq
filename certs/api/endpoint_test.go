@@ -31,11 +31,11 @@ var (
 	contentType = "application/json"
 	valid       = "valid"
 	invalid     = "invalid"
-	thingID     = testsutil.GenerateUUID(&testing.T{})
+	clientID    = testsutil.GenerateUUID(&testing.T{})
 	serial      = testsutil.GenerateUUID(&testing.T{})
 	ttl         = "1h"
 	cert        = certs.Cert{
-		ThingID:      thingID,
+		ThingID:      clientID,
 		SerialNumber: serial,
 		ExpiryTime:   time.Now().Add(time.Hour),
 	}
@@ -79,8 +79,8 @@ func TestIssueCert(t *testing.T) {
 	cs, svc, auth := newCertServer()
 	defer cs.Close()
 
-	validReqString := `{"thing_id": "%s","ttl": "%s"}`
-	invalidReqString := `{"thing_id": "%s","ttl": %s}`
+	validReqString := `{"client_id": "%s","ttl": "%s"}`
+	invalidReqString := `{"client_id": "%s","ttl": %s}`
 
 	cases := []struct {
 		desc            string
@@ -88,7 +88,7 @@ func TestIssueCert(t *testing.T) {
 		token           string
 		session         mgauthn.Session
 		contentType     string
-		thingID         string
+		clientID        string
 		ttl             string
 		request         string
 		status          int
@@ -102,9 +102,9 @@ func TestIssueCert(t *testing.T) {
 			token:       valid,
 			domainID:    valid,
 			contentType: contentType,
-			thingID:     thingID,
+			clientID:    clientID,
 			ttl:         ttl,
-			request:     fmt.Sprintf(validReqString, thingID, ttl),
+			request:     fmt.Sprintf(validReqString, clientID, ttl),
 			status:      http.StatusCreated,
 			svcRes:      certs.Cert{SerialNumber: serial},
 			svcErr:      nil,
@@ -115,9 +115,9 @@ func TestIssueCert(t *testing.T) {
 			token:       valid,
 			domainID:    valid,
 			contentType: contentType,
-			thingID:     thingID,
+			clientID:    clientID,
 			ttl:         ttl,
-			request:     fmt.Sprintf(validReqString, thingID, ttl),
+			request:     fmt.Sprintf(validReqString, clientID, ttl),
 			status:      http.StatusUnprocessableEntity,
 			svcRes:      certs.Cert{},
 			svcErr:      svcerr.ErrCreateEntity,
@@ -127,9 +127,9 @@ func TestIssueCert(t *testing.T) {
 			desc:            "issue with invalid token",
 			token:           invalid,
 			contentType:     contentType,
-			thingID:         thingID,
+			clientID:        clientID,
 			ttl:             ttl,
-			request:         fmt.Sprintf(validReqString, thingID, ttl),
+			request:         fmt.Sprintf(validReqString, clientID, ttl),
 			status:          http.StatusUnauthorized,
 			svcRes:          certs.Cert{},
 			authenticateErr: svcerr.ErrAuthentication,
@@ -139,7 +139,7 @@ func TestIssueCert(t *testing.T) {
 			desc:        "issue with empty token",
 			domainID:    valid,
 			contentType: contentType,
-			request:     fmt.Sprintf(validReqString, thingID, ttl),
+			request:     fmt.Sprintf(validReqString, clientID, ttl),
 			status:      http.StatusUnauthorized,
 			svcRes:      certs.Cert{},
 			svcErr:      nil,
@@ -150,7 +150,7 @@ func TestIssueCert(t *testing.T) {
 			token:       valid,
 			domainID:    "",
 			contentType: contentType,
-			request:     fmt.Sprintf(validReqString, thingID, ttl),
+			request:     fmt.Sprintf(validReqString, clientID, ttl),
 			status:      http.StatusBadRequest,
 			svcRes:      certs.Cert{},
 			svcErr:      nil,
@@ -172,7 +172,7 @@ func TestIssueCert(t *testing.T) {
 			token:       valid,
 			domainID:    valid,
 			contentType: contentType,
-			request:     fmt.Sprintf(validReqString, thingID, ""),
+			request:     fmt.Sprintf(validReqString, clientID, ""),
 			status:      http.StatusBadRequest,
 			svcRes:      certs.Cert{},
 			svcErr:      nil,
@@ -183,7 +183,7 @@ func TestIssueCert(t *testing.T) {
 			token:       valid,
 			domainID:    valid,
 			contentType: contentType,
-			request:     fmt.Sprintf(validReqString, thingID, invalid),
+			request:     fmt.Sprintf(validReqString, clientID, invalid),
 			status:      http.StatusBadRequest,
 			svcRes:      certs.Cert{},
 			svcErr:      nil,
@@ -194,7 +194,7 @@ func TestIssueCert(t *testing.T) {
 			token:       valid,
 			domainID:    valid,
 			contentType: "application/xml",
-			request:     fmt.Sprintf(validReqString, thingID, ttl),
+			request:     fmt.Sprintf(validReqString, clientID, ttl),
 			status:      http.StatusUnsupportedMediaType,
 			svcRes:      certs.Cert{},
 			svcErr:      nil,
@@ -205,7 +205,7 @@ func TestIssueCert(t *testing.T) {
 			token:       valid,
 			domainID:    valid,
 			contentType: contentType,
-			request:     fmt.Sprintf(invalidReqString, thingID, ttl),
+			request:     fmt.Sprintf(invalidReqString, clientID, ttl),
 			status:      http.StatusInternalServerError,
 			svcRes:      certs.Cert{},
 			svcErr:      nil,
@@ -227,7 +227,7 @@ func TestIssueCert(t *testing.T) {
 				tc.session = mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := svc.On("IssueCert", mock.Anything, tc.domainID, tc.token, tc.thingID, tc.ttl).Return(tc.svcRes, tc.svcErr)
+			svcCall := svc.On("IssueCert", mock.Anything, tc.domainID, tc.token, tc.clientID, tc.ttl).Return(tc.svcRes, tc.svcErr)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			var errRes respBody
@@ -448,7 +448,7 @@ func TestListSerials(t *testing.T) {
 			desc:     "list certs successfully with default limit",
 			domainID: valid,
 			token:    valid,
-			thingID:  thingID,
+			thingID:  clientID,
 			revoked:  revoked,
 			offset:   0,
 			limit:    10,
@@ -467,7 +467,7 @@ func TestListSerials(t *testing.T) {
 			desc:     "list certs successfully with default revoke",
 			domainID: valid,
 			token:    valid,
-			thingID:  thingID,
+			thingID:  clientID,
 			revoked:  revoked,
 			offset:   0,
 			limit:    10,
@@ -486,7 +486,7 @@ func TestListSerials(t *testing.T) {
 			desc:     "list certs successfully with all certs",
 			domainID: valid,
 			token:    valid,
-			thingID:  thingID,
+			thingID:  clientID,
 			revoked:  "all",
 			offset:   0,
 			limit:    10,
@@ -505,7 +505,7 @@ func TestListSerials(t *testing.T) {
 			desc:     "list certs successfully with limit",
 			domainID: valid,
 			token:    valid,
-			thingID:  thingID,
+			thingID:  clientID,
 			revoked:  revoked,
 			offset:   0,
 			limit:    5,
@@ -524,7 +524,7 @@ func TestListSerials(t *testing.T) {
 			desc:     "list certs successfully with offset",
 			domainID: valid,
 			token:    valid,
-			thingID:  thingID,
+			thingID:  clientID,
 			revoked:  revoked,
 			offset:   1,
 			limit:    10,
@@ -543,7 +543,7 @@ func TestListSerials(t *testing.T) {
 			desc:     "list certs successfully with offset and limit",
 			domainID: valid,
 			token:    valid,
-			thingID:  thingID,
+			thingID:  clientID,
 			revoked:  revoked,
 			offset:   1,
 			limit:    5,
@@ -562,7 +562,7 @@ func TestListSerials(t *testing.T) {
 			desc:            "list with invalid token",
 			domainID:        valid,
 			token:           invalid,
-			thingID:         thingID,
+			thingID:         clientID,
 			revoked:         revoked,
 			offset:          0,
 			limit:           10,
@@ -576,7 +576,7 @@ func TestListSerials(t *testing.T) {
 			desc:     "list with empty token",
 			domainID: valid,
 			token:    "",
-			thingID:  thingID,
+			thingID:  clientID,
 			revoked:  revoked,
 			offset:   0,
 			limit:    10,
@@ -590,7 +590,7 @@ func TestListSerials(t *testing.T) {
 			desc:     "list with limit exceeding max limit",
 			domainID: valid,
 			token:    valid,
-			thingID:  thingID,
+			thingID:  clientID,
 			revoked:  revoked,
 			query:    "?limit=1000",
 			status:   http.StatusBadRequest,
@@ -602,7 +602,7 @@ func TestListSerials(t *testing.T) {
 			desc:     "list with invalid offset",
 			domainID: valid,
 			token:    valid,
-			thingID:  thingID,
+			thingID:  clientID,
 			revoked:  revoked,
 			query:    "?offset=invalid",
 			status:   http.StatusBadRequest,
@@ -614,7 +614,7 @@ func TestListSerials(t *testing.T) {
 			desc:     "list with invalid limit",
 			domainID: valid,
 			token:    valid,
-			thingID:  thingID,
+			thingID:  clientID,
 			revoked:  revoked,
 			query:    "?limit=invalid",
 			status:   http.StatusBadRequest,

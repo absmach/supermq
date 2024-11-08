@@ -28,7 +28,7 @@ const (
 
 // Things commands
 const (
-	thsCmd     = "things"
+	cliCmd     = "clients"
 	connsCmd   = "connections"
 	connCmd    = "connect"
 	disconnCmd = "disconnect"

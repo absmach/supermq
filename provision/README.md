@@ -56,7 +56,7 @@ Example of provision layout below
 
 ```toml
 [[things]]
-  name = "thing"
+  name = "client"
 
   [things.metadata]
     external_id = "xxxxxx"
@@ -133,14 +133,14 @@ Or if you want to specify a name for thing different than in `config.toml` you c
 }
 ```
 
-Response contains created things, channels and certificates if any:
+Response contains created clients, channels and certificates if any:
 
 ```json
 {
-  "things": [
+  "clients": [
     {
       "id": "c22b0c0f-8c03-40da-a06b-37ed3a72c8d1",
-      "name": "thing",
+      "name": "client",
       "key": "007cce56-e0eb-40d6-b2b9-ed348a97d1eb",
       "metadata": {
         "external_id": "33:52:79:C3:43"
@@ -174,10 +174,10 @@ Response contains created things, channels and certificates if any:
 Provision service has `/certs` endpoint that can be used to generate certificates for things when mTLS is required:
 
 - `users_token` - users authentication token or API token
-- `thing_id` - id of the thing for which certificate is going to be generated
+- `client_id` - id of the thing for which certificate is going to be generated
 
 ```bash
-curl -s  -X POST  http://localhost:8190/certs -H "Authorization: Bearer <users_token>" -H 'Content-Type: application/json'   -d '{"thing_id": "<thing_id>", "ttl":"2400h" }'
+curl -s  -X POST  http://localhost:8190/certs -H "Authorization: Bearer <users_token>" -H 'Content-Type: application/json'   -d '{"client_id": "<client_id>", "ttl":"2400h" }'
 ```
 
 ```json

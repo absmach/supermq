@@ -468,8 +468,8 @@ func (svc service) Delete(ctx context.Context, session authn.Session, id string)
 func (svc service) ListMembers(ctx context.Context, session authn.Session, objectKind, objectID string, pm Page) (MembersPage, error) {
 	var objectType string
 	switch objectKind {
-	case policies.ThingsKind:
-		objectType = policies.ThingType
+	case policies.ClientsKind:
+		objectType = policies.ClientType
 	case policies.DomainsKind:
 		objectType = policies.DomainType
 	case policies.GroupsKind:

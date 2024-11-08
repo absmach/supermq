@@ -184,7 +184,7 @@ func (svc service) Authorize(ctx context.Context, pr policies.Policy) error {
 			return errors.Wrap(svcerr.ErrAuthentication, err)
 		}
 		if key.Subject == "" {
-			if pr.ObjectType == policies.GroupType || pr.ObjectType == policies.ThingType || pr.ObjectType == policies.DomainType {
+			if pr.ObjectType == policies.GroupType || pr.ObjectType == policies.ClientType || pr.ObjectType == policies.DomainType {
 				return svcerr.ErrDomainAuthorization
 			}
 			return svcerr.ErrAuthentication
@@ -199,8 +199,8 @@ func (svc service) Authorize(ctx context.Context, pr policies.Policy) error {
 }
 
 func (svc service) checkPolicy(ctx context.Context, pr policies.Policy) error {
-	// Domain status is required for if user sent authorization request on things, channels, groups and domains
-	if pr.SubjectType == policies.UserType && (pr.ObjectType == policies.GroupType || pr.ObjectType == policies.ThingType || pr.ObjectType == policies.DomainType) {
+	// Domain status is required for if user sent authorization request on clients, channels, groups and domains
+	if pr.SubjectType == policies.UserType && (pr.ObjectType == policies.GroupType || pr.ObjectType == policies.ClientType || pr.ObjectType == policies.DomainType) {
 		domainID := pr.Domain
 		if domainID == "" {
 			if pr.ObjectType != policies.DomainType {

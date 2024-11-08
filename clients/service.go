@@ -39,7 +39,7 @@ type service struct {
 
 // NewService returns a new Clients service implementation.
 func NewService(repo Repository, policy policies.Service, cache Cache, channels grpcChannelsV1.ChannelsServiceClient, groups grpcGroupsV1.GroupsServiceClient, idProvider mg.IDProvider, sIDProvider mg.IDProvider) (Service, error) {
-	rpms, err := roles.NewProvisionManageService(policies.ThingType, repo, policy, sIDProvider, AvailableActions(), BuiltInRoles())
+	rpms, err := roles.NewProvisionManageService(policies.ClientType, repo, policy, sIDProvider, AvailableActions(), BuiltInRoles())
 	if err != nil {
 		return service{}, err
 	}
@@ -109,7 +109,7 @@ func (svc service) CreateClients(ctx context.Context, session authn.Session, cls
 				SubjectType: policies.DomainType,
 				Subject:     session.DomainID,
 				Relation:    policies.DomainRelation,
-				ObjectType:  policies.ThingType,
+				ObjectType:  policies.ClientType,
 				Object:      clientID,
 			},
 		)
@@ -197,7 +197,7 @@ func (svc service) listUserClientPermission(ctx context.Context, userID, clientI
 		SubjectType: policies.UserType,
 		Subject:     userID,
 		Object:      clientID,
-		ObjectType:  policies.ThingType,
+		ObjectType:  policies.ClientType,
 	}, []string{})
 	if err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrAuthorization, err)
@@ -210,7 +210,7 @@ func (svc service) listClientIDs(ctx context.Context, userID, permission string)
 		SubjectType: policies.UserType,
 		Subject:     userID,
 		Permission:  permission,
-		ObjectType:  policies.ThingType,
+		ObjectType:  policies.ClientType,
 	})
 	if err != nil {
 		return nil, errors.Wrap(svcerr.ErrNotFound, err)
@@ -224,7 +224,7 @@ func (svc service) filterAllowedClientIDs(ctx context.Context, userID, permissio
 		SubjectType: policies.UserType,
 		Subject:     userID,
 		Permission:  permission,
-		ObjectType:  policies.ThingType,
+		ObjectType:  policies.ClientType,
 	})
 	if err != nil {
 		return nil, errors.Wrap(svcerr.ErrNotFound, err)
@@ -349,7 +349,7 @@ func (svc service) SetParentGroup(ctx context.Context, session authn.Session, pa
 		SubjectType: policies.GroupType,
 		Subject:     parentGroupID,
 		Relation:    policies.ParentGroupRelation,
-		ObjectType:  policies.ThingType,
+		ObjectType:  policies.ClientType,
 		Object:      id,
 	})
 
@@ -384,7 +384,7 @@ func (svc service) RemoveParentGroup(ctx context.Context, session authn.Session,
 			SubjectType: policies.GroupType,
 			Subject:     th.ParentGroup,
 			Relation:    policies.ParentGroupRelation,
-			ObjectType:  policies.ThingType,
+			ObjectType:  policies.ClientType,
 			Object:      id,
 		})
 
@@ -414,7 +414,7 @@ func (svc service) Delete(ctx context.Context, session authn.Session, id string)
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	if ok {
-		if _, err := svc.channels.RemoveThingConnections(ctx, &grpcChannelsV1.RemoveThingConnectionsReq{ThingId: id}); err != nil {
+		if _, err := svc.channels.RemoveThingConnections(ctx, &grpcChannelsV1.RemoveThingConnectionsReq{ClientId: id}); err != nil {
 			return errors.Wrap(svcerr.ErrRemoveEntity, err)
 		}
 	}
@@ -429,11 +429,11 @@ func (svc service) Delete(ctx context.Context, session authn.Session, id string)
 
 	filterDeletePolicies := []policies.Policy{
 		{
-			SubjectType: policies.ThingType,
+			SubjectType: policies.ClientType,
 			Subject:     id,
 		},
 		{
-			ObjectType: policies.ThingType,
+			ObjectType: policies.ClientType,
 			Object:     id,
 		},
 	}
@@ -442,7 +442,7 @@ func (svc service) Delete(ctx context.Context, session authn.Session, id string)
 			SubjectType: policies.DomainType,
 			Subject:     session.DomainID,
 			Relation:    policies.DomainRelation,
-			ObjectType:  policies.ThingType,
+			ObjectType:  policies.ClientType,
 			Object:      id,
 		},
 	}

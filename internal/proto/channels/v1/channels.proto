@@ -14,7 +14,7 @@ service ChannelsService {
 }
 
 message RemoveThingConnectionsReq {
-  string thing_id = 1;
+  string client_id = 1;
 }
 
 message RemoveThingConnectionsRes {}

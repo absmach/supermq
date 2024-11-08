@@ -133,12 +133,12 @@ jobs:
           report: false
           args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
-      - name: Run Things API tests
+      - name: Run Clients API tests
         if: steps.changes.outputs.things == 'true'
         uses: schemathesis/action@v1
         with:
-          schema: api/openapi/things.yml
-          base-url: ${{ env.THINGS_URL }}
+          schema: api/openapi/clients.yml
+          base-url: ${{ env.CLIENTS_URL }}
           checks: all
           report: false
           args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
@@ -151,7 +151,7 @@ jobs:
           base-url: ${{ env.HTTP_ADAPTER_URL }}
           checks: all
           report: false
-          args: '--header "Authorization: Thing ${{ env.THING_SECRET }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
+          args: '--header "Authorization: Client ${{ env.CLIENT_SECRET }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
 
       - name: Run Invitations API tests
         if: steps.changes.outputs.invitations == 'true'

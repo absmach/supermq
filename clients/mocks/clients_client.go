@@ -9,11 +9,11 @@ package mocks
 import (
 	context "context"
 
+	clientsv1 "github.com/absmach/magistrala/internal/grpc/clients/v1"
+
 	grpc "google.golang.org/grpc"
 
 	mock "github.com/stretchr/testify/mock"
-
-	thingsv1 "github.com/absmach/magistrala/internal/grpc/things/v1"
 
 	v1 "github.com/absmach/magistrala/internal/grpc/common/v1"
 )
@@ -106,7 +106,7 @@ func (_c *ClientsServiceClient_AddConnections_Call) RunAndReturn(run func(contex
 }
 
 // Authenticate provides a mock function with given fields: ctx, in, opts
-func (_m *ClientsServiceClient) Authenticate(ctx context.Context, in *thingsv1.AuthnReq, opts ...grpc.CallOption) (*thingsv1.AuthnRes, error) {
+func (_m *ClientsServiceClient) Authenticate(ctx context.Context, in *clientsv1.AuthnReq, opts ...grpc.CallOption) (*clientsv1.AuthnRes, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -120,20 +120,20 @@ func (_m *ClientsServiceClient) Authenticate(ctx context.Context, in *thingsv1.A
 		panic("no return value specified for Authenticate")
 	}
 
-	var r0 *thingsv1.AuthnRes
+	var r0 *clientsv1.AuthnRes
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *thingsv1.AuthnReq, ...grpc.CallOption) (*thingsv1.AuthnRes, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *clientsv1.AuthnReq, ...grpc.CallOption) (*clientsv1.AuthnRes, error)); ok {
 		return rf(ctx, in, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *thingsv1.AuthnReq, ...grpc.CallOption) *thingsv1.AuthnRes); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *clientsv1.AuthnReq, ...grpc.CallOption) *clientsv1.AuthnRes); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*thingsv1.AuthnRes)
+			r0 = ret.Get(0).(*clientsv1.AuthnRes)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *thingsv1.AuthnReq, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *clientsv1.AuthnReq, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -149,14 +149,14 @@ type ClientsServiceClient_Authenticate_Call struct {
 
 // Authenticate is a helper method to define mock.On call
 //   - ctx context.Context
-//   - in *thingsv1.AuthnReq
+//   - in *clientsv1.AuthnReq
 //   - opts ...grpc.CallOption
 func (_e *ClientsServiceClient_Expecter) Authenticate(ctx interface{}, in interface{}, opts ...interface{}) *ClientsServiceClient_Authenticate_Call {
 	return &ClientsServiceClient_Authenticate_Call{Call: _e.mock.On("Authenticate",
 		append([]interface{}{ctx, in}, opts...)...)}
 }
 
-func (_c *ClientsServiceClient_Authenticate_Call) Run(run func(ctx context.Context, in *thingsv1.AuthnReq, opts ...grpc.CallOption)) *ClientsServiceClient_Authenticate_Call {
+func (_c *ClientsServiceClient_Authenticate_Call) Run(run func(ctx context.Context, in *clientsv1.AuthnReq, opts ...grpc.CallOption)) *ClientsServiceClient_Authenticate_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		variadicArgs := make([]grpc.CallOption, len(args)-2)
 		for i, a := range args[2:] {
@@ -164,23 +164,23 @@ func (_c *ClientsServiceClient_Authenticate_Call) Run(run func(ctx context.Conte
 				variadicArgs[i] = a.(grpc.CallOption)
 			}
 		}
-		run(args[0].(context.Context), args[1].(*thingsv1.AuthnReq), variadicArgs...)
+		run(args[0].(context.Context), args[1].(*clientsv1.AuthnReq), variadicArgs...)
 	})
 	return _c
 }
 
-func (_c *ClientsServiceClient_Authenticate_Call) Return(_a0 *thingsv1.AuthnRes, _a1 error) *ClientsServiceClient_Authenticate_Call {
+func (_c *ClientsServiceClient_Authenticate_Call) Return(_a0 *clientsv1.AuthnRes, _a1 error) *ClientsServiceClient_Authenticate_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *ClientsServiceClient_Authenticate_Call) RunAndReturn(run func(context.Context, *thingsv1.AuthnReq, ...grpc.CallOption) (*thingsv1.AuthnRes, error)) *ClientsServiceClient_Authenticate_Call {
+func (_c *ClientsServiceClient_Authenticate_Call) RunAndReturn(run func(context.Context, *clientsv1.AuthnReq, ...grpc.CallOption) (*clientsv1.AuthnRes, error)) *ClientsServiceClient_Authenticate_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // RemoveChannelConnections provides a mock function with given fields: ctx, in, opts
-func (_m *ClientsServiceClient) RemoveChannelConnections(ctx context.Context, in *thingsv1.RemoveChannelConnectionsReq, opts ...grpc.CallOption) (*thingsv1.RemoveChannelConnectionsRes, error) {
+func (_m *ClientsServiceClient) RemoveChannelConnections(ctx context.Context, in *clientsv1.RemoveChannelConnectionsReq, opts ...grpc.CallOption) (*clientsv1.RemoveChannelConnectionsRes, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -194,20 +194,20 @@ func (_m *ClientsServiceClient) RemoveChannelConnections(ctx context.Context, in
 		panic("no return value specified for RemoveChannelConnections")
 	}
 
-	var r0 *thingsv1.RemoveChannelConnectionsRes
+	var r0 *clientsv1.RemoveChannelConnectionsRes
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *thingsv1.RemoveChannelConnectionsReq, ...grpc.CallOption) (*thingsv1.RemoveChannelConnectionsRes, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *clientsv1.RemoveChannelConnectionsReq, ...grpc.CallOption) (*clientsv1.RemoveChannelConnectionsRes, error)); ok {
 		return rf(ctx, in, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *thingsv1.RemoveChannelConnectionsReq, ...grpc.CallOption) *thingsv1.RemoveChannelConnectionsRes); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *clientsv1.RemoveChannelConnectionsReq, ...grpc.CallOption) *clientsv1.RemoveChannelConnectionsRes); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*thingsv1.RemoveChannelConnectionsRes)
+			r0 = ret.Get(0).(*clientsv1.RemoveChannelConnectionsRes)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *thingsv1.RemoveChannelConnectionsReq, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *clientsv1.RemoveChannelConnectionsReq, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -223,14 +223,14 @@ type ClientsServiceClient_RemoveChannelConnections_Call struct {
 
 // RemoveChannelConnections is a helper method to define mock.On call
 //   - ctx context.Context
-//   - in *thingsv1.RemoveChannelConnectionsReq
+//   - in *clientsv1.RemoveChannelConnectionsReq
 //   - opts ...grpc.CallOption
 func (_e *ClientsServiceClient_Expecter) RemoveChannelConnections(ctx interface{}, in interface{}, opts ...interface{}) *ClientsServiceClient_RemoveChannelConnections_Call {
 	return &ClientsServiceClient_RemoveChannelConnections_Call{Call: _e.mock.On("RemoveChannelConnections",
 		append([]interface{}{ctx, in}, opts...)...)}
 }
 
-func (_c *ClientsServiceClient_RemoveChannelConnections_Call) Run(run func(ctx context.Context, in *thingsv1.RemoveChannelConnectionsReq, opts ...grpc.CallOption)) *ClientsServiceClient_RemoveChannelConnections_Call {
+func (_c *ClientsServiceClient_RemoveChannelConnections_Call) Run(run func(ctx context.Context, in *clientsv1.RemoveChannelConnectionsReq, opts ...grpc.CallOption)) *ClientsServiceClient_RemoveChannelConnections_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		variadicArgs := make([]grpc.CallOption, len(args)-2)
 		for i, a := range args[2:] {
@@ -238,17 +238,17 @@ func (_c *ClientsServiceClient_RemoveChannelConnections_Call) Run(run func(ctx c
 				variadicArgs[i] = a.(grpc.CallOption)
 			}
 		}
-		run(args[0].(context.Context), args[1].(*thingsv1.RemoveChannelConnectionsReq), variadicArgs...)
+		run(args[0].(context.Context), args[1].(*clientsv1.RemoveChannelConnectionsReq), variadicArgs...)
 	})
 	return _c
 }
 
-func (_c *ClientsServiceClient_RemoveChannelConnections_Call) Return(_a0 *thingsv1.RemoveChannelConnectionsRes, _a1 error) *ClientsServiceClient_RemoveChannelConnections_Call {
+func (_c *ClientsServiceClient_RemoveChannelConnections_Call) Return(_a0 *clientsv1.RemoveChannelConnectionsRes, _a1 error) *ClientsServiceClient_RemoveChannelConnections_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *ClientsServiceClient_RemoveChannelConnections_Call) RunAndReturn(run func(context.Context, *thingsv1.RemoveChannelConnectionsReq, ...grpc.CallOption) (*thingsv1.RemoveChannelConnectionsRes, error)) *ClientsServiceClient_RemoveChannelConnections_Call {
+func (_c *ClientsServiceClient_RemoveChannelConnections_Call) RunAndReturn(run func(context.Context, *clientsv1.RemoveChannelConnectionsReq, ...grpc.CallOption) (*clientsv1.RemoveChannelConnectionsRes, error)) *ClientsServiceClient_RemoveChannelConnections_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -476,7 +476,7 @@ func (_c *ClientsServiceClient_RetrieveEntity_Call) RunAndReturn(run func(contex
 }
 
 // UnsetParentGroupFromClient provides a mock function with given fields: ctx, in, opts
-func (_m *ClientsServiceClient) UnsetParentGroupFromClient(ctx context.Context, in *thingsv1.UnsetParentGroupFromClientReq, opts ...grpc.CallOption) (*thingsv1.UnsetParentGroupFromClientRes, error) {
+func (_m *ClientsServiceClient) UnsetParentGroupFromClient(ctx context.Context, in *clientsv1.UnsetParentGroupFromClientReq, opts ...grpc.CallOption) (*clientsv1.UnsetParentGroupFromClientRes, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -490,20 +490,20 @@ func (_m *ClientsServiceClient) UnsetParentGroupFromClient(ctx context.Context, 
 		panic("no return value specified for UnsetParentGroupFromClient")
 	}
 
-	var r0 *thingsv1.UnsetParentGroupFromClientRes
+	var r0 *clientsv1.UnsetParentGroupFromClientRes
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *thingsv1.UnsetParentGroupFromClientReq, ...grpc.CallOption) (*thingsv1.UnsetParentGroupFromClientRes, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *clientsv1.UnsetParentGroupFromClientReq, ...grpc.CallOption) (*clientsv1.UnsetParentGroupFromClientRes, error)); ok {
 		return rf(ctx, in, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *thingsv1.UnsetParentGroupFromClientReq, ...grpc.CallOption) *thingsv1.UnsetParentGroupFromClientRes); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *clientsv1.UnsetParentGroupFromClientReq, ...grpc.CallOption) *clientsv1.UnsetParentGroupFromClientRes); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*thingsv1.UnsetParentGroupFromClientRes)
+			r0 = ret.Get(0).(*clientsv1.UnsetParentGroupFromClientRes)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *thingsv1.UnsetParentGroupFromClientReq, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *clientsv1.UnsetParentGroupFromClientReq, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -519,14 +519,14 @@ type ClientsServiceClient_UnsetParentGroupFromClient_Call struct {
 
 // UnsetParentGroupFromClient is a helper method to define mock.On call
 //   - ctx context.Context
-//   - in *thingsv1.UnsetParentGroupFromClientReq
+//   - in *clientsv1.UnsetParentGroupFromClientReq
 //   - opts ...grpc.CallOption
 func (_e *ClientsServiceClient_Expecter) UnsetParentGroupFromClient(ctx interface{}, in interface{}, opts ...interface{}) *ClientsServiceClient_UnsetParentGroupFromClient_Call {
 	return &ClientsServiceClient_UnsetParentGroupFromClient_Call{Call: _e.mock.On("UnsetParentGroupFromClient",
 		append([]interface{}{ctx, in}, opts...)...)}
 }
 
-func (_c *ClientsServiceClient_UnsetParentGroupFromClient_Call) Run(run func(ctx context.Context, in *thingsv1.UnsetParentGroupFromClientReq, opts ...grpc.CallOption)) *ClientsServiceClient_UnsetParentGroupFromClient_Call {
+func (_c *ClientsServiceClient_UnsetParentGroupFromClient_Call) Run(run func(ctx context.Context, in *clientsv1.UnsetParentGroupFromClientReq, opts ...grpc.CallOption)) *ClientsServiceClient_UnsetParentGroupFromClient_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		variadicArgs := make([]grpc.CallOption, len(args)-2)
 		for i, a := range args[2:] {
@@ -534,17 +534,17 @@ func (_c *ClientsServiceClient_UnsetParentGroupFromClient_Call) Run(run func(ctx
 				variadicArgs[i] = a.(grpc.CallOption)
 			}
 		}
-		run(args[0].(context.Context), args[1].(*thingsv1.UnsetParentGroupFromClientReq), variadicArgs...)
+		run(args[0].(context.Context), args[1].(*clientsv1.UnsetParentGroupFromClientReq), variadicArgs...)
 	})
 	return _c
 }
 
-func (_c *ClientsServiceClient_UnsetParentGroupFromClient_Call) Return(_a0 *thingsv1.UnsetParentGroupFromClientRes, _a1 error) *ClientsServiceClient_UnsetParentGroupFromClient_Call {
+func (_c *ClientsServiceClient_UnsetParentGroupFromClient_Call) Return(_a0 *clientsv1.UnsetParentGroupFromClientRes, _a1 error) *ClientsServiceClient_UnsetParentGroupFromClient_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *ClientsServiceClient_UnsetParentGroupFromClient_Call) RunAndReturn(run func(context.Context, *thingsv1.UnsetParentGroupFromClientReq, ...grpc.CallOption) (*thingsv1.UnsetParentGroupFromClientRes, error)) *ClientsServiceClient_UnsetParentGroupFromClient_Call {
+func (_c *ClientsServiceClient_UnsetParentGroupFromClient_Call) RunAndReturn(run func(context.Context, *clientsv1.UnsetParentGroupFromClientReq, ...grpc.CallOption) (*clientsv1.UnsetParentGroupFromClientRes, error)) *ClientsServiceClient_UnsetParentGroupFromClient_Call {
 	_c.Call.Return(run)
 	return _c
 }

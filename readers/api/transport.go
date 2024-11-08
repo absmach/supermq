@@ -47,7 +47,7 @@ const (
 	defFormat      = "messages"
 
 	tokenKind           = "token"
-	thingType           = "thing"
+	clientType          = "client"
 	userType            = "user"
 	subscribePermission = "subscribe"
 	viewPermission      = "view"
@@ -274,7 +274,7 @@ func authenticate(ctx context.Context, req listMessagesReq, authn mgauthn.Authen
 		if !res.GetAuthenticated() {
 			return "", "", svcerr.ErrAuthentication
 		}
-		return res.GetId(), policies.ThingType, nil
+		return res.GetId(), policies.ClientType, nil
 	default:
 		return "", "", svcerr.ErrAuthentication
 	}

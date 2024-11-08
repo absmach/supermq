@@ -19,9 +19,9 @@ import (
 )
 
 var (
-	// ErrThings indicates failure to communicate with Magistrala Things service.
+	// ErrClients indicates failure to communicate with Magistrala Clients service.
 	// It can be due to networking error or invalid/unauthenticated request.
-	ErrThings = errors.New("failed to receive response from Things service")
+	ErrClients = errors.New("failed to receive response from Clients service")
 
 	// ErrExternalKey indicates a non-existent bootstrap configuration for given external key.
 	ErrExternalKey = errors.New("failed to get bootstrap configuration for given external key")
@@ -60,10 +60,10 @@ var _ Service = (*bootstrapService)(nil)
 //
 //go:generate mockery --name Service --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
 type Service interface {
-	// Add adds new Thing Config to the user identified by the provided token.
+	// Add adds new Client Config to the user identified by the provided token.
 	Add(ctx context.Context, session mgauthn.Session, token string, cfg Config) (Config, error)
 
-	// View returns Thing Config with given ID belonging to the user identified by the given token.
+	// View returns Client Config with given ID belonging to the user identified by the given token.
 	View(ctx context.Context, session mgauthn.Session, id string) (Config, error)
 
 	// Update updates editable fields of the provided Config.
@@ -83,10 +83,10 @@ type Service interface {
 	// Remove removes Config with specified token that belongs to the user identified by the given token.
 	Remove(ctx context.Context, session mgauthn.Session, id string) error
 
-	// Bootstrap returns Config to the Thing with provided external ID using external key.
+	// Bootstrap returns Config to the Client with provided external ID using external key.
 	Bootstrap(ctx context.Context, externalKey, externalID string, secure bool) (Config, error)
 
-	// ChangeState changes state of the Thing with given thing ID and domain ID.
+	// ChangeState changes state of the Client with given thing ID and domain ID.
 	ChangeState(ctx context.Context, session mgauthn.Session, token, id string, state State) error
 
 	// Methods RemoveConfig, UpdateChannel, and RemoveChannel are used as
@@ -101,11 +101,11 @@ type Service interface {
 	// RemoveChannelHandler removes Channel with id received from an event.
 	RemoveChannelHandler(ctx context.Context, id string) error
 
-	// ConnectThingHandler changes state of the Config to active when connect event occurs.
-	ConnectThingHandler(ctx context.Context, channelID, ThingID string) error
+	// ConnectClientHandler changes state of the Config to active when connect event occurs.
+	ConnectClientHandler(ctx context.Context, channelID, clientID string) error
 
-	// DisconnectThingHandler changes state of the Config to inactive when disconnect event occurs.
-	DisconnectThingHandler(ctx context.Context, channelID, ThingID string) error
+	// DisconnectClientHandler changes state of the Config to inactive when disconnect event occurs.
+	DisconnectClientHandler(ctx context.Context, channelID, clientID string) error
 }
 
 // ConfigReader is used to parse Config into format which will be encoded
@@ -166,7 +166,7 @@ func (bs bootstrapService) Add(ctx context.Context, session mgauthn.Session, tok
 	cfg.ClientID = mgThing.ID
 	cfg.DomainID = session.DomainID
 	cfg.State = Inactive
-	cfg.ThingKey = mgThing.Credentials.Secret
+	cfg.ClientSecret = mgThing.Credentials.Secret
 
 	saved, err := bs.configs.Save(ctx, cfg, toConnect)
 	if err != nil {
@@ -242,7 +242,7 @@ func (bs bootstrapService) UpdateConnections(ctx context.Context, session mgauth
 			if errors.Contains(err, repoerr.ErrNotFound) {
 				continue
 			}
-			return ErrThings
+			return ErrClients
 		}
 	}
 
@@ -252,7 +252,7 @@ func (bs bootstrapService) UpdateConnections(ctx context.Context, session mgauth
 			ClientID:  id,
 		}
 		if err := bs.sdk.Connect(conIDs, session.DomainID, token); err != nil {
-			return ErrThings
+			return ErrClients
 		}
 	}
 	if err := bs.configs.UpdateConnections(ctx, session.DomainID, id, channels, connections); err != nil {
@@ -266,7 +266,7 @@ func (bs bootstrapService) listClientIDs(ctx context.Context, userID string) ([]
 		SubjectType: policies.UserType,
 		Subject:     userID,
 		Permission:  policies.ViewPermission,
-		ObjectType:  policies.ThingType,
+		ObjectType:  policies.ClientType,
 	})
 	if err != nil {
 		return nil, errors.Wrap(svcerr.ErrNotFound, err)
@@ -345,7 +345,7 @@ func (bs bootstrapService) ChangeState(ctx context.Context, session mgauthn.Sess
 				if errors.Contains(err, svcerr.ErrConflict) {
 					continue
 				}
-				return ErrThings
+				return ErrClients
 			}
 		}
 	case Inactive:
@@ -354,7 +354,7 @@ func (bs bootstrapService) ChangeState(ctx context.Context, session mgauthn.Sess
 				if errors.Contains(err, repoerr.ErrNotFound) {
 					continue
 				}
-				return ErrThings
+				return ErrClients
 			}
 		}
 	}
@@ -372,7 +372,7 @@ func (bs bootstrapService) UpdateChannelHandler(ctx context.Context, channel Cha
 }
 
 func (bs bootstrapService) RemoveConfigHandler(ctx context.Context, id string) error {
-	if err := bs.configs.RemoveThing(ctx, id); err != nil {
+	if err := bs.configs.RemoveClient(ctx, id); err != nil {
 		return errors.Wrap(errRemoveConfig, err)
 	}
 	return nil
@@ -385,15 +385,15 @@ func (bs bootstrapService) RemoveChannelHandler(ctx context.Context, id string) 
 	return nil
 }
 
-func (bs bootstrapService) ConnectThingHandler(ctx context.Context, channelID, thingID string) error {
-	if err := bs.configs.ConnectThing(ctx, channelID, thingID); err != nil {
+func (bs bootstrapService) ConnectClientHandler(ctx context.Context, channelID, clientID string) error {
+	if err := bs.configs.ConnectClient(ctx, channelID, clientID); err != nil {
 		return errors.Wrap(errConnectClient, err)
 	}
 	return nil
 }
 
-func (bs bootstrapService) DisconnectThingHandler(ctx context.Context, channelID, thingID string) error {
-	if err := bs.configs.DisconnectThing(ctx, channelID, thingID); err != nil {
+func (bs bootstrapService) DisconnectClientHandler(ctx context.Context, channelID, clientID string) error {
+	if err := bs.configs.DisconnectClient(ctx, channelID, clientID); err != nil {
 		return errors.Wrap(errDisconnectClient, err)
 	}
 	return nil
@@ -417,7 +417,7 @@ func (bs bootstrapService) client(domainID, id, token string) (mgsdk.Client, err
 	// If Client ID is provided, then retrieve thing
 	thing, sdkErr := bs.sdk.Client(id, domainID, token)
 	if sdkErr != nil {
-		return mgsdk.Client{}, errors.Wrap(ErrThings, sdkErr)
+		return mgsdk.Client{}, errors.Wrap(ErrClients, sdkErr)
 	}
 	return thing, nil
 }

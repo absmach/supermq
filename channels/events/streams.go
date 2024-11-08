@@ -118,13 +118,14 @@ func (es *eventStore) ListChannels(ctx context.Context, session authn.Session, p
 
 	return cp, nil
 }
-func (es *eventStore) ListChannelsByThing(ctx context.Context, session authn.Session, thID string, pm channels.PageMetadata) (channels.Page, error) {
-	cp, err := es.svc.ListChannelsByThing(ctx, session, thID, pm)
+
+func (es *eventStore) ListChannelsByClient(ctx context.Context, session authn.Session, clientID string, pm channels.PageMetadata) (channels.Page, error) {
+	cp, err := es.svc.ListChannelsByClient(ctx, session, clientID, pm)
 	if err != nil {
 		return cp, err
 	}
 	event := listChannelByThingEvent{
-		thID,
+		clientID,
 		pm,
 	}
 	if err := es.Publish(ctx, event); err != nil {
@@ -133,6 +134,7 @@ func (es *eventStore) ListChannelsByThing(ctx context.Context, session authn.Ses
 
 	return cp, nil
 }
+
 func (es *eventStore) EnableChannel(ctx context.Context, session authn.Session, id string) (channels.Channel, error) {
 	cli, err := es.svc.EnableChannel(ctx, session, id)
 	if err != nil {

@@ -54,7 +54,7 @@ Example of output:
 ```
 # List of things that can be connected to MQTT broker
 [[things]]
-thing_id = "0eac601b-6d54-4767-b8b7-594aaf9990d3"
+client_id = "0eac601b-6d54-4767-b8b7-594aaf9990d3"
 thing_key = "07713103-513f-43c7-b7fe-500c1af23d7d"
 mtls_cert = """-----BEGIN CERTIFICATE-----
 MIIEmTCCA4GgAwIBAgIRAO50qOfXsU+cHm/QY2NYu+0wDQYJKoZIhvcNAQELBQAw

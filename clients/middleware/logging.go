@@ -26,7 +26,7 @@ func LoggingMiddleware(svc clients.Service, logger *slog.Logger) clients.Service
 	return &loggingMiddleware{
 		logger:                       logger,
 		svc:                          svc,
-		RoleManagerLoggingMiddleware: rmMW.NewRoleManagerLoggingMiddleware("things", svc, logger),
+		RoleManagerLoggingMiddleware: rmMW.NewRoleManagerLoggingMiddleware("clients", svc, logger),
 	}
 }
 
@@ -49,7 +49,7 @@ func (lm *loggingMiddleware) View(ctx context.Context, session authn.Session, id
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.Group("thing",
+			slog.Group("client",
 				slog.String("id", c.ID),
 				slog.String("name", c.Name),
 			),
@@ -89,7 +89,7 @@ func (lm *loggingMiddleware) Update(ctx context.Context, session authn.Session, 
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.Group("thing",
+			slog.Group("client",
 				slog.String("id", client.ID),
 				slog.String("name", client.Name),
 				slog.Any("metadata", client.Metadata),
@@ -109,7 +109,7 @@ func (lm *loggingMiddleware) UpdateTags(ctx context.Context, session authn.Sessi
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.Group("thing",
+			slog.Group("client",
 				slog.String("id", c.ID),
 				slog.String("name", c.Name),
 				slog.Any("tags", c.Tags),
@@ -129,7 +129,7 @@ func (lm *loggingMiddleware) UpdateSecret(ctx context.Context, session authn.Ses
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.Group("thing",
+			slog.Group("client",
 				slog.String("id", c.ID),
 				slog.String("name", c.Name),
 			),
@@ -148,7 +148,7 @@ func (lm *loggingMiddleware) Enable(ctx context.Context, session authn.Session, 
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.Group("thing",
+			slog.Group("client",
 				slog.String("id", id),
 				slog.String("name", c.Name),
 			),
@@ -167,7 +167,7 @@ func (lm *loggingMiddleware) Disable(ctx context.Context, session authn.Session,
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.Group("thing",
+			slog.Group("client",
 				slog.String("id", id),
 				slog.String("name", c.Name),
 			),
@@ -186,7 +186,7 @@ func (lm *loggingMiddleware) Delete(ctx context.Context, session authn.Session, 
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.String("thing_id", id),
+			slog.String("client_id", id),
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
@@ -203,7 +203,7 @@ func (lm *loggingMiddleware) SetParentGroup(ctx context.Context, session authn.S
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.String("parent_group_id", parentGroupID),
-			slog.String("thing_id", id),
+			slog.String("client_id", id),
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))

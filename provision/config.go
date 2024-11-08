@@ -63,7 +63,7 @@ type Config struct {
 	File          string             `toml:"file"      env:"MG_PROVISION_CONFIG_FILE" envDefault:"config.toml"`
 	Server        ServiceConf        `toml:"server"    mapstructure:"server"`
 	Bootstrap     Bootstrap          `toml:"bootstrap" mapstructure:"bootstrap"`
-	Things        []clients.Client   `toml:"things"    mapstructure:"things"`
+	Things        []clients.Client   `toml:"clients"   mapstructure:"clients"`
 	Channels      []channels.Channel `toml:"channels"  mapstructure:"channels"`
 	Cert          Cert               `toml:"cert"      mapstructure:"cert"`
 	BSContent     string             `env:"MG_PROVISION_BS_CONTENT" envDefault:""`

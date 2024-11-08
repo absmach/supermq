@@ -28,7 +28,7 @@ func MetricsMiddleware(svc clients.Service, counter metrics.Counter, latency met
 		counter:                      counter,
 		latency:                      latency,
 		svc:                          svc,
-		RoleManagerMetricsMiddleware: rmMW.NewRoleManagerMetricsMiddleware("things", svc, counter, latency),
+		RoleManagerMetricsMiddleware: rmMW.NewRoleManagerMetricsMiddleware("clients", svc, counter, latency),
 	}
 }
 
