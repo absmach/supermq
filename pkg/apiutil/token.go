@@ -25,8 +25,8 @@ func ExtractBearerToken(r *http.Request) string {
 	return strings.TrimPrefix(token, BearerPrefix)
 }
 
-// ExtractThingKey returns value of the thing key. If there is no thing key - an empty value is returned.
-func ExtractThingKey(r *http.Request) string {
+// ExtractClientSecret returns value of the client secret. If it's not present - an empty value is returned.
+func ExtractClientSecret(r *http.Request) string {
 	token := r.Header.Get("Authorization")
 
 	if !strings.HasPrefix(token, ClientPrefix) {

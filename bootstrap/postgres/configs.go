@@ -149,8 +149,8 @@ func (cr configRepository) RetrieveByID(ctx context.Context, domainID, id string
 	return cfg, nil
 }
 
-func (cr configRepository) RetrieveAll(ctx context.Context, domainID string, thingIDs []string, filter bootstrap.Filter, offset, limit uint64) bootstrap.ConfigsPage {
-	search, params := buildRetrieveQueryParams(domainID, thingIDs, filter)
+func (cr configRepository) RetrieveAll(ctx context.Context, domainID string, clientIDs []string, filter bootstrap.Filter, offset, limit uint64) bootstrap.ConfigsPage {
+	search, params := buildRetrieveQueryParams(domainID, clientIDs, filter)
 	n := len(params)
 
 	q := `SELECT magistrala_client, magistrala_secret, external_id, external_key, name, content, state

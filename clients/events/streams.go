@@ -13,7 +13,7 @@ import (
 	rmEvents "github.com/absmach/magistrala/pkg/roles/rolemanager/events"
 )
 
-const streamID = "magistrala.things"
+const streamID = "magistrala.clients"
 
 var _ clients.Service = (*eventStore)(nil)
 

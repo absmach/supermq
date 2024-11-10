@@ -73,7 +73,7 @@ type ConfigRepository interface {
 
 	// RetrieveAll retrieves a subset of Configs that are owned
 	// by the specific user, with given filter parameters.
-	RetrieveAll(ctx context.Context, domainID string, thingIDs []string, filter Filter, offset, limit uint64) ConfigsPage
+	RetrieveAll(ctx context.Context, domainID string, clientIDs []string, filter Filter, offset, limit uint64) ConfigsPage
 
 	// RetrieveByExternalID returns Config for given external ID.
 	RetrieveByExternalID(ctx context.Context, externalID string) (Config, error)
@@ -84,7 +84,7 @@ type ConfigRepository interface {
 
 	// UpdateCerts updates and returns an existing Config certificate and domainID.
 	// A non-nil error is returned to indicate operation failure.
-	UpdateCert(ctx context.Context, domainID, thingID, clientCert, clientKey, caCert string) (Config, error)
+	UpdateCert(ctx context.Context, domainID, clientID, clientCert, clientKey, caCert string) (Config, error)
 
 	// UpdateConnections updates a list of Channels the Config is connected to
 	// adding new Channels if needed.

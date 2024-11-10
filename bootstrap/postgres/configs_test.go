@@ -162,7 +162,7 @@ func TestRetrieveAll(t *testing.T) {
 	err := deleteChannels(context.Background(), repo)
 	require.Nil(t, err, "Channels cleanup expected to succeed.")
 
-	thingIDs := make([]string, numConfigs)
+	clientIDs := make([]string, numConfigs)
 
 	for i := 0; i < numConfigs; i++ {
 		c := config
@@ -175,7 +175,7 @@ func TestRetrieveAll(t *testing.T) {
 		c.ClientID = uid.String()
 		c.ClientSecret = uid.String()
 
-		thingIDs[i] = c.ClientID
+		clientIDs[i] = c.ClientID
 
 		if i%2 == 0 {
 			c.State = bootstrap.Active
@@ -251,7 +251,7 @@ func TestRetrieveAll(t *testing.T) {
 		{
 			desc:     "retrieve by valid thingIDs",
 			domainID: config.DomainID,
-			thingID:  thingIDs,
+			thingID:  clientIDs,
 			offset:   0,
 			limit:    uint64(numConfigs),
 			size:     10,

@@ -33,11 +33,11 @@ var namesgenerator = namegenerator.NewGenerator()
 
 // MgConn - structure describing Magistrala connection set.
 type MgConn struct {
-	ChannelID string
-	ClientID  string
-	ThingKey  string
-	MTLSCert  string
-	MTLSKey   string
+	ClientID     string
+	ClinetSecret string
+	ChannelID    string
+	MTLSCert     string
+	MTLSKey      string
 }
 
 // Config - provisioning configuration.

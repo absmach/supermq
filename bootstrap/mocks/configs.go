@@ -156,8 +156,8 @@ func (_m *ConfigRepository) RemoveClient(ctx context.Context, id string) error {
 }
 
 // RetrieveAll provides a mock function with given fields: ctx, domainID, thingIDs, filter, offset, limit
-func (_m *ConfigRepository) RetrieveAll(ctx context.Context, domainID string, thingIDs []string, filter bootstrap.Filter, offset uint64, limit uint64) bootstrap.ConfigsPage {
-	ret := _m.Called(ctx, domainID, thingIDs, filter, offset, limit)
+func (_m *ConfigRepository) RetrieveAll(ctx context.Context, domainID string, clientIDs []string, filter bootstrap.Filter, offset uint64, limit uint64) bootstrap.ConfigsPage {
+	ret := _m.Called(ctx, domainID, clientIDs, filter, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RetrieveAll")
@@ -165,7 +165,7 @@ func (_m *ConfigRepository) RetrieveAll(ctx context.Context, domainID string, th
 
 	var r0 bootstrap.ConfigsPage
 	if rf, ok := ret.Get(0).(func(context.Context, string, []string, bootstrap.Filter, uint64, uint64) bootstrap.ConfigsPage); ok {
-		r0 = rf(ctx, domainID, thingIDs, filter, offset, limit)
+		r0 = rf(ctx, domainID, clientIDs, filter, offset, limit)
 	} else {
 		r0 = ret.Get(0).(bootstrap.ConfigsPage)
 	}

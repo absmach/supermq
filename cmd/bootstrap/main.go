@@ -55,8 +55,8 @@ const (
 	defDB          = "bootstrap"
 	defSvcHTTPPort = "9013"
 
-	thingsStream = "events.magistrala.things"
-	streamID     = "magistrala.bootstrap"
+	stream   = "events.magistrala.clients"
+	streamID = "magistrala.bootstrap"
 )
 
 type config struct {
@@ -235,7 +235,7 @@ func subscribeToThingsES(ctx context.Context, svc bootstrap.Service, cfg config,
 	}
 
 	subConfig := events.SubscriberConfig{
-		Stream:   thingsStream,
+		Stream:   stream,
 		Consumer: cfg.ESConsumerName,
 		Handler:  consumer.NewEventHandler(svc),
 	}

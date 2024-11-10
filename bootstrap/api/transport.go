@@ -216,7 +216,7 @@ func decodeListRequest(_ context.Context, r *http.Request) (interface{}, error) 
 func decodeBootstrapRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	req := bootstrapReq{
 		id:  chi.URLParam(r, "externalID"),
-		key: apiutil.ExtractThingKey(r),
+		key: apiutil.ExtractClientSecret(r),
 	}
 
 	return req, nil
