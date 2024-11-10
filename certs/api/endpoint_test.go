@@ -157,7 +157,7 @@ func TestIssueCert(t *testing.T) {
 			err:         apiutil.ErrMissingDomainID,
 		},
 		{
-			desc:        "issue with empty thing id",
+			desc:        "issue with empty client id",
 			token:       valid,
 			domainID:    valid,
 			contentType: contentType,
@@ -623,7 +623,7 @@ func TestListSerials(t *testing.T) {
 			err:      apiutil.ErrValidation,
 		},
 		{
-			desc:     "list with invalid thing id",
+			desc:     "list with invalid client id",
 			domainID: valid,
 			token:    valid,
 			thingID:  invalid,

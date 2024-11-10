@@ -21,7 +21,7 @@ import (
 )
 
 var cert = mgsdk.Cert{
-	ClientID: thing.ID,
+	ClientID: client.ID,
 }
 
 func TestGetCertCmd(t *testing.T) {
@@ -46,7 +46,7 @@ func TestGetCertCmd(t *testing.T) {
 			desc: "get cert successfully",
 			args: []string{
 				"client",
-				thing.ID,
+				client.ID,
 				domainID,
 				validToken,
 			},
@@ -63,7 +63,7 @@ func TestGetCertCmd(t *testing.T) {
 		{
 			desc: "get cert successfully by id",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				validToken,
 			},
@@ -74,7 +74,7 @@ func TestGetCertCmd(t *testing.T) {
 			desc: "get cert with invalid token",
 			args: []string{
 				"client",
-				thing.ID,
+				client.ID,
 				domainID,
 				invalidToken,
 			},
@@ -85,7 +85,7 @@ func TestGetCertCmd(t *testing.T) {
 		{
 			desc: "get cert by id with invalid token",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				invalidToken,
 			},
@@ -96,7 +96,7 @@ func TestGetCertCmd(t *testing.T) {
 		{
 			desc: "get cert with invalid args",
 			args: []string{
-				thing.ID,
+				client.ID,
 			},
 			logType: usageLog,
 		},
@@ -150,7 +150,7 @@ func TestRevokeCertCmd(t *testing.T) {
 		{
 			desc: "revoke cert successfully",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				token,
 			},
@@ -161,7 +161,7 @@ func TestRevokeCertCmd(t *testing.T) {
 		{
 			desc: "revoke cert with invalid args",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				token,
 				extraArg,
@@ -171,7 +171,7 @@ func TestRevokeCertCmd(t *testing.T) {
 		{
 			desc: "revoke cert with invalid token",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				invalidToken,
 			},
@@ -221,7 +221,7 @@ func TestIssueCertCmd(t *testing.T) {
 		{
 			desc: "issue cert successfully",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				validToken,
 			},
@@ -231,7 +231,7 @@ func TestIssueCertCmd(t *testing.T) {
 		{
 			desc: "issue cert with invalid args",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				validToken,
 				extraArg,
@@ -241,7 +241,7 @@ func TestIssueCertCmd(t *testing.T) {
 		{
 			desc: "issue cert with invalid token",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				invalidToken,
 			},

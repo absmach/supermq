@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/absmach/magistrala/channels"
-	"github.com/absmach/magistrala/clients"
 	"github.com/absmach/magistrala/pkg/errors"
 	"github.com/absmach/magistrala/provision"
 	"github.com/pelletier/go-toml"
@@ -31,7 +30,7 @@ var (
 				"test": "test",
 			},
 		},
-		Things: []things.Client{
+		Clients: []things.Client{
 			{
 				ID:   "1234567890",
 				Name: "test",

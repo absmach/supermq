@@ -122,24 +122,24 @@ func (ps *provisionService) Provision(domainID, token, name, externalID, externa
 		return res, errors.Wrap(ErrFailedToCreateToken, err)
 	}
 
-	if len(ps.conf.Things) == 0 {
+	if len(ps.conf.Clients) == 0 {
 		return res, ErrEmptyThingsList
 	}
 	if len(ps.conf.Channels) == 0 {
 		return res, ErrEmptyChannelsList
 	}
-	for _, thing := range ps.conf.Things {
-		// If thing in configs contains metadata with external_id
+	for _, c := range ps.conf.Clients {
+		// If client in configs contains metadata with external_id
 		// set value for it from the provision request
-		if _, ok := thing.Metadata[externalIDKey]; ok {
-			thing.Metadata[externalIDKey] = externalID
+		if _, ok := c.Metadata[externalIDKey]; ok {
+			c.Metadata[externalIDKey] = externalID
 		}
 
 		cli := sdk.Client{
-			Metadata: thing.Metadata,
+			Metadata: c.Metadata,
 		}
 		if name == "" {
-			name = thing.Name
+			name = c.Name
 		}
 		cli.Name = name
 		cli, err := ps.sdk.CreateClient(cli, domainID, token)
@@ -148,7 +148,7 @@ func (ps *provisionService) Provision(domainID, token, name, externalID, externa
 			return res, errors.Wrap(ErrFailedThingCreation, err)
 		}
 
-		// Get newly created thing (in order to get the key).
+		// Get newly created client (in order to get the key).
 		cli, err = ps.sdk.Client(cli.ID, domainID, token)
 		if err != nil {
 			e := errors.Wrap(err, fmt.Errorf("thing id: %s", cli.ID))
@@ -184,7 +184,7 @@ func (ps *provisionService) Provision(domainID, token, name, externalID, externa
 
 	var cert sdk.Cert
 	var bsConfig sdk.BootstrapConfig
-	for _, thing := range clients {
+	for _, c := range clients {
 		var chanIDs []string
 
 		for _, ch := range channels {
@@ -195,9 +195,9 @@ func (ps *provisionService) Provision(domainID, token, name, externalID, externa
 			return Result{}, errors.Wrap(ErrFailedBootstrap, err)
 		}
 
-		if ps.conf.Bootstrap.Provision && needsBootstrap(thing) {
+		if ps.conf.Bootstrap.Provision && needsBootstrap(c) {
 			bsReq := sdk.BootstrapConfig{
-				ClientID:    thing.ID,
+				ClientID:    c.ID,
 				ExternalID:  externalID,
 				ExternalKey: externalKey,
 				Channels:    chanIDs,
@@ -220,9 +220,9 @@ func (ps *provisionService) Provision(domainID, token, name, externalID, externa
 		if ps.conf.Bootstrap.X509Provision {
 			var cert sdk.Cert
 
-			cert, err = ps.sdk.IssueCert(thing.ID, ps.conf.Cert.TTL, domainID, token)
+			cert, err = ps.sdk.IssueCert(c.ID, ps.conf.Cert.TTL, domainID, token)
 			if err != nil {
-				e := errors.Wrap(err, fmt.Errorf("thing id: %s", thing.ID))
+				e := errors.Wrap(err, fmt.Errorf("thing id: %s", c.ID))
 				return res, errors.Wrap(ErrFailedCertCreation, e)
 			}
 			cert, err := ps.sdk.ViewCert(cert.SerialNumber, domainID, token)
@@ -230,11 +230,11 @@ func (ps *provisionService) Provision(domainID, token, name, externalID, externa
 				return res, errors.Wrap(ErrFailedCertView, err)
 			}
 
-			res.ClientCert[thing.ID] = cert.Certificate
-			res.ClientKey[thing.ID] = cert.Key
+			res.ClientCert[c.ID] = cert.Certificate
+			res.ClientKey[c.ID] = cert.Key
 			res.CACert = ""
 
-			if needsBootstrap(thing) {
+			if needsBootstrap(c) {
 				if _, err = ps.sdk.UpdateBootstrapCerts(bsConfig.ClientID, cert.Certificate, cert.Key, "", domainID, token); err != nil {
 					return Result{}, errors.Wrap(ErrFailedCertCreation, err)
 				}
@@ -242,11 +242,11 @@ func (ps *provisionService) Provision(domainID, token, name, externalID, externa
 		}
 
 		if ps.conf.Bootstrap.AutoWhiteList {
-			if err := ps.sdk.Whitelist(thing.ID, Active, domainID, token); err != nil {
+			if err := ps.sdk.Whitelist(c.ID, Active, domainID, token); err != nil {
 				res.Error = err.Error()
 				return res, ErrThingUpdate
 			}
-			res.Whitelisted[thing.ID] = true
+			res.Whitelisted[c.ID] = true
 		}
 	}
 

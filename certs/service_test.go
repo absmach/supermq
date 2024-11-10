@@ -83,7 +83,7 @@ func TestIssueCert(t *testing.T) {
 			err:          certs.ErrFailedCertCreation,
 		},
 		{
-			desc:     "issue new cert for non existing thing id",
+			desc:     "issue new cert for non existing client id",
 			domainID: domain,
 			token:    token,
 			thingID:  "2",
@@ -148,7 +148,7 @@ func TestRevokeCert(t *testing.T) {
 			err:       certs.ErrFailedCertRevocation,
 		},
 		{
-			desc:     "revoke cert for invalid thing id",
+			desc:     "revoke cert for invalid client id",
 			domainID: domain,
 			token:    token,
 			thingID:  "2",

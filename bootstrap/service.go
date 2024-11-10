@@ -71,7 +71,7 @@ type Service interface {
 
 	// UpdateCert updates an existing Config certificate and token.
 	// A non-nil error is returned to indicate operation failure.
-	UpdateCert(ctx context.Context, session mgauthn.Session, thingID, clientCert, clientKey, caCert string) (Config, error)
+	UpdateCert(ctx context.Context, session mgauthn.Session, clientID, clientCert, clientKey, caCert string) (Config, error)
 
 	// UpdateConnections updates list of Channels related to given Config.
 	UpdateConnections(ctx context.Context, session mgauthn.Session, token, id string, connections []string) error
@@ -86,7 +86,7 @@ type Service interface {
 	// Bootstrap returns Config to the Client with provided external ID using external key.
 	Bootstrap(ctx context.Context, externalKey, externalID string, secure bool) (Config, error)
 
-	// ChangeState changes state of the Client with given thing ID and domain ID.
+	// ChangeState changes state of the Client with given client ID and domain ID.
 	ChangeState(ctx context.Context, session mgauthn.Session, token, id string, state State) error
 
 	// Methods RemoveConfig, UpdateChannel, and RemoveChannel are used as
@@ -170,7 +170,7 @@ func (bs bootstrapService) Add(ctx context.Context, session mgauthn.Session, tok
 
 	saved, err := bs.configs.Save(ctx, cfg, toConnect)
 	if err != nil {
-		// If id is empty, then a new thing has been created function - bs.thing(id, token)
+		// If id is empty, then a new client has been created function - bs.thing(id, token)
 		// So, on bootstrap config save error , delete the newly created thing.
 		if id == "" {
 			if errT := bs.sdk.DeleteClient(cfg.ClientID, cfg.DomainID, token); errT != nil {
@@ -202,8 +202,8 @@ func (bs bootstrapService) Update(ctx context.Context, session mgauthn.Session, 
 	return nil
 }
 
-func (bs bootstrapService) UpdateCert(ctx context.Context, session mgauthn.Session, thingID, clientCert, clientKey, caCert string) (Config, error) {
-	cfg, err := bs.configs.UpdateCert(ctx, session.DomainID, thingID, clientCert, clientKey, caCert)
+func (bs bootstrapService) UpdateCert(ctx context.Context, session mgauthn.Session, clientID, clientCert, clientKey, caCert string) (Config, error) {
+	cfg, err := bs.configs.UpdateCert(ctx, session.DomainID, clientID, clientCert, clientKey, caCert)
 	if err != nil {
 		return Config{}, errors.Wrap(errUpdateCert, err)
 	}

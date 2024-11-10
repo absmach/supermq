@@ -7,7 +7,7 @@ For gateways to communicate with [Magistrala][magistrala] configuration is requi
 
 To create bootstrap configuration you can use [Bootstrap][bootstrap] or `Provision` service. [Magistrala UI][mgxui] uses [Bootstrap][bootstrap] service for creating gateway configurations. `Provision` service should provide an easy way of provisioning your gateways i.e creating bootstrap configuration and as many clients and channels that your setup requires.
 
-Also you may use provision service to create certificates for each thing. Each service running on gateway may require more than one thing and channel for communication. Let's say that you are using services [Agent][agent] and [Export][export] on a gateway you will need two channels for `Agent` (`data` and `control`) and one for `Export` and one thing. Additionally if you enabled mtls each service will need its own thing and certificate for access to [Magistrala][magistrala]. Your setup could require any number of clients and channels this kind of setup we can call `provision layout`.
+Also you may use provision service to create certificates for each thing. Each service running on gateway may require more than one client and channel for communication. Let's say that you are using services [Agent][agent] and [Export][export] on a gateway you will need two channels for `Agent` (`data` and `control`) and one for `Export` and one thing. Additionally if you enabled mtls each service will need its own client and certificate for access to [Magistrala][magistrala]. Your setup could require any number of clients and channels this kind of setup we can call `provision layout`.
 
 Provision service provides a way of specifying this `provision layout` and creating a setup according to that layout by serving requests on `/mapping` endpoint. Provision layout is configured in [config.toml](configs/config.toml).
 
@@ -17,30 +17,30 @@ The service is configured using the environment variables presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
 
-| Variable                            | Description                                       | Default                              |
-| ----------------------------------- | ------------------------------------------------- | ------------------------------------ |
-| MG_PROVISION_LOG_LEVEL              | Service log level                                 | debug                                |
-| MG_PROVISION_USER                   | User (email) for accessing Magistrala             | <user@example.com>                   |
-| MG_PROVISION_PASS                   | Magistrala password                               | user123                              |
-| MG_PROVISION_API_KEY                | Magistrala authentication token                   |                                      |
-| MG_PROVISION_CONFIG_FILE            | Provision config file                             | config.toml                          |
-| MG_PROVISION_HTTP_PORT              | Provision service listening port                  | 9016                                 |
-| MG_PROVISION_ENV_CLIENTS_TLS        | Magistrala SDK TLS verification                   | false                                |
-| MG_PROVISION_SERVER_CERT            | Magistrala gRPC secure server cert                |                                      |
-| MG_PROVISION_SERVER_KEY             | Magistrala gRPC secure server key                 |                                      |
-| MG_PROVISION_USERS_LOCATION         | Users service URL                                 | <http://users:9002>                  |
-| MG_PROVISION_CLIENTS_LOCATION        | Clients service URL                                | <http://things:9000>                 |
-| MG_PROVISION_BS_SVC_URL             | Magistrala Bootstrap service URL                  | <http://bootstrap:9013>              |
-| MG_PROVISION_CERTS_SVC_URL          | Certificates service URL                          | <http://certs:9019>                  |
-| MG_PROVISION_X509_PROVISIONING      | Should X509 client cert be provisioned            | false                                |
-| MG_PROVISION_BS_CONFIG_PROVISIONING | Should thing config be saved in Bootstrap service | true                                 |
-| MG_PROVISION_BS_AUTO_WHITELIST      | Should thing be auto whitelisted                  | true                                 |
-| MG_PROVISION_BS_CONTENT             | Bootstrap service configs content, JSON format    | {}                                   |
-| MG_PROVISION_CERTS_RSA_BITS         | Certificate RSA bits parameter                    | 4096                                 |
-| MG_PROVISION_CERTS_HOURS_VALID      | Number of hours that certificate is valid         | "2400h"                              |
-| MG_SEND_TELEMETRY                   | Send telemetry to magistrala call home server     | true                                 |
+| Variable                            | Description                                        | Default                 |
+| ----------------------------------- | -------------------------------------------------- | ----------------------- |
+| MG_PROVISION_LOG_LEVEL              | Service log level                                  | debug                   |
+| MG_PROVISION_USER                   | User (email) for accessing Magistrala              | <user@example.com>      |
+| MG_PROVISION_PASS                   | Magistrala password                                | user123                 |
+| MG_PROVISION_API_KEY                | Magistrala authentication token                    |                         |
+| MG_PROVISION_CONFIG_FILE            | Provision config file                              | config.toml             |
+| MG_PROVISION_HTTP_PORT              | Provision service listening port                   | 9016                    |
+| MG_PROVISION_ENV_CLIENTS_TLS        | Magistrala SDK TLS verification                    | false                   |
+| MG_PROVISION_SERVER_CERT            | Magistrala gRPC secure server cert                 |                         |
+| MG_PROVISION_SERVER_KEY             | Magistrala gRPC secure server key                  |                         |
+| MG_PROVISION_USERS_LOCATION         | Users service URL                                  | <http://users:9002>     |
+| MG_PROVISION_CLIENTS_LOCATION       | Clients service URL                                | <http://things:9000>    |
+| MG_PROVISION_BS_SVC_URL             | Magistrala Bootstrap service URL                   | <http://bootstrap:9013> |
+| MG_PROVISION_CERTS_SVC_URL          | Certificates service URL                           | <http://certs:9019>     |
+| MG_PROVISION_X509_PROVISIONING      | Should X509 client cert be provisioned             | false                   |
+| MG_PROVISION_BS_CONFIG_PROVISIONING | Should client config be saved in Bootstrap service | true                    |
+| MG_PROVISION_BS_AUTO_WHITELIST      | Should client be auto whitelisted                  | true                    |
+| MG_PROVISION_BS_CONTENT             | Bootstrap service configs content, JSON format     | {}                      |
+| MG_PROVISION_CERTS_RSA_BITS         | Certificate RSA bits parameter                     | 4096                    |
+| MG_PROVISION_CERTS_HOURS_VALID      | Number of hours that certificate is valid          | "2400h"                 |
+| MG_SEND_TELEMETRY                   | Send telemetry to magistrala call home server      | true                    |
 
-By default, call to `/mapping` endpoint will create one thing and two channels (`control` and `data`) and connect it. If there is a requirement for different provision layout we can use [config](docker/configs/config.toml) file in addition to environment variables.
+By default, call to `/mapping` endpoint will create one client and two channels (`control` and `data`) and connect it. If there is a requirement for different provision layout we can use [config](docker/configs/config.toml) file in addition to environment variables.
 
 For the purposes of running provision as an add-on in docker composition environment variables seems more suitable. Environment variables are set in [.env](.env).
 
@@ -49,7 +49,7 @@ Configuration can be specified in [config.toml](configs/config.toml). Config fil
 
 In `config.toml` we can enlist array of clients and channels that we want to create and make connections between them which we call provision layout.
 
-Metadata can be whatever suits your needs except that at least one thing needs to have `external_id` (which is populated with value from [request](#example)). Thing that has `external_id` will be used for creating bootstrap configuration which can be fetched with [Agent][agent].
+Metadata can be whatever suits your needs except that at least one client needs to have `external_id` (which is populated with value from [request](#example)). Thing that has `external_id` will be used for creating bootstrap configuration which can be fetched with [Agent][agent].
 For channels metadata `type` is reserved for `control` and `data` which we use with [Agent][agent].
 
 Example of provision layout below
@@ -123,7 +123,7 @@ In the case that provision service is not deployed with credentials or API key o
 curl -s -S  -X POST  http://localhost:<MG_PROVISION_HTTP_PORT>/mapping -H "Authorization: Bearer <token|api_key>" -H 'Content-Type: application/json' -d '{"external_id": "<external_id>", "external_key": "<external_key>"}'
 ```
 
-Or if you want to specify a name for thing different than in `config.toml` you can specify post data as:
+Or if you want to specify a name for client different than in `config.toml` you can specify post data as:
 
 ```json
 {
@@ -174,7 +174,7 @@ Response contains created clients, channels and certificates if any:
 Provision service has `/certs` endpoint that can be used to generate certificates for clients when mTLS is required:
 
 - `users_token` - users authentication token or API token
-- `client_id` - id of the thing for which certificate is going to be generated
+- `client_id` - id of the client for which certificate is going to be generated
 
 ```bash
 curl -s  -X POST  http://localhost:8190/certs -H "Authorization: Bearer <users_token>" -H 'Content-Type: application/json'   -d '{"client_id": "<client_id>", "ttl":"2400h" }'

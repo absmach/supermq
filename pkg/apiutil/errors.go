@@ -24,7 +24,7 @@ var (
 	// ErrMissingClientID indicates missing client ID.
 	ErrMissingClientID = errors.New("missing cient id")
 
-	// ErrMissingChannelID indicates missing thing ID.
+	// ErrMissingChannelID indicates missing client ID.
 	ErrMissingChannelID = errors.New("missing channel id")
 
 	// ErrMissingConnectionType indicates missing connection tpye.

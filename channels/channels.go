@@ -94,11 +94,11 @@ type Service interface {
 	ListChannels(ctx context.Context, session authn.Session, pm PageMetadata) (Page, error)
 
 	// ListChannelsByClient retrieves data about subset of channels that have
-	// specified thing connected or not connected to them and belong to the user identified by
+	// specified client connected or not connected to them and belong to the user identified by
 	// the provided key.
 	ListChannelsByClient(ctx context.Context, session authn.Session, id string, pm PageMetadata) (Page, error)
 
-	// RemoveChannel removes the thing identified by the provided ID, that
+	// RemoveChannel removes the client identified by the provided ID, that
 	// belongs to the user identified by the provided key.
 	RemoveChannel(ctx context.Context, session authn.Session, id string) error
 

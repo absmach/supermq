@@ -37,7 +37,7 @@ var cmdCerts = []cobra.Command{
 	{
 		Use:   "revoke <client_id> <domain_id> <user_auth_token>",
 		Short: "Revoke certificate",
-		Long:  `Revokes a certificate for a given thing ID.`,
+		Long:  `Revokes a certificate for a given client ID.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
 				logUsageCmd(*cmd, cmd.Use)

@@ -120,7 +120,7 @@ var cmdProvision = []cobra.Command{
 		Short: "test",
 		Long: `Provisions test setup: one test user, two clients and two channels. \
 						Connect both clients to one of the channels, \
-						and only on thing to other channel.`,
+						and only on client to other channel.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			numThings := 2
 			numChan := 2
@@ -202,7 +202,7 @@ var cmdProvision = []cobra.Command{
 				channels = append(channels, c)
 			}
 
-			// Connect clients to channels - first thing to both channels, second only to first
+			// Connect clients to channels - first client to both channels, second only to first
 			conIDs := mgxsdk.Connection{
 				ChannelID: channels[0].ID,
 				ClientID:  clients[0].ID,

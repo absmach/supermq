@@ -170,7 +170,7 @@ components:
       required: false
     Publisher:
       name: Publisher
-      description: Unique thing identifier.
+      description: Unique client identifier.
       in: query
       schema:
         type: string

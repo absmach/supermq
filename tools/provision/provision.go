@@ -250,7 +250,7 @@ func Provision(conf Config) error {
 	}
 
 	fmt.Printf("# List of channels that clients can publish to\n" +
-		"# each channel is connected to each thing from clients list\n")
+		"# each channel is connected to each client from clients list\n")
 	for i := 0; i < conf.Num; i++ {
 		fmt.Printf("[[channels]]\nchannel_id = \"%s\"\n\n", cIDs[i])
 	}

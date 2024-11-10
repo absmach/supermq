@@ -90,7 +90,7 @@ magistrala-cli clients create '{"name":"myThing", "metadata": {"key1":"value1"}}
 magistrala-cli provision clients <file> <user_token>
 ```
 
-- `file` - A CSV or JSON file containing thing names (must have extension `.csv` or `.json`)
+- `file` - A CSV or JSON file containing client names (must have extension `.csv` or `.json`)
 - `user_token` - A valid user auth token for the current system
 
 An example CSV file might be:
@@ -269,7 +269,7 @@ magistrala-cli clients connect <client_id> <channel_id> <user_token>
 magistrala-cli provision connect <file> <user_token>
 ```
 
-- `file` - A CSV or JSON file containing thing and channel ids (must have extension `.csv` or `.json`)
+- `file` - A CSV or JSON file containing client and channel ids (must have extension `.csv` or `.json`)
 - `user_token` - A valid user auth token for the current system
 
 An example CSV file might be
@@ -279,7 +279,7 @@ An example CSV file might be
 <client_id2>,<channel_id2>
 ```
 
-in which the first column is thing IDs and the second column is channel IDs. A connection will be created for each thing to each channel. This example would result in 4 connections being created.
+in which the first column is client IDs and the second column is channel IDs. A connection will be created for each client to each channel. This example would result in 4 connections being created.
 
 A comparable JSON file would be
 

@@ -72,14 +72,14 @@ func (es *eventStore) Update(ctx context.Context, session mgauthn.Session, cfg b
 	return es.Publish(ctx, ev)
 }
 
-func (es eventStore) UpdateCert(ctx context.Context, session mgauthn.Session, thingKey, clientCert, clientKey, caCert string) (bootstrap.Config, error) {
-	cfg, err := es.svc.UpdateCert(ctx, session, thingKey, clientCert, clientKey, caCert)
+func (es eventStore) UpdateCert(ctx context.Context, session mgauthn.Session, clientID, clientCert, clientKey, caCert string) (bootstrap.Config, error) {
+	cfg, err := es.svc.UpdateCert(ctx, session, clientID, clientCert, clientKey, caCert)
 	if err != nil {
 		return cfg, err
 	}
 
 	ev := updateCertEvent{
-		thingKey:   thingKey,
+		clientID:   clientID,
 		clientCert: clientCert,
 		clientKey:  clientKey,
 		caCert:     caCert,

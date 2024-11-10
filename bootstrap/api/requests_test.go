@@ -156,7 +156,7 @@ func TestUpdateCertReqValidation(t *testing.T) {
 		err     error
 	}{
 		{
-			desc:    "empty thing id",
+			desc:    "empty client id",
 			thingID: "",
 			err:     apiutil.ErrMissingID,
 		},

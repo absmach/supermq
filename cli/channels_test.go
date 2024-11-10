@@ -396,7 +396,7 @@ func TestListConnectionsCmd(t *testing.T) {
 					Offset: 0,
 					Limit:  10,
 				},
-				Clients: []mgsdk.Client{thing},
+				Clients: []mgsdk.Client{client},
 			},
 			logType: entityLog,
 		},
@@ -425,7 +425,7 @@ func TestListConnectionsCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("ThingsByChannel", tc.args[0], mock.Anything, tc.args[1], tc.args[2]).Return(tc.page, tc.sdkErr)
+			sdkCall := sdkMock.On("ClientsByChannel", tc.args[0], mock.Anything, tc.args[1], tc.args[2]).Return(tc.page, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{connsCmd}, tc.args...)...)
 			switch tc.logType {
 			case entityLog:
@@ -573,7 +573,7 @@ func TestDisableChannelCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "disable thing with invalid args",
+			desc: "disable client with invalid args",
 			args: []string{
 				channel.ID,
 				domainID,

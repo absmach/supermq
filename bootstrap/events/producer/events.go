@@ -201,12 +201,15 @@ func (uce updateConnectionsEvent) Encode() (map[string]interface{}, error) {
 }
 
 type updateCertEvent struct {
-	thingKey, clientCert, clientKey, caCert string
+	clientID   string
+	clientCert string
+	clientKey  string
+	caCert     string
 }
 
 func (uce updateCertEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
-		"thing_key":   uce.thingKey,
+		"client_id":   uce.clientID,
 		"client_cert": uce.clientCert,
 		"client_key":  uce.clientKey,
 		"ca_cert":     uce.caCert,

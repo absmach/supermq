@@ -324,7 +324,7 @@ func parseSubtopic(subtopic string) (string, error) {
 	return subtopic, nil
 }
 
-// extractClientSecret returns value of the thing key. If there is no thing key - an empty value is returned.
+// extractClientSecret returns value of the client secret. If there is no client key - an empty value is returned.
 func extractClientSecret(topic string) string {
 	if !strings.HasPrefix(topic, apiutil.ClientPrefix) {
 		return ""

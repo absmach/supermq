@@ -39,7 +39,7 @@ const (
 // ClientsService is a service that provides clients authorization functionalities
 // for magistrala services.
 type ClientsServiceClient interface {
-	// Authorize checks if the thing is authorized to perform
+	// Authorize checks if the client is authorized to perform
 	Authenticate(ctx context.Context, in *AuthnReq, opts ...grpc.CallOption) (*AuthnRes, error)
 	RetrieveEntity(ctx context.Context, in *v1.RetrieveEntityReq, opts ...grpc.CallOption) (*v1.RetrieveEntityRes, error)
 	RetrieveEntities(ctx context.Context, in *v1.RetrieveEntitiesReq, opts ...grpc.CallOption) (*v1.RetrieveEntitiesRes, error)
@@ -134,7 +134,7 @@ func (c *clientsServiceClient) UnsetParentGroupFromClient(ctx context.Context, i
 // ClientsService is a service that provides clients authorization functionalities
 // for magistrala services.
 type ClientsServiceServer interface {
-	// Authorize checks if the thing is authorized to perform
+	// Authorize checks if the client is authorized to perform
 	Authenticate(context.Context, *AuthnReq) (*AuthnRes, error)
 	RetrieveEntity(context.Context, *v1.RetrieveEntityReq) (*v1.RetrieveEntityRes, error)
 	RetrieveEntities(context.Context, *v1.RetrieveEntitiesReq) (*v1.RetrieveEntitiesRes, error)

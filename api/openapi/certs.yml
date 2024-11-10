@@ -111,7 +111,7 @@ paths:
       operationId: getSerials
       summary: Retrieves certificates' serial IDs
       description: |
-        Retrieves a list of certificates' serial IDs for a given thing ID.
+        Retrieves a list of certificates' serial IDs for a given client ID.
       tags:
         - certs
       parameters:
@@ -241,7 +241,7 @@ components:
     CertReq:
       description: |
         Issues a certificate that is required for mTLS. To create a certificate for a thing
-        provide a thing id, data identifying particular thing will be embedded into the Certificate.
+        provide a client id, data identifying particular client will be embedded into the Certificate.
         x509 and ECC certificates are supported when using when Vault is used as PKI.
       content:
         application/json:

@@ -629,7 +629,7 @@ func TestJournalRetrieveAll(t *testing.T) {
 			},
 		},
 		{
-			desc: "with thing entity type",
+			desc: "with client entity type",
 			page: journal.Page{
 				Offset:     0,
 				Limit:      10,

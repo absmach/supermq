@@ -131,7 +131,7 @@ func (cr configRepository) RetrieveByID(ctx context.Context, domainID, id string
 	for rows.Next() {
 		dbch := dbChannel{}
 		if err := rows.StructScan(&dbch); err != nil {
-			cr.log.Error(fmt.Sprintf("Failed to read connected thing due to %s", err))
+			cr.log.Error(fmt.Sprintf("Failed to read connected client due to %s", err))
 			return bootstrap.Config{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
 		dbch.DomainID = nullString(dbcfg.DomainID)
@@ -235,7 +235,7 @@ func (cr configRepository) RetrieveByExternalID(ctx context.Context, externalID 
 	for rows.Next() {
 		dbch := dbChannel{}
 		if err := rows.StructScan(&dbch); err != nil {
-			cr.log.Error(fmt.Sprintf("Failed to read connected thing due to %s", err))
+			cr.log.Error(fmt.Sprintf("Failed to read connected client due to %s", err))
 			return bootstrap.Config{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
 

@@ -202,7 +202,7 @@ paths:
   /{domainID}/clients/configs/connections/{configId}:
     put:
       operationId: updateConfigConnections
-      summary: Updates channels the thing is connected to
+      summary: Updates channels the client is connected to
       description: |
         Update connections performs update of the channel list corresponding
         Thing is connected to.
@@ -572,7 +572,7 @@ components:
               ca_cert:
                 type: string
     ConfigConnUpdateReq:
-      description: Array if IDs the thing is be connected to.
+      description: Array if IDs the client is be connected to.
       content:
         application/json:
           schema:

@@ -26,7 +26,7 @@ func LoggingMiddleware(svc bootstrap.Service, logger *slog.Logger) bootstrap.Ser
 	return &loggingMiddleware{logger, svc}
 }
 
-// Add logs the add request. It logs the thing ID and the time it took to complete the request.
+// Add logs the add request. It logs the client ID and the time it took to complete the request.
 // If the request fails, it logs the error.
 func (lm *loggingMiddleware) Add(ctx context.Context, session mgauthn.Session, token string, cfg bootstrap.Config) (saved bootstrap.Config, err error) {
 	defer func(begin time.Time) {
@@ -45,7 +45,7 @@ func (lm *loggingMiddleware) Add(ctx context.Context, session mgauthn.Session, t
 	return lm.svc.Add(ctx, session, token, cfg)
 }
 
-// View logs the view request. It logs the thing ID and the time it took to complete the request.
+// View logs the view request. It logs the client ID and the time it took to complete the request.
 // If the request fails, it logs the error.
 func (lm *loggingMiddleware) View(ctx context.Context, session mgauthn.Session, id string) (saved bootstrap.Config, err error) {
 	defer func(begin time.Time) {
@@ -55,16 +55,16 @@ func (lm *loggingMiddleware) View(ctx context.Context, session mgauthn.Session, 
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("View thing config failed", args...)
+			lm.logger.Warn("View client config failed", args...)
 			return
 		}
-		lm.logger.Info("View thing config completed successfully", args...)
+		lm.logger.Info("View client config completed successfully", args...)
 	}(time.Now())
 
 	return lm.svc.View(ctx, session, id)
 }
 
-// Update logs the update request. It logs bootstrap thing ID and the time it took to complete the request.
+// Update logs the update request. It logs bootstrap client ID and the time it took to complete the request.
 // If the request fails, it logs the error.
 func (lm *loggingMiddleware) Update(ctx context.Context, session mgauthn.Session, cfg bootstrap.Config) (err error) {
 	defer func(begin time.Time) {
@@ -86,7 +86,7 @@ func (lm *loggingMiddleware) Update(ctx context.Context, session mgauthn.Session
 	return lm.svc.Update(ctx, session, cfg)
 }
 
-// UpdateCert logs the update_cert request. It logs thing ID and the time it took to complete the request.
+// UpdateCert logs the update_cert request. It logs client ID and the time it took to complete the request.
 // If the request fails, it logs the error.
 func (lm *loggingMiddleware) UpdateCert(ctx context.Context, session mgauthn.Session, thingID, clientCert, clientKey, caCert string) (cfg bootstrap.Config, err error) {
 	defer func(begin time.Time) {
@@ -194,10 +194,10 @@ func (lm *loggingMiddleware) ChangeState(ctx context.Context, session mgauthn.Se
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Change thing state failed", args...)
+			lm.logger.Warn("Change client state failed", args...)
 			return
 		}
-		lm.logger.Info("Change thing state completed successfully", args...)
+		lm.logger.Info("Change client state completed successfully", args...)
 	}(time.Now())
 
 	return lm.svc.ChangeState(ctx, session, token, id, state)
@@ -267,7 +267,7 @@ func (lm *loggingMiddleware) ConnectClientHandler(ctx context.Context, channelID
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Connect thing handler failed", args...)
+			lm.logger.Warn("Connect client handler failed", args...)
 			return
 		}
 		lm.logger.Info("Connect client handler completed successfully", args...)
@@ -285,7 +285,7 @@ func (lm *loggingMiddleware) DisconnectClientHandler(ctx context.Context, channe
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Disconnect thing handler failed", args...)
+			lm.logger.Warn("Disconnect client handler failed", args...)
 			return
 		}
 		lm.logger.Info("Disconnect client handler completed successfully", args...)

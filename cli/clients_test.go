@@ -30,7 +30,7 @@ var (
 	all                = "all"
 )
 
-var thing = sdk.Client{
+var client = sdk.Client{
 	ID:   testsutil.GenerateUUID(&testing.T{}),
 	Name: "testthing",
 	Credentials: sdk.ClientCredentials{
@@ -58,17 +58,17 @@ func TestCreateClientsCmd(t *testing.T) {
 		logType       outputLog
 	}{
 		{
-			desc: "create thing successfully with token",
+			desc: "create client successfully with token",
 			args: []string{
 				thingJson,
 				domainID,
 				token,
 			},
-			thing:   thing,
+			thing:   client,
 			logType: entityLog,
 		},
 		{
-			desc: "create thing without token",
+			desc: "create client without token",
 			args: []string{
 				thingJson,
 				domainID,
@@ -76,7 +76,7 @@ func TestCreateClientsCmd(t *testing.T) {
 			logType: usageLog,
 		},
 		{
-			desc: "create thing with invalid token",
+			desc: "create client with invalid token",
 			args: []string{
 				thingJson,
 				domainID,
@@ -98,7 +98,7 @@ func TestCreateClientsCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "create thing with invalid metadata",
+			desc: "create client with invalid metadata",
 			args: []string{
 				"{\"name\":\"testthing\", \"metadata\":{\"key1\":value1}}",
 				domainID,
@@ -158,18 +158,18 @@ func TestGetClientssCmd(t *testing.T) {
 			},
 			logType: entityLog,
 			page: sdk.ClientsPage{
-				Clients: []sdk.Client{thing},
+				Clients: []sdk.Client{client},
 			},
 		},
 		{
-			desc: "get thing successfully with id",
+			desc: "get client successfully with id",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				token,
 			},
 			logType: entityLog,
-			thing:   thing,
+			thing:   client,
 		},
 		{
 			desc: "get clients with invalid token",
@@ -198,7 +198,7 @@ func TestGetClientssCmd(t *testing.T) {
 			logType: usageLog,
 		},
 		{
-			desc: "get thing without token",
+			desc: "get client without token",
 			args: []string{
 				all,
 				domainID,
@@ -206,7 +206,7 @@ func TestGetClientssCmd(t *testing.T) {
 			logType: usageLog,
 		},
 		{
-			desc: "get thing with invalid thing id",
+			desc: "get client with invalid client id",
 			args: []string{
 				invalidID,
 				domainID,
@@ -283,9 +283,9 @@ func TestUpdateClientCmd(t *testing.T) {
 		logType       outputLog
 	}{
 		{
-			desc: "update thing name and metadata successfully",
+			desc: "update client name and metadata successfully",
 			args: []string{
-				thing.ID,
+				client.ID,
 				newNameandMeta,
 				domainID,
 				token,
@@ -297,16 +297,16 @@ func TestUpdateClientCmd(t *testing.T) {
 						"role": "general",
 					},
 				},
-				ID:       thing.ID,
-				DomainID: thing.DomainID,
-				Status:   thing.Status,
+				ID:       client.ID,
+				DomainID: client.DomainID,
+				Status:   client.Status,
 			},
 			logType: entityLog,
 		},
 		{
-			desc: "update thing name and metadata with invalid json",
+			desc: "update client name and metadata with invalid json",
 			args: []string{
-				thing.ID,
+				client.ID,
 				"{\"name\": \"thingName\", \"metadata\": {\"role\": \"general\"}",
 				domainID,
 				token,
@@ -316,7 +316,7 @@ func TestUpdateClientCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "update thing name and metadata with invalid thing id",
+			desc: "update client name and metadata with invalid client id",
 			args: []string{
 				invalidID,
 				newNameandMeta,
@@ -328,28 +328,28 @@ func TestUpdateClientCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "update thing tags successfully",
+			desc: "update client tags successfully",
 			args: []string{
 				tagUpdateType,
-				thing.ID,
+				client.ID,
 				newTagsJson,
 				domainID,
 				token,
 			},
 			thing: sdk.Client{
-				Name:     thing.Name,
-				ID:       thing.ID,
-				DomainID: thing.DomainID,
-				Status:   thing.Status,
+				Name:     client.Name,
+				ID:       client.ID,
+				DomainID: client.DomainID,
+				Status:   client.Status,
 				Tags:     newTagString,
 			},
 			logType: entityLog,
 		},
 		{
-			desc: "update thing with invalid tags",
+			desc: "update client with invalid tags",
 			args: []string{
 				tagUpdateType,
-				thing.ID,
+				client.ID,
 				"[\"tag1\", \"tag2\"",
 				domainID,
 				token,
@@ -359,7 +359,7 @@ func TestUpdateClientCmd(t *testing.T) {
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.New("unexpected end of JSON input")),
 		},
 		{
-			desc: "update thing tags with invalid thing id",
+			desc: "update client tags with invalid client id",
 			args: []string{
 				tagUpdateType,
 				invalidID,
@@ -372,19 +372,19 @@ func TestUpdateClientCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "update thing secret successfully",
+			desc: "update client secret successfully",
 			args: []string{
 				secretUpdateType,
-				thing.ID,
+				client.ID,
 				newSecret,
 				domainID,
 				token,
 			},
 			thing: sdk.Client{
-				Name:     thing.Name,
-				ID:       thing.ID,
-				DomainID: thing.DomainID,
-				Status:   thing.Status,
+				Name:     client.Name,
+				ID:       client.ID,
+				DomainID: client.DomainID,
+				Status:   client.Status,
 				Credentials: sdk.ClientCredentials{
 					Secret: newSecret,
 				},
@@ -392,10 +392,10 @@ func TestUpdateClientCmd(t *testing.T) {
 			logType: entityLog,
 		},
 		{
-			desc: "update thing with invalid secret",
+			desc: "update client  with invalid secret",
 			args: []string{
 				secretUpdateType,
-				thing.ID,
+				client.ID,
 				"",
 				domainID,
 				token,
@@ -405,10 +405,10 @@ func TestUpdateClientCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "update thing with invalid token",
+			desc: "update client  with invalid token",
 			args: []string{
 				secretUpdateType,
-				thing.ID,
+				client.ID,
 				newSecret,
 				domainID,
 				invalidToken,
@@ -418,10 +418,10 @@ func TestUpdateClientCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "update thing with invalid args",
+			desc: "update client  with invalid args",
 			args: []string{
 				secretUpdateType,
-				thing.ID,
+				client.ID,
 				newSecret,
 				domainID,
 				token,
@@ -486,18 +486,18 @@ func TestDeleteClientCmd(t *testing.T) {
 		logType       outputLog
 	}{
 		{
-			desc: "delete thing successfully",
+			desc: "delete client successfully",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				token,
 			},
 			logType: okLog,
 		},
 		{
-			desc: "delete thing with invalid token",
+			desc: "delete client with invalid token",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				invalidToken,
 			},
@@ -506,7 +506,7 @@ func TestDeleteClientCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "delete thing with invalid thing id",
+			desc: "delete client with invalid client id",
 			args: []string{
 				invalidID,
 				domainID,
@@ -517,9 +517,9 @@ func TestDeleteClientCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "delete thing with invalid args",
+			desc: "delete client with invalid args",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				token,
 				extraArg,
@@ -562,20 +562,20 @@ func TestEnableThingCmd(t *testing.T) {
 		logType       outputLog
 	}{
 		{
-			desc: "enable thing successfully",
+			desc: "enable client successfully",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				validToken,
 			},
 			sdkErr:  nil,
-			thing:   thing,
+			thing:   client,
 			logType: entityLog,
 		},
 		{
-			desc: "delete thing with invalid token",
+			desc: "delete client with invalid token",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				invalidToken,
 			},
@@ -584,7 +584,7 @@ func TestEnableThingCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "delete thing with invalid thing ID",
+			desc: "delete client with invalid client ID",
 			args: []string{
 				invalidID,
 				domainID,
@@ -595,9 +595,9 @@ func TestEnableThingCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "enable thing with invalid args",
+			desc: "enable client with invalid args",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				validToken,
 				extraArg,
@@ -644,19 +644,19 @@ func TestDisablethingCmd(t *testing.T) {
 		logType       outputLog
 	}{
 		{
-			desc: "disable thing successfully",
+			desc: "disable client successfully",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				validToken,
 			},
 			logType: entityLog,
-			thing:   thing,
+			thing:   client,
 		},
 		{
-			desc: "delete thing with invalid token",
+			desc: "delete client with invalid token",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				invalidToken,
 			},
@@ -665,7 +665,7 @@ func TestDisablethingCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "delete thing with invalid thing ID",
+			desc: "delete client with invalid client ID",
 			args: []string{
 				invalidID,
 				domainID,
@@ -676,9 +676,9 @@ func TestDisablethingCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "disable thing with invalid args",
+			desc: "disable client with invalid args",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				validToken,
 				extraArg,
@@ -729,7 +729,7 @@ func TestUsersThingCmd(t *testing.T) {
 		{
 			desc: "get thing's users successfully",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				token,
 			},
@@ -744,9 +744,9 @@ func TestUsersThingCmd(t *testing.T) {
 			logType: entityLog,
 		},
 		{
-			desc: "list thing users' with invalid args",
+			desc: "list client users' with invalid args",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				token,
 				extraArg,
@@ -754,9 +754,9 @@ func TestUsersThingCmd(t *testing.T) {
 			logType: usageLog,
 		},
 		{
-			desc: "list thing users' with invalid domain",
+			desc: "list client users' with invalid domain",
 			args: []string{
-				thing.ID,
+				client.ID,
 				invalidID,
 				token,
 			},
@@ -765,7 +765,7 @@ func TestUsersThingCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "list thing users with invalid id",
+			desc: "list client users with invalid id",
 			args: []string{
 				invalidID,
 				domainID,
@@ -813,9 +813,9 @@ func TestConnectThingCmd(t *testing.T) {
 		errLogMessage string
 	}{
 		{
-			desc: "Connect thing to channel successfully",
+			desc: "Connect client to channel successfully",
 			args: []string{
-				thing.ID,
+				client.ID,
 				channel.ID,
 				domainID,
 				token,
@@ -825,7 +825,7 @@ func TestConnectThingCmd(t *testing.T) {
 		{
 			desc: "connect with invalid args",
 			args: []string{
-				thing.ID,
+				client.ID,
 				channel.ID,
 				domainID,
 				token,
@@ -834,7 +834,7 @@ func TestConnectThingCmd(t *testing.T) {
 			logType: usageLog,
 		},
 		{
-			desc: "connect with invalid thing id",
+			desc: "connect with invalid client id",
 			args: []string{
 				invalidID,
 				channel.ID,
@@ -848,7 +848,7 @@ func TestConnectThingCmd(t *testing.T) {
 		{
 			desc: "connect with invalid channel id",
 			args: []string{
-				thing.ID,
+				client.ID,
 				invalidID,
 				domainID,
 				token,
@@ -858,9 +858,9 @@ func TestConnectThingCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "list thing users' with invalid domain",
+			desc: "list client users' with invalid domain",
 			args: []string{
-				thing.ID,
+				client.ID,
 				channel.ID,
 				invalidID,
 				token,
@@ -903,9 +903,9 @@ func TestDisconnectClientCmd(t *testing.T) {
 		errLogMessage string
 	}{
 		{
-			desc: "Disconnect thing to channel successfully",
+			desc: "Disconnect client to channel successfully",
 			args: []string{
-				thing.ID,
+				client.ID,
 				channel.ID,
 				domainID,
 				token,
@@ -915,7 +915,7 @@ func TestDisconnectClientCmd(t *testing.T) {
 		{
 			desc: "Disconnect with invalid args",
 			args: []string{
-				thing.ID,
+				client.ID,
 				channel.ID,
 				domainID,
 				token,
@@ -924,7 +924,7 @@ func TestDisconnectClientCmd(t *testing.T) {
 			logType: usageLog,
 		},
 		{
-			desc: "disconnect with invalid thing id",
+			desc: "disconnect with invalid client id",
 			args: []string{
 				invalidID,
 				channel.ID,
@@ -938,7 +938,7 @@ func TestDisconnectClientCmd(t *testing.T) {
 		{
 			desc: "disconnect with invalid channel id",
 			args: []string{
-				thing.ID,
+				client.ID,
 				invalidID,
 				domainID,
 				token,
@@ -948,9 +948,9 @@ func TestDisconnectClientCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "disconnect thing with invalid domain",
+			desc: "disconnect client with invalid domain",
 			args: []string{
-				thing.ID,
+				client.ID,
 				channel.ID,
 				invalidID,
 				token,
@@ -997,7 +997,7 @@ func TestListConnectionCmd(t *testing.T) {
 		{
 			desc: "list connections successfully",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				token,
 			},
@@ -1014,7 +1014,7 @@ func TestListConnectionCmd(t *testing.T) {
 		{
 			desc: "list connections with invalid args",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				token,
 				extraArg,
@@ -1022,7 +1022,7 @@ func TestListConnectionCmd(t *testing.T) {
 			logType: usageLog,
 		},
 		{
-			desc: "list connections with invalid thing ID",
+			desc: "list connections with invalid client ID",
 			args: []string{
 				invalidID,
 				domainID,
@@ -1035,7 +1035,7 @@ func TestListConnectionCmd(t *testing.T) {
 		{
 			desc: "list connections with invalid token",
 			args: []string{
-				thing.ID,
+				client.ID,
 				domainID,
 				invalidToken,
 			},
@@ -1081,9 +1081,9 @@ func TestShareThingCmd(t *testing.T) {
 		errLogMessage string
 	}{
 		{
-			desc: "share thing successfully",
+			desc: "share client successfully",
 			args: []string{
-				thing.ID,
+				client.ID,
 				user.ID,
 				relation,
 				domainID,
@@ -1092,9 +1092,9 @@ func TestShareThingCmd(t *testing.T) {
 			logType: okLog,
 		},
 		{
-			desc: "share thing with invalid user id",
+			desc: "share client with invalid user id",
 			args: []string{
-				thing.ID,
+				client.ID,
 				invalidID,
 				relation,
 				domainID,
@@ -1105,7 +1105,7 @@ func TestShareThingCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "share thing with invalid thing ID",
+			desc: "share client with invalid client ID",
 			args: []string{
 				invalidID,
 				user.ID,
@@ -1118,9 +1118,9 @@ func TestShareThingCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "share thing with invalid args",
+			desc: "share client with invalid args",
 			args: []string{
-				thing.ID,
+				client.ID,
 				user.ID,
 				relation,
 				domainID,
@@ -1130,9 +1130,9 @@ func TestShareThingCmd(t *testing.T) {
 			logType: usageLog,
 		},
 		{
-			desc: "share thing with invalid relation",
+			desc: "share client with invalid relation",
 			args: []string{
-				thing.ID,
+				client.ID,
 				user.ID,
 				"invalid",
 				domainID,
@@ -1175,9 +1175,9 @@ func TestUnshareThingCmd(t *testing.T) {
 		errLogMessage string
 	}{
 		{
-			desc: "unshare thing successfully",
+			desc: "unshare client successfully",
 			args: []string{
-				thing.ID,
+				client.ID,
 				user.ID,
 				relation,
 				domainID,
@@ -1186,7 +1186,7 @@ func TestUnshareThingCmd(t *testing.T) {
 			logType: okLog,
 		},
 		{
-			desc: "unshare thing with invalid thing ID",
+			desc: "unshare client with invalid client ID",
 			args: []string{
 				invalidID,
 				user.ID,
@@ -1199,9 +1199,9 @@ func TestUnshareThingCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc: "unshare thing with invalid args",
+			desc: "unshare client with invalid args",
 			args: []string{
-				thing.ID,
+				client.ID,
 				user.ID,
 				relation,
 				domainID,
@@ -1211,9 +1211,9 @@ func TestUnshareThingCmd(t *testing.T) {
 			logType: usageLog,
 		},
 		{
-			desc: "unshare thing with invalid relation",
+			desc: "unshare client with invalid relation",
 			args: []string{
-				thing.ID,
+				client.ID,
 				user.ID,
 				"invalid",
 				domainID,

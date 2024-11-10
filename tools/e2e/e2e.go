@@ -61,7 +61,7 @@ type Config struct {
 // - Create channels
 // - Do Read, Update and Change of Status operations on channels.
 
-// - Connect thing to channel
+// - Connect client to channel
 // - Publish message from HTTP, MQTT, WS and CoAP Adapters.
 func Test(conf Config) {
 	sdkConf := sdk.Config{
@@ -345,7 +345,7 @@ func read(s sdk.SDK, conf Config, domainID, token string, users []sdk.User, grou
 	}
 	for _, c := range clients {
 		if _, err := s.Client(c.ID, domainID, token); err != nil {
-			return fmt.Errorf("failed to get thing %w", err)
+			return fmt.Errorf("failed to get client %w", err)
 		}
 	}
 	tp, err := s.Clients(sdk.PageMetadata{}, domainID, token)
@@ -463,43 +463,43 @@ func update(s sdk.SDK, domainID, token string, users []sdk.User, groups []sdk.Gr
 		t.Metadata = sdk.Metadata{"Update": namesgenerator.Generate()}
 		rThing, err := s.UpdateClient(t, domainID, token)
 		if err != nil {
-			return fmt.Errorf("failed to update thing %w", err)
+			return fmt.Errorf("failed to update client %w", err)
 		}
 		if rThing.Name != t.Name {
-			return fmt.Errorf("failed to update thing name before %s after %s", t.Name, rThing.Name)
+			return fmt.Errorf("failed to update client name before %s after %s", t.Name, rThing.Name)
 		}
 		if rThing.Metadata["Update"] != t.Metadata["Update"] {
-			return fmt.Errorf("failed to update thing metadata before %s after %s", t.Metadata["Update"], rThing.Metadata["Update"])
+			return fmt.Errorf("failed to update client metadata before %s after %s", t.Metadata["Update"], rThing.Metadata["Update"])
 		}
 		t = rThing
 		rThing, err = s.UpdateClientSecret(t.ID, t.Credentials.Secret, domainID, token)
 		if err != nil {
-			return fmt.Errorf("failed to update thing secret %w", err)
+			return fmt.Errorf("failed to update client secret %w", err)
 		}
 		t = rThing
 		t.Tags = []string{namesgenerator.Generate()}
 		rThing, err = s.UpdateClientTags(t, domainID, token)
 		if err != nil {
-			return fmt.Errorf("failed to update thing tags %w", err)
+			return fmt.Errorf("failed to update client tags %w", err)
 		}
 		if rThing.Tags[0] != t.Tags[0] {
-			return fmt.Errorf("failed to update thing tags before %s after %s", t.Tags[0], rThing.Tags[0])
+			return fmt.Errorf("failed to update client tags before %s after %s", t.Tags[0], rThing.Tags[0])
 		}
 		t = rThing
 		rThing, err = s.DisableClient(t.ID, domainID, token)
 		if err != nil {
-			return fmt.Errorf("failed to disable thing %w", err)
+			return fmt.Errorf("failed to disable client %w", err)
 		}
 		if rThing.Status != sdk.DisabledStatus {
-			return fmt.Errorf("failed to disable thing before %s after %s", t.Status, rThing.Status)
+			return fmt.Errorf("failed to disable client before %s after %s", t.Status, rThing.Status)
 		}
 		t = rThing
 		rThing, err = s.EnableClient(t.ID, domainID, token)
 		if err != nil {
-			return fmt.Errorf("failed to enable thing %w", err)
+			return fmt.Errorf("failed to enable client %w", err)
 		}
 		if rThing.Status != sdk.EnabledStatus {
-			return fmt.Errorf("failed to enable thing before %s after %s", t.Status, rThing.Status)
+			return fmt.Errorf("failed to enable client before %s after %s", t.Status, rThing.Status)
 		}
 	}
 	for _, channel := range channels {
@@ -544,7 +544,7 @@ func messaging(s sdk.SDK, conf Config, domainID, token string, clients []sdk.Cli
 				ChannelID: channel.ID,
 			}
 			if err := s.Connect(conn, domainID, token); err != nil {
-				return fmt.Errorf("failed to connect thing %s to channel %s", c.ID, channel.ID)
+				return fmt.Errorf("failed to connect client %s to channel %s", c.ID, channel.ID)
 			}
 		}
 	}
@@ -553,9 +553,9 @@ func messaging(s sdk.SDK, conf Config, domainID, token string, clients []sdk.Cli
 
 	bt := time.Now().Unix()
 	for i := uint64(0); i < conf.NumOfMsg; i++ {
-		for _, thing := range clients {
+		for _, client := range clients {
 			for _, channel := range channels {
-				func(num int64, thing sdk.Client, channel sdk.Channel) {
+				func(num int64, client sdk.Client, channel sdk.Channel) {
 					g.Go(func() error {
 						msg := fmt.Sprintf(msgFormat, num+1, rand.Int())
 						return sendHTTPMessage(s, msg, thing, channel.ID)
@@ -581,33 +581,33 @@ func messaging(s sdk.SDK, conf Config, domainID, token string, clients []sdk.Cli
 	return g.Wait()
 }
 
-func sendHTTPMessage(s sdk.SDK, msg string, thing sdk.Client, chanID string) error {
+func sendHTTPMessage(s sdk.SDK, msg string, client sdk.Client, chanID string) error {
 	if err := s.SendMessage(chanID, msg, thing.Credentials.Secret); err != nil {
-		return fmt.Errorf("HTTP failed to send message from thing %s to channel %s: %w", thing.ID, chanID, err)
+		return fmt.Errorf("HTTP failed to send message from client %s to channel %s: %w", thing.ID, chanID, err)
 	}
 
 	return nil
 }
 
-func sendCoAPMessage(msg string, thing sdk.Client, chanID string) error {
+func sendCoAPMessage(msg string, client sdk.Client, chanID string) error {
 	cmd := exec.Command("coap-cli", "post", fmt.Sprintf("channels/%s/messages", chanID), "--auth", thing.Credentials.Secret, "-d", msg)
 	if _, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("CoAP failed to send message from thing %s to channel %s: %w", thing.ID, chanID, err)
+		return fmt.Errorf("CoAP failed to send message from client %s to channel %s: %w", thing.ID, chanID, err)
 	}
 
 	return nil
 }
 
-func sendMQTTMessage(msg string, thing sdk.Client, chanID string) error {
+func sendMQTTMessage(msg string, client sdk.Client, chanID string) error {
 	cmd := exec.Command("mosquitto_pub", "--id-prefix", "magistrala", "-u", thing.ID, "-P", thing.Credentials.Secret, "-t", fmt.Sprintf("channels/%s/messages", chanID), "-h", "localhost", "-m", msg)
 	if _, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("MQTT failed to send message from thing %s to channel %s: %w", thing.ID, chanID, err)
+		return fmt.Errorf("MQTT failed to send message from client %s to channel %s: %w", thing.ID, chanID, err)
 	}
 
 	return nil
 }
 
-func sendWSMessage(conf Config, msg string, thing sdk.Client, chanID string) error {
+func sendWSMessage(conf Config, msg string, client sdk.Client, chanID string) error {
 	socketURL := fmt.Sprintf("ws://%s:%s/channels/%s/messages", conf.Host, defWSPort, chanID)
 	header := http.Header{"Authorization": []string{thing.Credentials.Secret}}
 	conn, _, err := websocket.DefaultDialer.Dial(socketURL, header)
@@ -616,7 +616,7 @@ func sendWSMessage(conf Config, msg string, thing sdk.Client, chanID string) err
 	}
 	defer conn.Close()
 	if err := conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
-		return fmt.Errorf("WS failed to send message from thing %s to channel %s: %w", thing.ID, chanID, err)
+		return fmt.Errorf("WS failed to send message from client %s to channel %s: %w", thing.ID, chanID, err)
 	}
 
 	return nil

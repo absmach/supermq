@@ -94,10 +94,10 @@ func (lm *loggingMiddleware) ListChannelsByClient(ctx context.Context, session a
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("List channels by thing failed", args...)
+			lm.logger.Warn("List channels by client failed", args...)
 			return
 		}
-		lm.logger.Info("List channels by thing completed successfully", args...)
+		lm.logger.Info("List channels by client completed successfully", args...)
 	}(time.Now())
 	return lm.svc.ListChannelsByClient(ctx, session, clientID, pm)
 }

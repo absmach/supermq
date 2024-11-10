@@ -177,7 +177,7 @@ var cmdBootstrap = []cobra.Command{
 	{
 		Use:   "whitelist <JSON_config> <domain_id> <user_auth_token>",
 		Short: "Whitelist config",
-		Long:  `Whitelist updates thing state config with given id from the authenticated user`,
+		Long:  `Whitelist updates client state config with given id from the authenticated user`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
 				logUsageCmd(*cmd, cmd.Use)

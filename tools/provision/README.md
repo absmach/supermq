@@ -138,7 +138,7 @@ uCRt+TFMyEfqilipmNsV7esgbroiyEGXGMI8JdBY9OsnK6ZSlXaMnQ9vq2kK
 """
 
 # List of channels that clients can publish to
-# each channel is connected to each thing from clients list
+# each channel is connected to each client from clients list
 # Things connected to channel 1f18afa1-29c4-4634-99d1-68dfa1b74e6a: 0eac601b-6d54-4767-b8b7-594aaf9990d3
 [[channels]]
 channel_id = "1f18afa1-29c4-4634-99d1-68dfa1b74e6a"

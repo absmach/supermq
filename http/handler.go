@@ -41,7 +41,7 @@ const (
 	logInfoConnected        = "connected with thing_key %s"
 	logInfoPublished        = "published with client_type %s client_id %s to the topic %s"
 	logInfoFailedAuthNToken = "failed to authenticate token for topic %s with error %s"
-	logInfoFailedAuthNThing = "failed to authenticate thing key %s for topic %s with error %s"
+	logInfoFailedAuthNThing = "failed to authenticate client key %s for topic %s with error %s"
 )
 
 // Error wrappers for MQTT errors.

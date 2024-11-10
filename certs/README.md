@@ -20,7 +20,7 @@ MG_CERTS_VAULT_CLIENTS_CERTS_PKI_PATH=<vault_clients_certs_pki_path>
 MG_CERTS_VAULT_CLIENTS_CERTS_PKI_ROLE_NAME=<vault_clients_certs_issue_role_name>
 ```
 
-The certificates can also be revoked using `certs` service. To revoke a certificate you need to provide `client_id` of the thing for which the certificate was issued.
+The certificates can also be revoked using `certs` service. To revoke a certificate you need to provide `client_id` of the client for which the certificate was issued.
 
 ```bash
 curl -s -S -X DELETE http://localhost:9019/certs/revoke -H "Authorization: Bearer $TOK" -H 'Content-Type: application/json'   -d '{"client_id":"c30b8842-507c-4bcd-973c-74008cef3be5"}'

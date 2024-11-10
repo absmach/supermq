@@ -369,7 +369,7 @@ func (ps *policyService) addPolicyPreCondition(ctx context.Context, pr policies.
 	case pr.SubjectType == policies.UserType && pr.ObjectType == policies.DomainType:
 		return ps.userDomainPreConditions(ctx, pr)
 
-	// Check thing and group not belongs to other domain before adding to domain
+	// Check client and group not belongs to other domain before adding to domain
 	case pr.SubjectType == policies.DomainType && pr.Relation == policies.DomainRelation && (pr.ObjectType == policies.ClientType || pr.ObjectType == policies.GroupType):
 		preconds := []*v1.Precondition{
 			{

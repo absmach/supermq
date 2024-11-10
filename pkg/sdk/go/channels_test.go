@@ -268,7 +268,7 @@ func TestListChannels(t *testing.T) {
 		gr := sdk.Channel{
 			ID:       generateUUID(t),
 			Name:     fmt.Sprintf("channel_%d", i),
-			Metadata: sdk.Metadata{"name": fmt.Sprintf("thing_%d", i)},
+			Metadata: sdk.Metadata{"name": fmt.Sprintf("client_%d", i)},
 			Status:   groups.EnabledStatus.String(),
 		}
 		chs = append(chs, gr)

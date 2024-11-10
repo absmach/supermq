@@ -102,8 +102,8 @@ components:
     user-password:
       type: userPassword
       description: |
-        username is thing ID connected to the channel defined in the mqtt topic and 
-        password is thing key corresponding to the thing ID 
+        username is client ID connected to the channel defined in the mqtt topic and
+        password is client secret corresponding to the client ID
 
   operationTraits:
     mqtt:

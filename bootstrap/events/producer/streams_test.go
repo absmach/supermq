@@ -1298,7 +1298,7 @@ func TestConnectThingHandler(t *testing.T) {
 		event     map[string]interface{}
 	}{
 		{
-			desc:      "connect thing handler successfully",
+			desc:      "connect client handler successfully",
 			channelID: channel.ID,
 			thingID:   "1",
 			err:       nil,
@@ -1311,21 +1311,21 @@ func TestConnectThingHandler(t *testing.T) {
 			},
 		},
 		{
-			desc:      "connect non-existing thing handler",
+			desc:      "connect non-existing client handler",
 			channelID: channel.ID,
 			thingID:   "unknown",
 			err:       nil,
 			event:     nil,
 		},
 		{
-			desc:      "connect thing handler with empty thing ID",
+			desc:      "connect client handler with empty client ID",
 			channelID: channel.ID,
 			thingID:   "",
 			err:       nil,
 			event:     nil,
 		},
 		{
-			desc:      "connect thing handler with empty channel ID",
+			desc:      "connect client handler with empty channel ID",
 			channelID: "",
 			thingID:   "1",
 			err:       nil,
@@ -1372,7 +1372,7 @@ func TestDisconnectThingHandler(t *testing.T) {
 		event     map[string]interface{}
 	}{
 		{
-			desc:      "disconnect thing handler successfully",
+			desc:      "disconnect client handler successfully",
 			channelID: channel.ID,
 			thingID:   "1",
 			err:       nil,
@@ -1385,25 +1385,25 @@ func TestDisconnectThingHandler(t *testing.T) {
 			},
 		},
 		{
-			desc:      "remove non-existing thing handler",
+			desc:      "remove non-existing client handler",
 			channelID: "unknown",
 			err:       nil,
 		},
 		{
-			desc:      "remove thing handler with empty thing ID",
+			desc:      "remove client handler with empty client ID",
 			channelID: channel.ID,
 			thingID:   "",
 			err:       nil,
 			event:     nil,
 		},
 		{
-			desc:      "remove thing handler with empty channel ID",
+			desc:      "remove client handler with empty channel ID",
 			channelID: "",
 			err:       nil,
 			event:     nil,
 		},
 		{
-			desc:      "remove thing handler successfully",
+			desc:      "remove client handler successfully",
 			channelID: channel.ID,
 			thingID:   "1",
 			err:       nil,

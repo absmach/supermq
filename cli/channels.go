@@ -43,7 +43,7 @@ var cmdChannels = []cobra.Command{
 		Short: "Get channel",
 		Long: `Get all channels or get channel by id. Channels can be filtered by name or metadata.
 		all - lists all channels
-		<channel_id> - shows thing with provided <channel_id>`,
+		<channel_id> - shows client with provided <channel_id>`,
 
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {

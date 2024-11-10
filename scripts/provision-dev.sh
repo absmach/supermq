@@ -5,7 +5,7 @@
 #
 
 ###
-# Provisions example user, thing and channel on a clean Magistrala installation.
+# Provisions example user, client and channel on a clean Magistrala installation.
 #
 # Expects a running Magistrala installation.
 #
@@ -32,11 +32,11 @@ JWTTOKEN=$(curl -s -S --cacert docker/ssl/certs/magistrala-server.crt --insecure
 printf "JWT TOKEN for user is $JWTTOKEN \n"
 
 #provision thing
-printf "Provisioning thing with name $DEVICE \n"
+printf "Provisioning client with name $DEVICE \n"
 DEVICEID=$(curl -s -S --cacert docker/ssl/certs/magistrala-server.crt --insecure -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $JWTTOKEN" https://localhost/things -d '{"name":"'"$DEVICE"'", "status": "enabled"}' | grep -oP '"id":"\K[^"]+' )
 curl -s -S --cacert docker/ssl/certs/magistrala-server.crt --insecure -X GET -H "Content-Type: application/json" -H "Authorization: Bearer $JWTTOKEN" https://localhost/things/$DEVICEID
 
-#get thing token
+#get client token
 DEVICETOKEN=$(curl -s -S --cacert docker/ssl/certs/magistrala-server.crt --insecure -H "Authorization: Bearer $JWTTOKEN" https://localhost/things/$DEVICEID | grep -oP '"secret":"\K[^"]+' )
 printf "Device token is $DEVICETOKEN \n"
 
@@ -45,6 +45,6 @@ printf "Provisioning channel with name $CHANNEL \n"
 CHANNELID=$(curl -s -S --cacert docker/ssl/certs/magistrala-server.crt --insecure -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $JWTTOKEN" https://localhost/channels -d '{"name":"'"$CHANNEL"'", "status": "enabled"}' |  grep -oP '"id":"\K[^"]+' )
 curl -s -S --cacert docker/ssl/certs/magistrala-server.crt --insecure -X GET -H "Content-Type: application/json" -H "Authorization: Bearer $JWTTOKEN" https://localhost/channels/$CHANNELID
 
-#connect thing to channel
-printf "Connecting thing of id $DEVICEID to channel of id $CHANNELID \n"
+#connect client to channel
+printf "Connecting client of id $DEVICEID to channel of id $CHANNELID \n"
 curl -s -S --cacert docker/ssl/certs/magistrala-server.crt --insecure -X PUT -H "Authorization: Bearer $JWTTOKEN" https://localhost/channels/$CHANNELID/things/$DEVICEID
