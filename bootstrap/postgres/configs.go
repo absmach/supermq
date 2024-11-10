@@ -660,12 +660,12 @@ type dbConfig struct {
 func toDBConfig(cfg bootstrap.Config) dbConfig {
 	return dbConfig{
 		ClientID:     cfg.ClientID,
+		ClientSecret: cfg.ClientSecret,
 		DomainID:     cfg.DomainID,
 		Name:         nullString(cfg.Name),
 		ClientCert:   nullString(cfg.ClientCert),
 		ClientKey:    nullString(cfg.ClientKey),
 		CaCert:       nullString(cfg.CACert),
-		ClientSecret: cfg.ClientSecret,
 		ExternalID:   cfg.ExternalID,
 		ExternalKey:  cfg.ExternalKey,
 		Content:      nullString(cfg.Content),
@@ -676,8 +676,8 @@ func toDBConfig(cfg bootstrap.Config) dbConfig {
 func toConfig(dbcfg dbConfig) bootstrap.Config {
 	cfg := bootstrap.Config{
 		ClientID:     dbcfg.ClientID,
-		DomainID:     dbcfg.DomainID,
 		ClientSecret: dbcfg.ClientSecret,
+		DomainID:     dbcfg.DomainID,
 		ExternalID:   dbcfg.ExternalID,
 		ExternalKey:  dbcfg.ExternalKey,
 		State:        dbcfg.State,

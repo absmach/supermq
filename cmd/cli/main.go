@@ -84,10 +84,10 @@ func main() {
 
 	rootCmd.PersistentFlags().StringVarP(
 		&sdkConf.ClientsURL,
-		"things-url",
+		"clients-url",
 		"t",
 		sdkConf.ClientsURL,
-		"Things service URL",
+		"Clients service URL",
 	)
 
 	rootCmd.PersistentFlags().StringVarP(

@@ -3573,7 +3573,7 @@ func TestListUsersByDomainID(t *testing.T) {
 	}
 }
 
-func TestListUsersByThingID(t *testing.T) {
+func TestListUsersByClientID(t *testing.T) {
 	us, svc, authn := newUsersServer()
 	defer us.Close()
 

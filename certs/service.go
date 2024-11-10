@@ -86,7 +86,7 @@ func (cs *certsService) IssueCert(ctx context.Context, domainID, token, clientID
 		Key:          cert.Key,
 		Revoked:      cert.Revoked,
 		ExpiryTime:   cert.ExpiryTime,
-		ThingID:      cert.ThingID,
+		ClientID:     cert.ClientID,
 	}, err
 }
 
@@ -130,7 +130,7 @@ func (cs *certsService) ListCerts(ctx context.Context, thingID string, pm PageMe
 			Key:          c.Key,
 			Revoked:      c.Revoked,
 			ExpiryTime:   c.ExpiryTime,
-			ThingID:      c.ThingID,
+			ClientID:     c.ClientID,
 		})
 	}
 
@@ -153,7 +153,7 @@ func (cs *certsService) ListSerials(ctx context.Context, thingID string, pm Page
 		if (pm.Revoked == "true" && c.Revoked) || (pm.Revoked == "false" && !c.Revoked) || (pm.Revoked == "all") {
 			certs = append(certs, Cert{
 				SerialNumber: c.SerialNumber,
-				ThingID:      c.ThingID,
+				ClientID:     c.ClientID,
 				ExpiryTime:   c.ExpiryTime,
 				Revoked:      c.Revoked,
 			})
@@ -180,6 +180,6 @@ func (cs *certsService) ViewCert(ctx context.Context, serialID string) (Cert, er
 		Key:          cert.Key,
 		Revoked:      cert.Revoked,
 		ExpiryTime:   cert.ExpiryTime,
-		ThingID:      cert.ThingID,
+		ClientID:     cert.ClientID,
 	}, nil
 }

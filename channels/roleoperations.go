@@ -74,8 +74,8 @@ var externalOperationNames = []string{
 	"DomainOpListChannel",
 	"GroupOpSetChildChannel",
 	"GroupsOpRemoveChildChannel",
-	"ThingsOpConnectChannel",
-	"ThingsOpDisconnectChannel",
+	"ClientsOpConnectChannel",
+	"ClientsOpDisconnectChannel",
 }
 
 func NewExternalOperationPerm() svcutil.ExternalOperationPerm {

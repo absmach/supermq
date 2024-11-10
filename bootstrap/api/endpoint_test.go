@@ -49,28 +49,28 @@ const (
 )
 
 var (
-	encKey         = []byte("1234567891011121")
-	metadata       = map[string]interface{}{"meta": "data"}
-	addExternalID  = testsutil.GenerateUUID(&testing.T{})
-	addExternalKey = testsutil.GenerateUUID(&testing.T{})
-	addThingID     = testsutil.GenerateUUID(&testing.T{})
-	addThingKey    = testsutil.GenerateUUID(&testing.T{})
-	addReq         = struct {
-		ThingID     string   `json:"client_id"`
-		ThingKey    string   `json:"thing_key"`
-		ExternalID  string   `json:"external_id"`
-		ExternalKey string   `json:"external_key"`
-		Channels    []string `json:"channels"`
-		Name        string   `json:"name"`
-		Content     string   `json:"content"`
+	encKey          = []byte("1234567891011121")
+	metadata        = map[string]interface{}{"meta": "data"}
+	addExternalID   = testsutil.GenerateUUID(&testing.T{})
+	addExternalKey  = testsutil.GenerateUUID(&testing.T{})
+	addClientID     = testsutil.GenerateUUID(&testing.T{})
+	addClientSecret = testsutil.GenerateUUID(&testing.T{})
+	addReq          = struct {
+		ClientID     string   `json:"client_id"`
+		ClinetSecret string   `json:"client_secret"`
+		ExternalID   string   `json:"external_id"`
+		ExternalKey  string   `json:"external_key"`
+		Channels     []string `json:"channels"`
+		Name         string   `json:"name"`
+		Content      string   `json:"content"`
 	}{
-		ThingID:     addThingID,
-		ThingKey:    addThingKey,
-		ExternalID:  addExternalID,
-		ExternalKey: addExternalKey,
-		Channels:    []string{"1"},
-		Name:        "name",
-		Content:     "config",
+		ClientID:     addClientID,
+		ClinetSecret: addClientSecret,
+		ExternalID:   addExternalID,
+		ExternalKey:  addExternalKey,
+		Channels:     []string{"1"},
+		Name:         "name",
+		Content:      "config",
 	}
 
 	updateReq = struct {
@@ -78,7 +78,7 @@ var (
 		Content    string          `json:"content,omitempty"`
 		State      bootstrap.State `json:"state,omitempty"`
 		ClientCert string          `json:"client_cert,omitempty"`
-		ClientKey  string          `json:"client_key,omitempty"`
+		ClientKey  string          `json:"client_secret,omitempty"`
 		CACert     string          `json:"ca_cert,omitempty"`
 	}{
 		Channels:   []string{"1"},
@@ -108,8 +108,8 @@ type testRequest struct {
 
 func newConfig() bootstrap.Config {
 	return bootstrap.Config{
-		ClientID:     addThingID,
-		ClientSecret: addThingKey,
+		ClientID:     addClientID,
+		ClientSecret: addClientSecret,
 		ExternalID:   addExternalID,
 		ExternalKey:  addExternalKey,
 		Channels: []bootstrap.Channel{
@@ -200,7 +200,7 @@ func TestAdd(t *testing.T) {
 	data := toJSON(addReq)
 
 	neID := addReq
-	neID.ThingID = testsutil.GenerateUUID(t)
+	neID.ClientID = testsutil.GenerateUUID(t)
 	neData := toJSON(neID)
 
 	invalidChannels := addReq
@@ -359,14 +359,14 @@ func TestView(t *testing.T) {
 	}
 
 	data := config{
-		ThingID:     c.ClientID,
-		ThingKey:    c.ClientSecret,
-		State:       c.State,
-		Channels:    channels,
-		ExternalID:  c.ExternalID,
-		ExternalKey: c.ExternalKey,
-		Name:        c.Name,
-		Content:     c.Content,
+		ClientID:     c.ClientID,
+		ClientSecret: c.ClientSecret,
+		State:        c.State,
+		Channels:     channels,
+		ExternalID:   c.ExternalID,
+		ExternalKey:  c.ExternalKey,
+		Name:         c.Name,
+		Content:      c.Content,
 	}
 
 	cases := []struct {
@@ -815,14 +815,14 @@ func TestList(t *testing.T) {
 			channels = append(channels, channel{ID: ch.ID, Name: ch.Name, Metadata: ch.Metadata})
 		}
 		s := config{
-			ThingID:     c.ClientID,
-			ThingKey:    c.ClientSecret,
-			Channels:    channels,
-			ExternalID:  c.ExternalID,
-			ExternalKey: c.ExternalKey,
-			Name:        c.Name,
-			Content:     c.Content,
-			State:       c.State,
+			ClientID:     c.ClientID,
+			ClientSecret: c.ClientSecret,
+			Channels:     channels,
+			ExternalID:   c.ExternalID,
+			ExternalKey:  c.ExternalKey,
+			Name:         c.Name,
+			Content:      c.Content,
+			State:        c.State,
 		}
 		list[i] = s
 	}
@@ -833,7 +833,7 @@ func TestList(t *testing.T) {
 			state = bootstrap.Inactive
 		}
 		svcCall := svc.On("ChangeState", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		err := svc.ChangeState(context.Background(), mgauthn.Session{}, validToken, list[i].ThingID, state)
+		err := svc.ChangeState(context.Background(), mgauthn.Session{}, validToken, list[i].ClientID, state)
 		assert.Nil(t, err, fmt.Sprintf("Changing state expected to succeed: %s.\n", err))
 
 		svcCall.Unset()
@@ -1156,21 +1156,21 @@ func TestBootstrap(t *testing.T) {
 	}
 
 	s := struct {
-		ThingID    string    `json:"client_id"`
-		ThingKey   string    `json:"thing_key"`
-		Channels   []channel `json:"channels"`
-		Content    string    `json:"content"`
-		ClientCert string    `json:"client_cert"`
-		ClientKey  string    `json:"client_key"`
-		CACert     string    `json:"ca_cert"`
+		ClientID     string    `json:"client_id"`
+		ClientSecret string    `json:"client_secret"`
+		Channels     []channel `json:"channels"`
+		Content      string    `json:"content"`
+		ClientCert   string    `json:"client_cert"`
+		ClientKey    string    `json:"client_key"`
+		CACert       string    `json:"ca_cert"`
 	}{
-		ThingID:    c.ClientID,
-		ThingKey:   c.ClientSecret,
-		Channels:   channels,
-		Content:    c.Content,
-		ClientCert: c.ClientCert,
-		ClientKey:  c.ClientKey,
-		CACert:     c.CACert,
+		ClientID:     c.ClientID,
+		ClientSecret: c.ClientSecret,
+		Channels:     channels,
+		Content:      c.Content,
+		ClientCert:   c.ClientCert,
+		ClientKey:    c.ClientKey,
+		CACert:       c.CACert,
 	}
 
 	data := toJSON(s)
@@ -1400,14 +1400,14 @@ type channel struct {
 }
 
 type config struct {
-	ThingID     string          `json:"client_id,omitempty"`
-	ThingKey    string          `json:"thing_key,omitempty"`
-	Channels    []channel       `json:"channels,omitempty"`
-	ExternalID  string          `json:"external_id"`
-	ExternalKey string          `json:"external_key,omitempty"`
-	Content     string          `json:"content,omitempty"`
-	Name        string          `json:"name"`
-	State       bootstrap.State `json:"state"`
+	ClientID     string          `json:"client_id,omitempty"`
+	ClientSecret string          `json:"client_secret,omitempty"`
+	Channels     []channel       `json:"channels,omitempty"`
+	ExternalID   string          `json:"external_id"`
+	ExternalKey  string          `json:"external_key,omitempty"`
+	Content      string          `json:"content,omitempty"`
+	Name         string          `json:"name"`
+	State        bootstrap.State `json:"state"`
 }
 
 type configPage struct {

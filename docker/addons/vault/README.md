@@ -28,7 +28,7 @@ When the Vault service is started, some initialization steps need to be done to 
 | MG_VAULT_PKI_CLUSTER_AIA_PATH           | Vault Root CA Cluster AIA Path                                                | http://localhost                      |
 | MG_VAULT_PKI_INT_PATH                   | Vault secrets engine path for Intermediate CA                                 | pki_int                               |
 | MG_VAULT_PKI_INT_SERVER_CERTS_ROLE_NAME | Vault Intermediate CA role name to issue server certificate                   | magistrala_server_certs               |
-| MG_VAULT_PKI_INT_THINGS_CERTS_ROLE_NAME | Vault Intermediate CA role name to issue Things certificates                  | magistrala_clients_certs               |
+| MG_VAULT_PKI_INT_CLIENTS_CERTS_ROLE_NAME | Vault Intermediate CA role name to issue Things certificates                  | magistrala_clients_certs               |
 | MG_VAULT_PKI_INT_FILE_NAME              | Intermediate CA Certificates name used by`vault_set_pki.sh`                   | mg_root                               |
 | MG_VAULT_PKI_INT_CA_CN                  | Common name used for Intermediate CA creation by`vault_set_pki.sh`            | Magistrala Root Certificate Authority |
 | MG_VAULT_PKI_INT_CA_OU                  | Organization unit used for Root CA creation by`vault_set_pki.sh`              | Magistrala                            |
@@ -40,8 +40,8 @@ When the Vault service is started, some initialization steps need to be done to 
 | MG_VAULT_PKI_INT_CA_PO                  | Postal code used for Intermediate CA creation by`vault_set_pki.sh`            | 75007                                 |
 | MG_VAULT_PKI_INT_CLUSTER_PATH           | Vault Intermediate CA Cluster Path                                            | http://localhost                      |
 | MG_VAULT_PKI_INT_CLUSTER_AIA_PATH       | Vault Intermediate CA Cluster AIA Path                                        | http://localhost                      |
-| MG_VAULT_THINGS_CERTS_ISSUER_ROLEID     | Vault Intermediate CA Things Certificate issuer AppRole authentication RoleID | magistrala                            |
-| MG_VAULT_THINGS_CERTS_ISSUER_SECRET     | Vault Intermediate CA Things Certificate issuer AppRole authentication Secret | magistrala                            |
+| MG_VAULT_CLIENTS_CERTS_ISSUER_ROLEID     | Vault Intermediate CA Things Certificate issuer AppRole authentication RoleID | magistrala                            |
+| MG_VAULT_CLIENTS_CERTS_ISSUER_SECRET     | Vault Intermediate CA Things Certificate issuer AppRole authentication Secret | magistrala                            |
 
 ## Setup
 

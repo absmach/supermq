@@ -63,7 +63,7 @@ type config struct {
 	LogLevel            string  `env:"MG_BOOTSTRAP_LOG_LEVEL"        envDefault:"info"`
 	EncKey              string  `env:"MG_BOOTSTRAP_ENCRYPT_KEY"      envDefault:"12345678910111213141516171819202"`
 	ESConsumerName      string  `env:"MG_BOOTSTRAP_EVENT_CONSUMER"   envDefault:"bootstrap"`
-	ThingsURL           string  `env:"MG_THINGS_URL"                 envDefault:"http://localhost:9000"`
+	ClientsURL          string  `env:"MG_CLIENTS_URL"                envDefault:"http://localhost:9000"`
 	JaegerURL           url.URL `env:"MG_JAEGER_URL"                 envDefault:"http://localhost:4318/v1/traces"`
 	SendTelemetry       bool    `env:"MG_SEND_TELEMETRY"             envDefault:"true"`
 	InstanceID          string  `env:"MG_BOOTSTRAP_INSTANCE_ID"      envDefault:""`
@@ -205,7 +205,7 @@ func newService(ctx context.Context, authz mgauthz.Authorization, policySvc poli
 	repoConfig := bootstrappg.NewConfigRepository(database, logger)
 
 	config := mgsdk.Config{
-		ClientsURL: cfg.ThingsURL,
+		ClientsURL: cfg.ClientsURL,
 	}
 
 	sdk := mgsdk.NewSDK(config)

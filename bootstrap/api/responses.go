@@ -67,16 +67,16 @@ type channelRes struct {
 }
 
 type viewRes struct {
-	ThingID     string          `json:"client_id,omitempty"`
-	ThingKey    string          `json:"thing_key,omitempty"`
-	Channels    []channelRes    `json:"channels,omitempty"`
-	ExternalID  string          `json:"external_id"`
-	ExternalKey string          `json:"external_key,omitempty"`
-	Content     string          `json:"content,omitempty"`
-	Name        string          `json:"name,omitempty"`
-	State       bootstrap.State `json:"state"`
-	ClientCert  string          `json:"client_cert,omitempty"`
-	CACert      string          `json:"ca_cert,omitempty"`
+	ClientID     string          `json:"client_id,omitempty"`
+	CLientSecret string          `json:"client,_secretomitempty"`
+	Channels     []channelRes    `json:"channels,omitempty"`
+	ExternalID   string          `json:"external_id"`
+	ExternalKey  string          `json:"external_key,omitempty"`
+	Content      string          `json:"content,omitempty"`
+	Name         string          `json:"name,omitempty"`
+	State        bootstrap.State `json:"state"`
+	ClientCert   string          `json:"client_cert,omitempty"`
+	CACert       string          `json:"ca_cert,omitempty"`
 }
 
 func (res viewRes) Code() int {
@@ -125,9 +125,9 @@ func (res stateRes) Empty() bool {
 }
 
 type updateConfigRes struct {
-	ThingID    string `json:"client_id,omitempty"`
-	ClientCert string `json:"client_cert,omitempty"`
+	ClientID   string `json:"client_id,omitempty"`
 	CACert     string `json:"ca_cert,omitempty"`
+	ClientCert string `json:"client_cert,omitempty"`
 	ClientKey  string `json:"client_key,omitempty"`
 }
 

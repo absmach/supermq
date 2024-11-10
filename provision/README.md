@@ -29,7 +29,7 @@ default values.
 | MG_PROVISION_SERVER_CERT            | Magistrala gRPC secure server cert                |                                      |
 | MG_PROVISION_SERVER_KEY             | Magistrala gRPC secure server key                 |                                      |
 | MG_PROVISION_USERS_LOCATION         | Users service URL                                 | <http://users:9002>                  |
-| MG_PROVISION_THINGS_LOCATION        | Things service URL                                | <http://things:9000>                 |
+| MG_PROVISION_CLIENTS_LOCATION        | Clients service URL                                | <http://things:9000>                 |
 | MG_PROVISION_BS_SVC_URL             | Magistrala Bootstrap service URL                  | <http://bootstrap:9013>              |
 | MG_PROVISION_CERTS_SVC_URL          | Certificates service URL                          | <http://certs:9019>                  |
 | MG_PROVISION_X509_PROVISIONING      | Should X509 client cert be provisioned            | false                                |
@@ -99,7 +99,7 @@ Standalone:
 
 ```bash
 MG_PROVISION_BS_SVC_URL=http://localhost:9013 \
-MG_PROVISION_THINGS_LOCATION=http://localhost:9000 \
+MG_PROVISION_CLIENTS_LOCATION=http://localhost:9000 \
 MG_PROVISION_USERS_LOCATION=http://localhost:9002 \
 MG_PROVISION_CONFIG_FILE=docker/addons/provision/configs/config.toml \
 build/magistrala-provision

@@ -229,7 +229,7 @@ func decodeStateRequest(_ context.Context, r *http.Request) (interface{}, error)
 
 	req := changeStateReq{
 		token: apiutil.ExtractBearerToken(r),
-		id:    chi.URLParam(r, "thingID"),
+		id:    chi.URLParam(r, "clientID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))

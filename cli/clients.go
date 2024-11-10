@@ -346,7 +346,7 @@ var cmdClients = []cobra.Command{
 // NewClientsCmd returns clients command.
 func NewClientsCmd() *cobra.Command {
 	cmd := cobra.Command{
-		Use:   "things [create | get | update | delete | share | connect | disconnect | connections | not-connected | users ]",
+		Use:   "clients [create | get | update | delete | share | connect | disconnect | connections | not-connected | users ]",
 		Short: "Clients management",
 		Long:  `Clients management: create, get, update, delete or share Client, connect or disconnect Client from Channel and get the list of Channels connected or disconnected from a Client`,
 	}

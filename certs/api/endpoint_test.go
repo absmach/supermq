@@ -35,7 +35,7 @@ var (
 	serial      = testsutil.GenerateUUID(&testing.T{})
 	ttl         = "1h"
 	cert        = certs.Cert{
-		ThingID:      clientID,
+		ClientID:     clientID,
 		SerialNumber: serial,
 		ExpiryTime:   time.Now().Add(time.Hour),
 	}

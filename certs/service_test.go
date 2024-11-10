@@ -41,7 +41,7 @@ func newService(_ *testing.T) (certs.Service, *mocks.Agent, *sdkmocks.SDK) {
 }
 
 var cert = mgcrt.Cert{
-	ThingID:      thingID,
+	ClientID:     thingID,
 	SerialNumber: "Serial",
 	ExpiryTime:   time.Now().Add(time.Duration(1000)),
 	Revoked:      false,
@@ -186,7 +186,7 @@ func TestListCerts(t *testing.T) {
 	var mycerts []mgcrt.Cert
 	for i := 0; i < certNum; i++ {
 		c := mgcrt.Cert{
-			ThingID:      thingID,
+			ClientID:     thingID,
 			SerialNumber: fmt.Sprintf("%d", i),
 			ExpiryTime:   time.Now().Add(time.Hour),
 		}
@@ -243,7 +243,7 @@ func TestListSerials(t *testing.T) {
 	var issuedCerts []mgcrt.Cert
 	for i := 0; i < certNum; i++ {
 		crt := mgcrt.Cert{
-			ThingID:      cert.ThingID,
+			ClientID:     cert.ClientID,
 			SerialNumber: cert.SerialNumber,
 			ExpiryTime:   cert.ExpiryTime,
 			Revoked:      false,

@@ -729,11 +729,11 @@ func TestConnectThing(t *testing.T) {
 
 	wrongID := testsutil.GenerateUUID(&testing.T{})
 
-	connectedThing := c
+	connectedClient := c
 
-	randomThing := c
-	randomThingID, _ := uuid.NewV4()
-	randomThing.ClientID = randomThingID.String()
+	randomClient := c
+	randomClientID, _ := uuid.NewV4()
+	randomClient.ClientID = randomClientID.String()
 
 	emptyThing := c
 	emptyThing.ClientID = ""
@@ -759,8 +759,8 @@ func TestConnectThing(t *testing.T) {
 		{
 			desc:        "connect already connected thing",
 			domainID:    c.DomainID,
-			id:          connectedThing.ClientID,
-			state:       connectedThing.State,
+			id:          connectedClient.ClientID,
+			state:       connectedClient.State,
 			channels:    c.Channels,
 			connections: channels,
 			err:         nil,
@@ -776,7 +776,7 @@ func TestConnectThing(t *testing.T) {
 		{
 			desc:        "connect random thing",
 			domainID:    c.DomainID,
-			id:          randomThing.ClientID,
+			id:          randomClient.ClientID,
 			channels:    c.Channels,
 			connections: channels,
 			err:         repoerr.ErrNotFound,
@@ -831,8 +831,8 @@ func TestDisconnectThing(t *testing.T) {
 	connectedThing := c
 
 	randomThing := c
-	randomThingID, _ := uuid.NewV4()
-	randomThing.ClientID = randomThingID.String()
+	randomClientID, _ := uuid.NewV4()
+	randomThing.ClientID = randomClientID.String()
 
 	emptyThing := c
 	emptyThing.ClientID = ""

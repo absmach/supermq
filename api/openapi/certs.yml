@@ -106,7 +106,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  /{domainID}/serials/{thingID}:
+  /{domainID}/serials/{clientID}:
     get:
       operationId: getSerials
       summary: Retrieves certificates' serial IDs
@@ -116,7 +116,7 @@ paths:
         - certs
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/ThingID"
+        - $ref: "#/components/parameters/ClientID"
       responses:
         "200":
           $ref: "#/components/responses/SerialsPageRes"
@@ -147,9 +147,9 @@ paths:
 
 components:
   parameters:
-    ThingID:
-      name: thingID
-      description: Thing ID
+    ClientID:
+      name: clientID
+      description: Client ID
       in: path
       schema:
         type: string

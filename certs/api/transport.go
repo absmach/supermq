@@ -91,7 +91,7 @@ func decodeListCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	}
 
 	req := listReq{
-		thingID: chi.URLParam(r, "thingID"),
+		thingID: chi.URLParam(r, "clientID"),
 		pm: certs.PageMetadata{
 			Offset:  o,
 			Limit:   l,

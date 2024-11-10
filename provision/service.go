@@ -25,7 +25,7 @@ const (
 var (
 	ErrUnauthorized             = errors.New("unauthorized access")
 	ErrFailedToCreateToken      = errors.New("failed to create access token")
-	ErrEmptyThingsList          = errors.New("things list in configuration empty")
+	ErrEmptyThingsList          = errors.New("clients list in configuration empty")
 	ErrThingUpdate              = errors.New("failed to update thing")
 	ErrEmptyChannelsList        = errors.New("channels list in configuration is empty")
 	ErrFailedChannelCreation    = errors.New("failed to create channel")

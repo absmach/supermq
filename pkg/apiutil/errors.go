@@ -21,8 +21,8 @@ var (
 	// ErrMissingID indicates missing entity ID.
 	ErrMissingID = errors.New("missing entity id")
 
-	// ErrMissingThingID indicates missing thing ID.
-	ErrMissingThingID = errors.New("missing thing id")
+	// ErrMissingClientID indicates missing client ID.
+	ErrMissingClientID = errors.New("missing cient id")
 
 	// ErrMissingChannelID indicates missing thing ID.
 	ErrMissingChannelID = errors.New("missing channel id")

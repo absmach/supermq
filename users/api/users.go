@@ -583,7 +583,7 @@ func decodeListMembersByThing(_ context.Context, r *http.Request) (interface{}, 
 	}
 	req := listMembersByObjectReq{
 		Page:     page,
-		objectID: chi.URLParam(r, "thingID"),
+		objectID: chi.URLParam(r, "clientID"),
 	}
 
 	return req, nil

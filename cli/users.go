@@ -398,7 +398,7 @@ var cmdUsers = []cobra.Command{
 	},
 
 	{
-		Use:   "things <user_id> <user_auth_token>",
+		Use:   "clients <user_id> <user_auth_token>",
 		Short: "List things",
 		Long: "List clients of user\n" +
 			"Usage:\n" +

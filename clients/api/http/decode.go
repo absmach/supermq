@@ -13,9 +13,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+const clientID = "clientID"
+
 func decodeViewClient(_ context.Context, r *http.Request) (interface{}, error) {
 	req := viewClientReq{
-		id: chi.URLParam(r, "thingID"),
+		id: chi.URLParam(r, clientID),
 	}
 
 	return req, nil
@@ -23,7 +25,7 @@ func decodeViewClient(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeViewClientPerms(_ context.Context, r *http.Request) (interface{}, error) {
 	req := viewClientPermsReq{
-		id: chi.URLParam(r, "thingID"),
+		id: chi.URLParam(r, clientID),
 	}
 
 	return req, nil
@@ -92,7 +94,7 @@ func decodeUpdateClient(_ context.Context, r *http.Request) (interface{}, error)
 	}
 
 	req := updateClientReq{
-		id: chi.URLParam(r, "thingID"),
+		id: chi.URLParam(r, clientID),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
@@ -107,7 +109,7 @@ func decodeUpdateClientTags(_ context.Context, r *http.Request) (interface{}, er
 	}
 
 	req := updateClientTagsReq{
-		id: chi.URLParam(r, "thingID"),
+		id: chi.URLParam(r, clientID),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
@@ -122,7 +124,7 @@ func decodeUpdateClientCredentials(_ context.Context, r *http.Request) (interfac
 	}
 
 	req := updateClientCredentialsReq{
-		id: chi.URLParam(r, "thingID"),
+		id: chi.URLParam(r, clientID),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
@@ -162,7 +164,7 @@ func decodeCreateClientsReq(_ context.Context, r *http.Request) (interface{}, er
 
 func decodeChangeClientStatus(_ context.Context, r *http.Request) (interface{}, error) {
 	req := changeClientStatusReq{
-		id: chi.URLParam(r, "thingID"),
+		id: chi.URLParam(r, clientID),
 	}
 
 	return req, nil
@@ -174,7 +176,7 @@ func decodeSetThingParentGroupStatus(_ context.Context, r *http.Request) (interf
 	}
 
 	req := setThingParentGroupReq{
-		id: chi.URLParam(r, "thingID"),
+		id: chi.URLParam(r, clientID),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
@@ -184,7 +186,7 @@ func decodeSetThingParentGroupStatus(_ context.Context, r *http.Request) (interf
 
 func decodeRemoveThingParentGroupStatus(_ context.Context, r *http.Request) (interface{}, error) {
 	req := removeThingParentGroupReq{
-		id: chi.URLParam(r, "thingID"),
+		id: chi.URLParam(r, clientID),
 	}
 
 	return req, nil
@@ -236,7 +238,7 @@ func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, 
 
 func decodeDeleteClientReq(_ context.Context, r *http.Request) (interface{}, error) {
 	req := deleteClientReq{
-		id: chi.URLParam(r, "thingID"),
+		id: chi.URLParam(r, clientID),
 	}
 
 	return req, nil

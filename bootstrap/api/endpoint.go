@@ -33,9 +33,9 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		config := bootstrap.Config{
-			ClientID:    req.ThingID,
+			ClientID:    req.ClientID,
 			ExternalID:  req.ExternalID,
-			ExternalKey: req.ExternalKey,
+			ExternalKey: req.ExternalSecret,
 			Channels:    channels,
 			Name:        req.Name,
 			ClientCert:  req.ClientCert,
@@ -76,7 +76,7 @@ func updateCertEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		res := updateConfigRes{
-			ThingID:    cfg.ClientID,
+			ClientID:   cfg.ClientID,
 			ClientCert: cfg.ClientCert,
 			CACert:     cfg.CACert,
 			ClientKey:  cfg.ClientKey,
@@ -113,14 +113,14 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		res := viewRes{
-			ThingID:     config.ClientID,
-			ThingKey:    config.ClientSecret,
-			Channels:    channels,
-			ExternalID:  config.ExternalID,
-			ExternalKey: config.ExternalKey,
-			Name:        config.Name,
-			Content:     config.Content,
-			State:       config.State,
+			ClientID:     config.ClientID,
+			CLientSecret: config.ClientSecret,
+			Channels:     channels,
+			ExternalID:   config.ExternalID,
+			ExternalKey:  config.ExternalKey,
+			Name:         config.Name,
+			Content:      config.Content,
+			State:        config.State,
 		}
 
 		return res, nil
@@ -217,14 +217,14 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			}
 
 			view := viewRes{
-				ThingID:     cfg.ClientID,
-				ThingKey:    cfg.ClientSecret,
-				Channels:    channels,
-				ExternalID:  cfg.ExternalID,
-				ExternalKey: cfg.ExternalKey,
-				Name:        cfg.Name,
-				Content:     cfg.Content,
-				State:       cfg.State,
+				ClientID:     cfg.ClientID,
+				CLientSecret: cfg.ClientSecret,
+				Channels:     channels,
+				ExternalID:   cfg.ExternalID,
+				ExternalKey:  cfg.ExternalKey,
+				Name:         cfg.Name,
+				Content:      cfg.Content,
+				State:        cfg.State,
 			}
 			res.Configs = append(res.Configs, view)
 		}

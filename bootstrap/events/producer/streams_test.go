@@ -32,13 +32,13 @@ import (
 )
 
 const (
-	streamID       = "magistrala.bootstrap"
-	email          = "user@example.com"
-	validToken     = "validToken"
-	invalidToken   = "invalid"
-	unknownThingID = "unknown"
-	channelsNum    = 3
-	defaultTimout  = 5
+	streamID        = "magistrala.bootstrap"
+	email           = "user@example.com"
+	validToken      = "validToken"
+	invalidToken    = "invalid"
+	unknownClientID = "unknown"
+	channelsNum     = 3
+	defaultTimout   = 5
 
 	configPrefix        = "config."
 	configCreate        = configPrefix + "create"
@@ -226,7 +226,7 @@ func TestView(t *testing.T) {
 	tv := newTestVariable(t, redisURL)
 
 	nonExisting := config
-	nonExisting.ClientID = unknownThingID
+	nonExisting.ClientID = unknownClientID
 
 	cases := []struct {
 		desc        string
@@ -316,7 +316,7 @@ func TestUpdate(t *testing.T) {
 	modified.Name = "new name"
 
 	nonExisting := config
-	nonExisting.ClientID = unknownThingID
+	nonExisting.ClientID = unknownClientID
 
 	channels := []string{modified.Channels[0].ID, modified.Channels[1].ID}
 
@@ -542,7 +542,7 @@ func TestUpdateCert(t *testing.T) {
 		},
 		{
 			desc:       "update cert with failed update",
-			configID:   "invalidThingID",
+			configID:   "clientID",
 			token:      validToken,
 			userID:     validID,
 			domainID:   domainID,
@@ -851,7 +851,7 @@ func TestRemove(t *testing.T) {
 	tv := newTestVariable(t, redisURL)
 
 	nonExisting := config
-	nonExisting.ClientID = unknownThingID
+	nonExisting.ClientID = unknownClientID
 
 	cases := []struct {
 		desc      string

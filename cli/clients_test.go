@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/absmach/magistrala/cli"
+	"github.com/absmach/magistrala/clients"
 	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
@@ -36,15 +37,15 @@ var thing = sdk.Client{
 		Secret: "secret",
 	},
 	DomainID: testsutil.GenerateUUID(&testing.T{}),
-	Status:   things.EnabledStatus.String(),
+	Status:   clients.EnabledStatus.String(),
 }
 
-func TestCreateThingsCmd(t *testing.T) {
+func TestCreateClientsCmd(t *testing.T) {
 	sdkMock := new(sdkmocks.SDK)
 	cli.SetSDK(sdkMock)
 	thingJson := "{\"name\":\"testthing\", \"metadata\":{\"key1\":\"value1\"}}"
-	thingsCmd := cli.NewThingsCmd()
-	rootCmd := setFlags(thingsCmd)
+	clientsCmd := cli.NewClientsCmd()
+	rootCmd := setFlags(clientsCmd)
 
 	var tg sdk.Client
 
@@ -130,11 +131,11 @@ func TestCreateThingsCmd(t *testing.T) {
 	}
 }
 
-func TestGetThingsCmd(t *testing.T) {
+func TestGetClientssCmd(t *testing.T) {
 	sdkMock := new(sdkmocks.SDK)
 	cli.SetSDK(sdkMock)
-	thingsCmd := cli.NewThingsCmd()
-	rootCmd := setFlags(thingsCmd)
+	clientsCmd := cli.NewClientsCmd()
+	rootCmd := setFlags(clientsCmd)
 
 	var tg sdk.Client
 	var page sdk.ClientsPage
@@ -219,8 +220,8 @@ func TestGetThingsCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("Things", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.page, tc.sdkErr)
-			sdkCall1 := sdkMock.On("Thing", mock.Anything, mock.Anything, mock.Anything).Return(tc.thing, tc.sdkErr)
+			sdkCall := sdkMock.On("Clients", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.page, tc.sdkErr)
+			sdkCall1 := sdkMock.On("Client", mock.Anything, mock.Anything, mock.Anything).Return(tc.thing, tc.sdkErr)
 
 			out := executeCommand(t, rootCmd, append([]string{getCmd}, tc.args...)...)
 
@@ -260,11 +261,11 @@ func TestGetThingsCmd(t *testing.T) {
 	}
 }
 
-func TestUpdateThingCmd(t *testing.T) {
+func TestUpdateClientCmd(t *testing.T) {
 	sdkMock := new(sdkmocks.SDK)
 	cli.SetSDK(sdkMock)
-	thingsCmd := cli.NewThingsCmd()
-	rootCmd := setFlags(thingsCmd)
+	clientsCmd := cli.NewClientsCmd()
+	rootCmd := setFlags(clientsCmd)
 
 	tagUpdateType := "tags"
 	secretUpdateType := "secret"
@@ -433,9 +434,9 @@ func TestUpdateThingCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			var tg sdk.Client
-			sdkCall := sdkMock.On("UpdateThing", mock.Anything, mock.Anything, mock.Anything).Return(tc.thing, tc.sdkErr)
-			sdkCall1 := sdkMock.On("UpdateThingTags", mock.Anything, mock.Anything, mock.Anything).Return(tc.thing, tc.sdkErr)
-			sdkCall2 := sdkMock.On("UpdateThingSecret", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.thing, tc.sdkErr)
+			sdkCall := sdkMock.On("UpdateClient", mock.Anything, mock.Anything, mock.Anything).Return(tc.thing, tc.sdkErr)
+			sdkCall1 := sdkMock.On("UpdateClientTags", mock.Anything, mock.Anything, mock.Anything).Return(tc.thing, tc.sdkErr)
+			sdkCall2 := sdkMock.On("UpdateClientSecret", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.thing, tc.sdkErr)
 
 			switch {
 			case tc.args[0] == tagUpdateType:
@@ -443,13 +444,13 @@ func TestUpdateThingCmd(t *testing.T) {
 				th.Tags = []string{"tag1", "tag2"}
 				th.ID = tc.args[1]
 
-				sdkCall1 = sdkMock.On("UpdateThingTags", th, tc.args[3]).Return(tc.thing, tc.sdkErr)
+				sdkCall1 = sdkMock.On("UpdateClientTags", th, tc.args[3]).Return(tc.thing, tc.sdkErr)
 			case tc.args[0] == secretUpdateType:
 				var th sdk.Client
 				th.Credentials.Secret = tc.args[2]
 				th.ID = tc.args[1]
 
-				sdkCall2 = sdkMock.On("UpdateThingSecret", th, tc.args[2], tc.args[3]).Return(tc.thing, tc.sdkErr)
+				sdkCall2 = sdkMock.On("UpdateClientSecret", th, tc.args[2], tc.args[3]).Return(tc.thing, tc.sdkErr)
 			}
 			out := executeCommand(t, rootCmd, append([]string{updCmd}, tc.args...)...)
 
@@ -471,11 +472,11 @@ func TestUpdateThingCmd(t *testing.T) {
 	}
 }
 
-func TestDeleteThingCmd(t *testing.T) {
+func TestDeleteClientCmd(t *testing.T) {
 	sdkMock := new(sdkmocks.SDK)
 	cli.SetSDK(sdkMock)
-	thingsCmd := cli.NewThingsCmd()
-	rootCmd := setFlags(thingsCmd)
+	clientdCmd := cli.NewClientsCmd()
+	rootCmd := setFlags(clientdCmd)
 
 	cases := []struct {
 		desc          string
@@ -548,8 +549,8 @@ func TestDeleteThingCmd(t *testing.T) {
 func TestEnableThingCmd(t *testing.T) {
 	sdkMock := new(sdkmocks.SDK)
 	cli.SetSDK(sdkMock)
-	thingsCmd := cli.NewThingsCmd()
-	rootCmd := setFlags(thingsCmd)
+	clientsCmd := cli.NewClientsCmd()
+	rootCmd := setFlags(clientsCmd)
 	var tg sdk.Client
 
 	cases := []struct {
@@ -629,8 +630,8 @@ func TestEnableThingCmd(t *testing.T) {
 func TestDisablethingCmd(t *testing.T) {
 	sdkMock := new(sdkmocks.SDK)
 	cli.SetSDK(sdkMock)
-	thingsCmd := cli.NewThingsCmd()
-	rootCmd := setFlags(thingsCmd)
+	clientsCmd := cli.NewClientsCmd()
+	rootCmd := setFlags(clientsCmd)
 
 	var tg sdk.Client
 
@@ -712,8 +713,8 @@ func TestDisablethingCmd(t *testing.T) {
 func TestUsersThingCmd(t *testing.T) {
 	sdkMock := new(sdkmocks.SDK)
 	cli.SetSDK(sdkMock)
-	thingsCmd := cli.NewThingsCmd()
-	rootCmd := setFlags(thingsCmd)
+	clientsCmd := cli.NewClientsCmd()
+	rootCmd := setFlags(clientsCmd)
 
 	page := sdk.UsersPage{}
 
@@ -801,8 +802,8 @@ func TestUsersThingCmd(t *testing.T) {
 func TestConnectThingCmd(t *testing.T) {
 	sdkMock := new(sdkmocks.SDK)
 	cli.SetSDK(sdkMock)
-	thingsCmd := cli.NewThingsCmd()
-	rootCmd := setFlags(thingsCmd)
+	clientsCmd := cli.NewClientsCmd()
+	rootCmd := setFlags(clientsCmd)
 
 	cases := []struct {
 		desc          string
@@ -888,11 +889,11 @@ func TestConnectThingCmd(t *testing.T) {
 	}
 }
 
-func TestDisconnectThingCmd(t *testing.T) {
+func TestDisconnectClientCmd(t *testing.T) {
 	sdkMock := new(sdkmocks.SDK)
 	cli.SetSDK(sdkMock)
-	thingsCmd := cli.NewThingsCmd()
-	rootCmd := setFlags(thingsCmd)
+	clientsCmd := cli.NewClientsCmd()
+	rootCmd := setFlags(clientsCmd)
 
 	cases := []struct {
 		desc          string
@@ -981,8 +982,8 @@ func TestDisconnectThingCmd(t *testing.T) {
 func TestListConnectionCmd(t *testing.T) {
 	sdkMock := new(sdkmocks.SDK)
 	cli.SetSDK(sdkMock)
-	thingsCmd := cli.NewThingsCmd()
-	rootCmd := setFlags(thingsCmd)
+	clientsCmd := cli.NewClientsCmd()
+	rootCmd := setFlags(clientsCmd)
 
 	cp := sdk.ChannelsPage{}
 	cases := []struct {
@@ -1069,8 +1070,8 @@ func TestListConnectionCmd(t *testing.T) {
 func TestShareThingCmd(t *testing.T) {
 	sdkMock := new(sdkmocks.SDK)
 	cli.SetSDK(sdkMock)
-	thingsCmd := cli.NewThingsCmd()
-	rootCmd := setFlags(thingsCmd)
+	clientCmd := cli.NewClientsCmd()
+	rootCmd := setFlags(clientCmd)
 
 	cases := []struct {
 		desc          string
@@ -1163,8 +1164,8 @@ func TestShareThingCmd(t *testing.T) {
 func TestUnshareThingCmd(t *testing.T) {
 	sdkMock := new(sdkmocks.SDK)
 	cli.SetSDK(sdkMock)
-	thingsCmd := cli.NewThingsCmd()
-	rootCmd := setFlags(thingsCmd)
+	clientsCmd := cli.NewClientsCmd()
+	rootCmd := setFlags(clientsCmd)
 
 	cases := []struct {
 		desc          string

@@ -398,7 +398,7 @@
       },
       "id": 35,
       "panels": [],
-      "title": "Things-Service",
+      "title": "Clients-Service",
       "type": "row"
     },
     {
@@ -452,14 +452,14 @@
             "uid": "PBFA97CFB590B2093"
           },
           "exemplar": true,
-          "expr": "things_api_request_count{}",
+          "expr": "clients_api_request_count{}",
           "instant": false,
           "interval": "",
           "legendFormat": "{{method}}",
           "refId": "A"
         }
       ],
-      "title": "Things Request Count",
+      "title": "Clients Request Count",
       "type": "gauge"
     },
     {
@@ -569,7 +569,7 @@
           "refId": "A"
         }
       ],
-      "title": "Things Latency Quantiles",
+      "title": "Clients Latency Quantiles",
       "type": "timeseries"
     },
     {

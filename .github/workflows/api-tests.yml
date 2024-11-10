@@ -29,7 +29,7 @@ env:
   USER_SECRET: 12345678
   DOMAIN_NAME: demo-test
   USERS_URL: http://localhost:9002
-  THINGS_URL: http://localhost:9000
+  CLIENTS_URL: http://localhost:9000
   HTTP_ADAPTER_URL: http://localhost:8008
   INVITATIONS_URL: http://localhost:9020
   AUTH_URL: http://localhost:8189

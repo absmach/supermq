@@ -435,22 +435,22 @@ type SDK interface {
 	// Thing returns client object by id.
 	//
 	// example:
-	//  thing, _ := sdk.Thing("thingID", "domainID", "token")
+	//  thing, _ := sdk.Client("clientID", "domainID", "token")
 	//  fmt.Println(client)
 	Client(id, domainID, token string) (Client, errors.SDKError)
 
 	// ThingPermissions returns user permissions on the client id.
 	//
 	// example:
-	//  thing, _ := sdk.Thing("thingID", "domainID", "token")
+	//  thing, _ := sdk.Client("clientID", "domainID", "token")
 	//  fmt.Println(client)
 	ClientPermissions(id, domainID, token string) (Client, errors.SDKError)
 
 	// UpdateThing updates existing thing.
 	//
 	// example:
-	//  client := sdk.Thing{
-	//    ID:   "thingID",
+	//  client := sdk.Client{
+	//    ID:   "clientID",
 	//    Name: "My Thing",
 	//    Metadata: sdk.Metadata{
 	//      "key": "value",
@@ -464,7 +464,7 @@ type SDK interface {
 	//
 	// example:
 	//  client := sdk.Thing{
-	//    ID:   "thingID",
+	//    ID:   "clientID",
 	//    Tags: []string{"tag1", "tag2"},
 	//  }
 	//  thing, _ := sdk.UpdateThingTags(thing, "domainID", "token")
@@ -474,21 +474,21 @@ type SDK interface {
 	// UpdateThingSecret updates the client's secret
 	//
 	// example:
-	//  thing, err := sdk.UpdateThingSecret("thingID", "newSecret", "domainID," "token")
+	//  thing, err := sdk.UpdateThingSecret("clientID", "newSecret", "domainID," "token")
 	//  fmt.Println(client)
 	UpdateClientSecret(id, secret, domainID, token string) (Client, errors.SDKError)
 
 	// EnableThing changes client status to enabled.
 	//
 	// example:
-	//  thing, _ := sdk.EnableThing("thingID", "domainID", "token")
+	//  thing, _ := sdk.EnableThing("clientID", "domainID", "token")
 	//  fmt.Println(client)
 	EnableClient(id, domainID, token string) (Client, errors.SDKError)
 
 	// DisableThing changes client status to disabled - soft delete.
 	//
 	// example:
-	//  thing, _ := sdk.DisableThing("thingID", "domainID", "token")
+	//  thing, _ := sdk.DisableThing("clientID", "domainID", "token")
 	//  fmt.Println(client)
 	DisableClient(id, domainID, token string) (Client, errors.SDKError)
 
@@ -529,7 +529,7 @@ type SDK interface {
 	// DeleteThing deletes a client with the given id.
 	//
 	// example:
-	//  err := sdk.DeleteThing("thingID", "domainID", "token")
+	//  err := sdk.DeleteThing("clientID", "domainID", "token")
 	//  fmt.Println(err)
 	DeleteClient(id, domainID, token string) errors.SDKError
 
@@ -710,7 +710,7 @@ type SDK interface {
 	//    Limit:  10,
 	//    Name:   "My Channel",
 	//  }
-	//  channels, _ := sdk.ChannelsByThing("thingID", pm, "domainID" "token")
+	//  channels, _ := sdk.ChannelsByThing("clientID", pm, "domainID" "token")
 	//  fmt.Println(channels)
 	ChannelsByClient(clientID string, pm PageMetadata, domainID, token string) (ChannelsPage, errors.SDKError)
 
@@ -834,7 +834,7 @@ type SDK interface {
 	// example:
 	//  conns := sdk.Connection{
 	//    ChannelID: "channel_id_1",
-	//    ThingID:   "client_id_1",
+	//    ClientID:   "client_id_1",
 	//  }
 	//  err := sdk.Connect(conns, "domainID", "token")
 	//  fmt.Println(err)
@@ -845,7 +845,7 @@ type SDK interface {
 	// example:
 	//  conns := sdk.Connection{
 	//    ChannelID: "channel_id_1",
-	//    ThingID:   "client_id_1",
+	//    ClientID:   "client_id_1",
 	//  }
 	//  err := sdk.Disconnect(conns, "domainID", "token")
 	//  fmt.Println(err)
@@ -856,7 +856,7 @@ type SDK interface {
 	// The `ConnectThing` method calls the `CreateThingPolicy` method under the hood.
 	//
 	// example:
-	//  err := sdk.ConnectThing("thingID", "channelID", "token")
+	//  err := sdk.ConnectThing("clientID", "channelID", "token")
 	//  fmt.Println(err)
 	ConnectClient(clientID, chanID, domainID, token string) errors.SDKError
 
@@ -865,7 +865,7 @@ type SDK interface {
 	// The `DisconnectClient` method calls the `DeleteThingPolicy` method under the hood.
 	//
 	// example:
-	//  err := sdk.DisconnectClient("thingID", "channelID", "token")
+	//  err := sdk.DisconnectClient("clientID", "channelID", "token")
 	//  fmt.Println(err)
 	DisconnectClient(clientID, chanID, domainID, token string) errors.SDKError
 
@@ -906,7 +906,7 @@ type SDK interface {
 	//
 	// example:
 	//  cfg := sdk.BootstrapConfig{
-	//    ThingID: "thingID",
+	//    ClientID: "clientID",
 	//    Name: "bootstrap",
 	//    ExternalID: "externalID",
 	//    ExternalKey: "externalKey",
@@ -927,7 +927,7 @@ type SDK interface {
 	//
 	// example:
 	//  cfg := sdk.BootstrapConfig{
-	//    ThingID: "thingID",
+	//    ClientID: "clientID",
 	//    Name: "bootstrap",
 	//    ExternalID: "externalID",
 	//    ExternalKey: "externalKey",
@@ -986,14 +986,14 @@ type SDK interface {
 	// Whitelist updates Thing state Config with given ID belonging to the user identified by the given token.
 	//
 	// example:
-	//  err := sdk.Whitelist("thingID", 1, "domainID", "token")
+	//  err := sdk.Whitelist("clientID", 1, "domainID", "token")
 	//  fmt.Println(err)
 	Whitelist(thingID string, state int, domainID, token string) errors.SDKError
 
 	// IssueCert issues a certificate for a client required for mTLS.
 	//
 	// example:
-	//  cert, _ := sdk.IssueCert("thingID", "24h", "domainID", "token")
+	//  cert, _ := sdk.IssueCert("clientID", "24h", "domainID", "token")
 	//  fmt.Println(cert)
 	IssueCert(thingID, validity, domainID, token string) (Cert, errors.SDKError)
 
@@ -1007,14 +1007,14 @@ type SDK interface {
 	// ViewCertByThing retrieves a list of certificates' serial IDs for a given client ID.
 	//
 	// example:
-	//  cserial, _ := sdk.ViewCertByThing("thingID", "domainID", "token")
+	//  cserial, _ := sdk.ViewCertByThing("clientID", "domainID", "token")
 	//  fmt.Println(cserial)
 	ViewCertByThing(thingID, domainID, token string) (CertSerials, errors.SDKError)
 
 	// RevokeCert revokes certificate for client with thingID
 	//
 	// example:
-	//  tm, _ := sdk.RevokeCert("thingID", "domainID", "token")
+	//  tm, _ := sdk.RevokeCert("clientID", "domainID", "token")
 	//  fmt.Println(tm)
 	RevokeCert(thingID, domainID, token string) (time.Time, errors.SDKError)
 
@@ -1210,7 +1210,7 @@ type SDK interface {
 	// Journal returns a list of journal logs.
 	//
 	// For example:
-	//  journals, _ := sdk.Journal("client", "thingID", PageMetadata{Offset: 0, Limit: 10, Operation: "users.create"}, "token")
+	//  journals, _ := sdk.Journal("client", "clientID", PageMetadata{Offset: 0, Limit: 10, Operation: "users.create"}, "token")
 	//  fmt.Println(journals)
 	Journal(entityType, entityID string, pm PageMetadata, token string) (journal JournalsPage, err error)
 }

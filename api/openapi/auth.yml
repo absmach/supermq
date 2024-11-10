@@ -684,7 +684,7 @@ components:
           type: string
           description: |
             Specifies an object field for the field.
-            Object indicates application objects such as ThingID.
+            Object indicates application objects such as Client ID.
         subjects:
           type: array
           minItems: 1

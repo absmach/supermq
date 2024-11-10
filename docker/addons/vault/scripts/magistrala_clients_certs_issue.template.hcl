@@ -1,6 +1,6 @@
 
 # Allow issue certificate with role with default issuer from Intermediate PKI
-path "${MG_VAULT_PKI_INT_PATH}/issue/${MG_VAULT_PKI_INT_THINGS_CERTS_ROLE_NAME}" {
+path "${MG_VAULT_PKI_INT_PATH}/issue/${MG_VAULT_PKI_INT_CLIENTS_CERTS_ROLE_NAME}" {
    capabilities = ["create",  "update"]
 }
 

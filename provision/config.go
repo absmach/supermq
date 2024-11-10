@@ -22,7 +22,7 @@ type ServiceConf struct {
 	TLS        bool   `toml:"tls"           env:"MG_PROVISION_ENV_CLIENTS_TLS"      envDefault:"false"`
 	ServerCert string `toml:"server_cert"   env:"MG_PROVISION_SERVER_CERT"          envDefault:""`
 	ServerKey  string `toml:"server_key"    env:"MG_PROVISION_SERVER_KEY"           envDefault:""`
-	ThingsURL  string `toml:"things_url"    env:"MG_PROVISION_THINGS_LOCATION"      envDefault:"http://localhost"`
+	ClientsURL string `toml:"clients_url"    env:"MG_PROVISION_CLIENTS_LOCATION"      envDefault:"http://localhost"`
 	UsersURL   string `toml:"users_url"     env:"MG_PROVISION_USERS_LOCATION"       envDefault:"http://localhost"`
 	HTTPPort   string `toml:"http_port"     env:"MG_PROVISION_HTTP_PORT"            envDefault:"9016"`
 	MgEmail    string `toml:"mg_email"      env:"MG_PROVISION_EMAIL"                envDefault:"test@example.com"`

@@ -44,7 +44,7 @@ func generateTestCerts(t *testing.T) (certs.Cert, sdk.Cert) {
 	expirationTime, err := time.Parse(time.RFC3339, "2032-01-01T00:00:00Z")
 	assert.Nil(t, err, fmt.Sprintf("failed to parse expiration time: %v", err))
 	c := certs.Cert{
-		ThingID:      clientID,
+		ClientID:     clientID,
 		SerialNumber: serial,
 		ExpiryTime:   expirationTime,
 		Certificate:  valid,

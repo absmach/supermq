@@ -31,7 +31,7 @@ default values.
 | MG_CLIENTS_DB_PORT               | Database host port                                                      | 5432                           |
 | MG_CLIENTS_DB_USER               | Database user                                                           | magistrala                     |
 | MG_CLIENTS_DB_PASS               | Database password                                                       | magistrala                     |
-| MG_CLIENTS_DB_NAME               | Name of the database used by the service                                | clients                         |
+| MG_CLIENTS_DB_NAME               | Name of the database used by the service                                | clients                        |
 | MG_CLIENTS_DB_SSL_MODE           | Database connection SSL mode (disable, require, verify-ca, verify-full) | disable                        |
 | MG_CLIENTS_DB_SSL_CERT           | Path to the PEM encoded certificate file                                | ""                             |
 | MG_CLIENTS_DB_SSL_KEY            | Path to the PEM encoded key file                                        | ""                             |

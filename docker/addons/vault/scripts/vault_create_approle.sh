@@ -47,7 +47,7 @@ source "$scriptdir/vault_cmd.sh"
 vaultCreatePolicyFile() {
     envsubst '
     ${MG_VAULT_PKI_INT_PATH}
-    ${MG_VAULT_PKI_INT_THINGS_CERTS_ROLE_NAME}
+    ${MG_VAULT_PKI_INT_CLIENTS_CERTS_ROLE_NAME}
     ' < "$scriptdir/magistrala_clients_certs_issue.template.hcl" > "$scriptdir/magistrala_clients_certs_issue.hcl"
 }
 
@@ -85,20 +85,20 @@ vaultCreateRole() {
 vaultWriteCustomRoleID() {
     echo "Writing custom role id"
     vault read -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} auth/approle/role/magistrala_clients_certs_issuer/role-id
-    vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} auth/approle/role/magistrala_clients_certs_issuer/role-id role_id=${MG_VAULT_THINGS_CERTS_ISSUER_ROLEID}
+    vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} auth/approle/role/magistrala_clients_certs_issuer/role-id role_id=${MG_VAULT_CLIENTS_CERTS_ISSUER_ROLEID}
 }
 
 vaultWriteCustomSecret() {
     echo "Writing custom secret"
     vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} -f auth/approle/role/magistrala_clients_certs_issuer/secret-id
-    vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} auth/approle/role/magistrala_clients_certs_issuer/custom-secret-id secret_id=${MG_VAULT_THINGS_CERTS_ISSUER_SECRET} num_uses=0 ttl=0
+    vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} auth/approle/role/magistrala_clients_certs_issuer/custom-secret-id secret_id=${MG_VAULT_CLIENTS_CERTS_ISSUER_SECRET} num_uses=0 ttl=0
 }
 
 vaultTestRoleLogin() {
     echo "Testing custom roleid secret by logging in"
     vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} auth/approle/login \
-        role_id=${MG_VAULT_THINGS_CERTS_ISSUER_ROLEID} \
-        secret_id=${MG_VAULT_THINGS_CERTS_ISSUER_SECRET}
+        role_id=${MG_VAULT_CLIENTS_CERTS_ISSUER_ROLEID} \
+        secret_id=${MG_VAULT_CLIENTS_CERTS_ISSUER_SECRET}
 }
 
 if ! command -v jq &> /dev/null; then

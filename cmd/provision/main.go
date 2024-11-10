@@ -75,7 +75,7 @@ func main() {
 
 	SDKCfg := mgsdk.Config{
 		UsersURL:        cfg.Server.UsersURL,
-		ClientsURL:      cfg.Server.ThingsURL,
+		ClientsURL:      cfg.Server.ClientsURL,
 		BootstrapURL:    cfg.Server.MgBSURL,
 		CertsURL:        cfg.Server.MgCertsURL,
 		MsgContentType:  contentType,

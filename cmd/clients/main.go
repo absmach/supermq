@@ -280,7 +280,7 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 		return nil, nil, err
 	}
 
-	// Things service
+	// Clients service
 	cache := cache.NewCache(cacheClient, keyDuration)
 
 	csvc, err := clients.NewService(repo, ps, cache, channels, groups, idp, sidp)

@@ -206,7 +206,7 @@ vaultGenerateServerCertificate() {
 
 vaultSetupThingCertsRole() {
     echo "Setup Thing Certs role"
-    vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} ${MG_VAULT_PKI_INT_PATH}/roles/${MG_VAULT_PKI_INT_THINGS_CERTS_ROLE_NAME} \
+    vault write -namespace=${MG_VAULT_NAMESPACE} -address=${MG_VAULT_ADDR} ${MG_VAULT_PKI_INT_PATH}/roles/${MG_VAULT_PKI_INT_CLIENTS_CERTS_ROLE_NAME} \
         allow_subdomains=true \
         allow_any_name=true \
         max_ttl="2160h"
