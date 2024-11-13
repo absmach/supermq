@@ -49,19 +49,3 @@ func (req authReq) validate() error {
 
 	return nil
 }
-
-type authPATReq struct {
-	paToken                  string
-	platformEntityType       string
-	optionalDomainID         string
-	optionalDomainEntityType string
-	operation                string
-	entityIDs                []string
-}
-
-func (req authPATReq) validate() error {
-	if req.paToken == "" {
-		return apiutil.ErrBearerToken
-	}
-	return nil
-}

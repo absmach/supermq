@@ -41,4 +41,5 @@ type Session struct {
 //go:generate mockery --name Authentication --output=./mocks --filename authn.go --quiet --note "Copyright (c) Abstract Machines"
 type Authentication interface {
 	Authenticate(ctx context.Context, token string) (Session, error)
+	AuthenticatePAT(ctx context.Context, token string) (Session, error)
 }

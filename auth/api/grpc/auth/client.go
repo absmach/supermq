@@ -17,9 +17,10 @@ import (
 const authSvcName = "auth.v1.AuthService"
 
 type authGrpcClient struct {
-	authenticate endpoint.Endpoint
-	authorize    endpoint.Endpoint
-	timeout      time.Duration
+	authenticate    endpoint.Endpoint
+	authenticatePAT endpoint.Endpoint
+	authorize       endpoint.Endpoint
+	timeout         time.Duration
 }
 
 var _ grpcAuthV1.AuthServiceClient = (*authGrpcClient)(nil)
@@ -34,6 +35,14 @@ func NewAuthClient(conn *grpc.ClientConn, timeout time.Duration) grpcAuthV1.Auth
 			encodeIdentifyRequest,
 			decodeIdentifyResponse,
 			grpcAuthV1.AuthNRes{},
+		).Endpoint(),
+		authenticatePAT: kitgrpc.NewClient(
+			conn,
+			authSvcName,
+			"AuthenticatePAT",
+			encodeIdentifyRequest,
+			decodeIdentifyPATResponse,
+			grpcAuthV1.AuthNPATRes{},
 		).Endpoint(),
 		authorize: kitgrpc.NewClient(
 			conn,
@@ -67,6 +76,23 @@ func encodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{},
 func decodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(*grpcAuthV1.AuthNRes)
 	return authenticateRes{id: res.GetId(), userID: res.GetUserId(), domainID: res.GetDomainId()}, nil
+}
+
+func (client authGrpcClient) AuthenticatePAT(ctx context.Context, token *grpcAuthV1.AuthNReq, _ ...grpc.CallOption) (*grpcAuthV1.AuthNPATRes, error) {
+	ctx, cancel := context.WithTimeout(ctx, client.timeout)
+	defer cancel()
+
+	res, err := client.authenticatePAT(ctx, authenticateReq{token: token.GetToken()})
+	if err != nil {
+		return &grpcAuthV1.AuthNPATRes{}, grpcapi.DecodeError(err)
+	}
+	ir := res.(authenticateRes)
+	return &grpcAuthV1.AuthNPATRes{Id: ir.id, UserId: ir.userID}, nil
+}
+
+func decodeIdentifyPATResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(*grpcAuthV1.AuthNPATRes)
+	return authenticateRes{id: res.GetId(), userID: res.GetUserId()}, nil
 }
 
 func (client authGrpcClient) Authorize(ctx context.Context, req *grpcAuthV1.AuthZReq, _ ...grpc.CallOption) (r *grpcAuthV1.AuthZRes, err error) {

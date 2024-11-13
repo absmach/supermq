@@ -11,6 +11,7 @@ option go_package = "github.com/absmach/supermq/internal/grpc/auth/v1";
 service AuthService {
   rpc Authorize(AuthZReq) returns (AuthZRes) {}
   rpc Authenticate(AuthNReq) returns (AuthNRes) {}
+  rpc AuthenticatePAT(AuthNReq) returns (AuthNPATRes) {}
 }
 
 
@@ -22,6 +23,11 @@ message AuthNRes {
   string id    = 1;     // id
   string user_id = 2;   // user id
   string domain_id = 3; // domain id
+}
+
+message AuthNPATRes {
+  string id    = 1; // pat id
+  string user_id = 2; // user id
 }
 
 message AuthZReq {

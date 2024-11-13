@@ -105,13 +105,6 @@ func MakeHandler(svc auth.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
 			api.EncodeResponse,
 			opts...,
 		).ServeHTTP)
-
-		r.Post("/authorize", kithttp.NewServer(
-			(authorizePATEndpoint(svc)),
-			decodeAuthorizePATRequest,
-			api.EncodeResponse,
-			opts...,
-		).ServeHTTP)
 	})
 	return mux
 }
@@ -251,16 +244,4 @@ func decodeClearPATAllScopeEntryRequest(_ context.Context, r *http.Request) (int
 		token: apiutil.ExtractBearerToken(r),
 		id:    chi.URLParam(r, "id"),
 	}, nil
-}
-
-func decodeAuthorizePATRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, apiutil.ErrUnsupportedContentType
-	}
-
-	req := authorizePATReq{token: apiutil.ExtractBearerToken(r)}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
-	}
-	return req, nil
 }

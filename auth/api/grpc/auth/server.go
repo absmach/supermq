@@ -16,8 +16,9 @@ var _ grpcAuthV1.AuthServiceServer = (*authGrpcServer)(nil)
 
 type authGrpcServer struct {
 	grpcAuthV1.UnimplementedAuthServiceServer
-	authorize    kitgrpc.Handler
-	authenticate kitgrpc.Handler
+	authorize       kitgrpc.Handler
+	authenticate    kitgrpc.Handler
+	authenticatePAT kitgrpc.Handler
 }
 
 // NewAuthServer returns new AuthnServiceServer instance.
@@ -34,6 +35,12 @@ func NewAuthServer(svc auth.Service) grpcAuthV1.AuthServiceServer {
 			decodeAuthenticateRequest,
 			encodeAuthenticateResponse,
 		),
+
+		authenticatePAT: kitgrpc.NewServer(
+			(authenticatePATEndpoint(svc)),
+			decodeAuthenticateRequest,
+			encodeAuthenticatePATResponse,
+		),
 	}
 }
 
@@ -43,6 +50,14 @@ func (s *authGrpcServer) Authenticate(ctx context.Context, req *grpcAuthV1.AuthN
 		return nil, grpcapi.EncodeError(err)
 	}
 	return res.(*grpcAuthV1.AuthNRes), nil
+}
+
+func (s *authGrpcServer) AuthenticatePAT(ctx context.Context, req *grpcAuthV1.AuthNReq) (*grpcAuthV1.AuthNPATRes, error) {
+	_, res, err := s.authenticatePAT.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, grpcapi.EncodeError(err)
+	}
+	return res.(*grpcAuthV1.AuthNPATRes), nil
 }
 
 func (s *authGrpcServer) Authorize(ctx context.Context, req *grpcAuthV1.AuthZReq) (*grpcAuthV1.AuthZRes, error) {
@@ -61,6 +76,11 @@ func decodeAuthenticateRequest(_ context.Context, grpcReq interface{}) (interfac
 func encodeAuthenticateResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(authenticateRes)
 	return &grpcAuthV1.AuthNRes{Id: res.id, UserId: res.userID, DomainId: res.domainID}, nil
+}
+
+func encodeAuthenticatePATResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(authenticateRes)
+	return &grpcAuthV1.AuthNPATRes{Id: res.id, UserId: res.userID}, nil
 }
 
 func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
