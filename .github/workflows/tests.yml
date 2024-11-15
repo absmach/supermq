@@ -1,6 +1,3 @@
-# Copyright (c) Abstract Machines
-# SPDX-License-Identifier: Apache-2.0
-
 name: CI Pipeline
 
 on:
@@ -22,6 +19,19 @@ jobs:
         with:
           go-version: 1.22.x
           cache-dependency-path: "go.sum"
+
+      - name: Install Protocol Buffers Compiler
+        run: |
+          sudo apt-get install -y protobuf-compiler
+
+      - name: Install protoc-gen-lint
+        run: |
+          go install github.com/ckaznocha/protoc-gen-lint@latest
+          export PATH=$PATH:$HOME/go/bin
+
+      - name: Lint Protobuf Files
+        run: |
+          protoc --lint_out=. *.proto
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
