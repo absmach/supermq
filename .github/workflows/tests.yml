@@ -23,22 +23,17 @@ jobs:
           go-version: 1.22.x
           cache-dependency-path: "go.sum"
 
-      - name: Install Protocol Buffers Compiler
+      - name: Install protolint
         run: |
-          PB_REL="https://github.com/protocolbuffers/protobuf/releases"
-          curl -LO $PB_REL/download/v27.1/protoc-27.1-linux-x86_64.zip
-          unzip protoc-27.1-linux-x86_64.zip -d $HOME/.local
-          export PATH="$PATH:$HOME/.local/bin"
-
-      - name: Install protoc-gen-lint
-        run: |
-          go install github.com/ckaznocha/protoc-gen-lint@latest
-          export PATH=$PATH:$HOME/go/bin
+          curl -LO https://github.com/yoheimuta/protolint/releases/download/v0.50.5/protolint_0.50.5_linux_amd64.tar.gz
+          tar -xzvf protolint_0.50.5_linux_amd64.tar.gz
+          mv protolint $HOME/.local/bin
+          export PATH=$PATH:$HOME/.local/bin
 
       - name: Lint Protobuf Files
         run: |
-          protoc --version
-          protoc --lint_out=. *.proto
+          protolint version
+          protolint . 
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
