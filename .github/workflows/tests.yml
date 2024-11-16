@@ -29,7 +29,6 @@ jobs:
 
       - name: Lint Protobuf Files
         run: |
-          protolint version
           protolint . 
 
       - name: golangci-lint
