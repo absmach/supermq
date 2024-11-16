@@ -25,10 +25,7 @@ jobs:
 
       - name: Install protolint
         run: |
-          curl -LO https://github.com/yoheimuta/protolint/releases/download/v0.50.5/protolint_0.50.5_linux_amd64.tar.gz
-          tar -xzvf protolint_0.50.5_linux_amd64.tar.gz
-          mv protolint $HOME/.local/bin
-          export PATH=$PATH:$HOME/.local/bin
+          go install github.com/yoheimuta/protolint/cmd/protolint@latest
 
       - name: Lint Protobuf Files
         run: |
