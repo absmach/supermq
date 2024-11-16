@@ -27,7 +27,7 @@ jobs:
         run: |
           PB_REL="https://github.com/protocolbuffers/protobuf/releases"
           curl -LO $PB_REL/download/v27.1/protoc-27.1-linux-x86_64.zip
-          unzip protoc-25.1-linux-x86_64.zip -d $HOME/.local
+          unzip protoc-27.1-linux-x86_64.zip -d $HOME/.local
           export PATH="$PATH:$HOME/.local/bin"
 
       - name: Install protoc-gen-lint
