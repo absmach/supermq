@@ -34,6 +34,7 @@ jobs:
 
       - name: Lint Protobuf Files
         run: |
+          protoc --version
           protoc --lint_out=. *.proto
 
       - name: golangci-lint
