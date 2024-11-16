@@ -46,7 +46,7 @@ message AuthNReq {
 }
 
 message AuthNRes {
-  string id = 1; // IMPROVEMENT NOTE: change name from "id" to "subject", sub in jwt = user id + domain id
+  string id = 1; // change "id" to "subject", sub in jwt = user + domain id
   string user_id = 2; // user id
   string domain_id = 3; // domain id
 }
