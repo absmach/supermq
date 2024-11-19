@@ -45,7 +45,7 @@ When the Vault service is started, some initialization steps need to be done to 
 
 ## Setup
 
-The following scripts are provided, which work on the running Vault service from within the `docker/addons/vault/scripts` directory in `magistrala` repository. To use them same vault scripts for the [devops](https://github.com/absmach/devops) repository, you need to pass the path to the `.env` file in the devops repository using the `--env-file` flag as described in this [README](https://github.com/absmach/devops/blob/master/README.md).
+The following scripts are provided, which work on the running Vault service from within the `docker/addons/vault/scripts` directory.
 
 ### 1. `vault_init.sh`
 
