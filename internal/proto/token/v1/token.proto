@@ -24,7 +24,7 @@ message RefreshReq {
 // field can be used to determine how to validate the token.
 // Also, different tokens can be encoded in different ways.
 message Token {
-    string accessToken = 1;
-    optional string refreshToken = 2;
-    string accessType = 3;
+  string access_token = 1;
+  optional string refresh_token = 2;
+  string access_type = 3;
 }

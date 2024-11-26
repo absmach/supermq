@@ -15,13 +15,13 @@ service AuthService {
 
 
 message AuthNReq {
-    string token = 1;
+  string token = 1;
 }
 
 message AuthNRes {
-    string id    = 1; // IMPROVEMENT NOTE: change name from "id" to "subject" , sub in jwt = user id  + domain id //
-    string user_id = 2; // user id
-    string domain_id = 3; // domain id
+  string id    = 1; // id
+  string user_id = 2; // user id
+  string domain_id = 3; // domain id
 }
 
 message AuthZReq {

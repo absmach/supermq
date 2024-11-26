@@ -13,7 +13,9 @@ service DomainsService {
   rpc DeleteUserFromDomains(DeleteUserReq) returns (DeleteUserRes) {}
 }
 
-message DeleteUserRes { bool deleted = 1; }
+message DeleteUserRes {
+  bool deleted = 1;
+}
 
 message DeleteUserReq{
   string id          = 1;
