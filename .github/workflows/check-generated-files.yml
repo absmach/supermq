@@ -79,9 +79,9 @@ jobs:
       - name: Set up protoc
         if: steps.changes.outputs.proto == 'true'
         run: |
-          PROTOC_VERSION=27.1
-          PROTOC_GEN_VERSION=v1.34.2
-          PROTOC_GRPC_VERSION=v1.4.0
+          PROTOC_VERSION=28.3
+          PROTOC_GEN_VERSION=v1.35.2
+          PROTOC_GRPC_VERSION=v1.5.1
 
           # Export the variables so they are available in future steps
           echo "PROTOC_VERSION=$PROTOC_VERSION" >> $GITHUB_ENV
