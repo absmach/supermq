@@ -15,6 +15,7 @@ import (
 	climocks "github.com/absmach/magistrala/clients/mocks"
 	"github.com/absmach/magistrala/internal/testsutil"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	mgauthn "github.com/absmach/magistrala/pkg/authn"
 	authnmocks "github.com/absmach/magistrala/pkg/authn/mocks"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/transformers/senml"

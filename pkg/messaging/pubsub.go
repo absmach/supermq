@@ -56,7 +56,7 @@ type Subscriber interface {
 
 // PubSub  represents aggregation interface for publisher and subscriber.
 //
-//go:generate mockery --name PubSub --filename pubsub.go --quiet --note "Copyright (c) Abstract Machines"
+//go:generate mockery --name PubSub --output=./mocks --filename pubsub.go --quiet --note "Copyright (c) Abstract Machines"
 type PubSub interface {
 	Publisher
 	Subscriber
