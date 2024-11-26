@@ -1,8 +1,8 @@
-# Magistrala
+# SuperMQ
 
-[![Check License Header](https://github.com/absmach/magistrala/actions/workflows/check-license.yaml/badge.svg?branch=main)](https://github.com/absmach/magistrala/actions/workflows/check-license.yaml)
-[![Check the consistency of generated files](https://github.com/absmach/magistrala/actions/workflows/check-generated-files.yml/badge.svg?branch=main)](https://github.com/absmach/magistrala/actions/workflows/check-generated-files.yml)
-[![Continuous Delivery](https://github.com/absmach/magistrala/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/absmach/magistrala/actions/workflows/build.yml)
+[![Check License Header](https://github.com/absmach/supermq/actions/workflows/check-license.yaml/badge.svg?branch=main)](https://github.com/absmach/supermq/actions/workflows/check-license.yaml)
+[![Check the consistency of generated files](https://github.com/absmach/supermq/actions/workflows/check-generated-files.yml/badge.svg?branch=main)](https://github.com/absmach/supermq/actions/workflows/check-generated-files.yml)
+[![Continuous Delivery](https://github.com/absmach/supermq/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/absmach/supermq/actions/workflows/build.yml)
 [![go report card][grc-badge]][grc-url]
 [![coverage][cov-badge]][cov-url]
 [![license][license]](LICENSE)
@@ -10,9 +10,9 @@
 
 ![banner][banner]
 
-Magistrala is modern, scalable, secure, open-source, and patent-free IoT cloud platform written in Go.
+SuperMQ is modern, scalable, secure, open-source, and patent-free cloud platform for messaging and event-driven architecture (EDA) written in Go.
 
-It accepts user and thing (sensor, actuator, application) connections over various network protocols (i.e. HTTP, MQTT, WebSocket, CoAP), thus making a seamless bridge between them. It is used as the IoT middleware for building complex IoT solutions.
+It accepts user and client (device, user, application) connections over various network protocols (i.e. HTTP, MQTT, WebSocket, CoAP), thus making a seamless bridge between them. It is used as the architecture backbone for building complex distributed solutions.
 
 For more details, check out the [official documentation][docs].
 For extra bits and services see [our contrib repository][contrib].
@@ -35,11 +35,11 @@ For extra bits and services see [our contrib repository][contrib].
 
 ## Prerequisites
 
-The following are needed to run Magistrala:
+The following are needed to run SuperMQ:
 
 - [Docker](https://docs.docker.com/install/) (version 26.0.0)
 
-Developing Magistrala will also require:
+Developing SuperMQ will also require:
 
 - [Go](https://golang.org/doc/install) (version 1.21)
 - [Protobuf](https://github.com/protocolbuffers/protobuf#protocol-compiler-installation) (version 25.1)
@@ -49,10 +49,10 @@ Developing Magistrala will also require:
 Once the prerequisites are installed, execute the following commands from the project's root:
 
 ```bash
-docker compose -f docker/docker-compose.yml --env-file docker/.env -p git_github_com_absmach_magistrala_git_  up
+docker compose -f docker/docker-compose.yml --env-file docker/.env -p git_github_com_absmach_supermq_git_  up
 ```
 
-This will bring up the Magistrala docker services and interconnect them. This command can also be executed using the project's included Makefile:
+This will bring up the SuperMQ docker services and interconnect them. This command can also be executed using the project's included Makefile:
 
 ```bash
 make run
@@ -72,11 +72,11 @@ Check that `.env` file contains:
 MG_RELEASE_TAG=<release_number>
 ```
 
-> `docker-compose` should be used for development and testing deployments. For production we suggest using [Kubernetes](https://docs.magistrala.abstractmachines.fr/kubernetes).
+> `docker-compose` should be used for development and testing deployments. For production we suggest using [Kubernetes](https://docs.supermq.abstractmachines.fr/kubernetes).
 
 ## Usage
 
-The quickest way to start using Magistrala is via the CLI. The latest version can be downloaded from the [official releases page][releases].
+The quickest way to start using SuperMQ is via the CLI. The latest version can be downloaded from the [official releases page][releases].
 
 It can also be built and used from the project's root directory:
 
@@ -85,37 +85,37 @@ make cli
 ./build/cli version
 ```
 
-Additional details on using the CLI can be found in the [CLI documentation](https://docs.magistrala.abstractmachines.fr/cli).
+Additional details on using the CLI can be found in the [CLI documentation](https://docs.supermq.abstractmachines.fr/cli).
 
 ## Documentation
 
-Official documentation is hosted at [Magistrala official docs page][docs]. Documentation is auto-generated, checkout the instructions on [official docs repository](https://github.com/absmach/magistrala-docs):
+Official documentation is hosted at [SuperMQ official docs page][docs]. Documentation is auto-generated, checkout the instructions on [official docs repository](https://github.com/absmach/supermq-docs):
 
 If you spot an error or a need for corrections, please let us know - or even better: send us a PR.
 
 ## Authors
 
-Main architect and BDFL of Magistrala project is [@drasko][drasko].
+Main architect and BDFL of SuperMQ project is [@drasko][drasko].
 
 Additionally, [@nmarcetic][nikola] and [@janko-isidorovic][janko] assured overall architecture and design, while [@manuio][manu] and [@darkodraskovic][darko] helped with crafting initial implementation and continuously worked on the project evolutions.
 
-Besides them, Magistrala is constantly improved and actively developed by [@anovakovic01][alex], [@dusanb94][dusan], [@srados][sava], [@gsaleh][george], [@blokovi][iva], [@chombium][kole], [@mteodor][mirko], [@rodneyosodo][rodneyosodo] and a large set of contributors.
+Besides them, SuperMQ is constantly improved and actively developed by [@anovakovic01][alex], [@dusanb94][dusan], [@srados][sava], [@gsaleh][george], [@blokovi][iva], [@chombium][kole], [@mteodor][mirko], [@rodneyosodo][rodneyosodo] and a large set of contributors.
 
 Maintainers are listed in [MAINTAINERS](MAINTAINERS) file.
 
-The Magistrala team would like to give special thanks to [@mijicd][dejan] for his monumental work on designing and implementing a highly improved and optimized version of the platform, and [@malidukica][dusanm] for his effort on implementing the initial user interface.
+The SuperMQ team would like to give special thanks to [@mijicd][dejan] for his monumental work on designing and implementing a highly improved and optimized version of the platform, and [@malidukica][dusanm] for his effort on implementing the initial user interface.
 
 ## Professional Support
 
-There are many companies offering professional support for the Magistrala system.
+There are many companies offering professional support for the SuperMQ system.
 
 If you need this kind of support, best is to reach out to [@drasko][drasko] directly, and he will point you out to the best-matching support team.
 
 ## Contributing
 
-Thank you for your interest in Magistrala and the desire to contribute!
+Thank you for your interest in SuperMQ and the desire to contribute!
 
-1. Take a look at our [open issues](https://github.com/absmach/magistrala/issues). The [good-first-issue](https://github.com/absmach/magistrala/labels/good-first-issue) label is specifically for issues that are great for getting started.
+1. Take a look at our [open issues](https://github.com/absmach/supermq/issues). The [good-first-issue](https://github.com/absmach/supermq/labels/good-first-issue) label is specifically for issues that are great for getting started.
 2. Checkout the [contribution guide](CONTRIBUTING.md) to learn more about our style and conventions.
 3. Make your changes compatible to our workflow.
 
@@ -123,7 +123,7 @@ Also, explore our [contrib][contrib] repository for extra services such as Cassa
 
 ### We're Hiring
 
-You like Magistrala and you would like to make it your day job? We're always looking for talented engineers interested in open-source, IoT and distributed systems. If you recognize yourself, reach out to [@drasko][drasko] - he will contact you back.
+You like SuperMQ and you would like to make it your day job? We're always looking for talented engineers interested in open-source, IoT and distributed systems. If you recognize yourself, reach out to [@drasko][drasko] - he will contact you back.
 
 > The best way to grab our attention is, of course, by sending PRs :sunglasses:.
 
@@ -138,40 +138,40 @@ You like Magistrala and you would like to make it your day job? We're always loo
 [Apache-2.0](LICENSE)
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fabsmach%2Fmagistrala.svg?type=large&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fabsmach%2Fmagistrala?ref=badge_large&issueType=license)
-## Data Collection for Magistrala
+## Data Collection for SuperMQ
 
-Magistrala is committed to continuously improving its services and ensuring a seamless experience for its users. To achieve this, we collect certain data from your deployments. Rest assured, this data is collected solely for the purpose of enhancing Magistrala and is not used with any malicious intent. The deployment summary can be found on our [website][callhome].
+SuperMQ is committed to continuously improving its services and ensuring a seamless experience for its users. To achieve this, we collect certain data from your deployments. Rest assured, this data is collected solely for the purpose of enhancing SuperMQ and is not used with any malicious intent. The deployment summary can be found on our [website][callhome].
 
 The collected data includes:
 
 - **IP Address** - Used for approximate location information on deployments.
 - **Services Used** - To understand which features are popular and prioritize future developments.
-- **Last Seen Time** - To ensure the stability and availability of Magistrala.
-- **Magistrala Version** - To track the software version and deliver relevant updates.
+- **Last Seen Time** - To ensure the stability and availability of SuperMQ.
+- **SuperMQ Version** - To track the software version and deliver relevant updates.
 
 We take your privacy and data security seriously. All data collected is handled in accordance with our stringent privacy policies and industry best practices.
 
 Data collection is on by default and can be disabled by setting the env variable:
-`MG_SEND_TELEMETRY=false`
+`SMQ_SEND_TELEMETRY=false`
 
-By utilizing Magistrala, you actively contribute to its improvement. Together, we can build a more robust and efficient IoT platform. Thank you for your trust in Magistrala!
+By utilizing SuperMQ, you actively contribute to its improvement. Together, we can build a more robust and efficient platform. Thank you for your trust in SuperMQ!
 
-[banner]: https://github.com/absmach/magistrala-docs/blob/main/docs/img/gopherBanner.jpg
-[docs]: https://docs.magistrala.abstractmachines.fr
+[banner]: https://github.com/absmach/supermq-docs/blob/main/docs/img/gopherBanner.jpg
+[docs]: https://docs.supermq.abstractmachines.fr
 [docker]: https://www.docker.com
 [forum]: https://groups.google.com/forum/#!forum/mainflux
-[gitter]: https://gitter.im/absmach/magistrala?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+[gitter]: https://gitter.im/absmach/supermq?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 [gitter-badge]: https://badges.gitter.im/Join%20Chat.svg
-[grc-badge]: https://goreportcard.com/badge/github.com/absmach/magistrala
-[grc-url]: https://goreportcard.com/report/github.com/absmach/magistrala
-[cov-badge]: https://codecov.io/gh/absmach/magistrala/graph/badge.svg?token=SEMDAO3L09
-[cov-url]: https://codecov.io/gh/absmach/magistrala
+[grc-badge]: https://goreportcard.com/badge/github.com/absmach/supermq
+[grc-url]: https://goreportcard.com/report/github.com/absmach/supermq
+[cov-badge]: https://codecov.io/gh/absmach/supermq/graph/badge.svg?token=nPCEr5nW8S
+[cov-url]: https://codecov.io/gh/absmach/supermq
 [license]: https://img.shields.io/badge/license-Apache%20v2.0-blue.svg
 [twitter]: https://twitter.com/absmach
 [agent]: https://github.com/absmach/agent
 [export]: https://github.com/absmach/export
 [kubernetes]: https://kubernetes.io/
-[releases]: https://github.com/absmach/magistrala/releases
+[releases]: https://github.com/absmach/supermq/releases
 [drasko]: https://github.com/drasko
 [nikola]: https://github.com/nmarcetic
 [dejan]: https://github.com/mijicd
