@@ -9,9 +9,8 @@ import "common/v1/common.proto";
 
 option go_package = "github.com/absmach/supermq/internal/grpc/clients/v1";
 
-// ClientsService is a service that provides
-// clients authorization functionalities
-// for magistrala services.
+// ClientsService is a service that provides clients
+// authorization functionalities for SuperMQ services.
 service ClientsService {
   // Authorize checks if the client is authorized to perform
   rpc Authenticate(AuthnReq)

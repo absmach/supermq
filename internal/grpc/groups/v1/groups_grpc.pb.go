@@ -30,8 +30,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// GroupssService is a service that provides groups functionalities
-// for magistrala services.
+// GroupssService is a service that provides groups
+// functionalities for SuperMQ services.
 type GroupsServiceClient interface {
 	RetrieveEntity(ctx context.Context, in *v1.RetrieveEntityReq, opts ...grpc.CallOption) (*v1.RetrieveEntityRes, error)
 }
@@ -58,8 +58,8 @@ func (c *groupsServiceClient) RetrieveEntity(ctx context.Context, in *v1.Retriev
 // All implementations must embed UnimplementedGroupsServiceServer
 // for forward compatibility.
 //
-// GroupssService is a service that provides groups functionalities
-// for magistrala services.
+// GroupssService is a service that provides groups
+// functionalities for SuperMQ services.
 type GroupsServiceServer interface {
 	RetrieveEntity(context.Context, *v1.RetrieveEntityReq) (*v1.RetrieveEntityRes, error)
 	mustEmbedUnimplementedGroupsServiceServer()

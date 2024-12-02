@@ -36,7 +36,7 @@ const (
 	envPrefixAuth     = "SMQ_AUTH_GRPC_"
 	envPrefixClients  = "SMQ_CLIENTS_AUTH_GRPC_"
 	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
-	defDB             = "magistrala"
+	defDB             = "supermq"
 	defSvcHTTPPort    = "9009"
 )
 

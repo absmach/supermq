@@ -76,7 +76,7 @@ func (pub *publisher) Publish(ctx context.Context, topic string, msg *messaging.
 		amqp.Publishing{
 			Headers:     amqp.Table{},
 			ContentType: "application/octet-stream",
-			AppId:       "magistrala-publisher",
+			AppId:       "supermq-publisher",
 			Body:        data,
 		})
 	if err != nil {

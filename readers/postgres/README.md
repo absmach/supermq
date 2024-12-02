@@ -8,33 +8,33 @@ The service is configured using the environment variables presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
 
-| Variable                            | Description                                   | Default                      |
-| ----------------------------------- | --------------------------------------------- | ---------------------------- |
-| SMQ_POSTGRES_READER_LOG_LEVEL        | Service log level                             | info                         |
-| SMQ_POSTGRES_READER_HTTP_HOST        | Service HTTP host                             | localhost                    |
-| SMQ_POSTGRES_READER_HTTP_PORT        | Service HTTP port                             | 9009                         |
-| SMQ_POSTGRES_READER_HTTP_SERVER_CERT | Service HTTP server cert                      | ""                           |
-| SMQ_POSTGRES_READER_HTTP_SERVER_KEY  | Service HTTP server key                       | ""                           |
-| SMQ_POSTGRES_HOST                    | Postgres DB host                              | localhost                    |
-| SMQ_POSTGRES_PORT                    | Postgres DB port                              | 5432                         |
-| SMQ_POSTGRES_USER                    | Postgres user                                 | magistrala                   |
-| SMQ_POSTGRES_PASS                    | Postgres password                             | magistrala                   |
-| SMQ_POSTGRES_NAME                    | Postgres database name                        | messages                     |
-| SMQ_POSTGRES_SSL_MODE                | Postgres SSL mode                             | disabled                     |
-| SMQ_POSTGRES_SSL_CERT                | Postgres SSL certificate path                 | ""                           |
-| SMQ_POSTGRES_SSL_KEY                 | Postgres SSL key                              | ""                           |
-| SMQ_POSTGRES_SSL_ROOT_CERT           | Postgres SSL root certificate path            | ""                           |
-| SMQ_CLIENTS_AUTH_GRPC_URL            | Clients service Auth gRPC URL                 | localhost:7000               |
-| SMQ_CLIENTS_AUTH_GRPC_TIMEOUT        | Clients service Auth gRPC timeout in seconds  | 1s                           |
-| SMQ_CLIENTS_AUTH_GRPC_CLIENT_TLS     | Clients service Auth gRPC TLS mode flag       | false                        |
-| SMQ_CLIENTS_AUTH_GRPC_CA_CERTS       | Clients service Auth gRPC CA certificates     | ""                           |
-| SMQ_AUTH_GRPC_URL                    | Auth service gRPC URL                         | localhost:7001               |
-| SMQ_AUTH_GRPC_TIMEOUT                | Auth service gRPC request timeout in seconds  | 1s                           |
-| SMQ_AUTH_GRPC_CLIENT_TLS             | Auth service gRPC TLS mode flag               | false                        |
-| SMQ_AUTH_GRPC_CA_CERTS               | Auth service gRPC CA certificates             | ""                           |
-| SMQ_JAEGER_URL                       | Jaeger server URL                             | http://jaeger:4318/v1/traces |
-| SMQ_SEND_TELEMETRY                   | Send telemetry to magistrala call home server | true                         |
-| SMQ_POSTGRES_READER_INSTANCE_ID      | Postgres reader instance ID                   |                              |
+| Variable                             | Description                                  | Default                      |
+| ------------------------------------ | -------------------------------------------- | ---------------------------- |
+| SMQ_POSTGRES_READER_LOG_LEVEL        | Service log level                            | info                         |
+| SMQ_POSTGRES_READER_HTTP_HOST        | Service HTTP host                            | localhost                    |
+| SMQ_POSTGRES_READER_HTTP_PORT        | Service HTTP port                            | 9009                         |
+| SMQ_POSTGRES_READER_HTTP_SERVER_CERT | Service HTTP server cert                     | ""                           |
+| SMQ_POSTGRES_READER_HTTP_SERVER_KEY  | Service HTTP server key                      | ""                           |
+| SMQ_POSTGRES_HOST                    | Postgres DB host                             | localhost                    |
+| SMQ_POSTGRES_PORT                    | Postgres DB port                             | 5432                         |
+| SMQ_POSTGRES_USER                    | Postgres user                                | supermq                      |
+| SMQ_POSTGRES_PASS                    | Postgres password                            | supermq                      |
+| SMQ_POSTGRES_NAME                    | Postgres database name                       | messages                     |
+| SMQ_POSTGRES_SSL_MODE                | Postgres SSL mode                            | disabled                     |
+| SMQ_POSTGRES_SSL_CERT                | Postgres SSL certificate path                | ""                           |
+| SMQ_POSTGRES_SSL_KEY                 | Postgres SSL key                             | ""                           |
+| SMQ_POSTGRES_SSL_ROOT_CERT           | Postgres SSL root certificate path           | ""                           |
+| SMQ_CLIENTS_AUTH_GRPC_URL            | Clients service Auth gRPC URL                | localhost:7000               |
+| SMQ_CLIENTS_AUTH_GRPC_TIMEOUT        | Clients service Auth gRPC timeout in seconds | 1s                           |
+| SMQ_CLIENTS_AUTH_GRPC_CLIENT_TLS     | Clients service Auth gRPC TLS mode flag      | false                        |
+| SMQ_CLIENTS_AUTH_GRPC_CA_CERTS       | Clients service Auth gRPC CA certificates    | ""                           |
+| SMQ_AUTH_GRPC_URL                    | Auth service gRPC URL                        | localhost:7001               |
+| SMQ_AUTH_GRPC_TIMEOUT                | Auth service gRPC request timeout in seconds | 1s                           |
+| SMQ_AUTH_GRPC_CLIENT_TLS             | Auth service gRPC TLS mode flag              | false                        |
+| SMQ_AUTH_GRPC_CA_CERTS               | Auth service gRPC CA certificates            | ""                           |
+| SMQ_JAEGER_URL                       | Jaeger server URL                            | http://jaeger:4318/v1/traces |
+| SMQ_SEND_TELEMETRY                   | Send telemetry to supermq call home server   | true                         |
+| SMQ_POSTGRES_READER_INSTANCE_ID      | Postgres reader instance ID                  |                              |
 
 ## Deployment
 
@@ -47,7 +47,7 @@ To start the service, execute the following shell script:
 # download the latest version of the service
 git clone https://github.com/absmach/supermq
 
-cd magistrala
+cd supermq
 
 # compile the postgres writer
 make postgres-writer
@@ -79,9 +79,9 @@ SMQ_AUTH_GRPC_TIMEOUT=[Auth service gRPC request timeout in seconds] \
 SMQ_AUTH_GRPC_CLIENT_TLS=[Auth service gRPC TLS mode flag] \
 SMQ_AUTH_GRPC_CA_CERTS=[Auth service gRPC CA certificates] \
 SMQ_JAEGER_URL=[Jaeger server URL] \
-SMQ_SEND_TELEMETRY=[Send telemetry to magistrala call home server] \
+SMQ_SEND_TELEMETRY=[Send telemetry to supermq call home server] \
 SMQ_POSTGRES_READER_INSTANCE_ID=[Postgres reader instance ID] \
-$GOBIN/magistrala-postgres-reader
+$GOBIN/supermq-postgres-reader
 ```
 
 ## Usage

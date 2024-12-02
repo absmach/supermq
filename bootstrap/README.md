@@ -22,9 +22,9 @@ Client Configuration consists of two logical parts: the custom configuration tha
 
 Enabling and disabling Client (adding Client to/from whitelist) is as simple as connecting corresponding SuperMQ Client to the given list of Channels. Configuration keeps _state_ of the Client:
 
-| State    | What it means                                  |
-| -------- | ---------------------------------------------- |
-| Inactive | Client is created, but isn't enabled           |
+| State    | What it means                               |
+| -------- | ------------------------------------------- |
+| Inactive | Client is created, but isn't enabled        |
 | Active   | Client is able to communicate using SuperMQ |
 
 Switching between states `Active` and `Inactive` enables and disables Client, respectively.
@@ -40,8 +40,8 @@ The service is configured using the environment variables presented in the follo
 | SMQ_BOOTSTRAP_LOG_LEVEL        | Log level for Bootstrap (debug, info, warn, error)                               | info                              |
 | SMQ_BOOTSTRAP_DB_HOST          | Database host address                                                            | localhost                         |
 | SMQ_BOOTSTRAP_DB_PORT          | Database host port                                                               | 5432                              |
-| SMQ_BOOTSTRAP_DB_USER          | Database user                                                                    | magistrala                        |
-| SMQ_BOOTSTRAP_DB_PASS          | Database password                                                                | magistrala                        |
+| SMQ_BOOTSTRAP_DB_USER          | Database user                                                                    | supermq                           |
+| SMQ_BOOTSTRAP_DB_PASS          | Database password                                                                | supermq                           |
 | SMQ_BOOTSTRAP_DB_NAME          | Name of the database used by the service                                         | bootstrap                         |
 | SMQ_BOOTSTRAP_DB_SSL_MODE      | Database connection SSL mode (disable, require, verify-ca, verify-full)          | disable                           |
 | SMQ_BOOTSTRAP_DB_SSL_CERT      | Path to the PEM encoded certificate file                                         | ""                                |
@@ -59,10 +59,10 @@ The service is configured using the environment variables presented in the follo
 | SMQ_AUTH_GRPC_CLIENT_CERT      | Path to the PEM encoded auth service Auth gRPC client certificate file           | ""                                |
 | SMQ_AUTH_GRPC_CLIENT_KEY       | Path to the PEM encoded auth service Auth gRPC client key file                   | ""                                |
 | SMQ_AUTH_GRPC_SERVER_CERTS     | Path to the PEM encoded auth server Auth gRPC server trusted CA certificate file | ""                                |
-| SMQ_CLIENTS_URL                | Base URL for SuperMQ Clients                                                  | <http://localhost:9000>           |
+| SMQ_CLIENTS_URL                | Base URL for SuperMQ Clients                                                     | <http://localhost:9000>           |
 | SMQ_JAEGER_URL                 | Jaeger server URL                                                                | <http://localhost:4318/v1/traces> |
 | SMQ_JAEGER_TRACE_RATIO         | Jaeger sampling ratio                                                            | 1.0                               |
-| SMQ_SEND_TELEMETRY             | Send telemetry to magistrala call home server                                    | true                              |
+| SMQ_SEND_TELEMETRY             | Send telemetry to supermq call home server                                       | true                              |
 | SMQ_BOOTSTRAP_INSTANCE_ID      | Bootstrap service instance ID                                                    | ""                                |
 
 ## Deployment
@@ -75,7 +75,7 @@ To start the service outside of the container, execute the following shell scrip
 # download the latest version of the service
 git clone https://github.com/absmach/supermq
 
-cd magistrala
+cd supermq
 
 # compile the servic e
 make bootstrap
@@ -87,8 +87,8 @@ make install
 SMQ_BOOTSTRAP_LOG_LEVEL=info \
 SMQ_BOOTSTRAP_DB_HOST=localhost \
 SMQ_BOOTSTRAP_DB_PORT=5432 \
-SMQ_BOOTSTRAP_DB_USER=magistrala \
-SMQ_BOOTSTRAP_DB_PASS=magistrala \
+SMQ_BOOTSTRAP_DB_USER=supermq \
+SMQ_BOOTSTRAP_DB_PASS=supermq \
 SMQ_BOOTSTRAP_DB_NAME=bootstrap \
 SMQ_BOOTSTRAP_DB_SSL_MODE=disable \
 SMQ_BOOTSTRAP_DB_SSL_CERT="" \
@@ -110,7 +110,7 @@ SMQ_JAEGER_URL=http://localhost:14268/api/traces \
 SMQ_JAEGER_TRACE_RATIO=1.0 \
 SMQ_SEND_TELEMETRY=true \
 SMQ_BOOTSTRAP_INSTANCE_ID="" \
-$GOBIN/magistrala-bootstrap
+$GOBIN/supermq-bootstrap
 ```
 
 Setting `SMQ_BOOTSTRAP_HTTP_SERVER_CERT` and `SMQ_BOOTSTRAP_HTTP_SERVER_KEY` will enable TLS against the service. The service expects a file in PEM format for both the certificate and the key.

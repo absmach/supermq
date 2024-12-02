@@ -29,8 +29,8 @@ default values.
 | SMQ_CLIENTS_AUTH_GRPC_SERVER_KEY  | Path to the PEM encoded server key file                                 | ""                             |
 | SMQ_CLIENTS_DB_HOST               | Database host address                                                   | localhost                      |
 | SMQ_CLIENTS_DB_PORT               | Database host port                                                      | 5432                           |
-| SMQ_CLIENTS_DB_USER               | Database user                                                           | magistrala                     |
-| SMQ_CLIENTS_DB_PASS               | Database password                                                       | magistrala                     |
+| SMQ_CLIENTS_DB_USER               | Database user                                                           | supermq                        |
+| SMQ_CLIENTS_DB_PASS               | Database password                                                       | supermq                        |
 | SMQ_CLIENTS_DB_NAME               | Name of the database used by the service                                | clients                        |
 | SMQ_CLIENTS_DB_SSL_MODE           | Database connection SSL mode (disable, require, verify-ca, verify-full) | disable                        |
 | SMQ_CLIENTS_DB_SSL_CERT           | Path to the PEM encoded certificate file                                | ""                             |
@@ -48,7 +48,7 @@ default values.
 | SMQ_AUTH_GRPC_TIMEOUT             | Auth service gRPC request timeout in seconds                            | 1s                             |
 | SMQ_AUTH_GRPC_CLIENT_TLS          | Enable TLS for gRPC client                                              | false                          |
 | SMQ_AUTH_GRPC_CA_CERT             | Path to the CA certificate file                                         | ""                             |
-| SMQ_SEND_TELEMETRY                | Send telemetry to magistrala call home server.                          | true                           |
+| SMQ_SEND_TELEMETRY                | Send telemetry to supermq call home server.                             | true                           |
 | Clients_INSTANCE_ID               | Clients instance ID                                                     | ""                             |
 
 **Note** that if you want `clients` service to have only one user locally, you should use `CLIENTS_STANDALONE` env vars. By specifying these, you don't need `auth` service in your deployment for users' authorization.
@@ -64,7 +64,7 @@ To start the service outside of the container, execute the following shell scrip
 # download the latest version of the service
 git clone https://github.com/absmach/supermq
 
-cd magistrala
+cd supermq
 
 # compile the clients
 make clients
@@ -103,9 +103,9 @@ SMQ_AUTH_GRPC_TIMEOUT=[Auth service gRPC request timeout in seconds] \
 SMQ_AUTH_GRPC_CLIENT_TLS=[Enable TLS for gRPC client] \
 SMQ_AUTH_GRPC_CA_CERT=[Path to trusted CA certificate file] \
 SMQ_JAEGER_URL=[Jaeger server URL] \
-SMQ_SEND_TELEMETRY=[Send telemetry to magistrala call home server] \
+SMQ_SEND_TELEMETRY=[Send telemetry to supermq call home server] \
 Clients_INSTANCE_ID=[Clients instance ID] \
-$GOBIN/magistrala-clients
+$GOBIN/supermq-clients
 ```
 
 Setting `Clients_CA_CERTS` expects a file in PEM format of trusted CAs. This will enable TLS against the Auth gRPC endpoint trusting only those CAs that are provided.

@@ -14,7 +14,7 @@ type Session struct {
 	SuperAdmin   bool
 }
 
-// Authn is magistrala authentication library.
+// Authn is supermq authentication library.
 //
 //go:generate mockery --name Authentication --output=./mocks --filename authn.go --quiet --note "Copyright (c) Abstract Machines"
 type Authentication interface {

@@ -16,7 +16,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const username = "magistrala-mqtt"
+const username = "supermq-mqtt"
 
 var (
 	// ErrConnect indicates that connection to MQTT broker failed.

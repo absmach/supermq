@@ -28,7 +28,7 @@ var (
 )
 
 const (
-	username      = "magistrala-mqtt"
+	username      = "supermq-mqtt"
 	qos           = 2
 	port          = "1883/tcp"
 	brokerTimeout = 30 * time.Second

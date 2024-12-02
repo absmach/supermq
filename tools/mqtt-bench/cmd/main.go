@@ -69,7 +69,7 @@ Complete documentation is available at https://docs.supermq.abstractmachines.fr`
 
 	// Config file
 	rootCmd.PersistentFlags().StringVarP(&confFile, "config", "c", "config.toml", "config file for mqtt-bench")
-	rootCmd.PersistentFlags().StringVarP(&bconf.Mg.ConnFile, "magistrala", "m", "connections.toml", "config file for SuperMQ connections")
+	rootCmd.PersistentFlags().StringVarP(&bconf.Smq.ConnFile, "supermq", "m", "connections.toml", "config file for SuperMQ connections")
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)

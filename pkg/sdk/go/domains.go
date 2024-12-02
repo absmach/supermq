@@ -15,7 +15,7 @@ import (
 
 const domainsEndpoint = "domains"
 
-// Domain represents magistrala domain.
+// Domain represents supermq domain.
 type Domain struct {
 	ID          string    `json:"id,omitempty"`
 	Name        string    `json:"name,omitempty"`

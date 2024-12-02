@@ -19,7 +19,7 @@ var defaultAttributes = []attribute.KeyValue{
 	attribute.String("messaging.system", "rabbitmq"),
 	attribute.String("network.protocol.name", "amqp"),
 	attribute.String("network.protocol.version", "3.9.20"),
-	attribute.String("messaging.rabbitmq.destination.routing_key", "magistrala"),
+	attribute.String("messaging.rabbitmq.destination.routing_key", "supermq"),
 }
 
 var _ messaging.Publisher = (*publisherMiddleware)(nil)

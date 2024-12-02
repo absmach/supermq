@@ -6,8 +6,8 @@ syntax = "proto3";
 package auth.v1;
 option go_package = "github.com/absmach/supermq/internal/grpc/auth/v1";
 
-// AuthService is a service that provides authentication and authorization
-// functionalities for magistrala services.
+// AuthService is a service that provides authentication 
+// and authorization functionalities for SuperMQ services.
 service AuthService {
   rpc Authorize(AuthZReq) returns (AuthZRes) {}
   rpc Authenticate(AuthNReq) returns (AuthNRes) {}
@@ -19,8 +19,8 @@ message AuthNReq {
 }
 
 message AuthNRes {
-  string id    = 1; // id
-  string user_id = 2; // user id
+  string id    = 1;     // id
+  string user_id = 2;   // user id
   string domain_id = 3; // domain id
 }
 

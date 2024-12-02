@@ -32,8 +32,8 @@ The service is configured using the environment variables presented in the follo
 | SMQ_AUTH_GRPC_SERVER_CA_CERTS  | Path to the PEM encoded server CA certificate file                      | ""                                |
 | SMQ_USERS_DB_HOST              | Database host address                                                   | localhost                         |
 | SMQ_USERS_DB_PORT              | Database host port                                                      | 5432                              |
-| SMQ_USERS_DB_USER              | Database user                                                           | magistrala                        |
-| SMQ_USERS_DB_PASS              | Database password                                                       | magistrala                        |
+| SMQ_USERS_DB_USER              | Database user                                                           | supermq                           |
+| SMQ_USERS_DB_PASS              | Database password                                                       | supermq                           |
 | SMQ_USERS_DB_NAME              | Name of the database used by the service                                | users                             |
 | SMQ_USERS_DB_SSL_MODE          | Database connection SSL mode (disable, require, verify-ca, verify-full) | disable                           |
 | SMQ_USERS_DB_SSL_CERT          | Path to the PEM encoded certificate file                                | ""                                |
@@ -53,8 +53,8 @@ The service is configured using the environment variables presented in the follo
 | SMQ_USERS_DELETE_INTERVAL      | Interval for deleting users                                             | 24h                               |
 | SMQ_USERS_DELETE_AFTER         | Time after which users are deleted                                      | 720h                              |
 | SMQ_JAEGER_TRACE_RATIO         | Jaeger sampling ratio                                                   | 1.0                               |
-| SMQ_SEND_TELEMETRY             | Send telemetry to magistrala call home server.                          | true                              |
-| SMQ_USERS_INSTANCE_ID          | SuperMQ instance ID                                                  | ""                                |
+| SMQ_SEND_TELEMETRY             | Send telemetry to supermq call home server.                             | true                              |
+| SMQ_USERS_INSTANCE_ID          | SuperMQ instance ID                                                     | ""                                |
 
 ## Deployment
 
@@ -66,7 +66,7 @@ To start the service outside of the container, execute the following shell scrip
 # download the latest version of the service
 git clone https://github.com/absmach/supermq
 
-cd magistrala
+cd supermq
 
 # compile the service
 make users
@@ -93,8 +93,8 @@ SMQ_AUTH_GRPC_CLIENT_KEY="" \
 SMQ_AUTH_GRPC_SERVER_CA_CERTS="" \
 SMQ_USERS_DB_HOST=localhost \
 SMQ_USERS_DB_PORT=5432 \
-SMQ_USERS_DB_USER=magistrala \
-SMQ_USERS_DB_PASS=magistrala \
+SMQ_USERS_DB_USER=supermq \
+SMQ_USERS_DB_PASS=supermq \
 SMQ_USERS_DB_NAME=users \
 SMQ_USERS_DB_SSL_MODE=disable \
 SMQ_USERS_DB_SSL_CERT="" \
@@ -116,7 +116,7 @@ SMQ_OAUTH_UI_ERROR_URL=http://localhost:9095/error \
 SMQ_USERS_DELETE_INTERVAL=24h \
 SMQ_USERS_DELETE_AFTER=720h \
 SMQ_USERS_INSTANCE_ID="" \
-$GOBIN/magistrala-users
+$GOBIN/supermq-users
 ```
 
 If `SMQ_EMAIL_TEMPLATE` doesn't point to any file service will function but password reset functionality will not work. The email environment variables are used to send emails with password reset link. The service expects a file in Go template format. The template should be something like [this](https://github.com/absmach/supermq/blob/main/docker/templates/users.tmpl).

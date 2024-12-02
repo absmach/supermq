@@ -26,24 +26,24 @@ Flags:
       --ca string         CA for creating and signing clients certificate (default "ca.crt")
       --cakey string      ca.key for creating and signing clients certificate (default "ca.key")
   -h, --help              help for provision
-      --host string       address for magistrala instance (default "https://localhost")
+      --host string       address for supermq instance (default "https://localhost")
       --num int           number of channels and clients to create and connect (default 10)
-  -p, --password string   magistrala users password
+  -p, --password string   supermq users password
       --ssl               create certificates for mTLS access
-  -u, --username string   magistrala user
+  -u, --username string   supermq user
       --prefix string     name prefix for clients and channels
 ```
 
 Example:
 
 ```bash
-go run tools/provision/cmd/main.go -u test@magistrala.com -p test1234 --host https://142.93.118.47
+go run tools/provision/cmd/main.go -u test@supermq.com -p test1234 --host https://142.93.118.47
 ```
 
 If you want to create a list of channels with certificates:
 
 ```bash
-go run tools/provision/cmd/main.go  --host http://localhost --num 10 -u test@magistrala.com -p test1234 --ssl true --ca docker/ssl/certs/ca.crt --cakey docker/ssl/certs/ca.key
+go run tools/provision/cmd/main.go  --host http://localhost --num 10 -u test@supermq.com -p test1234 --ssl true --ca docker/ssl/certs/ca.crt --cakey docker/ssl/certs/ca.key
 
 ```
 

@@ -1,13 +1,13 @@
 # Provision service
 
-Provision service provides an HTTP API to interact with [SuperMQ][magistrala].
+Provision service provides an HTTP API to interact with [SuperMQ][supermq].
 Provision service is used to setup initial applications configuration i.e. clients, channels, connections and certificates that will be required for the specific use case especially useful for gateway provision.
 
-For gateways to communicate with [SuperMQ][magistrala] configuration is required (mqtt host, client, channels, certificates...). To get the configuration gateway will send a request to [Bootstrap][bootstrap] service providing `<external_id>` and `<external_key>` in request. To make a request to [Bootstrap][bootstrap] service you can use [Agent][agent] service on a gateway.
+For gateways to communicate with [SuperMQ][supermq] configuration is required (mqtt host, client, channels, certificates...). To get the configuration gateway will send a request to [Bootstrap][bootstrap] service providing `<external_id>` and `<external_key>` in request. To make a request to [Bootstrap][bootstrap] service you can use [Agent][agent] service on a gateway.
 
 To create bootstrap configuration you can use [Bootstrap][bootstrap] or `Provision` service. [SuperMQ UI][mgxui] uses [Bootstrap][bootstrap] service for creating gateway configurations. `Provision` service should provide an easy way of provisioning your gateways i.e creating bootstrap configuration and as many clients and channels that your setup requires.
 
-Also you may use provision service to create certificates for each client. Each service running on gateway may require more than one client and channel for communication. Let's say that you are using services [Agent][agent] and [Export][export] on a gateway you will need two channels for `Agent` (`data` and `control`) and one for `Export` and one client. Additionally if you enabled mtls each service will need its own client and certificate for access to [SuperMQ][magistrala]. Your setup could require any number of clients and channels this kind of setup we can call `provision layout`.
+Also you may use provision service to create certificates for each client. Each service running on gateway may require more than one client and channel for communication. Let's say that you are using services [Agent][agent] and [Export][export] on a gateway you will need two channels for `Agent` (`data` and `control`) and one for `Export` and one client. Additionally if you enabled mtls each service will need its own client and certificate for access to [SuperMQ][supermq]. Your setup could require any number of clients and channels this kind of setup we can call `provision layout`.
 
 Provision service provides a way of specifying this `provision layout` and creating a setup according to that layout by serving requests on `/mapping` endpoint. Provision layout is configured in [config.toml](configs/config.toml).
 
@@ -17,20 +17,20 @@ The service is configured using the environment variables presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
 
-| Variable                            | Description                                        | Default                 |
-| ----------------------------------- | -------------------------------------------------- | ----------------------- |
+| Variable                             | Description                                        | Default                 |
+| ------------------------------------ | -------------------------------------------------- | ----------------------- |
 | SMQ_PROVISION_LOG_LEVEL              | Service log level                                  | debug                   |
-| SMQ_PROVISION_USER                   | User (email) for accessing SuperMQ              | <user@example.com>      |
-| SMQ_PROVISION_PASS                   | SuperMQ password                                | user123                 |
-| SMQ_PROVISION_API_KEY                | SuperMQ authentication token                    |                         |
+| SMQ_PROVISION_USER                   | User (email) for accessing SuperMQ                 | <user@example.com>      |
+| SMQ_PROVISION_PASS                   | SuperMQ password                                   | user123                 |
+| SMQ_PROVISION_API_KEY                | SuperMQ authentication token                       |                         |
 | SMQ_PROVISION_CONFIG_FILE            | Provision config file                              | config.toml             |
 | SMQ_PROVISION_HTTP_PORT              | Provision service listening port                   | 9016                    |
-| SMQ_PROVISION_ENV_CLIENTS_TLS        | SuperMQ SDK TLS verification                    | false                   |
-| SMQ_PROVISION_SERVER_CERT            | SuperMQ gRPC secure server cert                 |                         |
-| SMQ_PROVISION_SERVER_KEY             | SuperMQ gRPC secure server key                  |                         |
+| SMQ_PROVISION_ENV_CLIENTS_TLS        | SuperMQ SDK TLS verification                       | false                   |
+| SMQ_PROVISION_SERVER_CERT            | SuperMQ gRPC secure server cert                    |                         |
+| SMQ_PROVISION_SERVER_KEY             | SuperMQ gRPC secure server key                     |                         |
 | SMQ_PROVISION_USERS_LOCATION         | Users service URL                                  | <http://users:9002>     |
-| SMQ_PROVISION_CLIENTS_LOCATION       | Clients service URL                                | <http://clients:9000>    |
-| SMQ_PROVISION_BS_SVC_URL             | SuperMQ Bootstrap service URL                   | <http://bootstrap:9013> |
+| SMQ_PROVISION_CLIENTS_LOCATION       | Clients service URL                                | <http://clients:9000>   |
+| SMQ_PROVISION_BS_SVC_URL             | SuperMQ Bootstrap service URL                      | <http://bootstrap:9013> |
 | SMQ_PROVISION_CERTS_SVC_URL          | Certificates service URL                           | <http://certs:9019>     |
 | SMQ_PROVISION_X509_PROVISIONING      | Should X509 client cert be provisioned             | false                   |
 | SMQ_PROVISION_BS_CONFIG_PROVISIONING | Should client config be saved in Bootstrap service | true                    |
@@ -38,7 +38,7 @@ default values.
 | SMQ_PROVISION_BS_CONTENT             | Bootstrap service configs content, JSON format     | {}                      |
 | SMQ_PROVISION_CERTS_RSA_BITS         | Certificate RSA bits parameter                     | 4096                    |
 | SMQ_PROVISION_CERTS_HOURS_VALID      | Number of hours that certificate is valid          | "2400h"                 |
-| SMQ_SEND_TELEMETRY                   | Send telemetry to magistrala call home server      | true                    |
+| SMQ_SEND_TELEMETRY                   | Send telemetry to supermq call home server         | true                    |
 
 By default, call to `/mapping` endpoint will create one client and two channels (`control` and `data`) and connect it. If there is a requirement for different provision layout we can use [config](docker/configs/config.toml) file in addition to environment variables.
 
@@ -102,7 +102,7 @@ SMQ_PROVISION_BS_SVC_URL=http://localhost:9013 \
 SMQ_PROVISION_CLIENTS_LOCATION=http://localhost:9000 \
 SMQ_PROVISION_USERS_LOCATION=http://localhost:9002 \
 SMQ_PROVISION_CONFIG_FILE=docker/addons/provision/configs/config.toml \
-build/magistrala-provision
+build/supermq-provision
 ```
 
 Docker composition:
@@ -187,7 +187,7 @@ curl -s  -X POST  http://localhost:8190/certs -H "Authorization: Bearer <users_t
 }
 ```
 
-[magistrala]: https://github.com/absmach/supermq
+[supermq]: https://github.com/absmach/supermq
 [bootstrap]: https://github.com/absmach/supermq/tree/master/bootstrap
 [export]: https://github.com/absmach/export
 [agent]: https://github.com/absmach/agent

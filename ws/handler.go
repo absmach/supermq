@@ -47,7 +47,7 @@ var (
 	errFailedSubscribe          = errors.New("failed to subscribe")
 	errFailedPublish            = errors.New("failed to publish")
 	errFailedParseSubtopic      = errors.New("failed to parse subtopic")
-	errFailedPublishToMsgBroker = errors.New("failed to publish to magistrala message broker")
+	errFailedPublishToMsgBroker = errors.New("failed to publish to supermq message broker")
 )
 
 var channelRegExp = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]*)?(\?.*)?$`)

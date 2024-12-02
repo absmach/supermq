@@ -64,8 +64,8 @@ The service is configured using the environment variables presented in the follo
 | SMQ_AUTH_LOG_LEVEL              | Log level for the Auth service (debug, info, warn, error)               | info                           |
 | SMQ_AUTH_DB_HOST                | Database host address                                                   | localhost                      |
 | SMQ_AUTH_DB_PORT                | Database host port                                                      | 5432                           |
-| SMQ_AUTH_DB_USER                | Database user                                                           | magistrala                     |
-| SMQ_AUTH_DB_PASSWORD            | Database password                                                       | magistrala                     |
+| SMQ_AUTH_DB_USER                | Database user                                                           | supermq                        |
+| SMQ_AUTH_DB_PASSWORD            | Database password                                                       | supermq                        |
 | SMQ_AUTH_DB_NAME                | Name of the database used by the service                                | auth                           |
 | SMQ_AUTH_DB_SSL_MODE            | Database connection SSL mode (disable, require, verify-ca, verify-full) | disable                        |
 | SMQ_AUTH_DB_SSL_CERT            | Path to the PEM encoded certificate file                                | ""                             |
@@ -91,7 +91,7 @@ The service is configured using the environment variables presented in the follo
 | SMQ_SPICEDB_SCHEMA_FILE         | Path to SpiceDB schema file                                             | ./docker/spicedb/schema.zed    |
 | SMQ_JAEGER_URL                  | Jaeger server URL                                                       | <http://jaeger:4318/v1/traces> |
 | SMQ_JAEGER_TRACE_RATIO          | Jaeger sampling ratio                                                   | 1.0                            |
-| SMQ_SEND_TELEMETRY              | Send telemetry to magistrala call home server                           | true                           |
+| SMQ_SEND_TELEMETRY              | Send telemetry to supermq call home server                              | true                           |
 | SMQ_AUTH_ADAPTER_INSTANCE_ID    | Adapter instance ID                                                     | ""                             |
 
 ## Deployment
@@ -105,7 +105,7 @@ To start the service outside of the container, execute the following shell scrip
 # download the latest version of the service
 git clone https://github.com/absmach/supermq
 
-cd magistrala
+cd supermq
 
 # compile the service
 make auth
@@ -117,8 +117,8 @@ make install
 SMQ_AUTH_LOG_LEVEL=info \
 SMQ_AUTH_DB_HOST=localhost \
 SMQ_AUTH_DB_PORT=5432 \
-SMQ_AUTH_DB_USER=magistrala \
-SMQ_AUTH_DB_PASSWORD=magistrala \
+SMQ_AUTH_DB_USER=supermq \
+SMQ_AUTH_DB_PASSWORD=supermq \
 SMQ_AUTH_DB_NAME=auth \
 SMQ_AUTH_DB_SSL_MODE=disable \
 SMQ_AUTH_DB_SSL_CERT="" \
@@ -146,7 +146,7 @@ SMQ_JAEGER_URL=http://localhost:14268/api/traces \
 SMQ_JAEGER_TRACE_RATIO=1.0 \
 SMQ_SEND_TELEMETRY=true \
 SMQ_AUTH_ADAPTER_INSTANCE_ID="" \
-$GOBIN/magistrala-auth
+$GOBIN/supermq-auth
 ```
 
 Setting `SMQ_AUTH_HTTP_SERVER_CERT` and `SMQ_AUTH_HTTP_SERVER_KEY` will enable TLS against the service. The service expects a file in PEM format for both the certificate and the key.

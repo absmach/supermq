@@ -23,7 +23,7 @@ const (
 	unshareEndpoint     = "unshare"
 )
 
-// Client represents magistrala client.
+// Client represents supermq client.
 type Client struct {
 	ID          string                 `json:"id,omitempty"`
 	Name        string                 `json:"name,omitempty"`

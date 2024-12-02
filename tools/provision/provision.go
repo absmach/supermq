@@ -208,7 +208,7 @@ func Provision(conf Config) error {
 				Subject: pkix.Name{
 					Organization:       []string{"SuperMQ"},
 					CommonName:         clients[i].Credentials.Secret,
-					OrganizationalUnit: []string{"magistrala"},
+					OrganizationalUnit: []string{"supermq"},
 				},
 				NotBefore: notBefore,
 				NotAfter:  notAfter,

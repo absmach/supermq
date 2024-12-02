@@ -25,7 +25,7 @@ const (
 	PasswordResetEndpoint = "password"
 )
 
-// User represents magistrala user its credentials.
+// User represents supermq user its credentials.
 type User struct {
 	ID             string      `json:"id"`
 	FirstName      string      `json:"first_name,omitempty"`

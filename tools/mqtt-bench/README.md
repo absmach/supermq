@@ -33,7 +33,7 @@ Flags:
   -n, --count int         Number of messages sent per publisher (default 100)
   -f, --format string     Output format: text|json (default "text")
   -h, --help              help for mqtt-bench
-  -m, --magistrala string   config file for SuperMQ connections (default "connections.toml")
+  -m, --supermq string   config file for SuperMQ connections (default "connections.toml")
       --mtls              Use mtls for connection
   -p, --pubs int          Number of publishers (default 10)
   -q, --qos int           QoS for published messages, values 0 1 2
@@ -50,7 +50,7 @@ Before use you need a `mgconn.toml` - a TOML file that describes SuperMQ connect
 You can use `provision` tool (in tools/provision) to create this TOML config file.
 
 ```bash
-go run tools/mqtt-bench/cmd/main.go -u test@magistrala.com -p test1234 --host http://127.0.0.1 --num 100 > tools/mqtt-bench/mgconn.toml
+go run tools/mqtt-bench/cmd/main.go -u test@supermq.com -p test1234 --host http://127.0.0.1 --num 100 > tools/mqtt-bench/mgconn.toml
 ```
 
 Example use and output
@@ -58,11 +58,11 @@ Example use and output
 Without mtls:
 
 ```
-go run tools/mqtt-bench/cmd/main.go --broker tcp://localhost:1883 --count 100 --size 100 --qos 0 --format text --pubs 10 --magistrala tools/mqtt-bench/mgconn.toml
+go run tools/mqtt-bench/cmd/main.go --broker tcp://localhost:1883 --count 100 --size 100 --qos 0 --format text --pubs 10 --supermq tools/mqtt-bench/mgconn.toml
 ```
 
 With mtls
-go run tools/mqtt-bench/cmd/main.go --broker tcps://localhost:8883 --count 100 --size 100 --qos 0 --format text --pubs 10 --magistrala tools/mqtt-bench/mgconn.toml --mtls -ca docker/ssl/certs/ca.crt
+go run tools/mqtt-bench/cmd/main.go --broker tcps://localhost:8883 --count 100 --size 100 --qos 0 --format text --pubs 10 --supermq tools/mqtt-bench/mgconn.toml --mtls -ca docker/ssl/certs/ca.crt
 
 ```
 
@@ -100,7 +100,7 @@ count = 100
 [log]
 quiet = false
 
-[magistrala]
+[supermq]
 connections_file = "mgconn.toml"
 
 ```

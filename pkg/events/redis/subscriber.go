@@ -18,7 +18,7 @@ const (
 	eventsPrefix = "events."
 	eventCount   = 100
 	exists       = "BUSYGROUP Consumer Group name already exists"
-	group        = "magistrala"
+	group        = "supermq"
 )
 
 var _ events.Subscriber = (*subEventStore)(nil)

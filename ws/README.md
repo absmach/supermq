@@ -6,8 +6,8 @@ WebSocket adapter provides a [WebSocket](https://en.wikipedia.org/wiki/WebSocket
 
 The service is configured using the environment variables presented in the following table. Note that any unset variables will be replaced with their default values.
 
-| Variable                          | Description                                                                         | Default                           |
-| --------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------- |
+| Variable                           | Description                                                                         | Default                           |
+| ---------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------- |
 | SMQ_WS_ADAPTER_LOG_LEVEL           | Log level for the WS Adapter (debug, info, warn, error)                             | info                              |
 | SMQ_WS_ADAPTER_HTTP_HOST           | Service WS host                                                                     | ""                                |
 | SMQ_WS_ADAPTER_HTTP_PORT           | Service WS port                                                                     | 8190                              |
@@ -21,7 +21,7 @@ The service is configured using the environment variables presented in the follo
 | SMQ_MESSAGE_BROKER_URL             | Message broker instance URL                                                         | <nats://localhost:4222>           |
 | SMQ_JAEGER_URL                     | Jaeger server URL                                                                   | <http://localhost:4318/v1/traces> |
 | SMQ_JAEGER_TRACE_RATIO             | Jaeger sampling ratio                                                               | 1.0                               |
-| SMQ_SEND_TELEMETRY                 | Send telemetry to magistrala call home server                                       | true                              |
+| SMQ_SEND_TELEMETRY                 | Send telemetry to supermq call home server                                          | true                              |
 | SMQ_WS_ADAPTER_INSTANCE_ID         | Service instance ID                                                                 | ""                                |
 
 ## Deployment
@@ -35,7 +35,7 @@ To start the service outside of the container, execute the following shell scrip
 # download the latest version of the service
 git clone https://github.com/absmach/supermq
 
-cd magistrala
+cd supermq
 
 # compile the ws
 make ws
@@ -59,7 +59,7 @@ SMQ_JAEGER_URL=http://localhost:14268/api/traces \
 SMQ_JAEGER_TRACE_RATIO=1.0 \
 SMQ_SEND_TELEMETRY=true \
 SMQ_WS_ADAPTER_INSTANCE_ID="" \
-$GOBIN/magistrala-ws
+$GOBIN/supermq-ws
 ```
 
 Setting `SMQ_WS_ADAPTER_HTTP_SERVER_CERT` and `SMQ_WS_ADAPTER_HTTP_SERVER_KEY` will enable TLS against the service. The service expects a file in PEM format for both the certificate and the key.

@@ -86,7 +86,7 @@ var cmdChannels = []cobra.Command{
 		Short: "Delete channel",
 		Long: "Delete channel by id.\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli channels delete <channel_id> $DOMAINID $USERTOKEN - delete the given channel ID\n",
+			"\tsupermq-cli channels delete <channel_id> $DOMAINID $USERTOKEN - delete the given channel ID\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -189,7 +189,7 @@ var cmdChannels = []cobra.Command{
 		Short: "List users",
 		Long: "List users of a channel\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli channels users <channel_id> $DOMAINID $USERTOKEN\n",
+			"\tsupermq-cli channels users <channel_id> $DOMAINID $USERTOKEN\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -213,7 +213,7 @@ var cmdChannels = []cobra.Command{
 		Short: "List groups",
 		Long: "List groups of a channel\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli channels groups <channel_id> $DOMAINID $USERTOKEN\n",
+			"\tsupermq-cli channels groups <channel_id> $DOMAINID $USERTOKEN\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -240,7 +240,7 @@ var channelAssignCmds = []cobra.Command{
 		Short: "Assign users",
 		Long: "Assign users to a channel\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli channels assign users <relation> '[\"<user_id_1>\", \"<user_id_2>\"]' <channel_id> $DOMAINID $USERTOKEN\n",
+			"\tsupermq-cli channels assign users <relation> '[\"<user_id_1>\", \"<user_id_2>\"]' <channel_id> $DOMAINID $USERTOKEN\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 5 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -263,7 +263,7 @@ var channelAssignCmds = []cobra.Command{
 		Short: "Assign groups",
 		Long: "Assign groups to a channel\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli channels assign groups  '[\"<group_id_1>\", \"<group_id_2>\"]' <channel_id> $DOMAINID $USERTOKEN\n",
+			"\tsupermq-cli channels assign groups  '[\"<group_id_1>\", \"<group_id_2>\"]' <channel_id> $DOMAINID $USERTOKEN\n",
 
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 4 {
@@ -290,7 +290,7 @@ var channelUnassignCmds = []cobra.Command{
 		Short: "Unassign groups",
 		Long: "Unassign groups from a channel\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli channels unassign groups '[\"<group_id_1>\", \"<group_id_2>\"]'  <channel_id> $DOMAINID $USERTOKEN\n",
+			"\tsupermq-cli channels unassign groups '[\"<group_id_1>\", \"<group_id_2>\"]'  <channel_id> $DOMAINID $USERTOKEN\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 4 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -314,7 +314,7 @@ var channelUnassignCmds = []cobra.Command{
 		Short: "Unassign users",
 		Long: "Unassign users from a channel\n" +
 			"Usage:\n" +
-			"\tmagistrala-cli channels unassign users <relation> '[\"<user_id_1>\", \"<user_id_2>\"]' <channel_id> $DOMAINID $USERTOKEN\n",
+			"\tsupermq-cli channels unassign users <relation> '[\"<user_id_1>\", \"<user_id_2>\"]' <channel_id> $DOMAINID $USERTOKEN\n",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 5 {
 				logUsageCmd(*cmd, cmd.Use)

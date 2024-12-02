@@ -30,8 +30,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// AuthService is a service that provides authentication and authorization
-// functionalities for magistrala services.
+// AuthService is a service that provides authentication
+// and authorization functionalities for SuperMQ services.
 type AuthServiceClient interface {
 	Authorize(ctx context.Context, in *AuthZReq, opts ...grpc.CallOption) (*AuthZRes, error)
 	Authenticate(ctx context.Context, in *AuthNReq, opts ...grpc.CallOption) (*AuthNRes, error)
@@ -69,8 +69,8 @@ func (c *authServiceClient) Authenticate(ctx context.Context, in *AuthNReq, opts
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility.
 //
-// AuthService is a service that provides authentication and authorization
-// functionalities for magistrala services.
+// AuthService is a service that provides authentication
+// and authorization functionalities for SuperMQ services.
 type AuthServiceServer interface {
 	Authorize(context.Context, *AuthZReq) (*AuthZRes, error)
 	Authenticate(context.Context, *AuthNReq) (*AuthNRes, error)

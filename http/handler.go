@@ -48,7 +48,7 @@ const (
 var (
 	errClientNotInitialized     = errors.New("client is not initialized")
 	errFailedPublish            = errors.New("failed to publish")
-	errFailedPublishToMsgBroker = errors.New("failed to publish to magistrala message broker")
+	errFailedPublishToMsgBroker = errors.New("failed to publish to supermq message broker")
 	errMalformedSubtopic        = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("malformed subtopic"))
 	errMalformedTopic           = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("malformed topic"))
 	errMissingTopicPub          = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("failed to publish due to missing topic"))

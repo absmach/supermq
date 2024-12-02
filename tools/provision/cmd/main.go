@@ -27,10 +27,10 @@ Complete documentation is available at https://docs.supermq.abstractmachines.fr`
 	}
 
 	// Root Flags
-	rootCmd.PersistentFlags().StringVarP(&pconf.Host, "host", "", "https://localhost", "address for magistrala instance")
+	rootCmd.PersistentFlags().StringVarP(&pconf.Host, "host", "", "https://localhost", "address for supermq instance")
 	rootCmd.PersistentFlags().StringVarP(&pconf.Prefix, "prefix", "", "", "name prefix for clients and channels")
-	rootCmd.PersistentFlags().StringVarP(&pconf.Username, "username", "u", "", "magistrala user")
-	rootCmd.PersistentFlags().StringVarP(&pconf.Password, "password", "p", "", "magistrala users password")
+	rootCmd.PersistentFlags().StringVarP(&pconf.Username, "username", "u", "", "supermq user")
+	rootCmd.PersistentFlags().StringVarP(&pconf.Password, "password", "p", "", "supermq users password")
 	rootCmd.PersistentFlags().IntVarP(&pconf.Num, "num", "", 10, "number of channels and clients to create and connect")
 	rootCmd.PersistentFlags().BoolVarP(&pconf.SSL, "ssl", "", false, "create certificates for mTLS access")
 	rootCmd.PersistentFlags().StringVarP(&pconf.CAKey, "cakey", "", "ca.key", "ca.key for creating and signing clients certificate")

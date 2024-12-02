@@ -52,7 +52,7 @@ var (
 	ErrFailedPublishDisconnectEvent = errors.New("failed to publish disconnect event")
 	ErrFailedParseSubtopic          = errors.New("failed to parse subtopic")
 	ErrFailedPublishConnectEvent    = errors.New("failed to publish connect event")
-	ErrFailedPublishToMsgBroker     = errors.New("failed to publish to magistrala message broker")
+	ErrFailedPublishToMsgBroker     = errors.New("failed to publish to supermq message broker")
 )
 
 var (

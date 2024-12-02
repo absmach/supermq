@@ -29,8 +29,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// DomainsService is a service that provides access to domains
-// functionalities for magistrala services.
+// DomainsService is a service that provides access to
+// domains functionalities for SuperMQ services.
 type DomainsServiceClient interface {
 	DeleteUserFromDomains(ctx context.Context, in *DeleteUserReq, opts ...grpc.CallOption) (*DeleteUserRes, error)
 }
@@ -57,8 +57,8 @@ func (c *domainsServiceClient) DeleteUserFromDomains(ctx context.Context, in *De
 // All implementations must embed UnimplementedDomainsServiceServer
 // for forward compatibility.
 //
-// DomainsService is a service that provides access to domains
-// functionalities for magistrala services.
+// DomainsService is a service that provides access to
+// domains functionalities for SuperMQ services.
 type DomainsServiceServer interface {
 	DeleteUserFromDomains(context.Context, *DeleteUserReq) (*DeleteUserRes, error)
 	mustEmbedUnimplementedDomainsServiceServer()

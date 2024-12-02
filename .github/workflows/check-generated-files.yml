@@ -74,7 +74,6 @@ jobs:
               - "certs/pki/vault.go"
               - "certs/service.go"
               - "journal/journal.go"
-              - "magistrala/auth_grpc.pb.go"
 
       - name: Set up protoc
         if: steps.changes.outputs.proto == 'true'

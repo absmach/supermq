@@ -45,15 +45,15 @@ The service is configured using the environment variables presented in the follo
 | SMQ_CERTS_SIGN_CA_PATH                      | Path to the PEM encoded CA certificate file                                 | ca.crt                                                              |
 | SMQ_CERTS_SIGN_CA_KEY_PATH                  | Path to the PEM encoded CA key file                                         | ca.key                                                              |
 | SMQ_CERTS_VAULT_HOST                        | Vault host                                                                  | http://vault:8200                                                   |
-| SMQ_CERTS_VAULT_NAMESPACE                   | Vault namespace in which pki is present                                     | magistrala                                                          |
-| SMQ_CERTS_VAULT_APPROLE_ROLEID              | Vault AppRole auth RoleID                                                   | magistrala                                                          |
-| SMQ_CERTS_VAULT_APPROLE_SECRET              | Vault AppRole auth Secret                                                   | magistrala                                                          |
+| SMQ_CERTS_VAULT_NAMESPACE                   | Vault namespace in which pki is present                                     | supermq                                                             |
+| SMQ_CERTS_VAULT_APPROLE_ROLEID              | Vault AppRole auth RoleID                                                   | supermq                                                             |
+| SMQ_CERTS_VAULT_APPROLE_SECRET              | Vault AppRole auth Secret                                                   | supermq                                                             |
 | SMQ_CERTS_VAULT_CLIENTS_CERTS_PKI_PATH      | Vault PKI path for issuing Clients Certificates                             | pki_int                                                             |
-| SMQ_CERTS_VAULT_CLIENTS_CERTS_PKI_ROLE_NAME | Vault PKI Role Name for issuing Clients Certificates                        | magistrala_clients_certs                                            |
+| SMQ_CERTS_VAULT_CLIENTS_CERTS_PKI_ROLE_NAME | Vault PKI Role Name for issuing Clients Certificates                        | supermq_clients_certs                                               |
 | SMQ_CERTS_DB_HOST                           | Database host                                                               | localhost                                                           |
 | SMQ_CERTS_DB_PORT                           | Database port                                                               | 5432                                                                |
-| SMQ_CERTS_DB_PASS                           | Database password                                                           | magistrala                                                          |
-| SMQ_CERTS_DB_USER                           | Database user                                                               | magistrala                                                          |
+| SMQ_CERTS_DB_PASS                           | Database password                                                           | supermq                                                             |
+| SMQ_CERTS_DB_USER                           | Database user                                                               | supermq                                                             |
 | SMQ_CERTS_DB_NAME                           | Database name                                                               | certs                                                               |
 | SMQ_CERTS_DB_SSL_MODE                       | Database SSL mode                                                           | disable                                                             |
 | SMQ_CERTS_DB_SSL_CERT                       | Database SSL certificate                                                    | ""                                                                  |
@@ -62,7 +62,7 @@ The service is configured using the environment variables presented in the follo
 | SMQ_CLIENTS_URL                             | Clients service URL                                                         | [localhost:9000](localhost:9000)                                    |
 | SMQ_JAEGER_URL                              | Jaeger server URL                                                           | [http://localhost:4318/v1/traces](http://localhost:4318//v1/traces) |
 | SMQ_JAEGER_TRACE_RATIO                      | Jaeger sampling ratio                                                       | 1.0                                                                 |
-| SMQ_SEND_TELEMETRY                          | Send telemetry to magistrala call home server                               | true                                                                |
+| SMQ_SEND_TELEMETRY                          | Send telemetry to supermq call home server                                  | true                                                                |
 | SMQ_CERTS_INSTANCE_ID                       | Service instance ID                                                         | ""                                                                  |
 
 ## Deployment
@@ -76,7 +76,7 @@ To start the service outside of the container, execute the following shell scrip
 # download the latest version of the service
 git clone https://github.com/absmach/supermq
 
-cd magistrala
+cd supermq
 
 # compile the certs
 make certs
@@ -98,15 +98,15 @@ SMQ_AUTH_GRPC_SERVER_CERTS="" \
 SMQ_CERTS_SIGN_CA_PATH=ca.crt \
 SMQ_CERTS_SIGN_CA_KEY_PATH=ca.key \
 SMQ_CERTS_VAULT_HOST=http://vault:8200 \
-SMQ_CERTS_VAULT_NAMESPACE=magistrala \
-SMQ_CERTS_VAULT_APPROLE_ROLEID=magistrala \
-SMQ_CERTS_VAULT_APPROLE_SECRET=magistrala \
+SMQ_CERTS_VAULT_NAMESPACE=supermq \
+SMQ_CERTS_VAULT_APPROLE_ROLEID=supermq \
+SMQ_CERTS_VAULT_APPROLE_SECRET=supermq \
 SMQ_CERTS_VAULT_CLIENTS_CERTS_PKI_PATH=pki_int \
-SMQ_CERTS_VAULT_CLIENTS_CERTS_PKI_ROLE_NAME=magistrala_clients_certs \
+SMQ_CERTS_VAULT_CLIENTS_CERTS_PKI_ROLE_NAME=supermq_clients_certs \
 SMQ_CERTS_DB_HOST=localhost \
 SMQ_CERTS_DB_PORT=5432 \
-SMQ_CERTS_DB_PASS=magistrala \
-SMQ_CERTS_DB_USER=magistrala \
+SMQ_CERTS_DB_PASS=supermq \
+SMQ_CERTS_DB_USER=supermq \
 SMQ_CERTS_DB_NAME=certs \
 SMQ_CERTS_DB_SSL_MODE=disable \
 SMQ_CERTS_DB_SSL_CERT="" \
@@ -117,7 +117,7 @@ SMQ_JAEGER_URL=http://localhost:14268/api/traces \
 SMQ_JAEGER_TRACE_RATIO=1.0 \
 SMQ_SEND_TELEMETRY=true \
 SMQ_CERTS_INSTANCE_ID="" \
-$GOBIN/magistrala-certs
+$GOBIN/supermq-certs
 ```
 
 Setting `SMQ_CERTS_HTTP_SERVER_CERT` and `SMQ_CERTS_HTTP_SERVER_KEY` will enable TLS against the service. The service expects a file in PEM format for both the certificate and the key.

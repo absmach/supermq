@@ -8,27 +8,27 @@ The service is configured using the environment variables presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
 
-| Variable                             | Description                                               | Default                          |
-| ------------------------------------ | --------------------------------------------------------- | -------------------------------- |
-| SMQ_TIMESCALE_WRITER_LOG_LEVEL        | Service log level                                         | info                             |
-| SMQ_TIMESCALE_WRITER_CONFIG_PATH      | Configuration file path with Message broker subjects list | /config.toml                     |
-| SMQ_TIMESCALE_WRITER_HTTP_HOST        | Service HTTP host                                         | localhost                        |
-| SMQ_TIMESCALE_WRITER_HTTP_PORT        | Service HTTP port                                         | 9012                             |
-| SMQ_TIMESCALE_WRITER_HTTP_SERVER_CERT | Service HTTP server certificate path                      | ""                               |
-| SMQ_TIMESCALE_WRITER_HTTP_SERVER_KEY  | Service HTTP server key                                   | ""                               |
-| SMQ_TIMESCALE_HOST                    | Timescale DB host                                         | timescale                        |
-| SMQ_TIMESCALE_PORT                    | Timescale DB port                                         | 5432                             |
-| SMQ_TIMESCALE_USER                    | Timescale user                                            | magistrala                       |
-| SMQ_TIMESCALE_PASS                    | Timescale password                                        | magistrala                       |
-| SMQ_TIMESCALE_NAME                    | Timescale database name                                   | messages                         |
-| SMQ_TIMESCALE_SSL_MODE                | Timescale SSL mode                                        | disabled                         |
-| SMQ_TIMESCALE_SSL_CERT                | Timescale SSL certificate path                            | ""                               |
-| SMQ_TIMESCALE_SSL_KEY                 | Timescale SSL key                                         | ""                               |
-| SMQ_TIMESCALE_SSL_ROOT_CERT           | Timescale SSL root certificate path                       | ""                               |
-| SMQ_MESSAGE_BROKER_URL                | Message broker instance URL                               | nats://localhost:4222            |
+| Variable                              | Description                                               | Default                      |
+| ------------------------------------- | --------------------------------------------------------- | ---------------------------- |
+| SMQ_TIMESCALE_WRITER_LOG_LEVEL        | Service log level                                         | info                         |
+| SMQ_TIMESCALE_WRITER_CONFIG_PATH      | Configuration file path with Message broker subjects list | /config.toml                 |
+| SMQ_TIMESCALE_WRITER_HTTP_HOST        | Service HTTP host                                         | localhost                    |
+| SMQ_TIMESCALE_WRITER_HTTP_PORT        | Service HTTP port                                         | 9012                         |
+| SMQ_TIMESCALE_WRITER_HTTP_SERVER_CERT | Service HTTP server certificate path                      | ""                           |
+| SMQ_TIMESCALE_WRITER_HTTP_SERVER_KEY  | Service HTTP server key                                   | ""                           |
+| SMQ_TIMESCALE_HOST                    | Timescale DB host                                         | timescale                    |
+| SMQ_TIMESCALE_PORT                    | Timescale DB port                                         | 5432                         |
+| SMQ_TIMESCALE_USER                    | Timescale user                                            | supermq                      |
+| SMQ_TIMESCALE_PASS                    | Timescale password                                        | supermq                      |
+| SMQ_TIMESCALE_NAME                    | Timescale database name                                   | messages                     |
+| SMQ_TIMESCALE_SSL_MODE                | Timescale SSL mode                                        | disabled                     |
+| SMQ_TIMESCALE_SSL_CERT                | Timescale SSL certificate path                            | ""                           |
+| SMQ_TIMESCALE_SSL_KEY                 | Timescale SSL key                                         | ""                           |
+| SMQ_TIMESCALE_SSL_ROOT_CERT           | Timescale SSL root certificate path                       | ""                           |
+| SMQ_MESSAGE_BROKER_URL                | Message broker instance URL                               | nats://localhost:4222        |
 | SMQ_JAEGER_URL                        | Jaeger server URL                                         | http://jaeger:4318/v1/traces |
-| SMQ_SEND_TELEMETRY                    | Send telemetry to magistrala call home server             | true                             |
-| SMQ_TIMESCALE_WRITER_INSTANCE_ID      | Timescale writer instance ID                              | ""                               |
+| SMQ_SEND_TELEMETRY                    | Send telemetry to supermq call home server                | true                         |
+| SMQ_TIMESCALE_WRITER_INSTANCE_ID      | Timescale writer instance ID                              | ""                           |
 
 ## Deployment
 
@@ -40,7 +40,7 @@ To start the service, execute the following shell script:
 # download the latest version of the service
 git clone https://github.com/absmach/supermq
 
-cd magistrala
+cd supermq
 
 # compile the timescale writer
 make timescale-writer
@@ -66,9 +66,9 @@ SMQ_TIMESCALE_SSL_KEY=[Timescale SSL key] \
 SMQ_TIMESCALE_SSL_ROOT_CERT=[Timescale SSL Root cert] \
 SMQ_MESSAGE_BROKER_URL=[Message broker instance URL] \
 SMQ_JAEGER_URL=[Jaeger server URL] \
-SMQ_SEND_TELEMETRY=[Send telemetry to magistrala call home server] \
+SMQ_SEND_TELEMETRY=[Send telemetry to supermq call home server] \
 SMQ_TIMESCALE_WRITER_INSTANCE_ID=[Timescale writer instance ID] \
-$GOBIN/magistrala-timescale-writer
+$GOBIN/supermq-timescale-writer
 ```
 
 ## Usage

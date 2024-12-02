@@ -57,7 +57,7 @@ var (
 	errMalformedTopic           = errors.New("malformed topic")
 	errFailedParseSubtopic      = errors.New("failed to parse subtopic")
 	errMalformedSubtopic        = errors.New("malformed subtopic")
-	errFailedPublishToMsgBroker = errors.New("failed to publish to magistrala message broker")
+	errFailedPublishToMsgBroker = errors.New("failed to publish to supermq message broker")
 )
 
 var (

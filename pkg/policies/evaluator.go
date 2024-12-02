@@ -55,7 +55,7 @@ const (
 	CreatePermission     = "create"
 )
 
-const SuperMQObject = "magistrala"
+const SuperMQObject = "supermq"
 
 //go:generate mockery --name Evaluator --output=./mocks --filename evaluator.go --quiet --note "Copyright (c) Abstract Machines"
 type Evaluator interface {

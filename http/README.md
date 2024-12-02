@@ -6,8 +6,8 @@ HTTP adapter provides an HTTP API for sending messages through the platform.
 
 The service is configured using the environment variables presented in the following table. Note that any unset variables will be replaced with their default values.
 
-| Variable                          | Description                                                                         | Default                           |
-| --------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------- |
+| Variable                           | Description                                                                         | Default                           |
+| ---------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------- |
 | SMQ_HTTP_ADAPTER_LOG_LEVEL         | Log level for the HTTP Adapter (debug, info, warn, error)                           | info                              |
 | SMQ_HTTP_ADAPTER_HOST              | Service HTTP host                                                                   | ""                                |
 | SMQ_HTTP_ADAPTER_PORT              | Service HTTP port                                                                   | 80                                |
@@ -21,7 +21,7 @@ The service is configured using the environment variables presented in the follo
 | SMQ_MESSAGE_BROKER_URL             | Message broker instance URL                                                         | <nats://localhost:4222>           |
 | SMQ_JAEGER_URL                     | Jaeger server URL                                                                   | <http://localhost:4318/v1/traces> |
 | SMQ_JAEGER_TRACE_RATIO             | Jaeger sampling ratio                                                               | 1.0                               |
-| SMQ_SEND_TELEMETRY                 | Send telemetry to magistrala call home server                                       | true                              |
+| SMQ_SEND_TELEMETRY                 | Send telemetry to supermq call home server                                          | true                              |
 | SMQ_HTTP_ADAPTER_INSTANCE_ID       | Service instance ID                                                                 | ""                                |
 
 ## Deployment
@@ -35,7 +35,7 @@ To start the service outside of the container, execute the following shell scrip
 # download the latest version of the service
 git clone https://github.com/absmach/supermq
 
-cd magistrala
+cd supermq
 
 # compile the http
 make http
@@ -59,7 +59,7 @@ SMQ_JAEGER_URL=http://localhost:14268/api/traces \
 SMQ_JAEGER_TRACE_RATIO=1.0 \
 SMQ_SEND_TELEMETRY=true \
 SMQ_HTTP_ADAPTER_INSTANCE_ID="" \
-$GOBIN/magistrala-http
+$GOBIN/supermq-http
 ```
 
 Setting `SMQ_HTTP_ADAPTER_SERVER_CERT` and `SMQ_HTTP_ADAPTER_SERVER_KEY` will enable TLS against the service. The service expects a file in PEM format for both the certificate and the key.

@@ -36,9 +36,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// ClientsService is a service that provides
-// clients authorization functionalities
-// for magistrala services.
+// ClientsService is a service that provides clients
+// authorization functionalities for SuperMQ services.
 type ClientsServiceClient interface {
 	// Authorize checks if the client is authorized to perform
 	Authenticate(ctx context.Context, in *AuthnReq, opts ...grpc.CallOption) (*AuthnRes, error)
@@ -132,9 +131,8 @@ func (c *clientsServiceClient) UnsetParentGroupFromClient(ctx context.Context, i
 // All implementations must embed UnimplementedClientsServiceServer
 // for forward compatibility.
 //
-// ClientsService is a service that provides
-// clients authorization functionalities
-// for magistrala services.
+// ClientsService is a service that provides clients
+// authorization functionalities for SuperMQ services.
 type ClientsServiceServer interface {
 	// Authorize checks if the client is authorized to perform
 	Authenticate(context.Context, *AuthnReq) (*AuthnRes, error)

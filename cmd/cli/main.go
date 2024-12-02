@@ -20,7 +20,7 @@ func main() {
 
 	// Root
 	rootCmd := &cobra.Command{
-		Use: "magistrala-cli",
+		Use: "supermq-cli",
 		PersistentPreRun: func(_ *cobra.Command, _ []string) {
 			cliConf, err := cli.ParseConfig(sdkConf)
 			if err != nil {

@@ -42,7 +42,7 @@ type PolicyReq struct {
 	Permission string `json:"permission,omitempty"`
 }
 
-// Authz is magistrala authorization library.
+// Authz is supermq authorization library.
 //
 //go:generate mockery --name Authorization --output=./mocks --filename authz.go --quiet --note "Copyright (c) Abstract Machines"
 type Authorization interface {

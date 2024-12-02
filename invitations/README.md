@@ -21,8 +21,8 @@ The service is configured using the environment variables presented in the follo
 | SMQ_AUTH_GRPC_CLIENT_KEY         | Path to client key in PEM format                 | ""                      |
 | SMQ_AUTH_GRPC_CLIENT_CA_CERTS    | Path to trusted CAs in PEM format                | ""                      |
 | SMQ_INVITATIONS_DB_HOST          | Invitation service database host                 | localhost               |
-| SMQ_INVITATIONS_DB_USER          | Invitation service database user                 | magistrala              |
-| SMQ_INVITATIONS_DB_PASS          | Invitation service database password             | magistrala              |
+| SMQ_INVITATIONS_DB_USER          | Invitation service database user                 | supermq              |
+| SMQ_INVITATIONS_DB_PASS          | Invitation service database password             | supermq              |
 | SMQ_INVITATIONS_DB_PORT          | Invitation service database port                 | 5432                    |
 | SMQ_INVITATIONS_DB_NAME          | Invitation service database name                 | invitations             |
 | SMQ_INVITATIONS_DB_SSL_MODE      | Invitation service database SSL mode             | disable                 |
@@ -41,7 +41,7 @@ To start the service outside of the container, execute the following shell scrip
 # download the latest version of the service
 git clone https://github.com/absmach/supermq
 
-cd magistrala
+cd supermq
 
 # compile the http
 make invitation
@@ -64,15 +64,15 @@ SMQ_AUTH_GRPC_CLIENT_CERT="" \
 SMQ_AUTH_GRPC_CLIENT_KEY="" \
 SMQ_AUTH_GRPC_CLIENT_CA_CERTS="" \
 SMQ_INVITATIONS_DB_HOST=localhost \
-SMQ_INVITATIONS_DB_USER=magistrala \
-SMQ_INVITATIONS_DB_PASS=magistrala \
+SMQ_INVITATIONS_DB_USER=supermq \
+SMQ_INVITATIONS_DB_PASS=supermq \
 SMQ_INVITATIONS_DB_PORT=5432 \
 SMQ_INVITATIONS_DB_NAME=invitations \
 SMQ_INVITATIONS_DB_SSL_MODE=disable \
 SMQ_INVITATIONS_DB_SSL_CERT="" \
 SMQ_INVITATIONS_DB_SSL_KEY="" \
 SMQ_INVITATIONS_DB_SSL_ROOT_CERT="" \
-$GOBIN/magistrala-invitation
+$GOBIN/supermq-invitation
 ```
 
 ## Usage

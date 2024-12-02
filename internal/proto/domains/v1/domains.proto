@@ -7,8 +7,8 @@ package domains.v1;
 option go_package = "github.com/absmach/supermq/internal/grpc/domains/v1";
 
 
-// DomainsService is a service that provides access to domains
-// functionalities for magistrala services.
+// DomainsService is a service that provides access to
+// domains functionalities for SuperMQ services.
 service DomainsService {
   rpc DeleteUserFromDomains(DeleteUserReq) returns (DeleteUserRes) {}
 }

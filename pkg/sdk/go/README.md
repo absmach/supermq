@@ -79,6 +79,6 @@ func (sdk *MgxSDK) UpdateChannel(channel Channel, token string) error
 func (sdk *MgxSDK) UpdateClient(client Client, token string) error
     UpdateClient - updates client by ID
 
-func (sdk *MgxSDK) Health() (magistrala.Health, error)
+func (sdk *MgxSDK) Health() (supermq.Health, error)
     Health - clients service health check
 ```
