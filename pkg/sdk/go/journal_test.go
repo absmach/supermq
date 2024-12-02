@@ -146,9 +146,9 @@ func TestRetrieveJournal(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:       "retrieve thing journal successfully",
+			desc:       "retrieve client journal successfully",
 			token:      validToken,
-			entityType: "thing",
+			entityType: "client",
 			entityID:   validID,
 			domainID:   domainID,
 			pageMeta: sdk.PageMetadata{
@@ -159,7 +159,7 @@ func TestRetrieveJournal(t *testing.T) {
 				Offset:     0,
 				Limit:      10,
 				EntityID:   validID,
-				EntityType: journal.ThingEntity,
+				EntityType: journal.ClientEntity,
 				Direction:  "desc",
 			},
 			svcRes: journal.JournalsPage{

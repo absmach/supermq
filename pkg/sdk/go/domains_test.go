@@ -10,16 +10,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/absmach/magistrala/auth"
-	httpapi "github.com/absmach/magistrala/auth/api/http/domains"
-	authmocks "github.com/absmach/magistrala/auth/mocks"
+	"github.com/absmach/magistrala/domains"
+	httpapi "github.com/absmach/magistrala/domains/api/http"
+	"github.com/absmach/magistrala/domains/mocks"
 	internalapi "github.com/absmach/magistrala/internal/api"
 	"github.com/absmach/magistrala/internal/testsutil"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/apiutil"
+	mgauthn "github.com/absmach/magistrala/pkg/authn"
+	authnmocks "github.com/absmach/magistrala/pkg/authn/mocks"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	policies "github.com/absmach/magistrala/pkg/policies"
 	sdk "github.com/absmach/magistrala/pkg/sdk/go"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
@@ -28,7 +29,7 @@ import (
 
 var (
 	authDomain, sdkDomain = generateTestDomain(&testing.T{})
-	authDomainReq         = auth.Domain{
+	authDomainReq         = domains.Domain{
 		Name:     authDomain.Name,
 		Metadata: authDomain.Metadata,
 		Tags:     authDomain.Tags,
@@ -43,17 +44,18 @@ var (
 	updatedDomianName = "updated-domain"
 )
 
-func setupDomains() (*httptest.Server, *authmocks.Service) {
-	svc := new(authmocks.Service)
+func setupDomains() (*httptest.Server, *mocks.Service, *authnmocks.Authentication) {
+	svc := new(mocks.Service)
 	logger := mglog.NewMock()
 	mux := chi.NewRouter()
+	authn := new(authnmocks.Authentication)
 
-	mux = httpapi.MakeHandler(svc, mux, logger)
-	return httptest.NewServer(mux), svc
+	mux = httpapi.MakeHandler(svc, authn, mux, logger, "")
+	return httptest.NewServer(mux), svc, authn
 }
 
 func TestCreateDomain(t *testing.T) {
-	ds, svc := setupDomains()
+	ds, svc, auth := setupDomains()
 	defer ds.Close()
 
 	sdkConf := sdk.Config{
@@ -66,10 +68,12 @@ func TestCreateDomain(t *testing.T) {
 	cases := []struct {
 		desc     string
 		token    string
+		session  mgauthn.Session
 		domain   sdk.Domain
-		svcReq   auth.Domain
-		svcRes   auth.Domain
+		svcReq   domains.Domain
+		svcRes   domains.Domain
 		svcErr   error
+		authnErr error
 		response sdk.Domain
 		err      error
 	}{
@@ -88,8 +92,8 @@ func TestCreateDomain(t *testing.T) {
 			token:    invalidToken,
 			domain:   sdkDomainReq,
 			svcReq:   authDomainReq,
-			svcRes:   auth.Domain{},
-			svcErr:   svcerr.ErrAuthentication,
+			svcRes:   domains.Domain{},
+			authnErr: svcerr.ErrAuthentication,
 			response: sdk.Domain{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
@@ -98,7 +102,7 @@ func TestCreateDomain(t *testing.T) {
 			token:    "",
 			domain:   sdkDomainReq,
 			svcReq:   authDomainReq,
-			svcRes:   auth.Domain{},
+			svcRes:   domains.Domain{},
 			svcErr:   nil,
 			response: sdk.Domain{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
@@ -112,8 +116,8 @@ func TestCreateDomain(t *testing.T) {
 				Tags:     sdkDomain.Tags,
 				Alias:    sdkDomain.Alias,
 			},
-			svcReq:   auth.Domain{},
-			svcRes:   auth.Domain{},
+			svcReq:   domains.Domain{},
+			svcRes:   domains.Domain{},
 			svcErr:   nil,
 			response: sdk.Domain{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingName, http.StatusBadRequest),
@@ -127,8 +131,8 @@ func TestCreateDomain(t *testing.T) {
 					"key": make(chan int),
 				},
 			},
-			svcReq:   auth.Domain{},
-			svcRes:   auth.Domain{},
+			svcReq:   domains.Domain{},
+			svcRes:   domains.Domain{},
 			svcErr:   nil,
 			response: sdk.Domain{},
 			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
@@ -138,10 +142,10 @@ func TestCreateDomain(t *testing.T) {
 			token:  validToken,
 			domain: sdkDomainReq,
 			svcReq: authDomainReq,
-			svcRes: auth.Domain{
+			svcRes: domains.Domain{
 				ID:   authDomain.ID,
 				Name: authDomain.Name,
-				Metadata: auth.Metadata{
+				Metadata: domains.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -152,21 +156,26 @@ func TestCreateDomain(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("CreateDomain", mock.Anything, tc.token, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			if tc.token == validToken {
+				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
+			svcCall := svc.On("CreateDomain", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.CreateDomain(tc.domain, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "CreateDomain", mock.Anything, tc.token, tc.svcReq)
+				ok := svcCall.Parent.AssertCalled(t, "CreateDomain", mock.Anything, tc.session, tc.svcReq)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
+			authCall.Unset()
 		})
 	}
 }
 
 func TestUpdateDomain(t *testing.T) {
-	ds, svc := setupDomains()
+	ds, svc, authn := setupDomains()
 	defer ds.Close()
 
 	sdkConf := sdk.Config{
@@ -184,10 +193,12 @@ func TestUpdateDomain(t *testing.T) {
 	cases := []struct {
 		desc     string
 		token    string
+		session  mgauthn.Session
 		domainID string
 		domain   sdk.Domain
-		svcRes   auth.Domain
+		svcRes   domains.Domain
 		svcErr   error
+		authnErr error
 		response sdk.Domain
 		err      error
 	}{
@@ -212,8 +223,8 @@ func TestUpdateDomain(t *testing.T) {
 				ID:   sdkDomain.ID,
 				Name: updatedDomianName,
 			},
-			svcRes:   auth.Domain{},
-			svcErr:   svcerr.ErrAuthentication,
+			svcRes:   domains.Domain{},
+			authnErr: svcerr.ErrAuthentication,
 			response: sdk.Domain{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
@@ -225,7 +236,7 @@ func TestUpdateDomain(t *testing.T) {
 				ID:   sdkDomain.ID,
 				Name: updatedDomianName,
 			},
-			svcRes:   auth.Domain{},
+			svcRes:   domains.Domain{},
 			svcErr:   nil,
 			response: sdk.Domain{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
@@ -238,7 +249,7 @@ func TestUpdateDomain(t *testing.T) {
 				ID:   wrongID,
 				Name: updatedDomianName,
 			},
-			svcRes:   auth.Domain{},
+			svcRes:   domains.Domain{},
 			svcErr:   svcerr.ErrAuthorization,
 			response: sdk.Domain{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
@@ -250,7 +261,7 @@ func TestUpdateDomain(t *testing.T) {
 			domain: sdk.Domain{
 				Name: sdkDomain.Name,
 			},
-			svcRes:   auth.Domain{},
+			svcRes:   domains.Domain{},
 			svcErr:   nil,
 			response: sdk.Domain{},
 			err:      errors.NewSDKError(apiutil.ErrMissingID),
@@ -266,7 +277,7 @@ func TestUpdateDomain(t *testing.T) {
 					"key": make(chan int),
 				},
 			},
-			svcRes:   auth.Domain{},
+			svcRes:   domains.Domain{},
 			svcErr:   nil,
 			response: sdk.Domain{},
 			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
@@ -279,10 +290,10 @@ func TestUpdateDomain(t *testing.T) {
 				ID:   sdkDomain.ID,
 				Name: sdkDomain.Name,
 			},
-			svcRes: auth.Domain{
+			svcRes: domains.Domain{
 				ID:   authDomain.ID,
 				Name: authDomain.Name,
-				Metadata: auth.Metadata{
+				Metadata: domains.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -293,21 +304,26 @@ func TestUpdateDomain(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("UpdateDomain", mock.Anything, tc.token, tc.domainID, mock.Anything).Return(tc.svcRes, tc.svcErr)
+			if tc.token == validToken {
+				tc.session = mgauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
+			}
+			authCall := authn.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
+			svcCall := svc.On("UpdateDomain", mock.Anything, tc.session, tc.domainID, mock.Anything).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.UpdateDomain(tc.domain, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "UpdateDomain", mock.Anything, tc.token, tc.domainID, mock.Anything)
+				ok := svcCall.Parent.AssertCalled(t, "UpdateDomain", mock.Anything, tc.session, tc.domainID, mock.Anything)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
+			authCall.Unset()
 		})
 	}
 }
 
 func TestViewDomain(t *testing.T) {
-	ds, svc := setupDomains()
+	ds, svc, authn := setupDomains()
 	defer ds.Close()
 
 	sdkConf := sdk.Config{
@@ -320,9 +336,11 @@ func TestViewDomain(t *testing.T) {
 	cases := []struct {
 		desc     string
 		token    string
+		session  mgauthn.Session
 		domainID string
-		svcRes   auth.Domain
+		svcRes   domains.Domain
 		svcErr   error
+		authnErr error
 		response sdk.Domain
 		err      error
 	}{
@@ -339,8 +357,8 @@ func TestViewDomain(t *testing.T) {
 			desc:     "view domain with invalid token",
 			token:    invalidToken,
 			domainID: sdkDomain.ID,
-			svcRes:   auth.Domain{},
-			svcErr:   svcerr.ErrAuthentication,
+			svcRes:   domains.Domain{},
+			authnErr: svcerr.ErrAuthentication,
 			response: sdk.Domain{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
@@ -348,7 +366,7 @@ func TestViewDomain(t *testing.T) {
 			desc:     "view domain with empty token",
 			token:    "",
 			domainID: sdkDomain.ID,
-			svcRes:   auth.Domain{},
+			svcRes:   domains.Domain{},
 			svcErr:   nil,
 			response: sdk.Domain{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
@@ -357,7 +375,7 @@ func TestViewDomain(t *testing.T) {
 			desc:     "view domain with invalid domain ID",
 			token:    validToken,
 			domainID: wrongID,
-			svcRes:   auth.Domain{},
+			svcRes:   domains.Domain{},
 			svcErr:   svcerr.ErrAuthorization,
 			response: sdk.Domain{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
@@ -366,7 +384,7 @@ func TestViewDomain(t *testing.T) {
 			desc:     "view domain with empty id",
 			token:    validToken,
 			domainID: "",
-			svcRes:   auth.Domain{},
+			svcRes:   domains.Domain{},
 			svcErr:   nil,
 			response: sdk.Domain{},
 			err:      errors.NewSDKError(apiutil.ErrMissingID),
@@ -375,10 +393,10 @@ func TestViewDomain(t *testing.T) {
 			desc:     "view domain with response that cannot be unmarshalled",
 			token:    validToken,
 			domainID: sdkDomain.ID,
-			svcRes: auth.Domain{
+			svcRes: domains.Domain{
 				ID:   authDomain.ID,
 				Name: authDomain.Name,
-				Metadata: auth.Metadata{
+				Metadata: domains.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -389,104 +407,26 @@ func TestViewDomain(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("RetrieveDomain", mock.Anything, tc.token, tc.domainID).Return(tc.svcRes, tc.svcErr)
+			if tc.token == validToken {
+				tc.session = mgauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
+			}
+			authCall := authn.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
+			svcCall := svc.On("RetrieveDomain", mock.Anything, tc.session, tc.domainID).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.Domain(tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "RetrieveDomain", mock.Anything, tc.token, tc.domainID)
+				ok := svcCall.Parent.AssertCalled(t, "RetrieveDomain", mock.Anything, tc.session, tc.domainID)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
-		})
-	}
-}
-
-func TestDomainPermissions(t *testing.T) {
-	ds, svc := setupDomains()
-	defer ds.Close()
-
-	sdkConf := sdk.Config{
-		DomainsURL:     ds.URL,
-		MsgContentType: contentType,
-	}
-
-	mgsdk := sdk.NewSDK(sdkConf)
-
-	cases := []struct {
-		desc     string
-		token    string
-		domainID string
-		svcRes   policies.Permissions
-		svcErr   error
-		response sdk.Domain
-		err      error
-	}{
-		{
-			desc:     "retrieve domain permissions successfully",
-			token:    validToken,
-			domainID: sdkDomain.ID,
-			svcRes:   policies.Permissions{policies.ViewPermission},
-			svcErr:   nil,
-			response: sdk.Domain{
-				Permissions: []string{policies.ViewPermission},
-			},
-			err: nil,
-		},
-		{
-			desc:     "retrieve domain permissions with invalid token",
-			token:    invalidToken,
-			domainID: sdkDomain.ID,
-			svcRes:   policies.Permissions{},
-			svcErr:   svcerr.ErrAuthentication,
-			response: sdk.Domain{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
-		},
-		{
-			desc:     "retrieve domain permissions with empty token",
-			token:    "",
-			domainID: sdkDomain.ID,
-			svcRes:   policies.Permissions{},
-			svcErr:   nil,
-			response: sdk.Domain{},
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
-		},
-		{
-			desc:     "retrieve domain permissions with empty domain id",
-			token:    validToken,
-			domainID: "",
-			svcRes:   policies.Permissions{},
-			svcErr:   nil,
-			response: sdk.Domain{},
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
-		},
-		{
-			desc:     "retrieve domain permissions with invalid domain id",
-			token:    validToken,
-			domainID: wrongID,
-			svcRes:   policies.Permissions{},
-			svcErr:   svcerr.ErrAuthorization,
-			response: sdk.Domain{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
-		},
-	}
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("RetrieveDomainPermissions", mock.Anything, tc.token, tc.domainID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.DomainPermissions(tc.domainID, tc.token)
-			assert.Equal(t, tc.err, err)
-			assert.Equal(t, tc.response, resp)
-			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "RetrieveDomainPermissions", mock.Anything, tc.token, tc.domainID)
-				assert.True(t, ok)
-			}
-			svcCall.Unset()
+			authCall.Unset()
 		})
 	}
 }
 
 func TestListDomians(t *testing.T) {
-	ds, svc := setupDomains()
+	ds, svc, authn := setupDomains()
 	defer ds.Close()
 
 	sdkConf := sdk.Config{
@@ -499,10 +439,12 @@ func TestListDomians(t *testing.T) {
 	cases := []struct {
 		desc     string
 		token    string
+		session  mgauthn.Session
 		pageMeta sdk.PageMetadata
-		svcReq   auth.Page
-		svcRes   auth.DomainsPage
+		svcReq   domains.Page
+		svcRes   domains.DomainsPage
 		svcErr   error
+		authnErr error
 		response sdk.DomainsPage
 		err      error
 	}{
@@ -513,15 +455,15 @@ func TestListDomians(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 			},
-			svcReq: auth.Page{
+			svcReq: domains.Page{
 				Offset: 0,
 				Limit:  10,
 				Order:  internalapi.DefOrder,
 				Dir:    internalapi.DefDir,
 			},
-			svcRes: auth.DomainsPage{
+			svcRes: domains.DomainsPage{
 				Total:   1,
-				Domains: []auth.Domain{authDomain},
+				Domains: []domains.Domain{authDomain},
 			},
 			svcErr: nil,
 			response: sdk.DomainsPage{
@@ -539,14 +481,14 @@ func TestListDomians(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 			},
-			svcReq: auth.Page{
+			svcReq: domains.Page{
 				Offset: 0,
 				Limit:  10,
 				Order:  internalapi.DefOrder,
 				Dir:    internalapi.DefDir,
 			},
-			svcRes:   auth.DomainsPage{},
-			svcErr:   svcerr.ErrAuthentication,
+			svcRes:   domains.DomainsPage{},
+			authnErr: svcerr.ErrAuthentication,
 			response: sdk.DomainsPage{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
@@ -557,11 +499,11 @@ func TestListDomians(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 			},
-			svcReq:   auth.Page{},
-			svcRes:   auth.DomainsPage{},
+			svcReq:   domains.Page{},
+			svcRes:   domains.DomainsPage{},
 			svcErr:   nil,
 			response: sdk.DomainsPage{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerToken), http.StatusUnauthorized),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
 			desc:  "list domains with invalid page metadata",
@@ -573,8 +515,8 @@ func TestListDomians(t *testing.T) {
 					"key": make(chan int),
 				},
 			},
-			svcReq:   auth.Page{},
-			svcRes:   auth.DomainsPage{},
+			svcReq:   domains.Page{},
+			svcRes:   domains.DomainsPage{},
 			svcErr:   nil,
 			response: sdk.DomainsPage{},
 			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
@@ -586,17 +528,17 @@ func TestListDomians(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 			},
-			svcReq: auth.Page{
+			svcReq: domains.Page{
 				Offset: 0,
 				Limit:  10,
 				Order:  internalapi.DefOrder,
 				Dir:    internalapi.DefDir,
 			},
-			svcRes: auth.DomainsPage{
+			svcRes: domains.DomainsPage{
 				Total: 1,
-				Domains: []auth.Domain{{
+				Domains: []domains.Domain{{
 					Name:     authDomain.Name,
-					Metadata: auth.Metadata{"key": make(chan int)},
+					Metadata: domains.Metadata{"key": make(chan int)},
 				}},
 			},
 			svcErr:   nil,
@@ -606,175 +548,26 @@ func TestListDomians(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("ListDomains", mock.Anything, tc.token, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			if tc.token == validToken {
+				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := authn.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
+			svcCall := svc.On("ListDomains", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.Domains(tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "ListDomains", mock.Anything, tc.token, mock.Anything)
+				ok := svcCall.Parent.AssertCalled(t, "ListDomains", mock.Anything, tc.session, mock.Anything)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
-		})
-	}
-}
-
-func TestListUserDomains(t *testing.T) {
-	ds, svc := setupDomains()
-	defer ds.Close()
-
-	sdkConf := sdk.Config{
-		DomainsURL:     ds.URL,
-		MsgContentType: contentType,
-	}
-
-	mgsdk := sdk.NewSDK(sdkConf)
-
-	cases := []struct {
-		desc     string
-		token    string
-		userID   string
-		pageMeta sdk.PageMetadata
-		svcReq   auth.Page
-		svcRes   auth.DomainsPage
-		svcErr   error
-		response sdk.DomainsPage
-		err      error
-	}{
-		{
-			desc:   "list user domains successfully",
-			token:  validToken,
-			userID: sdkDomain.CreatedBy,
-			pageMeta: sdk.PageMetadata{
-				Offset: 0,
-				Limit:  10,
-			},
-			svcReq: auth.Page{
-				Offset: 0,
-				Limit:  10,
-				Order:  internalapi.DefOrder,
-				Dir:    internalapi.DefDir,
-			},
-			svcRes: auth.DomainsPage{
-				Total:   1,
-				Domains: []auth.Domain{authDomain},
-			},
-			svcErr: nil,
-			response: sdk.DomainsPage{
-				PageRes: sdk.PageRes{
-					Total: 1,
-				},
-				Domains: []sdk.Domain{sdkDomain},
-			},
-			err: nil,
-		},
-		{
-			desc:   "list user domains with invalid token",
-			token:  invalidToken,
-			userID: sdkDomain.CreatedBy,
-			pageMeta: sdk.PageMetadata{
-				Offset: 0,
-				Limit:  10,
-			},
-			svcReq: auth.Page{
-				Offset: 0,
-				Limit:  10,
-				Order:  internalapi.DefOrder,
-				Dir:    internalapi.DefDir,
-			},
-			svcRes:   auth.DomainsPage{},
-			svcErr:   svcerr.ErrAuthentication,
-			response: sdk.DomainsPage{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
-		},
-		{
-			desc:   "list user domains with empty token",
-			token:  "",
-			userID: sdkDomain.CreatedBy,
-			pageMeta: sdk.PageMetadata{
-				Offset: 0,
-				Limit:  10,
-			},
-			svcReq:   auth.Page{},
-			svcRes:   auth.DomainsPage{},
-			svcErr:   nil,
-			response: sdk.DomainsPage{},
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
-		},
-		{
-			desc:   "list user domains with empty user id",
-			token:  validToken,
-			userID: "",
-			pageMeta: sdk.PageMetadata{
-				Offset: 0,
-				Limit:  10,
-			},
-			svcReq:   auth.Page{},
-			svcRes:   auth.DomainsPage{},
-			svcErr:   nil,
-			response: sdk.DomainsPage{},
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
-		},
-		{
-			desc:   "list user domains with request that cannot be marshalled",
-			token:  validToken,
-			userID: sdkDomain.CreatedBy,
-			pageMeta: sdk.PageMetadata{
-				Offset: 0,
-				Limit:  10,
-			},
-			svcReq: auth.Page{
-				Offset: 0,
-				Limit:  10,
-				Order:  internalapi.DefOrder,
-				Dir:    internalapi.DefDir,
-			},
-			svcRes: auth.DomainsPage{
-				Total: 1,
-				Domains: []auth.Domain{{
-					Name:     authDomain.Name,
-					Metadata: auth.Metadata{"key": make(chan int)},
-				}},
-			},
-			svcErr:   nil,
-			response: sdk.DomainsPage{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
-		},
-		{
-			desc:   "list user domains with invalid page metadata",
-			token:  validToken,
-			userID: sdkDomain.CreatedBy,
-			pageMeta: sdk.PageMetadata{
-				Offset: 0,
-				Limit:  10,
-				Metadata: sdk.Metadata{
-					"key": make(chan int),
-				},
-			},
-			svcReq:   auth.Page{},
-			svcRes:   auth.DomainsPage{},
-			svcErr:   nil,
-			response: sdk.DomainsPage{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
-		},
-	}
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("ListUserDomains", mock.Anything, tc.token, tc.userID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.ListUserDomains(tc.userID, tc.pageMeta, tc.token)
-			assert.Equal(t, tc.err, err)
-			assert.Equal(t, tc.response, resp)
-			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "ListUserDomains", mock.Anything, tc.token, tc.userID, tc.svcReq)
-				assert.True(t, ok)
-			}
-			svcCall.Unset()
+			authCall.Unset()
 		})
 	}
 }
 
 func TestEnableDomain(t *testing.T) {
-	ds, svc := setupDomains()
+	ds, svc, authn := setupDomains()
 	defer ds.Close()
 
 	sdkConf := sdk.Config{
@@ -784,45 +577,37 @@ func TestEnableDomain(t *testing.T) {
 
 	mgsdk := sdk.NewSDK(sdkConf)
 
-	enable := auth.EnabledStatus
-
 	cases := []struct {
 		desc     string
 		token    string
+		session  mgauthn.Session
 		domainID string
-		svcReq   auth.DomainReq
-		svcRes   auth.Domain
+		svcRes   domains.Domain
 		svcErr   error
+		authnErr error
 		err      error
 	}{
 		{
 			desc:     "enable domain successfully",
 			token:    validToken,
 			domainID: sdkDomain.ID,
-			svcReq: auth.DomainReq{
-				Status: &enable,
-			},
-			svcRes: authDomain,
-			svcErr: nil,
-			err:    nil,
+			svcRes:   authDomain,
+			svcErr:   nil,
+			err:      nil,
 		},
 		{
 			desc:     "enable domain with invalid token",
 			token:    invalidToken,
 			domainID: sdkDomain.ID,
-			svcReq: auth.DomainReq{
-				Status: &enable,
-			},
-			svcRes: auth.Domain{},
-			svcErr: svcerr.ErrAuthentication,
-			err:    errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+			svcRes:   domains.Domain{},
+			authnErr: svcerr.ErrAuthentication,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
 			desc:     "enable domain with empty token",
 			token:    "",
 			domainID: sdkDomain.ID,
-			svcReq:   auth.DomainReq{},
-			svcRes:   auth.Domain{},
+			svcRes:   domains.Domain{},
 			svcErr:   nil,
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
@@ -830,28 +615,32 @@ func TestEnableDomain(t *testing.T) {
 			desc:     "enable domain with empty domain id",
 			token:    validToken,
 			domainID: "",
-			svcReq:   auth.DomainReq{},
-			svcRes:   auth.Domain{},
+			svcRes:   domains.Domain{},
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingDomainID, http.StatusBadRequest),
 		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("ChangeDomainStatus", mock.Anything, tc.token, tc.domainID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			if tc.token == validToken {
+				tc.session = mgauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
+			}
+			authCall := authn.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
+			svcCall := svc.On("EnableDomain", mock.Anything, tc.session, tc.domainID).Return(tc.svcRes, tc.svcErr)
 			err := mgsdk.EnableDomain(tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "ChangeDomainStatus", mock.Anything, tc.token, tc.domainID, tc.svcReq)
+				ok := svcCall.Parent.AssertCalled(t, "EnableDomain", mock.Anything, tc.session, tc.domainID)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
+			authCall.Unset()
 		})
 	}
 }
 
 func TestDisableDomain(t *testing.T) {
-	ds, svc := setupDomains()
+	ds, svc, authn := setupDomains()
 	defer ds.Close()
 
 	sdkConf := sdk.Config{
@@ -861,45 +650,37 @@ func TestDisableDomain(t *testing.T) {
 
 	mgsdk := sdk.NewSDK(sdkConf)
 
-	disable := auth.DisabledStatus
-
 	cases := []struct {
 		desc     string
 		token    string
+		session  mgauthn.Session
 		domainID string
-		svcReq   auth.DomainReq
-		svcRes   auth.Domain
+		svcRes   domains.Domain
 		svcErr   error
+		authnErr error
 		err      error
 	}{
 		{
 			desc:     "disable domain successfully",
 			token:    validToken,
 			domainID: sdkDomain.ID,
-			svcReq: auth.DomainReq{
-				Status: &disable,
-			},
-			svcRes: authDomain,
-			svcErr: nil,
-			err:    nil,
+			svcRes:   authDomain,
+			svcErr:   nil,
+			err:      nil,
 		},
 		{
 			desc:     "disable domain with invalid token",
 			token:    invalidToken,
 			domainID: sdkDomain.ID,
-			svcReq: auth.DomainReq{
-				Status: &disable,
-			},
-			svcRes: auth.Domain{},
-			svcErr: svcerr.ErrAuthentication,
-			err:    errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+			svcRes:   domains.Domain{},
+			authnErr: svcerr.ErrAuthentication,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
 			desc:     "disable domain with empty token",
 			token:    "",
 			domainID: sdkDomain.ID,
-			svcReq:   auth.DomainReq{},
-			svcRes:   auth.Domain{},
+			svcRes:   domains.Domain{},
 			svcErr:   nil,
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
@@ -907,213 +688,41 @@ func TestDisableDomain(t *testing.T) {
 			desc:     "disable domain with empty domain id",
 			token:    validToken,
 			domainID: "",
-			svcReq:   auth.DomainReq{},
-			svcRes:   auth.Domain{},
+			svcRes:   domains.Domain{},
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingDomainID, http.StatusBadRequest),
 		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("ChangeDomainStatus", mock.Anything, tc.token, tc.domainID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			if tc.token == validToken {
+				tc.session = mgauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
+			}
+			authCall := authn.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
+			svcCall := svc.On("DisableDomain", mock.Anything, tc.session, tc.domainID).Return(tc.svcRes, tc.svcErr)
 			err := mgsdk.DisableDomain(tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "ChangeDomainStatus", mock.Anything, tc.token, tc.domainID, tc.svcReq)
+				ok := svcCall.Parent.AssertCalled(t, "DisableDomain", mock.Anything, tc.session, tc.domainID)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
+			authCall.Unset()
 		})
 	}
 }
 
-func TestAddUserToDomain(t *testing.T) {
-	ds, svc := setupDomains()
-	defer ds.Close()
-
-	sdkConf := sdk.Config{
-		DomainsURL:     ds.URL,
-		MsgContentType: contentType,
-	}
-
-	mgsdk := sdk.NewSDK(sdkConf)
-	newUser := testsutil.GenerateUUID(t)
-
-	cases := []struct {
-		desc             string
-		token            string
-		domainID         string
-		addUserDomainReq sdk.UsersRelationRequest
-		svcErr           error
-		err              error
-	}{
-		{
-			desc:     "add user to domain successfully",
-			token:    validToken,
-			domainID: sdkDomain.ID,
-			addUserDomainReq: sdk.UsersRelationRequest{
-				UserIDs:  []string{newUser},
-				Relation: policies.MemberRelation,
-			},
-			svcErr: nil,
-			err:    nil,
-		},
-		{
-			desc:     "add user to domain with invalid token",
-			token:    invalidToken,
-			domainID: sdkDomain.ID,
-			addUserDomainReq: sdk.UsersRelationRequest{
-				UserIDs:  []string{newUser},
-				Relation: policies.MemberRelation,
-			},
-			svcErr: svcerr.ErrAuthentication,
-			err:    errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
-		},
-		{
-			desc:     "add user to domain with empty token",
-			token:    "",
-			domainID: sdkDomain.ID,
-			addUserDomainReq: sdk.UsersRelationRequest{
-				UserIDs:  []string{newUser},
-				Relation: policies.MemberRelation,
-			},
-			svcErr: nil,
-			err:    errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
-		},
-		{
-			desc:     "add user to domain with empty domain id",
-			token:    validToken,
-			domainID: "",
-			addUserDomainReq: sdk.UsersRelationRequest{
-				UserIDs:  []string{newUser},
-				Relation: policies.MemberRelation,
-			},
-			svcErr: nil,
-			err:    errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
-		},
-		{
-			desc:     "add user to domain with empty user id",
-			token:    validToken,
-			domainID: sdkDomain.ID,
-			addUserDomainReq: sdk.UsersRelationRequest{
-				UserIDs:  []string{},
-				Relation: policies.MemberRelation,
-			},
-			svcErr: nil,
-			err:    errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
-		},
-		{
-			desc:     "add user to domain with empty relation",
-			token:    validToken,
-			domainID: sdkDomain.ID,
-			addUserDomainReq: sdk.UsersRelationRequest{
-				UserIDs:  []string{newUser},
-				Relation: "",
-			},
-			svcErr: nil,
-			err:    errors.NewSDKErrorWithStatus(apiutil.ErrMissingRelation, http.StatusBadRequest),
-		},
-	}
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("AssignUsers", mock.Anything, tc.token, tc.domainID, tc.addUserDomainReq.UserIDs, tc.addUserDomainReq.Relation).Return(tc.svcErr)
-			err := mgsdk.AddUserToDomain(tc.domainID, tc.addUserDomainReq, tc.token)
-			assert.Equal(t, tc.err, err)
-			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "AssignUsers", mock.Anything, tc.token, tc.domainID, tc.addUserDomainReq.UserIDs, tc.addUserDomainReq.Relation)
-				assert.True(t, ok)
-			}
-			svcCall.Unset()
-		})
-	}
-}
-
-func TestRemoveUserFromDomain(t *testing.T) {
-	ds, svc := setupDomains()
-	defer ds.Close()
-
-	sdkConf := sdk.Config{
-		DomainsURL:     ds.URL,
-		MsgContentType: contentType,
-	}
-
-	mgsdk := sdk.NewSDK(sdkConf)
-	removeUserID := testsutil.GenerateUUID(t)
-
-	cases := []struct {
-		desc     string
-		token    string
-		domainID string
-		userID   string
-		svcErr   error
-		err      error
-	}{
-		{
-			desc:     "remove user from domain successfully",
-			token:    validToken,
-			domainID: sdkDomain.ID,
-			userID:   removeUserID,
-			svcErr:   nil,
-			err:      nil,
-		},
-		{
-			desc:     "remove user from domain with invalid token",
-			token:    invalidToken,
-			domainID: sdkDomain.ID,
-			userID:   removeUserID,
-			svcErr:   svcerr.ErrAuthentication,
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
-		},
-		{
-			desc:     "remove user from domain with empty token",
-			token:    "",
-			domainID: sdkDomain.ID,
-			userID:   removeUserID,
-			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
-		},
-		{
-			desc:     "remove user from domain with empty domain id",
-			token:    validToken,
-			domainID: "",
-			userID:   removeUserID,
-			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
-		},
-		{
-			desc:     "remove user from domain with empty user id",
-			token:    validToken,
-			domainID: sdkDomain.ID,
-			userID:   "",
-			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMalformedPolicy, http.StatusBadRequest),
-		},
-	}
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("UnassignUser", mock.Anything, tc.token, tc.domainID, tc.userID).Return(tc.svcErr)
-			err := mgsdk.RemoveUserFromDomain(tc.domainID, tc.userID, tc.token)
-			assert.Equal(t, tc.err, err)
-			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "UnassignUser", mock.Anything, tc.token, tc.domainID, tc.userID)
-				assert.True(t, ok)
-			}
-			svcCall.Unset()
-		})
-	}
-}
-
-func generateTestDomain(t *testing.T) (auth.Domain, sdk.Domain) {
+func generateTestDomain(t *testing.T) (domains.Domain, sdk.Domain) {
 	createdAt, err := time.Parse(time.RFC3339, "2024-04-01T00:00:00Z")
 	assert.Nil(t, err, fmt.Sprintf("Unexpected error parsing time: %s", err))
 	ownerID := testsutil.GenerateUUID(t)
-	ad := auth.Domain{
+	ad := domains.Domain{
 		ID:        testsutil.GenerateUUID(t),
 		Name:      "test-domain",
-		Metadata:  auth.Metadata(validMetadata),
+		Metadata:  domains.Metadata(validMetadata),
 		Tags:      []string{"tag1", "tag2"},
 		Alias:     "test-alias",
-		Status:    auth.EnabledStatus,
+		Status:    domains.EnabledStatus,
 		CreatedBy: ownerID,
 		CreatedAt: createdAt,
 		UpdatedBy: ownerID,

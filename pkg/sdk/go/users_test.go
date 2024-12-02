@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/absmach/magistrala"
 	authmocks "github.com/absmach/magistrala/auth/mocks"
 	internalapi "github.com/absmach/magistrala/internal/api"
+	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/authn"
@@ -20,10 +20,7 @@ import (
 	authnmocks "github.com/absmach/magistrala/pkg/authn/mocks"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/pkg/groups"
-	gmocks "github.com/absmach/magistrala/pkg/groups/mocks"
 	oauth2mocks "github.com/absmach/magistrala/pkg/oauth2/mocks"
-	policies "github.com/absmach/magistrala/pkg/policies"
 	sdk "github.com/absmach/magistrala/pkg/sdk/go"
 	"github.com/absmach/magistrala/users"
 	"github.com/absmach/magistrala/users/api"
@@ -40,14 +37,13 @@ var (
 
 func setupUsers() (*httptest.Server, *umocks.Service, *authnmocks.Authentication) {
 	usvc := new(umocks.Service)
-	gsvc := new(gmocks.Service)
 	logger := mglog.NewMock()
 	mux := chi.NewRouter()
 	provider := new(oauth2mocks.Provider)
 	provider.On("Name").Return("test")
 	authn := new(authnmocks.Authentication)
 	token := new(authmocks.TokenServiceClient)
-	api.MakeHandler(usvc, authn, token, true, gsvc, mux, logger, "", passRegex, provider)
+	api.MakeHandler(usvc, authn, token, true, mux, logger, "", passRegex, provider)
 
 	return httptest.NewServer(mux), usvc, authn
 }
@@ -1376,7 +1372,7 @@ func TestResetPasswordRequest(t *testing.T) {
 		email    string
 		svcRes   users.User
 		svcErr   error
-		issueRes *magistrala.Token
+		issueRes *grpcTokenV1.Token
 		issueErr error
 		err      errors.SDKError
 	}{
@@ -1385,7 +1381,7 @@ func TestResetPasswordRequest(t *testing.T) {
 			email:    validEmail,
 			svcRes:   convertUser(user),
 			svcErr:   nil,
-			issueRes: &magistrala.Token{AccessToken: validToken, RefreshToken: &validToken},
+			issueRes: &grpcTokenV1.Token{AccessToken: validToken, RefreshToken: &validToken},
 			err:      nil,
 		},
 		{
@@ -1393,7 +1389,7 @@ func TestResetPasswordRequest(t *testing.T) {
 			email:    "invalidemail",
 			svcRes:   users.User{},
 			svcErr:   svcerr.ErrViewEntity,
-			issueRes: &magistrala.Token{},
+			issueRes: &grpcTokenV1.Token{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
 		},
 		{
@@ -1401,7 +1397,7 @@ func TestResetPasswordRequest(t *testing.T) {
 			email:    "",
 			svcRes:   users.User{},
 			svcErr:   nil,
-			issueRes: &magistrala.Token{},
+			issueRes: &grpcTokenV1.Token{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingEmail), http.StatusBadRequest),
 		},
 	}
@@ -2352,7 +2348,7 @@ func TestListMembers(t *testing.T) {
 			svcReq: users.Page{
 				Offset:     0,
 				Limit:      10,
-				Permission: policies.ViewPermission,
+				Permission: defPermission,
 			},
 			svcRes: users.MembersPage{
 				Page: users.Page{
@@ -2380,7 +2376,7 @@ func TestListMembers(t *testing.T) {
 			svcReq: users.Page{
 				Offset:     0,
 				Limit:      10,
-				Permission: policies.ViewPermission,
+				Permission: defPermission,
 			},
 			authenticateErr: svcerr.ErrAuthentication,
 			response:        sdk.UsersPage{},
@@ -2412,7 +2408,7 @@ func TestListMembers(t *testing.T) {
 			svcReq: users.Page{
 				Offset:     0,
 				Limit:      10,
-				Permission: policies.ViewPermission,
+				Permission: defPermission,
 			},
 			svcErr:   svcerr.ErrViewEntity,
 			response: sdk.UsersPage{},
@@ -2462,7 +2458,7 @@ func TestListMembers(t *testing.T) {
 			svcReq: users.Page{
 				Offset:     0,
 				Limit:      10,
-				Permission: policies.ViewPermission,
+				Permission: defPermission,
 			},
 			svcRes: users.MembersPage{
 				Page: users.Page{
@@ -2566,196 +2562,6 @@ func TestDeleteUser(t *testing.T) {
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "Delete", mock.Anything, tc.session, tc.userID)
-				assert.True(t, ok)
-			}
-			svcCall.Unset()
-			authCall.Unset()
-		})
-	}
-}
-
-func TestListUserGroups(t *testing.T) {
-	ts, svc, auth := setupGroups()
-	defer ts.Close()
-
-	conf := sdk.Config{
-		UsersURL: ts.URL,
-	}
-	mgsdk := sdk.NewSDK(conf)
-
-	group := generateTestGroup(t)
-	cases := []struct {
-		desc            string
-		token           string
-		session         mgauthn.Session
-		userID          string
-		pageMeta        sdk.PageMetadata
-		svcReq          groups.Page
-		svcRes          groups.Page
-		svcErr          error
-		authenticateErr error
-		response        sdk.GroupsPage
-		err             errors.SDKError
-	}{
-		{
-			desc:   "list user groups successfully",
-			token:  validToken,
-			userID: validID,
-			pageMeta: sdk.PageMetadata{
-				Offset:   0,
-				Limit:    10,
-				DomainID: domainID,
-			},
-			svcReq: groups.Page{
-				PageMeta: groups.PageMeta{
-					Offset: 0,
-					Limit:  10,
-				},
-				Permission: policies.ViewPermission,
-				Direction:  -1,
-			},
-			svcRes: groups.Page{
-				PageMeta: groups.PageMeta{
-					Total: 1,
-				},
-				Groups: []groups.Group{convertGroup(group)},
-			},
-			svcErr: nil,
-			response: sdk.GroupsPage{
-				PageRes: sdk.PageRes{
-					Total: 1,
-				},
-				Groups: []sdk.Group{group},
-			},
-			err: nil,
-		},
-		{
-			desc:   "list user groups with invalid token",
-			token:  invalidToken,
-			userID: validID,
-			pageMeta: sdk.PageMetadata{
-				Offset:   0,
-				Limit:    10,
-				DomainID: domainID,
-			},
-			svcReq: groups.Page{
-				PageMeta: groups.PageMeta{
-					Offset: 0,
-					Limit:  10,
-				},
-				Permission: policies.ViewPermission,
-				Direction:  -1,
-			},
-			svcRes: groups.Page{
-				PageMeta: groups.PageMeta{
-					Total: 1,
-				},
-				Groups: []groups.Group{convertGroup(group)},
-			},
-			authenticateErr: svcerr.ErrAuthentication,
-			response:        sdk.GroupsPage{},
-			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
-		},
-		{
-			desc:   "list user groups with empty token",
-			token:  "",
-			userID: validID,
-			pageMeta: sdk.PageMetadata{
-				Offset:   0,
-				Limit:    10,
-				DomainID: domainID,
-			},
-			svcReq:   groups.Page{},
-			svcErr:   nil,
-			response: sdk.GroupsPage{},
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
-		},
-		{
-			desc:   "list user groups with invalid user id",
-			token:  validToken,
-			userID: wrongID,
-			pageMeta: sdk.PageMetadata{
-				Offset:   0,
-				Limit:    10,
-				DomainID: domainID,
-			},
-			svcReq: groups.Page{
-				PageMeta: groups.PageMeta{
-					Offset: 0,
-					Limit:  10,
-				},
-				Permission: policies.ViewPermission,
-				Direction:  -1,
-			},
-			svcRes:   groups.Page{},
-			svcErr:   svcerr.ErrViewEntity,
-			response: sdk.GroupsPage{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
-		},
-		{
-			desc:   "list user groups with page metadata that can't be marshalled",
-			token:  validToken,
-			userID: validID,
-			pageMeta: sdk.PageMetadata{
-				Offset:   0,
-				Limit:    10,
-				DomainID: domainID,
-				Metadata: map[string]interface{}{
-					"test": make(chan int),
-				},
-			},
-			svcReq:   groups.Page{},
-			svcRes:   groups.Page{},
-			svcErr:   nil,
-			response: sdk.GroupsPage{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
-		},
-		{
-			desc:   "list user groups with response that can't be unmarshalled",
-			token:  validToken,
-			userID: validID,
-			pageMeta: sdk.PageMetadata{
-				Offset:   0,
-				Limit:    10,
-				DomainID: domainID,
-			},
-			svcReq: groups.Page{
-				PageMeta: groups.PageMeta{
-					Offset: 0,
-					Limit:  10,
-				},
-				Permission: policies.ViewPermission,
-				Direction:  -1,
-			},
-			svcRes: groups.Page{
-				PageMeta: groups.PageMeta{
-					Total: 1,
-				},
-				Groups: []groups.Group{{
-					ID:   group.ID,
-					Name: group.Name,
-					Metadata: map[string]interface{}{
-						"key": make(chan int),
-					},
-				}},
-			},
-			svcErr:   nil,
-			response: sdk.GroupsPage{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
-		},
-	}
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
-			}
-			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := svc.On("ListGroups", mock.Anything, tc.session, "users", tc.userID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.ListUserGroups(tc.userID, tc.pageMeta, tc.token)
-			assert.Equal(t, tc.err, err)
-			assert.Equal(t, tc.response, resp)
-			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "ListGroups", mock.Anything, tc.session, "users", tc.userID, tc.svcReq)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()

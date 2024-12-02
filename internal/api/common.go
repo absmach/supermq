@@ -11,11 +11,11 @@ import (
 	"github.com/absmach/magistrala"
 	"github.com/absmach/magistrala/bootstrap"
 	"github.com/absmach/magistrala/certs"
-	"github.com/absmach/magistrala/internal/groups"
+	"github.com/absmach/magistrala/clients"
+	"github.com/absmach/magistrala/groups"
 	"github.com/absmach/magistrala/pkg/apiutil"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/things"
 	"github.com/absmach/magistrala/users"
 	"github.com/gofrs/uuid/v5"
 )
@@ -36,6 +36,10 @@ const (
 	NameKey          = "name"
 	GroupKey         = "group"
 	ActionKey        = "action"
+	ActionsKey       = "actions"
+	RoleIDKey        = "role_id"
+	RoleNameKey      = "role_name"
+	AccessTypeKey    = "access_type"
 	TagKey           = "tag"
 	FirstNameKey     = "first_name"
 	LastNameKey      = "last_name"
@@ -43,6 +47,8 @@ const (
 	SubjectKey       = "subject"
 	ObjectKey        = "object"
 	LevelKey         = "level"
+	StartLevelKey    = "start_level"
+	EndLevelKey      = "end_level"
 	TreeKey          = "tree"
 	DirKey           = "dir"
 	ListPerms        = "list_perms"
@@ -50,15 +56,20 @@ const (
 	EmailKey         = "email"
 	SharedByKey      = "shared_by"
 	TokenKey         = "token"
-	DefPermission    = "view"
+	UserKey          = "user"
+	DomainKey        = "domain"
+	ChannelKey       = "channel"
+	DefPermission    = "read_permission"
 	DefTotal         = uint64(100)
 	DefOffset        = 0
 	DefOrder         = "updated_at"
 	DefDir           = "asc"
 	DefLimit         = 10
 	DefLevel         = 0
+	DefStartLevel    = 1
+	DefEndLevel      = 0
 	DefStatus        = "enabled"
-	DefClientStatus  = things.Enabled
+	DefClientStatus  = clients.Enabled
 	DefUserStatus    = users.Enabled
 	DefGroupStatus   = groups.Enabled
 	DefListPerms     = false
@@ -71,6 +82,7 @@ const (
 	// MaxNameSize limits name size to prevent making them too complex.
 	MaxLimitSize = 100
 	MaxNameSize  = 1024
+	MaxIDSize    = 36
 	NameOrder    = "name"
 	IDOrder      = "id"
 	AscDir       = "asc"
@@ -177,14 +189,20 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, apiutil.ErrMissingLastName),
 		errors.Contains(err, apiutil.ErrInvalidUsername),
 		errors.Contains(err, apiutil.ErrMissingIdentity),
-		errors.Contains(err, apiutil.ErrInvalidProfilePictureURL):
+		errors.Contains(err, apiutil.ErrInvalidProfilePictureURL),
+		errors.Contains(err, apiutil.ErrSelfParentingNotAllowed),
+		errors.Contains(err, apiutil.ErrMissingChildrenGroupIDs),
+		errors.Contains(err, apiutil.ErrMissingParentGroupID),
+		errors.Contains(err, apiutil.ErrMissingConnectionType):
 		err = unwrap(err)
 		w.WriteHeader(http.StatusBadRequest)
 
 	case errors.Contains(err, svcerr.ErrCreateEntity),
 		errors.Contains(err, svcerr.ErrUpdateEntity),
 		errors.Contains(err, svcerr.ErrRemoveEntity),
-		errors.Contains(err, svcerr.ErrEnableClient):
+		errors.Contains(err, svcerr.ErrEnableClient),
+		errors.Contains(err, svcerr.ErrEnableUser),
+		errors.Contains(err, svcerr.ErrDisableUser):
 		err = unwrap(err)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 

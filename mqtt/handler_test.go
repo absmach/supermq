@@ -10,22 +10,24 @@ import (
 	"log"
 	"testing"
 
-	"github.com/absmach/magistrala"
+	chmocks "github.com/absmach/magistrala/channels/mocks"
+	climocks "github.com/absmach/magistrala/clients/mocks"
+	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/clients/v1"
 	"github.com/absmach/magistrala/internal/testsutil"
 	mglog "github.com/absmach/magistrala/logger"
 	"github.com/absmach/magistrala/mqtt"
 	"github.com/absmach/magistrala/mqtt/mocks"
+	"github.com/absmach/magistrala/pkg/connections"
 	"github.com/absmach/magistrala/pkg/errors"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	thmocks "github.com/absmach/magistrala/things/mocks"
+	"github.com/absmach/magistrala/pkg/policies"
 	"github.com/absmach/mgate/pkg/session"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 const (
-	thingID               = "513d02d2-16c1-4f23-98be-9e12f8fee898"
-	thingID1              = "513d02d2-16c1-4f23-98be-9e12f8fee899"
 	password              = "password"
 	password1             = "password1"
 	chanID                = "123e4567-e89b-12d3-a456-000000000001"
@@ -49,28 +51,37 @@ var (
 	logBuffer     = bytes.Buffer{}
 	sessionClient = session.Session{
 		ID:       clientID,
-		Username: thingID,
+		Username: clientID,
 		Password: []byte(password),
 	}
 	sessionClientSub = session.Session{
 		ID:       clientID1,
-		Username: thingID1,
+		Username: clientID1,
 		Password: []byte(password1),
 	}
-	invalidThingSessionClient = session.Session{
+	invalidClientSessionClient = session.Session{
 		ID:       clientID,
 		Username: invalidID,
 		Password: []byte(password),
 	}
+	errInvalidUserId = errors.New("invalid user id")
+)
+
+var (
+	clients    = new(climocks.ClientsServiceClient)
+	channels   = new(chmocks.ChannelsServiceClient)
+	eventStore = new(mocks.EventStore)
 )
 
 func TestAuthConnect(t *testing.T) {
-	handler, _, eventStore := newHandler()
+	handler := newHandler()
 
 	cases := []struct {
-		desc    string
-		err     error
-		session *session.Session
+		desc     string
+		session  *session.Session
+		authNRes *grpcClientsV1.AuthnRes
+		authNErr error
+		err      error
 	}{
 		{
 			desc:    "connect without active session",
@@ -82,54 +93,89 @@ func TestAuthConnect(t *testing.T) {
 			err:  mqtt.ErrMissingClientID,
 			session: &session.Session{
 				ID:       "",
-				Username: thingID,
+				Username: clientID,
 				Password: []byte(password),
 			},
 		},
 		{
-			desc: "connect with invalid password",
-			err:  nil,
+			desc: "connect with empty password",
 			session: &session.Session{
 				ID:       clientID,
-				Username: thingID,
+				Username: clientID,
 				Password: []byte(""),
 			},
+			authNErr: svcerr.ErrAuthentication,
+			err:      svcerr.ErrAuthentication,
+		},
+		{
+			desc: "connect with invalid password",
+			session: &session.Session{
+				ID:       clientID,
+				Username: clientID,
+				Password: []byte("invalid"),
+			},
+			authNRes: &grpcClientsV1.AuthnRes{
+				Authenticated: false,
+			},
+			err: svcerr.ErrAuthentication,
 		},
 		{
 			desc:    "connect with valid password and invalid username",
-			err:     nil,
-			session: &invalidThingSessionClient,
+			session: &invalidClientSessionClient,
+			authNRes: &grpcClientsV1.AuthnRes{
+				Authenticated: true,
+				Id:            testsutil.GenerateUUID(t),
+			},
+			err: errInvalidUserId,
 		},
 		{
 			desc:    "connect with valid username and password",
 			err:     nil,
 			session: &sessionClient,
+			authNRes: &grpcClientsV1.AuthnRes{
+				Authenticated: true,
+				Id:            clientID,
+			},
 		},
 	}
 	for _, tc := range cases {
-		ctx := context.TODO()
-		password := ""
-		if tc.session != nil {
-			ctx = session.NewContext(ctx, tc.session)
-			password = string(tc.session.Password)
-		}
-		svcCall := eventStore.On("Connect", mock.Anything, password).Return(tc.err)
-		err := handler.AuthConnect(ctx)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		svcCall.Unset()
+		t.Run(tc.desc, func(t *testing.T) {
+			ctx := context.TODO()
+			password := ""
+			if tc.session != nil {
+				ctx = session.NewContext(ctx, tc.session)
+				password = string(tc.session.Password)
+			}
+			clientsCall := clients.On("Authenticate", mock.Anything, &grpcClientsV1.AuthnReq{ClientSecret: password}).Return(tc.authNRes, tc.authNErr)
+			svcCall := eventStore.On("Connect", mock.Anything, password).Return(tc.err)
+			err := handler.AuthConnect(ctx)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+			svcCall.Unset()
+			clientsCall.Unset()
+		})
 	}
 }
 
 func TestAuthPublish(t *testing.T) {
-	handler, things, _ := newHandler()
+	handler := newHandler()
 
 	cases := []struct {
-		desc    string
-		session *session.Session
-		err     error
-		topic   *string
-		payload []byte
+		desc     string
+		session  *session.Session
+		err      error
+		topic    *string
+		payload  []byte
+		authZRes *grpcChannelsV1.AuthzRes
+		authZErr error
 	}{
+		{
+			desc:     "publish successfully",
+			session:  &sessionClient,
+			err:      nil,
+			topic:    &topic,
+			payload:  payload,
+			authZRes: &grpcChannelsV1.AuthzRes{Authorized: true},
+		},
 		{
 			desc:    "publish with an inactive client",
 			session: nil,
@@ -152,34 +198,46 @@ func TestAuthPublish(t *testing.T) {
 			payload: payload,
 		},
 		{
-			desc:    "publish successfully",
-			session: &sessionClient,
-			err:     nil,
-			topic:   &topic,
-			payload: payload,
+			desc:     "publish with authorization error",
+			session:  &sessionClient,
+			err:      svcerr.ErrAuthorization,
+			topic:    &topic,
+			payload:  payload,
+			authZRes: &grpcChannelsV1.AuthzRes{Authorized: false},
+			authZErr: svcerr.ErrAuthorization,
 		},
 	}
 
 	for _, tc := range cases {
-		repocall := things.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.ThingsAuthzRes{Authorized: true, Id: testsutil.GenerateUUID(t)}, tc.err)
-		ctx := context.TODO()
-		if tc.session != nil {
-			ctx = session.NewContext(ctx, tc.session)
-		}
-		err := handler.AuthPublish(ctx, tc.topic, &tc.payload)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		repocall.Unset()
+		t.Run(tc.desc, func(t *testing.T) {
+			ctx := context.TODO()
+			if tc.session != nil {
+				ctx = session.NewContext(ctx, tc.session)
+			}
+			channelsCall := channels.On("Authorize", mock.Anything, &grpcChannelsV1.AuthzReq{
+				ChannelId:  chanID,
+				ClientId:   clientID,
+				ClientType: policies.ClientType,
+				Type:       uint32(connections.Publish),
+			}).Return(tc.authZRes, tc.authZErr)
+			err := handler.AuthPublish(ctx, tc.topic, &tc.payload)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+			channelsCall.Unset()
+		})
 	}
 }
 
 func TestAuthSubscribe(t *testing.T) {
-	handler, things, _ := newHandler()
+	handler := newHandler()
 
 	cases := []struct {
-		desc    string
-		session *session.Session
-		err     error
-		topic   *[]string
+		desc      string
+		session   *session.Session
+		err       error
+		topic     *[]string
+		channelID string
+		authZRes  *grpcChannelsV1.AuthzRes
+		authZErr  error
 	}{
 		{
 			desc:    "subscribe without active session",
@@ -200,33 +258,52 @@ func TestAuthSubscribe(t *testing.T) {
 			topic:   &invalidTopics,
 		},
 		{
-			desc:    "subscribe with invalid channel ID",
-			session: &sessionClient,
-			err:     svcerr.ErrAuthorization,
-			topic:   &invalidChanIDTopics,
+			desc:      "subscribe with invalid channel ID",
+			session:   &sessionClientSub,
+			err:       svcerr.ErrAuthorization,
+			topic:     &invalidChanIDTopics,
+			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: false},
+			channelID: invalidValue,
 		},
 		{
-			desc:    "subscribe successfully",
-			session: &sessionClientSub,
-			err:     nil,
-			topic:   &topics,
+			desc:      "subscribe successfully",
+			session:   &sessionClientSub,
+			err:       nil,
+			topic:     &topics,
+			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
+			channelID: chanID,
+		},
+		{
+			desc:      "subscribe with failed authorization",
+			session:   &sessionClientSub,
+			err:       svcerr.ErrAuthorization,
+			topic:     &topics,
+			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: false},
+			channelID: chanID,
 		},
 	}
 
 	for _, tc := range cases {
-		repocall := things.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.ThingsAuthzRes{Authorized: true, Id: testsutil.GenerateUUID(t)}, tc.err)
-		ctx := context.TODO()
-		if tc.session != nil {
-			ctx = session.NewContext(ctx, tc.session)
-		}
-		err := handler.AuthSubscribe(ctx, tc.topic)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		repocall.Unset()
+		t.Run(tc.desc, func(t *testing.T) {
+			ctx := context.TODO()
+			if tc.session != nil {
+				ctx = session.NewContext(ctx, tc.session)
+			}
+			channelsCall := channels.On("Authorize", mock.Anything, &grpcChannelsV1.AuthzReq{
+				ChannelId:  tc.channelID,
+				ClientId:   clientID1,
+				ClientType: policies.ClientType,
+				Type:       uint32(connections.Subscribe),
+			}).Return(tc.authZRes, tc.authZErr)
+			err := handler.AuthSubscribe(ctx, tc.topic)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+			channelsCall.Unset()
+		})
 	}
 }
 
 func TestConnect(t *testing.T) {
-	handler, _, _ := newHandler()
+	handler := newHandler()
 	logBuffer.Reset()
 
 	cases := []struct {
@@ -260,7 +337,7 @@ func TestConnect(t *testing.T) {
 }
 
 func TestPublish(t *testing.T) {
-	handler, _, _ := newHandler()
+	handler := newHandler()
 	logBuffer.Reset()
 
 	malformedSubtopics := topic + "/" + subtopic + "%"
@@ -339,7 +416,7 @@ func TestPublish(t *testing.T) {
 }
 
 func TestSubscribe(t *testing.T) {
-	handler, _, _ := newHandler()
+	handler := newHandler()
 	logBuffer.Reset()
 
 	cases := []struct {
@@ -375,7 +452,7 @@ func TestSubscribe(t *testing.T) {
 }
 
 func TestUnsubscribe(t *testing.T) {
-	handler, _, _ := newHandler()
+	handler := newHandler()
 	logBuffer.Reset()
 
 	cases := []struct {
@@ -411,7 +488,7 @@ func TestUnsubscribe(t *testing.T) {
 }
 
 func TestDisconnect(t *testing.T) {
-	handler, _, eventStore := newHandler()
+	handler := newHandler()
 	logBuffer.Reset()
 
 	cases := []struct {
@@ -450,12 +527,13 @@ func TestDisconnect(t *testing.T) {
 	}
 }
 
-func newHandler() (session.Handler, *thmocks.ThingsServiceClient, *mocks.EventStore) {
+func newHandler() session.Handler {
 	logger, err := mglog.New(&logBuffer, "debug")
 	if err != nil {
 		log.Fatalf("failed to create logger: %s", err)
 	}
-	things := new(thmocks.ThingsServiceClient)
-	eventStore := new(mocks.EventStore)
-	return mqtt.NewHandler(mocks.NewPublisher(), eventStore, logger, things), things, eventStore
+	clients = new(climocks.ClientsServiceClient)
+	channels = new(chmocks.ChannelsServiceClient)
+	eventStore = new(mocks.EventStore)
+	return mqtt.NewHandler(mocks.NewPublisher(), eventStore, logger, clients, channels)
 }

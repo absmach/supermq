@@ -8,12 +8,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/absmach/magistrala"
+	chmocks "github.com/absmach/magistrala/channels/mocks"
+	climocks "github.com/absmach/magistrala/clients/mocks"
+	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
+	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/clients/v1"
 	"github.com/absmach/magistrala/internal/testsutil"
+	"github.com/absmach/magistrala/pkg/connections"
 	svcerr "github.com/absmach/magistrala/pkg/errors/service"
 	"github.com/absmach/magistrala/pkg/messaging"
 	"github.com/absmach/magistrala/pkg/messaging/mocks"
-	thmocks "github.com/absmach/magistrala/things/mocks"
+	"github.com/absmach/magistrala/pkg/policies"
 	"github.com/absmach/magistrala/ws"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -24,102 +28,152 @@ const (
 	invalidID  = "invalidID"
 	invalidKey = "invalidKey"
 	id         = "1"
-	thingKey   = "thing_key"
+	clientKey  = "client_key"
 	subTopic   = "subtopic"
 	protocol   = "ws"
 )
 
-var msg = messaging.Message{
-	Channel:   chanID,
-	Publisher: id,
-	Subtopic:  "",
-	Protocol:  protocol,
-	Payload:   []byte(`[{"n":"current","t":-5,"v":1.2}]`),
-}
+var (
+	msg = messaging.Message{
+		Channel:   chanID,
+		Publisher: id,
+		Subtopic:  "",
+		Protocol:  protocol,
+		Payload:   []byte(`[{"n":"current","t":-5,"v":1.2}]`),
+	}
+	clientID = testsutil.GenerateUUID(&testing.T{})
+)
 
-func newService() (ws.Service, *mocks.PubSub, *thmocks.ThingsServiceClient) {
+func newService() (ws.Service, *mocks.PubSub, *climocks.ClientsServiceClient, *chmocks.ChannelsServiceClient) {
 	pubsub := new(mocks.PubSub)
-	things := new(thmocks.ThingsServiceClient)
+	clients := new(climocks.ClientsServiceClient)
+	channels := new(chmocks.ChannelsServiceClient)
 
-	return ws.New(things, pubsub), pubsub, things
+	return ws.New(clients, channels, pubsub), pubsub, clients, channels
 }
 
 func TestSubscribe(t *testing.T) {
-	svc, pubsub, things := newService()
+	svc, pubsub, clients, channels := newService()
 
 	c := ws.NewClient(nil)
 
 	cases := []struct {
-		desc     string
-		thingKey string
-		chanID   string
-		subtopic string
-		err      error
+		desc      string
+		clientKey string
+		chanID    string
+		subtopic  string
+		authNRes  *grpcClientsV1.AuthnRes
+		authNErr  error
+		authZRes  *grpcChannelsV1.AuthzRes
+		authZErr  error
+		subErr    error
+		err       error
 	}{
 		{
-			desc:     "subscribe to channel with valid thingKey, chanID, subtopic",
-			thingKey: thingKey,
-			chanID:   chanID,
-			subtopic: subTopic,
-			err:      nil,
+			desc:      "subscribe to channel with valid clientKey, chanID, subtopic",
+			clientKey: clientKey,
+			chanID:    chanID,
+			subtopic:  subTopic,
+			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
+			err:       nil,
 		},
 		{
-			desc:     "subscribe again to channel with valid thingKey, chanID, subtopic",
-			thingKey: thingKey,
-			chanID:   chanID,
-			subtopic: subTopic,
-			err:      nil,
+			desc:      "subscribe again to channel with valid clientKey, chanID, subtopic",
+			clientKey: clientKey,
+			chanID:    chanID,
+			subtopic:  subTopic,
+			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
+			err:       nil,
 		},
 		{
-			desc:     "subscribe to channel with subscribe set to fail",
-			thingKey: thingKey,
-			chanID:   chanID,
-			subtopic: subTopic,
-			err:      ws.ErrFailedSubscription,
+			desc:      "subscribe to channel with subscribe set to fail",
+			clientKey: clientKey,
+			chanID:    chanID,
+			subtopic:  subTopic,
+			subErr:    ws.ErrFailedSubscription,
+			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
+			err:       ws.ErrFailedSubscription,
 		},
 		{
-			desc:     "subscribe to channel with invalid chanID and invalid thingKey",
-			thingKey: invalidKey,
-			chanID:   invalidID,
-			subtopic: subTopic,
-			err:      ws.ErrFailedSubscription,
+			desc:      "subscribe to channel with invalid clientKey",
+			clientKey: invalidKey,
+			chanID:    invalidID,
+			subtopic:  subTopic,
+			authNRes:  &grpcClientsV1.AuthnRes{Authenticated: false},
+			authNErr:  svcerr.ErrAuthentication,
+			err:       svcerr.ErrAuthorization,
 		},
 		{
-			desc:     "subscribe to channel with empty channel",
-			thingKey: thingKey,
-			chanID:   "",
-			subtopic: subTopic,
-			err:      svcerr.ErrAuthentication,
+			desc:      "subscribe to channel with empty channel",
+			clientKey: clientKey,
+			chanID:    "",
+			subtopic:  subTopic,
+			err:       svcerr.ErrAuthentication,
 		},
 		{
-			desc:     "subscribe to channel with empty thingKey",
-			thingKey: "",
-			chanID:   chanID,
-			subtopic: subTopic,
-			err:      svcerr.ErrAuthentication,
+			desc:      "subscribe to channel with empty clientKey",
+			clientKey: "",
+			chanID:    chanID,
+			subtopic:  subTopic,
+			err:       svcerr.ErrAuthentication,
 		},
 		{
-			desc:     "subscribe to channel with empty thingKey and empty channel",
-			thingKey: "",
-			chanID:   "",
-			subtopic: subTopic,
-			err:      svcerr.ErrAuthentication,
+			desc:      "subscribe to channel with empty clientKey and empty channel",
+			clientKey: "",
+			chanID:    "",
+			subtopic:  subTopic,
+			err:       svcerr.ErrAuthentication,
+		},
+		{
+			desc:      "subscribe to channel with invalid channel",
+			clientKey: clientKey,
+			chanID:    invalidID,
+			subtopic:  subTopic,
+			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: false},
+			authZErr:  svcerr.ErrAuthorization,
+			err:       svcerr.ErrAuthorization,
+		},
+		{
+			desc:      "subscribe to channel with failed authentication",
+			clientKey: clientKey,
+			chanID:    chanID,
+			subtopic:  subTopic,
+			authNRes:  &grpcClientsV1.AuthnRes{Authenticated: false},
+			err:       svcerr.ErrAuthorization,
+		},
+		{
+			desc:      "subscribe to channel with failed authorization",
+			clientKey: clientKey,
+			chanID:    chanID,
+			subtopic:  subTopic,
+			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: false},
+			err:       svcerr.ErrAuthorization,
 		},
 	}
 
 	for _, tc := range cases {
-		thingID := testsutil.GenerateUUID(t)
 		subConfig := messaging.SubscriberConfig{
-			ID:      thingID,
+			ID:      clientID,
 			Topic:   "channels." + tc.chanID + "." + subTopic,
 			Handler: c,
 		}
-		repocall := pubsub.On("Subscribe", mock.Anything, subConfig).Return(tc.err)
-		repocall1 := things.On("Authorize", mock.Anything, mock.Anything).Return(&magistrala.ThingsAuthzRes{Authorized: true, Id: thingID}, nil)
-		err := svc.Subscribe(context.Background(), tc.thingKey, tc.chanID, tc.subtopic, c)
+		clientsCall := clients.On("Authenticate", mock.Anything, &grpcClientsV1.AuthnReq{ClientSecret: tc.clientKey}).Return(tc.authNRes, tc.authNErr)
+		channelsCall := channels.On("Authorize", mock.Anything, &grpcChannelsV1.AuthzReq{
+			ClientType: policies.ClientType,
+			ClientId:   tc.authNRes.GetId(),
+			Type:       uint32(connections.Subscribe),
+			ChannelId:  tc.chanID,
+		}).Return(tc.authZRes, tc.authZErr)
+		repocall := pubsub.On("Subscribe", mock.Anything, subConfig).Return(tc.subErr)
+		err := svc.Subscribe(context.Background(), tc.clientKey, tc.chanID, tc.subtopic, c)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		repocall1.Parent.AssertCalled(t, "Authorize", mock.Anything, mock.Anything)
 		repocall.Unset()
-		repocall1.Unset()
+		clientsCall.Unset()
+		channelsCall.Unset()
 	}
 }
