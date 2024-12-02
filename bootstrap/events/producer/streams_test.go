@@ -32,7 +32,7 @@ import (
 )
 
 const (
-	streamID        = "magistrala.bootstrap"
+	streamID        = "supermq.bootstrap"
 	email           = "user@example.com"
 	validToken      = "validToken"
 	invalidToken    = "invalid"

@@ -55,27 +55,27 @@ import (
 
 const (
 	svcName          = "channels"
-	envPrefixDB      = "MG_CHANNELS_DB_"
-	envPrefixHTTP    = "MG_CHANNELS_HTTP_"
-	envPrefixGRPC    = "MG_CHANNELS_GRPC_"
-	envPrefixAuth    = "MG_AUTH_GRPC_"
-	envPrefixClients = "MG_CLIENTS_AUTH_GRPC_"
-	envPrefixGroups  = "MG_GROUPS_GRPC_"
+	envPrefixDB      = "SMQ_CHANNELS_DB_"
+	envPrefixHTTP    = "SMQ_CHANNELS_HTTP_"
+	envPrefixGRPC    = "SMQ_CHANNELS_GRPC_"
+	envPrefixAuth    = "SMQ_AUTH_GRPC_"
+	envPrefixClients = "SMQ_CLIENTS_AUTH_GRPC_"
+	envPrefixGroups  = "SMQ_GROUPS_GRPC_"
 	defDB            = "channels"
 	defSvcHTTPPort   = "9005"
 	defSvcGRPCPort   = "7005"
 )
 
 type config struct {
-	LogLevel            string  `env:"MG_CHANNELS_LOG_LEVEL"           envDefault:"info"`
-	InstanceID          string  `env:"MG_CHANNELS_INSTANCE_ID"         envDefault:""`
-	JaegerURL           url.URL `env:"MG_JAEGER_URL"                   envDefault:"http://localhost:4318/v1/traces"`
-	SendTelemetry       bool    `env:"MG_SEND_TELEMETRY"               envDefault:"true"`
-	ESURL               string  `env:"MG_ES_URL"                       envDefault:"nats://localhost:4222"`
-	TraceRatio          float64 `env:"MG_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
-	SpicedbHost         string  `env:"MG_SPICEDB_HOST"                 envDefault:"localhost"`
-	SpicedbPort         string  `env:"MG_SPICEDB_PORT"                 envDefault:"50051"`
-	SpicedbPreSharedKey string  `env:"MG_SPICEDB_PRE_SHARED_KEY"       envDefault:"12345678"`
+	LogLevel            string  `env:"SMQ_CHANNELS_LOG_LEVEL"           envDefault:"info"`
+	InstanceID          string  `env:"SMQ_CHANNELS_INSTANCE_ID"         envDefault:""`
+	JaegerURL           url.URL `env:"SMQ_JAEGER_URL"                   envDefault:"http://localhost:4318/v1/traces"`
+	SendTelemetry       bool    `env:"SMQ_SEND_TELEMETRY"               envDefault:"true"`
+	ESURL               string  `env:"SMQ_ES_URL"                       envDefault:"nats://localhost:4222"`
+	TraceRatio          float64 `env:"SMQ_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
+	SpicedbHost         string  `env:"SMQ_SPICEDB_HOST"                 envDefault:"localhost"`
+	SpicedbPort         string  `env:"SMQ_SPICEDB_PORT"                 envDefault:"50051"`
+	SpicedbPreSharedKey string  `env:"SMQ_SPICEDB_PRE_SHARED_KEY"       envDefault:"12345678"`
 }
 
 func main() {
@@ -231,7 +231,7 @@ func main() {
 	httpSvc := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, authn, mux, logger, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
-		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
+		chc := chclient.New(svcName, supermq.Version, logger, cancel)
 		go chc.CallHome(ctx)
 	}
 

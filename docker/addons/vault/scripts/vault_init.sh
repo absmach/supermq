@@ -43,4 +43,4 @@ readDotEnv
 
 mkdir -p "$scriptdir/data"
 
-vault operator init -address="$MG_VAULT_ADDR" 2>&1 | tee >(sed -r 's/\x1b\[[0-9;]*m//g' > "$scriptdir/data/secrets")
+vault operator init -address="$SMQ_VAULT_ADDR" 2>&1 | tee >(sed -r 's/\x1b\[[0-9;]*m//g' > "$scriptdir/data/secrets")

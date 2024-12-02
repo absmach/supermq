@@ -90,7 +90,7 @@ func main() {
 	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, logger, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
-		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
+		chc := chclient.New(svcName, supermq.Version, logger, cancel)
 		go chc.CallHome(ctx)
 	}
 

@@ -41,7 +41,7 @@ func (am *authorizationMiddleware) RetrieveAll(ctx context.Context, session mgau
 	if page.EntityType.AuthString() == policies.UserType {
 		permission = policies.AdminPermission
 		objectType = policies.PlatformType
-		object = policies.MagistralaObject
+		object = policies.SuperMQObject
 		subject = session.UserID
 	}
 

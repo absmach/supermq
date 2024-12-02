@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	footer          = "Sent by Magistrala SMTP Notification"
+	footer          = "Sent by SuperMQ SMTP Notification"
 	contentTemplate = "A publisher with an id %s sent the message over %s with the following values \n %s"
 )
 

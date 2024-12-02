@@ -24,7 +24,7 @@ var ErrGroupIDs = errors.New("invalid group ids")
 type service struct {
 	repo       Repository
 	policy     policies.Service
-	idProvider magistrala.IDProvider
+	idProvider supermq.IDProvider
 	channels   grpcChannelsV1.ChannelsServiceClient
 	clients    grpcClientsV1.ClientsServiceClient
 
@@ -32,7 +32,7 @@ type service struct {
 }
 
 // NewService returns a new groups service implementation.
-func NewService(repo Repository, policy policies.Service, idp magistrala.IDProvider, channels grpcChannelsV1.ChannelsServiceClient, clients grpcClientsV1.ClientsServiceClient, sidProvider magistrala.IDProvider, availableActions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action) (Service, error) {
+func NewService(repo Repository, policy policies.Service, idp supermq.IDProvider, channels grpcChannelsV1.ChannelsServiceClient, clients grpcClientsV1.ClientsServiceClient, sidProvider supermq.IDProvider, availableActions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action) (Service, error) {
 	rpms, err := roles.NewProvisionManageService(policies.GroupType, repo, policy, sidProvider, availableActions, builtInRoles)
 	if err != nil {
 		return service{}, err

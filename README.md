@@ -59,7 +59,7 @@ make run
 ```
 
 If you want to run services from specific release checkout code from github and make sure that
-`MG_RELEASE_TAG` in [.env](.env) is being set to match the release version
+`SMQ_RELEASE_TAG` in [.env](.env) is being set to match the release version
 
 ```bash
 git checkout tags/<release_number> -b <release_number>
@@ -69,7 +69,7 @@ git checkout tags/<release_number> -b <release_number>
 Check that `.env` file contains:
 
 ```bash
-MG_RELEASE_TAG=<release_number>
+SMQ_RELEASE_TAG=<release_number>
 ```
 
 > `docker-compose` should be used for development and testing deployments. For production we suggest using [Kubernetes](https://docs.supermq.abstractmachines.fr/kubernetes).

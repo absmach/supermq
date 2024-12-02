@@ -23,7 +23,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Message represents a message emitted by the Magistrala adapters layer.
+// Message represents a message emitted by the SuperMQ adapters layer.
 type Message struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

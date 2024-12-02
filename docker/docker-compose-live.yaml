@@ -3,7 +3,7 @@
 
 services:
   domains:
-    image: magistrala/domains-dev
+    image: supermq/domains-dev
     build:
       context: .
       dockerfile: Dockerfile.livereload
@@ -22,7 +22,7 @@ services:
                   "--tmp_dir", "/tmp",]
 
   users:
-    image: magistrala/users-dev
+    image: supermq/users-dev
     build:
       context: .
       dockerfile: Dockerfile.livereload
@@ -39,7 +39,7 @@ services:
                   "--build.exclude_regex", "[\"_test\\.go\"" ,
                   "--tmp_dir", "/tmp",]
   clients:
-    image: magistrala/clients-dev
+    image: supermq/clients-dev
     build:
       context: .
       dockerfile: Dockerfile.livereload
@@ -57,7 +57,7 @@ services:
                   "-tmp_dir", "/tmp",]
 
   channels:
-    image: magistrala/channels-dev
+    image: supermq/channels-dev
     build:
       context: .
       dockerfile: Dockerfile.livereload
@@ -78,7 +78,7 @@ services:
     command: ["postgres", "-c", "log_statement=all"]
 
   groups:
-    image: magistrala/groups-dev
+    image: supermq/groups-dev
     build:
       context: .
       dockerfile: Dockerfile.livereload

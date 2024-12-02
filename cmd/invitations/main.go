@@ -40,21 +40,21 @@ import (
 
 const (
 	svcName        = "invitations"
-	envPrefixDB    = "MG_INVITATIONS_DB_"
-	envPrefixHTTP  = "MG_INVITATIONS_HTTP_"
-	envPrefixAuth  = "MG_AUTH_GRPC_"
+	envPrefixDB    = "SMQ_INVITATIONS_DB_"
+	envPrefixHTTP  = "SMQ_INVITATIONS_HTTP_"
+	envPrefixAuth  = "SMQ_AUTH_GRPC_"
 	defDB          = "invitations"
 	defSvcHTTPPort = "9020"
 )
 
 type config struct {
-	LogLevel      string  `env:"MG_INVITATIONS_LOG_LEVEL"      envDefault:"info"`
-	UsersURL      string  `env:"MG_USERS_URL"                  envDefault:"http://localhost:9002"`
-	DomainsURL    string  `env:"MG_DOMAINS_URL"                envDefault:"http://localhost:8189"`
-	InstanceID    string  `env:"MG_INVITATIONS_INSTANCE_ID"    envDefault:""`
-	JaegerURL     url.URL `env:"MG_JAEGER_URL"                 envDefault:"http://localhost:4318/v1/traces"`
-	TraceRatio    float64 `env:"MG_JAEGER_TRACE_RATIO"         envDefault:"1.0"`
-	SendTelemetry bool    `env:"MG_SEND_TELEMETRY"             envDefault:"true"`
+	LogLevel      string  `env:"SMQ_INVITATIONS_LOG_LEVEL"      envDefault:"info"`
+	UsersURL      string  `env:"SMQ_USERS_URL"                  envDefault:"http://localhost:9002"`
+	DomainsURL    string  `env:"SMQ_DOMAINS_URL"                envDefault:"http://localhost:8189"`
+	InstanceID    string  `env:"SMQ_INVITATIONS_INSTANCE_ID"    envDefault:""`
+	JaegerURL     url.URL `env:"SMQ_JAEGER_URL"                 envDefault:"http://localhost:4318/v1/traces"`
+	TraceRatio    float64 `env:"SMQ_JAEGER_TRACE_RATIO"         envDefault:"1.0"`
+	SendTelemetry bool    `env:"SMQ_SEND_TELEMETRY"             envDefault:"true"`
 }
 
 func main() {
@@ -159,7 +159,7 @@ func main() {
 	httpSvr := http.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, logger, authn, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
-		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
+		chc := chclient.New(svcName, supermq.Version, logger, cancel)
 		go chc.CallHome(ctx)
 	}
 

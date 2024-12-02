@@ -196,7 +196,7 @@ func (ps *pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 		}
 
 		if err := h.Handle(&msg); err != nil {
-			ps.logger.Warn(fmt.Sprintf("Failed to handle Magistrala message: %s", err))
+			ps.logger.Warn(fmt.Sprintf("Failed to handle SuperMQ message: %s", err))
 		}
 	}
 }

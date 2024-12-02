@@ -46,7 +46,7 @@ func MakeHandler(logger *slog.Logger, instanceID string) http.Handler {
 		api.EncodeResponse,
 		opts...,
 	), "publish").ServeHTTP)
-	r.Get("/health", magistrala.Health("http", instanceID))
+	r.Get("/health", supermq.Health("http", instanceID))
 	r.Handle("/metrics", promhttp.Handler())
 
 	return r

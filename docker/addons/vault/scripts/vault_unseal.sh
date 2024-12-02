@@ -41,6 +41,6 @@ source "$scriptdir/vault_cmd.sh"
 
 readDotEnv
 
-vault operator unseal -address=${MG_VAULT_ADDR} ${MG_VAULT_UNSEAL_KEY_1}
-vault operator unseal -address=${MG_VAULT_ADDR} ${MG_VAULT_UNSEAL_KEY_2}
-vault operator unseal -address=${MG_VAULT_ADDR} ${MG_VAULT_UNSEAL_KEY_3}
+vault operator unseal -address=${SMQ_VAULT_ADDR} ${SMQ_VAULT_UNSEAL_KEY_1}
+vault operator unseal -address=${SMQ_VAULT_ADDR} ${SMQ_VAULT_UNSEAL_KEY_2}
+vault operator unseal -address=${SMQ_VAULT_ADDR} ${SMQ_VAULT_UNSEAL_KEY_3}

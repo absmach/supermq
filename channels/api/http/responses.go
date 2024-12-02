@@ -12,16 +12,16 @@ import (
 )
 
 var (
-	_ magistrala.Response = (*createChannelRes)(nil)
-	_ magistrala.Response = (*viewChannelRes)(nil)
-	_ magistrala.Response = (*channelsPageRes)(nil)
-	_ magistrala.Response = (*updateChannelRes)(nil)
-	_ magistrala.Response = (*deleteChannelRes)(nil)
-	_ magistrala.Response = (*connectChannelClientsRes)(nil)
-	_ magistrala.Response = (*disconnectChannelClientsRes)(nil)
-	_ magistrala.Response = (*connectRes)(nil)
-	_ magistrala.Response = (*disconnectRes)(nil)
-	_ magistrala.Response = (*changeChannelStatusRes)(nil)
+	_ supermq.Response = (*createChannelRes)(nil)
+	_ supermq.Response = (*viewChannelRes)(nil)
+	_ supermq.Response = (*channelsPageRes)(nil)
+	_ supermq.Response = (*updateChannelRes)(nil)
+	_ supermq.Response = (*deleteChannelRes)(nil)
+	_ supermq.Response = (*connectChannelClientsRes)(nil)
+	_ supermq.Response = (*disconnectChannelClientsRes)(nil)
+	_ supermq.Response = (*connectRes)(nil)
+	_ supermq.Response = (*disconnectRes)(nil)
+	_ supermq.Response = (*changeChannelStatusRes)(nil)
 )
 
 type pageRes struct {

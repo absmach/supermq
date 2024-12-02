@@ -24,7 +24,7 @@ type Error interface {
 
 var _ Error = (*customError)(nil)
 
-// customError represents a Magistrala error.
+// customError represents a SuperMQ error.
 type customError struct {
 	msg string
 	err Error

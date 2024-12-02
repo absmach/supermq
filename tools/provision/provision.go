@@ -31,7 +31,7 @@ const (
 
 var namesgenerator = namegenerator.NewGenerator()
 
-// MgConn - structure describing Magistrala connection set.
+// MgConn - structure describing SuperMQ connection set.
 type MgConn struct {
 	ClientID     string
 	ClinetSecret string
@@ -206,7 +206,7 @@ func Provision(conf Config) error {
 			tmpl := x509.Certificate{
 				SerialNumber: serialNumber,
 				Subject: pkix.Name{
-					Organization:       []string{"Magistrala"},
+					Organization:       []string{"SuperMQ"},
 					CommonName:         clients[i].Credentials.Secret,
 					OrganizationalUnit: []string{"magistrala"},
 				},

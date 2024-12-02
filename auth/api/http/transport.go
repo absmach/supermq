@@ -19,7 +19,7 @@ func MakeHandler(svc auth.Service, logger *slog.Logger, instanceID string) http.
 
 	mux = keys.MakeHandler(svc, mux, logger)
 
-	mux.Get("/health", magistrala.Health("auth", instanceID))
+	mux.Get("/health", supermq.Health("auth", instanceID))
 	mux.Handle("/metrics", promhttp.Handler())
 
 	return mux

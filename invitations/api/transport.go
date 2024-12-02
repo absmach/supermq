@@ -82,7 +82,7 @@ func MakeHandler(svc invitations.Service, logger *slog.Logger, authn mgauthn.Aut
 		})
 	})
 
-	mux.Get("/health", magistrala.Health("invitations", instanceID))
+	mux.Get("/health", supermq.Health("invitations", instanceID))
 	mux.Handle("/metrics", promhttp.Handler())
 
 	return mux

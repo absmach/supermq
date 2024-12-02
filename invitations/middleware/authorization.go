@@ -57,7 +57,7 @@ func (am *authorizationMiddleware) ViewInvitation(ctx context.Context, session a
 
 func (am *authorizationMiddleware) ListInvitations(ctx context.Context, session authn.Session, page invitations.Page) (invs invitations.InvitationPage, err error) {
 	session.DomainUserID = auth.EncodeDomainUserID(session.DomainID, session.UserID)
-	if err := am.authorize(ctx, session.UserID, policies.AdminPermission, policies.PlatformType, policies.MagistralaObject); err == nil {
+	if err := am.authorize(ctx, session.UserID, policies.AdminPermission, policies.PlatformType, policies.SuperMQObject); err == nil {
 		session.SuperAdmin = true
 	}
 
@@ -98,7 +98,7 @@ func (am *authorizationMiddleware) checkAdmin(ctx context.Context, session authn
 		return nil
 	}
 
-	if err := am.authorize(ctx, session.UserID, policies.AdminPermission, policies.PlatformType, policies.MagistralaObject); err == nil {
+	if err := am.authorize(ctx, session.UserID, policies.AdminPermission, policies.PlatformType, policies.SuperMQObject); err == nil {
 		return nil
 	}
 

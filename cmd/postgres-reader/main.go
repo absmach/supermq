@@ -31,19 +31,19 @@ import (
 
 const (
 	svcName           = "postgres-reader"
-	envPrefixDB       = "MG_POSTGRES_"
-	envPrefixHTTP     = "MG_POSTGRES_READER_HTTP_"
-	envPrefixAuth     = "MG_AUTH_GRPC_"
-	envPrefixClients  = "MG_CLIENTS_AUTH_GRPC_"
-	envPrefixChannels = "MG_CHANNELS_GRPC_"
+	envPrefixDB       = "SMQ_POSTGRES_"
+	envPrefixHTTP     = "SMQ_POSTGRES_READER_HTTP_"
+	envPrefixAuth     = "SMQ_AUTH_GRPC_"
+	envPrefixClients  = "SMQ_CLIENTS_AUTH_GRPC_"
+	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
 	defDB             = "magistrala"
 	defSvcHTTPPort    = "9009"
 )
 
 type config struct {
-	LogLevel      string `env:"MG_POSTGRES_READER_LOG_LEVEL"     envDefault:"info"`
-	SendTelemetry bool   `env:"MG_SEND_TELEMETRY"                envDefault:"true"`
-	InstanceID    string `env:"MG_POSTGRES_READER_INSTANCE_ID"   envDefault:""`
+	LogLevel      string `env:"SMQ_POSTGRES_READER_LOG_LEVEL"     envDefault:"info"`
+	SendTelemetry bool   `env:"SMQ_SEND_TELEMETRY"                envDefault:"true"`
+	InstanceID    string `env:"SMQ_POSTGRES_READER_INSTANCE_ID"   envDefault:""`
 }
 
 func main() {
@@ -144,7 +144,7 @@ func main() {
 	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(repo, authn, clientsClient, channelsClient, svcName, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
-		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
+		chc := chclient.New(svcName, supermq.Version, logger, cancel)
 		go chc.CallHome(ctx)
 	}
 

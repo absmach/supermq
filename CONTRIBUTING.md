@@ -1,6 +1,6 @@
-# Contributing to Magistrala
+# Contributing to SuperMQ
 
-The following is a set of guidelines to contribute to Magistrala and its libraries, which are
+The following is a set of guidelines to contribute to SuperMQ and its libraries, which are
 hosted on the [Abstract Machines Organization](https://github.com/absmach) on GitHub.
 
 This project adheres to the [Contributor Covenant 1.2](http://contributor-covenant.org/version/1/2/0).

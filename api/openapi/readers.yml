@@ -3,11 +3,11 @@
 
 openapi: 3.0.1
 info:
-  title: Magistrala reader service
+  title: SuperMQ reader service
   description: |
     HTTP API for reading messages.
     Some useful links:
-    - [The Magistrala repository](https://github.com/absmach/supermq)
+    - [The SuperMQ repository](https://github.com/absmach/supermq)
   contact:
     email: info@abstractmachines.fr
   license:

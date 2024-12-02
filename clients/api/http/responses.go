@@ -12,12 +12,12 @@ import (
 )
 
 var (
-	_ magistrala.Response = (*createClientRes)(nil)
-	_ magistrala.Response = (*viewClientRes)(nil)
-	_ magistrala.Response = (*viewClientPermsRes)(nil)
-	_ magistrala.Response = (*clientsPageRes)(nil)
-	_ magistrala.Response = (*changeClientStatusRes)(nil)
-	_ magistrala.Response = (*deleteClientRes)(nil)
+	_ supermq.Response = (*createClientRes)(nil)
+	_ supermq.Response = (*viewClientRes)(nil)
+	_ supermq.Response = (*viewClientPermsRes)(nil)
+	_ supermq.Response = (*clientsPageRes)(nil)
+	_ supermq.Response = (*changeClientStatusRes)(nil)
+	_ supermq.Response = (*deleteClientRes)(nil)
 )
 
 type clientsPageMetaRes struct {

@@ -59,31 +59,31 @@ import (
 
 const (
 	svcName            = "clients"
-	envPrefixDB        = "MG_CLIENTS_DB_"
-	envPrefixHTTP      = "MG_CLIENTS_HTTP_"
-	envPrefixGRPC      = "MG_CLIENTS_AUTH_GRPC_"
-	envPrefixAuth      = "MG_AUTH_GRPC_"
-	envPrefixChannels  = "MG_CHANNELS_GRPC_"
-	envPrefixGroups    = "MG_GROUPS_GRPC_"
+	envPrefixDB        = "SMQ_CLIENTS_DB_"
+	envPrefixHTTP      = "SMQ_CLIENTS_HTTP_"
+	envPrefixGRPC      = "SMQ_CLIENTS_AUTH_GRPC_"
+	envPrefixAuth      = "SMQ_AUTH_GRPC_"
+	envPrefixChannels  = "SMQ_CHANNELS_GRPC_"
+	envPrefixGroups    = "SMQ_GROUPS_GRPC_"
 	defDB              = "clients"
 	defSvcHTTPPort     = "9000"
 	defSvcAuthGRPCPort = "7000"
 )
 
 type config struct {
-	InstanceID          string        `env:"MG_CLIENTS_INSTANCE_ID"        envDefault:""`
-	LogLevel            string        `env:"MG_CLIENTS_LOG_LEVEL"          envDefault:"info"`
-	StandaloneID        string        `env:"MG_CLIENTS_STANDALONE_ID"      envDefault:""`
-	StandaloneToken     string        `env:"MG_CLIENTS_STANDALONE_TOKEN"   envDefault:""`
-	CacheURL            string        `env:"MG_CLIENTS_CACHE_URL"          envDefault:"redis://localhost:6379/0"`
-	CacheKeyDuration    time.Duration `env:"MG_CLIENTS_CACHE_KEY_DURATION" envDefault:"10m"`
-	JaegerURL           url.URL       `env:"MG_JAEGER_URL"                 envDefault:"http://localhost:4318/v1/traces"`
-	SendTelemetry       bool          `env:"MG_SEND_TELEMETRY"             envDefault:"true"`
-	ESURL               string        `env:"MG_ES_URL"                     envDefault:"nats://localhost:4222"`
-	TraceRatio          float64       `env:"MG_JAEGER_TRACE_RATIO"         envDefault:"1.0"`
-	SpicedbHost         string        `env:"MG_SPICEDB_HOST"               envDefault:"localhost"`
-	SpicedbPort         string        `env:"MG_SPICEDB_PORT"               envDefault:"50051"`
-	SpicedbPreSharedKey string        `env:"MG_SPICEDB_PRE_SHARED_KEY"     envDefault:"12345678"`
+	InstanceID          string        `env:"SMQ_CLIENTS_INSTANCE_ID"        envDefault:""`
+	LogLevel            string        `env:"SMQ_CLIENTS_LOG_LEVEL"          envDefault:"info"`
+	StandaloneID        string        `env:"SMQ_CLIENTS_STANDALONE_ID"      envDefault:""`
+	StandaloneToken     string        `env:"SMQ_CLIENTS_STANDALONE_TOKEN"   envDefault:""`
+	CacheURL            string        `env:"SMQ_CLIENTS_CACHE_URL"          envDefault:"redis://localhost:6379/0"`
+	CacheKeyDuration    time.Duration `env:"SMQ_CLIENTS_CACHE_KEY_DURATION" envDefault:"10m"`
+	JaegerURL           url.URL       `env:"SMQ_JAEGER_URL"                 envDefault:"http://localhost:4318/v1/traces"`
+	SendTelemetry       bool          `env:"SMQ_SEND_TELEMETRY"             envDefault:"true"`
+	ESURL               string        `env:"SMQ_ES_URL"                     envDefault:"nats://localhost:4222"`
+	TraceRatio          float64       `env:"SMQ_JAEGER_TRACE_RATIO"         envDefault:"1.0"`
+	SpicedbHost         string        `env:"SMQ_SPICEDB_HOST"               envDefault:"localhost"`
+	SpicedbPort         string        `env:"SMQ_SPICEDB_PORT"               envDefault:"50051"`
+	SpicedbPreSharedKey string        `env:"SMQ_SPICEDB_PRE_SHARED_KEY"     envDefault:"12345678"`
 }
 
 func main() {
@@ -248,7 +248,7 @@ func main() {
 	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerClientsServer, logger)
 
 	if cfg.SendTelemetry {
-		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
+		chc := chclient.New(svcName, supermq.Version, logger, cancel)
 		go chc.CallHome(ctx)
 	}
 

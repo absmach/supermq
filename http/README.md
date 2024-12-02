@@ -8,21 +8,21 @@ The service is configured using the environment variables presented in the follo
 
 | Variable                          | Description                                                                         | Default                           |
 | --------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------- |
-| MG_HTTP_ADAPTER_LOG_LEVEL         | Log level for the HTTP Adapter (debug, info, warn, error)                           | info                              |
-| MG_HTTP_ADAPTER_HOST              | Service HTTP host                                                                   | ""                                |
-| MG_HTTP_ADAPTER_PORT              | Service HTTP port                                                                   | 80                                |
-| MG_HTTP_ADAPTER_SERVER_CERT       | Path to the PEM encoded server certificate file                                     | ""                                |
-| MG_HTTP_ADAPTER_SERVER_KEY        | Path to the PEM encoded server key file                                             | ""                                |
-| MG_CLIENTS_AUTH_GRPC_URL          | Clients service Auth gRPC URL                                                       | <localhost:7000>                  |
-| MG_CLIENTS_AUTH_GRPC_TIMEOUT      | Clients service Auth gRPC request timeout in seconds                                | 1s                                |
-| MG_CLIENTS_AUTH_GRPC_CLIENT_CERT  | Path to the PEM encoded clients service Auth gRPC client certificate file           | ""                                |
-| MG_CLIENTS_AUTH_GRPC_CLIENT_KEY   | Path to the PEM encoded clients service Auth gRPC client key file                   | ""                                |
-| MG_CLIENTS_AUTH_GRPC_SERVER_CERTS | Path to the PEM encoded clients server Auth gRPC server trusted CA certificate file | ""                                |
-| MG_MESSAGE_BROKER_URL             | Message broker instance URL                                                         | <nats://localhost:4222>           |
-| MG_JAEGER_URL                     | Jaeger server URL                                                                   | <http://localhost:4318/v1/traces> |
-| MG_JAEGER_TRACE_RATIO             | Jaeger sampling ratio                                                               | 1.0                               |
-| MG_SEND_TELEMETRY                 | Send telemetry to magistrala call home server                                       | true                              |
-| MG_HTTP_ADAPTER_INSTANCE_ID       | Service instance ID                                                                 | ""                                |
+| SMQ_HTTP_ADAPTER_LOG_LEVEL         | Log level for the HTTP Adapter (debug, info, warn, error)                           | info                              |
+| SMQ_HTTP_ADAPTER_HOST              | Service HTTP host                                                                   | ""                                |
+| SMQ_HTTP_ADAPTER_PORT              | Service HTTP port                                                                   | 80                                |
+| SMQ_HTTP_ADAPTER_SERVER_CERT       | Path to the PEM encoded server certificate file                                     | ""                                |
+| SMQ_HTTP_ADAPTER_SERVER_KEY        | Path to the PEM encoded server key file                                             | ""                                |
+| SMQ_CLIENTS_AUTH_GRPC_URL          | Clients service Auth gRPC URL                                                       | <localhost:7000>                  |
+| SMQ_CLIENTS_AUTH_GRPC_TIMEOUT      | Clients service Auth gRPC request timeout in seconds                                | 1s                                |
+| SMQ_CLIENTS_AUTH_GRPC_CLIENT_CERT  | Path to the PEM encoded clients service Auth gRPC client certificate file           | ""                                |
+| SMQ_CLIENTS_AUTH_GRPC_CLIENT_KEY   | Path to the PEM encoded clients service Auth gRPC client key file                   | ""                                |
+| SMQ_CLIENTS_AUTH_GRPC_SERVER_CERTS | Path to the PEM encoded clients server Auth gRPC server trusted CA certificate file | ""                                |
+| SMQ_MESSAGE_BROKER_URL             | Message broker instance URL                                                         | <nats://localhost:4222>           |
+| SMQ_JAEGER_URL                     | Jaeger server URL                                                                   | <http://localhost:4318/v1/traces> |
+| SMQ_JAEGER_TRACE_RATIO             | Jaeger sampling ratio                                                               | 1.0                               |
+| SMQ_SEND_TELEMETRY                 | Send telemetry to magistrala call home server                                       | true                              |
+| SMQ_HTTP_ADAPTER_INSTANCE_ID       | Service instance ID                                                                 | ""                                |
 
 ## Deployment
 
@@ -44,27 +44,27 @@ make http
 make install
 
 # set the environment variables and run the service
-MG_HTTP_ADAPTER_LOG_LEVEL=info \
-MG_HTTP_ADAPTER_HOST=localhost \
-MG_HTTP_ADAPTER_PORT=80 \
-MG_HTTP_ADAPTER_SERVER_CERT="" \
-MG_HTTP_ADAPTER_SERVER_KEY="" \
-MG_CLIENTS_AUTH_GRPC_URL=localhost:7000 \
-MG_CLIENTS_AUTH_GRPC_TIMEOUT=1s \
-MG_CLIENTS_AUTH_GRPC_CLIENT_CERT="" \
-MG_CLIENTS_AUTH_GRPC_CLIENT_KEY="" \
-MG_CLIENTS_AUTH_GRPC_SERVER_CERTS="" \
-MG_MESSAGE_BROKER_URL=nats://localhost:4222 \
-MG_JAEGER_URL=http://localhost:14268/api/traces \
-MG_JAEGER_TRACE_RATIO=1.0 \
-MG_SEND_TELEMETRY=true \
-MG_HTTP_ADAPTER_INSTANCE_ID="" \
+SMQ_HTTP_ADAPTER_LOG_LEVEL=info \
+SMQ_HTTP_ADAPTER_HOST=localhost \
+SMQ_HTTP_ADAPTER_PORT=80 \
+SMQ_HTTP_ADAPTER_SERVER_CERT="" \
+SMQ_HTTP_ADAPTER_SERVER_KEY="" \
+SMQ_CLIENTS_AUTH_GRPC_URL=localhost:7000 \
+SMQ_CLIENTS_AUTH_GRPC_TIMEOUT=1s \
+SMQ_CLIENTS_AUTH_GRPC_CLIENT_CERT="" \
+SMQ_CLIENTS_AUTH_GRPC_CLIENT_KEY="" \
+SMQ_CLIENTS_AUTH_GRPC_SERVER_CERTS="" \
+SMQ_MESSAGE_BROKER_URL=nats://localhost:4222 \
+SMQ_JAEGER_URL=http://localhost:14268/api/traces \
+SMQ_JAEGER_TRACE_RATIO=1.0 \
+SMQ_SEND_TELEMETRY=true \
+SMQ_HTTP_ADAPTER_INSTANCE_ID="" \
 $GOBIN/magistrala-http
 ```
 
-Setting `MG_HTTP_ADAPTER_SERVER_CERT` and `MG_HTTP_ADAPTER_SERVER_KEY` will enable TLS against the service. The service expects a file in PEM format for both the certificate and the key.
+Setting `SMQ_HTTP_ADAPTER_SERVER_CERT` and `SMQ_HTTP_ADAPTER_SERVER_KEY` will enable TLS against the service. The service expects a file in PEM format for both the certificate and the key.
 
-Setting `MG_CLIENTS_AUTH_GRPC_CLIENT_CERT` and `MG_CLIENTS_AUTH_GRPC_CLIENT_KEY` will enable TLS against the clients service. The service expects a file in PEM format for both the certificate and the key. Setting `MG_CLIENTS_AUTH_GRPC_SERVER_CERTS` will enable TLS against the clients service trusting only those CAs that are provided. The service expects a file in PEM format of trusted CAs.
+Setting `SMQ_CLIENTS_AUTH_GRPC_CLIENT_CERT` and `SMQ_CLIENTS_AUTH_GRPC_CLIENT_KEY` will enable TLS against the clients service. The service expects a file in PEM format for both the certificate and the key. Setting `SMQ_CLIENTS_AUTH_GRPC_SERVER_CERTS` will enable TLS against the clients service trusting only those CAs that are provided. The service expects a file in PEM format of trusted CAs.
 
 ## Usage
 

@@ -11,7 +11,7 @@ import (
 	sdk "github.com/absmach/supermq/pkg/sdk/go"
 )
 
-var _ magistrala.Response = (*provisionRes)(nil)
+var _ supermq.Response = (*provisionRes)(nil)
 
 type provisionRes struct {
 	Clients     []sdk.Client      `json:"clients"`

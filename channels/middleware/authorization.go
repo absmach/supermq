@@ -340,7 +340,7 @@ func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, userID s
 		Subject:     userID,
 		Permission:  policies.AdminPermission,
 		ObjectType:  policies.PlatformType,
-		Object:      policies.MagistralaObject,
+		Object:      policies.SuperMQObject,
 	}); err != nil {
 		return err
 	}

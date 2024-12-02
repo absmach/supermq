@@ -31,19 +31,19 @@ import (
 
 const (
 	svcName           = "timescaledb-reader"
-	envPrefixDB       = "MG_TIMESCALE_"
-	envPrefixHTTP     = "MG_TIMESCALE_READER_HTTP_"
-	envPrefixAuth     = "MG_AUTH_GRPC_"
-	envPrefixClients  = "MG_CLIENTS_AUTH_GRPC_"
-	envPrefixChannels = "MG_CHANNELS_GRPC_"
+	envPrefixDB       = "SMQ_TIMESCALE_"
+	envPrefixHTTP     = "SMQ_TIMESCALE_READER_HTTP_"
+	envPrefixAuth     = "SMQ_AUTH_GRPC_"
+	envPrefixClients  = "SMQ_CLIENTS_AUTH_GRPC_"
+	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
 	defDB             = "messages"
 	defSvcHTTPPort    = "9011"
 )
 
 type config struct {
-	LogLevel      string `env:"MG_TIMESCALE_READER_LOG_LEVEL"    envDefault:"info"`
-	SendTelemetry bool   `env:"MG_SEND_TELEMETRY"                envDefault:"true"`
-	InstanceID    string `env:"MG_TIMESCALE_READER_INSTANCE_ID"  envDefault:""`
+	LogLevel      string `env:"SMQ_TIMESCALE_READER_LOG_LEVEL"    envDefault:"info"`
+	SendTelemetry bool   `env:"SMQ_SEND_TELEMETRY"                envDefault:"true"`
+	InstanceID    string `env:"SMQ_TIMESCALE_READER_INSTANCE_ID"  envDefault:""`
 }
 
 func main() {
@@ -143,7 +143,7 @@ func main() {
 	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(repo, authn, clientsClient, channelsClient, svcName, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
-		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
+		chc := chclient.New(svcName, supermq.Version, logger, cancel)
 		go chc.CallHome(ctx)
 	}
 

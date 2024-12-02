@@ -40,20 +40,20 @@ import (
 
 const (
 	svcName        = "journal"
-	envPrefixDB    = "MG_JOURNAL_DB_"
-	envPrefixHTTP  = "MG_JOURNAL_HTTP_"
-	envPrefixAuth  = "MG_AUTH_GRPC_"
+	envPrefixDB    = "SMQ_JOURNAL_DB_"
+	envPrefixHTTP  = "SMQ_JOURNAL_HTTP_"
+	envPrefixAuth  = "SMQ_AUTH_GRPC_"
 	defDB          = "journal"
 	defSvcHTTPPort = "9021"
 )
 
 type config struct {
-	LogLevel      string  `env:"MG_JOURNAL_LOG_LEVEL"   envDefault:"info"`
-	ESURL         string  `env:"MG_ES_URL"              envDefault:"nats://localhost:4222"`
-	JaegerURL     url.URL `env:"MG_JAEGER_URL"          envDefault:"http://localhost:4318/v1/traces"`
-	SendTelemetry bool    `env:"MG_SEND_TELEMETRY"      envDefault:"true"`
-	InstanceID    string  `env:"MG_JOURNAL_INSTANCE_ID" envDefault:""`
-	TraceRatio    float64 `env:"MG_JAEGER_TRACE_RATIO"  envDefault:"1.0"`
+	LogLevel      string  `env:"SMQ_JOURNAL_LOG_LEVEL"   envDefault:"info"`
+	ESURL         string  `env:"SMQ_ES_URL"              envDefault:"nats://localhost:4222"`
+	JaegerURL     url.URL `env:"SMQ_JAEGER_URL"          envDefault:"http://localhost:4318/v1/traces"`
+	SendTelemetry bool    `env:"SMQ_SEND_TELEMETRY"      envDefault:"true"`
+	InstanceID    string  `env:"SMQ_JOURNAL_INSTANCE_ID" envDefault:""`
+	TraceRatio    float64 `env:"SMQ_JAEGER_TRACE_RATIO"  envDefault:"1.0"`
 }
 
 func main() {
@@ -160,7 +160,7 @@ func main() {
 	hs := http.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, authn, logger, svcName, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
-		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
+		chc := chclient.New(svcName, supermq.Version, logger, cancel)
 		go chc.CallHome(ctx)
 	}
 

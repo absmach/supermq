@@ -6,7 +6,7 @@ package messaging;
 
 option go_package = "./messaging";
 
-// Message represents a message emitted by the Magistrala adapters layer.
+// Message represents a message emitted by the SuperMQ adapters layer.
 message Message {
   string channel = 1;
   string subtopic = 2;

@@ -3,13 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 vault() {
-    if is_container_running "magistrala-vault"; then
-        docker exec -it magistrala-vault vault "$@"
+    if is_container_running "supermq-vault"; then
+        docker exec -it supermq-vault vault "$@"
     else
         if which vault &> /dev/null; then
             $(which vault) "$@"
         else
-            echo "magistrala-vault container or vault command not found. Please refer to the documentation: https://github.com/absmach/supermq/blob/main/docker/addons/vault/README.md"
+            echo "supermq-vault container or vault command not found. Please refer to the documentation: https://github.com/absmach/supermq/blob/main/docker/addons/vault/README.md"
         fi
     fi
 }

@@ -53,25 +53,25 @@ import (
 
 const (
 	svcName        = "domains"
-	envPrefixHTTP  = "MG_DOMAINS_HTTP_"
-	envPrefixGrpc  = "MG_DOMAINS_GRPC_"
-	envPrefixDB    = "MG_DOMAINS_DB_"
-	envPrefixAuth  = "MG_AUTH_GRPC_"
+	envPrefixHTTP  = "SMQ_DOMAINS_HTTP_"
+	envPrefixGrpc  = "SMQ_DOMAINS_GRPC_"
+	envPrefixDB    = "SMQ_DOMAINS_DB_"
+	envPrefixAuth  = "SMQ_AUTH_GRPC_"
 	defDB          = "domains"
 	defSvcHTTPPort = "9004"
 	defSvcGRPCPort = "7004"
 )
 
 type config struct {
-	LogLevel            string  `env:"MG_DOMAINS_LOG_LEVEL"            envDefault:"info"`
-	JaegerURL           url.URL `env:"MG_JAEGER_URL"                   envDefault:"http://localhost:4318/v1/traces"`
-	SendTelemetry       bool    `env:"MG_SEND_TELEMETRY"               envDefault:"true"`
-	InstanceID          string  `env:"MG_DOMAINS_INSTANCE_ID"  envDefault:""`
-	SpicedbHost         string  `env:"MG_SPICEDB_HOST"                 envDefault:"localhost"`
-	SpicedbPort         string  `env:"MG_SPICEDB_PORT"                 envDefault:"50051"`
-	SpicedbPreSharedKey string  `env:"MG_SPICEDB_PRE_SHARED_KEY"       envDefault:"12345678"`
-	TraceRatio          float64 `env:"MG_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
-	ESURL               string  `env:"MG_ES_URL"                       envDefault:"nats://localhost:4222"`
+	LogLevel            string  `env:"SMQ_DOMAINS_LOG_LEVEL"            envDefault:"info"`
+	JaegerURL           url.URL `env:"SMQ_JAEGER_URL"                   envDefault:"http://localhost:4318/v1/traces"`
+	SendTelemetry       bool    `env:"SMQ_SEND_TELEMETRY"               envDefault:"true"`
+	InstanceID          string  `env:"SMQ_DOMAINS_INSTANCE_ID"  envDefault:""`
+	SpicedbHost         string  `env:"SMQ_SPICEDB_HOST"                 envDefault:"localhost"`
+	SpicedbPort         string  `env:"SMQ_SPICEDB_PORT"                 envDefault:"50051"`
+	SpicedbPreSharedKey string  `env:"SMQ_SPICEDB_PRE_SHARED_KEY"       envDefault:"12345678"`
+	TraceRatio          float64 `env:"SMQ_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
+	ESURL               string  `env:"SMQ_ES_URL"                       envDefault:"nats://localhost:4222"`
 }
 
 func main() {
@@ -205,7 +205,7 @@ func main() {
 	})
 
 	if cfg.SendTelemetry {
-		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
+		chc := chclient.New(svcName, supermq.Version, logger, cancel)
 		go chc.CallHome(ctx)
 	}
 

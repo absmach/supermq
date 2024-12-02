@@ -125,7 +125,7 @@ func (am *authorizationMiddleware) ListDomains(ctx context.Context, session auth
 		SubjectType: policies.UserType,
 		Permission:  policies.AdminPermission,
 		ObjectType:  policies.PlatformType,
-		Object:      policies.MagistralaObject,
+		Object:      policies.SuperMQObject,
 	}); err == nil {
 		session.SuperAdmin = true
 	}

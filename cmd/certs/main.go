@@ -34,29 +34,29 @@ import (
 
 const (
 	svcName        = "certs"
-	envPrefixDB    = "MG_CERTS_DB_"
-	envPrefixHTTP  = "MG_CERTS_HTTP_"
-	envPrefixAuth  = "MG_AUTH_GRPC_"
+	envPrefixDB    = "SMQ_CERTS_DB_"
+	envPrefixHTTP  = "SMQ_CERTS_HTTP_"
+	envPrefixAuth  = "SMQ_AUTH_GRPC_"
 	defDB          = "certs"
 	defSvcHTTPPort = "9019"
 )
 
 type config struct {
-	LogLevel      string  `env:"MG_CERTS_LOG_LEVEL"        envDefault:"info"`
-	ClientsURL    string  `env:"MG_CLIENTS_URL"            envDefault:"http://localhost:9000"`
-	JaegerURL     url.URL `env:"MG_JAEGER_URL"             envDefault:"http://localhost:4318/v1/traces"`
-	SendTelemetry bool    `env:"MG_SEND_TELEMETRY"         envDefault:"true"`
-	InstanceID    string  `env:"MG_CERTS_INSTANCE_ID"      envDefault:""`
-	TraceRatio    float64 `env:"MG_JAEGER_TRACE_RATIO"     envDefault:"1.0"`
+	LogLevel      string  `env:"SMQ_CERTS_LOG_LEVEL"        envDefault:"info"`
+	ClientsURL    string  `env:"SMQ_CLIENTS_URL"            envDefault:"http://localhost:9000"`
+	JaegerURL     url.URL `env:"SMQ_JAEGER_URL"             envDefault:"http://localhost:4318/v1/traces"`
+	SendTelemetry bool    `env:"SMQ_SEND_TELEMETRY"         envDefault:"true"`
+	InstanceID    string  `env:"SMQ_CERTS_INSTANCE_ID"      envDefault:""`
+	TraceRatio    float64 `env:"SMQ_JAEGER_TRACE_RATIO"     envDefault:"1.0"`
 
 	// Sign and issue certificates without 3rd party PKI
-	SignCAPath    string `env:"MG_CERTS_SIGN_CA_PATH"        envDefault:"ca.crt"`
-	SignCAKeyPath string `env:"MG_CERTS_SIGN_CA_KEY_PATH"    envDefault:"ca.key"`
+	SignCAPath    string `env:"SMQ_CERTS_SIGN_CA_PATH"        envDefault:"ca.crt"`
+	SignCAKeyPath string `env:"SMQ_CERTS_SIGN_CA_KEY_PATH"    envDefault:"ca.key"`
 
 	// Amcerts SDK settings
-	SDKHost         string `env:"MG_CERTS_SDK_HOST"             envDefault:""`
-	SDKCertsURL     string `env:"MG_CERTS_SDK_CERTS_URL"        envDefault:"http://localhost:9010"`
-	TLSVerification bool   `env:"MG_CERTS_SDK_TLS_VERIFICATION" envDefault:"false"`
+	SDKHost         string `env:"SMQ_CERTS_SDK_HOST"             envDefault:""`
+	SDKCertsURL     string `env:"SMQ_CERTS_SDK_CERTS_URL"        envDefault:"http://localhost:9010"`
+	TLSVerification bool   `env:"SMQ_CERTS_SDK_TLS_VERIFICATION" envDefault:"false"`
 }
 
 func main() {
@@ -136,7 +136,7 @@ func main() {
 	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, authn, logger, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
-		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
+		chc := chclient.New(svcName, supermq.Version, logger, cancel)
 		go chc.CallHome(ctx)
 	}
 

@@ -19,7 +19,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var _ magistrala.Response = (*response)(nil)
+var _ supermq.Response = (*response)(nil)
 
 var validUUID = testsutil.GenerateUUID(&testing.T{})
 

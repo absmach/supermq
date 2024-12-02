@@ -25,13 +25,13 @@ var (
 type service struct {
 	repo       Repository
 	policy     policies.Service
-	idProvider magistrala.IDProvider
+	idProvider supermq.IDProvider
 	roles.ProvisionManageService
 }
 
 var _ Service = (*service)(nil)
 
-func New(repo Repository, policy policies.Service, idProvider magistrala.IDProvider, sidProvider magistrala.IDProvider) (Service, error) {
+func New(repo Repository, policy policies.Service, idProvider supermq.IDProvider, sidProvider supermq.IDProvider) (Service, error) {
 	rpms, err := roles.NewProvisionManageService(policies.DomainType, repo, policy, sidProvider, AvailableActions(), BuiltInRoles())
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func (svc service) CreateDomain(ctx context.Context, session authn.Session, d Do
 
 	optionalPolicies := []policies.Policy{
 		{
-			Subject:     policies.MagistralaObject,
+			Subject:     policies.SuperMQObject,
 			SubjectType: policies.PlatformType,
 			Relation:    "organization",
 			Object:      d.ID,

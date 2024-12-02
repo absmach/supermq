@@ -43,22 +43,22 @@ import (
 
 const (
 	svcName           = "http_adapter"
-	envPrefix         = "MG_HTTP_ADAPTER_"
-	envPrefixClients  = "MG_CLIENTS_AUTH_GRPC_"
-	envPrefixChannels = "MG_CHANNELS_GRPC_"
-	envPrefixAuth     = "MG_AUTH_GRPC_"
+	envPrefix         = "SMQ_HTTP_ADAPTER_"
+	envPrefixClients  = "SMQ_CLIENTS_AUTH_GRPC_"
+	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
+	envPrefixAuth     = "SMQ_AUTH_GRPC_"
 	defSvcHTTPPort    = "80"
 	targetHTTPPort    = "81"
 	targetHTTPHost    = "http://localhost"
 )
 
 type config struct {
-	LogLevel      string  `env:"MG_HTTP_ADAPTER_LOG_LEVEL"   envDefault:"info"`
-	BrokerURL     string  `env:"MG_MESSAGE_BROKER_URL"       envDefault:"nats://localhost:4222"`
-	JaegerURL     url.URL `env:"MG_JAEGER_URL"               envDefault:"http://localhost:4318/v1/traces"`
-	SendTelemetry bool    `env:"MG_SEND_TELEMETRY"           envDefault:"true"`
-	InstanceID    string  `env:"MG_HTTP_ADAPTER_INSTANCE_ID" envDefault:""`
-	TraceRatio    float64 `env:"MG_JAEGER_TRACE_RATIO"       envDefault:"1.0"`
+	LogLevel      string  `env:"SMQ_HTTP_ADAPTER_LOG_LEVEL"   envDefault:"info"`
+	BrokerURL     string  `env:"SMQ_MESSAGE_BROKER_URL"       envDefault:"nats://localhost:4222"`
+	JaegerURL     url.URL `env:"SMQ_JAEGER_URL"               envDefault:"http://localhost:4318/v1/traces"`
+	SendTelemetry bool    `env:"SMQ_SEND_TELEMETRY"           envDefault:"true"`
+	InstanceID    string  `env:"SMQ_HTTP_ADAPTER_INSTANCE_ID" envDefault:""`
+	TraceRatio    float64 `env:"SMQ_JAEGER_TRACE_RATIO"       envDefault:"1.0"`
 }
 
 func main() {
@@ -169,7 +169,7 @@ func main() {
 	hs := httpserver.NewServer(ctx, cancel, svcName, targetServerCfg, api.MakeHandler(logger, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
-		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
+		chc := chclient.New(svcName, supermq.Version, logger, cancel)
 		go chc.CallHome(ctx)
 	}
 

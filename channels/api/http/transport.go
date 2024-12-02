@@ -133,7 +133,7 @@ func MakeHandler(svc channels.Service, authn mgauthn.Authentication, mux *chi.Mu
 		})
 	})
 
-	mux.Get("/health", magistrala.Health("channels", instanceID))
+	mux.Get("/health", supermq.Health("channels", instanceID))
 	mux.Handle("/metrics", promhttp.Handler())
 
 	return mux

@@ -13,11 +13,11 @@ import (
 )
 
 type service struct {
-	idProvider magistrala.IDProvider
+	idProvider supermq.IDProvider
 	repository Repository
 }
 
-func NewService(idp magistrala.IDProvider, repository Repository) Service {
+func NewService(idp supermq.IDProvider, repository Repository) Service {
 	return &service{
 		idProvider: idp,
 		repository: repository,

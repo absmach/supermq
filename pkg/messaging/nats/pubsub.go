@@ -27,7 +27,7 @@ var (
 
 	jsStreamConfig = jetstream.StreamConfig{
 		Name:              "channels",
-		Description:       "Magistrala stream for sending and receiving messages in between Magistrala channels",
+		Description:       "SuperMQ stream for sending and receiving messages in between SuperMQ channels",
 		Subjects:          []string{"channels.>"},
 		Retention:         jetstream.LimitsPolicy,
 		MaxMsgsPerSubject: 1e6,
@@ -99,7 +99,7 @@ func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig)
 	consumerConfig := jetstream.ConsumerConfig{
 		Name:          formatConsumerName(cfg.Topic, cfg.ID),
 		Durable:       formatConsumerName(cfg.Topic, cfg.ID),
-		Description:   fmt.Sprintf("Magistrala consumer of id %s for cfg.Topic %s", cfg.ID, cfg.Topic),
+		Description:   fmt.Sprintf("SuperMQ consumer of id %s for cfg.Topic %s", cfg.ID, cfg.Topic),
 		DeliverPolicy: jetstream.DeliverNewPolicy,
 		FilterSubject: cfg.Topic,
 	}
@@ -150,7 +150,7 @@ func (ps *pubsub) natsHandler(h messaging.MessageHandler) func(m jetstream.Msg) 
 		}
 
 		if err := h.Handle(&msg); err != nil {
-			ps.logger.Warn(fmt.Sprintf("Failed to handle Magistrala message: %s", err))
+			ps.logger.Warn(fmt.Sprintf("Failed to handle SuperMQ message: %s", err))
 		}
 		if err := m.Ack(); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to ack message: %s", err))

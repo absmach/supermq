@@ -3,11 +3,11 @@
 
 openapi: 3.0.1
 info:
-  title: Magistrala Notifiers service
+  title: SuperMQ Notifiers service
   description: |
     HTTP API for Notifiers service.
     Some useful links:
-    - [The Magistrala repository](https://github.com/absmach/supermq)
+    - [The SuperMQ repository](https://github.com/absmach/supermq)
   contact:
     email: info@abstractmachines.fr
   license:

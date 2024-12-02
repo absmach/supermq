@@ -48,29 +48,29 @@ import (
 
 const (
 	svcName        = "auth"
-	envPrefixHTTP  = "MG_AUTH_HTTP_"
-	envPrefixGrpc  = "MG_AUTH_GRPC_"
-	envPrefixDB    = "MG_AUTH_DB_"
+	envPrefixHTTP  = "SMQ_AUTH_HTTP_"
+	envPrefixGrpc  = "SMQ_AUTH_GRPC_"
+	envPrefixDB    = "SMQ_AUTH_DB_"
 	defDB          = "auth"
 	defSvcHTTPPort = "8189"
 	defSvcGRPCPort = "8181"
 )
 
 type config struct {
-	LogLevel            string        `env:"MG_AUTH_LOG_LEVEL"               envDefault:"info"`
-	SecretKey           string        `env:"MG_AUTH_SECRET_KEY"              envDefault:"secret"`
-	JaegerURL           url.URL       `env:"MG_JAEGER_URL"                   envDefault:"http://localhost:4318/v1/traces"`
-	SendTelemetry       bool          `env:"MG_SEND_TELEMETRY"               envDefault:"true"`
-	InstanceID          string        `env:"MG_AUTH_ADAPTER_INSTANCE_ID"     envDefault:""`
-	AccessDuration      time.Duration `env:"MG_AUTH_ACCESS_TOKEN_DURATION"   envDefault:"1h"`
-	RefreshDuration     time.Duration `env:"MG_AUTH_REFRESH_TOKEN_DURATION"  envDefault:"24h"`
-	InvitationDuration  time.Duration `env:"MG_AUTH_INVITATION_DURATION"     envDefault:"168h"`
-	SpicedbHost         string        `env:"MG_SPICEDB_HOST"                 envDefault:"localhost"`
-	SpicedbPort         string        `env:"MG_SPICEDB_PORT"                 envDefault:"50051"`
-	SpicedbSchemaFile   string        `env:"MG_SPICEDB_SCHEMA_FILE"          envDefault:"./docker/spicedb/schema.zed"`
-	SpicedbPreSharedKey string        `env:"MG_SPICEDB_PRE_SHARED_KEY"       envDefault:"12345678"`
-	TraceRatio          float64       `env:"MG_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
-	ESURL               string        `env:"MG_ES_URL"                       envDefault:"nats://localhost:4222"`
+	LogLevel            string        `env:"SMQ_AUTH_LOG_LEVEL"               envDefault:"info"`
+	SecretKey           string        `env:"SMQ_AUTH_SECRET_KEY"              envDefault:"secret"`
+	JaegerURL           url.URL       `env:"SMQ_JAEGER_URL"                   envDefault:"http://localhost:4318/v1/traces"`
+	SendTelemetry       bool          `env:"SMQ_SEND_TELEMETRY"               envDefault:"true"`
+	InstanceID          string        `env:"SMQ_AUTH_ADAPTER_INSTANCE_ID"     envDefault:""`
+	AccessDuration      time.Duration `env:"SMQ_AUTH_ACCESS_TOKEN_DURATION"   envDefault:"1h"`
+	RefreshDuration     time.Duration `env:"SMQ_AUTH_REFRESH_TOKEN_DURATION"  envDefault:"24h"`
+	InvitationDuration  time.Duration `env:"SMQ_AUTH_INVITATION_DURATION"     envDefault:"168h"`
+	SpicedbHost         string        `env:"SMQ_SPICEDB_HOST"                 envDefault:"localhost"`
+	SpicedbPort         string        `env:"SMQ_SPICEDB_PORT"                 envDefault:"50051"`
+	SpicedbSchemaFile   string        `env:"SMQ_SPICEDB_SCHEMA_FILE"          envDefault:"./docker/spicedb/schema.zed"`
+	SpicedbPreSharedKey string        `env:"SMQ_SPICEDB_PRE_SHARED_KEY"       envDefault:"12345678"`
+	TraceRatio          float64       `env:"SMQ_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
+	ESURL               string        `env:"SMQ_ES_URL"                       envDefault:"nats://localhost:4222"`
 }
 
 func main() {
@@ -148,7 +148,7 @@ func main() {
 	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerAuthServiceServer, logger)
 
 	if cfg.SendTelemetry {
-		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
+		chc := chclient.New(svcName, supermq.Version, logger, cancel)
 		go chc.CallHome(ctx)
 	}
 	g.Go(func() error {
@@ -164,7 +164,7 @@ func main() {
 	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, logger, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
-		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
+		chc := chclient.New(svcName, supermq.Version, logger, cancel)
 		go chc.CallHome(ctx)
 	}
 

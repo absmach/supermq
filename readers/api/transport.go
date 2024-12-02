@@ -61,7 +61,7 @@ func MakeHandler(svc readers.MessageRepository, authn mgauthn.Authentication, cl
 		opts...,
 	).ServeHTTP)
 
-	mux.Get("/health", magistrala.Health(svcName, instanceID))
+	mux.Get("/health", supermq.Health(svcName, instanceID))
 	mux.Handle("/metrics", promhttp.Handler())
 
 	return mux
@@ -180,7 +180,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", contentType)
 
-	if ar, ok := response.(magistrala.Response); ok {
+	if ar, ok := response.(supermq.Response); ok {
 		for k, v := range ar.Headers() {
 			w.Header().Set(k, v)
 		}

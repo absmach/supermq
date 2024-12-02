@@ -2,5 +2,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package transformers contains the domain concept definitions needed to
-// support Magistrala transformer services functionality.
+// support SuperMQ transformer services functionality.
 package transformers

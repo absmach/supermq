@@ -16,9 +16,9 @@ func main() {
 
 	rootCmd := &cobra.Command{
 		Use:   "provision",
-		Short: "provision is provisioning tool for Magistrala",
-		Long: `Tool for provisioning series of Magistrala channels and clients and connecting them together.
-Complete documentation is available at https://docs.magistrala.abstractmachines.fr`,
+		Short: "provision is provisioning tool for SuperMQ",
+		Long: `Tool for provisioning series of SuperMQ channels and clients and connecting them together.
+Complete documentation is available at https://docs.supermq.abstractmachines.fr`,
 		Run: func(_ *cobra.Command, _ []string) {
 			if err := provision.Provision(pconf); err != nil {
 				log.Fatal(err)

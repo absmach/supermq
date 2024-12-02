@@ -10,7 +10,7 @@ import (
 	"github.com/absmach/supermq/journal"
 )
 
-var _ magistrala.Response = (*pageRes)(nil)
+var _ supermq.Response = (*pageRes)(nil)
 
 type pageRes struct {
 	journal.JournalsPage `json:",inline"`

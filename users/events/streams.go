@@ -13,7 +13,7 @@ import (
 	"github.com/absmach/supermq/users"
 )
 
-const streamID = "magistrala.users"
+const streamID = "supermq.users"
 
 var _ users.Service = (*eventStore)(nil)
 

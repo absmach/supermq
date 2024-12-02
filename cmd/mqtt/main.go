@@ -43,30 +43,30 @@ import (
 
 const (
 	svcName           = "mqtt"
-	envPrefixClients  = "MG_CLIENTS_AUTH_GRPC_"
-	envPrefixChannels = "MG_CHANNELS_GRPC_"
+	envPrefixClients  = "SMQ_CLIENTS_AUTH_GRPC_"
+	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
 	wsPathPrefix      = "/mqtt"
 )
 
 type config struct {
-	LogLevel              string        `env:"MG_MQTT_ADAPTER_LOG_LEVEL"                    envDefault:"info"`
-	MQTTPort              string        `env:"MG_MQTT_ADAPTER_MQTT_PORT"                    envDefault:"1883"`
-	MQTTTargetHost        string        `env:"MG_MQTT_ADAPTER_MQTT_TARGET_HOST"             envDefault:"localhost"`
-	MQTTTargetPort        string        `env:"MG_MQTT_ADAPTER_MQTT_TARGET_PORT"             envDefault:"1883"`
-	MQTTForwarderTimeout  time.Duration `env:"MG_MQTT_ADAPTER_FORWARDER_TIMEOUT"            envDefault:"30s"`
-	MQTTTargetHealthCheck string        `env:"MG_MQTT_ADAPTER_MQTT_TARGET_HEALTH_CHECK"     envDefault:""`
-	MQTTQoS               uint8         `env:"MG_MQTT_ADAPTER_MQTT_QOS"                     envDefault:"1"`
-	HTTPPort              string        `env:"MG_MQTT_ADAPTER_WS_PORT"                      envDefault:"8080"`
-	HTTPTargetHost        string        `env:"MG_MQTT_ADAPTER_WS_TARGET_HOST"               envDefault:"localhost"`
-	HTTPTargetPort        string        `env:"MG_MQTT_ADAPTER_WS_TARGET_PORT"               envDefault:"8080"`
-	HTTPTargetPath        string        `env:"MG_MQTT_ADAPTER_WS_TARGET_PATH"               envDefault:"/mqtt"`
-	Instance              string        `env:"MG_MQTT_ADAPTER_INSTANCE"                     envDefault:""`
-	JaegerURL             url.URL       `env:"MG_JAEGER_URL"                                envDefault:"http://localhost:4318/v1/traces"`
-	BrokerURL             string        `env:"MG_MESSAGE_BROKER_URL"                        envDefault:"nats://localhost:4222"`
-	SendTelemetry         bool          `env:"MG_SEND_TELEMETRY"                            envDefault:"true"`
-	InstanceID            string        `env:"MG_MQTT_ADAPTER_INSTANCE_ID"                  envDefault:""`
-	ESURL                 string        `env:"MG_ES_URL"                                    envDefault:"nats://localhost:4222"`
-	TraceRatio            float64       `env:"MG_JAEGER_TRACE_RATIO"                        envDefault:"1.0"`
+	LogLevel              string        `env:"SMQ_MQTT_ADAPTER_LOG_LEVEL"                    envDefault:"info"`
+	MQTTPort              string        `env:"SMQ_MQTT_ADAPTER_MQTT_PORT"                    envDefault:"1883"`
+	MQTTTargetHost        string        `env:"SMQ_MQTT_ADAPTER_MQTT_TARGET_HOST"             envDefault:"localhost"`
+	MQTTTargetPort        string        `env:"SMQ_MQTT_ADAPTER_MQTT_TARGET_PORT"             envDefault:"1883"`
+	MQTTForwarderTimeout  time.Duration `env:"SMQ_MQTT_ADAPTER_FORWARDER_TIMEOUT"            envDefault:"30s"`
+	MQTTTargetHealthCheck string        `env:"SMQ_MQTT_ADAPTER_MQTT_TARGET_HEALTH_CHECK"     envDefault:""`
+	MQTTQoS               uint8         `env:"SMQ_MQTT_ADAPTER_MQTT_QOS"                     envDefault:"1"`
+	HTTPPort              string        `env:"SMQ_MQTT_ADAPTER_WS_PORT"                      envDefault:"8080"`
+	HTTPTargetHost        string        `env:"SMQ_MQTT_ADAPTER_WS_TARGET_HOST"               envDefault:"localhost"`
+	HTTPTargetPort        string        `env:"SMQ_MQTT_ADAPTER_WS_TARGET_PORT"               envDefault:"8080"`
+	HTTPTargetPath        string        `env:"SMQ_MQTT_ADAPTER_WS_TARGET_PATH"               envDefault:"/mqtt"`
+	Instance              string        `env:"SMQ_MQTT_ADAPTER_INSTANCE"                     envDefault:""`
+	JaegerURL             url.URL       `env:"SMQ_JAEGER_URL"                                envDefault:"http://localhost:4318/v1/traces"`
+	BrokerURL             string        `env:"SMQ_MESSAGE_BROKER_URL"                        envDefault:"nats://localhost:4222"`
+	SendTelemetry         bool          `env:"SMQ_SEND_TELEMETRY"                            envDefault:"true"`
+	InstanceID            string        `env:"SMQ_MQTT_ADAPTER_INSTANCE_ID"                  envDefault:""`
+	ESURL                 string        `env:"SMQ_ES_URL"                                    envDefault:"nats://localhost:4222"`
+	TraceRatio            float64       `env:"SMQ_JAEGER_TRACE_RATIO"                        envDefault:"1.0"`
 }
 
 func main() {
@@ -202,7 +202,7 @@ func main() {
 	h = handler.NewTracing(tracer, h)
 
 	if cfg.SendTelemetry {
-		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
+		chc := chclient.New(svcName, supermq.Version, logger, cancel)
 		go chc.CallHome(ctx)
 	}
 

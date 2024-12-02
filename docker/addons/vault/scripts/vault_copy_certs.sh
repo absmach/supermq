@@ -52,35 +52,35 @@ readDotEnv
 
 server_name="localhost"
 
-# Check if MG_NGINX_SERVER_NAME is set or not empty
-if [ -n "${MG_NGINX_SERVER_NAME:-}" ]; then
-    server_name="$MG_NGINX_SERVER_NAME"
+# Check if SMQ_NGINX_SERVER_NAME is set or not empty
+if [ -n "${SMQ_NGINX_SERVER_NAME:-}" ]; then
+    server_name="$SMQ_NGINX_SERVER_NAME"
 fi
 
 echo "Copying certificate files to ${certs_copy_path}"
 
 if [ -e "$scriptdir/data/${server_name}.crt" ]; then
-    cp -v "$scriptdir/data/${server_name}.crt" "${certs_copy_path}magistrala-server.crt"
+    cp -v "$scriptdir/data/${server_name}.crt" "${certs_copy_path}supermq-server.crt"
 else
     echo "${server_name}.crt file not available"
 fi
 
 if [ -e "$scriptdir/data/${server_name}.key" ]; then
-    cp -v "$scriptdir/data/${server_name}.key" "${certs_copy_path}magistrala-server.key"
+    cp -v "$scriptdir/data/${server_name}.key" "${certs_copy_path}supermq-server.key"
 else
     echo "${server_name}.key file not available"
 fi
 
-if [ -e "$scriptdir/data/${MG_VAULT_PKI_INT_FILE_NAME}.key" ]; then
-    cp -v "$scriptdir/data/${MG_VAULT_PKI_INT_FILE_NAME}.key" "${certs_copy_path}ca.key"
+if [ -e "$scriptdir/data/${SMQ_VAULT_PKI_INT_FILE_NAME}.key" ]; then
+    cp -v "$scriptdir/data/${SMQ_VAULT_PKI_INT_FILE_NAME}.key" "${certs_copy_path}ca.key"
 else
-    echo "$scriptdir/data/${MG_VAULT_PKI_INT_FILE_NAME}.key file not available"
+    echo "$scriptdir/data/${SMQ_VAULT_PKI_INT_FILE_NAME}.key file not available"
 fi
 
-if [ -e "$scriptdir/data/${MG_VAULT_PKI_INT_FILE_NAME}_bundle.crt" ]; then
-    cp -v "$scriptdir/data/${MG_VAULT_PKI_INT_FILE_NAME}_bundle.crt" "${certs_copy_path}ca.crt"
+if [ -e "$scriptdir/data/${SMQ_VAULT_PKI_INT_FILE_NAME}_bundle.crt" ]; then
+    cp -v "$scriptdir/data/${SMQ_VAULT_PKI_INT_FILE_NAME}_bundle.crt" "${certs_copy_path}ca.crt"
 else
-    echo "$scriptdir/data/${MG_VAULT_PKI_INT_FILE_NAME}_bundle.crt file not available"
+    echo "$scriptdir/data/${SMQ_VAULT_PKI_INT_FILE_NAME}_bundle.crt file not available"
 fi
 
 exit 0

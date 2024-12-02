@@ -98,7 +98,7 @@ func rabbitHandler(deliveries <-chan amqp.Delivery, h messaging.MessageHandler) 
 			return
 		}
 		if err := h.Handle(&msg); err != nil {
-			logger.Warn(fmt.Sprintf("Failed to handle Magistrala message: %s", err))
+			logger.Warn(fmt.Sprintf("Failed to handle SuperMQ message: %s", err))
 			return
 		}
 	}

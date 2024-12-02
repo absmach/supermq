@@ -55,7 +55,7 @@ func MakeHandler(svc journal.Service, authn mgauthn.Authentication, logger *slog
 		opts...,
 	), "list__entity_journals").ServeHTTP)
 
-	mux.Get("/health", magistrala.Health(svcName, instanceID))
+	mux.Get("/health", supermq.Health(svcName, instanceID))
 	mux.Handle("/metrics", promhttp.Handler())
 
 	return mux

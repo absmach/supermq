@@ -13,7 +13,7 @@ import (
 // Prefix represents the prefix used to generate UUID mocks.
 const Prefix = "123e4567-e89b-12d3-a456-"
 
-var _ magistrala.IDProvider = (*uuidProviderMock)(nil)
+var _ supermq.IDProvider = (*uuidProviderMock)(nil)
 
 type uuidProviderMock struct {
 	mu      sync.Mutex
@@ -30,6 +30,6 @@ func (up *uuidProviderMock) ID() (string, error) {
 
 // NewMock creates "mirror" uuid provider, i.e. generated
 // token will hold value provided by the caller.
-func NewMock() magistrala.IDProvider {
+func NewMock() supermq.IDProvider {
 	return &uuidProviderMock{}
 }

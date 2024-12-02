@@ -48,7 +48,7 @@ func MakeHandler(svc provision.Service, logger *slog.Logger, instanceID string) 
 		})
 	})
 	r.Handle("/metrics", promhttp.Handler())
-	r.Get("/health", magistrala.Health("provision", instanceID))
+	r.Get("/health", supermq.Health("provision", instanceID))
 
 	return r
 }

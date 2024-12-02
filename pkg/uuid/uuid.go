@@ -13,12 +13,12 @@ import (
 // ErrGeneratingID indicates error in generating UUID.
 var ErrGeneratingID = errors.New("failed to generate uuid")
 
-var _ magistrala.IDProvider = (*uuidProvider)(nil)
+var _ supermq.IDProvider = (*uuidProvider)(nil)
 
 type uuidProvider struct{}
 
 // New instantiates a UUID provider.
-func New() magistrala.IDProvider {
+func New() supermq.IDProvider {
 	return &uuidProvider{}
 }
 

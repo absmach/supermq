@@ -136,7 +136,7 @@ type Credentials struct {
 	Secret   string `json:"secret,omitempty"`   // password or token
 }
 
-// SDK contains Magistrala API.
+// SDK contains SuperMQ API.
 //
 //go:generate mockery --name SDK --output=../mocks --filename sdk.go --quiet --note "Copyright (c) Abstract Machines"
 type SDK interface {

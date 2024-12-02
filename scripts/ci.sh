@@ -49,7 +49,7 @@ setup_protoc() {
 }
 
 setup_mg() {
-    echo "Setting up Magistrala..."
+    echo "Setting up SuperMQ..."
     for p in $(ls *.pb.go); do
         mv $p $p.tmp
     done
@@ -70,9 +70,9 @@ setup_mg() {
         fi
     done
     echo "Compile check for rabbitmq..."
-    MG_MESSAGE_BROKER_TYPE=rabbitmq make http
+    SMQ_MESSAGE_BROKER_TYPE=rabbitmq make http
     echo "Compile check for redis..."
-    MG_ES_TYPE=redis make http
+    SMQ_ES_TYPE=redis make http
     make -j$NPROC
 }
 

@@ -16,14 +16,14 @@ import (
 // ErrGeneratingID indicates error in generating ULID.
 var ErrGeneratingID = errors.New("generating id failed")
 
-var _ magistrala.IDProvider = (*ulidProvider)(nil)
+var _ supermq.IDProvider = (*ulidProvider)(nil)
 
 type ulidProvider struct {
 	entropy *rand.Rand
 }
 
 // New instantiates a ULID provider.
-func New() magistrala.IDProvider {
+func New() supermq.IDProvider {
 	seed := time.Now().UnixNano()
 	source := rand.NewSource(seed)
 	return &ulidProvider{

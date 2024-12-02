@@ -3,11 +3,11 @@
 
 openapi: 3.0.1
 info:
-  title: Magistrala http adapter
+  title: SuperMQ http adapter
   description: |
     HTTP API for sending messages through communication channels.
     Some useful links:
-    - [The Magistrala repository](https://github.com/absmach/supermq)
+    - [The SuperMQ repository](https://github.com/absmach/supermq)
   contact:
     email: info@abstractmachines.fr
   license:

@@ -101,7 +101,7 @@ func ValidateUUID(extID string) (err error) {
 
 // EncodeResponse encodes successful response.
 func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
-	if ar, ok := response.(magistrala.Response); ok {
+	if ar, ok := response.(supermq.Response); ok {
 		for k, v := range ar.Headers() {
 			w.Header().Set(k, v)
 		}

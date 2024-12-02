@@ -33,7 +33,7 @@ var (
 type service struct {
 	repo       Repository
 	policy     policies.Service
-	idProvider magistrala.IDProvider
+	idProvider supermq.IDProvider
 	clients    grpcClientsV1.ClientsServiceClient
 	groups     grpcGroupsV1.GroupsServiceClient
 	roles.ProvisionManageService
@@ -41,7 +41,7 @@ type service struct {
 
 var _ Service = (*service)(nil)
 
-func New(repo Repository, policy policies.Service, idProvider magistrala.IDProvider, clients grpcClientsV1.ClientsServiceClient, groups grpcGroupsV1.GroupsServiceClient, sidProvider magistrala.IDProvider) (Service, error) {
+func New(repo Repository, policy policies.Service, idProvider supermq.IDProvider, clients grpcClientsV1.ClientsServiceClient, groups grpcGroupsV1.GroupsServiceClient, sidProvider supermq.IDProvider) (Service, error) {
 	rpms, err := roles.NewProvisionManageService(policies.ChannelType, repo, policy, sidProvider, AvailableActions(), BuiltInRoles())
 	if err != nil {
 		return nil, err

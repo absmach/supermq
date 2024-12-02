@@ -29,7 +29,7 @@ var (
 )
 
 const (
-	issuerName             = "magistrala.auth"
+	issuerName             = "supermq.auth"
 	tokenType              = "type"
 	userField              = "user"
 	oauthProviderField     = "oauth_provider"

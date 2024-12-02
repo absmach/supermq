@@ -71,7 +71,7 @@ func MakeHandler(svc certs.Service, authn mgauthn.Authentication, logger *slog.L
 		})
 	})
 	r.Handle("/metrics", promhttp.Handler())
-	r.Get("/health", magistrala.Health("certs", instanceID))
+	r.Get("/health", supermq.Health("certs", instanceID))
 
 	return r
 }

@@ -31,13 +31,13 @@ var _ roleProvisionerManger = (*ProvisionManageService)(nil)
 type ProvisionManageService struct {
 	entityType   string
 	repo         Repository
-	sidProvider  magistrala.IDProvider
+	sidProvider  supermq.IDProvider
 	policy       policies.Service
 	actions      []Action
 	builtInRoles map[BuiltInRoleName][]Action
 }
 
-func NewProvisionManageService(entityType string, repo Repository, policy policies.Service, sidProvider magistrala.IDProvider, actions []Action, builtInRoles map[BuiltInRoleName][]Action) (ProvisionManageService, error) {
+func NewProvisionManageService(entityType string, repo Repository, policy policies.Service, sidProvider supermq.IDProvider, actions []Action, builtInRoles map[BuiltInRoleName][]Action) (ProvisionManageService, error) {
 	rm := ProvisionManageService{
 		entityType:   entityType,
 		repo:         repo,

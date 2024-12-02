@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package coap contains the domain concept definitions needed to support
-// Magistrala CoAP adapter service functionality. All constant values are taken
+// SuperMQ CoAP adapter service functionality. All constant values are taken
 // from RFC, and could be adjusted based on specific use case.
 package coap
 

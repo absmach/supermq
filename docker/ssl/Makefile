@@ -2,11 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 CRT_LOCATION = certs
-O = Magistrala
-OU_CA = magistrala_ca
-OU_CRT = magistrala_crt
-EA = info@magistrala.com
-CN_CA = Magistrala_Self_Signed_CA
+O = SuperMQ
+OU_CA = supermq_ca
+OU_CRT = supermq_crt
+EA = info@supermq.com
+CN_CA = SuperMQ_Self_Signed_CA
 CN_SRV = localhost
 CLIENT_SECRET = <CLIENTS_SECRET> # e.g. 8f65ed04-0770-4ce4-a291-6d1bf2000f4d
 CRT_FILE_NAME = client
@@ -58,20 +58,20 @@ ca:
 	openssl req -newkey rsa:2048 -x509 -nodes -sha512 -days 1095 \
 				-keyout $(CRT_LOCATION)/ca.key -out $(CRT_LOCATION)/ca.crt -subj "/CN=$(CN_CA)/O=$(O)/OU=$(OU_CA)/emailAddress=$(EA)"
 
-# Server cert and key name is "magistrala-server".
+# Server cert and key name is "supermq-server".
 server_cert:
-	# Create magistrala server key and CSR.
-	openssl req -new -sha256 -newkey rsa:4096 -nodes -keyout $(CRT_LOCATION)/magistrala-server.key \
-				-out $(CRT_LOCATION)/magistrala-server.csr -subj "/CN=$(CN_SRV)/O=$(O)/OU=$(OU_CRT)/emailAddress=$(EA)"
+	# Create supermq server key and CSR.
+	openssl req -new -sha256 -newkey rsa:4096 -nodes -keyout $(CRT_LOCATION)/supermq-server.key \
+				-out $(CRT_LOCATION)/supermq-server.csr -subj "/CN=$(CN_SRV)/O=$(O)/OU=$(OU_CRT)/emailAddress=$(EA)"
 
 	# Sign server CSR.
-	openssl x509 -req -days 1000 -in $(CRT_LOCATION)/magistrala-server.csr -CA $(CRT_LOCATION)/ca.crt -CAkey $(CRT_LOCATION)/ca.key -CAcreateserial -out $(CRT_LOCATION)/magistrala-server.crt
+	openssl x509 -req -days 1000 -in $(CRT_LOCATION)/supermq-server.csr -CA $(CRT_LOCATION)/ca.crt -CAkey $(CRT_LOCATION)/ca.key -CAcreateserial -out $(CRT_LOCATION)/supermq-server.crt
 
 	# Remove CSR.
-	rm $(CRT_LOCATION)/magistrala-server.csr
+	rm $(CRT_LOCATION)/supermq-server.csr
 
 client_cert:
-	# Create magistrala server key and CSR.
+	# Create supermq server key and CSR.
 	openssl req -new -sha256 -newkey rsa:4096 -nodes -keyout $(CRT_LOCATION)/$(CRT_FILE_NAME).key \
 				-out $(CRT_LOCATION)/$(CRT_FILE_NAME).csr -subj "/CN=$(CLIENTS_SECRET)/O=$(O)/OU=$(OU_CRT)/emailAddress=$(EA)"
 

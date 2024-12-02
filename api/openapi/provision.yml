@@ -3,11 +3,11 @@
 
 openapi: 3.0.1
 info:
-  title: Magistrala Provision service
+  title: SuperMQ Provision service
   description: |
     HTTP API for Provision service
     Some useful links:
-    - [The Magistrala repository](https://github.com/absmach/supermq)
+    - [The SuperMQ repository](https://github.com/absmach/supermq)
   contact:
     email: info@abstracmachines.fr
   license:

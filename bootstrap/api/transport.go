@@ -121,7 +121,7 @@ func MakeHandler(svc bootstrap.Service, authn mgauthn.Authentication, reader boo
 			opts...), "bootstrap_secure").ServeHTTP)
 	})
 
-	r.Get("/health", magistrala.Health("bootstrap", instanceID))
+	r.Get("/health", supermq.Health("bootstrap", instanceID))
 	r.Handle("/metrics", promhttp.Handler())
 
 	return r

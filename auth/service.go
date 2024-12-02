@@ -81,7 +81,7 @@ var _ Service = (*service)(nil)
 
 type service struct {
 	keys               KeyRepository
-	idProvider         magistrala.IDProvider
+	idProvider         supermq.IDProvider
 	evaluator          policies.Evaluator
 	policysvc          policies.Service
 	tokenizer          Tokenizer
@@ -91,7 +91,7 @@ type service struct {
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, idp magistrala.IDProvider, tokenizer Tokenizer, policyEvaluator policies.Evaluator, policyService policies.Service, loginDuration, refreshDuration, invitationDuration time.Duration) Service {
+func New(keys KeyRepository, idp supermq.IDProvider, tokenizer Tokenizer, policyEvaluator policies.Evaluator, policyService policies.Service, loginDuration, refreshDuration, invitationDuration time.Duration) Service {
 	return &service{
 		tokenizer:          tokenizer,
 		keys:               keys,
@@ -227,7 +227,7 @@ func (svc service) checkDomain(ctx context.Context, subjectType, subject, domain
 }
 
 func (svc service) PolicyValidation(pr policies.Policy) error {
-	if pr.ObjectType == policies.PlatformType && pr.Object != policies.MagistralaObject {
+	if pr.ObjectType == policies.PlatformType && pr.Object != policies.SuperMQObject {
 		return errPlatform
 	}
 	return nil
@@ -329,7 +329,7 @@ func (svc service) checkUserDomain(ctx context.Context, key Key) (subject string
 			Subject:     key.User,
 			SubjectType: policies.UserType,
 			Permission:  policies.AdminPermission,
-			Object:      policies.MagistralaObject,
+			Object:      policies.SuperMQObject,
 			ObjectType:  policies.PlatformType,
 		}); err == nil {
 			return key.User, nil

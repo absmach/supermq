@@ -51,7 +51,7 @@ func Benchmark(cfg Config) error {
 
 	mg := magistrala{}
 	if err := toml.Unmarshal(data, &mg); err != nil {
-		return fmt.Errorf("cannot load Magistrala connections config %s \nUse tools/provision to create file", cfg.Mg.ConnFile)
+		return fmt.Errorf("cannot load SuperMQ connections config %s \nUse tools/provision to create file", cfg.Mg.ConnFile)
 	}
 
 	resCh := make(chan *runResults)

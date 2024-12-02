@@ -32,21 +32,21 @@ import (
 
 const (
 	svcName           = "coap_adapter"
-	envPrefix         = "MG_COAP_ADAPTER_"
-	envPrefixHTTP     = "MG_COAP_ADAPTER_HTTP_"
-	envPrefixClients  = "MG_CLIENTS_AUTH_GRPC_"
-	envPrefixChannels = "MG_CHANNELS_GRPC_"
+	envPrefix         = "SMQ_COAP_ADAPTER_"
+	envPrefixHTTP     = "SMQ_COAP_ADAPTER_HTTP_"
+	envPrefixClients  = "SMQ_CLIENTS_AUTH_GRPC_"
+	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
 	defSvcHTTPPort    = "5683"
 	defSvcCoAPPort    = "5683"
 )
 
 type config struct {
-	LogLevel      string  `env:"MG_COAP_ADAPTER_LOG_LEVEL"   envDefault:"info"`
-	BrokerURL     string  `env:"MG_MESSAGE_BROKER_URL"       envDefault:"nats://localhost:4222"`
-	JaegerURL     url.URL `env:"MG_JAEGER_URL"               envDefault:"http://localhost:4318/v1/traces"`
-	SendTelemetry bool    `env:"MG_SEND_TELEMETRY"           envDefault:"true"`
-	InstanceID    string  `env:"MG_COAP_ADAPTER_INSTANCE_ID" envDefault:""`
-	TraceRatio    float64 `env:"MG_JAEGER_TRACE_RATIO"       envDefault:"1.0"`
+	LogLevel      string  `env:"SMQ_COAP_ADAPTER_LOG_LEVEL"   envDefault:"info"`
+	BrokerURL     string  `env:"SMQ_MESSAGE_BROKER_URL"       envDefault:"nats://localhost:4222"`
+	JaegerURL     url.URL `env:"SMQ_JAEGER_URL"               envDefault:"http://localhost:4318/v1/traces"`
+	SendTelemetry bool    `env:"SMQ_SEND_TELEMETRY"           envDefault:"true"`
+	InstanceID    string  `env:"SMQ_COAP_ADAPTER_INSTANCE_ID" envDefault:""`
+	TraceRatio    float64 `env:"SMQ_JAEGER_TRACE_RATIO"       envDefault:"1.0"`
 }
 
 func main() {
@@ -157,7 +157,7 @@ func main() {
 	cs := coapserver.NewServer(ctx, cancel, svcName, coapServerConfig, api.MakeCoAPHandler(svc, logger), logger)
 
 	if cfg.SendTelemetry {
-		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
+		chc := chclient.New(svcName, supermq.Version, logger, cancel)
 		go chc.CallHome(ctx)
 	}
 

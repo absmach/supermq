@@ -54,7 +54,7 @@ var (
 // MakeHandler returns a HTTP handler for API endpoints.
 func MakeHandler(instanceID string) http.Handler {
 	b := chi.NewRouter()
-	b.Get("/health", magistrala.Health(protocol, instanceID))
+	b.Get("/health", supermq.Health(protocol, instanceID))
 	b.Handle("/metrics", promhttp.Handler())
 
 	return b

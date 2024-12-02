@@ -5,9 +5,9 @@
 #
 
 ###
-# Provisions example user, client and channel on a clean Magistrala installation.
+# Provisions example user, client and channel on a clean SuperMQ installation.
 #
-# Expects a running Magistrala installation.
+# Expects a running SuperMQ installation.
 #
 #
 ###

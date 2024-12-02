@@ -43,7 +43,7 @@ func MakeHandler(ctx context.Context, svc ws.Service, l *slog.Logger, instanceID
 	mux.Get("/channels/{chanID}/messages", handshake(ctx, svc))
 	mux.Get("/channels/{chanID}/messages/*", handshake(ctx, svc))
 
-	mux.Get("/health", magistrala.Health(service, instanceID))
+	mux.Get("/health", supermq.Health(service, instanceID))
 	mux.Handle("/metrics", promhttp.Handler())
 
 	return mux

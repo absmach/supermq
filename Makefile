@@ -1,7 +1,7 @@
 # Copyright (c) Abstract Machines
 # SPDX-License-Identifier: Apache-2.0
 
-MG_DOCKER_IMAGE_NAME_PREFIX ?= supermq
+SMQ_DOCKER_IMAGE_NAME_PREFIX ?= supermq
 BUILD_DIR ?= build
 SERVICES = auth users clients groups channels domains http coap ws postgres-writer postgres-reader timescale-writer \
 	timescale-reader cli bootstrap mqtt provision certs invitations journal
@@ -27,21 +27,21 @@ INTERNAL_PROTO_GEN_OUT_DIR=internal/grpc
 INTERNAL_PROTO_DIR=internal/proto
 INTERNAL_PROTO_FILES := $(shell find $(INTERNAL_PROTO_DIR) -name "*.proto" | sed 's|$(INTERNAL_PROTO_DIR)/||')
 
-ifneq ($(MG_MESSAGE_BROKER_TYPE),)
-    MG_MESSAGE_BROKER_TYPE := $(MG_MESSAGE_BROKER_TYPE)
+ifneq ($(SMQ_MESSAGE_BROKER_TYPE),)
+    SMQ_MESSAGE_BROKER_TYPE := $(SMQ_MESSAGE_BROKER_TYPE)
 else
-    MG_MESSAGE_BROKER_TYPE=nats
+    SMQ_MESSAGE_BROKER_TYPE=nats
 endif
 
-ifneq ($(MG_ES_TYPE),)
-    MG_ES_TYPE := $(MG_ES_TYPE)
+ifneq ($(SMQ_ES_TYPE),)
+    SMQ_ES_TYPE := $(SMQ_ES_TYPE)
 else
-    MG_ES_TYPE=nats
+    SMQ_ES_TYPE=nats
 endif
 
 define compile_service
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) \
-	go build -tags $(MG_MESSAGE_BROKER_TYPE) --tags $(MG_ES_TYPE) -ldflags "-s -w \
+	go build -tags $(SMQ_MESSAGE_BROKER_TYPE) --tags $(SMQ_ES_TYPE) -ldflags "-s -w \
 	-X 'github.com/absmach/supermq.BuildTime=$(TIME)' \
 	-X 'github.com/absmach/supermq.Version=$(VERSION)' \
 	-X 'github.com/absmach/supermq.Commit=$(COMMIT)'" \
@@ -59,7 +59,7 @@ define make_docker
 		--build-arg VERSION=$(VERSION) \
 		--build-arg COMMIT=$(COMMIT) \
 		--build-arg TIME=$(TIME) \
-		--tag=$(MG_DOCKER_IMAGE_NAME_PREFIX)/$(svc) \
+		--tag=$(SMQ_DOCKER_IMAGE_NAME_PREFIX)/$(svc) \
 		-f docker/Dockerfile .
 endef
 
@@ -69,7 +69,7 @@ define make_docker_dev
 	docker build \
 		--no-cache \
 		--build-arg SVC=$(svc) \
-		--tag=$(MG_DOCKER_IMAGE_NAME_PREFIX)/$(svc) \
+		--tag=$(SMQ_DOCKER_IMAGE_NAME_PREFIX)/$(svc) \
 		-f docker/Dockerfile.dev ./build
 endef
 
@@ -110,7 +110,7 @@ cleandocker:
 
 ifdef pv
 	# Remove unused volumes
-	docker volume ls -f name=$(MG_DOCKER_IMAGE_NAME_PREFIX) -f dangling=true -q | xargs -r docker volume rm
+	docker volume ls -f name=$(SMQ_DOCKER_IMAGE_NAME_PREFIX) -f dangling=true -q | xargs -r docker volume rm
 endif
 
 install:
@@ -200,7 +200,7 @@ dockers_dev: $(DOCKERS_DEV)
 
 define docker_push
 	for svc in $(SERVICES); do \
-		docker push $(MG_DOCKER_IMAGE_NAME_PREFIX)/$$svc:$(1); \
+		docker push $(SMQ_DOCKER_IMAGE_NAME_PREFIX)/$$svc:$(1); \
 	done
 endef
 
@@ -215,7 +215,7 @@ release:
 	git checkout $(version)
 	$(MAKE) dockers
 	for svc in $(SERVICES); do \
-		docker tag $(MG_DOCKER_IMAGE_NAME_PREFIX)/$$svc $(MG_DOCKER_IMAGE_NAME_PREFIX)/$$svc:$(version); \
+		docker tag $(SMQ_DOCKER_IMAGE_NAME_PREFIX)/$$svc $(SMQ_DOCKER_IMAGE_NAME_PREFIX)/$$svc:$(version); \
 	done
 	$(call docker_push,$(version))
 
@@ -260,7 +260,7 @@ run: check_certs
 run_addons: check_certs
 	$(foreach SVC,$(RUN_ADDON_ARGS),$(if $(filter $(SVC),$(ADDON_SERVICES) $(EXTERNAL_SERVICES)),,$(error Invalid Service $(SVC))))
 	@for SVC in $(RUN_ADDON_ARGS); do \
-		MG_ADDONS_CERTS_PATH_PREFIX="../."  docker compose -f docker/addons/$$SVC/docker-compose.yml -p $(DOCKER_PROJECT) --env-file ./docker/.env $(DOCKER_COMPOSE_COMMAND) $(args) & \
+		SMQ_ADDONS_CERTS_PATH_PREFIX="../."  docker compose -f docker/addons/$$SVC/docker-compose.yml -p $(DOCKER_PROJECT) --env-file ./docker/.env $(DOCKER_COMPOSE_COMMAND) $(args) & \
 	done
 
 run_live: check_certs

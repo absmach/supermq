@@ -13,7 +13,7 @@ import (
 	rmEvents "github.com/absmach/supermq/pkg/roles/rolemanager/events"
 )
 
-const streamID = "magistrala.groups"
+const streamID = "supermq.groups"
 
 var _ groups.Service = (*eventStore)(nil)
 

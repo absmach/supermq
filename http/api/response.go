@@ -9,7 +9,7 @@ import (
 	"github.com/absmach/supermq"
 )
 
-var _ magistrala.Response = (*publishMessageRes)(nil)
+var _ supermq.Response = (*publishMessageRes)(nil)
 
 type publishMessageRes struct{}
 

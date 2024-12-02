@@ -54,7 +54,7 @@ func NewAgent(host, certsURL string, TLSVerification bool) (Agent, error) {
 }
 
 func (c sdkAgent) Issue(entityId, ttl string, ipAddrs []string) (Cert, error) {
-	cert, err := c.sdk.IssueCert(entityId, ttl, ipAddrs, sdk.Options{CommonName: "Magistrala"})
+	cert, err := c.sdk.IssueCert(entityId, ttl, ipAddrs, sdk.Options{CommonName: "SuperMQ"})
 	if err != nil {
 		return Cert{}, err
 	}

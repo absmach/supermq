@@ -1,6 +1,6 @@
-# Magistrala Go SDK
+# SuperMQ Go SDK
 
-Go SDK, a Go driver for Magistrala HTTP API.
+Go SDK, a Go driver for SuperMQ HTTP API.
 
 Does both system administration (provisioning) and messaging.
 
@@ -61,7 +61,7 @@ func (sdk *MgxSDK) DisconnectClient(clientID, chanID, token string) error
     DisconnectClient - connect client to a channel
 
 func (sdk *MgxSDK) SendMessage(chanID, msg, token string) error
-    SendMessage - send message on Magistrala channel
+    SendMessage - send message on SuperMQ channel
 
 func (sdk *MgxSDK) SetContentType(ct ContentType) error
     SetContentType - set message content type. Available options are SenML

@@ -11,11 +11,11 @@ import (
 )
 
 var (
-	_ magistrala.Response = (*createDomainRes)(nil)
-	_ magistrala.Response = (*retrieveDomainRes)(nil)
-	_ magistrala.Response = (*assignUsersRes)(nil)
-	_ magistrala.Response = (*unassignUsersRes)(nil)
-	_ magistrala.Response = (*listDomainsRes)(nil)
+	_ supermq.Response = (*createDomainRes)(nil)
+	_ supermq.Response = (*retrieveDomainRes)(nil)
+	_ supermq.Response = (*assignUsersRes)(nil)
+	_ supermq.Response = (*unassignUsersRes)(nil)
+	_ supermq.Response = (*listDomainsRes)(nil)
 )
 
 type createDomainRes struct {

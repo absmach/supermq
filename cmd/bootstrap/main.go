@@ -49,29 +49,29 @@ import (
 
 const (
 	svcName        = "bootstrap"
-	envPrefixDB    = "MG_BOOTSTRAP_DB_"
-	envPrefixHTTP  = "MG_BOOTSTRAP_HTTP_"
-	envPrefixAuth  = "MG_AUTH_GRPC_"
+	envPrefixDB    = "SMQ_BOOTSTRAP_DB_"
+	envPrefixHTTP  = "SMQ_BOOTSTRAP_HTTP_"
+	envPrefixAuth  = "SMQ_AUTH_GRPC_"
 	defDB          = "bootstrap"
 	defSvcHTTPPort = "9013"
 
-	stream   = "events.magistrala.clients"
-	streamID = "magistrala.bootstrap"
+	stream   = "events.supermq.clients"
+	streamID = "supermq.bootstrap"
 )
 
 type config struct {
-	LogLevel            string  `env:"MG_BOOTSTRAP_LOG_LEVEL"        envDefault:"info"`
-	EncKey              string  `env:"MG_BOOTSTRAP_ENCRYPT_KEY"      envDefault:"12345678910111213141516171819202"`
-	ESConsumerName      string  `env:"MG_BOOTSTRAP_EVENT_CONSUMER"   envDefault:"bootstrap"`
-	ClientsURL          string  `env:"MG_CLIENTS_URL"                envDefault:"http://localhost:9000"`
-	JaegerURL           url.URL `env:"MG_JAEGER_URL"                 envDefault:"http://localhost:4318/v1/traces"`
-	SendTelemetry       bool    `env:"MG_SEND_TELEMETRY"             envDefault:"true"`
-	InstanceID          string  `env:"MG_BOOTSTRAP_INSTANCE_ID"      envDefault:""`
-	ESURL               string  `env:"MG_ES_URL"                     envDefault:"nats://localhost:4222"`
-	TraceRatio          float64 `env:"MG_JAEGER_TRACE_RATIO"         envDefault:"1.0"`
-	SpicedbHost         string  `env:"MG_SPICEDB_HOST"               envDefault:"localhost"`
-	SpicedbPort         string  `env:"MG_SPICEDB_PORT"               envDefault:"50051"`
-	SpicedbPreSharedKey string  `env:"MG_SPICEDB_PRE_SHARED_KEY"     envDefault:"12345678"`
+	LogLevel            string  `env:"SMQ_BOOTSTRAP_LOG_LEVEL"        envDefault:"info"`
+	EncKey              string  `env:"SMQ_BOOTSTRAP_ENCRYPT_KEY"      envDefault:"12345678910111213141516171819202"`
+	ESConsumerName      string  `env:"SMQ_BOOTSTRAP_EVENT_CONSUMER"   envDefault:"bootstrap"`
+	ClientsURL          string  `env:"SMQ_CLIENTS_URL"                envDefault:"http://localhost:9000"`
+	JaegerURL           url.URL `env:"SMQ_JAEGER_URL"                 envDefault:"http://localhost:4318/v1/traces"`
+	SendTelemetry       bool    `env:"SMQ_SEND_TELEMETRY"             envDefault:"true"`
+	InstanceID          string  `env:"SMQ_BOOTSTRAP_INSTANCE_ID"      envDefault:""`
+	ESURL               string  `env:"SMQ_ES_URL"                     envDefault:"nats://localhost:4222"`
+	TraceRatio          float64 `env:"SMQ_JAEGER_TRACE_RATIO"         envDefault:"1.0"`
+	SpicedbHost         string  `env:"SMQ_SPICEDB_HOST"               envDefault:"localhost"`
+	SpicedbPort         string  `env:"SMQ_SPICEDB_PORT"               envDefault:"50051"`
+	SpicedbPreSharedKey string  `env:"SMQ_SPICEDB_PRE_SHARED_KEY"     envDefault:"12345678"`
 }
 
 func main() {
@@ -182,7 +182,7 @@ func main() {
 	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, authn, bootstrap.NewConfigReader([]byte(cfg.EncKey)), logger, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
-		chc := chclient.New(svcName, magistrala.Version, logger, cancel)
+		chc := chclient.New(svcName, supermq.Version, logger, cancel)
 		go chc.CallHome(ctx)
 	}
 
