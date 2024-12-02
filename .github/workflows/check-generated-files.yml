@@ -78,7 +78,7 @@ jobs:
       - name: Set up protoc
         if: steps.changes.outputs.proto == 'true'
         run: |
-          PROTOC_VERSION=28.3
+          PROTOC_VERSION=29.0
           PROTOC_GEN_VERSION=v1.35.2
           PROTOC_GRPC_VERSION=v1.5.1
 
