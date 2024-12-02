@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	mgjson "github.com/absmach/magistrala/pkg/transformers/json"
+	mgjson "github.com/absmach/supermq/pkg/transformers/json"
 )
 
 func ExampleParseFlat() {

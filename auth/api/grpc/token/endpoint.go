@@ -6,7 +6,7 @@ package token
 import (
 	"context"
 
-	"github.com/absmach/magistrala/auth"
+	"github.com/absmach/supermq/auth"
 	"github.com/go-kit/kit/endpoint"
 )
 

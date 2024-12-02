@@ -5,8 +5,8 @@
 package uuid
 
 import (
-	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/pkg/errors"
+	"github.com/absmach/supermq"
+	"github.com/absmach/supermq/pkg/errors"
 	"github.com/gofrs/uuid/v5"
 )
 

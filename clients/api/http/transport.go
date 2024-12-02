@@ -7,9 +7,9 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/clients"
-	mgauthn "github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/supermq"
+	"github.com/absmach/supermq/clients"
+	mgauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )

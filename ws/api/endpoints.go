@@ -11,8 +11,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/absmach/magistrala/pkg/errors"
-	"github.com/absmach/magistrala/ws"
+	"github.com/absmach/supermq/pkg/errors"
+	"github.com/absmach/supermq/ws"
 	"github.com/go-chi/chi/v5"
 )
 

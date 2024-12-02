@@ -4,7 +4,7 @@
 package grpc
 
 import (
-	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/supermq/pkg/apiutil"
 )
 
 type deleteUserPoliciesReq struct {

@@ -11,14 +11,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/absmach/magistrala/clients"
-	"github.com/absmach/magistrala/internal/api"
-	"github.com/absmach/magistrala/pkg/apiutil"
-	"github.com/absmach/magistrala/pkg/connections"
-	"github.com/absmach/magistrala/pkg/errors"
-	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
-	"github.com/absmach/magistrala/pkg/postgres"
-	rolesPostgres "github.com/absmach/magistrala/pkg/roles/repo/postgres"
+	"github.com/absmach/supermq/clients"
+	"github.com/absmach/supermq/internal/api"
+	"github.com/absmach/supermq/pkg/apiutil"
+	"github.com/absmach/supermq/pkg/connections"
+	"github.com/absmach/supermq/pkg/errors"
+	repoerr "github.com/absmach/supermq/pkg/errors/repository"
+	"github.com/absmach/supermq/pkg/postgres"
+	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
 	"github.com/jackc/pgtype"
 )
 

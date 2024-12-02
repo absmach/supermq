@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/absmach/magistrala/pkg/events"
+	"github.com/absmach/supermq/pkg/events"
 	"github.com/redis/go-redis/v9"
 )
 

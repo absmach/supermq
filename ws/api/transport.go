@@ -9,8 +9,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/ws"
+	"github.com/absmach/supermq"
+	"github.com/absmach/supermq/ws"
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

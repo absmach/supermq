@@ -7,7 +7,7 @@ package mocks
 import (
 	context "context"
 
-	channels "github.com/absmach/magistrala/channels"
+	channels "github.com/absmach/supermq/channels"
 
 	mock "github.com/stretchr/testify/mock"
 )

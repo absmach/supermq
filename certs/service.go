@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/absmach/certs/sdk"
-	pki "github.com/absmach/magistrala/certs/pki/amcerts"
-	"github.com/absmach/magistrala/pkg/errors"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	mgsdk "github.com/absmach/magistrala/pkg/sdk/go"
+	pki "github.com/absmach/supermq/certs/pki/amcerts"
+	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	mgsdk "github.com/absmach/supermq/pkg/sdk/go"
 )
 
 var (

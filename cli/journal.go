@@ -4,7 +4,7 @@
 package cli
 
 import (
-	mgxsdk "github.com/absmach/magistrala/pkg/sdk/go"
+	mgxsdk "github.com/absmach/supermq/pkg/sdk/go"
 	"github.com/spf13/cobra"
 )
 

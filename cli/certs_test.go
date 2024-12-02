@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/absmach/magistrala/cli"
-	"github.com/absmach/magistrala/pkg/errors"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	mgsdk "github.com/absmach/magistrala/pkg/sdk/go"
-	sdkmocks "github.com/absmach/magistrala/pkg/sdk/mocks"
+	"github.com/absmach/supermq/cli"
+	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	mgsdk "github.com/absmach/supermq/pkg/sdk/go"
+	sdkmocks "github.com/absmach/supermq/pkg/sdk/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

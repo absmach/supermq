@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/users"
+	"github.com/absmach/supermq"
+	"github.com/absmach/supermq/users"
 )
 
 // MailSent message response when link is sent.

@@ -10,9 +10,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/absmach/magistrala/domains"
-	"github.com/absmach/magistrala/pkg/authn"
-	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
+	"github.com/absmach/supermq/domains"
+	"github.com/absmach/supermq/pkg/authn"
+	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 )
 
 var _ domains.Service = (*loggingMiddleware)(nil)

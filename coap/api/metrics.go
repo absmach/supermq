@@ -9,8 +9,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/absmach/magistrala/coap"
-	"github.com/absmach/magistrala/pkg/messaging"
+	"github.com/absmach/supermq/coap"
+	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/go-kit/kit/metrics"
 )
 

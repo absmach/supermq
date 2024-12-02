@@ -6,7 +6,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/absmach/magistrala"
+	"github.com/absmach/supermq"
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )

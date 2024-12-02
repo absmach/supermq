@@ -9,8 +9,8 @@ import (
 	"net/url"
 	"strconv"
 
-	mgxsdk "github.com/absmach/magistrala/pkg/sdk/go"
-	"github.com/absmach/magistrala/users"
+	mgxsdk "github.com/absmach/supermq/pkg/sdk/go"
+	"github.com/absmach/supermq/users"
 	"github.com/spf13/cobra"
 )
 

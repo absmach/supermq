@@ -6,13 +6,13 @@ package middleware
 import (
 	"context"
 
-	"github.com/absmach/magistrala/domains"
-	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/authz"
-	mgauthz "github.com/absmach/magistrala/pkg/authz"
-	"github.com/absmach/magistrala/pkg/policies"
-	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
-	"github.com/absmach/magistrala/pkg/svcutil"
+	"github.com/absmach/supermq/domains"
+	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/authz"
+	mgauthz "github.com/absmach/supermq/pkg/authz"
+	"github.com/absmach/supermq/pkg/policies"
+	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
+	"github.com/absmach/supermq/pkg/svcutil"
 )
 
 var _ domains.Service = (*authorizationMiddleware)(nil)

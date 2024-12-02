@@ -7,8 +7,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/absmach/magistrala/pkg/apiutil"
-	mgauthn "github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/supermq/pkg/apiutil"
+	mgauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/go-chi/chi/v5"
 )
 

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/absmach/magistrala/pkg/errors"
+	"github.com/absmach/supermq/pkg/errors"
 )
 
 const (

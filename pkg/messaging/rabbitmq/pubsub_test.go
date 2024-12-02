@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/absmach/magistrala/pkg/messaging"
-	"github.com/absmach/magistrala/pkg/messaging/rabbitmq"
+	"github.com/absmach/supermq/pkg/messaging"
+	"github.com/absmach/supermq/pkg/messaging/rabbitmq"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"

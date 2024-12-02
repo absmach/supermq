@@ -8,10 +8,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/absmach/magistrala/consumers"
-	"github.com/absmach/magistrala/pkg/errors"
-	mgjson "github.com/absmach/magistrala/pkg/transformers/json"
-	"github.com/absmach/magistrala/pkg/transformers/senml"
+	"github.com/absmach/supermq/consumers"
+	"github.com/absmach/supermq/pkg/errors"
+	mgjson "github.com/absmach/supermq/pkg/transformers/json"
+	"github.com/absmach/supermq/pkg/transformers/senml"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx" // required for DB access

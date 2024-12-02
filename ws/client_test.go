@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/absmach/magistrala/ws"
+	"github.com/absmach/supermq/ws"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 )

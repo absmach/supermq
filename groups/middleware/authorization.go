@@ -7,15 +7,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/absmach/magistrala/groups"
-	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/authz"
-	mgauthz "github.com/absmach/magistrala/pkg/authz"
-	"github.com/absmach/magistrala/pkg/errors"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/pkg/policies"
-	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
-	"github.com/absmach/magistrala/pkg/svcutil"
+	"github.com/absmach/supermq/groups"
+	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/authz"
+	mgauthz "github.com/absmach/supermq/pkg/authz"
+	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/policies"
+	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
+	"github.com/absmach/supermq/pkg/svcutil"
 )
 
 var (

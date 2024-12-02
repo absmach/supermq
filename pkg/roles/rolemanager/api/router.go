@@ -4,8 +4,8 @@
 package http
 
 import (
-	"github.com/absmach/magistrala/internal/api"
-	"github.com/absmach/magistrala/pkg/roles"
+	"github.com/absmach/supermq/internal/api"
+	"github.com/absmach/supermq/pkg/roles"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"

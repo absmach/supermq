@@ -6,12 +6,12 @@ package middleware
 import (
 	"context"
 
-	"github.com/absmach/magistrala/pkg/authn"
-	mgauthz "github.com/absmach/magistrala/pkg/authz"
-	"github.com/absmach/magistrala/pkg/errors"
-	"github.com/absmach/magistrala/pkg/policies"
-	"github.com/absmach/magistrala/pkg/roles"
-	"github.com/absmach/magistrala/pkg/svcutil"
+	"github.com/absmach/supermq/pkg/authn"
+	mgauthz "github.com/absmach/supermq/pkg/authz"
+	"github.com/absmach/supermq/pkg/errors"
+	"github.com/absmach/supermq/pkg/policies"
+	"github.com/absmach/supermq/pkg/roles"
+	"github.com/absmach/supermq/pkg/svcutil"
 )
 
 var _ roles.RoleManager = (*RoleManagerAuthorizationMiddleware)(nil)

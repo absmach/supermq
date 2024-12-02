@@ -6,8 +6,8 @@ package keys
 import (
 	"time"
 
-	"github.com/absmach/magistrala/auth"
-	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/supermq/auth"
+	"github.com/absmach/supermq/pkg/apiutil"
 )
 
 type issueKeyReq struct {

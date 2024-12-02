@@ -6,11 +6,11 @@ package http
 import (
 	"log/slog"
 
-	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/channels"
-	"github.com/absmach/magistrala/internal/api"
-	"github.com/absmach/magistrala/pkg/apiutil"
-	mgauthn "github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/supermq"
+	"github.com/absmach/supermq/channels"
+	"github.com/absmach/supermq/internal/api"
+	"github.com/absmach/supermq/pkg/apiutil"
+	mgauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/absmach/magistrala/pkg/errors"
+	"github.com/absmach/supermq/pkg/errors"
 )
 
 type Cert struct {

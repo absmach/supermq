@@ -7,13 +7,13 @@ import (
 	"context"
 	"fmt"
 
-	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
-	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/clients/v1"
-	"github.com/absmach/magistrala/pkg/connections"
-	"github.com/absmach/magistrala/pkg/errors"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/pkg/messaging"
-	"github.com/absmach/magistrala/pkg/policies"
+	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
+	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
+	"github.com/absmach/supermq/pkg/connections"
+	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/messaging"
+	"github.com/absmach/supermq/pkg/policies"
 )
 
 const chansPrefix = "channels"

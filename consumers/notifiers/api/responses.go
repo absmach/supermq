@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/absmach/magistrala"
+	"github.com/absmach/supermq"
 )
 
 var (

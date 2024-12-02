@@ -9,7 +9,7 @@ vault() {
         if which vault &> /dev/null; then
             $(which vault) "$@"
         else
-            echo "magistrala-vault container or vault command not found. Please refer to the documentation: https://github.com/absmach/magistrala/blob/main/docker/addons/vault/README.md"
+            echo "magistrala-vault container or vault command not found. Please refer to the documentation: https://github.com/absmach/supermq/blob/main/docker/addons/vault/README.md"
         fi
     fi
 }

@@ -6,13 +6,13 @@ package api
 import (
 	"context"
 
-	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
-	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/clients/v1"
-	"github.com/absmach/magistrala/pkg/apiutil"
-	mgauthn "github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/errors"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/readers"
+	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
+	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
+	"github.com/absmach/supermq/pkg/apiutil"
+	mgauthn "github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/readers"
 	"github.com/go-kit/kit/endpoint"
 )
 

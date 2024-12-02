@@ -12,16 +12,16 @@ import (
 	"strings"
 	"time"
 
-	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
-	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/clients/v1"
-	"github.com/absmach/magistrala/pkg/apiutil"
-	mgauthn "github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/connections"
-	"github.com/absmach/magistrala/pkg/errors"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/pkg/messaging"
-	"github.com/absmach/magistrala/pkg/policies"
 	"github.com/absmach/mgate/pkg/session"
+	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
+	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
+	"github.com/absmach/supermq/pkg/apiutil"
+	mgauthn "github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/connections"
+	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/messaging"
+	"github.com/absmach/supermq/pkg/policies"
 )
 
 var _ session.Handler = (*handler)(nil)

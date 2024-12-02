@@ -1,4 +1,4 @@
-module github.com/absmach/magistrala
+module github.com/absmach/supermq
 
 go 1.23.0
 

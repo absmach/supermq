@@ -8,7 +8,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/absmach/magistrala/ws"
+	"github.com/absmach/supermq/ws"
 )
 
 var _ ws.Service = (*loggingMiddleware)(nil)

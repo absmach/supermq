@@ -6,7 +6,7 @@ package nats
 import (
 	"errors"
 
-	"github.com/absmach/magistrala/pkg/messaging"
+	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/nats-io/nats.go/jetstream"
 )
 

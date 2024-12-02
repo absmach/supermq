@@ -6,35 +6,35 @@ filename: "{{.InterfaceName}}.go"
 outpkg: "mocks"
 boilerplate-file: "./tools/config/boilerplate.txt"
 packages:
-  github.com/absmach/magistrala/internal/grpc/clients/v1:
+  github.com/absmach/supermq/internal/grpc/clients/v1:
     interfaces:
       ClientsServiceClient:
         config:
           dir: "./clients/mocks"
           mockname: "ClientsServiceClient"
           filename: "clients_client.go"
-  github.com/absmach/magistrala/internal/grpc/domains/v1:
+  github.com/absmach/supermq/internal/grpc/domains/v1:
     interfaces:
       DomainsServiceClient:
         config:
           dir: "./domains/mocks"
           mockname: "DomainsServiceClient"
           filename: "domains_client.go"
-  github.com/absmach/magistrala/internal/grpc/token/v1:
+  github.com/absmach/supermq/internal/grpc/token/v1:
     interfaces:
       TokenServiceClient:
         config:
           dir: "./auth/mocks"
           mockname: "TokenServiceClient"
           filename: "token_client.go"
-  github.com/absmach/magistrala/internal/grpc/channels/v1:
+  github.com/absmach/supermq/internal/grpc/channels/v1:
     interfaces:
       ChannelsServiceClient:
         config:
           dir: "./channels/mocks"
           mockname: "ChannelsServiceClient"
           filename: "channels_client.go"
-  github.com/absmach/magistrala/internal/grpc/groups/v1:
+  github.com/absmach/supermq/internal/grpc/groups/v1:
     interfaces:
       GroupsServiceClient:
         config:
@@ -42,7 +42,7 @@ packages:
           mockname: "GroupsServiceClient"
           filename: "groups_client.go"
 
-  github.com/absmach/magistrala/certs/pki/amcerts:
+  github.com/absmach/supermq/certs/pki/amcerts:
     interfaces:
       Agent:
         config:

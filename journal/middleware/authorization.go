@@ -6,10 +6,10 @@ package middleware
 import (
 	"context"
 
-	"github.com/absmach/magistrala/journal"
-	mgauthn "github.com/absmach/magistrala/pkg/authn"
-	mgauthz "github.com/absmach/magistrala/pkg/authz"
-	"github.com/absmach/magistrala/pkg/policies"
+	"github.com/absmach/supermq/journal"
+	mgauthn "github.com/absmach/supermq/pkg/authn"
+	mgauthz "github.com/absmach/supermq/pkg/authz"
+	"github.com/absmach/supermq/pkg/policies"
 )
 
 var _ journal.Service = (*authorizationMiddleware)(nil)

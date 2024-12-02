@@ -7,10 +7,10 @@ import (
 	"context"
 	"time"
 
-	clients "github.com/absmach/magistrala/clients"
-	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/connections"
-	"github.com/absmach/magistrala/pkg/roles"
+	clients "github.com/absmach/supermq/clients"
+	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/connections"
+	"github.com/absmach/supermq/pkg/roles"
 )
 
 // Channel represents a Magistrala "communication topic". This topic

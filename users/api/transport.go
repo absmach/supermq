@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/absmach/magistrala"
-	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
-	mgauthn "github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/oauth2"
-	"github.com/absmach/magistrala/users"
+	"github.com/absmach/supermq"
+	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
+	mgauthn "github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/oauth2"
+	"github.com/absmach/supermq/users"
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )

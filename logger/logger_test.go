@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"testing"
 
-	mglog "github.com/absmach/magistrala/logger"
+	mglog "github.com/absmach/supermq/logger"
 	"github.com/stretchr/testify/assert"
 )
 

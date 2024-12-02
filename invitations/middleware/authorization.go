@@ -6,13 +6,13 @@ package middleware
 import (
 	"context"
 
-	"github.com/absmach/magistrala/auth"
-	"github.com/absmach/magistrala/invitations"
-	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/authz"
-	"github.com/absmach/magistrala/pkg/errors"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/pkg/policies"
+	"github.com/absmach/supermq/auth"
+	"github.com/absmach/supermq/invitations"
+	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/authz"
+	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/policies"
 )
 
 // ErrMemberExist indicates that the user is already a member of the domain.

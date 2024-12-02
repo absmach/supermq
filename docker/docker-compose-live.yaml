@@ -8,9 +8,9 @@ services:
       context: .
       dockerfile: Dockerfile.livereload
     volumes:
-      - ../:/go/src/github.com/absmach/magistrala
+      - ../:/go/src/github.com/absmach/supermq
       - $GOPATH/pkg/mod/cache:/go/pkg/mod/cache
-    working_dir: /go/src/github.com/absmach/magistrala
+    working_dir: /go/src/github.com/absmach/supermq
     entrypoint: [ "air",
                   "--build.cmd", "BUILD_DIR=/tmp make domains",
                   "--build.bin", "/tmp/domains",
@@ -27,9 +27,9 @@ services:
       context: .
       dockerfile: Dockerfile.livereload
     volumes:
-      - ../:/go/src/github.com/absmach/magistrala
+      - ../:/go/src/github.com/absmach/supermq
       - $GOPATH/pkg/mod/cache:/go/pkg/mod/cache
-    working_dir: /go/src/github.com/absmach/magistrala
+    working_dir: /go/src/github.com/absmach/supermq
     entrypoint: [ "air",
                   "--build.cmd", "BUILD_DIR=/tmp make users",
                   "--build.bin", "/tmp/users",
@@ -44,9 +44,9 @@ services:
       context: .
       dockerfile: Dockerfile.livereload
     volumes:
-      - ../:/go/src/github.com/absmach/magistrala
+      - ../:/go/src/github.com/absmach/supermq
       - $GOPATH/pkg/mod/cache:/go/pkg/mod/cache
-    working_dir: /go/src/github.com/absmach/magistrala
+    working_dir: /go/src/github.com/absmach/supermq
     entrypoint: [ "air",
                   "--build.cmd", "BUILD_DIR=/tmp make clients",
                   "--build.bin", "/tmp/clients",
@@ -62,9 +62,9 @@ services:
       context: .
       dockerfile: Dockerfile.livereload
     volumes:
-      - ../:/go/src/github.com/absmach/magistrala
+      - ../:/go/src/github.com/absmach/supermq
       - $GOPATH/pkg/mod/cache:/go/pkg/mod/cache
-    working_dir: /go/src/github.com/absmach/magistrala
+    working_dir: /go/src/github.com/absmach/supermq
     entrypoint: [ "air",
                   "--build.cmd", "BUILD_DIR=/tmp make channels",
                   "--build.bin", "/tmp/channels",
@@ -83,9 +83,9 @@ services:
       context: .
       dockerfile: Dockerfile.livereload
     volumes:
-      - ../:/go/src/github.com/absmach/magistrala
+      - ../:/go/src/github.com/absmach/supermq
       - $GOPATH/pkg/mod/cache:/go/pkg/mod/cache
-    working_dir: /go/src/github.com/absmach/magistrala
+    working_dir: /go/src/github.com/absmach/supermq
     entrypoint: [ "air",
                   "--build.cmd", "BUILD_DIR=/tmp make groups",
                   "--build.bin", "/tmp/groups",

@@ -5,10 +5,10 @@
 package mocks
 
 import (
-	errors "github.com/absmach/magistrala/pkg/errors"
+	errors "github.com/absmach/supermq/pkg/errors"
 	mock "github.com/stretchr/testify/mock"
 
-	sdk "github.com/absmach/magistrala/pkg/sdk/go"
+	sdk "github.com/absmach/supermq/pkg/sdk/go"
 
 	time "time"
 )

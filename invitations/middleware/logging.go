@@ -8,8 +8,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/absmach/magistrala/invitations"
-	"github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/supermq/invitations"
+	"github.com/absmach/supermq/pkg/authn"
 )
 
 var _ invitations.Service = (*logging)(nil)

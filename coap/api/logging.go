@@ -10,8 +10,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/absmach/magistrala/coap"
-	"github.com/absmach/magistrala/pkg/messaging"
+	"github.com/absmach/supermq/coap"
+	"github.com/absmach/supermq/pkg/messaging"
 )
 
 var _ coap.Service = (*loggingMiddleware)(nil)

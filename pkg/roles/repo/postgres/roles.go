@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/absmach/magistrala/pkg/apiutil"
-	"github.com/absmach/magistrala/pkg/errors"
-	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
-	"github.com/absmach/magistrala/pkg/postgres"
-	"github.com/absmach/magistrala/pkg/roles"
+	"github.com/absmach/supermq/pkg/apiutil"
+	"github.com/absmach/supermq/pkg/errors"
+	repoerr "github.com/absmach/supermq/pkg/errors/repository"
+	"github.com/absmach/supermq/pkg/postgres"
+	"github.com/absmach/supermq/pkg/roles"
 )
 
 var _ roles.Repository = (*Repository)(nil)

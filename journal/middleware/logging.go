@@ -8,8 +8,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/absmach/magistrala/journal"
-	mgauthn "github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/supermq/journal"
+	mgauthn "github.com/absmach/supermq/pkg/authn"
 )
 
 var _ journal.Service = (*loggingMiddleware)(nil)

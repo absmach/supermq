@@ -6,9 +6,9 @@ package tracing
 import (
 	"context"
 
-	"github.com/absmach/magistrala/domains"
-	"github.com/absmach/magistrala/pkg/authn"
-	rmTrace "github.com/absmach/magistrala/pkg/roles/rolemanager/tracing"
+	"github.com/absmach/supermq/domains"
+	"github.com/absmach/supermq/pkg/authn"
+	rmTrace "github.com/absmach/supermq/pkg/roles/rolemanager/tracing"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )

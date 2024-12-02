@@ -7,9 +7,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/policies"
-	"github.com/absmach/magistrala/pkg/svcutil"
+	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/policies"
+	"github.com/absmach/supermq/pkg/svcutil"
 )
 
 type Action string

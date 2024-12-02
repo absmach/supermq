@@ -6,8 +6,8 @@ package middleware
 import (
 	"context"
 
-	"github.com/absmach/magistrala/journal"
-	mgauthn "github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/supermq/journal"
+	mgauthn "github.com/absmach/supermq/pkg/authn"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )

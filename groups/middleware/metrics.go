@@ -7,9 +7,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/absmach/magistrala/groups"
-	"github.com/absmach/magistrala/pkg/authn"
-	rmMW "github.com/absmach/magistrala/pkg/roles/rolemanager/middleware"
+	"github.com/absmach/supermq/groups"
+	"github.com/absmach/supermq/pkg/authn"
+	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 	"github.com/go-kit/kit/metrics"
 )
 

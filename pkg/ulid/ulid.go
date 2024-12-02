@@ -8,8 +8,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/pkg/errors"
+	"github.com/absmach/supermq"
+	"github.com/absmach/supermq/pkg/errors"
 	"github.com/oklog/ulid/v2"
 )
 

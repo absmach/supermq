@@ -6,8 +6,8 @@ package api
 import (
 	"net/http"
 
-	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/invitations"
+	"github.com/absmach/supermq"
+	"github.com/absmach/supermq/invitations"
 )
 
 var (

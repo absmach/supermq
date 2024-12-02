@@ -6,7 +6,7 @@ package grpc
 import (
 	"context"
 
-	"github.com/absmach/magistrala/domains"
+	"github.com/absmach/supermq/domains"
 	"github.com/go-kit/kit/endpoint"
 )
 

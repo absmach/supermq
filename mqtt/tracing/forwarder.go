@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/absmach/magistrala/mqtt"
-	"github.com/absmach/magistrala/pkg/messaging"
-	"github.com/absmach/magistrala/pkg/server"
+	"github.com/absmach/supermq/mqtt"
+	"github.com/absmach/supermq/pkg/messaging"
+	"github.com/absmach/supermq/pkg/server"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )

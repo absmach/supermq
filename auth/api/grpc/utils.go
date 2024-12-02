@@ -6,10 +6,10 @@ package grpc
 import (
 	"fmt"
 
-	"github.com/absmach/magistrala/auth"
-	"github.com/absmach/magistrala/pkg/apiutil"
-	"github.com/absmach/magistrala/pkg/errors"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	"github.com/absmach/supermq/auth"
+	"github.com/absmach/supermq/pkg/apiutil"
+	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/absmach/magistrala/certs"
-	"github.com/absmach/magistrala/pkg/errors"
+	"github.com/absmach/supermq/certs"
+	"github.com/absmach/supermq/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 

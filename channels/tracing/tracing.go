@@ -6,10 +6,10 @@ package tracing
 import (
 	"context"
 
-	"github.com/absmach/magistrala/channels"
-	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/connections"
-	rmTrace "github.com/absmach/magistrala/pkg/roles/rolemanager/tracing"
+	"github.com/absmach/supermq/channels"
+	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/connections"
+	rmTrace "github.com/absmach/supermq/pkg/roles/rolemanager/tracing"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )

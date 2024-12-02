@@ -7,9 +7,9 @@ package mocks
 import (
 	context "context"
 
-	authn "github.com/absmach/magistrala/pkg/authn"
+	authn "github.com/absmach/supermq/pkg/authn"
 
-	invitations "github.com/absmach/magistrala/invitations"
+	invitations "github.com/absmach/supermq/invitations"
 
 	mock "github.com/stretchr/testify/mock"
 )

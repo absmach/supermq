@@ -9,7 +9,7 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/absmach/magistrala/pkg/messaging"
+	"github.com/absmach/supermq/pkg/messaging"
 )
 
 // Forwarder specifies MQTT forwarder interface API.

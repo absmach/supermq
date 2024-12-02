@@ -6,11 +6,11 @@ package events
 import (
 	"context"
 
-	"github.com/absmach/magistrala/domains"
-	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/events"
-	"github.com/absmach/magistrala/pkg/events/store"
-	rmEvents "github.com/absmach/magistrala/pkg/roles/rolemanager/events"
+	"github.com/absmach/supermq/domains"
+	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/events"
+	"github.com/absmach/supermq/pkg/events/store"
+	rmEvents "github.com/absmach/supermq/pkg/roles/rolemanager/events"
 )
 
 const streamID = "magistrala.domains"

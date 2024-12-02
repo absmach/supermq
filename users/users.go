@@ -8,10 +8,10 @@ import (
 	"net/mail"
 	"time"
 
-	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
-	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/errors"
-	"github.com/absmach/magistrala/pkg/postgres"
+	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
+	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/errors"
+	"github.com/absmach/supermq/pkg/postgres"
 )
 
 type User struct {

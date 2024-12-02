@@ -8,15 +8,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/absmach/magistrala"
-	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
-	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/clients/v1"
-	"github.com/absmach/magistrala/pkg/apiutil"
-	mgauthn "github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/errors"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/pkg/policies"
-	"github.com/absmach/magistrala/pkg/roles"
+	"github.com/absmach/supermq"
+	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
+	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
+	"github.com/absmach/supermq/pkg/apiutil"
+	mgauthn "github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/policies"
+	"github.com/absmach/supermq/pkg/roles"
 )
 
 var ErrGroupIDs = errors.New("invalid group ids")

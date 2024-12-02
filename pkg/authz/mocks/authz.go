@@ -7,7 +7,7 @@ package mocks
 import (
 	context "context"
 
-	authz "github.com/absmach/magistrala/pkg/authz"
+	authz "github.com/absmach/supermq/pkg/authz"
 
 	mock "github.com/stretchr/testify/mock"
 )

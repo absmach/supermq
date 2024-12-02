@@ -10,7 +10,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/absmach/magistrala/certs"
+	"github.com/absmach/supermq/certs"
 )
 
 var _ certs.Service = (*loggingMiddleware)(nil)

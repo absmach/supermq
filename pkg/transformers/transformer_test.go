@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/absmach/magistrala/pkg/transformers"
+	"github.com/absmach/supermq/pkg/transformers"
 )
 
 var now = time.Now()

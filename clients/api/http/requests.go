@@ -4,9 +4,9 @@
 package http
 
 import (
-	"github.com/absmach/magistrala/clients"
-	"github.com/absmach/magistrala/internal/api"
-	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/supermq/clients"
+	"github.com/absmach/supermq/internal/api"
+	"github.com/absmach/supermq/pkg/apiutil"
 )
 
 type createClientReq struct {

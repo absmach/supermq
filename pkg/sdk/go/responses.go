@@ -6,7 +6,7 @@ package sdk
 import (
 	"time"
 
-	"github.com/absmach/magistrala/pkg/transformers/senml"
+	"github.com/absmach/supermq/pkg/transformers/senml"
 )
 
 type createClientsRes struct {

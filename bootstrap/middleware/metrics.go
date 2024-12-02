@@ -9,8 +9,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/absmach/magistrala/bootstrap"
-	mgauthn "github.com/absmach/magistrala/pkg/authn"
+	"github.com/absmach/supermq/bootstrap"
+	mgauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/go-kit/kit/metrics"
 )
 

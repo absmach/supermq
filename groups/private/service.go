@@ -6,7 +6,7 @@ package private
 import (
 	"context"
 
-	"github.com/absmach/magistrala/groups"
+	"github.com/absmach/supermq/groups"
 )
 
 //go:generate mockery --name Service  --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"

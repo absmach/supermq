@@ -7,7 +7,7 @@ package mocks
 import (
 	context "context"
 
-	policies "github.com/absmach/magistrala/pkg/policies"
+	policies "github.com/absmach/supermq/pkg/policies"
 	mock "github.com/stretchr/testify/mock"
 )
 

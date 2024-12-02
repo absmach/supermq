@@ -6,7 +6,7 @@ package oauth2
 import (
 	"context"
 
-	"github.com/absmach/magistrala/users"
+	"github.com/absmach/supermq/users"
 	"golang.org/x/oauth2"
 )
 

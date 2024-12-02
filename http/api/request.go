@@ -4,8 +4,8 @@
 package api
 
 import (
-	"github.com/absmach/magistrala/pkg/apiutil"
-	"github.com/absmach/magistrala/pkg/messaging"
+	"github.com/absmach/supermq/pkg/apiutil"
+	"github.com/absmach/supermq/pkg/messaging"
 )
 
 type publishReq struct {

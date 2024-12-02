@@ -9,9 +9,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/absmach/magistrala/bootstrap/postgres"
-	mglog "github.com/absmach/magistrala/logger"
-	pgclient "github.com/absmach/magistrala/pkg/postgres"
+	"github.com/absmach/supermq/bootstrap/postgres"
+	mglog "github.com/absmach/supermq/logger"
+	pgclient "github.com/absmach/supermq/pkg/postgres"
 	"github.com/jmoiron/sqlx"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"

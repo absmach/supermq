@@ -8,9 +8,9 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/absmach/magistrala/pkg/events"
-	"github.com/absmach/magistrala/pkg/messaging"
-	broker "github.com/absmach/magistrala/pkg/messaging/rabbitmq"
+	"github.com/absmach/supermq/pkg/events"
+	"github.com/absmach/supermq/pkg/messaging"
+	broker "github.com/absmach/supermq/pkg/messaging/rabbitmq"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 

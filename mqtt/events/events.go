@@ -3,7 +3,7 @@
 
 package events
 
-import "github.com/absmach/magistrala/pkg/events"
+import "github.com/absmach/supermq/pkg/events"
 
 var _ events.Event = (*mqttEvent)(nil)
 

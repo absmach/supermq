@@ -7,7 +7,7 @@ package mocks
 import (
 	context "context"
 
-	users "github.com/absmach/magistrala/users"
+	users "github.com/absmach/supermq/users"
 	mock "github.com/stretchr/testify/mock"
 )
 

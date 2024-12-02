@@ -7,12 +7,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/errors"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/pkg/policies"
-	"github.com/absmach/magistrala/pkg/roles"
+	"github.com/absmach/supermq"
+	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/policies"
+	"github.com/absmach/supermq/pkg/roles"
 )
 
 const defLimit = 100

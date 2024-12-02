@@ -8,11 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/absmach/magistrala/channels"
-	"github.com/absmach/magistrala/internal/api"
-	"github.com/absmach/magistrala/internal/testsutil"
-	"github.com/absmach/magistrala/pkg/apiutil"
-	"github.com/absmach/magistrala/pkg/connections"
+	"github.com/absmach/supermq/channels"
+	"github.com/absmach/supermq/internal/api"
+	"github.com/absmach/supermq/internal/testsutil"
+	"github.com/absmach/supermq/pkg/apiutil"
+	"github.com/absmach/supermq/pkg/connections"
 	"github.com/stretchr/testify/assert"
 )
 

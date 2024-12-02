@@ -4,8 +4,8 @@
 package http
 
 import (
-	"github.com/absmach/magistrala/domains"
-	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/supermq/domains"
+	"github.com/absmach/supermq/pkg/apiutil"
 )
 
 type page struct {

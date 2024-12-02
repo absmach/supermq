@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/stretchr/testify/assert"
 )
 

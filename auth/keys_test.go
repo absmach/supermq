@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/absmach/magistrala/auth"
+	"github.com/absmach/supermq/auth"
 	"github.com/stretchr/testify/assert"
 )
 

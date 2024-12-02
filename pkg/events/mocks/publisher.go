@@ -7,7 +7,7 @@ package mocks
 import (
 	context "context"
 
-	events "github.com/absmach/magistrala/pkg/events"
+	events "github.com/absmach/supermq/pkg/events"
 	mock "github.com/stretchr/testify/mock"
 )
 

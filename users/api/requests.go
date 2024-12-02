@@ -7,10 +7,10 @@ import (
 	"net/mail"
 	"net/url"
 
-	"github.com/absmach/magistrala/internal/api"
-	"github.com/absmach/magistrala/pkg/apiutil"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/users"
+	"github.com/absmach/supermq/internal/api"
+	"github.com/absmach/supermq/pkg/apiutil"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/users"
 )
 
 const maxLimitSize = 100

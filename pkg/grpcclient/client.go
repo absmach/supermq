@@ -6,16 +6,16 @@ package grpcclient
 import (
 	"context"
 
-	tokengrpc "github.com/absmach/magistrala/auth/api/grpc/token"
-	channelsgrpc "github.com/absmach/magistrala/channels/api/grpc"
-	clientsauth "github.com/absmach/magistrala/clients/api/grpc"
-	domainsgrpc "github.com/absmach/magistrala/domains/api/grpc"
-	groupsgrpc "github.com/absmach/magistrala/groups/api/grpc"
-	grpcChannelsV1 "github.com/absmach/magistrala/internal/grpc/channels/v1"
-	grpcClientsV1 "github.com/absmach/magistrala/internal/grpc/clients/v1"
-	grpcDomainsV1 "github.com/absmach/magistrala/internal/grpc/domains/v1"
-	grpcGroupsV1 "github.com/absmach/magistrala/internal/grpc/groups/v1"
-	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
+	tokengrpc "github.com/absmach/supermq/auth/api/grpc/token"
+	channelsgrpc "github.com/absmach/supermq/channels/api/grpc"
+	clientsauth "github.com/absmach/supermq/clients/api/grpc"
+	domainsgrpc "github.com/absmach/supermq/domains/api/grpc"
+	groupsgrpc "github.com/absmach/supermq/groups/api/grpc"
+	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
+	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
+	grpcDomainsV1 "github.com/absmach/supermq/internal/grpc/domains/v1"
+	grpcGroupsV1 "github.com/absmach/supermq/internal/grpc/groups/v1"
+	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	grpchealth "google.golang.org/grpc/health/grpc_health_v1"
 )
 

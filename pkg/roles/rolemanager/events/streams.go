@@ -6,9 +6,9 @@ package events
 import (
 	"context"
 
-	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/events"
-	"github.com/absmach/magistrala/pkg/roles"
+	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/events"
+	"github.com/absmach/supermq/pkg/roles"
 )
 
 var _ roles.RoleManager = (*RoleManagerEventStore)(nil)

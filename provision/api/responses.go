@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/absmach/magistrala"
-	sdk "github.com/absmach/magistrala/pkg/sdk/go"
+	"github.com/absmach/supermq"
+	sdk "github.com/absmach/supermq/pkg/sdk/go"
 )
 
 var _ magistrala.Response = (*provisionRes)(nil)

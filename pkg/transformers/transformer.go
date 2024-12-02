@@ -3,7 +3,7 @@
 
 package transformers
 
-import "github.com/absmach/magistrala/pkg/messaging"
+import "github.com/absmach/supermq/pkg/messaging"
 
 // Transformer specifies API form Message transformer.
 type Transformer interface {

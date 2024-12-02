@@ -6,7 +6,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/absmach/magistrala"
+	"github.com/absmach/supermq"
 )
 
 var _ magistrala.Response = (*publishMessageRes)(nil)

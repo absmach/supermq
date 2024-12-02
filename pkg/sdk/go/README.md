@@ -6,10 +6,10 @@ Does both system administration (provisioning) and messaging.
 
 ## Installation
 
-Import `"github.com/absmach/magistrala/sdk/go"` in your Go package.
+Import `"github.com/absmach/supermq/sdk/go"` in your Go package.
 
 ```go
-import "github.com/absmach/magistrala/pkg/sdk/go"
+import "github.com/absmach/supermq/pkg/sdk/go"
 ```
 
 Then call SDK Go functions to interact with the system.

@@ -8,9 +8,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/absmach/magistrala/journal"
-	"github.com/absmach/magistrala/pkg/events"
-	"github.com/absmach/magistrala/pkg/events/store"
+	"github.com/absmach/supermq/journal"
+	"github.com/absmach/supermq/pkg/events"
+	"github.com/absmach/supermq/pkg/events/store"
 )
 
 var ErrMissingOccurredAt = errors.New("missing occurred_at")

@@ -6,8 +6,8 @@ package cli
 import (
 	"encoding/json"
 
-	"github.com/absmach/magistrala/groups"
-	mgxsdk "github.com/absmach/magistrala/pkg/sdk/go"
+	"github.com/absmach/supermq/groups"
+	mgxsdk "github.com/absmach/supermq/pkg/sdk/go"
 	"github.com/spf13/cobra"
 )
 

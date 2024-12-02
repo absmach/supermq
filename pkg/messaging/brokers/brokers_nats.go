@@ -11,8 +11,8 @@ import (
 	"log"
 	"log/slog"
 
-	"github.com/absmach/magistrala/pkg/messaging"
-	"github.com/absmach/magistrala/pkg/messaging/nats"
+	"github.com/absmach/supermq/pkg/messaging"
+	"github.com/absmach/supermq/pkg/messaging/nats"
 )
 
 // SubjectAllChannels represents subject to subscribe for all the channels.

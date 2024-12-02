@@ -14,8 +14,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/absmach/magistrala/pkg/apiutil"
-	"github.com/absmach/magistrala/pkg/errors"
+	"github.com/absmach/supermq/pkg/apiutil"
+	"github.com/absmach/supermq/pkg/errors"
 )
 
 const (

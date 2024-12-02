@@ -39,7 +39,7 @@ To start the service outside of the container, execute the following shell scrip
 
 ```bash
 # download the latest version of the service
-git clone https://github.com/absmach/magistrala
+git clone https://github.com/absmach/supermq
 
 cd magistrala
 

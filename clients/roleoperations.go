@@ -4,8 +4,8 @@
 package clients
 
 import (
-	"github.com/absmach/magistrala/pkg/roles"
-	"github.com/absmach/magistrala/pkg/svcutil"
+	"github.com/absmach/supermq/pkg/roles"
+	"github.com/absmach/supermq/pkg/svcutil"
 )
 
 // Internal Operations

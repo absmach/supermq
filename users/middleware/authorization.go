@@ -6,14 +6,14 @@ package middleware
 import (
 	"context"
 
-	mgauth "github.com/absmach/magistrala/auth"
-	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
-	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/authz"
-	mgauthz "github.com/absmach/magistrala/pkg/authz"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/pkg/policies"
-	"github.com/absmach/magistrala/users"
+	mgauth "github.com/absmach/supermq/auth"
+	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
+	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/authz"
+	mgauthz "github.com/absmach/supermq/pkg/authz"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/policies"
+	"github.com/absmach/supermq/users"
 )
 
 var _ users.Service = (*authorizationMiddleware)(nil)

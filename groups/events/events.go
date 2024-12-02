@@ -6,8 +6,8 @@ package events
 import (
 	"time"
 
-	groups "github.com/absmach/magistrala/groups"
-	"github.com/absmach/magistrala/pkg/events"
+	groups "github.com/absmach/supermq/groups"
+	"github.com/absmach/supermq/pkg/events"
 )
 
 var (

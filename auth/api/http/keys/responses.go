@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/auth"
+	"github.com/absmach/supermq"
+	"github.com/absmach/supermq/auth"
 )
 
 var (

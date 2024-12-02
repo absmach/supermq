@@ -9,7 +9,7 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
-	users "github.com/absmach/magistrala/users"
+	users "github.com/absmach/supermq/users"
 
 	xoauth2 "golang.org/x/oauth2"
 )

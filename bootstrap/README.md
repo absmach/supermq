@@ -67,13 +67,13 @@ The service is configured using the environment variables presented in the follo
 
 ## Deployment
 
-The service itself is distributed as Docker container. Check the [`bootstrap`](https://github.com/absmach/magistrala/blob/main/docker/addons/bootstrap/docker-compose.yml) service section in docker-compose file to see how service is deployed.
+The service itself is distributed as Docker container. Check the [`bootstrap`](https://github.com/absmach/supermq/blob/main/docker/addons/bootstrap/docker-compose.yml) service section in docker-compose file to see how service is deployed.
 
 To start the service outside of the container, execute the following shell script:
 
 ```bash
 # download the latest version of the service
-git clone https://github.com/absmach/magistrala
+git clone https://github.com/absmach/supermq
 
 cd magistrala
 

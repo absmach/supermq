@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/absmach/magistrala/pkg/messaging"
-	mqttpubsub "github.com/absmach/magistrala/pkg/messaging/mqtt"
+	"github.com/absmach/supermq/pkg/messaging"
+	mqttpubsub "github.com/absmach/supermq/pkg/messaging/mqtt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"

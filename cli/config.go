@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/absmach/magistrala/pkg/errors"
-	mgxsdk "github.com/absmach/magistrala/pkg/sdk/go"
+	"github.com/absmach/supermq/pkg/errors"
+	mgxsdk "github.com/absmach/supermq/pkg/sdk/go"
 	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
 )

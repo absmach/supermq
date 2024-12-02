@@ -9,13 +9,13 @@ import (
 	"crypto/cipher"
 	"encoding/hex"
 
-	"github.com/absmach/magistrala"
-	mgauthn "github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/errors"
-	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/pkg/policies"
-	mgsdk "github.com/absmach/magistrala/pkg/sdk/go"
+	"github.com/absmach/supermq"
+	mgauthn "github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/errors"
+	repoerr "github.com/absmach/supermq/pkg/errors/repository"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/policies"
+	mgsdk "github.com/absmach/supermq/pkg/sdk/go"
 )
 
 var (

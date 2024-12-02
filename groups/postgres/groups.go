@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	mggroups "github.com/absmach/magistrala/groups"
-	"github.com/absmach/magistrala/pkg/errors"
-	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
-	"github.com/absmach/magistrala/pkg/postgres"
-	rolesPostgres "github.com/absmach/magistrala/pkg/roles/repo/postgres"
+	mggroups "github.com/absmach/supermq/groups"
+	"github.com/absmach/supermq/pkg/errors"
+	repoerr "github.com/absmach/supermq/pkg/errors/repository"
+	"github.com/absmach/supermq/pkg/postgres"
+	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )

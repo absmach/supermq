@@ -7,7 +7,7 @@ package mocks
 import (
 	context "context"
 
-	roles "github.com/absmach/magistrala/pkg/roles"
+	roles "github.com/absmach/supermq/pkg/roles"
 	mock "github.com/stretchr/testify/mock"
 )
 

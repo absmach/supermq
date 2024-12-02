@@ -6,11 +6,11 @@ package middleware
 import (
 	"context"
 
-	"github.com/absmach/magistrala/bootstrap"
-	mgauthn "github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/authz"
-	mgauthz "github.com/absmach/magistrala/pkg/authz"
-	"github.com/absmach/magistrala/pkg/policies"
+	"github.com/absmach/supermq/bootstrap"
+	mgauthn "github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/authz"
+	mgauthz "github.com/absmach/supermq/pkg/authz"
+	"github.com/absmach/supermq/pkg/policies"
 )
 
 var _ bootstrap.Service = (*authorizationMiddleware)(nil)

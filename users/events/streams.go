@@ -6,11 +6,11 @@ package events
 import (
 	"context"
 
-	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
-	"github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/events"
-	"github.com/absmach/magistrala/pkg/events/store"
-	"github.com/absmach/magistrala/users"
+	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
+	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/events"
+	"github.com/absmach/supermq/pkg/events/store"
+	"github.com/absmach/supermq/users"
 )
 
 const streamID = "magistrala.users"

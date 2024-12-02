@@ -6,9 +6,9 @@ package api
 import (
 	"context"
 
-	"github.com/absmach/magistrala/pkg/apiutil"
-	"github.com/absmach/magistrala/pkg/errors"
-	"github.com/absmach/magistrala/provision"
+	"github.com/absmach/supermq/pkg/apiutil"
+	"github.com/absmach/supermq/pkg/errors"
+	"github.com/absmach/supermq/provision"
 	"github.com/go-kit/kit/endpoint"
 )
 

@@ -4,7 +4,7 @@
 syntax = "proto3";
 
 package common.v1;
-option go_package = "github.com/absmach/magistrala/internal/grpc/common/v1";
+option go_package = "github.com/absmach/supermq/internal/grpc/common/v1";
 
 
 message RetrieveEntitiesReq {

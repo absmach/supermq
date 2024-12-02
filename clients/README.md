@@ -55,14 +55,14 @@ default values.
 
 ## Deployment
 
-The service itself is distributed as Docker container. Check the [`clients `](https://github.com/absmach/magistrala/blob/main/docker/docker-compose.yml#L167-L194) service section in
+The service itself is distributed as Docker container. Check the [`clients `](https://github.com/absmach/supermq/blob/main/docker/docker-compose.yml#L167-L194) service section in
 docker-compose file to see how service is deployed.
 
 To start the service outside of the container, execute the following shell script:
 
 ```bash
 # download the latest version of the service
-git clone https://github.com/absmach/magistrala
+git clone https://github.com/absmach/supermq
 
 cd magistrala
 

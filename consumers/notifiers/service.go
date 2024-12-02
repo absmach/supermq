@@ -7,12 +7,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/consumers"
-	mgauthn "github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/errors"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	"github.com/absmach/magistrala/pkg/messaging"
+	"github.com/absmach/supermq"
+	"github.com/absmach/supermq/consumers"
+	mgauthn "github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/messaging"
 )
 
 // ErrMessage indicates an error converting a message to Magistrala message.

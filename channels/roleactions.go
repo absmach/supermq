@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package channels
 
-import "github.com/absmach/magistrala/pkg/roles"
+import "github.com/absmach/supermq/pkg/roles"
 
 // Below codes should moved out of service, may be can be kept in `cmd/<svc>/main.go`
 

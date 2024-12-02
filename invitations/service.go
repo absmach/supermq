@@ -7,11 +7,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/absmach/magistrala/auth"
-	grpcTokenV1 "github.com/absmach/magistrala/internal/grpc/token/v1"
-	"github.com/absmach/magistrala/pkg/authn"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
-	mgsdk "github.com/absmach/magistrala/pkg/sdk/go"
+	"github.com/absmach/supermq/auth"
+	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
+	"github.com/absmach/supermq/pkg/authn"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	mgsdk "github.com/absmach/supermq/pkg/sdk/go"
 )
 
 type service struct {

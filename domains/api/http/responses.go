@@ -6,8 +6,8 @@ package http
 import (
 	"net/http"
 
-	"github.com/absmach/magistrala"
-	"github.com/absmach/magistrala/domains"
+	"github.com/absmach/supermq"
+	"github.com/absmach/supermq/domains"
 )
 
 var (

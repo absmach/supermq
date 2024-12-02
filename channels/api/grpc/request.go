@@ -3,7 +3,7 @@
 
 package grpc
 
-import "github.com/absmach/magistrala/pkg/connections"
+import "github.com/absmach/supermq/pkg/connections"
 
 type authorizeReq struct {
 	domainID   string

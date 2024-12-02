@@ -3,7 +3,7 @@
 
 package domains
 
-import "github.com/absmach/magistrala/pkg/roles"
+import "github.com/absmach/supermq/pkg/roles"
 
 const (
 	// Domain Roles : Actions related to manage the domain.

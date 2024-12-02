@@ -3,7 +3,7 @@
 
 package api
 
-import "github.com/absmach/magistrala/pkg/apiutil"
+import "github.com/absmach/supermq/pkg/apiutil"
 
 type createSubReq struct {
 	token   string

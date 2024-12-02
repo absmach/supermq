@@ -6,10 +6,10 @@ package journal
 import (
 	"context"
 
-	"github.com/absmach/magistrala"
-	mgauthn "github.com/absmach/magistrala/pkg/authn"
-	"github.com/absmach/magistrala/pkg/errors"
-	svcerr "github.com/absmach/magistrala/pkg/errors/service"
+	"github.com/absmach/supermq"
+	mgauthn "github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
 )
 
 type service struct {

@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"strings"
 
-	mggroups "github.com/absmach/magistrala/groups"
-	"github.com/absmach/magistrala/internal/api"
-	"github.com/absmach/magistrala/pkg/apiutil"
-	"github.com/absmach/magistrala/pkg/errors"
+	mggroups "github.com/absmach/supermq/groups"
+	"github.com/absmach/supermq/internal/api"
+	"github.com/absmach/supermq/pkg/apiutil"
+	"github.com/absmach/supermq/pkg/errors"
 	"github.com/go-chi/chi/v5"
 )
 

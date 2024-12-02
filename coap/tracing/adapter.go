@@ -6,8 +6,8 @@ package tracing
 import (
 	"context"
 
-	"github.com/absmach/magistrala/coap"
-	"github.com/absmach/magistrala/pkg/messaging"
+	"github.com/absmach/supermq/coap"
+	"github.com/absmach/supermq/pkg/messaging"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )

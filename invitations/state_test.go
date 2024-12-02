@@ -6,8 +6,8 @@ package invitations_test
 import (
 	"testing"
 
-	"github.com/absmach/magistrala/invitations"
-	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/supermq/invitations"
+	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/stretchr/testify/assert"
 )
 
