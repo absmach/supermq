@@ -41,8 +41,8 @@ To contribute to the project, [fork](https://help.github.com/articles/fork-a-rep
 clone your fork repository, and configure the remotes:
 
 ```
-git clone https://github.com/<your-username>/magistrala.git
-cd magistrala
+git clone https://github.com/<your-username>/supermq.git
+cd supermq
 git remote add upstream https://github.com/absmach/supermq.git
 ```
 
