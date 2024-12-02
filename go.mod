@@ -12,7 +12,7 @@ require (
 	github.com/absmach/senml v1.0.6
 	github.com/authzed/authzed-go v1.1.1
 	github.com/authzed/grpcutil v0.0.0-20240123194739-2ea1e3d2d98b
-	github.com/authzed/spicedb v1.38.0
+	github.com/authzed/spicedb v1.38.1
 	github.com/caarlos0/env/v11 v11.2.2
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
