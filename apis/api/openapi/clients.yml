@@ -3,9 +3,9 @@
 
 openapi: 3.0.3
 info:
-  title: Magistrala Things Service
+  title: Magistrala Clients Service
   description: |
-    This is the Things Server based on the OpenAPI 3.0 specification.  It is the HTTP API for managing platform things and channels. You can now help us improve the API whether it's by making changes to the definition itself or to the code.
+    This is the Clients Server based on the OpenAPI 3.0 specification.  It is the HTTP API for managing platform clients and channels. You can now help us improve the API whether it's by making changes to the definition itself or to the code.
     Some useful links:
     - [The Magistrala repository](https://github.com/absmach/magistrala)
   contact:
@@ -20,39 +20,39 @@ servers:
   - url: https://localhost:9000
 
 tags:
-  - name: Things
-    description: Everything about your Things
+  - name: Clients
+    description: Everyclient about your Clients
     externalDocs:
-      description: Find out more about things
+      description: Find out more about clients
       url: https://docs.magistrala.abstractmachines.fr/
   - name: Channels
-    description: Everything about your Channels
+    description: Everyclient about your Channels
     externalDocs:
-      description: Find out more about things channels
+      description: Find out more about clients channels
       url: https://docs.magistrala.abstractmachines.fr/
   - name: Policies
-    description: Access to things policies
+    description: Access to clients policies
     externalDocs:
-      description: Find out more about things policies
+      description: Find out more about clients policies
       url: https://docs.magistrala.abstractmachines.fr/
 
 paths:
-  /{domainID}/things:
+  /{domainID}clients:
     post:
-      operationId: createThing
+      operationId: createClient
       tags:
-        - Things
-      summary: Adds new thing
+        - Clients
+      summary: Adds new client
       description: |
-        Adds new thing to the list of things owned by user identified using
+        Adds new client to the list of clients owned by user identified using
         the provided access token.
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
       requestBody:
-        $ref: "#/components/requestBodies/ThingCreateReq"
+        $ref: "#/components/requestBodies/ClientCreateReq"
       responses:
         "201":
-          $ref: "#/components/responses/ThingCreateRes"
+          $ref: "#/components/responses/ClientCreateRes"
         "400":
           description: Failed due to malformed JSON.
         "401":
@@ -71,13 +71,13 @@ paths:
           $ref: "#/components/responses/ServiceError"
 
     get:
-      operationId: listThings
+      operationId: listClients
       tags:
-        - Things
-      summary: Retrieves things
+        - Clients
+      summary: Retrieves clients
       description: |
-        Retrieves a list of things. Due to performance concerns, data
-        is retrieved in subsets. The API things must ensure that the entire
+        Retrieves a list of clients. Due to performance concerns, data
+        is retrieved in subsets. The API clients must ensure that the entire
         dataset is consumed either by making subsequent requests, or by
         increasing the subset size of the initial request.
       parameters:
@@ -86,13 +86,13 @@ paths:
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Metadata"
         - $ref: "#/components/parameters/Status"
-        - $ref: "#/components/parameters/ThingName"
+        - $ref: "#/components/parameters/ClientName"
         - $ref: "#/components/parameters/Tags"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "#/components/responses/ThingPageRes"
+          $ref: "#/components/responses/ClientPageRes"
         "400":
           description: Failed due to malformed query parameters.
         "401":
@@ -107,22 +107,22 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/things/bulk:
+  /{domainID}clients/bulk:
     post:
-      operationId: bulkCreateThings
-      summary: Bulk provisions new things
+      operationId: bulkCreateClients
+      summary: Bulk provisions new clients
       description: |
-        Adds new things to the list of things owned by user identified using
+        Adds a list og new clients to the list of clients owned by user identified using
         the provided access token.
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
       tags:
-        - Things
+        - Clients
       requestBody:
-        $ref: "#/components/requestBodies/ThingsCreateReq"
+        $ref: "#/components/requestBodiesclientsCreateReq"
       responses:
         "200":
-          $ref: "#/components/responses/ThingPageRes"
+          $ref: "#/components/responses/ClientPageRes"
         "400":
           description: Failed due to malformed JSON.
         "401":
@@ -138,22 +138,22 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/things/{thingID}:
+  /{domainID}clients/{clientID}:
     get:
-      operationId: getThing
-      summary: Retrieves thing info
+      operationId: getClient
+      summary: Retrieves client info
       description: |
-        Retrieves a specific thing that is identifier by the thing ID.
+        Retrieves a specific client that is identifier by the client ID.
       tags:
-        - Things
+        - Clients
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/ThingID"
+        - $ref: "#/components/parameters/clientID"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "#/components/responses/ThingRes"
+          $ref: "#/components/responses/ClientRes"
         "400":
           description: Failed due to malformed domain ID.
         "401":
@@ -168,24 +168,24 @@ paths:
           $ref: "#/components/responses/ServiceError"
 
     patch:
-      operationId: updateThing
-      summary: Updates name and metadata of the thing.
+      operationId: updateClient
+      summary: Updates name and metadata of the client.
       description: |
         Update is performed by replacing the current resource data with values
-        provided in a request payload. Note that the thing's type and ID
+        provided in a request payload. Note that the client's type and ID
         cannot be changed.
       tags:
-        - Things
+        - Clients
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/ThingID"
+        - $ref: "#/components/parameters/clientID"
       requestBody:
-        $ref: "#/components/requestBodies/ThingUpdateReq"
+        $ref: "#/components/requestBodies/ClientUpdateReq"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "#/components/responses/ThingRes"
+          $ref: "#/components/responses/ClientRes"
         "400":
           description: Failed due to malformed JSON.
         "401":
@@ -193,7 +193,7 @@ paths:
         "403":
           description: Failed to perform authorization over the entity.
         "404":
-          description: Failed due to non existing thing.
+          description: Failed due to non existing client.
         "409":
           description: Failed due to using an existing identity.
         "415":
@@ -203,56 +203,56 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
     delete:
-      summary: Delete thing for a thing with the given id.
+      summary: Delete client for a client with the given id.
       description: |
-        Delete thing removes a thing with the given id from repo
-        and removes all the policies related to this thing.
+        Delete client removes a client with the given id from repo
+        and removes all the policies related to this client.
       tags:
-        - Things
+        - Clients
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/ThingID"
+        - $ref: "#/components/parameters/clientID"
       security:
         - bearerAuth: []
       responses:
         "204":
-          description: Thing deleted.
+          description: Client deleted.
         "400":
           description: Failed due to malformed domain ID.
         "401":
           description: Missing or invalid access token provided.
         "403":
-          description: Unauthorized access to thing id.
+          description: Unauthorized access to client id.
         "404":
-          description: Missing thing.
+          description: Missing client.
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/things/{thingID}/tags:
+  /{domainID}clients/{clientID}/tags:
     patch:
-      operationId: updateThingTags
-      summary: Updates tags the thing.
+      operationId: updateClientTags
+      summary: Updates tags the client.
       description: |
-        Updates tags of the thing with provided ID. Tags is updated using
+        Updates tags of the client with provided ID. Tags is updated using
         authorization token and the new tags received in request.
       tags:
-        - Things
+        - Clients
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/ThingID"
+        - $ref: "#/components/parameters/clientID"
       requestBody:
-        $ref: "#/components/requestBodies/ThingUpdateTagsReq"
+        $ref: "#/components/requestBodies/ClientUpdateTagsReq"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "#/components/responses/ThingRes"
+          $ref: "#/components/responses/ClientRes"
         "400":
           description: Failed due to malformed JSON.
         "403":
           description: Failed to perform authorization over the entity.
         "404":
-          description: Failed due to non existing thing.
+          description: Failed due to non existing client.
         "401":
           description: Missing or invalid access token provided.
         "422":
@@ -260,25 +260,25 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/things/{thingID}/secret:
+  /{domainID}clients/{clientID}/secret:
     patch:
-      operationId: updateThingSecret
-      summary: Updates secret of the identified thing.
+      operationId: updateClientSecret
+      summary: Updates Secret of the identified client.
       description: |
-        Updates secret of the identified in thing. Secret is updated using
+        Updates secret of the identified in client. Secret is updated using
         authorization token and the new received info. Update is performed by replacing current key with a new one.
       tags:
-        - Things
+        - Clients
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/ThingID"
+        - $ref: "#/components/parameters/clientID"
       requestBody:
-        $ref: "#/components/requestBodies/ThingUpdateSecretReq"
+        $ref: "#/components/requestBodies/ClientUpdateSecretReq"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "#/components/responses/ThingRes"
+          $ref: "#/components/responses/ClientRes"
         "400":
           description: Failed due to malformed JSON.
         "401":
@@ -286,7 +286,7 @@ paths:
         "403":
           description: Failed to perform authorization over the entity.
         "404":
-          description: Failed due to non existing thing.
+          description: Failed due to non existing client.
         "409":
           description: Specified key already exists.
         "415":
@@ -296,24 +296,24 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/things/{thingID}/disable:
+  /{domainID}clients/{clientID}/disable:
     post:
-      operationId: disableThing
-      summary: Disables a thing
+      operationId: disableClient
+      summary: Disables a client
       description: |
-        Disables a specific thing that is identifier by the thing ID.
+        Disables a specific client that is identifier by the client ID.
       tags:
-        - Things
+        - Clients
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/ThingID"
+        - $ref: "#/components/parameters/clientID"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "#/components/responses/ThingRes"
+          $ref: "#/components/responses/ClientRes"
         "400":
-          description: Failed due to malformed thing's ID.
+          description: Failed due to malformed client's ID.
         "401":
           description: Missing or invalid access token provided.
         "403":
@@ -321,30 +321,30 @@ paths:
         "404":
           description: A non-existent entity request.
         "409":
-          description: Failed due to already disabled thing.
+          description: Failed due to already disabled client.
         "422":
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/things/{thingID}/enable:
+  /{domainID}clients/{clientID}/enable:
     post:
-      operationId: enableThing
-      summary: Enables a thing
+      operationId: enableClient
+      summary: Enables a client
       description: |
-        Enables a specific thing that is identifier by the thing ID.
+        Enables a specific client that is identifier by the client ID.
       tags:
-        - Things
+        - Clients
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/ThingID"
+        - $ref: "#/components/parameters/clientID"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "#/components/responses/ThingRes"
+          $ref: "#/components/responses/ClientRes"
         "400":
-          description: Failed due to malformed thing's ID.
+          description: Failed due to malformed client's ID.
         "401":
           description: Missing or invalid access token provided.
         "403":
@@ -352,32 +352,32 @@ paths:
         "404":
           description: A non-existent entity request.
         "409":
-          description: Failed due to already enabled thing.
+          description: Failed due to already enabled client.
         "422":
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/things/{thingID}/share:
+  /{domainID}clients/{clientID}/share:
     post:
-      operationId: shareThing
-      summary: Shares a thing
+      operationId: shareClient
+      summary: Shares a client
       description: |
-        Shares a specific thing that is identified by the thing ID.
+        Shares a specific client that is identifier by the client ID.
       tags:
-        - Things
+        - Clients
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/ThingID"
+        - $ref: "#/components/parameters/clientID"
       requestBody:
-        $ref: "#/components/requestBodies/ShareThingReq"
+        $ref: "#/components/requestBodies/ShareClientReq"
       security:
         - bearerAuth: []
       responses:
         "200":
-          description: Thing shared.
+          description: Client shared.
         "400":
-          description: Failed due to malformed thing's ID.
+          description: Failed due to malformed client's ID.
         "401":
           description: Missing or invalid access token provided.
         "403":
@@ -389,26 +389,26 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/things/{thingID}/unshare:
+  /{domainID}clients/{clientID}/unshare:
     post:
-      operationId: unshareThing
-      summary: Unshares a thing
+      operationId: unshareClient
+      summary: Unshares a client
       description: |
-        Unshares a specific thing that is identified by the thing ID.
+        Unshares a specific client that is identifier by the client ID.
       tags:
-        - Things
+        - Clients
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/ThingID"
+        - $ref: "#/components/parameters/clientID"
       requestBody:
-        $ref: "#/components/requestBodies/ShareThingReq"
+        $ref: "#/components/requestBodies/ShareClientReq"
       security:
         - bearerAuth: []
       responses:
         "200":
-          description: Thing unshared.
+          description: Client unshared.
         "400":
-          description: Failed due to malformed thing's ID.
+          description: Failed due to malformed client's ID.
         "401":
           description: Missing or invalid access token provided.
         "403":
@@ -420,15 +420,15 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/channels/{chanID}/things:
+  /{domainID}/channels/{chanID}clients:
     get:
-      operationId: listThingsInaChannel
-      summary: List of things connected to specified channel
+      operationId: listClientsInaChannel
+      summary: List of clients connected to specified channel
       description: |
-        Retrieves list of things connected to specified channel with pagination
+        Retrieves list of clients connected to specified channel with pagination
         metadata.
       tags:
-        - Things
+        - Clients
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/chanID"
@@ -437,7 +437,7 @@ paths:
         - $ref: "#/components/parameters/Connected"
       responses:
         "200":
-          $ref: "#/components/responses/ThingsPageRes"
+          $ref: "#/components/responsesclientsPageRes"
         "400":
           description: Failed due to malformed query parameters.
         "401":
@@ -490,7 +490,7 @@ paths:
       summary: Lists channels.
       description: |
         Retrieves a list of channels. Due to performance concerns, data
-        is retrieved in subsets. The API things must ensure that the entire
+        is retrieved in subsets. The API clients must ensure that the entire
         dataset is consumed either by making subsequent requests, or by
         increasing the subset size of the initial request.
       tags:
@@ -603,7 +603,7 @@ paths:
         "401":
           description: Missing or invalid access token provided.
         "403":
-          description: Unauthorized access to thing id.
+          description: Unauthorized access to client id.
         "404":
           description: A non-existent entity request.
         "500":
@@ -688,9 +688,9 @@ paths:
         - bearerAuth: []
       responses:
         "200":
-          description: Thing shared.
+          description: Client shared.
         "400":
-          description: Failed due to malformed thing's ID.
+          description: Failed due to malformed client's ID.
         "401":
           description: Missing or invalid access token provided.
         "403":
@@ -719,9 +719,9 @@ paths:
         - bearerAuth: []
       responses:
         "204":
-          description: Thing unshared.
+          description: Client unshared.
         "400":
-          description: Failed due to malformed thing's ID.
+          description: Failed due to malformed client's ID.
         "401":
           description: Missing or invalid access token provided.
         "403":
@@ -750,9 +750,9 @@ paths:
         - bearerAuth: []
       responses:
         "200":
-          description: Thing shared.
+          description: Client shared.
         "400":
-          description: Failed due to malformed thing's ID.
+          description: Failed due to malformed client's ID.
         "401":
           description: Missing or invalid access token provided.
         "403":
@@ -781,9 +781,9 @@ paths:
         - bearerAuth: []
       responses:
         "204":
-          description: Thing unshared.
+          description: Client unshared.
         "400":
-          description: Failed due to malformed thing's ID.
+          description: Failed due to malformed client's ID.
         "401":
           description: Missing or invalid access token provided.
         "403":
@@ -795,18 +795,18 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/things/{thingID}/channels:
+  /{domainID}clients/{clientID}/channels:
     get:
-      operationId: listChannelsConnectedToThing
-      summary: List of channels connected to specified thing
+      operationId: listChannelsConnectedToClient
+      summary: List of channels connected to specified client
       description: |
-        Retrieves list of channels connected to specified thing with pagination
+        Retrieves list of channels connected to specified client with pagination
         metadata.
       tags:
         - Channels
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/ThingID"
+        - $ref: "#/components/parameters/clientID"
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Limit"
       responses:
@@ -819,7 +819,7 @@ paths:
         "403":
           description: Failed to perform authorization over the entity.
         "404":
-          description: Thing does not exist.
+          description: Client does not exist.
         "422":
           description: Database can't process request.
         "500":
@@ -849,7 +849,7 @@ paths:
         "403":
           description: Failed to perform authorization over the entity.
         "404":
-          description: Thing does not exist.
+          description: Client does not exist.
         "422":
           description: Database can't process request.
         "500":
@@ -879,7 +879,7 @@ paths:
         "403":
           description: Failed to perform authorization over the entity.
         "404":
-          description: Thing does not exist.
+          description: Client does not exist.
         "422":
           description: Database can't process request.
         "500":
@@ -887,11 +887,11 @@ paths:
 
   /{domainID}/connect:
     post:
-      operationId: connectThingsAndChannels
-      summary: Connects thing and channel.
+      operationId: connectClientsAndChannels
+      summary: Connects client and channel.
       description: |
-        Connect things specified by IDs to channels specified by IDs.
-        Channel and thing are owned by user identified using the provided access token.
+        Connect clients specified by IDs to channels specified by IDs.
+        Channel and client are owned by user identified using the provided access token.
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
       tags:
@@ -920,11 +920,11 @@ paths:
 
   /{domainID}/disconnect:
     post:
-      operationId: disconnectThingsAndChannels
-      summary: Disconnect things and channels using lists of IDs.
+      operationId: disconnectClientsAndChannels
+      summary: Disconnect clients and channels using lists of IDs.
       description: |
-        Disconnect things from channels specified by lists of IDs.
-        Channels and things are owned by user identified using the provided access token.
+        Disconnect clients from channels specified by lists of IDs.
+        Channels and clients are owned by user identified using the provided access token.
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
       tags:
@@ -949,23 +949,23 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/channels/{chanID}/things/{thingID}/connect:
+  /{domainID}/channels/{chanID}clients/{clientID}/connect:
     post:
-      operationId: connectThingToChannel
-      summary: Connects a thing to a channel
+      operationId: connectClientToChannel
+      summary: Connects a client to a channel
       description: |
-        Connects a specific thing to a channel that is identifier by the channel ID.
+        Connects a specific client to a channel that is identifier by the channel ID.
       tags:
         - Policies
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/chanID"
-        - $ref: "#/components/parameters/ThingID"
+        - $ref: "#/components/parameters/clientID"
       responses:
         "200":
-          description: Thing connected.
+          description: Client connected.
         "400":
-          description: Failed due to malformed thing's ID.
+          description: Failed due to malformed client's ID.
         "401":
           description: Missing or invalid access token provided.
         "403":
@@ -977,23 +977,23 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/channels/{chanID}/things/{thingID}/disconnect:
+  /{domainID}/channels/{chanID}clients/{clientID}/disconnect:
     post:
-      operationId: disconnectThingFromChannel
-      summary: Disconnects a thing to a channel
+      operationId: disconnectClientFromChannel
+      summary: Disconnects a client to a channel
       description: |
-        Disconnects a specific thing to a channel that is identifier by the channel ID.
+        Disconnects a specific client to a channel that is identifier by the channel ID.
       tags:
         - Policies
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/chanID"
-        - $ref: "#/components/parameters/ThingID"
+        - $ref: "#/components/parameters/clientID"
       responses:
         "200":
-          description: Thing connected.
+          description: Client connected.
         "400":
-          description: Failed due to malformed thing's ID.
+          description: Failed due to malformed client's ID.
         "401":
           description: Missing or invalid access token provided.
         "403":
@@ -1019,27 +1019,27 @@ paths:
 
 components:
   schemas:
-    ThingReqObj:
+    ClientReqObj:
       type: object
       properties:
         name:
           type: string
-          example: thingName
-          description: Thing name.
+          example: clientName
+          description: Client name.
         tags:
           type: array
           minItems: 0
           items:
             type: string
           example: ["tag1", "tag2"]
-          description: Thing tags.
+          description: Client tags.
         credentials:
           type: object
           properties:
             identity:
               type: string
-              example: "thingidentity"
-              description: Thing's identity will be used as its unique identifier
+              example: "clientIDentity"
+              description: Client's identity will be used as its unique identifier
             secret:
               type: string
               format: password
@@ -1049,10 +1049,10 @@ components:
         metadata:
           type: object
           example: { "model": "example" }
-          description: Arbitrary, object-encoded thing's data.
+          description: Arbitrary, object-encoded client's data.
         status:
           type: string
-          description: Thing Status
+          description: Client Status
           format: string
           example: enabled
       required:
@@ -1100,9 +1100,12 @@ components:
               "bb7edb32-2eac-4aad-aebe-ed96fe073879",
             ]
         relation:
-          type: string
-          example: "editor"
-          description: Policy relation.
+          type: array
+          minItems: 0
+          items:
+            type: string
+          example: ["m_write", "g_add"]
+          description: Policy relations.
       required:
         - user_ids
         - relation
@@ -1123,7 +1126,7 @@ components:
             ]
         relation:
           type: string
-          example: "editor"
+          example: "m_write"
           description: Policy relations.
         member_kind:
           type: string
@@ -1150,7 +1153,7 @@ components:
             ]
         relation:
           type: string
-          example: "editor"
+          example: "m_write"
           description: Policy relations.
       required:
         - users_ids
@@ -1173,48 +1176,48 @@ components:
       required:
         - group_ids
 
-    Thing:
+    Client:
       type: object
       properties:
         id:
           type: string
           format: uuid
           example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: Thing unique identifier.
+          description: Client unique identifier.
         name:
           type: string
-          example: thingName
-          description: Thing name.
+          example: clientName
+          description: Client name.
         tags:
           type: array
           minItems: 0
           items:
             type: string
           example: ["tag1", "tag2"]
-          description: Thing tags.
+          description: Client tags.
         domain_id:
           type: string
           format: uuid
           example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: ID of the domain to which thing belongs.
+          description: ID of the domain to which client belongs.
         credentials:
           type: object
           properties:
             identity:
               type: string
-              example: thingidentity
-              description: Thing Identity for example email address.
+              example: clientIDentity
+              description: Client Identity for example email address.
             secret:
               type: string
               example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-              description: Thing secret password.
+              description: Client secret password.
         metadata:
           type: object
           example: { "model": "example" }
-          description: Arbitrary, object-encoded thing's data.
+          description: Arbitrary, object-encoded client's data.
         status:
           type: string
-          description: Thing Status
+          description: Client Status
           format: string
           example: enabled
         created_at:
@@ -1228,50 +1231,50 @@ components:
           example: "2019-11-26 13:31:52"
           description: Time when the channel was created.
       xml:
-        name: thing
+        name: client
 
-    ThingWithEmptySecret:
+    ClientWithEmptySecret:
       type: object
       properties:
         id:
           type: string
           format: uuid
           example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: Thing unique identifier.
+          description: Client unique identifier.
         name:
           type: string
-          example: thingName
-          description: Thing name.
+          example: clientName
+          description: Client name.
         tags:
           type: array
           minItems: 0
           items:
             type: string
           example: ["tag1", "tag2"]
-          description: Thing tags.
+          description: Client tags.
         domain_id:
           type: string
           format: uuid
           example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: ID of the domain to which thing belongs.
+          description: ID of the domain to which client belongs.
         credentials:
           type: object
           properties:
             identity:
               type: string
-              example: thingidentity
-              description: Thing Identity for example email address.
+              example: clientIDentity
+              description: Client Identity for example email address.
             secret:
               type: string
               example: ""
-              description: Thing secret password.
+              description: Client secret password.
         metadata:
           type: object
           example: { "model": "example" }
-          description: Arbitrary, object-encoded thing's data.
+          description: Arbitrary, object-encoded client's data.
         status:
           type: string
-          description: Thing Status
+          description: Client Status
           format: string
           example: enabled
         created_at:
@@ -1285,7 +1288,7 @@ components:
           example: "2019-11-26 13:31:52"
           description: Time when the channel was created.
       xml:
-        name: thing
+        name: client
 
     Channel:
       type: object
@@ -1383,15 +1386,15 @@ components:
       xml:
         name: policy
 
-    ThingsPage:
+    ClientsPage:
       type: object
       properties:
-        things:
+        clients:
           type: array
           minItems: 0
           uniqueItems: true
           items:
-            $ref: "#/components/schemas/ThingWithEmptySecret"
+            $ref: "#/components/schemas/ClientWithEmptySecret"
         total:
           type: integer
           example: 1
@@ -1404,7 +1407,7 @@ components:
           example: 10
           description: Maximum number of items to return in one page.
       required:
-        - things
+        - clients
         - total
         - offset
 
@@ -1458,40 +1461,40 @@ components:
         - total
         - offset
 
-    ThingUpdate:
+    ClientUpdate:
       type: object
       properties:
         name:
           type: string
-          example: thingName
-          description: Thing name.
+          example: clientName
+          description: Client name.
         metadata:
           type: object
           example: { "role": "general" }
-          description: Arbitrary, object-encoded thing's data.
+          description: Arbitrary, object-encoded client's data.
       required:
         - name
         - metadata
 
-    ThingTags:
+    ClientTags:
       type: object
       properties:
         tags:
           type: array
           example: ["tag1", "tag2"]
-          description: Thing tags.
+          description: Client tags.
           minItems: 0
           uniqueItems: true
           items:
             type: string
 
-    ThingSecret:
+    ClientSecret:
       type: object
       properties:
         secret:
           type: string
           example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: New thing secret.
+          description: New client secret.
       required:
         - secret
 
@@ -1525,7 +1528,7 @@ components:
             example: bb7edb32-2eac-4aad-aebe-ed96fe073879
         subjects:
           type: array
-          description: Thing IDs
+          description: Client IDs
           items:
             example: bb7edb32-2eac-4aad-aebe-ed96fe073879
         permission:
@@ -1544,7 +1547,7 @@ components:
             example: bb7edb32-2eac-4aad-aebe-ed96fe073879
         subjects:
           type: array
-          description: Thing IDs
+          description: Client IDs
           items:
             example: bb7edb32-2eac-4aad-aebe-ed96fe073879
 
@@ -1575,16 +1578,16 @@ components:
         description:
           type: string
           description: Service description.
-          example: things service
+          example: clients service
         build_time:
           type: string
           description: Service build time.
           example: 1970-01-01_00:00:00
 
   parameters:
-    ThingID:
-      name: thingID
-      description: Unique thing identifier.
+    clientID:
+      name: clientID
+      description: Unique client identifier.
       in: path
       schema:
         type: string
@@ -1608,18 +1611,18 @@ components:
       required: true
       example: bb7edb32-2eac-4aad-aebe-ed96fe073879
 
-    ThingName:
+    ClientName:
       name: name
-      description: Thing's name.
+      description: Client's name.
       in: query
       schema:
         type: string
       required: false
-      example: "thingName"
+      example: "clientName"
 
     Status:
       name: status
-      description: Thing account status.
+      description: Client account status.
       in: query
       schema:
         type: string
@@ -1629,7 +1632,7 @@ components:
 
     Tags:
       name: tags
-      description: Thing tags.
+      description: Client tags.
       in: query
       schema:
         type: array
@@ -1739,40 +1742,40 @@ components:
       required: false
 
   requestBodies:
-    ThingCreateReq:
-      description: JSON-formatted document describing the new thing to be registered
+    ClientCreateReq:
+      description: JSON-formatted document describing the new client to be registered
       required: true
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ThingReqObj"
+            $ref: "#/components/schemas/ClientReqObj"
 
-    ThingUpdateReq:
-      description: JSON-formated document describing the metadata and name of thing to be update
+    ClientUpdateReq:
+      description: JSON-formated document describing the metadata and name of client to be update
       required: true
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ThingUpdate"
+            $ref: "#/components/schemas/ClientUpdate"
 
-    ThingUpdateTagsReq:
-      description: JSON-formated document describing the tags of thing to be update
+    ClientUpdateTagsReq:
+      description: JSON-formated document describing the tags of client to be update
       required: true
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ThingTags"
+            $ref: "#/components/schemas/ClientTags"
 
-    ThingUpdateSecretReq:
-      description: Secret change data. Thing can change its secret.
+    ClientUpdateSecretReq:
+      description: Secret change data. Client can change its secret.
       required: true
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ThingSecret"
+            $ref: "#/components/schemasclientsecret"
 
-    ShareThingReq:
-      description: JSON-formated document describing the policy related to sharing things
+    ShareClientReq:
+      description: JSON-formated document describing the policy related to sharing clients
       required: true
       content:
         application/json:
@@ -1819,15 +1822,15 @@ components:
           schema:
             $ref: "#/components/schemas/ChannelUpdate"
 
-    ThingsCreateReq:
-      description: JSON-formatted document describing the new things.
+    ClientsCreateReq:
+      description: JSON-formatted document describing the new clients.
       required: true
       content:
         application/json:
           schema:
             type: array
             items:
-              $ref: "#/components/schemas/ThingReqObj"
+              $ref: "#/components/schemas/ClientReqObj"
 
     ConnCreateReq:
       description: JSON-formatted document describing the new connection.
@@ -1846,89 +1849,89 @@ components:
             $ref: "#/components/schemas/DisConnectionReqSchema"
 
   responses:
-    ThingCreateRes:
-      description: Registered new thing.
+    ClientCreateRes:
+      description: Registered new client.
       headers:
         Location:
           schema:
             type: string
             format: url
-          description: Registered thing relative URL in the format `/things/<thing_id>`
+          description: Registered client relative URL in the format `clients/<client_id>`
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Thing"
+            $ref: "#/components/schemas/Client"
       links:
         get:
-          operationId: getThing
+          operationId: getClient
           parameters:
-            thingID: $response.body#/id
+            clientID: $response.body#/id
         get_channels:
-          operationId: listChannelsConnectedToThing
+          operationId: listChannelsConnectedToClient
           parameters:
-            thingID: $response.body#/id
+            clientID: $response.body#/id
         update:
-          operationId: updateThing
+          operationId: updateClient
           parameters:
-            thingID: $response.body#/id
+            clientID: $response.body#/id
         update_tags:
-          operationId: updateThingTags
+          operationId: updateClientTags
           parameters:
-            thingID: $response.body#/id
+            clientID: $response.body#/id
         update_secret:
-          operationId: updateThingSecret
+          operationId: updateClientSecret
           parameters:
-            thingID: $response.body#/id
+            clientID: $response.body#/id
         share:
-          operationId: shareThing
+          operationId: shareClient
           parameters:
-            thingID: $response.body#/id
+            clientID: $response.body#/id
         unsahre:
-          operationId: unshareThing
+          operationId: unshareClient
           parameters:
-            thingID: $response.body#/id
+            clientID: $response.body#/id
         disable:
-          operationId: disableThing
+          operationId: disableClient
           parameters:
-            thingID: $response.body#/id
+            clientID: $response.body#/id
         enable:
-          operationId: enableThing
+          operationId: enableClient
           parameters:
-            thingID: $response.body#/id
+            clientID: $response.body#/id
 
-    ThingRes:
+    ClientRes:
       description: Data retrieved.
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Thing"
+            $ref: "#/components/schemas/Client"
       links:
         get_channels:
-          operationId: listChannelsConnectedToThing
+          operationId: listChannelsConnectedToClient
           parameters:
-            thingID: $response.body#/id
+            clientID: $response.body#/id
         share:
-          operationId: shareThing
+          operationId: shareClient
           parameters:
-            thingID: $response.body#/id
+            clientID: $response.body#/id
         unsahre:
-          operationId: unshareThing
+          operationId: unshareClient
           parameters:
-            thingID: $response.body#/id
+            clientID: $response.body#/id
 
-    ThingPageRes:
+    ClientPageRes:
       description: Data retrieved.
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ThingsPage"
+            $ref: "#/components/schemasclientsPage"
 
-    ThingsPageRes:
+    ClientsPageRes:
       description: Data retrieved.
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ThingsPage"
+            $ref: "#/components/schemasclientsPage"
 
     ChannelCreateRes:
       description: Registered new channel.
@@ -1947,8 +1950,8 @@ components:
           operationId: getChannel
           parameters:
             chanID: $response.body#/id
-        get_things:
-          operationId: listThingsInaChannel
+        get_clients:
+          operationId: listClientsInaChannel
           parameters:
             chanID: $response.body#/id
         get_users:
@@ -1995,8 +1998,8 @@ components:
           schema:
             $ref: "#/components/schemas/Channel"
       links:
-        get_things:
-          operationId: listThingsInaChannel
+        get_clients:
+          operationId: listClientsInaChannel
           parameters:
             chanID: $response.body#/id
         get_users:
@@ -2032,14 +2035,14 @@ components:
             $ref: "#/components/schemas/ChannelsPage"
 
     ConnCreateRes:
-      description: Thing registered.
+      description: Client registered.
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/PoliciesPage"
 
     DisconnRes:
-      description: Things disconnected.
+      description: Clients disconnected.
 
     HealthRes:
       description: Service Health Check.
@@ -2061,7 +2064,7 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: |
-        * Thing access: "Authorization: Bearer <user_access_token>"
+        * Client access: "Authorization: Bearer <user_access_token>"
 
 security:
   - bearerAuth: []
