@@ -63,8 +63,8 @@ func startGRPCServer(svc auth.Service, port int) *grpc.Server {
 
 func TestIdentify(t *testing.T) {
 	conn, err := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	defer conn.Close()
 	assert.Nil(t, err, fmt.Sprintf("Unexpected error creating client connection %s", err))
+	defer conn.Close()
 	grpcClient := grpcapi.NewAuthClient(conn, time.Second)
 
 	cases := []struct {
@@ -108,8 +108,9 @@ func TestIdentify(t *testing.T) {
 
 func TestAuthorize(t *testing.T) {
 	conn, err := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	defer conn.Close()
 	assert.Nil(t, err, fmt.Sprintf("Unexpected error creating client connection %s", err))
+	defer conn.Close()
+
 	grpcClient := grpcapi.NewAuthClient(conn, time.Second)
 
 	cases := []struct {

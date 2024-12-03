@@ -299,10 +299,10 @@ type AuthZpatReq struct {
 	UserId                   string   `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`                                                            // User id
 	PatId                    string   `protobuf:"bytes,2,opt,name=pat_id,json=patId,proto3" json:"pat_id,omitempty"`                                                               // Pat id
 	PlatformEntityType       uint32   `protobuf:"varint,3,opt,name=platform_entity_type,json=platformEntityType,proto3" json:"platform_entity_type,omitempty"`                     // Platform entity type
-	OptionalDomainID         string   `protobuf:"bytes,4,opt,name=optional_domainID,json=optionalDomainID,proto3" json:"optional_domainID,omitempty"`                              // Optional domain id
+	OptionalDomainId         string   `protobuf:"bytes,4,opt,name=optional_domain_id,json=optionalDomainId,proto3" json:"optional_domain_id,omitempty"`                            // Optional domain id
 	OptionalDomainEntityType uint32   `protobuf:"varint,5,opt,name=optional_domain_entity_type,json=optionalDomainEntityType,proto3" json:"optional_domain_entity_type,omitempty"` // Optional domain entity type
 	Operation                uint32   `protobuf:"varint,6,opt,name=operation,proto3" json:"operation,omitempty"`                                                                   // Operation
-	EntityIDs                []string `protobuf:"bytes,7,rep,name=entityIDs,proto3" json:"entityIDs,omitempty"`                                                                    // EntityIDs
+	EntityIds                []string `protobuf:"bytes,7,rep,name=entity_ids,json=entityIds,proto3" json:"entity_ids,omitempty"`                                                   // EntityIDs
 }
 
 func (x *AuthZpatReq) Reset() {
@@ -356,9 +356,9 @@ func (x *AuthZpatReq) GetPlatformEntityType() uint32 {
 	return 0
 }
 
-func (x *AuthZpatReq) GetOptionalDomainID() string {
+func (x *AuthZpatReq) GetOptionalDomainId() string {
 	if x != nil {
-		return x.OptionalDomainID
+		return x.OptionalDomainId
 	}
 	return ""
 }
@@ -377,9 +377,9 @@ func (x *AuthZpatReq) GetOperation() uint32 {
 	return 0
 }
 
-func (x *AuthZpatReq) GetEntityIDs() []string {
+func (x *AuthZpatReq) GetEntityIds() []string {
 	if x != nil {
-		return x.EntityIDs
+		return x.EntityIds
 	}
 	return nil
 }
