@@ -30,7 +30,7 @@ func New(ctx context.Context, svc groups.Service, url string) (groups.Service, e
 	if err != nil {
 		return nil, err
 	}
-	rmes := rmEvents.NewRoleManagerEventStore("groups", svc, publisher)
+	rmes := rmEvents.NewRoleManagerEventStore("groups", groupPrefix, svc, publisher)
 
 	return &eventStore{
 		svc:                   svc,

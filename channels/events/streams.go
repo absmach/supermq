@@ -32,7 +32,7 @@ func NewEventStoreMiddleware(ctx context.Context, svc channels.Service, url stri
 		return nil, err
 	}
 
-	rolesSvcEventStoreMiddleware := rmEvents.NewRoleManagerEventStore("channels", svc, publisher)
+	rolesSvcEventStoreMiddleware := rmEvents.NewRoleManagerEventStore("channels", channelPrefix, svc, publisher)
 	return &eventStore{
 		svc:                   svc,
 		Publisher:             publisher,

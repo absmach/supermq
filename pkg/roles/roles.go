@@ -146,7 +146,7 @@ type Repository interface {
 	RoleRemoveMembers(ctx context.Context, role Role, members []string) (err error)
 	RoleRemoveAllMembers(ctx context.Context, role Role) (err error)
 	RetrieveEntitiesRolesActionsMembers(ctx context.Context, entityIDs []string) ([]EntityActionRole, []EntityMemberRole, error)
-	RemoveMemberFromAllRoles(ctx context.Context, members string) (err error)
+	RemoveMemberFromAllRoles(ctx context.Context, memberID string) (err error)
 }
 
 type Roles interface {
