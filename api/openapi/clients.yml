@@ -24,17 +24,17 @@ tags:
     description: Everyclient about your Clients
     externalDocs:
       description: Find out more about clients
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
   - name: Channels
     description: Everyclient about your Channels
     externalDocs:
       description: Find out more about clients channels
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
   - name: Policies
     description: Access to clients policies
     externalDocs:
       description: Find out more about clients policies
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
 
 paths:
   /{domainID}clients:

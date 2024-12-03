@@ -24,12 +24,12 @@ tags:
     description: Everything about your Users
     externalDocs:
       description: Find out more about users
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
   - name: Groups
     description: Everything about your Groups
     externalDocs:
       description: Find out more about users groups
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
 
 paths:
   /users:

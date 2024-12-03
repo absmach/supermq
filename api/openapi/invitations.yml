@@ -24,7 +24,7 @@ tags:
     description: Everything about your Invitations
     externalDocs:
       description: Find out more about Invitations
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
 
 paths:
   /invitations:

@@ -24,19 +24,19 @@ tags:
     description: Everything about your Keys.
     externalDocs:
       description: Find out more about keys
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
 
   - name: Domains
     description: Everything about your Domains.
     externalDocs:
       description: Find out more about domains
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
 
   - name: Health
     description: Service health check endpoint.
     externalDocs:
       description: Find out more about health check
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
 
 
 paths:

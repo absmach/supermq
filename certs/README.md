@@ -126,4 +126,4 @@ Setting `SMQ_AUTH_GRPC_CLIENT_CERT` and `SMQ_AUTH_GRPC_CLIENT_KEY` will enable T
 
 ## Usage
 
-For more information about service capabilities and its usage, please check out the [Certs section](https://docs.magistrala.abstractmachines.fr/certs/).
+For more information about service capabilities and its usage, please check out the [Certs section](https://docs.supermq.abstractmachines.fr/certs/).

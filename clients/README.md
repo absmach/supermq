@@ -119,4 +119,4 @@ To run service in a standalone mode, set `Clients_STANDALONE_EMAIL` and `Clients
 For more information about service capabilities and its usage, please check out
 the [API documentation](https://docs.api.magistrala.abstractmachines.fr/?urls.primaryName=clients-openapi.yml).
 
-[doc]: https://docs.magistrala.abstractmachines.fr
+[doc]: https://docs.supermq.abstractmachines.fr

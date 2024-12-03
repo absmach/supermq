@@ -24,7 +24,7 @@ tags:
     description: Everything about your Certs
     externalDocs:
       description: Find out more about certs
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
 
 paths:
   /{domainID}/certs:

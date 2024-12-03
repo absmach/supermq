@@ -12,5 +12,5 @@ the [Docker Compose][compose] file.
 For an in-depth explanation of the usage of `writers`, as well as thorough
 understanding of SuperMQ, please check out the [official documentation][doc].
 
-[doc]: https://docs.magistrala.abstractmachines.fr
+[doc]: https://docs.supermq.abstractmachines.fr
 [compose]: ../docker/docker-compose.yml

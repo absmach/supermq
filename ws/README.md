@@ -68,4 +68,4 @@ Setting `SMQ_CLIENTS_AUTH_GRPC_CLIENT_CERT` and `SMQ_CLIENTS_AUTH_GRPC_CLIENT_KE
 
 ## Usage
 
-For more information about service capabilities and its usage, please check out the [WebSocket section](https://docs.magistrala.abstractmachines.fr/messaging/#websocket).
+For more information about service capabilities and its usage, please check out the [WebSocket section](https://docs.supermq.abstractmachines.fr/messaging/#websocket).
