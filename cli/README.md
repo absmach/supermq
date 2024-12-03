@@ -1,4 +1,4 @@
-# Magistrala CLI
+# SuperMQ CLI
 
 ## Build
 
@@ -12,7 +12,7 @@ make cli
 
 ### Service
 
-#### Get Magistrala Services Health Check
+#### Get SuperMQ Services Health Check
 
 ```bash
 supermq-cli health <service>

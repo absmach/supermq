@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	mgauth "github.com/absmach/supermq/auth"
+	smqauth "github.com/absmach/supermq/auth"
 	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/apiutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
@@ -47,7 +47,7 @@ func TestIssueToken(t *testing.T) {
 			svcRes: &grpcTokenV1.Token{
 				AccessToken:  token.AccessToken,
 				RefreshToken: &token.RefreshToken,
-				AccessType:   mgauth.AccessKey.String(),
+				AccessType:   smqauth.AccessKey.String(),
 			},
 			svcErr:   nil,
 			response: token,
@@ -180,6 +180,6 @@ func generateTestToken() sdk.Token {
 	return sdk.Token{
 		AccessToken:  "access_token",
 		RefreshToken: "refresh_token",
-		AccessType:   mgauth.AccessKey.String(),
+		AccessType:   smqauth.AccessKey.String(),
 	}
 }

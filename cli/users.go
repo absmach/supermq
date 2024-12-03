@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"strconv"
 
-	mgxsdk "github.com/absmach/supermq/pkg/sdk/go"
+	smqsdk "github.com/absmach/supermq/pkg/sdk/go"
 	"github.com/absmach/supermq/users"
 	"github.com/spf13/cobra"
 )
@@ -30,11 +30,11 @@ var cmdUsers = []cobra.Command{
 				args = append(args, "")
 			}
 
-			user := mgxsdk.User{
+			user := smqsdk.User{
 				FirstName: args[0],
 				LastName:  args[1],
 				Email:     args[2],
-				Credentials: mgxsdk.Credentials{
+				Credentials: smqsdk.Credentials{
 					Username: args[3],
 					Secret:   args[4],
 				},
@@ -67,7 +67,7 @@ var cmdUsers = []cobra.Command{
 				logErrorCmd(*cmd, err)
 				return
 			}
-			pageMetadata := mgxsdk.PageMetadata{
+			pageMetadata := smqsdk.PageMetadata{
 				Username: Username,
 				Identity: Identity,
 				Offset:   Offset,
@@ -105,7 +105,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			loginReq := mgxsdk.Login{
+			loginReq := smqsdk.Login{
 				Identity: args[0],
 				Secret:   args[1],
 			}
@@ -157,7 +157,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			var user mgxsdk.User
+			var user smqsdk.User
 			if args[0] == "tags" {
 				if err := json.Unmarshal([]byte(args[2]), &user.Tags); err != nil {
 					logErrorCmd(*cmd, err)
@@ -382,7 +382,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			pm := mgxsdk.PageMetadata{
+			pm := smqsdk.PageMetadata{
 				Offset: Offset,
 				Limit:  Limit,
 			}
@@ -409,7 +409,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			pm := mgxsdk.PageMetadata{
+			pm := smqsdk.PageMetadata{
 				Offset: Offset,
 				Limit:  Limit,
 			}
@@ -436,7 +436,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			pm := mgxsdk.PageMetadata{
+			pm := smqsdk.PageMetadata{
 				Offset: Offset,
 				Limit:  Limit,
 			}
@@ -463,7 +463,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			pm := mgxsdk.PageMetadata{
+			pm := smqsdk.PageMetadata{
 				Offset: Offset,
 				Limit:  Limit,
 			}
@@ -495,7 +495,7 @@ var cmdUsers = []cobra.Command{
 				logErrorCmd(*cmd, fmt.Errorf("failed to parse query: %s", err))
 			}
 
-			pm := mgxsdk.PageMetadata{
+			pm := smqsdk.PageMetadata{
 				Offset: Offset,
 				Limit:  Limit,
 				Name:   values.Get("name"),

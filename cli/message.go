@@ -4,7 +4,7 @@
 package cli
 
 import (
-	mgxsdk "github.com/absmach/supermq/pkg/sdk/go"
+	smqsdk "github.com/absmach/supermq/pkg/sdk/go"
 	"github.com/spf13/cobra"
 )
 
@@ -38,8 +38,8 @@ var cmdMessages = []cobra.Command{
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			pageMetadata := mgxsdk.MessagePageMetadata{
-				PageMetadata: mgxsdk.PageMetadata{
+			pageMetadata := smqsdk.MessagePageMetadata{
+				PageMetadata: smqsdk.PageMetadata{
 					Offset: Offset,
 					Limit:  Limit,
 				},

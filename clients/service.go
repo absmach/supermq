@@ -8,7 +8,7 @@ import (
 	"time"
 
 	smq "github.com/absmach/supermq"
-	mgauth "github.com/absmach/supermq/auth"
+	smqauth "github.com/absmach/supermq/auth"
 	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
 	grpcCommonV1 "github.com/absmach/supermq/internal/grpc/common/v1"
 	grpcGroupsV1 "github.com/absmach/supermq/internal/grpc/groups/v1"
@@ -135,7 +135,7 @@ func (svc service) ListClients(ctx context.Context, session authn.Session, reqUs
 	var err error
 	switch {
 	case (reqUserID != "" && reqUserID != session.UserID):
-		rtids, err := svc.listClientIDs(ctx, mgauth.EncodeDomainUserID(session.DomainID, reqUserID), pm.Permission)
+		rtids, err := svc.listClientIDs(ctx, smqauth.EncodeDomainUserID(session.DomainID, reqUserID), pm.Permission)
 		if err != nil {
 			return ClientsPage{}, errors.Wrap(svcerr.ErrNotFound, err)
 		}

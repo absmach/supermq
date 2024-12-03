@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 
 	"github.com/absmach/supermq/groups"
-	mgxsdk "github.com/absmach/supermq/pkg/sdk/go"
+	smqsdk "github.com/absmach/supermq/pkg/sdk/go"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,7 @@ var cmdGroups = []cobra.Command{
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			var group mgxsdk.Group
+			var group smqsdk.Group
 			if err := json.Unmarshal([]byte(args[0]), &group); err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -49,7 +49,7 @@ var cmdGroups = []cobra.Command{
 				return
 			}
 
-			var group mgxsdk.Group
+			var group smqsdk.Group
 			if err := json.Unmarshal([]byte(args[0]), &group); err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -83,7 +83,7 @@ var cmdGroups = []cobra.Command{
 					logUsageCmd(*cmd, cmd.Use)
 					return
 				}
-				pm := mgxsdk.PageMetadata{
+				pm := smqsdk.PageMetadata{
 					Offset: Offset,
 					Limit:  Limit,
 				}
@@ -100,7 +100,7 @@ var cmdGroups = []cobra.Command{
 					logUsageCmd(*cmd, cmd.Use)
 					return
 				}
-				pm := mgxsdk.PageMetadata{
+				pm := smqsdk.PageMetadata{
 					Offset:   Offset,
 					Limit:    Limit,
 					DomainID: args[2],
@@ -118,7 +118,7 @@ var cmdGroups = []cobra.Command{
 					logUsageCmd(*cmd, cmd.Use)
 					return
 				}
-				pm := mgxsdk.PageMetadata{
+				pm := smqsdk.PageMetadata{
 					Offset: Offset,
 					Limit:  Limit,
 				}
@@ -171,7 +171,7 @@ var cmdGroups = []cobra.Command{
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			pm := mgxsdk.PageMetadata{
+			pm := smqsdk.PageMetadata{
 				Offset: Offset,
 				Limit:  Limit,
 				Status: Status,
@@ -195,7 +195,7 @@ var cmdGroups = []cobra.Command{
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			pm := mgxsdk.PageMetadata{
+			pm := smqsdk.PageMetadata{
 				Offset: Offset,
 				Limit:  Limit,
 				Status: Status,
@@ -269,7 +269,7 @@ var groupAssignCmds = []cobra.Command{
 				logErrorCmd(*cmd, err)
 				return
 			}
-			if err := sdk.AddUserToGroup(args[2], mgxsdk.UsersRelationRequest{Relation: args[0], UserIDs: userIDs}, args[3], args[4]); err != nil {
+			if err := sdk.AddUserToGroup(args[2], smqsdk.UsersRelationRequest{Relation: args[0], UserIDs: userIDs}, args[3], args[4]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}
@@ -295,7 +295,7 @@ var groupUnassignCmds = []cobra.Command{
 				logErrorCmd(*cmd, err)
 				return
 			}
-			if err := sdk.RemoveUserFromGroup(args[2], mgxsdk.UsersRelationRequest{Relation: args[0], UserIDs: userIDs}, args[3], args[4]); err != nil {
+			if err := sdk.RemoveUserFromGroup(args[2], smqsdk.UsersRelationRequest{Relation: args[0], UserIDs: userIDs}, args[3], args[4]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}

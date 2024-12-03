@@ -6,7 +6,7 @@ package grpc
 import (
 	"context"
 
-	mgauth "github.com/absmach/supermq/auth"
+	smqauth "github.com/absmach/supermq/auth"
 	groups "github.com/absmach/supermq/groups/private"
 	grpcCommonV1 "github.com/absmach/supermq/internal/grpc/common/v1"
 	grpcGroupsV1 "github.com/absmach/supermq/internal/grpc/groups/v1"
@@ -77,7 +77,7 @@ func encodeError(err error) error {
 		err == apiutil.ErrMalformedPolicyAct:
 		return status.Error(codes.InvalidArgument, err.Error())
 	case errors.Contains(err, svcerr.ErrAuthentication),
-		errors.Contains(err, mgauth.ErrKeyExpired),
+		errors.Contains(err, smqauth.ErrKeyExpired),
 		err == apiutil.ErrMissingEmail,
 		err == apiutil.ErrBearerToken:
 		return status.Error(codes.Unauthenticated, err.Error())

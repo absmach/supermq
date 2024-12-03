@@ -4,7 +4,7 @@
 package cli
 
 import (
-	mgxsdk "github.com/absmach/supermq/pkg/sdk/go"
+	smqsdk "github.com/absmach/supermq/pkg/sdk/go"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +20,7 @@ var cmdInvitations = []cobra.Command{
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			inv := mgxsdk.Invitation{
+			inv := smqsdk.Invitation{
 				UserID:   args[0],
 				DomainID: args[1],
 				Relation: args[2],
@@ -47,7 +47,7 @@ var cmdInvitations = []cobra.Command{
 				return
 			}
 
-			pageMetadata := mgxsdk.PageMetadata{
+			pageMetadata := smqsdk.PageMetadata{
 				Identity: Identity,
 				Offset:   Offset,
 				Limit:    Limit,

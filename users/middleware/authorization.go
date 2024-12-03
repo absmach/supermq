@@ -6,7 +6,7 @@ package middleware
 import (
 	"context"
 
-	mgauth "github.com/absmach/supermq/auth"
+	smqauth "github.com/absmach/supermq/auth"
 	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/authz"
@@ -69,15 +69,15 @@ func (am *authorizationMiddleware) ListMembers(ctx context.Context, session auth
 	}
 	switch objectKind {
 	case policies.GroupsKind:
-		if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, mgauth.SwitchToPermission(pm.Permission), policies.GroupType, objectID); err != nil {
+		if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, smqauth.SwitchToPermission(pm.Permission), policies.GroupType, objectID); err != nil {
 			return users.MembersPage{}, err
 		}
 	case policies.DomainsKind:
-		if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, mgauth.SwitchToPermission(pm.Permission), policies.DomainType, objectID); err != nil {
+		if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.DomainUserID, smqauth.SwitchToPermission(pm.Permission), policies.DomainType, objectID); err != nil {
 			return users.MembersPage{}, err
 		}
 	case policies.ClientsKind:
-		if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.UserID, mgauth.SwitchToPermission(pm.Permission), policies.ClientType, objectID); err != nil {
+		if err := am.authorize(ctx, session.DomainID, policies.UserType, policies.UsersKind, session.UserID, smqauth.SwitchToPermission(pm.Permission), policies.ClientType, objectID); err != nil {
 			return users.MembersPage{}, err
 		}
 	default:

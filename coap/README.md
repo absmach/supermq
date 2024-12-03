@@ -6,8 +6,8 @@ SuperMQ CoAP adapter provides an [CoAP](http://coap.technology/) API for sending
 
 The service is configured using the environment variables presented in the following table. Note that any unset variables will be replaced with their default values.
 
-| Variable                          | Description                                                                         | Default                           |
-| --------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------- |
+| Variable                           | Description                                                                         | Default                           |
+| ---------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------- |
 | SMQ_COAP_ADAPTER_LOG_LEVEL         | Log level for the CoAP Adapter (debug, info, warn, error)                           | info                              |
 | SMQ_COAP_ADAPTER_HOST              | CoAP service listening host                                                         | ""                                |
 | SMQ_COAP_ADAPTER_PORT              | CoAP service listening port                                                         | 5683                              |
@@ -67,7 +67,7 @@ SMQ_JAEGER_URL=http://localhost:14268/api/traces \
 SMQ_JAEGER_TRACE_RATIO=1.0 \
 SMQ_SEND_TELEMETRY=true \
 SMQ_COAP_ADAPTER_INSTANCE_ID="" \
-$GOBIN/magistrala-coap
+$GOBIN/supermq-coap
 ```
 
 Setting `SMQ_COAP_ADAPTER_SERVER_CERT` and `SMQ_COAP_ADAPTER_SERVER_KEY` will enable TLS against the service. The service expects a file in PEM format for both the certificate and the key. Setting `SMQ_COAP_ADAPTER_HTTP_SERVER_CERT` and `SMQ_COAP_ADAPTER_HTTP_SERVER_KEY` will enable TLS against the service. The service expects a file in PEM format for both the certificate and the key.

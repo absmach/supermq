@@ -6,7 +6,7 @@ package cli
 import (
 	"encoding/json"
 
-	mgxsdk "github.com/absmach/supermq/pkg/sdk/go"
+	smqsdk "github.com/absmach/supermq/pkg/sdk/go"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,7 @@ var cmdDomains = []cobra.Command{
 				return
 			}
 
-			dom := mgxsdk.Domain{
+			dom := smqsdk.Domain{
 				Name:  args[0],
 				Alias: args[1],
 			}
@@ -49,7 +49,7 @@ var cmdDomains = []cobra.Command{
 				logErrorCmd(*cmd, err)
 				return
 			}
-			pageMetadata := mgxsdk.PageMetadata{
+			pageMetadata := smqsdk.PageMetadata{
 				Name:     Name,
 				Offset:   Offset,
 				Limit:    Limit,
@@ -89,7 +89,7 @@ var cmdDomains = []cobra.Command{
 				logErrorCmd(*cmd, err)
 				return
 			}
-			pageMetadata := mgxsdk.PageMetadata{
+			pageMetadata := smqsdk.PageMetadata{
 				Offset:   Offset,
 				Limit:    Limit,
 				Metadata: metadata,
@@ -117,7 +117,7 @@ var cmdDomains = []cobra.Command{
 				return
 			}
 
-			var d mgxsdk.Domain
+			var d smqsdk.Domain
 
 			if err := json.Unmarshal([]byte(args[1]), &d); err != nil {
 				logErrorCmd(*cmd, err)
@@ -190,7 +190,7 @@ var domainAssignCmds = []cobra.Command{
 				logErrorCmd(*cmd, err)
 				return
 			}
-			if err := sdk.AddUserToDomain(args[2], mgxsdk.UsersRelationRequest{Relation: args[0], UserIDs: userIDs}, args[3]); err != nil {
+			if err := sdk.AddUserToDomain(args[2], smqsdk.UsersRelationRequest{Relation: args[0], UserIDs: userIDs}, args[3]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}

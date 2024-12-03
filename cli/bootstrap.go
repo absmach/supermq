@@ -6,7 +6,7 @@ package cli
 import (
 	"encoding/json"
 
-	mgxsdk "github.com/absmach/supermq/pkg/sdk/go"
+	smqsdk "github.com/absmach/supermq/pkg/sdk/go"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +21,7 @@ var cmdBootstrap = []cobra.Command{
 				return
 			}
 
-			var cfg mgxsdk.BootstrapConfig
+			var cfg smqsdk.BootstrapConfig
 			if err := json.Unmarshal([]byte(args[0]), &cfg); err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -47,7 +47,7 @@ var cmdBootstrap = []cobra.Command{
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			pageMetadata := mgxsdk.PageMetadata{
+			pageMetadata := smqsdk.PageMetadata{
 				Offset: Offset,
 				Limit:  Limit,
 				State:  State,
@@ -86,7 +86,7 @@ var cmdBootstrap = []cobra.Command{
 				return
 			}
 			if args[0] == "config" {
-				var cfg mgxsdk.BootstrapConfig
+				var cfg smqsdk.BootstrapConfig
 				if err := json.Unmarshal([]byte(args[1]), &cfg); err != nil {
 					logErrorCmd(*cmd, err)
 					return
@@ -184,7 +184,7 @@ var cmdBootstrap = []cobra.Command{
 				return
 			}
 
-			var cfg mgxsdk.BootstrapConfig
+			var cfg smqsdk.BootstrapConfig
 			if err := json.Unmarshal([]byte(args[0]), &cfg); err != nil {
 				logErrorCmd(*cmd, err)
 				return

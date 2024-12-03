@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/0x6flab/namegenerator"
-	mgxsdk "github.com/absmach/supermq/pkg/sdk/go"
+	smqsdk "github.com/absmach/supermq/pkg/sdk/go"
 	"github.com/spf13/cobra"
 )
 
@@ -78,7 +78,7 @@ var cmdProvision = []cobra.Command{
 				return
 			}
 
-			var chs []mgxsdk.Channel
+			var chs []smqsdk.Channel
 			for _, c := range channels {
 				c, err = sdk.CreateChannel(c, args[1], args[2])
 				if err != nil {
@@ -126,8 +126,8 @@ var cmdProvision = []cobra.Command{
 		Run: func(cmd *cobra.Command, args []string) {
 			numClients := 2
 			numChan := 2
-			clients := []mgxsdk.Client{}
-			channels := []mgxsdk.Channel{}
+			clients := []smqsdk.Client{}
+			channels := []smqsdk.Channel{}
 
 			if len(args) != 0 {
 				logUsageCmd(*cmd, cmd.Use)
@@ -136,14 +136,14 @@ var cmdProvision = []cobra.Command{
 
 			// Create test user
 			name := namesgenerator.Generate()
-			user := mgxsdk.User{
+			user := smqsdk.User{
 				FirstName: name,
 				Email:     fmt.Sprintf("%s@email.com", name),
-				Credentials: mgxsdk.Credentials{
+				Credentials: smqsdk.Credentials{
 					Username: name,
 					Secret:   "12345678",
 				},
-				Status: mgxsdk.EnabledStatus,
+				Status: smqsdk.EnabledStatus,
 			}
 			user, err := sdk.CreateUser(user, "")
 			if err != nil {
@@ -151,16 +151,16 @@ var cmdProvision = []cobra.Command{
 				return
 			}
 
-			ut, err := sdk.CreateToken(mgxsdk.Login{Identity: user.Credentials.Username, Secret: user.Credentials.Secret})
+			ut, err := sdk.CreateToken(smqsdk.Login{Identity: user.Credentials.Username, Secret: user.Credentials.Secret})
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}
 
 			// create domain
-			domain := mgxsdk.Domain{
+			domain := smqsdk.Domain{
 				Name:   fmt.Sprintf("%s-domain", name),
-				Status: mgxsdk.EnabledStatus,
+				Status: smqsdk.EnabledStatus,
 			}
 			domain, err = sdk.CreateDomain(domain, ut.AccessToken)
 			if err != nil {
@@ -168,7 +168,7 @@ var cmdProvision = []cobra.Command{
 				return
 			}
 
-			ut, err = sdk.CreateToken(mgxsdk.Login{Identity: user.Email, Secret: user.Credentials.Secret})
+			ut, err = sdk.CreateToken(smqsdk.Login{Identity: user.Email, Secret: user.Credentials.Secret})
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -176,9 +176,9 @@ var cmdProvision = []cobra.Command{
 
 			// Create clients
 			for i := 0; i < numClients; i++ {
-				t := mgxsdk.Client{
+				t := smqsdk.Client{
 					Name:   fmt.Sprintf("%s-client-%d", name, i),
-					Status: mgxsdk.EnabledStatus,
+					Status: smqsdk.EnabledStatus,
 				}
 
 				clients = append(clients, t)
@@ -191,9 +191,9 @@ var cmdProvision = []cobra.Command{
 
 			// Create channels
 			for i := 0; i < numChan; i++ {
-				c := mgxsdk.Channel{
+				c := smqsdk.Channel{
 					Name:   fmt.Sprintf("%s-channel-%d", name, i),
-					Status: mgxsdk.EnabledStatus,
+					Status: smqsdk.EnabledStatus,
 				}
 				c, err = sdk.CreateChannel(c, domain.ID, ut.AccessToken)
 				if err != nil {
@@ -205,7 +205,7 @@ var cmdProvision = []cobra.Command{
 			}
 
 			// Connect clients to channels - first client to both channels, second only to first
-			conIDs := mgxsdk.Connection{
+			conIDs := smqsdk.Connection{
 				ChannelIDs: []string{channels[0].ID},
 				ClientIDs:  []string{clients[0].ID},
 				Types:      []string{PublishType, SubscribeType},
@@ -215,7 +215,7 @@ var cmdProvision = []cobra.Command{
 				return
 			}
 
-			conIDs = mgxsdk.Connection{
+			conIDs = smqsdk.Connection{
 				ChannelIDs: []string{channels[1].ID},
 				ClientIDs:  []string{clients[0].ID},
 				Types:      []string{PublishType, SubscribeType},
@@ -225,7 +225,7 @@ var cmdProvision = []cobra.Command{
 				return
 			}
 
-			conIDs = mgxsdk.Connection{
+			conIDs = smqsdk.Connection{
 				ChannelIDs: []string{channels[0].ID},
 				ClientIDs:  []string{clients[1].ID},
 				Types:      []string{PublishType, SubscribeType},
@@ -269,18 +269,18 @@ func NewProvisionCmd() *cobra.Command {
 	return &cmd
 }
 
-func clientsFromFile(path string) ([]mgxsdk.Client, error) {
+func clientsFromFile(path string) ([]smqsdk.Client, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return []mgxsdk.Client{}, err
+		return []smqsdk.Client{}, err
 	}
 
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
 	if err != nil {
-		return []mgxsdk.Client{}, err
+		return []smqsdk.Client{}, err
 	}
 	defer file.Close()
 
-	clients := []mgxsdk.Client{}
+	clients := []smqsdk.Client{}
 	switch filepath.Ext(path) {
 	case csvExt:
 		reader := csv.NewReader(file)
@@ -291,14 +291,14 @@ func clientsFromFile(path string) ([]mgxsdk.Client, error) {
 				break
 			}
 			if err != nil {
-				return []mgxsdk.Client{}, err
+				return []smqsdk.Client{}, err
 			}
 
 			if len(l) < 1 {
-				return []mgxsdk.Client{}, errors.New("empty line found in file")
+				return []smqsdk.Client{}, errors.New("empty line found in file")
 			}
 
-			client := mgxsdk.Client{
+			client := smqsdk.Client{
 				Name: l[0],
 			}
 
@@ -307,27 +307,27 @@ func clientsFromFile(path string) ([]mgxsdk.Client, error) {
 	case jsonExt:
 		err := json.NewDecoder(file).Decode(&clients)
 		if err != nil {
-			return []mgxsdk.Client{}, err
+			return []smqsdk.Client{}, err
 		}
 	default:
-		return []mgxsdk.Client{}, err
+		return []smqsdk.Client{}, err
 	}
 
 	return clients, nil
 }
 
-func channelsFromFile(path string) ([]mgxsdk.Channel, error) {
+func channelsFromFile(path string) ([]smqsdk.Channel, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return []mgxsdk.Channel{}, err
+		return []smqsdk.Channel{}, err
 	}
 
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
 	if err != nil {
-		return []mgxsdk.Channel{}, err
+		return []smqsdk.Channel{}, err
 	}
 	defer file.Close()
 
-	channels := []mgxsdk.Channel{}
+	channels := []smqsdk.Channel{}
 	switch filepath.Ext(path) {
 	case csvExt:
 		reader := csv.NewReader(file)
@@ -338,14 +338,14 @@ func channelsFromFile(path string) ([]mgxsdk.Channel, error) {
 				break
 			}
 			if err != nil {
-				return []mgxsdk.Channel{}, err
+				return []smqsdk.Channel{}, err
 			}
 
 			if len(l) < 1 {
-				return []mgxsdk.Channel{}, errors.New("empty line found in file")
+				return []smqsdk.Channel{}, errors.New("empty line found in file")
 			}
 
-			channel := mgxsdk.Channel{
+			channel := smqsdk.Channel{
 				Name: l[0],
 			}
 
@@ -354,27 +354,27 @@ func channelsFromFile(path string) ([]mgxsdk.Channel, error) {
 	case jsonExt:
 		err := json.NewDecoder(file).Decode(&channels)
 		if err != nil {
-			return []mgxsdk.Channel{}, err
+			return []smqsdk.Channel{}, err
 		}
 	default:
-		return []mgxsdk.Channel{}, err
+		return []smqsdk.Channel{}, err
 	}
 
 	return channels, nil
 }
 
-func connectionsFromFile(path string) ([]mgxsdk.Connection, error) {
+func connectionsFromFile(path string) ([]smqsdk.Connection, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return []mgxsdk.Connection{}, err
+		return []smqsdk.Connection{}, err
 	}
 
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
 	if err != nil {
-		return []mgxsdk.Connection{}, err
+		return []smqsdk.Connection{}, err
 	}
 	defer file.Close()
 
-	connections := []mgxsdk.Connection{}
+	connections := []smqsdk.Connection{}
 	switch filepath.Ext(path) {
 	case csvExt:
 		reader := csv.NewReader(file)
@@ -385,13 +385,13 @@ func connectionsFromFile(path string) ([]mgxsdk.Connection, error) {
 				break
 			}
 			if err != nil {
-				return []mgxsdk.Connection{}, err
+				return []smqsdk.Connection{}, err
 			}
 
 			if len(l) < 1 {
-				return []mgxsdk.Connection{}, errors.New("empty line found in file")
+				return []smqsdk.Connection{}, errors.New("empty line found in file")
 			}
-			connections = append(connections, mgxsdk.Connection{
+			connections = append(connections, smqsdk.Connection{
 				ClientIDs:  []string{l[0]},
 				ChannelIDs: []string{l[1]},
 				Types:      []string{PublishType, SubscribeType},
@@ -400,10 +400,10 @@ func connectionsFromFile(path string) ([]mgxsdk.Connection, error) {
 	case jsonExt:
 		err := json.NewDecoder(file).Decode(&connections)
 		if err != nil {
-			return []mgxsdk.Connection{}, err
+			return []smqsdk.Connection{}, err
 		}
 	default:
-		return []mgxsdk.Connection{}, err
+		return []smqsdk.Connection{}, err
 	}
 
 	return connections, nil

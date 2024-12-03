@@ -3,12 +3,12 @@
 
 package cli
 
-import mgxsdk "github.com/absmach/supermq/pkg/sdk/go"
+import smqsdk "github.com/absmach/supermq/pkg/sdk/go"
 
 // Keep SDK handle in global var.
-var sdk mgxsdk.SDK
+var sdk smqsdk.SDK
 
 // SetSDK sets supermq SDK instance.
-func SetSDK(s mgxsdk.SDK) {
+func SetSDK(s smqsdk.SDK) {
 	sdk = s
 }

@@ -6,7 +6,7 @@ package cli
 import (
 	"encoding/json"
 
-	mgxsdk "github.com/absmach/supermq/pkg/sdk/go"
+	smqsdk "github.com/absmach/supermq/pkg/sdk/go"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,7 @@ var cmdChannels = []cobra.Command{
 				return
 			}
 
-			var channel mgxsdk.Channel
+			var channel smqsdk.Channel
 			if err := json.Unmarshal([]byte(args[0]), &channel); err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -55,7 +55,7 @@ var cmdChannels = []cobra.Command{
 				logErrorCmd(*cmd, err)
 				return
 			}
-			pageMetadata := mgxsdk.PageMetadata{
+			pageMetadata := smqsdk.PageMetadata{
 				Name:     "",
 				Offset:   Offset,
 				Limit:    Limit,
@@ -109,7 +109,7 @@ var cmdChannels = []cobra.Command{
 				return
 			}
 
-			var channel mgxsdk.Channel
+			var channel smqsdk.Channel
 			if err := json.Unmarshal([]byte(args[1]), &channel); err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -133,7 +133,7 @@ var cmdChannels = []cobra.Command{
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			pm := mgxsdk.PageMetadata{
+			pm := smqsdk.PageMetadata{
 				Offset: Offset,
 				Limit:  Limit,
 			}
@@ -195,7 +195,7 @@ var cmdChannels = []cobra.Command{
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			pm := mgxsdk.PageMetadata{
+			pm := smqsdk.PageMetadata{
 				Offset: Offset,
 				Limit:  Limit,
 			}
@@ -219,7 +219,7 @@ var cmdChannels = []cobra.Command{
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			pm := mgxsdk.PageMetadata{
+			pm := smqsdk.PageMetadata{
 				Offset: Offset,
 				Limit:  Limit,
 			}
@@ -251,7 +251,7 @@ var channelAssignCmds = []cobra.Command{
 				logErrorCmd(*cmd, err)
 				return
 			}
-			if err := sdk.AddUserToChannel(args[2], mgxsdk.UsersRelationRequest{Relation: args[0], UserIDs: userIDs}, args[3], args[4]); err != nil {
+			if err := sdk.AddUserToChannel(args[2], smqsdk.UsersRelationRequest{Relation: args[0], UserIDs: userIDs}, args[3], args[4]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}
@@ -275,7 +275,7 @@ var channelAssignCmds = []cobra.Command{
 				logErrorCmd(*cmd, err)
 				return
 			}
-			if err := sdk.AddUserGroupToChannel(args[1], mgxsdk.UserGroupsRequest{UserGroupIDs: groupIDs}, args[2], args[3]); err != nil {
+			if err := sdk.AddUserGroupToChannel(args[1], smqsdk.UserGroupsRequest{UserGroupIDs: groupIDs}, args[2], args[3]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}
@@ -301,7 +301,7 @@ var channelUnassignCmds = []cobra.Command{
 				logErrorCmd(*cmd, err)
 				return
 			}
-			if err := sdk.RemoveUserGroupFromChannel(args[1], mgxsdk.UserGroupsRequest{UserGroupIDs: groupIDs}, args[2], args[3]); err != nil {
+			if err := sdk.RemoveUserGroupFromChannel(args[1], smqsdk.UserGroupsRequest{UserGroupIDs: groupIDs}, args[2], args[3]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}
@@ -325,7 +325,7 @@ var channelUnassignCmds = []cobra.Command{
 				logErrorCmd(*cmd, err)
 				return
 			}
-			if err := sdk.RemoveUserFromChannel(args[2], mgxsdk.UsersRelationRequest{Relation: args[0], UserIDs: userIDs}, args[3], args[4]); err != nil {
+			if err := sdk.RemoveUserFromChannel(args[2], smqsdk.UsersRelationRequest{Relation: args[0], UserIDs: userIDs}, args[3], args[4]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}

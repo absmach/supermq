@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 
 	"github.com/absmach/supermq/clients"
-	mgxsdk "github.com/absmach/supermq/pkg/sdk/go"
+	smqsdk "github.com/absmach/supermq/pkg/sdk/go"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +24,7 @@ var cmdClients = []cobra.Command{
 				return
 			}
 
-			var client mgxsdk.Client
+			var client smqsdk.Client
 			if err := json.Unmarshal([]byte(args[0]), &client); err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -57,7 +57,7 @@ var cmdClients = []cobra.Command{
 				logErrorCmd(*cmd, err)
 				return
 			}
-			pageMetadata := mgxsdk.PageMetadata{
+			pageMetadata := smqsdk.PageMetadata{
 				Name:     Name,
 				Offset:   Offset,
 				Limit:    Limit,
@@ -113,7 +113,7 @@ var cmdClients = []cobra.Command{
 				return
 			}
 
-			var client mgxsdk.Client
+			var client smqsdk.Client
 			if args[0] == "tags" {
 				if err := json.Unmarshal([]byte(args[2]), &client.Tags); err != nil {
 					logErrorCmd(*cmd, err)
@@ -208,7 +208,7 @@ var cmdClients = []cobra.Command{
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			req := mgxsdk.UsersRelationRequest{
+			req := smqsdk.UsersRelationRequest{
 				Relation: args[2],
 				UserIDs:  []string{args[1]},
 			}
@@ -232,7 +232,7 @@ var cmdClients = []cobra.Command{
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			req := mgxsdk.UsersRelationRequest{
+			req := smqsdk.UsersRelationRequest{
 				Relation: args[2],
 				UserIDs:  []string{args[1]},
 			}
@@ -257,7 +257,7 @@ var cmdClients = []cobra.Command{
 				return
 			}
 
-			connIDs := mgxsdk.Connection{
+			connIDs := smqsdk.Connection{
 				ChannelIDs: []string{args[1]},
 				ClientIDs:  []string{args[0]},
 			}
@@ -281,7 +281,7 @@ var cmdClients = []cobra.Command{
 				return
 			}
 
-			connIDs := mgxsdk.Connection{
+			connIDs := smqsdk.Connection{
 				ClientIDs:  []string{args[0]},
 				ChannelIDs: []string{args[1]},
 			}
@@ -304,7 +304,7 @@ var cmdClients = []cobra.Command{
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			pm := mgxsdk.PageMetadata{
+			pm := smqsdk.PageMetadata{
 				Offset: Offset,
 				Limit:  Limit,
 			}
@@ -328,7 +328,7 @@ var cmdClients = []cobra.Command{
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			pm := mgxsdk.PageMetadata{
+			pm := smqsdk.PageMetadata{
 				Offset: Offset,
 				Limit:  Limit,
 			}
