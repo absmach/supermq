@@ -192,17 +192,3 @@ func (res clearAllScopeEntryRes) Headers() map[string]string {
 func (res clearAllScopeEntryRes) Empty() bool {
 	return true
 }
-
-type authorizePATRes struct{}
-
-func (res authorizePATRes) Code() int {
-	return http.StatusNoContent
-}
-
-func (res authorizePATRes) Headers() map[string]string {
-	return map[string]string{}
-}
-
-func (res authorizePATRes) Empty() bool {
-	return true
-}

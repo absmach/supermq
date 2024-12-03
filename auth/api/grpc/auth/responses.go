@@ -4,9 +4,9 @@
 package auth
 
 type authenticateRes struct {
-	id        string
-	userID    string
-	domainID  string
+	id       string
+	userID   string
+	domainID string
 }
 
 type authorizeRes struct {
