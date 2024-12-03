@@ -5,7 +5,7 @@ hosted on the [Abstract Machines Organization](https://github.com/absmach) on Gi
 
 This project adheres to the [Contributor Covenant 1.2](http://contributor-covenant.org/version/1/2/0).
 By participating, you are expected to uphold this code. Please report unacceptable behavior to
-[abuse@magistrala.com](mailto:abuse@magistrala.com).
+[abuse@abstractmachines.fr](mailto:abuse@abstractmachines.fr).
 
 ## Reporting issues
 

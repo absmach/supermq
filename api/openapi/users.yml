@@ -1266,7 +1266,7 @@ components:
           description: User tags.
         email:
           type: string
-          example: "john.doe@magistrala.com"
+          example: "john.doe@supermq.com"
           description: User email for example email address.
         credentials:
           type: object
@@ -1377,7 +1377,7 @@ components:
           description: User's last name.
         email:
           type: string
-          example: user@magistrala.com
+          example: user@supermq.com
           description: User's email address.
         tags:
           type: array
@@ -1542,7 +1542,7 @@ components:
       properties:
         email:
           type: string
-          example: user@magistrala.com
+          example: user@supermq.com
           description: User email address.
       required:
         - email
@@ -1659,7 +1659,7 @@ components:
       properties:
         identity:
           type: string
-          example: user@magistrala.com
+          example: user@supermq.com
           description: User identity - email address.
         secret:
           type: string

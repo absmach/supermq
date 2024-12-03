@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	mggroups "github.com/absmach/supermq/groups"
+	groups "github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/errors"
@@ -20,7 +20,7 @@ func DecodeGroupCreate(_ context.Context, r *http.Request) (interface{}, error) 
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
-	var g mggroups.Group
+	var g groups.Group
 	if err := json.NewDecoder(r.Body).Decode(&g); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
 	}
@@ -39,12 +39,12 @@ func DecodeListGroupsRequest(_ context.Context, r *http.Request) (interface{}, e
 
 	userID, err := apiutil.ReadStringQuery(r, api.UserKey, "")
 	if err != nil {
-		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	groupID, err := apiutil.ReadStringQuery(r, api.GroupKey, "")
 	if err != nil {
-		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	req := listGroupsReq{
@@ -157,12 +157,12 @@ func decodeListChildrenGroupsRequest(_ context.Context, r *http.Request) (interf
 
 	startLevel, err := apiutil.ReadNumQuery[int64](r, api.StartLevelKey, api.DefStartLevel)
 	if err != nil {
-		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	endLevel, err := apiutil.ReadNumQuery[int64](r, api.EndLevelKey, api.DefEndLevel)
 	if err != nil {
-		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	req := listChildrenGroupsReq{
@@ -174,61 +174,61 @@ func decodeListChildrenGroupsRequest(_ context.Context, r *http.Request) (interf
 	return req, nil
 }
 
-func decodeHierarchyPageMeta(r *http.Request) (mggroups.HierarchyPageMeta, error) {
+func decodeHierarchyPageMeta(r *http.Request) (groups.HierarchyPageMeta, error) {
 	level, err := apiutil.ReadNumQuery[uint64](r, api.LevelKey, api.DefLevel)
 	if err != nil {
-		return mggroups.HierarchyPageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.HierarchyPageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	tree, err := apiutil.ReadBoolQuery(r, api.TreeKey, false)
 	if err != nil {
-		return mggroups.HierarchyPageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.HierarchyPageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	hierarchyDir, err := apiutil.ReadNumQuery[int64](r, api.DirKey, -1)
 	if err != nil {
-		return mggroups.HierarchyPageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.HierarchyPageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
-	return mggroups.HierarchyPageMeta{
+	return groups.HierarchyPageMeta{
 		Level:     level,
 		Direction: hierarchyDir,
 		Tree:      tree,
 	}, nil
 }
 
-func decodePageMeta(r *http.Request) (mggroups.PageMeta, error) {
+func decodePageMeta(r *http.Request) (groups.PageMeta, error) {
 	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefGroupStatus)
 	if err != nil {
-		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	st, err := mggroups.ToStatus(s)
+	st, err := groups.ToStatus(s)
 	if err != nil {
-		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	offset, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
 	if err != nil {
-		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	limit, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
 	if err != nil {
-		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	name, err := apiutil.ReadStringQuery(r, api.NameKey, "")
 	if err != nil {
-		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	id, err := apiutil.ReadStringQuery(r, api.IDOrder, "")
 	if err != nil {
-		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	meta, err := apiutil.ReadMetadataQuery(r, api.MetadataKey, nil)
 	if err != nil {
-		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	allActions, err := apiutil.ReadStringQuery(r, api.ActionsKey, "")
 	if err != nil {
-		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	actions := []string{}
@@ -239,20 +239,20 @@ func decodePageMeta(r *http.Request) (mggroups.PageMeta, error) {
 	}
 	roleID, err := apiutil.ReadStringQuery(r, api.RoleIDKey, "")
 	if err != nil {
-		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	roleName, err := apiutil.ReadStringQuery(r, api.RoleNameKey, "")
 	if err != nil {
-		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	accessType, err := apiutil.ReadStringQuery(r, api.AccessTypeKey, "")
 	if err != nil {
-		return mggroups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
-	ret := mggroups.PageMeta{
+	ret := groups.PageMeta{
 		Offset:     offset,
 		Limit:      limit,
 		Name:       name,

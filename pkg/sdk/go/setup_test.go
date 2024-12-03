@@ -12,7 +12,7 @@ import (
 
 	mgchannels "github.com/absmach/supermq/channels"
 	"github.com/absmach/supermq/clients"
-	mggroups "github.com/absmach/supermq/groups"
+	groups "github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/invitations"
 	"github.com/absmach/supermq/journal"
@@ -76,8 +76,8 @@ func convertClients(cs ...sdk.Client) []clients.Client {
 	return ccs
 }
 
-func convertGroups(cs []sdk.Group) []mggroups.Group {
-	cgs := []mggroups.Group{}
+func convertGroups(cs []sdk.Group) []groups.Group {
+	cgs := []groups.Group{}
 
 	for _, c := range cs {
 		cgs = append(cgs, convertGroup(c))
@@ -96,22 +96,22 @@ func convertChannels(cs []sdk.Channel) []mgchannels.Channel {
 	return chs
 }
 
-func convertGroup(g sdk.Group) mggroups.Group {
+func convertGroup(g sdk.Group) groups.Group {
 	if g.Status == "" {
-		g.Status = mggroups.EnabledStatus.String()
+		g.Status = groups.EnabledStatus.String()
 	}
-	status, err := mggroups.ToStatus(g.Status)
+	status, err := groups.ToStatus(g.Status)
 	if err != nil {
-		return mggroups.Group{}
+		return groups.Group{}
 	}
 
-	return mggroups.Group{
+	return groups.Group{
 		ID:          g.ID,
 		Domain:      g.DomainID,
 		Parent:      g.ParentID,
 		Name:        g.Name,
 		Description: g.Description,
-		Metadata:    mggroups.Metadata(g.Metadata),
+		Metadata:    groups.Metadata(g.Metadata),
 		Level:       g.Level,
 		Path:        g.Path,
 		Children:    convertChildren(g.Children),
@@ -121,8 +121,8 @@ func convertGroup(g sdk.Group) mggroups.Group {
 	}
 }
 
-func convertChildren(gs []*sdk.Group) []*mggroups.Group {
-	cg := []*mggroups.Group{}
+func convertChildren(gs []*sdk.Group) []*groups.Group {
+	cg := []*groups.Group{}
 
 	if len(gs) == 0 {
 		return cg

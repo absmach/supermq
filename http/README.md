@@ -68,4 +68,4 @@ Setting `SMQ_CLIENTS_AUTH_GRPC_CLIENT_CERT` and `SMQ_CLIENTS_AUTH_GRPC_CLIENT_KE
 
 ## Usage
 
-HTTP Authorization request header contains the credentials to authenticate a Client. The authorization header can be a plain Client key or a Client key encoded as a password for Basic Authentication. In case the Basic Authentication schema is used, the username is ignored. For more information about service capabilities and its usage, please check out the [API documentation](https://docs.api.magistrala.abstractmachines.fr/?urls.primaryName=http.yml).
+HTTP Authorization request header contains the credentials to authenticate a Client. The authorization header can be a plain Client key or a Client key encoded as a password for Basic Authentication. In case the Basic Authentication schema is used, the username is ignored. For more information about service capabilities and its usage, please check out the [API documentation](https://docs.api.supermq.abstractmachines.fr/?urls.primaryName=http.yml).
