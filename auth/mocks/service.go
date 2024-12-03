@@ -72,14 +72,14 @@ func (_m *Service) Authorize(ctx context.Context, pr policies.Policy) error {
 	return r0
 }
 
-// AuthorizePAT provides a mock function with given fields: ctx, paToken, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs
-func (_m *Service) AuthorizePAT(ctx context.Context, paToken string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) error {
+// AuthorizePAT provides a mock function with given fields: ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs
+func (_m *Service) AuthorizePAT(ctx context.Context, userID string, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) error {
 	_va := make([]interface{}, len(entityIDs))
 	for _i := range entityIDs {
 		_va[_i] = entityIDs[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, ctx, paToken, platformEntityType, optionalDomainID, optionalDomainEntityType, operation)
+	_ca = append(_ca, ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
@@ -88,8 +88,8 @@ func (_m *Service) AuthorizePAT(ctx context.Context, paToken string, platformEnt
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) error); ok {
-		r0 = rf(ctx, paToken, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) error); ok {
+		r0 = rf(ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -389,9 +389,9 @@ func (_m *Service) RetrieveKey(ctx context.Context, token string, id string) (au
 	return r0, r1
 }
 
-// RetrievePAT provides a mock function with given fields: ctx, token, patID
-func (_m *Service) RetrievePAT(ctx context.Context, token string, patID string) (auth.PAT, error) {
-	ret := _m.Called(ctx, token, patID)
+// RetrievePAT provides a mock function with given fields: ctx, userID, patID
+func (_m *Service) RetrievePAT(ctx context.Context, userID string, patID string) (auth.PAT, error) {
+	ret := _m.Called(ctx, userID, patID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RetrievePAT")
@@ -400,16 +400,16 @@ func (_m *Service) RetrievePAT(ctx context.Context, token string, patID string) 
 	var r0 auth.PAT
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) (auth.PAT, error)); ok {
-		return rf(ctx, token, patID)
+		return rf(ctx, userID, patID)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) auth.PAT); ok {
-		r0 = rf(ctx, token, patID)
+		r0 = rf(ctx, userID, patID)
 	} else {
 		r0 = ret.Get(0).(auth.PAT)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = rf(ctx, token, patID)
+		r1 = rf(ctx, userID, patID)
 	} else {
 		r1 = ret.Error(1)
 	}

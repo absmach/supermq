@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/absmach/supermq/auth"
 	grpcapi "github.com/absmach/supermq/auth/api/grpc"
 	grpcAuthV1 "github.com/absmach/supermq/internal/grpc/auth/v1"
 	"github.com/go-kit/kit/endpoint"
@@ -20,6 +21,7 @@ type authGrpcClient struct {
 	authenticate    endpoint.Endpoint
 	authenticatePAT endpoint.Endpoint
 	authorize       endpoint.Endpoint
+	authorizePAT    endpoint.Endpoint
 	timeout         time.Duration
 }
 
@@ -52,7 +54,6 @@ func NewAuthClient(conn *grpc.ClientConn, timeout time.Duration) grpcAuthV1.Auth
 			decodeAuthorizeResponse,
 			grpcAuthV1.AuthZRes{},
 		).Endpoint(),
-		timeout: timeout,
 		authorizePAT: kitgrpc.NewClient(
 			conn,
 			authSvcName,
@@ -145,19 +146,18 @@ func encodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}
 	}, nil
 }
 
-func (client authGrpcClient) AuthorizePAT(ctx context.Context, req *grpcAuthV1.AuthZReq, _ ...grpc.CallOption) (r *grpcAuthV1.AuthZRes, err error) {
+func (client authGrpcClient) AuthorizePAT(ctx context.Context, req *grpcAuthV1.AuthZpatReq, _ ...grpc.CallOption) (r *grpcAuthV1.AuthZRes, err error) {
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
-	res, err := client.authorize(ctx, authReq{
-		Domain:      req.GetDomain(),
-		SubjectType: req.GetSubjectType(),
-		Subject:     req.GetSubject(),
-		SubjectKind: req.GetSubjectKind(),
-		Relation:    req.GetRelation(),
-		Permission:  req.GetPermission(),
-		ObjectType:  req.GetObjectType(),
-		Object:      req.GetObject(),
+	res, err := client.authorizePAT(ctx, authPATReq{
+		userID:                   req.GetUserId(),
+		patID:                    req.GetPatId(),
+		platformEntityType:       auth.PlatformEntityType(req.GetPlatformEntityType()),
+		optionalDomainID:         req.GetOptionalDomainID(),
+		optionalDomainEntityType: auth.DomainEntityType(req.GetOptionalDomainEntityType()),
+		operation:                auth.OperationType(req.GetOperation()),
+		entityIDs:                req.GetEntityIDs(),
 	})
 	if err != nil {
 		return &grpcAuthV1.AuthZRes{}, grpcapi.DecodeError(err)
@@ -170,11 +170,12 @@ func (client authGrpcClient) AuthorizePAT(ctx context.Context, req *grpcAuthV1.A
 func encodeAuthorizePATRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(authPATReq)
 	return &grpcAuthV1.AuthZpatReq{
-		PaToken:                  req.paToken,
-		PlatformEntityType:       req.platformEntityType,
+		UserId:                   req.userID,
+		PatId:                    req.patID,
+		PlatformEntityType:       uint32(req.platformEntityType),
 		OptionalDomainID:         req.optionalDomainID,
-		OptionalDomainEntityType: req.optionalDomainEntityType,
-		Operation:                req.operation,
+		OptionalDomainEntityType: uint32(req.optionalDomainEntityType),
+		Operation:                uint32(req.operation),
 		EntityIDs:                req.entityIDs,
 	}, nil
 }

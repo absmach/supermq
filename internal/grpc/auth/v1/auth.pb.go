@@ -73,7 +73,7 @@ type AuthNRes struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id       string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`                             // id
+	Id       string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`                             // IMPROVEMENT NOTE: change name from "id" to "subject" , sub in jwt = user id  + domain id //
 	UserId   string `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`       // user id
 	DomainId string `protobuf:"bytes,3,opt,name=domain_id,json=domainId,proto3" json:"domain_id,omitempty"` // domain id
 }
@@ -296,21 +296,20 @@ type AuthZpatReq struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	PaToken                  string   `protobuf:"bytes,1,opt,name=paToken,proto3" json:"paToken,omitempty"`                                                                       // PaToken
-	PlatformEntityType       string   `protobuf:"bytes,2,opt,name=platform_entity_type,json=platformEntityType,proto3" json:"platform_entity_type,omitempty"`                     // Platform entity type
-	OptionalDomainID         string   `protobuf:"bytes,3,opt,name=optional_domainID,json=optionalDomainID,proto3" json:"optional_domainID,omitempty"`                             // Optional domain id
-	OptionalDomainEntityType string   `protobuf:"bytes,4,opt,name=optional_domain_entity_type,json=optionalDomainEntityType,proto3" json:"optional_domain_entity_type,omitempty"` // Optional domain entity type
-	Operation                string   `protobuf:"bytes,5,opt,name=operation,proto3" json:"operation,omitempty"`                                                                   // Operation
-	EntityIDs                []string `protobuf:"bytes,6,rep,name=entityIDs,proto3" json:"entityIDs,omitempty"`                                                                   // EntityIDs
+	UserId                   string   `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`                                                            // User id
+	PatId                    string   `protobuf:"bytes,2,opt,name=pat_id,json=patId,proto3" json:"pat_id,omitempty"`                                                               // Pat id
+	PlatformEntityType       uint32   `protobuf:"varint,3,opt,name=platform_entity_type,json=platformEntityType,proto3" json:"platform_entity_type,omitempty"`                     // Platform entity type
+	OptionalDomainID         string   `protobuf:"bytes,4,opt,name=optional_domainID,json=optionalDomainID,proto3" json:"optional_domainID,omitempty"`                              // Optional domain id
+	OptionalDomainEntityType uint32   `protobuf:"varint,5,opt,name=optional_domain_entity_type,json=optionalDomainEntityType,proto3" json:"optional_domain_entity_type,omitempty"` // Optional domain entity type
+	Operation                uint32   `protobuf:"varint,6,opt,name=operation,proto3" json:"operation,omitempty"`                                                                   // Operation
+	EntityIDs                []string `protobuf:"bytes,7,rep,name=entityIDs,proto3" json:"entityIDs,omitempty"`                                                                    // EntityIDs
 }
 
 func (x *AuthZpatReq) Reset() {
 	*x = AuthZpatReq{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_auth_v1_auth_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_auth_v1_auth_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *AuthZpatReq) String() string {
@@ -320,8 +319,8 @@ func (x *AuthZpatReq) String() string {
 func (*AuthZpatReq) ProtoMessage() {}
 
 func (x *AuthZpatReq) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_v1_auth_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
+	mi := &file_auth_v1_auth_proto_msgTypes[4]
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -333,21 +332,28 @@ func (x *AuthZpatReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AuthZpatReq.ProtoReflect.Descriptor instead.
 func (*AuthZpatReq) Descriptor() ([]byte, []int) {
-	return file_auth_v1_auth_proto_rawDescGZIP(), []int{3}
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *AuthZpatReq) GetPaToken() string {
+func (x *AuthZpatReq) GetUserId() string {
 	if x != nil {
-		return x.PaToken
+		return x.UserId
 	}
 	return ""
 }
 
-func (x *AuthZpatReq) GetPlatformEntityType() string {
+func (x *AuthZpatReq) GetPatId() string {
+	if x != nil {
+		return x.PatId
+	}
+	return ""
+}
+
+func (x *AuthZpatReq) GetPlatformEntityType() uint32 {
 	if x != nil {
 		return x.PlatformEntityType
 	}
-	return ""
+	return 0
 }
 
 func (x *AuthZpatReq) GetOptionalDomainID() string {
@@ -357,18 +363,18 @@ func (x *AuthZpatReq) GetOptionalDomainID() string {
 	return ""
 }
 
-func (x *AuthZpatReq) GetOptionalDomainEntityType() string {
+func (x *AuthZpatReq) GetOptionalDomainEntityType() uint32 {
 	if x != nil {
 		return x.OptionalDomainEntityType
 	}
-	return ""
+	return 0
 }
 
-func (x *AuthZpatReq) GetOperation() string {
+func (x *AuthZpatReq) GetOperation() uint32 {
 	if x != nil {
 		return x.Operation
 	}
-	return ""
+	return 0
 }
 
 func (x *AuthZpatReq) GetEntityIDs() []string {
@@ -389,7 +395,7 @@ type AuthZRes struct {
 
 func (x *AuthZRes) Reset() {
 	*x = AuthZRes{}
-	mi := &file_auth_v1_auth_proto_msgTypes[4]
+	mi := &file_auth_v1_auth_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -401,7 +407,7 @@ func (x *AuthZRes) String() string {
 func (*AuthZRes) ProtoMessage() {}
 
 func (x *AuthZRes) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_v1_auth_proto_msgTypes[4]
+	mi := &file_auth_v1_auth_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -414,7 +420,7 @@ func (x *AuthZRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AuthZRes.ProtoReflect.Descriptor instead.
 func (*AuthZRes) Descriptor() ([]byte, []int) {
-	return file_auth_v1_auth_proto_rawDescGZIP(), []int{4}
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *AuthZRes) GetAuthorized() bool {
@@ -491,23 +497,26 @@ func file_auth_v1_auth_proto_rawDescGZIP() []byte {
 	return file_auth_v1_auth_proto_rawDescData
 }
 
-var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_auth_v1_auth_proto_goTypes = []any{
 	(*AuthNReq)(nil),    // 0: auth.v1.AuthNReq
 	(*AuthNRes)(nil),    // 1: auth.v1.AuthNRes
 	(*AuthNPATRes)(nil), // 2: auth.v1.AuthNPATRes
 	(*AuthZReq)(nil),    // 3: auth.v1.AuthZReq
-	(*AuthZRes)(nil),    // 4: auth.v1.AuthZRes
+	(*AuthZpatReq)(nil), // 4: auth.v1.AuthZpatReq
+	(*AuthZRes)(nil),    // 5: auth.v1.AuthZRes
 }
 var file_auth_v1_auth_proto_depIdxs = []int32{
 	3, // 0: auth.v1.AuthService.Authorize:input_type -> auth.v1.AuthZReq
-	0, // 1: auth.v1.AuthService.Authenticate:input_type -> auth.v1.AuthNReq
-	0, // 2: auth.v1.AuthService.AuthenticatePAT:input_type -> auth.v1.AuthNReq
-	4, // 3: auth.v1.AuthService.Authorize:output_type -> auth.v1.AuthZRes
-	1, // 4: auth.v1.AuthService.Authenticate:output_type -> auth.v1.AuthNRes
-	2, // 5: auth.v1.AuthService.AuthenticatePAT:output_type -> auth.v1.AuthNPATRes
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
+	4, // 1: auth.v1.AuthService.AuthorizePAT:input_type -> auth.v1.AuthZpatReq
+	0, // 2: auth.v1.AuthService.Authenticate:input_type -> auth.v1.AuthNReq
+	0, // 3: auth.v1.AuthService.AuthenticatePAT:input_type -> auth.v1.AuthNReq
+	5, // 4: auth.v1.AuthService.Authorize:output_type -> auth.v1.AuthZRes
+	5, // 5: auth.v1.AuthService.AuthorizePAT:output_type -> auth.v1.AuthZRes
+	1, // 6: auth.v1.AuthService.Authenticate:output_type -> auth.v1.AuthNRes
+	2, // 7: auth.v1.AuthService.AuthenticatePAT:output_type -> auth.v1.AuthNPATRes
+	4, // [4:8] is the sub-list for method output_type
+	0, // [0:4] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -524,7 +533,7 @@ func file_auth_v1_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_auth_v1_auth_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -23,7 +23,7 @@ func authenticateEndpoint(svc auth.Service) endpoint.Endpoint {
 			return authenticateRes{}, err
 		}
 
-		return authenticateRes{id: key.Subject, userID: key.User, domainID: key.Domain}, nil
+		return authenticateRes{id: key.ID, userID: key.User, domainID: key.Domain}, nil
 	}
 }
 
@@ -74,7 +74,7 @@ func authorizePATEndpoint(svc auth.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return authorizeRes{}, err
 		}
-		err := svc.AuthorizePAT(ctx, req.paToken, req.platformEntityType, req.optionalDomainID,req.optionalDomainEntityType, req.operation, req.entityIDs)
+		err := svc.AuthorizePAT(ctx, req.userID, req.patID, req.platformEntityType, req.optionalDomainID, req.optionalDomainEntityType, req.operation, req.entityIDs...)
 		if err != nil {
 			return authorizeRes{authorized: false}, err
 		}

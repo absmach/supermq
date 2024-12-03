@@ -660,8 +660,8 @@ func (svc service) IdentifyPAT(ctx context.Context, secret string) (PAT, error) 
 	return PAT{ID: patID.String(), User: userID.String()}, nil
 }
 
-func (svc service) AuthorizePAT(ctx context.Context, paToken string, platformEntityType PlatformEntityType, optionalDomainID string, optionalDomainEntityType DomainEntityType, operation OperationType, entityIDs ...string) error {
-	res, err := svc.IdentifyPAT(ctx, paToken)
+func (svc service) AuthorizePAT(ctx context.Context, userID, patID string, platformEntityType PlatformEntityType, optionalDomainID string, optionalDomainEntityType DomainEntityType, operation OperationType, entityIDs ...string) error {
+	res, err := svc.RetrievePAT(ctx, userID, patID)
 	if err != nil {
 		return err
 	}

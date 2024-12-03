@@ -4,6 +4,7 @@
 package auth
 
 import (
+	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/apiutil"
 )
 
@@ -51,16 +52,20 @@ func (req authReq) validate() error {
 }
 
 type authPATReq struct {
-	paToken                  string
-	platformEntityType       string
+	userID                   string
+	patID                    string
+	platformEntityType       auth.PlatformEntityType
 	optionalDomainID         string
-	optionalDomainEntityType string
-	operation                string
+	optionalDomainEntityType auth.DomainEntityType
+	operation                auth.OperationType
 	entityIDs                []string
 }
 
 func (req authPATReq) validate() error {
-	if req.paToken == "" {
+	if req.userID == "" {
+		return apiutil.ErrBearerToken
+	}
+	if req.patID == "" {
 		return apiutil.ErrBearerToken
 	}
 	return nil

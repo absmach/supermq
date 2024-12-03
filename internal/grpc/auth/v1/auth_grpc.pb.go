@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	AuthService_Authorize_FullMethodName       = "/auth.v1.AuthService/Authorize"
+	AuthService_AuthorizePAT_FullMethodName    = "/auth.v1.AuthService/AuthorizePAT"
 	AuthService_Authenticate_FullMethodName    = "/auth.v1.AuthService/Authenticate"
 	AuthService_AuthenticatePAT_FullMethodName = "/auth.v1.AuthService/AuthenticatePAT"
 )

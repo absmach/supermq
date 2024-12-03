@@ -17,7 +17,7 @@ service AuthService {
 
 
 message AuthNReq {
-  string token = 1;
+    string token = 1;
 }
 
 message AuthNRes {
@@ -44,12 +44,13 @@ message AuthZReq {
 }
 
 message AuthZpatReq {
-  string paToken = 1;                     // PaToken
-  string platform_entity_type = 2;        // Platform entity type
-  string optional_domainID = 3;           // Optional domain id
-  string optional_domain_entity_type = 4; // Optional domain entity type 
-  string operation = 5;                   // Operation
-  repeated string entityIDs = 6;          // EntityIDs
+  string user_id = 1;                      // User id
+  string pat_id = 2;                       // Pat id
+  uint32 platform_entity_type = 3;        // Platform entity type
+  string optional_domainID = 4;           // Optional domain id
+  uint32 optional_domain_entity_type = 5; // Optional domain entity type 
+  uint32 operation = 6;                   // Operation
+  repeated string entityIDs = 7;          // EntityIDs
 }
 
 message AuthZRes {
