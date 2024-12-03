@@ -1149,7 +1149,7 @@ services:
           create_host_path: true
 
   vernemq:
-    image: magistrala/vernemq:${SMQ_RELEASE_TAG}
+    image: supermq/vernemq:${SMQ_RELEASE_TAG}
     container_name: supermq-vernemq
     restart: on-failure
     environment:
