@@ -17,7 +17,7 @@ service AuthService {
 
 
 message AuthNReq {
-    string token = 1;
+  string token = 1;
 }
 
 message AuthNRes {
