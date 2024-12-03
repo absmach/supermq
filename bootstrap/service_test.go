@@ -17,7 +17,7 @@ import (
 	"github.com/absmach/supermq/bootstrap"
 	"github.com/absmach/supermq/bootstrap/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	policysvc "github.com/absmach/supermq/pkg/policies"
@@ -103,7 +103,7 @@ func TestAdd(t *testing.T) {
 		desc            string
 		config          bootstrap.Config
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		userID          string
 		domainID        string
 		clientErr       error
@@ -151,7 +151,7 @@ func TestAdd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tc.session = mgauthn.Session{UserID: tc.userID, DomainID: tc.domainID, DomainUserID: validID}
+			tc.session = smqauthn.Session{UserID: tc.userID, DomainID: tc.domainID, DomainUserID: validID}
 			repoCall := sdk.On("Client", tc.config.ClientID, mock.Anything, tc.token).Return(mgsdk.Client{ID: tc.config.ClientID, Credentials: mgsdk.ClientCredentials{Secret: tc.config.ClientSecret}}, tc.clientErr)
 			repoCall1 := sdk.On("CreateClient", mock.Anything, tc.domainID, tc.token).Return(mgsdk.Client{}, tc.createClientErr)
 			repoCall2 := sdk.On("DeleteClient", tc.config.ClientID, tc.domainID, tc.token).Return(tc.deleteClientErr)
@@ -178,7 +178,7 @@ func TestView(t *testing.T) {
 		domain       string
 		clientDomain string
 		token        string
-		session      mgauthn.Session
+		session      smqauthn.Session
 		retrieveErr  error
 		clientErr    error
 		channelErr   error
@@ -217,7 +217,7 @@ func TestView(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tc.session = mgauthn.Session{UserID: tc.userID, DomainID: tc.domain, DomainUserID: validID}
+			tc.session = smqauthn.Session{UserID: tc.userID, DomainID: tc.domain, DomainUserID: validID}
 			repoCall := boot.On("RetrieveByID", context.Background(), tc.clientDomain, tc.configID).Return(config, tc.retrieveErr)
 			_, err := svc.View(context.Background(), tc.session, tc.configID)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -245,7 +245,7 @@ func TestUpdate(t *testing.T) {
 		desc      string
 		config    bootstrap.Config
 		token     string
-		session   mgauthn.Session
+		session   smqauthn.Session
 		userID    string
 		domainID  string
 		updateErr error
@@ -281,7 +281,7 @@ func TestUpdate(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tc.session = mgauthn.Session{UserID: tc.userID, DomainID: tc.domainID, DomainUserID: validID}
+			tc.session = smqauthn.Session{UserID: tc.userID, DomainID: tc.domainID, DomainUserID: validID}
 			repoCall := boot.On("Update", context.Background(), mock.Anything).Return(tc.updateErr)
 			err := svc.Update(context.Background(), tc.session, tc.config)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -301,7 +301,7 @@ func TestUpdateCert(t *testing.T) {
 	cases := []struct {
 		desc            string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		userID          string
 		domainID        string
 		clientID        string
@@ -356,7 +356,7 @@ func TestUpdateCert(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tc.session = mgauthn.Session{UserID: tc.userID, DomainID: tc.domainID, DomainUserID: validID}
+			tc.session = smqauthn.Session{UserID: tc.userID, DomainID: tc.domainID, DomainUserID: validID}
 			repoCall := boot.On("UpdateCert", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.expectedConfig, tc.updateErr)
 			cfg, err := svc.UpdateCert(context.Background(), tc.session, tc.clientID, tc.clientCert, tc.clientKey, tc.caCert)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -386,7 +386,7 @@ func TestUpdateConnections(t *testing.T) {
 	cases := []struct {
 		desc        string
 		token       string
-		session     mgauthn.Session
+		session     smqauthn.Session
 		id          string
 		state       bootstrap.State
 		userID      string
@@ -433,7 +433,7 @@ func TestUpdateConnections(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tc.session = mgauthn.Session{UserID: tc.userID, DomainID: tc.domainID, DomainUserID: validID}
+			tc.session = smqauthn.Session{UserID: tc.userID, DomainID: tc.domainID, DomainUserID: validID}
 			sdkCall := sdk.On("Channel", mock.Anything, tc.domainID, tc.token).Return(mgsdk.Channel{}, tc.channelErr)
 			repoCall := boot.On("RetrieveByID", context.Background(), tc.domainID, tc.id).Return(c, tc.retrieveErr)
 			repoCall1 := boot.On("ListExisting", context.Background(), mock.Anything, mock.Anything, mock.Anything).Return(c.Channels, tc.listErr)
@@ -470,7 +470,7 @@ func TestList(t *testing.T) {
 		offset              uint64
 		limit               uint64
 		token               string
-		session             mgauthn.Session
+		session             smqauthn.Session
 		userID              string
 		domainID            string
 		listObjectsResponse policysvc.PolicyPage
@@ -488,7 +488,7 @@ func TestList(t *testing.T) {
 			},
 			filter:   bootstrap.Filter{},
 			token:    validToken,
-			session:  mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID, SuperAdmin: true},
+			session:  smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID, SuperAdmin: true},
 			userID:   validID,
 			domainID: domainID,
 			offset:   0,
@@ -500,7 +500,7 @@ func TestList(t *testing.T) {
 			config:              bootstrap.ConfigsPage{},
 			filter:              bootstrap.Filter{},
 			token:               validID,
-			session:             mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID},
+			session:             smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID},
 			userID:              validID,
 			domainID:            domainID,
 			listObjectsResponse: policysvc.PolicyPage{},
@@ -520,7 +520,7 @@ func TestList(t *testing.T) {
 			token:               validToken,
 			userID:              validID,
 			domainID:            domainID,
-			session:             mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID, SuperAdmin: true},
+			session:             smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID, SuperAdmin: true},
 			listObjectsResponse: policysvc.PolicyPage{},
 			offset:              0,
 			limit:               10,
@@ -538,7 +538,7 @@ func TestList(t *testing.T) {
 			token:               validToken,
 			userID:              validID,
 			domainID:            domainID,
-			session:             mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID},
+			session:             smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID},
 			listObjectsResponse: policysvc.PolicyPage{Policies: []string{"test", "test"}},
 			offset:              0,
 			limit:               10,
@@ -554,7 +554,7 @@ func TestList(t *testing.T) {
 			},
 			filter:   bootstrap.Filter{PartialMatch: map[string]string{"name": "95"}},
 			token:    validToken,
-			session:  mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID, SuperAdmin: true},
+			session:  smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID, SuperAdmin: true},
 			userID:   validID,
 			domainID: domainID,
 			offset:   0,
@@ -573,7 +573,7 @@ func TestList(t *testing.T) {
 			token:    validToken,
 			userID:   validID,
 			domainID: domainID,
-			session:  mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID, SuperAdmin: true},
+			session:  smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID, SuperAdmin: true},
 			offset:   0,
 			limit:    100,
 			err:      nil,
@@ -590,7 +590,7 @@ func TestList(t *testing.T) {
 			token:               validToken,
 			userID:              validID,
 			domainID:            domainID,
-			session:             mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID},
+			session:             smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID},
 			listObjectsResponse: policysvc.PolicyPage{Policies: []string{"test", "test"}},
 			offset:              0,
 			limit:               100,
@@ -608,7 +608,7 @@ func TestList(t *testing.T) {
 			token:    validToken,
 			userID:   validID,
 			domainID: domainID,
-			session:  mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID, SuperAdmin: true},
+			session:  smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID, SuperAdmin: true},
 			offset:   95,
 			limit:    10,
 			err:      nil,
@@ -625,7 +625,7 @@ func TestList(t *testing.T) {
 			token:    validToken,
 			userID:   validID,
 			domainID: domainID,
-			session:  mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID, SuperAdmin: true},
+			session:  smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID, SuperAdmin: true},
 			offset:   95,
 			limit:    10,
 			err:      nil,
@@ -642,7 +642,7 @@ func TestList(t *testing.T) {
 			token:               validToken,
 			userID:              validID,
 			domainID:            domainID,
-			session:             mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID},
+			session:             smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID},
 			listObjectsResponse: policysvc.PolicyPage{Policies: []string{"test", "test"}},
 			offset:              95,
 			limit:               10,
@@ -660,7 +660,7 @@ func TestList(t *testing.T) {
 			token:    validToken,
 			userID:   validID,
 			domainID: domainID,
-			session:  mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID, SuperAdmin: true},
+			session:  smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID, SuperAdmin: true},
 			offset:   35,
 			limit:    20,
 			err:      nil,
@@ -677,7 +677,7 @@ func TestList(t *testing.T) {
 			token:    validToken,
 			userID:   validID,
 			domainID: domainID,
-			session:  mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID, SuperAdmin: true},
+			session:  smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID, SuperAdmin: true},
 			offset:   35,
 			limit:    20,
 			err:      nil,
@@ -694,7 +694,7 @@ func TestList(t *testing.T) {
 			token:               validToken,
 			userID:              validID,
 			domainID:            domainID,
-			session:             mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID},
+			session:             smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID},
 			listObjectsResponse: policysvc.PolicyPage{Policies: []string{"test", "test"}},
 			offset:              35,
 			limit:               20,
@@ -709,7 +709,7 @@ func TestList(t *testing.T) {
 			token:               validToken,
 			userID:              validID,
 			domainID:            domainID,
-			session:             mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID},
+			session:             smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: validID},
 			listObjectsResponse: policysvc.PolicyPage{},
 			listObjectsErr:      svcerr.ErrNotFound,
 			err:                 svcerr.ErrNotFound,
@@ -744,7 +744,7 @@ func TestRemove(t *testing.T) {
 		desc      string
 		id        string
 		token     string
-		session   mgauthn.Session
+		session   smqauthn.Session
 		userID    string
 		domainID  string
 		removeErr error
@@ -779,7 +779,7 @@ func TestRemove(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tc.session = mgauthn.Session{UserID: tc.userID, DomainID: tc.domainID, DomainUserID: validID}
+			tc.session = smqauthn.Session{UserID: tc.userID, DomainID: tc.domainID, DomainUserID: validID}
 			repoCall := boot.On("Remove", context.Background(), mock.Anything, mock.Anything).Return(tc.removeErr)
 			err := svc.Remove(context.Background(), tc.session, tc.id)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -867,7 +867,7 @@ func TestChangeState(t *testing.T) {
 		state         bootstrap.State
 		id            string
 		token         string
-		session       mgauthn.Session
+		session       smqauthn.Session
 		userID        string
 		domainID      string
 		retrieveErr   error
@@ -937,7 +937,7 @@ func TestChangeState(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tc.session = mgauthn.Session{UserID: tc.userID, DomainID: tc.domainID, DomainUserID: validID}
+			tc.session = smqauthn.Session{UserID: tc.userID, DomainID: tc.domainID, DomainUserID: validID}
 			repoCall := boot.On("RetrieveByID", context.Background(), tc.domainID, tc.id).Return(c, tc.retrieveErr)
 			sdkCall := sdk.On("ConnectClient", mock.Anything, mock.Anything, []string{"Publish", "Subscribe"}, mock.Anything, tc.token).Return(tc.connectErr)
 			repoCall1 := boot.On("ChangeState", context.Background(), mock.Anything, mock.Anything, mock.Anything).Return(tc.stateErr)

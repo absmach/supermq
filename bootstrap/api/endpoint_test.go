@@ -22,9 +22,9 @@ import (
 	bsapi "github.com/absmach/supermq/bootstrap/api"
 	"github.com/absmach/supermq/bootstrap/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/apiutil"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -177,7 +177,7 @@ func dec(in []byte) ([]byte, error) {
 }
 
 func newBootstrapServer() (*httptest.Server, *mocks.Service, *authnmocks.Authentication) {
-	logger := mglog.NewMock()
+	logger := smqlog.NewMock()
 	svc := new(mocks.Service)
 	authn := new(authnmocks.Authentication)
 	mux := bsapi.MakeHandler(svc, authn, bootstrap.NewConfigReader(encKey), logger, instanceID)
@@ -212,7 +212,7 @@ func TestAdd(t *testing.T) {
 		req             string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		contentType     string
 		status          int
 		location        string
@@ -324,7 +324,7 @@ func TestAdd(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 
@@ -372,7 +372,7 @@ func TestView(t *testing.T) {
 	cases := []struct {
 		desc            string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		id              string
 		status          int
 		res             config
@@ -425,7 +425,7 @@ func TestView(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("View", mock.Anything, tc.session, tc.id).Return(c, tc.err)
@@ -467,7 +467,7 @@ func TestUpdate(t *testing.T) {
 		req             string
 		id              string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		contentType     string
 		status          int
 		authenticateErr error
@@ -542,7 +542,7 @@ func TestUpdate(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("Update", mock.Anything, tc.session, mock.Anything).Return(tc.err)
@@ -575,7 +575,7 @@ func TestUpdateCert(t *testing.T) {
 		req             string
 		id              string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		contentType     string
 		status          int
 		authenticateErr error
@@ -650,7 +650,7 @@ func TestUpdateCert(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("UpdateCert", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(c, tc.err)
@@ -687,7 +687,7 @@ func TestUpdateConnections(t *testing.T) {
 		req             string
 		id              string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		contentType     string
 		status          int
 		authenticateErr error
@@ -771,7 +771,7 @@ func TestUpdateConnections(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			repoCall := svc.On("UpdateConnections", mock.Anything, tc.session, tc.token, mock.Anything, mock.Anything).Return(tc.err)
@@ -833,7 +833,7 @@ func TestList(t *testing.T) {
 			state = bootstrap.Inactive
 		}
 		svcCall := svc.On("ChangeState", context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		err := svc.ChangeState(context.Background(), mgauthn.Session{}, validToken, list[i].ClientID, state)
+		err := svc.ChangeState(context.Background(), smqauthn.Session{}, validToken, list[i].ClientID, state)
 		assert.Nil(t, err, fmt.Sprintf("Changing state expected to succeed: %s.\n", err))
 
 		svcCall.Unset()
@@ -849,7 +849,7 @@ func TestList(t *testing.T) {
 	cases := []struct {
 		desc            string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		url             string
 		status          int
 		res             configPage
@@ -1040,7 +1040,7 @@ func TestList(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("List", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(bootstrap.ConfigsPage{Total: tc.res.Total, Offset: tc.res.Offset, Limit: tc.res.Limit}, tc.err)
@@ -1077,7 +1077,7 @@ func TestRemove(t *testing.T) {
 		desc            string
 		id              string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		status          int
 		authenticateErr error
 		err             error
@@ -1123,7 +1123,7 @@ func TestRemove(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
@@ -1287,7 +1287,7 @@ func TestChangeState(t *testing.T) {
 		desc            string
 		id              string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		state           string
 		contentType     string
 		status          int
@@ -1372,7 +1372,7 @@ func TestChangeState(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("ChangeState", mock.Anything, tc.session, tc.token, mock.Anything, mock.Anything).Return(tc.err)

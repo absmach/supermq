@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	mg "github.com/absmach/supermq"
+	smq "github.com/absmach/supermq"
 	mgauth "github.com/absmach/supermq/auth"
 	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
 	grpcCommonV1 "github.com/absmach/supermq/internal/grpc/common/v1"
@@ -33,12 +33,12 @@ type service struct {
 	channels   grpcChannelsV1.ChannelsServiceClient
 	groups     grpcGroupsV1.GroupsServiceClient
 	cache      Cache
-	idProvider mg.IDProvider
+	idProvider smq.IDProvider
 	roles.ProvisionManageService
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(repo Repository, policy policies.Service, cache Cache, channels grpcChannelsV1.ChannelsServiceClient, groups grpcGroupsV1.GroupsServiceClient, idProvider mg.IDProvider, sIDProvider mg.IDProvider) (Service, error) {
+func NewService(repo Repository, policy policies.Service, cache Cache, channels grpcChannelsV1.ChannelsServiceClient, groups grpcGroupsV1.GroupsServiceClient, idProvider smq.IDProvider, sIDProvider smq.IDProvider) (Service, error) {
 	rpms, err := roles.NewProvisionManageService(policies.ClientType, repo, policy, sIDProvider, AvailableActions(), BuiltInRoles())
 	if err != nil {
 		return service{}, err

@@ -23,8 +23,8 @@ const numConfigs = 10
 
 var (
 	config = bootstrap.Config{
-		ClientID:     "mg-client",
-		ClientSecret: "mg-key",
+		ClientID:     "smq-client",
+		ClientSecret: "smq-key",
 		ExternalID:   "external-id",
 		ExternalKey:  "external-key",
 		DomainID:     testsutil.GenerateUUID(&testing.T{}),

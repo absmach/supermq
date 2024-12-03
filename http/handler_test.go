@@ -17,9 +17,9 @@ import (
 	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
 	"github.com/absmach/supermq/internal/testsutil"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/apiutil"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -68,7 +68,7 @@ var (
 )
 
 func newHandler() session.Handler {
-	logger := mglog.NewMock()
+	logger := smqlog.NewMock()
 	authn = new(authnmocks.Authentication)
 	clients = new(clmocks.ClientsServiceClient)
 	channels = new(chmocks.ChannelsServiceClient)
@@ -152,7 +152,7 @@ func TestPublish(t *testing.T) {
 		session    *session.Session
 		status     int
 		authNRes   *grpcClientsV1.AuthnRes
-		authNRes1  mgauthn.Session
+		authNRes1  smqauthn.Session
 		authNErr   error
 		authZRes   *grpcChannelsV1.AuthzRes
 		authZErr   error
@@ -179,7 +179,7 @@ func TestPublish(t *testing.T) {
 			password:  validToken,
 			session:   &tokenSession,
 			channelID: chanID,
-			authNRes1: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
+			authNRes1: smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
 			authNErr:  nil,
 			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
 			authZErr:  nil,
@@ -279,7 +279,7 @@ func TestPublish(t *testing.T) {
 			session:   &tokenSession,
 			channelID: chanID,
 			status:    http.StatusUnauthorized,
-			authNRes1: mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
+			authNRes1: smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
 			authNErr:  svcerr.ErrAuthentication,
 			err:       svcerr.ErrAuthentication,
 		},

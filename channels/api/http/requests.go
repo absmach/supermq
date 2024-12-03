@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/absmach/supermq/channels"
-	mgclients "github.com/absmach/supermq/clients"
+	smqclients "github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/connections"
@@ -64,7 +64,7 @@ func (req viewChannelReq) validate() error {
 }
 
 type listChannelsReq struct {
-	status     mgclients.Status
+	status     smqclients.Status
 	offset     uint64
 	limit      uint64
 	name       string
@@ -73,7 +73,7 @@ type listChannelsReq struct {
 	visibility string
 	userID     string
 	listPerms  bool
-	metadata   mgclients.Metadata
+	metadata   smqclients.Metadata
 	id         string
 }
 

@@ -18,7 +18,7 @@ import (
 	"github.com/absmach/supermq/domains/mocks"
 	"github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/internal/testsutil"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/authn"
 	authnmock "github.com/absmach/supermq/pkg/authn/mocks"
@@ -89,7 +89,7 @@ func toJSON(data interface{}) string {
 }
 
 func newDomainsServer() (*httptest.Server, *mocks.Service, *authnmock.Authentication) {
-	logger := mglog.NewMock()
+	logger := smqlog.NewMock()
 	svc := new(mocks.Service)
 	authn := new(authnmock.Authentication)
 	mux := chi.NewMux()

@@ -17,7 +17,7 @@ import (
 	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/apiutil"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/transformers/senml"
@@ -50,7 +50,7 @@ var (
 	vb                   = true
 	vd                   = "dataValue"
 	sum          float64 = 42
-	validSession         = mgauthn.Session{UserID: testsutil.GenerateUUID(&testing.T{})}
+	validSession         = smqauthn.Session{UserID: testsutil.GenerateUUID(&testing.T{})}
 )
 
 func newServer(repo *mocks.MessageRepository, authn *authnmocks.Authentication, clients *climocks.ClientsServiceClient, channels *chmocks.ChannelsServiceClient) *httptest.Server {

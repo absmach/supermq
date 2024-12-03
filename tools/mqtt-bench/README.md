@@ -101,7 +101,7 @@ count = 100
 quiet = false
 
 [supermq]
-connections_file = "mgconn.toml"
+connections_file = "smqconn.toml"
 
 ```
 

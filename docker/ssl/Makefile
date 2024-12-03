@@ -34,8 +34,8 @@ CN = mg.svc
 C  = RS
 ST = RS
 L  = BELGRADE
-O  = MAGISTRALA
-OU = MAGISTRALA
+O  = SUPERMQ
+OU = SUPERMQ
 
 [v3_req]
 subjectAltName = @alt_names

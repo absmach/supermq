@@ -15,9 +15,9 @@ import (
 	api "github.com/absmach/supermq/clients/api/http"
 	"github.com/absmach/supermq/clients/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/apiutil"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -30,7 +30,7 @@ import (
 func setupClients() (*httptest.Server, *mocks.Service, *authnmocks.Authentication) {
 	tsvc := new(mocks.Service)
 
-	logger := mglog.NewMock()
+	logger := smqlog.NewMock()
 	mux := chi.NewRouter()
 	authn := new(authnmocks.Authentication)
 	api.MakeHandler(tsvc, authn, mux, logger, "")
@@ -61,7 +61,7 @@ func TestCreateClient(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		createClientReq sdk.Client
 		svcReq          clients.Client
 		svcRes          []clients.Client
@@ -187,7 +187,7 @@ func TestCreateClient(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("CreateClients", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
@@ -223,7 +223,7 @@ func TestCreateClients(t *testing.T) {
 		desc                 string
 		domainID             string
 		token                string
-		session              mgauthn.Session
+		session              smqauthn.Session
 		createClientsRequest []sdk.Client
 		svcReq               []clients.Client
 		svcRes               []clients.Client
@@ -298,7 +298,7 @@ func TestCreateClients(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("CreateClients", mock.Anything, tc.session, tc.svcReq[0], tc.svcReq[1], tc.svcReq[2]).Return(tc.svcRes, tc.svcErr)
@@ -338,7 +338,7 @@ func TestListClients(t *testing.T) {
 		desc            string
 		token           string
 		domainID        string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		pageMeta        sdk.PageMetadata
 		svcReq          clients.Page
 		svcRes          clients.ClientsPage
@@ -543,7 +543,7 @@ func TestListClients(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("ListClients", mock.Anything, tc.session, mock.Anything, tc.svcReq).Return(tc.svcRes, tc.svcErr)
@@ -574,7 +574,7 @@ func TestViewClient(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		clientID        string
 		svcRes          clients.Client
 		svcErr          error
@@ -653,7 +653,7 @@ func TestViewClient(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("View", mock.Anything, tc.session, tc.clientID).Return(tc.svcRes, tc.svcErr)
@@ -695,7 +695,7 @@ func TestUpdateClient(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		updateClientReq sdk.Client
 		svcReq          clients.Client
 		svcRes          clients.Client
@@ -811,7 +811,7 @@ func TestUpdateClient(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("Update", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
@@ -849,7 +849,7 @@ func TestUpdateClientTags(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		updateClientReq sdk.Client
 		svcReq          clients.Client
 		svcRes          clients.Client
@@ -963,7 +963,7 @@ func TestUpdateClientTags(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("UpdateTags", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
@@ -998,7 +998,7 @@ func TestUpdateClientSecret(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		clientID        string
 		newSecret       string
 		svcRes          clients.Client
@@ -1095,7 +1095,7 @@ func TestUpdateClientSecret(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("UpdateSecret", mock.Anything, tc.session, tc.clientID, tc.newSecret).Return(tc.svcRes, tc.svcErr)
@@ -1129,7 +1129,7 @@ func TestEnableClient(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		clientID        string
 		svcRes          clients.Client
 		svcErr          error
@@ -1198,7 +1198,7 @@ func TestEnableClient(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("Enable", mock.Anything, tc.session, tc.clientID).Return(tc.svcRes, tc.svcErr)
@@ -1232,7 +1232,7 @@ func TestDisableClient(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		clientID        string
 		svcRes          clients.Client
 		svcErr          error
@@ -1301,7 +1301,7 @@ func TestDisableClient(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("Disable", mock.Anything, tc.session, tc.clientID).Return(tc.svcRes, tc.svcErr)
@@ -1333,7 +1333,7 @@ func TestDeleteClient(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		clientID        string
 		svcErr          error
 		authenticateErr error
@@ -1383,7 +1383,7 @@ func TestDeleteClient(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("Delete", mock.Anything, tc.session, tc.clientID).Return(tc.svcErr)
@@ -1421,7 +1421,7 @@ func TestListUserClients(t *testing.T) {
 	cases := []struct {
 		desc            string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		userID          string
 		pageMeta        sdk.PageMetadata
 		svcReq          clients.Page
@@ -1634,7 +1634,7 @@ func TestListUserClients(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("ListClients", mock.Anything, tc.session, tc.userID, tc.svcReq).Return(tc.svcRes, tc.svcErr)

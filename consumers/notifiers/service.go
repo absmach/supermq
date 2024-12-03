@@ -9,7 +9,7 @@ import (
 
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/consumers"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/messaging"
@@ -43,7 +43,7 @@ type Service interface {
 var _ Service = (*notifierService)(nil)
 
 type notifierService struct {
-	authn    mgauthn.Authentication
+	authn    smqauthn.Authentication
 	subs     SubscriptionsRepository
 	idp      supermq.IDProvider
 	notifier Notifier
@@ -52,7 +52,7 @@ type notifierService struct {
 }
 
 // New instantiates the subscriptions service implementation.
-func New(authn mgauthn.Authentication, subs SubscriptionsRepository, idp supermq.IDProvider, notifier Notifier, from string) Service {
+func New(authn smqauthn.Authentication, subs SubscriptionsRepository, idp supermq.IDProvider, notifier Notifier, from string) Service {
 	return &notifierService{
 		authn:    authn,
 		subs:     subs,

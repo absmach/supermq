@@ -29,7 +29,7 @@ const (
 	clientsType     = "clients"
 	usersType       = "users"
 	description     = "Description"
-	groupName       = "mgx"
+	groupName       = "smqx"
 	adminpermission = "admin"
 
 	authoritiesObj  = "authorities"

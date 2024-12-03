@@ -188,7 +188,7 @@ curl -s  -X POST  http://localhost:8190/certs -H "Authorization: Bearer <users_t
 ```
 
 [supermq]: https://github.com/absmach/supermq
-[bootstrap]: https://github.com/absmach/supermq/tree/master/bootstrap
+[bootstrap]: https://github.com/absmach/supermq/tree/main/bootstrap
 [export]: https://github.com/absmach/export
 [agent]: https://github.com/absmach/agent
 [mgxui]: https://github.com/absmach/supermq/ui

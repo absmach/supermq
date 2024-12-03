@@ -11,7 +11,7 @@ import (
 	"github.com/absmach/supermq/consumers/notifiers"
 	"github.com/absmach/supermq/consumers/notifiers/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
@@ -79,7 +79,7 @@ func TestCreateSubscription(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := auth.On("Authenticate", context.Background(), tc.token).Return(mgauthn.Session{UserID: tc.userID}, tc.authenticateErr)
+		repoCall := auth.On("Authenticate", context.Background(), tc.token).Return(smqauthn.Session{UserID: tc.userID}, tc.authenticateErr)
 		repoCall1 := repo.On("Save", context.Background(), mock.Anything).Return(tc.id, tc.err)
 		id, err := svc.CreateSubscription(context.Background(), tc.token, tc.sub)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -136,7 +136,7 @@ func TestViewSubscription(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := auth.On("Authenticate", context.Background(), tc.token).Return(mgauthn.Session{UserID: tc.userID}, tc.authenticateErr)
+		repoCall := auth.On("Authenticate", context.Background(), tc.token).Return(smqauthn.Session{UserID: tc.userID}, tc.authenticateErr)
 		repoCall1 := repo.On("Retrieve", context.Background(), tc.id).Return(tc.sub, tc.err)
 		sub, err := svc.ViewSubscription(context.Background(), tc.token, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -263,7 +263,7 @@ func TestListSubscriptions(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := auth.On("Authenticate", context.Background(), tc.token).Return(mgauthn.Session{UserID: tc.userID}, tc.authenticateErr)
+		repoCall := auth.On("Authenticate", context.Background(), tc.token).Return(smqauthn.Session{UserID: tc.userID}, tc.authenticateErr)
 		repoCall1 := repo.On("RetrieveAll", context.Background(), tc.pageMeta).Return(tc.page, tc.err)
 		page, err := svc.ListSubscriptions(context.Background(), tc.token, tc.pageMeta)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -313,7 +313,7 @@ func TestRemoveSubscription(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := auth.On("Authenticate", context.Background(), tc.token).Return(mgauthn.Session{UserID: tc.userID}, tc.authenticateErr)
+		repoCall := auth.On("Authenticate", context.Background(), tc.token).Return(smqauthn.Session{UserID: tc.userID}, tc.authenticateErr)
 		repoCall1 := repo.On("Remove", context.Background(), tc.id).Return(tc.err)
 		err := svc.RemoveSubscription(context.Background(), tc.token, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))

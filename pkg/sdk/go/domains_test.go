@@ -15,9 +15,9 @@ import (
 	"github.com/absmach/supermq/domains/mocks"
 	internalapi "github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/internal/testsutil"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/apiutil"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -46,7 +46,7 @@ var (
 
 func setupDomains() (*httptest.Server, *mocks.Service, *authnmocks.Authentication) {
 	svc := new(mocks.Service)
-	logger := mglog.NewMock()
+	logger := smqlog.NewMock()
 	mux := chi.NewRouter()
 	authn := new(authnmocks.Authentication)
 
@@ -68,7 +68,7 @@ func TestCreateDomain(t *testing.T) {
 	cases := []struct {
 		desc     string
 		token    string
-		session  mgauthn.Session
+		session  smqauthn.Session
 		domain   sdk.Domain
 		svcReq   domains.Domain
 		svcRes   domains.Domain
@@ -157,7 +157,7 @@ func TestCreateDomain(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("CreateDomain", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
@@ -193,7 +193,7 @@ func TestUpdateDomain(t *testing.T) {
 	cases := []struct {
 		desc     string
 		token    string
-		session  mgauthn.Session
+		session  smqauthn.Session
 		domainID string
 		domain   sdk.Domain
 		svcRes   domains.Domain
@@ -305,7 +305,7 @@ func TestUpdateDomain(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
+				tc.session = smqauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("UpdateDomain", mock.Anything, tc.session, tc.domainID, mock.Anything).Return(tc.svcRes, tc.svcErr)
@@ -336,7 +336,7 @@ func TestViewDomain(t *testing.T) {
 	cases := []struct {
 		desc     string
 		token    string
-		session  mgauthn.Session
+		session  smqauthn.Session
 		domainID string
 		svcRes   domains.Domain
 		svcErr   error
@@ -408,7 +408,7 @@ func TestViewDomain(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
+				tc.session = smqauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("RetrieveDomain", mock.Anything, tc.session, tc.domainID).Return(tc.svcRes, tc.svcErr)
@@ -439,7 +439,7 @@ func TestListDomians(t *testing.T) {
 	cases := []struct {
 		desc     string
 		token    string
-		session  mgauthn.Session
+		session  smqauthn.Session
 		pageMeta sdk.PageMetadata
 		svcReq   domains.Page
 		svcRes   domains.DomainsPage
@@ -549,7 +549,7 @@ func TestListDomians(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("ListDomains", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
@@ -580,7 +580,7 @@ func TestEnableDomain(t *testing.T) {
 	cases := []struct {
 		desc     string
 		token    string
-		session  mgauthn.Session
+		session  smqauthn.Session
 		domainID string
 		svcRes   domains.Domain
 		svcErr   error
@@ -623,7 +623,7 @@ func TestEnableDomain(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
+				tc.session = smqauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("EnableDomain", mock.Anything, tc.session, tc.domainID).Return(tc.svcRes, tc.svcErr)
@@ -653,7 +653,7 @@ func TestDisableDomain(t *testing.T) {
 	cases := []struct {
 		desc     string
 		token    string
-		session  mgauthn.Session
+		session  smqauthn.Session
 		domainID string
 		svcRes   domains.Domain
 		svcErr   error
@@ -696,7 +696,7 @@ func TestDisableDomain(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
+				tc.session = smqauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("DisableDomain", mock.Anything, tc.session, tc.domainID).Return(tc.svcRes, tc.svcErr)

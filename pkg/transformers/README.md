@@ -6,5 +6,5 @@ SuperMQ [SenML transformer](transformer) is an example of Transformer service fo
 
 SuperMQ [writers](writers) are using a standalone SenML transformer to preprocess messages before storing them.
 
-[transformers]: https://github.com/absmach/supermq/tree/master/transformers/senml
-[writers]: https://github.com/absmach/supermq/tree/master/writers
+[transformers]: https://github.com/absmach/supermq/tree/main/transformers/senml
+[writers]: https://github.com/absmach/supermq/tree/main/writers

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/journal"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 )
 
 var _ journal.Service = (*loggingMiddleware)(nil)
@@ -47,7 +47,7 @@ func (lm *loggingMiddleware) Save(ctx context.Context, j journal.Journal) (err e
 	return lm.service.Save(ctx, j)
 }
 
-func (lm *loggingMiddleware) RetrieveAll(ctx context.Context, session mgauthn.Session, page journal.Page) (journalsPage journal.JournalsPage, err error) {
+func (lm *loggingMiddleware) RetrieveAll(ctx context.Context, session smqauthn.Session, page journal.Page) (journalsPage journal.JournalsPage, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),

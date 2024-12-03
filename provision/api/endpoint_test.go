@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/absmach/supermq/internal/testsutil"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/apiutil"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/provision"
@@ -56,7 +56,7 @@ func (tr testRequest) make() (*http.Response, error) {
 func newProvisionServer() (*httptest.Server, *mocks.Service) {
 	svc := new(mocks.Service)
 
-	logger := mglog.NewMock()
+	logger := smqlog.NewMock()
 	mux := api.MakeHandler(svc, logger, "test")
 	return httptest.NewServer(mux), svc
 }

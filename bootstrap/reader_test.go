@@ -50,27 +50,27 @@ func dec(in []byte) ([]byte, error) {
 
 func TestReadConfig(t *testing.T) {
 	cfg := bootstrap.Config{
-		ClientID:     "mg_id",
+		ClientID:     "smq_id",
 		ClientCert:   "client_cert",
 		ClientKey:    "client_key",
 		CACert:       "ca_cert",
-		ClientSecret: "mg_key",
+		ClientSecret: "smq_key",
 		Channels: []bootstrap.Channel{
 			{
-				ID:       "mg_id",
-				Name:     "mg_name",
+				ID:       "smq_id",
+				Name:     "smq_name",
 				Metadata: map[string]interface{}{"key": "value}"},
 			},
 		},
 		Content: "content",
 	}
 	ret := readResp{
-		ClientID:     "mg_id",
-		ClientSecret: "mg_key",
+		ClientID:     "smq_id",
+		ClientSecret: "smq_key",
 		Channels: []readChan{
 			{
-				ID:       "mg_id",
-				Name:     "mg_name",
+				ID:       "smq_id",
+				Name:     "smq_name",
 				Metadata: map[string]interface{}{"key": "value}"},
 			},
 		},

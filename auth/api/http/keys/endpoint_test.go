@@ -18,7 +18,7 @@ import (
 	httpapi "github.com/absmach/supermq/auth/api/http"
 	"github.com/absmach/supermq/auth/jwt"
 	"github.com/absmach/supermq/auth/mocks"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/apiutil"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	policymocks "github.com/absmach/supermq/pkg/policies/mocks"
@@ -78,7 +78,7 @@ func newService() (auth.Service, *mocks.KeyRepository) {
 }
 
 func newServer(svc auth.Service) *httptest.Server {
-	mux := httpapi.MakeHandler(svc, mglog.NewMock(), "")
+	mux := httpapi.MakeHandler(svc, smqlog.NewMock(), "")
 	return httptest.NewServer(mux)
 }
 

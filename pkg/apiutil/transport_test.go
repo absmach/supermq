@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"testing"
 
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -355,7 +355,7 @@ func TestLoggingErrorEncoder(t *testing.T) {
 				encCalled = true
 			}
 
-			errorEncoder := apiutil.LoggingErrorEncoder(mglog.NewMock(), encFunc)
+			errorEncoder := apiutil.LoggingErrorEncoder(smqlog.NewMock(), encFunc)
 			errorEncoder(context.Background(), c.err, httptest.NewRecorder())
 
 			assert.True(t, encCalled)

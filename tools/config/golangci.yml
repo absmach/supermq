@@ -25,7 +25,7 @@ linters-settings:
       - pkg: github.com/absmach/callhome/pkg/client
         alias: chclient
       - pkg: github.com/absmach/supermq/logger
-        alias: mglog
+        alias: smqlog
       - pkg: github.com/absmach/supermq/pkg/errors/service
         alias: svcerr
       - pkg: github.com/absmach/supermq/pkg/errors/repository

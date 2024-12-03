@@ -10,7 +10,7 @@ import (
 
 	"github.com/absmach/supermq"
 	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/oauth2"
 	"github.com/absmach/supermq/users"
 	"github.com/go-chi/chi/v5"
@@ -18,7 +18,7 @@ import (
 )
 
 // MakeHandler returns a HTTP handler for Users and Groups API endpoints.
-func MakeHandler(cls users.Service, authn mgauthn.Authentication, tokensvc grpcTokenV1.TokenServiceClient, selfRegister bool, mux *chi.Mux, logger *slog.Logger, instanceID string, pr *regexp.Regexp, providers ...oauth2.Provider) http.Handler {
+func MakeHandler(cls users.Service, authn smqauthn.Authentication, tokensvc grpcTokenV1.TokenServiceClient, selfRegister bool, mux *chi.Mux, logger *slog.Logger, instanceID string, pr *regexp.Regexp, providers ...oauth2.Provider) http.Handler {
 	mux = usersHandler(cls, authn, tokensvc, selfRegister, mux, logger, pr, providers...)
 
 	mux.Get("/health", supermq.Health("users", instanceID))

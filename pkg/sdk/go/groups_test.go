@@ -15,9 +15,9 @@ import (
 	httpapi "github.com/absmach/supermq/groups/api/http"
 	"github.com/absmach/supermq/groups/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/apiutil"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -38,7 +38,7 @@ var (
 func setupGroups() (*httptest.Server, *mocks.Service, *authnmocks.Authentication) {
 	svc := new(mocks.Service)
 
-	logger := mglog.NewMock()
+	logger := smqlog.NewMock()
 	mux := chi.NewRouter()
 	provider := new(oauth2mocks.Provider)
 	provider.On("Name").Return("test")
@@ -75,7 +75,7 @@ func TestCreateGroup(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		groupReq        sdk.Group
 		svcReq          groups.Group
 		svcRes          groups.Group
@@ -259,7 +259,7 @@ func TestCreateGroup(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("CreateGroup", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
@@ -300,7 +300,7 @@ func TestListGroups(t *testing.T) {
 		desc            string
 		token           string
 		domainID        string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		pageMeta        sdk.PageMetadata
 		svcReq          groups.PageMeta
 		svcRes          groups.Page
@@ -494,7 +494,7 @@ func TestListGroups(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("ListGroups", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
@@ -540,7 +540,7 @@ func TestListChildrenGroups(t *testing.T) {
 		desc            string
 		token           string
 		domainID        string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		childID         string
 		pageMeta        sdk.PageMetadata
 		svcReq          groups.Page
@@ -747,7 +747,7 @@ func TestListChildrenGroups(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("ListChildrenGroups", mock.Anything, tc.session, tc.childID, int64(1), int64(0), mock.Anything).Return(tc.svcRes, tc.svcErr)
@@ -777,7 +777,7 @@ func TestViewGroup(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		groupID         string
 		svcRes          groups.Group
 		svcErr          error
@@ -856,7 +856,7 @@ func TestViewGroup(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("ViewGroup", mock.Anything, tc.session, tc.groupID).Return(tc.svcRes, tc.svcErr)
@@ -893,7 +893,7 @@ func TestUpdateGroup(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		groupReq        sdk.Group
 		svcReq          groups.Group
 		svcRes          groups.Group
@@ -1045,7 +1045,7 @@ func TestUpdateGroup(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("UpdateGroup", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
@@ -1078,7 +1078,7 @@ func TestEnableGroup(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		groupID         string
 		svcRes          groups.Group
 		svcErr          error
@@ -1156,7 +1156,7 @@ func TestEnableGroup(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("EnableGroup", mock.Anything, tc.session, tc.groupID).Return(tc.svcRes, tc.svcErr)
@@ -1189,7 +1189,7 @@ func TestDisableGroup(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		groupID         string
 		svcRes          groups.Group
 		svcErr          error
@@ -1267,7 +1267,7 @@ func TestDisableGroup(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("DisableGroup", mock.Anything, tc.session, tc.groupID).Return(tc.svcRes, tc.svcErr)
@@ -1297,7 +1297,7 @@ func TestDeleteGroup(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		groupID         string
 		svcErr          error
 		authenticateErr error
@@ -1347,7 +1347,7 @@ func TestDeleteGroup(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("DeleteGroup", mock.Anything, tc.session, tc.groupID).Return(tc.svcErr)

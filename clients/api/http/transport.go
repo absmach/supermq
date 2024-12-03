@@ -9,13 +9,13 @@ import (
 
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/clients"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // MakeHandler returns a HTTP handler for clients and Groups API endpoints.
-func MakeHandler(tsvc clients.Service, authn mgauthn.Authentication, mux *chi.Mux, logger *slog.Logger, instanceID string) http.Handler {
+func MakeHandler(tsvc clients.Service, authn smqauthn.Authentication, mux *chi.Mux, logger *slog.Logger, instanceID string) http.Handler {
 	mux = clientsHandler(tsvc, authn, mux, logger)
 
 	mux.Get("/health", supermq.Health("clients", instanceID))

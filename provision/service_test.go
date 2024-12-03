@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/absmach/supermq/internal/testsutil"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -23,7 +23,7 @@ var validToken = "valid"
 
 func TestMapping(t *testing.T) {
 	mgsdk := new(sdkmocks.SDK)
-	svc := provision.New(validConfig, mgsdk, mglog.NewMock())
+	svc := provision.New(validConfig, mgsdk, smqlog.NewMock())
 
 	cases := []struct {
 		desc    string
@@ -213,7 +213,7 @@ func TestCert(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.desc, func(t *testing.T) {
 			mgsdk := new(sdkmocks.SDK)
-			svc := provision.New(c.config, mgsdk, mglog.NewMock())
+			svc := provision.New(c.config, mgsdk, smqlog.NewMock())
 
 			mgsdk.On("Client", c.clientID, c.domainID, mock.Anything).Return(sdk.Client{ID: c.clientID}, c.sdkClientErr)
 			mgsdk.On("IssueCert", c.clientID, c.config.Cert.TTL, c.domainID, mock.Anything).Return(sdk.Cert{SerialNumber: c.serial}, c.sdkCertErr)

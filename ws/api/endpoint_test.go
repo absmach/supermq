@@ -18,8 +18,8 @@ import (
 	climocks "github.com/absmach/supermq/clients/mocks"
 	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
-	mglog "github.com/absmach/supermq/logger"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqlog "github.com/absmach/supermq/logger"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnMocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/messaging/mocks"
 	"github.com/absmach/supermq/ws"
@@ -46,13 +46,13 @@ func newService(clients grpcClientsV1.ClientsServiceClient, channels grpcChannel
 }
 
 func newHTTPServer(svc ws.Service) *httptest.Server {
-	mux := api.MakeHandler(context.Background(), svc, mglog.NewMock(), instanceID)
+	mux := api.MakeHandler(context.Background(), svc, smqlog.NewMock(), instanceID)
 	return httptest.NewServer(mux)
 }
 
 func newProxyHTPPServer(svc session.Handler, targetServer *httptest.Server) (*httptest.Server, error) {
 	turl := strings.ReplaceAll(targetServer.URL, "http", "ws")
-	mp, err := websockets.NewProxy("", turl, mglog.NewMock(), svc)
+	mp, err := websockets.NewProxy("", turl, smqlog.NewMock(), svc)
 	if err != nil {
 		return nil, err
 	}
@@ -100,14 +100,14 @@ func TestHandshake(t *testing.T) {
 	svc, pubsub := newService(clients, channels)
 	target := newHTTPServer(svc)
 	defer target.Close()
-	handler := ws.NewHandler(pubsub, mglog.NewMock(), authn, clients, channels)
+	handler := ws.NewHandler(pubsub, smqlog.NewMock(), authn, clients, channels)
 	ts, err := newProxyHTPPServer(handler, target)
 	require.Nil(t, err)
 	defer ts.Close()
 	pubsub.On("Subscribe", mock.Anything, mock.Anything).Return(nil)
 	pubsub.On("Publish", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	clients.On("Authenticate", mock.Anything, mock.Anything).Return(&grpcClientsV1.AuthnRes{Authenticated: true}, nil)
-	authn.On("Authenticate", mock.Anything, mock.Anything).Return(mgauthn.Session{}, nil)
+	authn.On("Authenticate", mock.Anything, mock.Anything).Return(smqauthn.Session{}, nil)
 	channels.On("Authorize", mock.Anything, mock.Anything, mock.Anything).Return(&grpcChannelsV1.AuthzRes{Authorized: true}, nil)
 
 	cases := []struct {

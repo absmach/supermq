@@ -49,15 +49,15 @@ git remote add upstream https://github.com/absmach/supermq.git
 If your cloned repository is behind the upstream commits, then get the latest changes from upstream:
 
 ```
-git checkout master
+git checkout main
 git pull --rebase upstream main
 ```
 
-Create a new topic branch from `master` using the naming convention `MG-[issue-number]`
+Create a new topic branch from `main` using the naming convention `SMQ-[issue-number]`
 to help us keep track of your contribution scope:
 
 ```
-git checkout -b MG-[issue-number]
+git checkout -b SMQ-[issue-number]
 ```
 
 Commit your changes in logical chunks. When you are ready to commit, make sure
@@ -80,7 +80,7 @@ git pull --rebase upstream main
 Push your topic branch up to your fork:
 
 ```
-git push origin MG-[issue-number]
+git push origin SMQ-[issue-number]
 ```
 
 [Open a Pull Request](https://help.github.com/articles/using-pull-requests/) with a clear title

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/pkg/apiutil"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/policies"
 )
 
@@ -144,7 +144,7 @@ type Service interface {
 	Save(ctx context.Context, journal Journal) error
 
 	// RetrieveAll retrieves all journals from the database with the given page.
-	RetrieveAll(ctx context.Context, session mgauthn.Session, page Page) (JournalsPage, error)
+	RetrieveAll(ctx context.Context, session smqauthn.Session, page Page) (JournalsPage, error)
 }
 
 // Repository provides access to the journal log database.

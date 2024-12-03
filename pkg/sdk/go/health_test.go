@@ -13,7 +13,7 @@ import (
 	bmocks "github.com/absmach/supermq/bootstrap/mocks"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	climocks "github.com/absmach/supermq/clients/mocks"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
 	sdk "github.com/absmach/supermq/pkg/sdk/go"
@@ -126,7 +126,7 @@ func TestHealth(t *testing.T) {
 func setupMinimalBootstrap() *httptest.Server {
 	bsvc := new(bmocks.Service)
 	reader := new(bmocks.ConfigReader)
-	logger := mglog.NewMock()
+	logger := smqlog.NewMock()
 	authn := new(authnmocks.Authentication)
 	mux := api.MakeHandler(bsvc, authn, reader, logger, "")
 

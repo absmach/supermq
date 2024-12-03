@@ -10,7 +10,7 @@ import (
 	"encoding/hex"
 
 	"github.com/absmach/supermq"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -61,33 +61,33 @@ var _ Service = (*bootstrapService)(nil)
 //go:generate mockery --name Service --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
 type Service interface {
 	// Add adds new Client Config to the user identified by the provided token.
-	Add(ctx context.Context, session mgauthn.Session, token string, cfg Config) (Config, error)
+	Add(ctx context.Context, session smqauthn.Session, token string, cfg Config) (Config, error)
 
 	// View returns Client Config with given ID belonging to the user identified by the given token.
-	View(ctx context.Context, session mgauthn.Session, id string) (Config, error)
+	View(ctx context.Context, session smqauthn.Session, id string) (Config, error)
 
 	// Update updates editable fields of the provided Config.
-	Update(ctx context.Context, session mgauthn.Session, cfg Config) error
+	Update(ctx context.Context, session smqauthn.Session, cfg Config) error
 
 	// UpdateCert updates an existing Config certificate and token.
 	// A non-nil error is returned to indicate operation failure.
-	UpdateCert(ctx context.Context, session mgauthn.Session, clientID, clientCert, clientKey, caCert string) (Config, error)
+	UpdateCert(ctx context.Context, session smqauthn.Session, clientID, clientCert, clientKey, caCert string) (Config, error)
 
 	// UpdateConnections updates list of Channels related to given Config.
-	UpdateConnections(ctx context.Context, session mgauthn.Session, token, id string, connections []string) error
+	UpdateConnections(ctx context.Context, session smqauthn.Session, token, id string, connections []string) error
 
 	// List returns subset of Configs with given search params that belong to the
 	// user identified by the given token.
-	List(ctx context.Context, session mgauthn.Session, filter Filter, offset, limit uint64) (ConfigsPage, error)
+	List(ctx context.Context, session smqauthn.Session, filter Filter, offset, limit uint64) (ConfigsPage, error)
 
 	// Remove removes Config with specified token that belongs to the user identified by the given token.
-	Remove(ctx context.Context, session mgauthn.Session, id string) error
+	Remove(ctx context.Context, session smqauthn.Session, id string) error
 
 	// Bootstrap returns Config to the Client with provided external ID using external key.
 	Bootstrap(ctx context.Context, externalKey, externalID string, secure bool) (Config, error)
 
 	// ChangeState changes state of the Client with given client ID and domain ID.
-	ChangeState(ctx context.Context, session mgauthn.Session, token, id string, state State) error
+	ChangeState(ctx context.Context, session smqauthn.Session, token, id string, state State) error
 
 	// Methods RemoveConfig, UpdateChannel, and RemoveChannel are used as
 	// handlers for events. That's why these methods surpass ownership check.
@@ -137,7 +137,7 @@ func New(policyService policies.Service, configs ConfigRepository, sdk mgsdk.SDK
 	}
 }
 
-func (bs bootstrapService) Add(ctx context.Context, session mgauthn.Session, token string, cfg Config) (Config, error) {
+func (bs bootstrapService) Add(ctx context.Context, session smqauthn.Session, token string, cfg Config) (Config, error) {
 	toConnect := bs.toIDList(cfg.Channels)
 
 	// Check if channels exist. This is the way to prevent fetching channels that already exist.
@@ -186,7 +186,7 @@ func (bs bootstrapService) Add(ctx context.Context, session mgauthn.Session, tok
 	return cfg, nil
 }
 
-func (bs bootstrapService) View(ctx context.Context, session mgauthn.Session, id string) (Config, error) {
+func (bs bootstrapService) View(ctx context.Context, session smqauthn.Session, id string) (Config, error) {
 	cfg, err := bs.configs.RetrieveByID(ctx, session.DomainID, id)
 	if err != nil {
 		return Config{}, errors.Wrap(svcerr.ErrViewEntity, err)
@@ -194,7 +194,7 @@ func (bs bootstrapService) View(ctx context.Context, session mgauthn.Session, id
 	return cfg, nil
 }
 
-func (bs bootstrapService) Update(ctx context.Context, session mgauthn.Session, cfg Config) error {
+func (bs bootstrapService) Update(ctx context.Context, session smqauthn.Session, cfg Config) error {
 	cfg.DomainID = session.DomainID
 	if err := bs.configs.Update(ctx, cfg); err != nil {
 		return errors.Wrap(errUpdateConnections, err)
@@ -202,7 +202,7 @@ func (bs bootstrapService) Update(ctx context.Context, session mgauthn.Session, 
 	return nil
 }
 
-func (bs bootstrapService) UpdateCert(ctx context.Context, session mgauthn.Session, clientID, clientCert, clientKey, caCert string) (Config, error) {
+func (bs bootstrapService) UpdateCert(ctx context.Context, session smqauthn.Session, clientID, clientCert, clientKey, caCert string) (Config, error) {
 	cfg, err := bs.configs.UpdateCert(ctx, session.DomainID, clientID, clientCert, clientKey, caCert)
 	if err != nil {
 		return Config{}, errors.Wrap(errUpdateCert, err)
@@ -210,7 +210,7 @@ func (bs bootstrapService) UpdateCert(ctx context.Context, session mgauthn.Sessi
 	return cfg, nil
 }
 
-func (bs bootstrapService) UpdateConnections(ctx context.Context, session mgauthn.Session, token, id string, connections []string) error {
+func (bs bootstrapService) UpdateConnections(ctx context.Context, session smqauthn.Session, token, id string, connections []string) error {
 	cfg, err := bs.configs.RetrieveByID(ctx, session.DomainID, id)
 	if err != nil {
 		return errors.Wrap(errUpdateConnections, err)
@@ -275,7 +275,7 @@ func (bs bootstrapService) listClientIDs(ctx context.Context, userID string) ([]
 	return tids.Policies, nil
 }
 
-func (bs bootstrapService) List(ctx context.Context, session mgauthn.Session, filter Filter, offset, limit uint64) (ConfigsPage, error) {
+func (bs bootstrapService) List(ctx context.Context, session smqauthn.Session, filter Filter, offset, limit uint64) (ConfigsPage, error) {
 	if session.SuperAdmin {
 		return bs.configs.RetrieveAll(ctx, session.DomainID, []string{}, filter, offset, limit), nil
 	}
@@ -298,7 +298,7 @@ func (bs bootstrapService) List(ctx context.Context, session mgauthn.Session, fi
 	return bs.configs.RetrieveAll(ctx, session.DomainID, clientIDs, filter, offset, limit), nil
 }
 
-func (bs bootstrapService) Remove(ctx context.Context, session mgauthn.Session, id string) error {
+func (bs bootstrapService) Remove(ctx context.Context, session smqauthn.Session, id string) error {
 	if err := bs.configs.Remove(ctx, session.DomainID, id); err != nil {
 		return errors.Wrap(errRemoveBootstrap, err)
 	}
@@ -324,7 +324,7 @@ func (bs bootstrapService) Bootstrap(ctx context.Context, externalKey, externalI
 	return cfg, nil
 }
 
-func (bs bootstrapService) ChangeState(ctx context.Context, session mgauthn.Session, token, id string, state State) error {
+func (bs bootstrapService) ChangeState(ctx context.Context, session smqauthn.Session, token, id string, state State) error {
 	cfg, err := bs.configs.RetrieveByID(ctx, session.DomainID, id)
 	if err != nil {
 		return errors.Wrap(errChangeState, err)

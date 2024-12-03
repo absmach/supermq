@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/events"
 	"github.com/absmach/supermq/pkg/events/rabbitmq"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +20,7 @@ import (
 
 var (
 	eventsChan = make(chan map[string]interface{})
-	logger     = mglog.NewMock()
+	logger     = smqlog.NewMock()
 	errFailed  = errors.New("failed")
 	numEvents  = 100
 )

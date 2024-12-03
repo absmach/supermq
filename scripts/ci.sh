@@ -78,7 +78,7 @@ setup_mg() {
 
 setup_lint() {
     # binary will be $(go env GOBIN)/golangci-lint
-    curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOBIN) $GOLANGCI_LINT_VERSION
+    curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/main/install.sh | sh -s -- -b $(go env GOBIN) $GOLANGCI_LINT_VERSION
 }
 
 setup() {
@@ -105,7 +105,7 @@ run_test() {
 }
 
 push() {
-    if test -n "$BRANCH_NAME" && test "$BRANCH_NAME" = "master"; then
+    if test -n "$BRANCH_NAME" && test "$BRANCH_NAME" = "main"; then
         echo "Pushing Docker images..."
         make -j$NPROC latest
     fi

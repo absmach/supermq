@@ -13,7 +13,7 @@ import (
 	httpapi "github.com/absmach/supermq/consumers/notifiers/api"
 	notmocks "github.com/absmach/supermq/consumers/notifiers/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -49,7 +49,7 @@ var (
 
 func setupSubscriptions() (*httptest.Server, *notmocks.Service) {
 	nsvc := new(notmocks.Service)
-	logger := mglog.NewMock()
+	logger := smqlog.NewMock()
 	mux := httpapi.MakeHandler(nsvc, logger, instanceID)
 
 	return httptest.NewServer(mux), nsvc

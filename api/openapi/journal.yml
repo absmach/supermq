@@ -12,7 +12,7 @@ info:
     email: info@mainflux.com
   license:
     name: Apache 2.0
-    url: https://github.com/absmach/supermq/blob/master/LICENSE
+    url: https://github.com/absmach/supermq/blob/main/LICENSE
   version: 0.14.0
 
 servers:

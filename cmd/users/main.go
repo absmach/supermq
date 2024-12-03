@@ -19,9 +19,9 @@ import (
 	"github.com/absmach/supermq/internal/email"
 	grpcDomainsV1 "github.com/absmach/supermq/internal/grpc/domains/v1"
 	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
-	mgauthz "github.com/absmach/supermq/pkg/authz"
+	smqauthz "github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	jaegerclient "github.com/absmach/supermq/pkg/jaeger"
@@ -104,13 +104,13 @@ func main() {
 	}
 	cfg.PassRegex = passRegex
 
-	logger, err := mglog.New(os.Stdout, cfg.LogLevel)
+	logger, err := smqlog.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatalf("failed to init logger: %s", err.Error())
 	}
 
 	var exitCode int
-	defer mglog.ExitWithError(&exitCode)
+	defer smqlog.ExitWithError(&exitCode)
 
 	if cfg.InstanceID == "" {
 		if cfg.InstanceID, err = uuid.New().ID(); err != nil {
@@ -257,7 +257,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, authz mgauthz.Authorization, token grpcTokenV1.TokenServiceClient, policyService policies.Service, domainsClient grpcDomainsV1.DomainsServiceClient, db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, c config, ec email.Config, logger *slog.Logger) (users.Service, error) {
+func newService(ctx context.Context, authz smqauthz.Authorization, token grpcTokenV1.TokenServiceClient, policyService policies.Service, domainsClient grpcDomainsV1.DomainsServiceClient, db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, c config, ec email.Config, logger *slog.Logger) (users.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	idp := uuid.New()
 	hsr := hasher.New()
@@ -337,8 +337,8 @@ func createAdmin(ctx context.Context, c config, repo users.Repository, hsr users
 	return user.ID, nil
 }
 
-func createAdminPolicy(ctx context.Context, userID string, authz mgauthz.Authorization, policyService policies.Service) error {
-	if err := authz.Authorize(ctx, mgauthz.PolicyReq{
+func createAdminPolicy(ctx context.Context, userID string, authz smqauthz.Authorization, policyService policies.Service) error {
+	if err := authz.Authorize(ctx, smqauthz.PolicyReq{
 		SubjectType: policies.UserType,
 		Subject:     userID,
 		Permission:  policies.AdministratorRelation,

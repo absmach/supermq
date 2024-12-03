@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/absmach/supermq/bootstrap/postgres"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	pgclient "github.com/absmach/supermq/pkg/postgres"
 	"github.com/jmoiron/sqlx"
 	"github.com/ory/dockertest/v3"
@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	testLog, _ = mglog.New(os.Stdout, "info")
+	testLog, _ = smqlog.New(os.Stdout, "info")
 	db         *sqlx.DB
 )
 

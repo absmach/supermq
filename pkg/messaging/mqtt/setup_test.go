@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/messaging"
 	mqttpubsub "github.com/absmach/supermq/pkg/messaging/mqtt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -57,7 +57,7 @@ func TestMain(m *testing.M) {
 	address = fmt.Sprintf("%s:%s", "localhost", container.GetPort(port))
 	pool.MaxWait = poolMaxWait
 
-	logger, err = mglog.New(os.Stdout, "debug")
+	logger, err = smqlog.New(os.Stdout, "debug")
 	if err != nil {
 		log.Fatal(err.Error())
 	}

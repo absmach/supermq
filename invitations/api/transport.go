@@ -14,7 +14,7 @@ import (
 	"github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/invitations"
 	"github.com/absmach/supermq/pkg/apiutil"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -30,7 +30,7 @@ const (
 	stateKey     = "state"
 )
 
-func MakeHandler(svc invitations.Service, logger *slog.Logger, authn mgauthn.Authentication, instanceID string) http.Handler {
+func MakeHandler(svc invitations.Service, logger *slog.Logger, authn smqauthn.Authentication, instanceID string) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}

@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	mgclients "github.com/absmach/supermq/clients"
+	smqclients "github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/errors"
@@ -88,7 +88,7 @@ func decodeListChannels(_ context.Context, r *http.Request) (interface{}, error)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	st, err := mgclients.ToStatus(s)
+	st, err := smqclients.ToStatus(s)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}

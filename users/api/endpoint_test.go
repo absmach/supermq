@@ -17,9 +17,9 @@ import (
 	"github.com/absmach/supermq/internal/api"
 	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/internal/testsutil"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/apiutil"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -87,7 +87,7 @@ func (tr testRequest) make() (*http.Response, error) {
 
 func newUsersServer() (*httptest.Server, *mocks.Service, *authnmocks.Authentication) {
 	svc := new(mocks.Service)
-	logger := mglog.NewMock()
+	logger := smqlog.NewMock()
 	mux := chi.NewRouter()
 	provider := new(oauth2mocks.Provider)
 	provider.On("Name").Return("test")
@@ -234,7 +234,7 @@ func TestRegister(t *testing.T) {
 				body:        strings.NewReader(data),
 			}
 
-			svcCall := svc.On("Register", mock.Anything, mgauthn.Session{}, tc.user, true).Return(tc.user, tc.err)
+			svcCall := svc.On("Register", mock.Anything, smqauthn.Session{}, tc.user, true).Return(tc.user, tc.err)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			var errRes respBody
@@ -259,7 +259,7 @@ func TestView(t *testing.T) {
 		token    string
 		id       string
 		status   int
-		authnRes mgauthn.Session
+		authnRes smqauthn.Session
 		authnErr error
 		svcErr   error
 		err      error
@@ -269,7 +269,7 @@ func TestView(t *testing.T) {
 			token:    validToken,
 			id:       user.ID,
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -277,7 +277,7 @@ func TestView(t *testing.T) {
 			token:    inValidToken,
 			id:       user.ID,
 			status:   http.StatusUnauthorized,
-			authnRes: mgauthn.Session{},
+			authnRes: smqauthn.Session{},
 			authnErr: svcerr.ErrAuthentication,
 			err:      svcerr.ErrAuthentication,
 		},
@@ -286,7 +286,7 @@ func TestView(t *testing.T) {
 			token:    "",
 			id:       user.ID,
 			status:   http.StatusUnauthorized,
-			authnRes: mgauthn.Session{},
+			authnRes: smqauthn.Session{},
 			authnErr: svcerr.ErrAuthentication,
 			err:      apiutil.ErrBearerToken,
 		},
@@ -295,7 +295,7 @@ func TestView(t *testing.T) {
 			token:    validToken,
 			id:       user.ID,
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -303,7 +303,7 @@ func TestView(t *testing.T) {
 			token:    validToken,
 			id:       inValid,
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			svcErr:   svcerr.ErrViewEntity,
 			err:      svcerr.ErrViewEntity,
 		},
@@ -345,7 +345,7 @@ func TestViewProfile(t *testing.T) {
 		token    string
 		id       string
 		status   int
-		authnRes mgauthn.Session
+		authnRes smqauthn.Session
 		authnErr error
 		svcErr   error
 		err      error
@@ -355,7 +355,7 @@ func TestViewProfile(t *testing.T) {
 			token:    validToken,
 			id:       user.ID,
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -364,7 +364,7 @@ func TestViewProfile(t *testing.T) {
 			id:       user.ID,
 			status:   http.StatusUnauthorized,
 			authnErr: svcerr.ErrAuthentication,
-			authnRes: mgauthn.Session{},
+			authnRes: smqauthn.Session{},
 			err:      svcerr.ErrAuthentication,
 		},
 		{
@@ -373,7 +373,7 @@ func TestViewProfile(t *testing.T) {
 			id:       user.ID,
 			status:   http.StatusUnauthorized,
 			authnErr: svcerr.ErrAuthentication,
-			authnRes: mgauthn.Session{},
+			authnRes: smqauthn.Session{},
 			err:      apiutil.ErrBearerToken,
 		},
 		{
@@ -381,7 +381,7 @@ func TestViewProfile(t *testing.T) {
 			token:    validToken,
 			id:       user.ID,
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			svcErr:   svcerr.ErrViewEntity,
 			err:      svcerr.ErrViewEntity,
 		},
@@ -424,7 +424,7 @@ func TestListUsers(t *testing.T) {
 		token             string
 		listUsersResponse users.UsersPage
 		status            int
-		authnRes          mgauthn.Session
+		authnRes          smqauthn.Session
 		authnErr          error
 		err               error
 	}{
@@ -438,14 +438,14 @@ func TestListUsers(t *testing.T) {
 				},
 				Users: []users.User{user},
 			},
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
 			desc:     "list users with empty token",
 			token:    "",
 			status:   http.StatusUnauthorized,
-			authnRes: mgauthn.Session{},
+			authnRes: smqauthn.Session{},
 			authnErr: svcerr.ErrAuthentication,
 			err:      apiutil.ErrBearerToken,
 		},
@@ -453,7 +453,7 @@ func TestListUsers(t *testing.T) {
 			desc:     "list users with invalid token",
 			token:    inValidToken,
 			status:   http.StatusUnauthorized,
-			authnRes: mgauthn.Session{},
+			authnRes: smqauthn.Session{},
 			authnErr: svcerr.ErrAuthentication,
 			err:      svcerr.ErrAuthentication,
 		},
@@ -469,7 +469,7 @@ func TestListUsers(t *testing.T) {
 			},
 			query:    "offset=1",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -477,7 +477,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "offset=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -492,7 +492,7 @@ func TestListUsers(t *testing.T) {
 			},
 			query:    "limit=1",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -500,7 +500,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "limit=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -508,7 +508,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    fmt.Sprintf("limit=%d", api.MaxLimitSize+1),
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -522,7 +522,7 @@ func TestListUsers(t *testing.T) {
 			},
 			query:    "name=username",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -530,7 +530,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "name=1&name=2",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
@@ -544,7 +544,7 @@ func TestListUsers(t *testing.T) {
 			},
 			query:    "status=enabled",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -552,7 +552,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "status=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -560,7 +560,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "status=enabled&status=disabled",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
@@ -574,7 +574,7 @@ func TestListUsers(t *testing.T) {
 			},
 			query:    "tag=tag1,tag2",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -582,7 +582,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "tag=tag1&tag=tag2",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
@@ -596,7 +596,7 @@ func TestListUsers(t *testing.T) {
 			},
 			query:    "metadata=%7B%22domain%22%3A%20%22example.com%22%7D&",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -604,7 +604,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "metadata=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -612,7 +612,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "metadata=%7B%22domain%22%3A%20%22example.com%22%7D&metadata=%7B%22domain%22%3A%20%22example.com%22%7D",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
@@ -626,7 +626,7 @@ func TestListUsers(t *testing.T) {
 			},
 			query:    "permission=view",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -634,7 +634,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "permission=view&permission=view",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
@@ -648,7 +648,7 @@ func TestListUsers(t *testing.T) {
 			},
 			query:    "list_perms=true",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -656,7 +656,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "list_perms=true&list_perms=true",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
@@ -670,7 +670,7 @@ func TestListUsers(t *testing.T) {
 				Users: []users.User{user},
 			},
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -678,7 +678,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "email=1&email=2",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
@@ -686,7 +686,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "list_perms=true&list_perms=true",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
@@ -702,7 +702,7 @@ func TestListUsers(t *testing.T) {
 				},
 			},
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: validID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: validID},
 			err:      nil,
 		},
 		{
@@ -710,7 +710,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "email=1&email=2",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: validID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: validID},
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
@@ -726,7 +726,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "order=name",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -734,7 +734,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "order=name&order=name",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
@@ -742,7 +742,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "dir=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -750,7 +750,7 @@ func TestListUsers(t *testing.T) {
 			token:    validToken,
 			query:    "dir=asc&dir=asc",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 	}
@@ -902,7 +902,7 @@ func TestSearchUsers(t *testing.T) {
 				token:  tc.token,
 			}
 
-			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(mgauthn.Session{UserID: validID, DomainID: domainID}, tc.authnErr)
+			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(smqauthn.Session{UserID: validID, DomainID: domainID}, tc.authnErr)
 			svcCall := svc.On("SearchUsers", mock.Anything, mock.Anything).Return(
 				users.UsersPage{
 					Page:  tc.listUsersResponse.Page,
@@ -931,7 +931,7 @@ func TestUpdate(t *testing.T) {
 		data         string
 		userResponse users.User
 		token        string
-		authnRes     mgauthn.Session
+		authnRes     smqauthn.Session
 		authnErr     error
 		contentType  string
 		status       int
@@ -942,7 +942,7 @@ func TestUpdate(t *testing.T) {
 			id:          user.ID,
 			data:        fmt.Sprintf(`{"name":"%s","metadata":%s}`, newName, toJSON(newMetadata)),
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: contentType,
 			userResponse: users.User{
 				ID:        user.ID,
@@ -957,7 +957,7 @@ func TestUpdate(t *testing.T) {
 			id:          user.ID,
 			data:        fmt.Sprintf(`{"name":"%s","metadata":%s}`, newName, toJSON(newMetadata)),
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: contentType,
 			userResponse: users.User{
 				ID:        user.ID,
@@ -992,7 +992,7 @@ func TestUpdate(t *testing.T) {
 			id:          inValid,
 			data:        fmt.Sprintf(`{"name":"%s","metadata":%s}`, newName, toJSON(newMetadata)),
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: contentType,
 			status:      http.StatusForbidden,
 			err:         svcerr.ErrAuthorization,
@@ -1002,7 +1002,7 @@ func TestUpdate(t *testing.T) {
 			id:          user.ID,
 			data:        fmt.Sprintf(`{"name":"%s","metadata":%s}`, newName, toJSON(newMetadata)),
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: "application/xml",
 			status:      http.StatusUnsupportedMediaType,
 			err:         apiutil.ErrValidation,
@@ -1012,7 +1012,7 @@ func TestUpdate(t *testing.T) {
 			id:          user.ID,
 			data:        fmt.Sprintf(`{"name":%s}`, "invalid"),
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
@@ -1022,7 +1022,7 @@ func TestUpdate(t *testing.T) {
 			id:          " ",
 			data:        fmt.Sprintf(`{"name":"%s","metadata":%s}`, newName, toJSON(newMetadata)),
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
@@ -1071,7 +1071,7 @@ func TestUpdateTags(t *testing.T) {
 		contentType  string
 		userResponse users.User
 		token        string
-		authnRes     mgauthn.Session
+		authnRes     smqauthn.Session
 		authnErr     error
 		status       int
 		err          error
@@ -1086,7 +1086,7 @@ func TestUpdateTags(t *testing.T) {
 				Tags: []string{newTag},
 			},
 			token:    validToken,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:   http.StatusOK,
 			err:      nil,
 		},
@@ -1100,7 +1100,7 @@ func TestUpdateTags(t *testing.T) {
 				Tags: []string{newTag},
 			},
 			token:    validToken,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:   http.StatusOK,
 			err:      nil,
 		},
@@ -1130,7 +1130,7 @@ func TestUpdateTags(t *testing.T) {
 			data:        fmt.Sprintf(`{"tags":["%s"]}`, newTag),
 			contentType: contentType,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:      http.StatusForbidden,
 			err:         svcerr.ErrAuthorization,
 		},
@@ -1140,7 +1140,7 @@ func TestUpdateTags(t *testing.T) {
 			data:        fmt.Sprintf(`{"tags":["%s"]}`, newTag),
 			contentType: "application/xml",
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:      http.StatusUnsupportedMediaType,
 			err:         apiutil.ErrValidation,
 		},
@@ -1150,7 +1150,7 @@ func TestUpdateTags(t *testing.T) {
 			data:        fmt.Sprintf(`{"tags":["%s"]}`, newTag),
 			contentType: contentType,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
 		},
@@ -1160,7 +1160,7 @@ func TestUpdateTags(t *testing.T) {
 			data:        fmt.Sprintf(`{"tags":%s}`, newTag),
 			contentType: contentType,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
 		},
@@ -1210,7 +1210,7 @@ func TestUpdateEmail(t *testing.T) {
 		user        users.User
 		contentType string
 		token       string
-		authnRes    mgauthn.Session
+		authnRes    smqauthn.Session
 		authnErr    error
 		status      int
 		svcErr      error
@@ -1228,7 +1228,7 @@ func TestUpdateEmail(t *testing.T) {
 			},
 			contentType: contentType,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:      http.StatusOK,
 			err:         nil,
 		},
@@ -1244,7 +1244,7 @@ func TestUpdateEmail(t *testing.T) {
 			},
 			contentType: contentType,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: validID},
 			status:      http.StatusOK,
 			err:         nil,
 		},
@@ -1292,7 +1292,7 @@ func TestUpdateEmail(t *testing.T) {
 			},
 			contentType: contentType,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: validID},
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrMissingID,
 		},
@@ -1335,7 +1335,7 @@ func TestUpdateEmail(t *testing.T) {
 			},
 			contentType: contentType,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:      http.StatusUnprocessableEntity,
 			svcErr:      svcerr.ErrUpdateEntity,
 			err:         svcerr.ErrUpdateEntity,
@@ -1381,7 +1381,7 @@ func TestUpdateUsername(t *testing.T) {
 		user        users.User
 		contentType string
 		token       string
-		authnRes    mgauthn.Session
+		authnRes    smqauthn.Session
 		authnErr    error
 		status      int
 		err         error
@@ -1397,7 +1397,7 @@ func TestUpdateUsername(t *testing.T) {
 			},
 			contentType: contentType,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:      http.StatusOK,
 			err:         nil,
 		},
@@ -1442,7 +1442,7 @@ func TestUpdateUsername(t *testing.T) {
 			},
 			contentType: contentType,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: validID},
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrMissingID,
 		},
@@ -1529,7 +1529,7 @@ func TestUpdateProfilePicture(t *testing.T) {
 		user        users.User
 		contentType string
 		token       string
-		authnRes    mgauthn.Session
+		authnRes    smqauthn.Session
 		authnErr    error
 		status      int
 		svcErr      error
@@ -1544,7 +1544,7 @@ func TestUpdateProfilePicture(t *testing.T) {
 			},
 			contentType: contentType,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:      http.StatusOK,
 			err:         nil,
 		},
@@ -1577,7 +1577,7 @@ func TestUpdateProfilePicture(t *testing.T) {
 			},
 			contentType: contentType,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: validID},
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrMissingID,
 		},
@@ -1753,7 +1753,7 @@ func TestPasswordReset(t *testing.T) {
 		token       string
 		contentType string
 		status      int
-		authnRes    mgauthn.Session
+		authnRes    smqauthn.Session
 		authnErr    error
 		svcErr      error
 		err         error
@@ -1857,7 +1857,7 @@ func TestUpdateRole(t *testing.T) {
 		userID      string
 		token       string
 		contentType string
-		authnRes    mgauthn.Session
+		authnRes    smqauthn.Session
 		authnErr    error
 		status      int
 		svcErr      error
@@ -1868,7 +1868,7 @@ func TestUpdateRole(t *testing.T) {
 			data:        fmt.Sprintf(`{"role": "%s"}`, "admin"),
 			userID:      user.ID,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: contentType,
 			status:      http.StatusOK,
 			err:         nil,
@@ -1878,7 +1878,7 @@ func TestUpdateRole(t *testing.T) {
 			data:        fmt.Sprintf(`{"role": "%s"}`, "admin"),
 			userID:      user.ID,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: contentType,
 			status:      http.StatusOK,
 			err:         nil,
@@ -1908,7 +1908,7 @@ func TestUpdateRole(t *testing.T) {
 			data:        fmt.Sprintf(`{"role": "%s"}`, "invalid"),
 			userID:      user.ID,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         svcerr.ErrInvalidRole,
@@ -1918,7 +1918,7 @@ func TestUpdateRole(t *testing.T) {
 			data:        fmt.Sprintf(`{"role": "%s"}`, "admin"),
 			userID:      user.ID,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: "application/xml",
 			status:      http.StatusUnsupportedMediaType,
 			err:         apiutil.ErrValidation,
@@ -1928,7 +1928,7 @@ func TestUpdateRole(t *testing.T) {
 			data:        fmt.Sprintf(`{"role": %s}`, "admin"),
 			userID:      user.ID,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
@@ -1938,7 +1938,7 @@ func TestUpdateRole(t *testing.T) {
 			data:        fmt.Sprintf(`{"role": "%s"}`, "admin"),
 			userID:      user.ID,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			contentType: contentType,
 			status:      http.StatusUnprocessableEntity,
 			svcErr:      svcerr.ErrUpdateEntity,
@@ -1986,7 +1986,7 @@ func TestUpdateSecret(t *testing.T) {
 		contentType string
 		token       string
 		status      int
-		authnRes    mgauthn.Session
+		authnRes    smqauthn.Session
 		authnErr    error
 		err         error
 	}{
@@ -2208,7 +2208,7 @@ func TestRefreshToken(t *testing.T) {
 		data        string
 		contentType string
 		token       string
-		authnRes    mgauthn.Session
+		authnRes    smqauthn.Session
 		authnErr    error
 		status      int
 		refreshErr  error
@@ -2219,7 +2219,7 @@ func TestRefreshToken(t *testing.T) {
 			data:        fmt.Sprintf(`{"refresh_token": "%s", "domain_id": "%s"}`, validToken, validID),
 			contentType: contentType,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:      http.StatusCreated,
 			err:         nil,
 		},
@@ -2245,7 +2245,7 @@ func TestRefreshToken(t *testing.T) {
 			data:        fmt.Sprintf(`{"refresh_token": "%s", "domain_id": "%s"}`, validToken, "invalid"),
 			contentType: contentType,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:      http.StatusUnauthorized,
 			err:         svcerr.ErrAuthentication,
 		},
@@ -2254,7 +2254,7 @@ func TestRefreshToken(t *testing.T) {
 			data:        fmt.Sprintf(`{"refresh_token": %s, "domain_id": %s}`, validToken, validID),
 			contentType: contentType,
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
 		},
@@ -2263,7 +2263,7 @@ func TestRefreshToken(t *testing.T) {
 			data:        fmt.Sprintf(`{"refresh_token": "%s", "domain_id": "%s"}`, validToken, validID),
 			contentType: "application/xml",
 			token:       validToken,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:      http.StatusUnsupportedMediaType,
 			err:         apiutil.ErrValidation,
 		},
@@ -2305,7 +2305,7 @@ func TestEnable(t *testing.T) {
 		user     users.User
 		response users.User
 		token    string
-		authnRes mgauthn.Session
+		authnRes smqauthn.Session
 		authnErr error
 		status   int
 		svcErr   error
@@ -2319,7 +2319,7 @@ func TestEnable(t *testing.T) {
 				Status: users.EnabledStatus,
 			},
 			token:    validToken,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:   http.StatusOK,
 			err:      nil,
 		},
@@ -2331,7 +2331,7 @@ func TestEnable(t *testing.T) {
 				Status: users.EnabledStatus,
 			},
 			token:    validToken,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:   http.StatusOK,
 			err:      nil,
 		},
@@ -2349,7 +2349,7 @@ func TestEnable(t *testing.T) {
 				ID: "",
 			},
 			token:    validToken,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:   http.StatusBadRequest,
 			err:      apiutil.ErrMissingID,
 		},
@@ -2357,7 +2357,7 @@ func TestEnable(t *testing.T) {
 			desc:     "enable user with service error",
 			user:     user,
 			token:    validToken,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:   http.StatusUnprocessableEntity,
 			svcErr:   svcerr.ErrEnableUser,
 			err:      svcerr.ErrEnableUser,
@@ -2405,7 +2405,7 @@ func TestDisable(t *testing.T) {
 		user     users.User
 		response users.User
 		token    string
-		authnRes mgauthn.Session
+		authnRes smqauthn.Session
 		authnErr error
 		status   int
 		svcErr   error
@@ -2419,7 +2419,7 @@ func TestDisable(t *testing.T) {
 				Status: users.DisabledStatus,
 			},
 			token:    validToken,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID, SuperAdmin: true},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, SuperAdmin: true},
 			status:   http.StatusOK,
 			err:      nil,
 		},
@@ -2431,7 +2431,7 @@ func TestDisable(t *testing.T) {
 				Status: users.DisabledStatus,
 			},
 			token:    validToken,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:   http.StatusOK,
 			err:      nil,
 		},
@@ -2449,7 +2449,7 @@ func TestDisable(t *testing.T) {
 				ID: "",
 			},
 			token:    validToken,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:   http.StatusBadRequest,
 			err:      apiutil.ErrMissingID,
 		},
@@ -2457,7 +2457,7 @@ func TestDisable(t *testing.T) {
 			desc:     "disable user with service error",
 			user:     user,
 			token:    validToken,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:   http.StatusUnprocessableEntity,
 			svcErr:   svcerr.ErrDisableUser,
 			err:      svcerr.ErrDisableUser,
@@ -2496,7 +2496,7 @@ func TestDelete(t *testing.T) {
 		user     users.User
 		response users.User
 		token    string
-		authnRes mgauthn.Session
+		authnRes smqauthn.Session
 		authnErr error
 		status   int
 		svcErr   error
@@ -2509,7 +2509,7 @@ func TestDelete(t *testing.T) {
 				ID: user.ID,
 			},
 			token:    validToken,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:   http.StatusNoContent,
 			err:      nil,
 		},
@@ -2527,7 +2527,7 @@ func TestDelete(t *testing.T) {
 				ID: "",
 			},
 			token:    validToken,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:   http.StatusMethodNotAllowed,
 			err:      apiutil.ErrMissingID,
 		},
@@ -2535,7 +2535,7 @@ func TestDelete(t *testing.T) {
 			desc:     "delete user with service error",
 			user:     user,
 			token:    validToken,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			status:   http.StatusUnprocessableEntity,
 			svcErr:   svcerr.ErrRemoveEntity,
 			err:      svcerr.ErrRemoveEntity,
@@ -2577,7 +2577,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 		status            int
 		query             string
 		listUsersResponse users.UsersPage
-		authnRes          mgauthn.Session
+		authnRes          smqauthn.Session
 		authnErr          error
 		err               error
 	}{
@@ -2593,7 +2593,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 				},
 				Users: []users.User{user},
 			},
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -2601,7 +2601,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			token:    validToken,
 			groupID:  "",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrMissingID,
 		},
 		{
@@ -2633,7 +2633,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			},
 			query:    "offset=1",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -2657,7 +2657,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			},
 			query:    "limit=1",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -2666,7 +2666,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			groupID:  validID,
 			query:    "limit=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -2675,7 +2675,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			groupID:  validID,
 			query:    fmt.Sprintf("limit=%d", api.MaxLimitSize+1),
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -2690,7 +2690,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			},
 			query:    "username=username",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -2699,7 +2699,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			groupID:  validID,
 			query:    "username=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -2722,7 +2722,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			},
 			query:    "status=enabled",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -2753,7 +2753,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			},
 			query:    "tag=tag1,tag2",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -2762,7 +2762,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			groupID:  validID,
 			query:    "tag=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -2771,7 +2771,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			groupID:  validID,
 			query:    "tag=tag1&tag=tag2",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
@@ -2786,7 +2786,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			},
 			query:    "metadata=%7B%22domain%22%3A%20%22example.com%22%7D&",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -2817,7 +2817,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			},
 			query:    "permission=view",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -2827,7 +2827,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			query:             "permission=view&permission=view",
 			status:            http.StatusBadRequest,
 			listUsersResponse: users.UsersPage{},
-			authnRes:          mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:          smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:               apiutil.ErrInvalidQueryParams,
 		},
 		{
@@ -2844,7 +2844,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 				},
 			},
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -2853,7 +2853,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			groupID:  validID,
 			query:    "email=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -2862,7 +2862,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 			groupID:  validID,
 			query:    "email=1&email=2",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 	}
@@ -2876,7 +2876,7 @@ func TestListUsersByUserGroupId(t *testing.T) {
 				token:  tc.token,
 			}
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-			svcCall := svc.On("ListMembers", mock.Anything, mgauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID}, mock.Anything, mock.Anything, mock.Anything).Return(
+			svcCall := svc.On("ListMembers", mock.Anything, smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID}, mock.Anything, mock.Anything, mock.Anything).Return(
 				users.MembersPage{
 					Page:    tc.listUsersResponse.Page,
 					Members: tc.listUsersResponse.Users,
@@ -2903,7 +2903,7 @@ func TestListUsersByChannelID(t *testing.T) {
 		status            int
 		query             string
 		listUsersResponse users.UsersPage
-		authnRes          mgauthn.Session
+		authnRes          smqauthn.Session
 		authnErr          error
 		err               error
 	}{
@@ -2918,7 +2918,7 @@ func TestListUsersByChannelID(t *testing.T) {
 				},
 				Users: []users.User{user},
 			},
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -2950,7 +2950,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			},
 			query:    "offset=1",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -2974,7 +2974,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			},
 			query:    "limit=1",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -2983,7 +2983,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			channelID: validID,
 			query:     "limit=invalid",
 			status:    http.StatusBadRequest,
-			authnRes:  mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:  smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:       apiutil.ErrValidation,
 		},
 		{
@@ -2992,7 +2992,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			channelID: validID,
 			query:     fmt.Sprintf("limit=%d", api.MaxLimitSize+1),
 			status:    http.StatusBadRequest,
-			authnRes:  mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:  smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:       apiutil.ErrValidation,
 		},
 		{
@@ -3007,7 +3007,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			},
 			query:    "username=username",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3016,7 +3016,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			channelID: validID,
 			query:     "username=invalid",
 			status:    http.StatusBadRequest,
-			authnRes:  mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:  smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:       apiutil.ErrValidation,
 		},
 		{
@@ -3038,7 +3038,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			},
 			query:    "status=enabled",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3047,7 +3047,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			channelID: validID,
 			query:     "status=invalid",
 			status:    http.StatusBadRequest,
-			authnRes:  mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:  smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:       apiutil.ErrValidation,
 		},
 		{
@@ -3069,7 +3069,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			},
 			query:    "tag=tag1,tag2",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3078,7 +3078,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			channelID: validID,
 			query:     "tag=invalid",
 			status:    http.StatusBadRequest,
-			authnRes:  mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:  smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:       apiutil.ErrValidation,
 		},
 		{
@@ -3101,7 +3101,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			},
 			query:    "metadata=%7B%22domain%22%3A%20%22example.com%22%7D&",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3110,7 +3110,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			channelID: validID,
 			query:     "metadata=invalid",
 			status:    http.StatusBadRequest,
-			authnRes:  mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:  smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:       apiutil.ErrValidation,
 		},
 		{
@@ -3132,7 +3132,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			},
 			query:    "permission=view",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3157,7 +3157,7 @@ func TestListUsersByChannelID(t *testing.T) {
 				},
 			},
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3166,7 +3166,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			channelID: validID,
 			query:     "email=invalid",
 			status:    http.StatusBadRequest,
-			authnRes:  mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:  smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:       apiutil.ErrValidation,
 		},
 		{
@@ -3183,7 +3183,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			channelID: validID,
 			query:     "list_perms=true",
 			status:    http.StatusOK,
-			authnRes:  mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:  smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:       nil,
 		},
 		{
@@ -3192,7 +3192,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			channelID: validID,
 			query:     "list_perms=invalid",
 			status:    http.StatusBadRequest,
-			authnRes:  mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes:  smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:       apiutil.ErrValidation,
 		},
 		{
@@ -3214,7 +3214,7 @@ func TestListUsersByChannelID(t *testing.T) {
 			}
 
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-			svcCall := svc.On("ListMembers", mock.Anything, mgauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID}, mock.Anything, mock.Anything, mock.Anything).Return(
+			svcCall := svc.On("ListMembers", mock.Anything, smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID}, mock.Anything, mock.Anything, mock.Anything).Return(
 				users.MembersPage{
 					Page:    tc.listUsersResponse.Page,
 					Members: tc.listUsersResponse.Users,
@@ -3241,7 +3241,7 @@ func TestListUsersByDomainID(t *testing.T) {
 		status            int
 		query             string
 		listUsersResponse users.UsersPage
-		authnRes          mgauthn.Session
+		authnRes          smqauthn.Session
 		authnErr          error
 		err               error
 	}{
@@ -3256,7 +3256,7 @@ func TestListUsersByDomainID(t *testing.T) {
 				},
 				Users: []users.User{user},
 			},
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3286,7 +3286,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			},
 			query:    "offset=1",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3295,7 +3295,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			domainID: validID,
 			query:    "offset=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3311,7 +3311,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			},
 			query:    "limit=1",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3320,7 +3320,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			domainID: validID,
 			query:    "limit=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3329,7 +3329,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			domainID: validID,
 			query:    fmt.Sprintf("limit=%d", api.MaxLimitSize+1),
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3344,7 +3344,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			},
 			query:    "username=username",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3353,7 +3353,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			domainID: validID,
 			query:    "username=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3376,7 +3376,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			},
 			query:    "status=enabled",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3385,7 +3385,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			domainID: validID,
 			query:    "status=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3407,7 +3407,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			},
 			query:    "tag=tag1,tag2",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3416,7 +3416,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			domainID: validID,
 			query:    "tag=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3438,7 +3438,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			},
 			query:    "metadata=%7B%22domain%22%3A%20%22example.com%22%7D&",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3447,7 +3447,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			domainID: validID,
 			query:    "metadata=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3469,7 +3469,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			},
 			query:    "permission=membership",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3494,7 +3494,7 @@ func TestListUsersByDomainID(t *testing.T) {
 				},
 			},
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3503,7 +3503,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			domainID: validID,
 			query:    "email=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3527,7 +3527,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			},
 			query:    "list_perms=true",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3536,7 +3536,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			domainID: validID,
 			query:    "list_perms=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3558,7 +3558,7 @@ func TestListUsersByDomainID(t *testing.T) {
 			}
 
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-			svcCall := svc.On("ListMembers", mock.Anything, mgauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID}, mock.Anything, mock.Anything, mock.Anything).Return(
+			svcCall := svc.On("ListMembers", mock.Anything, smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID}, mock.Anything, mock.Anything, mock.Anything).Return(
 				users.MembersPage{
 					Page:    tc.listUsersResponse.Page,
 					Members: tc.listUsersResponse.Users,
@@ -3585,7 +3585,7 @@ func TestListUsersByClientID(t *testing.T) {
 		status            int
 		query             string
 		listUsersResponse users.UsersPage
-		authnRes          mgauthn.Session
+		authnRes          smqauthn.Session
 		authnErr          error
 		err               error
 	}{
@@ -3600,7 +3600,7 @@ func TestListUsersByClientID(t *testing.T) {
 				},
 				Users: []users.User{user},
 			},
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3632,7 +3632,7 @@ func TestListUsersByClientID(t *testing.T) {
 			},
 			query:    "offset=1",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3641,7 +3641,7 @@ func TestListUsersByClientID(t *testing.T) {
 			clientID: validID,
 			query:    "offset=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3657,7 +3657,7 @@ func TestListUsersByClientID(t *testing.T) {
 			},
 			query:    "limit=1",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3666,7 +3666,7 @@ func TestListUsersByClientID(t *testing.T) {
 			clientID: validID,
 			query:    "limit=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3675,7 +3675,7 @@ func TestListUsersByClientID(t *testing.T) {
 			clientID: validID,
 			query:    fmt.Sprintf("limit=%d", api.MaxLimitSize+1),
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3690,7 +3690,7 @@ func TestListUsersByClientID(t *testing.T) {
 			},
 			query:    "name=username",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3699,7 +3699,7 @@ func TestListUsersByClientID(t *testing.T) {
 			clientID: validID,
 			query:    "username=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3722,7 +3722,7 @@ func TestListUsersByClientID(t *testing.T) {
 			},
 			query:    "status=enabled",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3731,7 +3731,7 @@ func TestListUsersByClientID(t *testing.T) {
 			clientID: validID,
 			query:    "status=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3753,7 +3753,7 @@ func TestListUsersByClientID(t *testing.T) {
 			},
 			query:    "tag=tag1,tag2",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3762,7 +3762,7 @@ func TestListUsersByClientID(t *testing.T) {
 			clientID: validID,
 			query:    "tag=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3784,7 +3784,7 @@ func TestListUsersByClientID(t *testing.T) {
 			},
 			query:    "metadata=%7B%22domain%22%3A%20%22example.com%22%7D&",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3793,7 +3793,7 @@ func TestListUsersByClientID(t *testing.T) {
 			clientID: validID,
 			query:    "metadata=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3802,7 +3802,7 @@ func TestListUsersByClientID(t *testing.T) {
 			clientID: validID,
 			query:    "metadata=%7B%22domain%22%3A%20%22example.com%22%7D&metadata=%7B%22domain%22%3A%20%22example.com%22%7D",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
@@ -3817,7 +3817,7 @@ func TestListUsersByClientID(t *testing.T) {
 			},
 			query:    "permission=view",
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3841,7 +3841,7 @@ func TestListUsersByClientID(t *testing.T) {
 				},
 			},
 			status:   http.StatusOK,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
 		},
 		{
@@ -3850,7 +3850,7 @@ func TestListUsersByClientID(t *testing.T) {
 			clientID: validID,
 			query:    "email=invalid",
 			status:   http.StatusBadRequest,
-			authnRes: mgauthn.Session{UserID: validID, DomainID: domainID},
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      apiutil.ErrValidation,
 		},
 		{
@@ -3872,7 +3872,7 @@ func TestListUsersByClientID(t *testing.T) {
 			}
 
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-			svcCall := svc.On("ListMembers", mock.Anything, mgauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID}, mock.Anything, mock.Anything, mock.Anything).Return(
+			svcCall := svc.On("ListMembers", mock.Anything, smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID}, mock.Anything, mock.Anything, mock.Anything).Return(
 				users.MembersPage{
 					Page:    tc.listUsersResponse.Page,
 					Members: tc.listUsersResponse.Users,

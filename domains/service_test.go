@@ -28,7 +28,7 @@ const (
 	secret          = "secret"
 	email           = "test@example.com"
 	id              = "testID"
-	groupName       = "mgx"
+	groupName       = "smqx"
 	description     = "Description"
 	memberRelation  = "member"
 	authoritiesObj  = "authorities"

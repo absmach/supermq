@@ -15,9 +15,9 @@ import (
 	"github.com/absmach/supermq/invitations"
 	"github.com/absmach/supermq/invitations/api"
 	"github.com/absmach/supermq/invitations/mocks"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/apiutil"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/stretchr/testify/assert"
@@ -59,7 +59,7 @@ func (tr testRequest) make() (*http.Response, error) {
 
 func newIvitationsServer() (*httptest.Server, *mocks.Service, *authnmocks.Authentication) {
 	svc := new(mocks.Service)
-	logger := mglog.NewMock()
+	logger := smqlog.NewMock()
 	authn := new(authnmocks.Authentication)
 	mux := api.MakeHandler(svc, logger, authn, "test")
 	return httptest.NewServer(mux), svc, authn
@@ -74,7 +74,7 @@ func TestSendInvitation(t *testing.T) {
 		data        string
 		contentType string
 		status      int
-		authnRes    mgauthn.Session
+		authnRes    smqauthn.Session
 		authnErr    error
 		svcErr      error
 	}{
@@ -82,7 +82,7 @@ func TestSendInvitation(t *testing.T) {
 			desc:        "valid request",
 			token:       validToken,
 			data:        fmt.Sprintf(`{"user_id": "%s","domain_id": "%s", "relation": "%s"}`, validID, domainID, "domain"),
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
 			status:      http.StatusCreated,
 			contentType: validContenType,
 			svcErr:      nil,
@@ -107,7 +107,7 @@ func TestSendInvitation(t *testing.T) {
 			desc:        "invalid content type",
 			token:       validToken,
 			data:        fmt.Sprintf(`{"user_id": "%s","domain_id": "%s",  "relation": "%s"}`, validID, validID, "domain"),
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
 			status:      http.StatusUnsupportedMediaType,
 			contentType: "text/plain",
 			svcErr:      nil,
@@ -116,7 +116,7 @@ func TestSendInvitation(t *testing.T) {
 			desc:        "invalid data",
 			token:       validToken,
 			data:        `data`,
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
 			status:      http.StatusBadRequest,
 			contentType: validContenType,
 			svcErr:      nil,
@@ -125,7 +125,7 @@ func TestSendInvitation(t *testing.T) {
 			desc:        "with service error",
 			token:       validToken,
 			data:        fmt.Sprintf(`{"user_id": "%s", "domain_id": "%s", "relation": "%s"}`, validID, domainID, "domain"),
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
 			status:      http.StatusForbidden,
 			contentType: validContenType,
 			svcErr:      svcerr.ErrAuthorization,
@@ -164,12 +164,12 @@ func TestListInvitation(t *testing.T) {
 		contentType string
 		status      int
 		svcErr      error
-		authnRes    mgauthn.Session
+		authnRes    smqauthn.Session
 		authnErr    error
 	}{
 		{
 			desc:        "valid request",
-			authnRes:    mgauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			status:      http.StatusOK,
 			contentType: validContenType,
@@ -184,7 +184,7 @@ func TestListInvitation(t *testing.T) {
 		},
 		{
 			desc:        "with offset",
-			authnRes:    mgauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			query:       "offset=1",
 			status:      http.StatusOK,
@@ -201,7 +201,7 @@ func TestListInvitation(t *testing.T) {
 		},
 		{
 			desc:        "with limit",
-			authnRes:    mgauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			query:       "limit=1",
 			status:      http.StatusOK,
@@ -218,7 +218,7 @@ func TestListInvitation(t *testing.T) {
 		},
 		{
 			desc:        "with user_id",
-			authnRes:    mgauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			query:       fmt.Sprintf("user_id=%s", validID),
 			status:      http.StatusOK,
@@ -227,7 +227,7 @@ func TestListInvitation(t *testing.T) {
 		},
 		{
 			desc:        "with duplicate user_id",
-			authnRes:    mgauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			query:       "user_id=1&user_id=2",
 			status:      http.StatusBadRequest,
@@ -236,7 +236,7 @@ func TestListInvitation(t *testing.T) {
 		},
 		{
 			desc:        "with invited_by",
-			authnRes:    mgauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			query:       fmt.Sprintf("invited_by=%s", validID),
 			status:      http.StatusOK,
@@ -245,7 +245,7 @@ func TestListInvitation(t *testing.T) {
 		},
 		{
 			desc:        "with duplicate invited_by",
-			authnRes:    mgauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			query:       "invited_by=1&invited_by=2",
 			status:      http.StatusBadRequest,
@@ -254,7 +254,7 @@ func TestListInvitation(t *testing.T) {
 		},
 		{
 			desc:        "with relation",
-			authnRes:    mgauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			query:       fmt.Sprintf("relation=%s", "relation"),
 			status:      http.StatusOK,
@@ -263,7 +263,7 @@ func TestListInvitation(t *testing.T) {
 		},
 		{
 			desc:        "with duplicate relation",
-			authnRes:    mgauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			query:       "relation=1&relation=2",
 			status:      http.StatusBadRequest,
@@ -272,7 +272,7 @@ func TestListInvitation(t *testing.T) {
 		},
 		{
 			desc:        "with state",
-			authnRes:    mgauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			query:       "state=pending",
 			status:      http.StatusOK,
@@ -297,7 +297,7 @@ func TestListInvitation(t *testing.T) {
 		},
 		{
 			desc:        "with service error",
-			authnRes:    mgauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			status:      http.StatusForbidden,
 			contentType: validContenType,
@@ -336,12 +336,12 @@ func TestViewInvitation(t *testing.T) {
 		contentType string
 		status      int
 		svcErr      error
-		authnRes    mgauthn.Session
+		authnRes    smqauthn.Session
 		authnErr    error
 	}{
 		{
 			desc:        "valid request",
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			userID:      validID,
 			domainID:    domainID,
@@ -360,7 +360,7 @@ func TestViewInvitation(t *testing.T) {
 		},
 		{
 			desc:        "with service error",
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			userID:      validID,
 			domainID:    domainID,
@@ -430,12 +430,12 @@ func TestDeleteInvitation(t *testing.T) {
 		contentType string
 		status      int
 		svcErr      error
-		authnRes    mgauthn.Session
+		authnRes    smqauthn.Session
 		authnErr    error
 	}{
 		{
 			desc:        "valid request",
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			userID:      validID,
 			domainID:    domainID,
@@ -454,7 +454,7 @@ func TestDeleteInvitation(t *testing.T) {
 		},
 		{
 			desc:        "with service error",
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			userID:      validID,
 			domainID:    domainID,
@@ -522,12 +522,12 @@ func TestAcceptInvitation(t *testing.T) {
 		contentType string
 		status      int
 		svcErr      error
-		authnRes    mgauthn.Session
+		authnRes    smqauthn.Session
 		authnErr    error
 	}{
 		{
 			desc:        "valid request",
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
 			data:        fmt.Sprintf(`{"domain_id": "%s"}`, validID),
 			token:       validToken,
 			status:      http.StatusNoContent,
@@ -544,7 +544,7 @@ func TestAcceptInvitation(t *testing.T) {
 		},
 		{
 			desc:        "with service error",
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			data:        fmt.Sprintf(`{"domain_id": "%s"}`, validID),
 			status:      http.StatusForbidden,
@@ -602,12 +602,12 @@ func TestRejectInvitation(t *testing.T) {
 		contentType string
 		status      int
 		svcErr      error
-		authnRes    mgauthn.Session
+		authnRes    smqauthn.Session
 		authnErr    error
 	}{
 		{
 			desc:        "valid request",
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			data:        fmt.Sprintf(`{"domain_id": "%s"}`, validID),
 			status:      http.StatusNoContent,
@@ -624,7 +624,7 @@ func TestRejectInvitation(t *testing.T) {
 		},
 		{
 			desc:        "unauthorized error",
-			authnRes:    mgauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
+			authnRes:    smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID},
 			token:       validToken,
 			data:        fmt.Sprintf(`{"domain_id": "%s"}`, "invalid"),
 			status:      http.StatusForbidden,

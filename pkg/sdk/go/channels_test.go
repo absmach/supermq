@@ -16,9 +16,9 @@ import (
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/internal/testsutil"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/apiutil"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
@@ -37,7 +37,7 @@ var (
 
 func setupChannels() (*httptest.Server, *chmocks.Service, *authnmocks.Authentication) {
 	svc := new(chmocks.Service)
-	logger := mglog.NewMock()
+	logger := smqlog.NewMock()
 	authn := new(authnmocks.Authentication)
 	mux := chi.NewRouter()
 	chapi.MakeHandler(svc, authn, mux, logger, "")
@@ -80,11 +80,11 @@ func TestCreateChannel(t *testing.T) {
 		channelReq       sdk.Channel
 		domainID         string
 		token            string
-		session          mgauthn.Session
+		session          smqauthn.Session
 		createChannelReq channels.Channel
 		svcRes           []channels.Channel
 		svcErr           error
-		authenticateRes  mgauthn.Session
+		authenticateRes  smqauthn.Session
 		authenticateErr  error
 		response         sdk.Channel
 		err              errors.SDKError
@@ -207,7 +207,7 @@ func TestCreateChannel(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("CreateChannels", mock.Anything, tc.session, tc.createChannelReq).Return(tc.svcRes, tc.svcErr)
@@ -247,7 +247,7 @@ func TestListChannels(t *testing.T) {
 		desc             string
 		domainID         string
 		token            string
-		session          mgauthn.Session
+		session          smqauthn.Session
 		status           clients.Status
 		total            uint64
 		offset           uint64
@@ -258,7 +258,7 @@ func TestListChannels(t *testing.T) {
 		channelsPageMeta channels.PageMetadata
 		svcRes           channels.Page
 		svcErr           error
-		authenticateRes  mgauthn.Session
+		authenticateRes  smqauthn.Session
 		authenticateErr  error
 		response         sdk.ChannelsPage
 		err              errors.SDKError
@@ -461,7 +461,7 @@ func TestListChannels(t *testing.T) {
 				Metadata: tc.metadata,
 			}
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("ListChannels", mock.Anything, tc.session, tc.channelsPageMeta).Return(tc.svcRes, tc.svcErr)
@@ -492,7 +492,7 @@ func TestViewChannel(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		channelID       string
 		svcRes          channels.Channel
 		svcErr          error
@@ -570,7 +570,7 @@ func TestViewChannel(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("ViewChannel", mock.Anything, tc.session, tc.channelID).Return(tc.svcRes, tc.svcErr)
@@ -621,7 +621,7 @@ func TestUpdateChannel(t *testing.T) {
 		desc             string
 		domainID         string
 		token            string
-		session          mgauthn.Session
+		session          smqauthn.Session
 		channelReq       sdk.Channel
 		updateChannelReq channels.Channel
 		svcRes           channels.Channel
@@ -841,7 +841,7 @@ func TestUpdateChannel(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("UpdateChannel", mock.Anything, tc.session, tc.updateChannelReq).Return(tc.svcRes, tc.svcErr)
@@ -871,7 +871,7 @@ func TestEnableChannel(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		channelID       string
 		svcRes          channels.Channel
 		svcErr          error
@@ -948,7 +948,7 @@ func TestEnableChannel(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("EnableChannel", mock.Anything, tc.session, tc.channelID).Return(tc.svcRes, tc.svcErr)
@@ -981,7 +981,7 @@ func TestDisableChannel(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		channelID       string
 		svcRes          channels.Channel
 		svcErr          error
@@ -1058,7 +1058,7 @@ func TestDisableChannel(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("DisableChannel", mock.Anything, tc.session, tc.channelID).Return(tc.svcRes, tc.svcErr)
@@ -1089,7 +1089,7 @@ func TestDeleteChannel(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		channelID       string
 		svcErr          error
 		authenticateErr error
@@ -1139,7 +1139,7 @@ func TestDeleteChannel(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("RemoveChannel", mock.Anything, tc.session, tc.channelID).Return(tc.svcErr)
@@ -1170,10 +1170,10 @@ func TestConnect(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		connection      sdk.Connection
 		svcErr          error
-		authenticateRes mgauthn.Session
+		authenticateRes smqauthn.Session
 		authenticateErr error
 		err             errors.SDKError
 	}{
@@ -1252,7 +1252,7 @@ func TestConnect(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			connTypes := []connections.ConnType{}
 			for _, ct := range tc.connection.Types {
@@ -1290,10 +1290,10 @@ func TestDisconnect(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		disconnect      sdk.Connection
 		svcErr          error
-		authenticateRes mgauthn.Session
+		authenticateRes smqauthn.Session
 		authenticateErr error
 		err             errors.SDKError
 	}{
@@ -1372,7 +1372,7 @@ func TestDisconnect(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			connTypes := []connections.ConnType{}
 			for _, ct := range tc.disconnect.Types {
@@ -1409,12 +1409,12 @@ func TestConnectClient(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		channelID       string
 		clientID        string
 		connType        string
 		svcErr          error
-		authenticateRes mgauthn.Session
+		authenticateRes smqauthn.Session
 		authenticateErr error
 		err             errors.SDKError
 	}{
@@ -1481,7 +1481,7 @@ func TestConnectClient(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			connType, err := connections.ParseConnType(tc.connType)
 			assert.Nil(t, err, fmt.Sprintf("error parsing connection type %s", tc.connType))
@@ -1514,7 +1514,7 @@ func TestDisconnectClient(t *testing.T) {
 		desc            string
 		domainID        string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		channelID       string
 		clientID        string
 		connType        string
@@ -1584,7 +1584,7 @@ func TestDisconnectClient(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = mgauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			connType, err := connections.ParseConnType(tc.connType)
 			assert.Nil(t, err, fmt.Sprintf("error parsing connection type %s", tc.connType))

@@ -14,9 +14,9 @@ import (
 	"github.com/absmach/supermq/invitations"
 	"github.com/absmach/supermq/invitations/api"
 	"github.com/absmach/supermq/invitations/mocks"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/apiutil"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -33,7 +33,7 @@ var (
 
 func setupInvitations() (*httptest.Server, *mocks.Service, *authnmocks.Authentication) {
 	svc := new(mocks.Service)
-	logger := mglog.NewMock()
+	logger := smqlog.NewMock()
 	authn := new(authnmocks.Authentication)
 	mux := api.MakeHandler(svc, logger, authn, "test")
 
@@ -59,7 +59,7 @@ func TestSendInvitation(t *testing.T) {
 	cases := []struct {
 		desc              string
 		token             string
-		session           mgauthn.Session
+		session           smqauthn.Session
 		sendInvitationReq sdk.Invitation
 		svcReq            invitations.Invitation
 		authenticateErr   error
@@ -138,7 +138,7 @@ func TestSendInvitation(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == valid {
-				tc.session = mgauthn.Session{UserID: tc.sendInvitationReq.UserID, DomainID: tc.sendInvitationReq.DomainID}
+				tc.session = smqauthn.Session{UserID: tc.sendInvitationReq.UserID, DomainID: tc.sendInvitationReq.DomainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("SendInvitation", mock.Anything, tc.session, tc.svcReq).Return(tc.svcErr)
@@ -166,7 +166,7 @@ func TestViewInvitation(t *testing.T) {
 	cases := []struct {
 		desc            string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		userID          string
 		domainID        string
 		svcRes          invitations.Invitation
@@ -229,7 +229,7 @@ func TestViewInvitation(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == valid {
-				tc.session = mgauthn.Session{UserID: tc.userID, DomainID: tc.domainID}
+				tc.session = smqauthn.Session{UserID: tc.userID, DomainID: tc.domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("ViewInvitation", mock.Anything, tc.session, tc.userID, tc.domainID).Return(tc.svcRes, tc.svcErr)
@@ -258,7 +258,7 @@ func TestListInvitation(t *testing.T) {
 	cases := []struct {
 		desc            string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		pageMeta        sdk.PageMetadata
 		svcReq          invitations.Page
 		svcRes          invitations.InvitationPage
@@ -331,7 +331,7 @@ func TestListInvitation(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == valid {
-				tc.session = mgauthn.Session{DomainUserID: validID, UserID: validID}
+				tc.session = smqauthn.Session{DomainUserID: validID, UserID: validID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("ListInvitations", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
@@ -360,7 +360,7 @@ func TestAcceptInvitation(t *testing.T) {
 	cases := []struct {
 		desc            string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		domainID        string
 		authenticateErr error
 		svcErr          error
@@ -398,7 +398,7 @@ func TestAcceptInvitation(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == valid {
-				tc.session = mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("AcceptInvitation", mock.Anything, tc.session, tc.domainID).Return(tc.svcErr)
@@ -426,7 +426,7 @@ func TestRejectInvitation(t *testing.T) {
 	cases := []struct {
 		desc            string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		domainID        string
 		authenticateErr error
 		svcErr          error
@@ -464,7 +464,7 @@ func TestRejectInvitation(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == valid {
-				tc.session = mgauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("RejectInvitation", mock.Anything, tc.session, tc.domainID).Return(tc.svcErr)
@@ -492,7 +492,7 @@ func TestDeleteInvitation(t *testing.T) {
 	cases := []struct {
 		desc            string
 		token           string
-		session         mgauthn.Session
+		session         smqauthn.Session
 		userID          string
 		domainID        string
 		authenticateErr error
@@ -543,7 +543,7 @@ func TestDeleteInvitation(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == valid {
-				tc.session = mgauthn.Session{UserID: tc.userID, DomainID: tc.domainID}
+				tc.session = smqauthn.Session{UserID: tc.userID, DomainID: tc.domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("DeleteInvitation", mock.Anything, tc.session, tc.userID, tc.domainID).Return(tc.svcErr)

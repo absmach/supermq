@@ -18,7 +18,7 @@ import (
 	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
 	grpcDomainsV1 "github.com/absmach/supermq/internal/grpc/domains/v1"
 	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	"github.com/absmach/supermq/pkg/server"
@@ -33,7 +33,7 @@ func TestSetupToken(t *testing.T) {
 	registerAuthServiceServer := func(srv *grpc.Server) {
 		grpcTokenV1.RegisterTokenServiceServer(srv, tokengrpcapi.NewTokenServer(new(mocks.Service)))
 	}
-	gs := grpcserver.NewServer(ctx, cancel, "auth", server.Config{Port: "12345"}, registerAuthServiceServer, mglog.NewMock())
+	gs := grpcserver.NewServer(ctx, cancel, "auth", server.Config{Port: "12345"}, registerAuthServiceServer, smqlog.NewMock())
 	go func() {
 		err := gs.Start()
 		assert.Nil(t, err, fmt.Sprintf(`"Unexpected error creating server %s"`, err))
@@ -85,7 +85,7 @@ func TestSetupClientsClient(t *testing.T) {
 	registerClientsServiceServer := func(srv *grpc.Server) {
 		grpcClientsV1.RegisterClientsServiceServer(srv, clientsgrpcapi.NewServer(new(climocks.Service)))
 	}
-	gs := grpcserver.NewServer(ctx, cancel, "clients", server.Config{Port: "12345"}, registerClientsServiceServer, mglog.NewMock())
+	gs := grpcserver.NewServer(ctx, cancel, "clients", server.Config{Port: "12345"}, registerClientsServiceServer, smqlog.NewMock())
 	go func() {
 		err := gs.Start()
 		assert.Nil(t, err, fmt.Sprintf(`"Unexpected error creating server %s"`, err))
@@ -129,7 +129,7 @@ func TestSetupDomainsClient(t *testing.T) {
 	registerDomainsServiceServer := func(srv *grpc.Server) {
 		grpcDomainsV1.RegisterDomainsServiceServer(srv, domainsgrpcapi.NewDomainsServer(new(domainsMocks.Service)))
 	}
-	gs := grpcserver.NewServer(ctx, cancel, "domains", server.Config{Port: "12345"}, registerDomainsServiceServer, mglog.NewMock())
+	gs := grpcserver.NewServer(ctx, cancel, "domains", server.Config{Port: "12345"}, registerDomainsServiceServer, smqlog.NewMock())
 	go func() {
 		err := gs.Start()
 		assert.Nil(t, err, fmt.Sprintf("Unexpected error creating server %s", err))

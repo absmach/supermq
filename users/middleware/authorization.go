@@ -10,7 +10,7 @@ import (
 	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/authz"
-	mgauthz "github.com/absmach/supermq/pkg/authz"
+	smqauthz "github.com/absmach/supermq/pkg/authz"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/users"
@@ -20,12 +20,12 @@ var _ users.Service = (*authorizationMiddleware)(nil)
 
 type authorizationMiddleware struct {
 	svc          users.Service
-	authz        mgauthz.Authorization
+	authz        smqauthz.Authorization
 	selfRegister bool
 }
 
 // AuthorizationMiddleware adds authorization to the clients service.
-func AuthorizationMiddleware(svc users.Service, authz mgauthz.Authorization, selfRegister bool) users.Service {
+func AuthorizationMiddleware(svc users.Service, authz smqauthz.Authorization, selfRegister bool) users.Service {
 	return &authorizationMiddleware{
 		svc:          svc,
 		authz:        authz,

@@ -7,8 +7,8 @@ import (
 	"context"
 
 	"github.com/absmach/supermq/journal"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
-	mgauthz "github.com/absmach/supermq/pkg/authz"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthz "github.com/absmach/supermq/pkg/authz"
 	"github.com/absmach/supermq/pkg/policies"
 )
 
@@ -16,11 +16,11 @@ var _ journal.Service = (*authorizationMiddleware)(nil)
 
 type authorizationMiddleware struct {
 	svc   journal.Service
-	authz mgauthz.Authorization
+	authz smqauthz.Authorization
 }
 
 // AuthorizationMiddleware adds authorization to the journal service.
-func AuthorizationMiddleware(svc journal.Service, authz mgauthz.Authorization) journal.Service {
+func AuthorizationMiddleware(svc journal.Service, authz smqauthz.Authorization) journal.Service {
 	return &authorizationMiddleware{
 		svc:   svc,
 		authz: authz,
@@ -31,7 +31,7 @@ func (am *authorizationMiddleware) Save(ctx context.Context, journal journal.Jou
 	return am.svc.Save(ctx, journal)
 }
 
-func (am *authorizationMiddleware) RetrieveAll(ctx context.Context, session mgauthn.Session, page journal.Page) (journal.JournalsPage, error) {
+func (am *authorizationMiddleware) RetrieveAll(ctx context.Context, session smqauthn.Session, page journal.Page) (journal.JournalsPage, error) {
 	permission := policies.ViewPermission
 	objectType := page.EntityType.AuthString()
 	object := page.EntityID
@@ -45,7 +45,7 @@ func (am *authorizationMiddleware) RetrieveAll(ctx context.Context, session mgau
 		subject = session.UserID
 	}
 
-	req := mgauthz.PolicyReq{
+	req := smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,

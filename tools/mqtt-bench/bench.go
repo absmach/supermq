@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/pelletier/go-toml"
 )
 
@@ -23,7 +23,7 @@ func Benchmark(cfg Config) error {
 	if err := checkConnection(cfg.MQTT.Broker.URL, 1); err != nil {
 		return err
 	}
-	logger, err := mglog.New(os.Stdout, "debug")
+	logger, err := smqlog.New(os.Stdout, "debug")
 	if err != nil {
 		return err
 	}

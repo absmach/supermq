@@ -19,7 +19,7 @@ import (
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/authn"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -227,7 +227,7 @@ func TestViewGroup(t *testing.T) {
 
 	cases := []struct {
 		desc     string
-		session  mgauthn.Session
+		session  smqauthn.Session
 		id       string
 		repoResp groups.Group
 		repoErr  error
@@ -420,7 +420,7 @@ func TestListGroups(t *testing.T) {
 
 	cases := []struct {
 		desc                 string
-		session              mgauthn.Session
+		session              smqauthn.Session
 		pageMeta             groups.PageMeta
 		retrieveAllRes       groups.Page
 		retrieveAllErr       error
@@ -431,7 +431,7 @@ func TestListGroups(t *testing.T) {
 	}{
 		{
 			desc:    "list groups as super admin successfully",
-			session: mgauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID, SuperAdmin: true},
+			session: smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID, SuperAdmin: true},
 			pageMeta: groups.PageMeta{
 				Limit:    10,
 				Offset:   0,
@@ -453,7 +453,7 @@ func TestListGroups(t *testing.T) {
 		},
 		{
 			desc:    "list groups as super admin with failed to retrieve",
-			session: mgauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID, SuperAdmin: true},
+			session: smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID, SuperAdmin: true},
 			pageMeta: groups.PageMeta{
 				Limit:    10,
 				Offset:   0,
@@ -515,7 +515,7 @@ func TestListUserGroups(t *testing.T) {
 
 	cases := []struct {
 		desc                 string
-		session              mgauthn.Session
+		session              smqauthn.Session
 		userID               string
 		pageMeta             groups.PageMeta
 		retrieveUserGroupRes groups.Page
@@ -1136,7 +1136,7 @@ func TestListAllChildrenGroups(t *testing.T) {
 
 	cases := []struct {
 		desc        string
-		session     mgauthn.Session
+		session     smqauthn.Session
 		pageMeta    groups.PageMeta
 		parentID    string
 		startLevel  int64

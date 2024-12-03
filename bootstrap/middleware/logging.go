@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/bootstrap"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 )
 
 var _ bootstrap.Service = (*loggingMiddleware)(nil)
@@ -28,7 +28,7 @@ func LoggingMiddleware(svc bootstrap.Service, logger *slog.Logger) bootstrap.Ser
 
 // Add logs the add request. It logs the client ID and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) Add(ctx context.Context, session mgauthn.Session, token string, cfg bootstrap.Config) (saved bootstrap.Config, err error) {
+func (lm *loggingMiddleware) Add(ctx context.Context, session smqauthn.Session, token string, cfg bootstrap.Config) (saved bootstrap.Config, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -47,7 +47,7 @@ func (lm *loggingMiddleware) Add(ctx context.Context, session mgauthn.Session, t
 
 // View logs the view request. It logs the client ID and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) View(ctx context.Context, session mgauthn.Session, id string) (saved bootstrap.Config, err error) {
+func (lm *loggingMiddleware) View(ctx context.Context, session smqauthn.Session, id string) (saved bootstrap.Config, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -66,7 +66,7 @@ func (lm *loggingMiddleware) View(ctx context.Context, session mgauthn.Session, 
 
 // Update logs the update request. It logs bootstrap client ID and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) Update(ctx context.Context, session mgauthn.Session, cfg bootstrap.Config) (err error) {
+func (lm *loggingMiddleware) Update(ctx context.Context, session smqauthn.Session, cfg bootstrap.Config) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -88,7 +88,7 @@ func (lm *loggingMiddleware) Update(ctx context.Context, session mgauthn.Session
 
 // UpdateCert logs the update_cert request. It logs client ID and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) UpdateCert(ctx context.Context, session mgauthn.Session, clientID, clientCert, clientKey, caCert string) (cfg bootstrap.Config, err error) {
+func (lm *loggingMiddleware) UpdateCert(ctx context.Context, session smqauthn.Session, clientID, clientCert, clientKey, caCert string) (cfg bootstrap.Config, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -107,7 +107,7 @@ func (lm *loggingMiddleware) UpdateCert(ctx context.Context, session mgauthn.Ses
 
 // UpdateConnections logs the update_connections request. It logs bootstrap ID and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) UpdateConnections(ctx context.Context, session mgauthn.Session, token, id string, connections []string) (err error) {
+func (lm *loggingMiddleware) UpdateConnections(ctx context.Context, session smqauthn.Session, token, id string, connections []string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -127,7 +127,7 @@ func (lm *loggingMiddleware) UpdateConnections(ctx context.Context, session mgau
 
 // List logs the list request. It logs offset, limit and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) List(ctx context.Context, session mgauthn.Session, filter bootstrap.Filter, offset, limit uint64) (res bootstrap.ConfigsPage, err error) {
+func (lm *loggingMiddleware) List(ctx context.Context, session smqauthn.Session, filter bootstrap.Filter, offset, limit uint64) (res bootstrap.ConfigsPage, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -151,7 +151,7 @@ func (lm *loggingMiddleware) List(ctx context.Context, session mgauthn.Session, 
 
 // Remove logs the remove request. It logs bootstrap ID and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) Remove(ctx context.Context, session mgauthn.Session, id string) (err error) {
+func (lm *loggingMiddleware) Remove(ctx context.Context, session smqauthn.Session, id string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -185,7 +185,7 @@ func (lm *loggingMiddleware) Bootstrap(ctx context.Context, externalKey, externa
 	return lm.svc.Bootstrap(ctx, externalKey, externalID, secure)
 }
 
-func (lm *loggingMiddleware) ChangeState(ctx context.Context, session mgauthn.Session, token, id string, state bootstrap.State) (err error) {
+func (lm *loggingMiddleware) ChangeState(ctx context.Context, session smqauthn.Session, token, id string, state bootstrap.State) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),

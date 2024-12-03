@@ -17,9 +17,9 @@ import (
 	"github.com/absmach/supermq/http/api"
 	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/apiutil"
-	mgauthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -43,16 +43,16 @@ func setupMessages() (*httptest.Server, *pubsub.PubSub) {
 	channelsGRPCClient = new(chmocks.ChannelsServiceClient)
 	pub := new(pubsub.PubSub)
 	authn := new(authnmocks.Authentication)
-	handler := adapter.NewHandler(pub, authn, clientsGRPCClient, channelsGRPCClient, mglog.NewMock())
+	handler := adapter.NewHandler(pub, authn, clientsGRPCClient, channelsGRPCClient, smqlog.NewMock())
 
-	mux := api.MakeHandler(mglog.NewMock(), "")
+	mux := api.MakeHandler(smqlog.NewMock(), "")
 	target := httptest.NewServer(mux)
 
 	config := mgate.Config{
 		Address: "",
 		Target:  target.URL,
 	}
-	mp, err := proxy.NewProxy(config, handler, mglog.NewMock())
+	mp, err := proxy.NewProxy(config, handler, smqlog.NewMock())
 	if err != nil {
 		return nil, nil
 	}
@@ -393,7 +393,7 @@ func TestReadMessages(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			authCall1 := authn.On("Authenticate", mock.Anything, tc.token).Return(mgauthn.Session{UserID: validID}, tc.authnErr)
+			authCall1 := authn.On("Authenticate", mock.Anything, tc.token).Return(smqauthn.Session{UserID: validID}, tc.authnErr)
 			authzCall := channelsGRPCClient.On("Authorize", mock.Anything, mock.Anything).Return(&grpcChannelsV1.AuthzRes{Authorized: true}, tc.authzErr)
 			repoCall := repo.On("ReadAll", channelID, mock.Anything).Return(tc.repoRes, tc.repoErr)
 			response, err := mgsdk.ReadMessages(tc.messagePageMeta, tc.chanName, tc.domainID, tc.token)

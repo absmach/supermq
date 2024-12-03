@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"testing"
 
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/pkg/messaging/nats"
 	"github.com/ory/dockertest/v3"
@@ -47,7 +47,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	logger, err := mglog.New(os.Stdout, "error")
+	logger, err := smqlog.New(os.Stdout, "error")
 	if err != nil {
 		log.Fatal(err.Error())
 	}

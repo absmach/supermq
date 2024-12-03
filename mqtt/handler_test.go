@@ -16,7 +16,7 @@ import (
 	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
 	"github.com/absmach/supermq/internal/testsutil"
-	mglog "github.com/absmach/supermq/logger"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/mqtt"
 	"github.com/absmach/supermq/mqtt/mocks"
 	"github.com/absmach/supermq/pkg/connections"
@@ -528,7 +528,7 @@ func TestDisconnect(t *testing.T) {
 }
 
 func newHandler() session.Handler {
-	logger, err := mglog.New(&logBuffer, "debug")
+	logger, err := smqlog.New(&logBuffer, "debug")
 	if err != nil {
 		log.Fatalf("failed to create logger: %s", err)
 	}

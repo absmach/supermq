@@ -13,7 +13,7 @@ import (
 	"github.com/absmach/supermq/channels"
 	"github.com/absmach/supermq/channels/mocks"
 	"github.com/absmach/supermq/clients"
-	mgclients "github.com/absmach/supermq/clients"
+	smqclients "github.com/absmach/supermq/clients"
 	clmocks "github.com/absmach/supermq/clients/mocks"
 	gpmocks "github.com/absmach/supermq/groups/mocks"
 	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
@@ -767,7 +767,7 @@ func TestRemoveChannel(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := repo.On("DoesChannelHaveConnections", context.Background(), validChannel.ID).Return(tc.connectionsRes, tc.connectionsErr)
 			clientsCall := clientsSvc.On("RemoveChannelConnections", context.Background(), &grpcClientsV1.RemoveChannelConnectionsReq{ChannelId: tc.id}).Return(&grpcClientsV1.RemoveChannelConnectionsRes{}, tc.removeConnectionsErr)
-			repoCall1 := repo.On("ChangeStatus", context.Background(), channels.Channel{ID: tc.id, Status: mgclients.DeletedStatus}).Return(tc.changeStatusRes, tc.changeStatusErr)
+			repoCall1 := repo.On("ChangeStatus", context.Background(), channels.Channel{ID: tc.id, Status: smqclients.DeletedStatus}).Return(tc.changeStatusRes, tc.changeStatusErr)
 			repoCall2 := repo.On("RetrieveEntitiesRolesActionsMembers", context.Background(), []string{tc.id}).Return([]roles.EntityActionRole{}, []roles.EntityMemberRole{}, nil)
 			policyCall := policies.On("DeletePolicies", context.Background(), mock.Anything).Return(tc.deletePoliciesErr)
 			policyCall1 := policies.On("DeletePolicyFilter", context.Background(), mock.Anything).Return(tc.deletePolicyFilterErr)
