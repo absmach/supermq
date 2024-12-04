@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/absmach/magistrala/auth"
-	"github.com/absmach/magistrala/pkg/errors"
-	repoerr "github.com/absmach/magistrala/pkg/errors/repository"
+	"github.com/absmach/supermq/auth"
+	"github.com/absmach/supermq/pkg/errors"
+	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	bolt "go.etcd.io/bbolt"
 )
 

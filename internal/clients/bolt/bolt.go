@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/absmach/magistrala/pkg/errors"
+	"github.com/absmach/supermq/pkg/errors"
 	"github.com/caarlos0/env/v11"
 	bolt "go.etcd.io/bbolt"
 )

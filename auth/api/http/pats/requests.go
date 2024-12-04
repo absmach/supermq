@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/absmach/magistrala/auth"
-	"github.com/absmach/magistrala/pkg/apiutil"
+	"github.com/absmach/supermq/auth"
+	"github.com/absmach/supermq/pkg/apiutil"
 )
 
 type createPatReq struct {

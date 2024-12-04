@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/absmach/magistrala/pkg/errors"
+	"github.com/absmach/supermq/pkg/errors"
 )
 
 var errAddEntityToAnyIDs = errors.New("could not add entity id to any ID scope value")

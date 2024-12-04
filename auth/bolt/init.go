@@ -6,7 +6,7 @@
 package bolt
 
 import (
-	"github.com/absmach/magistrala/pkg/errors"
+	"github.com/absmach/supermq/pkg/errors"
 	bolt "go.etcd.io/bbolt"
 )
 
