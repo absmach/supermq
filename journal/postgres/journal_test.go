@@ -295,7 +295,7 @@ func TestJournalRetrieveAll(t *testing.T) {
 		j := journal.Journal{
 			ID:         testsutil.GenerateUUID(t),
 			Operation:  fmt.Sprintf("%s-%d", operation, i),
-			OccurredAt: time.Now().UTC().Truncate(time.Millisecond),
+			OccurredAt: time.Now().UTC().Truncate(time.Microsecond),
 			Attributes: userAttributesV1,
 			Metadata:   payload,
 		}
