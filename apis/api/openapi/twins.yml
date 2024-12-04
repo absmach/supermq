@@ -3,16 +3,16 @@
 
 openapi: 3.0.1
 info:
-  title: Magistrala twins service
+  title: SuperMQ twins service
   description: |
     HTTP API for managing digital twins and their states.
     Some useful links:
-    - [The Magistrala repository](https://github.com/absmach/magistrala)
+    - [The SuperMQ repository](https://github.com/absmach/supermq)
   contact:
     email: info@abstractmachines.fr
   license:
     name: Apache 2.0
-    url: https://github.com/absmach/magistrala/blob/main/LICENSE
+    url: https://github.com/absmach/supermq/blob/main/LICENSE
   version: 0.14.0
 
 servers:
@@ -24,7 +24,7 @@ tags:
     description: Everything about your Twins
     externalDocs:
       description: Find out more about twins
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
 
 paths:
   /twins:
@@ -244,7 +244,7 @@ components:
           description: Name of the attribute.
         channel:
           type: string
-          description: Magistrala channel used by attribute.
+          description: SuperMQ channel used by attribute.
         subtopic:
           type: string
           description: Subtopic used by attribute.
@@ -278,7 +278,7 @@ components:
       properties:
         owner:
           type: string
-          description: Email address of Magistrala user that owns twin.
+          description: Email address of SuperMQ user that owns twin.
         id:
           type: string
           format: uuid

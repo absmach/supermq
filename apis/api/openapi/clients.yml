@@ -3,16 +3,16 @@
 
 openapi: 3.0.3
 info:
-  title: Magistrala Clients Service
+  title: SuperMQ Clients Service
   description: |
     This is the Clients Server based on the OpenAPI 3.0 specification.  It is the HTTP API for managing platform clients and channels. You can now help us improve the API whether it's by making changes to the definition itself or to the code.
     Some useful links:
-    - [The Magistrala repository](https://github.com/absmach/magistrala)
+    - [The SuperMQ repository](https://github.com/absmach/supermq)
   contact:
     email: info@abstractmachines.fr
   license:
     name: Apache 2.0
-    url: https://github.com/absmach/magistrala/blob/main/LICENSE
+    url: https://github.com/absmach/supermq/blob/main/LICENSE
   version: 0.14.0
 
 servers:
@@ -24,17 +24,17 @@ tags:
     description: Everyclient about your Clients
     externalDocs:
       description: Find out more about clients
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
   - name: Channels
     description: Everyclient about your Channels
     externalDocs:
       description: Find out more about clients channels
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
   - name: Policies
     description: Access to clients policies
     externalDocs:
       description: Find out more about clients policies
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
 
 paths:
   /{domainID}clients:

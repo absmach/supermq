@@ -3,16 +3,16 @@
 
 openapi: 3.0.1
 info:
-  title: Magistrala Bootstrap service
+  title: SuperMQ Bootstrap service
   description: |
     HTTP API for managing platform clients configuration.
     Some useful links:
-    - [The Magistrala repository](https://github.com/absmach/magistrala)
+    - [The SuperMQ repository](https://github.com/absmach/supermq)
   contact:
     email: info@abstractmachines.fr
   license:
     name: Apache 2.0
-    url: https://github.com/absmach/magistrala/blob/main/LICENSE
+    url: https://github.com/absmach/supermq/blob/main/LICENSE
   version: 0.14.0
 
 servers:
@@ -24,7 +24,7 @@ tags:
     description: Everything about your Configs
     externalDocs:
       description: Find out more about Configs
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
 
 paths:
   /{domainID}/clients/configs:
@@ -118,7 +118,7 @@ paths:
       description: |
         Update is performed by replacing the current resource data with values
         provided in a request payload. Note that the owner, ID, external ID,
-        external key, Magistrala Client ID and key cannot be changed.
+        external key, SuperMQ Client ID and key cannot be changed.
       tags:
         - configs
       parameters:
@@ -148,7 +148,7 @@ paths:
       summary: Removes a Config
       description: |
         Removes a Config. In case of successful removal the service will ensure
-        that the removed config is disconnected from all of the Magistrala channels.
+        that the removed config is disconnected from all of the SuperMQ channels.
       tags:
         - configs
       parameters:
@@ -287,7 +287,7 @@ paths:
       summary: Updates Config state.
       description: |
         Updating state represents enabling/disabling Config, i.e. connecting
-        and disconnecting corresponding Magistrala Client to the list of Channels.
+        and disconnecting corresponding SuperMQ Client to the list of Channels.
       tags:
         - configs
       parameters:
@@ -333,11 +333,11 @@ components:
         client_id:
           type: string
           format: uuid
-          description: Corresponding Magistrala Client ID.
+          description: Corresponding SuperMQ Client ID.
         magistrala_secret:
           type: string
           format: uuid
-          description: Corresponding Magistrala Client key.
+          description: Corresponding SuperMQ Client key.
         channels:
           type: array
           minItems: 0
@@ -405,11 +405,11 @@ components:
         client_id:
           type: string
           format: uuid
-          description: Corresponding Magistrala Client ID.
+          description: Corresponding SuperMQ Client ID.
         client_key:
           type: string
           format: uuid
-          description: Corresponding Magistrala Client key.
+          description: Corresponding SuperMQ Client key.
         channels:
           type: array
           minItems: 0
@@ -438,7 +438,7 @@ components:
         client_id:
           type: string
           format: uuid
-          description: Corresponding Magistrala Client ID.
+          description: Corresponding SuperMQ Client ID.
         client_cert:
           type: string
           description: Client certificate.
@@ -522,7 +522,7 @@ components:
               client_id:
                 type: string
                 format: uuid
-                description: ID of the corresponding Magistrala Client.
+                description: ID of the corresponding SuperMQ Client.
               channels:
                 type: array
                 minItems: 0

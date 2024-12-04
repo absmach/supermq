@@ -3,16 +3,16 @@
 
 openapi: 3.0.3
 info:
-  title: Magistrala Users Service
+  title: SuperMQ Users Service
   description: |
     This is the Users Server based on the OpenAPI 3.0 specification.  It is the HTTP API for managing platform users. You can now help us improve the API whether it's by making changes to the definition itself or to the code.
     Some useful links:
-    - [The Magistrala repository](https://github.com/absmach/magistrala)
+    - [The SuperMQ repository](https://github.com/absmach/supermq)
   contact:
     email: info@abstractmachines.fr
   license:
     name: Apache 2.0
-    url: https://github.com/absmach/magistrala/blob/main/LICENSE
+    url: https://github.com/absmach/supermq/blob/main/LICENSE
   version: 0.14.0
 
 servers:
@@ -24,12 +24,12 @@ tags:
     description: Everything about your Users
     externalDocs:
       description: Find out more about users
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
   - name: Groups
     description: Everything about your Groups
     externalDocs:
       description: Find out more about users groups
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
 
 paths:
   /users:
@@ -1266,7 +1266,7 @@ components:
           description: User tags.
         email:
           type: string
-          example: "john.doe@magistrala.com"
+          example: "john.doe@supermq.com"
           description: User email for example email address.
         credentials:
           type: object
@@ -1377,7 +1377,7 @@ components:
           description: User's last name.
         email:
           type: string
-          example: user@magistrala.com
+          example: user@supermq.com
           description: User's email address.
         tags:
           type: array
@@ -1542,7 +1542,7 @@ components:
       properties:
         email:
           type: string
-          example: user@magistrala.com
+          example: user@supermq.com
           description: User email address.
       required:
         - email
@@ -1659,7 +1659,7 @@ components:
       properties:
         identity:
           type: string
-          example: user@magistrala.com
+          example: user@supermq.com
           description: User identity - email address.
         secret:
           type: string

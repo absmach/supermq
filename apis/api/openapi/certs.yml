@@ -3,16 +3,16 @@
 
 openapi: 3.0.1
 info:
-  title: Magistrala Certs service
+  title: SuperMQ Certs service
   description: |
     HTTP API for Certs service
     Some useful links:
-    - [The Magistrala repository](https://github.com/absmach/magistrala)
+    - [The SuperMQ repository](https://github.com/absmach/supermq)
   contact:
     email: info@abstractmachines.fr
   license:
     name: Apache 2.0
-    url: https://github.com/absmach/magistrala/blob/main/LICENSE
+    url: https://github.com/absmach/supermq/blob/main/LICENSE
   version: 0.14.0
 
 servers:
@@ -24,7 +24,7 @@ tags:
     description: Everything about your Certs
     externalDocs:
       description: Find out more about certs
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
 
 paths:
   /{domainID}/certs:
@@ -171,7 +171,7 @@ components:
         client_id:
           type: string
           format: uuid
-          description: Corresponding Magistrala Client ID.
+          description: Corresponding SuperMQ Client ID.
         client_cert:
           type: string
           description: Client Certificate.

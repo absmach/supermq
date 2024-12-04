@@ -3,16 +3,16 @@
 
 openapi: 3.0.3
 info:
-  title: Magistrala Invitations Service
+  title: SuperMQ Invitations Service
   description: |
     This is the Invitations Server based on the OpenAPI 3.0 specification.  It is the HTTP API for managing platform invitations. You can now help us improve the API whether it's by making changes to the definition itself or to the code.
     Some useful links:
-    - [The Magistrala repository](https://github.com/absmach/magistrala)
+    - [The SuperMQ repository](https://github.com/absmach/supermq)
   contact:
     email: info@abstractmachines.fr
   license:
     name: Apache 2.0
-    url: https://github.com/absmach/magistrala/blob/main/LICENSE
+    url: https://github.com/absmach/supermq/blob/main/LICENSE
   version: 0.14.0
 
 servers:
@@ -24,7 +24,7 @@ tags:
     description: Everything about your Invitations
     externalDocs:
       description: Find out more about Invitations
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
 
 paths:
   /invitations:

@@ -3,16 +3,16 @@
 
 openapi: 3.0.3
 info:
-  title: Magistrala Journal Log Service
+  title: SuperMQ Journal Log Service
   description: |
     This is the Journal Log Server based on the OpenAPI 3.0 specification.  It is the HTTP API for viewing journal log history. You can now help us improve the API whether it's by making changes to the definition itself or to the code.
     Some useful links:
-    - [The Magistrala repository](https://github.com/absmach/magistrala)
+    - [The SuperMQ repository](https://github.com/absmach/supermq)
   contact:
     email: info@mainflux.com
   license:
     name: Apache 2.0
-    url: https://github.com/absmach/magistrala/blob/master/LICENSE
+    url: https://github.com/absmach/supermq/blob/main/LICENSE
   version: 0.14.0
 
 servers:
