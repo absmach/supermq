@@ -105,6 +105,54 @@ func (repo domainRepo) RetrieveByID(ctx context.Context, id string) (domains.Dom
 	return domains.Domain{}, repoerr.ErrNotFound
 }
 
+func (repo domainRepo) RetrieveByUserAndID(ctx context.Context, userID, id string) (domains.Domain, error) {
+	q := repo.userDomainsBaseQuery() +
+		`SELECT
+			d.id as id,
+			d.name as name,
+			d.tags as tags,
+			d.alias as alias,
+			d.metadata as metadata,
+			d.status as status,
+			d.role_id AS role_id,
+			d.role_name AS role_name,
+			d.actions AS actions,
+			d.created_at as created_at,
+			d.updated_at as updated_at,
+			d.updated_by as updated_by,
+			d.created_by as created_by
+		FROM
+			domains d
+		WHERE d.id = :id
+		`
+
+	dbdp := dbDomainsPage{
+		ID:     id,
+		UserID: userID,
+	}
+
+	rows, err := repo.db.NamedQueryContext(ctx, q, dbdp)
+	if err != nil {
+		return domains.Domain{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+	}
+	defer rows.Close()
+
+	dbd := dbDomain{}
+	if rows.Next() {
+		if err = rows.StructScan(&dbd); err != nil {
+			return domains.Domain{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+		}
+
+		domain, err := toDomain(dbd)
+		if err != nil {
+			return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
+		}
+
+		return domain, nil
+	}
+	return domains.Domain{}, repoerr.ErrNotFound
+}
+
 // RetrieveAllByIDs retrieves for given Domain IDs .
 func (repo domainRepo) RetrieveAllByIDs(ctx context.Context, pm domains.Page) (domains.DomainsPage, error) {
 	var q string
@@ -178,36 +226,8 @@ func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domain
 		LIMIT :limit OFFSET :offset`
 
 	if pm.UserID != "" {
-		q = `with domains AS (
-			SELECT
-				d.id as id,
-				d.name as name,
-				d.tags as tags,
-				d.alias as alias,
-				d.metadata as metadata,
-				d.created_at as created_at,
-				d.updated_at as updated_at,
-				d.updated_by as updated_by,
-				d.created_by as created_by,
-				d.status as status,
-				dr.entity_id AS entity_id,
-				drm.member_id AS member_id,
-				dr.id AS role_id,
-				dr."name" AS role_name,
-				array_agg(dra."action") AS actions
-			FROM
-				domains_role_members drm
-			JOIN
-				domains_role_actions dra ON dra.role_id = drm.role_id
-			JOIN
-				domains_roles dr ON dr.id = drm.role_id
-			JOIN
-				"domains" d ON d.id = dr.entity_id
-			WHERE
-				drm.member_id = :member_id
-			GROUP BY
-				dr.entity_id, drm.member_id, dr.id, dr."name", d.id
-			)
+		q = repo.userDomainsBaseQuery() +
+			`
 			SELECT
 				d.id as id,
 				d.name as name,
@@ -231,8 +251,6 @@ func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domain
 
 	q = fmt.Sprintf(q, query)
 
-	fmt.Println(q)
-	time.Sleep(time.Second)
 	dbPage, err := toDBClientsPage(pm)
 	if err != nil {
 		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
@@ -253,37 +271,7 @@ func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domain
 		FROM domains as d %s`
 
 	if pm.UserID != "" {
-		cq = `with domains AS (
-			SELECT
-				d.id as id,
-				d.name as name,
-				d.tags as tags,
-				d.alias as alias,
-				d.metadata as metadata,
-				d.created_at as created_at,
-				d.updated_at as updated_at,
-				d.updated_by as updated_by,
-				d.created_by as created_by,
-				d.status as status,
-				dr.entity_id AS entity_id,
-				drm.member_id AS member_id,
-				dr.id AS role_id,
-				dr."name" AS role_name,
-				array_agg(dra."action") AS actions
-			FROM
-				domains_role_members drm
-			JOIN
-				domains_role_actions dra ON dra.role_id = drm.role_id
-			JOIN
-				domains_roles dr ON dr.id = drm.role_id
-			JOIN
-				"domains" d ON d.id = dr.entity_id
-			WHERE
-				drm.member_id = :member_id
-			GROUP BY
-				dr.entity_id, drm.member_id, dr.id, dr."name", d.id
-			)
-			` + cq
+		cq = repo.userDomainsBaseQuery() + cq
 	}
 
 	if query != "" {
@@ -379,6 +367,39 @@ func (repo domainRepo) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
+func (repo domainRepo) userDomainsBaseQuery() string {
+	return `
+		with domains AS (
+			SELECT
+				d.id as id,
+				d.name as name,
+				d.tags as tags,
+				d.alias as alias,
+				d.metadata as metadata,
+				d.created_at as created_at,
+				d.updated_at as updated_at,
+				d.updated_by as updated_by,
+				d.created_by as created_by,
+				d.status as status,
+				dr.entity_id AS entity_id,
+				drm.member_id AS member_id,
+				dr.id AS role_id,
+				dr."name" AS role_name,
+				array_agg(dra."action") AS actions
+			FROM
+				domains_role_members drm
+			JOIN
+				domains_role_actions dra ON dra.role_id = drm.role_id
+			JOIN
+				domains_roles dr ON dr.id = drm.role_id
+			JOIN
+				"domains" d ON d.id = dr.entity_id
+			WHERE
+				drm.member_id = :member_id
+			GROUP BY
+				dr.entity_id, drm.member_id, dr.id, dr."name", d.id
+		)`
+}
 func (repo domainRepo) processRows(rows *sqlx.Rows) ([]domains.Domain, error) {
 	var items []domains.Domain
 	for rows.Next() {

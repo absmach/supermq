@@ -183,6 +183,8 @@ type Repository interface {
 	// RetrieveByID retrieves Domain by its unique ID.
 	RetrieveByID(ctx context.Context, id string) (Domain, error)
 
+	RetrieveByUserAndID(ctx context.Context, userID, id string) (Domain, error)
+
 	// RetrieveAllByIDs retrieves for given Domain IDs.
 	RetrieveAllByIDs(ctx context.Context, pm Page) (DomainsPage, error)
 
