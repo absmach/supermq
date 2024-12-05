@@ -10,6 +10,7 @@ import (
 
 	"github.com/absmach/supermq/domains"
 	"github.com/absmach/supermq/domains/mocks"
+	"github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
@@ -67,7 +68,11 @@ func newService() domains.Service {
 	idProvider := uuid.NewMock()
 	sidProvider := sid.NewMock()
 	policy = new(policiesMocks.Service)
-	ds, _ := domains.New(drepo, policy, idProvider, sidProvider)
+	availableActions := []roles.Action{}
+	builtInRoles := map[roles.BuiltInRoleName][]roles.Action{
+		groups.BuiltInRoleAdmin: availableActions,
+	}
+	ds, _ := domains.New(drepo, policy, idProvider, sidProvider, availableActions, builtInRoles)
 	return ds
 }
 

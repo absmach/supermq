@@ -31,8 +31,8 @@ type service struct {
 
 var _ Service = (*service)(nil)
 
-func New(repo Repository, policy policies.Service, idProvider supermq.IDProvider, sidProvider supermq.IDProvider) (Service, error) {
-	rpms, err := roles.NewProvisionManageService(policies.DomainType, repo, policy, sidProvider, AvailableActions(), BuiltInRoles())
+func New(repo Repository, policy policies.Service, idProvider supermq.IDProvider, sidProvider supermq.IDProvider, availableActions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action) (Service, error) {
+	rpms, err := roles.NewProvisionManageService(policies.DomainType, repo, policy, sidProvider, availableActions, builtInRoles)
 	if err != nil {
 		return nil, err
 	}
@@ -74,8 +74,7 @@ func (svc service) CreateDomain(ctx context.Context, session authn.Session, d Do
 	}()
 
 	newBuiltInRoleMembers := map[roles.BuiltInRoleName][]roles.Member{
-		BuiltInRoleAdmin:      {roles.Member(session.UserID)},
-		BuiltInRoleMembership: {},
+		BuiltInRoleAdmin: {roles.Member(session.UserID)},
 	}
 
 	optionalPolicies := []policies.Policy{

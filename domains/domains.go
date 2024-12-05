@@ -12,7 +12,6 @@ import (
 	"github.com/absmach/supermq/pkg/authn"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/roles"
-	"github.com/absmach/supermq/pkg/svcutil"
 )
 
 // Status represents Domain status.
@@ -94,31 +93,6 @@ func (s *Status) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-const (
-	OpUpdateDomain svcutil.Operation = iota
-	OpRetrieveDomain
-	OpEnableDomain
-	OpDisableDomain
-)
-
-var expectedOperations = []svcutil.Operation{
-	OpRetrieveDomain,
-	OpUpdateDomain,
-	OpEnableDomain,
-	OpDisableDomain,
-}
-
-var operationNames = []string{
-	"OpRetrieveDomain",
-	"OpUpdateDomain",
-	"OpEnableDomain",
-	"OpDisableDomain",
-}
-
-func NewOperationPerm() svcutil.OperationPerm {
-	return svcutil.NewOperationPerm(expectedOperations, operationNames)
-}
-
 // Metadata represents arbitrary JSON.
 type Metadata map[string]interface{}
 
@@ -182,15 +156,6 @@ func (page DomainsPage) MarshalJSON() ([]byte, error) {
 	return json.Marshal(a)
 }
 
-type Policy struct {
-	SubjectType     string `json:"subject_type,omitempty"`
-	SubjectID       string `json:"subject_id,omitempty"`
-	SubjectRelation string `json:"subject_relation,omitempty"`
-	Relation        string `json:"relation,omitempty"`
-	ObjectType      string `json:"object_type,omitempty"`
-	ObjectID        string `json:"object_id,omitempty"`
-}
-
 //go:generate mockery --name Service --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
 type Service interface {
 	CreateDomain(ctx context.Context, sesssion authn.Session, d Domain) (Domain, error)
@@ -227,56 +192,4 @@ type Repository interface {
 	ListDomains(ctx context.Context, pm Page) (DomainsPage, error)
 
 	roles.Repository
-}
-
-// Below codes should moved out of service, may be can be kept in `cmd/<svc>/main.go`
-
-const (
-	updatePermission          = "update_permission"
-	enablePermission          = "enable_permission"
-	disablePermission         = "disable_permission"
-	readPermission            = "read_permission"
-	membershipPermission      = "membership_permission"
-	deletePermission          = "delete_permission"
-	manageRolePermission      = "manage_role_permission"
-	addRoleUsersPermission    = "add_role_users_permission"
-	removeRoleUsersPermission = "remove_role_users_permission"
-	viewRoleUsersPermission   = "view_role_users_permission"
-)
-
-const (
-	ClientCreatePermission  = "client_create_permission"
-	ChannelCreatePermission = "channel_create_permission"
-	GroupCreatePermission   = "group_create_permission"
-)
-
-func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
-	opPerm := map[svcutil.Operation]svcutil.Permission{
-		OpRetrieveDomain: readPermission,
-		OpUpdateDomain:   updatePermission,
-		OpEnableDomain:   enablePermission,
-		OpDisableDomain:  disablePermission,
-	}
-	return opPerm
-}
-
-func NewRolesOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
-	opPerm := map[svcutil.Operation]svcutil.Permission{
-		roles.OpAddRole:                manageRolePermission,
-		roles.OpRemoveRole:             manageRolePermission,
-		roles.OpUpdateRoleName:         manageRolePermission,
-		roles.OpRetrieveRole:           manageRolePermission,
-		roles.OpRetrieveAllRoles:       manageRolePermission,
-		roles.OpRoleAddActions:         manageRolePermission,
-		roles.OpRoleListActions:        manageRolePermission,
-		roles.OpRoleCheckActionsExists: manageRolePermission,
-		roles.OpRoleRemoveActions:      manageRolePermission,
-		roles.OpRoleRemoveAllActions:   manageRolePermission,
-		roles.OpRoleAddMembers:         addRoleUsersPermission,
-		roles.OpRoleListMembers:        viewRoleUsersPermission,
-		roles.OpRoleCheckMembersExists: viewRoleUsersPermission,
-		roles.OpRoleRemoveMembers:      removeRoleUsersPermission,
-		roles.OpRoleRemoveAllMembers:   manageRolePermission,
-	}
-	return opPerm
 }
