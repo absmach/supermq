@@ -43,6 +43,7 @@ var (
 	}
 
 	entityID           = testsutil.GenerateUUID(&testing.T{})
+	domain             = testsutil.GenerateUUID(&testing.T{})
 	clientOperation    = "client.create"
 	clientAttributesV1 = map[string]interface{}{
 		"id":         entityID,
@@ -50,7 +51,7 @@ var (
 		"created_at": time.Now().Add(-time.Hour),
 		"name":       "client",
 		"tags":       []interface{}{"tag1", "tag2"},
-		"domain":     testsutil.GenerateUUID(&testing.T{}),
+		"domain":     domain,
 		"metadata":   payload,
 		"identity":   testsutil.GenerateUUID(&testing.T{}),
 	}
@@ -64,7 +65,7 @@ var (
 		"created_at": time.Now().Add(-time.Hour),
 		"name":       "user",
 		"tags":       []interface{}{"tag1", "tag2"},
-		"domain":     testsutil.GenerateUUID(&testing.T{}),
+		"domain":     domain,
 		"metadata":   payload,
 		"identity":   testsutil.GenerateUUID(&testing.T{}),
 	}
@@ -294,6 +295,7 @@ func TestJournalRetrieveAll(t *testing.T) {
 	for i := 0; i < num; i++ {
 		j := journal.Journal{
 			ID:         testsutil.GenerateUUID(t),
+			Domain:     domain,
 			Operation:  fmt.Sprintf("%s-%d", operation, i),
 			OccurredAt: time.Now().UTC().Truncate(time.Microsecond),
 			Attributes: userAttributesV1,

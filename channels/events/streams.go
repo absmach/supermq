@@ -49,6 +49,7 @@ func (es *eventStore) CreateChannels(ctx context.Context, session authn.Session,
 	for _, ch := range chs {
 		event := createChannelEvent{
 			ch,
+			session.DomainID,
 		}
 		if err := es.Publish(ctx, event); err != nil {
 			return chs, err
@@ -64,7 +65,7 @@ func (es *eventStore) UpdateChannel(ctx context.Context, session authn.Session, 
 		return chann, err
 	}
 
-	return es.update(ctx, "", chann)
+	return es.update(ctx, "", session, chann)
 }
 
 func (es *eventStore) UpdateChannelTags(ctx context.Context, session authn.Session, ch channels.Channel) (channels.Channel, error) {
@@ -73,12 +74,14 @@ func (es *eventStore) UpdateChannelTags(ctx context.Context, session authn.Sessi
 		return chann, err
 	}
 
-	return es.update(ctx, "tags", chann)
+	return es.update(ctx, "tags", session, chann)
 }
 
-func (es *eventStore) update(ctx context.Context, operation string, ch channels.Channel) (channels.Channel, error) {
+func (es *eventStore) update(ctx context.Context, operation string, session authn.Session, ch channels.Channel) (channels.Channel, error) {
 	event := updateChannelEvent{
-		ch, operation,
+		Channel:   ch,
+		operation: operation,
+		domainID:  session.DomainID,
 	}
 
 	if err := es.Publish(ctx, event); err != nil {
@@ -96,6 +99,7 @@ func (es *eventStore) ViewChannel(ctx context.Context, session authn.Session, id
 
 	event := viewChannelEvent{
 		chann,
+		session.DomainID,
 	}
 	if err := es.Publish(ctx, event); err != nil {
 		return chann, err
@@ -111,6 +115,7 @@ func (es *eventStore) ListChannels(ctx context.Context, session authn.Session, p
 	}
 	event := listChannelEvent{
 		pm,
+		session.DomainID,
 	}
 	if err := es.Publish(ctx, event); err != nil {
 		return cp, err
@@ -125,8 +130,9 @@ func (es *eventStore) ListChannelsByClient(ctx context.Context, session authn.Se
 		return cp, err
 	}
 	event := listChannelByClientEvent{
-		clientID,
-		pm,
+		domainID:     session.DomainID,
+		clientID:     clientID,
+		PageMetadata: pm,
 	}
 	if err := es.Publish(ctx, event); err != nil {
 		return cp, err
@@ -141,7 +147,7 @@ func (es *eventStore) EnableChannel(ctx context.Context, session authn.Session, 
 		return cli, err
 	}
 
-	return es.changeStatus(ctx, cli)
+	return es.changeStatus(ctx, session, cli)
 }
 
 func (es *eventStore) DisableChannel(ctx context.Context, session authn.Session, id string) (channels.Channel, error) {
@@ -150,15 +156,16 @@ func (es *eventStore) DisableChannel(ctx context.Context, session authn.Session,
 		return cli, err
 	}
 
-	return es.changeStatus(ctx, cli)
+	return es.changeStatus(ctx, session, cli)
 }
 
-func (es *eventStore) changeStatus(ctx context.Context, ch channels.Channel) (channels.Channel, error) {
+func (es *eventStore) changeStatus(ctx context.Context, session authn.Session, ch channels.Channel) (channels.Channel, error) {
 	event := changeStatusChannelEvent{
 		id:        ch.ID,
 		updatedAt: ch.UpdatedAt,
 		updatedBy: ch.UpdatedBy,
 		status:    ch.Status.String(),
+		domainID:  session.DomainID,
 	}
 	if err := es.Publish(ctx, event); err != nil {
 		return ch, err
@@ -172,7 +179,7 @@ func (es *eventStore) RemoveChannel(ctx context.Context, session authn.Session, 
 		return err
 	}
 
-	event := removeChannelEvent{id}
+	event := removeChannelEvent{id: id, domainID: session.DomainID}
 
 	if err := es.Publish(ctx, event); err != nil {
 		return err
@@ -186,7 +193,7 @@ func (es *eventStore) Connect(ctx context.Context, session authn.Session, chIDs,
 		return err
 	}
 
-	event := connectEvent{chIDs, thIDs, connTypes}
+	event := connectEvent{domainID: session.DomainID, chIDs: chIDs, thIDs: thIDs, types: connTypes}
 
 	if err := es.Publish(ctx, event); err != nil {
 		return err
@@ -200,7 +207,7 @@ func (es *eventStore) Disconnect(ctx context.Context, session authn.Session, chI
 		return err
 	}
 
-	event := disconnectEvent{chIDs, thIDs, connTypes}
+	event := disconnectEvent{domainID: session.DomainID, chIDs: chIDs, thIDs: thIDs, types: connTypes}
 
 	if err := es.Publish(ctx, event); err != nil {
 		return err
@@ -214,7 +221,7 @@ func (es *eventStore) SetParentGroup(ctx context.Context, session authn.Session,
 		return err
 	}
 
-	event := setParentGroupEvent{parentGroupID: parentGroupID, id: id}
+	event := setParentGroupEvent{parentGroupID: parentGroupID, id: id, domainID: session.DomainID}
 
 	if err := es.Publish(ctx, event); err != nil {
 		return err
@@ -228,7 +235,7 @@ func (es *eventStore) RemoveParentGroup(ctx context.Context, session authn.Sessi
 		return err
 	}
 
-	event := removeParentGroupEvent{id: id}
+	event := removeParentGroupEvent{id: id, domainID: session.DomainID}
 
 	if err := es.Publish(ctx, event); err != nil {
 		return err

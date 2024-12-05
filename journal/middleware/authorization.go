@@ -14,6 +14,8 @@ import (
 
 var _ journal.Service = (*authorizationMiddleware)(nil)
 
+var readPermission = "read_permission"
+
 type authorizationMiddleware struct {
 	svc   journal.Service
 	authz smqauthz.Authorization
@@ -32,7 +34,7 @@ func (am *authorizationMiddleware) Save(ctx context.Context, journal journal.Jou
 }
 
 func (am *authorizationMiddleware) RetrieveAll(ctx context.Context, session smqauthn.Session, page journal.Page) (journal.JournalsPage, error) {
-	permission := policies.ViewPermission
+	permission := readPermission
 	objectType := page.EntityType.AuthString()
 	object := page.EntityID
 	subject := session.DomainUserID

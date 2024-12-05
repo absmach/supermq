@@ -338,6 +338,7 @@ type listUserByGroupEvent struct {
 	users.Page
 	objectKind string
 	objectID   string
+	domainID   string
 }
 
 func (lcge listUserByGroupEvent) Encode() (map[string]interface{}, error) {
@@ -348,6 +349,7 @@ func (lcge listUserByGroupEvent) Encode() (map[string]interface{}, error) {
 		"limit":       lcge.Limit,
 		"object_kind": lcge.objectKind,
 		"object_id":   lcge.objectID,
+		"domain":      lcge.domainID,
 	}
 
 	if lcge.Username != "" {

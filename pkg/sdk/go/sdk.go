@@ -1210,7 +1210,7 @@ type SDK interface {
 	// Journal returns a list of journal logs.
 	//
 	// For example:
-	//  journals, _ := sdk.Journal("client", "clientID","domainID", PageMetadata{Offset: 0, Limit: 10, Operation: "thing.create"}, "token")
+	//  journals, _ := sdk.Journal("client", "clientID","domainID", PageMetadata{Offset: 0, Limit: 10, Operation: "client.create"}, "token")
 	//  fmt.Println(journals)
 	Journal(entityType, entityID, domainID string, pm PageMetadata, token string) (journal JournalsPage, err error)
 }
