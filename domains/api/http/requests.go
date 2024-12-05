@@ -9,15 +9,17 @@ import (
 )
 
 type page struct {
-	offset     uint64
-	limit      uint64
-	order      string
-	dir        string
-	name       string
-	metadata   map[string]interface{}
-	tag        string
-	permission string
-	status     domains.Status
+	offset   uint64
+	limit    uint64
+	order    string
+	dir      string
+	name     string
+	metadata map[string]interface{}
+	tag      string
+	roleID   string
+	roleName string
+	actions  []string
+	status   domains.Status
 }
 
 type createDomainReq struct {

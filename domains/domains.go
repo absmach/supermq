@@ -104,34 +104,38 @@ type DomainReq struct {
 	Status   *Status   `json:"status,omitempty"`
 }
 type Domain struct {
-	ID         string    `json:"id"`
-	Name       string    `json:"name"`
-	Metadata   Metadata  `json:"metadata,omitempty"`
-	Tags       []string  `json:"tags,omitempty"`
-	Alias      string    `json:"alias,omitempty"`
-	Status     Status    `json:"status"`
-	Permission string    `json:"permission,omitempty"`
-	CreatedBy  string    `json:"created_by,omitempty"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedBy  string    `json:"updated_by,omitempty"`
-	UpdatedAt  time.Time `json:"updated_at,omitempty"`
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	Metadata  Metadata  `json:"metadata,omitempty"`
+	Tags      []string  `json:"tags,omitempty"`
+	Alias     string    `json:"alias,omitempty"`
+	Status    Status    `json:"status"`
+	RoleID    string    `json:"role_id,omitempty"`
+	RoleName  string    `json:"role_name,omitempty"`
+	Actions   []string  `json:"actions,omitempty"`
+	CreatedBy string    `json:"created_by,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedBy string    `json:"updated_by,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 }
 
 type Page struct {
-	Total      uint64   `json:"total"`
-	Offset     uint64   `json:"offset"`
-	Limit      uint64   `json:"limit"`
-	Name       string   `json:"name,omitempty"`
-	Order      string   `json:"-"`
-	Dir        string   `json:"-"`
-	Metadata   Metadata `json:"metadata,omitempty"`
-	Tag        string   `json:"tag,omitempty"`
-	Permission string   `json:"permission,omitempty"`
-	Status     Status   `json:"status,omitempty"`
-	ID         string   `json:"id,omitempty"`
-	IDs        []string `json:"-"`
-	Identity   string   `json:"identity,omitempty"`
-	SubjectID  string   `json:"-"`
+	Total    uint64   `json:"total"`
+	Offset   uint64   `json:"offset"`
+	Limit    uint64   `json:"limit"`
+	Name     string   `json:"name,omitempty"`
+	Order    string   `json:"-"`
+	Dir      string   `json:"-"`
+	Metadata Metadata `json:"metadata,omitempty"`
+	Tag      string   `json:"tag,omitempty"`
+	RoleName string   `json:"role_name,omitempty"`
+	RoleID   string   `json:"role_id,omitempty"`
+	Actions  []string `json:"actions,omitempty"`
+	Status   Status   `json:"status,omitempty"`
+	ID       string   `json:"id,omitempty"`
+	IDs      []string `json:"-"`
+	Identity string   `json:"identity,omitempty"`
+	UserID   string   `json:"-"`
 }
 
 type DomainsPage struct {

@@ -106,15 +106,17 @@ func listDomainsEndpoint(svc domains.Service) endpoint.Endpoint {
 		}
 
 		page := domains.Page{
-			Offset:     req.offset,
-			Limit:      req.limit,
-			Name:       req.name,
-			Metadata:   req.metadata,
-			Order:      req.order,
-			Dir:        req.dir,
-			Tag:        req.tag,
-			Permission: req.permission,
-			Status:     req.status,
+			Offset:   req.offset,
+			Limit:    req.limit,
+			Name:     req.name,
+			Metadata: req.metadata,
+			Order:    req.order,
+			Dir:      req.dir,
+			Tag:      req.tag,
+			RoleID:   req.roleID,
+			RoleName: req.roleName,
+			Actions:  req.actions,
+			Status:   req.status,
 		}
 		dp, err := svc.ListDomains(ctx, session, page)
 		if err != nil {

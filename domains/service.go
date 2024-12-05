@@ -139,9 +139,9 @@ func (svc service) FreezeDomain(ctx context.Context, session authn.Session, id s
 }
 
 func (svc service) ListDomains(ctx context.Context, session authn.Session, p Page) (DomainsPage, error) {
-	p.SubjectID = session.UserID
+	p.UserID = session.UserID
 	if session.SuperAdmin {
-		p.SubjectID = ""
+		p.UserID = ""
 	}
 
 	dp, err := svc.repo.ListDomains(ctx, p)
@@ -152,14 +152,14 @@ func (svc service) ListDomains(ctx context.Context, session authn.Session, p Pag
 }
 
 func (svc service) DeleteUserFromDomains(ctx context.Context, id string) (err error) {
-	domainsPage, err := svc.repo.ListDomains(ctx, Page{SubjectID: id, Limit: defLimit})
+	domainsPage, err := svc.repo.ListDomains(ctx, Page{UserID: id, Limit: defLimit})
 	if err != nil {
 		return err
 	}
 
 	if domainsPage.Total > defLimit {
 		for i := defLimit; i < int(domainsPage.Total); i += defLimit {
-			page := Page{SubjectID: id, Offset: uint64(i), Limit: defLimit}
+			page := Page{UserID: id, Offset: uint64(i), Limit: defLimit}
 			dp, err := svc.repo.ListDomains(ctx, page)
 			if err != nil {
 				return err

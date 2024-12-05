@@ -18,6 +18,7 @@ import (
 	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
 	"github.com/jackc/pgtype"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 var _ domains.Repository = (*domainRepo)(nil)
@@ -160,25 +161,83 @@ func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domain
 		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
 	}
 
-	q := `SELECT d.id as id, d.name as name, d.tags as tags, d.alias as alias, d.metadata as metadata, d.created_at as created_at, d.updated_at as updated_at, d.updated_by as updated_by, d.created_by as created_by, d.status as status
-	FROM domains as d
-	JOIN domains_roles dr
-	ON dr.entity_id = d.id
-	JOIN domains_role_members drm
-	ON drm.role_id = dr.id
-	`
+	q := `SELECT
+			d.id as id,
+			d.name as name,
+			d.tags as tags,
+			d.alias as alias,
+			d.metadata as metadata,
+			d.created_at as created_at,
+			d.updated_at as updated_at,
+			d.updated_by as updated_by,
+			d.created_by as created_by,
+			d.status as status
+		FROM
+			domains as d
+		%s
+		LIMIT :limit OFFSET :offset`
 
-	if pm.SubjectID == "" {
-		q = `SELECT d.id as id, d.name as name, d.tags as tags, d.alias as alias, d.metadata as metadata, d.created_at as created_at, d.updated_at as updated_at, d.updated_by as updated_by, d.created_by as created_by, d.status as status
-		FROM domains as d`
+	if pm.UserID != "" {
+		q = `with domains AS (
+			SELECT
+				d.id as id,
+				d.name as name,
+				d.tags as tags,
+				d.alias as alias,
+				d.metadata as metadata,
+				d.created_at as created_at,
+				d.updated_at as updated_at,
+				d.updated_by as updated_by,
+				d.created_by as created_by,
+				d.status as status,
+				dr.entity_id AS entity_id,
+				drm.member_id AS member_id,
+				dr.id AS role_id,
+				dr."name" AS role_name,
+				array_agg(dra."action") AS actions
+			FROM
+				domains_role_members drm
+			JOIN
+				domains_role_actions dra ON dra.role_id = drm.role_id
+			JOIN
+				domains_roles dr ON dr.id = drm.role_id
+			JOIN
+				"domains" d ON d.id = dr.entity_id
+			WHERE
+				drm.member_id = :member_id
+			GROUP BY
+				dr.entity_id, drm.member_id, dr.id, dr."name", d.id
+			)
+			SELECT
+				d.id as id,
+				d.name as name,
+				d.tags as tags,
+				d.alias as alias,
+				d.metadata as metadata,
+				d.status as status,
+				d.role_id AS role_id,
+				d.role_name AS role_name,
+				d.actions AS actions,
+				d.created_at as created_at,
+				d.updated_at as updated_at,
+				d.updated_by as updated_by,
+				d.created_by as created_by
+			FROM
+				domains d
+			%s
+			LIMIT :limit OFFSET :offset
+			`
 	}
 
-	q = fmt.Sprintf("%s %s  LIMIT :limit OFFSET :offset", q, query)
+	q = fmt.Sprintf(q, query)
 
+	fmt.Println(q)
+	time.Sleep(time.Second)
 	dbPage, err := toDBClientsPage(pm)
 	if err != nil {
 		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
+	fmt.Printf("%+v\n", dbPage)
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
 		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
@@ -191,18 +250,44 @@ func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domain
 	}
 
 	cq := `SELECT COUNT(*)
-	FROM domains as d
-	JOIN domains_roles dr
-	ON dr.entity_id = d.id
-	JOIN domains_role_members drm
-	ON drm.role_id = dr.id
-	`
-	if pm.SubjectID == "" {
-		cq = `SELECT COUNT(*)
-		FROM domains as d`
+		FROM domains as d %s`
+
+	if pm.UserID != "" {
+		cq = `with domains AS (
+			SELECT
+				d.id as id,
+				d.name as name,
+				d.tags as tags,
+				d.alias as alias,
+				d.metadata as metadata,
+				d.created_at as created_at,
+				d.updated_at as updated_at,
+				d.updated_by as updated_by,
+				d.created_by as created_by,
+				d.status as status,
+				dr.entity_id AS entity_id,
+				drm.member_id AS member_id,
+				dr.id AS role_id,
+				dr."name" AS role_name,
+				array_agg(dra."action") AS actions
+			FROM
+				domains_role_members drm
+			JOIN
+				domains_role_actions dra ON dra.role_id = drm.role_id
+			JOIN
+				domains_roles dr ON dr.id = drm.role_id
+			JOIN
+				"domains" d ON d.id = dr.entity_id
+			WHERE
+				drm.member_id = :member_id
+			GROUP BY
+				dr.entity_id, drm.member_id, dr.id, dr."name", d.id
+			)
+			` + cq
 	}
+
 	if query != "" {
-		cq = fmt.Sprintf(" %s %s", cq, query)
+		cq = fmt.Sprintf(cq, query)
 	}
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbPage)
@@ -311,17 +396,19 @@ func (repo domainRepo) processRows(rows *sqlx.Rows) ([]domains.Domain, error) {
 }
 
 type dbDomain struct {
-	ID         string           `db:"id"`
-	Name       string           `db:"name"`
-	Metadata   []byte           `db:"metadata,omitempty"`
-	Tags       pgtype.TextArray `db:"tags,omitempty"`
-	Alias      *string          `db:"alias,omitempty"`
-	Status     domains.Status   `db:"status"`
-	Permission string           `db:"relation"`
-	CreatedBy  string           `db:"created_by"`
-	CreatedAt  time.Time        `db:"created_at"`
-	UpdatedBy  *string          `db:"updated_by,omitempty"`
-	UpdatedAt  sql.NullTime     `db:"updated_at,omitempty"`
+	ID        string           `db:"id"`
+	Name      string           `db:"name"`
+	Metadata  []byte           `db:"metadata,omitempty"`
+	Tags      pgtype.TextArray `db:"tags,omitempty"`
+	Alias     *string          `db:"alias,omitempty"`
+	Status    domains.Status   `db:"status"`
+	RoleID    string           `db:"role_id"`
+	RoleName  string           `db:"role_name"`
+	Actions   pq.StringArray   `db:"actions"`
+	CreatedBy string           `db:"created_by"`
+	CreatedAt time.Time        `db:"created_at"`
+	UpdatedBy *string          `db:"updated_by,omitempty"`
+	UpdatedAt sql.NullTime     `db:"updated_at,omitempty"`
 }
 
 func toDBDomain(d domains.Domain) (dbDomain, error) {
@@ -352,17 +439,17 @@ func toDBDomain(d domains.Domain) (dbDomain, error) {
 	}
 
 	return dbDomain{
-		ID:         d.ID,
-		Name:       d.Name,
-		Metadata:   data,
-		Tags:       tags,
-		Alias:      alias,
-		Status:     d.Status,
-		Permission: d.Permission,
-		CreatedBy:  d.CreatedBy,
-		CreatedAt:  d.CreatedAt,
-		UpdatedBy:  updatedBy,
-		UpdatedAt:  updatedAt,
+		ID:        d.ID,
+		Name:      d.Name,
+		Metadata:  data,
+		Tags:      tags,
+		Alias:     alias,
+		Status:    d.Status,
+		RoleID:    d.RoleID,
+		CreatedBy: d.CreatedBy,
+		CreatedAt: d.CreatedAt,
+		UpdatedBy: updatedBy,
+		UpdatedAt: updatedAt,
 	}, nil
 }
 
@@ -391,34 +478,38 @@ func toDomain(d dbDomain) (domains.Domain, error) {
 	}
 
 	return domains.Domain{
-		ID:         d.ID,
-		Name:       d.Name,
-		Metadata:   metadata,
-		Tags:       tags,
-		Alias:      alias,
-		Permission: d.Permission,
-		Status:     d.Status,
-		CreatedBy:  d.CreatedBy,
-		CreatedAt:  d.CreatedAt,
-		UpdatedBy:  updatedBy,
-		UpdatedAt:  updatedAt,
+		ID:        d.ID,
+		Name:      d.Name,
+		Metadata:  metadata,
+		Tags:      tags,
+		Alias:     alias,
+		RoleID:    d.RoleID,
+		RoleName:  d.RoleName,
+		Actions:   d.Actions,
+		Status:    d.Status,
+		CreatedBy: d.CreatedBy,
+		CreatedAt: d.CreatedAt,
+		UpdatedBy: updatedBy,
+		UpdatedAt: updatedAt,
 	}, nil
 }
 
 type dbDomainsPage struct {
-	Total      uint64         `db:"total"`
-	Limit      uint64         `db:"limit"`
-	Offset     uint64         `db:"offset"`
-	Order      string         `db:"order"`
-	Dir        string         `db:"dir"`
-	Name       string         `db:"name"`
-	Permission string         `db:"permission"`
-	ID         string         `db:"id"`
-	IDs        []string       `db:"ids"`
-	Metadata   []byte         `db:"metadata"`
-	Tag        string         `db:"tag"`
-	Status     domains.Status `db:"status"`
-	SubjectID  string         `db:"subject_id"`
+	Total    uint64         `db:"total"`
+	Limit    uint64         `db:"limit"`
+	Offset   uint64         `db:"offset"`
+	Order    string         `db:"order"`
+	Dir      string         `db:"dir"`
+	Name     string         `db:"name"`
+	RoleID   string         `db:"role_id"`
+	RoleName string         `db:"role_name"`
+	Actions  pq.StringArray `db:"actions"`
+	ID       string         `db:"id"`
+	IDs      []string       `db:"ids"`
+	Metadata []byte         `db:"metadata"`
+	Tag      string         `db:"tag"`
+	Status   domains.Status `db:"status"`
+	UserID   string         `db:"member_id"`
 }
 
 func toDBClientsPage(pm domains.Page) (dbDomainsPage, error) {
@@ -427,19 +518,21 @@ func toDBClientsPage(pm domains.Page) (dbDomainsPage, error) {
 		return dbDomainsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
 	return dbDomainsPage{
-		Total:      pm.Total,
-		Limit:      pm.Limit,
-		Offset:     pm.Offset,
-		Order:      pm.Order,
-		Dir:        pm.Dir,
-		Name:       pm.Name,
-		Permission: pm.Permission,
-		ID:         pm.ID,
-		IDs:        pm.IDs,
-		Metadata:   data,
-		Tag:        pm.Tag,
-		Status:     pm.Status,
-		SubjectID:  pm.SubjectID,
+		Total:    pm.Total,
+		Limit:    pm.Limit,
+		Offset:   pm.Offset,
+		Order:    pm.Order,
+		Dir:      pm.Dir,
+		Name:     pm.Name,
+		RoleID:   pm.RoleID,
+		RoleName: pm.RoleName,
+		Actions:  pm.Actions,
+		ID:       pm.ID,
+		IDs:      pm.IDs,
+		Metadata: data,
+		Tag:      pm.Tag,
+		Status:   pm.Status,
+		UserID:   pm.UserID,
 	}, nil
 }
 
@@ -465,12 +558,18 @@ func buildPageQuery(pm domains.Page) (string, error) {
 		query = append(query, "d.name = :name")
 	}
 
-	if pm.SubjectID != "" {
-		query = append(query, "drm.member_id = :subject_id")
-	}
+	if pm.UserID != "" {
+		if pm.RoleName != "" {
+			query = append(query, "d.role_name = :role_name")
+		}
 
-	if pm.Permission != "" && pm.SubjectID != "" {
-		query = append(query, "dr.name = :permission")
+		if pm.RoleID != "" {
+			query = append(query, "d.role_id = :role_id")
+		}
+
+		if len(pm.Actions) != 0 {
+			query = append(query, "d.actions @> :actions")
+		}
 	}
 
 	if pm.Tag != "" {
