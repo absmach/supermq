@@ -32,10 +32,10 @@ func (fm *FileMode) UnmarshalText(text []byte) error {
 
 // Config contains BoltDB specific parameters.
 type Config struct {
-	FileDirPath string        `env:"FILE_DIR_PATH"  envDefault:"./magistrala-data"`
-	FileName    string        `env:"FILE_NAME"      envDefault:"magistrala-pat.db"`
+	FileDirPath string        `env:"FILE_DIR_PATH"  envDefault:"./supermq-data"`
+	FileName    string        `env:"FILE_NAME"      envDefault:"supermq-pat.db"`
 	FileMode    FileMode      `env:"FILE_MODE"      envDefault:"0600"`
-	Bucket      string        `env:"BUCKET"         envDefault:"magistrala"`
+	Bucket      string        `env:"BUCKET"         envDefault:"supermq"`
 	Timeout     time.Duration `env:"TIMEOUT"        envDefault:"0"`
 }
 
