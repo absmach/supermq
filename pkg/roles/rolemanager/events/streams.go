@@ -192,7 +192,6 @@ func (rmes *RoleManagerEventStore) RoleRemoveActions(ctx context.Context, sessio
 		return err
 	}
 	return nil
-
 }
 
 func (rmes *RoleManagerEventStore) RoleRemoveAllActions(ctx context.Context, session authn.Session, entityID, roleName string) error {
