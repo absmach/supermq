@@ -19,6 +19,8 @@ import (
 	authgrpcapi "github.com/absmach/supermq/auth/api/grpc/auth"
 	tokengrpcapi "github.com/absmach/supermq/auth/api/grpc/token"
 	httpapi "github.com/absmach/supermq/auth/api/http"
+	"github.com/absmach/supermq/auth/bolt"
+	"github.com/absmach/supermq/auth/hasher"
 	"github.com/absmach/supermq/auth/jwt"
 	apostgres "github.com/absmach/supermq/auth/postgres"
 	"github.com/absmach/supermq/auth/tracing"
@@ -26,11 +28,8 @@ import (
 	grpcAuthV1 "github.com/absmach/supermq/internal/grpc/auth/v1"
 	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	smqlog "github.com/absmach/supermq/logger"
-	"github.com/absmach/supermq/auth/bolt"
-	"github.com/absmach/supermq/auth/hasher"
 	"github.com/absmach/supermq/pkg/jaeger"
 	"github.com/absmach/supermq/pkg/policies/spicedb"
-	"github.com/absmach/supermq/pkg/postgres"
 	pgclient "github.com/absmach/supermq/pkg/postgres"
 	"github.com/absmach/supermq/pkg/prometheus"
 	"github.com/absmach/supermq/pkg/server"
@@ -233,7 +232,7 @@ func initSchema(ctx context.Context, client *authzed.ClientWithExperimental, sch
 }
 
 func newService(_ context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental, bClient *bbolt.DB, bConfig boltclient.Config) auth.Service {
-	database := postgres.NewDatabase(db, dbConfig, tracer)
+	database := pgclient.NewDatabase(db, dbConfig, tracer)
 	keysRepo := apostgres.New(database)
 	patsRepo := bolt.NewPATSRepository(bClient, bConfig.Bucket)
 	hasher := hasher.New()
