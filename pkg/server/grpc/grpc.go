@@ -102,7 +102,6 @@ func (s *grpcServer) Start() error {
 			creds = grpc.Creds(credentials.NewTLS(tlsConfig))
 			s.Logger.Info(fmt.Sprintf("%s service gRPC server listening at %s with TLS/mTLS cert %s , key %s and %s", s.Name, s.Address, s.Config.CertFile, s.Config.KeyFile, mtlsCA))
 		default:
-
 			s.Logger.Info(fmt.Sprintf("%s service gRPC server listening at %s with TLS cert %s and key %s", s.Name, s.Address, s.Config.CertFile, s.Config.KeyFile))
 		}
 	default:
