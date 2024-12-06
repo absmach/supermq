@@ -402,6 +402,7 @@ func (repo domainRepo) userDomainsBaseQuery() string {
 				dr.entity_id, drm.member_id, dr.id, dr."name", d.id
 		)`
 }
+
 func (repo domainRepo) processRows(rows *sqlx.Rows) ([]domains.Domain, error) {
 	var items []domains.Domain
 	for rows.Next() {
