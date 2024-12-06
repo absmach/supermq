@@ -10,12 +10,12 @@ import (
 
 	"github.com/absmach/supermq/domains"
 	"github.com/absmach/supermq/domains/mocks"
+	"github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
-	"github.com/absmach/supermq/pkg/policies"
 	policiesMocks "github.com/absmach/supermq/pkg/policies/mocks"
 	"github.com/absmach/supermq/pkg/roles"
 	"github.com/absmach/supermq/pkg/sid"
@@ -45,13 +45,13 @@ var (
 	inValid         = "invalid"
 	valid           = "valid"
 	domain          = domains.Domain{
-		ID:         validID,
-		Name:       groupName,
-		Tags:       []string{"tag1", "tag2"},
-		Alias:      "test",
-		Permission: policies.AdminPermission,
-		CreatedBy:  validID,
-		UpdatedBy:  validID,
+		ID:        validID,
+		Name:      groupName,
+		Tags:      []string{"tag1", "tag2"},
+		Alias:     "test",
+		RoleID:    "test_role_id",
+		CreatedBy: validID,
+		UpdatedBy: validID,
 	}
 	userID       = testsutil.GenerateUUID(&testing.T{})
 	validSession = authn.Session{UserID: userID}
@@ -67,7 +67,11 @@ func newService() domains.Service {
 	idProvider := uuid.NewMock()
 	sidProvider := sid.NewMock()
 	policy = new(policiesMocks.Service)
-	ds, _ := domains.New(drepo, policy, idProvider, sidProvider)
+	availableActions := []roles.Action{}
+	builtInRoles := map[roles.BuiltInRoleName][]roles.Action{
+		groups.BuiltInRoleAdmin: availableActions,
+	}
+	ds, _ := domains.New(drepo, policy, idProvider, sidProvider, availableActions, builtInRoles)
 	return ds
 }
 
@@ -447,11 +451,10 @@ func TestListDomains(t *testing.T) {
 			session:  validSession,
 			domainID: validID,
 			pageMeta: domains.Page{
-				SubjectID:  userID,
-				Offset:     0,
-				Limit:      10,
-				Permission: policies.AdminPermission,
-				Status:     domains.EnabledStatus,
+				UserID: userID,
+				Offset: 0,
+				Limit:  10,
+				Status: domains.EnabledStatus,
 			},
 			listDomainsRes: domains.DomainsPage{
 				Domains: []domains.Domain{domain},
@@ -466,10 +469,9 @@ func TestListDomains(t *testing.T) {
 			session:  authn.Session{UserID: validID, SuperAdmin: true},
 			domainID: validID,
 			pageMeta: domains.Page{
-				Offset:     0,
-				Limit:      10,
-				Permission: policies.AdminPermission,
-				Status:     domains.EnabledStatus,
+				Offset: 0,
+				Limit:  10,
+				Status: domains.EnabledStatus,
 			},
 			listDomainsRes: domains.DomainsPage{
 				Domains: []domains.Domain{domain},
@@ -484,11 +486,10 @@ func TestListDomains(t *testing.T) {
 			session:  validSession,
 			domainID: validID,
 			pageMeta: domains.Page{
-				SubjectID:  userID,
-				Offset:     0,
-				Limit:      10,
-				Permission: policies.AdminPermission,
-				Status:     domains.EnabledStatus,
+				UserID: userID,
+				Offset: 0,
+				Limit:  10,
+				Status: domains.EnabledStatus,
 			},
 			listDomainErr: errors.ErrMalformedEntity,
 			err:           svcerr.ErrViewEntity,
@@ -569,8 +570,8 @@ func TestDeleteUserFromDomains(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := drepo.On("ListDomains", context.Background(), domains.Page{SubjectID: tc.userID, Limit: 100}).Return(tc.listUserDomainsRes, tc.listUserDomainsErr)
-			repoCall1 := drepo.On("ListDomains", context.Background(), domains.Page{SubjectID: tc.userID, Offset: 100, Limit: 100}).Return(tc.listUserDomainsRes1, tc.listUserDomainsErr1)
+			repoCall := drepo.On("ListDomains", context.Background(), domains.Page{UserID: tc.userID, Limit: 100}).Return(tc.listUserDomainsRes, tc.listUserDomainsErr)
+			repoCall1 := drepo.On("ListDomains", context.Background(), domains.Page{UserID: tc.userID, Offset: 100, Limit: 100}).Return(tc.listUserDomainsRes1, tc.listUserDomainsErr1)
 			err := svc.DeleteUserFromDomains(context.Background(), tc.userID)
 			assert.True(t, errors.Contains(err, tc.err))
 			repoCall.Unset()

@@ -49,9 +49,6 @@ func (cde createDomainEvent) Encode() (map[string]interface{}, error) {
 	if cde.Name != "" {
 		val["name"] = cde.Name
 	}
-	if cde.Permission != "" {
-		val["permission"] = cde.Permission
-	}
 	if len(cde.Tags) > 0 {
 		val["tags"] = cde.Tags
 	}
@@ -196,8 +193,14 @@ func (lde listDomainsEvent) Encode() (map[string]interface{}, error) {
 	if lde.Tag != "" {
 		val["tag"] = lde.Tag
 	}
-	if lde.Permission != "" {
-		val["permission"] = lde.Permission
+	if lde.RoleID != "" {
+		val["role_id"] = lde.RoleID
+	}
+	if lde.RoleName != "" {
+		val["role_name"] = lde.RoleName
+	}
+	if len(lde.Actions) != 0 {
+		val["actions"] = lde.Actions
 	}
 	if lde.Status.String() != "" {
 		val["status"] = lde.Status.String()
@@ -211,8 +214,8 @@ func (lde listDomainsEvent) Encode() (map[string]interface{}, error) {
 	if lde.Identity != "" {
 		val["identity"] = lde.Identity
 	}
-	if lde.SubjectID != "" {
-		val["subject_id"] = lde.SubjectID
+	if lde.UserID != "" {
+		val["user_id"] = lde.UserID
 	}
 
 	return val, nil

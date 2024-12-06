@@ -121,20 +121,39 @@ func decodePageRequest(_ context.Context, r *http.Request) (page, error) {
 	if err != nil {
 		return page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	p, err := apiutil.ReadStringQuery(r, api.PermissionKey, "")
+
+	allActions, err := apiutil.ReadStringQuery(r, api.ActionsKey, "")
+	if err != nil {
+		return page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	var actions []string
+
+	allActions = strings.TrimSpace(allActions)
+	if allActions != "" {
+		actions = strings.Split(allActions, ",")
+	}
+	roleID, err := apiutil.ReadStringQuery(r, api.RoleIDKey, "")
+	if err != nil {
+		return page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	roleName, err := apiutil.ReadStringQuery(r, api.RoleNameKey, "")
 	if err != nil {
 		return page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	return page{
-		offset:     o,
-		order:      or,
-		dir:        dir,
-		limit:      l,
-		name:       n,
-		metadata:   m,
-		tag:        t,
-		permission: p,
-		status:     st,
+		offset:   o,
+		order:    or,
+		dir:      dir,
+		limit:    l,
+		name:     n,
+		metadata: m,
+		tag:      t,
+		roleID:   roleID,
+		roleName: roleName,
+		actions:  actions,
+		status:   st,
 	}, nil
 }

@@ -757,10 +757,10 @@ func TestListDomains(t *testing.T) {
 		{
 			desc: "list all domains with subject id",
 			pm: domains.Page{
-				Offset:    0,
-				Limit:     10,
-				SubjectID: userID,
-				Status:    domains.AllStatus,
+				Offset: 0,
+				Limit:  10,
+				UserID: userID,
+				Status: domains.AllStatus,
 			},
 			response: domains.DomainsPage{
 				Total:  0,

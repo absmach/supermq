@@ -34,10 +34,12 @@ import (
 	"github.com/absmach/supermq/pkg/postgres"
 	pgclient "github.com/absmach/supermq/pkg/postgres"
 	"github.com/absmach/supermq/pkg/prometheus"
+	"github.com/absmach/supermq/pkg/roles"
 	"github.com/absmach/supermq/pkg/server"
 	grpcserver "github.com/absmach/supermq/pkg/server/grpc"
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/sid"
+	spicedbdecoder "github.com/absmach/supermq/pkg/spicedb"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/authzed/authzed-go/v1"
 	"github.com/authzed/grpcutil"
@@ -66,9 +68,10 @@ type config struct {
 	LogLevel            string  `env:"SMQ_DOMAINS_LOG_LEVEL"            envDefault:"info"`
 	JaegerURL           url.URL `env:"SMQ_JAEGER_URL"                   envDefault:"http://localhost:4318/v1/traces"`
 	SendTelemetry       bool    `env:"SMQ_SEND_TELEMETRY"               envDefault:"true"`
-	InstanceID          string  `env:"SMQ_DOMAINS_INSTANCE_ID"  envDefault:""`
+	InstanceID          string  `env:"SMQ_DOMAINS_INSTANCE_ID"          envDefault:""`
 	SpicedbHost         string  `env:"SMQ_SPICEDB_HOST"                 envDefault:"localhost"`
 	SpicedbPort         string  `env:"SMQ_SPICEDB_PORT"                 envDefault:"50051"`
+	SpicedbSchemaFile   string  `env:"SMQ_SPICEDB_SCHEMA_FILE"          envDefault:"schema.zed"`
 	SpicedbPreSharedKey string  `env:"SMQ_SPICEDB_PRE_SHARED_KEY"       envDefault:"12345678"`
 	TraceRatio          float64 `env:"SMQ_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
 	ESURL               string  `env:"SMQ_ES_URL"                       envDefault:"nats://localhost:4222"`
@@ -227,7 +230,13 @@ func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg
 	if err != nil {
 		return nil, fmt.Errorf("failed to init short id provider : %w", err)
 	}
-	svc, err := domainsSvc.New(domainsRepo, policiessvc, idProvider, sidProvider)
+
+	availableActions, builtInRoles, err := availableActionsAndBuiltInRoles(cfg.SpicedbSchemaFile)
+	if err != nil {
+		return nil, err
+	}
+
+	svc, err := domainsSvc.New(domainsRepo, policiessvc, idProvider, sidProvider, availableActions, builtInRoles)
 	if err != nil {
 		return nil, fmt.Errorf("failed to init domain service: %w", err)
 	}
@@ -262,4 +271,17 @@ func newPolicyService(cfg config, logger *slog.Logger) (policies.Service, error)
 	policySvc := spicedb.NewPolicyService(client, logger)
 
 	return policySvc, nil
+}
+
+func availableActionsAndBuiltInRoles(spicedbSchemaFile string) ([]roles.Action, map[roles.BuiltInRoleName][]roles.Action, error) {
+	availableActions, err := spicedbdecoder.GetActionsFromSchema(spicedbSchemaFile, policies.DomainType)
+	if err != nil {
+		return []roles.Action{}, map[roles.BuiltInRoleName][]roles.Action{}, err
+	}
+
+	builtInRoles := map[roles.BuiltInRoleName][]roles.Action{
+		domains.BuiltInRoleAdmin: availableActions,
+	}
+
+	return availableActions, builtInRoles, err
 }
