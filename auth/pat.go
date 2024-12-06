@@ -119,7 +119,7 @@ const (
 	DomainManagementScope DomainEntityType = iota
 	DomainGroupsScope
 	DomainChannelsScope
-	DomainThingsScope
+	DomainClientsScope
 	DomainNullScope
 )
 
@@ -127,7 +127,7 @@ const (
 	domainManagementScopeStr = "domain_management"
 	domainGroupsScopeStr     = "groups"
 	domainChannelsScopeStr   = "channels"
-	domainThingsScopeStr     = "things"
+	domainClientsScopeStr    = "clients"
 )
 
 func (det DomainEntityType) String() string {
@@ -138,8 +138,8 @@ func (det DomainEntityType) String() string {
 		return domainGroupsScopeStr
 	case DomainChannelsScope:
 		return domainChannelsScopeStr
-	case DomainThingsScope:
-		return domainThingsScopeStr
+	case DomainClientsScope:
+		return domainClientsScopeStr
 	default:
 		return fmt.Sprintf("unknown domain entity type %d", det)
 	}
@@ -161,8 +161,8 @@ func ParseDomainEntityType(det string) (DomainEntityType, error) {
 		return DomainGroupsScope, nil
 	case domainChannelsScopeStr:
 		return DomainChannelsScope, nil
-	case domainThingsScopeStr:
-		return DomainThingsScope, nil
+	case domainClientsScopeStr:
+		return DomainClientsScope, nil
 	default:
 		return 0, fmt.Errorf("unknown domain entity type %s", det)
 	}
@@ -452,7 +452,7 @@ func (ds *DomainScope) Add(domainEntityType DomainEntityType, operation Operatio
 		return fmt.Errorf("failed to add domain %s scope: domain_scope is nil and not initialized", domainEntityType)
 	}
 
-	if domainEntityType < DomainManagementScope || domainEntityType > DomainThingsScope {
+	if domainEntityType < DomainManagementScope || domainEntityType > DomainClientsScope {
 		return fmt.Errorf("failed to add domain %d scope: invalid domain entity type", domainEntityType)
 	}
 	if domainEntityType == DomainManagementScope {
@@ -483,7 +483,7 @@ func (ds *DomainScope) Delete(domainEntityType DomainEntityType, operation Opera
 		return nil
 	}
 
-	if domainEntityType < DomainManagementScope || domainEntityType > DomainThingsScope {
+	if domainEntityType < DomainManagementScope || domainEntityType > DomainClientsScope {
 		return fmt.Errorf("failed to delete domain %d scope: invalid domain entity type", domainEntityType)
 	}
 	if ds.Entities == nil {
@@ -516,7 +516,7 @@ func (ds *DomainScope) Check(domainEntityType DomainEntityType, operation Operat
 	if ds.Entities == nil {
 		return false
 	}
-	if domainEntityType < DomainManagementScope || domainEntityType > DomainThingsScope {
+	if domainEntityType < DomainManagementScope || domainEntityType > DomainClientsScope {
 		return false
 	}
 	if domainEntityType == DomainManagementScope {
