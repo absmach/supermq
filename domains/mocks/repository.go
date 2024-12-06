@@ -214,6 +214,34 @@ func (_m *Repository) RetrieveByID(ctx context.Context, id string) (domains.Doma
 	return r0, r1
 }
 
+// RetrieveByUserAndID provides a mock function with given fields: ctx, userID, id
+func (_m *Repository) RetrieveByUserAndID(ctx context.Context, userID string, id string) (domains.Domain, error) {
+	ret := _m.Called(ctx, userID, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveByUserAndID")
+	}
+
+	var r0 domains.Domain
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (domains.Domain, error)); ok {
+		return rf(ctx, userID, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) domains.Domain); ok {
+		r0 = rf(ctx, userID, id)
+	} else {
+		r0 = ret.Get(0).(domains.Domain)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, userID, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RetrieveEntitiesRolesActionsMembers provides a mock function with given fields: ctx, entityIDs
 func (_m *Repository) RetrieveEntitiesRolesActionsMembers(ctx context.Context, entityIDs []string) ([]roles.EntityActionRole, []roles.EntityMemberRole, error) {
 	ret := _m.Called(ctx, entityIDs)
