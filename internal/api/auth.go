@@ -6,7 +6,9 @@ package api
 import (
 	"context"
 	"net/http"
+	"strings"
 
+	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/apiutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/go-chi/chi/v5"
@@ -14,7 +16,10 @@ import (
 
 type sessionKeyType string
 
-const SessionKey = sessionKeyType("session")
+const (
+	SessionKey = sessionKeyType("session")
+	patPrefix  = "pat_"
+)
 
 func AuthenticateMiddleware(authn smqauthn.Authentication, domainCheck bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -24,11 +29,20 @@ func AuthenticateMiddleware(authn smqauthn.Authentication, domainCheck bool) fun
 				EncodeError(r.Context(), apiutil.ErrBearerToken, w)
 				return
 			}
-
-			resp, err := authn.Authenticate(r.Context(), token)
-			if err != nil {
-				EncodeError(r.Context(), err, w)
-				return
+			var resp smqauthn.Session
+			var err error
+			if strings.HasPrefix(token, patPrefix) {
+				resp, err = authn.AuthenticatePAT(r.Context(), token)
+				if err != nil {
+					EncodeError(r.Context(), err, w)
+					return
+				}
+			} else {
+				resp, err = authn.Authenticate(r.Context(), token)
+				if err != nil {
+					EncodeError(r.Context(), err, w)
+					return
+				}
 			}
 
 			if domainCheck {
@@ -38,7 +52,7 @@ func AuthenticateMiddleware(authn smqauthn.Authentication, domainCheck bool) fun
 					return
 				}
 				resp.DomainID = domain
-				resp.DomainUserID = domain + "_" + resp.UserID
+				resp.DomainUserID = auth.EncodeDomainUserID(domain, resp.UserID)
 			}
 
 			ctx := context.WithValue(r.Context(), SessionKey, resp)

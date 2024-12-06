@@ -266,9 +266,9 @@ func (_m *Repository) RemoveConnections(ctx context.Context, conns []channels.Co
 	return r0
 }
 
-// RemoveMemberFromAllRoles provides a mock function with given fields: ctx, members
-func (_m *Repository) RemoveMemberFromAllRoles(ctx context.Context, members string) error {
-	ret := _m.Called(ctx, members)
+// RemoveMemberFromAllRoles provides a mock function with given fields: ctx, memberID
+func (_m *Repository) RemoveMemberFromAllRoles(ctx context.Context, memberID string) error {
+	ret := _m.Called(ctx, memberID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RemoveMemberFromAllRoles")
@@ -276,7 +276,7 @@ func (_m *Repository) RemoveMemberFromAllRoles(ctx context.Context, members stri
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(ctx, members)
+		r0 = rf(ctx, memberID)
 	} else {
 		r0 = ret.Error(0)
 	}
