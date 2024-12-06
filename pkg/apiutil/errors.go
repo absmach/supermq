@@ -247,5 +247,4 @@ var (
 
 	// ErrUnsupportedTokenType indicates that this type of token is not supported.
 	ErrUnsupportedTokenType = errors.New("unsupported content token type")
-
 )
