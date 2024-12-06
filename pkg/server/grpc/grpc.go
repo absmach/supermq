@@ -61,7 +61,7 @@ func (s *grpcServer) Start() error {
 			return fmt.Errorf("failed to load auth gRPC client certificates: %w", err)
 		}
 		tlsConfig := &tls.Config{
-			ClientAuth:   tls.RequireAndVerifyClientCert,
+			ClientAuth:   tls.NoClientCert,
 			Certificates: []tls.Certificate{certificate},
 		}
 
@@ -98,6 +98,8 @@ func (s *grpcServer) Start() error {
 		creds = grpc.Creds(credentials.NewTLS(tlsConfig))
 		switch {
 		case mtlsCA != "":
+			tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
+			creds = grpc.Creds(credentials.NewTLS(tlsConfig))
 			s.Logger.Info(fmt.Sprintf("%s service gRPC server listening at %s with TLS/mTLS cert %s , key %s and %s", s.Name, s.Address, s.Config.CertFile, s.Config.KeyFile, mtlsCA))
 		default:
 			s.Logger.Info(fmt.Sprintf("%s service gRPC server listening at %s with TLS cert %s and key %s", s.Name, s.Address, s.Config.CertFile, s.Config.KeyFile))
