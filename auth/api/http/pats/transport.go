@@ -21,6 +21,7 @@ import (
 const (
 	contentType = "application/json"
 	defInterval = "30d"
+	patPrefix   = "pat_"
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -113,8 +114,11 @@ func decodeCreatePATRequest(_ context.Context, r *http.Request) (interface{}, er
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, apiutil.ErrUnsupportedContentType
 	}
-
-	req := createPatReq{token: apiutil.ExtractBearerToken(r)}
+	token := apiutil.ExtractBearerToken(r)
+	if strings.HasPrefix(token, patPrefix) {
+		return nil, apiutil.ErrUnsupportedTokenType
+	}
+	req := createPatReq{token: token}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
 	}
@@ -122,8 +126,13 @@ func decodeCreatePATRequest(_ context.Context, r *http.Request) (interface{}, er
 }
 
 func decodeRetrievePATRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	token := apiutil.ExtractBearerToken(r)
+	if strings.HasPrefix(token, patPrefix) {
+		return nil, apiutil.ErrUnsupportedTokenType
+	}
+
 	req := retrievePatReq{
-		token: apiutil.ExtractBearerToken(r),
+		token: token,
 		id:    chi.URLParam(r, "id"),
 	}
 	return req, nil
@@ -133,9 +142,12 @@ func decodeUpdatePATNameRequest(_ context.Context, r *http.Request) (interface{}
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, apiutil.ErrUnsupportedContentType
 	}
-
+	token := apiutil.ExtractBearerToken(r)
+	if strings.HasPrefix(token, patPrefix) {
+		return nil, apiutil.ErrUnsupportedTokenType
+	}
 	req := updatePatNameReq{
-		token: apiutil.ExtractBearerToken(r),
+		token: token,
 		id:    chi.URLParam(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -149,8 +161,12 @@ func decodeUpdatePATDescriptionRequest(_ context.Context, r *http.Request) (inte
 		return nil, apiutil.ErrUnsupportedContentType
 	}
 
+	token := apiutil.ExtractBearerToken(r)
+	if strings.HasPrefix(token, patPrefix) {
+		return nil, apiutil.ErrUnsupportedTokenType
+	}
 	req := updatePatDescriptionReq{
-		token: apiutil.ExtractBearerToken(r),
+		token: token,
 		id:    chi.URLParam(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -168,8 +184,12 @@ func decodeListPATSRequest(_ context.Context, r *http.Request) (interface{}, err
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
+	token := apiutil.ExtractBearerToken(r)
+	if strings.HasPrefix(token, patPrefix) {
+		return nil, apiutil.ErrUnsupportedTokenType
+	}
 	req := listPatsReq{
-		token:  apiutil.ExtractBearerToken(r),
+		token:  token,
 		limit:  l,
 		offset: o,
 	}
@@ -177,8 +197,12 @@ func decodeListPATSRequest(_ context.Context, r *http.Request) (interface{}, err
 }
 
 func decodeDeletePATRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	token := apiutil.ExtractBearerToken(r)
+	if strings.HasPrefix(token, patPrefix) {
+		return nil, apiutil.ErrUnsupportedTokenType
+	}
 	return deletePatReq{
-		token: apiutil.ExtractBearerToken(r),
+		token: token,
 		id:    chi.URLParam(r, "id"),
 	}, nil
 }
@@ -188,8 +212,12 @@ func decodeResetPATSecretRequest(_ context.Context, r *http.Request) (interface{
 		return nil, apiutil.ErrUnsupportedContentType
 	}
 
+	token := apiutil.ExtractBearerToken(r)
+	if strings.HasPrefix(token, patPrefix) {
+		return nil, apiutil.ErrUnsupportedTokenType
+	}
 	req := resetPatSecretReq{
-		token: apiutil.ExtractBearerToken(r),
+		token: token,
 		id:    chi.URLParam(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -199,8 +227,12 @@ func decodeResetPATSecretRequest(_ context.Context, r *http.Request) (interface{
 }
 
 func decodeRevokePATSecretRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	token := apiutil.ExtractBearerToken(r)
+	if strings.HasPrefix(token, patPrefix) {
+		return nil, apiutil.ErrUnsupportedTokenType
+	}
 	return revokePatSecretReq{
-		token: apiutil.ExtractBearerToken(r),
+		token: token,
 		id:    chi.URLParam(r, "id"),
 	}, nil
 }
@@ -210,8 +242,13 @@ func decodeAddPATScopeEntryRequest(_ context.Context, r *http.Request) (interfac
 		return nil, apiutil.ErrUnsupportedContentType
 	}
 
+	token := apiutil.ExtractBearerToken(r)
+	if strings.HasPrefix(token, patPrefix) {
+		return nil, apiutil.ErrUnsupportedTokenType
+	}
+
 	req := addPatScopeEntryReq{
-		token: apiutil.ExtractBearerToken(r),
+		token: token,
 		id:    chi.URLParam(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -225,8 +262,13 @@ func decodeRemovePATScopeEntryRequest(_ context.Context, r *http.Request) (inter
 		return nil, apiutil.ErrUnsupportedContentType
 	}
 
+	token := apiutil.ExtractBearerToken(r)
+	if strings.HasPrefix(token, patPrefix) {
+		return nil, apiutil.ErrUnsupportedTokenType
+	}
+
 	req := removePatScopeEntryReq{
-		token: apiutil.ExtractBearerToken(r),
+		token: token,
 		id:    chi.URLParam(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -240,8 +282,13 @@ func decodeClearPATAllScopeEntryRequest(_ context.Context, r *http.Request) (int
 		return nil, apiutil.ErrUnsupportedContentType
 	}
 
+	token := apiutil.ExtractBearerToken(r)
+	if strings.HasPrefix(token, patPrefix) {
+		return nil, apiutil.ErrUnsupportedTokenType
+	}
+
 	return clearAllScopeEntryReq{
-		token: apiutil.ExtractBearerToken(r),
+		token: token,
 		id:    chi.URLParam(r, "id"),
 	}, nil
 }
