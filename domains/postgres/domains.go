@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/domains"
+	"github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	"github.com/absmach/supermq/pkg/postgres"
@@ -208,6 +209,7 @@ func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domain
 	if err != nil {
 		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
 	}
+	squery := applyOrdering(query, pm)
 
 	q := `SELECT
 			d.id as id,
@@ -249,13 +251,13 @@ func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domain
 			`
 	}
 
-	q = fmt.Sprintf(q, query)
+	q = fmt.Sprintf(q, squery)
 
 	dbPage, err := toDBClientsPage(pm)
 	if err != nil {
 		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
-	fmt.Printf("%+v\n", dbPage)
+
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
 		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
@@ -414,6 +416,17 @@ func (repo domainRepo) processRows(rows *sqlx.Rows) ([]domains.Domain, error) {
 		items = append(items, d)
 	}
 	return items, nil
+}
+
+func applyOrdering(emq string, pm domains.Page) string {
+	switch pm.Order {
+	case "name", "created_at", "updated_at":
+		emq = fmt.Sprintf("%s ORDER BY d.%s", emq, pm.Order)
+		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+			emq = fmt.Sprintf("%s %s", emq, pm.Dir)
+		}
+	}
+	return emq
 }
 
 type dbDomain struct {
