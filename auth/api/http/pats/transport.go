@@ -44,14 +44,14 @@ func MakeHandler(svc auth.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
 			opts...,
 		).ServeHTTP)
 
-		r.Put("/{id}/name", kithttp.NewServer(
+		r.Patch("/{id}/name", kithttp.NewServer(
 			(updatePATNameEndpoint(svc)),
 			decodeUpdatePATNameRequest,
 			api.EncodeResponse,
 			opts...,
 		).ServeHTTP)
 
-		r.Put("/{id}/description", kithttp.NewServer(
+		r.Patch("/{id}/description", kithttp.NewServer(
 			(updatePATDescriptionEndpoint(svc)),
 			decodeUpdatePATDescriptionRequest,
 			api.EncodeResponse,
@@ -72,28 +72,28 @@ func MakeHandler(svc auth.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
 			opts...,
 		).ServeHTTP)
 
-		r.Put("/{id}/secret/reset", kithttp.NewServer(
+		r.Patch("/{id}/secret/reset", kithttp.NewServer(
 			(resetPATSecretEndpoint(svc)),
 			decodeResetPATSecretRequest,
 			api.EncodeResponse,
 			opts...,
 		).ServeHTTP)
 
-		r.Put("/{id}/secret/revoke", kithttp.NewServer(
+		r.Patch("/{id}/secret/revoke", kithttp.NewServer(
 			(revokePATSecretEndpoint(svc)),
 			decodeRevokePATSecretRequest,
 			api.EncodeResponse,
 			opts...,
 		).ServeHTTP)
 
-		r.Put("/{id}/scope/add", kithttp.NewServer(
+		r.Patch("/{id}/scope/add", kithttp.NewServer(
 			(addPATScopeEntryEndpoint(svc)),
 			decodeAddPATScopeEntryRequest,
 			api.EncodeResponse,
 			opts...,
 		).ServeHTTP)
 
-		r.Put("/{id}/scope/remove", kithttp.NewServer(
+		r.Patch("/{id}/scope/remove", kithttp.NewServer(
 			(removePATScopeEntryEndpoint(svc)),
 			decodeRemovePATScopeEntryRequest,
 			api.EncodeResponse,
