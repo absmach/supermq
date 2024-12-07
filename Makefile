@@ -5,7 +5,7 @@ SMQ_DOCKER_IMAGE_NAME_PREFIX ?= supermq
 BUILD_DIR ?= build
 SERVICES = auth users clients groups channels domains http coap ws postgres-writer postgres-reader timescale-writer \
 	timescale-reader cli bootstrap mqtt provision certs invitations journal
-TEST_API_SERVICES = journal auth bootstrap certs http invitations notifiers provision readers clients users
+TEST_API_SERVICES = journal auth bootstrap certs http invitations notifiers provision readers clients users channels groups domains
 TEST_API = $(addprefix test_api_,$(TEST_API_SERVICES))
 DOCKERS = $(addprefix docker_,$(SERVICES))
 DOCKERS_DEV = $(addprefix docker_dev_,$(SERVICES))
@@ -168,7 +168,10 @@ define test_api_service
 endef
 
 test_api_users: TEST_API_URL := http://localhost:9002
-test_api_clients: TEST_API_URL := http://localhost:9000
+test_api_clients: TEST_API_URL := http://localhost:9006
+test_api_domains: TEST_API_URL := http://localhost:9003
+test_api_channels: TEST_API_URL := http://localhost:9005
+test_api_groups: TEST_API_URL := http://localhost:9004
 test_api_http: TEST_API_URL := http://localhost:8008
 test_api_invitations: TEST_API_URL := http://localhost:9020
 test_api_auth: TEST_API_URL := http://localhost:8189
@@ -264,4 +267,4 @@ run_addons: check_certs
 	done
 
 run_live: check_certs
-	GOPATH=$(go env GOPATH) docker compose  -f docker/docker-compose.yml -f docker/docker-compose-live.yaml   --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
+	GOPATH=$(go env GOPATH) docker compose  -f docker/docker-compose.yml -f docker/docker-compose-live.yaml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
