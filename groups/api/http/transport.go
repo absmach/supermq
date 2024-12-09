@@ -6,6 +6,7 @@ package api
 import (
 	"log/slog"
 
+	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/pkg/apiutil"
@@ -13,6 +14,7 @@ import (
 	roleManagerHttp "github.com/absmach/supermq/pkg/roles/rolemanager/api"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -132,6 +134,9 @@ func MakeHandler(svc groups.Service, authn authn.Authentication, mux *chi.Mux, l
 			})
 		})
 	})
+
+	mux.Get("/health", supermq.Health("groups", instanceID))
+	mux.Handle("/metrics", promhttp.Handler())
 
 	return mux
 }
