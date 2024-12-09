@@ -856,7 +856,7 @@ type SDK interface {
 	// The `ConnectClient` method calls the `CreateClientPolicy` method under the hood.
 	//
 	// example:
-	//  err := sdk.ConnectClient("clientID", "channelID",[]string{"Publish", "Subscribe"} "token")
+	//  err := sdk.ConnectClient("clientID", "channelID",[]string{"Publish", "Subscribe"}, "token")
 	//  fmt.Println(err)
 	ConnectClient(clientID, chanID string, connTypes []string, domainID, token string) errors.SDKError
 

@@ -19,15 +19,17 @@ import (
 	authgrpcapi "github.com/absmach/supermq/auth/api/grpc/auth"
 	tokengrpcapi "github.com/absmach/supermq/auth/api/grpc/token"
 	httpapi "github.com/absmach/supermq/auth/api/http"
+	"github.com/absmach/supermq/auth/bolt"
+	"github.com/absmach/supermq/auth/hasher"
 	"github.com/absmach/supermq/auth/jwt"
 	apostgres "github.com/absmach/supermq/auth/postgres"
 	"github.com/absmach/supermq/auth/tracing"
+	boltclient "github.com/absmach/supermq/internal/clients/bolt"
 	grpcAuthV1 "github.com/absmach/supermq/internal/grpc/auth/v1"
 	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/jaeger"
 	"github.com/absmach/supermq/pkg/policies/spicedb"
-	"github.com/absmach/supermq/pkg/postgres"
 	pgclient "github.com/absmach/supermq/pkg/postgres"
 	"github.com/absmach/supermq/pkg/prometheus"
 	"github.com/absmach/supermq/pkg/server"
@@ -39,6 +41,7 @@ import (
 	"github.com/authzed/grpcutil"
 	"github.com/caarlos0/env/v11"
 	"github.com/jmoiron/sqlx"
+	"go.etcd.io/bbolt"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -51,6 +54,7 @@ const (
 	envPrefixHTTP  = "SMQ_AUTH_HTTP_"
 	envPrefixGrpc  = "SMQ_AUTH_GRPC_"
 	envPrefixDB    = "SMQ_AUTH_DB_"
+	envPrefixPATDB = "SMQ_AUTH_PAT_DB_"
 	defDB          = "auth"
 	defSvcHTTPPort = "8189"
 	defSvcGRPCPort = "8181"
@@ -131,7 +135,23 @@ func main() {
 		exitCode = 1
 		return
 	}
-	svc := newService(ctx, db, tracer, cfg, dbConfig, logger, spicedbclient)
+
+	boltDBConfig := boltclient.Config{}
+	if err := env.ParseWithOptions(&boltDBConfig, env.Options{Prefix: envPrefixPATDB}); err != nil {
+		logger.Error(fmt.Sprintf("failed to parse bolt db config : %s\n", err.Error()))
+		exitCode = 1
+		return
+	}
+
+	bClient, err := boltclient.Connect(boltDBConfig, bolt.Init)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to connect to bolt db : %s\n", err.Error()))
+		exitCode = 1
+		return
+	}
+	defer bClient.Close()
+
+	svc := newService(ctx, db, tracer, cfg, dbConfig, logger, spicedbclient, bClient, boltDBConfig)
 
 	grpcServerConfig := server.Config{Port: defSvcGRPCPort}
 	if err := env.ParseWithOptions(&grpcServerConfig, env.Options{Prefix: envPrefixGrpc}); err != nil {
@@ -211,9 +231,11 @@ func initSchema(ctx context.Context, client *authzed.ClientWithExperimental, sch
 	return nil
 }
 
-func newService(_ context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental) auth.Service {
-	database := postgres.NewDatabase(db, dbConfig, tracer)
+func newService(_ context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental, bClient *bbolt.DB, bConfig boltclient.Config) auth.Service {
+	database := pgclient.NewDatabase(db, dbConfig, tracer)
 	keysRepo := apostgres.New(database)
+	patsRepo := bolt.NewPATSRepository(bClient, bConfig.Bucket)
+	hasher := hasher.New()
 	idProvider := uuid.New()
 
 	pEvaluator := spicedb.NewPolicyEvaluator(spicedbClient, logger)
@@ -221,7 +243,7 @@ func newService(_ context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config,
 
 	t := jwt.New([]byte(cfg.SecretKey))
 
-	svc := auth.New(keysRepo, idProvider, t, pEvaluator, pService, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration)
+	svc := auth.New(keysRepo, patsRepo, hasher, idProvider, t, pEvaluator, pService, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics("auth", "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)
