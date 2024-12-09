@@ -13,23 +13,28 @@ on:
       - "auth/api/http/**"
       - "bootstrap/api**"
       - "certs/api/**"
+      - "channels/api/http/**"
+      - "clients/api/http/**"
       - "consumers/notifiers/api/**"
+      - "domains/api/http/**"
+      - "groups/api/http/**"
       - "http/api/**"
       - "invitations/api/**"
       - "journal/api/**"
       - "provision/api/**"
       - "readers/api/**"
-      - "clients/api/**"
       - "users/api/**"
 
 env:
   TOKENS_URL: http://localhost:9002/users/tokens/issue
-  DOMAINS_URL: http://localhost:8189/domains
+  CREATE_DOMAINS_URL: http://localhost:9003/domains
   USER_IDENTITY: admin@example.com
   USER_SECRET: 12345678
   DOMAIN_NAME: demo-test
   USERS_URL: http://localhost:9002
-  CLIENTS_URL: http://localhost:9000
+  CLIENTS_URL: http://localhost:9006
+  CHANNELS_URL: http://localhost:9005
+  GROUPS_URL: http://localhost:9004
   HTTP_ADAPTER_URL: http://localhost:8008
   INVITATIONS_URL: http://localhost:9020
   AUTH_URL: http://localhost:8189
@@ -62,8 +67,7 @@ jobs:
       - name: Set access token
         run: |
           export USER_TOKEN=$(curl -sSX POST $TOKENS_URL -H "Content-Type: application/json" -d "{\"identity\": \"$USER_IDENTITY\",\"secret\": \"$USER_SECRET\"}" | jq -r .access_token)
-          export DOMAIN_ID=$(curl -sSX POST $DOMAINS_URL -H "Content-Type: application/json" -H "Authorization: Bearer $USER_TOKEN" -d "{\"name\":\"$DOMAIN_NAME\",\"alias\":\"$DOMAIN_NAME\"}" | jq -r .id)
-          export USER_TOKEN=$(curl -sSX POST $TOKENS_URL -H "Content-Type: application/json" -d "{\"identity\": \"$USER_IDENTITY\",\"secret\": \"$USER_SECRET\",\"domain_id\": \"$DOMAIN_ID\"}" | jq -r .access_token)
+          export DOMAIN_ID=$(curl -sSX POST $CREATE_DOMAINS_URL -H "Content-Type: application/json" -H "Authorization: Bearer $USER_TOKEN" -d "{\"name\":\"$DOMAIN_NAME\",\"alias\":\"$DOMAIN_NAME\"}" | jq -r .id)
           echo "USER_TOKEN=$USER_TOKEN" >> $GITHUB_ENV
           export CLIENT_SECRET=$(supermq-cli provision test | /usr/bin/grep -Eo '"secret": "[^"]+"' | awk 'NR % 2 == 0' | sed 's/"secret": "\(.*\)"/\1/')
           echo "CLIENT_SECRET=$CLIENT_SECRET" >> $GITHUB_ENV
@@ -92,6 +96,11 @@ jobs:
               - ".github/workflows/api-tests.yml"
               - "api/openapi/certs.yml"
               - "certs/api/**"
+            
+            domains:
+              - ".github/workflows/api-tests.yml"
+              - "api/openapi/domains.yml"
+              - "domains/api/http/**"
 
             http:
               - ".github/workflows/api-tests.yml"
@@ -116,7 +125,17 @@ jobs:
             clients:
               - ".github/workflows/api-tests.yml"
               - "api/openapi/clients.yml"
-              - "clients/api/**"
+              - "clients/api/http/**"
+            
+            channels:
+              - ".github/workflows/api-tests.yml"
+              - "api/openapi/channels.yml"
+              - "channels/api/http/**"
+            
+            groups:
+              - ".github/workflows/api-tests.yml"
+              - "api/openapi/groups.yml"
+              - "groups/api/http/**"
 
             users:
               - ".github/workflows/api-tests.yml"
@@ -139,6 +158,16 @@ jobs:
         with:
           schema: api/openapi/clients.yml
           base-url: ${{ env.CLIENTS_URL }}
+          checks: all
+          report: false
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'
+      
+      - name: Run Channels API tests
+        if: steps.changes.outputs.channels == 'true'
+        uses: schemathesis/action@v1
+        with:
+          schema: api/openapi/channels.yml
+          base-url: ${{ env.CHANNELS_URL }}
           checks: all
           report: false
           args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --contrib-openapi-formats-uuid --hypothesis-suppress-health-check=filter_too_much --stateful=links'

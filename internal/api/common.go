@@ -193,7 +193,10 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, apiutil.ErrSelfParentingNotAllowed),
 		errors.Contains(err, apiutil.ErrMissingChildrenGroupIDs),
 		errors.Contains(err, apiutil.ErrMissingParentGroupID),
-		errors.Contains(err, apiutil.ErrMissingConnectionType):
+		errors.Contains(err, apiutil.ErrMissingConnectionType),
+		errors.Contains(err, apiutil.ErrMissingRoleName),
+		errors.Contains(err, apiutil.ErrMissingPolicyEntityType),
+		errors.Contains(err, apiutil.ErrMissingRoleMembers):
 		err = unwrap(err)
 		w.WriteHeader(http.StatusBadRequest)
 
