@@ -21,7 +21,7 @@ import (
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
-	sdk "github.com/absmach/supermq/pkg/sdk/go"
+	sdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

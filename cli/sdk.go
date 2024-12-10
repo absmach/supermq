@@ -3,7 +3,7 @@
 
 package cli
 
-import smqsdk "github.com/absmach/supermq/pkg/sdk/go"
+import smqsdk "github.com/absmach/supermq/pkg/sdk"
 
 // Keep SDK handle in global var.
 var sdk smqsdk.SDK

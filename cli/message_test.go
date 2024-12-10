@@ -13,7 +13,7 @@ import (
 	"github.com/absmach/supermq/cli"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
-	mgsdk "github.com/absmach/supermq/pkg/sdk/go"
+	mgsdk "github.com/absmach/supermq/pkg/sdk"
 	sdkmocks "github.com/absmach/supermq/pkg/sdk/mocks"
 	"github.com/absmach/supermq/pkg/transformers/senml"
 	"github.com/stretchr/testify/assert"

@@ -16,7 +16,7 @@ import (
 	smqlog "github.com/absmach/supermq/logger"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
-	sdk "github.com/absmach/supermq/pkg/sdk/go"
+	sdk "github.com/absmach/supermq/pkg/sdk"
 	readersapi "github.com/absmach/supermq/readers/api"
 	readersmocks "github.com/absmach/supermq/readers/mocks"
 	"github.com/stretchr/testify/assert"

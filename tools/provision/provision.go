@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/0x6flab/namegenerator"
-	sdk "github.com/absmach/supermq/pkg/sdk/go"
+	sdk "github.com/absmach/supermq/pkg/sdk"
 )
 
 const (

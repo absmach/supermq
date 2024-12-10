@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"strconv"
 
-	smqsdk "github.com/absmach/supermq/pkg/sdk/go"
+	smqsdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/absmach/supermq/users"
 	"github.com/spf13/cobra"
 )

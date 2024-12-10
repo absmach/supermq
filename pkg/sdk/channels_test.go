@@ -23,7 +23,7 @@ import (
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
-	sdk "github.com/absmach/supermq/pkg/sdk/go"
+	sdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

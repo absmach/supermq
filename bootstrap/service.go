@@ -15,7 +15,7 @@ import (
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
-	mgsdk "github.com/absmach/supermq/pkg/sdk/go"
+	mgsdk "github.com/absmach/supermq/pkg/sdk"
 )
 
 var (

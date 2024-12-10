@@ -21,7 +21,7 @@ import (
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	oauth2mocks "github.com/absmach/supermq/pkg/oauth2/mocks"
-	sdk "github.com/absmach/supermq/pkg/sdk/go"
+	sdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/absmach/supermq/users"
 	"github.com/absmach/supermq/users/api"
 	umocks "github.com/absmach/supermq/users/mocks"

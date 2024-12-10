@@ -14,7 +14,7 @@ import (
 	mgcrt "github.com/absmach/supermq/certs/pki/amcerts"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
-	mgsdk "github.com/absmach/supermq/pkg/sdk/go"
+	mgsdk "github.com/absmach/supermq/pkg/sdk"
 	sdkmocks "github.com/absmach/supermq/pkg/sdk/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

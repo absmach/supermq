@@ -11,7 +11,7 @@ import (
 	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/authn"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
-	mgsdk "github.com/absmach/supermq/pkg/sdk/go"
+	mgsdk "github.com/absmach/supermq/pkg/sdk"
 )
 
 type service struct {

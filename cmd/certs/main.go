@@ -23,7 +23,7 @@ import (
 	"github.com/absmach/supermq/pkg/grpcclient"
 	jaegerclient "github.com/absmach/supermq/pkg/jaeger"
 	"github.com/absmach/supermq/pkg/prometheus"
-	mgsdk "github.com/absmach/supermq/pkg/sdk/go"
+	mgsdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/absmach/supermq/pkg/server"
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/uuid"

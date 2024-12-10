@@ -18,7 +18,7 @@ import (
 	"github.com/absmach/supermq/clients"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/errors"
-	mgsdk "github.com/absmach/supermq/pkg/sdk/go"
+	mgsdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/absmach/supermq/pkg/server"
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/uuid"

@@ -11,7 +11,7 @@ import (
 	pki "github.com/absmach/supermq/certs/pki/amcerts"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
-	mgsdk "github.com/absmach/supermq/pkg/sdk/go"
+	mgsdk "github.com/absmach/supermq/pkg/sdk"
 )
 
 var (

@@ -24,7 +24,7 @@ import (
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	pubsub "github.com/absmach/supermq/pkg/messaging/mocks"
-	sdk "github.com/absmach/supermq/pkg/sdk/go"
+	sdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/absmach/supermq/pkg/transformers/senml"
 	"github.com/absmach/supermq/readers"
 	readersapi "github.com/absmach/supermq/readers/api"

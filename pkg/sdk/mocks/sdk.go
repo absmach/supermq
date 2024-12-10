@@ -8,7 +8,7 @@ import (
 	errors "github.com/absmach/supermq/pkg/errors"
 	mock "github.com/stretchr/testify/mock"
 
-	sdk "github.com/absmach/supermq/pkg/sdk/go"
+	sdk "github.com/absmach/supermq/pkg/sdk"
 
 	time "time"
 )

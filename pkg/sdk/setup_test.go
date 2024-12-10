@@ -16,7 +16,7 @@ import (
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/invitations"
 	"github.com/absmach/supermq/journal"
-	sdk "github.com/absmach/supermq/pkg/sdk/go"
+	sdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/absmach/supermq/users"
 	"github.com/stretchr/testify/assert"

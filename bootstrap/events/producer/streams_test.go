@@ -22,7 +22,7 @@ import (
 	"github.com/absmach/supermq/pkg/events/store"
 	policysvc "github.com/absmach/supermq/pkg/policies"
 	policymocks "github.com/absmach/supermq/pkg/policies/mocks"
-	mgsdk "github.com/absmach/supermq/pkg/sdk/go"
+	mgsdk "github.com/absmach/supermq/pkg/sdk"
 	sdkmocks "github.com/absmach/supermq/pkg/sdk/mocks"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/redis/go-redis/v9"

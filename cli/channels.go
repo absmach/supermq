@@ -6,7 +6,7 @@ package cli
 import (
 	"encoding/json"
 
-	smqsdk "github.com/absmach/supermq/pkg/sdk/go"
+	smqsdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/spf13/cobra"
 )
 

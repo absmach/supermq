@@ -11,7 +11,7 @@ import (
 
 	"github.com/absmach/supermq/cli"
 	"github.com/absmach/supermq/pkg/errors"
-	mgsdk "github.com/absmach/supermq/pkg/sdk/go"
+	mgsdk "github.com/absmach/supermq/pkg/sdk"
 	sdkmocks "github.com/absmach/supermq/pkg/sdk/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

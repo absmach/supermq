@@ -9,7 +9,7 @@ import (
 	"log/slog"
 
 	"github.com/absmach/supermq/pkg/errors"
-	sdk "github.com/absmach/supermq/pkg/sdk/go"
+	sdk "github.com/absmach/supermq/pkg/sdk"
 )
 
 const (
