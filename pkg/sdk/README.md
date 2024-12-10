@@ -6,7 +6,7 @@ Does both system administration (provisioning) and messaging.
 
 ## Installation
 
-Import `"github.com/absmach/supermq/sdk/go"` in your Go package.
+Import `"github.com/absmach/supermq/sdk"` in your Go package.
 
 ```go
 import "github.com/absmach/supermq/pkg/sdk"

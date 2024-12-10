@@ -44,7 +44,7 @@ jobs:
 
             mocks:
               - ".github/workflows/check-generated-files.yml"
-              - "pkg/sdk/go/sdk.go"
+              - "pkg/sdk/sdk.go"
               - "users/postgres/clients.go"
               - "users/clients.go"
               - "pkg/clients/clients.go"
