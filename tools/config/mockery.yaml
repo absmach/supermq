@@ -41,6 +41,13 @@ packages:
           dir: "./groups/mocks"
           mockname: "GroupsServiceClient"
           filename: "groups_client.go"
+  github.com/absmach/supermq/pkg/sdk:
+    interfaces:
+      SDK:
+        config:
+          dir: "./pkg/sdk/mocks"
+          mockname: "SDK"
+          filename: "sdk.go"
 
   github.com/absmach/supermq/certs/pki/amcerts:
     interfaces:
