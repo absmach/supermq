@@ -248,7 +248,7 @@ func TestPublish(t *testing.T) {
 			err:       svcerr.ErrAuthentication,
 		},
 		{
-			desc:      "publish with thing key and failed to authenticate",
+			desc:      "publish with client key and failed to authenticate",
 			topic:     &topic,
 			payload:   &payload,
 			password:  clientKey,
@@ -260,7 +260,7 @@ func TestPublish(t *testing.T) {
 			err:       svcerr.ErrAuthentication,
 		},
 		{
-			desc:      "publish with thing key and failed to authenticate with error",
+			desc:      "publish with client key and failed to authenticate with error",
 			topic:     &topic,
 			payload:   &payload,
 			password:  clientKey,

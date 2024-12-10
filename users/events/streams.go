@@ -216,7 +216,10 @@ func (es *eventStore) ListMembers(ctx context.Context, session authn.Session, ob
 		return mp, err
 	}
 	event := listUserByGroupEvent{
-		pm, objectKind, objectID,
+		Page:       pm,
+		objectKind: objectKind,
+		objectID:   objectID,
+		domainID:   session.DomainID,
 	}
 
 	if err := es.Publish(ctx, event); err != nil {

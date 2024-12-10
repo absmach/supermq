@@ -17,6 +17,7 @@ func Migration() *migrate.MemoryMigrationSource {
 					`CREATE TABLE IF NOT EXISTS journal (
 						id          VARCHAR(36) PRIMARY KEY,
 						operation	VARCHAR NOT NULL,
+						domain		VARCHAR,
 						occurred_at	TIMESTAMP NOT NULL,
 						attributes	JSONB NOT NULL,
 						metadata	JSONB,

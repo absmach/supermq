@@ -34,7 +34,9 @@ func (es *eventStore) Add(ctx context.Context, session smqauthn.Session, token s
 	}
 
 	ev := configEvent{
-		saved, configCreate,
+		Config:    saved,
+		operation: configCreate,
+		domainID:  session.DomainID,
 	}
 
 	if err := es.Publish(ctx, ev); err != nil {
@@ -50,7 +52,9 @@ func (es *eventStore) View(ctx context.Context, session smqauthn.Session, id str
 		return cfg, err
 	}
 	ev := configEvent{
-		cfg, configView,
+		Config:    cfg,
+		operation: configView,
+		domainID:  session.DomainID,
 	}
 
 	if err := es.Publish(ctx, ev); err != nil {
@@ -66,7 +70,9 @@ func (es *eventStore) Update(ctx context.Context, session smqauthn.Session, cfg 
 	}
 
 	ev := configEvent{
-		cfg, configUpdate,
+		Config:    cfg,
+		operation: configUpdate,
+		domainID:  session.DomainID,
 	}
 
 	return es.Publish(ctx, ev)
@@ -83,6 +89,7 @@ func (es eventStore) UpdateCert(ctx context.Context, session smqauthn.Session, c
 		clientCert: clientCert,
 		clientKey:  clientKey,
 		caCert:     caCert,
+		domainID:   session.DomainID,
 	}
 
 	if err := es.Publish(ctx, ev); err != nil {
@@ -98,6 +105,7 @@ func (es *eventStore) UpdateConnections(ctx context.Context, session smqauthn.Se
 	}
 
 	ev := updateConnectionsEvent{
+		domainID:   session.DomainID,
 		mgClient:   id,
 		mgChannels: connections,
 	}
@@ -114,6 +122,7 @@ func (es *eventStore) List(ctx context.Context, session smqauthn.Session, filter
 	ev := listConfigsEvent{
 		offset:       offset,
 		limit:        limit,
+		domainID:     session.DomainID,
 		fullMatch:    filter.FullMatch,
 		partialMatch: filter.PartialMatch,
 	}
@@ -131,7 +140,8 @@ func (es *eventStore) Remove(ctx context.Context, session smqauthn.Session, id s
 	}
 
 	ev := removeConfigEvent{
-		client: id,
+		client:   id,
+		domainID: session.DomainID,
 	}
 
 	return es.Publish(ctx, ev)
@@ -164,6 +174,7 @@ func (es *eventStore) ChangeState(ctx context.Context, session smqauthn.Session,
 
 	ev := changeStateEvent{
 		mgClient: id,
+		domainID: session.DomainID,
 		state:    state,
 	}
 

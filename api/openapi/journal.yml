@@ -220,7 +220,7 @@ components:
 
     id:
       name: id
-      description: Unique identifier for an entity, e.g. group, channel or thing.  Used together with entity_type.
+      description: Unique identifier for an entity, e.g. group, channel or client.  Used together with entity_type.
       in: path
       schema:
         type: string
