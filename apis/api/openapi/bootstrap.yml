@@ -421,9 +421,6 @@ components:
         client_cert:
           type: string
           description: Client certificate.
-        client_key:
-          type: string
-          description: Key for the client_cert.
         ca_cert:
           type: string
           description: Issuing CA certificate.
@@ -652,7 +649,7 @@ components:
       content:
         application/health+json:
           schema:
-            $ref: "./schemas/HealthInfo.yml"
+            $ref: "./schemas/health_info.yml"
     ConfigUpdateCertsRes:
       description: Data retrieved. Config certs updated.
       content:
