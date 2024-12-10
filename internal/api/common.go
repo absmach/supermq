@@ -127,8 +127,10 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, svcerr.ErrAuthorization),
 		errors.Contains(err, svcerr.ErrDomainAuthorization),
+		errors.Contains(err, svcerr.ErrUnauthorizedPAT),
 		errors.Contains(err, bootstrap.ErrExternalKey),
-		errors.Contains(err, bootstrap.ErrExternalKeySecure):
+		errors.Contains(err, bootstrap.ErrExternalKeySecure),
+		errors.Contains(err, apiutil.ErrUnsupportedTokenType):
 		err = unwrap(err)
 		w.WriteHeader(http.StatusForbidden)
 
@@ -184,6 +186,8 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, apiutil.ErrLenSearchQuery),
 		errors.Contains(err, apiutil.ErrMissingDomainID),
 		errors.Contains(err, certs.ErrFailedReadFromPKI),
+		errors.Contains(err, apiutil.ErrMissingUserID),
+		errors.Contains(err, apiutil.ErrMissingPATID),
 		errors.Contains(err, apiutil.ErrMissingUsername),
 		errors.Contains(err, apiutil.ErrMissingFirstName),
 		errors.Contains(err, apiutil.ErrMissingLastName),

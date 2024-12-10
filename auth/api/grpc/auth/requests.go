@@ -4,6 +4,7 @@
 package auth
 
 import (
+	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/apiutil"
 )
 
@@ -47,5 +48,25 @@ func (req authReq) validate() error {
 		return apiutil.ErrMalformedPolicyPer
 	}
 
+	return nil
+}
+
+type authPATReq struct {
+	userID                   string
+	patID                    string
+	platformEntityType       auth.PlatformEntityType
+	optionalDomainID         string
+	optionalDomainEntityType auth.DomainEntityType
+	operation                auth.OperationType
+	entityIDs                []string
+}
+
+func (req authPATReq) validate() error {
+	if req.userID == "" {
+		return apiutil.ErrMissingUserID
+	}
+	if req.patID == "" {
+		return apiutil.ErrMissingPATID
+	}
 	return nil
 }
