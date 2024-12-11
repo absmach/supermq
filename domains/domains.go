@@ -164,6 +164,7 @@ func (page DomainsPage) MarshalJSON() ([]byte, error) {
 type Service interface {
 	CreateDomain(ctx context.Context, sesssion authn.Session, d Domain) (Domain, error)
 	RetrieveDomain(ctx context.Context, sesssion authn.Session, id string) (Domain, error)
+	RetrieveStatus(ctx context.Context, id string) (Status, error)
 	UpdateDomain(ctx context.Context, sesssion authn.Session, id string, d DomainReq) (Domain, error)
 	EnableDomain(ctx context.Context, sesssion authn.Session, id string) (Domain, error)
 	DisableDomain(ctx context.Context, sesssion authn.Session, id string) (Domain, error)
@@ -198,4 +199,70 @@ type Repository interface {
 	ListDomains(ctx context.Context, pm Page) (DomainsPage, error)
 
 	roles.Repository
+}
+
+// Cache contains domains caching interface.
+//
+//go:generate mockery --name Cache --output=./mocks --filename cache.go --quiet --note "Copyright (c) Abstract Machines"
+type Cache interface {
+	// Save stores pair domain status and  domain id.
+	Save(ctx context.Context, domainID string, status Status) error
+
+	// Status returns domain status for given domain ID.
+	Status(ctx context.Context, domainID string) (Status, error)
+
+	// Removes domain from cache.
+	Remove(ctx context.Context, domainID string) error
+}
+
+// Below codes should moved out of service, may be can be kept in `cmd/<svc>/main.go`
+
+const (
+	updatePermission          = "update_permission"
+	enablePermission          = "enable_permission"
+	disablePermission         = "disable_permission"
+	readPermission            = "read_permission"
+	membershipPermission      = "membership_permission"
+	deletePermission          = "delete_permission"
+	manageRolePermission      = "manage_role_permission"
+	addRoleUsersPermission    = "add_role_users_permission"
+	removeRoleUsersPermission = "remove_role_users_permission"
+	viewRoleUsersPermission   = "view_role_users_permission"
+)
+
+const (
+	ClientCreatePermission  = "client_create_permission"
+	ChannelCreatePermission = "channel_create_permission"
+	GroupCreatePermission   = "group_create_permission"
+)
+
+func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
+	opPerm := map[svcutil.Operation]svcutil.Permission{
+		OpRetrieveDomain: readPermission,
+		OpUpdateDomain:   updatePermission,
+		OpEnableDomain:   enablePermission,
+		OpDisableDomain:  disablePermission,
+	}
+	return opPerm
+}
+
+func NewRolesOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
+	opPerm := map[svcutil.Operation]svcutil.Permission{
+		roles.OpAddRole:                manageRolePermission,
+		roles.OpRemoveRole:             manageRolePermission,
+		roles.OpUpdateRoleName:         manageRolePermission,
+		roles.OpRetrieveRole:           manageRolePermission,
+		roles.OpRetrieveAllRoles:       manageRolePermission,
+		roles.OpRoleAddActions:         manageRolePermission,
+		roles.OpRoleListActions:        manageRolePermission,
+		roles.OpRoleCheckActionsExists: manageRolePermission,
+		roles.OpRoleRemoveActions:      manageRolePermission,
+		roles.OpRoleRemoveAllActions:   manageRolePermission,
+		roles.OpRoleAddMembers:         addRoleUsersPermission,
+		roles.OpRoleListMembers:        viewRoleUsersPermission,
+		roles.OpRoleCheckMembersExists: viewRoleUsersPermission,
+		roles.OpRoleRemoveMembers:      removeRoleUsersPermission,
+		roles.OpRoleRemoveAllMembers:   manageRolePermission,
+	}
+	return opPerm
 }

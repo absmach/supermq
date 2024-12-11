@@ -42,6 +42,14 @@ func (tm *tracingMiddleware) RetrieveDomain(ctx context.Context, session authn.S
 	return tm.svc.RetrieveDomain(ctx, session, id)
 }
 
+func (tm *tracingMiddleware) RetrieveStatus(ctx context.Context, id string) (domains.Status, error) {
+	ctx, span := tm.tracer.Start(ctx, "view_domain_status", trace.WithAttributes(
+		attribute.String("id", id),
+	))
+	defer span.End()
+	return tm.svc.RetrieveStatus(ctx, id)
+}
+
 func (tm *tracingMiddleware) UpdateDomain(ctx context.Context, session authn.Session, id string, d domains.DomainReq) (domains.Domain, error) {
 	ctx, span := tm.tracer.Start(ctx, "update_domain", trace.WithAttributes(
 		attribute.String("id", id),

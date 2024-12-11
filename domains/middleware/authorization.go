@@ -63,6 +63,10 @@ func (am *authorizationMiddleware) RetrieveDomain(ctx context.Context, session a
 	return am.svc.RetrieveDomain(ctx, session, id)
 }
 
+func (am *authorizationMiddleware) RetrieveStatus(ctx context.Context, id string) (domains.Status, error) {
+	return am.svc.RetrieveStatus(ctx, id)
+}
+
 func (am *authorizationMiddleware) UpdateDomain(ctx context.Context, session authn.Session, id string, d domains.DomainReq) (domains.Domain, error) {
 	if err := am.authorize(ctx, domains.OpUpdateDomain, authz.PolicyReq{
 		Subject:     session.DomainUserID,
@@ -107,12 +111,12 @@ func (am *authorizationMiddleware) DisableDomain(ctx context.Context, session au
 func (am *authorizationMiddleware) FreezeDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
 	// Only SuperAdmin can freeze the domain
 	if err := am.authz.Authorize(ctx, authz.PolicyReq{
-		Subject:     session.DomainUserID,
+		Subject:     session.UserID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
 		Permission:  policies.AdminPermission,
-		Object:      id,
-		ObjectType:  policies.DomainType,
+		Object:      policies.SuperMQObject,
+		ObjectType:  policies.PlatformType,
 	}); err != nil {
 		return domains.Domain{}, err
 	}

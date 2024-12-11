@@ -24,6 +24,7 @@ var (
 
 type service struct {
 	repo       Repository
+	cache      Cache
 	policy     policies.Service
 	idProvider supermq.IDProvider
 	roles.ProvisionManageService
@@ -31,14 +32,15 @@ type service struct {
 
 var _ Service = (*service)(nil)
 
-func New(repo Repository, policy policies.Service, idProvider supermq.IDProvider, sidProvider supermq.IDProvider, availableActions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action) (Service, error) {
-	rpms, err := roles.NewProvisionManageService(policies.DomainType, repo, policy, sidProvider, availableActions, builtInRoles)
+func New(repo Repository, cache Cache, policy policies.Service, idProvider supermq.IDProvider, sidProvider supermq.IDProvider) (Service, error) {
+	rpms, err := roles.NewProvisionManageService(policies.DomainType, repo, policy, sidProvider, AvailableActions(), BuiltInRoles())
 	if err != nil {
 		return nil, err
 	}
 
 	return &service{
 		repo:                   repo,
+		cache:                  cache,
 		policy:                 policy,
 		idProvider:             idProvider,
 		ProvisionManageService: rpms,
@@ -109,6 +111,23 @@ func (svc service) RetrieveDomain(ctx context.Context, session authn.Session, id
 	return domain, nil
 }
 
+func (svc service) RetrieveStatus(ctx context.Context, id string) (Status, error) {
+	status, err := svc.cache.Status(ctx, id)
+	if err == nil {
+		return status, nil
+	}
+	dom, err := svc.repo.RetrieveByID(ctx, id)
+	if err != nil {
+		return AllStatus, errors.Wrap(svcerr.ErrViewEntity, err)
+	}
+	status = dom.Status
+	if err := svc.cache.Save(ctx, id, status); err != nil {
+		return AllStatus, errors.Wrap(svcerr.ErrUpdateEntity, err)
+	}
+
+	return status, nil
+}
+
 func (svc service) UpdateDomain(ctx context.Context, session authn.Session, id string, d DomainReq) (Domain, error) {
 	dom, err := svc.repo.Update(ctx, id, session.UserID, d)
 	if err != nil {
@@ -123,6 +142,10 @@ func (svc service) EnableDomain(ctx context.Context, session authn.Session, id s
 	if err != nil {
 		return Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
+	if err := svc.cache.Remove(ctx, id); err != nil {
+		return Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+	}
+
 	return dom, nil
 }
 
@@ -132,6 +155,10 @@ func (svc service) DisableDomain(ctx context.Context, session authn.Session, id 
 	if err != nil {
 		return Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
+	if err := svc.cache.Remove(ctx, id); err != nil {
+		return Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+	}
+
 	return dom, nil
 }
 
@@ -142,6 +169,10 @@ func (svc service) FreezeDomain(ctx context.Context, session authn.Session, id s
 	if err != nil {
 		return Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
+	if err := svc.cache.Remove(ctx, id); err != nil {
+		return Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+	}
+
 	return dom, nil
 }
 

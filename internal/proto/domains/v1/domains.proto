@@ -11,6 +11,7 @@ option go_package = "github.com/absmach/supermq/internal/grpc/domains/v1";
 // domains functionalities for SuperMQ services.
 service DomainsService {
   rpc DeleteUserFromDomains(DeleteUserReq) returns (DeleteUserRes) {}
+  rpc RetrieveDomainStatus(RetrieveDomainStatusReq) returns (RetrieveDomainStatusRes) {}
 }
 
 message DeleteUserRes {
@@ -19,4 +20,12 @@ message DeleteUserRes {
 
 message DeleteUserReq{
   string id          = 1;
+}
+
+message RetrieveDomainStatusReq {
+  string id          = 1;
+}
+
+message RetrieveDomainStatusRes {
+  string status      = 2;
 }

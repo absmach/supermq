@@ -24,3 +24,19 @@ func deleteUserFromDomainsEndpoint(svc domains.Service) endpoint.Endpoint {
 		return deleteUserRes{deleted: true}, nil
 	}
 }
+
+func retrieveDomainStatusEndpoint(svc domains.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(retrieveDomainStatusReq)
+		if err := req.validate(); err != nil {
+			return retrieveDomainStatusRes{}, err
+		}
+
+		status, err := svc.RetrieveStatus(ctx, req.ID)
+		if err != nil {
+			return retrieveDomainStatusRes{}, err
+		}
+
+		return retrieveDomainStatusRes{status: status.String()}, nil
+	}
+}

@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	DomainsService_DeleteUserFromDomains_FullMethodName = "/domains.v1.DomainsService/DeleteUserFromDomains"
+	DomainsService_RetrieveDomainStatus_FullMethodName  = "/domains.v1.DomainsService/RetrieveDomainStatus"
 )
 
 // DomainsServiceClient is the client API for DomainsService service.
@@ -33,6 +34,7 @@ const (
 // domains functionalities for SuperMQ services.
 type DomainsServiceClient interface {
 	DeleteUserFromDomains(ctx context.Context, in *DeleteUserReq, opts ...grpc.CallOption) (*DeleteUserRes, error)
+	RetrieveDomainStatus(ctx context.Context, in *RetrieveDomainStatusReq, opts ...grpc.CallOption) (*RetrieveDomainStatusRes, error)
 }
 
 type domainsServiceClient struct {
@@ -53,6 +55,16 @@ func (c *domainsServiceClient) DeleteUserFromDomains(ctx context.Context, in *De
 	return out, nil
 }
 
+func (c *domainsServiceClient) RetrieveDomainStatus(ctx context.Context, in *RetrieveDomainStatusReq, opts ...grpc.CallOption) (*RetrieveDomainStatusRes, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RetrieveDomainStatusRes)
+	err := c.cc.Invoke(ctx, DomainsService_RetrieveDomainStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DomainsServiceServer is the server API for DomainsService service.
 // All implementations must embed UnimplementedDomainsServiceServer
 // for forward compatibility.
@@ -61,6 +73,7 @@ func (c *domainsServiceClient) DeleteUserFromDomains(ctx context.Context, in *De
 // domains functionalities for SuperMQ services.
 type DomainsServiceServer interface {
 	DeleteUserFromDomains(context.Context, *DeleteUserReq) (*DeleteUserRes, error)
+	RetrieveDomainStatus(context.Context, *RetrieveDomainStatusReq) (*RetrieveDomainStatusRes, error)
 	mustEmbedUnimplementedDomainsServiceServer()
 }
 
@@ -73,6 +86,9 @@ type UnimplementedDomainsServiceServer struct{}
 
 func (UnimplementedDomainsServiceServer) DeleteUserFromDomains(context.Context, *DeleteUserReq) (*DeleteUserRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserFromDomains not implemented")
+}
+func (UnimplementedDomainsServiceServer) RetrieveDomainStatus(context.Context, *RetrieveDomainStatusReq) (*RetrieveDomainStatusRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RetrieveDomainStatus not implemented")
 }
 func (UnimplementedDomainsServiceServer) mustEmbedUnimplementedDomainsServiceServer() {}
 func (UnimplementedDomainsServiceServer) testEmbeddedByValue()                        {}
@@ -113,6 +129,24 @@ func _DomainsService_DeleteUserFromDomains_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DomainsService_RetrieveDomainStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RetrieveDomainStatusReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DomainsServiceServer).RetrieveDomainStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DomainsService_RetrieveDomainStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DomainsServiceServer).RetrieveDomainStatus(ctx, req.(*RetrieveDomainStatusReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DomainsService_ServiceDesc is the grpc.ServiceDesc for DomainsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -123,6 +157,10 @@ var DomainsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteUserFromDomains",
 			Handler:    _DomainsService_DeleteUserFromDomains_Handler,
+		},
+		{
+			MethodName: "RetrieveDomainStatus",
+			Handler:    _DomainsService_RetrieveDomainStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -6,3 +6,7 @@ package grpc
 type deleteUserRes struct {
 	deleted bool
 }
+
+type retrieveDomainStatusRes struct {
+	status string
+}

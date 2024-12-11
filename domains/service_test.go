@@ -59,11 +59,13 @@ var (
 
 var (
 	drepo  *mocks.Repository
+	dcache *mocks.Cache
 	policy *policiesMocks.Service
 )
 
 func newService() domains.Service {
 	drepo = new(mocks.Repository)
+	dcache = new(mocks.Cache)
 	idProvider := uuid.NewMock()
 	sidProvider := sid.NewMock()
 	policy = new(policiesMocks.Service)
