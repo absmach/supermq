@@ -421,9 +421,6 @@ components:
         client_cert:
           type: string
           description: Client certificate.
-        ca_cert:
-          type: string
-          description: Issuing CA certificate.
       required:
         - client_id
         - client_key
