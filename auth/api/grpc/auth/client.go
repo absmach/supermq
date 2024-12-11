@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/absmach/supermq/auth"
 	grpcapi "github.com/absmach/supermq/auth/api/grpc"
 	grpcAuthV1 "github.com/absmach/supermq/internal/grpc/auth/v1"
 	"github.com/go-kit/kit/endpoint"
@@ -17,9 +18,11 @@ import (
 const authSvcName = "auth.v1.AuthService"
 
 type authGrpcClient struct {
-	authenticate endpoint.Endpoint
-	authorize    endpoint.Endpoint
-	timeout      time.Duration
+	authenticate    endpoint.Endpoint
+	authenticatePAT endpoint.Endpoint
+	authorize       endpoint.Endpoint
+	authorizePAT    endpoint.Endpoint
+	timeout         time.Duration
 }
 
 var _ grpcAuthV1.AuthServiceClient = (*authGrpcClient)(nil)
@@ -35,11 +38,27 @@ func NewAuthClient(conn *grpc.ClientConn, timeout time.Duration) grpcAuthV1.Auth
 			decodeIdentifyResponse,
 			grpcAuthV1.AuthNRes{},
 		).Endpoint(),
+		authenticatePAT: kitgrpc.NewClient(
+			conn,
+			authSvcName,
+			"AuthenticatePAT",
+			encodeIdentifyRequest,
+			decodeIdentifyPATResponse,
+			grpcAuthV1.AuthNPATRes{},
+		).Endpoint(),
 		authorize: kitgrpc.NewClient(
 			conn,
 			authSvcName,
 			"Authorize",
 			encodeAuthorizeRequest,
+			decodeAuthorizeResponse,
+			grpcAuthV1.AuthZRes{},
+		).Endpoint(),
+		authorizePAT: kitgrpc.NewClient(
+			conn,
+			authSvcName,
+			"AuthorizePAT",
+			encodeAuthorizePATRequest,
 			decodeAuthorizeResponse,
 			grpcAuthV1.AuthZRes{},
 		).Endpoint(),
@@ -67,6 +86,23 @@ func encodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{},
 func decodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(*grpcAuthV1.AuthNRes)
 	return authenticateRes{id: res.GetId(), userID: res.GetUserId(), domainID: res.GetDomainId()}, nil
+}
+
+func (client authGrpcClient) AuthenticatePAT(ctx context.Context, token *grpcAuthV1.AuthNReq, _ ...grpc.CallOption) (*grpcAuthV1.AuthNPATRes, error) {
+	ctx, cancel := context.WithTimeout(ctx, client.timeout)
+	defer cancel()
+
+	res, err := client.authenticatePAT(ctx, authenticateReq{token: token.GetToken()})
+	if err != nil {
+		return &grpcAuthV1.AuthNPATRes{}, grpcapi.DecodeError(err)
+	}
+	ir := res.(authenticateRes)
+	return &grpcAuthV1.AuthNPATRes{Id: ir.id, UserId: ir.userID}, nil
+}
+
+func decodeIdentifyPATResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(*grpcAuthV1.AuthNPATRes)
+	return authenticateRes{id: res.GetId(), userID: res.GetUserId()}, nil
 }
 
 func (client authGrpcClient) Authorize(ctx context.Context, req *grpcAuthV1.AuthZReq, _ ...grpc.CallOption) (r *grpcAuthV1.AuthZRes, err error) {
@@ -107,5 +143,39 @@ func encodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}
 		Permission:  req.Permission,
 		ObjectType:  req.ObjectType,
 		Object:      req.Object,
+	}, nil
+}
+
+func (client authGrpcClient) AuthorizePAT(ctx context.Context, req *grpcAuthV1.AuthZpatReq, _ ...grpc.CallOption) (r *grpcAuthV1.AuthZRes, err error) {
+	ctx, cancel := context.WithTimeout(ctx, client.timeout)
+	defer cancel()
+
+	res, err := client.authorizePAT(ctx, authPATReq{
+		userID:                   req.GetUserId(),
+		patID:                    req.GetPatId(),
+		platformEntityType:       auth.PlatformEntityType(req.GetPlatformEntityType()),
+		optionalDomainID:         req.GetOptionalDomainId(),
+		optionalDomainEntityType: auth.DomainEntityType(req.GetOptionalDomainEntityType()),
+		operation:                auth.OperationType(req.GetOperation()),
+		entityIDs:                req.GetEntityIds(),
+	})
+	if err != nil {
+		return &grpcAuthV1.AuthZRes{}, grpcapi.DecodeError(err)
+	}
+
+	ar := res.(authorizeRes)
+	return &grpcAuthV1.AuthZRes{Authorized: ar.authorized, Id: ar.id}, nil
+}
+
+func encodeAuthorizePATRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(authPATReq)
+	return &grpcAuthV1.AuthZpatReq{
+		UserId:                   req.userID,
+		PatId:                    req.patID,
+		PlatformEntityType:       uint32(req.platformEntityType),
+		OptionalDomainId:         req.optionalDomainID,
+		OptionalDomainEntityType: uint32(req.optionalDomainEntityType),
+		Operation:                uint32(req.operation),
+		EntityIds:                req.entityIDs,
 	}, nil
 }

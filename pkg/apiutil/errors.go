@@ -241,4 +241,10 @@ var (
 	ErrInvalidProfilePictureURL = errors.New("invalid profile picture url")
 
 	ErrMultipleEntitiesFilter = errors.New("multiple entities are provided in filter are not supported")
+
+	// ErrMissingDescription indicates missing description.
+	ErrMissingDescription = errors.New("missing description")
+
+	// ErrUnsupportedTokenType indicates that this type of token is not supported.
+	ErrUnsupportedTokenType = errors.New("unsupported content token type")
 )
