@@ -1,6 +1,9 @@
 module github.com/absmach/supermq
 
-go 1.23.0
+go 1.23.1
+
+toolchain go1.23.3
+
 require (
 	github.com/0x6flab/namegenerator v1.4.0
 	github.com/absmach/callhome v0.14.0
