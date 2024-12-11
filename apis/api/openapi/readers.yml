@@ -13,7 +13,7 @@ info:
   license:
     name: Apache 2.0
     url: https://github.com/absmach/supermq/blob/main/LICENSE
-  version: 0.14.0
+  version: 0.15.1
 
 servers:
   - url: http://localhost:9003
@@ -35,7 +35,7 @@ tags:
       url: https://docs.supermq.abstractmachines.fr/
 
 paths:
-  /{domainID}/channels/{chanId}/messages:
+  /channels/{chanId}/messages:
     get:
       operationId: getMessages
       summary: Retrieves messages sent to single channel
@@ -47,7 +47,6 @@ paths:
       tags:
         - readers
       parameters:
-        - $ref: "#/components/parameters/DomainID"
         - $ref: "#/components/parameters/ChanId"
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"

@@ -13,7 +13,7 @@ info:
   license:
     name: Apache 2.0
     url: https://github.com/absmach/supermq/blob/main/LICENSE
-  version: 0.14.0
+  version: 0.15.1
 
 servers:
   - url: http://localhost:9019
@@ -53,6 +53,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
+
   /{domainID}/certs/{certID}:
     get:
       operationId: getCert
@@ -106,6 +107,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
+
   /{domainID}/serials/{clientID}:
     get:
       operationId: getSerials
@@ -133,6 +135,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
+
   /health:
     get:
       summary: Retrieves service health check info.

@@ -13,7 +13,7 @@ info:
   license:
     name: Apache 2.0
     url: https://github.com/absmach/supermq/blob/main/LICENSE
-  version: 0.14.0
+  version: 0.15.1
 
 servers:
   - url: http://localhost:9002
@@ -25,10 +25,10 @@ tags:
     externalDocs:
       description: Find out more about users
       url: https://docs.supermq.abstractmachines.fr/
-  - name: Groups
-    description: Everything about your Groups
+  - name: Health
+    description: Health check operations
     externalDocs:
-      description: Find out more about users groups
+      description: Find out more about health checks
       url: https://docs.supermq.abstractmachines.fr/
 
 paths:
@@ -628,6 +628,77 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
+  /{domainID}/clients/{clientID}/users:
+    get:
+      operationId: listUsersInClient
+      tags:
+        - Users
+      summary: List users associated with a client
+      description: |
+        Retrieves a list of users associated with a client. Due to performance concerns, data
+        is retrieved in subsets. The API must ensure that the entire
+        dataset is consumed either by making subsequent requests, or by
+        increasing the subset size of the initial request.
+      parameters:
+        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "#/components/parameters/ClientID"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Level"
+        - $ref: "#/components/parameters/Tree"
+        - $ref: "#/components/parameters/Metadata"
+        - $ref: "#/components/parameters/ChannelName"
+        - $ref: "#/components/parameters/ParentID"
+      responses:
+        "200":
+          $ref: "#/components/responses/MembersPageRes"
+        "400":
+          description: Failed due to malformed query parameters.
+        "401":
+          description: |
+            Missing or invalid access token provided.
+            This endpoint is available only for administrators.
+        "403":
+          description: Failed to perform authorization over the entity.
+        "404":
+          description: A non-existent entity request.
+        "422":
+          description: Database can't process request.
+        "500":
+          $ref: "#/components/responses/ServiceError"
+  
+  /{domainID}/users:
+    get:
+      summary: List users assigned to domain
+      description: |
+        List users assigned to domain that is identified by the domain ID.
+      tags:
+        - Users
+      parameters:
+        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Metadata"
+        - $ref: "#/components/parameters/Status"
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responses/UserPageRes"
+          description: List of users assigned to domain.
+        "400":
+          description: Failed due to malformed domain's ID.
+        "401":
+          description: Missing or invalid access token provided.
+        "403":
+          description: Unauthorized access the domain ID.
+        "404":
+          description: A non-existent entity request.
+        "422":
+          description: Database can't process request.
+        "500":
+          $ref: "#/components/responses/ServiceError"
+
   /users/tokens/issue:
     post:
       operationId: issueToken
@@ -680,480 +751,12 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/groups:
-    post:
-      operationId: createGroup
-      tags:
-        - Groups
-      summary: Creates new group
-      description: |
-        Creates new group that can be used for grouping entities. New account will
-        be uniquely identified by its identity.
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-      requestBody:
-        $ref: "#/components/requestBodies/GroupCreateReq"
-      security:
-        - bearerAuth: []
-      responses:
-        "201":
-          $ref: "#/components/responses/GroupCreateRes"
-        "400":
-          description: Failed due to malformed JSON.
-        "401":
-          description: Missing or invalid access token provided.
-        "403":
-          description: Failed to perform authorization over the entity.
-        "404":
-          description: A non-existent entity request.
-        "409":
-          description: Failed due to using an existing identity.
-        "415":
-          description: Missing or invalid content type.
-        "422":
-          description: Database can't process request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
-
-    get:
-      operationId: listGroups
-      summary: Lists groups.
-      description: |
-        Lists groups up to a max level of hierarchy that can be fetched in one
-        request ( max level = 5). Result can be filtered by metadata. Groups will
-        be returned as JSON array or JSON tree. Due to performance concerns, result
-        is returned in subsets.
-      tags:
-        - Groups
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/Limit"
-        - $ref: "#/components/parameters/Offset"
-        - $ref: "#/components/parameters/Level"
-        - $ref: "#/components/parameters/Tree"
-        - $ref: "#/components/parameters/Metadata"
-        - $ref: "#/components/parameters/GroupName"
-        - $ref: "#/components/parameters/ParentID"
-      responses:
-        "200":
-          $ref: "#/components/responses/GroupPageRes"
-        "400":
-          description: Failed due to malformed query parameters.
-        "401":
-          description: Missing or invalid access token provided.
-        "403":
-          description: Failed to perform authorization over the entity.
-        "404":
-          description: Group does not exist.
-        "422":
-          description: Database can't process request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
-
-  /{domainID}/groups/{groupID}:
-    get:
-      operationId: getGroup
-      summary: Gets group info.
-      description: |
-        Gets info on a group specified by id.
-      tags:
-        - Groups
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/GroupID"
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          $ref: "#/components/responses/GroupRes"
-        "400":
-          description: Failed due to malformed query parameters.
-        "401":
-          description: Missing or invalid access token provided.
-        "403":
-          description: Failed to perform authorization over the entity.
-        "404":
-          description: Group does not exist.
-        "422":
-          description: Database can't process request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
-
-    put:
-      operationId: updateGroup
-      summary: Updates group data.
-      description: |
-        Updates Name, Description or Metadata of a group.
-      tags:
-        - Groups
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/GroupID"
-      security:
-        - bearerAuth: []
-      requestBody:
-        $ref: "#/components/requestBodies/GroupUpdateReq"
-      responses:
-        "200":
-          $ref: "#/components/responses/GroupRes"
-        "400":
-          description: Failed due to malformed query parameters.
-        "401":
-          description: Missing or invalid access token provided.
-        "403":
-          description: Failed to perform authorization over the entity.
-        "404":
-          description: Group does not exist.
-        "409":
-          description: Failed due to using an existing identity.
-        "415":
-          description: Missing or invalid content type.
-        "422":
-          description: Database can't process request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
-    delete:
-      summary: Delete group for a group with the given id.
-      description: |
-        Delete group removes a group with the given id from repo
-        and removes all the policies related to this group.
-      tags:
-        - Groups
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/GroupID"
-      security:
-        - bearerAuth: []
-      responses:
-        "204":
-          description: Group deleted.
-        "400":
-          description: Failed due to malformed query parameters.
-        "401":
-          description: Missing or invalid access token provided.
-        "403":
-          description: Unauthorized access to group id.
-        "404":
-          description: A non-existent entity request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
-
-  /{domainID}/groups/{groupID}/children:
-    get:
-      operationId: listChildren
-      summary: List children of a certain group
-      description: |
-        Lists groups up to a max level of hierarchy that can be fetched in one
-        request ( max level = 5). Result can be filtered by metadata. Groups will
-        be returned as JSON array or JSON tree. Due to performance concerns, result
-        is returned in subsets.
-      tags:
-        - Groups
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/GroupID"
-        - $ref: "#/components/parameters/Limit"
-        - $ref: "#/components/parameters/Offset"
-        - $ref: "#/components/parameters/Level"
-        - $ref: "#/components/parameters/Tree"
-        - $ref: "#/components/parameters/Metadata"
-        - $ref: "#/components/parameters/GroupName"
-        - $ref: "#/components/parameters/ParentID"
-      responses:
-        "200":
-          $ref: "#/components/responses/GroupPageRes"
-        "400":
-          description: Failed due to malformed query parameters.
-        "401":
-          description: Missing or invalid access token provided.
-        "403":
-          description: Failed to perform authorization over the entity.
-        "404":
-          description: Group does not exist.
-        "422":
-          description: Database can't process request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
-
-  /{domainID}/groups/{groupID}/parents:
-    get:
-      operationId: listParents
-      summary: List parents of a certain group
-      description: |
-        Lists groups up to a max level of hierarchy that can be fetched in one
-        request ( max level = 5). Result can be filtered by metadata. Groups will
-        be returned as JSON array or JSON tree. Due to performance concerns, result
-        is returned in subsets.
-      tags:
-        - Groups
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/GroupID"
-        - $ref: "#/components/parameters/Limit"
-        - $ref: "#/components/parameters/Offset"
-        - $ref: "#/components/parameters/Level"
-        - $ref: "#/components/parameters/Tree"
-        - $ref: "#/components/parameters/Metadata"
-        - $ref: "#/components/parameters/GroupName"
-        - $ref: "#/components/parameters/ParentID"
-      responses:
-        "200":
-          $ref: "#/components/responses/GroupPageRes"
-        "400":
-          description: Failed due to malformed query parameters.
-        "401":
-          description: Missing or invalid access token provided.
-        "403":
-          description: Failed to perform authorization over the entity.
-        "404":
-          description: Group does not exist.
-        "422":
-          description: Database can't process request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
-
-  /{domainID}/groups/{groupID}/enable:
-    post:
-      operationId: enableGroup
-      summary: Enables a group
-      description: |
-        Enables a specific group that is identifier by the group ID.
-      tags:
-        - Groups
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/GroupID"
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          $ref: "#/components/responses/GroupRes"
-        "400":
-          description: Failed due to malformed query parameters.
-        "401":
-          description: Missing or invalid access token provided.
-        "403":
-          description: Failed to perform authorization over the entity.
-        "404":
-          description: A non-existent entity request.
-        "409":
-          description: Failed due to already enabled group.
-        "415":
-          description: Missing or invalid content type.
-        "422":
-          description: Database can't process request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
-
-  /{domainID}/groups/{groupID}/disable:
-    post:
-      operationId: disableGroup
-      summary: Disables a group
-      description: |
-        Disables a specific group that is identifier by the group ID.
-      tags:
-        - Groups
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/GroupID"
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          $ref: "#/components/responses/GroupRes"
-        "400":
-          description: Failed due to malformed query parameters.
-        "401":
-          description: Missing or invalid access token provided.
-        "403":
-          description: Failed to perform authorization over the entity.
-        "404":
-          description: A non-existent entity request.
-        "409":
-          description: Failed due to already disabled group.
-        "415":
-          description: Missing or invalid content type.
-        "422":
-          description: Database can't process request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
-
-  /{domainID}/groups/{groupID}/users/assign:
-    post:
-      operationId: assignUser
-      summary: Assigns a user to a group
-      description: |
-        Assigns a specific user to a group that is identifier by the group ID.
-      tags:
-        - Groups
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/GroupID"
-      requestBody:
-        $ref: "#/components/requestBodies/AssignUserReq"
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Member assigned.
-        "400":
-          description: Failed due to malformed group's ID.
-        "401":
-          description: Missing or invalid access token provided.
-        "403":
-          description: Failed to perform authorization over the entity.
-        "404":
-          description: A non-existent entity request.
-        "415":
-          description: Missing or invalid content type.
-        "422":
-          description: Database can't process request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
-
-  /{domainID}/groups/{groupID}/users/unassign:
-    post:
-      operationId: unassignUser
-      summary: Unassigns a user to a group
-      description: |
-        Unassigns a specific user to a group that is identifier by the group ID.
-      tags:
-        - Groups
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/GroupID"
-      requestBody:
-        $ref: "#/components/requestBodies/AssignUserReq"
-      security:
-        - bearerAuth: []
-      responses:
-        "204":
-          description: Member unassigned.
-        "400":
-          description: Failed due to malformed group's ID.
-        "401":
-          description: Missing or invalid access token provided.
-        "403":
-          description: Failed to perform authorization over the entity.
-        "404":
-          description: A non-existent entity request.
-        "415":
-          description: Missing or invalid content type.
-        "422":
-          description: Database can't process request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
-
-  /{domainID}/channels/{memberID}/groups:
-    get:
-      operationId: listGroupsInChannel
-      summary: Get group associated with the member
-      description: |
-        Gets groups associated with the channel member specified by id.
-      tags:
-        - Groups
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/MemberID"
-        - $ref: "#/components/parameters/Limit"
-        - $ref: "#/components/parameters/Offset"
-        - $ref: "#/components/parameters/Metadata"
-        - $ref: "#/components/parameters/Status"
-        - $ref: "#/components/parameters/Tags"
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          $ref: "#/components/responses/GroupPageRes"
-        "400":
-          description: Failed due to malformed query parameters.
-        "401":
-          description: Missing or invalid access token provided.
-        "403":
-          description: Failed to perform authorization over the entity.
-        "404":
-          description: Group does not exist.
-        "422":
-          description: Database can't process request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
-
-  /{domainID}/users/{memberID}/groups:
-    get:
-      operationId: listGroupsByUser
-      summary: Get group associated with the member
-      description: |
-        Gets groups associated with the user member specified by id.
-      tags:
-        - Groups
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/MemberID"
-        - $ref: "#/components/parameters/Limit"
-        - $ref: "#/components/parameters/Offset"
-        - $ref: "#/components/parameters/Metadata"
-        - $ref: "#/components/parameters/Status"
-        - $ref: "#/components/parameters/Tags"
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          $ref: "#/components/responses/GroupPageRes"
-        "400":
-          description: Failed due to malformed query parameters.
-        "401":
-          description: Missing or invalid access token provided.
-        "403":
-          description: Failed to perform authorization over the entity.
-        "404":
-          description: Group does not exist.
-        "422":
-          description: Database can't process request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
-  /{domainID}/users:
-    get:
-      summary: List users assigned to domain
-      description: |
-        List users assigned to domain that is identified by the domain ID.
-      tags:
-        - Domains
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/Limit"
-        - $ref: "#/components/parameters/Offset"
-        - $ref: "#/components/parameters/Metadata"
-        - $ref: "#/components/parameters/Status"
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          $ref: "#/components/responses/UserPageRes"
-          description: List of users assigned to domain.
-        "400":
-          description: Failed due to malformed domain's ID.
-        "401":
-          description: Missing or invalid access token provided.
-        "403":
-          description: Unauthorized access the domain ID.
-        "404":
-          description: A non-existent entity request.
-        "422":
-          description: Database can't process request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
   /health:
     get:
       operationId: health
       summary: Retrieves service health check info.
       tags:
-        - health
+        - Health
       security: []
       responses:
         "200":
@@ -1214,33 +817,6 @@ components:
       required:
         - credentials
 
-    GroupReqObj:
-      type: object
-      properties:
-        name:
-          type: string
-          example: groupName
-          description: Free-form group name. Group name is unique on the given hierarchy level.
-        description:
-          type: string
-          example: long group description
-          description: Group description, free form text.
-        parent_id:
-          type: string
-          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: Id of parent group, it must be existing group.
-        metadata:
-          type: object
-          example: { "domain": "example.com" }
-          description: Arbitrary, object-encoded groups's data.
-        status:
-          type: string
-          description: Group Status
-          format: string
-          example: enabled
-      required:
-        - name
-
     User:
       type: object
       properties:
@@ -1300,64 +876,6 @@ components:
           description: Time when the group was created.
       xml:
         name: user
-
-    Group:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: Unique group identifier generated by the service.
-        name:
-          type: string
-          example: groupName
-          description: Free-form group name. Group name is unique on the given hierarchy level.
-        domain_id:
-          type: string
-          format: uuid
-          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: ID of the domain to which the group belongs..
-        parent_id:
-          type: string
-          format: uuid
-          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: Group parent identifier.
-        description:
-          type: string
-          example: long group description
-          description: Group description, free form text.
-        metadata:
-          type: object
-          example: { "role": "general" }
-          description: Arbitrary, object-encoded groups's data.
-        path:
-          type: string
-          example: bb7edb32-2eac-4aad-aebe-ed96fe073879.bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: Hierarchy path, concatenated ids of group ancestors.
-        level:
-          type: integer
-          description: Level in hierarchy, distance from the root group.
-          format: int32
-          example: 2
-          maximum: 5
-        created_at:
-          type: string
-          format: date-time
-          example: "2019-11-26 13:31:52"
-          description: Datetime when the group was created.
-        updated_at:
-          type: string
-          format: date-time
-          example: "2019-11-26 13:31:52"
-          description: Datetime when the group was created.
-        status:
-          type: string
-          description: Group Status
-          format: string
-          example: enabled
-      xml:
-        name: group
 
     Members:
       type: object
@@ -1442,31 +960,6 @@ components:
           description: Maximum number of items to return in one page.
       required:
         - users
-        - total
-        - offset
-
-    GroupsPage:
-      type: object
-      properties:
-        groups:
-          type: array
-          minItems: 0
-          uniqueItems: true
-          items:
-            $ref: "#/components/schemas/Group"
-        total:
-          type: integer
-          example: 1
-          description: Total number of items.
-        offset:
-          type: integer
-          description: Number of items to skip during retrieval.
-        limit:
-          type: integer
-          example: 10
-          description: Maximum number of items to return in one page.
-      required:
-        - groups
         - total
         - offset
 
@@ -1584,26 +1077,6 @@ components:
           description: User's username for example 'admin' will be used as its unique identifier.
       required:
         - username
-
-    GroupUpdate:
-      type: object
-      properties:
-        name:
-          type: string
-          example: groupName
-          description: Free-form group name. Group name is unique on the given hierarchy level.
-        description:
-          type: string
-          example: long description but not too long
-          description: Group description, free form text.
-        metadata:
-          type: object
-          example: { "role": "general" }
-          description: Arbitrary, object-encoded groups's data.
-      required:
-        - name
-        - metadata
-        - description
 
     AssignReqObj:
       type: object
@@ -1837,6 +1310,19 @@ components:
         pattern: "^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
       required: true
       example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+    
+    ClientID:
+      name: clientID
+      description: Unique client identifier.
+      in: path
+      schema:
+        type: string
+        format: uuid
+        minLength: 36
+        maxLength: 36
+        pattern: "^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+      required: true
+      example: bb7edb32-2eac-4aad-aebe-ed96fe073879
 
     MemberID:
       name: memberID
@@ -1976,22 +1462,6 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Username"
-
-    GroupCreateReq:
-      description: JSON-formatted document describing the new group to be registered
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/GroupReqObj"
-
-    GroupUpdateReq:
-      description: JSON-formated document describing the metadata and name of group to be update
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/GroupUpdate"
 
     AssignReq:
       description: JSON-formated document describing the policy related to assigning members to a group
@@ -2158,99 +1628,6 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/UsersPage"
-
-    GroupCreateRes:
-      description: Registered new group.
-      headers:
-        Location:
-          schema:
-            type: string
-            format: url
-          description: Registered group relative URL in the format `/groups/<group_id>`
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/Group"
-      links:
-        get:
-          operationId: getGroup
-          parameters:
-            groupID: $response.body#/id
-        get_children:
-          operationId: listChildren
-          parameters:
-            groupID: $response.body#/id
-        get_parent:
-          operationId: listParents
-          parameters:
-            groupID: $response.body#/id
-        get_channels:
-          operationId: listGroupsInChannel
-          parameters:
-            memberID: $response.body#/id
-        get_users:
-          operationId: listGroupsByUser
-          parameters:
-            memberID: $response.body#/id
-        update:
-          operationId: updateGroup
-          parameters:
-            groupID: $response.body#/id
-        disable:
-          operationId: disableGroup
-          parameters:
-            groupID: $response.body#/id
-        enable:
-          operationId: enableGroup
-          parameters:
-            groupID: $response.body#/id
-        assign:
-          operationId: assignUser
-          parameters:
-            groupID: $response.body#/id
-        unassign:
-          operationId: unassignUser
-          parameters:
-            groupID: $response.body#/id
-
-    GroupRes:
-      description: Data retrieved.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/Group"
-      links:
-        get_children:
-          operationId: listChildren
-          parameters:
-            groupID: $response.body#/id
-        get_parent:
-          operationId: listParents
-          parameters:
-            groupID: $response.body#/id
-        get_channels:
-          operationId: listGroupsInChannel
-          parameters:
-            memberID: $response.body#/id
-        get_users:
-          operationId: listGroupsByUser
-          parameters:
-            memberID: $response.body#/id
-        assign:
-          operationId: assignUser
-          parameters:
-            groupID: $response.body#/id
-        unassign:
-          operationId: unassignUser
-          parameters:
-            groupID: $response.body#/id
-
-    GroupPageRes:
-      description: Data retrieved.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/GroupsPage"
 
     MembersPageRes:
       description: Group members retrieved.

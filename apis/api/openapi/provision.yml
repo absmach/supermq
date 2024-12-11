@@ -13,7 +13,7 @@ info:
   license:
     name: Apache 2.0
     url: https://github.com/absmach/supermq/blob/main/LICENSE
-  version: 0.14.0
+  version: 0.15.1
 
 servers:
   - url: http://localhost:9016
@@ -44,6 +44,8 @@ paths:
           description: Failed due to malformed JSON.
         "401":
           description: Missing or invalid access token provided.
+        "403":
+          description: Failed to perform authorization over the entity.
         "415":
           description: Missing or invalid content type.
         "422":
@@ -64,6 +66,8 @@ paths:
           $ref: "#/components/responses/ProvisionRes"
         "401":
           description: Missing or invalid access token provided.
+        "403":
+          description: Failed to perform authorization over the entity.
         "415":
           description: Missing or invalid content type.
         "422":

@@ -163,6 +163,20 @@ components:
               "c01ed106-e52d-4aa4-bed3-39f360177cfa",
             ]
     
+    AvailableActionsObj:
+      type: object
+      properties:
+        available_actions:
+          type: array
+          description: List of all available actions.
+          items:
+            type: string
+          example:
+            [
+              "read",
+              "update",
+            ]
+    
   parameters:
     RoleName:
       name: roleName
@@ -255,3 +269,10 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/RoleMembersObj'
+
+    ListAvailableActionsRes:
+      description: Available actions retrieved successfully.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AvailableActionsObj'

@@ -3,9 +3,9 @@
 
 openapi: 3.0.3
 info:
-  title: SuperMQ Clients Service
+  title: SuperMQ Groups Service
   description: |
-    This is the Clients Server based on the OpenAPI 3.0 specification.  It is the HTTP API for managing platform clients. You can now help us improve the API whether it's by making changes to the definition itself or to the code.
+    This is the Groups Server based on the OpenAPI 3.0 specification.  It is the HTTP API for managing platform groups. You can now help us improve the API whether it's by making changes to the definition itself or to the code.
     Some useful links:
     - [The SuperMQ repository](https://github.com/absmach/supermq)
   contact:
@@ -16,17 +16,17 @@ info:
   version: 0.15.1
 
 servers:
-  - url: http://localhost:9006
-  - url: https://localhost:9006
+  - url: http://localhost:9004
+  - url: https://localhost:9004
 
 tags:
-  - name: Clients
-    description: CRUD operations for your clients
+  - name: Groups
+    description: CRUD operations for your groups
     externalDocs:
-      description: Find out more about clients
+      description: Find out more about users groups
       url: https://docs.supermq.abstractmachines.fr/
   - name: Roles
-    description: All operations involving roles for clients
+    description: All operations involving roles for groups
     externalDocs:
        description: Find out more about roles
        url: https://docs.supermq.abstractmachines.fr/
@@ -37,22 +37,24 @@ tags:
       url: https://docs.supermq.abstractmachines.fr/
 
 paths:
-  /{domainID}/clients:
+  /{domainID}/groups:
     post:
-      operationId: createClient
+      operationId: createGroup
       tags:
-        - Clients
-      summary: Adds new client
+        - Groups
+      summary: Creates new group
       description: |
-        Adds new client to the list of clients owned by user identified using
-        the provided access token.
+        Creates new group that can be used for grouping entities. New account will
+        be uniquely identified by its identity.
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
       requestBody:
-        $ref: "#/components/requestBodies/ClientCreateReq"
+        $ref: "#/components/requestBodies/GroupCreateReq"
+      security:
+        - bearerAuth: []
       responses:
         "201":
-          $ref: "#/components/responses/ClientCreateRes"
+          $ref: "#/components/responses/GroupCreateRes"
         "400":
           description: Failed due to malformed JSON.
         "401":
@@ -71,129 +73,96 @@ paths:
           $ref: "#/components/responses/ServiceError"
 
     get:
-      operationId: listClients
-      tags:
-        - Clients
-      summary: Retrieves clients
+      operationId: listGroups
+      summary: Lists groups.
       description: |
-        Retrieves a list of clients. Due to performance concerns, data
-        is retrieved in subsets. The API clients must ensure that the entire
-        dataset is consumed either by making subsequent requests, or by
-        increasing the subset size of the initial request.
+        Lists groups up to a max level of hierarchy that can be fetched in one
+        request ( max level = 5). Result can be filtered by metadata. Groups will
+        be returned as JSON array or JSON tree. Due to performance concerns, result
+        is returned in subsets.
+      tags:
+        - Groups
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Level"
+        - $ref: "#/components/parameters/Tree"
         - $ref: "#/components/parameters/Metadata"
-        - $ref: "#/components/parameters/Status"
-        - $ref: "#/components/parameters/ClientName"
-        - $ref: "#/components/parameters/Tags"
-      security:
-        - bearerAuth: []
+        - $ref: "#/components/parameters/GroupName"
+        - $ref: "#/components/parameters/ParentID"
       responses:
         "200":
-          $ref: "#/components/responses/ClientPageRes"
+          $ref: "#/components/responses/GroupPageRes"
         "400":
           description: Failed due to malformed query parameters.
         "401":
-          description: |
-            Missing or invalid access token provided.
-        "403":
-          description: Failed to perform authorization over the entity.
-        "404":
-          description: A non-existent entity request.
-        "422":
-          description: Database can't process request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
-
-  /{domainID}/clients/bulk:
-    post:
-      operationId: bulkCreateClients
-      summary: Bulk provisions new clients
-      description: |
-        Adds a list of new clients to the list of clients owned by user identified using
-        the provided access token.
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-      tags:
-        - Clients
-      requestBody:
-        $ref: "#/components/requestBodies/ClientsCreateReq"
-      responses:
-        "200":
-          $ref: "#/components/responses/ClientPageRes"
-        "400":
-          description: Failed due to malformed JSON.
-        "401":
           description: Missing or invalid access token provided.
         "403":
           description: Failed to perform authorization over the entity.
         "404":
-          description: A non-existent entity request.
-        "415":
-          description: Missing or invalid content type.
+          description: Group does not exist.
         "422":
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/clients/{clientID}:
+  /{domainID}/groups/{groupID}:
     get:
-      operationId: getClient
-      summary: Retrieves client info
+      operationId: getGroup
+      summary: Gets group info.
       description: |
-        Retrieves a specific client that is identified by the client ID.
+        Gets info on a group specified by id.
       tags:
-        - Clients
+        - Groups
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "#/components/responses/ClientRes"
+          $ref: "#/components/responses/GroupRes"
         "400":
-          description: Failed due to malformed domain ID.
+          description: Failed due to malformed query parameters.
         "401":
           description: Missing or invalid access token provided.
         "403":
           description: Failed to perform authorization over the entity.
         "404":
-          description: A non-existent entity request.
+          description: Group does not exist.
         "422":
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
 
-    patch:
-      operationId: updateClient
-      summary: Updates name and metadata of the client.
+    put:
+      operationId: updateGroup
+      summary: Updates group data.
       description: |
-        Update is performed by replacing the current resource data with values
-        provided in a request payload. Note that the client's type and ID
-        cannot be changed.
+        Updates Name, Description or Metadata of a group.
       tags:
-        - Clients
+        - Groups
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
-      requestBody:
-        $ref: "#/components/requestBodies/ClientUpdateReq"
+        - $ref: "#/components/parameters/GroupID"
       security:
         - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/GroupUpdateReq"
       responses:
         "200":
-          $ref: "#/components/responses/ClientRes"
+          $ref: "#/components/responses/GroupRes"
         "400":
-          description: Failed due to malformed JSON.
+          description: Failed due to malformed query parameters.
         "401":
           description: Missing or invalid access token provided.
         "403":
           description: Failed to perform authorization over the entity.
         "404":
-          description: Failed due to non existing client.
+          description: Group does not exist.
         "409":
           description: Failed due to using an existing identity.
         "415":
@@ -203,92 +172,57 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
     delete:
-      summary: Delete client for a client with the given id.
+      summary: Delete group for a group with the given id.
       description: |
-        Delete client removes a client with the given id from repo
-        and removes all the policies related to this client.
+        Delete group removes a group with the given id from repo
+        and removes all the policies related to this group.
       tags:
-        - Clients
+        - Groups
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
       security:
         - bearerAuth: []
       responses:
         "204":
-          description: Client deleted.
+          description: Group deleted.
         "400":
-          description: Failed due to malformed domain ID.
+          description: Failed due to malformed query parameters.
         "401":
           description: Missing or invalid access token provided.
         "403":
-          description: Unauthorized access to client id.
+          description: Unauthorized access to group id.
         "404":
-          description: Missing client.
+          description: A non-existent entity request.
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/clients/{clientID}/tags:
-    patch:
-      operationId: updateClientTags
-      summary: Updates tags the client.
+  /{domainID}/groups/{groupID}/enable:
+    post:
+      operationId: enableGroup
+      summary: Enables a group
       description: |
-        Updates tags of the client with provided ID. Tags is updated using
-        authorization token and the new tags received in request.
+        Enables a specific group that is identifier by the group ID.
       tags:
-        - Clients
+        - Groups
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
-      requestBody:
-        $ref: "#/components/requestBodies/ClientUpdateTagsReq"
+        - $ref: "#/components/parameters/GroupID"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "#/components/responses/ClientRes"
+          $ref: "#/components/responses/GroupRes"
         "400":
-          description: Failed due to malformed JSON.
-        "403":
-          description: Failed to perform authorization over the entity.
-        "404":
-          description: Failed due to non existing client.
-        "401":
-          description: Missing or invalid access token provided.
-        "422":
-          description: Database can't process request.
-        "500":
-          $ref: "#/components/responses/ServiceError"
-
-  /{domainID}/clients/{clientID}/secret:
-    patch:
-      operationId: updateClientSecret
-      summary: Updates Secret of the identified client.
-      description: |
-        Updates secret of the identified in client. Secret is updated using
-        authorization token and the new received info. Update is performed by replacing current key with a new one.
-      tags:
-        - Clients
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
-      requestBody:
-        $ref: "#/components/requestBodies/ClientUpdateSecretReq"
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          $ref: "#/components/responses/ClientRes"
-        "400":
-          description: Failed due to malformed JSON.
+          description: Failed due to malformed query parameters.
         "401":
           description: Missing or invalid access token provided.
         "403":
           description: Failed to perform authorization over the entity.
         "404":
-          description: Failed due to non existing client.
+          description: A non-existent entity request.
         "409":
-          description: Specified key already exists.
+          description: Failed due to already enabled group.
         "415":
           description: Missing or invalid content type.
         "422":
@@ -296,24 +230,24 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/clients/{clientID}/disable:
+  /{domainID}/groups/{groupID}/disable:
     post:
-      operationId: disableClient
-      summary: Disables a client
+      operationId: disableGroup
+      summary: Disables a group
       description: |
-        Disables a specific client that is identified by the client ID.
+        Disables a specific group that is identifier by the group ID.
       tags:
-        - Clients
+        - Groups
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "#/components/responses/ClientRes"
+          $ref: "#/components/responses/GroupRes"
         "400":
-          description: Failed due to malformed client's ID.
+          description: Failed due to malformed query parameters.
         "401":
           description: Missing or invalid access token provided.
         "403":
@@ -321,63 +255,69 @@ paths:
         "404":
           description: A non-existent entity request.
         "409":
-          description: Failed due to already disabled client.
+          description: Failed due to already disabled group.
+        "415":
+          description: Missing or invalid content type.
         "422":
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-
-  /{domainID}/clients/{clientID}/enable:
-    post:
-      operationId: enableClient
-      summary: Enables a client
+  
+  /{domainID}/groups/{groupID}/hierarchy:
+    get:
+      operationId: listGroupHierarchy
+      summary: Lists groups hierarchy.
       description: |
-        Enables a specific client that is identified by the client ID.
+        Lists groups heirarchy up to a max level of hierarchy that can be fetched in one
+        request ( max level = 5). Result can be filtered by metadata. Groups will
+        be returned as JSON array or JSON tree. Due to performance concerns, result
+        is returned in subsets.
       tags:
-        - Clients
-      parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - Groups
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "#/components/parameters/GroupID"
+        - $ref: "#/components/parameters/Level"
+        - $ref: "#/components/parameters/Tree"
+        - $ref: "#/components/parameters/Direction"
       responses:
         "200":
-          $ref: "#/components/responses/ClientRes"
+          $ref: "#/components/responses/GroupsHierarchyPageRes"
         "400":
-          description: Failed due to malformed client's ID.
+          description: Failed due to malformed query parameters.
         "401":
           description: Missing or invalid access token provided.
         "403":
           description: Failed to perform authorization over the entity.
         "404":
-          description: A non-existent entity request.
-        "409":
-          description: Failed due to already enabled client.
+          description: Group does not exist.
         "422":
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-
-  /{domainID}/clients/{clientID}/parent:
+  
+  /{domainID}/groups/{groupID}/parent:
     post:
-      operationId: setClientParentGroup
-      summary: Sets a parent group for a client
+      operationId: setGroupParentGroup
+      summary: Sets a parent group for a group.
       description: |
-        Sets a parent group for a specific client that is identified by the client ID.
+        Sets a parent group for a specific group that is identified by the group ID.
       tags:
-        - Clients
+        - Groups
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
       requestBody:
-        $ref: "#/components/requestBodies/ClientParentGroupReq"
+        $ref: "#/components/requestBodies/GroupParentReq"
       security:
         - bearerAuth: []
       responses:
         "200":
           description: Parent group set.
         "400":
-          description: Failed due to malformed client's ID.
+          description: Failed due to malformed group's ID.
         "401":
           description: Missing or invalid access token provided.
         "403":
@@ -390,24 +330,24 @@ paths:
           $ref: "#/components/responses/ServiceError"
 
     delete:
-      operationId: removeClientParentGroup
-      summary: Removes a parent group from a client.
+      operationId: removeGroupParentGroup
+      summary: Removes a parent group from a group.
       description: |
-        Removes a parent group from a specific client that is identified by the client ID.
+        Removes a parent group from a specific group that is identified by the group ID.
       tags:
-        - Clients
+        - Groups
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
       requestBody:
-        $ref: "#/components/requestBodies/ClientParentGroupReq"
+        $ref: "#/components/requestBodies/GroupParentReq"
       security:
         - bearerAuth: []
       responses:
         "200":
           description: Parent group removed.
         "400":
-          description: Failed due to malformed client's ID.
+          description: Failed due to malformed group's ID.
         "401":
           description: Missing or invalid access token provided.
         "403":
@@ -419,53 +359,157 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/users/{userID}/clients:
-    get:
-      operationId: listUserClients
-      summary: List clients asssociated with a user.
+  /{domainID}/groups/{groupID}/children:
+    post:
+      operationId: addChildrenGroups
+      summary: Add children groups.
       description: |
-        Lists clients associated with a user identified by the user ID.
+        Adds children groups for a specific group that is identified by the group ID.
       tags:
-        - Clients
+        - Groups
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "users.yml#/components/parameters/UserID"
-        - $ref: "#/components/parameters/Limit"
-        - $ref: "#/components/parameters/Offset"
-        - $ref: "#/components/parameters/Metadata"
-        - $ref: "#/components/parameters/Status"
-        - $ref: "#/components/parameters/ClientName"
-        - $ref: "#/components/parameters/Tags"
+        - $ref: "#/components/parameters/GroupID"
+      requestBody:
+        $ref: "#/components/requestBodies/GroupChildrenReq"
       security:
         - bearerAuth: []
       responses:
-        "200":
-          $ref: "#/components/responses/ClientPageRes"
+        "204":
+          description: Children groups added successfully.
         "400":
-          description: Failed due to malformed query parameters.
+          description: Failed due to malformed JSON.
         "401":
-          description: |
-            Missing or invalid access token provided.
+          description: Missing or invalid access token provided.
         "403":
           description: Failed to perform authorization over the entity.
         "404":
           description: A non-existent entity request.
+        "409":
+          description: Failed due to using an existing identity.
+        "415":
+          description: Missing or invalid content type.
+        "422":
+          description: Database can't process request.
+        "500":
+          $ref: "#/components/responses/ServiceError"
+
+    delete:
+      operationId: removeChildrenGroups
+      summary: Remove children groups.
+      description: |
+        Removes children groups for a specific group that is identified by the group ID.
+      tags:
+        - Groups
+      parameters:
+        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "#/components/parameters/GroupID"
+      requestBody:
+        $ref: "#/components/requestBodies/GroupChildrenReq"
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Children groups removed successfully.
+        "400":
+          description: Failed due to malformed JSON.
+        "401":
+          description: Missing or invalid access token provided.
+        "403":
+          description: Failed to perform authorization over the entity.
+        "404":
+          description: A non-existent entity request.
+        "409":
+          description: Failed due to using an existing identity.
+        "415":
+          description: Missing or invalid content type.
+        "422":
+          description: Database can't process request.
+        "500":
+          $ref: "#/components/responses/ServiceError"
+
+    get:
+      operationId: listChildrenGroups
+      summary: List children of a certain group
+      description: |
+        Lists groups up to a max level of hierarchy that can be fetched in one
+        request ( max level = 5). Result can be filtered by metadata. Groups will
+        be returned as JSON array or JSON tree. Due to performance concerns, result
+        is returned in subsets.
+      tags:
+        - Groups
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "#/components/parameters/GroupID"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/StartLevel"
+        - $ref: "#/components/parameters/EndLevel"
+        - $ref: "#/components/parameters/Tree"
+        - $ref: "#/components/parameters/Metadata"
+        - $ref: "#/components/parameters/GroupName"
+      responses:
+        "200":
+          $ref: "#/components/responses/GroupPageRes"
+        "400":
+          description: Failed due to malformed query parameters.
+        "401":
+          description: Missing or invalid access token provided.
+        "403":
+          description: Failed to perform authorization over the entity.
+        "404":
+          description: Group does not exist.
         "422":
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
   
-  /{domainID}/clients/{clientID}/roles:
-    post:
-      operationId: createClientRole
-      summary: Creates a role for a client
+  /{domainID}/groups/{groupID}/children/all:
+    delete:
+      operationId: removeAllChildrenGroups
+      summary: Remove all children groups.
       description: |
-        Creates a role for a specific client that is identified by the client ID.
+        Removes all children groups for a specific group that is identified by the group ID.
+      tags:
+        - Groups
+      parameters:
+        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "#/components/parameters/GroupID"
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Children groups removed successfully.
+        "400":
+          description: Failed due to malformed JSON.
+        "401":
+          description: Missing or invalid access token provided.
+        "403":
+          description: Failed to perform authorization over the entity.
+        "404":
+          description: A non-existent entity request.
+        "409":
+          description: Failed due to using an existing identity.
+        "415":
+          description: Missing or invalid content type.
+        "422":
+          description: Database can't process request.
+        "500":
+          $ref: "#/components/responses/ServiceError"
+
+  /{domainID}/groups/{groupID}/roles:
+    post:
+      operationId: createGroupRole
+      summary: Creates a role for a group
+      description: |
+        Creates a role for a specific group that is identified by the group ID.
       tags:
         - Roles
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/CreateRoleReq"
       security:
@@ -474,7 +518,7 @@ paths:
         "201":
             $ref: "./schemas/roles.yml#/components/responses/CreateRoleRes"
         "400":
-          description: Failed due to malformed client's ID.
+          description: Failed due to malformed group's ID.
         "401":
           description: Missing or invalid access token provided.
         "403":
@@ -487,18 +531,18 @@ paths:
           $ref: "#/components/responses/ServiceError"
     
     get:
-      operationId: listClientRoles
+      operationId: listGroupRoles
       tags:
         - Roles
-      summary: Retrieves clients roles.
+      summary: Retrieves groups roles.
       description: |
-        Retrieves a list of client roles. Due to performance concerns, data
-        is retrieved in subsets. The API clients must ensure that the entire
+        Retrieves a list of group roles. Due to performance concerns, data
+        is retrieved in subsets. The API groups must ensure that the entire
         dataset is consumed either by making subsequent requests, or by
         increasing the subset size of the initial request.
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
       security:
@@ -520,17 +564,17 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/clients/{clientID}/roles/{roleName}:
+  /{domainID}/groups/{groupID}/roles/{roleName}:
     get:
-      operationId: getClientRole
+      operationId: getGroupRole
       tags:
         - Roles
-      summary: Retrieves client role.
+      summary: Retrieves group role.
       description: |
-        Retrieves a specific client role that is identified by the role name.
+        Retrieves a specific group role that is identified by the role name.
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       security:
         - bearerAuth: []
@@ -552,15 +596,15 @@ paths:
           $ref: "#/components/responses/ServiceError"
       
     put:
-      operationId: updateClientRole
-      summary: Updates client role.
+      operationId: updateGroupRole
+      summary: Updates group role.
       description: |
-        Updates a specific client role that is identified by the role name.
+        Updates a specific group role that is identified by the role name.
       tags:
         - Roles
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/UpdateRoleReq"
@@ -584,15 +628,15 @@ paths:
           $ref: "#/components/responses/ServiceError"
       
     delete:
-      operationId: deleteClientRole
-      summary: Deletes client role.
+      operationId: deleteGroupRole
+      summary: Deletes group role.
       description: |
-        Deletes a specific client role that is identified by the role name.
+        Deletes a specific group role that is identifier by the role name.
       tags:
         - Roles
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       security:
         - bearerAuth: []
@@ -613,17 +657,17 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
   
-  /{domainID}/clients/{clientID}/roles/{roleName}/actions:
+  /{domainID}/groups/{groupID}/roles/{roleName}/actions:
     post:
-      operationId: addClientRoleAction
-      summary: Adds a role action for a client role.
+      operationId: addGroupRoleAction
+      summary: Adds a role action for a group role.
       description: |
-        Adds a role action for a specific client role that is identified by the role name.
+        Adds a role action for a specific group role that is identified by the role name.
       tags:
         - Roles
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleActionsReq"
@@ -647,15 +691,15 @@ paths:
           $ref: "#/components/responses/ServiceError"
   
     get:
-      operationId: listClientRoleActions
+      operationId: listGroupRoleActions
       tags:
         - Roles
-      summary: Lists client role actions.
+      summary: Lists group role actions.
       description: |
-        Retrieves a list of client role actions. 
+        Retrieves a list of group role actions. 
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       security:
         - bearerAuth: []
@@ -676,17 +720,17 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
   
-  /{domainID}/clients/{clientID}/roles/{roleName}/actions/delete:
+  /{domainID}/groups/{groupID}/roles/{roleName}/actions/delete:
     post:
-      operationId: deleteClientRoleAction
-      summary: Deletes role actions for a client role.
+      operationId: deleteGroupRoleAction
+      summary: Deletes role actions for a group role.
       description: |
-        Deletes a role action for a specific client role that is identified by the role name.
+        Deletes a role action for a specific group role that is identified by the role name.
       tags:
         - Roles
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleActionsReq"
@@ -709,17 +753,17 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
     
-  /{domainID}/clients/{clientID}/roles/{roleName}/actions/delete-all:
+  /{domainID}/groups/{groupID}/roles/{roleName}/actions/delete-all:
     post:
-      operationId: deleteAllClientRoleActions
-      summary: Deletes all role actions for a client role.
+      operationId: deleteAllGroupRoleActions
+      summary: Deletes all role actions for a group role.
       description: |
-        Deletes all role actions for a specific client role that is identified by the role name.
+        Deletes all role actions for a specific group role that is identified by the role name.
       tags:
         - Roles
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       security:
         - bearerAuth: []
@@ -740,17 +784,17 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
   
-  /{domainID}/clients/{clientID}/roles/{roleName}/members:
+  /{domainID}/groups/{groupID}/roles/{roleName}/members:
     post:
-      operationId: addClientRoleMember
-      summary: Adds a member to a client role.
+      operationId: addGroupRoleMember
+      summary: Adds a member to a group role.
       description: |
-        Adds a member to a specific client role that is identified by the role name.
+        Adds a member to a specific group role that is identified by the role name.
       tags:
         - Roles
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleMembersReq"
@@ -774,15 +818,15 @@ paths:
           $ref: "#/components/responses/ServiceError"
     
     get:
-      operationId: listClientRoleMembers
+      operationId: listGroupRoleMembers
       tags:
         - Roles
-      summary: Lists client role members.
+      summary: Lists group role members.
       description: |
-        Retrieves a list of client role members. 
+        Retrieves a list of group role members. 
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       security:
         - bearerAuth: []
@@ -803,17 +847,17 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
     
-  /{domainID}/clients/{clientID}/roles/{roleName}/members/delete:
+  /{domainID}/groups/{groupID}/roles/{roleName}/members/delete:
     post:
-      operationId: deleteClientRoleMembers
-      summary: Deletes members from a client role.
+      operationId: deleteGroupRoleMembers
+      summary: Deletes members from a group role.
       description: |
-        Deletes a member from a specific client role that is identified by the role name.
+        Deletes a member from a specific group role that is identified by the role name.
       tags:
         - Roles
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleMembersReq"
@@ -836,17 +880,17 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
   
-  /{domainID}/clients/{clientID}/roles/{roleName}/members/delete-all:
+  /{domainID}/groups/{groupID}/roles/{roleName}/members/delete-all:
     post:
-      operationId: deleteAllClientRoleMembers
-      summary: Deletes all members from a client role.
+      operationId: deleteAllGroupRoleMembers
+      summary: Deletes all members from a group role.
       description: |
-        Deletes all members from a specific client role that is identified by the role name.
+        Deletes all members from a specific group role that is identified by the role name.
       tags:
         - Roles
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/clientID"
+        - $ref: "#/components/parameters/GroupID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       security:
         - bearerAuth: []
@@ -867,7 +911,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/clients/roles/available-actions:
+  /{domainID}/groups/roles/available-actions:
     get:
       operationId: listAvailableActions
       tags:
@@ -898,6 +942,7 @@ paths:
 
   /health:
     get:
+      operationId: health
       summary: Retrieves service health check info.
       tags:
         - Health
@@ -910,179 +955,161 @@ paths:
 
 components:
   schemas:
-    ClientReqObj:
+    GroupReqObj:
       type: object
       properties:
         name:
           type: string
-          example: clientName
-          description: Client name.
+          example: groupName
+          description: Free-form group name. Group name is unique on the given hierarchy level.
+        description:
+          type: string
+          example: long group description
+          description: Group description, free form text.
+        parent_id:
+          type: string
+          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+          description: Id of parent group, it must be existing group.
+        metadata:
+          type: object
+          example: { "domain": "example.com" }
+          description: Arbitrary, object-encoded groups's data.
+        status:
+          type: string
+          description: Group Status
+          format: string
+          example: enabled
+      required:
+        - name
+
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+          description: Unique group identifier generated by the service.
+        name:
+          type: string
+          example: groupName
+          description: Free-form group name. Group name is unique on the given hierarchy level.
+        domain_id:
+          type: string
+          format: uuid
+          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+          description: ID of the domain to which the group belongs..
+        parent_id:
+          type: string
+          format: uuid
+          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+          description: Group parent identifier.
+        description:
+          type: string
+          example: long group description
+          description: Group description, free form text.
+        metadata:
+          type: object
+          example: { "role": "general" }
+          description: Arbitrary, object-encoded groups's data.
+        path:
+          type: string
+          example: bb7edb32-2eac-4aad-aebe-ed96fe073879.bb7edb32-2eac-4aad-aebe-ed96fe073879
+          description: Hierarchy path, concatenated ids of group ancestors.
+        level:
+          type: integer
+          description: Level in hierarchy, distance from the root group.
+          format: int32
+          example: 2
+          maximum: 5
+        created_at:
+          type: string
+          format: date-time
+          example: "2019-11-26 13:31:52"
+          description: Datetime when the group was created.
+        updated_at:
+          type: string
+          format: date-time
+          example: "2019-11-26 13:31:52"
+          description: Datetime when the group was created.
+        status:
+          type: string
+          description: Group Status
+          format: string
+          example: enabled
+      xml:
+        name: group
+
+    Members:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+          description: User unique identifier.
+        first_name:
+          type: string
+          example: John
+          description: User's first name.
+        last_name:
+          type: string
+          example: Doe
+          description: User's last name.
+        email:
+          type: string
+          example: user@supermq.com
+          description: User's email address.
         tags:
           type: array
           minItems: 0
           items:
             type: string
-          example: ["tag1", "tag2"]
-          description: Client tags.
+          example: ["computations", "datasets"]
+          description: User tags.
         credentials:
           type: object
           properties:
-            identity:
+            username:
               type: string
-              example: "clientIDentity"
-              description: Client's identity will be used as its unique identifier
+              example: john_doe
+              description: User's username.
             secret:
               type: string
-              format: password
-              example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+              example: password
               minimum: 8
-              description: Free-form account secret used for acquiring auth token(s).
+              description: User secret password.
         metadata:
           type: object
-          example: { "model": "example" }
-          description: Arbitrary, object-encoded client's data.
+          example: { "role": "general" }
+          description: Arbitrary, object-encoded user's data.
         status:
           type: string
-          description: Client Status
-          format: string
-          example: enabled
-      required:
-        - credentials
-
-    ParentGroupReqObj:
-      type: object
-      properties:
-         parent_group_id:
-          type: string
-          format: uuid
-          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: Parent group unique identifier.
-      required:
-        - parent_group_id
-
-    Client:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: Client unique identifier.
-        name:
-          type: string
-          example: clientName
-          description: Client name.
-        tags:
-          type: array
-          minItems: 0
-          items:
-            type: string
-          example: ["tag1", "tag2"]
-          description: Client tags.
-        domain_id:
-          type: string
-          format: uuid
-          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: ID of the domain to which client belongs.
-        credentials:
-          type: object
-          properties:
-            identity:
-              type: string
-              example: clientIDentity
-              description: Client Identity for example email address.
-            secret:
-              type: string
-              example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-              description: Client secret password.
-        metadata:
-          type: object
-          example: { "model": "example" }
-          description: Arbitrary, object-encoded client's data.
-        status:
-          type: string
-          description: Client Status
+          description: User Status
           format: string
           example: enabled
         created_at:
           type: string
           format: date-time
           example: "2019-11-26 13:31:52"
-          description: Time when the channel was created.
+          description: Time when the group was created.
         updated_at:
           type: string
           format: date-time
           example: "2019-11-26 13:31:52"
-          description: Time when the channel was created.
+          description: Time when the group was created.
       xml:
-        name: client
+        name: members
 
-    ClientWithEmptySecret:
+    GroupsPage:
       type: object
       properties:
-        id:
-          type: string
-          format: uuid
-          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: Client unique identifier.
-        name:
-          type: string
-          example: clientName
-          description: Client name.
-        tags:
-          type: array
-          minItems: 0
-          items:
-            type: string
-          example: ["tag1", "tag2"]
-          description: Client tags.
-        domain_id:
-          type: string
-          format: uuid
-          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: ID of the domain to which client belongs.
-        credentials:
-          type: object
-          properties:
-            identity:
-              type: string
-              example: clientIDentity
-              description: Client Identity for example email address.
-            secret:
-              type: string
-              example: ""
-              description: Client secret password.
-        metadata:
-          type: object
-          example: { "model": "example" }
-          description: Arbitrary, object-encoded client's data.
-        status:
-          type: string
-          description: Client Status
-          format: string
-          example: enabled
-        created_at:
-          type: string
-          format: date-time
-          example: "2019-11-26 13:31:52"
-          description: Time when the channel was created.
-        updated_at:
-          type: string
-          format: date-time
-          example: "2019-11-26 13:31:52"
-          description: Time when the channel was created.
-      xml:
-        name: client
-
-    ClientsPage:
-      type: object
-      properties:
-        clients:
+        groups:
           type: array
           minItems: 0
           uniqueItems: true
           items:
-            $ref: "#/components/schemas/ClientWithEmptySecret"
+            $ref: "#/components/schemas/Group"
         total:
           type: integer
           example: 1
@@ -1095,46 +1122,97 @@ components:
           example: 10
           description: Maximum number of items to return in one page.
       required:
-        - clients
+        - groups
         - total
         - offset
+    
+    GroupsHierarchyPage:
+      type: object
+      properties:
+        level:
+          type: integer
+          example: 1
+          description: Level of hierarchy.
+        direction:
+          type: integer
+          example: -1
+          description: Direction of hierarchy traversal.
+        groups:
+          type: array
+          minItems: 0
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/Group"
 
-    ClientUpdate:
+    MembersPage:
+      type: object
+      properties:
+        members:
+          type: array
+          minItems: 0
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/Members"
+        total:
+          type: integer
+          example: 1
+          description: Total number of items.
+        offset:
+          type: integer
+          description: Number of items to skip during retrieval.
+        limit:
+          type: integer
+          example: 10
+          description: Maximum number of items to return in one page.
+      required:
+        - members
+        - total
+        - level
+
+    GroupUpdate:
       type: object
       properties:
         name:
           type: string
-          example: clientName
-          description: Client name.
+          example: groupName
+          description: Free-form group name. Group name is unique on the given hierarchy level.
+        description:
+          type: string
+          example: long description but not too long
+          description: Group description, free form text.
         metadata:
           type: object
           example: { "role": "general" }
-          description: Arbitrary, object-encoded client's data.
+          description: Arbitrary, object-encoded groups's data.
       required:
         - name
         - metadata
+        - description
 
-    ClientTags:
+    ParentGroupReqObj:
       type: object
       properties:
-        tags:
+         group_id:
+          type: string
+          format: uuid
+          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+          description: Parent group unique identifier.
+      required:
+        - group_id
+    
+    ChildrenGroupReqObj:
+      type: object
+      properties:
+        groups:
           type: array
-          example: ["tag1", "tag2"]
-          description: Client tags.
-          minItems: 0
-          uniqueItems: true
+          minItems: 1
           items:
             type: string
-
-    ClientSecret:
-      type: object
-      properties:
-        secret:
-          type: string
-          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-          description: New client secret.
+            format: uuid
+            example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+          description: Children group IDs.
       required:
-        - secret
+        - groups
 
     Error:
       type: object
@@ -1155,7 +1233,7 @@ components:
         version:
           type: string
           description: Service version.
-          example: 0.14.0
+          example: 0.0.1
         commit:
           type: string
           description: Service commit hash.
@@ -1163,16 +1241,24 @@ components:
         description:
           type: string
           description: Service description.
-          example: clients service
+          example: <service_name> service
         build_time:
           type: string
           description: Service build time.
           example: 1970-01-01_00:00:00
 
   parameters:
-    clientID:
-      name: clientID
-      description: Unique client identifier.
+    Referer:
+      name: Referer
+      description: Host being sent by browser.
+      in: header
+      schema:
+        type: string
+      required: true
+
+    UserID:
+      name: userID
+      description: Unique user identifier.
       in: path
       schema:
         type: string
@@ -1183,18 +1269,9 @@ components:
       required: true
       example: bb7edb32-2eac-4aad-aebe-ed96fe073879
 
-    ClientName:
-      name: name
-      description: Client's name.
-      in: query
-      schema:
-        type: string
-      required: false
-      example: "clientName"
-
     Status:
       name: status
-      description: Client account status.
+      description: User account status.
       in: query
       schema:
         type: string
@@ -1204,7 +1281,7 @@ components:
 
     Tags:
       name: tags
-      description: Client tags.
+      description: User tags.
       in: query
       schema:
         type: array
@@ -1214,6 +1291,116 @@ components:
           type: string
       required: false
       example: ["yello", "orange"]
+
+    GroupName:
+      name: name
+      description: Group's name.
+      in: query
+      schema:
+        type: string
+      required: false
+      example: "groupName"
+
+    GroupDescription:
+      name: name
+      description: Group's description.
+      in: query
+      schema:
+        type: string
+      required: false
+      example: "group description"
+
+    GroupID:
+      name: groupID
+      description: Unique group identifier.
+      in: path
+      schema:
+        type: string
+        format: uuid
+        minLength: 36
+        maxLength: 36
+        pattern: "^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+      required: true
+      example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+
+    ChannelID:
+      name: channelID
+      description: Unique channel identifier.
+      in: path
+      schema:
+        type: string
+        format: uuid
+        minLength: 36
+        maxLength: 36
+        pattern: "^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+      required: true
+      example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+
+    MemberID:
+      name: memberID
+      description: Unique member identifier.
+      in: path
+      schema:
+        type: string
+        format: uuid
+        minLength: 36
+        maxLength: 36
+        pattern: "^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+      required: true
+      example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+
+    ParentID:
+      name: parentID
+      description: Unique parent identifier for a group.
+      in: query
+      schema:
+        type: string
+        format: uuid
+      required: false
+      example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+
+    Level:
+      name: level
+      description: Level of hierarchy up to which to retrieve groups from given group id.
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 5
+      required: false
+    
+    StartLevel:
+      name: start_level
+      description: Level of hierarchy from which to start retrieving groups from given group id.
+      in: query
+      schema:
+        type: integer
+      required: false
+    
+    EndLevel:
+      name: end_level
+      description: Level of hierarchy up to which to retrieve groups from given group id.
+      in: query
+      schema:
+        type: integer
+      required: false
+
+    Direction:
+      name: direction
+      description: Direction of hierarchy traversal.
+      in: query
+      schema:
+        type: integer
+      required: false
+
+    Tree:
+      name: tree
+      description: Specify type of response, JSON array or tree.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
 
     Metadata:
       name: metadata
@@ -1248,140 +1435,145 @@ components:
       example: "0"
 
   requestBodies:
-    ClientCreateReq:
-      description: JSON-formatted document describing the new client to be registered
+    GroupCreateReq:
+      description: JSON-formatted document describing the new group to be registered
       required: true
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ClientReqObj"
+            $ref: "#/components/schemas/GroupReqObj"
 
-    ClientsCreateReq:
-      description: JSON-formatted document describing the new clients.
+    GroupUpdateReq:
+      description: JSON-formated document describing the metadata and name of group to be update
       required: true
       content:
         application/json:
           schema:
-            type: array
-            items:
-              $ref: "#/components/schemas/ClientReqObj"
+            $ref: "#/components/schemas/GroupUpdate"
 
-    ClientUpdateReq:
-      description: JSON-formated document describing the metadata and name of client to be update
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ClientUpdate"
-
-    ClientUpdateTagsReq:
-      description: JSON-formated document describing the tags of client to be update
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ClientTags"
-
-    ClientUpdateSecretReq:
-      description: Secret change data. Client can change its secret.
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ClientSecret"
-
-    ClientParentGroupReq:
-      description: JSON-formated document describing the parent group to be set to or removed from a client.
+    GroupParentReq:
+      description: JSON-formated document describing the parent group to be set to or removed from a group.
       required: true
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ParentGroupReqObj"
+    
+    GroupChildrenReq:
+      description: JSON-formated document describing the children groups to be added to a group.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ChildrenGroupReqObj"
 
   responses:
-    ClientCreateRes:
-      description: Registered new client.
+    GroupCreateRes:
+      description: Registered new group.
       headers:
         Location:
           schema:
             type: string
             format: url
-          description: Registered client relative URL in the format `clients/<client_id>`
+          description: Registered group relative URL in the format `/groups/<group_id>`
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Client"
+            $ref: "#/components/schemas/Group"
       links:
         get:
-          operationId: getClient
+          operationId: getGroup
           parameters:
-            clientID: $response.body#/id
+            groupID: $response.body#/id
+        get_children:
+          operationId: listChildren
+          parameters:
+            groupID: $response.body#/id
+        get_parent:
+          operationId: listParents
+          parameters:
+            groupID: $response.body#/id
         get_channels:
-          operationId: listChannelsConnectedToClient
+          operationId: listGroupsInChannel
           parameters:
-            clientID: $response.body#/id
+            memberID: $response.body#/id
+        get_users:
+          operationId: listGroupsByUser
+          parameters:
+            memberID: $response.body#/id
         update:
-          operationId: updateClient
+          operationId: updateGroup
           parameters:
-            clientID: $response.body#/id
-        update_tags:
-          operationId: updateClientTags
-          parameters:
-            clientID: $response.body#/id
-        update_secret:
-          operationId: updateClientSecret
-          parameters:
-            clientID: $response.body#/id
-        share:
-          operationId: shareClient
-          parameters:
-            clientID: $response.body#/id
-        unsahre:
-          operationId: unshareClient
-          parameters:
-            clientID: $response.body#/id
+            groupID: $response.body#/id
         disable:
-          operationId: disableClient
+          operationId: disableGroup
           parameters:
-            clientID: $response.body#/id
+            groupID: $response.body#/id
         enable:
-          operationId: enableClient
+          operationId: enableGroup
           parameters:
-            clientID: $response.body#/id
+            groupID: $response.body#/id
+        assign:
+          operationId: assignUser
+          parameters:
+            groupID: $response.body#/id
+        unassign:
+          operationId: unassignUser
+          parameters:
+            groupID: $response.body#/id
 
-    ClientRes:
+    GroupRes:
       description: Data retrieved.
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Client"
+            $ref: "#/components/schemas/Group"
       links:
+        get_children:
+          operationId: listChildren
+          parameters:
+            groupID: $response.body#/id
+        get_parent:
+          operationId: listParents
+          parameters:
+            groupID: $response.body#/id
         get_channels:
-          operationId: listChannelsConnectedToClient
+          operationId: listGroupsInChannel
           parameters:
-            clientID: $response.body#/id
-        share:
-          operationId: shareClient
+            memberID: $response.body#/id
+        get_users:
+          operationId: listGroupsByUser
           parameters:
-            clientID: $response.body#/id
-        unsahre:
-          operationId: unshareClient
+            memberID: $response.body#/id
+        assign:
+          operationId: assignUser
           parameters:
-            clientID: $response.body#/id
+            groupID: $response.body#/id
+        unassign:
+          operationId: unassignUser
+          parameters:
+            groupID: $response.body#/id
 
-    ClientPageRes:
+    GroupPageRes:
       description: Data retrieved.
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ClientsPage"
+            $ref: "#/components/schemas/GroupsPage"
 
-    ClientsPageRes:
-      description: Data retrieved.
+    GroupsHierarchyPageRes:
+      description: Group hierarchy retrieved.
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ClientsPage"
+            $ref: "#/components/schemas/GroupsHierarchyPage"
+
+    MembersPageRes:
+      description: Group members retrieved.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MembersPage"
 
     HealthRes:
       description: Service Health Check.
@@ -1403,7 +1595,14 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: |
-        * Client access: "Authorization: Bearer <user_access_token>"
+        * User access: "Authorization: Bearer <user_access_token>"
 
+    refreshAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        * User refresh token used to get another access token: "Authorization: Bearer <user_refresh_token>"
 security:
   - bearerAuth: []
+  - refreshAuth: []
