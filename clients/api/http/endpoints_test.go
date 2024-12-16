@@ -15,7 +15,7 @@ import (
 	"github.com/0x6flab/namegenerator"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/clients"
-	httpapi "github.com/absmach/supermq/clients/api/http"
+	clientsapi "github.com/absmach/supermq/clients/api/http"
 	"github.com/absmach/supermq/clients/mocks"
 	"github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/internal/testsutil"
@@ -93,7 +93,7 @@ func newClientsServer() (*httptest.Server, *mocks.Service, *authnmocks.Authentic
 
 	logger := smqlog.NewMock()
 	mux := chi.NewRouter()
-	httpapi.MakeHandler(svc, authn, mux, logger, "")
+	clientsapi.MakeHandler(svc, authn, mux, logger, "")
 
 	return httptest.NewServer(mux), svc, authn
 }

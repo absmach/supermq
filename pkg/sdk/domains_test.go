@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
+	httpapi "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/domains"
-	httpapi "github.com/absmach/supermq/domains/api/http"
+	domainapi "github.com/absmach/supermq/domains/api/http"
 	"github.com/absmach/supermq/domains/mocks"
-	internalapi "github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
@@ -50,7 +50,7 @@ func setupDomains() (*httptest.Server, *mocks.Service, *authnmocks.Authenticatio
 	mux := chi.NewRouter()
 	authn := new(authnmocks.Authentication)
 
-	mux = httpapi.MakeHandler(svc, authn, mux, logger, "")
+	mux = domainapi.MakeHandler(svc, authn, mux, logger, "")
 	return httptest.NewServer(mux), svc, authn
 }
 
@@ -458,8 +458,8 @@ func TestListDomians(t *testing.T) {
 			svcReq: domains.Page{
 				Offset: 0,
 				Limit:  10,
-				Order:  internalapi.DefOrder,
-				Dir:    internalapi.DefDir,
+				Order:  httpapi.DefOrder,
+				Dir:    httpapi.DefDir,
 			},
 			svcRes: domains.DomainsPage{
 				Total:   1,
@@ -484,8 +484,8 @@ func TestListDomians(t *testing.T) {
 			svcReq: domains.Page{
 				Offset: 0,
 				Limit:  10,
-				Order:  internalapi.DefOrder,
-				Dir:    internalapi.DefDir,
+				Order:  httpapi.DefOrder,
+				Dir:    httpapi.DefDir,
 			},
 			svcRes:   domains.DomainsPage{},
 			authnErr: svcerr.ErrAuthentication,
@@ -531,8 +531,8 @@ func TestListDomians(t *testing.T) {
 			svcReq: domains.Page{
 				Offset: 0,
 				Limit:  10,
-				Order:  internalapi.DefOrder,
-				Dir:    internalapi.DefDir,
+				Order:  httpapi.DefOrder,
+				Dir:    httpapi.DefDir,
 			},
 			svcRes: domains.DomainsPage{
 				Total: 1,

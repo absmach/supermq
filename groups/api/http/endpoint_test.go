@@ -13,10 +13,10 @@ import (
 	"testing"
 	"time"
 
+	httpapi "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/groups/mocks"
-	smqapi "github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
@@ -763,7 +763,7 @@ func TestListGroups(t *testing.T) {
 			desc:     "list groups with limit greater than max",
 			token:    validToken,
 			domainID: validID,
-			query:    fmt.Sprintf("limit=%d", smqapi.MaxLimitSize+1),
+			query:    fmt.Sprintf("limit=%d", httpapi.MaxLimitSize+1),
 			status:   http.StatusBadRequest,
 			err:      apiutil.ErrValidation,
 		},

@@ -34,7 +34,8 @@ linters-settings:
         alias: sdkmocks
       - pkg: github.com/absmach/supermq/api/http/util
         alias: apiutil
-
+      - pkg: github.com/absmach/supermq/api/http
+        alias: httpapi
   gocritic:
     enabled-checks:
       - importShadow

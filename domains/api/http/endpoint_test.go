@@ -15,7 +15,7 @@ import (
 
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/domains"
-	httpapi "github.com/absmach/supermq/domains/api/http"
+	domainsapi "github.com/absmach/supermq/domains/api/http"
 	"github.com/absmach/supermq/domains/mocks"
 	"github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/internal/testsutil"
@@ -93,7 +93,7 @@ func newDomainsServer() (*httptest.Server, *mocks.Service, *authnmock.Authentica
 	svc := new(mocks.Service)
 	authn := new(authnmock.Authentication)
 	mux := chi.NewMux()
-	httpapi.MakeHandler(svc, authn, mux, logger, "")
+	domainsapi.MakeHandler(svc, authn, mux, logger, "")
 	return httptest.NewServer(mux), svc, authn
 }
 
