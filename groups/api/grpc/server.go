@@ -8,11 +8,11 @@ import (
 
 	smqauth "github.com/absmach/supermq/auth"
 	groups "github.com/absmach/supermq/groups/private"
-	grpcCommonV1 "github.com/absmach/supermq/internal/grpc/common/v1"
-	grpcGroupsV1 "github.com/absmach/supermq/internal/grpc/groups/v1"
 	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	grpcCommonV1 "github.com/absmach/supermq/pkg/grpc/common/v1"
+	grpcGroupsV1 "github.com/absmach/supermq/pkg/grpc/groups/v1"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

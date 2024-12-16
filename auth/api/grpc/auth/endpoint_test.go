@@ -12,11 +12,11 @@ import (
 
 	"github.com/absmach/supermq/auth"
 	grpcapi "github.com/absmach/supermq/auth/api/grpc/auth"
-	grpcAuthV1 "github.com/absmach/supermq/internal/grpc/auth/v1"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	grpcAuthV1 "github.com/absmach/supermq/pkg/grpc/auth/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc"

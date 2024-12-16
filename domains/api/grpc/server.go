@@ -8,7 +8,7 @@ import (
 
 	grpcapi "github.com/absmach/supermq/auth/api/grpc"
 	"github.com/absmach/supermq/domains"
-	grpcDomainsV1 "github.com/absmach/supermq/internal/grpc/domains/v1"
+	grpcDomainsV1 "github.com/absmach/supermq/pkg/grpc/domains/v1"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 )
 

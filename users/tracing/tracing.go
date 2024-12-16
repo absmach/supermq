@@ -6,8 +6,8 @@ package tracing
 import (
 	"context"
 
-	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/authn"
+	grpcTokenV1 "github.com/absmach/supermq/pkg/grpc/token/v1"
 	users "github.com/absmach/supermq/users"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"

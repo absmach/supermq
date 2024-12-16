@@ -13,10 +13,10 @@ import (
 
 	smqauth "github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/internal/api"
-	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/apiutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
+	grpcTokenV1 "github.com/absmach/supermq/pkg/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/oauth2"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/users"

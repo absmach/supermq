@@ -14,8 +14,8 @@ import (
 	"log/slog"
 	"time"
 
-	grpcDomainsV1 "github.com/absmach/supermq/internal/grpc/domains/v1"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	grpcDomainsV1 "github.com/absmach/supermq/pkg/grpc/domains/v1"
 	"github.com/absmach/supermq/pkg/policies"
 )
 
