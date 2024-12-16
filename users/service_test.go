@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
+	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	smqauth "github.com/absmach/supermq/auth"
 	authmocks "github.com/absmach/supermq/auth/mocks"
-	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"

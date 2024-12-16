@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
+	grpcCommonV1 "github.com/absmach/supermq/api/grpc/common/v1"
+	grpcGroupsV1 "github.com/absmach/supermq/api/grpc/groups/v1"
 	"github.com/absmach/supermq/groups"
 	grpcapi "github.com/absmach/supermq/groups/api/grpc"
 	prmocks "github.com/absmach/supermq/groups/private/mocks"
-	grpcCommonV1 "github.com/absmach/supermq/internal/grpc/common/v1"
-	grpcGroupsV1 "github.com/absmach/supermq/internal/grpc/groups/v1"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"

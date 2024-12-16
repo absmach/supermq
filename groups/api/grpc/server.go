@@ -6,11 +6,11 @@ package grpc
 import (
 	"context"
 
+	grpcCommonV1 "github.com/absmach/supermq/api/grpc/common/v1"
+	grpcGroupsV1 "github.com/absmach/supermq/api/grpc/groups/v1"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	smqauth "github.com/absmach/supermq/auth"
 	groups "github.com/absmach/supermq/groups/private"
-	grpcCommonV1 "github.com/absmach/supermq/internal/grpc/common/v1"
-	grpcGroupsV1 "github.com/absmach/supermq/internal/grpc/groups/v1"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"

@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/absmach/supermq"
+	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	smqauth "github.com/absmach/supermq/auth"
-	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"

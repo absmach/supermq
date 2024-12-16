@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"testing"
 
+	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	smqauth "github.com/absmach/supermq/auth"
-	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"

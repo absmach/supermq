@@ -4,7 +4,7 @@
 syntax = "proto3";
 
 package auth.v1;
-option go_package = "github.com/absmach/supermq/internal/grpc/auth/v1";
+option go_package = "github.com/absmach/supermq/api/grpc/auth/v1";
 
 // AuthService is a service that provides authentication 
 // and authorization functionalities for SuperMQ services.

@@ -6,8 +6,8 @@ package authsvc
 import (
 	"context"
 
+	grpcAuthV1 "github.com/absmach/supermq/api/grpc/auth/v1"
 	"github.com/absmach/supermq/auth/api/grpc/auth"
-	grpcAuthV1 "github.com/absmach/supermq/internal/grpc/auth/v1"
 	"github.com/absmach/supermq/pkg/authz"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/absmach/supermq/pkg/grpcclient"

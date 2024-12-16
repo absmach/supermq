@@ -6,7 +6,7 @@ package events
 import (
 	"context"
 
-	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
+	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/events"
 	"github.com/absmach/supermq/pkg/events/store"

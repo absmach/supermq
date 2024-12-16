@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"testing"
 
+	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
+	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	climocks "github.com/absmach/supermq/clients/mocks"
-	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
-	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/connections"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"

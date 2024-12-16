@@ -14,7 +14,7 @@ import (
 
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/supermq"
-	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
+	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	"github.com/absmach/supermq/invitations"
 	httpapi "github.com/absmach/supermq/invitations/api"
 	"github.com/absmach/supermq/invitations/middleware"

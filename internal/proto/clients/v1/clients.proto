@@ -7,7 +7,7 @@ package clients.v1;
 
 import "common/v1/common.proto";
 
-option go_package = "github.com/absmach/supermq/internal/grpc/clients/v1";
+option go_package = "github.com/absmach/supermq/api/grpc/clients/v1";
 
 // ClientsService is a service that provides clients
 // authorization functionalities for SuperMQ services.

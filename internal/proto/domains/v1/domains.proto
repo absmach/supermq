@@ -4,7 +4,7 @@
 syntax = "proto3";
 
 package domains.v1;
-option go_package = "github.com/absmach/supermq/internal/grpc/domains/v1";
+option go_package = "github.com/absmach/supermq/api/grpc/domains/v1";
 
 
 // DomainsService is a service that provides access to

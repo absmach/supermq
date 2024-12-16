@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	grpcCommonV1 "github.com/absmach/supermq/internal/grpc/common/v1"
-	grpcGroupsV1 "github.com/absmach/supermq/internal/grpc/groups/v1"
+	grpcCommonV1 "github.com/absmach/supermq/api/grpc/common/v1"
+	grpcGroupsV1 "github.com/absmach/supermq/api/grpc/groups/v1"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/go-kit/kit/endpoint"

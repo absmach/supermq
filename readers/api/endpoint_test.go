@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
+	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
+	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	climocks "github.com/absmach/supermq/clients/mocks"
-	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
-	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"

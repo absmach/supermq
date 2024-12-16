@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
-	grpcCommonV1 "github.com/absmach/supermq/internal/grpc/common/v1"
+	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
+	grpcCommonV1 "github.com/absmach/supermq/api/grpc/common/v1"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"

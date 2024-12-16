@@ -6,9 +6,9 @@ package auth
 import (
 	"context"
 
+	grpcAuthV1 "github.com/absmach/supermq/api/grpc/auth/v1"
 	"github.com/absmach/supermq/auth"
 	grpcapi "github.com/absmach/supermq/auth/api/grpc"
-	grpcAuthV1 "github.com/absmach/supermq/internal/grpc/auth/v1"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 )
 

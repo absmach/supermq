@@ -14,6 +14,8 @@ import (
 
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/supermq"
+	grpcAuthV1 "github.com/absmach/supermq/api/grpc/auth/v1"
+	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	"github.com/absmach/supermq/auth"
 	api "github.com/absmach/supermq/auth/api"
 	authgrpcapi "github.com/absmach/supermq/auth/api/grpc/auth"
@@ -25,8 +27,6 @@ import (
 	apostgres "github.com/absmach/supermq/auth/postgres"
 	"github.com/absmach/supermq/auth/tracing"
 	boltclient "github.com/absmach/supermq/internal/clients/bolt"
-	grpcAuthV1 "github.com/absmach/supermq/internal/grpc/auth/v1"
-	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/jaeger"
 	"github.com/absmach/supermq/pkg/policies/spicedb"

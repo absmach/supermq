@@ -14,6 +14,7 @@ import (
 
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/supermq"
+	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
 	"github.com/absmach/supermq/domains"
 	domainsSvc "github.com/absmach/supermq/domains"
 	domainsgrpcapi "github.com/absmach/supermq/domains/api/grpc"
@@ -22,7 +23,6 @@ import (
 	dmw "github.com/absmach/supermq/domains/middleware"
 	dpostgres "github.com/absmach/supermq/domains/postgres"
 	dtracing "github.com/absmach/supermq/domains/tracing"
-	grpcDomainsV1 "github.com/absmach/supermq/internal/grpc/domains/v1"
 	smqlog "github.com/absmach/supermq/logger"
 	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
 	"github.com/absmach/supermq/pkg/authz"
