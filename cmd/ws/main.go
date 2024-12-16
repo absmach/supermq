@@ -212,10 +212,10 @@ func proxyWS(ctx context.Context, hostConfig, targetConfig server.Config, logger
 
 	go func() {
 		if hostConfig.CertFile != "" && hostConfig.KeyFile != "" {
-			logger.Info(fmt.Sprintf("ws-adapter service http server listening at %s:%s with TLS", hostConfig.Host, hostConfig.Port))
+			logger.Info(fmt.Sprintf("ws-adapter service HTTP server listening at %s:%s with TLS", hostConfig.Host, hostConfig.Port))
 			errCh <- wp.ListenTLS(hostConfig.CertFile, hostConfig.KeyFile)
 		} else {
-			logger.Info(fmt.Sprintf("ws-adapter service http server listening at %s:%s without TLS", hostConfig.Host, hostConfig.Port))
+			logger.Info(fmt.Sprintf("ws-adapter service HTTP server listening at %s:%s without TLS", hostConfig.Host, hostConfig.Port))
 			errCh <- wp.Listen()
 		}
 	}()

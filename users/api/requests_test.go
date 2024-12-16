@@ -511,24 +511,24 @@ func TestLoginUserReqValidate(t *testing.T) {
 		{
 			desc: "valid request with identity",
 			req: loginUserReq{
-				Identity: "example",
-				Secret:   secret,
+				Username: "example",
+				Password: secret,
 			},
 			err: nil,
 		},
 		{
 			desc: "empty identity",
 			req: loginUserReq{
-				Identity: "",
-				Secret:   secret,
+				Username: "",
+				Password: secret,
 			},
 			err: apiutil.ErrMissingIdentity,
 		},
 		{
 			desc: "empty secret",
 			req: loginUserReq{
-				Secret:   "",
-				Identity: "example",
+				Password: "",
+				Username: "example",
 			},
 			err: apiutil.ErrMissingPass,
 		},
