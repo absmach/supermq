@@ -13,12 +13,12 @@ import (
 	"strings"
 	"testing"
 
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/consumers/notifiers"
 	httpapi "github.com/absmach/supermq/consumers/notifiers/api"
 	"github.com/absmach/supermq/consumers/notifiers/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
-	"github.com/absmach/supermq/pkg/apiutil"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/stretchr/testify/assert"

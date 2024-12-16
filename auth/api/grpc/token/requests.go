@@ -4,8 +4,8 @@
 package token
 
 import (
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/auth"
-	"github.com/absmach/supermq/pkg/apiutil"
 )
 
 type issueReq struct {

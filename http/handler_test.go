@@ -11,6 +11,7 @@ import (
 
 	mghttp "github.com/absmach/mgate/pkg/http"
 	"github.com/absmach/mgate/pkg/session"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	clmocks "github.com/absmach/supermq/clients/mocks"
 	mhttp "github.com/absmach/supermq/http"
@@ -18,7 +19,6 @@ import (
 	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
-	"github.com/absmach/supermq/pkg/apiutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"

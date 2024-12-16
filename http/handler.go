@@ -15,9 +15,9 @@ import (
 
 	mgate "github.com/absmach/mgate/pkg/http"
 	"github.com/absmach/mgate/pkg/session"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
-	"github.com/absmach/supermq/pkg/apiutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"

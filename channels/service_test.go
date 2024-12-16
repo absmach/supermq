@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/0x6flab/namegenerator"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/channels"
 	"github.com/absmach/supermq/channels/mocks"
 	"github.com/absmach/supermq/clients"
@@ -19,7 +20,6 @@ import (
 	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
 	grpcCommonV1 "github.com/absmach/supermq/internal/grpc/common/v1"
 	"github.com/absmach/supermq/internal/testsutil"
-	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"

@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
+	apiutil "github.com/absmach/supermq/api/http/util"
 	authmocks "github.com/absmach/supermq/auth/mocks"
 	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/invitations"
 	"github.com/absmach/supermq/invitations/mocks"
-	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"

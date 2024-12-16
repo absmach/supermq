@@ -4,8 +4,8 @@
 package http
 
 import (
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/domains"
-	"github.com/absmach/supermq/pkg/apiutil"
 )
 
 type page struct {

@@ -6,8 +6,8 @@ package api
 import (
 	"context"
 
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/certs"
-	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/go-kit/kit/endpoint"
 )

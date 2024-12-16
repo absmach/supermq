@@ -4,7 +4,7 @@
 package api
 
 import (
-	"github.com/absmach/supermq/pkg/apiutil"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/pkg/messaging"
 )
 

@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/cli"
 	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/internal/testsutil"
-	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	sdk "github.com/absmach/supermq/pkg/sdk"

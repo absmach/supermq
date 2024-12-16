@@ -6,9 +6,9 @@ package api
 import (
 	"testing"
 
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/journal"
-	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -7,8 +7,8 @@ import (
 	"context"
 	"net/http"
 
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/auth"
-	"github.com/absmach/supermq/pkg/apiutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/go-chi/chi/v5"
 )
