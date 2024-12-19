@@ -16,6 +16,7 @@ import (
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/invitations"
 	"github.com/absmach/supermq/journal"
+	"github.com/absmach/supermq/pkg/roles"
 	sdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/absmach/supermq/users"
@@ -33,6 +34,7 @@ const (
 	invalid         = "invalid"
 	wrongID         = "wrongID"
 	defPermission   = "read_permission"
+	roleName        = "roleName"
 )
 
 var (
@@ -106,18 +108,26 @@ func convertGroup(g sdk.Group) groups.Group {
 	}
 
 	return groups.Group{
-		ID:          g.ID,
-		Domain:      g.DomainID,
-		Parent:      g.ParentID,
-		Name:        g.Name,
-		Description: g.Description,
-		Metadata:    groups.Metadata(g.Metadata),
-		Level:       g.Level,
-		Path:        g.Path,
-		Children:    convertChildren(g.Children),
-		CreatedAt:   g.CreatedAt,
-		UpdatedAt:   g.UpdatedAt,
-		Status:      status,
+		ID:                        g.ID,
+		Domain:                    g.DomainID,
+		Parent:                    g.ParentID,
+		Name:                      g.Name,
+		Description:               g.Description,
+		Metadata:                  groups.Metadata(g.Metadata),
+		Level:                     g.Level,
+		Path:                      g.Path,
+		Children:                  convertChildren(g.Children),
+		CreatedAt:                 g.CreatedAt,
+		UpdatedAt:                 g.UpdatedAt,
+		Status:                    status,
+		RoleID:                    g.RoleID,
+		RoleName:                  g.RoleName,
+		Actions:                   g.Actions,
+		AccessType:                g.AccessType,
+		AccessProviderId:          g.AccessProviderId,
+		AccessProviderRoleId:      g.AccessProviderRoleId,
+		AccessProviderRoleName:    g.AccessProviderRoleName,
+		AccessProviderRoleActions: g.AccessProviderRoleActions,
 	}
 }
 
@@ -177,10 +187,12 @@ func convertClient(c sdk.Client) clients.Client {
 		Name:        c.Name,
 		Tags:        c.Tags,
 		Domain:      c.DomainID,
+		ParentGroup: c.ParentGroup,
 		Credentials: clients.Credentials(c.Credentials),
 		Metadata:    clients.Metadata(c.Metadata),
 		CreatedAt:   c.CreatedAt,
 		UpdatedAt:   c.UpdatedAt,
+		UpdatedBy:   c.UpdatedBy,
 		Status:      status,
 	}
 }
@@ -195,13 +207,16 @@ func convertChannel(g sdk.Channel) mgchannels.Channel {
 	}
 	return mgchannels.Channel{
 		ID:          g.ID,
-		Domain:      g.DomainID,
-		ParentGroup: g.ParentGroup,
 		Name:        g.Name,
+		Tags:        g.Tags,
+		ParentGroup: g.ParentGroup,
+		Domain:      g.DomainID,
 		Metadata:    clients.Metadata(g.Metadata),
 		CreatedAt:   g.CreatedAt,
 		UpdatedAt:   g.UpdatedAt,
+		UpdatedBy:   g.UpdatedBy,
 		Status:      status,
+		Permissions: g.Permissions,
 	}
 }
 
@@ -247,6 +262,18 @@ func generateTestUser(t *testing.T) sdk.User {
 		UpdatedAt: createdAt,
 		Status:    users.EnabledStatus.String(),
 		Role:      users.UserRole.String(),
+	}
+}
+
+func convertRole(r roles.Role) sdk.Role {
+	return sdk.Role{
+		ID:        r.ID,
+		Name:      r.Name,
+		EntityID:  r.EntityID,
+		CreatedBy: r.CreatedBy,
+		CreatedAt: r.CreatedAt,
+		UpdatedBy: r.UpdatedBy,
+		UpdatedAt: r.UpdatedAt,
 	}
 }
 

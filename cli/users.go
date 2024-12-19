@@ -371,40 +371,13 @@ var cmdUsers = []cobra.Command{
 		},
 	},
 	{
-		Use:   "channels <user_id> <user_auth_token>",
-		Short: "List channels",
-		Long: "List channels of user\n" +
-			"Usage:\n" +
-			"\tsupermq-cli users channels <user_id> <user_auth_token>\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			pm := smqsdk.PageMetadata{
-				Offset: Offset,
-				Limit:  Limit,
-			}
-
-			cp, err := sdk.ListUserChannels(args[0], pm, args[1])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, cp)
-		},
-	},
-
-	{
-		Use:   "clients <user_id> <user_auth_token>",
+		Use:   "clients <user_id> <domain_id> <user_auth_token>",
 		Short: "List clients",
 		Long: "List clients of user\n" +
 			"Usage:\n" +
 			"\tsupermq-cli users clients <user_id> <user_auth_token>\n",
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
+			if len(args) != 3 {
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
@@ -414,7 +387,7 @@ var cmdUsers = []cobra.Command{
 				Limit:  Limit,
 			}
 
-			tp, err := sdk.ListUserClients(args[0], pm, args[1])
+			tp, err := sdk.ListUserClients(args[0], args[1], pm, args[2])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -423,61 +396,6 @@ var cmdUsers = []cobra.Command{
 			logJSONCmd(*cmd, tp)
 		},
 	},
-
-	{
-		Use:   "domains <user_id> <user_auth_token>",
-		Short: "List domains",
-		Long: "List user's domains\n" +
-			"Usage:\n" +
-			"\tsupermq-cli users domains <user_id> <user_auth_token>\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			pm := smqsdk.PageMetadata{
-				Offset: Offset,
-				Limit:  Limit,
-			}
-
-			dp, err := sdk.ListUserDomains(args[0], pm, args[1])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, dp)
-		},
-	},
-
-	{
-		Use:   "groups <user_id> <user_auth_token>",
-		Short: "List groups",
-		Long: "List groups of user\n" +
-			"Usage:\n" +
-			"\tsupermq-cli users groups <user_id> <user_auth_token>\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			pm := smqsdk.PageMetadata{
-				Offset: Offset,
-				Limit:  Limit,
-			}
-
-			users, err := sdk.ListUserGroups(args[0], pm, args[1])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, users)
-		},
-	},
-
 	{
 		Use:   "search <query> <user_auth_token>",
 		Short: "Search users",

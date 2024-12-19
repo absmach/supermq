@@ -21,6 +21,7 @@ import (
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/roles"
 	sdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
@@ -154,9 +155,9 @@ func TestCreateClient(t *testing.T) {
 			domainID: domainID,
 			token:    validToken,
 			createClientReq: sdk.Client{
-				Name: "test",
+				Name: valid,
 				Metadata: map[string]interface{}{
-					"test": make(chan int),
+					valid: make(chan int),
 				},
 			},
 			svcReq:   clients.Client{},
@@ -778,7 +779,7 @@ func TestUpdateClient(t *testing.T) {
 			token:    validToken,
 
 			updateClientReq: sdk.Client{
-				ID: "test",
+				ID: valid,
 				Metadata: map[string]interface{}{
 					"test": make(chan int),
 				},
@@ -930,7 +931,7 @@ func TestUpdateClientTags(t *testing.T) {
 			domainID: domainID,
 			token:    validToken,
 			updateClientReq: sdk.Client{
-				ID: "test",
+				ID: valid,
 				Metadata: map[string]interface{}{
 					"test": make(chan int),
 				},
@@ -1423,6 +1424,7 @@ func TestListUserClients(t *testing.T) {
 		token           string
 		session         smqauthn.Session
 		userID          string
+		domainID        string
 		pageMeta        sdk.PageMetadata
 		svcReq          clients.Page
 		svcRes          clients.ClientsPage
@@ -1432,13 +1434,13 @@ func TestListUserClients(t *testing.T) {
 		err             errors.SDKError
 	}{
 		{
-			desc:   "list user clients successfully",
-			token:  validToken,
-			userID: validID,
+			desc:     "list user clients successfully",
+			token:    validToken,
+			userID:   validID,
+			domainID: domainID,
 			pageMeta: sdk.PageMetadata{
-				Offset:   0,
-				Limit:    100,
-				DomainID: domainID,
+				Offset: 0,
+				Limit:  100,
 			},
 			svcReq: clients.Page{
 				Offset:     0,
@@ -1463,13 +1465,13 @@ func TestListUserClients(t *testing.T) {
 			},
 		},
 		{
-			desc:   "list user clients with an invalid token",
-			token:  invalidToken,
-			userID: validID,
+			desc:     "list user clients with an invalid token",
+			token:    invalidToken,
+			userID:   validID,
+			domainID: domainID,
 			pageMeta: sdk.PageMetadata{
-				Offset:   0,
-				Limit:    100,
-				DomainID: domainID,
+				Offset: 0,
+				Limit:  100,
 			},
 			svcReq: clients.Page{
 				Offset:     0,
@@ -1482,13 +1484,13 @@ func TestListUserClients(t *testing.T) {
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
-			desc:   "list user clients with limit greater than max",
-			token:  validToken,
-			userID: validID,
+			desc:     "list user clients with limit greater than max",
+			token:    validToken,
+			userID:   validID,
+			domainID: domainID,
 			pageMeta: sdk.PageMetadata{
-				Offset:   0,
-				Limit:    1000,
-				DomainID: domainID,
+				Offset: 0,
+				Limit:  1000,
 			},
 			svcReq:   clients.Page{},
 			svcRes:   clients.ClientsPage{},
@@ -1497,14 +1499,14 @@ func TestListUserClients(t *testing.T) {
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusBadRequest),
 		},
 		{
-			desc:   "list user clients with name size greater than max",
-			token:  validToken,
-			userID: validID,
+			desc:     "list user clients with name size greater than max",
+			token:    validToken,
+			userID:   validID,
+			domainID: domainID,
 			pageMeta: sdk.PageMetadata{
-				Offset:   0,
-				Limit:    100,
-				Name:     strings.Repeat("a", 1025),
-				DomainID: domainID,
+				Offset: 0,
+				Limit:  100,
+				Name:   strings.Repeat("a", 1025),
 			},
 			svcReq:   clients.Page{},
 			svcRes:   clients.ClientsPage{},
@@ -1513,14 +1515,14 @@ func TestListUserClients(t *testing.T) {
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrNameSize), http.StatusBadRequest),
 		},
 		{
-			desc:   "list user clients with status",
-			token:  validToken,
-			userID: validID,
+			desc:     "list user clients with status",
+			token:    validToken,
+			userID:   validID,
+			domainID: domainID,
 			pageMeta: sdk.PageMetadata{
-				Offset:   0,
-				Limit:    100,
-				Status:   clients.DisabledStatus.String(),
-				DomainID: domainID,
+				Offset: 0,
+				Limit:  100,
+				Status: clients.DisabledStatus.String(),
 			},
 			svcReq: clients.Page{
 				Offset:     0,
@@ -1547,14 +1549,14 @@ func TestListUserClients(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:   "list user clients with tags",
-			token:  validToken,
-			userID: validID,
+			desc:     "list user clients with tags",
+			token:    validToken,
+			userID:   validID,
+			domainID: domainID,
 			pageMeta: sdk.PageMetadata{
-				Offset:   0,
-				Limit:    100,
-				Tag:      "tag1",
-				DomainID: domainID,
+				Offset: 0,
+				Limit:  100,
+				Tag:    "tag1",
 			},
 			svcReq: clients.Page{
 				Offset:     0,
@@ -1581,16 +1583,16 @@ func TestListUserClients(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:   "list user clients with invalid metadata",
-			token:  validToken,
-			userID: validID,
+			desc:     "list user clients with invalid metadata",
+			token:    validToken,
+			userID:   validID,
+			domainID: domainID,
 			pageMeta: sdk.PageMetadata{
 				Offset: 0,
 				Limit:  100,
 				Metadata: map[string]interface{}{
 					"test": make(chan int),
 				},
-				DomainID: domainID,
 			},
 			svcReq:   clients.Page{},
 			svcRes:   clients.ClientsPage{},
@@ -1599,12 +1601,12 @@ func TestListUserClients(t *testing.T) {
 			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
 		},
 		{
-			desc:  "list user clients with response that can't be unmarshalled",
-			token: validToken,
+			desc:     "list user clients with response that can't be unmarshalled",
+			token:    validToken,
+			domainID: domainID,
 			pageMeta: sdk.PageMetadata{
-				Offset:   0,
-				Limit:    100,
-				DomainID: domainID,
+				Offset: 0,
+				Limit:  100,
 			},
 			svcReq: clients.Page{
 				Offset:     0,
@@ -1638,11 +1640,1793 @@ func TestListUserClients(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("ListClients", mock.Anything, tc.session, tc.userID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.ListUserClients(tc.userID, tc.pageMeta, tc.token)
+			resp, err := mgsdk.ListUserClients(tc.userID, tc.domainID, tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "ListClients", mock.Anything, tc.session, tc.userID, tc.svcReq)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestSetClientParent(t *testing.T) {
+	ts, csvc, auth := setupClients()
+	defer ts.Close()
+
+	conf := sdk.Config{
+		ClientsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+	parentID := testsutil.GenerateUUID(t)
+
+	cases := []struct {
+		desc            string
+		domainID        string
+		token           string
+		session         smqauthn.Session
+		clientID        string
+		parentID        string
+		svcErr          error
+		authenticateErr error
+		err             errors.SDKError
+	}{
+		{
+			desc:     "set client parent successfully",
+			domainID: domainID,
+			token:    validToken,
+			clientID: clientID,
+			parentID: parentID,
+			svcErr:   nil,
+			err:      nil,
+		},
+		{
+			desc:            "set client parent with invalid token",
+			domainID:        domainID,
+			token:           invalidToken,
+			clientID:        clientID,
+			parentID:        parentID,
+			authenticateErr: svcerr.ErrAuthentication,
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "set client parent with empty token",
+			domainID: domainID,
+			token:    "",
+			clientID: clientID,
+			parentID: parentID,
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "set client parent with invalid client id",
+			domainID: domainID,
+			token:    validToken,
+			clientID: wrongID,
+			parentID: parentID,
+			svcErr:   svcerr.ErrAuthorization,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "set client parent with empty client id",
+			domainID: domainID,
+			token:    validToken,
+			clientID: "",
+			parentID: parentID,
+			svcErr:   nil,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+		},
+		{
+			desc:     "set client parent with empty parent id",
+			domainID: domainID,
+			token:    validToken,
+			clientID: clientID,
+			parentID: "",
+			svcErr:   nil,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingParentGroupID), http.StatusBadRequest),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := csvc.On("SetParentGroup", mock.Anything, tc.session, tc.parentID, tc.clientID).Return(tc.svcErr)
+			err := mgsdk.SetClientParent(tc.clientID, tc.domainID, tc.parentID, tc.token)
+			assert.Equal(t, tc.err, err)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "SetParentGroup", mock.Anything, tc.session, tc.parentID, tc.clientID)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestRemoveClientParent(t *testing.T) {
+	ts, csvc, auth := setupClients()
+	defer ts.Close()
+
+	conf := sdk.Config{
+		ClientsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+	parentID := testsutil.GenerateUUID(t)
+
+	cases := []struct {
+		desc            string
+		domainID        string
+		token           string
+		session         smqauthn.Session
+		clientID        string
+		parentID        string
+		svcErr          error
+		authenticateErr error
+		err             errors.SDKError
+	}{
+		{
+			desc:     "remove client parent successfully",
+			domainID: domainID,
+			token:    validToken,
+			clientID: clientID,
+			parentID: parentID,
+			svcErr:   nil,
+			err:      nil,
+		},
+		{
+			desc:            "remove client parent with invalid token",
+			domainID:        domainID,
+			token:           invalidToken,
+			clientID:        clientID,
+			parentID:        parentID,
+			authenticateErr: svcerr.ErrAuthentication,
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "remove client parent with empty token",
+			domainID: domainID,
+			token:    "",
+			clientID: clientID,
+			parentID: parentID,
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "remove client parent with invalid client id",
+			domainID: domainID,
+			token:    validToken,
+			clientID: wrongID,
+			parentID: parentID,
+			svcErr:   svcerr.ErrAuthorization,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "remove client parent with empty client id",
+			domainID: domainID,
+			token:    validToken,
+			clientID: "",
+			parentID: parentID,
+			svcErr:   nil,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := csvc.On("RemoveParentGroup", mock.Anything, tc.session, tc.clientID).Return(tc.svcErr)
+			err := mgsdk.RemoveClientParent(tc.clientID, tc.domainID, tc.parentID, tc.token)
+			assert.Equal(t, tc.err, err)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "RemoveParentGroup", mock.Anything, tc.session, tc.clientID)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestCreateClientRole(t *testing.T) {
+	ts, csvc, auth := setupClients()
+	defer ts.Close()
+
+	conf := sdk.Config{
+		ClientsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	rReq := sdk.RoleReq{
+		RoleName:        roleName,
+		OptionalActions: []string{"create", "update"},
+		OptionalMembers: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+	}
+	userID := testsutil.GenerateUUID(t)
+	now := time.Now().UTC()
+	role := roles.Role{
+		ID:        testsutil.GenerateUUID(t),
+		Name:      rReq.RoleName,
+		EntityID:  clientID,
+		CreatedBy: userID,
+		CreatedAt: now,
+	}
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		domainID        string
+		clientID        string
+		roleReq         sdk.RoleReq
+		svcRes          roles.Role
+		svcErr          error
+		authenticateErr error
+		response        sdk.Role
+		err             errors.SDKError
+	}{
+		{
+			desc:     "create client role successfully",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleReq:  rReq,
+			svcRes:   role,
+			svcErr:   nil,
+			response: convertRole(role),
+			err:      nil,
+		},
+		{
+			desc:            "create client role with invalid token",
+			token:           invalidToken,
+			domainID:        domainID,
+			clientID:        clientID,
+			roleReq:         rReq,
+			svcRes:          roles.Role{},
+			authenticateErr: svcerr.ErrAuthentication,
+			response:        sdk.Role{},
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "create client role with empty token",
+			token:    "",
+			domainID: domainID,
+			clientID: clientID,
+			roleReq:  rReq,
+			svcRes:   roles.Role{},
+			response: sdk.Role{},
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "create client role with invalid client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: testsutil.GenerateUUID(t),
+			roleReq:  rReq,
+			svcRes:   roles.Role{},
+			svcErr:   svcerr.ErrAuthorization,
+			response: sdk.Role{},
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "create client role with empty client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: "",
+			roleReq:  rReq,
+			svcRes:   roles.Role{},
+			svcErr:   nil,
+			response: sdk.Role{},
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidIDFormat), http.StatusBadRequest),
+		},
+		{
+			desc:     "create client role with empty role name",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleReq: sdk.RoleReq{
+				RoleName:        "",
+				OptionalActions: []string{"create", "update"},
+				OptionalMembers: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+			},
+			svcRes:   roles.Role{},
+			svcErr:   nil,
+			response: sdk.Role{},
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleName), http.StatusBadRequest),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := csvc.On("AddRole", mock.Anything, tc.session, tc.clientID, tc.roleReq.RoleName, tc.roleReq.OptionalActions, tc.roleReq.OptionalMembers).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.CreateClientRole(tc.clientID, tc.domainID, tc.roleReq, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "AddRole", mock.Anything, tc.session, tc.clientID, tc.roleReq.RoleName, tc.roleReq.OptionalActions, tc.roleReq.OptionalMembers)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestListClientRoles(t *testing.T) {
+	ts, csvc, auth := setupClients()
+	defer ts.Close()
+
+	conf := sdk.Config{
+		ClientsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	role := roles.Role{
+		ID:        testsutil.GenerateUUID(t),
+		Name:      roleName,
+		EntityID:  clientID,
+		CreatedBy: testsutil.GenerateUUID(t),
+		CreatedAt: time.Now().UTC(),
+	}
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		domainID        string
+		clientID        string
+		pageMeta        sdk.PageMetadata
+		svcRes          roles.RolePage
+		svcErr          error
+		authenticateErr error
+		response        sdk.RolesPage
+		err             errors.SDKError
+	}{
+		{
+			desc:     "list client roles successfully",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			pageMeta: sdk.PageMetadata{
+				Offset: 0,
+				Limit:  10,
+			},
+			svcRes: roles.RolePage{
+				Total:  1,
+				Offset: 0,
+				Limit:  10,
+				Roles:  []roles.Role{role},
+			},
+			svcErr: nil,
+			response: sdk.RolesPage{
+				Total:  1,
+				Offset: 0,
+				Limit:  10,
+				Roles:  []sdk.Role{convertRole(role)},
+			},
+			err: nil,
+		},
+		{
+			desc:     "list client roles with invalid token",
+			token:    invalidToken,
+			domainID: domainID,
+			clientID: clientID,
+			pageMeta: sdk.PageMetadata{
+				Offset: 0,
+				Limit:  10,
+			},
+			svcRes:          roles.RolePage{},
+			authenticateErr: svcerr.ErrAuthentication,
+			response:        sdk.RolesPage{},
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "list client roles with empty token",
+			token:    "",
+			domainID: domainID,
+			clientID: clientID,
+			pageMeta: sdk.PageMetadata{
+				Offset: 0,
+				Limit:  10,
+			},
+			svcRes:   roles.RolePage{},
+			response: sdk.RolesPage{},
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "list client roles with invalid client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: testsutil.GenerateUUID(t),
+			pageMeta: sdk.PageMetadata{
+				Offset: 0,
+				Limit:  10,
+			},
+			svcRes:   roles.RolePage{},
+			svcErr:   svcerr.ErrAuthorization,
+			response: sdk.RolesPage{},
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "list client roles with empty client id",
+			token:    validToken,
+			domainID: domainID,
+			pageMeta: sdk.PageMetadata{
+				Offset: 0,
+				Limit:  10,
+			},
+			clientID: "",
+			svcRes:   roles.RolePage{},
+			svcErr:   nil,
+			response: sdk.RolesPage{},
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := csvc.On("RetrieveAllRoles", mock.Anything, tc.session, tc.clientID, tc.pageMeta.Limit, tc.pageMeta.Offset).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.ClientRoles(tc.clientID, tc.domainID, tc.pageMeta, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "RetrieveAllRoles", mock.Anything, tc.session, tc.clientID, tc.pageMeta.Limit, tc.pageMeta.Offset)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestViewClientRole(t *testing.T) {
+	ts, csvc, auth := setupClients()
+	defer ts.Close()
+
+	conf := sdk.Config{
+		ClientsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	role := roles.Role{
+		ID:        testsutil.GenerateUUID(t),
+		Name:      roleName,
+		EntityID:  clientID,
+		CreatedBy: testsutil.GenerateUUID(t),
+		CreatedAt: time.Now().UTC(),
+	}
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		domainID        string
+		clientID        string
+		roleName        string
+		svcRes          roles.Role
+		svcErr          error
+		authenticateErr error
+		response        sdk.Role
+		err             errors.SDKError
+	}{
+		{
+			desc:     "view client role successfully",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: role.Name,
+			svcRes:   role,
+			svcErr:   nil,
+			response: convertRole(role),
+			err:      nil,
+		},
+		{
+			desc:            "view client role with invalid token",
+			token:           invalidToken,
+			domainID:        domainID,
+			clientID:        clientID,
+			roleName:        role.Name,
+			svcRes:          roles.Role{},
+			authenticateErr: svcerr.ErrAuthentication,
+			response:        sdk.Role{},
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "view client role with empty token",
+			token:    "",
+			domainID: domainID,
+			clientID: clientID,
+			roleName: role.Name,
+			svcRes:   roles.Role{},
+			response: sdk.Role{},
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "view client role with invalid client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: testsutil.GenerateUUID(t),
+			roleName: role.Name,
+			svcRes:   roles.Role{},
+			svcErr:   svcerr.ErrAuthorization,
+			response: sdk.Role{},
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "view client role with empty client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: "",
+			roleName: role.Name,
+			svcRes:   roles.Role{},
+			svcErr:   nil,
+			response: sdk.Role{},
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+		},
+		{
+			desc:     "view client role with invalid role name",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: invalid,
+			svcRes:   roles.Role{},
+			svcErr:   svcerr.ErrAuthorization,
+			response: sdk.Role{},
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := csvc.On("RetrieveRole", mock.Anything, tc.session, tc.clientID, tc.roleName).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.ClientRole(tc.clientID, tc.roleName, tc.domainID, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "RetrieveRole", mock.Anything, tc.session, tc.clientID, tc.roleName)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestUpdateClientRole(t *testing.T) {
+	ts, csvc, auth := setupClients()
+	defer ts.Close()
+
+	conf := sdk.Config{
+		ClientsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	roleName := roleName
+	newRoleName := valid
+	userID := testsutil.GenerateUUID(t)
+	createdAt := time.Now().UTC().Add(-time.Hour)
+	role := roles.Role{
+		ID:        testsutil.GenerateUUID(t),
+		Name:      newRoleName,
+		EntityID:  clientID,
+		CreatedBy: userID,
+		CreatedAt: createdAt,
+		UpdatedBy: userID,
+		UpdatedAt: time.Now().UTC(),
+	}
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		domainID        string
+		clientID        string
+		roleName        string
+		newRoleName     string
+		svcRes          roles.Role
+		svcErr          error
+		authenticateErr error
+		response        sdk.Role
+		err             errors.SDKError
+	}{
+		{
+			desc:        "update client role successfully",
+			token:       validToken,
+			domainID:    domainID,
+			clientID:    clientID,
+			roleName:    roleName,
+			newRoleName: newRoleName,
+			svcRes:      role,
+			svcErr:      nil,
+			response:    convertRole(role),
+			err:         nil,
+		},
+		{
+			desc:            "update client role with invalid token",
+			token:           invalidToken,
+			domainID:        domainID,
+			clientID:        clientID,
+			roleName:        roleName,
+			newRoleName:     newRoleName,
+			svcRes:          roles.Role{},
+			authenticateErr: svcerr.ErrAuthentication,
+			response:        sdk.Role{},
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:        "update client role with empty token",
+			token:       "",
+			domainID:    domainID,
+			clientID:    clientID,
+			roleName:    roleName,
+			newRoleName: newRoleName,
+			svcRes:      roles.Role{},
+			response:    sdk.Role{},
+			err:         errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:        "update client role with invalid client id",
+			token:       validToken,
+			domainID:    domainID,
+			clientID:    testsutil.GenerateUUID(t),
+			roleName:    roleName,
+			newRoleName: newRoleName,
+			svcRes:      roles.Role{},
+			svcErr:      svcerr.ErrAuthorization,
+			response:    sdk.Role{},
+			err:         errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:        "update client role with empty client id",
+			token:       validToken,
+			domainID:    domainID,
+			clientID:    "",
+			roleName:    roleName,
+			newRoleName: newRoleName,
+			svcRes:      roles.Role{},
+			svcErr:      nil,
+			response:    sdk.Role{},
+			err:         errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := csvc.On("UpdateRoleName", mock.Anything, tc.session, tc.clientID, tc.roleName, tc.newRoleName).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.UpdateClientRole(tc.clientID, tc.roleName, tc.newRoleName, tc.domainID, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "UpdateRoleName", mock.Anything, tc.session, tc.clientID, tc.roleName, tc.newRoleName)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestDeleteClientRole(t *testing.T) {
+	ts, csvc, auth := setupClients()
+	defer ts.Close()
+
+	conf := sdk.Config{
+		ClientsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	roleName := roleName
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		domainID        string
+		clientID        string
+		roleName        string
+		svcErr          error
+		authenticateErr error
+		err             errors.SDKError
+	}{
+		{
+			desc:     "delete client role successfully",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			svcErr:   nil,
+			err:      nil,
+		},
+		{
+			desc:            "delete client role with invalid token",
+			token:           invalidToken,
+			domainID:        domainID,
+			clientID:        clientID,
+			roleName:        roleName,
+			authenticateErr: svcerr.ErrAuthentication,
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "delete client role with empty token",
+			token:    "",
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "delete client role with invalid client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: testsutil.GenerateUUID(t),
+			roleName: roleName,
+			svcErr:   svcerr.ErrAuthorization,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "delete client role with empty client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: "",
+			roleName: roleName,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+		},
+		{
+			desc:     "delete client role with invalid role name",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: invalid,
+			svcErr:   svcerr.ErrAuthorization,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := csvc.On("RemoveRole", mock.Anything, tc.session, tc.clientID, tc.roleName).Return(tc.svcErr)
+			err := mgsdk.DeleteClientRole(tc.clientID, tc.roleName, tc.domainID, tc.token)
+			assert.Equal(t, tc.err, err)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "RemoveRole", mock.Anything, tc.session, tc.clientID, tc.roleName)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestAddClientRoleActions(t *testing.T) {
+	ts, csvc, auth := setupClients()
+	defer ts.Close()
+
+	conf := sdk.Config{
+		ClientsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	roleName := roleName
+	actions := []string{"create", "update"}
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		domainID        string
+		clientID        string
+		roleName        string
+		actions         []string
+		svcRes          []string
+		svcErr          error
+		authenticateErr error
+		response        []string
+		err             errors.SDKError
+	}{
+		{
+			desc:     "add client role actions successfully",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			actions:  actions,
+			svcRes:   actions,
+			svcErr:   nil,
+			response: actions,
+			err:      nil,
+		},
+		{
+			desc:            "add client role actions with invalid token",
+			token:           invalidToken,
+			domainID:        domainID,
+			clientID:        clientID,
+			roleName:        roleName,
+			actions:         actions,
+			authenticateErr: svcerr.ErrAuthentication,
+			response:        []string{},
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "add client role actions with empty token",
+			token:    "",
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			actions:  actions,
+			response: []string{},
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "add client role actions with invalid client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: testsutil.GenerateUUID(t),
+			roleName: roleName,
+			actions:  actions,
+			svcErr:   svcerr.ErrAuthorization,
+			response: []string{},
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "add client role actions with empty client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: "",
+			roleName: roleName,
+			actions:  actions,
+			response: []string{},
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+		},
+		{
+			desc:     "add client role actions with invalid role name",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: invalid,
+			actions:  actions,
+			svcErr:   svcerr.ErrAuthorization,
+			response: []string{},
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "add client role actions with empty actions",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			actions:  []string{},
+			svcErr:   nil,
+			response: []string{},
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPolicyEntityType), http.StatusBadRequest),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := csvc.On("RoleAddActions", mock.Anything, tc.session, tc.clientID, tc.roleName, tc.actions).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.AddClientRoleActions(tc.clientID, tc.roleName, tc.domainID, tc.actions, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "RoleAddActions", mock.Anything, tc.session, tc.clientID, tc.roleName, tc.actions)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestListClientRoleActions(t *testing.T) {
+	ts, csvc, auth := setupClients()
+	defer ts.Close()
+
+	conf := sdk.Config{
+		ClientsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	roleName := roleName
+	actions := []string{"create", "update"}
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		domainID        string
+		clientID        string
+		roleName        string
+		svcRes          []string
+		svcErr          error
+		authenticateErr error
+		response        []string
+		err             errors.SDKError
+	}{
+		{
+			desc:     "list client role actions successfully",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			svcRes:   actions,
+			svcErr:   nil,
+			response: actions,
+			err:      nil,
+		},
+		{
+			desc:            "list client role actions with invalid token",
+			token:           invalidToken,
+			domainID:        domainID,
+			clientID:        clientID,
+			roleName:        roleName,
+			authenticateErr: svcerr.ErrAuthentication,
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "list client role actions with empty token",
+			token:    "",
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "list client role actions with invalid client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: testsutil.GenerateUUID(t),
+			roleName: roleName,
+			svcErr:   svcerr.ErrAuthorization,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "list client role actions with empty client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: "",
+			roleName: roleName,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+		},
+		{
+			desc:     "list client role actions with invalid role name",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: invalid,
+			svcErr:   svcerr.ErrAuthorization,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "list client role actions with empty role name",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: "",
+			svcErr:   nil,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleName), http.StatusBadRequest),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := csvc.On("RoleListActions", mock.Anything, tc.session, tc.clientID, tc.roleName).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.ClientRoleActions(tc.clientID, tc.roleName, tc.domainID, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "RoleListActions", mock.Anything, tc.session, tc.clientID, tc.roleName)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestRemoveClientRoleActions(t *testing.T) {
+	ts, csvc, auth := setupClients()
+	defer ts.Close()
+
+	conf := sdk.Config{
+		ClientsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	roleName := roleName
+	actions := []string{"create", "update"}
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		domainID        string
+		clientID        string
+		roleName        string
+		actions         []string
+		svcErr          error
+		authenticateErr error
+		err             errors.SDKError
+	}{
+		{
+			desc:     "remove client role actions successfully",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			actions:  actions,
+			svcErr:   nil,
+			err:      nil,
+		},
+		{
+			desc:            "remove client role actions with invalid token",
+			token:           invalidToken,
+			domainID:        domainID,
+			clientID:        clientID,
+			roleName:        roleName,
+			actions:         actions,
+			authenticateErr: svcerr.ErrAuthentication,
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "remove client role actions with empty token",
+			token:    "",
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			actions:  actions,
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "remove client role actions with invalid client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: testsutil.GenerateUUID(t),
+			roleName: roleName,
+			actions:  actions,
+			svcErr:   svcerr.ErrAuthorization,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "remove client role actions with empty client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: "",
+			roleName: roleName,
+			actions:  actions,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+		},
+		{
+			desc:     "remove client role actions with invalid role name",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: invalid,
+			actions:  actions,
+			svcErr:   svcerr.ErrAuthorization,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "remove client role actions with empty actions",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			actions:  []string{},
+			svcErr:   nil,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPolicyEntityType), http.StatusBadRequest),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := csvc.On("RoleRemoveActions", mock.Anything, tc.session, tc.clientID, tc.roleName, tc.actions).Return(tc.svcErr)
+			err := mgsdk.RemoveClientRoleActions(tc.clientID, tc.roleName, tc.domainID, tc.actions, tc.token)
+			assert.Equal(t, tc.err, err)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveActions", mock.Anything, tc.session, tc.clientID, tc.roleName, tc.actions)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestRemoveAllClientRoleActions(t *testing.T) {
+	ts, csvc, auth := setupClients()
+	defer ts.Close()
+
+	conf := sdk.Config{
+		ClientsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	roleName := roleName
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		domainID        string
+		clientID        string
+		roleName        string
+		svcErr          error
+		authenticateErr error
+		err             errors.SDKError
+	}{
+		{
+			desc:     "remove all client role actions successfully",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			svcErr:   nil,
+			err:      nil,
+		},
+		{
+			desc:            "remove all client role actions with invalid token",
+			token:           invalidToken,
+			domainID:        domainID,
+			clientID:        clientID,
+			roleName:        roleName,
+			authenticateErr: svcerr.ErrAuthentication,
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "remove all client role actions with empty token",
+			token:    "",
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "remove all client role actions with invalid client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: testsutil.GenerateUUID(t),
+			roleName: roleName,
+			svcErr:   svcerr.ErrAuthorization,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "remove all client role actions with empty client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: "",
+			roleName: roleName,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+		},
+		{
+			desc:     "remove all client role actions with invalid role name",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: invalid,
+			svcErr:   svcerr.ErrAuthorization,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "remove all client role actions with empty role name",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: "",
+			svcErr:   nil,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleName), http.StatusBadRequest),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := csvc.On("RoleRemoveAllActions", mock.Anything, tc.session, tc.clientID, tc.roleName).Return(tc.svcErr)
+			err := mgsdk.RemoveAllClientRoleActions(tc.clientID, tc.roleName, tc.domainID, tc.token)
+			assert.Equal(t, tc.err, err)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveAllActions", mock.Anything, tc.session, tc.clientID, tc.roleName)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestAddClientRoleMembers(t *testing.T) {
+	ts, csvc, auth := setupClients()
+	defer ts.Close()
+
+	conf := sdk.Config{
+		ClientsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	roleName := roleName
+	members := []string{"user1", "user2"}
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		domainID        string
+		clientID        string
+		roleName        string
+		members         []string
+		svcRes          []string
+		svcErr          error
+		authenticateErr error
+		response        []string
+		err             errors.SDKError
+	}{
+		{
+			desc:     "add client role members successfully",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			members:  members,
+			svcRes:   members,
+			svcErr:   nil,
+			response: members,
+			err:      nil,
+		},
+		{
+			desc:            "add client role members with invalid token",
+			token:           invalidToken,
+			domainID:        domainID,
+			clientID:        clientID,
+			roleName:        roleName,
+			members:         members,
+			authenticateErr: svcerr.ErrAuthentication,
+			response:        []string{},
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "add client role members with empty token",
+			token:    "",
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			members:  members,
+			response: []string{},
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "add client role members with invalid client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: testsutil.GenerateUUID(t),
+			roleName: roleName,
+			members:  members,
+			svcErr:   svcerr.ErrAuthorization,
+			response: []string{},
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "add client role members with empty client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: "",
+			roleName: roleName,
+			members:  members,
+			response: []string{},
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+		},
+		{
+			desc:     "add client role members with invalid role name",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: invalid,
+			members:  members,
+			svcErr:   svcerr.ErrAuthorization,
+			response: []string{},
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "add client role members with empty members",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			members:  []string{},
+			svcErr:   nil,
+			response: []string{},
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleMembers), http.StatusBadRequest),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := csvc.On("RoleAddMembers", mock.Anything, tc.session, tc.clientID, tc.roleName, tc.members).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.AddClientRoleMembers(tc.clientID, tc.roleName, tc.domainID, tc.members, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "RoleAddMembers", mock.Anything, tc.session, tc.clientID, tc.roleName, tc.members)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestListClientRoleMembers(t *testing.T) {
+	ts, csvc, auth := setupClients()
+	defer ts.Close()
+
+	conf := sdk.Config{
+		ClientsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	roleName := roleName
+	members := []string{"user1", "user2"}
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		domainID        string
+		clientID        string
+		roleName        string
+		pageMeta        sdk.PageMetadata
+		svcRes          roles.MembersPage
+		svcErr          error
+		authenticateErr error
+		response        sdk.RoleMembersPage
+		err             errors.SDKError
+	}{
+		{
+			desc:     "list client role members successfully",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			pageMeta: sdk.PageMetadata{
+				Offset: 0,
+				Limit:  5,
+			},
+			roleName: roleName,
+			svcRes: roles.MembersPage{
+				Total:   2,
+				Offset:  0,
+				Limit:   5,
+				Members: members,
+			},
+			svcErr: nil,
+			response: sdk.RoleMembersPage{
+				Total:   2,
+				Offset:  0,
+				Limit:   5,
+				Members: members,
+			},
+			err: nil,
+		},
+		{
+			desc:     "list client role members with invalid token",
+			token:    invalidToken,
+			domainID: domainID,
+			clientID: clientID,
+			pageMeta: sdk.PageMetadata{
+				Offset: 0,
+				Limit:  5,
+			},
+			roleName:        roleName,
+			authenticateErr: svcerr.ErrAuthentication,
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "list client role members with empty token",
+			token:    "",
+			domainID: domainID,
+			clientID: clientID,
+			pageMeta: sdk.PageMetadata{
+				Offset: 0,
+				Limit:  5,
+			},
+			roleName: roleName,
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "list client role members with invalid client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: testsutil.GenerateUUID(t),
+			pageMeta: sdk.PageMetadata{
+				Offset: 0,
+				Limit:  5,
+			},
+			roleName: roleName,
+			svcErr:   svcerr.ErrAuthorization,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "list client role members with empty client id",
+			token:    validToken,
+			domainID: domainID,
+			pageMeta: sdk.PageMetadata{
+				Offset: 0,
+				Limit:  5,
+			},
+			clientID: "",
+			roleName: roleName,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+		},
+		{
+			desc:     "list client role members with invalid role name",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			pageMeta: sdk.PageMetadata{
+				Offset: 0,
+				Limit:  5,
+			},
+			roleName: invalid,
+			svcErr:   svcerr.ErrAuthorization,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "list client role members with empty role name",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			pageMeta: sdk.PageMetadata{
+				Offset: 0,
+				Limit:  5,
+			},
+			roleName: "",
+			svcErr:   nil,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleName), http.StatusBadRequest),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := csvc.On("RoleListMembers", mock.Anything, tc.session, tc.clientID, tc.roleName, tc.pageMeta.Limit, tc.pageMeta.Offset).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.ClientRoleMembers(tc.clientID, tc.roleName, tc.domainID, tc.pageMeta, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "RoleListMembers", mock.Anything, tc.session, tc.clientID, tc.roleName, tc.pageMeta.Limit, tc.pageMeta.Offset)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestRemoveClientRoleMembers(t *testing.T) {
+	ts, csvc, auth := setupClients()
+	defer ts.Close()
+
+	conf := sdk.Config{
+		ClientsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	roleName := roleName
+	members := []string{"user1", "user2"}
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		domainID        string
+		clientID        string
+		roleName        string
+		members         []string
+		svcErr          error
+		authenticateErr error
+		err             errors.SDKError
+	}{
+		{
+			desc:     "remove client role members successfully",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			members:  members,
+			svcErr:   nil,
+			err:      nil,
+		},
+		{
+			desc:            "remove client role members with invalid token",
+			token:           invalidToken,
+			domainID:        domainID,
+			clientID:        clientID,
+			roleName:        roleName,
+			members:         members,
+			authenticateErr: svcerr.ErrAuthentication,
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "remove client role members with empty token",
+			token:    "",
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			members:  members,
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "remove client role members with invalid client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: testsutil.GenerateUUID(t),
+			roleName: roleName,
+			members:  members,
+			svcErr:   svcerr.ErrAuthorization,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "remove client role members with empty client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: "",
+			roleName: roleName,
+			members:  members,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+		},
+		{
+			desc:     "remove client role members with invalid role name",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: invalid,
+			members:  members,
+			svcErr:   svcerr.ErrAuthorization,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "remove client role members with empty members",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			members:  []string{},
+			svcErr:   nil,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleMembers), http.StatusBadRequest),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := csvc.On("RoleRemoveMembers", mock.Anything, tc.session, tc.clientID, tc.roleName, tc.members).Return(tc.svcErr)
+			err := mgsdk.RemoveClientRoleMembers(tc.clientID, tc.roleName, tc.domainID, tc.members, tc.token)
+			assert.Equal(t, tc.err, err)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveMembers", mock.Anything, tc.session, tc.clientID, tc.roleName, tc.members)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestRemoveAllClientRoleMembers(t *testing.T) {
+	ts, csvc, auth := setupClients()
+	defer ts.Close()
+
+	conf := sdk.Config{
+		ClientsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	roleName := roleName
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		domainID        string
+		clientID        string
+		roleName        string
+		svcErr          error
+		authenticateErr error
+		err             errors.SDKError
+	}{
+		{
+			desc:     "remove all client role members successfully",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			svcErr:   nil,
+			err:      nil,
+		},
+		{
+			desc:            "remove all client role members with invalid token",
+			token:           invalidToken,
+			domainID:        domainID,
+			clientID:        clientID,
+			roleName:        roleName,
+			authenticateErr: svcerr.ErrAuthentication,
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "remove all client role members with empty token",
+			token:    "",
+			domainID: domainID,
+			clientID: clientID,
+			roleName: roleName,
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "remove all client role members with invalid client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: testsutil.GenerateUUID(t),
+			roleName: roleName,
+			svcErr:   svcerr.ErrAuthorization,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "remove all client role members with empty client id",
+			token:    validToken,
+			domainID: domainID,
+			clientID: "",
+			roleName: roleName,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+		},
+		{
+			desc:     "remove all client role members with invalid role name",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: invalid,
+			svcErr:   svcerr.ErrAuthorization,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:     "remove all client role members with empty role name",
+			token:    validToken,
+			domainID: domainID,
+			clientID: clientID,
+			roleName: "",
+			svcErr:   nil,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleName), http.StatusBadRequest),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := csvc.On("RoleRemoveAllMembers", mock.Anything, tc.session, tc.clientID, tc.roleName).Return(tc.svcErr)
+			err := mgsdk.RemoveAllClientRoleMembers(tc.clientID, tc.roleName, tc.domainID, tc.token)
+			assert.Equal(t, tc.err, err)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveAllMembers", mock.Anything, tc.session, tc.clientID, tc.roleName)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestListAvailableClientRoleActions(t *testing.T) {
+	ts, csvc, auth := setupClients()
+	defer ts.Close()
+
+	conf := sdk.Config{
+		ClientsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+	actions := []string{"create", "update"}
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		domainID        string
+		svcRes          []string
+		svcErr          error
+		authenticateErr error
+		response        []string
+		err             errors.SDKError
+	}{
+		{
+			desc:     "list available role actions successfully",
+			token:    validToken,
+			domainID: domainID,
+			svcRes:   actions,
+			svcErr:   nil,
+			response: actions,
+			err:      nil,
+		},
+		{
+			desc:            "list available role actions with invalid token",
+			token:           invalidToken,
+			domainID:        domainID,
+			authenticateErr: svcerr.ErrAuthentication,
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "list available role actions with empty token",
+			token:    "",
+			domainID: domainID,
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "list available role actions with empty domain id",
+			token:    validToken,
+			domainID: "",
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingDomainID, http.StatusBadRequest),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := csvc.On("ListAvailableActions", mock.Anything, tc.session).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.AvailableClientRoleActions(tc.domainID, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "ListAvailableActions", mock.Anything, tc.session)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()

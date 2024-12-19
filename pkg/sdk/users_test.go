@@ -31,8 +31,9 @@ import (
 )
 
 var (
-	id       = generateUUID(&testing.T{})
-	domainID = "c717fa97-ffd9-40cb-8cf9-7c2859059395"
+	id                   = generateUUID(&testing.T{})
+	domainID             = "c717fa97-ffd9-40cb-8cf9-7c2859059395"
+	membershipPermission = "membership"
 )
 
 func setupUsers() (*httptest.Server, *umocks.Service, *authnmocks.Authentication) {
@@ -2484,7 +2485,7 @@ func TestListMembers(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("ListMembers", mock.Anything, tc.session, "groups", tc.groupID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.Members(tc.groupID, tc.pageMeta, tc.token)
+			resp, err := mgsdk.Members(tc.groupID, domainID, tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2562,6 +2563,483 @@ func TestDeleteUser(t *testing.T) {
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "Delete", mock.Anything, tc.session, tc.userID)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestListClientUsers(t *testing.T) {
+	ts, svc, auth := setupUsers()
+	defer ts.Close()
+
+	clientUser := generateTestUser(t)
+	conf := sdk.Config{
+		UsersURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		clientID        string
+		pageMeta        sdk.PageMetadata
+		svcReq          users.Page
+		svcRes          users.MembersPage
+		svcErr          error
+		authenticateErr error
+		response        sdk.UsersPage
+		err             errors.SDKError
+	}{
+		{
+			desc:     "list client users successfully",
+			token:    validToken,
+			clientID: validID,
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+			},
+			svcReq: users.Page{
+				Offset:     0,
+				Limit:      10,
+				Permission: defPermission,
+			},
+			svcRes: users.MembersPage{
+				Page: users.Page{
+					Total: 1,
+				},
+				Members: []users.User{convertUser(clientUser)},
+			},
+			svcErr: nil,
+			response: sdk.UsersPage{
+				PageRes: sdk.PageRes{
+					Total: 1,
+				},
+				Users: []sdk.User{clientUser},
+			},
+		},
+		{
+			desc:     "list client users with invalid token",
+			token:    invalidToken,
+			clientID: validID,
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+			},
+			svcReq: users.Page{
+				Offset:     0,
+				Limit:      10,
+				Permission: defPermission,
+			},
+			authenticateErr: svcerr.ErrAuthentication,
+			response:        sdk.UsersPage{},
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:     "list client users with empty token",
+			token:    "",
+			clientID: validID,
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+			},
+			svcReq:   users.Page{},
+			svcErr:   nil,
+			response: sdk.UsersPage{},
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "list client users with invalid client id",
+			token:    validToken,
+			clientID: wrongID,
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+			},
+			svcReq: users.Page{
+				Offset:     0,
+				Limit:      10,
+				Permission: defPermission,
+			},
+			svcErr:   svcerr.ErrViewEntity,
+			response: sdk.UsersPage{},
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
+		},
+		{
+			desc:     "list clients users with request that cannot be marshalled",
+			token:    validToken,
+			clientID: validID,
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+				Metadata: map[string]interface{}{
+					"test": make(chan int),
+				},
+			},
+			err: errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+		},
+		{
+			desc:     "list clients users with response that cannot be unmarshalled",
+			token:    validToken,
+			clientID: validID,
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+			},
+			svcReq: users.Page{
+				Offset:     0,
+				Limit:      10,
+				Permission: defPermission,
+			},
+			svcRes: users.MembersPage{
+				Page: users.Page{
+					Total: 1,
+				},
+				Members: []users.User{{
+					ID:        clientUser.ID,
+					FirstName: clientUser.FirstName,
+					Metadata: map[string]interface{}{
+						"key": make(chan int),
+					},
+				}},
+			},
+			svcErr:   nil,
+			response: sdk.UsersPage{},
+			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := svc.On("ListMembers", mock.Anything, tc.session, "clients", tc.clientID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.ListClientUsers(tc.clientID, domainID, tc.pageMeta, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "ListMembers", mock.Anything, tc.session, "clients", tc.clientID, tc.svcReq)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestListGroupUsers(t *testing.T) {
+	ts, svc, auth := setupUsers()
+	defer ts.Close()
+
+	groupUser := generateTestUser(t)
+	conf := sdk.Config{
+		UsersURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		groupID         string
+		pageMeta        sdk.PageMetadata
+		svcReq          users.Page
+		svcRes          users.MembersPage
+		svcErr          error
+		authenticateErr error
+		response        sdk.UsersPage
+		err             errors.SDKError
+	}{
+		{
+			desc:    "list client users successfully",
+			token:   validToken,
+			groupID: validID,
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+			},
+			svcReq: users.Page{
+				Offset:     0,
+				Limit:      10,
+				Permission: defPermission,
+			},
+			svcRes: users.MembersPage{
+				Page: users.Page{
+					Total: 1,
+				},
+				Members: []users.User{convertUser(groupUser)},
+			},
+			svcErr: nil,
+			response: sdk.UsersPage{
+				PageRes: sdk.PageRes{
+					Total: 1,
+				},
+				Users: []sdk.User{groupUser},
+			},
+		},
+		{
+			desc:    "list client users with invalid token",
+			token:   invalidToken,
+			groupID: validID,
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+			},
+			svcReq: users.Page{
+				Offset:     0,
+				Limit:      10,
+				Permission: defPermission,
+			},
+			authenticateErr: svcerr.ErrAuthentication,
+			response:        sdk.UsersPage{},
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:    "list client users with empty token",
+			token:   "",
+			groupID: validID,
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+			},
+			svcReq:   users.Page{},
+			svcErr:   nil,
+			response: sdk.UsersPage{},
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:    "list client users with invalid client id",
+			token:   validToken,
+			groupID: wrongID,
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+			},
+			svcReq: users.Page{
+				Offset:     0,
+				Limit:      10,
+				Permission: defPermission,
+			},
+			svcErr:   svcerr.ErrViewEntity,
+			response: sdk.UsersPage{},
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
+		},
+		{
+			desc:    "list clients users with request that cannot be marshalled",
+			token:   validToken,
+			groupID: validID,
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+				Metadata: map[string]interface{}{
+					"test": make(chan int),
+				},
+			},
+			err: errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+		},
+		{
+			desc:    "list clients users with response that cannot be unmarshalled",
+			token:   validToken,
+			groupID: validID,
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+			},
+			svcReq: users.Page{
+				Offset:     0,
+				Limit:      10,
+				Permission: defPermission,
+			},
+			svcRes: users.MembersPage{
+				Page: users.Page{
+					Total: 1,
+				},
+				Members: []users.User{{
+					ID:        groupUser.ID,
+					FirstName: groupUser.FirstName,
+					Metadata: map[string]interface{}{
+						"key": make(chan int),
+					},
+				}},
+			},
+			svcErr:   nil,
+			response: sdk.UsersPage{},
+			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := svc.On("ListMembers", mock.Anything, tc.session, "groups", tc.groupID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.ListChannelUsers(tc.groupID, domainID, tc.pageMeta, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "ListMembers", mock.Anything, tc.session, "groups", tc.groupID, tc.svcReq)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestListDomainUser(t *testing.T) {
+	ts, svc, auth := setupUsers()
+	defer ts.Close()
+
+	user := generateTestUser(t)
+	conf := sdk.Config{
+		UsersURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	cases := []struct {
+		desc            string
+		token           string
+		session         smqauthn.Session
+		pageMeta        sdk.PageMetadata
+		svcReq          users.Page
+		svcRes          users.MembersPage
+		svcErr          error
+		authenticateErr error
+		response        sdk.UsersPage
+		err             errors.SDKError
+	}{
+		{
+			desc:  "list domain users successfully",
+			token: validToken,
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+			},
+			svcReq: users.Page{
+				Offset:     0,
+				Limit:      10,
+				Permission: membershipPermission,
+			},
+			svcRes: users.MembersPage{
+				Page: users.Page{
+					Total: 1,
+				},
+				Members: []users.User{convertUser(user)},
+			},
+			svcErr: nil,
+			response: sdk.UsersPage{
+				PageRes: sdk.PageRes{
+					Total: 1,
+				},
+				Users: []sdk.User{user},
+			},
+		},
+		{
+			desc:  "list domain users with invalid token",
+			token: invalidToken,
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+			},
+			svcReq: users.Page{
+				Offset:     0,
+				Limit:      10,
+				Permission: membershipPermission,
+			},
+			authenticateErr: svcerr.ErrAuthentication,
+			response:        sdk.UsersPage{},
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+		},
+		{
+			desc:  "list domain users with empty token",
+			token: "",
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+			},
+			svcReq:   users.Page{},
+			svcErr:   nil,
+			response: sdk.UsersPage{},
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:  "list domain users with request that cannot be marshalled",
+			token: validToken,
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+				Metadata: map[string]interface{}{
+					"test": make(chan int),
+				},
+			},
+			err: errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+		},
+		{
+			desc:  "list domain users with response that cannot be unmarshalled",
+			token: validToken,
+			pageMeta: sdk.PageMetadata{
+				Offset:   0,
+				Limit:    10,
+				DomainID: domainID,
+			},
+			svcReq: users.Page{
+				Offset:     0,
+				Limit:      10,
+				Permission: membershipPermission,
+			},
+			svcRes: users.MembersPage{
+				Page: users.Page{
+					Total: 1,
+				},
+				Members: []users.User{{
+					ID:        user.ID,
+					FirstName: user.FirstName,
+					Metadata: map[string]interface{}{
+						"key": make(chan int),
+					},
+				}},
+			},
+			svcErr:   nil,
+			response: sdk.UsersPage{},
+			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := svc.On("ListMembers", mock.Anything, tc.session, "domains", domainID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.ListDomainUsers(domainID, tc.pageMeta, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "ListMembers", mock.Anything, tc.session, "domains", domainID, tc.svcReq)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()

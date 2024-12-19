@@ -198,54 +198,6 @@ var cmdClients = []cobra.Command{
 		},
 	},
 	{
-		Use:   "share <client_id> <user_id> <relation> <domain_id> <user_auth_token>",
-		Short: "Share client with a user",
-		Long: "Share client with a user\n" +
-			"Usage:\n" +
-			"\tsupermq-cli clients share <client_id> <user_id> <relation> $DOMAINID $USERTOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 5 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			req := smqsdk.UsersRelationRequest{
-				Relation: args[2],
-				UserIDs:  []string{args[1]},
-			}
-			err := sdk.ShareClient(args[0], req, args[3], args[4])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logOKCmd(*cmd)
-		},
-	},
-	{
-		Use:   "unshare <client_id> <user_id> <relation> <domain_id> <user_auth_token>",
-		Short: "Unshare client with a user",
-		Long: "Unshare client with a user\n" +
-			"Usage:\n" +
-			"\tsupermq-cli clients share  <client_id> <user_id> <relation> $DOMAINID $USERTOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 5 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			req := smqsdk.UsersRelationRequest{
-				Relation: args[2],
-				UserIDs:  []string{args[1]},
-			}
-			err := sdk.UnshareClient(args[0], req, args[3], args[4])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logOKCmd(*cmd)
-		},
-	},
-	{
 		Use:   "connect <client_id> <channel_id> <domain_id> <user_auth_token>",
 		Short: "Connect client",
 		Long: "Connect client to the channel\n" +
@@ -294,30 +246,6 @@ var cmdClients = []cobra.Command{
 		},
 	},
 	{
-		Use:   "connections <client_id> <domain_id> <user_auth_token>",
-		Short: "Connected list",
-		Long: "List of Channels connected to Client\n" +
-			"Usage:\n" +
-			"\tsupermq-cli connections <client_id> $DOMAINID $USERTOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			pm := smqsdk.PageMetadata{
-				Offset: Offset,
-				Limit:  Limit,
-			}
-			cl, err := sdk.ChannelsByClient(args[0], pm, args[1], args[2])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, cl)
-		},
-	},
-	{
 		Use:   "users <client_id> <domain_id> <user_auth_token>",
 		Short: "List users",
 		Long: "List users of a client\n" +
@@ -332,7 +260,7 @@ var cmdClients = []cobra.Command{
 				Offset: Offset,
 				Limit:  Limit,
 			}
-			ul, err := sdk.ListClientUsers(args[0], pm, args[1], args[2])
+			ul, err := sdk.ListClientUsers(args[0], args[1], pm, args[2])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return

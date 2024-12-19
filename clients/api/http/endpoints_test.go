@@ -1555,7 +1555,7 @@ func TestSetClientParentGroupEndpoint(t *testing.T) {
 			id:          validID,
 			data:        fmt.Sprintf(`{"parent_group_id":"%s"}`, validID),
 			contentType: contentType,
-			status:      http.StatusAccepted,
+			status:      http.StatusOK,
 			err:         nil,
 		},
 		{

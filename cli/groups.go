@@ -65,84 +65,6 @@ var cmdGroups = []cobra.Command{
 		},
 	},
 	{
-		Use:   "get [all | children <group_id> | parents <group_id> | members <group_id> | <group_id>] <domain_id> <user_auth_token>",
-		Short: "Get group",
-		Long: "Get all users groups, group children or group by id.\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups get all $DOMAINID $USERTOKEN - lists all groups\n" +
-			"\tsupermq-cli groups get children <group_id> $DOMAINID $USERTOKEN - lists all children groups of <group_id>\n" +
-			"\tsupermq-cli groups get parents <group_id> $DOMAINID $USERTOKEN - lists all parent groups of <group_id>\n" +
-			"\tsupermq-cli groups get <group_id> $DOMAINID $USERTOKEN - shows group with provided group ID\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) < 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			if args[0] == all {
-				if len(args) > 3 {
-					logUsageCmd(*cmd, cmd.Use)
-					return
-				}
-				pm := smqsdk.PageMetadata{
-					Offset: Offset,
-					Limit:  Limit,
-				}
-				l, err := sdk.Groups(pm, args[1], args[2])
-				if err != nil {
-					logErrorCmd(*cmd, err)
-					return
-				}
-				logJSONCmd(*cmd, l)
-				return
-			}
-			if args[0] == "children" {
-				if len(args) > 4 {
-					logUsageCmd(*cmd, cmd.Use)
-					return
-				}
-				pm := smqsdk.PageMetadata{
-					Offset:   Offset,
-					Limit:    Limit,
-					DomainID: args[2],
-				}
-				l, err := sdk.Children(args[1], pm, args[2], args[3])
-				if err != nil {
-					logErrorCmd(*cmd, err)
-					return
-				}
-				logJSONCmd(*cmd, l)
-				return
-			}
-			if args[0] == "parents" {
-				if len(args) > 4 {
-					logUsageCmd(*cmd, cmd.Use)
-					return
-				}
-				pm := smqsdk.PageMetadata{
-					Offset: Offset,
-					Limit:  Limit,
-				}
-				l, err := sdk.Parents(args[1], pm, args[2], args[3])
-				if err != nil {
-					logErrorCmd(*cmd, err)
-					return
-				}
-				logJSONCmd(*cmd, l)
-				return
-			}
-			if len(args) > 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			t, err := sdk.Group(args[0], args[1], args[2])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logJSONCmd(*cmd, t)
-		},
-	},
-	{
 		Use:   "delete <group_id> <domain_id> <user_auth_token>",
 		Short: "Delete group",
 		Long: "Delete group by id.\n" +
@@ -158,54 +80,6 @@ var cmdGroups = []cobra.Command{
 				return
 			}
 			logOKCmd(*cmd)
-		},
-	},
-	{
-		Use:   "users <group_id> <domain_id> <user_auth_token>",
-		Short: "List users",
-		Long: "List users in a group\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups users <group_id> $DOMAINID $USERTOKEN",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			pm := smqsdk.PageMetadata{
-				Offset: Offset,
-				Limit:  Limit,
-				Status: Status,
-			}
-			users, err := sdk.ListGroupUsers(args[0], pm, args[1], args[2])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logJSONCmd(*cmd, users)
-		},
-	},
-	{
-		Use:   "channels <group_id> <domain_id> <user_auth_token>",
-		Short: "List channels",
-		Long: "List channels in a group\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups channels <group_id> $DOMAINID $USERTOKEN",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			pm := smqsdk.PageMetadata{
-				Offset: Offset,
-				Limit:  Limit,
-				Status: Status,
-			}
-			channels, err := sdk.ListGroupChannels(args[0], pm, args[1], args[2])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logJSONCmd(*cmd, channels)
 		},
 	},
 	{
@@ -252,84 +126,6 @@ var cmdGroups = []cobra.Command{
 	},
 }
 
-var groupAssignCmds = []cobra.Command{
-	{
-		Use:   "users <relation> <user_ids> <group_id> <domain_id> <user_auth_token>",
-		Short: "Assign users",
-		Long: "Assign users to a group\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups assign users <relation> '[\"<user_id_1>\", \"<user_id_2>\"]' <group_id> $DOMAINID $USERTOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 5 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			var userIDs []string
-			if err := json.Unmarshal([]byte(args[1]), &userIDs); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			if err := sdk.AddUserToGroup(args[2], smqsdk.UsersRelationRequest{Relation: args[0], UserIDs: userIDs}, args[3], args[4]); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logOKCmd(*cmd)
-		},
-	},
-}
-
-var groupUnassignCmds = []cobra.Command{
-	{
-		Use:   "users <relation> <user_ids> <group_id> <domain_id> <user_auth_token>",
-		Short: "Unassign users",
-		Long: "Unassign users from a group\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups unassign users <relation> '[\"<user_id_1>\", \"<user_id_2>\"]' <group_id> $DOMAINID $USERTOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 5 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			var userIDs []string
-			if err := json.Unmarshal([]byte(args[1]), &userIDs); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			if err := sdk.RemoveUserFromGroup(args[2], smqsdk.UsersRelationRequest{Relation: args[0], UserIDs: userIDs}, args[3], args[4]); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logOKCmd(*cmd)
-		},
-	},
-}
-
-func NewGroupAssignCmds() *cobra.Command {
-	cmd := cobra.Command{
-		Use:   "assign [users]",
-		Short: "Assign users to a group",
-		Long:  "Assign users to a group",
-	}
-
-	for i := range groupAssignCmds {
-		cmd.AddCommand(&groupAssignCmds[i])
-	}
-	return &cmd
-}
-
-func NewGroupUnassignCmds() *cobra.Command {
-	cmd := cobra.Command{
-		Use:   "unassign [users]",
-		Short: "Unassign users from a group",
-		Long:  "Unassign users from a group",
-	}
-
-	for i := range groupUnassignCmds {
-		cmd.AddCommand(&groupUnassignCmds[i])
-	}
-	return &cmd
-}
-
 // NewGroupsCmd returns users command.
 func NewGroupsCmd() *cobra.Command {
 	cmd := cobra.Command{
@@ -342,7 +138,5 @@ func NewGroupsCmd() *cobra.Command {
 		cmd.AddCommand(&cmdGroups[i])
 	}
 
-	cmd.AddCommand(NewGroupAssignCmds())
-	cmd.AddCommand(NewGroupUnassignCmds())
 	return &cmd
 }
