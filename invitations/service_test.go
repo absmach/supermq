@@ -9,7 +9,6 @@ import (
 	"time"
 
 	authmocks "github.com/absmach/supermq/auth/mocks"
-	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/invitations"
 	"github.com/absmach/supermq/invitations/mocks"
@@ -18,6 +17,7 @@ import (
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	grpcTokenV1 "github.com/absmach/supermq/pkg/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/policies"
 	sdkmocks "github.com/absmach/supermq/pkg/sdk/mocks"
 	"github.com/stretchr/testify/assert"

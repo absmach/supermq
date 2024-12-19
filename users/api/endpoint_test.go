@@ -15,7 +15,6 @@ import (
 
 	authmocks "github.com/absmach/supermq/auth/mocks"
 	"github.com/absmach/supermq/internal/api"
-	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/apiutil"
@@ -23,6 +22,7 @@ import (
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	grpcTokenV1 "github.com/absmach/supermq/pkg/grpc/token/v1"
 	oauth2mocks "github.com/absmach/supermq/pkg/oauth2/mocks"
 	"github.com/absmach/supermq/users"
 	httpapi "github.com/absmach/supermq/users/api"

@@ -7,9 +7,9 @@ import (
 	"context"
 
 	"github.com/absmach/supermq/auth/api/grpc/auth"
-	grpcAuthV1 "github.com/absmach/supermq/internal/grpc/auth/v1"
 	"github.com/absmach/supermq/pkg/authz"
 	"github.com/absmach/supermq/pkg/errors"
+	grpcAuthV1 "github.com/absmach/supermq/pkg/grpc/auth/v1"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	grpchealth "google.golang.org/grpc/health/grpc_health_v1"
 )

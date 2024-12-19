@@ -9,8 +9,8 @@ import (
 	"regexp"
 
 	"github.com/absmach/supermq"
-	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
+	grpcTokenV1 "github.com/absmach/supermq/pkg/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/oauth2"
 	"github.com/absmach/supermq/users"
 	"github.com/go-chi/chi/v5"

@@ -12,9 +12,9 @@ import (
 
 	"github.com/absmach/supermq/domains"
 	grpcapi "github.com/absmach/supermq/domains/api/grpc"
-	grpcDomainsV1 "github.com/absmach/supermq/internal/grpc/domains/v1"
 	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/errors"
+	grpcDomainsV1 "github.com/absmach/supermq/pkg/grpc/domains/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc"

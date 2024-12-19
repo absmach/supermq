@@ -13,13 +13,13 @@ import (
 	"time"
 
 	"github.com/absmach/mgate/pkg/session"
-	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
-	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
 	"github.com/absmach/supermq/pkg/apiutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	grpcChannelsV1 "github.com/absmach/supermq/pkg/grpc/channels/v1"
+	grpcClientsV1 "github.com/absmach/supermq/pkg/grpc/clients/v1"
 	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/pkg/policies"
 )

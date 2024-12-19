@@ -14,7 +14,6 @@ import (
 
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/supermq"
-	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/invitations"
 	"github.com/absmach/supermq/invitations/api"
 	"github.com/absmach/supermq/invitations/middleware"
@@ -23,6 +22,7 @@ import (
 	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
+	grpcTokenV1 "github.com/absmach/supermq/pkg/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	"github.com/absmach/supermq/pkg/jaeger"
 	"github.com/absmach/supermq/pkg/postgres"

@@ -8,7 +8,7 @@ import (
 
 	"github.com/absmach/supermq/auth"
 	grpcapi "github.com/absmach/supermq/auth/api/grpc"
-	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
+	grpcTokenV1 "github.com/absmach/supermq/pkg/grpc/token/v1"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 )
 

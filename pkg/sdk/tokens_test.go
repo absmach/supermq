@@ -8,11 +8,11 @@ import (
 	"testing"
 
 	smqauth "github.com/absmach/supermq/auth"
-	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/apiutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	grpcTokenV1 "github.com/absmach/supermq/pkg/grpc/token/v1"
 	sdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

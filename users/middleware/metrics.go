@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/authn"
+	grpcTokenV1 "github.com/absmach/supermq/pkg/grpc/token/v1"
 	"github.com/absmach/supermq/users"
 	"github.com/go-kit/kit/metrics"
 )

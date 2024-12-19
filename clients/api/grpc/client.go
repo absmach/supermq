@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/clients"
-	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
-	grpcCommonV1 "github.com/absmach/supermq/internal/grpc/common/v1"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	grpcClientsV1 "github.com/absmach/supermq/pkg/grpc/clients/v1"
+	grpcCommonV1 "github.com/absmach/supermq/pkg/grpc/common/v1"
 	"github.com/go-kit/kit/endpoint"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc"
