@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/absmach/supermq/pkg/apiutil"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/readers"
 )
 

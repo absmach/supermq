@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/journal"
-	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/stretchr/testify/assert"
 )
 

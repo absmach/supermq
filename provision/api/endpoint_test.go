@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
-	"github.com/absmach/supermq/pkg/apiutil"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/provision"
 	"github.com/absmach/supermq/provision/api"

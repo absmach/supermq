@@ -1,13 +1,13 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package apiutil_test
+package util_test
 
 import (
 	"net/http"
 	"testing"
 
-	"github.com/absmach/supermq/pkg/apiutil"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/stretchr/testify/assert"
 )
 

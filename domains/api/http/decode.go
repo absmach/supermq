@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"strings"
 
+	api "github.com/absmach/supermq/api/http"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/domains"
-	"github.com/absmach/supermq/internal/api"
-	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/go-chi/chi/v5"
 )

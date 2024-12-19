@@ -6,8 +6,8 @@ package clients_test
 import (
 	"testing"
 
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/clients"
-	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -13,19 +13,19 @@ import (
 	"strings"
 	"testing"
 
+	api "github.com/absmach/supermq/api/http"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	authmocks "github.com/absmach/supermq/auth/mocks"
-	"github.com/absmach/supermq/internal/api"
 	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
-	"github.com/absmach/supermq/pkg/apiutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	oauth2mocks "github.com/absmach/supermq/pkg/oauth2/mocks"
 	"github.com/absmach/supermq/users"
-	httpapi "github.com/absmach/supermq/users/api"
+	usersapi "github.com/absmach/supermq/users/api"
 	"github.com/absmach/supermq/users/mocks"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
@@ -93,7 +93,7 @@ func newUsersServer() (*httptest.Server, *mocks.Service, *authnmocks.Authenticat
 	provider.On("Name").Return("test")
 	authn := new(authnmocks.Authentication)
 	token := new(authmocks.TokenServiceClient)
-	httpapi.MakeHandler(svc, authn, token, true, mux, logger, "", passRegex, provider)
+	usersapi.MakeHandler(svc, authn, token, true, mux, logger, "", passRegex, provider)
 
 	return httptest.NewServer(mux), svc, authn
 }
@@ -2119,6 +2119,7 @@ func TestIssueToken(t *testing.T) {
 	defer us.Close()
 
 	validUsername := "valid"
+	dataFormat := `{"username": "%s", "password": "%s"}`
 
 	cases := []struct {
 		desc        string
@@ -2129,42 +2130,42 @@ func TestIssueToken(t *testing.T) {
 	}{
 		{
 			desc:        "issue token with valid identity and secret",
-			data:        fmt.Sprintf(`{"identity": "%s", "secret": "%s"}`, validUsername, secret),
+			data:        fmt.Sprintf(dataFormat, validUsername, secret),
 			contentType: contentType,
 			status:      http.StatusCreated,
 			err:         nil,
 		},
 		{
 			desc:        "issue token with empty identity",
-			data:        fmt.Sprintf(`{"identity": "%s", "secret": "%s"}`, "", secret),
+			data:        fmt.Sprintf(dataFormat, "", secret),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
 		},
 		{
 			desc:        "issue token with empty secret",
-			data:        fmt.Sprintf(`{"identity": "%s", "secret": "%s"}`, validUsername, ""),
+			data:        fmt.Sprintf(dataFormat, validUsername, ""),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
 		},
 		{
 			desc:        "issue token with invalid email",
-			data:        fmt.Sprintf(`{"identity": "%s", "secret": "%s"}`, "invalid", secret),
+			data:        fmt.Sprintf(dataFormat, "invalid", secret),
 			contentType: contentType,
 			status:      http.StatusUnauthorized,
 			err:         svcerr.ErrAuthentication,
 		},
 		{
 			desc:        "issues token with malformed data",
-			data:        fmt.Sprintf(`{"identity": %s, "secret": %s}`, validUsername, secret),
+			data:        fmt.Sprintf(dataFormat, validUsername, secret),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrValidation,
 		},
 		{
 			desc:        "issue token with invalid contentype",
-			data:        fmt.Sprintf(`{"identity": "%s", "secret": "%s"}`, "invalid", secret),
+			data:        fmt.Sprintf(dataFormat, "invalid", secret),
 			contentType: "application/xml",
 			status:      http.StatusUnsupportedMediaType,
 			err:         apiutil.ErrValidation,

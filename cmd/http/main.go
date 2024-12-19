@@ -226,12 +226,12 @@ func proxyHTTP(ctx context.Context, cfg server.Config, logger *slog.Logger, sess
 		go func() {
 			errCh <- mp.Listen(ctx)
 		}()
-		logger.Info(fmt.Sprintf("%s service https server listening at %s:%s with TLS cert %s and key %s", svcName, cfg.Host, cfg.Port, cfg.CertFile, cfg.KeyFile))
+		logger.Info(fmt.Sprintf("%s service HTTPS server listening at %s:%s with TLS cert %s and key %s", svcName, cfg.Host, cfg.Port, cfg.CertFile, cfg.KeyFile))
 	default:
 		go func() {
 			errCh <- mp.Listen(ctx)
 		}()
-		logger.Info(fmt.Sprintf("%s service http server listening at %s:%s without TLS", svcName, cfg.Host, cfg.Port))
+		logger.Info(fmt.Sprintf("%s service HTTP server listening at %s:%s without TLS", svcName, cfg.Host, cfg.Port))
 	}
 
 	select {

@@ -6,8 +6,8 @@ package api
 import (
 	"context"
 
-	"github.com/absmach/supermq/internal/api"
-	"github.com/absmach/supermq/pkg/apiutil"
+	api "github.com/absmach/supermq/api/http"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -475,7 +475,7 @@ func issueTokenEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		token, err := svc.IssueToken(ctx, req.Identity, req.Secret)
+		token, err := svc.IssueToken(ctx, req.Username, req.Password)
 		if err != nil {
 			return nil, err
 		}

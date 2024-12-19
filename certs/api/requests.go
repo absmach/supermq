@@ -6,8 +6,8 @@ package api
 import (
 	"time"
 
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/certs"
-	"github.com/absmach/supermq/pkg/apiutil"
 )
 
 const maxLimitSize = 100

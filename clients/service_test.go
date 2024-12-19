@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	apiutil "github.com/absmach/supermq/api/http/util"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	"github.com/absmach/supermq/clients"
 	climocks "github.com/absmach/supermq/clients/mocks"
@@ -15,7 +16,6 @@ import (
 	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
 	grpcCommonV1 "github.com/absmach/supermq/internal/grpc/common/v1"
 	"github.com/absmach/supermq/internal/testsutil"
-	"github.com/absmach/supermq/pkg/apiutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"

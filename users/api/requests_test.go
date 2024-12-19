@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/absmach/supermq/internal/api"
+	api "github.com/absmach/supermq/api/http"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/internal/testsutil"
-	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/users"
 	"github.com/stretchr/testify/assert"
 )
@@ -511,24 +511,24 @@ func TestLoginUserReqValidate(t *testing.T) {
 		{
 			desc: "valid request with identity",
 			req: loginUserReq{
-				Identity: "example",
-				Secret:   secret,
+				Username: "example",
+				Password: secret,
 			},
 			err: nil,
 		},
 		{
 			desc: "empty identity",
 			req: loginUserReq{
-				Identity: "",
-				Secret:   secret,
+				Username: "",
+				Password: secret,
 			},
 			err: apiutil.ErrMissingIdentity,
 		},
 		{
 			desc: "empty secret",
 			req: loginUserReq{
-				Secret:   "",
-				Identity: "example",
+				Password: "",
+				Username: "example",
 			},
 			err: apiutil.ErrMissingPass,
 		},

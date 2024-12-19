@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package api
+package http
 
 import (
 	"context"
@@ -9,11 +9,11 @@ import (
 	"net/http"
 
 	"github.com/absmach/supermq"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/bootstrap"
 	"github.com/absmach/supermq/certs"
 	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/groups"
-	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/users"

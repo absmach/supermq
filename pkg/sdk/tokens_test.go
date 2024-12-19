@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"testing"
 
+	apiutil "github.com/absmach/supermq/api/http/util"
 	smqauth "github.com/absmach/supermq/auth"
 	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
-	"github.com/absmach/supermq/pkg/apiutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -41,8 +41,8 @@ func TestIssueToken(t *testing.T) {
 		{
 			desc: "issue token successfully",
 			login: sdk.Login{
-				Identity: client.Credentials.Username,
-				Secret:   client.Credentials.Secret,
+				Username: client.Credentials.Username,
+				Password: client.Credentials.Secret,
 			},
 			svcRes: &grpcTokenV1.Token{
 				AccessToken:  token.AccessToken,
@@ -56,8 +56,8 @@ func TestIssueToken(t *testing.T) {
 		{
 			desc: "issue token with invalid identity",
 			login: sdk.Login{
-				Identity: invalidIdentity,
-				Secret:   client.Credentials.Secret,
+				Username: invalidIdentity,
+				Password: client.Credentials.Secret,
 			},
 			svcRes:   &grpcTokenV1.Token{},
 			svcErr:   svcerr.ErrAuthentication,
@@ -67,8 +67,8 @@ func TestIssueToken(t *testing.T) {
 		{
 			desc: "issue token with invalid secret",
 			login: sdk.Login{
-				Identity: client.Credentials.Username,
-				Secret:   "invalid",
+				Username: client.Credentials.Username,
+				Password: "invalid",
 			},
 			svcRes:   &grpcTokenV1.Token{},
 			svcErr:   svcerr.ErrLogin,
@@ -78,8 +78,8 @@ func TestIssueToken(t *testing.T) {
 		{
 			desc: "issue token with empty identity",
 			login: sdk.Login{
-				Identity: "",
-				Secret:   client.Credentials.Secret,
+				Username: "",
+				Password: client.Credentials.Secret,
 			},
 			svcRes:   &grpcTokenV1.Token{},
 			svcErr:   nil,
@@ -89,8 +89,8 @@ func TestIssueToken(t *testing.T) {
 		{
 			desc: "issue token with empty secret",
 			login: sdk.Login{
-				Identity: client.Credentials.Username,
-				Secret:   "",
+				Username: client.Credentials.Username,
+				Password: "",
 			},
 			svcRes:   &grpcTokenV1.Token{},
 			svcErr:   nil,
@@ -100,12 +100,12 @@ func TestIssueToken(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("IssueToken", mock.Anything, tc.login.Identity, tc.login.Secret).Return(tc.svcRes, tc.svcErr)
+			svcCall := svc.On("IssueToken", mock.Anything, tc.login.Username, tc.login.Password).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.CreateToken(tc.login)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "IssueToken", mock.Anything, tc.login.Identity, tc.login.Secret)
+				ok := svcCall.Parent.AssertCalled(t, "IssueToken", mock.Anything, tc.login.Username, tc.login.Password)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()

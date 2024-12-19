@@ -9,12 +9,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/consumers/notifiers"
 	httpapi "github.com/absmach/supermq/consumers/notifiers/api"
 	notmocks "github.com/absmach/supermq/consumers/notifiers/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
-	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	sdk "github.com/absmach/supermq/pkg/sdk"

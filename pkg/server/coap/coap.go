@@ -32,7 +32,7 @@ func NewServer(ctx context.Context, cancel context.CancelFunc, name string, conf
 
 func (s *coapServer) Start() error {
 	errCh := make(chan error)
-	s.Logger.Info(fmt.Sprintf("%s service started using http, exposed port %s", s.Name, s.Address))
+	s.Logger.Info(fmt.Sprintf("%s service started using HTTP, exposed port %s", s.Name, s.Address))
 	s.Logger.Info(fmt.Sprintf("%s service %s server listening at %s without TLS", s.Name, s.Protocol, s.Address))
 
 	go func() {

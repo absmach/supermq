@@ -2,5 +2,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package api contains commonly used constants and functions
-// for the HTTP endpoints.
+// for the HTTP and gRPC API.
 package api

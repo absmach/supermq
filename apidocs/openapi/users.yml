@@ -1130,18 +1130,18 @@ components:
     IssueToken:
       type: object
       properties:
-        identity:
+        username:
           type: string
-          example: user@supermq.com
-          description: User identity - email address.
-        secret:
+          example: myUsername
+          description: Users' username.
+        password:
           type: string
           example: password
           minimum: 8
           description: User secret password.
       required:
-        - identity
-        - secret
+        - username
+        - password
 
     Error:
       type: object

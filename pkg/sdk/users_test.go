@@ -10,11 +10,11 @@ import (
 	"strings"
 	"testing"
 
+	api "github.com/absmach/supermq/api/http"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	authmocks "github.com/absmach/supermq/auth/mocks"
-	internalapi "github.com/absmach/supermq/internal/api"
 	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	smqlog "github.com/absmach/supermq/logger"
-	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/authn"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
@@ -23,7 +23,7 @@ import (
 	oauth2mocks "github.com/absmach/supermq/pkg/oauth2/mocks"
 	sdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/absmach/supermq/users"
-	"github.com/absmach/supermq/users/api"
+	httpapi "github.com/absmach/supermq/users/api"
 	umocks "github.com/absmach/supermq/users/mocks"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
@@ -43,7 +43,7 @@ func setupUsers() (*httptest.Server, *umocks.Service, *authnmocks.Authentication
 	provider.On("Name").Return("test")
 	authn := new(authnmocks.Authentication)
 	token := new(authmocks.TokenServiceClient)
-	api.MakeHandler(usvc, authn, token, true, mux, logger, "", passRegex, provider)
+	httpapi.MakeHandler(usvc, authn, token, true, mux, logger, "", passRegex, provider)
 
 	return httptest.NewServer(mux), usvc, authn
 }
@@ -320,8 +320,8 @@ func TestListUsers(t *testing.T) {
 			svcReq: users.Page{
 				Offset: offset,
 				Limit:  limit,
-				Order:  internalapi.DefOrder,
-				Dir:    internalapi.DefDir,
+				Order:  api.DefOrder,
+				Dir:    api.DefDir,
 			},
 			svcRes: users.UsersPage{
 				Page: users.Page{
@@ -348,8 +348,8 @@ func TestListUsers(t *testing.T) {
 			svcReq: users.Page{
 				Offset: offset,
 				Limit:  limit,
-				Order:  internalapi.DefOrder,
-				Dir:    internalapi.DefDir,
+				Order:  api.DefOrder,
+				Dir:    api.DefDir,
 			},
 			svcRes:          users.UsersPage{},
 			svcErr:          svcerr.ErrAuthentication,
@@ -381,8 +381,8 @@ func TestListUsers(t *testing.T) {
 			svcReq: users.Page{
 				Offset: offset,
 				Limit:  10,
-				Order:  internalapi.DefOrder,
-				Dir:    internalapi.DefDir,
+				Order:  api.DefOrder,
+				Dir:    api.DefDir,
 			},
 			svcRes: users.UsersPage{
 				Page: users.Page{
@@ -423,8 +423,8 @@ func TestListUsers(t *testing.T) {
 				Offset:   offset,
 				Limit:    limit,
 				Metadata: users.Metadata{"name": "user_99"},
-				Order:    internalapi.DefOrder,
-				Dir:      internalapi.DefDir,
+				Order:    api.DefOrder,
+				Dir:      api.DefDir,
 			},
 			svcRes: users.UsersPage{
 				Page: users.Page{
@@ -453,8 +453,8 @@ func TestListUsers(t *testing.T) {
 				Offset: offset,
 				Limit:  limit,
 				Status: users.DisabledStatus,
-				Order:  internalapi.DefOrder,
-				Dir:    internalapi.DefDir,
+				Order:  api.DefOrder,
+				Dir:    api.DefDir,
 			},
 			svcRes: users.UsersPage{
 				Page: users.Page{
@@ -483,8 +483,8 @@ func TestListUsers(t *testing.T) {
 				Offset: offset,
 				Limit:  limit,
 				Tag:    "tag1",
-				Order:  internalapi.DefOrder,
-				Dir:    internalapi.DefDir,
+				Order:  api.DefOrder,
+				Dir:    api.DefDir,
 			},
 			svcRes: users.UsersPage{
 				Page: users.Page{
@@ -514,8 +514,8 @@ func TestListUsers(t *testing.T) {
 			svcReq: users.Page{
 				Offset: offset,
 				Limit:  limit,
-				Order:  internalapi.DefOrder,
-				Dir:    internalapi.DefDir,
+				Order:  api.DefOrder,
+				Dir:    api.DefDir,
 			},
 			svcRes:   users.UsersPage{},
 			svcErr:   nil,
@@ -532,8 +532,8 @@ func TestListUsers(t *testing.T) {
 			svcReq: users.Page{
 				Offset: offset,
 				Limit:  limit,
-				Order:  internalapi.DefOrder,
-				Dir:    internalapi.DefDir,
+				Order:  api.DefOrder,
+				Dir:    api.DefDir,
 			},
 			svcRes: users.UsersPage{
 				Page: users.Page{

@@ -106,8 +106,8 @@ var cmdUsers = []cobra.Command{
 			}
 
 			loginReq := smqsdk.Login{
-				Identity: args[0],
-				Secret:   args[1],
+				Username: args[0],
+				Password: args[1],
 			}
 
 			token, err := sdk.CreateToken(loginReq)

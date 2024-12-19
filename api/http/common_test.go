@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package api_test
+package http_test
 
 import (
 	"context"
@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/absmach/supermq"
-	"github.com/absmach/supermq/internal/api"
+	api "github.com/absmach/supermq/api/http"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/internal/testsutil"
-	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/stretchr/testify/assert"

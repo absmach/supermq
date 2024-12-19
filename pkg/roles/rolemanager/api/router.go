@@ -4,7 +4,7 @@
 package http
 
 import (
-	"github.com/absmach/supermq/internal/api"
+	api "github.com/absmach/supermq/api/http"
 	"github.com/absmach/supermq/pkg/roles"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"

@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/absmach/supermq"
-	"github.com/absmach/supermq/internal/api"
+	api "github.com/absmach/supermq/api/http"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/journal"
-	"github.com/absmach/supermq/pkg/apiutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/go-chi/chi/v5"

@@ -11,10 +11,10 @@ import (
 	"regexp"
 	"strings"
 
+	api "github.com/absmach/supermq/api/http"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	smqauth "github.com/absmach/supermq/auth"
-	"github.com/absmach/supermq/internal/api"
 	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
-	"github.com/absmach/supermq/pkg/apiutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/absmach/supermq/pkg/oauth2"

@@ -11,6 +11,7 @@ import (
 
 	"github.com/absmach/mgate"
 	proxy "github.com/absmach/mgate/pkg/http"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	climocks "github.com/absmach/supermq/clients/mocks"
 	adapter "github.com/absmach/supermq/http"
@@ -18,7 +19,6 @@ import (
 	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
 	smqlog "github.com/absmach/supermq/logger"
-	"github.com/absmach/supermq/pkg/apiutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"

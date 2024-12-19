@@ -1,23 +1,20 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package api
+package http
 
 import (
 	"context"
 	"net/http"
 
-	"github.com/absmach/supermq/auth"
-	"github.com/absmach/supermq/pkg/apiutil"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/go-chi/chi/v5"
 )
 
 type sessionKeyType string
 
-const (
-	SessionKey = sessionKeyType("session")
-)
+const SessionKey = sessionKeyType("session")
 
 func AuthenticateMiddleware(authn smqauthn.Authentication, domainCheck bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -27,10 +24,8 @@ func AuthenticateMiddleware(authn smqauthn.Authentication, domainCheck bool) fun
 				EncodeError(r.Context(), apiutil.ErrBearerToken, w)
 				return
 			}
-			var resp smqauthn.Session
-			var err error
 
-			resp, err = authn.Authenticate(r.Context(), token)
+			resp, err := authn.Authenticate(r.Context(), token)
 			if err != nil {
 				EncodeError(r.Context(), err, w)
 				return
@@ -43,7 +38,7 @@ func AuthenticateMiddleware(authn smqauthn.Authentication, domainCheck bool) fun
 					return
 				}
 				resp.DomainID = domain
-				resp.DomainUserID = auth.EncodeDomainUserID(domain, resp.UserID)
+				resp.DomainUserID = domain + "_" + resp.UserID
 			}
 
 			ctx := context.WithValue(r.Context(), SessionKey, resp)

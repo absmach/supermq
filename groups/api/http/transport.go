@@ -7,9 +7,9 @@ import (
 	"log/slog"
 
 	"github.com/absmach/supermq"
+	api "github.com/absmach/supermq/api/http"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/groups"
-	"github.com/absmach/supermq/internal/api"
-	"github.com/absmach/supermq/pkg/apiutil"
 	"github.com/absmach/supermq/pkg/authn"
 	roleManagerHttp "github.com/absmach/supermq/pkg/roles/rolemanager/api"
 	"github.com/go-chi/chi/v5"

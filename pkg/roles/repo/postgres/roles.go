@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/absmach/supermq/pkg/apiutil"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	"github.com/absmach/supermq/pkg/postgres"

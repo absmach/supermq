@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/absmach/supermq/pkg/apiutil"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/policies"
 )

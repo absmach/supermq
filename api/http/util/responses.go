@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package apiutil
+package util
 
 // ErrorRes represents the HTTP error response body.
 type ErrorRes struct {
