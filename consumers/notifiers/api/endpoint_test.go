@@ -15,7 +15,7 @@ import (
 
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/consumers/notifiers"
-	httpapi "github.com/absmach/supermq/consumers/notifiers/api"
+	"github.com/absmach/supermq/consumers/notifiers/api"
 	"github.com/absmach/supermq/consumers/notifiers/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
@@ -70,7 +70,7 @@ func (tr testRequest) make() (*http.Response, error) {
 func newServer() (*httptest.Server, *mocks.Service) {
 	logger := smqlog.NewMock()
 	svc := new(mocks.Service)
-	mux := httpapi.MakeHandler(svc, logger, instanceID)
+	mux := api.MakeHandler(svc, logger, instanceID)
 	return httptest.NewServer(mux), svc
 }
 

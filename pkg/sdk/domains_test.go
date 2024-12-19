@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	httpapi "github.com/absmach/supermq/api/http"
+	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/domains"
 	domainapi "github.com/absmach/supermq/domains/api/http"
@@ -458,8 +458,8 @@ func TestListDomians(t *testing.T) {
 			svcReq: domains.Page{
 				Offset: 0,
 				Limit:  10,
-				Order:  httpapi.DefOrder,
-				Dir:    httpapi.DefDir,
+				Order:  api.DefOrder,
+				Dir:    api.DefDir,
 			},
 			svcRes: domains.DomainsPage{
 				Total:   1,
@@ -484,8 +484,8 @@ func TestListDomians(t *testing.T) {
 			svcReq: domains.Page{
 				Offset: 0,
 				Limit:  10,
-				Order:  httpapi.DefOrder,
-				Dir:    httpapi.DefDir,
+				Order:  api.DefOrder,
+				Dir:    api.DefDir,
 			},
 			svcRes:   domains.DomainsPage{},
 			authnErr: svcerr.ErrAuthentication,
@@ -531,8 +531,8 @@ func TestListDomians(t *testing.T) {
 			svcReq: domains.Page{
 				Offset: 0,
 				Limit:  10,
-				Order:  httpapi.DefOrder,
-				Dir:    httpapi.DefDir,
+				Order:  api.DefOrder,
+				Dir:    api.DefDir,
 			},
 			svcRes: domains.DomainsPage{
 				Total: 1,

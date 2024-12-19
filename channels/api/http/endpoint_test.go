@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	httpapi "github.com/absmach/supermq/api/http"
+	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/channels"
 	"github.com/absmach/supermq/channels/mocks"
@@ -517,7 +517,7 @@ func TestListChannels(t *testing.T) {
 			desc:     "list channels with limit greater than max",
 			token:    validToken,
 			domainID: validID,
-			query:    fmt.Sprintf("limit=%d", httpapi.MaxLimitSize+1),
+			query:    fmt.Sprintf("limit=%d", api.MaxLimitSize+1),
 			status:   http.StatusBadRequest,
 			err:      apiutil.ErrValidation,
 		},

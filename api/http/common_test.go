@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq"
-	httpapi "github.com/absmach/supermq/api/http"
+	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/errors"
@@ -103,7 +103,7 @@ func TestValidateUUID(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.desc, func(t *testing.T) {
-			err := httpapi.ValidateUUID(c.uuid)
+			err := api.ValidateUUID(c.uuid)
 			assert.Equal(t, c.err, err)
 		})
 	}
@@ -207,7 +207,7 @@ func TestEncodeResponse(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.desc, func(t *testing.T) {
 			responseWriter := newResponseWriter()
-			err := httpapi.EncodeResponse(context.Background(), responseWriter, c.resp)
+			err := api.EncodeResponse(context.Background(), responseWriter, c.resp)
 			assert.Equal(t, c.err, err)
 			assert.Equal(t, c.header, responseWriter.Header())
 			assert.Equal(t, c.code, responseWriter.StatusCode())
@@ -316,7 +316,7 @@ func TestEncodeError(t *testing.T) {
 		t.Run(c.desc, func(t *testing.T) {
 			responseWriter := newResponseWriter()
 			for _, err := range c.errs {
-				httpapi.EncodeError(context.Background(), err, responseWriter)
+				api.EncodeError(context.Background(), err, responseWriter)
 				assert.Equal(t, c.code, responseWriter.StatusCode())
 
 				message := body{}

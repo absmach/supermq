@@ -15,7 +15,7 @@ import (
 
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/certs"
-	httpapi "github.com/absmach/supermq/certs/api"
+	"github.com/absmach/supermq/certs/api"
 	"github.com/absmach/supermq/certs/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
@@ -70,7 +70,7 @@ func newCertServer() (*httptest.Server, *mocks.Service, *authnmocks.Authenticati
 	svc := new(mocks.Service)
 	logger := smqlog.NewMock()
 	authn := new(authnmocks.Authentication)
-	mux := httpapi.MakeHandler(svc, authn, logger, "")
+	mux := api.MakeHandler(svc, authn, logger, "")
 
 	return httptest.NewServer(mux), svc, authn
 }
