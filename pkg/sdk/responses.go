@@ -13,6 +13,10 @@ type createClientsRes struct {
 	Clients []Client `json:"clients"`
 }
 
+type createChannelsRes struct {
+	Channels []Channel `json:"channels"`
+}
+
 type PageRes struct {
 	Total  uint64 `json:"total"`
 	Offset uint64 `json:"offset"`
@@ -82,4 +86,29 @@ type SubscriptionPage struct {
 type DomainsPage struct {
 	Domains []Domain `json:"domains"`
 	PageRes
+}
+
+type roleActionsRes struct {
+	Actions []string `json:"actions"`
+}
+
+type availableRoleActionsRes struct {
+	AvailableActions []string `json:"available_actions"`
+}
+
+type roleMembersRes struct {
+	Members []string `json:"members"`
+}
+
+type GroupsHierarchyPage struct {
+	Level     uint64  `json:"level"`
+	Direction int64   `json:"direction"`
+	Groups    []Group `json:"groups"`
+}
+
+type RoleMembersPage struct {
+	Total   uint64   `json:"total"`
+	Offset  uint64   `json:"offset"`
+	Limit   uint64   `json:"limit"`
+	Members []string `json:"members"`
 }

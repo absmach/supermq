@@ -137,7 +137,7 @@ func (res changeClientStatusRes) Empty() bool {
 type setParentGroupRes struct{}
 
 func (res setParentGroupRes) Code() int {
-	return http.StatusAccepted
+	return http.StatusOK
 }
 
 func (res setParentGroupRes) Headers() map[string]string {

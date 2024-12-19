@@ -91,11 +91,7 @@ func (svc *service) AcceptInvitation(ctx context.Context, session authn.Session,
 		return svcerr.ErrInvitationAlreadyRejected
 	}
 
-	req := mgsdk.UsersRelationRequest{
-		Relation: inv.Relation,
-		UserIDs:  []string{session.UserID},
-	}
-	if sdkerr := svc.sdk.AddUserToDomain(inv.DomainID, req, inv.Token); sdkerr != nil {
+	if _, sdkerr := svc.sdk.AddDomainRoleMembers(inv.DomainID, "admin", []string{session.UserID}, inv.Token); sdkerr != nil {
 		return sdkerr
 	}
 

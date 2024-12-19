@@ -1263,7 +1263,7 @@ func TestAddParentGroupEndpoint(t *testing.T) {
 			parentID:    validID,
 			contentType: contentType,
 			svcErr:      nil,
-			status:      http.StatusNoContent,
+			status:      http.StatusOK,
 			err:         nil,
 		},
 		{
@@ -1496,7 +1496,7 @@ func TestAddChildrenGroupsEndpoint(t *testing.T) {
 			childrenIDs: []string{validID},
 			contentType: contentType,
 			svcErr:      nil,
-			status:      http.StatusNoContent,
+			status:      http.StatusOK,
 			err:         nil,
 		},
 		{
