@@ -20,8 +20,8 @@ type Token struct {
 }
 
 type Login struct {
-	Identity string `json:"identity"`
-	Secret   string `json:"secret"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 func (sdk mgSDK) CreateToken(lt Login) (Token, errors.SDKError) {

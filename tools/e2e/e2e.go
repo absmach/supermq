@@ -149,8 +149,8 @@ func createUser(s sdk.SDK, conf Config) (string, string, error) {
 	}
 
 	login := sdk.Login{
-		Identity: user.Credentials.Username,
-		Secret:   user.Credentials.Secret,
+		Username: user.Credentials.Username,
+		Password: user.Credentials.Secret,
 	}
 	token, err := s.CreateToken(login)
 	if err != nil {
@@ -170,8 +170,8 @@ func createUser(s sdk.SDK, conf Config) (string, string, error) {
 	}
 
 	login = sdk.Login{
-		Identity: user.Credentials.Username,
-		Secret:   user.Credentials.Secret,
+		Username: user.Credentials.Username,
+		Password: user.Credentials.Secret,
 	}
 	token, err = s.CreateToken(login)
 	if err != nil {

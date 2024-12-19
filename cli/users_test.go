@@ -338,8 +338,8 @@ func TestIssueTokenCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			lg := mgsdk.Login{
-				Identity: tc.args[0],
-				Secret:   tc.args[1],
+				Username: tc.args[0],
+				Password: tc.args[1],
 			}
 			sdkCall := sdkMock.On("CreateToken", lg).Return(tc.token, tc.sdkerr)
 

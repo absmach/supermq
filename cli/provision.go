@@ -151,7 +151,7 @@ var cmdProvision = []cobra.Command{
 				return
 			}
 
-			ut, err := sdk.CreateToken(smqsdk.Login{Identity: user.Credentials.Username, Secret: user.Credentials.Secret})
+			ut, err := sdk.CreateToken(smqsdk.Login{Username: user.Credentials.Username, Password: user.Credentials.Secret})
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -168,7 +168,7 @@ var cmdProvision = []cobra.Command{
 				return
 			}
 
-			ut, err = sdk.CreateToken(smqsdk.Login{Identity: user.Email, Secret: user.Credentials.Secret})
+			ut, err = sdk.CreateToken(smqsdk.Login{Username: user.Email, Password: user.Credentials.Secret})
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return

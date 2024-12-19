@@ -219,8 +219,8 @@ func TestCert(t *testing.T) {
 			mgsdk.On("IssueCert", c.clientID, c.config.Cert.TTL, c.domainID, mock.Anything).Return(sdk.Cert{SerialNumber: c.serial}, c.sdkCertErr)
 			mgsdk.On("ViewCert", c.serial, mock.Anything, mock.Anything).Return(sdk.Cert{Certificate: c.cert, Key: c.key}, c.sdkCertErr)
 			login := sdk.Login{
-				Identity: c.config.Server.MgUsername,
-				Secret:   c.config.Server.MgPass,
+				Username: c.config.Server.MgUsername,
+				Password: c.config.Server.MgPass,
 			}
 			mgsdk.On("CreateToken", login).Return(sdk.Token{AccessToken: validToken}, c.sdkTokenErr)
 			cert, key, err := svc.Cert(c.domainID, c.token, c.clientID, c.ttl)
