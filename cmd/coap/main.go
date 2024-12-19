@@ -14,7 +14,7 @@ import (
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/coap"
-	"github.com/absmach/supermq/coap/api"
+	httpapi "github.com/absmach/supermq/coap/api"
 	"github.com/absmach/supermq/coap/tracing"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/grpcclient"
@@ -147,14 +147,14 @@ func main() {
 
 	svc = tracing.New(tracer, svc)
 
-	svc = api.LoggingMiddleware(svc, logger)
+	svc = httpapi.LoggingMiddleware(svc, logger)
 
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
-	svc = api.MetricsMiddleware(svc, counter, latency)
+	svc = httpapi.MetricsMiddleware(svc, counter, latency)
 
-	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(cfg.InstanceID), logger)
+	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(cfg.InstanceID), logger)
 
-	cs := coapserver.NewServer(ctx, cancel, svcName, coapServerConfig, api.MakeCoAPHandler(svc, logger), logger)
+	cs := coapserver.NewServer(ctx, cancel, svcName, coapServerConfig, httpapi.MakeCoAPHandler(svc, logger), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)

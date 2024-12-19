@@ -23,7 +23,7 @@ import (
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/absmach/supermq/provision"
-	"github.com/absmach/supermq/provision/api"
+	httpapi "github.com/absmach/supermq/provision/api"
 	"github.com/caarlos0/env/v11"
 	"golang.org/x/sync/errgroup"
 )
@@ -84,10 +84,10 @@ func main() {
 	SDK := mgsdk.NewSDK(SDKCfg)
 
 	svc := provision.New(cfg, SDK, logger)
-	svc = api.NewLoggingMiddleware(svc, logger)
+	svc = httpapi.NewLoggingMiddleware(svc, logger)
 
 	httpServerConfig := server.Config{Host: "", Port: cfg.Server.HTTPPort, KeyFile: cfg.Server.ServerKey, CertFile: cfg.Server.ServerCert}
-	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, logger, cfg.InstanceID), logger)
+	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, logger, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)

@@ -15,7 +15,7 @@ import (
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/journal"
-	"github.com/absmach/supermq/journal/api"
+	httpapi "github.com/absmach/supermq/journal/api"
 	"github.com/absmach/supermq/journal/events"
 	"github.com/absmach/supermq/journal/middleware"
 	journalpg "github.com/absmach/supermq/journal/postgres"
@@ -157,7 +157,7 @@ func main() {
 		return
 	}
 
-	hs := http.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, authn, logger, svcName, cfg.InstanceID), logger)
+	hs := http.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, authn, logger, svcName, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)

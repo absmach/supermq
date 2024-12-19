@@ -15,7 +15,7 @@ import (
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/certs"
-	"github.com/absmach/supermq/certs/api"
+	httpapi "github.com/absmach/supermq/certs/api"
 	pki "github.com/absmach/supermq/certs/pki/amcerts"
 	"github.com/absmach/supermq/certs/tracing"
 	smqlog "github.com/absmach/supermq/logger"
@@ -133,7 +133,7 @@ func main() {
 		exitCode = 1
 		return
 	}
-	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, authn, logger, cfg.InstanceID), logger)
+	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, authn, logger, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)
@@ -159,9 +159,9 @@ func newService(tracer trace.Tracer, logger *slog.Logger, cfg config, pkiAgent p
 	}
 	sdk := mgsdk.NewSDK(config)
 	svc := certs.New(sdk, pkiAgent)
-	svc = api.LoggingMiddleware(svc, logger)
+	svc = httpapi.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
-	svc = api.MetricsMiddleware(svc, counter, latency)
+	svc = httpapi.MetricsMiddleware(svc, counter, latency)
 	svc = tracing.New(svc, tracer)
 
 	return svc

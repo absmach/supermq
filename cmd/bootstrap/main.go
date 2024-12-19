@@ -15,7 +15,7 @@ import (
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/bootstrap"
-	"github.com/absmach/supermq/bootstrap/api"
+	httpapi "github.com/absmach/supermq/bootstrap/api"
 	"github.com/absmach/supermq/bootstrap/events/consumer"
 	"github.com/absmach/supermq/bootstrap/events/producer"
 	"github.com/absmach/supermq/bootstrap/middleware"
@@ -179,7 +179,7 @@ func main() {
 		exitCode = 1
 		return
 	}
-	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, authn, bootstrap.NewConfigReader([]byte(cfg.EncKey)), logger, cfg.InstanceID), logger)
+	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, authn, bootstrap.NewConfigReader([]byte(cfg.EncKey)), logger, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)

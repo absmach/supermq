@@ -22,7 +22,7 @@ import (
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/absmach/supermq/readers"
-	"github.com/absmach/supermq/readers/api"
+	httpapi "github.com/absmach/supermq/readers/api"
 	"github.com/absmach/supermq/readers/postgres"
 	"github.com/caarlos0/env/v11"
 	"github.com/jmoiron/sqlx"
@@ -141,7 +141,7 @@ func main() {
 		exitCode = 1
 		return
 	}
-	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(repo, authn, clientsClient, channelsClient, svcName, cfg.InstanceID), logger)
+	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(repo, authn, clientsClient, channelsClient, svcName, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)
@@ -163,9 +163,9 @@ func main() {
 
 func newService(db *sqlx.DB, logger *slog.Logger) readers.MessageRepository {
 	svc := postgres.New(db)
-	svc = api.LoggingMiddleware(svc, logger)
+	svc = httpapi.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics("postgres", "message_reader")
-	svc = api.MetricsMiddleware(svc, counter, latency)
+	svc = httpapi.MetricsMiddleware(svc, counter, latency)
 
 	return svc
 }

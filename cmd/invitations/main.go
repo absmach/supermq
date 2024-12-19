@@ -16,7 +16,7 @@ import (
 	"github.com/absmach/supermq"
 	grpcTokenV1 "github.com/absmach/supermq/internal/grpc/token/v1"
 	"github.com/absmach/supermq/invitations"
-	"github.com/absmach/supermq/invitations/api"
+	httpapi "github.com/absmach/supermq/invitations/api"
 	"github.com/absmach/supermq/invitations/middleware"
 	invitationspg "github.com/absmach/supermq/invitations/postgres"
 	smqlog "github.com/absmach/supermq/logger"
@@ -156,7 +156,7 @@ func main() {
 		return
 	}
 
-	httpSvr := http.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, logger, authn, cfg.InstanceID), logger)
+	httpSvr := http.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, logger, authn, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)

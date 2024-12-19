@@ -16,7 +16,7 @@ import (
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/consumers"
 	consumertracing "github.com/absmach/supermq/consumers/tracing"
-	"github.com/absmach/supermq/consumers/writers/api"
+	httpapi "github.com/absmach/supermq/consumers/writers/api"
 	writerpg "github.com/absmach/supermq/consumers/writers/postgres"
 	smqlog "github.com/absmach/supermq/logger"
 	jaegerclient "github.com/absmach/supermq/pkg/jaeger"
@@ -125,7 +125,7 @@ func main() {
 		return
 	}
 
-	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svcName, cfg.InstanceID), logger)
+	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svcName, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)
@@ -147,8 +147,8 @@ func main() {
 
 func newService(db *sqlx.DB, logger *slog.Logger) consumers.BlockingConsumer {
 	svc := writerpg.New(db)
-	svc = api.LoggingMiddleware(svc, logger)
+	svc = httpapi.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics("postgres", "message_writer")
-	svc = api.MetricsMiddleware(svc, counter, latency)
+	svc = httpapi.MetricsMiddleware(svc, counter, latency)
 	return svc
 }

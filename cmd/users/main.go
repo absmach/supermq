@@ -36,7 +36,7 @@ import (
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/absmach/supermq/users"
-	"github.com/absmach/supermq/users/api"
+	httpapi "github.com/absmach/supermq/users/api"
 	"github.com/absmach/supermq/users/emailer"
 	"github.com/absmach/supermq/users/events"
 	"github.com/absmach/supermq/users/hasher"
@@ -237,7 +237,7 @@ func main() {
 	oauthProvider := googleoauth.NewProvider(oauthConfig, cfg.OAuthUIRedirectURL, cfg.OAuthUIErrorURL)
 
 	mux := chi.NewRouter()
-	httpSrv := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(csvc, authn, tokenClient, cfg.SelfRegister, mux, logger, cfg.InstanceID, cfg.PassRegex, oauthProvider), logger)
+	httpSrv := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(csvc, authn, tokenClient, cfg.SelfRegister, mux, logger, cfg.InstanceID, cfg.PassRegex, oauthProvider), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)

@@ -30,7 +30,7 @@ import (
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/absmach/supermq/ws"
-	"github.com/absmach/supermq/ws/api"
+	httpapi "github.com/absmach/supermq/ws/api"
 	"github.com/absmach/supermq/ws/tracing"
 	"github.com/caarlos0/env/v11"
 	"go.opentelemetry.io/otel/trace"
@@ -167,7 +167,7 @@ func main() {
 
 	svc := newService(clientsClient, channelsClient, nps, logger, tracer)
 
-	hs := httpserver.NewServer(ctx, cancel, svcName, targetServerConfig, api.MakeHandler(ctx, svc, logger, cfg.InstanceID), logger)
+	hs := httpserver.NewServer(ctx, cancel, svcName, targetServerConfig, httpapi.MakeHandler(ctx, svc, logger, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)
@@ -194,9 +194,9 @@ func main() {
 func newService(clientsClient grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, nps messaging.PubSub, logger *slog.Logger, tracer trace.Tracer) ws.Service {
 	svc := ws.New(clientsClient, channels, nps)
 	svc = tracing.New(tracer, svc)
-	svc = api.LoggingMiddleware(svc, logger)
+	svc = httpapi.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics("ws_adapter", "api")
-	svc = api.MetricsMiddleware(svc, counter, latency)
+	svc = httpapi.MetricsMiddleware(svc, counter, latency)
 	return svc
 }
 

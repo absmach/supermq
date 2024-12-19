@@ -20,7 +20,7 @@ import (
 	"github.com/absmach/mgate/pkg/session"
 	"github.com/absmach/supermq"
 	adapter "github.com/absmach/supermq/http"
-	"github.com/absmach/supermq/http/api"
+	httpapi "github.com/absmach/supermq/http/api"
 	grpcChannelsV1 "github.com/absmach/supermq/internal/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/internal/grpc/clients/v1"
 	smqlog "github.com/absmach/supermq/logger"
@@ -166,7 +166,7 @@ func main() {
 	svc := newService(pub, authn, clientsClient, channelsClient, logger, tracer)
 	targetServerCfg := server.Config{Port: targetHTTPPort}
 
-	hs := httpserver.NewServer(ctx, cancel, svcName, targetServerCfg, api.MakeHandler(logger, cfg.InstanceID), logger)
+	hs := httpserver.NewServer(ctx, cancel, svcName, targetServerCfg, httpapi.MakeHandler(logger, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)
