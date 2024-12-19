@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/absmach/supermq"
+	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
-	"github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/journal"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"

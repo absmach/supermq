@@ -13,11 +13,11 @@ import (
 	"testing"
 
 	"github.com/0x6flab/namegenerator"
+	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/clients"
 	clientsapi "github.com/absmach/supermq/clients/api/http"
 	"github.com/absmach/supermq/clients/mocks"
-	"github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"

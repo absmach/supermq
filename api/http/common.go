@@ -134,7 +134,8 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 	case errors.Contains(err, svcerr.ErrAuthentication),
 		errors.Contains(err, apiutil.ErrBearerToken),
-		errors.Contains(err, svcerr.ErrLogin):
+		errors.Contains(err, svcerr.ErrLogin),
+		errors.Contains(err, apiutil.ErrUnsupportedTokenType):
 		err = unwrap(err)
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, svcerr.ErrMalformedEntity),
@@ -184,6 +185,8 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, apiutil.ErrLenSearchQuery),
 		errors.Contains(err, apiutil.ErrMissingDomainID),
 		errors.Contains(err, certs.ErrFailedReadFromPKI),
+		errors.Contains(err, apiutil.ErrMissingUserID),
+		errors.Contains(err, apiutil.ErrMissingPATID),
 		errors.Contains(err, apiutil.ErrMissingUsername),
 		errors.Contains(err, apiutil.ErrMissingFirstName),
 		errors.Contains(err, apiutil.ErrMissingLastName),

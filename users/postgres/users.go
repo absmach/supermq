@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
+	api "github.com/absmach/supermq/api/http"
 	"github.com/absmach/supermq/groups"
-	"github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	"github.com/absmach/supermq/pkg/postgres"

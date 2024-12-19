@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
-	"github.com/absmach/supermq/internal/api"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/users"
 	"github.com/stretchr/testify/assert"
