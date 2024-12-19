@@ -164,17 +164,3 @@ func (es *eventStore) ListDomains(ctx context.Context, session authn.Session, p 
 
 	return dp, nil
 }
-
-func (es *eventStore) DeleteUserFromDomains(ctx context.Context, userID string) error {
-	if err := es.svc.DeleteUserFromDomains(ctx, userID); err != nil {
-		return err
-	}
-
-	event := deleteUserFromDomainsEvent{userID}
-
-	if err := es.Publish(ctx, event); err != nil {
-		return err
-	}
-
-	return nil
-}

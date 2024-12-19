@@ -45,7 +45,6 @@ type authorizationMiddleware struct {
 	authz  smqauthz.Authorization
 	opp    svcutil.OperationPerm
 	extOpp svcutil.ExternalOperationPerm
-
 	rmMW.RoleManagerAuthorizationMiddleware
 }
 
@@ -371,6 +370,7 @@ func (am *authorizationMiddleware) authorize(ctx context.Context, op svcutil.Ope
 		return err
 	}
 	pr.Permission = perm.String()
+
 	if err := am.authz.Authorize(ctx, pr); err != nil {
 		return err
 	}

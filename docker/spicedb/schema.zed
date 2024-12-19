@@ -251,7 +251,6 @@ definition domain {
 	relation update: role#member | team#member
 	relation enable: role#member | team#member
 	relation disable: role#member | team#member
-	relation membership: role#member | team#member
 	relation read: role#member | team#member
 	relation delete: role#member | team#member
 
@@ -304,13 +303,15 @@ definition domain {
 	permission read_permission = read + team->domain_read + organization->admin
 	permission enable_permission = enable + team->domain_update + organization->admin
 	permission disable_permission = disable + team->domain_update + organization->admin
-	permission membership_permission = membership + team->domain_membership + organization->admin
 	permission delete_permission = delete + team->domain_delete + organization->admin
 
 	permission manage_role_permission = manage_role + team->domain_manage_role + organization->admin
 	permission add_role_users_permission = add_role_users + team->domain_add_role_users + organization->admin
 	permission remove_role_users_permission = remove_role_users + team->domain_remove_role_users + organization->admin
 	permission view_role_users_permission = view_role_users + team->domain_view_role_users + organization->admin
+
+	permission membership = read + update + enable + disable + delete + manage_role + add_role_users + remove_role_users + view_role_users
+	permission admin = read & update & enable & disable & delete & manage_role & add_role_users & remove_role_users & view_role_users
 
 	permission client_create_permission = client_create + team->client_create + organization->admin
 	permission channel_create_permission = channel_create + team->channel_create + organization->admin

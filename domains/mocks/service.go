@@ -357,6 +357,34 @@ func (_m *Service) RetrieveRole(ctx context.Context, session authn.Session, enti
 	return r0, r1
 }
 
+// RetrieveStatus provides a mock function with given fields: ctx, id
+func (_m *Service) RetrieveStatus(ctx context.Context, id string) (domains.Status, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveStatus")
+	}
+
+	var r0 domains.Status
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (domains.Status, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) domains.Status); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(domains.Status)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RoleAddActions provides a mock function with given fields: ctx, session, entityID, roleName, actions
 func (_m *Service) RoleAddActions(ctx context.Context, session authn.Session, entityID string, roleName string, actions []string) ([]string, error) {
 	ret := _m.Called(ctx, session, entityID, roleName, actions)

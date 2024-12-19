@@ -30,6 +30,7 @@ import (
 	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
+	domainsAuthz "github.com/absmach/supermq/pkg/domains/grpcclient"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	jaegerclient "github.com/absmach/supermq/pkg/jaeger"
 	"github.com/absmach/supermq/pkg/policies"
@@ -157,7 +158,21 @@ func main() {
 	defer authnHandler.Close()
 	logger.Info("Authn successfully connected to auth gRPC server " + authnHandler.Secure())
 
-	authz, authzHandler, err := authsvcAuthz.NewAuthorization(ctx, authClientConfig)
+	domsGrpcCfg := grpcclient.Config{}
+	if err := env.ParseWithOptions(&domsGrpcCfg, env.Options{Prefix: envPrefixDomains}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load domains gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+	domAuthz, _, domainsHandler, err := domainsAuthz.NewAuthorization(ctx, domsGrpcCfg)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer domainsHandler.Close()
+
+	authz, authzHandler, err := authsvcAuthz.NewAuthorization(ctx, authClientConfig, domAuthz)
 	if err != nil {
 		logger.Error("failed to create authz " + err.Error())
 		exitCode = 1

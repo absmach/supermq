@@ -81,7 +81,6 @@ func AuthorizationMiddleware(svc channels.Service, repo channels.Repository, aut
 }
 
 func (am *authorizationMiddleware) CreateChannels(ctx context.Context, session authn.Session, chs ...channels.Channel) ([]channels.Channel, error) {
-	// If domain is disabled , then this authorization will fail for all non-admin domain users
 	if err := am.extAuthorize(ctx, channels.DomainOpCreateChannel, authz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,

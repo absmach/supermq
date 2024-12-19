@@ -169,7 +169,6 @@ type Service interface {
 	DisableDomain(ctx context.Context, sesssion authn.Session, id string) (Domain, error)
 	FreezeDomain(ctx context.Context, sesssion authn.Session, id string) (Domain, error)
 	ListDomains(ctx context.Context, sesssion authn.Session, page Page) (DomainsPage, error)
-	DeleteUserFromDomains(ctx context.Context, id string) error
 	roles.RoleManager
 }
 
@@ -198,4 +197,18 @@ type Repository interface {
 	ListDomains(ctx context.Context, pm Page) (DomainsPage, error)
 
 	roles.Repository
+}
+
+// Cache contains domains caching interface.
+//
+//go:generate mockery --name Cache --output=./mocks --filename cache.go --quiet --note "Copyright (c) Abstract Machines"
+type Cache interface {
+	// Save stores pair domain status and  domain id.
+	Save(ctx context.Context, domainID string, status Status) error
+
+	// Status returns domain status for given domain ID.
+	Status(ctx context.Context, domainID string) (Status, error)
+
+	// Removes domain from cache.
+	Remove(ctx context.Context, domainID string) error
 }

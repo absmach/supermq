@@ -3,7 +3,9 @@
 
 package authz
 
-import "context"
+import (
+	"context"
+)
 
 type PolicyReq struct {
 	// Domain contains the domain ID.
