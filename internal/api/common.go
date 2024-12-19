@@ -127,6 +127,7 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, svcerr.ErrAuthorization),
 		errors.Contains(err, svcerr.ErrDomainAuthorization),
+		errors.Contains(err, svcerr.ErrUnauthorizedPAT),
 		errors.Contains(err, bootstrap.ErrExternalKey),
 		errors.Contains(err, bootstrap.ErrExternalKeySecure):
 		err = unwrap(err)

@@ -203,7 +203,7 @@ func (tm *tracingMiddleware) AuthorizePAT(ctx context.Context, userID, patID str
 func (tm *tracingMiddleware) CheckPAT(ctx context.Context, userID, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) error {
 	ctx, span := tm.tracer.Start(ctx, "check_pat", trace.WithAttributes(
 		attribute.String("user_id", userID),
-		attribute.String("patID", patID),
+		attribute.String("pat_id", patID),
 		attribute.String("platform_entity", platformEntityType.String()),
 		attribute.String("optional_domain_id", optionalDomainID),
 		attribute.String("optional_domain_entity", optionalDomainEntityType.String()),
