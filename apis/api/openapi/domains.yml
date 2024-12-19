@@ -235,7 +235,6 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/DomainID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/CreateRoleReq"
@@ -268,7 +267,6 @@ paths:
         dataset is consumed either by making subsequent requests, or by
         increasing the subset size of the initial request.
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/DomainID"
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
@@ -300,7 +298,6 @@ paths:
       description: |
         Retrieves a specific domain role that is identified by the role name.
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/DomainID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       security:
@@ -330,7 +327,6 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/DomainID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       requestBody:
@@ -362,7 +358,6 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/DomainID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       security:
@@ -393,7 +388,6 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/DomainID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       requestBody:
@@ -425,7 +419,6 @@ paths:
       description: |
         Retrieves a list of domain role actions. 
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/DomainID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       security:
@@ -456,7 +449,6 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/DomainID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       requestBody:
@@ -489,7 +481,6 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/DomainID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       security:
@@ -520,7 +511,6 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/DomainID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       requestBody:
@@ -552,7 +542,6 @@ paths:
       description: |
         Retrieves a list of domain role members. 
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/DomainID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       security:
@@ -583,7 +572,6 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/DomainID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       requestBody:
@@ -616,7 +604,6 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/DomainID"
         - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
       security:
