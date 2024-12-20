@@ -25,7 +25,9 @@ func EncodeError(err error) error {
 		err == apiutil.ErrMissingMemberType,
 		err == apiutil.ErrMissingPolicySub,
 		err == apiutil.ErrMissingPolicyObj,
-		err == apiutil.ErrMalformedPolicyAct:
+		err == apiutil.ErrMalformedPolicyAct,
+		err == apiutil.ErrMissingUserID,
+		err == apiutil.ErrMissingPATID:
 		return status.Error(codes.InvalidArgument, err.Error())
 	case errors.Contains(err, svcerr.ErrAuthentication),
 		errors.Contains(err, auth.ErrKeyExpired),
