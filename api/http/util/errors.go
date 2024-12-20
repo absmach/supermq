@@ -81,6 +81,9 @@ var (
 	// ErrMissingRoleName indicates that role name are empty.
 	ErrMissingRoleName = errors.New("empty role name")
 
+	// ErrMissingRoleID indicates that role name are empty.
+	ErrMissingRoleID = errors.New("empty role id")
+
 	// ErrMissingRoleOperations indicates that role operations are empty.
 	ErrMissingRoleOperations = errors.New("empty role operations")
 

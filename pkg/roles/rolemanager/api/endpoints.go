@@ -67,7 +67,7 @@ func ViewRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		ro, err := svc.RetrieveRole(ctx, session, req.entityID, req.roleName)
+		ro, err := svc.RetrieveRole(ctx, session, req.entityID, req.roleID)
 		if err != nil {
 			return nil, err
 		}
@@ -87,7 +87,7 @@ func UpdateRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		ro, err := svc.UpdateRoleName(ctx, session, req.entityID, req.roleName, req.Name)
+		ro, err := svc.UpdateRoleName(ctx, session, req.entityID, req.roleID, req.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -107,7 +107,7 @@ func DeleteRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		if err := svc.RemoveRole(ctx, session, req.entityID, req.roleName); err != nil {
+		if err := svc.RemoveRole(ctx, session, req.entityID, req.roleID); err != nil {
 			return nil, err
 		}
 		return deleteRoleRes{}, nil
@@ -146,7 +146,7 @@ func AddRoleActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		caps, err := svc.RoleAddActions(ctx, session, req.entityID, req.roleName, req.Actions)
+		caps, err := svc.RoleAddActions(ctx, session, req.entityID, req.roleID, req.Actions)
 		if err != nil {
 			return nil, err
 		}
@@ -166,7 +166,7 @@ func ListRoleActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		caps, err := svc.RoleListActions(ctx, session, req.entityID, req.roleName)
+		caps, err := svc.RoleListActions(ctx, session, req.entityID, req.roleID)
 		if err != nil {
 			return nil, err
 		}
@@ -186,7 +186,7 @@ func DeleteRoleActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		if err := svc.RoleRemoveActions(ctx, session, req.entityID, req.roleName, req.Actions); err != nil {
+		if err := svc.RoleRemoveActions(ctx, session, req.entityID, req.roleID, req.Actions); err != nil {
 			return nil, err
 		}
 		return deleteRoleActionsRes{}, nil
@@ -205,7 +205,7 @@ func DeleteAllRoleActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		if err := svc.RoleRemoveAllActions(ctx, session, req.entityID, req.roleName); err != nil {
+		if err := svc.RoleRemoveAllActions(ctx, session, req.entityID, req.roleID); err != nil {
 			return nil, err
 		}
 		return deleteAllRoleActionsRes{}, nil
@@ -224,7 +224,7 @@ func AddRoleMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		members, err := svc.RoleAddMembers(ctx, session, req.entityID, req.roleName, req.Members)
+		members, err := svc.RoleAddMembers(ctx, session, req.entityID, req.roleID, req.Members)
 		if err != nil {
 			return nil, err
 		}
@@ -244,7 +244,7 @@ func ListRoleMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		mp, err := svc.RoleListMembers(ctx, session, req.entityID, req.roleName, req.limit, req.offset)
+		mp, err := svc.RoleListMembers(ctx, session, req.entityID, req.roleID, req.limit, req.offset)
 		if err != nil {
 			return nil, err
 		}
@@ -264,7 +264,7 @@ func DeleteRoleMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		if err := svc.RoleRemoveMembers(ctx, session, req.entityID, req.roleName, req.Members); err != nil {
+		if err := svc.RoleRemoveMembers(ctx, session, req.entityID, req.roleID, req.Members); err != nil {
 			return nil, err
 		}
 		return deleteRoleMembersRes{}, nil
@@ -283,7 +283,7 @@ func DeleteAllRoleMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		if err := svc.RoleRemoveAllMembers(ctx, session, req.entityID, req.roleName); err != nil {
+		if err := svc.RoleRemoveAllMembers(ctx, session, req.entityID, req.roleID); err != nil {
 			return nil, err
 		}
 		return deleteAllRoleMemberRes{}, nil
