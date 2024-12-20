@@ -125,7 +125,7 @@ func (res updateChannelRes) Empty() bool {
 type setChannelParentGroupRes struct{}
 
 func (res setChannelParentGroupRes) Code() int {
-	return http.StatusAccepted
+	return http.StatusOK
 }
 
 func (res setChannelParentGroupRes) Headers() map[string]string {

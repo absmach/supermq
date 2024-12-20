@@ -80,74 +80,74 @@ jobs:
           filters: |
             journal:
               - ".github/workflows/api-tests.yml"
-              - "api/openapi/journal.yml"
+              - "apidocs/openapi/journal.yml"
               - "journal/api/**"
 
             auth:
               - ".github/workflows/api-tests.yml"
-              - "api/openapi/auth.yml"
+              - "apidocs/openapi/auth.yml"
               - "auth/api/http/**"
 
             bootstrap:
               - ".github/workflows/api-tests.yml"
-              - "api/openapi/bootstrap.yml"
+              - "apidocs/openapi/bootstrap.yml"
               - "bootstrap/api/**"
 
             certs:
               - ".github/workflows/api-tests.yml"
-              - "api/openapi/certs.yml"
+              - "apidocs/openapi/certs.yml"
               - "certs/api/**"
             
             domains:
               - ".github/workflows/api-tests.yml"
-              - "api/openapi/domains.yml"
+              - "apidocs/openapi/domains.yml"
               - "domains/api/http/**"
 
             http:
               - ".github/workflows/api-tests.yml"
-              - "api/openapi/http.yml"
+              - "apidocs/openapi/http.yml"
               - "http/api/**"
 
             invitations:
               - ".github/workflows/api-tests.yml"
-              - "api/openapi/invitations.yml"
+              - "apidocs/openapi/invitations.yml"
               - "invitations/api/**"
 
             provision:
               - ".github/workflows/api-tests.yml"
-              - "api/openapi/provision.yml"
+              - "apidocs/openapi/provision.yml"
               - "provision/api/**"
 
             readers:
               - ".github/workflows/api-tests.yml"
-              - "api/openapi/readers.yml"
+              - "apidocs/openapi/readers.yml"
               - "readers/api/**"
 
             clients:
               - ".github/workflows/api-tests.yml"
-              - "api/openapi/clients.yml"
+              - "apidocs/openapi/clients.yml"
               - "clients/api/http/**"
             
             channels:
               - ".github/workflows/api-tests.yml"
-              - "api/openapi/channels.yml"
+              - "apidocs/openapi/channels.yml"
               - "channels/api/http/**"
             
             groups:
               - ".github/workflows/api-tests.yml"
-              - "api/openapi/groups.yml"
+              - "apidocs/openapi/groups.yml"
               - "groups/api/http/**"
 
             users:
               - ".github/workflows/api-tests.yml"
-              - "api/openapi/users.yml"
+              - "apidocs/openapi/users.yml"
               - "users/api/**"
 
       - name: Run Users API tests
         if: steps.changes.outputs.users == 'true'
         uses: schemathesis/action@v1
         with:
-          schema: api/openapi/users.yml
+          schema: apidocs/openapi/users.yml
           base-url: ${{ env.USERS_URL }}
           checks: all
           report: false
@@ -157,7 +157,7 @@ jobs:
         if: steps.changes.outputs.groups == 'true'
         uses: schemathesis/action@v1
         with:
-          schema: api/openapi/groups.yml
+          schema: apidocs/openapi/groups.yml
           base-url: ${{ env.GROUPS_URL }}
           checks: all
           report: false
@@ -167,7 +167,7 @@ jobs:
         if: steps.changes.outputs.clients == 'true'
         uses: schemathesis/action@v1
         with:
-          schema: api/openapi/clients.yml
+          schema: apidocs/openapi/clients.yml
           base-url: ${{ env.CLIENTS_URL }}
           checks: all
           report: false
@@ -177,7 +177,7 @@ jobs:
         if: steps.changes.outputs.channels == 'true'
         uses: schemathesis/action@v1
         with:
-          schema: api/openapi/channels.yml
+          schema: apidocs/openapi/channels.yml
           base-url: ${{ env.CHANNELS_URL }}
           checks: all
           report: false
@@ -187,7 +187,7 @@ jobs:
         if: steps.changes.outputs.http == 'true'
         uses: schemathesis/action@v1
         with:
-          schema: api/openapi/http.yml
+          schema: apidocs/openapi/http.yml
           base-url: ${{ env.HTTP_ADAPTER_URL }}
           checks: all
           report: false
@@ -197,7 +197,7 @@ jobs:
         if: steps.changes.outputs.invitations == 'true'
         uses: schemathesis/action@v1
         with:
-          schema: api/openapi/invitations.yml
+          schema: apidocs/openapi/invitations.yml
           base-url: ${{ env.INVITATIONS_URL }}
           checks: all
           report: false
@@ -207,7 +207,7 @@ jobs:
         if: steps.changes.outputs.auth == 'true'
         uses: schemathesis/action@v1
         with:
-          schema: api/openapi/auth.yml
+          schema: apidocs/openapi/auth.yml
           base-url: ${{ env.AUTH_URL }}
           checks: all
           report: false
@@ -217,7 +217,7 @@ jobs:
         if: steps.changes.outputs.domains == 'true'
         uses: schemathesis/action@v1
         with:
-          schema: api/openapi/domains.yml
+          schema: apidocs/openapi/domains.yml
           base-url: ${{ env.DOMAIN_URL }}
           checks: all
           report: false
@@ -227,7 +227,7 @@ jobs:
         if: steps.changes.outputs.journal == 'true'
         uses: schemathesis/action@v1
         with:
-          schema: api/openapi/journal.yml
+          schema: apidocs/openapi/journal.yml
           base-url: ${{ env.JOURNAL_URL }}
           checks: all
           report: false
@@ -237,7 +237,7 @@ jobs:
         if: steps.changes.outputs.bootstrap == 'true'
         uses: schemathesis/action@v1
         with:
-          schema: api/openapi/bootstrap.yml
+          schema: apidocs/openapi/bootstrap.yml
           base-url: ${{ env.BOOTSTRAP_URL }}
           checks: all
           report: false
@@ -247,7 +247,7 @@ jobs:
         if: steps.changes.outputs.certs == 'true'
         uses: schemathesis/action@v1
         with:
-          schema: api/openapi/certs.yml
+          schema: apidocs/openapi/certs.yml
           base-url: ${{ env.CERTS_URL }}
           checks: all
           report: false
@@ -257,7 +257,7 @@ jobs:
         if: steps.changes.outputs.provision == 'true'
         uses: schemathesis/action@v1
         with:
-          schema: api/openapi/provision.yml
+          schema: apidocs/openapi/provision.yml
           base-url: ${{ env.PROVISION_URL }}
           checks: all
           report: false
@@ -273,7 +273,7 @@ jobs:
         if: steps.changes.outputs.readers == 'true'
         uses: schemathesis/action@v1
         with:
-          schema: api/openapi/readers.yml
+          schema: apidocs/openapi/readers.yml
           base-url: ${{ env.POSTGRES_READER_URL }}
           checks: all
           report: false
@@ -283,7 +283,7 @@ jobs:
         if: steps.changes.outputs.readers == 'true'
         uses: schemathesis/action@v1
         with:
-          schema: api/openapi/readers.yml
+          schema: apidocs/openapi/readers.yml
           base-url: ${{ env.TIMESCALE_READER_URL }}
           checks: all
           report: false

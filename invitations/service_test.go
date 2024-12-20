@@ -373,7 +373,7 @@ func TestAcceptInvitation(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			repocall1 := repo.On("Retrieve", context.Background(), mock.Anything, tc.domainID).Return(tc.resp, tc.repoErr)
-			sdkcall := sdksvc.On("AddUserToDomain", mock.Anything, mock.Anything, mock.Anything).Return(tc.sdkErr)
+			sdkcall := sdksvc.On("AddDomainRoleMembers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]string{}, tc.sdkErr)
 			repocall2 := repo.On("UpdateConfirmation", context.Background(), mock.Anything).Return(tc.repoErr1)
 			err := svc.AcceptInvitation(context.Background(), tc.session, tc.domainID)
 			assert.Equal(t, tc.err, err, tc.desc)

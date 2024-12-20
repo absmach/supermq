@@ -135,17 +135,17 @@ func (_c *SDK_AddBootstrap_Call) RunAndReturn(run func(sdk.BootstrapConfig, stri
 	return _c
 }
 
-// AddUserGroupToChannel provides a mock function with given fields: channelID, req, domainID, token
-func (_m *SDK) AddUserGroupToChannel(channelID string, req sdk.UserGroupsRequest, domainID string, token string) errors.SDKError {
-	ret := _m.Called(channelID, req, domainID, token)
+// AddChildren provides a mock function with given fields: id, domainID, groupIDs, token
+func (_m *SDK) AddChildren(id string, domainID string, groupIDs []string, token string) errors.SDKError {
+	ret := _m.Called(id, domainID, groupIDs, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for AddUserGroupToChannel")
+		panic("no return value specified for AddChildren")
 	}
 
 	var r0 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.UserGroupsRequest, string, string) errors.SDKError); ok {
-		r0 = rf(channelID, req, domainID, token)
+	if rf, ok := ret.Get(0).(func(string, string, []string, string) errors.SDKError); ok {
+		r0 = rf(id, domainID, groupIDs, token)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.SDKError)
@@ -155,185 +155,597 @@ func (_m *SDK) AddUserGroupToChannel(channelID string, req sdk.UserGroupsRequest
 	return r0
 }
 
-// SDK_AddUserGroupToChannel_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddUserGroupToChannel'
-type SDK_AddUserGroupToChannel_Call struct {
+// SDK_AddChildren_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddChildren'
+type SDK_AddChildren_Call struct {
 	*mock.Call
 }
 
-// AddUserGroupToChannel is a helper method to define mock.On call
-//   - channelID string
-//   - req sdk.UserGroupsRequest
+// AddChildren is a helper method to define mock.On call
+//   - id string
 //   - domainID string
+//   - groupIDs []string
 //   - token string
-func (_e *SDK_Expecter) AddUserGroupToChannel(channelID interface{}, req interface{}, domainID interface{}, token interface{}) *SDK_AddUserGroupToChannel_Call {
-	return &SDK_AddUserGroupToChannel_Call{Call: _e.mock.On("AddUserGroupToChannel", channelID, req, domainID, token)}
+func (_e *SDK_Expecter) AddChildren(id interface{}, domainID interface{}, groupIDs interface{}, token interface{}) *SDK_AddChildren_Call {
+	return &SDK_AddChildren_Call{Call: _e.mock.On("AddChildren", id, domainID, groupIDs, token)}
 }
 
-func (_c *SDK_AddUserGroupToChannel_Call) Run(run func(channelID string, req sdk.UserGroupsRequest, domainID string, token string)) *SDK_AddUserGroupToChannel_Call {
+func (_c *SDK_AddChildren_Call) Run(run func(id string, domainID string, groupIDs []string, token string)) *SDK_AddChildren_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.UserGroupsRequest), args[2].(string), args[3].(string))
+		run(args[0].(string), args[1].(string), args[2].([]string), args[3].(string))
 	})
 	return _c
 }
 
-func (_c *SDK_AddUserGroupToChannel_Call) Return(_a0 errors.SDKError) *SDK_AddUserGroupToChannel_Call {
+func (_c *SDK_AddChildren_Call) Return(_a0 errors.SDKError) *SDK_AddChildren_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *SDK_AddUserGroupToChannel_Call) RunAndReturn(run func(string, sdk.UserGroupsRequest, string, string) errors.SDKError) *SDK_AddUserGroupToChannel_Call {
+func (_c *SDK_AddChildren_Call) RunAndReturn(run func(string, string, []string, string) errors.SDKError) *SDK_AddChildren_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// AddUserToChannel provides a mock function with given fields: channelID, req, domainID, token
-func (_m *SDK) AddUserToChannel(channelID string, req sdk.UsersRelationRequest, domainID string, token string) errors.SDKError {
-	ret := _m.Called(channelID, req, domainID, token)
+// AddClientRoleActions provides a mock function with given fields: id, roleName, domainID, actions, token
+func (_m *SDK) AddClientRoleActions(id string, roleName string, domainID string, actions []string, token string) ([]string, errors.SDKError) {
+	ret := _m.Called(id, roleName, domainID, actions, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for AddUserToChannel")
+		panic("no return value specified for AddClientRoleActions")
 	}
 
-	var r0 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.UsersRelationRequest, string, string) errors.SDKError); ok {
-		r0 = rf(channelID, req, domainID, token)
+	var r0 []string
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, []string, string) ([]string, errors.SDKError)); ok {
+		return rf(id, roleName, domainID, actions, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, string, []string, string) []string); ok {
+		r0 = rf(id, roleName, domainID, actions, token)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(errors.SDKError)
+			r0 = ret.Get(0).([]string)
 		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(string, string, string, []string, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, domainID, actions, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
 }
 
-// SDK_AddUserToChannel_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddUserToChannel'
-type SDK_AddUserToChannel_Call struct {
+// SDK_AddClientRoleActions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddClientRoleActions'
+type SDK_AddClientRoleActions_Call struct {
 	*mock.Call
 }
 
-// AddUserToChannel is a helper method to define mock.On call
-//   - channelID string
-//   - req sdk.UsersRelationRequest
+// AddClientRoleActions is a helper method to define mock.On call
+//   - id string
+//   - roleName string
 //   - domainID string
+//   - actions []string
 //   - token string
-func (_e *SDK_Expecter) AddUserToChannel(channelID interface{}, req interface{}, domainID interface{}, token interface{}) *SDK_AddUserToChannel_Call {
-	return &SDK_AddUserToChannel_Call{Call: _e.mock.On("AddUserToChannel", channelID, req, domainID, token)}
+func (_e *SDK_Expecter) AddClientRoleActions(id interface{}, roleName interface{}, domainID interface{}, actions interface{}, token interface{}) *SDK_AddClientRoleActions_Call {
+	return &SDK_AddClientRoleActions_Call{Call: _e.mock.On("AddClientRoleActions", id, roleName, domainID, actions, token)}
 }
 
-func (_c *SDK_AddUserToChannel_Call) Run(run func(channelID string, req sdk.UsersRelationRequest, domainID string, token string)) *SDK_AddUserToChannel_Call {
+func (_c *SDK_AddClientRoleActions_Call) Run(run func(id string, roleName string, domainID string, actions []string, token string)) *SDK_AddClientRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.UsersRelationRequest), args[2].(string), args[3].(string))
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
 	})
 	return _c
 }
 
-func (_c *SDK_AddUserToChannel_Call) Return(_a0 errors.SDKError) *SDK_AddUserToChannel_Call {
-	_c.Call.Return(_a0)
+func (_c *SDK_AddClientRoleActions_Call) Return(_a0 []string, _a1 errors.SDKError) *SDK_AddClientRoleActions_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *SDK_AddUserToChannel_Call) RunAndReturn(run func(string, sdk.UsersRelationRequest, string, string) errors.SDKError) *SDK_AddUserToChannel_Call {
+func (_c *SDK_AddClientRoleActions_Call) RunAndReturn(run func(string, string, string, []string, string) ([]string, errors.SDKError)) *SDK_AddClientRoleActions_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// AddUserToDomain provides a mock function with given fields: domainID, req, token
-func (_m *SDK) AddUserToDomain(domainID string, req sdk.UsersRelationRequest, token string) errors.SDKError {
-	ret := _m.Called(domainID, req, token)
+// AddClientRoleMembers provides a mock function with given fields: id, roleName, domainID, members, token
+func (_m *SDK) AddClientRoleMembers(id string, roleName string, domainID string, members []string, token string) ([]string, errors.SDKError) {
+	ret := _m.Called(id, roleName, domainID, members, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for AddUserToDomain")
+		panic("no return value specified for AddClientRoleMembers")
 	}
 
-	var r0 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.UsersRelationRequest, string) errors.SDKError); ok {
-		r0 = rf(domainID, req, token)
+	var r0 []string
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, []string, string) ([]string, errors.SDKError)); ok {
+		return rf(id, roleName, domainID, members, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, string, []string, string) []string); ok {
+		r0 = rf(id, roleName, domainID, members, token)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(errors.SDKError)
+			r0 = ret.Get(0).([]string)
 		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(string, string, string, []string, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, domainID, members, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
 }
 
-// SDK_AddUserToDomain_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddUserToDomain'
-type SDK_AddUserToDomain_Call struct {
+// SDK_AddClientRoleMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddClientRoleMembers'
+type SDK_AddClientRoleMembers_Call struct {
 	*mock.Call
 }
 
-// AddUserToDomain is a helper method to define mock.On call
+// AddClientRoleMembers is a helper method to define mock.On call
+//   - id string
+//   - roleName string
 //   - domainID string
-//   - req sdk.UsersRelationRequest
+//   - members []string
 //   - token string
-func (_e *SDK_Expecter) AddUserToDomain(domainID interface{}, req interface{}, token interface{}) *SDK_AddUserToDomain_Call {
-	return &SDK_AddUserToDomain_Call{Call: _e.mock.On("AddUserToDomain", domainID, req, token)}
+func (_e *SDK_Expecter) AddClientRoleMembers(id interface{}, roleName interface{}, domainID interface{}, members interface{}, token interface{}) *SDK_AddClientRoleMembers_Call {
+	return &SDK_AddClientRoleMembers_Call{Call: _e.mock.On("AddClientRoleMembers", id, roleName, domainID, members, token)}
 }
 
-func (_c *SDK_AddUserToDomain_Call) Run(run func(domainID string, req sdk.UsersRelationRequest, token string)) *SDK_AddUserToDomain_Call {
+func (_c *SDK_AddClientRoleMembers_Call) Run(run func(id string, roleName string, domainID string, members []string, token string)) *SDK_AddClientRoleMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.UsersRelationRequest), args[2].(string))
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
 	})
 	return _c
 }
 
-func (_c *SDK_AddUserToDomain_Call) Return(_a0 errors.SDKError) *SDK_AddUserToDomain_Call {
-	_c.Call.Return(_a0)
+func (_c *SDK_AddClientRoleMembers_Call) Return(_a0 []string, _a1 errors.SDKError) *SDK_AddClientRoleMembers_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *SDK_AddUserToDomain_Call) RunAndReturn(run func(string, sdk.UsersRelationRequest, string) errors.SDKError) *SDK_AddUserToDomain_Call {
+func (_c *SDK_AddClientRoleMembers_Call) RunAndReturn(run func(string, string, string, []string, string) ([]string, errors.SDKError)) *SDK_AddClientRoleMembers_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// AddUserToGroup provides a mock function with given fields: groupID, req, domainID, token
-func (_m *SDK) AddUserToGroup(groupID string, req sdk.UsersRelationRequest, domainID string, token string) errors.SDKError {
-	ret := _m.Called(groupID, req, domainID, token)
+// AddDomainRoleActions provides a mock function with given fields: id, roleName, actions, token
+func (_m *SDK) AddDomainRoleActions(id string, roleName string, actions []string, token string) ([]string, errors.SDKError) {
+	ret := _m.Called(id, roleName, actions, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for AddUserToGroup")
+		panic("no return value specified for AddDomainRoleActions")
 	}
 
-	var r0 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.UsersRelationRequest, string, string) errors.SDKError); ok {
-		r0 = rf(groupID, req, domainID, token)
+	var r0 []string
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, []string, string) ([]string, errors.SDKError)); ok {
+		return rf(id, roleName, actions, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, []string, string) []string); ok {
+		r0 = rf(id, roleName, actions, token)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(errors.SDKError)
+			r0 = ret.Get(0).([]string)
 		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(string, string, []string, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, actions, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
 }
 
-// SDK_AddUserToGroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddUserToGroup'
-type SDK_AddUserToGroup_Call struct {
+// SDK_AddDomainRoleActions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddDomainRoleActions'
+type SDK_AddDomainRoleActions_Call struct {
 	*mock.Call
 }
 
-// AddUserToGroup is a helper method to define mock.On call
-//   - groupID string
-//   - req sdk.UsersRelationRequest
-//   - domainID string
+// AddDomainRoleActions is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - actions []string
 //   - token string
-func (_e *SDK_Expecter) AddUserToGroup(groupID interface{}, req interface{}, domainID interface{}, token interface{}) *SDK_AddUserToGroup_Call {
-	return &SDK_AddUserToGroup_Call{Call: _e.mock.On("AddUserToGroup", groupID, req, domainID, token)}
+func (_e *SDK_Expecter) AddDomainRoleActions(id interface{}, roleName interface{}, actions interface{}, token interface{}) *SDK_AddDomainRoleActions_Call {
+	return &SDK_AddDomainRoleActions_Call{Call: _e.mock.On("AddDomainRoleActions", id, roleName, actions, token)}
 }
 
-func (_c *SDK_AddUserToGroup_Call) Run(run func(groupID string, req sdk.UsersRelationRequest, domainID string, token string)) *SDK_AddUserToGroup_Call {
+func (_c *SDK_AddDomainRoleActions_Call) Run(run func(id string, roleName string, actions []string, token string)) *SDK_AddDomainRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.UsersRelationRequest), args[2].(string), args[3].(string))
+		run(args[0].(string), args[1].(string), args[2].([]string), args[3].(string))
 	})
 	return _c
 }
 
-func (_c *SDK_AddUserToGroup_Call) Return(_a0 errors.SDKError) *SDK_AddUserToGroup_Call {
-	_c.Call.Return(_a0)
+func (_c *SDK_AddDomainRoleActions_Call) Return(_a0 []string, _a1 errors.SDKError) *SDK_AddDomainRoleActions_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *SDK_AddUserToGroup_Call) RunAndReturn(run func(string, sdk.UsersRelationRequest, string, string) errors.SDKError) *SDK_AddUserToGroup_Call {
+func (_c *SDK_AddDomainRoleActions_Call) RunAndReturn(run func(string, string, []string, string) ([]string, errors.SDKError)) *SDK_AddDomainRoleActions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// AddDomainRoleMembers provides a mock function with given fields: id, roleName, members, token
+func (_m *SDK) AddDomainRoleMembers(id string, roleName string, members []string, token string) ([]string, errors.SDKError) {
+	ret := _m.Called(id, roleName, members, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddDomainRoleMembers")
+	}
+
+	var r0 []string
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, []string, string) ([]string, errors.SDKError)); ok {
+		return rf(id, roleName, members, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, []string, string) []string); ok {
+		r0 = rf(id, roleName, members, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, []string, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, members, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_AddDomainRoleMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddDomainRoleMembers'
+type SDK_AddDomainRoleMembers_Call struct {
+	*mock.Call
+}
+
+// AddDomainRoleMembers is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - members []string
+//   - token string
+func (_e *SDK_Expecter) AddDomainRoleMembers(id interface{}, roleName interface{}, members interface{}, token interface{}) *SDK_AddDomainRoleMembers_Call {
+	return &SDK_AddDomainRoleMembers_Call{Call: _e.mock.On("AddDomainRoleMembers", id, roleName, members, token)}
+}
+
+func (_c *SDK_AddDomainRoleMembers_Call) Run(run func(id string, roleName string, members []string, token string)) *SDK_AddDomainRoleMembers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].([]string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_AddDomainRoleMembers_Call) Return(_a0 []string, _a1 errors.SDKError) *SDK_AddDomainRoleMembers_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_AddDomainRoleMembers_Call) RunAndReturn(run func(string, string, []string, string) ([]string, errors.SDKError)) *SDK_AddDomainRoleMembers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// AddGroupRoleActions provides a mock function with given fields: id, roleName, domainID, actions, token
+func (_m *SDK) AddGroupRoleActions(id string, roleName string, domainID string, actions []string, token string) ([]string, errors.SDKError) {
+	ret := _m.Called(id, roleName, domainID, actions, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddGroupRoleActions")
+	}
+
+	var r0 []string
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, []string, string) ([]string, errors.SDKError)); ok {
+		return rf(id, roleName, domainID, actions, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, string, []string, string) []string); ok {
+		r0 = rf(id, roleName, domainID, actions, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, string, []string, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, domainID, actions, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_AddGroupRoleActions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddGroupRoleActions'
+type SDK_AddGroupRoleActions_Call struct {
+	*mock.Call
+}
+
+// AddGroupRoleActions is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - domainID string
+//   - actions []string
+//   - token string
+func (_e *SDK_Expecter) AddGroupRoleActions(id interface{}, roleName interface{}, domainID interface{}, actions interface{}, token interface{}) *SDK_AddGroupRoleActions_Call {
+	return &SDK_AddGroupRoleActions_Call{Call: _e.mock.On("AddGroupRoleActions", id, roleName, domainID, actions, token)}
+}
+
+func (_c *SDK_AddGroupRoleActions_Call) Run(run func(id string, roleName string, domainID string, actions []string, token string)) *SDK_AddGroupRoleActions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_AddGroupRoleActions_Call) Return(_a0 []string, _a1 errors.SDKError) *SDK_AddGroupRoleActions_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_AddGroupRoleActions_Call) RunAndReturn(run func(string, string, string, []string, string) ([]string, errors.SDKError)) *SDK_AddGroupRoleActions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// AddGroupRoleMembers provides a mock function with given fields: id, roleName, domainID, members, token
+func (_m *SDK) AddGroupRoleMembers(id string, roleName string, domainID string, members []string, token string) ([]string, errors.SDKError) {
+	ret := _m.Called(id, roleName, domainID, members, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddGroupRoleMembers")
+	}
+
+	var r0 []string
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, []string, string) ([]string, errors.SDKError)); ok {
+		return rf(id, roleName, domainID, members, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, string, []string, string) []string); ok {
+		r0 = rf(id, roleName, domainID, members, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, string, []string, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, domainID, members, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_AddGroupRoleMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddGroupRoleMembers'
+type SDK_AddGroupRoleMembers_Call struct {
+	*mock.Call
+}
+
+// AddGroupRoleMembers is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - domainID string
+//   - members []string
+//   - token string
+func (_e *SDK_Expecter) AddGroupRoleMembers(id interface{}, roleName interface{}, domainID interface{}, members interface{}, token interface{}) *SDK_AddGroupRoleMembers_Call {
+	return &SDK_AddGroupRoleMembers_Call{Call: _e.mock.On("AddGroupRoleMembers", id, roleName, domainID, members, token)}
+}
+
+func (_c *SDK_AddGroupRoleMembers_Call) Run(run func(id string, roleName string, domainID string, members []string, token string)) *SDK_AddGroupRoleMembers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_AddGroupRoleMembers_Call) Return(_a0 []string, _a1 errors.SDKError) *SDK_AddGroupRoleMembers_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_AddGroupRoleMembers_Call) RunAndReturn(run func(string, string, string, []string, string) ([]string, errors.SDKError)) *SDK_AddGroupRoleMembers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// AvailableClientRoleActions provides a mock function with given fields: domainID, token
+func (_m *SDK) AvailableClientRoleActions(domainID string, token string) ([]string, errors.SDKError) {
+	ret := _m.Called(domainID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AvailableClientRoleActions")
+	}
+
+	var r0 []string
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string) ([]string, errors.SDKError)); ok {
+		return rf(domainID, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string) []string); ok {
+		r0 = rf(domainID, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string) errors.SDKError); ok {
+		r1 = rf(domainID, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_AvailableClientRoleActions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AvailableClientRoleActions'
+type SDK_AvailableClientRoleActions_Call struct {
+	*mock.Call
+}
+
+// AvailableClientRoleActions is a helper method to define mock.On call
+//   - domainID string
+//   - token string
+func (_e *SDK_Expecter) AvailableClientRoleActions(domainID interface{}, token interface{}) *SDK_AvailableClientRoleActions_Call {
+	return &SDK_AvailableClientRoleActions_Call{Call: _e.mock.On("AvailableClientRoleActions", domainID, token)}
+}
+
+func (_c *SDK_AvailableClientRoleActions_Call) Run(run func(domainID string, token string)) *SDK_AvailableClientRoleActions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_AvailableClientRoleActions_Call) Return(_a0 []string, _a1 errors.SDKError) *SDK_AvailableClientRoleActions_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_AvailableClientRoleActions_Call) RunAndReturn(run func(string, string) ([]string, errors.SDKError)) *SDK_AvailableClientRoleActions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// AvailableDomainRoleActions provides a mock function with given fields: token
+func (_m *SDK) AvailableDomainRoleActions(token string) ([]string, errors.SDKError) {
+	ret := _m.Called(token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AvailableDomainRoleActions")
+	}
+
+	var r0 []string
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string) ([]string, errors.SDKError)); ok {
+		return rf(token)
+	}
+	if rf, ok := ret.Get(0).(func(string) []string); ok {
+		r0 = rf(token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) errors.SDKError); ok {
+		r1 = rf(token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_AvailableDomainRoleActions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AvailableDomainRoleActions'
+type SDK_AvailableDomainRoleActions_Call struct {
+	*mock.Call
+}
+
+// AvailableDomainRoleActions is a helper method to define mock.On call
+//   - token string
+func (_e *SDK_Expecter) AvailableDomainRoleActions(token interface{}) *SDK_AvailableDomainRoleActions_Call {
+	return &SDK_AvailableDomainRoleActions_Call{Call: _e.mock.On("AvailableDomainRoleActions", token)}
+}
+
+func (_c *SDK_AvailableDomainRoleActions_Call) Run(run func(token string)) *SDK_AvailableDomainRoleActions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_AvailableDomainRoleActions_Call) Return(_a0 []string, _a1 errors.SDKError) *SDK_AvailableDomainRoleActions_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_AvailableDomainRoleActions_Call) RunAndReturn(run func(string) ([]string, errors.SDKError)) *SDK_AvailableDomainRoleActions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// AvailableGroupRoleActions provides a mock function with given fields: id, token
+func (_m *SDK) AvailableGroupRoleActions(id string, token string) ([]string, errors.SDKError) {
+	ret := _m.Called(id, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AvailableGroupRoleActions")
+	}
+
+	var r0 []string
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string) ([]string, errors.SDKError)); ok {
+		return rf(id, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string) []string); ok {
+		r0 = rf(id, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string) errors.SDKError); ok {
+		r1 = rf(id, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_AvailableGroupRoleActions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AvailableGroupRoleActions'
+type SDK_AvailableGroupRoleActions_Call struct {
+	*mock.Call
+}
+
+// AvailableGroupRoleActions is a helper method to define mock.On call
+//   - id string
+//   - token string
+func (_e *SDK_Expecter) AvailableGroupRoleActions(id interface{}, token interface{}) *SDK_AvailableGroupRoleActions_Call {
+	return &SDK_AvailableGroupRoleActions_Call{Call: _e.mock.On("AvailableGroupRoleActions", id, token)}
+}
+
+func (_c *SDK_AvailableGroupRoleActions_Call) Run(run func(id string, token string)) *SDK_AvailableGroupRoleActions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_AvailableGroupRoleActions_Call) Return(_a0 []string, _a1 errors.SDKError) *SDK_AvailableGroupRoleActions_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_AvailableGroupRoleActions_Call) RunAndReturn(run func(string, string) ([]string, errors.SDKError)) *SDK_AvailableGroupRoleActions_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -577,66 +989,6 @@ func (_c *SDK_Channel_Call) RunAndReturn(run func(string, string, string) (sdk.C
 	return _c
 }
 
-// ChannelPermissions provides a mock function with given fields: id, domainID, token
-func (_m *SDK) ChannelPermissions(id string, domainID string, token string) (sdk.Channel, errors.SDKError) {
-	ret := _m.Called(id, domainID, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ChannelPermissions")
-	}
-
-	var r0 sdk.Channel
-	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, string, string) (sdk.Channel, errors.SDKError)); ok {
-		return rf(id, domainID, token)
-	}
-	if rf, ok := ret.Get(0).(func(string, string, string) sdk.Channel); ok {
-		r0 = rf(id, domainID, token)
-	} else {
-		r0 = ret.Get(0).(sdk.Channel)
-	}
-
-	if rf, ok := ret.Get(1).(func(string, string, string) errors.SDKError); ok {
-		r1 = rf(id, domainID, token)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.SDKError)
-		}
-	}
-
-	return r0, r1
-}
-
-// SDK_ChannelPermissions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ChannelPermissions'
-type SDK_ChannelPermissions_Call struct {
-	*mock.Call
-}
-
-// ChannelPermissions is a helper method to define mock.On call
-//   - id string
-//   - domainID string
-//   - token string
-func (_e *SDK_Expecter) ChannelPermissions(id interface{}, domainID interface{}, token interface{}) *SDK_ChannelPermissions_Call {
-	return &SDK_ChannelPermissions_Call{Call: _e.mock.On("ChannelPermissions", id, domainID, token)}
-}
-
-func (_c *SDK_ChannelPermissions_Call) Run(run func(id string, domainID string, token string)) *SDK_ChannelPermissions_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
-	})
-	return _c
-}
-
-func (_c *SDK_ChannelPermissions_Call) Return(_a0 sdk.Channel, _a1 errors.SDKError) *SDK_ChannelPermissions_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *SDK_ChannelPermissions_Call) RunAndReturn(run func(string, string, string) (sdk.Channel, errors.SDKError)) *SDK_ChannelPermissions_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // Channels provides a mock function with given fields: pm, domainID, token
 func (_m *SDK) Channels(pm sdk.PageMetadata, domainID string, token string) (sdk.ChannelsPage, errors.SDKError) {
 	ret := _m.Called(pm, domainID, token)
@@ -697,70 +1049,9 @@ func (_c *SDK_Channels_Call) RunAndReturn(run func(sdk.PageMetadata, string, str
 	return _c
 }
 
-// ChannelsByClient provides a mock function with given fields: clientID, pm, domainID, token
-func (_m *SDK) ChannelsByClient(clientID string, pm sdk.PageMetadata, domainID string, token string) (sdk.ChannelsPage, errors.SDKError) {
-	ret := _m.Called(clientID, pm, domainID, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ChannelsByClient")
-	}
-
-	var r0 sdk.ChannelsPage
-	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) (sdk.ChannelsPage, errors.SDKError)); ok {
-		return rf(clientID, pm, domainID, token)
-	}
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) sdk.ChannelsPage); ok {
-		r0 = rf(clientID, pm, domainID, token)
-	} else {
-		r0 = ret.Get(0).(sdk.ChannelsPage)
-	}
-
-	if rf, ok := ret.Get(1).(func(string, sdk.PageMetadata, string, string) errors.SDKError); ok {
-		r1 = rf(clientID, pm, domainID, token)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.SDKError)
-		}
-	}
-
-	return r0, r1
-}
-
-// SDK_ChannelsByClient_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ChannelsByClient'
-type SDK_ChannelsByClient_Call struct {
-	*mock.Call
-}
-
-// ChannelsByClient is a helper method to define mock.On call
-//   - clientID string
-//   - pm sdk.PageMetadata
-//   - domainID string
-//   - token string
-func (_e *SDK_Expecter) ChannelsByClient(clientID interface{}, pm interface{}, domainID interface{}, token interface{}) *SDK_ChannelsByClient_Call {
-	return &SDK_ChannelsByClient_Call{Call: _e.mock.On("ChannelsByClient", clientID, pm, domainID, token)}
-}
-
-func (_c *SDK_ChannelsByClient_Call) Run(run func(clientID string, pm sdk.PageMetadata, domainID string, token string)) *SDK_ChannelsByClient_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string), args[3].(string))
-	})
-	return _c
-}
-
-func (_c *SDK_ChannelsByClient_Call) Return(_a0 sdk.ChannelsPage, _a1 errors.SDKError) *SDK_ChannelsByClient_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *SDK_ChannelsByClient_Call) RunAndReturn(run func(string, sdk.PageMetadata, string, string) (sdk.ChannelsPage, errors.SDKError)) *SDK_ChannelsByClient_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// Children provides a mock function with given fields: id, pm, domainID, token
-func (_m *SDK) Children(id string, pm sdk.PageMetadata, domainID string, token string) (sdk.GroupsPage, errors.SDKError) {
-	ret := _m.Called(id, pm, domainID, token)
+// Children provides a mock function with given fields: id, domainID, pm, token
+func (_m *SDK) Children(id string, domainID string, pm sdk.PageMetadata, token string) (sdk.GroupsPage, errors.SDKError) {
+	ret := _m.Called(id, domainID, pm, token)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Children")
@@ -768,17 +1059,17 @@ func (_m *SDK) Children(id string, pm sdk.PageMetadata, domainID string, token s
 
 	var r0 sdk.GroupsPage
 	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) (sdk.GroupsPage, errors.SDKError)); ok {
-		return rf(id, pm, domainID, token)
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.GroupsPage, errors.SDKError)); ok {
+		return rf(id, domainID, pm, token)
 	}
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) sdk.GroupsPage); ok {
-		r0 = rf(id, pm, domainID, token)
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.GroupsPage); ok {
+		r0 = rf(id, domainID, pm, token)
 	} else {
 		r0 = ret.Get(0).(sdk.GroupsPage)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, sdk.PageMetadata, string, string) errors.SDKError); ok {
-		r1 = rf(id, pm, domainID, token)
+	if rf, ok := ret.Get(1).(func(string, string, sdk.PageMetadata, string) errors.SDKError); ok {
+		r1 = rf(id, domainID, pm, token)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.SDKError)
@@ -795,16 +1086,16 @@ type SDK_Children_Call struct {
 
 // Children is a helper method to define mock.On call
 //   - id string
-//   - pm sdk.PageMetadata
 //   - domainID string
+//   - pm sdk.PageMetadata
 //   - token string
-func (_e *SDK_Expecter) Children(id interface{}, pm interface{}, domainID interface{}, token interface{}) *SDK_Children_Call {
-	return &SDK_Children_Call{Call: _e.mock.On("Children", id, pm, domainID, token)}
+func (_e *SDK_Expecter) Children(id interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_Children_Call {
+	return &SDK_Children_Call{Call: _e.mock.On("Children", id, domainID, pm, token)}
 }
 
-func (_c *SDK_Children_Call) Run(run func(id string, pm sdk.PageMetadata, domainID string, token string)) *SDK_Children_Call {
+func (_c *SDK_Children_Call) Run(run func(id string, domainID string, pm sdk.PageMetadata, token string)) *SDK_Children_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string), args[3].(string))
+		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
 	})
 	return _c
 }
@@ -814,7 +1105,7 @@ func (_c *SDK_Children_Call) Return(_a0 sdk.GroupsPage, _a1 errors.SDKError) *SD
 	return _c
 }
 
-func (_c *SDK_Children_Call) RunAndReturn(run func(string, sdk.PageMetadata, string, string) (sdk.GroupsPage, errors.SDKError)) *SDK_Children_Call {
+func (_c *SDK_Children_Call) RunAndReturn(run func(string, string, sdk.PageMetadata, string) (sdk.GroupsPage, errors.SDKError)) *SDK_Children_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -879,27 +1170,27 @@ func (_c *SDK_Client_Call) RunAndReturn(run func(string, string, string) (sdk.Cl
 	return _c
 }
 
-// ClientPermissions provides a mock function with given fields: id, domainID, token
-func (_m *SDK) ClientPermissions(id string, domainID string, token string) (sdk.Client, errors.SDKError) {
-	ret := _m.Called(id, domainID, token)
+// ClientRole provides a mock function with given fields: id, roleName, domainID, token
+func (_m *SDK) ClientRole(id string, roleName string, domainID string, token string) (sdk.Role, errors.SDKError) {
+	ret := _m.Called(id, roleName, domainID, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ClientPermissions")
+		panic("no return value specified for ClientRole")
 	}
 
-	var r0 sdk.Client
+	var r0 sdk.Role
 	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, string, string) (sdk.Client, errors.SDKError)); ok {
-		return rf(id, domainID, token)
+	if rf, ok := ret.Get(0).(func(string, string, string, string) (sdk.Role, errors.SDKError)); ok {
+		return rf(id, roleName, domainID, token)
 	}
-	if rf, ok := ret.Get(0).(func(string, string, string) sdk.Client); ok {
-		r0 = rf(id, domainID, token)
+	if rf, ok := ret.Get(0).(func(string, string, string, string) sdk.Role); ok {
+		r0 = rf(id, roleName, domainID, token)
 	} else {
-		r0 = ret.Get(0).(sdk.Client)
+		r0 = ret.Get(0).(sdk.Role)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string, string) errors.SDKError); ok {
-		r1 = rf(id, domainID, token)
+	if rf, ok := ret.Get(1).(func(string, string, string, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, domainID, token)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.SDKError)
@@ -909,32 +1200,219 @@ func (_m *SDK) ClientPermissions(id string, domainID string, token string) (sdk.
 	return r0, r1
 }
 
-// SDK_ClientPermissions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ClientPermissions'
-type SDK_ClientPermissions_Call struct {
+// SDK_ClientRole_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ClientRole'
+type SDK_ClientRole_Call struct {
 	*mock.Call
 }
 
-// ClientPermissions is a helper method to define mock.On call
+// ClientRole is a helper method to define mock.On call
 //   - id string
+//   - roleName string
 //   - domainID string
 //   - token string
-func (_e *SDK_Expecter) ClientPermissions(id interface{}, domainID interface{}, token interface{}) *SDK_ClientPermissions_Call {
-	return &SDK_ClientPermissions_Call{Call: _e.mock.On("ClientPermissions", id, domainID, token)}
+func (_e *SDK_Expecter) ClientRole(id interface{}, roleName interface{}, domainID interface{}, token interface{}) *SDK_ClientRole_Call {
+	return &SDK_ClientRole_Call{Call: _e.mock.On("ClientRole", id, roleName, domainID, token)}
 }
 
-func (_c *SDK_ClientPermissions_Call) Run(run func(id string, domainID string, token string)) *SDK_ClientPermissions_Call {
+func (_c *SDK_ClientRole_Call) Run(run func(id string, roleName string, domainID string, token string)) *SDK_ClientRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
 
-func (_c *SDK_ClientPermissions_Call) Return(_a0 sdk.Client, _a1 errors.SDKError) *SDK_ClientPermissions_Call {
+func (_c *SDK_ClientRole_Call) Return(_a0 sdk.Role, _a1 errors.SDKError) *SDK_ClientRole_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *SDK_ClientPermissions_Call) RunAndReturn(run func(string, string, string) (sdk.Client, errors.SDKError)) *SDK_ClientPermissions_Call {
+func (_c *SDK_ClientRole_Call) RunAndReturn(run func(string, string, string, string) (sdk.Role, errors.SDKError)) *SDK_ClientRole_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ClientRoleActions provides a mock function with given fields: id, roleName, domainID, token
+func (_m *SDK) ClientRoleActions(id string, roleName string, domainID string, token string) ([]string, errors.SDKError) {
+	ret := _m.Called(id, roleName, domainID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ClientRoleActions")
+	}
+
+	var r0 []string
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, string) ([]string, errors.SDKError)); ok {
+		return rf(id, roleName, domainID, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, string, string) []string); ok {
+		r0 = rf(id, roleName, domainID, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, string, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, domainID, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_ClientRoleActions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ClientRoleActions'
+type SDK_ClientRoleActions_Call struct {
+	*mock.Call
+}
+
+// ClientRoleActions is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - domainID string
+//   - token string
+func (_e *SDK_Expecter) ClientRoleActions(id interface{}, roleName interface{}, domainID interface{}, token interface{}) *SDK_ClientRoleActions_Call {
+	return &SDK_ClientRoleActions_Call{Call: _e.mock.On("ClientRoleActions", id, roleName, domainID, token)}
+}
+
+func (_c *SDK_ClientRoleActions_Call) Run(run func(id string, roleName string, domainID string, token string)) *SDK_ClientRoleActions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_ClientRoleActions_Call) Return(_a0 []string, _a1 errors.SDKError) *SDK_ClientRoleActions_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_ClientRoleActions_Call) RunAndReturn(run func(string, string, string, string) ([]string, errors.SDKError)) *SDK_ClientRoleActions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ClientRoleMembers provides a mock function with given fields: id, roleName, domainID, pm, token
+func (_m *SDK) ClientRoleMembers(id string, roleName string, domainID string, pm sdk.PageMetadata, token string) (sdk.RoleMembersPage, errors.SDKError) {
+	ret := _m.Called(id, roleName, domainID, pm, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ClientRoleMembers")
+	}
+
+	var r0 sdk.RoleMembersPage
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, sdk.PageMetadata, string) (sdk.RoleMembersPage, errors.SDKError)); ok {
+		return rf(id, roleName, domainID, pm, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, string, sdk.PageMetadata, string) sdk.RoleMembersPage); ok {
+		r0 = rf(id, roleName, domainID, pm, token)
+	} else {
+		r0 = ret.Get(0).(sdk.RoleMembersPage)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, string, sdk.PageMetadata, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, domainID, pm, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_ClientRoleMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ClientRoleMembers'
+type SDK_ClientRoleMembers_Call struct {
+	*mock.Call
+}
+
+// ClientRoleMembers is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - domainID string
+//   - pm sdk.PageMetadata
+//   - token string
+func (_e *SDK_Expecter) ClientRoleMembers(id interface{}, roleName interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_ClientRoleMembers_Call {
+	return &SDK_ClientRoleMembers_Call{Call: _e.mock.On("ClientRoleMembers", id, roleName, domainID, pm, token)}
+}
+
+func (_c *SDK_ClientRoleMembers_Call) Run(run func(id string, roleName string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ClientRoleMembers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(sdk.PageMetadata), args[4].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_ClientRoleMembers_Call) Return(_a0 sdk.RoleMembersPage, _a1 errors.SDKError) *SDK_ClientRoleMembers_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_ClientRoleMembers_Call) RunAndReturn(run func(string, string, string, sdk.PageMetadata, string) (sdk.RoleMembersPage, errors.SDKError)) *SDK_ClientRoleMembers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ClientRoles provides a mock function with given fields: id, domainID, pm, token
+func (_m *SDK) ClientRoles(id string, domainID string, pm sdk.PageMetadata, token string) (sdk.RolesPage, errors.SDKError) {
+	ret := _m.Called(id, domainID, pm, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ClientRoles")
+	}
+
+	var r0 sdk.RolesPage
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.RolesPage, errors.SDKError)); ok {
+		return rf(id, domainID, pm, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.RolesPage); ok {
+		r0 = rf(id, domainID, pm, token)
+	} else {
+		r0 = ret.Get(0).(sdk.RolesPage)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, sdk.PageMetadata, string) errors.SDKError); ok {
+		r1 = rf(id, domainID, pm, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_ClientRoles_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ClientRoles'
+type SDK_ClientRoles_Call struct {
+	*mock.Call
+}
+
+// ClientRoles is a helper method to define mock.On call
+//   - id string
+//   - domainID string
+//   - pm sdk.PageMetadata
+//   - token string
+func (_e *SDK_Expecter) ClientRoles(id interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_ClientRoles_Call {
+	return &SDK_ClientRoles_Call{Call: _e.mock.On("ClientRoles", id, domainID, pm, token)}
+}
+
+func (_c *SDK_ClientRoles_Call) Run(run func(id string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ClientRoles_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_ClientRoles_Call) Return(_a0 sdk.RolesPage, _a1 errors.SDKError) *SDK_ClientRoles_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_ClientRoles_Call) RunAndReturn(run func(string, string, sdk.PageMetadata, string) (sdk.RolesPage, errors.SDKError)) *SDK_ClientRoles_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -999,70 +1477,9 @@ func (_c *SDK_Clients_Call) RunAndReturn(run func(sdk.PageMetadata, string, stri
 	return _c
 }
 
-// ClientsByChannel provides a mock function with given fields: chanID, pm, domainID, token
-func (_m *SDK) ClientsByChannel(chanID string, pm sdk.PageMetadata, domainID string, token string) (sdk.ClientsPage, errors.SDKError) {
-	ret := _m.Called(chanID, pm, domainID, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ClientsByChannel")
-	}
-
-	var r0 sdk.ClientsPage
-	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) (sdk.ClientsPage, errors.SDKError)); ok {
-		return rf(chanID, pm, domainID, token)
-	}
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) sdk.ClientsPage); ok {
-		r0 = rf(chanID, pm, domainID, token)
-	} else {
-		r0 = ret.Get(0).(sdk.ClientsPage)
-	}
-
-	if rf, ok := ret.Get(1).(func(string, sdk.PageMetadata, string, string) errors.SDKError); ok {
-		r1 = rf(chanID, pm, domainID, token)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.SDKError)
-		}
-	}
-
-	return r0, r1
-}
-
-// SDK_ClientsByChannel_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ClientsByChannel'
-type SDK_ClientsByChannel_Call struct {
-	*mock.Call
-}
-
-// ClientsByChannel is a helper method to define mock.On call
-//   - chanID string
-//   - pm sdk.PageMetadata
-//   - domainID string
-//   - token string
-func (_e *SDK_Expecter) ClientsByChannel(chanID interface{}, pm interface{}, domainID interface{}, token interface{}) *SDK_ClientsByChannel_Call {
-	return &SDK_ClientsByChannel_Call{Call: _e.mock.On("ClientsByChannel", chanID, pm, domainID, token)}
-}
-
-func (_c *SDK_ClientsByChannel_Call) Run(run func(chanID string, pm sdk.PageMetadata, domainID string, token string)) *SDK_ClientsByChannel_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string), args[3].(string))
-	})
-	return _c
-}
-
-func (_c *SDK_ClientsByChannel_Call) Return(_a0 sdk.ClientsPage, _a1 errors.SDKError) *SDK_ClientsByChannel_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *SDK_ClientsByChannel_Call) RunAndReturn(run func(string, sdk.PageMetadata, string, string) (sdk.ClientsPage, errors.SDKError)) *SDK_ClientsByChannel_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// Connect provides a mock function with given fields: conns, domainID, token
-func (_m *SDK) Connect(conns sdk.Connection, domainID string, token string) errors.SDKError {
-	ret := _m.Called(conns, domainID, token)
+// Connect provides a mock function with given fields: conn, domainID, token
+func (_m *SDK) Connect(conn sdk.Connection, domainID string, token string) errors.SDKError {
+	ret := _m.Called(conn, domainID, token)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Connect")
@@ -1070,7 +1487,7 @@ func (_m *SDK) Connect(conns sdk.Connection, domainID string, token string) erro
 
 	var r0 errors.SDKError
 	if rf, ok := ret.Get(0).(func(sdk.Connection, string, string) errors.SDKError); ok {
-		r0 = rf(conns, domainID, token)
+		r0 = rf(conn, domainID, token)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.SDKError)
@@ -1086,14 +1503,14 @@ type SDK_Connect_Call struct {
 }
 
 // Connect is a helper method to define mock.On call
-//   - conns sdk.Connection
+//   - conn sdk.Connection
 //   - domainID string
 //   - token string
-func (_e *SDK_Expecter) Connect(conns interface{}, domainID interface{}, token interface{}) *SDK_Connect_Call {
-	return &SDK_Connect_Call{Call: _e.mock.On("Connect", conns, domainID, token)}
+func (_e *SDK_Expecter) Connect(conn interface{}, domainID interface{}, token interface{}) *SDK_Connect_Call {
+	return &SDK_Connect_Call{Call: _e.mock.On("Connect", conn, domainID, token)}
 }
 
-func (_c *SDK_Connect_Call) Run(run func(conns sdk.Connection, domainID string, token string)) *SDK_Connect_Call {
+func (_c *SDK_Connect_Call) Run(run func(conn sdk.Connection, domainID string, token string)) *SDK_Connect_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(sdk.Connection), args[1].(string), args[2].(string))
 	})
@@ -1110,17 +1527,17 @@ func (_c *SDK_Connect_Call) RunAndReturn(run func(sdk.Connection, string, string
 	return _c
 }
 
-// ConnectClient provides a mock function with given fields: clientID, chanID, connTypes, domainID, token
-func (_m *SDK) ConnectClient(clientID string, chanID string, connTypes []string, domainID string, token string) errors.SDKError {
-	ret := _m.Called(clientID, chanID, connTypes, domainID, token)
+// ConnectClients provides a mock function with given fields: channelID, clientIDs, connTypes, domainID, token
+func (_m *SDK) ConnectClients(channelID string, clientIDs []string, connTypes []string, domainID string, token string) errors.SDKError {
+	ret := _m.Called(channelID, clientIDs, connTypes, domainID, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ConnectClient")
+		panic("no return value specified for ConnectClients")
 	}
 
 	var r0 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, string, []string, string, string) errors.SDKError); ok {
-		r0 = rf(clientID, chanID, connTypes, domainID, token)
+	if rf, ok := ret.Get(0).(func(string, []string, []string, string, string) errors.SDKError); ok {
+		r0 = rf(channelID, clientIDs, connTypes, domainID, token)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.SDKError)
@@ -1130,34 +1547,34 @@ func (_m *SDK) ConnectClient(clientID string, chanID string, connTypes []string,
 	return r0
 }
 
-// SDK_ConnectClient_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ConnectClient'
-type SDK_ConnectClient_Call struct {
+// SDK_ConnectClients_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ConnectClients'
+type SDK_ConnectClients_Call struct {
 	*mock.Call
 }
 
-// ConnectClient is a helper method to define mock.On call
-//   - clientID string
-//   - chanID string
+// ConnectClients is a helper method to define mock.On call
+//   - channelID string
+//   - clientIDs []string
 //   - connTypes []string
 //   - domainID string
 //   - token string
-func (_e *SDK_Expecter) ConnectClient(clientID interface{}, chanID interface{}, connTypes interface{}, domainID interface{}, token interface{}) *SDK_ConnectClient_Call {
-	return &SDK_ConnectClient_Call{Call: _e.mock.On("ConnectClient", clientID, chanID, connTypes, domainID, token)}
+func (_e *SDK_Expecter) ConnectClients(channelID interface{}, clientIDs interface{}, connTypes interface{}, domainID interface{}, token interface{}) *SDK_ConnectClients_Call {
+	return &SDK_ConnectClients_Call{Call: _e.mock.On("ConnectClients", channelID, clientIDs, connTypes, domainID, token)}
 }
 
-func (_c *SDK_ConnectClient_Call) Run(run func(clientID string, chanID string, connTypes []string, domainID string, token string)) *SDK_ConnectClient_Call {
+func (_c *SDK_ConnectClients_Call) Run(run func(channelID string, clientIDs []string, connTypes []string, domainID string, token string)) *SDK_ConnectClients_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].([]string), args[3].(string), args[4].(string))
+		run(args[0].(string), args[1].([]string), args[2].([]string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
 
-func (_c *SDK_ConnectClient_Call) Return(_a0 errors.SDKError) *SDK_ConnectClient_Call {
+func (_c *SDK_ConnectClients_Call) Return(_a0 errors.SDKError) *SDK_ConnectClients_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *SDK_ConnectClient_Call) RunAndReturn(run func(string, string, []string, string, string) errors.SDKError) *SDK_ConnectClient_Call {
+func (_c *SDK_ConnectClients_Call) RunAndReturn(run func(string, []string, []string, string, string) errors.SDKError) *SDK_ConnectClients_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1222,6 +1639,68 @@ func (_c *SDK_CreateChannel_Call) RunAndReturn(run func(sdk.Channel, string, str
 	return _c
 }
 
+// CreateChannels provides a mock function with given fields: channels, domainID, token
+func (_m *SDK) CreateChannels(channels []sdk.Channel, domainID string, token string) ([]sdk.Channel, errors.SDKError) {
+	ret := _m.Called(channels, domainID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateChannels")
+	}
+
+	var r0 []sdk.Channel
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func([]sdk.Channel, string, string) ([]sdk.Channel, errors.SDKError)); ok {
+		return rf(channels, domainID, token)
+	}
+	if rf, ok := ret.Get(0).(func([]sdk.Channel, string, string) []sdk.Channel); ok {
+		r0 = rf(channels, domainID, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]sdk.Channel)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func([]sdk.Channel, string, string) errors.SDKError); ok {
+		r1 = rf(channels, domainID, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_CreateChannels_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateChannels'
+type SDK_CreateChannels_Call struct {
+	*mock.Call
+}
+
+// CreateChannels is a helper method to define mock.On call
+//   - channels []sdk.Channel
+//   - domainID string
+//   - token string
+func (_e *SDK_Expecter) CreateChannels(channels interface{}, domainID interface{}, token interface{}) *SDK_CreateChannels_Call {
+	return &SDK_CreateChannels_Call{Call: _e.mock.On("CreateChannels", channels, domainID, token)}
+}
+
+func (_c *SDK_CreateChannels_Call) Run(run func(channels []sdk.Channel, domainID string, token string)) *SDK_CreateChannels_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].([]sdk.Channel), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_CreateChannels_Call) Return(_a0 []sdk.Channel, _a1 errors.SDKError) *SDK_CreateChannels_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_CreateChannels_Call) RunAndReturn(run func([]sdk.Channel, string, string) ([]sdk.Channel, errors.SDKError)) *SDK_CreateChannels_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateClient provides a mock function with given fields: client, domainID, token
 func (_m *SDK) CreateClient(client sdk.Client, domainID string, token string) (sdk.Client, errors.SDKError) {
 	ret := _m.Called(client, domainID, token)
@@ -1278,6 +1757,67 @@ func (_c *SDK_CreateClient_Call) Return(_a0 sdk.Client, _a1 errors.SDKError) *SD
 }
 
 func (_c *SDK_CreateClient_Call) RunAndReturn(run func(sdk.Client, string, string) (sdk.Client, errors.SDKError)) *SDK_CreateClient_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CreateClientRole provides a mock function with given fields: id, domainID, rq, token
+func (_m *SDK) CreateClientRole(id string, domainID string, rq sdk.RoleReq, token string) (sdk.Role, errors.SDKError) {
+	ret := _m.Called(id, domainID, rq, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateClientRole")
+	}
+
+	var r0 sdk.Role
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, sdk.RoleReq, string) (sdk.Role, errors.SDKError)); ok {
+		return rf(id, domainID, rq, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, sdk.RoleReq, string) sdk.Role); ok {
+		r0 = rf(id, domainID, rq, token)
+	} else {
+		r0 = ret.Get(0).(sdk.Role)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, sdk.RoleReq, string) errors.SDKError); ok {
+		r1 = rf(id, domainID, rq, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_CreateClientRole_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateClientRole'
+type SDK_CreateClientRole_Call struct {
+	*mock.Call
+}
+
+// CreateClientRole is a helper method to define mock.On call
+//   - id string
+//   - domainID string
+//   - rq sdk.RoleReq
+//   - token string
+func (_e *SDK_Expecter) CreateClientRole(id interface{}, domainID interface{}, rq interface{}, token interface{}) *SDK_CreateClientRole_Call {
+	return &SDK_CreateClientRole_Call{Call: _e.mock.On("CreateClientRole", id, domainID, rq, token)}
+}
+
+func (_c *SDK_CreateClientRole_Call) Run(run func(id string, domainID string, rq sdk.RoleReq, token string)) *SDK_CreateClientRole_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(sdk.RoleReq), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_CreateClientRole_Call) Return(_a0 sdk.Role, _a1 errors.SDKError) *SDK_CreateClientRole_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_CreateClientRole_Call) RunAndReturn(run func(string, string, sdk.RoleReq, string) (sdk.Role, errors.SDKError)) *SDK_CreateClientRole_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1403,6 +1943,66 @@ func (_c *SDK_CreateDomain_Call) RunAndReturn(run func(sdk.Domain, string) (sdk.
 	return _c
 }
 
+// CreateDomainRole provides a mock function with given fields: id, rq, token
+func (_m *SDK) CreateDomainRole(id string, rq sdk.RoleReq, token string) (sdk.Role, errors.SDKError) {
+	ret := _m.Called(id, rq, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateDomainRole")
+	}
+
+	var r0 sdk.Role
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, sdk.RoleReq, string) (sdk.Role, errors.SDKError)); ok {
+		return rf(id, rq, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, sdk.RoleReq, string) sdk.Role); ok {
+		r0 = rf(id, rq, token)
+	} else {
+		r0 = ret.Get(0).(sdk.Role)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, sdk.RoleReq, string) errors.SDKError); ok {
+		r1 = rf(id, rq, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_CreateDomainRole_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateDomainRole'
+type SDK_CreateDomainRole_Call struct {
+	*mock.Call
+}
+
+// CreateDomainRole is a helper method to define mock.On call
+//   - id string
+//   - rq sdk.RoleReq
+//   - token string
+func (_e *SDK_Expecter) CreateDomainRole(id interface{}, rq interface{}, token interface{}) *SDK_CreateDomainRole_Call {
+	return &SDK_CreateDomainRole_Call{Call: _e.mock.On("CreateDomainRole", id, rq, token)}
+}
+
+func (_c *SDK_CreateDomainRole_Call) Run(run func(id string, rq sdk.RoleReq, token string)) *SDK_CreateDomainRole_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(sdk.RoleReq), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_CreateDomainRole_Call) Return(_a0 sdk.Role, _a1 errors.SDKError) *SDK_CreateDomainRole_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_CreateDomainRole_Call) RunAndReturn(run func(string, sdk.RoleReq, string) (sdk.Role, errors.SDKError)) *SDK_CreateDomainRole_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateGroup provides a mock function with given fields: group, domainID, token
 func (_m *SDK) CreateGroup(group sdk.Group, domainID string, token string) (sdk.Group, errors.SDKError) {
 	ret := _m.Called(group, domainID, token)
@@ -1459,6 +2059,67 @@ func (_c *SDK_CreateGroup_Call) Return(_a0 sdk.Group, _a1 errors.SDKError) *SDK_
 }
 
 func (_c *SDK_CreateGroup_Call) RunAndReturn(run func(sdk.Group, string, string) (sdk.Group, errors.SDKError)) *SDK_CreateGroup_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CreateGroupRole provides a mock function with given fields: id, domainID, rq, token
+func (_m *SDK) CreateGroupRole(id string, domainID string, rq sdk.RoleReq, token string) (sdk.Role, errors.SDKError) {
+	ret := _m.Called(id, domainID, rq, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateGroupRole")
+	}
+
+	var r0 sdk.Role
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, sdk.RoleReq, string) (sdk.Role, errors.SDKError)); ok {
+		return rf(id, domainID, rq, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, sdk.RoleReq, string) sdk.Role); ok {
+		r0 = rf(id, domainID, rq, token)
+	} else {
+		r0 = ret.Get(0).(sdk.Role)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, sdk.RoleReq, string) errors.SDKError); ok {
+		r1 = rf(id, domainID, rq, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_CreateGroupRole_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateGroupRole'
+type SDK_CreateGroupRole_Call struct {
+	*mock.Call
+}
+
+// CreateGroupRole is a helper method to define mock.On call
+//   - id string
+//   - domainID string
+//   - rq sdk.RoleReq
+//   - token string
+func (_e *SDK_Expecter) CreateGroupRole(id interface{}, domainID interface{}, rq interface{}, token interface{}) *SDK_CreateGroupRole_Call {
+	return &SDK_CreateGroupRole_Call{Call: _e.mock.On("CreateGroupRole", id, domainID, rq, token)}
+}
+
+func (_c *SDK_CreateGroupRole_Call) Run(run func(id string, domainID string, rq sdk.RoleReq, token string)) *SDK_CreateGroupRole_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(sdk.RoleReq), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_CreateGroupRole_Call) Return(_a0 sdk.Role, _a1 errors.SDKError) *SDK_CreateGroupRole_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_CreateGroupRole_Call) RunAndReturn(run func(string, string, sdk.RoleReq, string) (sdk.Role, errors.SDKError)) *SDK_CreateGroupRole_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1740,6 +2401,107 @@ func (_c *SDK_DeleteClient_Call) RunAndReturn(run func(string, string, string) e
 	return _c
 }
 
+// DeleteClientRole provides a mock function with given fields: id, roleName, domainID, token
+func (_m *SDK) DeleteClientRole(id string, roleName string, domainID string, token string) errors.SDKError {
+	ret := _m.Called(id, roleName, domainID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteClientRole")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, string) errors.SDKError); ok {
+		r0 = rf(id, roleName, domainID, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_DeleteClientRole_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteClientRole'
+type SDK_DeleteClientRole_Call struct {
+	*mock.Call
+}
+
+// DeleteClientRole is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - domainID string
+//   - token string
+func (_e *SDK_Expecter) DeleteClientRole(id interface{}, roleName interface{}, domainID interface{}, token interface{}) *SDK_DeleteClientRole_Call {
+	return &SDK_DeleteClientRole_Call{Call: _e.mock.On("DeleteClientRole", id, roleName, domainID, token)}
+}
+
+func (_c *SDK_DeleteClientRole_Call) Run(run func(id string, roleName string, domainID string, token string)) *SDK_DeleteClientRole_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_DeleteClientRole_Call) Return(_a0 errors.SDKError) *SDK_DeleteClientRole_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_DeleteClientRole_Call) RunAndReturn(run func(string, string, string, string) errors.SDKError) *SDK_DeleteClientRole_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DeleteDomainRole provides a mock function with given fields: id, roleName, token
+func (_m *SDK) DeleteDomainRole(id string, roleName string, token string) errors.SDKError {
+	ret := _m.Called(id, roleName, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteDomainRole")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string) errors.SDKError); ok {
+		r0 = rf(id, roleName, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_DeleteDomainRole_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteDomainRole'
+type SDK_DeleteDomainRole_Call struct {
+	*mock.Call
+}
+
+// DeleteDomainRole is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - token string
+func (_e *SDK_Expecter) DeleteDomainRole(id interface{}, roleName interface{}, token interface{}) *SDK_DeleteDomainRole_Call {
+	return &SDK_DeleteDomainRole_Call{Call: _e.mock.On("DeleteDomainRole", id, roleName, token)}
+}
+
+func (_c *SDK_DeleteDomainRole_Call) Run(run func(id string, roleName string, token string)) *SDK_DeleteDomainRole_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_DeleteDomainRole_Call) Return(_a0 errors.SDKError) *SDK_DeleteDomainRole_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_DeleteDomainRole_Call) RunAndReturn(run func(string, string, string) errors.SDKError) *SDK_DeleteDomainRole_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DeleteGroup provides a mock function with given fields: id, domainID, token
 func (_m *SDK) DeleteGroup(id string, domainID string, token string) errors.SDKError {
 	ret := _m.Called(id, domainID, token)
@@ -1786,6 +2548,57 @@ func (_c *SDK_DeleteGroup_Call) Return(_a0 errors.SDKError) *SDK_DeleteGroup_Cal
 }
 
 func (_c *SDK_DeleteGroup_Call) RunAndReturn(run func(string, string, string) errors.SDKError) *SDK_DeleteGroup_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DeleteGroupRole provides a mock function with given fields: id, roleName, domainID, token
+func (_m *SDK) DeleteGroupRole(id string, roleName string, domainID string, token string) errors.SDKError {
+	ret := _m.Called(id, roleName, domainID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteGroupRole")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, string) errors.SDKError); ok {
+		r0 = rf(id, roleName, domainID, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_DeleteGroupRole_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteGroupRole'
+type SDK_DeleteGroupRole_Call struct {
+	*mock.Call
+}
+
+// DeleteGroupRole is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - domainID string
+//   - token string
+func (_e *SDK_Expecter) DeleteGroupRole(id interface{}, roleName interface{}, domainID interface{}, token interface{}) *SDK_DeleteGroupRole_Call {
+	return &SDK_DeleteGroupRole_Call{Call: _e.mock.On("DeleteGroupRole", id, roleName, domainID, token)}
+}
+
+func (_c *SDK_DeleteGroupRole_Call) Run(run func(id string, roleName string, domainID string, token string)) *SDK_DeleteGroupRole_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_DeleteGroupRole_Call) Return(_a0 errors.SDKError) *SDK_DeleteGroupRole_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_DeleteGroupRole_Call) RunAndReturn(run func(string, string, string, string) errors.SDKError) *SDK_DeleteGroupRole_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -2224,9 +3037,9 @@ func (_c *SDK_DisableUser_Call) RunAndReturn(run func(string, string) (sdk.User,
 	return _c
 }
 
-// Disconnect provides a mock function with given fields: connIDs, domainID, token
-func (_m *SDK) Disconnect(connIDs sdk.Connection, domainID string, token string) errors.SDKError {
-	ret := _m.Called(connIDs, domainID, token)
+// Disconnect provides a mock function with given fields: conn, domainID, token
+func (_m *SDK) Disconnect(conn sdk.Connection, domainID string, token string) errors.SDKError {
+	ret := _m.Called(conn, domainID, token)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Disconnect")
@@ -2234,7 +3047,7 @@ func (_m *SDK) Disconnect(connIDs sdk.Connection, domainID string, token string)
 
 	var r0 errors.SDKError
 	if rf, ok := ret.Get(0).(func(sdk.Connection, string, string) errors.SDKError); ok {
-		r0 = rf(connIDs, domainID, token)
+		r0 = rf(conn, domainID, token)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.SDKError)
@@ -2250,14 +3063,14 @@ type SDK_Disconnect_Call struct {
 }
 
 // Disconnect is a helper method to define mock.On call
-//   - connIDs sdk.Connection
+//   - conn sdk.Connection
 //   - domainID string
 //   - token string
-func (_e *SDK_Expecter) Disconnect(connIDs interface{}, domainID interface{}, token interface{}) *SDK_Disconnect_Call {
-	return &SDK_Disconnect_Call{Call: _e.mock.On("Disconnect", connIDs, domainID, token)}
+func (_e *SDK_Expecter) Disconnect(conn interface{}, domainID interface{}, token interface{}) *SDK_Disconnect_Call {
+	return &SDK_Disconnect_Call{Call: _e.mock.On("Disconnect", conn, domainID, token)}
 }
 
-func (_c *SDK_Disconnect_Call) Run(run func(connIDs sdk.Connection, domainID string, token string)) *SDK_Disconnect_Call {
+func (_c *SDK_Disconnect_Call) Run(run func(conn sdk.Connection, domainID string, token string)) *SDK_Disconnect_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(sdk.Connection), args[1].(string), args[2].(string))
 	})
@@ -2274,17 +3087,17 @@ func (_c *SDK_Disconnect_Call) RunAndReturn(run func(sdk.Connection, string, str
 	return _c
 }
 
-// DisconnectClient provides a mock function with given fields: clientID, chanID, connTypes, domainID, token
-func (_m *SDK) DisconnectClient(clientID string, chanID string, connTypes []string, domainID string, token string) errors.SDKError {
-	ret := _m.Called(clientID, chanID, connTypes, domainID, token)
+// DisconnectClients provides a mock function with given fields: channelID, clientIDs, connTypes, domainID, token
+func (_m *SDK) DisconnectClients(channelID string, clientIDs []string, connTypes []string, domainID string, token string) errors.SDKError {
+	ret := _m.Called(channelID, clientIDs, connTypes, domainID, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for DisconnectClient")
+		panic("no return value specified for DisconnectClients")
 	}
 
 	var r0 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, string, []string, string, string) errors.SDKError); ok {
-		r0 = rf(clientID, chanID, connTypes, domainID, token)
+	if rf, ok := ret.Get(0).(func(string, []string, []string, string, string) errors.SDKError); ok {
+		r0 = rf(channelID, clientIDs, connTypes, domainID, token)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.SDKError)
@@ -2294,34 +3107,34 @@ func (_m *SDK) DisconnectClient(clientID string, chanID string, connTypes []stri
 	return r0
 }
 
-// SDK_DisconnectClient_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DisconnectClient'
-type SDK_DisconnectClient_Call struct {
+// SDK_DisconnectClients_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DisconnectClients'
+type SDK_DisconnectClients_Call struct {
 	*mock.Call
 }
 
-// DisconnectClient is a helper method to define mock.On call
-//   - clientID string
-//   - chanID string
+// DisconnectClients is a helper method to define mock.On call
+//   - channelID string
+//   - clientIDs []string
 //   - connTypes []string
 //   - domainID string
 //   - token string
-func (_e *SDK_Expecter) DisconnectClient(clientID interface{}, chanID interface{}, connTypes interface{}, domainID interface{}, token interface{}) *SDK_DisconnectClient_Call {
-	return &SDK_DisconnectClient_Call{Call: _e.mock.On("DisconnectClient", clientID, chanID, connTypes, domainID, token)}
+func (_e *SDK_Expecter) DisconnectClients(channelID interface{}, clientIDs interface{}, connTypes interface{}, domainID interface{}, token interface{}) *SDK_DisconnectClients_Call {
+	return &SDK_DisconnectClients_Call{Call: _e.mock.On("DisconnectClients", channelID, clientIDs, connTypes, domainID, token)}
 }
 
-func (_c *SDK_DisconnectClient_Call) Run(run func(clientID string, chanID string, connTypes []string, domainID string, token string)) *SDK_DisconnectClient_Call {
+func (_c *SDK_DisconnectClients_Call) Run(run func(channelID string, clientIDs []string, connTypes []string, domainID string, token string)) *SDK_DisconnectClients_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].([]string), args[3].(string), args[4].(string))
+		run(args[0].(string), args[1].([]string), args[2].([]string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
 
-func (_c *SDK_DisconnectClient_Call) Return(_a0 errors.SDKError) *SDK_DisconnectClient_Call {
+func (_c *SDK_DisconnectClients_Call) Return(_a0 errors.SDKError) *SDK_DisconnectClients_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *SDK_DisconnectClient_Call) RunAndReturn(run func(string, string, []string, string, string) errors.SDKError) *SDK_DisconnectClient_Call {
+func (_c *SDK_DisconnectClients_Call) RunAndReturn(run func(string, []string, []string, string, string) errors.SDKError) *SDK_DisconnectClients_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -2385,27 +3198,27 @@ func (_c *SDK_Domain_Call) RunAndReturn(run func(string, string) (sdk.Domain, er
 	return _c
 }
 
-// DomainPermissions provides a mock function with given fields: domainID, token
-func (_m *SDK) DomainPermissions(domainID string, token string) (sdk.Domain, errors.SDKError) {
-	ret := _m.Called(domainID, token)
+// DomainRole provides a mock function with given fields: id, roleName, token
+func (_m *SDK) DomainRole(id string, roleName string, token string) (sdk.Role, errors.SDKError) {
+	ret := _m.Called(id, roleName, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for DomainPermissions")
+		panic("no return value specified for DomainRole")
 	}
 
-	var r0 sdk.Domain
+	var r0 sdk.Role
 	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, string) (sdk.Domain, errors.SDKError)); ok {
-		return rf(domainID, token)
+	if rf, ok := ret.Get(0).(func(string, string, string) (sdk.Role, errors.SDKError)); ok {
+		return rf(id, roleName, token)
 	}
-	if rf, ok := ret.Get(0).(func(string, string) sdk.Domain); ok {
-		r0 = rf(domainID, token)
+	if rf, ok := ret.Get(0).(func(string, string, string) sdk.Role); ok {
+		r0 = rf(id, roleName, token)
 	} else {
-		r0 = ret.Get(0).(sdk.Domain)
+		r0 = ret.Get(0).(sdk.Role)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string) errors.SDKError); ok {
-		r1 = rf(domainID, token)
+	if rf, ok := ret.Get(1).(func(string, string, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, token)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.SDKError)
@@ -2415,31 +3228,215 @@ func (_m *SDK) DomainPermissions(domainID string, token string) (sdk.Domain, err
 	return r0, r1
 }
 
-// SDK_DomainPermissions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DomainPermissions'
-type SDK_DomainPermissions_Call struct {
+// SDK_DomainRole_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DomainRole'
+type SDK_DomainRole_Call struct {
 	*mock.Call
 }
 
-// DomainPermissions is a helper method to define mock.On call
-//   - domainID string
+// DomainRole is a helper method to define mock.On call
+//   - id string
+//   - roleName string
 //   - token string
-func (_e *SDK_Expecter) DomainPermissions(domainID interface{}, token interface{}) *SDK_DomainPermissions_Call {
-	return &SDK_DomainPermissions_Call{Call: _e.mock.On("DomainPermissions", domainID, token)}
+func (_e *SDK_Expecter) DomainRole(id interface{}, roleName interface{}, token interface{}) *SDK_DomainRole_Call {
+	return &SDK_DomainRole_Call{Call: _e.mock.On("DomainRole", id, roleName, token)}
 }
 
-func (_c *SDK_DomainPermissions_Call) Run(run func(domainID string, token string)) *SDK_DomainPermissions_Call {
+func (_c *SDK_DomainRole_Call) Run(run func(id string, roleName string, token string)) *SDK_DomainRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(string), args[1].(string), args[2].(string))
 	})
 	return _c
 }
 
-func (_c *SDK_DomainPermissions_Call) Return(_a0 sdk.Domain, _a1 errors.SDKError) *SDK_DomainPermissions_Call {
+func (_c *SDK_DomainRole_Call) Return(_a0 sdk.Role, _a1 errors.SDKError) *SDK_DomainRole_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *SDK_DomainPermissions_Call) RunAndReturn(run func(string, string) (sdk.Domain, errors.SDKError)) *SDK_DomainPermissions_Call {
+func (_c *SDK_DomainRole_Call) RunAndReturn(run func(string, string, string) (sdk.Role, errors.SDKError)) *SDK_DomainRole_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DomainRoleActions provides a mock function with given fields: id, roleName, token
+func (_m *SDK) DomainRoleActions(id string, roleName string, token string) ([]string, errors.SDKError) {
+	ret := _m.Called(id, roleName, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DomainRoleActions")
+	}
+
+	var r0 []string
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string) ([]string, errors.SDKError)); ok {
+		return rf(id, roleName, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, string) []string); ok {
+		r0 = rf(id, roleName, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_DomainRoleActions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DomainRoleActions'
+type SDK_DomainRoleActions_Call struct {
+	*mock.Call
+}
+
+// DomainRoleActions is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - token string
+func (_e *SDK_Expecter) DomainRoleActions(id interface{}, roleName interface{}, token interface{}) *SDK_DomainRoleActions_Call {
+	return &SDK_DomainRoleActions_Call{Call: _e.mock.On("DomainRoleActions", id, roleName, token)}
+}
+
+func (_c *SDK_DomainRoleActions_Call) Run(run func(id string, roleName string, token string)) *SDK_DomainRoleActions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_DomainRoleActions_Call) Return(_a0 []string, _a1 errors.SDKError) *SDK_DomainRoleActions_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_DomainRoleActions_Call) RunAndReturn(run func(string, string, string) ([]string, errors.SDKError)) *SDK_DomainRoleActions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DomainRoleMembers provides a mock function with given fields: id, roleName, pm, token
+func (_m *SDK) DomainRoleMembers(id string, roleName string, pm sdk.PageMetadata, token string) (sdk.RoleMembersPage, errors.SDKError) {
+	ret := _m.Called(id, roleName, pm, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DomainRoleMembers")
+	}
+
+	var r0 sdk.RoleMembersPage
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.RoleMembersPage, errors.SDKError)); ok {
+		return rf(id, roleName, pm, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.RoleMembersPage); ok {
+		r0 = rf(id, roleName, pm, token)
+	} else {
+		r0 = ret.Get(0).(sdk.RoleMembersPage)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, sdk.PageMetadata, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, pm, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_DomainRoleMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DomainRoleMembers'
+type SDK_DomainRoleMembers_Call struct {
+	*mock.Call
+}
+
+// DomainRoleMembers is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - pm sdk.PageMetadata
+//   - token string
+func (_e *SDK_Expecter) DomainRoleMembers(id interface{}, roleName interface{}, pm interface{}, token interface{}) *SDK_DomainRoleMembers_Call {
+	return &SDK_DomainRoleMembers_Call{Call: _e.mock.On("DomainRoleMembers", id, roleName, pm, token)}
+}
+
+func (_c *SDK_DomainRoleMembers_Call) Run(run func(id string, roleName string, pm sdk.PageMetadata, token string)) *SDK_DomainRoleMembers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_DomainRoleMembers_Call) Return(_a0 sdk.RoleMembersPage, _a1 errors.SDKError) *SDK_DomainRoleMembers_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_DomainRoleMembers_Call) RunAndReturn(run func(string, string, sdk.PageMetadata, string) (sdk.RoleMembersPage, errors.SDKError)) *SDK_DomainRoleMembers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DomainRoles provides a mock function with given fields: id, pm, token
+func (_m *SDK) DomainRoles(id string, pm sdk.PageMetadata, token string) (sdk.RolesPage, errors.SDKError) {
+	ret := _m.Called(id, pm, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DomainRoles")
+	}
+
+	var r0 sdk.RolesPage
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string) (sdk.RolesPage, errors.SDKError)); ok {
+		return rf(id, pm, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string) sdk.RolesPage); ok {
+		r0 = rf(id, pm, token)
+	} else {
+		r0 = ret.Get(0).(sdk.RolesPage)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, sdk.PageMetadata, string) errors.SDKError); ok {
+		r1 = rf(id, pm, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_DomainRoles_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DomainRoles'
+type SDK_DomainRoles_Call struct {
+	*mock.Call
+}
+
+// DomainRoles is a helper method to define mock.On call
+//   - id string
+//   - pm sdk.PageMetadata
+//   - token string
+func (_e *SDK_Expecter) DomainRoles(id interface{}, pm interface{}, token interface{}) *SDK_DomainRoles_Call {
+	return &SDK_DomainRoles_Call{Call: _e.mock.On("DomainRoles", id, pm, token)}
+}
+
+func (_c *SDK_DomainRoles_Call) Run(run func(id string, pm sdk.PageMetadata, token string)) *SDK_DomainRoles_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_DomainRoles_Call) Return(_a0 sdk.RolesPage, _a1 errors.SDKError) *SDK_DomainRoles_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_DomainRoles_Call) RunAndReturn(run func(string, sdk.PageMetadata, string) (sdk.RolesPage, errors.SDKError)) *SDK_DomainRoles_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -2791,6 +3788,55 @@ func (_c *SDK_EnableUser_Call) RunAndReturn(run func(string, string) (sdk.User, 
 	return _c
 }
 
+// FreezeDomain provides a mock function with given fields: domainID, token
+func (_m *SDK) FreezeDomain(domainID string, token string) errors.SDKError {
+	ret := _m.Called(domainID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FreezeDomain")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string) errors.SDKError); ok {
+		r0 = rf(domainID, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_FreezeDomain_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FreezeDomain'
+type SDK_FreezeDomain_Call struct {
+	*mock.Call
+}
+
+// FreezeDomain is a helper method to define mock.On call
+//   - domainID string
+//   - token string
+func (_e *SDK_Expecter) FreezeDomain(domainID interface{}, token interface{}) *SDK_FreezeDomain_Call {
+	return &SDK_FreezeDomain_Call{Call: _e.mock.On("FreezeDomain", domainID, token)}
+}
+
+func (_c *SDK_FreezeDomain_Call) Run(run func(domainID string, token string)) *SDK_FreezeDomain_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_FreezeDomain_Call) Return(_a0 errors.SDKError) *SDK_FreezeDomain_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_FreezeDomain_Call) RunAndReturn(run func(string, string) errors.SDKError) *SDK_FreezeDomain_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Group provides a mock function with given fields: id, domainID, token
 func (_m *SDK) Group(id string, domainID string, token string) (sdk.Group, errors.SDKError) {
 	ret := _m.Called(id, domainID, token)
@@ -2851,27 +3897,27 @@ func (_c *SDK_Group_Call) RunAndReturn(run func(string, string, string) (sdk.Gro
 	return _c
 }
 
-// GroupPermissions provides a mock function with given fields: id, domainID, token
-func (_m *SDK) GroupPermissions(id string, domainID string, token string) (sdk.Group, errors.SDKError) {
-	ret := _m.Called(id, domainID, token)
+// GroupRole provides a mock function with given fields: id, roleName, domainID, token
+func (_m *SDK) GroupRole(id string, roleName string, domainID string, token string) (sdk.Role, errors.SDKError) {
+	ret := _m.Called(id, roleName, domainID, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GroupPermissions")
+		panic("no return value specified for GroupRole")
 	}
 
-	var r0 sdk.Group
+	var r0 sdk.Role
 	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, string, string) (sdk.Group, errors.SDKError)); ok {
-		return rf(id, domainID, token)
+	if rf, ok := ret.Get(0).(func(string, string, string, string) (sdk.Role, errors.SDKError)); ok {
+		return rf(id, roleName, domainID, token)
 	}
-	if rf, ok := ret.Get(0).(func(string, string, string) sdk.Group); ok {
-		r0 = rf(id, domainID, token)
+	if rf, ok := ret.Get(0).(func(string, string, string, string) sdk.Role); ok {
+		r0 = rf(id, roleName, domainID, token)
 	} else {
-		r0 = ret.Get(0).(sdk.Group)
+		r0 = ret.Get(0).(sdk.Role)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string, string) errors.SDKError); ok {
-		r1 = rf(id, domainID, token)
+	if rf, ok := ret.Get(1).(func(string, string, string, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, domainID, token)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.SDKError)
@@ -2881,32 +3927,219 @@ func (_m *SDK) GroupPermissions(id string, domainID string, token string) (sdk.G
 	return r0, r1
 }
 
-// SDK_GroupPermissions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GroupPermissions'
-type SDK_GroupPermissions_Call struct {
+// SDK_GroupRole_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GroupRole'
+type SDK_GroupRole_Call struct {
 	*mock.Call
 }
 
-// GroupPermissions is a helper method to define mock.On call
+// GroupRole is a helper method to define mock.On call
 //   - id string
+//   - roleName string
 //   - domainID string
 //   - token string
-func (_e *SDK_Expecter) GroupPermissions(id interface{}, domainID interface{}, token interface{}) *SDK_GroupPermissions_Call {
-	return &SDK_GroupPermissions_Call{Call: _e.mock.On("GroupPermissions", id, domainID, token)}
+func (_e *SDK_Expecter) GroupRole(id interface{}, roleName interface{}, domainID interface{}, token interface{}) *SDK_GroupRole_Call {
+	return &SDK_GroupRole_Call{Call: _e.mock.On("GroupRole", id, roleName, domainID, token)}
 }
 
-func (_c *SDK_GroupPermissions_Call) Run(run func(id string, domainID string, token string)) *SDK_GroupPermissions_Call {
+func (_c *SDK_GroupRole_Call) Run(run func(id string, roleName string, domainID string, token string)) *SDK_GroupRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
 
-func (_c *SDK_GroupPermissions_Call) Return(_a0 sdk.Group, _a1 errors.SDKError) *SDK_GroupPermissions_Call {
+func (_c *SDK_GroupRole_Call) Return(_a0 sdk.Role, _a1 errors.SDKError) *SDK_GroupRole_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *SDK_GroupPermissions_Call) RunAndReturn(run func(string, string, string) (sdk.Group, errors.SDKError)) *SDK_GroupPermissions_Call {
+func (_c *SDK_GroupRole_Call) RunAndReturn(run func(string, string, string, string) (sdk.Role, errors.SDKError)) *SDK_GroupRole_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GroupRoleActions provides a mock function with given fields: id, roleName, domainID, token
+func (_m *SDK) GroupRoleActions(id string, roleName string, domainID string, token string) ([]string, errors.SDKError) {
+	ret := _m.Called(id, roleName, domainID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GroupRoleActions")
+	}
+
+	var r0 []string
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, string) ([]string, errors.SDKError)); ok {
+		return rf(id, roleName, domainID, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, string, string) []string); ok {
+		r0 = rf(id, roleName, domainID, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, string, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, domainID, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_GroupRoleActions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GroupRoleActions'
+type SDK_GroupRoleActions_Call struct {
+	*mock.Call
+}
+
+// GroupRoleActions is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - domainID string
+//   - token string
+func (_e *SDK_Expecter) GroupRoleActions(id interface{}, roleName interface{}, domainID interface{}, token interface{}) *SDK_GroupRoleActions_Call {
+	return &SDK_GroupRoleActions_Call{Call: _e.mock.On("GroupRoleActions", id, roleName, domainID, token)}
+}
+
+func (_c *SDK_GroupRoleActions_Call) Run(run func(id string, roleName string, domainID string, token string)) *SDK_GroupRoleActions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_GroupRoleActions_Call) Return(_a0 []string, _a1 errors.SDKError) *SDK_GroupRoleActions_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_GroupRoleActions_Call) RunAndReturn(run func(string, string, string, string) ([]string, errors.SDKError)) *SDK_GroupRoleActions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GroupRoleMembers provides a mock function with given fields: id, roleName, domainID, pm, token
+func (_m *SDK) GroupRoleMembers(id string, roleName string, domainID string, pm sdk.PageMetadata, token string) (sdk.RoleMembersPage, errors.SDKError) {
+	ret := _m.Called(id, roleName, domainID, pm, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GroupRoleMembers")
+	}
+
+	var r0 sdk.RoleMembersPage
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, sdk.PageMetadata, string) (sdk.RoleMembersPage, errors.SDKError)); ok {
+		return rf(id, roleName, domainID, pm, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, string, sdk.PageMetadata, string) sdk.RoleMembersPage); ok {
+		r0 = rf(id, roleName, domainID, pm, token)
+	} else {
+		r0 = ret.Get(0).(sdk.RoleMembersPage)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, string, sdk.PageMetadata, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, domainID, pm, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_GroupRoleMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GroupRoleMembers'
+type SDK_GroupRoleMembers_Call struct {
+	*mock.Call
+}
+
+// GroupRoleMembers is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - domainID string
+//   - pm sdk.PageMetadata
+//   - token string
+func (_e *SDK_Expecter) GroupRoleMembers(id interface{}, roleName interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_GroupRoleMembers_Call {
+	return &SDK_GroupRoleMembers_Call{Call: _e.mock.On("GroupRoleMembers", id, roleName, domainID, pm, token)}
+}
+
+func (_c *SDK_GroupRoleMembers_Call) Run(run func(id string, roleName string, domainID string, pm sdk.PageMetadata, token string)) *SDK_GroupRoleMembers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(sdk.PageMetadata), args[4].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_GroupRoleMembers_Call) Return(_a0 sdk.RoleMembersPage, _a1 errors.SDKError) *SDK_GroupRoleMembers_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_GroupRoleMembers_Call) RunAndReturn(run func(string, string, string, sdk.PageMetadata, string) (sdk.RoleMembersPage, errors.SDKError)) *SDK_GroupRoleMembers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GroupRoles provides a mock function with given fields: id, domainID, pm, token
+func (_m *SDK) GroupRoles(id string, domainID string, pm sdk.PageMetadata, token string) (sdk.RolesPage, errors.SDKError) {
+	ret := _m.Called(id, domainID, pm, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GroupRoles")
+	}
+
+	var r0 sdk.RolesPage
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.RolesPage, errors.SDKError)); ok {
+		return rf(id, domainID, pm, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.RolesPage); ok {
+		r0 = rf(id, domainID, pm, token)
+	} else {
+		r0 = ret.Get(0).(sdk.RolesPage)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, sdk.PageMetadata, string) errors.SDKError); ok {
+		r1 = rf(id, domainID, pm, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_GroupRoles_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GroupRoles'
+type SDK_GroupRoles_Call struct {
+	*mock.Call
+}
+
+// GroupRoles is a helper method to define mock.On call
+//   - id string
+//   - domainID string
+//   - pm sdk.PageMetadata
+//   - token string
+func (_e *SDK_Expecter) GroupRoles(id interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_GroupRoles_Call {
+	return &SDK_GroupRoles_Call{Call: _e.mock.On("GroupRoles", id, domainID, pm, token)}
+}
+
+func (_c *SDK_GroupRoles_Call) Run(run func(id string, domainID string, pm sdk.PageMetadata, token string)) *SDK_GroupRoles_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_GroupRoles_Call) Return(_a0 sdk.RolesPage, _a1 errors.SDKError) *SDK_GroupRoles_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_GroupRoles_Call) RunAndReturn(run func(string, string, sdk.PageMetadata, string) (sdk.RolesPage, errors.SDKError)) *SDK_GroupRoles_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -3025,6 +4258,67 @@ func (_c *SDK_Health_Call) Return(_a0 sdk.HealthInfo, _a1 errors.SDKError) *SDK_
 }
 
 func (_c *SDK_Health_Call) RunAndReturn(run func(string) (sdk.HealthInfo, errors.SDKError)) *SDK_Health_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Hierarchy provides a mock function with given fields: id, domainID, pm, token
+func (_m *SDK) Hierarchy(id string, domainID string, pm sdk.PageMetadata, token string) (sdk.GroupsHierarchyPage, errors.SDKError) {
+	ret := _m.Called(id, domainID, pm, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Hierarchy")
+	}
+
+	var r0 sdk.GroupsHierarchyPage
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.GroupsHierarchyPage, errors.SDKError)); ok {
+		return rf(id, domainID, pm, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.GroupsHierarchyPage); ok {
+		r0 = rf(id, domainID, pm, token)
+	} else {
+		r0 = ret.Get(0).(sdk.GroupsHierarchyPage)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, sdk.PageMetadata, string) errors.SDKError); ok {
+		r1 = rf(id, domainID, pm, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_Hierarchy_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Hierarchy'
+type SDK_Hierarchy_Call struct {
+	*mock.Call
+}
+
+// Hierarchy is a helper method to define mock.On call
+//   - id string
+//   - domainID string
+//   - pm sdk.PageMetadata
+//   - token string
+func (_e *SDK_Expecter) Hierarchy(id interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_Hierarchy_Call {
+	return &SDK_Hierarchy_Call{Call: _e.mock.On("Hierarchy", id, domainID, pm, token)}
+}
+
+func (_c *SDK_Hierarchy_Call) Run(run func(id string, domainID string, pm sdk.PageMetadata, token string)) *SDK_Hierarchy_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_Hierarchy_Call) Return(_a0 sdk.GroupsHierarchyPage, _a1 errors.SDKError) *SDK_Hierarchy_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_Hierarchy_Call) RunAndReturn(run func(string, string, sdk.PageMetadata, string) (sdk.GroupsHierarchyPage, errors.SDKError)) *SDK_Hierarchy_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -3265,70 +4559,9 @@ func (_c *SDK_Journal_Call) RunAndReturn(run func(string, string, string, sdk.Pa
 	return _c
 }
 
-// ListChannelUserGroups provides a mock function with given fields: channelID, pm, domainID, token
-func (_m *SDK) ListChannelUserGroups(channelID string, pm sdk.PageMetadata, domainID string, token string) (sdk.GroupsPage, errors.SDKError) {
-	ret := _m.Called(channelID, pm, domainID, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ListChannelUserGroups")
-	}
-
-	var r0 sdk.GroupsPage
-	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) (sdk.GroupsPage, errors.SDKError)); ok {
-		return rf(channelID, pm, domainID, token)
-	}
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) sdk.GroupsPage); ok {
-		r0 = rf(channelID, pm, domainID, token)
-	} else {
-		r0 = ret.Get(0).(sdk.GroupsPage)
-	}
-
-	if rf, ok := ret.Get(1).(func(string, sdk.PageMetadata, string, string) errors.SDKError); ok {
-		r1 = rf(channelID, pm, domainID, token)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.SDKError)
-		}
-	}
-
-	return r0, r1
-}
-
-// SDK_ListChannelUserGroups_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListChannelUserGroups'
-type SDK_ListChannelUserGroups_Call struct {
-	*mock.Call
-}
-
-// ListChannelUserGroups is a helper method to define mock.On call
-//   - channelID string
-//   - pm sdk.PageMetadata
-//   - domainID string
-//   - token string
-func (_e *SDK_Expecter) ListChannelUserGroups(channelID interface{}, pm interface{}, domainID interface{}, token interface{}) *SDK_ListChannelUserGroups_Call {
-	return &SDK_ListChannelUserGroups_Call{Call: _e.mock.On("ListChannelUserGroups", channelID, pm, domainID, token)}
-}
-
-func (_c *SDK_ListChannelUserGroups_Call) Run(run func(channelID string, pm sdk.PageMetadata, domainID string, token string)) *SDK_ListChannelUserGroups_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string), args[3].(string))
-	})
-	return _c
-}
-
-func (_c *SDK_ListChannelUserGroups_Call) Return(_a0 sdk.GroupsPage, _a1 errors.SDKError) *SDK_ListChannelUserGroups_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *SDK_ListChannelUserGroups_Call) RunAndReturn(run func(string, sdk.PageMetadata, string, string) (sdk.GroupsPage, errors.SDKError)) *SDK_ListChannelUserGroups_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// ListChannelUsers provides a mock function with given fields: channelID, pm, domainID, token
-func (_m *SDK) ListChannelUsers(channelID string, pm sdk.PageMetadata, domainID string, token string) (sdk.UsersPage, errors.SDKError) {
-	ret := _m.Called(channelID, pm, domainID, token)
+// ListChannelUsers provides a mock function with given fields: channelID, domainID, pm, token
+func (_m *SDK) ListChannelUsers(channelID string, domainID string, pm sdk.PageMetadata, token string) (sdk.UsersPage, errors.SDKError) {
+	ret := _m.Called(channelID, domainID, pm, token)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListChannelUsers")
@@ -3336,17 +4569,17 @@ func (_m *SDK) ListChannelUsers(channelID string, pm sdk.PageMetadata, domainID 
 
 	var r0 sdk.UsersPage
 	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) (sdk.UsersPage, errors.SDKError)); ok {
-		return rf(channelID, pm, domainID, token)
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.UsersPage, errors.SDKError)); ok {
+		return rf(channelID, domainID, pm, token)
 	}
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) sdk.UsersPage); ok {
-		r0 = rf(channelID, pm, domainID, token)
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.UsersPage); ok {
+		r0 = rf(channelID, domainID, pm, token)
 	} else {
 		r0 = ret.Get(0).(sdk.UsersPage)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, sdk.PageMetadata, string, string) errors.SDKError); ok {
-		r1 = rf(channelID, pm, domainID, token)
+	if rf, ok := ret.Get(1).(func(string, string, sdk.PageMetadata, string) errors.SDKError); ok {
+		r1 = rf(channelID, domainID, pm, token)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.SDKError)
@@ -3363,16 +4596,16 @@ type SDK_ListChannelUsers_Call struct {
 
 // ListChannelUsers is a helper method to define mock.On call
 //   - channelID string
-//   - pm sdk.PageMetadata
 //   - domainID string
+//   - pm sdk.PageMetadata
 //   - token string
-func (_e *SDK_Expecter) ListChannelUsers(channelID interface{}, pm interface{}, domainID interface{}, token interface{}) *SDK_ListChannelUsers_Call {
-	return &SDK_ListChannelUsers_Call{Call: _e.mock.On("ListChannelUsers", channelID, pm, domainID, token)}
+func (_e *SDK_Expecter) ListChannelUsers(channelID interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_ListChannelUsers_Call {
+	return &SDK_ListChannelUsers_Call{Call: _e.mock.On("ListChannelUsers", channelID, domainID, pm, token)}
 }
 
-func (_c *SDK_ListChannelUsers_Call) Run(run func(channelID string, pm sdk.PageMetadata, domainID string, token string)) *SDK_ListChannelUsers_Call {
+func (_c *SDK_ListChannelUsers_Call) Run(run func(channelID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ListChannelUsers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string), args[3].(string))
+		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
 	})
 	return _c
 }
@@ -3382,14 +4615,14 @@ func (_c *SDK_ListChannelUsers_Call) Return(_a0 sdk.UsersPage, _a1 errors.SDKErr
 	return _c
 }
 
-func (_c *SDK_ListChannelUsers_Call) RunAndReturn(run func(string, sdk.PageMetadata, string, string) (sdk.UsersPage, errors.SDKError)) *SDK_ListChannelUsers_Call {
+func (_c *SDK_ListChannelUsers_Call) RunAndReturn(run func(string, string, sdk.PageMetadata, string) (sdk.UsersPage, errors.SDKError)) *SDK_ListChannelUsers_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// ListClientUsers provides a mock function with given fields: id, pm, domainID, token
-func (_m *SDK) ListClientUsers(id string, pm sdk.PageMetadata, domainID string, token string) (sdk.UsersPage, errors.SDKError) {
-	ret := _m.Called(id, pm, domainID, token)
+// ListClientUsers provides a mock function with given fields: clientID, domainID, pm, token
+func (_m *SDK) ListClientUsers(clientID string, domainID string, pm sdk.PageMetadata, token string) (sdk.UsersPage, errors.SDKError) {
+	ret := _m.Called(clientID, domainID, pm, token)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListClientUsers")
@@ -3397,17 +4630,17 @@ func (_m *SDK) ListClientUsers(id string, pm sdk.PageMetadata, domainID string, 
 
 	var r0 sdk.UsersPage
 	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) (sdk.UsersPage, errors.SDKError)); ok {
-		return rf(id, pm, domainID, token)
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.UsersPage, errors.SDKError)); ok {
+		return rf(clientID, domainID, pm, token)
 	}
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) sdk.UsersPage); ok {
-		r0 = rf(id, pm, domainID, token)
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.UsersPage); ok {
+		r0 = rf(clientID, domainID, pm, token)
 	} else {
 		r0 = ret.Get(0).(sdk.UsersPage)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, sdk.PageMetadata, string, string) errors.SDKError); ok {
-		r1 = rf(id, pm, domainID, token)
+	if rf, ok := ret.Get(1).(func(string, string, sdk.PageMetadata, string) errors.SDKError); ok {
+		r1 = rf(clientID, domainID, pm, token)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.SDKError)
@@ -3423,17 +4656,17 @@ type SDK_ListClientUsers_Call struct {
 }
 
 // ListClientUsers is a helper method to define mock.On call
-//   - id string
-//   - pm sdk.PageMetadata
+//   - clientID string
 //   - domainID string
+//   - pm sdk.PageMetadata
 //   - token string
-func (_e *SDK_Expecter) ListClientUsers(id interface{}, pm interface{}, domainID interface{}, token interface{}) *SDK_ListClientUsers_Call {
-	return &SDK_ListClientUsers_Call{Call: _e.mock.On("ListClientUsers", id, pm, domainID, token)}
+func (_e *SDK_Expecter) ListClientUsers(clientID interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_ListClientUsers_Call {
+	return &SDK_ListClientUsers_Call{Call: _e.mock.On("ListClientUsers", clientID, domainID, pm, token)}
 }
 
-func (_c *SDK_ListClientUsers_Call) Run(run func(id string, pm sdk.PageMetadata, domainID string, token string)) *SDK_ListClientUsers_Call {
+func (_c *SDK_ListClientUsers_Call) Run(run func(clientID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ListClientUsers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string), args[3].(string))
+		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
 	})
 	return _c
 }
@@ -3443,7 +4676,7 @@ func (_c *SDK_ListClientUsers_Call) Return(_a0 sdk.UsersPage, _a1 errors.SDKErro
 	return _c
 }
 
-func (_c *SDK_ListClientUsers_Call) RunAndReturn(run func(string, sdk.PageMetadata, string, string) (sdk.UsersPage, errors.SDKError)) *SDK_ListClientUsers_Call {
+func (_c *SDK_ListClientUsers_Call) RunAndReturn(run func(string, string, sdk.PageMetadata, string) (sdk.UsersPage, errors.SDKError)) *SDK_ListClientUsers_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -3508,128 +4741,6 @@ func (_c *SDK_ListDomainUsers_Call) RunAndReturn(run func(string, sdk.PageMetada
 	return _c
 }
 
-// ListGroupChannels provides a mock function with given fields: groupID, pm, domainID, token
-func (_m *SDK) ListGroupChannels(groupID string, pm sdk.PageMetadata, domainID string, token string) (sdk.ChannelsPage, errors.SDKError) {
-	ret := _m.Called(groupID, pm, domainID, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ListGroupChannels")
-	}
-
-	var r0 sdk.ChannelsPage
-	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) (sdk.ChannelsPage, errors.SDKError)); ok {
-		return rf(groupID, pm, domainID, token)
-	}
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) sdk.ChannelsPage); ok {
-		r0 = rf(groupID, pm, domainID, token)
-	} else {
-		r0 = ret.Get(0).(sdk.ChannelsPage)
-	}
-
-	if rf, ok := ret.Get(1).(func(string, sdk.PageMetadata, string, string) errors.SDKError); ok {
-		r1 = rf(groupID, pm, domainID, token)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.SDKError)
-		}
-	}
-
-	return r0, r1
-}
-
-// SDK_ListGroupChannels_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListGroupChannels'
-type SDK_ListGroupChannels_Call struct {
-	*mock.Call
-}
-
-// ListGroupChannels is a helper method to define mock.On call
-//   - groupID string
-//   - pm sdk.PageMetadata
-//   - domainID string
-//   - token string
-func (_e *SDK_Expecter) ListGroupChannels(groupID interface{}, pm interface{}, domainID interface{}, token interface{}) *SDK_ListGroupChannels_Call {
-	return &SDK_ListGroupChannels_Call{Call: _e.mock.On("ListGroupChannels", groupID, pm, domainID, token)}
-}
-
-func (_c *SDK_ListGroupChannels_Call) Run(run func(groupID string, pm sdk.PageMetadata, domainID string, token string)) *SDK_ListGroupChannels_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string), args[3].(string))
-	})
-	return _c
-}
-
-func (_c *SDK_ListGroupChannels_Call) Return(_a0 sdk.ChannelsPage, _a1 errors.SDKError) *SDK_ListGroupChannels_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *SDK_ListGroupChannels_Call) RunAndReturn(run func(string, sdk.PageMetadata, string, string) (sdk.ChannelsPage, errors.SDKError)) *SDK_ListGroupChannels_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// ListGroupUsers provides a mock function with given fields: groupID, pm, domainID, token
-func (_m *SDK) ListGroupUsers(groupID string, pm sdk.PageMetadata, domainID string, token string) (sdk.UsersPage, errors.SDKError) {
-	ret := _m.Called(groupID, pm, domainID, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ListGroupUsers")
-	}
-
-	var r0 sdk.UsersPage
-	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) (sdk.UsersPage, errors.SDKError)); ok {
-		return rf(groupID, pm, domainID, token)
-	}
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) sdk.UsersPage); ok {
-		r0 = rf(groupID, pm, domainID, token)
-	} else {
-		r0 = ret.Get(0).(sdk.UsersPage)
-	}
-
-	if rf, ok := ret.Get(1).(func(string, sdk.PageMetadata, string, string) errors.SDKError); ok {
-		r1 = rf(groupID, pm, domainID, token)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.SDKError)
-		}
-	}
-
-	return r0, r1
-}
-
-// SDK_ListGroupUsers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListGroupUsers'
-type SDK_ListGroupUsers_Call struct {
-	*mock.Call
-}
-
-// ListGroupUsers is a helper method to define mock.On call
-//   - groupID string
-//   - pm sdk.PageMetadata
-//   - domainID string
-//   - token string
-func (_e *SDK_Expecter) ListGroupUsers(groupID interface{}, pm interface{}, domainID interface{}, token interface{}) *SDK_ListGroupUsers_Call {
-	return &SDK_ListGroupUsers_Call{Call: _e.mock.On("ListGroupUsers", groupID, pm, domainID, token)}
-}
-
-func (_c *SDK_ListGroupUsers_Call) Run(run func(groupID string, pm sdk.PageMetadata, domainID string, token string)) *SDK_ListGroupUsers_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string), args[3].(string))
-	})
-	return _c
-}
-
-func (_c *SDK_ListGroupUsers_Call) Return(_a0 sdk.UsersPage, _a1 errors.SDKError) *SDK_ListGroupUsers_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *SDK_ListGroupUsers_Call) RunAndReturn(run func(string, sdk.PageMetadata, string, string) (sdk.UsersPage, errors.SDKError)) *SDK_ListGroupUsers_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // ListSubscriptions provides a mock function with given fields: pm, token
 func (_m *SDK) ListSubscriptions(pm sdk.PageMetadata, token string) (sdk.SubscriptionPage, errors.SDKError) {
 	ret := _m.Called(pm, token)
@@ -3689,69 +4800,9 @@ func (_c *SDK_ListSubscriptions_Call) RunAndReturn(run func(sdk.PageMetadata, st
 	return _c
 }
 
-// ListUserChannels provides a mock function with given fields: userID, pm, token
-func (_m *SDK) ListUserChannels(userID string, pm sdk.PageMetadata, token string) (sdk.ChannelsPage, errors.SDKError) {
-	ret := _m.Called(userID, pm, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ListUserChannels")
-	}
-
-	var r0 sdk.ChannelsPage
-	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string) (sdk.ChannelsPage, errors.SDKError)); ok {
-		return rf(userID, pm, token)
-	}
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string) sdk.ChannelsPage); ok {
-		r0 = rf(userID, pm, token)
-	} else {
-		r0 = ret.Get(0).(sdk.ChannelsPage)
-	}
-
-	if rf, ok := ret.Get(1).(func(string, sdk.PageMetadata, string) errors.SDKError); ok {
-		r1 = rf(userID, pm, token)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.SDKError)
-		}
-	}
-
-	return r0, r1
-}
-
-// SDK_ListUserChannels_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListUserChannels'
-type SDK_ListUserChannels_Call struct {
-	*mock.Call
-}
-
-// ListUserChannels is a helper method to define mock.On call
-//   - userID string
-//   - pm sdk.PageMetadata
-//   - token string
-func (_e *SDK_Expecter) ListUserChannels(userID interface{}, pm interface{}, token interface{}) *SDK_ListUserChannels_Call {
-	return &SDK_ListUserChannels_Call{Call: _e.mock.On("ListUserChannels", userID, pm, token)}
-}
-
-func (_c *SDK_ListUserChannels_Call) Run(run func(userID string, pm sdk.PageMetadata, token string)) *SDK_ListUserChannels_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string))
-	})
-	return _c
-}
-
-func (_c *SDK_ListUserChannels_Call) Return(_a0 sdk.ChannelsPage, _a1 errors.SDKError) *SDK_ListUserChannels_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *SDK_ListUserChannels_Call) RunAndReturn(run func(string, sdk.PageMetadata, string) (sdk.ChannelsPage, errors.SDKError)) *SDK_ListUserChannels_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// ListUserClients provides a mock function with given fields: userID, pm, token
-func (_m *SDK) ListUserClients(userID string, pm sdk.PageMetadata, token string) (sdk.ClientsPage, errors.SDKError) {
-	ret := _m.Called(userID, pm, token)
+// ListUserClients provides a mock function with given fields: userID, domainID, pm, token
+func (_m *SDK) ListUserClients(userID string, domainID string, pm sdk.PageMetadata, token string) (sdk.ClientsPage, errors.SDKError) {
+	ret := _m.Called(userID, domainID, pm, token)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListUserClients")
@@ -3759,17 +4810,17 @@ func (_m *SDK) ListUserClients(userID string, pm sdk.PageMetadata, token string)
 
 	var r0 sdk.ClientsPage
 	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string) (sdk.ClientsPage, errors.SDKError)); ok {
-		return rf(userID, pm, token)
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.ClientsPage, errors.SDKError)); ok {
+		return rf(userID, domainID, pm, token)
 	}
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string) sdk.ClientsPage); ok {
-		r0 = rf(userID, pm, token)
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.ClientsPage); ok {
+		r0 = rf(userID, domainID, pm, token)
 	} else {
 		r0 = ret.Get(0).(sdk.ClientsPage)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, sdk.PageMetadata, string) errors.SDKError); ok {
-		r1 = rf(userID, pm, token)
+	if rf, ok := ret.Get(1).(func(string, string, sdk.PageMetadata, string) errors.SDKError); ok {
+		r1 = rf(userID, domainID, pm, token)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.SDKError)
@@ -3786,15 +4837,16 @@ type SDK_ListUserClients_Call struct {
 
 // ListUserClients is a helper method to define mock.On call
 //   - userID string
+//   - domainID string
 //   - pm sdk.PageMetadata
 //   - token string
-func (_e *SDK_Expecter) ListUserClients(userID interface{}, pm interface{}, token interface{}) *SDK_ListUserClients_Call {
-	return &SDK_ListUserClients_Call{Call: _e.mock.On("ListUserClients", userID, pm, token)}
+func (_e *SDK_Expecter) ListUserClients(userID interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_ListUserClients_Call {
+	return &SDK_ListUserClients_Call{Call: _e.mock.On("ListUserClients", userID, domainID, pm, token)}
 }
 
-func (_c *SDK_ListUserClients_Call) Run(run func(userID string, pm sdk.PageMetadata, token string)) *SDK_ListUserClients_Call {
+func (_c *SDK_ListUserClients_Call) Run(run func(userID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ListUserClients_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string))
+		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
 	})
 	return _c
 }
@@ -3804,134 +4856,14 @@ func (_c *SDK_ListUserClients_Call) Return(_a0 sdk.ClientsPage, _a1 errors.SDKEr
 	return _c
 }
 
-func (_c *SDK_ListUserClients_Call) RunAndReturn(run func(string, sdk.PageMetadata, string) (sdk.ClientsPage, errors.SDKError)) *SDK_ListUserClients_Call {
+func (_c *SDK_ListUserClients_Call) RunAndReturn(run func(string, string, sdk.PageMetadata, string) (sdk.ClientsPage, errors.SDKError)) *SDK_ListUserClients_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// ListUserDomains provides a mock function with given fields: userID, pm, token
-func (_m *SDK) ListUserDomains(userID string, pm sdk.PageMetadata, token string) (sdk.DomainsPage, errors.SDKError) {
-	ret := _m.Called(userID, pm, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ListUserDomains")
-	}
-
-	var r0 sdk.DomainsPage
-	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string) (sdk.DomainsPage, errors.SDKError)); ok {
-		return rf(userID, pm, token)
-	}
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string) sdk.DomainsPage); ok {
-		r0 = rf(userID, pm, token)
-	} else {
-		r0 = ret.Get(0).(sdk.DomainsPage)
-	}
-
-	if rf, ok := ret.Get(1).(func(string, sdk.PageMetadata, string) errors.SDKError); ok {
-		r1 = rf(userID, pm, token)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.SDKError)
-		}
-	}
-
-	return r0, r1
-}
-
-// SDK_ListUserDomains_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListUserDomains'
-type SDK_ListUserDomains_Call struct {
-	*mock.Call
-}
-
-// ListUserDomains is a helper method to define mock.On call
-//   - userID string
-//   - pm sdk.PageMetadata
-//   - token string
-func (_e *SDK_Expecter) ListUserDomains(userID interface{}, pm interface{}, token interface{}) *SDK_ListUserDomains_Call {
-	return &SDK_ListUserDomains_Call{Call: _e.mock.On("ListUserDomains", userID, pm, token)}
-}
-
-func (_c *SDK_ListUserDomains_Call) Run(run func(userID string, pm sdk.PageMetadata, token string)) *SDK_ListUserDomains_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string))
-	})
-	return _c
-}
-
-func (_c *SDK_ListUserDomains_Call) Return(_a0 sdk.DomainsPage, _a1 errors.SDKError) *SDK_ListUserDomains_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *SDK_ListUserDomains_Call) RunAndReturn(run func(string, sdk.PageMetadata, string) (sdk.DomainsPage, errors.SDKError)) *SDK_ListUserDomains_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// ListUserGroups provides a mock function with given fields: userID, pm, token
-func (_m *SDK) ListUserGroups(userID string, pm sdk.PageMetadata, token string) (sdk.GroupsPage, errors.SDKError) {
-	ret := _m.Called(userID, pm, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ListUserGroups")
-	}
-
-	var r0 sdk.GroupsPage
-	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string) (sdk.GroupsPage, errors.SDKError)); ok {
-		return rf(userID, pm, token)
-	}
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string) sdk.GroupsPage); ok {
-		r0 = rf(userID, pm, token)
-	} else {
-		r0 = ret.Get(0).(sdk.GroupsPage)
-	}
-
-	if rf, ok := ret.Get(1).(func(string, sdk.PageMetadata, string) errors.SDKError); ok {
-		r1 = rf(userID, pm, token)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.SDKError)
-		}
-	}
-
-	return r0, r1
-}
-
-// SDK_ListUserGroups_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListUserGroups'
-type SDK_ListUserGroups_Call struct {
-	*mock.Call
-}
-
-// ListUserGroups is a helper method to define mock.On call
-//   - userID string
-//   - pm sdk.PageMetadata
-//   - token string
-func (_e *SDK_Expecter) ListUserGroups(userID interface{}, pm interface{}, token interface{}) *SDK_ListUserGroups_Call {
-	return &SDK_ListUserGroups_Call{Call: _e.mock.On("ListUserGroups", userID, pm, token)}
-}
-
-func (_c *SDK_ListUserGroups_Call) Run(run func(userID string, pm sdk.PageMetadata, token string)) *SDK_ListUserGroups_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string))
-	})
-	return _c
-}
-
-func (_c *SDK_ListUserGroups_Call) Return(_a0 sdk.GroupsPage, _a1 errors.SDKError) *SDK_ListUserGroups_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *SDK_ListUserGroups_Call) RunAndReturn(run func(string, sdk.PageMetadata, string) (sdk.GroupsPage, errors.SDKError)) *SDK_ListUserGroups_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// Members provides a mock function with given fields: groupID, meta, token
-func (_m *SDK) Members(groupID string, meta sdk.PageMetadata, token string) (sdk.UsersPage, errors.SDKError) {
-	ret := _m.Called(groupID, meta, token)
+// Members provides a mock function with given fields: groupID, domainID, pm, token
+func (_m *SDK) Members(groupID string, domainID string, pm sdk.PageMetadata, token string) (sdk.UsersPage, errors.SDKError) {
+	ret := _m.Called(groupID, domainID, pm, token)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Members")
@@ -3939,17 +4871,17 @@ func (_m *SDK) Members(groupID string, meta sdk.PageMetadata, token string) (sdk
 
 	var r0 sdk.UsersPage
 	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string) (sdk.UsersPage, errors.SDKError)); ok {
-		return rf(groupID, meta, token)
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.UsersPage, errors.SDKError)); ok {
+		return rf(groupID, domainID, pm, token)
 	}
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string) sdk.UsersPage); ok {
-		r0 = rf(groupID, meta, token)
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.UsersPage); ok {
+		r0 = rf(groupID, domainID, pm, token)
 	} else {
 		r0 = ret.Get(0).(sdk.UsersPage)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, sdk.PageMetadata, string) errors.SDKError); ok {
-		r1 = rf(groupID, meta, token)
+	if rf, ok := ret.Get(1).(func(string, string, sdk.PageMetadata, string) errors.SDKError); ok {
+		r1 = rf(groupID, domainID, pm, token)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.SDKError)
@@ -3966,15 +4898,16 @@ type SDK_Members_Call struct {
 
 // Members is a helper method to define mock.On call
 //   - groupID string
-//   - meta sdk.PageMetadata
+//   - domainID string
+//   - pm sdk.PageMetadata
 //   - token string
-func (_e *SDK_Expecter) Members(groupID interface{}, meta interface{}, token interface{}) *SDK_Members_Call {
-	return &SDK_Members_Call{Call: _e.mock.On("Members", groupID, meta, token)}
+func (_e *SDK_Expecter) Members(groupID interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_Members_Call {
+	return &SDK_Members_Call{Call: _e.mock.On("Members", groupID, domainID, pm, token)}
 }
 
-func (_c *SDK_Members_Call) Run(run func(groupID string, meta sdk.PageMetadata, token string)) *SDK_Members_Call {
+func (_c *SDK_Members_Call) Run(run func(groupID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_Members_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string))
+		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
 	})
 	return _c
 }
@@ -3984,68 +4917,7 @@ func (_c *SDK_Members_Call) Return(_a0 sdk.UsersPage, _a1 errors.SDKError) *SDK_
 	return _c
 }
 
-func (_c *SDK_Members_Call) RunAndReturn(run func(string, sdk.PageMetadata, string) (sdk.UsersPage, errors.SDKError)) *SDK_Members_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// Parents provides a mock function with given fields: id, pm, domainID, token
-func (_m *SDK) Parents(id string, pm sdk.PageMetadata, domainID string, token string) (sdk.GroupsPage, errors.SDKError) {
-	ret := _m.Called(id, pm, domainID, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Parents")
-	}
-
-	var r0 sdk.GroupsPage
-	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) (sdk.GroupsPage, errors.SDKError)); ok {
-		return rf(id, pm, domainID, token)
-	}
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string, string) sdk.GroupsPage); ok {
-		r0 = rf(id, pm, domainID, token)
-	} else {
-		r0 = ret.Get(0).(sdk.GroupsPage)
-	}
-
-	if rf, ok := ret.Get(1).(func(string, sdk.PageMetadata, string, string) errors.SDKError); ok {
-		r1 = rf(id, pm, domainID, token)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.SDKError)
-		}
-	}
-
-	return r0, r1
-}
-
-// SDK_Parents_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Parents'
-type SDK_Parents_Call struct {
-	*mock.Call
-}
-
-// Parents is a helper method to define mock.On call
-//   - id string
-//   - pm sdk.PageMetadata
-//   - domainID string
-//   - token string
-func (_e *SDK_Expecter) Parents(id interface{}, pm interface{}, domainID interface{}, token interface{}) *SDK_Parents_Call {
-	return &SDK_Parents_Call{Call: _e.mock.On("Parents", id, pm, domainID, token)}
-}
-
-func (_c *SDK_Parents_Call) Run(run func(id string, pm sdk.PageMetadata, domainID string, token string)) *SDK_Parents_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string), args[3].(string))
-	})
-	return _c
-}
-
-func (_c *SDK_Parents_Call) Return(_a0 sdk.GroupsPage, _a1 errors.SDKError) *SDK_Parents_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *SDK_Parents_Call) RunAndReturn(run func(string, sdk.PageMetadata, string, string) (sdk.GroupsPage, errors.SDKError)) *SDK_Parents_Call {
+func (_c *SDK_Members_Call) RunAndReturn(run func(string, string, sdk.PageMetadata, string) (sdk.UsersPage, errors.SDKError)) *SDK_Members_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -4216,6 +5088,360 @@ func (_c *SDK_RejectInvitation_Call) RunAndReturn(run func(string, string) error
 	return _c
 }
 
+// RemoveAllChildren provides a mock function with given fields: id, domainID, token
+func (_m *SDK) RemoveAllChildren(id string, domainID string, token string) errors.SDKError {
+	ret := _m.Called(id, domainID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveAllChildren")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string) errors.SDKError); ok {
+		r0 = rf(id, domainID, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_RemoveAllChildren_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveAllChildren'
+type SDK_RemoveAllChildren_Call struct {
+	*mock.Call
+}
+
+// RemoveAllChildren is a helper method to define mock.On call
+//   - id string
+//   - domainID string
+//   - token string
+func (_e *SDK_Expecter) RemoveAllChildren(id interface{}, domainID interface{}, token interface{}) *SDK_RemoveAllChildren_Call {
+	return &SDK_RemoveAllChildren_Call{Call: _e.mock.On("RemoveAllChildren", id, domainID, token)}
+}
+
+func (_c *SDK_RemoveAllChildren_Call) Run(run func(id string, domainID string, token string)) *SDK_RemoveAllChildren_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_RemoveAllChildren_Call) Return(_a0 errors.SDKError) *SDK_RemoveAllChildren_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_RemoveAllChildren_Call) RunAndReturn(run func(string, string, string) errors.SDKError) *SDK_RemoveAllChildren_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveAllClientRoleActions provides a mock function with given fields: id, roleName, domainID, token
+func (_m *SDK) RemoveAllClientRoleActions(id string, roleName string, domainID string, token string) errors.SDKError {
+	ret := _m.Called(id, roleName, domainID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveAllClientRoleActions")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, string) errors.SDKError); ok {
+		r0 = rf(id, roleName, domainID, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_RemoveAllClientRoleActions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveAllClientRoleActions'
+type SDK_RemoveAllClientRoleActions_Call struct {
+	*mock.Call
+}
+
+// RemoveAllClientRoleActions is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - domainID string
+//   - token string
+func (_e *SDK_Expecter) RemoveAllClientRoleActions(id interface{}, roleName interface{}, domainID interface{}, token interface{}) *SDK_RemoveAllClientRoleActions_Call {
+	return &SDK_RemoveAllClientRoleActions_Call{Call: _e.mock.On("RemoveAllClientRoleActions", id, roleName, domainID, token)}
+}
+
+func (_c *SDK_RemoveAllClientRoleActions_Call) Run(run func(id string, roleName string, domainID string, token string)) *SDK_RemoveAllClientRoleActions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_RemoveAllClientRoleActions_Call) Return(_a0 errors.SDKError) *SDK_RemoveAllClientRoleActions_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_RemoveAllClientRoleActions_Call) RunAndReturn(run func(string, string, string, string) errors.SDKError) *SDK_RemoveAllClientRoleActions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveAllClientRoleMembers provides a mock function with given fields: id, roleName, domainID, token
+func (_m *SDK) RemoveAllClientRoleMembers(id string, roleName string, domainID string, token string) errors.SDKError {
+	ret := _m.Called(id, roleName, domainID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveAllClientRoleMembers")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, string) errors.SDKError); ok {
+		r0 = rf(id, roleName, domainID, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_RemoveAllClientRoleMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveAllClientRoleMembers'
+type SDK_RemoveAllClientRoleMembers_Call struct {
+	*mock.Call
+}
+
+// RemoveAllClientRoleMembers is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - domainID string
+//   - token string
+func (_e *SDK_Expecter) RemoveAllClientRoleMembers(id interface{}, roleName interface{}, domainID interface{}, token interface{}) *SDK_RemoveAllClientRoleMembers_Call {
+	return &SDK_RemoveAllClientRoleMembers_Call{Call: _e.mock.On("RemoveAllClientRoleMembers", id, roleName, domainID, token)}
+}
+
+func (_c *SDK_RemoveAllClientRoleMembers_Call) Run(run func(id string, roleName string, domainID string, token string)) *SDK_RemoveAllClientRoleMembers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_RemoveAllClientRoleMembers_Call) Return(_a0 errors.SDKError) *SDK_RemoveAllClientRoleMembers_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_RemoveAllClientRoleMembers_Call) RunAndReturn(run func(string, string, string, string) errors.SDKError) *SDK_RemoveAllClientRoleMembers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveAllDomainRoleActions provides a mock function with given fields: id, roleName, token
+func (_m *SDK) RemoveAllDomainRoleActions(id string, roleName string, token string) errors.SDKError {
+	ret := _m.Called(id, roleName, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveAllDomainRoleActions")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string) errors.SDKError); ok {
+		r0 = rf(id, roleName, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_RemoveAllDomainRoleActions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveAllDomainRoleActions'
+type SDK_RemoveAllDomainRoleActions_Call struct {
+	*mock.Call
+}
+
+// RemoveAllDomainRoleActions is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - token string
+func (_e *SDK_Expecter) RemoveAllDomainRoleActions(id interface{}, roleName interface{}, token interface{}) *SDK_RemoveAllDomainRoleActions_Call {
+	return &SDK_RemoveAllDomainRoleActions_Call{Call: _e.mock.On("RemoveAllDomainRoleActions", id, roleName, token)}
+}
+
+func (_c *SDK_RemoveAllDomainRoleActions_Call) Run(run func(id string, roleName string, token string)) *SDK_RemoveAllDomainRoleActions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_RemoveAllDomainRoleActions_Call) Return(_a0 errors.SDKError) *SDK_RemoveAllDomainRoleActions_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_RemoveAllDomainRoleActions_Call) RunAndReturn(run func(string, string, string) errors.SDKError) *SDK_RemoveAllDomainRoleActions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveAllDomainRoleMembers provides a mock function with given fields: id, roleName, token
+func (_m *SDK) RemoveAllDomainRoleMembers(id string, roleName string, token string) errors.SDKError {
+	ret := _m.Called(id, roleName, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveAllDomainRoleMembers")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string) errors.SDKError); ok {
+		r0 = rf(id, roleName, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_RemoveAllDomainRoleMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveAllDomainRoleMembers'
+type SDK_RemoveAllDomainRoleMembers_Call struct {
+	*mock.Call
+}
+
+// RemoveAllDomainRoleMembers is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - token string
+func (_e *SDK_Expecter) RemoveAllDomainRoleMembers(id interface{}, roleName interface{}, token interface{}) *SDK_RemoveAllDomainRoleMembers_Call {
+	return &SDK_RemoveAllDomainRoleMembers_Call{Call: _e.mock.On("RemoveAllDomainRoleMembers", id, roleName, token)}
+}
+
+func (_c *SDK_RemoveAllDomainRoleMembers_Call) Run(run func(id string, roleName string, token string)) *SDK_RemoveAllDomainRoleMembers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_RemoveAllDomainRoleMembers_Call) Return(_a0 errors.SDKError) *SDK_RemoveAllDomainRoleMembers_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_RemoveAllDomainRoleMembers_Call) RunAndReturn(run func(string, string, string) errors.SDKError) *SDK_RemoveAllDomainRoleMembers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveAllGroupRoleActions provides a mock function with given fields: id, roleName, domainID, token
+func (_m *SDK) RemoveAllGroupRoleActions(id string, roleName string, domainID string, token string) errors.SDKError {
+	ret := _m.Called(id, roleName, domainID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveAllGroupRoleActions")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, string) errors.SDKError); ok {
+		r0 = rf(id, roleName, domainID, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_RemoveAllGroupRoleActions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveAllGroupRoleActions'
+type SDK_RemoveAllGroupRoleActions_Call struct {
+	*mock.Call
+}
+
+// RemoveAllGroupRoleActions is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - domainID string
+//   - token string
+func (_e *SDK_Expecter) RemoveAllGroupRoleActions(id interface{}, roleName interface{}, domainID interface{}, token interface{}) *SDK_RemoveAllGroupRoleActions_Call {
+	return &SDK_RemoveAllGroupRoleActions_Call{Call: _e.mock.On("RemoveAllGroupRoleActions", id, roleName, domainID, token)}
+}
+
+func (_c *SDK_RemoveAllGroupRoleActions_Call) Run(run func(id string, roleName string, domainID string, token string)) *SDK_RemoveAllGroupRoleActions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_RemoveAllGroupRoleActions_Call) Return(_a0 errors.SDKError) *SDK_RemoveAllGroupRoleActions_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_RemoveAllGroupRoleActions_Call) RunAndReturn(run func(string, string, string, string) errors.SDKError) *SDK_RemoveAllGroupRoleActions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveAllGroupRoleMembers provides a mock function with given fields: id, roleName, domainID, token
+func (_m *SDK) RemoveAllGroupRoleMembers(id string, roleName string, domainID string, token string) errors.SDKError {
+	ret := _m.Called(id, roleName, domainID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveAllGroupRoleMembers")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, string) errors.SDKError); ok {
+		r0 = rf(id, roleName, domainID, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_RemoveAllGroupRoleMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveAllGroupRoleMembers'
+type SDK_RemoveAllGroupRoleMembers_Call struct {
+	*mock.Call
+}
+
+// RemoveAllGroupRoleMembers is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - domainID string
+//   - token string
+func (_e *SDK_Expecter) RemoveAllGroupRoleMembers(id interface{}, roleName interface{}, domainID interface{}, token interface{}) *SDK_RemoveAllGroupRoleMembers_Call {
+	return &SDK_RemoveAllGroupRoleMembers_Call{Call: _e.mock.On("RemoveAllGroupRoleMembers", id, roleName, domainID, token)}
+}
+
+func (_c *SDK_RemoveAllGroupRoleMembers_Call) Run(run func(id string, roleName string, domainID string, token string)) *SDK_RemoveAllGroupRoleMembers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_RemoveAllGroupRoleMembers_Call) Return(_a0 errors.SDKError) *SDK_RemoveAllGroupRoleMembers_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_RemoveAllGroupRoleMembers_Call) RunAndReturn(run func(string, string, string, string) errors.SDKError) *SDK_RemoveAllGroupRoleMembers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // RemoveBootstrap provides a mock function with given fields: id, domainID, token
 func (_m *SDK) RemoveBootstrap(id string, domainID string, token string) errors.SDKError {
 	ret := _m.Called(id, domainID, token)
@@ -4266,17 +5492,17 @@ func (_c *SDK_RemoveBootstrap_Call) RunAndReturn(run func(string, string, string
 	return _c
 }
 
-// RemoveUserFromChannel provides a mock function with given fields: channelID, req, domainID, token
-func (_m *SDK) RemoveUserFromChannel(channelID string, req sdk.UsersRelationRequest, domainID string, token string) errors.SDKError {
-	ret := _m.Called(channelID, req, domainID, token)
+// RemoveChannelParent provides a mock function with given fields: id, domainID, groupID, token
+func (_m *SDK) RemoveChannelParent(id string, domainID string, groupID string, token string) errors.SDKError {
+	ret := _m.Called(id, domainID, groupID, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RemoveUserFromChannel")
+		panic("no return value specified for RemoveChannelParent")
 	}
 
 	var r0 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.UsersRelationRequest, string, string) errors.SDKError); ok {
-		r0 = rf(channelID, req, domainID, token)
+	if rf, ok := ret.Get(0).(func(string, string, string, string) errors.SDKError); ok {
+		r0 = rf(id, domainID, groupID, token)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.SDKError)
@@ -4286,149 +5512,48 @@ func (_m *SDK) RemoveUserFromChannel(channelID string, req sdk.UsersRelationRequ
 	return r0
 }
 
-// SDK_RemoveUserFromChannel_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveUserFromChannel'
-type SDK_RemoveUserFromChannel_Call struct {
+// SDK_RemoveChannelParent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveChannelParent'
+type SDK_RemoveChannelParent_Call struct {
 	*mock.Call
 }
 
-// RemoveUserFromChannel is a helper method to define mock.On call
-//   - channelID string
-//   - req sdk.UsersRelationRequest
+// RemoveChannelParent is a helper method to define mock.On call
+//   - id string
 //   - domainID string
-//   - token string
-func (_e *SDK_Expecter) RemoveUserFromChannel(channelID interface{}, req interface{}, domainID interface{}, token interface{}) *SDK_RemoveUserFromChannel_Call {
-	return &SDK_RemoveUserFromChannel_Call{Call: _e.mock.On("RemoveUserFromChannel", channelID, req, domainID, token)}
-}
-
-func (_c *SDK_RemoveUserFromChannel_Call) Run(run func(channelID string, req sdk.UsersRelationRequest, domainID string, token string)) *SDK_RemoveUserFromChannel_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.UsersRelationRequest), args[2].(string), args[3].(string))
-	})
-	return _c
-}
-
-func (_c *SDK_RemoveUserFromChannel_Call) Return(_a0 errors.SDKError) *SDK_RemoveUserFromChannel_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *SDK_RemoveUserFromChannel_Call) RunAndReturn(run func(string, sdk.UsersRelationRequest, string, string) errors.SDKError) *SDK_RemoveUserFromChannel_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// RemoveUserFromDomain provides a mock function with given fields: domainID, userID, token
-func (_m *SDK) RemoveUserFromDomain(domainID string, userID string, token string) errors.SDKError {
-	ret := _m.Called(domainID, userID, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RemoveUserFromDomain")
-	}
-
-	var r0 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, string, string) errors.SDKError); ok {
-		r0 = rf(domainID, userID, token)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(errors.SDKError)
-		}
-	}
-
-	return r0
-}
-
-// SDK_RemoveUserFromDomain_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveUserFromDomain'
-type SDK_RemoveUserFromDomain_Call struct {
-	*mock.Call
-}
-
-// RemoveUserFromDomain is a helper method to define mock.On call
-//   - domainID string
-//   - userID string
-//   - token string
-func (_e *SDK_Expecter) RemoveUserFromDomain(domainID interface{}, userID interface{}, token interface{}) *SDK_RemoveUserFromDomain_Call {
-	return &SDK_RemoveUserFromDomain_Call{Call: _e.mock.On("RemoveUserFromDomain", domainID, userID, token)}
-}
-
-func (_c *SDK_RemoveUserFromDomain_Call) Run(run func(domainID string, userID string, token string)) *SDK_RemoveUserFromDomain_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
-	})
-	return _c
-}
-
-func (_c *SDK_RemoveUserFromDomain_Call) Return(_a0 errors.SDKError) *SDK_RemoveUserFromDomain_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *SDK_RemoveUserFromDomain_Call) RunAndReturn(run func(string, string, string) errors.SDKError) *SDK_RemoveUserFromDomain_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// RemoveUserFromGroup provides a mock function with given fields: groupID, req, domainID, token
-func (_m *SDK) RemoveUserFromGroup(groupID string, req sdk.UsersRelationRequest, domainID string, token string) errors.SDKError {
-	ret := _m.Called(groupID, req, domainID, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RemoveUserFromGroup")
-	}
-
-	var r0 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.UsersRelationRequest, string, string) errors.SDKError); ok {
-		r0 = rf(groupID, req, domainID, token)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(errors.SDKError)
-		}
-	}
-
-	return r0
-}
-
-// SDK_RemoveUserFromGroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveUserFromGroup'
-type SDK_RemoveUserFromGroup_Call struct {
-	*mock.Call
-}
-
-// RemoveUserFromGroup is a helper method to define mock.On call
 //   - groupID string
-//   - req sdk.UsersRelationRequest
-//   - domainID string
 //   - token string
-func (_e *SDK_Expecter) RemoveUserFromGroup(groupID interface{}, req interface{}, domainID interface{}, token interface{}) *SDK_RemoveUserFromGroup_Call {
-	return &SDK_RemoveUserFromGroup_Call{Call: _e.mock.On("RemoveUserFromGroup", groupID, req, domainID, token)}
+func (_e *SDK_Expecter) RemoveChannelParent(id interface{}, domainID interface{}, groupID interface{}, token interface{}) *SDK_RemoveChannelParent_Call {
+	return &SDK_RemoveChannelParent_Call{Call: _e.mock.On("RemoveChannelParent", id, domainID, groupID, token)}
 }
 
-func (_c *SDK_RemoveUserFromGroup_Call) Run(run func(groupID string, req sdk.UsersRelationRequest, domainID string, token string)) *SDK_RemoveUserFromGroup_Call {
+func (_c *SDK_RemoveChannelParent_Call) Run(run func(id string, domainID string, groupID string, token string)) *SDK_RemoveChannelParent_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.UsersRelationRequest), args[2].(string), args[3].(string))
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
 
-func (_c *SDK_RemoveUserFromGroup_Call) Return(_a0 errors.SDKError) *SDK_RemoveUserFromGroup_Call {
+func (_c *SDK_RemoveChannelParent_Call) Return(_a0 errors.SDKError) *SDK_RemoveChannelParent_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *SDK_RemoveUserFromGroup_Call) RunAndReturn(run func(string, sdk.UsersRelationRequest, string, string) errors.SDKError) *SDK_RemoveUserFromGroup_Call {
+func (_c *SDK_RemoveChannelParent_Call) RunAndReturn(run func(string, string, string, string) errors.SDKError) *SDK_RemoveChannelParent_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// RemoveUserGroupFromChannel provides a mock function with given fields: channelID, req, domainID, token
-func (_m *SDK) RemoveUserGroupFromChannel(channelID string, req sdk.UserGroupsRequest, domainID string, token string) errors.SDKError {
-	ret := _m.Called(channelID, req, domainID, token)
+// RemoveChildren provides a mock function with given fields: id, domainID, groupIDs, token
+func (_m *SDK) RemoveChildren(id string, domainID string, groupIDs []string, token string) errors.SDKError {
+	ret := _m.Called(id, domainID, groupIDs, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RemoveUserGroupFromChannel")
+		panic("no return value specified for RemoveChildren")
 	}
 
 	var r0 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.UserGroupsRequest, string, string) errors.SDKError); ok {
-		r0 = rf(channelID, req, domainID, token)
+	if rf, ok := ret.Get(0).(func(string, string, []string, string) errors.SDKError); ok {
+		r0 = rf(id, domainID, groupIDs, token)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.SDKError)
@@ -4438,33 +5563,445 @@ func (_m *SDK) RemoveUserGroupFromChannel(channelID string, req sdk.UserGroupsRe
 	return r0
 }
 
-// SDK_RemoveUserGroupFromChannel_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveUserGroupFromChannel'
-type SDK_RemoveUserGroupFromChannel_Call struct {
+// SDK_RemoveChildren_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveChildren'
+type SDK_RemoveChildren_Call struct {
 	*mock.Call
 }
 
-// RemoveUserGroupFromChannel is a helper method to define mock.On call
-//   - channelID string
-//   - req sdk.UserGroupsRequest
+// RemoveChildren is a helper method to define mock.On call
+//   - id string
 //   - domainID string
+//   - groupIDs []string
 //   - token string
-func (_e *SDK_Expecter) RemoveUserGroupFromChannel(channelID interface{}, req interface{}, domainID interface{}, token interface{}) *SDK_RemoveUserGroupFromChannel_Call {
-	return &SDK_RemoveUserGroupFromChannel_Call{Call: _e.mock.On("RemoveUserGroupFromChannel", channelID, req, domainID, token)}
+func (_e *SDK_Expecter) RemoveChildren(id interface{}, domainID interface{}, groupIDs interface{}, token interface{}) *SDK_RemoveChildren_Call {
+	return &SDK_RemoveChildren_Call{Call: _e.mock.On("RemoveChildren", id, domainID, groupIDs, token)}
 }
 
-func (_c *SDK_RemoveUserGroupFromChannel_Call) Run(run func(channelID string, req sdk.UserGroupsRequest, domainID string, token string)) *SDK_RemoveUserGroupFromChannel_Call {
+func (_c *SDK_RemoveChildren_Call) Run(run func(id string, domainID string, groupIDs []string, token string)) *SDK_RemoveChildren_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.UserGroupsRequest), args[2].(string), args[3].(string))
+		run(args[0].(string), args[1].(string), args[2].([]string), args[3].(string))
 	})
 	return _c
 }
 
-func (_c *SDK_RemoveUserGroupFromChannel_Call) Return(_a0 errors.SDKError) *SDK_RemoveUserGroupFromChannel_Call {
+func (_c *SDK_RemoveChildren_Call) Return(_a0 errors.SDKError) *SDK_RemoveChildren_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *SDK_RemoveUserGroupFromChannel_Call) RunAndReturn(run func(string, sdk.UserGroupsRequest, string, string) errors.SDKError) *SDK_RemoveUserGroupFromChannel_Call {
+func (_c *SDK_RemoveChildren_Call) RunAndReturn(run func(string, string, []string, string) errors.SDKError) *SDK_RemoveChildren_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveClientParent provides a mock function with given fields: id, domainID, groupID, token
+func (_m *SDK) RemoveClientParent(id string, domainID string, groupID string, token string) errors.SDKError {
+	ret := _m.Called(id, domainID, groupID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveClientParent")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, string) errors.SDKError); ok {
+		r0 = rf(id, domainID, groupID, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_RemoveClientParent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveClientParent'
+type SDK_RemoveClientParent_Call struct {
+	*mock.Call
+}
+
+// RemoveClientParent is a helper method to define mock.On call
+//   - id string
+//   - domainID string
+//   - groupID string
+//   - token string
+func (_e *SDK_Expecter) RemoveClientParent(id interface{}, domainID interface{}, groupID interface{}, token interface{}) *SDK_RemoveClientParent_Call {
+	return &SDK_RemoveClientParent_Call{Call: _e.mock.On("RemoveClientParent", id, domainID, groupID, token)}
+}
+
+func (_c *SDK_RemoveClientParent_Call) Run(run func(id string, domainID string, groupID string, token string)) *SDK_RemoveClientParent_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_RemoveClientParent_Call) Return(_a0 errors.SDKError) *SDK_RemoveClientParent_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_RemoveClientParent_Call) RunAndReturn(run func(string, string, string, string) errors.SDKError) *SDK_RemoveClientParent_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveClientRoleActions provides a mock function with given fields: id, roleName, domainID, actions, token
+func (_m *SDK) RemoveClientRoleActions(id string, roleName string, domainID string, actions []string, token string) errors.SDKError {
+	ret := _m.Called(id, roleName, domainID, actions, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveClientRoleActions")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, []string, string) errors.SDKError); ok {
+		r0 = rf(id, roleName, domainID, actions, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_RemoveClientRoleActions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveClientRoleActions'
+type SDK_RemoveClientRoleActions_Call struct {
+	*mock.Call
+}
+
+// RemoveClientRoleActions is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - domainID string
+//   - actions []string
+//   - token string
+func (_e *SDK_Expecter) RemoveClientRoleActions(id interface{}, roleName interface{}, domainID interface{}, actions interface{}, token interface{}) *SDK_RemoveClientRoleActions_Call {
+	return &SDK_RemoveClientRoleActions_Call{Call: _e.mock.On("RemoveClientRoleActions", id, roleName, domainID, actions, token)}
+}
+
+func (_c *SDK_RemoveClientRoleActions_Call) Run(run func(id string, roleName string, domainID string, actions []string, token string)) *SDK_RemoveClientRoleActions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_RemoveClientRoleActions_Call) Return(_a0 errors.SDKError) *SDK_RemoveClientRoleActions_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_RemoveClientRoleActions_Call) RunAndReturn(run func(string, string, string, []string, string) errors.SDKError) *SDK_RemoveClientRoleActions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveClientRoleMembers provides a mock function with given fields: id, roleName, domainID, members, token
+func (_m *SDK) RemoveClientRoleMembers(id string, roleName string, domainID string, members []string, token string) errors.SDKError {
+	ret := _m.Called(id, roleName, domainID, members, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveClientRoleMembers")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, []string, string) errors.SDKError); ok {
+		r0 = rf(id, roleName, domainID, members, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_RemoveClientRoleMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveClientRoleMembers'
+type SDK_RemoveClientRoleMembers_Call struct {
+	*mock.Call
+}
+
+// RemoveClientRoleMembers is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - domainID string
+//   - members []string
+//   - token string
+func (_e *SDK_Expecter) RemoveClientRoleMembers(id interface{}, roleName interface{}, domainID interface{}, members interface{}, token interface{}) *SDK_RemoveClientRoleMembers_Call {
+	return &SDK_RemoveClientRoleMembers_Call{Call: _e.mock.On("RemoveClientRoleMembers", id, roleName, domainID, members, token)}
+}
+
+func (_c *SDK_RemoveClientRoleMembers_Call) Run(run func(id string, roleName string, domainID string, members []string, token string)) *SDK_RemoveClientRoleMembers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_RemoveClientRoleMembers_Call) Return(_a0 errors.SDKError) *SDK_RemoveClientRoleMembers_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_RemoveClientRoleMembers_Call) RunAndReturn(run func(string, string, string, []string, string) errors.SDKError) *SDK_RemoveClientRoleMembers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveDomainRoleActions provides a mock function with given fields: id, roleName, actions, token
+func (_m *SDK) RemoveDomainRoleActions(id string, roleName string, actions []string, token string) errors.SDKError {
+	ret := _m.Called(id, roleName, actions, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveDomainRoleActions")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, []string, string) errors.SDKError); ok {
+		r0 = rf(id, roleName, actions, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_RemoveDomainRoleActions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveDomainRoleActions'
+type SDK_RemoveDomainRoleActions_Call struct {
+	*mock.Call
+}
+
+// RemoveDomainRoleActions is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - actions []string
+//   - token string
+func (_e *SDK_Expecter) RemoveDomainRoleActions(id interface{}, roleName interface{}, actions interface{}, token interface{}) *SDK_RemoveDomainRoleActions_Call {
+	return &SDK_RemoveDomainRoleActions_Call{Call: _e.mock.On("RemoveDomainRoleActions", id, roleName, actions, token)}
+}
+
+func (_c *SDK_RemoveDomainRoleActions_Call) Run(run func(id string, roleName string, actions []string, token string)) *SDK_RemoveDomainRoleActions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].([]string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_RemoveDomainRoleActions_Call) Return(_a0 errors.SDKError) *SDK_RemoveDomainRoleActions_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_RemoveDomainRoleActions_Call) RunAndReturn(run func(string, string, []string, string) errors.SDKError) *SDK_RemoveDomainRoleActions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveDomainRoleMembers provides a mock function with given fields: id, roleName, members, token
+func (_m *SDK) RemoveDomainRoleMembers(id string, roleName string, members []string, token string) errors.SDKError {
+	ret := _m.Called(id, roleName, members, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveDomainRoleMembers")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, []string, string) errors.SDKError); ok {
+		r0 = rf(id, roleName, members, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_RemoveDomainRoleMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveDomainRoleMembers'
+type SDK_RemoveDomainRoleMembers_Call struct {
+	*mock.Call
+}
+
+// RemoveDomainRoleMembers is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - members []string
+//   - token string
+func (_e *SDK_Expecter) RemoveDomainRoleMembers(id interface{}, roleName interface{}, members interface{}, token interface{}) *SDK_RemoveDomainRoleMembers_Call {
+	return &SDK_RemoveDomainRoleMembers_Call{Call: _e.mock.On("RemoveDomainRoleMembers", id, roleName, members, token)}
+}
+
+func (_c *SDK_RemoveDomainRoleMembers_Call) Run(run func(id string, roleName string, members []string, token string)) *SDK_RemoveDomainRoleMembers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].([]string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_RemoveDomainRoleMembers_Call) Return(_a0 errors.SDKError) *SDK_RemoveDomainRoleMembers_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_RemoveDomainRoleMembers_Call) RunAndReturn(run func(string, string, []string, string) errors.SDKError) *SDK_RemoveDomainRoleMembers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveGroupParent provides a mock function with given fields: id, domainID, groupID, token
+func (_m *SDK) RemoveGroupParent(id string, domainID string, groupID string, token string) errors.SDKError {
+	ret := _m.Called(id, domainID, groupID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveGroupParent")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, string) errors.SDKError); ok {
+		r0 = rf(id, domainID, groupID, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_RemoveGroupParent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveGroupParent'
+type SDK_RemoveGroupParent_Call struct {
+	*mock.Call
+}
+
+// RemoveGroupParent is a helper method to define mock.On call
+//   - id string
+//   - domainID string
+//   - groupID string
+//   - token string
+func (_e *SDK_Expecter) RemoveGroupParent(id interface{}, domainID interface{}, groupID interface{}, token interface{}) *SDK_RemoveGroupParent_Call {
+	return &SDK_RemoveGroupParent_Call{Call: _e.mock.On("RemoveGroupParent", id, domainID, groupID, token)}
+}
+
+func (_c *SDK_RemoveGroupParent_Call) Run(run func(id string, domainID string, groupID string, token string)) *SDK_RemoveGroupParent_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_RemoveGroupParent_Call) Return(_a0 errors.SDKError) *SDK_RemoveGroupParent_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_RemoveGroupParent_Call) RunAndReturn(run func(string, string, string, string) errors.SDKError) *SDK_RemoveGroupParent_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveGroupRoleActions provides a mock function with given fields: id, roleName, domainID, actions, token
+func (_m *SDK) RemoveGroupRoleActions(id string, roleName string, domainID string, actions []string, token string) errors.SDKError {
+	ret := _m.Called(id, roleName, domainID, actions, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveGroupRoleActions")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, []string, string) errors.SDKError); ok {
+		r0 = rf(id, roleName, domainID, actions, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_RemoveGroupRoleActions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveGroupRoleActions'
+type SDK_RemoveGroupRoleActions_Call struct {
+	*mock.Call
+}
+
+// RemoveGroupRoleActions is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - domainID string
+//   - actions []string
+//   - token string
+func (_e *SDK_Expecter) RemoveGroupRoleActions(id interface{}, roleName interface{}, domainID interface{}, actions interface{}, token interface{}) *SDK_RemoveGroupRoleActions_Call {
+	return &SDK_RemoveGroupRoleActions_Call{Call: _e.mock.On("RemoveGroupRoleActions", id, roleName, domainID, actions, token)}
+}
+
+func (_c *SDK_RemoveGroupRoleActions_Call) Run(run func(id string, roleName string, domainID string, actions []string, token string)) *SDK_RemoveGroupRoleActions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_RemoveGroupRoleActions_Call) Return(_a0 errors.SDKError) *SDK_RemoveGroupRoleActions_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_RemoveGroupRoleActions_Call) RunAndReturn(run func(string, string, string, []string, string) errors.SDKError) *SDK_RemoveGroupRoleActions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveGroupRoleMembers provides a mock function with given fields: id, roleName, domainID, members, token
+func (_m *SDK) RemoveGroupRoleMembers(id string, roleName string, domainID string, members []string, token string) errors.SDKError {
+	ret := _m.Called(id, roleName, domainID, members, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveGroupRoleMembers")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, []string, string) errors.SDKError); ok {
+		r0 = rf(id, roleName, domainID, members, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_RemoveGroupRoleMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveGroupRoleMembers'
+type SDK_RemoveGroupRoleMembers_Call struct {
+	*mock.Call
+}
+
+// RemoveGroupRoleMembers is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - domainID string
+//   - members []string
+//   - token string
+func (_e *SDK_Expecter) RemoveGroupRoleMembers(id interface{}, roleName interface{}, domainID interface{}, members interface{}, token interface{}) *SDK_RemoveGroupRoleMembers_Call {
+	return &SDK_RemoveGroupRoleMembers_Call{Call: _e.mock.On("RemoveGroupRoleMembers", id, roleName, domainID, members, token)}
+}
+
+func (_c *SDK_RemoveGroupRoleMembers_Call) Run(run func(id string, roleName string, domainID string, members []string, token string)) *SDK_RemoveGroupRoleMembers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_RemoveGroupRoleMembers_Call) Return(_a0 errors.SDKError) *SDK_RemoveGroupRoleMembers_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_RemoveGroupRoleMembers_Call) RunAndReturn(run func(string, string, string, []string, string) errors.SDKError) *SDK_RemoveGroupRoleMembers_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -4783,6 +6320,108 @@ func (_c *SDK_SendMessage_Call) RunAndReturn(run func(string, string, string) er
 	return _c
 }
 
+// SetChannelParent provides a mock function with given fields: id, domainID, groupID, token
+func (_m *SDK) SetChannelParent(id string, domainID string, groupID string, token string) errors.SDKError {
+	ret := _m.Called(id, domainID, groupID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetChannelParent")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, string) errors.SDKError); ok {
+		r0 = rf(id, domainID, groupID, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_SetChannelParent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetChannelParent'
+type SDK_SetChannelParent_Call struct {
+	*mock.Call
+}
+
+// SetChannelParent is a helper method to define mock.On call
+//   - id string
+//   - domainID string
+//   - groupID string
+//   - token string
+func (_e *SDK_Expecter) SetChannelParent(id interface{}, domainID interface{}, groupID interface{}, token interface{}) *SDK_SetChannelParent_Call {
+	return &SDK_SetChannelParent_Call{Call: _e.mock.On("SetChannelParent", id, domainID, groupID, token)}
+}
+
+func (_c *SDK_SetChannelParent_Call) Run(run func(id string, domainID string, groupID string, token string)) *SDK_SetChannelParent_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_SetChannelParent_Call) Return(_a0 errors.SDKError) *SDK_SetChannelParent_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_SetChannelParent_Call) RunAndReturn(run func(string, string, string, string) errors.SDKError) *SDK_SetChannelParent_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SetClientParent provides a mock function with given fields: id, domainID, groupID, token
+func (_m *SDK) SetClientParent(id string, domainID string, groupID string, token string) errors.SDKError {
+	ret := _m.Called(id, domainID, groupID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetClientParent")
+	}
+
+	var r0 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, string) errors.SDKError); ok {
+		r0 = rf(id, domainID, groupID, token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
+		}
+	}
+
+	return r0
+}
+
+// SDK_SetClientParent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetClientParent'
+type SDK_SetClientParent_Call struct {
+	*mock.Call
+}
+
+// SetClientParent is a helper method to define mock.On call
+//   - id string
+//   - domainID string
+//   - groupID string
+//   - token string
+func (_e *SDK_Expecter) SetClientParent(id interface{}, domainID interface{}, groupID interface{}, token interface{}) *SDK_SetClientParent_Call {
+	return &SDK_SetClientParent_Call{Call: _e.mock.On("SetClientParent", id, domainID, groupID, token)}
+}
+
+func (_c *SDK_SetClientParent_Call) Run(run func(id string, domainID string, groupID string, token string)) *SDK_SetClientParent_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_SetClientParent_Call) Return(_a0 errors.SDKError) *SDK_SetClientParent_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SDK_SetClientParent_Call) RunAndReturn(run func(string, string, string, string) errors.SDKError) *SDK_SetClientParent_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // SetContentType provides a mock function with given fields: ct
 func (_m *SDK) SetContentType(ct sdk.ContentType) errors.SDKError {
 	ret := _m.Called(ct)
@@ -4831,17 +6470,17 @@ func (_c *SDK_SetContentType_Call) RunAndReturn(run func(sdk.ContentType) errors
 	return _c
 }
 
-// ShareClient provides a mock function with given fields: id, req, domainID, token
-func (_m *SDK) ShareClient(id string, req sdk.UsersRelationRequest, domainID string, token string) errors.SDKError {
-	ret := _m.Called(id, req, domainID, token)
+// SetGroupParent provides a mock function with given fields: id, domainID, groupID, token
+func (_m *SDK) SetGroupParent(id string, domainID string, groupID string, token string) errors.SDKError {
+	ret := _m.Called(id, domainID, groupID, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ShareClient")
+		panic("no return value specified for SetGroupParent")
 	}
 
 	var r0 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.UsersRelationRequest, string, string) errors.SDKError); ok {
-		r0 = rf(id, req, domainID, token)
+	if rf, ok := ret.Get(0).(func(string, string, string, string) errors.SDKError); ok {
+		r0 = rf(id, domainID, groupID, token)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.SDKError)
@@ -4851,84 +6490,33 @@ func (_m *SDK) ShareClient(id string, req sdk.UsersRelationRequest, domainID str
 	return r0
 }
 
-// SDK_ShareClient_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ShareClient'
-type SDK_ShareClient_Call struct {
+// SDK_SetGroupParent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetGroupParent'
+type SDK_SetGroupParent_Call struct {
 	*mock.Call
 }
 
-// ShareClient is a helper method to define mock.On call
+// SetGroupParent is a helper method to define mock.On call
 //   - id string
-//   - req sdk.UsersRelationRequest
 //   - domainID string
+//   - groupID string
 //   - token string
-func (_e *SDK_Expecter) ShareClient(id interface{}, req interface{}, domainID interface{}, token interface{}) *SDK_ShareClient_Call {
-	return &SDK_ShareClient_Call{Call: _e.mock.On("ShareClient", id, req, domainID, token)}
+func (_e *SDK_Expecter) SetGroupParent(id interface{}, domainID interface{}, groupID interface{}, token interface{}) *SDK_SetGroupParent_Call {
+	return &SDK_SetGroupParent_Call{Call: _e.mock.On("SetGroupParent", id, domainID, groupID, token)}
 }
 
-func (_c *SDK_ShareClient_Call) Run(run func(id string, req sdk.UsersRelationRequest, domainID string, token string)) *SDK_ShareClient_Call {
+func (_c *SDK_SetGroupParent_Call) Run(run func(id string, domainID string, groupID string, token string)) *SDK_SetGroupParent_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.UsersRelationRequest), args[2].(string), args[3].(string))
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
 
-func (_c *SDK_ShareClient_Call) Return(_a0 errors.SDKError) *SDK_ShareClient_Call {
+func (_c *SDK_SetGroupParent_Call) Return(_a0 errors.SDKError) *SDK_SetGroupParent_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *SDK_ShareClient_Call) RunAndReturn(run func(string, sdk.UsersRelationRequest, string, string) errors.SDKError) *SDK_ShareClient_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// UnshareClient provides a mock function with given fields: id, req, domainID, token
-func (_m *SDK) UnshareClient(id string, req sdk.UsersRelationRequest, domainID string, token string) errors.SDKError {
-	ret := _m.Called(id, req, domainID, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for UnshareClient")
-	}
-
-	var r0 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.UsersRelationRequest, string, string) errors.SDKError); ok {
-		r0 = rf(id, req, domainID, token)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(errors.SDKError)
-		}
-	}
-
-	return r0
-}
-
-// SDK_UnshareClient_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UnshareClient'
-type SDK_UnshareClient_Call struct {
-	*mock.Call
-}
-
-// UnshareClient is a helper method to define mock.On call
-//   - id string
-//   - req sdk.UsersRelationRequest
-//   - domainID string
-//   - token string
-func (_e *SDK_Expecter) UnshareClient(id interface{}, req interface{}, domainID interface{}, token interface{}) *SDK_UnshareClient_Call {
-	return &SDK_UnshareClient_Call{Call: _e.mock.On("UnshareClient", id, req, domainID, token)}
-}
-
-func (_c *SDK_UnshareClient_Call) Run(run func(id string, req sdk.UsersRelationRequest, domainID string, token string)) *SDK_UnshareClient_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.UsersRelationRequest), args[2].(string), args[3].(string))
-	})
-	return _c
-}
-
-func (_c *SDK_UnshareClient_Call) Return(_a0 errors.SDKError) *SDK_UnshareClient_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *SDK_UnshareClient_Call) RunAndReturn(run func(string, sdk.UsersRelationRequest, string, string) errors.SDKError) *SDK_UnshareClient_Call {
+func (_c *SDK_SetGroupParent_Call) RunAndReturn(run func(string, string, string, string) errors.SDKError) *SDK_SetGroupParent_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -5157,6 +6745,66 @@ func (_c *SDK_UpdateChannel_Call) RunAndReturn(run func(sdk.Channel, string, str
 	return _c
 }
 
+// UpdateChannelTags provides a mock function with given fields: c, domainID, token
+func (_m *SDK) UpdateChannelTags(c sdk.Channel, domainID string, token string) (sdk.Channel, errors.SDKError) {
+	ret := _m.Called(c, domainID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateChannelTags")
+	}
+
+	var r0 sdk.Channel
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(sdk.Channel, string, string) (sdk.Channel, errors.SDKError)); ok {
+		return rf(c, domainID, token)
+	}
+	if rf, ok := ret.Get(0).(func(sdk.Channel, string, string) sdk.Channel); ok {
+		r0 = rf(c, domainID, token)
+	} else {
+		r0 = ret.Get(0).(sdk.Channel)
+	}
+
+	if rf, ok := ret.Get(1).(func(sdk.Channel, string, string) errors.SDKError); ok {
+		r1 = rf(c, domainID, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_UpdateChannelTags_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateChannelTags'
+type SDK_UpdateChannelTags_Call struct {
+	*mock.Call
+}
+
+// UpdateChannelTags is a helper method to define mock.On call
+//   - c sdk.Channel
+//   - domainID string
+//   - token string
+func (_e *SDK_Expecter) UpdateChannelTags(c interface{}, domainID interface{}, token interface{}) *SDK_UpdateChannelTags_Call {
+	return &SDK_UpdateChannelTags_Call{Call: _e.mock.On("UpdateChannelTags", c, domainID, token)}
+}
+
+func (_c *SDK_UpdateChannelTags_Call) Run(run func(c sdk.Channel, domainID string, token string)) *SDK_UpdateChannelTags_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(sdk.Channel), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_UpdateChannelTags_Call) Return(_a0 sdk.Channel, _a1 errors.SDKError) *SDK_UpdateChannelTags_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_UpdateChannelTags_Call) RunAndReturn(run func(sdk.Channel, string, string) (sdk.Channel, errors.SDKError)) *SDK_UpdateChannelTags_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // UpdateClient provides a mock function with given fields: client, domainID, token
 func (_m *SDK) UpdateClient(client sdk.Client, domainID string, token string) (sdk.Client, errors.SDKError) {
 	ret := _m.Called(client, domainID, token)
@@ -5213,6 +6861,68 @@ func (_c *SDK_UpdateClient_Call) Return(_a0 sdk.Client, _a1 errors.SDKError) *SD
 }
 
 func (_c *SDK_UpdateClient_Call) RunAndReturn(run func(sdk.Client, string, string) (sdk.Client, errors.SDKError)) *SDK_UpdateClient_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateClientRole provides a mock function with given fields: id, roleName, newName, domainID, token
+func (_m *SDK) UpdateClientRole(id string, roleName string, newName string, domainID string, token string) (sdk.Role, errors.SDKError) {
+	ret := _m.Called(id, roleName, newName, domainID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateClientRole")
+	}
+
+	var r0 sdk.Role
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, string, string) (sdk.Role, errors.SDKError)); ok {
+		return rf(id, roleName, newName, domainID, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, string, string, string) sdk.Role); ok {
+		r0 = rf(id, roleName, newName, domainID, token)
+	} else {
+		r0 = ret.Get(0).(sdk.Role)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, string, string, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, newName, domainID, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_UpdateClientRole_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateClientRole'
+type SDK_UpdateClientRole_Call struct {
+	*mock.Call
+}
+
+// UpdateClientRole is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - newName string
+//   - domainID string
+//   - token string
+func (_e *SDK_Expecter) UpdateClientRole(id interface{}, roleName interface{}, newName interface{}, domainID interface{}, token interface{}) *SDK_UpdateClientRole_Call {
+	return &SDK_UpdateClientRole_Call{Call: _e.mock.On("UpdateClientRole", id, roleName, newName, domainID, token)}
+}
+
+func (_c *SDK_UpdateClientRole_Call) Run(run func(id string, roleName string, newName string, domainID string, token string)) *SDK_UpdateClientRole_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_UpdateClientRole_Call) Return(_a0 sdk.Role, _a1 errors.SDKError) *SDK_UpdateClientRole_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_UpdateClientRole_Call) RunAndReturn(run func(string, string, string, string, string) (sdk.Role, errors.SDKError)) *SDK_UpdateClientRole_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -5397,6 +7107,67 @@ func (_c *SDK_UpdateDomain_Call) RunAndReturn(run func(sdk.Domain, string) (sdk.
 	return _c
 }
 
+// UpdateDomainRole provides a mock function with given fields: id, roleName, newName, token
+func (_m *SDK) UpdateDomainRole(id string, roleName string, newName string, token string) (sdk.Role, errors.SDKError) {
+	ret := _m.Called(id, roleName, newName, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateDomainRole")
+	}
+
+	var r0 sdk.Role
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, string) (sdk.Role, errors.SDKError)); ok {
+		return rf(id, roleName, newName, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, string, string) sdk.Role); ok {
+		r0 = rf(id, roleName, newName, token)
+	} else {
+		r0 = ret.Get(0).(sdk.Role)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, string, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, newName, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_UpdateDomainRole_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateDomainRole'
+type SDK_UpdateDomainRole_Call struct {
+	*mock.Call
+}
+
+// UpdateDomainRole is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - newName string
+//   - token string
+func (_e *SDK_Expecter) UpdateDomainRole(id interface{}, roleName interface{}, newName interface{}, token interface{}) *SDK_UpdateDomainRole_Call {
+	return &SDK_UpdateDomainRole_Call{Call: _e.mock.On("UpdateDomainRole", id, roleName, newName, token)}
+}
+
+func (_c *SDK_UpdateDomainRole_Call) Run(run func(id string, roleName string, newName string, token string)) *SDK_UpdateDomainRole_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_UpdateDomainRole_Call) Return(_a0 sdk.Role, _a1 errors.SDKError) *SDK_UpdateDomainRole_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_UpdateDomainRole_Call) RunAndReturn(run func(string, string, string, string) (sdk.Role, errors.SDKError)) *SDK_UpdateDomainRole_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // UpdateGroup provides a mock function with given fields: group, domainID, token
 func (_m *SDK) UpdateGroup(group sdk.Group, domainID string, token string) (sdk.Group, errors.SDKError) {
 	ret := _m.Called(group, domainID, token)
@@ -5453,6 +7224,68 @@ func (_c *SDK_UpdateGroup_Call) Return(_a0 sdk.Group, _a1 errors.SDKError) *SDK_
 }
 
 func (_c *SDK_UpdateGroup_Call) RunAndReturn(run func(sdk.Group, string, string) (sdk.Group, errors.SDKError)) *SDK_UpdateGroup_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateGroupRole provides a mock function with given fields: id, roleName, newName, domainID, token
+func (_m *SDK) UpdateGroupRole(id string, roleName string, newName string, domainID string, token string) (sdk.Role, errors.SDKError) {
+	ret := _m.Called(id, roleName, newName, domainID, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateGroupRole")
+	}
+
+	var r0 sdk.Role
+	var r1 errors.SDKError
+	if rf, ok := ret.Get(0).(func(string, string, string, string, string) (sdk.Role, errors.SDKError)); ok {
+		return rf(id, roleName, newName, domainID, token)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, string, string, string) sdk.Role); ok {
+		r0 = rf(id, roleName, newName, domainID, token)
+	} else {
+		r0 = ret.Get(0).(sdk.Role)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, string, string, string) errors.SDKError); ok {
+		r1 = rf(id, roleName, newName, domainID, token)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+
+	return r0, r1
+}
+
+// SDK_UpdateGroupRole_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateGroupRole'
+type SDK_UpdateGroupRole_Call struct {
+	*mock.Call
+}
+
+// UpdateGroupRole is a helper method to define mock.On call
+//   - id string
+//   - roleName string
+//   - newName string
+//   - domainID string
+//   - token string
+func (_e *SDK_Expecter) UpdateGroupRole(id interface{}, roleName interface{}, newName interface{}, domainID interface{}, token interface{}) *SDK_UpdateGroupRole_Call {
+	return &SDK_UpdateGroupRole_Call{Call: _e.mock.On("UpdateGroupRole", id, roleName, newName, domainID, token)}
+}
+
+func (_c *SDK_UpdateGroupRole_Call) Run(run func(id string, roleName string, newName string, domainID string, token string)) *SDK_UpdateGroupRole_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
+	})
+	return _c
+}
+
+func (_c *SDK_UpdateGroupRole_Call) Return(_a0 sdk.Role, _a1 errors.SDKError) *SDK_UpdateGroupRole_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *SDK_UpdateGroupRole_Call) RunAndReturn(run func(string, string, string, string, string) (sdk.Role, errors.SDKError)) *SDK_UpdateGroupRole_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -53,7 +53,36 @@ type UserGroupsRequest struct {
 	UserGroupIDs []string `json:"group_ids"`
 }
 
+type RoleReq struct {
+	RoleName        string   `json:"role_name"`
+	OptionalActions []string `json:"optional_actions"`
+	OptionalMembers []string `json:"optional_members"`
+}
+
 type UpdateUsernameReq struct {
 	id       string
 	Username string `json:"username"`
+}
+
+type parentGroupReq struct {
+	ParentGroupID string `json:"parent_group_id"`
+}
+
+type updateRoleNameReq struct {
+	Name string `json:"name"`
+}
+type roleActionsReq struct {
+	Actions []string `json:"actions"`
+}
+
+type roleMembersReq struct {
+	Members []string `json:"members"`
+}
+
+type groupParentReq struct {
+	ParentID string `json:"parent_id"`
+}
+
+type childrenGroupsReq struct {
+	ChildrenIDs []string `json:"children_ids"`
 }

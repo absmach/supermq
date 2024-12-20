@@ -165,7 +165,7 @@ func (res retrieveGroupHierarchyRes) Empty() bool {
 type addParentGroupRes struct{}
 
 func (res addParentGroupRes) Code() int {
-	return http.StatusNoContent
+	return http.StatusOK
 }
 
 func (res addParentGroupRes) Headers() map[string]string {
@@ -193,7 +193,7 @@ func (res removeParentGroupRes) Empty() bool {
 type addChildrenGroupsRes struct{}
 
 func (res addChildrenGroupsRes) Code() int {
-	return http.StatusNoContent
+	return http.StatusOK
 }
 
 func (res addChildrenGroupsRes) Headers() map[string]string {
