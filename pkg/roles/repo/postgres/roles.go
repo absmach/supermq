@@ -304,13 +304,13 @@ func (repo *Repository) RetrieveRole(ctx context.Context, roleID string) (roles.
 	return roles.Role{}, repoerr.ErrNotFound
 }
 
-func (repo *Repository) RetrieveRoleByEntityIDAndName(ctx context.Context, entityID, roleName string) (roles.Role, error) {
+func (repo *Repository) RetrieveEntityRole(ctx context.Context, entityID, roleID string) (roles.Role, error) {
 	q := fmt.Sprintf(`SELECT id, name, entity_id, created_by, created_at, updated_by, updated_at
-        FROM %s_roles WHERE entity_id = :entity_id and name = :name`, repo.tableNamePrefix)
+        FROM %s_roles WHERE entity_id = :entity_id and id = :id`, repo.tableNamePrefix)
 
 	dbr := dbRole{
 		EntityID: entityID,
-		Name:     roleName,
+		ID:       roleID,
 	}
 
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbr)

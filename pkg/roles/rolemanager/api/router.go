@@ -27,7 +27,7 @@ func EntityRoleMangerRouter(svc roles.RoleManager, d Decoder, r chi.Router, opts
 			opts...,
 		), "list_roles").ServeHTTP)
 
-		r.Route("/{roleName}", func(r chi.Router) {
+		r.Route("/{roleID}", func(r chi.Router) {
 			r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
 				ViewRoleEndpoint(svc),
 				d.DecodeViewRole,

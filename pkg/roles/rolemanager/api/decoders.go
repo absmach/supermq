@@ -59,7 +59,7 @@ func (d Decoder) DecodeViewRole(_ context.Context, r *http.Request) (interface{}
 	req := viewRoleReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),
-		roleName: chi.URLParam(r, "roleName"),
+		roleID:   chi.URLParam(r, "roleID"),
 	}
 	return req, nil
 }
@@ -71,7 +71,7 @@ func (d Decoder) DecodeUpdateRole(_ context.Context, r *http.Request) (interface
 	req := updateRoleReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),
-		roleName: chi.URLParam(r, "roleName"),
+		roleID:   chi.URLParam(r, "roleID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
@@ -83,7 +83,7 @@ func (d Decoder) DecodeDeleteRole(_ context.Context, r *http.Request) (interface
 	req := deleteRoleReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),
-		roleName: chi.URLParam(r, "roleName"),
+		roleID:   chi.URLParam(r, "roleID"),
 	}
 	return req, nil
 }
@@ -102,7 +102,7 @@ func (d Decoder) DecodeAddRoleActions(_ context.Context, r *http.Request) (inter
 	req := addRoleActionsReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),
-		roleName: chi.URLParam(r, "roleName"),
+		roleID:   chi.URLParam(r, "roleID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
@@ -114,7 +114,7 @@ func (d Decoder) DecodeListRoleActions(_ context.Context, r *http.Request) (inte
 	req := listRoleActionsReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),
-		roleName: chi.URLParam(r, "roleName"),
+		roleID:   chi.URLParam(r, "roleID"),
 	}
 	return req, nil
 }
@@ -126,7 +126,7 @@ func (d Decoder) DecodeDeleteRoleActions(_ context.Context, r *http.Request) (in
 	req := deleteRoleActionsReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),
-		roleName: chi.URLParam(r, "roleName"),
+		roleID:   chi.URLParam(r, "roleID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
@@ -138,7 +138,7 @@ func (d Decoder) DecodeDeleteAllRoleActions(_ context.Context, r *http.Request) 
 	req := deleteAllRoleActionsReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),
-		roleName: chi.URLParam(r, "roleName"),
+		roleID:   chi.URLParam(r, "roleID"),
 	}
 	return req, nil
 }
@@ -150,7 +150,7 @@ func (d Decoder) DecodeAddRoleMembers(_ context.Context, r *http.Request) (inter
 	req := addRoleMembersReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),
-		roleName: chi.URLParam(r, "roleName"),
+		roleID:   chi.URLParam(r, "roleID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
@@ -170,7 +170,7 @@ func (d Decoder) DecodeListRoleMembers(_ context.Context, r *http.Request) (inte
 	req := listRoleMembersReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),
-		roleName: chi.URLParam(r, "roleName"),
+		roleID:   chi.URLParam(r, "roleID"),
 		limit:    l,
 		offset:   o,
 	}
@@ -184,7 +184,7 @@ func (d Decoder) DecodeDeleteRoleMembers(_ context.Context, r *http.Request) (in
 	req := deleteRoleMembersReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),
-		roleName: chi.URLParam(r, "roleName"),
+		roleID:   chi.URLParam(r, "roleID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
@@ -196,7 +196,7 @@ func (d Decoder) DecodeDeleteAllRoleMembers(_ context.Context, r *http.Request) 
 	req := deleteAllRoleMembersReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),
-		roleName: chi.URLParam(r, "roleName"),
+		roleID:   chi.URLParam(r, "roleID"),
 	}
 	return req, nil
 }

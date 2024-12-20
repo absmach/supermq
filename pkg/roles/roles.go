@@ -93,36 +93,36 @@ type RoleManager interface {
 	AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (Role, error)
 
 	// Remove removes the roles of entity.
-	RemoveRole(ctx context.Context, session authn.Session, entityID, roleName string) error
+	RemoveRole(ctx context.Context, session authn.Session, entityID, roleID string) error
 
 	// UpdateName update the name of the entity role.
-	UpdateRoleName(ctx context.Context, session authn.Session, entityID, oldRoleName, newRoleName string) (Role, error)
+	UpdateRoleName(ctx context.Context, session authn.Session, entityID, roleID, newRoleName string) (Role, error)
 
-	RetrieveRole(ctx context.Context, session authn.Session, entityID, roleName string) (Role, error)
+	RetrieveRole(ctx context.Context, session authn.Session, entityID, roleID string) (Role, error)
 
 	RetrieveAllRoles(ctx context.Context, session authn.Session, entityID string, limit, offset uint64) (RolePage, error)
 
 	ListAvailableActions(ctx context.Context, session authn.Session) ([]string, error)
 
-	RoleAddActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (ops []string, err error)
+	RoleAddActions(ctx context.Context, session authn.Session, entityID, roleID string, actions []string) (ops []string, err error)
 
-	RoleListActions(ctx context.Context, session authn.Session, entityID, roleName string) ([]string, error)
+	RoleListActions(ctx context.Context, session authn.Session, entityID, roleID string) ([]string, error)
 
-	RoleCheckActionsExists(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (bool, error)
+	RoleCheckActionsExists(ctx context.Context, session authn.Session, entityID, roleID string, actions []string) (bool, error)
 
-	RoleRemoveActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (err error)
+	RoleRemoveActions(ctx context.Context, session authn.Session, entityID, roleID string, actions []string) (err error)
 
-	RoleRemoveAllActions(ctx context.Context, session authn.Session, entityID, roleName string) error
+	RoleRemoveAllActions(ctx context.Context, session authn.Session, entityID, roleID string) error
 
-	RoleAddMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) ([]string, error)
+	RoleAddMembers(ctx context.Context, session authn.Session, entityID, roleID string, members []string) ([]string, error)
 
-	RoleListMembers(ctx context.Context, session authn.Session, entityID, roleName string, limit, offset uint64) (MembersPage, error)
+	RoleListMembers(ctx context.Context, session authn.Session, entityID, roleID string, limit, offset uint64) (MembersPage, error)
 
-	RoleCheckMembersExists(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (bool, error)
+	RoleCheckMembersExists(ctx context.Context, session authn.Session, entityID, roleID string, members []string) (bool, error)
 
-	RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (err error)
+	RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleID string, members []string) (err error)
 
-	RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleName string) (err error)
+	RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleID string) (err error)
 
 	RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, memberID string) (err error)
 }
@@ -133,7 +133,7 @@ type Repository interface {
 	RemoveRoles(ctx context.Context, roleIDs []string) error
 	UpdateRole(ctx context.Context, ro Role) (Role, error)
 	RetrieveRole(ctx context.Context, roleID string) (Role, error)
-	RetrieveRoleByEntityIDAndName(ctx context.Context, entityID, roleName string) (Role, error)
+	RetrieveEntityRole(ctx context.Context, entityID, roleID string) (Role, error)
 	RetrieveAllRoles(ctx context.Context, entityID string, limit, offset uint64) (RolePage, error)
 	RoleAddActions(ctx context.Context, role Role, actions []string) (ops []string, err error)
 	RoleListActions(ctx context.Context, roleID string) ([]string, error)
@@ -147,51 +147,6 @@ type Repository interface {
 	RoleRemoveAllMembers(ctx context.Context, role Role) (err error)
 	RetrieveEntitiesRolesActionsMembers(ctx context.Context, entityIDs []string) ([]EntityActionRole, []EntityMemberRole, error)
 	RemoveMemberFromAllRoles(ctx context.Context, memberID string) (err error)
-}
-
-type Roles interface {
-	// Add New role to entity
-	AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (Role, error)
-
-	// Remove removes the roles of entity.
-	RemoveRole(ctx context.Context, session authn.Session, entityID, roleName string) error
-
-	// UpdateName update the name of the entity role.
-	UpdateRoleName(ctx context.Context, session authn.Session, entityID, oldRoleName, newRoleName string) (Role, error)
-
-	RetrieveRole(ctx context.Context, session authn.Session, entityID, roleName string) (Role, error)
-
-	RetrieveAllRoles(ctx context.Context, session authn.Session, entityID string, limit, offset uint64) (RolePage, error)
-
-	ListAvailableActions(ctx context.Context, session authn.Session) ([]string, error)
-
-	RoleAddActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (ops []string, err error)
-
-	RoleListActions(ctx context.Context, session authn.Session, entityID, roleName string) ([]string, error)
-
-	RoleCheckActionsExists(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (bool, error)
-
-	RoleRemoveActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (err error)
-
-	RoleRemoveAllActions(ctx context.Context, session authn.Session, entityID, roleName string) error
-
-	RoleAddMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) ([]string, error)
-
-	RoleListMembers(ctx context.Context, session authn.Session, entityID, roleName string, limit, offset uint64) (MembersPage, error)
-
-	RoleCheckMembersExists(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (bool, error)
-
-	RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (err error)
-
-	RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleName string) (err error)
-
-	RemoveMembersFromAllRoles(ctx context.Context, session authn.Session, members []string) (err error)
-
-	RemoveMembersFromRoles(ctx context.Context, session authn.Session, members []string, roleNames []string) (err error)
-
-	RemoveActionsFromAllRoles(ctx context.Context, session authn.Session, actions []string) (err error)
-
-	RemoveActionsFromRoles(ctx context.Context, session authn.Session, actions []string, roleNames []string) (err error)
 }
 
 const (
