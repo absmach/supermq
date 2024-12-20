@@ -46,13 +46,13 @@ func (rmes *RoleManagerEventStore) AddRole(ctx context.Context, session authn.Se
 	return ro, nil
 }
 
-func (rmes *RoleManagerEventStore) RemoveRole(ctx context.Context, session authn.Session, entityID, roleName string) error {
-	if err := rmes.svc.RemoveRole(ctx, session, entityID, roleName); err != nil {
+func (rmes *RoleManagerEventStore) RemoveRole(ctx context.Context, session authn.Session, entityID, roleID string) error {
+	if err := rmes.svc.RemoveRole(ctx, session, entityID, roleID); err != nil {
 		return err
 	}
 	e := removeRoleEvent{
 		operationPrefix: rmes.operationPrefix,
-		roleName:        roleName,
+		roleID:          roleID,
 		entityID:        entityID,
 	}
 	if err := rmes.Publish(ctx, e); err != nil {
@@ -61,8 +61,8 @@ func (rmes *RoleManagerEventStore) RemoveRole(ctx context.Context, session authn
 	return nil
 }
 
-func (rmes *RoleManagerEventStore) UpdateRoleName(ctx context.Context, session authn.Session, entityID, oldRoleName, newRoleName string) (roles.Role, error) {
-	ro, err := rmes.svc.UpdateRoleName(ctx, session, entityID, oldRoleName, newRoleName)
+func (rmes *RoleManagerEventStore) UpdateRoleName(ctx context.Context, session authn.Session, entityID, roleID, newRoleName string) (roles.Role, error) {
+	ro, err := rmes.svc.UpdateRoleName(ctx, session, entityID, roleID, newRoleName)
 	if err != nil {
 		return ro, err
 	}
@@ -77,8 +77,8 @@ func (rmes *RoleManagerEventStore) UpdateRoleName(ctx context.Context, session a
 	return ro, nil
 }
 
-func (rmes *RoleManagerEventStore) RetrieveRole(ctx context.Context, session authn.Session, entityID, roleName string) (roles.Role, error) {
-	ro, err := rmes.svc.RetrieveRole(ctx, session, entityID, roleName)
+func (rmes *RoleManagerEventStore) RetrieveRole(ctx context.Context, session authn.Session, entityID, roleID string) (roles.Role, error) {
+	ro, err := rmes.svc.RetrieveRole(ctx, session, entityID, roleID)
 	if err != nil {
 		return ro, err
 	}
@@ -124,15 +124,15 @@ func (rmes *RoleManagerEventStore) ListAvailableActions(ctx context.Context, ses
 	return actions, nil
 }
 
-func (rmes *RoleManagerEventStore) RoleAddActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) ([]string, error) {
-	actions, err := rmes.svc.RoleAddActions(ctx, session, entityID, roleName, actions)
+func (rmes *RoleManagerEventStore) RoleAddActions(ctx context.Context, session authn.Session, entityID, roleID string, actions []string) ([]string, error) {
+	actions, err := rmes.svc.RoleAddActions(ctx, session, entityID, roleID, actions)
 	if err != nil {
 		return actions, err
 	}
 	e := roleAddActionsEvent{
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
-		roleName:        roleName,
+		roleID:          roleID,
 		actions:         actions,
 	}
 	if err := rmes.Publish(ctx, e); err != nil {
@@ -141,8 +141,8 @@ func (rmes *RoleManagerEventStore) RoleAddActions(ctx context.Context, session a
 	return actions, nil
 }
 
-func (rmes *RoleManagerEventStore) RoleListActions(ctx context.Context, session authn.Session, entityID, roleName string) ([]string, error) {
-	actions, err := rmes.svc.RoleListActions(ctx, session, entityID, roleName)
+func (rmes *RoleManagerEventStore) RoleListActions(ctx context.Context, session authn.Session, entityID, roleID string) ([]string, error) {
+	actions, err := rmes.svc.RoleListActions(ctx, session, entityID, roleID)
 	if err != nil {
 		return actions, err
 	}
@@ -150,7 +150,7 @@ func (rmes *RoleManagerEventStore) RoleListActions(ctx context.Context, session 
 	e := roleListActionsEvent{
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
-		roleName:        roleName,
+		roleID:          roleID,
 	}
 	if err := rmes.Publish(ctx, e); err != nil {
 		return actions, err
@@ -158,8 +158,8 @@ func (rmes *RoleManagerEventStore) RoleListActions(ctx context.Context, session 
 	return actions, nil
 }
 
-func (rmes *RoleManagerEventStore) RoleCheckActionsExists(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (bool, error) {
-	isAllExists, err := rmes.svc.RoleCheckActionsExists(ctx, session, entityID, roleName, actions)
+func (rmes *RoleManagerEventStore) RoleCheckActionsExists(ctx context.Context, session authn.Session, entityID, roleID string, actions []string) (bool, error) {
+	isAllExists, err := rmes.svc.RoleCheckActionsExists(ctx, session, entityID, roleID, actions)
 	if err != nil {
 		return isAllExists, err
 	}
@@ -167,7 +167,7 @@ func (rmes *RoleManagerEventStore) RoleCheckActionsExists(ctx context.Context, s
 	e := roleCheckActionsExistsEvent{
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
-		roleName:        roleName,
+		roleID:          roleID,
 		actions:         actions,
 		isAllExists:     isAllExists,
 	}
@@ -177,15 +177,15 @@ func (rmes *RoleManagerEventStore) RoleCheckActionsExists(ctx context.Context, s
 	return isAllExists, nil
 }
 
-func (rmes *RoleManagerEventStore) RoleRemoveActions(ctx context.Context, session authn.Session, entityID, roleName string, actions []string) (err error) {
-	if err := rmes.svc.RoleRemoveActions(ctx, session, entityID, roleName, actions); err != nil {
+func (rmes *RoleManagerEventStore) RoleRemoveActions(ctx context.Context, session authn.Session, entityID, roleID string, actions []string) (err error) {
+	if err := rmes.svc.RoleRemoveActions(ctx, session, entityID, roleID, actions); err != nil {
 		return err
 	}
 
 	e := roleRemoveActionsEvent{
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
-		roleName:        roleName,
+		roleID:          roleID,
 		actions:         actions,
 	}
 	if err := rmes.Publish(ctx, e); err != nil {
@@ -194,15 +194,15 @@ func (rmes *RoleManagerEventStore) RoleRemoveActions(ctx context.Context, sessio
 	return nil
 }
 
-func (rmes *RoleManagerEventStore) RoleRemoveAllActions(ctx context.Context, session authn.Session, entityID, roleName string) error {
-	if err := rmes.svc.RoleRemoveAllActions(ctx, session, entityID, roleName); err != nil {
+func (rmes *RoleManagerEventStore) RoleRemoveAllActions(ctx context.Context, session authn.Session, entityID, roleID string) error {
+	if err := rmes.svc.RoleRemoveAllActions(ctx, session, entityID, roleID); err != nil {
 		return err
 	}
 
 	e := roleRemoveAllActionsEvent{
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
-		roleName:        roleName,
+		roleID:          roleID,
 	}
 	if err := rmes.Publish(ctx, e); err != nil {
 		return err
@@ -210,8 +210,8 @@ func (rmes *RoleManagerEventStore) RoleRemoveAllActions(ctx context.Context, ses
 	return nil
 }
 
-func (rmes *RoleManagerEventStore) RoleAddMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) ([]string, error) {
-	mems, err := rmes.svc.RoleAddMembers(ctx, session, entityID, roleName, members)
+func (rmes *RoleManagerEventStore) RoleAddMembers(ctx context.Context, session authn.Session, entityID, roleID string, members []string) ([]string, error) {
+	mems, err := rmes.svc.RoleAddMembers(ctx, session, entityID, roleID, members)
 	if err != nil {
 		return mems, err
 	}
@@ -219,7 +219,7 @@ func (rmes *RoleManagerEventStore) RoleAddMembers(ctx context.Context, session a
 	e := roleAddMembersEvent{
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
-		roleName:        roleName,
+		roleID:          roleID,
 		members:         members,
 	}
 	if err := rmes.Publish(ctx, e); err != nil {
@@ -228,8 +228,8 @@ func (rmes *RoleManagerEventStore) RoleAddMembers(ctx context.Context, session a
 	return mems, nil
 }
 
-func (rmes *RoleManagerEventStore) RoleListMembers(ctx context.Context, session authn.Session, entityID, roleName string, limit, offset uint64) (roles.MembersPage, error) {
-	mp, err := rmes.svc.RoleListMembers(ctx, session, entityID, roleName, limit, offset)
+func (rmes *RoleManagerEventStore) RoleListMembers(ctx context.Context, session authn.Session, entityID, roleID string, limit, offset uint64) (roles.MembersPage, error) {
+	mp, err := rmes.svc.RoleListMembers(ctx, session, entityID, roleID, limit, offset)
 	if err != nil {
 		return mp, err
 	}
@@ -237,7 +237,7 @@ func (rmes *RoleManagerEventStore) RoleListMembers(ctx context.Context, session 
 	e := roleListMembersEvent{
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
-		roleName:        roleName,
+		roleID:          roleID,
 		limit:           limit,
 		offset:          offset,
 	}
@@ -247,8 +247,8 @@ func (rmes *RoleManagerEventStore) RoleListMembers(ctx context.Context, session 
 	return mp, nil
 }
 
-func (rmes *RoleManagerEventStore) RoleCheckMembersExists(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (bool, error) {
-	isAllExists, err := rmes.svc.RoleCheckMembersExists(ctx, session, entityID, roleName, members)
+func (rmes *RoleManagerEventStore) RoleCheckMembersExists(ctx context.Context, session authn.Session, entityID, roleID string, members []string) (bool, error) {
+	isAllExists, err := rmes.svc.RoleCheckMembersExists(ctx, session, entityID, roleID, members)
 	if err != nil {
 		return isAllExists, err
 	}
@@ -256,7 +256,7 @@ func (rmes *RoleManagerEventStore) RoleCheckMembersExists(ctx context.Context, s
 	e := roleCheckMembersExistsEvent{
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
-		roleName:        roleName,
+		roleID:          roleID,
 		members:         members,
 	}
 	if err := rmes.Publish(ctx, e); err != nil {
@@ -265,15 +265,15 @@ func (rmes *RoleManagerEventStore) RoleCheckMembersExists(ctx context.Context, s
 	return isAllExists, nil
 }
 
-func (rmes *RoleManagerEventStore) RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleName string, members []string) (err error) {
-	if err := rmes.svc.RoleRemoveMembers(ctx, session, entityID, roleName, members); err != nil {
+func (rmes *RoleManagerEventStore) RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleID string, members []string) (err error) {
+	if err := rmes.svc.RoleRemoveMembers(ctx, session, entityID, roleID, members); err != nil {
 		return err
 	}
 
 	e := roleRemoveMembersEvent{
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
-		roleName:        roleName,
+		roleID:          roleID,
 		members:         members,
 	}
 	if err := rmes.Publish(ctx, e); err != nil {
@@ -282,15 +282,15 @@ func (rmes *RoleManagerEventStore) RoleRemoveMembers(ctx context.Context, sessio
 	return nil
 }
 
-func (rmes *RoleManagerEventStore) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleName string) (err error) {
-	if err := rmes.svc.RoleRemoveAllMembers(ctx, session, entityID, roleName); err != nil {
+func (rmes *RoleManagerEventStore) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleID string) (err error) {
+	if err := rmes.svc.RoleRemoveAllMembers(ctx, session, entityID, roleID); err != nil {
 		return err
 	}
 
 	e := roleRemoveAllMembersEvent{
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
-		roleName:        roleName,
+		roleID:          roleID,
 	}
 	if err := rmes.Publish(ctx, e); err != nil {
 		return err

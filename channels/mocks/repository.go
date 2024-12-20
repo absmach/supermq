@@ -443,6 +443,34 @@ func (_m *Repository) RetrieveEntitiesRolesActionsMembers(ctx context.Context, e
 	return r0, r1, r2
 }
 
+// RetrieveEntityRole provides a mock function with given fields: ctx, entityID, roleID
+func (_m *Repository) RetrieveEntityRole(ctx context.Context, entityID string, roleID string) (roles.Role, error) {
+	ret := _m.Called(ctx, entityID, roleID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveEntityRole")
+	}
+
+	var r0 roles.Role
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (roles.Role, error)); ok {
+		return rf(ctx, entityID, roleID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) roles.Role); ok {
+		r0 = rf(ctx, entityID, roleID)
+	} else {
+		r0 = ret.Get(0).(roles.Role)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, entityID, roleID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RetrieveParentGroupChannels provides a mock function with given fields: ctx, parentGroupID
 func (_m *Repository) RetrieveParentGroupChannels(ctx context.Context, parentGroupID string) ([]channels.Channel, error) {
 	ret := _m.Called(ctx, parentGroupID)
@@ -494,34 +522,6 @@ func (_m *Repository) RetrieveRole(ctx context.Context, roleID string) (roles.Ro
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(ctx, roleID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// RetrieveRoleByEntityIDAndName provides a mock function with given fields: ctx, entityID, roleName
-func (_m *Repository) RetrieveRoleByEntityIDAndName(ctx context.Context, entityID string, roleName string) (roles.Role, error) {
-	ret := _m.Called(ctx, entityID, roleName)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RetrieveRoleByEntityIDAndName")
-	}
-
-	var r0 roles.Role
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) (roles.Role, error)); ok {
-		return rf(ctx, entityID, roleName)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) roles.Role); ok {
-		r0 = rf(ctx, entityID, roleName)
-	} else {
-		r0 = ret.Get(0).(roles.Role)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = rf(ctx, entityID, roleName)
 	} else {
 		r1 = ret.Error(1)
 	}

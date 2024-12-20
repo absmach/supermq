@@ -93,7 +93,7 @@ type RoleManager interface {
 	AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (Role, error)
 
 	// Remove removes the roles of entity.
-	RemoveRole(ctx context.Context, session authn.Session, entityID, roleName string) error
+	RemoveRole(ctx context.Context, session authn.Session, entityID, roleID string) error
 
 	// UpdateName update the name of the entity role.
 	UpdateRoleName(ctx context.Context, session authn.Session, entityID, roleID, newRoleName string) (Role, error)

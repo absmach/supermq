@@ -71,7 +71,6 @@ type removeRoleEvent struct {
 	operationPrefix string
 	entityID        string
 	roleID          string
-	roleName        string
 }
 
 func (rre removeRoleEvent) Encode() (map[string]interface{}, error) {
@@ -79,7 +78,6 @@ func (rre removeRoleEvent) Encode() (map[string]interface{}, error) {
 		"operation": rre.operationPrefix + removeRole,
 		"entity_id": rre.entityID,
 		"role_id":   rre.roleID,
-		"role_name": rre.roleName,
 	}
 	return val, nil
 }
@@ -154,7 +152,6 @@ type roleAddActionsEvent struct {
 	operationPrefix string
 	entityID        string
 	roleID          string
-	roleName        string
 	actions         []string
 }
 
@@ -163,7 +160,6 @@ func (raae roleAddActionsEvent) Encode() (map[string]interface{}, error) {
 		"operation": raae.operationPrefix + addRoleActions,
 		"entity_id": raae.entityID,
 		"role_id":   raae.roleID,
-		"role_name": raae.roleName,
 		"actions":   raae.actions,
 	}
 	return val, nil
@@ -173,7 +169,6 @@ type roleListActionsEvent struct {
 	operationPrefix string
 	entityID        string
 	roleID          string
-	roleName        string
 }
 
 func (rlae roleListActionsEvent) Encode() (map[string]interface{}, error) {
@@ -181,7 +176,6 @@ func (rlae roleListActionsEvent) Encode() (map[string]interface{}, error) {
 		"operation": rlae.operationPrefix + listRoleActions,
 		"entity_id": rlae.entityID,
 		"role_id":   rlae.roleID,
-		"role_name": rlae.roleName,
 	}
 	return val, nil
 }
@@ -190,7 +184,6 @@ type roleCheckActionsExistsEvent struct {
 	operationPrefix string
 	entityID        string
 	roleID          string
-	roleName        string
 	actions         []string
 	isAllExists     bool
 }
@@ -200,7 +193,6 @@ func (rcaee roleCheckActionsExistsEvent) Encode() (map[string]interface{}, error
 		"operation":     rcaee.operationPrefix + checkRoleActions,
 		"entity_id":     rcaee.entityID,
 		"role_id":       rcaee.roleID,
-		"role_name":     rcaee.roleName,
 		"actions":       rcaee.actions,
 		"is_all_exists": rcaee.isAllExists,
 	}
@@ -211,7 +203,6 @@ type roleRemoveActionsEvent struct {
 	operationPrefix string
 	entityID        string
 	roleID          string
-	roleName        string
 	actions         []string
 }
 
@@ -220,7 +211,6 @@ func (rrae roleRemoveActionsEvent) Encode() (map[string]interface{}, error) {
 		"operation": rrae.operationPrefix + removeRoleActions,
 		"entity_id": rrae.entityID,
 		"role_id":   rrae.roleID,
-		"role_name": rrae.roleName,
 		"actions":   rrae.actions,
 	}
 	return val, nil
@@ -230,7 +220,6 @@ type roleRemoveAllActionsEvent struct {
 	operationPrefix string
 	entityID        string
 	roleID          string
-	roleName        string
 }
 
 func (rraae roleRemoveAllActionsEvent) Encode() (map[string]interface{}, error) {
@@ -238,7 +227,6 @@ func (rraae roleRemoveAllActionsEvent) Encode() (map[string]interface{}, error) 
 		"operation": rraae.operationPrefix + removeAllRoleActions,
 		"entity_id": rraae.entityID,
 		"role_id":   rraae.roleID,
-		"role_name": rraae.roleName,
 	}
 	return val, nil
 }
@@ -247,7 +235,6 @@ type roleAddMembersEvent struct {
 	operationPrefix string
 	entityID        string
 	roleID          string
-	roleName        string
 	members         []string
 }
 
@@ -256,7 +243,6 @@ func (rame roleAddMembersEvent) Encode() (map[string]interface{}, error) {
 		"operation": rame.operationPrefix + addRoleMembers,
 		"entity_id": rame.entityID,
 		"role_id":   rame.roleID,
-		"role_name": rame.roleName,
 		"members":   rame.members,
 	}
 	return val, nil
@@ -266,7 +252,6 @@ type roleListMembersEvent struct {
 	operationPrefix string
 	entityID        string
 	roleID          string
-	roleName        string
 	limit           uint64
 	offset          uint64
 }
@@ -276,7 +261,6 @@ func (rlme roleListMembersEvent) Encode() (map[string]interface{}, error) {
 		"operation": rlme.operationPrefix + listRoleMembers,
 		"entity_id": rlme.entityID,
 		"role_id":   rlme.roleID,
-		"role_name": rlme.roleName,
 		"limit":     rlme.limit,
 		"offset":    rlme.offset,
 	}
@@ -287,7 +271,6 @@ type roleCheckMembersExistsEvent struct {
 	operationPrefix string
 	entityID        string
 	roleID          string
-	roleName        string
 	members         []string
 }
 
@@ -296,7 +279,6 @@ func (rcmee roleCheckMembersExistsEvent) Encode() (map[string]interface{}, error
 		"operation": rcmee.operationPrefix + checkRoleMembers,
 		"entity_id": rcmee.entityID,
 		"role_id":   rcmee.roleID,
-		"role_name": rcmee.roleName,
 		"members":   rcmee.members,
 	}
 	return val, nil
@@ -306,7 +288,6 @@ type roleRemoveMembersEvent struct {
 	operationPrefix string
 	entityID        string
 	roleID          string
-	roleName        string
 	members         []string
 }
 
@@ -315,7 +296,6 @@ func (rrme roleRemoveMembersEvent) Encode() (map[string]interface{}, error) {
 		"operation": rrme.operationPrefix + removeRoleMembers,
 		"entity_id": rrme.entityID,
 		"role_id":   rrme.roleID,
-		"role_name": rrme.roleName,
 		"members":   rrme.members,
 	}
 	return val, nil
@@ -325,7 +305,6 @@ type roleRemoveAllMembersEvent struct {
 	operationPrefix string
 	entityID        string
 	roleID          string
-	roleName        string
 }
 
 func (rrame roleRemoveAllMembersEvent) Encode() (map[string]interface{}, error) {
@@ -333,7 +312,6 @@ func (rrame roleRemoveAllMembersEvent) Encode() (map[string]interface{}, error) 
 		"operation": rrame.operationPrefix + removeRoleAllMembers,
 		"entity_id": rrame.entityID,
 		"role_id":   rrame.roleID,
-		"role_name": rrame.roleName,
 	}
 	return val, nil
 }
