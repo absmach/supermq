@@ -40,7 +40,6 @@ const (
 	enablePermission          = "enable_permission"
 	disablePermission         = "disable_permission"
 	readPermission            = "read_permission"
-	membershipPermission      = "membership_permission"
 	deletePermission          = "delete_permission"
 	manageRolePermission      = "manage_role_permission"
 	addRoleUsersPermission    = "add_role_users_permission"

@@ -23,6 +23,7 @@ import (
 	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
+	domainsAuthz "github.com/absmach/supermq/pkg/domains/grpcclient"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	"github.com/absmach/supermq/pkg/jaeger"
 	"github.com/absmach/supermq/pkg/postgres"
@@ -39,12 +40,13 @@ import (
 )
 
 const (
-	svcName        = "invitations"
-	envPrefixDB    = "SMQ_INVITATIONS_DB_"
-	envPrefixHTTP  = "SMQ_INVITATIONS_HTTP_"
-	envPrefixAuth  = "SMQ_AUTH_GRPC_"
-	defDB          = "invitations"
-	defSvcHTTPPort = "9020"
+	svcName          = "invitations"
+	envPrefixDB      = "SMQ_INVITATIONS_DB_"
+	envPrefixHTTP    = "SMQ_INVITATIONS_HTTP_"
+	envPrefixAuth    = "SMQ_AUTH_GRPC_"
+	envPrefixDomains = "SMQ_DOMAINS_GRPC_"
+	defDB            = "invitations"
+	defSvcHTTPPort   = "9020"
 )
 
 type config struct {
@@ -120,7 +122,21 @@ func main() {
 	defer authnHandler.Close()
 	logger.Info("AuthN successfully connected to auth gRPC server " + authnHandler.Secure())
 
-	authz, authzHandler, err := authsvcAuthz.NewAuthorization(ctx, authClientCfg)
+	domsGrpcCfg := grpcclient.Config{}
+	if err := env.ParseWithOptions(&domsGrpcCfg, env.Options{Prefix: envPrefixDomains}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load domains gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+	domAuthz, _, domainsHandler, err := domainsAuthz.NewAuthorization(ctx, domsGrpcCfg)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer domainsHandler.Close()
+
+	authz, authzHandler, err := authsvcAuthz.NewAuthorization(ctx, authClientCfg, domAuthz)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1

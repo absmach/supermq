@@ -59,11 +59,13 @@ var (
 
 var (
 	drepo  *mocks.Repository
+	dcache *mocks.Cache
 	policy *policiesMocks.Service
 )
 
 func newService() domains.Service {
 	drepo = new(mocks.Repository)
+	dcache = new(mocks.Cache)
 	idProvider := uuid.NewMock()
 	sidProvider := sid.NewMock()
 	policy = new(policiesMocks.Service)
@@ -71,7 +73,7 @@ func newService() domains.Service {
 	builtInRoles := map[roles.BuiltInRoleName][]roles.Action{
 		groups.BuiltInRoleAdmin: availableActions,
 	}
-	ds, _ := domains.New(drepo, policy, idProvider, sidProvider, availableActions, builtInRoles)
+	ds, _ := domains.New(drepo, dcache, policy, idProvider, sidProvider, availableActions, builtInRoles)
 	return ds
 }
 
@@ -312,6 +314,8 @@ func TestEnableDomain(t *testing.T) {
 		domainID  string
 		enableRes domains.Domain
 		enableErr error
+		cacheErr  error
+		resp      domains.Domain
 		err       error
 	}{
 		{
@@ -319,6 +323,7 @@ func TestEnableDomain(t *testing.T) {
 			session:   validSession,
 			domainID:  domain.ID,
 			enableRes: enabledDomain,
+			resp:      enabledDomain,
 			err:       nil,
 		},
 		{
@@ -326,6 +331,7 @@ func TestEnableDomain(t *testing.T) {
 			session:   validSession,
 			domainID:  "",
 			enableErr: repoerr.ErrNotFound,
+			resp:      domains.Domain{},
 			err:       svcerr.ErrUpdateEntity,
 		},
 		{
@@ -333,17 +339,29 @@ func TestEnableDomain(t *testing.T) {
 			session:   validSession,
 			domainID:  domain.ID,
 			enableErr: errors.ErrMalformedEntity,
+			resp:      domains.Domain{},
 			err:       svcerr.ErrUpdateEntity,
+		},
+		{
+			desc:      "enable domain with failed to remove cache",
+			session:   validSession,
+			domainID:  domain.ID,
+			enableRes: enabledDomain,
+			cacheErr:  errors.ErrMalformedEntity,
+			resp:      enabledDomain,
+			err:       svcerr.ErrRemoveEntity,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := drepo.On("Update", context.Background(), tc.domainID, tc.session.UserID, domains.DomainReq{Status: &status}).Return(tc.enableRes, tc.enableErr)
+			cacheCall := dcache.On("Remove", context.Background(), tc.domainID).Return(tc.cacheErr)
 			domain, err := svc.EnableDomain(context.Background(), tc.session, tc.domainID)
 			assert.True(t, errors.Contains(err, tc.err))
-			assert.Equal(t, tc.enableRes, domain)
+			assert.Equal(t, tc.resp, domain)
 			repoCall.Unset()
+			cacheCall.Unset()
 		})
 	}
 }
@@ -361,6 +379,8 @@ func TestDisableDomain(t *testing.T) {
 		domainID   string
 		disableRes domains.Domain
 		disableErr error
+		cacheErr   error
+		resp       domains.Domain
 		err        error
 	}{
 		{
@@ -368,6 +388,7 @@ func TestDisableDomain(t *testing.T) {
 			session:    validSession,
 			domainID:   domain.ID,
 			disableRes: disabledDomain,
+			resp:       disabledDomain,
 			err:        nil,
 		},
 		{
@@ -375,6 +396,7 @@ func TestDisableDomain(t *testing.T) {
 			session:    validSession,
 			domainID:   "",
 			disableErr: repoerr.ErrNotFound,
+			resp:       domains.Domain{},
 			err:        svcerr.ErrUpdateEntity,
 		},
 		{
@@ -382,17 +404,29 @@ func TestDisableDomain(t *testing.T) {
 			session:    validSession,
 			domainID:   domain.ID,
 			disableErr: errors.ErrMalformedEntity,
+			resp:       domains.Domain{},
 			err:        svcerr.ErrUpdateEntity,
+		},
+		{
+			desc:       "disable domain with failed to remove cache",
+			session:    validSession,
+			domainID:   domain.ID,
+			disableRes: disabledDomain,
+			cacheErr:   errors.ErrMalformedEntity,
+			resp:       disabledDomain,
+			err:        svcerr.ErrRemoveEntity,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := drepo.On("Update", context.Background(), tc.domainID, tc.session.UserID, domains.DomainReq{Status: &status}).Return(tc.disableRes, tc.disableErr)
+			cacheCall := dcache.On("Remove", context.Background(), tc.domainID).Return(tc.cacheErr)
 			domain, err := svc.DisableDomain(context.Background(), tc.session, tc.domainID)
 			assert.True(t, errors.Contains(err, tc.err))
 			assert.Equal(t, tc.disableRes, domain)
 			repoCall.Unset()
+			cacheCall.Unset()
 		})
 	}
 }
@@ -410,6 +444,8 @@ func TestFreezeDomain(t *testing.T) {
 		domainID  string
 		freezeRes domains.Domain
 		freezeErr error
+		cacheErr  error
+		resp      domains.Domain
 		err       error
 	}{
 		{
@@ -417,6 +453,7 @@ func TestFreezeDomain(t *testing.T) {
 			session:   validSession,
 			domainID:  domain.ID,
 			freezeRes: freezeDomain,
+			resp:      freezeDomain,
 			err:       nil,
 		},
 		{
@@ -424,6 +461,7 @@ func TestFreezeDomain(t *testing.T) {
 			session:   validSession,
 			domainID:  "",
 			freezeErr: repoerr.ErrNotFound,
+			resp:      domains.Domain{},
 			err:       svcerr.ErrUpdateEntity,
 		},
 		{
@@ -431,17 +469,29 @@ func TestFreezeDomain(t *testing.T) {
 			session:   validSession,
 			domainID:  domain.ID,
 			freezeErr: errors.ErrMalformedEntity,
+			resp:      domains.Domain{},
 			err:       svcerr.ErrUpdateEntity,
+		},
+		{
+			desc:      "freeze domain with failed to remove cache",
+			session:   validSession,
+			domainID:  domain.ID,
+			freezeRes: freezeDomain,
+			cacheErr:  errors.ErrMalformedEntity,
+			resp:      freezeDomain,
+			err:       svcerr.ErrRemoveEntity,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := drepo.On("Update", context.Background(), tc.domainID, tc.session.UserID, domains.DomainReq{Status: &status}).Return(tc.freezeRes, tc.freezeErr)
+			cacheCall := dcache.On("Remove", context.Background(), tc.domainID).Return(tc.cacheErr)
 			domain, err := svc.FreezeDomain(context.Background(), tc.session, tc.domainID)
 			assert.True(t, errors.Contains(err, tc.err))
 			assert.Equal(t, tc.freezeRes, domain)
 			repoCall.Unset()
+			cacheCall.Unset()
 		})
 	}
 }
@@ -514,79 +564,6 @@ func TestListDomains(t *testing.T) {
 			dp, err := svc.ListDomains(context.Background(), tc.session, tc.pageMeta)
 			assert.True(t, errors.Contains(err, tc.err))
 			assert.Equal(t, tc.listDomainsRes, dp)
-			repoCall1.Unset()
-		})
-	}
-}
-
-func TestDeleteUserFromDomains(t *testing.T) {
-	svc := newService()
-
-	cases := []struct {
-		desc                string
-		userID              string
-		listUserDomainsRes  domains.DomainsPage
-		listUserDomainsRes1 domains.DomainsPage
-		listUserDomainsErr  error
-		listUserDomainsErr1 error
-		err                 error
-	}{
-		{
-			desc:   "delete user from domains successfully",
-			userID: id,
-			listUserDomainsRes: domains.DomainsPage{
-				Domains: []domains.Domain{domain},
-				Offset:  0,
-				Limit:   10,
-				Total:   1,
-			},
-			err: nil,
-		},
-		{
-			desc:               "delete user from domains with repository error on list domains",
-			userID:             id,
-			listUserDomainsErr: svcerr.ErrViewEntity,
-			err:                svcerr.ErrViewEntity,
-		},
-		{
-			desc:   "delete user from domains with domains greater than default limit",
-			userID: id,
-			listUserDomainsRes: domains.DomainsPage{
-				Domains: []domains.Domain{domain},
-				Offset:  0,
-				Limit:   100,
-				Total:   101,
-			},
-			listUserDomainsRes1: domains.DomainsPage{
-				Domains: []domains.Domain{domain},
-				Offset:  100,
-				Limit:   100,
-				Total:   101,
-			},
-			err: nil,
-		},
-		{
-			desc:   "delete user from domains with domains greater than default limit with error",
-			userID: id,
-			listUserDomainsRes: domains.DomainsPage{
-				Domains: []domains.Domain{domain},
-				Offset:  0,
-				Limit:   100,
-				Total:   101,
-			},
-			listUserDomainsRes1: domains.DomainsPage{},
-			listUserDomainsErr1: svcerr.ErrViewEntity,
-			err:                 svcerr.ErrViewEntity,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := drepo.On("ListDomains", context.Background(), domains.Page{UserID: tc.userID, Limit: 100}).Return(tc.listUserDomainsRes, tc.listUserDomainsErr)
-			repoCall1 := drepo.On("ListDomains", context.Background(), domains.Page{UserID: tc.userID, Offset: 100, Limit: 100}).Return(tc.listUserDomainsRes1, tc.listUserDomainsErr1)
-			err := svc.DeleteUserFromDomains(context.Background(), tc.userID)
-			assert.True(t, errors.Contains(err, tc.err))
-			repoCall.Unset()
 			repoCall1.Unset()
 		})
 	}

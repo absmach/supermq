@@ -19,14 +19,18 @@ import (
 	domainsSvc "github.com/absmach/supermq/domains"
 	domainsgrpcapi "github.com/absmach/supermq/domains/api/grpc"
 	httpapi "github.com/absmach/supermq/domains/api/http"
+	cache "github.com/absmach/supermq/domains/cache"
 	"github.com/absmach/supermq/domains/events"
 	dmw "github.com/absmach/supermq/domains/middleware"
 	dpostgres "github.com/absmach/supermq/domains/postgres"
+	"github.com/absmach/supermq/domains/private"
 	dtracing "github.com/absmach/supermq/domains/tracing"
+	redisclient "github.com/absmach/supermq/internal/clients/redis"
 	smqlog "github.com/absmach/supermq/logger"
 	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
 	"github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
+	domainsAuthz "github.com/absmach/supermq/pkg/domains/psvc"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	"github.com/absmach/supermq/pkg/jaeger"
 	"github.com/absmach/supermq/pkg/policies"
@@ -45,7 +49,6 @@ import (
 	"github.com/authzed/grpcutil"
 	"github.com/caarlos0/env/v11"
 	"github.com/go-chi/chi/v5"
-	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -65,16 +68,18 @@ const (
 )
 
 type config struct {
-	LogLevel            string  `env:"SMQ_DOMAINS_LOG_LEVEL"            envDefault:"info"`
-	JaegerURL           url.URL `env:"SMQ_JAEGER_URL"                   envDefault:"http://localhost:4318/v1/traces"`
-	SendTelemetry       bool    `env:"SMQ_SEND_TELEMETRY"               envDefault:"true"`
-	InstanceID          string  `env:"SMQ_DOMAINS_INSTANCE_ID"          envDefault:""`
-	SpicedbHost         string  `env:"SMQ_SPICEDB_HOST"                 envDefault:"localhost"`
-	SpicedbPort         string  `env:"SMQ_SPICEDB_PORT"                 envDefault:"50051"`
-	SpicedbSchemaFile   string  `env:"SMQ_SPICEDB_SCHEMA_FILE"          envDefault:"schema.zed"`
-	SpicedbPreSharedKey string  `env:"SMQ_SPICEDB_PRE_SHARED_KEY"       envDefault:"12345678"`
-	TraceRatio          float64 `env:"SMQ_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
-	ESURL               string  `env:"SMQ_ES_URL"                       envDefault:"nats://localhost:4222"`
+	LogLevel            string        `env:"SMQ_DOMAINS_LOG_LEVEL"            envDefault:"info"`
+	JaegerURL           url.URL       `env:"SMQ_JAEGER_URL"                   envDefault:"http://localhost:4318/v1/traces"`
+	SendTelemetry       bool          `env:"SMQ_SEND_TELEMETRY"               envDefault:"true"`
+	CacheURL            string        `env:"SMQ_DOMAINS_CACHE_URL"            envDefault:"redis://localhost:6379/0"`
+	CacheKeyDuration    time.Duration `env:"SMQ_DOMAINS_CACHE_KEY_DURATION"   envDefault:"10m"`
+	InstanceID          string        `env:"SMQ_DOMAINS_INSTANCE_ID"          envDefault:""`
+	SpicedbHost         string        `env:"SMQ_SPICEDB_HOST"                 envDefault:"localhost"`
+	SpicedbPort         string        `env:"SMQ_SPICEDB_PORT"                 envDefault:"50051"`
+	SpicedbSchemaFile   string        `env:"SMQ_SPICEDB_SCHEMA_FILE"          envDefault:"schema.zed"`
+	SpicedbPreSharedKey string        `env:"SMQ_SPICEDB_PRE_SHARED_KEY"       envDefault:"12345678"`
+	TraceRatio          float64       `env:"SMQ_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
+	ESURL               string        `env:"SMQ_ES_URL"                       envDefault:"nats://localhost:4222"`
 }
 
 func main() {
@@ -153,7 +158,23 @@ func main() {
 	defer authnHandler.Close()
 	logger.Info("Authn successfully connected to auth gRPC server " + authnHandler.Secure())
 
-	authz, authzHandler, err := authsvcAuthz.NewAuthorization(ctx, clientConfig)
+	database := postgres.NewDatabase(db, dbConfig, tracer)
+	domainsRepo := dpostgres.New(database)
+
+	cacheclient, err := redisclient.Connect(cfg.CacheURL)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer cacheclient.Close()
+	cache := cache.NewDomainsCache(cacheclient, cfg.CacheKeyDuration)
+
+	psvc := private.New(domainsRepo, cache)
+
+	domAuthz := domainsAuthz.NewAuthorization(psvc)
+
+	authz, authzHandler, err := authsvcAuthz.NewAuthorization(ctx, clientConfig, domAuthz)
 	if err != nil {
 		logger.Error(fmt.Sprintf("authz failed to connect to auth gRPC server : %s", err.Error()))
 		exitCode = 1
@@ -170,7 +191,7 @@ func main() {
 	}
 	logger.Info("Policy client successfully connected to spicedb gRPC server")
 
-	svc, err := newDomainService(ctx, db, tracer, cfg, dbConfig, authz, policyService, logger)
+	svc, err := newDomainService(ctx, domainsRepo, cache, tracer, cfg, authz, policyService, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create %s service: %s", svcName, err.Error()))
 		exitCode = 1
@@ -185,7 +206,7 @@ func main() {
 	}
 	registerDomainsServiceServer := func(srv *grpc.Server) {
 		reflection.Register(srv)
-		grpcDomainsV1.RegisterDomainsServiceServer(srv, domainsgrpcapi.NewDomainsServer(svc))
+		grpcDomainsV1.RegisterDomainsServiceServer(srv, domainsgrpcapi.NewDomainsServer(psvc))
 	}
 
 	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerDomainsServiceServer, logger)
@@ -221,10 +242,7 @@ func main() {
 	}
 }
 
-func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, authz authz.Authorization, policiessvc policies.Service, logger *slog.Logger) (domains.Service, error) {
-	database := postgres.NewDatabase(db, dbConfig, tracer)
-	domainsRepo := dpostgres.New(database)
-
+func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, cache domainsSvc.Cache, tracer trace.Tracer, cfg config, authz authz.Authorization, policiessvc policies.Service, logger *slog.Logger) (domains.Service, error) {
 	idProvider := uuid.New()
 	sidProvider, err := sid.New()
 	if err != nil {
@@ -236,7 +254,7 @@ func newDomainService(ctx context.Context, db *sqlx.DB, tracer trace.Tracer, cfg
 		return nil, err
 	}
 
-	svc, err := domainsSvc.New(domainsRepo, policiessvc, idProvider, sidProvider, availableActions, builtInRoles)
+	svc, err := domainsSvc.New(domainsRepo, cache, policiessvc, idProvider, sidProvider, availableActions, builtInRoles)
 	if err != nil {
 		return nil, fmt.Errorf("failed to init domain service: %w", err)
 	}

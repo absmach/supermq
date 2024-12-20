@@ -11,20 +11,22 @@ import (
 )
 
 const (
-	domainPrefix     = "domain."
-	domainCreate     = domainPrefix + "create"
-	domainRetrieve   = domainPrefix + "retrieve"
-	domainUpdate     = domainPrefix + "update"
-	domainEnable     = domainPrefix + "enable"
-	domainDisable    = domainPrefix + "disable"
-	domainFreeze     = domainPrefix + "freeze"
-	domainList       = domainPrefix + "list"
-	domainUserDelete = domainPrefix + "user_delete"
+	domainPrefix         = "domain."
+	domainCreate         = domainPrefix + "create"
+	domainRetrieve       = domainPrefix + "retrieve"
+	domainRetrieveStatus = domainPrefix + "retrieve_status"
+	domainUpdate         = domainPrefix + "update"
+	domainEnable         = domainPrefix + "enable"
+	domainDisable        = domainPrefix + "disable"
+	domainFreeze         = domainPrefix + "freeze"
+	domainList           = domainPrefix + "list"
+	domainUserDelete     = domainPrefix + "user_delete"
 )
 
 var (
 	_ events.Event = (*createDomainEvent)(nil)
 	_ events.Event = (*retrieveDomainEvent)(nil)
+	_ events.Event = (*retrieveDomainStatusEvent)(nil)
 	_ events.Event = (*updateDomainEvent)(nil)
 	_ events.Event = (*enableDomainEvent)(nil)
 	_ events.Event = (*disableDomainEvent)(nil)
@@ -88,6 +90,21 @@ func (rde retrieveDomainEvent) Encode() (map[string]interface{}, error) {
 	if rde.UpdatedBy != "" {
 		val["updated_by"] = rde.UpdatedBy
 	}
+	return val, nil
+}
+
+type retrieveDomainStatusEvent struct {
+	id     string
+	status domains.Status
+}
+
+func (rdse retrieveDomainStatusEvent) Encode() (map[string]interface{}, error) {
+	val := map[string]interface{}{
+		"operation": domainRetrieve,
+		"id":        rdse.id,
+		"status":    rdse.status.String(),
+	}
+
 	return val, nil
 }
 
@@ -218,17 +235,5 @@ func (lde listDomainsEvent) Encode() (map[string]interface{}, error) {
 		val["user_id"] = lde.UserID
 	}
 
-	return val, nil
-}
-
-type deleteUserFromDomainsEvent struct {
-	userID string
-}
-
-func (dude deleteUserFromDomainsEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
-		"operation": domainUserDelete,
-		"user_id":   dude.userID,
-	}
 	return val, nil
 }

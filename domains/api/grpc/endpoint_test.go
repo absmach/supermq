@@ -12,8 +12,8 @@ import (
 
 	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
 	apiutil "github.com/absmach/supermq/api/http/util"
-	"github.com/absmach/supermq/domains"
 	grpcapi "github.com/absmach/supermq/domains/api/grpc"
+	domains "github.com/absmach/supermq/domains/private"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -31,7 +31,6 @@ const (
 	description     = "Description"
 	groupName       = "smqx"
 	adminpermission = "admin"
-
 	authoritiesObj  = "authorities"
 	memberRelation  = "member"
 	loginDuration   = 30 * time.Minute

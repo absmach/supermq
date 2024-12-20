@@ -23,6 +23,7 @@ import (
 	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
+	domainsAuthz "github.com/absmach/supermq/pkg/domains/grpcclient"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	jaegerclient "github.com/absmach/supermq/pkg/jaeger"
 	"github.com/absmach/supermq/pkg/oauth2"
@@ -181,7 +182,21 @@ func main() {
 	defer authnHandler.Close()
 	logger.Info("AuthN successfully connected to auth gRPC server " + authnHandler.Secure())
 
-	authz, authzHandler, err := authsvcAuthz.NewAuthorization(ctx, authClientConfig)
+	domsGrpcCfg := grpcclient.Config{}
+	if err := env.ParseWithOptions(&domsGrpcCfg, env.Options{Prefix: envPrefixDomains}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load domains gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+	domAuthz, domainsClient, domainsHandler, err := domainsAuthz.NewAuthorization(ctx, domsGrpcCfg)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer domainsHandler.Close()
+
+	authz, authzHandler, err := authsvcAuthz.NewAuthorization(ctx, authClientConfig, domAuthz)
 	if err != nil {
 		logger.Error("failed to create authz " + err.Error())
 		exitCode = 1
@@ -189,22 +204,6 @@ func main() {
 	}
 	defer authzHandler.Close()
 	logger.Info("AuthZ successfully connected to auth gRPC server " + authzHandler.Secure())
-
-	domainsClientConfig := grpcclient.Config{}
-	if err := env.ParseWithOptions(&domainsClientConfig, env.Options{Prefix: envPrefixDomains}); err != nil {
-		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
-		exitCode = 1
-		return
-	}
-
-	domainsClient, domainsHandler, err := grpcclient.SetupDomainsClient(ctx, domainsClientConfig)
-	if err != nil {
-		logger.Error("failed to setup domain gRPC clients " + err.Error())
-		exitCode = 1
-		return
-	}
-	defer domainsHandler.Close()
-	logger.Info("DomainsService gRPC client successfully connected to domains gRPC server " + domainsHandler.Secure())
 
 	policyService, err := newPolicyService(cfg, logger)
 	if err != nil {

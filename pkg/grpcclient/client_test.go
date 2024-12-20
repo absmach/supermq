@@ -17,7 +17,7 @@ import (
 	clientsgrpcapi "github.com/absmach/supermq/clients/api/grpc"
 	climocks "github.com/absmach/supermq/clients/private/mocks"
 	domainsgrpcapi "github.com/absmach/supermq/domains/api/grpc"
-	domainsMocks "github.com/absmach/supermq/domains/mocks"
+	domainsMocks "github.com/absmach/supermq/domains/private/mocks"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/absmach/supermq/pkg/grpcclient"

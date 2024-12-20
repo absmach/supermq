@@ -163,19 +163,3 @@ func (lm *loggingMiddleware) ListDomains(ctx context.Context, session authn.Sess
 	}(time.Now())
 	return lm.svc.ListDomains(ctx, session, page)
 }
-
-func (lm *loggingMiddleware) DeleteUserFromDomains(ctx context.Context, id string) (err error) {
-	defer func(begin time.Time) {
-		args := []any{
-			slog.String("duration", time.Since(begin).String()),
-			slog.String("id", id),
-		}
-		if err != nil {
-			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Delete entity policies failed to complete successfully", args...)
-			return
-		}
-		lm.logger.Info("Delete entity policies completed successfully", args...)
-	}(time.Now())
-	return lm.svc.DeleteUserFromDomains(ctx, id)
-}

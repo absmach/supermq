@@ -79,9 +79,3 @@ func (tm *tracingMiddleware) ListDomains(ctx context.Context, session authn.Sess
 	defer span.End()
 	return tm.svc.ListDomains(ctx, session, p)
 }
-
-func (tm *tracingMiddleware) DeleteUserFromDomains(ctx context.Context, id string) error {
-	ctx, span := tm.tracer.Start(ctx, "delete_user_from_domains")
-	defer span.End()
-	return tm.svc.DeleteUserFromDomains(ctx, id)
-}

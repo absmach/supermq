@@ -15,8 +15,6 @@ import (
 	"github.com/absmach/supermq/pkg/roles"
 )
 
-const defLimit = 100
-
 var (
 	errCreateDomainPolicy = errors.New("failed to create domain policy")
 	errRollbackRepo       = errors.New("failed to rollback repo")
@@ -24,6 +22,7 @@ var (
 
 type service struct {
 	repo       Repository
+	cache      Cache
 	policy     policies.Service
 	idProvider supermq.IDProvider
 	roles.ProvisionManageService
@@ -31,7 +30,7 @@ type service struct {
 
 var _ Service = (*service)(nil)
 
-func New(repo Repository, policy policies.Service, idProvider supermq.IDProvider, sidProvider supermq.IDProvider, availableActions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action) (Service, error) {
+func New(repo Repository, cache Cache, policy policies.Service, idProvider supermq.IDProvider, sidProvider supermq.IDProvider, availableActions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action) (Service, error) {
 	rpms, err := roles.NewProvisionManageService(policies.DomainType, repo, policy, sidProvider, availableActions, builtInRoles)
 	if err != nil {
 		return nil, err
@@ -39,6 +38,7 @@ func New(repo Repository, policy policies.Service, idProvider supermq.IDProvider
 
 	return &service{
 		repo:                   repo,
+		cache:                  cache,
 		policy:                 policy,
 		idProvider:             idProvider,
 		ProvisionManageService: rpms,
@@ -123,6 +123,10 @@ func (svc service) EnableDomain(ctx context.Context, session authn.Session, id s
 	if err != nil {
 		return Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
+	if err := svc.cache.Remove(ctx, id); err != nil {
+		return dom, errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+
 	return dom, nil
 }
 
@@ -132,6 +136,10 @@ func (svc service) DisableDomain(ctx context.Context, session authn.Session, id 
 	if err != nil {
 		return Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
+	if err := svc.cache.Remove(ctx, id); err != nil {
+		return dom, errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+
 	return dom, nil
 }
 
@@ -142,6 +150,10 @@ func (svc service) FreezeDomain(ctx context.Context, session authn.Session, id s
 	if err != nil {
 		return Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
+	if err := svc.cache.Remove(ctx, id); err != nil {
+		return dom, errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+
 	return dom, nil
 }
 
@@ -156,45 +168,4 @@ func (svc service) ListDomains(ctx context.Context, session authn.Session, p Pag
 		return DomainsPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return dp, nil
-}
-
-func (svc service) DeleteUserFromDomains(ctx context.Context, id string) (err error) {
-	domainsPage, err := svc.repo.ListDomains(ctx, Page{UserID: id, Limit: defLimit})
-	if err != nil {
-		return err
-	}
-
-	if domainsPage.Total > defLimit {
-		for i := defLimit; i < int(domainsPage.Total); i += defLimit {
-			page := Page{UserID: id, Offset: uint64(i), Limit: defLimit}
-			dp, err := svc.repo.ListDomains(ctx, page)
-			if err != nil {
-				return err
-			}
-			domainsPage.Domains = append(domainsPage.Domains, dp.Domains...)
-		}
-	}
-
-	// if err := svc.RemoveMembersFromAllRoles(ctx, authn.Session{}, []string{id}); err != nil {
-	// 	return err
-	// }
-	////////////ToDo//////////////
-	// Remove user from all roles in all domains
-	//////////////////////////
-
-	// for _, domain := range domainsPage.Domains {
-	// 	req := policies.Policy{
-	// 		Subject:     policies.EncodeDomainUserID(domain.ID, id),
-	// 		SubjectType: policies.UserType,
-	// 	}
-	// 	if err := svc.policies.DeletePolicyFilter(ctx, req); err != nil {
-	// 		return err
-	// 	}
-	// }
-
-	// if err := svc.repo.DeleteUserPolicies(ctx, id); err != nil {
-	// 	return err
-	// }
-
-	return nil
 }
