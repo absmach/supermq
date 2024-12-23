@@ -78,10 +78,10 @@ var (
 	// ErrEmptyList indicates that entity data is empty.
 	ErrEmptyList = errors.New("empty list provided")
 
-	// ErrMissingRoleName indicates that role name are empty.
+	// ErrMissingRoleName indicates that role name is empty.
 	ErrMissingRoleName = errors.New("empty role name")
 
-	// ErrMissingRoleID indicates that role name are empty.
+	// ErrMissingRoleID indicates that role id is empty.
 	ErrMissingRoleID = errors.New("empty role id")
 
 	// ErrMissingRoleOperations indicates that role operations are empty.
