@@ -57,10 +57,10 @@ func (sdk mgSDK) listRoles(entityURL, entityEndpoint, id, domainID string, pm Pa
 	return rp, nil
 }
 
-func (sdk mgSDK) viewRole(entityURL, entityEndpoint, id, roleName, domainID, token string) (Role, errors.SDKError) {
-	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleName)
+func (sdk mgSDK) viewRole(entityURL, entityEndpoint, id, roleID, domainID, token string) (Role, errors.SDKError) {
+	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleID)
 	if entityEndpoint == domainsEndpoint {
-		url = fmt.Sprintf("%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleName)
+		url = fmt.Sprintf("%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleID)
 	}
 	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
 	if sdkerr != nil {
@@ -75,16 +75,16 @@ func (sdk mgSDK) viewRole(entityURL, entityEndpoint, id, roleName, domainID, tok
 	return role, nil
 }
 
-func (sdk mgSDK) updateRole(entityURL, entityEndpoint, id, roleName, newName, domainID string, token string) (Role, errors.SDKError) {
+func (sdk mgSDK) updateRole(entityURL, entityEndpoint, id, roleID, newName, domainID string, token string) (Role, errors.SDKError) {
 	ucr := updateRoleNameReq{Name: newName}
 	data, err := json.Marshal(ucr)
 	if err != nil {
 		return Role{}, errors.NewSDKError(err)
 	}
 
-	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleName)
+	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleID)
 	if entityEndpoint == domainsEndpoint {
-		url = fmt.Sprintf("%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleName)
+		url = fmt.Sprintf("%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleID)
 	}
 	_, body, sdkerr := sdk.processRequest(http.MethodPut, url, token, data, nil, http.StatusOK)
 	if sdkerr != nil {
@@ -99,26 +99,26 @@ func (sdk mgSDK) updateRole(entityURL, entityEndpoint, id, roleName, newName, do
 	return role, nil
 }
 
-func (sdk mgSDK) deleteRole(entityURL, entityEndpoint, id, roleName, domainID, token string) errors.SDKError {
-	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleName)
+func (sdk mgSDK) deleteRole(entityURL, entityEndpoint, id, roleID, domainID, token string) errors.SDKError {
+	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleID)
 	if entityEndpoint == domainsEndpoint {
-		url = fmt.Sprintf("%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleName)
+		url = fmt.Sprintf("%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleID)
 	}
 	_, _, sdkerr := sdk.processRequest(http.MethodDelete, url, token, nil, nil, http.StatusNoContent)
 
 	return sdkerr
 }
 
-func (sdk mgSDK) addRoleActions(entityURL, entityEndpoint, id, roleName, domainID string, actions []string, token string) ([]string, errors.SDKError) {
+func (sdk mgSDK) addRoleActions(entityURL, entityEndpoint, id, roleID, domainID string, actions []string, token string) ([]string, errors.SDKError) {
 	acra := roleActionsReq{Actions: actions}
 	data, err := json.Marshal(acra)
 	if err != nil {
 		return []string{}, errors.NewSDKError(err)
 	}
 
-	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleName, actionsEndpoint)
+	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleID, actionsEndpoint)
 	if entityEndpoint == domainsEndpoint {
-		url = fmt.Sprintf("%s/%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleName, actionsEndpoint)
+		url = fmt.Sprintf("%s/%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleID, actionsEndpoint)
 	}
 	_, body, sdkerr := sdk.processRequest(http.MethodPost, url, token, data, nil, http.StatusOK)
 	if sdkerr != nil {
@@ -133,10 +133,10 @@ func (sdk mgSDK) addRoleActions(entityURL, entityEndpoint, id, roleName, domainI
 	return res.Actions, nil
 }
 
-func (sdk mgSDK) listRoleActions(entityURL, entityEndpoint, id, roleName, domainID string, token string) ([]string, errors.SDKError) {
-	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleName, actionsEndpoint)
+func (sdk mgSDK) listRoleActions(entityURL, entityEndpoint, id, roleID, domainID string, token string) ([]string, errors.SDKError) {
+	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleID, actionsEndpoint)
 	if entityEndpoint == domainsEndpoint {
-		url = fmt.Sprintf("%s/%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleName, actionsEndpoint)
+		url = fmt.Sprintf("%s/%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleID, actionsEndpoint)
 	}
 	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
 	if sdkerr != nil {
@@ -151,42 +151,42 @@ func (sdk mgSDK) listRoleActions(entityURL, entityEndpoint, id, roleName, domain
 	return res.Actions, nil
 }
 
-func (sdk mgSDK) removeRoleActions(entityURL, entityEndpoint, id, roleName, domainID string, actions []string, token string) errors.SDKError {
+func (sdk mgSDK) removeRoleActions(entityURL, entityEndpoint, id, roleID, domainID string, actions []string, token string) errors.SDKError {
 	rcra := roleActionsReq{Actions: actions}
 	data, err := json.Marshal(rcra)
 	if err != nil {
 		return errors.NewSDKError(err)
 	}
 
-	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleName, actionsEndpoint, "delete")
+	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleID, actionsEndpoint, "delete")
 	if entityEndpoint == domainsEndpoint {
-		url = fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleName, actionsEndpoint, "delete")
+		url = fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleID, actionsEndpoint, "delete")
 	}
 	_, _, sdkerr := sdk.processRequest(http.MethodPost, url, token, data, nil, http.StatusNoContent)
 
 	return sdkerr
 }
 
-func (sdk mgSDK) removeAllRoleActions(entityURL, entityEndpoint, id, roleName, domainID, token string) errors.SDKError {
-	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleName, actionsEndpoint, "delete-all")
+func (sdk mgSDK) removeAllRoleActions(entityURL, entityEndpoint, id, roleID, domainID, token string) errors.SDKError {
+	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleID, actionsEndpoint, "delete-all")
 	if entityEndpoint == domainsEndpoint {
-		url = fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleName, actionsEndpoint, "delete-all")
+		url = fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleID, actionsEndpoint, "delete-all")
 	}
 	_, _, sdkerr := sdk.processRequest(http.MethodPost, url, token, nil, nil, http.StatusNoContent)
 
 	return sdkerr
 }
 
-func (sdk mgSDK) addRoleMembers(entityURL, entityEndpoint, id, roleName, domainID string, members []string, token string) ([]string, errors.SDKError) {
+func (sdk mgSDK) addRoleMembers(entityURL, entityEndpoint, id, roleID, domainID string, members []string, token string) ([]string, errors.SDKError) {
 	acrm := roleMembersReq{Members: members}
 	data, err := json.Marshal(acrm)
 	if err != nil {
 		return []string{}, errors.NewSDKError(err)
 	}
 
-	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleName, membersEndpoint)
+	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleID, membersEndpoint)
 	if entityEndpoint == domainsEndpoint {
-		url = fmt.Sprintf("%s/%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleName, membersEndpoint)
+		url = fmt.Sprintf("%s/%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleID, membersEndpoint)
 	}
 	_, body, sdkerr := sdk.processRequest(http.MethodPost, url, token, data, nil, http.StatusOK)
 	if sdkerr != nil {
@@ -201,10 +201,10 @@ func (sdk mgSDK) addRoleMembers(entityURL, entityEndpoint, id, roleName, domainI
 	return res.Members, nil
 }
 
-func (sdk mgSDK) listRoleMembers(entityURL, entityEndpoint, id, roleName, domainID string, pm PageMetadata, token string) (RoleMembersPage, errors.SDKError) {
-	endpoint := fmt.Sprintf("%s/%s/%s/%s/%s/%s", domainID, entityEndpoint, id, rolesEndpoint, roleName, membersEndpoint)
+func (sdk mgSDK) listRoleMembers(entityURL, entityEndpoint, id, roleID, domainID string, pm PageMetadata, token string) (RoleMembersPage, errors.SDKError) {
+	endpoint := fmt.Sprintf("%s/%s/%s/%s/%s/%s", domainID, entityEndpoint, id, rolesEndpoint, roleID, membersEndpoint)
 	if entityEndpoint == domainsEndpoint {
-		endpoint = fmt.Sprintf("%s/%s/%s/%s/%s", entityEndpoint, id, rolesEndpoint, roleName, membersEndpoint)
+		endpoint = fmt.Sprintf("%s/%s/%s/%s/%s", entityEndpoint, id, rolesEndpoint, roleID, membersEndpoint)
 	}
 	url, err := sdk.withQueryParams(entityURL, endpoint, pm)
 	if err != nil {
@@ -223,26 +223,26 @@ func (sdk mgSDK) listRoleMembers(entityURL, entityEndpoint, id, roleName, domain
 	return res, nil
 }
 
-func (sdk mgSDK) removeRoleMembers(entityURL, entityEndpoint, id, roleName, domainID string, members []string, token string) errors.SDKError {
+func (sdk mgSDK) removeRoleMembers(entityURL, entityEndpoint, id, roleID, domainID string, members []string, token string) errors.SDKError {
 	rcrm := roleMembersReq{Members: members}
 	data, err := json.Marshal(rcrm)
 	if err != nil {
 		return errors.NewSDKError(err)
 	}
 
-	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleName, membersEndpoint, "delete")
+	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleID, membersEndpoint, "delete")
 	if entityEndpoint == domainsEndpoint {
-		url = fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleName, membersEndpoint, "delete")
+		url = fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleID, membersEndpoint, "delete")
 	}
 	_, _, sdkerr := sdk.processRequest(http.MethodPost, url, token, data, nil, http.StatusNoContent)
 
 	return sdkerr
 }
 
-func (sdk mgSDK) removeAllRoleMembers(entityURL, entityEndpoint, id, roleName, domainID, token string) errors.SDKError {
-	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleName, membersEndpoint, "delete-all")
+func (sdk mgSDK) removeAllRoleMembers(entityURL, entityEndpoint, id, roleID, domainID, token string) errors.SDKError {
+	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s/%s", entityURL, domainID, entityEndpoint, id, rolesEndpoint, roleID, membersEndpoint, "delete-all")
 	if entityEndpoint == domainsEndpoint {
-		url = fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleName, membersEndpoint, "delete-all")
+		url = fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", entityURL, entityEndpoint, id, rolesEndpoint, roleID, membersEndpoint, "delete-all")
 	}
 	_, _, sdkerr := sdk.processRequest(http.MethodPost, url, token, nil, nil, http.StatusNoContent)
 

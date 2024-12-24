@@ -547,90 +547,90 @@ type SDK interface {
 	//  fmt.Println(roles)
 	ClientRoles(id, domainID string, pm PageMetadata, token string) (RolesPage, errors.SDKError)
 
-	// ClientRole returns client role object by roleName.
+	// ClientRole returns client role object by roleID.
 	//
 	// example:
-	//  role, _ := sdk.ClientRole("clientID", "roleName", "domainID", "token")
+	//  role, _ := sdk.ClientRole("clientID", "roleID", "domainID", "token")
 	//  fmt.Println(role)
-	ClientRole(id, roleName, domainID, token string) (Role, errors.SDKError)
+	ClientRole(id, roleID, domainID, token string) (Role, errors.SDKError)
 
 	// UpdateClientRole updates existing client role name.
 	//
 	// example:
-	//  role, _ := sdk.UpdateClientRole{"clientID", "roleName", "newName", "domainID", "token"}
+	//  role, _ := sdk.UpdateClientRole{"clientID", "roleID", "newName", "domainID", "token"}
 	//  fmr.Println(role)
-	UpdateClientRole(id, roleName, newName, domainID string, token string) (Role, errors.SDKError)
+	UpdateClientRole(id, roleID, newName, domainID string, token string) (Role, errors.SDKError)
 
-	// DeleteClientRole deletes a client role with the given clientID and  roleName.
+	// DeleteClientRole deletes a client role with the given clientID and  roleID.
 	//
 	// example:
-	//  err := sdk.DeleteClientRole("clientID", "roleName", "domainID", "token")
+	//  err := sdk.DeleteClientRole("clientID", "roleID", "domainID", "token")
 	//  fmt.Println(err)
-	DeleteClientRole(id, roleName, domainID, token string) errors.SDKError
+	DeleteClientRole(id, roleID, domainID, token string) errors.SDKError
 
 	// AddClientRoleActions adds actions to a client role.
 	//
 	// example:
 	//  actions := []string{"read", "update"}
-	//  actions, _ := sdk.AddClientRoleActions("clientID", "roleName", "domainID", actions, "token")
+	//  actions, _ := sdk.AddClientRoleActions("clientID", "roleID", "domainID", actions, "token")
 	//  fmt.Println(actions)
-	AddClientRoleActions(id, roleName, domainID string, actions []string, token string) ([]string, errors.SDKError)
+	AddClientRoleActions(id, roleID, domainID string, actions []string, token string) ([]string, errors.SDKError)
 
-	// ClientRoleActions returns client role actions by roleName.
+	// ClientRoleActions returns client role actions by roleID.
 	//
 	// example:
-	//  actions, _ := sdk.ClientRoleActions("clientID", "roleName", "domainID", "token")
+	//  actions, _ := sdk.ClientRoleActions("clientID", "roleID", "domainID", "token")
 	//  fmt.Println(actions)
-	ClientRoleActions(id, roleName, domainID string, token string) ([]string, errors.SDKError)
+	ClientRoleActions(id, roleID, domainID string, token string) ([]string, errors.SDKError)
 
 	// RemoveClientRoleActions removes actions from a client role.
 	//
 	// example:
 	//  actions := []string{"read", "update"}
-	//  err := sdk.RemoveClientRoleActions("clientID", "roleName", "domainID", actions, "token")
+	//  err := sdk.RemoveClientRoleActions("clientID", "roleID", "domainID", actions, "token")
 	//  fmt.Println(err)
-	RemoveClientRoleActions(id, roleName, domainID string, actions []string, token string) errors.SDKError
+	RemoveClientRoleActions(id, roleID, domainID string, actions []string, token string) errors.SDKError
 
 	// RemoveAllClientRoleActions removes all actions from a client role.
 	//
 	// example:
-	//  err := sdk.RemoveAllClientRoleActions("clientID", "roleName", "domainID", "token")
+	//  err := sdk.RemoveAllClientRoleActions("clientID", "roleID", "domainID", "token")
 	//  fmt.Println(err)
-	RemoveAllClientRoleActions(id, roleName, domainID, token string) errors.SDKError
+	RemoveAllClientRoleActions(id, roleID, domainID, token string) errors.SDKError
 
 	// AddClientRoleMembers adds members to a client role.
 	//
 	// example:
 	//  members := []string{"member_id_1", "member_id_2"}
-	//  members, _ := sdk.AddClientRoleMembers("clientID", "roleName", "domainID", members, "token")
+	//  members, _ := sdk.AddClientRoleMembers("clientID", "roleID", "domainID", members, "token")
 	//  fmt.Println(members)
-	AddClientRoleMembers(id, roleName, domainID string, members []string, token string) ([]string, errors.SDKError)
+	AddClientRoleMembers(id, roleID, domainID string, members []string, token string) ([]string, errors.SDKError)
 
-	// ClientRoleMembers returns client role members by roleName.
+	// ClientRoleMembers returns client role members by roleID.
 	//
 	// example:
 	// pm := sdk.PageMetadata{
 	//   Offset: 0,
 	//  Limit:  10,
 	// }
-	//  members, _ := sdk.ClientRoleMembers("clientID", "roleName", "domainID", pm,"token")
+	//  members, _ := sdk.ClientRoleMembers("clientID", "roleID", "domainID", pm,"token")
 	//  fmt.Println(members)
-	ClientRoleMembers(id, roleName, domainID string, pm PageMetadata, token string) (RoleMembersPage, errors.SDKError)
+	ClientRoleMembers(id, roleID, domainID string, pm PageMetadata, token string) (RoleMembersPage, errors.SDKError)
 
 	// RemoveClientRoleMembers removes members from a client role.
 	//
 	// example:
 	//  members := []string{"member_id_1", "member_id_2"}
-	//  err := sdk.RemoveClientRoleMembers("clientID", "roleName", "domainID", members, "token")
+	//  err := sdk.RemoveClientRoleMembers("clientID", "roleID", "domainID", members, "token")
 	//  fmt.Println(err)
-	RemoveClientRoleMembers(id, roleName, domainID string, members []string, token string) errors.SDKError
+	RemoveClientRoleMembers(id, roleID, domainID string, members []string, token string) errors.SDKError
 
 	// RemoveAllClientRoleMembers removes all members from a client role.
 	//
 	// example:
-	//  err := sdk.RemoveAllClientRoleMembers("clientID", "roleName", "domainID", "token")
+	//  err := sdk.RemoveAllClientRoleMembers("clientID", "roleID", "domainID", "token")
 	//  fmt.Println(err)
-	RemoveAllClientRoleMembers(id, roleName, domainID, token string) errors.SDKError
+	RemoveAllClientRoleMembers(id, roleID, domainID, token string) errors.SDKError
 
 	// AvailableClientRoleActions returns available actions for a client role.
 	//
@@ -789,90 +789,90 @@ type SDK interface {
 	//  fmt.Println(roles)
 	GroupRoles(id, domainID string, pm PageMetadata, token string) (RolesPage, errors.SDKError)
 
-	// GroupRole returns group role object by roleName.
+	// GroupRole returns group role object by roleID.
 	//
 	// example:
-	//  role, _ := sdk.GroupRole("groupID", "roleName", "domainID", "token")
+	//  role, _ := sdk.GroupRole("groupID", "roleID", "domainID", "token")
 	//  fmt.Println(role)
-	GroupRole(id, roleName, domainID, token string) (Role, errors.SDKError)
+	GroupRole(id, roleID, domainID, token string) (Role, errors.SDKError)
 
 	// UpdateGroupRole updates existing group role name.
 	//
 	// example:
-	//  role, _ := sdk.UpdateGroupRole{"groupID", "roleName", "newName", "domainID", "token"}
+	//  role, _ := sdk.UpdateGroupRole{"groupID", "roleID", "newName", "domainID", "token"}
 	//  fmr.Println(role)
-	UpdateGroupRole(id, roleName, newName, domainID string, token string) (Role, errors.SDKError)
+	UpdateGroupRole(id, roleID, newName, domainID string, token string) (Role, errors.SDKError)
 
-	// DeleteGroupRole deletes a group role with the given groupID and  roleName.
+	// DeleteGroupRole deletes a group role with the given groupID and  roleID.
 	//
 	// example:
-	//  err := sdk.DeleteGroupRole("groupID", "roleName", "domainID", "token")
+	//  err := sdk.DeleteGroupRole("groupID", "roleID", "domainID", "token")
 	//  fmt.Println(err)
-	DeleteGroupRole(id, roleName, domainID, token string) errors.SDKError
+	DeleteGroupRole(id, roleID, domainID, token string) errors.SDKError
 
 	// AddGroupRoleActions adds actions to a group role.
 	//
 	// example:
 	//  actions := []string{"read", "update"}
-	//  actions, _ := sdk.AddGroupRoleActions("groupID", "roleName", "domainID", actions, "token")
+	//  actions, _ := sdk.AddGroupRoleActions("groupID", "roleID", "domainID", actions, "token")
 	//  fmt.Println(actions)
-	AddGroupRoleActions(id, roleName, domainID string, actions []string, token string) ([]string, errors.SDKError)
+	AddGroupRoleActions(id, roleID, domainID string, actions []string, token string) ([]string, errors.SDKError)
 
-	// GroupRoleActions returns group role actions by roleName.
+	// GroupRoleActions returns group role actions by roleID.
 	//
 	// example:
-	//  actions, _ := sdk.GroupRoleActions("groupID", "roleName", "domainID", "token")
+	//  actions, _ := sdk.GroupRoleActions("groupID", "roleID", "domainID", "token")
 	//  fmt.Println(actions)
-	GroupRoleActions(id, roleName, domainID string, token string) ([]string, errors.SDKError)
+	GroupRoleActions(id, roleID, domainID string, token string) ([]string, errors.SDKError)
 
 	// RemoveGroupRoleActions removes actions from a group role.
 	//
 	// example:
 	//  actions := []string{"read", "update"}
-	//  err := sdk.RemoveGroupRoleActions("groupID", "roleName", "domainID", actions, "token")
+	//  err := sdk.RemoveGroupRoleActions("groupID", "roleID", "domainID", actions, "token")
 	//  fmt.Println(err)
-	RemoveGroupRoleActions(id, roleName, domainID string, actions []string, token string) errors.SDKError
+	RemoveGroupRoleActions(id, roleID, domainID string, actions []string, token string) errors.SDKError
 
 	// RemoveAllGroupRoleActions removes all actions from a group role.
 	//
 	// example:
-	//  err := sdk.RemoveAllGroupRoleActions("groupID", "roleName", "domainID", "token")
+	//  err := sdk.RemoveAllGroupRoleActions("groupID", "roleID", "domainID", "token")
 	//  fmt.Println(err)
-	RemoveAllGroupRoleActions(id, roleName, domainID, token string) errors.SDKError
+	RemoveAllGroupRoleActions(id, roleID, domainID, token string) errors.SDKError
 
 	// AddGroupRoleMembers adds members to a group role.
 	//
 	// example:
 	//  members := []string{"member_id_1", "member_id_2"}
-	//  members, _ := sdk.AddGroupRoleMembers("groupID", "roleName", "domainID", members, "token")
+	//  members, _ := sdk.AddGroupRoleMembers("groupID", "roleID", "domainID", members, "token")
 	//  fmt.Println(members)
-	AddGroupRoleMembers(id, roleName, domainID string, members []string, token string) ([]string, errors.SDKError)
+	AddGroupRoleMembers(id, roleID, domainID string, members []string, token string) ([]string, errors.SDKError)
 
-	// GroupRoleMembers returns group role members by roleName.
+	// GroupRoleMembers returns group role members by roleID.
 	//
 	// example:
 	// pm := sdk.PageMetadata{
 	//   Offset: 0,
 	//  Limit:  10,
 	// }
-	//  members, _ := sdk.GroupRoleMembers("groupID", "roleName", "domainID", "token")
+	//  members, _ := sdk.GroupRoleMembers("groupID", "roleID", "domainID", "token")
 	//  fmt.Println(members)
-	GroupRoleMembers(id, roleName, domainID string, pm PageMetadata, token string) (RoleMembersPage, errors.SDKError)
+	GroupRoleMembers(id, roleID, domainID string, pm PageMetadata, token string) (RoleMembersPage, errors.SDKError)
 
 	// RemoveGroupRoleMembers removes members from a group role.
 	//
 	// example:
 	//  members := []string{"member_id_1", "member_id_2"}
-	//  err := sdk.RemoveGroupRoleMembers("groupID", "roleName", "domainID", members, "token")
+	//  err := sdk.RemoveGroupRoleMembers("groupID", "roleID", "domainID", members, "token")
 	//  fmt.Println(err)
-	RemoveGroupRoleMembers(id, roleName, domainID string, members []string, token string) errors.SDKError
+	RemoveGroupRoleMembers(id, roleID, domainID string, members []string, token string) errors.SDKError
 
 	// RemoveAllGroupRoleMembers removes all members from a group role.
 	//
 	// example:
-	//  err := sdk.RemoveAllGroupRoleMembers("groupID", "roleName", "domainID", "token")
+	//  err := sdk.RemoveAllGroupRoleMembers("groupID", "roleID", "domainID", "token")
 	//  fmt.Println(err)
-	RemoveAllGroupRoleMembers(id, roleName, domainID, token string) errors.SDKError
+	RemoveAllGroupRoleMembers(id, roleID, domainID, token string) errors.SDKError
 
 	// AvailableGroupRoleActions returns available actions for a group role.
 	//
@@ -1306,90 +1306,90 @@ type SDK interface {
 	//  fmt.Println(roles)
 	DomainRoles(id string, pm PageMetadata, token string) (RolesPage, errors.SDKError)
 
-	// DomainRole returns domain role object by roleName.
+	// DomainRole returns domain role object by roleID.
 	//
 	// example:
-	//  role, _ := sdk.DomainRole("domainID", "roleName", "token")
+	//  role, _ := sdk.DomainRole("domainID", "roleID", "token")
 	//  fmt.Println(role)
-	DomainRole(id, roleName, token string) (Role, errors.SDKError)
+	DomainRole(id, roleID, token string) (Role, errors.SDKError)
 
 	// UpdateDomainRole updates existing domain role name.
 	//
 	// example:
-	//  role, _ := sdk.UpdateDomainRole("domainID", "roleName", "newName", "token")
+	//  role, _ := sdk.UpdateDomainRole("domainID", "roleID", "newName", "token")
 	//  fmt.Println(role)
-	UpdateDomainRole(id, roleName, newName string, token string) (Role, errors.SDKError)
+	UpdateDomainRole(id, roleID, newName string, token string) (Role, errors.SDKError)
 
-	// DeleteDomainRole deletes a domain role with the given domainID and roleName.
+	// DeleteDomainRole deletes a domain role with the given domainID and roleID.
 	//
 	// example:
-	//  err := sdk.DeleteDomainRole("domainID", "roleName", "token")
+	//  err := sdk.DeleteDomainRole("domainID", "roleID", "token")
 	//  fmt.Println(err)
-	DeleteDomainRole(id, roleName, token string) errors.SDKError
+	DeleteDomainRole(id, roleID, token string) errors.SDKError
 
 	// AddDomainRoleActions adds actions to a domain role.
 	//
 	// example:
 	//  actions := []string{"read", "update"}
-	//  actions, _ := sdk.AddDomainRoleActions("domainID", "roleName", actions, "token")
+	//  actions, _ := sdk.AddDomainRoleActions("domainID", "roleID", actions, "token")
 	//  fmt.Println(actions)
-	AddDomainRoleActions(id, roleName string, actions []string, token string) ([]string, errors.SDKError)
+	AddDomainRoleActions(id, roleID string, actions []string, token string) ([]string, errors.SDKError)
 
-	// DomainRoleActions returns domain role actions by roleName.
+	// DomainRoleActions returns domain role actions by roleID.
 	//
 	// example:
-	//  actions, _ := sdk.DomainRoleActions("domainID", "roleName", "token")
+	//  actions, _ := sdk.DomainRoleActions("domainID", "roleID", "token")
 	//  fmt.Println(actions)
-	DomainRoleActions(id, roleName string, token string) ([]string, errors.SDKError)
+	DomainRoleActions(id, roleID string, token string) ([]string, errors.SDKError)
 
 	// RemoveDomainRoleActions removes actions from a domain role.
 	//
 	// example:
 	//  actions := []string{"read", "update"}
-	//  err := sdk.RemoveDomainRoleActions("domainID", "roleName", actions, "token")
+	//  err := sdk.RemoveDomainRoleActions("domainID", "roleID", actions, "token")
 	//  fmt.Println(err)
-	RemoveDomainRoleActions(id, roleName string, actions []string, token string) errors.SDKError
+	RemoveDomainRoleActions(id, roleID string, actions []string, token string) errors.SDKError
 
 	// RemoveAllDomainRoleActions removes all actions from a domain role.
 	//
 	// example:
-	//  err := sdk.RemoveAllDomainRoleActions("domainID", "roleName", "token")
+	//  err := sdk.RemoveAllDomainRoleActions("domainID", "roleID", "token")
 	//  fmt.Println(err)
-	RemoveAllDomainRoleActions(id, roleName, token string) errors.SDKError
+	RemoveAllDomainRoleActions(id, roleID, token string) errors.SDKError
 
 	// AddDomainRoleMembers adds members to a domain role.
 	//
 	// example:
 	//  members := []string{"member_id_1", "member_id_2"}
-	//  members, _ := sdk.AddDomainRoleMembers("domainID", "roleName", members, "token")
+	//  members, _ := sdk.AddDomainRoleMembers("domainID", "roleID", members, "token")
 	//  fmt.Println(members)
-	AddDomainRoleMembers(id, roleName string, members []string, token string) ([]string, errors.SDKError)
+	AddDomainRoleMembers(id, roleID string, members []string, token string) ([]string, errors.SDKError)
 
-	// DomainRoleMembers returns domain role members by roleName.
+	// DomainRoleMembers returns domain role members by roleID.
 	//
 	// example:
 	//  pm := sdk.PageMetadata{
 	//    Offset: 0,
 	//    Limit:  10,
 	//  }
-	//  members, _ := sdk.DomainRoleMembers("domainID", "roleName", "token")
+	//  members, _ := sdk.DomainRoleMembers("domainID", "roleID", "token")
 	//  fmt.Println(members)
-	DomainRoleMembers(id, roleName string, pm PageMetadata, token string) (RoleMembersPage, errors.SDKError)
+	DomainRoleMembers(id, roleID string, pm PageMetadata, token string) (RoleMembersPage, errors.SDKError)
 
 	// RemoveDomainRoleMembers removes members from a domain role.
 	//
 	// example:
 	//  members := []string{"member_id_1", "member_id_2"}
-	//  err := sdk.RemoveDomainRoleMembers("domainID", "roleName", members, "token")
+	//  err := sdk.RemoveDomainRoleMembers("domainID", "roleID", members, "token")
 	//  fmt.Println(err)
-	RemoveDomainRoleMembers(id, roleName string, members []string, token string) errors.SDKError
+	RemoveDomainRoleMembers(id, roleID string, members []string, token string) errors.SDKError
 
 	// RemoveAllDomainRoleMembers removes all members from a domain role.
 	//
 	// example:
-	//  err := sdk.RemoveAllDomainRoleMembers("domainID", "roleName", "token")
+	//  err := sdk.RemoveAllDomainRoleMembers("domainID", "roleID", "token")
 	//  fmt.Println(err)
-	RemoveAllDomainRoleMembers(id, roleName, token string) errors.SDKError
+	RemoveAllDomainRoleMembers(id, roleID, token string) errors.SDKError
 
 	// AvailableDomainRoleActions returns available actions for a domain role.
 	//

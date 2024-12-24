@@ -78,7 +78,7 @@ components:
           format: date-time
           example: "2019-11-26 13:31:52"
           description: Time when the channel was created.
-      
+
     CreateRoleObj:
       type: object
       properties:
@@ -94,7 +94,7 @@ components:
           example:
             [
               "read",
-              "update",              
+              "update",
             ]
         optional_members:
           type: array
@@ -107,7 +107,7 @@ components:
               "5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb",
               "c01ed106-e52d-4aa4-bed3-39f360177cfa",
             ]
-    
+
     UpdateRoleObj:
       type: object
       properties:
@@ -146,9 +146,9 @@ components:
           example:
             [
               "read",
-              "update",              
+              "update",
             ]
-    
+
     RoleMembersObj:
       type: object
       properties:
@@ -162,7 +162,7 @@ components:
               "5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb",
               "c01ed106-e52d-4aa4-bed3-39f360177cfa",
             ]
-    
+
     AvailableActionsObj:
       type: object
       properties:
@@ -176,7 +176,7 @@ components:
               "read",
               "update",
             ]
-    
+
   parameters:
     RoleName:
       name: roleName
@@ -186,6 +186,14 @@ components:
         type: string
       required: true
       example: "roleName"
+    RoleID:
+      name: roleID
+      description: Role ID.
+      in: path
+      schema:
+        type: string
+      required: true
+      example: "roleID"
 
   requestBodies:
     CreateRoleReq:
@@ -193,17 +201,17 @@ components:
       required: true
       content:
         application/json:
-          schema: 
+          schema:
             $ref: '#/components/schemas/CreateRoleObj'
-    
+
     UpdateRoleReq:
       description: JSON- formatted object decsribing a role to be updated.
       required: true
       content:
         application/json:
-          schema: 
+          schema:
             $ref: '#/components/schemas/UpdateRoleObj'
-    
+
     AddRoleActionsReq:
       description: JSON- formatted object decsribing an action to be added to a role.
       required: true
@@ -241,7 +249,7 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Role'
-    
+
     AddRoleActionsRes:
       description: Action added to role successfully.
       content:
@@ -255,14 +263,14 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/RoleActionsObj'
-    
+
     AddRoleMembersRes:
       description: Member added to role successfully.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/RoleMembersObj'
-    
+
     ListRoleMembersRes:
       description: Role members retrieved successfully.
       content:

@@ -148,7 +148,6 @@ func (r ProvisionManageService) AddNewEntitiesRoles(ctx context.Context, domainI
 				return []RoleProvision{}, fmt.Errorf("default role %s not found in in-built roles", defaultRole)
 			}
 
-			// There an option to have id as entityID_roleName where in roleName all space are removed with _ and starts with letter and supports only alphanumeric, space and hyphen
 			sid, err := r.sidProvider.ID()
 			if err != nil {
 				return []RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)

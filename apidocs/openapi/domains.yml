@@ -225,7 +225,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
   /domains/{domainID}/roles:
     post:
       operationId: createDomainRole
@@ -255,7 +255,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-    
+
     get:
       operationId: listDomainRoles
       tags:
@@ -289,7 +289,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /domains/{domainID}/roles/{roleName}:
+  /domains/{domainID}/roles/{roleID}:
     get:
       operationId: getDomainRole
       tags:
@@ -299,7 +299,7 @@ paths:
         Retrieves a specific domain role that is identified by the role name.
       parameters:
         - $ref: "#/components/parameters/DomainID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -318,7 +318,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-      
+
     put:
       operationId: updateDomainRole
       summary: Updates domain role.
@@ -328,7 +328,7 @@ paths:
         - Roles
       parameters:
         - $ref: "#/components/parameters/DomainID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/UpdateRoleReq"
       security:
@@ -349,7 +349,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-      
+
     delete:
       operationId: deleteDomainRole
       summary: Deletes domain role.
@@ -359,7 +359,7 @@ paths:
         - Roles
       parameters:
         - $ref: "#/components/parameters/DomainID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -378,8 +378,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
-  /domains/{domainID}/roles/{roleName}/actions:
+
+  /domains/{domainID}/roles/{roleID}/actions:
     post:
       operationId: addDomainRoleAction
       summary: Adds a role action for a domain role.
@@ -389,7 +389,7 @@ paths:
         - Roles
       parameters:
         - $ref: "#/components/parameters/DomainID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleActionsReq"
       security:
@@ -410,17 +410,17 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
     get:
       operationId: listDomainRoleActions
       tags:
         - Roles
       summary: Lists domain role actions.
       description: |
-        Retrieves a list of domain role actions. 
+        Retrieves a list of domain role actions.
       parameters:
         - $ref: "#/components/parameters/DomainID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -439,8 +439,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
-  /domains/{domainID}/roles/{roleName}/actions/delete:
+
+  /domains/{domainID}/roles/{roleID}/actions/delete:
     post:
       operationId: deleteDomainRoleAction
       summary: Deletes role actions for a domain role.
@@ -450,7 +450,7 @@ paths:
         - Roles
       parameters:
         - $ref: "#/components/parameters/DomainID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleActionsReq"
       security:
@@ -471,8 +471,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-    
-  /domains/{domainID}/roles/{roleName}/actions/delete-all:
+
+  /domains/{domainID}/roles/{roleID}/actions/delete-all:
     post:
       operationId: deleteAllDomainRoleActions
       summary: Deletes all role actions for a domain role.
@@ -482,7 +482,7 @@ paths:
         - Roles
       parameters:
         - $ref: "#/components/parameters/DomainID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -501,8 +501,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
-  /domains/{domainID}/roles/{roleName}/members:
+
+  /domains/{domainID}/roles/{roleID}/members:
     post:
       operationId: addDomainRoleMember
       summary: Adds a member to a domain role.
@@ -512,7 +512,7 @@ paths:
         - Roles
       parameters:
         - $ref: "#/components/parameters/DomainID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleMembersReq"
       security:
@@ -533,17 +533,17 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-    
+
     get:
       operationId: listDomainRoleMembers
       tags:
         - Roles
       summary: Lists domain role members.
       description: |
-        Retrieves a list of domain role members. 
+        Retrieves a list of domain role members.
       parameters:
         - $ref: "#/components/parameters/DomainID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -562,8 +562,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-    
-  /domains/{domainID}/roles/{roleName}/members/delete:
+
+  /domains/{domainID}/roles/{roleID}/members/delete:
     post:
       operationId: deleteDomainRoleMembers
       summary: Deletes members from a domain role.
@@ -573,7 +573,7 @@ paths:
         - Roles
       parameters:
         - $ref: "#/components/parameters/DomainID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleMembersReq"
       security:
@@ -594,8 +594,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
-  /domains/{domainID}/roles/{roleName}/members/delete-all:
+
+  /domains/{domainID}/roles/{roleID}/members/delete-all:
     post:
       operationId: deleteAllDomainRoleMembers
       summary: Deletes all members from a domain role.
@@ -605,7 +605,7 @@ paths:
         - Roles
       parameters:
         - $ref: "#/components/parameters/DomainID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -624,7 +624,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
   /domains/roles/available-actions:
     get:
       operationId: listAvailableActions
@@ -632,7 +632,7 @@ paths:
         - Roles
       summary: Retrieves available actions.
       description: |
-        Retrieves a list of available actions. 
+        Retrieves a list of available actions.
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
       security:

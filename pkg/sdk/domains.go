@@ -141,48 +141,48 @@ func (sdk mgSDK) DomainRoles(id string, pm PageMetadata, token string) (RolesPag
 	return sdk.listRoles(sdk.domainsURL, domainsEndpoint, id, "", pm, token)
 }
 
-func (sdk mgSDK) DomainRole(id, roleName, token string) (Role, errors.SDKError) {
-	return sdk.viewRole(sdk.domainsURL, domainsEndpoint, id, roleName, "", token)
+func (sdk mgSDK) DomainRole(id, roleID, token string) (Role, errors.SDKError) {
+	return sdk.viewRole(sdk.domainsURL, domainsEndpoint, id, roleID, "", token)
 }
 
-func (sdk mgSDK) UpdateDomainRole(id, roleName, newName string, token string) (Role, errors.SDKError) {
-	return sdk.updateRole(sdk.domainsURL, domainsEndpoint, id, roleName, newName, "", token)
+func (sdk mgSDK) UpdateDomainRole(id, roleID, newName string, token string) (Role, errors.SDKError) {
+	return sdk.updateRole(sdk.domainsURL, domainsEndpoint, id, roleID, newName, "", token)
 }
 
-func (sdk mgSDK) DeleteDomainRole(id, roleName, token string) errors.SDKError {
-	return sdk.deleteRole(sdk.domainsURL, domainsEndpoint, id, roleName, "", token)
+func (sdk mgSDK) DeleteDomainRole(id, roleID, token string) errors.SDKError {
+	return sdk.deleteRole(sdk.domainsURL, domainsEndpoint, id, roleID, "", token)
 }
 
-func (sdk mgSDK) AddDomainRoleActions(id, roleName string, actions []string, token string) ([]string, errors.SDKError) {
-	return sdk.addRoleActions(sdk.domainsURL, domainsEndpoint, id, roleName, "", actions, token)
+func (sdk mgSDK) AddDomainRoleActions(id, roleID string, actions []string, token string) ([]string, errors.SDKError) {
+	return sdk.addRoleActions(sdk.domainsURL, domainsEndpoint, id, roleID, "", actions, token)
 }
 
-func (sdk mgSDK) DomainRoleActions(id, roleName string, token string) ([]string, errors.SDKError) {
-	return sdk.listRoleActions(sdk.domainsURL, domainsEndpoint, id, roleName, "", token)
+func (sdk mgSDK) DomainRoleActions(id, roleID string, token string) ([]string, errors.SDKError) {
+	return sdk.listRoleActions(sdk.domainsURL, domainsEndpoint, id, roleID, "", token)
 }
 
-func (sdk mgSDK) RemoveDomainRoleActions(id, roleName string, actions []string, token string) errors.SDKError {
-	return sdk.removeRoleActions(sdk.domainsURL, domainsEndpoint, id, roleName, "", actions, token)
+func (sdk mgSDK) RemoveDomainRoleActions(id, roleID string, actions []string, token string) errors.SDKError {
+	return sdk.removeRoleActions(sdk.domainsURL, domainsEndpoint, id, roleID, "", actions, token)
 }
 
-func (sdk mgSDK) RemoveAllDomainRoleActions(id, roleName, token string) errors.SDKError {
-	return sdk.removeAllRoleActions(sdk.domainsURL, domainsEndpoint, id, roleName, "", token)
+func (sdk mgSDK) RemoveAllDomainRoleActions(id, roleID, token string) errors.SDKError {
+	return sdk.removeAllRoleActions(sdk.domainsURL, domainsEndpoint, id, roleID, "", token)
 }
 
-func (sdk mgSDK) AddDomainRoleMembers(id, roleName string, members []string, token string) ([]string, errors.SDKError) {
-	return sdk.addRoleMembers(sdk.domainsURL, domainsEndpoint, id, roleName, "", members, token)
+func (sdk mgSDK) AddDomainRoleMembers(id, roleID string, members []string, token string) ([]string, errors.SDKError) {
+	return sdk.addRoleMembers(sdk.domainsURL, domainsEndpoint, id, roleID, "", members, token)
 }
 
-func (sdk mgSDK) DomainRoleMembers(id, roleName string, pm PageMetadata, token string) (RoleMembersPage, errors.SDKError) {
-	return sdk.listRoleMembers(sdk.domainsURL, domainsEndpoint, id, roleName, "", pm, token)
+func (sdk mgSDK) DomainRoleMembers(id, roleID string, pm PageMetadata, token string) (RoleMembersPage, errors.SDKError) {
+	return sdk.listRoleMembers(sdk.domainsURL, domainsEndpoint, id, roleID, "", pm, token)
 }
 
-func (sdk mgSDK) RemoveDomainRoleMembers(id, roleName string, members []string, token string) errors.SDKError {
-	return sdk.removeRoleMembers(sdk.domainsURL, domainsEndpoint, id, roleName, "", members, token)
+func (sdk mgSDK) RemoveDomainRoleMembers(id, roleID string, members []string, token string) errors.SDKError {
+	return sdk.removeRoleMembers(sdk.domainsURL, domainsEndpoint, id, roleID, "", members, token)
 }
 
-func (sdk mgSDK) RemoveAllDomainRoleMembers(id, roleName, token string) errors.SDKError {
-	return sdk.removeAllRoleMembers(sdk.domainsURL, domainsEndpoint, id, roleName, "", token)
+func (sdk mgSDK) RemoveAllDomainRoleMembers(id, roleID, token string) errors.SDKError {
+	return sdk.removeAllRoleMembers(sdk.domainsURL, domainsEndpoint, id, roleID, "", token)
 }
 
 func (sdk mgSDK) AvailableDomainRoleActions(token string) ([]string, errors.SDKError) {

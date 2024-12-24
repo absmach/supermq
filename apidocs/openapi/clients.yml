@@ -454,7 +454,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
   /{domainID}/clients/{clientID}/roles:
     post:
       operationId: createClientRole
@@ -485,7 +485,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-    
+
     get:
       operationId: listClientRoles
       tags:
@@ -520,7 +520,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/clients/{clientID}/roles/{roleName}:
+  /{domainID}/clients/{clientID}/roles/{roleID}:
     get:
       operationId: getClientRole
       tags:
@@ -531,7 +531,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -550,7 +550,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-      
+
     put:
       operationId: updateClientRole
       summary: Updates client role.
@@ -561,7 +561,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/UpdateRoleReq"
       security:
@@ -582,7 +582,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-      
+
     delete:
       operationId: deleteClientRole
       summary: Deletes client role.
@@ -593,7 +593,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -612,8 +612,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
-  /{domainID}/clients/{clientID}/roles/{roleName}/actions:
+
+  /{domainID}/clients/{clientID}/roles/{roleID}/actions:
     post:
       operationId: addClientRoleAction
       summary: Adds a role action for a client role.
@@ -624,7 +624,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleActionsReq"
       security:
@@ -645,18 +645,18 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
     get:
       operationId: listClientRoleActions
       tags:
         - Roles
       summary: Lists client role actions.
       description: |
-        Retrieves a list of client role actions. 
+        Retrieves a list of client role actions.
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -675,8 +675,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
-  /{domainID}/clients/{clientID}/roles/{roleName}/actions/delete:
+
+  /{domainID}/clients/{clientID}/roles/{roleID}/actions/delete:
     post:
       operationId: deleteClientRoleAction
       summary: Deletes role actions for a client role.
@@ -687,7 +687,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleActionsReq"
       security:
@@ -708,8 +708,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-    
-  /{domainID}/clients/{clientID}/roles/{roleName}/actions/delete-all:
+
+  /{domainID}/clients/{clientID}/roles/{roleID}/actions/delete-all:
     post:
       operationId: deleteAllClientRoleActions
       summary: Deletes all role actions for a client role.
@@ -720,7 +720,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -739,8 +739,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
-  /{domainID}/clients/{clientID}/roles/{roleName}/members:
+
+  /{domainID}/clients/{clientID}/roles/{roleID}/members:
     post:
       operationId: addClientRoleMember
       summary: Adds a member to a client role.
@@ -751,7 +751,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleMembersReq"
       security:
@@ -772,18 +772,18 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-    
+
     get:
       operationId: listClientRoleMembers
       tags:
         - Roles
       summary: Lists client role members.
       description: |
-        Retrieves a list of client role members. 
+        Retrieves a list of client role members.
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -802,8 +802,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-    
-  /{domainID}/clients/{clientID}/roles/{roleName}/members/delete:
+
+  /{domainID}/clients/{clientID}/roles/{roleID}/members/delete:
     post:
       operationId: deleteClientRoleMembers
       summary: Deletes members from a client role.
@@ -814,7 +814,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleMembersReq"
       security:
@@ -835,8 +835,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
-  /{domainID}/clients/{clientID}/roles/{roleName}/members/delete-all:
+
+  /{domainID}/clients/{clientID}/roles/{roleID}/members/delete-all:
     post:
       operationId: deleteAllClientRoleMembers
       summary: Deletes all members from a client role.
@@ -847,7 +847,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -874,7 +874,7 @@ paths:
         - Roles
       summary: Retrieves available actions.
       description: |
-        Retrieves a list of available actions. 
+        Retrieves a list of available actions.
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
       security:

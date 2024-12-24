@@ -262,7 +262,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
   /{domainID}/groups/{groupID}/hierarchy:
     get:
       operationId: listGroupHierarchy
@@ -297,7 +297,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
   /{domainID}/groups/{groupID}/parent:
     post:
       operationId: setGroupParentGroup
@@ -465,7 +465,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
   /{domainID}/groups/{groupID}/children/all:
     delete:
       operationId: removeAllChildrenGroups
@@ -529,7 +529,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-    
+
     get:
       operationId: listGroupRoles
       tags:
@@ -564,7 +564,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /{domainID}/groups/{groupID}/roles/{roleName}:
+  /{domainID}/groups/{groupID}/roles/{roleID}:
     get:
       operationId: getGroupRole
       tags:
@@ -575,7 +575,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/GroupID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -594,7 +594,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-      
+
     put:
       operationId: updateGroupRole
       summary: Updates group role.
@@ -605,7 +605,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/GroupID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/UpdateRoleReq"
       security:
@@ -626,7 +626,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-      
+
     delete:
       operationId: deleteGroupRole
       summary: Deletes group role.
@@ -637,7 +637,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/GroupID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -656,8 +656,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
-  /{domainID}/groups/{groupID}/roles/{roleName}/actions:
+
+  /{domainID}/groups/{groupID}/roles/{roleID}/actions:
     post:
       operationId: addGroupRoleAction
       summary: Adds a role action for a group role.
@@ -668,7 +668,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/GroupID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleActionsReq"
       security:
@@ -689,18 +689,18 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
     get:
       operationId: listGroupRoleActions
       tags:
         - Roles
       summary: Lists group role actions.
       description: |
-        Retrieves a list of group role actions. 
+        Retrieves a list of group role actions.
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/GroupID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -719,8 +719,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
-  /{domainID}/groups/{groupID}/roles/{roleName}/actions/delete:
+
+  /{domainID}/groups/{groupID}/roles/{roleID}/actions/delete:
     post:
       operationId: deleteGroupRoleAction
       summary: Deletes role actions for a group role.
@@ -731,7 +731,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/GroupID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleActionsReq"
       security:
@@ -752,8 +752,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-    
-  /{domainID}/groups/{groupID}/roles/{roleName}/actions/delete-all:
+
+  /{domainID}/groups/{groupID}/roles/{roleID}/actions/delete-all:
     post:
       operationId: deleteAllGroupRoleActions
       summary: Deletes all role actions for a group role.
@@ -764,7 +764,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/GroupID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -783,8 +783,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
-  /{domainID}/groups/{groupID}/roles/{roleName}/members:
+
+  /{domainID}/groups/{groupID}/roles/{roleID}/members:
     post:
       operationId: addGroupRoleMember
       summary: Adds a member to a group role.
@@ -795,7 +795,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/GroupID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleMembersReq"
       security:
@@ -816,18 +816,18 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-    
+
     get:
       operationId: listGroupRoleMembers
       tags:
         - Roles
       summary: Lists group role members.
       description: |
-        Retrieves a list of group role members. 
+        Retrieves a list of group role members.
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/GroupID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -846,8 +846,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-    
-  /{domainID}/groups/{groupID}/roles/{roleName}/members/delete:
+
+  /{domainID}/groups/{groupID}/roles/{roleID}/members/delete:
     post:
       operationId: deleteGroupRoleMembers
       summary: Deletes members from a group role.
@@ -858,7 +858,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/GroupID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       requestBody:
         $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleMembersReq"
       security:
@@ -879,8 +879,8 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
-  /{domainID}/groups/{groupID}/roles/{roleName}/members/delete-all:
+
+  /{domainID}/groups/{groupID}/roles/{roleID}/members/delete-all:
     post:
       operationId: deleteAllGroupRoleMembers
       summary: Deletes all members from a group role.
@@ -891,7 +891,7 @@ paths:
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/GroupID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -918,7 +918,7 @@ paths:
         - Roles
       summary: Retrieves available actions.
       description: |
-        Retrieves a list of available actions. 
+        Retrieves a list of available actions.
       parameters:
         - $ref: "auth.yml#/components/parameters/DomainID"
       security:
@@ -1125,7 +1125,7 @@ components:
         - groups
         - total
         - offset
-    
+
     GroupsHierarchyPage:
       type: object
       properties:
@@ -1199,7 +1199,7 @@ components:
           description: Parent group unique identifier.
       required:
         - group_id
-    
+
     ChildrenGroupReqObj:
       type: object
       properties:
@@ -1368,7 +1368,7 @@ components:
         minimum: 1
         maximum: 5
       required: false
-    
+
     StartLevel:
       name: start_level
       description: Level of hierarchy from which to start retrieving groups from given group id.
@@ -1376,7 +1376,7 @@ components:
       schema:
         type: integer
       required: false
-    
+
     EndLevel:
       name: end_level
       description: Level of hierarchy up to which to retrieve groups from given group id.
@@ -1458,7 +1458,7 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ParentGroupReqObj"
-    
+
     GroupChildrenReq:
       description: JSON-formated document describing the children groups to be added to a group.
       required: true
