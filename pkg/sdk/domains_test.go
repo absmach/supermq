@@ -1040,7 +1040,6 @@ func TestViewClietRole(t *testing.T) {
 		DomainsURL: ts.URL,
 	}
 	mgsdk := sdk.NewSDK(conf)
-
 	role := roles.Role{
 		ID:        testsutil.GenerateUUID(t),
 		Name:      roleName,
@@ -1054,7 +1053,7 @@ func TestViewClietRole(t *testing.T) {
 		token           string
 		session         smqauthn.Session
 		domainID        string
-		roleName        string
+		roleID          string
 		svcRes          roles.Role
 		svcErr          error
 		authenticateErr error
@@ -1065,7 +1064,7 @@ func TestViewClietRole(t *testing.T) {
 			desc:     "view domain role successfully",
 			token:    validToken,
 			domainID: domainID,
-			roleName: role.Name,
+			roleID:   role.ID,
 			svcRes:   role,
 			svcErr:   nil,
 			response: convertRole(role),
@@ -1075,7 +1074,7 @@ func TestViewClietRole(t *testing.T) {
 			desc:            "view domain role with invalid token",
 			token:           invalidToken,
 			domainID:        domainID,
-			roleName:        role.Name,
+			roleID:          role.ID,
 			svcRes:          roles.Role{},
 			authenticateErr: svcerr.ErrAuthentication,
 			response:        sdk.Role{},
@@ -1085,7 +1084,7 @@ func TestViewClietRole(t *testing.T) {
 			desc:     "view domain role with empty token",
 			token:    "",
 			domainID: domainID,
-			roleName: role.Name,
+			roleID:   role.ID,
 			svcRes:   roles.Role{},
 			response: sdk.Role{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
@@ -1094,7 +1093,7 @@ func TestViewClietRole(t *testing.T) {
 			desc:     "view domain role with invalid domain id",
 			token:    validToken,
 			domainID: testsutil.GenerateUUID(t),
-			roleName: role.Name,
+			roleID:   role.ID,
 			svcRes:   roles.Role{},
 			svcErr:   svcerr.ErrAuthorization,
 			response: sdk.Role{},
@@ -1104,17 +1103,17 @@ func TestViewClietRole(t *testing.T) {
 			desc:     "view domain role with empty domain id",
 			token:    validToken,
 			domainID: "",
-			roleName: role.Name,
+			roleID:   role.ID,
 			svcRes:   roles.Role{},
 			svcErr:   nil,
 			response: sdk.Role{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingDomainID, http.StatusBadRequest),
 		},
 		{
-			desc:     "view domain role with invalid role name",
+			desc:     "view domain role with invalid role id",
 			token:    validToken,
 			domainID: domainID,
-			roleName: invalid,
+			roleID:   invalid,
 			svcRes:   roles.Role{},
 			svcErr:   svcerr.ErrAuthorization,
 			response: sdk.Role{},
@@ -1128,12 +1127,12 @@ func TestViewClietRole(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := csvc.On("RetrieveRole", mock.Anything, tc.session, tc.domainID, tc.roleName).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.DomainRole(tc.domainID, tc.roleName, tc.token)
+			svcCall := csvc.On("RetrieveRole", mock.Anything, tc.session, tc.domainID, tc.roleID).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.DomainRole(tc.domainID, tc.roleID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "RetrieveRole", mock.Anything, tc.session, tc.domainID, tc.roleName)
+				ok := svcCall.Parent.AssertCalled(t, "RetrieveRole", mock.Anything, tc.session, tc.domainID, tc.roleID)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1151,7 +1150,7 @@ func TestUpdateDomainRole(t *testing.T) {
 	}
 	mgsdk := sdk.NewSDK(conf)
 
-	roleName := roleName
+	roleID := testsutil.GenerateUUID(t)
 	newRoleName := "newTest"
 	userID := testsutil.GenerateUUID(t)
 	createdAt := time.Now().UTC().Add(-time.Hour)
@@ -1170,7 +1169,7 @@ func TestUpdateDomainRole(t *testing.T) {
 		token           string
 		session         smqauthn.Session
 		domainID        string
-		roleName        string
+		roleID          string
 		newRoleName     string
 		svcRes          roles.Role
 		svcErr          error
@@ -1182,7 +1181,7 @@ func TestUpdateDomainRole(t *testing.T) {
 			desc:        "update domain role successfully",
 			token:       validToken,
 			domainID:    domainID,
-			roleName:    roleName,
+			roleID:      roleID,
 			newRoleName: newRoleName,
 			svcRes:      role,
 			svcErr:      nil,
@@ -1193,7 +1192,7 @@ func TestUpdateDomainRole(t *testing.T) {
 			desc:            "update domain role with invalid token",
 			token:           invalidToken,
 			domainID:        domainID,
-			roleName:        roleName,
+			roleID:          roleID,
 			newRoleName:     newRoleName,
 			svcRes:          roles.Role{},
 			authenticateErr: svcerr.ErrAuthentication,
@@ -1204,7 +1203,7 @@ func TestUpdateDomainRole(t *testing.T) {
 			desc:        "update domain role with empty token",
 			token:       "",
 			domainID:    domainID,
-			roleName:    roleName,
+			roleID:      roleID,
 			newRoleName: newRoleName,
 			svcRes:      roles.Role{},
 			response:    sdk.Role{},
@@ -1214,7 +1213,7 @@ func TestUpdateDomainRole(t *testing.T) {
 			desc:        "update domain role with invalid domain id",
 			token:       validToken,
 			domainID:    testsutil.GenerateUUID(t),
-			roleName:    roleName,
+			roleID:      roleID,
 			newRoleName: newRoleName,
 			svcRes:      roles.Role{},
 			svcErr:      svcerr.ErrAuthorization,
@@ -1225,7 +1224,7 @@ func TestUpdateDomainRole(t *testing.T) {
 			desc:        "update domain role with empty domain id",
 			token:       validToken,
 			domainID:    "",
-			roleName:    roleName,
+			roleID:      roleID,
 			newRoleName: newRoleName,
 			svcRes:      roles.Role{},
 			svcErr:      nil,
@@ -1240,12 +1239,12 @@ func TestUpdateDomainRole(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := csvc.On("UpdateRoleName", mock.Anything, tc.session, tc.domainID, tc.roleName, tc.newRoleName).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateDomainRole(tc.domainID, tc.roleName, tc.newRoleName, tc.token)
+			svcCall := csvc.On("UpdateRoleName", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.newRoleName).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.UpdateDomainRole(tc.domainID, tc.roleID, tc.newRoleName, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "UpdateRoleName", mock.Anything, tc.session, tc.domainID, tc.roleName, tc.newRoleName)
+				ok := svcCall.Parent.AssertCalled(t, "UpdateRoleName", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.newRoleName)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1263,14 +1262,13 @@ func TestDeleteDomainRole(t *testing.T) {
 	}
 	mgsdk := sdk.NewSDK(conf)
 
-	roleName := roleName
-
+	roleID := testsutil.GenerateUUID(t)
 	cases := []struct {
 		desc            string
 		token           string
 		session         smqauthn.Session
 		domainID        string
-		roleName        string
+		roleID          string
 		svcErr          error
 		authenticateErr error
 		err             errors.SDKError
@@ -1279,7 +1277,7 @@ func TestDeleteDomainRole(t *testing.T) {
 			desc:     "delete domain role successfully",
 			token:    validToken,
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			svcErr:   nil,
 			err:      nil,
 		},
@@ -1287,7 +1285,7 @@ func TestDeleteDomainRole(t *testing.T) {
 			desc:            "delete domain role with invalid token",
 			token:           invalidToken,
 			domainID:        domainID,
-			roleName:        roleName,
+			roleID:          roleID,
 			authenticateErr: svcerr.ErrAuthentication,
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
@@ -1295,14 +1293,14 @@ func TestDeleteDomainRole(t *testing.T) {
 			desc:     "delete domain role with empty token",
 			token:    "",
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
 			desc:     "delete domain role with invalid domain id",
 			token:    validToken,
 			domainID: testsutil.GenerateUUID(t),
-			roleName: roleName,
+			roleID:   roleID,
 			svcErr:   svcerr.ErrAuthorization,
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
@@ -1310,14 +1308,14 @@ func TestDeleteDomainRole(t *testing.T) {
 			desc:     "delete domain role with empty domain id",
 			token:    validToken,
 			domainID: "",
-			roleName: roleName,
+			roleID:   roleID,
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingDomainID, http.StatusBadRequest),
 		},
 		{
-			desc:     "delete domain role with invalid role name",
+			desc:     "delete domain role with invalid role id",
 			token:    validToken,
 			domainID: domainID,
-			roleName: invalid,
+			roleID:   invalid,
 			svcErr:   svcerr.ErrAuthorization,
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
@@ -1329,11 +1327,11 @@ func TestDeleteDomainRole(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := csvc.On("RemoveRole", mock.Anything, tc.session, tc.domainID, tc.roleName).Return(tc.svcErr)
-			err := mgsdk.DeleteDomainRole(tc.domainID, tc.roleName, tc.token)
+			svcCall := csvc.On("RemoveRole", mock.Anything, tc.session, tc.domainID, tc.roleID).Return(tc.svcErr)
+			err := mgsdk.DeleteDomainRole(tc.domainID, tc.roleID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "RemoveRole", mock.Anything, tc.session, tc.domainID, tc.roleName)
+				ok := svcCall.Parent.AssertCalled(t, "RemoveRole", mock.Anything, tc.session, tc.domainID, tc.roleID)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1351,7 +1349,7 @@ func TestAddDomainRoleActions(t *testing.T) {
 	}
 	mgsdk := sdk.NewSDK(conf)
 
-	roleName := roleName
+	roleID := testsutil.GenerateUUID(t)
 	actions := []string{"create", "update"}
 
 	cases := []struct {
@@ -1359,7 +1357,7 @@ func TestAddDomainRoleActions(t *testing.T) {
 		token           string
 		session         smqauthn.Session
 		domainID        string
-		roleName        string
+		roleID          string
 		actions         []string
 		svcRes          []string
 		svcErr          error
@@ -1371,7 +1369,7 @@ func TestAddDomainRoleActions(t *testing.T) {
 			desc:     "add domain role actions successfully",
 			token:    validToken,
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			actions:  actions,
 			svcRes:   actions,
 			svcErr:   nil,
@@ -1382,7 +1380,7 @@ func TestAddDomainRoleActions(t *testing.T) {
 			desc:            "add domain role actions with invalid token",
 			token:           invalidToken,
 			domainID:        domainID,
-			roleName:        roleName,
+			roleID:          roleID,
 			actions:         actions,
 			authenticateErr: svcerr.ErrAuthentication,
 			response:        []string{},
@@ -1392,7 +1390,7 @@ func TestAddDomainRoleActions(t *testing.T) {
 			desc:     "add domain role actions with empty token",
 			token:    "",
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			actions:  actions,
 			response: []string{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
@@ -1401,7 +1399,7 @@ func TestAddDomainRoleActions(t *testing.T) {
 			desc:     "add domain role actions with invalid domain id",
 			token:    validToken,
 			domainID: testsutil.GenerateUUID(t),
-			roleName: roleName,
+			roleID:   roleID,
 			actions:  actions,
 			svcErr:   svcerr.ErrAuthorization,
 			response: []string{},
@@ -1411,16 +1409,16 @@ func TestAddDomainRoleActions(t *testing.T) {
 			desc:     "add domain role actions with empty domain id",
 			token:    validToken,
 			domainID: "",
-			roleName: roleName,
+			roleID:   roleID,
 			actions:  actions,
 			response: []string{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingDomainID, http.StatusBadRequest),
 		},
 		{
-			desc:     "add domain role actions with invalid role name",
+			desc:     "add domain role actions with invalid role id",
 			token:    validToken,
 			domainID: domainID,
-			roleName: invalid,
+			roleID:   invalid,
 			actions:  actions,
 			svcErr:   svcerr.ErrAuthorization,
 			response: []string{},
@@ -1430,7 +1428,7 @@ func TestAddDomainRoleActions(t *testing.T) {
 			desc:     "add domain role actions with empty actions",
 			token:    validToken,
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			actions:  []string{},
 			svcErr:   nil,
 			response: []string{},
@@ -1444,12 +1442,12 @@ func TestAddDomainRoleActions(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := csvc.On("RoleAddActions", mock.Anything, tc.session, tc.domainID, tc.roleName, tc.actions).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.AddDomainRoleActions(tc.domainID, tc.roleName, tc.actions, tc.token)
+			svcCall := csvc.On("RoleAddActions", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.actions).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.AddDomainRoleActions(tc.domainID, tc.roleID, tc.actions, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "RoleAddActions", mock.Anything, tc.session, tc.domainID, tc.roleName, tc.actions)
+				ok := svcCall.Parent.AssertCalled(t, "RoleAddActions", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.actions)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1467,7 +1465,7 @@ func TestListDomainRoleActions(t *testing.T) {
 	}
 	mgsdk := sdk.NewSDK(conf)
 
-	roleName := roleName
+	roleID := testsutil.GenerateUUID(t)
 	actions := []string{"create", "update"}
 
 	cases := []struct {
@@ -1475,7 +1473,7 @@ func TestListDomainRoleActions(t *testing.T) {
 		token           string
 		session         smqauthn.Session
 		domainID        string
-		roleName        string
+		roleID          string
 		svcRes          []string
 		svcErr          error
 		authenticateErr error
@@ -1486,7 +1484,7 @@ func TestListDomainRoleActions(t *testing.T) {
 			desc:     "list domain role actions successfully",
 			token:    validToken,
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			svcRes:   actions,
 			svcErr:   nil,
 			response: actions,
@@ -1496,7 +1494,7 @@ func TestListDomainRoleActions(t *testing.T) {
 			desc:            "list domain role actions with invalid token",
 			token:           invalidToken,
 			domainID:        domainID,
-			roleName:        roleName,
+			roleID:          roleID,
 			authenticateErr: svcerr.ErrAuthentication,
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
@@ -1504,14 +1502,14 @@ func TestListDomainRoleActions(t *testing.T) {
 			desc:     "list domain role actions with empty token",
 			token:    "",
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
 			desc:     "list domain role actions with invalid domain id",
 			token:    validToken,
 			domainID: testsutil.GenerateUUID(t),
-			roleName: roleName,
+			roleID:   roleID,
 			svcErr:   svcerr.ErrAuthorization,
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
@@ -1519,24 +1517,24 @@ func TestListDomainRoleActions(t *testing.T) {
 			desc:     "list domain role actions with empty domain id",
 			token:    validToken,
 			domainID: "",
-			roleName: roleName,
+			roleID:   roleID,
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingDomainID, http.StatusBadRequest),
 		},
 		{
-			desc:     "list domain role actions with invalid role name",
+			desc:     "list domain role actions with invalid role id",
 			token:    validToken,
 			domainID: domainID,
-			roleName: invalid,
+			roleID:   invalid,
 			svcErr:   svcerr.ErrAuthorization,
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
-			desc:     "list domain role actions with empty role name",
+			desc:     "list domain role actions with empty role id",
 			token:    validToken,
 			domainID: domainID,
-			roleName: "",
+			roleID:   "",
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleName), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleID), http.StatusBadRequest),
 		},
 	}
 
@@ -1546,12 +1544,12 @@ func TestListDomainRoleActions(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := csvc.On("RoleListActions", mock.Anything, tc.session, tc.domainID, tc.roleName).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.DomainRoleActions(tc.domainID, tc.roleName, tc.token)
+			svcCall := csvc.On("RoleListActions", mock.Anything, tc.session, tc.domainID, tc.roleID).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.DomainRoleActions(tc.domainID, tc.roleID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "RoleListActions", mock.Anything, tc.session, tc.domainID, tc.roleName)
+				ok := svcCall.Parent.AssertCalled(t, "RoleListActions", mock.Anything, tc.session, tc.domainID, tc.roleID)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1569,7 +1567,7 @@ func TestRemoveDomainRoleActions(t *testing.T) {
 	}
 	mgsdk := sdk.NewSDK(conf)
 
-	roleName := roleName
+	roleID := testsutil.GenerateUUID(t)
 	actions := []string{"create", "update"}
 
 	cases := []struct {
@@ -1577,7 +1575,7 @@ func TestRemoveDomainRoleActions(t *testing.T) {
 		token           string
 		session         smqauthn.Session
 		domainID        string
-		roleName        string
+		roleID          string
 		actions         []string
 		svcErr          error
 		authenticateErr error
@@ -1587,7 +1585,7 @@ func TestRemoveDomainRoleActions(t *testing.T) {
 			desc:     "remove domain role actions successfully",
 			token:    validToken,
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			actions:  actions,
 			svcErr:   nil,
 			err:      nil,
@@ -1596,7 +1594,7 @@ func TestRemoveDomainRoleActions(t *testing.T) {
 			desc:            "remove domain role actions with invalid token",
 			token:           invalidToken,
 			domainID:        domainID,
-			roleName:        roleName,
+			roleID:          roleID,
 			actions:         actions,
 			authenticateErr: svcerr.ErrAuthentication,
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
@@ -1605,7 +1603,7 @@ func TestRemoveDomainRoleActions(t *testing.T) {
 			desc:     "remove domain role actions with empty token",
 			token:    "",
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			actions:  actions,
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
@@ -1613,7 +1611,7 @@ func TestRemoveDomainRoleActions(t *testing.T) {
 			desc:     "remove domain role actions with invalid domain id",
 			token:    validToken,
 			domainID: testsutil.GenerateUUID(t),
-			roleName: roleName,
+			roleID:   roleID,
 			actions:  actions,
 			svcErr:   svcerr.ErrAuthorization,
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
@@ -1622,15 +1620,15 @@ func TestRemoveDomainRoleActions(t *testing.T) {
 			desc:     "remove domain role actions with empty domain id",
 			token:    validToken,
 			domainID: "",
-			roleName: roleName,
+			roleID:   roleID,
 			actions:  actions,
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingDomainID, http.StatusBadRequest),
 		},
 		{
-			desc:     "remove domain role actions with invalid role name",
+			desc:     "remove domain role actions with invalid role id",
 			token:    validToken,
 			domainID: domainID,
-			roleName: invalid,
+			roleID:   invalid,
 			actions:  actions,
 			svcErr:   svcerr.ErrAuthorization,
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
@@ -1639,7 +1637,7 @@ func TestRemoveDomainRoleActions(t *testing.T) {
 			desc:     "remove domain role actions with empty actions",
 			token:    validToken,
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			actions:  []string{},
 			svcErr:   nil,
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPolicyEntityType), http.StatusBadRequest),
@@ -1652,11 +1650,11 @@ func TestRemoveDomainRoleActions(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := csvc.On("RoleRemoveActions", mock.Anything, tc.session, tc.domainID, tc.roleName, tc.actions).Return(tc.svcErr)
-			err := mgsdk.RemoveDomainRoleActions(tc.domainID, tc.roleName, tc.actions, tc.token)
+			svcCall := csvc.On("RoleRemoveActions", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.actions).Return(tc.svcErr)
+			err := mgsdk.RemoveDomainRoleActions(tc.domainID, tc.roleID, tc.actions, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveActions", mock.Anything, tc.session, tc.domainID, tc.roleName, tc.actions)
+				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveActions", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.actions)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1674,14 +1672,14 @@ func TestRemoveAllDomainRoleActions(t *testing.T) {
 	}
 	mgsdk := sdk.NewSDK(conf)
 
-	roleName := roleName
+	roleID := testsutil.GenerateUUID(t)
 
 	cases := []struct {
 		desc            string
 		token           string
 		session         smqauthn.Session
 		domainID        string
-		roleName        string
+		roleID          string
 		svcErr          error
 		authenticateErr error
 		err             errors.SDKError
@@ -1690,7 +1688,7 @@ func TestRemoveAllDomainRoleActions(t *testing.T) {
 			desc:     "remove all domain role actions successfully",
 			token:    validToken,
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			svcErr:   nil,
 			err:      nil,
 		},
@@ -1698,7 +1696,7 @@ func TestRemoveAllDomainRoleActions(t *testing.T) {
 			desc:            "remove all domain role actions with invalid token",
 			token:           invalidToken,
 			domainID:        domainID,
-			roleName:        roleName,
+			roleID:          roleID,
 			authenticateErr: svcerr.ErrAuthentication,
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
@@ -1706,14 +1704,14 @@ func TestRemoveAllDomainRoleActions(t *testing.T) {
 			desc:     "remove all domain role actions with empty token",
 			token:    "",
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
 			desc:     "remove all domain role actions with invalid domain id",
 			token:    validToken,
 			domainID: testsutil.GenerateUUID(t),
-			roleName: roleName,
+			roleID:   roleID,
 			svcErr:   svcerr.ErrAuthorization,
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
@@ -1721,24 +1719,24 @@ func TestRemoveAllDomainRoleActions(t *testing.T) {
 			desc:     "remove all domain role actions with empty domain id",
 			token:    validToken,
 			domainID: "",
-			roleName: roleName,
+			roleID:   roleID,
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingDomainID, http.StatusBadRequest),
 		},
 		{
-			desc:     "remove all domain role actions with invalid role name",
+			desc:     "remove all domain role actions with invalid role id",
 			token:    validToken,
 			domainID: domainID,
-			roleName: invalid,
+			roleID:   invalid,
 			svcErr:   svcerr.ErrAuthorization,
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
-			desc:     "remove all domain role actions with empty role name",
+			desc:     "remove all domain role actions with empty role id",
 			token:    validToken,
 			domainID: domainID,
-			roleName: "",
+			roleID:   "",
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleName), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleID), http.StatusBadRequest),
 		},
 	}
 
@@ -1748,11 +1746,11 @@ func TestRemoveAllDomainRoleActions(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := csvc.On("RoleRemoveAllActions", mock.Anything, tc.session, tc.domainID, tc.roleName).Return(tc.svcErr)
-			err := mgsdk.RemoveAllDomainRoleActions(tc.domainID, tc.roleName, tc.token)
+			svcCall := csvc.On("RoleRemoveAllActions", mock.Anything, tc.session, tc.domainID, tc.roleID).Return(tc.svcErr)
+			err := mgsdk.RemoveAllDomainRoleActions(tc.domainID, tc.roleID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveAllActions", mock.Anything, tc.session, tc.domainID, tc.roleName)
+				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveAllActions", mock.Anything, tc.session, tc.domainID, tc.roleID)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1770,7 +1768,7 @@ func TestAddDomainRoleMembers(t *testing.T) {
 	}
 	mgsdk := sdk.NewSDK(conf)
 
-	roleName := roleName
+	roleID := testsutil.GenerateUUID(t)
 	members := []string{"user1", "user2"}
 
 	cases := []struct {
@@ -1778,7 +1776,7 @@ func TestAddDomainRoleMembers(t *testing.T) {
 		token           string
 		session         smqauthn.Session
 		domainID        string
-		roleName        string
+		roleID          string
 		members         []string
 		svcRes          []string
 		svcErr          error
@@ -1790,7 +1788,7 @@ func TestAddDomainRoleMembers(t *testing.T) {
 			desc:     "add domain role members successfully",
 			token:    validToken,
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			members:  members,
 			svcRes:   members,
 			svcErr:   nil,
@@ -1801,7 +1799,7 @@ func TestAddDomainRoleMembers(t *testing.T) {
 			desc:            "add domain role members with invalid token",
 			token:           invalidToken,
 			domainID:        domainID,
-			roleName:        roleName,
+			roleID:          roleID,
 			members:         members,
 			authenticateErr: svcerr.ErrAuthentication,
 			response:        []string{},
@@ -1811,7 +1809,7 @@ func TestAddDomainRoleMembers(t *testing.T) {
 			desc:     "add domain role members with empty token",
 			token:    "",
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			members:  members,
 			response: []string{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
@@ -1820,7 +1818,7 @@ func TestAddDomainRoleMembers(t *testing.T) {
 			desc:     "add domain role members with invalid domain id",
 			token:    validToken,
 			domainID: testsutil.GenerateUUID(t),
-			roleName: roleName,
+			roleID:   roleID,
 			members:  members,
 			svcErr:   svcerr.ErrAuthorization,
 			response: []string{},
@@ -1830,16 +1828,16 @@ func TestAddDomainRoleMembers(t *testing.T) {
 			desc:     "add domain role members with empty domain id",
 			token:    validToken,
 			domainID: "",
-			roleName: roleName,
+			roleID:   roleID,
 			members:  members,
 			response: []string{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingDomainID, http.StatusBadRequest),
 		},
 		{
-			desc:     "add domain role members with invalid role name",
+			desc:     "add domain role members with invalid role id",
 			token:    validToken,
 			domainID: domainID,
-			roleName: invalid,
+			roleID:   invalid,
 			members:  members,
 			svcErr:   svcerr.ErrAuthorization,
 			response: []string{},
@@ -1849,7 +1847,7 @@ func TestAddDomainRoleMembers(t *testing.T) {
 			desc:     "add domain role members with empty members",
 			token:    validToken,
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			members:  []string{},
 			svcErr:   nil,
 			response: []string{},
@@ -1863,12 +1861,12 @@ func TestAddDomainRoleMembers(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := csvc.On("RoleAddMembers", mock.Anything, tc.session, tc.domainID, tc.roleName, tc.members).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.AddDomainRoleMembers(tc.domainID, tc.roleName, tc.members, tc.token)
+			svcCall := csvc.On("RoleAddMembers", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.members).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.AddDomainRoleMembers(tc.domainID, tc.roleID, tc.members, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "RoleAddMembers", mock.Anything, tc.session, tc.domainID, tc.roleName, tc.members)
+				ok := svcCall.Parent.AssertCalled(t, "RoleAddMembers", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.members)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1886,7 +1884,7 @@ func TestListDomainRoleMembers(t *testing.T) {
 	}
 	mgsdk := sdk.NewSDK(conf)
 
-	roleName := roleName
+	roleID := testsutil.GenerateUUID(t)
 	members := []string{"user1", "user2"}
 
 	cases := []struct {
@@ -1894,7 +1892,7 @@ func TestListDomainRoleMembers(t *testing.T) {
 		token           string
 		session         smqauthn.Session
 		domainID        string
-		roleName        string
+		roleID          string
 		pageMeta        sdk.PageMetadata
 		svcRes          roles.MembersPage
 		svcErr          error
@@ -1910,7 +1908,7 @@ func TestListDomainRoleMembers(t *testing.T) {
 				Offset: 0,
 				Limit:  5,
 			},
-			roleName: roleName,
+			roleID: roleID,
 			svcRes: roles.MembersPage{
 				Total:   2,
 				Offset:  0,
@@ -1934,7 +1932,7 @@ func TestListDomainRoleMembers(t *testing.T) {
 				Offset: 0,
 				Limit:  5,
 			},
-			roleName:        roleName,
+			roleID:          roleID,
 			authenticateErr: svcerr.ErrAuthentication,
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
@@ -1946,8 +1944,8 @@ func TestListDomainRoleMembers(t *testing.T) {
 				Offset: 0,
 				Limit:  5,
 			},
-			roleName: roleName,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+			roleID: roleID,
+			err:    errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
 			desc:     "list domain role members with invalid domain id",
@@ -1957,9 +1955,9 @@ func TestListDomainRoleMembers(t *testing.T) {
 				Offset: 0,
 				Limit:  5,
 			},
-			roleName: roleName,
-			svcErr:   svcerr.ErrAuthorization,
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			roleID: roleID,
+			svcErr: svcerr.ErrAuthorization,
+			err:    errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
 			desc:  "list domain role members with empty domain id",
@@ -1969,32 +1967,32 @@ func TestListDomainRoleMembers(t *testing.T) {
 				Limit:  5,
 			},
 			domainID: "",
-			roleName: roleName,
+			roleID:   roleID,
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingDomainID, http.StatusBadRequest),
 		},
 		{
-			desc:     "list domain role members with invalid role name",
+			desc:     "list domain role members with invalid role id",
 			token:    validToken,
 			domainID: domainID,
 			pageMeta: sdk.PageMetadata{
 				Offset: 0,
 				Limit:  5,
 			},
-			roleName: invalid,
-			svcErr:   svcerr.ErrAuthorization,
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			roleID: invalid,
+			svcErr: svcerr.ErrAuthorization,
+			err:    errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
-			desc:     "list domain role members with empty role name",
+			desc:     "list domain role members with empty role id",
 			token:    validToken,
 			domainID: domainID,
 			pageMeta: sdk.PageMetadata{
 				Offset: 0,
 				Limit:  5,
 			},
-			roleName: "",
-			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleName), http.StatusBadRequest),
+			roleID: "",
+			svcErr: nil,
+			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleID), http.StatusBadRequest),
 		},
 	}
 
@@ -2004,12 +2002,12 @@ func TestListDomainRoleMembers(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := csvc.On("RoleListMembers", mock.Anything, tc.session, tc.domainID, tc.roleName, tc.pageMeta.Limit, tc.pageMeta.Offset).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.DomainRoleMembers(tc.domainID, tc.roleName, tc.pageMeta, tc.token)
+			svcCall := csvc.On("RoleListMembers", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.pageMeta.Limit, tc.pageMeta.Offset).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.DomainRoleMembers(tc.domainID, tc.roleID, tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "RoleListMembers", mock.Anything, tc.session, tc.domainID, tc.roleName, tc.pageMeta.Limit, tc.pageMeta.Offset)
+				ok := svcCall.Parent.AssertCalled(t, "RoleListMembers", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.pageMeta.Limit, tc.pageMeta.Offset)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -2027,7 +2025,7 @@ func TestRemoveDomainRoleMembers(t *testing.T) {
 	}
 	mgsdk := sdk.NewSDK(conf)
 
-	roleName := roleName
+	roleID := testsutil.GenerateUUID(t)
 	members := []string{"user1", "user2"}
 
 	cases := []struct {
@@ -2035,7 +2033,7 @@ func TestRemoveDomainRoleMembers(t *testing.T) {
 		token           string
 		session         smqauthn.Session
 		domainID        string
-		roleName        string
+		roleID          string
 		members         []string
 		svcErr          error
 		authenticateErr error
@@ -2045,7 +2043,7 @@ func TestRemoveDomainRoleMembers(t *testing.T) {
 			desc:     "remove domain role members successfully",
 			token:    validToken,
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			members:  members,
 			svcErr:   nil,
 			err:      nil,
@@ -2054,7 +2052,7 @@ func TestRemoveDomainRoleMembers(t *testing.T) {
 			desc:            "remove domain role members with invalid token",
 			token:           invalidToken,
 			domainID:        domainID,
-			roleName:        roleName,
+			roleID:          roleID,
 			members:         members,
 			authenticateErr: svcerr.ErrAuthentication,
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
@@ -2063,7 +2061,7 @@ func TestRemoveDomainRoleMembers(t *testing.T) {
 			desc:     "remove domain role members with empty token",
 			token:    "",
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			members:  members,
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
@@ -2071,7 +2069,7 @@ func TestRemoveDomainRoleMembers(t *testing.T) {
 			desc:     "remove domain role members with invalid domain id",
 			token:    validToken,
 			domainID: testsutil.GenerateUUID(t),
-			roleName: roleName,
+			roleID:   roleID,
 			members:  members,
 			svcErr:   svcerr.ErrAuthorization,
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
@@ -2080,15 +2078,15 @@ func TestRemoveDomainRoleMembers(t *testing.T) {
 			desc:     "remove domain role members with empty domain id",
 			token:    validToken,
 			domainID: "",
-			roleName: roleName,
+			roleID:   roleID,
 			members:  members,
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingDomainID, http.StatusBadRequest),
 		},
 		{
-			desc:     "remove domain role members with invalid role name",
+			desc:     "remove domain role members with invalid role id",
 			token:    validToken,
 			domainID: domainID,
-			roleName: invalid,
+			roleID:   invalid,
 			members:  members,
 			svcErr:   svcerr.ErrAuthorization,
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
@@ -2097,7 +2095,7 @@ func TestRemoveDomainRoleMembers(t *testing.T) {
 			desc:     "remove domain role members with empty members",
 			token:    validToken,
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			members:  []string{},
 			svcErr:   nil,
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleMembers), http.StatusBadRequest),
@@ -2110,11 +2108,11 @@ func TestRemoveDomainRoleMembers(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := csvc.On("RoleRemoveMembers", mock.Anything, tc.session, tc.domainID, tc.roleName, tc.members).Return(tc.svcErr)
-			err := mgsdk.RemoveDomainRoleMembers(tc.domainID, tc.roleName, tc.members, tc.token)
+			svcCall := csvc.On("RoleRemoveMembers", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.members).Return(tc.svcErr)
+			err := mgsdk.RemoveDomainRoleMembers(tc.domainID, tc.roleID, tc.members, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveMembers", mock.Anything, tc.session, tc.domainID, tc.roleName, tc.members)
+				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveMembers", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.members)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -2132,14 +2130,14 @@ func TestRemoveAllDomainRoleMembers(t *testing.T) {
 	}
 	mgsdk := sdk.NewSDK(conf)
 
-	roleName := roleName
+	roleID := testsutil.GenerateUUID(t)
 
 	cases := []struct {
 		desc            string
 		token           string
 		session         smqauthn.Session
 		domainID        string
-		roleName        string
+		roleID          string
 		svcErr          error
 		authenticateErr error
 		err             errors.SDKError
@@ -2148,7 +2146,7 @@ func TestRemoveAllDomainRoleMembers(t *testing.T) {
 			desc:     "remove all domain role members successfully",
 			token:    validToken,
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			svcErr:   nil,
 			err:      nil,
 		},
@@ -2156,7 +2154,7 @@ func TestRemoveAllDomainRoleMembers(t *testing.T) {
 			desc:            "remove all domain role members with invalid token",
 			token:           invalidToken,
 			domainID:        domainID,
-			roleName:        roleName,
+			roleID:          roleID,
 			authenticateErr: svcerr.ErrAuthentication,
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
@@ -2164,14 +2162,14 @@ func TestRemoveAllDomainRoleMembers(t *testing.T) {
 			desc:     "remove all domain role members with empty token",
 			token:    "",
 			domainID: domainID,
-			roleName: roleName,
+			roleID:   roleID,
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
 			desc:     "remove all domain role members with invalid domain id",
 			token:    validToken,
 			domainID: testsutil.GenerateUUID(t),
-			roleName: roleName,
+			roleID:   roleID,
 			svcErr:   svcerr.ErrAuthorization,
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
@@ -2179,24 +2177,24 @@ func TestRemoveAllDomainRoleMembers(t *testing.T) {
 			desc:     "remove all domain role members with empty domain id",
 			token:    validToken,
 			domainID: "",
-			roleName: roleName,
+			roleID:   roleID,
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingDomainID, http.StatusBadRequest),
 		},
 		{
-			desc:     "remove all domain role members with invalid role name",
+			desc:     "remove all domain role members with invalid role id",
 			token:    validToken,
 			domainID: domainID,
-			roleName: invalid,
+			roleID:   invalid,
 			svcErr:   svcerr.ErrAuthorization,
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 		},
 		{
-			desc:     "remove all domain role members with empty role name",
+			desc:     "remove all domain role members with empty role id",
 			token:    validToken,
 			domainID: domainID,
-			roleName: "",
+			roleID:   "",
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleName), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleID), http.StatusBadRequest),
 		},
 	}
 
@@ -2206,11 +2204,11 @@ func TestRemoveAllDomainRoleMembers(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: tc.domainID + "_" + validID, UserID: validID, DomainID: tc.domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := csvc.On("RoleRemoveAllMembers", mock.Anything, tc.session, tc.domainID, tc.roleName).Return(tc.svcErr)
-			err := mgsdk.RemoveAllDomainRoleMembers(tc.domainID, tc.roleName, tc.token)
+			svcCall := csvc.On("RoleRemoveAllMembers", mock.Anything, tc.session, tc.domainID, tc.roleID).Return(tc.svcErr)
+			err := mgsdk.RemoveAllDomainRoleMembers(tc.domainID, tc.roleID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveAllMembers", mock.Anything, tc.session, tc.domainID, tc.roleName)
+				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveAllMembers", mock.Anything, tc.session, tc.domainID, tc.roleID)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
