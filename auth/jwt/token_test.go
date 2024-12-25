@@ -105,6 +105,18 @@ func TestIssue(t *testing.T) {
 			err: nil,
 		},
 		{
+			desc: "issue token without type",
+			key: auth.Key{
+				ID:       testsutil.GenerateUUID(t),
+				Type:     auth.KeyType(auth.InvitationKey + 1),
+				Subject:  testsutil.GenerateUUID(t),
+				User:     testsutil.GenerateUUID(t),
+				Domain:   testsutil.GenerateUUID(t),
+				IssuedAt: time.Now().Add(-10 * time.Second).Round(time.Second),
+			},
+			err: nil,
+		},
+		{
 			desc: "issue token without a domain and subject",
 			key: auth.Key{
 				ID:        testsutil.GenerateUUID(t),
@@ -154,6 +166,11 @@ func TestParse(t *testing.T) {
 	emptySubjectKey := key()
 	emptySubjectKey.Subject = ""
 	emptySubjectToken, err := tokenizer.Issue(emptySubjectKey)
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+
+	emptyTypeKey := key()
+	emptyTypeKey.Type = auth.KeyType(auth.InvitationKey + 1)
+	emptyTypeToken, err := tokenizer.Issue(emptyTypeKey)
 	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
 
 	emptyKey := key()
@@ -217,6 +234,12 @@ func TestParse(t *testing.T) {
 			key:   emptySubjectKey,
 			token: emptySubjectToken,
 			err:   nil,
+		},
+		{
+			desc:  "parse token with empty type",
+			key:   emptyTypeKey,
+			token: emptyTypeToken,
+			err:   errors.ErrAuthentication,
 		},
 		{
 			desc:  "parse token with empty domain and subject",

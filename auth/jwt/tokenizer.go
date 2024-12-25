@@ -17,7 +17,10 @@ import (
 )
 
 var (
+	// errInvalidIssuer is returned when the issuer is not supermq.auth.
 	errInvalidIssuer = errors.New("invalid token issuer value")
+	// errInvalidType is returned when there is no type field.
+	errInvalidType = errors.New("invalid token type")
 	// errJWTExpiryKey is used to check if the token is expired.
 	errJWTExpiryKey = errors.New(`"exp" not satisfied`)
 	// ErrSignJWT indicates an error in signing jwt token.
@@ -127,11 +130,15 @@ func toKey(tkn jwt.Token) (auth.Key, error) {
 
 	tType, ok := tkn.Get(tokenType)
 	if !ok {
-		return auth.Key{}, err
+		return auth.Key{}, errInvalidType
 	}
 	ktype, err := strconv.ParseInt(fmt.Sprintf("%v", tType), 10, 64)
 	if err != nil {
 		return auth.Key{}, err
+	}
+	kt := auth.KeyType(ktype)
+	if !kt.Validate() {
+		return auth.Key{}, errInvalidType
 	}
 
 	key.ID = tkn.JwtID()

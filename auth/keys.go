@@ -36,6 +36,10 @@ const (
 	InvitationKey
 )
 
+func (kt KeyType) Validate() bool {
+	return AccessKey <= kt && kt <= InvitationKey
+}
+
 func (kt KeyType) String() string {
 	switch kt {
 	case AccessKey:
