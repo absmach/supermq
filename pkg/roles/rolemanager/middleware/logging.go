@@ -31,7 +31,7 @@ func NewRoleManagerLoggingMiddleware(svcName string, svc roles.RoleManager, logg
 	}
 }
 
-func (lm *RoleManagerLoggingMiddleware) AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (ro roles.Role, err error) {
+func (lm *RoleManagerLoggingMiddleware) AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (ro roles.RoleProvision, err error) {
 	prefix := fmt.Sprintf("Add %s roles", lm.svcName)
 	defer func(begin time.Time) {
 		args := []any{

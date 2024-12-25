@@ -38,23 +38,23 @@ func (_m *Repository) AddConnections(ctx context.Context, conns []channels.Conne
 }
 
 // AddRoles provides a mock function with given fields: ctx, rps
-func (_m *Repository) AddRoles(ctx context.Context, rps []roles.RoleProvision) ([]roles.Role, error) {
+func (_m *Repository) AddRoles(ctx context.Context, rps []roles.RoleProvision) ([]roles.RoleProvision, error) {
 	ret := _m.Called(ctx, rps)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddRoles")
 	}
 
-	var r0 []roles.Role
+	var r0 []roles.RoleProvision
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, []roles.RoleProvision) ([]roles.Role, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []roles.RoleProvision) ([]roles.RoleProvision, error)); ok {
 		return rf(ctx, rps)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, []roles.RoleProvision) []roles.Role); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []roles.RoleProvision) []roles.RoleProvision); ok {
 		r0 = rf(ctx, rps)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]roles.Role)
+			r0 = ret.Get(0).([]roles.RoleProvision)
 		}
 	}
 

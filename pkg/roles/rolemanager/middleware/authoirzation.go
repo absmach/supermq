@@ -52,7 +52,7 @@ func (ram RoleManagerAuthorizationMiddleware) validate() error {
 	return nil
 }
 
-func (ram RoleManagerAuthorizationMiddleware) AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (roles.Role, error) {
+func (ram RoleManagerAuthorizationMiddleware) AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (roles.RoleProvision, error) {
 	if err := ram.authorize(ctx, roles.OpAddRole, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
@@ -61,7 +61,7 @@ func (ram RoleManagerAuthorizationMiddleware) AddRole(ctx context.Context, sessi
 		Object:      entityID,
 		ObjectType:  ram.entityType,
 	}); err != nil {
-		return roles.Role{}, err
+		return roles.RoleProvision{}, err
 	}
 	return ram.svc.AddRole(ctx, session, entityID, roleName, optionalActions, optionalMembers)
 }

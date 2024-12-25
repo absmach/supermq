@@ -160,10 +160,10 @@ func toRole(r dbRole) roles.Role {
 	}
 }
 
-func (repo *Repository) AddRoles(ctx context.Context, rps []roles.RoleProvision) ([]roles.Role, error) {
+func (repo *Repository) AddRoles(ctx context.Context, rps []roles.RoleProvision) ([]roles.RoleProvision, error) {
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return []roles.Role{}, errors.Wrap(repoerr.ErrCreateEntity, err)
+		return []roles.RoleProvision{}, errors.Wrap(repoerr.ErrCreateEntity, err)
 	}
 	defer func() {
 		if err != nil {
@@ -173,17 +173,13 @@ func (repo *Repository) AddRoles(ctx context.Context, rps []roles.RoleProvision)
 		}
 	}()
 
-	var retRoles []roles.Role
-
 	for _, rp := range rps {
 		q := fmt.Sprintf(`INSERT INTO %s_roles (id, name, entity_id, created_by, created_at, updated_by, updated_at)
         VALUES (:id, :name, :entity_id, :created_by, :created_at, :updated_by, :updated_at);`, repo.tableNamePrefix)
 
 		if _, err := tx.NamedExec(q, toDBRoles(rp.Role)); err != nil {
-			return []roles.Role{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+			return []roles.RoleProvision{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 		}
-
-		retRoles = append(retRoles, rp.Role)
 
 		if len(rp.OptionalActions) > 0 {
 			capq := fmt.Sprintf(`INSERT INTO %s_role_actions (role_id, action)
@@ -198,7 +194,7 @@ func (repo *Repository) AddRoles(ctx context.Context, rps []roles.RoleProvision)
 				})
 			}
 			if _, err := tx.NamedExec(capq, rCaps); err != nil {
-				return []roles.Role{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+				return []roles.RoleProvision{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 			}
 		}
 
@@ -215,16 +211,16 @@ func (repo *Repository) AddRoles(ctx context.Context, rps []roles.RoleProvision)
 				})
 			}
 			if _, err := tx.NamedExec(mq, rMems); err != nil {
-				return []roles.Role{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+				return []roles.RoleProvision{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 			}
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		return []roles.Role{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+		return []roles.RoleProvision{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
-	return retRoles, nil
+	return rps, nil
 }
 
 func (repo *Repository) RemoveRoles(ctx context.Context, roleIDs []string) error {

@@ -210,23 +210,24 @@ func (r ProvisionManageService) AddNewEntitiesRoles(ctx context.Context, domainI
 		}()
 	}
 
-	if _, err := r.repo.AddRoles(ctx, newRolesProvision); err != nil {
+	nprs, err := r.repo.AddRoles(ctx, newRolesProvision)
+	if err != nil {
 		return []RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 
-	return newRolesProvision, nil
+	return nprs, nil
 }
 
-func (r ProvisionManageService) AddRole(ctx context.Context, session authn.Session, entityID string, roleName string, optionalActions []string, optionalMembers []string) (retRole Role, retErr error) {
+func (r ProvisionManageService) AddRole(ctx context.Context, session authn.Session, entityID string, roleName string, optionalActions []string, optionalMembers []string) (retRoleProvision RoleProvision, retErr error) {
 	sid, err := r.sidProvider.ID()
 	if err != nil {
-		return Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+		return RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 
 	id := r.entityType + "_" + sid
 
 	if err := r.validateActions(toRolesActions(optionalActions)); err != nil {
-		return Role{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
+		return RoleProvision{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 	}
 
 	newRoleProvisions := []RoleProvision{
@@ -267,7 +268,7 @@ func (r ProvisionManageService) AddRole(ctx context.Context, session authn.Sessi
 
 	if len(prs) > 0 {
 		if err := r.policy.AddPolicies(ctx, prs); err != nil {
-			return Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+			return RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 		}
 
 		defer func() {
@@ -279,16 +280,16 @@ func (r ProvisionManageService) AddRole(ctx context.Context, session authn.Sessi
 		}()
 	}
 
-	newRoles, err := r.repo.AddRoles(ctx, newRoleProvisions)
+	nrps, err := r.repo.AddRoles(ctx, newRoleProvisions)
 	if err != nil {
-		return Role{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+		return RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 
-	if len(newRoles) == 0 {
-		return Role{}, svcerr.ErrCreateEntity
+	if len(nrps) == 0 {
+		return RoleProvision{}, svcerr.ErrCreateEntity
 	}
 
-	return newRoles[0], nil
+	return nrps[0], nil
 }
 
 func (r ProvisionManageService) RemoveRole(ctx context.Context, session authn.Session, entityID, roleID string) error {

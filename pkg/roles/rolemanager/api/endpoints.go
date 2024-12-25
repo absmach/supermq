@@ -27,11 +27,11 @@ func CreateRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		ro, err := svc.AddRole(ctx, session, req.entityID, req.RoleName, req.OptionalActions, req.OptionalMembers)
+		rp, err := svc.AddRole(ctx, session, req.entityID, req.RoleName, req.OptionalActions, req.OptionalMembers)
 		if err != nil {
 			return nil, err
 		}
-		return createRoleRes{Role: ro}, nil
+		return createRoleRes{RoleProvision: rp}, nil
 	}
 }
 

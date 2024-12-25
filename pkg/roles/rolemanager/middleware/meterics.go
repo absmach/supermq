@@ -31,7 +31,7 @@ func NewRoleManagerMetricsMiddleware(svcName string, svc roles.RoleManager, coun
 	}
 }
 
-func (rmm *RoleManagerMetricsMiddleware) AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (roles.Role, error) {
+func (rmm *RoleManagerMetricsMiddleware) AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (roles.RoleProvision, error) {
 	return rmm.svc.AddRole(ctx, session, entityID, roleName, optionalActions, optionalMembers)
 }
 

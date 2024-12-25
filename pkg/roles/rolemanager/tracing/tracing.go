@@ -23,7 +23,7 @@ func NewRoleManagerTracing(svcName string, svc roles.RoleManager, tracer trace.T
 	return RoleManagerTracing{svcName, svc, tracer}
 }
 
-func (rtm *RoleManagerTracing) AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (roles.Role, error) {
+func (rtm *RoleManagerTracing) AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (roles.RoleProvision, error) {
 	return rtm.roles.AddRole(ctx, session, entityID, roleName, optionalActions, optionalMembers)
 }
 

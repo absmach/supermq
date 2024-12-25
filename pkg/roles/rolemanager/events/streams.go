@@ -30,20 +30,20 @@ func NewRoleManagerEventStore(svcName, operationPrefix string, svc roles.RoleMan
 	}
 }
 
-func (rmes *RoleManagerEventStore) AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (roles.Role, error) {
-	ro, err := rmes.svc.AddRole(ctx, session, entityID, roleName, optionalActions, optionalMembers)
+func (rmes *RoleManagerEventStore) AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (roles.RoleProvision, error) {
+	nrp, err := rmes.svc.AddRole(ctx, session, entityID, roleName, optionalActions, optionalMembers)
 	if err != nil {
-		return ro, err
+		return nrp, err
 	}
 
 	e := addRoleEvent{
 		operationPrefix: rmes.operationPrefix,
-		Role:            ro,
+		RoleProvision:   nrp,
 	}
 	if err := rmes.Publish(ctx, e); err != nil {
-		return ro, err
+		return nrp, err
 	}
-	return ro, nil
+	return nrp, nil
 }
 
 func (rmes *RoleManagerEventStore) RemoveRole(ctx context.Context, session authn.Session, entityID, roleID string) error {

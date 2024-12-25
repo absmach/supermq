@@ -20,22 +20,22 @@ type RoleManager struct {
 }
 
 // AddRole provides a mock function with given fields: ctx, session, entityID, roleName, optionalActions, optionalMembers
-func (_m *RoleManager) AddRole(ctx context.Context, session authn.Session, entityID string, roleName string, optionalActions []string, optionalMembers []string) (roles.Role, error) {
+func (_m *RoleManager) AddRole(ctx context.Context, session authn.Session, entityID string, roleName string, optionalActions []string, optionalMembers []string) (roles.RoleProvision, error) {
 	ret := _m.Called(ctx, session, entityID, roleName, optionalActions, optionalMembers)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddRole")
 	}
 
-	var r0 roles.Role
+	var r0 roles.RoleProvision
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, string, []string, []string) (roles.Role, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, string, []string, []string) (roles.RoleProvision, error)); ok {
 		return rf(ctx, session, entityID, roleName, optionalActions, optionalMembers)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, string, []string, []string) roles.Role); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, string, []string, []string) roles.RoleProvision); ok {
 		r0 = rf(ctx, session, entityID, roleName, optionalActions, optionalMembers)
 	} else {
-		r0 = ret.Get(0).(roles.Role)
+		r0 = ret.Get(0).(roles.RoleProvision)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string, string, []string, []string) error); ok {

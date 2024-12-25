@@ -50,19 +50,21 @@ var (
 
 type addRoleEvent struct {
 	operationPrefix string
-	roles.Role
+	roles.RoleProvision
 }
 
 func (are addRoleEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
-		"operation":  are.operationPrefix + addRole,
-		"id":         are.ID,
-		"name":       are.Name,
-		"entity_id":  are.EntityID,
-		"created_by": are.CreatedBy,
-		"created_at": are.CreatedAt,
-		"updated_by": are.UpdatedBy,
-		"updated_at": are.UpdatedAt,
+		"operation":        are.operationPrefix + addRole,
+		"id":               are.ID,
+		"name":             are.Name,
+		"entity_id":        are.EntityID,
+		"created_by":       are.CreatedBy,
+		"created_at":       are.CreatedAt,
+		"updated_by":       are.UpdatedBy,
+		"updated_at":       are.UpdatedAt,
+		"optional_actions": are.OptionalActions,
+		"optional_members": are.OptionalMembers,
 	}
 	return val, nil
 }

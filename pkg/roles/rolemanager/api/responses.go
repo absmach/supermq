@@ -28,7 +28,7 @@ var (
 )
 
 type createRoleRes struct {
-	roles.Role
+	roles.RoleProvision
 }
 
 func (res createRoleRes) Code() int {
