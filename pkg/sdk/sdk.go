@@ -132,13 +132,15 @@ type PageMetadata struct {
 }
 
 type Role struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	EntityID  string    `json:"entity_id"`
-	CreatedBy string    `json:"created_by"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedBy string    `json:"updated_by"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID              string    `json:"id"`
+	Name            string    `json:"name"`
+	EntityID        string    `json:"entity_id"`
+	CreatedBy       string    `json:"created_by"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedBy       string    `json:"updated_by"`
+	UpdatedAt       time.Time `json:"updated_at"`
+	OptionalActions []string  `json:"optional_actions,omitempty"`
+	OptionalMembers []string  `json:"optional_members,omitempty"`
 }
 
 type RolesPage struct {

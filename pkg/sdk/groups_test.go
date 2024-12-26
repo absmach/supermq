@@ -263,7 +263,7 @@ func TestCreateGroup(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := gsvc.On("CreateGroup", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			svcCall := gsvc.On("CreateGroup", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, []roles.RoleProvision{}, tc.svcErr)
 			resp, err := mgsdk.CreateGroup(tc.groupReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
@@ -2005,10 +2005,12 @@ func TestCreateGroupRole(t *testing.T) {
 	}
 	mgsdk := sdk.NewSDK(conf)
 
+	optionalActions := []string{"create", "update"}
+	optionalMembers := []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)}
 	rReq := sdk.RoleReq{
 		RoleName:        roleName,
-		OptionalActions: []string{"create", "update"},
-		OptionalMembers: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+		OptionalActions: optionalActions,
+		OptionalMembers: optionalMembers,
 	}
 	userID := testsutil.GenerateUUID(t)
 	groupID := testsutil.GenerateUUID(t)
@@ -2020,6 +2022,11 @@ func TestCreateGroupRole(t *testing.T) {
 		CreatedBy: userID,
 		CreatedAt: now,
 	}
+	roleProvision := roles.RoleProvision{
+		Role:            role,
+		OptionalActions: optionalActions,
+		OptionalMembers: optionalMembers,
+	}
 
 	cases := []struct {
 		desc            string
@@ -2028,7 +2035,7 @@ func TestCreateGroupRole(t *testing.T) {
 		domainID        string
 		groupID         string
 		roleReq         sdk.RoleReq
-		svcRes          roles.Role
+		svcRes          roles.RoleProvision
 		svcErr          error
 		authenticateErr error
 		response        sdk.Role
@@ -2040,9 +2047,9 @@ func TestCreateGroupRole(t *testing.T) {
 			domainID: domainID,
 			groupID:  groupID,
 			roleReq:  rReq,
-			svcRes:   role,
+			svcRes:   roleProvision,
 			svcErr:   nil,
-			response: convertRole(role),
+			response: convertRoleProvision(roleProvision),
 			err:      nil,
 		},
 		{
@@ -2051,7 +2058,7 @@ func TestCreateGroupRole(t *testing.T) {
 			domainID:        domainID,
 			groupID:         groupID,
 			roleReq:         rReq,
-			svcRes:          roles.Role{},
+			svcRes:          roles.RoleProvision{},
 			authenticateErr: svcerr.ErrAuthentication,
 			response:        sdk.Role{},
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
@@ -2062,7 +2069,7 @@ func TestCreateGroupRole(t *testing.T) {
 			domainID: domainID,
 			groupID:  groupID,
 			roleReq:  rReq,
-			svcRes:   roles.Role{},
+			svcRes:   roles.RoleProvision{},
 			response: sdk.Role{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
@@ -2072,7 +2079,7 @@ func TestCreateGroupRole(t *testing.T) {
 			domainID: domainID,
 			groupID:  testsutil.GenerateUUID(t),
 			roleReq:  rReq,
-			svcRes:   roles.Role{},
+			svcRes:   roles.RoleProvision{},
 			svcErr:   svcerr.ErrAuthorization,
 			response: sdk.Role{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
@@ -2083,7 +2090,7 @@ func TestCreateGroupRole(t *testing.T) {
 			domainID: domainID,
 			groupID:  "",
 			roleReq:  rReq,
-			svcRes:   roles.Role{},
+			svcRes:   roles.RoleProvision{},
 			svcErr:   nil,
 			response: sdk.Role{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidIDFormat), http.StatusBadRequest),
@@ -2098,7 +2105,7 @@ func TestCreateGroupRole(t *testing.T) {
 				OptionalActions: []string{"create", "update"},
 				OptionalMembers: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
 			},
-			svcRes:   roles.Role{},
+			svcRes:   roles.RoleProvision{},
 			svcErr:   nil,
 			response: sdk.Role{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleName), http.StatusBadRequest),

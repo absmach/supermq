@@ -191,7 +191,7 @@ func TestCreateClient(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("CreateClients", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			svcCall := tsvc.On("CreateClients", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, []roles.RoleProvision{}, tc.svcErr)
 			resp, err := mgsdk.CreateClient(tc.createClientReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
@@ -302,7 +302,7 @@ func TestCreateClients(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("CreateClients", mock.Anything, tc.session, tc.svcReq[0], tc.svcReq[1], tc.svcReq[2]).Return(tc.svcRes, tc.svcErr)
+			svcCall := tsvc.On("CreateClients", mock.Anything, tc.session, tc.svcReq[0], tc.svcReq[1], tc.svcReq[2]).Return(tc.svcRes, []roles.RoleProvision{}, tc.svcErr)
 			resp, err := mgsdk.CreateClients(tc.createClientsRequest, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
@@ -1843,10 +1843,12 @@ func TestCreateClientRole(t *testing.T) {
 	}
 	mgsdk := sdk.NewSDK(conf)
 
+	optionalActions := []string{"create", "update"}
+	optionalMembers := []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)}
 	rReq := sdk.RoleReq{
 		RoleName:        roleName,
-		OptionalActions: []string{"create", "update"},
-		OptionalMembers: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+		OptionalActions: optionalActions,
+		OptionalMembers: optionalMembers,
 	}
 	userID := testsutil.GenerateUUID(t)
 	now := time.Now().UTC()
@@ -1857,6 +1859,11 @@ func TestCreateClientRole(t *testing.T) {
 		CreatedBy: userID,
 		CreatedAt: now,
 	}
+	roleProvision := roles.RoleProvision{
+		Role:            role,
+		OptionalActions: optionalActions,
+		OptionalMembers: optionalMembers,
+	}
 
 	cases := []struct {
 		desc            string
@@ -1865,7 +1872,7 @@ func TestCreateClientRole(t *testing.T) {
 		domainID        string
 		clientID        string
 		roleReq         sdk.RoleReq
-		svcRes          roles.Role
+		svcRes          roles.RoleProvision
 		svcErr          error
 		authenticateErr error
 		response        sdk.Role
@@ -1877,9 +1884,9 @@ func TestCreateClientRole(t *testing.T) {
 			domainID: domainID,
 			clientID: clientID,
 			roleReq:  rReq,
-			svcRes:   role,
+			svcRes:   roleProvision,
 			svcErr:   nil,
-			response: convertRole(role),
+			response: convertRoleProvision(roleProvision),
 			err:      nil,
 		},
 		{
@@ -1888,7 +1895,7 @@ func TestCreateClientRole(t *testing.T) {
 			domainID:        domainID,
 			clientID:        clientID,
 			roleReq:         rReq,
-			svcRes:          roles.Role{},
+			svcRes:          roles.RoleProvision{},
 			authenticateErr: svcerr.ErrAuthentication,
 			response:        sdk.Role{},
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
@@ -1899,7 +1906,7 @@ func TestCreateClientRole(t *testing.T) {
 			domainID: domainID,
 			clientID: clientID,
 			roleReq:  rReq,
-			svcRes:   roles.Role{},
+			svcRes:   roles.RoleProvision{},
 			response: sdk.Role{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
@@ -1909,7 +1916,7 @@ func TestCreateClientRole(t *testing.T) {
 			domainID: domainID,
 			clientID: testsutil.GenerateUUID(t),
 			roleReq:  rReq,
-			svcRes:   roles.Role{},
+			svcRes:   roles.RoleProvision{},
 			svcErr:   svcerr.ErrAuthorization,
 			response: sdk.Role{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
@@ -1920,7 +1927,7 @@ func TestCreateClientRole(t *testing.T) {
 			domainID: domainID,
 			clientID: "",
 			roleReq:  rReq,
-			svcRes:   roles.Role{},
+			svcRes:   roles.RoleProvision{},
 			svcErr:   nil,
 			response: sdk.Role{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidIDFormat), http.StatusBadRequest),
@@ -1935,7 +1942,7 @@ func TestCreateClientRole(t *testing.T) {
 				OptionalActions: []string{"create", "update"},
 				OptionalMembers: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
 			},
-			svcRes:   roles.Role{},
+			svcRes:   roles.RoleProvision{},
 			svcErr:   nil,
 			response: sdk.Role{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleName), http.StatusBadRequest),

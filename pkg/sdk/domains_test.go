@@ -161,7 +161,7 @@ func TestCreateDomain(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
-			svcCall := svc.On("CreateDomain", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			svcCall := svc.On("CreateDomain", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, []roles.RoleProvision{}, tc.svcErr)
 			resp, err := mgsdk.CreateDomain(tc.domain, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
@@ -795,10 +795,12 @@ func TestCreateDomainRole(t *testing.T) {
 	}
 	mgsdk := sdk.NewSDK(conf)
 
+	optionalActions := []string{"create", "update"}
+	optionalMembers := []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)}
 	rReq := sdk.RoleReq{
 		RoleName:        roleName,
-		OptionalActions: []string{"create", "update"},
-		OptionalMembers: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+		OptionalActions: optionalActions,
+		OptionalMembers: optionalMembers,
 	}
 	userID := testsutil.GenerateUUID(t)
 	now := time.Now().UTC()
@@ -809,6 +811,11 @@ func TestCreateDomainRole(t *testing.T) {
 		CreatedBy: userID,
 		CreatedAt: now,
 	}
+	roleProvision := roles.RoleProvision{
+		Role:            role,
+		OptionalActions: optionalActions,
+		OptionalMembers: optionalMembers,
+	}
 
 	cases := []struct {
 		desc            string
@@ -816,7 +823,7 @@ func TestCreateDomainRole(t *testing.T) {
 		session         smqauthn.Session
 		domainID        string
 		roleReq         sdk.RoleReq
-		svcRes          roles.Role
+		svcRes          roles.RoleProvision
 		svcErr          error
 		authenticateErr error
 		response        sdk.Role
@@ -827,9 +834,9 @@ func TestCreateDomainRole(t *testing.T) {
 			token:    validToken,
 			domainID: domainID,
 			roleReq:  rReq,
-			svcRes:   role,
+			svcRes:   roleProvision,
 			svcErr:   nil,
-			response: convertRole(role),
+			response: convertRoleProvision(roleProvision),
 			err:      nil,
 		},
 		{
@@ -837,7 +844,7 @@ func TestCreateDomainRole(t *testing.T) {
 			token:           invalidToken,
 			domainID:        domainID,
 			roleReq:         rReq,
-			svcRes:          roles.Role{},
+			svcRes:          roles.RoleProvision{},
 			authenticateErr: svcerr.ErrAuthentication,
 			response:        sdk.Role{},
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
@@ -847,7 +854,7 @@ func TestCreateDomainRole(t *testing.T) {
 			token:    "",
 			domainID: domainID,
 			roleReq:  rReq,
-			svcRes:   roles.Role{},
+			svcRes:   roles.RoleProvision{},
 			response: sdk.Role{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
@@ -856,7 +863,7 @@ func TestCreateDomainRole(t *testing.T) {
 			token:    validToken,
 			domainID: testsutil.GenerateUUID(t),
 			roleReq:  rReq,
-			svcRes:   roles.Role{},
+			svcRes:   roles.RoleProvision{},
 			svcErr:   svcerr.ErrAuthorization,
 			response: sdk.Role{},
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
@@ -866,7 +873,7 @@ func TestCreateDomainRole(t *testing.T) {
 			token:    validToken,
 			domainID: "",
 			roleReq:  rReq,
-			svcRes:   roles.Role{},
+			svcRes:   roles.RoleProvision{},
 			svcErr:   nil,
 			response: sdk.Role{},
 			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingDomainID, http.StatusBadRequest),
@@ -880,7 +887,7 @@ func TestCreateDomainRole(t *testing.T) {
 				OptionalActions: []string{"create", "update"},
 				OptionalMembers: []string{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
 			},
-			svcRes:   roles.Role{},
+			svcRes:   roles.RoleProvision{},
 			svcErr:   nil,
 			response: sdk.Role{},
 			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleName), http.StatusBadRequest),

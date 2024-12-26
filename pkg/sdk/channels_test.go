@@ -23,6 +23,7 @@ import (
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/roles"
 	sdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
@@ -210,7 +211,7 @@ func TestCreateChannel(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := gsvc.On("CreateChannels", mock.Anything, tc.session, tc.createChannelReq).Return(tc.svcRes, tc.svcErr)
+			svcCall := gsvc.On("CreateChannels", mock.Anything, tc.session, tc.createChannelReq).Return(tc.svcRes, []roles.RoleProvision{}, tc.svcErr)
 			resp, err := mgsdk.CreateChannel(tc.channelReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
@@ -334,7 +335,7 @@ func TestCreateChannels(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := gsvc.On("CreateChannels", mock.Anything, tc.session, tc.createChannelsReq[0], tc.createChannelsReq[1], tc.createChannelsReq[2]).Return(tc.svcRes, tc.svcErr)
+			svcCall := gsvc.On("CreateChannels", mock.Anything, tc.session, tc.createChannelsReq[0], tc.createChannelsReq[1], tc.createChannelsReq[2]).Return(tc.svcRes, []roles.RoleProvision{}, tc.svcErr)
 			resp, err := mgsdk.CreateChannels(tc.channelsReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)

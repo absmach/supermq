@@ -277,6 +277,20 @@ func convertRole(r roles.Role) sdk.Role {
 	}
 }
 
+func convertRoleProvision(r roles.RoleProvision) sdk.Role {
+	return sdk.Role{
+		ID:              r.ID,
+		Name:            r.Name,
+		EntityID:        r.EntityID,
+		CreatedBy:       r.CreatedBy,
+		CreatedAt:       r.CreatedAt,
+		UpdatedBy:       r.UpdatedBy,
+		UpdatedAt:       r.UpdatedAt,
+		OptionalActions: r.OptionalActions,
+		OptionalMembers: r.OptionalMembers,
+	}
+}
+
 func TestMain(m *testing.M) {
 	exitCode := m.Run()
 	os.Exit(exitCode)
