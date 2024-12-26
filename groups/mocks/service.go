@@ -86,7 +86,7 @@ func (_m *Service) AddRole(ctx context.Context, session authn.Session, entityID 
 }
 
 // CreateGroup provides a mock function with given fields: ctx, session, g
-func (_m *Service) CreateGroup(ctx context.Context, session authn.Session, g groups.Group) (groups.Group, error) {
+func (_m *Service) CreateGroup(ctx context.Context, session authn.Session, g groups.Group) (groups.Group, []roles.RoleProvision, error) {
 	ret := _m.Called(ctx, session, g)
 
 	if len(ret) == 0 {
@@ -94,8 +94,9 @@ func (_m *Service) CreateGroup(ctx context.Context, session authn.Session, g gro
 	}
 
 	var r0 groups.Group
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, groups.Group) (groups.Group, error)); ok {
+	var r1 []roles.RoleProvision
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, groups.Group) (groups.Group, []roles.RoleProvision, error)); ok {
 		return rf(ctx, session, g)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, groups.Group) groups.Group); ok {
@@ -104,13 +105,21 @@ func (_m *Service) CreateGroup(ctx context.Context, session authn.Session, g gro
 		r0 = ret.Get(0).(groups.Group)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, groups.Group) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, groups.Group) []roles.RoleProvision); ok {
 		r1 = rf(ctx, session, g)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]roles.RoleProvision)
+		}
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, authn.Session, groups.Group) error); ok {
+		r2 = rf(ctx, session, g)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // DeleteGroup provides a mock function with given fields: ctx, session, id

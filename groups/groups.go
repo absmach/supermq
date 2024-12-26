@@ -134,7 +134,7 @@ type Repository interface {
 //go:generate mockery --name Service --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines" --unroll-variadic=false
 type Service interface {
 	// CreateGroup creates new  group.
-	CreateGroup(ctx context.Context, session authn.Session, g Group) (Group, error)
+	CreateGroup(ctx context.Context, session authn.Session, g Group) (Group, []roles.RoleProvision, error)
 
 	// UpdateGroup updates the group identified by the provided ID.
 	UpdateGroup(ctx context.Context, session authn.Session, g Group) (Group, error)

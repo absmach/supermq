@@ -10,6 +10,7 @@ import (
 
 	"github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/roles"
 	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 )
 
@@ -28,7 +29,7 @@ func LoggingMiddleware(svc groups.Service, logger *slog.Logger) groups.Service {
 
 // CreateGroup logs the create_group request. It logs the group name, id and token and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) CreateGroup(ctx context.Context, session authn.Session, group groups.Group) (g groups.Group, err error) {
+func (lm *loggingMiddleware) CreateGroup(ctx context.Context, session authn.Session, group groups.Group) (g groups.Group, rps []roles.RoleProvision, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),

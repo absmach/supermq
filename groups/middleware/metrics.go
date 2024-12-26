@@ -9,6 +9,7 @@ import (
 
 	"github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/roles"
 	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 	"github.com/go-kit/kit/metrics"
 )
@@ -34,7 +35,7 @@ func MetricsMiddleware(svc groups.Service, counter metrics.Counter, latency metr
 }
 
 // CreateGroup instruments CreateGroup method with metrics.
-func (ms *metricsMiddleware) CreateGroup(ctx context.Context, session authn.Session, g groups.Group) (groups.Group, error) {
+func (ms *metricsMiddleware) CreateGroup(ctx context.Context, session authn.Session, g groups.Group) (groups.Group, []roles.RoleProvision, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "create_group").Add(1)
 		ms.latency.With("method", "create_group").Observe(time.Since(begin).Seconds())

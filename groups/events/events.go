@@ -8,6 +8,7 @@ import (
 
 	groups "github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/pkg/events"
+	"github.com/absmach/supermq/pkg/roles"
 )
 
 var (
@@ -49,14 +50,16 @@ var (
 
 type createGroupEvent struct {
 	groups.Group
+	rolesProvisioned []roles.RoleProvision
 }
 
 func (cge createGroupEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
-		"operation":  groupCreate,
-		"id":         cge.ID,
-		"status":     cge.Status.String(),
-		"created_at": cge.CreatedAt,
+		"operation":         groupCreate,
+		"id":                cge.ID,
+		"roles_provisioned": cge.rolesProvisioned,
+		"status":            cge.Status.String(),
+		"created_at":        cge.CreatedAt,
 	}
 
 	if cge.Domain != "" {

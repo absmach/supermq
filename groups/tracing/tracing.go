@@ -9,6 +9,7 @@ import (
 
 	"github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/roles"
 	rmTrace "github.com/absmach/supermq/pkg/roles/rolemanager/tracing"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -28,7 +29,7 @@ func New(svc groups.Service, tracer trace.Tracer) groups.Service {
 }
 
 // CreateGroup traces the "CreateGroup" operation of the wrapped groups.Service.
-func (tm *tracingMiddleware) CreateGroup(ctx context.Context, session authn.Session, g groups.Group) (groups.Group, error) {
+func (tm *tracingMiddleware) CreateGroup(ctx context.Context, session authn.Session, g groups.Group) (groups.Group, []roles.RoleProvision, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_create_group")
 	defer span.End()
 

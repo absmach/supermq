@@ -201,9 +201,9 @@ func TestCreateGroup(t *testing.T) {
 			repoCall := repo.On("Save", context.Background(), mock.Anything).Return(tc.saveResp, tc.saveErr)
 			policyCall := policies.On("AddPolicies", context.Background(), mock.Anything).Return(tc.addPoliciesErr)
 			policyCall1 := policies.On("DeletePolicies", context.Background(), mock.Anything).Return(tc.deletePoliciesErr)
-			repoCall1 := repo.On("AddRoles", context.Background(), mock.Anything).Return([]roles.Role{}, tc.addRoleErr)
+			repoCall1 := repo.On("AddRoles", context.Background(), mock.Anything).Return([]roles.RoleProvision{}, tc.addRoleErr)
 			repoCall2 := repo.On("Delete", context.Background(), mock.Anything).Return(tc.deleteErr)
-			got, err := svc.CreateGroup(context.Background(), validSession, tc.group)
+			got, _, err := svc.CreateGroup(context.Background(), validSession, tc.group)
 			assert.Equal(t, tc.err, err, fmt.Sprintf("expected error %v but got %v", tc.err, err))
 			if err == nil {
 				assert.NotEmpty(t, got.ID)

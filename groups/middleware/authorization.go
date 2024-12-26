@@ -14,6 +14,7 @@ import (
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
+	"github.com/absmach/supermq/pkg/roles"
 	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 	"github.com/absmach/supermq/pkg/svcutil"
 )
@@ -79,7 +80,7 @@ func AuthorizationMiddleware(entityType string, svc groups.Service, repo groups.
 	}, nil
 }
 
-func (am *authorizationMiddleware) CreateGroup(ctx context.Context, session authn.Session, g groups.Group) (groups.Group, error) {
+func (am *authorizationMiddleware) CreateGroup(ctx context.Context, session authn.Session, g groups.Group) (groups.Group, []roles.RoleProvision, error) {
 	if err := am.extAuthorize(ctx, groups.DomainOpCreateGroup, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
@@ -88,7 +89,7 @@ func (am *authorizationMiddleware) CreateGroup(ctx context.Context, session auth
 		Object:      session.DomainID,
 		ObjectType:  policies.DomainType,
 	}); err != nil {
-		return groups.Group{}, errors.Wrap(errDomainCreateGroups, err)
+		return groups.Group{}, []roles.RoleProvision{}, errors.Wrap(errDomainCreateGroups, err)
 	}
 
 	if g.Parent != "" {
@@ -100,7 +101,7 @@ func (am *authorizationMiddleware) CreateGroup(ctx context.Context, session auth
 			Object:      g.Parent,
 			ObjectType:  policies.GroupType,
 		}); err != nil {
-			return groups.Group{}, errors.Wrap(errParentGroupSetChildGroup, err)
+			return groups.Group{}, []roles.RoleProvision{}, errors.Wrap(errParentGroupSetChildGroup, err)
 		}
 	}
 

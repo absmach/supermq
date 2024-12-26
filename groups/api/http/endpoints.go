@@ -27,7 +27,7 @@ func CreateGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 			return createGroupRes{created: false}, svcerr.ErrAuthentication
 		}
 
-		group, err := svc.CreateGroup(ctx, session, req.Group)
+		group, _, err := svc.CreateGroup(ctx, session, req.Group)
 		if err != nil {
 			return createGroupRes{created: false}, err
 		}

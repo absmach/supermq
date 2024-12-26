@@ -10,6 +10,7 @@ import (
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/events"
 	"github.com/absmach/supermq/pkg/events/store"
+	"github.com/absmach/supermq/pkg/roles"
 	rmEvents "github.com/absmach/supermq/pkg/roles/rolemanager/events"
 )
 
@@ -39,21 +40,22 @@ func New(ctx context.Context, svc groups.Service, url string) (groups.Service, e
 	}, nil
 }
 
-func (es eventStore) CreateGroup(ctx context.Context, session authn.Session, group groups.Group) (groups.Group, error) {
-	group, err := es.svc.CreateGroup(ctx, session, group)
+func (es eventStore) CreateGroup(ctx context.Context, session authn.Session, group groups.Group) (groups.Group, []roles.RoleProvision, error) {
+	group, rps, err := es.svc.CreateGroup(ctx, session, group)
 	if err != nil {
-		return group, err
+		return group, rps, err
 	}
 
 	event := createGroupEvent{
-		group,
+		Group:            group,
+		rolesProvisioned: rps,
 	}
 
 	if err := es.Publish(ctx, event); err != nil {
-		return group, err
+		return group, rps, err
 	}
 
-	return group, nil
+	return group, rps, nil
 }
 
 func (es eventStore) UpdateGroup(ctx context.Context, session authn.Session, group groups.Group) (groups.Group, error) {

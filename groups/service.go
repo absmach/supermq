@@ -47,13 +47,13 @@ func NewService(repo Repository, policy policies.Service, idp supermq.IDProvider
 	}, nil
 }
 
-func (svc service) CreateGroup(ctx context.Context, session smqauthn.Session, g Group) (gr Group, retErr error) {
+func (svc service) CreateGroup(ctx context.Context, session smqauthn.Session, g Group) (retGr Group, retRps []roles.RoleProvision, retErr error) {
 	groupID, err := svc.idProvider.ID()
 	if err != nil {
-		return Group{}, err
+		return Group{}, []roles.RoleProvision{}, err
 	}
 	if g.Status != EnabledStatus && g.Status != DisabledStatus {
-		return Group{}, svcerr.ErrInvalidStatus
+		return Group{}, []roles.RoleProvision{}, svcerr.ErrInvalidStatus
 	}
 
 	g.ID = groupID
@@ -62,7 +62,7 @@ func (svc service) CreateGroup(ctx context.Context, session smqauthn.Session, g 
 
 	saved, err := svc.repo.Save(ctx, g)
 	if err != nil {
-		return Group{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+		return Group{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 
 	defer func() {
@@ -97,11 +97,12 @@ func (svc service) CreateGroup(ctx context.Context, session smqauthn.Session, g 
 	newBuiltInRoleMembers := map[roles.BuiltInRoleName][]roles.Member{
 		BuiltInRoleAdmin: {roles.Member(session.UserID)},
 	}
-	if _, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, []string{saved.ID}, oprs, newBuiltInRoleMembers); err != nil {
-		return Group{}, errors.Wrap(svcerr.ErrAddPolicies, err)
+	nrps, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, []string{saved.ID}, oprs, newBuiltInRoleMembers)
+	if err != nil {
+		return Group{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
 
-	return saved, nil
+	return saved, nrps, nil
 }
 
 func (svc service) ViewGroup(ctx context.Context, session smqauthn.Session, id string) (Group, error) {
