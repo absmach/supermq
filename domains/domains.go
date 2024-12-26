@@ -162,7 +162,7 @@ func (page DomainsPage) MarshalJSON() ([]byte, error) {
 
 //go:generate mockery --name Service --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
 type Service interface {
-	CreateDomain(ctx context.Context, sesssion authn.Session, d Domain) (Domain, error)
+	CreateDomain(ctx context.Context, sesssion authn.Session, d Domain) (Domain, []roles.RoleProvision, error)
 	RetrieveDomain(ctx context.Context, sesssion authn.Session, id string) (Domain, error)
 	UpdateDomain(ctx context.Context, sesssion authn.Session, id string, d DomainReq) (Domain, error)
 	EnableDomain(ctx context.Context, sesssion authn.Session, id string) (Domain, error)

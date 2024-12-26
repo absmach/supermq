@@ -52,8 +52,8 @@ type Role struct {
 
 type RoleProvision struct {
 	Role
-	OptionalActions []string `json:"-"`
-	OptionalMembers []string `json:"-"`
+	OptionalActions []string `json:"optional_actions"`
+	OptionalMembers []string `json:"optional_members"`
 }
 
 type RolePage struct {

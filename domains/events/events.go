@@ -8,6 +8,7 @@ import (
 
 	"github.com/absmach/supermq/domains"
 	"github.com/absmach/supermq/pkg/events"
+	"github.com/absmach/supermq/pkg/roles"
 )
 
 const (
@@ -36,16 +37,18 @@ var (
 
 type createDomainEvent struct {
 	domains.Domain
+	rolesProvisioned []roles.RoleProvision
 }
 
 func (cde createDomainEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
-		"operation":  domainCreate,
-		"id":         cde.ID,
-		"alias":      cde.Alias,
-		"status":     cde.Status.String(),
-		"created_at": cde.CreatedAt,
-		"created_by": cde.CreatedBy,
+		"operation":         domainCreate,
+		"id":                cde.ID,
+		"alias":             cde.Alias,
+		"status":            cde.Status.String(),
+		"created_at":        cde.CreatedAt,
+		"created_by":        cde.CreatedBy,
+		"roles_provisioned": cde.rolesProvisioned,
 	}
 
 	if cde.Name != "" {

@@ -10,6 +10,7 @@ import (
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/events"
 	"github.com/absmach/supermq/pkg/events/store"
+	"github.com/absmach/supermq/pkg/roles"
 	rmEvents "github.com/absmach/supermq/pkg/roles/rolemanager/events"
 )
 
@@ -40,21 +41,22 @@ func NewEventStoreMiddleware(ctx context.Context, svc domains.Service, url strin
 	}, nil
 }
 
-func (es *eventStore) CreateDomain(ctx context.Context, session authn.Session, domain domains.Domain) (domains.Domain, error) {
-	domain, err := es.svc.CreateDomain(ctx, session, domain)
+func (es *eventStore) CreateDomain(ctx context.Context, session authn.Session, domain domains.Domain) (domains.Domain, []roles.RoleProvision, error) {
+	domain, rps, err := es.svc.CreateDomain(ctx, session, domain)
 	if err != nil {
-		return domain, err
+		return domain, rps, err
 	}
 
 	event := createDomainEvent{
-		domain,
+		Domain:           domain,
+		rolesProvisioned: rps,
 	}
 
 	if err := es.Publish(ctx, event); err != nil {
-		return domain, err
+		return domain, rps, err
 	}
 
-	return domain, nil
+	return domain, rps, nil
 }
 
 func (es *eventStore) RetrieveDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {

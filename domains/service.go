@@ -45,17 +45,17 @@ func New(repo Repository, cache Cache, policy policies.Service, idProvider super
 	}, nil
 }
 
-func (svc service) CreateDomain(ctx context.Context, session authn.Session, d Domain) (do Domain, err error) {
+func (svc service) CreateDomain(ctx context.Context, session authn.Session, d Domain) (retDo Domain, retRps []roles.RoleProvision, retErr error) {
 	d.CreatedBy = session.UserID
 
 	domainID, err := svc.idProvider.ID()
 	if err != nil {
-		return Domain{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+		return Domain{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	d.ID = domainID
 
 	if d.Status != DisabledStatus && d.Status != EnabledStatus {
-		return Domain{}, svcerr.ErrInvalidStatus
+		return Domain{}, []roles.RoleProvision{}, svcerr.ErrInvalidStatus
 	}
 
 	d.CreatedAt = time.Now()
@@ -63,12 +63,12 @@ func (svc service) CreateDomain(ctx context.Context, session authn.Session, d Do
 	// Domain is created in repo first, because Roles table have foreign key relation with Domain ID
 	dom, err := svc.repo.Save(ctx, d)
 	if err != nil {
-		return Domain{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+		return Domain{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	defer func() {
-		if err != nil {
+		if retErr != nil {
 			if errRollBack := svc.repo.Delete(ctx, domainID); errRollBack != nil {
-				err = errors.Wrap(err, errors.Wrap(errRollbackRepo, errRollBack))
+				retErr = errors.Wrap(retErr, errors.Wrap(errRollbackRepo, errRollBack))
 			}
 		}
 	}()
@@ -87,11 +87,12 @@ func (svc service) CreateDomain(ctx context.Context, session authn.Session, d Do
 		},
 	}
 
-	if _, err := svc.AddNewEntitiesRoles(ctx, domainID, session.UserID, []string{domainID}, optionalPolicies, newBuiltInRoleMembers); err != nil {
-		return Domain{}, errors.Wrap(errCreateDomainPolicy, err)
+	rps, err := svc.AddNewEntitiesRoles(ctx, domainID, session.UserID, []string{domainID}, optionalPolicies, newBuiltInRoleMembers)
+	if err != nil {
+		return Domain{}, []roles.RoleProvision{}, errors.Wrap(errCreateDomainPolicy, err)
 	}
 
-	return dom, nil
+	return dom, rps, nil
 }
 
 func (svc service) RetrieveDomain(ctx context.Context, session authn.Session, id string) (Domain, error) {

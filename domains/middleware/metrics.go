@@ -11,6 +11,7 @@ import (
 
 	"github.com/absmach/supermq/domains"
 	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/roles"
 	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 	"github.com/go-kit/kit/metrics"
 )
@@ -36,7 +37,7 @@ func MetricsMiddleware(svc domains.Service, counter metrics.Counter, latency met
 	}
 }
 
-func (ms *metricsMiddleware) CreateDomain(ctx context.Context, session authn.Session, d domains.Domain) (domains.Domain, error) {
+func (ms *metricsMiddleware) CreateDomain(ctx context.Context, session authn.Session, d domains.Domain) (domains.Domain, []roles.RoleProvision, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "create_domain").Add(1)
 		ms.latency.With("method", "create_domain").Observe(time.Since(begin).Seconds())

@@ -168,10 +168,10 @@ func TestCreateDomain(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := drepo.On("Save", mock.Anything, mock.Anything).Return(tc.d, tc.saveDomainErr)
 			repoCall1 := drepo.On("Delete", mock.Anything, mock.Anything).Return(tc.deleteDomainErr)
-			repoCall2 := drepo.On("AddRoles", mock.Anything, mock.Anything).Return([]roles.Role{}, tc.addRolesErr)
+			repoCall2 := drepo.On("AddRoles", mock.Anything, mock.Anything).Return([]roles.RoleProvision{}, tc.addRolesErr)
 			policyCall := policy.On("AddPolicies", mock.Anything, mock.Anything).Return(tc.addPoliciesErr)
 			policyCall1 := policy.On("DeletePolicies", mock.Anything, mock.Anything).Return(tc.deletePoliciesErr)
-			_, err := svc.CreateDomain(context.Background(), tc.session, tc.d)
+			_, _, err := svc.CreateDomain(context.Background(), tc.session, tc.d)
 			assert.True(t, errors.Contains(err, tc.err))
 			repoCall.Unset()
 			repoCall1.Unset()

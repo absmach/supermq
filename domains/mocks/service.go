@@ -50,7 +50,7 @@ func (_m *Service) AddRole(ctx context.Context, session authn.Session, entityID 
 }
 
 // CreateDomain provides a mock function with given fields: ctx, sesssion, d
-func (_m *Service) CreateDomain(ctx context.Context, sesssion authn.Session, d domains.Domain) (domains.Domain, error) {
+func (_m *Service) CreateDomain(ctx context.Context, sesssion authn.Session, d domains.Domain) (domains.Domain, []roles.RoleProvision, error) {
 	ret := _m.Called(ctx, sesssion, d)
 
 	if len(ret) == 0 {
@@ -58,8 +58,9 @@ func (_m *Service) CreateDomain(ctx context.Context, sesssion authn.Session, d d
 	}
 
 	var r0 domains.Domain
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, domains.Domain) (domains.Domain, error)); ok {
+	var r1 []roles.RoleProvision
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, domains.Domain) (domains.Domain, []roles.RoleProvision, error)); ok {
 		return rf(ctx, sesssion, d)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, domains.Domain) domains.Domain); ok {
@@ -68,13 +69,21 @@ func (_m *Service) CreateDomain(ctx context.Context, sesssion authn.Session, d d
 		r0 = ret.Get(0).(domains.Domain)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, domains.Domain) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, domains.Domain) []roles.RoleProvision); ok {
 		r1 = rf(ctx, sesssion, d)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]roles.RoleProvision)
+		}
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, authn.Session, domains.Domain) error); ok {
+		r2 = rf(ctx, sesssion, d)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // DisableDomain provides a mock function with given fields: ctx, sesssion, id

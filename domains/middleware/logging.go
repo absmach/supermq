@@ -12,6 +12,7 @@ import (
 
 	"github.com/absmach/supermq/domains"
 	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/roles"
 	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 )
 
@@ -33,7 +34,7 @@ func LoggingMiddleware(svc domains.Service, logger *slog.Logger) domains.Service
 	}
 }
 
-func (lm *loggingMiddleware) CreateDomain(ctx context.Context, session authn.Session, d domains.Domain) (do domains.Domain, err error) {
+func (lm *loggingMiddleware) CreateDomain(ctx context.Context, session authn.Session, d domains.Domain) (do domains.Domain, rps []roles.RoleProvision, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),

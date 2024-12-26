@@ -33,7 +33,7 @@ func createDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 			Tags:     req.Tags,
 			Alias:    req.Alias,
 		}
-		domain, err := svc.CreateDomain(ctx, session, d)
+		domain, _, err := svc.CreateDomain(ctx, session, d)
 		if err != nil {
 			return nil, err
 		}
