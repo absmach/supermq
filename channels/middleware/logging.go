@@ -12,6 +12,7 @@ import (
 	"github.com/absmach/supermq/channels"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
+	"github.com/absmach/supermq/pkg/roles"
 	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 )
 
@@ -27,7 +28,7 @@ func LoggingMiddleware(svc channels.Service, logger *slog.Logger) channels.Servi
 	return &loggingMiddleware{logger, svc, rmMW.NewRoleManagerLoggingMiddleware("channels", svc, logger)}
 }
 
-func (lm *loggingMiddleware) CreateChannels(ctx context.Context, session authn.Session, clients ...channels.Channel) (cs []channels.Channel, err error) {
+func (lm *loggingMiddleware) CreateChannels(ctx context.Context, session authn.Session, clients ...channels.Channel) (cs []channels.Channel, rps []roles.RoleProvision, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),

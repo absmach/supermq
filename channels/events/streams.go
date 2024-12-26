@@ -11,6 +11,7 @@ import (
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/events"
 	"github.com/absmach/supermq/pkg/events/store"
+	"github.com/absmach/supermq/pkg/roles"
 	rmEvents "github.com/absmach/supermq/pkg/roles/rolemanager/events"
 )
 
@@ -40,22 +41,23 @@ func NewEventStoreMiddleware(ctx context.Context, svc channels.Service, url stri
 	}, nil
 }
 
-func (es *eventStore) CreateChannels(ctx context.Context, session authn.Session, chs ...channels.Channel) ([]channels.Channel, error) {
-	chs, err := es.svc.CreateChannels(ctx, session, chs...)
+func (es *eventStore) CreateChannels(ctx context.Context, session authn.Session, chs ...channels.Channel) ([]channels.Channel, []roles.RoleProvision, error) {
+	chs, rps, err := es.svc.CreateChannels(ctx, session, chs...)
 	if err != nil {
-		return chs, err
+		return chs, rps, err
 	}
 
 	for _, ch := range chs {
 		event := createChannelEvent{
-			ch,
+			Channel:          ch,
+			rolesProvisioned: rps,
 		}
 		if err := es.Publish(ctx, event); err != nil {
-			return chs, err
+			return chs, rps, err
 		}
 	}
 
-	return chs, nil
+	return chs, rps, nil
 }
 
 func (es *eventStore) UpdateChannel(ctx context.Context, session authn.Session, ch channels.Channel) (channels.Channel, error) {

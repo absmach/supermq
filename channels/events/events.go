@@ -9,6 +9,7 @@ import (
 	"github.com/absmach/supermq/channels"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/events"
+	"github.com/absmach/supermq/pkg/roles"
 )
 
 const (
@@ -38,14 +39,16 @@ var (
 
 type createChannelEvent struct {
 	channels.Channel
+	rolesProvisioned []roles.RoleProvision
 }
 
 func (cce createChannelEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
-		"operation":  channelCreate,
-		"id":         cce.ID,
-		"status":     cce.Status.String(),
-		"created_at": cce.CreatedAt,
+		"operation":         channelCreate,
+		"id":                cce.ID,
+		"roles_provisioned": cce.rolesProvisioned,
+		"status":            cce.Status.String(),
+		"created_at":        cce.CreatedAt,
 	}
 
 	if cce.Name != "" {

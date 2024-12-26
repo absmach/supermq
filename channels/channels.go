@@ -72,7 +72,7 @@ type AuthzReq struct {
 //go:generate mockery --name Service  --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
 type Service interface {
 	// CreateChannels adds channels to the user identified by the provided key.
-	CreateChannels(ctx context.Context, session authn.Session, channels ...Channel) ([]Channel, error)
+	CreateChannels(ctx context.Context, session authn.Session, channels ...Channel) ([]Channel, []roles.RoleProvision, error)
 
 	// ViewChannel retrieves data about the channel identified by the provided
 	// ID, that belongs to the user identified by the provided key.

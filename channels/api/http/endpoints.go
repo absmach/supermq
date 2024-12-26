@@ -27,7 +27,7 @@ func createChannelEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		channels, err := svc.CreateChannels(ctx, session, req.Channel)
+		channels, _, err := svc.CreateChannels(ctx, session, req.Channel)
 		if err != nil {
 			return nil, err
 		}
@@ -51,7 +51,7 @@ func createChannelsEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		channels, err := svc.CreateChannels(ctx, session, req.Channels...)
+		channels, _, err := svc.CreateChannels(ctx, session, req.Channels...)
 		if err != nil {
 			return nil, err
 		}

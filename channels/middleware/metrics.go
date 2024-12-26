@@ -10,6 +10,7 @@ import (
 	"github.com/absmach/supermq/channels"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
+	"github.com/absmach/supermq/pkg/roles"
 	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 	"github.com/go-kit/kit/metrics"
 )
@@ -33,7 +34,7 @@ func MetricsMiddleware(svc channels.Service, counter metrics.Counter, latency me
 	}
 }
 
-func (ms *metricsMiddleware) CreateChannels(ctx context.Context, session authn.Session, chs ...channels.Channel) ([]channels.Channel, error) {
+func (ms *metricsMiddleware) CreateChannels(ctx context.Context, session authn.Session, chs ...channels.Channel) ([]channels.Channel, []roles.RoleProvision, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "register_channels").Add(1)
 		ms.latency.With("method", "register_channels").Observe(time.Since(begin).Seconds())

@@ -25,6 +25,7 @@ import (
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/roles"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -176,7 +177,7 @@ func TestCreateChannelEndpoint(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
-			svcCall := svc.On("CreateChannels", mock.Anything, tc.session, tc.req).Return(tc.svcResp, tc.svcErr)
+			svcCall := svc.On("CreateChannels", mock.Anything, tc.session, tc.req).Return(tc.svcResp, []roles.RoleProvision{}, tc.svcErr)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			var errRes respBody
@@ -312,7 +313,7 @@ func TestCreateChannelsEndpoint(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
-			svcCall := svc.On("CreateChannels", mock.Anything, tc.session, tc.req[0]).Return(tc.svcResp, tc.svcErr)
+			svcCall := svc.On("CreateChannels", mock.Anything, tc.session, tc.req[0]).Return(tc.svcResp, []roles.RoleProvision{}, tc.svcErr)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			var errRes respBody

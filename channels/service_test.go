@@ -186,9 +186,9 @@ func TestCreateChannel(t *testing.T) {
 			repoCall := repo.On("Save", context.Background(), mock.Anything).Return(tc.saveResp, tc.saveErr)
 			policyCall := policies.On("AddPolicies", context.Background(), mock.Anything).Return(tc.addPoliciesErr)
 			policyCall1 := policies.On("DeletePolicies", context.Background(), mock.Anything).Return(tc.deletePoliciesErr)
-			repoCall1 := repo.On("AddRoles", context.Background(), mock.Anything).Return([]roles.Role{}, tc.addRoleErr)
+			repoCall1 := repo.On("AddRoles", context.Background(), mock.Anything).Return([]roles.RoleProvision{}, tc.addRoleErr)
 			repoCall2 := repo.On("Remove", context.Background(), mock.Anything).Return(tc.deleteErr)
-			_, err := svc.CreateChannels(context.Background(), validSession, tc.channel)
+			_, _, err := svc.CreateChannels(context.Background(), validSession, tc.channel)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v but got %v", tc.err, err))
 			if err == nil {
 				ok := repoCall.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything)

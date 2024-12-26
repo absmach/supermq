@@ -57,19 +57,19 @@ func New(repo Repository, policy policies.Service, idProvider supermq.IDProvider
 	}, nil
 }
 
-func (svc service) CreateChannels(ctx context.Context, session authn.Session, chs ...Channel) (retChs []Channel, retErr error) {
+func (svc service) CreateChannels(ctx context.Context, session authn.Session, chs ...Channel) (retChs []Channel, retRps []roles.RoleProvision, retErr error) {
 	var reChs []Channel
 	for _, c := range chs {
 		if c.ID == "" {
 			clientID, err := svc.idProvider.ID()
 			if err != nil {
-				return []Channel{}, err
+				return []Channel{}, []roles.RoleProvision{}, err
 			}
 			c.ID = clientID
 		}
 
 		if c.Status != smqclients.DisabledStatus && c.Status != smqclients.EnabledStatus {
-			return []Channel{}, svcerr.ErrInvalidStatus
+			return []Channel{}, []roles.RoleProvision{}, svcerr.ErrInvalidStatus
 		}
 		c.Domain = session.DomainID
 		c.CreatedAt = time.Now()
@@ -78,7 +78,7 @@ func (svc service) CreateChannels(ctx context.Context, session authn.Session, ch
 
 	savedChs, err := svc.repo.Save(ctx, reChs...)
 	if err != nil {
-		return nil, errors.Wrap(svcerr.ErrCreateEntity, err)
+		return []Channel{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	chIDs := []string{}
 	for _, c := range savedChs {
@@ -110,10 +110,11 @@ func (svc service) CreateChannels(ctx context.Context, session authn.Session, ch
 			},
 		)
 	}
-	if _, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, chIDs, optionalPolicies, newBuiltInRoleMembers); err != nil {
-		return []Channel{}, errors.Wrap(svcerr.ErrAddPolicies, err)
+	nrps, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, chIDs, optionalPolicies, newBuiltInRoleMembers)
+	if err != nil {
+		return []Channel{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
-	return savedChs, nil
+	return savedChs, nrps, nil
 }
 
 func (svc service) UpdateChannel(ctx context.Context, session authn.Session, ch Channel) (Channel, error) {

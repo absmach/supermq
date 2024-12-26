@@ -9,6 +9,7 @@ import (
 	"github.com/absmach/supermq/channels"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
+	"github.com/absmach/supermq/pkg/roles"
 	rmTrace "github.com/absmach/supermq/pkg/roles/rolemanager/tracing"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -28,7 +29,7 @@ func New(svc channels.Service, tracer trace.Tracer) channels.Service {
 }
 
 // CreateChannels traces the "CreateChannels" operation of the wrapped policies.Service.
-func (tm *tracingMiddleware) CreateChannels(ctx context.Context, session authn.Session, chs ...channels.Channel) ([]channels.Channel, error) {
+func (tm *tracingMiddleware) CreateChannels(ctx context.Context, session authn.Session, chs ...channels.Channel) ([]channels.Channel, []roles.RoleProvision, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_create_channel")
 	defer span.End()
 

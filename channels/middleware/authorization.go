@@ -15,6 +15,7 @@ import (
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
+	"github.com/absmach/supermq/pkg/roles"
 	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 	"github.com/absmach/supermq/pkg/svcutil"
 )
@@ -80,7 +81,7 @@ func AuthorizationMiddleware(svc channels.Service, repo channels.Repository, aut
 	}, nil
 }
 
-func (am *authorizationMiddleware) CreateChannels(ctx context.Context, session authn.Session, chs ...channels.Channel) ([]channels.Channel, error) {
+func (am *authorizationMiddleware) CreateChannels(ctx context.Context, session authn.Session, chs ...channels.Channel) ([]channels.Channel, []roles.RoleProvision, error) {
 	if err := am.extAuthorize(ctx, channels.DomainOpCreateChannel, authz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
@@ -88,7 +89,7 @@ func (am *authorizationMiddleware) CreateChannels(ctx context.Context, session a
 		ObjectType:  policies.DomainType,
 		Object:      session.DomainID,
 	}); err != nil {
-		return []channels.Channel{}, errors.Wrap(err, errDomainCreateChannels)
+		return []channels.Channel{}, []roles.RoleProvision{}, errors.Wrap(err, errDomainCreateChannels)
 	}
 
 	for _, ch := range chs {
@@ -100,7 +101,7 @@ func (am *authorizationMiddleware) CreateChannels(ctx context.Context, session a
 				ObjectType:  policies.GroupType,
 				Object:      ch.ParentGroup,
 			}); err != nil {
-				return []channels.Channel{}, errors.Wrap(err, errors.Wrap(errGroupSetChildChannels, fmt.Errorf("channel name %s parent group id %s", ch.Name, ch.ParentGroup)))
+				return []channels.Channel{}, []roles.RoleProvision{}, errors.Wrap(err, errors.Wrap(errGroupSetChildChannels, fmt.Errorf("channel name %s parent group id %s", ch.Name, ch.ParentGroup)))
 			}
 		}
 	}

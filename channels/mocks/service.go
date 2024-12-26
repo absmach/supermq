@@ -69,7 +69,7 @@ func (_m *Service) Connect(ctx context.Context, session authn.Session, chIDs []s
 }
 
 // CreateChannels provides a mock function with given fields: ctx, session, _a2
-func (_m *Service) CreateChannels(ctx context.Context, session authn.Session, _a2 ...channels.Channel) ([]channels.Channel, error) {
+func (_m *Service) CreateChannels(ctx context.Context, session authn.Session, _a2 ...channels.Channel) ([]channels.Channel, []roles.RoleProvision, error) {
 	_va := make([]interface{}, len(_a2))
 	for _i := range _a2 {
 		_va[_i] = _a2[_i]
@@ -84,8 +84,9 @@ func (_m *Service) CreateChannels(ctx context.Context, session authn.Session, _a
 	}
 
 	var r0 []channels.Channel
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, ...channels.Channel) ([]channels.Channel, error)); ok {
+	var r1 []roles.RoleProvision
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, ...channels.Channel) ([]channels.Channel, []roles.RoleProvision, error)); ok {
 		return rf(ctx, session, _a2...)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, ...channels.Channel) []channels.Channel); ok {
@@ -96,13 +97,21 @@ func (_m *Service) CreateChannels(ctx context.Context, session authn.Session, _a
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, ...channels.Channel) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, ...channels.Channel) []roles.RoleProvision); ok {
 		r1 = rf(ctx, session, _a2...)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]roles.RoleProvision)
+		}
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, authn.Session, ...channels.Channel) error); ok {
+		r2 = rf(ctx, session, _a2...)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // DisableChannel provides a mock function with given fields: ctx, session, id
