@@ -11,6 +11,7 @@ import (
 
 	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/roles"
 	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 )
 
@@ -30,7 +31,7 @@ func LoggingMiddleware(svc clients.Service, logger *slog.Logger) clients.Service
 	}
 }
 
-func (lm *loggingMiddleware) CreateClients(ctx context.Context, session authn.Session, clients ...clients.Client) (cs []clients.Client, err error) {
+func (lm *loggingMiddleware) CreateClients(ctx context.Context, session authn.Session, clients ...clients.Client) (cs []clients.Client, rps []roles.RoleProvision, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),

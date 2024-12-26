@@ -54,43 +54,43 @@ func NewService(repo Repository, policy policies.Service, cache Cache, channels 
 	}, nil
 }
 
-func (svc service) CreateClients(ctx context.Context, session authn.Session, cls ...Client) (retClients []Client, retErr error) {
+func (svc service) CreateClients(ctx context.Context, session authn.Session, cls ...Client) (retClients []Client, retRps []roles.RoleProvision, retErr error) {
 	var clients []Client
 	for _, c := range cls {
 		if c.ID == "" {
 			clientID, err := svc.idProvider.ID()
 			if err != nil {
-				return []Client{}, err
+				return []Client{}, []roles.RoleProvision{}, err
 			}
 			c.ID = clientID
 		}
 		if c.Credentials.Secret == "" {
 			key, err := svc.idProvider.ID()
 			if err != nil {
-				return []Client{}, err
+				return []Client{}, []roles.RoleProvision{}, err
 			}
 			c.Credentials.Secret = key
 		}
 		if c.Status != DisabledStatus && c.Status != EnabledStatus {
-			return []Client{}, svcerr.ErrInvalidStatus
+			return []Client{}, []roles.RoleProvision{}, svcerr.ErrInvalidStatus
 		}
 		c.Domain = session.DomainID
 		c.CreatedAt = time.Now()
 		clients = append(clients, c)
 	}
 
-	saved, err := svc.repo.Save(ctx, clients...)
+	newClients, err := svc.repo.Save(ctx, clients...)
 	if err != nil {
-		return nil, errors.Wrap(svcerr.ErrCreateEntity, err)
+		return []Client{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
-	clientIDs := []string{}
-	for _, c := range saved {
-		clientIDs = append(clientIDs, c.ID)
+	newClientIDs := []string{}
+	for _, newClient := range newClients {
+		newClientIDs = append(newClientIDs, newClient.ID)
 	}
 
 	defer func() {
 		if retErr != nil {
-			if errRollBack := svc.repo.Delete(ctx, clientIDs...); errRollBack != nil {
+			if errRollBack := svc.repo.Delete(ctx, newClientIDs...); errRollBack != nil {
 				retErr = errors.Wrap(retErr, errors.Wrap(errRollbackRepo, errRollBack))
 			}
 		}
@@ -102,7 +102,7 @@ func (svc service) CreateClients(ctx context.Context, session authn.Session, cls
 
 	optionalPolicies := []policies.Policy{}
 
-	for _, clientID := range clientIDs {
+	for _, newClientID := range newClientIDs {
 		optionalPolicies = append(optionalPolicies,
 			policies.Policy{
 				Domain:      session.DomainID,
@@ -110,16 +110,17 @@ func (svc service) CreateClients(ctx context.Context, session authn.Session, cls
 				Subject:     session.DomainID,
 				Relation:    policies.DomainRelation,
 				ObjectType:  policies.ClientType,
-				Object:      clientID,
+				Object:      newClientID,
 			},
 		)
 	}
 
-	if _, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, clientIDs, optionalPolicies, newBuiltInRoleMembers); err != nil {
-		return []Client{}, errors.Wrap(svcerr.ErrAddPolicies, err)
+	nrps, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, newClientIDs, optionalPolicies, newBuiltInRoleMembers)
+	if err != nil {
+		return []Client{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
 
-	return saved, nil
+	return newClients, nrps, nil
 }
 
 func (svc service) View(ctx context.Context, session authn.Session, id string) (Client, error) {

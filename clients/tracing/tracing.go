@@ -8,6 +8,7 @@ import (
 
 	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/roles"
 	rmTrace "github.com/absmach/supermq/pkg/roles/rolemanager/tracing"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -31,7 +32,7 @@ func New(svc clients.Service, tracer trace.Tracer) clients.Service {
 }
 
 // CreateClients traces the "CreateClients" operation of the wrapped clients.Service.
-func (tm *tracingMiddleware) CreateClients(ctx context.Context, session authn.Session, cli ...clients.Client) ([]clients.Client, error) {
+func (tm *tracingMiddleware) CreateClients(ctx context.Context, session authn.Session, cli ...clients.Client) ([]clients.Client, []roles.RoleProvision, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_create_client")
 	defer span.End()
 

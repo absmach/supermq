@@ -12,6 +12,7 @@ import (
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
+	"github.com/absmach/supermq/pkg/roles"
 	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 	"github.com/absmach/supermq/pkg/svcutil"
 )
@@ -72,7 +73,7 @@ func AuthorizationMiddleware(entityType string, svc clients.Service, authz authz
 	}, nil
 }
 
-func (am *authorizationMiddleware) CreateClients(ctx context.Context, session authn.Session, client ...clients.Client) ([]clients.Client, error) {
+func (am *authorizationMiddleware) CreateClients(ctx context.Context, session authn.Session, client ...clients.Client) ([]clients.Client, []roles.RoleProvision, error) {
 	if err := am.extAuthorize(ctx, clients.DomainOpCreateClient, authz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
@@ -80,7 +81,7 @@ func (am *authorizationMiddleware) CreateClients(ctx context.Context, session au
 		ObjectType:  policies.DomainType,
 		Object:      session.DomainID,
 	}); err != nil {
-		return []clients.Client{}, errors.Wrap(err, errDomainCreateClients)
+		return []clients.Client{}, []roles.RoleProvision{}, errors.Wrap(err, errDomainCreateClients)
 	}
 
 	return am.svc.CreateClients(ctx, session, client...)

@@ -10,6 +10,7 @@ import (
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/events"
 	"github.com/absmach/supermq/pkg/events/store"
+	"github.com/absmach/supermq/pkg/roles"
 	rmEvents "github.com/absmach/supermq/pkg/roles/rolemanager/events"
 )
 
@@ -39,22 +40,23 @@ func NewEventStoreMiddleware(ctx context.Context, svc clients.Service, url strin
 	}, nil
 }
 
-func (es *eventStore) CreateClients(ctx context.Context, session authn.Session, clients ...clients.Client) ([]clients.Client, error) {
-	clis, err := es.svc.CreateClients(ctx, session, clients...)
+func (es *eventStore) CreateClients(ctx context.Context, session authn.Session, clients ...clients.Client) ([]clients.Client, []roles.RoleProvision, error) {
+	clis, rps, err := es.svc.CreateClients(ctx, session, clients...)
 	if err != nil {
-		return clis, err
+		return clis, rps, err
 	}
 
 	for _, cli := range clis {
 		event := createClientEvent{
-			cli,
+			Client:           cli,
+			rolesProvisioned: rps,
 		}
 		if err := es.Publish(ctx, event); err != nil {
-			return clis, err
+			return clis, rps, err
 		}
 	}
 
-	return clis, nil
+	return clis, rps, nil
 }
 
 func (es *eventStore) Update(ctx context.Context, session authn.Session, client clients.Client) (clients.Client, error) {

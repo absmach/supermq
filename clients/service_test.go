@@ -278,9 +278,9 @@ func TestCreateClients(t *testing.T) {
 		repoCall := repo.On("Save", context.Background(), mock.Anything).Return([]clients.Client{tc.client}, tc.saveErr)
 		policyCall := pService.On("AddPolicies", context.Background(), mock.Anything).Return(tc.addPolicyErr)
 		policyCall1 := pService.On("DeletePolicies", context.Background(), mock.Anything).Return(tc.deletePolicyErr)
-		repoCall1 := repo.On("AddRoles", context.Background(), mock.Anything).Return([]roles.Role{}, tc.addRoleErr)
+		repoCall1 := repo.On("AddRoles", context.Background(), mock.Anything).Return([]roles.RoleProvision{}, tc.addRoleErr)
 		repoCall2 := repo.On("Delete", context.Background(), mock.Anything).Return(tc.deleteErr)
-		expected, err := svc.CreateClients(context.Background(), smqauthn.Session{}, tc.client)
+		expected, _, err := svc.CreateClients(context.Background(), smqauthn.Session{}, tc.client)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
 			tc.client.ID = expected[0].ID

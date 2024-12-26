@@ -27,13 +27,13 @@ func createClientEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		client, err := svc.CreateClients(ctx, session, req.client)
+		clients, _, err := svc.CreateClients(ctx, session, req.client)
 		if err != nil {
 			return nil, err
 		}
 
 		return createClientRes{
-			Client:  client[0],
+			Client:  clients[0],
 			created: true,
 		}, nil
 	}
@@ -51,18 +51,18 @@ func createClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		page, err := svc.CreateClients(ctx, session, req.Clients...)
+		clients, _, err := svc.CreateClients(ctx, session, req.Clients...)
 		if err != nil {
 			return nil, err
 		}
 
 		res := clientsPageRes{
 			clientsPageMetaRes: clientsPageMetaRes{
-				Total: uint64(len(page)),
+				Total: uint64(len(clients)),
 			},
 			Clients: []viewClientRes{},
 		}
-		for _, c := range page {
+		for _, c := range clients {
 			res.Clients = append(res.Clients, viewClientRes{Client: c})
 		}
 

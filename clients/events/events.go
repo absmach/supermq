@@ -8,6 +8,7 @@ import (
 
 	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/pkg/events"
+	"github.com/absmach/supermq/pkg/roles"
 )
 
 const (
@@ -42,14 +43,16 @@ var (
 
 type createClientEvent struct {
 	clients.Client
+	rolesProvisioned []roles.RoleProvision
 }
 
 func (cce createClientEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
-		"operation":  clientCreate,
-		"id":         cce.ID,
-		"status":     cce.Status.String(),
-		"created_at": cce.CreatedAt,
+		"operation":         clientCreate,
+		"id":                cce.ID,
+		"roles_provisioned": cce.rolesProvisioned,
+		"status":            cce.Status.String(),
+		"created_at":        cce.CreatedAt,
 	}
 
 	if cce.Name != "" {

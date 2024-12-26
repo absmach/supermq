@@ -9,6 +9,7 @@ import (
 
 	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/pkg/authn"
+	"github.com/absmach/supermq/pkg/roles"
 	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 	"github.com/go-kit/kit/metrics"
 )
@@ -32,7 +33,7 @@ func MetricsMiddleware(svc clients.Service, counter metrics.Counter, latency met
 	}
 }
 
-func (ms *metricsMiddleware) CreateClients(ctx context.Context, session authn.Session, clients ...clients.Client) ([]clients.Client, error) {
+func (ms *metricsMiddleware) CreateClients(ctx context.Context, session authn.Session, clients ...clients.Client) ([]clients.Client, []roles.RoleProvision, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "register_clients").Add(1)
 		ms.latency.With("method", "register_clients").Observe(time.Since(begin).Seconds())

@@ -100,7 +100,7 @@ type Repository interface {
 type Service interface {
 	// CreateClients creates new client. In case of the failed registration, a
 	// non-nil error value is returned.
-	CreateClients(ctx context.Context, session authn.Session, client ...Client) ([]Client, error)
+	CreateClients(ctx context.Context, session authn.Session, client ...Client) ([]Client, []roles.RoleProvision, error)
 
 	// View retrieves client info for a given client ID and an authorized token.
 	View(ctx context.Context, session authn.Session, id string) (Client, error)
