@@ -1,25 +1,30 @@
 <div align="center">
 
-# <span style="background-color:#f5f5f5;padding:10px;border-radius:5px;">SuperMQ</span>
-
-**Planetary event-driven infrastructure**  
-**Made by [Abstract Machines](https://abstractmachines.fr/) with ❤️**
-
-[![Build Status](https://github.com/absmach/supermq/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/absmach/supermq/actions/workflows/build.yml)
-[![Check License Header](https://github.com/absmach/supermq/actions/workflows/check-license.yaml/badge.svg?branch=main)](https://github.com/absmach/supermq/actions/workflows/check-license.yaml)
-[![Check Generated Files](https://github.com/absmach/supermq/actions/workflows/check-generated-files.yml/badge.svg?branch=main)](https://github.com/absmach/supermq/actions/workflows/check-generated-files.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/absmach/supermq)](https://goreportcard.com/report/github.com/absmach/supermq)
-[![Coverage](https://codecov.io/gh/absmach/supermq/graph/badge.svg?token=nPCEr5nW8S)](https://codecov.io/gh/absmach/supermq)
-[![License](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
-[![Matrix](https://img.shields.io/matrix/:supermq)](https://matrix.to/#/#supermq:matrix.org)
-
-**[Guide](https://docs.supermq.abstractmachines.fr) | [Contributing](#CONTRIBUTING) | [Website](https://abstractmachines.fr/) | [Chat](https://matrix.to/#/#supermq:matrix.org)**
+  # SuperMQ
+  
+  **Planetary event-driven infrastructure**
+  
+  **Made with ❤️ by [Abstract Machines](https://abstractmachines.fr/)**
+  
+  [![Build Status](https://github.com/absmach/supermq/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/absmach/supermq/actions/workflows/build.yml)
+  [![Check License Header](https://github.com/absmach/supermq/actions/workflows/check-license.yaml/badge.svg?branch=main)](https://github.com/absmach/supermq/actions/workflows/check-license.yaml)
+  [![Check Generated Files](https://github.com/absmach/supermq/actions/workflows/check-generated-files.yml/badge.svg?branch=main)](https://github.com/absmach/supermq/actions/workflows/check-generated-files.yml)
+  [![Go Report Card](https://goreportcard.com/badge/github.com/absmach/supermq)](https://goreportcard.com/report/github.com/absmach/supermq)
+  [![Coverage](https://codecov.io/gh/absmach/supermq/graph/badge.svg?token=nPCEr5nW8S)](https://codecov.io/gh/absmach/supermq)
+  [![License](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
+  [![Matrix](https://img.shields.io/matrix/:supermq)](https://matrix.to/#/#supermq:matrix.org)
+  
+  ### [Guide](https://docs.supermq.abstractmachines.fr) | [Contributing](CONTRIBUTING.md) | [Website](https://abstractmachines.fr/) | [Chat](https://matrix.to/#/#supermq:matrix.org)
 
 </div>
 
+
+
+## Introduction 📖
+
 SuperMQ is a distributed, highly scalable, and secure open-source cloud platform for messaging and event-driven architecture (EDA). It is a planetarily distributed, highly scalable, and secure platform that serves as a robust foundation for building advanced real-time and reactive systems.
 
-## Why Choose SuperMQ? 🤔
+## Why SuperMQ Stands Out 🚀
 
 SuperMQ bridges the gap between various network protocols (HTTP, MQTT, WebSocket, CoAP, and more) to provide a seamless messaging experience. Whether you're working on IoT solutions, real-time data pipelines, or event-driven systems, SuperMQ has you covered. 🌐✨
 
