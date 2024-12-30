@@ -12,7 +12,7 @@
   [![Go Report Card](https://goreportcard.com/badge/github.com/absmach/supermq)](https://goreportcard.com/report/github.com/absmach/supermq)
   [![Coverage](https://codecov.io/gh/absmach/supermq/graph/badge.svg?token=nPCEr5nW8S)](https://codecov.io/gh/absmach/supermq)
   [![License](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
-  [![Matrix](https://img.shields.io/matrix/:supermq)](https://matrix.to/#/#supermq:matrix.org)
+ [![Matrix](https://img.shields.io/matrix/supermq%3Amatrix.org?label=Chat&style=flat&logo=matrix&logoColor=white)](https://matrix.to/#/#supermq:matrix.org)
   
   ### [Guide](https://docs.supermq.abstractmachines.fr) | [Contributing](CONTRIBUTING.md) | [Website](https://abstractmachines.fr/) | [Chat](https://matrix.to/#/#supermq:matrix.org)
 
@@ -85,8 +85,9 @@ See our [CLI documentation](https://docs.supermq.abstractmachines.fr/cli) for mo
 
 ## Documentation 📚
 
-Official documentation is hosted at [SuperMQ official docs page][docs]. Documentation is auto-generated, checkout the instructions on [official docs repository](https://github.com/absmach/supermq-docs):
+The official documentation is hosted at [SuperMQ docs page](https://docs.supermq.abstractmachines.fr).
 
+Documentation is auto-generated, check out the instructions in the [docs repository](https://github.com/absmach/supermq-docs).
 If you spot an error or a need for corrections, please let us know - or even better: send us a PR! 💌
 
 ## Community and Contributing 🤝
