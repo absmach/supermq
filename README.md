@@ -1,117 +1,90 @@
-# SuperMQ
+<div align="center">
 
+# <span style="background-color:#f5f5f5;padding:10px;border-radius:5px;">SuperMQ</span>
+
+**Planetary event-driven infrastructure**  
+**Made by [Abstract Machines](https://abstractmachines.fr/) with ❤️**
+
+[![Build Status](https://github.com/absmach/supermq/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/absmach/supermq/actions/workflows/build.yml)
 [![Check License Header](https://github.com/absmach/supermq/actions/workflows/check-license.yaml/badge.svg?branch=main)](https://github.com/absmach/supermq/actions/workflows/check-license.yaml)
-[![Check the consistency of generated files](https://github.com/absmach/supermq/actions/workflows/check-generated-files.yml/badge.svg?branch=main)](https://github.com/absmach/supermq/actions/workflows/check-generated-files.yml)
-[![Continuous Delivery](https://github.com/absmach/supermq/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/absmach/supermq/actions/workflows/build.yml)
-[![go report card][grc-badge]][grc-url]
-[![coverage][cov-badge]][cov-url]
-[![license][license]](LICENSE)
-[![chat][gitter-badge]][gitter]
+[![Check Generated Files](https://github.com/absmach/supermq/actions/workflows/check-generated-files.yml/badge.svg?branch=main)](https://github.com/absmach/supermq/actions/workflows/check-generated-files.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/absmach/supermq)](https://goreportcard.com/report/github.com/absmach/supermq)
+[![Coverage](https://codecov.io/gh/absmach/supermq/graph/badge.svg?token=nPCEr5nW8S)](https://codecov.io/gh/absmach/supermq)
+[![License](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
+[![Chat](https://img.shields.io/matrix/:supermq)](https://matrix.to/#/#supermq:matrix.org)
 
-![banner][banner]
+| [Guide](https://docs.supermq.abstractmachines.fr) | [Contributing](#contributing) | [Website](https://abstractmachines.fr/) | [Chat](https://matrix.to/#/#supermq:matrix.org) |
 
-SuperMQ is modern, scalable, secure, open-source, and patent-free cloud platform for messaging and event-driven architecture (EDA) written in Go.
+</div>
 
-It accepts user and client (device, user, application) connections over various network protocols (i.e. HTTP, MQTT, WebSocket, CoAP), thus making a seamless bridge between them. It is used as the architecture backbone for building complex distributed solutions.
+SuperMQ is a distributed, highly scalable, and secure open-source cloud platform for messaging and event-driven architecture (EDA). It is a planetarily distributed, highly scalable, and secure platform that serves as a robust foundation for building advanced real-time and reactive systems.
 
-For more details, check out the [official documentation][docs].
-For extra bits and services see [our contrib repository][contrib].
+## Why Choose SuperMQ? 🤔
 
-## Features
+SuperMQ bridges the gap between various network protocols (HTTP, MQTT, WebSocket, CoAP, and more) to provide a seamless messaging experience. Whether you're working on IoT solutions, real-time data pipelines, or event-driven systems, SuperMQ has you covered. 🌐✨
 
-- Multi-protocol connectivity and bridging (HTTP, MQTT, WebSocket and CoAP; see [contrib repository][contrib] for LoRa and OPC UA)
-- Device management and provisioning (Zero Touch provisioning)
-- Mutual TLS Authentication (mTLS) using X.509 Certificates
-- Fine-grained access control (policies, ABAC/RBAC)
-- Message persistence (Timescale and PostgresSQL - see [contrib repository][contrib] for Cassandra, InfluxDB, and MongoDB support)
-- Platform logging and instrumentation support (Prometheus and OpenTelemetry)
-- Event sourcing
-- Container-based deployment using [Docker][docker] and [Kubernetes][kubernetes]
-- Edge [Agent][agent] and [Export][export] services for remote IoT gateway management and edge computing
-- SDK
-- CLI
-- Small memory footprint and fast execution
-- Domain-driven design architecture, high-quality code and test coverage
+## Key Features 🌟
 
-## Prerequisites
+- **Multi-Protocol Connectivity**: HTTP, MQTT, WebSocket, CoAP, and more! 🌉
+- **Secure by Design**: Mutual TLS (mTLS) with X.509 Certificates, JWT support, and multi-protocol authorization. 🔒
+- **Fine-Grained Access Control**: Support for ABAC and RBAC policies. 📜
+- **Multi-Tenant**: Manage multiple domains seamlessly. 🏢
+- **Multi-User**: Unlimited organizational hierarchies for user management. 👥
+- **Application Management**: Group and share messaging clients for streamlined operations. 📱
+- **Ease of Use**: Simple and powerful communication channel management, grouping, and sharing. ✨
+- **Personal Access Tokens (PATs)**: Scoped and revocable tokens for enhanced security. 🔑
+- **Observability**: Integrated logging and instrumentation with Prometheus and OpenTelemetry. 📈
+- **Event Sourcing**: Build robust and scalable architectures. ⚡
+- **Edge and IoT Ready**: Supports MQTT and CoAP protocols for seamless IoT gateway and sensor communication and management. 🌍
+- **Developer-Friendly**: SDKs, CLI tools, and comprehensive documentation to get you started. 👩‍💻👨‍💻
+- **Production-Ready**: Container-based deployment using Docker and Kubernetes. 🐳☸️
 
-The following are needed to run SuperMQ:
+## Installation 🛠️
 
-- [Docker](https://docs.docker.com/install/) (version 26.0.0)
-
-Developing SuperMQ will also require:
-
-- [Go](https://golang.org/doc/install) (version 1.21)
-- [Protobuf](https://github.com/protocolbuffers/protobuf#protocol-compiler-installation) (version 25.1)
-
-## Install
-
-Once the prerequisites are installed, execute the following commands from the project's root:
+Clone the repository and start SuperMQ services:
 
 ```bash
-docker compose -f docker/docker-compose.yml --env-file docker/.env -p git_github_com_absmach_supermq_git_  up
+git clone https://github.com/absmach/supermq.git
+cd supermq
+docker compose -f docker/docker-compose.yml --env-file docker/.env up
 ```
 
-This will bring up the SuperMQ docker services and interconnect them. This command can also be executed using the project's included Makefile:
+Or use the [Makefile](Makefile) for a simpler command:
 
 ```bash
 make run
 ```
 
-If you want to run services from specific release checkout code from github and make sure that
-`SMQ_RELEASE_TAG` in [.env](.env) is being set to match the release version
+For production deployments, check our [Kubernetes guide](https://docs.supermq.abstractmachines.fr/kubernetes). ⚙️
 
-```bash
-git checkout tags/<release_number> -b <release_number>
-# e.g. `git checkout tags/0.13.0 -b 0.13.0`
-```
+### Usage 📤📥
 
-Check that `.env` file contains:
-
-```bash
-SMQ_RELEASE_TAG=<release_number>
-```
-
-> `docker-compose` should be used for development and testing deployments. For production we suggest using [Kubernetes](https://docs.supermq.abstractmachines.fr/kubernetes).
-
-## Usage
-
-The quickest way to start using SuperMQ is via the CLI. The latest version can be downloaded from the [official releases page][releases].
-
-It can also be built and used from the project's root directory:
+#### Using the CLI:
 
 ```bash
 make cli
-./build/cli version
+./build/supermq-cli status
 ```
 
-Additional details on using the CLI can be found in the [CLI documentation](https://docs.supermq.abstractmachines.fr/cli).
+This command retrieves the status of the SuperMQ server and outputs it to the console.
 
-## Documentation
+#### Using HTTP with Curl:
+
+```bash
+curl -X GET http://localhost:8080/status
+```
+
+This request fetches the server status over HTTP and provides a JSON response.
+
+See our [CLI documentation](https://docs.supermq.abstractmachines.fr/cli) for more details.
+
+## Documentation 📚
 
 Official documentation is hosted at [SuperMQ official docs page][docs]. Documentation is auto-generated, checkout the instructions on [official docs repository](https://github.com/absmach/supermq-docs):
 
-If you spot an error or a need for corrections, please let us know - or even better: send us a PR.
+If you spot an error or a need for corrections, please let us know - or even better: send us a PR! 💌
 
-## Authors
-
-Main architect and BDFL of SuperMQ project is [@drasko][drasko].
-
-Additionally, [@nmarcetic][nikola] and [@janko-isidorovic][janko] assured overall architecture and design, while [@manuio][manu] and [@darkodraskovic][darko] helped with crafting initial implementation and continuously worked on the project evolutions.
-
-Besides them, SuperMQ is constantly improved and actively developed by [@anovakovic01][alex], [@dusanb94][dusan], [@srados][sava], [@gsaleh][george], [@blokovi][iva], [@chombium][kole], [@mteodor][mirko], [@rodneyosodo][rodneyosodo] and a large set of contributors.
-
-Maintainers are listed in [MAINTAINERS](MAINTAINERS) file.
-
-The SuperMQ team would like to give special thanks to [@mijicd][dejan] for his monumental work on designing and implementing a highly improved and optimized version of the platform, and [@malidukica][dusanm] for his effort on implementing the initial user interface.
-
-## Professional Support
-
-There are many companies offering professional support for the SuperMQ system.
-
-If you need this kind of support, best is to reach out to [@drasko][drasko] directly, and he will point you out to the best-matching support team.
-
-## Contributing
+## Community and Contributing 🤝
 
 Thank you for your interest in SuperMQ and the desire to contribute!
 
@@ -119,75 +92,21 @@ Thank you for your interest in SuperMQ and the desire to contribute!
 2. Checkout the [contribution guide](CONTRIBUTING.md) to learn more about our style and conventions.
 3. Make your changes compatible to our workflow.
 
-Also, explore our [contrib][contrib] repository for extra services such as Cassandra, InfluxDB, MongoDB readers and writers, LoRa, OPC UA support, Digital Twins, and more. If you have a contribution that is not a good fit for the core monorepo (it's specific to your use case, it's an additional feature or a new service, it's optional or an add-on), this is a great place to submit the pull request.
+Join our community:
 
-### We're Hiring
+- [Matrix Room](https://matrix.to/#/#supermq\:matrix.org)
 
-You like SuperMQ and you would like to make it your day job? We're always looking for talented engineers interested in open-source, IoT and distributed systems. If you recognize yourself, reach out to [@drasko][drasko] - he will contact you back.
+## Professional Support 💼
 
-> The best way to grab our attention is, of course, by sending PRs :sunglasses:.
+Need help deploying SuperMQ or integrating it into your system? Reach out to **[Abstract Machines](https://abstractmachines.fr/)** for professional support and guidance.
 
-## Community
+## License 📜
 
-- [Google group][forum]
-- [Gitter][gitter]
-- [Twitter][twitter]
+SuperMQ is open-source software licensed under the [Apache License 2.0](LICENSE). Contributions are welcome!
 
-## License
+## Acknowledgments 🙌
 
-[Apache-2.0](LICENSE)
+Special thanks to the amazing contributors who make SuperMQ possible. Check out the [MAINTAINERS](MAINTAINERS) file to see the team behind the magic.
 
-[![FOSSA Status][FOSSA]][FOSSA]
+Ready to build the future of messaging and event-driven systems? Let's get started! 🚀
 
-## Data Collection for SuperMQ
-
-SuperMQ is committed to continuously improving its services and ensuring a seamless experience for its users. To achieve this, we collect certain data from your deployments. Rest assured, this data is collected solely for the purpose of enhancing SuperMQ and is not used with any malicious intent. The deployment summary can be found on our [website][callhome].
-
-The collected data includes:
-
-- **IP Address** - Used for approximate location information on deployments.
-- **Services Used** - To understand which features are popular and prioritize future developments.
-- **Last Seen Time** - To ensure the stability and availability of SuperMQ.
-- **SuperMQ Version** - To track the software version and deliver relevant updates.
-
-We take your privacy and data security seriously. All data collected is handled in accordance with our stringent privacy policies and industry best practices.
-
-Data collection is on by default and can be disabled by setting the env variable:
-`SMQ_SEND_TELEMETRY=false`
-
-By utilizing SuperMQ, you actively contribute to its improvement. Together, we can build a more robust and efficient platform. Thank you for your trust in SuperMQ!
-
-[banner]: https://github.com/absmach/supermq-docs/blob/main/docs/img/gopherBanner.jpg
-[docs]: https://docs.supermq.abstractmachines.fr
-[docker]: https://www.docker.com
-[forum]: https://groups.google.com/forum/#!forum/mainflux
-[gitter]: https://gitter.im/absmach/supermq?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-[gitter-badge]: https://badges.gitter.im/Join%20Chat.svg
-[grc-badge]: https://goreportcard.com/badge/github.com/absmach/supermq
-[grc-url]: https://goreportcard.com/report/github.com/absmach/supermq
-[cov-badge]: https://codecov.io/gh/absmach/supermq/graph/badge.svg?token=nPCEr5nW8S
-[cov-url]: https://codecov.io/gh/absmach/supermq
-[license]: https://img.shields.io/badge/license-Apache%20v2.0-blue.svg
-[twitter]: https://twitter.com/absmach
-[agent]: https://github.com/absmach/agent
-[export]: https://github.com/absmach/export
-[kubernetes]: https://kubernetes.io/
-[releases]: https://github.com/absmach/supermq/releases
-[drasko]: https://github.com/drasko
-[nikola]: https://github.com/nmarcetic
-[dejan]: https://github.com/mijicd
-[manu]: https://github.com/manuIO
-[darko]: https://github.com/darkodraskovic
-[janko]: https://github.com/janko-isidorovic
-[alex]: https://github.com/anovakovic01
-[dusan]: https://github.com/dborovcanin
-[sava]: https://github.com/srados
-[george]: https://github.com/gesaleh
-[iva]: https://github.com/blokovi
-[kole]: https://github.com/chombium
-[dusanm]: https://github.com/malidukica
-[mirko]: https://github.com/mteodor
-[rodneyosodo]: https://github.com/rodneyosodo
-[callhome]: https://deployments.magistrala.abstractmachines.fr/
-[contrib]: https://www.github.com/absmach/mg-contrib
-[FOSSA]: https://app.fossa.com/api/projects/git%2Bgithub.com%2Fabsmach%2Fsupermq.svg?type=small
