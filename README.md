@@ -11,9 +11,9 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/absmach/supermq)](https://goreportcard.com/report/github.com/absmach/supermq)
 [![Coverage](https://codecov.io/gh/absmach/supermq/graph/badge.svg?token=nPCEr5nW8S)](https://codecov.io/gh/absmach/supermq)
 [![License](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
-[![Chat](https://img.shields.io/matrix/:supermq)](https://matrix.to/#/#supermq:matrix.org)
+[![Matrix](https://img.shields.io/matrix/:supermq)](https://matrix.to/#/#supermq:matrix.org)
 
-| [Guide](https://docs.supermq.abstractmachines.fr) | [Contributing](#contributing) | [Website](https://abstractmachines.fr/) | [Chat](https://matrix.to/#/#supermq:matrix.org) |
+**[Guide](https://docs.supermq.abstractmachines.fr) | [Contributing](#CONTRIBUTING) | [Website](https://abstractmachines.fr/) | [Chat](https://matrix.to/#/#supermq:matrix.org)**
 
 </div>
 
