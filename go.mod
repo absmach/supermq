@@ -8,7 +8,7 @@ require (
 	github.com/absmach/certs v0.0.0-20241014135535-3f118b801054
 	github.com/absmach/mgate v0.4.5
 	github.com/absmach/senml v1.0.6
-	github.com/authzed/authzed-go v1.2.0
+	github.com/authzed/authzed-go v1.2.1
 	github.com/authzed/grpcutil v0.0.0-20240123194739-2ea1e3d2d98b
 	github.com/authzed/spicedb v1.39.1
 	github.com/caarlos0/env/v11 v11.3.1
@@ -57,7 +57,7 @@ require (
 	golang.org/x/oauth2 v0.24.0
 	golang.org/x/sync v0.10.0
 	gonum.org/v1/gonum v0.15.1
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241209162323-e6fa225c2576
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241219192143-6b3ec007d9bb
 	google.golang.org/grpc v1.69.2
 	google.golang.org/protobuf v1.36.2
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
@@ -102,7 +102,7 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.24.0 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.25.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -174,11 +174,11 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0 // indirect
-	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20241209162323-e6fa225c2576 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20241219192143-6b3ec007d9bb // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
