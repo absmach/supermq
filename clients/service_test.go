@@ -351,7 +351,6 @@ func TestListClients(t *testing.T) {
 	adminID := testsutil.GenerateUUID(t)
 	domainID := testsutil.GenerateUUID(t)
 	nonAdminID := testsutil.GenerateUUID(t)
-	client.Permissions = []string{"read", "edit"}
 
 	cases := []struct {
 		desc                    string
@@ -375,9 +374,8 @@ func TestListClients(t *testing.T) {
 			session:  smqauthn.Session{UserID: nonAdminID, DomainID: domainID, SuperAdmin: false},
 			id:       nonAdminID,
 			page: clients.Page{
-				Offset:    0,
-				Limit:     100,
-				ListPerms: true,
+				Offset: 0,
+				Limit:  100,
 			},
 			listObjectsResponse: policysvc.PolicyPage{Policies: []string{client.ID, client.ID}},
 			retrieveAllResponse: clients.ClientsPage{
@@ -388,7 +386,6 @@ func TestListClients(t *testing.T) {
 				},
 				Clients: []clients.Client{client, client},
 			},
-			listPermissionsResponse: client.Permissions,
 			response: clients.ClientsPage{
 				Page: clients.Page{
 					Total:  2,
@@ -405,9 +402,8 @@ func TestListClients(t *testing.T) {
 			session:  smqauthn.Session{UserID: nonAdminID, DomainID: domainID, SuperAdmin: false},
 			id:       nonAdminID,
 			page: clients.Page{
-				Offset:    0,
-				Limit:     100,
-				ListPerms: true,
+				Offset: 0,
+				Limit:  100,
 			},
 			listObjectsResponse: policysvc.PolicyPage{Policies: []string{client.ID, client.ID}},
 			retrieveAllResponse: clients.ClientsPage{},
@@ -421,9 +417,8 @@ func TestListClients(t *testing.T) {
 			session:  smqauthn.Session{UserID: nonAdminID, DomainID: domainID, SuperAdmin: false},
 			id:       nonAdminID,
 			page: clients.Page{
-				Offset:    0,
-				Limit:     100,
-				ListPerms: true,
+				Offset: 0,
+				Limit:  100,
 			},
 			listObjectsResponse: policysvc.PolicyPage{Policies: []string{client.ID, client.ID}},
 			retrieveAllResponse: clients.ClientsPage{
@@ -445,9 +440,8 @@ func TestListClients(t *testing.T) {
 			session:  smqauthn.Session{UserID: nonAdminID, DomainID: domainID, SuperAdmin: false},
 			id:       nonAdminID,
 			page: clients.Page{
-				Offset:    0,
-				Limit:     100,
-				ListPerms: true,
+				Offset: 0,
+				Limit:  100,
 			},
 			response:            clients.ClientsPage{},
 			listObjectsResponse: policysvc.PolicyPage{},
@@ -458,9 +452,8 @@ func TestListClients(t *testing.T) {
 			userKind: "non-admin",
 			id:       nonAdminID,
 			page: clients.Page{
-				Offset:    0,
-				Limit:     100,
-				ListPerms: true,
+				Offset: 0,
+				Limit:  100,
 			},
 			response:            clients.ClientsPage{},
 			listObjectsResponse: policysvc.PolicyPage{},
@@ -473,7 +466,7 @@ func TestListClients(t *testing.T) {
 		listAllObjectsCall := pService.On("ListAllObjects", mock.Anything, mock.Anything).Return(tc.listObjectsResponse, tc.listObjectsErr)
 		retrieveAllCall := repo.On("SearchClients", mock.Anything, mock.Anything).Return(tc.retrieveAllResponse, tc.retrieveAllErr)
 		listPermissionsCall := pService.On("ListPermissions", mock.Anything, mock.Anything, mock.Anything).Return(tc.listPermissionsResponse, tc.listPermissionsErr)
-		page, err := svc.ListClients(context.Background(), tc.session, tc.id, tc.page)
+		page, err := svc.ListClients(context.Background(), tc.session, tc.page)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
 		listAllObjectsCall.Unset()
@@ -503,10 +496,9 @@ func TestListClients(t *testing.T) {
 			id:       adminID,
 			session:  smqauthn.Session{UserID: adminID, DomainID: domainID, SuperAdmin: true},
 			page: clients.Page{
-				Offset:    0,
-				Limit:     100,
-				ListPerms: true,
-				Domain:    domainID,
+				Offset: 0,
+				Limit:  100,
+				Domain: domainID,
 			},
 			listObjectsResponse: policysvc.PolicyPage{Policies: []string{client.ID, client.ID}},
 			retrieveAllResponse: clients.ClientsPage{
@@ -517,7 +509,6 @@ func TestListClients(t *testing.T) {
 				},
 				Clients: []clients.Client{client, client},
 			},
-			listPermissionsResponse: client.Permissions,
 			response: clients.ClientsPage{
 				Page: clients.Page{
 					Total:  2,
@@ -534,10 +525,9 @@ func TestListClients(t *testing.T) {
 			id:       adminID,
 			session:  smqauthn.Session{UserID: adminID, DomainID: domainID, SuperAdmin: true},
 			page: clients.Page{
-				Offset:    0,
-				Limit:     100,
-				ListPerms: true,
-				Domain:    domainID,
+				Offset: 0,
+				Limit:  100,
+				Domain: domainID,
 			},
 			listObjectsResponse: policysvc.PolicyPage{},
 			retrieveAllResponse: clients.ClientsPage{},
@@ -550,10 +540,9 @@ func TestListClients(t *testing.T) {
 			id:       adminID,
 			session:  smqauthn.Session{UserID: adminID, DomainID: domainID, SuperAdmin: true},
 			page: clients.Page{
-				Offset:    0,
-				Limit:     100,
-				ListPerms: true,
-				Domain:    domainID,
+				Offset: 0,
+				Limit:  100,
+				Domain: domainID,
 			},
 			listObjectsResponse: policysvc.PolicyPage{},
 			retrieveAllResponse: clients.ClientsPage{
@@ -574,10 +563,9 @@ func TestListClients(t *testing.T) {
 			id:       adminID,
 			session:  smqauthn.Session{UserID: adminID, DomainID: domainID, SuperAdmin: true},
 			page: clients.Page{
-				Offset:    0,
-				Limit:     100,
-				ListPerms: true,
-				Domain:    domainID,
+				Offset: 0,
+				Limit:  100,
+				Domain: domainID,
 			},
 			retrieveAllResponse: clients.ClientsPage{},
 			retrieveAllErr:      repoerr.ErrNotFound,
@@ -600,7 +588,7 @@ func TestListClients(t *testing.T) {
 		}).Return(tc.listObjectsResponse, tc.listObjectsErr)
 		retrieveAllCall := repo.On("SearchClients", mock.Anything, mock.Anything).Return(tc.retrieveAllResponse, tc.retrieveAllErr)
 		listPermissionsCall := pService.On("ListPermissions", mock.Anything, mock.Anything, mock.Anything).Return(tc.listPermissionsResponse, tc.listPermissionsErr)
-		page, err := svc.ListClients(context.Background(), tc.session, tc.id, tc.page)
+		page, err := svc.ListClients(context.Background(), tc.session, tc.page)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
 		listAllObjectsCall.Unset()

@@ -29,24 +29,24 @@ func Migration(rolesTableNamePrefix, entityTableName, entityIDColumnName string)
 						updated_at  TIMESTAMP,
 						updated_by  VARCHAR(254),
 						created_by  VARCHAR(254),
-                        CONSTRAINT  unique_role_name_entity_id_constraint UNIQUE ( name, entity_id),
-						CONSTRAINT  fk_entity_id FOREIGN KEY(entity_id) REFERENCES %s(%s) ON DELETE CASCADE
-                    );`, rolesTableNamePrefix, entityTableName, entityIDColumnName),
+                        CONSTRAINT  %s_roles_unique_role_name_entity_id_constraint UNIQUE ( name, entity_id),
+						CONSTRAINT  %s_roles_fk_entity_id FOREIGN KEY(entity_id) REFERENCES %s(%s) ON DELETE CASCADE
+                    );`, rolesTableNamePrefix, rolesTableNamePrefix, rolesTableNamePrefix, entityTableName, entityIDColumnName),
 
 					fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s_role_actions (
                         role_id     VARCHAR(254) NOT NULL,
                         action   VARCHAR(254) NOT NULL,
-                        CONSTRAINT  unique_domain_role_action_constraint UNIQUE ( role_id, action),
-                        CONSTRAINT  fk_%s_roles_id FOREIGN KEY(role_id) REFERENCES %s_roles(id) ON DELETE CASCADE
+                        CONSTRAINT  %s_role_actions_unique_domain_role_action_constraint UNIQUE ( role_id, action),
+                        CONSTRAINT  %s_role_actions_fk_roles_id FOREIGN KEY(role_id) REFERENCES %s_roles(id) ON DELETE CASCADE
 
-                    );`, rolesTableNamePrefix, rolesTableNamePrefix, rolesTableNamePrefix),
+                    );`, rolesTableNamePrefix, rolesTableNamePrefix, rolesTableNamePrefix, rolesTableNamePrefix),
 
 					fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s_role_members (
                         role_id     VARCHAR(254) NOT NULL,
                         member_id   VARCHAR(254) NOT NULL,
-                        CONSTRAINT  unique_role_member_constraint UNIQUE (role_id, member_id),
-                        CONSTRAINT  fk_%s_roles_id FOREIGN KEY(role_id) REFERENCES %s_roles(id) ON DELETE CASCADE
-                    );`, rolesTableNamePrefix, rolesTableNamePrefix, rolesTableNamePrefix),
+                        CONSTRAINT  %s_role_members_unique_role_member_constraint UNIQUE (role_id, member_id),
+                        CONSTRAINT  %s_role_members_fk_roles_id FOREIGN KEY(role_id) REFERENCES %s_roles(id) ON DELETE CASCADE
+                    );`, rolesTableNamePrefix, rolesTableNamePrefix, rolesTableNamePrefix, rolesTableNamePrefix),
 				},
 				Down: []string{
 					fmt.Sprintf(`DROP TABLE IF EXISTS %s_roles`, rolesTableNamePrefix),

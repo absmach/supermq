@@ -213,8 +213,7 @@ func TestListClientsReqValidate(t *testing.T) {
 		{
 			desc: "invalid visibility",
 			req: listClientsReq{
-				limit:      10,
-				visibility: "invalid",
+				limit: 10,
 			},
 			err: apiutil.ErrInvalidVisibilityType,
 		},

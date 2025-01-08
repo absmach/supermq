@@ -198,9 +198,9 @@ func (_m *Service) ListAvailableActions(ctx context.Context, session authn.Sessi
 	return r0, r1
 }
 
-// ListClients provides a mock function with given fields: ctx, session, reqUserID, pm
-func (_m *Service) ListClients(ctx context.Context, session authn.Session, reqUserID string, pm clients.Page) (clients.ClientsPage, error) {
-	ret := _m.Called(ctx, session, reqUserID, pm)
+// ListClients provides a mock function with given fields: ctx, session, pm
+func (_m *Service) ListClients(ctx context.Context, session authn.Session, pm clients.Page) (clients.ClientsPage, error) {
+	ret := _m.Called(ctx, session, pm)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListClients")
@@ -208,17 +208,45 @@ func (_m *Service) ListClients(ctx context.Context, session authn.Session, reqUs
 
 	var r0 clients.ClientsPage
 	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, clients.Page) (clients.ClientsPage, error)); ok {
+		return rf(ctx, session, pm)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, clients.Page) clients.ClientsPage); ok {
+		r0 = rf(ctx, session, pm)
+	} else {
+		r0 = ret.Get(0).(clients.ClientsPage)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, clients.Page) error); ok {
+		r1 = rf(ctx, session, pm)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListUserClients provides a mock function with given fields: ctx, session, userID, pm
+func (_m *Service) ListUserClients(ctx context.Context, session authn.Session, userID string, pm clients.Page) (clients.ClientsPage, error) {
+	ret := _m.Called(ctx, session, userID, pm)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListUserClients")
+	}
+
+	var r0 clients.ClientsPage
+	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, clients.Page) (clients.ClientsPage, error)); ok {
-		return rf(ctx, session, reqUserID, pm)
+		return rf(ctx, session, userID, pm)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, clients.Page) clients.ClientsPage); ok {
-		r0 = rf(ctx, session, reqUserID, pm)
+		r0 = rf(ctx, session, userID, pm)
 	} else {
 		r0 = ret.Get(0).(clients.ClientsPage)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string, clients.Page) error); ok {
-		r1 = rf(ctx, session, reqUserID, pm)
+		r1 = rf(ctx, session, userID, pm)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -73,6 +73,7 @@ func AuthorizationMiddleware(entityType string, svc groups.Service, repo groups.
 	}
 	return &authorizationMiddleware{
 		svc:                                svc,
+		repo:                               repo,
 		authz:                              authz,
 		opp:                                opp,
 		extOpp:                             extOpp,

@@ -71,29 +71,28 @@ func (req viewClientPermsReq) validate() error {
 }
 
 type listClientsReq struct {
-	status     clients.Status
-	offset     uint64
-	limit      uint64
 	name       string
 	tag        string
-	permission string
-	visibility string
-	userID     string
-	listPerms  bool
+	status     clients.Status
 	metadata   clients.Metadata
-	id         string
+	roleName   string
+	roleID     string
+	actions    []string
+	accessType string
+	order      string
+	dir        string
+	offset     uint64
+	limit      uint64
+	groupID    string
+	channelID  string
+	userID     string
 }
 
 func (req listClientsReq) validate() error {
 	if req.limit > api.MaxLimitSize || req.limit < 1 {
 		return apiutil.ErrLimitSize
 	}
-	if req.visibility != "" &&
-		req.visibility != api.AllVisibility &&
-		req.visibility != api.MyVisibility &&
-		req.visibility != api.SharedVisibility {
-		return apiutil.ErrInvalidVisibilityType
-	}
+
 	if len(req.name) > api.MaxNameSize {
 		return apiutil.ErrNameSize
 	}

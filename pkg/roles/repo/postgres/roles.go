@@ -406,7 +406,7 @@ func (repo *Repository) RoleAddActions(ctx context.Context, role roles.Role, act
 		return []string{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
-	return repo.RoleListActions(ctx, role.ID)
+	return actions, nil
 }
 
 func (repo *Repository) RoleListActions(ctx context.Context, roleID string) ([]string, error) {

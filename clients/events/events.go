@@ -205,7 +205,6 @@ func (vcpe viewClientPermsEvent) Encode() (map[string]interface{}, error) {
 }
 
 type listClientEvent struct {
-	reqUserID string
 	clients.Page
 	authn.Session
 }
@@ -213,7 +212,6 @@ type listClientEvent struct {
 func (lce listClientEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
 		"operation":   clientList,
-		"reqUserID":   lce.reqUserID,
 		"total":       lce.Total,
 		"offset":      lce.Offset,
 		"limit":       lce.Limit,
@@ -238,8 +236,52 @@ func (lce listClientEvent) Encode() (map[string]interface{}, error) {
 	if lce.Tag != "" {
 		val["tag"] = lce.Tag
 	}
-	if lce.Permission != "" {
-		val["permission"] = lce.Permission
+	if lce.Status.String() != "" {
+		val["status"] = lce.Status.String()
+	}
+	if len(lce.IDs) > 0 {
+		val["ids"] = lce.IDs
+	}
+	if lce.Identity != "" {
+		val["identity"] = lce.Identity
+	}
+	return val, nil
+
+}
+
+type listUserClientEvent struct {
+	userID string
+	clients.Page
+	authn.Session
+}
+
+func (lce listUserClientEvent) Encode() (map[string]interface{}, error) {
+	val := map[string]interface{}{
+		"operation":   clientList,
+		"userID":      lce.userID,
+		"total":       lce.Total,
+		"offset":      lce.Offset,
+		"limit":       lce.Limit,
+		"domain":      lce.DomainID,
+		"user_id":     lce.UserID,
+		"token_type":  lce.Type.String(),
+		"super_admin": lce.SuperAdmin,
+	}
+
+	if lce.Name != "" {
+		val["name"] = lce.Name
+	}
+	if lce.Order != "" {
+		val["order"] = lce.Order
+	}
+	if lce.Dir != "" {
+		val["dir"] = lce.Dir
+	}
+	if lce.Metadata != nil {
+		val["metadata"] = lce.Metadata
+	}
+	if lce.Tag != "" {
+		val["tag"] = lce.Tag
 	}
 	if lce.Status.String() != "" {
 		val["status"] = lce.Status.String()
@@ -287,9 +329,6 @@ func (lcge listClientByGroupEvent) Encode() (map[string]interface{}, error) {
 	}
 	if lcge.Tag != "" {
 		val["tag"] = lcge.Tag
-	}
-	if lcge.Permission != "" {
-		val["permission"] = lcge.Permission
 	}
 	if lcge.Status.String() != "" {
 		val["status"] = lcge.Status.String()

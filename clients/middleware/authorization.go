@@ -129,7 +129,29 @@ func (am *authorizationMiddleware) View(ctx context.Context, session authn.Sessi
 	return am.svc.View(ctx, session, id)
 }
 
-func (am *authorizationMiddleware) ListClients(ctx context.Context, session authn.Session, reqUserID string, pm clients.Page) (clients.ClientsPage, error) {
+func (am *authorizationMiddleware) ListClients(ctx context.Context, session authn.Session, pm clients.Page) (clients.ClientsPage, error) {
+	if session.Type == authn.PersonalAccessToken {
+		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
+			UserID:                   session.UserID,
+			PatID:                    session.PatID,
+			PlatformEntityType:       auth.PlatformDomainsScope,
+			OptionalDomainID:         session.DomainID,
+			OptionalDomainEntityType: auth.DomainClientsScope,
+			Operation:                auth.ListOp,
+			EntityIDs:                auth.AnyIDs{}.Values(),
+		}); err != nil {
+			return clients.ClientsPage{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
+		}
+	}
+
+	if err := am.checkSuperAdmin(ctx, session.UserID); err == nil {
+		session.SuperAdmin = true
+	}
+
+	return am.svc.ListClients(ctx, session, pm)
+}
+
+func (am *authorizationMiddleware) ListUserClients(ctx context.Context, session authn.Session, userID string, pm clients.Page) (clients.ClientsPage, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
 			UserID:                   session.UserID,
@@ -145,10 +167,10 @@ func (am *authorizationMiddleware) ListClients(ctx context.Context, session auth
 	}
 
 	if err := am.checkSuperAdmin(ctx, session.UserID); err != nil {
-		session.SuperAdmin = true
+		return clients.ClientsPage{}, err
 	}
 
-	return am.svc.ListClients(ctx, session, reqUserID, pm)
+	return am.svc.ListUserClients(ctx, session, userID, pm)
 }
 
 func (am *authorizationMiddleware) Update(ctx context.Context, session authn.Session, client clients.Client) (clients.Client, error) {

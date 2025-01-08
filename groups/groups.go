@@ -142,9 +142,10 @@ type Service interface {
 	// ViewGroup retrieves data about the group identified by ID.
 	ViewGroup(ctx context.Context, session authn.Session, id string) (Group, error)
 
-	// ListGroups retrieves
+	// ListGroups retrieves groups for given filters.
 	ListGroups(ctx context.Context, session authn.Session, pm PageMeta) (Page, error)
 
+	// ListGroups retrieves user accessible groups for given filters.
 	ListUserGroups(ctx context.Context, session authn.Session, userID string, pm PageMeta) (Page, error)
 
 	// EnableGroup logically enables the group identified with the provided ID.

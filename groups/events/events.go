@@ -357,13 +357,13 @@ type addChildrenGroupsEvent struct {
 
 func (acge addChildrenGroupsEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
-		"operation":   groupAddChildrenGroups,
-		"id":          acge.id,
-		"childre_ids": acge.childrenIDs,
-		"domain":      acge.DomainID,
-		"user_id":     acge.UserID,
-		"token_type":  acge.Type.String(),
-		"super_admin": acge.SuperAdmin,
+		"operation":    groupAddChildrenGroups,
+		"id":           acge.id,
+		"children_ids": acge.childrenIDs,
+		"domain":       acge.DomainID,
+		"user_id":      acge.UserID,
+		"token_type":   acge.Type.String(),
+		"super_admin":  acge.SuperAdmin,
 	}, nil
 }
 

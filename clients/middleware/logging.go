@@ -65,11 +65,10 @@ func (lm *loggingMiddleware) View(ctx context.Context, session authn.Session, id
 	return lm.svc.View(ctx, session, id)
 }
 
-func (lm *loggingMiddleware) ListClients(ctx context.Context, session authn.Session, reqUserID string, pm clients.Page) (cp clients.ClientsPage, err error) {
+func (lm *loggingMiddleware) ListClients(ctx context.Context, session authn.Session, pm clients.Page) (cp clients.ClientsPage, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.String("user_id", reqUserID),
 			slog.Group("page",
 				slog.Uint64("limit", pm.Limit),
 				slog.Uint64("offset", pm.Offset),
@@ -83,7 +82,28 @@ func (lm *loggingMiddleware) ListClients(ctx context.Context, session authn.Sess
 		}
 		lm.logger.Info("List clients completed successfully", args...)
 	}(time.Now())
-	return lm.svc.ListClients(ctx, session, reqUserID, pm)
+	return lm.svc.ListClients(ctx, session, pm)
+}
+
+func (lm *loggingMiddleware) ListUserClients(ctx context.Context, session authn.Session, userID string, pm clients.Page) (cp clients.ClientsPage, err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.String("user_id", userID),
+			slog.Group("page",
+				slog.Uint64("limit", pm.Limit),
+				slog.Uint64("offset", pm.Offset),
+				slog.Uint64("total", cp.Total),
+			),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn("List clients failed", args...)
+			return
+		}
+		lm.logger.Info("List clients completed successfully", args...)
+	}(time.Now())
+	return lm.svc.ListUserClients(ctx, session, userID, pm)
 }
 
 func (lm *loggingMiddleware) Update(ctx context.Context, session authn.Session, client clients.Client) (c clients.Client, err error) {

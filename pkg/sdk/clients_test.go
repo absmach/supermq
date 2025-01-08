@@ -357,9 +357,8 @@ func TestListClients(t *testing.T) {
 				Limit:  100,
 			},
 			svcReq: clients.Page{
-				Offset:     0,
-				Limit:      100,
-				Permission: defPermission,
+				Offset: 0,
+				Limit:  100,
 			},
 			svcRes: clients.ClientsPage{
 				Page: clients.Page{
@@ -387,9 +386,8 @@ func TestListClients(t *testing.T) {
 				Limit:  100,
 			},
 			svcReq: clients.Page{
-				Offset:     0,
-				Limit:      100,
-				Permission: defPermission,
+				Offset: 0,
+				Limit:  100,
 			},
 			svcRes:          clients.ClientsPage{},
 			authenticateErr: svcerr.ErrAuthentication,
@@ -435,10 +433,9 @@ func TestListClients(t *testing.T) {
 				Status: clients.DisabledStatus.String(),
 			},
 			svcReq: clients.Page{
-				Offset:     0,
-				Limit:      100,
-				Permission: defPermission,
-				Status:     clients.DisabledStatus,
+				Offset: 0,
+				Limit:  100,
+				Status: clients.DisabledStatus,
 			},
 			svcRes: clients.ClientsPage{
 				Page: clients.Page{
@@ -468,10 +465,9 @@ func TestListClients(t *testing.T) {
 				Tag:    "tag1",
 			},
 			svcReq: clients.Page{
-				Offset:     0,
-				Limit:      100,
-				Permission: defPermission,
-				Tag:        "tag1",
+				Offset: 0,
+				Limit:  100,
+				Tag:    "tag1",
 			},
 			svcRes: clients.ClientsPage{
 				Page: clients.Page{
@@ -517,9 +513,8 @@ func TestListClients(t *testing.T) {
 				Limit:  100,
 			},
 			svcReq: clients.Page{
-				Offset:     0,
-				Limit:      100,
-				Permission: defPermission,
+				Offset: 0,
+				Limit:  100,
 			},
 			svcRes: clients.ClientsPage{
 				Page: clients.Page{
@@ -1443,9 +1438,8 @@ func TestListUserClients(t *testing.T) {
 				Limit:  100,
 			},
 			svcReq: clients.Page{
-				Offset:     0,
-				Limit:      100,
-				Permission: defPermission,
+				Offset: 0,
+				Limit:  100,
 			},
 			svcRes: clients.ClientsPage{
 				Page: clients.Page{
@@ -1474,9 +1468,8 @@ func TestListUserClients(t *testing.T) {
 				Limit:  100,
 			},
 			svcReq: clients.Page{
-				Offset:     0,
-				Limit:      100,
-				Permission: defPermission,
+				Offset: 0,
+				Limit:  100,
 			},
 			svcRes:          clients.ClientsPage{},
 			authenticateErr: svcerr.ErrAuthentication,
@@ -1525,10 +1518,9 @@ func TestListUserClients(t *testing.T) {
 				Status: clients.DisabledStatus.String(),
 			},
 			svcReq: clients.Page{
-				Offset:     0,
-				Limit:      100,
-				Permission: defPermission,
-				Status:     clients.DisabledStatus,
+				Offset: 0,
+				Limit:  100,
+				Status: clients.DisabledStatus,
 			},
 			svcRes: clients.ClientsPage{
 				Page: clients.Page{
@@ -1559,10 +1551,9 @@ func TestListUserClients(t *testing.T) {
 				Tag:    "tag1",
 			},
 			svcReq: clients.Page{
-				Offset:     0,
-				Limit:      100,
-				Permission: defPermission,
-				Tag:        "tag1",
+				Offset: 0,
+				Limit:  100,
+				Tag:    "tag1",
 			},
 			svcRes: clients.ClientsPage{
 				Page: clients.Page{
@@ -1609,9 +1600,8 @@ func TestListUserClients(t *testing.T) {
 				Limit:  100,
 			},
 			svcReq: clients.Page{
-				Offset:     0,
-				Limit:      100,
-				Permission: defPermission,
+				Offset: 0,
+				Limit:  100,
 			},
 			svcRes: clients.ClientsPage{
 				Page: clients.Page{

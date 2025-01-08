@@ -49,12 +49,20 @@ func (ms *metricsMiddleware) View(ctx context.Context, session authn.Session, id
 	return ms.svc.View(ctx, session, id)
 }
 
-func (ms *metricsMiddleware) ListClients(ctx context.Context, session authn.Session, reqUserID string, pm clients.Page) (clients.ClientsPage, error) {
+func (ms *metricsMiddleware) ListClients(ctx context.Context, session authn.Session, pm clients.Page) (clients.ClientsPage, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_clients").Add(1)
 		ms.latency.With("method", "list_clients").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.ListClients(ctx, session, reqUserID, pm)
+	return ms.svc.ListClients(ctx, session, pm)
+}
+
+func (ms *metricsMiddleware) ListUserClients(ctx context.Context, session authn.Session, userID string, pm clients.Page) (clients.ClientsPage, error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "list_user_clients").Add(1)
+		ms.latency.With("method", "list_user_clients").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.ListUserClients(ctx, session, userID, pm)
 }
 
 func (ms *metricsMiddleware) Update(ctx context.Context, session authn.Session, client clients.Client) (clients.Client, error) {

@@ -35,6 +35,9 @@ type Repository interface {
 	// RetrieveAll retrieves all clients.
 	RetrieveAll(ctx context.Context, pm Page) (ClientsPage, error)
 
+	//RetrieveUserThings retrieve all clients of a given user id.
+	RetrieveUserThings(ctx context.Context, domainID, userID string, pm Page) (ClientsPage, error)
+
 	// SearchClients retrieves clients based on search criteria.
 	SearchClients(ctx context.Context, pm Page) (ClientsPage, error)
 
@@ -105,8 +108,11 @@ type Service interface {
 	// View retrieves client info for a given client ID and an authorized token.
 	View(ctx context.Context, session authn.Session, id string) (Client, error)
 
-	// ListClients retrieves clients list for a valid auth token.
-	ListClients(ctx context.Context, session authn.Session, reqUserID string, pm Page) (ClientsPage, error)
+	// ListClients retrieves clients list for given page query.
+	ListClients(ctx context.Context, session authn.Session, pm Page) (ClientsPage, error)
+
+	//ListUserClients retrieves clients list for a given user id and page query
+	ListUserClients(ctx context.Context, session authn.Session, userID string, pm Page) (ClientsPage, error)
 
 	// Update updates the client's name and metadata.
 	Update(ctx context.Context, session authn.Session, client Client) (Client, error)
@@ -161,8 +167,20 @@ type Client struct {
 	UpdatedAt   time.Time   `json:"updated_at,omitempty"`
 	UpdatedBy   string      `json:"updated_by,omitempty"`
 	Status      Status      `json:"status,omitempty"` // 1 for enabled, 0 for disabled
-	Permissions []string    `json:"permissions,omitempty"`
 	Identity    string      `json:"identity,omitempty"`
+	// Extended
+	ParentGroupPath           string   `json:"parent_group_path"`
+	RoleID                    string   `json:"role_id"`
+	RoleName                  string   `json:"role_name"`
+	Actions                   []string `json:"actions"`
+	AccessType                string   `json:"access_type"`
+	AccessProviderId          string   `json:"access_provider_id"`
+	AccessProviderRoleId      string   `json:"access_provider_role_id"`
+	AccessProviderRoleName    string   `json:"access_provider_role_name"`
+	AccessProviderRoleActions []string `json:"access_provider_role_actions"`
+}
+
+type ClientsAdditional struct {
 }
 
 // ClientsPage contains page related metadata as well as list.
@@ -182,21 +200,26 @@ type MembersPage struct {
 // Page contains the page metadata that helps navigation.
 
 type Page struct {
-	Total      uint64   `json:"total"`
-	Offset     uint64   `json:"offset"`
-	Limit      uint64   `json:"limit"`
-	Name       string   `json:"name,omitempty"`
-	Id         string   `json:"id,omitempty"`
-	Order      string   `json:"order,omitempty"`
-	Dir        string   `json:"dir,omitempty"`
-	Metadata   Metadata `json:"metadata,omitempty"`
-	Domain     string   `json:"domain,omitempty"`
-	Tag        string   `json:"tag,omitempty"`
-	Permission string   `json:"permission,omitempty"`
-	Status     Status   `json:"status,omitempty"`
-	IDs        []string `json:"ids,omitempty"`
-	Identity   string   `json:"identity,omitempty"`
-	ListPerms  bool     `json:"-"`
+	Total          uint64   `json:"total"`
+	Offset         uint64   `json:"offset"`
+	Limit          uint64   `json:"limit"`
+	Name           string   `json:"name,omitempty"`
+	Id             string   `json:"id,omitempty"`
+	Order          string   `json:"order,omitempty"`
+	Dir            string   `json:"dir,omitempty"`
+	Metadata       Metadata `json:"metadata,omitempty"`
+	Domain         string   `json:"domain,omitempty"`
+	Tag            string   `json:"tag,omitempty"`
+	Status         Status   `json:"status,omitempty"`
+	IDs            []string `json:"ids,omitempty"`
+	Identity       string   `json:"identity,omitempty"`
+	Group          string   `json:"group,omitempty"`
+	Channel        string   `json:"channel,omitempty"`
+	ConnectionType string   `json:"connection_type,omitempty"`
+	RoleName       string   `json:"role_name,omitempty"`
+	RoleID         string   `json:"role_id,omitempty"`
+	Actions        []string `json:"actions,omitempty"`
+	AccessType     string   `json:"access_type,omitempty"`
 }
 
 // Metadata represents arbitrary JSON.

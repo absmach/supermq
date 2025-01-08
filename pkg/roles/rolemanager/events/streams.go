@@ -24,9 +24,10 @@ type RoleManagerEventStore struct {
 // events to event store.
 func NewRoleManagerEventStore(svcName, operationPrefix string, svc roles.RoleManager, publisher events.Publisher) RoleManagerEventStore {
 	return RoleManagerEventStore{
-		svcName:   svcName,
-		svc:       svc,
-		Publisher: publisher,
+		svcName:         svcName,
+		operationPrefix: operationPrefix,
+		svc:             svc,
+		Publisher:       publisher,
 	}
 }
 

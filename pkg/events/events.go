@@ -43,6 +43,7 @@ type SubscriberConfig struct {
 	Consumer string
 	Stream   string
 	Handler  EventHandler
+	Ordered  bool
 }
 
 // Subscriber specifies event subscription API.

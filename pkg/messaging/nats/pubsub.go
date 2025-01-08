@@ -94,7 +94,7 @@ func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig)
 		return ErrEmptyTopic
 	}
 
-	nh := ps.natsHandler(cfg.Handler)
+	nh := ps.natsHandler(cfg.Handler, cfg.AckErr)
 
 	consumerConfig := jetstream.ConsumerConfig{
 		Name:          formatConsumerName(cfg.Topic, cfg.ID),
@@ -102,6 +102,10 @@ func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig)
 		Description:   fmt.Sprintf("SuperMQ consumer of id %s for cfg.Topic %s", cfg.ID, cfg.Topic),
 		DeliverPolicy: jetstream.DeliverNewPolicy,
 		FilterSubject: cfg.Topic,
+	}
+
+	if cfg.Ordered {
+		consumerConfig.MaxAckPending = 1
 	}
 
 	switch cfg.DeliveryPolicy {
@@ -140,17 +144,22 @@ func (ps *pubsub) Unsubscribe(ctx context.Context, id, topic string) error {
 	}
 }
 
-func (ps *pubsub) natsHandler(h messaging.MessageHandler) func(m jetstream.Msg) {
+func (ps *pubsub) natsHandler(h messaging.MessageHandler, ackErr bool) func(m jetstream.Msg) {
 	return func(m jetstream.Msg) {
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Data(), &msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
-
 			return
 		}
 
 		if err := h.Handle(&msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to handle SuperMQ message: %s", err))
+			if ackErr {
+				if err := m.Ack(); err != nil {
+					ps.logger.Warn(fmt.Sprintf("Failed to ack message: %s", err))
+				}
+			}
+			return
 		}
 		if err := m.Ack(); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to ack message: %s", err))

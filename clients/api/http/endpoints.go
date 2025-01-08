@@ -104,19 +104,25 @@ func listClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 
 		pm := clients.Page{
-			Status:     req.status,
-			Offset:     req.offset,
-			Limit:      req.limit,
-			Name:       req.name,
-			Tag:        req.tag,
-			Permission: req.permission,
-			Metadata:   req.metadata,
-			ListPerms:  req.listPerms,
-			Id:         req.id,
+			Status:   req.status,
+			Offset:   req.offset,
+			Limit:    req.limit,
+			Name:     req.name,
+			Tag:      req.tag,
+			Metadata: req.metadata,
+			Group:    req.groupID,
 		}
-		page, err := svc.ListClients(ctx, session, req.userID, pm)
+
+		var page clients.ClientsPage
+		var err error
+		switch req.userID != "" {
+		case true:
+			page, err = svc.ListUserClients(ctx, session, req.userID, pm)
+		default:
+			page, err = svc.ListClients(ctx, session, pm)
+		}
 		if err != nil {
-			return nil, err
+			return clientsPageRes{}, err
 		}
 
 		res := clientsPageRes{

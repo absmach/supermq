@@ -39,6 +39,8 @@ type SubscriberConfig struct {
 	Topic          string
 	Handler        MessageHandler
 	DeliveryPolicy DeliveryPolicy
+	Ordered        bool
+	AckErr         bool
 }
 
 // Subscriber specifies message subscription API.
