@@ -1,3 +1,6 @@
+// Copyright (c) Abstract Machines
+// SPDX-License-Identifier: Apache-2.0
+
 package consumer
 
 import (
@@ -32,6 +35,7 @@ func NewEventHandler(entityType string, repo roles.Repository) EventHandler {
 		repo:       repo,
 	}
 }
+
 func (es *EventHandler) AddEntityRoleHandler(ctx context.Context, data map[string]interface{}) error {
 	rps, err := ToRoleProvision(data)
 	if err != nil {
@@ -47,7 +51,6 @@ func (es *EventHandler) AddEntityRoleHandler(ctx context.Context, data map[strin
 }
 
 func (es *EventHandler) UpdateEntityRoleHandler(ctx context.Context, data map[string]interface{}) error {
-
 	ro, err := ToRole(data)
 	if err != nil {
 		return fmt.Errorf(errUpdateEntityRoleEvent, es.entityType, err)
@@ -61,7 +64,6 @@ func (es *EventHandler) UpdateEntityRoleHandler(ctx context.Context, data map[st
 }
 
 func (es *EventHandler) RemoveEntityRoleHandler(ctx context.Context, data map[string]interface{}) error {
-
 	id, ok := data["role_id"].(string)
 	if !ok {
 		return fmt.Errorf(errRemoveEntityRoleEvent, es.entityType, errRoleID)

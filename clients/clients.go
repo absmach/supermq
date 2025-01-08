@@ -35,7 +35,7 @@ type Repository interface {
 	// RetrieveAll retrieves all clients.
 	RetrieveAll(ctx context.Context, pm Page) (ClientsPage, error)
 
-	//RetrieveUserThings retrieve all clients of a given user id.
+	// RetrieveUserThings retrieve all clients of a given user id.
 	RetrieveUserThings(ctx context.Context, domainID, userID string, pm Page) (ClientsPage, error)
 
 	// SearchClients retrieves clients based on search criteria.
@@ -111,7 +111,7 @@ type Service interface {
 	// ListClients retrieves clients list for given page query.
 	ListClients(ctx context.Context, session authn.Session, pm Page) (ClientsPage, error)
 
-	//ListUserClients retrieves clients list for a given user id and page query
+	// ListUserClients retrieves clients list for a given user id and page query.
 	ListUserClients(ctx context.Context, session authn.Session, userID string, pm Page) (ClientsPage, error)
 
 	// Update updates the client's name and metadata.
@@ -180,8 +180,7 @@ type Client struct {
 	AccessProviderRoleActions []string `json:"access_provider_role_actions"`
 }
 
-type ClientsAdditional struct {
-}
+type ClientsAdditional struct{}
 
 // ClientsPage contains page related metadata as well as list.
 type ClientsPage struct {

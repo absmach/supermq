@@ -84,6 +84,7 @@ func ToRole(data map[string]interface{}) (roles.Role, error) {
 
 	return r, nil
 }
+
 func ToStrings(data []interface{}) ([]string, error) {
 	var strs []string
 	for _, i := range data {

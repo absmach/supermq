@@ -154,53 +154,6 @@ func (svc service) ListUserClients(ctx context.Context, session authn.Session, u
 	return cp, nil
 }
 
-func (svc service) listUserClientPermission(ctx context.Context, userID, clientID string) ([]string, error) {
-	permissions, err := svc.policy.ListPermissions(ctx, policies.Policy{
-		SubjectType: policies.UserType,
-		Subject:     userID,
-		Object:      clientID,
-		ObjectType:  policies.ClientType,
-	}, []string{})
-	if err != nil {
-		return []string{}, errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-	return permissions, nil
-}
-
-func (svc service) listClientIDs(ctx context.Context, userID, permission string) ([]string, error) {
-	tids, err := svc.policy.ListAllObjects(ctx, policies.Policy{
-		SubjectType: policies.UserType,
-		Subject:     userID,
-		Permission:  permission,
-		ObjectType:  policies.ClientType,
-	})
-	if err != nil {
-		return nil, errors.Wrap(svcerr.ErrNotFound, err)
-	}
-	return tids.Policies, nil
-}
-
-func (svc service) filterAllowedClientIDs(ctx context.Context, userID, permission string, clientIDs []string) ([]string, error) {
-	var ids []string
-	tids, err := svc.policy.ListAllObjects(ctx, policies.Policy{
-		SubjectType: policies.UserType,
-		Subject:     userID,
-		Permission:  permission,
-		ObjectType:  policies.ClientType,
-	})
-	if err != nil {
-		return nil, errors.Wrap(svcerr.ErrNotFound, err)
-	}
-	for _, clientID := range clientIDs {
-		for _, tid := range tids.Policies {
-			if clientID == tid {
-				ids = append(ids, clientID)
-			}
-		}
-	}
-	return ids, nil
-}
-
 func (svc service) Update(ctx context.Context, session authn.Session, cli Client) (Client, error) {
 	client := Client{
 		ID:        cli.ID,

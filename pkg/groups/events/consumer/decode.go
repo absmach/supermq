@@ -31,7 +31,6 @@ var (
 	errConvertStatus = errors.New("failed to convert status")
 	errCreatedAt     = errors.New("failed to parse 'created_at' time")
 	errUpdatedAt     = errors.New("failed to parse 'updated_at' time")
-	errNotString     = errors.New("not string type")
 )
 
 const (

@@ -34,7 +34,7 @@ var (
 	// ErrFailedToRetrieveAllGroups failed to retrieve groups.
 	ErrFailedToRetrieveAllGroups = errors.New("failed to retrieve all groups")
 
-	// ErrRoleMigration failed to apply role migrations
+	// ErrRoleMigration failed to apply role migrations.
 	ErrRoleMigration = errors.New("failed to apply role migration")
 
 	// ErrMissingNames indicates missing first and last names.
