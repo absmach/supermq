@@ -244,6 +244,15 @@ func main() {
 		return
 	}
 
+	gdatabase := pg.NewDatabase(db, dbConfig, tracer)
+	grepo := gpostgres.New(gdatabase)
+
+	if err := gconsumer.GroupsEventsSubscribe(ctx, grepo, cfg.ESURL, cfg.ESConsumerName, logger); err != nil {
+		logger.Error(fmt.Sprintf("failed to create groups event store : %s", err))
+		exitCode = 1
+		return
+	}
+
 	httpServerConfig := server.Config{Port: defSvcHTTPPort}
 	if err := env.ParseWithOptions(&httpServerConfig, env.Options{Prefix: envPrefixHTTP}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
@@ -256,15 +265,6 @@ func main() {
 	grpcServerConfig := server.Config{Port: defSvcAuthGRPCPort}
 	if err := env.ParseWithOptions(&grpcServerConfig, env.Options{Prefix: envPrefixGRPC}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s gRPC server configuration : %s", svcName, err))
-		exitCode = 1
-		return
-	}
-
-	gdatabase := pg.NewDatabase(db, dbConfig, tracer)
-	grepo := gpostgres.New(gdatabase)
-
-	if err := gconsumer.GroupsEventsSubscribe(ctx, grepo, cfg.ESURL, cfg.ESConsumerName, logger); err != nil {
-		logger.Error(fmt.Sprintf("failed to create groups event store : %s", err))
 		exitCode = 1
 		return
 	}

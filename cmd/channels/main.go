@@ -25,11 +25,13 @@ import (
 	"github.com/absmach/supermq/channels/postgres"
 	pChannels "github.com/absmach/supermq/channels/private"
 	"github.com/absmach/supermq/channels/tracing"
+	gpostgres "github.com/absmach/supermq/groups/postgres"
 	smqlog "github.com/absmach/supermq/logger"
 	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
 	domainsAuthz "github.com/absmach/supermq/pkg/domains/grpcclient"
+	gconsumer "github.com/absmach/supermq/pkg/groups/events/consumer"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	jaegerclient "github.com/absmach/supermq/pkg/jaeger"
 	"github.com/absmach/supermq/pkg/policies"
@@ -74,6 +76,7 @@ type config struct {
 	JaegerURL           url.URL `env:"SMQ_JAEGER_URL"                   envDefault:"http://localhost:4318/v1/traces"`
 	SendTelemetry       bool    `env:"SMQ_SEND_TELEMETRY"               envDefault:"true"`
 	ESURL               string  `env:"SMQ_ES_URL"                       envDefault:"nats://localhost:4222"`
+	ESConsumerName      string  `env:"SMQ_CLIENTS_EVENT_CONSUMER"       envDefault:"channels"`
 	TraceRatio          float64 `env:"SMQ_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
 	SpicedbHost         string  `env:"SMQ_SPICEDB_HOST"                 envDefault:"localhost"`
 	SpicedbPort         string  `env:"SMQ_SPICEDB_PORT"                 envDefault:"50051"`
@@ -220,6 +223,15 @@ func main() {
 	svc, psvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cfg.ESURL, tracer, clientsClient, groupsClient, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
+		exitCode = 1
+		return
+	}
+
+	gdatabase := pg.NewDatabase(db, dbConfig, tracer)
+	grepo := gpostgres.New(gdatabase)
+
+	if err := gconsumer.GroupsEventsSubscribe(ctx, grepo, cfg.ESURL, cfg.ESConsumerName, logger); err != nil {
+		logger.Error(fmt.Sprintf("failed to create groups event store : %s", err))
 		exitCode = 1
 		return
 	}
