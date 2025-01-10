@@ -1626,7 +1626,7 @@ func TestSearchClients(t *testing.T) {
 	}
 }
 
-func TestRetrievByIDs(t *testing.T) {
+func TestRetrieveByIDs(t *testing.T) {
 	t.Cleanup(func() {
 		_, err := db.Exec("DELETE FROM clients")
 		require.Nil(t, err, fmt.Sprintf("clean clients unexpected error: %s", err))

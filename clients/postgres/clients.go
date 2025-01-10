@@ -901,6 +901,10 @@ func PageQuery(pm clients.Page) (string, error) {
 		query = append(query, mq)
 	}
 
+	if len(pm.IDs) != 0 {
+		query = append(query, fmt.Sprintf("c.id IN ('%s')", strings.Join(pm.IDs, "','")))
+	}
+
 	if pm.Status != clients.AllStatus {
 		query = append(query, "c.status = :status")
 	}

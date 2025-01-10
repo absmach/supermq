@@ -216,7 +216,6 @@ func convertChannel(g sdk.Channel) mgchannels.Channel {
 		UpdatedAt:   g.UpdatedAt,
 		UpdatedBy:   g.UpdatedBy,
 		Status:      status,
-		Permissions: g.Permissions,
 	}
 }
 
