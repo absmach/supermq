@@ -460,7 +460,6 @@ func TestListChannels(t *testing.T) {
 	svc := newService(t)
 
 	channelWithPerms := validChannel
-	channelWithPerms.Permissions = []string{policysvc.AdminPermission, policysvc.EditPermission, policysvc.ViewPermission}
 
 	cases := []struct {
 		desc               string
@@ -499,8 +498,7 @@ func TestListChannels(t *testing.T) {
 			desc:    "list channels as admin with list perms successfully",
 			session: authn.Session{UserID: validID, DomainID: validID, DomainUserID: validID, SuperAdmin: true},
 			pageMeta: channels.PageMetadata{
-				Domain:    validID,
-				ListPerms: true,
+				Domain: validID,
 			},
 			listPermissionsRes: policysvc.Permissions{
 				policysvc.AdminPermission, policysvc.EditPermission, policysvc.ViewPermission,
@@ -533,8 +531,7 @@ func TestListChannels(t *testing.T) {
 			desc:    "list channels as admin with failed to list permissions",
 			session: authn.Session{UserID: validID, DomainID: validID, DomainUserID: validID, SuperAdmin: true},
 			pageMeta: channels.PageMetadata{
-				Domain:    validID,
-				ListPerms: true,
+				Domain: validID,
 			},
 			retrieveAllRes: channels.Page{
 				Channels: []channels.Channel{validChannel},
@@ -556,8 +553,7 @@ func TestListChannels(t *testing.T) {
 			desc:    "list channels as user successfully",
 			session: validSession,
 			pageMeta: channels.PageMetadata{
-				Permission: policysvc.ViewPermission,
-				IDs:        []string{validChannel.ID},
+				IDs: []string{validChannel.ID},
 			},
 			listAllObjectsRes: policysvc.PolicyPage{
 				Policies: []string{validChannel.ID},
@@ -580,8 +576,7 @@ func TestListChannels(t *testing.T) {
 			desc:    "list channels as user with failed to list all objects",
 			session: validSession,
 			pageMeta: channels.PageMetadata{
-				Permission: policysvc.ViewPermission,
-				IDs:        []string{validChannel.ID},
+				IDs: []string{validChannel.ID},
 			},
 			listAllObjectsErr: svcerr.ErrAuthorization,
 			err:               svcerr.ErrAuthorization,
@@ -590,9 +585,7 @@ func TestListChannels(t *testing.T) {
 			desc:    "list channels as user with list permissions successfully",
 			session: validSession,
 			pageMeta: channels.PageMetadata{
-				Permission: policysvc.ViewPermission,
-				IDs:        []string{validChannel.ID},
-				ListPerms:  true,
+				IDs: []string{validChannel.ID},
 			},
 			listAllObjectsRes: policysvc.PolicyPage{
 				Policies: []string{validChannel.ID},
@@ -618,9 +611,7 @@ func TestListChannels(t *testing.T) {
 			desc:    "list channels as user with list permissions and failed to list permissions",
 			session: validSession,
 			pageMeta: channels.PageMetadata{
-				Permission: policysvc.ViewPermission,
-				IDs:        []string{validChannel.ID},
-				ListPerms:  true,
+				IDs: []string{validChannel.ID},
 			},
 			listAllObjectsRes: policysvc.PolicyPage{
 				Policies: []string{validChannel.ID},
@@ -639,8 +630,7 @@ func TestListChannels(t *testing.T) {
 			desc:    "list channels as user with failed to retrieve all",
 			session: validSession,
 			pageMeta: channels.PageMetadata{
-				Permission: policysvc.ViewPermission,
-				IDs:        []string{validChannel.ID},
+				IDs: []string{validChannel.ID},
 			},
 			listAllObjectsRes: policysvc.PolicyPage{
 				Policies: []string{validChannel.ID},

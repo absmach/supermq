@@ -177,8 +177,7 @@ func TestListChannelsReqValidation(t *testing.T) {
 		{
 			desc: "invalid visibility",
 			req: listChannelsReq{
-				limit:      10,
-				visibility: "invalid",
+				limit: 10,
 			},
 			err: apiutil.ErrInvalidVisibilityType,
 		},

@@ -246,27 +246,27 @@ func (_m *Service) ListChannels(ctx context.Context, session authn.Session, pm c
 	return r0, r1
 }
 
-// ListChannelsByClient provides a mock function with given fields: ctx, session, id, pm
-func (_m *Service) ListChannelsByClient(ctx context.Context, session authn.Session, id string, pm channels.PageMetadata) (channels.Page, error) {
-	ret := _m.Called(ctx, session, id, pm)
+// ListUserChannels provides a mock function with given fields: ctx, session, userID, pm
+func (_m *Service) ListUserChannels(ctx context.Context, session authn.Session, userID string, pm channels.PageMetadata) (channels.Page, error) {
+	ret := _m.Called(ctx, session, userID, pm)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ListChannelsByClient")
+		panic("no return value specified for ListUserChannels")
 	}
 
 	var r0 channels.Page
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, channels.PageMetadata) (channels.Page, error)); ok {
-		return rf(ctx, session, id, pm)
+		return rf(ctx, session, userID, pm)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, channels.PageMetadata) channels.Page); ok {
-		r0 = rf(ctx, session, id, pm)
+		r0 = rf(ctx, session, userID, pm)
 	} else {
 		r0 = ret.Get(0).(channels.Page)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string, channels.PageMetadata) error); ok {
-		r1 = rf(ctx, session, id, pm)
+		r1 = rf(ctx, session, userID, pm)
 	} else {
 		r1 = ret.Error(1)
 	}

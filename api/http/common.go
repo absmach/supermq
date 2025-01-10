@@ -58,6 +58,7 @@ const (
 	UserKey          = "user"
 	DomainKey        = "domain"
 	ChannelKey       = "channel"
+	ConnTypeKey      = "connection_type"
 	DefPermission    = "read_permission"
 	DefTotal         = uint64(100)
 	DefOffset        = 0

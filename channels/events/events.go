@@ -206,9 +206,6 @@ func (lce listChannelEvent) Encode() (map[string]interface{}, error) {
 	if lce.Tag != "" {
 		val["tag"] = lce.Tag
 	}
-	if lce.Permission != "" {
-		val["permission"] = lce.Permission
-	}
 	if lce.Status.String() != "" {
 		val["status"] = lce.Status.String()
 	}
@@ -219,48 +216,48 @@ func (lce listChannelEvent) Encode() (map[string]interface{}, error) {
 	return val, nil
 }
 
-type listChannelByClientEvent struct {
-	clientID string
+type listUserChannelsEvent struct {
+	userID string
 	channels.PageMetadata
 	authn.Session
 }
 
-func (lcte listChannelByClientEvent) Encode() (map[string]interface{}, error) {
+func (luce listUserChannelsEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
 		"operation":   channelList,
-		"client_id":   lcte.clientID,
-		"total":       lcte.Total,
-		"offset":      lcte.Offset,
-		"limit":       lcte.Limit,
-		"domain":      lcte.DomainID,
-		"user_id":     lcte.UserID,
-		"token_type":  lcte.Type.String(),
-		"super_admin": lcte.SuperAdmin,
+		"req_user_id": luce.userID,
+		"total":       luce.Total,
+		"offset":      luce.Offset,
+		"limit":       luce.Limit,
+		"domain":      luce.DomainID,
+		"user_id":     luce.UserID,
+		"token_type":  luce.Type.String(),
+		"super_admin": luce.SuperAdmin,
 	}
 
-	if lcte.Name != "" {
-		val["name"] = lcte.Name
+	if luce.Name != "" {
+		val["name"] = luce.Name
 	}
-	if lcte.Order != "" {
-		val["order"] = lcte.Order
+	if luce.Order != "" {
+		val["order"] = luce.Order
 	}
-	if lcte.Dir != "" {
-		val["dir"] = lcte.Dir
+	if luce.Dir != "" {
+		val["dir"] = luce.Dir
 	}
-	if lcte.Metadata != nil {
-		val["metadata"] = lcte.Metadata
+	if luce.Metadata != nil {
+		val["metadata"] = luce.Metadata
 	}
-	if lcte.Tag != "" {
-		val["tag"] = lcte.Tag
+	if luce.Domain != "" {
+		val["domain"] = luce.Domain
 	}
-	if lcte.Permission != "" {
-		val["permission"] = lcte.Permission
+	if luce.Tag != "" {
+		val["tag"] = luce.Tag
 	}
-	if lcte.Status.String() != "" {
-		val["status"] = lcte.Status.String()
+	if luce.Status.String() != "" {
+		val["status"] = luce.Status.String()
 	}
-	if len(lcte.IDs) > 0 {
-		val["ids"] = lcte.IDs
+	if len(luce.IDs) > 0 {
+		val["ids"] = luce.IDs
 	}
 
 	return val, nil

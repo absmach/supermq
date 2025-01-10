@@ -529,6 +529,34 @@ func (_m *Repository) RetrieveRole(ctx context.Context, roleID string) (roles.Ro
 	return r0, r1
 }
 
+// RetrieveUserChannels provides a mock function with given fields: ctx, domainID, userID, pm
+func (_m *Repository) RetrieveUserChannels(ctx context.Context, domainID string, userID string, pm channels.PageMetadata) (channels.Page, error) {
+	ret := _m.Called(ctx, domainID, userID, pm)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveUserChannels")
+	}
+
+	var r0 channels.Page
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, channels.PageMetadata) (channels.Page, error)); ok {
+		return rf(ctx, domainID, userID, pm)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, channels.PageMetadata) channels.Page); ok {
+		r0 = rf(ctx, domainID, userID, pm)
+	} else {
+		r0 = ret.Get(0).(channels.Page)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, channels.PageMetadata) error); ok {
+		r1 = rf(ctx, domainID, userID, pm)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RoleAddActions provides a mock function with given fields: ctx, role, actions
 func (_m *Repository) RoleAddActions(ctx context.Context, role roles.Role, actions []string) ([]string, error) {
 	ret := _m.Called(ctx, role, actions)

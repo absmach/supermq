@@ -141,7 +141,7 @@ const (
 	// External Permission
 	// Domains.
 	domainCreateChannelPermission = "channel_create_permission"
-	domainListChanelPermission    = "list_channels_permission"
+	domainListChanelPermission    = "channel_read_permission"
 	// Groups.
 	groupSetChildChannelPermission    = "channel_create_permission"
 	groupRemoveChildChannelPermission = "channel_create_permission"

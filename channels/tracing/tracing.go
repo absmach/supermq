@@ -50,10 +50,10 @@ func (tm *tracingMiddleware) ListChannels(ctx context.Context, session authn.Ses
 	return tm.svc.ListChannels(ctx, session, pm)
 }
 
-func (tm *tracingMiddleware) ListChannelsByClient(ctx context.Context, session authn.Session, clientID string, pm channels.PageMetadata) (channels.Page, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_list_channels")
+func (tm *tracingMiddleware) ListUserChannels(ctx context.Context, session authn.Session, userID string, pm channels.PageMetadata) (channels.Page, error) {
+	ctx, span := tm.tracer.Start(ctx, "svc_list_user_channels")
 	defer span.End()
-	return tm.svc.ListChannelsByClient(ctx, session, clientID, pm)
+	return tm.svc.ListUserChannels(ctx, session, userID, pm)
 }
 
 // UpdateChannel traces the "UpdateChannel" operation of the wrapped policies.Service.

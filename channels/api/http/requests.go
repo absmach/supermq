@@ -9,7 +9,7 @@ import (
 	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/channels"
-	smqclients "github.com/absmach/supermq/clients"
+	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/pkg/connections"
 )
 
@@ -64,29 +64,29 @@ func (req viewChannelReq) validate() error {
 }
 
 type listChannelsReq struct {
-	status     smqclients.Status
-	offset     uint64
-	limit      uint64
 	name       string
 	tag        string
-	permission string
-	visibility string
+	status     clients.Status
+	metadata   clients.Metadata
+	roleName   string
+	roleID     string
+	actions    []string
+	accessType string
+	order      string
+	dir        string
+	offset     uint64
+	limit      uint64
+	groupID    string
+	clientID   string
+	connType   string
 	userID     string
-	listPerms  bool
-	metadata   smqclients.Metadata
-	id         string
 }
 
 func (req listChannelsReq) validate() error {
 	if req.limit > api.MaxLimitSize || req.limit < 1 {
 		return apiutil.ErrLimitSize
 	}
-	if req.visibility != "" &&
-		req.visibility != api.AllVisibility &&
-		req.visibility != api.MyVisibility &&
-		req.visibility != api.SharedVisibility {
-		return apiutil.ErrInvalidVisibilityType
-	}
+
 	if len(req.name) > api.MaxNameSize {
 		return apiutil.ErrNameSize
 	}

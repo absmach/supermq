@@ -258,7 +258,7 @@ type listUserClientEvent struct {
 func (lce listUserClientEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
 		"operation":   clientList,
-		"userID":      lce.userID,
+		"req_user_id": lce.userID,
 		"total":       lce.Total,
 		"offset":      lce.Offset,
 		"limit":       lce.Limit,

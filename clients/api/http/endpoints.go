@@ -104,13 +104,21 @@ func listClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 
 		pm := clients.Page{
-			Status:   req.status,
-			Offset:   req.offset,
-			Limit:    req.limit,
-			Name:     req.name,
-			Tag:      req.tag,
-			Metadata: req.metadata,
-			Group:    req.groupID,
+			Name:           req.name,
+			Tag:            req.tag,
+			Status:         req.status,
+			Metadata:       req.metadata,
+			RoleName:       req.roleName,
+			RoleID:         req.roleID,
+			Actions:        req.actions,
+			AccessType:     req.accessType,
+			Order:          req.order,
+			Dir:            req.dir,
+			Offset:         req.offset,
+			Limit:          req.limit,
+			Group:          req.groupID,
+			Channel:        req.channelID,
+			ConnectionType: req.connType,
 		}
 
 		var page clients.ClientsPage

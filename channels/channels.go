@@ -22,29 +22,43 @@ type Channel struct {
 	ParentGroup string           `json:"parent_group_id,omitempty"`
 	Domain      string           `json:"domain_id,omitempty"`
 	Metadata    clients.Metadata `json:"metadata,omitempty"`
+	CreatedBy   string           `json:"created_by,omitempty"`
 	CreatedAt   time.Time        `json:"created_at,omitempty"`
 	UpdatedAt   time.Time        `json:"updated_at,omitempty"`
 	UpdatedBy   string           `json:"updated_by,omitempty"`
-	Status      clients.Status   `json:"status,omitempty"`      // 1 for enabled, 0 for disabled
-	Permissions []string         `json:"permissions,omitempty"` // 1 for enabled, 0 for disabled
+	Status      clients.Status   `json:"status,omitempty"` // 1 for enabled, 0 for disabled
+	// Extended
+	ParentGroupPath           string   `json:"parent_group_path"`
+	RoleID                    string   `json:"role_id"`
+	RoleName                  string   `json:"role_name"`
+	Actions                   []string `json:"actions"`
+	AccessType                string   `json:"access_type"`
+	AccessProviderId          string   `json:"access_provider_id"`
+	AccessProviderRoleId      string   `json:"access_provider_role_id"`
+	AccessProviderRoleName    string   `json:"access_provider_role_name"`
+	AccessProviderRoleActions []string `json:"access_provider_role_actions"`
 }
 
 type PageMetadata struct {
-	Total      uint64           `json:"total"`
-	Offset     uint64           `json:"offset"`
-	Limit      uint64           `json:"limit"`
-	Name       string           `json:"name,omitempty"`
-	Id         string           `json:"id,omitempty"`
-	Order      string           `json:"order,omitempty"`
-	Dir        string           `json:"dir,omitempty"`
-	Metadata   clients.Metadata `json:"metadata,omitempty"`
-	Domain     string           `json:"domain,omitempty"`
-	Tag        string           `json:"tag,omitempty"`
-	Permission string           `json:"permission,omitempty"`
-	Status     clients.Status   `json:"status,omitempty"`
-	IDs        []string         `json:"ids,omitempty"`
-	ListPerms  bool             `json:"-"`
-	ClientID   string           `json:"-"`
+	Total          uint64           `json:"total"`
+	Offset         uint64           `json:"offset"`
+	Limit          uint64           `json:"limit"`
+	Order          string           `json:"order,omitempty"`
+	Dir            string           `json:"dir,omitempty"`
+	Id             string           `json:"id,omitempty"`
+	Name           string           `json:"name,omitempty"`
+	Metadata       clients.Metadata `json:"metadata,omitempty"`
+	Domain         string           `json:"domain,omitempty"`
+	Tag            string           `json:"tag,omitempty"`
+	Status         clients.Status   `json:"status,omitempty"`
+	Group          string           `json:"group,omitempty"`
+	Client         string           `json:"client,omitempty"`
+	ConnectionType string           `json:"connection_type,omitempty"`
+	RoleName       string           `json:"role_name,omitempty"`
+	RoleID         string           `json:"role_id,omitempty"`
+	Actions        []string         `json:"actions,omitempty"`
+	AccessType     string           `json:"access_type,omitempty"`
+	IDs            []string         `json:"-"`
 }
 
 // ChannelsPage contains page related metadata as well as list of channels that
@@ -71,15 +85,15 @@ type AuthzReq struct {
 
 //go:generate mockery --name Service  --output=./mocks --filename service.go --quiet --note "Copyright (c) Abstract Machines"
 type Service interface {
-	// CreateChannels adds channels to the user identified by the provided key.
+	// CreateChannels adds channels to the user.
 	CreateChannels(ctx context.Context, session authn.Session, channels ...Channel) ([]Channel, []roles.RoleProvision, error)
 
 	// ViewChannel retrieves data about the channel identified by the provided
-	// ID, that belongs to the user identified by the provided key.
+	// ID, that belongs to the user.
 	ViewChannel(ctx context.Context, session authn.Session, id string) (Channel, error)
 
 	// UpdateChannel updates the channel identified by the provided ID, that
-	// belongs to the user identified by the provided key.
+	// belongs to the user.
 	UpdateChannel(ctx context.Context, session authn.Session, channel Channel) (Channel, error)
 
 	// UpdateChannelTags updates the channel's tags.
@@ -89,17 +103,14 @@ type Service interface {
 
 	DisableChannel(ctx context.Context, session authn.Session, id string) (Channel, error)
 
-	// ListChannels retrieves data about subset of channels that belongs to the
-	// user identified by the provided key.
+	// ListChannels retrieves data about subset of channels that belongs to the user.
 	ListChannels(ctx context.Context, session authn.Session, pm PageMetadata) (Page, error)
 
-	// ListChannelsByClient retrieves data about subset of channels that have
-	// specified client connected or not connected to them and belong to the user identified by
-	// the provided key.
-	ListChannelsByClient(ctx context.Context, session authn.Session, id string, pm PageMetadata) (Page, error)
+	// ListUserChannels retrieves data about subset of channels that belong to the specified user.
+	ListUserChannels(ctx context.Context, session authn.Session, userID string, pm PageMetadata) (Page, error)
 
 	// RemoveChannel removes the client identified by the provided ID, that
-	// belongs to the user identified by the provided key.
+	// belongs to the user.
 	RemoveChannel(ctx context.Context, session authn.Session, id string) error
 
 	// Connect adds clients to the channels list of connected clients.
@@ -130,6 +141,9 @@ type Repository interface {
 	UpdateTags(ctx context.Context, ch Channel) (Channel, error)
 
 	ChangeStatus(ctx context.Context, channel Channel) (Channel, error)
+
+	// RetrieveUserChannels retrieves the channel of given domainID and userID.
+	RetrieveUserChannels(ctx context.Context, domainID, userID string, pm PageMetadata) (Page, error)
 
 	// RetrieveByID retrieves the channel having the provided identifier
 	RetrieveByID(ctx context.Context, id string) (Channel, error)

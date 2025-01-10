@@ -11,7 +11,7 @@ import (
 
 	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
-	smqclients "github.com/absmach/supermq/clients"
+	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/go-chi/chi/v5"
 )
@@ -51,58 +51,106 @@ func decodeCreateChannelsReq(_ context.Context, r *http.Request) (interface{}, e
 }
 
 func decodeListChannels(_ context.Context, r *http.Request) (interface{}, error) {
-	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefClientStatus)
+	name, err := apiutil.ReadStringQuery(r, api.NameKey, "")
 	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	o, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	l, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	m, err := apiutil.ReadMetadataQuery(r, api.MetadataKey, nil)
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	n, err := apiutil.ReadStringQuery(r, api.NameKey, "")
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	t, err := apiutil.ReadStringQuery(r, api.TagKey, "")
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	id, err := apiutil.ReadStringQuery(r, api.IDOrder, "")
-	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	p, err := apiutil.ReadStringQuery(r, api.PermissionKey, api.DefPermission)
+
+	tag, err := apiutil.ReadStringQuery(r, api.TagKey, "")
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
-	lp, err := apiutil.ReadBoolQuery(r, api.ListPerms, api.DefListPerms)
+	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefGroupStatus)
 	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	st, err := smqclients.ToStatus(s)
+	status, err := clients.ToStatus(s)
 	if err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, err)
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
+
+	meta, err := apiutil.ReadMetadataQuery(r, api.MetadataKey, nil)
+	if err != nil {
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	offset, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
+	if err != nil {
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	limit, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
+	if err != nil {
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	dir, err := apiutil.ReadStringQuery(r, api.DirKey, api.DefDir)
+	if err != nil {
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	order, err := apiutil.ReadStringQuery(r, api.OrderKey, api.DefOrder)
+	if err != nil {
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	allActions, err := apiutil.ReadStringQuery(r, api.ActionsKey, "")
+	if err != nil {
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	actions := []string{}
+
+	allActions = strings.TrimSpace(allActions)
+	if allActions != "" {
+		actions = strings.Split(allActions, ",")
+	}
+	roleID, err := apiutil.ReadStringQuery(r, api.RoleIDKey, "")
+	if err != nil {
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	roleName, err := apiutil.ReadStringQuery(r, api.RoleNameKey, "")
+	if err != nil {
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	accessType, err := apiutil.ReadStringQuery(r, api.AccessTypeKey, "")
+	if err != nil {
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	userID, err := apiutil.ReadStringQuery(r, api.UserKey, "")
+	if err != nil {
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	groupID, err := apiutil.ReadStringQuery(r, api.GroupKey, "")
+	if err != nil {
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	clientID, err := apiutil.ReadStringQuery(r, api.ClientKey, "")
+	if err != nil {
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
 	req := listChannelsReq{
-		status:     st,
-		offset:     o,
-		limit:      l,
-		metadata:   m,
-		name:       n,
-		tag:        t,
-		permission: p,
-		listPerms:  lp,
-		userID:     chi.URLParam(r, "userID"),
-		id:         id,
+		name:       name,
+		tag:        tag,
+		status:     status,
+		metadata:   meta,
+		roleName:   roleName,
+		roleID:     roleID,
+		actions:    actions,
+		accessType: accessType,
+		order:      order,
+		dir:        dir,
+		offset:     offset,
+		limit:      limit,
+		groupID:    groupID,
+		clientID:   clientID,
+		userID:     userID,
 	}
 	return req, nil
 }

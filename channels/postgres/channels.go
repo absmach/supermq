@@ -21,6 +21,7 @@ import (
 	"github.com/absmach/supermq/pkg/postgres"
 	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
 	"github.com/jackc/pgtype"
+	"github.com/lib/pq"
 )
 
 const (
@@ -152,7 +153,7 @@ func (cr *channelRepository) RetrieveAll(ctx context.Context, pm channels.PageMe
 	query = applyOrdering(query, pm)
 
 	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags,  c.metadata, COALESCE(c.domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, c.status,
-					c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM channels c %s ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, query)
+					c.created_by, c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM channels c %s LIMIT :limit OFFSET :offset;`, query)
 
 	dbPage, err := toDBChannelsPage(pm)
 	if err != nil {
@@ -194,6 +195,303 @@ func (cr *channelRepository) RetrieveAll(ctx context.Context, pm channels.PageMe
 		},
 	}
 	return page, nil
+}
+
+func (repo *channelRepository) RetrieveUserChannels(ctx context.Context, domainID, userID string, pm channels.PageMetadata) (channels.Page, error) {
+	return repo.retrieveClients(ctx, domainID, userID, pm)
+}
+
+func (repo *channelRepository) retrieveClients(ctx context.Context, domainID, userID string, pm channels.PageMetadata) (channels.Page, error) {
+	pageQuery, err := PageQuery(pm)
+	if err != nil {
+		return channels.Page{}, err
+	}
+
+	bq := repo.userChannelsBaseQuery(domainID, userID)
+
+	connJoinQuery := ""
+	if pm.Client != "" {
+		connJoinQuery = "JOIN connection conn ON conn.channel_id = c.id"
+	}
+
+	q := fmt.Sprintf(`
+				%s
+				SELECT
+				  	c.id,
+					c.name,
+					c.domain_id,
+					c.parent_group_id,
+					c.tags,
+					c.metadata,
+					c.created_by,
+					c.created_at,
+					c.updated_at,
+					c.updated_by,
+					c.status,
+					c.parent_group_path,
+					c.role_id,
+					c.role_name,
+					c.actions,
+					c.access_type,
+					c.access_provider_id,
+					c.access_provider_role_id,
+					c.access_provider_role_name,
+					c.access_provider_role_actions
+				FROM
+					final_channels c
+				%s
+				%s
+	`, bq, connJoinQuery, pageQuery)
+
+	q = applyOrdering(q, pm)
+
+	dbPage, err := toDBChannelsPage(pm)
+	if err != nil {
+		return channels.Page{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+
+	rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
+	if err != nil {
+		return channels.Page{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+	defer rows.Close()
+
+	var items []channels.Channel
+	for rows.Next() {
+		dbc := dbChannel{}
+		if err := rows.StructScan(&dbc); err != nil {
+			return channels.Page{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+
+		c, err := toChannel(dbc)
+		if err != nil {
+			return channels.Page{}, err
+		}
+
+		items = append(items, c)
+	}
+
+	chJoinQuery := ""
+	if pm.Client != "" {
+		chJoinQuery = "JOIN connection conn ON conn.channel_id = c.id"
+	}
+	cq := fmt.Sprintf(`%s
+						SELECT COUNT(*) AS total_count
+						FROM (
+							SELECT
+								c.id,
+								c.name,
+								c.domain_id,
+								c.parent_group_id,
+								c.tags,
+								c.metadata,
+								c.created_by,
+								c.created_at,
+								c.updated_at,
+								c.updated_by,
+								c.status,
+								c.parent_group_path,
+								c.role_id,
+								c.role_name,
+								c.actions,
+								c.access_type,
+								c.access_provider_id,
+								c.access_provider_role_id,
+								c.access_provider_role_name,
+								c.access_provider_role_actions
+							FROM
+								final_channels c
+							%s
+							%s
+						) AS subquery;
+			`, bq, chJoinQuery, pageQuery)
+
+	total, err := postgres.Total(ctx, repo.db, cq, dbPage)
+	if err != nil {
+		return channels.Page{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+
+	page := channels.Page{
+		Channels: items,
+		PageMetadata: channels.PageMetadata{
+			Total:  total,
+			Offset: pm.Offset,
+			Limit:  pm.Limit,
+		},
+	}
+
+	return page, nil
+}
+
+func (repo *channelRepository) userChannelsBaseQuery(domainID, userID string) string {
+	return fmt.Sprintf(`
+						WITH direct_channels AS (
+							select
+								c.id,
+								c.name,
+								c.domain_id,
+								c.parent_group_id,
+								c.tags,
+								c.metadata,
+								c.created_by,
+								c.created_at,
+								c.updated_at,
+								c.updated_by,
+								c.status,
+								text2ltree('') as parent_group_path,
+								cr.id AS role_id,
+								cr."name" AS role_name,
+								array_agg(cra."action") AS actions,
+								'direct' as access_type,
+								'' AS access_provider_id,
+								'' AS access_provider_role_id,
+								'' AS access_provider_role_name,
+								array[]::::text[] AS access_provider_role_actions
+							FROM
+								channels_role_members crm
+							JOIN
+								channels_role_actions cra ON cra.role_id = crm.role_id
+							JOIN
+								channels_roles cr ON cr.id = crm.role_id
+							JOIN
+								channels c ON c.id = cr.entity_id
+							WHERE
+								crm.member_id = '%s'
+								AND c.domain_id = '%s'
+							GROUP BY
+								cr.entity_id, crm.member_id, cr.id, cr."name", c.id
+						),
+						direct_groups AS (
+							SELECT
+								g.*,
+								gr.entity_id AS entity_id,
+								grm.member_id AS member_id,
+								gr.id AS role_id,
+								gr."name" AS role_name,
+								array_agg(gra."action") AS actions
+							FROM
+								groups_role_members grm
+							JOIN
+								groups_role_actions gra ON gra.role_id = grm.role_id
+							JOIN
+								groups_roles gr ON gr.id = grm.role_id
+							JOIN
+								"groups" g ON g.id = gr.entity_id
+							WHERE
+								grm.member_id = '%s'
+								AND g.domain_id = '%s'
+							GROUP BY
+								gr.entity_id, grm.member_id, gr.id, gr."name", g."path", g.id
+						),
+						direct_groups_with_subgroup AS (
+							SELECT
+								*
+							FROM direct_groups
+							WHERE EXISTS (
+								SELECT 1
+								FROM unnest(direct_groups.actions) AS action
+								WHERE action LIKE 'subgroup_%%'
+							)
+						),
+						indirect_child_groups AS (
+							SELECT
+								DISTINCT indirect_child_groups.id as child_id,
+								indirect_child_groups.*,
+								dgws.id as access_provider_id,
+								dgws.role_id as access_provider_role_id,
+								dgws.role_name as access_provider_role_name,
+								dgws.actions as access_provider_role_actions
+							FROM
+								direct_groups_with_subgroup dgws
+							JOIN
+								groups indirect_child_groups ON indirect_child_groups.path <@ dgws.path
+							WHERE
+								indirect_child_groups.domain_id = '%s'
+								AND NOT EXISTS (
+									SELECT 1
+									FROM direct_groups_with_subgroup dgws
+									WHERE dgws.id = indirect_child_groups.id
+								)
+						),
+						final_groups AS (
+							SELECT
+								id,
+								parent_id,
+								domain_id,
+								"name",
+								description,
+								metadata,
+								created_at,
+								updated_at,
+								updated_by,
+								status,
+								"path",
+								role_id,
+								role_name,
+								actions,
+								'direct_group' AS access_type,
+								'' AS access_provider_id,
+								'' AS access_provider_role_id,
+								'' AS access_provider_role_name,
+								array[]::::text[] AS access_provider_role_actions
+							FROM
+								direct_groups
+							UNION
+							SELECT
+								id,
+								parent_id,
+								domain_id,
+								"name",
+								description,
+								metadata,
+								created_at,
+								updated_at,
+								updated_by,
+								status,
+								"path",
+								'' AS role_id,
+								'' AS role_name,
+								array[]::::text[] AS actions,
+								'indirect_group' AS access_type,
+								access_provider_id,
+								access_provider_role_id,
+								access_provider_role_name,
+								access_provider_role_actions
+							FROM
+								indirect_child_groups
+						),
+						final_channels AS (
+							SELECT
+								c.id,
+								c.name,
+								c.domain_id,
+								c.parent_group_id,
+								c.tags,
+								c.metadata,
+								c.created_by,
+								c.created_at,
+								c.updated_at,
+								c.updated_by,
+								c.status,
+								g.path AS parent_group_path,
+								g.role_id,
+								g.role_name,
+								g.actions,
+								g.access_type,
+								g.access_provider_id,
+								g.access_provider_role_id,
+								g.access_provider_role_name,
+								g.access_provider_role_actions
+							FROM
+								final_groups g
+							JOIN
+								channels c ON c.parent_group_id = g.id
+							WHERE
+								c.id NOT IN (SELECT id FROM direct_channels)
+							UNION
+							SELECT	* FROM   direct_channels
+						)
+	`, userID, domainID, userID, domainID, domainID)
 }
 
 func (cr *channelRepository) Remove(ctx context.Context, ids ...string) error {
@@ -361,7 +659,7 @@ func (cr *channelRepository) RemoveChannelConnections(ctx context.Context, chann
 
 func (cr *channelRepository) RetrieveParentGroupChannels(ctx context.Context, parentGroupID string) ([]channels.Channel, error) {
 	query := `SELECT c.id, c.name, c.tags,  c.metadata, COALESCE(c.domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, c.status,
-					c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM channels c WHERE c.parent_group_id = :parent_group_id ;`
+					c.created_by, c.created_at, c.updated_at, COALESCE(c.updated_by, '') AS updated_by FROM channels c WHERE c.parent_group_id = :parent_group_id ;`
 
 	rows, err := cr.db.NamedQueryContext(ctx, query, dbChannel{ParentGroup: toNullString(parentGroupID)})
 	if err != nil {
@@ -420,17 +718,26 @@ func (cr *channelRepository) update(ctx context.Context, ch channels.Channel, qu
 }
 
 type dbChannel struct {
-	ID          string           `db:"id"`
-	Name        string           `db:"name,omitempty"`
-	ParentGroup sql.NullString   `db:"parent_group_id,omitempty"`
-	Tags        pgtype.TextArray `db:"tags,omitempty"`
-	Domain      string           `db:"domain_id"`
-	Metadata    []byte           `db:"metadata,omitempty"`
-	CreatedAt   time.Time        `db:"created_at,omitempty"`
-	UpdatedAt   sql.NullTime     `db:"updated_at,omitempty"`
-	UpdatedBy   *string          `db:"updated_by,omitempty"`
-	Status      clients.Status   `db:"status,omitempty"`
-	Role        *clients.Role    `db:"role,omitempty"`
+	ID                        string           `db:"id"`
+	Name                      string           `db:"name,omitempty"`
+	ParentGroup               sql.NullString   `db:"parent_group_id,omitempty"`
+	Tags                      pgtype.TextArray `db:"tags,omitempty"`
+	Domain                    string           `db:"domain_id"`
+	Metadata                  []byte           `db:"metadata,omitempty"`
+	CreatedBy                 *string          `db:"created_by,omitempty"`
+	CreatedAt                 time.Time        `db:"created_at,omitempty"`
+	UpdatedAt                 sql.NullTime     `db:"updated_at,omitempty"`
+	UpdatedBy                 *string          `db:"updated_by,omitempty"`
+	Status                    clients.Status   `db:"status,omitempty"`
+	ParentGroupPath           string           `db:"parent_group_path,omitempty"`
+	RoleID                    string           `db:"role_id,omitempty"`
+	RoleName                  string           `db:"role_name,omitempty"`
+	Actions                   pq.StringArray   `db:"actions,omitempty"`
+	AccessType                string           `db:"access_type,omitempty"`
+	AccessProviderId          string           `db:"access_provider_id,omitempty"`
+	AccessProviderRoleId      string           `db:"access_provider_role_id,omitempty"`
+	AccessProviderRoleName    string           `db:"access_provider_role_name,omitempty"`
+	AccessProviderRoleActions pq.StringArray   `db:"access_provider_role_actions,omitempty"`
 }
 
 func toDBChannel(ch channels.Channel) (dbChannel, error) {
@@ -445,6 +752,10 @@ func toDBChannel(ch channels.Channel) (dbChannel, error) {
 	var tags pgtype.TextArray
 	if err := tags.Set(ch.Tags); err != nil {
 		return dbChannel{}, err
+	}
+	var createdBy *string
+	if ch.CreatedBy != "" {
+		createdBy = &ch.CreatedBy
 	}
 	var updatedBy *string
 	if ch.UpdatedBy != "" {
@@ -461,6 +772,7 @@ func toDBChannel(ch channels.Channel) (dbChannel, error) {
 		Domain:      ch.Domain,
 		Tags:        tags,
 		Metadata:    data,
+		CreatedBy:   createdBy,
 		CreatedAt:   ch.CreatedAt,
 		UpdatedAt:   updatedAt,
 		UpdatedBy:   updatedBy,
@@ -497,6 +809,10 @@ func toChannel(ch dbChannel) (channels.Channel, error) {
 	for _, e := range ch.Tags.Elements {
 		tags = append(tags, e.String)
 	}
+	var createdBy string
+	if ch.CreatedBy != nil {
+		createdBy = *ch.CreatedBy
+	}
 	var updatedBy string
 	if ch.UpdatedBy != nil {
 		updatedBy = *ch.UpdatedBy
@@ -507,16 +823,26 @@ func toChannel(ch dbChannel) (channels.Channel, error) {
 	}
 
 	newCh := channels.Channel{
-		ID:          ch.ID,
-		Name:        ch.Name,
-		Tags:        tags,
-		Domain:      ch.Domain,
-		ParentGroup: toString(ch.ParentGroup),
-		Metadata:    metadata,
-		CreatedAt:   ch.CreatedAt,
-		UpdatedAt:   updatedAt,
-		UpdatedBy:   updatedBy,
-		Status:      ch.Status,
+		ID:                        ch.ID,
+		Name:                      ch.Name,
+		Tags:                      tags,
+		Domain:                    ch.Domain,
+		ParentGroup:               toString(ch.ParentGroup),
+		Metadata:                  metadata,
+		CreatedBy:                 createdBy,
+		CreatedAt:                 ch.CreatedAt,
+		UpdatedAt:                 updatedAt,
+		UpdatedBy:                 updatedBy,
+		Status:                    ch.Status,
+		ParentGroupPath:           ch.ParentGroupPath,
+		RoleID:                    ch.RoleID,
+		RoleName:                  ch.RoleName,
+		Actions:                   ch.Actions,
+		AccessType:                ch.AccessType,
+		AccessProviderId:          ch.AccessProviderId,
+		AccessProviderRoleId:      ch.AccessProviderRoleId,
+		AccessProviderRoleName:    ch.AccessProviderRoleName,
+		AccessProviderRoleActions: ch.AccessProviderRoleActions,
 	}
 
 	return newCh, nil
@@ -533,20 +859,11 @@ func PageQuery(pm channels.PageMetadata) (string, error) {
 		query = append(query, "c.name ILIKE '%' || :name || '%'")
 	}
 
-	if pm.ClientID != "" {
-		query = append(query, "conn.client_id = :client_id")
-	}
 	if pm.Id != "" {
 		query = append(query, "c.id ILIKE '%' || :id || '%'")
 	}
 	if pm.Tag != "" {
 		query = append(query, "EXISTS (SELECT 1 FROM unnest(tags) AS tag WHERE tag ILIKE '%' || :tag || '%')")
-	}
-
-	// If there are search params presents, use search and ignore other options.
-	// Always combine role with search params, so len(query) > 1.
-	if len(query) > 1 {
-		return fmt.Sprintf("WHERE %s", strings.Join(query, " AND ")), nil
 	}
 
 	if mq != "" {
@@ -562,6 +879,31 @@ func PageQuery(pm channels.PageMetadata) (string, error) {
 	if pm.Domain != "" {
 		query = append(query, "c.domain_id = :domain_id")
 	}
+	if pm.Group != "" {
+		query = append(query, "c.parent_group_path @> (SELECT path from groups where id = :group_id) ")
+	}
+	if pm.Client != "" {
+		query = append(query, "conn.client_id = :client_id ")
+		if pm.ConnectionType != "" {
+			query = append(query, "conn.type = :conn_type ")
+		}
+	}
+	if pm.AccessType != "" {
+		query = append(query, "c.access_type = :access_type")
+	}
+	if pm.RoleID != "" {
+		query = append(query, "c.role_id = :role_id")
+	}
+	if pm.RoleName != "" {
+		query = append(query, "c.role_name = :role_name")
+	}
+	if len(pm.Actions) != 0 {
+		query = append(query, "c.actions @> :actions")
+	}
+	if len(pm.Metadata) > 0 {
+		query = append(query, "c.metadata @> :metadata")
+	}
+
 	var emq string
 	if len(query) > 0 {
 		emq = fmt.Sprintf("WHERE %s", strings.Join(query, " AND "))
@@ -586,28 +928,40 @@ func toDBChannelsPage(pm channels.PageMetadata) (dbChannelsPage, error) {
 		return dbChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
 	return dbChannelsPage{
-		Name:     pm.Name,
-		Id:       pm.Id,
-		Metadata: data,
-		Domain:   pm.Domain,
-		Total:    pm.Total,
-		Offset:   pm.Offset,
-		Limit:    pm.Limit,
-		Status:   pm.Status,
-		Tag:      pm.Tag,
+		Limit:      pm.Limit,
+		Offset:     pm.Offset,
+		Name:       pm.Name,
+		Id:         pm.Id,
+		Domain:     pm.Domain,
+		Metadata:   data,
+		Tag:        pm.Tag,
+		Status:     pm.Status,
+		GroupID:    pm.Group,
+		ClientID:   pm.Client,
+		ConnType:   pm.ConnectionType,
+		RoleName:   pm.RoleName,
+		RoleID:     pm.RoleID,
+		Actions:    pm.Actions,
+		AccessType: pm.AccessType,
 	}, nil
 }
 
 type dbChannelsPage struct {
-	Total    uint64         `db:"total"`
-	Limit    uint64         `db:"limit"`
-	Offset   uint64         `db:"offset"`
-	Name     string         `db:"name"`
-	Id       string         `db:"id"`
-	Domain   string         `db:"domain_id"`
-	Metadata []byte         `db:"metadata"`
-	Tag      string         `db:"tag"`
-	Status   clients.Status `db:"status"`
+	Limit      uint64         `db:"limit"`
+	Offset     uint64         `db:"offset"`
+	Name       string         `db:"name"`
+	Id         string         `db:"id"`
+	Domain     string         `db:"domain_id"`
+	Metadata   []byte         `db:"metadata"`
+	Tag        string         `db:"tag"`
+	Status     clients.Status `db:"status"`
+	GroupID    string         `db:"group_id"`
+	ClientID   string         `db:"client_id"`
+	ConnType   string         `db:"type"`
+	RoleName   string         `db:"role_name"`
+	RoleID     string         `db:"role_id"`
+	Actions    pq.StringArray `db:"actions"`
+	AccessType string         `db:"access_type"`
 }
 
 type dbConnection struct {

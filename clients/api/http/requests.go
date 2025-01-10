@@ -85,6 +85,7 @@ type listClientsReq struct {
 	limit      uint64
 	groupID    string
 	channelID  string
+	connType   string
 	userID     string
 }
 

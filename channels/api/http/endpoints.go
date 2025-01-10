@@ -104,15 +104,21 @@ func listChannelsEndpoint(svc channels.Service) endpoint.Endpoint {
 		}
 
 		pm := channels.PageMetadata{
-			Status:     req.status,
-			Offset:     req.offset,
-			Limit:      req.limit,
-			Name:       req.name,
-			Tag:        req.tag,
-			Permission: req.permission,
-			Metadata:   req.metadata,
-			ListPerms:  req.listPerms,
-			Id:         req.id,
+			Offset:         req.offset,
+			Limit:          req.limit,
+			Name:           req.name,
+			Order:          req.order,
+			Dir:            req.dir,
+			Metadata:       req.metadata,
+			Tag:            req.tag,
+			Status:         req.status,
+			Group:          req.groupID,
+			Client:         req.clientID,
+			ConnectionType: req.connType,
+			RoleName:       req.roleName,
+			RoleID:         req.roleID,
+			Actions:        req.actions,
+			AccessType:     req.accessType,
 		}
 		page, err := svc.ListChannels(ctx, session, pm)
 		if err != nil {

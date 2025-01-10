@@ -82,11 +82,11 @@ func (lm *loggingMiddleware) ListChannels(ctx context.Context, session authn.Ses
 	return lm.svc.ListChannels(ctx, session, pm)
 }
 
-func (lm *loggingMiddleware) ListChannelsByClient(ctx context.Context, session authn.Session, clientID string, pm channels.PageMetadata) (cp channels.Page, err error) {
+func (lm *loggingMiddleware) ListUserChannels(ctx context.Context, session authn.Session, userID string, pm channels.PageMetadata) (cp channels.Page, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.String("client_id", clientID),
+			slog.String("user_id", userID),
 			slog.Group("page",
 				slog.Uint64("limit", pm.Limit),
 				slog.Uint64("offset", pm.Offset),
@@ -95,12 +95,12 @@ func (lm *loggingMiddleware) ListChannelsByClient(ctx context.Context, session a
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("List channels by client failed", args...)
+			lm.logger.Warn("List user channels failed", args...)
 			return
 		}
-		lm.logger.Info("List channels by client completed successfully", args...)
+		lm.logger.Info("List user channels completed successfully", args...)
 	}(time.Now())
-	return lm.svc.ListChannelsByClient(ctx, session, clientID, pm)
+	return lm.svc.ListUserChannels(ctx, session, userID, pm)
 }
 
 func (lm *loggingMiddleware) UpdateChannel(ctx context.Context, session authn.Session, client channels.Channel) (c channels.Channel, err error) {

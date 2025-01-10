@@ -12,7 +12,6 @@ import (
 	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/clients"
-	"github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/go-chi/chi/v5"
 )
@@ -30,7 +29,7 @@ func decodeViewClient(_ context.Context, r *http.Request) (interface{}, error) {
 func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) {
 	name, err := apiutil.ReadStringQuery(r, api.NameKey, "")
 	if err != nil {
-		return clients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	tag, err := apiutil.ReadStringQuery(r, api.TagKey, "")
@@ -40,40 +39,40 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 
 	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefGroupStatus)
 	if err != nil {
-		return clients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	status, err := clients.ToStatus(s)
 	if err != nil {
-		return clients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	meta, err := apiutil.ReadMetadataQuery(r, api.MetadataKey, nil)
 	if err != nil {
-		return clients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	offset, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
 	if err != nil {
-		return clients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 	limit, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
 	if err != nil {
-		return clients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	dir, err := apiutil.ReadStringQuery(r, api.DirKey, api.DefDir)
 	if err != nil {
-		return clients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	order, err := apiutil.ReadStringQuery(r, api.OrderKey, api.DefOrder)
 	if err != nil {
-		return clients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	allActions, err := apiutil.ReadStringQuery(r, api.ActionsKey, "")
 	if err != nil {
-		return clients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	actions := []string{}
@@ -84,32 +83,37 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 	}
 	roleID, err := apiutil.ReadStringQuery(r, api.RoleIDKey, "")
 	if err != nil {
-		return clients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	roleName, err := apiutil.ReadStringQuery(r, api.RoleNameKey, "")
 	if err != nil {
-		return clients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	accessType, err := apiutil.ReadStringQuery(r, api.AccessTypeKey, "")
 	if err != nil {
-		return clients.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	userID, err := apiutil.ReadStringQuery(r, api.UserKey, "")
 	if err != nil {
-		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	groupID, err := apiutil.ReadStringQuery(r, api.GroupKey, "")
 	if err != nil {
-		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	channelID, err := apiutil.ReadStringQuery(r, api.ChannelKey, "")
 	if err != nil {
-		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	connType, err := apiutil.ReadStringQuery(r, api.ConnTypeKey, "")
+	if err != nil {
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
 	req := listClientsReq{
@@ -127,6 +131,7 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 		limit:      limit,
 		groupID:    groupID,
 		channelID:  channelID,
+		connType:   connType,
 		userID:     userID,
 	}
 	return req, nil

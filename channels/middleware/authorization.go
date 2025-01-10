@@ -22,6 +22,7 @@ import (
 
 var (
 	errView                     = errors.New("not authorized to view channel")
+	errList                     = errors.New("not authorized to list user channels")
 	errUpdate                   = errors.New("not authorized to update channel")
 	errUpdateTags               = errors.New("not authorized to update channel tags")
 	errEnable                   = errors.New("not authorized to enable channel")
@@ -164,13 +165,13 @@ func (am *authorizationMiddleware) ListChannels(ctx context.Context, session aut
 		}
 	}
 
-	if err := am.checkSuperAdmin(ctx, session.UserID); err != nil {
+	if err := am.checkSuperAdmin(ctx, session.UserID); err == nil {
 		session.SuperAdmin = true
 	}
 	return am.svc.ListChannels(ctx, session, pm)
 }
 
-func (am *authorizationMiddleware) ListChannelsByClient(ctx context.Context, session authn.Session, clientID string, pm channels.PageMetadata) (channels.Page, error) {
+func (am *authorizationMiddleware) ListUserChannels(ctx context.Context, session authn.Session, userID string, pm channels.PageMetadata) (channels.Page, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
 			UserID:                   session.UserID,
@@ -184,7 +185,10 @@ func (am *authorizationMiddleware) ListChannelsByClient(ctx context.Context, ses
 			return channels.Page{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
 	}
-	return am.svc.ListChannelsByClient(ctx, session, clientID, pm)
+	if err := am.checkSuperAdmin(ctx, session.UserID); err != nil {
+		return channels.Page{}, errors.Wrap(err, errList)
+	}
+	return am.svc.ListUserChannels(ctx, session, userID, pm)
 }
 
 func (am *authorizationMiddleware) UpdateChannel(ctx context.Context, session authn.Session, channel channels.Channel) (channels.Channel, error) {

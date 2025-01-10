@@ -13,6 +13,10 @@ import (
 	"github.com/absmach/supermq/pkg/roles"
 )
 
+type CtxKey int
+
+const ListDomainClients CtxKey = iota
+
 type Connection struct {
 	ClientID  string
 	ChannelID string
@@ -35,14 +39,14 @@ type Repository interface {
 	// RetrieveAll retrieves all clients.
 	RetrieveAll(ctx context.Context, pm Page) (ClientsPage, error)
 
-	// RetrieveUserThings retrieve all clients of a given user id.
-	RetrieveUserThings(ctx context.Context, domainID, userID string, pm Page) (ClientsPage, error)
+	// RetrieveUserClients retrieve all clients of a given user id.
+	RetrieveUserClients(ctx context.Context, domainID, userID string, includeDomainClients bool, pm Page) (ClientsPage, error)
 
 	// SearchClients retrieves clients based on search criteria.
 	SearchClients(ctx context.Context, pm Page) (ClientsPage, error)
 
-	// RetrieveAllByIDs retrieves for given client IDs .
-	RetrieveAllByIDs(ctx context.Context, pm Page) (ClientsPage, error)
+	// RetrieveByIds
+	RetrieveByIds(ctx context.Context, ids []string) (ClientsPage, error)
 
 	// Update updates the client name and metadata.
 	Update(ctx context.Context, client Client) (Client, error)
@@ -68,8 +72,6 @@ type Repository interface {
 
 	// RetrieveBySecret retrieves a client based on the secret (key).
 	RetrieveBySecret(ctx context.Context, key string) (Client, error)
-
-	RetrieveByIds(ctx context.Context, ids []string) (ClientsPage, error)
 
 	AddConnections(ctx context.Context, conns []Connection) error
 
@@ -180,8 +182,6 @@ type Client struct {
 	AccessProviderRoleActions []string `json:"access_provider_role_actions"`
 }
 
-type ClientsAdditional struct{}
-
 // ClientsPage contains page related metadata as well as list.
 type ClientsPage struct {
 	Page
@@ -202,15 +202,14 @@ type Page struct {
 	Total          uint64   `json:"total"`
 	Offset         uint64   `json:"offset"`
 	Limit          uint64   `json:"limit"`
-	Name           string   `json:"name,omitempty"`
-	Id             string   `json:"id,omitempty"`
 	Order          string   `json:"order,omitempty"`
 	Dir            string   `json:"dir,omitempty"`
+	Id             string   `json:"id,omitempty"`
+	Name           string   `json:"name,omitempty"`
 	Metadata       Metadata `json:"metadata,omitempty"`
 	Domain         string   `json:"domain,omitempty"`
 	Tag            string   `json:"tag,omitempty"`
 	Status         Status   `json:"status,omitempty"`
-	IDs            []string `json:"ids,omitempty"`
 	Identity       string   `json:"identity,omitempty"`
 	Group          string   `json:"group,omitempty"`
 	Channel        string   `json:"channel,omitempty"`
@@ -219,6 +218,7 @@ type Page struct {
 	RoleID         string   `json:"role_id,omitempty"`
 	Actions        []string `json:"actions,omitempty"`
 	AccessType     string   `json:"access_type,omitempty"`
+	IDs            []string `json:"-"`
 }
 
 // Metadata represents arbitrary JSON.

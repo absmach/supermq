@@ -21,7 +21,6 @@ import (
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
-	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -183,48 +182,28 @@ func (svc service) ViewChannel(ctx context.Context, session authn.Session, id st
 }
 
 func (svc service) ListChannels(ctx context.Context, session authn.Session, pm PageMetadata) (Page, error) {
-	var ids []string
-	var err error
-
 	switch session.SuperAdmin {
 	case true:
-		pm.Domain = session.DomainID
-	default:
-		ids, err = svc.listChannelIDs(ctx, session.DomainUserID, pm.Permission)
+		cp, err := svc.repo.RetrieveAll(ctx, pm)
 		if err != nil {
-			return Page{}, errors.Wrap(svcerr.ErrNotFound, err)
+			return Page{}, errors.Wrap(svcerr.ErrViewEntity, err)
 		}
+		return cp, nil
+	default:
+		cp, err := svc.repo.RetrieveUserChannels(ctx, session.DomainID, session.UserID, pm)
+		if err != nil {
+			return Page{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		}
+		return cp, nil
 	}
-	if len(ids) == 0 && pm.Domain == "" {
-		return Page{}, nil
-	}
-	pm.IDs = ids
+}
 
-	cp, err := svc.repo.RetrieveAll(ctx, pm)
+func (svc service) ListUserChannels(ctx context.Context, session authn.Session, userID string, pm PageMetadata) (Page, error) {
+	cp, err := svc.repo.RetrieveUserChannels(ctx, session.DomainID, userID, pm)
 	if err != nil {
 		return Page{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
-
-	if pm.ListPerms && len(cp.Channels) > 0 {
-		g, ctx := errgroup.WithContext(ctx)
-
-		for i := range cp.Channels {
-			// Copying loop variable "i" to avoid "loop variable captured by func literal"
-			iter := i
-			g.Go(func() error {
-				return svc.retrievePermissions(ctx, session.DomainUserID, &cp.Channels[iter])
-			})
-		}
-
-		if err := g.Wait(); err != nil {
-			return Page{}, err
-		}
-	}
 	return cp, nil
-}
-
-func (svc service) ListChannelsByClient(ctx context.Context, session authn.Session, clID string, pm PageMetadata) (Page, error) {
-	return Page{}, nil
 }
 
 func (svc service) RemoveChannel(ctx context.Context, session authn.Session, id string) error {
@@ -491,41 +470,6 @@ func (svc service) RemoveParentGroup(ctx context.Context, session authn.Session,
 	}
 
 	return nil
-}
-
-func (svc service) listChannelIDs(ctx context.Context, userID, permission string) ([]string, error) {
-	tids, err := svc.policy.ListAllObjects(ctx, policies.Policy{
-		SubjectType: policies.UserType,
-		Subject:     userID,
-		Permission:  permission,
-		ObjectType:  policies.ChannelType,
-	})
-	if err != nil {
-		return nil, errors.Wrap(svcerr.ErrNotFound, err)
-	}
-	return tids.Policies, nil
-}
-
-func (svc service) retrievePermissions(ctx context.Context, userID string, channel *Channel) error {
-	permissions, err := svc.listUserClientPermission(ctx, userID, channel.ID)
-	if err != nil {
-		return err
-	}
-	channel.Permissions = permissions
-	return nil
-}
-
-func (svc service) listUserClientPermission(ctx context.Context, userID, clientID string) ([]string, error) {
-	lp, err := svc.policy.ListPermissions(ctx, policies.Policy{
-		SubjectType: policies.UserType,
-		Subject:     userID,
-		Object:      clientID,
-		ObjectType:  policies.ChannelType,
-	}, []string{})
-	if err != nil {
-		return []string{}, errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-	return lp, nil
 }
 
 func (svc service) changeChannelStatus(ctx context.Context, userID string, channel Channel) (Channel, error) {
