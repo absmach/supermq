@@ -248,17 +248,17 @@ func (repo *clientRepo) RetrieveAll(ctx context.Context, pm clients.Page) (clien
 	return page, nil
 }
 
-func (repo *clientRepo) RetrieveUserClients(ctx context.Context, domainID, userID string, includeDomainClients bool, pm clients.Page) (clients.ClientsPage, error) {
-	return repo.retrieveClients(ctx, domainID, userID, includeDomainClients, pm)
+func (repo *clientRepo) RetrieveUserClients(ctx context.Context, domainID, userID string, pm clients.Page) (clients.ClientsPage, error) {
+	return repo.retrieveClients(ctx, domainID, userID, pm)
 }
 
-func (repo *clientRepo) retrieveClients(ctx context.Context, domainID, userID string, includeDomainClients bool, pm clients.Page) (clients.ClientsPage, error) {
+func (repo *clientRepo) retrieveClients(ctx context.Context, domainID, userID string, pm clients.Page) (clients.ClientsPage, error) {
 	pageQuery, err := PageQuery(pm)
 	if err != nil {
 		return clients.ClientsPage{}, err
 	}
 
-	bq := repo.userClientBaseQuery(domainID, userID, includeDomainClients)
+	bq := repo.userClientBaseQuery(domainID, userID)
 
 	q := fmt.Sprintf(`
 				%s
@@ -370,42 +370,7 @@ func (repo *clientRepo) retrieveClients(ctx context.Context, domainID, userID st
 	return page, nil
 }
 
-func (repo *clientRepo) userClientBaseQuery(domainID, userID string, includeDomainClients bool) string {
-	domainClientsQuery := ""
-	if includeDomainClients {
-		domainClientsQuery = fmt.Sprintf(`
-							UNION
-							SELECT
-								c.id,
-								c.name,
-								c.domain_id,
-								c.parent_group_id,
-								c.identity,
-								c.secret,
-								c.tags,
-								c.metadata,
-								c.created_at,
-								c.updated_at,
-								c.updated_by,
-								c.status,
-								'' AS parent_group_path,
-								'' AS role_id,
-								'' AS role_name,
-								array[]::::text[]  AS actions,
-								'indirect_domain' AS access_type,
-								'' AS access_provider_id,
-								''  AS access_provider_role_id,
-								'' AS access_provider_role_name,
-								array[]::::text[]  AS access_provider_role_actions
-							FROM
-								clients c
-							WHERE
-								c.domain_id = '%s'
-								AND
-								c.id NOT IN (SELECT id FROM group_direct_clients)
-
-		`, domainID)
-	}
+func (repo *clientRepo) userClientBaseQuery(domainID, userID string) string {
 	return fmt.Sprintf(`
 						WITH direct_clients AS (
 							SELECT
@@ -623,9 +588,8 @@ func (repo *clientRepo) userClientBaseQuery(domainID, userID string, includeDoma
 								gdc.access_provider_role_actions
 							FROM
 								group_direct_clients AS gdc
-							%s
 						)
-	`, userID, domainID, userID, domainID, domainID, domainClientsQuery)
+	`, userID, domainID, userID, domainID, domainID)
 }
 
 func (repo *clientRepo) SearchClients(ctx context.Context, pm clients.Page) (clients.ClientsPage, error) {

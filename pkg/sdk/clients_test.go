@@ -357,8 +357,11 @@ func TestListClients(t *testing.T) {
 				Limit:  100,
 			},
 			svcReq: clients.Page{
-				Offset: 0,
-				Limit:  100,
+				Actions: []string{},
+				Order:   "updated_at",
+				Dir:     "asc",
+				Offset:  0,
+				Limit:   100,
 			},
 			svcRes: clients.ClientsPage{
 				Page: clients.Page{
@@ -386,8 +389,11 @@ func TestListClients(t *testing.T) {
 				Limit:  100,
 			},
 			svcReq: clients.Page{
-				Offset: 0,
-				Limit:  100,
+				Actions: []string{},
+				Order:   "updated_at",
+				Dir:     "asc",
+				Offset:  0,
+				Limit:   100,
 			},
 			svcRes:          clients.ClientsPage{},
 			authenticateErr: svcerr.ErrAuthentication,
@@ -402,7 +408,11 @@ func TestListClients(t *testing.T) {
 				Offset: 0,
 				Limit:  1000,
 			},
-			svcReq:   clients.Page{},
+			svcReq: clients.Page{
+				Actions: []string{},
+				Order:   "updated_at",
+				Dir:     "asc",
+			},
 			svcRes:   clients.ClientsPage{},
 			svcErr:   nil,
 			response: sdk.ClientsPage{},
@@ -417,7 +427,11 @@ func TestListClients(t *testing.T) {
 				Limit:  100,
 				Name:   strings.Repeat("a", 1025),
 			},
-			svcReq:   clients.Page{},
+			svcReq: clients.Page{
+				Actions: []string{},
+				Order:   "updated_at",
+				Dir:     "asc",
+			},
 			svcRes:   clients.ClientsPage{},
 			svcErr:   nil,
 			response: sdk.ClientsPage{},
@@ -433,9 +447,12 @@ func TestListClients(t *testing.T) {
 				Status: clients.DisabledStatus.String(),
 			},
 			svcReq: clients.Page{
-				Offset: 0,
-				Limit:  100,
-				Status: clients.DisabledStatus,
+				Actions: []string{},
+				Order:   "updated_at",
+				Dir:     "asc",
+				Offset:  0,
+				Limit:   100,
+				Status:  clients.DisabledStatus,
 			},
 			svcRes: clients.ClientsPage{
 				Page: clients.Page{
@@ -465,9 +482,12 @@ func TestListClients(t *testing.T) {
 				Tag:    "tag1",
 			},
 			svcReq: clients.Page{
-				Offset: 0,
-				Limit:  100,
-				Tag:    "tag1",
+				Actions: []string{},
+				Order:   "updated_at",
+				Dir:     "asc",
+				Offset:  0,
+				Limit:   100,
+				Tag:     "tag1",
 			},
 			svcRes: clients.ClientsPage{
 				Page: clients.Page{
@@ -498,7 +518,11 @@ func TestListClients(t *testing.T) {
 					"test": make(chan int),
 				},
 			},
-			svcReq:   clients.Page{},
+			svcReq: clients.Page{
+				Actions: []string{},
+				Order:   "updated_at",
+				Dir:     "asc",
+			},
 			svcRes:   clients.ClientsPage{},
 			svcErr:   nil,
 			response: sdk.ClientsPage{},
@@ -513,8 +537,11 @@ func TestListClients(t *testing.T) {
 				Limit:  100,
 			},
 			svcReq: clients.Page{
-				Offset: 0,
-				Limit:  100,
+				Actions: []string{},
+				Order:   "updated_at",
+				Dir:     "asc",
+				Offset:  0,
+				Limit:   100,
 			},
 			svcRes: clients.ClientsPage{
 				Page: clients.Page{
@@ -542,12 +569,12 @@ func TestListClients(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("ListClients", mock.Anything, tc.session, mock.Anything, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			svcCall := tsvc.On("ListClients", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.Clients(tc.pageMeta, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "ListClients", mock.Anything, tc.session, mock.Anything, tc.svcReq)
+				ok := svcCall.Parent.AssertCalled(t, "ListClients", mock.Anything, tc.session, tc.svcReq)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1387,254 +1414,6 @@ func TestDeleteClient(t *testing.T) {
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "Delete", mock.Anything, tc.session, tc.clientID)
-				assert.True(t, ok)
-			}
-			svcCall.Unset()
-			authCall.Unset()
-		})
-	}
-}
-
-func TestListUserClients(t *testing.T) {
-	ts, tsvc, auth := setupClients()
-	defer ts.Close()
-
-	var sdkClients []sdk.Client
-	for i := 10; i < 100; i++ {
-		c := generateTestClient(t)
-		if i == 50 {
-			c.Status = clients.DisabledStatus.String()
-			c.Tags = []string{"tag1", "tag2"}
-		}
-		sdkClients = append(sdkClients, c)
-	}
-
-	conf := sdk.Config{
-		ClientsURL: ts.URL,
-	}
-	mgsdk := sdk.NewSDK(conf)
-
-	cases := []struct {
-		desc            string
-		token           string
-		session         smqauthn.Session
-		userID          string
-		domainID        string
-		pageMeta        sdk.PageMetadata
-		svcReq          clients.Page
-		svcRes          clients.ClientsPage
-		svcErr          error
-		authenticateErr error
-		response        sdk.ClientsPage
-		err             errors.SDKError
-	}{
-		{
-			desc:     "list user clients successfully",
-			token:    validToken,
-			userID:   validID,
-			domainID: domainID,
-			pageMeta: sdk.PageMetadata{
-				Offset: 0,
-				Limit:  100,
-			},
-			svcReq: clients.Page{
-				Offset: 0,
-				Limit:  100,
-			},
-			svcRes: clients.ClientsPage{
-				Page: clients.Page{
-					Offset: 0,
-					Limit:  100,
-					Total:  uint64(len(sdkClients)),
-				},
-				Clients: convertClients(sdkClients...),
-			},
-			svcErr: nil,
-			response: sdk.ClientsPage{
-				PageRes: sdk.PageRes{
-					Limit: 100,
-					Total: uint64(len(sdkClients)),
-				},
-				Clients: sdkClients,
-			},
-		},
-		{
-			desc:     "list user clients with an invalid token",
-			token:    invalidToken,
-			userID:   validID,
-			domainID: domainID,
-			pageMeta: sdk.PageMetadata{
-				Offset: 0,
-				Limit:  100,
-			},
-			svcReq: clients.Page{
-				Offset: 0,
-				Limit:  100,
-			},
-			svcRes:          clients.ClientsPage{},
-			authenticateErr: svcerr.ErrAuthentication,
-			response:        sdk.ClientsPage{},
-			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
-		},
-		{
-			desc:     "list user clients with limit greater than max",
-			token:    validToken,
-			userID:   validID,
-			domainID: domainID,
-			pageMeta: sdk.PageMetadata{
-				Offset: 0,
-				Limit:  1000,
-			},
-			svcReq:   clients.Page{},
-			svcRes:   clients.ClientsPage{},
-			svcErr:   nil,
-			response: sdk.ClientsPage{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusBadRequest),
-		},
-		{
-			desc:     "list user clients with name size greater than max",
-			token:    validToken,
-			userID:   validID,
-			domainID: domainID,
-			pageMeta: sdk.PageMetadata{
-				Offset: 0,
-				Limit:  100,
-				Name:   strings.Repeat("a", 1025),
-			},
-			svcReq:   clients.Page{},
-			svcRes:   clients.ClientsPage{},
-			svcErr:   nil,
-			response: sdk.ClientsPage{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrNameSize), http.StatusBadRequest),
-		},
-		{
-			desc:     "list user clients with status",
-			token:    validToken,
-			userID:   validID,
-			domainID: domainID,
-			pageMeta: sdk.PageMetadata{
-				Offset: 0,
-				Limit:  100,
-				Status: clients.DisabledStatus.String(),
-			},
-			svcReq: clients.Page{
-				Offset: 0,
-				Limit:  100,
-				Status: clients.DisabledStatus,
-			},
-			svcRes: clients.ClientsPage{
-				Page: clients.Page{
-					Offset: 0,
-					Limit:  100,
-					Total:  1,
-				},
-				Clients: convertClients(sdkClients[50]),
-			},
-			svcErr: nil,
-			response: sdk.ClientsPage{
-				PageRes: sdk.PageRes{
-					Limit: 100,
-					Total: 1,
-				},
-				Clients: []sdk.Client{sdkClients[50]},
-			},
-			err: nil,
-		},
-		{
-			desc:     "list user clients with tags",
-			token:    validToken,
-			userID:   validID,
-			domainID: domainID,
-			pageMeta: sdk.PageMetadata{
-				Offset: 0,
-				Limit:  100,
-				Tag:    "tag1",
-			},
-			svcReq: clients.Page{
-				Offset: 0,
-				Limit:  100,
-				Tag:    "tag1",
-			},
-			svcRes: clients.ClientsPage{
-				Page: clients.Page{
-					Offset: 0,
-					Limit:  100,
-					Total:  1,
-				},
-				Clients: convertClients(sdkClients[50]),
-			},
-			svcErr: nil,
-			response: sdk.ClientsPage{
-				PageRes: sdk.PageRes{
-					Limit: 100,
-					Total: 1,
-				},
-				Clients: []sdk.Client{sdkClients[50]},
-			},
-			err: nil,
-		},
-		{
-			desc:     "list user clients with invalid metadata",
-			token:    validToken,
-			userID:   validID,
-			domainID: domainID,
-			pageMeta: sdk.PageMetadata{
-				Offset: 0,
-				Limit:  100,
-				Metadata: map[string]interface{}{
-					"test": make(chan int),
-				},
-			},
-			svcReq:   clients.Page{},
-			svcRes:   clients.ClientsPage{},
-			svcErr:   nil,
-			response: sdk.ClientsPage{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
-		},
-		{
-			desc:     "list user clients with response that can't be unmarshalled",
-			token:    validToken,
-			domainID: domainID,
-			pageMeta: sdk.PageMetadata{
-				Offset: 0,
-				Limit:  100,
-			},
-			svcReq: clients.Page{
-				Offset: 0,
-				Limit:  100,
-			},
-			svcRes: clients.ClientsPage{
-				Page: clients.Page{
-					Offset: 0,
-					Limit:  100,
-					Total:  1,
-				},
-				Clients: []clients.Client{{
-					Name:        sdkClients[0].Name,
-					Tags:        sdkClients[0].Tags,
-					Credentials: clients.Credentials(sdkClients[0].Credentials),
-					Metadata: clients.Metadata{
-						"test": make(chan int),
-					},
-				}},
-			},
-			svcErr:   nil,
-			response: sdk.ClientsPage{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
-		},
-	}
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
-			}
-			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
-			svcCall := tsvc.On("ListClients", mock.Anything, tc.session, tc.userID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.ListUserClients(tc.userID, tc.domainID, tc.pageMeta, tc.token)
-			assert.Equal(t, tc.err, err)
-			assert.Equal(t, tc.response, resp)
-			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "ListClients", mock.Anything, tc.session, tc.userID, tc.svcReq)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()

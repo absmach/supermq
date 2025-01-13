@@ -392,8 +392,11 @@ func TestListChannels(t *testing.T) {
 			offset:   offset,
 			total:    total,
 			channelsPageMeta: channels.PageMetadata{
-				Offset: offset,
-				Limit:  limit,
+				Actions: []string{},
+				Order:   "updated_at",
+				Dir:     "asc",
+				Offset:  offset,
+				Limit:   limit,
 			},
 			svcRes: channels.Page{
 				PageMetadata: channels.PageMetadata{
@@ -416,8 +419,11 @@ func TestListChannels(t *testing.T) {
 			offset:   offset,
 			limit:    limit,
 			channelsPageMeta: channels.PageMetadata{
-				Offset: offset,
-				Limit:  limit,
+				Actions: []string{},
+				Order:   "updated_at",
+				Dir:     "asc",
+				Offset:  offset,
+				Limit:   limit,
 			},
 			svcRes:          channels.Page{},
 			authenticateErr: svcerr.ErrAuthentication,
@@ -425,16 +431,20 @@ func TestListChannels(t *testing.T) {
 			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
-			desc:             "list channels with empty token",
-			token:            "",
-			domainID:         validID,
-			offset:           offset,
-			limit:            limit,
-			channelsPageMeta: channels.PageMetadata{},
-			svcRes:           channels.Page{},
-			svcErr:           nil,
-			response:         sdk.ChannelsPage{},
-			err:              errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+			desc:     "list channels with empty token",
+			token:    "",
+			domainID: validID,
+			offset:   offset,
+			limit:    limit,
+			channelsPageMeta: channels.PageMetadata{
+				Actions: []string{},
+				Order:   "updated_at",
+				Dir:     "asc",
+			},
+			svcRes:   channels.Page{},
+			svcErr:   nil,
+			response: sdk.ChannelsPage{},
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		{
 			desc:     "list channels with zero limit",
@@ -443,8 +453,11 @@ func TestListChannels(t *testing.T) {
 			offset:   offset,
 			limit:    0,
 			channelsPageMeta: channels.PageMetadata{
-				Offset: offset,
-				Limit:  10,
+				Actions: []string{},
+				Order:   "updated_at",
+				Dir:     "asc",
+				Offset:  offset,
+				Limit:   10,
 			},
 			svcRes: channels.Page{
 				PageMetadata: channels.PageMetadata{
@@ -462,16 +475,20 @@ func TestListChannels(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:             "list channels with limit greater than max",
-			token:            validToken,
-			domainID:         domainID,
-			offset:           offset,
-			limit:            110,
-			channelsPageMeta: channels.PageMetadata{},
-			svcRes:           channels.Page{},
-			svcErr:           nil,
-			response:         sdk.ChannelsPage{},
-			err:              errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusBadRequest),
+			desc:     "list channels with limit greater than max",
+			token:    validToken,
+			domainID: domainID,
+			offset:   offset,
+			limit:    110,
+			channelsPageMeta: channels.PageMetadata{
+				Actions: []string{},
+				Order:   "updated_at",
+				Dir:     "asc",
+			},
+			svcRes:   channels.Page{},
+			svcErr:   nil,
+			response: sdk.ChannelsPage{},
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusBadRequest),
 		},
 		{
 			desc:     "list channels with level",
@@ -481,8 +498,11 @@ func TestListChannels(t *testing.T) {
 			limit:    1,
 			level:    1,
 			channelsPageMeta: channels.PageMetadata{
-				Offset: offset,
-				Limit:  1,
+				Actions: []string{},
+				Order:   "updated_at",
+				Dir:     "asc",
+				Offset:  offset,
+				Limit:   1,
 			},
 			svcRes: channels.Page{
 				PageMetadata: channels.PageMetadata{
@@ -507,6 +527,9 @@ func TestListChannels(t *testing.T) {
 			limit:    10,
 			metadata: sdk.Metadata{"name": "client_89"},
 			channelsPageMeta: channels.PageMetadata{
+				Actions:  []string{},
+				Order:    "updated_at",
+				Dir:      "asc",
 				Offset:   offset,
 				Limit:    10,
 				Metadata: clients.Metadata{"name": "client_89"},
@@ -535,11 +558,15 @@ func TestListChannels(t *testing.T) {
 			metadata: sdk.Metadata{
 				"test": make(chan int),
 			},
-			channelsPageMeta: channels.PageMetadata{},
-			svcRes:           channels.Page{},
-			svcErr:           nil,
-			response:         sdk.ChannelsPage{},
-			err:              errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			channelsPageMeta: channels.PageMetadata{
+				Actions: []string{},
+				Order:   "updated_at",
+				Dir:     "asc",
+			},
+			svcRes:   channels.Page{},
+			svcErr:   nil,
+			response: sdk.ChannelsPage{},
+			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
 		},
 		{
 			desc:     "list channels with service response that can't be unmarshalled",
@@ -548,8 +575,11 @@ func TestListChannels(t *testing.T) {
 			offset:   0,
 			limit:    10,
 			channelsPageMeta: channels.PageMetadata{
-				Offset: 0,
-				Limit:  10,
+				Actions: []string{},
+				Order:   "updated_at",
+				Dir:     "asc",
+				Offset:  0,
+				Limit:   10,
 			},
 			svcRes: channels.Page{
 				PageMetadata: channels.PageMetadata{

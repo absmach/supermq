@@ -4393,67 +4393,6 @@ func (_c *SDK_ListDomainUsers_Call) RunAndReturn(run func(string, sdk.PageMetada
 	return _c
 }
 
-// ListUserClients provides a mock function with given fields: userID, domainID, pm, token
-func (_m *SDK) ListUserClients(userID string, domainID string, pm sdk.PageMetadata, token string) (sdk.ClientsPage, errors.SDKError) {
-	ret := _m.Called(userID, domainID, pm, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ListUserClients")
-	}
-
-	var r0 sdk.ClientsPage
-	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.ClientsPage, errors.SDKError)); ok {
-		return rf(userID, domainID, pm, token)
-	}
-	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.ClientsPage); ok {
-		r0 = rf(userID, domainID, pm, token)
-	} else {
-		r0 = ret.Get(0).(sdk.ClientsPage)
-	}
-
-	if rf, ok := ret.Get(1).(func(string, string, sdk.PageMetadata, string) errors.SDKError); ok {
-		r1 = rf(userID, domainID, pm, token)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.SDKError)
-		}
-	}
-
-	return r0, r1
-}
-
-// SDK_ListUserClients_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListUserClients'
-type SDK_ListUserClients_Call struct {
-	*mock.Call
-}
-
-// ListUserClients is a helper method to define mock.On call
-//   - userID string
-//   - domainID string
-//   - pm sdk.PageMetadata
-//   - token string
-func (_e *SDK_Expecter) ListUserClients(userID interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_ListUserClients_Call {
-	return &SDK_ListUserClients_Call{Call: _e.mock.On("ListUserClients", userID, domainID, pm, token)}
-}
-
-func (_c *SDK_ListUserClients_Call) Run(run func(userID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ListUserClients_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
-	})
-	return _c
-}
-
-func (_c *SDK_ListUserClients_Call) Return(_a0 sdk.ClientsPage, _a1 errors.SDKError) *SDK_ListUserClients_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *SDK_ListUserClients_Call) RunAndReturn(run func(string, string, sdk.PageMetadata, string) (sdk.ClientsPage, errors.SDKError)) *SDK_ListUserClients_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // Members provides a mock function with given fields: groupID, domainID, pm, token
 func (_m *SDK) Members(groupID string, domainID string, pm sdk.PageMetadata, token string) (sdk.UsersPage, errors.SDKError) {
 	ret := _m.Called(groupID, domainID, pm, token)

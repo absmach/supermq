@@ -252,23 +252,6 @@ func (sdk mgSDK) DeleteClient(id, domainID, token string) errors.SDKError {
 	return sdkerr
 }
 
-func (sdk mgSDK) ListUserClients(userID, domainID string, pm PageMetadata, token string) (ClientsPage, errors.SDKError) {
-	url, err := sdk.withQueryParams(sdk.clientsURL, fmt.Sprintf("%s/%s/%s/%s", domainID, usersEndpoint, userID, clientsEndpoint), pm)
-	if err != nil {
-		return ClientsPage{}, errors.NewSDKError(err)
-	}
-	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return ClientsPage{}, sdkerr
-	}
-	cp := ClientsPage{}
-	if err := json.Unmarshal(body, &cp); err != nil {
-		return ClientsPage{}, errors.NewSDKError(err)
-	}
-
-	return cp, nil
-}
-
 func (sdk mgSDK) CreateClientRole(id, domainID string, rq RoleReq, token string) (Role, errors.SDKError) {
 	return sdk.createRole(sdk.clientsURL, clientsEndpoint, id, domainID, rq, token)
 }

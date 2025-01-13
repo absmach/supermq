@@ -174,13 +174,6 @@ func TestListChannelsReqValidation(t *testing.T) {
 			},
 			err: apiutil.ErrNameSize,
 		},
-		{
-			desc: "invalid visibility",
-			req: listChannelsReq{
-				limit: 10,
-			},
-			err: apiutil.ErrInvalidVisibilityType,
-		},
 	}
 	for _, tc := range cases {
 		err := tc.req.validate()

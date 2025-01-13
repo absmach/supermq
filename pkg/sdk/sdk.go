@@ -515,17 +515,6 @@ type SDK interface {
 	//  fmt.Println(err)
 	RemoveClientParent(id, domainID, groupID, token string) errors.SDKError
 
-	// ListUserClients returns list of clients for the given user ID and filters.
-	//
-	// example:
-	//  pm := sdk.PageMetadata{
-	//    Offset: 0,
-	//    Limit:  10,
-	//  }
-	//  clients, _ := sdk.ListUserClients("userID", "domainID", pm,"token")
-	//  fmt.Println(clients)
-	ListUserClients(userID, domainID string, pm PageMetadata, token string) (ClientsPage, errors.SDKError)
-
 	// CreateClientRole creates new client role and returns its id.
 	//
 	// example:

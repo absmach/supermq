@@ -371,32 +371,6 @@ var cmdUsers = []cobra.Command{
 		},
 	},
 	{
-		Use:   "clients <user_id> <domain_id> <user_auth_token>",
-		Short: "List clients",
-		Long: "List clients of user\n" +
-			"Usage:\n" +
-			"\tsupermq-cli users clients <user_id> <user_auth_token>\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			pm := smqsdk.PageMetadata{
-				Offset: Offset,
-				Limit:  Limit,
-			}
-
-			tp, err := sdk.ListUserClients(args[0], args[1], pm, args[2])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, tp)
-		},
-	},
-	{
 		Use:   "search <query> <user_auth_token>",
 		Short: "Search users",
 		Long: "Search users by query\n" +

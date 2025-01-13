@@ -412,29 +412,6 @@ func TestListClients(t *testing.T) {
 			err:                 svcerr.ErrNotFound,
 		},
 		{
-			desc:     "list all clients as non admin with failed to list permissions",
-			userKind: "non-admin",
-			session:  smqauthn.Session{UserID: nonAdminID, DomainID: domainID, SuperAdmin: false},
-			id:       nonAdminID,
-			page: clients.Page{
-				Offset: 0,
-				Limit:  100,
-			},
-			listObjectsResponse: policysvc.PolicyPage{Policies: []string{client.ID, client.ID}},
-			retrieveAllResponse: clients.ClientsPage{
-				Page: clients.Page{
-					Total:  2,
-					Offset: 0,
-					Limit:  100,
-				},
-				Clients: []clients.Client{client, client},
-			},
-			listPermissionsResponse: []string{},
-			response:                clients.ClientsPage{},
-			listPermissionsErr:      svcerr.ErrNotFound,
-			err:                     svcerr.ErrNotFound,
-		},
-		{
 			desc:     "list all clients as non admin with failed super admin",
 			userKind: "non-admin",
 			session:  smqauthn.Session{UserID: nonAdminID, DomainID: domainID, SuperAdmin: false},
@@ -455,6 +432,7 @@ func TestListClients(t *testing.T) {
 				Offset: 0,
 				Limit:  100,
 			},
+			retrieveAllErr:      repoerr.ErrNotFound,
 			response:            clients.ClientsPage{},
 			listObjectsResponse: policysvc.PolicyPage{},
 			listObjectsErr:      svcerr.ErrNotFound,
@@ -463,15 +441,13 @@ func TestListClients(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		listAllObjectsCall := pService.On("ListAllObjects", mock.Anything, mock.Anything).Return(tc.listObjectsResponse, tc.listObjectsErr)
-		retrieveAllCall := repo.On("SearchClients", mock.Anything, mock.Anything).Return(tc.retrieveAllResponse, tc.retrieveAllErr)
-		listPermissionsCall := pService.On("ListPermissions", mock.Anything, mock.Anything, mock.Anything).Return(tc.listPermissionsResponse, tc.listPermissionsErr)
+		retrieveAllCall := repo.On("RetrieveAll", mock.Anything, mock.Anything).Return(tc.retrieveAllResponse, tc.retrieveAllErr)
+		retrieveUserClientsCall := repo.On("RetrieveUserClients", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.retrieveAllResponse, tc.retrieveAllErr)
 		page, err := svc.ListClients(context.Background(), tc.session, tc.page)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
-		listAllObjectsCall.Unset()
 		retrieveAllCall.Unset()
-		listPermissionsCall.Unset()
+		retrieveUserClientsCall.Unset()
 	}
 
 	cases2 := []struct {
@@ -535,29 +511,6 @@ func TestListClients(t *testing.T) {
 			err:                 svcerr.ErrNotFound,
 		},
 		{
-			desc:     "list all clients as admin with failed to list permissions",
-			userKind: "admin",
-			id:       adminID,
-			session:  smqauthn.Session{UserID: adminID, DomainID: domainID, SuperAdmin: true},
-			page: clients.Page{
-				Offset: 0,
-				Limit:  100,
-				Domain: domainID,
-			},
-			listObjectsResponse: policysvc.PolicyPage{},
-			retrieveAllResponse: clients.ClientsPage{
-				Page: clients.Page{
-					Total:  2,
-					Offset: 0,
-					Limit:  100,
-				},
-				Clients: []clients.Client{client, client},
-			},
-			listPermissionsResponse: []string{},
-			listPermissionsErr:      svcerr.ErrNotFound,
-			err:                     svcerr.ErrNotFound,
-		},
-		{
 			desc:     "list all clients as admin with failed to list clients",
 			userKind: "admin",
 			id:       adminID,
@@ -574,27 +527,11 @@ func TestListClients(t *testing.T) {
 	}
 
 	for _, tc := range cases2 {
-		listAllObjectsCall := pService.On("ListAllObjects", context.Background(), policysvc.Policy{
-			SubjectType: policysvc.UserType,
-			Subject:     tc.session.DomainID + "_" + adminID,
-			Permission:  "",
-			ObjectType:  policysvc.ClientType,
-		}).Return(tc.listObjectsResponse, tc.listObjectsErr)
-		listAllObjectsCall2 := pService.On("ListAllObjects", context.Background(), policysvc.Policy{
-			SubjectType: policysvc.UserType,
-			Subject:     tc.session.UserID,
-			Permission:  "",
-			ObjectType:  policysvc.ClientType,
-		}).Return(tc.listObjectsResponse, tc.listObjectsErr)
-		retrieveAllCall := repo.On("SearchClients", mock.Anything, mock.Anything).Return(tc.retrieveAllResponse, tc.retrieveAllErr)
-		listPermissionsCall := pService.On("ListPermissions", mock.Anything, mock.Anything, mock.Anything).Return(tc.listPermissionsResponse, tc.listPermissionsErr)
+		retrieveAllCall := repo.On("RetrieveAll", mock.Anything, mock.Anything).Return(tc.retrieveAllResponse, tc.retrieveAllErr)
 		page, err := svc.ListClients(context.Background(), tc.session, tc.page)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
-		listAllObjectsCall.Unset()
-		listAllObjectsCall2.Unset()
 		retrieveAllCall.Unset()
-		listPermissionsCall.Unset()
 	}
 }
 

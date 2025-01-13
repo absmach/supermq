@@ -138,11 +138,7 @@ func (svc service) ListClients(ctx context.Context, session authn.Session, pm Pa
 		}
 		return cp, nil
 	default:
-		includeDomainClients, ok := ctx.Value(ListDomainClients).(bool)
-		if !ok {
-			includeDomainClients = false
-		}
-		cp, err := svc.repo.RetrieveUserClients(ctx, session.DomainID, session.UserID, includeDomainClients, pm)
+		cp, err := svc.repo.RetrieveUserClients(ctx, session.DomainID, session.UserID, pm)
 		if err != nil {
 			return ClientsPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 		}
@@ -151,11 +147,7 @@ func (svc service) ListClients(ctx context.Context, session authn.Session, pm Pa
 }
 
 func (svc service) ListUserClients(ctx context.Context, session authn.Session, userID string, pm Page) (ClientsPage, error) {
-	includeDomainClients, ok := ctx.Value(ListDomainClients).(bool)
-	if !ok {
-		includeDomainClients = false
-	}
-	cp, err := svc.repo.RetrieveUserClients(ctx, session.DomainID, userID, includeDomainClients, pm)
+	cp, err := svc.repo.RetrieveUserClients(ctx, session.DomainID, userID, pm)
 	if err != nil {
 		return ClientsPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}

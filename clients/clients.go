@@ -40,7 +40,7 @@ type Repository interface {
 	RetrieveAll(ctx context.Context, pm Page) (ClientsPage, error)
 
 	// RetrieveUserClients retrieve all clients of a given user id.
-	RetrieveUserClients(ctx context.Context, domainID, userID string, includeDomainClients bool, pm Page) (ClientsPage, error)
+	RetrieveUserClients(ctx context.Context, domainID, userID string, pm Page) (ClientsPage, error)
 
 	// SearchClients retrieves clients based on search criteria.
 	SearchClients(ctx context.Context, pm Page) (ClientsPage, error)
@@ -171,15 +171,15 @@ type Client struct {
 	Status      Status      `json:"status,omitempty"` // 1 for enabled, 0 for disabled
 	Identity    string      `json:"identity,omitempty"`
 	// Extended
-	ParentGroupPath           string   `json:"parent_group_path"`
-	RoleID                    string   `json:"role_id"`
-	RoleName                  string   `json:"role_name"`
-	Actions                   []string `json:"actions"`
-	AccessType                string   `json:"access_type"`
-	AccessProviderId          string   `json:"access_provider_id"`
-	AccessProviderRoleId      string   `json:"access_provider_role_id"`
-	AccessProviderRoleName    string   `json:"access_provider_role_name"`
-	AccessProviderRoleActions []string `json:"access_provider_role_actions"`
+	ParentGroupPath           string   `json:"parent_group_path,omitempty"`
+	RoleID                    string   `json:"role_id,omitempty"`
+	RoleName                  string   `json:"role_name,omitempty"`
+	Actions                   []string `json:"actions,omitempty"`
+	AccessType                string   `json:"access_type,omitempty"`
+	AccessProviderId          string   `json:"access_provider_id,omitempty"`
+	AccessProviderRoleId      string   `json:"access_provider_role_id,omitempty"`
+	AccessProviderRoleName    string   `json:"access_provider_role_name,omitempty"`
+	AccessProviderRoleActions []string `json:"access_provider_role_actions,omitempty"`
 }
 
 // ClientsPage contains page related metadata as well as list.
