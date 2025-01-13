@@ -246,7 +246,6 @@ func (lce listClientEvent) Encode() (map[string]interface{}, error) {
 		val["identity"] = lce.Identity
 	}
 	return val, nil
-
 }
 
 type listUserClientEvent struct {

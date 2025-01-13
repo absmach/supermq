@@ -21,6 +21,7 @@ import (
 	gpmocks "github.com/absmach/supermq/groups/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
@@ -459,210 +460,180 @@ func TestDisableChannel(t *testing.T) {
 func TestListChannels(t *testing.T) {
 	svc := newService(t)
 
-	channelWithPerms := validChannel
+	adminID := testsutil.GenerateUUID(t)
+	domainID := testsutil.GenerateUUID(t)
+	nonAdminID := testsutil.GenerateUUID(t)
 
 	cases := []struct {
-		desc               string
-		session            authn.Session
-		pageMeta           channels.PageMetadata
-		listAllObjectsRes  policysvc.PolicyPage
-		listAllObjectsErr  error
-		retrieveAllRes     channels.Page
-		retrieveAllErr     error
-		listPermissionsRes policysvc.Permissions
-		listPermissionsErr error
-		resp               channels.Page
-		err                error
+		desc                string
+		userKind            string
+		session             smqauthn.Session
+		page                channels.PageMetadata
+		retrieveAllResponse channels.Page
+		response            channels.Page
+		id                  string
+		size                uint64
+		listObjectsErr      error
+		retrieveAllErr      error
+		listPermissionsErr  error
+		err                 error
 	}{
 		{
-			desc:    "list channesls as admin successfully",
-			session: authn.Session{UserID: validID, DomainID: validID, DomainUserID: validID, SuperAdmin: true},
-			pageMeta: channels.PageMetadata{
-				Domain: validID,
+			desc:     "list all channels successfully as non admin",
+			userKind: "non-admin",
+			session:  smqauthn.Session{UserID: nonAdminID, DomainID: domainID, SuperAdmin: false},
+			id:       nonAdminID,
+			page: channels.PageMetadata{
+				Offset: 0,
+				Limit:  100,
 			},
-			retrieveAllRes: channels.Page{
-				Channels: []channels.Channel{validChannel},
+			retrieveAllResponse: channels.Page{
 				PageMetadata: channels.PageMetadata{
-					Total: 1,
+					Total:  2,
+					Offset: 0,
+					Limit:  100,
 				},
+				Channels: []channels.Channel{validChannel, validChannel},
 			},
-			resp: channels.Page{
-				Channels: []channels.Channel{validChannel},
+			response: channels.Page{
 				PageMetadata: channels.PageMetadata{
-					Total: 1,
+					Total:  2,
+					Offset: 0,
+					Limit:  100,
 				},
+				Channels: []channels.Channel{validChannel, validChannel},
 			},
 			err: nil,
 		},
 		{
-			desc:    "list channels as admin with list perms successfully",
-			session: authn.Session{UserID: validID, DomainID: validID, DomainUserID: validID, SuperAdmin: true},
-			pageMeta: channels.PageMetadata{
-				Domain: validID,
+			desc:     "list all channels as non admin with failed to retrieve all",
+			userKind: "non-admin",
+			session:  smqauthn.Session{UserID: nonAdminID, DomainID: domainID, SuperAdmin: false},
+			id:       nonAdminID,
+			page: channels.PageMetadata{
+				Offset: 0,
+				Limit:  100,
 			},
-			listPermissionsRes: policysvc.Permissions{
-				policysvc.AdminPermission, policysvc.EditPermission, policysvc.ViewPermission,
-			},
-			retrieveAllRes: channels.Page{
-				Channels: []channels.Channel{validChannel},
-				PageMetadata: channels.PageMetadata{
-					Total: 1,
-				},
-			},
-			resp: channels.Page{
-				Channels: []channels.Channel{channelWithPerms},
-				PageMetadata: channels.PageMetadata{
-					Total: 1,
-				},
-			},
-			err: nil,
+			retrieveAllResponse: channels.Page{},
+			response:            channels.Page{},
+			retrieveAllErr:      repoerr.ErrNotFound,
+			err:                 svcerr.ErrNotFound,
 		},
 		{
-			desc:    "list channels as admin with failed to retrieve all",
-			session: authn.Session{UserID: validID, DomainID: validID, DomainUserID: validID, SuperAdmin: true},
-			pageMeta: channels.PageMetadata{
-				Domain: validID,
+			desc:     "list all channels as non admin with failed super admin",
+			userKind: "non-admin",
+			session:  smqauthn.Session{UserID: nonAdminID, DomainID: domainID, SuperAdmin: false},
+			id:       nonAdminID,
+			page: channels.PageMetadata{
+				Offset: 0,
+				Limit:  100,
 			},
-			retrieveAllRes: channels.Page{},
-			retrieveAllErr: repoerr.ErrNotFound,
-			err:            repoerr.ErrNotFound,
-		},
-		{
-			desc:    "list channels as admin with failed to list permissions",
-			session: authn.Session{UserID: validID, DomainID: validID, DomainUserID: validID, SuperAdmin: true},
-			pageMeta: channels.PageMetadata{
-				Domain: validID,
-			},
-			retrieveAllRes: channels.Page{
-				Channels: []channels.Channel{validChannel},
-				PageMetadata: channels.PageMetadata{
-					Total: 1,
-				},
-			},
-			listPermissionsRes: policysvc.Permissions{},
-			listPermissionsErr: svcerr.ErrAuthorization,
-			err:                svcerr.ErrAuthorization,
-		},
-		{
-			desc:     "list channels as admin with no domain id",
-			session:  authn.Session{UserID: validID, SuperAdmin: true},
-			pageMeta: channels.PageMetadata{},
+			response: channels.Page{},
 			err:      nil,
 		},
 		{
-			desc:    "list channels as user successfully",
-			session: validSession,
-			pageMeta: channels.PageMetadata{
-				IDs: []string{validChannel.ID},
+			desc:     "list all channels as non admin with failed to list objects",
+			userKind: "non-admin",
+			id:       nonAdminID,
+			page: channels.PageMetadata{
+				Offset: 0,
+				Limit:  100,
 			},
-			listAllObjectsRes: policysvc.PolicyPage{
-				Policies: []string{validChannel.ID},
-			},
-			retrieveAllRes: channels.Page{
-				Channels: []channels.Channel{validChannel},
-				PageMetadata: channels.PageMetadata{
-					Total: 1,
-				},
-			},
-			resp: channels.Page{
-				Channels: []channels.Channel{validChannel},
-				PageMetadata: channels.PageMetadata{
-					Total: 1,
-				},
-			},
-			err: nil,
-		},
-		{
-			desc:    "list channels as user with failed to list all objects",
-			session: validSession,
-			pageMeta: channels.PageMetadata{
-				IDs: []string{validChannel.ID},
-			},
-			listAllObjectsErr: svcerr.ErrAuthorization,
-			err:               svcerr.ErrAuthorization,
-		},
-		{
-			desc:    "list channels as user with list permissions successfully",
-			session: validSession,
-			pageMeta: channels.PageMetadata{
-				IDs: []string{validChannel.ID},
-			},
-			listAllObjectsRes: policysvc.PolicyPage{
-				Policies: []string{validChannel.ID},
-			},
-			retrieveAllRes: channels.Page{
-				Channels: []channels.Channel{validChannel},
-				PageMetadata: channels.PageMetadata{
-					Total: 1,
-				},
-			},
-			listPermissionsRes: policysvc.Permissions{
-				policysvc.AdminPermission, policysvc.EditPermission, policysvc.ViewPermission,
-			},
-			resp: channels.Page{
-				Channels: []channels.Channel{channelWithPerms},
-				PageMetadata: channels.PageMetadata{
-					Total: 1,
-				},
-			},
-			err: nil,
-		},
-		{
-			desc:    "list channels as user with list permissions and failed to list permissions",
-			session: validSession,
-			pageMeta: channels.PageMetadata{
-				IDs: []string{validChannel.ID},
-			},
-			listAllObjectsRes: policysvc.PolicyPage{
-				Policies: []string{validChannel.ID},
-			},
-			retrieveAllRes: channels.Page{
-				Channels: []channels.Channel{validChannel},
-				PageMetadata: channels.PageMetadata{
-					Total: 1,
-				},
-			},
-			listPermissionsRes: policysvc.Permissions{},
-			listPermissionsErr: svcerr.ErrAuthorization,
-			err:                svcerr.ErrAuthorization,
-		},
-		{
-			desc:    "list channels as user with failed to retrieve all",
-			session: validSession,
-			pageMeta: channels.PageMetadata{
-				IDs: []string{validChannel.ID},
-			},
-			listAllObjectsRes: policysvc.PolicyPage{
-				Policies: []string{validChannel.ID},
-			},
-			retrieveAllRes: channels.Page{},
 			retrieveAllErr: repoerr.ErrNotFound,
-			err:            repoerr.ErrNotFound,
+			response:       channels.Page{},
+			listObjectsErr: svcerr.ErrNotFound,
+			err:            svcerr.ErrNotFound,
 		},
 	}
 
 	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			policyCall := policies.On("ListAllObjects", context.Background(), policysvc.Policy{
-				SubjectType: policysvc.UserType,
-				Subject:     validID,
-				Permission:  policysvc.ViewPermission,
-				ObjectType:  policysvc.ChannelType,
-			}).Return(tc.listAllObjectsRes, tc.listAllObjectsErr)
-			repoCall := repo.On("RetrieveAll", context.Background(), tc.pageMeta).Return(tc.retrieveAllRes, tc.retrieveAllErr)
-			policyCall1 := policies.On("ListPermissions", mock.Anything, policysvc.Policy{
-				SubjectType: policysvc.UserType,
-				Subject:     validID,
-				Object:      validChannel.ID,
-				ObjectType:  policysvc.ChannelType,
-			}, []string{}).Return(tc.listPermissionsRes, tc.listPermissionsErr)
-			got, err := svc.ListChannels(context.Background(), tc.session, tc.pageMeta)
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
-			assert.Equal(t, tc.resp, got)
-			policyCall.Unset()
-			repoCall.Unset()
-			policyCall1.Unset()
-		})
+		retrieveAllCall := repo.On("RetrieveAll", mock.Anything, mock.Anything).Return(tc.retrieveAllResponse, tc.retrieveAllErr)
+		retrieveUserClientsCall := repo.On("RetrieveUserChannels", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.retrieveAllResponse, tc.retrieveAllErr)
+		page, err := svc.ListChannels(context.Background(), tc.session, tc.page)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
+		retrieveAllCall.Unset()
+		retrieveUserClientsCall.Unset()
+	}
+
+	cases2 := []struct {
+		desc                string
+		userKind            string
+		session             smqauthn.Session
+		page                channels.PageMetadata
+		retrieveAllResponse channels.Page
+		response            channels.Page
+		id                  string
+		size                uint64
+		listObjectsErr      error
+		retrieveAllErr      error
+		listPermissionsErr  error
+		err                 error
+	}{
+		{
+			desc:     "list all clients as admin successfully",
+			userKind: "admin",
+			id:       adminID,
+			session:  smqauthn.Session{UserID: adminID, DomainID: domainID, SuperAdmin: true},
+			page: channels.PageMetadata{
+				Offset: 0,
+				Limit:  100,
+				Domain: domainID,
+			},
+			retrieveAllResponse: channels.Page{
+				PageMetadata: channels.PageMetadata{
+					Total:  2,
+					Offset: 0,
+					Limit:  100,
+				},
+				Channels: []channels.Channel{validChannel, validChannel},
+			},
+			response: channels.Page{
+				PageMetadata: channels.PageMetadata{
+					Total:  2,
+					Offset: 0,
+					Limit:  100,
+				},
+				Channels: []channels.Channel{validChannel, validChannel},
+			},
+			err: nil,
+		},
+		{
+			desc:     "list all clients as admin with failed to retrieve all",
+			userKind: "admin",
+			id:       adminID,
+			session:  smqauthn.Session{UserID: adminID, DomainID: domainID, SuperAdmin: true},
+			page: channels.PageMetadata{
+				Offset: 0,
+				Limit:  100,
+				Domain: domainID,
+			},
+			retrieveAllResponse: channels.Page{},
+			retrieveAllErr:      repoerr.ErrNotFound,
+			err:                 svcerr.ErrNotFound,
+		},
+		{
+			desc:     "list all clients as admin with failed to list clients",
+			userKind: "admin",
+			id:       adminID,
+			session:  smqauthn.Session{UserID: adminID, DomainID: domainID, SuperAdmin: true},
+			page: channels.PageMetadata{
+				Offset: 0,
+				Limit:  100,
+				Domain: domainID,
+			},
+			retrieveAllResponse: channels.Page{},
+			retrieveAllErr:      repoerr.ErrNotFound,
+			err:                 svcerr.ErrNotFound,
+		},
+	}
+
+	for _, tc := range cases2 {
+		retrieveAllCall := repo.On("RetrieveAll", mock.Anything, mock.Anything).Return(tc.retrieveAllResponse, tc.retrieveAllErr)
+		page, err := svc.ListChannels(context.Background(), tc.session, tc.page)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
+		retrieveAllCall.Unset()
 	}
 }
 
