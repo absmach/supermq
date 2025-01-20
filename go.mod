@@ -46,7 +46,7 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.59.0
 	go.opentelemetry.io/otel v1.34.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.34.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.33.0
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.34.0
 	go.opentelemetry.io/otel/sdk v1.34.0
 	go.opentelemetry.io/otel/trace v1.34.0
 	golang.org/x/crypto v0.32.0
@@ -162,7 +162,7 @@ require (
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250102185135-69823020774d // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250115164207-1a7da9e5054f // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
