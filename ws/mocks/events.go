@@ -15,60 +15,6 @@ type EventStore struct {
 	mock.Mock
 }
 
-// Connect provides a mock function with given fields: ctx, clientID, subscriberID
-func (_m *EventStore) Connect(ctx context.Context, clientID string, subscriberID string) error {
-	ret := _m.Called(ctx, clientID, subscriberID)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Connect")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, clientID, subscriberID)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// Disconnect provides a mock function with given fields: ctx, clientID, subscriberID
-func (_m *EventStore) Disconnect(ctx context.Context, clientID string, subscriberID string) error {
-	ret := _m.Called(ctx, clientID, subscriberID)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Disconnect")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, clientID, subscriberID)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// Subscribe provides a mock function with given fields: ctx, clientID, channelID, subscriberID, subtopic
-func (_m *EventStore) Subscribe(ctx context.Context, clientID string, channelID string, subscriberID string, subtopic string) error {
-	ret := _m.Called(ctx, clientID, channelID, subscriberID, subtopic)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Subscribe")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) error); ok {
-		r0 = rf(ctx, clientID, channelID, subscriberID, subtopic)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // Publish provides a mock function with given fields: ctx, clientID, channelID, topic
 func (_m *EventStore) Publish(ctx context.Context, clientID string, channelID string, topic string) error {
 	ret := _m.Called(ctx, clientID, channelID, topic)
