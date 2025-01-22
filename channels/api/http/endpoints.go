@@ -120,9 +120,17 @@ func listChannelsEndpoint(svc channels.Service) endpoint.Endpoint {
 			Actions:        req.actions,
 			AccessType:     req.accessType,
 		}
-		page, err := svc.ListChannels(ctx, session, pm)
+
+		var page channels.Page
+		var err error
+		switch req.userID != "" {
+		case true:
+			page, err = svc.ListUserChannels(ctx, session, req.userID, pm)
+		default:
+			page, err = svc.ListChannels(ctx, session, pm)
+		}
 		if err != nil {
-			return nil, err
+			return channelsPageRes{}, err
 		}
 
 		res := channelsPageRes{

@@ -28,15 +28,16 @@ type Channel struct {
 	UpdatedBy   string           `json:"updated_by,omitempty"`
 	Status      clients.Status   `json:"status,omitempty"` // 1 for enabled, 0 for disabled
 	// Extended
-	ParentGroupPath           string   `json:"parent_group_path,omitempty"`
-	RoleID                    string   `json:"role_id,omitempty"`
-	RoleName                  string   `json:"role_name,omitempty"`
-	Actions                   []string `json:"actions,omitempty"`
-	AccessType                string   `json:"access_type,omitempty"`
-	AccessProviderId          string   `json:"access_provider_id,omitempty"`
-	AccessProviderRoleId      string   `json:"access_provider_role_id,omitempty"`
-	AccessProviderRoleName    string   `json:"access_provider_role_name,omitempty"`
-	AccessProviderRoleActions []string `json:"access_provider_role_actions,omitempty"`
+	ParentGroupPath           string                 `json:"parent_group_path,omitempty"`
+	RoleID                    string                 `json:"role_id,omitempty"`
+	RoleName                  string                 `json:"role_name,omitempty"`
+	Actions                   []string               `json:"actions,omitempty"`
+	AccessType                string                 `json:"access_type,omitempty"`
+	AccessProviderId          string                 `json:"access_provider_id,omitempty"`
+	AccessProviderRoleId      string                 `json:"access_provider_role_id,omitempty"`
+	AccessProviderRoleName    string                 `json:"access_provider_role_name,omitempty"`
+	AccessProviderRoleActions []string               `json:"access_provider_role_actions,omitempty"`
+	ConnectionTypes           []connections.ConnType `json:"connection_types,omitempty"`
 }
 
 type PageMetadata struct {

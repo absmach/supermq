@@ -35,6 +35,11 @@ func (c *ConnType) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
+func (c ConnType) MarshalJSON() ([]byte, error) {
+	cstr := c.String()
+	return json.Marshal(cstr)
+}
+
 func CheckConnType(c ConnType) error {
 	switch c {
 	case Publish:
