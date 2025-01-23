@@ -881,7 +881,7 @@ func ToClient(t DBClient) (clients.Client, error) {
 		updatedAt = t.UpdatedAt.Time
 	}
 
-	connTypes := []connections.ConnType{}
+	var connTypes []connections.ConnType
 	for _, ct := range t.ConnectionTypes {
 		connType, err := connections.NewType(uint(ct))
 		if err != nil {
