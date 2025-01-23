@@ -183,7 +183,7 @@ func toClientEvent(journal Journal) (clientEvent, error) {
 		return clientEvent{}, fmt.Errorf("invalid domain attribute")
 	}
 	createdAtStr := journal.Attributes["created_at"].(string)
-	if createdAtStr == "" {
+	if createdAtStr != "" {
 		createdAt, err = time.Parse(time.RFC3339, createdAtStr)
 		if err != nil {
 			return clientEvent{}, fmt.Errorf("invalid created_at format")
