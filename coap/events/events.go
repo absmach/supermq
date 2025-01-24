@@ -3,12 +3,16 @@
 
 package events
 
+import "github.com/absmach/supermq/pkg/events"
+
 const (
 	coapPrefix        = "coap"
 	clientPublish     = coapPrefix + ".client_publish"
 	clientSubscribe   = coapPrefix + ".client_subscribe"
 	clientUnsubscribe = coapPrefix + ".client_unsubscribe"
 )
+
+var _ events.Event = (*coapEvent)(nil)
 
 type coapEvent struct {
 	operation string

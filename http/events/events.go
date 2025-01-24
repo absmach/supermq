@@ -21,12 +21,13 @@ type httpEvent struct {
 	instance  string
 }
 
-func (ce httpEvent) Encode() (map[string]interface{}, error) {
+func (he httpEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
-		"operation":  ce.operation,
-		"channel_id": ce.channelID,
-		"client_id":  ce.clientID,
-		"topic":      ce.topic,
+		"operation":  he.operation,
+		"channel_id": he.channelID,
+		"client_id":  he.clientID,
+		"topic":      he.topic,
+		"instance":   he.instance,
 	}
 	return val, nil
 }

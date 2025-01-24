@@ -209,7 +209,7 @@ func (h *handler) Subscribe(ctx context.Context, topics *[]string) error {
 			return err
 		}
 		if err := h.es.Subscribe(ctx, s.Username, channelID, s.ID, subTopic); err != nil {
-			return errors.Wrap(ErrFailedUnsubscribeEvent, err)
+			return errors.Wrap(ErrFailedSubscribeEvent, err)
 		}
 	}
 

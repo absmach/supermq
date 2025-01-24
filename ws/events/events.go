@@ -22,11 +22,12 @@ type wsEvent struct {
 	instance  string
 }
 
-func (me wsEvent) Encode() (map[string]interface{}, error) {
+func (we wsEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
-		"operation":  me.operation,
-		"channel_id": me.channelID,
-		"client_id":  me.clientID,
-		"topic":      me.topic,
+		"operation":  we.operation,
+		"channel_id": we.channelID,
+		"client_id":  we.clientID,
+		"topic":      we.topic,
+		"instance":   we.instance,
 	}, nil
 }

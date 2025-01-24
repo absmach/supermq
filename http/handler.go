@@ -100,7 +100,7 @@ func (h *handler) AuthConnect(ctx context.Context) error {
 	}
 
 	if err := h.es.Connect(ctx, tok); err != nil {
-		h.logger.Error(errors.Wrap(errFailedPublishEvent, err).Error())
+		return errors.Wrap(errFailedPublishEvent, err)
 	}
 
 	h.logger.Info(fmt.Sprintf(logInfoConnected, tok))
