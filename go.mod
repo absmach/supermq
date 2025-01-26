@@ -8,9 +8,9 @@ require (
 	github.com/absmach/certs v0.0.0-20241014135535-3f118b801054
 	github.com/absmach/mgate v0.4.5
 	github.com/absmach/senml v1.0.6
-	github.com/authzed/authzed-go v1.2.1
+	github.com/authzed/authzed-go v1.2.2-0.20250107172318-7fd4159ab2b7
 	github.com/authzed/grpcutil v0.0.0-20240123194739-2ea1e3d2d98b
-	github.com/authzed/spicedb v1.39.1
+	github.com/authzed/spicedb v1.40.0
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
@@ -60,7 +60,7 @@ require (
 )
 
 require (
-	cloud.google.com/go/compute/metadata v0.5.2 // indirect
+	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
@@ -68,7 +68,7 @@ require (
 	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
 	github.com/authzed/cel-go v0.20.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/ccoveille/go-safecast v1.2.0 // indirect
+	github.com/ccoveille/go-safecast v1.5.0 // indirect
 	github.com/certifi/gocertifi v0.0.0-20210507211836-431795d63e8d // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/containerd/continuity v0.4.3 // indirect
@@ -138,7 +138,7 @@ require (
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240917153116-6f2963f01587 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.60.1 // indirect
+	github.com/prometheus/common v0.61.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
@@ -166,4 +166,5 @@ require (
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 // indirect
 )
