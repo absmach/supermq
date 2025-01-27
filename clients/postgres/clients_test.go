@@ -826,8 +826,9 @@ func TestRetrieveAll(t *testing.T) {
 			Metadata: clients.Metadata{
 				"department": namegen.Generate(),
 			},
-			Status:    clients.EnabledStatus,
-			CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
+			Status:          clients.EnabledStatus,
+			CreatedAt:       time.Now().UTC().Truncate(time.Microsecond),
+			ConnectionTypes: []connections.ConnType{},
 		}
 		if i%50 == 0 {
 			client.Status = clients.DisabledStatus
@@ -1240,6 +1241,8 @@ func TestRetrieveAll(t *testing.T) {
 				assert.Equal(t, c.response.Limit, page.Limit)
 				expected := stripClientDetails(c.response.Clients)
 				got := stripClientDetails(page.Clients)
+				// fmt.Printf("\ngot is %+v\n\n", got)
+				// fmt.Printf("expected is %+v\n", expected)
 				assert.ElementsMatch(t, expected, got)
 			}
 		})
