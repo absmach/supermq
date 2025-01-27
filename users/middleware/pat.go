@@ -36,13 +36,13 @@ func (pm *patMiddleware) authorizePAT(ctx context.Context, session authn.Session
 	if session.Type != authn.PersonalAccessToken {
 		return nil
 	}
-	if session.ID == "" || session.UserID == "" {
+	if session.PatID == "" || session.UserID == "" {
 		return errors.Wrap(svcerr.ErrAuthentication, errors.New("invalid PAT credentials"))
 	}
 
 	if err := pm.pat.AuthorizePAT(ctx, smqpat.PatReq{
 		UserID:                   session.UserID,
-		PatID:                    session.ID,
+		PatID:                    session.PatID,
 		PlatformEntityType:       platformEntityType,
 		OptionalDomainEntityType: optionalDomainEntityType,
 		OptionalDomainID:         OptionalDomainID,

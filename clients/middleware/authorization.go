@@ -100,12 +100,20 @@ func (am *authorizationMiddleware) View(ctx context.Context, session authn.Sessi
 	return am.svc.View(ctx, session, id)
 }
 
-func (am *authorizationMiddleware) ListClients(ctx context.Context, session authn.Session, reqUserID string, pm clients.Page) (clients.ClientsPage, error) {
+func (am *authorizationMiddleware) ListClients(ctx context.Context, session authn.Session, pm clients.Page) (clients.ClientsPage, error) {
 	if err := am.checkSuperAdmin(ctx, session.UserID); err != nil {
 		return clients.ClientsPage{}, err
 	}
 
-	return am.svc.ListUserClients(ctx, session, session.UserID, pm)
+	return am.svc.ListClients(ctx, session, pm)
+}
+
+func (am *authorizationMiddleware) ListUserClients(ctx context.Context, session authn.Session, userID string, pm clients.Page) (clients.ClientsPage, error) {
+	if err := am.checkSuperAdmin(ctx, session.UserID); err != nil {
+		return clients.ClientsPage{}, err
+	}
+
+	return am.svc.ListUserClients(ctx, session, userID, pm)
 }
 
 func (am *authorizationMiddleware) Update(ctx context.Context, session authn.Session, client clients.Client) (clients.Client, error) {
