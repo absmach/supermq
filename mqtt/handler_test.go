@@ -147,7 +147,7 @@ func TestAuthConnect(t *testing.T) {
 				password = string(tc.session.Password)
 			}
 			clientsCall := clients.On("Authenticate", mock.Anything, &grpcClientsV1.AuthnReq{ClientSecret: password}).Return(tc.authNRes, tc.authNErr)
-			svcCall := eventStore.On("Connect", mock.Anything, mock.Anything, clientID).Return(tc.err)
+			svcCall := eventStore.On("Connect", mock.Anything, clientID, mock.Anything).Return(tc.err)
 			err := handler.AuthConnect(ctx)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 			svcCall.Unset()
@@ -295,11 +295,9 @@ func TestAuthSubscribe(t *testing.T) {
 				ClientType: policies.ClientType,
 				Type:       uint32(connections.Subscribe),
 			}).Return(tc.authZRes, tc.authZErr)
-			eventsCall := eventStore.On("Subscribe", mock.Anything, clientID1, mock.Anything, mock.Anything).Return(nil)
 			err := handler.AuthSubscribe(ctx, tc.topic)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 			channelsCall.Unset()
-			eventsCall.Unset()
 		})
 	}
 }
@@ -411,11 +409,9 @@ func TestPublish(t *testing.T) {
 		if tc.session != nil {
 			ctx = session.NewContext(ctx, tc.session)
 		}
-		eventsCall := eventStore.On("Publish", mock.Anything, clientID, mock.Anything, mock.Anything).Return(nil)
 		err := handler.Publish(ctx, &tc.topic, &tc.payload)
 		assert.Contains(t, logBuffer.String(), tc.logMsg)
 		assert.Equal(t, tc.err, err)
-		eventsCall.Unset()
 	}
 }
 
@@ -449,7 +445,7 @@ func TestSubscribe(t *testing.T) {
 		if tc.session != nil {
 			ctx = session.NewContext(ctx, tc.session)
 		}
-		eventsCall := eventStore.On("Subscribe", mock.Anything, clientID, mock.Anything, clientID, mock.Anything).Return(nil)
+		eventsCall := eventStore.On("Subscribe", mock.Anything, clientID, chanID, clientID, mock.Anything).Return(nil)
 		err := handler.Subscribe(ctx, &tc.topic)
 		assert.Contains(t, logBuffer.String(), tc.logMsg)
 		assert.Equal(t, tc.err, err)
@@ -463,32 +459,23 @@ func TestUnsubscribe(t *testing.T) {
 	logBuffer.Reset()
 
 	cases := []struct {
-		desc      string
-		session   *session.Session
-		channelID string
-		topic     []string
-		logMsg    string
-		authZRes  *grpcChannelsV1.AuthzRes
-		authZErr  error
-		err       error
+		desc    string
+		session *session.Session
+		topic   []string
+		logMsg  string
+		err     error
 	}{
 		{
-			desc:      "unsubscribe without active session",
-			session:   nil,
-			topic:     topics,
-			channelID: chanID,
-			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
-			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
-			err:       errors.Wrap(mqtt.ErrFailedUnsubscribe, mqtt.ErrClientNotInitialized),
+			desc:    "unsubscribe without active session",
+			session: nil,
+			topic:   topics,
+			err:     errors.Wrap(mqtt.ErrFailedUnsubscribe, mqtt.ErrClientNotInitialized),
 		},
 		{
-			desc:      "unsubscribe with valid session and topics",
-			session:   &sessionClient,
-			topic:     topics,
-			channelID: chanID,
-			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
-			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
-			logMsg:    fmt.Sprintf(mqtt.LogInfoUnsubscribed, clientID, topics[0]),
+			desc:    "unsubscribe with valid session and topics",
+			session: &sessionClient,
+			topic:   topics,
+			logMsg:  fmt.Sprintf(mqtt.LogInfoUnsubscribed, clientID, topics[0]),
 		},
 	}
 
@@ -497,18 +484,9 @@ func TestUnsubscribe(t *testing.T) {
 		if tc.session != nil {
 			ctx = session.NewContext(ctx, tc.session)
 		}
-		eventsCall := eventStore.On("Unsubscribe", mock.Anything, clientID, mock.Anything, clientID, mock.Anything).Return(nil)
-		channelsCall := channels.On("Authorize", mock.Anything, &grpcChannelsV1.AuthzReq{
-			ChannelId:  tc.channelID,
-			ClientId:   clientID,
-			ClientType: policies.ClientType,
-			Type:       uint32(connections.Subscribe),
-		}).Return(tc.authZRes, tc.authZErr)
 		err := handler.Unsubscribe(ctx, &tc.topic)
 		assert.Contains(t, logBuffer.String(), tc.logMsg)
 		assert.Equal(t, tc.err, err)
-		eventsCall.Unset()
-		channelsCall.Unset()
 	}
 }
 
@@ -542,7 +520,7 @@ func TestDisconnect(t *testing.T) {
 		if tc.session != nil {
 			ctx = session.NewContext(ctx, tc.session)
 		}
-		svcCall := eventStore.On("Disconnect", mock.Anything, sessionClient.Username, sessionClient.ID).Return(tc.err)
+		svcCall := eventStore.On("Disconnect", mock.Anything, clientID, mock.Anything).Return(tc.err)
 		err := handler.Disconnect(ctx)
 		assert.Contains(t, logBuffer.String(), tc.logMsg)
 		assert.Equal(t, tc.err, err)

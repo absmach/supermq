@@ -23,7 +23,6 @@ import (
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
 	adapter "github.com/absmach/supermq/http"
 	httpapi "github.com/absmach/supermq/http/api"
-	"github.com/absmach/supermq/http/events"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/authn/authsvc"
@@ -32,6 +31,7 @@ import (
 	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/pkg/messaging/brokers"
 	brokerstracing "github.com/absmach/supermq/pkg/messaging/brokers/tracing"
+	msgevents "github.com/absmach/supermq/pkg/messaging/events"
 	"github.com/absmach/supermq/pkg/messaging/handler"
 	"github.com/absmach/supermq/pkg/prometheus"
 	"github.com/absmach/supermq/pkg/server"
@@ -144,13 +144,6 @@ func main() {
 	defer authnHandler.Close()
 	logger.Info("authn successfully connected to auth gRPC server " + authnHandler.Secure())
 
-	eventStore, err := events.NewEventStore(ctx, cfg.ESURL, cfg.InstanceID)
-	if err != nil {
-		logger.Error(fmt.Sprintf("failed to create %s event store : %s", svcName, err))
-		exitCode = 1
-		return
-	}
-
 	tp, err := jaegerclient.NewProvider(ctx, svcName, cfg.JaegerURL, cfg.InstanceID, cfg.TraceRatio)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to init Jaeger: %s", err))
@@ -173,7 +166,14 @@ func main() {
 	defer pub.Close()
 	pub = brokerstracing.NewPublisher(httpServerConfig, tracer, pub)
 
-	svc := newService(pub, eventStore, authn, clientsClient, channelsClient, logger, tracer)
+	pub, err = msgevents.NewPublisherMiddleware(ctx, pub, cfg.ESURL)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to create event store middleware: %s", err))
+		exitCode = 1
+		return
+	}
+
+	svc := newService(pub, authn, clientsClient, channelsClient, logger, tracer)
 	targetServerCfg := server.Config{Port: targetHTTPPort}
 
 	hs := httpserver.NewServer(ctx, cancel, svcName, targetServerCfg, httpapi.MakeHandler(logger, cfg.InstanceID), logger)
@@ -200,8 +200,8 @@ func main() {
 	}
 }
 
-func newService(pub messaging.Publisher, es events.EventStore, authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, logger *slog.Logger, tracer trace.Tracer) session.Handler {
-	svc := adapter.NewHandler(pub, es, authn, clients, channels, logger)
+func newService(pub messaging.Publisher, authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, logger *slog.Logger, tracer trace.Tracer) session.Handler {
+	svc := adapter.NewHandler(pub, authn, clients, channels, logger)
 	svc = handler.NewTracing(tracer, svc)
 	svc = handler.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics(svcName, "api")

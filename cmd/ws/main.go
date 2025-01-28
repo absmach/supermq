@@ -32,7 +32,6 @@ import (
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/absmach/supermq/ws"
 	httpapi "github.com/absmach/supermq/ws/api"
-	"github.com/absmach/supermq/ws/events"
 	"github.com/absmach/supermq/ws/tracing"
 	"github.com/caarlos0/env/v11"
 	"go.opentelemetry.io/otel/trace"
@@ -146,13 +145,6 @@ func main() {
 	defer authnHandler.Close()
 	logger.Info("authn successfully connected to auth gRPC server " + authnHandler.Secure())
 
-	eventStore, err := events.NewEventStore(ctx, cfg.ESURL, cfg.InstanceID)
-	if err != nil {
-		logger.Error(fmt.Sprintf("failed to create %s event store : %s", svcName, err))
-		exitCode = 1
-		return
-	}
-
 	tp, err := jaegerclient.NewProvider(ctx, svcName, cfg.JaegerURL, cfg.InstanceID, cfg.TraceRatio)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to init Jaeger: %s", err))
@@ -195,7 +187,7 @@ func main() {
 		g.Go(func() error {
 			return hs.Start()
 		})
-		handler := ws.NewHandler(nps, eventStore, logger, authn, clientsClient, channelsClient)
+		handler := ws.NewHandler(nps, logger, authn, clientsClient, channelsClient)
 		return proxyWS(ctx, httpServerConfig, targetServerConfig, logger, handler)
 	})
 

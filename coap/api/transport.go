@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/absmach/supermq"
-	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
 	"github.com/absmach/supermq/coap"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -50,7 +49,6 @@ var (
 var (
 	logger  *slog.Logger
 	service coap.Service
-	clients grpcClientsV1.ClientsServiceClient
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -63,10 +61,9 @@ func MakeHandler(instanceID string) http.Handler {
 }
 
 // MakeCoAPHandler creates handler for CoAP messages.
-func MakeCoAPHandler(svc coap.Service, l *slog.Logger, cli grpcClientsV1.ClientsServiceClient) mux.HandlerFunc {
+func MakeCoAPHandler(svc coap.Service, l *slog.Logger) mux.HandlerFunc {
 	logger = l
 	service = svc
-	clients = cli
 
 	return handler
 }
@@ -97,20 +94,14 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 		resp.SetCode(codes.Unauthorized)
 		return
 	}
-	clientID, err := authenticate(m.Context(), key)
-	if err != nil {
-		logger.Warn(fmt.Sprintf("Error authenticating: %s", err))
-		resp.SetCode(codes.Unauthorized)
-		return
-	}
 
 	switch m.Code() {
 	case codes.GET:
 		resp.SetCode(codes.Content)
-		err = handleGet(m, w, msg, clientID)
+		err = handleGet(m, w, msg, key)
 	case codes.POST:
 		resp.SetCode(codes.Created)
-		err = service.Publish(m.Context(), clientID, msg)
+		err = service.Publish(m.Context(), key, msg)
 	default:
 		err = errMethodNotAllowed
 	}
@@ -131,7 +122,7 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 	}
 }
 
-func handleGet(m *mux.Message, w mux.ResponseWriter, msg *messaging.Message, clientID string) error {
+func handleGet(m *mux.Message, w mux.ResponseWriter, msg *messaging.Message, key string) error {
 	var obs uint32
 	obs, err := m.Options().Observe()
 	if err != nil {
@@ -141,11 +132,11 @@ func handleGet(m *mux.Message, w mux.ResponseWriter, msg *messaging.Message, cli
 	if obs == startObserve {
 		c := coap.NewClient(w.Conn(), m.Token(), logger)
 		w.Conn().AddOnClose(func() {
-			_ = service.Unsubscribe(context.Background(), clientID, msg.GetChannel(), msg.GetSubtopic(), c.Token())
+			_ = service.DisconnectHandler(context.Background(), msg.GetChannel(), msg.GetSubtopic(), c.Token())
 		})
-		return service.Subscribe(w.Conn().Context(), clientID, msg.GetChannel(), msg.GetSubtopic(), c)
+		return service.Subscribe(w.Conn().Context(), key, msg.GetChannel(), msg.GetSubtopic(), c)
 	}
-	return service.Unsubscribe(w.Conn().Context(), clientID, msg.GetChannel(), msg.GetSubtopic(), m.Token().String())
+	return service.Unsubscribe(w.Conn().Context(), key, msg.GetChannel(), msg.GetSubtopic(), m.Token().String())
 }
 
 func decodeMessage(msg *mux.Message) (*messaging.Message, error) {
@@ -222,18 +213,4 @@ func parseSubtopic(subtopic string) (string, error) {
 
 	subtopic = strings.Join(filteredElems, ".")
 	return subtopic, nil
-}
-
-func authenticate(ctx context.Context, key string) (string, error) {
-	authnRes, err := clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{
-		ClientSecret: key,
-	})
-	if err != nil {
-		return "", errors.Wrap(svcerr.ErrAuthentication, err)
-	}
-	if !authnRes.Authenticated {
-		return "", svcerr.ErrAuthentication
-	}
-
-	return authnRes.GetId(), nil
 }

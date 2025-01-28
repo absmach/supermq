@@ -23,7 +23,7 @@ func TestHealth(t *testing.T) {
 	certsTs, _, _ := setupCerts()
 	defer certsTs.Close()
 
-	httpAdapterTs, _, _ := setupMessages()
+	httpAdapterTs, _ := setupMessages()
 	defer httpAdapterTs.Close()
 
 	sdkConf := sdk.Config{

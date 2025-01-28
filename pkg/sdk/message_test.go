@@ -18,7 +18,6 @@ import (
 	climocks "github.com/absmach/supermq/clients/mocks"
 	adapter "github.com/absmach/supermq/http"
 	"github.com/absmach/supermq/http/api"
-	"github.com/absmach/supermq/http/mocks"
 	smqlog "github.com/absmach/supermq/logger"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
@@ -34,13 +33,12 @@ var (
 	clientsGRPCClient  *climocks.ClientsServiceClient
 )
 
-func setupMessages() (*httptest.Server, *pubsub.PubSub, *mocks.EventStore) {
+func setupMessages() (*httptest.Server, *pubsub.PubSub) {
 	clientsGRPCClient = new(climocks.ClientsServiceClient)
 	channelsGRPCClient = new(chmocks.ChannelsServiceClient)
 	pub := new(pubsub.PubSub)
 	authn := new(authnmocks.Authentication)
-	es := new(mocks.EventStore)
-	handler := adapter.NewHandler(pub, es, authn, clientsGRPCClient, channelsGRPCClient, smqlog.NewMock())
+	handler := adapter.NewHandler(pub, authn, clientsGRPCClient, channelsGRPCClient, smqlog.NewMock())
 
 	mux := api.MakeHandler(smqlog.NewMock(), "")
 	target := httptest.NewServer(mux)
@@ -51,14 +49,14 @@ func setupMessages() (*httptest.Server, *pubsub.PubSub, *mocks.EventStore) {
 	}
 	mp, err := proxy.NewProxy(config, handler, smqlog.NewMock())
 	if err != nil {
-		return nil, nil, nil
+		return nil, nil
 	}
 
-	return httptest.NewServer(http.HandlerFunc(mp.ServeHTTP)), pub, es
+	return httptest.NewServer(http.HandlerFunc(mp.ServeHTTP)), pub
 }
 
 func TestSendMessage(t *testing.T) {
-	ts, pub, es := setupMessages()
+	ts, pub := setupMessages()
 	defer ts.Close()
 
 	msg := `[{"n":"current","t":-1,"v":1.6}]`
@@ -148,8 +146,6 @@ func TestSendMessage(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			authzCall := clientsGRPCClient.On("Authenticate", mock.Anything, mock.Anything).Return(tc.authRes, tc.authErr)
 			authnCall := channelsGRPCClient.On("Authorize", mock.Anything, mock.Anything).Return(&grpcChannelsV1.AuthzRes{Authorized: true}, nil)
-			eventsCall := es.On("Connect", mock.Anything, mock.Anything).Return(nil)
-			eventsCall1 := es.On("Publish", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			svcCall := pub.On("Publish", mock.Anything, channelID, mock.Anything).Return(tc.svcErr)
 			err := mgsdk.SendMessage(tc.chanName, tc.msg, tc.clientKey)
 			assert.Equal(t, tc.err, err)
@@ -160,14 +156,12 @@ func TestSendMessage(t *testing.T) {
 			svcCall.Unset()
 			authzCall.Unset()
 			authnCall.Unset()
-			eventsCall.Unset()
-			eventsCall1.Unset()
 		})
 	}
 }
 
 func TestSetContentType(t *testing.T) {
-	ts, _, _ := setupMessages()
+	ts, _ := setupMessages()
 	defer ts.Close()
 
 	sdkConf := sdk.Config{

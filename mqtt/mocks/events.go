@@ -15,9 +15,9 @@ type EventStore struct {
 	mock.Mock
 }
 
-// Connect provides a mock function with given fields: ctx, clientID, connID
-func (_m *EventStore) Connect(ctx context.Context, clientID string, connID string) error {
-	ret := _m.Called(ctx, clientID, connID)
+// Connect provides a mock function with given fields: ctx, clientID, subscriberID
+func (_m *EventStore) Connect(ctx context.Context, clientID string, subscriberID string) error {
+	ret := _m.Called(ctx, clientID, subscriberID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Connect")
@@ -25,7 +25,7 @@ func (_m *EventStore) Connect(ctx context.Context, clientID string, connID strin
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, clientID, connID)
+		r0 = rf(ctx, clientID, subscriberID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -33,9 +33,9 @@ func (_m *EventStore) Connect(ctx context.Context, clientID string, connID strin
 	return r0
 }
 
-// Disconnect provides a mock function with given fields: ctx, clientID, connID
-func (_m *EventStore) Disconnect(ctx context.Context, clientID string, connID string) error {
-	ret := _m.Called(ctx, clientID, connID)
+// Disconnect provides a mock function with given fields: ctx, clientID, subscriberID
+func (_m *EventStore) Disconnect(ctx context.Context, clientID string, subscriberID string) error {
+	ret := _m.Called(ctx, clientID, subscriberID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Disconnect")
@@ -43,7 +43,7 @@ func (_m *EventStore) Disconnect(ctx context.Context, clientID string, connID st
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, clientID, connID)
+		r0 = rf(ctx, clientID, subscriberID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -51,27 +51,9 @@ func (_m *EventStore) Disconnect(ctx context.Context, clientID string, connID st
 	return r0
 }
 
-// Publish provides a mock function with given fields: ctx, clientID, channelID, topic
-func (_m *EventStore) Publish(ctx context.Context, clientID string, channelID string, topic string) error {
-	ret := _m.Called(ctx, clientID, channelID, topic)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Publish")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) error); ok {
-		r0 = rf(ctx, clientID, channelID, topic)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// Subscribe provides a mock function with given fields: ctx, clientID, channelID, connID, subtopic
-func (_m *EventStore) Subscribe(ctx context.Context, clientID string, channelID string, connID string, subtopic string) error {
-	ret := _m.Called(ctx, clientID, channelID, connID, subtopic)
+// Subscribe provides a mock function with given fields: ctx, clientID, channelID, subscriberID, subtopic
+func (_m *EventStore) Subscribe(ctx context.Context, clientID string, channelID string, subscriberID string, subtopic string) error {
+	ret := _m.Called(ctx, clientID, channelID, subscriberID, subtopic)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Subscribe")
@@ -79,25 +61,7 @@ func (_m *EventStore) Subscribe(ctx context.Context, clientID string, channelID 
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) error); ok {
-		r0 = rf(ctx, clientID, channelID, connID, subtopic)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// Unsubscribe provides a mock function with given fields: ctx, clientID, channelID, connID, subtopic
-func (_m *EventStore) Unsubscribe(ctx context.Context, clientID string, channelID string, connID string, subtopic string) error {
-	ret := _m.Called(ctx, clientID, channelID, connID, subtopic)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Unsubscribe")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) error); ok {
-		r0 = rf(ctx, clientID, channelID, connID, subtopic)
+		r0 = rf(ctx, clientID, channelID, subscriberID, subtopic)
 	} else {
 		r0 = ret.Error(0)
 	}

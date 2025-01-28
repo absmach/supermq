@@ -6,31 +6,48 @@ package events
 import "github.com/absmach/supermq/pkg/events"
 
 const (
-	mqttPrefix        = "mqtt"
-	clientPublish     = mqttPrefix + ".client_publish"
-	clientSubscribe   = mqttPrefix + ".client_subscribe"
-	clientUnsubscribe = mqttPrefix + ".client_unsubscribe"
-	clientConnect     = mqttPrefix + ".client_connect"
-	clientDisconnect  = mqttPrefix + ".client_disconnect"
+	mqttPrefix       = "mqtt"
+	clientSubscribe  = mqttPrefix + ".client_subscribe"
+	clientConnect    = mqttPrefix + ".client_connect"
+	clientDisconnect = mqttPrefix + ".client_disconnect"
 )
 
-var _ events.Event = (*mqttEvent)(nil)
+var (
+	_ events.Event = (*connectEvent)(nil)
+	_ events.Event = (*subscribeEvent)(nil)
+)
 
-type mqttEvent struct {
-	operation string
-	channelID string
-	clientID  string
-	connID    string
-	topic     string
-	instance  string
+type connectEvent struct {
+	operation    string
+	clientID     string
+	subscriberID string
+	instance     string
+}
+
+func (ce connectEvent) Encode() (map[string]interface{}, error) {
+	return map[string]interface{}{
+		"operation":     ce.operation,
+		"client_id":     ce.clientID,
+		"subscriber_id": ce.subscriberID,
+		"instance":      ce.instance,
+	}, nil
+}
+
+type subscribeEvent struct {
+	operation    string
+	clientID     string
+	subscriberID string
+	channelID    string
+	subtopic     string
 }
 
 func (se subscribeEvent) Encode() (map[string]interface{}, error) {
+func (se subscribeEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
-		"operation":  me.operation,
-		"channel_id": me.channelID,
-		"client_id":  me.clientID,
-		"conn_id":    me.connID,
-		"topic":      me.topic,
+		"operation":     se.operation,
+		"client_id":     se.clientID,
+		"subscriber_id": se.subscriberID,
+		"channel_id":    se.channelID,
+		"subtopic":      se.subtopic,
 	}, nil
 }
