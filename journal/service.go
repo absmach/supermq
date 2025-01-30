@@ -6,6 +6,7 @@ package journal
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/absmach/supermq"
@@ -15,19 +16,13 @@ import (
 )
 
 const (
-	clientCreate    = "client.create"
-	clientRemove    = "client.remove"
-	coapSubscribe   = "coap.client_subscribe"
-	coapUnsubscribe = "coap.client_unsubscribe"
-	coapPublish     = "coap.client_publish"
-	httpPublish     = "http.client_publish"
-	mqttSubscribe   = "mqtt.client_subscribe"
-	mqttUnsubscribe = "mqtt.client_unsubscribe"
-	mqttPublish     = "mqtt.client_publish"
-	mqttDisconnect  = "mqtt.client_disconnect"
-	wsSubscribe     = "ws.client_subscribe"
-	wsUnsubscribe   = "ws.client_unsubscribe"
-	wsPublish       = "ws.client_publish"
+	clientCreate         = "client.create"
+	clientRemove         = "client.remove"
+	mqttSubscribe        = "mqtt.client_subscribe"
+	mqttDisconnect       = "mqtt.client_disconnect"
+	messagingPublish     = "messaging.client_publish"
+	messagingSubscribe   = "messaging.client_subscribe"
+	messagingUnsubscribe = "messaging.client_unsubscribe"
 )
 
 type service struct {
@@ -74,6 +69,13 @@ func (svc *service) RetrieveClientTelemetry(ctx context.Context, session smqauth
 		return ClientTelemetry{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
+	subs, err := svc.repository.CountSubscriptions(ctx, clientID)
+	if err != nil {
+		return ClientTelemetry{}, errors.Wrap(svcerr.ErrViewEntity, err)
+	}
+
+	ct.Subscriptions = subs
+
 	return ct, nil
 }
 
@@ -85,17 +87,20 @@ func (svc *service) handleTelemetry(ctx context.Context, journal Journal) error 
 	case clientRemove:
 		return svc.removeClientTelemetry(ctx, journal)
 
-	case coapSubscribe, mqttSubscribe, wsSubscribe:
+	case mqttSubscribe:
+		return svc.addMqttSubscription(ctx, journal)
+
+	case messagingSubscribe:
 		return svc.addSubscription(ctx, journal)
 
-	case coapUnsubscribe, mqttUnsubscribe, wsUnsubscribe:
+	case messagingUnsubscribe:
 		return svc.removeSubscription(ctx, journal)
 
-	case coapPublish, httpPublish, mqttPublish, wsPublish:
+	case messagingPublish:
 		return svc.updateMessageCount(ctx, journal)
 
 	case mqttDisconnect:
-		return svc.removeSubscriptionWithConnID(ctx, journal)
+		return svc.removeMqttSubscription(ctx, journal)
 
 	default:
 		return nil
@@ -125,44 +130,84 @@ func (svc *service) removeClientTelemetry(ctx context.Context, journal Journal) 
 }
 
 func (svc *service) addSubscription(ctx context.Context, journal Journal) error {
-	ae, err := toAdapterEvent(journal)
+	ae, err := toSubscribeEvent(journal)
 	if err != nil {
 		return err
 	}
-	sub := fmt.Sprintf("%s:%s:%s", ae.connID, ae.channelID, ae.topic)
-	return svc.repository.AddSubscription(ctx, ae.clientID, sub)
+	var subtopic string
+	topics := strings.Split(ae.topic, ".")
+	if len(topics) > 2 {
+		subtopic = topics[2]
+	}
+
+	id, err := svc.idProvider.ID()
+	if err != nil {
+		return err
+	}
+
+	sub := ClientSubscription{
+		ID:           id,
+		SubscriberID: ae.subscriberID,
+		ChannelID:    topics[1],
+		Subtopic:     subtopic,
+		ClientID:     ae.clientID,
+	}
+
+	return svc.repository.AddSubscription(ctx, sub)
+}
+
+func (svc *service) addMqttSubscription(ctx context.Context, journal Journal) error {
+	ae, err := toMqttSubscribeEvent(journal)
+	if err != nil {
+		return err
+	}
+
+	id, err := svc.idProvider.ID()
+	if err != nil {
+		return err
+	}
+
+	sub := ClientSubscription{
+		ID:           id,
+		SubscriberID: ae.subscriberID,
+		ChannelID:    ae.channelID,
+		Subtopic:     ae.subtopic,
+		ClientID:     ae.clientID,
+	}
+
+	return svc.repository.AddSubscription(ctx, sub)
 }
 
 func (svc *service) removeSubscription(ctx context.Context, journal Journal) error {
-	ae, err := toAdapterEvent(journal)
+	ae, err := toUnsubscribeEvent(journal)
 	if err != nil {
 		return err
 	}
-	sub := fmt.Sprintf("%s:%s:%s", ae.connID, ae.channelID, ae.topic)
-	return svc.repository.RemoveSubscription(ctx, ae.clientID, sub)
+
+	return svc.repository.RemoveSubscription(ctx, ae.subscriberID)
+}
+
+func (svc *service) removeMqttSubscription(ctx context.Context, journal Journal) error {
+	ae, err := toMqttDisconnectEvent(journal)
+	if err != nil {
+		return err
+	}
+
+	return svc.repository.RemoveSubscription(ctx, ae.subscriberID)
 }
 
 func (svc *service) updateMessageCount(ctx context.Context, journal Journal) error {
-	ae, err := toAdapterEvent(journal)
+	ae, err := toPublishEvent(journal)
 	if err != nil {
 		return err
 	}
 	if err := svc.repository.IncrementInboundMessages(ctx, ae.clientID); err != nil {
 		return err
 	}
-	if err := svc.repository.IncrementOutboundMessages(ctx, ae.channelID, ae.topic); err != nil {
+	if err := svc.repository.IncrementOutboundMessages(ctx, ae.channelID, ae.subtopic); err != nil {
 		return err
 	}
 	return nil
-}
-
-func (svc *service) removeSubscriptionWithConnID(ctx context.Context, journal Journal) error {
-	ae, err := toAdapterEvent(journal)
-	if err != nil {
-		return err
-	}
-
-	return svc.repository.RemoveSubscriptionWithConnID(ctx, ae.connID, ae.clientID)
 }
 
 type clientEvent struct {
@@ -174,14 +219,15 @@ type clientEvent struct {
 func toClientEvent(journal Journal) (clientEvent, error) {
 	var createdAt time.Time
 	var err error
-	id, ok := journal.Attributes["id"].(string)
-	if !ok {
-		return clientEvent{}, fmt.Errorf("invalid id attribute")
+	id, err := getStringAttribute(journal, "id")
+	if err != nil {
+		return clientEvent{}, err
 	}
-	domain, ok := journal.Attributes["domain"].(string)
-	if !ok {
-		return clientEvent{}, fmt.Errorf("invalid domain attribute")
+	domain, err := getStringAttribute(journal, "domain")
+	if err != nil {
+		return clientEvent{}, err
 	}
+
 	createdAtStr := journal.Attributes["created_at"].(string)
 	if createdAtStr != "" {
 		createdAt, err = time.Parse(time.RFC3339, createdAtStr)
@@ -197,21 +243,118 @@ func toClientEvent(journal Journal) (clientEvent, error) {
 }
 
 type adapterEvent struct {
-	clientID  string
-	connID    string
-	channelID string
-	topic     string
+	clientID     string
+	channelID    string
+	subscriberID string
+	topic        string
+	subtopic     string
 }
 
-func toAdapterEvent(journal Journal) (adapterEvent, error) {
-	clientID := journal.Attributes["client_id"].(string)
-	connID := journal.Attributes["conn_id"].(string)
-	channelID := journal.Attributes["channel_id"].(string)
-	topic := journal.Attributes["topic"].(string)
+func toPublishEvent(journal Journal) (adapterEvent, error) {
+	clientID, err := getStringAttribute(journal, "client_id")
+	if err != nil {
+		return adapterEvent{}, err
+	}
+	channelID, err := getStringAttribute(journal, "channel_id")
+	if err != nil {
+		return adapterEvent{}, err
+	}
+	subtopic, err := getStringAttribute(journal, "subtopic")
+	if err != nil {
+		return adapterEvent{}, err
+	}
+
 	return adapterEvent{
 		clientID:  clientID,
-		connID:    connID,
 		channelID: channelID,
-		topic:     topic,
+		subtopic:  subtopic,
 	}, nil
+}
+
+func toSubscribeEvent(journal Journal) (adapterEvent, error) {
+	subscriberID, err := getStringAttribute(journal, "subscriber_id")
+	if err != nil {
+		return adapterEvent{}, err
+	}
+	topic, err := getStringAttribute(journal, "topic")
+	if err != nil {
+		return adapterEvent{}, err
+	}
+	var clientID string
+	clientID, err = getStringAttribute(journal, "client_id")
+	if err != nil {
+		clientID = ""
+	}
+
+	return adapterEvent{
+		clientID:     clientID,
+		subscriberID: subscriberID,
+		topic:        topic,
+	}, nil
+}
+
+func toUnsubscribeEvent(journal Journal) (adapterEvent, error) {
+	subscriberID, err := getStringAttribute(journal, "subscriber_id")
+	if err != nil {
+		return adapterEvent{}, err
+	}
+	topic, err := getStringAttribute(journal, "topic")
+	if err != nil {
+		return adapterEvent{}, err
+	}
+
+	return adapterEvent{
+		subscriberID: subscriberID,
+		topic:        topic,
+	}, nil
+}
+
+func toMqttSubscribeEvent(journal Journal) (adapterEvent, error) {
+	clientID, err := getStringAttribute(journal, "client_id")
+	if err != nil {
+		return adapterEvent{}, err
+	}
+	subscriberID, err := getStringAttribute(journal, "subscriber_id")
+	if err != nil {
+		return adapterEvent{}, err
+	}
+	channelID, err := getStringAttribute(journal, "channel_id")
+	if err != nil {
+		return adapterEvent{}, err
+	}
+	subtopic, err := getStringAttribute(journal, "subtopic")
+	if err != nil {
+		return adapterEvent{}, err
+	}
+
+	return adapterEvent{
+		clientID:     clientID,
+		subscriberID: subscriberID,
+		channelID:    channelID,
+		subtopic:     subtopic,
+	}, nil
+}
+
+func toMqttDisconnectEvent(journal Journal) (adapterEvent, error) {
+	subscriberID, err := getStringAttribute(journal, "subscriber_id")
+	if err != nil {
+		return adapterEvent{}, err
+	}
+	clientID, err := getStringAttribute(journal, "client_id")
+	if err != nil {
+		return adapterEvent{}, err
+	}
+
+	return adapterEvent{
+		subscriberID: subscriberID,
+		channelID:    clientID,
+	}, nil
+}
+
+func getStringAttribute(journal Journal, key string) (string, error) {
+	value, ok := journal.Attributes[key].(string)
+	if !ok {
+		return "", fmt.Errorf("missing or invalid %s attribute", key)
+	}
+	return value, nil
 }

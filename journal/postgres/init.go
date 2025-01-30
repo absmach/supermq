@@ -28,19 +28,25 @@ func Migration() *migrate.MemoryMigrationSource {
 					`CREATE INDEX idx_journal_default_client_filter ON journal(operation, (attributes->>'id'), (attributes->>'client_id'), occurred_at DESC);`,
 					`CREATE INDEX idx_journal_default_channel_filter ON journal(operation, (attributes->>'id'), (attributes->>'channel_id'), occurred_at DESC);`,
 					`CREATE TABLE IF NOT EXISTS clients_telemetry (
-						client_id         VARCHAR(36) NOT NULL,
+						client_id         VARCHAR(36) PRIMARY KEY,
 						domain_id         VARCHAR(36) NOT NULL,
-						subscriptions     TEXT[] DEFAULT '{}',
 						inbound_messages  BIGINT DEFAULT 0,
 						outbound_messages BIGINT DEFAULT 0,
 						first_seen        TIMESTAMP,
-						last_seen         TIMESTAMP,
-						PRIMARY KEY (client_id, domain_id)
+						last_seen         TIMESTAMP
 					)`,
-					`CREATE INDEX idx_subscriptions_gin ON clients_telemetry USING GIN (subscriptions);`,
+					`CREATE TABLE IF NOT EXISTS subscriptions (
+						id              VARCHAR(36) PRIMARY KEY,
+						subscriber_id   VARCHAR(1024) NOT NULL,
+						channel_id      VARCHAR(36) NOT NULL,
+						subtopic        VARCHAR(1024),
+						client_id       VARCHAR(36),
+						FOREIGN KEY (client_id) REFERENCES clients_telemetry(client_id) ON DELETE CASCADE ON UPDATE CASCADE
+					)`,
 				},
 				Down: []string{
 					`DROP TABLE IF EXISTS clients_telemetry`,
+					`DROP TABLE IF EXISTS subscriptions`,
 					`DROP TABLE IF EXISTS journal`,
 				},
 			},

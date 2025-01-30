@@ -135,13 +135,6 @@ func main() {
 	defer bsub.Close()
 	bsub = brokerstracing.NewPubSub(serverConfig, tracer, bsub)
 
-	bsub, err = msgevents.NewPubSubMiddleware(ctx, bsub, cfg.ESURL)
-	if err != nil {
-		logger.Error(fmt.Sprintf("failed to create event store middleware: %s", err))
-		exitCode = 1
-		return
-	}
-
 	mpub, err := mqttpub.NewPublisher(fmt.Sprintf("mqtt://%s:%s", cfg.MQTTTargetHost, cfg.MQTTTargetPort), cfg.MQTTQoS, cfg.MQTTForwarderTimeout)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create MQTT publisher: %s", err))

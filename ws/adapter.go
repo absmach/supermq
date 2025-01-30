@@ -75,9 +75,10 @@ func (svc *adapterService) Subscribe(ctx context.Context, clientKey, chanID, sub
 	}
 
 	subCfg := messaging.SubscriberConfig{
-		ID:      clientID,
-		Topic:   subject,
-		Handler: c,
+		ID:       clientID,
+		ClientID: clientID,
+		Topic:    subject,
+		Handler:  c,
 	}
 	if err := svc.pubsub.Subscribe(ctx, subCfg); err != nil {
 		return ErrFailedSubscription

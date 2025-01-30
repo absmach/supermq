@@ -36,6 +36,7 @@ type MessageHandler interface {
 
 type SubscriberConfig struct {
 	ID             string
+	ClientID       string
 	Topic          string
 	Handler        MessageHandler
 	DeliveryPolicy DeliveryPolicy

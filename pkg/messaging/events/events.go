@@ -35,13 +35,15 @@ func (pe publishEvent) Encode() (map[string]interface{}, error) {
 type subscribeEvent struct {
 	operation    string
 	subscriberID string
-	subtopic     string
+	clientID     string
+	topic        string
 }
 
 func (se subscribeEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"operation":     se.operation,
 		"subscriber_id": se.subscriberID,
-		"subtopic":      se.subtopic,
+		"client_id":     se.clientID,
+		"topic":         se.topic,
 	}, nil
 }

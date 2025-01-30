@@ -16,8 +16,8 @@ import (
 )
 
 func (repo *repository) SaveClientTelemetry(ctx context.Context, ct journal.ClientTelemetry) error {
-	q := `INSERT INTO clients_telemetry (client_id, domain_id, inbound_messages, outbound_messages, subscriptions, first_seen, last_seen)
-		VALUES (:client_id, :domain_id, :inbound_messages, :outbound_messages, :subscriptions, :first_seen, :last_seen);`
+	q := `INSERT INTO clients_telemetry (client_id, domain_id, inbound_messages, outbound_messages, first_seen, last_seen)
+		VALUES (:client_id, :domain_id, :inbound_messages, :outbound_messages, :first_seen, :last_seen);`
 
 	dbct, err := toDBClientsTelemetry(ct)
 	if err != nil {
@@ -32,7 +32,7 @@ func (repo *repository) SaveClientTelemetry(ctx context.Context, ct journal.Clie
 }
 
 func (repo *repository) DeleteClientTelemetry(ctx context.Context, clientID, domainID string) error {
-	q := "DELETE FROM clients_telemetry AS ct WHERE ct.client_id = :client_id AND ct.domain_id = :domain_id;"
+	q := `DELETE FROM clients_telemetry AS ct WHERE ct.client_id = :client_id AND ct.domain_id = :domain_id;`
 
 	dbct := dbClientTelemetry{
 		ClientID: clientID,
@@ -50,7 +50,7 @@ func (repo *repository) DeleteClientTelemetry(ctx context.Context, clientID, dom
 }
 
 func (repo *repository) RetrieveClientTelemetry(ctx context.Context, clientID, domainID string) (journal.ClientTelemetry, error) {
-	q := "SELECT * FROM clients_telemetry WHERE client_id = :client_id AND domain_id = :domain_id;"
+	q := `SELECT * FROM clients_telemetry WHERE client_id = :client_id AND domain_id = :domain_id;`
 
 	dbct := dbClientTelemetry{
 		ClientID: clientID,
@@ -80,24 +80,12 @@ func (repo *repository) RetrieveClientTelemetry(ctx context.Context, clientID, d
 	return journal.ClientTelemetry{}, repoerr.ErrNotFound
 }
 
-func (repo *repository) AddSubscription(ctx context.Context, clientID, sub string) error {
-	q := `
-		UPDATE clients_telemetry
-		SET subscriptions = ARRAY_APPEND(subscriptions, :subscriptions),
-			last_seen = :last_seen
-		WHERE client_id = :client_id;
+func (repo *repository) AddSubscription(ctx context.Context, sub journal.ClientSubscription) error {
+	q := `INSERT INTO subscriptions (id, subscriber_id, channel_id, subtopic, client_id)
+		VALUES (:id, :subscriber_id, :channel_id, :subtopic, :client_id);
 	`
-	ct := journal.ClientTelemetry{
-		ClientID:      clientID,
-		Subscriptions: []string{sub},
-		LastSeen:      time.Now(),
-	}
-	dbct, err := toDBClientsTelemetry(ct)
-	if err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
 
-	result, err := repo.db.NamedExecContext(ctx, q, dbct)
+	result, err := repo.db.NamedExecContext(ctx, q, sub)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
@@ -109,45 +97,29 @@ func (repo *repository) AddSubscription(ctx context.Context, clientID, sub strin
 	return nil
 }
 
-func (repo *repository) RemoveSubscription(ctx context.Context, clientID, sub string) error {
-	q := `
-		UPDATE clients_telemetry
-		SET subscriptions = ARRAY_REMOVE(subscriptions, :subscriptions)
-		WHERE client_id = :client_id
-		AND (:subscriptions = ANY(subscriptions))
-	`
-	ct := journal.ClientTelemetry{
-		ClientID:      clientID,
-		Subscriptions: []string{sub},
+func (repo *repository) CountSubscriptions(ctx context.Context, clientID string) (uint64, error) {
+	q := `SELECT COUNT(*) FROM subscriptions WHERE client_id = :client_id;`
+
+	sb := journal.ClientSubscription{
+		ClientID: clientID,
 	}
-	dbct, err := toDBClientsTelemetry(ct)
+
+	total, err := postgres.Total(ctx, repo.db, q, sb)
 	if err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+		return 0, postgres.HandleError(repoerr.ErrViewEntity, err)
 	}
 
-	result, err := repo.db.NamedExecContext(ctx, q, dbct)
-	if err != nil {
-		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
-	}
-
-	if rows, _ := result.RowsAffected(); rows == 0 {
-		return repoerr.ErrNotFound
-	}
-
-	return nil
+	return total, nil
 }
 
-func (repo *repository) RemoveSubscriptionWithConnID(ctx context.Context, connID, clientID string) error {
-	q := `
-		UPDATE clients_telemetry
-		SET subscriptions = ARRAY(
-			SELECT sub
-			FROM unnest(subscriptions) AS sub
-			WHERE sub NOT LIKE '%' || $1 || '%'
-		)
-		WHERE client_id = $2;
-	`
-	_, err := repo.db.ExecContext(ctx, q, connID, clientID)
+func (repo *repository) RemoveSubscription(ctx context.Context, subscriberID string) error {
+	q := `DELETE FROM subscriptions WHERE subscriber_id = :subscriber_id;`
+
+	sb := journal.ClientSubscription{
+		SubscriberID: subscriberID,
+	}
+
+	_, err := repo.db.NamedExecContext(ctx, q, sb)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
@@ -185,29 +157,54 @@ func (repo *repository) IncrementInboundMessages(ctx context.Context, clientID s
 }
 
 func (repo *repository) IncrementOutboundMessages(ctx context.Context, channelID, subtopic string) error {
-	q := `
-		WITH matched_clients AS (
-			SELECT 
-				client_id,
-				domain_id,
-				COUNT(*) AS match_count
-			FROM 
-				clients_telemetry,
-				unnest(subscriptions) AS sub
-			WHERE 
-				sub LIKE '%' || $1 || ':' || $2 || '%'
-			GROUP BY 
-				client_id, domain_id
-		)
-		UPDATE clients_telemetry
-		SET outbound_messages = outbound_messages + matched_clients.match_count
-		FROM matched_clients
-		WHERE clients_telemetry.client_id = matched_clients.client_id
-		AND clients_telemetry.domain_id = matched_clients.domain_id;
+	query := `
+		SELECT client_id, COUNT(*) AS match_count
+		FROM subscriptions
+		WHERE channel_id = :channel_id AND subtopic = :subtopic
+		GROUP BY client_id
 	`
+	sb := journal.ClientSubscription{
+		ChannelID: channelID,
+		Subtopic:  subtopic,
+	}
 
-	_, err := repo.db.ExecContext(ctx, q, channelID, subtopic)
+	rows, err := repo.db.NamedQueryContext(ctx, query, sb)
 	if err != nil {
+		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
+	}
+	defer rows.Close()
+
+	tx, err := repo.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
+	}
+
+	q := `UPDATE clients_telemetry
+		SET outbound_messages = outbound_messages + $1
+		WHERE client_id = $2;
+		`
+
+	for rows.Next() {
+		var clientID string
+		var count uint64
+		if err = rows.Scan(&clientID, &count); err != nil {
+			err := tx.Rollback()
+			if err == nil {
+				return postgres.HandleError(repoerr.ErrUpdateEntity, err)
+			}
+			return errors.Wrap(errors.ErrRollbackTx, err)
+		}
+
+		if _, err = repo.db.ExecContext(ctx, q, count, clientID); err != nil {
+			err := tx.Rollback()
+			if err == nil {
+				return postgres.HandleError(repoerr.ErrUpdateEntity, err)
+			}
+			return errors.Wrap(errors.ErrRollbackTx, err)
+		}
+	}
+
+	if err = tx.Commit(); err != nil {
 		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 
@@ -215,13 +212,12 @@ func (repo *repository) IncrementOutboundMessages(ctx context.Context, channelID
 }
 
 type dbClientTelemetry struct {
-	ClientID         string           `db:"client_id"`
-	DomainID         string           `db:"domain_id"`
-	Subscriptions    pgtype.TextArray `db:"subscriptions"`
-	InboundMessages  uint64           `db:"inbound_messages"`
-	OutboundMessages uint64           `db:"outbound_messages"`
-	FirstSeen        time.Time        `db:"first_seen"`
-	LastSeen         sql.NullTime     `db:"last_seen"`
+	ClientID         string       `db:"client_id"`
+	DomainID         string       `db:"domain_id"`
+	InboundMessages  uint64       `db:"inbound_messages"`
+	OutboundMessages uint64       `db:"outbound_messages"`
+	FirstSeen        time.Time    `db:"first_seen"`
+	LastSeen         sql.NullTime `db:"last_seen"`
 }
 
 func toDBClientsTelemetry(ct journal.ClientTelemetry) (dbClientTelemetry, error) {
@@ -238,7 +234,6 @@ func toDBClientsTelemetry(ct journal.ClientTelemetry) (dbClientTelemetry, error)
 	return dbClientTelemetry{
 		ClientID:         ct.ClientID,
 		DomainID:         ct.DomainID,
-		Subscriptions:    subs,
 		InboundMessages:  ct.InboundMessages,
 		OutboundMessages: ct.OutboundMessages,
 		FirstSeen:        ct.FirstSeen,
@@ -247,11 +242,6 @@ func toDBClientsTelemetry(ct journal.ClientTelemetry) (dbClientTelemetry, error)
 }
 
 func toClientsTelemetry(dbct dbClientTelemetry) (journal.ClientTelemetry, error) {
-	var subs []string
-	for _, e := range dbct.Subscriptions.Elements {
-		subs = append(subs, e.String)
-	}
-
 	var lastSeen time.Time
 	if dbct.LastSeen.Valid {
 		lastSeen = dbct.LastSeen.Time
@@ -260,7 +250,6 @@ func toClientsTelemetry(dbct dbClientTelemetry) (journal.ClientTelemetry, error)
 	return journal.ClientTelemetry{
 		ClientID:         dbct.ClientID,
 		DomainID:         dbct.DomainID,
-		Subscriptions:    subs,
 		InboundMessages:  dbct.InboundMessages,
 		OutboundMessages: dbct.OutboundMessages,
 		FirstSeen:        dbct.FirstSeen,

@@ -121,9 +121,10 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 
 	authzc := newAuthzClient(clientID, chanID, subtopic, svc.channels, c)
 	subCfg := messaging.SubscriberConfig{
-		ID:      c.Token(),
-		Topic:   subject,
-		Handler: authzc,
+		ID:       c.Token(),
+		ClientID: clientID,
+		Topic:    subject,
+		Handler:  authzc,
 	}
 	return svc.pubsub.Subscribe(ctx, subCfg)
 }

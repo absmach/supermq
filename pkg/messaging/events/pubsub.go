@@ -54,7 +54,8 @@ func (es *pubsubES) Subscribe(ctx context.Context, cfg messaging.SubscriberConfi
 	se := subscribeEvent{
 		operation:    clientSubscribe,
 		subscriberID: cfg.ID,
-		subtopic:     cfg.Topic,
+		clientID:     cfg.ClientID,
+		topic:        cfg.Topic,
 	}
 
 	return es.ep.Publish(ctx, se)
@@ -68,7 +69,7 @@ func (es *pubsubES) Unsubscribe(ctx context.Context, id string, topic string) er
 	se := subscribeEvent{
 		operation:    clientUnsubscribe,
 		subscriberID: id,
-		subtopic:     topic,
+		topic:        topic,
 	}
 
 	return es.ep.Publish(ctx, se)

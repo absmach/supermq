@@ -140,11 +140,19 @@ func (page JournalsPage) MarshalJSON() ([]byte, error) {
 type ClientTelemetry struct {
 	ClientID         string    `json:"client_id"`
 	DomainID         string    `json:"domain_id"`
-	Subscriptions    []string  `json:"subscriptions"`
+	Subscriptions    uint64    `json:"subscriptions"`
 	InboundMessages  uint64    `json:"inbound_messages"`
 	OutboundMessages uint64    `json:"outbound_messages"`
 	FirstSeen        time.Time `json:"first_seen"`
 	LastSeen         time.Time `json:"last_seen"`
+}
+
+type ClientSubscription struct {
+	ID           string `json:"id" db:"id"`
+	SubscriberID string `json:"subscriber_id" db:"subscriber_id"`
+	ChannelID    string `json:"channel_id" db:"channel_id"`
+	Subtopic     string `json:"subtopic" db:"subtopic"`
+	ClientID     string `json:"client_id" db:"client_id"`
 }
 
 // Service provides access to the journal log service.
@@ -181,13 +189,13 @@ type Repository interface {
 	DeleteClientTelemetry(ctx context.Context, clientID, domainID string) error
 
 	// AddSubscription adds a subscription to the client telemetry.
-	AddSubscription(ctx context.Context, clientID, sub string) error
+	AddSubscription(ctx context.Context, sub ClientSubscription) error
+
+	// CountSubscriptions returns the number of subscriptions for a client.
+	CountSubscriptions(ctx context.Context, clientID string) (uint64, error)
 
 	// RemoveSubscription removes a subscription from the client telemetry.
-	RemoveSubscription(ctx context.Context, clientID, sub string) error
-
-	// RemoveSubscriptionWithConnID removes a subscription from the client telemetry using the connection ID.
-	RemoveSubscriptionWithConnID(ctx context.Context, connID, clientID string) error
+	RemoveSubscription(ctx context.Context, subscriberID string) error
 
 	// IncrementInboundMessages increments the inbound messages count for a client.
 	IncrementInboundMessages(ctx context.Context, clientID string) error
