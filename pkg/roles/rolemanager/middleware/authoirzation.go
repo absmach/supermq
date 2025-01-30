@@ -240,20 +240,6 @@ func (ram RoleManagerAuthorizationMiddleware) RoleCheckMembersExists(ctx context
 	return ram.svc.RoleCheckMembersExists(ctx, session, entityID, roleID, members)
 }
 
-func (ram RoleManagerAuthorizationMiddleware) RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleID string, members []string) (err error) {
-	if err := ram.authorize(ctx, roles.OpRoleRemoveMembers, smqauthz.PolicyReq{
-		Domain:      session.DomainID,
-		Subject:     session.DomainUserID,
-		SubjectType: policies.UserType,
-		SubjectKind: policies.UsersKind,
-		Object:      entityID,
-		ObjectType:  ram.entityType,
-	}); err != nil {
-		return err
-	}
-	return ram.svc.RoleRemoveMembers(ctx, session, entityID, roleID, members)
-}
-
 func (ram RoleManagerAuthorizationMiddleware) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleID string) (err error) {
 	if err := ram.authorize(ctx, roles.OpRoleRemoveAllMembers, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
@@ -266,6 +252,48 @@ func (ram RoleManagerAuthorizationMiddleware) RoleRemoveAllMembers(ctx context.C
 		return err
 	}
 	return ram.svc.RoleRemoveAllMembers(ctx, session, entityID, roleID)
+}
+
+func (ram RoleManagerAuthorizationMiddleware) ListEntityMembers(ctx context.Context, session authn.Session, entityID string, pageQuery roles.MembersRolePageQuery) (roles.MembersRolePage, error) {
+	if err := ram.authorize(ctx, roles.OpRoleListMembers, smqauthz.PolicyReq{
+		Domain:      session.DomainID,
+		Subject:     session.DomainUserID,
+		SubjectType: policies.UserType,
+		SubjectKind: policies.UsersKind,
+		Object:      entityID,
+		ObjectType:  ram.entityType,
+	}); err != nil {
+		return roles.MembersRolePage{}, err
+	}
+	return ram.svc.ListEntityMembers(ctx, session, entityID, pageQuery)
+}
+
+func (ram RoleManagerAuthorizationMiddleware) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) error {
+	if err := ram.authorize(ctx, roles.OpRoleRemoveAllMembers, smqauthz.PolicyReq{
+		Domain:      session.DomainID,
+		Subject:     session.DomainUserID,
+		SubjectType: policies.UserType,
+		SubjectKind: policies.UsersKind,
+		Object:      entityID,
+		ObjectType:  ram.entityType,
+	}); err != nil {
+		return err
+	}
+	return ram.svc.RemoveEntityMembers(ctx, session, entityID, members)
+}
+
+func (ram RoleManagerAuthorizationMiddleware) RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleID string, members []string) (err error) {
+	if err := ram.authorize(ctx, roles.OpRoleRemoveMembers, smqauthz.PolicyReq{
+		Domain:      session.DomainID,
+		Subject:     session.DomainUserID,
+		SubjectType: policies.UserType,
+		SubjectKind: policies.UsersKind,
+		Object:      entityID,
+		ObjectType:  ram.entityType,
+	}); err != nil {
+		return err
+	}
+	return ram.svc.RoleRemoveMembers(ctx, session, entityID, roleID, members)
 }
 
 func (ram RoleManagerAuthorizationMiddleware) authorize(ctx context.Context, op svcutil.Operation, pr smqauthz.PolicyReq) error {

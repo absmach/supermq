@@ -15,6 +15,7 @@ import (
 	"github.com/absmach/supermq/domains"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
+	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/postgres"
 	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
 	"github.com/jackc/pgtype"
@@ -38,7 +39,7 @@ type domainRepo struct {
 // New instantiates a PostgreSQL
 // implementation of Domain repository.
 func New(db postgres.Database) domains.Repository {
-	rmsvcRepo := rolesPostgres.NewRepository(db, rolesTableNamePrefix, entityTableName, entityIDColumnName)
+	rmsvcRepo := rolesPostgres.NewRepository(db, policies.DomainType, rolesTableNamePrefix, entityTableName, entityIDColumnName)
 	return &domainRepo{
 		db:         db,
 		Repository: rmsvcRepo,

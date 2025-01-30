@@ -18,6 +18,7 @@ import (
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
+	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/postgres"
 	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
 	"github.com/jackc/pgtype"
@@ -40,7 +41,7 @@ type channelRepository struct {
 // NewChannelRepository instantiates a PostgreSQL implementation of channel
 // repository.
 func NewRepository(db postgres.Database) channels.Repository {
-	rolesRepo := rolesPostgres.NewRepository(db, rolesTableNamePrefix, entityTableName, entityIDColumnName)
+	rolesRepo := rolesPostgres.NewRepository(db, policies.ChannelType, rolesTableNamePrefix, entityTableName, entityIDColumnName)
 	return &channelRepository{
 		db:         db,
 		Repository: rolesRepo,

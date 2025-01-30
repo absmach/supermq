@@ -19,23 +19,13 @@ import (
 const (
 	stream = "events.supermq.domains"
 
-	create                   = "domain.create"
-	update                   = "domain.update"
-	enable                   = "domain.enable"
-	disable                  = "domain.disable"
-	freeze                   = "domain.freeze"
-	delete                   = "domain.delete"
-	userDelete               = "domain.user_delete"
-	addRole                  = "domain.role.add"
-	removeRole               = "domain.role.remove"
-	updateRole               = "domain.role.update"
-	addRoleActions           = "domain.role.actions.add"
-	removeRoleActions        = "domain.role.actions.remove"
-	removeAllRoleActions     = "domain.role.actions.remove_all"
-	addRoleMembers           = "domain.role.members.add"
-	removeRoleMembers        = "domain.role.members.remove"
-	removeRoleAllMembers     = "domain.role.members.remove_all"
-	removeMemberFromAllRoles = "domain.role.members.remove_from_all_roles"
+	create     = "domain.create"
+	update     = "domain.update"
+	enable     = "domain.enable"
+	disable    = "domain.disable"
+	freeze     = "domain.freeze"
+	delete     = "domain.delete"
+	userDelete = "domain.user_delete"
 )
 
 var (
@@ -105,28 +95,9 @@ func (es *eventHandler) Handle(ctx context.Context, event events.Event) error {
 		return es.userDeleteDomainHandler(ctx, msg)
 	case delete:
 		return es.deleteDomainHandler(ctx, msg)
-	case addRole:
-		return es.rolesEventHandler.AddEntityRoleHandler(ctx, msg)
-	case updateRole:
-		return es.rolesEventHandler.UpdateEntityRoleHandler(ctx, msg)
-	case removeRole:
-		return es.rolesEventHandler.RemoveEntityRoleHandler(ctx, msg)
-	case addRoleActions:
-		return es.rolesEventHandler.AddEntityRoleActionsHandler(ctx, msg)
-	case removeRoleActions:
-		return es.rolesEventHandler.RemoveEntityRoleActionsHandler(ctx, msg)
-	case removeAllRoleActions:
-		return es.rolesEventHandler.RemoveAllEntityRoleActionsHandler(ctx, msg)
-	case addRoleMembers:
-		return es.rolesEventHandler.AddEntityRoleMembersHandler(ctx, msg)
-	case removeRoleMembers:
-		return es.rolesEventHandler.RemoveEntityRoleMembersHandler(ctx, msg)
-	case removeRoleAllMembers:
-		return es.rolesEventHandler.RemoveAllEntityRoleMembersHandler(ctx, msg)
-	case removeMemberFromAllRoles:
-		return es.rolesEventHandler.RemoveMemberFromAllEntityHandler(ctx, msg)
 	}
-	return nil
+
+	return es.rolesEventHandler.Handle(ctx, op, msg)
 }
 
 func (es *eventHandler) createDomainHandler(ctx context.Context, data map[string]interface{}) error {

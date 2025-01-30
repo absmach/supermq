@@ -299,6 +299,40 @@ func (rmes *RoleManagerEventStore) RoleRemoveAllMembers(ctx context.Context, ses
 	return nil
 }
 
+func (rmes *RoleManagerEventStore) ListEntityMembers(ctx context.Context, session authn.Session, entityID string, pageQuery roles.MembersRolePageQuery) (roles.MembersRolePage, error) {
+	mems, err := rmes.svc.ListEntityMembers(ctx, session, entityID, pageQuery)
+	if err != nil {
+		return mems, err
+	}
+
+	e := listEntityMembersEvent{
+		operationPrefix: rmes.operationPrefix,
+		entityID:        entityID,
+		limit:           pageQuery.Limit,
+		offset:          pageQuery.Offset,
+	}
+	if err := rmes.Publish(ctx, e); err != nil {
+		return mems, err
+	}
+	return mems, nil
+}
+
+func (rmes *RoleManagerEventStore) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) error {
+	if err := rmes.svc.RemoveEntityMembers(ctx, session, entityID, members); err != nil {
+		return err
+	}
+
+	e := removeEntityMembersEvent{
+		operationPrefix: rmes.operationPrefix,
+		entityID:        entityID,
+		members:         members,
+	}
+	if err := rmes.Publish(ctx, e); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (rmes *RoleManagerEventStore) RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, memberID string) (err error) {
 	if err := rmes.svc.RemoveMemberFromAllRoles(ctx, session, memberID); err != nil {
 		return err

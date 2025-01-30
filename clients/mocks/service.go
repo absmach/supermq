@@ -226,6 +226,34 @@ func (_m *Service) ListClients(ctx context.Context, session authn.Session, pm cl
 	return r0, r1
 }
 
+// ListEntityMembers provides a mock function with given fields: ctx, session, entityID, pq
+func (_m *Service) ListEntityMembers(ctx context.Context, session authn.Session, entityID string, pq roles.MembersRolePageQuery) (roles.MembersRolePage, error) {
+	ret := _m.Called(ctx, session, entityID, pq)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListEntityMembers")
+	}
+
+	var r0 roles.MembersRolePage
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, roles.MembersRolePageQuery) (roles.MembersRolePage, error)); ok {
+		return rf(ctx, session, entityID, pq)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, roles.MembersRolePageQuery) roles.MembersRolePage); ok {
+		r0 = rf(ctx, session, entityID, pq)
+	} else {
+		r0 = ret.Get(0).(roles.MembersRolePage)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string, roles.MembersRolePageQuery) error); ok {
+		r1 = rf(ctx, session, entityID, pq)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListUserClients provides a mock function with given fields: ctx, session, userID, pm
 func (_m *Service) ListUserClients(ctx context.Context, session authn.Session, userID string, pm clients.Page) (clients.ClientsPage, error) {
 	ret := _m.Called(ctx, session, userID, pm)
@@ -252,6 +280,24 @@ func (_m *Service) ListUserClients(ctx context.Context, session authn.Session, u
 	}
 
 	return r0, r1
+}
+
+// RemoveEntityMembers provides a mock function with given fields: ctx, session, entityID, members
+func (_m *Service) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) error {
+	ret := _m.Called(ctx, session, entityID, members)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveEntityMembers")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, []string) error); ok {
+		r0 = rf(ctx, session, entityID, members)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // RemoveMemberFromAllRoles provides a mock function with given fields: ctx, session, memberID

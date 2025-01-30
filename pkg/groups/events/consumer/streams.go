@@ -18,25 +18,15 @@ import (
 const (
 	stream = "events.supermq.groups"
 
-	create                   = "group.create"
-	update                   = "group.update"
-	changeStatus             = "group.change_status"
-	remove                   = "group.remove"
-	addParentGroup           = "group.add_parent_group"
-	removeParentGroup        = "group.remove_parent_group"
-	addChildrenGroups        = "group.add_children_groups"
-	removeChildrenGroups     = "group.remove_children_groups"
-	removeAllChildrenGroups  = "group.remove_all_children_groups"
-	addRole                  = "group.role.add"
-	removeRole               = "group.role.remove"
-	updateRole               = "group.role.update"
-	addRoleActions           = "group.role.actions.add"
-	removeRoleActions        = "group.role.actions.remove"
-	removeAllRoleActions     = "group.role.actions.remove_all"
-	addRoleMembers           = "group.role.members.add"
-	removeRoleMembers        = "group.role.members.remove"
-	removeRoleAllMembers     = "group.role.members.remove_all"
-	removeMemberFromAllRoles = "group.role.members.remove_from_all_roles"
+	create                  = "group.create"
+	update                  = "group.update"
+	changeStatus            = "group.change_status"
+	remove                  = "group.remove"
+	addParentGroup          = "group.add_parent_group"
+	removeParentGroup       = "group.remove_parent_group"
+	addChildrenGroups       = "group.add_children_groups"
+	removeChildrenGroups    = "group.remove_children_groups"
+	removeAllChildrenGroups = "group.remove_all_children_groups"
 )
 
 var (
@@ -111,28 +101,9 @@ func (es *eventHandler) Handle(ctx context.Context, event events.Event) error {
 		return es.removeChildrenGroupsHandler(ctx, msg)
 	case removeAllChildrenGroups:
 		return es.removeAllChildrenGroupsHandler(ctx, msg)
-	case addRole:
-		return es.rolesEventHandler.AddEntityRoleHandler(ctx, msg)
-	case updateRole:
-		return es.rolesEventHandler.UpdateEntityRoleHandler(ctx, msg)
-	case removeRole:
-		return es.rolesEventHandler.RemoveEntityRoleHandler(ctx, msg)
-	case addRoleActions:
-		return es.rolesEventHandler.AddEntityRoleActionsHandler(ctx, msg)
-	case removeRoleActions:
-		return es.rolesEventHandler.RemoveEntityRoleActionsHandler(ctx, msg)
-	case removeAllRoleActions:
-		return es.rolesEventHandler.RemoveAllEntityRoleActionsHandler(ctx, msg)
-	case addRoleMembers:
-		return es.rolesEventHandler.AddEntityRoleMembersHandler(ctx, msg)
-	case removeRoleMembers:
-		return es.rolesEventHandler.RemoveEntityRoleMembersHandler(ctx, msg)
-	case removeRoleAllMembers:
-		return es.rolesEventHandler.RemoveAllEntityRoleMembersHandler(ctx, msg)
-	case removeMemberFromAllRoles:
-		return es.rolesEventHandler.RemoveMemberFromAllEntityHandler(ctx, msg)
 	}
-	return nil
+
+	return es.rolesEventHandler.Handle(ctx, op, msg)
 }
 
 func (es *eventHandler) createGroupHandler(ctx context.Context, data map[string]interface{}) error {

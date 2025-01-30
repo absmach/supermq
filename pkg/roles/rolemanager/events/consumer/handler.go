@@ -10,6 +10,7 @@ import (
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	"github.com/absmach/supermq/pkg/roles"
+	"github.com/absmach/supermq/pkg/roles/rolemanager/events"
 )
 
 const (
@@ -25,15 +26,65 @@ const (
 )
 
 type EventHandler struct {
-	entityType string
-	repo       roles.Repository
+	entityType               string
+	repo                     roles.Repository
+	addRole                  string
+	removeRole               string
+	updateRole               string
+	addRoleActions           string
+	removeRoleActions        string
+	removeAllRoleActions     string
+	addRoleMembers           string
+	removeRoleMembers        string
+	removeRoleAllMembers     string
+	removeMemberFromAllRoles string
+	removeEntityMembers      string
 }
 
 func NewEventHandler(entityType string, repo roles.Repository) EventHandler {
 	return EventHandler{
-		entityType: entityType,
-		repo:       repo,
+		entityType:               entityType,
+		repo:                     repo,
+		addRole:                  entityType + "." + events.AddRole,
+		removeRole:               entityType + "." + events.RemoveRole,
+		updateRole:               entityType + "." + events.UpdateRole,
+		addRoleActions:           entityType + "." + events.AddRoleActions,
+		removeRoleActions:        entityType + "." + events.RemoveRoleActions,
+		removeAllRoleActions:     entityType + "." + events.RemoveAllRoleActions,
+		addRoleMembers:           entityType + "." + events.AddRoleMembers,
+		removeRoleMembers:        entityType + "." + events.RemoveRoleMembers,
+		removeRoleAllMembers:     entityType + "." + events.RemoveRoleAllMembers,
+		removeMemberFromAllRoles: entityType + "." + events.RemoveMemberFromAllRoles,
+		removeEntityMembers:      entityType + "." + events.RemoveEntityMembers,
 	}
+}
+
+func (es *EventHandler) Handle(ctx context.Context, op interface{}, msg map[string]interface{}) error {
+	switch op {
+	case es.addRole:
+		return es.AddEntityRoleHandler(ctx, msg)
+	case es.removeRole:
+		return es.RemoveEntityRoleHandler(ctx, msg)
+	case es.updateRole:
+		return es.UpdateEntityRoleHandler(ctx, msg)
+	case es.addRoleActions:
+		return es.AddEntityRoleActionsHandler(ctx, msg)
+	case es.removeRoleActions:
+		return es.RemoveEntityRoleActionsHandler(ctx, msg)
+	case es.removeAllRoleActions:
+		return es.RemoveAllEntityRoleActionsHandler(ctx, msg)
+	case es.addRoleMembers:
+		return es.AddEntityRoleMembersHandler(ctx, msg)
+	case es.removeRoleMembers:
+		return es.RemoveEntityRoleMembersHandler(ctx, msg)
+	case es.removeRoleAllMembers:
+		return es.RemoveAllMembersFromEntityRoleHandler(ctx, msg)
+	case es.removeEntityMembers:
+		return es.RemoveEntityMembersHandler(ctx, msg)
+	case es.removeMemberFromAllRoles:
+		return es.RemoveMemberFromAllEntityHandler(ctx, msg)
+	}
+	return nil
 }
 
 func (es *EventHandler) AddEntityRoleHandler(ctx context.Context, data map[string]interface{}) error {
@@ -171,7 +222,7 @@ func (es *EventHandler) RemoveEntityRoleMembersHandler(ctx context.Context, data
 	return nil
 }
 
-func (es *EventHandler) RemoveAllEntityRoleMembersHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *EventHandler) RemoveAllMembersFromEntityRoleHandler(ctx context.Context, data map[string]interface{}) error {
 	id, ok := data["role_id"].(string)
 	if !ok {
 		return fmt.Errorf(errRemoveEntityRoleAllMembersEvent, es.entityType, errRoleID)
@@ -180,6 +231,26 @@ func (es *EventHandler) RemoveAllEntityRoleMembersHandler(ctx context.Context, d
 	if err := es.repo.RoleRemoveAllMembers(ctx, roles.Role{ID: id}); err != nil {
 		return fmt.Errorf(errRemoveEntityRoleAllMembersEvent, es.entityType, err)
 	}
+	return nil
+}
+
+func (es *EventHandler) RemoveEntityMembersHandler(ctx context.Context, data map[string]interface{}) error {
+	entityID, ok := data["entity_id"].(string)
+	if !ok {
+		return fmt.Errorf(errRemoveEntityRoleAllMembersEvent, es.entityType, errEntityID)
+	}
+	imems, ok := data["members"].([]interface{})
+	if !ok {
+		return fmt.Errorf(errRemoveEntityRoleMembersEvent, es.entityType, errMembers)
+	}
+	mems, err := ToStrings(imems)
+	if err != nil {
+		return fmt.Errorf(errRemoveEntityRoleMembersEvent, es.entityType, err)
+	}
+
+	// ToDo: added when repo is implemented.
+	_ = entityID
+	_ = mems
 	return nil
 }
 

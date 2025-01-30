@@ -63,6 +63,39 @@ type RolePage struct {
 	Roles  []Role `json:"roles"`
 }
 
+type MemberRoleActions struct {
+	RoleID             string   `json:"role_id"`
+	RoleName           string   `json:"role_name"`
+	Actions            []string `json:"actions,omitempty"`
+	AccessProviderID   string   `json:"access_provider_id,omitempty"`
+	AccessProviderPath string   `json:"access_provider_path,omitempty"`
+	AccessType         string   `json:"access_type,omitempty"`
+}
+type MemberRoles struct {
+	MemberID string              `json:"member_id,omitempty"`
+	Roles    []MemberRoleActions `json:"roles,omitempty"`
+}
+
+type MembersRolePage struct {
+	Total   uint64        `json:"total"`
+	Offset  uint64        `json:"offset"`
+	Limit   uint64        `json:"limit"`
+	Members []MemberRoles `json:"members"`
+}
+
+type MembersRolePageQuery struct {
+	Total            uint64   `json:"total"`
+	Offset           uint64   `json:"offset"`
+	Limit            uint64   `json:"limit"`
+	Order            string   `json:"order_by"`
+	Dir              string   `json:"dir"`
+	AccessProviderID string   `json:"access_provider_id"`
+	RoleID           string   `json:"role_id"`
+	RoleName         string   `json:"role_name"`
+	Actions          []string `json:"actions"`
+	AccessType       string   `json:"access_type"`
+}
+
 type MembersPage struct {
 	Total   uint64   `json:"total"`
 	Offset  uint64   `json:"offset"`
@@ -124,6 +157,10 @@ type RoleManager interface {
 
 	RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleID string) (err error)
 
+	ListEntityMembers(ctx context.Context, session authn.Session, entityID string, pq MembersRolePageQuery) (MembersRolePage, error)
+
+	RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) (err error)
+
 	RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, memberID string) (err error)
 }
 
@@ -146,6 +183,8 @@ type Repository interface {
 	RoleRemoveMembers(ctx context.Context, role Role, members []string) (err error)
 	RoleRemoveAllMembers(ctx context.Context, role Role) (err error)
 	RetrieveEntitiesRolesActionsMembers(ctx context.Context, entityIDs []string) ([]EntityActionRole, []EntityMemberRole, error)
+	ListEntityMembers(ctx context.Context, entityID string, pageQuery MembersRolePageQuery) (MembersRolePage, error)
+	RemoveEntityMembers(ctx context.Context, entityID string, members []string) error
 	RemoveMemberFromAllRoles(ctx context.Context, memberID string) (err error)
 }
 

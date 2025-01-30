@@ -6,13 +6,16 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
+	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
+	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/postgres"
 	"github.com/absmach/supermq/pkg/roles"
 )
@@ -20,20 +23,35 @@ import (
 var _ roles.Repository = (*Repository)(nil)
 
 type Repository struct {
-	db                 postgres.Database
-	tableNamePrefix    string
-	entityTableName    string
-	entityIDColumnName string
+	db                   postgres.Database
+	tableNamePrefix      string
+	entityTableName      string
+	entityIDColumnName   string
+	membersListBaseQuery string
 }
 
 // NewRepository instantiates a PostgreSQL
 // implementation of Roles repository.
-func NewRepository(db postgres.Database, tableNamePrefix, entityTableName, entityIDColumnName string) Repository {
+func NewRepository(db postgres.Database, entityType, tableNamePrefix, entityTableName, entityIDColumnName string) Repository {
+	var membersListBaseQuery string
+
+	switch entityType {
+	case policies.ChannelType:
+		membersListBaseQuery = channelMembersListBaseQuery()
+	case policies.ClientType:
+		membersListBaseQuery = clientMembersListBaseQuery()
+	case policies.GroupType:
+		membersListBaseQuery = groupMembersListBaseQuery()
+	case policies.DomainType:
+		membersListBaseQuery = domainMembersListBaseQuery()
+	}
+
 	return Repository{
-		db:                 db,
-		tableNamePrefix:    tableNamePrefix,
-		entityTableName:    entityTableName,
-		entityIDColumnName: entityIDColumnName,
+		db:                   db,
+		tableNamePrefix:      tableNamePrefix,
+		entityTableName:      entityTableName,
+		entityIDColumnName:   entityIDColumnName,
+		membersListBaseQuery: membersListBaseQuery,
 	}
 }
 
@@ -53,6 +71,11 @@ type dbRole struct {
 	CreatedAt sql.NullTime `db:"created_at"`
 	UpdatedBy *string      `db:"updated_by"`
 	UpdatedAt sql.NullTime `db:"updated_at"`
+}
+
+type dbMemberRoles struct {
+	MemberID string          `db:"member_id,omitempty"`
+	Roles    json.RawMessage `db:"roles,omitempty"`
 }
 
 type dbEntityActionRole struct {
@@ -97,6 +120,7 @@ type dbRoleAction struct {
 
 type dbRoleMember struct {
 	RoleID   string `db:"role_id"`
+	EntityID string `db:"entity_id"`
 	MemberID string `db:"member_id"`
 }
 
@@ -199,15 +223,16 @@ func (repo *Repository) AddRoles(ctx context.Context, rps []roles.RoleProvision)
 		}
 
 		if len(rp.OptionalMembers) > 0 {
-			mq := fmt.Sprintf(`INSERT INTO %s_role_members (role_id, member_id)
-					VALUES (:role_id, :member_id)
-					RETURNING role_id, member_id`, repo.tableNamePrefix)
+			mq := fmt.Sprintf(`INSERT INTO %s_role_members (role_id, entity_id, member_id)
+					VALUES (:role_id, :entity_id, :member_id)
+					RETURNING role_id, entity_id, member_id`, repo.tableNamePrefix)
 
 			rMems := []dbRoleMember{}
 			for _, m := range rp.OptionalMembers {
 				rMems = append(rMems, dbRoleMember{
 					RoleID:   rp.ID,
 					MemberID: m,
+					EntityID: rp.EntityID,
 				})
 			}
 			if _, err := tx.NamedExec(mq, rMems); err != nil {
@@ -533,9 +558,9 @@ func (repo *Repository) RoleRemoveAllActions(ctx context.Context, role roles.Rol
 }
 
 func (repo *Repository) RoleAddMembers(ctx context.Context, role roles.Role, members []string) ([]string, error) {
-	mq := fmt.Sprintf(`INSERT INTO %s_role_members (role_id, member_id)
-        VALUES (:role_id, :member_id)
-        RETURNING role_id, member_id`, repo.tableNamePrefix)
+	mq := fmt.Sprintf(`INSERT INTO %s_role_members (role_id, entity_id, member_id)
+        VALUES (:role_id, :entity_id, :member_id)
+        RETURNING role_id, :entity_id, member_id`, repo.tableNamePrefix)
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -553,6 +578,7 @@ func (repo *Repository) RoleAddMembers(ctx context.Context, role roles.Role, mem
 	for _, m := range members {
 		rMems = append(rMems, dbRoleMember{
 			RoleID:   role.ID,
+			EntityID: role.EntityID,
 			MemberID: m,
 		})
 	}
@@ -757,6 +783,604 @@ func (repo *Repository) RetrieveEntitiesRolesActionsMembers(ctx context.Context,
 	return dbToEntityActionRole(dbears), dbToEntityMemberRole(dbemrs), nil
 }
 
+func (repo *Repository) ListEntityMembers(ctx context.Context, entityID string, pageQuery roles.MembersRolePageQuery) (roles.MembersRolePage, error) {
+	dbPageQuery, err := toDBMembersRolePageQuery(pageQuery)
+	if err != nil {
+		return roles.MembersRolePage{}, err
+	}
+	dbPageQuery.EntityID = entityID
+
+	entityMembersQuery := fmt.Sprintf(`
+		%s
+		SELECT
+			member_id,
+			roles
+		FROM
+			members
+	`, repo.membersListBaseQuery)
+
+	entityMembersQuery = applyConditions(entityMembersQuery, pageQuery)
+	entityMembersQuery = applyOrdering(entityMembersQuery, pageQuery)
+	entityMembersQuery = applyLimitOffset(entityMembersQuery)
+
+	rows, err := repo.db.NamedQueryContext(ctx, entityMembersQuery, dbPageQuery)
+	if err != nil {
+		return roles.MembersRolePage{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+	}
+
+	defer rows.Close()
+	mems := []roles.MemberRoles{}
+	for rows.Next() {
+		var dbmr dbMemberRoles
+		if err = rows.StructScan(&dbmr); err != nil {
+			return roles.MembersRolePage{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+		}
+
+		var roleActions []roles.MemberRoleActions
+		if err := json.Unmarshal(dbmr.Roles, &roleActions); err != nil {
+			return roles.MembersRolePage{}, fmt.Errorf("failed to unmarshal roles JSON: %w", err)
+		}
+		mems = append(mems, roles.MemberRoles{MemberID: dbmr.MemberID, Roles: roleActions})
+	}
+
+	entityMembersCountQuery := fmt.Sprintf(`
+		%s
+		SELECT
+			COUNT(*)
+		FROM
+			members
+	`, repo.membersListBaseQuery)
+
+	entityMembersCountQuery = applyConditions(entityMembersCountQuery, pageQuery)
+
+	total, err := postgres.Total(ctx, repo.db, entityMembersCountQuery, dbPageQuery)
+	if err != nil {
+		return roles.MembersRolePage{}, err
+	}
+
+	return roles.MembersRolePage{
+		Total:   total,
+		Limit:   pageQuery.Limit,
+		Offset:  pageQuery.Offset,
+		Members: mems,
+	}, nil
+}
+
+func (repo *Repository) RemoveEntityMembers(ctx context.Context, entityID string, memberIDs []string) error {
+	return nil
+}
+
 func (repo *Repository) RemoveMemberFromAllRoles(ctx context.Context, memberID string) (err error) {
 	return nil
+}
+
+func applyConditions(query string, pageQuery roles.MembersRolePageQuery) string {
+	var whereClause []string
+
+	if pageQuery.RoleID != "" {
+		whereClause = append(whereClause, " roles @>  :role_id ")
+
+	}
+	if pageQuery.RoleName != "" {
+		whereClause = append(whereClause, " roles @> :role_name ")
+
+	}
+	if len(pageQuery.Actions) != 0 {
+		whereClause = append(whereClause, " roles @> :actions ")
+	}
+	if pageQuery.AccessType != "" {
+		whereClause = append(whereClause, " roles @> :access_type ")
+
+	}
+	if pageQuery.AccessProviderID != "" {
+		whereClause = append(whereClause, " roles @> :access_provider_id ")
+	}
+
+	var whereCondition string
+	if len(whereClause) != 0 {
+		whereCondition = "WHERE " + strings.Join(whereClause, " AND ")
+	}
+
+	return fmt.Sprintf(`%s
+			%s`, query, whereCondition)
+}
+func applyOrdering(query string, pageQuery roles.MembersRolePageQuery) string {
+	switch pageQuery.Order {
+	case "access_provider_id", "role_name", "role_id", "access_type":
+		query = fmt.Sprintf("%s ORDER BY %s", query, pageQuery.Order)
+		if pageQuery.Dir == api.AscDir || pageQuery.Dir == api.DescDir {
+			query = fmt.Sprintf("%s %s", query, pageQuery.Dir)
+		}
+	}
+	return query
+}
+
+func applyLimitOffset(query string) string {
+	return fmt.Sprintf(`%s
+			LIMIT :limit OFFSET :offset`, query)
+}
+
+type dbMembersRolePageQuery struct {
+	Offset           uint64          `db:"offset"`
+	Limit            uint64          `db:"limit"`
+	OrderBy          string          `db:"order_by"`
+	Direction        string          `db:"dir"`
+	AccessProviderID json.RawMessage `db:"access_provider_id"`
+	RoleId           json.RawMessage `db:"role_id"`
+	RoleName         json.RawMessage `db:"role_name"`
+	Actions          json.RawMessage `db:"actions"`
+	AccessType       json.RawMessage `db:"access_type"`
+	EntityID         string          `db:"entity_id"`
+}
+
+func toDBMembersRolePageQuery(pageQuery roles.MembersRolePageQuery) (dbMembersRolePageQuery, error) {
+	actions := []byte("{}")
+	if len(pageQuery.Actions) != 0 {
+		var err error
+		jactions := []struct {
+			Actions []string `json:"actions"`
+		}{
+			{
+				Actions: pageQuery.Actions,
+			},
+		}
+		actions, err = json.Marshal(jactions)
+		if err != nil {
+			return dbMembersRolePageQuery{}, err
+		}
+	}
+
+	accessProviderID := []byte("{}")
+	if pageQuery.AccessProviderID != "" {
+		accessProviderID = []byte(fmt.Sprintf("[{\"access_provider_id\" : \"%s\"}]", pageQuery.AccessProviderID))
+	}
+
+	roleID := []byte("{}")
+	if pageQuery.RoleID != "" {
+		roleID = []byte(fmt.Sprintf("[{\"role_id\" : \"%s\"}]", pageQuery.RoleID))
+	}
+
+	roleName := []byte("{}")
+	if pageQuery.RoleName != "" {
+		roleName = []byte(fmt.Sprintf("[{\"role_name\" : \"%s\"}]", pageQuery.RoleName))
+	}
+
+	accessType := []byte("{}")
+	if pageQuery.AccessType != "" {
+		accessType = []byte(fmt.Sprintf("[{\"access_type\" : \"%s\"}]", pageQuery.AccessType))
+	}
+
+	return dbMembersRolePageQuery{
+		Offset:           pageQuery.Offset,
+		Limit:            pageQuery.Limit,
+		OrderBy:          pageQuery.Order,
+		Direction:        pageQuery.Dir,
+		AccessProviderID: accessProviderID,
+		RoleId:           roleID,
+		RoleName:         roleName,
+		Actions:          actions,
+		AccessType:       accessType,
+	}, nil
+}
+
+func domainMembersListBaseQuery() string {
+	return `
+WITH ungrouped_members AS (
+    SELECT
+        dr.id,
+        dr.name,
+        drm.member_id,
+        ARRAY_AGG(DISTINCT all_actions.action) AS actions,
+        'direct' AS access_type,
+        '' AS access_provider_id
+    FROM
+        domains_role_members drm
+    JOIN domains_roles dr ON
+        dr.id = drm.role_id
+    JOIN domains_role_actions dra ON
+        dra.role_id = dr.id
+    JOIN domains_role_actions all_actions ON
+        all_actions.role_id = drm.role_id
+    WHERE
+        dr.entity_id = :entity_id
+    GROUP BY
+        dr.id,
+        drm.member_id
+),
+members AS (
+    SELECT
+        um.member_id,
+        JSONB_AGG(
+            JSON_BUILD_OBJECT(
+                'role_id', um.id,
+                'role_name', um.name,
+                'actions', um.actions,
+                'access_type', um.access_type,
+                'access_provider_id', um.access_provider_id
+            )
+        ) AS roles
+    FROM
+        ungrouped_members um
+    GROUP BY
+        um.member_id
+)
+	`
+}
+
+func groupMembersListBaseQuery() string {
+	return `
+WITH ungrouped_members AS (
+    SELECT
+        gr."name",
+        gr.id,
+        grm.member_id,
+        ARRAY_AGG(DISTINCT agg_gra."action") AS actions,
+        CASE
+            WHEN g.id = :entity_id THEN 'direct'
+            ELSE 'indirect_group'
+        END AS access_type,
+        CASE
+            WHEN g.id = :entity_id THEN ''
+            ELSE g.id
+        END AS access_provider_id
+    FROM
+        "groups" g
+    JOIN
+        groups_roles gr ON
+        gr.entity_id = g.id
+    JOIN
+        groups_role_members grm ON
+        grm.role_id = gr.id
+    JOIN
+        groups_role_actions gra ON
+        gra.role_id = gr.id
+    JOIN
+        groups_role_actions agg_gra ON
+        agg_gra.role_id = gr.id
+    WHERE
+        g.path @> (
+            SELECT
+                "path"
+            FROM
+                "groups"
+            WHERE
+                id = :entity_id
+            LIMIT 1
+        )
+		AND (
+        	g.id = :entity_id
+        	OR gra."action" LIKE 'subgroup%'
+    	) -- --  If g.id = <entity_id>, it allows all actions. If g.id <> <entity_id>, it only allows actions matching 'subgroup%'.
+    GROUP BY
+        gr.id,
+        grm.member_id,
+        g.id
+UNION
+    SELECT
+        dr."name",
+        dr.id,
+        drm.member_id,
+        ARRAY_AGG(DISTINCT agg_dra."action") AS actions,
+        'domain' AS access_type,
+        d.id AS access_provider_id
+    FROM
+        "groups" g
+    JOIN
+        domains d ON
+        d.id = g.domain_id
+    JOIN
+        domains_roles dr ON
+        dr.entity_id = d.id
+    JOIN
+        domains_role_members drm ON
+        dr.id = drm.role_id
+    JOIN
+        domains_role_actions dra ON
+        dr.id = dra.role_id
+    JOIN
+        domains_role_actions agg_dra ON
+        agg_dra.role_id = dr.id
+    WHERE
+        g.id = :entity_id
+        AND
+        dra."action" LIKE 'group%'
+    GROUP BY
+        dr.id,
+        drm.member_id,
+        d.id
+),
+members AS (
+    SELECT
+        um.member_id,
+        JSONB_AGG(
+            JSON_BUILD_OBJECT(
+                'role_id', um.id,
+                'role_name', um.name,
+                'actions', um.actions,
+                'access_type', um.access_type,
+                'access_provider_id', um.access_provider_id
+            )
+        ) AS roles
+    FROM
+        ungrouped_members um
+    GROUP BY
+        um.member_id
+)
+	`
+}
+
+func clientMembersListBaseQuery() string {
+	return `
+WITH client_group AS (
+    SELECT
+        c.id,
+        c.parent_group_id,
+        c.domain_id,
+        g."path" AS parent_group_path
+    FROM
+        clients c
+    LEFT JOIN
+		"groups" g ON
+        g.id = c.parent_group_id
+    WHERE
+        c.id = :entity_id
+    LIMIT 1
+),
+ungrouped_members AS (
+    SELECT
+        cr."name",
+        cr.id,
+        crm.member_id,
+        ARRAY_AGG(DISTINCT cra."action") AS actions,
+        'direct' AS access_type,
+        '' AS access_provider_id,
+		''::::LTREE AS access_provider_path
+    FROM
+        client_group cg
+    JOIN
+        clients_roles cr ON
+        cr.entity_id = cg.id
+    JOIN
+		clients_role_members crm ON
+        crm.role_id = cr.id
+    JOIN
+		clients_role_actions cra ON
+        cra.role_id = cr.id
+    GROUP BY
+        cr.id,
+        crm.member_id
+	UNION
+    SELECT
+        gr."name",
+        gr.id,
+        grm.member_id,
+        ARRAY_AGG(DISTINCT agg_gra."action") AS actions,
+        CASE
+            WHEN g.id = cg.parent_group_id THEN 'direct_group'
+            ELSE 'indirect_group'
+        END AS access_type,
+        g.id AS access_provider_id,
+		g.path AS access_provider_path
+    FROM
+        client_group cg
+    JOIN
+        "groups" g ON
+        g.PATH @> cg.parent_group_path
+    JOIN
+        groups_roles gr ON
+        g.id = gr.entity_id
+    JOIN
+		groups_role_members grm ON
+        grm.role_id = gr.id
+    JOIN
+		groups_role_actions gra ON
+        gra.role_id = gr.id
+    JOIN
+        groups_role_actions agg_gra ON
+        agg_gra.role_id = gr.id
+    WHERE
+        (
+            gra."action" LIKE 'client%%'
+                AND g.id = cg.parent_group_id
+        )
+        OR
+	 	(
+            gra."action" LIKE 'subgroup_client%%'
+                AND g.id <> cg.parent_group_id
+        )
+    GROUP BY
+        gr.id,
+        grm.member_id,
+        g.id,
+        cg.parent_group_id
+	UNION
+    SELECT
+        dr."name",
+        dr.id,
+        drm.member_id,
+        ARRAY_AGG(DISTINCT agg_dra."action") AS actions,
+        'domain' AS access_type,
+        d.id AS access_provider_id,
+		''::::LTREE AS access_provider_path
+    FROM
+        client_group cg
+    JOIN
+        domains d ON
+        d.id = cg.domain_id
+    JOIN
+        domains_roles dr ON
+        dr.entity_id = d.id
+    JOIN
+        domains_role_members drm ON
+        dr.id = drm.role_id
+    JOIN
+        domains_role_actions dra ON
+        dr.id = dra.role_id
+    JOIN
+        domains_role_actions agg_dra ON
+        agg_dra.role_id = dr.id
+    WHERE
+        dra."action" LIKE 'client%'
+    GROUP BY
+        dr.id,
+        drm.member_id,
+        d.id
+),
+members AS (
+    SELECT
+        um.member_id,
+        JSONB_AGG(
+            JSON_BUILD_OBJECT(
+                'role_id', um.id,
+                'role_name', um.name,
+                'actions', um.actions,
+                'access_type', um.access_type,
+                'access_provider_id', um.access_provider_id,
+                'access_provider_path', um.access_provider_path
+            )
+        ) AS roles
+    FROM
+        ungrouped_members um
+    GROUP BY
+        um.member_id
+)
+	`
+}
+
+func channelMembersListBaseQuery() string {
+	return `
+WITH channel_group AS (
+    SELECT
+        c.id,
+        c.parent_group_id,
+        c.domain_id,
+        g."path" AS parent_group_path
+    FROM
+        channels c
+    LEFT JOIN
+		"groups" g ON
+        g.id = c.parent_group_id
+    WHERE
+        c.id = :entity_id
+    LIMIT 1
+),
+ungrouped_members AS (
+    SELECT
+        cr."name",
+        cr.id,
+        crm.member_id,
+        ARRAY_AGG(DISTINCT cra."action") AS actions,
+        'direct' AS access_type,
+        '' AS access_provider_id,
+		''::::LTREE AS access_provider_path
+    FROM
+        channel_group cg
+    JOIN
+        channels_roles cr ON
+        cr.entity_id = cg.id
+    JOIN
+		channels_role_members crm ON
+        crm.role_id = cr.id
+    JOIN
+		channels_role_actions cra ON
+        cra.role_id = cr.id
+    GROUP BY
+        cr.id,
+        crm.member_id
+	UNION
+    SELECT
+        gr."name",
+        gr.id,
+        grm.member_id,
+        ARRAY_AGG(DISTINCT agg_gra."action") AS actions,
+        CASE
+            WHEN g.id = cg.parent_group_id THEN 'direct_group'
+            ELSE 'indirect_group'
+        END AS access_type,
+        g.id AS access_provider_id,
+		g.path AS access_provider_path
+    FROM
+        channel_group cg
+    JOIN
+        "groups" g ON
+        g.PATH @> cg.parent_group_path
+    JOIN
+        groups_roles gr ON
+        g.id = gr.entity_id
+    JOIN
+		groups_role_members grm ON
+        grm.role_id = gr.id
+    JOIN
+		groups_role_actions gra ON
+        gra.role_id = gr.id
+    JOIN
+        groups_role_actions agg_gra ON
+        agg_gra.role_id = gr.id
+    WHERE
+        (
+            gra."action" LIKE 'channel%%'
+                AND g.id = cg.parent_group_id
+        )
+        OR
+	 	(
+            gra."action" LIKE 'subgroup_channel%%'
+                AND g.id <> cg.parent_group_id
+        )
+    GROUP BY
+        gr.id,
+        grm.member_id,
+        g.id,
+        cg.parent_group_id
+	UNION
+    SELECT
+        dr."name",
+        dr.id,
+        drm.member_id,
+        ARRAY_AGG(DISTINCT agg_dra."action") AS actions,
+        'domain' AS access_type,
+        d.id AS access_provider_id,
+		''::::LTREE AS access_provider_path
+    FROM
+        channel_group cg
+    JOIN
+        domains d ON
+        d.id = cg.domain_id
+    JOIN
+        domains_roles dr ON
+        dr.entity_id = d.id
+    JOIN
+        domains_role_members drm ON
+        dr.id = drm.role_id
+    JOIN
+        domains_role_actions dra ON
+        dr.id = dra.role_id
+    JOIN
+        domains_role_actions agg_dra ON
+        agg_dra.role_id = dr.id
+    WHERE
+        dra."action" LIKE 'channel%'
+    GROUP BY
+        dr.id,
+        drm.member_id,
+        d.id
+),
+members AS (
+    SELECT
+        um.member_id,
+        JSONB_AGG(
+            JSON_BUILD_OBJECT(
+                'role_id', um.id,
+                'role_name', um.name,
+                'actions', um.actions,
+                'access_type', um.access_type,
+                'access_provider_id', um.access_provider_id,
+                'access_provider_path', um.access_provider_path
+            )
+        ) AS roles
+    FROM
+        ungrouped_members um
+    GROUP BY
+        um.member_id
+)
+	`
 }

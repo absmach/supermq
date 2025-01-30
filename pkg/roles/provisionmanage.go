@@ -579,7 +579,7 @@ func (r ProvisionManageService) RoleRemoveMembers(ctx context.Context, session a
 	}
 
 	ro.UpdatedAt = time.Now()
-	// ro.UpdatedBy = userID
+	ro.UpdatedBy = session.UserID
 	if err := r.repo.RoleRemoveMembers(ctx, ro, members); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
@@ -607,6 +607,21 @@ func (r ProvisionManageService) RoleRemoveAllMembers(ctx context.Context, sessio
 
 	if err := r.repo.RoleRemoveAllMembers(ctx, ro); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+	return nil
+}
+
+func (r ProvisionManageService) ListEntityMembers(ctx context.Context, session authn.Session, entityID string, pageQuery MembersRolePageQuery) (MembersRolePage, error) {
+	mp, err := r.repo.ListEntityMembers(ctx, entityID, pageQuery)
+	if err != nil {
+		return MembersRolePage{}, err
+	}
+	return mp, nil
+}
+
+func (r ProvisionManageService) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) error {
+	if err := r.repo.RemoveEntityMembers(ctx, entityID, members); err != nil {
+		return err
 	}
 	return nil
 }

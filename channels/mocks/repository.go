@@ -187,6 +187,34 @@ func (_m *Repository) DoesChannelHaveConnections(ctx context.Context, id string)
 	return r0, r1
 }
 
+// ListEntityMembers provides a mock function with given fields: ctx, entityID, pageQuery
+func (_m *Repository) ListEntityMembers(ctx context.Context, entityID string, pageQuery roles.MembersRolePageQuery) (roles.MembersRolePage, error) {
+	ret := _m.Called(ctx, entityID, pageQuery)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListEntityMembers")
+	}
+
+	var r0 roles.MembersRolePage
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, roles.MembersRolePageQuery) (roles.MembersRolePage, error)); ok {
+		return rf(ctx, entityID, pageQuery)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, roles.MembersRolePageQuery) roles.MembersRolePage); ok {
+		r0 = rf(ctx, entityID, pageQuery)
+	} else {
+		r0 = ret.Get(0).(roles.MembersRolePage)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, roles.MembersRolePageQuery) error); ok {
+		r1 = rf(ctx, entityID, pageQuery)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Remove provides a mock function with given fields: ctx, ids
 func (_m *Repository) Remove(ctx context.Context, ids ...string) error {
 	_va := make([]interface{}, len(ids))
@@ -259,6 +287,24 @@ func (_m *Repository) RemoveConnections(ctx context.Context, conns []channels.Co
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, []channels.Connection) error); ok {
 		r0 = rf(ctx, conns)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemoveEntityMembers provides a mock function with given fields: ctx, entityID, members
+func (_m *Repository) RemoveEntityMembers(ctx context.Context, entityID string, members []string) error {
+	ret := _m.Called(ctx, entityID, members)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveEntityMembers")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, []string) error); ok {
+		r0 = rf(ctx, entityID, members)
 	} else {
 		r0 = ret.Error(0)
 	}

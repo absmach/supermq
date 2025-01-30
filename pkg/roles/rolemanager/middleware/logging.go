@@ -326,6 +326,47 @@ func (lm *RoleManagerLoggingMiddleware) RoleRemoveAllMembers(ctx context.Context
 	return lm.svc.RoleRemoveAllMembers(ctx, session, entityID, roleID)
 }
 
+func (lm *RoleManagerLoggingMiddleware) ListEntityMembers(ctx context.Context, session authn.Session, entityID string, pageQuery roles.MembersRolePageQuery) (mems roles.MembersRolePage, err error) {
+	prefix := fmt.Sprintf("%s list entity members", lm.svcName)
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.Group(lm.svcName+"_remove_entity_members",
+				slog.String("entity_id", entityID),
+				slog.Uint64("limit", pageQuery.Limit),
+				slog.Uint64("offset", pageQuery.Offset),
+			),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn(prefix+" failed", args...)
+			return
+		}
+		lm.logger.Info(prefix+" completed successfully", args...)
+	}(time.Now())
+	return lm.svc.ListEntityMembers(ctx, session, entityID, pageQuery)
+}
+
+func (lm *RoleManagerLoggingMiddleware) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) (err error) {
+	prefix := fmt.Sprintf("%s remove entity members", lm.svcName)
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.Group(lm.svcName+"_remove_entity_members",
+				slog.String("entity_id", entityID),
+				slog.Any("member_ids", members),
+			),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn(prefix+" failed", args...)
+			return
+		}
+		lm.logger.Info(prefix+" completed successfully", args...)
+	}(time.Now())
+	return lm.svc.RemoveEntityMembers(ctx, session, entityID, members)
+}
+
 func (lm *RoleManagerLoggingMiddleware) RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, memberID string) (err error) {
 	prefix := fmt.Sprintf("%s remove members from all roles", lm.svcName)
 	defer func(begin time.Time) {

@@ -27,6 +27,20 @@ func EntityRoleMangerRouter(svc roles.RoleManager, d Decoder, r chi.Router, opts
 			opts...,
 		), "list_roles").ServeHTTP)
 
+		r.Get("/members", otelhttp.NewHandler(kithttp.NewServer(
+			ListEntityMembersEndpoint(svc),
+			d.DecodeListEntityMembers,
+			api.EncodeResponse,
+			opts...,
+		), "list_entity_members").ServeHTTP)
+
+		r.Delete("/", otelhttp.NewHandler(kithttp.NewServer(
+			RemoveEntityMembersEndpoint(svc),
+			d.DecodeListEntityMembers,
+			api.EncodeResponse,
+			opts...,
+		), "delete_entity_members").ServeHTTP)
+
 		r.Route("/{roleID}", func(r chi.Router) {
 			r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
 				ViewRoleEndpoint(svc),

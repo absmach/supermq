@@ -53,6 +53,52 @@ func (req listRolesReq) validate() error {
 	return nil
 }
 
+type listEntityMembersReq struct {
+	token            string
+	entityID         string
+	limit            uint64
+	offset           uint64
+	dir              string
+	order            string
+	accessProviderID string
+	roleId           string
+	roleName         string
+	actions          []string
+	accessType       string
+}
+
+func (req listEntityMembersReq) validate() error {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
+	if req.entityID == "" {
+		return apiutil.ErrMissingID
+	}
+	if req.limit > api.MaxLimitSize || req.limit < 1 {
+		return apiutil.ErrLimitSize
+	}
+	return nil
+}
+
+type removeEntityMembersReq struct {
+	token     string
+	entityID  string
+	MemberIDs []string `json:"member_ids"`
+}
+
+func (req removeEntityMembersReq) validate() error {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
+	if req.entityID == "" {
+		return apiutil.ErrMissingID
+	}
+	if len(req.MemberIDs) == 0 {
+		return apiutil.ErrMissingMemberIDs
+	}
+	return nil
+}
+
 type viewRoleReq struct {
 	token    string
 	entityID string

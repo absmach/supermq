@@ -55,6 +55,91 @@ func (d Decoder) DecodeListRoles(_ context.Context, r *http.Request) (interface{
 	return req, nil
 }
 
+func (d Decoder) DecodeListEntityMembers(_ context.Context, r *http.Request) (interface{}, error) {
+	o, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	l, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	order, err := apiutil.ReadStringQuery(r, api.OrderKey, "")
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	dir, err := apiutil.ReadStringQuery(r, api.LimitKey, "")
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	accessProviderID, err := apiutil.ReadStringQuery(r, api.AccessProviderIDKey, "")
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	accessType, err := apiutil.ReadStringQuery(r, api.AccessTypeKey, "")
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	roleId, err := apiutil.ReadStringQuery(r, api.RoleIDKey, "")
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	roleName, err := apiutil.ReadStringQuery(r, api.RoleNameKey, "")
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	allActions, err := apiutil.ReadStringQuery(r, api.ActionsKey, "")
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
+	actions := []string{}
+
+	allActions = strings.TrimSpace(allActions)
+	if allActions != "" {
+		actions = strings.Split(allActions, ",")
+	}
+
+	req := listEntityMembersReq{
+		token:            apiutil.ExtractBearerToken(r),
+		entityID:         chi.URLParam(r, d.entityIDTemplate),
+		limit:            l,
+		offset:           o,
+		order:            order,
+		dir:              dir,
+		accessProviderID: accessProviderID,
+		roleId:           roleId,
+		roleName:         roleName,
+		actions:          actions,
+		accessType:       accessType,
+	}
+	return req, nil
+}
+
+func (d Decoder) DecodeRemoveEntityMembers(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
+	}
+
+	req := removeEntityMembersReq{
+		token:    apiutil.ExtractBearerToken(r),
+		entityID: chi.URLParam(r, d.entityIDTemplate),
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+	}
+	return req, nil
+}
+
 func (d Decoder) DecodeViewRole(_ context.Context, r *http.Request) (interface{}, error) {
 	req := viewRoleReq{
 		token:    apiutil.ExtractBearerToken(r),

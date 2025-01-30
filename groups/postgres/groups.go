@@ -14,6 +14,7 @@ import (
 	groups "github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
+	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/postgres"
 	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
 	"github.com/jmoiron/sqlx"
@@ -42,7 +43,7 @@ type groupRepository struct {
 // New instantiates a PostgreSQL implementation of group
 // repository.
 func New(db postgres.Database) groups.Repository {
-	roleRepo := rolesPostgres.NewRepository(db, rolesTableNamePrefix, entityTableName, entityIDColumnName)
+	roleRepo := rolesPostgres.NewRepository(db, policies.GroupType, rolesTableNamePrefix, entityTableName, entityIDColumnName)
 
 	return &groupRepository{
 		db:         db,

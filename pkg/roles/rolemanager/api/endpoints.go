@@ -55,6 +55,57 @@ func ListRolesEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 	}
 }
 
+func ListEntityMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(listEntityMembersReq)
+		if err := req.validate(); err != nil {
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
+		}
+
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+
+		pageQuery := roles.MembersRolePageQuery{
+			Offset:           req.offset,
+			Limit:            req.limit,
+			AccessProviderID: req.accessProviderID,
+			Order:            req.order,
+			Dir:              req.dir,
+			RoleID:           req.roleId,
+			RoleName:         req.roleName,
+			Actions:          req.actions,
+			AccessType:       req.accessType,
+		}
+
+		mems, err := svc.ListEntityMembers(ctx, session, req.entityID, pageQuery)
+		if err != nil {
+			return nil, err
+		}
+		return listEntityMembersRes{mems}, nil
+	}
+}
+
+func RemoveEntityMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(removeEntityMembersReq)
+		if err := req.validate(); err != nil {
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
+		}
+
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+
+		if err := svc.RemoveEntityMembers(ctx, session, req.entityID, req.MemberIDs); err != nil {
+			return nil, err
+		}
+		return deleteEntityMembersRes{}, nil
+	}
+}
+
 func ViewRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewRoleReq)
