@@ -101,3 +101,22 @@ type RoleMembersPage struct {
 	Limit   uint64   `json:"limit"`
 	Members []string `json:"members"`
 }
+
+type MemberRole struct {
+	Actions            []string `json:"actions,omitempty"`
+	RoleName           string   `json:"role_name,omitempty"`
+	RoleID             string   `json:"role_id,omitempty"`
+	AccessType         string   `json:"access_type,omitempty"`
+	AccessProviderID   string   `json:"access_provider_id,omitempty"`
+	AccessProviderPath string   `json:"access_provider_path,omitempty"`
+}
+type MemberRoles struct {
+	MemberID string       `json:"member_id"`
+	Roles    []MemberRole `json:"roles"`
+}
+type EntityMembersPage struct {
+	Total   uint64        `json:"total"`
+	Offset  uint64        `json:"offset"`
+	Limit   uint64        `json:"limit"`
+	Members []MemberRoles `json:"members"`
+}

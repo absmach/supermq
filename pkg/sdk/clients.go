@@ -307,3 +307,7 @@ func (sdk mgSDK) RemoveAllClientRoleMembers(id, roleID, domainID, token string) 
 func (sdk mgSDK) AvailableClientRoleActions(domainID, token string) ([]string, errors.SDKError) {
 	return sdk.listAvailableRoleActions(sdk.clientsURL, clientsEndpoint, domainID, token)
 }
+
+func (sdk mgSDK) ListClientMembers(clientID, domainID string, pm PageMetadata, token string) (EntityMembersPage, errors.SDKError) {
+	return sdk.listEntityMembers(sdk.clientsURL, domainID, clientsEndpoint, clientID, token, pm)
+}

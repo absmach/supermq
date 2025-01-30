@@ -33,7 +33,6 @@ const (
 	contentType     = "application/senml+json"
 	invalid         = "invalid"
 	wrongID         = "wrongID"
-	defPermission   = "read_permission"
 	roleName        = "roleName"
 )
 

@@ -4211,23 +4211,23 @@ func (_c *SDK_Journal_Call) RunAndReturn(run func(string, string, string, sdk.Pa
 	return _c
 }
 
-// ListChannelUsers provides a mock function with given fields: channelID, domainID, pm, token
-func (_m *SDK) ListChannelUsers(channelID string, domainID string, pm sdk.PageMetadata, token string) (sdk.UsersPage, errors.SDKError) {
+// ListChannelMembers provides a mock function with given fields: channelID, domainID, pm, token
+func (_m *SDK) ListChannelMembers(channelID string, domainID string, pm sdk.PageMetadata, token string) (sdk.EntityMembersPage, errors.SDKError) {
 	ret := _m.Called(channelID, domainID, pm, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ListChannelUsers")
+		panic("no return value specified for ListChannelMembers")
 	}
 
-	var r0 sdk.UsersPage
+	var r0 sdk.EntityMembersPage
 	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.UsersPage, errors.SDKError)); ok {
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.EntityMembersPage, errors.SDKError)); ok {
 		return rf(channelID, domainID, pm, token)
 	}
-	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.UsersPage); ok {
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.EntityMembersPage); ok {
 		r0 = rf(channelID, domainID, pm, token)
 	} else {
-		r0 = ret.Get(0).(sdk.UsersPage)
+		r0 = ret.Get(0).(sdk.EntityMembersPage)
 	}
 
 	if rf, ok := ret.Get(1).(func(string, string, sdk.PageMetadata, string) errors.SDKError); ok {
@@ -4241,54 +4241,54 @@ func (_m *SDK) ListChannelUsers(channelID string, domainID string, pm sdk.PageMe
 	return r0, r1
 }
 
-// SDK_ListChannelUsers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListChannelUsers'
-type SDK_ListChannelUsers_Call struct {
+// SDK_ListChannelMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListChannelMembers'
+type SDK_ListChannelMembers_Call struct {
 	*mock.Call
 }
 
-// ListChannelUsers is a helper method to define mock.On call
+// ListChannelMembers is a helper method to define mock.On call
 //   - channelID string
 //   - domainID string
 //   - pm sdk.PageMetadata
 //   - token string
-func (_e *SDK_Expecter) ListChannelUsers(channelID interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_ListChannelUsers_Call {
-	return &SDK_ListChannelUsers_Call{Call: _e.mock.On("ListChannelUsers", channelID, domainID, pm, token)}
+func (_e *SDK_Expecter) ListChannelMembers(channelID interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_ListChannelMembers_Call {
+	return &SDK_ListChannelMembers_Call{Call: _e.mock.On("ListChannelMembers", channelID, domainID, pm, token)}
 }
 
-func (_c *SDK_ListChannelUsers_Call) Run(run func(channelID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ListChannelUsers_Call {
+func (_c *SDK_ListChannelMembers_Call) Run(run func(channelID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ListChannelMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
 	})
 	return _c
 }
 
-func (_c *SDK_ListChannelUsers_Call) Return(_a0 sdk.UsersPage, _a1 errors.SDKError) *SDK_ListChannelUsers_Call {
+func (_c *SDK_ListChannelMembers_Call) Return(_a0 sdk.EntityMembersPage, _a1 errors.SDKError) *SDK_ListChannelMembers_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *SDK_ListChannelUsers_Call) RunAndReturn(run func(string, string, sdk.PageMetadata, string) (sdk.UsersPage, errors.SDKError)) *SDK_ListChannelUsers_Call {
+func (_c *SDK_ListChannelMembers_Call) RunAndReturn(run func(string, string, sdk.PageMetadata, string) (sdk.EntityMembersPage, errors.SDKError)) *SDK_ListChannelMembers_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// ListClientUsers provides a mock function with given fields: clientID, domainID, pm, token
-func (_m *SDK) ListClientUsers(clientID string, domainID string, pm sdk.PageMetadata, token string) (sdk.UsersPage, errors.SDKError) {
+// ListClientMembers provides a mock function with given fields: clientID, domainID, pm, token
+func (_m *SDK) ListClientMembers(clientID string, domainID string, pm sdk.PageMetadata, token string) (sdk.EntityMembersPage, errors.SDKError) {
 	ret := _m.Called(clientID, domainID, pm, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ListClientUsers")
+		panic("no return value specified for ListClientMembers")
 	}
 
-	var r0 sdk.UsersPage
+	var r0 sdk.EntityMembersPage
 	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.UsersPage, errors.SDKError)); ok {
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.EntityMembersPage, errors.SDKError)); ok {
 		return rf(clientID, domainID, pm, token)
 	}
-	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.UsersPage); ok {
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.EntityMembersPage); ok {
 		r0 = rf(clientID, domainID, pm, token)
 	} else {
-		r0 = ret.Get(0).(sdk.UsersPage)
+		r0 = ret.Get(0).(sdk.EntityMembersPage)
 	}
 
 	if rf, ok := ret.Get(1).(func(string, string, sdk.PageMetadata, string) errors.SDKError); ok {
@@ -4302,54 +4302,54 @@ func (_m *SDK) ListClientUsers(clientID string, domainID string, pm sdk.PageMeta
 	return r0, r1
 }
 
-// SDK_ListClientUsers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListClientUsers'
-type SDK_ListClientUsers_Call struct {
+// SDK_ListClientMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListClientMembers'
+type SDK_ListClientMembers_Call struct {
 	*mock.Call
 }
 
-// ListClientUsers is a helper method to define mock.On call
+// ListClientMembers is a helper method to define mock.On call
 //   - clientID string
 //   - domainID string
 //   - pm sdk.PageMetadata
 //   - token string
-func (_e *SDK_Expecter) ListClientUsers(clientID interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_ListClientUsers_Call {
-	return &SDK_ListClientUsers_Call{Call: _e.mock.On("ListClientUsers", clientID, domainID, pm, token)}
+func (_e *SDK_Expecter) ListClientMembers(clientID interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_ListClientMembers_Call {
+	return &SDK_ListClientMembers_Call{Call: _e.mock.On("ListClientMembers", clientID, domainID, pm, token)}
 }
 
-func (_c *SDK_ListClientUsers_Call) Run(run func(clientID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ListClientUsers_Call {
+func (_c *SDK_ListClientMembers_Call) Run(run func(clientID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ListClientMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
 	})
 	return _c
 }
 
-func (_c *SDK_ListClientUsers_Call) Return(_a0 sdk.UsersPage, _a1 errors.SDKError) *SDK_ListClientUsers_Call {
+func (_c *SDK_ListClientMembers_Call) Return(_a0 sdk.EntityMembersPage, _a1 errors.SDKError) *SDK_ListClientMembers_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *SDK_ListClientUsers_Call) RunAndReturn(run func(string, string, sdk.PageMetadata, string) (sdk.UsersPage, errors.SDKError)) *SDK_ListClientUsers_Call {
+func (_c *SDK_ListClientMembers_Call) RunAndReturn(run func(string, string, sdk.PageMetadata, string) (sdk.EntityMembersPage, errors.SDKError)) *SDK_ListClientMembers_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// ListDomainUsers provides a mock function with given fields: domainID, pm, token
-func (_m *SDK) ListDomainUsers(domainID string, pm sdk.PageMetadata, token string) (sdk.UsersPage, errors.SDKError) {
+// ListDomainMembers provides a mock function with given fields: domainID, pm, token
+func (_m *SDK) ListDomainMembers(domainID string, pm sdk.PageMetadata, token string) (sdk.EntityMembersPage, errors.SDKError) {
 	ret := _m.Called(domainID, pm, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ListDomainUsers")
+		panic("no return value specified for ListDomainMembers")
 	}
 
-	var r0 sdk.UsersPage
+	var r0 sdk.EntityMembersPage
 	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string) (sdk.UsersPage, errors.SDKError)); ok {
+	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string) (sdk.EntityMembersPage, errors.SDKError)); ok {
 		return rf(domainID, pm, token)
 	}
-	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string) sdk.UsersPage); ok {
+	if rf, ok := ret.Get(0).(func(string, sdk.PageMetadata, string) sdk.EntityMembersPage); ok {
 		r0 = rf(domainID, pm, token)
 	} else {
-		r0 = ret.Get(0).(sdk.UsersPage)
+		r0 = ret.Get(0).(sdk.EntityMembersPage)
 	}
 
 	if rf, ok := ret.Get(1).(func(string, sdk.PageMetadata, string) errors.SDKError); ok {
@@ -4363,53 +4363,53 @@ func (_m *SDK) ListDomainUsers(domainID string, pm sdk.PageMetadata, token strin
 	return r0, r1
 }
 
-// SDK_ListDomainUsers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListDomainUsers'
-type SDK_ListDomainUsers_Call struct {
+// SDK_ListDomainMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListDomainMembers'
+type SDK_ListDomainMembers_Call struct {
 	*mock.Call
 }
 
-// ListDomainUsers is a helper method to define mock.On call
+// ListDomainMembers is a helper method to define mock.On call
 //   - domainID string
 //   - pm sdk.PageMetadata
 //   - token string
-func (_e *SDK_Expecter) ListDomainUsers(domainID interface{}, pm interface{}, token interface{}) *SDK_ListDomainUsers_Call {
-	return &SDK_ListDomainUsers_Call{Call: _e.mock.On("ListDomainUsers", domainID, pm, token)}
+func (_e *SDK_Expecter) ListDomainMembers(domainID interface{}, pm interface{}, token interface{}) *SDK_ListDomainMembers_Call {
+	return &SDK_ListDomainMembers_Call{Call: _e.mock.On("ListDomainMembers", domainID, pm, token)}
 }
 
-func (_c *SDK_ListDomainUsers_Call) Run(run func(domainID string, pm sdk.PageMetadata, token string)) *SDK_ListDomainUsers_Call {
+func (_c *SDK_ListDomainMembers_Call) Run(run func(domainID string, pm sdk.PageMetadata, token string)) *SDK_ListDomainMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string))
 	})
 	return _c
 }
 
-func (_c *SDK_ListDomainUsers_Call) Return(_a0 sdk.UsersPage, _a1 errors.SDKError) *SDK_ListDomainUsers_Call {
+func (_c *SDK_ListDomainMembers_Call) Return(_a0 sdk.EntityMembersPage, _a1 errors.SDKError) *SDK_ListDomainMembers_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *SDK_ListDomainUsers_Call) RunAndReturn(run func(string, sdk.PageMetadata, string) (sdk.UsersPage, errors.SDKError)) *SDK_ListDomainUsers_Call {
+func (_c *SDK_ListDomainMembers_Call) RunAndReturn(run func(string, sdk.PageMetadata, string) (sdk.EntityMembersPage, errors.SDKError)) *SDK_ListDomainMembers_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// Members provides a mock function with given fields: groupID, domainID, pm, token
-func (_m *SDK) Members(groupID string, domainID string, pm sdk.PageMetadata, token string) (sdk.UsersPage, errors.SDKError) {
+// ListGroupMembers provides a mock function with given fields: groupID, domainID, pm, token
+func (_m *SDK) ListGroupMembers(groupID string, domainID string, pm sdk.PageMetadata, token string) (sdk.EntityMembersPage, errors.SDKError) {
 	ret := _m.Called(groupID, domainID, pm, token)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Members")
+		panic("no return value specified for ListGroupMembers")
 	}
 
-	var r0 sdk.UsersPage
+	var r0 sdk.EntityMembersPage
 	var r1 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.UsersPage, errors.SDKError)); ok {
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) (sdk.EntityMembersPage, errors.SDKError)); ok {
 		return rf(groupID, domainID, pm, token)
 	}
-	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.UsersPage); ok {
+	if rf, ok := ret.Get(0).(func(string, string, sdk.PageMetadata, string) sdk.EntityMembersPage); ok {
 		r0 = rf(groupID, domainID, pm, token)
 	} else {
-		r0 = ret.Get(0).(sdk.UsersPage)
+		r0 = ret.Get(0).(sdk.EntityMembersPage)
 	}
 
 	if rf, ok := ret.Get(1).(func(string, string, sdk.PageMetadata, string) errors.SDKError); ok {
@@ -4423,33 +4423,33 @@ func (_m *SDK) Members(groupID string, domainID string, pm sdk.PageMetadata, tok
 	return r0, r1
 }
 
-// SDK_Members_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Members'
-type SDK_Members_Call struct {
+// SDK_ListGroupMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListGroupMembers'
+type SDK_ListGroupMembers_Call struct {
 	*mock.Call
 }
 
-// Members is a helper method to define mock.On call
+// ListGroupMembers is a helper method to define mock.On call
 //   - groupID string
 //   - domainID string
 //   - pm sdk.PageMetadata
 //   - token string
-func (_e *SDK_Expecter) Members(groupID interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_Members_Call {
-	return &SDK_Members_Call{Call: _e.mock.On("Members", groupID, domainID, pm, token)}
+func (_e *SDK_Expecter) ListGroupMembers(groupID interface{}, domainID interface{}, pm interface{}, token interface{}) *SDK_ListGroupMembers_Call {
+	return &SDK_ListGroupMembers_Call{Call: _e.mock.On("ListGroupMembers", groupID, domainID, pm, token)}
 }
 
-func (_c *SDK_Members_Call) Run(run func(groupID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_Members_Call {
+func (_c *SDK_ListGroupMembers_Call) Run(run func(groupID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ListGroupMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
 	})
 	return _c
 }
 
-func (_c *SDK_Members_Call) Return(_a0 sdk.UsersPage, _a1 errors.SDKError) *SDK_Members_Call {
+func (_c *SDK_ListGroupMembers_Call) Return(_a0 sdk.EntityMembersPage, _a1 errors.SDKError) *SDK_ListGroupMembers_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *SDK_Members_Call) RunAndReturn(run func(string, string, sdk.PageMetadata, string) (sdk.UsersPage, errors.SDKError)) *SDK_Members_Call {
+func (_c *SDK_ListGroupMembers_Call) RunAndReturn(run func(string, string, sdk.PageMetadata, string) (sdk.EntityMembersPage, errors.SDKError)) *SDK_ListGroupMembers_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -196,17 +196,6 @@ type SDK interface {
 	//	fmt.Println(users)
 	Users(pm PageMetadata, token string) (UsersPage, errors.SDKError)
 
-	// Members returns list of users that are members of a group.
-	//
-	// example:
-	//	pm := sdk.PageMetadata{
-	//		Offset: 0,
-	//		Limit:  10,
-	//	}
-	//	members, _ := sdk.Members("groupID","domainID", pm, "token")
-	//	fmt.Println(members)
-	Members(groupID, domainID string, pm PageMetadata, token string) (UsersPage, errors.SDKError)
-
 	// UserProfile returns user logged in.
 	//
 	// example:
@@ -358,42 +347,6 @@ type SDK interface {
 	//  users, _ := sdk.SearchUsers(pm, "token")
 	//  fmt.Println(users)
 	SearchUsers(pm PageMetadata, token string) (UsersPage, errors.SDKError)
-
-	// ListClientUsers all users in a client.
-	//
-	// example:
-	//	pm := sdk.PageMetadata{
-	//		Offset: 0,
-	//		Limit:  10,
-	//		Permission: "edit", // available Options:  "administrator", "administrator", "delete", edit", "view", "share", "owner", "owner", "admin", "editor", "contributor", "editor", "viewer", "guest", "create"
-	//	}
-	//  users, _ := sdk.ListClientUsers("client_id", pm, "domainID", "token")
-	//  fmt.Println(users)
-	ListClientUsers(clientID, domainID string, pm PageMetadata, token string) (UsersPage, errors.SDKError)
-
-	// ListChannelUsers list all users in a channel .
-	//
-	// example:
-	//	pm := sdk.PageMetadata{
-	//		Offset: 0,
-	//		Limit:  10,
-	//		Permission: "edit",  // available Options:  "administrator", "administrator", "delete", edit", "view", "share", "owner", "owner", "admin", "editor", "contributor", "editor", "viewer", "guest", "create"
-	//	}
-	//  users, _ := sdk.ListChannelUsers("channel_id","domainID", pm, "token")
-	//  fmt.Println(users)
-	ListChannelUsers(channelID, domainID string, pm PageMetadata, token string) (UsersPage, errors.SDKError)
-
-	// ListDomainUsers returns list of users for the given domain ID and filters.
-	//
-	// example:
-	//  pm := sdk.PageMetadata{
-	//    Offset: 0,
-	//    Limit:  10,
-	//    Permission : "view"
-	//  }
-	//  users, _ := sdk.ListDomainUsers("domainID", pm, "token")
-	//  fmt.Println(users)
-	ListDomainUsers(domainID string, pm PageMetadata, token string) (UsersPage, errors.SDKError)
 
 	// CreateClient registers new client and returns its id.
 	//
@@ -629,6 +582,17 @@ type SDK interface {
 	//  actions, _ := sdk.AvailableClientRoleActions("domainID", "token")
 	//  fmt.Println(actions)
 	AvailableClientRoleActions(domainID, token string) ([]string, errors.SDKError)
+
+	// ListClientMembers list all members from all roles in a client .
+	//
+	// example:
+	//	pm := sdk.PageMetadata{
+	//		Offset: 0,
+	//		Limit:  10,
+	//	}
+	//  members, _ := sdk.ListClientMembers("client_id","domainID", pm, "token")
+	//  fmt.Println(members)
+	ListClientMembers(clientID, domainID string, pm PageMetadata, token string) (EntityMembersPage, errors.SDKError)
 
 	// CreateGroup creates new group and returns its id.
 	//
@@ -872,6 +836,17 @@ type SDK interface {
 	//  fmt.Println(actions)
 	AvailableGroupRoleActions(id, token string) ([]string, errors.SDKError)
 
+	// ListGroupMembers list all members from all roles in a group .
+	//
+	// example:
+	//	pm := sdk.PageMetadata{
+	//		Offset: 0,
+	//		Limit:  10,
+	//	}
+	//  members, _ := sdk.ListGroupMembers("group_id","domainID", pm, "token")
+	//  fmt.Println(members)
+	ListGroupMembers(groupID, domainID string, pm PageMetadata, token string) (EntityMembersPage, errors.SDKError)
+
 	// CreateChannel creates new channel and returns its id.
 	//
 	// example:
@@ -1024,6 +999,17 @@ type SDK interface {
 	//  err := sdk.DisconnectClient("channelID", clientIDs, []string{"Publish", "Subscribe"}, "token")
 	//  fmt.Println(err)
 	DisconnectClients(channelID string, clientIDs, connTypes []string, domainID, token string) errors.SDKError
+
+	// ListChannelMembers list all members from all roles in a channel .
+	//
+	// example:
+	//	pm := sdk.PageMetadata{
+	//		Offset: 0,
+	//		Limit:  10,
+	//	}
+	//  members, _ := sdk.ListChannelMembers("channel_id","domainID", pm, "token")
+	//  fmt.Println(members)
+	ListChannelMembers(channelID, domainID string, pm PageMetadata, token string) (EntityMembersPage, errors.SDKError)
 
 	// SendMessage send message to specified channel.
 	//
@@ -1257,6 +1243,17 @@ type SDK interface {
 	//  actions, _ := sdk.AvailableDomainRoleActions("token")
 	//  fmt.Println(actions)
 	AvailableDomainRoleActions(token string) ([]string, errors.SDKError)
+
+	// ListDomainUsers returns list of users for the given domain ID and filters.
+	//
+	// example:
+	//  pm := sdk.PageMetadata{
+	//    Offset: 0,
+	//    Limit:  10,
+	//  }
+	//  members, _ := sdk.ListDomainMembers("domain_id", pm, "token")
+	//  fmt.Println(members)
+	ListDomainMembers(domainID string, pm PageMetadata, token string) (EntityMembersPage, errors.SDKError)
 
 	// SendInvitation sends an invitation to the email address associated with the given user.
 	//

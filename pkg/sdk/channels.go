@@ -276,3 +276,7 @@ func (sdk mgSDK) RemoveChannelParent(id, domainID, groupID, token string) errors
 
 	return sdkerr
 }
+
+func (sdk mgSDK) ListChannelMembers(channelID, domainID string, pm PageMetadata, token string) (EntityMembersPage, errors.SDKError) {
+	return sdk.listEntityMembers(sdk.channelsURL, domainID, channelsEndpoint, channelID, token, pm)
+}

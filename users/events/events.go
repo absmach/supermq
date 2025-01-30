@@ -43,7 +43,6 @@ var (
 	_ events.Event = (*viewUserEvent)(nil)
 	_ events.Event = (*viewProfileEvent)(nil)
 	_ events.Event = (*listUserEvent)(nil)
-	_ events.Event = (*listUserByGroupEvent)(nil)
 	_ events.Event = (*searchUserEvent)(nil)
 	_ events.Event = (*identifyUserEvent)(nil)
 	_ events.Event = (*generateResetTokenEvent)(nil)
@@ -354,63 +353,6 @@ func (lue listUserEvent) Encode() (map[string]interface{}, error) {
 	}
 	if lue.Email != "" {
 		val["email"] = lue.Email
-	}
-
-	return val, nil
-}
-
-type listUserByGroupEvent struct {
-	users.Page
-	objectKind string
-	objectID   string
-	authn.Session
-}
-
-func (lcge listUserByGroupEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
-		"operation":   userListByGroup,
-		"total":       lcge.Total,
-		"offset":      lcge.Offset,
-		"limit":       lcge.Limit,
-		"object_kind": lcge.objectKind,
-		"object_id":   lcge.objectID,
-		"domain":      lcge.DomainID,
-		"token_type":  lcge.Type.String(),
-		"super_admin": lcge.SuperAdmin,
-	}
-
-	if lcge.Username != "" {
-		val["username"] = lcge.Username
-	}
-	if lcge.Order != "" {
-		val["order"] = lcge.Order
-	}
-	if lcge.Dir != "" {
-		val["dir"] = lcge.Dir
-	}
-	if lcge.Metadata != nil {
-		val["metadata"] = lcge.Metadata
-	}
-	if lcge.Domain != "" {
-		val["domain"] = lcge.Domain
-	}
-	if lcge.Tag != "" {
-		val["tag"] = lcge.Tag
-	}
-	if lcge.Permission != "" {
-		val["permission"] = lcge.Permission
-	}
-	if lcge.Status.String() != "" {
-		val["status"] = lcge.Status.String()
-	}
-	if lcge.FirstName != "" {
-		val["first_name"] = lcge.FirstName
-	}
-	if lcge.LastName != "" {
-		val["last_name"] = lcge.LastName
-	}
-	if lcge.Email != "" {
-		val["email"] = lcge.Email
 	}
 
 	return val, nil

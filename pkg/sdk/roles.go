@@ -266,3 +266,26 @@ func (sdk mgSDK) listAvailableRoleActions(entityURL, entityEndpoint, domainID, t
 
 	return res.AvailableActions, nil
 }
+
+func (sdk mgSDK) listEntityMembers(entityURL, domainID, entityEndpoint, id, token string, pm PageMetadata) (EntityMembersPage, errors.SDKError) {
+	ep := fmt.Sprintf("%s/%s/%s/%s/%s", domainID, entityEndpoint, id, rolesEndpoint, membersEndpoint)
+	if entityEndpoint == domainsEndpoint {
+		ep = fmt.Sprintf("%s/%s/%s/%s", entityEndpoint, id, rolesEndpoint, membersEndpoint)
+	}
+	url, err := sdk.withQueryParams(entityURL, ep, pm)
+	if err != nil {
+		return EntityMembersPage{}, errors.NewSDKError(err)
+	}
+
+	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
+	if sdkerr != nil {
+		return EntityMembersPage{}, sdkerr
+	}
+
+	res := EntityMembersPage{}
+	if err := json.Unmarshal(body, &res); err != nil {
+		return EntityMembersPage{}, errors.NewSDKError(err)
+	}
+
+	return res, nil
+}

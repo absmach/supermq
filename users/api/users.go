@@ -18,7 +18,6 @@ import (
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/absmach/supermq/pkg/oauth2"
-	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/users"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -171,48 +170,6 @@ func usersHandler(svc users.Service, authn smqauthn.Authentication, tokenClient 
 			api.EncodeResponse,
 			opts...,
 		), "password_reset").ServeHTTP)
-	})
-
-	r.Group(func(r chi.Router) {
-		r.Use(api.AuthenticateMiddleware(authn, true))
-
-		// Ideal location: users service, groups endpoint.
-		// Reason for placing here :
-		// SpiceDB provides list of user ids in given user_group_id
-		// and users service can access spiceDB and get the user list with user_group_id.
-		// Request to get list of users present in the user_group_id {groupID}
-		r.Get("/{domainID}/groups/{groupID}/users", otelhttp.NewHandler(kithttp.NewServer(
-			listMembersByGroupEndpoint(svc),
-			decodeListMembersByGroup,
-			api.EncodeResponse,
-			opts...,
-		), "list_users_by_user_group_id").ServeHTTP)
-
-		// Ideal location: clients service, channels endpoint.
-		// Reason for placing here :
-		// SpiceDB provides list of user ids in given channel_id
-		// and users service can access spiceDB and get the user list with channel_id.
-		// Request to get list of users present in the user_group_id {channelID}
-		r.Get("/{domainID}/channels/{channelID}/users", otelhttp.NewHandler(kithttp.NewServer(
-			listMembersByChannelEndpoint(svc),
-			decodeListMembersByChannel,
-			api.EncodeResponse,
-			opts...,
-		), "list_users_by_channel_id").ServeHTTP)
-
-		r.Get("/{domainID}/clients/{clientID}/users", otelhttp.NewHandler(kithttp.NewServer(
-			listMembersByClientEndpoint(svc),
-			decodeListMembersByClient,
-			api.EncodeResponse,
-			opts...,
-		), "list_users_by_client_id").ServeHTTP)
-
-		r.Get("/{domainID}/users", otelhttp.NewHandler(kithttp.NewServer(
-			listMembersByDomainEndpoint(svc),
-			decodeListMembersByDomain,
-			api.EncodeResponse,
-			opts...,
-		), "list_users_by_domain_id").ServeHTTP)
 	})
 
 	r.Post("/users/tokens/issue", otelhttp.NewHandler(kithttp.NewServer(
@@ -548,123 +505,6 @@ func decodeChangeUserStatus(_ context.Context, r *http.Request) (interface{}, er
 	}
 
 	return req, nil
-}
-
-func decodeListMembersByGroup(_ context.Context, r *http.Request) (interface{}, error) {
-	page, err := queryPageParams(r, api.DefPermission)
-	if err != nil {
-		return nil, err
-	}
-	req := listMembersByObjectReq{
-		Page:     page,
-		objectID: chi.URLParam(r, "groupID"),
-	}
-
-	return req, nil
-}
-
-func decodeListMembersByChannel(_ context.Context, r *http.Request) (interface{}, error) {
-	page, err := queryPageParams(r, api.DefPermission)
-	if err != nil {
-		return nil, err
-	}
-	req := listMembersByObjectReq{
-		Page:     page,
-		objectID: chi.URLParam(r, "channelID"),
-	}
-
-	return req, nil
-}
-
-func decodeListMembersByClient(_ context.Context, r *http.Request) (interface{}, error) {
-	page, err := queryPageParams(r, api.DefPermission)
-	if err != nil {
-		return nil, err
-	}
-	req := listMembersByObjectReq{
-		Page:     page,
-		objectID: chi.URLParam(r, "clientID"),
-	}
-
-	return req, nil
-}
-
-func decodeListMembersByDomain(_ context.Context, r *http.Request) (interface{}, error) {
-	page, err := queryPageParams(r, policies.MembershipPermission)
-	if err != nil {
-		return nil, err
-	}
-
-	req := listMembersByObjectReq{
-		Page:     page,
-		objectID: chi.URLParam(r, "domainID"),
-	}
-
-	return req, nil
-}
-
-func queryPageParams(r *http.Request, defPermission string) (users.Page, error) {
-	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefClientStatus)
-	if err != nil {
-		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	o, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
-	if err != nil {
-		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	l, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
-	if err != nil {
-		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	m, err := apiutil.ReadMetadataQuery(r, api.MetadataKey, nil)
-	if err != nil {
-		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	n, err := apiutil.ReadStringQuery(r, api.UsernameKey, "")
-	if err != nil {
-		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	f, err := apiutil.ReadStringQuery(r, api.FirstNameKey, "")
-	if err != nil {
-		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	a, err := apiutil.ReadStringQuery(r, api.LastNameKey, "")
-	if err != nil {
-		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	i, err := apiutil.ReadStringQuery(r, api.EmailKey, "")
-	if err != nil {
-		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	t, err := apiutil.ReadStringQuery(r, api.TagKey, "")
-	if err != nil {
-		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	st, err := users.ToStatus(s)
-	if err != nil {
-		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	p, err := apiutil.ReadStringQuery(r, api.PermissionKey, defPermission)
-	if err != nil {
-		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	lp, err := apiutil.ReadBoolQuery(r, api.ListPerms, api.DefListPerms)
-	if err != nil {
-		return users.Page{}, errors.Wrap(apiutil.ErrValidation, err)
-	}
-	return users.Page{
-		Status:     st,
-		Offset:     o,
-		Limit:      l,
-		Metadata:   m,
-		FirstName:  f,
-		Username:   n,
-		LastName:   a,
-		Email:      i,
-		Tag:        t,
-		Permission: p,
-		ListPerms:  lp,
-	}, nil
 }
 
 // oauth2CallbackHandler is a http.HandlerFunc that handles OAuth2 callbacks.

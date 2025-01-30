@@ -171,34 +171,6 @@ func (_m *Service) IssueToken(ctx context.Context, identity string, secret strin
 	return r0, r1
 }
 
-// ListMembers provides a mock function with given fields: ctx, session, objectKind, objectID, pm
-func (_m *Service) ListMembers(ctx context.Context, session authn.Session, objectKind string, objectID string, pm users.Page) (users.MembersPage, error) {
-	ret := _m.Called(ctx, session, objectKind, objectID, pm)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ListMembers")
-	}
-
-	var r0 users.MembersPage
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, string, users.Page) (users.MembersPage, error)); ok {
-		return rf(ctx, session, objectKind, objectID, pm)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, string, users.Page) users.MembersPage); ok {
-		r0 = rf(ctx, session, objectKind, objectID, pm)
-	} else {
-		r0 = ret.Get(0).(users.MembersPage)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string, string, users.Page) error); ok {
-		r1 = rf(ctx, session, objectKind, objectID, pm)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // ListUsers provides a mock function with given fields: ctx, session, pm
 func (_m *Service) ListUsers(ctx context.Context, session authn.Session, pm users.Page) (users.UsersPage, error) {
 	ret := _m.Called(ctx, session, pm)

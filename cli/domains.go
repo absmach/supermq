@@ -96,7 +96,7 @@ var cmdDomains = []cobra.Command{
 				Status:   Status,
 			}
 
-			l, err := sdk.ListDomainUsers(args[0], pageMetadata, args[1])
+			l, err := sdk.ListDomainMembers(args[0], pageMetadata, args[1])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return

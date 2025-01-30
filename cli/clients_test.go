@@ -23,12 +23,11 @@ import (
 )
 
 var (
-	token              = "valid" + "domaintoken"
-	domainID           = "domain-id"
-	tokenWithoutDomain = "valid"
-	relation           = "administrator"
-	all                = "all"
-	conntype           = `["publish","subscribe"]`
+	token    = "valid" + "domaintoken"
+	domainID = "domain-id"
+	relation = "administrator"
+	all      = "all"
+	conntype = `["publish","subscribe"]`
 )
 
 var client = smqsdk.Client{
@@ -706,95 +705,6 @@ func TestDisableclientCmd(t *testing.T) {
 				assert.Equal(t, tc.client, tg, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.client, tg))
 			}
 
-			sdkCall.Unset()
-		})
-	}
-}
-
-func TestUsersClientCmd(t *testing.T) {
-	sdkMock := new(sdkmocks.SDK)
-	cli.SetSDK(sdkMock)
-	clientsCmd := cli.NewClientsCmd()
-	rootCmd := setFlags(clientsCmd)
-
-	page := smqsdk.UsersPage{}
-
-	cases := []struct {
-		desc          string
-		args          []string
-		logType       outputLog
-		errLogMessage string
-		page          smqsdk.UsersPage
-		sdkErr        errors.SDKError
-	}{
-		{
-			desc: "get client's users successfully",
-			args: []string{
-				client.ID,
-				domainID,
-				token,
-			},
-			page: smqsdk.UsersPage{
-				PageRes: smqsdk.PageRes{
-					Total:  1,
-					Offset: 0,
-					Limit:  10,
-				},
-				Users: []smqsdk.User{user},
-			},
-			logType: entityLog,
-		},
-		{
-			desc: "list client users' with invalid args",
-			args: []string{
-				client.ID,
-				domainID,
-				token,
-				extraArg,
-			},
-			logType: usageLog,
-		},
-		{
-			desc: "list client users' with invalid domain",
-			args: []string{
-				client.ID,
-				invalidID,
-				token,
-			},
-			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrDomainAuthorization, http.StatusForbidden),
-			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrDomainAuthorization, http.StatusForbidden)),
-			logType:       errLog,
-		},
-		{
-			desc: "list client users with invalid id",
-			args: []string{
-				invalidID,
-				domainID,
-				token,
-			},
-			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
-			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden)),
-			logType:       errLog,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("ListClientUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.page, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{usrCmd}, tc.args...)...)
-
-			switch tc.logType {
-			case entityLog:
-				err := json.Unmarshal([]byte(out), &page)
-				if err != nil {
-					t.Fatalf("Failed to unmarshal JSON: %v", err)
-				}
-				assert.Equal(t, tc.page, page, fmt.Sprintf("%v unexpected response, expected: %v, got: %v", tc.desc, tc.page, page))
-			case usageLog:
-				assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
-			case errLog:
-				assert.Equal(t, tc.errLogMessage, out, fmt.Sprintf("%s unexpected error response: expected %s got errLogMessage:%s", tc.desc, tc.errLogMessage, out))
-			}
 			sdkCall.Unset()
 		})
 	}

@@ -216,25 +216,6 @@ func (es *eventStore) SearchUsers(ctx context.Context, pm users.Page) (users.Use
 	return cp, nil
 }
 
-func (es *eventStore) ListMembers(ctx context.Context, session authn.Session, objectKind, objectID string, pm users.Page) (users.MembersPage, error) {
-	mp, err := es.svc.ListMembers(ctx, session, objectKind, objectID, pm)
-	if err != nil {
-		return mp, err
-	}
-	event := listUserByGroupEvent{
-		Page:       pm,
-		objectKind: objectKind,
-		objectID:   objectID,
-		Session:    session,
-	}
-
-	if err := es.Publish(ctx, event); err != nil {
-		return mp, err
-	}
-
-	return mp, nil
-}
-
 func (es *eventStore) Enable(ctx context.Context, session authn.Session, id string) (users.User, error) {
 	user, err := es.svc.Enable(ctx, session, id)
 	if err != nil {

@@ -15,8 +15,6 @@ import (
 
 const (
 	usersEndpoint         = "users"
-	assignEndpoint        = "assign"
-	unassignEndpoint      = "unassign"
 	enableEndpoint        = "enable"
 	disableEndpoint       = "disable"
 	issueTokenEndpoint    = "tokens/issue"
@@ -79,25 +77,6 @@ func (sdk mgSDK) Users(pm PageMetadata, token string) (UsersPage, errors.SDKErro
 	}
 
 	return cp, nil
-}
-
-func (sdk mgSDK) Members(groupID, domainID string, pm PageMetadata, token string) (UsersPage, errors.SDKError) {
-	url, err := sdk.withQueryParams(sdk.usersURL, fmt.Sprintf("%s/%s/%s/%s", domainID, groupsEndpoint, groupID, usersEndpoint), pm)
-	if err != nil {
-		return UsersPage{}, errors.NewSDKError(err)
-	}
-
-	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return UsersPage{}, sdkerr
-	}
-
-	var up UsersPage
-	if err := json.Unmarshal(body, &up); err != nil {
-		return UsersPage{}, errors.NewSDKError(err)
-	}
-
-	return up, nil
 }
 
 func (sdk mgSDK) User(id, token string) (User, errors.SDKError) {
@@ -371,56 +350,4 @@ func (sdk mgSDK) DeleteUser(id, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, id)
 	_, _, sdkerr := sdk.processRequest(http.MethodDelete, url, token, nil, nil, http.StatusNoContent)
 	return sdkerr
-}
-
-func (sdk mgSDK) ListClientUsers(clientID, domainID string, pm PageMetadata, token string) (UsersPage, errors.SDKError) {
-	url, err := sdk.withQueryParams(sdk.usersURL, fmt.Sprintf("%s/%s/%s/%s", domainID, clientsEndpoint, clientID, usersEndpoint), pm)
-	if err != nil {
-		return UsersPage{}, errors.NewSDKError(err)
-	}
-
-	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return UsersPage{}, sdkerr
-	}
-	up := UsersPage{}
-	if err := json.Unmarshal(body, &up); err != nil {
-		return UsersPage{}, errors.NewSDKError(err)
-	}
-
-	return up, nil
-}
-
-func (sdk mgSDK) ListDomainUsers(domainID string, pm PageMetadata, token string) (UsersPage, errors.SDKError) {
-	url, err := sdk.withQueryParams(sdk.usersURL, fmt.Sprintf("%s/%s", domainID, usersEndpoint), pm)
-	if err != nil {
-		return UsersPage{}, errors.NewSDKError(err)
-	}
-	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return UsersPage{}, sdkerr
-	}
-	var up UsersPage
-	if err := json.Unmarshal(body, &up); err != nil {
-		return UsersPage{}, errors.NewSDKError(err)
-	}
-
-	return up, nil
-}
-
-func (sdk mgSDK) ListChannelUsers(channelID, domainID string, pm PageMetadata, token string) (UsersPage, errors.SDKError) {
-	url, err := sdk.withQueryParams(sdk.usersURL, fmt.Sprintf("%s/%s/%s/%s", domainID, channelsEndpoint, channelID, usersEndpoint), pm)
-	if err != nil {
-		return UsersPage{}, errors.NewSDKError(err)
-	}
-	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return UsersPage{}, sdkerr
-	}
-	up := UsersPage{}
-	if err := json.Unmarshal(body, &up); err != nil {
-		return UsersPage{}, errors.NewSDKError(err)
-	}
-
-	return up, nil
 }

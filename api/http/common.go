@@ -20,63 +20,63 @@ import (
 )
 
 const (
-	MemberKindKey       = "member_kind"
-	PermissionKey       = "permission"
-	RelationKey         = "relation"
-	StatusKey           = "status"
-	OffsetKey           = "offset"
-	OrderKey            = "order"
-	LimitKey            = "limit"
-	MetadataKey         = "metadata"
-	ParentKey           = "parent_id"
-	OwnerKey            = "owner_id"
-	ClientKey           = "client"
-	UsernameKey         = "username"
-	NameKey             = "name"
-	GroupKey            = "group"
+	OffsetKey = "offset"
+	DirKey    = "dir"
+	OrderKey  = "order"
+	LimitKey  = "limit"
+
+	NameOrder = "name"
+	IDOrder   = "id"
+	AscDir    = "asc"
+	DescDir   = "desc"
+
+	MetadataKey = "metadata"
+	NameKey     = "name"
+	TagKey      = "tag"
+	StatusKey   = "status"
+
+	ClientKey   = "client"
+	ChannelKey  = "channel"
+	ConnTypeKey = "connection_type"
+	GroupKey    = "group"
+	DomainKey   = "domain"
+
+	StartLevelKey = "start_level"
+	EndLevelKey   = "end_level"
+	TreeKey       = "tree"
+	ParentKey     = "parent_id"
+	LevelKey      = "level"
+
+	TokenKey   = "token"
+	SubjectKey = "subject"
+	ObjectKey  = "object"
+
 	ActionKey           = "action"
 	ActionsKey          = "actions"
 	RoleIDKey           = "role_id"
 	RoleNameKey         = "role_name"
 	AccessProviderIDKey = "access_provider_id"
 	AccessTypeKey       = "access_type"
-	TagKey              = "tag"
-	FirstNameKey        = "first_name"
-	LastNameKey         = "last_name"
-	TotalKey            = "total"
-	SubjectKey          = "subject"
-	ObjectKey           = "object"
-	LevelKey            = "level"
-	StartLevelKey       = "start_level"
-	EndLevelKey         = "end_level"
-	TreeKey             = "tree"
-	DirKey              = "dir"
-	ListPerms           = "list_perms"
-	VisibilityKey       = "visibility"
-	EmailKey            = "email"
-	SharedByKey         = "shared_by"
-	TokenKey            = "token"
-	UserKey             = "user"
-	DomainKey           = "domain"
-	ChannelKey          = "channel"
-	ConnTypeKey         = "connection_type"
-	DefPermission       = "read_permission"
-	DefTotal            = uint64(100)
-	DefOffset           = 0
-	DefOrder            = "updated_at"
-	DefDir              = "asc"
-	DefLimit            = 10
-	DefLevel            = 0
-	DefStartLevel       = 1
-	DefEndLevel         = 0
-	DefStatus           = "enabled"
-	DefClientStatus     = clients.Enabled
-	DefUserStatus       = users.Enabled
-	DefGroupStatus      = groups.Enabled
-	DefListPerms        = false
-	SharedVisibility    = "shared"
-	MyVisibility        = "mine"
-	AllVisibility       = "all"
+
+	UsernameKey  = "username"
+	UserKey      = "user"
+	EmailKey     = "email"
+	FirstNameKey = "first_name"
+	LastNameKey  = "last_name"
+
+	DefTotal        = uint64(100)
+	DefOffset       = 0
+	DefOrder        = "updated_at"
+	DefDir          = "asc"
+	DefLimit        = 10
+	DefLevel        = 0
+	DefStartLevel   = 1
+	DefEndLevel     = 0
+	DefStatus       = "enabled"
+	DefClientStatus = clients.Enabled
+	DefUserStatus   = users.Enabled
+	DefGroupStatus  = groups.Enabled
+
 	// ContentType represents JSON content type.
 	ContentType = "application/json"
 
@@ -84,10 +84,6 @@ const (
 	MaxLimitSize = 100
 	MaxNameSize  = 1024
 	MaxIDSize    = 36
-	NameOrder    = "name"
-	IDOrder      = "id"
-	AscDir       = "asc"
-	DescDir      = "desc"
 )
 
 // ValidateUUID validates UUID format.

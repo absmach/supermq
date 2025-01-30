@@ -23,8 +23,6 @@ var (
 	_ supermq.Response = (*viewMembersRes)(nil)
 	_ supermq.Response = (*passwResetReqRes)(nil)
 	_ supermq.Response = (*passwChangeRes)(nil)
-	_ supermq.Response = (*assignUsersRes)(nil)
-	_ supermq.Response = (*unassignUsersRes)(nil)
 	_ supermq.Response = (*updateUserRes)(nil)
 	_ supermq.Response = (*tokenRes)(nil)
 	_ supermq.Response = (*deleteUserRes)(nil)
@@ -190,34 +188,6 @@ func (res passwChangeRes) Headers() map[string]string {
 
 func (res passwChangeRes) Empty() bool {
 	return false
-}
-
-type assignUsersRes struct{}
-
-func (res assignUsersRes) Code() int {
-	return http.StatusCreated
-}
-
-func (res assignUsersRes) Headers() map[string]string {
-	return map[string]string{}
-}
-
-func (res assignUsersRes) Empty() bool {
-	return true
-}
-
-type unassignUsersRes struct{}
-
-func (res unassignUsersRes) Code() int {
-	return http.StatusNoContent
-}
-
-func (res unassignUsersRes) Headers() map[string]string {
-	return map[string]string{}
-}
-
-func (res unassignUsersRes) Empty() bool {
-	return true
 }
 
 type deleteUserRes struct {

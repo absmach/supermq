@@ -414,32 +414,6 @@ func (lm *loggingMiddleware) Disable(ctx context.Context, session authn.Session,
 	return lm.svc.Disable(ctx, session, id)
 }
 
-// ListMembers logs the list_members request. It logs the group id, and the time it took to complete the request.
-// If the request fails, it logs the error.
-func (lm *loggingMiddleware) ListMembers(ctx context.Context, session authn.Session, objectKind, objectID string, cp users.Page) (mp users.MembersPage, err error) {
-	defer func(begin time.Time) {
-		args := []any{
-			slog.String("duration", time.Since(begin).String()),
-			slog.Group("object",
-				slog.String("kind", objectKind),
-				slog.String("id", objectID),
-			),
-			slog.Group("page",
-				slog.Uint64("limit", cp.Limit),
-				slog.Uint64("offset", cp.Offset),
-				slog.Uint64("total", mp.Total),
-			),
-		}
-		if err != nil {
-			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("List members failed", args...)
-			return
-		}
-		lm.logger.Info("List members completed successfully", args...)
-	}(time.Now())
-	return lm.svc.ListMembers(ctx, session, objectKind, objectID, cp)
-}
-
 // Identify logs the identify request. It logs the time it took to complete the request.
 func (lm *loggingMiddleware) Identify(ctx context.Context, session authn.Session) (id string, err error) {
 	defer func(begin time.Time) {

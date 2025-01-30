@@ -188,3 +188,7 @@ func (sdk mgSDK) RemoveAllDomainRoleMembers(id, roleID, token string) errors.SDK
 func (sdk mgSDK) AvailableDomainRoleActions(token string) ([]string, errors.SDKError) {
 	return sdk.listAvailableRoleActions(sdk.domainsURL, domainsEndpoint, "", token)
 }
+
+func (sdk mgSDK) ListDomainMembers(domainID string, pm PageMetadata, token string) (EntityMembersPage, errors.SDKError) {
+	return sdk.listEntityMembers(sdk.domainsURL, domainID, domainsEndpoint, domainID, token, pm)
+}

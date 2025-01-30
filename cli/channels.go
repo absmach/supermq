@@ -177,7 +177,7 @@ var cmdChannels = []cobra.Command{
 				Offset: Offset,
 				Limit:  Limit,
 			}
-			ul, err := sdk.ListChannelUsers(args[0], args[1], pm, args[2])
+			ul, err := sdk.ListChannelMembers(args[0], args[1], pm, args[2])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return

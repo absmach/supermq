@@ -210,14 +210,6 @@ func (tm *tracingMiddleware) Disable(ctx context.Context, session authn.Session,
 	return tm.svc.Disable(ctx, session, id)
 }
 
-// ListMembers traces the "ListMembers" operation of the wrapped users.Service.
-func (tm *tracingMiddleware) ListMembers(ctx context.Context, session authn.Session, objectKind, objectID string, pm users.Page) (users.MembersPage, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_list_members", trace.WithAttributes(attribute.String("object_kind", objectKind)), trace.WithAttributes(attribute.String("object_id", objectID)))
-	defer span.End()
-
-	return tm.svc.ListMembers(ctx, session, objectKind, objectID, pm)
-}
-
 // Identify traces the "Identify" operation of the wrapped users.Service.
 func (tm *tracingMiddleware) Identify(ctx context.Context, session authn.Session) (string, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_identify", trace.WithAttributes(attribute.String("user_id", session.UserID)))

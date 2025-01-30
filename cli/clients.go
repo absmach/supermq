@@ -275,7 +275,7 @@ var cmdClients = []cobra.Command{
 				Offset: Offset,
 				Limit:  Limit,
 			}
-			ul, err := sdk.ListClientUsers(args[0], args[1], pm, args[2])
+			ul, err := sdk.ListClientMembers(args[0], args[1], pm, args[2])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return

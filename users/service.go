@@ -17,14 +17,12 @@ import (
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
-	"golang.org/x/sync/errgroup"
 )
 
 var (
-	errIssueToken            = errors.New("failed to issue token")
-	errFailedPermissionsList = errors.New("failed to list permissions")
-	errRecoveryToken         = errors.New("failed to generate password recovery token")
-	errLoginDisableUser      = errors.New("failed to login in disabled user")
+	errIssueToken       = errors.New("failed to issue token")
+	errRecoveryToken    = errors.New("failed to generate password recovery token")
+	errLoginDisableUser = errors.New("failed to login in disabled user")
 )
 
 type service struct {
@@ -467,106 +465,6 @@ func (svc service) Delete(ctx context.Context, session authn.Session, id string)
 	}
 
 	return nil
-}
-
-func (svc service) ListMembers(ctx context.Context, session authn.Session, objectKind, objectID string, pm Page) (MembersPage, error) {
-	var objectType string
-	switch objectKind {
-	case policies.ClientsKind:
-		objectType = policies.ClientType
-	case policies.DomainsKind:
-		objectType = policies.DomainType
-	case policies.GroupsKind:
-		fallthrough
-	default:
-		objectType = policies.GroupType
-	}
-
-	duids, err := svc.policies.ListAllSubjects(ctx, policies.Policy{
-		SubjectType: policies.UserType,
-		Permission:  pm.Permission,
-		Object:      objectID,
-		ObjectType:  objectType,
-	})
-	if err != nil {
-		return MembersPage{}, errors.Wrap(svcerr.ErrNotFound, err)
-	}
-	if len(duids.Policies) == 0 {
-		return MembersPage{
-			Page: Page{Total: 0, Offset: pm.Offset, Limit: pm.Limit},
-		}, nil
-	}
-
-	var userIDs []string
-
-	for _, domainUserID := range duids.Policies {
-		_, userID := smqauth.DecodeDomainUserID(domainUserID)
-		userIDs = append(userIDs, userID)
-	}
-	pm.IDs = userIDs
-
-	up, err := svc.users.RetrieveAll(ctx, pm)
-	if err != nil {
-		return MembersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
-	}
-
-	for i, u := range up.Users {
-		up.Users[i] = User{
-			ID:        u.ID,
-			FirstName: u.FirstName,
-			LastName:  u.LastName,
-			Credentials: Credentials{
-				Username: u.Credentials.Username,
-			},
-			CreatedAt: u.CreatedAt,
-			UpdatedAt: u.UpdatedAt,
-			Status:    u.Status,
-		}
-	}
-
-	if pm.ListPerms && len(up.Users) > 0 {
-		g, ctx := errgroup.WithContext(ctx)
-
-		for i := range up.Users {
-			// Copying loop variable "i" to avoid "loop variable captured by func literal"
-			iter := i
-			g.Go(func() error {
-				return svc.retrieveObjectUsersPermissions(ctx, session.DomainID, objectType, objectID, &up.Users[iter])
-			})
-		}
-
-		if err := g.Wait(); err != nil {
-			return MembersPage{}, err
-		}
-	}
-
-	return MembersPage{
-		Page:    up.Page,
-		Members: up.Users,
-	}, nil
-}
-
-func (svc service) retrieveObjectUsersPermissions(ctx context.Context, domainID, objectType, objectID string, user *User) error {
-	userID := smqauth.EncodeDomainUserID(domainID, user.ID)
-	permissions, err := svc.listObjectUserPermission(ctx, userID, objectType, objectID)
-	if err != nil {
-		return errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-	user.Permissions = permissions
-	return nil
-}
-
-func (svc service) listObjectUserPermission(ctx context.Context, userID, objectType, objectID string) ([]string, error) {
-	permissions, err := svc.policies.ListPermissions(ctx, policies.Policy{
-		SubjectType: policies.UserType,
-		Subject:     userID,
-		Object:      objectID,
-		ObjectType:  objectType,
-	}, []string{})
-	if err != nil {
-		return []string{}, errors.Wrap(errFailedPermissionsList, err)
-	}
-	return permissions, nil
 }
 
 func (svc *service) checkSuperAdmin(ctx context.Context, session authn.Session) error {

@@ -164,95 +164,6 @@ func searchUsersEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func listMembersByGroupEndpoint(svc users.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listMembersByObjectReq)
-		req.objectKind = "groups"
-		if err := req.validate(); err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
-		}
-
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-
-		page, err := svc.ListMembers(ctx, session, req.objectKind, req.objectID, req.Page)
-		if err != nil {
-			return nil, err
-		}
-
-		return buildUsersResponse(page), nil
-	}
-}
-
-func listMembersByChannelEndpoint(svc users.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listMembersByObjectReq)
-		// In spiceDB schema, using the same 'group' type for both channels and groups, rather than having a separate type for channels.
-		req.objectKind = "groups"
-		if err := req.validate(); err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
-		}
-
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-
-		page, err := svc.ListMembers(ctx, session, req.objectKind, req.objectID, req.Page)
-		if err != nil {
-			return nil, err
-		}
-
-		return buildUsersResponse(page), nil
-	}
-}
-
-func listMembersByClientEndpoint(svc users.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listMembersByObjectReq)
-		req.objectKind = "clients"
-		if err := req.validate(); err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
-		}
-
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-
-		page, err := svc.ListMembers(ctx, session, req.objectKind, req.objectID, req.Page)
-		if err != nil {
-			return nil, err
-		}
-
-		return buildUsersResponse(page), nil
-	}
-}
-
-func listMembersByDomainEndpoint(svc users.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listMembersByObjectReq)
-		req.objectKind = "domains"
-		if err := req.validate(); err != nil {
-			return nil, errors.Wrap(apiutil.ErrValidation, err)
-		}
-
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
-		if !ok {
-			return nil, svcerr.ErrAuthentication
-		}
-
-		page, err := svc.ListMembers(ctx, session, req.objectKind, req.objectID, req.Page)
-		if err != nil {
-			return nil, err
-		}
-
-		return buildUsersResponse(page), nil
-	}
-}
-
 func updateEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(updateUserReq)
@@ -573,21 +484,4 @@ func deleteEndpoint(svc users.Service) endpoint.Endpoint {
 
 		return deleteUserRes{true}, nil
 	}
-}
-
-func buildUsersResponse(cp users.MembersPage) usersPageRes {
-	res := usersPageRes{
-		pageRes: pageRes{
-			Total:  cp.Total,
-			Offset: cp.Offset,
-			Limit:  cp.Limit,
-		},
-		Users: []viewUserRes{},
-	}
-
-	for _, user := range cp.Members {
-		res.Users = append(res.Users, viewUserRes{User: user})
-	}
-
-	return res
 }

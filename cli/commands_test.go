@@ -37,17 +37,6 @@ const (
 	unshrCmd   = "unshare"
 )
 
-// Groups and channels commands
-const (
-	chansCmd    = "channels"
-	grpCmd      = "groups"
-	childCmd    = "children"
-	parentCmd   = "parents"
-	usrCmd      = "users"
-	assignCmd   = "assign"
-	unassignCmd = "unassign"
-)
-
 // Certs commands
 const (
 	revokeCmd = "revoke"

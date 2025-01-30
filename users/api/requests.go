@@ -121,23 +121,6 @@ func (req searchUsersReq) validate() error {
 	return nil
 }
 
-type listMembersByObjectReq struct {
-	users.Page
-	objectKind string
-	objectID   string
-}
-
-func (req listMembersByObjectReq) validate() error {
-	if req.objectID == "" {
-		return apiutil.ErrMissingID
-	}
-	if req.objectKind == "" {
-		return apiutil.ErrMissingMemberKind
-	}
-
-	return nil
-}
-
 type updateUserReq struct {
 	id        string
 	FirstName string         `json:"first_name,omitempty"`
@@ -323,90 +306,6 @@ func (req resetTokenReq) validate() error {
 	}
 	if !passRegex.MatchString(req.ConfPass) {
 		return apiutil.ErrPasswordFormat
-	}
-
-	return nil
-}
-
-type assignUsersReq struct {
-	groupID  string
-	Relation string   `json:"relation"`
-	UserIDs  []string `json:"user_ids"`
-}
-
-func (req assignUsersReq) validate() error {
-	if req.Relation == "" {
-		return apiutil.ErrMissingRelation
-	}
-
-	if req.groupID == "" {
-		return apiutil.ErrMissingID
-	}
-
-	if len(req.UserIDs) == 0 {
-		return apiutil.ErrEmptyList
-	}
-
-	return nil
-}
-
-type unassignUsersReq struct {
-	groupID  string
-	Relation string   `json:"relation"`
-	UserIDs  []string `json:"user_ids"`
-}
-
-func (req unassignUsersReq) validate() error {
-	if req.groupID == "" {
-		return apiutil.ErrMissingID
-	}
-
-	if len(req.UserIDs) == 0 {
-		return apiutil.ErrEmptyList
-	}
-
-	return nil
-}
-
-type assignGroupsReq struct {
-	groupID  string
-	domainID string
-	GroupIDs []string `json:"group_ids"`
-}
-
-func (req assignGroupsReq) validate() error {
-	if req.domainID == "" {
-		return apiutil.ErrMissingDomainID
-	}
-
-	if req.groupID == "" {
-		return apiutil.ErrMissingID
-	}
-
-	if len(req.GroupIDs) == 0 {
-		return apiutil.ErrEmptyList
-	}
-
-	return nil
-}
-
-type unassignGroupsReq struct {
-	groupID  string
-	domainID string
-	GroupIDs []string `json:"group_ids"`
-}
-
-func (req unassignGroupsReq) validate() error {
-	if req.domainID == "" {
-		return apiutil.ErrMissingDomainID
-	}
-
-	if req.groupID == "" {
-		return apiutil.ErrMissingID
-	}
-
-	if len(req.GroupIDs) == 0 {
-		return apiutil.ErrEmptyList
 	}
 
 	return nil
