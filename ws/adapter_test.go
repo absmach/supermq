@@ -158,9 +158,10 @@ func TestSubscribe(t *testing.T) {
 
 	for _, tc := range cases {
 		subConfig := messaging.SubscriberConfig{
-			ID:      clientID,
-			Topic:   "channels." + tc.chanID + "." + subTopic,
-			Handler: c,
+			ID:       clientID,
+			Topic:    "channels." + tc.chanID + "." + subTopic,
+			ClientID: clientID,
+			Handler:  c,
 		}
 		clientsCall := clients.On("Authenticate", mock.Anything, &grpcClientsV1.AuthnReq{ClientSecret: tc.clientKey}).Return(tc.authNRes, tc.authNErr)
 		channelsCall := channels.On("Authorize", mock.Anything, &grpcChannelsV1.AuthzReq{

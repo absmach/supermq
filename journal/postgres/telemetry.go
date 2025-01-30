@@ -188,17 +188,15 @@ func (repo *repository) IncrementOutboundMessages(ctx context.Context, channelID
 		var clientID string
 		var count uint64
 		if err = rows.Scan(&clientID, &count); err != nil {
-			err := tx.Rollback()
-			if err == nil {
-				return postgres.HandleError(repoerr.ErrUpdateEntity, err)
+			if err := tx.Rollback(); err != nil {
+				return errors.Wrap(errors.ErrRollbackTx, err)
 			}
-			return errors.Wrap(errors.ErrRollbackTx, err)
+			return postgres.HandleError(repoerr.ErrUpdateEntity, err)
 		}
 
 		if _, err = repo.db.ExecContext(ctx, q, count, clientID); err != nil {
-			err := tx.Rollback()
-			if err == nil {
-				return postgres.HandleError(repoerr.ErrUpdateEntity, err)
+			if err := tx.Rollback(); err != nil {
+				return errors.Wrap(errors.ErrRollbackTx, err)
 			}
 			return errors.Wrap(errors.ErrRollbackTx, err)
 		}
