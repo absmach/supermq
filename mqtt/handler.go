@@ -53,7 +53,6 @@ var (
 	ErrFailedParseSubtopic          = errors.New("failed to parse subtopic")
 	ErrFailedPublishConnectEvent    = errors.New("failed to publish connect event")
 	ErrFailedSubscribeEvent         = errors.New("failed to publish subscribe event")
-	ErrFailedSubscribeEvent         = errors.New("failed to publish subscribe event")
 	ErrFailedPublishToMsgBroker     = errors.New("failed to publish to supermq message broker")
 )
 
@@ -271,23 +270,6 @@ func (h *handler) authAccess(ctx context.Context, clientID, topic string, msgTyp
 	}
 
 	return nil
-}
-
-func parseTopic(topic string) (string, string, error) {
-	channelParts := channelRegExp.FindStringSubmatch(topic)
-	if len(channelParts) < 2 {
-		return "", "", errors.Wrap(ErrFailedPublish, ErrMalformedTopic)
-	}
-
-	chanID := channelParts[1]
-	subtopic := channelParts[2]
-
-	subtopic, err := parseSubtopic(subtopic)
-	if err != nil {
-		return "", "", errors.Wrap(ErrFailedParseSubtopic, err)
-	}
-
-	return chanID, subtopic, nil
 }
 
 func parseTopic(topic string) (string, string, error) {

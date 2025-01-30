@@ -450,7 +450,6 @@ func TestSubscribe(t *testing.T) {
 		assert.Contains(t, logBuffer.String(), tc.logMsg)
 		assert.Equal(t, tc.err, err)
 		eventsCall.Unset()
-		eventsCall.Unset()
 	}
 }
 

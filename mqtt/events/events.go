@@ -42,7 +42,6 @@ type subscribeEvent struct {
 }
 
 func (se subscribeEvent) Encode() (map[string]interface{}, error) {
-func (se subscribeEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"operation":     se.operation,
 		"client_id":     se.clientID,

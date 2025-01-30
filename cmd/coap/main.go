@@ -49,7 +49,6 @@ type config struct {
 	InstanceID    string  `env:"SMQ_COAP_ADAPTER_INSTANCE_ID" envDefault:""`
 	TraceRatio    float64 `env:"SMQ_JAEGER_TRACE_RATIO"       envDefault:"1.0"`
 	ESURL         string  `env:"SMQ_ES_URL"                   envDefault:"nats://localhost:4222"`
-	ESURL         string  `env:"SMQ_ES_URL"                   envDefault:"nats://localhost:4222"`
 }
 
 func main() {
