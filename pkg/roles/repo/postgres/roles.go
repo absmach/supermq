@@ -859,18 +859,15 @@ func applyConditions(query string, pageQuery roles.MembersRolePageQuery) string 
 
 	if pageQuery.RoleID != "" {
 		whereClause = append(whereClause, " roles @>  :role_id ")
-
 	}
 	if pageQuery.RoleName != "" {
 		whereClause = append(whereClause, " roles @> :role_name ")
-
 	}
 	if len(pageQuery.Actions) != 0 {
 		whereClause = append(whereClause, " roles @> :actions ")
 	}
 	if pageQuery.AccessType != "" {
 		whereClause = append(whereClause, " roles @> :access_type ")
-
 	}
 	if pageQuery.AccessProviderID != "" {
 		whereClause = append(whereClause, " roles @> :access_provider_id ")
@@ -884,6 +881,7 @@ func applyConditions(query string, pageQuery roles.MembersRolePageQuery) string 
 	return fmt.Sprintf(`%s
 			%s`, query, whereCondition)
 }
+
 func applyOrdering(query string, pageQuery roles.MembersRolePageQuery) string {
 	switch pageQuery.Order {
 	case "access_provider_id", "role_name", "role_id", "access_type":

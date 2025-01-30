@@ -248,7 +248,7 @@ func (es *EventHandler) RemoveEntityMembersHandler(ctx context.Context, data map
 		return fmt.Errorf(errRemoveEntityRoleMembersEvent, es.entityType, err)
 	}
 
-	// ToDo: added when repo is implemented.
+	// added when repo is implemented.
 	_ = entityID
 	_ = mems
 	return nil
