@@ -61,7 +61,6 @@ jobs:
               - "invitations/invitations.go"
               - "users/emailer.go"
               - "users/hasher.go"
-              - "mqtt/events/streams.go"
               - "certs/certs.go"
               - "certs/pki/vault.go"
               - "certs/service.go"
@@ -149,7 +148,6 @@ jobs:
           mv ./clients/mocks/clients_client.go ./clients/mocks/clients_client.go.tmp
           mv ./clients/mocks/cache.go ./clients/mocks/cache.go.tmp
           mv ./clients/mocks/service.go ./clients/mocks/service.go.tmp
-          mv ./mqtt/mocks/events.go ./mqtt/mocks/events.go.tmp
           mv ./readers/mocks/messages.go ./readers/mocks/messages.go.tmp
           mv ./pkg/sdk/mocks/sdk.go ./pkg/sdk/mocks/sdk.go.tmp
           mv ./pkg/messaging/mocks/pubsub.go ./pkg/messaging/mocks/pubsub.go.tmp
@@ -208,7 +206,6 @@ jobs:
           check_mock_changes ./clients/mocks/clients_client.go " ./clients/mocks/clients_client.go"
           check_mock_changes ./clients/mocks/cache.go " ./clients/mocks/cache.go"
           check_mock_changes ./clients/mocks/service.go " ./clients/mocks/service.go"
-          check_mock_changes ./mqtt/mocks/events.go " ./mqtt/mocks/events.go"
           check_mock_changes ./readers/mocks/messages.go " ./readers/mocks/messages.go"
           check_mock_changes ./pkg/sdk/mocks/sdk.go " ./pkg/sdk/mocks/sdk.go"
           check_mock_changes ./pkg/messaging/mocks/pubsub.go " ./pkg/messaging/mocks/pubsub.go"

@@ -15,7 +15,6 @@ import (
 	"github.com/absmach/mgate/pkg/session"
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
-	"github.com/absmach/supermq/mqtt/events"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -67,13 +66,11 @@ type handler struct {
 	clients   grpcClientsV1.ClientsServiceClient
 	channels  grpcChannelsV1.ChannelsServiceClient
 	logger    *slog.Logger
-	es        events.EventStore
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(publisher messaging.Publisher, es events.EventStore, logger *slog.Logger, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) session.Handler {
+func NewHandler(publisher messaging.Publisher, logger *slog.Logger, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) session.Handler {
 	return &handler{
-		es:        es,
 		logger:    logger,
 		publisher: publisher,
 		clients:   clients,
@@ -105,10 +102,6 @@ func (h *handler) AuthConnect(ctx context.Context) error {
 
 	if s.Username != "" && res.GetId() != s.Username {
 		return errInvalidUserId
-	}
-
-	if err := h.es.Connect(ctx, s.Username, s.ID); err != nil {
-		h.logger.Error(errors.Wrap(ErrFailedPublishConnectEvent, err).Error())
 	}
 
 	return nil
@@ -203,18 +196,8 @@ func (h *handler) Subscribe(ctx context.Context, topics *[]string) error {
 	if !ok {
 		return errors.Wrap(ErrFailedSubscribe, ErrClientNotInitialized)
 	}
-
-	for _, topic := range *topics {
-		channelID, subTopic, err := parseTopic(topic)
-		if err != nil {
-			return err
-		}
-		if err := h.es.Subscribe(ctx, s.Username, channelID, s.ID, subTopic); err != nil {
-			return errors.Wrap(ErrFailedSubscribeEvent, err)
-		}
-	}
-
 	h.logger.Info(fmt.Sprintf(LogInfoSubscribed, s.ID, strings.Join(*topics, ",")))
+
 	return nil
 }
 
@@ -225,6 +208,7 @@ func (h *handler) Unsubscribe(ctx context.Context, topics *[]string) error {
 		return errors.Wrap(ErrFailedUnsubscribe, ErrClientNotInitialized)
 	}
 	h.logger.Info(fmt.Sprintf(LogInfoUnsubscribed, s.ID, strings.Join(*topics, ",")))
+
 	return nil
 }
 
@@ -235,9 +219,7 @@ func (h *handler) Disconnect(ctx context.Context) error {
 		return errors.Wrap(ErrFailedDisconnect, ErrClientNotInitialized)
 	}
 	h.logger.Error(fmt.Sprintf(LogInfoDisconnected, s.ID, s.Password))
-	if err := h.es.Disconnect(ctx, s.Username, s.ID); err != nil {
-		return errors.Wrap(ErrFailedPublishDisconnectEvent, err)
-	}
+
 	return nil
 }
 
@@ -270,23 +252,6 @@ func (h *handler) authAccess(ctx context.Context, clientID, topic string, msgTyp
 	}
 
 	return nil
-}
-
-func parseTopic(topic string) (string, string, error) {
-	channelParts := channelRegExp.FindStringSubmatch(topic)
-	if len(channelParts) < 2 {
-		return "", "", errors.Wrap(ErrFailedPublish, ErrMalformedTopic)
-	}
-
-	chanID := channelParts[1]
-	subtopic := channelParts[2]
-
-	subtopic, err := parseSubtopic(subtopic)
-	if err != nil {
-		return "", "", errors.Wrap(ErrFailedParseSubtopic, err)
-	}
-
-	return chanID, subtopic, nil
 }
 
 func parseSubtopic(subtopic string) (string, error) {
