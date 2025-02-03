@@ -700,6 +700,14 @@ type PATSPage struct {
 	PATS   []PAT  `json:"pats"`
 }
 
+func (pat PAT) MarshalBinary() ([]byte, error) {
+	return json.Marshal(pat)
+}
+
+func (pat *PAT) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, pat)
+}
+
 func (pat *PAT) String() string {
 	str, err := json.MarshalIndent(pat, "", "  ")
 	if err != nil {

@@ -70,10 +70,9 @@ func Migration() *migrate.MemoryMigrationSource {
 				Up: []string{
 					`CREATE TABLE IF NOT EXISTS pats (
 						id 					VARCHAR(36) PRIMARY KEY,
-						name        		VARCHAR(254),
+                        name        		VARCHAR(254),
 						user_id 			VARCHAR(36),
 						description			TEXT,
-						domain 				VARCHAR(36),
 						secret				TEXT,
 						issued_at			TIMESTAMP,
 						expires_at 			TIMESTAMP,
@@ -81,8 +80,13 @@ func Migration() *migrate.MemoryMigrationSource {
 						revoked 			BOOLEAN,
 						revoked_at 			TIMESTAMP,
 						entity_type 		TEXT,
-						allowed_operation	TEXT[],
-						constraints 		TEXT
+						last_used_at		TIMESTAMP,
+						scopes_data 		TEXT,
+						allowed_ops			TEXT[],
+						entity_ids			TEXT[],
+						domains				TEXT[],
+						entity_types		TEXT[],
+						metadata			TEXT
 					)`,
 				},
 				Down: []string{

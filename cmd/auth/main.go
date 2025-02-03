@@ -21,10 +21,10 @@ import (
 	authgrpcapi "github.com/absmach/supermq/auth/api/grpc/auth"
 	tokengrpcapi "github.com/absmach/supermq/auth/api/grpc/token"
 	httpapi "github.com/absmach/supermq/auth/api/http"
+	"github.com/absmach/supermq/auth/cache"
 	"github.com/absmach/supermq/auth/hasher"
 	"github.com/absmach/supermq/auth/jwt"
 	apostgres "github.com/absmach/supermq/auth/postgres"
-	"github.com/absmach/supermq/auth/postgres/pat"
 	"github.com/absmach/supermq/auth/tracing"
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
 	smqlog "github.com/absmach/supermq/logger"
@@ -41,6 +41,7 @@ import (
 	"github.com/authzed/grpcutil"
 	"github.com/caarlos0/env/v11"
 	"github.com/jmoiron/sqlx"
+	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -74,7 +75,7 @@ type config struct {
 	SpicedbPreSharedKey string        `env:"SMQ_SPICEDB_PRE_SHARED_KEY"       envDefault:"12345678"`
 	TraceRatio          float64       `env:"SMQ_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
 	ESURL               string        `env:"SMQ_ES_URL"                       envDefault:"nats://localhost:4222"`
-	CacheURL            string        `env:"SMQ_AUTH_CACHE_URL"            	  envDefault:"redis://localhost:6379/0"`
+	CacheURL            string        `env:"SMQ_AUTH_CACHE_URL"               envDefault:"redis://localhost:6379/0"`
 	CacheKeyDuration    time.Duration `env:"SMQ_AUTH_CACHE_KEY_DURATION"      envDefault:"10m"`
 }
 
@@ -145,7 +146,7 @@ func main() {
 		return
 	}
 
-	svc := newService(ctx, db, tracer, cfg, dbConfig, logger, spicedbclient)
+	svc := newService(ctx, db, tracer, cfg, dbConfig, logger, spicedbclient, cacheclient, cfg.CacheKeyDuration)
 
 	grpcServerConfig := server.Config{Port: defSvcGRPCPort}
 	if err := env.ParseWithOptions(&grpcServerConfig, env.Options{Prefix: envPrefixGrpc}); err != nil {
@@ -225,10 +226,12 @@ func initSchema(ctx context.Context, client *authzed.ClientWithExperimental, sch
 	return nil
 }
 
-func newService(_ context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental) auth.Service {
+func newService(_ context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental, cacheClient *redis.Client, keyDuration time.Duration) auth.Service {
+	cache := cache.NewPatsCache(cacheClient, keyDuration)
+
 	database := pgclient.NewDatabase(db, dbConfig, tracer)
 	keysRepo := apostgres.New(database)
-	patsRepo := pat.NewPATSRepository(db.DB, nil) // No cache for now
+	patsRepo := apostgres.NewPatRepo(database, cache)
 	hasher := hasher.New()
 	idProvider := uuid.New()
 

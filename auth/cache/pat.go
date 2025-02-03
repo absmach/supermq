@@ -25,21 +25,22 @@ func NewPatsCache(client *redis.Client, duration time.Duration) auth.Cache {
 	}
 }
 
-func (pc *patCache) Save(ctx context.Context, patSecret, patID string, scope auth.Scope) error {
-	if err := pc.client.Set(ctx, patID, scope, pc.duration).Err(); err != nil {
+func (pc *patCache) Save(ctx context.Context, patSecret, patID string, pat auth.PAT) error {
+	if err := pc.client.Set(ctx, patID, pat, pc.duration).Err(); err != nil {
 		return errors.Wrap(repoerr.ErrCreateEntity, err)
 	}
 
 	return nil
 }
 
-func (pc *patCache) ID(ctx context.Context, patID string) (auth.Scope, error) {
-	_, err := pc.client.Get(ctx, patID).Result()
+func (pc *patCache) ID(ctx context.Context, patID string) (auth.PAT, error) {
+	var pat auth.PAT
+	err := pc.client.Get(ctx, patID).Scan(&pat)
 	if err != nil {
-		return auth.Scope{}, errors.Wrap(repoerr.ErrNotFound, err)
+		return auth.PAT{}, errors.Wrap(repoerr.ErrNotFound, err)
 	}
 
-	return auth.Scope{}, nil
+	return pat, nil
 }
 
 func (dc *patCache) Remove(ctx context.Context, patID string) error {

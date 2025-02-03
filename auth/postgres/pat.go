@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package pat
+package postgres
 
 import (
 	"encoding/json"
@@ -12,29 +12,35 @@ import (
 )
 
 type dbPat struct {
-	ID               string    `db:"id,omitempty"`
-	User             string    `db:"user_id,omitempty"`
-	Name             string    `db:"name,omitempty"`
-	Description      string    `db:"description,omitempty"`
-	Secret           string    `db:"secret,omitempty"`
-	IssuedAt         time.Time `db:"issued_at,omitempty"`
-	ExpiresAt        time.Time `db:"expires_at,omitempty"`
-	UpdatedAt        time.Time `db:"updated_at,omitempty"`
-	LastUsedAt       time.Time `db:"last_used_at,omitempty"`
-	Revoked          bool      `db:"revoked,omitempty"`
-	RevokedAt        time.Time `db:"revoked_at,omitempty"`
-	
+	ID          string    `db:"id,omitempty"`
+	User        string    `db:"user_id,omitempty"`
+	Name        string    `db:"name,omitempty"`
+	Description string    `db:"description,omitempty"`
+	Secret      string    `db:"secret,omitempty"`
+	IssuedAt    time.Time `db:"issued_at,omitempty"`
+	ExpiresAt   time.Time `db:"expires_at,omitempty"`
+	UpdatedAt   time.Time `db:"updated_at,omitempty"`
+	LastUsedAt  time.Time `db:"last_used_at,omitempty"`
+	Revoked     bool      `db:"revoked,omitempty"`
+	RevokedAt   time.Time `db:"revoked_at,omitempty"`
+
 	// Scopes data stored as JSON
-	ScopesData      string    `db:"scopes_data,omitempty"`      // JSON string containing all scope information
-	
+	ScopesData string `db:"scopes_data,omitempty"`
+
 	// Aggregated scope fields for querying
-	AllowedOps      []string  `db:"allowed_operations,omitempty"` // Combined list of all allowed operations
-	EntityIDs       []string  `db:"entity_ids,omitempty"`       // Combined list of all entity IDs
-	Domains         []string  `db:"domains,omitempty"`          // List of all domain IDs
-	EntityTypes     []string  `db:"entity_types,omitempty"`     // List of all entity types
-	
+	AllowedOps  []string `db:"allowed_ops,omitempty"`  // Combined list of all allowed operations
+	EntityIDs   []string `db:"entity_ids,omitempty"`   // Combined list of all entity IDs
+	Domains     []string `db:"domains,omitempty"`      // List of all domain IDs
+	EntityTypes []string `db:"entity_types,omitempty"` // List of all entity types
+
 	// Metadata
-	Metadata        string    `db:"metadata,omitempty"`         // JSON string for additional metadata
+	Metadata string `db:"metadata,omitempty"` // JSON string for additional metadata
+}
+
+type dbAuthPage struct {
+	Limit  uint64 `db:"limit"`
+	Offset uint64 `db:"offset"`
+	User   string `db:"user_id"`
 }
 
 func toAuthPat(db dbPat) (auth.PAT, error) {
@@ -55,10 +61,10 @@ func toAuthPat(db dbPat) (auth.PAT, error) {
 
 	// Parse scopes data
 	var scopeData struct {
-		Users        auth.OperationScope              `json:"users,omitempty"`
-		Dashboard    auth.OperationScope              `json:"dashboard,omitempty"`
-		Messaging    auth.OperationScope              `json:"messaging,omitempty"`
-		DomainScopes map[string]DomainScopeData      `json:"domain_scopes,omitempty"`
+		Users        auth.OperationScope        `json:"users,omitempty"`
+		Dashboard    auth.OperationScope        `json:"dashboard,omitempty"`
+		Messaging    auth.OperationScope        `json:"messaging,omitempty"`
+		DomainScopes map[string]DomainScopeData `json:"domain_scopes,omitempty"`
 	}
 
 	if err := json.Unmarshal([]byte(db.ScopesData), &scopeData); err != nil {
@@ -100,14 +106,13 @@ func toAuthPat(db dbPat) (auth.PAT, error) {
 	return pat, nil
 }
 
-
 func patToDBRecords(pat auth.PAT) (dbPat, error) {
 	// Initialize scope data structure
 	scopeData := struct {
-		Users            auth.OperationScope              `json:"users,omitempty"`
-		Dashboard        auth.OperationScope              `json:"dashboard,omitempty"`
-		Messaging        auth.OperationScope              `json:"messaging,omitempty"`
-		DomainScopes     map[string]DomainScopeData      `json:"domain_scopes,omitempty"`
+		Users        auth.OperationScope        `json:"users,omitempty"`
+		Dashboard    auth.OperationScope        `json:"dashboard,omitempty"`
+		Messaging    auth.OperationScope        `json:"messaging,omitempty"`
+		DomainScopes map[string]DomainScopeData `json:"domain_scopes,omitempty"`
 	}{
 		DomainScopes: make(map[string]DomainScopeData),
 	}
@@ -163,7 +168,7 @@ func patToDBRecords(pat auth.PAT) (dbPat, error) {
 				return dbPat{}, fmt.Errorf("invalid entity type: %w", err)
 			}
 			dsd.Entities[entityTypeStr] = ops
-			
+
 			extractedOps, ids := extractOpsAndIDs(ops)
 			allOps = append(allOps, extractedOps...)
 			allEntityIDs = append(allEntityIDs, ids...)
@@ -197,29 +202,29 @@ func patToDBRecords(pat auth.PAT) (dbPat, error) {
 	}
 
 	return dbPat{
-		ID:           pat.ID,
-		User:         pat.User,
-		Name:         pat.Name,
-		Description:  pat.Description,
-		Secret:       pat.Secret,
-		IssuedAt:     pat.IssuedAt,
-		ExpiresAt:    pat.ExpiresAt,
-		UpdatedAt:    pat.UpdatedAt,
-		LastUsedAt:   pat.LastUsedAt,
-		Revoked:      pat.Revoked,
-		RevokedAt:    pat.RevokedAt,
-		ScopesData:   string(scopesJSON),
-		AllowedOps:   allOps,
-		EntityIDs:    allEntityIDs,
-		Domains:      allDomains,
-		EntityTypes:  allEntityTypes,
-		Metadata:     string(metadataJSON),
+		ID:          pat.ID,
+		User:        pat.User,
+		Name:        pat.Name,
+		Description: pat.Description,
+		Secret:      pat.Secret,
+		IssuedAt:    pat.IssuedAt,
+		ExpiresAt:   pat.ExpiresAt,
+		UpdatedAt:   pat.UpdatedAt,
+		LastUsedAt:  pat.LastUsedAt,
+		Revoked:     pat.Revoked,
+		RevokedAt:   pat.RevokedAt,
+		ScopesData:  string(scopesJSON),
+		AllowedOps:  allOps,
+		EntityIDs:   allEntityIDs,
+		Domains:     allDomains,
+		EntityTypes: allEntityTypes,
+		Metadata:    string(metadataJSON),
 	}, nil
 }
 
 type DomainScopeData struct {
-	DomainManagement auth.OperationScope              `json:"domain_management,omitempty"`
-	Entities         map[string]auth.OperationScope   `json:"entities,omitempty"`
+	DomainManagement auth.OperationScope            `json:"domain_management,omitempty"`
+	Entities         map[string]auth.OperationScope `json:"entities,omitempty"`
 }
 
 func extractOpsAndIDs(ops auth.OperationScope) ([]string, []string) {
@@ -248,4 +253,12 @@ func uniqueStrings(strs []string) []string {
 		}
 	}
 	return result
+}
+
+func toDBAuthPage(user string, pm auth.PATSPageMeta) dbAuthPage {
+	return dbAuthPage{
+		Limit:  pm.Limit,
+		Offset: pm.Offset,
+		User:   user,
+	}
 }
