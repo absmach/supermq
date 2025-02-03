@@ -95,11 +95,21 @@ type Service interface {
 	PATS
 }
 
+//go:generate mockery --name Cache --output=./mocks --filename cache.go --quiet --note "Copyright (c) Abstract Machines"
+type Cache interface {
+	Save(ctx context.Context, patSecret, patID string, scope Scope) error
+
+	ID(ctx context.Context, patID string) (Scope, error)
+
+	Remove(ctx context.Context, patID string) error
+}
+
 var _ Service = (*service)(nil)
 
 type service struct {
 	keys               KeyRepository
 	pats               PATSRepository
+	cache              Cache
 	hasher             Hasher
 	idProvider         supermq.IDProvider
 	evaluator          policies.Evaluator
@@ -111,11 +121,12 @@ type service struct {
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, pats PATSRepository, hasher Hasher, idp supermq.IDProvider, tokenizer Tokenizer, policyEvaluator policies.Evaluator, policyService policies.Service, loginDuration, refreshDuration, invitationDuration time.Duration) Service {
+func New(keys KeyRepository, repo PATSRepository, cache Cache, hasher Hasher, idp supermq.IDProvider, tokenizer Tokenizer, policyEvaluator policies.Evaluator, policyService policies.Service, loginDuration, refreshDuration, invitationDuration time.Duration) Service {
 	return &service{
 		tokenizer:          tokenizer,
 		keys:               keys,
-		pats:               pats,
+		pats:               repo,
+		cache:              cache,
 		hasher:             hasher,
 		idProvider:         idp,
 		evaluator:          policyEvaluator,

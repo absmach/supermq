@@ -5,17 +5,17 @@
 // bolt as the underlying database.
 package bolt
 
-import (
-	"github.com/absmach/supermq/pkg/errors"
-	bolt "go.etcd.io/bbolt"
-)
+// import (
+// 	"github.com/absmach/supermq/pkg/errors"
+// 	bolt "go.etcd.io/bbolt"
+// )
 
-var errInit = errors.New("failed to initialize BoltDB")
+// var errInit = errors.New("failed to initialize BoltDB")
 
-func Init(tx *bolt.Tx, bucket string) error {
-	_, err := tx.CreateBucketIfNotExists([]byte(bucket))
-	if err != nil {
-		return errors.Wrap(errInit, err)
-	}
-	return nil
-}
+// func Init(tx *bolt.Tx, bucket string) error {
+// 	_, err := tx.CreateBucketIfNotExists([]byte(bucket))
+// 	if err != nil {
+// 		return errors.Wrap(errInit, err)
+// 	}
+// 	return nil
+// }

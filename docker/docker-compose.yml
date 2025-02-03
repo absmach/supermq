@@ -20,6 +20,7 @@ volumes:
   supermq-domains-db-volume:
   supermq-domains-redis-volume:
   supermq-ui-db-volume:
+  supermq-auth-redis-volume:
 
 services:
   spicedb:
@@ -83,6 +84,15 @@ services:
     volumes:
       - supermq-auth-db-volume:/var/lib/postgresql/data
 
+  auth-redis:
+    image: redis:7.2.4-alpine
+    container_name: supermq-auth-redis
+    restart: on-failure
+    networks:
+      - supermq-base-net
+    volumes:
+      - supermq-auth-redis-volume:/data
+
   auth:
     image: supermq/auth:${SMQ_RELEASE_TAG}
     container_name: supermq-auth
@@ -129,6 +139,8 @@ services:
       SMQ_SEND_TELEMETRY: ${SMQ_SEND_TELEMETRY}
       SMQ_AUTH_ADAPTER_INSTANCE_ID: ${SMQ_AUTH_ADAPTER_INSTANCE_ID}
       SMQ_ES_URL: ${SMQ_ES_URL}
+      SMQ_AUTH_CACHE_URL: ${SMQ_AUTH_CACHE_URL}
+      SMQ_AUTH_CACHE_KEY_DURATION: ${SMQ_AUTH_CACHE_KEY_DURATION}
     ports:
       - ${SMQ_AUTH_HTTP_PORT}:${SMQ_AUTH_HTTP_PORT}
       - ${SMQ_AUTH_GRPC_PORT}:${SMQ_AUTH_GRPC_PORT}
