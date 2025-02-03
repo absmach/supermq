@@ -32,9 +32,6 @@ type dbPat struct {
 	EntityIDs   []string `db:"entity_ids,omitempty"`   // Combined list of all entity IDs
 	Domains     []string `db:"domains,omitempty"`      // List of all domain IDs
 	EntityTypes []string `db:"entity_types,omitempty"` // List of all entity types
-
-	// Metadata
-	Metadata string `db:"metadata,omitempty"` // JSON string for additional metadata
 }
 
 type dbAuthPage struct {
@@ -59,7 +56,6 @@ func toAuthPat(db dbPat) (auth.PAT, error) {
 		Scope:       auth.Scope{Domains: make(map[string]auth.DomainScope)},
 	}
 
-	// Parse scopes data
 	var scopeData struct {
 		Users        auth.OperationScope        `json:"users,omitempty"`
 		Dashboard    auth.OperationScope        `json:"dashboard,omitempty"`
@@ -71,27 +67,16 @@ func toAuthPat(db dbPat) (auth.PAT, error) {
 		return auth.PAT{}, fmt.Errorf("failed to unmarshal scopes data: %w", err)
 	}
 
-	// Parse metadata if exists
-	var metadata map[string]interface{}
-	if db.Metadata != "" {
-		if err := json.Unmarshal([]byte(db.Metadata), &metadata); err != nil {
-			return auth.PAT{}, fmt.Errorf("failed to unmarshal metadata: %w", err)
-		}
-	}
-
-	// Set platform scopes
 	pat.Scope.Users = scopeData.Users
 	pat.Scope.Dashboard = scopeData.Dashboard
 	pat.Scope.Messaging = scopeData.Messaging
 
-	// Set domain scopes
 	for domainID, dsd := range scopeData.DomainScopes {
 		domainScope := auth.DomainScope{
 			DomainManagement: dsd.DomainManagement,
 			Entities:         make(map[auth.DomainEntityType]auth.OperationScope),
 		}
 
-		// Process domain entity scopes
 		for entityTypeStr, ops := range dsd.Entities {
 			entityType, err := auth.ParseDomainEntityType(entityTypeStr)
 			if err != nil {
@@ -107,7 +92,6 @@ func toAuthPat(db dbPat) (auth.PAT, error) {
 }
 
 func patToDBRecords(pat auth.PAT) (dbPat, error) {
-	// Initialize scope data structure
 	scopeData := struct {
 		Users        auth.OperationScope        `json:"users,omitempty"`
 		Dashboard    auth.OperationScope        `json:"dashboard,omitempty"`
@@ -117,13 +101,11 @@ func patToDBRecords(pat auth.PAT) (dbPat, error) {
 		DomainScopes: make(map[string]DomainScopeData),
 	}
 
-	// Collect all operations and entity IDs
 	var allOps []string
 	var allEntityIDs []string
 	var allDomains []string
 	var allEntityTypes []string
 
-	// Process platform scopes
 	if len(pat.Scope.Users) > 0 {
 		scopeData.Users = pat.Scope.Users
 		ops, ids := extractOpsAndIDs(pat.Scope.Users)
@@ -148,7 +130,6 @@ func patToDBRecords(pat auth.PAT) (dbPat, error) {
 		allEntityTypes = append(allEntityTypes, "messaging")
 	}
 
-	// Process domain scopes
 	for domainID, domainScope := range pat.Scope.Domains {
 		dsd := DomainScopeData{
 			DomainManagement: domainScope.DomainManagement,
@@ -179,26 +160,14 @@ func patToDBRecords(pat auth.PAT) (dbPat, error) {
 		allDomains = append(allDomains, domainID)
 	}
 
-	// Remove duplicates
 	allOps = uniqueStrings(allOps)
 	allEntityIDs = uniqueStrings(allEntityIDs)
 	allDomains = uniqueStrings(allDomains)
 	allEntityTypes = uniqueStrings(allEntityTypes)
 
-	// Marshal scope data
 	scopesJSON, err := json.Marshal(scopeData)
 	if err != nil {
 		return dbPat{}, fmt.Errorf("failed to marshal scopes data: %w", err)
-	}
-
-	// Create metadata
-	metadata := map[string]interface{}{
-		"created_at": time.Now(),
-		"version":    "1.0",
-	}
-	metadataJSON, err := json.Marshal(metadata)
-	if err != nil {
-		return dbPat{}, fmt.Errorf("failed to marshal metadata: %w", err)
 	}
 
 	return dbPat{
@@ -218,7 +187,6 @@ func patToDBRecords(pat auth.PAT) (dbPat, error) {
 		EntityIDs:   allEntityIDs,
 		Domains:     allDomains,
 		EntityTypes: allEntityTypes,
-		Metadata:    string(metadataJSON),
 	}, nil
 }
 

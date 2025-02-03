@@ -86,7 +86,6 @@ func Migration() *migrate.MemoryMigrationSource {
 						entity_ids			TEXT[],
 						domains				TEXT[],
 						entity_types		TEXT[],
-						metadata			TEXT
 					)`,
 				},
 				Down: []string{
