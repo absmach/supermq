@@ -15,6 +15,32 @@ import (
 
 var _ auth.PATSRepository = (*patRepo)(nil)
 
+const (
+	saveQuery = `
+	INSERT INTO pats (
+		id, user_id, name, description, secret, issued_at, expires_at, 
+		updated_at, last_used_at, revoked, revoked_at,
+		scopes_data
+	) VALUES (
+		:id, :user_id, :name, :description, :secret, :issued_at, :expires_at,
+		:updated_at, :last_used_at, :revoked, :revoked_at,
+		:scopes_data
+	)`
+
+	retrieveQuery = `
+		SELECT 
+		id, user_id, name, description, secret, issued_at, expires_at,
+		updated_at, last_used_at, revoked, revoked_at,
+		scopes_data
+		FROM pats WHERE user_id = $1 AND id = $2`
+
+	updateQuery = `
+		UPDATE pats SET
+			scopes_data = :scopes_data,
+			updated_at = :updated_at
+		WHERE user_id = :user_id AND id = :id`
+)
+
 type patRepo struct {
 	db    postgres.Database
 	cache auth.Cache
@@ -33,18 +59,7 @@ func (pr *patRepo) Save(ctx context.Context, pat auth.PAT) error {
 		return errors.Wrap(repoerr.ErrCreateEntity, err)
 	}
 
-	q := `
-		INSERT INTO pats (
-			id, user_id, name, description, secret, issued_at, expires_at, 
-			updated_at, last_used_at, revoked, revoked_at,
-			scopes_data
-		) VALUES (
-			:id, :user_id, :name, :description, :secret, :issued_at, :expires_at,
-			:updated_at, :last_used_at, :revoked, :revoked_at,
-			:scopes_data
-		)`
-
-	row, err := pr.db.NamedQueryContext(ctx, q, record)
+	row, err := pr.db.NamedQueryContext(ctx, saveQuery, record)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
@@ -358,13 +373,7 @@ func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, plat
 		return auth.Scope{}, errors.Wrap(repoerr.ErrCreateEntity, err)
 	}
 
-	q := `
-		UPDATE pats SET
-			scopes_data = :scopes_data,
-			updated_at = :updated_at
-		WHERE user_id = :user_id AND id = :id`
-
-	res, err := pr.db.NamedExecContext(ctx, q, record)
+	res, err := pr.db.NamedExecContext(ctx, updateQuery, record)
 	if err != nil {
 		return auth.Scope{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
@@ -399,13 +408,7 @@ func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, p
 		return auth.Scope{}, errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
-	q := `
-		UPDATE pats SET
-			scopes_data = :scopes_data,
-			updated_at = :updated_at
-		WHERE user_id = :user_id AND id = :id`
-
-	res, err := pr.db.NamedExecContext(ctx, q, record)
+	res, err := pr.db.NamedExecContext(ctx, updateQuery, record)
 	if err != nil {
 		return auth.Scope{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
@@ -457,13 +460,7 @@ func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, userID, patID string
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
-	q := `
-		UPDATE pats SET
-			scopes_data = :scopes_data,
-			updated_at = :updated_at
-		WHERE user_id = :user_id AND id = :id`
-
-	res, err := pr.db.NamedExecContext(ctx, q, record)
+	res, err := pr.db.NamedExecContext(ctx, updateQuery, record)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
@@ -484,14 +481,7 @@ func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, userID, patID string
 }
 
 func (pr *patRepo) retrieveFromDB(ctx context.Context, userID, patID string) (auth.PAT, error) {
-	q := `
-		SELECT 
-		id, user_id, name, description, secret, issued_at, expires_at,
-		updated_at, last_used_at, revoked, revoked_at,
-		scopes_data
-		FROM pats WHERE user_id = $1 AND id = $2`
-
-	rows, err := pr.db.QueryContext(ctx, q, userID, patID)
+	rows, err := pr.db.QueryContext(ctx, retrieveQuery, userID, patID)
 	if err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
