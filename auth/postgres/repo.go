@@ -5,7 +5,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/absmach/supermq/auth"
@@ -38,11 +37,11 @@ func (pr *patRepo) Save(ctx context.Context, pat auth.PAT) error {
 		INSERT INTO pats (
 			id, user_id, name, description, secret, issued_at, expires_at, 
 			updated_at, last_used_at, revoked, revoked_at,
-			scopes_data, allowed_ops, entity_ids, domains, entity_types, metadata
+			scopes_data
 		) VALUES (
 			:id, :user_id, :name, :description, :secret, :issued_at, :expires_at,
 			:updated_at, :last_used_at, :revoked, :revoked_at,
-			:scopes_data, :allowed_ops, :entity_ids, :domains, :entity_types, :metadata
+			:scopes_data
 		)`
 
 	row, err := pr.db.NamedQueryContext(ctx, q, record)
@@ -51,7 +50,7 @@ func (pr *patRepo) Save(ctx context.Context, pat auth.PAT) error {
 	}
 	defer row.Close()
 
-	if err := pr.cache.Save(ctx, pat.Secret, pat.ID, pat); err != nil {
+	if err := pr.cache.Save(ctx, pat.ID, pat); err != nil {
 		return errors.Wrap(repoerr.ErrCreateEntity, err)
 	}
 
@@ -63,45 +62,23 @@ func (pr *patRepo) Retrieve(ctx context.Context, userID, patID string) (auth.PAT
 		return pat, nil
 	}
 
-	q := `
-		SELECT 
-		id, user_id, name, description, secret, issued_at, expires_at,
-		updated_at, last_used_at, revoked, revoked_at,
-		scopes_data,allowed_ops, entity_ids, domains, entity_types, metadata
-		FROM pats WHERE user_id = $1 AND id = $2`
-
-	rows, err := pr.db.QueryContext(ctx, q, userID, patID)
+	pat, err := pr.retrieveFromDB(ctx, userID, patID)
 	if err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
-	defer rows.Close()
-
-	var record dbPat
-	if rows.Next() {
-		if err := rows.Scan(&record); err != nil {
-			return auth.PAT{}, errors.Wrap(repoerr.ErrViewEntity, err)
-		}
-		pat, err := toAuthPat(record)
-		if err != nil {
-			return auth.PAT{}, err
-		}
-		// Save to cache
-		if err := pr.cache.Save(ctx, pat.Secret, pat.ID, pat); err != nil {
-			return auth.PAT{}, errors.Wrap(repoerr.ErrViewEntity, err)
-		}
-		return pat, nil
+	if err := pr.cache.Save(ctx, pat.ID, pat); err != nil {
+		return auth.PAT{}, err
 	}
 
-	return auth.PAT{}, repoerr.ErrNotFound
+	return pat, nil
 }
 
 func (pr *patRepo) RetrieveAll(ctx context.Context, userID string, pm auth.PATSPageMeta) (auth.PATSPage, error) {
 	q := `
 		SELECT 
-		p.id, p.user_id, p.name, p.description, p.secret, p.issued_at, p.expires_at,
-		p.updated_at, p.last_used_at, p.revoked, p.revoked_at,
-		p.scopes_data, p.allowed_ops, p.entity_ids, p.domains, p.entity_types, p.metadata
-		FROM pats p WHERE user_id :user_id
+		p.id, p.user_id, p.name, p.description, p.issued_at, p.expires_at,
+		p.updated_at, p.revoked, p.revoked_at
+		FROM pats p WHERE user_id = :user_id
 		ORDER BY issued_at DESC
 		LIMIT :limit OFFSET :offset`
 
@@ -113,20 +90,38 @@ func (pr *patRepo) RetrieveAll(ctx context.Context, userID string, pm auth.PATSP
 	}
 	defer rows.Close()
 
+	type data struct {
+		ID          string    `db:"id,omitempty"`
+		User        string    `db:"user_id,omitempty"`
+		Name        string    `db:"name,omitempty"`
+		Description string    `db:"description,omitempty"`
+		IssuedAt    time.Time `db:"issued_at,omitempty"`
+		ExpiresAt   time.Time `db:"expires_at,omitempty"`
+		UpdatedAt   time.Time `db:"updated_at,omitempty"`
+		Revoked     bool      `db:"revoked,omitempty"`
+		RevokedAt   time.Time `db:"revoked_at,omitempty"`
+	}
+
 	var items []auth.PAT
 	for rows.Next() {
-		var pat auth.PAT
+		var pat data
 		if err := rows.StructScan(&pat); err != nil {
 			return auth.PATSPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
-		items = append(items, pat)
+		items = append(items, auth.PAT{
+			ID:          pat.ID,
+			User:        pat.User,
+			Name:        pat.Name,
+			Description: pat.Description,
+			IssuedAt:    pat.IssuedAt,
+			ExpiresAt:   pat.ExpiresAt,
+			UpdatedAt:   pat.UpdatedAt,
+			Revoked:     pat.Revoked,
+			RevokedAt:   pat.RevokedAt,
+		})
 	}
 
-	cq := fmt.Sprintf(`SELECT COUNT(*) AS total_count 
-	FROM (
-		SELECT DISTINCT p.id FROM pats p %s
-		) AS subquery; 
-		`, q)
+	cq := `SELECT COUNT(*) FROM pats p WHERE user_id = :user_id`
 
 	total, err := postgres.Total(ctx, pr.db, cq, dbPage)
 	if err != nil {
@@ -194,7 +189,16 @@ func (pr *patRepo) UpdateName(ctx context.Context, userID, patID, name string) (
 		return auth.PAT{}, repoerr.ErrNotFound
 	}
 
-	return pr.Retrieve(ctx, userID, patID)
+	pat, err := pr.retrieveFromDB(ctx, userID, patID)
+	if err != nil {
+		return auth.PAT{}, err
+	}
+
+	if err := pr.cache.Save(ctx, patID, pat); err != nil {
+		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+	}
+
+	return pat, nil
 }
 
 func (pr *patRepo) UpdateDescription(ctx context.Context, userID, patID, description string) (auth.PAT, error) {
@@ -216,7 +220,16 @@ func (pr *patRepo) UpdateDescription(ctx context.Context, userID, patID, descrip
 		return auth.PAT{}, repoerr.ErrNotFound
 	}
 
-	return pr.Retrieve(ctx, userID, patID)
+	pat, err := pr.retrieveFromDB(ctx, userID, patID)
+	if err != nil {
+		return auth.PAT{}, err
+	}
+
+	if err := pr.cache.Save(ctx, patID, pat); err != nil {
+		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+	}
+
+	return pat, nil
 }
 
 func (pr *patRepo) UpdateTokenHash(ctx context.Context, userID, patID, tokenHash string, expiryAt time.Time) (auth.PAT, error) {
@@ -238,12 +251,12 @@ func (pr *patRepo) UpdateTokenHash(ctx context.Context, userID, patID, tokenHash
 		return auth.PAT{}, repoerr.ErrNotFound
 	}
 
-	pat, err := pr.Retrieve(ctx, userID, patID)
+	pat, err := pr.retrieveFromDB(ctx, userID, patID)
 	if err != nil {
 		return auth.PAT{}, err
 	}
 
-	if err := pr.cache.Save(ctx, tokenHash, patID, pat); err != nil {
+	if err := pr.cache.Save(ctx, patID, pat); err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
@@ -300,7 +313,7 @@ func (pr *patRepo) Reactivate(ctx context.Context, userID, patID string) error {
 		return err
 	}
 
-	if err := pr.cache.Save(ctx, pat.Secret, patID, pat); err != nil {
+	if err := pr.cache.Save(ctx, patID, pat); err != nil {
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
@@ -331,7 +344,7 @@ func (pr *patRepo) Remove(ctx context.Context, userID, patID string) error {
 }
 
 func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (auth.Scope, error) {
-	pat, err := pr.Retrieve(ctx, userID, patID)
+	pat, err := pr.retrieveFromDB(ctx, userID, patID)
 	if err != nil {
 		return auth.Scope{}, err
 	}
@@ -348,10 +361,6 @@ func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, plat
 	q := `
 		UPDATE pats SET
 			scopes_data = :scopes_data,
-			allowed_ops = :allowed_ops,
-			entity_ids = :entity_ids,
-			domains = :domains,
-			entity_types = :entity_types,
 			updated_at = :updated_at
 		WHERE user_id = :user_id AND id = :id`
 
@@ -368,7 +377,7 @@ func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, plat
 		return auth.Scope{}, repoerr.ErrNotFound
 	}
 
-	if err := pr.cache.Save(ctx, pat.Secret, pat.ID, pat); err != nil {
+	if err := pr.cache.Save(ctx, pat.ID, pat); err != nil {
 		return auth.Scope{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
@@ -393,10 +402,6 @@ func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, p
 	q := `
 		UPDATE pats SET
 			scopes_data = :scopes_data,
-			allowed_ops = :allowed_ops,
-			entity_ids = :entity_ids,
-			domains = :domains,
-			entity_types = :entity_types,
 			updated_at = :updated_at
 		WHERE user_id = :user_id AND id = :id`
 
@@ -413,7 +418,7 @@ func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, p
 		return auth.Scope{}, repoerr.ErrNotFound
 	}
 
-	if err := pr.cache.Save(ctx, pat.Secret, pat.ID, pat); err != nil {
+	if err := pr.cache.Save(ctx, pat.ID, pat); err != nil {
 		return auth.Scope{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
@@ -455,10 +460,6 @@ func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, userID, patID string
 	q := `
 		UPDATE pats SET
 			scopes_data = :scopes_data,
-			allowed_ops = :allowed_ops,
-			entity_ids = :entity_ids,
-			domains = :domains,
-			entity_types = :entity_types,
 			updated_at = :updated_at
 		WHERE user_id = :user_id AND id = :id`
 
@@ -475,9 +476,47 @@ func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, userID, patID string
 		return repoerr.ErrNotFound
 	}
 
-	if err := pr.cache.Save(ctx, pat.Secret, pat.ID, pat); err != nil {
+	if err := pr.cache.Save(ctx, pat.ID, pat); err != nil {
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
 	return nil
+}
+
+func (pr *patRepo) retrieveFromDB(ctx context.Context, userID, patID string) (auth.PAT, error) {
+	q := `
+		SELECT 
+		id, user_id, name, description, secret, issued_at, expires_at,
+		updated_at, last_used_at, revoked, revoked_at,
+		scopes_data
+		FROM pats WHERE user_id = $1 AND id = $2`
+
+	rows, err := pr.db.QueryContext(ctx, q, userID, patID)
+	if err != nil {
+		return auth.PAT{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+	defer rows.Close()
+
+	var record dbPat
+	if rows.Next() {
+		if err := rows.Scan(
+			&record.ID,
+			&record.User,
+			&record.Name,
+			&record.Description,
+			&record.Secret,
+			&record.IssuedAt,
+			&record.ExpiresAt,
+			&record.UpdatedAt,
+			&record.LastUsedAt,
+			&record.Revoked,
+			&record.RevokedAt,
+			&record.ScopesData,
+		); err != nil {
+			return auth.PAT{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+		return toAuthPat(record)
+	}
+
+	return auth.PAT{}, repoerr.ErrNotFound
 }

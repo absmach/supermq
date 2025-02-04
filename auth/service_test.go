@@ -50,11 +50,13 @@ var (
 	pService   *policymocks.Service
 	pEvaluator *policymocks.Evaluator
 	patsrepo   *mocks.PATSRepository
+	cache      *mocks.Cache
 	hasher     *mocks.Hasher
 )
 
 func newService() (auth.Service, string) {
 	krepo = new(mocks.KeyRepository)
+	cache = new(mocks.Cache)
 	pService = new(policymocks.Service)
 	pEvaluator = new(policymocks.Evaluator)
 	patsrepo = new(mocks.PATSRepository)
@@ -72,7 +74,7 @@ func newService() (auth.Service, string) {
 	}
 	token, _ := t.Issue(key)
 
-	return auth.New(krepo, patsrepo, hasher, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), token
+	return auth.New(krepo, patsrepo, cache, hasher, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), token
 }
 
 func TestIssue(t *testing.T) {

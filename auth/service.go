@@ -6,7 +6,6 @@ package auth
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -98,7 +97,7 @@ type Service interface {
 
 //go:generate mockery --name Cache --output=./mocks --filename cache.go --quiet --note "Copyright (c) Abstract Machines"
 type Cache interface {
-	Save(ctx context.Context, patSecret, patID string, scope PAT) error
+	Save(ctx context.Context, patID string, scope PAT) error
 
 	ID(ctx context.Context, patID string) (PAT, error)
 
@@ -490,13 +489,12 @@ func (svc service) CreatePAT(ctx context.Context, token, name, description strin
 		User:        key.User,
 		Name:        name,
 		Description: description,
-		Secret:      hash,
+		Secret:      patPrefix + patSecretSeparator + hash,
 		IssuedAt:    now,
 		ExpiresAt:   now.Add(duration),
 		Scope:       scope,
 	}
 	if err := svc.pats.Save(ctx, pat); err != nil {
-		fmt.Printf("err is %+v\n", err)
 		return PAT{}, errors.Wrap(errCreatePAT, err)
 	}
 	pat.Secret = secret
@@ -530,9 +528,6 @@ func (svc service) UpdatePATDescription(ctx context.Context, token, patID, descr
 func (svc service) RetrievePAT(ctx context.Context, userID, patID string) (PAT, error) {
 	pat, err := svc.pats.Retrieve(ctx, userID, patID)
 	if err != nil {
-		fmt.Printf("userID is %+v\n", userID)
-		fmt.Printf("patID is %+v\n", patID)
-		fmt.Printf("error is %+v\n", err)
 		return PAT{}, errors.Wrap(errRetrievePAT, err)
 	}
 	return pat, nil
@@ -647,9 +642,6 @@ func (svc service) IdentifyPAT(ctx context.Context, secret string) (PAT, error) 
 	if err != nil {
 		return PAT{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-	fmt.Printf("revoked is %+v\n", revoked)
-	fmt.Printf("secretHash is %+v\n", secretHash)
-	fmt.Printf("expired is %+v\n", expired)
 	if revoked {
 		return PAT{}, errors.Wrap(svcerr.ErrAuthentication, errRevokedPAT)
 	}

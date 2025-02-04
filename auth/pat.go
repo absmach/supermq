@@ -676,7 +676,7 @@ func (s *Scope) String() string {
 // PAT represents Personal Access Token.
 type PAT struct {
 	ID          string    `json:"id,omitempty"`
-	User        string    `json:"user,omitempty"`
+	User        string    `json:"user_id,omitempty"`
 	Name        string    `json:"name,omitempty"`
 	Description string    `json:"description,omitempty"`
 	Secret      string    `json:"secret,omitempty"`

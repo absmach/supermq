@@ -25,7 +25,7 @@ func NewPatsCache(client *redis.Client, duration time.Duration) auth.Cache {
 	}
 }
 
-func (pc *patCache) Save(ctx context.Context, patSecret, patID string, pat auth.PAT) error {
+func (pc *patCache) Save(ctx context.Context, patID string, pat auth.PAT) error {
 	if err := pc.client.Set(ctx, patID, pat, pc.duration).Err(); err != nil {
 		return errors.Wrap(repoerr.ErrCreateEntity, err)
 	}

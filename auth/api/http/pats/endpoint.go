@@ -33,7 +33,12 @@ func retrievePATEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		pat, err := svc.RetrievePAT(ctx, req.token, req.id)
+		key, err := svc.Identify(ctx, req.token)
+		if err != nil {
+			return nil, err
+		}
+
+		pat, err := svc.RetrievePAT(ctx, key.User, req.id)
 		if err != nil {
 			return nil, err
 		}

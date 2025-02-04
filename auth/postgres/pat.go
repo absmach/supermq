@@ -23,15 +23,7 @@ type dbPat struct {
 	LastUsedAt  time.Time `db:"last_used_at,omitempty"`
 	Revoked     bool      `db:"revoked,omitempty"`
 	RevokedAt   time.Time `db:"revoked_at,omitempty"`
-
-	// Scopes data stored as JSON
-	ScopesData string `db:"scopes_data,omitempty"`
-
-	// Aggregated scope fields for querying
-	AllowedOps  []string `db:"allowed_ops,omitempty"`  // Combined list of all allowed operations
-	EntityIDs   []string `db:"entity_ids,omitempty"`   // Combined list of all entity IDs
-	Domains     []string `db:"domains,omitempty"`      // List of all domain IDs
-	EntityTypes []string `db:"entity_types,omitempty"` // List of all entity types
+	ScopesData  string    `db:"scopes_data,omitempty"`
 }
 
 type dbAuthPage struct {
@@ -101,33 +93,16 @@ func patToDBRecords(pat auth.PAT) (dbPat, error) {
 		DomainScopes: make(map[string]DomainScopeData),
 	}
 
-	var allOps []string
-	var allEntityIDs []string
-	var allDomains []string
-	var allEntityTypes []string
-
 	if len(pat.Scope.Users) > 0 {
 		scopeData.Users = pat.Scope.Users
-		ops, ids := extractOpsAndIDs(pat.Scope.Users)
-		allOps = append(allOps, ops...)
-		allEntityIDs = append(allEntityIDs, ids...)
-		allEntityTypes = append(allEntityTypes, "users")
 	}
 
 	if len(pat.Scope.Dashboard) > 0 {
 		scopeData.Dashboard = pat.Scope.Dashboard
-		ops, ids := extractOpsAndIDs(pat.Scope.Dashboard)
-		allOps = append(allOps, ops...)
-		allEntityIDs = append(allEntityIDs, ids...)
-		allEntityTypes = append(allEntityTypes, "dashboard")
 	}
 
 	if len(pat.Scope.Messaging) > 0 {
 		scopeData.Messaging = pat.Scope.Messaging
-		ops, ids := extractOpsAndIDs(pat.Scope.Messaging)
-		allOps = append(allOps, ops...)
-		allEntityIDs = append(allEntityIDs, ids...)
-		allEntityTypes = append(allEntityTypes, "messaging")
 	}
 
 	for domainID, domainScope := range pat.Scope.Domains {
@@ -136,34 +111,16 @@ func patToDBRecords(pat auth.PAT) (dbPat, error) {
 			Entities:         make(map[string]auth.OperationScope),
 		}
 
-		if len(domainScope.DomainManagement) > 0 {
-			ops, ids := extractOpsAndIDs(domainScope.DomainManagement)
-			allOps = append(allOps, ops...)
-			allEntityIDs = append(allEntityIDs, ids...)
-			allEntityTypes = append(allEntityTypes, "domain_management")
-		}
-
 		for entityType, ops := range domainScope.Entities {
 			entityTypeStr, err := entityType.ValidString()
 			if err != nil {
 				return dbPat{}, fmt.Errorf("invalid entity type: %w", err)
 			}
 			dsd.Entities[entityTypeStr] = ops
-
-			extractedOps, ids := extractOpsAndIDs(ops)
-			allOps = append(allOps, extractedOps...)
-			allEntityIDs = append(allEntityIDs, ids...)
-			allEntityTypes = append(allEntityTypes, entityTypeStr)
 		}
 
 		scopeData.DomainScopes[domainID] = dsd
-		allDomains = append(allDomains, domainID)
 	}
-
-	allOps = uniqueStrings(allOps)
-	allEntityIDs = uniqueStrings(allEntityIDs)
-	allDomains = uniqueStrings(allDomains)
-	allEntityTypes = uniqueStrings(allEntityTypes)
 
 	scopesJSON, err := json.Marshal(scopeData)
 	if err != nil {
@@ -183,44 +140,12 @@ func patToDBRecords(pat auth.PAT) (dbPat, error) {
 		Revoked:     pat.Revoked,
 		RevokedAt:   pat.RevokedAt,
 		ScopesData:  string(scopesJSON),
-		AllowedOps:  allOps,
-		EntityIDs:   allEntityIDs,
-		Domains:     allDomains,
-		EntityTypes: allEntityTypes,
 	}, nil
 }
 
 type DomainScopeData struct {
 	DomainManagement auth.OperationScope            `json:"domain_management,omitempty"`
 	Entities         map[string]auth.OperationScope `json:"entities,omitempty"`
-}
-
-func extractOpsAndIDs(ops auth.OperationScope) ([]string, []string) {
-	var operations []string
-	var entityIDs []string
-
-	for op, scopeValue := range ops {
-		opStr, err := op.ValidString()
-		if err != nil {
-			continue
-		}
-		operations = append(operations, opStr)
-		entityIDs = append(entityIDs, scopeValue.Values()...)
-	}
-
-	return operations, entityIDs
-}
-
-func uniqueStrings(strs []string) []string {
-	seen := make(map[string]struct{})
-	var result []string
-	for _, str := range strs {
-		if _, exists := seen[str]; !exists {
-			seen[str] = struct{}{}
-			result = append(result, str)
-		}
-	}
-	return result
 }
 
 func toDBAuthPage(user string, pm auth.PATSPageMeta) dbAuthPage {
