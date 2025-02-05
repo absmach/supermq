@@ -4,8 +4,6 @@
 package postgres
 
 import (
-	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/absmach/supermq/auth"
@@ -23,7 +21,15 @@ type dbPat struct {
 	LastUsedAt  time.Time `db:"last_used_at,omitempty"`
 	Revoked     bool      `db:"revoked,omitempty"`
 	RevokedAt   time.Time `db:"revoked_at,omitempty"`
-	ScopesData  string    `db:"scopes_data,omitempty"`
+}
+
+type dbScope struct {
+	PatID         string   `db:"pat_id,omitempty"`
+	Platformtype  string   `db:"platform_type,omitempty"`
+	DomainID      string   `db:"domain_id,omitempty"`
+	DomainType    string   `db:"domain_type,omitempty"`
+	OperationType string   `db:"operation_type,omitempty"`
+	EntityIDs     []string `db:"entity_ids,omitempty"`
 }
 
 type dbAuthPage struct {
@@ -32,7 +38,7 @@ type dbAuthPage struct {
 	User   string `db:"user_id"`
 }
 
-func toAuthPat(db dbPat) (auth.PAT, error) {
+func toAuthPat(db dbPat, sc []dbScope) (auth.PAT, error) {
 	pat := auth.PAT{
 		ID:          db.ID,
 		User:        db.User,
@@ -47,86 +53,130 @@ func toAuthPat(db dbPat) (auth.PAT, error) {
 		RevokedAt:   db.RevokedAt,
 		Scope:       auth.Scope{Domains: make(map[string]auth.DomainScope)},
 	}
-
-	var scopeData struct {
-		Users        auth.OperationScope        `json:"users,omitempty"`
-		Dashboard    auth.OperationScope        `json:"dashboard,omitempty"`
-		Messaging    auth.OperationScope        `json:"messaging,omitempty"`
-		DomainScopes map[string]DomainScopeData `json:"domain_scopes,omitempty"`
+	scope, err := toAuthScope(sc)
+	if err != nil {
+		return auth.PAT{}, err
 	}
-
-	if err := json.Unmarshal([]byte(db.ScopesData), &scopeData); err != nil {
-		return auth.PAT{}, fmt.Errorf("failed to unmarshal scopes data: %w", err)
-	}
-
-	pat.Scope.Users = scopeData.Users
-	pat.Scope.Dashboard = scopeData.Dashboard
-	pat.Scope.Messaging = scopeData.Messaging
-
-	for domainID, dsd := range scopeData.DomainScopes {
-		domainScope := auth.DomainScope{
-			DomainManagement: dsd.DomainManagement,
-			Entities:         make(map[auth.DomainEntityType]auth.OperationScope),
-		}
-
-		for entityTypeStr, ops := range dsd.Entities {
-			entityType, err := auth.ParseDomainEntityType(entityTypeStr)
-			if err != nil {
-				return auth.PAT{}, fmt.Errorf("invalid domain entity type %s: %w", entityTypeStr, err)
-			}
-			domainScope.Entities[entityType] = ops
-		}
-
-		pat.Scope.Domains[domainID] = domainScope
-	}
+	pat.Scope = scope
 
 	return pat, nil
 }
 
-func patToDBRecords(pat auth.PAT) (dbPat, error) {
-	scopeData := struct {
-		Users        auth.OperationScope        `json:"users,omitempty"`
-		Dashboard    auth.OperationScope        `json:"dashboard,omitempty"`
-		Messaging    auth.OperationScope        `json:"messaging,omitempty"`
-		DomainScopes map[string]DomainScopeData `json:"domain_scopes,omitempty"`
-	}{
-		DomainScopes: make(map[string]DomainScopeData),
+func toAuthScope(sc []dbScope) (auth.Scope, error) {
+	scope := auth.Scope{
+		Domains:   make(map[string]auth.DomainScope),
+		Users:     auth.OperationScope{},
+		Dashboard: auth.OperationScope{},
+		Messaging: auth.OperationScope{},
 	}
 
-	if len(pat.Scope.Users) > 0 {
-		scopeData.Users = pat.Scope.Users
-	}
+	for _, t := range sc {
+		var platformType auth.PlatformEntityType
+		var operation auth.OperationType
+		var err error
 
-	if len(pat.Scope.Dashboard) > 0 {
-		scopeData.Dashboard = pat.Scope.Dashboard
-	}
-
-	if len(pat.Scope.Messaging) > 0 {
-		scopeData.Messaging = pat.Scope.Messaging
-	}
-
-	for domainID, domainScope := range pat.Scope.Domains {
-		dsd := DomainScopeData{
-			DomainManagement: domainScope.DomainManagement,
-			Entities:         make(map[string]auth.OperationScope),
+		platformType, err = auth.ParsePlatformEntityType(t.Platformtype)
+		if err != nil {
+			return auth.Scope{}, err
 		}
 
-		for entityType, ops := range domainScope.Entities {
-			entityTypeStr, err := entityType.ValidString()
-			if err != nil {
-				return dbPat{}, fmt.Errorf("invalid entity type: %w", err)
+		operation, err = auth.ParseOperationType(t.OperationType)
+		if err != nil {
+			return auth.Scope{}, err
+		}
+
+		switch platformType {
+		case auth.PlatformUsersScope:
+			if err := scope.Users.Add(operation, t.EntityIDs...); err != nil {
+				return auth.Scope{}, err
 			}
-			dsd.Entities[entityTypeStr] = ops
+		case auth.PlatformDashBoardScope:
+			if err := scope.Dashboard.Add(operation, t.EntityIDs...); err != nil {
+				return auth.Scope{}, err
+			}
+		case auth.PlatformMesagingScope:
+			if err := scope.Messaging.Add(operation, t.EntityIDs...); err != nil {
+				return auth.Scope{}, err
+			}
+		case auth.PlatformDomainsScope:
+			var domainEntityType auth.DomainEntityType
+			if t.DomainType != "" {
+				domainEntityType, err = auth.ParseDomainEntityType(t.DomainType)
+				if err != nil {
+					return auth.Scope{}, err
+				}
+			}
+
+			if err := scope.Add(platformType, t.DomainID, domainEntityType, operation, t.EntityIDs...); err != nil {
+				return auth.Scope{}, err
+			}
+		}
+	}
+
+	return scope, nil
+}
+
+func fromAuthScope(patID string, scope auth.Scope) []dbScope {
+	var dbScopes []dbScope
+
+	for op, ids := range scope.Users {
+		dbScopes = append(dbScopes, dbScope{
+			PatID:         patID,
+			Platformtype:  auth.PlatformUsersScope.String(),
+			OperationType: op.String(),
+			EntityIDs:     ids.Values(),
+		})
+	}
+
+	for op, ids := range scope.Dashboard {
+		dbScopes = append(dbScopes, dbScope{
+			PatID:         patID,
+			Platformtype:  auth.PlatformDashBoardScope.String(),
+			OperationType: op.String(),
+			EntityIDs:     ids.Values(),
+		})
+	}
+
+	for op, ids := range scope.Messaging {
+		dbScopes = append(dbScopes, dbScope{
+			PatID:         patID,
+			Platformtype:  auth.PlatformMesagingScope.String(),
+			OperationType: op.String(),
+			EntityIDs:     ids.Values(),
+		})
+	}
+
+	for domainID, domainScope := range scope.Domains {
+		for op, ids := range domainScope.DomainManagement {
+			dbScopes = append(dbScopes, dbScope{
+				PatID:         patID,
+				Platformtype:  auth.PlatformDomainsScope.String(),
+				DomainID:      domainID,
+				DomainType:    auth.DomainManagementScope.String(),
+				OperationType: op.String(),
+				EntityIDs:     ids.Values(),
+			})
 		}
 
-		scopeData.DomainScopes[domainID] = dsd
+		for entityType, entityScope := range domainScope.Entities {
+			for op, ids := range entityScope {
+				dbScopes = append(dbScopes, dbScope{
+					PatID:         patID,
+					Platformtype:  auth.PlatformDomainsScope.String(),
+					DomainID:      domainID,
+					DomainType:    entityType.String(),
+					OperationType: op.String(),
+					EntityIDs:     ids.Values(),
+				})
+			}
+		}
 	}
 
-	scopesJSON, err := json.Marshal(scopeData)
-	if err != nil {
-		return dbPat{}, fmt.Errorf("failed to marshal scopes data: %w", err)
-	}
+	return dbScopes
+}
 
+func patToDBRecords(pat auth.PAT) (dbPat, []dbScope, error) {
+	scopes := fromAuthScope(pat.ID, pat.Scope)
 	return dbPat{
 		ID:          pat.ID,
 		User:        pat.User,
@@ -139,13 +189,7 @@ func patToDBRecords(pat auth.PAT) (dbPat, error) {
 		LastUsedAt:  pat.LastUsedAt,
 		Revoked:     pat.Revoked,
 		RevokedAt:   pat.RevokedAt,
-		ScopesData:  string(scopesJSON),
-	}, nil
-}
-
-type DomainScopeData struct {
-	DomainManagement auth.OperationScope            `json:"domain_management,omitempty"`
-	Entities         map[string]auth.OperationScope `json:"entities,omitempty"`
+	}, scopes, nil
 }
 
 func toDBAuthPage(user string, pm auth.PATSPageMeta) dbAuthPage {

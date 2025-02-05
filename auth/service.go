@@ -489,7 +489,7 @@ func (svc service) CreatePAT(ctx context.Context, token, name, description strin
 		User:        key.User,
 		Name:        name,
 		Description: description,
-		Secret:      patPrefix + patSecretSeparator + hash,
+		Secret:      hash,
 		IssuedAt:    now,
 		ExpiresAt:   now.Add(duration),
 		Scope:       scope,

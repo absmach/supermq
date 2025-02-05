@@ -80,12 +80,29 @@ func Migration() *migrate.MemoryMigrationSource {
 						revoked 			BOOLEAN,
 						revoked_at 			TIMESTAMP,
 						entity_type 		TEXT,
-						last_used_at		TIMESTAMP,
-						scopes_data 		TEXT
+						last_used_at		TIMESTAMP
 					)`,
 				},
 				Down: []string{
 					`DROP TABLE IF EXISTS pats`,
+				},
+			},
+			{
+				Id: "auth_5",
+				Up: []string{
+					`CREATE TABLE IF NOT EXISTS pat_scopes (
+						id              SERIAL PRIMARY KEY,
+						pat_id          VARCHAR(36) REFERENCES pats(id) ON DELETE CASCADE,
+						platform_type   VARCHAR(50) NOT NULL,
+						domain_id       VARCHAR(36),
+						domain_type     VARCHAR(50),
+						operation_type  VARCHAR(50) NOT NULL,
+						entity_ids      TEXT[] NOT NULL,
+						UNIQUE (pat_id, platform_type, domain_id, domain_type, operation_type)
+					)`,
+				},
+				Down: []string{
+					`DROP TABLE IF EXISTS pat_scopes`,
 				},
 			},
 		},

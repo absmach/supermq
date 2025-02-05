@@ -11,6 +11,7 @@ import (
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	"github.com/absmach/supermq/pkg/postgres"
+	"github.com/lib/pq"
 )
 
 var _ auth.PATSRepository = (*patRepo)(nil)
@@ -19,26 +20,49 @@ const (
 	saveQuery = `
 	INSERT INTO pats (
 		id, user_id, name, description, secret, issued_at, expires_at, 
-		updated_at, last_used_at, revoked, revoked_at,
-		scopes_data
+		updated_at, last_used_at, revoked, revoked_at
 	) VALUES (
 		:id, :user_id, :name, :description, :secret, :issued_at, :expires_at,
-		:updated_at, :last_used_at, :revoked, :revoked_at,
-		:scopes_data
+		:updated_at, :last_used_at, :revoked, :revoked_at
 	)`
+
+	updateQuery = `
+	UPDATE pats SET
+		name = :name,
+		description = :description,
+		secret = :secret,
+		expires_at = :expires_at,
+		updated_at = :updated_at,
+		last_used_at = :last_used_at,
+		revoked = :revoked,
+		revoked_at = :revoked_at
+	WHERE id = :id AND user_id = :user_id`
 
 	retrieveQuery = `
 		SELECT 
 		id, user_id, name, description, secret, issued_at, expires_at,
-		updated_at, last_used_at, revoked, revoked_at,
-		scopes_data
+		updated_at, last_used_at, revoked, revoked_at
 		FROM pats WHERE user_id = $1 AND id = $2`
 
-	updateQuery = `
+	saveScopeQuery = `
+		INSERT INTO pat_scopes (pat_id, platform_type, domain_id, domain_type, operation_type, entity_ids)
+		VALUES (:pat_id, :platform_type, :domain_id, :domain_type, :operation_type, :entity_ids)`
+
+	updateScopeQuery = `
 		UPDATE pats SET
-			scopes_data = :scopes_data,
-			updated_at = :updated_at
-		WHERE user_id = :user_id AND id = :id`
+			pat_id = :pat_id,
+			platform_type = :platform_type, 
+			domain_id = :domain_id, 
+			domain_type = :domain_type, 
+			operation_type = :operation_type, 
+			entity_ids = :entity_ids
+		WHERE id = :id AND user_id = :user_id`
+
+	retrieveScopesQuery = `
+		SELECT platform_type, domain_id, domain_type, operation_type, entity_ids
+		FROM pat_scopes WHERE pat_id = $1`
+
+	deleteScopesQuery = `DELETE FROM pat_scopes WHERE pat_id = $1`
 )
 
 type patRepo struct {
@@ -54,7 +78,7 @@ func NewPatRepo(db postgres.Database, cache auth.Cache) auth.PATSRepository {
 }
 
 func (pr *patRepo) Save(ctx context.Context, pat auth.PAT) error {
-	record, err := patToDBRecords(pat)
+	record, scope, err := patToDBRecords(pat)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrCreateEntity, err)
 	}
@@ -64,6 +88,12 @@ func (pr *patRepo) Save(ctx context.Context, pat auth.PAT) error {
 		return postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 	defer row.Close()
+
+	row1, err := pr.db.NamedQueryContext(ctx, saveScopeQuery, scope)
+	if err != nil {
+		return postgres.HandleError(repoerr.ErrCreateEntity, err)
+	}
+	defer row1.Close()
 
 	if err := pr.cache.Save(ctx, pat.ID, pat); err != nil {
 		return errors.Wrap(repoerr.ErrCreateEntity, err)
@@ -368,12 +398,12 @@ func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, plat
 		return auth.Scope{}, errors.Wrap(repoerr.ErrCreateEntity, err)
 	}
 
-	record, err := patToDBRecords(pat)
+	_, scope, err := patToDBRecords(pat)
 	if err != nil {
 		return auth.Scope{}, errors.Wrap(repoerr.ErrCreateEntity, err)
 	}
 
-	res, err := pr.db.NamedExecContext(ctx, updateQuery, record)
+	res, err := pr.db.NamedExecContext(ctx, updateScopeQuery, scope)
 	if err != nil {
 		return auth.Scope{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
@@ -403,12 +433,12 @@ func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, p
 		return auth.Scope{}, errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
-	record, err := patToDBRecords(pat)
+	_, scope, err := patToDBRecords(pat)
 	if err != nil {
 		return auth.Scope{}, errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
-	res, err := pr.db.NamedExecContext(ctx, updateQuery, record)
+	res, err := pr.db.NamedExecContext(ctx, updateScopeQuery, scope)
 	if err != nil {
 		return auth.Scope{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
@@ -455,12 +485,12 @@ func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, userID, patID string
 
 	pat.Scope = auth.Scope{Domains: make(map[string]auth.DomainScope)}
 
-	record, err := patToDBRecords(pat)
+	_, scope, err := patToDBRecords(pat)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
-	res, err := pr.db.NamedExecContext(ctx, updateQuery, record)
+	res, err := pr.db.NamedExecContext(ctx, updateScopeQuery, scope)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
@@ -481,6 +511,29 @@ func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, userID, patID string
 }
 
 func (pr *patRepo) retrieveFromDB(ctx context.Context, userID, patID string) (auth.PAT, error) {
+	scopeRows, err := pr.db.QueryContext(ctx, retrieveScopesQuery, patID)
+	if err != nil {
+		return auth.PAT{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+	defer scopeRows.Close()
+
+	var scopes []dbScope
+	var entityIDs pq.StringArray
+	for scopeRows.Next() {
+		var scope dbScope
+		if err := scopeRows.Scan(
+			&scope.Platformtype,
+			&scope.DomainID,
+			&scope.DomainType,
+			&scope.OperationType,
+			&entityIDs,
+		); err != nil {
+			return auth.PAT{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+		scope.EntityIDs = []string(entityIDs)
+		scopes = append(scopes, scope)
+	}
+
 	rows, err := pr.db.QueryContext(ctx, retrieveQuery, userID, patID)
 	if err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrViewEntity, err)
@@ -501,11 +554,10 @@ func (pr *patRepo) retrieveFromDB(ctx context.Context, userID, patID string) (au
 			&record.LastUsedAt,
 			&record.Revoked,
 			&record.RevokedAt,
-			&record.ScopesData,
 		); err != nil {
 			return auth.PAT{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
-		return toAuthPat(record)
+		return toAuthPat(record, scopes)
 	}
 
 	return auth.PAT{}, repoerr.ErrNotFound
