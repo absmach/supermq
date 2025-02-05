@@ -26,18 +26,6 @@ const (
 		:updated_at, :last_used_at, :revoked, :revoked_at
 	)`
 
-	updateQuery = `
-	UPDATE pats SET
-		name = :name,
-		description = :description,
-		secret = :secret,
-		expires_at = :expires_at,
-		updated_at = :updated_at,
-		last_used_at = :last_used_at,
-		revoked = :revoked,
-		revoked_at = :revoked_at
-	WHERE id = :id AND user_id = :user_id`
-
 	retrieveQuery = `
 		SELECT 
 		id, user_id, name, description, secret, issued_at, expires_at,
@@ -438,7 +426,7 @@ func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, p
 		return auth.Scope{}, errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
-	res, err := pr.db.NamedExecContext(ctx, updateScopeQuery, scope)
+	res, err := pr.db.NamedExecContext(ctx, deleteScopesQuery, scope)
 	if err != nil {
 		return auth.Scope{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
