@@ -5,7 +5,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/absmach/supermq/auth"
@@ -428,9 +427,7 @@ func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, p
 
 	res, err := pr.db.NamedExecContext(ctx, updateScopeQuery, scope)
 	if err != nil {
-
-		x := fmt.Sprintf("%+v \n %+v \n %+v \n", pat.Scope, scope, isEmptyScope(pat.Scope))
-		return auth.Scope{}, errors.New(x)
+		return auth.Scope{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
 	cnt, err := res.RowsAffected()
