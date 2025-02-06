@@ -12,10 +12,13 @@ The service is configured using the environment variables presented in the follo
 | SMQ_MQTT_ADAPTER_MQTT_PORT                | mProxy port                                                                         | 1883                              |
 | SMQ_MQTT_ADAPTER_MQTT_TARGET_HOST         | MQTT broker host                                                                    | localhost                         |
 | SMQ_MQTT_ADAPTER_MQTT_TARGET_PORT         | MQTT broker port                                                                    | 1883                              |
+| SMQ_MQTT_ADAPTER_MQTT_QOS                 | MQTT broker QoS                                                                     | 1                                 |
+| SMQ_MQTT_ADAPTER_FORWARDER_TIMEOUT        | MQTT forwarder for multiprotocol communication timeout                              | 30s                               |
 | SMQ_MQTT_ADAPTER_MQTT_TARGET_HEALTH_CHECK | URL of broker health check                                                          | ""                                |
 | SMQ_MQTT_ADAPTER_WS_PORT                  | mProxy MQTT over WS port                                                            | 8080                              |
 | SMQ_MQTT_ADAPTER_WS_TARGET_HOST           | MQTT broker host for MQTT over WS                                                   | localhost                         |
 | SMQ_MQTT_ADAPTER_WS_TARGET_PORT           | MQTT broker port for MQTT over WS                                                   | 8080                              |
+| SMQ_MQTT_ADAPTER_WS_TARGET_PATH           | MQTT broker MQTT over WS path                                                       | /mqtt                             |
 | SMQ_MQTT_ADAPTER_INSTANCE                 | Instance name for MQTT adapter                                                      | ""                                |
 | SMQ_CLIENTS_GRPC_URL                      | Clients service Auth gRPC URL                                                       | <localhost:7000>                  |
 | SMQ_CLIENTS_GRPC_TIMEOUT                  | Clients service Auth gRPC request timeout in seconds                                | 1s                                |
@@ -53,10 +56,13 @@ SMQ_MQTT_ADAPTER_LOG_LEVEL=info \
 SMQ_MQTT_ADAPTER_MQTT_PORT=1883 \
 SMQ_MQTT_ADAPTER_MQTT_TARGET_HOST=localhost \
 SMQ_MQTT_ADAPTER_MQTT_TARGET_PORT=1883 \
+SMQ_MQTT_ADAPTER_MQTT_QOS=1 \
+SMQ_MQTT_ADAPTER_FORWARDER_TIMEOUT=30s \
 SMQ_MQTT_ADAPTER_MQTT_TARGET_HEALTH_CHECK="" \
 SMQ_MQTT_ADAPTER_WS_PORT=8080 \
 SMQ_MQTT_ADAPTER_WS_TARGET_HOST=localhost \
 SMQ_MQTT_ADAPTER_WS_TARGET_PORT=8080 \
+SMQ_MQTT_ADAPTER_WS_TARGET_PATH=/mqtt \
 SMQ_MQTT_ADAPTER_INSTANCE="" \
 SMQ_CLIENTS_GRPC_URL=localhost:7000 \
 SMQ_CLIENTS_GRPC_TIMEOUT=1s \

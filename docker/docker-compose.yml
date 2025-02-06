@@ -14,6 +14,7 @@ volumes:
   supermq-channels-db-volume:
   supermq-clients-redis-volume:
   supermq-broker-volume:
+  supermq-mqtt-broker-volume:
   supermq-spicedb-db-volume:
   supermq-auth-db-volume:
   supermq-pat-db-volume:
@@ -885,6 +886,7 @@ services:
     container_name: supermq-mqtt
     depends_on:
       - clients
+      - vernemq
       - nats
     restart: on-failure
     environment:
@@ -892,11 +894,14 @@ services:
       SMQ_MQTT_ADAPTER_MQTT_PORT: ${SMQ_MQTT_ADAPTER_MQTT_PORT}
       SMQ_MQTT_ADAPTER_MQTT_TARGET_HOST: ${SMQ_MQTT_ADAPTER_MQTT_TARGET_HOST}
       SMQ_MQTT_ADAPTER_MQTT_TARGET_PORT: ${SMQ_MQTT_ADAPTER_MQTT_TARGET_PORT}
+      SMQ_MQTT_ADAPTER_FORWARDER_TIMEOUT: ${SMQ_MQTT_ADAPTER_FORWARDER_TIMEOUT}
       SMQ_MQTT_ADAPTER_MQTT_TARGET_HEALTH_CHECK: ${SMQ_MQTT_ADAPTER_MQTT_TARGET_HEALTH_CHECK}
+      SMQ_MQTT_ADAPTER_MQTT_QOS: ${SMQ_MQTT_ADAPTER_MQTT_QOS}
       SMQ_MQTT_ADAPTER_WS_PORT: ${SMQ_MQTT_ADAPTER_WS_PORT}
       SMQ_MQTT_ADAPTER_INSTANCE_ID: ${SMQ_MQTT_ADAPTER_INSTANCE_ID}
       SMQ_MQTT_ADAPTER_WS_TARGET_HOST: ${SMQ_MQTT_ADAPTER_WS_TARGET_HOST}
       SMQ_MQTT_ADAPTER_WS_TARGET_PORT: ${SMQ_MQTT_ADAPTER_WS_TARGET_PORT}
+      SMQ_MQTT_ADAPTER_WS_TARGET_PATH: ${SMQ_MQTT_ADAPTER_WS_TARGET_PATH}
       SMQ_MQTT_ADAPTER_INSTANCE: ${SMQ_MQTT_ADAPTER_INSTANCE}
       SMQ_ES_URL: ${SMQ_ES_URL}
       SMQ_CLIENTS_GRPC_URL: ${SMQ_CLIENTS_GRPC_URL}
@@ -1201,6 +1206,18 @@ services:
         target: /auth-grpc-server-ca${SMQ_AUTH_GRPC_SERVER_CA_CERTS:+.crt}
         bind:
           create_host_path: true
+
+  vernemq:
+    image: supermq/vernemq:${SMQ_RELEASE_TAG}
+    container_name: supermq-vernemq
+    restart: on-failure
+    environment:
+      DOCKER_VERNEMQ_ALLOW_ANONYMOUS: ${SMQ_DOCKER_VERNEMQ_ALLOW_ANONYMOUS}
+      DOCKER_VERNEMQ_LOG__CONSOLE__LEVEL: ${SMQ_DOCKER_VERNEMQ_LOG__CONSOLE__LEVEL}
+    networks:
+      - supermq-base-net
+    volumes:
+      - supermq-mqtt-broker-volume:/var/lib/vernemq
 
   nats:
     image: nats:2.10.9-alpine
