@@ -40,7 +40,7 @@ func (res createPatRes) Empty() bool {
 }
 
 type retrievePatRes struct {
-	auth.PAT
+	auth.PAT `json:",inline"`
 }
 
 func (res retrievePatRes) Code() int {
@@ -56,7 +56,7 @@ func (res retrievePatRes) Empty() bool {
 }
 
 type updatePatNameRes struct {
-	auth.PAT
+	auth.PAT `json:",inline"`
 }
 
 func (res updatePatNameRes) Code() int {
@@ -72,7 +72,7 @@ func (res updatePatNameRes) Empty() bool {
 }
 
 type updatePatDescriptionRes struct {
-	auth.PAT
+	auth.PAT `json:",inline"`
 }
 
 func (res updatePatDescriptionRes) Code() int {
@@ -88,7 +88,7 @@ func (res updatePatDescriptionRes) Empty() bool {
 }
 
 type listPatsRes struct {
-	auth.PATSPage
+	auth.PATSPage `json:",inline"`
 }
 
 func (res listPatsRes) Code() int {
@@ -118,7 +118,7 @@ func (res deletePatRes) Empty() bool {
 }
 
 type resetPatSecretRes struct {
-	auth.PAT
+	auth.PAT `json:",inline"`
 }
 
 func (res resetPatSecretRes) Code() int {
@@ -148,7 +148,7 @@ func (res revokePatSecretRes) Empty() bool {
 }
 
 type addPatScopeEntryRes struct {
-	auth.Scope
+	auth.Scope `json:",inline"`
 }
 
 func (res addPatScopeEntryRes) Code() int {
@@ -164,7 +164,7 @@ func (res addPatScopeEntryRes) Empty() bool {
 }
 
 type removePatScopeEntryRes struct {
-	auth.Scope
+	auth.Scope `json:",inline"`
 }
 
 func (res removePatScopeEntryRes) Code() int {

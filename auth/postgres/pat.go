@@ -75,6 +75,10 @@ func toAuthScope(sc []dbScope) (auth.Scope, error) {
 		var operation auth.OperationType
 		var err error
 
+		if t.Platformtype == "" {
+			return scope, nil
+		}
+
 		platformType, err = auth.ParsePlatformEntityType(t.Platformtype)
 		if err != nil {
 			return auth.Scope{}, err
@@ -118,6 +122,14 @@ func toAuthScope(sc []dbScope) (auth.Scope, error) {
 
 func fromAuthScope(patID string, scope auth.Scope) []dbScope {
 	var dbScopes []dbScope
+
+	if isEmptyScope(scope) {
+		sc := dbScope{
+			PatID: patID,
+		}
+		dbScopes = append(dbScopes, sc)
+		return dbScopes
+	}
 
 	for op, ids := range scope.Users {
 		dbScopes = append(dbScopes, dbScope{

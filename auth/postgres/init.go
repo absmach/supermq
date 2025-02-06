@@ -80,7 +80,8 @@ func Migration() *migrate.MemoryMigrationSource {
 						revoked 			BOOLEAN,
 						revoked_at 			TIMESTAMP,
 						entity_type 		TEXT,
-						last_used_at		TIMESTAMP
+						last_used_at		TIMESTAMP,
+						UNIQUE (id, name, secret)
 					)`,
 				},
 				Down: []string{
@@ -93,11 +94,11 @@ func Migration() *migrate.MemoryMigrationSource {
 					`CREATE TABLE IF NOT EXISTS pat_scopes (
 						id              SERIAL PRIMARY KEY,
 						pat_id          VARCHAR(36) REFERENCES pats(id) ON DELETE CASCADE,
-						platform_type   VARCHAR(50) NOT NULL,
+						platform_type   VARCHAR(50),
 						domain_id       VARCHAR(36),
 						domain_type     VARCHAR(50),
-						operation_type  VARCHAR(50) NOT NULL,
-						entity_ids      TEXT[] NOT NULL,
+						operation_type  VARCHAR(50),
+						entity_ids      TEXT[],
 						UNIQUE (pat_id, platform_type, domain_id, domain_type, operation_type)
 					)`,
 				},

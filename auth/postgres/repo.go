@@ -5,6 +5,7 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/absmach/supermq/auth"
@@ -37,14 +38,13 @@ const (
 		VALUES (:pat_id, :platform_type, :domain_id, :domain_type, :operation_type, :entity_ids)`
 
 	updateScopeQuery = `
-		UPDATE pats SET
-			pat_id = :pat_id,
+		UPDATE pat_scopes SET
 			platform_type = :platform_type, 
 			domain_id = :domain_id, 
 			domain_type = :domain_type, 
 			operation_type = :operation_type, 
 			entity_ids = :entity_ids
-		WHERE id = :id AND user_id = :user_id`
+		WHERE pat_id = :pat_id`
 
 	retrieveScopesQuery = `
 		SELECT platform_type, domain_id, domain_type, operation_type, entity_ids
@@ -77,11 +77,11 @@ func (pr *patRepo) Save(ctx context.Context, pat auth.PAT) error {
 	}
 	defer row.Close()
 
-	row1, err := pr.db.NamedQueryContext(ctx, saveScopeQuery, scope)
+	scopeRow, err := pr.db.NamedQueryContext(ctx, saveScopeQuery, scope)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
-	defer row1.Close()
+	defer scopeRow.Close()
 
 	if err := pr.cache.Save(ctx, pat.ID, pat); err != nil {
 		return errors.Wrap(repoerr.ErrCreateEntity, err)
@@ -426,9 +426,11 @@ func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, p
 		return auth.Scope{}, errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
-	res, err := pr.db.NamedExecContext(ctx, deleteScopesQuery, scope)
+	res, err := pr.db.NamedExecContext(ctx, updateScopeQuery, scope)
 	if err != nil {
-		return auth.Scope{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
+
+		x := fmt.Sprintf("%+v \n %+v \n %+v \n", pat.Scope, scope, isEmptyScope(pat.Scope))
+		return auth.Scope{}, errors.New(x)
 	}
 
 	cnt, err := res.RowsAffected()
@@ -478,7 +480,7 @@ func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, userID, patID string
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
-	res, err := pr.db.NamedExecContext(ctx, updateScopeQuery, scope)
+	res, err := pr.db.NamedExecContext(ctx, deleteScopesQuery, scope)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
@@ -549,4 +551,11 @@ func (pr *patRepo) retrieveFromDB(ctx context.Context, userID, patID string) (au
 	}
 
 	return auth.PAT{}, repoerr.ErrNotFound
+}
+
+func isEmptyScope(scope auth.Scope) bool {
+	return len(scope.Users) == 0 &&
+		len(scope.Dashboard) == 0 &&
+		len(scope.Messaging) == 0 &&
+		len(scope.Domains) == 0
 }

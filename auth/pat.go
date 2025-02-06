@@ -377,6 +377,7 @@ func (os *OperationScope) Add(operation OperationType, entityIDs ...string) erro
 		}
 		value = &sids
 	}
+	*os = make(map[OperationType]ScopeValue)
 	(*os)[operation] = value
 	return nil
 }
@@ -636,6 +637,7 @@ func (s *Scope) Delete(platformEntityType PlatformEntityType, optionalDomainID s
 		if err := ds.Delete(optionalDomainEntityType, operation, entityIDs...); err != nil {
 			return fmt.Errorf("failed to delete platform %s id %s  scope : %w", platformEntityType.String(), optionalDomainID, err)
 		}
+		delete(s.Domains, optionalDomainID)
 	default:
 		return fmt.Errorf("failed to add platform %d scope: invalid platform entity type ", platformEntityType)
 	}
@@ -697,7 +699,7 @@ type PATSPage struct {
 	Total  uint64 `json:"total"`
 	Offset uint64 `json:"offset"`
 	Limit  uint64 `json:"limit"`
-	PATS   []PAT  `json:"pats"`
+	PATS   []PAT  `json:"pats,omitempty"`
 }
 
 func (pat PAT) MarshalBinary() ([]byte, error) {
