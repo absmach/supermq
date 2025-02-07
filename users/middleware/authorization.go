@@ -7,10 +7,8 @@ import (
 	"context"
 
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
-	smqauth "github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/authn"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
-	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/users"
 )

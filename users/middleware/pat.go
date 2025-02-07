@@ -12,7 +12,6 @@ import (
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	smqpat "github.com/absmach/supermq/pkg/pat"
-	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/users"
 )
 
@@ -78,27 +77,6 @@ func (pm *patMiddleware) ListUsers(ctx context.Context, session authn.Session, p
 		return users.UsersPage{}, err
 	}
 	return pm.svc.ListUsers(ctx, session, page)
-}
-
-func (pm *patMiddleware) ListMembers(ctx context.Context, session authn.Session, objectKind, objectID string, page users.Page) (users.MembersPage, error) {
-	switch objectKind {
-	case policies.GroupsKind:
-		if err := pm.authorizePAT(ctx, session, smqauth.PlatformUsersScope, smqauth.DomainGroupsScope, session.DomainID, smqauth.ListOp, smqauth.AnyIDs{}.Values()); err != nil {
-			return users.MembersPage{}, err
-		}
-	case policies.DomainsKind:
-		if err := pm.authorizePAT(ctx, session, smqauth.PlatformUsersScope, smqauth.DomainManagementScope, session.DomainID, smqauth.ListOp, smqauth.AnyIDs{}.Values()); err != nil {
-			return users.MembersPage{}, err
-		}
-	case policies.ClientsKind:
-		if err := pm.authorizePAT(ctx, session, smqauth.PlatformUsersScope, smqauth.DomainClientsScope, session.DomainID, smqauth.ListOp, smqauth.AnyIDs{}.Values()); err != nil {
-			return users.MembersPage{}, err
-		}
-	default:
-		return users.MembersPage{}, svcerr.ErrAuthorization
-	}
-
-	return pm.svc.ListMembers(ctx, session, objectKind, objectID, page)
 }
 
 func (pm *patMiddleware) SearchUsers(ctx context.Context, page users.Page) (users.UsersPage, error) {

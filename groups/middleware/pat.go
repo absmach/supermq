@@ -352,6 +352,36 @@ func (pm *patMiddleware) RetrieveRole(ctx context.Context, session authn.Session
 	return pm.svc.RetrieveRole(ctx, session, entityID, roleID)
 }
 
+func (pm *patMiddleware) ListEntityMembers(ctx context.Context, session authn.Session, entityID string, pq roles.MembersRolePageQuery) (roles.MembersRolePage, error) {
+	if err := pm.authorizePAT(ctx,
+		session,
+		smqauth.PlatformDomainsScope,
+		smqauth.DomainGroupsScope,
+		session.DomainID,
+		smqauth.ListOp,
+		[]string{entityID},
+	); err != nil {
+		return roles.MembersRolePage{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
+	}
+
+	return pm.svc.ListEntityMembers(ctx, session, entityID, pq)
+}
+
+func (pm *patMiddleware) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) error {
+	if err := pm.authorizePAT(ctx,
+		session,
+		smqauth.PlatformDomainsScope,
+		smqauth.DomainGroupsScope,
+		session.DomainID,
+		smqauth.DeleteOp,
+		[]string{entityID},
+	); err != nil {
+		return errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
+	}
+
+	return pm.svc.RemoveEntityMembers(ctx, session, entityID, members)
+}
+
 func (pm *patMiddleware) RoleAddActions(ctx context.Context, session authn.Session, entityID, roleID string, actions []string) ([]string, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
