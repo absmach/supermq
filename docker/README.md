@@ -26,21 +26,21 @@ To pull docker images from a specific release you need to change the value of `S
 
 SuperMQ supports configurable MQTT broker and Message broker, which also acts as an events store. SuperMQ uses two types of brokers:
 
-1. MQTT_BROKER: Handles MQTT communication between MQTT adapters and message broker. This can either be 'VerneMQ' or 'NATS'.
+1. MQTT_BROKER: Handles MQTT communication between MQTT adapters and message broker. This can either be 'RabbitMQ' or 'NATS'.
 2. MESSAGE_BROKER: Manages message exchange between SuperMQ core, optional, and external services. This can either be 'NATS' or 'RabbitMQ'. This is used to store messages for distributed processing.
 
 Events store: This is used by SuperMQ services to store events for distributed processing. SuperMQ uses a single service to be the message broker and events store. This can either be 'NATS' or 'RabbitMQ'. Redis can also be used as an events store, but it requires a message broker to be deployed along with it for message exchange.
 
 This is the same as MESSAGE_BROKER. This can either be 'NATS' or 'RabbitMQ' or 'Redis'.  If Redis is used as an events store, then RabbitMQ or NATS is used as a message broker.
 
-The current deployment strategy for SuperMQ in `docker/docker-compose.yml` is to use VerneMQ as a MQTT_BROKER and NATS as a MESSAGE_BROKER and EVENTS_STORE.
+The current deployment strategy for SuperMQ in `docker/docker-compose.yml` is to use RabbitMQ as a MQTT_BROKER and NATS as a MESSAGE_BROKER and EVENTS_STORE.
 
 Therefore, the following combinations are possible:
 
-- MQTT_BROKER: VerneMQ, MESSAGE_BROKER: NATS, EVENTS_STORE: NATS
-- MQTT_BROKER: VerneMQ, MESSAGE_BROKER: NATS, EVENTS_STORE: Redis
-- MQTT_BROKER: VerneMQ, MESSAGE_BROKER: RabbitMQ, EVENTS_STORE: RabbitMQ
-- MQTT_BROKER: VerneMQ, MESSAGE_BROKER: RabbitMQ, EVENTS_STORE: Redis
+- MQTT_BROKER: RabbitMQ, MESSAGE_BROKER: NATS, EVENTS_STORE: NATS
+- MQTT_BROKER: RabbitMQ, MESSAGE_BROKER: NATS, EVENTS_STORE: Redis
+- MQTT_BROKER: RabbitMQ, MESSAGE_BROKER: RabbitMQ, EVENTS_STORE: RabbitMQ
+- MQTT_BROKER: RabbitMQ, MESSAGE_BROKER: RabbitMQ, EVENTS_STORE: Redis
 - MQTT_BROKER: NATS, MESSAGE_BROKER: RabbitMQ, EVENTS_STORE: RabbitMQ
 - MQTT_BROKER: NATS, MESSAGE_BROKER: RabbitMQ, EVENTS_STORE: Redis
 - MQTT_BROKER: NATS, MESSAGE_BROKER: NATS, EVENTS_STORE: NATS
@@ -70,7 +70,7 @@ SMQ_ES_TYPE=redis
 SMQ_ES_URL=${SMQ_REDIS_URL}
 ```
 
-For MQTT broker other than VerneMQ, you would need to change the `docker/.env`. For example, to use NATS as a MQTT broker:
+For MQTT broker other than RabbitMQ, you would need to change the `docker/.env`. For example, to use NATS as a MQTT broker:
 
 ```env
 SMQ_MQTT_BROKER_TYPE=nats
