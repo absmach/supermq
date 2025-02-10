@@ -121,7 +121,7 @@ jobs:
               - "groups/api/grpc/**"
               - "channels/api/grpc/**"
               - "domains/api/grpc/**"
-              - internal/grpc/**"
+              - "internal/grpc/**"
 
             coap:
               - "coap/**"
@@ -132,8 +132,8 @@ jobs:
               - "pkg/messaging/**"
 
             domains:
-              - "domain/**"
-              - "cmd/domain/**"
+              - "domains/**"
+              - "cmd/domains/**"
               - "auth.pb.go"
               - "auth_grpc.pb.go"
               - "auth/**"

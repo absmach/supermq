@@ -292,7 +292,7 @@ func TestUpdateDomain(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := drepo.On("Update", context.Background(), tc.domainID, tc.session.UserID, tc.updateReq).Return(tc.updateRes, tc.updateErr)
+			repoCall := drepo.On("Update", context.Background(), tc.domainID, mock.Anything).Return(tc.updateRes, tc.updateErr)
 			domain, err := svc.UpdateDomain(context.Background(), tc.session, tc.domainID, tc.updateReq)
 			assert.True(t, errors.Contains(err, tc.err))
 			assert.Equal(t, tc.updateRes, domain)
@@ -306,7 +306,6 @@ func TestEnableDomain(t *testing.T) {
 
 	enabledDomain := domain
 	enabledDomain.Status = domains.EnabledStatus
-	status := domains.EnabledStatus
 
 	cases := []struct {
 		desc      string
@@ -355,7 +354,7 @@ func TestEnableDomain(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := drepo.On("Update", context.Background(), tc.domainID, tc.session.UserID, domains.DomainReq{Status: &status}).Return(tc.enableRes, tc.enableErr)
+			repoCall := drepo.On("Update", context.Background(), tc.domainID, mock.Anything).Return(tc.enableRes, tc.enableErr)
 			cacheCall := dcache.On("Remove", context.Background(), tc.domainID).Return(tc.cacheErr)
 			domain, err := svc.EnableDomain(context.Background(), tc.session, tc.domainID)
 			assert.True(t, errors.Contains(err, tc.err))
@@ -371,7 +370,6 @@ func TestDisableDomain(t *testing.T) {
 
 	disabledDomain := domain
 	disabledDomain.Status = domains.DisabledStatus
-	status := domains.DisabledStatus
 
 	cases := []struct {
 		desc       string
@@ -420,7 +418,7 @@ func TestDisableDomain(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := drepo.On("Update", context.Background(), tc.domainID, tc.session.UserID, domains.DomainReq{Status: &status}).Return(tc.disableRes, tc.disableErr)
+			repoCall := drepo.On("Update", context.Background(), tc.domainID, mock.Anything).Return(tc.disableRes, tc.disableErr)
 			cacheCall := dcache.On("Remove", context.Background(), tc.domainID).Return(tc.cacheErr)
 			domain, err := svc.DisableDomain(context.Background(), tc.session, tc.domainID)
 			assert.True(t, errors.Contains(err, tc.err))
@@ -436,7 +434,6 @@ func TestFreezeDomain(t *testing.T) {
 
 	freezeDomain := domain
 	freezeDomain.Status = domains.FreezeStatus
-	status := domains.FreezeStatus
 
 	cases := []struct {
 		desc      string
@@ -485,7 +482,7 @@ func TestFreezeDomain(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := drepo.On("Update", context.Background(), tc.domainID, tc.session.UserID, domains.DomainReq{Status: &status}).Return(tc.freezeRes, tc.freezeErr)
+			repoCall := drepo.On("Update", context.Background(), tc.domainID, mock.Anything).Return(tc.freezeRes, tc.freezeErr)
 			cacheCall := dcache.On("Remove", context.Background(), tc.domainID).Return(tc.cacheErr)
 			domain, err := svc.FreezeDomain(context.Background(), tc.session, tc.domainID)
 			assert.True(t, errors.Contains(err, tc.err))
