@@ -225,7 +225,7 @@ func main() {
 		go chc.CallHome(ctx)
 	}
 
-	var interceptor = interceptor{
+	interceptor := interceptor{
 		username: cfg.MQTTTargetUsername,
 		password: cfg.MQTTTargetPassword,
 	}
