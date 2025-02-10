@@ -23,8 +23,8 @@ type publisher struct {
 }
 
 // NewPublisher returns a new MQTT message publisher.
-func NewPublisher(address, username, password string, qos uint8, timeout time.Duration) (messaging.Publisher, error) {
-	client, err := newClient(address, username, password, "mqtt-publisher", timeout)
+func NewPublisher(address string, qos uint8, timeout time.Duration) (messaging.Publisher, error) {
+	client, err := newClient(address, "mqtt-publisher", timeout)
 	if err != nil {
 		return nil, err
 	}
