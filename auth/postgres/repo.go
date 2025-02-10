@@ -94,7 +94,7 @@ func (pr *patRepo) Save(ctx context.Context, pat auth.PAT) error {
 	}
 
 	if err := tx.Commit(); err != nil {
-		postgres.HandleError(repoerr.ErrCreateEntity, err)
+		return postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
 	return nil
