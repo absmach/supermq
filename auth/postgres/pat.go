@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/auth"
+	"github.com/lib/pq"
 )
 
 type dbPat struct {
@@ -24,18 +25,25 @@ type dbPat struct {
 }
 
 type dbScope struct {
-	PatID         string   `db:"pat_id,omitempty"`
-	Platformtype  string   `db:"platform_type,omitempty"`
-	DomainID      string   `db:"domain_id,omitempty"`
-	DomainType    string   `db:"domain_type,omitempty"`
-	OperationType string   `db:"operation_type,omitempty"`
-	EntityIDs     []string `db:"entity_ids,omitempty"`
+	PatID         string         `db:"pat_id,omitempty"`
+	Platformtype  string         `db:"platform_type,omitempty"`
+	DomainID      string         `db:"domain_id,omitempty"`
+	DomainType    string         `db:"domain_type,omitempty"`
+	OperationType string         `db:"operation_type,omitempty"`
+	EntityIDs     pq.StringArray `db:"entity_ids,omitempty"`
 }
 
-type dbAuthPage struct {
-	Limit  uint64 `db:"limit"`
-	Offset uint64 `db:"offset"`
-	User   string `db:"user_id"`
+type dbPatPagemeta struct {
+	Limit       uint64    `db:"limit"`
+	Offset      uint64    `db:"offset"`
+	User        string    `db:"user_id"`
+	PatID       string    `db:"pat_id"`
+	ID          string    `db:"id"`
+	Name        string    `db:"name"`
+	UpdatedAt   time.Time `db:"updated_at"`
+	ExpiresAt   time.Time `db:"expires_at"`
+	Description string    `db:"description"`
+	Secret      string    `db:"secret"`
 }
 
 func toAuthPat(db dbPat, sc []dbScope) (auth.PAT, error) {
@@ -120,48 +128,48 @@ func toAuthScope(sc []dbScope) (auth.Scope, error) {
 	return scope, nil
 }
 
-func fromAuthScope(patID string, scope auth.Scope) []dbScope {
+func toDBPatScope(pat auth.PAT) []dbScope {
 	var dbScopes []dbScope
 
-	if isEmptyScope(scope) {
+	if isEmptyScope(pat.Scope) {
 		sc := dbScope{
-			PatID: patID,
+			PatID: pat.ID,
 		}
 		dbScopes = append(dbScopes, sc)
 		return dbScopes
 	}
 
-	for op, ids := range scope.Users {
+	for op, ids := range pat.Scope.Users {
 		dbScopes = append(dbScopes, dbScope{
-			PatID:         patID,
+			PatID:         pat.ID,
 			Platformtype:  auth.PlatformUsersScope.String(),
 			OperationType: op.String(),
 			EntityIDs:     ids.Values(),
 		})
 	}
 
-	for op, ids := range scope.Dashboard {
+	for op, ids := range pat.Scope.Dashboard {
 		dbScopes = append(dbScopes, dbScope{
-			PatID:         patID,
+			PatID:         pat.ID,
 			Platformtype:  auth.PlatformDashBoardScope.String(),
 			OperationType: op.String(),
 			EntityIDs:     ids.Values(),
 		})
 	}
 
-	for op, ids := range scope.Messaging {
+	for op, ids := range pat.Scope.Messaging {
 		dbScopes = append(dbScopes, dbScope{
-			PatID:         patID,
+			PatID:         pat.ID,
 			Platformtype:  auth.PlatformMesagingScope.String(),
 			OperationType: op.String(),
 			EntityIDs:     ids.Values(),
 		})
 	}
 
-	for domainID, domainScope := range scope.Domains {
+	for domainID, domainScope := range pat.Scope.Domains {
 		for op, ids := range domainScope.DomainManagement {
 			dbScopes = append(dbScopes, dbScope{
-				PatID:         patID,
+				PatID:         pat.ID,
 				Platformtype:  auth.PlatformDomainsScope.String(),
 				DomainID:      domainID,
 				DomainType:    auth.DomainManagementScope.String(),
@@ -173,7 +181,7 @@ func fromAuthScope(patID string, scope auth.Scope) []dbScope {
 		for entityType, entityScope := range domainScope.Entities {
 			for op, ids := range entityScope {
 				dbScopes = append(dbScopes, dbScope{
-					PatID:         patID,
+					PatID:         pat.ID,
 					Platformtype:  auth.PlatformDomainsScope.String(),
 					DomainID:      domainID,
 					DomainType:    entityType.String(),
@@ -188,7 +196,7 @@ func fromAuthScope(patID string, scope auth.Scope) []dbScope {
 }
 
 func patToDBRecords(pat auth.PAT) (dbPat, []dbScope, error) {
-	scopes := fromAuthScope(pat.ID, pat.Scope)
+	scopes := toDBPatScope(pat)
 	return dbPat{
 		ID:          pat.ID,
 		User:        pat.User,
@@ -204,8 +212,8 @@ func patToDBRecords(pat auth.PAT) (dbPat, []dbScope, error) {
 	}, scopes, nil
 }
 
-func toDBAuthPage(user string, pm auth.PATSPageMeta) dbAuthPage {
-	return dbAuthPage{
+func toDBAuthPage(user string, pm auth.PATSPageMeta) dbPatPagemeta {
+	return dbPatPagemeta{
 		Limit:  pm.Limit,
 		Offset: pm.Offset,
 		User:   user,

@@ -6,6 +6,7 @@ package auth
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -528,6 +529,7 @@ func (svc service) UpdatePATDescription(ctx context.Context, token, patID, descr
 func (svc service) RetrievePAT(ctx context.Context, userID, patID string) (PAT, error) {
 	pat, err := svc.pats.Retrieve(ctx, userID, patID)
 	if err != nil {
+		fmt.Printf("error is %+v\n", err)
 		return PAT{}, errors.Wrap(errRetrievePAT, err)
 	}
 	return pat, nil
