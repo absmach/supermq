@@ -39,6 +39,7 @@ import (
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/caarlos0/env/v11"
 	"github.com/cenkalti/backoff/v4"
+	"github.com/eclipse/paho.mqtt.golang/packets"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -54,6 +55,8 @@ type config struct {
 	MQTTPort              string        `env:"SMQ_MQTT_ADAPTER_MQTT_PORT"                    envDefault:"1883"`
 	MQTTTargetHost        string        `env:"SMQ_MQTT_ADAPTER_MQTT_TARGET_HOST"             envDefault:"localhost"`
 	MQTTTargetPort        string        `env:"SMQ_MQTT_ADAPTER_MQTT_TARGET_PORT"             envDefault:"1883"`
+	MQTTTargetUsername    string        `env:"SMQ_MQTT_ADAPTER_MQTT_TARGET_USERNAME"         envDefault:""`
+	MQTTTargetPassword    string        `env:"SMQ_MQTT_ADAPTER_MQTT_TARGET_PASSWORD"         envDefault:""`
 	MQTTForwarderTimeout  time.Duration `env:"SMQ_MQTT_ADAPTER_FORWARDER_TIMEOUT"            envDefault:"30s"`
 	MQTTTargetHealthCheck string        `env:"SMQ_MQTT_ADAPTER_MQTT_TARGET_HEALTH_CHECK"     envDefault:""`
 	MQTTQoS               uint8         `env:"SMQ_MQTT_ADAPTER_MQTT_QOS"                     envDefault:"1"`
@@ -135,7 +138,7 @@ func main() {
 	defer bsub.Close()
 	bsub = brokerstracing.NewPubSub(serverConfig, tracer, bsub)
 
-	mpub, err := mqttpub.NewPublisher(fmt.Sprintf("mqtt://%s:%s", cfg.MQTTTargetHost, cfg.MQTTTargetPort), cfg.MQTTQoS, cfg.MQTTForwarderTimeout)
+	mpub, err := mqttpub.NewPublisher(fmt.Sprintf("mqtt://%s:%s", cfg.MQTTTargetHost, cfg.MQTTTargetPort), cfg.MQTTTargetUsername, cfg.MQTTTargetPassword, cfg.MQTTQoS, cfg.MQTTForwarderTimeout)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create MQTT publisher: %s", err))
 		exitCode = 1
@@ -222,7 +225,10 @@ func main() {
 		go chc.CallHome(ctx)
 	}
 
-	var interceptor session.Interceptor
+	var interceptor = interceptor{
+		username: cfg.MQTTTargetUsername,
+		password: cfg.MQTTTargetPassword,
+	}
 	logger.Info(fmt.Sprintf("Starting MQTT proxy on port %s", cfg.MQTTPort))
 	g.Go(func() error {
 		return proxyMQTT(ctx, cfg, logger, h, interceptor)
@@ -317,4 +323,26 @@ func stopSignalHandler(ctx context.Context, cancel context.CancelFunc, logger *s
 	case <-ctx.Done():
 		return nil
 	}
+}
+
+type interceptor struct {
+	username string
+	password string
+}
+
+func (ic interceptor) Intercept(ctx context.Context, pkt packets.ControlPacket, dir session.Direction) (packets.ControlPacket, error) {
+	if connectPkt, ok := pkt.(*packets.ConnectPacket); ok {
+		if ic.username != "" {
+			connectPkt.Username = ic.username
+			connectPkt.UsernameFlag = true
+		}
+		if ic.password != "" {
+			connectPkt.Password = []byte(ic.password)
+			connectPkt.PasswordFlag = true
+		}
+
+		return connectPkt, nil
+	}
+
+	return pkt, nil
 }
