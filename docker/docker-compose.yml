@@ -870,7 +870,7 @@ services:
           create_host_path: true
 
   jaeger:
-    image: jaegertracing/all-in-one:1.60
+    image: jaegertracing/all-in-one:1.66.0
     container_name: supermq-jaeger
     environment:
       COLLECTOR_OTLP_ENABLED: ${SMQ_JAEGER_COLLECTOR_OTLP_ENABLED}
@@ -1210,7 +1210,7 @@ services:
           create_host_path: true
 
   rabbitmq:
-    image: rabbitmq:4.0.5-management-alpine
+    image: rabbitmq:4.0.5-alpine
     container_name: supermq-rabbitmq
     restart: on-failure
     environment:
@@ -1230,7 +1230,7 @@ services:
       - supermq-base-net
 
   nats:
-    image: nats:2.10.9-alpine
+    image: nats:2.10.25-alpine
     container_name: supermq-nats
     restart: on-failure
     command: "--config=/etc/nats/nats.conf"
