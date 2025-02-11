@@ -151,8 +151,7 @@ func addPATScopeEntryEndpoint(svc auth.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
-
-		scope, err := svc.AddPATScopeEntry(ctx, req.token, req.id, req.PlatformEntityType, req.OptionalDomainID, req.OptionalDomainEntityType, req.Operation, req.EntityIDs...)
+		scope, err := svc.AddPATScopeEntry(ctx, req.token, req.id, req.EntityType, req.OptionalDomainID, req.Operation, req.EntityIDs...)
 		if err != nil {
 			return nil, err
 		}
@@ -168,7 +167,7 @@ func removePATScopeEntryEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		scope, err := svc.RemovePATScopeEntry(ctx, req.token, req.id, req.PlatformEntityType, req.OptionalDomainID, req.OptionalDomainEntityType, req.Operation, req.EntityIDs...)
+		scope, err := svc.RemovePATScopeEntry(ctx, req.token, req.id, req.EntityType, req.OptionalDomainID, req.Operation, req.EntityIDs...)
 		if err != nil {
 			return nil, err
 		}

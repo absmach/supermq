@@ -24,7 +24,7 @@ var (
 )
 
 type createPatRes struct {
-	auth.PAT
+	auth.PAT `json:",inline"`
 }
 
 func (res createPatRes) Code() int {
@@ -148,7 +148,7 @@ func (res revokePatSecretRes) Empty() bool {
 }
 
 type addPatScopeEntryRes struct {
-	auth.Scope `json:",inline"`
+	auth.ScopesPage `json:",inline"`
 }
 
 func (res addPatScopeEntryRes) Code() int {
@@ -164,7 +164,7 @@ func (res addPatScopeEntryRes) Empty() bool {
 }
 
 type removePatScopeEntryRes struct {
-	auth.Scope `json:",inline"`
+	auth.ScopesPage `json:",inline"`
 }
 
 func (res removePatScopeEntryRes) Code() int {

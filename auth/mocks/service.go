@@ -21,14 +21,14 @@ type Service struct {
 	mock.Mock
 }
 
-// AddPATScopeEntry provides a mock function with given fields: ctx, token, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs
-func (_m *Service) AddPATScopeEntry(ctx context.Context, token string, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (auth.Scope, error) {
+// AddPATScopeEntry provides a mock function with given fields: ctx, token, patID, entityType, optionalDomainID, operation, entityIDs
+func (_m *Service) AddPATScopeEntry(ctx context.Context, token string, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) (auth.ScopesPage, error) {
 	_va := make([]interface{}, len(entityIDs))
 	for _i := range entityIDs {
 		_va[_i] = entityIDs[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, ctx, token, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation)
+	_ca = append(_ca, ctx, token, patID, entityType, optionalDomainID, operation)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
@@ -36,19 +36,19 @@ func (_m *Service) AddPATScopeEntry(ctx context.Context, token string, patID str
 		panic("no return value specified for AddPATScopeEntry")
 	}
 
-	var r0 auth.Scope
+	var r0 auth.ScopesPage
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) (auth.Scope, error)); ok {
-		return rf(ctx, token, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, ...string) (auth.ScopesPage, error)); ok {
+		return rf(ctx, token, patID, entityType, optionalDomainID, operation, entityIDs...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) auth.Scope); ok {
-		r0 = rf(ctx, token, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, ...string) auth.ScopesPage); ok {
+		r0 = rf(ctx, token, patID, entityType, optionalDomainID, operation, entityIDs...)
 	} else {
-		r0 = ret.Get(0).(auth.Scope)
+		r0 = ret.Get(0).(auth.ScopesPage)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) error); ok {
-		r1 = rf(ctx, token, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, ...string) error); ok {
+		r1 = rf(ctx, token, patID, entityType, optionalDomainID, operation, entityIDs...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -74,14 +74,14 @@ func (_m *Service) Authorize(ctx context.Context, pr policies.Policy) error {
 	return r0
 }
 
-// AuthorizePAT provides a mock function with given fields: ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs
-func (_m *Service) AuthorizePAT(ctx context.Context, userID string, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) error {
+// AuthorizePAT provides a mock function with given fields: ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs
+func (_m *Service) AuthorizePAT(ctx context.Context, userID string, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) error {
 	_va := make([]interface{}, len(entityIDs))
 	for _i := range entityIDs {
 		_va[_i] = entityIDs[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation)
+	_ca = append(_ca, ctx, userID, patID, entityType, optionalDomainID, operation)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
@@ -90,8 +90,8 @@ func (_m *Service) AuthorizePAT(ctx context.Context, userID string, patID string
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) error); ok {
-		r0 = rf(ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, ...string) error); ok {
+		r0 = rf(ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -99,14 +99,14 @@ func (_m *Service) AuthorizePAT(ctx context.Context, userID string, patID string
 	return r0
 }
 
-// CheckPAT provides a mock function with given fields: ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs
-func (_m *Service) CheckPAT(ctx context.Context, userID string, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) error {
+// CheckPAT provides a mock function with given fields: ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs
+func (_m *Service) CheckPAT(ctx context.Context, userID string, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) error {
 	_va := make([]interface{}, len(entityIDs))
 	for _i := range entityIDs {
 		_va[_i] = entityIDs[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation)
+	_ca = append(_ca, ctx, userID, patID, entityType, optionalDomainID, operation)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
@@ -115,8 +115,8 @@ func (_m *Service) CheckPAT(ctx context.Context, userID string, patID string, pl
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) error); ok {
-		r0 = rf(ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, ...string) error); ok {
+		r0 = rf(ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -143,7 +143,7 @@ func (_m *Service) ClearPATAllScopeEntry(ctx context.Context, token string, patI
 }
 
 // CreatePAT provides a mock function with given fields: ctx, token, name, description, duration, scope
-func (_m *Service) CreatePAT(ctx context.Context, token string, name string, description string, duration time.Duration, scope auth.Scope) (auth.PAT, error) {
+func (_m *Service) CreatePAT(ctx context.Context, token string, name string, description string, duration time.Duration, scope []auth.Scope) (auth.PAT, error) {
 	ret := _m.Called(ctx, token, name, description, duration, scope)
 
 	if len(ret) == 0 {
@@ -152,16 +152,16 @@ func (_m *Service) CreatePAT(ctx context.Context, token string, name string, des
 
 	var r0 auth.PAT
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, time.Duration, auth.Scope) (auth.PAT, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, time.Duration, []auth.Scope) (auth.PAT, error)); ok {
 		return rf(ctx, token, name, description, duration, scope)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, time.Duration, auth.Scope) auth.PAT); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, time.Duration, []auth.Scope) auth.PAT); ok {
 		r0 = rf(ctx, token, name, description, duration, scope)
 	} else {
 		r0 = ret.Get(0).(auth.PAT)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, time.Duration, auth.Scope) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, time.Duration, []auth.Scope) error); ok {
 		r1 = rf(ctx, token, name, description, duration, scope)
 	} else {
 		r1 = ret.Error(1)
@@ -300,14 +300,42 @@ func (_m *Service) ListPATS(ctx context.Context, token string, pm auth.PATSPageM
 	return r0, r1
 }
 
-// RemovePATScopeEntry provides a mock function with given fields: ctx, token, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs
-func (_m *Service) RemovePATScopeEntry(ctx context.Context, token string, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (auth.Scope, error) {
+// ListScopes provides a mock function with given fields: ctx, token, pm
+func (_m *Service) ListScopes(ctx context.Context, token string, pm auth.ScopesPageMeta) (auth.ScopesPage, error) {
+	ret := _m.Called(ctx, token, pm)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListScopes")
+	}
+
+	var r0 auth.ScopesPage
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, auth.ScopesPageMeta) (auth.ScopesPage, error)); ok {
+		return rf(ctx, token, pm)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, auth.ScopesPageMeta) auth.ScopesPage); ok {
+		r0 = rf(ctx, token, pm)
+	} else {
+		r0 = ret.Get(0).(auth.ScopesPage)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, auth.ScopesPageMeta) error); ok {
+		r1 = rf(ctx, token, pm)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RemovePATScopeEntry provides a mock function with given fields: ctx, token, patID, entityType, optionalDomainID, operation, entityIDs
+func (_m *Service) RemovePATScopeEntry(ctx context.Context, token string, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) (auth.ScopesPage, error) {
 	_va := make([]interface{}, len(entityIDs))
 	for _i := range entityIDs {
 		_va[_i] = entityIDs[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, ctx, token, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation)
+	_ca = append(_ca, ctx, token, patID, entityType, optionalDomainID, operation)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
@@ -315,19 +343,19 @@ func (_m *Service) RemovePATScopeEntry(ctx context.Context, token string, patID 
 		panic("no return value specified for RemovePATScopeEntry")
 	}
 
-	var r0 auth.Scope
+	var r0 auth.ScopesPage
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) (auth.Scope, error)); ok {
-		return rf(ctx, token, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, ...string) (auth.ScopesPage, error)); ok {
+		return rf(ctx, token, patID, entityType, optionalDomainID, operation, entityIDs...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) auth.Scope); ok {
-		r0 = rf(ctx, token, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, ...string) auth.ScopesPage); ok {
+		r0 = rf(ctx, token, patID, entityType, optionalDomainID, operation, entityIDs...)
 	} else {
-		r0 = ret.Get(0).(auth.Scope)
+		r0 = ret.Get(0).(auth.ScopesPage)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) error); ok {
-		r1 = rf(ctx, token, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, ...string) error); ok {
+		r1 = rf(ctx, token, patID, entityType, optionalDomainID, operation, entityIDs...)
 	} else {
 		r1 = ret.Error(1)
 	}

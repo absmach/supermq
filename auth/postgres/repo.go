@@ -33,20 +33,19 @@ const (
 		FROM pats WHERE user_id = :user_id AND id = :id`
 
 	saveScopeQuery = `
-		INSERT INTO pat_scopes (pat_id, platform_type, domain_id, domain_type, operation_type, entity_ids)
-		VALUES (:pat_id, :platform_type, :domain_id, :domain_type, :operation_type, :entity_ids)`
+		INSERT INTO pat_scopes (pat_id, entity_type, optional_domain_id, operation, entity_id)
+		VALUES (:pat_id, :entity_type, :optional_domain_id, :operation, :entity_id)`
 
 	updateScopeQuery = `
 		UPDATE pat_scopes SET
-			platform_type = :platform_type, 
-			domain_id = :domain_id, 
-			domain_type = :domain_type, 
-			operation_type = :operation_type, 
-			entity_ids = :entity_ids
+			entity_type = :entity_type, 
+			optional_domain_id = :optional_domain_id, 
+			operation = :operation, 
+			entity_id = :entity_id
 		WHERE pat_id = :pat_id`
 
 	retrieveScopesQuery = `
-		SELECT platform_type, domain_id, domain_type, operation_type, entity_ids
+		SELECT entity_type, optional_domain_id, operation, entity_id
 		FROM pat_scopes WHERE pat_id = :pat_id`
 
 	deleteScopesQuery = `DELETE FROM pat_scopes WHERE pat_id = :pat_id`
@@ -101,15 +100,15 @@ func (pr *patRepo) Save(ctx context.Context, pat auth.PAT) error {
 }
 
 func (pr *patRepo) Retrieve(ctx context.Context, userID, patID string) (auth.PAT, error) {
-	if pat, err := pr.cache.ID(ctx, patID); err == nil {
-		return pat, nil
-	}
+	// if pat, err := pr.cache.ID(ctx, patID); err == nil {
+	// 	return pat, nil
+	// }
 
 	pat, err := pr.retrieveFromDB(ctx, userID, patID)
 	if err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
-	if err := pr.cache.Save(ctx, pat.ID, pat); err != nil {
+	if err := pr.cache.Save(ctx, pat); err != nil {
 		return auth.PAT{}, err
 	}
 
@@ -260,7 +259,7 @@ func (pr *patRepo) UpdateName(ctx context.Context, userID, patID, name string) (
 		return auth.PAT{}, err
 	}
 
-	if err := pr.cache.Save(ctx, patID, pat); err != nil {
+	if err := pr.cache.Save(ctx, pat); err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
@@ -311,7 +310,7 @@ func (pr *patRepo) UpdateDescription(ctx context.Context, userID, patID, descrip
 		return auth.PAT{}, err
 	}
 
-	if err := pr.cache.Save(ctx, patID, pat); err != nil {
+	if err := pr.cache.Save(ctx, pat); err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
@@ -362,7 +361,7 @@ func (pr *patRepo) UpdateTokenHash(ctx context.Context, userID, patID, tokenHash
 		return auth.PAT{}, err
 	}
 
-	if err := pr.cache.Save(ctx, patID, pat); err != nil {
+	if err := pr.cache.Save(ctx, pat); err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
@@ -455,7 +454,7 @@ func (pr *patRepo) Reactivate(ctx context.Context, userID, patID string) error {
 		return err
 	}
 
-	if err := pr.cache.Save(ctx, patID, pat); err != nil {
+	if err := pr.cache.Save(ctx, pat); err != nil {
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
@@ -501,21 +500,53 @@ func (pr *patRepo) Remove(ctx context.Context, userID, patID string) error {
 	return nil
 }
 
-func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (auth.Scope, error) {
+func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) ([]auth.Scope, error) {
+	scopes := toDBScope(patID, entityType, optionalDomainID, operation, entityIDs...)
+
+	tx, err := pr.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return []auth.Scope{}, errors.Wrap(repoerr.ErrRemoveEntity, err)
+	}
+
+	defer func() {
+		if err != nil {
+			if errRollback := tx.Rollback(); errRollback != nil {
+				err = errors.Wrap(errors.Wrap(apiutil.ErrRollbackTx, errRollback), err)
+			}
+		}
+	}()
+
+	res, err := tx.NamedExec(updateScopeQuery, scopes)
+	if err != nil {
+		return []auth.Scope{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
+	}
+
+	cnt, err := res.RowsAffected()
+	if err != nil {
+		return []auth.Scope{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+	}
+	if cnt == 0 {
+		return []auth.Scope{}, repoerr.ErrNotFound
+	}
+
 	pat, err := pr.retrieveFromDB(ctx, userID, patID)
 	if err != nil {
-		return auth.Scope{}, err
+		return []auth.Scope{}, err
 	}
 
-	if err := pat.Scope.Add(platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...); err != nil {
-		return auth.Scope{}, errors.Wrap(repoerr.ErrCreateEntity, err)
+	if err := pr.cache.Save(ctx, pat); err != nil {
+		return []auth.Scope{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
-	scope := toDBPatScope(pat)
+	return pat.Scope, nil
+}
+
+func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) ([]auth.Scope, error) {
+	scopes := toDBScope(patID, entityType, optionalDomainID, operation, entityIDs...)
 
 	tx, err := pr.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return auth.Scope{}, errors.Wrap(repoerr.ErrRemoveEntity, err)
+		return []auth.Scope{}, errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
 	defer func() {
@@ -526,75 +557,37 @@ func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, plat
 		}
 	}()
 
-	res, err := tx.NamedExec(updateScopeQuery, scope)
+	res, err := tx.NamedExec(updateScopeQuery, scopes)
 	if err != nil {
-		return auth.Scope{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
+		return []auth.Scope{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
 	cnt, err := res.RowsAffected()
 	if err != nil {
-		return auth.Scope{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+		return []auth.Scope{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 	if cnt == 0 {
-		return auth.Scope{}, repoerr.ErrNotFound
+		return []auth.Scope{}, repoerr.ErrNotFound
 	}
 
-	if err := pr.cache.Save(ctx, pat.ID, pat); err != nil {
-		return auth.Scope{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+	pat, err := pr.retrieveFromDB(ctx, userID, patID)
+	if err != nil {
+		return []auth.Scope{}, err
+	}
+
+	if err := pr.cache.Save(ctx, pat); err != nil {
+		return []auth.Scope{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
 	return pat.Scope, nil
 }
 
-func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (auth.Scope, error) {
-	pat, err := pr.Retrieve(ctx, userID, patID)
-	if err != nil {
-		return auth.Scope{}, err
-	}
-
-	if err := pat.Scope.Delete(platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...); err != nil {
-		return auth.Scope{}, errors.Wrap(repoerr.ErrRemoveEntity, err)
-	}
-
-	scope := toDBPatScope(pat)
-
-	tx, err := pr.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return auth.Scope{}, errors.Wrap(repoerr.ErrRemoveEntity, err)
-	}
-
-	defer func() {
-		if err != nil {
-			if errRollback := tx.Rollback(); errRollback != nil {
-				err = errors.Wrap(errors.Wrap(apiutil.ErrRollbackTx, errRollback), err)
-			}
-		}
-	}()
-
-	res, err := tx.NamedExec(updateScopeQuery, scope)
-	if err != nil {
-		return auth.Scope{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-
-	cnt, err := res.RowsAffected()
-	if err != nil {
-		return auth.Scope{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-	if cnt == 0 {
-		return auth.Scope{}, repoerr.ErrNotFound
-	}
-
-	if err := pr.cache.Save(ctx, pat.ID, pat); err != nil {
-		return auth.Scope{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-
-	return pat.Scope, nil
-}
-
-func (pr *patRepo) CheckScopeEntry(ctx context.Context, userID, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) error {
+func (pr *patRepo) CheckScopeEntry(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) error {
 	if pat, err := pr.cache.ID(ctx, patID); err == nil {
-		if !pat.Scope.Check(platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...) {
-			return repoerr.ErrNotFound
+		for _, entityID := range entityIDs {
+			if !pat.CheckAccess(entityType, optionalDomainID, operation, entityID) {
+				return repoerr.ErrNotFound
+			}
 		}
 		return nil
 	}
@@ -604,8 +597,10 @@ func (pr *patRepo) CheckScopeEntry(ctx context.Context, userID, patID string, pl
 		return err
 	}
 
-	if !pat.Scope.Check(platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...) {
-		return repoerr.ErrNotFound
+	for _, entityID := range entityIDs {
+		if !pat.CheckAccess(entityType, optionalDomainID, operation, entityID) {
+			return repoerr.ErrNotFound
+		}
 	}
 	return nil
 }
@@ -616,7 +611,7 @@ func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, userID, patID string
 		return err
 	}
 
-	pat.Scope = auth.Scope{Domains: make(map[string]auth.DomainScope)}
+	pat.Scope = []auth.Scope{}
 
 	scope := toDBPatScope(pat)
 
@@ -646,11 +641,33 @@ func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, userID, patID string
 		return repoerr.ErrNotFound
 	}
 
-	if err := pr.cache.Save(ctx, pat.ID, pat); err != nil {
+	if err := pr.cache.Save(ctx, pat); err != nil {
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
 	return nil
+}
+
+func (pr *patRepo) RetrieveScope(ctx context.Context, pm auth.ScopesPageMeta) (scopes auth.ScopesPage, err error) {
+	if pat, err := pr.cache.ID(ctx, pm.PatID); err == nil {
+		return auth.ScopesPage{
+			Total:  uint64(len(pat.Scope)),
+			Scopes: pat.Scope,
+		}, nil
+	}
+
+	pat, err := pr.retrieveFromDB(ctx, pm.UserID, pm.PatID)
+	if err != nil {
+		return auth.ScopesPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+	if err := pr.cache.Save(ctx, pat); err != nil {
+		return auth.ScopesPage{}, err
+	}
+
+	return auth.ScopesPage{
+		Total:  uint64(len(pat.Scope)),
+		Scopes: pat.Scope,
+	}, nil
 }
 
 func (pr *patRepo) retrieveFromDB(ctx context.Context, userID, patID string) (auth.PAT, error) {
@@ -692,11 +709,4 @@ func (pr *patRepo) retrieveFromDB(ctx context.Context, userID, patID string) (au
 	}
 
 	return auth.PAT{}, repoerr.ErrNotFound
-}
-
-func isEmptyScope(scope auth.Scope) bool {
-	return len(scope.Users) == 0 &&
-		len(scope.Dashboard) == 0 &&
-		len(scope.Messaging) == 0 &&
-		len(scope.Domains) == 0
 }

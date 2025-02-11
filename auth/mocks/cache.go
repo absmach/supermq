@@ -63,17 +63,17 @@ func (_m *Cache) Remove(ctx context.Context, patID string) error {
 	return r0
 }
 
-// Save provides a mock function with given fields: ctx, patID, scope
-func (_m *Cache) Save(ctx context.Context, patID string, scope auth.PAT) error {
-	ret := _m.Called(ctx, patID, scope)
+// Save provides a mock function with given fields: ctx, scope
+func (_m *Cache) Save(ctx context.Context, scope auth.PAT) error {
+	ret := _m.Called(ctx, scope)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Save")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, auth.PAT) error); ok {
-		r0 = rf(ctx, patID, scope)
+	if rf, ok := ret.Get(0).(func(context.Context, auth.PAT) error); ok {
+		r0 = rf(ctx, scope)
 	} else {
 		r0 = ret.Error(0)
 	}

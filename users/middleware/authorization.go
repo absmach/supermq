@@ -46,12 +46,11 @@ func (am *authorizationMiddleware) Register(ctx context.Context, session authn.S
 func (am *authorizationMiddleware) View(ctx context.Context, session authn.Session, id string) (users.User, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
-			UserID:                   session.UserID,
-			PatID:                    session.PatID,
-			PlatformEntityType:       smqauth.PlatformUsersScope,
-			OptionalDomainEntityType: smqauth.DomainNullScope,
-			Operation:                smqauth.ReadOp,
-			EntityIDs:                []string{id},
+			UserID:     session.UserID,
+			PatID:      session.PatID,
+			EntityType: smqauth.UsersType,
+			Operation:  smqauth.ReadOp,
+			EntityID:   id,
 		}); err != nil {
 			return users.User{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
@@ -67,12 +66,11 @@ func (am *authorizationMiddleware) View(ctx context.Context, session authn.Sessi
 func (am *authorizationMiddleware) ViewProfile(ctx context.Context, session authn.Session) (users.User, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
-			UserID:                   session.UserID,
-			PatID:                    session.PatID,
-			PlatformEntityType:       smqauth.PlatformUsersScope,
-			OptionalDomainEntityType: smqauth.DomainNullScope,
-			Operation:                smqauth.ReadOp,
-			EntityIDs:                []string{session.UserID},
+			UserID:     session.UserID,
+			PatID:      session.PatID,
+			EntityType: smqauth.UsersType,
+			Operation:  smqauth.ReadOp,
+			EntityID:   session.UserID,
 		}); err != nil {
 			return users.User{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
@@ -83,12 +81,11 @@ func (am *authorizationMiddleware) ViewProfile(ctx context.Context, session auth
 func (am *authorizationMiddleware) ListUsers(ctx context.Context, session authn.Session, pm users.Page) (users.UsersPage, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
-			UserID:                   session.UserID,
-			PatID:                    session.PatID,
-			PlatformEntityType:       smqauth.PlatformUsersScope,
-			OptionalDomainEntityType: smqauth.DomainNullScope,
-			Operation:                smqauth.ListOp,
-			EntityIDs:                smqauth.AnyIDs{}.Values(),
+			UserID:     session.UserID,
+			PatID:      session.PatID,
+			EntityType: smqauth.UsersType,
+			Operation:  smqauth.ListOp,
+			EntityID:   smqauth.AnyIDs,
 		}); err != nil {
 			return users.UsersPage{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
@@ -107,12 +104,11 @@ func (am *authorizationMiddleware) SearchUsers(ctx context.Context, pm users.Pag
 func (am *authorizationMiddleware) Update(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
-			UserID:                   session.UserID,
-			PatID:                    session.PatID,
-			PlatformEntityType:       smqauth.PlatformUsersScope,
-			OptionalDomainEntityType: smqauth.DomainNullScope,
-			Operation:                smqauth.UpdateOp,
-			EntityIDs:                []string{user.ID},
+			UserID:     session.UserID,
+			PatID:      session.PatID,
+			EntityType: smqauth.UsersType,
+			Operation:  smqauth.UpdateOp,
+			EntityID:   user.ID,
 		}); err != nil {
 			return users.User{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
@@ -128,12 +124,11 @@ func (am *authorizationMiddleware) Update(ctx context.Context, session authn.Ses
 func (am *authorizationMiddleware) UpdateTags(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
-			UserID:                   session.UserID,
-			PatID:                    session.PatID,
-			PlatformEntityType:       smqauth.PlatformUsersScope,
-			OptionalDomainEntityType: smqauth.DomainNullScope,
-			Operation:                smqauth.UpdateOp,
-			EntityIDs:                []string{user.ID},
+			UserID:     session.UserID,
+			PatID:      session.PatID,
+			EntityType: smqauth.UsersType,
+			Operation:  smqauth.UpdateOp,
+			EntityID:   user.ID,
 		}); err != nil {
 			return users.User{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
@@ -149,12 +144,11 @@ func (am *authorizationMiddleware) UpdateTags(ctx context.Context, session authn
 func (am *authorizationMiddleware) UpdateEmail(ctx context.Context, session authn.Session, id, email string) (users.User, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
-			UserID:                   session.UserID,
-			PatID:                    session.PatID,
-			PlatformEntityType:       smqauth.PlatformUsersScope,
-			OptionalDomainEntityType: smqauth.DomainNullScope,
-			Operation:                smqauth.UpdateOp,
-			EntityIDs:                []string{id},
+			UserID:     session.UserID,
+			PatID:      session.PatID,
+			EntityType: smqauth.UsersType,
+			Operation:  smqauth.UpdateOp,
+			EntityID:   id,
 		}); err != nil {
 			return users.User{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
@@ -169,12 +163,11 @@ func (am *authorizationMiddleware) UpdateEmail(ctx context.Context, session auth
 func (am *authorizationMiddleware) UpdateUsername(ctx context.Context, session authn.Session, id, username string) (users.User, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
-			UserID:                   session.UserID,
-			PatID:                    session.PatID,
-			PlatformEntityType:       smqauth.PlatformUsersScope,
-			OptionalDomainEntityType: smqauth.DomainNullScope,
-			Operation:                smqauth.UpdateOp,
-			EntityIDs:                []string{id},
+			UserID:     session.UserID,
+			PatID:      session.PatID,
+			EntityType: smqauth.UsersType,
+			Operation:  smqauth.UpdateOp,
+			EntityID:   id,
 		}); err != nil {
 			return users.User{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
@@ -190,12 +183,11 @@ func (am *authorizationMiddleware) UpdateUsername(ctx context.Context, session a
 func (am *authorizationMiddleware) UpdateProfilePicture(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
-			UserID:                   session.UserID,
-			PatID:                    session.PatID,
-			PlatformEntityType:       smqauth.PlatformUsersScope,
-			OptionalDomainEntityType: smqauth.DomainNullScope,
-			Operation:                smqauth.UpdateOp,
-			EntityIDs:                []string{user.ID},
+			UserID:     session.UserID,
+			PatID:      session.PatID,
+			EntityType: smqauth.UsersType,
+			Operation:  smqauth.UpdateOp,
+			EntityID:   user.ID,
 		}); err != nil {
 			return users.User{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
@@ -215,12 +207,11 @@ func (am *authorizationMiddleware) GenerateResetToken(ctx context.Context, email
 func (am *authorizationMiddleware) UpdateSecret(ctx context.Context, session authn.Session, oldSecret, newSecret string) (users.User, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
-			UserID:                   session.UserID,
-			PatID:                    session.PatID,
-			PlatformEntityType:       smqauth.PlatformUsersScope,
-			OptionalDomainEntityType: smqauth.DomainNullScope,
-			Operation:                smqauth.UpdateOp,
-			EntityIDs:                []string{session.UserID},
+			UserID:     session.UserID,
+			PatID:      session.PatID,
+			EntityType: smqauth.UsersType,
+			Operation:  smqauth.UpdateOp,
+			EntityID:   session.UserID,
 		}); err != nil {
 			return users.User{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
@@ -240,12 +231,11 @@ func (am *authorizationMiddleware) SendPasswordReset(ctx context.Context, host, 
 func (am *authorizationMiddleware) UpdateRole(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
-			UserID:                   session.UserID,
-			PatID:                    session.PatID,
-			PlatformEntityType:       smqauth.PlatformUsersScope,
-			OptionalDomainEntityType: smqauth.DomainNullScope,
-			Operation:                smqauth.UpdateOp,
-			EntityIDs:                []string{user.ID},
+			UserID:     session.UserID,
+			PatID:      session.PatID,
+			EntityType: smqauth.UsersType,
+			Operation:  smqauth.UpdateOp,
+			EntityID:   user.ID,
 		}); err != nil {
 			return users.User{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
@@ -265,12 +255,11 @@ func (am *authorizationMiddleware) UpdateRole(ctx context.Context, session authn
 func (am *authorizationMiddleware) Enable(ctx context.Context, session authn.Session, id string) (users.User, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
-			UserID:                   session.UserID,
-			PatID:                    session.PatID,
-			PlatformEntityType:       smqauth.PlatformUsersScope,
-			OptionalDomainEntityType: smqauth.DomainNullScope,
-			Operation:                smqauth.UpdateOp,
-			EntityIDs:                []string{id},
+			UserID:     session.UserID,
+			PatID:      session.PatID,
+			EntityType: smqauth.UsersType,
+			Operation:  smqauth.UpdateOp,
+			EntityID:   id,
 		}); err != nil {
 			return users.User{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
@@ -286,12 +275,11 @@ func (am *authorizationMiddleware) Enable(ctx context.Context, session authn.Ses
 func (am *authorizationMiddleware) Disable(ctx context.Context, session authn.Session, id string) (users.User, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
-			UserID:                   session.UserID,
-			PatID:                    session.PatID,
-			PlatformEntityType:       smqauth.PlatformUsersScope,
-			OptionalDomainEntityType: smqauth.DomainNullScope,
-			Operation:                smqauth.UpdateOp,
-			EntityIDs:                []string{id},
+			UserID:     session.UserID,
+			PatID:      session.PatID,
+			EntityType: smqauth.UsersType,
+			Operation:  smqauth.UpdateOp,
+			EntityID:   id,
 		}); err != nil {
 			return users.User{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
@@ -307,12 +295,11 @@ func (am *authorizationMiddleware) Disable(ctx context.Context, session authn.Se
 func (am *authorizationMiddleware) Delete(ctx context.Context, session authn.Session, id string) error {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
-			UserID:                   session.UserID,
-			PatID:                    session.PatID,
-			PlatformEntityType:       smqauth.PlatformUsersScope,
-			OptionalDomainEntityType: smqauth.DomainNullScope,
-			Operation:                smqauth.DeleteOp,
-			EntityIDs:                []string{id},
+			UserID:     session.UserID,
+			PatID:      session.PatID,
+			EntityType: smqauth.UsersType,
+			Operation:  smqauth.DeleteOp,
+			EntityID:   id,
 		}); err != nil {
 			return errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}

@@ -19,14 +19,14 @@ type PATSRepository struct {
 	mock.Mock
 }
 
-// AddScopeEntry provides a mock function with given fields: ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs
-func (_m *PATSRepository) AddScopeEntry(ctx context.Context, userID string, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (auth.Scope, error) {
+// AddScopeEntry provides a mock function with given fields: ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs
+func (_m *PATSRepository) AddScopeEntry(ctx context.Context, userID string, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) ([]auth.Scope, error) {
 	_va := make([]interface{}, len(entityIDs))
 	for _i := range entityIDs {
 		_va[_i] = entityIDs[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation)
+	_ca = append(_ca, ctx, userID, patID, entityType, optionalDomainID, operation)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
@@ -34,19 +34,21 @@ func (_m *PATSRepository) AddScopeEntry(ctx context.Context, userID string, patI
 		panic("no return value specified for AddScopeEntry")
 	}
 
-	var r0 auth.Scope
+	var r0 []auth.Scope
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) (auth.Scope, error)); ok {
-		return rf(ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, ...string) ([]auth.Scope, error)); ok {
+		return rf(ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) auth.Scope); ok {
-		r0 = rf(ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, ...string) []auth.Scope); ok {
+		r0 = rf(ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs...)
 	} else {
-		r0 = ret.Get(0).(auth.Scope)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]auth.Scope)
+		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) error); ok {
-		r1 = rf(ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, ...string) error); ok {
+		r1 = rf(ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -54,14 +56,14 @@ func (_m *PATSRepository) AddScopeEntry(ctx context.Context, userID string, patI
 	return r0, r1
 }
 
-// CheckScopeEntry provides a mock function with given fields: ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs
-func (_m *PATSRepository) CheckScopeEntry(ctx context.Context, userID string, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) error {
+// CheckScopeEntry provides a mock function with given fields: ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs
+func (_m *PATSRepository) CheckScopeEntry(ctx context.Context, userID string, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) error {
 	_va := make([]interface{}, len(entityIDs))
 	for _i := range entityIDs {
 		_va[_i] = entityIDs[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation)
+	_ca = append(_ca, ctx, userID, patID, entityType, optionalDomainID, operation)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
@@ -70,8 +72,8 @@ func (_m *PATSRepository) CheckScopeEntry(ctx context.Context, userID string, pa
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) error); ok {
-		r0 = rf(ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, ...string) error); ok {
+		r0 = rf(ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -133,14 +135,14 @@ func (_m *PATSRepository) RemoveAllScopeEntry(ctx context.Context, userID string
 	return r0
 }
 
-// RemoveScopeEntry provides a mock function with given fields: ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs
-func (_m *PATSRepository) RemoveScopeEntry(ctx context.Context, userID string, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (auth.Scope, error) {
+// RemoveScopeEntry provides a mock function with given fields: ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs
+func (_m *PATSRepository) RemoveScopeEntry(ctx context.Context, userID string, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) ([]auth.Scope, error) {
 	_va := make([]interface{}, len(entityIDs))
 	for _i := range entityIDs {
 		_va[_i] = entityIDs[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation)
+	_ca = append(_ca, ctx, userID, patID, entityType, optionalDomainID, operation)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
@@ -148,19 +150,21 @@ func (_m *PATSRepository) RemoveScopeEntry(ctx context.Context, userID string, p
 		panic("no return value specified for RemoveScopeEntry")
 	}
 
-	var r0 auth.Scope
+	var r0 []auth.Scope
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) (auth.Scope, error)); ok {
-		return rf(ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, ...string) ([]auth.Scope, error)); ok {
+		return rf(ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) auth.Scope); ok {
-		r0 = rf(ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, ...string) []auth.Scope); ok {
+		r0 = rf(ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs...)
 	} else {
-		r0 = ret.Get(0).(auth.Scope)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]auth.Scope)
+		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, auth.PlatformEntityType, string, auth.DomainEntityType, auth.OperationType, ...string) error); ok {
-		r1 = rf(ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, ...string) error); ok {
+		r1 = rf(ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -217,6 +221,34 @@ func (_m *PATSRepository) RetrieveAll(ctx context.Context, userID string, pm aut
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, auth.PATSPageMeta) error); ok {
 		r1 = rf(ctx, userID, pm)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RetrieveScope provides a mock function with given fields: ctx, pm
+func (_m *PATSRepository) RetrieveScope(ctx context.Context, pm auth.ScopesPageMeta) (auth.ScopesPage, error) {
+	ret := _m.Called(ctx, pm)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveScope")
+	}
+
+	var r0 auth.ScopesPage
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, auth.ScopesPageMeta) (auth.ScopesPage, error)); ok {
+		return rf(ctx, pm)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, auth.ScopesPageMeta) auth.ScopesPage); ok {
+		r0 = rf(ctx, pm)
+	} else {
+		r0 = ret.Get(0).(auth.ScopesPage)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, auth.ScopesPageMeta) error); ok {
+		r1 = rf(ctx, pm)
 	} else {
 		r1 = ret.Error(1)
 	}

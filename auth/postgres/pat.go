@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/auth"
-	"github.com/lib/pq"
 )
 
 type dbPat struct {
@@ -25,12 +24,11 @@ type dbPat struct {
 }
 
 type dbScope struct {
-	PatID         string         `db:"pat_id,omitempty"`
-	Platformtype  string         `db:"platform_type,omitempty"`
-	DomainID      string         `db:"domain_id,omitempty"`
-	DomainType    string         `db:"domain_type,omitempty"`
-	OperationType string         `db:"operation_type,omitempty"`
-	EntityIDs     pq.StringArray `db:"entity_ids,omitempty"`
+	PatID            string `db:"pat_id,omitempty"`
+	OptionalDomainId string `db:"optional_domain_id,omitempty"`
+	EntityType       string `db:"entity_type,omitempty"`
+	EntityID         string `db:"entity_id,omitempty"`
+	Operation        string `db:"operation,omitempty"`
 }
 
 type dbPatPagemeta struct {
@@ -59,7 +57,6 @@ func toAuthPat(db dbPat, sc []dbScope) (auth.PAT, error) {
 		LastUsedAt:  db.LastUsedAt,
 		Revoked:     db.Revoked,
 		RevokedAt:   db.RevokedAt,
-		Scope:       auth.Scope{Domains: make(map[string]auth.DomainScope)},
 	}
 	scope, err := toAuthScope(sc)
 	if err != nil {
@@ -70,59 +67,26 @@ func toAuthPat(db dbPat, sc []dbScope) (auth.PAT, error) {
 	return pat, nil
 }
 
-func toAuthScope(sc []dbScope) (auth.Scope, error) {
-	scope := auth.Scope{
-		Domains:   make(map[string]auth.DomainScope),
-		Users:     auth.OperationScope{},
-		Dashboard: auth.OperationScope{},
-		Messaging: auth.OperationScope{},
-	}
+func toAuthScope(dsc []dbScope) ([]auth.Scope, error) {
+	scope := []auth.Scope{}
 
-	for _, t := range sc {
-		var platformType auth.PlatformEntityType
-		var operation auth.OperationType
-		var err error
+	for _, s := range dsc {
 
-		if t.Platformtype == "" {
-			return scope, nil
-		}
-
-		platformType, err = auth.ParsePlatformEntityType(t.Platformtype)
+		entityType, err := auth.ParseEntityType(s.EntityType)
 		if err != nil {
-			return auth.Scope{}, err
+			return []auth.Scope{}, err
 		}
-
-		operation, err = auth.ParseOperationType(t.OperationType)
+		operation, err := auth.ParseOperation(s.Operation)
 		if err != nil {
-			return auth.Scope{}, err
+			return []auth.Scope{}, err
 		}
-
-		switch platformType {
-		case auth.PlatformUsersScope:
-			if err := scope.Users.Add(operation, t.EntityIDs...); err != nil {
-				return auth.Scope{}, err
-			}
-		case auth.PlatformDashBoardScope:
-			if err := scope.Dashboard.Add(operation, t.EntityIDs...); err != nil {
-				return auth.Scope{}, err
-			}
-		case auth.PlatformMesagingScope:
-			if err := scope.Messaging.Add(operation, t.EntityIDs...); err != nil {
-				return auth.Scope{}, err
-			}
-		case auth.PlatformDomainsScope:
-			var domainEntityType auth.DomainEntityType
-			if t.DomainType != "" {
-				domainEntityType, err = auth.ParseDomainEntityType(t.DomainType)
-				if err != nil {
-					return auth.Scope{}, err
-				}
-			}
-
-			if err := scope.Add(platformType, t.DomainID, domainEntityType, operation, t.EntityIDs...); err != nil {
-				return auth.Scope{}, err
-			}
-		}
+		scope = append(scope, auth.Scope{
+			PatId:            s.PatID,
+			OptionalDomainId: s.OptionalDomainId,
+			EntityType:       entityType,
+			EntityId:         s.EntityID,
+			Operation:        operation,
+		})
 	}
 
 	return scope, nil
@@ -139,57 +103,14 @@ func toDBPatScope(pat auth.PAT) []dbScope {
 		return dbScopes
 	}
 
-	for op, ids := range pat.Scope.Users {
+	for _, p := range pat.Scope {
 		dbScopes = append(dbScopes, dbScope{
-			PatID:         pat.ID,
-			Platformtype:  auth.PlatformUsersScope.String(),
-			OperationType: op.String(),
-			EntityIDs:     ids.Values(),
+			PatID:            pat.ID,
+			OptionalDomainId: p.OptionalDomainId,
+			EntityType:       p.EntityType.String(),
+			Operation:        p.Operation.String(),
+			EntityID:         p.EntityId,
 		})
-	}
-
-	for op, ids := range pat.Scope.Dashboard {
-		dbScopes = append(dbScopes, dbScope{
-			PatID:         pat.ID,
-			Platformtype:  auth.PlatformDashBoardScope.String(),
-			OperationType: op.String(),
-			EntityIDs:     ids.Values(),
-		})
-	}
-
-	for op, ids := range pat.Scope.Messaging {
-		dbScopes = append(dbScopes, dbScope{
-			PatID:         pat.ID,
-			Platformtype:  auth.PlatformMesagingScope.String(),
-			OperationType: op.String(),
-			EntityIDs:     ids.Values(),
-		})
-	}
-
-	for domainID, domainScope := range pat.Scope.Domains {
-		for op, ids := range domainScope.DomainManagement {
-			dbScopes = append(dbScopes, dbScope{
-				PatID:         pat.ID,
-				Platformtype:  auth.PlatformDomainsScope.String(),
-				DomainID:      domainID,
-				DomainType:    auth.DomainManagementScope.String(),
-				OperationType: op.String(),
-				EntityIDs:     ids.Values(),
-			})
-		}
-
-		for entityType, entityScope := range domainScope.Entities {
-			for op, ids := range entityScope {
-				dbScopes = append(dbScopes, dbScope{
-					PatID:         pat.ID,
-					Platformtype:  auth.PlatformDomainsScope.String(),
-					DomainID:      domainID,
-					DomainType:    entityType.String(),
-					OperationType: op.String(),
-					EntityIDs:     ids.Values(),
-				})
-			}
-		}
 	}
 
 	return dbScopes
@@ -218,4 +139,22 @@ func toDBAuthPage(user string, pm auth.PATSPageMeta) dbPatPagemeta {
 		Offset: pm.Offset,
 		User:   user,
 	}
+}
+
+func isEmptyScope(scope []auth.Scope) bool {
+	return len(scope) == 0
+}
+
+func toDBScope(patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) []dbScope {
+	var scopes []dbScope
+	for _, entityID := range entityIDs {
+		scopes = append(scopes, dbScope{
+			PatID:            patID,
+			OptionalDomainId: optionalDomainID,
+			EntityType:       entityType.String(),
+			EntityID:         entityID,
+			Operation:        operation.String(),
+		})
+	}
+	return scopes
 }
