@@ -26,14 +26,14 @@ To pull docker images from a specific release you need to change the value of `S
 
 SuperMQ supports configurable MQTT broker and Message broker, which also acts as an events store. SuperMQ uses two types of brokers:
 
-1. MQTT_BROKER: Handles MQTT communication between MQTT adapters and message broker. This can either be 'RabbitMQ' or 'NATS'.
+1. MQTT_BROKER: Handles MQTT communication between MQTT adapters and message broker. This is RabbitMQ
 2. MESSAGE_BROKER: Manages message exchange between SuperMQ core, optional, and external services. This can either be 'NATS' or 'RabbitMQ'. This is used to store messages for distributed processing.
 
 Events store: This is used by SuperMQ services to store events for distributed processing. SuperMQ uses a single service to be the message broker and events store. This can either be 'NATS' or 'RabbitMQ'. Redis can also be used as an events store, but it requires a message broker to be deployed along with it for message exchange.
 
 This is the same as MESSAGE_BROKER. This can either be 'NATS' or 'RabbitMQ' or 'Redis'.  If Redis is used as an events store, then RabbitMQ or NATS is used as a message broker.
 
-The current deployment strategy for SuperMQ in `docker/docker-compose.yml` is to use RabbitMQ as a MQTT_BROKER and NATS as a MESSAGE_BROKER and EVENTS_STORE.
+The current deployment strategy for SuperMQ in `docker/docker-compose.yml` is to use RabbitMQ as a MQTT_BROKER and RabbitMQ as a MESSAGE_BROKER and EVENTS_STORE.
 
 Therefore, the following combinations are possible:
 
@@ -41,31 +41,27 @@ Therefore, the following combinations are possible:
 - MQTT_BROKER: RabbitMQ, MESSAGE_BROKER: NATS, EVENTS_STORE: Redis
 - MQTT_BROKER: RabbitMQ, MESSAGE_BROKER: RabbitMQ, EVENTS_STORE: RabbitMQ
 - MQTT_BROKER: RabbitMQ, MESSAGE_BROKER: RabbitMQ, EVENTS_STORE: Redis
-- MQTT_BROKER: NATS, MESSAGE_BROKER: RabbitMQ, EVENTS_STORE: RabbitMQ
-- MQTT_BROKER: NATS, MESSAGE_BROKER: RabbitMQ, EVENTS_STORE: Redis
-- MQTT_BROKER: NATS, MESSAGE_BROKER: NATS, EVENTS_STORE: NATS
-- MQTT_BROKER: NATS, MESSAGE_BROKER: NATS, EVENTS_STORE: Redis
 
-For Message brokers other than NATS, you would need to build the docker images with RabbitMQ as the build tag and change the `docker/.env`. For example, to use RabbitMQ as a message broker:
+For Message brokers other than RabbitMQ, you would need to build the docker images with RabbitMQ as the build tag and change the `docker/.env`. For example, to use RabbitMQ as a message broker:
 
 ```bash
-SMQ_MESSAGE_BROKER_TYPE=rabbitmq make dockers
+SMQ_MESSAGE_BROKER_TYPE=nats make dockers
 ```
 
 ```env
-SMQ_MESSAGE_BROKER_TYPE=rabbitmq
-SMQ_MESSAGE_BROKER_URL=${SMQ_RABBITMQ_URL}
+SMQ_MESSAGE_BROKER_TYPE=nats
+SMQ_MESSAGE_BROKER_URL=${SMQ_NATS_URL}
 ```
 
 For Redis as an events store, you would need to run RabbitMQ or NATS as a message broker. For example, to use Redis as an events store with rabbitmq as a message broker:
 
 ```bash
-SMQ_ES_TYPE=redis SMQ_MESSAGE_BROKER_TYPE=rabbitmq make dockers
+SMQ_ES_TYPE=redis SMQ_MESSAGE_BROKER_TYPE=nats make dockers
 ```
 
 ```env
-SMQ_MESSAGE_BROKER_TYPE=rabbitmq
-SMQ_MESSAGE_BROKER_URL=${SMQ_RABBITMQ_URL}
+SMQ_MESSAGE_BROKER_TYPE=nats
+SMQ_MESSAGE_BROKER_URL=${SMQ_NATS_URL}
 SMQ_ES_TYPE=redis
 SMQ_ES_URL=${SMQ_REDIS_URL}
 ```

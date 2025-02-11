@@ -43,12 +43,12 @@ const (
 
 type config struct {
 	LogLevel      string  `env:"SMQ_COAP_ADAPTER_LOG_LEVEL"   envDefault:"info"`
-	BrokerURL     string  `env:"SMQ_MESSAGE_BROKER_URL"       envDefault:"nats://localhost:4222"`
+	BrokerURL     string  `env:"SMQ_MESSAGE_BROKER_URL"       envDefault:"amqp://guest:guest@rabbitmq:5672/"`
 	JaegerURL     url.URL `env:"SMQ_JAEGER_URL"               envDefault:"http://localhost:4318/v1/traces"`
 	SendTelemetry bool    `env:"SMQ_SEND_TELEMETRY"           envDefault:"true"`
 	InstanceID    string  `env:"SMQ_COAP_ADAPTER_INSTANCE_ID" envDefault:""`
 	TraceRatio    float64 `env:"SMQ_JAEGER_TRACE_RATIO"       envDefault:"1.0"`
-	ESURL         string  `env:"SMQ_ES_URL"                   envDefault:"nats://localhost:4222"`
+	ESURL         string  `env:"SMQ_ES_URL"                   envDefault:"amqp://guest:guest@rabbitmq:5672/"`
 }
 
 func main() {

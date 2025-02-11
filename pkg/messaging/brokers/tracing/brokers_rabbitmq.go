@@ -1,5 +1,5 @@
-//go:build rabbitmq
-// +build rabbitmq
+//go:build !nats
+// +build !nats
 
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
