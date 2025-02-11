@@ -57,7 +57,7 @@ type authPATReq struct {
 	EntityType       auth.EntityType
 	optionalDomainID string
 	operation        auth.Operation
-	entityID        string
+	entityID         string
 }
 
 func (req authPATReq) validate() error {
