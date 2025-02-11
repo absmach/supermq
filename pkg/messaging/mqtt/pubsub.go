@@ -52,13 +52,15 @@ type pubsub struct {
 	logger        *slog.Logger
 	mu            sync.RWMutex
 	address       string
+	username      string
+	password      string
 	timeout       time.Duration
 	subscriptions map[string]subscription
 }
 
 // NewPubSub returns MQTT message publisher/subscriber.
-func NewPubSub(url string, qos uint8, timeout time.Duration, logger *slog.Logger) (messaging.PubSub, error) {
-	client, err := newClient(url, "mqtt-publisher", timeout)
+func NewPubSub(url, username, password string, qos uint8, timeout time.Duration, logger *slog.Logger) (messaging.PubSub, error) {
+	client, err := newClient(url, username, password, "mqtt-publisher", timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -69,6 +71,8 @@ func NewPubSub(url string, qos uint8, timeout time.Duration, logger *slog.Logger
 			qos:     qos,
 		},
 		address:       url,
+		username:      username,
+		password:      password,
 		timeout:       timeout,
 		logger:        logger,
 		subscriptions: make(map[string]subscription),
@@ -96,7 +100,7 @@ func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig)
 			}
 		}
 	default:
-		client, err := newClient(ps.address, cfg.ID, ps.timeout)
+		client, err := newClient(ps.address, ps.username, ps.password, cfg.ID, ps.timeout)
 		if err != nil {
 			return err
 		}
@@ -167,10 +171,10 @@ func (s *subscription) unsubscribe(topic string, timeout time.Duration) error {
 	return token.Error()
 }
 
-func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
+func newClient(address, username, password, id string, timeout time.Duration) (mqtt.Client, error) {
 	opts := mqtt.NewClientOptions().
-		SetConnectRetry(true).
-		SetAutoReconnect(true).
+		SetUsername(username).
+		SetPassword(password).
 		AddBroker(address).
 		SetClientID(id)
 	client := mqtt.NewClient(opts)
@@ -182,8 +186,6 @@ func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
 	if ok := token.WaitTimeout(timeout); !ok {
 		return nil, ErrConnect
 	}
-
-	fmt.Printf("Connected: %t\tError: %s\n", client.IsConnected(), token.Error())
 
 	return client, nil
 }
