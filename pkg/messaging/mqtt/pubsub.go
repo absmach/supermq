@@ -175,6 +175,8 @@ func newClient(address, username, password, id string, timeout time.Duration) (m
 	opts := mqtt.NewClientOptions().
 		SetUsername(username).
 		SetPassword(password).
+		SetConnectRetry(true).
+		SetAutoReconnect(true).
 		AddBroker(address).
 		SetClientID(id)
 	client := mqtt.NewClient(opts)
