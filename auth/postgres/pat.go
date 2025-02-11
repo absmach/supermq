@@ -71,7 +71,6 @@ func toAuthScope(dsc []dbScope) ([]auth.Scope, error) {
 	scope := []auth.Scope{}
 
 	for _, s := range dsc {
-
 		entityType, err := auth.ParseEntityType(s.EntityType)
 		if err != nil {
 			return []auth.Scope{}, err
