@@ -15,37 +15,6 @@ import (
 
 const AnyIDs = "*"
 
-// Example Scope as JSON
-//
-//	{
-//	    "users": {
-//	            "create": ["*"],
-//	            "read": ["*"],
-//	            "list": ["*"],
-//	            "update": ["*"],
-//	            "delete": ["*"]
-//	    },
-//	    "domains": {
-//	        "domain_1": {
-//	            "entities": {
-//	                "groups": {
-//	                    "create": ["*"] // this for all groups in domain
-//	                },
-//	                "channels": {
-//	                    // for particular channel in domain
-//	                    "delete": [
-//	                        "channel1",
-//	                        "channel2"
-//	                    ]
-//	                },
-//	                "things": {
-//	                    "update": ["*"] // this for all things in domain
-//	                }
-//	            }
-//	        }
-//	    }
-//	}
-
 type Operation uint32
 
 const (
@@ -241,6 +210,29 @@ func (et *EntityType) UnmarshalText(data []byte) (err error) {
 	*et, err = ParseEntityType(str)
 	return err
 }
+
+// Example Scope as JSON
+//
+// [
+//     {
+//         "optional_domain_id": "domain_1",
+//         "entity_type": "groups",
+//         "operation": "create",
+//         "entity_id": "*"
+//     },
+//     {
+//         "optional_domain_id": "domain_1",
+//         "entity_type": "channels",
+//         "operation": "delete",
+//         "entity_id": "channel1"
+//     },
+//     {
+//         "optional_domain_id": "domain_1",
+//         "entity_type": "things",
+//         "operation": "update",
+//         "entity_id": "*"
+//     }
+// ]
 
 type Scope struct {
 	PatId            string

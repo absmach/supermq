@@ -131,7 +131,7 @@ func (pr *patRepo) Save(ctx context.Context, pat auth.PAT) error {
 func (pr *patRepo) hasWildcardInScope(wrapper *sqlx.Tx, pat auth.PAT) (bool, error) {
 	for _, sc := range pat.Scope {
 		if sc.EntityId == auth.AnyIDs {
-			wildcardScope := toDBScope(pat.ID, sc.EntityType, sc.OptionalDomainId, sc.Operation, "*")
+			wildcardScope := toDBScope(pat.ID, sc.EntityType, sc.OptionalDomainId, sc.Operation, auth.AnyIDs)
 			_, err := wrapper.NamedExec(saveScopeQuery, wildcardScope)
 			if err != nil {
 				return false, postgres.HandleError(repoerr.ErrCreateEntity, err)
@@ -555,7 +555,7 @@ func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, enti
 		EntityType:       entityType.String(),
 		OptionalDomainId: optionalDomainID,
 		Operation:        operation.String(),
-		EntityID:         "*",
+		EntityID:         auth.AnyIDs,
 	}
 
 	existsDB, err := pr.checkWildcardInDB(ctx, checkScope)
@@ -571,7 +571,7 @@ func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, enti
 		return pat.Scope, nil
 	}
 
-	wildcardScope := toDBScope(patID, entityType, optionalDomainID, operation, "*")
+	wildcardScope := toDBScope(patID, entityType, optionalDomainID, operation, auth.AnyIDs)
 	existsID, err := pr.hasWildcardInIDs(ctx, checkScope, wildcardScope, entityIDs...)
 	if err != nil {
 		return []auth.Scope{}, err
@@ -621,7 +621,7 @@ func (pr *patRepo) hasWildcardInIDs(ctx context.Context, checkScope dbScope, wil
 		}
 	}()
 	for _, entityID := range entityIDs {
-		if entityID == "*" {
+		if entityID == auth.AnyIDs {
 			_, err = tx.NamedExec(deleteSpecificEntriesQuery, checkScope)
 			if err != nil {
 				return false, errors.Wrap(repoerr.ErrUpdateEntity, err)
