@@ -118,6 +118,7 @@ type EntityMemberRole struct {
 type Provisioner interface {
 	AddNewEntitiesRoles(ctx context.Context, domainID, userID string, entityIDs []string, optionalEntityPolicies []policies.Policy, newBuiltInRoleMembers map[BuiltInRoleName][]Member) ([]RoleProvision, error)
 	RemoveEntitiesRoles(ctx context.Context, domainID, userID string, entityIDs []string, optionalFilterDeletePolicies []policies.Policy, optionalDeletePolicies []policies.Policy) error
+	RemoveMemberFromDomain(ctx context.Context, domainID, memberID string) error
 }
 
 //go:generate mockery --name RoleManager --output=./mocks --filename rolemanager.go --quiet --note "Copyright (c) Abstract Machines"
@@ -159,7 +160,7 @@ type RoleManager interface {
 
 	ListEntityMembers(ctx context.Context, session authn.Session, entityID string, pq MembersRolePageQuery) (MembersRolePage, error)
 
-	RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) (err error)
+	RemoveMemberFromEntity(ctx context.Context, session authn.Session, entityID string, memberID string) error
 
 	RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, memberID string) (err error)
 }
@@ -184,7 +185,10 @@ type Repository interface {
 	RoleRemoveAllMembers(ctx context.Context, role Role) (err error)
 	RetrieveEntitiesRolesActionsMembers(ctx context.Context, entityIDs []string) ([]EntityActionRole, []EntityMemberRole, error)
 	ListEntityMembers(ctx context.Context, entityID string, pageQuery MembersRolePageQuery) (MembersRolePage, error)
-	RemoveEntityMembers(ctx context.Context, entityID string, members []string) error
+	RetrieveRolesByEntityMember(ctx context.Context, entityID, memberID string) ([]string, error)
+	RemoveMemberFromEntity(ctx context.Context, entityID string, memberID string) error
+	RetrieveRolesByDomainMember(ctx context.Context, domainID, memberID string) ([]string, error)
+	RemoveMemberFromDomain(ctx context.Context, domainID string, memberID string) error
 	RemoveMemberFromAllRoles(ctx context.Context, memberID string) (err error)
 }
 

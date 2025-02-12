@@ -99,8 +99,8 @@ func (rmm *RoleManagerMetricsMiddleware) ListEntityMembers(ctx context.Context, 
 	return rmm.svc.ListEntityMembers(ctx, session, entityID, pageQuery)
 }
 
-func (rmm *RoleManagerMetricsMiddleware) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) error {
-	return rmm.svc.RemoveEntityMembers(ctx, session, entityID, members)
+func (rmm *RoleManagerMetricsMiddleware) RemoveMemberFromEntity(ctx context.Context, session authn.Session, entityID string, memberID string) error {
+	return rmm.svc.RemoveMemberFromEntity(ctx, session, entityID, memberID)
 }
 
 func (rmm *RoleManagerMetricsMiddleware) RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, memberID string) (err error) {

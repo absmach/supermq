@@ -320,24 +320,6 @@ func (_m *Service) RemoveChannel(ctx context.Context, session authn.Session, id 
 	return r0
 }
 
-// RemoveEntityMembers provides a mock function with given fields: ctx, session, entityID, members
-func (_m *Service) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) error {
-	ret := _m.Called(ctx, session, entityID, members)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RemoveEntityMembers")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, []string) error); ok {
-		r0 = rf(ctx, session, entityID, members)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // RemoveMemberFromAllRoles provides a mock function with given fields: ctx, session, memberID
 func (_m *Service) RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, memberID string) error {
 	ret := _m.Called(ctx, session, memberID)
@@ -349,6 +331,24 @@ func (_m *Service) RemoveMemberFromAllRoles(ctx context.Context, session authn.S
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) error); ok {
 		r0 = rf(ctx, session, memberID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemoveMemberFromEntity provides a mock function with given fields: ctx, session, entityID, memberID
+func (_m *Service) RemoveMemberFromEntity(ctx context.Context, session authn.Session, entityID string, memberID string) error {
+	ret := _m.Called(ctx, session, entityID, memberID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveMemberFromEntity")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, string) error); ok {
+		r0 = rf(ctx, session, entityID, memberID)
 	} else {
 		r0 = ret.Error(0)
 	}

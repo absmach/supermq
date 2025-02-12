@@ -141,8 +141,8 @@ var (
 	// ErrInvalidComparator indicates an invalid comparator.
 	ErrInvalidComparator = errors.New("invalid comparator")
 
-	// ErrMissingMemberIDs indicates missing member ids.
-	ErrMissingMemberIDs = errors.New("missing member ids")
+	// ErrMissingMemberID indicates missing member id.
+	ErrMissingMemberID = errors.New("missing member id")
 
 	// ErrMissingMemberType indicates missing group member type.
 	ErrMissingMemberType = errors.New("missing group member type")

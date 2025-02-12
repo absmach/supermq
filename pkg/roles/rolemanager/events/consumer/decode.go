@@ -17,6 +17,7 @@ var (
 	errEntityID  = errors.New("missing or invalid 'entity_id'")
 	errActions   = errors.New("missing or invalid 'actions'")
 	errMembers   = errors.New("missing or invalid 'members'")
+	errMemberID  = errors.New("missing or invalid 'member_id'")
 	errCreatedAt = errors.New("failed to parse 'created_at' time")
 	errUpdatedAt = errors.New("failed to parse 'updated_at' time")
 	errNotString = errors.New("not string type")

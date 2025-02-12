@@ -26,7 +26,7 @@ const (
 	RemoveRoleMembers        = "role.members.remove"
 	RemoveRoleAllMembers     = "role.members.remove_all"
 	ListEntityMembers        = "members.list"
-	RemoveEntityMembers      = "members.remove"
+	RemoveEntityMember       = "member.remove"
 	RemoveMemberFromAllRoles = "role.members.remove_from_all_roles"
 )
 
@@ -48,7 +48,7 @@ var (
 	_ events.Event = (*roleRemoveMembersEvent)(nil)
 	_ events.Event = (*roleRemoveAllMembersEvent)(nil)
 	_ events.Event = (*listEntityMembersEvent)(nil)
-	_ events.Event = (*removeEntityMembersEvent)(nil)
+	_ events.Event = (*removeEntityMemberEvent)(nil)
 	_ events.Event = (*removeMemberFromAllRolesEvent)(nil)
 )
 
@@ -339,17 +339,17 @@ func (leme listEntityMembersEvent) Encode() (map[string]interface{}, error) {
 	return val, nil
 }
 
-type removeEntityMembersEvent struct {
+type removeEntityMemberEvent struct {
 	operationPrefix string
 	entityID        string
-	members         []string
+	memberID        string
 }
 
-func (reme removeEntityMembersEvent) Encode() (map[string]interface{}, error) {
+func (reme removeEntityMemberEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
-		"operation": reme.operationPrefix + RemoveEntityMembers,
+		"operation": reme.operationPrefix + RemoveEntityMember,
 		"entity_id": reme.entityID,
-		"members":   reme.members,
+		"member_id": reme.memberID,
 	}
 	return val, nil
 }

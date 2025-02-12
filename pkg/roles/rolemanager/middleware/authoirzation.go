@@ -268,7 +268,7 @@ func (ram RoleManagerAuthorizationMiddleware) ListEntityMembers(ctx context.Cont
 	return ram.svc.ListEntityMembers(ctx, session, entityID, pageQuery)
 }
 
-func (ram RoleManagerAuthorizationMiddleware) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) error {
+func (ram RoleManagerAuthorizationMiddleware) RemoveMemberFromEntity(ctx context.Context, session authn.Session, entityID string, memberID string) error {
 	if err := ram.authorize(ctx, roles.OpRoleRemoveAllMembers, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
@@ -279,7 +279,7 @@ func (ram RoleManagerAuthorizationMiddleware) RemoveEntityMembers(ctx context.Co
 	}); err != nil {
 		return err
 	}
-	return ram.svc.RemoveEntityMembers(ctx, session, entityID, members)
+	return ram.svc.RemoveMemberFromEntity(ctx, session, entityID, memberID)
 }
 
 func (ram RoleManagerAuthorizationMiddleware) RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleID string, members []string) (err error) {

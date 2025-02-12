@@ -87,9 +87,9 @@ func ListEntityMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 	}
 }
 
-func RemoveEntityMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
+func RemoveEntityMemberEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(removeEntityMembersReq)
+		req := request.(removeEntityMemberReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
@@ -99,7 +99,7 @@ func RemoveEntityMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		if err := svc.RemoveEntityMembers(ctx, session, req.entityID, req.MemberIDs); err != nil {
+		if err := svc.RemoveMemberFromEntity(ctx, session, req.entityID, req.MemberID); err != nil {
 			return nil, err
 		}
 		return deleteEntityMembersRes{}, nil

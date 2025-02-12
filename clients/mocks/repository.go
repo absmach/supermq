@@ -258,24 +258,6 @@ func (_m *Repository) RemoveConnections(ctx context.Context, conns []clients.Con
 	return r0
 }
 
-// RemoveEntityMembers provides a mock function with given fields: ctx, entityID, members
-func (_m *Repository) RemoveEntityMembers(ctx context.Context, entityID string, members []string) error {
-	ret := _m.Called(ctx, entityID, members)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RemoveEntityMembers")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, []string) error); ok {
-		r0 = rf(ctx, entityID, members)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // RemoveMemberFromAllRoles provides a mock function with given fields: ctx, memberID
 func (_m *Repository) RemoveMemberFromAllRoles(ctx context.Context, memberID string) error {
 	ret := _m.Called(ctx, memberID)
@@ -287,6 +269,24 @@ func (_m *Repository) RemoveMemberFromAllRoles(ctx context.Context, memberID str
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
 		r0 = rf(ctx, memberID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemoveMemberFromEntity provides a mock function with given fields: ctx, entityID, memberID
+func (_m *Repository) RemoveMemberFromEntity(ctx context.Context, entityID string, memberID string) error {
+	ret := _m.Called(ctx, entityID, memberID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveMemberFromEntity")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, entityID, memberID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -588,6 +588,36 @@ func (_m *Repository) RetrieveRole(ctx context.Context, roleID string) (roles.Ro
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(ctx, roleID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RetrieveRolesByEntityMember provides a mock function with given fields: ctx, entityID, memberID
+func (_m *Repository) RetrieveRolesByEntityMember(ctx context.Context, entityID string, memberID string) ([]string, error) {
+	ret := _m.Called(ctx, entityID, memberID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveRolesByEntityMember")
+	}
+
+	var r0 []string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) ([]string, error)); ok {
+		return rf(ctx, entityID, memberID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) []string); ok {
+		r0 = rf(ctx, entityID, memberID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, entityID, memberID)
 	} else {
 		r1 = ret.Error(1)
 	}

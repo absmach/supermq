@@ -80,21 +80,21 @@ func (req listEntityMembersReq) validate() error {
 	return nil
 }
 
-type removeEntityMembersReq struct {
-	token     string
-	entityID  string
-	MemberIDs []string `json:"member_ids"`
+type removeEntityMemberReq struct {
+	token    string
+	entityID string
+	MemberID string `json:"member_id"`
 }
 
-func (req removeEntityMembersReq) validate() error {
+func (req removeEntityMemberReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
 	if req.entityID == "" {
 		return apiutil.ErrMissingID
 	}
-	if len(req.MemberIDs) == 0 {
-		return apiutil.ErrMissingMemberIDs
+	if req.MemberID == "" {
+		return apiutil.ErrMissingMemberID
 	}
 	return nil
 }

@@ -19,6 +19,7 @@ var (
 	errRemoveOptionalDeletePolicies       = errors.New("failed to delete the additional requested policies")
 	errRemoveOptionalFilterDeletePolicies = errors.New("failed to filter delete the additional requested policies")
 	errRollbackRoles                      = errors.New("failed to rollback roles")
+	errInvalidOperation                   = errors.New("invalid operation")
 )
 
 type roleProvisionerManger interface {
@@ -90,6 +91,37 @@ func (r ProvisionManageService) validateActions(actions []Action) error {
 		}
 	}
 	return nil
+}
+
+func (r ProvisionManageService) RemoveMemberFromDomain(ctx context.Context, domainID, memberID string) error {
+	switch r.entityType {
+	case policies.ClientType,
+		policies.ChannelType,
+		policies.GroupType:
+		roles, err := r.repo.RetrieveRolesByDomainMember(ctx, domainID, memberID)
+		if err != nil {
+			return errors.Wrap(svcerr.ErrRemoveEntity, err)
+		}
+
+		for _, role := range roles {
+			pr := policies.Policy{
+				ObjectType:  policies.RoleType,
+				Object:      role,
+				SubjectType: policies.UserType,
+			}
+
+			if err := r.policy.DeletePolicyFilter(ctx, pr); err != nil {
+				return errors.Wrap(svcerr.ErrDeletePolicies, err)
+			}
+		}
+
+		if err := r.repo.RemoveMemberFromDomain(ctx, domainID, memberID); err != nil {
+			return err
+		}
+		return nil
+	default:
+		return errInvalidOperation
+	}
 }
 
 func (r ProvisionManageService) RemoveEntitiesRoles(ctx context.Context, domainID, userID string, entityIDs []string, optionalFilterDeletePolicies []policies.Policy, optionalDeletePolicies []policies.Policy) error {
@@ -619,11 +651,36 @@ func (r ProvisionManageService) ListEntityMembers(ctx context.Context, session a
 	return mp, nil
 }
 
-func (r ProvisionManageService) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) error {
-	if err := r.repo.RemoveEntityMembers(ctx, entityID, members); err != nil {
-		return err
+func (r ProvisionManageService) RemoveMemberFromEntity(ctx context.Context, session authn.Session, entityID string, memberID string) error {
+	switch r.entityType {
+	case policies.ClientType,
+		policies.ChannelType,
+		policies.GroupType:
+		roles, err := r.repo.RetrieveRolesByEntityMember(ctx, entityID, memberID)
+		if err != nil {
+			return errors.Wrap(svcerr.ErrRemoveEntity, err)
+		}
+
+		for _, role := range roles {
+			pr := policies.Policy{
+				ObjectType:  policies.RoleType,
+				Object:      role,
+				SubjectType: policies.UserType,
+			}
+
+			if err := r.policy.DeletePolicyFilter(ctx, pr); err != nil {
+				return errors.Wrap(svcerr.ErrDeletePolicies, err)
+			}
+		}
+
+		if err := r.repo.RemoveMemberFromEntity(ctx, entityID, memberID); err != nil {
+			return err
+		}
+		return nil
+	default:
+		return errInvalidOperation
 	}
-	return nil
+
 }
 
 func (r ProvisionManageService) RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, member string) (err error) {

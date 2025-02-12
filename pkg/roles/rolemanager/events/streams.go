@@ -317,15 +317,15 @@ func (rmes *RoleManagerEventStore) ListEntityMembers(ctx context.Context, sessio
 	return mems, nil
 }
 
-func (rmes *RoleManagerEventStore) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) error {
-	if err := rmes.svc.RemoveEntityMembers(ctx, session, entityID, members); err != nil {
+func (rmes *RoleManagerEventStore) RemoveMemberFromEntity(ctx context.Context, session authn.Session, entityID string, memberID string) error {
+	if err := rmes.svc.RemoveMemberFromEntity(ctx, session, entityID, memberID); err != nil {
 		return err
 	}
 
-	e := removeEntityMembersEvent{
+	e := removeEntityMemberEvent{
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
-		members:         members,
+		memberID:        memberID,
 	}
 	if err := rmes.Publish(ctx, e); err != nil {
 		return err

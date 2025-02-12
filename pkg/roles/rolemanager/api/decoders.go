@@ -124,12 +124,12 @@ func (d Decoder) DecodeListEntityMembers(_ context.Context, r *http.Request) (in
 	return req, nil
 }
 
-func (d Decoder) DecodeRemoveEntityMembers(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeRemoveEntityMember(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
 
-	req := removeEntityMembersReq{
+	req := removeEntityMemberReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),
 	}

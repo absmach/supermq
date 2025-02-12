@@ -23,6 +23,7 @@ const (
 	errAddEntityRoleMembersEvent       = "failed to consume %s add role members event : %w"
 	errRemoveEntityRoleMembersEvent    = "failed to consume %s remove role members event : %w"
 	errRemoveEntityRoleAllMembersEvent = "failed to consume %s remove role all members event : %w"
+	errRemoveEntityMemberEvent         = "failed to consume %s remove entity member event : %w"
 )
 
 type EventHandler struct {
@@ -55,7 +56,7 @@ func NewEventHandler(entityType string, repo roles.Repository) EventHandler {
 		removeRoleMembers:        entityType + "." + events.RemoveRoleMembers,
 		removeRoleAllMembers:     entityType + "." + events.RemoveRoleAllMembers,
 		removeMemberFromAllRoles: entityType + "." + events.RemoveMemberFromAllRoles,
-		removeEntityMembers:      entityType + "." + events.RemoveEntityMembers,
+		removeEntityMembers:      entityType + "." + events.RemoveEntityMember,
 	}
 }
 
@@ -80,7 +81,7 @@ func (es *EventHandler) Handle(ctx context.Context, op interface{}, msg map[stri
 	case es.removeRoleAllMembers:
 		return es.RemoveAllMembersFromEntityRoleHandler(ctx, msg)
 	case es.removeEntityMembers:
-		return es.RemoveEntityMembersHandler(ctx, msg)
+		return es.RemoveEntityMemberHandler(ctx, msg)
 	case es.removeMemberFromAllRoles:
 		return es.RemoveMemberFromAllEntityHandler(ctx, msg)
 	}
@@ -234,23 +235,18 @@ func (es *EventHandler) RemoveAllMembersFromEntityRoleHandler(ctx context.Contex
 	return nil
 }
 
-func (es *EventHandler) RemoveEntityMembersHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *EventHandler) RemoveEntityMemberHandler(ctx context.Context, data map[string]interface{}) error {
 	entityID, ok := data["entity_id"].(string)
 	if !ok {
-		return fmt.Errorf(errRemoveEntityRoleAllMembersEvent, es.entityType, errEntityID)
+		return fmt.Errorf(errRemoveEntityMemberEvent, es.entityType, errEntityID)
 	}
-	imems, ok := data["members"].([]interface{})
+	memberID, ok := data["member_id"].(string)
 	if !ok {
-		return fmt.Errorf(errRemoveEntityRoleMembersEvent, es.entityType, errMembers)
+		return fmt.Errorf(errRemoveEntityMemberEvent, es.entityType, errMemberID)
 	}
-	mems, err := ToStrings(imems)
-	if err != nil {
-		return fmt.Errorf(errRemoveEntityRoleMembersEvent, es.entityType, err)
+	if err := es.repo.RemoveMemberFromEntity(ctx, entityID, memberID); err != nil {
+		return fmt.Errorf(errRemoveEntityMemberEvent, es.entityType, err)
 	}
-
-	// added when repo is implemented.
-	_ = entityID
-	_ = mems
 	return nil
 }
 
