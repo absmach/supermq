@@ -189,3 +189,25 @@ func clearPATAllScopeEntryEndpoint(svc auth.Service) endpoint.Endpoint {
 		return clearAllScopeEntryRes{}, nil
 	}
 }
+
+func listScopesEndpoint(svc auth.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(listScopesReq)
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		pm := auth.ScopesPageMeta{
+			Limit:  req.limit,
+			Offset: req.offset,
+			PatID:  req.patID,
+			UserID: req.userID,
+		}
+		scopesPage, err := svc.ListScopes(ctx, req.token, pm)
+		if err != nil {
+			return nil, err
+		}
+
+		return listScopeRes{scopesPage}, nil
+	}
+}

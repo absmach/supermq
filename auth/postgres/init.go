@@ -70,7 +70,7 @@ func Migration() *migrate.MemoryMigrationSource {
 				Up: []string{
 					`CREATE TABLE IF NOT EXISTS pats (
 						id 					VARCHAR(36) PRIMARY KEY,
-                        name        		VARCHAR(254),
+                        name        		VARCHAR(254) NOT NULL UNIQUE,
 						user_id	 			VARCHAR(36),
 						description			TEXT,
 						secret				TEXT,
@@ -80,7 +80,7 @@ func Migration() *migrate.MemoryMigrationSource {
 						revoked 			BOOLEAN,
 						revoked_at 			TIMESTAMP,
 						last_used_at		TIMESTAMP,
-						UNIQUE (id, name, secret)
+						UNIQUE 				(id, name, secret)
 					)`,
 				},
 				Down: []string{

@@ -22,6 +22,7 @@ const (
 	contentType = "application/json"
 	defInterval = "30d"
 	patPrefix   = "pat_"
+	userID      = "user"
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -93,6 +94,13 @@ func MakeHandler(svc auth.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
 				r.Patch("/add", kithttp.NewServer(
 					addPATScopeEntryEndpoint(svc),
 					decodeAddPATScopeEntryRequest,
+					api.EncodeResponse,
+					opts...,
+				).ServeHTTP)
+
+				r.Get("/", kithttp.NewServer(
+					listScopesEndpoint(svc),
+					decodeListPATScopeRequest,
 					api.EncodeResponse,
 					opts...,
 				).ServeHTTP)
@@ -262,6 +270,32 @@ func decodeAddPATScopeEntryRequest(_ context.Context, r *http.Request) (interfac
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 
+	return req, nil
+}
+func decodeListPATScopeRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	l, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	o, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	u, err := apiutil.ReadStringQuery(r, userID, "")
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	token := apiutil.ExtractBearerToken(r)
+	if strings.HasPrefix(token, patPrefix) {
+		return nil, apiutil.ErrUnsupportedTokenType
+	}
+	req := listScopesReq{
+		token:  token,
+		limit:  l,
+		offset: o,
+		patID:  chi.URLParam(r, "id"),
+		userID: u,
+	}
 	return req, nil
 }
 

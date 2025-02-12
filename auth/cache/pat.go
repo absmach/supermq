@@ -13,6 +13,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+const Seperator = "_"
+
 type patCache struct {
 	client   *redis.Client
 	duration time.Duration
@@ -27,7 +29,7 @@ func NewPatsCache(client *redis.Client, duration time.Duration) auth.Cache {
 
 func (pc *patCache) Save(ctx context.Context, pat auth.PAT) error {
 	for _, sc := range pat.Scope {
-		key := generateKey(pat.ID, sc.OptionalDomainId, sc.EntityType.String(), sc.Operation.String(), sc.EntityId)
+		key := GenerateKey(pat.ID, sc.OptionalDomainId, sc.EntityType, sc.Operation, sc.EntityId)
 		if err := pc.client.Set(ctx, key, true, pc.duration).Err(); err != nil {
 			return errors.Wrap(repoerr.ErrCreateEntity, err)
 		}
@@ -36,17 +38,7 @@ func (pc *patCache) Save(ctx context.Context, pat auth.PAT) error {
 	return nil
 }
 
-func (pc *patCache) ID(ctx context.Context, patID string) (auth.PAT, error) {
-	var pat auth.PAT
-	err := pc.client.Get(ctx, patID).Scan(&pat)
-	if err != nil {
-		return auth.PAT{}, errors.Wrap(repoerr.ErrNotFound, err)
-	}
-
-	return pat, nil
-}
-
-func (pc *patCache) Check(ctx context.Context, key string) (bool, error) {
+func (pc *patCache) CheckScope(ctx context.Context, key string) (bool, error) {
 	var authorized bool
 	err := pc.client.Get(ctx, key).Scan(&authorized)
 	if err != nil {
@@ -67,6 +59,6 @@ func (dc *patCache) Remove(ctx context.Context, patID string) error {
 	return nil
 }
 
-func generateKey(patID, optionalDomainId, entityType, operation, entityID string) string {
-	return patID + optionalDomainId + entityType + operation + entityID
+func GenerateKey(patID, optionalDomainId string, entityType auth.EntityType, operation auth.Operation, entityID string) string {
+	return patID + Seperator + optionalDomainId + Seperator + entityType.String() + Seperator + operation.String() + Seperator + entityID
 }

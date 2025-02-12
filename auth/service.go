@@ -97,9 +97,9 @@ type Service interface {
 
 //go:generate mockery --name Cache --output=./mocks --filename cache.go --quiet --note "Copyright (c) Abstract Machines"
 type Cache interface {
-	Save(ctx context.Context, scope PAT) error
+	Save(ctx context.Context, pat PAT) error
 
-	ID(ctx context.Context, patID string) (PAT, error)
+	CheckScope(ctx context.Context, key string) (bool, error)
 
 	Remove(ctx context.Context, patID string) error
 }
@@ -482,6 +482,9 @@ func (svc service) CreatePAT(ctx context.Context, token, name, description strin
 	if err != nil {
 		return PAT{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
+	for i := range scope {
+		scope[i].PatId = id
+	}
 
 	now := time.Now()
 	pat := PAT{
@@ -675,11 +678,7 @@ func (svc service) IdentifyPAT(ctx context.Context, secret string) (PAT, error) 
 }
 
 func (svc service) AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityIDs ...string) error {
-	res, err := svc.RetrievePAT(ctx, userID, patID)
-	if err != nil {
-		return err
-	}
-	if err := svc.pats.CheckScopeEntry(ctx, res.User, res.ID, entityType, optionalDomainID, operation, entityIDs...); err != nil {
+	if err := svc.pats.CheckScopeEntry(ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs...); err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)
 	}
 	return nil

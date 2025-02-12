@@ -293,3 +293,21 @@ func (req clearAllScopeEntryReq) validate() (err error) {
 	}
 	return nil
 }
+
+type listScopesReq struct {
+	token  string
+	offset uint64
+	limit  uint64
+	patID  string
+	userID string
+}
+
+func (req listScopesReq) validate() (err error) {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
+	if req.patID == "" {
+		return apiutil.ErrMissingPATID
+	}
+	return nil
+}

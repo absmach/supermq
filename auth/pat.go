@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/absmach/supermq/pkg/errors"
@@ -130,7 +131,14 @@ func ParseOperation(op string) (Operation, error) {
 }
 
 func (op Operation) MarshalJSON() ([]byte, error) {
-	return []byte(op.String()), nil
+	return json.Marshal(op.String())
+}
+
+func (op *Operation) UnmarshalJSON(data []byte) error {
+	str := strings.Trim(string(data), "\"")
+	val, err := ParseOperation(str)
+	*op = val
+	return err
 }
 
 func (op Operation) MarshalText() (text []byte, err error) {
@@ -138,7 +146,8 @@ func (op Operation) MarshalText() (text []byte, err error) {
 }
 
 func (op *Operation) UnmarshalText(data []byte) (err error) {
-	*op, err = ParseOperation(string(data))
+	str := strings.Trim(string(data), "\"")
+	*op, err = ParseOperation(str)
 	return err
 }
 
@@ -213,7 +222,14 @@ func ParseEntityType(et string) (EntityType, error) {
 }
 
 func (et EntityType) MarshalJSON() ([]byte, error) {
-	return []byte(et.String()), nil
+	return json.Marshal(et.String())
+}
+
+func (et *EntityType) UnmarshalJSON(data []byte) error {
+	str := strings.Trim(string(data), "\"")
+	val, err := ParseEntityType(str)
+	*et = val
+	return err
 }
 
 func (et EntityType) MarshalText() ([]byte, error) {
@@ -221,7 +237,8 @@ func (et EntityType) MarshalText() ([]byte, error) {
 }
 
 func (et *EntityType) UnmarshalText(data []byte) (err error) {
-	*et, err = ParseEntityType(string(data))
+	str := strings.Trim(string(data), "\"")
+	*et, err = ParseEntityType(str)
 	return err
 }
 

@@ -192,3 +192,19 @@ func (res clearAllScopeEntryRes) Headers() map[string]string {
 func (res clearAllScopeEntryRes) Empty() bool {
 	return true
 }
+
+type listScopeRes struct {
+	auth.ScopesPage `json:",inline"`
+}
+
+func (res listScopeRes) Code() int {
+	return http.StatusOK
+}
+
+func (res listScopeRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res listScopeRes) Empty() bool {
+	return false
+}

@@ -9,9 +9,11 @@ import (
 
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/auth"
+	"github.com/absmach/supermq/auth/cache"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	"github.com/absmach/supermq/pkg/postgres"
+	"github.com/jmoiron/sqlx"
 )
 
 var _ auth.PATSRepository = (*patRepo)(nil)
@@ -36,19 +38,37 @@ const (
 		INSERT INTO pat_scopes (pat_id, entity_type, optional_domain_id, operation, entity_id)
 		VALUES (:pat_id, :entity_type, :optional_domain_id, :operation, :entity_id)`
 
-	updateScopeQuery = `
-		UPDATE pat_scopes SET
-			entity_type = :entity_type, 
-			optional_domain_id = :optional_domain_id, 
-			operation = :operation, 
-			entity_id = :entity_id
-		WHERE pat_id = :pat_id`
-
 	retrieveScopesQuery = `
 		SELECT entity_type, optional_domain_id, operation, entity_id
 		FROM pat_scopes WHERE pat_id = :pat_id`
 
-	deleteScopesQuery = `DELETE FROM pat_scopes WHERE pat_id = :pat_id`
+	deleteScopesQuery = `
+		DELETE FROM pat_scopes 
+		WHERE pat_id = :pat_id 
+			AND entity_type = :entity_type 
+			AND optional_domain_id = :optional_domain_id 
+			AND operation = :operation 
+			AND entity_id = :entity_id`
+
+	deleteAllScopesQuery = `DELETE FROM pat_scopes WHERE pat_id = :pat_id`
+
+	checkWildcardQuery = `
+		SELECT EXISTS (
+			SELECT 1 FROM pat_scopes 
+			WHERE pat_id = :pat_id 
+			AND COALESCE(optional_domain_id, '') = COALESCE(:optional_domain_id, '')
+			AND entity_type = :entity_type 
+			AND operation = :operation
+			AND entity_id = '*'
+		)`
+
+	deleteSpecificEntriesQuery = `
+		DELETE FROM pat_scopes 
+		WHERE pat_id = :pat_id 
+		AND COALESCE(optional_domain_id, '') = COALESCE(:optional_domain_id, '')
+		AND entity_type = :entity_type 
+		AND operation = :operation
+		AND entity_id != '*'`
 )
 
 type patRepo struct {
@@ -87,6 +107,15 @@ func (pr *patRepo) Save(ctx context.Context, pat auth.PAT) error {
 		return postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
+	exists, err := pr.hasWildcardInScope(tx, pat)
+	if err != nil {
+		return postgres.HandleError(repoerr.ErrCreateEntity, err)
+	}
+
+	if exists {
+		return nil
+	}
+
 	_, err = tx.NamedExec(saveScopeQuery, dbScope)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrCreateEntity, err)
@@ -99,11 +128,23 @@ func (pr *patRepo) Save(ctx context.Context, pat auth.PAT) error {
 	return nil
 }
 
-func (pr *patRepo) Retrieve(ctx context.Context, userID, patID string) (auth.PAT, error) {
-	// if pat, err := pr.cache.ID(ctx, patID); err == nil {
-	// 	return pat, nil
-	// }
+func (pr *patRepo) hasWildcardInScope(wrapper *sqlx.Tx, pat auth.PAT) (bool, error) {
+	for _, sc := range pat.Scope {
+		if sc.EntityId == auth.AnyIDs {
+			wildcardScope := toDBScope(pat.ID, sc.EntityType, sc.OptionalDomainId, sc.Operation, "*")
+			_, err := wrapper.NamedExec(saveScopeQuery, wildcardScope)
+			if err != nil {
+				return false, postgres.HandleError(repoerr.ErrCreateEntity, err)
+			}
+		}
+	}
+	if err := wrapper.Commit(); err != nil {
+		return false, postgres.HandleError(repoerr.ErrCreateEntity, err)
+	}
+	return true, nil
+}
 
+func (pr *patRepo) Retrieve(ctx context.Context, userID, patID string) (auth.PAT, error) {
 	pat, err := pr.retrieveFromDB(ctx, userID, patID)
 	if err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrViewEntity, err)
@@ -180,11 +221,6 @@ func (pr *patRepo) RetrieveAll(ctx context.Context, userID string, pm auth.PATSP
 }
 
 func (pr *patRepo) RetrieveSecretAndRevokeStatus(ctx context.Context, userID, patID string) (string, bool, bool, error) {
-	if pat, err := pr.cache.ID(ctx, patID); err == nil {
-		expired := time.Now().After(pat.ExpiresAt)
-		return pat.Secret, pat.Revoked, expired, nil
-	}
-
 	q := `
 		SELECT p.secret, p.revoked, p.expires_at 
 		FROM pats p
@@ -501,8 +537,6 @@ func (pr *patRepo) Remove(ctx context.Context, userID, patID string) error {
 }
 
 func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) ([]auth.Scope, error) {
-	scopes := toDBScope(patID, entityType, optionalDomainID, operation, entityIDs...)
-
 	tx, err := pr.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return []auth.Scope{}, errors.Wrap(repoerr.ErrRemoveEntity, err)
@@ -516,17 +550,48 @@ func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, enti
 		}
 	}()
 
-	res, err := tx.NamedExec(updateScopeQuery, scopes)
+	checkScope := dbScope{
+		PatID:            patID,
+		EntityType:       entityType.String(),
+		OptionalDomainId: optionalDomainID,
+		Operation:        operation.String(),
+		EntityID:         "*",
+	}
+
+	existsDB, err := pr.checkWildcardInDB(ctx, checkScope)
+	if err != nil {
+		return []auth.Scope{}, err
+	}
+
+	if existsDB {
+		pat, err := pr.retrieveFromDB(ctx, userID, patID)
+		if err != nil {
+			return []auth.Scope{}, err
+		}
+		return pat.Scope, nil
+	}
+
+	wildcardScope := toDBScope(patID, entityType, optionalDomainID, operation, "*")
+	existsID, err := pr.hasWildcardInIDs(ctx, checkScope, wildcardScope, entityIDs...)
+	if err != nil {
+		return []auth.Scope{}, err
+	}
+	if existsID {
+		pat, err := pr.retrieveFromDB(ctx, userID, patID)
+		if err != nil {
+			return []auth.Scope{}, err
+		}
+		return pat.Scope, nil
+	}
+
+	scopes := toDBScope(patID, entityType, optionalDomainID, operation, entityIDs...)
+	_, err = tx.NamedQuery(saveScopeQuery, scopes)
 	if err != nil {
 		return []auth.Scope{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 
-	cnt, err := res.RowsAffected()
-	if err != nil {
-		return []auth.Scope{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-	if cnt == 0 {
-		return []auth.Scope{}, repoerr.ErrNotFound
+	if err := tx.Commit(); err != nil {
+		return []auth.Scope{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 
 	pat, err := pr.retrieveFromDB(ctx, userID, patID)
@@ -541,12 +606,11 @@ func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, enti
 	return pat.Scope, nil
 }
 
-func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) ([]auth.Scope, error) {
-	scopes := toDBScope(patID, entityType, optionalDomainID, operation, entityIDs...)
-
+// check for wildcard in the entity IDs.
+func (pr *patRepo) hasWildcardInIDs(ctx context.Context, checkScope dbScope, wildcardScope []dbScope, entityIDs ...string) (bool, error) {
 	tx, err := pr.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return []auth.Scope{}, errors.Wrap(repoerr.ErrRemoveEntity, err)
+		return false, errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
 	defer func() {
@@ -556,18 +620,52 @@ func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, e
 			}
 		}
 	}()
+	for _, entityID := range entityIDs {
+		if entityID == "*" {
+			_, err = tx.NamedExec(deleteSpecificEntriesQuery, checkScope)
+			if err != nil {
+				return false, errors.Wrap(repoerr.ErrUpdateEntity, err)
+			}
 
-	res, err := tx.NamedExec(updateScopeQuery, scopes)
-	if err != nil {
-		return []auth.Scope{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+			_, err = tx.NamedQuery(saveScopeQuery, wildcardScope)
+			if err != nil {
+				return false, postgres.HandleError(repoerr.ErrUpdateEntity, err)
+			}
+
+			if err := tx.Commit(); err != nil {
+				return false, postgres.HandleError(repoerr.ErrUpdateEntity, err)
+			}
+
+			return true, nil
+		}
 	}
 
-	cnt, err := res.RowsAffected()
+	return false, nil
+}
+
+// check for wildcard in the database.
+func (pr *patRepo) checkWildcardInDB(ctx context.Context, checkScope dbScope) (bool, error) {
+	rows, err := pr.db.NamedQueryContext(ctx, checkWildcardQuery, checkScope)
+	if err != nil {
+		return false, errors.Wrap(repoerr.ErrUpdateEntity, err)
+	}
+
+	var exists bool
+	if rows.Next() {
+		if err := rows.Scan(&exists); err != nil {
+			return false, errors.Wrap(repoerr.ErrUpdateEntity, err)
+		}
+	}
+
+	return exists, nil
+}
+
+func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) ([]auth.Scope, error) {
+	scopes := toDBScope(patID, entityType, optionalDomainID, operation, entityIDs...)
+
+	_, err := pr.db.NamedQueryContext(ctx, deleteScopesQuery, scopes)
 	if err != nil {
 		return []auth.Scope{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-	if cnt == 0 {
-		return []auth.Scope{}, repoerr.ErrNotFound
 	}
 
 	pat, err := pr.retrieveFromDB(ctx, userID, patID)
@@ -583,13 +681,16 @@ func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, e
 }
 
 func (pr *patRepo) CheckScopeEntry(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) error {
-	if pat, err := pr.cache.ID(ctx, patID); err == nil {
-		for _, entityID := range entityIDs {
-			if !pat.CheckAccess(entityType, optionalDomainID, operation, entityID) {
-				return repoerr.ErrNotFound
-			}
+	for _, entityID := range entityIDs {
+		key := cache.GenerateKey(patID, optionalDomainID, entityType, operation, entityID)
+		authorized, err := pr.cache.CheckScope(ctx, key)
+		if err != nil {
+			break
 		}
-		return nil
+
+		if authorized {
+			return nil
+		}
 	}
 
 	pat, err := pr.retrieveFromDB(ctx, userID, patID)
@@ -606,7 +707,7 @@ func (pr *patRepo) CheckScopeEntry(ctx context.Context, userID, patID string, en
 }
 
 func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, userID, patID string) error {
-	pat, err := pr.Retrieve(ctx, userID, patID)
+	pat, err := pr.retrieveFromDB(ctx, userID, patID)
 	if err != nil {
 		return err
 	}
@@ -615,30 +716,9 @@ func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, userID, patID string
 
 	scope := toDBPatScope(pat)
 
-	tx, err := pr.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return errors.Wrap(repoerr.ErrRemoveEntity, err)
-	}
-
-	defer func() {
-		if err != nil {
-			if errRollback := tx.Rollback(); errRollback != nil {
-				err = errors.Wrap(errors.Wrap(apiutil.ErrRollbackTx, errRollback), err)
-			}
-		}
-	}()
-
-	res, err := tx.NamedExec(deleteScopesQuery, scope)
+	_, err = pr.db.NamedQueryContext(ctx, deleteAllScopesQuery, scope)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
-	}
-
-	cnt, err := res.RowsAffected()
-	if err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-	if cnt == 0 {
-		return repoerr.ErrNotFound
 	}
 
 	if err := pr.cache.Save(ctx, pat); err != nil {
@@ -649,13 +729,6 @@ func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, userID, patID string
 }
 
 func (pr *patRepo) RetrieveScope(ctx context.Context, pm auth.ScopesPageMeta) (scopes auth.ScopesPage, err error) {
-	if pat, err := pr.cache.ID(ctx, pm.PatID); err == nil {
-		return auth.ScopesPage{
-			Total:  uint64(len(pat.Scope)),
-			Scopes: pat.Scope,
-		}, nil
-	}
-
 	pat, err := pr.retrieveFromDB(ctx, pm.UserID, pm.PatID)
 	if err != nil {
 		return auth.ScopesPage{}, errors.Wrap(repoerr.ErrViewEntity, err)

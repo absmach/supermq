@@ -127,12 +127,20 @@ func (lm *loggingMiddleware) Authorize(ctx context.Context, pr policies.Policy) 
 
 func (lm *loggingMiddleware) CreatePAT(ctx context.Context, token, name, description string, duration time.Duration, scope []auth.Scope) (pa auth.PAT, err error) {
 	defer func(begin time.Time) {
+		var groupArgs []any
+		for _, s := range scope {
+			groupArgs = append(groupArgs, slog.String("entity_type", s.EntityType.String()))
+			groupArgs = append(groupArgs, slog.String("optional_domain_id", s.OptionalDomainId))
+			groupArgs = append(groupArgs, slog.String("operation", s.Operation.String()))
+			groupArgs = append(groupArgs, slog.String("entity_id", s.EntityId))
+		}
+
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.String("name", name),
 			slog.String("description", description),
 			slog.String("pat_duration", duration.String()),
-			slog.Any("scope", scope),
+			slog.Group("scope", groupArgs...),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
