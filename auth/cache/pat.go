@@ -13,7 +13,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-const Seperator = "_"
+const Separator = "_"
 
 type patCache struct {
 	client   *redis.Client
@@ -60,5 +60,5 @@ func (dc *patCache) Remove(ctx context.Context, patID string) error {
 }
 
 func GenerateKey(patID, optionalDomainId string, entityType auth.EntityType, operation auth.Operation, entityID string) string {
-	return patID + Seperator + optionalDomainId + Seperator + entityType.String() + Seperator + operation.String() + Seperator + entityID
+	return patID + Separator + optionalDomainId + Separator + entityType.String() + Separator + operation.String() + Separator + entityID
 }
