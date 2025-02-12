@@ -272,6 +272,7 @@ func decodeAddPATScopeEntryRequest(_ context.Context, r *http.Request) (interfac
 
 	return req, nil
 }
+
 func decodeListPATScopeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	l, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
 	if err != nil {
