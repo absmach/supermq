@@ -1,8 +1,8 @@
-//go:build !nats
-// +build !nats
-
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
+
+//go:build !nats
+// +build !nats
 
 package brokers
 
