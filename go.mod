@@ -37,7 +37,7 @@ require (
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/redis/go-redis/v9 v9.7.0
 	github.com/rubenv/sql-migrate v1.7.1
-	github.com/spf13/cobra v1.8.1
+	github.com/spf13/cobra v1.9.1
 	github.com/sqids/sqids-go v0.4.1
 	github.com/stretchr/testify v1.10.0
 	go.etcd.io/bbolt v1.4.0
