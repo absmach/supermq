@@ -19,8 +19,8 @@ require (
 	github.com/gofrs/uuid/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/hashicorp/vault/api v1.15.0
-	github.com/hashicorp/vault/api/auth/approle v0.8.0
+	github.com/hashicorp/vault/api v1.16.0
+	github.com/hashicorp/vault/api/auth/approle v0.9.0
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f
 	github.com/jackc/pgtype v1.14.4
 	github.com/jackc/pgx/v5 v5.7.2
