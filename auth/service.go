@@ -44,8 +44,6 @@ var (
 	errUpdatePAT           = errors.New("failed to update PAT")
 	errRetrievePAT         = errors.New("failed to retrieve PAT")
 	errDeletePAT           = errors.New("failed to delete PAT")
-	errRevokePAT           = errors.New("failed to revoke PAT")
-	errClearAllScope       = errors.New("failed to clear all entry in scope")
 	errInvalidScope        = errors.New("invalid scope")
 )
 

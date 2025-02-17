@@ -50,24 +50,6 @@ const (
 			AND entity_id = :entity_id`
 
 	deleteAllScopesQuery = `DELETE FROM pat_scopes WHERE pat_id = :pat_id`
-
-	checkWildcardQuery = `
-		SELECT EXISTS (
-			SELECT 1 FROM pat_scopes 
-			WHERE pat_id = :pat_id 
-			AND COALESCE(optional_domain_id, '') = COALESCE(:optional_domain_id, '')
-			AND entity_type = :entity_type 
-			AND operation = :operation
-			AND entity_id = '*'
-		)`
-
-	deleteSpecificEntriesQuery = `
-		DELETE FROM pat_scopes 
-		WHERE pat_id = :pat_id 
-		AND COALESCE(optional_domain_id, '') = COALESCE(:optional_domain_id, '')
-		AND entity_type = :entity_type 
-		AND operation = :operation
-		AND entity_id != '*'`
 )
 
 type patRepo struct {
