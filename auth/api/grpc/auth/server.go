@@ -114,7 +114,7 @@ func decodeAuthorizePATRequest(_ context.Context, grpcReq interface{}) (interfac
 	return authPATReq{
 		userID:           req.GetUserId(),
 		patID:            req.GetPatId(),
-		EntityType:       auth.EntityType(req.GetEntityType()),
+		entityType:       auth.EntityType(req.GetEntityType()),
 		optionalDomainID: req.GetOptionalDomainId(),
 		operation:        auth.Operation(req.GetOperation()),
 		entityID:         req.GetEntityId(),

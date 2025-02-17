@@ -235,14 +235,14 @@ func (et *EntityType) UnmarshalText(data []byte) (err error) {
 // ]
 
 type Scope struct {
-	PatId            string
-	OptionalDomainId string     `json:"optional_domain_id,omitempty"`
+	PatID            string     `json:"pat_id,omitempty"`
+	OptionalDomainID string     `json:"optional_domain_id,omitempty"`
 	EntityType       EntityType `json:"entity_type,omitempty"`
-	EntityId         string     `json:"entity_id,omitempty"`
+	EntityID         string     `json:"entity_id,omitempty"`
 	Operation        Operation  `json:"operation,omitempty"`
 }
 
-func (s *Scope) Check(entityType EntityType, optionalDomainID string, operation Operation, entityID string) bool {
+func (s *Scope) Authorized(entityType EntityType, optionalDomainID string, operation Operation, entityID string) bool {
 	if s == nil {
 		return false
 	}
@@ -251,7 +251,7 @@ func (s *Scope) Check(entityType EntityType, optionalDomainID string, operation 
 		return false
 	}
 
-	if optionalDomainID != "" && s.OptionalDomainId != optionalDomainID {
+	if optionalDomainID != "" && s.OptionalDomainID != optionalDomainID {
 		return false
 	}
 
@@ -259,14 +259,31 @@ func (s *Scope) Check(entityType EntityType, optionalDomainID string, operation 
 		return false
 	}
 
-	if s.EntityId == "*" {
+	if s.EntityID == "*" {
 		return true
 	}
 
-	if s.EntityId == entityID {
+	if s.EntityID == entityID {
 		return true
 	}
 	return false
+}
+
+func (s *Scope) Validate() error {
+	if s == nil {
+		return errInvalidScope
+	}
+	if s.EntityID == "" {
+		return errors.New("missing entityID")
+	}
+
+	switch s.EntityType {
+	case ChannelsType, GroupsType, ClientsType:
+		if s.OptionalDomainID == "" {
+			return errors.New("missing domainID")
+		}
+	}
+	return nil
 }
 
 // PAT represents Personal Access Token.
@@ -276,7 +293,6 @@ type PAT struct {
 	Name        string    `json:"name,omitempty"`
 	Description string    `json:"description,omitempty"`
 	Secret      string    `json:"secret,omitempty"`
-	Scope       []Scope   `json:"scope,omitempty"`
 	IssuedAt    time.Time `json:"issued_at,omitempty"`
 	ExpiresAt   time.Time `json:"expires_at,omitempty"`
 	UpdatedAt   time.Time `json:"updated_at,omitempty"`
@@ -300,13 +316,12 @@ type ScopesPageMeta struct {
 	Offset uint64 `json:"offset"`
 	Limit  uint64 `json:"limit"`
 	PatID  string `json:"pat_id"`
-	UserID string `json:"user_id"`
 }
 
 type ScopesPage struct {
 	Total  uint64  `json:"total"`
-	Offset uint64  `json:"offset"`
-	Limit  uint64  `json:"limit"`
+	Offset uint64  `json:"offset,omitempty"`
+	Limit  uint64  `json:"limit,omitempy"`
 	Scopes []Scope `json:"scopes,omitempty"`
 }
 
@@ -326,31 +341,12 @@ func (pat *PAT) String() string {
 	return string(str)
 }
 
-func (pat *PAT) CheckAccess(entityType EntityType, optionalDomainID string, operation Operation, entityID string) bool {
-	if pat == nil || pat.Scope == nil {
-		return false
-	}
-
-	for _, scope := range pat.Scope {
-		if scope.Check(entityType, optionalDomainID, operation, entityID) {
-			return true
-		}
-	}
-
-	return false
-}
-
-// Expired verifies if the key is expired.
-func (pat PAT) Expired() bool {
-	return pat.ExpiresAt.UTC().Before(time.Now().UTC())
-}
-
 // PATS specifies function which are required for Personal access Token implementation.
 //go:generate mockery --name PATS --output=./mocks --filename pats.go --quiet --note "Copyright (c) Abstract Machines"
 
 type PATS interface {
 	// Create function creates new PAT for given valid inputs.
-	CreatePAT(ctx context.Context, token, name, description string, duration time.Duration, scope []Scope) (PAT, error)
+	CreatePAT(ctx context.Context, token, name, description string, duration time.Duration) (PAT, error)
 
 	// UpdateName function updates the name for the given PAT ID.
 	UpdatePATName(ctx context.Context, token, patID, name string) (PAT, error)
@@ -377,13 +373,13 @@ type PATS interface {
 	RevokePATSecret(ctx context.Context, token, patID string) error
 
 	// AddScope function adds a new scope entry.
-	AddPATScopeEntry(ctx context.Context, token, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityIDs ...string) (ScopesPage, error)
+	AddScopeEntry(ctx context.Context, token, patID string, scope []Scope) (ScopesPage, error)
 
 	// RemoveScope function removes a scope entry.
-	RemovePATScopeEntry(ctx context.Context, token, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityIDs ...string) (ScopesPage, error)
+	RemoveScopeEntry(ctx context.Context, token, patID string, scope []Scope) (ScopesPage, error)
 
 	// ClearAllScope function removes all scope entry.
-	ClearPATAllScopeEntry(ctx context.Context, token, patID string) error
+	ClearAllScopeEntry(ctx context.Context, token, patID string) error
 
 	// IdentifyPAT function will valid the secret.
 	IdentifyPAT(ctx context.Context, paToken string) (PAT, error)
@@ -432,11 +428,11 @@ type PATSRepository interface {
 	// Remove removes Key with provided ID.
 	Remove(ctx context.Context, userID, patID string) error
 
-	AddScopeEntry(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityIDs ...string) ([]Scope, error)
+	AddScopeEntry(ctx context.Context, userID, patID string, scope []Scope) (ScopesPage, error)
 
-	RemoveScopeEntry(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityIDs ...string) ([]Scope, error)
+	RemoveScopeEntry(ctx context.Context, userID, patID string, scope []Scope) (ScopesPage, error)
 
-	CheckScopeEntry(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityIDs ...string) error
+	CheckScopeEntry(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error
 
 	RemoveAllScopeEntry(ctx context.Context, userID, patID string) error
 }

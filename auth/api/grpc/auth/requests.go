@@ -54,7 +54,7 @@ func (req authReq) validate() error {
 type authPATReq struct {
 	userID           string
 	patID            string
-	EntityType       auth.EntityType
+	entityType       auth.EntityType
 	optionalDomainID string
 	operation        auth.Operation
 	entityID         string

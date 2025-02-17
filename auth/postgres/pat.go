@@ -25,7 +25,7 @@ type dbPat struct {
 
 type dbScope struct {
 	PatID            string `db:"pat_id,omitempty"`
-	OptionalDomainId string `db:"optional_domain_id,omitempty"`
+	OptionalDomainID string `db:"optional_domain_id,omitempty"`
 	EntityType       string `db:"entity_type,omitempty"`
 	EntityID         string `db:"entity_id,omitempty"`
 	Operation        string `db:"operation,omitempty"`
@@ -44,7 +44,7 @@ type dbPatPagemeta struct {
 	Secret      string    `db:"secret"`
 }
 
-func toAuthPat(db dbPat, sc []dbScope) (auth.PAT, error) {
+func toAuthPat(db dbPat) (auth.PAT, error) {
 	pat := auth.PAT{
 		ID:          db.ID,
 		User:        db.User,
@@ -58,11 +58,6 @@ func toAuthPat(db dbPat, sc []dbScope) (auth.PAT, error) {
 		Revoked:     db.Revoked,
 		RevokedAt:   db.RevokedAt,
 	}
-	scope, err := toAuthScope(sc)
-	if err != nil {
-		return auth.PAT{}, err
-	}
-	pat.Scope = scope
 
 	return pat, nil
 }
@@ -80,10 +75,10 @@ func toAuthScope(dsc []dbScope) ([]auth.Scope, error) {
 			return []auth.Scope{}, err
 		}
 		scope = append(scope, auth.Scope{
-			PatId:            s.PatID,
-			OptionalDomainId: s.OptionalDomainId,
+			PatID:            s.PatID,
+			OptionalDomainID: s.OptionalDomainID,
 			EntityType:       entityType,
-			EntityId:         s.EntityID,
+			EntityID:         s.EntityID,
 			Operation:        operation,
 		})
 	}
@@ -91,32 +86,7 @@ func toAuthScope(dsc []dbScope) ([]auth.Scope, error) {
 	return scope, nil
 }
 
-func toDBPatScope(pat auth.PAT) []dbScope {
-	var dbScopes []dbScope
-
-	if isEmptyScope(pat.Scope) {
-		sc := dbScope{
-			PatID: pat.ID,
-		}
-		dbScopes = append(dbScopes, sc)
-		return dbScopes
-	}
-
-	for _, p := range pat.Scope {
-		dbScopes = append(dbScopes, dbScope{
-			PatID:            pat.ID,
-			OptionalDomainId: p.OptionalDomainId,
-			EntityType:       p.EntityType.String(),
-			Operation:        p.Operation.String(),
-			EntityID:         p.EntityId,
-		})
-	}
-
-	return dbScopes
-}
-
-func patToDBRecords(pat auth.PAT) (dbPat, []dbScope, error) {
-	scopes := toDBPatScope(pat)
+func toDBPats(pat auth.PAT) (dbPat, error) {
 	return dbPat{
 		ID:          pat.ID,
 		User:        pat.User,
@@ -129,7 +99,7 @@ func patToDBRecords(pat auth.PAT) (dbPat, []dbScope, error) {
 		LastUsedAt:  pat.LastUsedAt,
 		Revoked:     pat.Revoked,
 		RevokedAt:   pat.RevokedAt,
-	}, scopes, nil
+	}, nil
 }
 
 func toDBAuthPage(user string, pm auth.PATSPageMeta) dbPatPagemeta {
@@ -140,19 +110,15 @@ func toDBAuthPage(user string, pm auth.PATSPageMeta) dbPatPagemeta {
 	}
 }
 
-func isEmptyScope(scope []auth.Scope) bool {
-	return len(scope) == 0
-}
-
-func toDBScope(patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) []dbScope {
+func toDBScope(sc []auth.Scope) []dbScope {
 	var scopes []dbScope
-	for _, entityID := range entityIDs {
+	for _, s := range sc {
 		scopes = append(scopes, dbScope{
-			PatID:            patID,
-			OptionalDomainId: optionalDomainID,
-			EntityType:       entityType.String(),
-			EntityID:         entityID,
-			Operation:        operation.String(),
+			PatID:            s.PatID,
+			OptionalDomainID: s.OptionalDomainID,
+			EntityType:       s.EntityType.String(),
+			EntityID:         s.EntityID,
+			Operation:        s.Operation.String(),
 		})
 	}
 	return scopes

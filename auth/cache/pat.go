@@ -27,9 +27,9 @@ func NewPatsCache(client *redis.Client, duration time.Duration) auth.Cache {
 	}
 }
 
-func (pc *patCache) Save(ctx context.Context, pat auth.PAT) error {
-	for _, sc := range pat.Scope {
-		key := GenerateKey(pat.ID, sc.OptionalDomainId, sc.EntityType, sc.Operation, sc.EntityId)
+func (pc *patCache) Save(ctx context.Context, scopes []auth.Scope) error {
+	for _, sc := range scopes {
+		key := GenerateKey(sc.PatID, sc.OptionalDomainID, sc.EntityType, sc.Operation, sc.EntityID)
 		if err := pc.client.Set(ctx, key, true, pc.duration).Err(); err != nil {
 			return errors.Wrap(repoerr.ErrCreateEntity, err)
 		}
@@ -48,11 +48,8 @@ func (pc *patCache) CheckScope(ctx context.Context, key string) (bool, error) {
 	return authorized, nil
 }
 
-func (dc *patCache) Remove(ctx context.Context, patID string) error {
-	if patID == "" {
-		return errors.Wrap(repoerr.ErrRemoveEntity, errors.New("pat ID is empty"))
-	}
-	if err := dc.client.Del(ctx, patID).Err(); err != nil {
+func (dc *patCache) Remove(ctx context.Context, key ...string) error {
+	if err := dc.client.Del(ctx, key...).Err(); err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 

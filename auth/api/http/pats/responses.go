@@ -18,8 +18,7 @@ var (
 	_ supermq.Response = (*deletePatRes)(nil)
 	_ supermq.Response = (*resetPatSecretRes)(nil)
 	_ supermq.Response = (*revokePatSecretRes)(nil)
-	_ supermq.Response = (*addPatScopeEntryRes)(nil)
-	_ supermq.Response = (*removePatScopeEntryRes)(nil)
+	_ supermq.Response = (*scopeEntryRes)(nil)
 	_ supermq.Response = (*clearAllScopeEntryRes)(nil)
 )
 
@@ -147,35 +146,19 @@ func (res revokePatSecretRes) Empty() bool {
 	return true
 }
 
-type addPatScopeEntryRes struct {
+type scopeEntryRes struct {
 	auth.ScopesPage `json:",inline"`
 }
 
-func (res addPatScopeEntryRes) Code() int {
+func (res scopeEntryRes) Code() int {
 	return http.StatusOK
 }
 
-func (res addPatScopeEntryRes) Headers() map[string]string {
+func (res scopeEntryRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res addPatScopeEntryRes) Empty() bool {
-	return false
-}
-
-type removePatScopeEntryRes struct {
-	auth.ScopesPage `json:",inline"`
-}
-
-func (res removePatScopeEntryRes) Code() int {
-	return http.StatusOK
-}
-
-func (res removePatScopeEntryRes) Headers() map[string]string {
-	return map[string]string{}
-}
-
-func (res removePatScopeEntryRes) Empty() bool {
+func (res scopeEntryRes) Empty() bool {
 	return false
 }
 

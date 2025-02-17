@@ -153,7 +153,7 @@ func (client authGrpcClient) AuthorizePAT(ctx context.Context, req *grpcAuthV1.A
 	res, err := client.authorizePAT(ctx, authPATReq{
 		userID:           req.GetUserId(),
 		patID:            req.GetPatId(),
-		EntityType:       auth.EntityType(req.GetEntityType()),
+		entityType:       auth.EntityType(req.GetEntityType()),
 		optionalDomainID: req.GetOptionalDomainId(),
 		operation:        auth.Operation(req.GetOperation()),
 		entityID:         req.GetEntityId(),
@@ -171,7 +171,7 @@ func encodeAuthorizePATRequest(_ context.Context, grpcReq interface{}) (interfac
 	return &grpcAuthV1.AuthZPatReq{
 		UserId:           req.userID,
 		PatId:            req.patID,
-		EntityType:       uint32(req.EntityType),
+		EntityType:       uint32(req.entityType),
 		OptionalDomainId: req.optionalDomainID,
 		Operation:        uint32(req.operation),
 		EntityId:         req.entityID,

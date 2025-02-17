@@ -17,15 +17,13 @@ type createPatReq struct {
 	Name        string        `json:"name,omitempty"`
 	Description string        `json:"description,omitempty"`
 	Duration    time.Duration `json:"duration,omitempty"`
-	Scope       []auth.Scope  `json:"scope,omitempty"`
 }
 
 func (cpr *createPatReq) UnmarshalJSON(data []byte) error {
 	var temp struct {
-		Name        string       `json:"name,omitempty"`
-		Description string       `json:"description,omitempty"`
-		Duration    string       `json:"duration,omitempty"`
-		Scope       []auth.Scope `json:"scope,omitempty"`
+		Name        string `json:"name,omitempty"`
+		Description string `json:"description,omitempty"`
+		Duration    string `json:"duration,omitempty"`
 	}
 	if err := json.Unmarshal(data, &temp); err != nil {
 		return err
@@ -37,7 +35,6 @@ func (cpr *createPatReq) UnmarshalJSON(data []byte) error {
 	cpr.Name = temp.Name
 	cpr.Description = temp.Description
 	cpr.Duration = duration
-	cpr.Scope = temp.Scope
 	return nil
 }
 
@@ -48,12 +45,6 @@ func (req createPatReq) validate() (err error) {
 
 	if strings.TrimSpace(req.Name) == "" {
 		return apiutil.ErrMissingName
-	}
-
-	for _, s := range req.Scope {
-		if s.EntityId == "" {
-			return apiutil.ErrMissingID
-		}
 	}
 
 	return nil
@@ -187,95 +178,39 @@ func (req revokePatSecretReq) validate() (err error) {
 	return nil
 }
 
-type addPatScopeEntryReq struct {
-	token            string
-	id               string
-	EntityType       auth.EntityType `json:"entity_type,omitempty"`
-	OptionalDomainID string          `json:"optional_domain_id,omitempty"`
-	Operation        auth.Operation  `json:"operation,omitempty"`
-	EntityIDs        []string        `json:"entity_ids,omitempty"`
+type scopeEntryReq struct {
+	token  string
+	id     string
+	Scopes []auth.Scope `json:"scopes,omitempty"`
 }
 
-func (apser *addPatScopeEntryReq) UnmarshalJSON(data []byte) error {
-	var temp struct {
-		EntityType       string   `json:"entity_type,omitempty"`
-		OptionalDomainID string   `json:"optional_domain_id,omitempty"`
-		Operation        string   `json:"operation,omitempty"`
-		EntityIDs        []string `json:"entity_ids,omitempty"`
+func (aser *scopeEntryReq) UnmarshalJSON(data []byte) error {
+	type Alias scopeEntryReq
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(aser),
 	}
 
-	if err := json.Unmarshal(data, &temp); err != nil {
+	if err := json.Unmarshal(data, aux); err != nil {
 		return err
 	}
 
-	pet, err := auth.ParseEntityType(temp.EntityType)
-	if err != nil {
-		return err
-	}
-	op, err := auth.ParseOperation(temp.Operation)
-	if err != nil {
-		return err
-	}
-	apser.EntityType = pet
-	apser.OptionalDomainID = temp.OptionalDomainID
-	apser.Operation = op
-	apser.EntityIDs = temp.EntityIDs
 	return nil
 }
 
-func (req addPatScopeEntryReq) validate() (err error) {
+func (req scopeEntryReq) validate() (err error) {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
-	}
-	return nil
-}
-
-type removePatScopeEntryReq struct {
-	token            string
-	id               string
-	EntityType       auth.EntityType `json:"platform_entity_type,omitempty"`
-	OptionalDomainID string          `json:"optional_domain_id,omitempty"`
-	Operation        auth.Operation  `json:"operation,omitempty"`
-	EntityIDs        []string        `json:"entity_ids,omitempty"`
-}
-
-func (rpser *removePatScopeEntryReq) UnmarshalJSON(data []byte) error {
-	var temp struct {
-		EntityType       string   `json:"entity_type,omitempty"`
-		OptionalDomainID string   `json:"optional_domain_id,omitempty"`
-		Operation        string   `json:"operation,omitempty"`
-		EntityIDs        []string `json:"entity_ids,omitempty"`
+		return apiutil.ErrMissingPATID
 	}
 
-	if err := json.Unmarshal(data, &temp); err != nil {
-		return err
+	if len(req.Scopes) == 0 {
+		return apiutil.ErrValidation
 	}
 
-	pet, err := auth.ParseEntityType(temp.EntityType)
-	if err != nil {
-		return err
-	}
-	op, err := auth.ParseOperation(temp.Operation)
-	if err != nil {
-		return err
-	}
-	rpser.EntityType = pet
-	rpser.OptionalDomainID = temp.OptionalDomainID
-	rpser.Operation = op
-	rpser.EntityIDs = temp.EntityIDs
-	return nil
-}
-
-func (req removePatScopeEntryReq) validate() (err error) {
-	if req.token == "" {
-		return apiutil.ErrBearerToken
-	}
-	if req.id == "" {
-		return apiutil.ErrMissingID
-	}
 	return nil
 }
 
@@ -299,7 +234,6 @@ type listScopesReq struct {
 	offset uint64
 	limit  uint64
 	patID  string
-	userID string
 }
 
 func (req listScopesReq) validate() (err error) {

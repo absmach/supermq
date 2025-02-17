@@ -45,17 +45,24 @@ func (_m *Cache) CheckScope(ctx context.Context, key string) (bool, error) {
 	return r0, r1
 }
 
-// Remove provides a mock function with given fields: ctx, patID
-func (_m *Cache) Remove(ctx context.Context, patID string) error {
-	ret := _m.Called(ctx, patID)
+// Remove provides a mock function with given fields: ctx, key
+func (_m *Cache) Remove(ctx context.Context, key ...string) error {
+	_va := make([]interface{}, len(key))
+	for _i := range key {
+		_va[_i] = key[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Remove")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(ctx, patID)
+	if rf, ok := ret.Get(0).(func(context.Context, ...string) error); ok {
+		r0 = rf(ctx, key...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -63,17 +70,17 @@ func (_m *Cache) Remove(ctx context.Context, patID string) error {
 	return r0
 }
 
-// Save provides a mock function with given fields: ctx, pat
-func (_m *Cache) Save(ctx context.Context, pat auth.PAT) error {
-	ret := _m.Called(ctx, pat)
+// Save provides a mock function with given fields: ctx, scopes
+func (_m *Cache) Save(ctx context.Context, scopes []auth.Scope) error {
+	ret := _m.Called(ctx, scopes)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Save")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, auth.PAT) error); ok {
-		r0 = rf(ctx, pat)
+	if rf, ok := ret.Get(0).(func(context.Context, []auth.Scope) error); ok {
+		r0 = rf(ctx, scopes)
 	} else {
 		r0 = ret.Error(0)
 	}

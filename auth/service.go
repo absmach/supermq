@@ -46,6 +46,7 @@ var (
 	errDeletePAT           = errors.New("failed to delete PAT")
 	errRevokePAT           = errors.New("failed to revoke PAT")
 	errClearAllScope       = errors.New("failed to clear all entry in scope")
+	errInvalidScope        = errors.New("invalid scope")
 )
 
 // Authz represents a authorization service. It exposes
@@ -97,11 +98,11 @@ type Service interface {
 
 //go:generate mockery --name Cache --output=./mocks --filename cache.go --quiet --note "Copyright (c) Abstract Machines"
 type Cache interface {
-	Save(ctx context.Context, pat PAT) error
+	Save(ctx context.Context, scopes []Scope) error
 
 	CheckScope(ctx context.Context, key string) (bool, error)
 
-	Remove(ctx context.Context, patID string) error
+	Remove(ctx context.Context, key ...string) error
 }
 
 var _ Service = (*service)(nil)
@@ -468,7 +469,7 @@ func DecodeDomainUserID(domainUserID string) (string, string) {
 	}
 }
 
-func (svc service) CreatePAT(ctx context.Context, token, name, description string, duration time.Duration, scope []Scope) (PAT, error) {
+func (svc service) CreatePAT(ctx context.Context, token, name, description string, duration time.Duration) (PAT, error) {
 	key, err := svc.Identify(ctx, token)
 	if err != nil {
 		return PAT{}, err
@@ -482,9 +483,6 @@ func (svc service) CreatePAT(ctx context.Context, token, name, description strin
 	if err != nil {
 		return PAT{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
-	for i := range scope {
-		scope[i].PatId = id
-	}
 
 	now := time.Now()
 	pat := PAT{
@@ -495,7 +493,6 @@ func (svc service) CreatePAT(ctx context.Context, token, name, description strin
 		Secret:      hash,
 		IssuedAt:    now,
 		ExpiresAt:   now.Add(duration),
-		Scope:       scope,
 	}
 
 	if err := svc.pats.Save(ctx, pat); err != nil {
@@ -530,8 +527,12 @@ func (svc service) UpdatePATDescription(ctx context.Context, token, patID, descr
 	return pat, nil
 }
 
-func (svc service) RetrievePAT(ctx context.Context, userID, patID string) (PAT, error) {
-	pat, err := svc.pats.Retrieve(ctx, userID, patID)
+func (svc service) RetrievePAT(ctx context.Context, token, patID string) (PAT, error) {
+	key, err := svc.Identify(ctx, token)
+	if err != nil {
+		return PAT{}, err
+	}
+	pat, err := svc.pats.Retrieve(ctx, key.User, patID)
 	if err != nil {
 		return PAT{}, errors.Wrap(errRetrievePAT, err)
 	}
@@ -606,48 +607,65 @@ func (svc service) RevokePATSecret(ctx context.Context, token, patID string) err
 	}
 
 	if err := svc.pats.Revoke(ctx, key.User, patID); err != nil {
-		return errors.Wrap(errRevokePAT, err)
+		return errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	return nil
 }
 
-func (svc service) AddPATScopeEntry(ctx context.Context, token, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityIDs ...string) (ScopesPage, error) {
+func (svc service) AddScopeEntry(ctx context.Context, token, patID string, scopes []Scope) (ScopesPage, error) {
 	key, err := svc.Identify(ctx, token)
 	if err != nil {
 		return ScopesPage{}, err
 	}
-	scopes, err := svc.pats.AddScopeEntry(ctx, key.User, patID, entityType, optionalDomainID, operation, entityIDs...)
+
+	res, err := updateScopes(patID, scopes)
 	if err != nil {
-		return ScopesPage{}, errors.Wrap(errRevokePAT, err)
+		return ScopesPage{}, err
 	}
-	return ScopesPage{
-		Total:  uint64(len(scopes)),
-		Scopes: scopes,
-	}, nil
+
+	page, err := svc.pats.AddScopeEntry(ctx, key.User, patID, res)
+	if err != nil {
+		return ScopesPage{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+	}
+	return page, nil
 }
 
-func (svc service) RemovePATScopeEntry(ctx context.Context, token, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityIDs ...string) (ScopesPage, error) {
+func (svc service) RemoveScopeEntry(ctx context.Context, token, patID string, scopes []Scope) (ScopesPage, error) {
 	key, err := svc.Identify(ctx, token)
 	if err != nil {
 		return ScopesPage{}, err
 	}
-	scopes, err := svc.pats.RemoveScopeEntry(ctx, key.User, patID, entityType, optionalDomainID, operation, entityIDs...)
+	res, err := updateScopes(patID, scopes)
 	if err != nil {
 		return ScopesPage{}, err
 	}
-	return ScopesPage{
-		Total:  uint64(len(scopes)),
-		Scopes: scopes,
-	}, nil
+	pages, err := svc.pats.RemoveScopeEntry(ctx, key.User, patID, res)
+	if err != nil {
+		return ScopesPage{}, errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+	return pages, nil
 }
 
-func (svc service) ClearPATAllScopeEntry(ctx context.Context, token, patID string) error {
+func updateScopes(patID string, scopes []Scope) ([]Scope, error) {
+	for i := range scopes {
+		scopes[i].PatID = patID
+	}
+
+	for _, scope := range scopes {
+		if err := scope.Validate(); err != nil {
+			return []Scope{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
+		}
+	}
+	return scopes, nil
+}
+
+func (svc service) ClearAllScopeEntry(ctx context.Context, token, patID string) error {
 	key, err := svc.Identify(ctx, token)
 	if err != nil {
 		return err
 	}
 	if err := svc.pats.RemoveAllScopeEntry(ctx, key.User, patID); err != nil {
-		return errors.Wrap(errClearAllScope, err)
+		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	return nil
 }
@@ -678,16 +696,22 @@ func (svc service) IdentifyPAT(ctx context.Context, secret string) (PAT, error) 
 }
 
 func (svc service) AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityIDs ...string) error {
-	if err := svc.pats.CheckScopeEntry(ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs...); err != nil {
-		return errors.Wrap(svcerr.ErrAuthorization, err)
+	for _, entityID := range entityIDs {
+		if err := svc.pats.CheckScopeEntry(ctx, userID, patID, entityType, optionalDomainID, operation, entityID); err != nil {
+			return errors.Wrap(svcerr.ErrAuthorization, err)
+		}
 	}
+
 	return nil
 }
 
 func (svc service) CheckPAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityIDs ...string) error {
-	if err := svc.pats.CheckScopeEntry(ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs...); err != nil {
-		return errors.Wrap(svcerr.ErrAuthorization, err)
+	for _, entityID := range entityIDs {
+		if err := svc.pats.CheckScopeEntry(ctx, userID, patID, entityType, optionalDomainID, operation, entityID); err != nil {
+			return errors.Wrap(svcerr.ErrAuthorization, err)
+		}
 	}
+
 	return nil
 }
 

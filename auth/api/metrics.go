@@ -75,12 +75,12 @@ func (ms *metricsMiddleware) Authorize(ctx context.Context, pr policies.Policy) 
 	return ms.svc.Authorize(ctx, pr)
 }
 
-func (ms *metricsMiddleware) CreatePAT(ctx context.Context, token, name, description string, duration time.Duration, scope []auth.Scope) (auth.PAT, error) {
+func (ms *metricsMiddleware) CreatePAT(ctx context.Context, token, name, description string, duration time.Duration) (auth.PAT, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "create_pat").Add(1)
 		ms.latency.With("method", "create_pat").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.CreatePAT(ctx, token, name, description, duration, scope)
+	return ms.svc.CreatePAT(ctx, token, name, description, duration)
 }
 
 func (ms *metricsMiddleware) UpdatePATName(ctx context.Context, token, patID, name string) (auth.PAT, error) {
@@ -147,28 +147,28 @@ func (ms *metricsMiddleware) RevokePATSecret(ctx context.Context, token, patID s
 	return ms.svc.RevokePATSecret(ctx, token, patID)
 }
 
-func (ms *metricsMiddleware) AddPATScopeEntry(ctx context.Context, token, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) (auth.ScopesPage, error) {
+func (ms *metricsMiddleware) AddScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) (auth.ScopesPage, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "add_pat_scope_entry").Add(1)
 		ms.latency.With("method", "add_pat_scope_entry").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.AddPATScopeEntry(ctx, token, patID, entityType, optionalDomainID, operation, entityIDs...)
+	return ms.svc.AddScopeEntry(ctx, token, patID, scopes)
 }
 
-func (ms *metricsMiddleware) RemovePATScopeEntry(ctx context.Context, token, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) (auth.ScopesPage, error) {
+func (ms *metricsMiddleware) RemoveScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) (auth.ScopesPage, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "remove_pat_scope_entry").Add(1)
 		ms.latency.With("method", "remove_pat_scope_entry").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.RemovePATScopeEntry(ctx, token, patID, entityType, optionalDomainID, operation, entityIDs...)
+	return ms.svc.RemoveScopeEntry(ctx, token, patID, scopes)
 }
 
-func (ms *metricsMiddleware) ClearPATAllScopeEntry(ctx context.Context, token, patID string) error {
+func (ms *metricsMiddleware) ClearAllScopeEntry(ctx context.Context, token, patID string) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "clear_pat_all_scope_entry").Add(1)
 		ms.latency.With("method", "clear_pat_all_scope_entry").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.ClearPATAllScopeEntry(ctx, token, patID)
+	return ms.svc.ClearAllScopeEntry(ctx, token, patID)
 }
 
 func (ms *metricsMiddleware) IdentifyPAT(ctx context.Context, paToken string) (auth.PAT, error) {
