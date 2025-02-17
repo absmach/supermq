@@ -10,7 +10,7 @@ require (
 	github.com/absmach/senml v1.0.6
 	github.com/authzed/authzed-go v1.3.0
 	github.com/authzed/grpcutil v0.0.0-20240123194739-2ea1e3d2d98b
-	github.com/authzed/spicedb v1.40.0
+	github.com/authzed/spicedb v1.40.1
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/fatih/color v1.18.0
