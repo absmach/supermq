@@ -155,7 +155,7 @@ func (tm *tracingMiddleware) RevokePATSecret(ctx context.Context, token, patID s
 	return tm.svc.RevokePATSecret(ctx, token, patID)
 }
 
-func (tm *tracingMiddleware) AddScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) ([]auth.Scope, error) {
+func (tm *tracingMiddleware) AddScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) error {
 	var attributes []attribute.KeyValue
 	for _, s := range scopes {
 		attributes = append(attributes, attribute.String("entity_type", s.EntityType.String()))
@@ -171,7 +171,7 @@ func (tm *tracingMiddleware) AddScopeEntry(ctx context.Context, token, patID str
 	return tm.svc.AddScopeEntry(ctx, token, patID, scopes)
 }
 
-func (tm *tracingMiddleware) RemoveScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) ([]auth.Scope, error) {
+func (tm *tracingMiddleware) RemoveScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) error {
 	var attributes []attribute.KeyValue
 	for _, s := range scopes {
 		attributes = append(attributes, attribute.String("entity_type", s.EntityType.String()))
@@ -211,17 +211,4 @@ func (tm *tracingMiddleware) AuthorizePAT(ctx context.Context, userID, patID str
 	))
 	defer span.End()
 	return tm.svc.AuthorizePAT(ctx, userID, patID, entityType, optionalDomainID, operation, entityID)
-}
-
-func (tm *tracingMiddleware) CheckPAT(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) error {
-	ctx, span := tm.tracer.Start(ctx, "check_pat", trace.WithAttributes(
-		attribute.String("user_id", userID),
-		attribute.String("pat_id", patID),
-		attribute.String("entity_type", entityType.String()),
-		attribute.String("optional_domain_id", optionalDomainID),
-		attribute.String("operation", operation.String()),
-		attribute.StringSlice("entities", entityIDs),
-	))
-	defer span.End()
-	return tm.svc.CheckPAT(ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs...)
 }

@@ -98,9 +98,11 @@ type Service interface {
 type Cache interface {
 	Save(ctx context.Context, scopes []Scope) error
 
-	CheckScope(ctx context.Context, patID, optionalDomainID string, entityType EntityType, operation Operation, entityID string) (bool, error)
+	CheckScope(patID, optionalDomainID string, entityType EntityType, operation Operation, entityID string) bool
 
 	Remove(ctx context.Context, scopes []Scope) error
+
+	RemoveAllScope(ctx context.Context, patID string) error
 }
 
 var _ Service = (*service)(nil)
@@ -598,38 +600,38 @@ func (svc service) RevokePATSecret(ctx context.Context, token, patID string) err
 	return nil
 }
 
-func (svc service) AddScopeEntry(ctx context.Context, token, patID string, scopes []Scope) ([]Scope, error) {
+func (svc service) AddScopeEntry(ctx context.Context, token, patID string, scopes []Scope) error {
 	key, err := svc.Identify(ctx, token)
 	if err != nil {
-		return []Scope{}, err
+		return err
 	}
 
 	res, err := updateScopes(patID, scopes)
 	if err != nil {
-		return []Scope{}, err
+		return err
 	}
 
 	err = svc.pats.AddScopeEntry(ctx, key.User, res)
 	if err != nil {
-		return []Scope{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+		return errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
-	return scopes, nil
+	return nil
 }
 
-func (svc service) RemoveScopeEntry(ctx context.Context, token, patID string, scopes []Scope) ([]Scope, error) {
+func (svc service) RemoveScopeEntry(ctx context.Context, token, patID string, scopes []Scope) error {
 	key, err := svc.Identify(ctx, token)
 	if err != nil {
-		return []Scope{}, err
+		return err
 	}
 	res, err := updateScopes(patID, scopes)
 	if err != nil {
-		return []Scope{}, err
+		return err
 	}
 	err = svc.pats.RemoveScopeEntry(ctx, key.User, res)
 	if err != nil {
-		return []Scope{}, errors.Wrap(svcerr.ErrRemoveEntity, err)
+		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
-	return scopes, nil
+	return nil
 }
 
 func (svc service) ListScopes(ctx context.Context, token string, pm ScopesPageMeta) (ScopesPage, error) {
@@ -696,16 +698,6 @@ func (svc service) IdentifyPAT(ctx context.Context, secret string) (PAT, error) 
 func (svc service) AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error {
 	if err := svc.pats.CheckScopeEntry(ctx, userID, patID, entityType, optionalDomainID, operation, entityID); err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-
-	return nil
-}
-
-func (svc service) CheckPAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityIDs ...string) error {
-	for _, entityID := range entityIDs {
-		if err := svc.pats.CheckScopeEntry(ctx, userID, patID, entityType, optionalDomainID, operation, entityID); err != nil {
-			return errors.Wrap(svcerr.ErrAuthorization, err)
-		}
 	}
 
 	return nil

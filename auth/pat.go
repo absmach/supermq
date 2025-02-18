@@ -370,10 +370,10 @@ type PATS interface {
 	RevokePATSecret(ctx context.Context, token, patID string) error
 
 	// AddScope function adds a new scope entry.
-	AddScopeEntry(ctx context.Context, token, patID string, scope []Scope) ([]Scope, error)
+	AddScopeEntry(ctx context.Context, token, patID string, scope []Scope) error
 
 	// RemoveScope function removes a scope entry.
-	RemoveScopeEntry(ctx context.Context, token, patID string, scope []Scope) ([]Scope, error)
+	RemoveScopeEntry(ctx context.Context, token, patID string, scope []Scope) error
 
 	// ClearAllScope function removes all scope entry.
 	ClearAllScopeEntry(ctx context.Context, token, patID string) error
@@ -386,9 +386,6 @@ type PATS interface {
 
 	// AuthorizePAT function will valid the secret and check the given scope exists.
 	AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error
-
-	// CheckPAT function will check the given scope exists.
-	CheckPAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityIDs ...string) error
 }
 
 // PATSRepository specifies PATS persistence API.

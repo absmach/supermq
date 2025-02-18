@@ -5,6 +5,8 @@ package cache
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/absmach/supermq/auth"
@@ -29,7 +31,7 @@ func NewPatsCache(client *redis.Client, duration time.Duration) auth.Cache {
 
 func (pc *patCache) Save(ctx context.Context, scopes []auth.Scope) error {
 	for _, sc := range scopes {
-		key := GenerateKey(sc.PatID, sc.OptionalDomainID, sc.EntityType, sc.Operation, sc.EntityID)
+		key := generateKey(sc.PatID, sc.OptionalDomainID, sc.EntityType, sc.Operation, sc.EntityID)
 		if err := pc.client.Set(ctx, key, true, pc.duration).Err(); err != nil {
 			return errors.Wrap(repoerr.ErrCreateEntity, err)
 		}
@@ -38,20 +40,23 @@ func (pc *patCache) Save(ctx context.Context, scopes []auth.Scope) error {
 	return nil
 }
 
-func (pc *patCache) CheckScope(ctx context.Context, patID, optionalDomainID string, entityType auth.EntityType, operation auth.Operation, entityID string) (bool, error) {
-	var authorized bool
-	key := GenerateKey(patID, optionalDomainID, entityType, operation, entityID)
-	err := pc.client.Get(ctx, key).Scan(&authorized)
+func (pc *patCache) CheckScope(patID, optionalDomainID string, entityType auth.EntityType, operation auth.Operation, entityID string) bool {
+	ctx := context.Background()
+	exactKey := fmt.Sprintf("pat:%s:%s:%s:%s:%s", patID, entityType, optionalDomainID, operation, entityID)
+	wildcardKey := fmt.Sprintf("pat:%s:%s:%s:%s:*", patID, entityType, operation, operation)
+
+	res, err := pc.client.Exists(ctx, exactKey, wildcardKey).Result()
 	if err != nil {
-		return false, errors.Wrap(repoerr.ErrNotFound, err)
+		log.Println("Error checking PAT:", err)
+		return false
 	}
 
-	return authorized, nil
+	return res > 0
 }
 
 func (dc *patCache) Remove(ctx context.Context, scopes []auth.Scope) error {
 	for _, sc := range scopes {
-		key := GenerateKey(sc.PatID, sc.OptionalDomainID, sc.EntityType, sc.Operation, sc.EntityID)
+		key := generateKey(sc.PatID, sc.OptionalDomainID, sc.EntityType, sc.Operation, sc.EntityID)
 		if err := dc.client.Del(ctx, key).Err(); err != nil {
 			return errors.Wrap(repoerr.ErrRemoveEntity, err)
 		}
@@ -60,6 +65,23 @@ func (dc *patCache) Remove(ctx context.Context, scopes []auth.Scope) error {
 	return nil
 }
 
-func GenerateKey(patID, optionalDomainId string, entityType auth.EntityType, operation auth.Operation, entityID string) string {
-	return patID + Separator + optionalDomainId + Separator + entityType.String() + Separator + operation.String() + Separator + entityID
+func (pc *patCache) RemoveAllScope(ctx context.Context, patID string) error {
+	pattern := fmt.Sprintf("pat:%s", patID)
+
+	iter := pc.client.Scan(ctx, 0, pattern, 0).Iterator()
+	for iter.Next(ctx) {
+		if err := pc.client.Del(ctx, iter.Val()).Err(); err != nil {
+			return errors.Wrap(repoerr.ErrRemoveEntity, err)
+		}
+	}
+
+	if err := iter.Err(); err != nil {
+		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+	}
+
+	return nil
+}
+
+func generateKey(patID, optionalDomainId string, entityType auth.EntityType, operation auth.Operation, entityID string) string {
+	return fmt.Sprintf("pat:%s:%s:%s:%s:%s", patID, entityType, optionalDomainId, operation, entityID)
 }

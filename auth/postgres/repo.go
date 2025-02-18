@@ -5,6 +5,7 @@ package postgres
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/absmach/supermq/auth"
@@ -34,6 +35,16 @@ const (
 	saveScopeQuery = `
 		INSERT INTO pat_scopes (pat_id, entity_type, optional_domain_id, operation, entity_id)
 		VALUES (:pat_id, :entity_type, :optional_domain_id, :operation, :entity_id)`
+
+	checkScopeQuery = `
+        SELECT pat_id, entity_type, optional_domain_id, operation, entity_id
+        FROM pat_scopes 
+        WHERE pat_id = :pat_id 
+          AND entity_type = :entity_type
+          AND optional_domain_id = :optional_domain_id
+          AND operation = :operation
+          AND (entity_id = :entity_id OR entity_id = '*')
+        LIMIT 1`
 
 	retrieveScopesQuery = `
 		SELECT pat_id, entity_type, optional_domain_id, operation, entity_id
@@ -343,21 +354,56 @@ func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID string, scopes [
 }
 
 func (pr *patRepo) CheckScopeEntry(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityID string) error {
-	authorized, err := pr.cache.CheckScope(ctx, patID, optionalDomainID, entityType, operation, entityID)
-	if err == nil && authorized {
+	authorized := pr.cache.CheckScope(patID, optionalDomainID, entityType, operation, entityID)
+	if authorized {
 		return nil
 	}
 
-	scopes, err := pr.retrieveScopeFromDB(ctx, patID)
-	if err != nil {
-		return err
+	scope := dbScope{
+		PatID:            patID,
+		EntityType:       entityType.String(),
+		OptionalDomainID: optionalDomainID,
+		Operation:        operation.String(),
+		EntityID:         entityID,
 	}
 
-	for _, sc := range scopes {
-		if sc.Authorized(entityType, optionalDomainID, operation, entityID) {
+	rows, err := pr.db.NamedQueryContext(ctx, checkScopeQuery, scope)
+	if err != nil {
+		return errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		var sc dbScope
+		if err := rows.StructScan(&sc); err != nil {
+			return errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+
+		entityType, err := auth.ParseEntityType(sc.EntityType)
+		if err != nil {
+			return errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+		operation, err := auth.ParseOperation(sc.Operation)
+		if err != nil {
+			return errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+		authScope := auth.Scope{
+			PatID:            sc.PatID,
+			OptionalDomainID: sc.OptionalDomainID,
+			EntityType:       entityType,
+			EntityID:         sc.EntityID,
+			Operation:        operation,
+		}
+
+		if err := pr.cache.Save(ctx, []auth.Scope{authScope}); err != nil {
+			log.Println(err)
+		}
+
+		if authScope.Authorized(entityType, optionalDomainID, operation, entityID) {
 			return nil
 		}
 	}
+
 	return repoerr.ErrNotFound
 }
 
@@ -374,12 +420,7 @@ func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, userID, patID string
 		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 
-	scopes, err = pr.retrieveScopeFromDB(ctx, patID)
-	if err != nil {
-		return err
-	}
-
-	if err := pr.cache.Save(ctx, scopes); err != nil {
+	if err := pr.cache.RemoveAllScope(ctx, patID); err != nil {
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 

@@ -146,9 +146,7 @@ func (res revokePatSecretRes) Empty() bool {
 	return true
 }
 
-type scopeEntryRes struct {
-	Scopes []auth.Scope `json:"scopes"`
-}
+type scopeEntryRes struct {}
 
 func (res scopeEntryRes) Code() int {
 	return http.StatusOK
@@ -159,7 +157,7 @@ func (res scopeEntryRes) Headers() map[string]string {
 }
 
 func (res scopeEntryRes) Empty() bool {
-	return false
+	return true
 }
 
 type clearAllScopeEntryRes struct{}

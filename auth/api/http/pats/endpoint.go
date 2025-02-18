@@ -146,12 +146,12 @@ func addScopeEntryEndpoint(svc auth.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
-		scope, err := svc.AddScopeEntry(ctx, req.token, req.id, req.Scopes)
+		err := svc.AddScopeEntry(ctx, req.token, req.id, req.Scopes)
 		if err != nil {
 			return nil, err
 		}
 
-		return scopeEntryRes{scope}, nil
+		return scopeEntryRes{}, nil
 	}
 }
 
@@ -162,11 +162,11 @@ func removeScopeEntryEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		scope, err := svc.RemoveScopeEntry(ctx, req.token, req.id, req.Scopes)
+		err := svc.RemoveScopeEntry(ctx, req.token, req.id, req.Scopes)
 		if err != nil {
 			return nil, err
 		}
-		return scopeEntryRes{scope}, nil
+		return scopeEntryRes{}, nil
 	}
 }
 

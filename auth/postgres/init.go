@@ -97,7 +97,7 @@ func Migration() *migrate.MemoryMigrationSource {
 						entity_type     	VARCHAR(50) NOT NULL,
 						operation 			VARCHAR(50) NOT NULL,
 						entity_id			VARCHAR(50) NOT NULL,
-						UNIQUE (entity_type, operation, entity_id)
+						UNIQUE (pat_id, optional_domain_id, entity_type, operation, entity_id)
 					);`,
 
 					`CREATE OR REPLACE FUNCTION check_wildcard_exclusivity()
