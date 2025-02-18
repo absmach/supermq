@@ -428,9 +428,9 @@ type PATSRepository interface {
 	// Remove removes Key with provided ID.
 	Remove(ctx context.Context, userID, patID string) error
 
-	AddScopeEntry(ctx context.Context, userID string, scope []Scope) (error)
+	AddScopeEntry(ctx context.Context, userID string, scope []Scope) error
 
-	RemoveScopeEntry(ctx context.Context, userID string, scope []Scope) (error)
+	RemoveScopeEntry(ctx context.Context, userID string, scope []Scope) error
 
 	CheckScopeEntry(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error
 
