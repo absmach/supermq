@@ -98,9 +98,9 @@ type Service interface {
 type Cache interface {
 	Save(ctx context.Context, scopes []Scope) error
 
-	CheckScope(ctx context.Context, key string) (bool, error)
+	CheckScope(ctx context.Context, patID, optionalDomainID string, entityType EntityType, operation Operation, entityID string) (bool, error)
 
-	Remove(ctx context.Context, key ...string) error
+	Remove(ctx context.Context, scopes []Scope) error
 }
 
 var _ Service = (*service)(nil)
@@ -549,18 +549,6 @@ func (svc service) ListPATS(ctx context.Context, token string, pm PATSPageMeta) 
 	return patsPage, nil
 }
 
-func (svc service) ListScopes(ctx context.Context, token string, pm ScopesPageMeta) (ScopesPage, error) {
-	_, err := svc.Identify(ctx, token)
-	if err != nil {
-		return ScopesPage{}, err
-	}
-	patsPage, err := svc.pats.RetrieveScope(ctx, pm)
-	if err != nil {
-		return ScopesPage{}, errors.Wrap(errRetrievePAT, err)
-	}
-	return patsPage, nil
-}
-
 func (svc service) DeletePAT(ctx context.Context, token, patID string) error {
 	key, err := svc.Identify(ctx, token)
 	if err != nil {
@@ -610,38 +598,50 @@ func (svc service) RevokePATSecret(ctx context.Context, token, patID string) err
 	return nil
 }
 
-func (svc service) AddScopeEntry(ctx context.Context, token, patID string, scopes []Scope) (ScopesPage, error) {
+func (svc service) AddScopeEntry(ctx context.Context, token, patID string, scopes []Scope) ([]Scope, error) {
 	key, err := svc.Identify(ctx, token)
 	if err != nil {
-		return ScopesPage{}, err
+		return []Scope{}, err
 	}
 
 	res, err := updateScopes(patID, scopes)
 	if err != nil {
-		return ScopesPage{}, err
+		return []Scope{}, err
 	}
 
-	page, err := svc.pats.AddScopeEntry(ctx, key.User, patID, res)
+	err = svc.pats.AddScopeEntry(ctx, key.User, res)
 	if err != nil {
-		return ScopesPage{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+		return []Scope{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
-	return page, nil
+	return scopes, nil
 }
 
-func (svc service) RemoveScopeEntry(ctx context.Context, token, patID string, scopes []Scope) (ScopesPage, error) {
+func (svc service) RemoveScopeEntry(ctx context.Context, token, patID string, scopes []Scope) ([]Scope, error) {
 	key, err := svc.Identify(ctx, token)
 	if err != nil {
-		return ScopesPage{}, err
+		return []Scope{}, err
 	}
 	res, err := updateScopes(patID, scopes)
 	if err != nil {
+		return []Scope{}, err
+	}
+	err = svc.pats.RemoveScopeEntry(ctx, key.User, res)
+	if err != nil {
+		return []Scope{}, errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+	return scopes, nil
+}
+
+func (svc service) ListScopes(ctx context.Context, token string, pm ScopesPageMeta) (ScopesPage, error) {
+	_, err := svc.Identify(ctx, token)
+	if err != nil {
 		return ScopesPage{}, err
 	}
-	pages, err := svc.pats.RemoveScopeEntry(ctx, key.User, patID, res)
+	patsPage, err := svc.pats.RetrieveScope(ctx, pm)
 	if err != nil {
-		return ScopesPage{}, errors.Wrap(svcerr.ErrRemoveEntity, err)
+		return ScopesPage{}, errors.Wrap(errRetrievePAT, err)
 	}
-	return pages, nil
+	return patsPage, nil
 }
 
 func updateScopes(patID string, scopes []Scope) ([]Scope, error) {
@@ -693,11 +693,9 @@ func (svc service) IdentifyPAT(ctx context.Context, secret string) (PAT, error) 
 	return PAT{ID: patID.String(), User: userID.String()}, nil
 }
 
-func (svc service) AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityIDs ...string) error {
-	for _, entityID := range entityIDs {
-		if err := svc.pats.CheckScopeEntry(ctx, userID, patID, entityType, optionalDomainID, operation, entityID); err != nil {
-			return errors.Wrap(svcerr.ErrAuthorization, err)
-		}
+func (svc service) AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error {
+	if err := svc.pats.CheckScopeEntry(ctx, userID, patID, entityType, optionalDomainID, operation, entityID); err != nil {
+		return errors.Wrap(svcerr.ErrAuthorization, err)
 	}
 
 	return nil

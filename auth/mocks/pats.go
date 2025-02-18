@@ -20,22 +20,24 @@ type PATS struct {
 }
 
 // AddScopeEntry provides a mock function with given fields: ctx, token, patID, scope
-func (_m *PATS) AddScopeEntry(ctx context.Context, token string, patID string, scope []auth.Scope) (auth.ScopesPage, error) {
+func (_m *PATS) AddScopeEntry(ctx context.Context, token string, patID string, scope []auth.Scope) ([]auth.Scope, error) {
 	ret := _m.Called(ctx, token, patID, scope)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddScopeEntry")
 	}
 
-	var r0 auth.ScopesPage
+	var r0 []auth.Scope
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []auth.Scope) (auth.ScopesPage, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, []auth.Scope) ([]auth.Scope, error)); ok {
 		return rf(ctx, token, patID, scope)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []auth.Scope) auth.ScopesPage); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, []auth.Scope) []auth.Scope); ok {
 		r0 = rf(ctx, token, patID, scope)
 	} else {
-		r0 = ret.Get(0).(auth.ScopesPage)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]auth.Scope)
+		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string, []auth.Scope) error); ok {
@@ -47,24 +49,17 @@ func (_m *PATS) AddScopeEntry(ctx context.Context, token string, patID string, s
 	return r0, r1
 }
 
-// AuthorizePAT provides a mock function with given fields: ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs
-func (_m *PATS) AuthorizePAT(ctx context.Context, userID string, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) error {
-	_va := make([]interface{}, len(entityIDs))
-	for _i := range entityIDs {
-		_va[_i] = entityIDs[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, userID, patID, entityType, optionalDomainID, operation)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
+// AuthorizePAT provides a mock function with given fields: ctx, userID, patID, entityType, optionalDomainID, operation, entityID
+func (_m *PATS) AuthorizePAT(ctx context.Context, userID string, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityID string) error {
+	ret := _m.Called(ctx, userID, patID, entityType, optionalDomainID, operation, entityID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AuthorizePAT")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, ...string) error); ok {
-		r0 = rf(ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, string) error); ok {
+		r0 = rf(ctx, userID, patID, entityType, optionalDomainID, operation, entityID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -246,22 +241,24 @@ func (_m *PATS) ListScopes(ctx context.Context, token string, pm auth.ScopesPage
 }
 
 // RemoveScopeEntry provides a mock function with given fields: ctx, token, patID, scope
-func (_m *PATS) RemoveScopeEntry(ctx context.Context, token string, patID string, scope []auth.Scope) (auth.ScopesPage, error) {
+func (_m *PATS) RemoveScopeEntry(ctx context.Context, token string, patID string, scope []auth.Scope) ([]auth.Scope, error) {
 	ret := _m.Called(ctx, token, patID, scope)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RemoveScopeEntry")
 	}
 
-	var r0 auth.ScopesPage
+	var r0 []auth.Scope
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []auth.Scope) (auth.ScopesPage, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, []auth.Scope) ([]auth.Scope, error)); ok {
 		return rf(ctx, token, patID, scope)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []auth.Scope) auth.ScopesPage); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, []auth.Scope) []auth.Scope); ok {
 		r0 = rf(ctx, token, patID, scope)
 	} else {
-		r0 = ret.Get(0).(auth.ScopesPage)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]auth.Scope)
+		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string, []auth.Scope) error); ok {

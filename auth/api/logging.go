@@ -277,7 +277,7 @@ func (lm *loggingMiddleware) RevokePATSecret(ctx context.Context, token, patID s
 	return lm.svc.RevokePATSecret(ctx, token, patID)
 }
 
-func (lm *loggingMiddleware) AddScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) (sc auth.ScopesPage, err error) {
+func (lm *loggingMiddleware) AddScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) (sc []auth.Scope, err error) {
 	defer func(begin time.Time) {
 		var groupArgs []any
 		for _, s := range scopes {
@@ -302,7 +302,7 @@ func (lm *loggingMiddleware) AddScopeEntry(ctx context.Context, token, patID str
 	return lm.svc.AddScopeEntry(ctx, token, patID, scopes)
 }
 
-func (lm *loggingMiddleware) RemoveScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) (sc auth.ScopesPage, err error) {
+func (lm *loggingMiddleware) RemoveScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) (sc []auth.Scope, err error) {
 	defer func(begin time.Time) {
 		var groupArgs []any
 		for _, s := range scopes {
@@ -357,14 +357,14 @@ func (lm *loggingMiddleware) IdentifyPAT(ctx context.Context, paToken string) (p
 	return lm.svc.IdentifyPAT(ctx, paToken)
 }
 
-func (lm *loggingMiddleware) AuthorizePAT(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) (err error) {
+func (lm *loggingMiddleware) AuthorizePAT(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityID string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.String("entity_type", entityType.String()),
 			slog.String("optional_domain_id", optionalDomainID),
 			slog.String("operation", operation.String()),
-			slog.Any("entities", entityIDs),
+			slog.String("entities", entityID),
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
@@ -373,7 +373,7 @@ func (lm *loggingMiddleware) AuthorizePAT(ctx context.Context, userID, patID str
 		}
 		lm.logger.Info("Authorize PAT completed successfully", args...)
 	}(time.Now())
-	return lm.svc.AuthorizePAT(ctx, userID, patID, entityType, optionalDomainID, operation, entityIDs...)
+	return lm.svc.AuthorizePAT(ctx, userID, patID, entityType, optionalDomainID, operation, entityID)
 }
 
 func (lm *loggingMiddleware) CheckPAT(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityIDs ...string) (err error) {

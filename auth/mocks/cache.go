@@ -17,9 +17,9 @@ type Cache struct {
 	mock.Mock
 }
 
-// CheckScope provides a mock function with given fields: ctx, key
-func (_m *Cache) CheckScope(ctx context.Context, key string) (bool, error) {
-	ret := _m.Called(ctx, key)
+// CheckScope provides a mock function with given fields: ctx, patID, optionalDomainID, entityType, operation, entityID
+func (_m *Cache) CheckScope(ctx context.Context, patID string, optionalDomainID string, entityType auth.EntityType, operation auth.Operation, entityID string) (bool, error) {
+	ret := _m.Called(ctx, patID, optionalDomainID, entityType, operation, entityID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CheckScope")
@@ -27,17 +27,17 @@ func (_m *Cache) CheckScope(ctx context.Context, key string) (bool, error) {
 
 	var r0 bool
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (bool, error)); ok {
-		return rf(ctx, key)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, auth.Operation, string) (bool, error)); ok {
+		return rf(ctx, patID, optionalDomainID, entityType, operation, entityID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) bool); ok {
-		r0 = rf(ctx, key)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, auth.Operation, string) bool); ok {
+		r0 = rf(ctx, patID, optionalDomainID, entityType, operation, entityID)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, key)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, auth.EntityType, auth.Operation, string) error); ok {
+		r1 = rf(ctx, patID, optionalDomainID, entityType, operation, entityID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -45,24 +45,17 @@ func (_m *Cache) CheckScope(ctx context.Context, key string) (bool, error) {
 	return r0, r1
 }
 
-// Remove provides a mock function with given fields: ctx, key
-func (_m *Cache) Remove(ctx context.Context, key ...string) error {
-	_va := make([]interface{}, len(key))
-	for _i := range key {
-		_va[_i] = key[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
+// Remove provides a mock function with given fields: ctx, scopes
+func (_m *Cache) Remove(ctx context.Context, scopes []auth.Scope) error {
+	ret := _m.Called(ctx, scopes)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Remove")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, ...string) error); ok {
-		r0 = rf(ctx, key...)
+	if rf, ok := ret.Get(0).(func(context.Context, []auth.Scope) error); ok {
+		r0 = rf(ctx, scopes)
 	} else {
 		r0 = ret.Error(0)
 	}

@@ -19,32 +19,22 @@ type PATSRepository struct {
 	mock.Mock
 }
 
-// AddScopeEntry provides a mock function with given fields: ctx, userID, patID, scope
-func (_m *PATSRepository) AddScopeEntry(ctx context.Context, userID string, patID string, scope []auth.Scope) (auth.ScopesPage, error) {
-	ret := _m.Called(ctx, userID, patID, scope)
+// AddScopeEntry provides a mock function with given fields: ctx, userID, scope
+func (_m *PATSRepository) AddScopeEntry(ctx context.Context, userID string, scope []auth.Scope) error {
+	ret := _m.Called(ctx, userID, scope)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddScopeEntry")
 	}
 
-	var r0 auth.ScopesPage
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []auth.Scope) (auth.ScopesPage, error)); ok {
-		return rf(ctx, userID, patID, scope)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []auth.Scope) auth.ScopesPage); ok {
-		r0 = rf(ctx, userID, patID, scope)
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, []auth.Scope) error); ok {
+		r0 = rf(ctx, userID, scope)
 	} else {
-		r0 = ret.Get(0).(auth.ScopesPage)
+		r0 = ret.Error(0)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, []auth.Scope) error); ok {
-		r1 = rf(ctx, userID, patID, scope)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // CheckScopeEntry provides a mock function with given fields: ctx, userID, patID, entityType, optionalDomainID, operation, entityID
@@ -119,32 +109,22 @@ func (_m *PATSRepository) RemoveAllScopeEntry(ctx context.Context, userID string
 	return r0
 }
 
-// RemoveScopeEntry provides a mock function with given fields: ctx, userID, patID, scope
-func (_m *PATSRepository) RemoveScopeEntry(ctx context.Context, userID string, patID string, scope []auth.Scope) (auth.ScopesPage, error) {
-	ret := _m.Called(ctx, userID, patID, scope)
+// RemoveScopeEntry provides a mock function with given fields: ctx, userID, scope
+func (_m *PATSRepository) RemoveScopeEntry(ctx context.Context, userID string, scope []auth.Scope) error {
+	ret := _m.Called(ctx, userID, scope)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RemoveScopeEntry")
 	}
 
-	var r0 auth.ScopesPage
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []auth.Scope) (auth.ScopesPage, error)); ok {
-		return rf(ctx, userID, patID, scope)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []auth.Scope) auth.ScopesPage); ok {
-		r0 = rf(ctx, userID, patID, scope)
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, []auth.Scope) error); ok {
+		r0 = rf(ctx, userID, scope)
 	} else {
-		r0 = ret.Get(0).(auth.ScopesPage)
+		r0 = ret.Error(0)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, []auth.Scope) error); ok {
-		r1 = rf(ctx, userID, patID, scope)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // Retrieve provides a mock function with given fields: ctx, userID, patID

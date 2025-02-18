@@ -147,7 +147,7 @@ func (res revokePatSecretRes) Empty() bool {
 }
 
 type scopeEntryRes struct {
-	auth.ScopesPage `json:",inline"`
+	Scopes []auth.Scope `json:"scopes"`
 }
 
 func (res scopeEntryRes) Code() int {

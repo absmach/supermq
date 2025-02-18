@@ -7,9 +7,7 @@ import (
 	"context"
 	"time"
 
-	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/auth"
-	"github.com/absmach/supermq/auth/cache"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	"github.com/absmach/supermq/pkg/postgres"
@@ -31,7 +29,7 @@ const (
 		SELECT 
 		id, user_id, name, description, secret, issued_at, expires_at,
 		updated_at, last_used_at, revoked, revoked_at
-		FROM pats WHERE user_id = :user_id AND id = :id`
+		FROM pats WHERE user_id = :user_id AND id = :id OFFSET :offset LIMIT :limit`
 
 	saveScopeQuery = `
 		INSERT INTO pat_scopes (pat_id, entity_type, optional_domain_id, operation, entity_id)
@@ -39,7 +37,7 @@ const (
 
 	retrieveScopesQuery = `
 		SELECT pat_id, entity_type, optional_domain_id, operation, entity_id
-		FROM pat_scopes WHERE pat_id = :pat_id`
+		FROM pat_scopes WHERE pat_id = :pat_id OFFSET :offset LIMIT :limit`
 
 	deleteScopesQuery = `
 		DELETE FROM pat_scopes 
@@ -183,7 +181,8 @@ func (pr *patRepo) UpdateName(ctx context.Context, userID, patID, name string) (
 	q := `
 		UPDATE pats p
 		SET name = :name, updated_at = :updated_at
-		WHERE user_id = :user_id AND id = :id`
+		WHERE user_id = :user_id AND id = :id
+		RETURNING id, user_id, name, description, secret, issued_at, updated_at, expires_at, revoked, revoked_at, last_used_at`
 
 	upm := dbPatPagemeta{
 		User:      userID,
@@ -191,39 +190,15 @@ func (pr *patRepo) UpdateName(ctx context.Context, userID, patID, name string) (
 		Name:      name,
 		UpdatedAt: time.Now(),
 	}
-	tx, err := pr.db.BeginTxx(ctx, nil)
+
+	rows, err := pr.db.NamedQueryContext(ctx, q, upm)
 	if err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
-	defer func() {
-		if err != nil {
-			if errRollback := tx.Rollback(); errRollback != nil {
-				err = errors.Wrap(errors.Wrap(apiutil.ErrRollbackTx, errRollback), err)
-			}
-		}
-	}()
-
-	res, err := tx.NamedExec(q, upm)
-	if err != nil {
+	var pat auth.PAT
+	if err := rows.StructScan(&pat); err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-
-	cnt, err := res.RowsAffected()
-	if err != nil {
-		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-	if cnt == 0 {
-		return auth.PAT{}, repoerr.ErrNotFound
-	}
-
-	if err := tx.Commit(); err != nil {
-		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-
-	pat, err := pr.retrievePATFromDB(ctx, userID, patID)
-	if err != nil {
-		return auth.PAT{}, err
 	}
 
 	return pat, nil
@@ -233,7 +208,8 @@ func (pr *patRepo) UpdateDescription(ctx context.Context, userID, patID, descrip
 	q := `
 		UPDATE pats 
 		SET description = :description, updated_at = :updated_at
-		WHERE user_id = :user_id AND id = :id`
+		WHERE user_id = :user_id AND id = :id
+		RETURNING id, user_id, name, description, secret, issued_at, updated_at, expires_at, revoked, revoked_at, last_used_at`
 
 	upm := dbPatPagemeta{
 		User:        userID,
@@ -242,35 +218,14 @@ func (pr *patRepo) UpdateDescription(ctx context.Context, userID, patID, descrip
 		Description: description,
 	}
 
-	tx, err := pr.db.BeginTxx(ctx, nil)
+	rows, err := pr.db.NamedQueryContext(ctx, q, upm)
 	if err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
-	defer func() {
-		if err != nil {
-			if errRollback := tx.Rollback(); errRollback != nil {
-				err = errors.Wrap(errors.Wrap(apiutil.ErrRollbackTx, errRollback), err)
-			}
-		}
-	}()
-
-	res, err := tx.NamedExec(q, upm)
-	if err != nil {
+	var pat auth.PAT
+	if err := rows.StructScan(&pat); err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-
-	cnt, err := res.RowsAffected()
-	if err != nil {
-		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-	if cnt == 0 {
-		return auth.PAT{}, repoerr.ErrNotFound
-	}
-
-	pat, err := pr.retrievePATFromDB(ctx, userID, patID)
-	if err != nil {
-		return auth.PAT{}, err
 	}
 
 	return pat, nil
@@ -280,7 +235,8 @@ func (pr *patRepo) UpdateTokenHash(ctx context.Context, userID, patID, tokenHash
 	q := `
 		UPDATE pats 
 		SET secret = :secret, expires_at = :expires_at, updated_at = :updated_at
-		WHERE user_id = :user_id AND id = :id`
+		WHERE user_id = :user_id AND id = :id
+		RETURNING id, user_id, name, description, secret, issued_at, updated_at, expires_at, revoked, revoked_at, last_used_at`
 
 	upm := dbPatPagemeta{
 		User:      userID,
@@ -290,34 +246,14 @@ func (pr *patRepo) UpdateTokenHash(ctx context.Context, userID, patID, tokenHash
 		Secret:    tokenHash,
 	}
 
-	tx, err := pr.db.BeginTxx(ctx, nil)
+	rows, err := pr.db.NamedQueryContext(ctx, q, upm)
 	if err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
-	defer func() {
-		if err != nil {
-			if errRollback := tx.Rollback(); errRollback != nil {
-				err = errors.Wrap(errors.Wrap(apiutil.ErrRollbackTx, errRollback), err)
-			}
-		}
-	}()
-	res, err := tx.NamedExec(q, upm)
-	if err != nil {
+	var pat auth.PAT
+	if err := rows.StructScan(&pat); err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-
-	cnt, err := res.RowsAffected()
-	if err != nil {
-		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-	if cnt == 0 {
-		return auth.PAT{}, repoerr.ErrNotFound
-	}
-
-	pat, err := pr.retrievePATFromDB(ctx, userID, patID)
-	if err != nil {
-		return auth.PAT{}, err
 	}
 
 	return pat, nil
@@ -335,33 +271,8 @@ func (pr *patRepo) Revoke(ctx context.Context, userID, patID string) error {
 		ExpiresAt: time.Now(),
 	}
 
-	tx, err := pr.db.BeginTxx(ctx, nil)
+	_, err := pr.db.NamedQueryContext(ctx, q, upm)
 	if err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-
-	defer func() {
-		if err != nil {
-			if errRollback := tx.Rollback(); errRollback != nil {
-				err = errors.Wrap(errors.Wrap(apiutil.ErrRollbackTx, errRollback), err)
-			}
-		}
-	}()
-
-	res, err := tx.NamedExec(q, upm)
-	if err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-
-	cnt, err := res.RowsAffected()
-	if err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-	if cnt == 0 {
-		return repoerr.ErrNotFound
-	}
-
-	if err := pr.cache.Remove(ctx, patID); err != nil {
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
@@ -379,29 +290,9 @@ func (pr *patRepo) Reactivate(ctx context.Context, userID, patID string) error {
 		ID:   patID,
 	}
 
-	tx, err := pr.db.BeginTxx(ctx, nil)
+	_, err := pr.db.NamedQueryContext(ctx, q, upm)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-
-	defer func() {
-		if err != nil {
-			if errRollback := tx.Rollback(); errRollback != nil {
-				err = errors.Wrap(errors.Wrap(apiutil.ErrRollbackTx, errRollback), err)
-			}
-		}
-	}()
-	res, err := tx.NamedExec(q, upm)
-	if err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-
-	cnt, err := res.RowsAffected()
-	if err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-	if cnt == 0 {
-		return repoerr.ErrNotFound
 	}
 
 	return nil
@@ -414,103 +305,45 @@ func (pr *patRepo) Remove(ctx context.Context, userID, patID string) error {
 		ID:   patID,
 	}
 
-	tx, err := pr.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return errors.Wrap(repoerr.ErrRemoveEntity, err)
-	}
-
-	defer func() {
-		if err != nil {
-			if errRollback := tx.Rollback(); errRollback != nil {
-				err = errors.Wrap(errors.Wrap(apiutil.ErrRollbackTx, errRollback), err)
-			}
-		}
-	}()
-	res, err := tx.NamedExec(q, upm)
+	_, err := pr.db.NamedQueryContext(ctx, q, upm)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 
-	cnt, err := res.RowsAffected()
+	return nil
+}
+
+func (pr *patRepo) AddScopeEntry(ctx context.Context, userID string, scopes []auth.Scope) error {
+	scs := toDBScope(scopes)
+	_, err := pr.db.NamedQueryContext(ctx, saveScopeQuery, scs)
 	if err != nil {
-		return errors.Wrap(repoerr.ErrRemoveEntity, err)
-	}
-	if cnt == 0 {
-		return repoerr.ErrNotFound
+		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 
-	if err := pr.cache.Remove(ctx, patID); err != nil {
+	if err := pr.cache.Save(ctx, scopes); err != nil {
+		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+	}
+
+	return nil
+}
+
+func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID string, scopes []auth.Scope) error {
+	dbscopes := toDBScope(scopes)
+
+	_, err := pr.db.NamedQueryContext(ctx, deleteScopesQuery, dbscopes)
+	if err != nil {
+		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+	}
+
+	if err := pr.cache.Remove(ctx, scopes); err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
 	return nil
 }
 
-func (pr *patRepo) AddScopeEntry(ctx context.Context, userID, patID string, scopes []auth.Scope) (auth.ScopesPage, error) {
-	tx, err := pr.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return auth.ScopesPage{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-
-	defer func() {
-		if err != nil {
-			if errRollback := tx.Rollback(); errRollback != nil {
-				err = errors.Wrap(errors.Wrap(apiutil.ErrRollbackTx, errRollback), err)
-			}
-		}
-	}()
-
-	scs := toDBScope(scopes)
-	_, err = tx.NamedQuery(saveScopeQuery, scs)
-	if err != nil {
-		return auth.ScopesPage{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
-	}
-
-	if err := tx.Commit(); err != nil {
-		return auth.ScopesPage{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
-	}
-
-	res, err := pr.retrieveScopeFromDB(ctx, patID)
-	if err != nil {
-		return auth.ScopesPage{}, err
-	}
-
-	if err := pr.cache.Save(ctx, res); err != nil {
-		return auth.ScopesPage{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-
-	return auth.ScopesPage{
-		Total:  uint64(len(res)),
-		Scopes: res,
-	}, nil
-}
-
-func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID, patID string, scopes []auth.Scope) (auth.ScopesPage, error) {
-	dbscopes := toDBScope(scopes)
-
-	_, err := pr.db.NamedQueryContext(ctx, deleteScopesQuery, dbscopes)
-	if err != nil {
-		return auth.ScopesPage{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-
-	res, err := pr.retrieveScopeFromDB(ctx, patID)
-	if err != nil {
-		return auth.ScopesPage{}, err
-	}
-
-	if err := pr.cache.Save(ctx, res); err != nil {
-		return auth.ScopesPage{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-
-	return auth.ScopesPage{
-		Total:  uint64(len(res)),
-		Scopes: res,
-	}, nil
-}
-
 func (pr *patRepo) CheckScopeEntry(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityID string) error {
-	key := cache.GenerateKey(patID, optionalDomainID, entityType, operation, entityID)
-	authorized, err := pr.cache.CheckScope(ctx, key)
+	authorized, err := pr.cache.CheckScope(ctx, patID, optionalDomainID, entityType, operation, entityID)
 	if err == nil && authorized {
 		return nil
 	}
@@ -562,9 +395,18 @@ func (pr *patRepo) RetrieveScope(ctx context.Context, pm auth.ScopesPageMeta) (a
 		return auth.ScopesPage{}, err
 	}
 
+	cq := `SELECT COUNT(*) FROM pat_scopes WHERE pat_id = :pat_id`
+
+	total, err := postgres.Total(ctx, pr.db, cq, dbScope{PatID: pm.PatID})
+	if err != nil {
+		return auth.ScopesPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+
 	return auth.ScopesPage{
-		Total:  uint64(len(scopes)),
+		Total:  total,
 		Scopes: scopes,
+		Offset: pm.Offset,
+		Limit:  pm.Limit,
 	}, nil
 }
 

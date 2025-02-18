@@ -360,9 +360,6 @@ type PATS interface {
 	// List function lists all the PATs for the user.
 	ListPATS(ctx context.Context, token string, pm PATSPageMeta) (PATSPage, error)
 
-	// List function lists all the Scopes for the patID.
-	ListScopes(ctx context.Context, token string, pm ScopesPageMeta) (ScopesPage, error)
-
 	// Delete function deletes the PAT for given ID.
 	DeletePAT(ctx context.Context, token, patID string) error
 
@@ -373,19 +370,22 @@ type PATS interface {
 	RevokePATSecret(ctx context.Context, token, patID string) error
 
 	// AddScope function adds a new scope entry.
-	AddScopeEntry(ctx context.Context, token, patID string, scope []Scope) (ScopesPage, error)
+	AddScopeEntry(ctx context.Context, token, patID string, scope []Scope) ([]Scope, error)
 
 	// RemoveScope function removes a scope entry.
-	RemoveScopeEntry(ctx context.Context, token, patID string, scope []Scope) (ScopesPage, error)
+	RemoveScopeEntry(ctx context.Context, token, patID string, scope []Scope) ([]Scope, error)
 
 	// ClearAllScope function removes all scope entry.
 	ClearAllScopeEntry(ctx context.Context, token, patID string) error
+
+	// List function lists all the Scopes for the patID.
+	ListScopes(ctx context.Context, token string, pm ScopesPageMeta) (ScopesPage, error)
 
 	// IdentifyPAT function will valid the secret.
 	IdentifyPAT(ctx context.Context, paToken string) (PAT, error)
 
 	// AuthorizePAT function will valid the secret and check the given scope exists.
-	AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityIDs ...string) error
+	AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error
 
 	// CheckPAT function will check the given scope exists.
 	CheckPAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityIDs ...string) error
@@ -428,9 +428,9 @@ type PATSRepository interface {
 	// Remove removes Key with provided ID.
 	Remove(ctx context.Context, userID, patID string) error
 
-	AddScopeEntry(ctx context.Context, userID, patID string, scope []Scope) (ScopesPage, error)
+	AddScopeEntry(ctx context.Context, userID string, scope []Scope) (error)
 
-	RemoveScopeEntry(ctx context.Context, userID, patID string, scope []Scope) (ScopesPage, error)
+	RemoveScopeEntry(ctx context.Context, userID string, scope []Scope) (error)
 
 	CheckScopeEntry(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error
 
