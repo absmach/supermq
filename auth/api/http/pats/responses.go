@@ -146,7 +146,7 @@ func (res revokePatSecretRes) Empty() bool {
 	return true
 }
 
-type scopeEntryRes struct {}
+type scopeEntryRes struct{}
 
 func (res scopeEntryRes) Code() int {
 	return http.StatusOK
