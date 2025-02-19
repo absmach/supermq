@@ -17,17 +17,17 @@ type Cache struct {
 	mock.Mock
 }
 
-// CheckScope provides a mock function with given fields: patID, optionalDomainID, entityType, operation, entityID
-func (_m *Cache) CheckScope(patID string, optionalDomainID string, entityType auth.EntityType, operation auth.Operation, entityID string) bool {
-	ret := _m.Called(patID, optionalDomainID, entityType, operation, entityID)
+// CheckScope provides a mock function with given fields: ctx, patID, optionalDomainID, entityType, operation, entityID
+func (_m *Cache) CheckScope(ctx context.Context, patID string, optionalDomainID string, entityType auth.EntityType, operation auth.Operation, entityID string) bool {
+	ret := _m.Called(ctx, patID, optionalDomainID, entityType, operation, entityID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CheckScope")
 	}
 
 	var r0 bool
-	if rf, ok := ret.Get(0).(func(string, string, auth.EntityType, auth.Operation, string) bool); ok {
-		r0 = rf(patID, optionalDomainID, entityType, operation, entityID)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, auth.Operation, string) bool); ok {
+		r0 = rf(ctx, patID, optionalDomainID, entityType, operation, entityID)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}

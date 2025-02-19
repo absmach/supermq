@@ -98,7 +98,7 @@ type Service interface {
 type Cache interface {
 	Save(ctx context.Context, scopes []Scope) error
 
-	CheckScope(patID, optionalDomainID string, entityType EntityType, operation Operation, entityID string) bool
+	CheckScope(ctx context.Context, patID, optionalDomainID string, entityType EntityType, operation Operation, entityID string) bool
 
 	Remove(ctx context.Context, scopes []Scope) error
 

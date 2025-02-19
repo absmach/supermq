@@ -40,8 +40,7 @@ func (pc *patCache) Save(ctx context.Context, scopes []auth.Scope) error {
 	return nil
 }
 
-func (pc *patCache) CheckScope(patID, optionalDomainID string, entityType auth.EntityType, operation auth.Operation, entityID string) bool {
-	ctx := context.Background()
+func (pc *patCache) CheckScope(ctx context.Context, patID, optionalDomainID string, entityType auth.EntityType, operation auth.Operation, entityID string) bool {
 	exactKey := fmt.Sprintf("pat:%s:%s:%s:%s:%s", patID, entityType, optionalDomainID, operation, entityID)
 	wildcardKey := fmt.Sprintf("pat:%s:%s:%s:%s:*", patID, entityType, operation, operation)
 

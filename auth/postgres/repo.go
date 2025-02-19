@@ -354,7 +354,7 @@ func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID string, scopes [
 }
 
 func (pr *patRepo) CheckScopeEntry(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityID string) error {
-	authorized := pr.cache.CheckScope(patID, optionalDomainID, entityType, operation, entityID)
+	authorized := pr.cache.CheckScope(ctx, patID, optionalDomainID, entityType, operation, entityID)
 	if authorized {
 		return nil
 	}
