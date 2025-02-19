@@ -55,7 +55,27 @@ func (repo domainRepo) RetrieveInvitation(ctx context.Context, inviteeUserID, do
 func (repo domainRepo) RetrieveAllInvitations(ctx context.Context, pm domains.InvitationPageMeta) (domains.InvitationPage, error) {
 	query := pageQuery(pm)
 
-	q := fmt.Sprintf("SELECT invited_by, invitee_user_id, domain_id, role_id, created_at, updated_at, confirmed_at, rejected_at FROM invitations %s LIMIT :limit OFFSET :offset;", query)
+	q := fmt.Sprintf(`
+		SELECT
+			i.invited_by,
+			i.invitee_user_id,
+			i.domain_id,
+			d."name"  AS domain_name,
+			i.role_id,
+			dr."name" AS role_name,
+			i.created_at,
+			i.updated_at,
+			i.confirmed_at,
+			i.rejected_at
+		FROM
+			invitations i
+		LEFT JOIN domains d ON
+			i.domain_id = d.id
+		LEFT JOIN domains_roles dr ON
+			dr.id = i.role_id
+ 		%s
+		LIMIT :limit OFFSET :offset;
+		`, query)
 
 	rows, err := repo.db.NamedQueryContext(ctx, q, pm)
 	if err != nil {
@@ -72,7 +92,16 @@ func (repo domainRepo) RetrieveAllInvitations(ctx context.Context, pm domains.In
 		items = append(items, toInvitation(dbinv))
 	}
 
-	tq := fmt.Sprintf(`SELECT COUNT(*) FROM invitations %s`, query)
+	tq := fmt.Sprintf(`
+		SELECT
+			COUNT(*)
+		FROM
+			invitations i
+		LEFT JOIN domains d ON
+			i.domain_id = d.id
+		LEFT JOIN domains_roles dr ON
+			dr.id = i.role_id   %s
+		`, query)
 
 	total, err := postgres.Total(ctx, repo.db, tq, pm)
 	if err != nil {
@@ -137,28 +166,28 @@ func pageQuery(pm domains.InvitationPageMeta) string {
 	var query []string
 	var emq string
 	if pm.DomainID != "" {
-		query = append(query, "domain_id = :domain_id")
+		query = append(query, "i.domain_id = :domain_id")
 	}
 	if pm.InviteeUserID != "" {
-		query = append(query, "invitee_user_id = :invitee_user_id")
+		query = append(query, "i.invitee_user_id = :invitee_user_id")
 	}
 	if pm.InvitedBy != "" {
-		query = append(query, "invited_by = :invited_by")
+		query = append(query, "i.invited_by = :invited_by")
 	}
 	if pm.RoleID != "" {
-		query = append(query, "role_id = :role_id")
+		query = append(query, "i.role_id = :role_id")
 	}
 	if pm.InvitedByOrUserID != "" {
-		query = append(query, "(invited_by = :invited_by_or_user_id OR invitee_user_id = :invited_by_or_user_id)")
+		query = append(query, "(i.invited_by = :invited_by_or_user_id OR i.invitee_user_id = :invited_by_or_user_id)")
 	}
 	if pm.State == domains.Accepted {
-		query = append(query, "confirmed_at IS NOT NULL")
+		query = append(query, "i.confirmed_at IS NOT NULL")
 	}
 	if pm.State == domains.Pending {
-		query = append(query, "confirmed_at IS NULL AND rejected_at IS NULL")
+		query = append(query, "i.confirmed_at IS NULL AND rejected_at IS NULL")
 	}
 	if pm.State == domains.Rejected {
-		query = append(query, "rejected_at IS NOT NULL")
+		query = append(query, "i.rejected_at IS NOT NULL")
 	}
 
 	if len(query) > 0 {
@@ -172,7 +201,9 @@ type dbInvitation struct {
 	InvitedBy     string       `db:"invited_by"`
 	InviteeUserID string       `db:"invitee_user_id"`
 	DomainID      string       `db:"domain_id"`
+	DomainName    string       `db:"domain_name,omitempty"`
 	RoleID        string       `db:"role_id,omitempty"`
+	RoleName      string       `db:"role_name,omitempty"`
 	Relation      string       `db:"relation"`
 	CreatedAt     time.Time    `db:"created_at"`
 	UpdatedAt     sql.NullTime `db:"updated_at,omitempty"`
@@ -220,7 +251,9 @@ func toInvitation(dbinv dbInvitation) domains.Invitation {
 		InvitedBy:     dbinv.InvitedBy,
 		InviteeUserID: dbinv.InviteeUserID,
 		DomainID:      dbinv.DomainID,
+		DomainName:    dbinv.DomainName,
 		RoleID:        dbinv.RoleID,
+		RoleName:      dbinv.RoleName,
 		CreatedAt:     dbinv.CreatedAt,
 		UpdatedAt:     updatedAt,
 		ConfirmedAt:   confirmedAt,
