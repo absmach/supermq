@@ -30,7 +30,7 @@ const (
 		SELECT 
 		id, user_id, name, description, secret, issued_at, expires_at,
 		updated_at, last_used_at, revoked, revoked_at
-		FROM pats WHERE user_id = :user_id AND id = :id OFFSET :offset LIMIT :limit`
+		FROM pats WHERE user_id = :user_id AND id = :id`
 
 	saveScopeQuery = `
 		INSERT INTO pat_scopes (pat_id, entity_type, optional_domain_id, operation, entity_id)
@@ -105,7 +105,11 @@ func (pr *patRepo) RetrieveAll(ctx context.Context, userID string, pm auth.PATSP
 		ORDER BY issued_at DESC
 		LIMIT :limit OFFSET :offset`
 
-	dbPage := toDBAuthPage(userID, pm)
+	dbPage := dbPagemeta{
+		Limit:  pm.Limit,
+		Offset: pm.Offset,
+		User:   userID,
+	}
 
 	rows, err := pr.db.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
@@ -195,7 +199,7 @@ func (pr *patRepo) UpdateName(ctx context.Context, userID, patID, name string) (
 		WHERE user_id = :user_id AND id = :id
 		RETURNING id, user_id, name, description, secret, issued_at, updated_at, expires_at, revoked, revoked_at, last_used_at`
 
-	upm := dbPatPagemeta{
+	upm := dbPagemeta{
 		User:      userID,
 		ID:        patID,
 		Name:      name,
@@ -222,7 +226,7 @@ func (pr *patRepo) UpdateDescription(ctx context.Context, userID, patID, descrip
 		WHERE user_id = :user_id AND id = :id
 		RETURNING id, user_id, name, description, secret, issued_at, updated_at, expires_at, revoked, revoked_at, last_used_at`
 
-	upm := dbPatPagemeta{
+	upm := dbPagemeta{
 		User:        userID,
 		ID:          patID,
 		UpdatedAt:   time.Now(),
@@ -249,7 +253,7 @@ func (pr *patRepo) UpdateTokenHash(ctx context.Context, userID, patID, tokenHash
 		WHERE user_id = :user_id AND id = :id
 		RETURNING id, user_id, name, description, secret, issued_at, updated_at, expires_at, revoked, revoked_at, last_used_at`
 
-	upm := dbPatPagemeta{
+	upm := dbPagemeta{
 		User:      userID,
 		ID:        patID,
 		UpdatedAt: time.Now(),
@@ -276,7 +280,7 @@ func (pr *patRepo) Revoke(ctx context.Context, userID, patID string) error {
 		SET revoked = true, revoked_at = :revoked_at
 		WHERE user_id = :user_id AND id = :id`
 
-	upm := dbPatPagemeta{
+	upm := dbPagemeta{
 		User:      userID,
 		ID:        patID,
 		ExpiresAt: time.Now(),
@@ -296,7 +300,7 @@ func (pr *patRepo) Reactivate(ctx context.Context, userID, patID string) error {
 		SET revoked = false, revoked_at = NULL
 		WHERE user_id = :user_id AND id = :id`
 
-	upm := dbPatPagemeta{
+	upm := dbPagemeta{
 		User: userID,
 		ID:   patID,
 	}
@@ -311,7 +315,7 @@ func (pr *patRepo) Reactivate(ctx context.Context, userID, patID string) error {
 
 func (pr *patRepo) Remove(ctx context.Context, userID, patID string) error {
 	q := `DELETE FROM pats WHERE user_id = :user_id AND id = :id`
-	upm := dbPatPagemeta{
+	upm := dbPagemeta{
 		User: userID,
 		ID:   patID,
 	}
@@ -325,8 +329,8 @@ func (pr *patRepo) Remove(ctx context.Context, userID, patID string) error {
 }
 
 func (pr *patRepo) AddScopeEntry(ctx context.Context, userID string, scopes []auth.Scope) error {
-	scs := toDBScope(scopes)
-	_, err := pr.db.NamedQueryContext(ctx, saveScopeQuery, scs)
+	dbscopes := toDBScope(scopes)
+	_, err := pr.db.NamedQueryContext(ctx, saveScopeQuery, dbscopes)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
@@ -407,15 +411,12 @@ func (pr *patRepo) CheckScopeEntry(ctx context.Context, userID, patID string, en
 	return repoerr.ErrNotFound
 }
 
-func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, userID, patID string) error {
-	scopes, err := pr.retrieveScopeFromDB(ctx, patID)
-	if err != nil {
-		return err
+func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, patID string) error {
+	pm := dbPagemeta{
+		PatID: patID,
 	}
 
-	scs := toDBScope(scopes)
-
-	_, err = pr.db.NamedQueryContext(ctx, deleteAllScopesQuery, scs)
+	_, err := pr.db.NamedQueryContext(ctx, deleteAllScopesQuery, pm)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
@@ -428,17 +429,20 @@ func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, userID, patID string
 }
 
 func (pr *patRepo) RetrieveScope(ctx context.Context, pm auth.ScopesPageMeta) (auth.ScopesPage, error) {
-	scopes, err := pr.retrieveScopeFromDB(ctx, pm.PatID)
+	dbs := dbPagemeta{
+		PatID:  pm.PatID,
+		Offset: pm.Offset,
+		Limit:  pm.Limit,
+	}
+
+	scopes, err := pr.retrieveScopeFromDB(ctx, dbs)
 	if err != nil {
 		return auth.ScopesPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
-	}
-	if err := pr.cache.Save(ctx, scopes); err != nil {
-		return auth.ScopesPage{}, err
 	}
 
 	cq := `SELECT COUNT(*) FROM pat_scopes WHERE pat_id = :pat_id`
 
-	total, err := postgres.Total(ctx, pr.db, cq, dbScope{PatID: pm.PatID})
+	total, err := postgres.Total(ctx, pr.db, cq, dbs)
 	if err != nil {
 		return auth.ScopesPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
@@ -451,11 +455,8 @@ func (pr *patRepo) RetrieveScope(ctx context.Context, pm auth.ScopesPageMeta) (a
 	}, nil
 }
 
-func (pr *patRepo) retrieveScopeFromDB(ctx context.Context, patID string) ([]auth.Scope, error) {
-	dbs := dbScope{
-		PatID: patID,
-	}
-	scopeRows, err := pr.db.NamedQueryContext(ctx, retrieveScopesQuery, dbs)
+func (pr *patRepo) retrieveScopeFromDB(ctx context.Context, pm dbPagemeta) ([]auth.Scope, error) {
+	scopeRows, err := pr.db.NamedQueryContext(ctx, retrieveScopesQuery, pm)
 	if err != nil {
 		return []auth.Scope{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
@@ -479,7 +480,7 @@ func (pr *patRepo) retrieveScopeFromDB(ctx context.Context, patID string) ([]aut
 }
 
 func (pr *patRepo) retrievePATFromDB(ctx context.Context, userID, patID string) (auth.PAT, error) {
-	dbp := dbPatPagemeta{
+	dbp := dbPagemeta{
 		ID:   patID,
 		User: userID,
 	}

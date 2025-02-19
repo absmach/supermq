@@ -6,7 +6,6 @@ package cache
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/absmach/supermq/auth"
@@ -46,7 +45,6 @@ func (pc *patCache) CheckScope(ctx context.Context, patID, optionalDomainID stri
 
 	res, err := pc.client.Exists(ctx, exactKey, wildcardKey).Result()
 	if err != nil {
-		log.Println("Error checking PAT:", err)
 		return false
 	}
 

@@ -431,5 +431,5 @@ type PATSRepository interface {
 
 	CheckScopeEntry(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error
 
-	RemoveAllScopeEntry(ctx context.Context, userID, patID string) error
+	RemoveAllScopeEntry(ctx context.Context, patID string) error
 }

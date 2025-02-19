@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/auth"
+	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 )
 
 type dbPat struct {
@@ -31,7 +32,7 @@ type dbScope struct {
 	Operation        string `db:"operation,omitempty"`
 }
 
-type dbPatPagemeta struct {
+type dbPagemeta struct {
 	Limit       uint64    `db:"limit"`
 	Offset      uint64    `db:"offset"`
 	User        string    `db:"user_id"`
@@ -45,6 +46,10 @@ type dbPatPagemeta struct {
 }
 
 func toAuthPat(db dbPat) (auth.PAT, error) {
+	if db.ID == "" {
+		return auth.PAT{}, repoerr.ErrNotFound
+	}
+
 	pat := auth.PAT{
 		ID:          db.ID,
 		User:        db.User,
@@ -100,14 +105,6 @@ func toDBPats(pat auth.PAT) (dbPat, error) {
 		Revoked:     pat.Revoked,
 		RevokedAt:   pat.RevokedAt,
 	}, nil
-}
-
-func toDBAuthPage(user string, pm auth.PATSPageMeta) dbPatPagemeta {
-	return dbPatPagemeta{
-		Limit:  pm.Limit,
-		Offset: pm.Offset,
-		User:   user,
-	}
 }
 
 func toDBScope(sc []auth.Scope) []dbScope {

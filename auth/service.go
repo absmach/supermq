@@ -504,7 +504,7 @@ func (svc service) CreatePAT(ctx context.Context, token, name, description strin
 }
 
 func (svc service) UpdatePATName(ctx context.Context, token, patID, name string) (PAT, error) {
-	key, err := svc.Identify(ctx, token)
+	key, err := svc.authnAuthzUserPAT(ctx, token, patID)
 	if err != nil {
 		return PAT{}, err
 	}
@@ -516,7 +516,7 @@ func (svc service) UpdatePATName(ctx context.Context, token, patID, name string)
 }
 
 func (svc service) UpdatePATDescription(ctx context.Context, token, patID, description string) (PAT, error) {
-	key, err := svc.Identify(ctx, token)
+	key, err := svc.authnAuthzUserPAT(ctx, token, patID)
 	if err != nil {
 		return PAT{}, err
 	}
@@ -552,7 +552,7 @@ func (svc service) ListPATS(ctx context.Context, token string, pm PATSPageMeta) 
 }
 
 func (svc service) DeletePAT(ctx context.Context, token, patID string) error {
-	key, err := svc.Identify(ctx, token)
+	key, err := svc.authnAuthzUserPAT(ctx, token, patID)
 	if err != nil {
 		return err
 	}
@@ -563,7 +563,7 @@ func (svc service) DeletePAT(ctx context.Context, token, patID string) error {
 }
 
 func (svc service) ResetPATSecret(ctx context.Context, token, patID string, duration time.Duration) (PAT, error) {
-	key, err := svc.Identify(ctx, token)
+	key, err := svc.authnAuthzUserPAT(ctx, token, patID)
 	if err != nil {
 		return PAT{}, err
 	}
@@ -589,7 +589,7 @@ func (svc service) ResetPATSecret(ctx context.Context, token, patID string, dura
 }
 
 func (svc service) RevokePATSecret(ctx context.Context, token, patID string) error {
-	key, err := svc.Identify(ctx, token)
+	key, err := svc.authnAuthzUserPAT(ctx, token, patID)
 	if err != nil {
 		return err
 	}
@@ -601,7 +601,7 @@ func (svc service) RevokePATSecret(ctx context.Context, token, patID string) err
 }
 
 func (svc service) AddScopeEntry(ctx context.Context, token, patID string, scopes []Scope) error {
-	key, err := svc.Identify(ctx, token)
+	key, err := svc.authnAuthzUserPAT(ctx, token, patID)
 	if err != nil {
 		return err
 	}
@@ -619,7 +619,7 @@ func (svc service) AddScopeEntry(ctx context.Context, token, patID string, scope
 }
 
 func (svc service) RemoveScopeEntry(ctx context.Context, token, patID string, scopes []Scope) error {
-	key, err := svc.Identify(ctx, token)
+	key, err := svc.authnAuthzUserPAT(ctx, token, patID)
 	if err != nil {
 		return err
 	}
@@ -635,7 +635,7 @@ func (svc service) RemoveScopeEntry(ctx context.Context, token, patID string, sc
 }
 
 func (svc service) ListScopes(ctx context.Context, token string, pm ScopesPageMeta) (ScopesPage, error) {
-	_, err := svc.Identify(ctx, token)
+	_, err := svc.authnAuthzUserPAT(ctx, token, pm.PatID)
 	if err != nil {
 		return ScopesPage{}, err
 	}
@@ -660,11 +660,11 @@ func updateScopes(patID string, scopes []Scope) ([]Scope, error) {
 }
 
 func (svc service) ClearAllScopeEntry(ctx context.Context, token, patID string) error {
-	key, err := svc.Identify(ctx, token)
+	_, err := svc.authnAuthzUserPAT(ctx, token, patID)
 	if err != nil {
 		return err
 	}
-	if err := svc.pats.RemoveAllScopeEntry(ctx, key.User, patID); err != nil {
+	if err := svc.pats.RemoveAllScopeEntry(ctx, patID); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	return nil
@@ -748,4 +748,18 @@ func generateRandomString(n int) string {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
 	return string(b)
+}
+
+func (svc service) authnAuthzUserPAT(ctx context.Context, token, patID string) (Key, error) {
+	key, err := svc.Identify(ctx, token)
+	if err != nil {
+		return Key{}, err
+	}
+
+	_, err = svc.pats.Retrieve(ctx, key.User, patID)
+	if err != nil {
+		return Key{}, errors.Wrap(svcerr.ErrAuthorization, err)
+	}
+
+	return key, nil
 }

@@ -91,17 +91,17 @@ func (_m *PATSRepository) Remove(ctx context.Context, userID string, patID strin
 	return r0
 }
 
-// RemoveAllScopeEntry provides a mock function with given fields: ctx, userID, patID
-func (_m *PATSRepository) RemoveAllScopeEntry(ctx context.Context, userID string, patID string) error {
-	ret := _m.Called(ctx, userID, patID)
+// RemoveAllScopeEntry provides a mock function with given fields: ctx, patID
+func (_m *PATSRepository) RemoveAllScopeEntry(ctx context.Context, patID string) error {
+	ret := _m.Called(ctx, patID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RemoveAllScopeEntry")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, userID, patID)
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, patID)
 	} else {
 		r0 = ret.Error(0)
 	}
