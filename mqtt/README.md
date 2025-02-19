@@ -17,11 +17,11 @@ The service is configured using the environment variables presented in the follo
 | SMQ_MQTT_ADAPTER_WS_TARGET_HOST           | MQTT broker host for MQTT over WS                                                   | localhost                         |
 | SMQ_MQTT_ADAPTER_WS_TARGET_PORT           | MQTT broker port for MQTT over WS                                                   | 8080                              |
 | SMQ_MQTT_ADAPTER_INSTANCE                 | Instance name for MQTT adapter                                                      | ""                                |
-| SMQ_CLIENTS_AUTH_GRPC_URL                 | Clients service Auth gRPC URL                                                       | <localhost:7000>                  |
-| SMQ_CLIENTS_AUTH_GRPC_TIMEOUT             | Clients service Auth gRPC request timeout in seconds                                | 1s                                |
-| SMQ_CLIENTS_AUTH_GRPC_CLIENT_CERT         | Path to the PEM encoded clients service Auth gRPC client certificate file           | ""                                |
-| SMQ_CLIENTS_AUTH_GRPC_CLIENT_KEY          | Path to the PEM encoded clients service Auth gRPC client key file                   | ""                                |
-| SMQ_CLIENTS_AUTH_GRPC_SERVER_CERTS        | Path to the PEM encoded clients server Auth gRPC server trusted CA certificate file | ""                                |
+| SMQ_CLIENTS_GRPC_URL                      | Clients service Auth gRPC URL                                                       | <localhost:7000>                  |
+| SMQ_CLIENTS_GRPC_TIMEOUT                  | Clients service Auth gRPC request timeout in seconds                                | 1s                                |
+| SMQ_CLIENTS_GRPC_CLIENT_CERT              | Path to the PEM encoded clients service Auth gRPC client certificate file           | ""                                |
+| SMQ_CLIENTS_GRPC_CLIENT_KEY               | Path to the PEM encoded clients service Auth gRPC client key file                   | ""                                |
+| SMQ_CLIENTS_GRPC_SERVER_CERTS             | Path to the PEM encoded clients server Auth gRPC server trusted CA certificate file | ""                                |
 | SMQ_ES_URL                                | Event sourcing URL                                                                  | <nats://localhost:4222>           |
 | SMQ_MESSAGE_BROKER_URL                    | Message broker instance URL                                                         | <nats://localhost:4222>           |
 | SMQ_JAEGER_URL                            | Jaeger server URL                                                                   | <http://localhost:4318/v1/traces> |
@@ -58,11 +58,11 @@ SMQ_MQTT_ADAPTER_WS_PORT=8080 \
 SMQ_MQTT_ADAPTER_WS_TARGET_HOST=localhost \
 SMQ_MQTT_ADAPTER_WS_TARGET_PORT=8080 \
 SMQ_MQTT_ADAPTER_INSTANCE="" \
-SMQ_CLIENTS_AUTH_GRPC_URL=localhost:7000 \
-SMQ_CLIENTS_AUTH_GRPC_TIMEOUT=1s \
-SMQ_CLIENTS_AUTH_GRPC_CLIENT_CERT="" \
-SMQ_CLIENTS_AUTH_GRPC_CLIENT_KEY="" \
-SMQ_CLIENTS_AUTH_GRPC_SERVER_CERTS="" \
+SMQ_CLIENTS_GRPC_URL=localhost:7000 \
+SMQ_CLIENTS_GRPC_TIMEOUT=1s \
+SMQ_CLIENTS_GRPC_CLIENT_CERT="" \
+SMQ_CLIENTS_GRPC_CLIENT_KEY="" \
+SMQ_CLIENTS_GRPC_SERVER_CERTS="" \
 SMQ_ES_URL=nats://localhost:4222 \
 SMQ_MESSAGE_BROKER_URL=nats://localhost:4222 \
 SMQ_JAEGER_URL=http://localhost:14268/api/traces \
@@ -72,6 +72,6 @@ SMQ_MQTT_ADAPTER_INSTANCE_ID="" \
 $GOBIN/supermq-mqtt
 ```
 
-Setting `SMQ_CLIENTS_AUTH_GRPC_CLIENT_CERT` and `SMQ_CLIENTS_AUTH_GRPC_CLIENT_KEY` will enable TLS against the clients service. The service expects a file in PEM format for both the certificate and the key. Setting `SMQ_CLIENTS_AUTH_GRPC_SERVER_CERTS` will enable TLS against the clients service trusting only those CAs that are provided. The service expects a file in PEM format of trusted CAs.
+Setting `SMQ_CLIENTS_GRPC_CLIENT_CERT` and `SMQ_CLIENTS_GRPC_CLIENT_KEY` will enable TLS against the clients service. The service expects a file in PEM format for both the certificate and the key. Setting `SMQ_CLIENTS_GRPC_SERVER_CERTS` will enable TLS against the clients service trusting only those CAs that are provided. The service expects a file in PEM format of trusted CAs.
 
 For more information about service capabilities and its usage, please check out the API documentation [API](https://github.com/absmach/supermq/blob/main/api/asyncapi/mqtt.yml).

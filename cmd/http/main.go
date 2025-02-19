@@ -45,7 +45,7 @@ import (
 const (
 	svcName           = "http_adapter"
 	envPrefix         = "SMQ_HTTP_ADAPTER_"
-	envPrefixClients  = "SMQ_CLIENTS_AUTH_GRPC_"
+	envPrefixClients  = "SMQ_CLIENTS_GRPC_"
 	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
 	envPrefixAuth     = "SMQ_AUTH_GRPC_"
 	defSvcHTTPPort    = "80"

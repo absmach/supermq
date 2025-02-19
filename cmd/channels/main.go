@@ -66,7 +66,7 @@ const (
 	envPrefixHTTP    = "SMQ_CHANNELS_HTTP_"
 	envPrefixGRPC    = "SMQ_CHANNELS_GRPC_"
 	envPrefixAuth    = "SMQ_AUTH_GRPC_"
-	envPrefixClients = "SMQ_CLIENTS_AUTH_GRPC_"
+	envPrefixClients = "SMQ_CLIENTS_GRPC_"
 	envPrefixGroups  = "SMQ_GROUPS_GRPC_"
 	envPrefixDomains = "SMQ_DOMAINS_GRPC_"
 	defDB            = "channels"

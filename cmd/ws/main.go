@@ -41,7 +41,7 @@ import (
 const (
 	svcName           = "ws-adapter"
 	envPrefixHTTP     = "SMQ_WS_ADAPTER_HTTP_"
-	envPrefixClients  = "SMQ_CLIENTS_AUTH_GRPC_"
+	envPrefixClients  = "SMQ_CLIENTS_GRPC_"
 	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
 	envPrefixAuth     = "SMQ_AUTH_GRPC_"
 	defSvcHTTPPort    = "8190"

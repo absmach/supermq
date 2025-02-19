@@ -35,7 +35,7 @@ const (
 	svcName           = "coap_adapter"
 	envPrefix         = "SMQ_COAP_ADAPTER_"
 	envPrefixHTTP     = "SMQ_COAP_ADAPTER_HTTP_"
-	envPrefixClients  = "SMQ_CLIENTS_AUTH_GRPC_"
+	envPrefixClients  = "SMQ_CLIENTS_GRPC_"
 	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
 	defSvcHTTPPort    = "5683"
 	defSvcCoAPPort    = "5683"

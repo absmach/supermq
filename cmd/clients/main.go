@@ -68,7 +68,7 @@ const (
 	svcName            = "clients"
 	envPrefixDB        = "SMQ_CLIENTS_DB_"
 	envPrefixHTTP      = "SMQ_CLIENTS_HTTP_"
-	envPrefixGRPC      = "SMQ_CLIENTS_AUTH_GRPC_"
+	envPrefixGRPC      = "SMQ_CLIENTS_GRPC_"
 	envPrefixAuth      = "SMQ_AUTH_GRPC_"
 	envPrefixChannels  = "SMQ_CHANNELS_GRPC_"
 	envPrefixGroups    = "SMQ_GROUPS_GRPC_"

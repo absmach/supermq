@@ -67,7 +67,7 @@ const (
 	envPrefixAuth     = "SMQ_AUTH_GRPC_"
 	envPrefixDomains  = "SMQ_DOMAINS_GRPC_"
 	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
-	envPrefixClients  = "SMQ_CLIENTS_AUTH_GRPC_"
+	envPrefixClients  = "SMQ_CLIENTS_GRPC_"
 	defDB             = "groups"
 	defSvcHTTPPort    = "9004"
 	defSvcgRPCPort    = "7004"
