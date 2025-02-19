@@ -29,13 +29,13 @@ INTERNAL_PROTO_FILES := $(shell find $(INTERNAL_PROTO_DIR) -name "*.proto" | sed
 ifneq ($(SMQ_MESSAGE_BROKER_TYPE),)
     SMQ_MESSAGE_BROKER_TYPE := $(SMQ_MESSAGE_BROKER_TYPE)
 else
-    SMQ_MESSAGE_BROKER_TYPE=rabbitmq
+    SMQ_MESSAGE_BROKER_TYPE=nats
 endif
 
 ifneq ($(SMQ_ES_TYPE),)
     SMQ_ES_TYPE := $(SMQ_ES_TYPE)
 else
-    SMQ_ES_TYPE=rabbitmq
+    SMQ_ES_TYPE=nats
 endif
 
 define compile_service

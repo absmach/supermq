@@ -51,7 +51,7 @@ const (
 
 type config struct {
 	LogLevel      string  `env:"SMQ_JOURNAL_LOG_LEVEL"   envDefault:"info"`
-	ESURL         string  `env:"SMQ_ES_URL"              envDefault:"amqp://guest:guest@rabbitmq:5672/"`
+	ESURL         string  `env:"SMQ_ES_URL"              envDefault:"nats://localhost:4222"`
 	JaegerURL     url.URL `env:"SMQ_JAEGER_URL"          envDefault:"http://localhost:4318/v1/traces"`
 	SendTelemetry bool    `env:"SMQ_SEND_TELEMETRY"      envDefault:"true"`
 	InstanceID    string  `env:"SMQ_JOURNAL_INSTANCE_ID" envDefault:""`
