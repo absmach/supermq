@@ -362,8 +362,7 @@ type PATS interface {
 	// ClearAllPAT function removes all PATs entry.
 	ClearAllPATEntry(ctx context.Context, token string) error
 
-
-	// List function lists all the PATs for the user.
+	// ListPATS function lists all the PATs for the user.
 	ListPATS(ctx context.Context, token string, pm PATSPageMeta) (PATSPage, error)
 
 	// Delete function deletes the PAT for given ID.
