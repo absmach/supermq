@@ -140,6 +140,21 @@ func revokePATSecretEndpoint(svc auth.Service) endpoint.Endpoint {
 	}
 }
 
+func clearAllPATEntryEndpoint(svc auth.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(clearAllPATEntryReq)
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		if err := svc.ClearAllPATEntry(ctx, req.token); err != nil {
+			return nil, err
+		}
+
+		return clearAllEntryRes{}, nil
+	}
+}
+
 func addScopeEntryEndpoint(svc auth.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(addScopeEntryReq)
@@ -181,7 +196,7 @@ func clearAllScopeEntryEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		return clearAllScopeEntryRes{}, nil
+		return clearAllEntryRes{}, nil
 	}
 }
 

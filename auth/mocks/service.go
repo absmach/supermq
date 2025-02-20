@@ -21,9 +21,9 @@ type Service struct {
 	mock.Mock
 }
 
-// AddScopeEntry provides a mock function with given fields: ctx, token, patID, scope
-func (_m *Service) AddScopeEntry(ctx context.Context, token string, patID string, scope []auth.Scope) error {
-	ret := _m.Called(ctx, token, patID, scope)
+// AddScopeEntry provides a mock function with given fields: ctx, token, patID, scopes
+func (_m *Service) AddScopeEntry(ctx context.Context, token string, patID string, scopes []auth.Scope) error {
+	ret := _m.Called(ctx, token, patID, scopes)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddScopeEntry")
@@ -31,7 +31,7 @@ func (_m *Service) AddScopeEntry(ctx context.Context, token string, patID string
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string, []auth.Scope) error); ok {
-		r0 = rf(ctx, token, patID, scope)
+		r0 = rf(ctx, token, patID, scopes)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -68,6 +68,24 @@ func (_m *Service) AuthorizePAT(ctx context.Context, userID string, patID string
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, string, auth.Operation, string) error); ok {
 		r0 = rf(ctx, userID, patID, entityType, optionalDomainID, operation, entityID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ClearAllPATEntry provides a mock function with given fields: ctx, token
+func (_m *Service) ClearAllPATEntry(ctx context.Context, token string) error {
+	ret := _m.Called(ctx, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ClearAllPATEntry")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, token)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -279,11 +297,11 @@ func (_m *Service) ListScopes(ctx context.Context, token string, pm auth.ScopesP
 	return r0, r1
 }
 
-// RemoveScopeEntry provides a mock function with given fields: ctx, token, patID, scopeID
-func (_m *Service) RemoveScopeEntry(ctx context.Context, token string, patID string, scopeID ...string) error {
-	_va := make([]interface{}, len(scopeID))
-	for _i := range scopeID {
-		_va[_i] = scopeID[_i]
+// RemoveScopeEntry provides a mock function with given fields: ctx, token, patID, scopeIDs
+func (_m *Service) RemoveScopeEntry(ctx context.Context, token string, patID string, scopeIDs ...string) error {
+	_va := make([]interface{}, len(scopeIDs))
+	for _i := range scopeIDs {
+		_va[_i] = scopeIDs[_i]
 	}
 	var _ca []interface{}
 	_ca = append(_ca, ctx, token, patID)
@@ -296,7 +314,7 @@ func (_m *Service) RemoveScopeEntry(ctx context.Context, token string, patID str
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string, ...string) error); ok {
-		r0 = rf(ctx, token, patID, scopeID...)
+		r0 = rf(ctx, token, patID, scopeIDs...)
 	} else {
 		r0 = ret.Error(0)
 	}

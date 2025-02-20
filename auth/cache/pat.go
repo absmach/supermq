@@ -31,7 +31,7 @@ func NewPatsCache(client *redis.Client, duration time.Duration) auth.Cache {
 func (pc *patCache) Save(ctx context.Context, userID string, scopes []auth.Scope) error {
 	for _, sc := range scopes {
 		key := generateKey(userID, sc.PatID, sc.OptionalDomainID, sc.EntityType, sc.Operation, sc.EntityID)
-		if err := pc.client.Set(ctx, key, true, pc.duration).Err(); err != nil {
+		if err := pc.client.Set(ctx, key, sc.ID, pc.duration).Err(); err != nil {
 			return errors.Wrap(repoerr.ErrCreateEntity, err)
 		}
 	}
@@ -51,20 +51,45 @@ func (pc *patCache) CheckScope(ctx context.Context, userID, patID, optionalDomai
 	return res > 0
 }
 
-func (pc *patCache) Remove(ctx context.Context, userID string, scopesID ...string) error {
-	for _, sc := range scopesID {
-		pattern := fmt.Sprintf("pat:%s:*:%s", userID, sc)
-
+func (pc *patCache) Remove(ctx context.Context, userID string, scopeIDs ...string) error {
+	if len(scopeIDs) == 0 {
+		pattern := fmt.Sprintf("pat:%s:*", userID)
 		iter := pc.client.Scan(ctx, 0, pattern, 0).Iterator()
 		for iter.Next(ctx) {
 			if err := pc.client.Del(ctx, iter.Val()).Err(); err != nil {
 				return errors.Wrap(repoerr.ErrRemoveEntity, err)
 			}
 		}
-
 		if err := iter.Err(); err != nil {
 			return errors.Wrap(repoerr.ErrRemoveEntity, err)
 		}
+		return nil
+	}
+
+	pattern := fmt.Sprintf("pat:%s:*", userID)
+	iter := pc.client.Scan(ctx, 0, pattern, 0).Iterator()
+	for iter.Next(ctx) {
+		key := iter.Val()
+		val, err := pc.client.Get(ctx, key).Result()
+		if err != nil {
+			if err == redis.Nil {
+				continue
+			}
+			return errors.Wrap(repoerr.ErrRemoveEntity, err)
+		}
+
+		for _, scopeID := range scopeIDs {
+			if val == scopeID {
+				if err := pc.client.Del(ctx, key).Err(); err != nil {
+					return errors.Wrap(repoerr.ErrRemoveEntity, err)
+				}
+				break
+			}
+		}
+	}
+
+	if err := iter.Err(); err != nil {
+		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 
 	return nil

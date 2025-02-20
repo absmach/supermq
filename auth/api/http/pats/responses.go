@@ -19,7 +19,7 @@ var (
 	_ supermq.Response = (*resetPatSecretRes)(nil)
 	_ supermq.Response = (*revokePatSecretRes)(nil)
 	_ supermq.Response = (*scopeEntryRes)(nil)
-	_ supermq.Response = (*clearAllScopeEntryRes)(nil)
+	_ supermq.Response = (*clearAllEntryRes)(nil)
 )
 
 type createPatRes struct {
@@ -160,17 +160,17 @@ func (res scopeEntryRes) Empty() bool {
 	return true
 }
 
-type clearAllScopeEntryRes struct{}
+type clearAllEntryRes struct{}
 
-func (res clearAllScopeEntryRes) Code() int {
+func (res clearAllEntryRes) Code() int {
 	return http.StatusOK
 }
 
-func (res clearAllScopeEntryRes) Headers() map[string]string {
+func (res clearAllEntryRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res clearAllScopeEntryRes) Empty() bool {
+func (res clearAllEntryRes) Empty() bool {
 	return true
 }
 

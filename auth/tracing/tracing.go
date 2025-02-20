@@ -155,6 +155,12 @@ func (tm *tracingMiddleware) RevokePATSecret(ctx context.Context, token, patID s
 	return tm.svc.RevokePATSecret(ctx, token, patID)
 }
 
+func (tm *tracingMiddleware) ClearAllPATEntry(ctx context.Context, token string) error {
+	ctx, span := tm.tracer.Start(ctx, "clear_all_pat_entry")
+	defer span.End()
+	return tm.svc.ClearAllPATEntry(ctx, token)
+}
+
 func (tm *tracingMiddleware) AddScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) error {
 	var attributes []attribute.KeyValue
 	for _, s := range scopes {

@@ -179,6 +179,17 @@ func (req revokePatSecretReq) validate() (err error) {
 	return nil
 }
 
+type clearAllPATEntryReq struct {
+	token string
+}
+
+func (req clearAllPATEntryReq) validate() error {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
+	return nil
+}
+
 type addScopeEntryReq struct {
 	token  string
 	id     string

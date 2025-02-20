@@ -359,6 +359,10 @@ type PATS interface {
 	// Retrieve function retrieves the PAT for given ID.
 	RetrievePAT(ctx context.Context, userID string, patID string) (PAT, error)
 
+	// ClearAllPAT function removes all PATs entry.
+	ClearAllPATEntry(ctx context.Context, token string) error
+
+
 	// List function lists all the PATs for the user.
 	ListPATS(ctx context.Context, token string, pm PATSPageMeta) (PATSPage, error)
 
@@ -372,10 +376,10 @@ type PATS interface {
 	RevokePATSecret(ctx context.Context, token, patID string) error
 
 	// AddScope function adds a new scope entry.
-	AddScopeEntry(ctx context.Context, token, patID string, scope []Scope) error
+	AddScopeEntry(ctx context.Context, token, patID string, scopes []Scope) error
 
 	// RemoveScope function removes a scope entry.
-	RemoveScopeEntry(ctx context.Context, token string, patID string, scopeID ...string) error
+	RemoveScopeEntry(ctx context.Context, token string, patID string, scopeIDs ...string) error
 
 	// ClearAllScope function removes all scope entry.
 	ClearAllScopeEntry(ctx context.Context, token, patID string) error
@@ -427,9 +431,12 @@ type PATSRepository interface {
 	// Remove removes Key with provided ID.
 	Remove(ctx context.Context, userID, patID string) error
 
-	AddScopeEntry(ctx context.Context, userID string, scope []Scope) error
+	// RemoveAllPATEntry removes all PAT for a given user.
+	RemoveAllPATEntry(ctx context.Context, userID string) error
 
-	RemoveScopeEntry(ctx context.Context, userID string, scopesID ...string) error
+	AddScopeEntry(ctx context.Context, userID string, scopes []Scope) error
+
+	RemoveScopeEntry(ctx context.Context, userID string, scopesIDs ...string) error
 
 	CheckScopeEntry(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error
 

@@ -147,6 +147,14 @@ func (ms *metricsMiddleware) RevokePATSecret(ctx context.Context, token, patID s
 	return ms.svc.RevokePATSecret(ctx, token, patID)
 }
 
+func (ms *metricsMiddleware) ClearAllPATEntry(ctx context.Context, token string) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "clear_all_pat_entry").Add(1)
+		ms.latency.With("method", "clear_all_pat_entry").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.ClearAllPATEntry(ctx, token)
+}
+
 func (ms *metricsMiddleware) AddScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "add_pat_scope_entry").Add(1)

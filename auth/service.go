@@ -600,6 +600,17 @@ func (svc service) RevokePATSecret(ctx context.Context, token, patID string) err
 	return nil
 }
 
+func (svc service) ClearAllPATEntry(ctx context.Context, token string) error {
+	key, err := svc.Identify(ctx, token)
+	if err != nil {
+		return err
+	}
+	if err := svc.pats.RemoveAllPATEntry(ctx, key.User); err != nil {
+		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+	return nil
+}
+
 func (svc service) AddScopeEntry(ctx context.Context, token, patID string, scopes []Scope) error {
 	key, err := svc.authnAuthzUserPAT(ctx, token, patID)
 	if err != nil {
@@ -622,13 +633,13 @@ func (svc service) AddScopeEntry(ctx context.Context, token, patID string, scope
 	return nil
 }
 
-func (svc service) RemoveScopeEntry(ctx context.Context, token, patID string, scopesID ...string) error {
+func (svc service) RemoveScopeEntry(ctx context.Context, token, patID string, scopesIDs ...string) error {
 	key, err := svc.authnAuthzUserPAT(ctx, token, patID)
 	if err != nil {
 		return err
 	}
 
-	err = svc.pats.RemoveScopeEntry(ctx, key.User, scopesID...)
+	err = svc.pats.RemoveScopeEntry(ctx, key.User, scopesIDs...)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
@@ -644,6 +655,7 @@ func (svc service) ListScopes(ctx context.Context, token string, pm ScopesPageMe
 	if err != nil {
 		return ScopesPage{}, errors.Wrap(errRetrievePAT, err)
 	}
+
 	return patsPage, nil
 }
 

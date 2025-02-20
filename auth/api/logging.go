@@ -277,6 +277,21 @@ func (lm *loggingMiddleware) RevokePATSecret(ctx context.Context, token, patID s
 	return lm.svc.RevokePATSecret(ctx, token, patID)
 }
 
+func (lm *loggingMiddleware) ClearAllPATEntry(ctx context.Context, token string) (err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+		}
+		if err != nil {
+			args = append(args, slog.Any("error", err))
+			lm.logger.Warn("Clear all entry of PAT failed", args...)
+			return
+		}
+		lm.logger.Info("Clear all entry of PAT completed successfully", args...)
+	}(time.Now())
+	return lm.svc.ClearAllPATEntry(ctx, token)
+}
+
 func (lm *loggingMiddleware) AddScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) (err error) {
 	defer func(begin time.Time) {
 		var groupArgs []any

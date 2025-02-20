@@ -19,9 +19,9 @@ type PATSRepository struct {
 	mock.Mock
 }
 
-// AddScopeEntry provides a mock function with given fields: ctx, userID, scope
-func (_m *PATSRepository) AddScopeEntry(ctx context.Context, userID string, scope []auth.Scope) error {
-	ret := _m.Called(ctx, userID, scope)
+// AddScopeEntry provides a mock function with given fields: ctx, userID, scopes
+func (_m *PATSRepository) AddScopeEntry(ctx context.Context, userID string, scopes []auth.Scope) error {
+	ret := _m.Called(ctx, userID, scopes)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddScopeEntry")
@@ -29,7 +29,7 @@ func (_m *PATSRepository) AddScopeEntry(ctx context.Context, userID string, scop
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, []auth.Scope) error); ok {
-		r0 = rf(ctx, userID, scope)
+		r0 = rf(ctx, userID, scopes)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -91,6 +91,24 @@ func (_m *PATSRepository) Remove(ctx context.Context, userID string, patID strin
 	return r0
 }
 
+// RemoveAllPATEntry provides a mock function with given fields: ctx, userID
+func (_m *PATSRepository) RemoveAllPATEntry(ctx context.Context, userID string) error {
+	ret := _m.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveAllPATEntry")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, userID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // RemoveAllScopeEntry provides a mock function with given fields: ctx, patID
 func (_m *PATSRepository) RemoveAllScopeEntry(ctx context.Context, patID string) error {
 	ret := _m.Called(ctx, patID)
@@ -109,11 +127,11 @@ func (_m *PATSRepository) RemoveAllScopeEntry(ctx context.Context, patID string)
 	return r0
 }
 
-// RemoveScopeEntry provides a mock function with given fields: ctx, userID, scopesID
-func (_m *PATSRepository) RemoveScopeEntry(ctx context.Context, userID string, scopesID ...string) error {
-	_va := make([]interface{}, len(scopesID))
-	for _i := range scopesID {
-		_va[_i] = scopesID[_i]
+// RemoveScopeEntry provides a mock function with given fields: ctx, userID, scopesIDs
+func (_m *PATSRepository) RemoveScopeEntry(ctx context.Context, userID string, scopesIDs ...string) error {
+	_va := make([]interface{}, len(scopesIDs))
+	for _i := range scopesIDs {
+		_va[_i] = scopesIDs[_i]
 	}
 	var _ca []interface{}
 	_ca = append(_ca, ctx, userID)
@@ -126,7 +144,7 @@ func (_m *PATSRepository) RemoveScopeEntry(ctx context.Context, userID string, s
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, ...string) error); ok {
-		r0 = rf(ctx, userID, scopesID...)
+		r0 = rf(ctx, userID, scopesIDs...)
 	} else {
 		r0 = ret.Error(0)
 	}

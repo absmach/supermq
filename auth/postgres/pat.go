@@ -82,6 +82,7 @@ func toAuthScope(dsc []dbScope) ([]auth.Scope, error) {
 			return []auth.Scope{}, err
 		}
 		scope = append(scope, auth.Scope{
+			ID:               s.ID,
 			PatID:            s.PatID,
 			OptionalDomainID: s.OptionalDomainID,
 			EntityType:       entityType,

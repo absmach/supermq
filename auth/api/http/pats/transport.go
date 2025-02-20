@@ -44,6 +44,13 @@ func MakeHandler(svc auth.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
 			opts...,
 		).ServeHTTP)
 
+		r.Delete("/", kithttp.NewServer(
+			clearAllPATEntryEndpoint(svc),
+			decodeClearAllPATEntryRequest,
+			api.EncodeResponse,
+			opts...,
+		).ServeHTTP)
+
 		r.Route("/{id}", func(r chi.Router) {
 			r.Get("/", kithttp.NewServer(
 				retrievePATEndpoint(svc),
@@ -247,6 +254,17 @@ func decodeRevokePATSecretRequest(_ context.Context, r *http.Request) (interface
 	return revokePatSecretReq{
 		token: token,
 		id:    chi.URLParam(r, "id"),
+	}, nil
+}
+
+func decodeClearAllPATEntryRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	token := apiutil.ExtractBearerToken(r)
+	if strings.HasPrefix(token, patPrefix) {
+		return nil, apiutil.ErrUnsupportedTokenType
+	}
+
+	return clearAllPATEntryReq{
+		token: token,
 	}, nil
 }
 
