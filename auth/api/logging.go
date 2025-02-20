@@ -302,14 +302,11 @@ func (lm *loggingMiddleware) AddScopeEntry(ctx context.Context, token, patID str
 	return lm.svc.AddScopeEntry(ctx, token, patID, scopes)
 }
 
-func (lm *loggingMiddleware) RemoveScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) (err error) {
+func (lm *loggingMiddleware) RemoveScopeEntry(ctx context.Context, token, patID string, scopesID ...string) (err error) {
 	defer func(begin time.Time) {
 		var groupArgs []any
-		for _, s := range scopes {
-			groupArgs = append(groupArgs, slog.String("entity_type", s.EntityType.String()))
-			groupArgs = append(groupArgs, slog.String("optional_domain_id", s.OptionalDomainID))
-			groupArgs = append(groupArgs, slog.String("operation", s.Operation.String()))
-			groupArgs = append(groupArgs, slog.String("entity_id", s.EntityID))
+		for _, s := range scopesID {
+			groupArgs = append(groupArgs, slog.String("scope_id", s))
 		}
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -323,7 +320,7 @@ func (lm *loggingMiddleware) RemoveScopeEntry(ctx context.Context, token, patID 
 		}
 		lm.logger.Info("Remove entry from PAT scope completed successfully", args...)
 	}(time.Now())
-	return lm.svc.RemoveScopeEntry(ctx, token, patID, scopes)
+	return lm.svc.RemoveScopeEntry(ctx, token, patID, scopesID...)
 }
 
 func (lm *loggingMiddleware) ClearAllScopeEntry(ctx context.Context, token, patID string) (err error) {

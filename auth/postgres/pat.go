@@ -25,6 +25,7 @@ type dbPat struct {
 }
 
 type dbScope struct {
+	ID               string `db:"id,omitempty"`
 	PatID            string `db:"pat_id,omitempty"`
 	OptionalDomainID string `db:"optional_domain_id,omitempty"`
 	EntityType       string `db:"entity_type,omitempty"`
@@ -37,6 +38,7 @@ type dbPagemeta struct {
 	Offset      uint64    `db:"offset"`
 	User        string    `db:"user_id"`
 	PatID       string    `db:"pat_id"`
+	ScopesID    []string  `db:"scopes_id"`
 	ID          string    `db:"id"`
 	Name        string    `db:"name"`
 	UpdatedAt   time.Time `db:"updated_at"`
@@ -111,6 +113,7 @@ func toDBScope(sc []auth.Scope) []dbScope {
 	var scopes []dbScope
 	for _, s := range sc {
 		scopes = append(scopes, dbScope{
+			ID:               s.ID,
 			PatID:            s.PatID,
 			OptionalDomainID: s.OptionalDomainID,
 			EntityType:       s.EntityType.String(),

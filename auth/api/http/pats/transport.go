@@ -260,7 +260,7 @@ func decodeAddScopeEntryRequest(_ context.Context, r *http.Request) (interface{}
 		return nil, apiutil.ErrUnsupportedTokenType
 	}
 
-	req := scopeEntryReq{
+	req := addScopeEntryReq{
 		token: token,
 		id:    chi.URLParam(r, "id"),
 	}
@@ -304,7 +304,7 @@ func decodeRemoveScopeEntryRequest(_ context.Context, r *http.Request) (interfac
 		return nil, apiutil.ErrUnsupportedTokenType
 	}
 
-	req := scopeEntryReq{
+	req := removeScopeEntryReq{
 		token: token,
 		id:    chi.URLParam(r, "id"),
 	}

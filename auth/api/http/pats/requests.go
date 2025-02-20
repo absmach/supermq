@@ -10,6 +10,7 @@ import (
 
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/auth"
+	"github.com/absmach/supermq/pkg/errors"
 )
 
 type createPatReq struct {
@@ -60,7 +61,7 @@ func (req retrievePatReq) validate() (err error) {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
+		return apiutil.ErrMissingPATID
 	}
 	return nil
 }
@@ -76,7 +77,7 @@ func (req updatePatNameReq) validate() (err error) {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
+		return apiutil.ErrMissingPATID
 	}
 	if strings.TrimSpace(req.Name) == "" {
 		return apiutil.ErrMissingName
@@ -95,7 +96,7 @@ func (req updatePatDescriptionReq) validate() (err error) {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
+		return apiutil.ErrMissingPATID
 	}
 	if strings.TrimSpace(req.Description) == "" {
 		return apiutil.ErrMissingDescription
@@ -126,7 +127,7 @@ func (req deletePatReq) validate() (err error) {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
+		return apiutil.ErrMissingPATID
 	}
 	return nil
 }
@@ -158,7 +159,7 @@ func (req resetPatSecretReq) validate() (err error) {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
+		return apiutil.ErrMissingPATID
 	}
 	return nil
 }
@@ -173,19 +174,19 @@ func (req revokePatSecretReq) validate() (err error) {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
+		return apiutil.ErrMissingPATID
 	}
 	return nil
 }
 
-type scopeEntryReq struct {
+type addScopeEntryReq struct {
 	token  string
 	id     string
 	Scopes []auth.Scope `json:"scopes,omitempty"`
 }
 
-func (aser *scopeEntryReq) UnmarshalJSON(data []byte) error {
-	type Alias scopeEntryReq
+func (aser *addScopeEntryReq) UnmarshalJSON(data []byte) error {
+	type Alias addScopeEntryReq
 	aux := &struct {
 		*Alias
 	}{
@@ -199,7 +200,7 @@ func (aser *scopeEntryReq) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (req scopeEntryReq) validate() (err error) {
+func (req addScopeEntryReq) validate() (err error) {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
@@ -211,6 +212,31 @@ func (req scopeEntryReq) validate() (err error) {
 		return apiutil.ErrValidation
 	}
 
+	for _, scope := range req.Scopes {
+		if err := scope.Validate(); err != nil {
+			return errors.Wrap(apiutil.ErrValidation, err)
+		}
+	}
+
+	return nil
+}
+
+type removeScopeEntryReq struct {
+	token    string
+	id       string
+	ScopesID []string `json:"scopes_id,omitempty"`
+}
+
+func (req removeScopeEntryReq) validate() (err error) {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
+	if req.id == "" {
+		return apiutil.ErrMissingPATID
+	}
+	if len(req.ScopesID) == 0 {
+		return apiutil.ErrValidation
+	}
 	return nil
 }
 
@@ -224,7 +250,7 @@ func (req clearAllScopeEntryReq) validate() (err error) {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
+		return apiutil.ErrMissingPATID
 	}
 	return nil
 }

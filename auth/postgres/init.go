@@ -91,7 +91,7 @@ func Migration() *migrate.MemoryMigrationSource {
 				Id: "auth_5",
 				Up: []string{
 					`CREATE TABLE IF NOT EXISTS pat_scopes (
-						id              	SERIAL PRIMARY KEY,
+						id              	VARCHAR(36) PRIMARY KEY,
 						pat_id          	VARCHAR(36) REFERENCES pats(id) ON DELETE CASCADE,
 						optional_domain_id	VARCHAR(36),
 						entity_type     	VARCHAR(50) NOT NULL,
@@ -99,51 +99,9 @@ func Migration() *migrate.MemoryMigrationSource {
 						entity_id			VARCHAR(50) NOT NULL,
 						UNIQUE (pat_id, optional_domain_id, entity_type, operation, entity_id)
 					);`,
-
-					`CREATE OR REPLACE FUNCTION check_wildcard_exclusivity()
-					RETURNS TRIGGER AS $$
-					BEGIN
-						IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') THEN
-							IF NEW.entity_id = '*' THEN
-								DELETE FROM pat_scopes
-								WHERE pat_id = NEW.pat_id
-								AND COALESCE(optional_domain_id, '') = COALESCE(NEW.optional_domain_id, '')
-								AND entity_type = NEW.entity_type
-								AND operation = NEW.operation
-								AND entity_id != '*'
-								AND id != COALESCE(NEW.id, -1);
-								RETURN NEW;
-
-
-							ELSIF EXISTS (
-								SELECT 1
-								FROM pat_scopes
-								WHERE pat_id = NEW.pat_id
-								AND COALESCE(optional_domain_id, '') = COALESCE(NEW.optional_domain_id, '')
-								AND entity_type = NEW.entity_type
-								AND operation = NEW.operation
-								AND entity_id = '*'
-            					AND id != COALESCE(NEW.id, -1)
-							) THEN
-								RETURN NULL;
-							END IF;
-						END IF;
-						RETURN NEW;
-					END;
-					$$ LANGUAGE plpgsql;`,
-
-					`CREATE TRIGGER enforce_wildcard_exclusivity
-					BEFORE INSERT OR UPDATE ON pat_scopes
-					FOR EACH ROW
-					EXECUTE FUNCTION check_wildcard_exclusivity();`,
-
-					`CREATE INDEX idx_pat_scopes_wildcard 
-					ON pat_scopes(pat_id, optional_domain_id, entity_type, operation, entity_id);`,
 				},
 				Down: []string{
-					`DROP TRIGGER IF EXISTS enforce_wildcard_exclusivity ON pat_scopes;
-					DROP FUNCTION IF EXISTS check_wildcard_exclusivity();
-					DROP TABLE IF EXISTS pat_scopes;`,
+					`DROP TABLE IF EXISTS pat_scopes;`,
 				},
 			},
 		},

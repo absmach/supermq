@@ -17,17 +17,17 @@ type Cache struct {
 	mock.Mock
 }
 
-// CheckScope provides a mock function with given fields: ctx, patID, optionalDomainID, entityType, operation, entityID
-func (_m *Cache) CheckScope(ctx context.Context, patID string, optionalDomainID string, entityType auth.EntityType, operation auth.Operation, entityID string) bool {
-	ret := _m.Called(ctx, patID, optionalDomainID, entityType, operation, entityID)
+// CheckScope provides a mock function with given fields: ctx, userID, patID, optionalDomainID, entityType, operation, entityID
+func (_m *Cache) CheckScope(ctx context.Context, userID string, patID string, optionalDomainID string, entityType auth.EntityType, operation auth.Operation, entityID string) bool {
+	ret := _m.Called(ctx, userID, patID, optionalDomainID, entityType, operation, entityID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CheckScope")
 	}
 
 	var r0 bool
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, auth.EntityType, auth.Operation, string) bool); ok {
-		r0 = rf(ctx, patID, optionalDomainID, entityType, operation, entityID)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, auth.EntityType, auth.Operation, string) bool); ok {
+		r0 = rf(ctx, userID, patID, optionalDomainID, entityType, operation, entityID)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
@@ -35,17 +35,24 @@ func (_m *Cache) CheckScope(ctx context.Context, patID string, optionalDomainID 
 	return r0
 }
 
-// Remove provides a mock function with given fields: ctx, scopes
-func (_m *Cache) Remove(ctx context.Context, scopes []auth.Scope) error {
-	ret := _m.Called(ctx, scopes)
+// Remove provides a mock function with given fields: ctx, userID, scopesID
+func (_m *Cache) Remove(ctx context.Context, userID string, scopesID ...string) error {
+	_va := make([]interface{}, len(scopesID))
+	for _i := range scopesID {
+		_va[_i] = scopesID[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, userID)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Remove")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []auth.Scope) error); ok {
-		r0 = rf(ctx, scopes)
+	if rf, ok := ret.Get(0).(func(context.Context, string, ...string) error); ok {
+		r0 = rf(ctx, userID, scopesID...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -53,17 +60,17 @@ func (_m *Cache) Remove(ctx context.Context, scopes []auth.Scope) error {
 	return r0
 }
 
-// RemoveAllScope provides a mock function with given fields: ctx, patID
-func (_m *Cache) RemoveAllScope(ctx context.Context, patID string) error {
-	ret := _m.Called(ctx, patID)
+// RemoveAllScope provides a mock function with given fields: ctx, userID, patID
+func (_m *Cache) RemoveAllScope(ctx context.Context, userID string, patID string) error {
+	ret := _m.Called(ctx, userID, patID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RemoveAllScope")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(ctx, patID)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, userID, patID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -71,17 +78,17 @@ func (_m *Cache) RemoveAllScope(ctx context.Context, patID string) error {
 	return r0
 }
 
-// Save provides a mock function with given fields: ctx, scopes
-func (_m *Cache) Save(ctx context.Context, scopes []auth.Scope) error {
-	ret := _m.Called(ctx, scopes)
+// Save provides a mock function with given fields: ctx, userID, scopes
+func (_m *Cache) Save(ctx context.Context, userID string, scopes []auth.Scope) error {
+	ret := _m.Called(ctx, userID, scopes)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Save")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []auth.Scope) error); ok {
-		r0 = rf(ctx, scopes)
+	if rf, ok := ret.Get(0).(func(context.Context, string, []auth.Scope) error); ok {
+		r0 = rf(ctx, userID, scopes)
 	} else {
 		r0 = ret.Error(0)
 	}

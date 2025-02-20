@@ -235,6 +235,7 @@ func (et *EntityType) UnmarshalText(data []byte) (err error) {
 // ]
 
 type Scope struct {
+	ID               string     `json:"id,omitempty"`
 	PatID            string     `json:"pat_id,omitempty"`
 	OptionalDomainID string     `json:"optional_domain_id,omitempty"`
 	EntityType       EntityType `json:"entity_type,omitempty"`
@@ -316,6 +317,7 @@ type ScopesPageMeta struct {
 	Offset uint64 `json:"offset"`
 	Limit  uint64 `json:"limit"`
 	PatID  string `json:"pat_id"`
+	ID     string `json:"id"`
 }
 
 type ScopesPage struct {
@@ -373,7 +375,7 @@ type PATS interface {
 	AddScopeEntry(ctx context.Context, token, patID string, scope []Scope) error
 
 	// RemoveScope function removes a scope entry.
-	RemoveScopeEntry(ctx context.Context, token, patID string, scope []Scope) error
+	RemoveScopeEntry(ctx context.Context, token string, patID string, scopeID ...string) error
 
 	// ClearAllScope function removes all scope entry.
 	ClearAllScopeEntry(ctx context.Context, token, patID string) error
@@ -427,7 +429,7 @@ type PATSRepository interface {
 
 	AddScopeEntry(ctx context.Context, userID string, scope []Scope) error
 
-	RemoveScopeEntry(ctx context.Context, userID string, scope []Scope) error
+	RemoveScopeEntry(ctx context.Context, userID string, scopesID ...string) error
 
 	CheckScopeEntry(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error
 

@@ -171,20 +171,17 @@ func (tm *tracingMiddleware) AddScopeEntry(ctx context.Context, token, patID str
 	return tm.svc.AddScopeEntry(ctx, token, patID, scopes)
 }
 
-func (tm *tracingMiddleware) RemoveScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) error {
+func (tm *tracingMiddleware) RemoveScopeEntry(ctx context.Context, token, patID string, scopesID ...string) error {
 	var attributes []attribute.KeyValue
-	for _, s := range scopes {
-		attributes = append(attributes, attribute.String("entity_type", s.EntityType.String()))
-		attributes = append(attributes, attribute.String("optional_domain_id", s.OptionalDomainID))
-		attributes = append(attributes, attribute.String("operation", s.Operation.String()))
-		attributes = append(attributes, attribute.String("entity_id", s.EntityID))
+	for _, s := range scopesID {
+		attributes = append(attributes, attribute.String("scope_id", s))
 	}
 
 	attributes = append(attributes, attribute.String("pat_id", patID))
 
 	ctx, span := tm.tracer.Start(ctx, "remove_pat_scope_entry", trace.WithAttributes(attributes...))
 	defer span.End()
-	return tm.svc.RemoveScopeEntry(ctx, token, patID, scopes)
+	return tm.svc.RemoveScopeEntry(ctx, token, patID, scopesID...)
 }
 
 func (tm *tracingMiddleware) ClearAllScopeEntry(ctx context.Context, token, patID string) error {

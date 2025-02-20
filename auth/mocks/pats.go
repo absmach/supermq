@@ -203,17 +203,24 @@ func (_m *PATS) ListScopes(ctx context.Context, token string, pm auth.ScopesPage
 	return r0, r1
 }
 
-// RemoveScopeEntry provides a mock function with given fields: ctx, token, patID, scope
-func (_m *PATS) RemoveScopeEntry(ctx context.Context, token string, patID string, scope []auth.Scope) error {
-	ret := _m.Called(ctx, token, patID, scope)
+// RemoveScopeEntry provides a mock function with given fields: ctx, token, patID, scopeID
+func (_m *PATS) RemoveScopeEntry(ctx context.Context, token string, patID string, scopeID ...string) error {
+	_va := make([]interface{}, len(scopeID))
+	for _i := range scopeID {
+		_va[_i] = scopeID[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, token, patID)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RemoveScopeEntry")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []auth.Scope) error); ok {
-		r0 = rf(ctx, token, patID, scope)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, ...string) error); ok {
+		r0 = rf(ctx, token, patID, scopeID...)
 	} else {
 		r0 = ret.Error(0)
 	}

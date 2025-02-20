@@ -96,13 +96,13 @@ type Service interface {
 
 //go:generate mockery --name Cache --output=./mocks --filename cache.go --quiet --note "Copyright (c) Abstract Machines"
 type Cache interface {
-	Save(ctx context.Context, scopes []Scope) error
+	Save(ctx context.Context, userID string, scopes []Scope) error
 
-	CheckScope(ctx context.Context, patID, optionalDomainID string, entityType EntityType, operation Operation, entityID string) bool
+	CheckScope(ctx context.Context, userID, patID, optionalDomainID string, entityType EntityType, operation Operation, entityID string) bool
 
-	Remove(ctx context.Context, scopes []Scope) error
+	Remove(ctx context.Context, userID string, scopesID ...string) error
 
-	RemoveAllScope(ctx context.Context, patID string) error
+	RemoveAllScope(ctx context.Context, userID, patID string) error
 }
 
 var _ Service = (*service)(nil)
@@ -606,28 +606,29 @@ func (svc service) AddScopeEntry(ctx context.Context, token, patID string, scope
 		return err
 	}
 
-	res, err := updateScopes(patID, scopes)
-	if err != nil {
-		return err
+	for i := range len(scopes) {
+		scopes[i].ID, err = svc.idProvider.ID()
+		if err != nil {
+			return errors.Wrap(svcerr.ErrCreateEntity, err)
+		}
+
+		scopes[i].PatID = patID
 	}
 
-	err = svc.pats.AddScopeEntry(ctx, key.User, res)
+	err = svc.pats.AddScopeEntry(ctx, key.User, scopes)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	return nil
 }
 
-func (svc service) RemoveScopeEntry(ctx context.Context, token, patID string, scopes []Scope) error {
+func (svc service) RemoveScopeEntry(ctx context.Context, token, patID string, scopesID ...string) error {
 	key, err := svc.authnAuthzUserPAT(ctx, token, patID)
 	if err != nil {
 		return err
 	}
-	res, err := updateScopes(patID, scopes)
-	if err != nil {
-		return err
-	}
-	err = svc.pats.RemoveScopeEntry(ctx, key.User, res)
+
+	err = svc.pats.RemoveScopeEntry(ctx, key.User, scopesID...)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
@@ -644,19 +645,6 @@ func (svc service) ListScopes(ctx context.Context, token string, pm ScopesPageMe
 		return ScopesPage{}, errors.Wrap(errRetrievePAT, err)
 	}
 	return patsPage, nil
-}
-
-func updateScopes(patID string, scopes []Scope) ([]Scope, error) {
-	for i := range scopes {
-		scopes[i].PatID = patID
-	}
-
-	for _, scope := range scopes {
-		if err := scope.Validate(); err != nil {
-			return []Scope{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
-		}
-	}
-	return scopes, nil
 }
 
 func (svc service) ClearAllScopeEntry(ctx context.Context, token, patID string) error {
