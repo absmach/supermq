@@ -5,6 +5,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 	"time"
@@ -88,6 +89,15 @@ func (pr *patRepo) RetrieveAll(ctx context.Context, userID string, pm auth.PATSP
 		if err := rows.StructScan(&pat); err != nil {
 			return auth.PATSPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
+
+		var updatedAt, revokedAt time.Time
+		if pat.UpdatedAt.Valid {
+			updatedAt = pat.UpdatedAt.Time
+		}
+		if pat.RevokedAt.Valid {
+			revokedAt = pat.RevokedAt.Time
+		}
+
 		items = append(items, auth.PAT{
 			ID:          pat.ID,
 			User:        pat.User,
@@ -95,9 +105,9 @@ func (pr *patRepo) RetrieveAll(ctx context.Context, userID string, pm auth.PATSP
 			Description: pat.Description,
 			IssuedAt:    pat.IssuedAt,
 			ExpiresAt:   pat.ExpiresAt,
-			UpdatedAt:   pat.UpdatedAt,
+			UpdatedAt:   updatedAt,
 			Revoked:     pat.Revoked,
-			RevokedAt:   pat.RevokedAt,
+			RevokedAt:   revokedAt,
 		})
 	}
 
@@ -153,10 +163,13 @@ func (pr *patRepo) UpdateName(ctx context.Context, userID, patID, name string) (
 		RETURNING id, user_id, name, description, secret, issued_at, updated_at, expires_at, revoked, revoked_at, last_used_at`
 
 	upm := dbPagemeta{
-		User:      userID,
-		ID:        patID,
-		Name:      name,
-		UpdatedAt: time.Now(),
+		User: userID,
+		ID:   patID,
+		Name: name,
+		UpdatedAt: sql.NullTime{
+			Time:  time.Now(),
+			Valid: true,
+		},
 	}
 
 	rows, err := pr.db.NamedQueryContext(ctx, q, upm)
@@ -189,9 +202,12 @@ func (pr *patRepo) UpdateDescription(ctx context.Context, userID, patID, descrip
 		RETURNING id, user_id, name, description, secret, issued_at, updated_at, expires_at, revoked, revoked_at, last_used_at`
 
 	upm := dbPagemeta{
-		User:        userID,
-		ID:          patID,
-		UpdatedAt:   time.Now(),
+		User: userID,
+		ID:   patID,
+		UpdatedAt: sql.NullTime{
+			Time:  time.Now(),
+			Valid: true,
+		},
 		Description: description,
 	}
 
@@ -225,9 +241,12 @@ func (pr *patRepo) UpdateTokenHash(ctx context.Context, userID, patID, tokenHash
 		RETURNING id, user_id, name, description, secret, issued_at, updated_at, expires_at, revoked, revoked_at, last_used_at`
 
 	upm := dbPagemeta{
-		User:      userID,
-		ID:        patID,
-		UpdatedAt: time.Now(),
+		User: userID,
+		ID:   patID,
+		UpdatedAt: sql.NullTime{
+			Time:  time.Now(),
+			Valid: true,
+		},
 		ExpiresAt: expiryAt,
 		Secret:    tokenHash,
 	}
