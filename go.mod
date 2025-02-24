@@ -35,7 +35,7 @@ require (
 	github.com/plgd-dev/go-coap/v3 v3.3.6
 	github.com/prometheus/client_golang v1.21.0
 	github.com/rabbitmq/amqp091-go v1.10.0
-	github.com/redis/go-redis/v9 v9.7.0
+	github.com/redis/go-redis/v9 v9.7.1
 	github.com/rubenv/sql-migrate v1.7.1
 	github.com/spf13/cobra v1.9.1
 	github.com/sqids/sqids-go v0.4.1
