@@ -164,6 +164,10 @@ func (pr *patRepo) UpdateName(ctx context.Context, userID, patID, name string) (
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
+	if !rows.Next() {
+		return auth.PAT{}, repoerr.ErrNotFound
+	}
+
 	var pat dbPat
 	if err := rows.StructScan(&pat); err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
@@ -194,6 +198,10 @@ func (pr *patRepo) UpdateDescription(ctx context.Context, userID, patID, descrip
 	rows, err := pr.db.NamedQueryContext(ctx, q, upm)
 	if err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+	}
+
+	if !rows.Next() {
+		return auth.PAT{}, repoerr.ErrNotFound
 	}
 
 	var pat dbPat
@@ -227,6 +235,10 @@ func (pr *patRepo) UpdateTokenHash(ctx context.Context, userID, patID, tokenHash
 	rows, err := pr.db.NamedQueryContext(ctx, q, upm)
 	if err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+	}
+
+	if !rows.Next() {
+		return auth.PAT{}, repoerr.ErrNotFound
 	}
 
 	var pat dbPat
