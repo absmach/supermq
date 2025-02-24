@@ -70,7 +70,7 @@ func Migration() *migrate.MemoryMigrationSource {
 				Up: []string{
 					`CREATE TABLE IF NOT EXISTS pats (
 						id 					VARCHAR(36) PRIMARY KEY,
-                        name        		VARCHAR(254) NOT NULL UNIQUE,
+                        name        		VARCHAR(254) NOT NULL,
 						user_id	 			VARCHAR(36),
 						description			TEXT,
 						secret				TEXT,
