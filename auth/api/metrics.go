@@ -149,32 +149,32 @@ func (ms *metricsMiddleware) RevokePATSecret(ctx context.Context, token, patID s
 
 func (ms *metricsMiddleware) RemoveAllPAT(ctx context.Context, token string) error {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "clear_all_pat_entry").Add(1)
-		ms.latency.With("method", "clear_all_pat_entry").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "clear_all_pat").Add(1)
+		ms.latency.With("method", "clear_all_pat").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return ms.svc.RemoveAllPAT(ctx, token)
 }
 
-func (ms *metricsMiddleware) AddScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) error {
+func (ms *metricsMiddleware) AddScope(ctx context.Context, token, patID string, scopes []auth.Scope) error {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "add_pat_scope_entry").Add(1)
-		ms.latency.With("method", "add_pat_scope_entry").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "add_pat_scope").Add(1)
+		ms.latency.With("method", "add_pat_scope").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.AddScopeEntry(ctx, token, patID, scopes)
+	return ms.svc.AddScope(ctx, token, patID, scopes)
 }
 
-func (ms *metricsMiddleware) RemoveScopeEntry(ctx context.Context, token, patID string, scopesID ...string) error {
+func (ms *metricsMiddleware) RemoveScope(ctx context.Context, token, patID string, scopesID ...string) error {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "remove_pat_scope_entry").Add(1)
-		ms.latency.With("method", "remove_pat_scope_entry").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "remove_pat_scope").Add(1)
+		ms.latency.With("method", "remove_pat_scope").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.RemoveScopeEntry(ctx, token, patID, scopesID...)
+	return ms.svc.RemoveScope(ctx, token, patID, scopesID...)
 }
 
 func (ms *metricsMiddleware) RemovePATAllScope(ctx context.Context, token, patID string) error {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "clear_pat_all_scope_entry").Add(1)
-		ms.latency.With("method", "clear_pat_all_scope_entry").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "clear_pat_all_scope").Add(1)
+		ms.latency.With("method", "clear_pat_all_scope").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return ms.svc.RemovePATAllScope(ctx, token, patID)
 }

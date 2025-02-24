@@ -600,7 +600,7 @@ func (svc service) RemoveAllPAT(ctx context.Context, token string) error {
 	return nil
 }
 
-func (svc service) AddScopeEntry(ctx context.Context, token, patID string, scopes []Scope) error {
+func (svc service) AddScope(ctx context.Context, token, patID string, scopes []Scope) error {
 	key, err := svc.authnAuthzUserPAT(ctx, token, patID)
 	if err != nil {
 		return err
@@ -615,20 +615,20 @@ func (svc service) AddScopeEntry(ctx context.Context, token, patID string, scope
 		scopes[i].PatID = patID
 	}
 
-	err = svc.pats.AddScopeEntry(ctx, key.User, scopes)
+	err = svc.pats.AddScope(ctx, key.User, scopes)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	return nil
 }
 
-func (svc service) RemoveScopeEntry(ctx context.Context, token, patID string, scopesIDs ...string) error {
+func (svc service) RemoveScope(ctx context.Context, token, patID string, scopesIDs ...string) error {
 	key, err := svc.authnAuthzUserPAT(ctx, token, patID)
 	if err != nil {
 		return err
 	}
 
-	err = svc.pats.RemoveScopeEntry(ctx, key.User, scopesIDs...)
+	err = svc.pats.RemoveScope(ctx, key.User, scopesIDs...)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
@@ -685,7 +685,7 @@ func (svc service) IdentifyPAT(ctx context.Context, secret string) (PAT, error) 
 }
 
 func (svc service) AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error {
-	if err := svc.pats.CheckScopeEntry(ctx, userID, patID, entityType, optionalDomainID, operation, entityID); err != nil {
+	if err := svc.pats.CheckScope(ctx, userID, patID, entityType, optionalDomainID, operation, entityID); err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)
 	}
 

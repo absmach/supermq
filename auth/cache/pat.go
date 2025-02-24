@@ -84,6 +84,20 @@ func (pc *patCache) Remove(ctx context.Context, userID string, scopeIDs []string
 	return nil
 }
 
+func (pc *patCache) RemoveUserAllScope(ctx context.Context, userID string) error {
+	pattern := fmt.Sprintf("pat:%s:*", userID)
+	iter := pc.client.Scan(ctx, 0, pattern, 0).Iterator()
+	for iter.Next(ctx) {
+		if err := pc.client.Del(ctx, iter.Val()).Err(); err != nil {
+			return errors.Wrap(repoerr.ErrRemoveEntity, err)
+		}
+	}
+	if err := iter.Err(); err != nil {
+		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+	}
+	return nil
+}
+
 func (pc *patCache) RemoveAllScope(ctx context.Context, userID, patID string) error {
 	pattern := fmt.Sprintf("pat:%s:%s", userID, patID)
 

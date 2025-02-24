@@ -71,6 +71,24 @@ func (_m *Cache) RemoveAllScope(ctx context.Context, userID string, patID string
 	return r0
 }
 
+// RemoveUserAllScope provides a mock function with given fields: ctx, userID
+func (_m *Cache) RemoveUserAllScope(ctx context.Context, userID string) error {
+	ret := _m.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveUserAllScope")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, userID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // Save provides a mock function with given fields: ctx, userID, scopes
 func (_m *Cache) Save(ctx context.Context, userID string, scopes []auth.Scope) error {
 	ret := _m.Called(ctx, userID, scopes)

@@ -284,15 +284,15 @@ func (lm *loggingMiddleware) RemoveAllPAT(ctx context.Context, token string) (er
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Clear all entry of PAT failed", args...)
+			lm.logger.Warn("Remove all PAT failed", args...)
 			return
 		}
-		lm.logger.Info("Clear all entry of PAT completed successfully", args...)
+		lm.logger.Info("Remove all of PAT completed successfully", args...)
 	}(time.Now())
 	return lm.svc.RemoveAllPAT(ctx, token)
 }
 
-func (lm *loggingMiddleware) AddScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) (err error) {
+func (lm *loggingMiddleware) AddScope(ctx context.Context, token, patID string, scopes []auth.Scope) (err error) {
 	defer func(begin time.Time) {
 		var groupArgs []any
 		for _, s := range scopes {
@@ -309,15 +309,15 @@ func (lm *loggingMiddleware) AddScopeEntry(ctx context.Context, token, patID str
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Add entry to PAT scope failed", args...)
+			lm.logger.Warn("Add PAT scope failed", args...)
 			return
 		}
-		lm.logger.Info("Add entry to PAT scope completed successfully", args...)
+		lm.logger.Info("Add PAT scope completed successfully", args...)
 	}(time.Now())
-	return lm.svc.AddScopeEntry(ctx, token, patID, scopes)
+	return lm.svc.AddScope(ctx, token, patID, scopes)
 }
 
-func (lm *loggingMiddleware) RemoveScopeEntry(ctx context.Context, token, patID string, scopesID ...string) (err error) {
+func (lm *loggingMiddleware) RemoveScope(ctx context.Context, token, patID string, scopesID ...string) (err error) {
 	defer func(begin time.Time) {
 		var groupArgs []any
 		for _, s := range scopesID {
@@ -335,7 +335,7 @@ func (lm *loggingMiddleware) RemoveScopeEntry(ctx context.Context, token, patID 
 		}
 		lm.logger.Info("Remove entry from PAT scope completed successfully", args...)
 	}(time.Now())
-	return lm.svc.RemoveScopeEntry(ctx, token, patID, scopesID...)
+	return lm.svc.RemoveScope(ctx, token, patID, scopesID...)
 }
 
 func (lm *loggingMiddleware) RemovePATAllScope(ctx context.Context, token, patID string) (err error) {
@@ -346,10 +346,10 @@ func (lm *loggingMiddleware) RemovePATAllScope(ctx context.Context, token, patID
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Clear all entry from PAT scope failed", args...)
+			lm.logger.Warn("Remove all scopes from PAT failed", args...)
 			return
 		}
-		lm.logger.Info("Clear all entry from PAT scope completed successfully", args...)
+		lm.logger.Info("Remove all scopes from PAT completed successfully", args...)
 	}(time.Now())
 	return lm.svc.RemovePATAllScope(ctx, token, patID)
 }

@@ -19,12 +19,12 @@ type PATS struct {
 	mock.Mock
 }
 
-// AddScopeEntry provides a mock function with given fields: ctx, token, patID, scopes
-func (_m *PATS) AddScopeEntry(ctx context.Context, token string, patID string, scopes []auth.Scope) error {
+// AddScope provides a mock function with given fields: ctx, token, patID, scopes
+func (_m *PATS) AddScope(ctx context.Context, token string, patID string, scopes []auth.Scope) error {
 	ret := _m.Called(ctx, token, patID, scopes)
 
 	if len(ret) == 0 {
-		panic("no return value specified for AddScopeEntry")
+		panic("no return value specified for AddScope")
 	}
 
 	var r0 error
@@ -221,8 +221,8 @@ func (_m *PATS) RemovePATAllScope(ctx context.Context, token string, patID strin
 	return r0
 }
 
-// RemoveScopeEntry provides a mock function with given fields: ctx, token, patID, scopeIDs
-func (_m *PATS) RemoveScopeEntry(ctx context.Context, token string, patID string, scopeIDs ...string) error {
+// RemoveScope provides a mock function with given fields: ctx, token, patID, scopeIDs
+func (_m *PATS) RemoveScope(ctx context.Context, token string, patID string, scopeIDs ...string) error {
 	_va := make([]interface{}, len(scopeIDs))
 	for _i := range scopeIDs {
 		_va[_i] = scopeIDs[_i]
@@ -233,7 +233,7 @@ func (_m *PATS) RemoveScopeEntry(ctx context.Context, token string, patID string
 	ret := _m.Called(_ca...)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RemoveScopeEntry")
+		panic("no return value specified for RemoveScope")
 	}
 
 	var r0 error

@@ -374,13 +374,13 @@ type PATS interface {
 	// RevokeSecret function revokes the secret for the given ID.
 	RevokePATSecret(ctx context.Context, token, patID string) error
 
-	// AddScope function adds a new scope entry.
-	AddScopeEntry(ctx context.Context, token, patID string, scopes []Scope) error
+	// AddScope function adds a new scope.
+	AddScope(ctx context.Context, token, patID string, scopes []Scope) error
 
-	// RemoveScope function removes a scope entry.
-	RemoveScopeEntry(ctx context.Context, token string, patID string, scopeIDs ...string) error
+	// RemoveScope function removes a scope.
+	RemoveScope(ctx context.Context, token string, patID string, scopeIDs ...string) error
 
-	// RemovePATAllScope function removes all scope entry.
+	// RemovePATAllScope function removes all scope.
 	RemovePATAllScope(ctx context.Context, token, patID string) error
 
 	// List function lists all the Scopes for the patID.
@@ -433,11 +433,11 @@ type PATSRepository interface {
 	// RemoveAllPAT removes all PAT for a given user.
 	RemoveAllPAT(ctx context.Context, userID string) error
 
-	AddScopeEntry(ctx context.Context, userID string, scopes []Scope) error
+	AddScope(ctx context.Context, userID string, scopes []Scope) error
 
-	RemoveScopeEntry(ctx context.Context, userID string, scopesIDs ...string) error
+	RemoveScope(ctx context.Context, userID string, scopesIDs ...string) error
 
-	CheckScopeEntry(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error
+	CheckScope(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error
 
 	RemoveAllScope(ctx context.Context, patID string) error
 }
@@ -449,6 +449,8 @@ type Cache interface {
 	CheckScope(ctx context.Context, userID, patID, optionalDomainID string, entityType EntityType, operation Operation, entityID string) bool
 
 	Remove(ctx context.Context, userID string, scopesID []string) error
+
+	RemoveUserAllScope(ctx context.Context, userID string) error
 
 	RemoveAllScope(ctx context.Context, userID, patID string) error
 }

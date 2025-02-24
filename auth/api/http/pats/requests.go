@@ -179,25 +179,25 @@ func (req revokePatSecretReq) validate() (err error) {
 	return nil
 }
 
-type clearAllPATEntryReq struct {
+type clearAllPATReq struct {
 	token string
 }
 
-func (req clearAllPATEntryReq) validate() error {
+func (req clearAllPATReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
 	return nil
 }
 
-type addScopeEntryReq struct {
+type addScopeReq struct {
 	token  string
 	id     string
 	Scopes []auth.Scope `json:"scopes,omitempty"`
 }
 
-func (aser *addScopeEntryReq) UnmarshalJSON(data []byte) error {
-	type Alias addScopeEntryReq
+func (aser *addScopeReq) UnmarshalJSON(data []byte) error {
+	type Alias addScopeReq
 	aux := &struct {
 		*Alias
 	}{
@@ -211,7 +211,7 @@ func (aser *addScopeEntryReq) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (req addScopeEntryReq) validate() (err error) {
+func (req addScopeReq) validate() (err error) {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
@@ -232,13 +232,13 @@ func (req addScopeEntryReq) validate() (err error) {
 	return nil
 }
 
-type removeScopeEntryReq struct {
+type removeScopeReq struct {
 	token    string
 	id       string
 	ScopesID []string `json:"scopes_id,omitempty"`
 }
 
-func (req removeScopeEntryReq) validate() (err error) {
+func (req removeScopeReq) validate() (err error) {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
@@ -251,12 +251,12 @@ func (req removeScopeEntryReq) validate() (err error) {
 	return nil
 }
 
-type clearAllScopeEntryReq struct {
+type clearAllScopeReq struct {
 	token string
 	id    string
 }
 
-func (req clearAllScopeEntryReq) validate() (err error) {
+func (req clearAllScopeReq) validate() (err error) {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}

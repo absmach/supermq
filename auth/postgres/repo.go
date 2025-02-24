@@ -293,10 +293,14 @@ func (pr *patRepo) RemoveAllPAT(ctx context.Context, userID string) error {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 
+	if err := pr.cache.RemoveUserAllScope(ctx, userID); err != nil {
+		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+	}
+
 	return nil
 }
 
-func (pr *patRepo) AddScopeEntry(ctx context.Context, userID string, scopes []auth.Scope) error {
+func (pr *patRepo) AddScope(ctx context.Context, userID string, scopes []auth.Scope) error {
 	q := `
 		INSERT INTO pat_scopes (id, pat_id, entity_type, optional_domain_id, operation, entity_id)
 		VALUES (:id, :pat_id, :entity_type, :optional_domain_id, :operation, :entity_id)`
@@ -413,7 +417,7 @@ func (pr *patRepo) processScope(ctx context.Context, sc auth.Scope) (auth.Scope,
 	return sc, nil
 }
 
-func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID string, scopesIDs ...string) error {
+func (pr *patRepo) RemoveScope(ctx context.Context, userID string, scopesIDs ...string) error {
 	deleteScopesQuery := fmt.Sprintf(`DELETE FROM pat_scopes WHERE id IN ('%s')`, strings.Join(scopesIDs, ","))
 
 	res, err := pr.db.ExecContext(ctx, deleteScopesQuery)
@@ -432,7 +436,7 @@ func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID string, scopesID
 	return nil
 }
 
-func (pr *patRepo) CheckScopeEntry(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityID string) error {
+func (pr *patRepo) CheckScope(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityID string) error {
 	q := `
         SELECT id, pat_id, entity_type, optional_domain_id, operation, entity_id
         FROM pat_scopes 

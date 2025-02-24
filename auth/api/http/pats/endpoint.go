@@ -140,9 +140,9 @@ func revokePATSecretEndpoint(svc auth.Service) endpoint.Endpoint {
 	}
 }
 
-func clearAllPATEntryEndpoint(svc auth.Service) endpoint.Endpoint {
+func clearAllPATEndpoint(svc auth.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(clearAllPATEntryReq)
+		req := request.(clearAllPATReq)
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
@@ -151,43 +151,43 @@ func clearAllPATEntryEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		return clearAllEntryRes{}, nil
+		return clearAllRes{}, nil
 	}
 }
 
-func addScopeEntryEndpoint(svc auth.Service) endpoint.Endpoint {
+func addScopeEndpoint(svc auth.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(addScopeEntryReq)
+		req := request.(addScopeReq)
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
-		err := svc.AddScopeEntry(ctx, req.token, req.id, req.Scopes)
+		err := svc.AddScope(ctx, req.token, req.id, req.Scopes)
 		if err != nil {
 			return nil, err
 		}
 
-		return scopeEntryRes{}, nil
+		return scopeRes{}, nil
 	}
 }
 
-func removeScopeEntryEndpoint(svc auth.Service) endpoint.Endpoint {
+func removeScopeEndpoint(svc auth.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(removeScopeEntryReq)
+		req := request.(removeScopeReq)
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
 
-		err := svc.RemoveScopeEntry(ctx, req.token, req.id, req.ScopesID...)
+		err := svc.RemoveScope(ctx, req.token, req.id, req.ScopesID...)
 		if err != nil {
 			return nil, err
 		}
-		return scopeEntryRes{}, nil
+		return scopeRes{}, nil
 	}
 }
 
-func clearAllScopeEntryEndpoint(svc auth.Service) endpoint.Endpoint {
+func clearAllScopeEndpoint(svc auth.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(clearAllScopeEntryReq)
+		req := request.(clearAllScopeReq)
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
@@ -196,7 +196,7 @@ func clearAllScopeEntryEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		return clearAllEntryRes{}, nil
+		return clearAllRes{}, nil
 	}
 }
 

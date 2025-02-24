@@ -19,12 +19,12 @@ type PATSRepository struct {
 	mock.Mock
 }
 
-// AddScopeEntry provides a mock function with given fields: ctx, userID, scopes
-func (_m *PATSRepository) AddScopeEntry(ctx context.Context, userID string, scopes []auth.Scope) error {
+// AddScope provides a mock function with given fields: ctx, userID, scopes
+func (_m *PATSRepository) AddScope(ctx context.Context, userID string, scopes []auth.Scope) error {
 	ret := _m.Called(ctx, userID, scopes)
 
 	if len(ret) == 0 {
-		panic("no return value specified for AddScopeEntry")
+		panic("no return value specified for AddScope")
 	}
 
 	var r0 error
@@ -37,12 +37,12 @@ func (_m *PATSRepository) AddScopeEntry(ctx context.Context, userID string, scop
 	return r0
 }
 
-// CheckScopeEntry provides a mock function with given fields: ctx, userID, patID, entityType, optionalDomainID, operation, entityID
-func (_m *PATSRepository) CheckScopeEntry(ctx context.Context, userID string, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityID string) error {
+// CheckScope provides a mock function with given fields: ctx, userID, patID, entityType, optionalDomainID, operation, entityID
+func (_m *PATSRepository) CheckScope(ctx context.Context, userID string, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityID string) error {
 	ret := _m.Called(ctx, userID, patID, entityType, optionalDomainID, operation, entityID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for CheckScopeEntry")
+		panic("no return value specified for CheckScope")
 	}
 
 	var r0 error
@@ -127,8 +127,8 @@ func (_m *PATSRepository) RemoveAllScope(ctx context.Context, patID string) erro
 	return r0
 }
 
-// RemoveScopeEntry provides a mock function with given fields: ctx, userID, scopesIDs
-func (_m *PATSRepository) RemoveScopeEntry(ctx context.Context, userID string, scopesIDs ...string) error {
+// RemoveScope provides a mock function with given fields: ctx, userID, scopesIDs
+func (_m *PATSRepository) RemoveScope(ctx context.Context, userID string, scopesIDs ...string) error {
 	_va := make([]interface{}, len(scopesIDs))
 	for _i := range scopesIDs {
 		_va[_i] = scopesIDs[_i]
@@ -139,7 +139,7 @@ func (_m *PATSRepository) RemoveScopeEntry(ctx context.Context, userID string, s
 	ret := _m.Called(_ca...)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RemoveScopeEntry")
+		panic("no return value specified for RemoveScope")
 	}
 
 	var r0 error

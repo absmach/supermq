@@ -156,12 +156,12 @@ func (tm *tracingMiddleware) RevokePATSecret(ctx context.Context, token, patID s
 }
 
 func (tm *tracingMiddleware) RemoveAllPAT(ctx context.Context, token string) error {
-	ctx, span := tm.tracer.Start(ctx, "clear_all_pat_entry")
+	ctx, span := tm.tracer.Start(ctx, "clear_all_pat")
 	defer span.End()
 	return tm.svc.RemoveAllPAT(ctx, token)
 }
 
-func (tm *tracingMiddleware) AddScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) error {
+func (tm *tracingMiddleware) AddScope(ctx context.Context, token, patID string, scopes []auth.Scope) error {
 	var attributes []attribute.KeyValue
 	for _, s := range scopes {
 		attributes = append(attributes, attribute.String("entity_type", s.EntityType.String()))
@@ -172,12 +172,12 @@ func (tm *tracingMiddleware) AddScopeEntry(ctx context.Context, token, patID str
 
 	attributes = append(attributes, attribute.String("pat_id", patID))
 
-	ctx, span := tm.tracer.Start(ctx, "add_pat_scope_entry", trace.WithAttributes(attributes...))
+	ctx, span := tm.tracer.Start(ctx, "add_pat_scope", trace.WithAttributes(attributes...))
 	defer span.End()
-	return tm.svc.AddScopeEntry(ctx, token, patID, scopes)
+	return tm.svc.AddScope(ctx, token, patID, scopes)
 }
 
-func (tm *tracingMiddleware) RemoveScopeEntry(ctx context.Context, token, patID string, scopesID ...string) error {
+func (tm *tracingMiddleware) RemoveScope(ctx context.Context, token, patID string, scopesID ...string) error {
 	var attributes []attribute.KeyValue
 	for _, s := range scopesID {
 		attributes = append(attributes, attribute.String("scope_id", s))
@@ -185,13 +185,13 @@ func (tm *tracingMiddleware) RemoveScopeEntry(ctx context.Context, token, patID 
 
 	attributes = append(attributes, attribute.String("pat_id", patID))
 
-	ctx, span := tm.tracer.Start(ctx, "remove_pat_scope_entry", trace.WithAttributes(attributes...))
+	ctx, span := tm.tracer.Start(ctx, "remove_pat_scope", trace.WithAttributes(attributes...))
 	defer span.End()
-	return tm.svc.RemoveScopeEntry(ctx, token, patID, scopesID...)
+	return tm.svc.RemoveScope(ctx, token, patID, scopesID...)
 }
 
 func (tm *tracingMiddleware) RemovePATAllScope(ctx context.Context, token, patID string) error {
-	ctx, span := tm.tracer.Start(ctx, "clear_pat_all_scope_entry", trace.WithAttributes(
+	ctx, span := tm.tracer.Start(ctx, "clear_pat_all_scope", trace.WithAttributes(
 		attribute.String("pat_id", patID),
 	))
 	defer span.End()
