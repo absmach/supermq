@@ -4,6 +4,7 @@
 package postgres
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/absmach/supermq/auth"
@@ -11,17 +12,17 @@ import (
 )
 
 type dbPat struct {
-	ID          string    `db:"id,omitempty"`
-	User        string    `db:"user_id,omitempty"`
-	Name        string    `db:"name,omitempty"`
-	Description string    `db:"description,omitempty"`
-	Secret      string    `db:"secret,omitempty"`
-	IssuedAt    time.Time `db:"issued_at,omitempty"`
-	ExpiresAt   time.Time `db:"expires_at,omitempty"`
-	UpdatedAt   time.Time `db:"updated_at,omitempty"`
-	LastUsedAt  time.Time `db:"last_used_at,omitempty"`
-	Revoked     bool      `db:"revoked,omitempty"`
-	RevokedAt   time.Time `db:"revoked_at,omitempty"`
+	ID          string       `db:"id,omitempty"`
+	User        string       `db:"user_id,omitempty"`
+	Name        string       `db:"name,omitempty"`
+	Description string       `db:"description,omitempty"`
+	Secret      string       `db:"secret,omitempty"`
+	IssuedAt    time.Time    `db:"issued_at,omitempty"`
+	ExpiresAt   time.Time    `db:"expires_at,omitempty"`
+	UpdatedAt   sql.NullTime `db:"updated_at,omitempty"`
+	LastUsedAt  sql.NullTime `db:"last_used_at,omitempty"`
+	Revoked     bool         `db:"revoked,omitempty"`
+	RevokedAt   sql.NullTime `db:"revoked_at,omitempty"`
 }
 
 type dbScope struct {
@@ -34,22 +35,38 @@ type dbScope struct {
 }
 
 type dbPagemeta struct {
-	Limit       uint64    `db:"limit"`
-	Offset      uint64    `db:"offset"`
-	User        string    `db:"user_id"`
-	PatID       string    `db:"pat_id"`
-	ScopesID    []string  `db:"scopes_id"`
-	ID          string    `db:"id"`
-	Name        string    `db:"name"`
-	UpdatedAt   time.Time `db:"updated_at"`
-	ExpiresAt   time.Time `db:"expires_at"`
-	Description string    `db:"description"`
-	Secret      string    `db:"secret"`
+	Limit       uint64       `db:"limit"`
+	Offset      uint64       `db:"offset"`
+	User        string       `db:"user_id"`
+	PatID       string       `db:"pat_id"`
+	ScopesID    []string     `db:"scopes_id"`
+	ID          string       `db:"id"`
+	Name        string       `db:"name"`
+	UpdatedAt   sql.NullTime `db:"updated_at"`
+	ExpiresAt   time.Time    `db:"expires_at"`
+	Description string       `db:"description"`
+	Secret      string       `db:"secret"`
 }
 
 func toAuthPat(db dbPat) (auth.PAT, error) {
 	if db.ID == "" {
 		return auth.PAT{}, repoerr.ErrNotFound
+	}
+
+	updatedAt := time.Time{}
+	lastUsedAt := time.Time{}
+	revokedAt := time.Time{}
+
+	if db.UpdatedAt.Valid {
+		updatedAt = db.UpdatedAt.Time
+	}
+
+	if db.LastUsedAt.Valid {
+		lastUsedAt = db.LastUsedAt.Time
+	}
+
+	if db.RevokedAt.Valid {
+		revokedAt = db.RevokedAt.Time
 	}
 
 	pat := auth.PAT{
@@ -60,10 +77,10 @@ func toAuthPat(db dbPat) (auth.PAT, error) {
 		Secret:      db.Secret,
 		IssuedAt:    db.IssuedAt,
 		ExpiresAt:   db.ExpiresAt,
-		UpdatedAt:   db.UpdatedAt,
-		LastUsedAt:  db.LastUsedAt,
+		UpdatedAt:   updatedAt,
+		LastUsedAt:  lastUsedAt,
 		Revoked:     db.Revoked,
-		RevokedAt:   db.RevokedAt,
+		RevokedAt:   revokedAt,
 	}
 
 	return pat, nil
@@ -95,6 +112,29 @@ func toAuthScope(dsc []dbScope) ([]auth.Scope, error) {
 }
 
 func toDBPats(pat auth.PAT) (dbPat, error) {
+	var updatedAt, lastUsedAt, revokedAt sql.NullTime
+
+	if !pat.UpdatedAt.IsZero() {
+		updatedAt = sql.NullTime{
+			Time:  pat.UpdatedAt,
+			Valid: true,
+		}
+	}
+
+	if !pat.LastUsedAt.IsZero() {
+		lastUsedAt = sql.NullTime{
+			Time:  pat.LastUsedAt,
+			Valid: true,
+		}
+	}
+
+	if !pat.RevokedAt.IsZero() {
+		revokedAt = sql.NullTime{
+			Time:  pat.RevokedAt,
+			Valid: true,
+		}
+	}
+
 	return dbPat{
 		ID:          pat.ID,
 		User:        pat.User,
@@ -103,10 +143,10 @@ func toDBPats(pat auth.PAT) (dbPat, error) {
 		Secret:      pat.Secret,
 		IssuedAt:    pat.IssuedAt,
 		ExpiresAt:   pat.ExpiresAt,
-		UpdatedAt:   pat.UpdatedAt,
-		LastUsedAt:  pat.LastUsedAt,
+		UpdatedAt:   updatedAt,
+		LastUsedAt:  lastUsedAt,
 		Revoked:     pat.Revoked,
-		RevokedAt:   pat.RevokedAt,
+		RevokedAt:   revokedAt,
 	}, nil
 }
 
