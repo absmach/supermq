@@ -333,10 +333,6 @@ func decodeRemoveScopeRequest(_ context.Context, r *http.Request) (interface{}, 
 }
 
 func decodeClearAllScopeRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, apiutil.ErrUnsupportedContentType
-	}
-
 	token := apiutil.ExtractBearerToken(r)
 	if strings.HasPrefix(token, patPrefix) {
 		return nil, apiutil.ErrUnsupportedTokenType
