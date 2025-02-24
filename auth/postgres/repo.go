@@ -164,12 +164,17 @@ func (pr *patRepo) UpdateName(ctx context.Context, userID, patID, name string) (
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
-	var pat auth.PAT
+	var pat dbPat
 	if err := rows.StructScan(&pat); err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
-	return pat, nil
+	res, err := toAuthPat(pat)
+	if err != nil {
+		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+	}
+
+	return res, nil
 }
 
 func (pr *patRepo) UpdateDescription(ctx context.Context, userID, patID, description string) (auth.PAT, error) {
@@ -191,12 +196,17 @@ func (pr *patRepo) UpdateDescription(ctx context.Context, userID, patID, descrip
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
-	var pat auth.PAT
+	var pat dbPat
 	if err := rows.StructScan(&pat); err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
-	return pat, nil
+	res, err := toAuthPat(pat)
+	if err != nil {
+		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+	}
+
+	return res, nil
 }
 
 func (pr *patRepo) UpdateTokenHash(ctx context.Context, userID, patID, tokenHash string, expiryAt time.Time) (auth.PAT, error) {
@@ -219,12 +229,17 @@ func (pr *patRepo) UpdateTokenHash(ctx context.Context, userID, patID, tokenHash
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
-	var pat auth.PAT
+	var pat dbPat
 	if err := rows.StructScan(&pat); err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
 
-	return pat, nil
+	res, err := toAuthPat(pat)
+	if err != nil {
+		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+	}
+
+	return res, nil
 }
 
 func (pr *patRepo) Revoke(ctx context.Context, userID, patID string) error {

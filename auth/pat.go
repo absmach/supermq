@@ -359,7 +359,7 @@ type PATS interface {
 	// Retrieve function retrieves the PAT for given ID.
 	RetrievePAT(ctx context.Context, userID string, patID string) (PAT, error)
 
-	// RemoveAllPAT function removes all PATs.
+	// RemoveAllPAT function removes all PATs of user.
 	RemoveAllPAT(ctx context.Context, token string) error
 
 	// ListPATS function lists all the PATs for the user.
