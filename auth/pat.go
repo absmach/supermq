@@ -359,8 +359,8 @@ type PATS interface {
 	// Retrieve function retrieves the PAT for given ID.
 	RetrievePAT(ctx context.Context, userID string, patID string) (PAT, error)
 
-	// ClearAllPAT function removes all PATs entry.
-	ClearAllPATEntry(ctx context.Context, token string) error
+	// RemoveAllPAT function removes all PATs.
+	RemoveAllPAT(ctx context.Context, token string) error
 
 	// ListPATS function lists all the PATs for the user.
 	ListPATS(ctx context.Context, token string, pm PATSPageMeta) (PATSPage, error)
@@ -380,8 +380,8 @@ type PATS interface {
 	// RemoveScope function removes a scope entry.
 	RemoveScopeEntry(ctx context.Context, token string, patID string, scopeIDs ...string) error
 
-	// ClearAllScope function removes all scope entry.
-	ClearAllScopeEntry(ctx context.Context, token, patID string) error
+	// RemovePATAllScope function removes all scope entry.
+	RemovePATAllScope(ctx context.Context, token, patID string) error
 
 	// List function lists all the Scopes for the patID.
 	ListScopes(ctx context.Context, token string, pm ScopesPageMeta) (ScopesPage, error)
@@ -430,8 +430,8 @@ type PATSRepository interface {
 	// Remove removes Key with provided ID.
 	Remove(ctx context.Context, userID, patID string) error
 
-	// RemoveAllPATEntry removes all PAT for a given user.
-	RemoveAllPATEntry(ctx context.Context, userID string) error
+	// RemoveAllPAT removes all PAT for a given user.
+	RemoveAllPAT(ctx context.Context, userID string) error
 
 	AddScopeEntry(ctx context.Context, userID string, scopes []Scope) error
 
@@ -439,5 +439,16 @@ type PATSRepository interface {
 
 	CheckScopeEntry(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error
 
-	RemoveAllScopeEntry(ctx context.Context, patID string) error
+	RemoveAllScope(ctx context.Context, patID string) error
+}
+
+//go:generate mockery --name Cache --output=./mocks --filename cache.go --quiet --note "Copyright (c) Abstract Machines"
+type Cache interface {
+	Save(ctx context.Context, userID string, scopes []Scope) error
+
+	CheckScope(ctx context.Context, userID, patID, optionalDomainID string, entityType EntityType, operation Operation, entityID string) bool
+
+	Remove(ctx context.Context, userID string, scopesID ...string) error
+
+	RemoveAllScope(ctx context.Context, userID, patID string) error
 }

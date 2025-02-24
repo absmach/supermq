@@ -277,7 +277,7 @@ func (lm *loggingMiddleware) RevokePATSecret(ctx context.Context, token, patID s
 	return lm.svc.RevokePATSecret(ctx, token, patID)
 }
 
-func (lm *loggingMiddleware) ClearAllPATEntry(ctx context.Context, token string) (err error) {
+func (lm *loggingMiddleware) RemoveAllPAT(ctx context.Context, token string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -289,7 +289,7 @@ func (lm *loggingMiddleware) ClearAllPATEntry(ctx context.Context, token string)
 		}
 		lm.logger.Info("Clear all entry of PAT completed successfully", args...)
 	}(time.Now())
-	return lm.svc.ClearAllPATEntry(ctx, token)
+	return lm.svc.RemoveAllPAT(ctx, token)
 }
 
 func (lm *loggingMiddleware) AddScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) (err error) {
@@ -338,7 +338,7 @@ func (lm *loggingMiddleware) RemoveScopeEntry(ctx context.Context, token, patID 
 	return lm.svc.RemoveScopeEntry(ctx, token, patID, scopesID...)
 }
 
-func (lm *loggingMiddleware) ClearAllScopeEntry(ctx context.Context, token, patID string) (err error) {
+func (lm *loggingMiddleware) RemovePATAllScope(ctx context.Context, token, patID string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -351,7 +351,7 @@ func (lm *loggingMiddleware) ClearAllScopeEntry(ctx context.Context, token, patI
 		}
 		lm.logger.Info("Clear all entry from PAT scope completed successfully", args...)
 	}(time.Now())
-	return lm.svc.ClearAllScopeEntry(ctx, token, patID)
+	return lm.svc.RemovePATAllScope(ctx, token, patID)
 }
 
 func (lm *loggingMiddleware) IdentifyPAT(ctx context.Context, paToken string) (pa auth.PAT, err error) {

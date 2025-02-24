@@ -55,42 +55,6 @@ func (_m *PATS) AuthorizePAT(ctx context.Context, userID string, patID string, e
 	return r0
 }
 
-// ClearAllPATEntry provides a mock function with given fields: ctx, token
-func (_m *PATS) ClearAllPATEntry(ctx context.Context, token string) error {
-	ret := _m.Called(ctx, token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ClearAllPATEntry")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(ctx, token)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// ClearAllScopeEntry provides a mock function with given fields: ctx, token, patID
-func (_m *PATS) ClearAllScopeEntry(ctx context.Context, token string, patID string) error {
-	ret := _m.Called(ctx, token, patID)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ClearAllScopeEntry")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, token, patID)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // CreatePAT provides a mock function with given fields: ctx, token, name, description, duration
 func (_m *PATS) CreatePAT(ctx context.Context, token string, name string, description string, duration time.Duration) (auth.PAT, error) {
 	ret := _m.Called(ctx, token, name, description, duration)
@@ -219,6 +183,42 @@ func (_m *PATS) ListScopes(ctx context.Context, token string, pm auth.ScopesPage
 	}
 
 	return r0, r1
+}
+
+// RemoveAllPAT provides a mock function with given fields: ctx, token
+func (_m *PATS) RemoveAllPAT(ctx context.Context, token string) error {
+	ret := _m.Called(ctx, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveAllPAT")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, token)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemovePATAllScope provides a mock function with given fields: ctx, token, patID
+func (_m *PATS) RemovePATAllScope(ctx context.Context, token string, patID string) error {
+	ret := _m.Called(ctx, token, patID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemovePATAllScope")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, token, patID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // RemoveScopeEntry provides a mock function with given fields: ctx, token, patID, scopeIDs

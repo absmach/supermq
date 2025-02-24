@@ -147,7 +147,7 @@ func clearAllPATEntryEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err := svc.ClearAllPATEntry(ctx, req.token); err != nil {
+		if err := svc.RemoveAllPAT(ctx, req.token); err != nil {
 			return nil, err
 		}
 
@@ -192,7 +192,7 @@ func clearAllScopeEntryEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err := svc.ClearAllScopeEntry(ctx, req.token, req.id); err != nil {
+		if err := svc.RemovePATAllScope(ctx, req.token, req.id); err != nil {
 			return nil, err
 		}
 

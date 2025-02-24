@@ -91,12 +91,12 @@ func (_m *PATSRepository) Remove(ctx context.Context, userID string, patID strin
 	return r0
 }
 
-// RemoveAllPATEntry provides a mock function with given fields: ctx, userID
-func (_m *PATSRepository) RemoveAllPATEntry(ctx context.Context, userID string) error {
+// RemoveAllPAT provides a mock function with given fields: ctx, userID
+func (_m *PATSRepository) RemoveAllPAT(ctx context.Context, userID string) error {
 	ret := _m.Called(ctx, userID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RemoveAllPATEntry")
+		panic("no return value specified for RemoveAllPAT")
 	}
 
 	var r0 error
@@ -109,12 +109,12 @@ func (_m *PATSRepository) RemoveAllPATEntry(ctx context.Context, userID string) 
 	return r0
 }
 
-// RemoveAllScopeEntry provides a mock function with given fields: ctx, patID
-func (_m *PATSRepository) RemoveAllScopeEntry(ctx context.Context, patID string) error {
+// RemoveAllScope provides a mock function with given fields: ctx, patID
+func (_m *PATSRepository) RemoveAllScope(ctx context.Context, patID string) error {
 	ret := _m.Called(ctx, patID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RemoveAllScopeEntry")
+		panic("no return value specified for RemoveAllScope")
 	}
 
 	var r0 error

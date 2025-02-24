@@ -155,10 +155,10 @@ func (tm *tracingMiddleware) RevokePATSecret(ctx context.Context, token, patID s
 	return tm.svc.RevokePATSecret(ctx, token, patID)
 }
 
-func (tm *tracingMiddleware) ClearAllPATEntry(ctx context.Context, token string) error {
+func (tm *tracingMiddleware) RemoveAllPAT(ctx context.Context, token string) error {
 	ctx, span := tm.tracer.Start(ctx, "clear_all_pat_entry")
 	defer span.End()
-	return tm.svc.ClearAllPATEntry(ctx, token)
+	return tm.svc.RemoveAllPAT(ctx, token)
 }
 
 func (tm *tracingMiddleware) AddScopeEntry(ctx context.Context, token, patID string, scopes []auth.Scope) error {
@@ -190,12 +190,12 @@ func (tm *tracingMiddleware) RemoveScopeEntry(ctx context.Context, token, patID 
 	return tm.svc.RemoveScopeEntry(ctx, token, patID, scopesID...)
 }
 
-func (tm *tracingMiddleware) ClearAllScopeEntry(ctx context.Context, token, patID string) error {
+func (tm *tracingMiddleware) RemovePATAllScope(ctx context.Context, token, patID string) error {
 	ctx, span := tm.tracer.Start(ctx, "clear_pat_all_scope_entry", trace.WithAttributes(
 		attribute.String("pat_id", patID),
 	))
 	defer span.End()
-	return tm.svc.ClearAllScopeEntry(ctx, token, patID)
+	return tm.svc.RemovePATAllScope(ctx, token, patID)
 }
 
 func (tm *tracingMiddleware) IdentifyPAT(ctx context.Context, paToken string) (auth.PAT, error) {

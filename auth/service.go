@@ -94,17 +94,6 @@ type Service interface {
 	PATS
 }
 
-//go:generate mockery --name Cache --output=./mocks --filename cache.go --quiet --note "Copyright (c) Abstract Machines"
-type Cache interface {
-	Save(ctx context.Context, userID string, scopes []Scope) error
-
-	CheckScope(ctx context.Context, userID, patID, optionalDomainID string, entityType EntityType, operation Operation, entityID string) bool
-
-	Remove(ctx context.Context, userID string, scopesID ...string) error
-
-	RemoveAllScope(ctx context.Context, userID, patID string) error
-}
-
 var _ Service = (*service)(nil)
 
 type service struct {
@@ -600,12 +589,12 @@ func (svc service) RevokePATSecret(ctx context.Context, token, patID string) err
 	return nil
 }
 
-func (svc service) ClearAllPATEntry(ctx context.Context, token string) error {
+func (svc service) RemoveAllPAT(ctx context.Context, token string) error {
 	key, err := svc.Identify(ctx, token)
 	if err != nil {
 		return err
 	}
-	if err := svc.pats.RemoveAllPATEntry(ctx, key.User); err != nil {
+	if err := svc.pats.RemoveAllPAT(ctx, key.User); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	return nil
@@ -659,12 +648,12 @@ func (svc service) ListScopes(ctx context.Context, token string, pm ScopesPageMe
 	return patsPage, nil
 }
 
-func (svc service) ClearAllScopeEntry(ctx context.Context, token, patID string) error {
+func (svc service) RemovePATAllScope(ctx context.Context, token, patID string) error {
 	_, err := svc.authnAuthzUserPAT(ctx, token, patID)
 	if err != nil {
 		return err
 	}
-	if err := svc.pats.RemoveAllScopeEntry(ctx, patID); err != nil {
+	if err := svc.pats.RemoveAllScope(ctx, patID); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	return nil

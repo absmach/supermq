@@ -17,72 +17,6 @@ import (
 
 var _ auth.PATSRepository = (*patRepo)(nil)
 
-const (
-	saveQuery = `
-	INSERT INTO pats (
-		id, user_id, name, description, secret, issued_at, expires_at, 
-		updated_at, last_used_at, revoked, revoked_at
-	) VALUES (
-		:id, :user_id, :name, :description, :secret, :issued_at, :expires_at,
-		:updated_at, :last_used_at, :revoked, :revoked_at
-	)`
-
-	retrieveQuery = `
-		SELECT 
-		id, user_id, name, description, secret, issued_at, expires_at,
-		updated_at, last_used_at, revoked, revoked_at
-		FROM pats WHERE user_id = :user_id AND id = :id`
-
-	deleteAllPATsQuery = `DELETE FROM pats WHERE user_id = :user_id`
-
-	saveScopeQuery = `
-		INSERT INTO pat_scopes (id, pat_id, entity_type, optional_domain_id, operation, entity_id)
-		VALUES (:id, :pat_id, :entity_type, :optional_domain_id, :operation, :entity_id)`
-
-	checkWildcardQuery = `
-		SELECT COUNT(*) 
-		FROM pat_scopes 
-		WHERE pat_id = :pat_id 
-		  AND entity_type = :entity_type
-		  AND optional_domain_id = :optional_domain_id
-		  AND operation = :operation
-		  AND entity_id = :entity_id
-		LIMIT 1`
-
-	checkEntityQuery = `
-		SELECT COUNT(*) 
-		FROM pat_scopes 
-		WHERE pat_id = :pat_id 
-		  AND entity_type = :entity_type
-		  AND optional_domain_id = :optional_domain_id
-		  AND operation = :operation
-		LIMIT 1`
-
-	updateWithWildcardQuery = `
-		UPDATE pat_scopes 
-		SET entity_id = :entity_id 
-		WHERE pat_id = :pat_id 
-		  AND entity_type = :entity_type
-		  AND optional_domain_id = :optional_domain_id
-		  AND operation = :operation`
-
-	checkScopeQuery = `
-        SELECT id, pat_id, entity_type, optional_domain_id, operation, entity_id
-        FROM pat_scopes 
-        WHERE pat_id = :pat_id 
-          AND entity_type = :entity_type
-          AND optional_domain_id = :optional_domain_id
-          AND operation = :operation
-          AND (entity_id = :entity_id OR entity_id = '*')
-        LIMIT 1`
-
-	retrieveScopesQuery = `
-		SELECT id, pat_id, entity_type, optional_domain_id, operation, entity_id
-		FROM pat_scopes WHERE pat_id = :pat_id OFFSET :offset LIMIT :limit`
-
-	deleteAllScopesQuery = `DELETE FROM pat_scopes WHERE pat_id = :pat_id`
-)
-
 type patRepo struct {
 	db    postgres.Database
 	cache auth.Cache
@@ -96,12 +30,21 @@ func NewPatRepo(db postgres.Database, cache auth.Cache) auth.PATSRepository {
 }
 
 func (pr *patRepo) Save(ctx context.Context, pat auth.PAT) error {
+	q := `
+	INSERT INTO pats (
+		id, user_id, name, description, secret, issued_at, expires_at, 
+		updated_at, last_used_at, revoked, revoked_at
+	) VALUES (
+		:id, :user_id, :name, :description, :secret, :issued_at, :expires_at,
+		:updated_at, :last_used_at, :revoked, :revoked_at
+	)`
+
 	dbPat, err := toDBPats(pat)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrCreateEntity, err)
 	}
 
-	_, err = pr.db.NamedQueryContext(ctx, saveQuery, dbPat)
+	_, err = pr.db.NamedQueryContext(ctx, q, dbPat)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
@@ -139,21 +82,9 @@ func (pr *patRepo) RetrieveAll(ctx context.Context, userID string, pm auth.PATSP
 	}
 	defer rows.Close()
 
-	type data struct {
-		ID          string    `db:"id,omitempty"`
-		User        string    `db:"user_id,omitempty"`
-		Name        string    `db:"name,omitempty"`
-		Description string    `db:"description,omitempty"`
-		IssuedAt    time.Time `db:"issued_at,omitempty"`
-		ExpiresAt   time.Time `db:"expires_at,omitempty"`
-		UpdatedAt   time.Time `db:"updated_at,omitempty"`
-		Revoked     bool      `db:"revoked,omitempty"`
-		RevokedAt   time.Time `db:"revoked_at,omitempty"`
-	}
-
 	var items []auth.PAT
 	for rows.Next() {
-		var pat data
+		var pat dbPat
 		if err := rows.StructScan(&pat); err != nil {
 			return auth.PATSPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
@@ -350,12 +281,14 @@ func (pr *patRepo) Remove(ctx context.Context, userID, patID string) error {
 	return nil
 }
 
-func (pr *patRepo) RemoveAllPATEntry(ctx context.Context, userID string) error {
+func (pr *patRepo) RemoveAllPAT(ctx context.Context, userID string) error {
+	q := `DELETE FROM pats WHERE user_id = :user_id`
+
 	pm := dbPagemeta{
 		User: userID,
 	}
 
-	_, err := pr.db.NamedQueryContext(ctx, deleteAllPATsQuery, pm)
+	_, err := pr.db.NamedQueryContext(ctx, q, pm)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}
@@ -368,6 +301,10 @@ func (pr *patRepo) RemoveAllPATEntry(ctx context.Context, userID string) error {
 }
 
 func (pr *patRepo) AddScopeEntry(ctx context.Context, userID string, scopes []auth.Scope) error {
+	q := `
+		INSERT INTO pat_scopes (id, pat_id, entity_type, optional_domain_id, operation, entity_id)
+		VALUES (:id, :pat_id, :entity_type, :optional_domain_id, :operation, :entity_id)`
+
 	var newScopes []auth.Scope
 
 	for _, sc := range scopes {
@@ -381,7 +318,7 @@ func (pr *patRepo) AddScopeEntry(ctx context.Context, userID string, scopes []au
 	}
 
 	if len(newScopes) > 0 {
-		_, err := pr.db.NamedQueryContext(ctx, saveScopeQuery, toDBScope(newScopes))
+		_, err := pr.db.NamedQueryContext(ctx, q, toDBScope(newScopes))
 		if err != nil {
 			return postgres.HandleError(repoerr.ErrUpdateEntity, err)
 		}
@@ -395,6 +332,16 @@ func (pr *patRepo) AddScopeEntry(ctx context.Context, userID string, scopes []au
 }
 
 func (pr *patRepo) processScope(ctx context.Context, sc auth.Scope) (auth.Scope, error) {
+	q := `
+		SELECT COUNT(*) 
+		FROM pat_scopes 
+		WHERE pat_id = :pat_id 
+		  AND entity_type = :entity_type
+		  AND optional_domain_id = :optional_domain_id
+		  AND operation = :operation
+		  AND entity_id = :entity_id
+		LIMIT 1`
+
 	params := dbScope{
 		PatID:            sc.PatID,
 		OptionalDomainID: sc.OptionalDomainID,
@@ -403,7 +350,7 @@ func (pr *patRepo) processScope(ctx context.Context, sc auth.Scope) (auth.Scope,
 		EntityID:         auth.AnyIDs,
 	}
 
-	rows, err := pr.db.NamedQueryContext(ctx, checkWildcardQuery, params)
+	rows, err := pr.db.NamedQueryContext(ctx, q, params)
 	if err != nil {
 		return auth.Scope{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
@@ -427,6 +374,16 @@ func (pr *patRepo) processScope(ctx context.Context, sc auth.Scope) (auth.Scope,
 			EntityType:       sc.EntityType.String(),
 			Operation:        sc.Operation.String(),
 		}
+
+		checkEntityQuery := `
+			SELECT COUNT(*) 
+			FROM pat_scopes 
+			WHERE pat_id = :pat_id 
+			AND entity_type = :entity_type
+			AND optional_domain_id = :optional_domain_id
+			AND operation = :operation
+			LIMIT 1`
+
 		rows, err := pr.db.NamedQueryContext(ctx, checkEntityQuery, newParams)
 		if err != nil {
 			return auth.Scope{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
@@ -441,6 +398,14 @@ func (pr *patRepo) processScope(ctx context.Context, sc auth.Scope) (auth.Scope,
 		}
 
 		if count > 0 {
+			updateWithWildcardQuery := `
+			UPDATE pat_scopes 
+			SET entity_id = :entity_id 
+			WHERE pat_id = :pat_id 
+			AND entity_type = :entity_type
+			AND optional_domain_id = :optional_domain_id
+			AND operation = :operation`
+
 			_, err = pr.db.NamedQueryContext(ctx, updateWithWildcardQuery, params)
 			if err != nil {
 				return auth.Scope{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
@@ -472,6 +437,16 @@ func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID string, scopesID
 }
 
 func (pr *patRepo) CheckScopeEntry(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityID string) error {
+	q := `
+        SELECT id, pat_id, entity_type, optional_domain_id, operation, entity_id
+        FROM pat_scopes 
+        WHERE pat_id = :pat_id 
+          AND entity_type = :entity_type
+          AND optional_domain_id = :optional_domain_id
+          AND operation = :operation
+          AND (entity_id = :entity_id OR entity_id = '*')
+        LIMIT 1`
+
 	authorized := pr.cache.CheckScope(ctx, userID, patID, optionalDomainID, entityType, operation, entityID)
 	if authorized {
 		return nil
@@ -485,7 +460,7 @@ func (pr *patRepo) CheckScopeEntry(ctx context.Context, userID, patID string, en
 		EntityID:         entityID,
 	}
 
-	rows, err := pr.db.NamedQueryContext(ctx, checkScopeQuery, scope)
+	rows, err := pr.db.NamedQueryContext(ctx, q, scope)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrViewEntity, err)
 	}
@@ -526,12 +501,14 @@ func (pr *patRepo) CheckScopeEntry(ctx context.Context, userID, patID string, en
 	return repoerr.ErrNotFound
 }
 
-func (pr *patRepo) RemoveAllScopeEntry(ctx context.Context, patID string) error {
+func (pr *patRepo) RemoveAllScope(ctx context.Context, patID string) error {
 	pm := dbPagemeta{
 		PatID: patID,
 	}
 
-	_, err := pr.db.NamedQueryContext(ctx, deleteAllScopesQuery, pm)
+	q := `DELETE FROM pat_scopes WHERE pat_id = :pat_id`
+
+	_, err := pr.db.NamedQueryContext(ctx, q, pm)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}
@@ -571,7 +548,10 @@ func (pr *patRepo) RetrieveScope(ctx context.Context, pm auth.ScopesPageMeta) (a
 }
 
 func (pr *patRepo) retrieveScopeFromDB(ctx context.Context, pm dbPagemeta) ([]auth.Scope, error) {
-	scopeRows, err := pr.db.NamedQueryContext(ctx, retrieveScopesQuery, pm)
+	q := `
+		SELECT id, pat_id, entity_type, optional_domain_id, operation, entity_id
+		FROM pat_scopes WHERE pat_id = :pat_id OFFSET :offset LIMIT :limit`
+	scopeRows, err := pr.db.NamedQueryContext(ctx, q, pm)
 	if err != nil {
 		return []auth.Scope{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
@@ -595,12 +575,18 @@ func (pr *patRepo) retrieveScopeFromDB(ctx context.Context, pm dbPagemeta) ([]au
 }
 
 func (pr *patRepo) retrievePATFromDB(ctx context.Context, userID, patID string) (auth.PAT, error) {
+	q := `
+		SELECT 
+		id, user_id, name, description, secret, issued_at, expires_at,
+		updated_at, last_used_at, revoked, revoked_at
+		FROM pats WHERE user_id = :user_id AND id = :id`
+
 	dbp := dbPagemeta{
 		ID:   patID,
 		User: userID,
 	}
 
-	rows, err := pr.db.NamedQueryContext(ctx, retrieveQuery, dbp)
+	rows, err := pr.db.NamedQueryContext(ctx, q, dbp)
 	if err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
