@@ -14,8 +14,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-const Separator = "_"
-
 type patCache struct {
 	client   *redis.Client
 	duration time.Duration
@@ -51,23 +49,14 @@ func (pc *patCache) CheckScope(ctx context.Context, userID, patID, optionalDomai
 	return res > 0
 }
 
-func (pc *patCache) Remove(ctx context.Context, userID string, scopeIDs ...string) error {
+func (pc *patCache) Remove(ctx context.Context, userID string, scopeIDs []string) error {
 	if len(scopeIDs) == 0 {
-		pattern := fmt.Sprintf("pat:%s:*", userID)
-		iter := pc.client.Scan(ctx, 0, pattern, 0).Iterator()
-		for iter.Next(ctx) {
-			if err := pc.client.Del(ctx, iter.Val()).Err(); err != nil {
-				return errors.Wrap(repoerr.ErrRemoveEntity, err)
-			}
-		}
-		if err := iter.Err(); err != nil {
-			return errors.Wrap(repoerr.ErrRemoveEntity, err)
-		}
-		return nil
+		return repoerr.ErrRemoveEntity
 	}
 
 	pattern := fmt.Sprintf("pat:%s:*", userID)
 	iter := pc.client.Scan(ctx, 0, pattern, 0).Iterator()
+
 	for iter.Next(ctx) {
 		key := iter.Val()
 		val, err := pc.client.Get(ctx, key).Result()

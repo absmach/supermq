@@ -36,23 +36,16 @@ func (_m *Cache) CheckScope(ctx context.Context, userID string, patID string, op
 }
 
 // Remove provides a mock function with given fields: ctx, userID, scopesID
-func (_m *Cache) Remove(ctx context.Context, userID string, scopesID ...string) error {
-	_va := make([]interface{}, len(scopesID))
-	for _i := range scopesID {
-		_va[_i] = scopesID[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, userID)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
+func (_m *Cache) Remove(ctx context.Context, userID string, scopesID []string) error {
+	ret := _m.Called(ctx, userID, scopesID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Remove")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, ...string) error); ok {
-		r0 = rf(ctx, userID, scopesID...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, []string) error); ok {
+		r0 = rf(ctx, userID, scopesID)
 	} else {
 		r0 = ret.Error(0)
 	}

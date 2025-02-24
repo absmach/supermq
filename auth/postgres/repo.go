@@ -293,10 +293,6 @@ func (pr *patRepo) RemoveAllPAT(ctx context.Context, userID string) error {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 
-	if err := pr.cache.Remove(ctx, pm.User); err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
-
 	return nil
 }
 
@@ -429,7 +425,7 @@ func (pr *patRepo) RemoveScopeEntry(ctx context.Context, userID string, scopesID
 		return repoerr.ErrNotFound
 	}
 
-	if err := pr.cache.Remove(ctx, userID, scopesIDs...); err != nil {
+	if err := pr.cache.Remove(ctx, userID, scopesIDs); err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
 

@@ -448,7 +448,7 @@ type Cache interface {
 
 	CheckScope(ctx context.Context, userID, patID, optionalDomainID string, entityType EntityType, operation Operation, entityID string) bool
 
-	Remove(ctx context.Context, userID string, scopesID ...string) error
+	Remove(ctx context.Context, userID string, scopesID []string) error
 
 	RemoveAllScope(ctx context.Context, userID, patID string) error
 }
