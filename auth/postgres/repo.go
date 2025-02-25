@@ -280,9 +280,12 @@ func (pr *patRepo) Revoke(ctx context.Context, userID, patID string) error {
 		WHERE user_id = :user_id AND id = :id`
 
 	upm := dbPagemeta{
-		User:      userID,
-		ID:        patID,
-		ExpiresAt: time.Now(),
+		User: userID,
+		ID:   patID,
+		RevokedAt: sql.NullTime{
+			Time:  time.Now(),
+			Valid: true,
+		},
 	}
 
 	_, err := pr.db.NamedQueryContext(ctx, q, upm)

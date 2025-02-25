@@ -44,6 +44,7 @@ type dbPagemeta struct {
 	Name        string       `db:"name"`
 	UpdatedAt   sql.NullTime `db:"updated_at"`
 	ExpiresAt   time.Time    `db:"expires_at"`
+	RevokedAt   sql.NullTime `db:"revoked_at"`
 	Description string       `db:"description"`
 	Secret      string       `db:"secret"`
 }
