@@ -108,10 +108,11 @@ type service struct {
 	loginDuration      time.Duration
 	refreshDuration    time.Duration
 	invitationDuration time.Duration
+	callback           CallBack
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, pats PATSRepository, hasher Hasher, idp supermq.IDProvider, tokenizer Tokenizer, policyEvaluator policies.Evaluator, policyService policies.Service, loginDuration, refreshDuration, invitationDuration time.Duration) Service {
+func New(keys KeyRepository, pats PATSRepository, hasher Hasher, idp supermq.IDProvider, tokenizer Tokenizer, policyEvaluator policies.Evaluator, policyService policies.Service, loginDuration, refreshDuration, invitationDuration time.Duration, callback CallBack) Service {
 	return &service{
 		tokenizer:          tokenizer,
 		keys:               keys,
@@ -123,6 +124,7 @@ func New(keys KeyRepository, pats PATSRepository, hasher Hasher, idp supermq.IDP
 		loginDuration:      loginDuration,
 		refreshDuration:    refreshDuration,
 		invitationDuration: invitationDuration,
+		callback:           callback,
 	}
 }
 
@@ -211,6 +213,11 @@ func (svc service) Authorize(ctx context.Context, pr policies.Policy) error {
 	if err := svc.checkPolicy(ctx, pr); err != nil {
 		return err
 	}
+
+	if err := svc.callback.Authorize(ctx, pr); err != nil {
+		return err
+	}
+
 	return nil
 }
 

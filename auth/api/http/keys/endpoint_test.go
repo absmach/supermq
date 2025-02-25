@@ -75,8 +75,9 @@ func newService() (auth.Service, *mocks.KeyRepository) {
 	pService := new(policymocks.Service)
 	pEvaluator := new(policymocks.Evaluator)
 	t := jwt.New([]byte(secret))
+	callback := new(mocks.CallBack)
 
-	return auth.New(krepo, pRepo, hash, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), krepo
+	return auth.New(krepo, pRepo, hash, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration, callback), krepo
 }
 
 func newServer(svc auth.Service) *httptest.Server {
