@@ -198,17 +198,17 @@ func pageQuery(pm domains.InvitationPageMeta) string {
 }
 
 type dbInvitation struct {
-	InvitedBy     string       `db:"invited_by"`
-	InviteeUserID string       `db:"invitee_user_id"`
-	DomainID      string       `db:"domain_id"`
-	DomainName    string       `db:"domain_name,omitempty"`
-	RoleID        string       `db:"role_id,omitempty"`
-	RoleName      string       `db:"role_name,omitempty"`
-	Relation      string       `db:"relation"`
-	CreatedAt     time.Time    `db:"created_at"`
-	UpdatedAt     sql.NullTime `db:"updated_at,omitempty"`
-	ConfirmedAt   sql.NullTime `db:"confirmed_at,omitempty"`
-	RejectedAt    sql.NullTime `db:"rejected_at,omitempty"`
+	InvitedBy     string         `db:"invited_by"`
+	InviteeUserID string         `db:"invitee_user_id"`
+	DomainID      string         `db:"domain_id"`
+	DomainName    sql.NullString `db:"domain_name,omitempty"`
+	RoleID        string         `db:"role_id,omitempty"`
+	RoleName      sql.NullString `db:"role_name,omitempty"`
+	Relation      string         `db:"relation"`
+	CreatedAt     time.Time      `db:"created_at"`
+	UpdatedAt     sql.NullTime   `db:"updated_at,omitempty"`
+	ConfirmedAt   sql.NullTime   `db:"confirmed_at,omitempty"`
+	RejectedAt    sql.NullTime   `db:"rejected_at,omitempty"`
 }
 
 func toDBInvitation(inv domains.Invitation) dbInvitation {
@@ -251,12 +251,19 @@ func toInvitation(dbinv dbInvitation) domains.Invitation {
 		InvitedBy:     dbinv.InvitedBy,
 		InviteeUserID: dbinv.InviteeUserID,
 		DomainID:      dbinv.DomainID,
-		DomainName:    dbinv.DomainName,
+		DomainName:    toString(dbinv.DomainName),
 		RoleID:        dbinv.RoleID,
-		RoleName:      dbinv.RoleName,
+		RoleName:      toString(dbinv.RoleName),
 		CreatedAt:     dbinv.CreatedAt,
 		UpdatedAt:     updatedAt,
 		ConfirmedAt:   confirmedAt,
 		RejectedAt:    rejectedAt,
 	}
+}
+
+func toString(s sql.NullString) string {
+	if s.Valid {
+		return s.String
+	}
+	return ""
 }

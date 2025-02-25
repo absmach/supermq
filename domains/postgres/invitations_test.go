@@ -19,6 +19,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const roleName = "roleName"
+
 var invalidUUID = strings.Repeat("a", 37)
 
 func TestSaveInvitation(t *testing.T) {
@@ -30,7 +32,7 @@ func TestSaveInvitation(t *testing.T) {
 	})
 	repo := postgres.NewRepository(database)
 
-	domainID := saveDomain(t, repo)
+	dom := saveDomain(t, repo)
 	userID := testsutil.GenerateUUID(t)
 	roleID := testsutil.GenerateUUID(t)
 
@@ -44,7 +46,7 @@ func TestSaveInvitation(t *testing.T) {
 			invitation: domains.Invitation{
 				InvitedBy:     testsutil.GenerateUUID(t),
 				InviteeUserID: userID,
-				DomainID:      domainID,
+				DomainID:      dom.ID,
 				RoleID:        roleID,
 				CreatedAt:     time.Now(),
 			},
@@ -55,7 +57,7 @@ func TestSaveInvitation(t *testing.T) {
 			invitation: domains.Invitation{
 				InvitedBy:     testsutil.GenerateUUID(t),
 				InviteeUserID: testsutil.GenerateUUID(t),
-				DomainID:      domainID,
+				DomainID:      dom.ID,
 				CreatedAt:     time.Now(),
 				RoleID:        roleID,
 				ConfirmedAt:   time.Now(),
@@ -67,7 +69,7 @@ func TestSaveInvitation(t *testing.T) {
 			invitation: domains.Invitation{
 				InvitedBy:     testsutil.GenerateUUID(t),
 				InviteeUserID: userID,
-				DomainID:      domainID,
+				DomainID:      dom.ID,
 				RoleID:        roleID,
 				CreatedAt:     time.Now(),
 			},
@@ -78,7 +80,7 @@ func TestSaveInvitation(t *testing.T) {
 			invitation: domains.Invitation{
 				InvitedBy:     invalidUUID,
 				InviteeUserID: testsutil.GenerateUUID(t),
-				DomainID:      domainID,
+				DomainID:      dom.ID,
 				RoleID:        roleID,
 				CreatedAt:     time.Now(),
 			},
@@ -120,7 +122,7 @@ func TestSaveInvitation(t *testing.T) {
 			desc: "add invitation with empty invitation invitee user id",
 			invitation: domains.Invitation{
 				InvitedBy: testsutil.GenerateUUID(t),
-				DomainID:  domainID,
+				DomainID:  dom.ID,
 				RoleID:    roleID,
 				CreatedAt: time.Now(),
 			},
@@ -129,7 +131,7 @@ func TestSaveInvitation(t *testing.T) {
 		{
 			desc: "add invitation with empty invitation invited_by",
 			invitation: domains.Invitation{
-				DomainID:      domainID,
+				DomainID:      dom.ID,
 				InviteeUserID: testsutil.GenerateUUID(t),
 				RoleID:        roleID,
 				CreatedAt:     time.Now(),
@@ -141,7 +143,7 @@ func TestSaveInvitation(t *testing.T) {
 			invitation: domains.Invitation{
 				InvitedBy:     testsutil.GenerateUUID(t),
 				InviteeUserID: testsutil.GenerateUUID(t),
-				DomainID:      domainID,
+				DomainID:      dom.ID,
 				CreatedAt:     time.Now(),
 			},
 			err: nil,
@@ -164,12 +166,12 @@ func TestInvitationRetrieve(t *testing.T) {
 	})
 	repo := postgres.NewRepository(database)
 
-	domainID := saveDomain(t, repo)
+	dom := saveDomain(t, repo)
 
 	invitation := domains.Invitation{
 		InvitedBy:     testsutil.GenerateUUID(t),
 		InviteeUserID: testsutil.GenerateUUID(t),
-		DomainID:      domainID,
+		DomainID:      dom.ID,
 		RoleID:        testsutil.GenerateUUID(t),
 		CreatedAt:     time.Now().UTC().Truncate(time.Microsecond),
 	}
@@ -252,7 +254,7 @@ func TestInvitationRetrieveAll(t *testing.T) {
 	})
 	repo := postgres.NewRepository(database)
 
-	domainID := saveDomain(t, repo)
+	dom := saveDomain(t, repo)
 
 	num := 200
 
@@ -261,7 +263,8 @@ func TestInvitationRetrieveAll(t *testing.T) {
 		invitation := domains.Invitation{
 			InvitedBy:     testsutil.GenerateUUID(t),
 			InviteeUserID: testsutil.GenerateUUID(t),
-			DomainID:      domainID,
+			DomainID:      dom.ID,
+			DomainName:    dom.Name,
 			RoleID:        testsutil.GenerateUUID(t),
 			CreatedAt:     time.Now().UTC().Truncate(time.Microsecond),
 		}
@@ -639,13 +642,15 @@ func TestInvitationUpdateConfirmation(t *testing.T) {
 	})
 	repo := postgres.NewRepository(database)
 
-	domainID := saveDomain(t, repo)
+	dom := saveDomain(t, repo)
 
 	invitation := domains.Invitation{
 		InvitedBy:     testsutil.GenerateUUID(t),
 		InviteeUserID: testsutil.GenerateUUID(t),
-		DomainID:      domainID,
+		DomainID:      dom.ID,
+		DomainName:    dom.Name,
 		RoleID:        testsutil.GenerateUUID(t),
+		RoleName:      roleName,
 		CreatedAt:     time.Now(),
 	}
 	err := repo.SaveInvitation(context.Background(), invitation)
@@ -701,13 +706,15 @@ func TestInvitationUpdateRejection(t *testing.T) {
 	})
 	repo := postgres.NewRepository(database)
 
-	domainID := saveDomain(t, repo)
+	dom := saveDomain(t, repo)
 
 	invitation := domains.Invitation{
 		InvitedBy:     testsutil.GenerateUUID(t),
 		InviteeUserID: testsutil.GenerateUUID(t),
-		DomainID:      domainID,
+		DomainID:      dom.ID,
+		DomainName:    dom.Name,
 		RoleID:        testsutil.GenerateUUID(t),
+		RoleName:      roleName,
 		CreatedAt:     time.Now(),
 	}
 	err := repo.SaveInvitation(context.Background(), invitation)
@@ -763,13 +770,15 @@ func TestInvitationDelete(t *testing.T) {
 	})
 	repo := postgres.NewRepository(database)
 
-	domainID := saveDomain(t, repo)
+	dom := saveDomain(t, repo)
 
 	invitation := domains.Invitation{
 		InvitedBy:     testsutil.GenerateUUID(t),
 		InviteeUserID: testsutil.GenerateUUID(t),
-		DomainID:      domainID,
+		DomainID:      dom.ID,
+		DomainName:    dom.Name,
 		RoleID:        testsutil.GenerateUUID(t),
+		RoleName:      roleName,
 		CreatedAt:     time.Now(),
 	}
 	err := repo.SaveInvitation(context.Background(), invitation)
@@ -810,7 +819,7 @@ func TestInvitationDelete(t *testing.T) {
 	}
 }
 
-func saveDomain(t *testing.T, repo domains.Repository) string {
+func saveDomain(t *testing.T, repo domains.Repository) domains.Domain {
 	domain := domains.Domain{
 		ID:    testsutil.GenerateUUID(t),
 		Name:  "test",
@@ -829,5 +838,5 @@ func saveDomain(t *testing.T, repo domains.Repository) string {
 	_, err := repo.SaveDomain(context.Background(), domain)
 	require.Nil(t, err, fmt.Sprintf("failed to save domain %s", domain.ID))
 
-	return domain.ID
+	return domain
 }
