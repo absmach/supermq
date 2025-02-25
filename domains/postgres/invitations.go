@@ -253,7 +253,7 @@ func toInvitation(dbinv dbInvitation) domains.Invitation {
 		DomainID:      dbinv.DomainID,
 		DomainName:    toString(dbinv.DomainName),
 		RoleID:        dbinv.RoleID,
-		RoleName:      toString(dbinv.DomainName),
+		RoleName:      toString(dbinv.RoleName),
 		CreatedAt:     dbinv.CreatedAt,
 		UpdatedAt:     updatedAt,
 		ConfirmedAt:   confirmedAt,

@@ -265,7 +265,6 @@ func TestInvitationRetrieveAll(t *testing.T) {
 			InviteeUserID: testsutil.GenerateUUID(t),
 			DomainID:      dom.ID,
 			DomainName:    dom.Name,
-			RoleName:      "test",
 			RoleID:        testsutil.GenerateUUID(t),
 			CreatedAt:     time.Now().UTC().Truncate(time.Microsecond),
 		}
