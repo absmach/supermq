@@ -1,8 +1,8 @@
-//go:build rabbitmq
-// +build rabbitmq
-
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
+
+//go:build rabbitmq
+// +build rabbitmq
 
 package brokers
 
