@@ -183,7 +183,7 @@ func (svc service) RetrieveGroupHierarchy(ctx context.Context, session smqauthn.
 		return HierarchyPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	hids := svc.getGroupIDs(hp.Groups)
-	ids, err := svc.filterAllowedGroupIDsOfUserID(ctx, session.DomainUserID, "read_permission", hids)
+	ids, err := svc.filterAllowedGroupIDsOfUserID(ctx, session.UserID, "read_permission", hids)
 	if err != nil {
 		return HierarchyPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
@@ -454,7 +454,7 @@ func (svc service) DeleteGroup(ctx context.Context, session smqauthn.Session, id
 			Object:      id,
 		})
 	}
-	if err := svc.RemoveEntitiesRoles(ctx, session.DomainID, session.DomainUserID, []string{id}, filterDeletePolicies, deletePolicies); err != nil {
+	if err := svc.RemoveEntitiesRoles(ctx, session.DomainID, session.UserID, []string{id}, filterDeletePolicies, deletePolicies); err != nil {
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
 	}
 

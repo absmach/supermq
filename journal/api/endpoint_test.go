@@ -379,11 +379,7 @@ func TestListEntityJournalsEndpoint(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.desc, func(t *testing.T) {
 			if c.token == validToken {
-				c.session = smqauthn.Session{
-					UserID:       userID,
-					DomainID:     domainID,
-					DomainUserID: domainID + "_" + userID,
-				}
+				c.session = smqauthn.Session{UserID: userID, DomainID: domainID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, c.token).Return(c.session, c.authnErr)
 			svcCall := svc.On("RetrieveAll", mock.Anything, c.session, mock.Anything).Return(journal.JournalsPage{}, c.svcErr)
@@ -462,11 +458,7 @@ func TestRetrieveClientTelemetryEndpoint(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.desc, func(t *testing.T) {
 			if c.token == validToken {
-				c.session = smqauthn.Session{
-					UserID:       userID,
-					DomainID:     c.domainID,
-					DomainUserID: c.domainID + "_" + userID,
-				}
+				c.session = smqauthn.Session{UserID: userID, DomainID: c.domainID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, c.token).Return(c.session, c.authnErr)
 			svcCall := svc.On("RetrieveClientTelemetry", mock.Anything, c.session, c.clientID).Return(journal.ClientTelemetry{}, c.svcErr)

@@ -105,10 +105,3 @@ type Service interface {
 	// ListPermissions lists permission betweeen given subject and object .
 	ListPermissions(ctx context.Context, pr Policy, permissionsFilter []string) (Permissions, error)
 }
-
-func EncodeDomainUserID(domainID, userID string) string {
-	if domainID == "" || userID == "" {
-		return ""
-	}
-	return domainID + "_" + userID
-}

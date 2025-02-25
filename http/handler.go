@@ -148,7 +148,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
 		}
 		clientType = policies.UserType
-		clientID = authnSession.DomainUserID
+		clientID = authnSession.UserID
 	default:
 		return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
 	}

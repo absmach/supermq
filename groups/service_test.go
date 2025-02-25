@@ -68,7 +68,7 @@ var (
 	}
 	validID          = testsutil.GenerateUUID(&testing.T{})
 	errRollbackRoles = errors.New("failed to rollback roles")
-	validSession     = authn.Session{UserID: validID, DomainID: validID, DomainUserID: validID}
+	validSession     = authn.Session{UserID: validID, DomainID: validID}
 )
 
 var (
@@ -431,7 +431,7 @@ func TestListGroups(t *testing.T) {
 	}{
 		{
 			desc:    "list groups as super admin successfully",
-			session: smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID, SuperAdmin: true},
+			session: smqauthn.Session{UserID: validID, DomainID: validID, SuperAdmin: true},
 			pageMeta: groups.PageMeta{
 				Limit:    10,
 				Offset:   0,
@@ -453,7 +453,7 @@ func TestListGroups(t *testing.T) {
 		},
 		{
 			desc:    "list groups as super admin with failed to retrieve",
-			session: smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID, SuperAdmin: true},
+			session: smqauthn.Session{UserID: validID, DomainID: validID, SuperAdmin: true},
 			pageMeta: groups.PageMeta{
 				Limit:    10,
 				Offset:   0,

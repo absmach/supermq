@@ -356,10 +356,9 @@ func (svc service) checkUserDomain(ctx context.Context, key Key) (subject string
 		}); err == nil {
 			return key.User, nil
 		}
-		// Check user is domain member.
-		domainUserSubject := EncodeDomainUserID(key.Domain, key.User)
+
 		if err = svc.Authorize(ctx, policies.Policy{
-			Subject:     domainUserSubject,
+			Subject:     key.User,
 			SubjectType: policies.UserType,
 			Permission:  policies.MembershipPermission,
 			Object:      key.Domain,
@@ -367,7 +366,7 @@ func (svc service) checkUserDomain(ctx context.Context, key Key) (subject string
 		}); err != nil {
 			return "", err
 		}
-		return domainUserSubject, nil
+		return key.User, nil
 	}
 	return "", nil
 }
@@ -429,31 +428,6 @@ func SwitchToPermission(relation string) string {
 		return policies.ViewPermission
 	default:
 		return relation
-	}
-}
-
-func EncodeDomainUserID(domainID, userID string) string {
-	if domainID == "" || userID == "" {
-		return ""
-	}
-	return domainID + "_" + userID
-}
-
-func DecodeDomainUserID(domainUserID string) (string, string) {
-	if domainUserID == "" {
-		return domainUserID, domainUserID
-	}
-	duid := strings.Split(domainUserID, "_")
-
-	switch {
-	case len(duid) == 2:
-		return duid[0], duid[1]
-	case len(duid) == 1:
-		return duid[0], ""
-	case len(duid) == 0 || len(duid) > 2:
-		fallthrough
-	default:
-		return "", ""
 	}
 }
 
