@@ -14,6 +14,7 @@ volumes:
   supermq-channels-db-volume:
   supermq-clients-redis-volume:
   supermq-broker-volume:
+  supermq-mqtt-broker-volume:
   supermq-spicedb-db-volume:
   supermq-auth-db-volume:
   supermq-pat-db-volume:
@@ -869,7 +870,7 @@ services:
           create_host_path: true
 
   jaeger:
-    image: jaegertracing/all-in-one:1.60
+    image: jaegertracing/all-in-one:1.66.0
     container_name: supermq-jaeger
     environment:
       COLLECTOR_OTLP_ENABLED: ${SMQ_JAEGER_COLLECTOR_OTLP_ENABLED}
@@ -885,6 +886,7 @@ services:
     container_name: supermq-mqtt
     depends_on:
       - clients
+      - rabbitmq
       - nats
     restart: on-failure
     environment:
@@ -892,11 +894,16 @@ services:
       SMQ_MQTT_ADAPTER_MQTT_PORT: ${SMQ_MQTT_ADAPTER_MQTT_PORT}
       SMQ_MQTT_ADAPTER_MQTT_TARGET_HOST: ${SMQ_MQTT_ADAPTER_MQTT_TARGET_HOST}
       SMQ_MQTT_ADAPTER_MQTT_TARGET_PORT: ${SMQ_MQTT_ADAPTER_MQTT_TARGET_PORT}
+      SMQ_MQTT_ADAPTER_MQTT_TARGET_USERNAME: ${SMQ_MQTT_ADAPTER_MQTT_TARGET_USERNAME}
+      SMQ_MQTT_ADAPTER_MQTT_TARGET_PASSWORD: ${SMQ_MQTT_ADAPTER_MQTT_TARGET_PASSWORD}
+      SMQ_MQTT_ADAPTER_FORWARDER_TIMEOUT: ${SMQ_MQTT_ADAPTER_FORWARDER_TIMEOUT}
       SMQ_MQTT_ADAPTER_MQTT_TARGET_HEALTH_CHECK: ${SMQ_MQTT_ADAPTER_MQTT_TARGET_HEALTH_CHECK}
+      SMQ_MQTT_ADAPTER_MQTT_QOS: ${SMQ_MQTT_ADAPTER_MQTT_QOS}
       SMQ_MQTT_ADAPTER_WS_PORT: ${SMQ_MQTT_ADAPTER_WS_PORT}
       SMQ_MQTT_ADAPTER_INSTANCE_ID: ${SMQ_MQTT_ADAPTER_INSTANCE_ID}
       SMQ_MQTT_ADAPTER_WS_TARGET_HOST: ${SMQ_MQTT_ADAPTER_WS_TARGET_HOST}
       SMQ_MQTT_ADAPTER_WS_TARGET_PORT: ${SMQ_MQTT_ADAPTER_WS_TARGET_PORT}
+      SMQ_MQTT_ADAPTER_WS_TARGET_PATH: ${SMQ_MQTT_ADAPTER_WS_TARGET_PATH}
       SMQ_MQTT_ADAPTER_INSTANCE: ${SMQ_MQTT_ADAPTER_INSTANCE}
       SMQ_ES_URL: ${SMQ_ES_URL}
       SMQ_CLIENTS_GRPC_URL: ${SMQ_CLIENTS_GRPC_URL}
@@ -1202,8 +1209,28 @@ services:
         bind:
           create_host_path: true
 
+  rabbitmq:
+    image: rabbitmq:4.0.5-alpine
+    container_name: supermq-rabbitmq
+    restart: on-failure
+    environment:
+      RABBITMQ_ERLANG_COOKIE: ${SMQ_RABBITMQ_COOKIE}
+      RABBITMQ_DEFAULT_USER: ${SMQ_RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${SMQ_RABBITMQ_PASS}
+      RABBITMQ_DEFAULT_VHOST: ${SMQ_RABBITMQ_VHOST}
+      RABBITMQ_CONFIG_FILES: /etc/rabbitmq/conf.d/
+    ports:
+      - ${SMQ_RABBITMQ_PORT}:${SMQ_RABBITMQ_PORT}
+      - ${SMQ_RABBITMQ_HTTP_PORT}:${SMQ_RABBITMQ_HTTP_PORT}
+    volumes:
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/conf.d/10-defaults.conf
+      - supermq-mqtt-broker-volume:/var/lib/rabbitmq
+    networks:
+      - supermq-base-net
+
   nats:
-    image: nats:2.10.9-alpine
+    image: nats:2.10.25-alpine
     container_name: supermq-nats
     restart: on-failure
     command: "--config=/etc/nats/nats.conf"

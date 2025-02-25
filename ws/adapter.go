@@ -6,6 +6,7 @@ package ws
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
@@ -92,6 +93,9 @@ func (svc *adapterService) Subscribe(ctx context.Context, clientKey, chanID, sub
 func (svc *adapterService) authorize(ctx context.Context, clientKey, chanID string, msgType connections.ConnType) (string, error) {
 	authnReq := &grpcClientsV1.AuthnReq{
 		ClientSecret: clientKey,
+	}
+	if strings.HasPrefix(clientKey, "Client") {
+		authnReq.ClientSecret = extractClientSecret(clientKey)
 	}
 	authnRes, err := svc.clients.Authenticate(ctx, authnReq)
 	if err != nil {
