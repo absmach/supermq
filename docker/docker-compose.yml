@@ -331,6 +331,8 @@ services:
       - http-adapter
       - ws-adapter
       - coap-adapter
+      - ui
+      - ui-backend
 
   clients-db:
     image: postgres:16.2-alpine
