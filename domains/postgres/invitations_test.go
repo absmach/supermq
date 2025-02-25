@@ -265,8 +265,8 @@ func TestInvitationRetrieveAll(t *testing.T) {
 			InviteeUserID: testsutil.GenerateUUID(t),
 			DomainID:      dom.ID,
 			DomainName:    dom.Name,
+			RoleName:      "test",
 			RoleID:        testsutil.GenerateUUID(t),
-			RoleName:      roleName,
 			CreatedAt:     time.Now().UTC().Truncate(time.Microsecond),
 		}
 		err := repo.SaveInvitation(context.Background(), invitation)
