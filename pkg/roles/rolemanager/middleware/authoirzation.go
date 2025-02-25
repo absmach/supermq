@@ -9,6 +9,7 @@ import (
 	"github.com/absmach/supermq/pkg/authn"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
 	"github.com/absmach/supermq/pkg/svcutil"
@@ -209,6 +210,10 @@ func (ram RoleManagerAuthorizationMiddleware) RoleAddMembers(ctx context.Context
 	}); err != nil {
 		return []string{}, err
 	}
+
+	if err := ram.authorizeMembers(ctx, session, members); err != nil {
+		return []string{}, err
+	}
 	return ram.svc.RoleAddMembers(ctx, session, entityID, roleID, members)
 }
 
@@ -313,4 +318,40 @@ func (ram RoleManagerAuthorizationMiddleware) authorize(ctx context.Context, op 
 
 func (ram RoleManagerAuthorizationMiddleware) RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, memberID string) (err error) {
 	return ram.svc.RemoveMemberFromAllRoles(ctx, session, memberID)
+}
+
+func (ram RoleManagerAuthorizationMiddleware) authorizeMembers(ctx context.Context, session authn.Session, members []string) error {
+	switch ram.entityType {
+	case policies.DomainType:
+		for _, member := range members {
+			if err := ram.authz.Authorize(ctx, smqauthz.PolicyReq{
+				Permission:  policies.MembershipPermission,
+				Subject:     member,
+				SubjectType: policies.UserType,
+				SubjectKind: policies.UsersKind,
+				Object:      policies.SuperMQObject,
+				ObjectType:  policies.PlatformType,
+			}); err != nil {
+				return errors.Wrap(errors.ErrAuthorization, err)
+			}
+		}
+		return nil
+
+	case policies.ChannelType, policies.GroupType, policies.ClientType:
+		for _, member := range members {
+			if err := ram.authz.Authorize(ctx, smqauthz.PolicyReq{
+				Permission:  policies.MembershipPermission,
+				Subject:     policies.EncodeDomainUserID(session.DomainID, member),
+				SubjectType: policies.UserType,
+				SubjectKind: policies.UsersKind,
+				Object:      session.DomainID,
+				ObjectType:  policies.DomainType,
+			}); err != nil {
+				return errors.Wrap(svcerr.ErrDomainAuthorization, err)
+			}
+		}
+		return nil
+	default:
+		return errors.Wrap(errors.ErrAuthorization, errors.New("unsupported policies type"))
+	}
 }
