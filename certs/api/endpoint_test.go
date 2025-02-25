@@ -226,7 +226,7 @@ func TestIssueCert(t *testing.T) {
 				body:        strings.NewReader(tc.request),
 			}
 			if tc.token == valid {
-				tc.session = smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("IssueCert", mock.Anything, tc.domainID, tc.token, tc.clientID, tc.ttl).Return(tc.svcRes, tc.svcErr)
@@ -312,7 +312,7 @@ func TestViewCert(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == valid {
-				tc.session = smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("ViewCert", mock.Anything, tc.serialID).Return(tc.svcRes, tc.svcErr)
@@ -405,7 +405,7 @@ func TestRevokeCert(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == valid {
-				tc.session = smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("RevokeCert", mock.Anything, tc.domainID, tc.token, tc.serialID).Return(tc.svcRes, tc.svcErr)
@@ -648,7 +648,7 @@ func TestListSerials(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == valid {
-				tc.session = smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("ListSerials", mock.Anything, tc.clientID, certs.PageMetadata{Revoked: tc.revoked, Offset: tc.offset, Limit: tc.limit}).Return(tc.svcRes, tc.svcErr)

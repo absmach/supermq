@@ -161,13 +161,13 @@ func TestRefreshToken(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID}, tc.identifyErr)
-			svcCall := svc.On("RefreshToken", mock.Anything, smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID}, tc.token).Return(tc.svcRes, tc.svcErr)
+			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(smqauthn.Session{UserID: validID, DomainID: validID}, tc.identifyErr)
+			svcCall := svc.On("RefreshToken", mock.Anything, smqauthn.Session{UserID: validID, DomainID: validID}, tc.token).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.RefreshToken(tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "RefreshToken", mock.Anything, smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID}, tc.token)
+				ok := svcCall.Parent.AssertCalled(t, "RefreshToken", mock.Anything, smqauthn.Session{UserID: validID, DomainID: validID}, tc.token)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()

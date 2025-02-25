@@ -111,7 +111,7 @@ func (r ProvisionManageService) RemoveEntitiesRoles(ctx context.Context, domainI
 	}
 	for _, emr := range emrs {
 		deletePolicies = append(deletePolicies, policies.Policy{
-			Subject:     policies.EncodeDomainUserID(domainID, emr.MemberID),
+			Subject:     emr.MemberID,
 			SubjectType: policies.UserType,
 			Relation:    policies.MemberRelation,
 			ObjectType:  policies.RoleType,
@@ -187,7 +187,7 @@ func (r ProvisionManageService) AddNewEntitiesRoles(ctx context.Context, domainI
 			for _, member := range members {
 				prs = append(prs, policies.Policy{
 					SubjectType: policies.UserType,
-					Subject:     policies.EncodeDomainUserID(domainID, member),
+					Subject:     member,
 					Relation:    policies.MemberRelation,
 					Object:      id,
 					ObjectType:  policies.RoleType,
@@ -259,7 +259,7 @@ func (r ProvisionManageService) AddRole(ctx context.Context, session authn.Sessi
 	for _, member := range optionalMembers {
 		prs = append(prs, policies.Policy{
 			SubjectType: policies.UserType,
-			Subject:     policies.EncodeDomainUserID(session.DomainID, member),
+			Subject:     member,
 			Relation:    policies.MemberRelation,
 			Object:      id,
 			ObjectType:  policies.RoleType,
@@ -498,7 +498,7 @@ func (r ProvisionManageService) RoleAddMembers(ctx context.Context, session auth
 	for _, mem := range members {
 		prs = append(prs, policies.Policy{
 			SubjectType: policies.UserType,
-			Subject:     policies.EncodeDomainUserID(session.DomainID, mem),
+			Subject:     mem,
 			Relation:    policies.MemberRelation,
 			Object:      ro.ID,
 			ObjectType:  policies.RoleType,
@@ -567,7 +567,7 @@ func (r ProvisionManageService) RoleRemoveMembers(ctx context.Context, session a
 	for _, mem := range members {
 		prs = append(prs, policies.Policy{
 			SubjectType: policies.UserType,
-			Subject:     policies.EncodeDomainUserID(session.DomainID, mem),
+			Subject:     mem,
 			Relation:    policies.MemberRelation,
 			Object:      ro.ID,
 			ObjectType:  policies.RoleType,

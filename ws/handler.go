@@ -180,7 +180,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 			return err
 		}
 		clientType = policies.UserType
-		clientID = authnSession.DomainUserID
+		clientID = authnSession.UserID
 	}
 
 	ar := &grpcChannelsV1.AuthzReq{
@@ -262,7 +262,7 @@ func (h *handler) authAccess(ctx context.Context, token, topic string, msgType c
 			return err
 		}
 		clientType = policies.UserType
-		clientID = authnSession.DomainUserID
+		clientID = authnSession.UserID
 	}
 
 	// Topics are in the format:
