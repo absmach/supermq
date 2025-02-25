@@ -74,7 +74,7 @@ func authorizePATEndpoint(svc auth.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return authorizeRes{}, err
 		}
-		err := svc.AuthorizePAT(ctx, req.userID, req.patID, req.platformEntityType, req.optionalDomainID, req.optionalDomainEntityType, req.operation, req.entityIDs...)
+		err := svc.AuthorizePAT(ctx, req.userID, req.patID, req.entityType, req.optionalDomainID, req.operation, req.entityID)
 		if err != nil {
 			return authorizeRes{authorized: false}, err
 		}

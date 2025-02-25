@@ -180,7 +180,6 @@ func (es *eventHandler) removeParentGroupHandler(ctx context.Context, data map[s
 	if err != nil {
 		return errors.Wrap(errRemoveParentGroupEvent, err)
 	}
-
 	if err := es.repo.UnassignParentGroup(ctx, g.Parent, id); err != nil {
 		return errors.Wrap(errRemoveParentGroupEvent, err)
 	}

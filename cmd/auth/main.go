@@ -21,12 +21,12 @@ import (
 	authgrpcapi "github.com/absmach/supermq/auth/api/grpc/auth"
 	tokengrpcapi "github.com/absmach/supermq/auth/api/grpc/token"
 	httpapi "github.com/absmach/supermq/auth/api/http"
-	"github.com/absmach/supermq/auth/bolt"
+	"github.com/absmach/supermq/auth/cache"
 	"github.com/absmach/supermq/auth/hasher"
 	"github.com/absmach/supermq/auth/jwt"
 	apostgres "github.com/absmach/supermq/auth/postgres"
 	"github.com/absmach/supermq/auth/tracing"
-	boltclient "github.com/absmach/supermq/internal/clients/bolt"
+	redisclient "github.com/absmach/supermq/internal/clients/redis"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/jaeger"
 	"github.com/absmach/supermq/pkg/policies/spicedb"
@@ -41,7 +41,7 @@ import (
 	"github.com/authzed/grpcutil"
 	"github.com/caarlos0/env/v11"
 	"github.com/jmoiron/sqlx"
-	"go.etcd.io/bbolt"
+	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -75,6 +75,8 @@ type config struct {
 	SpicedbPreSharedKey string        `env:"SMQ_SPICEDB_PRE_SHARED_KEY"       envDefault:"12345678"`
 	TraceRatio          float64       `env:"SMQ_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
 	ESURL               string        `env:"SMQ_ES_URL"                       envDefault:"nats://localhost:4222"`
+	CacheURL            string        `env:"SMQ_AUTH_CACHE_URL"               envDefault:"redis://localhost:6379/0"`
+	CacheKeyDuration    time.Duration `env:"SMQ_AUTH_CACHE_KEY_DURATION"      envDefault:"10m"`
 }
 
 func main() {
@@ -107,6 +109,14 @@ func main() {
 		logger.Error(err.Error())
 	}
 
+	cacheclient, err := redisclient.Connect(cfg.CacheURL)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer cacheclient.Close()
+
 	am := apostgres.Migration()
 	db, err := pgclient.Setup(dbConfig, *am)
 	if err != nil {
@@ -136,22 +146,7 @@ func main() {
 		return
 	}
 
-	boltDBConfig := boltclient.Config{}
-	if err := env.ParseWithOptions(&boltDBConfig, env.Options{Prefix: envPrefixPATDB}); err != nil {
-		logger.Error(fmt.Sprintf("failed to parse bolt db config : %s\n", err.Error()))
-		exitCode = 1
-		return
-	}
-
-	bClient, err := boltclient.Connect(boltDBConfig, bolt.Init)
-	if err != nil {
-		logger.Error(fmt.Sprintf("failed to connect to bolt db : %s\n", err.Error()))
-		exitCode = 1
-		return
-	}
-	defer bClient.Close()
-
-	svc := newService(ctx, db, tracer, cfg, dbConfig, logger, spicedbclient, bClient, boltDBConfig)
+	svc := newService(ctx, db, tracer, cfg, dbConfig, logger, spicedbclient, cacheclient, cfg.CacheKeyDuration)
 
 	grpcServerConfig := server.Config{Port: defSvcGRPCPort}
 	if err := env.ParseWithOptions(&grpcServerConfig, env.Options{Prefix: envPrefixGrpc}); err != nil {
@@ -231,10 +226,12 @@ func initSchema(ctx context.Context, client *authzed.ClientWithExperimental, sch
 	return nil
 }
 
-func newService(_ context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental, bClient *bbolt.DB, bConfig boltclient.Config) auth.Service {
+func newService(_ context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental, cacheClient *redis.Client, keyDuration time.Duration) auth.Service {
+	cache := cache.NewPatsCache(cacheClient, keyDuration)
+
 	database := pgclient.NewDatabase(db, dbConfig, tracer)
 	keysRepo := apostgres.New(database)
-	patsRepo := bolt.NewPATSRepository(bClient, bConfig.Bucket)
+	patsRepo := apostgres.NewPatRepo(database, cache)
 	hasher := hasher.New()
 	idProvider := uuid.New()
 
@@ -243,7 +240,7 @@ func newService(_ context.Context, db *sqlx.DB, tracer trace.Tracer, cfg config,
 
 	t := jwt.New([]byte(cfg.SecretKey))
 
-	svc := auth.New(keysRepo, patsRepo, hasher, idProvider, t, pEvaluator, pService, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration)
+	svc := auth.New(keysRepo, patsRepo, nil, hasher, idProvider, t, pEvaluator, pService, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics("auth", "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)

@@ -52,13 +52,12 @@ func (req authReq) validate() error {
 }
 
 type authPATReq struct {
-	userID                   string
-	patID                    string
-	platformEntityType       auth.PlatformEntityType
-	optionalDomainID         string
-	optionalDomainEntityType auth.DomainEntityType
-	operation                auth.OperationType
-	entityIDs                []string
+	userID           string
+	patID            string
+	entityType       auth.EntityType
+	optionalDomainID string
+	operation        auth.Operation
+	entityID         string
 }
 
 func (req authPATReq) validate() error {

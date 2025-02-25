@@ -47,13 +47,12 @@ type PolicyReq struct {
 }
 
 type PatReq struct {
-	UserID                   string                  `json:"user_id,omitempty"`                     // UserID
-	PatID                    string                  `json:"pat_id,omitempty"`                      // UserID
-	PlatformEntityType       auth.PlatformEntityType `json:"platform_entity_type,omitempty"`        // Platform entity type
-	OptionalDomainID         string                  `json:"optional_domainID,omitempty"`           // Optional domain id
-	OptionalDomainEntityType auth.DomainEntityType   `json:"optional_domain_entity_type,omitempty"` // Optional domain entity type
-	Operation                auth.OperationType      `json:"operation,omitempty"`                   // Operation
-	EntityIDs                []string                `json:"entityIDs,omitempty"`                   // EntityIDs
+	UserID           string          `json:"user_id,omitempty"`           // UserID
+	PatID            string          `json:"pat_id,omitempty"`            // UserID
+	EntityType       auth.EntityType `json:"entity_type,omitempty"`       // Entity type
+	OptionalDomainID string          `json:"optional_domainID,omitempty"` // Optional domain id
+	Operation        auth.Operation  `json:"operation,omitempty"`         // Operation
+	EntityID         string          `json:"entityID,omitempty"`          // EntityID
 }
 
 // Authz is supermq authorization library.

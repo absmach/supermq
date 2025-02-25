@@ -10,6 +10,7 @@ import (
 
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/auth"
+	"github.com/absmach/supermq/pkg/errors"
 )
 
 type createPatReq struct {
@@ -17,15 +18,13 @@ type createPatReq struct {
 	Name        string        `json:"name,omitempty"`
 	Description string        `json:"description,omitempty"`
 	Duration    time.Duration `json:"duration,omitempty"`
-	Scope       auth.Scope    `json:"scope,omitempty"`
 }
 
 func (cpr *createPatReq) UnmarshalJSON(data []byte) error {
 	var temp struct {
-		Name        string     `json:"name,omitempty"`
-		Description string     `json:"description,omitempty"`
-		Duration    string     `json:"duration,omitempty"`
-		Scope       auth.Scope `json:"scope,omitempty"`
+		Name        string `json:"name,omitempty"`
+		Description string `json:"description,omitempty"`
+		Duration    string `json:"duration,omitempty"`
 	}
 	if err := json.Unmarshal(data, &temp); err != nil {
 		return err
@@ -37,7 +36,6 @@ func (cpr *createPatReq) UnmarshalJSON(data []byte) error {
 	cpr.Name = temp.Name
 	cpr.Description = temp.Description
 	cpr.Duration = duration
-	cpr.Scope = temp.Scope
 	return nil
 }
 
@@ -63,7 +61,7 @@ func (req retrievePatReq) validate() (err error) {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
+		return apiutil.ErrMissingPATID
 	}
 	return nil
 }
@@ -79,7 +77,7 @@ func (req updatePatNameReq) validate() (err error) {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
+		return apiutil.ErrMissingPATID
 	}
 	if strings.TrimSpace(req.Name) == "" {
 		return apiutil.ErrMissingName
@@ -98,7 +96,7 @@ func (req updatePatDescriptionReq) validate() (err error) {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
+		return apiutil.ErrMissingPATID
 	}
 	if strings.TrimSpace(req.Description) == "" {
 		return apiutil.ErrMissingDescription
@@ -129,7 +127,7 @@ func (req deletePatReq) validate() (err error) {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
+		return apiutil.ErrMissingPATID
 	}
 	return nil
 }
@@ -161,7 +159,7 @@ func (req resetPatSecretReq) validate() (err error) {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
+		return apiutil.ErrMissingPATID
 	}
 	return nil
 }
@@ -176,128 +174,111 @@ func (req revokePatSecretReq) validate() (err error) {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
+		return apiutil.ErrMissingPATID
 	}
 	return nil
 }
 
-type addPatScopeEntryReq struct {
-	token                    string
-	id                       string
-	PlatformEntityType       auth.PlatformEntityType `json:"platform_entity_type,omitempty"`
-	OptionalDomainID         string                  `json:"optional_domain_id,omitempty"`
-	OptionalDomainEntityType auth.DomainEntityType   `json:"optional_domain_entity_type,omitempty"`
-	Operation                auth.OperationType      `json:"operation,omitempty"`
-	EntityIDs                []string                `json:"entity_ids,omitempty"`
+type clearAllPATReq struct {
+	token string
 }
 
-func (apser *addPatScopeEntryReq) UnmarshalJSON(data []byte) error {
-	var temp struct {
-		PlatformEntityType       string   `json:"platform_entity_type,omitempty"`
-		OptionalDomainID         string   `json:"optional_domain_id,omitempty"`
-		OptionalDomainEntityType string   `json:"optional_domain_entity_type,omitempty"`
-		Operation                string   `json:"operation,omitempty"`
-		EntityIDs                []string `json:"entity_ids,omitempty"`
+func (req clearAllPATReq) validate() error {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
 	}
-
-	if err := json.Unmarshal(data, &temp); err != nil {
-		return err
-	}
-
-	pet, err := auth.ParsePlatformEntityType(temp.PlatformEntityType)
-	if err != nil {
-		return err
-	}
-	odt, err := auth.ParseDomainEntityType(temp.OptionalDomainEntityType)
-	if err != nil {
-		return err
-	}
-	op, err := auth.ParseOperationType(temp.Operation)
-	if err != nil {
-		return err
-	}
-	apser.PlatformEntityType = pet
-	apser.OptionalDomainID = temp.OptionalDomainID
-	apser.OptionalDomainEntityType = odt
-	apser.Operation = op
-	apser.EntityIDs = temp.EntityIDs
 	return nil
 }
 
-func (req addPatScopeEntryReq) validate() (err error) {
+type addScopeReq struct {
+	token  string
+	id     string
+	Scopes []auth.Scope `json:"scopes,omitempty"`
+}
+
+func (aser *addScopeReq) UnmarshalJSON(data []byte) error {
+	type Alias addScopeReq
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(aser),
+	}
+
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (req addScopeReq) validate() (err error) {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
+		return apiutil.ErrMissingPATID
 	}
+
+	if len(req.Scopes) == 0 {
+		return apiutil.ErrValidation
+	}
+
+	for _, scope := range req.Scopes {
+		if err := scope.Validate(); err != nil {
+			return errors.Wrap(apiutil.ErrValidation, err)
+		}
+	}
+
 	return nil
 }
 
-type removePatScopeEntryReq struct {
-	token                    string
-	id                       string
-	PlatformEntityType       auth.PlatformEntityType `json:"platform_entity_type,omitempty"`
-	OptionalDomainID         string                  `json:"optional_domain_id,omitempty"`
-	OptionalDomainEntityType auth.DomainEntityType   `json:"optional_domain_entity_type,omitempty"`
-	Operation                auth.OperationType      `json:"operation,omitempty"`
-	EntityIDs                []string                `json:"entity_ids,omitempty"`
+type removeScopeReq struct {
+	token    string
+	id       string
+	ScopesID []string `json:"scopes_id,omitempty"`
 }
 
-func (rpser *removePatScopeEntryReq) UnmarshalJSON(data []byte) error {
-	var temp struct {
-		PlatformEntityType       string   `json:"platform_entity_type,omitempty"`
-		OptionalDomainID         string   `json:"optional_domain_id,omitempty"`
-		OptionalDomainEntityType string   `json:"optional_domain_entity_type,omitempty"`
-		Operation                string   `json:"operation,omitempty"`
-		EntityIDs                []string `json:"entity_ids,omitempty"`
-	}
-
-	if err := json.Unmarshal(data, &temp); err != nil {
-		return err
-	}
-
-	pet, err := auth.ParsePlatformEntityType(temp.PlatformEntityType)
-	if err != nil {
-		return err
-	}
-	odt, err := auth.ParseDomainEntityType(temp.OptionalDomainEntityType)
-	if err != nil {
-		return err
-	}
-	op, err := auth.ParseOperationType(temp.Operation)
-	if err != nil {
-		return err
-	}
-	rpser.PlatformEntityType = pet
-	rpser.OptionalDomainID = temp.OptionalDomainID
-	rpser.OptionalDomainEntityType = odt
-	rpser.Operation = op
-	rpser.EntityIDs = temp.EntityIDs
-	return nil
-}
-
-func (req removePatScopeEntryReq) validate() (err error) {
+func (req removeScopeReq) validate() (err error) {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
+		return apiutil.ErrMissingPATID
+	}
+	if len(req.ScopesID) == 0 {
+		return apiutil.ErrValidation
 	}
 	return nil
 }
 
-type clearAllScopeEntryReq struct {
+type clearAllScopeReq struct {
 	token string
 	id    string
 }
 
-func (req clearAllScopeEntryReq) validate() (err error) {
+func (req clearAllScopeReq) validate() (err error) {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
-		return apiutil.ErrMissingID
+		return apiutil.ErrMissingPATID
+	}
+	return nil
+}
+
+type listScopesReq struct {
+	token  string
+	offset uint64
+	limit  uint64
+	patID  string
+}
+
+func (req listScopesReq) validate() (err error) {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
+	if req.patID == "" {
+		return apiutil.ErrMissingPATID
 	}
 	return nil
 }

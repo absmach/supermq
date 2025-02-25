@@ -44,6 +44,13 @@ func MakeHandler(svc auth.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
 			opts...,
 		).ServeHTTP)
 
+		r.Delete("/", kithttp.NewServer(
+			clearAllPATEndpoint(svc),
+			decodeClearAllPATRequest,
+			api.EncodeResponse,
+			opts...,
+		).ServeHTTP)
+
 		r.Route("/{id}", func(r chi.Router) {
 			r.Get("/", kithttp.NewServer(
 				retrievePATEndpoint(svc),
@@ -91,22 +98,29 @@ func MakeHandler(svc auth.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
 
 			r.Route("/scope", func(r chi.Router) {
 				r.Patch("/add", kithttp.NewServer(
-					addPATScopeEntryEndpoint(svc),
-					decodeAddPATScopeEntryRequest,
+					addScopeEndpoint(svc),
+					decodeAddScopeRequest,
+					api.EncodeResponse,
+					opts...,
+				).ServeHTTP)
+
+				r.Get("/", kithttp.NewServer(
+					listScopesEndpoint(svc),
+					decodeListScopeRequest,
 					api.EncodeResponse,
 					opts...,
 				).ServeHTTP)
 
 				r.Patch("/remove", kithttp.NewServer(
-					removePATScopeEntryEndpoint(svc),
-					decodeRemovePATScopeEntryRequest,
+					removeScopeEndpoint(svc),
+					decodeRemoveScopeRequest,
 					api.EncodeResponse,
 					opts...,
 				).ServeHTTP)
 
 				r.Delete("/", kithttp.NewServer(
-					clearPATAllScopeEntryEndpoint(svc),
-					decodeClearPATAllScopeEntryRequest,
+					clearAllScopeEndpoint(svc),
+					decodeClearAllScopeRequest,
 					api.EncodeResponse,
 					opts...,
 				).ServeHTTP)
@@ -243,7 +257,18 @@ func decodeRevokePATSecretRequest(_ context.Context, r *http.Request) (interface
 	}, nil
 }
 
-func decodeAddPATScopeEntryRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeClearAllPATRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	token := apiutil.ExtractBearerToken(r)
+	if strings.HasPrefix(token, patPrefix) {
+		return nil, apiutil.ErrUnsupportedTokenType
+	}
+
+	return clearAllPATReq{
+		token: token,
+	}, nil
+}
+
+func decodeAddScopeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, apiutil.ErrUnsupportedContentType
 	}
@@ -253,7 +278,51 @@ func decodeAddPATScopeEntryRequest(_ context.Context, r *http.Request) (interfac
 		return nil, apiutil.ErrUnsupportedTokenType
 	}
 
-	req := addPatScopeEntryReq{
+	req := addScopeReq{
+		token: token,
+		id:    chi.URLParam(r, "id"),
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+	}
+
+	return req, nil
+}
+
+func decodeListScopeRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	l, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	o, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	token := apiutil.ExtractBearerToken(r)
+	if strings.HasPrefix(token, patPrefix) {
+		return nil, apiutil.ErrUnsupportedTokenType
+	}
+	req := listScopesReq{
+		token:  token,
+		limit:  l,
+		offset: o,
+		patID:  chi.URLParam(r, "id"),
+	}
+	return req, nil
+}
+
+func decodeRemoveScopeRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+		return nil, apiutil.ErrUnsupportedContentType
+	}
+
+	token := apiutil.ExtractBearerToken(r)
+	if strings.HasPrefix(token, patPrefix) {
+		return nil, apiutil.ErrUnsupportedTokenType
+	}
+
+	req := removeScopeReq{
 		token: token,
 		id:    chi.URLParam(r, "id"),
 	}
@@ -263,37 +332,13 @@ func decodeAddPATScopeEntryRequest(_ context.Context, r *http.Request) (interfac
 	return req, nil
 }
 
-func decodeRemovePATScopeEntryRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, apiutil.ErrUnsupportedContentType
-	}
-
+func decodeClearAllScopeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	token := apiutil.ExtractBearerToken(r)
 	if strings.HasPrefix(token, patPrefix) {
 		return nil, apiutil.ErrUnsupportedTokenType
 	}
 
-	req := removePatScopeEntryReq{
-		token: token,
-		id:    chi.URLParam(r, "id"),
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
-	}
-	return req, nil
-}
-
-func decodeClearPATAllScopeEntryRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, apiutil.ErrUnsupportedContentType
-	}
-
-	token := apiutil.ExtractBearerToken(r)
-	if strings.HasPrefix(token, patPrefix) {
-		return nil, apiutil.ErrUnsupportedTokenType
-	}
-
-	return clearAllScopeEntryReq{
+	return clearAllScopeReq{
 		token: token,
 		id:    chi.URLParam(r, "id"),
 	}, nil

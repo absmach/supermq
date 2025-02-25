@@ -76,15 +76,14 @@ func (tm *tracingMiddleware) Authorize(ctx context.Context, pr policies.Policy) 
 	return tm.svc.Authorize(ctx, pr)
 }
 
-func (tm *tracingMiddleware) CreatePAT(ctx context.Context, token, name, description string, duration time.Duration, scope auth.Scope) (auth.PAT, error) {
+func (tm *tracingMiddleware) CreatePAT(ctx context.Context, token, name, description string, duration time.Duration) (auth.PAT, error) {
 	ctx, span := tm.tracer.Start(ctx, "create_pat", trace.WithAttributes(
 		attribute.String("name", name),
 		attribute.String("description", description),
 		attribute.String("duration", duration.String()),
-		attribute.String("scope", scope.String()),
 	))
 	defer span.End()
-	return tm.svc.CreatePAT(ctx, token, name, description, duration, scope)
+	return tm.svc.CreatePAT(ctx, token, name, description, duration)
 }
 
 func (tm *tracingMiddleware) UpdatePATName(ctx context.Context, token, patID, name string) (auth.PAT, error) {
@@ -122,6 +121,15 @@ func (tm *tracingMiddleware) ListPATS(ctx context.Context, token string, pm auth
 	return tm.svc.ListPATS(ctx, token, pm)
 }
 
+func (tm *tracingMiddleware) ListScopes(ctx context.Context, token string, pm auth.ScopesPageMeta) (auth.ScopesPage, error) {
+	ctx, span := tm.tracer.Start(ctx, "list_scopes", trace.WithAttributes(
+		attribute.Int64("limit", int64(pm.Limit)),
+		attribute.Int64("offset", int64(pm.Offset)),
+	))
+	defer span.End()
+	return tm.svc.ListScopes(ctx, token, pm)
+}
+
 func (tm *tracingMiddleware) DeletePAT(ctx context.Context, token, patID string) error {
 	ctx, span := tm.tracer.Start(ctx, "delete_pat", trace.WithAttributes(
 		attribute.String("pat_id", patID),
@@ -147,38 +155,47 @@ func (tm *tracingMiddleware) RevokePATSecret(ctx context.Context, token, patID s
 	return tm.svc.RevokePATSecret(ctx, token, patID)
 }
 
-func (tm *tracingMiddleware) AddPATScopeEntry(ctx context.Context, token, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (auth.Scope, error) {
-	ctx, span := tm.tracer.Start(ctx, "add_pat_scope_entry", trace.WithAttributes(
-		attribute.String("pat_id", patID),
-		attribute.String("platform_entity", platformEntityType.String()),
-		attribute.String("optional_domain_id", optionalDomainID),
-		attribute.String("optional_domain_entity", optionalDomainEntityType.String()),
-		attribute.String("operation", operation.String()),
-		attribute.StringSlice("entities", entityIDs),
-	))
+func (tm *tracingMiddleware) RemoveAllPAT(ctx context.Context, token string) error {
+	ctx, span := tm.tracer.Start(ctx, "clear_all_pat")
 	defer span.End()
-	return tm.svc.AddPATScopeEntry(ctx, token, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	return tm.svc.RemoveAllPAT(ctx, token)
 }
 
-func (tm *tracingMiddleware) RemovePATScopeEntry(ctx context.Context, token, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (auth.Scope, error) {
-	ctx, span := tm.tracer.Start(ctx, "remove_pat_scope_entry", trace.WithAttributes(
-		attribute.String("pat_id", patID),
-		attribute.String("platform_entity", platformEntityType.String()),
-		attribute.String("optional_domain_id", optionalDomainID),
-		attribute.String("optional_domain_entity", optionalDomainEntityType.String()),
-		attribute.String("operation", operation.String()),
-		attribute.StringSlice("entities", entityIDs),
-	))
+func (tm *tracingMiddleware) AddScope(ctx context.Context, token, patID string, scopes []auth.Scope) error {
+	var attributes []attribute.KeyValue
+	for _, s := range scopes {
+		attributes = append(attributes, attribute.String("entity_type", s.EntityType.String()))
+		attributes = append(attributes, attribute.String("optional_domain_id", s.OptionalDomainID))
+		attributes = append(attributes, attribute.String("operation", s.Operation.String()))
+		attributes = append(attributes, attribute.String("entity_id", s.EntityID))
+	}
+
+	attributes = append(attributes, attribute.String("pat_id", patID))
+
+	ctx, span := tm.tracer.Start(ctx, "add_pat_scope", trace.WithAttributes(attributes...))
 	defer span.End()
-	return tm.svc.RemovePATScopeEntry(ctx, token, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	return tm.svc.AddScope(ctx, token, patID, scopes)
 }
 
-func (tm *tracingMiddleware) ClearPATAllScopeEntry(ctx context.Context, token, patID string) error {
-	ctx, span := tm.tracer.Start(ctx, "clear_pat_all_scope_entry", trace.WithAttributes(
+func (tm *tracingMiddleware) RemoveScope(ctx context.Context, token, patID string, scopesID ...string) error {
+	var attributes []attribute.KeyValue
+	for _, s := range scopesID {
+		attributes = append(attributes, attribute.String("scope_id", s))
+	}
+
+	attributes = append(attributes, attribute.String("pat_id", patID))
+
+	ctx, span := tm.tracer.Start(ctx, "remove_pat_scope", trace.WithAttributes(attributes...))
+	defer span.End()
+	return tm.svc.RemoveScope(ctx, token, patID, scopesID...)
+}
+
+func (tm *tracingMiddleware) RemovePATAllScope(ctx context.Context, token, patID string) error {
+	ctx, span := tm.tracer.Start(ctx, "clear_pat_all_scope", trace.WithAttributes(
 		attribute.String("pat_id", patID),
 	))
 	defer span.End()
-	return tm.svc.ClearPATAllScopeEntry(ctx, token, patID)
+	return tm.svc.RemovePATAllScope(ctx, token, patID)
 }
 
 func (tm *tracingMiddleware) IdentifyPAT(ctx context.Context, paToken string) (auth.PAT, error) {
@@ -187,29 +204,14 @@ func (tm *tracingMiddleware) IdentifyPAT(ctx context.Context, paToken string) (a
 	return tm.svc.IdentifyPAT(ctx, paToken)
 }
 
-func (tm *tracingMiddleware) AuthorizePAT(ctx context.Context, userID, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) error {
+func (tm *tracingMiddleware) AuthorizePAT(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityID string) error {
 	ctx, span := tm.tracer.Start(ctx, "authorize_pat", trace.WithAttributes(
 		attribute.String("pat_id", patID),
-		attribute.String("platform_entity", platformEntityType.String()),
+		attribute.String("entity_type", entityType.String()),
 		attribute.String("optional_domain_id", optionalDomainID),
-		attribute.String("optional_domain_entity", optionalDomainEntityType.String()),
 		attribute.String("operation", operation.String()),
-		attribute.StringSlice("entities", entityIDs),
+		attribute.String("entities", entityID),
 	))
 	defer span.End()
-	return tm.svc.AuthorizePAT(ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
-}
-
-func (tm *tracingMiddleware) CheckPAT(ctx context.Context, userID, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) error {
-	ctx, span := tm.tracer.Start(ctx, "check_pat", trace.WithAttributes(
-		attribute.String("user_id", userID),
-		attribute.String("pat_id", patID),
-		attribute.String("platform_entity", platformEntityType.String()),
-		attribute.String("optional_domain_id", optionalDomainID),
-		attribute.String("optional_domain_entity", optionalDomainEntityType.String()),
-		attribute.String("operation", operation.String()),
-		attribute.StringSlice("entities", entityIDs),
-	))
-	defer span.End()
-	return tm.svc.CheckPAT(ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	return tm.svc.AuthorizePAT(ctx, userID, patID, entityType, optionalDomainID, operation, entityID)
 }

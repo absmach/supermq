@@ -39,13 +39,12 @@ message AuthZReq {
 }
 
 message AuthZPatReq {
-  string user_id = 1;                      // User id
-  string pat_id = 2;                       // Pat id
-  uint32 platform_entity_type = 3;        // Platform entity type
-  string optional_domain_id = 4;           // Optional domain id
-  uint32 optional_domain_entity_type = 5; // Optional domain entity type 
-  uint32 operation = 6;                   // Operation
-  repeated string entity_ids = 7;          // EntityIDs
+  string user_id = 1;             // User id
+  string pat_id = 2;              // Pat id
+  uint32 entity_type = 3;         // Entity type
+  string optional_domain_id = 4;  // Optional domain id
+  uint32 operation = 6;           // Operation
+  string entity_id = 7;           // EntityID
 }
 
 message AuthZRes {

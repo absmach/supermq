@@ -151,13 +151,12 @@ func (client authGrpcClient) AuthorizePAT(ctx context.Context, req *grpcAuthV1.A
 	defer cancel()
 
 	res, err := client.authorizePAT(ctx, authPATReq{
-		userID:                   req.GetUserId(),
-		patID:                    req.GetPatId(),
-		platformEntityType:       auth.PlatformEntityType(req.GetPlatformEntityType()),
-		optionalDomainID:         req.GetOptionalDomainId(),
-		optionalDomainEntityType: auth.DomainEntityType(req.GetOptionalDomainEntityType()),
-		operation:                auth.OperationType(req.GetOperation()),
-		entityIDs:                req.GetEntityIds(),
+		userID:           req.GetUserId(),
+		patID:            req.GetPatId(),
+		entityType:       auth.EntityType(req.GetEntityType()),
+		optionalDomainID: req.GetOptionalDomainId(),
+		operation:        auth.Operation(req.GetOperation()),
+		entityID:         req.GetEntityId(),
 	})
 	if err != nil {
 		return &grpcAuthV1.AuthZRes{}, grpcapi.DecodeError(err)
@@ -170,12 +169,11 @@ func (client authGrpcClient) AuthorizePAT(ctx context.Context, req *grpcAuthV1.A
 func encodeAuthorizePATRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(authPATReq)
 	return &grpcAuthV1.AuthZPatReq{
-		UserId:                   req.userID,
-		PatId:                    req.patID,
-		PlatformEntityType:       uint32(req.platformEntityType),
-		OptionalDomainId:         req.optionalDomainID,
-		OptionalDomainEntityType: uint32(req.optionalDomainEntityType),
-		Operation:                uint32(req.operation),
-		EntityIds:                req.entityIDs,
+		UserId:           req.userID,
+		PatId:            req.patID,
+		EntityType:       uint32(req.entityType),
+		OptionalDomainId: req.optionalDomainID,
+		Operation:        uint32(req.operation),
+		EntityId:         req.entityID,
 	}, nil
 }

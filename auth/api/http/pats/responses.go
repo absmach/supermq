@@ -18,13 +18,12 @@ var (
 	_ supermq.Response = (*deletePatRes)(nil)
 	_ supermq.Response = (*resetPatSecretRes)(nil)
 	_ supermq.Response = (*revokePatSecretRes)(nil)
-	_ supermq.Response = (*addPatScopeEntryRes)(nil)
-	_ supermq.Response = (*removePatScopeEntryRes)(nil)
-	_ supermq.Response = (*clearAllScopeEntryRes)(nil)
+	_ supermq.Response = (*scopeRes)(nil)
+	_ supermq.Response = (*clearAllRes)(nil)
 )
 
 type createPatRes struct {
-	auth.PAT
+	auth.PAT `json:",inline"`
 }
 
 func (res createPatRes) Code() int {
@@ -40,7 +39,7 @@ func (res createPatRes) Empty() bool {
 }
 
 type retrievePatRes struct {
-	auth.PAT
+	auth.PAT `json:",inline"`
 }
 
 func (res retrievePatRes) Code() int {
@@ -56,7 +55,7 @@ func (res retrievePatRes) Empty() bool {
 }
 
 type updatePatNameRes struct {
-	auth.PAT
+	auth.PAT `json:",inline"`
 }
 
 func (res updatePatNameRes) Code() int {
@@ -72,7 +71,7 @@ func (res updatePatNameRes) Empty() bool {
 }
 
 type updatePatDescriptionRes struct {
-	auth.PAT
+	auth.PAT `json:",inline"`
 }
 
 func (res updatePatDescriptionRes) Code() int {
@@ -88,7 +87,7 @@ func (res updatePatDescriptionRes) Empty() bool {
 }
 
 type listPatsRes struct {
-	auth.PATSPage
+	auth.PATSPage `json:",inline"`
 }
 
 func (res listPatsRes) Code() int {
@@ -118,7 +117,7 @@ func (res deletePatRes) Empty() bool {
 }
 
 type resetPatSecretRes struct {
-	auth.PAT
+	auth.PAT `json:",inline"`
 }
 
 func (res resetPatSecretRes) Code() int {
@@ -147,48 +146,46 @@ func (res revokePatSecretRes) Empty() bool {
 	return true
 }
 
-type addPatScopeEntryRes struct {
-	auth.Scope
-}
+type scopeRes struct{}
 
-func (res addPatScopeEntryRes) Code() int {
+func (res scopeRes) Code() int {
 	return http.StatusOK
 }
 
-func (res addPatScopeEntryRes) Headers() map[string]string {
+func (res scopeRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res addPatScopeEntryRes) Empty() bool {
-	return false
-}
-
-type removePatScopeEntryRes struct {
-	auth.Scope
-}
-
-func (res removePatScopeEntryRes) Code() int {
-	return http.StatusOK
-}
-
-func (res removePatScopeEntryRes) Headers() map[string]string {
-	return map[string]string{}
-}
-
-func (res removePatScopeEntryRes) Empty() bool {
-	return false
-}
-
-type clearAllScopeEntryRes struct{}
-
-func (res clearAllScopeEntryRes) Code() int {
-	return http.StatusOK
-}
-
-func (res clearAllScopeEntryRes) Headers() map[string]string {
-	return map[string]string{}
-}
-
-func (res clearAllScopeEntryRes) Empty() bool {
+func (res scopeRes) Empty() bool {
 	return true
+}
+
+type clearAllRes struct{}
+
+func (res clearAllRes) Code() int {
+	return http.StatusOK
+}
+
+func (res clearAllRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res clearAllRes) Empty() bool {
+	return true
+}
+
+type listScopeRes struct {
+	auth.ScopesPage `json:",inline"`
+}
+
+func (res listScopeRes) Code() int {
+	return http.StatusOK
+}
+
+func (res listScopeRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res listScopeRes) Empty() bool {
+	return false
 }

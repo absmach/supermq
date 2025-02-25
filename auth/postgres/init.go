@@ -65,6 +65,45 @@ func Migration() *migrate.MemoryMigrationSource {
                     `,
 				},
 			},
+			{
+				Id: "auth_4",
+				Up: []string{
+					`CREATE TABLE IF NOT EXISTS pats (
+						id 					VARCHAR(36) PRIMARY KEY,
+                        name        		VARCHAR(254) NOT NULL,
+						user_id	 			VARCHAR(36),
+						description			TEXT,
+						secret				TEXT,
+						issued_at			TIMESTAMP,
+						expires_at 			TIMESTAMP,
+						updated_at 			TIMESTAMP,
+						revoked 			BOOLEAN,
+						revoked_at 			TIMESTAMP,
+						last_used_at		TIMESTAMP,
+						UNIQUE 				(id, name, secret)
+					)`,
+				},
+				Down: []string{
+					`DROP TABLE IF EXISTS pats`,
+				},
+			},
+			{
+				Id: "auth_5",
+				Up: []string{
+					`CREATE TABLE IF NOT EXISTS pat_scopes (
+						id              	VARCHAR(36) PRIMARY KEY,
+						pat_id          	VARCHAR(36) REFERENCES pats(id) ON DELETE CASCADE,
+						optional_domain_id	VARCHAR(36),
+						entity_type     	VARCHAR(50) NOT NULL,
+						operation 			VARCHAR(50) NOT NULL,
+						entity_id			VARCHAR(50) NOT NULL,
+						UNIQUE (pat_id, optional_domain_id, entity_type, operation, entity_id)
+					);`,
+				},
+				Down: []string{
+					`DROP TABLE IF EXISTS pat_scopes;`,
+				},
+			},
 		},
 	}
 }

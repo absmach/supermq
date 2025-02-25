@@ -75,12 +75,12 @@ func (ms *metricsMiddleware) Authorize(ctx context.Context, pr policies.Policy) 
 	return ms.svc.Authorize(ctx, pr)
 }
 
-func (ms *metricsMiddleware) CreatePAT(ctx context.Context, token, name, description string, duration time.Duration, scope auth.Scope) (auth.PAT, error) {
+func (ms *metricsMiddleware) CreatePAT(ctx context.Context, token, name, description string, duration time.Duration) (auth.PAT, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "create_pat").Add(1)
 		ms.latency.With("method", "create_pat").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.CreatePAT(ctx, token, name, description, duration, scope)
+	return ms.svc.CreatePAT(ctx, token, name, description, duration)
 }
 
 func (ms *metricsMiddleware) UpdatePATName(ctx context.Context, token, patID, name string) (auth.PAT, error) {
@@ -115,6 +115,14 @@ func (ms *metricsMiddleware) ListPATS(ctx context.Context, token string, pm auth
 	return ms.svc.ListPATS(ctx, token, pm)
 }
 
+func (ms *metricsMiddleware) ListScopes(ctx context.Context, token string, pm auth.ScopesPageMeta) (auth.ScopesPage, error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "list_scopes").Add(1)
+		ms.latency.With("method", "list_scopes").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.ListScopes(ctx, token, pm)
+}
+
 func (ms *metricsMiddleware) DeletePAT(ctx context.Context, token, patID string) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "delete_pat").Add(1)
@@ -139,28 +147,36 @@ func (ms *metricsMiddleware) RevokePATSecret(ctx context.Context, token, patID s
 	return ms.svc.RevokePATSecret(ctx, token, patID)
 }
 
-func (ms *metricsMiddleware) AddPATScopeEntry(ctx context.Context, token, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (auth.Scope, error) {
+func (ms *metricsMiddleware) RemoveAllPAT(ctx context.Context, token string) error {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "add_pat_scope_entry").Add(1)
-		ms.latency.With("method", "add_pat_scope_entry").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "clear_all_pat").Add(1)
+		ms.latency.With("method", "clear_all_pat").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.AddPATScopeEntry(ctx, token, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	return ms.svc.RemoveAllPAT(ctx, token)
 }
 
-func (ms *metricsMiddleware) RemovePATScopeEntry(ctx context.Context, token, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) (auth.Scope, error) {
+func (ms *metricsMiddleware) AddScope(ctx context.Context, token, patID string, scopes []auth.Scope) error {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "remove_pat_scope_entry").Add(1)
-		ms.latency.With("method", "remove_pat_scope_entry").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "add_pat_scope").Add(1)
+		ms.latency.With("method", "add_pat_scope").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.RemovePATScopeEntry(ctx, token, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	return ms.svc.AddScope(ctx, token, patID, scopes)
 }
 
-func (ms *metricsMiddleware) ClearPATAllScopeEntry(ctx context.Context, token, patID string) error {
+func (ms *metricsMiddleware) RemoveScope(ctx context.Context, token, patID string, scopesID ...string) error {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "clear_pat_all_scope_entry").Add(1)
-		ms.latency.With("method", "clear_pat_all_scope_entry").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "remove_pat_scope").Add(1)
+		ms.latency.With("method", "remove_pat_scope").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.ClearPATAllScopeEntry(ctx, token, patID)
+	return ms.svc.RemoveScope(ctx, token, patID, scopesID...)
+}
+
+func (ms *metricsMiddleware) RemovePATAllScope(ctx context.Context, token, patID string) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "clear_pat_all_scope").Add(1)
+		ms.latency.With("method", "clear_pat_all_scope").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.RemovePATAllScope(ctx, token, patID)
 }
 
 func (ms *metricsMiddleware) IdentifyPAT(ctx context.Context, paToken string) (auth.PAT, error) {
@@ -171,18 +187,10 @@ func (ms *metricsMiddleware) IdentifyPAT(ctx context.Context, paToken string) (a
 	return ms.svc.IdentifyPAT(ctx, paToken)
 }
 
-func (ms *metricsMiddleware) AuthorizePAT(ctx context.Context, userID, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) error {
+func (ms *metricsMiddleware) AuthorizePAT(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityID string) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "authorize_pat").Add(1)
 		ms.latency.With("method", "authorize_pat").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.AuthorizePAT(ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
-}
-
-func (ms *metricsMiddleware) CheckPAT(ctx context.Context, userID, patID string, platformEntityType auth.PlatformEntityType, optionalDomainID string, optionalDomainEntityType auth.DomainEntityType, operation auth.OperationType, entityIDs ...string) error {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "check_pat").Add(1)
-		ms.latency.With("method", "check_pat").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-	return ms.svc.CheckPAT(ctx, userID, patID, platformEntityType, optionalDomainID, optionalDomainEntityType, operation, entityIDs...)
+	return ms.svc.AuthorizePAT(ctx, userID, patID, entityType, optionalDomainID, operation, entityID)
 }
