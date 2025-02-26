@@ -92,7 +92,7 @@ func (am *authorizationMiddleware) CreateClients(ctx context.Context, session au
 	if err := am.extAuthorize(ctx, clients.DomainOpCreateClient, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.UserID,
 		ObjectType:  policies.DomainType,
 		Object:      session.DomainID,
 	}); err != nil {
@@ -120,7 +120,7 @@ func (am *authorizationMiddleware) View(ctx context.Context, session authn.Sessi
 	if err := am.authorize(ctx, clients.OpViewClient, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.UserID,
 		ObjectType:  policies.ClientType,
 		Object:      id,
 	}); err != nil {
@@ -191,7 +191,7 @@ func (am *authorizationMiddleware) Update(ctx context.Context, session authn.Ses
 	if err := am.authorize(ctx, clients.OpUpdateClient, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.UserID,
 		ObjectType:  policies.ClientType,
 		Object:      client.ID,
 	}); err != nil {
@@ -219,7 +219,7 @@ func (am *authorizationMiddleware) UpdateTags(ctx context.Context, session authn
 	if err := am.authorize(ctx, clients.OpUpdateClientTags, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.UserID,
 		ObjectType:  policies.ClientType,
 		Object:      client.ID,
 	}); err != nil {
@@ -247,7 +247,7 @@ func (am *authorizationMiddleware) UpdateSecret(ctx context.Context, session aut
 	if err := am.authorize(ctx, clients.OpUpdateClientSecret, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.UserID,
 		ObjectType:  policies.ClientType,
 		Object:      id,
 	}); err != nil {
@@ -274,7 +274,7 @@ func (am *authorizationMiddleware) Enable(ctx context.Context, session authn.Ses
 	if err := am.authorize(ctx, clients.OpEnableClient, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.UserID,
 		ObjectType:  policies.ClientType,
 		Object:      id,
 	}); err != nil {
@@ -302,7 +302,7 @@ func (am *authorizationMiddleware) Disable(ctx context.Context, session authn.Se
 	if err := am.authorize(ctx, clients.OpDisableClient, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.UserID,
 		ObjectType:  policies.ClientType,
 		Object:      id,
 	}); err != nil {
@@ -328,7 +328,7 @@ func (am *authorizationMiddleware) Delete(ctx context.Context, session authn.Ses
 	if err := am.authorize(ctx, clients.OpDeleteClient, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.UserID,
 		ObjectType:  policies.ClientType,
 		Object:      id,
 	}); err != nil {
@@ -356,7 +356,7 @@ func (am *authorizationMiddleware) SetParentGroup(ctx context.Context, session a
 	if err := am.authorize(ctx, clients.OpSetParentGroup, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.UserID,
 		ObjectType:  policies.ClientType,
 		Object:      id,
 	}); err != nil {
@@ -366,7 +366,7 @@ func (am *authorizationMiddleware) SetParentGroup(ctx context.Context, session a
 	if err := am.extAuthorize(ctx, clients.GroupOpSetChildClient, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.UserID,
 		ObjectType:  policies.GroupType,
 		Object:      parentGroupID,
 	}); err != nil {
@@ -393,7 +393,7 @@ func (am *authorizationMiddleware) RemoveParentGroup(ctx context.Context, sessio
 	if err := am.authorize(ctx, clients.OpRemoveParentGroup, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.UserID,
 		ObjectType:  policies.ClientType,
 		Object:      id,
 	}); err != nil {
@@ -409,7 +409,7 @@ func (am *authorizationMiddleware) RemoveParentGroup(ctx context.Context, sessio
 		if err := am.extAuthorize(ctx, clients.GroupOpSetChildClient, smqauthz.PolicyReq{
 			Domain:      session.DomainID,
 			SubjectType: policies.UserType,
-			Subject:     session.DomainUserID,
+			Subject:     session.UserID,
 			ObjectType:  policies.GroupType,
 			Object:      th.ParentGroup,
 		}); err != nil {

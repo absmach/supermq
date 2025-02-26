@@ -253,7 +253,7 @@ func (svc service) RemoveChannel(ctx context.Context, session authn.Session, id 
 		},
 	}
 
-	if err := svc.RemoveEntitiesRoles(ctx, session.DomainID, session.DomainUserID, []string{id}, filterDeletePolicies, deletePolicies); err != nil {
+	if err := svc.RemoveEntitiesRoles(ctx, session.DomainID, session.UserID, []string{id}, filterDeletePolicies, deletePolicies); err != nil {
 		return errors.Wrap(svcerr.ErrDeletePolicies, err)
 	}
 

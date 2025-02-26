@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	apiutil "github.com/absmach/supermq/api/http/util"
-	"github.com/absmach/supermq/auth"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/go-chi/chi/v5"
 )
@@ -38,7 +37,6 @@ func AuthenticateMiddleware(authn smqauthn.Authentication, domainCheck bool) fun
 					return
 				}
 				resp.DomainID = domain
-				resp.DomainUserID = auth.EncodeDomainUserID(domain, resp.UserID)
 			}
 
 			ctx := context.WithValue(r.Context(), SessionKey, resp)

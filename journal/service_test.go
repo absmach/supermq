@@ -73,7 +73,7 @@ func TestReadAll(t *testing.T) {
 	repo := new(mocks.Repository)
 	svc := journal.NewService(idProvider, repo)
 
-	validSession := smqauthn.Session{DomainUserID: testsutil.GenerateUUID(t), UserID: testsutil.GenerateUUID(t), DomainID: testsutil.GenerateUUID(t)}
+	validSession := smqauthn.Session{UserID: testsutil.GenerateUUID(t), DomainID: testsutil.GenerateUUID(t)}
 	validPage := journal.Page{
 		Offset:     0,
 		Limit:      10,
