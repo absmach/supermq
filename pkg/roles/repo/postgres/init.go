@@ -45,9 +45,8 @@ func Migration(rolesTableNamePrefix, entityTableName, entityIDColumnName string)
                         member_id   VARCHAR(254) NOT NULL,
                         entity_id   VARCHAR(36)  NOT NULL,
                         CONSTRAINT  %s_role_members_unique_role_member_constraint UNIQUE (role_id, member_id),
-                        CONSTRAINT  %s_role_members_unique_entity_member_constraint UNIQUE (member_id, entity_id),
                         CONSTRAINT  %s_role_members_fk_roles_id FOREIGN KEY(role_id) REFERENCES %s_roles(id) ON DELETE CASCADE
-                    );`, rolesTableNamePrefix, rolesTableNamePrefix, rolesTableNamePrefix, rolesTableNamePrefix, rolesTableNamePrefix),
+                    );`, rolesTableNamePrefix, rolesTableNamePrefix, rolesTableNamePrefix, rolesTableNamePrefix),
 				},
 				Down: []string{
 					fmt.Sprintf(`DROP TABLE IF EXISTS %s_roles`, rolesTableNamePrefix),
