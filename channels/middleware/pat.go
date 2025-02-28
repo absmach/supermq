@@ -231,8 +231,8 @@ func (pm *patMiddleware) SetParentGroup(ctx context.Context, session authn.Sessi
 	); err != nil {
 		return errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
-	
-	if err := pm.authorizePAT(ctx, 
+
+	if err := pm.authorizePAT(ctx,
 		session,
 		smqauth.ChannelsType,
 		session.DomainID,
@@ -246,7 +246,7 @@ func (pm *patMiddleware) SetParentGroup(ctx context.Context, session authn.Sessi
 }
 
 func (pm *patMiddleware) RemoveParentGroup(ctx context.Context, session authn.Session, id string) error {
-	if err := pm.authorizePAT(ctx, 
+	if err := pm.authorizePAT(ctx,
 		session,
 		smqauth.ChannelsType,
 		session.DomainID,
