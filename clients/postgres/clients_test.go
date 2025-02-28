@@ -1241,8 +1241,6 @@ func TestRetrieveAll(t *testing.T) {
 				assert.Equal(t, c.response.Limit, page.Limit)
 				expected := stripClientDetails(c.response.Clients)
 				got := stripClientDetails(page.Clients)
-				// fmt.Printf("\ngot is %+v\n\n", got)
-				// fmt.Printf("expected is %+v\n", expected)
 				assert.ElementsMatch(t, expected, got)
 			}
 		})

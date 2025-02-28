@@ -15,13 +15,12 @@ import (
 )
 
 type PatReq struct {
-	UserID                   string                     `json:"user_id,omitempty"`                     // UserID
-	PatID                    string                     `json:"pat_id,omitempty"`                      // UserID
-	PlatformEntityType       smqauth.PlatformEntityType `json:"platform_entity_type,omitempty"`        // Platform entity type
-	OptionalDomainID         string                     `json:"optional_domainID,omitempty"`           // Optional domain id
-	OptionalDomainEntityType smqauth.DomainEntityType   `json:"optional_domain_entity_type,omitempty"` // Optional domain entity type
-	Operation                smqauth.OperationType      `json:"operation,omitempty"`                   // Operation
-	EntityIDs                []string                   `json:"entityIDs,omitempty"`                   // EntityIDs
+	UserID           string             `json:"user_id,omitempty"`           // UserID
+	PatID            string             `json:"pat_id,omitempty"`            // UserID
+	EntityType       smqauth.EntityType `json:"entity_type,omitempty"`       // Entity type
+	OptionalDomainID string             `json:"optional_domainID,omitempty"` // Optional domain id
+	Operation        smqauth.Operation  `json:"operation,omitempty"`         // Operation
+	EntityID         string             `json:"entityID,omitempty"`          // EntityID
 }
 
 type Authorization interface {
@@ -53,13 +52,12 @@ func NewAuthorization(ctx context.Context, cfg grpcclient.Config) (Authorization
 
 func (a authorization) AuthorizePAT(ctx context.Context, pr PatReq) error {
 	req := grpcAuthV1.AuthZPatReq{
-		UserId:                   pr.UserID,
-		PatId:                    pr.PatID,
-		PlatformEntityType:       uint32(pr.PlatformEntityType),
-		OptionalDomainId:         pr.OptionalDomainID,
-		OptionalDomainEntityType: uint32(pr.OptionalDomainEntityType),
-		Operation:                uint32(pr.Operation),
-		EntityIds:                pr.EntityIDs,
+		UserId:           pr.UserID,
+		PatId:            pr.PatID,
+		EntityType:       uint32(pr.EntityType),
+		OptionalDomainId: pr.OptionalDomainID,
+		Operation:        uint32(pr.Operation),
+		EntityId:         pr.EntityID,
 	}
 	res, err := a.authSvcClient.AuthorizePAT(ctx, &req)
 	if err != nil {

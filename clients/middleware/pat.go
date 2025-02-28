@@ -29,7 +29,7 @@ func PATMiddleware(svc clients.Service, pat smqpat.Authorization) clients.Servic
 	}
 }
 
-func (pm *patMiddleware) authorizePAT(ctx context.Context, session authn.Session, platformEntityType smqauth.PlatformEntityType, optionalDomainEntityType smqauth.DomainEntityType, OptionalDomainID string, operation smqauth.OperationType, entityIDs []string) error {
+func (pm *patMiddleware) authorizePAT(ctx context.Context, session authn.Session, entityType smqauth.EntityType, OptionalDomainID string, operation smqauth.Operation, entityID string) error {
 	if session.Type != authn.PersonalAccessToken {
 		return nil
 	}
@@ -38,13 +38,12 @@ func (pm *patMiddleware) authorizePAT(ctx context.Context, session authn.Session
 	}
 
 	if err := pm.pat.AuthorizePAT(ctx, smqpat.PatReq{
-		UserID:                   session.UserID,
-		PatID:                    session.PatID,
-		PlatformEntityType:       platformEntityType,
-		OptionalDomainEntityType: optionalDomainEntityType,
-		OptionalDomainID:         OptionalDomainID,
-		Operation:                operation,
-		EntityIDs:                entityIDs,
+		UserID:           session.UserID,
+		PatID:            session.PatID,
+		EntityType:       entityType,
+		OptionalDomainID: OptionalDomainID,
+		Operation:        operation,
+		EntityID:         entityID,
 	}); err != nil {
 		return errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -55,11 +54,10 @@ func (pm *patMiddleware) authorizePAT(ctx context.Context, session authn.Session
 func (pm *patMiddleware) CreateClients(ctx context.Context, session authn.Session, client ...clients.Client) ([]clients.Client, []roles.RoleProvision, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.CreateOp,
-		smqauth.AnyIDs{}.Values(),
+		smqauth.AnyIDs,
 	); err != nil {
 		return []clients.Client{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -70,11 +68,10 @@ func (pm *patMiddleware) CreateClients(ctx context.Context, session authn.Sessio
 func (pm *patMiddleware) View(ctx context.Context, session authn.Session, id string) (clients.Client, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.ReadOp,
-		[]string{id},
+		id,
 	); err != nil {
 		return clients.Client{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -85,11 +82,10 @@ func (pm *patMiddleware) View(ctx context.Context, session authn.Session, id str
 func (pm *patMiddleware) ListClients(ctx context.Context, session authn.Session, pg clients.Page) (clients.ClientsPage, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.ListOp,
-		smqauth.AnyIDs{}.Values(),
+		smqauth.AnyIDs,
 	); err != nil {
 		return clients.ClientsPage{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -100,11 +96,10 @@ func (pm *patMiddleware) ListClients(ctx context.Context, session authn.Session,
 func (pm *patMiddleware) ListUserClients(ctx context.Context, session authn.Session, userID string, pg clients.Page) (clients.ClientsPage, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.ListOp,
-		smqauth.AnyIDs{}.Values(),
+		smqauth.AnyIDs,
 	); err != nil {
 		return clients.ClientsPage{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -115,11 +110,10 @@ func (pm *patMiddleware) ListUserClients(ctx context.Context, session authn.Sess
 func (pm *patMiddleware) Update(ctx context.Context, session authn.Session, client clients.Client) (clients.Client, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.UpdateOp,
-		[]string{client.ID},
+		client.ID,
 	); err != nil {
 		return clients.Client{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -130,11 +124,10 @@ func (pm *patMiddleware) Update(ctx context.Context, session authn.Session, clie
 func (pm *patMiddleware) UpdateTags(ctx context.Context, session authn.Session, client clients.Client) (clients.Client, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.UpdateOp,
-		[]string{client.ID},
+		client.ID,
 	); err != nil {
 		return clients.Client{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -145,11 +138,10 @@ func (pm *patMiddleware) UpdateTags(ctx context.Context, session authn.Session, 
 func (pm *patMiddleware) UpdateSecret(ctx context.Context, session authn.Session, id, key string) (clients.Client, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.UpdateOp,
-		[]string{id},
+		id,
 	); err != nil {
 		return clients.Client{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -160,11 +152,10 @@ func (pm *patMiddleware) UpdateSecret(ctx context.Context, session authn.Session
 func (pm *patMiddleware) Enable(ctx context.Context, session authn.Session, id string) (clients.Client, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.UpdateOp,
-		[]string{id},
+		id,
 	); err != nil {
 		return clients.Client{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -175,11 +166,10 @@ func (pm *patMiddleware) Enable(ctx context.Context, session authn.Session, id s
 func (pm *patMiddleware) Disable(ctx context.Context, session authn.Session, id string) (clients.Client, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.UpdateOp,
-		[]string{id},
+		id,
 	); err != nil {
 		return clients.Client{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -190,11 +180,10 @@ func (pm *patMiddleware) Disable(ctx context.Context, session authn.Session, id 
 func (pm *patMiddleware) Delete(ctx context.Context, session authn.Session, id string) error {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.DeleteOp,
-		[]string{id},
+		id,
 	); err != nil {
 		return errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -205,11 +194,20 @@ func (pm *patMiddleware) Delete(ctx context.Context, session authn.Session, id s
 func (pm *patMiddleware) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainGroupsScope,
+		smqauth.GroupsType,
 		session.DomainID,
 		smqauth.UpdateOp,
-		[]string{id},
+		parentGroupID,
+	); err != nil {
+		return errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
+	}
+
+	if err := pm.authorizePAT(ctx,
+		session,
+		smqauth.ClientsType,
+		session.DomainID,
+		smqauth.UpdateOp,
+		id,
 	); err != nil {
 		return errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -220,11 +218,10 @@ func (pm *patMiddleware) SetParentGroup(ctx context.Context, session authn.Sessi
 func (pm *patMiddleware) RemoveParentGroup(ctx context.Context, session authn.Session, id string) error {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainGroupsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.DeleteOp,
-		[]string{id},
+		id,
 	); err != nil {
 		return errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -235,11 +232,10 @@ func (pm *patMiddleware) RemoveParentGroup(ctx context.Context, session authn.Se
 func (pm *patMiddleware) AddRole(ctx context.Context, session authn.Session, entityID string, roleName string, optionalActions []string, optionalMembers []string) (roles.RoleProvision, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.CreateOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return roles.RoleProvision{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -250,11 +246,10 @@ func (pm *patMiddleware) AddRole(ctx context.Context, session authn.Session, ent
 func (pm *patMiddleware) ListAvailableActions(ctx context.Context, session authn.Session) ([]string, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.ListOp,
-		smqauth.AnyIDs{}.Values(),
+		smqauth.AnyIDs,
 	); err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -265,11 +260,10 @@ func (pm *patMiddleware) ListAvailableActions(ctx context.Context, session authn
 func (pm *patMiddleware) RemoveMemberFromAllRoles(ctx context.Context, session authn.Session, member string) error {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.DeleteOp,
-		smqauth.AnyIDs{}.Values(),
+		smqauth.AnyIDs,
 	); err != nil {
 		return errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -280,11 +274,10 @@ func (pm *patMiddleware) RemoveMemberFromAllRoles(ctx context.Context, session a
 func (pm *patMiddleware) RemoveRole(ctx context.Context, session authn.Session, entityID, roleID string) error {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.DeleteOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -295,11 +288,10 @@ func (pm *patMiddleware) RemoveRole(ctx context.Context, session authn.Session, 
 func (pm *patMiddleware) RetrieveAllRoles(ctx context.Context, session authn.Session, entityID string, limit, offset uint64) (roles.RolePage, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.ListOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return roles.RolePage{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -310,11 +302,10 @@ func (pm *patMiddleware) RetrieveAllRoles(ctx context.Context, session authn.Ses
 func (pm *patMiddleware) RetrieveRole(ctx context.Context, session authn.Session, entityID, roleID string) (roles.Role, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.ReadOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return roles.Role{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -325,11 +316,10 @@ func (pm *patMiddleware) RetrieveRole(ctx context.Context, session authn.Session
 func (pm *patMiddleware) ListEntityMembers(ctx context.Context, session authn.Session, entityID string, pq roles.MembersRolePageQuery) (roles.MembersRolePage, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.ListOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return roles.MembersRolePage{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -340,11 +330,10 @@ func (pm *patMiddleware) ListEntityMembers(ctx context.Context, session authn.Se
 func (pm *patMiddleware) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) error {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.DeleteOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -355,11 +344,10 @@ func (pm *patMiddleware) RemoveEntityMembers(ctx context.Context, session authn.
 func (pm *patMiddleware) RoleAddActions(ctx context.Context, session authn.Session, entityID, roleID string, actions []string) ([]string, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.UpdateOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -370,11 +358,10 @@ func (pm *patMiddleware) RoleAddActions(ctx context.Context, session authn.Sessi
 func (pm *patMiddleware) RoleListActions(ctx context.Context, session authn.Session, entityID, roleID string) ([]string, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.ReadOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -385,11 +372,10 @@ func (pm *patMiddleware) RoleListActions(ctx context.Context, session authn.Sess
 func (pm *patMiddleware) RoleCheckActionsExists(ctx context.Context, session authn.Session, entityID, roleID string, actions []string) (bool, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.ReadOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return false, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -400,11 +386,10 @@ func (pm *patMiddleware) RoleCheckActionsExists(ctx context.Context, session aut
 func (pm *patMiddleware) RoleRemoveActions(ctx context.Context, session authn.Session, entityID, roleID string, actions []string) error {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.DeleteOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -415,11 +400,10 @@ func (pm *patMiddleware) RoleRemoveActions(ctx context.Context, session authn.Se
 func (pm *patMiddleware) RoleRemoveAllActions(ctx context.Context, session authn.Session, entityID, roleID string) error {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.DeleteOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -430,11 +414,10 @@ func (pm *patMiddleware) RoleRemoveAllActions(ctx context.Context, session authn
 func (pm *patMiddleware) RoleAddMembers(ctx context.Context, session authn.Session, entityID, roleID string, members []string) ([]string, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.UpdateOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return []string{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -445,11 +428,10 @@ func (pm *patMiddleware) RoleAddMembers(ctx context.Context, session authn.Sessi
 func (pm *patMiddleware) RoleListMembers(ctx context.Context, session authn.Session, entityID, roleID string, limit, offset uint64) (roles.MembersPage, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.ReadOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return roles.MembersPage{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -460,11 +442,10 @@ func (pm *patMiddleware) RoleListMembers(ctx context.Context, session authn.Sess
 func (pm *patMiddleware) RoleCheckMembersExists(ctx context.Context, session authn.Session, entityID, roleID string, members []string) (bool, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.ReadOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return false, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -475,11 +456,10 @@ func (pm *patMiddleware) RoleCheckMembersExists(ctx context.Context, session aut
 func (pm *patMiddleware) RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleID string, members []string) error {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.DeleteOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -490,11 +470,10 @@ func (pm *patMiddleware) RoleRemoveMembers(ctx context.Context, session authn.Se
 func (pm *patMiddleware) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleID string) error {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.DeleteOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
@@ -505,11 +484,10 @@ func (pm *patMiddleware) RoleRemoveAllMembers(ctx context.Context, session authn
 func (pm *patMiddleware) UpdateRoleName(ctx context.Context, session authn.Session, entityID, roleID, newRoleName string) (roles.Role, error) {
 	if err := pm.authorizePAT(ctx,
 		session,
-		smqauth.PlatformDomainsScope,
-		smqauth.DomainClientsScope,
+		smqauth.ClientsType,
 		session.DomainID,
 		smqauth.UpdateOp,
-		[]string{entityID},
+		entityID,
 	); err != nil {
 		return roles.Role{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 	}
