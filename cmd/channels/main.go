@@ -36,6 +36,7 @@ import (
 	gconsumer "github.com/absmach/supermq/pkg/groups/events/consumer"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	jaegerclient "github.com/absmach/supermq/pkg/jaeger"
+	authsvcPat "github.com/absmach/supermq/pkg/pat"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/policies/spicedb"
 	pg "github.com/absmach/supermq/pkg/postgres"
@@ -195,6 +196,15 @@ func main() {
 	defer authzClient.Close()
 	logger.Info("AuthZ  successfully connected to auth gRPC server " + authzClient.Secure())
 
+	pat, patHandler, err := authsvcPat.NewAuthorization(ctx, grpcCfg)
+	if err != nil {
+		logger.Error("failed to create authz " + err.Error())
+		exitCode = 1
+		return
+	}
+	defer patHandler.Close()
+	logger.Info("PAT successfully connected to auth gRPC server " + patHandler.Secure())
+
 	thgrpcCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&thgrpcCfg, env.Options{Prefix: envPrefixClients}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load clients gRPC client configuration : %s", err))
@@ -225,7 +235,7 @@ func main() {
 	defer groupsHandler.Close()
 	logger.Info("Groups gRPC client successfully connected to groups gRPC server " + groupsHandler.Secure())
 
-	svc, psvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cfg, tracer, clientsClient, groupsClient, logger)
+	svc, psvc, err := newService(ctx, db, dbConfig, authz, pat, policyEvaluator, policyService, cfg, tracer, clientsClient, groupsClient, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
 		exitCode = 1
@@ -296,7 +306,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz smqauthz.Authorization,
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz smqauthz.Authorization, pat authsvcPat.Authorization,
 	pe policies.Evaluator, ps policies.Service, cfg config, tracer trace.Tracer, clientsClient grpcClientsV1.ClientsServiceClient,
 	groupsClient grpcGroupsV1.GroupsServiceClient, logger *slog.Logger,
 ) (channels.Service, pChannels.Service, error) {
@@ -328,7 +338,7 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 
 	counter, latency := prometheus.MakeMetrics("channels", "api")
 	svc = middleware.MetricsMiddleware(svc, counter, latency)
-
+	svc = middleware.PATMiddleware(svc, pat)
 	svc, err = middleware.AuthorizationMiddleware(svc, repo, authz, channels.NewOperationPermissionMap(), channels.NewRolesOperationPermissionMap(), channels.NewExternalOperationPermissionMap())
 	if err != nil {
 		return nil, nil, err

@@ -121,22 +121,3 @@ func (a authorization) checkDomain(ctx context.Context, subjectType, subject, do
 		return svcerr.ErrInvalidStatus
 	}
 }
-
-func (a authorization) AuthorizePAT(ctx context.Context, pr authz.PatReq) error {
-	req := grpcAuthV1.AuthZPatReq{
-		UserId:           pr.UserID,
-		PatId:            pr.PatID,
-		EntityType:       uint32(pr.EntityType),
-		OptionalDomainId: pr.OptionalDomainID,
-		Operation:        uint32(pr.Operation),
-		EntityId:         pr.EntityID,
-	}
-	res, err := a.authSvcClient.AuthorizePAT(ctx, &req)
-	if err != nil {
-		return errors.Wrap(errors.ErrAuthorization, err)
-	}
-	if !res.Authorized {
-		return errors.ErrAuthorization
-	}
-	return nil
-}

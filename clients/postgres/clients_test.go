@@ -826,8 +826,9 @@ func TestRetrieveAll(t *testing.T) {
 			Metadata: clients.Metadata{
 				"department": namegen.Generate(),
 			},
-			Status:    clients.EnabledStatus,
-			CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
+			Status:          clients.EnabledStatus,
+			CreatedAt:       time.Now().UTC().Truncate(time.Microsecond),
+			ConnectionTypes: []connections.ConnType{},
 		}
 		if i%50 == 0 {
 			client.Status = clients.DisabledStatus
