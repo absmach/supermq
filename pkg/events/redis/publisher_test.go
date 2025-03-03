@@ -241,7 +241,7 @@ func TestPubsub(t *testing.T) {
 }
 
 func TestUnavailablePublish(t *testing.T) {
-	publisher, err := redis.NewPublisher(context.Background(), redisURL, stream, time.Second)
+	publisher, err := redis.NewPublisher(context.Background(), redisURL, time.Second)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
 	subcriber, err := redis.NewSubscriber(redisURL, logger)
