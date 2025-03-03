@@ -1222,7 +1222,7 @@ services:
           create_host_path: true
 
   rabbitmq:
-    image: rabbitmq:4.0.5-alpine
+    image: rabbitmq:4.0.5-management-alpine
     container_name: supermq-rabbitmq
     restart: on-failure
     environment:
