@@ -11,7 +11,12 @@ import (
 	"github.com/absmach/supermq/pkg/messaging"
 )
 
-const streamID = "supermq.messaging"
+const (
+	supermqPrefix     = "supermq."
+	publishStream     = supermqPrefix + "publish"
+	subscribeStream   = supermqPrefix + "subscribe"
+	unsubscribeStream = supermqPrefix + "unsubscribe"
+)
 
 var _ messaging.PubSub = (*pubsubES)(nil)
 
@@ -21,7 +26,7 @@ type pubsubES struct {
 }
 
 func NewPubSubMiddleware(ctx context.Context, pubsub messaging.PubSub, url string) (messaging.PubSub, error) {
-	publisher, err := store.NewPublisher(ctx, url, streamID)
+	publisher, err := store.NewPublisher(ctx, url)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +48,7 @@ func (es *pubsubES) Publish(ctx context.Context, topic string, msg *messaging.Me
 		subtopic:  msg.Subtopic,
 	}
 
-	return es.ep.Publish(ctx, me)
+	return es.ep.Publish(ctx, publishStream, me)
 }
 
 func (es *pubsubES) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig) error {
@@ -58,7 +63,7 @@ func (es *pubsubES) Subscribe(ctx context.Context, cfg messaging.SubscriberConfi
 		topic:        cfg.Topic,
 	}
 
-	return es.ep.Publish(ctx, se)
+	return es.ep.Publish(ctx, subscribeStream, se)
 }
 
 func (es *pubsubES) Unsubscribe(ctx context.Context, id string, topic string) error {
@@ -72,7 +77,7 @@ func (es *pubsubES) Unsubscribe(ctx context.Context, id string, topic string) er
 		topic:        topic,
 	}
 
-	return es.ep.Publish(ctx, se)
+	return es.ep.Publish(ctx, unsubscribeStream, se)
 }
 
 func (es *pubsubES) Close() error {
