@@ -34,17 +34,17 @@ func (_m *Publisher) Close() error {
 	return r0
 }
 
-// Publish provides a mock function with given fields: ctx, event
-func (_m *Publisher) Publish(ctx context.Context, event events.Event) error {
-	ret := _m.Called(ctx, event)
+// Publish provides a mock function with given fields: ctx, stream, event
+func (_m *Publisher) Publish(ctx context.Context, stream string, event events.Event) error {
+	ret := _m.Called(ctx, stream, event)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Publish")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, events.Event) error); ok {
-		r0 = rf(ctx, event)
+	if rf, ok := ret.Get(0).(func(context.Context, string, events.Event) error); ok {
+		r0 = rf(ctx, stream, event)
 	} else {
 		r0 = ret.Error(0)
 	}
