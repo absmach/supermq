@@ -44,7 +44,7 @@ func TestMain(m *testing.M) {
 	rabbitmqURL = fmt.Sprintf("amqp://%s:%s", "localhost", container.GetPort("5672/tcp"))
 
 	if err := pool.Retry(func() error {
-		_, err = rabbitmq.NewPublisher(context.Background(), rabbitmqURL, stream)
+		_, err = rabbitmq.NewPublisher(context.Background(), rabbitmqURL)
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)

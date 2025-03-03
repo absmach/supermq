@@ -45,7 +45,7 @@ func TestMain(m *testing.M) {
 	natsURL = fmt.Sprintf("nats://%s:%s", "localhost", container.GetPort("4222/tcp"))
 
 	if err := pool.Retry(func() error {
-		_, err = nats.NewPublisher(context.Background(), natsURL, stream)
+		_, err = nats.NewPublisher(context.Background(), natsURL)
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
