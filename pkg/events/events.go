@@ -28,7 +28,7 @@ type Event interface {
 //go:generate mockery --name Publisher --output=./mocks --filename publisher.go --quiet --note "Copyright (c) Abstract Machines"
 type Publisher interface {
 	// Publish publishes event to stream.
-	Publish(ctx context.Context, event Event) error
+	Publish(ctx context.Context, stream string, event Event) error
 
 	// Close gracefully closes event publisher's connection.
 	Close() error

@@ -19,7 +19,7 @@ type publisherES struct {
 }
 
 func NewPublisherMiddleware(ctx context.Context, pub messaging.Publisher, url string) (messaging.Publisher, error) {
-	publisher, err := store.NewPublisher(ctx, url, streamID)
+	publisher, err := store.NewPublisher(ctx, url)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (es *publisherES) Publish(ctx context.Context, topic string, msg *messaging
 		subtopic:  msg.Subtopic,
 	}
 
-	return es.ep.Publish(ctx, me)
+	return es.ep.Publish(ctx, publishStream, me)
 }
 
 func (es *publisherES) Close() error {

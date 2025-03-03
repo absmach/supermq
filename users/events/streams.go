@@ -14,7 +14,20 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-const streamID = "supermq.users"
+const (
+	supermqPrefix      = "supermq."
+	createStream       = supermqPrefix + userCreate
+	updateStream       = supermqPrefix + userUpdate
+	changeStatusStream = supermqPrefix + changeUserStatus
+	viewStream         = supermqPrefix + userView
+	listStream         = supermqPrefix + userList
+	searchStream       = supermqPrefix + userSearch
+	identifyStream     = supermqPrefix + userIdentify
+	tokenStream        = supermqPrefix + "user.token"
+	secretStream       = supermqPrefix + "user.secret"
+	oauthStream        = supermqPrefix + oauthCallback
+	deleteStream       = supermqPrefix + deleteUser
+)
 
 var _ users.Service = (*eventStore)(nil)
 
@@ -26,7 +39,7 @@ type eventStore struct {
 // NewEventStoreMiddleware returns wrapper around users service that sends
 // events to event store.
 func NewEventStoreMiddleware(ctx context.Context, svc users.Service, url string) (users.Service, error) {
-	publisher, err := store.NewPublisher(ctx, url, streamID)
+	publisher, err := store.NewPublisher(ctx, url)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +62,7 @@ func (es *eventStore) Register(ctx context.Context, session authn.Session, user 
 		middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, createStream, event); err != nil {
 		return user, err
 	}
 
@@ -104,7 +117,7 @@ func (es *eventStore) UpdateUsername(ctx context.Context, session authn.Session,
 		middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, updateStream, event); err != nil {
 		return user, err
 	}
 
@@ -123,7 +136,7 @@ func (es *eventStore) UpdateProfilePicture(ctx context.Context, session authn.Se
 		middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, updateStream, event); err != nil {
 		return user, err
 	}
 
@@ -144,7 +157,7 @@ func (es *eventStore) update(ctx context.Context, session authn.Session, operati
 		user, operation, session, middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, updateStream, event); err != nil {
 		return user, err
 	}
 
@@ -163,7 +176,7 @@ func (es *eventStore) View(ctx context.Context, session authn.Session, id string
 		middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, viewStream, event); err != nil {
 		return user, err
 	}
 
@@ -182,7 +195,7 @@ func (es *eventStore) ViewProfile(ctx context.Context, session authn.Session) (u
 		middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, viewStream, event); err != nil {
 		return user, err
 	}
 
@@ -200,7 +213,7 @@ func (es *eventStore) ListUsers(ctx context.Context, session authn.Session, pm u
 		middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, listStream, event); err != nil {
 		return cp, err
 	}
 
@@ -217,7 +230,7 @@ func (es *eventStore) SearchUsers(ctx context.Context, pm users.Page) (users.Use
 		middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, searchStream, event); err != nil {
 		return cp, err
 	}
 
@@ -230,7 +243,7 @@ func (es *eventStore) Enable(ctx context.Context, session authn.Session, id stri
 		return user, err
 	}
 
-	return es.delete(ctx, session, user)
+	return es.changeStatus(ctx, session, user)
 }
 
 func (es *eventStore) Disable(ctx context.Context, session authn.Session, id string) (users.User, error) {
@@ -239,11 +252,11 @@ func (es *eventStore) Disable(ctx context.Context, session authn.Session, id str
 		return user, err
 	}
 
-	return es.delete(ctx, session, user)
+	return es.changeStatus(ctx, session, user)
 }
 
-func (es *eventStore) delete(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
-	event := removeUserEvent{
+func (es *eventStore) changeStatus(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+	event := changeUserStatusEvent{
 		id:        user.ID,
 		updatedAt: user.UpdatedAt,
 		updatedBy: user.UpdatedBy,
@@ -252,7 +265,7 @@ func (es *eventStore) delete(ctx context.Context, session authn.Session, user us
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, changeStatusStream, event); err != nil {
 		return user, err
 	}
 
@@ -270,7 +283,7 @@ func (es *eventStore) Identify(ctx context.Context, session authn.Session) (stri
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, identifyStream, event); err != nil {
 		return userID, err
 	}
 
@@ -289,7 +302,7 @@ func (es *eventStore) GenerateResetToken(ctx context.Context, email, host string
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	return es.Publish(ctx, event)
+	return es.Publish(ctx, tokenStream, event)
 }
 
 func (es *eventStore) IssueToken(ctx context.Context, username, secret string) (*grpcTokenV1.Token, error) {
@@ -303,7 +316,7 @@ func (es *eventStore) IssueToken(ctx context.Context, username, secret string) (
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, tokenStream, event); err != nil {
 		return token, err
 	}
 
@@ -320,7 +333,7 @@ func (es *eventStore) RefreshToken(ctx context.Context, session authn.Session, r
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, tokenStream, event); err != nil {
 		return token, err
 	}
 
@@ -336,7 +349,7 @@ func (es *eventStore) ResetSecret(ctx context.Context, session authn.Session, se
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	return es.Publish(ctx, event)
+	return es.Publish(ctx, secretStream, event)
 }
 
 func (es *eventStore) SendPasswordReset(ctx context.Context, host, email, user, token string) error {
@@ -351,7 +364,7 @@ func (es *eventStore) SendPasswordReset(ctx context.Context, host, email, user, 
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	return es.Publish(ctx, event)
+	return es.Publish(ctx, secretStream, event)
 }
 
 func (es *eventStore) OAuthCallback(ctx context.Context, user users.User) (users.User, error) {
@@ -365,7 +378,7 @@ func (es *eventStore) OAuthCallback(ctx context.Context, user users.User) (users
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, oauthStream, event); err != nil {
 		return token, err
 	}
 
@@ -383,7 +396,7 @@ func (es *eventStore) Delete(ctx context.Context, session authn.Session, id stri
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	return es.Publish(ctx, event)
+	return es.Publish(ctx, deleteStream, event)
 }
 
 func (es *eventStore) OAuthAddUserPolicy(ctx context.Context, user users.User) error {
@@ -397,5 +410,5 @@ func (es *eventStore) OAuthAddUserPolicy(ctx context.Context, user users.User) e
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	return es.Publish(ctx, event)
+	return es.Publish(ctx, oauthStream, event)
 }

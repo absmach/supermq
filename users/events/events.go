@@ -15,7 +15,7 @@ const (
 	userPrefix               = "user."
 	userCreate               = userPrefix + "create"
 	userUpdate               = userPrefix + "update"
-	userRemove               = userPrefix + "remove"
+	changeUserStatus         = userPrefix + "change_status"
 	userView                 = userPrefix + "view"
 	profileView              = userPrefix + "view_profile"
 	userList                 = userPrefix + "list"
@@ -39,7 +39,7 @@ var (
 	_ events.Event = (*updateUserEvent)(nil)
 	_ events.Event = (*updateProfilePictureEvent)(nil)
 	_ events.Event = (*updateUsernameEvent)(nil)
-	_ events.Event = (*removeUserEvent)(nil)
+	_ events.Event = (*changeUserStatusEvent)(nil)
 	_ events.Event = (*viewUserEvent)(nil)
 	_ events.Event = (*viewProfileEvent)(nil)
 	_ events.Event = (*listUserEvent)(nil)
@@ -203,7 +203,7 @@ func (uppe updateProfilePictureEvent) Encode() (map[string]interface{}, error) {
 	return val, nil
 }
 
-type removeUserEvent struct {
+type changeUserStatusEvent struct {
 	id        string
 	status    string
 	updatedAt time.Time
@@ -212,9 +212,9 @@ type removeUserEvent struct {
 	requestID string
 }
 
-func (rce removeUserEvent) Encode() (map[string]interface{}, error) {
+func (rce changeUserStatusEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
-		"operation":   userRemove,
+		"operation":   changeUserStatus,
 		"id":          rce.id,
 		"status":      rce.status,
 		"updated_at":  rce.updatedAt,
