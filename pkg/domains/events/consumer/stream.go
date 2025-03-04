@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	stream = "events.supermq.domains"
+	stream = "events.supermq.domain.*"
 
 	create     = "domain.create"
 	update     = "domain.update"

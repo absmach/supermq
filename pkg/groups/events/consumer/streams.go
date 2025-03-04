@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	stream = "events.supermq.groups"
+	stream = "events.supermq.group.*"
 
 	create                  = "group.create"
 	update                  = "group.update"
