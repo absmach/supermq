@@ -44,8 +44,6 @@ func NewRepository(db postgres.Database, entityType, tableNamePrefix, entityTabl
 		membersListBaseQuery = groupMembersListBaseQuery()
 	case policies.DomainType:
 		membersListBaseQuery = domainMembersListBaseQuery()
-	default:
-		membersListBaseQuery = defaultMembersListBaseQuery(fmt.Sprintf("%s_roles", tableNamePrefix), fmt.Sprintf("%s_role_members", tableNamePrefix), fmt.Sprintf("%s_role_actions", tableNamePrefix))
 	}
 
 	return Repository{
@@ -854,6 +852,10 @@ func (repo *Repository) RemoveMemberFromAllRoles(ctx context.Context, memberID s
 	return nil
 }
 
+func (repo *Repository) SetMemberListBaseQuery(query string) {
+	repo.membersListBaseQuery = query
+}
+
 func applyConditions(query string, pageQuery roles.MembersRolePageQuery) string {
 	var whereClause []string
 
@@ -1381,48 +1383,4 @@ members AS (
         um.member_id
 )
 	`
-}
-
-func defaultMembersListBaseQuery(roleTable, roleMembersTable, roleActionsTable string) string {
-	return fmt.Sprintf(`
-WITH ungrouped_members AS (
-
-    SELECT
-        r.id,
-        r.name,
-        rm.member_id,
-        ARRAY_AGG(DISTINCT ra.action) AS actions,
-        'direct' AS access_type,
-        '' AS access_provider_id
-    FROM
-        %s rm
-    JOIN %s r ON
-        r.id = rm.role_id
-    JOIN %s ra ON
-        ra.role_id = r.id
-    WHERE
-        r.entity_id = :entity_id
-    GROUP BY
-        r.id,
-        rm.member_id
-),
-
-members AS (
-    SELECT
-        um.member_id,
-        JSONB_AGG(
-            JSON_BUILD_OBJECT(
-                'role_id', um.id,
-                'role_name', um.name,
-                'actions', um.actions,
-                'access_type', um.access_type,
-                'access_provider_id', um.access_provider_id
-            )
-        ) AS roles
-    FROM
-        ungrouped_members um
-    GROUP BY
-        um.member_id
-)
-`, roleMembersTable, roleTable, roleActionsTable)
 }
