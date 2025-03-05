@@ -337,7 +337,7 @@ func (ram RoleManagerAuthorizationMiddleware) authorizeMembers(ctx context.Conte
 		}
 		return nil
 
-	case policies.ChannelType, policies.GroupType, policies.ClientType:
+	default:
 		for _, member := range members {
 			if err := ram.authz.Authorize(ctx, smqauthz.PolicyReq{
 				Permission:  policies.MembershipPermission,
@@ -351,7 +351,5 @@ func (ram RoleManagerAuthorizationMiddleware) authorizeMembers(ctx context.Conte
 			}
 		}
 		return nil
-	default:
-		return errors.Wrap(errors.ErrAuthorization, errors.New("unsupported policies type"))
 	}
 }
