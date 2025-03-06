@@ -19,6 +19,7 @@ import (
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/postgres"
+	"github.com/absmach/supermq/pkg/roles"
 	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
 	"github.com/jackc/pgtype"
 	"github.com/lib/pq"
@@ -171,29 +172,87 @@ func (repo *clientRepo) ChangeStatus(ctx context.Context, client clients.Client)
 }
 
 func (repo *clientRepo) RetrieveByID(ctx context.Context, id string) (clients.Client, error) {
-	q := `SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, identity, secret, metadata, created_at, updated_at, updated_by, status
-        FROM clients WHERE id = :id`
+	query := `
+	WITH client_roles AS (
+		SELECT
+			cr.id AS role_id,
+			cr.name AS role_name,
+			array_agg(cra.action) AS actions
+		FROM
+			clients_roles cr
+		LEFT JOIN
+			clients_role_actions cra ON cr.id = cra.role_id
+		WHERE
+			cr.entity_id = :id
+		GROUP BY
+			cr.id, cr.name
+	)
+	SELECT
+		c.id, c.name, c.tags, COALESCE(c.domain_id, '') AS domain_id, COALESCE(c.parent_group_id, '') AS parent_group_id,
+		c.identity, c.secret, c.metadata, c.created_at, c.updated_at, c.updated_by, c.status, cr.role_id, cr.role_name, cr.actions
+	FROM
+		clients c
+	LEFT JOIN
+		client_roles cr ON 1=1
+	WHERE
+		c.id = :id`
 
 	dbc := DBClient{
 		ID: id,
 	}
 
-	row, err := repo.DB.NamedQueryContext(ctx, q, dbc)
+	row, err := repo.DB.NamedQueryContext(ctx, query, dbc)
 	if err != nil {
 		return clients.Client{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
 	defer row.Close()
 
 	dbc = DBClient{}
-	if row.Next() {
-		if err := row.StructScan(&dbc); err != nil {
+	var res []roles.RoleRes
+	for row.Next() {
+		var roleID, roleName string
+		var roleActions pgtype.TextArray
+
+		if err := row.Scan(
+			&dbc.ID,
+			&dbc.Name,
+			&dbc.Tags,
+			&dbc.Domain,
+			&dbc.ParentGroup,
+			&dbc.Identity,
+			&dbc.Secret,
+			&dbc.Metadata,
+			&dbc.CreatedAt,
+			&dbc.UpdatedAt,
+			&dbc.UpdatedBy,
+			&dbc.Status,
+			&roleID,
+			&roleName,
+			&roleActions,
+		); err != nil {
 			return clients.Client{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
 
-		return ToClient(dbc)
+		var actions []string
+		for _, e := range roleActions.Elements {
+			actions = append(actions, e.String)
+		}
+
+		res = append(res, roles.RoleRes{
+			RoleID:   roleID,
+			RoleName: roleName,
+			Actions:  actions,
+		})
 	}
 
-	return clients.Client{}, repoerr.ErrNotFound
+	cl, err := ToClient(dbc)
+	if err != nil {
+		return clients.Client{}, err
+	}
+
+	cl.Roles = res
+
+	return cl, nil
 }
 
 func (repo *clientRepo) RetrieveAll(ctx context.Context, pm clients.Page) (clients.ClientsPage, error) {

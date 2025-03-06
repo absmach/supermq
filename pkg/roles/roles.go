@@ -56,6 +56,12 @@ type RoleProvision struct {
 	OptionalMembers []string `json:"optional_members"`
 }
 
+type RoleRes struct {
+	RoleID   string   `json:"role_id" db:"id"`
+	RoleName string   `json:"role_name" db:"name"`
+	Actions  []string `json:"actions"`
+}
+
 type RolePage struct {
 	Total  uint64 `json:"total"`
 	Offset uint64 `json:"offset"`

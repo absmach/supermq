@@ -107,19 +107,20 @@ type DomainReq struct {
 }
 
 type Domain struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	Metadata  Metadata  `json:"metadata,omitempty"`
-	Tags      []string  `json:"tags,omitempty"`
-	Alias     string    `json:"alias,omitempty"`
-	Status    Status    `json:"status"`
-	RoleID    string    `json:"role_id,omitempty"`
-	RoleName  string    `json:"role_name,omitempty"`
-	Actions   []string  `json:"actions,omitempty"`
-	CreatedBy string    `json:"created_by,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedBy string    `json:"updated_by,omitempty"`
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	ID        string          `json:"id"`
+	Name      string          `json:"name"`
+	Metadata  Metadata        `json:"metadata,omitempty"`
+	Tags      []string        `json:"tags,omitempty"`
+	Alias     string          `json:"alias,omitempty"`
+	Status    Status          `json:"status"`
+	RoleID    string          `json:"role_id,omitempty"`
+	RoleName  string          `json:"role_name,omitempty"`
+	Actions   []string        `json:"actions,omitempty"`
+	CreatedBy string          `json:"created_by,omitempty"`
+	CreatedAt time.Time       `json:"created_at"`
+	UpdatedBy string          `json:"updated_by,omitempty"`
+	UpdatedAt time.Time       `json:"updated_at,omitempty"`
+	Roles     []roles.RoleRes `json:"roles,omitempty"`
 }
 
 type Page struct {

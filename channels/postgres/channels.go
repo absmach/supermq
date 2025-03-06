@@ -20,6 +20,7 @@ import (
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/postgres"
+	"github.com/absmach/supermq/pkg/roles"
 	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
 	"github.com/jackc/pgtype"
 	"github.com/lib/pq"
@@ -123,8 +124,30 @@ func (cr *channelRepository) ChangeStatus(ctx context.Context, channel channels.
 }
 
 func (cr *channelRepository) RetrieveByID(ctx context.Context, id string) (channels.Channel, error) {
-	q := `SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id,  metadata, created_at, updated_at, updated_by, status FROM channels WHERE id = :id`
-
+	q := `
+	WITH channel_roles AS (
+		SELECT
+			cr.id AS role_id,
+			cr.name AS role_name,
+			array_agg(cra.action) AS actions
+		FROM
+			channels_roles cr
+		LEFT JOIN
+			channels_role_actions cra ON cr.id = cra.role_id
+		WHERE
+			cr.entity_id = :id
+		GROUP BY
+			cr.id, cr.name
+	)
+	SELECT
+		c.id, c.name, c.tags, COALESCE(c.domain_id, '') AS domain_id, COALESCE(c.parent_group_id, '') AS parent_group_id,
+		c.metadata, c.created_at, c.updated_at, c.updated_by, c.status, cr.role_id, cr.role_name, cr.actions
+	FROM
+		channels c
+	LEFT JOIN
+		channel_roles cr ON 1=1
+	WHERE
+		c.id = :id`
 	dbch := dbChannel{
 		ID: id,
 	}
@@ -136,14 +159,49 @@ func (cr *channelRepository) RetrieveByID(ctx context.Context, id string) (chann
 	defer row.Close()
 
 	dbch = dbChannel{}
-	if row.Next() {
-		if err := row.StructScan(&dbch); err != nil {
+	var res []roles.RoleRes
+	for row.Next() {
+		var roleID, roleName string
+		var roleActions pgtype.TextArray
+
+		if err := row.Scan(
+			&dbch.ID,
+			&dbch.Name,
+			&dbch.Tags,
+			&dbch.Domain,
+			&dbch.ParentGroup,
+			&dbch.Metadata,
+			&dbch.CreatedAt,
+			&dbch.UpdatedAt,
+			&dbch.UpdatedBy,
+			&dbch.Status,
+			&roleID,
+			&roleName,
+			&roleActions,
+		); err != nil {
 			return channels.Channel{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
-		return toChannel(dbch)
+
+		var actions []string
+		for _, e := range roleActions.Elements {
+			actions = append(actions, e.String)
+		}
+
+		res = append(res, roles.RoleRes{
+			RoleID:   roleID,
+			RoleName: roleName,
+			Actions:  actions,
+		})
 	}
 
-	return channels.Channel{}, repoerr.ErrNotFound
+	ch, err := toChannel(dbch)
+	if err != nil {
+		return channels.Channel{}, err
+	}
+
+	ch.Roles = res
+
+	return ch, nil
 }
 
 func (cr *channelRepository) RetrieveAll(ctx context.Context, pm channels.PageMetadata) (channels.Page, error) {
