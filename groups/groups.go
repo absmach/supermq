@@ -25,27 +25,28 @@ type Metadata map[string]interface{}
 // Path in a tree consisting of group IDs
 // Paths are unique per domain.
 type Group struct {
-	ID                        string    `json:"id"`
-	Domain                    string    `json:"domain_id,omitempty"`
-	Parent                    string    `json:"parent_id,omitempty"`
-	Name                      string    `json:"name"`
-	Description               string    `json:"description,omitempty"`
-	Metadata                  Metadata  `json:"metadata,omitempty"`
-	Level                     int       `json:"level,omitempty"`
-	Path                      string    `json:"path,omitempty"`
-	Children                  []*Group  `json:"children,omitempty"`
-	CreatedAt                 time.Time `json:"created_at"`
-	UpdatedAt                 time.Time `json:"updated_at,omitempty"`
-	UpdatedBy                 string    `json:"updated_by,omitempty"`
-	Status                    Status    `json:"status"`
-	RoleID                    string    `json:"role_id,omitempty"`
-	RoleName                  string    `json:"role_name,omitempty"`
-	Actions                   []string  `json:"actions,omitempty"`
-	AccessType                string    `json:"access_type,omitempty"`
-	AccessProviderId          string    `json:"access_provider_id,omitempty"`
-	AccessProviderRoleId      string    `json:"access_provider_role_id,omitempty"`
-	AccessProviderRoleName    string    `json:"access_provider_role_name,omitempty"`
-	AccessProviderRoleActions []string  `json:"access_provider_role_actions,omitempty"`
+	ID                        string          `json:"id"`
+	Domain                    string          `json:"domain_id,omitempty"`
+	Parent                    string          `json:"parent_id,omitempty"`
+	Name                      string          `json:"name"`
+	Description               string          `json:"description,omitempty"`
+	Metadata                  Metadata        `json:"metadata,omitempty"`
+	Level                     int             `json:"level,omitempty"`
+	Path                      string          `json:"path,omitempty"`
+	Children                  []*Group        `json:"children,omitempty"`
+	CreatedAt                 time.Time       `json:"created_at"`
+	UpdatedAt                 time.Time       `json:"updated_at,omitempty"`
+	UpdatedBy                 string          `json:"updated_by,omitempty"`
+	Status                    Status          `json:"status"`
+	RoleID                    string          `json:"role_id,omitempty"`
+	RoleName                  string          `json:"role_name,omitempty"`
+	Actions                   []string        `json:"actions,omitempty"`
+	AccessType                string          `json:"access_type,omitempty"`
+	AccessProviderId          string          `json:"access_provider_id,omitempty"`
+	AccessProviderRoleId      string          `json:"access_provider_role_id,omitempty"`
+	AccessProviderRoleName    string          `json:"access_provider_role_name,omitempty"`
+	AccessProviderRoleActions []string        `json:"access_provider_role_actions,omitempty"`
+	Roles                     []roles.RoleRes `json:"roles,omitempty"`
 }
 
 type Member struct {

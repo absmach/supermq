@@ -16,7 +16,9 @@ import (
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/postgres"
+	"github.com/absmach/supermq/pkg/roles"
 	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
+	"github.com/jackc/pgtype"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -142,8 +144,31 @@ func (repo groupRepository) ChangeStatus(ctx context.Context, group groups.Group
 }
 
 func (repo groupRepository) RetrieveByID(ctx context.Context, id string) (groups.Group, error) {
-	q := `SELECT id, name, domain_id, COALESCE(parent_id, '') AS parent_id, description, metadata, created_at, updated_at, updated_by, status, path FROM groups
-	    WHERE id = :id`
+	q := `
+		WITH group_roles AS (
+			SELECT
+				gr.id AS role_id,
+				gr.name AS role_name,
+				array_agg(gra.action) AS actions
+			FROM
+				groups_roles gr
+			LEFT JOIN
+				groups_role_actions gra ON gr.id = gra.role_id
+			WHERE
+				gr.entity_id = :id
+			GROUP BY
+				gr.id, gr.name
+		)
+		SELECT
+			g.id, g.name, COALESCE(g.domain_id, '') AS domain_id, COALESCE(g.parent_id, '') AS parent_id,
+			g.description, g.metadata, g.created_at, g.updated_at, g.updated_by, g.status, g.path,
+			gr.role_id, gr.role_name, gr.actions
+		FROM
+			groups g
+		LEFT JOIN
+			group_roles gr ON 1=1
+		WHERE
+			g.id = :id`
 
 	dbg := dbGroup{
 		ID: id,
@@ -156,13 +181,47 @@ func (repo groupRepository) RetrieveByID(ctx context.Context, id string) (groups
 	defer row.Close()
 
 	dbg = dbGroup{}
-	if ok := row.Next(); !ok {
-		return groups.Group{}, repoerr.ErrNotFound
+	var res []roles.RoleRes
+	for row.Next() {
+		var roleID, roleName string
+		var roleActions pgtype.TextArray
+		if err := row.Scan(
+			&dbg.ID,
+			&dbg.Name,
+			&dbg.DomainID,
+			&dbg.ParentID,
+			&dbg.Description,
+			&dbg.Metadata,
+			&dbg.CreatedAt,
+			&dbg.UpdatedAt,
+			&dbg.UpdatedBy,
+			&dbg.Status,
+			&dbg.Path,
+			&roleID,
+			&roleName,
+			&roleActions,
+		); err != nil {
+			return groups.Group{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+
+		var actions []string
+		for _, e := range roleActions.Elements {
+			actions = append(actions, e.String)
+		}
+
+		res = append(res, roles.RoleRes{
+			RoleID:   roleID,
+			RoleName: roleName,
+			Actions:  actions,
+		})
 	}
-	if err := row.StructScan(&dbg); err != nil {
-		return groups.Group{}, errors.Wrap(repoerr.ErrViewEntity, err)
+
+	group, err := toGroup(dbg)
+	if err != nil {
+		return groups.Group{}, err
 	}
-	return toGroup(dbg)
+	group.Roles = res
+	return group, nil
 }
 
 func (repo groupRepository) RetrieveByIDAndUser(ctx context.Context, domainID, userID, groupID string) (groups.Group, error) {
