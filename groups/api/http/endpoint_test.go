@@ -207,7 +207,7 @@ func TestCreateGroupEndpoint(t *testing.T) {
 				body:        strings.NewReader(data),
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("CreateGroup", mock.Anything, tc.session, tc.req.Group).Return(tc.svcResp, []roles.RoleProvision{}, tc.svcErr)
@@ -304,7 +304,7 @@ func TestViewGroupEndpoint(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("ViewGroup", mock.Anything, tc.session, tc.id).Return(tc.svcResp, tc.svcErr)
@@ -449,7 +449,7 @@ func TestUpdateGroupEndpoint(t *testing.T) {
 				body:        strings.NewReader(data),
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("UpdateGroup", mock.Anything, tc.session, tc.updateReq).Return(tc.svcResp, tc.svcErr)
@@ -552,7 +552,7 @@ func TestEnableGroupEndpoint(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("EnableGroup", mock.Anything, tc.session, tc.id).Return(tc.svcResp, tc.svcErr)
@@ -655,7 +655,7 @@ func TestDisableGroupEndpoint(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("DisableGroup", mock.Anything, tc.session, tc.id).Return(tc.svcResp, tc.svcErr)
@@ -962,7 +962,7 @@ func TestListGroups(t *testing.T) {
 				token:       tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("ListGroups", mock.Anything, tc.session, mock.Anything).Return(tc.listGroupsResponse, tc.err)
@@ -1052,7 +1052,7 @@ func TestDeleteGroupEndpoint(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("DeleteGroup", mock.Anything, tc.session, tc.id).Return(tc.svcErr)
@@ -1221,7 +1221,7 @@ func TestRetrieveGroupHierarchyEndpoint(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("RetrieveGroupHierarchy", mock.Anything, tc.session, tc.groupID, tc.pageMeta).Return(tc.svcRes, tc.svcErr)
@@ -1370,7 +1370,7 @@ func TestAddParentGroupEndpoint(t *testing.T) {
 				body:        strings.NewReader(data),
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("AddParentGroup", mock.Anything, tc.session, tc.id, tc.parentID).Return(tc.svcErr)
@@ -1461,7 +1461,7 @@ func TestRemoveParentGroupEndpoint(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("RemoveParentGroup", mock.Anything, tc.session, tc.id).Return(tc.svcErr)
@@ -1613,7 +1613,7 @@ func TestAddChildrenGroupsEndpoint(t *testing.T) {
 				body:        strings.NewReader(data),
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("AddChildrenGroups", mock.Anything, tc.session, tc.id, tc.childrenIDs).Return(tc.svcErr)
@@ -1755,7 +1755,7 @@ func TestRemoveChildrenGroupsEndpoint(t *testing.T) {
 				body:        strings.NewReader(data),
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("RemoveChildrenGroups", mock.Anything, tc.session, tc.id, tc.childrenIDs).Return(tc.svcErr)
@@ -1846,7 +1846,7 @@ func TestRemoveAllChildrenGroupsEndpoint(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("RemoveAllChildrenGroups", mock.Anything, tc.session, tc.id).Return(tc.svcErr)
@@ -1990,7 +1990,7 @@ func TestListChildrenGroupsEndpoint(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("ListChildrenGroups", mock.Anything, tc.session, tc.id, int64(1), int64(0), tc.pageMeta).Return(tc.svcRes, tc.svcErr)

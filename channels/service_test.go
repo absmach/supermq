@@ -49,7 +49,7 @@ var (
 	}
 	parentGroupID    = testsutil.GenerateUUID(&testing.T{})
 	validID          = testsutil.GenerateUUID(&testing.T{})
-	validSession     = authn.Session{UserID: validID, DomainID: validID, DomainUserID: validID}
+	validSession     = authn.Session{UserID: validID, DomainID: validID}
 	errRollbackRoles = errors.New("failed to rollback roles")
 )
 

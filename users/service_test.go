@@ -940,7 +940,7 @@ func TestUpdateEmail(t *testing.T) {
 	for _, tc := range cases {
 		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
 		repoCall1 := cRepo.On("Update", context.Background(), mock.Anything).Return(tc.updateEmailResponse, tc.updateEmailErr)
-		updatedUser, err := svc.UpdateEmail(context.Background(), authn.Session{DomainUserID: tc.reqUserID, UserID: validID, DomainID: validID}, tc.id, tc.email)
+		updatedUser, err := svc.UpdateEmail(context.Background(), authn.Session{UserID: validID, DomainID: validID}, tc.id, tc.email)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateEmailResponse, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateEmailResponse, updatedUser))
 		if tc.err == nil {
@@ -1428,7 +1428,7 @@ func TestRefreshToken(t *testing.T) {
 	}{
 		{
 			desc:        "refresh token with refresh token for an existing user",
-			session:     authn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
+			session:     authn.Session{UserID: validID, DomainID: validID},
 			refreshResp: &grpcTokenV1.Token{AccessToken: validToken, RefreshToken: &validToken, AccessType: "3"},
 			repoResp:    rUser,
 			err:         nil,
@@ -1442,7 +1442,7 @@ func TestRefreshToken(t *testing.T) {
 		},
 		{
 			desc:        "refresh token with access token for an existing user",
-			session:     authn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
+			session:     authn.Session{UserID: validID, DomainID: validID},
 			refreshResp: &grpcTokenV1.Token{},
 			refresErr:   svcerr.ErrAuthentication,
 			repoResp:    rUser,
@@ -1450,19 +1450,19 @@ func TestRefreshToken(t *testing.T) {
 		},
 		{
 			desc:    "refresh token with refresh token for a non-existing client",
-			session: authn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
+			session: authn.Session{UserID: validID, DomainID: validID},
 			repoErr: repoerr.ErrNotFound,
 			err:     repoerr.ErrNotFound,
 		},
 		{
 			desc:     "refresh token with refresh token for a disable user",
-			session:  authn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
+			session:  authn.Session{UserID: validID, DomainID: validID},
 			repoResp: users.User{Status: users.DisabledStatus},
 			err:      svcerr.ErrAuthentication,
 		},
 		{
 			desc:        "refresh token with empty domain id",
-			session:     authn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
+			session:     authn.Session{UserID: validID, DomainID: validID},
 			refreshResp: &grpcTokenV1.Token{},
 			refresErr:   svcerr.ErrAuthentication,
 			repoResp:    rUser,

@@ -176,7 +176,7 @@ func TestCreateChannelEndpoint(t *testing.T) {
 				body:        strings.NewReader(data),
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("CreateChannels", mock.Anything, tc.session, tc.req).Return(tc.svcResp, []roles.RoleProvision{}, tc.svcErr)
@@ -312,7 +312,7 @@ func TestCreateChannelsEndpoint(t *testing.T) {
 				body:        strings.NewReader(data),
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("CreateChannels", mock.Anything, tc.session, tc.req[0]).Return(tc.svcResp, []roles.RoleProvision{}, tc.svcErr)
@@ -409,7 +409,7 @@ func TestViewChannelEndpoint(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("ViewChannel", mock.Anything, tc.session, tc.id).Return(tc.svcResp, tc.svcErr)
@@ -716,7 +716,7 @@ func TestListChannels(t *testing.T) {
 				token:       tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("ListChannels", mock.Anything, tc.session, mock.Anything).Return(tc.listChannelsResponse, tc.err)
@@ -859,7 +859,7 @@ func TestUpdateChannelEndpoint(t *testing.T) {
 				body:        strings.NewReader(data),
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("UpdateChannel", mock.Anything, tc.session, tc.updateReq).Return(tc.svcResp, tc.svcErr)
@@ -999,7 +999,7 @@ func TestUpdateChannelTagsEndpoint(t *testing.T) {
 				body:        strings.NewReader(tc.data),
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("UpdateChannelTags", mock.Anything, tc.session, channels.Channel{ID: tc.id, Tags: []string{newTag}}).Return(tc.svcResp, tc.svcErr)
@@ -1141,7 +1141,7 @@ func TestSetChannelParentGroupEndpoint(t *testing.T) {
 				body:        strings.NewReader(tc.data),
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("SetParentGroup", mock.Anything, tc.session, validID, tc.id).Return(tc.svcErr)
@@ -1229,7 +1229,7 @@ func TestRemoveChannelParentGroupEndpoint(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("RemoveParentGroup", mock.Anything, tc.session, tc.id).Return(tc.svcErr)
@@ -1325,7 +1325,7 @@ func TestEnableChannelEndpoint(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("EnableChannel", mock.Anything, tc.session, tc.id).Return(tc.svcResp, tc.svcErr)
@@ -1428,7 +1428,7 @@ func TestDisableChannelEndpoint(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("DisableChannel", mock.Anything, tc.session, tc.id).Return(tc.svcResp, tc.svcErr)
@@ -1537,7 +1537,7 @@ func TestConnectChannelClientEndpoint(t *testing.T) {
 				body:        strings.NewReader(tc.data),
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("Connect", mock.Anything, tc.session, []string{tc.id}, []string{validID}, []connections.ConnType{1}).Return(tc.svcErr)
@@ -1639,7 +1639,7 @@ func TestDisconnectChannelClientEndpoint(t *testing.T) {
 				body:        strings.NewReader(tc.data),
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("Disconnect", mock.Anything, tc.session, []string{tc.id}, []string{validID}, []connections.ConnType{1}).Return(tc.svcErr)
@@ -1769,7 +1769,7 @@ func TestConnectEndpoint(t *testing.T) {
 				})),
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("Connect", mock.Anything, tc.session, tc.channelIDs, tc.clientIDs, tc.types).Return(tc.svcErr)
@@ -1899,7 +1899,7 @@ func TestDisconnectEndpoint(t *testing.T) {
 				})),
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("Disconnect", mock.Anything, tc.session, tc.channelIDs, tc.clientIDs, tc.types).Return(tc.svcErr)
@@ -1982,7 +1982,7 @@ func TestDeleteChannelEndpoint(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
+				tc.session = smqauthn.Session{UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("RemoveChannel", mock.Anything, tc.session, tc.id).Return(tc.svcErr)

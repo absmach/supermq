@@ -944,7 +944,7 @@ func TestSetParentGroup(t *testing.T) {
 			desc:             "set parent group successfully",
 			clientID:         client.ID,
 			parentGroupID:    testsutil.GenerateUUID(t),
-			session:          smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID},
+			session:          smqauthn.Session{UserID: validID, DomainID: validID},
 			retrieveByIDResp: client,
 			retrieveEntityResp: &grpcCommonV1.RetrieveEntityRes{
 				Entity: &grpcCommonV1.EntityBasic{
@@ -959,7 +959,7 @@ func TestSetParentGroup(t *testing.T) {
 			desc:             "set parent group with failed to retrieve client",
 			clientID:         client.ID,
 			parentGroupID:    testsutil.GenerateUUID(t),
-			session:          smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID},
+			session:          smqauthn.Session{UserID: validID, DomainID: validID},
 			retrieveByIDResp: clients.Client{},
 			retrieveByIDErr:  svcerr.ErrNotFound,
 			err:              svcerr.ErrUpdateEntity,
@@ -968,7 +968,7 @@ func TestSetParentGroup(t *testing.T) {
 			desc:             "set parent group with parent already set",
 			clientID:         parentedClient.ID,
 			parentGroupID:    validID,
-			session:          smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID},
+			session:          smqauthn.Session{UserID: validID, DomainID: validID},
 			retrieveByIDResp: parentedClient,
 			err:              nil,
 		},
@@ -976,7 +976,7 @@ func TestSetParentGroup(t *testing.T) {
 			desc:             "set parent group of client with existing parent group",
 			clientID:         cparentedClient.ID,
 			parentGroupID:    testsutil.GenerateUUID(t),
-			session:          smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID},
+			session:          smqauthn.Session{UserID: validID, DomainID: validID},
 			retrieveByIDResp: cparentedClient,
 			err:              svcerr.ErrConflict,
 		},
@@ -984,7 +984,7 @@ func TestSetParentGroup(t *testing.T) {
 			desc:              "set parent group with failed to retrieve entity",
 			clientID:          client.ID,
 			parentGroupID:     testsutil.GenerateUUID(t),
-			session:           smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID},
+			session:           smqauthn.Session{UserID: validID, DomainID: validID},
 			retrieveByIDResp:  client,
 			retrieveEntityErr: svcerr.ErrAuthorization,
 			err:               svcerr.ErrUpdateEntity,
@@ -993,7 +993,7 @@ func TestSetParentGroup(t *testing.T) {
 			desc:             "set parent group with parent group from different domain",
 			clientID:         client.ID,
 			parentGroupID:    testsutil.GenerateUUID(t),
-			session:          smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID},
+			session:          smqauthn.Session{UserID: validID, DomainID: validID},
 			retrieveByIDResp: client,
 			retrieveEntityResp: &grpcCommonV1.RetrieveEntityRes{
 				Entity: &grpcCommonV1.EntityBasic{
@@ -1008,7 +1008,7 @@ func TestSetParentGroup(t *testing.T) {
 			desc:             "set parent group with disabled parent group",
 			clientID:         client.ID,
 			parentGroupID:    testsutil.GenerateUUID(t),
-			session:          smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID},
+			session:          smqauthn.Session{UserID: validID, DomainID: validID},
 			retrieveByIDResp: client,
 			retrieveEntityResp: &grpcCommonV1.RetrieveEntityRes{
 				Entity: &grpcCommonV1.EntityBasic{
@@ -1023,7 +1023,7 @@ func TestSetParentGroup(t *testing.T) {
 			desc:             "set parent group with failed to add policies",
 			clientID:         client.ID,
 			parentGroupID:    testsutil.GenerateUUID(t),
-			session:          smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID},
+			session:          smqauthn.Session{UserID: validID, DomainID: validID},
 			retrieveByIDResp: client,
 			retrieveEntityResp: &grpcCommonV1.RetrieveEntityRes{
 				Entity: &grpcCommonV1.EntityBasic{
@@ -1039,7 +1039,7 @@ func TestSetParentGroup(t *testing.T) {
 			desc:             "set parent group with failed to set parent group",
 			clientID:         client.ID,
 			parentGroupID:    testsutil.GenerateUUID(t),
-			session:          smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID},
+			session:          smqauthn.Session{UserID: validID, DomainID: validID},
 			retrieveByIDResp: client,
 			retrieveEntityResp: &grpcCommonV1.RetrieveEntityRes{
 				Entity: &grpcCommonV1.EntityBasic{
@@ -1055,7 +1055,7 @@ func TestSetParentGroup(t *testing.T) {
 			desc:             "set parent group with failed to set parent group and failed rollback",
 			clientID:         client.ID,
 			parentGroupID:    testsutil.GenerateUUID(t),
-			session:          smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID},
+			session:          smqauthn.Session{UserID: validID, DomainID: validID},
 			retrieveByIDResp: client,
 			retrieveEntityResp: &grpcCommonV1.RetrieveEntityRes{
 				Entity: &grpcCommonV1.EntityBasic{
@@ -1116,14 +1116,14 @@ func TestRemoveParentGroup(t *testing.T) {
 		{
 			desc:             "remove parent group successfully",
 			clientID:         parentedGroup.ID,
-			session:          smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID},
+			session:          smqauthn.Session{UserID: validID, DomainID: validID},
 			retrieveByIDResp: parentedGroup,
 			err:              nil,
 		},
 		{
 			desc:             "remove parent group with failed to retrieve client",
 			clientID:         parentedGroup.ID,
-			session:          smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID},
+			session:          smqauthn.Session{UserID: validID, DomainID: validID},
 			retrieveByIDResp: clients.Client{},
 			retrieveByIDErr:  svcerr.ErrNotFound,
 			err:              svcerr.ErrViewEntity,
@@ -1131,7 +1131,7 @@ func TestRemoveParentGroup(t *testing.T) {
 		{
 			desc:              "remove parent group with failed to delete policies",
 			clientID:          parentedGroup.ID,
-			session:           smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID},
+			session:           smqauthn.Session{UserID: validID, DomainID: validID},
 			retrieveByIDResp:  parentedGroup,
 			deletePoliciesErr: svcerr.ErrAuthorization,
 			err:               svcerr.ErrDeletePolicies,
@@ -1139,7 +1139,7 @@ func TestRemoveParentGroup(t *testing.T) {
 		{
 			desc:                 "remove parent group with failed to remove parent group",
 			clientID:             parentedGroup.ID,
-			session:              smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID},
+			session:              smqauthn.Session{UserID: validID, DomainID: validID},
 			retrieveByIDResp:     parentedGroup,
 			removeParentGroupErr: svcerr.ErrUpdateEntity,
 			err:                  svcerr.ErrUpdateEntity,
@@ -1147,7 +1147,7 @@ func TestRemoveParentGroup(t *testing.T) {
 		{
 			desc:                 "remove parent group with failed to remove parent group and failed to add policies",
 			clientID:             parentedGroup.ID,
-			session:              smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID},
+			session:              smqauthn.Session{UserID: validID, DomainID: validID},
 			retrieveByIDResp:     parentedGroup,
 			removeParentGroupErr: svcerr.ErrUpdateEntity,
 			addPoliciesErr:       svcerr.ErrUpdateEntity,

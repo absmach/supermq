@@ -28,12 +28,11 @@ func (t TokenType) String() string {
 }
 
 type Session struct {
-	Type         TokenType
-	PatID        string
-	DomainUserID string
-	UserID       string
-	DomainID     string
-	SuperAdmin   bool
+	Type       TokenType
+	PatID      string
+	UserID     string
+	DomainID   string
+	SuperAdmin bool
 }
 
 // Authn is supermq authentication library.

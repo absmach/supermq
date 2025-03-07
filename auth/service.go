@@ -364,10 +364,9 @@ func (svc service) checkUserDomain(ctx context.Context, key Key) (subject string
 		}); err == nil {
 			return key.User, nil
 		}
-		// Check user is domain member.
-		domainUserSubject := EncodeDomainUserID(key.Domain, key.User)
+
 		if err = svc.Authorize(ctx, policies.Policy{
-			Subject:     domainUserSubject,
+			Subject:     key.User,
 			SubjectType: policies.UserType,
 			Permission:  policies.MembershipPermission,
 			Object:      key.Domain,
@@ -375,7 +374,7 @@ func (svc service) checkUserDomain(ctx context.Context, key Key) (subject string
 		}); err != nil {
 			return "", err
 		}
-		return domainUserSubject, nil
+		return key.User, nil
 	}
 	return "", nil
 }

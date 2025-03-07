@@ -427,14 +427,14 @@ func TestIssue(t *testing.T) {
 				ObjectType:  policies.PlatformType,
 			},
 			checkDomainMemberReq: policies.Policy{
-				Subject:     auth.EncodeDomainUserID(domainID, userID),
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				Permission:  policies.MembershipPermission,
 				Object:      domainID,
 				ObjectType:  policies.DomainType,
 			},
 			checkDomainMemberReq1: policies.Policy{
-				Subject:     auth.EncodeDomainUserID(domainID, userID),
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				Permission:  policies.MembershipPermission,
 				Object:      domainID,
@@ -461,7 +461,7 @@ func TestIssue(t *testing.T) {
 				ObjectType:  policies.PlatformType,
 			},
 			checkDomainMemberReq: policies.Policy{
-				Subject:     auth.EncodeDomainUserID(domainID, userID),
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				Permission:  policies.MembershipPermission,
 				Object:      domainID,
@@ -558,14 +558,14 @@ func TestIssue(t *testing.T) {
 				ObjectType:  policies.PlatformType,
 			},
 			checkDomainMemberReq: policies.Policy{
-				Subject:     auth.EncodeDomainUserID(domainID, userID),
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				Permission:  policies.MembershipPermission,
 				Object:      domainID,
 				ObjectType:  policies.DomainType,
 			},
 			checkDomainMemberReq1: policies.Policy{
-				Subject:     auth.EncodeDomainUserID(domainID, userID),
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				Permission:  policies.MembershipPermission,
 				Object:      domainID,
@@ -592,14 +592,14 @@ func TestIssue(t *testing.T) {
 				ObjectType:  policies.PlatformType,
 			},
 			checkDomainMemberReq: policies.Policy{
-				Subject:     auth.EncodeDomainUserID(domainID, userID),
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				Permission:  policies.MembershipPermission,
 				Object:      domainID,
 				ObjectType:  policies.DomainType,
 			},
 			checkDomainMemberReq1: policies.Policy{
-				Subject:     auth.EncodeDomainUserID(domainID, userID),
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				Permission:  policies.MembershipPermission,
 				Object:      domainID,
@@ -1204,84 +1204,5 @@ func TestSwitchToPermission(t *testing.T) {
 	for _, tc := range cases {
 		result := auth.SwitchToPermission(tc.relation)
 		assert.Equal(t, tc.result, result, fmt.Sprintf("switching to permission expected to succeed: %s", result))
-	}
-}
-
-func TestEncodeDomainUserID(t *testing.T) {
-	cases := []struct {
-		desc     string
-		domainID string
-		userID   string
-		response string
-	}{
-		{
-			desc:     "encode domain user id successfully",
-			domainID: validID,
-			userID:   validID,
-			response: validID + "_" + validID,
-		},
-		{
-			desc:     "encode domain user id with empty userID",
-			domainID: validID,
-			userID:   "",
-			response: "",
-		},
-		{
-			desc:     "encode domain user id with empty domain ID",
-			domainID: "",
-			userID:   validID,
-			response: "",
-		},
-		{
-			desc:     "encode domain user id with empty domain ID and userID",
-			domainID: "",
-			userID:   "",
-			response: "",
-		},
-	}
-
-	for _, tc := range cases {
-		ar := auth.EncodeDomainUserID(tc.domainID, tc.userID)
-		assert.Equal(t, tc.response, ar, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.response, ar))
-	}
-}
-
-func TestDecodeDomainUserID(t *testing.T) {
-	cases := []struct {
-		desc         string
-		domainUserID string
-		respDomainID string
-		respUserID   string
-	}{
-		{
-			desc:         "decode domain user id successfully",
-			domainUserID: validID + "_" + validID,
-			respDomainID: validID,
-			respUserID:   validID,
-		},
-		{
-			desc:         "decode domain user id with empty domainUserID",
-			domainUserID: "",
-			respDomainID: "",
-			respUserID:   "",
-		},
-		{
-			desc:         "decode domain user id with empty UserID",
-			domainUserID: validID,
-			respDomainID: validID,
-			respUserID:   "",
-		},
-		{
-			desc:         "decode domain user id with invalid domainuserId",
-			domainUserID: validID + "_" + validID + "_" + validID + "_" + validID,
-			respDomainID: "",
-			respUserID:   "",
-		},
-	}
-
-	for _, tc := range cases {
-		ar, er := auth.DecodeDomainUserID(tc.domainUserID)
-		assert.Equal(t, tc.respUserID, er, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.respUserID, er))
-		assert.Equal(t, tc.respDomainID, ar, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.respDomainID, ar))
 	}
 }

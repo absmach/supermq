@@ -6,7 +6,6 @@ package private
 import (
 	"context"
 
-	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/channels"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -41,7 +40,7 @@ func (svc service) Authorize(ctx context.Context, req channels.AuthzReq) error {
 			return err
 		}
 		pr := policies.Policy{
-			Subject:     auth.EncodeDomainUserID(req.DomainID, req.ClientID),
+			Subject:     req.ClientID,
 			SubjectType: policies.UserType,
 			Object:      req.ChannelID,
 			Permission:  permission,
