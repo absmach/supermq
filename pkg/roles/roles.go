@@ -56,6 +56,17 @@ type RoleProvision struct {
 	OptionalMembers []string `json:"optional_members"`
 }
 
+type RoleRes struct {
+	RoleID                    string                 `json:"role_id,omitempty"`
+	RoleName                  string                 `json:"role_name,omitempty"`
+	Actions                   []string               `json:"actions,omitempty"`
+	AccessType                string                 `json:"access_type,omitempty"`
+	AccessProviderId          string                 `json:"access_provider_id,omitempty"`
+	AccessProviderRoleId      string                 `json:"access_provider_role_id,omitempty"`
+	AccessProviderRoleName    string                 `json:"access_provider_role_name,omitempty"`
+	AccessProviderRoleActions []string               `json:"access_provider_role_actions,omitempty"`
+}
+
 type RolePage struct {
 	Total  uint64 `json:"total"`
 	Offset uint64 `json:"offset"`
