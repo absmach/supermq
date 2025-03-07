@@ -12,7 +12,7 @@ import (
 	"github.com/absmach/supermq/pkg/roles"
 )
 
-var (
+const (
 	groupPrefix                  = "group."
 	groupCreate                  = groupPrefix + "create"
 	groupUpdate                  = groupPrefix + "update"
