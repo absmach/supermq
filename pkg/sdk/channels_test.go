@@ -237,11 +237,7 @@ func TestCreateChannels(t *testing.T) {
 	mgsdk := sdk.NewSDK(conf)
 
 	for i := 0; i < 3; i++ {
-		gr := sdk.Channel{
-			ID:       generateUUID(t),
-			Name:     fmt.Sprintf("channel_%d", i),
-			Metadata: sdk.Metadata{"name": fmt.Sprintf("client_%d", i)},
-		}
+		gr := generateTestChannel(t)
 		chs = append(chs, gr)
 	}
 
@@ -357,11 +353,7 @@ func TestListChannels(t *testing.T) {
 	mgsdk := sdk.NewSDK(conf)
 
 	for i := 10; i < 100; i++ {
-		gr := sdk.Channel{
-			ID:       generateUUID(t),
-			Name:     fmt.Sprintf("channel_%d", i),
-			Metadata: sdk.Metadata{"name": fmt.Sprintf("client_%d", i)},
-		}
+		gr := generateTestChannel(t)
 		chs = append(chs, gr)
 	}
 
@@ -2090,6 +2082,7 @@ func generateTestChannel(t *testing.T) sdk.Channel {
 		Metadata:  sdk.Metadata{"role": "client"},
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
+		Status:    channels.EnabledStatus.String(),
 	}
 	return ch
 }
