@@ -671,6 +671,44 @@ func TestRetrieveAll(t *testing.T) {
 			},
 			err: errors.ErrMalformedEntity,
 		},
+		{
+			desc: "retrieve channels with id",
+			page: channels.ChannelsPage{
+				Page: channels.Page{
+					Offset: 0,
+					Limit:  10,
+					ID:     items[0].ID,
+				},
+			},
+			response: channels.ChannelsPage{
+				Page: channels.Page{
+					Total:  1,
+					Offset: 0,
+					Limit:  10,
+				},
+				Channels: []channels.Channel{items[0]},
+			},
+			err: nil,
+		},
+		{
+			desc: "retrieve channels with wrong id",
+			page: channels.ChannelsPage{
+				Page: channels.Page{
+					Offset: 0,
+					Limit:  10,
+					ID:     "wrong",
+				},
+			},
+			response: channels.ChannelsPage{
+				Page: channels.Page{
+					Total:  0,
+					Offset: 0,
+					Limit:  10,
+				},
+				Channels: []channels.Channel(nil),
+			},
+			err: nil,
+		},
 	}
 
 	for _, tc := range cases {

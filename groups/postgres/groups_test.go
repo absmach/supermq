@@ -823,6 +823,44 @@ func TestRetrieveAll(t *testing.T) {
 			},
 			err: errors.ErrMalformedEntity,
 		},
+		{
+			desc: "retrieve groups with id",
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
+					Offset: 0,
+					Limit:  10,
+					ID:     items[0].ID,
+				},
+			},
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
+					Total:  1,
+					Offset: 0,
+					Limit:  10,
+				},
+				Groups: []groups.Group{items[0]},
+			},
+			err: nil,
+		},
+		{
+			desc: "retrieve groups with wrong id",
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
+					Offset: 0,
+					Limit:  10,
+					ID:     "wrong",
+				},
+			},
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
+					Total:  0,
+					Offset: 0,
+					Limit:  10,
+				},
+				Groups: []groups.Group(nil),
+			},
+			err: nil,
+		},
 	}
 
 	for _, tc := range cases {

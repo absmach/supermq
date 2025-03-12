@@ -693,6 +693,22 @@ func TestListDomains(t *testing.T) {
 			err: nil,
 		},
 		{
+			desc: "list all domains with name",
+			pm: domains.Page{
+				Offset: 0,
+				Limit:  10,
+				Name:   items[0].Name,
+				Status: domains.AllStatus,
+			},
+			response: domains.DomainsPage{
+				Total:   1,
+				Offset:  0,
+				Limit:   10,
+				Domains: []domains.Domain{items[0]},
+			},
+			err: nil,
+		},
+		{
 			desc: "list all domains with disabled status",
 			pm: domains.Page{
 				Offset: 0,
@@ -720,6 +736,22 @@ func TestListDomains(t *testing.T) {
 				Offset:  0,
 				Limit:   10,
 				Domains: []domains.Domain{items[0], items[5]},
+			},
+			err: nil,
+		},
+		{
+			desc: "list all domains with invalid tag",
+			pm: domains.Page{
+				Offset: 0,
+				Limit:  10,
+				Tag:    "invalid",
+				Status: domains.AllStatus,
+			},
+			response: domains.DomainsPage{
+				Total:   0,
+				Offset:  0,
+				Limit:   10,
+				Domains: []domains.Domain(nil),
 			},
 			err: nil,
 		},
@@ -760,6 +792,37 @@ func TestListDomains(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				UserID: userID,
+				Status: domains.AllStatus,
+			},
+			response: domains.DomainsPage{
+				Total:  0,
+				Offset: 0,
+				Limit:  10,
+			},
+			err: nil,
+		},
+		{
+			desc: "list domains with id",
+			pm: domains.Page{
+				Offset: 0,
+				Limit:  10,
+				ID:     items[0].ID,
+				Status: domains.AllStatus,
+			},
+			response: domains.DomainsPage{
+				Total:   1,
+				Offset:  0,
+				Limit:   10,
+				Domains: []domains.Domain{items[0]},
+			},
+			err: nil,
+		},
+		{
+			desc: "list domains with invalid id",
+			pm: domains.Page{
+				Offset: 0,
+				Limit:  10,
+				ID:     invalid,
 				Status: domains.AllStatus,
 			},
 			response: domains.DomainsPage{

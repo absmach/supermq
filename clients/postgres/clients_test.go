@@ -1229,6 +1229,40 @@ func TestRetrieveAll(t *testing.T) {
 				Clients: []clients.Client{expectedClients[0]},
 			},
 		},
+		{
+			desc: "with id",
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				ID:     expectedClients[0].ID,
+				Status: clients.AllStatus,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  1,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client{expectedClients[0]},
+			},
+		},
+		{
+			desc: "with wrong id",
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				ID:     testsutil.GenerateUUID(t),
+				Status: clients.AllStatus,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  0,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client(nil),
+			},
+		},
 	}
 	for _, c := range cases {
 		t.Run(c.desc, func(t *testing.T) {
