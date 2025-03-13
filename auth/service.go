@@ -135,13 +135,13 @@ func (svc service) Issue(ctx context.Context, token string, key Key) (Token, err
 	case APIKey:
 		return svc.userKey(ctx, token, key)
 	case RefreshKey:
-		return svc.refreshKey(ctx, token, key)
+		return svc.refreshKey(token, key)
 	case RecoveryKey:
 		return svc.tmpKey(recoveryDuration, key)
 	case InvitationKey:
-		return svc.invitationKey(ctx, key)
+		return svc.invitationKey(key)
 	default:
-		return svc.accessKey(ctx, key)
+		return svc.accessKey(key)
 	}
 }
 
@@ -273,15 +273,10 @@ func (svc service) tmpKey(duration time.Duration, key Key) (Token, error) {
 	return Token{AccessToken: value}, nil
 }
 
-func (svc service) accessKey(ctx context.Context, key Key) (Token, error) {
+func (svc service) accessKey(key Key) (Token, error) {
 	var err error
 	key.Type = AccessKey
 	key.ExpiresAt = time.Now().Add(svc.loginDuration)
-
-	key.Subject, err = svc.checkUserDomain(ctx, key)
-	if err != nil {
-		return Token{}, errors.Wrap(svcerr.ErrAuthorization, err)
-	}
 
 	access, err := svc.tokenizer.Issue(key)
 	if err != nil {
@@ -298,15 +293,10 @@ func (svc service) accessKey(ctx context.Context, key Key) (Token, error) {
 	return Token{AccessToken: access, RefreshToken: refresh}, nil
 }
 
-func (svc service) invitationKey(ctx context.Context, key Key) (Token, error) {
+func (svc service) invitationKey(key Key) (Token, error) {
 	var err error
 	key.Type = InvitationKey
 	key.ExpiresAt = time.Now().Add(svc.invitationDuration)
-
-	key.Subject, err = svc.checkUserDomain(ctx, key)
-	if err != nil {
-		return Token{}, err
-	}
 
 	access, err := svc.tokenizer.Issue(key)
 	if err != nil {
@@ -316,7 +306,7 @@ func (svc service) invitationKey(ctx context.Context, key Key) (Token, error) {
 	return Token{AccessToken: access}, nil
 }
 
-func (svc service) refreshKey(ctx context.Context, token string, key Key) (Token, error) {
+func (svc service) refreshKey(token string, key Key) (Token, error) {
 	k, err := svc.tokenizer.Parse(token)
 	if err != nil {
 		return Token{}, errors.Wrap(errRetrieve, err)
@@ -330,11 +320,8 @@ func (svc service) refreshKey(ctx context.Context, token string, key Key) (Token
 	}
 	key.User = k.User
 	key.Type = AccessKey
-
-	key.Subject, err = svc.checkUserDomain(ctx, key)
-	if err != nil {
-		return Token{}, errors.Wrap(svcerr.ErrAuthorization, err)
-	}
+	key.Subject = k.Subject
+	key.Role = k.Role
 
 	key.ExpiresAt = time.Now().Add(svc.loginDuration)
 	access, err := svc.tokenizer.Issue(key)
@@ -350,34 +337,6 @@ func (svc service) refreshKey(ctx context.Context, token string, key Key) (Token
 	}
 
 	return Token{AccessToken: access, RefreshToken: refresh}, nil
-}
-
-func (svc service) checkUserDomain(ctx context.Context, key Key) (subject string, err error) {
-	if key.Domain != "" {
-		// Check user is platform admin.
-		if err = svc.Authorize(ctx, policies.Policy{
-			Subject:     key.User,
-			SubjectType: policies.UserType,
-			Permission:  policies.AdminPermission,
-			Object:      policies.SuperMQObject,
-			ObjectType:  policies.PlatformType,
-		}); err == nil {
-			return key.User, nil
-		}
-		// Check user is domain member.
-		domainUserSubject := EncodeDomainUserID(key.Domain, key.User)
-		if err = svc.Authorize(ctx, policies.Policy{
-			Subject:     domainUserSubject,
-			SubjectType: policies.UserType,
-			Permission:  policies.MembershipPermission,
-			Object:      key.Domain,
-			ObjectType:  policies.DomainType,
-		}); err != nil {
-			return "", err
-		}
-		return domainUserSubject, nil
-	}
-	return "", nil
 }
 
 func (svc service) userKey(ctx context.Context, token string, key Key) (Token, error) {
