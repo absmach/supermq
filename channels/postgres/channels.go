@@ -19,6 +19,7 @@ import (
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/postgres"
+	"github.com/absmach/supermq/pkg/roles"
 	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
 	"github.com/jackc/pgtype"
 	"github.com/lib/pq"
@@ -143,6 +144,204 @@ func (cr *channelRepository) RetrieveByID(ctx context.Context, id string) (chann
 	}
 
 	return channels.Channel{}, repoerr.ErrNotFound
+}
+
+func (cr *channelRepository) RetrieveByIDWithRoles(ctx context.Context, id, memberID string) (channels.Channel, error) {
+	query := `
+	WITH selected_channel AS (
+		SELECT
+			c.id,
+			c.parent_group_id,
+			COALESCE(g."path", ''::::ltree) AS parent_group_path,
+			c.domain_id
+		FROM
+			channels c
+		LEFT JOIN
+			"groups" g ON c.parent_group_id = g.id
+		WHERE
+			c.id = :id
+		LIMIT 1
+	),
+	selected_channel_roles AS (
+		SELECT
+			cr.entity_id AS channel_id,
+			crm.member_id AS member_id,
+			cr.id AS role_id,
+			cr."name" AS role_name,
+			jsonb_agg(DISTINCT cra."action") AS actions,
+			'direct' AS access_type,
+			''::::ltree AS access_provider_path,
+			'' AS access_provider_id
+		FROM
+			channels_roles cr
+		JOIN
+			channels_role_members crm ON cr.id = crm.role_id
+		JOIN
+			channels_role_actions cra ON cr.id = cra.role_id
+		JOIN
+			selected_channel sc ON sc.id = cr.entity_id
+			AND crm.member_id = :member_id
+		GROUP BY
+			cr.entity_id, cr.id, cr.name, crm.member_id
+	),
+	selected_group_roles AS (
+		SELECT
+			sc.id AS channel_id,
+			grm.member_id AS member_id,
+			gr.id AS role_id,
+			gr."name" AS role_name,
+			jsonb_agg(DISTINCT all_actions."action") AS actions,
+			gr.entity_id AS access_provider_id,
+			g."path" AS access_provider_path,
+			CASE
+				WHEN gr.entity_id = sc.parent_group_id
+				THEN 'direct_group'
+				ELSE 'indirect_group'
+			END AS access_type
+		FROM
+			"groups" g
+		JOIN
+			groups_roles gr ON gr.entity_id = g.id
+		JOIN
+			groups_role_members grm ON gr.id = grm.role_id
+		JOIN
+			groups_role_actions gra ON gr.id = gra.role_id
+		JOIN
+			groups_role_actions all_actions ON gr.id = all_actions.role_id
+		JOIN
+			selected_channel sc ON TRUE
+		WHERE
+			g."path" @> sc.parent_group_path
+			AND grm.member_id = :member_id
+			AND (
+				(g.id = sc.parent_group_id AND gra."action" LIKE 'channel%%')
+				OR
+				(g.id <> sc.parent_group_id AND gra."action" LIKE 'subgroup_channel%%')
+			)
+		GROUP BY
+			sc.id, sc.parent_group_id, gr.entity_id, gr.id, gr."name", g."path", grm.member_id
+	),
+	selected_domain_roles AS (
+		SELECT
+			sc.id AS channel_id,
+			drm.member_id AS member_id,
+			dr.entity_id AS group_id,
+			dr.id AS role_id,
+			dr."name" AS role_name,
+			jsonb_agg(DISTINCT all_actions."action") AS actions,
+			''::::ltree access_provider_path,
+			'domain' AS access_type,
+			dr.entity_id AS access_provider_id
+		FROM
+			domains d
+		JOIN
+			selected_channel sc ON sc.domain_id = d.id
+		JOIN
+			domains_roles dr ON dr.entity_id = d.id
+		JOIN
+			domains_role_members drm ON dr.id = drm.role_id
+		JOIN
+			domains_role_actions dra ON dr.id = dra.role_id
+		JOIN
+			domains_role_actions all_actions ON dr.id = all_actions.role_id
+		WHERE
+			drm.member_id = :member_id
+			AND dra."action" LIKE 'channel%%'
+		GROUP BY
+			sc.id, dr.entity_id, dr.id, dr."name", drm.member_id
+	),
+	all_roles AS (
+		SELECT
+			scr.channel_id,
+			scr.member_id,
+			scr.role_id AS role_id,
+			scr.role_name AS role_name,
+			scr.actions AS actions,
+			scr.access_type AS access_type,
+			scr.access_provider_path AS access_provider_path,
+			scr.access_provider_id AS access_provider_id
+		FROM
+			selected_channel_roles scr
+		UNION
+		SELECT
+			sgr.channel_id,
+			sgr.member_id,
+			sgr.role_id AS role_id,
+			sgr.role_name AS role_name,
+			sgr.actions AS actions,
+			sgr.access_type AS access_type,
+			sgr.access_provider_path AS access_provider_path,
+			sgr.access_provider_id AS access_provider_id
+		FROM
+			selected_group_roles sgr
+		UNION
+		SELECT
+			sdr.channel_id,
+			sdr.member_id,
+			sdr.role_id AS role_id,
+			sdr.role_name AS role_name,
+			sdr.actions AS actions,
+			sdr.access_type AS access_type,
+			sdr.access_provider_path AS access_provider_path,
+			sdr.access_provider_id AS access_provider_id
+		FROM
+			selected_domain_roles sdr
+	),
+	final_roles AS (
+		SELECT
+			ar.channel_id,
+			ar.member_id,
+			jsonb_agg(
+				jsonb_build_object(
+					'role_id', ar.role_id,
+					'role_name', ar.role_name,
+					'actions', ar.actions,
+					'access_type', ar.access_type,
+					'access_provider_path', ar.access_provider_path,
+					'access_provider_id', ar.access_provider_id
+				)
+			) AS roles
+		FROM all_roles ar
+		GROUP BY
+			ar.channel_id, ar.member_id
+	)
+	SELECT
+		c2.id,
+		c2."name",
+		c2.tags,
+		COALESCE(c2.domain_id, '') AS domain_id,
+		COALESCE(c2.parent_group_id, '') AS parent_group_id,
+		c2.metadata,
+		c2.created_at,
+		c2.created_by,
+		c2.updated_at,
+		c2.updated_by,
+		c2.status,
+		fr.member_id,
+		fr.roles
+	FROM channels c2
+		JOIN final_roles fr ON fr.channel_id = c2.id
+	`
+	parameters := map[string]interface{}{
+		"id":        id,
+		"member_id": memberID,
+	}
+	row, err := cr.db.NamedQueryContext(ctx, query, parameters)
+	if err != nil {
+		return channels.Channel{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+	defer row.Close()
+
+	dbch := dbChannel{}
+	if !row.Next() {
+		return channels.Channel{}, errors.Wrap(repoerr.ErrNotFound, err)
+	}
+
+	if err := row.StructScan(&dbch); err != nil {
+		return channels.Channel{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+
+	return toChannel(dbch)
 }
 
 func (cr *channelRepository) RetrieveAll(ctx context.Context, pm channels.Page) (channels.ChannelsPage, error) {
@@ -890,6 +1089,8 @@ type dbChannel struct {
 	AccessProviderRoleName    string           `db:"access_provider_role_name,omitempty"`
 	AccessProviderRoleActions pq.StringArray   `db:"access_provider_role_actions,omitempty"`
 	ConnectionTypes           pq.Int32Array    `db:"connection_types,omitempty"`
+	MemberID                  string           `db:"member_id,omitempty"`
+	Roles                     json.RawMessage  `db:"roles,omitempty"`
 }
 
 func toDBChannel(ch channels.Channel) (dbChannel, error) {
@@ -983,6 +1184,13 @@ func toChannel(ch dbChannel) (channels.Channel, error) {
 		connTypes = append(connTypes, connType)
 	}
 
+	var roles []roles.MemberRoleActions
+	if ch.Roles != nil {
+		if err := json.Unmarshal(ch.Roles, &roles); err != nil {
+			return channels.Channel{}, errors.Wrap(errors.ErrMalformedEntity, err)
+		}
+	}
+
 	newCh := channels.Channel{
 		ID:                        ch.ID,
 		Name:                      ch.Name,
@@ -1005,6 +1213,7 @@ func toChannel(ch dbChannel) (channels.Channel, error) {
 		AccessProviderRoleName:    ch.AccessProviderRoleName,
 		AccessProviderRoleActions: ch.AccessProviderRoleActions,
 		ConnectionTypes:           connTypes,
+		Roles:                     roles,
 	}
 
 	return newCh, nil

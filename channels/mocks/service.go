@@ -796,9 +796,9 @@ func (_m *Service) UpdateRoleName(ctx context.Context, session authn.Session, en
 	return r0, r1
 }
 
-// ViewChannel provides a mock function with given fields: ctx, session, id
-func (_m *Service) ViewChannel(ctx context.Context, session authn.Session, id string) (channels.Channel, error) {
-	ret := _m.Called(ctx, session, id)
+// ViewChannel provides a mock function with given fields: ctx, session, id, withRoles
+func (_m *Service) ViewChannel(ctx context.Context, session authn.Session, id string, withRoles bool) (channels.Channel, error) {
+	ret := _m.Called(ctx, session, id, withRoles)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ViewChannel")
@@ -806,17 +806,17 @@ func (_m *Service) ViewChannel(ctx context.Context, session authn.Session, id st
 
 	var r0 channels.Channel
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) (channels.Channel, error)); ok {
-		return rf(ctx, session, id)
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, bool) (channels.Channel, error)); ok {
+		return rf(ctx, session, id, withRoles)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) channels.Channel); ok {
-		r0 = rf(ctx, session, id)
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, bool) channels.Channel); ok {
+		r0 = rf(ctx, session, id, withRoles)
 	} else {
 		r0 = ret.Get(0).(channels.Channel)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string) error); ok {
-		r1 = rf(ctx, session, id)
+	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string, bool) error); ok {
+		r1 = rf(ctx, session, id, withRoles)
 	} else {
 		r1 = ret.Error(1)
 	}

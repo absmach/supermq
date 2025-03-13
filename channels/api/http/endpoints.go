@@ -82,7 +82,7 @@ func viewChannelEndpoint(svc channels.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		c, err := svc.ViewChannel(ctx, session, req.id)
+		c, err := svc.ViewChannel(ctx, session, req.id, req.roles)
 		if err != nil {
 			return nil, err
 		}

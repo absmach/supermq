@@ -107,7 +107,7 @@ type Service interface {
 	CreateClients(ctx context.Context, session authn.Session, client ...Client) ([]Client, []roles.RoleProvision, error)
 
 	// View retrieves client info for a given client ID and an authorized token.
-	View(ctx context.Context, session authn.Session, id string, getRoles bool) (Client, error)
+	View(ctx context.Context, session authn.Session, id string, withRoles bool) (Client, error)
 
 	// ListClients retrieves clients list for given page query.
 	ListClients(ctx context.Context, session authn.Session, pm Page) (ClientsPage, error)

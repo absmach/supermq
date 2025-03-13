@@ -96,8 +96,8 @@ func (es *eventStore) update(ctx context.Context, operation string, session auth
 	return ch, nil
 }
 
-func (es *eventStore) ViewChannel(ctx context.Context, session authn.Session, id string) (channels.Channel, error) {
-	chann, err := es.svc.ViewChannel(ctx, session, id)
+func (es *eventStore) ViewChannel(ctx context.Context, session authn.Session, id string, withRoles bool) (channels.Channel, error) {
+	chann, err := es.svc.ViewChannel(ctx, session, id, withRoles)
 	if err != nil {
 		return chann, err
 	}

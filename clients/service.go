@@ -121,10 +121,10 @@ func (svc service) CreateClients(ctx context.Context, session authn.Session, cls
 	return newClients, nrps, nil
 }
 
-func (svc service) View(ctx context.Context, session authn.Session, id string, getRoles bool) (Client, error) {
+func (svc service) View(ctx context.Context, session authn.Session, id string, withRoles bool) (Client, error) {
 	var client Client
 	var err error
-	switch getRoles {
+	switch withRoles {
 	case true:
 		client, err = svc.repo.RetrieveByIDWithRoles(ctx, id, session.UserID)
 	default:

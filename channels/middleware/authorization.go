@@ -122,7 +122,7 @@ func (am *authorizationMiddleware) CreateChannels(ctx context.Context, session a
 	return am.svc.CreateChannels(ctx, session, chs...)
 }
 
-func (am *authorizationMiddleware) ViewChannel(ctx context.Context, session authn.Session, id string) (channels.Channel, error) {
+func (am *authorizationMiddleware) ViewChannel(ctx context.Context, session authn.Session, id string, withRoles bool) (channels.Channel, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
 			UserID:           session.UserID,
@@ -145,7 +145,7 @@ func (am *authorizationMiddleware) ViewChannel(ctx context.Context, session auth
 	}); err != nil {
 		return channels.Channel{}, errors.Wrap(err, errView)
 	}
-	return am.svc.ViewChannel(ctx, session, id)
+	return am.svc.ViewChannel(ctx, session, id, withRoles)
 }
 
 func (am *authorizationMiddleware) ListChannels(ctx context.Context, session authn.Session, pm channels.Page) (channels.ChannelsPage, error) {

@@ -52,7 +52,8 @@ func (req createChannelsReq) validate() error {
 }
 
 type viewChannelReq struct {
-	id string
+	id    string
+	roles bool
 }
 
 func (req viewChannelReq) validate() error {

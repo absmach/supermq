@@ -30,16 +30,18 @@ type Channel struct {
 	UpdatedBy   string    `json:"updated_by,omitempty"`
 	Status      Status    `json:"status,omitempty"` // 1 for enabled, 0 for disabled
 	// Extended
-	ParentGroupPath           string                 `json:"parent_group_path,omitempty"`
-	RoleID                    string                 `json:"role_id,omitempty"`
-	RoleName                  string                 `json:"role_name,omitempty"`
-	Actions                   []string               `json:"actions,omitempty"`
-	AccessType                string                 `json:"access_type,omitempty"`
-	AccessProviderId          string                 `json:"access_provider_id,omitempty"`
-	AccessProviderRoleId      string                 `json:"access_provider_role_id,omitempty"`
-	AccessProviderRoleName    string                 `json:"access_provider_role_name,omitempty"`
-	AccessProviderRoleActions []string               `json:"access_provider_role_actions,omitempty"`
-	ConnectionTypes           []connections.ConnType `json:"connection_types,omitempty"`
+	ParentGroupPath           string                    `json:"parent_group_path,omitempty"`
+	RoleID                    string                    `json:"role_id,omitempty"`
+	RoleName                  string                    `json:"role_name,omitempty"`
+	Actions                   []string                  `json:"actions,omitempty"`
+	AccessType                string                    `json:"access_type,omitempty"`
+	AccessProviderId          string                    `json:"access_provider_id,omitempty"`
+	AccessProviderRoleId      string                    `json:"access_provider_role_id,omitempty"`
+	AccessProviderRoleName    string                    `json:"access_provider_role_name,omitempty"`
+	AccessProviderRoleActions []string                  `json:"access_provider_role_actions,omitempty"`
+	ConnectionTypes           []connections.ConnType    `json:"connection_types,omitempty"`
+	MemberId                  string                    `json:"member_id,omitempty"`
+	Roles                     []roles.MemberRoleActions `json:"roles,omitempty"`
 }
 
 type Page struct {
@@ -93,7 +95,7 @@ type Service interface {
 
 	// ViewChannel retrieves data about the channel identified by the provided
 	// ID, that belongs to the user.
-	ViewChannel(ctx context.Context, session authn.Session, id string) (Channel, error)
+	ViewChannel(ctx context.Context, session authn.Session, id string, withRoles bool) (Channel, error)
 
 	// UpdateChannel updates the channel identified by the provided ID, that
 	// belongs to the user.
@@ -150,6 +152,9 @@ type Repository interface {
 
 	// RetrieveByID retrieves the channel having the provided identifier
 	RetrieveByID(ctx context.Context, id string) (Channel, error)
+
+	// RetrieveByIDWithRoles retrieves channel by its unique ID along with member roles.
+	RetrieveByIDWithRoles(ctx context.Context, id, memberID string) (Channel, error)
 
 	// RetrieveAll retrieves the subset of channels.
 	RetrieveAll(ctx context.Context, pm Page) (ChannelsPage, error)

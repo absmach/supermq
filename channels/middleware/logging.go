@@ -46,7 +46,7 @@ func (lm *loggingMiddleware) CreateChannels(ctx context.Context, session authn.S
 	return lm.svc.CreateChannels(ctx, session, clients...)
 }
 
-func (lm *loggingMiddleware) ViewChannel(ctx context.Context, session authn.Session, id string) (c channels.Channel, err error) {
+func (lm *loggingMiddleware) ViewChannel(ctx context.Context, session authn.Session, id string, withRoles bool) (c channels.Channel, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -55,6 +55,7 @@ func (lm *loggingMiddleware) ViewChannel(ctx context.Context, session authn.Sess
 			slog.Group("channel",
 				slog.String("id", c.ID),
 				slog.String("name", c.Name),
+				slog.Bool("with_roles", withRoles),
 			),
 		}
 		if err != nil {
@@ -64,7 +65,7 @@ func (lm *loggingMiddleware) ViewChannel(ctx context.Context, session authn.Sess
 		}
 		lm.logger.Info("View channel completed successfully", args...)
 	}(time.Now())
-	return lm.svc.ViewChannel(ctx, session, id)
+	return lm.svc.ViewChannel(ctx, session, id, withRoles)
 }
 
 func (lm *loggingMiddleware) ListChannels(ctx context.Context, session authn.Session, pm channels.Page) (cp channels.ChannelsPage, err error) {

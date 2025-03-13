@@ -101,7 +101,7 @@ func (am *authorizationMiddleware) CreateClients(ctx context.Context, session au
 	return am.svc.CreateClients(ctx, session, client...)
 }
 
-func (am *authorizationMiddleware) View(ctx context.Context, session authn.Session, id string, getRoles bool) (clients.Client, error) {
+func (am *authorizationMiddleware) View(ctx context.Context, session authn.Session, id string, withRoles bool) (clients.Client, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
 			UserID:           session.UserID,
@@ -124,7 +124,7 @@ func (am *authorizationMiddleware) View(ctx context.Context, session authn.Sessi
 	}); err != nil {
 		return clients.Client{}, errors.Wrap(err, errView)
 	}
-	return am.svc.View(ctx, session, id, getRoles)
+	return am.svc.View(ctx, session, id, withRoles)
 }
 
 func (am *authorizationMiddleware) ListClients(ctx context.Context, session authn.Session, pm clients.Page) (clients.ClientsPage, error) {

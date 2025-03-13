@@ -786,9 +786,9 @@ func (_m *Service) UpdateTags(ctx context.Context, session authn.Session, client
 	return r0, r1
 }
 
-// View provides a mock function with given fields: ctx, session, id, getRoles
-func (_m *Service) View(ctx context.Context, session authn.Session, id string, getRoles bool) (clients.Client, error) {
-	ret := _m.Called(ctx, session, id, getRoles)
+// View provides a mock function with given fields: ctx, session, id, withRoles
+func (_m *Service) View(ctx context.Context, session authn.Session, id string, withRoles bool) (clients.Client, error) {
+	ret := _m.Called(ctx, session, id, withRoles)
 
 	if len(ret) == 0 {
 		panic("no return value specified for View")
@@ -797,16 +797,16 @@ func (_m *Service) View(ctx context.Context, session authn.Session, id string, g
 	var r0 clients.Client
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, bool) (clients.Client, error)); ok {
-		return rf(ctx, session, id, getRoles)
+		return rf(ctx, session, id, withRoles)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, bool) clients.Client); ok {
-		r0 = rf(ctx, session, id, getRoles)
+		r0 = rf(ctx, session, id, withRoles)
 	} else {
 		r0 = ret.Get(0).(clients.Client)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string, bool) error); ok {
-		r1 = rf(ctx, session, id, getRoles)
+		r1 = rf(ctx, session, id, withRoles)
 	} else {
 		r1 = ret.Error(1)
 	}

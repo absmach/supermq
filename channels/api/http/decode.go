@@ -17,8 +17,14 @@ import (
 )
 
 func decodeViewChannel(_ context.Context, r *http.Request) (interface{}, error) {
+	roles, err := apiutil.ReadBoolQuery(r, api.RolesKey, false)
+	if err != nil {
+		return viewChannelReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
 	req := viewChannelReq{
-		id: chi.URLParam(r, "channelID"),
+		id:    chi.URLParam(r, "channelID"),
+		roles: roles,
 	}
 
 	return req, nil

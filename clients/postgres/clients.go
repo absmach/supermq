@@ -1067,7 +1067,7 @@ func ToDBClient(c clients.Client) (DBClient, error) {
 func ToClient(t DBClient) (clients.Client, error) {
 	var metadata clients.Metadata
 	if t.Metadata != nil {
-		if err := json.Unmarshal([]byte(t.Metadata), &metadata); err != nil {
+		if err := json.Unmarshal(t.Metadata, &metadata); err != nil {
 			return clients.Client{}, errors.Wrap(errors.ErrMalformedEntity, err)
 		}
 	}

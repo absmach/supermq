@@ -172,13 +172,19 @@ func (svc service) DisableChannel(ctx context.Context, session authn.Session, id
 	return ch, nil
 }
 
-func (svc service) ViewChannel(ctx context.Context, session authn.Session, id string) (Channel, error) {
-	channel, err := svc.repo.RetrieveByID(ctx, id)
+func (svc service) ViewChannel(ctx context.Context, session authn.Session, id string, withRoles bool) (Channel, error) {
+	var ch Channel
+	var err error
+	switch withRoles {
+	case true:
+		ch, err = svc.repo.RetrieveByIDWithRoles(ctx, id, session.UserID)
+	default:
+		ch, err = svc.repo.RetrieveByID(ctx, id)
+	}
 	if err != nil {
 		return Channel{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
-
-	return channel, nil
+	return ch, nil
 }
 
 func (svc service) ListChannels(ctx context.Context, session authn.Session, pm Page) (ChannelsPage, error) {

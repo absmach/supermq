@@ -38,10 +38,10 @@ func (tm *tracingMiddleware) CreateChannels(ctx context.Context, session authn.S
 }
 
 // ViewChannel traces the "ViewChannel" operation of the wrapped policies.Service.
-func (tm *tracingMiddleware) ViewChannel(ctx context.Context, session authn.Session, id string) (channels.Channel, error) {
+func (tm *tracingMiddleware) ViewChannel(ctx context.Context, session authn.Session, id string, withRoles bool) (channels.Channel, error) {
 	ctx, span := tracing.StartSpan(ctx, tm.tracer, "svc_view_channel", trace.WithAttributes(attribute.String("id", id)))
 	defer span.End()
-	return tm.svc.ViewChannel(ctx, session, id)
+	return tm.svc.ViewChannel(ctx, session, id, withRoles)
 }
 
 // ListChannels traces the "ListChannels" operation of the wrapped policies.Service.
