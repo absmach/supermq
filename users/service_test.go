@@ -1395,7 +1395,7 @@ func TestIssueToken(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := cRepo.On("RetrieveByUsername", context.Background(), tc.user.Credentials.Username).Return(tc.retrieveByUsernameResponse, tc.retrieveByUsernameErr)
-		authCall := auth.On("Issue", context.Background(), &grpcTokenV1.IssueReq{UserId: tc.user.ID, Type: uint32(smqauth.AccessKey)}).Return(tc.issueResponse, tc.issueErr)
+		authCall := auth.On("Issue", context.Background(), &grpcTokenV1.IssueReq{UserId: tc.user.ID, UserRole: uint32(tc.user.Role + 1), Type: uint32(smqauth.AccessKey)}).Return(tc.issueResponse, tc.issueErr)
 		token, err := svc.IssueToken(context.Background(), tc.user.Credentials.Username, tc.user.Credentials.Secret)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
@@ -1403,7 +1403,7 @@ func TestIssueToken(t *testing.T) {
 			assert.NotEmpty(t, token.GetRefreshToken(), fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.GetRefreshToken()))
 			ok := repoCall.Parent.AssertCalled(t, "RetrieveByUsername", context.Background(), tc.user.Credentials.Username)
 			assert.True(t, ok, fmt.Sprintf("RetrieveByUsername was not called on %s", tc.desc))
-			ok = authCall.Parent.AssertCalled(t, "Issue", context.Background(), &grpcTokenV1.IssueReq{UserId: tc.user.ID, Type: uint32(smqauth.AccessKey)})
+			ok = authCall.Parent.AssertCalled(t, "Issue", context.Background(), &grpcTokenV1.IssueReq{UserId: tc.user.ID, UserRole: uint32(tc.user.Role + 1), Type: uint32(smqauth.AccessKey)})
 			assert.True(t, ok, fmt.Sprintf("Issue was not called on %s", tc.desc))
 		}
 		authCall.Unset()
