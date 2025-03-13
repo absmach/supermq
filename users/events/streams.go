@@ -15,18 +15,26 @@ import (
 )
 
 const (
-	supermqPrefix      = "supermq."
-	createStream       = supermqPrefix + userCreate
-	updateStream       = supermqPrefix + userUpdate
-	changeStatusStream = supermqPrefix + changeUserStatus
-	viewStream         = supermqPrefix + userView
-	listStream         = supermqPrefix + userList
-	searchStream       = supermqPrefix + userSearch
-	identifyStream     = supermqPrefix + userIdentify
-	tokenStream        = supermqPrefix + "user.token"
-	secretStream       = supermqPrefix + "user.secret"
-	oauthStream        = supermqPrefix + oauthCallback
-	deleteStream       = supermqPrefix + deleteUser
+	supermqPrefix           = "supermq."
+	createStream            = supermqPrefix + userCreate
+	updateStream            = supermqPrefix + userUpdate
+	updateUsernameStream    = supermqPrefix + userUpdateUsername
+	updatePictureStream     = supermqPrefix + userUpdateProfilePicture
+	changeStatusStream      = supermqPrefix + changeUserStatus
+	viewStream              = supermqPrefix + userView
+	viewProfileStream       = supermqPrefix + profileView
+	listStream              = supermqPrefix + userList
+	searchStream            = supermqPrefix + userSearch
+	listByGroupStream       = supermqPrefix + userListByGroup
+	identifyStream          = supermqPrefix + userIdentify
+	resetTokenStream        = supermqPrefix + generateResetToken
+	issueTokenStream        = supermqPrefix + issueToken
+	refreshTokenStream      = supermqPrefix + refreshToken
+	resetSecretStream       = supermqPrefix + resetSecret
+	sendPasswordResetStream = supermqPrefix + sendPasswordReset
+	oauthStream             = supermqPrefix + oauthCallback
+	addPolicyStream         = supermqPrefix + addClientPolicy
+	deleteStream            = supermqPrefix + deleteUser
 )
 
 var _ users.Service = (*eventStore)(nil)
@@ -117,7 +125,7 @@ func (es *eventStore) UpdateUsername(ctx context.Context, session authn.Session,
 		middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, updateStream, event); err != nil {
+	if err := es.Publish(ctx, updateUsernameStream, event); err != nil {
 		return user, err
 	}
 
@@ -195,7 +203,7 @@ func (es *eventStore) ViewProfile(ctx context.Context, session authn.Session) (u
 		middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, viewStream, event); err != nil {
+	if err := es.Publish(ctx, viewProfileStream, event); err != nil {
 		return user, err
 	}
 
@@ -302,7 +310,7 @@ func (es *eventStore) GenerateResetToken(ctx context.Context, email, host string
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	return es.Publish(ctx, tokenStream, event)
+	return es.Publish(ctx, refreshTokenStream, event)
 }
 
 func (es *eventStore) IssueToken(ctx context.Context, username, secret string) (*grpcTokenV1.Token, error) {
@@ -316,7 +324,7 @@ func (es *eventStore) IssueToken(ctx context.Context, username, secret string) (
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, tokenStream, event); err != nil {
+	if err := es.Publish(ctx, issueTokenStream, event); err != nil {
 		return token, err
 	}
 
@@ -333,7 +341,7 @@ func (es *eventStore) RefreshToken(ctx context.Context, session authn.Session, r
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, tokenStream, event); err != nil {
+	if err := es.Publish(ctx, refreshToken, event); err != nil {
 		return token, err
 	}
 
@@ -349,7 +357,7 @@ func (es *eventStore) ResetSecret(ctx context.Context, session authn.Session, se
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	return es.Publish(ctx, secretStream, event)
+	return es.Publish(ctx, resetSecretStream, event)
 }
 
 func (es *eventStore) SendPasswordReset(ctx context.Context, host, email, user, token string) error {
@@ -364,7 +372,7 @@ func (es *eventStore) SendPasswordReset(ctx context.Context, host, email, user, 
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	return es.Publish(ctx, secretStream, event)
+	return es.Publish(ctx, sendPasswordResetStream, event)
 }
 
 func (es *eventStore) OAuthCallback(ctx context.Context, user users.User) (users.User, error) {
@@ -410,5 +418,5 @@ func (es *eventStore) OAuthAddUserPolicy(ctx context.Context, user users.User) e
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	return es.Publish(ctx, oauthStream, event)
+	return es.Publish(ctx, addPolicyStream, event)
 }

@@ -24,6 +24,8 @@ const (
 	viewStream         = supermqPrefix + clientView
 	viewPermsStream    = supermqPrefix + clientViewPerms
 	listStream         = supermqPrefix + clientList
+	listByUserStream   = supermqPrefix + clientListByUser
+	listByGroupStream  = supermqPrefix + clientListByGroup
 	identifyStream     = supermqPrefix + clientIdentify
 	authorizeStream    = supermqPrefix + clientAuthorize
 	setParentStream    = supermqPrefix + clientSetParent
@@ -163,7 +165,7 @@ func (es *eventStore) ListUserClients(ctx context.Context, session authn.Session
 		session,
 		middleware.GetReqID(ctx),
 	}
-	if err := es.Publish(ctx, listStream, event); err != nil {
+	if err := es.Publish(ctx, listByUserStream, event); err != nil {
 		return cp, err
 	}
 

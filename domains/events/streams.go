@@ -21,7 +21,9 @@ const (
 	retrieveStream           = supermqPrefix + domainRetrieve
 	retrieveStatusStream     = supermqPrefix + domainRetrieveStatus
 	updateStream             = supermqPrefix + domainUpdate
-	changeStatusStream       = supermqPrefix + domainPrefix + "change_status"
+	enableStream             = supermqPrefix + domainEnable
+	disableStream            = supermqPrefix + domainDisable
+	freezeStream             = supermqPrefix + domainFreeze
 	listStream               = supermqPrefix + domainList
 	userDeleteStream         = supermqPrefix + domainUserDelete
 	sendInvitationStream     = supermqPrefix + invitationSend
@@ -129,7 +131,7 @@ func (es *eventStore) EnableDomain(ctx context.Context, session authn.Session, i
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, changeStatusStream, event); err != nil {
+	if err := es.Publish(ctx, enableStream, event); err != nil {
 		return domain, err
 	}
 
@@ -150,7 +152,7 @@ func (es *eventStore) DisableDomain(ctx context.Context, session authn.Session, 
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, changeStatusStream, event); err != nil {
+	if err := es.Publish(ctx, disableStream, event); err != nil {
 		return domain, err
 	}
 
@@ -171,7 +173,7 @@ func (es *eventStore) FreezeDomain(ctx context.Context, session authn.Session, i
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, changeStatusStream, event); err != nil {
+	if err := es.Publish(ctx, freezeStream, event); err != nil {
 		return domain, err
 	}
 
