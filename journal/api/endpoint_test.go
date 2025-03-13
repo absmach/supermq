@@ -382,7 +382,7 @@ func TestListEntityJournalsEndpoint(t *testing.T) {
 				c.session = smqauthn.Session{
 					UserID:       userID,
 					DomainID:     domainID,
-					DomainUserID: domainID + "_" + userID,
+					Subject: domainID + "_" + userID,
 				}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, c.token).Return(c.session, c.authnErr)
@@ -465,7 +465,7 @@ func TestRetrieveClientTelemetryEndpoint(t *testing.T) {
 				c.session = smqauthn.Session{
 					UserID:       userID,
 					DomainID:     c.domainID,
-					DomainUserID: c.domainID + "_" + userID,
+					Subject: c.domainID + "_" + userID,
 				}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, c.token).Return(c.session, c.authnErr)

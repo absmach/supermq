@@ -21,6 +21,8 @@ var (
 	errInvalidIssuer = errors.New("invalid token issuer value")
 	// errInvalidType is returned when there is no type field.
 	errInvalidType = errors.New("invalid token type")
+	// errInvalidRole is returned when the role is invalid.
+	errInvalidRole = errors.New("invalid role")
 	// errJWTExpiryKey is used to check if the token is expired.
 	errJWTExpiryKey = errors.New(`"exp" not satisfied`)
 	// ErrSignJWT indicates an error in signing jwt token.
@@ -35,6 +37,7 @@ const (
 	issuerName             = "supermq.auth"
 	tokenType              = "type"
 	userField              = "user"
+	RoleField              = "role"
 	oauthProviderField     = "oauth_provider"
 	oauthAccessTokenField  = "access_token"
 	oauthRefreshTokenField = "refresh_token"
@@ -61,6 +64,7 @@ func (tok *tokenizer) Issue(key auth.Key) (string, error) {
 		Claim(tokenType, key.Type).
 		Expiration(key.ExpiresAt)
 	builder.Claim(userField, key.User)
+	builder.Claim(RoleField, key.Role)
 	if key.Subject != "" {
 		builder.Subject(key.Subject)
 	}
@@ -141,8 +145,22 @@ func toKey(tkn jwt.Token) (auth.Key, error) {
 		return auth.Key{}, errInvalidType
 	}
 
+	tRole, ok := tkn.Get(RoleField)
+	if !ok {
+		return auth.Key{}, errInvalidRole
+	}
+	kRole, err := strconv.ParseInt(fmt.Sprintf("%v", tRole), 10, 64)
+	if err != nil {
+		return auth.Key{}, err
+	}
+	kr := auth.Role(kRole)
+	if !kr.Validate() {
+		return auth.Key{}, errInvalidRole
+	}
+
 	key.ID = tkn.JwtID()
 	key.Type = auth.KeyType(ktype)
+	key.Role = auth.Role(kRole)
 	key.Issuer = tkn.Issuer()
 	key.Subject = tkn.Subject()
 	key.IssuedAt = tkn.IssuedAt()

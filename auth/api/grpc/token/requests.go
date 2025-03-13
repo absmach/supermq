@@ -9,8 +9,9 @@ import (
 )
 
 type issueReq struct {
-	userID  string
-	keyType auth.KeyType
+	userID   string
+	userRole auth.Role
+	keyType  auth.KeyType
 }
 
 func (req issueReq) validate() error {

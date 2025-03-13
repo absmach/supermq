@@ -3,9 +3,12 @@
 
 package auth
 
+import smqauth "github.com/absmach/supermq/auth"
+
 type authenticateRes struct {
 	id       string
 	userID   string
+	userRole smqauth.Role
 	domainID string
 }
 

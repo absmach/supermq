@@ -99,7 +99,7 @@ func (am *authorizationMiddleware) CreateGroup(ctx context.Context, session auth
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
-		Subject:     session.DomainUserID,
+		Subject:     session.Subject,
 		Object:      session.DomainID,
 		ObjectType:  policies.DomainType,
 	}); err != nil {
@@ -111,7 +111,7 @@ func (am *authorizationMiddleware) CreateGroup(ctx context.Context, session auth
 			Domain:      session.DomainID,
 			SubjectType: policies.UserType,
 			SubjectKind: policies.UsersKind,
-			Subject:     session.DomainUserID,
+			Subject:     session.Subject,
 			Object:      g.Parent,
 			ObjectType:  policies.GroupType,
 		}); err != nil {
@@ -140,7 +140,7 @@ func (am *authorizationMiddleware) UpdateGroup(ctx context.Context, session auth
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
-		Subject:     session.DomainUserID,
+		Subject:     session.Subject,
 		Object:      g.ID,
 		ObjectType:  policies.GroupType,
 	}); err != nil {
@@ -168,7 +168,7 @@ func (am *authorizationMiddleware) ViewGroup(ctx context.Context, session authn.
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
-		Subject:     session.DomainUserID,
+		Subject:     session.Subject,
 		Object:      id,
 		ObjectType:  policies.GroupType,
 	}); err != nil {
@@ -201,7 +201,7 @@ func (am *authorizationMiddleware) ListGroups(ctx context.Context, session authn
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
-		Subject:     session.DomainUserID,
+		Subject:     session.Subject,
 		Object:      session.DomainID,
 		ObjectType:  policies.DomainType,
 	}); err != nil {
@@ -220,7 +220,7 @@ func (am *authorizationMiddleware) ListUserGroups(ctx context.Context, session a
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
-		Subject:     session.DomainUserID,
+		Subject:     session.Subject,
 		Object:      session.DomainID,
 		ObjectType:  policies.DomainType,
 	}); err != nil {
@@ -246,7 +246,7 @@ func (am *authorizationMiddleware) EnableGroup(ctx context.Context, session auth
 	if err := am.authorize(ctx, groups.OpEnableGroup, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.Subject,
 		Object:      id,
 		ObjectType:  policies.GroupType,
 	}); err != nil {
@@ -273,7 +273,7 @@ func (am *authorizationMiddleware) DisableGroup(ctx context.Context, session aut
 	if err := am.authorize(ctx, groups.OpDisableGroup, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.Subject,
 		Object:      id,
 		ObjectType:  policies.GroupType,
 	}); err != nil {
@@ -300,7 +300,7 @@ func (am *authorizationMiddleware) DeleteGroup(ctx context.Context, session auth
 	if err := am.authorize(ctx, groups.OpDeleteGroup, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.Subject,
 		Object:      id,
 		ObjectType:  policies.GroupType,
 	}); err != nil {
@@ -327,7 +327,7 @@ func (am *authorizationMiddleware) RetrieveGroupHierarchy(ctx context.Context, s
 	if err := am.authorize(ctx, groups.OpRetrieveGroupHierarchy, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.Subject,
 		Object:      id,
 		ObjectType:  policies.GroupType,
 	}); err != nil {
@@ -353,7 +353,7 @@ func (am *authorizationMiddleware) AddParentGroup(ctx context.Context, session a
 	if err := am.authorize(ctx, groups.OpAddParentGroup, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.Subject,
 		Object:      id,
 		ObjectType:  policies.GroupType,
 	}); err != nil {
@@ -363,7 +363,7 @@ func (am *authorizationMiddleware) AddParentGroup(ctx context.Context, session a
 	if err := am.authorize(ctx, groups.OpAddChildrenGroups, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.Subject,
 		Object:      parentID,
 		ObjectType:  policies.GroupType,
 	}); err != nil {
@@ -389,7 +389,7 @@ func (am *authorizationMiddleware) RemoveParentGroup(ctx context.Context, sessio
 	if err := am.authorize(ctx, groups.OpRemoveParentGroup, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.Subject,
 		Object:      id,
 		ObjectType:  policies.GroupType,
 	}); err != nil {
@@ -405,7 +405,7 @@ func (am *authorizationMiddleware) RemoveParentGroup(ctx context.Context, sessio
 		if err := am.authorize(ctx, groups.OpRemoveParentGroup, smqauthz.PolicyReq{
 			Domain:      session.DomainID,
 			SubjectType: policies.UserType,
-			Subject:     session.DomainUserID,
+			Subject:     session.Subject,
 			Object:      group.Parent,
 			ObjectType:  policies.GroupType,
 		}); err != nil {
@@ -432,7 +432,7 @@ func (am *authorizationMiddleware) AddChildrenGroups(ctx context.Context, sessio
 	if err := am.authorize(ctx, groups.OpAddChildrenGroups, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.Subject,
 		Object:      id,
 		ObjectType:  policies.GroupType,
 	}); err != nil {
@@ -443,7 +443,7 @@ func (am *authorizationMiddleware) AddChildrenGroups(ctx context.Context, sessio
 		if err := am.authorize(ctx, groups.OpAddParentGroup, smqauthz.PolicyReq{
 			Domain:      session.DomainID,
 			SubjectType: policies.UserType,
-			Subject:     session.DomainUserID,
+			Subject:     session.Subject,
 			Object:      childID,
 			ObjectType:  policies.GroupType,
 		}); err != nil {
@@ -471,7 +471,7 @@ func (am *authorizationMiddleware) RemoveChildrenGroups(ctx context.Context, ses
 	if err := am.authorize(ctx, groups.OpRemoveChildrenGroups, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.Subject,
 		Object:      id,
 		ObjectType:  policies.GroupType,
 	}); err != nil {
@@ -498,7 +498,7 @@ func (am *authorizationMiddleware) RemoveAllChildrenGroups(ctx context.Context, 
 	if err := am.authorize(ctx, groups.OpRemoveAllChildrenGroups, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.Subject,
 		Object:      id,
 		ObjectType:  policies.GroupType,
 	}); err != nil {
@@ -525,7 +525,7 @@ func (am *authorizationMiddleware) ListChildrenGroups(ctx context.Context, sessi
 	if err := am.authorize(ctx, groups.OpListChildrenGroups, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
-		Subject:     session.DomainUserID,
+		Subject:     session.Subject,
 		Object:      id,
 		ObjectType:  policies.GroupType,
 	}); err != nil {

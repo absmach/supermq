@@ -13,6 +13,7 @@ service TokenService {
 
 message IssueReq {
   string user_id = 1;
+  uint32 user_role = 2;
   uint32 type = 3;
 }
 

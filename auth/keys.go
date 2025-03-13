@@ -57,6 +57,28 @@ func (kt KeyType) String() string {
 	}
 }
 
+type Role uint32
+
+const (
+	UserRole Role = iota + 1
+	AdminRole
+)
+
+func (r Role) String() string {
+	switch r {
+	case UserRole:
+		return "user"
+	case AdminRole:
+		return "admin"
+	default:
+		return "unknown"
+	}
+}
+
+func (r Role) Validate() bool {
+	return UserRole <= r && r <= AdminRole
+}
+
 // Key represents API key.
 type Key struct {
 	ID        string    `json:"id,omitempty"`
@@ -64,6 +86,7 @@ type Key struct {
 	Issuer    string    `json:"issuer,omitempty"`
 	Subject   string    `json:"subject,omitempty"` // user ID
 	User      string    `json:"user,omitempty"`
+	Role      Role      `json:"role,omitempty"`
 	Domain    string    `json:"domain,omitempty"` // domain user ID
 	IssuedAt  time.Time `json:"issued_at,omitempty"`
 	ExpiresAt time.Time `json:"expires_at,omitempty"`
@@ -76,10 +99,11 @@ func (key Key) String() string {
 	issuer_id: %s,
 	subject: %s,
 	user: %s,
+	role: %s,
 	domain: %s,
 	iat: %v,
 	eat: %v
-}`, key.ID, key.Type, key.Issuer, key.Subject, key.User, key.Domain, key.IssuedAt, key.ExpiresAt)
+}`, key.ID, key.Type, key.Issuer, key.Subject, key.User, key.Role, key.Domain, key.IssuedAt, key.ExpiresAt)
 }
 
 // Expired verifies if the key is expired.
