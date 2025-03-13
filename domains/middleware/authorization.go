@@ -62,7 +62,7 @@ func (am *authorizationMiddleware) RetrieveDomain(ctx context.Context, session a
 		session.SuperAdmin = true
 		return am.svc.RetrieveDomain(ctx, session, id)
 	}
-	
+
 	if err := am.authorize(ctx, domains.OpRetrieveDomain, authz.PolicyReq{
 		Subject:     session.Subject,
 		SubjectType: policies.UserType,

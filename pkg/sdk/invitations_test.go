@@ -119,9 +119,9 @@ func TestSendInvitation(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == valid {
 				tc.session = smqauthn.Session{
-					UserID:       tc.sendInvitationReq.InviteeUserID,
-					DomainID:     tc.sendInvitationReq.DomainID,
-					Subject: tc.sendInvitationReq.DomainID + "_" + tc.sendInvitationReq.InviteeUserID,
+					UserID:   tc.sendInvitationReq.InviteeUserID,
+					DomainID: tc.sendInvitationReq.DomainID,
+					Subject:  tc.sendInvitationReq.DomainID + "_" + tc.sendInvitationReq.InviteeUserID,
 				}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
