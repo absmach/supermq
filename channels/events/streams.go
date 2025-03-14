@@ -16,7 +16,19 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-const streamID = "supermq.channels"
+const (
+	supermqPrefix      = "supermq."
+	createStream       = supermqPrefix + channelCreate
+	updateStream       = supermqPrefix + channelUpdate
+	changeStatusStream = supermqPrefix + channelChangeStatus
+	removeStream       = supermqPrefix + channelRemove
+	viewStream         = supermqPrefix + channelView
+	listStream         = supermqPrefix + channelList
+	connectStream      = supermqPrefix + channelConnect
+	disconnectStream   = supermqPrefix + channelDisconnect
+	setParentStream    = supermqPrefix + channelSetParent
+	removeParentStream = supermqPrefix + channelRemoveParent
+)
 
 var _ channels.Service = (*eventStore)(nil)
 
@@ -29,7 +41,7 @@ type eventStore struct {
 // NewEventStoreMiddleware returns wrapper around clients service that sends
 // events to event store.
 func NewEventStoreMiddleware(ctx context.Context, svc channels.Service, url string) (channels.Service, error) {
-	publisher, err := store.NewPublisher(ctx, url, streamID)
+	publisher, err := store.NewPublisher(ctx, url)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +67,7 @@ func (es *eventStore) CreateChannels(ctx context.Context, session authn.Session,
 			Session:          session,
 			requestID:        middleware.GetReqID(ctx),
 		}
-		if err := es.Publish(ctx, event); err != nil {
+		if err := es.Publish(ctx, createStream, event); err != nil {
 			return chs, rps, err
 		}
 	}
@@ -89,7 +101,7 @@ func (es *eventStore) update(ctx context.Context, operation string, session auth
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, updateStream, event); err != nil {
 		return ch, err
 	}
 
@@ -107,7 +119,7 @@ func (es *eventStore) ViewChannel(ctx context.Context, session authn.Session, id
 		Session:   session,
 		requestID: middleware.GetReqID(ctx),
 	}
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, viewStream, event); err != nil {
 		return chann, err
 	}
 
@@ -124,7 +136,7 @@ func (es *eventStore) ListChannels(ctx context.Context, session authn.Session, p
 		Session:   session,
 		requestID: middleware.GetReqID(ctx),
 	}
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, listStream, event); err != nil {
 		return cp, err
 	}
 
@@ -142,7 +154,7 @@ func (es *eventStore) ListUserChannels(ctx context.Context, session authn.Sessio
 		Session:   session,
 		requestID: middleware.GetReqID(ctx),
 	}
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, listStream, event); err != nil {
 		return cp, err
 	}
 
@@ -176,7 +188,7 @@ func (es *eventStore) changeStatus(ctx context.Context, session authn.Session, c
 		Session:   session,
 		requestID: middleware.GetReqID(ctx),
 	}
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, changeStatusStream, event); err != nil {
 		return ch, err
 	}
 
@@ -194,7 +206,7 @@ func (es *eventStore) RemoveChannel(ctx context.Context, session authn.Session, 
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, removeStream, event); err != nil {
 		return err
 	}
 
@@ -214,7 +226,7 @@ func (es *eventStore) Connect(ctx context.Context, session authn.Session, chIDs,
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, connectStream, event); err != nil {
 		return err
 	}
 
@@ -234,7 +246,7 @@ func (es *eventStore) Disconnect(ctx context.Context, session authn.Session, chI
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, disconnectStream, event); err != nil {
 		return err
 	}
 
@@ -253,7 +265,7 @@ func (es *eventStore) SetParentGroup(ctx context.Context, session authn.Session,
 		requestID:     middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, setParentStream, event); err != nil {
 		return err
 	}
 
@@ -271,7 +283,7 @@ func (es *eventStore) RemoveParentGroup(ctx context.Context, session authn.Sessi
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, removeParentStream, event); err != nil {
 		return err
 	}
 

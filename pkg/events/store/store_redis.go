@@ -22,8 +22,8 @@ func init() {
 	log.Println("The binary was build using redis as the events store")
 }
 
-func NewPublisher(ctx context.Context, url, stream string) (events.Publisher, error) {
-	pb, err := redis.NewPublisher(ctx, url, stream, events.UnpublishedEventsCheckInterval)
+func NewPublisher(ctx context.Context, url string) (events.Publisher, error) {
+	pb, err := redis.NewPublisher(ctx, url, events.UnpublishedEventsCheckInterval)
 	if err != nil {
 		return nil, err
 	}
