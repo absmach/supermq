@@ -110,7 +110,7 @@ func (svc service) IssueToken(ctx context.Context, identity, secret string) (*gr
 		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrLogin, err)
 	}
 
-	token, err := svc.token.Issue(ctx, &grpcTokenV1.IssueReq{UserId: dbUser.ID, Type: uint32(smqauth.AccessKey)})
+	token, err := svc.token.Issue(ctx, &grpcTokenV1.IssueReq{UserId: dbUser.ID, UserRole: uint32(dbUser.Role + 1), Type: uint32(smqauth.AccessKey)})
 	if err != nil {
 		return &grpcTokenV1.Token{}, errors.Wrap(errIssueToken, err)
 	}

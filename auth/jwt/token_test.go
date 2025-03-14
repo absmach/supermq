@@ -20,11 +20,11 @@ import (
 )
 
 const (
-	tokenType   = "type"
-	userField   = "user"
-	domainField = "domain"
-	issuerName  = "supermq.auth"
-	secret      = "test"
+	tokenType  = "type"
+	userField  = "user"
+	roleField  = "role"
+	issuerName = "supermq.auth"
+	secret     = "test"
 )
 
 var (
@@ -40,9 +40,7 @@ func newToken(issuerName string, key auth.Key) string {
 		Claim(tokenType, "r").
 		Expiration(key.ExpiresAt)
 	builder.Claim(userField, key.User)
-	if key.Domain != "" {
-		builder.Claim(domainField, key.Domain)
-	}
+	builder.Claim(roleField, key.Role)
 	if key.Subject != "" {
 		builder.Subject(key.Subject)
 	}
@@ -266,6 +264,7 @@ func key() auth.Key {
 		ID:        "66af4a67-3823-438a-abd7-efdb613eaef6",
 		Type:      auth.AccessKey,
 		Issuer:    "supermq.auth",
+		Role:      auth.UserRole,
 		Subject:   "66af4a67-3823-438a-abd7-efdb613eaef6",
 		IssuedAt:  time.Now().UTC().Add(-10 * time.Second).Round(time.Second),
 		ExpiresAt: exp,

@@ -27,13 +27,21 @@ func (t TokenType) String() string {
 	}
 }
 
+type Role uint32
+
+const (
+	UserRole Role = iota + 1
+	AdminRole
+)
+
 type Session struct {
 	Type         TokenType
 	PatID        string
-	DomainUserID string
 	UserID       string
 	DomainID     string
+	DomainUserID string
 	SuperAdmin   bool
+	Role         Role
 }
 
 // Authn is supermq authentication library.
