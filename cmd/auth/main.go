@@ -87,6 +87,7 @@ type config struct {
 	AuthCalloutCACert          string        `env:"SMQ_AUTH_CALLOUT_CA_CERT"          envDefault:""`
 	AuthCalloutCert            string        `env:"SMQ_AUTH_CALLOUT_CERT"             envDefault:""`
 	AuthCalloutKey             string        `env:"SMQ_AUTH_CALLOUT_KEY"              envDefault:""`
+	AuthCalloutPermissions     []string      `env:"SMQ_AUTH_CALL_WEBHOOK_PERMISSIONS" envDefault:"" envSeparator:","`
 }
 
 func main() {
@@ -284,7 +285,7 @@ func newService(db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.
 		},
 		Timeout: cfg.AuthCalloutTimeout,
 	}
-	callback, err := auth.NewCallback(httpClient, cfg.AuthCalloutMethod, cfg.AuthCalloutURLs)
+	callback, err := auth.NewCallback(httpClient, cfg.AuthCalloutMethod, cfg.AuthCalloutURLs, cfg.AuthCalloutPermissions)
 	if err != nil {
 		return nil, err
 	}

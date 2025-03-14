@@ -17,9 +17,10 @@ import (
 )
 
 type callback struct {
-	httpClient *http.Client
-	urls       []string
-	method     string
+	httpClient        *http.Client
+	urls              []string
+	method            string
+	allowedPermission map[string]struct{}
 }
 
 // CallBack send auth request to an external service.
@@ -30,7 +31,7 @@ type CallBack interface {
 }
 
 // NewCallback creates a new instance of CallBack.
-func NewCallback(httpClient *http.Client, method string, urls []string) (CallBack, error) {
+func NewCallback(httpClient *http.Client, method string, urls []string, permissions []string) (CallBack, error) {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
@@ -38,16 +39,32 @@ func NewCallback(httpClient *http.Client, method string, urls []string) (CallBac
 		return nil, fmt.Errorf("unsupported auth callback method: %s", method)
 	}
 
+	allowedPermission := make(map[string]struct{})
+	for _, permission := range permissions {
+		allowedPermission[permission] = struct{}{}
+	}
+
 	return &callback{
-		httpClient: httpClient,
-		urls:       urls,
-		method:     method,
+		httpClient:        httpClient,
+		urls:              urls,
+		method:            method,
+		allowedPermission: allowedPermission,
 	}, nil
 }
 
 func (c *callback) Authorize(ctx context.Context, pr policies.Policy) error {
 	if len(c.urls) == 0 {
 		return nil
+	}
+
+	// Check if the permission is in the allowed list
+	// If the map is empty, all permissions are allowed (backward compatibility)
+	// Otherwise, only call webhook if the permission is in the map
+	if len(c.allowedPermission) > 0 {
+		_, exists := c.allowedPermission[pr.Permission]
+		if !exists {
+			return nil
+		}
 	}
 
 	payload := map[string]string{

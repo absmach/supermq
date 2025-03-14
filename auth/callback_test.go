@@ -71,7 +71,7 @@ func TestCallback_Authorize(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			cb, err := auth.NewCallback(http.DefaultClient, tc.method, []string{ts.URL})
+			cb, err := auth.NewCallback(http.DefaultClient, tc.method, []string{ts.URL}, []string{})
 			assert.NoError(t, err)
 			err = cb.Authorize(context.Background(), policy)
 
@@ -96,21 +96,21 @@ func TestCallback_MultipleURLs(t *testing.T) {
 	}))
 	defer ts2.Close()
 
-	cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{ts1.URL, ts2.URL})
+	cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{ts1.URL, ts2.URL}, []string{})
 	assert.NoError(t, err)
 	err = cb.Authorize(context.Background(), policies.Policy{})
 	assert.NoError(t, err)
 }
 
 func TestCallback_InvalidURL(t *testing.T) {
-	cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{"http://invalid-url"})
+	cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{"http://invalid-url"}, []string{})
 	assert.NoError(t, err)
 	err = cb.Authorize(context.Background(), policies.Policy{})
 	assert.Error(t, err)
 }
 
 func TestCallback_InvalidMethod(t *testing.T) {
-	_, err := auth.NewCallback(http.DefaultClient, "invalid-method", []string{"http://example.com"})
+	_, err := auth.NewCallback(http.DefaultClient, "invalid-method", []string{"http://example.com"}, []string{})
 	assert.Error(t, err)
 }
 
@@ -123,21 +123,73 @@ func TestCallback_CancelledContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{ts.URL})
+	cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{ts.URL}, []string{})
 	assert.NoError(t, err)
 	err = cb.Authorize(ctx, policies.Policy{})
 	assert.Error(t, err)
 }
 
 func TestNewCallback_NilClient(t *testing.T) {
-	cb, err := auth.NewCallback(nil, http.MethodPost, []string{"test"})
+	cb, err := auth.NewCallback(nil, http.MethodPost, []string{"test"}, []string{})
 	assert.NoError(t, err)
 	assert.NotNil(t, cb)
 }
 
 func TestCallback_NoURL(t *testing.T) {
-	cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{})
+	cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{}, []string{})
 	assert.NoError(t, err)
 	err = cb.Authorize(context.Background(), policies.Policy{})
 	assert.NoError(t, err)
+}
+
+func TestCallback_PermissionFiltering(t *testing.T) {
+	webhookCalled := false
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		webhookCalled = true
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	t.Run("allowed permission", func(t *testing.T) {
+		webhookCalled = false
+		allowedPermissions := []string{"create_client", "delete_channel"}
+
+		cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{ts.URL}, allowedPermissions)
+		assert.NoError(t, err)
+
+		err = cb.Authorize(context.Background(), policies.Policy{
+			Permission: "create_client",
+		})
+		assert.NoError(t, err)
+		assert.True(t, webhookCalled, "webhook should be called for allowed permission")
+	})
+
+	t.Run("non-allowed permission", func(t *testing.T) {
+		webhookCalled = false
+		allowedPermissions := []string{"create_client", "delete_channel"}
+
+		cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{ts.URL}, allowedPermissions)
+		assert.NoError(t, err)
+
+		err = cb.Authorize(context.Background(), policies.Policy{
+			Permission: "read_channel",
+		})
+		assert.NoError(t, err)
+		assert.False(t, webhookCalled, "webhook should not be called for non-allowed permission")
+	})
+
+	t.Run("empty allowed permissions", func(t *testing.T) {
+		webhookCalled = false
+		allowedPermissions := []string{}
+
+		cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{ts.URL}, allowedPermissions)
+		assert.NoError(t, err)
+
+		err = cb.Authorize(context.Background(), policies.Policy{
+			Permission: "any_permission",
+		})
+		assert.NoError(t, err)
+		assert.True(t, webhookCalled, "webhook should be called when allowed permissions list is empty")
+	})
 }
