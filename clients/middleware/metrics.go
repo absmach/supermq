@@ -41,12 +41,12 @@ func (ms *metricsMiddleware) CreateClients(ctx context.Context, session authn.Se
 	return ms.svc.CreateClients(ctx, session, clients...)
 }
 
-func (ms *metricsMiddleware) View(ctx context.Context, session authn.Session, id string, getRoles bool) (clients.Client, error) {
+func (ms *metricsMiddleware) View(ctx context.Context, session authn.Session, id string, withRoles bool) (clients.Client, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "view_client").Add(1)
 		ms.latency.With("method", "view_client").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.View(ctx, session, id, getRoles)
+	return ms.svc.View(ctx, session, id, withRoles)
 }
 
 func (ms *metricsMiddleware) ListClients(ctx context.Context, session authn.Session, pm clients.Page) (clients.ClientsPage, error) {

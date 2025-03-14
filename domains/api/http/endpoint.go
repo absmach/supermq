@@ -58,7 +58,7 @@ func retrieveDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthorization
 		}
 
-		domain, err := svc.RetrieveDomain(ctx, session, req.domainID)
+		domain, err := svc.RetrieveDomain(ctx, session, req.domainID, req.roles)
 		if err != nil {
 			return nil, err
 		}

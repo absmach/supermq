@@ -11,6 +11,7 @@ import (
 
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/pkg/errors"
+	"github.com/absmach/supermq/pkg/roles"
 )
 
 const (
@@ -20,18 +21,19 @@ const (
 
 // Domain represents supermq domain.
 type Domain struct {
-	ID          string    `json:"id,omitempty"`
-	Name        string    `json:"name,omitempty"`
-	Metadata    Metadata  `json:"metadata,omitempty"`
-	Tags        []string  `json:"tags,omitempty"`
-	Alias       string    `json:"alias,omitempty"`
-	Status      string    `json:"status,omitempty"`
-	Permission  string    `json:"permission,omitempty"`
-	CreatedBy   string    `json:"created_by,omitempty"`
-	CreatedAt   time.Time `json:"created_at,omitempty"`
-	UpdatedBy   string    `json:"updated_by,omitempty"`
-	UpdatedAt   time.Time `json:"updated_at,omitempty"`
-	Permissions []string  `json:"permissions,omitempty"`
+	ID          string                    `json:"id,omitempty"`
+	Name        string                    `json:"name,omitempty"`
+	Metadata    Metadata                  `json:"metadata,omitempty"`
+	Tags        []string                  `json:"tags,omitempty"`
+	Alias       string                    `json:"alias,omitempty"`
+	Status      string                    `json:"status,omitempty"`
+	Permission  string                    `json:"permission,omitempty"`
+	CreatedBy   string                    `json:"created_by,omitempty"`
+	CreatedAt   time.Time                 `json:"created_at,omitempty"`
+	UpdatedBy   string                    `json:"updated_by,omitempty"`
+	UpdatedAt   time.Time                 `json:"updated_at,omitempty"`
+	Permissions []string                  `json:"permissions,omitempty"`
+	Roles       []roles.MemberRoleActions `json:"roles,omitempty"`
 }
 
 func (sdk mgSDK) CreateDomain(domain Domain, token string) (Domain, errors.SDKError) {

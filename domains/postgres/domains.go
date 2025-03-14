@@ -17,6 +17,7 @@ import (
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/postgres"
+	"github.com/absmach/supermq/pkg/roles"
 	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
 	"github.com/jackc/pgtype"
 	"github.com/jmoiron/sqlx"
@@ -76,13 +77,85 @@ func (repo domainRepo) SaveDomain(ctx context.Context, d domains.Domain) (dd dom
 	return domain, nil
 }
 
-// RetrieveDomainByID retrieves Domain by its unique ID.
-func (repo domainRepo) RetrieveDomainByID(ctx context.Context, id string) (domains.Domain, error) {
-	q := `SELECT d.id as id, d.name as name, d.tags as tags,  d.alias as alias, d.metadata as metadata, d.created_at as created_at, d.updated_at as updated_at, d.updated_by as updated_by, d.created_by as created_by, d.status as status
-        FROM domains d WHERE d.id = :id`
+// RetrieveDomainByIDWithRoles retrieves Domain by its unique ID along with member roles.
+func (repo domainRepo) RetrieveDomainByIDWithRoles(ctx context.Context, id string, memberID string) (domains.Domain, error) {
+	q := `
+	WITH all_roles AS (
+		SELECT
+			d.id AS domain_id,
+			drm.member_id AS member_id,
+			dr.id AS role_id,
+			dr."name" AS role_name,
+			jsonb_agg(DISTINCT all_actions."action") AS actions,
+			'direct' AS access_type,
+			'' AS access_provider_path,
+			'' AS access_provider_id
+		FROM
+			domains d
+		JOIN
+				domains_roles dr ON
+			dr.entity_id = d.id
+		JOIN
+				domains_role_members drm ON
+			dr.id = drm.role_id
+		JOIN
+				domains_role_actions dra ON
+			dr.id = dra.role_id
+		JOIN
+				domains_role_actions all_actions ON
+			dr.id = all_actions.role_id
+		WHERE
+			d.id = :id
+			AND
+			drm.member_id = :member_id
+		GROUP BY
+			d.id,
+			dr.id,
+			dr."name",
+			drm.member_id
+	),
+	final_roles AS (
+		SELECT
+			ar.domain_id,
+			ar.member_id,
+			jsonb_agg(
+				jsonb_build_object(
+					'role_id', ar.role_id,
+					'role_name', ar.role_name,
+					'actions', ar.actions,
+					'access_type', ar.access_type,
+					'access_provider_path', ar.access_provider_path,
+					'access_provider_id', ar.access_provider_id
+				)
+			) AS roles
+		FROM
+			all_roles ar
+		GROUP BY
+			ar.domain_id,
+			ar.member_id
+	)
+	SELECT
+		d.id,
+		d.name,
+		d.tags,
+		d.alias,
+		d.metadata,
+		d.created_at,
+		d.updated_at,
+		d.updated_by,
+		d.created_by,
+		d.status,
+		fr.member_id,
+		fr.roles
+	FROM
+		domains d
+	JOIN final_roles fr ON
+		d.id = fr.domain_id
+	`
 
 	dbdp := dbDomainsPage{
-		ID: id,
+		ID:     id,
+		UserID: memberID,
 	}
 
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbdp)
@@ -107,30 +180,13 @@ func (repo domainRepo) RetrieveDomainByID(ctx context.Context, id string) (domai
 	return domains.Domain{}, repoerr.ErrNotFound
 }
 
-func (repo domainRepo) RetrieveDomainByUserAndID(ctx context.Context, userID, id string) (domains.Domain, error) {
-	q := repo.userDomainsBaseQuery() +
-		`SELECT
-			d.id as id,
-			d.name as name,
-			d.tags as tags,
-			d.alias as alias,
-			d.metadata as metadata,
-			d.status as status,
-			d.role_id AS role_id,
-			d.role_name AS role_name,
-			d.actions AS actions,
-			d.created_at as created_at,
-			d.updated_at as updated_at,
-			d.updated_by as updated_by,
-			d.created_by as created_by
-		FROM
-			domains d
-		WHERE d.id = :id
-		`
+// RetrieveDomainByID retrieves Domain by its unique ID.
+func (repo domainRepo) RetrieveDomainByID(ctx context.Context, id string) (domains.Domain, error) {
+	q := `SELECT d.id as id, d.name as name, d.tags as tags,  d.alias as alias, d.metadata as metadata, d.created_at as created_at, d.updated_at as updated_at, d.updated_by as updated_by, d.created_by as created_by, d.status as status
+        FROM domains d WHERE d.id = :id`
 
 	dbdp := dbDomainsPage{
-		ID:     id,
-		UserID: userID,
+		ID: id,
 	}
 
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbdp)
@@ -450,6 +506,8 @@ type dbDomain struct {
 	CreatedAt time.Time        `db:"created_at"`
 	UpdatedBy *string          `db:"updated_by,omitempty"`
 	UpdatedAt sql.NullTime     `db:"updated_at,omitempty"`
+	MemberID  string           `db:"member_id,omitempty"`
+	Roles     json.RawMessage  `db:"roles,omitempty"`
 }
 
 func toDBDomain(d domains.Domain) (dbDomain, error) {
@@ -518,6 +576,13 @@ func toDomain(d dbDomain) (domains.Domain, error) {
 		updatedAt = d.UpdatedAt.Time
 	}
 
+	var mra []roles.MemberRoleActions
+	if d.Roles != nil {
+		if err := json.Unmarshal(d.Roles, &mra); err != nil {
+			return domains.Domain{}, errors.Wrap(errors.ErrMalformedEntity, err)
+		}
+	}
+
 	return domains.Domain{
 		ID:        d.ID,
 		Name:      d.Name,
@@ -532,6 +597,8 @@ func toDomain(d dbDomain) (domains.Domain, error) {
 		CreatedAt: d.CreatedAt,
 		UpdatedBy: updatedBy,
 		UpdatedAt: updatedAt,
+		MemberID:  d.MemberID,
+		Roles:     mra,
 	}, nil
 }
 

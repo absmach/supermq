@@ -420,9 +420,9 @@ func (_m *Service) RetrieveAllRoles(ctx context.Context, session authn.Session, 
 	return r0, r1
 }
 
-// RetrieveDomain provides a mock function with given fields: ctx, sesssion, id
-func (_m *Service) RetrieveDomain(ctx context.Context, sesssion authn.Session, id string) (domains.Domain, error) {
-	ret := _m.Called(ctx, sesssion, id)
+// RetrieveDomain provides a mock function with given fields: ctx, sesssion, id, withRoles
+func (_m *Service) RetrieveDomain(ctx context.Context, sesssion authn.Session, id string, withRoles bool) (domains.Domain, error) {
+	ret := _m.Called(ctx, sesssion, id, withRoles)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RetrieveDomain")
@@ -430,17 +430,17 @@ func (_m *Service) RetrieveDomain(ctx context.Context, sesssion authn.Session, i
 
 	var r0 domains.Domain
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) (domains.Domain, error)); ok {
-		return rf(ctx, sesssion, id)
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, bool) (domains.Domain, error)); ok {
+		return rf(ctx, sesssion, id, withRoles)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string) domains.Domain); ok {
-		r0 = rf(ctx, sesssion, id)
+	if rf, ok := ret.Get(0).(func(context.Context, authn.Session, string, bool) domains.Domain); ok {
+		r0 = rf(ctx, sesssion, id, withRoles)
 	} else {
 		r0 = ret.Get(0).(domains.Domain)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string) error); ok {
-		r1 = rf(ctx, sesssion, id)
+	if rf, ok := ret.Get(1).(func(context.Context, authn.Session, string, bool) error); ok {
+		r1 = rf(ctx, sesssion, id, withRoles)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -306,27 +306,27 @@ func (_m *Repository) RetrieveDomainByID(ctx context.Context, id string) (domain
 	return r0, r1
 }
 
-// RetrieveDomainByUserAndID provides a mock function with given fields: ctx, userID, id
-func (_m *Repository) RetrieveDomainByUserAndID(ctx context.Context, userID string, id string) (domains.Domain, error) {
-	ret := _m.Called(ctx, userID, id)
+// RetrieveDomainByIDWithRoles provides a mock function with given fields: ctx, id, memberID
+func (_m *Repository) RetrieveDomainByIDWithRoles(ctx context.Context, id string, memberID string) (domains.Domain, error) {
+	ret := _m.Called(ctx, id, memberID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RetrieveDomainByUserAndID")
+		panic("no return value specified for RetrieveDomainByIDWithRoles")
 	}
 
 	var r0 domains.Domain
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) (domains.Domain, error)); ok {
-		return rf(ctx, userID, id)
+		return rf(ctx, id, memberID)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) domains.Domain); ok {
-		r0 = rf(ctx, userID, id)
+		r0 = rf(ctx, id, memberID)
 	} else {
 		r0 = ret.Get(0).(domains.Domain)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = rf(ctx, userID, id)
+		r1 = rf(ctx, id, memberID)
 	} else {
 		r1 = ret.Error(1)
 	}

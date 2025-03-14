@@ -5,6 +5,7 @@ package domains_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -52,6 +53,24 @@ var (
 		RoleID:    "test_role_id",
 		CreatedBy: validID,
 		UpdatedBy: validID,
+	}
+	validRoles = []roles.MemberRoleActions{
+		{
+			RoleID:     "domain_role_id",
+			RoleName:   "domain_role_name",
+			Actions:    []string{"read", "delete"},
+			AccessType: "direct",
+		},
+	}
+	domainWithRoles = domains.Domain{
+		ID:        validID,
+		Name:      groupName,
+		Tags:      []string{"tag1", "tag2"},
+		Alias:     "test",
+		RoleID:    "test_role_id",
+		CreatedBy: validID,
+		UpdatedBy: validID,
+		Roles:     validRoles,
 	}
 	userID          = testsutil.GenerateUUID(&testing.T{})
 	validSession    = authn.Session{UserID: userID}
@@ -207,6 +226,7 @@ func TestRetrieveDomain(t *testing.T) {
 		desc              string
 		session           authn.Session
 		domainID          string
+		withRoles         bool
 		retrieveDomainRes domains.Domain
 		retrieveDomainErr error
 		err               error
@@ -214,6 +234,7 @@ func TestRetrieveDomain(t *testing.T) {
 		{
 			desc:              "retrieve domain successfully as super admin",
 			session:           superAdminSession,
+			withRoles:         false,
 			domainID:          validID,
 			retrieveDomainRes: domain,
 			err:               nil,
@@ -221,13 +242,23 @@ func TestRetrieveDomain(t *testing.T) {
 		{
 			desc:              "retrieve domain successfully as non super admin",
 			session:           validSession,
+			withRoles:         false,
 			domainID:          validID,
 			retrieveDomainRes: domain,
 			err:               nil,
 		},
 		{
+			desc:              "retrieve domain successfully as non super admin with roles",
+			session:           validSession,
+			withRoles:         true,
+			domainID:          validID,
+			retrieveDomainRes: domainWithRoles,
+			err:               nil,
+		},
+		{
 			desc:              "retrieve domain with empty domain id",
 			session:           validSession,
+			withRoles:         false,
 			domainID:          "",
 			retrieveDomainErr: repoerr.ErrNotFound,
 			err:               svcerr.ErrViewEntity,
@@ -235,6 +266,7 @@ func TestRetrieveDomain(t *testing.T) {
 		{
 			desc:              "retrieve non-existing domain",
 			session:           validSession,
+			withRoles:         false,
 			domainID:          inValid,
 			retrieveDomainErr: repoerr.ErrNotFound,
 			err:               svcerr.ErrViewEntity,
@@ -244,9 +276,21 @@ func TestRetrieveDomain(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := drepo.On("RetrieveDomainByID", context.Background(), tc.domainID).Return(tc.retrieveDomainRes, tc.retrieveDomainErr)
-			repoCall1 := drepo.On("RetrieveDomainByUserAndID", context.Background(), tc.session.UserID, tc.domainID).Return(tc.retrieveDomainRes, tc.retrieveDomainErr)
-			domain, err := svc.RetrieveDomain(context.Background(), tc.session, tc.domainID)
+			repoCall1 := drepo.On("RetrieveDomainByIDWithRoles", context.Background(), tc.domainID, tc.session.UserID).Return(tc.retrieveDomainRes, tc.retrieveDomainErr)
+			domain, err := svc.RetrieveDomain(context.Background(), tc.session, tc.domainID, tc.withRoles)
 			assert.True(t, errors.Contains(err, tc.err))
+
+			switch tc.withRoles {
+			case true:
+				assert.Equal(t, domain.Roles, validRoles, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, validRoles, domain.Roles))
+				ok := drepo.AssertCalled(t, "RetrieveDomainByIDWithRoles", context.Background(), tc.domainID, tc.session.UserID)
+				assert.True(t, ok, fmt.Sprintf("RetrieveDomainByIDWithRoles was not called on %s", tc.desc))
+			default:
+				assert.Empty(t, domain.Roles)
+				ok := drepo.AssertCalled(t, "RetrieveDomainByID", context.Background(), tc.domainID)
+				assert.True(t, ok, fmt.Sprintf("RetrieveDomainByID was not called on %s", tc.desc))
+			}
+
 			assert.Equal(t, tc.retrieveDomainRes, domain)
 			repoCall.Unset()
 			repoCall1.Unset()

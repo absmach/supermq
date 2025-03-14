@@ -38,8 +38,13 @@ func decodeCreateDomainRequest(_ context.Context, r *http.Request) (interface{},
 }
 
 func decodeRetrieveDomainRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	roles, err := apiutil.ReadBoolQuery(r, api.RolesKey, false)
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
 	req := retrieveDomainRequest{
 		domainID: chi.URLParam(r, "domainID"),
+		roles:    roles,
 	}
 	return req, nil
 }

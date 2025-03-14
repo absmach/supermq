@@ -35,6 +35,7 @@ func (req createDomainReq) validate() error {
 
 type retrieveDomainRequest struct {
 	domainID string
+	roles    bool
 }
 
 func (req retrieveDomainRequest) validate() error {

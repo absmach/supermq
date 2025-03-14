@@ -45,12 +45,12 @@ func (ms *metricsMiddleware) CreateDomain(ctx context.Context, session authn.Ses
 	return ms.svc.CreateDomain(ctx, session, d)
 }
 
-func (ms *metricsMiddleware) RetrieveDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
+func (ms *metricsMiddleware) RetrieveDomain(ctx context.Context, session authn.Session, id string, withRoles bool) (domains.Domain, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "retrieve_domain").Add(1)
 		ms.latency.With("method", "retrieve_domain").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.RetrieveDomain(ctx, session, id)
+	return ms.svc.RetrieveDomain(ctx, session, id, withRoles)
 }
 
 func (ms *metricsMiddleware) UpdateDomain(ctx context.Context, session authn.Session, id string, d domains.DomainReq) (domains.Domain, error) {

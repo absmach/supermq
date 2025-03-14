@@ -97,14 +97,19 @@ func (svc service) CreateDomain(ctx context.Context, session authn.Session, d Do
 	return dom, rps, nil
 }
 
-func (svc service) RetrieveDomain(ctx context.Context, session authn.Session, id string) (Domain, error) {
+func (svc service) RetrieveDomain(ctx context.Context, session authn.Session, id string, withRoles bool) (Domain, error) {
 	var domain Domain
 	var err error
 	switch session.SuperAdmin {
 	case true:
 		domain, err = svc.repo.RetrieveDomainByID(ctx, id)
 	default:
-		domain, err = svc.repo.RetrieveDomainByUserAndID(ctx, session.UserID, id)
+		switch withRoles {
+		case true:
+			domain, err = svc.repo.RetrieveDomainByIDWithRoles(ctx, id, session.UserID)
+		default:
+			domain, err = svc.repo.RetrieveDomainByID(ctx, id)
+		}
 	}
 	if err != nil {
 		return Domain{}, errors.Wrap(svcerr.ErrViewEntity, err)

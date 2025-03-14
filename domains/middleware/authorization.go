@@ -57,7 +57,7 @@ func (am *authorizationMiddleware) CreateDomain(ctx context.Context, session aut
 	return am.svc.CreateDomain(ctx, session, d)
 }
 
-func (am *authorizationMiddleware) RetrieveDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
+func (am *authorizationMiddleware) RetrieveDomain(ctx context.Context, session authn.Session, id string, withRoles bool) (domains.Domain, error) {
 	if err := am.authorize(ctx, domains.OpRetrieveDomain, authz.PolicyReq{
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -67,7 +67,7 @@ func (am *authorizationMiddleware) RetrieveDomain(ctx context.Context, session a
 	}); err != nil {
 		return domains.Domain{}, err
 	}
-	return am.svc.RetrieveDomain(ctx, session, id)
+	return am.svc.RetrieveDomain(ctx, session, id, withRoles)
 }
 
 func (am *authorizationMiddleware) UpdateDomain(ctx context.Context, session authn.Session, id string, d domains.DomainReq) (domains.Domain, error) {

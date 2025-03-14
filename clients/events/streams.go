@@ -104,8 +104,8 @@ func (es *eventStore) update(ctx context.Context, session authn.Session, operati
 	return client, nil
 }
 
-func (es *eventStore) View(ctx context.Context, session authn.Session, id string, getRoles bool) (clients.Client, error) {
-	cli, err := es.svc.View(ctx, session, id, getRoles)
+func (es *eventStore) View(ctx context.Context, session authn.Session, id string, withRoles bool) (clients.Client, error) {
+	cli, err := es.svc.View(ctx, session, id, withRoles)
 	if err != nil {
 		return cli, err
 	}
