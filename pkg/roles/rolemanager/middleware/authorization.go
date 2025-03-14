@@ -9,7 +9,6 @@ import (
 	"github.com/absmach/supermq/pkg/authn"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	"github.com/absmach/supermq/pkg/errors"
-	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
 	"github.com/absmach/supermq/pkg/svcutil"
@@ -62,6 +61,9 @@ func (ram RoleManagerAuthorizationMiddleware) AddRole(ctx context.Context, sessi
 		Object:      entityID,
 		ObjectType:  ram.entityType,
 	}); err != nil {
+		return roles.RoleProvision{}, err
+	}
+	if err := ram.validateMembers(ctx, session, optionalMembers); err != nil {
 		return roles.RoleProvision{}, err
 	}
 	return ram.svc.AddRole(ctx, session, entityID, roleName, optionalActions, optionalMembers)
@@ -211,7 +213,7 @@ func (ram RoleManagerAuthorizationMiddleware) RoleAddMembers(ctx context.Context
 		return []string{}, err
 	}
 
-	if err := ram.authorizeMembers(ctx, session, members); err != nil {
+	if err := ram.validateMembers(ctx, session, members); err != nil {
 		return []string{}, err
 	}
 	return ram.svc.RoleAddMembers(ctx, session, entityID, roleID, members)
@@ -320,7 +322,7 @@ func (ram RoleManagerAuthorizationMiddleware) RemoveMemberFromAllRoles(ctx conte
 	return ram.svc.RemoveMemberFromAllRoles(ctx, session, memberID)
 }
 
-func (ram RoleManagerAuthorizationMiddleware) authorizeMembers(ctx context.Context, session authn.Session, members []string) error {
+func (ram RoleManagerAuthorizationMiddleware) validateMembers(ctx context.Context, session authn.Session, members []string) error {
 	switch ram.entityType {
 	case policies.DomainType:
 		for _, member := range members {
@@ -332,7 +334,7 @@ func (ram RoleManagerAuthorizationMiddleware) authorizeMembers(ctx context.Conte
 				Object:      policies.SuperMQObject,
 				ObjectType:  policies.PlatformType,
 			}); err != nil {
-				return errors.Wrap(errors.ErrAuthorization, err)
+				return errors.Wrap(errors.ErrMissingMember, err)
 			}
 		}
 		return nil
@@ -347,7 +349,7 @@ func (ram RoleManagerAuthorizationMiddleware) authorizeMembers(ctx context.Conte
 				Object:      session.DomainID,
 				ObjectType:  policies.DomainType,
 			}); err != nil {
-				return errors.Wrap(svcerr.ErrDomainAuthorization, err)
+				return errors.Wrap(errors.ErrMissingDomainMember, err)
 			}
 		}
 		return nil

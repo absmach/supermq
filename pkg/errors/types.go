@@ -29,4 +29,10 @@ var (
 
 	// ErrAuthorization indicates failure occurred while authorizing the entity.
 	ErrAuthorization = errors.New("failed to perform authorization over the entity")
+
+	// ErrMissingDomainMember indicates member is not part of a domain.
+	ErrMissingDomainMember = errors.New("member id is not member of domain")
+
+	// ErrMissingMember indicates member is not found.
+	ErrMissingMember = errors.New("member id is not found")
 )
