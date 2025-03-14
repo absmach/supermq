@@ -35,6 +35,7 @@ var (
 	errRetrieve  = errors.New("failed to retrieve key data")
 	errIdentify  = errors.New("failed to validate token")
 	errPlatform  = errors.New("invalid platform id")
+	errRoleAuth  = errors.New("failed to authorize user role")
 
 	errMalformedPAT        = errors.New("malformed personal access token")
 	errFailedToParseUUID   = errors.New("failed to parse string to UUID")
@@ -135,13 +136,13 @@ func (svc service) Issue(ctx context.Context, token string, key Key) (Token, err
 	case APIKey:
 		return svc.userKey(ctx, token, key)
 	case RefreshKey:
-		return svc.refreshKey(token, key)
+		return svc.refreshKey(ctx, token, key)
 	case RecoveryKey:
-		return svc.tmpKey(recoveryDuration, key)
+		return svc.tmpKey(ctx, recoveryDuration, key)
 	case InvitationKey:
-		return svc.invitationKey(key)
+		return svc.invitationKey(ctx, key)
 	default:
-		return svc.accessKey(key)
+		return svc.accessKey(ctx, key)
 	}
 }
 
@@ -263,8 +264,11 @@ func (svc service) PolicyValidation(pr policies.Policy) error {
 	return nil
 }
 
-func (svc service) tmpKey(duration time.Duration, key Key) (Token, error) {
+func (svc service) tmpKey(ctx context.Context, duration time.Duration, key Key) (Token, error) {
 	key.ExpiresAt = time.Now().Add(duration)
+	if err := svc.checkUserRole(ctx, key); err != nil {
+		return Token{}, errors.Wrap(errIssueTmp, err)
+	}
 	value, err := svc.tokenizer.Issue(key)
 	if err != nil {
 		return Token{}, errors.Wrap(errIssueTmp, err)
@@ -273,10 +277,14 @@ func (svc service) tmpKey(duration time.Duration, key Key) (Token, error) {
 	return Token{AccessToken: value}, nil
 }
 
-func (svc service) accessKey(key Key) (Token, error) {
+func (svc service) accessKey(ctx context.Context, key Key) (Token, error) {
 	var err error
 	key.Type = AccessKey
 	key.ExpiresAt = time.Now().Add(svc.loginDuration)
+
+	if err := svc.checkUserRole(ctx, key); err != nil {
+		return Token{}, errors.Wrap(errIssueUser, err)
+	}
 
 	access, err := svc.tokenizer.Issue(key)
 	if err != nil {
@@ -293,10 +301,14 @@ func (svc service) accessKey(key Key) (Token, error) {
 	return Token{AccessToken: access, RefreshToken: refresh}, nil
 }
 
-func (svc service) invitationKey(key Key) (Token, error) {
+func (svc service) invitationKey(ctx context.Context, key Key) (Token, error) {
 	var err error
 	key.Type = InvitationKey
 	key.ExpiresAt = time.Now().Add(svc.invitationDuration)
+
+	if err := svc.checkUserRole(ctx, key); err != nil {
+		return Token{}, errors.Wrap(errIssueTmp, err)
+	}
 
 	access, err := svc.tokenizer.Issue(key)
 	if err != nil {
@@ -306,7 +318,7 @@ func (svc service) invitationKey(key Key) (Token, error) {
 	return Token{AccessToken: access}, nil
 }
 
-func (svc service) refreshKey(token string, key Key) (Token, error) {
+func (svc service) refreshKey(ctx context.Context, token string, key Key) (Token, error) {
 	k, err := svc.tokenizer.Parse(token)
 	if err != nil {
 		return Token{}, errors.Wrap(errRetrieve, err)
@@ -321,6 +333,10 @@ func (svc service) refreshKey(token string, key Key) (Token, error) {
 	key.User = k.User
 	key.Type = AccessKey
 	key.Subject = k.Subject
+
+	if err := svc.checkUserRole(ctx, key); err != nil {
+		return Token{}, errors.Wrap(errIssueUser, err)
+	}
 	key.Role = k.Role
 
 	key.ExpiresAt = time.Now().Add(svc.loginDuration)
@@ -339,6 +355,35 @@ func (svc service) refreshKey(token string, key Key) (Token, error) {
 	return Token{AccessToken: access, RefreshToken: refresh}, nil
 }
 
+func (svc service) checkUserRole(ctx context.Context, key Key) (err error) {
+	switch key.Role {
+	case AdminRole:
+		if err = svc.Authorize(ctx, policies.Policy{
+			Subject:     key.User,
+			SubjectType: policies.UserType,
+			Permission:  policies.AdminPermission,
+			Object:      policies.SuperMQObject,
+			ObjectType:  policies.PlatformType,
+		}); err != nil {
+			return errRoleAuth
+		}
+		return nil
+	case UserRole:
+		if err = svc.Authorize(ctx, policies.Policy{
+			Subject:     key.User,
+			SubjectType: policies.UserType,
+			Permission:  policies.MembershipPermission,
+			Object:      policies.SuperMQObject,
+			ObjectType:  policies.PlatformType,
+		}); err != nil {
+			return errRoleAuth
+		}
+		return nil
+	default:
+		return errRoleAuth
+	}
+}
+
 func (svc service) userKey(ctx context.Context, token string, key Key) (Token, error) {
 	id, sub, err := svc.authenticate(token)
 	if err != nil {
@@ -348,6 +393,9 @@ func (svc service) userKey(ctx context.Context, token string, key Key) (Token, e
 	key.Issuer = id
 	if key.Subject == "" {
 		key.Subject = sub
+	}
+	if err := svc.checkUserRole(ctx, key); err != nil {
+		return Token{}, errors.Wrap(errIssueUser, err)
 	}
 
 	keyID, err := svc.idProvider.ID()
