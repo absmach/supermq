@@ -64,7 +64,7 @@ func (am *authorizationMiddleware) RetrieveDomain(ctx context.Context, session a
 	}
 
 	if err := am.authorize(ctx, domains.OpRetrieveDomain, authz.PolicyReq{
-		Subject:     session.Subject,
+		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
 		Object:      id,
@@ -77,7 +77,7 @@ func (am *authorizationMiddleware) RetrieveDomain(ctx context.Context, session a
 
 func (am *authorizationMiddleware) UpdateDomain(ctx context.Context, session authn.Session, id string, d domains.DomainReq) (domains.Domain, error) {
 	if err := am.authorize(ctx, domains.OpUpdateDomain, authz.PolicyReq{
-		Subject:     session.Subject,
+		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
 		Object:      id,
@@ -90,7 +90,7 @@ func (am *authorizationMiddleware) UpdateDomain(ctx context.Context, session aut
 
 func (am *authorizationMiddleware) EnableDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
 	if err := am.authorize(ctx, domains.OpEnableDomain, authz.PolicyReq{
-		Subject:     session.Subject,
+		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
 		Object:      id,
@@ -104,7 +104,7 @@ func (am *authorizationMiddleware) EnableDomain(ctx context.Context, session aut
 
 func (am *authorizationMiddleware) DisableDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
 	if err := am.authorize(ctx, domains.OpDisableDomain, authz.PolicyReq{
-		Subject:     session.Subject,
+		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
 		Object:      id,
@@ -154,7 +154,7 @@ func (am *authorizationMiddleware) SendInvitation(ctx context.Context, session a
 }
 
 func (am *authorizationMiddleware) ViewInvitation(ctx context.Context, session authn.Session, inviteeUserID, domain string) (invitation domains.Invitation, err error) {
-	session.Subject = auth.EncodeDomainUserID(session.DomainID, session.UserID)
+	session.DomainUserID = auth.EncodeDomainUserID(session.DomainID, session.UserID)
 	if session.UserID != inviteeUserID {
 		if err := am.checkAdmin(ctx, session); err != nil {
 			return domains.Invitation{}, err
@@ -165,7 +165,7 @@ func (am *authorizationMiddleware) ViewInvitation(ctx context.Context, session a
 }
 
 func (am *authorizationMiddleware) ListInvitations(ctx context.Context, session authn.Session, page domains.InvitationPageMeta) (invs domains.InvitationPage, err error) {
-	session.Subject = auth.EncodeDomainUserID(session.DomainID, session.UserID)
+	session.DomainUserID = auth.EncodeDomainUserID(session.DomainID, session.UserID)
 	if err := am.extAuthorize(ctx, session.UserID, policies.AdminPermission, policies.PlatformType, policies.SuperMQObject); err == nil {
 		session.SuperAdmin = true
 		page.DomainID = ""
@@ -174,7 +174,7 @@ func (am *authorizationMiddleware) ListInvitations(ctx context.Context, session 
 	if !session.SuperAdmin {
 		switch {
 		case page.DomainID != "":
-			if err := am.extAuthorize(ctx, session.Subject, policies.AdminPermission, policies.DomainType, page.DomainID); err != nil {
+			if err := am.extAuthorize(ctx, session.DomainUserID, policies.AdminPermission, policies.DomainType, page.DomainID); err != nil {
 				return domains.InvitationPage{}, err
 			}
 		default:
@@ -194,7 +194,7 @@ func (am *authorizationMiddleware) RejectInvitation(ctx context.Context, session
 }
 
 func (am *authorizationMiddleware) DeleteInvitation(ctx context.Context, session authn.Session, inviteeUserID, domainID string) (err error) {
-	session.Subject = auth.EncodeDomainUserID(session.DomainID, session.UserID)
+	session.DomainUserID = auth.EncodeDomainUserID(session.DomainID, session.UserID)
 	if err := am.checkAdmin(ctx, session); err != nil {
 		return err
 	}
@@ -221,7 +221,7 @@ func (am *authorizationMiddleware) checkAdmin(ctx context.Context, session authn
 	req := smqauthz.PolicyReq{
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
-		Subject:     session.Subject,
+		Subject:     session.DomainUserID,
 		Permission:  policies.AdminPermission,
 		ObjectType:  policies.DomainType,
 		Object:      session.DomainID,

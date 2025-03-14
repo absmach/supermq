@@ -35,13 +35,13 @@ const (
 )
 
 type Session struct {
-	Type       TokenType
-	PatID      string
-	UserID     string
-	DomainID   string
-	Subject    string
-	SuperAdmin bool
-	Role       Role
+	Type         TokenType
+	PatID        string
+	UserID       string
+	DomainID     string
+	DomainUserID string
+	SuperAdmin   bool
+	Role         Role
 }
 
 // Authn is supermq authentication library.

@@ -38,10 +38,10 @@ func AuthenticateMiddleware(authn smqauthn.Authentication, domainCheck bool) fun
 					return
 				}
 				resp.DomainID = domain
-				resp.Subject = auth.EncodeDomainUserID(domain, resp.UserID)
+				resp.DomainUserID = auth.EncodeDomainUserID(domain, resp.UserID)
 			}
 			if resp.Role == smqauthn.AdminRole {
-				resp.Subject = resp.UserID
+				resp.DomainUserID = resp.UserID
 			}
 
 			ctx := context.WithValue(r.Context(), SessionKey, resp)

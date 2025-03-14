@@ -668,7 +668,7 @@ func TestViewDomain(t *testing.T) {
 				token:  tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = authn.Session{UserID: userID, DomainID: tc.domainID, Subject: tc.domainID + "_" + userID}
+				tc.session = authn.Session{UserID: userID, DomainID: tc.domainID, DomainUserID: tc.domainID + "_" + userID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("RetrieveDomain", mock.Anything, tc.session, tc.domainID).Return(tc.svcRes, tc.svcErr)
@@ -822,7 +822,7 @@ func TestUpdateDomain(t *testing.T) {
 			}
 
 			if tc.token == validToken {
-				tc.session = authn.Session{UserID: userID, DomainID: tc.domainID, Subject: tc.domainID + "_" + userID}
+				tc.session = authn.Session{UserID: userID, DomainID: tc.domainID, DomainUserID: tc.domainID + "_" + userID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("UpdateDomain", mock.Anything, tc.session, tc.domainID, tc.updateReq).Return(tc.svcRes, tc.svcErr)
@@ -907,7 +907,7 @@ func TestEnableDomain(t *testing.T) {
 				token:       tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = authn.Session{UserID: userID, DomainID: tc.domainID, Subject: tc.domainID + "_" + userID}
+				tc.session = authn.Session{UserID: userID, DomainID: tc.domainID, DomainUserID: tc.domainID + "_" + userID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("EnableDomain", mock.Anything, tc.session, tc.domainID).Return(tc.svcRes, tc.svcErr)
@@ -985,7 +985,7 @@ func TestDisableDomain(t *testing.T) {
 				token:       tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = authn.Session{UserID: userID, DomainID: tc.domainID, Subject: tc.domainID + "_" + userID}
+				tc.session = authn.Session{UserID: userID, DomainID: tc.domainID, DomainUserID: tc.domainID + "_" + userID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("DisableDomain", mock.Anything, tc.session, tc.domainID).Return(tc.svcRes, tc.svcErr)
@@ -1063,7 +1063,7 @@ func TestFreezeDomain(t *testing.T) {
 				token:       tc.token,
 			}
 			if tc.token == validToken {
-				tc.session = authn.Session{UserID: userID, DomainID: tc.domainID, Subject: tc.domainID + "_" + userID}
+				tc.session = authn.Session{UserID: userID, DomainID: tc.domainID, DomainUserID: tc.domainID + "_" + userID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("FreezeDomain", mock.Anything, tc.session, tc.domainID).Return(tc.svcRes, tc.svcErr)
@@ -1149,7 +1149,7 @@ func TestSendInvitation(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = authn.Session{UserID: userID, DomainID: domainID, Subject: domainID + "_" + userID}
+				tc.session = authn.Session{UserID: userID, DomainID: domainID, DomainUserID: domainID + "_" + userID}
 			}
 			authnCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			repoCall := svc.On("SendInvitation", mock.Anything, tc.session, mock.Anything).Return(tc.svcErr)
@@ -1382,7 +1382,7 @@ func TestViewInvitation(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = authn.Session{UserID: userID, DomainID: domainID, Subject: domainID + "_" + userID}
+				tc.session = authn.Session{UserID: userID, DomainID: domainID, DomainUserID: domainID + "_" + userID}
 			}
 			authnCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			repoCall := svc.On("ViewInvitation", mock.Anything, tc.session, tc.userID, tc.domainID).Return(domains.Invitation{}, tc.svcErr)
@@ -1476,7 +1476,7 @@ func TestDeleteInvitation(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = authn.Session{UserID: userID, DomainID: domainID, Subject: domainID + "_" + userID}
+				tc.session = authn.Session{UserID: userID, DomainID: domainID, DomainUserID: domainID + "_" + userID}
 			}
 			authnCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
 			repoCall := svc.On("DeleteInvitation", mock.Anything, tc.session, tc.userID, tc.domainID).Return(tc.svcErr)

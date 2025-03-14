@@ -380,9 +380,9 @@ func TestListEntityJournalsEndpoint(t *testing.T) {
 		t.Run(c.desc, func(t *testing.T) {
 			if c.token == validToken {
 				c.session = smqauthn.Session{
-					UserID:   userID,
-					DomainID: domainID,
-					Subject:  domainID + "_" + userID,
+					UserID:       userID,
+					DomainID:     domainID,
+					DomainUserID: domainID + "_" + userID,
 				}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, c.token).Return(c.session, c.authnErr)
@@ -463,9 +463,9 @@ func TestRetrieveClientTelemetryEndpoint(t *testing.T) {
 		t.Run(c.desc, func(t *testing.T) {
 			if c.token == validToken {
 				c.session = smqauthn.Session{
-					UserID:   userID,
-					DomainID: c.domainID,
-					Subject:  c.domainID + "_" + userID,
+					UserID:       userID,
+					DomainID:     c.domainID,
+					DomainUserID: c.domainID + "_" + userID,
 				}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, c.token).Return(c.session, c.authnErr)
