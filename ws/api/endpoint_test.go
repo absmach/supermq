@@ -18,6 +18,7 @@ import (
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	climocks "github.com/absmach/supermq/clients/mocks"
+	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnMocks "github.com/absmach/supermq/pkg/authn/mocks"
@@ -31,14 +32,16 @@ import (
 )
 
 const (
-	chanID     = "30315311-56ba-484d-b500-c1e08305511f"
 	id         = "1"
 	clientKey  = "c02ff576-ccd5-40f6-ba5f-c85377aad529"
 	protocol   = "ws"
 	instanceID = "5de9b29a-feb9-11ed-be56-0242ac120002"
 )
 
-var msg = []byte(`[{"n":"current","t":-1,"v":1.6}]`)
+var (
+	msg      = []byte(`[{"n":"current","t":-1,"v":1.6}]`)
+	domainID = testsutil.GenerateUUID(&testing.T{})
+)
 
 func newService(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) (ws.Service, *mocks.PubSub) {
 	pubsub := new(mocks.PubSub)
@@ -59,15 +62,15 @@ func newProxyHTPPServer(svc session.Handler, targetServer *httptest.Server) (*ht
 	return httptest.NewServer(http.HandlerFunc(mp.Handler)), nil
 }
 
-func makeURL(tsURL, chanID, subtopic, clientKey string, header bool) (string, error) {
+func makeURL(tsURL, domainID, chanID, subtopic, clientKey string, header bool) (string, error) {
 	u, _ := url.Parse(tsURL)
 	u.Scheme = protocol
 
 	if chanID == "0" || chanID == "" {
 		if header {
-			return fmt.Sprintf("%s/ch/%s/msg", u, chanID), fmt.Errorf("invalid channel id")
+			return fmt.Sprintf("%s/%s/ch/%s/msg", u, domainID, chanID), fmt.Errorf("invalid channel id")
 		}
-		return fmt.Sprintf("%s/ch/%s/msg?authorization=%s", u, chanID, clientKey), fmt.Errorf("invalid channel id")
+		return fmt.Sprintf("%s/%s/ch/%s/msg?authorization=%s", u, domainID, chanID, clientKey), fmt.Errorf("invalid channel id")
 	}
 
 	subtopicPart := ""
@@ -75,19 +78,19 @@ func makeURL(tsURL, chanID, subtopic, clientKey string, header bool) (string, er
 		subtopicPart = fmt.Sprintf("/%s", subtopic)
 	}
 	if header {
-		return fmt.Sprintf("%s/ch/%s/msg%s", u, chanID, subtopicPart), nil
+		return fmt.Sprintf("%s/%s/ch/%s/msg%s", u, chanID, domainID, subtopicPart), nil
 	}
 
-	return fmt.Sprintf("%s/ch/%s/msg%s?authorization=%s", u, chanID, subtopicPart, clientKey), nil
+	return fmt.Sprintf("%s/%s/ch/%s/msg%s?authorization=%s", u, domainID, chanID, subtopicPart, clientKey), nil
 }
 
-func handshake(tsURL, chanID, subtopic, clientKey string, addHeader bool) (*websocket.Conn, *http.Response, error) {
+func handshake(tsURL, domainID, chanID, subtopic, clientKey string, addHeader bool) (*websocket.Conn, *http.Response, error) {
 	header := http.Header{}
 	if addHeader {
 		header.Add("Authorization", clientKey)
 	}
 
-	turl, _ := makeURL(tsURL, chanID, subtopic, clientKey, addHeader)
+	turl, _ := makeURL(tsURL, domainID, chanID, subtopic, clientKey, addHeader)
 	conn, res, errRet := websocket.DefaultDialer.Dial(turl, header)
 
 	return conn, res, errRet
@@ -112,6 +115,7 @@ func TestHandshake(t *testing.T) {
 
 	cases := []struct {
 		desc      string
+		domainID  string
 		chanID    string
 		subtopic  string
 		header    bool
@@ -122,6 +126,7 @@ func TestHandshake(t *testing.T) {
 	}{
 		{
 			desc:      "connect and send message",
+			domainID:  domainID,
 			chanID:    id,
 			subtopic:  "",
 			header:    true,
@@ -131,6 +136,7 @@ func TestHandshake(t *testing.T) {
 		},
 		{
 			desc:      "connect and send message with clientKey as query parameter",
+			domainID:  domainID,
 			chanID:    id,
 			subtopic:  "",
 			header:    false,
@@ -140,6 +146,7 @@ func TestHandshake(t *testing.T) {
 		},
 		{
 			desc:      "connect and send message that cannot be published",
+			domainID:  domainID,
 			chanID:    id,
 			subtopic:  "",
 			header:    true,
@@ -149,6 +156,7 @@ func TestHandshake(t *testing.T) {
 		},
 		{
 			desc:      "connect and send message to subtopic",
+			domainID:  domainID,
 			chanID:    id,
 			subtopic:  "subtopic",
 			header:    true,
@@ -158,6 +166,7 @@ func TestHandshake(t *testing.T) {
 		},
 		{
 			desc:      "connect and send message to nested subtopic",
+			domainID:  domainID,
 			chanID:    id,
 			subtopic:  "subtopic/nested",
 			header:    true,
@@ -167,6 +176,7 @@ func TestHandshake(t *testing.T) {
 		},
 		{
 			desc:      "connect and send message to all subtopics",
+			domainID:  domainID,
 			chanID:    id,
 			subtopic:  ">",
 			header:    true,
@@ -176,6 +186,7 @@ func TestHandshake(t *testing.T) {
 		},
 		{
 			desc:      "connect to empty channel",
+			domainID:  domainID,
 			chanID:    "",
 			subtopic:  "",
 			header:    true,
@@ -185,6 +196,7 @@ func TestHandshake(t *testing.T) {
 		},
 		{
 			desc:      "connect with empty clientKey",
+			domainID:  domainID,
 			chanID:    id,
 			subtopic:  "",
 			header:    true,
@@ -194,6 +206,7 @@ func TestHandshake(t *testing.T) {
 		},
 		{
 			desc:      "connect and send message to subtopic with invalid name",
+			domainID:  domainID,
 			chanID:    id,
 			subtopic:  "sub/a*b/topic",
 			header:    true,
@@ -205,7 +218,7 @@ func TestHandshake(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			conn, res, err := handshake(ts.URL, tc.chanID, tc.subtopic, tc.clientKey, tc.header)
+			conn, res, err := handshake(ts.URL, tc.domainID, tc.chanID, tc.subtopic, tc.clientKey, tc.header)
 			assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code '%d' got '%d'\n", tc.desc, tc.status, res.StatusCode))
 
 			if tc.status == http.StatusSwitchingProtocols {

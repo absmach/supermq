@@ -16,7 +16,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-var channelPartRegExp = regexp.MustCompile(`^/ch/([\w\-]+)/msg(/[^?]*)?(\?.*)?$`)
+var channelPartRegExp = regexp.MustCompile(`^/([\w\-]+)/ch/([\w\-]+)/msg(/[^?]*)?(\?.*)?$`)
 
 func handshake(ctx context.Context, svc ws.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +33,7 @@ func handshake(ctx context.Context, svc ws.Service) http.HandlerFunc {
 		req.conn = conn
 		client := ws.NewClient(conn)
 
-		if err := svc.Subscribe(ctx, req.clientKey, req.chanID, req.subtopic, client); err != nil {
+		if err := svc.Subscribe(ctx, req.clientKey, req.domainID, req.chanID, req.subtopic, client); err != nil {
 			req.conn.Close()
 			return
 		}
@@ -53,20 +53,22 @@ func decodeRequest(r *http.Request) (connReq, error) {
 		authKey = authKeys[0]
 	}
 
+	domainID := chi.URLParam(r, "domainID")
 	chanID := chi.URLParam(r, "chanID")
 
 	req := connReq{
 		clientKey: authKey,
 		chanID:    chanID,
+		domainID:  domainID,
 	}
 
 	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
-	if len(channelParts) < 2 {
+	if len(channelParts) < 3 {
 		logger.Warn("Empty channel id or malformed url")
 		return connReq{}, errors.ErrMalformedEntity
 	}
 
-	subtopic, err := parseSubTopic(channelParts[2])
+	subtopic, err := parseSubTopic(channelParts[3])
 	if err != nil {
 		return connReq{}, err
 	}
