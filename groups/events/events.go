@@ -12,11 +12,12 @@ import (
 	"github.com/absmach/supermq/pkg/roles"
 )
 
-var (
+const (
 	groupPrefix                  = "group."
 	groupCreate                  = groupPrefix + "create"
 	groupUpdate                  = groupPrefix + "update"
-	groupChangeStatus            = groupPrefix + "change_status"
+	groupEnable                  = groupPrefix + "enable"
+	groupDisable                 = groupPrefix + "disable"
 	groupView                    = groupPrefix + "view"
 	groupList                    = groupPrefix + "list"
 	groupListUserGroups          = groupPrefix + "list_user_groups"
@@ -34,7 +35,7 @@ var (
 var (
 	_ events.Event = (*createGroupEvent)(nil)
 	_ events.Event = (*updateGroupEvent)(nil)
-	_ events.Event = (*changeStatusGroupEvent)(nil)
+	_ events.Event = (*changeGroupStatusEvent)(nil)
 	_ events.Event = (*viewGroupEvent)(nil)
 	_ events.Event = (*deleteGroupEvent)(nil)
 	_ events.Event = (*viewGroupEvent)(nil)
@@ -132,8 +133,9 @@ func (uge updateGroupEvent) Encode() (map[string]interface{}, error) {
 	return val, nil
 }
 
-type changeStatusGroupEvent struct {
+type changeGroupStatusEvent struct {
 	id        string
+	operation string
 	status    string
 	updatedAt time.Time
 	updatedBy string
@@ -141,9 +143,9 @@ type changeStatusGroupEvent struct {
 	requestID string
 }
 
-func (rge changeStatusGroupEvent) Encode() (map[string]interface{}, error) {
+func (rge changeGroupStatusEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
-		"operation":   groupChangeStatus,
+		"operation":   rge.operation,
 		"id":          rge.id,
 		"status":      rge.status,
 		"updated_at":  rge.updatedAt,

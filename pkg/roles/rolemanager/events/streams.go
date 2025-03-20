@@ -11,6 +11,11 @@ import (
 	"github.com/absmach/supermq/pkg/roles"
 )
 
+const (
+	supermqPrefix = "supermq."
+	rolesPrefix   = "roles"
+)
+
 var _ roles.RoleManager = (*RoleManagerEventStore)(nil)
 
 type RoleManagerEventStore struct {
@@ -18,6 +23,7 @@ type RoleManagerEventStore struct {
 	svc             roles.RoleManager
 	operationPrefix string
 	svcName         string
+	streamID        string
 }
 
 // NewEventStoreMiddleware returns wrapper around auth service that sends
@@ -27,6 +33,7 @@ func NewRoleManagerEventStore(svcName, operationPrefix string, svc roles.RoleMan
 		svcName:         svcName,
 		operationPrefix: operationPrefix,
 		svc:             svc,
+		streamID:        supermqPrefix + operationPrefix + rolesPrefix,
 		Publisher:       publisher,
 	}
 }
@@ -41,7 +48,7 @@ func (rmes *RoleManagerEventStore) AddRole(ctx context.Context, session authn.Se
 		operationPrefix: rmes.operationPrefix,
 		RoleProvision:   nrp,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return nrp, err
 	}
 	return nrp, nil
@@ -56,7 +63,7 @@ func (rmes *RoleManagerEventStore) RemoveRole(ctx context.Context, session authn
 		roleID:          roleID,
 		entityID:        entityID,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return err
 	}
 	return nil
@@ -72,7 +79,7 @@ func (rmes *RoleManagerEventStore) UpdateRoleName(ctx context.Context, session a
 		operationPrefix: rmes.operationPrefix,
 		Role:            ro,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return ro, err
 	}
 	return ro, nil
@@ -87,7 +94,7 @@ func (rmes *RoleManagerEventStore) RetrieveRole(ctx context.Context, session aut
 		operationPrefix: rmes.operationPrefix,
 		Role:            ro,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return ro, err
 	}
 	return ro, nil
@@ -105,7 +112,7 @@ func (rmes *RoleManagerEventStore) RetrieveAllRoles(ctx context.Context, session
 		limit:           limit,
 		offset:          offset,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return rp, err
 	}
 	return rp, nil
@@ -119,7 +126,7 @@ func (rmes *RoleManagerEventStore) ListAvailableActions(ctx context.Context, ses
 	e := listAvailableActionsEvent{
 		operationPrefix: rmes.operationPrefix,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return actions, err
 	}
 	return actions, nil
@@ -136,7 +143,7 @@ func (rmes *RoleManagerEventStore) RoleAddActions(ctx context.Context, session a
 		roleID:          roleID,
 		actions:         actions,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return actions, err
 	}
 	return actions, nil
@@ -153,7 +160,7 @@ func (rmes *RoleManagerEventStore) RoleListActions(ctx context.Context, session 
 		entityID:        entityID,
 		roleID:          roleID,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return actions, err
 	}
 	return actions, nil
@@ -172,7 +179,7 @@ func (rmes *RoleManagerEventStore) RoleCheckActionsExists(ctx context.Context, s
 		actions:         actions,
 		isAllExists:     isAllExists,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return isAllExists, err
 	}
 	return isAllExists, nil
@@ -189,7 +196,7 @@ func (rmes *RoleManagerEventStore) RoleRemoveActions(ctx context.Context, sessio
 		roleID:          roleID,
 		actions:         actions,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return err
 	}
 	return nil
@@ -205,7 +212,7 @@ func (rmes *RoleManagerEventStore) RoleRemoveAllActions(ctx context.Context, ses
 		entityID:        entityID,
 		roleID:          roleID,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return err
 	}
 	return nil
@@ -223,7 +230,7 @@ func (rmes *RoleManagerEventStore) RoleAddMembers(ctx context.Context, session a
 		roleID:          roleID,
 		members:         members,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return mems, err
 	}
 	return mems, nil
@@ -242,7 +249,7 @@ func (rmes *RoleManagerEventStore) RoleListMembers(ctx context.Context, session 
 		limit:           limit,
 		offset:          offset,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return mp, err
 	}
 	return mp, nil
@@ -260,7 +267,7 @@ func (rmes *RoleManagerEventStore) RoleCheckMembersExists(ctx context.Context, s
 		roleID:          roleID,
 		members:         members,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return isAllExists, err
 	}
 	return isAllExists, nil
@@ -277,7 +284,7 @@ func (rmes *RoleManagerEventStore) RoleRemoveMembers(ctx context.Context, sessio
 		roleID:          roleID,
 		members:         members,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return err
 	}
 	return nil
@@ -293,7 +300,7 @@ func (rmes *RoleManagerEventStore) RoleRemoveAllMembers(ctx context.Context, ses
 		entityID:        entityID,
 		roleID:          roleID,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return err
 	}
 	return nil
@@ -311,7 +318,7 @@ func (rmes *RoleManagerEventStore) ListEntityMembers(ctx context.Context, sessio
 		limit:           pageQuery.Limit,
 		offset:          pageQuery.Offset,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return mems, err
 	}
 	return mems, nil
@@ -327,7 +334,7 @@ func (rmes *RoleManagerEventStore) RemoveEntityMembers(ctx context.Context, sess
 		entityID:        entityID,
 		members:         members,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return err
 	}
 	return nil
@@ -342,7 +349,7 @@ func (rmes *RoleManagerEventStore) RemoveMemberFromAllRoles(ctx context.Context,
 		operationPrefix: rmes.operationPrefix,
 		memberID:        memberID,
 	}
-	if err := rmes.Publish(ctx, e); err != nil {
+	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return err
 	}
 	return nil

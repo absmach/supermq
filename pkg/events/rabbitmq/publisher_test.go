@@ -50,10 +50,10 @@ func (te testEvent) Encode() (map[string]interface{}, error) {
 }
 
 func TestPublish(t *testing.T) {
-	_, err := rabbitmq.NewPublisher(context.Background(), "http://invaliurl.com", stream)
+	_, err := rabbitmq.NewPublisher(context.Background(), "http://invaliurl.com")
 	assert.NotNilf(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err), err)
 
-	publisher, err := rabbitmq.NewPublisher(context.Background(), rabbitmqURL, stream)
+	publisher, err := rabbitmq.NewPublisher(context.Background(), rabbitmqURL)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 	defer publisher.Close()
 
@@ -133,7 +133,7 @@ func TestPublish(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			event := testEvent{Data: tc.event}
 
-			err := publisher.Publish(context.Background(), event)
+			err := publisher.Publish(context.Background(), stream, event)
 			switch tc.err {
 			case nil:
 				receivedEvent := <-eventsChan
@@ -245,7 +245,7 @@ func TestPubsub(t *testing.T) {
 }
 
 func TestUnavailablePublish(t *testing.T) {
-	publisher, err := rabbitmq.NewPublisher(context.Background(), rabbitmqURL, stream)
+	publisher, err := rabbitmq.NewPublisher(context.Background(), rabbitmqURL)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
 	subcriber, err := rabbitmq.NewSubscriber(rabbitmqURL, logger)
@@ -301,7 +301,7 @@ func generateRandomEvent() testEvent {
 func spawnGoroutines(publisher events.Publisher, t *testing.T) {
 	for i := 0; i < numEvents; i++ {
 		go func() {
-			err := publisher.Publish(context.Background(), generateRandomEvent())
+			err := publisher.Publish(context.Background(), stream, generateRandomEvent())
 			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 		}()
 	}

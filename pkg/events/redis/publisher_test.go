@@ -42,10 +42,10 @@ func TestPublish(t *testing.T) {
 	err := redisClient.FlushAll(context.Background()).Err()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on flushing redis: %s", err))
 
-	_, err = redis.NewPublisher(context.Background(), "http://invaliurl.com", stream, events.UnpublishedEventsCheckInterval)
+	_, err = redis.NewPublisher(context.Background(), "http://invaliurl.com", events.UnpublishedEventsCheckInterval)
 	assert.NotNilf(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err), err)
 
-	publisher, err := redis.NewPublisher(context.Background(), redisURL, stream, events.UnpublishedEventsCheckInterval)
+	publisher, err := redis.NewPublisher(context.Background(), redisURL, events.UnpublishedEventsCheckInterval)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 	defer publisher.Close()
 
@@ -125,7 +125,7 @@ func TestPublish(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			event := testEvent{Data: tc.event}
 
-			err := publisher.Publish(context.Background(), event)
+			err := publisher.Publish(context.Background(), stream, event)
 			switch tc.err {
 			case nil:
 				receivedEvent := <-eventsChan
@@ -241,7 +241,7 @@ func TestPubsub(t *testing.T) {
 }
 
 func TestUnavailablePublish(t *testing.T) {
-	publisher, err := redis.NewPublisher(context.Background(), redisURL, stream, time.Second)
+	publisher, err := redis.NewPublisher(context.Background(), redisURL, time.Second)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
 	subcriber, err := redis.NewSubscriber(redisURL, logger)
@@ -296,7 +296,7 @@ func generateRandomEvent() testEvent {
 func spawnGoroutines(publisher events.Publisher, t *testing.T) {
 	for i := 0; i < numEvents; i++ {
 		go func() {
-			err := publisher.Publish(context.Background(), generateRandomEvent())
+			err := publisher.Publish(context.Background(), stream, generateRandomEvent())
 			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 		}()
 	}

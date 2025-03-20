@@ -13,23 +13,21 @@ import (
 )
 
 const (
-	domainPrefix         = "domain."
-	domainCreate         = domainPrefix + "create"
-	domainRetrieve       = domainPrefix + "retrieve"
-	domainRetrieveStatus = domainPrefix + "retrieve_status"
-	domainUpdate         = domainPrefix + "update"
-	domainEnable         = domainPrefix + "enable"
-	domainDisable        = domainPrefix + "disable"
-	domainFreeze         = domainPrefix + "freeze"
-	domainList           = domainPrefix + "list"
-	domainUserDelete     = domainPrefix + "user_delete"
-	invitationPrefix     = "invitation."
-	invitationSend       = invitationPrefix + "send"
-	invitationAccept     = invitationPrefix + "accept"
-	invitationReject     = invitationPrefix + "reject"
-	invitationList       = invitationPrefix + "list"
-	invitationRetrieve   = invitationPrefix + "retrieve"
-	invitationDelete     = invitationPrefix + "delete"
+	domainPrefix       = "domain."
+	domainCreate       = domainPrefix + "create"
+	domainRetrieve     = domainPrefix + "retrieve"
+	domainUpdate       = domainPrefix + "update"
+	domainEnable       = domainPrefix + "enable"
+	domainDisable      = domainPrefix + "disable"
+	domainFreeze       = domainPrefix + "freeze"
+	domainList         = domainPrefix + "list"
+	invitationPrefix   = "invitation."
+	invitationSend     = invitationPrefix + "send"
+	invitationAccept   = invitationPrefix + "accept"
+	invitationReject   = invitationPrefix + "reject"
+	invitationList     = invitationPrefix + "list"
+	invitationRetrieve = invitationPrefix + "retrieve"
+	invitationDelete   = invitationPrefix + "delete"
 )
 
 var (
