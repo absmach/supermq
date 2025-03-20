@@ -60,7 +60,6 @@ var (
 	channelRegExp    = regexp.MustCompile(`^\/?([\w\-]+)/ch/([\w\-]+)/msg(/[^?]*)?(\?.*)?$`)
 )
 
-
 // Event implements events.Event interface.
 type handler struct {
 	publisher messaging.Publisher
@@ -229,14 +228,12 @@ func (h *handler) Disconnect(ctx context.Context) error {
 func (h *handler) authAccess(ctx context.Context, clientID, topic string, msgType connections.ConnType) error {
 	// Topics are in the format:
 	// <domain_id>/ch/<channel_id>/msg/<subtopic>/.../ct/<content_type>
-	
 	if !channelRegExp.MatchString(topic) {
 		return ErrMalformedTopic
 	}
 
 	channelParts := channelRegExp.FindStringSubmatch(topic)
-	if len(channelParts) < 2 {
-		fmt.Println("Error thrown here 1")
+	if len(channelParts) < 3 {
 		return ErrMalformedTopic
 	}
 

@@ -232,7 +232,7 @@ func (h *handler) authAccess(ctx context.Context, token, topic string, msgType c
 	}
 
 	channelParts := channelRegExp.FindStringSubmatch(topic)
-	if len(channelParts) < 2 {
+	if len(channelParts) < 3 {
 		return "", "", errMalformedTopic
 	}
 

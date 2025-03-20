@@ -16,7 +16,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-var channelPartRegExp = regexp.MustCompile(`^/([\w\-]+)/ch/([\w\-]+)/msg(/[^?]*)?(\?.*)?$`)
+var channelPartRegExp = regexp.MustCompile(`^\/?([\w\-]+)/ch/([\w\-]+)/msg(/[^?]*)?(\?.*)?$`)
 
 func handshake(ctx context.Context, svc ws.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
