@@ -37,7 +37,7 @@ func (lm *loggingMiddleware) Subscribe(ctx context.Context, clientKey, domainID,
 		}
 		if err != nil {
 			args = append(args, slog.Any("error", err))
-			lm.logger.Warn("Subscibe failed", args...)
+			lm.logger.Warn("Subscribe failed", args...)
 			return
 		}
 		lm.logger.Info("Subscribe completed successfully", args...)

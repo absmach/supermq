@@ -36,7 +36,8 @@ var (
 // Service specifies web socket service API.
 type Service interface {
 	// Subscribe subscribes message from the broker using the clientKey for authorization,
-	// and the channelID for subscription. Subtopic is optional.
+	// the channelID for subscription and domainID specifies the domain for authorization.
+	// Subtopic is optional.
 	// If the subscription is successful, nil is returned otherwise error is returned.
 	Subscribe(ctx context.Context, clientKey, domainID, chanID, subtopic string, client *Client) error
 }
@@ -59,7 +60,7 @@ func New(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.Cha
 }
 
 func (svc *adapterService) Subscribe(ctx context.Context, clientKey, domainID, chanID, subtopic string, c *Client) error {
-	if chanID == "" || clientKey == "" {
+	if chanID == "" || clientKey == "" || domainID == "" {
 		return svcerr.ErrAuthentication
 	}
 

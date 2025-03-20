@@ -29,7 +29,7 @@ type Service interface {
 	// Key is used to authorize publisher.
 	Publish(ctx context.Context, key string, msg *messaging.Message) error
 
-	// Subscribes to channel with specified id, subtopic and adds subscription to
+	// Subscribes to channel with specified id, domainID, subtopic and adds subscription to
 	// service map of subscriptions under given ID.
 	Subscribe(ctx context.Context, key, domainID, chanID, subtopic string, c Client) error
 
