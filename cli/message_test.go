@@ -36,6 +36,7 @@ func TestSendMesageCmd(t *testing.T) {
 			args: []string{
 				channel.ID,
 				message,
+				domainID,
 				client.Credentials.Secret,
 			},
 			logType: okLog,
@@ -46,6 +47,7 @@ func TestSendMesageCmd(t *testing.T) {
 				channel.ID,
 				message,
 				client.Credentials.Secret,
+				domainID,
 				extraArg,
 			},
 			logType: usageLog,
@@ -55,6 +57,7 @@ func TestSendMesageCmd(t *testing.T) {
 			args: []string{
 				channel.ID,
 				message,
+				domainID,
 				"invalid_secret",
 			},
 			sdkErr:        errors.NewSDKErrorWithStatus(errors.Wrap(svcerr.ErrAuthentication, errors.Wrap(svcerr.ErrAuthorization, svcerr.ErrNotFound)), http.StatusBadRequest),
@@ -65,7 +68,7 @@ func TestSendMesageCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("SendMessage", tc.args[0], tc.args[1], tc.args[2]).Return(tc.sdkErr)
+			sdkCall := sdkMock.On("SendMessage", tc.args[0], tc.args[1], tc.args[2], tc.args[3]).Return(tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{sendCmd}, tc.args...)...)
 
 			switch tc.logType {
