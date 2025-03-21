@@ -31,6 +31,7 @@ import (
 	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
+	pkgDomains "github.com/absmach/supermq/pkg/domains"
 	dconsumer "github.com/absmach/supermq/pkg/domains/events/consumer"
 	domainsAuthz "github.com/absmach/supermq/pkg/domains/grpcclient"
 	gconsumer "github.com/absmach/supermq/pkg/groups/events/consumer"
@@ -225,7 +226,7 @@ func main() {
 	defer groupsHandler.Close()
 	logger.Info("Groups gRPC client successfully connected to groups gRPC server " + groupsHandler.Secure())
 
-	svc, psvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cfg, tracer, clientsClient, groupsClient, logger)
+	svc, psvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cfg, tracer, clientsClient, groupsClient, domAuthz, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
 		exitCode = 1
@@ -298,7 +299,7 @@ func main() {
 
 func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz smqauthz.Authorization,
 	pe policies.Evaluator, ps policies.Service, cfg config, tracer trace.Tracer, clientsClient grpcClientsV1.ClientsServiceClient,
-	groupsClient grpcGroupsV1.GroupsServiceClient, logger *slog.Logger,
+	groupsClient grpcGroupsV1.GroupsServiceClient, da pkgDomains.Authorization, logger *slog.Logger,
 ) (channels.Service, pChannels.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	repo := postgres.NewRepository(database)
@@ -335,7 +336,7 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 	}
 	svc = middleware.LoggingMiddleware(svc, logger)
 
-	psvc := pChannels.New(repo, pe, ps)
+	psvc := pChannels.New(repo, pe, ps, da)
 	return svc, psvc, err
 }
 
