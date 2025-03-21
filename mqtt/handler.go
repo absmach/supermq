@@ -57,7 +57,7 @@ var (
 
 var (
 	errInvalidUserId = errors.New("invalid user id")
-	channelRegExp    = regexp.MustCompile(`^\/?([\w\-]+)/ch/([\w\-]+)/msg(/[^?]*)?(\?.*)?$`)
+	channelRegExp    = regexp.MustCompile(`^\/?([\w\-]+)/ch\/([\w\-]+)\/msg(\/[^?]*)?(\?.*)?$`)
 )
 
 // Event implements events.Event interface.

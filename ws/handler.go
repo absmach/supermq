@@ -50,7 +50,7 @@ var (
 	errFailedPublishToMsgBroker = errors.New("failed to publish to supermq message broker")
 )
 
-var channelRegExp = regexp.MustCompile(`^\/?([\w\-]+)/ch/([\w\-]+)/msg(/[^?]*)?(\?.*)?$`)
+var channelRegExp = regexp.MustCompile(`^\/?([\w\-]+)/ch\/([\w\-]+)\/msg(\/[^?]*)?(\?.*)?$`)
 
 // Event implements events.Event interface.
 type handler struct {
