@@ -53,8 +53,9 @@ func (client tokenGrpcClient) Issue(ctx context.Context, req *grpcTokenV1.IssueR
 	defer cancel()
 
 	res, err := client.issue(ctx, issueReq{
-		userID:  req.GetUserId(),
-		keyType: auth.KeyType(req.GetType()),
+		userID:   req.GetUserId(),
+		userRole: auth.Role(req.GetUserRole()),
+		keyType:  auth.KeyType(req.GetType()),
 	})
 	if err != nil {
 		return &grpcTokenV1.Token{}, grpcapi.DecodeError(err)
@@ -65,8 +66,9 @@ func (client tokenGrpcClient) Issue(ctx context.Context, req *grpcTokenV1.IssueR
 func encodeIssueRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(issueReq)
 	return &grpcTokenV1.IssueReq{
-		UserId: req.userID,
-		Type:   uint32(req.keyType),
+		UserId:   req.userID,
+		UserRole: uint32(req.userRole),
+		Type:     uint32(req.keyType),
 	}, nil
 }
 

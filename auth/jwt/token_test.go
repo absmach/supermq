@@ -20,11 +20,10 @@ import (
 )
 
 const (
-	tokenType   = "type"
-	userField   = "user"
-	domainField = "domain"
-	issuerName  = "supermq.auth"
-	secret      = "test"
+	tokenType  = "type"
+	roleField  = "role"
+	issuerName = "supermq.auth"
+	secret     = "test"
 )
 
 var (
@@ -39,10 +38,7 @@ func newToken(issuerName string, key auth.Key) string {
 		IssuedAt(key.IssuedAt).
 		Claim(tokenType, "r").
 		Expiration(key.ExpiresAt)
-	builder.Claim(userField, key.User)
-	if key.Domain != "" {
-		builder.Claim(domainField, key.Domain)
-	}
+	builder.Claim(roleField, key.Role)
 	if key.Subject != "" {
 		builder.Subject(key.Subject)
 	}
@@ -73,8 +69,6 @@ func TestIssue(t *testing.T) {
 				ID:        testsutil.GenerateUUID(t),
 				Type:      auth.AccessKey,
 				Subject:   testsutil.GenerateUUID(t),
-				User:      testsutil.GenerateUUID(t),
-				Domain:    testsutil.GenerateUUID(t),
 				IssuedAt:  time.Now().Add(-10 * time.Second).Round(time.Second),
 				ExpiresAt: time.Now().Add(10 * time.Minute).Round(time.Second),
 			},
@@ -86,8 +80,6 @@ func TestIssue(t *testing.T) {
 				ID:       testsutil.GenerateUUID(t),
 				Type:     auth.AccessKey,
 				Subject:  testsutil.GenerateUUID(t),
-				User:     testsutil.GenerateUUID(t),
-				Domain:   "",
 				IssuedAt: time.Now().Add(-10 * time.Second).Round(time.Second),
 			},
 			err: nil,
@@ -98,8 +90,6 @@ func TestIssue(t *testing.T) {
 				ID:       testsutil.GenerateUUID(t),
 				Type:     auth.AccessKey,
 				Subject:  "",
-				User:     testsutil.GenerateUUID(t),
-				Domain:   testsutil.GenerateUUID(t),
 				IssuedAt: time.Now().Add(-10 * time.Second).Round(time.Second),
 			},
 			err: nil,
@@ -110,8 +100,6 @@ func TestIssue(t *testing.T) {
 				ID:       testsutil.GenerateUUID(t),
 				Type:     auth.KeyType(auth.InvitationKey + 1),
 				Subject:  testsutil.GenerateUUID(t),
-				User:     testsutil.GenerateUUID(t),
-				Domain:   testsutil.GenerateUUID(t),
 				IssuedAt: time.Now().Add(-10 * time.Second).Round(time.Second),
 			},
 			err: nil,
@@ -122,8 +110,6 @@ func TestIssue(t *testing.T) {
 				ID:        testsutil.GenerateUUID(t),
 				Type:      auth.AccessKey,
 				Subject:   "",
-				User:      testsutil.GenerateUUID(t),
-				Domain:    "",
 				IssuedAt:  time.Now().Add(-10 * time.Second).Round(time.Second),
 				ExpiresAt: time.Now().Add(10 * time.Minute).Round(time.Second),
 			},
@@ -158,11 +144,6 @@ func TestParse(t *testing.T) {
 	expToken, err := tokenizer.Issue(expKey)
 	require.Nil(t, err, fmt.Sprintf("issuing expired key expected to succeed: %s", err))
 
-	emptyDomainKey := key()
-	emptyDomainKey.Domain = ""
-	emptyDomainToken, err := tokenizer.Issue(emptyDomainKey)
-	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
-
 	emptySubjectKey := key()
 	emptySubjectKey.Subject = ""
 	emptySubjectToken, err := tokenizer.Issue(emptySubjectKey)
@@ -174,9 +155,7 @@ func TestParse(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
 
 	emptyKey := key()
-	emptyKey.Domain = ""
 	emptyKey.Subject = ""
-	emptyToken, err := tokenizer.Issue(emptyKey)
 	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
 
 	inValidToken := newToken("invalid", key())
@@ -224,12 +203,6 @@ func TestParse(t *testing.T) {
 			err:   authjwt.ErrJSONHandle,
 		},
 		{
-			desc:  "parse token with empty domain",
-			key:   emptyDomainKey,
-			token: emptyDomainToken,
-			err:   nil,
-		},
-		{
 			desc:  "parse token with empty subject",
 			key:   emptySubjectKey,
 			token: emptySubjectToken,
@@ -240,12 +213,6 @@ func TestParse(t *testing.T) {
 			key:   emptyTypeKey,
 			token: emptyTypeToken,
 			err:   errors.ErrAuthentication,
-		},
-		{
-			desc:  "parse token with empty domain and subject",
-			key:   emptyKey,
-			token: emptyToken,
-			err:   nil,
 		},
 	}
 
@@ -266,6 +233,7 @@ func key() auth.Key {
 		ID:        "66af4a67-3823-438a-abd7-efdb613eaef6",
 		Type:      auth.AccessKey,
 		Issuer:    "supermq.auth",
+		Role:      auth.UserRole,
 		Subject:   "66af4a67-3823-438a-abd7-efdb613eaef6",
 		IssuedAt:  time.Now().UTC().Add(-10 * time.Second).Round(time.Second),
 		ExpiresAt: exp,

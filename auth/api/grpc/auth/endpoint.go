@@ -23,7 +23,7 @@ func authenticateEndpoint(svc auth.Service) endpoint.Endpoint {
 			return authenticateRes{}, err
 		}
 
-		return authenticateRes{id: key.Subject, userID: key.User, domainID: key.Domain}, nil
+		return authenticateRes{userID: key.Subject, userRole: key.Role}, nil
 	}
 }
 

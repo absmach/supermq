@@ -37,6 +37,12 @@ const (
 	invalidDuration = 7 * 24 * time.Hour
 )
 
+var (
+	krepo      *mocks.KeyRepository
+	pEvaluator *policymocks.Evaluator
+	callback   *mocks.CallBack
+)
+
 type issueRequest struct {
 	Duration time.Duration `json:"duration,omitempty"`
 	Type     uint32        `json:"type,omitempty"`
@@ -67,18 +73,18 @@ func (tr testRequest) make() (*http.Response, error) {
 	return tr.client.Do(req)
 }
 
-func newService() (auth.Service, *mocks.KeyRepository) {
-	krepo := new(mocks.KeyRepository)
+func newService() auth.Service {
+	krepo = new(mocks.KeyRepository)
 	pRepo := new(mocks.PATSRepository)
 	cache := new(mocks.Cache)
 	hash := new(mocks.Hasher)
 	idProvider := uuid.NewMock()
 	pService := new(policymocks.Service)
-	pEvaluator := new(policymocks.Evaluator)
+	pEvaluator = new(policymocks.Evaluator)
 	t := jwt.New([]byte(secret))
-	callback := new(mocks.CallBack)
+	callback = new(mocks.CallBack)
 
-	return auth.New(krepo, pRepo, cache, hash, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration, callback), krepo
+	return auth.New(krepo, pRepo, cache, hash, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration, callback)
 }
 
 func newServer(svc auth.Service) *httptest.Server {
@@ -95,9 +101,13 @@ func toJSON(data interface{}) string {
 }
 
 func TestIssue(t *testing.T) {
-	svc, krepo := newService()
-	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, IssuedAt: time.Now(), Subject: id})
+	svc := newService()
+	policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
+	callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
+	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Role: auth.UserRole, IssuedAt: time.Now(), Subject: id})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
+	policyCall.Unset()
+	callBackCall.Unset()
 
 	ts := newServer(svc)
 	defer ts.Close()
@@ -196,16 +206,22 @@ func TestIssue(t *testing.T) {
 			body:        strings.NewReader(tc.req),
 		}
 		repocall := krepo.On("Save", mock.Anything, mock.Anything).Return("", nil)
+		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
+		callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 		repocall.Unset()
+		policyCall.Unset()
+		callBackCall.Unset()
 	}
 }
 
 func TestRetrieve(t *testing.T) {
-	svc, krepo := newService()
-	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, IssuedAt: time.Now(), Subject: id})
+	svc := newService()
+	policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
+	callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
+	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Role: auth.UserRole, IssuedAt: time.Now(), Subject: id})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	key := auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), Subject: id}
 
@@ -213,6 +229,8 @@ func TestRetrieve(t *testing.T) {
 	k, err := svc.Issue(context.Background(), token.AccessToken, key)
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	repocall.Unset()
+	policyCall.Unset()
+	callBackCall.Unset()
 
 	ts := newServer(svc)
 	defer ts.Close()
@@ -269,17 +287,23 @@ func TestRetrieve(t *testing.T) {
 			url:    fmt.Sprintf("%s/keys/%s", ts.URL, tc.id),
 			token:  tc.token,
 		}
+		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
+		callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 		repocall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(tc.key, tc.err)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 		repocall.Unset()
+		policyCall.Unset()
+		callBackCall.Unset()
 	}
 }
 
 func TestRevoke(t *testing.T) {
-	svc, krepo := newService()
-	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, IssuedAt: time.Now(), Subject: id})
+	svc := newService()
+	policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
+	callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
+	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Role: auth.UserRole, IssuedAt: time.Now(), Subject: id})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	key := auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), Subject: id}
 
@@ -287,6 +311,8 @@ func TestRevoke(t *testing.T) {
 	k, err := svc.Issue(context.Background(), token.AccessToken, key)
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	repocall.Unset()
+	policyCall.Unset()
+	callBackCall.Unset()
 
 	ts := newServer(svc)
 	defer ts.Close()
