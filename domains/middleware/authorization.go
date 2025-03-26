@@ -22,7 +22,10 @@ import (
 var _ domains.Service = (*authorizationMiddleware)(nil)
 
 // ErrMemberExist indicates that the user is already a member of the domain.
-var ErrMemberExist = errors.New("user is already a member of the domain")
+var (
+	ErrMemberExist    = errors.New("user is already a member of the domain")
+	ErrPermissionFail = errors.New("billing permission failed")
+)
 
 type authorizationMiddleware struct {
 	svc   domains.Service
@@ -151,8 +154,8 @@ func (am *authorizationMiddleware) SendInvitation(ctx context.Context, session a
 		return err
 	}
 
-	if err := am.billingPermissionCheck(ctx, invitation.DomainID, domainUserId, policies.SendInvitationPermission); err != nil {
-		return err
+	if err := am.extAuthorize(ctx, auth.EncodeDomainUserID(invitation.DomainID, session.UserID), policies.SendInvitationPermission, policies.DomainType, invitation.DomainID); err != nil {
+		return errors.Wrap(svcerr.ErrAuthorization, ErrPermissionFail)
 	}
 
 	return am.svc.SendInvitation(ctx, session, invitation)
@@ -259,22 +262,6 @@ func (am *authorizationMiddleware) extAuthorize(ctx context.Context, subj, perm,
 		Permission:  perm,
 		ObjectType:  objType,
 		Object:      obj,
-	}
-	if err := am.authz.Authorize(ctx, req); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (am *authorizationMiddleware) billingPermissionCheck(ctx context.Context, domainID, subj, perm string) error {
-	req := authz.PolicyReq{
-		SubjectType: policies.UserType,
-		SubjectKind: policies.UsersKind,
-		Subject:     subj,
-		Permission:  perm,
-		ObjectType:  policies.DomainType,
-		Object:      domainID,
 	}
 	if err := am.authz.Authorize(ctx, req); err != nil {
 		return err
