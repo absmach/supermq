@@ -22,10 +22,7 @@ import (
 var _ domains.Service = (*authorizationMiddleware)(nil)
 
 // ErrMemberExist indicates that the user is already a member of the domain.
-var (
-	ErrMemberExist    = errors.New("user is already a member of the domain")
-	ErrPermissionFail = errors.New("billing permission failed")
-)
+var ErrMemberExist = errors.New("user is already a member of the domain")
 
 type authorizationMiddleware struct {
 	svc   domains.Service
@@ -155,7 +152,7 @@ func (am *authorizationMiddleware) SendInvitation(ctx context.Context, session a
 	}
 
 	if err := am.extAuthorize(ctx, auth.EncodeDomainUserID(invitation.DomainID, session.UserID), policies.SendInvitationPermission, policies.DomainType, invitation.DomainID); err != nil {
-		return errors.Wrap(svcerr.ErrAuthorization, ErrPermissionFail)
+		return errors.Wrap(err, svcerr.ErrAuthorization)
 	}
 
 	return am.svc.SendInvitation(ctx, session, invitation)
