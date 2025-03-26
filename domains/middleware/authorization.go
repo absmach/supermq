@@ -151,6 +151,10 @@ func (am *authorizationMiddleware) SendInvitation(ctx context.Context, session a
 		return err
 	}
 
+	if err := am.billingPermissionCheck(ctx, invitation.DomainID, domainUserId, policies.SendInvitationPermission); err != nil {
+		return err
+	}
+
 	return am.svc.SendInvitation(ctx, session, invitation)
 }
 
@@ -255,6 +259,22 @@ func (am *authorizationMiddleware) extAuthorize(ctx context.Context, subj, perm,
 		Permission:  perm,
 		ObjectType:  objType,
 		Object:      obj,
+	}
+	if err := am.authz.Authorize(ctx, req); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (am *authorizationMiddleware) billingPermissionCheck(ctx context.Context, domainID, subj, perm string) error {
+	req := authz.PolicyReq{
+		SubjectType: policies.UserType,
+		SubjectKind: policies.UsersKind,
+		Subject:     subj,
+		Permission:  perm,
+		ObjectType:  policies.DomainType,
+		Object:      domainID,
 	}
 	if err := am.authz.Authorize(ctx, req); err != nil {
 		return err
