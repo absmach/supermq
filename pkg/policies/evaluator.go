@@ -44,15 +44,16 @@ const (
 )
 
 const (
-	AdminPermission      = "admin"
-	DeletePermission     = "delete"
-	EditPermission       = "edit"
-	ViewPermission       = "view"
-	MembershipPermission = "membership"
-	SharePermission      = "share"
-	PublishPermission    = "publish"
-	SubscribePermission  = "subscribe"
-	CreatePermission     = "create"
+	AdminPermission          = "admin"
+	DeletePermission         = "delete"
+	EditPermission           = "edit"
+	ViewPermission           = "view"
+	MembershipPermission     = "membership"
+	SharePermission          = "share"
+	PublishPermission        = "publish"
+	SubscribePermission      = "subscribe"
+	CreatePermission         = "create"
+	SendInvitationPermission = "send_invitation"
 )
 
 const SuperMQObject = "supermq"
