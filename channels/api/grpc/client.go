@@ -76,11 +76,11 @@ func (client grpcClient) Authorize(ctx context.Context, req *grpcChannelsV1.Auth
 	defer cancel()
 
 	res, err := client.authorize(ctx, authorizeReq{
-		domainID:   req.GetDomainId(),
-		clientID:   req.GetClientId(),
-		clientType: req.GetClientType(),
-		channelID:  req.GetChannelId(),
-		connType:   connections.ConnType(req.GetType()),
+		domainID:     req.GetDomainId(),
+		clientID:     req.GetClientId(),
+		clientType:   req.GetClientType(),
+		channelTopic: req.GetChannelTopic(),
+		connType:     connections.ConnType(req.GetType()),
 	})
 	if err != nil {
 		return &grpcChannelsV1.AuthzRes{}, decodeError(err)
@@ -95,11 +95,11 @@ func encodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}
 	req := grpcReq.(authorizeReq)
 
 	return &grpcChannelsV1.AuthzReq{
-		DomainId:   req.domainID,
-		ClientId:   req.clientID,
-		ClientType: req.clientType,
-		ChannelId:  req.channelID,
-		Type:       uint32(req.connType),
+		DomainId:     req.domainID,
+		ClientId:     req.clientID,
+		ClientType:   req.clientType,
+		ChannelTopic: req.channelTopic,
+		Type:         uint32(req.connType),
 	}, nil
 }
 

@@ -122,6 +122,7 @@ func (lm *loggingMiddleware) UpdateChannel(ctx context.Context, session authn.Se
 			slog.Group("channel",
 				slog.String("id", client.ID),
 				slog.String("name", client.Name),
+				slog.String("topic", client.Topic),
 				slog.Any("metadata", client.Metadata),
 			),
 		}

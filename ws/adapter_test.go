@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	chanID     = "1"
+	chanTopic  = "1"
 	invalidID  = "invalidID"
 	invalidKey = "invalidKey"
 	id         = "1"
@@ -35,14 +35,16 @@ const (
 )
 
 var (
-	msg = messaging.Message{
-		Channel:   chanID,
+	domainID = testsutil.GenerateUUID(&testing.T{})
+	clientID = testsutil.GenerateUUID(&testing.T{})
+	msg      = messaging.Message{
+		Channel:   chanTopic,
+		Domain:    domainID,
 		Publisher: id,
 		Subtopic:  "",
 		Protocol:  protocol,
 		Payload:   []byte(`[{"n":"current","t":-5,"v":1.2}]`),
 	}
-	clientID = testsutil.GenerateUUID(&testing.T{})
 )
 
 func newService() (ws.Service, *mocks.PubSub, *climocks.ClientsServiceClient, *chmocks.ChannelsServiceClient) {
@@ -61,7 +63,8 @@ func TestSubscribe(t *testing.T) {
 	cases := []struct {
 		desc      string
 		clientKey string
-		chanID    string
+		chanTopic string
+		domainID  string
 		subtopic  string
 		authNRes  *grpcClientsV1.AuthnRes
 		authNErr  error
@@ -71,18 +74,20 @@ func TestSubscribe(t *testing.T) {
 		err       error
 	}{
 		{
-			desc:      "subscribe to channel with valid clientKey, chanID, subtopic",
+			desc:      "subscribe to channel with valid clientKey, chanTopic, subtopic",
 			clientKey: clientKey,
-			chanID:    chanID,
+			chanTopic: chanTopic,
+			domainID:  domainID,
 			subtopic:  subTopic,
 			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
 			err:       nil,
 		},
 		{
-			desc:      "subscribe again to channel with valid clientKey, chanID, subtopic",
+			desc:      "subscribe again to channel with valid clientKey, chanTopic, subtopic",
 			clientKey: clientKey,
-			chanID:    chanID,
+			chanTopic: chanTopic,
+			domainID:  domainID,
 			subtopic:  subTopic,
 			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
@@ -91,7 +96,8 @@ func TestSubscribe(t *testing.T) {
 		{
 			desc:      "subscribe to channel with subscribe set to fail",
 			clientKey: clientKey,
-			chanID:    chanID,
+			chanTopic: chanTopic,
+			domainID:  domainID,
 			subtopic:  subTopic,
 			subErr:    ws.ErrFailedSubscription,
 			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
@@ -101,7 +107,8 @@ func TestSubscribe(t *testing.T) {
 		{
 			desc:      "subscribe to channel with invalid clientKey",
 			clientKey: invalidKey,
-			chanID:    invalidID,
+			chanTopic: invalidID,
+			domainID:  domainID,
 			subtopic:  subTopic,
 			authNRes:  &grpcClientsV1.AuthnRes{Authenticated: false},
 			authNErr:  svcerr.ErrAuthentication,
@@ -110,28 +117,32 @@ func TestSubscribe(t *testing.T) {
 		{
 			desc:      "subscribe to channel with empty channel",
 			clientKey: clientKey,
-			chanID:    "",
+			chanTopic: "",
+			domainID:  domainID,
 			subtopic:  subTopic,
 			err:       svcerr.ErrAuthentication,
 		},
 		{
 			desc:      "subscribe to channel with empty clientKey",
 			clientKey: "",
-			chanID:    chanID,
+			chanTopic: chanTopic,
+			domainID:  domainID,
 			subtopic:  subTopic,
 			err:       svcerr.ErrAuthentication,
 		},
 		{
 			desc:      "subscribe to channel with empty clientKey and empty channel",
 			clientKey: "",
-			chanID:    "",
+			chanTopic: "",
+			domainID:  domainID,
 			subtopic:  subTopic,
 			err:       svcerr.ErrAuthentication,
 		},
 		{
 			desc:      "subscribe to channel with invalid channel",
 			clientKey: clientKey,
-			chanID:    invalidID,
+			chanTopic: invalidID,
+			domainID:  domainID,
 			subtopic:  subTopic,
 			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: false},
@@ -141,7 +152,8 @@ func TestSubscribe(t *testing.T) {
 		{
 			desc:      "subscribe to channel with failed authentication",
 			clientKey: clientKey,
-			chanID:    chanID,
+			chanTopic: chanTopic,
+			domainID:  domainID,
 			subtopic:  subTopic,
 			authNRes:  &grpcClientsV1.AuthnRes{Authenticated: false},
 			err:       svcerr.ErrAuthorization,
@@ -149,16 +161,18 @@ func TestSubscribe(t *testing.T) {
 		{
 			desc:      "subscribe to channel with failed authorization",
 			clientKey: clientKey,
-			chanID:    chanID,
+			chanTopic: chanTopic,
+			domainID:  domainID,
 			subtopic:  subTopic,
 			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: false},
 			err:       svcerr.ErrAuthorization,
 		},
 		{
-			desc:      "subscribe to channel with valid clientKey prefixed with 'client_', chanID, subtopic",
+			desc:      "subscribe to channel with valid clientKey prefixed with 'client_', chanTopic, subtopic",
 			clientKey: "Client " + clientKey,
-			chanID:    chanID,
+			chanTopic: chanTopic,
+			domainID:  domainID,
 			subtopic:  subTopic,
 			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
@@ -169,7 +183,7 @@ func TestSubscribe(t *testing.T) {
 	for _, tc := range cases {
 		subConfig := messaging.SubscriberConfig{
 			ID:       clientID,
-			Topic:    "channels." + tc.chanID + "." + subTopic,
+			Topic:    "channels." + tc.chanTopic + "." + subTopic,
 			ClientID: clientID,
 			Handler:  c,
 		}
@@ -179,13 +193,14 @@ func TestSubscribe(t *testing.T) {
 		}
 		clientsCall := clients.On("Authenticate", mock.Anything, authReq).Return(tc.authNRes, tc.authNErr)
 		channelsCall := channels.On("Authorize", mock.Anything, &grpcChannelsV1.AuthzReq{
-			ClientType: policies.ClientType,
-			ClientId:   tc.authNRes.GetId(),
-			Type:       uint32(connections.Subscribe),
-			ChannelId:  tc.chanID,
+			ClientType:   policies.ClientType,
+			ClientId:     tc.authNRes.GetId(),
+			Type:         uint32(connections.Subscribe),
+			ChannelTopic: tc.chanTopic,
+			DomainId:     tc.domainID,
 		}).Return(tc.authZRes, tc.authZErr)
 		repocall := pubsub.On("Subscribe", mock.Anything, subConfig).Return(tc.subErr)
-		err := svc.Subscribe(context.Background(), tc.clientKey, tc.chanID, tc.subtopic, c)
+		err := svc.Subscribe(context.Background(), tc.clientKey, tc.domainID, tc.chanTopic, tc.subtopic, c)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		repocall.Unset()
 		clientsCall.Unset()

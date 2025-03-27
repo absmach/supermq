@@ -41,6 +41,26 @@ func TestCreateChannelReqValidation(t *testing.T) {
 			err: apiutil.ErrNameSize,
 		},
 		{
+			desc: "valid request with topic",
+			req: createChannelReq{
+				Channel: channels.Channel{
+					Name:  valid,
+					Topic: valid,
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "invalid topic",
+			req: createChannelReq{
+				Channel: channels.Channel{
+					Name:  valid,
+					Topic: "__invalid",
+				},
+			},
+			err: apiutil.ErrInvalidTopicFormat,
+		},
+		{
 			desc: "missing channel ID",
 			req: createChannelReq{
 				Channel: channels.Channel{

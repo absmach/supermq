@@ -65,6 +65,9 @@ func (svc service) CreateChannels(ctx context.Context, session authn.Session, ch
 			}
 			c.ID = clientID
 		}
+		if c.Topic == "" {
+			c.Topic = c.ID
+		}
 
 		if c.Status != DisabledStatus && c.Status != EnabledStatus {
 			return []Channel{}, []roles.RoleProvision{}, svcerr.ErrInvalidStatus
@@ -119,6 +122,7 @@ func (svc service) UpdateChannel(ctx context.Context, session authn.Session, ch 
 	channel := Channel{
 		ID:        ch.ID,
 		Name:      ch.Name,
+		Topic:     ch.Topic,
 		Metadata:  ch.Metadata,
 		UpdatedAt: time.Now(),
 		UpdatedBy: session.UserID,

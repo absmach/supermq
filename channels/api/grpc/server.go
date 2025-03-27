@@ -71,11 +71,11 @@ func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}
 		return nil, err
 	}
 	return authorizeReq{
-		domainID:   req.GetDomainId(),
-		clientID:   req.GetClientId(),
-		clientType: req.GetClientType(),
-		channelID:  req.GetChannelId(),
-		connType:   connType,
+		domainID:     req.GetDomainId(),
+		clientID:     req.GetClientId(),
+		clientType:   req.GetClientType(),
+		channelTopic: req.GetChannelTopic(),
+		connType:     connType,
 	}, nil
 }
 

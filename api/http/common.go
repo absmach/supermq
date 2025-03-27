@@ -92,6 +92,7 @@ const (
 
 var (
 	nameRegExp        = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{34}[a-z0-9]$`)
+	topicRegExp       = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]{0,35}$`)
 	errUnreadableName = errors.New("name containing double underscores or double dashes not allowed")
 )
 
@@ -113,6 +114,18 @@ func ValidateName(id string) error {
 	// Names containing double underscores or double dashes are invalid due to similarity concerns.
 	if strings.Contains(id, "__") || strings.Contains(id, "--") {
 		return errors.Wrap(apiutil.ErrInvalidNameFormat, errUnreadableName)
+	}
+
+	return nil
+}
+
+func ValidateTopic(topic string) error {
+	if !topicRegExp.MatchString(topic) {
+		return apiutil.ErrInvalidTopicFormat
+	}
+
+	if strings.Contains(topic, "__") || strings.Contains(topic, "--") {
+		return errors.Wrap(apiutil.ErrInvalidTopicFormat, errUnreadableName)
 	}
 
 	return nil
@@ -218,7 +231,8 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, apiutil.ErrMissingPolicyEntityType),
 		errors.Contains(err, apiutil.ErrMissingRoleMembers),
 		errors.Contains(err, apiutil.ErrMissingDescription),
-		errors.Contains(err, apiutil.ErrMissingEntityID):
+		errors.Contains(err, apiutil.ErrMissingEntityID),
+		errors.Contains(err, apiutil.ErrInvalidTopicFormat):
 		err = unwrap(err)
 		w.WriteHeader(http.StatusBadRequest)
 

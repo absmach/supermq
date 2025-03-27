@@ -50,7 +50,7 @@ var (
 	errFailedPublishToMsgBroker = errors.New("failed to publish to supermq message broker")
 )
 
-var channelRegExp = regexp.MustCompile(`^\/?ch\/([\w\-]+)\/msg(\/[^?]*)?(\?.*)?$`)
+var channelRegExp = regexp.MustCompile(`^\/?([\w\-]+)/ch\/([\w\-]+)\/msg(\/[^?]*)?(\?.*)?$`)
 
 // Event implements events.Event interface.
 type handler struct {
@@ -139,14 +139,15 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 	}
 
 	// Topics are in the format:
-	// ch/<channel_id>/msg/<subtopic>/.../ct/<content_type>
+	// <domain_id>/ch/<channel_topic>/msg/<subtopic>/.../ct/<content_type>
 	channelParts := channelRegExp.FindStringSubmatch(*topic)
-	if len(channelParts) < 2 {
+	if len(channelParts) < 3 {
 		return errors.Wrap(errFailedPublish, errMalformedTopic)
 	}
 
-	chanID := channelParts[1]
-	subtopic := channelParts[2]
+	domainID := channelParts[1]
+	chanTopic := channelParts[2]
+	subtopic := channelParts[3]
 
 	subtopic, err := parseSubtopic(subtopic)
 	if err != nil {
@@ -160,7 +161,8 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 
 	msg := messaging.Message{
 		Protocol: protocol,
-		Channel:  chanID,
+		Domain:   domainID,
+		Channel:  chanTopic,
 		Subtopic: subtopic,
 		Payload:  *payload,
 		Created:  time.Now().UnixNano(),
@@ -224,23 +226,25 @@ func (h *handler) authAccess(ctx context.Context, token, topic string, msgType c
 	clientID := authnRes.GetId()
 
 	// Topics are in the format:
-	// ch/<channel_id>/msg/<subtopic>/.../ct/<content_type>
+	// <domain_id>/ch/<channel_topic>/msg/<subtopic>/.../ct/<content_type>
 	if !channelRegExp.MatchString(topic) {
 		return "", "", errMalformedTopic
 	}
 
 	channelParts := channelRegExp.FindStringSubmatch(topic)
-	if len(channelParts) < 1 {
+	if len(channelParts) < 3 {
 		return "", "", errMalformedTopic
 	}
 
-	chanID := channelParts[1]
+	domainID := channelParts[1]
+	chanTopic := channelParts[2]
 
 	ar := &grpcChannelsV1.AuthzReq{
-		Type:       uint32(msgType),
-		ClientId:   clientID,
-		ClientType: clientType,
-		ChannelId:  chanID,
+		Type:         uint32(msgType),
+		ClientId:     clientID,
+		ClientType:   clientType,
+		ChannelTopic: chanTopic,
+		DomainId:     domainID,
 	}
 	res, err := h.channels.Authorize(ctx, ar)
 	if err != nil {

@@ -5691,17 +5691,17 @@ func (_c *SDK_SendInvitation_Call) RunAndReturn(run func(sdk.Invitation, string)
 	return _c
 }
 
-// SendMessage provides a mock function with given fields: chanID, msg, key
-func (_m *SDK) SendMessage(chanID string, msg string, key string) errors.SDKError {
-	ret := _m.Called(chanID, msg, key)
+// SendMessage provides a mock function with given fields: chanID, msg, domainID, key
+func (_m *SDK) SendMessage(chanID string, msg string, domainID string, key string) errors.SDKError {
+	ret := _m.Called(chanID, msg, domainID, key)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SendMessage")
 	}
 
 	var r0 errors.SDKError
-	if rf, ok := ret.Get(0).(func(string, string, string) errors.SDKError); ok {
-		r0 = rf(chanID, msg, key)
+	if rf, ok := ret.Get(0).(func(string, string, string, string) errors.SDKError); ok {
+		r0 = rf(chanID, msg, domainID, key)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.SDKError)
@@ -5719,14 +5719,15 @@ type SDK_SendMessage_Call struct {
 // SendMessage is a helper method to define mock.On call
 //   - chanID string
 //   - msg string
+//   - domainID string
 //   - key string
-func (_e *SDK_Expecter) SendMessage(chanID interface{}, msg interface{}, key interface{}) *SDK_SendMessage_Call {
-	return &SDK_SendMessage_Call{Call: _e.mock.On("SendMessage", chanID, msg, key)}
+func (_e *SDK_Expecter) SendMessage(chanID interface{}, msg interface{}, domainID interface{}, key interface{}) *SDK_SendMessage_Call {
+	return &SDK_SendMessage_Call{Call: _e.mock.On("SendMessage", chanID, msg, domainID, key)}
 }
 
-func (_c *SDK_SendMessage_Call) Run(run func(chanID string, msg string, key string)) *SDK_SendMessage_Call {
+func (_c *SDK_SendMessage_Call) Run(run func(chanID string, msg string, domainID string, key string)) *SDK_SendMessage_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -5736,7 +5737,7 @@ func (_c *SDK_SendMessage_Call) Return(_a0 errors.SDKError) *SDK_SendMessage_Cal
 	return _c
 }
 
-func (_c *SDK_SendMessage_Call) RunAndReturn(run func(string, string, string) errors.SDKError) *SDK_SendMessage_Call {
+func (_c *SDK_SendMessage_Call) RunAndReturn(run func(string, string, string, string) errors.SDKError) *SDK_SendMessage_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -29,6 +29,7 @@ var (
 		Domain:          testsutil.GenerateUUID(&testing.T{}),
 		ParentGroup:     testsutil.GenerateUUID(&testing.T{}),
 		Name:            namegen.Generate(),
+		Topic:           testsutil.GenerateUUID(&testing.T{}),
 		Tags:            []string{"tag1", "tag2"},
 		Metadata:        map[string]interface{}{"key": "value"},
 		CreatedAt:       time.Now().UTC().Truncate(time.Microsecond),
@@ -158,6 +159,7 @@ func TestUpdate(t *testing.T) {
 			channel: channels.Channel{
 				ID:        validChannel.ID,
 				Name:      namegen.Generate(),
+				Topic:     testsutil.GenerateUUID(t),
 				Metadata:  map[string]interface{}{"key": "value"},
 				UpdatedAt: validTimestamp,
 				UpdatedBy: testsutil.GenerateUUID(t),
@@ -170,6 +172,17 @@ func TestUpdate(t *testing.T) {
 			channel: channels.Channel{
 				ID:        validChannel.ID,
 				Name:      namegen.Generate(),
+				UpdatedAt: validTimestamp,
+				UpdatedBy: testsutil.GenerateUUID(t),
+			},
+			err: nil,
+		},
+		{
+			desc:   "update channel topic",
+			update: "topic",
+			channel: channels.Channel{
+				ID:        validChannel.ID,
+				Topic:     testsutil.GenerateUUID(t),
 				UpdatedAt: validTimestamp,
 				UpdatedBy: testsutil.GenerateUUID(t),
 			},
@@ -222,9 +235,12 @@ func TestUpdate(t *testing.T) {
 				switch tc.update {
 				case "all":
 					assert.Equal(t, tc.channel.Name, channel.Name, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.channel.Name, channel.Name))
+					assert.Equal(t, tc.channel.Topic, channel.Topic, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.channel.Topic, channel.Topic))
 					assert.Equal(t, tc.channel.Metadata, channel.Metadata, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.channel.Metadata, channel.Metadata))
 				case "name":
 					assert.Equal(t, tc.channel.Name, channel.Name, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.channel.Name, channel.Name))
+				case "topic":
+					assert.Equal(t, tc.channel.Topic, channel.Topic, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.channel.Topic, channel.Topic))
 				case "metadata":
 					assert.Equal(t, tc.channel.Metadata, channel.Metadata, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.channel.Metadata, channel.Metadata))
 				}
@@ -305,6 +321,7 @@ func TestChangeStatus(t *testing.T) {
 	disabledChannel := validChannel
 	disabledChannel.ID = testsutil.GenerateUUID(t)
 	disabledChannel.Name = namegen.Generate()
+	disabledChannel.Topic = testsutil.GenerateUUID(t)
 	disabledChannel.Status = channels.DisabledStatus
 
 	_, err := repo.Save(context.Background(), validChannel, disabledChannel)
@@ -417,6 +434,69 @@ func TestRetrieveByID(t *testing.T) {
 	}
 }
 
+func TestRetrieveByTopic(t *testing.T) {
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM channels")
+		require.Nil(t, err, fmt.Sprintf("clean channels unexpected error: %s", err))
+	})
+
+	repo := postgres.NewRepository(database)
+
+	_, err := repo.Save(context.Background(), validChannel)
+	require.Nil(t, err, fmt.Sprintf("save channel unexpected error: %s", err))
+
+	cases := []struct {
+		desc     string
+		topic    string
+		domainID string
+		resp     channels.Channel
+		err      error
+	}{
+		{
+			desc:     "retrieve channel by topic successfully",
+			topic:    validChannel.Topic,
+			domainID: validChannel.Domain,
+			resp:     validChannel,
+			err:      nil,
+		},
+		{
+			desc:     "retrieve channel by id with invalid topic",
+			topic:    "invalid-topic",
+			domainID: validChannel.Domain,
+			err:      repoerr.ErrNotFound,
+		},
+		{
+			desc:     "retrieve channel by id with empty topic",
+			topic:    "",
+			domainID: validChannel.Domain,
+			err:      repoerr.ErrNotFound,
+		},
+		{
+			desc:     "retrieve channel by id with invalid domain",
+			topic:    validChannel.Topic,
+			domainID: "invalid-domain",
+			err:      repoerr.ErrNotFound,
+		},
+		{
+			desc:     "retrieve channel by id with empty domain",
+			topic:    validChannel.Topic,
+			domainID: "",
+			err:      repoerr.ErrNotFound,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			channel, err := repo.RetrieveByTopic(context.Background(), tc.topic, tc.domainID)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+			if err == nil {
+				assert.Nil(t, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+				assert.Equal(t, tc.resp, channel, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.resp, channel))
+			}
+		})
+	}
+}
+
 func TestRetrieveAll(t *testing.T) {
 	t.Cleanup(func() {
 		_, err := db.Exec("DELETE FROM channels")
@@ -435,6 +515,7 @@ func TestRetrieveAll(t *testing.T) {
 			Domain:          testsutil.GenerateUUID(t),
 			ParentGroup:     parentID,
 			Name:            name,
+			Topic:           testsutil.GenerateUUID(t),
 			Metadata:        map[string]interface{}{"name": name},
 			CreatedAt:       time.Now().UTC().Truncate(time.Microsecond),
 			Status:          channels.EnabledStatus,

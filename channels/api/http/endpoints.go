@@ -146,6 +146,7 @@ func updateChannelEndpoint(svc channels.Service) endpoint.Endpoint {
 		ch := channels.Channel{
 			ID:       req.id,
 			Name:     req.Name,
+			Topic:    req.Topic,
 			Metadata: req.Metadata,
 		}
 		ch, err := svc.UpdateChannel(ctx, session, ch)
