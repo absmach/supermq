@@ -50,10 +50,10 @@ func (te testEvent) Encode() (map[string]interface{}, error) {
 }
 
 func TestPublish(t *testing.T) {
-	_, err := nats.NewPublisher(context.Background(), "http://invaliurl.com", stream)
+	_, err := nats.NewPublisher(context.Background(), "http://invaliurl.com")
 	assert.NotNilf(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err), err)
 
-	publisher, err := nats.NewPublisher(context.Background(), natsURL, stream)
+	publisher, err := nats.NewPublisher(context.Background(), natsURL)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 	defer publisher.Close()
 
@@ -133,7 +133,7 @@ func TestPublish(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			event := testEvent{Data: tc.event}
 
-			err := publisher.Publish(context.Background(), event)
+			err := publisher.Publish(context.Background(), stream, event)
 			switch tc.err {
 			case nil:
 				receivedEvent := <-eventsChan
@@ -244,7 +244,7 @@ func TestPubsub(t *testing.T) {
 }
 
 func TestUnavailablePublish(t *testing.T) {
-	publisher, err := nats.NewPublisher(context.Background(), natsURL, stream)
+	publisher, err := nats.NewPublisher(context.Background(), natsURL)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on creating event store: %s", err))
 
 	subcriber, err := nats.NewSubscriber(context.Background(), natsURL, logger)
@@ -300,7 +300,7 @@ func generateRandomEvent() testEvent {
 func spawnGoroutines(publisher events.Publisher, t *testing.T) {
 	for i := 0; i < numEvents; i++ {
 		go func() {
-			err := publisher.Publish(context.Background(), generateRandomEvent())
+			err := publisher.Publish(context.Background(), stream, generateRandomEvent())
 			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 		}()
 	}

@@ -16,12 +16,16 @@ const (
 	clientPrefix       = "client."
 	clientCreate       = clientPrefix + "create"
 	clientUpdate       = clientPrefix + "update"
-	clientChangeStatus = clientPrefix + "change_status"
+	clientUpdateTags   = clientPrefix + "update_tags"
+	clientUpdateSecret = clientPrefix + "update_secret"
+	clientEnable       = clientPrefix + "enable"
+	clientDisable      = clientPrefix + "disable"
 	clientRemove       = clientPrefix + "remove"
 	clientView         = clientPrefix + "view"
 	clientViewPerms    = clientPrefix + "view_perms"
 	clientList         = clientPrefix + "list"
 	clientListByGroup  = clientPrefix + "list_by_channel"
+	clientListByUser   = clientPrefix + "list_by_user"
 	clientIdentify     = clientPrefix + "identify"
 	clientAuthorize    = clientPrefix + "authorize"
 	clientSetParent    = clientPrefix + "set_parent"
@@ -31,7 +35,7 @@ const (
 var (
 	_ events.Event = (*createClientEvent)(nil)
 	_ events.Event = (*updateClientEvent)(nil)
-	_ events.Event = (*changeStatusClientEvent)(nil)
+	_ events.Event = (*changeClientStatusEvent)(nil)
 	_ events.Event = (*viewClientEvent)(nil)
 	_ events.Event = (*viewClientPermsEvent)(nil)
 	_ events.Event = (*listClientEvent)(nil)
@@ -88,7 +92,7 @@ type updateClientEvent struct {
 
 func (uce updateClientEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
-		"operation":   clientUpdate,
+		"operation":   uce.operation,
 		"updated_at":  uce.UpdatedAt,
 		"updated_by":  uce.UpdatedBy,
 		"domain":      uce.DomainID,
@@ -97,10 +101,6 @@ func (uce updateClientEvent) Encode() (map[string]interface{}, error) {
 		"super_admin": uce.SuperAdmin,
 		"request_id":  uce.requestID,
 	}
-	if uce.operation != "" {
-		val["operation"] = clientUpdate + "_" + uce.operation
-	}
-
 	if uce.ID != "" {
 		val["id"] = uce.ID
 	}
@@ -126,8 +126,9 @@ func (uce updateClientEvent) Encode() (map[string]interface{}, error) {
 	return val, nil
 }
 
-type changeStatusClientEvent struct {
+type changeClientStatusEvent struct {
 	id        string
+	operation string
 	status    string
 	updatedAt time.Time
 	updatedBy string
@@ -135,18 +136,18 @@ type changeStatusClientEvent struct {
 	requestID string
 }
 
-func (rce changeStatusClientEvent) Encode() (map[string]interface{}, error) {
+func (cse changeClientStatusEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
-		"operation":   clientChangeStatus,
-		"id":          rce.id,
-		"status":      rce.status,
-		"updated_at":  rce.updatedAt,
-		"updated_by":  rce.updatedBy,
-		"domain":      rce.DomainID,
-		"user_id":     rce.UserID,
-		"token_type":  rce.Type.String(),
-		"super_admin": rce.SuperAdmin,
-		"request_id":  rce.requestID,
+		"operation":   cse.operation,
+		"id":          cse.id,
+		"status":      cse.status,
+		"updated_at":  cse.updatedAt,
+		"updated_by":  cse.updatedBy,
+		"domain":      cse.DomainID,
+		"user_id":     cse.UserID,
+		"token_type":  cse.Type.String(),
+		"super_admin": cse.SuperAdmin,
+		"request_id":  cse.requestID,
 	}, nil
 }
 

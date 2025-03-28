@@ -15,7 +15,25 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-const streamID = "supermq.groups"
+const (
+	supermqPrefix           = "supermq."
+	createStream            = supermqPrefix + groupCreate
+	updateStream            = supermqPrefix + groupUpdate
+	enableStream            = supermqPrefix + groupEnable
+	disableStream           = supermqPrefix + groupDisable
+	viewStream              = supermqPrefix + groupView
+	listStream              = supermqPrefix + groupList
+	listUserGroupsStream    = supermqPrefix + groupListUserGroups
+	removeStream            = supermqPrefix + groupRemove
+	retrieveHierarchyStream = supermqPrefix + groupRetrieveGroupHierarchy
+	addParentStream         = supermqPrefix + groupAddParentGroup
+	removeParentStream      = supermqPrefix + groupRemoveParentGroup
+	viewParentStream        = supermqPrefix + groupViewParentGroup
+	addChildrenStream       = supermqPrefix + groupAddChildrenGroups
+	removeChildrenStream    = supermqPrefix + groupRemoveChildrenGroups
+	removeAllChildrenStream = supermqPrefix + groupRemoveAllChildrenGroups
+	listChildrenStream      = supermqPrefix + groupListChildrenGroups
+)
 
 var _ groups.Service = (*eventStore)(nil)
 
@@ -28,7 +46,7 @@ type eventStore struct {
 // NewEventStoreMiddleware returns wrapper around clients service that sends
 // events to event store.
 func New(ctx context.Context, svc groups.Service, url string) (groups.Service, error) {
-	publisher, err := store.NewPublisher(ctx, url, streamID)
+	publisher, err := store.NewPublisher(ctx, url)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +72,7 @@ func (es eventStore) CreateGroup(ctx context.Context, session authn.Session, gro
 		requestID:        middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, createStream, event); err != nil {
 		return group, rps, err
 	}
 
@@ -73,7 +91,7 @@ func (es eventStore) UpdateGroup(ctx context.Context, session authn.Session, gro
 		middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, updateStream, event); err != nil {
 		return group, err
 	}
 
@@ -91,7 +109,7 @@ func (es eventStore) ViewGroup(ctx context.Context, session authn.Session, id st
 		middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, viewStream, event); err != nil {
 		return group, err
 	}
 
@@ -112,7 +130,7 @@ func (es eventStore) ListGroups(ctx context.Context, session authn.Session, pm g
 		requestID:  middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, listStream, event); err != nil {
 		return gp, err
 	}
 
@@ -133,7 +151,7 @@ func (es eventStore) ListUserGroups(ctx context.Context, session authn.Session, 
 		requestID:  middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, listUserGroupsStream, event); err != nil {
 		return gp, err
 	}
 
@@ -146,7 +164,7 @@ func (es eventStore) EnableGroup(ctx context.Context, session authn.Session, id 
 		return group, err
 	}
 
-	return es.changeStatus(ctx, session, group)
+	return es.changeStatus(ctx, session, groupEnable, enableStream, group)
 }
 
 func (es eventStore) DisableGroup(ctx context.Context, session authn.Session, id string) (groups.Group, error) {
@@ -155,12 +173,13 @@ func (es eventStore) DisableGroup(ctx context.Context, session authn.Session, id
 		return group, err
 	}
 
-	return es.changeStatus(ctx, session, group)
+	return es.changeStatus(ctx, session, groupDisable, disableStream, group)
 }
 
-func (es eventStore) changeStatus(ctx context.Context, session authn.Session, group groups.Group) (groups.Group, error) {
-	event := changeStatusGroupEvent{
+func (es eventStore) changeStatus(ctx context.Context, session authn.Session, operation, stream string, group groups.Group) (groups.Group, error) {
+	event := changeGroupStatusEvent{
 		id:        group.ID,
+		operation: operation,
 		updatedAt: group.UpdatedAt,
 		updatedBy: group.UpdatedBy,
 		status:    group.Status.String(),
@@ -168,7 +187,7 @@ func (es eventStore) changeStatus(ctx context.Context, session authn.Session, gr
 		requestID: middleware.GetReqID(ctx),
 	}
 
-	if err := es.Publish(ctx, event); err != nil {
+	if err := es.Publish(ctx, stream, event); err != nil {
 		return group, err
 	}
 
@@ -179,7 +198,7 @@ func (es eventStore) DeleteGroup(ctx context.Context, session authn.Session, id 
 	if err := es.svc.DeleteGroup(ctx, session, id); err != nil {
 		return err
 	}
-	if err := es.Publish(ctx, deleteGroupEvent{
+	if err := es.Publish(ctx, removeStream, deleteGroupEvent{
 		id:        id,
 		Session:   session,
 		requestID: middleware.GetReqID(ctx),
@@ -194,7 +213,7 @@ func (es eventStore) RetrieveGroupHierarchy(ctx context.Context, session authn.S
 	if err != nil {
 		return g, err
 	}
-	if err := es.Publish(ctx, retrieveGroupHierarchyEvent{id: id, Session: session, HierarchyPageMeta: hm, requestID: middleware.GetReqID(ctx)}); err != nil {
+	if err := es.Publish(ctx, retrieveHierarchyStream, retrieveGroupHierarchyEvent{id: id, Session: session, HierarchyPageMeta: hm, requestID: middleware.GetReqID(ctx)}); err != nil {
 		return g, err
 	}
 	return g, nil
@@ -204,7 +223,7 @@ func (es eventStore) AddParentGroup(ctx context.Context, session authn.Session, 
 	if err := es.svc.AddParentGroup(ctx, session, id, parentID); err != nil {
 		return err
 	}
-	if err := es.Publish(ctx, addParentGroupEvent{id: id, parentID: parentID, Session: session, requestID: middleware.GetReqID(ctx)}); err != nil {
+	if err := es.Publish(ctx, addParentStream, addParentGroupEvent{id: id, parentID: parentID, Session: session, requestID: middleware.GetReqID(ctx)}); err != nil {
 		return err
 	}
 	return nil
@@ -214,7 +233,7 @@ func (es eventStore) RemoveParentGroup(ctx context.Context, session authn.Sessio
 	if err := es.svc.RemoveParentGroup(ctx, session, id); err != nil {
 		return err
 	}
-	if err := es.Publish(ctx, removeParentGroupEvent{id: id, Session: session, requestID: middleware.GetReqID(ctx)}); err != nil {
+	if err := es.Publish(ctx, removeParentStream, removeParentGroupEvent{id: id, Session: session, requestID: middleware.GetReqID(ctx)}); err != nil {
 		return err
 	}
 	return nil
@@ -224,7 +243,7 @@ func (es eventStore) AddChildrenGroups(ctx context.Context, session authn.Sessio
 	if err := es.svc.AddChildrenGroups(ctx, session, id, childrenGroupIDs); err != nil {
 		return err
 	}
-	if err := es.Publish(ctx, addChildrenGroupsEvent{id: id, Session: session, childrenIDs: childrenGroupIDs, requestID: middleware.GetReqID(ctx)}); err != nil {
+	if err := es.Publish(ctx, addChildrenStream, addChildrenGroupsEvent{id: id, Session: session, childrenIDs: childrenGroupIDs, requestID: middleware.GetReqID(ctx)}); err != nil {
 		return err
 	}
 	return nil
@@ -234,7 +253,7 @@ func (es eventStore) RemoveChildrenGroups(ctx context.Context, session authn.Ses
 	if err := es.svc.RemoveChildrenGroups(ctx, session, id, childrenGroupIDs); err != nil {
 		return err
 	}
-	if err := es.Publish(ctx, removeChildrenGroupsEvent{id: id, Session: session, childrenIDs: childrenGroupIDs, requestID: middleware.GetReqID(ctx)}); err != nil {
+	if err := es.Publish(ctx, removeChildrenStream, removeChildrenGroupsEvent{id: id, Session: session, childrenIDs: childrenGroupIDs, requestID: middleware.GetReqID(ctx)}); err != nil {
 		return err
 	}
 
@@ -245,7 +264,7 @@ func (es eventStore) RemoveAllChildrenGroups(ctx context.Context, session authn.
 	if err := es.svc.RemoveAllChildrenGroups(ctx, session, id); err != nil {
 		return err
 	}
-	if err := es.Publish(ctx, removeAllChildrenGroupsEvent{id: id, Session: session, requestID: middleware.GetReqID(ctx)}); err != nil {
+	if err := es.Publish(ctx, removeAllChildrenStream, removeAllChildrenGroupsEvent{id: id, Session: session, requestID: middleware.GetReqID(ctx)}); err != nil {
 		return err
 	}
 	return nil
@@ -256,7 +275,7 @@ func (es eventStore) ListChildrenGroups(ctx context.Context, session authn.Sessi
 	if err != nil {
 		return g, err
 	}
-	if err := es.Publish(ctx, listChildrenGroupsEvent{
+	if err := es.Publish(ctx, listChildrenStream, listChildrenGroupsEvent{
 		id:         id,
 		domainID:   session.DomainID,
 		startLevel: startLevel,

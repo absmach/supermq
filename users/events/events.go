@@ -15,7 +15,14 @@ const (
 	userPrefix               = "user."
 	userCreate               = userPrefix + "create"
 	userUpdate               = userPrefix + "update"
-	userRemove               = userPrefix + "remove"
+	userUpdateRole           = userPrefix + "update_role"
+	userUpdateTags           = userPrefix + "update_tags"
+	userUpdateSecret         = userPrefix + "update_secret"
+	userUpdateUsername       = userPrefix + "update_username"
+	userUpdateProfilePicture = userPrefix + "update_profile_picture"
+	userUpdateEmail          = userPrefix + "update_email"
+	userEnable               = userPrefix + "enable"
+	userDisable              = userPrefix + "disable"
 	userView                 = userPrefix + "view"
 	profileView              = userPrefix + "view_profile"
 	userList                 = userPrefix + "list"
@@ -30,8 +37,6 @@ const (
 	oauthCallback            = userPrefix + "oauth_callback"
 	addClientPolicy          = userPrefix + "add_policy"
 	deleteUser               = userPrefix + "delete"
-	userUpdateUsername       = userPrefix + "update_username"
-	userUpdateProfilePicture = userPrefix + "update_profile_picture"
 )
 
 var (
@@ -39,7 +44,7 @@ var (
 	_ events.Event = (*updateUserEvent)(nil)
 	_ events.Event = (*updateProfilePictureEvent)(nil)
 	_ events.Event = (*updateUsernameEvent)(nil)
-	_ events.Event = (*removeUserEvent)(nil)
+	_ events.Event = (*changeUserStatusEvent)(nil)
 	_ events.Event = (*viewUserEvent)(nil)
 	_ events.Event = (*viewProfileEvent)(nil)
 	_ events.Event = (*listUserEvent)(nil)
@@ -103,15 +108,12 @@ type updateUserEvent struct {
 
 func (uce updateUserEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
-		"operation":   userUpdate,
+		"operation":   uce.operation,
 		"updated_at":  uce.UpdatedAt,
 		"updated_by":  uce.UpdatedBy,
 		"token_type":  uce.Type.String(),
 		"super_admin": uce.SuperAdmin,
 		"request_id":  uce.requestID,
-	}
-	if uce.operation != "" {
-		val["operation"] = userUpdate + "_" + uce.operation
 	}
 
 	if uce.ID != "" {
@@ -203,8 +205,9 @@ func (uppe updateProfilePictureEvent) Encode() (map[string]interface{}, error) {
 	return val, nil
 }
 
-type removeUserEvent struct {
+type changeUserStatusEvent struct {
 	id        string
+	operation string
 	status    string
 	updatedAt time.Time
 	updatedBy string
@@ -212,9 +215,9 @@ type removeUserEvent struct {
 	requestID string
 }
 
-func (rce removeUserEvent) Encode() (map[string]interface{}, error) {
+func (rce changeUserStatusEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
-		"operation":   userRemove,
+		"operation":   rce.operation,
 		"id":          rce.id,
 		"status":      rce.status,
 		"updated_at":  rce.updatedAt,
