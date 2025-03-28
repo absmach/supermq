@@ -72,6 +72,7 @@ func TestCreateChannelEndpoint(t *testing.T) {
 		Metadata: map[string]interface{}{
 			"name": "test",
 		},
+		Route: valid,
 	}
 
 	cases := []struct {
@@ -141,6 +142,18 @@ func TestCreateChannelEndpoint(t *testing.T) {
 			err:         apiutil.ErrNameSize,
 		},
 		{
+			desc:     "create channel with invalid route format",
+			token:    validToken,
+			domainID: validID,
+			req: channels.Channel{
+				Name:  valid,
+				Route: "__invalid",
+			},
+			contentType: contentType,
+			status:      http.StatusBadRequest,
+			err:         apiutil.ErrInvalidRouteFormat,
+		},
+		{
 			desc:        "create channel with invalid content type",
 			token:       validToken,
 			domainID:    validID,
@@ -205,6 +218,7 @@ func TestCreateChannelsEndpoint(t *testing.T) {
 			Metadata: map[string]interface{}{
 				"name": "test",
 			},
+			Route: valid,
 		},
 	}
 
@@ -275,6 +289,20 @@ func TestCreateChannelsEndpoint(t *testing.T) {
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			err:         apiutil.ErrNameSize,
+		},
+		{
+			desc:     "create channels with invalid route format",
+			token:    validToken,
+			domainID: validID,
+			req: []channels.Channel{
+				{
+					Name:  valid,
+					Route: "__invalid",
+				},
+			},
+			contentType: contentType,
+			status:      http.StatusBadRequest,
+			err:         apiutil.ErrInvalidRouteFormat,
 		},
 		{
 			desc:        "create channels with invalid content type",
