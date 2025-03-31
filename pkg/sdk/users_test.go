@@ -4,6 +4,7 @@
 package sdk_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -259,7 +260,7 @@ func TestCreateUser(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			svcCall := svc.On("Register", mock.Anything, smqauthn.Session{}, tc.svcReq, true).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.CreateUser(tc.createSdkUserReq, tc.token)
+			resp, err := mgsdk.CreateUser(context.Background(), tc.createSdkUserReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -563,7 +564,7 @@ func TestListUsers(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("ListUsers", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.Users(tc.pageMeta, tc.token)
+			resp, err := mgsdk.Users(context.Background(), tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -694,7 +695,7 @@ func TestSearchUsers(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: domainID}, tc.authenticateErr)
 			svcCall := svc.On("SearchUsers", mock.Anything, mock.Anything).Return(tc.searchreturn, tc.err)
-			page, err := mgsdk.SearchUsers(tc.page, tc.token)
+			page, err := mgsdk.SearchUsers(context.Background(), tc.page, tc.token)
 			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %v, got %v", tc.desc, tc.err, err))
 			assert.Equal(t, tc.response, page.Users, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page.Users))
 			svcCall.Unset()
@@ -793,7 +794,7 @@ func TestViewUser(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("View", mock.Anything, tc.session, tc.userID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.User(tc.userID, tc.token)
+			resp, err := mgsdk.User(context.Background(), tc.userID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -872,7 +873,7 @@ func TestUserProfile(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("ViewProfile", mock.Anything, tc.session).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UserProfile(tc.token)
+			resp, err := mgsdk.UserProfile(context.Background(), tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1036,7 +1037,7 @@ func TestUpdateUser(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("Update", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateUser(tc.updateUserReq, tc.token)
+			resp, err := mgsdk.UpdateUser(context.Background(), tc.updateUserReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1194,7 +1195,7 @@ func TestUpdateUserTags(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("UpdateTags", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateUserTags(tc.updateUserReq, tc.token)
+			resp, err := mgsdk.UpdateUserTags(context.Background(), tc.updateUserReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1342,7 +1343,7 @@ func TestUpdateUserEmail(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("UpdateEmail", mock.Anything, tc.session, tc.updateUserReq.ID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateUserEmail(tc.updateUserReq, tc.token)
+			resp, err := mgsdk.UpdateUserEmail(context.Background(), tc.updateUserReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1407,7 +1408,7 @@ func TestResetPasswordRequest(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			svcCall := svc.On("GenerateResetToken", mock.Anything, tc.email, defHost).Return(tc.svcErr)
 			svcCall1 := svc.On("SendPasswordReset", mock.Anything, mock.Anything, tc.email, user.Credentials.Username, tc.issueRes.AccessToken).Return(nil)
-			err := mgsdk.ResetPasswordRequest(tc.email)
+			err := mgsdk.ResetPasswordRequest(context.Background(), tc.email)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "GenerateResetToken", mock.Anything, tc.email, defHost)
@@ -1509,7 +1510,7 @@ func TestResetPassword(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("ResetSecret", mock.Anything, tc.session, tc.newPassword).Return(tc.svcErr)
-			err := mgsdk.ResetPassword(tc.newPassword, tc.confPassword, tc.token)
+			err := mgsdk.ResetPassword(context.Background(), tc.newPassword, tc.confPassword, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "ResetSecret", mock.Anything, tc.session, tc.newPassword)
@@ -1640,7 +1641,7 @@ func TestUpdatePassword(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("UpdateSecret", mock.Anything, tc.session, tc.oldPassword, tc.newPassword).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdatePassword(tc.oldPassword, tc.newPassword, tc.token)
+			resp, err := mgsdk.UpdatePassword(context.Background(), tc.oldPassword, tc.newPassword, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1798,7 +1799,7 @@ func TestUpdateUserRole(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("UpdateRole", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateUserRole(tc.updateUserReq, tc.token)
+			resp, err := mgsdk.UpdateUserRole(context.Background(), tc.updateUserReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1962,7 +1963,7 @@ func TestUpdateUsername(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("UpdateUsername", mock.Anything, tc.session, tc.svcReq.ID, tc.svcReq.Credentials.Username).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateUsername(tc.updateUserReq, tc.token)
+			resp, err := mgsdk.UpdateUsername(context.Background(), tc.updateUserReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2124,7 +2125,7 @@ func TestUpdateProfilePicture(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("UpdateProfilePicture", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateProfilePicture(tc.updateUserReq, tc.token)
+			resp, err := mgsdk.UpdateProfilePicture(context.Background(), tc.updateUserReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2197,7 +2198,7 @@ func TestEnableUser(t *testing.T) {
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("Enable", mock.Anything, tc.session, tc.userID).Return(tc.svcRes, tc.svcErr)
 
-			resp, err := mgsdk.EnableUser(tc.userID, tc.token)
+			resp, err := mgsdk.EnableUser(context.Background(), tc.userID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2302,7 +2303,7 @@ func TestDisableUser(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("Disable", mock.Anything, tc.session, tc.userID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.DisableUser(tc.userID, tc.token)
+			resp, err := mgsdk.DisableUser(context.Background(), tc.userID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2376,7 +2377,7 @@ func TestDeleteUser(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("Delete", mock.Anything, tc.session, tc.userID).Return(tc.svcErr)
-			err := mgsdk.DeleteUser(tc.userID, tc.token)
+			err := mgsdk.DeleteUser(context.Background(), tc.userID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "Delete", mock.Anything, tc.session, tc.userID)

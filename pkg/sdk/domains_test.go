@@ -4,6 +4,7 @@
 package sdk_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -173,7 +174,7 @@ func TestCreateDomain(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("CreateDomain", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, []roles.RoleProvision{}, tc.svcErr)
-			resp, err := mgsdk.CreateDomain(tc.domain, tc.token)
+			resp, err := mgsdk.CreateDomain(context.Background(), tc.domain, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -321,7 +322,7 @@ func TestUpdateDomain(t *testing.T) {
 			}
 			authCall := authn.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("UpdateDomain", mock.Anything, tc.session, tc.domainID, mock.Anything).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateDomain(tc.domain, tc.token)
+			resp, err := mgsdk.UpdateDomain(context.Background(), tc.domain, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -453,9 +454,9 @@ func TestViewDomain(t *testing.T) {
 
 			switch tc.withRoles {
 			case true:
-				resp, err = mgsdkRoles.Domain(tc.domainID, tc.token)
+				resp, err = mgsdkRoles.Domain(context.Background(), tc.domainID, tc.token)
 			default:
-				resp, err = mgsdk.Domain(tc.domainID, tc.token)
+				resp, err = mgsdk.Domain(context.Background(), tc.domainID, tc.token)
 			}
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
@@ -600,7 +601,7 @@ func TestListDomians(t *testing.T) {
 			}
 			authCall := authn.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("ListDomains", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.Domains(tc.pageMeta, tc.token)
+			resp, err := mgsdk.Domains(context.Background(), tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -674,7 +675,7 @@ func TestEnableDomain(t *testing.T) {
 			}
 			authCall := authn.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("EnableDomain", mock.Anything, tc.session, tc.domainID).Return(tc.svcRes, tc.svcErr)
-			err := mgsdk.EnableDomain(tc.domainID, tc.token)
+			err := mgsdk.EnableDomain(context.Background(), tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "EnableDomain", mock.Anything, tc.session, tc.domainID)
@@ -747,7 +748,7 @@ func TestDisableDomain(t *testing.T) {
 			}
 			authCall := authn.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("DisableDomain", mock.Anything, tc.session, tc.domainID).Return(tc.svcRes, tc.svcErr)
-			err := mgsdk.DisableDomain(tc.domainID, tc.token)
+			err := mgsdk.DisableDomain(context.Background(), tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "DisableDomain", mock.Anything, tc.session, tc.domainID)
@@ -820,7 +821,7 @@ func TestFreezeDomain(t *testing.T) {
 			}
 			authCall := authn.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("FreezeDomain", mock.Anything, tc.session, tc.domainID).Return(tc.svcRes, tc.svcErr)
-			err := mgsdk.FreezeDomain(tc.domainID, tc.token)
+			err := mgsdk.FreezeDomain(context.Background(), tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "FreezeDomain", mock.Anything, tc.session, tc.domainID)
@@ -947,7 +948,7 @@ func TestCreateDomainRole(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("AddRole", mock.Anything, tc.session, tc.domainID, tc.roleReq.RoleName, tc.roleReq.OptionalActions, tc.roleReq.OptionalMembers).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.CreateDomainRole(tc.domainID, tc.roleReq, tc.token)
+			resp, err := mgsdk.CreateDomainRole(context.Background(), tc.domainID, tc.roleReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1072,7 +1073,7 @@ func TestListDomainRoles(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RetrieveAllRoles", mock.Anything, tc.session, tc.domainID, tc.pageMeta.Limit, tc.pageMeta.Offset).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.DomainRoles(tc.domainID, tc.pageMeta, tc.token)
+			resp, err := mgsdk.DomainRoles(context.Background(), tc.domainID, tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1181,7 +1182,7 @@ func TestViewClietRole(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RetrieveRole", mock.Anything, tc.session, tc.domainID, tc.roleID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.DomainRole(tc.domainID, tc.roleID, tc.token)
+			resp, err := mgsdk.DomainRole(context.Background(), tc.domainID, tc.roleID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1293,7 +1294,7 @@ func TestUpdateDomainRole(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("UpdateRoleName", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.newRoleName).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateDomainRole(tc.domainID, tc.roleID, tc.newRoleName, tc.token)
+			resp, err := mgsdk.UpdateDomainRole(context.Background(), tc.domainID, tc.roleID, tc.newRoleName, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1381,7 +1382,7 @@ func TestDeleteDomainRole(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RemoveRole", mock.Anything, tc.session, tc.domainID, tc.roleID).Return(tc.svcErr)
-			err := mgsdk.DeleteDomainRole(tc.domainID, tc.roleID, tc.token)
+			err := mgsdk.DeleteDomainRole(context.Background(), tc.domainID, tc.roleID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RemoveRole", mock.Anything, tc.session, tc.domainID, tc.roleID)
@@ -1496,7 +1497,7 @@ func TestAddDomainRoleActions(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleAddActions", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.actions).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.AddDomainRoleActions(tc.domainID, tc.roleID, tc.actions, tc.token)
+			resp, err := mgsdk.AddDomainRoleActions(context.Background(), tc.domainID, tc.roleID, tc.actions, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1598,7 +1599,7 @@ func TestListDomainRoleActions(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleListActions", mock.Anything, tc.session, tc.domainID, tc.roleID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.DomainRoleActions(tc.domainID, tc.roleID, tc.token)
+			resp, err := mgsdk.DomainRoleActions(context.Background(), tc.domainID, tc.roleID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1704,7 +1705,7 @@ func TestRemoveDomainRoleActions(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleRemoveActions", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.actions).Return(tc.svcErr)
-			err := mgsdk.RemoveDomainRoleActions(tc.domainID, tc.roleID, tc.actions, tc.token)
+			err := mgsdk.RemoveDomainRoleActions(context.Background(), tc.domainID, tc.roleID, tc.actions, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveActions", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.actions)
@@ -1800,7 +1801,7 @@ func TestRemoveAllDomainRoleActions(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleRemoveAllActions", mock.Anything, tc.session, tc.domainID, tc.roleID).Return(tc.svcErr)
-			err := mgsdk.RemoveAllDomainRoleActions(tc.domainID, tc.roleID, tc.token)
+			err := mgsdk.RemoveAllDomainRoleActions(context.Background(), tc.domainID, tc.roleID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveAllActions", mock.Anything, tc.session, tc.domainID, tc.roleID)
@@ -1915,7 +1916,7 @@ func TestAddDomainRoleMembers(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleAddMembers", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.members).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.AddDomainRoleMembers(tc.domainID, tc.roleID, tc.members, tc.token)
+			resp, err := mgsdk.AddDomainRoleMembers(context.Background(), tc.domainID, tc.roleID, tc.members, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2056,7 +2057,7 @@ func TestListDomainRoleMembers(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleListMembers", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.pageMeta.Limit, tc.pageMeta.Offset).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.DomainRoleMembers(tc.domainID, tc.roleID, tc.pageMeta, tc.token)
+			resp, err := mgsdk.DomainRoleMembers(context.Background(), tc.domainID, tc.roleID, tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2162,7 +2163,7 @@ func TestRemoveDomainRoleMembers(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleRemoveMembers", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.members).Return(tc.svcErr)
-			err := mgsdk.RemoveDomainRoleMembers(tc.domainID, tc.roleID, tc.members, tc.token)
+			err := mgsdk.RemoveDomainRoleMembers(context.Background(), tc.domainID, tc.roleID, tc.members, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveMembers", mock.Anything, tc.session, tc.domainID, tc.roleID, tc.members)
@@ -2258,7 +2259,7 @@ func TestRemoveAllDomainRoleMembers(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleRemoveAllMembers", mock.Anything, tc.session, tc.domainID, tc.roleID).Return(tc.svcErr)
-			err := mgsdk.RemoveAllDomainRoleMembers(tc.domainID, tc.roleID, tc.token)
+			err := mgsdk.RemoveAllDomainRoleMembers(context.Background(), tc.domainID, tc.roleID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveAllMembers", mock.Anything, tc.session, tc.domainID, tc.roleID)
@@ -2319,7 +2320,7 @@ func TestListAvailableDomainRoleActions(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("ListAvailableActions", mock.Anything, tc.session).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.AvailableDomainRoleActions(tc.token)
+			resp, err := mgsdk.AvailableDomainRoleActions(context.Background(), tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {

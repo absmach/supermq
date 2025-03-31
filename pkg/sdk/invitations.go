@@ -4,6 +4,7 @@
 package sdk
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -37,7 +38,7 @@ type InvitationPage struct {
 	Invitations []Invitation `json:"invitations"`
 }
 
-func (sdk mgSDK) SendInvitation(invitation Invitation, token string) (err error) {
+func (sdk mgSDK) SendInvitation(ctx context.Context, invitation Invitation, token string) (err error) {
 	data, err := json.Marshal(invitation)
 	if err != nil {
 		return errors.NewSDKError(err)
@@ -45,15 +46,15 @@ func (sdk mgSDK) SendInvitation(invitation Invitation, token string) (err error)
 
 	url := sdk.domainsURL + "/" + domainsEndpoint + "/" + invitation.DomainID + "/" + invitationsEndpoint
 
-	_, _, sdkerr := sdk.processRequest(http.MethodPost, url, token, data, nil, http.StatusCreated)
+	_, _, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusCreated)
 
 	return sdkerr
 }
 
-func (sdk mgSDK) Invitation(userID, domainID, token string) (invitation Invitation, err error) {
+func (sdk mgSDK) Invitation(ctx context.Context, userID, domainID, token string) (invitation Invitation, err error) {
 	url := sdk.domainsURL + "/" + domainsEndpoint + "/" + domainID + "/" + invitationsEndpoint + "/" + userID
 
-	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
 	if sdkerr != nil {
 		return Invitation{}, sdkerr
 	}
@@ -65,13 +66,13 @@ func (sdk mgSDK) Invitation(userID, domainID, token string) (invitation Invitati
 	return invitation, nil
 }
 
-func (sdk mgSDK) Invitations(pm PageMetadata, token string) (invitations InvitationPage, err error) {
+func (sdk mgSDK) Invitations(ctx context.Context, pm PageMetadata, token string) (invitations InvitationPage, err error) {
 	url, err := sdk.withQueryParams(sdk.domainsURL, invitationsEndpoint, pm)
 	if err != nil {
 		return InvitationPage{}, errors.NewSDKError(err)
 	}
 
-	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
 	if sdkerr != nil {
 		return InvitationPage{}, sdkerr
 	}
@@ -84,7 +85,7 @@ func (sdk mgSDK) Invitations(pm PageMetadata, token string) (invitations Invitat
 	return invPage, nil
 }
 
-func (sdk mgSDK) AcceptInvitation(domainID, token string) (err error) {
+func (sdk mgSDK) AcceptInvitation(ctx context.Context, domainID, token string) (err error) {
 	req := struct {
 		DomainID string `json:"domain_id"`
 	}{
@@ -97,12 +98,12 @@ func (sdk mgSDK) AcceptInvitation(domainID, token string) (err error) {
 
 	url := sdk.domainsURL + "/" + invitationsEndpoint + "/" + acceptEndpoint
 
-	_, _, sdkerr := sdk.processRequest(http.MethodPost, url, token, data, nil, http.StatusNoContent)
+	_, _, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusNoContent)
 
 	return sdkerr
 }
 
-func (sdk mgSDK) RejectInvitation(domainID, token string) (err error) {
+func (sdk mgSDK) RejectInvitation(ctx context.Context, domainID, token string) (err error) {
 	req := struct {
 		DomainID string `json:"domain_id"`
 	}{
@@ -115,15 +116,15 @@ func (sdk mgSDK) RejectInvitation(domainID, token string) (err error) {
 
 	url := sdk.domainsURL + "/" + invitationsEndpoint + "/" + rejectEndpoint
 
-	_, _, sdkerr := sdk.processRequest(http.MethodPost, url, token, data, nil, http.StatusNoContent)
+	_, _, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusNoContent)
 
 	return sdkerr
 }
 
-func (sdk mgSDK) DeleteInvitation(userID, domainID, token string) (err error) {
+func (sdk mgSDK) DeleteInvitation(ctx context.Context, userID, domainID, token string) (err error) {
 	url := sdk.domainsURL + "/" + domainsEndpoint + "/" + domainID + "/" + invitationsEndpoint + "/" + userID
 
-	_, _, sdkerr := sdk.processRequest(http.MethodDelete, url, token, nil, nil, http.StatusNoContent)
+	_, _, sdkerr := sdk.processRequest(ctx, http.MethodDelete, url, token, nil, nil, http.StatusNoContent)
 
 	return sdkerr
 }

@@ -5,6 +5,7 @@ package sdk
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -17,6 +18,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/pkg/errors"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"moul.io/http2curl"
 )
 
@@ -173,14 +175,14 @@ type SDK interface {
 	//  }
 	//  user, _ := sdk.CreateUser(user)
 	//  fmt.Println(user)
-	CreateUser(user User, token string) (User, errors.SDKError)
+	CreateUser(ctx context.Context, user User, token string) (User, errors.SDKError)
 
 	// User returns user object by id.
 	//
 	// example:
 	//  user, _ := sdk.User("userID", "token")
 	//  fmt.Println(user)
-	User(id, token string) (User, errors.SDKError)
+	User(ctx context.Context, id, token string) (User, errors.SDKError)
 
 	// Users returns list of users.
 	//
@@ -192,14 +194,14 @@ type SDK interface {
 	//	}
 	//	users, _ := sdk.Users(pm, "token")
 	//	fmt.Println(users)
-	Users(pm PageMetadata, token string) (UsersPage, errors.SDKError)
+	Users(ctx context.Context, pm PageMetadata, token string) (UsersPage, errors.SDKError)
 
 	// UserProfile returns user logged in.
 	//
 	// example:
 	//  user, _ := sdk.UserProfile("token")
 	//  fmt.Println(user)
-	UserProfile(token string) (User, errors.SDKError)
+	UserProfile(ctx context.Context, token string) (User, errors.SDKError)
 
 	// UpdateUser updates existing user.
 	//
@@ -213,7 +215,7 @@ type SDK interface {
 	//  }
 	//  user, _ := sdk.UpdateUser(user, "token")
 	//  fmt.Println(user)
-	UpdateUser(user User, token string) (User, errors.SDKError)
+	UpdateUser(ctx context.Context, user User, token string) (User, errors.SDKError)
 
 	// UpdateUserEmail updates the user's email
 	//
@@ -226,7 +228,7 @@ type SDK interface {
 	//  }
 	//  user, _ := sdk.UpdateUserEmail(user, "token")
 	//  fmt.Println(user)
-	UpdateUserEmail(user User, token string) (User, errors.SDKError)
+	UpdateUserEmail(ctx context.Context, user User, token string) (User, errors.SDKError)
 
 	// UpdateUserTags updates the user's tags.
 	//
@@ -237,7 +239,7 @@ type SDK interface {
 	//  }
 	//  user, _ := sdk.UpdateUserTags(user, "token")
 	//  fmt.Println(user)
-	UpdateUserTags(user User, token string) (User, errors.SDKError)
+	UpdateUserTags(ctx context.Context, user User, token string) (User, errors.SDKError)
 
 	// UpdateUsername updates the user's Username.
 	//
@@ -250,7 +252,7 @@ type SDK interface {
 	//  }
 	//  user, _ := sdk.UpdateUsername(user, "token")
 	//  fmt.Println(user)
-	UpdateUsername(user User, token string) (User, errors.SDKError)
+	UpdateUsername(ctx context.Context, user User, token string) (User, errors.SDKError)
 
 	// UpdateProfilePicture updates the user's profile picture.
 	//
@@ -261,7 +263,7 @@ type SDK interface {
 	//  }
 	//  user, _ := sdk.UpdateProfilePicture(user, "token")
 	//  fmt.Println(user)
-	UpdateProfilePicture(user User, token string) (User, errors.SDKError)
+	UpdateProfilePicture(ctx context.Context, user User, token string) (User, errors.SDKError)
 
 	// UpdateUserRole updates the user's role.
 	//
@@ -272,49 +274,49 @@ type SDK interface {
 	//  }
 	//  user, _ := sdk.UpdateUserRole(user, "token")
 	//  fmt.Println(user)
-	UpdateUserRole(user User, token string) (User, errors.SDKError)
+	UpdateUserRole(ctx context.Context, user User, token string) (User, errors.SDKError)
 
 	// ResetPasswordRequest sends a password request email to a user.
 	//
 	// example:
 	//  err := sdk.ResetPasswordRequest("example@email.com")
 	//  fmt.Println(err)
-	ResetPasswordRequest(email string) errors.SDKError
+	ResetPasswordRequest(ctx context.Context, email string) errors.SDKError
 
 	// ResetPassword changes a user's password to the one passed in the argument.
 	//
 	// example:
 	//  err := sdk.ResetPassword("password","password","token")
 	//  fmt.Println(err)
-	ResetPassword(password, confPass, token string) errors.SDKError
+	ResetPassword(ctx context.Context, password, confPass, token string) errors.SDKError
 
 	// UpdatePassword updates user password.
 	//
 	// example:
 	//  user, _ := sdk.UpdatePassword("oldPass", "newPass", "token")
 	//  fmt.Println(user)
-	UpdatePassword(oldPass, newPass, token string) (User, errors.SDKError)
+	UpdatePassword(ctx context.Context, oldPass, newPass, token string) (User, errors.SDKError)
 
 	// EnableUser changes the status of the user to enabled.
 	//
 	// example:
 	//  user, _ := sdk.EnableUser("userID", "token")
 	//  fmt.Println(user)
-	EnableUser(id, token string) (User, errors.SDKError)
+	EnableUser(ctx context.Context, id, token string) (User, errors.SDKError)
 
 	// DisableUser changes the status of the user to disabled.
 	//
 	// example:
 	//  user, _ := sdk.DisableUser("userID", "token")
 	//  fmt.Println(user)
-	DisableUser(id, token string) (User, errors.SDKError)
+	DisableUser(ctx context.Context, id, token string) (User, errors.SDKError)
 
 	// DeleteUser deletes a user with the given id.
 	//
 	// example:
 	//  err := sdk.DeleteUser("userID", "token")
 	//  fmt.Println(err)
-	DeleteUser(id, token string) errors.SDKError
+	DeleteUser(ctx context.Context, id, token string) errors.SDKError
 
 	// CreateToken receives credentials and returns user token.
 	//
@@ -325,14 +327,14 @@ type SDK interface {
 	//  }
 	//  token, _ := sdk.CreateToken(lt)
 	//  fmt.Println(token)
-	CreateToken(lt Login) (Token, errors.SDKError)
+	CreateToken(ctx context.Context, lt Login) (Token, errors.SDKError)
 
 	// RefreshToken receives credentials and returns user token.
 	//
 	// example:
 	//  token, _ := sdk.RefreshToken("refresh_token")
 	//  fmt.Println(token)
-	RefreshToken(token string) (Token, errors.SDKError)
+	RefreshToken(ctx context.Context, token string) (Token, errors.SDKError)
 
 	// SeachUsers filters users and returns a page result.
 	//
@@ -344,7 +346,7 @@ type SDK interface {
 	//  }
 	//  users, _ := sdk.SearchUsers(pm, "token")
 	//  fmt.Println(users)
-	SearchUsers(pm PageMetadata, token string) (UsersPage, errors.SDKError)
+	SearchUsers(ctx context.Context, pm PageMetadata, token string) (UsersPage, errors.SDKError)
 
 	// CreateClient registers new client and returns its id.
 	//
@@ -357,7 +359,7 @@ type SDK interface {
 	//  }
 	//  client, _ := sdk.CreateClient(client, "domainID", "token")
 	//  fmt.Println(client)
-	CreateClient(client Client, domainID, token string) (Client, errors.SDKError)
+	CreateClient(ctx context.Context, client Client, domainID, token string) (Client, errors.SDKError)
 
 	// CreateClients registers new clients and returns their ids.
 	//
@@ -378,7 +380,7 @@ type SDK interface {
 	//  }
 	//  clients, _ := sdk.CreateClients(clients, "domainID", "token")
 	//  fmt.Println(clients)
-	CreateClients(client []Client, domainID, token string) ([]Client, errors.SDKError)
+	CreateClients(ctx context.Context, client []Client, domainID, token string) ([]Client, errors.SDKError)
 
 	// Filters clients and returns a page result.
 	//
@@ -390,14 +392,14 @@ type SDK interface {
 	//  }
 	//  clients, _ := sdk.Clients(pm, "domainID", "token")
 	//  fmt.Println(clients)
-	Clients(pm PageMetadata, domainID, token string) (ClientsPage, errors.SDKError)
+	Clients(ctx context.Context, pm PageMetadata, domainID, token string) (ClientsPage, errors.SDKError)
 
 	// Client returns client object by id.
 	//
 	// example:
 	//  client, _ := sdk.Client("clientID", "domainID", "token")
 	//  fmt.Println(client)
-	Client(id, domainID, token string) (Client, errors.SDKError)
+	Client(ctx context.Context, id, domainID, token string) (Client, errors.SDKError)
 
 	// UpdateClient updates existing client.
 	//
@@ -411,7 +413,7 @@ type SDK interface {
 	//  }
 	//  client, _ := sdk.UpdateClient(client, "domainID", "token")
 	//  fmt.Println(client)
-	UpdateClient(client Client, domainID, token string) (Client, errors.SDKError)
+	UpdateClient(ctx context.Context, client Client, domainID, token string) (Client, errors.SDKError)
 
 	// UpdateClientTags updates the client's tags.
 	//
@@ -422,49 +424,49 @@ type SDK interface {
 	//  }
 	//  client, _ := sdk.UpdateClientTags(client, "domainID", "token")
 	//  fmt.Println(client)
-	UpdateClientTags(client Client, domainID, token string) (Client, errors.SDKError)
+	UpdateClientTags(ctx context.Context, client Client, domainID, token string) (Client, errors.SDKError)
 
 	// UpdateClientSecret updates the client's secret
 	//
 	// example:
 	//  client, err := sdk.UpdateClientSecret("clientID", "newSecret", "domainID," "token")
 	//  fmt.Println(client)
-	UpdateClientSecret(id, secret, domainID, token string) (Client, errors.SDKError)
+	UpdateClientSecret(ctx context.Context, id, secret, domainID, token string) (Client, errors.SDKError)
 
 	// EnableClient changes client status to enabled.
 	//
 	// example:
 	//  client, _ := sdk.EnableClient("clientID", "domainID", "token")
 	//  fmt.Println(client)
-	EnableClient(id, domainID, token string) (Client, errors.SDKError)
+	EnableClient(ctx context.Context, id, domainID, token string) (Client, errors.SDKError)
 
 	// DisableClient changes client status to disabled - soft delete.
 	//
 	// example:
 	//  client, _ := sdk.DisableClient("clientID", "domainID", "token")
 	//  fmt.Println(client)
-	DisableClient(id, domainID, token string) (Client, errors.SDKError)
+	DisableClient(ctx context.Context, id, domainID, token string) (Client, errors.SDKError)
 
 	// DeleteClient deletes a client with the given id.
 	//
 	// example:
 	//  err := sdk.DeleteClient("clientID", "domainID", "token")
 	//  fmt.Println(err)
-	DeleteClient(id, domainID, token string) errors.SDKError
+	DeleteClient(ctx context.Context, id, domainID, token string) errors.SDKError
 
 	// SetClientParent sets the parent group of a client.
 	//
 	// example:
 	//  err := sdk.SetClientParent("clientID", "domainID", "groupID", "token")
 	//  fmt.Println(err)
-	SetClientParent(id, domainID, groupID, token string) errors.SDKError
+	SetClientParent(ctx context.Context, id, domainID, groupID, token string) errors.SDKError
 
 	// RemoveClientParent removes the parent group of a client.
 	//
 	// example:
 	//  err := sdk.RemoveClientParent("clientID", "domainID", "groupID", "token")
 	//  fmt.Println(err)
-	RemoveClientParent(id, domainID, groupID, token string) errors.SDKError
+	RemoveClientParent(ctx context.Context, id, domainID, groupID, token string) errors.SDKError
 
 	// CreateClientRole creates new client role and returns its id.
 	//
@@ -476,7 +478,7 @@ type SDK interface {
 	//  }
 	//  role, _ := sdk.CreateClientRole("clientID", "domainID", rq, "token")
 	//  fmt.Println(role)
-	CreateClientRole(id, domainID string, rq RoleReq, token string) (Role, errors.SDKError)
+	CreateClientRole(ctx context.Context, id, domainID string, rq RoleReq, token string) (Role, errors.SDKError)
 
 	// ClientRoles returns client roles.
 	//
@@ -487,28 +489,28 @@ type SDK interface {
 	// }
 	//  roles, _ := sdk.ClientRoles("clientID", "domainID", pm, "token")
 	//  fmt.Println(roles)
-	ClientRoles(id, domainID string, pm PageMetadata, token string) (RolesPage, errors.SDKError)
+	ClientRoles(ctx context.Context, id, domainID string, pm PageMetadata, token string) (RolesPage, errors.SDKError)
 
 	// ClientRole returns client role object by roleID.
 	//
 	// example:
 	//  role, _ := sdk.ClientRole("clientID", "roleID", "domainID", "token")
 	//  fmt.Println(role)
-	ClientRole(id, roleID, domainID, token string) (Role, errors.SDKError)
+	ClientRole(ctx context.Context, id, roleID, domainID, token string) (Role, errors.SDKError)
 
 	// UpdateClientRole updates existing client role name.
 	//
 	// example:
 	//  role, _ := sdk.UpdateClientRole{"clientID", "roleID", "newName", "domainID", "token"}
 	//  fmr.Println(role)
-	UpdateClientRole(id, roleID, newName, domainID string, token string) (Role, errors.SDKError)
+	UpdateClientRole(ctx context.Context, id, roleID, newName, domainID string, token string) (Role, errors.SDKError)
 
 	// DeleteClientRole deletes a client role with the given clientID and  roleID.
 	//
 	// example:
 	//  err := sdk.DeleteClientRole("clientID", "roleID", "domainID", "token")
 	//  fmt.Println(err)
-	DeleteClientRole(id, roleID, domainID, token string) errors.SDKError
+	DeleteClientRole(ctx context.Context, id, roleID, domainID, token string) errors.SDKError
 
 	// AddClientRoleActions adds actions to a client role.
 	//
@@ -516,14 +518,14 @@ type SDK interface {
 	//  actions := []string{"read", "update"}
 	//  actions, _ := sdk.AddClientRoleActions("clientID", "roleID", "domainID", actions, "token")
 	//  fmt.Println(actions)
-	AddClientRoleActions(id, roleID, domainID string, actions []string, token string) ([]string, errors.SDKError)
+	AddClientRoleActions(ctx context.Context, id, roleID, domainID string, actions []string, token string) ([]string, errors.SDKError)
 
 	// ClientRoleActions returns client role actions by roleID.
 	//
 	// example:
 	//  actions, _ := sdk.ClientRoleActions("clientID", "roleID", "domainID", "token")
 	//  fmt.Println(actions)
-	ClientRoleActions(id, roleID, domainID string, token string) ([]string, errors.SDKError)
+	ClientRoleActions(ctx context.Context, id, roleID, domainID string, token string) ([]string, errors.SDKError)
 
 	// RemoveClientRoleActions removes actions from a client role.
 	//
@@ -531,14 +533,14 @@ type SDK interface {
 	//  actions := []string{"read", "update"}
 	//  err := sdk.RemoveClientRoleActions("clientID", "roleID", "domainID", actions, "token")
 	//  fmt.Println(err)
-	RemoveClientRoleActions(id, roleID, domainID string, actions []string, token string) errors.SDKError
+	RemoveClientRoleActions(ctx context.Context, id, roleID, domainID string, actions []string, token string) errors.SDKError
 
 	// RemoveAllClientRoleActions removes all actions from a client role.
 	//
 	// example:
 	//  err := sdk.RemoveAllClientRoleActions("clientID", "roleID", "domainID", "token")
 	//  fmt.Println(err)
-	RemoveAllClientRoleActions(id, roleID, domainID, token string) errors.SDKError
+	RemoveAllClientRoleActions(ctx context.Context, id, roleID, domainID, token string) errors.SDKError
 
 	// AddClientRoleMembers adds members to a client role.
 	//
@@ -546,7 +548,7 @@ type SDK interface {
 	//  members := []string{"member_id_1", "member_id_2"}
 	//  members, _ := sdk.AddClientRoleMembers("clientID", "roleID", "domainID", members, "token")
 	//  fmt.Println(members)
-	AddClientRoleMembers(id, roleID, domainID string, members []string, token string) ([]string, errors.SDKError)
+	AddClientRoleMembers(ctx context.Context, id, roleID, domainID string, members []string, token string) ([]string, errors.SDKError)
 
 	// ClientRoleMembers returns client role members by roleID.
 	//
@@ -557,7 +559,7 @@ type SDK interface {
 	// }
 	//  members, _ := sdk.ClientRoleMembers("clientID", "roleID", "domainID", pm,"token")
 	//  fmt.Println(members)
-	ClientRoleMembers(id, roleID, domainID string, pm PageMetadata, token string) (RoleMembersPage, errors.SDKError)
+	ClientRoleMembers(ctx context.Context, id, roleID, domainID string, pm PageMetadata, token string) (RoleMembersPage, errors.SDKError)
 
 	// RemoveClientRoleMembers removes members from a client role.
 	//
@@ -565,21 +567,21 @@ type SDK interface {
 	//  members := []string{"member_id_1", "member_id_2"}
 	//  err := sdk.RemoveClientRoleMembers("clientID", "roleID", "domainID", members, "token")
 	//  fmt.Println(err)
-	RemoveClientRoleMembers(id, roleID, domainID string, members []string, token string) errors.SDKError
+	RemoveClientRoleMembers(ctx context.Context, id, roleID, domainID string, members []string, token string) errors.SDKError
 
 	// RemoveAllClientRoleMembers removes all members from a client role.
 	//
 	// example:
 	//  err := sdk.RemoveAllClientRoleMembers("clientID", "roleID", "domainID", "token")
 	//  fmt.Println(err)
-	RemoveAllClientRoleMembers(id, roleID, domainID, token string) errors.SDKError
+	RemoveAllClientRoleMembers(ctx context.Context, id, roleID, domainID, token string) errors.SDKError
 
 	// AvailableClientRoleActions returns available actions for a client role.
 	//
 	// example:
 	//  actions, _ := sdk.AvailableClientRoleActions("domainID", "token")
 	//  fmt.Println(actions)
-	AvailableClientRoleActions(domainID, token string) ([]string, errors.SDKError)
+	AvailableClientRoleActions(ctx context.Context, domainID, token string) ([]string, errors.SDKError)
 
 	// ListClientMembers list all members from all roles in a client .
 	//
@@ -590,7 +592,7 @@ type SDK interface {
 	//	}
 	//  members, _ := sdk.ListClientMembers("client_id","domainID", pm, "token")
 	//  fmt.Println(members)
-	ListClientMembers(clientID, domainID string, pm PageMetadata, token string) (EntityMembersPage, errors.SDKError)
+	ListClientMembers(ctx context.Context, clientID, domainID string, pm PageMetadata, token string) (EntityMembersPage, errors.SDKError)
 
 	// CreateGroup creates new group and returns its id.
 	//
@@ -603,7 +605,7 @@ type SDK interface {
 	//  }
 	//  group, _ := sdk.CreateGroup(group, "domainID", "token")
 	//  fmt.Println(group)
-	CreateGroup(group Group, domainID, token string) (Group, errors.SDKError)
+	CreateGroup(ctx context.Context, group Group, domainID, token string) (Group, errors.SDKError)
 
 	// Groups returns page of groups.
 	//
@@ -615,14 +617,14 @@ type SDK interface {
 	//  }
 	//  groups, _ := sdk.Groups(pm, "domainID", "token")
 	//  fmt.Println(groups)
-	Groups(pm PageMetadata, domainID, token string) (GroupsPage, errors.SDKError)
+	Groups(ctx context.Context, pm PageMetadata, domainID, token string) (GroupsPage, errors.SDKError)
 
 	// Group returns users group object by id.
 	//
 	// example:
 	//  group, _ := sdk.Group("groupID", "domainID", "token")
 	//  fmt.Println(group)
-	Group(id, domainID, token string) (Group, errors.SDKError)
+	Group(ctx context.Context, id, domainID, token string) (Group, errors.SDKError)
 
 	// UpdateGroup updates existing group.
 	//
@@ -636,21 +638,21 @@ type SDK interface {
 	//  }
 	//  group, _ := sdk.UpdateGroup(group, "domainID", "token")
 	//  fmt.Println(group)
-	UpdateGroup(group Group, domainID, token string) (Group, errors.SDKError)
+	UpdateGroup(ctx context.Context, group Group, domainID, token string) (Group, errors.SDKError)
 
 	// SetGroupParent sets the parent group of a group.
 	//
 	// example:
 	//  err := sdk.SetGroupParent("groupID", "domainID", "groupID", "token")
 	//  fmt.Println(err)
-	SetGroupParent(id, domainID, groupID, token string) errors.SDKError
+	SetGroupParent(ctx context.Context, id, domainID, groupID, token string) errors.SDKError
 
 	// RemoveGroupParent removes the parent group of a group.
 	//
 	// example:
 	//  err := sdk.RemoveGroupParent("groupID", "domainID", "groupID", "token")
 	//  fmt.Println(err)
-	RemoveGroupParent(id, domainID, groupID, token string) errors.SDKError
+	RemoveGroupParent(ctx context.Context, id, domainID, groupID, token string) errors.SDKError
 
 	// AddChildren adds children groups to a group.
 	//
@@ -658,7 +660,7 @@ type SDK interface {
 	//  groupIDs := []string{"groupID1", "groupID2"}
 	//  err := sdk.AddChildren("groupID", "domainID", groupIDs, "token")
 	//  fmt.Println(err)
-	AddChildren(id, domainID string, groupIDs []string, token string) errors.SDKError
+	AddChildren(ctx context.Context, id, domainID string, groupIDs []string, token string) errors.SDKError
 
 	// RemoveChildren removes children groups from a group.
 	//
@@ -666,14 +668,14 @@ type SDK interface {
 	//  groupIDs := []string{"groupID1", "groupID2"}
 	//  err := sdk.RemoveChildren("groupID", "domainID", groupIDs, "token")
 	//  fmt.Println(err)
-	RemoveChildren(id, domainID string, groupIDs []string, token string) errors.SDKError
+	RemoveChildren(ctx context.Context, id, domainID string, groupIDs []string, token string) errors.SDKError
 
 	// RemoveAllChildren removes all children groups from a group.
 	//
 	// example:
 	//  err := sdk.RemoveAllChildren("groupID", "domainID", "token")
 	//  fmt.Println(err)
-	RemoveAllChildren(id, domainID, token string) errors.SDKError
+	RemoveAllChildren(ctx context.Context, id, domainID, token string) errors.SDKError
 
 	// Children returns page of children groups.
 	//
@@ -684,28 +686,28 @@ type SDK interface {
 	//  }
 	//  groups, _ := sdk.Children("groupID", "domainID", pm, "token")
 	//  fmt.Println(groups)
-	Children(id, domainID string, pm PageMetadata, token string) (GroupsPage, errors.SDKError)
+	Children(ctx context.Context, id, domainID string, pm PageMetadata, token string) (GroupsPage, errors.SDKError)
 
 	// EnableGroup changes group status to enabled.
 	//
 	// example:
 	//  group, _ := sdk.EnableGroup("groupID", "domainID", "token")
 	//  fmt.Println(group)
-	EnableGroup(id, domainID, token string) (Group, errors.SDKError)
+	EnableGroup(ctx context.Context, id, domainID, token string) (Group, errors.SDKError)
 
 	// DisableGroup changes group status to disabled - soft delete.
 	//
 	// example:
 	//  group, _ := sdk.DisableGroup("groupID", "domainID", "token")
 	//  fmt.Println(group)
-	DisableGroup(id, domainID, token string) (Group, errors.SDKError)
+	DisableGroup(ctx context.Context, id, domainID, token string) (Group, errors.SDKError)
 
 	// DeleteGroup delete given group id.
 	//
 	// example:
 	//  err := sdk.DeleteGroup("groupID", "domainID", "token")
 	//  fmt.Println(err)
-	DeleteGroup(id, domainID, token string) errors.SDKError
+	DeleteGroup(ctx context.Context, id, domainID, token string) errors.SDKError
 
 	// Hierarchy returns page of groups hierarchy.
 	//
@@ -717,7 +719,7 @@ type SDK interface {
 	//  }
 	// groups, _ := sdk.Hierarchy("groupID", "domainID", pm, "token")
 	// fmt.Println(groups)
-	Hierarchy(id, domainID string, pm PageMetadata, token string) (GroupsHierarchyPage, errors.SDKError)
+	Hierarchy(ctx context.Context, id, domainID string, pm PageMetadata, token string) (GroupsHierarchyPage, errors.SDKError)
 
 	// CreateGroupRole creates new group role and returns its id.
 	//
@@ -729,7 +731,7 @@ type SDK interface {
 	//  }
 	//  role, _ := sdk.CreateGroupRole("groupID", "domainID", rq, "token")
 	//  fmt.Println(role)
-	CreateGroupRole(id, domainID string, rq RoleReq, token string) (Role, errors.SDKError)
+	CreateGroupRole(ctx context.Context, id, domainID string, rq RoleReq, token string) (Role, errors.SDKError)
 
 	// GroupRoles returns group roles.
 	//
@@ -740,28 +742,28 @@ type SDK interface {
 	// }
 	//  roles, _ := sdk.GroupRoles("groupID", "domainID",pm, "token")
 	//  fmt.Println(roles)
-	GroupRoles(id, domainID string, pm PageMetadata, token string) (RolesPage, errors.SDKError)
+	GroupRoles(ctx context.Context, id, domainID string, pm PageMetadata, token string) (RolesPage, errors.SDKError)
 
 	// GroupRole returns group role object by roleID.
 	//
 	// example:
 	//  role, _ := sdk.GroupRole("groupID", "roleID", "domainID", "token")
 	//  fmt.Println(role)
-	GroupRole(id, roleID, domainID, token string) (Role, errors.SDKError)
+	GroupRole(ctx context.Context, id, roleID, domainID, token string) (Role, errors.SDKError)
 
 	// UpdateGroupRole updates existing group role name.
 	//
 	// example:
 	//  role, _ := sdk.UpdateGroupRole{"groupID", "roleID", "newName", "domainID", "token"}
 	//  fmr.Println(role)
-	UpdateGroupRole(id, roleID, newName, domainID string, token string) (Role, errors.SDKError)
+	UpdateGroupRole(ctx context.Context, id, roleID, newName, domainID string, token string) (Role, errors.SDKError)
 
 	// DeleteGroupRole deletes a group role with the given groupID and  roleID.
 	//
 	// example:
 	//  err := sdk.DeleteGroupRole("groupID", "roleID", "domainID", "token")
 	//  fmt.Println(err)
-	DeleteGroupRole(id, roleID, domainID, token string) errors.SDKError
+	DeleteGroupRole(ctx context.Context, id, roleID, domainID, token string) errors.SDKError
 
 	// AddGroupRoleActions adds actions to a group role.
 	//
@@ -769,14 +771,14 @@ type SDK interface {
 	//  actions := []string{"read", "update"}
 	//  actions, _ := sdk.AddGroupRoleActions("groupID", "roleID", "domainID", actions, "token")
 	//  fmt.Println(actions)
-	AddGroupRoleActions(id, roleID, domainID string, actions []string, token string) ([]string, errors.SDKError)
+	AddGroupRoleActions(ctx context.Context, id, roleID, domainID string, actions []string, token string) ([]string, errors.SDKError)
 
 	// GroupRoleActions returns group role actions by roleID.
 	//
 	// example:
 	//  actions, _ := sdk.GroupRoleActions("groupID", "roleID", "domainID", "token")
 	//  fmt.Println(actions)
-	GroupRoleActions(id, roleID, domainID string, token string) ([]string, errors.SDKError)
+	GroupRoleActions(ctx context.Context, id, roleID, domainID string, token string) ([]string, errors.SDKError)
 
 	// RemoveGroupRoleActions removes actions from a group role.
 	//
@@ -784,14 +786,14 @@ type SDK interface {
 	//  actions := []string{"read", "update"}
 	//  err := sdk.RemoveGroupRoleActions("groupID", "roleID", "domainID", actions, "token")
 	//  fmt.Println(err)
-	RemoveGroupRoleActions(id, roleID, domainID string, actions []string, token string) errors.SDKError
+	RemoveGroupRoleActions(ctx context.Context, id, roleID, domainID string, actions []string, token string) errors.SDKError
 
 	// RemoveAllGroupRoleActions removes all actions from a group role.
 	//
 	// example:
 	//  err := sdk.RemoveAllGroupRoleActions("groupID", "roleID", "domainID", "token")
 	//  fmt.Println(err)
-	RemoveAllGroupRoleActions(id, roleID, domainID, token string) errors.SDKError
+	RemoveAllGroupRoleActions(ctx context.Context, id, roleID, domainID, token string) errors.SDKError
 
 	// AddGroupRoleMembers adds members to a group role.
 	//
@@ -799,7 +801,7 @@ type SDK interface {
 	//  members := []string{"member_id_1", "member_id_2"}
 	//  members, _ := sdk.AddGroupRoleMembers("groupID", "roleID", "domainID", members, "token")
 	//  fmt.Println(members)
-	AddGroupRoleMembers(id, roleID, domainID string, members []string, token string) ([]string, errors.SDKError)
+	AddGroupRoleMembers(ctx context.Context, id, roleID, domainID string, members []string, token string) ([]string, errors.SDKError)
 
 	// GroupRoleMembers returns group role members by roleID.
 	//
@@ -810,7 +812,7 @@ type SDK interface {
 	// }
 	//  members, _ := sdk.GroupRoleMembers("groupID", "roleID", "domainID", "token")
 	//  fmt.Println(members)
-	GroupRoleMembers(id, roleID, domainID string, pm PageMetadata, token string) (RoleMembersPage, errors.SDKError)
+	GroupRoleMembers(ctx context.Context, id, roleID, domainID string, pm PageMetadata, token string) (RoleMembersPage, errors.SDKError)
 
 	// RemoveGroupRoleMembers removes members from a group role.
 	//
@@ -818,21 +820,21 @@ type SDK interface {
 	//  members := []string{"member_id_1", "member_id_2"}
 	//  err := sdk.RemoveGroupRoleMembers("groupID", "roleID", "domainID", members, "token")
 	//  fmt.Println(err)
-	RemoveGroupRoleMembers(id, roleID, domainID string, members []string, token string) errors.SDKError
+	RemoveGroupRoleMembers(ctx context.Context, id, roleID, domainID string, members []string, token string) errors.SDKError
 
 	// RemoveAllGroupRoleMembers removes all members from a group role.
 	//
 	// example:
 	//  err := sdk.RemoveAllGroupRoleMembers("groupID", "roleID", "domainID", "token")
 	//  fmt.Println(err)
-	RemoveAllGroupRoleMembers(id, roleID, domainID, token string) errors.SDKError
+	RemoveAllGroupRoleMembers(ctx context.Context, id, roleID, domainID, token string) errors.SDKError
 
 	// AvailableGroupRoleActions returns available actions for a group role.
 	//
 	// example:
 	//  actions, _ := sdk.AvailableGroupRoleActions("groupID", "token")
 	//  fmt.Println(actions)
-	AvailableGroupRoleActions(id, token string) ([]string, errors.SDKError)
+	AvailableGroupRoleActions(ctx context.Context, id, token string) ([]string, errors.SDKError)
 
 	// ListGroupMembers list all members from all roles in a group .
 	//
@@ -843,7 +845,7 @@ type SDK interface {
 	//	}
 	//  members, _ := sdk.ListGroupMembers("group_id","domainID", pm, "token")
 	//  fmt.Println(members)
-	ListGroupMembers(groupID, domainID string, pm PageMetadata, token string) (EntityMembersPage, errors.SDKError)
+	ListGroupMembers(ctx context.Context, groupID, domainID string, pm PageMetadata, token string) (EntityMembersPage, errors.SDKError)
 
 	// CreateChannel creates new channel and returns its id.
 	//
@@ -856,7 +858,7 @@ type SDK interface {
 	//  }
 	//  channel, _ := sdk.CreateChannel(channel, "domainID", "token")
 	//  fmt.Println(channel)
-	CreateChannel(channel Channel, domainID, token string) (Channel, errors.SDKError)
+	CreateChannel(ctx context.Context, channel Channel, domainID, token string) (Channel, errors.SDKError)
 
 	// CreateChannels creates new channels and returns their ids.
 	//
@@ -877,7 +879,7 @@ type SDK interface {
 	//  }
 	//  channels, _ := sdk.CreateChannels(channels, "domainID", "token")
 	//  fmt.Println(channels)
-	CreateChannels(channels []Channel, domainID, token string) ([]Channel, errors.SDKError)
+	CreateChannels(ctx context.Context, channels []Channel, domainID, token string) ([]Channel, errors.SDKError)
 
 	// Channels returns page of channels.
 	//
@@ -889,14 +891,14 @@ type SDK interface {
 	//  }
 	//  channels, _ := sdk.Channels(pm, "domainID", "token")
 	//  fmt.Println(channels)
-	Channels(pm PageMetadata, domainID, token string) (ChannelsPage, errors.SDKError)
+	Channels(ctx context.Context, pm PageMetadata, domainID, token string) (ChannelsPage, errors.SDKError)
 
 	// Channel returns channel data by id.
 	//
 	// example:
 	//  channel, _ := sdk.Channel("channelID", "domainID", "token")
 	//  fmt.Println(channel)
-	Channel(id, domainID, token string) (Channel, errors.SDKError)
+	Channel(ctx context.Context, id, domainID, token string) (Channel, errors.SDKError)
 
 	// UpdateChannel updates existing channel.
 	//
@@ -910,7 +912,7 @@ type SDK interface {
 	//  }
 	//  channel, _ := sdk.UpdateChannel(channel, "domainID", "token")
 	//  fmt.Println(channel)
-	UpdateChannel(channel Channel, domainID, token string) (Channel, errors.SDKError)
+	UpdateChannel(ctx context.Context, channel Channel, domainID, token string) (Channel, errors.SDKError)
 
 	// UpdateChannelTags updates the channel's tags.
 	//
@@ -921,42 +923,42 @@ type SDK interface {
 	//  }
 	//  channel, _ := sdk.UpdateChannelTags(channel, "domainID", "token")
 	//  fmt.Println(channel)
-	UpdateChannelTags(c Channel, domainID, token string) (Channel, errors.SDKError)
+	UpdateChannelTags(ctx context.Context, c Channel, domainID, token string) (Channel, errors.SDKError)
 
 	// EnableChannel changes channel status to enabled.
 	//
 	// example:
 	//  channel, _ := sdk.EnableChannel("channelID", "domainID", "token")
 	//  fmt.Println(channel)
-	EnableChannel(id, domainID, token string) (Channel, errors.SDKError)
+	EnableChannel(ctx context.Context, id, domainID, token string) (Channel, errors.SDKError)
 
 	// DisableChannel changes channel status to disabled - soft delete.
 	//
 	// example:
 	//  channel, _ := sdk.DisableChannel("channelID", "domainID", "token")
 	//  fmt.Println(channel)
-	DisableChannel(id, domainID, token string) (Channel, errors.SDKError)
+	DisableChannel(ctx context.Context, id, domainID, token string) (Channel, errors.SDKError)
 
 	// DeleteChannel delete given group id.
 	//
 	// example:
 	//  err := sdk.DeleteChannel("channelID", "domainID", "token")
 	//  fmt.Println(err)
-	DeleteChannel(id, domainID, token string) errors.SDKError
+	DeleteChannel(ctx context.Context, id, domainID, token string) errors.SDKError
 
 	// SetChannelParent sets the parent group of a channel.
 	//
 	// example:
 	//  err := sdk.SetChannelParent("channelID", "domainID", "groupID", "token")
 	//  fmt.Println(err)
-	SetChannelParent(id, domainID, groupID, token string) errors.SDKError
+	SetChannelParent(ctx context.Context, id, domainID, groupID, token string) errors.SDKError
 
 	// RemoveChannelParent removes the parent group of a channel.
 	//
 	// example:
 	//  err := sdk.RemoveChannelParent("channelID", "domainID", "groupID", "token")
 	//  fmt.Println(err)
-	RemoveChannelParent(id, domainID, groupID, token string) errors.SDKError
+	RemoveChannelParent(ctx context.Context, id, domainID, groupID, token string) errors.SDKError
 
 	// Connect bulk connects clients to channels specified by id.
 	//
@@ -968,7 +970,7 @@ type SDK interface {
 	//  }
 	//  err := sdk.Connect(conns, "domainID", "token")
 	//  fmt.Println(err)
-	Connect(conn Connection, domainID, token string) errors.SDKError
+	Connect(ctx context.Context, conn Connection, domainID, token string) errors.SDKError
 
 	// Disconnect
 	//
@@ -980,7 +982,7 @@ type SDK interface {
 	//  }
 	//  err := sdk.Disconnect(conns, "domainID", "token")
 	//  fmt.Println(err)
-	Disconnect(conn Connection, domainID, token string) errors.SDKError
+	Disconnect(ctx context.Context, conn Connection, domainID, token string) errors.SDKError
 
 	// ConnectClient connects client to specified channel by id.
 	//
@@ -988,7 +990,7 @@ type SDK interface {
 	//  clientIDs := []string{"client_id_1", "client_id_2"}
 	//  err := sdk.ConnectClient("channelID", clientIDs, []string{"Publish", "Subscribe"}, "token")
 	//  fmt.Println(err)
-	ConnectClients(channelID string, clientIDs, connTypes []string, domainID, token string) errors.SDKError
+	ConnectClients(ctx context.Context, channelID string, clientIDs, connTypes []string, domainID, token string) errors.SDKError
 
 	// DisconnectClient disconnect client from specified channel by id.
 	//
@@ -996,7 +998,7 @@ type SDK interface {
 	//  clientIDs := []string{"client_id_1", "client_id_2"}
 	//  err := sdk.DisconnectClient("channelID", clientIDs, []string{"Publish", "Subscribe"}, "token")
 	//  fmt.Println(err)
-	DisconnectClients(channelID string, clientIDs, connTypes []string, domainID, token string) errors.SDKError
+	DisconnectClients(ctx context.Context, channelID string, clientIDs, connTypes []string, domainID, token string) errors.SDKError
 
 	// ListChannelMembers list all members from all roles in a channel .
 	//
@@ -1007,7 +1009,7 @@ type SDK interface {
 	//	}
 	//  members, _ := sdk.ListChannelMembers("channel_id","domainID", pm, "token")
 	//  fmt.Println(members)
-	ListChannelMembers(channelID, domainID string, pm PageMetadata, token string) (EntityMembersPage, errors.SDKError)
+	ListChannelMembers(ctx context.Context, channelID, domainID string, pm PageMetadata, token string) (EntityMembersPage, errors.SDKError)
 
 	// SendMessage send message to specified channel.
 	//
@@ -1015,7 +1017,7 @@ type SDK interface {
 	//  msg := '[{"bn":"some-base-name:","bt":1.276020076001e+09, "bu":"A","bver":5, "n":"voltage","u":"V","v":120.1}, {"n":"current","t":-5,"v":1.2}, {"n":"current","t":-4,"v":1.3}]'
 	//  err := sdk.SendMessage("channelID", msg, "clientSecret")
 	//  fmt.Println(err)
-	SendMessage(chanID, msg, key string) errors.SDKError
+	SendMessage(ctx context.Context, chanID, msg, key string) errors.SDKError
 
 	// SetContentType sets message content type.
 	//
@@ -1036,28 +1038,28 @@ type SDK interface {
 	// example:
 	//  cert, _ := sdk.IssueCert("clientID", "24h", "domainID", "token")
 	//  fmt.Println(cert)
-	IssueCert(clientID, validity, domainID, token string) (Cert, errors.SDKError)
+	IssueCert(ctx context.Context, clientID, validity, domainID, token string) (Cert, errors.SDKError)
 
 	// ViewCert returns a certificate given certificate ID
 	//
 	// example:
 	//  cert, _ := sdk.ViewCert("certID", "domainID", "token")
 	//  fmt.Println(cert)
-	ViewCert(certID, domainID, token string) (Cert, errors.SDKError)
+	ViewCert(ctx context.Context, certID, domainID, token string) (Cert, errors.SDKError)
 
 	// ViewCertByClient retrieves a list of certificates' serial IDs for a given client ID.
 	//
 	// example:
 	//  cserial, _ := sdk.ViewCertByClient("clientID", "domainID", "token")
 	//  fmt.Println(cserial)
-	ViewCertByClient(clientID, domainID, token string) (CertSerials, errors.SDKError)
+	ViewCertByClient(ctx context.Context, clientID, domainID, token string) (CertSerials, errors.SDKError)
 
 	// RevokeCert revokes certificate for client with clientID
 	//
 	// example:
 	//  tm, _ := sdk.RevokeCert("clientID", "domainID", "token")
 	//  fmt.Println(tm)
-	RevokeCert(clientID, domainID, token string) (time.Time, errors.SDKError)
+	RevokeCert(ctx context.Context, clientID, domainID, token string) (time.Time, errors.SDKError)
 
 	// CreateDomain creates new domain and returns its details.
 	//
@@ -1070,14 +1072,14 @@ type SDK interface {
 	//  }
 	//  domain, _ := sdk.CreateDomain(group, "token")
 	//  fmt.Println(domain)
-	CreateDomain(d Domain, token string) (Domain, errors.SDKError)
+	CreateDomain(ctx context.Context, d Domain, token string) (Domain, errors.SDKError)
 
 	// Domain retrieve domain information of given domain ID .
 	//
 	// example:
 	//  domain, _ := sdk.Domain("domainID", "token")
 	//  fmt.Println(domain)
-	Domain(domainID, token string) (Domain, errors.SDKError)
+	Domain(ctx context.Context, domainID, token string) (Domain, errors.SDKError)
 
 	// UpdateDomain updates details of the given domain ID.
 	//
@@ -1091,7 +1093,7 @@ type SDK interface {
 	//  }
 	//  domain, _ := sdk.UpdateDomain(domain, "token")
 	//  fmt.Println(domain)
-	UpdateDomain(d Domain, token string) (Domain, errors.SDKError)
+	UpdateDomain(ctx context.Context, d Domain, token string) (Domain, errors.SDKError)
 
 	// Domains returns list of domain for the given filters.
 	//
@@ -1104,28 +1106,28 @@ type SDK interface {
 	//  }
 	//  domains, _ := sdk.Domains(pm, "token")
 	//  fmt.Println(domains)
-	Domains(pm PageMetadata, token string) (DomainsPage, errors.SDKError)
+	Domains(ctx context.Context, pm PageMetadata, token string) (DomainsPage, errors.SDKError)
 
 	// EnableDomain changes the status of the domain to enabled.
 	//
 	// example:
 	//  err := sdk.EnableDomain("domainID", "token")
 	//  fmt.Println(err)
-	EnableDomain(domainID, token string) errors.SDKError
+	EnableDomain(ctx context.Context, domainID, token string) errors.SDKError
 
 	// DisableDomain changes the status of the domain to disabled.
 	//
 	// example:
 	//  err := sdk.DisableDomain("domainID", "token")
 	//  fmt.Println(err)
-	DisableDomain(domainID, token string) errors.SDKError
+	DisableDomain(ctx context.Context, domainID, token string) errors.SDKError
 
 	// FreezeDomain changes the status of the domain to frozen.
 	//
 	// example:
 	//  err := sdk.FreezeDomain("domainID", "token")
 	//  fmt.Println(err)
-	FreezeDomain(domainID, token string) errors.SDKError
+	FreezeDomain(ctx context.Context, domainID, token string) errors.SDKError
 
 	// CreateDomainRole creates new domain role and returns its id.
 	//
@@ -1137,7 +1139,7 @@ type SDK interface {
 	//  }
 	//  role, _ := sdk.CreateDomainRole("domainID", rq, "token")
 	//  fmt.Println(role)
-	CreateDomainRole(id string, rq RoleReq, token string) (Role, errors.SDKError)
+	CreateDomainRole(ctx context.Context, id string, rq RoleReq, token string) (Role, errors.SDKError)
 
 	// DomainRoles returns domain roles.
 	//
@@ -1148,28 +1150,28 @@ type SDK interface {
 	// }
 	//  roles, _ := sdk.DomainRoles("domainID", pm, "token")
 	//  fmt.Println(roles)
-	DomainRoles(id string, pm PageMetadata, token string) (RolesPage, errors.SDKError)
+	DomainRoles(ctx context.Context, id string, pm PageMetadata, token string) (RolesPage, errors.SDKError)
 
 	// DomainRole returns domain role object by roleID.
 	//
 	// example:
 	//  role, _ := sdk.DomainRole("domainID", "roleID", "token")
 	//  fmt.Println(role)
-	DomainRole(id, roleID, token string) (Role, errors.SDKError)
+	DomainRole(ctx context.Context, id, roleID, token string) (Role, errors.SDKError)
 
 	// UpdateDomainRole updates existing domain role name.
 	//
 	// example:
 	//  role, _ := sdk.UpdateDomainRole("domainID", "roleID", "newName", "token")
 	//  fmt.Println(role)
-	UpdateDomainRole(id, roleID, newName string, token string) (Role, errors.SDKError)
+	UpdateDomainRole(ctx context.Context, id, roleID, newName string, token string) (Role, errors.SDKError)
 
 	// DeleteDomainRole deletes a domain role with the given domainID and roleID.
 	//
 	// example:
 	//  err := sdk.DeleteDomainRole("domainID", "roleID", "token")
 	//  fmt.Println(err)
-	DeleteDomainRole(id, roleID, token string) errors.SDKError
+	DeleteDomainRole(ctx context.Context, id, roleID, token string) errors.SDKError
 
 	// AddDomainRoleActions adds actions to a domain role.
 	//
@@ -1177,14 +1179,14 @@ type SDK interface {
 	//  actions := []string{"read", "update"}
 	//  actions, _ := sdk.AddDomainRoleActions("domainID", "roleID", actions, "token")
 	//  fmt.Println(actions)
-	AddDomainRoleActions(id, roleID string, actions []string, token string) ([]string, errors.SDKError)
+	AddDomainRoleActions(ctx context.Context, id, roleID string, actions []string, token string) ([]string, errors.SDKError)
 
 	// DomainRoleActions returns domain role actions by roleID.
 	//
 	// example:
 	//  actions, _ := sdk.DomainRoleActions("domainID", "roleID", "token")
 	//  fmt.Println(actions)
-	DomainRoleActions(id, roleID string, token string) ([]string, errors.SDKError)
+	DomainRoleActions(ctx context.Context, id, roleID string, token string) ([]string, errors.SDKError)
 
 	// RemoveDomainRoleActions removes actions from a domain role.
 	//
@@ -1192,14 +1194,14 @@ type SDK interface {
 	//  actions := []string{"read", "update"}
 	//  err := sdk.RemoveDomainRoleActions("domainID", "roleID", actions, "token")
 	//  fmt.Println(err)
-	RemoveDomainRoleActions(id, roleID string, actions []string, token string) errors.SDKError
+	RemoveDomainRoleActions(ctx context.Context, id, roleID string, actions []string, token string) errors.SDKError
 
 	// RemoveAllDomainRoleActions removes all actions from a domain role.
 	//
 	// example:
 	//  err := sdk.RemoveAllDomainRoleActions("domainID", "roleID", "token")
 	//  fmt.Println(err)
-	RemoveAllDomainRoleActions(id, roleID, token string) errors.SDKError
+	RemoveAllDomainRoleActions(ctx context.Context, id, roleID, token string) errors.SDKError
 
 	// AddDomainRoleMembers adds members to a domain role.
 	//
@@ -1207,7 +1209,7 @@ type SDK interface {
 	//  members := []string{"member_id_1", "member_id_2"}
 	//  members, _ := sdk.AddDomainRoleMembers("domainID", "roleID", members, "token")
 	//  fmt.Println(members)
-	AddDomainRoleMembers(id, roleID string, members []string, token string) ([]string, errors.SDKError)
+	AddDomainRoleMembers(ctx context.Context, id, roleID string, members []string, token string) ([]string, errors.SDKError)
 
 	// DomainRoleMembers returns domain role members by roleID.
 	//
@@ -1218,7 +1220,7 @@ type SDK interface {
 	//  }
 	//  members, _ := sdk.DomainRoleMembers("domainID", "roleID", "token")
 	//  fmt.Println(members)
-	DomainRoleMembers(id, roleID string, pm PageMetadata, token string) (RoleMembersPage, errors.SDKError)
+	DomainRoleMembers(ctx context.Context, id, roleID string, pm PageMetadata, token string) (RoleMembersPage, errors.SDKError)
 
 	// RemoveDomainRoleMembers removes members from a domain role.
 	//
@@ -1226,21 +1228,21 @@ type SDK interface {
 	//  members := []string{"member_id_1", "member_id_2"}
 	//  err := sdk.RemoveDomainRoleMembers("domainID", "roleID", members, "token")
 	//  fmt.Println(err)
-	RemoveDomainRoleMembers(id, roleID string, members []string, token string) errors.SDKError
+	RemoveDomainRoleMembers(ctx context.Context, id, roleID string, members []string, token string) errors.SDKError
 
 	// RemoveAllDomainRoleMembers removes all members from a domain role.
 	//
 	// example:
 	//  err := sdk.RemoveAllDomainRoleMembers("domainID", "roleID", "token")
 	//  fmt.Println(err)
-	RemoveAllDomainRoleMembers(id, roleID, token string) errors.SDKError
+	RemoveAllDomainRoleMembers(ctx context.Context, id, roleID, token string) errors.SDKError
 
 	// AvailableDomainRoleActions returns available actions for a domain role.
 	//
 	// example:
 	//  actions, _ := sdk.AvailableDomainRoleActions("token")
 	//  fmt.Println(actions)
-	AvailableDomainRoleActions(token string) ([]string, errors.SDKError)
+	AvailableDomainRoleActions(ctx context.Context, token string) ([]string, errors.SDKError)
 
 	// ListDomainUsers returns list of users for the given domain ID and filters.
 	//
@@ -1251,7 +1253,7 @@ type SDK interface {
 	//  }
 	//  members, _ := sdk.ListDomainMembers("domain_id", pm, "token")
 	//  fmt.Println(members)
-	ListDomainMembers(domainID string, pm PageMetadata, token string) (EntityMembersPage, errors.SDKError)
+	ListDomainMembers(ctx context.Context, domainID string, pm PageMetadata, token string) (EntityMembersPage, errors.SDKError)
 
 	// SendInvitation sends an invitation to the email address associated with the given user.
 	//
@@ -1263,49 +1265,49 @@ type SDK interface {
 	//  }
 	//  err := sdk.SendInvitation(invitation, "token")
 	//  fmt.Println(err)
-	SendInvitation(invitation Invitation, token string) (err error)
+	SendInvitation(ctx context.Context, invitation Invitation, token string) (err error)
 
 	// Invitation returns an invitation.
 	//
 	// For example:
 	//  invitation, _ := sdk.Invitation("userID", "domainID", "token")
 	//  fmt.Println(invitation)
-	Invitation(userID, domainID, token string) (invitation Invitation, err error)
+	Invitation(ctx context.Context, userID, domainID, token string) (invitation Invitation, err error)
 
 	// Invitations returns a list of invitations.
 	//
 	// For example:
 	//  invitations, _ := sdk.Invitations(PageMetadata{Offset: 0, Limit: 10}, "token")
 	//  fmt.Println(invitations)
-	Invitations(pm PageMetadata, token string) (invitations InvitationPage, err error)
+	Invitations(ctx context.Context, pm PageMetadata, token string) (invitations InvitationPage, err error)
 
 	// AcceptInvitation accepts an invitation by adding the user to the domain that they were invited to.
 	//
 	// For example:
 	//  err := sdk.AcceptInvitation("domainID", "token")
 	//  fmt.Println(err)
-	AcceptInvitation(domainID, token string) (err error)
+	AcceptInvitation(ctx context.Context, domainID, token string) (err error)
 
 	// RejectInvitation rejects an invitation.
 	//
 	// For example:
 	//  err := sdk.RejectInvitation("domainID", "token")
 	//  fmt.Println(err)
-	RejectInvitation(domainID, token string) (err error)
+	RejectInvitation(ctx context.Context, domainID, token string) (err error)
 
 	// DeleteInvitation deletes an invitation.
 	//
 	// For example:
 	//  err := sdk.DeleteInvitation("userID", "domainID", "token")
 	//  fmt.Println(err)
-	DeleteInvitation(userID, domainID, token string) (err error)
+	DeleteInvitation(ctx context.Context, userID, domainID, token string) (err error)
 
 	// Journal returns a list of journal logs.
 	//
 	// For example:
 	//  journals, _ := sdk.Journal("client", "clientID","domainID", PageMetadata{Offset: 0, Limit: 10, Operation: "client.create"}, "token")
 	//  fmt.Println(journals)
-	Journal(entityType, entityID, domainID string, pm PageMetadata, token string) (journal JournalsPage, err error)
+	Journal(ctx context.Context, entityType, entityID, domainID string, pm PageMetadata, token string) (journal JournalsPage, err error)
 }
 
 type mgSDK struct {
@@ -1357,13 +1359,11 @@ func NewSDK(conf Config) SDK {
 		HostURL:        conf.HostURL,
 
 		msgContentType: conf.MsgContentType,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: !conf.TLSVerification,
-				},
+		client: &http.Client{Transport: otelhttp.NewTransport(&http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
 			},
-		},
+		})},
 		curlFlag: conf.CurlFlag,
 		roles:    conf.Roles,
 	}
@@ -1371,11 +1371,11 @@ func NewSDK(conf Config) SDK {
 
 // processRequest creates and send a new HTTP request, and checks for errors in the HTTP response.
 // It then returns the response headers, the response body, and the associated error(s) (if any).
-func (sdk mgSDK) processRequest(method, reqUrl, token string, data []byte, headers map[string]string, expectedRespCodes ...int) (http.Header, []byte, errors.SDKError) {
+func (sdk mgSDK) processRequest(ctx context.Context, method, reqUrl, token string, data []byte, headers map[string]string, expectedRespCodes ...int) (http.Header, []byte, errors.SDKError) {
 	if sdk.roles {
 		reqUrl = reqUrl + fmt.Sprintf("?roles=%v", true)
 	}
-	req, err := http.NewRequest(method, reqUrl, bytes.NewReader(data))
+	req, err := http.NewRequestWithContext(ctx, method, reqUrl, bytes.NewReader(data))
 	if err != nil {
 		return make(http.Header), []byte{}, errors.NewSDKError(err)
 	}

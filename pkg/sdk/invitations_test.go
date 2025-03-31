@@ -4,6 +4,7 @@
 package sdk_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -126,7 +127,7 @@ func TestSendInvitation(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("SendInvitation", mock.Anything, tc.session, tc.svcReq).Return(tc.svcErr)
-			err := mgsdk.SendInvitation(tc.sendInvitationReq, tc.token)
+			err := mgsdk.SendInvitation(context.Background(), tc.sendInvitationReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "SendInvitation", mock.Anything, tc.session, tc.svcReq)
@@ -217,7 +218,7 @@ func TestViewInvitation(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("ViewInvitation", mock.Anything, tc.session, tc.userID, tc.domainID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.Invitation(tc.userID, tc.domainID, tc.token)
+			resp, err := mgsdk.Invitation(context.Background(), tc.userID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -319,7 +320,7 @@ func TestListInvitation(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("ListInvitations", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.Invitations(tc.pageMeta, tc.token)
+			resp, err := mgsdk.Invitations(context.Background(), tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -386,7 +387,7 @@ func TestAcceptInvitation(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("AcceptInvitation", mock.Anything, tc.session, tc.domainID).Return(tc.svcErr)
-			err := mgsdk.AcceptInvitation(tc.domainID, tc.token)
+			err := mgsdk.AcceptInvitation(context.Background(), tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "AcceptInvitation", mock.Anything, tc.session, tc.domainID)
@@ -452,7 +453,7 @@ func TestRejectInvitation(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("RejectInvitation", mock.Anything, tc.session, tc.domainID).Return(tc.svcErr)
-			err := mgsdk.RejectInvitation(tc.domainID, tc.token)
+			err := mgsdk.RejectInvitation(context.Background(), tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RejectInvitation", mock.Anything, tc.session, tc.domainID)
@@ -531,7 +532,7 @@ func TestDeleteInvitation(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("DeleteInvitation", mock.Anything, tc.session, tc.inviteeUserID, tc.domainID).Return(tc.svcErr)
-			err := mgsdk.DeleteInvitation(tc.inviteeUserID, tc.domainID, tc.token)
+			err := mgsdk.DeleteInvitation(context.Background(), tc.inviteeUserID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "DeleteInvitation", mock.Anything, tc.session, tc.inviteeUserID, tc.domainID)

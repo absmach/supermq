@@ -40,7 +40,7 @@ var cmdUsers = []cobra.Command{
 				},
 				Status: users.EnabledStatus.String(),
 			}
-			user, err := sdk.CreateUser(user, args[5])
+			user, err := sdk.CreateUser(cmd.Context(), user, args[5])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -76,7 +76,7 @@ var cmdUsers = []cobra.Command{
 				Status:   Status,
 			}
 			if args[0] == all {
-				l, err := sdk.Users(pageMetadata, args[1])
+				l, err := sdk.Users(cmd.Context(), pageMetadata, args[1])
 				if err != nil {
 					logErrorCmd(*cmd, err)
 					return
@@ -84,7 +84,7 @@ var cmdUsers = []cobra.Command{
 				logJSONCmd(*cmd, l)
 				return
 			}
-			u, err := sdk.User(args[0], args[1])
+			u, err := sdk.User(cmd.Context(), args[0], args[1])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -110,7 +110,7 @@ var cmdUsers = []cobra.Command{
 				Password: args[1],
 			}
 
-			token, err := sdk.CreateToken(loginReq)
+			token, err := sdk.CreateToken(cmd.Context(), loginReq)
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -132,7 +132,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			token, err := sdk.RefreshToken(args[0])
+			token, err := sdk.RefreshToken(cmd.Context(), args[0])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -164,7 +164,7 @@ var cmdUsers = []cobra.Command{
 					return
 				}
 				user.ID = args[1]
-				user, err := sdk.UpdateUserTags(user, args[3])
+				user, err := sdk.UpdateUserTags(cmd.Context(), user, args[3])
 				if err != nil {
 					logErrorCmd(*cmd, err)
 					return
@@ -177,7 +177,7 @@ var cmdUsers = []cobra.Command{
 			if args[0] == "email" {
 				user.ID = args[1]
 				user.Email = args[2]
-				user, err := sdk.UpdateUserEmail(user, args[3])
+				user, err := sdk.UpdateUserEmail(cmd.Context(), user, args[3])
 				if err != nil {
 					logErrorCmd(*cmd, err)
 					return
@@ -189,7 +189,7 @@ var cmdUsers = []cobra.Command{
 			if args[0] == "username" {
 				user.ID = args[1]
 				user.Credentials.Username = args[2]
-				user, err := sdk.UpdateUsername(user, args[3])
+				user, err := sdk.UpdateUsername(cmd.Context(), user, args[3])
 				if err != nil {
 					logErrorCmd(*cmd, err)
 					return
@@ -203,7 +203,7 @@ var cmdUsers = []cobra.Command{
 			if args[0] == "role" {
 				user.ID = args[1]
 				user.Role = args[2]
-				user, err := sdk.UpdateUserRole(user, args[3])
+				user, err := sdk.UpdateUserRole(cmd.Context(), user, args[3])
 				if err != nil {
 					logErrorCmd(*cmd, err)
 					return
@@ -219,7 +219,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 			user.ID = args[0]
-			user, err := sdk.UpdateUser(user, args[2])
+			user, err := sdk.UpdateUser(cmd.Context(), user, args[2])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -240,7 +240,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			user, err := sdk.UserProfile(args[0])
+			user, err := sdk.UserProfile(cmd.Context(), args[0])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -261,7 +261,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			if err := sdk.ResetPasswordRequest(args[0]); err != nil {
+			if err := sdk.ResetPasswordRequest(cmd.Context(), args[0]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}
@@ -281,7 +281,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			if err := sdk.ResetPassword(args[0], args[1], args[2]); err != nil {
+			if err := sdk.ResetPassword(cmd.Context(), args[0], args[1], args[2]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}
@@ -301,7 +301,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			user, err := sdk.UpdatePassword(args[0], args[1], args[2])
+			user, err := sdk.UpdatePassword(cmd.Context(), args[0], args[1], args[2])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -322,7 +322,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			user, err := sdk.EnableUser(args[0], args[1])
+			user, err := sdk.EnableUser(cmd.Context(), args[0], args[1])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -343,7 +343,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			user, err := sdk.DisableUser(args[0], args[1])
+			user, err := sdk.DisableUser(cmd.Context(), args[0], args[1])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -363,7 +363,7 @@ var cmdUsers = []cobra.Command{
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			if err := sdk.DeleteUser(args[0], args[1]); err != nil {
+			if err := sdk.DeleteUser(cmd.Context(), args[0], args[1]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}
@@ -402,7 +402,7 @@ var cmdUsers = []cobra.Command{
 				pm.Limit = uint64(lim)
 			}
 
-			users, err := sdk.SearchUsers(pm, args[1])
+			users, err := sdk.SearchUsers(cmd.Context(), pm, args[1])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return

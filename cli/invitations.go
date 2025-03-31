@@ -25,7 +25,7 @@ var cmdInvitations = []cobra.Command{
 				DomainID:      args[1],
 				RoleID:        args[2],
 			}
-			if err := sdk.SendInvitation(inv, args[3]); err != nil {
+			if err := sdk.SendInvitation(cmd.Context(), inv, args[3]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}
@@ -53,7 +53,7 @@ var cmdInvitations = []cobra.Command{
 				Limit:    Limit,
 			}
 			if args[0] == all {
-				l, err := sdk.Invitations(pageMetadata, args[1])
+				l, err := sdk.Invitations(cmd.Context(), pageMetadata, args[1])
 				if err != nil {
 					logErrorCmd(*cmd, err)
 					return
@@ -61,7 +61,7 @@ var cmdInvitations = []cobra.Command{
 				logJSONCmd(*cmd, l)
 				return
 			}
-			u, err := sdk.Invitation(args[0], args[1], args[2])
+			u, err := sdk.Invitation(cmd.Context(), args[0], args[1], args[2])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -82,7 +82,7 @@ var cmdInvitations = []cobra.Command{
 				return
 			}
 
-			if err := sdk.AcceptInvitation(args[0], args[1]); err != nil {
+			if err := sdk.AcceptInvitation(cmd.Context(), args[0], args[1]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}
@@ -102,7 +102,7 @@ var cmdInvitations = []cobra.Command{
 				return
 			}
 
-			if err := sdk.RejectInvitation(args[0], args[1]); err != nil {
+			if err := sdk.RejectInvitation(cmd.Context(), args[0], args[1]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}
@@ -122,7 +122,7 @@ var cmdInvitations = []cobra.Command{
 				return
 			}
 
-			if err := sdk.DeleteInvitation(args[0], args[1], args[2]); err != nil {
+			if err := sdk.DeleteInvitation(cmd.Context(), args[0], args[1], args[2]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}

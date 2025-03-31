@@ -32,7 +32,7 @@ var cmdJournal = cobra.Command{
 			entityType, entityID, domainID, token = args[0], args[1], args[2], args[3]
 		}
 
-		journal, err := sdk.Journal(entityType, entityID, domainID, pageMetadata, token)
+		journal, err := sdk.Journal(cmd.Context(), entityType, entityID, domainID, pageMetadata, token)
 		if err != nil {
 			logErrorCmd(*cmd, err)
 			return

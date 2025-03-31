@@ -4,6 +4,7 @@
 package sdk_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -184,7 +185,7 @@ func TestIssueCert(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("IssueCert", mock.Anything, tc.domainID, tc.token, tc.clientID, tc.duration).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.IssueCert(tc.clientID, tc.duration, tc.domainID, tc.token)
+			resp, err := mgsdk.IssueCert(context.Background(), tc.clientID, tc.duration, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				assert.Equal(t, tc.svcRes.SerialNumber, resp.SerialNumber)
@@ -268,7 +269,7 @@ func TestViewCert(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("ViewCert", mock.Anything, tc.certID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.ViewCert(tc.certID, tc.domainID, tc.token)
+			resp, err := mgsdk.ViewCert(context.Background(), tc.certID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if err == nil {
 				assert.Equal(t, viewCertRes, resp)
@@ -362,7 +363,7 @@ func TestViewCertByClient(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("ListSerials", mock.Anything, tc.clientID, certs.PageMetadata{Revoked: defRevoke, Offset: defOffset, Limit: defLimit}).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.ViewCertByClient(tc.clientID, tc.domainID, tc.token)
+			resp, err := mgsdk.ViewCertByClient(context.Background(), tc.clientID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				assert.Equal(t, viewCertClientRes, resp)
@@ -451,7 +452,7 @@ func TestRevokeCert(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := svc.On("RevokeCert", mock.Anything, tc.domainID, tc.token, tc.clientID).Return(tc.svcResp, tc.svcErr)
-			resp, err := mgsdk.RevokeCert(tc.clientID, tc.domainID, tc.token)
+			resp, err := mgsdk.RevokeCert(context.Background(), tc.clientID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if err == nil {
 				assert.NotEmpty(t, resp)

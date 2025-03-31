@@ -71,9 +71,9 @@ func (_e *SDK_Expecter) AcceptInvitation(domainID interface{}, token interface{}
 	return &SDK_AcceptInvitation_Call{Call: _e.mock.On("AcceptInvitation", domainID, token)}
 }
 
-func (_c *SDK_AcceptInvitation_Call) Run(run func(domainID string, token string)) *SDK_AcceptInvitation_Call {
+func (_c *SDK_AcceptInvitation_Call) Run(run func(ctx context.Context, domainID string, token string)) *SDK_AcceptInvitation_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -121,9 +121,9 @@ func (_e *SDK_Expecter) AddChildren(id interface{}, domainID interface{}, groupI
 	return &SDK_AddChildren_Call{Call: _e.mock.On("AddChildren", id, domainID, groupIDs, token)}
 }
 
-func (_c *SDK_AddChildren_Call) Run(run func(id string, domainID string, groupIDs []string, token string)) *SDK_AddChildren_Call {
+func (_c *SDK_AddChildren_Call) Run(run func(ctx context.Context, id string, domainID string, groupIDs []string, token string)) *SDK_AddChildren_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].([]string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
 	})
 	return _c
 }
@@ -183,9 +183,9 @@ func (_e *SDK_Expecter) AddClientRoleActions(id interface{}, roleID interface{},
 	return &SDK_AddClientRoleActions_Call{Call: _e.mock.On("AddClientRoleActions", id, roleID, domainID, actions, token)}
 }
 
-func (_c *SDK_AddClientRoleActions_Call) Run(run func(id string, roleID string, domainID string, actions []string, token string)) *SDK_AddClientRoleActions_Call {
+func (_c *SDK_AddClientRoleActions_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, actions []string, token string)) *SDK_AddClientRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].([]string), args[5].(string))
 	})
 	return _c
 }
@@ -245,9 +245,9 @@ func (_e *SDK_Expecter) AddClientRoleMembers(id interface{}, roleID interface{},
 	return &SDK_AddClientRoleMembers_Call{Call: _e.mock.On("AddClientRoleMembers", id, roleID, domainID, members, token)}
 }
 
-func (_c *SDK_AddClientRoleMembers_Call) Run(run func(id string, roleID string, domainID string, members []string, token string)) *SDK_AddClientRoleMembers_Call {
+func (_c *SDK_AddClientRoleMembers_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, members []string, token string)) *SDK_AddClientRoleMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].([]string), args[5].(string))
 	})
 	return _c
 }
@@ -306,9 +306,9 @@ func (_e *SDK_Expecter) AddDomainRoleActions(id interface{}, roleID interface{},
 	return &SDK_AddDomainRoleActions_Call{Call: _e.mock.On("AddDomainRoleActions", id, roleID, actions, token)}
 }
 
-func (_c *SDK_AddDomainRoleActions_Call) Run(run func(id string, roleID string, actions []string, token string)) *SDK_AddDomainRoleActions_Call {
+func (_c *SDK_AddDomainRoleActions_Call) Run(run func(ctx context.Context, id string, roleID string, actions []string, token string)) *SDK_AddDomainRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].([]string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
 	})
 	return _c
 }
@@ -367,9 +367,9 @@ func (_e *SDK_Expecter) AddDomainRoleMembers(id interface{}, roleID interface{},
 	return &SDK_AddDomainRoleMembers_Call{Call: _e.mock.On("AddDomainRoleMembers", id, roleID, members, token)}
 }
 
-func (_c *SDK_AddDomainRoleMembers_Call) Run(run func(id string, roleID string, members []string, token string)) *SDK_AddDomainRoleMembers_Call {
+func (_c *SDK_AddDomainRoleMembers_Call) Run(run func(ctx context.Context, id string, roleID string, members []string, token string)) *SDK_AddDomainRoleMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].([]string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
 	})
 	return _c
 }
@@ -429,9 +429,9 @@ func (_e *SDK_Expecter) AddGroupRoleActions(id interface{}, roleID interface{}, 
 	return &SDK_AddGroupRoleActions_Call{Call: _e.mock.On("AddGroupRoleActions", id, roleID, domainID, actions, token)}
 }
 
-func (_c *SDK_AddGroupRoleActions_Call) Run(run func(id string, roleID string, domainID string, actions []string, token string)) *SDK_AddGroupRoleActions_Call {
+func (_c *SDK_AddGroupRoleActions_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, actions []string, token string)) *SDK_AddGroupRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].([]string), args[5].(string))
 	})
 	return _c
 }
@@ -491,9 +491,9 @@ func (_e *SDK_Expecter) AddGroupRoleMembers(id interface{}, roleID interface{}, 
 	return &SDK_AddGroupRoleMembers_Call{Call: _e.mock.On("AddGroupRoleMembers", id, roleID, domainID, members, token)}
 }
 
-func (_c *SDK_AddGroupRoleMembers_Call) Run(run func(id string, roleID string, domainID string, members []string, token string)) *SDK_AddGroupRoleMembers_Call {
+func (_c *SDK_AddGroupRoleMembers_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, members []string, token string)) *SDK_AddGroupRoleMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].([]string), args[5].(string))
 	})
 	return _c
 }
@@ -550,9 +550,9 @@ func (_e *SDK_Expecter) AvailableClientRoleActions(domainID interface{}, token i
 	return &SDK_AvailableClientRoleActions_Call{Call: _e.mock.On("AvailableClientRoleActions", domainID, token)}
 }
 
-func (_c *SDK_AvailableClientRoleActions_Call) Run(run func(domainID string, token string)) *SDK_AvailableClientRoleActions_Call {
+func (_c *SDK_AvailableClientRoleActions_Call) Run(run func(ctx context.Context, domainID string, token string)) *SDK_AvailableClientRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -608,9 +608,9 @@ func (_e *SDK_Expecter) AvailableDomainRoleActions(token interface{}) *SDK_Avail
 	return &SDK_AvailableDomainRoleActions_Call{Call: _e.mock.On("AvailableDomainRoleActions", token)}
 }
 
-func (_c *SDK_AvailableDomainRoleActions_Call) Run(run func(token string)) *SDK_AvailableDomainRoleActions_Call {
+func (_c *SDK_AvailableDomainRoleActions_Call) Run(run func(ctx context.Context, token string)) *SDK_AvailableDomainRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
@@ -667,9 +667,9 @@ func (_e *SDK_Expecter) AvailableGroupRoleActions(id interface{}, token interfac
 	return &SDK_AvailableGroupRoleActions_Call{Call: _e.mock.On("AvailableGroupRoleActions", id, token)}
 }
 
-func (_c *SDK_AvailableGroupRoleActions_Call) Run(run func(id string, token string)) *SDK_AvailableGroupRoleActions_Call {
+func (_c *SDK_AvailableGroupRoleActions_Call) Run(run func(ctx context.Context, id string, token string)) *SDK_AvailableGroupRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -725,9 +725,9 @@ func (_e *SDK_Expecter) Channel(id interface{}, domainID interface{}, token inte
 	return &SDK_Channel_Call{Call: _e.mock.On("Channel", id, domainID, token)}
 }
 
-func (_c *SDK_Channel_Call) Run(run func(id string, domainID string, token string)) *SDK_Channel_Call {
+func (_c *SDK_Channel_Call) Run(run func(ctx context.Context, id string, domainID string, token string)) *SDK_Channel_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -783,9 +783,9 @@ func (_e *SDK_Expecter) Channels(pm interface{}, domainID interface{}, token int
 	return &SDK_Channels_Call{Call: _e.mock.On("Channels", pm, domainID, token)}
 }
 
-func (_c *SDK_Channels_Call) Run(run func(pm sdk.PageMetadata, domainID string, token string)) *SDK_Channels_Call {
+func (_c *SDK_Channels_Call) Run(run func(ctx context.Context, pm sdk.PageMetadata, domainID string, token string)) *SDK_Channels_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.PageMetadata), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(sdk.PageMetadata), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -842,9 +842,9 @@ func (_e *SDK_Expecter) Children(id interface{}, domainID interface{}, pm interf
 	return &SDK_Children_Call{Call: _e.mock.On("Children", id, domainID, pm, token)}
 }
 
-func (_c *SDK_Children_Call) Run(run func(id string, domainID string, pm sdk.PageMetadata, token string)) *SDK_Children_Call {
+func (_c *SDK_Children_Call) Run(run func(ctx context.Context, id string, domainID string, pm sdk.PageMetadata, token string)) *SDK_Children_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(sdk.PageMetadata), args[4].(string))
 	})
 	return _c
 }
@@ -900,9 +900,9 @@ func (_e *SDK_Expecter) Client(id interface{}, domainID interface{}, token inter
 	return &SDK_Client_Call{Call: _e.mock.On("Client", id, domainID, token)}
 }
 
-func (_c *SDK_Client_Call) Run(run func(id string, domainID string, token string)) *SDK_Client_Call {
+func (_c *SDK_Client_Call) Run(run func(ctx context.Context, id string, domainID string, token string)) *SDK_Client_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -959,9 +959,9 @@ func (_e *SDK_Expecter) ClientRole(id interface{}, roleID interface{}, domainID 
 	return &SDK_ClientRole_Call{Call: _e.mock.On("ClientRole", id, roleID, domainID, token)}
 }
 
-func (_c *SDK_ClientRole_Call) Run(run func(id string, roleID string, domainID string, token string)) *SDK_ClientRole_Call {
+func (_c *SDK_ClientRole_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, token string)) *SDK_ClientRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -1020,9 +1020,9 @@ func (_e *SDK_Expecter) ClientRoleActions(id interface{}, roleID interface{}, do
 	return &SDK_ClientRoleActions_Call{Call: _e.mock.On("ClientRoleActions", id, roleID, domainID, token)}
 }
 
-func (_c *SDK_ClientRoleActions_Call) Run(run func(id string, roleID string, domainID string, token string)) *SDK_ClientRoleActions_Call {
+func (_c *SDK_ClientRoleActions_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, token string)) *SDK_ClientRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -1080,9 +1080,9 @@ func (_e *SDK_Expecter) ClientRoleMembers(id interface{}, roleID interface{}, do
 	return &SDK_ClientRoleMembers_Call{Call: _e.mock.On("ClientRoleMembers", id, roleID, domainID, pm, token)}
 }
 
-func (_c *SDK_ClientRoleMembers_Call) Run(run func(id string, roleID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ClientRoleMembers_Call {
+func (_c *SDK_ClientRoleMembers_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ClientRoleMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(sdk.PageMetadata), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(sdk.PageMetadata), args[5].(string))
 	})
 	return _c
 }
@@ -1139,9 +1139,9 @@ func (_e *SDK_Expecter) ClientRoles(id interface{}, domainID interface{}, pm int
 	return &SDK_ClientRoles_Call{Call: _e.mock.On("ClientRoles", id, domainID, pm, token)}
 }
 
-func (_c *SDK_ClientRoles_Call) Run(run func(id string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ClientRoles_Call {
+func (_c *SDK_ClientRoles_Call) Run(run func(ctx context.Context, id string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ClientRoles_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(sdk.PageMetadata), args[4].(string))
 	})
 	return _c
 }
@@ -1197,9 +1197,9 @@ func (_e *SDK_Expecter) Clients(pm interface{}, domainID interface{}, token inte
 	return &SDK_Clients_Call{Call: _e.mock.On("Clients", pm, domainID, token)}
 }
 
-func (_c *SDK_Clients_Call) Run(run func(pm sdk.PageMetadata, domainID string, token string)) *SDK_Clients_Call {
+func (_c *SDK_Clients_Call) Run(run func(ctx context.Context, pm sdk.PageMetadata, domainID string, token string)) *SDK_Clients_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.PageMetadata), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(sdk.PageMetadata), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -1246,9 +1246,9 @@ func (_e *SDK_Expecter) Connect(conn interface{}, domainID interface{}, token in
 	return &SDK_Connect_Call{Call: _e.mock.On("Connect", conn, domainID, token)}
 }
 
-func (_c *SDK_Connect_Call) Run(run func(conn sdk.Connection, domainID string, token string)) *SDK_Connect_Call {
+func (_c *SDK_Connect_Call) Run(run func(ctx context.Context, conn sdk.Connection, domainID string, token string)) *SDK_Connect_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.Connection), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(sdk.Connection), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -1297,9 +1297,9 @@ func (_e *SDK_Expecter) ConnectClients(channelID interface{}, clientIDs interfac
 	return &SDK_ConnectClients_Call{Call: _e.mock.On("ConnectClients", channelID, clientIDs, connTypes, domainID, token)}
 }
 
-func (_c *SDK_ConnectClients_Call) Run(run func(channelID string, clientIDs []string, connTypes []string, domainID string, token string)) *SDK_ConnectClients_Call {
+func (_c *SDK_ConnectClients_Call) Run(run func(ctx context.Context, channelID string, clientIDs []string, connTypes []string, domainID string, token string)) *SDK_ConnectClients_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].([]string), args[2].([]string), args[3].(string), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].([]string), args[3].([]string), args[4].(string), args[5].(string))
 	})
 	return _c
 }
@@ -1355,9 +1355,9 @@ func (_e *SDK_Expecter) CreateChannel(channel interface{}, domainID interface{},
 	return &SDK_CreateChannel_Call{Call: _e.mock.On("CreateChannel", channel, domainID, token)}
 }
 
-func (_c *SDK_CreateChannel_Call) Run(run func(channel sdk.Channel, domainID string, token string)) *SDK_CreateChannel_Call {
+func (_c *SDK_CreateChannel_Call) Run(run func(ctx context.Context, channel sdk.Channel, domainID string, token string)) *SDK_CreateChannel_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.Channel), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(sdk.Channel), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -1415,9 +1415,9 @@ func (_e *SDK_Expecter) CreateChannels(channels interface{}, domainID interface{
 	return &SDK_CreateChannels_Call{Call: _e.mock.On("CreateChannels", channels, domainID, token)}
 }
 
-func (_c *SDK_CreateChannels_Call) Run(run func(channels []sdk.Channel, domainID string, token string)) *SDK_CreateChannels_Call {
+func (_c *SDK_CreateChannels_Call) Run(run func(ctx context.Context, channels []sdk.Channel, domainID string, token string)) *SDK_CreateChannels_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].([]sdk.Channel), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].([]sdk.Channel), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -1473,9 +1473,9 @@ func (_e *SDK_Expecter) CreateClient(client interface{}, domainID interface{}, t
 	return &SDK_CreateClient_Call{Call: _e.mock.On("CreateClient", client, domainID, token)}
 }
 
-func (_c *SDK_CreateClient_Call) Run(run func(client sdk.Client, domainID string, token string)) *SDK_CreateClient_Call {
+func (_c *SDK_CreateClient_Call) Run(run func(ctx context.Context, client sdk.Client, domainID string, token string)) *SDK_CreateClient_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.Client), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(sdk.Client), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -1532,9 +1532,9 @@ func (_e *SDK_Expecter) CreateClientRole(id interface{}, domainID interface{}, r
 	return &SDK_CreateClientRole_Call{Call: _e.mock.On("CreateClientRole", id, domainID, rq, token)}
 }
 
-func (_c *SDK_CreateClientRole_Call) Run(run func(id string, domainID string, rq sdk.RoleReq, token string)) *SDK_CreateClientRole_Call {
+func (_c *SDK_CreateClientRole_Call) Run(run func(ctx context.Context, id string, domainID string, rq sdk.RoleReq, token string)) *SDK_CreateClientRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(sdk.RoleReq), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(sdk.RoleReq), args[4].(string))
 	})
 	return _c
 }
@@ -1592,9 +1592,9 @@ func (_e *SDK_Expecter) CreateClients(client interface{}, domainID interface{}, 
 	return &SDK_CreateClients_Call{Call: _e.mock.On("CreateClients", client, domainID, token)}
 }
 
-func (_c *SDK_CreateClients_Call) Run(run func(client []sdk.Client, domainID string, token string)) *SDK_CreateClients_Call {
+func (_c *SDK_CreateClients_Call) Run(run func(ctx context.Context, client []sdk.Client, domainID string, token string)) *SDK_CreateClients_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].([]sdk.Client), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].([]sdk.Client), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -1649,9 +1649,9 @@ func (_e *SDK_Expecter) CreateDomain(d interface{}, token interface{}) *SDK_Crea
 	return &SDK_CreateDomain_Call{Call: _e.mock.On("CreateDomain", d, token)}
 }
 
-func (_c *SDK_CreateDomain_Call) Run(run func(d sdk.Domain, token string)) *SDK_CreateDomain_Call {
+func (_c *SDK_CreateDomain_Call) Run(run func(ctx context.Context, d sdk.Domain, token string)) *SDK_CreateDomain_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.Domain), args[1].(string))
+		run(args[0].(context.Context), args[1].(sdk.Domain), args[2].(string))
 	})
 	return _c
 }
@@ -1707,9 +1707,9 @@ func (_e *SDK_Expecter) CreateDomainRole(id interface{}, rq interface{}, token i
 	return &SDK_CreateDomainRole_Call{Call: _e.mock.On("CreateDomainRole", id, rq, token)}
 }
 
-func (_c *SDK_CreateDomainRole_Call) Run(run func(id string, rq sdk.RoleReq, token string)) *SDK_CreateDomainRole_Call {
+func (_c *SDK_CreateDomainRole_Call) Run(run func(ctx context.Context, id string, rq sdk.RoleReq, token string)) *SDK_CreateDomainRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.RoleReq), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(sdk.RoleReq), args[3].(string))
 	})
 	return _c
 }
@@ -1765,9 +1765,9 @@ func (_e *SDK_Expecter) CreateGroup(group interface{}, domainID interface{}, tok
 	return &SDK_CreateGroup_Call{Call: _e.mock.On("CreateGroup", group, domainID, token)}
 }
 
-func (_c *SDK_CreateGroup_Call) Run(run func(group sdk.Group, domainID string, token string)) *SDK_CreateGroup_Call {
+func (_c *SDK_CreateGroup_Call) Run(run func(ctx context.Context, group sdk.Group, domainID string, token string)) *SDK_CreateGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.Group), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(sdk.Group), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -1824,9 +1824,9 @@ func (_e *SDK_Expecter) CreateGroupRole(id interface{}, domainID interface{}, rq
 	return &SDK_CreateGroupRole_Call{Call: _e.mock.On("CreateGroupRole", id, domainID, rq, token)}
 }
 
-func (_c *SDK_CreateGroupRole_Call) Run(run func(id string, domainID string, rq sdk.RoleReq, token string)) *SDK_CreateGroupRole_Call {
+func (_c *SDK_CreateGroupRole_Call) Run(run func(ctx context.Context, id string, domainID string, rq sdk.RoleReq, token string)) *SDK_CreateGroupRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(sdk.RoleReq), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(sdk.RoleReq), args[4].(string))
 	})
 	return _c
 }
@@ -1880,9 +1880,9 @@ func (_e *SDK_Expecter) CreateToken(lt interface{}) *SDK_CreateToken_Call {
 	return &SDK_CreateToken_Call{Call: _e.mock.On("CreateToken", lt)}
 }
 
-func (_c *SDK_CreateToken_Call) Run(run func(lt sdk.Login)) *SDK_CreateToken_Call {
+func (_c *SDK_CreateToken_Call) Run(run func(ctx context.Context, lt sdk.Login)) *SDK_CreateToken_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.Login))
+		run(args[0].(context.Context), args[1].(sdk.Login))
 	})
 	return _c
 }
@@ -1937,9 +1937,9 @@ func (_e *SDK_Expecter) CreateUser(user interface{}, token interface{}) *SDK_Cre
 	return &SDK_CreateUser_Call{Call: _e.mock.On("CreateUser", user, token)}
 }
 
-func (_c *SDK_CreateUser_Call) Run(run func(user sdk.User, token string)) *SDK_CreateUser_Call {
+func (_c *SDK_CreateUser_Call) Run(run func(ctx context.Context, user sdk.User, token string)) *SDK_CreateUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.User), args[1].(string))
+		run(args[0].(context.Context), args[1].(sdk.User), args[2].(string))
 	})
 	return _c
 }
@@ -1986,9 +1986,9 @@ func (_e *SDK_Expecter) DeleteChannel(id interface{}, domainID interface{}, toke
 	return &SDK_DeleteChannel_Call{Call: _e.mock.On("DeleteChannel", id, domainID, token)}
 }
 
-func (_c *SDK_DeleteChannel_Call) Run(run func(id string, domainID string, token string)) *SDK_DeleteChannel_Call {
+func (_c *SDK_DeleteChannel_Call) Run(run func(ctx context.Context, id string, domainID string, token string)) *SDK_DeleteChannel_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -2035,9 +2035,9 @@ func (_e *SDK_Expecter) DeleteClient(id interface{}, domainID interface{}, token
 	return &SDK_DeleteClient_Call{Call: _e.mock.On("DeleteClient", id, domainID, token)}
 }
 
-func (_c *SDK_DeleteClient_Call) Run(run func(id string, domainID string, token string)) *SDK_DeleteClient_Call {
+func (_c *SDK_DeleteClient_Call) Run(run func(ctx context.Context, id string, domainID string, token string)) *SDK_DeleteClient_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -2085,9 +2085,9 @@ func (_e *SDK_Expecter) DeleteClientRole(id interface{}, roleID interface{}, dom
 	return &SDK_DeleteClientRole_Call{Call: _e.mock.On("DeleteClientRole", id, roleID, domainID, token)}
 }
 
-func (_c *SDK_DeleteClientRole_Call) Run(run func(id string, roleID string, domainID string, token string)) *SDK_DeleteClientRole_Call {
+func (_c *SDK_DeleteClientRole_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, token string)) *SDK_DeleteClientRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -2134,9 +2134,9 @@ func (_e *SDK_Expecter) DeleteDomainRole(id interface{}, roleID interface{}, tok
 	return &SDK_DeleteDomainRole_Call{Call: _e.mock.On("DeleteDomainRole", id, roleID, token)}
 }
 
-func (_c *SDK_DeleteDomainRole_Call) Run(run func(id string, roleID string, token string)) *SDK_DeleteDomainRole_Call {
+func (_c *SDK_DeleteDomainRole_Call) Run(run func(ctx context.Context, id string, roleID string, token string)) *SDK_DeleteDomainRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -2183,9 +2183,9 @@ func (_e *SDK_Expecter) DeleteGroup(id interface{}, domainID interface{}, token 
 	return &SDK_DeleteGroup_Call{Call: _e.mock.On("DeleteGroup", id, domainID, token)}
 }
 
-func (_c *SDK_DeleteGroup_Call) Run(run func(id string, domainID string, token string)) *SDK_DeleteGroup_Call {
+func (_c *SDK_DeleteGroup_Call) Run(run func(ctx context.Context, id string, domainID string, token string)) *SDK_DeleteGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -2233,9 +2233,9 @@ func (_e *SDK_Expecter) DeleteGroupRole(id interface{}, roleID interface{}, doma
 	return &SDK_DeleteGroupRole_Call{Call: _e.mock.On("DeleteGroupRole", id, roleID, domainID, token)}
 }
 
-func (_c *SDK_DeleteGroupRole_Call) Run(run func(id string, roleID string, domainID string, token string)) *SDK_DeleteGroupRole_Call {
+func (_c *SDK_DeleteGroupRole_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, token string)) *SDK_DeleteGroupRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -2280,9 +2280,9 @@ func (_e *SDK_Expecter) DeleteInvitation(userID interface{}, domainID interface{
 	return &SDK_DeleteInvitation_Call{Call: _e.mock.On("DeleteInvitation", userID, domainID, token)}
 }
 
-func (_c *SDK_DeleteInvitation_Call) Run(run func(userID string, domainID string, token string)) *SDK_DeleteInvitation_Call {
+func (_c *SDK_DeleteInvitation_Call) Run(run func(ctx context.Context, userID string, domainID string, token string)) *SDK_DeleteInvitation_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -2328,9 +2328,9 @@ func (_e *SDK_Expecter) DeleteUser(id interface{}, token interface{}) *SDK_Delet
 	return &SDK_DeleteUser_Call{Call: _e.mock.On("DeleteUser", id, token)}
 }
 
-func (_c *SDK_DeleteUser_Call) Run(run func(id string, token string)) *SDK_DeleteUser_Call {
+func (_c *SDK_DeleteUser_Call) Run(run func(ctx context.Context, id string, token string)) *SDK_DeleteUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -2386,9 +2386,9 @@ func (_e *SDK_Expecter) DisableChannel(id interface{}, domainID interface{}, tok
 	return &SDK_DisableChannel_Call{Call: _e.mock.On("DisableChannel", id, domainID, token)}
 }
 
-func (_c *SDK_DisableChannel_Call) Run(run func(id string, domainID string, token string)) *SDK_DisableChannel_Call {
+func (_c *SDK_DisableChannel_Call) Run(run func(ctx context.Context, id string, domainID string, token string)) *SDK_DisableChannel_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -2444,9 +2444,9 @@ func (_e *SDK_Expecter) DisableClient(id interface{}, domainID interface{}, toke
 	return &SDK_DisableClient_Call{Call: _e.mock.On("DisableClient", id, domainID, token)}
 }
 
-func (_c *SDK_DisableClient_Call) Run(run func(id string, domainID string, token string)) *SDK_DisableClient_Call {
+func (_c *SDK_DisableClient_Call) Run(run func(ctx context.Context, id string, domainID string, token string)) *SDK_DisableClient_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -2492,9 +2492,9 @@ func (_e *SDK_Expecter) DisableDomain(domainID interface{}, token interface{}) *
 	return &SDK_DisableDomain_Call{Call: _e.mock.On("DisableDomain", domainID, token)}
 }
 
-func (_c *SDK_DisableDomain_Call) Run(run func(domainID string, token string)) *SDK_DisableDomain_Call {
+func (_c *SDK_DisableDomain_Call) Run(run func(ctx context.Context, domainID string, token string)) *SDK_DisableDomain_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -2550,9 +2550,9 @@ func (_e *SDK_Expecter) DisableGroup(id interface{}, domainID interface{}, token
 	return &SDK_DisableGroup_Call{Call: _e.mock.On("DisableGroup", id, domainID, token)}
 }
 
-func (_c *SDK_DisableGroup_Call) Run(run func(id string, domainID string, token string)) *SDK_DisableGroup_Call {
+func (_c *SDK_DisableGroup_Call) Run(run func(ctx context.Context, id string, domainID string, token string)) *SDK_DisableGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -2607,9 +2607,9 @@ func (_e *SDK_Expecter) DisableUser(id interface{}, token interface{}) *SDK_Disa
 	return &SDK_DisableUser_Call{Call: _e.mock.On("DisableUser", id, token)}
 }
 
-func (_c *SDK_DisableUser_Call) Run(run func(id string, token string)) *SDK_DisableUser_Call {
+func (_c *SDK_DisableUser_Call) Run(run func(ctx context.Context, id string, token string)) *SDK_DisableUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -2656,9 +2656,9 @@ func (_e *SDK_Expecter) Disconnect(conn interface{}, domainID interface{}, token
 	return &SDK_Disconnect_Call{Call: _e.mock.On("Disconnect", conn, domainID, token)}
 }
 
-func (_c *SDK_Disconnect_Call) Run(run func(conn sdk.Connection, domainID string, token string)) *SDK_Disconnect_Call {
+func (_c *SDK_Disconnect_Call) Run(run func(ctx context.Context, conn sdk.Connection, domainID string, token string)) *SDK_Disconnect_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.Connection), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(sdk.Connection), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -2707,9 +2707,9 @@ func (_e *SDK_Expecter) DisconnectClients(channelID interface{}, clientIDs inter
 	return &SDK_DisconnectClients_Call{Call: _e.mock.On("DisconnectClients", channelID, clientIDs, connTypes, domainID, token)}
 }
 
-func (_c *SDK_DisconnectClients_Call) Run(run func(channelID string, clientIDs []string, connTypes []string, domainID string, token string)) *SDK_DisconnectClients_Call {
+func (_c *SDK_DisconnectClients_Call) Run(run func(ctx context.Context, channelID string, clientIDs []string, connTypes []string, domainID string, token string)) *SDK_DisconnectClients_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].([]string), args[2].([]string), args[3].(string), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].([]string), args[3].([]string), args[4].(string), args[5].(string))
 	})
 	return _c
 }
@@ -2764,9 +2764,9 @@ func (_e *SDK_Expecter) Domain(domainID interface{}, token interface{}) *SDK_Dom
 	return &SDK_Domain_Call{Call: _e.mock.On("Domain", domainID, token)}
 }
 
-func (_c *SDK_Domain_Call) Run(run func(domainID string, token string)) *SDK_Domain_Call {
+func (_c *SDK_Domain_Call) Run(run func(ctx context.Context, domainID string, token string)) *SDK_Domain_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -2822,9 +2822,9 @@ func (_e *SDK_Expecter) DomainRole(id interface{}, roleID interface{}, token int
 	return &SDK_DomainRole_Call{Call: _e.mock.On("DomainRole", id, roleID, token)}
 }
 
-func (_c *SDK_DomainRole_Call) Run(run func(id string, roleID string, token string)) *SDK_DomainRole_Call {
+func (_c *SDK_DomainRole_Call) Run(run func(ctx context.Context, id string, roleID string, token string)) *SDK_DomainRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -2882,9 +2882,9 @@ func (_e *SDK_Expecter) DomainRoleActions(id interface{}, roleID interface{}, to
 	return &SDK_DomainRoleActions_Call{Call: _e.mock.On("DomainRoleActions", id, roleID, token)}
 }
 
-func (_c *SDK_DomainRoleActions_Call) Run(run func(id string, roleID string, token string)) *SDK_DomainRoleActions_Call {
+func (_c *SDK_DomainRoleActions_Call) Run(run func(ctx context.Context, id string, roleID string, token string)) *SDK_DomainRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -2941,9 +2941,9 @@ func (_e *SDK_Expecter) DomainRoleMembers(id interface{}, roleID interface{}, pm
 	return &SDK_DomainRoleMembers_Call{Call: _e.mock.On("DomainRoleMembers", id, roleID, pm, token)}
 }
 
-func (_c *SDK_DomainRoleMembers_Call) Run(run func(id string, roleID string, pm sdk.PageMetadata, token string)) *SDK_DomainRoleMembers_Call {
+func (_c *SDK_DomainRoleMembers_Call) Run(run func(ctx context.Context, id string, roleID string, pm sdk.PageMetadata, token string)) *SDK_DomainRoleMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(sdk.PageMetadata), args[4].(string))
 	})
 	return _c
 }
@@ -2999,9 +2999,9 @@ func (_e *SDK_Expecter) DomainRoles(id interface{}, pm interface{}, token interf
 	return &SDK_DomainRoles_Call{Call: _e.mock.On("DomainRoles", id, pm, token)}
 }
 
-func (_c *SDK_DomainRoles_Call) Run(run func(id string, pm sdk.PageMetadata, token string)) *SDK_DomainRoles_Call {
+func (_c *SDK_DomainRoles_Call) Run(run func(ctx context.Context, id string, pm sdk.PageMetadata, token string)) *SDK_DomainRoles_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
 	})
 	return _c
 }
@@ -3056,9 +3056,9 @@ func (_e *SDK_Expecter) Domains(pm interface{}, token interface{}) *SDK_Domains_
 	return &SDK_Domains_Call{Call: _e.mock.On("Domains", pm, token)}
 }
 
-func (_c *SDK_Domains_Call) Run(run func(pm sdk.PageMetadata, token string)) *SDK_Domains_Call {
+func (_c *SDK_Domains_Call) Run(run func(ctx context.Context, pm sdk.PageMetadata, token string)) *SDK_Domains_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.PageMetadata), args[1].(string))
+		run(args[0].(context.Context), args[1].(sdk.PageMetadata), args[2].(string))
 	})
 	return _c
 }
@@ -3114,9 +3114,9 @@ func (_e *SDK_Expecter) EnableChannel(id interface{}, domainID interface{}, toke
 	return &SDK_EnableChannel_Call{Call: _e.mock.On("EnableChannel", id, domainID, token)}
 }
 
-func (_c *SDK_EnableChannel_Call) Run(run func(id string, domainID string, token string)) *SDK_EnableChannel_Call {
+func (_c *SDK_EnableChannel_Call) Run(run func(ctx context.Context, id string, domainID string, token string)) *SDK_EnableChannel_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -3172,9 +3172,9 @@ func (_e *SDK_Expecter) EnableClient(id interface{}, domainID interface{}, token
 	return &SDK_EnableClient_Call{Call: _e.mock.On("EnableClient", id, domainID, token)}
 }
 
-func (_c *SDK_EnableClient_Call) Run(run func(id string, domainID string, token string)) *SDK_EnableClient_Call {
+func (_c *SDK_EnableClient_Call) Run(run func(ctx context.Context, id string, domainID string, token string)) *SDK_EnableClient_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -3220,9 +3220,9 @@ func (_e *SDK_Expecter) EnableDomain(domainID interface{}, token interface{}) *S
 	return &SDK_EnableDomain_Call{Call: _e.mock.On("EnableDomain", domainID, token)}
 }
 
-func (_c *SDK_EnableDomain_Call) Run(run func(domainID string, token string)) *SDK_EnableDomain_Call {
+func (_c *SDK_EnableDomain_Call) Run(run func(ctx context.Context, domainID string, token string)) *SDK_EnableDomain_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -3278,9 +3278,9 @@ func (_e *SDK_Expecter) EnableGroup(id interface{}, domainID interface{}, token 
 	return &SDK_EnableGroup_Call{Call: _e.mock.On("EnableGroup", id, domainID, token)}
 }
 
-func (_c *SDK_EnableGroup_Call) Run(run func(id string, domainID string, token string)) *SDK_EnableGroup_Call {
+func (_c *SDK_EnableGroup_Call) Run(run func(ctx context.Context, id string, domainID string, token string)) *SDK_EnableGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -3335,9 +3335,9 @@ func (_e *SDK_Expecter) EnableUser(id interface{}, token interface{}) *SDK_Enabl
 	return &SDK_EnableUser_Call{Call: _e.mock.On("EnableUser", id, token)}
 }
 
-func (_c *SDK_EnableUser_Call) Run(run func(id string, token string)) *SDK_EnableUser_Call {
+func (_c *SDK_EnableUser_Call) Run(run func(ctx context.Context, id string, token string)) *SDK_EnableUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -3383,9 +3383,9 @@ func (_e *SDK_Expecter) FreezeDomain(domainID interface{}, token interface{}) *S
 	return &SDK_FreezeDomain_Call{Call: _e.mock.On("FreezeDomain", domainID, token)}
 }
 
-func (_c *SDK_FreezeDomain_Call) Run(run func(domainID string, token string)) *SDK_FreezeDomain_Call {
+func (_c *SDK_FreezeDomain_Call) Run(run func(ctx context.Context, domainID string, token string)) *SDK_FreezeDomain_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -3441,9 +3441,9 @@ func (_e *SDK_Expecter) Group(id interface{}, domainID interface{}, token interf
 	return &SDK_Group_Call{Call: _e.mock.On("Group", id, domainID, token)}
 }
 
-func (_c *SDK_Group_Call) Run(run func(id string, domainID string, token string)) *SDK_Group_Call {
+func (_c *SDK_Group_Call) Run(run func(ctx context.Context, id string, domainID string, token string)) *SDK_Group_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -3500,9 +3500,9 @@ func (_e *SDK_Expecter) GroupRole(id interface{}, roleID interface{}, domainID i
 	return &SDK_GroupRole_Call{Call: _e.mock.On("GroupRole", id, roleID, domainID, token)}
 }
 
-func (_c *SDK_GroupRole_Call) Run(run func(id string, roleID string, domainID string, token string)) *SDK_GroupRole_Call {
+func (_c *SDK_GroupRole_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, token string)) *SDK_GroupRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -3561,9 +3561,9 @@ func (_e *SDK_Expecter) GroupRoleActions(id interface{}, roleID interface{}, dom
 	return &SDK_GroupRoleActions_Call{Call: _e.mock.On("GroupRoleActions", id, roleID, domainID, token)}
 }
 
-func (_c *SDK_GroupRoleActions_Call) Run(run func(id string, roleID string, domainID string, token string)) *SDK_GroupRoleActions_Call {
+func (_c *SDK_GroupRoleActions_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, token string)) *SDK_GroupRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -3621,9 +3621,9 @@ func (_e *SDK_Expecter) GroupRoleMembers(id interface{}, roleID interface{}, dom
 	return &SDK_GroupRoleMembers_Call{Call: _e.mock.On("GroupRoleMembers", id, roleID, domainID, pm, token)}
 }
 
-func (_c *SDK_GroupRoleMembers_Call) Run(run func(id string, roleID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_GroupRoleMembers_Call {
+func (_c *SDK_GroupRoleMembers_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_GroupRoleMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(sdk.PageMetadata), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(sdk.PageMetadata), args[5].(string))
 	})
 	return _c
 }
@@ -3680,9 +3680,9 @@ func (_e *SDK_Expecter) GroupRoles(id interface{}, domainID interface{}, pm inte
 	return &SDK_GroupRoles_Call{Call: _e.mock.On("GroupRoles", id, domainID, pm, token)}
 }
 
-func (_c *SDK_GroupRoles_Call) Run(run func(id string, domainID string, pm sdk.PageMetadata, token string)) *SDK_GroupRoles_Call {
+func (_c *SDK_GroupRoles_Call) Run(run func(ctx context.Context, id string, domainID string, pm sdk.PageMetadata, token string)) *SDK_GroupRoles_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(sdk.PageMetadata), args[4].(string))
 	})
 	return _c
 }
@@ -3738,9 +3738,9 @@ func (_e *SDK_Expecter) Groups(pm interface{}, domainID interface{}, token inter
 	return &SDK_Groups_Call{Call: _e.mock.On("Groups", pm, domainID, token)}
 }
 
-func (_c *SDK_Groups_Call) Run(run func(pm sdk.PageMetadata, domainID string, token string)) *SDK_Groups_Call {
+func (_c *SDK_Groups_Call) Run(run func(ctx context.Context, pm sdk.PageMetadata, domainID string, token string)) *SDK_Groups_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.PageMetadata), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(sdk.PageMetadata), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -3853,9 +3853,9 @@ func (_e *SDK_Expecter) Hierarchy(id interface{}, domainID interface{}, pm inter
 	return &SDK_Hierarchy_Call{Call: _e.mock.On("Hierarchy", id, domainID, pm, token)}
 }
 
-func (_c *SDK_Hierarchy_Call) Run(run func(id string, domainID string, pm sdk.PageMetadata, token string)) *SDK_Hierarchy_Call {
+func (_c *SDK_Hierarchy_Call) Run(run func(ctx context.Context, id string, domainID string, pm sdk.PageMetadata, token string)) *SDK_Hierarchy_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(sdk.PageMetadata), args[4].(string))
 	})
 	return _c
 }
@@ -3909,9 +3909,9 @@ func (_e *SDK_Expecter) Invitation(userID interface{}, domainID interface{}, tok
 	return &SDK_Invitation_Call{Call: _e.mock.On("Invitation", userID, domainID, token)}
 }
 
-func (_c *SDK_Invitation_Call) Run(run func(userID string, domainID string, token string)) *SDK_Invitation_Call {
+func (_c *SDK_Invitation_Call) Run(run func(ctx context.Context, userID string, domainID string, token string)) *SDK_Invitation_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -3964,9 +3964,9 @@ func (_e *SDK_Expecter) Invitations(pm interface{}, token interface{}) *SDK_Invi
 	return &SDK_Invitations_Call{Call: _e.mock.On("Invitations", pm, token)}
 }
 
-func (_c *SDK_Invitations_Call) Run(run func(pm sdk.PageMetadata, token string)) *SDK_Invitations_Call {
+func (_c *SDK_Invitations_Call) Run(run func(ctx context.Context, pm sdk.PageMetadata, token string)) *SDK_Invitations_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.PageMetadata), args[1].(string))
+		run(args[0].(context.Context), args[1].(sdk.PageMetadata), args[2].(string))
 	})
 	return _c
 }
@@ -4023,9 +4023,9 @@ func (_e *SDK_Expecter) IssueCert(clientID interface{}, validity interface{}, do
 	return &SDK_IssueCert_Call{Call: _e.mock.On("IssueCert", clientID, validity, domainID, token)}
 }
 
-func (_c *SDK_IssueCert_Call) Run(run func(clientID string, validity string, domainID string, token string)) *SDK_IssueCert_Call {
+func (_c *SDK_IssueCert_Call) Run(run func(ctx context.Context, clientID string, validity string, domainID string, token string)) *SDK_IssueCert_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -4081,9 +4081,9 @@ func (_e *SDK_Expecter) Journal(entityType interface{}, entityID interface{}, do
 	return &SDK_Journal_Call{Call: _e.mock.On("Journal", entityType, entityID, domainID, pm, token)}
 }
 
-func (_c *SDK_Journal_Call) Run(run func(entityType string, entityID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_Journal_Call {
+func (_c *SDK_Journal_Call) Run(run func(ctx context.Context, entityType string, entityID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_Journal_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(sdk.PageMetadata), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(sdk.PageMetadata), args[5].(string))
 	})
 	return _c
 }
@@ -4140,9 +4140,9 @@ func (_e *SDK_Expecter) ListChannelMembers(channelID interface{}, domainID inter
 	return &SDK_ListChannelMembers_Call{Call: _e.mock.On("ListChannelMembers", channelID, domainID, pm, token)}
 }
 
-func (_c *SDK_ListChannelMembers_Call) Run(run func(channelID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ListChannelMembers_Call {
+func (_c *SDK_ListChannelMembers_Call) Run(run func(ctx context.Context, channelID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ListChannelMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(sdk.PageMetadata), args[4].(string))
 	})
 	return _c
 }
@@ -4199,9 +4199,9 @@ func (_e *SDK_Expecter) ListClientMembers(clientID interface{}, domainID interfa
 	return &SDK_ListClientMembers_Call{Call: _e.mock.On("ListClientMembers", clientID, domainID, pm, token)}
 }
 
-func (_c *SDK_ListClientMembers_Call) Run(run func(clientID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ListClientMembers_Call {
+func (_c *SDK_ListClientMembers_Call) Run(run func(ctx context.Context, clientID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ListClientMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(sdk.PageMetadata), args[4].(string))
 	})
 	return _c
 }
@@ -4257,9 +4257,9 @@ func (_e *SDK_Expecter) ListDomainMembers(domainID interface{}, pm interface{}, 
 	return &SDK_ListDomainMembers_Call{Call: _e.mock.On("ListDomainMembers", domainID, pm, token)}
 }
 
-func (_c *SDK_ListDomainMembers_Call) Run(run func(domainID string, pm sdk.PageMetadata, token string)) *SDK_ListDomainMembers_Call {
+func (_c *SDK_ListDomainMembers_Call) Run(run func(ctx context.Context, domainID string, pm sdk.PageMetadata, token string)) *SDK_ListDomainMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(sdk.PageMetadata), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
 	})
 	return _c
 }
@@ -4316,9 +4316,9 @@ func (_e *SDK_Expecter) ListGroupMembers(groupID interface{}, domainID interface
 	return &SDK_ListGroupMembers_Call{Call: _e.mock.On("ListGroupMembers", groupID, domainID, pm, token)}
 }
 
-func (_c *SDK_ListGroupMembers_Call) Run(run func(groupID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ListGroupMembers_Call {
+func (_c *SDK_ListGroupMembers_Call) Run(run func(ctx context.Context, groupID string, domainID string, pm sdk.PageMetadata, token string)) *SDK_ListGroupMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(sdk.PageMetadata), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(sdk.PageMetadata), args[4].(string))
 	})
 	return _c
 }
@@ -4372,9 +4372,9 @@ func (_e *SDK_Expecter) RefreshToken(token interface{}) *SDK_RefreshToken_Call {
 	return &SDK_RefreshToken_Call{Call: _e.mock.On("RefreshToken", token)}
 }
 
-func (_c *SDK_RefreshToken_Call) Run(run func(token string)) *SDK_RefreshToken_Call {
+func (_c *SDK_RefreshToken_Call) Run(run func(ctx context.Context, token string)) *SDK_RefreshToken_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
@@ -4418,9 +4418,9 @@ func (_e *SDK_Expecter) RejectInvitation(domainID interface{}, token interface{}
 	return &SDK_RejectInvitation_Call{Call: _e.mock.On("RejectInvitation", domainID, token)}
 }
 
-func (_c *SDK_RejectInvitation_Call) Run(run func(domainID string, token string)) *SDK_RejectInvitation_Call {
+func (_c *SDK_RejectInvitation_Call) Run(run func(ctx context.Context, domainID string, token string)) *SDK_RejectInvitation_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -4467,9 +4467,9 @@ func (_e *SDK_Expecter) RemoveAllChildren(id interface{}, domainID interface{}, 
 	return &SDK_RemoveAllChildren_Call{Call: _e.mock.On("RemoveAllChildren", id, domainID, token)}
 }
 
-func (_c *SDK_RemoveAllChildren_Call) Run(run func(id string, domainID string, token string)) *SDK_RemoveAllChildren_Call {
+func (_c *SDK_RemoveAllChildren_Call) Run(run func(ctx context.Context, id string, domainID string, token string)) *SDK_RemoveAllChildren_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -4517,9 +4517,9 @@ func (_e *SDK_Expecter) RemoveAllClientRoleActions(id interface{}, roleID interf
 	return &SDK_RemoveAllClientRoleActions_Call{Call: _e.mock.On("RemoveAllClientRoleActions", id, roleID, domainID, token)}
 }
 
-func (_c *SDK_RemoveAllClientRoleActions_Call) Run(run func(id string, roleID string, domainID string, token string)) *SDK_RemoveAllClientRoleActions_Call {
+func (_c *SDK_RemoveAllClientRoleActions_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, token string)) *SDK_RemoveAllClientRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -4567,9 +4567,9 @@ func (_e *SDK_Expecter) RemoveAllClientRoleMembers(id interface{}, roleID interf
 	return &SDK_RemoveAllClientRoleMembers_Call{Call: _e.mock.On("RemoveAllClientRoleMembers", id, roleID, domainID, token)}
 }
 
-func (_c *SDK_RemoveAllClientRoleMembers_Call) Run(run func(id string, roleID string, domainID string, token string)) *SDK_RemoveAllClientRoleMembers_Call {
+func (_c *SDK_RemoveAllClientRoleMembers_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, token string)) *SDK_RemoveAllClientRoleMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -4616,9 +4616,9 @@ func (_e *SDK_Expecter) RemoveAllDomainRoleActions(id interface{}, roleID interf
 	return &SDK_RemoveAllDomainRoleActions_Call{Call: _e.mock.On("RemoveAllDomainRoleActions", id, roleID, token)}
 }
 
-func (_c *SDK_RemoveAllDomainRoleActions_Call) Run(run func(id string, roleID string, token string)) *SDK_RemoveAllDomainRoleActions_Call {
+func (_c *SDK_RemoveAllDomainRoleActions_Call) Run(run func(ctx context.Context, id string, roleID string, token string)) *SDK_RemoveAllDomainRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -4665,9 +4665,9 @@ func (_e *SDK_Expecter) RemoveAllDomainRoleMembers(id interface{}, roleID interf
 	return &SDK_RemoveAllDomainRoleMembers_Call{Call: _e.mock.On("RemoveAllDomainRoleMembers", id, roleID, token)}
 }
 
-func (_c *SDK_RemoveAllDomainRoleMembers_Call) Run(run func(id string, roleID string, token string)) *SDK_RemoveAllDomainRoleMembers_Call {
+func (_c *SDK_RemoveAllDomainRoleMembers_Call) Run(run func(ctx context.Context, id string, roleID string, token string)) *SDK_RemoveAllDomainRoleMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -4715,9 +4715,9 @@ func (_e *SDK_Expecter) RemoveAllGroupRoleActions(id interface{}, roleID interfa
 	return &SDK_RemoveAllGroupRoleActions_Call{Call: _e.mock.On("RemoveAllGroupRoleActions", id, roleID, domainID, token)}
 }
 
-func (_c *SDK_RemoveAllGroupRoleActions_Call) Run(run func(id string, roleID string, domainID string, token string)) *SDK_RemoveAllGroupRoleActions_Call {
+func (_c *SDK_RemoveAllGroupRoleActions_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, token string)) *SDK_RemoveAllGroupRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -4765,9 +4765,9 @@ func (_e *SDK_Expecter) RemoveAllGroupRoleMembers(id interface{}, roleID interfa
 	return &SDK_RemoveAllGroupRoleMembers_Call{Call: _e.mock.On("RemoveAllGroupRoleMembers", id, roleID, domainID, token)}
 }
 
-func (_c *SDK_RemoveAllGroupRoleMembers_Call) Run(run func(id string, roleID string, domainID string, token string)) *SDK_RemoveAllGroupRoleMembers_Call {
+func (_c *SDK_RemoveAllGroupRoleMembers_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, token string)) *SDK_RemoveAllGroupRoleMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -4815,9 +4815,9 @@ func (_e *SDK_Expecter) RemoveChannelParent(id interface{}, domainID interface{}
 	return &SDK_RemoveChannelParent_Call{Call: _e.mock.On("RemoveChannelParent", id, domainID, groupID, token)}
 }
 
-func (_c *SDK_RemoveChannelParent_Call) Run(run func(id string, domainID string, groupID string, token string)) *SDK_RemoveChannelParent_Call {
+func (_c *SDK_RemoveChannelParent_Call) Run(run func(ctx context.Context, id string, domainID string, groupID string, token string)) *SDK_RemoveChannelParent_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -4865,9 +4865,9 @@ func (_e *SDK_Expecter) RemoveChildren(id interface{}, domainID interface{}, gro
 	return &SDK_RemoveChildren_Call{Call: _e.mock.On("RemoveChildren", id, domainID, groupIDs, token)}
 }
 
-func (_c *SDK_RemoveChildren_Call) Run(run func(id string, domainID string, groupIDs []string, token string)) *SDK_RemoveChildren_Call {
+func (_c *SDK_RemoveChildren_Call) Run(run func(ctx context.Context, id string, domainID string, groupIDs []string, token string)) *SDK_RemoveChildren_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].([]string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
 	})
 	return _c
 }
@@ -4915,9 +4915,9 @@ func (_e *SDK_Expecter) RemoveClientParent(id interface{}, domainID interface{},
 	return &SDK_RemoveClientParent_Call{Call: _e.mock.On("RemoveClientParent", id, domainID, groupID, token)}
 }
 
-func (_c *SDK_RemoveClientParent_Call) Run(run func(id string, domainID string, groupID string, token string)) *SDK_RemoveClientParent_Call {
+func (_c *SDK_RemoveClientParent_Call) Run(run func(ctx context.Context, id string, domainID string, groupID string, token string)) *SDK_RemoveClientParent_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -4966,9 +4966,9 @@ func (_e *SDK_Expecter) RemoveClientRoleActions(id interface{}, roleID interface
 	return &SDK_RemoveClientRoleActions_Call{Call: _e.mock.On("RemoveClientRoleActions", id, roleID, domainID, actions, token)}
 }
 
-func (_c *SDK_RemoveClientRoleActions_Call) Run(run func(id string, roleID string, domainID string, actions []string, token string)) *SDK_RemoveClientRoleActions_Call {
+func (_c *SDK_RemoveClientRoleActions_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, actions []string, token string)) *SDK_RemoveClientRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].([]string), args[5].(string))
 	})
 	return _c
 }
@@ -5017,9 +5017,9 @@ func (_e *SDK_Expecter) RemoveClientRoleMembers(id interface{}, roleID interface
 	return &SDK_RemoveClientRoleMembers_Call{Call: _e.mock.On("RemoveClientRoleMembers", id, roleID, domainID, members, token)}
 }
 
-func (_c *SDK_RemoveClientRoleMembers_Call) Run(run func(id string, roleID string, domainID string, members []string, token string)) *SDK_RemoveClientRoleMembers_Call {
+func (_c *SDK_RemoveClientRoleMembers_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, members []string, token string)) *SDK_RemoveClientRoleMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].([]string), args[5].(string))
 	})
 	return _c
 }
@@ -5067,9 +5067,9 @@ func (_e *SDK_Expecter) RemoveDomainRoleActions(id interface{}, roleID interface
 	return &SDK_RemoveDomainRoleActions_Call{Call: _e.mock.On("RemoveDomainRoleActions", id, roleID, actions, token)}
 }
 
-func (_c *SDK_RemoveDomainRoleActions_Call) Run(run func(id string, roleID string, actions []string, token string)) *SDK_RemoveDomainRoleActions_Call {
+func (_c *SDK_RemoveDomainRoleActions_Call) Run(run func(ctx context.Context, id string, roleID string, actions []string, token string)) *SDK_RemoveDomainRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].([]string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
 	})
 	return _c
 }
@@ -5117,9 +5117,9 @@ func (_e *SDK_Expecter) RemoveDomainRoleMembers(id interface{}, roleID interface
 	return &SDK_RemoveDomainRoleMembers_Call{Call: _e.mock.On("RemoveDomainRoleMembers", id, roleID, members, token)}
 }
 
-func (_c *SDK_RemoveDomainRoleMembers_Call) Run(run func(id string, roleID string, members []string, token string)) *SDK_RemoveDomainRoleMembers_Call {
+func (_c *SDK_RemoveDomainRoleMembers_Call) Run(run func(ctx context.Context, id string, roleID string, members []string, token string)) *SDK_RemoveDomainRoleMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].([]string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
 	})
 	return _c
 }
@@ -5167,9 +5167,9 @@ func (_e *SDK_Expecter) RemoveGroupParent(id interface{}, domainID interface{}, 
 	return &SDK_RemoveGroupParent_Call{Call: _e.mock.On("RemoveGroupParent", id, domainID, groupID, token)}
 }
 
-func (_c *SDK_RemoveGroupParent_Call) Run(run func(id string, domainID string, groupID string, token string)) *SDK_RemoveGroupParent_Call {
+func (_c *SDK_RemoveGroupParent_Call) Run(run func(ctx context.Context, id string, domainID string, groupID string, token string)) *SDK_RemoveGroupParent_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -5218,9 +5218,9 @@ func (_e *SDK_Expecter) RemoveGroupRoleActions(id interface{}, roleID interface{
 	return &SDK_RemoveGroupRoleActions_Call{Call: _e.mock.On("RemoveGroupRoleActions", id, roleID, domainID, actions, token)}
 }
 
-func (_c *SDK_RemoveGroupRoleActions_Call) Run(run func(id string, roleID string, domainID string, actions []string, token string)) *SDK_RemoveGroupRoleActions_Call {
+func (_c *SDK_RemoveGroupRoleActions_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, actions []string, token string)) *SDK_RemoveGroupRoleActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].([]string), args[5].(string))
 	})
 	return _c
 }
@@ -5269,9 +5269,9 @@ func (_e *SDK_Expecter) RemoveGroupRoleMembers(id interface{}, roleID interface{
 	return &SDK_RemoveGroupRoleMembers_Call{Call: _e.mock.On("RemoveGroupRoleMembers", id, roleID, domainID, members, token)}
 }
 
-func (_c *SDK_RemoveGroupRoleMembers_Call) Run(run func(id string, roleID string, domainID string, members []string, token string)) *SDK_RemoveGroupRoleMembers_Call {
+func (_c *SDK_RemoveGroupRoleMembers_Call) Run(run func(ctx context.Context, id string, roleID string, domainID string, members []string, token string)) *SDK_RemoveGroupRoleMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].([]string), args[5].(string))
 	})
 	return _c
 }
@@ -5318,9 +5318,9 @@ func (_e *SDK_Expecter) ResetPassword(password interface{}, confPass interface{}
 	return &SDK_ResetPassword_Call{Call: _e.mock.On("ResetPassword", password, confPass, token)}
 }
 
-func (_c *SDK_ResetPassword_Call) Run(run func(password string, confPass string, token string)) *SDK_ResetPassword_Call {
+func (_c *SDK_ResetPassword_Call) Run(run func(ctx context.Context, password string, confPass string, token string)) *SDK_ResetPassword_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -5365,9 +5365,9 @@ func (_e *SDK_Expecter) ResetPasswordRequest(email interface{}) *SDK_ResetPasswo
 	return &SDK_ResetPasswordRequest_Call{Call: _e.mock.On("ResetPasswordRequest", email)}
 }
 
-func (_c *SDK_ResetPasswordRequest_Call) Run(run func(email string)) *SDK_ResetPasswordRequest_Call {
+func (_c *SDK_ResetPasswordRequest_Call) Run(run func(ctx context.Context, email string)) *SDK_ResetPasswordRequest_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
@@ -5423,9 +5423,9 @@ func (_e *SDK_Expecter) RevokeCert(clientID interface{}, domainID interface{}, t
 	return &SDK_RevokeCert_Call{Call: _e.mock.On("RevokeCert", clientID, domainID, token)}
 }
 
-func (_c *SDK_RevokeCert_Call) Run(run func(clientID string, domainID string, token string)) *SDK_RevokeCert_Call {
+func (_c *SDK_RevokeCert_Call) Run(run func(ctx context.Context, clientID string, domainID string, token string)) *SDK_RevokeCert_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -5480,9 +5480,9 @@ func (_e *SDK_Expecter) SearchUsers(pm interface{}, token interface{}) *SDK_Sear
 	return &SDK_SearchUsers_Call{Call: _e.mock.On("SearchUsers", pm, token)}
 }
 
-func (_c *SDK_SearchUsers_Call) Run(run func(pm sdk.PageMetadata, token string)) *SDK_SearchUsers_Call {
+func (_c *SDK_SearchUsers_Call) Run(run func(ctx context.Context, pm sdk.PageMetadata, token string)) *SDK_SearchUsers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.PageMetadata), args[1].(string))
+		run(args[0].(context.Context), args[1].(sdk.PageMetadata), args[2].(string))
 	})
 	return _c
 }
@@ -5526,9 +5526,9 @@ func (_e *SDK_Expecter) SendInvitation(invitation interface{}, token interface{}
 	return &SDK_SendInvitation_Call{Call: _e.mock.On("SendInvitation", invitation, token)}
 }
 
-func (_c *SDK_SendInvitation_Call) Run(run func(invitation sdk.Invitation, token string)) *SDK_SendInvitation_Call {
+func (_c *SDK_SendInvitation_Call) Run(run func(ctx context.Context, invitation sdk.Invitation, token string)) *SDK_SendInvitation_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.Invitation), args[1].(string))
+		run(args[0].(context.Context), args[1].(sdk.Invitation), args[2].(string))
 	})
 	return _c
 }
@@ -5575,9 +5575,9 @@ func (_e *SDK_Expecter) SendMessage(chanID interface{}, msg interface{}, key int
 	return &SDK_SendMessage_Call{Call: _e.mock.On("SendMessage", chanID, msg, key)}
 }
 
-func (_c *SDK_SendMessage_Call) Run(run func(chanID string, msg string, key string)) *SDK_SendMessage_Call {
+func (_c *SDK_SendMessage_Call) Run(run func(ctx context.Context, chanID string, msg string, key string)) *SDK_SendMessage_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -5625,9 +5625,9 @@ func (_e *SDK_Expecter) SetChannelParent(id interface{}, domainID interface{}, g
 	return &SDK_SetChannelParent_Call{Call: _e.mock.On("SetChannelParent", id, domainID, groupID, token)}
 }
 
-func (_c *SDK_SetChannelParent_Call) Run(run func(id string, domainID string, groupID string, token string)) *SDK_SetChannelParent_Call {
+func (_c *SDK_SetChannelParent_Call) Run(run func(ctx context.Context, id string, domainID string, groupID string, token string)) *SDK_SetChannelParent_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -5675,9 +5675,9 @@ func (_e *SDK_Expecter) SetClientParent(id interface{}, domainID interface{}, gr
 	return &SDK_SetClientParent_Call{Call: _e.mock.On("SetClientParent", id, domainID, groupID, token)}
 }
 
-func (_c *SDK_SetClientParent_Call) Run(run func(id string, domainID string, groupID string, token string)) *SDK_SetClientParent_Call {
+func (_c *SDK_SetClientParent_Call) Run(run func(ctx context.Context, id string, domainID string, groupID string, token string)) *SDK_SetClientParent_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -5772,9 +5772,9 @@ func (_e *SDK_Expecter) SetGroupParent(id interface{}, domainID interface{}, gro
 	return &SDK_SetGroupParent_Call{Call: _e.mock.On("SetGroupParent", id, domainID, groupID, token)}
 }
 
-func (_c *SDK_SetGroupParent_Call) Run(run func(id string, domainID string, groupID string, token string)) *SDK_SetGroupParent_Call {
+func (_c *SDK_SetGroupParent_Call) Run(run func(ctx context.Context, id string, domainID string, groupID string, token string)) *SDK_SetGroupParent_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -5830,9 +5830,9 @@ func (_e *SDK_Expecter) UpdateChannel(channel interface{}, domainID interface{},
 	return &SDK_UpdateChannel_Call{Call: _e.mock.On("UpdateChannel", channel, domainID, token)}
 }
 
-func (_c *SDK_UpdateChannel_Call) Run(run func(channel sdk.Channel, domainID string, token string)) *SDK_UpdateChannel_Call {
+func (_c *SDK_UpdateChannel_Call) Run(run func(ctx context.Context, channel sdk.Channel, domainID string, token string)) *SDK_UpdateChannel_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.Channel), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(sdk.Channel), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -5888,9 +5888,9 @@ func (_e *SDK_Expecter) UpdateChannelTags(c interface{}, domainID interface{}, t
 	return &SDK_UpdateChannelTags_Call{Call: _e.mock.On("UpdateChannelTags", c, domainID, token)}
 }
 
-func (_c *SDK_UpdateChannelTags_Call) Run(run func(c sdk.Channel, domainID string, token string)) *SDK_UpdateChannelTags_Call {
+func (_c *SDK_UpdateChannelTags_Call) Run(run func(ctx context.Context, c sdk.Channel, domainID string, token string)) *SDK_UpdateChannelTags_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.Channel), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(sdk.Channel), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -5946,9 +5946,9 @@ func (_e *SDK_Expecter) UpdateClient(client interface{}, domainID interface{}, t
 	return &SDK_UpdateClient_Call{Call: _e.mock.On("UpdateClient", client, domainID, token)}
 }
 
-func (_c *SDK_UpdateClient_Call) Run(run func(client sdk.Client, domainID string, token string)) *SDK_UpdateClient_Call {
+func (_c *SDK_UpdateClient_Call) Run(run func(ctx context.Context, client sdk.Client, domainID string, token string)) *SDK_UpdateClient_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.Client), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(sdk.Client), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -6006,9 +6006,9 @@ func (_e *SDK_Expecter) UpdateClientRole(id interface{}, roleID interface{}, new
 	return &SDK_UpdateClientRole_Call{Call: _e.mock.On("UpdateClientRole", id, roleID, newName, domainID, token)}
 }
 
-func (_c *SDK_UpdateClientRole_Call) Run(run func(id string, roleID string, newName string, domainID string, token string)) *SDK_UpdateClientRole_Call {
+func (_c *SDK_UpdateClientRole_Call) Run(run func(ctx context.Context, id string, roleID string, newName string, domainID string, token string)) *SDK_UpdateClientRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string), args[5].(string))
 	})
 	return _c
 }
@@ -6065,9 +6065,9 @@ func (_e *SDK_Expecter) UpdateClientSecret(id interface{}, secret interface{}, d
 	return &SDK_UpdateClientSecret_Call{Call: _e.mock.On("UpdateClientSecret", id, secret, domainID, token)}
 }
 
-func (_c *SDK_UpdateClientSecret_Call) Run(run func(id string, secret string, domainID string, token string)) *SDK_UpdateClientSecret_Call {
+func (_c *SDK_UpdateClientSecret_Call) Run(run func(ctx context.Context, id string, secret string, domainID string, token string)) *SDK_UpdateClientSecret_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -6123,9 +6123,9 @@ func (_e *SDK_Expecter) UpdateClientTags(client interface{}, domainID interface{
 	return &SDK_UpdateClientTags_Call{Call: _e.mock.On("UpdateClientTags", client, domainID, token)}
 }
 
-func (_c *SDK_UpdateClientTags_Call) Run(run func(client sdk.Client, domainID string, token string)) *SDK_UpdateClientTags_Call {
+func (_c *SDK_UpdateClientTags_Call) Run(run func(ctx context.Context, client sdk.Client, domainID string, token string)) *SDK_UpdateClientTags_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.Client), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(sdk.Client), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -6180,9 +6180,9 @@ func (_e *SDK_Expecter) UpdateDomain(d interface{}, token interface{}) *SDK_Upda
 	return &SDK_UpdateDomain_Call{Call: _e.mock.On("UpdateDomain", d, token)}
 }
 
-func (_c *SDK_UpdateDomain_Call) Run(run func(d sdk.Domain, token string)) *SDK_UpdateDomain_Call {
+func (_c *SDK_UpdateDomain_Call) Run(run func(ctx context.Context, d sdk.Domain, token string)) *SDK_UpdateDomain_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.Domain), args[1].(string))
+		run(args[0].(context.Context), args[1].(sdk.Domain), args[2].(string))
 	})
 	return _c
 }
@@ -6239,9 +6239,9 @@ func (_e *SDK_Expecter) UpdateDomainRole(id interface{}, roleID interface{}, new
 	return &SDK_UpdateDomainRole_Call{Call: _e.mock.On("UpdateDomainRole", id, roleID, newName, token)}
 }
 
-func (_c *SDK_UpdateDomainRole_Call) Run(run func(id string, roleID string, newName string, token string)) *SDK_UpdateDomainRole_Call {
+func (_c *SDK_UpdateDomainRole_Call) Run(run func(ctx context.Context, id string, roleID string, newName string, token string)) *SDK_UpdateDomainRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -6297,9 +6297,9 @@ func (_e *SDK_Expecter) UpdateGroup(group interface{}, domainID interface{}, tok
 	return &SDK_UpdateGroup_Call{Call: _e.mock.On("UpdateGroup", group, domainID, token)}
 }
 
-func (_c *SDK_UpdateGroup_Call) Run(run func(group sdk.Group, domainID string, token string)) *SDK_UpdateGroup_Call {
+func (_c *SDK_UpdateGroup_Call) Run(run func(ctx context.Context, group sdk.Group, domainID string, token string)) *SDK_UpdateGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.Group), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(sdk.Group), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -6357,9 +6357,9 @@ func (_e *SDK_Expecter) UpdateGroupRole(id interface{}, roleID interface{}, newN
 	return &SDK_UpdateGroupRole_Call{Call: _e.mock.On("UpdateGroupRole", id, roleID, newName, domainID, token)}
 }
 
-func (_c *SDK_UpdateGroupRole_Call) Run(run func(id string, roleID string, newName string, domainID string, token string)) *SDK_UpdateGroupRole_Call {
+func (_c *SDK_UpdateGroupRole_Call) Run(run func(ctx context.Context, id string, roleID string, newName string, domainID string, token string)) *SDK_UpdateGroupRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string), args[5].(string))
 	})
 	return _c
 }
@@ -6415,9 +6415,9 @@ func (_e *SDK_Expecter) UpdatePassword(oldPass interface{}, newPass interface{},
 	return &SDK_UpdatePassword_Call{Call: _e.mock.On("UpdatePassword", oldPass, newPass, token)}
 }
 
-func (_c *SDK_UpdatePassword_Call) Run(run func(oldPass string, newPass string, token string)) *SDK_UpdatePassword_Call {
+func (_c *SDK_UpdatePassword_Call) Run(run func(ctx context.Context, oldPass string, newPass string, token string)) *SDK_UpdatePassword_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -6472,9 +6472,9 @@ func (_e *SDK_Expecter) UpdateProfilePicture(user interface{}, token interface{}
 	return &SDK_UpdateProfilePicture_Call{Call: _e.mock.On("UpdateProfilePicture", user, token)}
 }
 
-func (_c *SDK_UpdateProfilePicture_Call) Run(run func(user sdk.User, token string)) *SDK_UpdateProfilePicture_Call {
+func (_c *SDK_UpdateProfilePicture_Call) Run(run func(ctx context.Context, user sdk.User, token string)) *SDK_UpdateProfilePicture_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.User), args[1].(string))
+		run(args[0].(context.Context), args[1].(sdk.User), args[2].(string))
 	})
 	return _c
 }
@@ -6529,9 +6529,9 @@ func (_e *SDK_Expecter) UpdateUser(user interface{}, token interface{}) *SDK_Upd
 	return &SDK_UpdateUser_Call{Call: _e.mock.On("UpdateUser", user, token)}
 }
 
-func (_c *SDK_UpdateUser_Call) Run(run func(user sdk.User, token string)) *SDK_UpdateUser_Call {
+func (_c *SDK_UpdateUser_Call) Run(run func(ctx context.Context, user sdk.User, token string)) *SDK_UpdateUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.User), args[1].(string))
+		run(args[0].(context.Context), args[1].(sdk.User), args[2].(string))
 	})
 	return _c
 }
@@ -6586,9 +6586,9 @@ func (_e *SDK_Expecter) UpdateUserEmail(user interface{}, token interface{}) *SD
 	return &SDK_UpdateUserEmail_Call{Call: _e.mock.On("UpdateUserEmail", user, token)}
 }
 
-func (_c *SDK_UpdateUserEmail_Call) Run(run func(user sdk.User, token string)) *SDK_UpdateUserEmail_Call {
+func (_c *SDK_UpdateUserEmail_Call) Run(run func(ctx context.Context, user sdk.User, token string)) *SDK_UpdateUserEmail_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.User), args[1].(string))
+		run(args[0].(context.Context), args[1].(sdk.User), args[2].(string))
 	})
 	return _c
 }
@@ -6643,9 +6643,9 @@ func (_e *SDK_Expecter) UpdateUserRole(user interface{}, token interface{}) *SDK
 	return &SDK_UpdateUserRole_Call{Call: _e.mock.On("UpdateUserRole", user, token)}
 }
 
-func (_c *SDK_UpdateUserRole_Call) Run(run func(user sdk.User, token string)) *SDK_UpdateUserRole_Call {
+func (_c *SDK_UpdateUserRole_Call) Run(run func(ctx context.Context, user sdk.User, token string)) *SDK_UpdateUserRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.User), args[1].(string))
+		run(args[0].(context.Context), args[1].(sdk.User), args[2].(string))
 	})
 	return _c
 }
@@ -6700,9 +6700,9 @@ func (_e *SDK_Expecter) UpdateUserTags(user interface{}, token interface{}) *SDK
 	return &SDK_UpdateUserTags_Call{Call: _e.mock.On("UpdateUserTags", user, token)}
 }
 
-func (_c *SDK_UpdateUserTags_Call) Run(run func(user sdk.User, token string)) *SDK_UpdateUserTags_Call {
+func (_c *SDK_UpdateUserTags_Call) Run(run func(ctx context.Context, user sdk.User, token string)) *SDK_UpdateUserTags_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.User), args[1].(string))
+		run(args[0].(context.Context), args[1].(sdk.User), args[2].(string))
 	})
 	return _c
 }
@@ -6757,9 +6757,9 @@ func (_e *SDK_Expecter) UpdateUsername(user interface{}, token interface{}) *SDK
 	return &SDK_UpdateUsername_Call{Call: _e.mock.On("UpdateUsername", user, token)}
 }
 
-func (_c *SDK_UpdateUsername_Call) Run(run func(user sdk.User, token string)) *SDK_UpdateUsername_Call {
+func (_c *SDK_UpdateUsername_Call) Run(run func(ctx context.Context, user sdk.User, token string)) *SDK_UpdateUsername_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.User), args[1].(string))
+		run(args[0].(context.Context), args[1].(sdk.User), args[2].(string))
 	})
 	return _c
 }
@@ -6814,9 +6814,9 @@ func (_e *SDK_Expecter) User(id interface{}, token interface{}) *SDK_User_Call {
 	return &SDK_User_Call{Call: _e.mock.On("User", id, token)}
 }
 
-func (_c *SDK_User_Call) Run(run func(id string, token string)) *SDK_User_Call {
+func (_c *SDK_User_Call) Run(run func(ctx context.Context, id string, token string)) *SDK_User_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -6870,9 +6870,9 @@ func (_e *SDK_Expecter) UserProfile(token interface{}) *SDK_UserProfile_Call {
 	return &SDK_UserProfile_Call{Call: _e.mock.On("UserProfile", token)}
 }
 
-func (_c *SDK_UserProfile_Call) Run(run func(token string)) *SDK_UserProfile_Call {
+func (_c *SDK_UserProfile_Call) Run(run func(ctx context.Context, token string)) *SDK_UserProfile_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
@@ -6927,9 +6927,9 @@ func (_e *SDK_Expecter) Users(pm interface{}, token interface{}) *SDK_Users_Call
 	return &SDK_Users_Call{Call: _e.mock.On("Users", pm, token)}
 }
 
-func (_c *SDK_Users_Call) Run(run func(pm sdk.PageMetadata, token string)) *SDK_Users_Call {
+func (_c *SDK_Users_Call) Run(run func(ctx context.Context, pm sdk.PageMetadata, token string)) *SDK_Users_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.PageMetadata), args[1].(string))
+		run(args[0].(context.Context), args[1].(sdk.PageMetadata), args[2].(string))
 	})
 	return _c
 }
@@ -6985,9 +6985,9 @@ func (_e *SDK_Expecter) ViewCert(certID interface{}, domainID interface{}, token
 	return &SDK_ViewCert_Call{Call: _e.mock.On("ViewCert", certID, domainID, token)}
 }
 
-func (_c *SDK_ViewCert_Call) Run(run func(certID string, domainID string, token string)) *SDK_ViewCert_Call {
+func (_c *SDK_ViewCert_Call) Run(run func(ctx context.Context, certID string, domainID string, token string)) *SDK_ViewCert_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -7043,9 +7043,9 @@ func (_e *SDK_Expecter) ViewCertByClient(clientID interface{}, domainID interfac
 	return &SDK_ViewCertByClient_Call{Call: _e.mock.On("ViewCertByClient", clientID, domainID, token)}
 }
 
-func (_c *SDK_ViewCertByClient_Call) Run(run func(clientID string, domainID string, token string)) *SDK_ViewCertByClient_Call {
+func (_c *SDK_ViewCertByClient_Call) Run(run func(ctx context.Context, clientID string, domainID string, token string)) *SDK_ViewCertByClient_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }

@@ -4,6 +4,7 @@
 package sdk_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -194,7 +195,7 @@ func TestCreateClient(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("CreateClients", mock.Anything, tc.session, []clients.Client{tc.svcReq}).Return(tc.svcRes, []roles.RoleProvision{}, tc.svcErr)
-			resp, err := mgsdk.CreateClient(tc.createClientReq, tc.domainID, tc.token)
+			resp, err := mgsdk.CreateClient(context.Background(), tc.createClientReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -305,7 +306,7 @@ func TestCreateClients(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("CreateClients", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, []roles.RoleProvision{}, tc.svcErr)
-			resp, err := mgsdk.CreateClients(tc.createClientsRequest, tc.domainID, tc.token)
+			resp, err := mgsdk.CreateClients(context.Background(), tc.createClientsRequest, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -572,7 +573,7 @@ func TestListClients(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("ListClients", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.Clients(tc.pageMeta, tc.domainID, tc.token)
+			resp, err := mgsdk.Clients(context.Background(), tc.pageMeta, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -712,9 +713,9 @@ func TestViewClient(t *testing.T) {
 			var err error
 			switch tc.withRoles {
 			case true:
-				resp, err = mgsdkRoles.Client(tc.clientID, tc.domainID, tc.token)
+				resp, err = mgsdkRoles.Client(context.Background(), tc.clientID, tc.domainID, tc.token)
 			default:
-				resp, err = mgsdk.Client(tc.clientID, tc.domainID, tc.token)
+				resp, err = mgsdk.Client(context.Background(), tc.clientID, tc.domainID, tc.token)
 			}
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
@@ -876,7 +877,7 @@ func TestUpdateClient(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("Update", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateClient(tc.updateClientReq, tc.domainID, tc.token)
+			resp, err := mgsdk.UpdateClient(context.Background(), tc.updateClientReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1028,7 +1029,7 @@ func TestUpdateClientTags(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("UpdateTags", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateClientTags(tc.updateClientReq, tc.domainID, tc.token)
+			resp, err := mgsdk.UpdateClientTags(context.Background(), tc.updateClientReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1160,7 +1161,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("UpdateSecret", mock.Anything, tc.session, tc.clientID, tc.newSecret).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateClientSecret(tc.clientID, tc.newSecret, tc.domainID, tc.token)
+			resp, err := mgsdk.UpdateClientSecret(context.Background(), tc.clientID, tc.newSecret, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1263,7 +1264,7 @@ func TestEnableClient(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("Enable", mock.Anything, tc.session, tc.clientID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.EnableClient(tc.clientID, tc.domainID, tc.token)
+			resp, err := mgsdk.EnableClient(context.Background(), tc.clientID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1366,7 +1367,7 @@ func TestDisableClient(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("Disable", mock.Anything, tc.session, tc.clientID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.DisableClient(tc.clientID, tc.domainID, tc.token)
+			resp, err := mgsdk.DisableClient(context.Background(), tc.clientID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1448,7 +1449,7 @@ func TestDeleteClient(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
 			svcCall := tsvc.On("Delete", mock.Anything, tc.session, tc.clientID).Return(tc.svcErr)
-			err := mgsdk.DeleteClient(tc.clientID, tc.domainID, tc.token)
+			err := mgsdk.DeleteClient(context.Background(), tc.clientID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "Delete", mock.Anything, tc.session, tc.clientID)
@@ -1543,7 +1544,7 @@ func TestSetClientParent(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("SetParentGroup", mock.Anything, tc.session, tc.parentID, tc.clientID).Return(tc.svcErr)
-			err := mgsdk.SetClientParent(tc.clientID, tc.domainID, tc.parentID, tc.token)
+			err := mgsdk.SetClientParent(context.Background(), tc.clientID, tc.domainID, tc.parentID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "SetParentGroup", mock.Anything, tc.session, tc.parentID, tc.clientID)
@@ -1629,7 +1630,7 @@ func TestRemoveClientParent(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RemoveParentGroup", mock.Anything, tc.session, tc.clientID).Return(tc.svcErr)
-			err := mgsdk.RemoveClientParent(tc.clientID, tc.domainID, tc.parentID, tc.token)
+			err := mgsdk.RemoveClientParent(context.Background(), tc.clientID, tc.domainID, tc.parentID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RemoveParentGroup", mock.Anything, tc.session, tc.clientID)
@@ -1763,7 +1764,7 @@ func TestCreateClientRole(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("AddRole", mock.Anything, tc.session, tc.clientID, tc.roleReq.RoleName, tc.roleReq.OptionalActions, tc.roleReq.OptionalMembers).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.CreateClientRole(tc.clientID, tc.domainID, tc.roleReq, tc.token)
+			resp, err := mgsdk.CreateClientRole(context.Background(), tc.clientID, tc.domainID, tc.roleReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1894,7 +1895,7 @@ func TestListClientRoles(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RetrieveAllRoles", mock.Anything, tc.session, tc.clientID, tc.pageMeta.Limit, tc.pageMeta.Offset).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.ClientRoles(tc.clientID, tc.domainID, tc.pageMeta, tc.token)
+			resp, err := mgsdk.ClientRoles(context.Background(), tc.clientID, tc.domainID, tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2011,7 +2012,7 @@ func TestViewClientRole(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RetrieveRole", mock.Anything, tc.session, tc.clientID, tc.roleID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.ClientRole(tc.clientID, tc.roleID, tc.domainID, tc.token)
+			resp, err := mgsdk.ClientRole(context.Background(), tc.clientID, tc.roleID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2129,7 +2130,7 @@ func TestUpdateClientRole(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("UpdateRoleName", mock.Anything, tc.session, tc.clientID, tc.roleID, tc.newRoleName).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateClientRole(tc.clientID, tc.roleID, tc.newRoleName, tc.domainID, tc.token)
+			resp, err := mgsdk.UpdateClientRole(context.Background(), tc.clientID, tc.roleID, tc.newRoleName, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2225,7 +2226,7 @@ func TestDeleteClientRole(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RemoveRole", mock.Anything, tc.session, tc.clientID, tc.roleID).Return(tc.svcErr)
-			err := mgsdk.DeleteClientRole(tc.clientID, tc.roleID, tc.domainID, tc.token)
+			err := mgsdk.DeleteClientRole(context.Background(), tc.clientID, tc.roleID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RemoveRole", mock.Anything, tc.session, tc.clientID, tc.roleID)
@@ -2348,7 +2349,7 @@ func TestAddClientRoleActions(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleAddActions", mock.Anything, tc.session, tc.clientID, tc.roleID, tc.actions).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.AddClientRoleActions(tc.clientID, tc.roleID, tc.domainID, tc.actions, tc.token)
+			resp, err := mgsdk.AddClientRoleActions(context.Background(), tc.clientID, tc.roleID, tc.domainID, tc.actions, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2458,7 +2459,7 @@ func TestListClientRoleActions(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleListActions", mock.Anything, tc.session, tc.clientID, tc.roleID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.ClientRoleActions(tc.clientID, tc.roleID, tc.domainID, tc.token)
+			resp, err := mgsdk.ClientRoleActions(context.Background(), tc.clientID, tc.roleID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2572,7 +2573,7 @@ func TestRemoveClientRoleActions(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleRemoveActions", mock.Anything, tc.session, tc.clientID, tc.roleID, tc.actions).Return(tc.svcErr)
-			err := mgsdk.RemoveClientRoleActions(tc.clientID, tc.roleID, tc.domainID, tc.actions, tc.token)
+			err := mgsdk.RemoveClientRoleActions(context.Background(), tc.clientID, tc.roleID, tc.domainID, tc.actions, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveActions", mock.Anything, tc.session, tc.clientID, tc.roleID, tc.actions)
@@ -2676,7 +2677,7 @@ func TestRemoveAllClientRoleActions(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleRemoveAllActions", mock.Anything, tc.session, tc.clientID, tc.roleID).Return(tc.svcErr)
-			err := mgsdk.RemoveAllClientRoleActions(tc.clientID, tc.roleID, tc.domainID, tc.token)
+			err := mgsdk.RemoveAllClientRoleActions(context.Background(), tc.clientID, tc.roleID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveAllActions", mock.Anything, tc.session, tc.clientID, tc.roleID)
@@ -2799,7 +2800,7 @@ func TestAddClientRoleMembers(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleAddMembers", mock.Anything, tc.session, tc.clientID, tc.roleID, tc.members).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.AddClientRoleMembers(tc.clientID, tc.roleID, tc.domainID, tc.members, tc.token)
+			resp, err := mgsdk.AddClientRoleMembers(context.Background(), tc.clientID, tc.roleID, tc.domainID, tc.members, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2948,7 +2949,7 @@ func TestListClientRoleMembers(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleListMembers", mock.Anything, tc.session, tc.clientID, tc.roleID, tc.pageMeta.Limit, tc.pageMeta.Offset).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.ClientRoleMembers(tc.clientID, tc.roleID, tc.domainID, tc.pageMeta, tc.token)
+			resp, err := mgsdk.ClientRoleMembers(context.Background(), tc.clientID, tc.roleID, tc.domainID, tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -3062,7 +3063,7 @@ func TestRemoveClientRoleMembers(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleRemoveMembers", mock.Anything, tc.session, tc.clientID, tc.roleID, tc.members).Return(tc.svcErr)
-			err := mgsdk.RemoveClientRoleMembers(tc.clientID, tc.roleID, tc.domainID, tc.members, tc.token)
+			err := mgsdk.RemoveClientRoleMembers(context.Background(), tc.clientID, tc.roleID, tc.domainID, tc.members, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveMembers", mock.Anything, tc.session, tc.clientID, tc.roleID, tc.members)
@@ -3166,7 +3167,7 @@ func TestRemoveAllClientRoleMembers(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleRemoveAllMembers", mock.Anything, tc.session, tc.clientID, tc.roleID).Return(tc.svcErr)
-			err := mgsdk.RemoveAllClientRoleMembers(tc.clientID, tc.roleID, tc.domainID, tc.token)
+			err := mgsdk.RemoveAllClientRoleMembers(context.Background(), tc.clientID, tc.roleID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveAllMembers", mock.Anything, tc.session, tc.clientID, tc.roleID)
@@ -3236,7 +3237,7 @@ func TestListAvailableClientRoleActions(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("ListAvailableActions", mock.Anything, tc.session).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.AvailableClientRoleActions(tc.domainID, tc.token)
+			resp, err := mgsdk.AvailableClientRoleActions(context.Background(), tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {

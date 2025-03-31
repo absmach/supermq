@@ -4,6 +4,7 @@
 package sdk_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -333,7 +334,7 @@ func TestRetrieveJournal(t *testing.T) {
 			}
 			authCall := authn.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authnErr)
 			svcCall := svc.On("RetrieveAll", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.Journal(tc.entityType, tc.entityID, tc.domainID, tc.pageMeta, tc.token)
+			resp, err := mgsdk.Journal(context.Background(), tc.entityType, tc.entityID, tc.domainID, tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {

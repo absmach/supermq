@@ -29,7 +29,7 @@ var cmdChannels = []cobra.Command{
 				return
 			}
 
-			channel, err := sdk.CreateChannel(channel, args[1], args[2])
+			channel, err := sdk.CreateChannel(cmd.Context(), channel, args[1], args[2])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -63,7 +63,7 @@ var cmdChannels = []cobra.Command{
 			}
 
 			if args[0] == all {
-				l, err := sdk.Channels(pageMetadata, args[1], args[2])
+				l, err := sdk.Channels(cmd.Context(), pageMetadata, args[1], args[2])
 				if err != nil {
 					logErrorCmd(*cmd, err)
 					return
@@ -72,7 +72,7 @@ var cmdChannels = []cobra.Command{
 				logJSONCmd(*cmd, l)
 				return
 			}
-			c, err := sdk.Channel(args[0], args[1], args[2])
+			c, err := sdk.Channel(cmd.Context(), args[0], args[1], args[2])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -92,7 +92,7 @@ var cmdChannels = []cobra.Command{
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-			if err := sdk.DeleteChannel(args[0], args[1], args[2]); err != nil {
+			if err := sdk.DeleteChannel(cmd.Context(), args[0], args[1], args[2]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}
@@ -115,7 +115,7 @@ var cmdChannels = []cobra.Command{
 				return
 			}
 			channel.ID = args[0]
-			channel, err := sdk.UpdateChannel(channel, args[2], args[3])
+			channel, err := sdk.UpdateChannel(cmd.Context(), channel, args[2], args[3])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -134,7 +134,7 @@ var cmdChannels = []cobra.Command{
 				return
 			}
 
-			channel, err := sdk.EnableChannel(args[0], args[1], args[2])
+			channel, err := sdk.EnableChannel(cmd.Context(), args[0], args[1], args[2])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -153,7 +153,7 @@ var cmdChannels = []cobra.Command{
 				return
 			}
 
-			channel, err := sdk.DisableChannel(args[0], args[1], args[2])
+			channel, err := sdk.DisableChannel(cmd.Context(), args[0], args[1], args[2])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return
@@ -177,7 +177,7 @@ var cmdChannels = []cobra.Command{
 				Offset: Offset,
 				Limit:  Limit,
 			}
-			ul, err := sdk.ListChannelMembers(args[0], args[1], pm, args[2])
+			ul, err := sdk.ListChannelMembers(cmd.Context(), args[0], args[1], pm, args[2])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return

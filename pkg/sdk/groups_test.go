@@ -4,6 +4,7 @@
 package sdk_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -266,7 +267,7 @@ func TestCreateGroup(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("CreateGroup", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, []roles.RoleProvision{}, tc.svcErr)
-			resp, err := mgsdk.CreateGroup(tc.groupReq, tc.domainID, tc.token)
+			resp, err := mgsdk.CreateGroup(context.Background(), tc.groupReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -501,7 +502,7 @@ func TestListGroups(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("ListGroups", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.Groups(tc.pageMeta, tc.domainID, tc.token)
+			resp, err := mgsdk.Groups(context.Background(), tc.pageMeta, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -640,9 +641,9 @@ func TestViewGroup(t *testing.T) {
 
 			switch tc.withRoles {
 			case true:
-				resp, err = mgsdkRoles.Group(tc.groupID, tc.domainID, tc.token)
+				resp, err = mgsdkRoles.Group(context.Background(), tc.groupID, tc.domainID, tc.token)
 			default:
-				resp, err = mgsdk.Group(tc.groupID, tc.domainID, tc.token)
+				resp, err = mgsdk.Group(context.Background(), tc.groupID, tc.domainID, tc.token)
 			}
 
 			assert.Equal(t, tc.err, err)
@@ -836,7 +837,7 @@ func TestUpdateGroup(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("UpdateGroup", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateGroup(tc.groupReq, tc.domainID, tc.token)
+			resp, err := mgsdk.UpdateGroup(context.Background(), tc.groupReq, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -947,7 +948,7 @@ func TestEnableGroup(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("EnableGroup", mock.Anything, tc.session, tc.groupID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.EnableGroup(tc.groupID, tc.domainID, tc.token)
+			resp, err := mgsdk.EnableGroup(context.Background(), tc.groupID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1058,7 +1059,7 @@ func TestDisableGroup(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("DisableGroup", mock.Anything, tc.session, tc.groupID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.DisableGroup(tc.groupID, tc.domainID, tc.token)
+			resp, err := mgsdk.DisableGroup(context.Background(), tc.groupID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -1138,7 +1139,7 @@ func TestDeleteGroup(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("DeleteGroup", mock.Anything, tc.session, tc.groupID).Return(tc.svcErr)
-			err := mgsdk.DeleteGroup(tc.groupID, tc.domainID, tc.token)
+			err := mgsdk.DeleteGroup(context.Background(), tc.groupID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "DeleteGroup", mock.Anything, tc.session, tc.groupID)
@@ -1234,7 +1235,7 @@ func TestSetGroupParent(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("AddParentGroup", mock.Anything, tc.session, tc.groupID, tc.parentID).Return(tc.svcErr)
-			err := mgsdk.SetGroupParent(tc.groupID, tc.domainID, tc.parentID, tc.token)
+			err := mgsdk.SetGroupParent(context.Background(), tc.groupID, tc.domainID, tc.parentID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "AddParentGroup", mock.Anything, tc.session, tc.groupID, tc.parentID)
@@ -1321,7 +1322,7 @@ func TestRemoveGroupParent(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RemoveParentGroup", mock.Anything, tc.session, tc.groupID).Return(tc.svcErr)
-			err := mgsdk.RemoveGroupParent(tc.groupID, tc.domainID, tc.parentID, tc.token)
+			err := mgsdk.RemoveGroupParent(context.Background(), tc.groupID, tc.domainID, tc.parentID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RemoveParentGroup", mock.Anything, tc.session, tc.groupID)
@@ -1417,7 +1418,7 @@ func TestAddChildrenGroups(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("AddChildrenGroups", mock.Anything, tc.session, tc.groupID, tc.childrenIDs).Return(tc.svcErr)
-			err := mgsdk.AddChildren(tc.groupID, tc.domainID, tc.childrenIDs, tc.token)
+			err := mgsdk.AddChildren(context.Background(), tc.groupID, tc.domainID, tc.childrenIDs, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "AddChildrenGroups", mock.Anything, tc.session, tc.groupID, tc.childrenIDs)
@@ -1513,7 +1514,7 @@ func TestRemoveChildrenGroups(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RemoveChildrenGroups", mock.Anything, tc.session, tc.groupID, tc.childrenIDs).Return(tc.svcErr)
-			err := mgsdk.RemoveChildren(tc.groupID, tc.domainID, tc.childrenIDs, tc.token)
+			err := mgsdk.RemoveChildren(context.Background(), tc.groupID, tc.domainID, tc.childrenIDs, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RemoveChildrenGroups", mock.Anything, tc.session, tc.groupID, tc.childrenIDs)
@@ -1593,7 +1594,7 @@ func TestRemoveAllChildrenGroups(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RemoveAllChildrenGroups", mock.Anything, tc.session, tc.groupID).Return(tc.svcErr)
-			err := mgsdk.RemoveAllChildren(tc.groupID, tc.domainID, tc.token)
+			err := mgsdk.RemoveAllChildren(context.Background(), tc.groupID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RemoveAllChildrenGroups", mock.Anything, tc.session, tc.groupID)
@@ -1846,7 +1847,7 @@ func TestListChildrenGroups(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("ListChildrenGroups", mock.Anything, tc.session, tc.childID, int64(1), int64(0), mock.Anything).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.Children(tc.childID, tc.domainID, tc.pageMeta, tc.token)
+			resp, err := mgsdk.Children(context.Background(), tc.childID, tc.domainID, tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2022,7 +2023,7 @@ func TestHierarchy(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("RetrieveGroupHierarchy", mock.Anything, tc.session, tc.groupID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.Hierarchy(tc.groupID, tc.domainID, tc.pageMeta, tc.token)
+			resp, err := mgsdk.Hierarchy(context.Background(), tc.groupID, tc.domainID, tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2158,7 +2159,7 @@ func TestCreateGroupRole(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("AddRole", mock.Anything, tc.session, tc.groupID, tc.roleReq.RoleName, tc.roleReq.OptionalActions, tc.roleReq.OptionalMembers).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.CreateGroupRole(tc.groupID, tc.domainID, tc.roleReq, tc.token)
+			resp, err := mgsdk.CreateGroupRole(context.Background(), tc.groupID, tc.domainID, tc.roleReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2290,7 +2291,7 @@ func TestListGroupRoles(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RetrieveAllRoles", mock.Anything, tc.session, tc.groupID, tc.pageMeta.Limit, tc.pageMeta.Offset).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.GroupRoles(tc.groupID, tc.domainID, tc.pageMeta, tc.token)
+			resp, err := mgsdk.GroupRoles(context.Background(), tc.groupID, tc.domainID, tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2407,7 +2408,7 @@ func TestViewGroupRole(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RetrieveRole", mock.Anything, tc.session, tc.groupID, tc.roleID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.GroupRole(tc.groupID, tc.roleID, tc.domainID, tc.token)
+			resp, err := mgsdk.GroupRole(context.Background(), tc.groupID, tc.roleID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2526,7 +2527,7 @@ func TestUpdateGroupRole(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("UpdateRoleName", mock.Anything, tc.session, tc.groupID, tc.roleID, tc.newRoleName).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.UpdateGroupRole(tc.groupID, tc.roleID, tc.newRoleName, tc.domainID, tc.token)
+			resp, err := mgsdk.UpdateGroupRole(context.Background(), tc.groupID, tc.roleID, tc.newRoleName, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2623,7 +2624,7 @@ func TestDeleteGroupRole(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RemoveRole", mock.Anything, tc.session, tc.groupID, tc.roleID).Return(tc.svcErr)
-			err := mgsdk.DeleteGroupRole(tc.groupID, tc.roleID, tc.domainID, tc.token)
+			err := mgsdk.DeleteGroupRole(context.Background(), tc.groupID, tc.roleID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RemoveRole", mock.Anything, tc.session, tc.groupID, tc.roleID)
@@ -2747,7 +2748,7 @@ func TestAddGroupRoleActions(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleAddActions", mock.Anything, tc.session, tc.groupID, tc.roleID, tc.actions).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.AddGroupRoleActions(tc.groupID, tc.roleID, tc.domainID, tc.actions, tc.token)
+			resp, err := mgsdk.AddGroupRoleActions(context.Background(), tc.groupID, tc.roleID, tc.domainID, tc.actions, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2858,7 +2859,7 @@ func TestListGroupRoleActions(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleListActions", mock.Anything, tc.session, tc.groupID, tc.roleID).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.GroupRoleActions(tc.groupID, tc.roleID, tc.domainID, tc.token)
+			resp, err := mgsdk.GroupRoleActions(context.Background(), tc.groupID, tc.roleID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -2973,7 +2974,7 @@ func TestRemoveGroupRoleActions(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleRemoveActions", mock.Anything, tc.session, tc.groupID, tc.roleID, tc.actions).Return(tc.svcErr)
-			err := mgsdk.RemoveGroupRoleActions(tc.groupID, tc.roleID, tc.domainID, tc.actions, tc.token)
+			err := mgsdk.RemoveGroupRoleActions(context.Background(), tc.groupID, tc.roleID, tc.domainID, tc.actions, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveActions", mock.Anything, tc.session, tc.groupID, tc.roleID, tc.actions)
@@ -3078,7 +3079,7 @@ func TestRemoveAllGroupRoleActions(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleRemoveAllActions", mock.Anything, tc.session, tc.groupID, tc.roleID).Return(tc.svcErr)
-			err := mgsdk.RemoveAllGroupRoleActions(tc.groupID, tc.roleID, tc.domainID, tc.token)
+			err := mgsdk.RemoveAllGroupRoleActions(context.Background(), tc.groupID, tc.roleID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveAllActions", mock.Anything, tc.session, tc.groupID, tc.roleID)
@@ -3202,7 +3203,7 @@ func TestAddGroupRoleMembers(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleAddMembers", mock.Anything, tc.session, tc.groupID, tc.roleID, tc.members).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.AddGroupRoleMembers(tc.groupID, tc.roleID, tc.domainID, tc.members, tc.token)
+			resp, err := mgsdk.AddGroupRoleMembers(context.Background(), tc.groupID, tc.roleID, tc.domainID, tc.members, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -3352,7 +3353,7 @@ func TestListGroupRoleMembers(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleListMembers", mock.Anything, tc.session, tc.groupID, tc.roleID, tc.pageMeta.Limit, tc.pageMeta.Offset).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.GroupRoleMembers(tc.groupID, tc.roleID, tc.domainID, tc.pageMeta, tc.token)
+			resp, err := mgsdk.GroupRoleMembers(context.Background(), tc.groupID, tc.roleID, tc.domainID, tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
@@ -3467,7 +3468,7 @@ func TestRemoveGroupRoleMembers(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleRemoveMembers", mock.Anything, tc.session, tc.groupID, tc.roleID, tc.members).Return(tc.svcErr)
-			err := mgsdk.RemoveGroupRoleMembers(tc.groupID, tc.roleID, tc.domainID, tc.members, tc.token)
+			err := mgsdk.RemoveGroupRoleMembers(context.Background(), tc.groupID, tc.roleID, tc.domainID, tc.members, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveMembers", mock.Anything, tc.session, tc.groupID, tc.roleID, tc.members)
@@ -3572,7 +3573,7 @@ func TestRemoveAllGroupRoleMembers(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("RoleRemoveAllMembers", mock.Anything, tc.session, tc.groupID, tc.roleID).Return(tc.svcErr)
-			err := mgsdk.RemoveAllGroupRoleMembers(tc.groupID, tc.roleID, tc.domainID, tc.token)
+			err := mgsdk.RemoveAllGroupRoleMembers(context.Background(), tc.groupID, tc.roleID, tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "RoleRemoveAllMembers", mock.Anything, tc.session, tc.groupID, tc.roleID)
@@ -3642,7 +3643,7 @@ func TestListAvailableGroupRoleActions(t *testing.T) {
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := csvc.On("ListAvailableActions", mock.Anything, tc.session).Return(tc.svcRes, tc.svcErr)
-			resp, err := mgsdk.AvailableGroupRoleActions(tc.domainID, tc.token)
+			resp, err := mgsdk.AvailableGroupRoleActions(context.Background(), tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {

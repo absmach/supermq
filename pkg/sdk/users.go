@@ -4,6 +4,7 @@
 package sdk
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -39,7 +40,7 @@ type User struct {
 	ProfilePicture string      `json:"profile_picture,omitempty"`
 }
 
-func (sdk mgSDK) CreateUser(user User, token string) (User, errors.SDKError) {
+func (sdk mgSDK) CreateUser(ctx context.Context, user User, token string) (User, errors.SDKError) {
 	data, err := json.Marshal(user)
 	if err != nil {
 		return User{}, errors.NewSDKError(err)
@@ -47,7 +48,7 @@ func (sdk mgSDK) CreateUser(user User, token string) (User, errors.SDKError) {
 
 	url := fmt.Sprintf("%s/%s", sdk.usersURL, usersEndpoint)
 
-	_, body, sdkerr := sdk.processRequest(http.MethodPost, url, token, data, nil, http.StatusCreated)
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusCreated)
 	if sdkerr != nil {
 		return User{}, sdkerr
 	}
@@ -60,13 +61,13 @@ func (sdk mgSDK) CreateUser(user User, token string) (User, errors.SDKError) {
 	return user, nil
 }
 
-func (sdk mgSDK) Users(pm PageMetadata, token string) (UsersPage, errors.SDKError) {
+func (sdk mgSDK) Users(ctx context.Context, pm PageMetadata, token string) (UsersPage, errors.SDKError) {
 	url, err := sdk.withQueryParams(sdk.usersURL, usersEndpoint, pm)
 	if err != nil {
 		return UsersPage{}, errors.NewSDKError(err)
 	}
 
-	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
 	if sdkerr != nil {
 		return UsersPage{}, sdkerr
 	}
@@ -79,13 +80,13 @@ func (sdk mgSDK) Users(pm PageMetadata, token string) (UsersPage, errors.SDKErro
 	return cp, nil
 }
 
-func (sdk mgSDK) User(id, token string) (User, errors.SDKError) {
+func (sdk mgSDK) User(ctx context.Context, id, token string) (User, errors.SDKError) {
 	if id == "" {
 		return User{}, errors.NewSDKError(apiutil.ErrMissingID)
 	}
 	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, id)
 
-	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
 	if sdkerr != nil {
 		return User{}, sdkerr
 	}
@@ -98,10 +99,10 @@ func (sdk mgSDK) User(id, token string) (User, errors.SDKError) {
 	return user, nil
 }
 
-func (sdk mgSDK) UserProfile(token string) (User, errors.SDKError) {
+func (sdk mgSDK) UserProfile(ctx context.Context, token string) (User, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/profile", sdk.usersURL, usersEndpoint)
 
-	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
 	if sdkerr != nil {
 		return User{}, sdkerr
 	}
@@ -114,7 +115,7 @@ func (sdk mgSDK) UserProfile(token string) (User, errors.SDKError) {
 	return user, nil
 }
 
-func (sdk mgSDK) UpdateUser(user User, token string) (User, errors.SDKError) {
+func (sdk mgSDK) UpdateUser(ctx context.Context, user User, token string) (User, errors.SDKError) {
 	if user.ID == "" {
 		return User{}, errors.NewSDKError(apiutil.ErrMissingID)
 	}
@@ -125,7 +126,7 @@ func (sdk mgSDK) UpdateUser(user User, token string) (User, errors.SDKError) {
 		return User{}, errors.NewSDKError(err)
 	}
 
-	_, body, sdkerr := sdk.processRequest(http.MethodPatch, url, token, data, nil, http.StatusOK)
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
 	if sdkerr != nil {
 		return User{}, sdkerr
 	}
@@ -138,7 +139,7 @@ func (sdk mgSDK) UpdateUser(user User, token string) (User, errors.SDKError) {
 	return user, nil
 }
 
-func (sdk mgSDK) UpdateUserTags(user User, token string) (User, errors.SDKError) {
+func (sdk mgSDK) UpdateUserTags(ctx context.Context, user User, token string) (User, errors.SDKError) {
 	data, err := json.Marshal(user)
 	if err != nil {
 		return User{}, errors.NewSDKError(err)
@@ -146,7 +147,7 @@ func (sdk mgSDK) UpdateUserTags(user User, token string) (User, errors.SDKError)
 
 	url := fmt.Sprintf("%s/%s/%s/tags", sdk.usersURL, usersEndpoint, user.ID)
 
-	_, body, sdkerr := sdk.processRequest(http.MethodPatch, url, token, data, nil, http.StatusOK)
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
 	if sdkerr != nil {
 		return User{}, sdkerr
 	}
@@ -159,7 +160,7 @@ func (sdk mgSDK) UpdateUserTags(user User, token string) (User, errors.SDKError)
 	return user, nil
 }
 
-func (sdk mgSDK) UpdateUserEmail(user User, token string) (User, errors.SDKError) {
+func (sdk mgSDK) UpdateUserEmail(ctx context.Context, user User, token string) (User, errors.SDKError) {
 	ucir := updateUserEmailReq{token: token, id: user.ID, Email: user.Email}
 
 	data, err := json.Marshal(ucir)
@@ -169,7 +170,7 @@ func (sdk mgSDK) UpdateUserEmail(user User, token string) (User, errors.SDKError
 
 	url := fmt.Sprintf("%s/%s/%s/email", sdk.usersURL, usersEndpoint, user.ID)
 
-	_, body, sdkerr := sdk.processRequest(http.MethodPatch, url, token, data, nil, http.StatusOK)
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
 	if sdkerr != nil {
 		return User{}, sdkerr
 	}
@@ -182,7 +183,7 @@ func (sdk mgSDK) UpdateUserEmail(user User, token string) (User, errors.SDKError
 	return user, nil
 }
 
-func (sdk mgSDK) ResetPasswordRequest(email string) errors.SDKError {
+func (sdk mgSDK) ResetPasswordRequest(ctx context.Context, email string) errors.SDKError {
 	rpr := resetPasswordRequestreq{Email: email}
 
 	data, err := json.Marshal(rpr)
@@ -194,12 +195,12 @@ func (sdk mgSDK) ResetPasswordRequest(email string) errors.SDKError {
 	header := make(map[string]string)
 	header["Referer"] = sdk.HostURL
 
-	_, _, sdkerr := sdk.processRequest(http.MethodPost, url, "", data, header, http.StatusCreated)
+	_, _, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, "", data, header, http.StatusCreated)
 
 	return sdkerr
 }
 
-func (sdk mgSDK) ResetPassword(password, confPass, token string) errors.SDKError {
+func (sdk mgSDK) ResetPassword(ctx context.Context, password, confPass, token string) errors.SDKError {
 	rpr := resetPasswordReq{Token: token, Password: password, ConfPass: confPass}
 
 	data, err := json.Marshal(rpr)
@@ -208,12 +209,12 @@ func (sdk mgSDK) ResetPassword(password, confPass, token string) errors.SDKError
 	}
 	url := fmt.Sprintf("%s/%s/reset", sdk.usersURL, PasswordResetEndpoint)
 
-	_, _, sdkerr := sdk.processRequest(http.MethodPut, url, token, data, nil, http.StatusCreated)
+	_, _, sdkerr := sdk.processRequest(ctx, http.MethodPut, url, token, data, nil, http.StatusCreated)
 
 	return sdkerr
 }
 
-func (sdk mgSDK) UpdatePassword(oldPass, newPass, token string) (User, errors.SDKError) {
+func (sdk mgSDK) UpdatePassword(ctx context.Context, oldPass, newPass, token string) (User, errors.SDKError) {
 	ucsr := updateUserSecretReq{OldSecret: oldPass, NewSecret: newPass}
 
 	data, err := json.Marshal(ucsr)
@@ -223,7 +224,7 @@ func (sdk mgSDK) UpdatePassword(oldPass, newPass, token string) (User, errors.SD
 
 	url := fmt.Sprintf("%s/%s/secret", sdk.usersURL, usersEndpoint)
 
-	_, body, sdkerr := sdk.processRequest(http.MethodPatch, url, token, data, nil, http.StatusOK)
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
 	if sdkerr != nil {
 		return User{}, sdkerr
 	}
@@ -236,7 +237,7 @@ func (sdk mgSDK) UpdatePassword(oldPass, newPass, token string) (User, errors.SD
 	return user, nil
 }
 
-func (sdk mgSDK) UpdateUserRole(user User, token string) (User, errors.SDKError) {
+func (sdk mgSDK) UpdateUserRole(ctx context.Context, user User, token string) (User, errors.SDKError) {
 	data, err := json.Marshal(user)
 	if err != nil {
 		return User{}, errors.NewSDKError(err)
@@ -244,7 +245,7 @@ func (sdk mgSDK) UpdateUserRole(user User, token string) (User, errors.SDKError)
 
 	url := fmt.Sprintf("%s/%s/%s/role", sdk.usersURL, usersEndpoint, user.ID)
 
-	_, body, sdkerr := sdk.processRequest(http.MethodPatch, url, token, data, nil, http.StatusOK)
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
 	if sdkerr != nil {
 		return User{}, sdkerr
 	}
@@ -257,7 +258,7 @@ func (sdk mgSDK) UpdateUserRole(user User, token string) (User, errors.SDKError)
 	return user, nil
 }
 
-func (sdk mgSDK) UpdateUsername(user User, token string) (User, errors.SDKError) {
+func (sdk mgSDK) UpdateUsername(ctx context.Context, user User, token string) (User, errors.SDKError) {
 	uur := UpdateUsernameReq{id: user.ID, Username: user.Credentials.Username}
 	data, err := json.Marshal(uur)
 	if err != nil {
@@ -266,7 +267,7 @@ func (sdk mgSDK) UpdateUsername(user User, token string) (User, errors.SDKError)
 
 	url := fmt.Sprintf("%s/%s/%s/username", sdk.usersURL, usersEndpoint, user.ID)
 
-	_, body, sdkerr := sdk.processRequest(http.MethodPatch, url, token, data, nil, http.StatusOK)
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
 	if sdkerr != nil {
 		return User{}, sdkerr
 	}
@@ -279,7 +280,7 @@ func (sdk mgSDK) UpdateUsername(user User, token string) (User, errors.SDKError)
 	return user, nil
 }
 
-func (sdk mgSDK) UpdateProfilePicture(user User, token string) (User, errors.SDKError) {
+func (sdk mgSDK) UpdateProfilePicture(ctx context.Context, user User, token string) (User, errors.SDKError) {
 	data, err := json.Marshal(user)
 	if err != nil {
 		return User{}, errors.NewSDKError(err)
@@ -287,7 +288,7 @@ func (sdk mgSDK) UpdateProfilePicture(user User, token string) (User, errors.SDK
 
 	url := fmt.Sprintf("%s/%s/%s/picture", sdk.usersURL, usersEndpoint, user.ID)
 
-	_, body, sdkerr := sdk.processRequest(http.MethodPatch, url, token, data, nil, http.StatusOK)
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
 	if sdkerr != nil {
 		return User{}, sdkerr
 	}
@@ -300,13 +301,13 @@ func (sdk mgSDK) UpdateProfilePicture(user User, token string) (User, errors.SDK
 	return user, nil
 }
 
-func (sdk mgSDK) SearchUsers(pm PageMetadata, token string) (UsersPage, errors.SDKError) {
+func (sdk mgSDK) SearchUsers(ctx context.Context, pm PageMetadata, token string) (UsersPage, errors.SDKError) {
 	url, err := sdk.withQueryParams(sdk.usersURL, fmt.Sprintf("%s/search", usersEndpoint), pm)
 	if err != nil {
 		return UsersPage{}, errors.NewSDKError(err)
 	}
 
-	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, nil, nil, http.StatusOK)
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
 	if sdkerr != nil {
 		return UsersPage{}, sdkerr
 	}
@@ -319,18 +320,18 @@ func (sdk mgSDK) SearchUsers(pm PageMetadata, token string) (UsersPage, errors.S
 	return cp, nil
 }
 
-func (sdk mgSDK) EnableUser(id, token string) (User, errors.SDKError) {
-	return sdk.changeUserStatus(token, id, enableEndpoint)
+func (sdk mgSDK) EnableUser(ctx context.Context, id, token string) (User, errors.SDKError) {
+	return sdk.changeUserStatus(ctx, token, id, enableEndpoint)
 }
 
-func (sdk mgSDK) DisableUser(id, token string) (User, errors.SDKError) {
-	return sdk.changeUserStatus(token, id, disableEndpoint)
+func (sdk mgSDK) DisableUser(ctx context.Context, id, token string) (User, errors.SDKError) {
+	return sdk.changeUserStatus(ctx, token, id, disableEndpoint)
 }
 
-func (sdk mgSDK) changeUserStatus(token, id, status string) (User, errors.SDKError) {
+func (sdk mgSDK) changeUserStatus(ctx context.Context, token, id, status string) (User, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s/%s", sdk.usersURL, usersEndpoint, id, status)
 
-	_, body, sdkerr := sdk.processRequest(http.MethodPost, url, token, nil, nil, http.StatusOK)
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, nil, nil, http.StatusOK)
 	if sdkerr != nil {
 		return User{}, sdkerr
 	}
@@ -343,11 +344,11 @@ func (sdk mgSDK) changeUserStatus(token, id, status string) (User, errors.SDKErr
 	return user, nil
 }
 
-func (sdk mgSDK) DeleteUser(id, token string) errors.SDKError {
+func (sdk mgSDK) DeleteUser(ctx context.Context, id, token string) errors.SDKError {
 	if id == "" {
 		return errors.NewSDKError(apiutil.ErrMissingID)
 	}
 	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, id)
-	_, _, sdkerr := sdk.processRequest(http.MethodDelete, url, token, nil, nil, http.StatusNoContent)
+	_, _, sdkerr := sdk.processRequest(ctx, http.MethodDelete, url, token, nil, nil, http.StatusNoContent)
 	return sdkerr
 }

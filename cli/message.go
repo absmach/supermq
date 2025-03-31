@@ -16,7 +16,7 @@ var cmdMessages = []cobra.Command{
 				return
 			}
 
-			if err := sdk.SendMessage(args[0], args[1], args[2]); err != nil {
+			if err := sdk.SendMessage(cmd.Context(), args[0], args[1], args[2]); err != nil {
 				logErrorCmd(*cmd, err)
 				return
 			}
