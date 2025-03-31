@@ -34,7 +34,7 @@ The service is configured using the environment variables presented in the follo
 
 ## Deployment
 
-The service itself is distributed as Docker container. Check the [`mqtt-adapter`](https://github.com/absmach/supermq/blob/main/docker/docker-compose.yml) service section in docker-compose file to see how service is deployed.
+The service itself is distributed as Docker container. Check the [`mqtt-adapter`](https://github.com/absmach/supermq/blob/main/docker/docker-compose.yaml) service section in docker-compose file to see how service is deployed.
 
 Running this service outside of container requires working instance of the message broker service, clients service and Jaeger server.
 To start the service outside of the container, execute the following shell script:
@@ -80,4 +80,4 @@ $GOBIN/supermq-mqtt
 
 Setting `SMQ_CLIENTS_GRPC_CLIENT_CERT` and `SMQ_CLIENTS_GRPC_CLIENT_KEY` will enable TLS against the clients service. The service expects a file in PEM format for both the certificate and the key. Setting `SMQ_CLIENTS_GRPC_SERVER_CERTS` will enable TLS against the clients service trusting only those CAs that are provided. The service expects a file in PEM format of trusted CAs.
 
-For more information about service capabilities and its usage, please check out the API documentation [API](https://github.com/absmach/supermq/blob/main/api/asyncapi/mqtt.yml).
+For more information about service capabilities and its usage, please check out the API documentation [API](https://github.com/absmach/supermq/blob/main/api/asyncapi/mqtt.yaml).

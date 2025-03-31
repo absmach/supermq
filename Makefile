@@ -13,11 +13,11 @@ GOARCH ?= amd64
 VERSION ?= $(shell git describe --abbrev=0 --tags 2>/dev/null || echo 'unknown')
 COMMIT ?= $(shell git rev-parse HEAD)
 TIME ?= $(shell date +%F_%T)
-USER_REPO ?= $(shell git remote get-url origin | sed -e 's/.*\/\([^/]*\)\/\([^/]*\).*/\1_\2/' )
+USER_REPO ?= $(shell git remote get-url origin | sed -E 's#.*[:/]([^/:]+)/([^/.]+)(\.git)?#\1_\2#')
 empty:=
 space:= $(empty) $(empty)
 # Docker compose project name should follow this guidelines: https://docs.docker.com/compose/reference/#use--p-to-specify-a-project-name
-DOCKER_PROJECT ?= $(shell echo $(subst $(space),,$(USER_REPO)) | tr -c -s '[:alnum:][=-=]' '_' | tr '[:upper:]' '[:lower:]')
+DOCKER_PROJECT ?= $(shell echo $(subst $(space),,$(USER_REPO)) | sed -E 's/[^a-zA-Z0-9]/_/g' | tr '[:upper:]' '[:lower:]')
 DOCKER_COMPOSE_COMMANDS_SUPPORTED := up down config restart
 DEFAULT_DOCKER_COMPOSE_COMMAND  := up
 GRPC_MTLS_CERT_FILES_EXISTS = 0
@@ -105,7 +105,7 @@ clean:
 
 cleandocker:
 	# Stops containers and removes containers, networks, volumes, and images created by up
-	docker compose -f docker/docker-compose.yml -p $(DOCKER_PROJECT) down --rmi all -v --remove-orphans
+	docker compose -f docker/docker-compose.yaml -p $(DOCKER_PROJECT) down --rmi all -v --remove-orphans
 
 ifdef pv
 	# Remove unused volumes
@@ -120,7 +120,7 @@ install:
 mocks:
 	@which mockery > /dev/null || go install github.com/vektra/mockery/v2@$(MOCKERY_VERSION)
 	@unset MOCKERY_VERSION && go generate ./...
-	mockery --config ./tools/config/mockery.yaml
+	mockery --config ./tools/config/.mockery.yaml
 
 
 DIRS = consumers readers postgres internal
@@ -148,7 +148,7 @@ define test_api_service
 	fi
 
 	@if [ "$(svc)" = "http" ]; then \
-		st run api/openapi/$(svc).yml \
+		st run api/openapi/$(svc).yaml \
 		--checks all \
 		--base-url $(2) \
 		--header "Authorization: Client $(CLIENT_SECRET)" \
@@ -156,7 +156,7 @@ define test_api_service
 		--hypothesis-suppress-health-check=filter_too_much \
 		--stateful=links; \
 	else \
-		st run api/openapi/$(svc).yml \
+		st run api/openapi/$(svc).yaml \
 		--checks all \
 		--base-url $(2) \
 		--header "Authorization: Bearer $(USER_TOKEN)" \
@@ -253,13 +253,13 @@ endif
 endif
 
 run: check_certs
-	docker compose -f docker/docker-compose.yml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
+	docker compose -f docker/docker-compose.yaml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
 
 run_addons: check_certs
 	$(foreach SVC,$(RUN_ADDON_ARGS),$(if $(filter $(SVC),$(ADDON_SERVICES) $(EXTERNAL_SERVICES)),,$(error Invalid Service $(SVC))))
 	@for SVC in $(RUN_ADDON_ARGS); do \
-		SMQ_ADDONS_CERTS_PATH_PREFIX="../."  docker compose -f docker/addons/$$SVC/docker-compose.yml -p $(DOCKER_PROJECT) --env-file ./docker/.env $(DOCKER_COMPOSE_COMMAND) $(args) & \
+		SMQ_ADDONS_CERTS_PATH_PREFIX="../."  docker compose -f docker/addons/$$SVC/docker-compose.yaml -p $(DOCKER_PROJECT) --env-file ./docker/.env $(DOCKER_COMPOSE_COMMAND) $(args) & \
 	done
 
 run_live: check_certs
-	GOPATH=$(go env GOPATH) docker compose  -f docker/docker-compose.yml -f docker/docker-compose-live.yaml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
+	GOPATH=$(go env GOPATH) docker compose  -f docker/docker-compose.yaml -f docker/docker-compose-live.yaml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)

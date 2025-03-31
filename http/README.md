@@ -26,7 +26,7 @@ The service is configured using the environment variables presented in the follo
 
 ## Deployment
 
-The service itself is distributed as Docker container. Check the [`http-adapter`](https://github.com/absmach/supermq/blob/main/docker/docker-compose.yml) service section in docker-compose file to see how service is deployed.
+The service itself is distributed as Docker container. Check the [`http-adapter`](https://github.com/absmach/supermq/blob/main/docker/docker-compose.yaml) service section in docker-compose file to see how service is deployed.
 
 Running this service outside of container requires working instance of the message broker service, clients service and Jaeger server.
 To start the service outside of the container, execute the following shell script:
@@ -68,4 +68,4 @@ Setting `SMQ_CLIENTS_GRPC_CLIENT_CERT` and `SMQ_CLIENTS_GRPC_CLIENT_KEY` will en
 
 ## Usage
 
-HTTP Authorization request header contains the credentials to authenticate a Client. The authorization header can be a plain Client key or a Client key encoded as a password for Basic Authentication. In case the Basic Authentication schema is used, the username is ignored. For more information about service capabilities and its usage, please check out the [API documentation](https://docs.api.supermq.abstractmachines.fr/?urls.primaryName=http.yml).
+HTTP Authorization request header contains the credentials to authenticate a Client. The authorization header can be a plain Client key or a Client key encoded as a password for Basic Authentication. In case the Basic Authentication schema is used, the username is ignored. For more information about service capabilities and its usage, please check out the [API documentation](https://docs.api.supermq.abstractmachines.fr/?urls.primaryName=http.yaml).

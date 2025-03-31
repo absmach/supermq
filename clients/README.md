@@ -55,7 +55,7 @@ default values.
 
 ## Deployment
 
-The service itself is distributed as Docker container. Check the [`clients `](https://github.com/absmach/supermq/blob/main/docker/docker-compose.yml#L167-L194) service section in
+The service itself is distributed as Docker container. Check the [`clients `](https://github.com/absmach/supermq/blob/main/docker/docker-compose.yaml#L167-L194) service section in
 docker-compose file to see how service is deployed.
 
 To start the service outside of the container, execute the following shell script:
@@ -117,6 +117,6 @@ To run service in a standalone mode, set `Clients_STANDALONE_EMAIL` and `Clients
 ## Usage
 
 For more information about service capabilities and its usage, please check out
-the [API documentation](https://docs.api.supermq.abstractmachines.fr/?urls.primaryName=clients-openapi.yml).
+the [API documentation](https://docs.api.supermq.abstractmachines.fr/?urls.primaryName=clients-openapi.yaml).
 
 [doc]: https://docs.supermq.abstractmachines.fr

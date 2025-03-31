@@ -50,7 +50,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
       responses:
         "201":
           $ref: "#/components/responses/ChannelCreateRes"
@@ -84,7 +84,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Metadata"
@@ -118,7 +118,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
       responses:
         "201":
           $ref: "#/components/responses/ChannelsCreateRes"
@@ -148,7 +148,7 @@ paths:
       tags:
         - Channels
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/chanID"
       security:
         - bearerAuth: []
@@ -178,7 +178,7 @@ paths:
       tags:
         - Channels
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/chanID"
       security:
         - bearerAuth: []
@@ -211,7 +211,7 @@ paths:
       tags:
         - Channels
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/chanID"
       security:
         - bearerAuth: []
@@ -240,7 +240,7 @@ paths:
       tags:
         - Channels
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/chanID"
       security:
         - bearerAuth: []
@@ -275,7 +275,7 @@ paths:
       tags:
         - Channels
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/chanID"
       security:
         - bearerAuth: []
@@ -306,7 +306,7 @@ paths:
       tags:
         - Channels
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/chanID"
       security:
         - bearerAuth: []
@@ -337,7 +337,7 @@ paths:
       tags:
         - Channels
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/chanID"
       requestBody:
         $ref: "#/components/requestBodies/ChannelParentGroupReq"
@@ -367,7 +367,7 @@ paths:
       tags:
         - Channels
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/chanID"
       requestBody:
         $ref: "#/components/requestBodies/ChannelParentGroupReq"
@@ -397,7 +397,7 @@ paths:
         Connect clients specified by IDs to channels specified by IDs.
         Channel and client are owned by user identified using the provided access token.
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
       tags:
         - Connections
       requestBody:
@@ -430,7 +430,7 @@ paths:
         Disconnect clients specified by IDs from channels specified by IDs.
         Channel and client are owned by user identified using the provided access token.
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
       tags:
         - Connections
       requestBody:
@@ -464,7 +464,7 @@ paths:
       tags:
         - Connections
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/chanID"
       requestBody:
         $ref: "#/components/requestBodies/ChannelConnReq"
@@ -493,7 +493,7 @@ paths:
       tags:
         - Connections
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/chanID"
       requestBody:
         $ref: "#/components/requestBodies/ChannelConnReq"

@@ -36,14 +36,14 @@ jobs:
           base: main
           filters: |
             proto:
-              - ".github/workflows/check-generated-files.yml"
+              - ".github/workflows/check-generated-files.yaml"
               - "auth.proto"
               - "auth/*.pb.go"
               - "pkg/messaging/message.proto"
               - "pkg/messaging/*.pb.go"
 
             mocks:
-              - ".github/workflows/check-generated-files.yml"
+              - ".github/workflows/check-generated-files.yaml"
               - "pkg/sdk/sdk.go"
               - "users/postgres/clients.go"
               - "users/clients.go"

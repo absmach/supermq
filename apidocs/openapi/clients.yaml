@@ -47,7 +47,7 @@ paths:
         Adds new client to the list of clients owned by user identified using
         the provided access token.
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
       requestBody:
         $ref: "#/components/requestBodies/ClientCreateReq"
       responses:
@@ -81,7 +81,7 @@ paths:
         dataset is consumed either by making subsequent requests, or by
         increasing the subset size of the initial request.
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Metadata"
@@ -115,7 +115,7 @@ paths:
         Adds a list of new clients to the list of clients owned by user identified using
         the provided access token.
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
       tags:
         - Clients
       requestBody:
@@ -147,7 +147,7 @@ paths:
       tags:
         - Clients
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
       security:
         - bearerAuth: []
@@ -177,7 +177,7 @@ paths:
       tags:
         - Clients
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
       requestBody:
         $ref: "#/components/requestBodies/ClientUpdateReq"
@@ -210,7 +210,7 @@ paths:
       tags:
         - Clients
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
       security:
         - bearerAuth: []
@@ -238,7 +238,7 @@ paths:
       tags:
         - Clients
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
       requestBody:
         $ref: "#/components/requestBodies/ClientUpdateTagsReq"
@@ -270,7 +270,7 @@ paths:
       tags:
         - Clients
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
       requestBody:
         $ref: "#/components/requestBodies/ClientUpdateSecretReq"
@@ -305,7 +305,7 @@ paths:
       tags:
         - Clients
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
       security:
         - bearerAuth: []
@@ -336,7 +336,7 @@ paths:
       tags:
         - Clients
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
       security:
         - bearerAuth: []
@@ -367,7 +367,7 @@ paths:
       tags:
         - Clients
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
       requestBody:
         $ref: "#/components/requestBodies/ClientParentGroupReq"
@@ -397,7 +397,7 @@ paths:
       tags:
         - Clients
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
       requestBody:
         $ref: "#/components/requestBodies/ClientParentGroupReq"
@@ -428,8 +428,8 @@ paths:
       tags:
         - Clients
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
-        - $ref: "users.yml#/components/parameters/UserID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
+        - $ref: "users.yaml#/components/parameters/UserID"
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Metadata"
@@ -464,15 +464,15 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
       requestBody:
-        $ref: "./schemas/roles.yml#/components/requestBodies/CreateRoleReq"
+        $ref: "./schemas/roles.yaml#/components/requestBodies/CreateRoleReq"
       security:
         - bearerAuth: []
       responses:
         "201":
-            $ref: "./schemas/roles.yml#/components/responses/CreateRoleRes"
+            $ref: "./schemas/roles.yaml#/components/responses/CreateRoleRes"
         "400":
           description: Failed due to malformed client's ID.
         "401":
@@ -497,7 +497,7 @@ paths:
         dataset is consumed either by making subsequent requests, or by
         increasing the subset size of the initial request.
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
@@ -505,7 +505,7 @@ paths:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "./schemas/roles.yml#/components/responses/ListRolesRes"
+          $ref: "./schemas/roles.yaml#/components/responses/ListRolesRes"
         "400":
           description: Failed due to malformed query parameters.
         "401":
@@ -529,13 +529,13 @@ paths:
       description: |
         Retrieves members from role for the specific client.
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "./schemas/roles.yml#/components/responses/ListEntityMembersRes"
+          $ref: "./schemas/roles.yaml#/components/responses/ListEntityMembersRes"
         "400":
           description: Failed due to malformed query parameters.
         "401":
@@ -559,14 +559,14 @@ paths:
       description: |
         Retrieves a specific client role that is identified by the role name.
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
+        - $ref: "./schemas/roles.yaml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "./schemas/roles.yml#/components/responses/GetRoleRes"
+          $ref: "./schemas/roles.yaml#/components/responses/GetRoleRes"
         "400":
           description: Failed due to malformed query parameters.
         "401":
@@ -589,16 +589,16 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
+        - $ref: "./schemas/roles.yaml#/components/parameters/RoleID"
       requestBody:
-        $ref: "./schemas/roles.yml#/components/requestBodies/UpdateRoleReq"
+        $ref: "./schemas/roles.yaml#/components/requestBodies/UpdateRoleReq"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "./schemas/roles.yml#/components/responses/GetRoleRes"
+          $ref: "./schemas/roles.yaml#/components/responses/GetRoleRes"
         "400":
           description: Failed due to malformed query parameters.
         "401":
@@ -621,9 +621,9 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
+        - $ref: "./schemas/roles.yaml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -652,16 +652,16 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
+        - $ref: "./schemas/roles.yaml#/components/parameters/RoleID"
       requestBody:
-        $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleActionsReq"
+        $ref: "./schemas/roles.yaml#/components/requestBodies/AddRoleActionsReq"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "./schemas/roles.yml#/components/responses/AddRoleActionsRes"
+          $ref: "./schemas/roles.yaml#/components/responses/AddRoleActionsRes"
         "400":
           description: Failed due to malformed query parameters.
         "401":
@@ -684,14 +684,14 @@ paths:
       description: |
         Retrieves a list of client role actions.
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
+        - $ref: "./schemas/roles.yaml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "./schemas/roles.yml#/components/responses/ListRoleActionsRes"
+          $ref: "./schemas/roles.yaml#/components/responses/ListRoleActionsRes"
         "400":
           description: Failed due to malformed query parameters.
         "401":
@@ -715,11 +715,11 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
+        - $ref: "./schemas/roles.yaml#/components/parameters/RoleID"
       requestBody:
-        $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleActionsReq"
+        $ref: "./schemas/roles.yaml#/components/requestBodies/AddRoleActionsReq"
       security:
         - bearerAuth: []
       responses:
@@ -748,9 +748,9 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
+        - $ref: "./schemas/roles.yaml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -779,16 +779,16 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
+        - $ref: "./schemas/roles.yaml#/components/parameters/RoleID"
       requestBody:
-        $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleMembersReq"
+        $ref: "./schemas/roles.yaml#/components/requestBodies/AddRoleMembersReq"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "./schemas/roles.yml#/components/responses/AddRoleMembersRes"
+          $ref: "./schemas/roles.yaml#/components/responses/AddRoleMembersRes"
         "400":
           description: Failed due to malformed query parameters.
         "401":
@@ -811,14 +811,14 @@ paths:
       description: |
         Retrieves a list of client role members.
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
+        - $ref: "./schemas/roles.yaml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "./schemas/roles.yml#/components/responses/ListRoleMembersRes"
+          $ref: "./schemas/roles.yaml#/components/responses/ListRoleMembersRes"
         "400":
           description: Failed due to malformed query parameters.
         "401":
@@ -842,11 +842,11 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
+        - $ref: "./schemas/roles.yaml#/components/parameters/RoleID"
       requestBody:
-        $ref: "./schemas/roles.yml#/components/requestBodies/AddRoleMembersReq"
+        $ref: "./schemas/roles.yaml#/components/requestBodies/AddRoleMembersReq"
       security:
         - bearerAuth: []
       responses:
@@ -875,9 +875,9 @@ paths:
       tags:
         - Roles
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/clientID"
-        - $ref: "./schemas/roles.yml#/components/parameters/RoleID"
+        - $ref: "./schemas/roles.yaml#/components/parameters/RoleID"
       security:
         - bearerAuth: []
       responses:
@@ -906,12 +906,12 @@ paths:
       description: |
         Retrieves a list of available actions.
       parameters:
-        - $ref: "auth.yml#/components/parameters/DomainID"
+        - $ref: "auth.yaml#/components/parameters/DomainID"
       security:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "./schemas/roles.yml#/components/responses/ListAvailableActionsRes"
+          $ref: "./schemas/roles.yaml#/components/responses/ListAvailableActionsRes"
         "400":
           description: Failed due to malformed query parameters.
         "401":

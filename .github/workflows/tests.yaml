@@ -35,7 +35,7 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.60.3
-          args: --config ./tools/config/golangci.yml
+          args: --config ./tools/config/.golangci.yaml
 
       - name: Build all Binaries
         run: |
@@ -73,7 +73,7 @@ jobs:
           base: main
           filters: |
             workflow:
-              - ".github/workflows/tests.yml"
+              - ".github/workflows/tests.yaml"
 
             auth:
               - "auth/**"
@@ -364,5 +364,5 @@ jobs:
         with:
           token: ${{ secrets.CODECOV }}
           files: ./coverage/*.out
-          codecov_yml_path: tools/config/codecov.yml
+          codecov_yml_path: tools/config/.codecov.yaml
           verbose: true
