@@ -104,8 +104,8 @@ func TestGetCertCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("ViewCertByClient", mock.Anything, mock.Anything, mock.Anything).Return(tc.serials, tc.sdkErr)
-			sdkCall1 := sdkMock.On("ViewCert", mock.Anything, mock.Anything, mock.Anything).Return(tc.cert, tc.sdkErr)
+			sdkCall := sdkMock.On("ViewCertByClient", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.serials, tc.sdkErr)
+			sdkCall1 := sdkMock.On("ViewCert", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.cert, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{getCmd}, tc.args...)...)
 			switch tc.logType {
 			case entityLog:
@@ -183,7 +183,7 @@ func TestRevokeCertCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("RevokeCert", tc.args[0], tc.args[1], tc.args[2]).Return(tc.time, tc.sdkErr)
+			sdkCall := sdkMock.On("RevokeCert", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.time, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{revokeCmd}, tc.args...)...)
 
 			switch tc.logType {
@@ -253,7 +253,7 @@ func TestIssueCertCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("IssueCert", mock.Anything, mock.Anything, tc.args[1], tc.args[2]).Return(tc.cert, tc.sdkErr)
+			sdkCall := sdkMock.On("IssueCert", mock.Anything, mock.Anything, mock.Anything, tc.args[1], tc.args[2]).Return(tc.cert, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{issueCmd}, tc.args...)...)
 
 			switch tc.logType {

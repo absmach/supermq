@@ -87,7 +87,7 @@ func TestCreateChannelCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("CreateChannel", mock.Anything, tc.args[1], tc.args[2]).Return(tc.channel, tc.sdkErr)
+			sdkCall := sdkMock.On("CreateChannel", mock.Anything, mock.Anything, tc.args[1], tc.args[2]).Return(tc.channel, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{createCmd}, tc.args...)...)
 
 			switch tc.logType {
@@ -181,8 +181,8 @@ func TestGetChannelsCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("Channel", tc.args[0], tc.args[1], tc.args[2]).Return(tc.channel, tc.sdkErr)
-			sdkCall1 := sdkMock.On("Channels", mock.Anything, tc.args[1], tc.args[2]).Return(tc.page, tc.sdkErr)
+			sdkCall := sdkMock.On("Channel", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.channel, tc.sdkErr)
+			sdkCall1 := sdkMock.On("Channels", mock.Anything, mock.Anything, tc.args[1], tc.args[2]).Return(tc.page, tc.sdkErr)
 
 			out := executeCommand(t, rootCmd, append([]string{getCmd}, tc.args...)...)
 
@@ -266,7 +266,7 @@ func TestDeleteChannelCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("DeleteChannel", tc.args[0], tc.args[1], tc.args[2]).Return(tc.sdkErr)
+			sdkCall := sdkMock.On("DeleteChannel", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{delCmd}, tc.args...)...)
 
 			switch tc.logType {
@@ -350,7 +350,7 @@ func TestUpdateChannelCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			var ch mgsdk.Channel
-			sdkCall := sdkMock.On("UpdateChannel", mock.Anything, tc.args[2], tc.args[3]).Return(tc.channel, tc.sdkErr)
+			sdkCall := sdkMock.On("UpdateChannel", mock.Anything, mock.Anything, tc.args[2], tc.args[3]).Return(tc.channel, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{updCmd}, tc.args...)...)
 
 			switch tc.logType {
@@ -429,7 +429,7 @@ func TestEnableChannelCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("EnableChannel", tc.args[0], tc.args[1], tc.args[2]).Return(tc.channel, tc.sdkErr)
+			sdkCall := sdkMock.On("EnableChannel", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.channel, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{enableCmd}, tc.args...)...)
 
 			switch tc.logType {
@@ -510,7 +510,7 @@ func TestDisableChannelCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("DisableChannel", tc.args[0], tc.args[1], tc.args[2]).Return(tc.channel, tc.sdkErr)
+			sdkCall := sdkMock.On("DisableChannel", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.channel, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{disableCmd}, tc.args...)...)
 
 			switch tc.logType {
