@@ -101,9 +101,9 @@ func TestGetJournalCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("Journal", tc.args[0], tc.args[1], "", mock.Anything, tc.args[2]).Return(tc.page, tc.sdkErr)
+			sdkCall := sdkMock.On("Journal", mock.Anything, tc.args[0], tc.args[1], "", mock.Anything, tc.args[2]).Return(tc.page, tc.sdkErr)
 			if tc.args[0] != "user" {
-				sdkCall = sdkMock.On("Journal", tc.args[0], tc.args[1], tc.args[2], mock.Anything, tc.args[3]).Return(tc.page, tc.sdkErr)
+				sdkCall = sdkMock.On("Journal", mock.Anything, tc.args[0], tc.args[1], tc.args[2], mock.Anything, tc.args[3]).Return(tc.page, tc.sdkErr)
 			}
 			out := executeCommand(t, rootCmd, append([]string{getCmd}, tc.args...)...)
 

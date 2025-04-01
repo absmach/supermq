@@ -14,6 +14,7 @@ import (
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	sdkmocks "github.com/absmach/supermq/pkg/sdk/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestSendMesageCmd(t *testing.T) {
@@ -65,7 +66,7 @@ func TestSendMesageCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("SendMessage", tc.args[0], tc.args[1], tc.args[2]).Return(tc.sdkErr)
+			sdkCall := sdkMock.On("SendMessage", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{sendCmd}, tc.args...)...)
 
 			switch tc.logType {

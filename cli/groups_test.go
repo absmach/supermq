@@ -98,7 +98,7 @@ func TestCreateGroupCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("CreateGroup", mock.Anything, tc.args[1], tc.args[2]).Return(tc.group, tc.sdkErr)
+			sdkCall := sdkMock.On("CreateGroup", mock.Anything, mock.Anything, tc.args[1], tc.args[2]).Return(tc.group, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{createCmd}, tc.args...)...)
 
 			switch tc.logType {
@@ -174,7 +174,7 @@ func TestDeletegroupCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("DeleteGroup", tc.args[0], tc.args[1], tc.args[2]).Return(tc.sdkErr)
+			sdkCall := sdkMock.On("DeleteGroup", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{delCmd}, tc.args...)...)
 
 			switch tc.logType {
@@ -254,7 +254,7 @@ func TestUpdategroupCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			var ch smqsdk.Group
-			sdkCall := sdkMock.On("UpdateGroup", mock.Anything, tc.args[1], tc.args[2]).Return(tc.group, tc.sdkErr)
+			sdkCall := sdkMock.On("UpdateGroup", mock.Anything, mock.Anything, tc.args[1], tc.args[2]).Return(tc.group, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{updCmd}, tc.args...)...)
 
 			switch tc.logType {
@@ -333,7 +333,7 @@ func TestEnablegroupCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("EnableGroup", tc.args[0], tc.args[1], tc.args[2]).Return(tc.group, tc.sdkErr)
+			sdkCall := sdkMock.On("EnableGroup", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.group, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{enableCmd}, tc.args...)...)
 
 			switch tc.logType {
@@ -414,7 +414,7 @@ func TestDisablegroupCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("DisableGroup", tc.args[0], tc.args[1], tc.args[2]).Return(tc.group, tc.sdkErr)
+			sdkCall := sdkMock.On("DisableGroup", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.group, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{disableCmd}, tc.args...)...)
 
 			switch tc.logType {
@@ -485,7 +485,7 @@ func TestCreateGroupRoleCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("CreateGroupRole", tc.args[1], tc.args[2], roleReq, tc.args[3]).Return(tc.role, tc.sdkErr)
+			sdkCall := sdkMock.On("CreateGroupRole", mock.Anything, tc.args[1], tc.args[2], roleReq, tc.args[3]).Return(tc.role, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{"roles", "create"}, tc.args...)...)
 
 			switch tc.logType {
@@ -556,9 +556,9 @@ func TestGetGroupRolesCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("GroupRoles", tc.args[1], tc.args[2], mock.Anything, tc.args[3]).Return(tc.roles, tc.sdkErr)
+			sdkCall := sdkMock.On("GroupRoles", mock.Anything, tc.args[1], tc.args[2], mock.Anything, tc.args[3]).Return(tc.roles, tc.sdkErr)
 			if tc.args[0] != all {
-				sdkCall = sdkMock.On("GroupRole", tc.args[1], tc.args[0], tc.args[2], tc.args[3]).Return(role, tc.sdkErr)
+				sdkCall = sdkMock.On("GroupRole", mock.Anything, tc.args[1], tc.args[0], tc.args[2], tc.args[3]).Return(role, tc.sdkErr)
 			}
 			out := executeCommand(t, rootCmd, append([]string{"roles", "get"}, tc.args...)...)
 
@@ -626,7 +626,7 @@ func TestUpdateGroupRoleCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("UpdateGroupRole", tc.args[2], tc.args[1], tc.args[0], tc.args[3], tc.args[4]).Return(tc.role, tc.sdkErr)
+			sdkCall := sdkMock.On("UpdateGroupRole", mock.Anything, tc.args[2], tc.args[1], tc.args[0], tc.args[3], tc.args[4]).Return(tc.role, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{"roles", "update"}, tc.args...)...)
 
 			switch tc.logType {
@@ -683,7 +683,7 @@ func TestDeleteGroupRoleCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("DeleteGroupRole", tc.args[1], tc.args[0], tc.args[2], tc.args[3]).Return(tc.sdkErr)
+			sdkCall := sdkMock.On("DeleteGroupRole", mock.Anything, tc.args[1], tc.args[0], tc.args[2], tc.args[3]).Return(tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{"roles", "delete"}, tc.args...)...)
 
 			switch tc.logType {
@@ -747,7 +747,7 @@ func TestAddGroupRoleActionsCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("AddGroupRoleActions", tc.args[2], tc.args[1], tc.args[3], tc.actions, tc.args[4]).Return(tc.actions, tc.sdkErr)
+			sdkCall := sdkMock.On("AddGroupRoleActions", mock.Anything, tc.args[2], tc.args[1], tc.args[3], tc.actions, tc.args[4]).Return(tc.actions, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{"roles", "actions", "add"}, tc.args...)...)
 
 			switch tc.logType {
@@ -808,7 +808,7 @@ func TestListGroupRoleActionsCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("GroupRoleActions", tc.args[1], tc.args[0], tc.args[2], tc.args[3]).Return(tc.actions, tc.sdkErr)
+			sdkCall := sdkMock.On("GroupRoleActions", mock.Anything, tc.args[1], tc.args[0], tc.args[2], tc.args[3]).Return(tc.actions, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{"roles", "actions", "list"}, tc.args...)...)
 
 			switch tc.logType {
@@ -886,9 +886,9 @@ func TestDeleteGroupRoleActionsCmd(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			var sdkCall *mock.Call
 			if tc.args[0] == all {
-				sdkCall = sdkMock.On("RemoveAllGroupRoleActions", tc.args[2], tc.args[1], tc.args[3], tc.args[4]).Return(tc.sdkErr)
+				sdkCall = sdkMock.On("RemoveAllGroupRoleActions", mock.Anything, tc.args[2], tc.args[1], tc.args[3], tc.args[4]).Return(tc.sdkErr)
 			} else {
-				sdkCall = sdkMock.On("RemoveGroupRoleActions", tc.args[2], tc.args[1], tc.args[3], actions.Actions, tc.args[4]).Return(tc.sdkErr)
+				sdkCall = sdkMock.On("RemoveGroupRoleActions", mock.Anything, tc.args[2], tc.args[1], tc.args[3], actions.Actions, tc.args[4]).Return(tc.sdkErr)
 			}
 			out := executeCommand(t, rootCmd, append([]string{"roles", "actions", "delete"}, tc.args...)...)
 
@@ -943,7 +943,7 @@ func TestAvailableGroupRoleActionsCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("AvailableGroupRoleActions", tc.args[0], tc.args[1]).Return(tc.actions, tc.sdkErr)
+			sdkCall := sdkMock.On("AvailableGroupRoleActions", mock.Anything, tc.args[0], tc.args[1]).Return(tc.actions, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{"roles", "actions", "available-actions"}, tc.args...)...)
 
 			switch tc.logType {
@@ -1010,7 +1010,7 @@ func TestAddGroupRoleMembersCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("AddGroupRoleMembers", tc.args[2], tc.args[1], tc.args[3], tc.members, tc.args[4]).Return(tc.members, tc.sdkErr)
+			sdkCall := sdkMock.On("AddGroupRoleMembers", mock.Anything, tc.args[2], tc.args[1], tc.args[3], tc.members, tc.args[4]).Return(tc.members, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{"roles", "members", "add"}, tc.args...)...)
 
 			switch tc.logType {
@@ -1078,7 +1078,7 @@ func TestListGroupRoleMembersCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("GroupRoleMembers", tc.args[1], tc.args[0], tc.args[2], mock.Anything, tc.args[3]).Return(tc.members, tc.sdkErr)
+			sdkCall := sdkMock.On("GroupRoleMembers", mock.Anything, tc.args[1], tc.args[0], tc.args[2], mock.Anything, tc.args[3]).Return(tc.members, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{"roles", "members", "list"}, tc.args...)...)
 
 			switch tc.logType {
@@ -1156,9 +1156,9 @@ func TestDeleteGroupRoleMembersCmd(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			var sdkCall *mock.Call
 			if tc.args[0] == all {
-				sdkCall = sdkMock.On("RemoveAllGroupRoleMembers", tc.args[2], tc.args[1], tc.args[3], tc.args[4]).Return(tc.sdkErr)
+				sdkCall = sdkMock.On("RemoveAllGroupRoleMembers", mock.Anything, tc.args[2], tc.args[1], tc.args[3], tc.args[4]).Return(tc.sdkErr)
 			} else {
-				sdkCall = sdkMock.On("RemoveGroupRoleMembers", tc.args[2], tc.args[1], tc.args[3], members.Members, tc.args[4]).Return(tc.sdkErr)
+				sdkCall = sdkMock.On("RemoveGroupRoleMembers", mock.Anything, tc.args[2], tc.args[1], tc.args[3], members.Members, tc.args[4]).Return(tc.sdkErr)
 			}
 			out := executeCommand(t, rootCmd, append([]string{"roles", "members", "delete"}, tc.args...)...)
 
