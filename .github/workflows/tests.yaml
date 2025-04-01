@@ -32,7 +32,7 @@ jobs:
           protolint .
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           version: v1.60.3
           args: --config ./tools/config/.golangci.yaml
