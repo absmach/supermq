@@ -5,6 +5,10 @@
 coverage:
   ignore:
     - "tools/*"
+    - "cmd/*"
     - "coap/*"
-    - "**/mocks*"
+    - "*/mocks/*"
     - "*/middleware/*"
+    - "pkg/sid/mock.go"
+    - "pkg/tracing/utils.go"
+    - "pkg/prometheus/*"
