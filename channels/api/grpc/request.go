@@ -12,11 +12,11 @@ import (
 var errDomainID = errors.New("domain id required for users")
 
 type authorizeReq struct {
-	domainID   string
-	channelID  string
-	clientID   string
-	clientType string
-	connType   connections.ConnType
+	domainID     string
+	channelRoute string
+	clientID     string
+	clientType   string
+	connType     connections.ConnType
 }
 
 func (req authorizeReq) validate() error {

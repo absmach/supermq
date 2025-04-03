@@ -54,12 +54,14 @@ func TestCreateChannel(t *testing.T) {
 
 	createChannelReq := channels.Channel{
 		Name:     channel.Name,
+		Route:    channel.Route,
 		Metadata: channels.Metadata{"role": "client"},
 		Status:   channels.EnabledStatus,
 	}
 
 	channelReq := sdk.Channel{
 		Name:     channel.Name,
+		Route:    channel.Route,
 		Metadata: validMetadata,
 		Status:   channels.EnabledStatus.String(),
 	}
@@ -134,6 +136,7 @@ func TestCreateChannel(t *testing.T) {
 			desc: "create channel with parent group",
 			channelReq: sdk.Channel{
 				Name:        channel.Name,
+				Route:       channel.Route,
 				ParentGroup: parentID,
 				Status:      channels.EnabledStatus.String(),
 			},
@@ -142,6 +145,7 @@ func TestCreateChannel(t *testing.T) {
 			createChannelReq: channels.Channel{
 				Name:        channel.Name,
 				ParentGroup: parentID,
+				Route:       channel.Route,
 				Status:      channels.EnabledStatus,
 			},
 			svcRes:   []channels.Channel{convertChannel(pChannel)},
@@ -153,6 +157,7 @@ func TestCreateChannel(t *testing.T) {
 			desc: "create channel with invalid parent",
 			channelReq: sdk.Channel{
 				Name:        channel.Name,
+				Route:       channel.Route,
 				ParentGroup: wrongID,
 				Status:      channels.EnabledStatus.String(),
 			},
@@ -161,6 +166,7 @@ func TestCreateChannel(t *testing.T) {
 			createChannelReq: channels.Channel{
 				Name:        channel.Name,
 				ParentGroup: wrongID,
+				Route:       channel.Route,
 				Status:      channels.EnabledStatus,
 			},
 			svcRes:   []channels.Channel{},
@@ -173,6 +179,7 @@ func TestCreateChannel(t *testing.T) {
 			channelReq: sdk.Channel{
 				ID:          channel.ID,
 				ParentGroup: parentID,
+				Route:       channel.Route,
 				Name:        channel.Name,
 				Metadata:    validMetadata,
 				CreatedAt:   channel.CreatedAt,
@@ -184,6 +191,7 @@ func TestCreateChannel(t *testing.T) {
 			createChannelReq: channels.Channel{
 				ID:          channel.ID,
 				ParentGroup: parentID,
+				Route:       channel.Route,
 				Name:        channel.Name,
 				Metadata:    channels.Metadata{"role": "client"},
 				CreatedAt:   channel.CreatedAt,
@@ -294,8 +302,9 @@ func TestCreateChannels(t *testing.T) {
 			token:    validToken,
 			channelsReq: []sdk.Channel{
 				{
-					ID:   generateUUID(t),
-					Name: "channel_1",
+					ID:    generateUUID(t),
+					Name:  "channel_1",
+					Route: valid,
 					Metadata: map[string]interface{}{
 						"test": make(chan int),
 					},
@@ -2117,6 +2126,7 @@ func generateTestChannel(t *testing.T) sdk.Channel {
 		ID:        testsutil.GenerateUUID(&testing.T{}),
 		DomainID:  testsutil.GenerateUUID(&testing.T{}),
 		Name:      channelName,
+		Route:     valid,
 		Metadata:  sdk.Metadata{"role": "client"},
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,

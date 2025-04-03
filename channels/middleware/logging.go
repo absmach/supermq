@@ -29,7 +29,7 @@ func LoggingMiddleware(svc channels.Service, logger *slog.Logger) channels.Servi
 	return &loggingMiddleware{logger, svc, rmMW.NewRoleManagerLoggingMiddleware("channels", svc, logger)}
 }
 
-func (lm *loggingMiddleware) CreateChannels(ctx context.Context, session authn.Session, clients ...channels.Channel) (cs []channels.Channel, rps []roles.RoleProvision, err error) {
+func (lm *loggingMiddleware) CreateChannels(ctx context.Context, session authn.Session, channels ...channels.Channel) (cs []channels.Channel, rps []roles.RoleProvision, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -38,12 +38,12 @@ func (lm *loggingMiddleware) CreateChannels(ctx context.Context, session authn.S
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn(fmt.Sprintf("Create %d channels failed", len(clients)), args...)
+			lm.logger.Warn(fmt.Sprintf("Create %d channels failed", len(channels)), args...)
 			return
 		}
-		lm.logger.Info(fmt.Sprintf("Create %d channel completed successfully", len(clients)), args...)
+		lm.logger.Info(fmt.Sprintf("Create %d channel completed successfully", len(channels)), args...)
 	}(time.Now())
-	return lm.svc.CreateChannels(ctx, session, clients...)
+	return lm.svc.CreateChannels(ctx, session, channels...)
 }
 
 func (lm *loggingMiddleware) ViewChannel(ctx context.Context, session authn.Session, id string, withRoles bool) (c channels.Channel, err error) {
@@ -113,16 +113,17 @@ func (lm *loggingMiddleware) ListUserChannels(ctx context.Context, session authn
 	return lm.svc.ListUserChannels(ctx, session, userID, pm)
 }
 
-func (lm *loggingMiddleware) UpdateChannel(ctx context.Context, session authn.Session, client channels.Channel) (c channels.Channel, err error) {
+func (lm *loggingMiddleware) UpdateChannel(ctx context.Context, session authn.Session, channel channels.Channel) (c channels.Channel, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.String("domain_id", session.DomainID),
 			slog.String("request_id", middleware.GetReqID(ctx)),
 			slog.Group("channel",
-				slog.String("id", client.ID),
-				slog.String("name", client.Name),
-				slog.Any("metadata", client.Metadata),
+				slog.String("id", channel.ID),
+				slog.String("name", channel.Name),
+				slog.String("route", channel.Route),
+				slog.Any("metadata", channel.Metadata),
 			),
 		}
 		if err != nil {
@@ -132,10 +133,10 @@ func (lm *loggingMiddleware) UpdateChannel(ctx context.Context, session authn.Se
 		}
 		lm.logger.Info("Update channel completed successfully", args...)
 	}(time.Now())
-	return lm.svc.UpdateChannel(ctx, session, client)
+	return lm.svc.UpdateChannel(ctx, session, channel)
 }
 
-func (lm *loggingMiddleware) UpdateChannelTags(ctx context.Context, session authn.Session, client channels.Channel) (c channels.Channel, err error) {
+func (lm *loggingMiddleware) UpdateChannelTags(ctx context.Context, session authn.Session, channel channels.Channel) (c channels.Channel, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -154,7 +155,7 @@ func (lm *loggingMiddleware) UpdateChannelTags(ctx context.Context, session auth
 		}
 		lm.logger.Info("Update channel tags completed successfully", args...)
 	}(time.Now())
-	return lm.svc.UpdateChannelTags(ctx, session, client)
+	return lm.svc.UpdateChannelTags(ctx, session, channel)
 }
 
 func (lm *loggingMiddleware) EnableChannel(ctx context.Context, session authn.Session, id string) (c channels.Channel, err error) {

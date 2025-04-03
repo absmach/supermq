@@ -8,13 +8,20 @@ import (
 
 	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/channels"
+	dom "github.com/absmach/supermq/domains"
+	pkgDomains "github.com/absmach/supermq/pkg/domains"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
 )
 
+var (
+	errDisabledDomain  = errors.New("domain is disabled or frozen")
+	errDisabledChannel = errors.New("channel is disabled")
+)
+
 type Service interface {
-	Authorize(ctx context.Context, req channels.AuthzReq) error
+	Authorize(ctx context.Context, req channels.AuthzReq) (string, error)
 	UnsetParentGroupFromChannels(ctx context.Context, parentGroupID string) error
 	RemoveClientConnections(ctx context.Context, clientID string) error
 	RetrieveByID(ctx context.Context, id string) (channels.Channel, error)
@@ -24,44 +31,59 @@ type service struct {
 	repo      channels.Repository
 	evaluator policies.Evaluator
 	policy    policies.Service
+	domains   pkgDomains.Authorization
 }
 
 var _ Service = (*service)(nil)
 
-func New(repo channels.Repository, evaluator policies.Evaluator, policy policies.Service) Service {
-	return service{repo, evaluator, policy}
+func New(repo channels.Repository, evaluator policies.Evaluator, policy policies.Service, domains pkgDomains.Authorization) Service {
+	return service{repo, evaluator, policy, domains}
 }
 
-func (svc service) Authorize(ctx context.Context, req channels.AuthzReq) error {
+func (svc service) Authorize(ctx context.Context, req channels.AuthzReq) (string, error) {
+	d, err := svc.domains.RetrieveEntity(ctx, req.DomainID)
+	if err != nil {
+		return "", errors.Wrap(svcerr.ErrAuthorization, err)
+	}
+	if d.Status != dom.EnabledStatus {
+		return "", errors.Wrap(svcerr.ErrAuthorization, errDisabledDomain)
+	}
+	ch, err := svc.repo.RetrieveByRoute(ctx, req.ChannelRoute, req.DomainID)
+	if err != nil {
+		return "", errors.Wrap(svcerr.ErrAuthorization, err)
+	}
+	if ch.Status != channels.EnabledStatus {
+		return "", errors.Wrap(svcerr.ErrAuthorization, errDisabledChannel)
+	}
 	switch req.ClientType {
 	case policies.UserType:
 		permission, err := req.Type.Permission()
 		if err != nil {
-			return err
+			return "", err
 		}
 		pr := policies.Policy{
 			Subject:     auth.EncodeDomainUserID(req.DomainID, req.ClientID),
 			SubjectType: policies.UserType,
-			Object:      req.ChannelID,
+			Object:      ch.ID,
 			Permission:  permission,
 			ObjectType:  policies.ChannelType,
 		}
 		if err := svc.evaluator.CheckPolicy(ctx, pr); err != nil {
-			return errors.Wrap(svcerr.ErrAuthorization, err)
+			return "", errors.Wrap(svcerr.ErrAuthorization, err)
 		}
-		return nil
+		return ch.ID, nil
 	case policies.ClientType:
 		// Optimization: Add cache
 		if err := svc.repo.ClientAuthorize(ctx, channels.Connection{
-			ChannelID: req.ChannelID,
+			ChannelID: ch.ID,
 			ClientID:  req.ClientID,
 			Type:      req.Type,
 		}); err != nil {
-			return errors.Wrap(svcerr.ErrAuthorization, err)
+			return "", errors.Wrap(svcerr.ErrAuthorization, err)
 		}
-		return nil
+		return ch.ID, nil
 	default:
-		return svcerr.ErrAuthentication
+		return "", svcerr.ErrAuthentication
 	}
 }
 

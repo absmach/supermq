@@ -25,7 +25,7 @@ const (
 var (
 	errFailedSession  = errors.New("failed to obtain session from context")
 	errMalformedTopic = errors.New("malformed topic")
-	channelRegExp     = regexp.MustCompile(`^\/?ch\/([\w\-]+)\/msg(\/[^?]*)?(\?.*)?$`)
+	channelRegExp     = regexp.MustCompile(`^\/?([\w\-]+)/ch\/([\w\-]+)\/msg(\/[^?]*)?(\?.*)?$`)
 )
 
 // EventStore is a struct used to store event streams in Redis.
@@ -142,12 +142,12 @@ func (es *eventStore) Disconnect(ctx context.Context) error {
 
 func parseTopic(topic string) (string, string, error) {
 	channelParts := channelRegExp.FindStringSubmatch(topic)
-	if len(channelParts) < 2 {
+	if len(channelParts) < 3 {
 		return "", "", errMalformedTopic
 	}
 
-	chanID := channelParts[1]
-	subtopic := channelParts[2]
+	chanID := channelParts[2]
+	subtopic := channelParts[3]
 
 	if subtopic == "" {
 		return subtopic, chanID, nil

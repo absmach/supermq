@@ -43,10 +43,11 @@ message AuthzReq {
   string domain_id = 1;
   string client_id = 2;
   string client_type = 3;
-  string channel_id = 4;
+  string channel_route = 4;
   uint32 type = 5;
 }
 
 message AuthzRes {
   bool authorized = 1;
+  string channel_id = 2;
 }

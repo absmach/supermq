@@ -42,20 +42,29 @@ func (_m *Service) EXPECT() *Service_Expecter {
 }
 
 // Authorize provides a mock function for the type Service
-func (_mock *Service) Authorize(ctx context.Context, req channels.AuthzReq) error {
+func (_mock *Service) Authorize(ctx context.Context, req channels.AuthzReq) (string, error) {
 	ret := _mock.Called(ctx, req)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Authorize")
 	}
 
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, channels.AuthzReq) error); ok {
+	var r0 string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, channels.AuthzReq) (string, error)); ok {
+		return returnFunc(ctx, req)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, channels.AuthzReq) string); ok {
 		r0 = returnFunc(ctx, req)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(string)
 	}
-	return r0
+	if returnFunc, ok := ret.Get(1).(func(context.Context, channels.AuthzReq) error); ok {
+		r1 = returnFunc(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
 }
 
 // Service_Authorize_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Authorize'
@@ -77,12 +86,12 @@ func (_c *Service_Authorize_Call) Run(run func(ctx context.Context, req channels
 	return _c
 }
 
-func (_c *Service_Authorize_Call) Return(err error) *Service_Authorize_Call {
-	_c.Call.Return(err)
+func (_c *Service_Authorize_Call) Return(s string, err error) *Service_Authorize_Call {
+	_c.Call.Return(s, err)
 	return _c
 }
 
-func (_c *Service_Authorize_Call) RunAndReturn(run func(ctx context.Context, req channels.AuthzReq) error) *Service_Authorize_Call {
+func (_c *Service_Authorize_Call) RunAndReturn(run func(ctx context.Context, req channels.AuthzReq) (string, error)) *Service_Authorize_Call {
 	_c.Call.Return(run)
 	return _c
 }

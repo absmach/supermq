@@ -76,11 +76,11 @@ func (client grpcClient) Authorize(ctx context.Context, req *grpcChannelsV1.Auth
 	defer cancel()
 
 	res, err := client.authorize(ctx, authorizeReq{
-		domainID:   req.GetDomainId(),
-		clientID:   req.GetClientId(),
-		clientType: req.GetClientType(),
-		channelID:  req.GetChannelId(),
-		connType:   connections.ConnType(req.GetType()),
+		domainID:     req.GetDomainId(),
+		clientID:     req.GetClientId(),
+		clientType:   req.GetClientType(),
+		channelRoute: req.GetChannelRoute(),
+		connType:     connections.ConnType(req.GetType()),
 	})
 	if err != nil {
 		return &grpcChannelsV1.AuthzRes{}, decodeError(err)
@@ -88,25 +88,25 @@ func (client grpcClient) Authorize(ctx context.Context, req *grpcChannelsV1.Auth
 
 	ar := res.(authorizeRes)
 
-	return &grpcChannelsV1.AuthzRes{Authorized: ar.authorized}, nil
+	return &grpcChannelsV1.AuthzRes{Authorized: ar.authorized, ChannelId: ar.channelID}, nil
 }
 
 func encodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(authorizeReq)
 
 	return &grpcChannelsV1.AuthzReq{
-		DomainId:   req.domainID,
-		ClientId:   req.clientID,
-		ClientType: req.clientType,
-		ChannelId:  req.channelID,
-		Type:       uint32(req.connType),
+		DomainId:     req.domainID,
+		ClientId:     req.clientID,
+		ClientType:   req.clientType,
+		ChannelRoute: req.channelRoute,
+		Type:         uint32(req.connType),
 	}, nil
 }
 
 func decodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(*grpcChannelsV1.AuthzRes)
 
-	return authorizeRes{authorized: res.GetAuthorized()}, nil
+	return authorizeRes{authorized: res.GetAuthorized(), channelID: res.GetChannelId()}, nil
 }
 
 func (client grpcClient) RemoveClientConnections(ctx context.Context, req *grpcChannelsV1.RemoveClientConnectionsReq, _ ...grpc.CallOption) (r *grpcChannelsV1.RemoveClientConnectionsRes, err error) {

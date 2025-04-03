@@ -55,7 +55,7 @@ var (
 	errFailedParseSubtopic      = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("failed to parse subtopic"))
 )
 
-var channelRegExp = regexp.MustCompile(`^\/?ch\/([\w\-]+)\/msg(\/[^?]*)?(\?.*)?$`)
+var channelRegExp = regexp.MustCompile(`^\/?([\w\-]+)/ch\/([\w\-]+)\/msg(\/[^?]*)?(\?.*)?$`)
 
 // Event implements events.Event interface.
 type handler struct {
@@ -153,24 +153,26 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
 	}
 
-	chanID, subtopic, err := parseTopic(*topic)
+	domainID, chanTopic, subtopic, err := parseTopic(*topic)
 	if err != nil {
 		return mgate.NewHTTPProxyError(http.StatusBadRequest, err)
 	}
 
 	msg := messaging.Message{
 		Protocol: protocol,
-		Channel:  chanID,
+		Domain:   domainID,
+		Channel:  chanTopic,
 		Subtopic: subtopic,
 		Payload:  *payload,
 		Created:  time.Now().UnixNano(),
 	}
 
 	ar := &grpcChannelsV1.AuthzReq{
-		ClientId:   clientID,
-		ClientType: clientType,
-		ChannelId:  msg.Channel,
-		Type:       uint32(connections.Publish),
+		DomainId:     domainID,
+		ClientId:     clientID,
+		ClientType:   clientType,
+		ChannelTopic: msg.Channel,
+		Type:         uint32(connections.Publish),
 	}
 	res, err := h.channels.Authorize(ctx, ar)
 	if err != nil {
@@ -208,23 +210,24 @@ func (h *handler) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func parseTopic(topic string) (string, string, error) {
+func parseTopic(topic string) (string, string, string, error) {
 	// Topics are in the format:
-	// ch/<channel_id>/msg/<subtopic>/.../ct/<content_type>
+	// <domain_id>/ch/<channel_id>/msg/<subtopic>/.../ct/<content_type>
 	channelParts := channelRegExp.FindStringSubmatch(topic)
-	if len(channelParts) < 2 {
-		return "", "", errors.Wrap(errFailedPublish, errMalformedTopic)
+	if len(channelParts) < 3 {
+		return "", "", "", errors.Wrap(errFailedPublish, errMalformedTopic)
 	}
 
-	chanID := channelParts[1]
-	subtopic := channelParts[2]
+	domainID := channelParts[1]
+	chanID := channelParts[2]
+	subtopic := channelParts[3]
 
 	subtopic, err := parseSubtopic(subtopic)
 	if err != nil {
-		return "", "", errors.Wrap(errFailedParseSubtopic, err)
+		return "", "", "", errors.Wrap(errFailedParseSubtopic, err)
 	}
 
-	return chanID, subtopic, nil
+	return domainID, chanID, subtopic, nil
 }
 
 func parseSubtopic(subtopic string) (string, error) {

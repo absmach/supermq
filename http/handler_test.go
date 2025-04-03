@@ -39,10 +39,11 @@ const (
 )
 
 var (
-	topicMsg      = "ch/%s/msg"
-	subtopicMsg   = "ch/%s/msg/subtopic"
-	topic         = fmt.Sprintf(topicMsg, chanID)
-	subtopic      = fmt.Sprintf(subtopicMsg, chanID)
+	domainID      = testsutil.GenerateUUID(&testing.T{})
+	topicMsg      = "/%s/ch/%s/msg"
+	subtopicMsg   = "/%s/ch/%s/msg/subtopic"
+	topic         = fmt.Sprintf(topicMsg, domainID, chanID)
+	subtopic      = fmt.Sprintf(subtopicMsg, domainID, chanID)
 	invalidTopic  = invalidValue
 	payload       = []byte("[{'n':'test-name', 'v': 1.2}]")
 	sessionClient = session.Session{

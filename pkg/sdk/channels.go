@@ -25,6 +25,7 @@ type Channel struct {
 	ID          string                    `json:"id,omitempty"`
 	Name        string                    `json:"name,omitempty"`
 	Tags        []string                  `json:"tags,omitempty"`
+	Route       string                    `json:"route,omitempty"`
 	ParentGroup string                    `json:"parent_group_id,omitempty"`
 	DomainID    string                    `json:"domain_id,omitempty"`
 	Metadata    Metadata                  `json:"metadata,omitempty"`
