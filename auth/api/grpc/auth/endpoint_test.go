@@ -80,7 +80,7 @@ func TestIdentify(t *testing.T) {
 		{
 			desc:  "authenticate user with valid user token",
 			token: validToken,
-			idt:   &grpcAuthV1.AuthNRes{Id: id, UserId: email, DomainId: domainID},
+			idt:   &grpcAuthV1.AuthNRes{UserId: id, UserRole: uint32(auth.UserRole)},
 			err:   nil,
 		},
 		{
@@ -100,7 +100,7 @@ func TestIdentify(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("Identify", mock.Anything, mock.Anything).Return(auth.Key{Subject: id, User: email, Domain: domainID}, tc.svcErr)
+			svcCall := svc.On("Identify", mock.Anything, mock.Anything).Return(auth.Key{Subject: id, Role: auth.UserRole}, tc.svcErr)
 			idt, err := grpcClient.Authenticate(context.Background(), &grpcAuthV1.AuthNReq{Token: tc.token})
 			if idt != nil {
 				assert.Equal(t, tc.idt, idt, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.idt, idt))

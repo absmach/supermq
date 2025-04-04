@@ -55,8 +55,9 @@ func (s *tokenGrpcServer) Refresh(ctx context.Context, req *grpcTokenV1.RefreshR
 func decodeIssueRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*grpcTokenV1.IssueReq)
 	return issueReq{
-		userID:  req.GetUserId(),
-		keyType: auth.KeyType(req.GetType()),
+		userID:   req.GetUserId(),
+		userRole: auth.Role(req.GetUserRole()),
+		keyType:  auth.KeyType(req.GetType()),
 	}, nil
 }
 

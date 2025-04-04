@@ -39,6 +39,7 @@ const (
 
 var (
 	errIssueUser = errors.New("failed to issue new login key")
+	errRoleAuth  = errors.New("failed to authorize user role")
 	ErrExpiry    = errors.New("token is expired")
 	inValidToken = "invalid"
 	userID       = testsutil.GenerateUUID(&testing.T{})
@@ -69,10 +70,9 @@ func newService() (auth.Service, string) {
 	key := auth.Key{
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(refreshDuration),
-		Subject:   id,
+		Subject:   userID,
 		Type:      auth.AccessKey,
-		User:      userID,
-		Domain:    groupName,
+		Role:      auth.UserRole,
 	}
 	token, _ := t.Issue(key)
 
@@ -87,10 +87,9 @@ func TestIssue(t *testing.T) {
 	apikey := auth.Key{
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(refreshDuration),
-		Subject:   id,
+		Subject:   userID,
 		Type:      auth.APIKey,
-		User:      email,
-		Domain:    groupName,
+		Role:      auth.UserRole,
 	}
 	apiToken, err := n.Issue(apikey)
 	assert.Nil(t, err, fmt.Sprintf("Issuing API key expected to succeed: %s", err))
@@ -98,24 +97,26 @@ func TestIssue(t *testing.T) {
 	refreshkey := auth.Key{
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(refreshDuration),
-		Subject:   validID,
+		Subject:   userID,
 		Type:      auth.RefreshKey,
-		User:      userID,
-		Domain:    domainID,
+		Role:      auth.UserRole,
 	}
 	refreshToken, err := n.Issue(refreshkey)
 	assert.Nil(t, err, fmt.Sprintf("Issuing refresh key expected to succeed: %s", err))
 
 	cases := []struct {
-		desc  string
-		key   auth.Key
-		token string
-		err   error
+		desc         string
+		key          auth.Key
+		token        string
+		roleCheckErr error
+		err          error
 	}{
 		{
 			desc: "issue recovery key",
 			key: auth.Key{
 				Type:     auth.RecoveryKey,
+				Subject:  userID,
+				Role:     auth.UserRole,
 				IssuedAt: time.Now(),
 			},
 			token: "",
@@ -124,202 +125,72 @@ func TestIssue(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, policies.Policy{
+			Subject:     tc.key.Subject,
+			SubjectType: policies.UserType,
+			Permission:  policies.MembershipPermission,
+			Object:      policies.SuperMQObject,
+			ObjectType:  policies.PlatformType,
+		}).Return(tc.roleCheckErr)
+		callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 		_, err := svc.Issue(context.Background(), tc.token, tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+		policyCall.Unset()
+		callBackCall.Unset()
 	}
 
 	cases2 := []struct {
-		desc                   string
-		key                    auth.Key
-		saveResponse           auth.Key
-		token                  string
-		saveErr                error
-		checkPolicyRequest     policies.Policy
-		checkPlatformPolicyReq policies.Policy
-		checkDomainPolicyReq   policies.Policy
-		checkPolicyErr         error
-		checkPolicyErr1        error
-		retreiveByIDErr        error
-		err                    error
+		desc         string
+		key          auth.Key
+		saveResponse auth.Key
+		token        string
+		saveErr      error
+		roleCheckErr error
+		err          error
 	}{
 		{
 			desc: "issue access key",
 			key: auth.Key{
 				Type:     auth.AccessKey,
+				Subject:  userID,
+				Role:     auth.UserRole,
 				IssuedAt: time.Now(),
-			},
-			checkPolicyRequest: policies.Policy{
-				SubjectType: policies.UserType,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-				Permission:  policies.AdminPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				SubjectType: policies.UserType,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
 			},
 			token: accessToken,
 			err:   nil,
-		},
-		{
-			desc: "issue access key with domain",
-			key: auth.Key{
-				Type:     auth.AccessKey,
-				IssuedAt: time.Now(),
-				Domain:   groupName,
-			},
-			checkPolicyRequest: policies.Policy{
-				SubjectType: policies.UserType,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-				Permission:  policies.AdminPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				SubjectType: policies.UserType,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			token: accessToken,
-			err:   nil,
-		},
-		{
-			desc: "issue access key with failed check on platform admin",
-			key: auth.Key{
-				Type:     auth.AccessKey,
-				IssuedAt: time.Now(),
-				Domain:   validID,
-			},
-			token: accessToken,
-			checkPolicyRequest: policies.Policy{
-				SubjectType: policies.UserType,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-				Permission:  policies.AdminPermission,
-			},
-			checkPlatformPolicyReq: policies.Policy{
-				SubjectType: policies.UserType,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-				Object:      validID,
-			},
-			checkPolicyErr: svcerr.ErrAuthorization,
-			err:            nil,
-		},
-		{
-			desc: "issue access key with failed check on platform admin with enabled status",
-			key: auth.Key{
-				Type:     auth.AccessKey,
-				IssuedAt: time.Now(),
-				Domain:   validID,
-			},
-			token: accessToken,
-			checkPolicyRequest: policies.Policy{
-				SubjectType: policies.UserType,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-				Permission:  policies.AdminPermission,
-			},
-			checkPlatformPolicyReq: policies.Policy{
-				SubjectType: policies.UserType,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				SubjectType: policies.UserType,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			checkPolicyErr:  svcerr.ErrAuthorization,
-			checkPolicyErr1: svcerr.ErrAuthorization,
-			err:             svcerr.ErrAuthorization,
-		},
-		{
-			desc: "issue access key with membership permission",
-			key: auth.Key{
-				Type:     auth.AccessKey,
-				IssuedAt: time.Now(),
-				Domain:   groupName,
-			},
-			token: accessToken,
-			checkPolicyRequest: policies.Policy{
-				SubjectType: policies.UserType,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-				Permission:  policies.AdminPermission,
-			},
-			checkPlatformPolicyReq: policies.Policy{
-				SubjectType: policies.UserType,
-				Object:      groupName,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				SubjectType: policies.UserType,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			checkPolicyErr:  svcerr.ErrAuthorization,
-			checkPolicyErr1: svcerr.ErrAuthorization,
-			err:             svcerr.ErrAuthorization,
-		},
-		{
-			desc: "issue access key with membership permission with failed  to authorize",
-			key: auth.Key{
-				Type:     auth.AccessKey,
-				IssuedAt: time.Now(),
-				Domain:   groupName,
-			},
-			token: accessToken,
-			checkPolicyRequest: policies.Policy{
-				SubjectType: policies.UserType,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-				Permission:  policies.AdminPermission,
-			},
-			checkPlatformPolicyReq: policies.Policy{
-				SubjectType: policies.UserType,
-				Object:      groupName,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				SubjectType: policies.UserType,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			checkPolicyErr:  svcerr.ErrAuthorization,
-			checkPolicyErr1: svcerr.ErrAuthorization,
-			err:             svcerr.ErrAuthorization,
 		},
 	}
 	for _, tc := range cases2 {
 		repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, tc.saveErr)
-		repoCall1 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPolicyRequest).Return(tc.checkPolicyErr)
-		repoCall2 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPlatformPolicyReq).Return(tc.checkPolicyErr1)
-		repoCall3 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDomainPolicyReq).Return(tc.checkPolicyErr)
-		repoCall4 := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
+		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, policies.Policy{
+			Subject:     tc.key.Subject,
+			SubjectType: policies.UserType,
+			Permission:  policies.MembershipPermission,
+			Object:      policies.SuperMQObject,
+			ObjectType:  policies.PlatformType,
+		}).Return(tc.roleCheckErr)
+		callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 		_, err := svc.Issue(context.Background(), tc.token, tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall.Unset()
-		repoCall1.Unset()
-		repoCall2.Unset()
-		repoCall3.Unset()
-		repoCall4.Unset()
+		policyCall.Unset()
+		callBackCall.Unset()
 	}
 
 	cases3 := []struct {
-		desc    string
-		key     auth.Key
-		token   string
-		saveErr error
-		err     error
+		desc         string
+		key          auth.Key
+		token        string
+		saveErr      error
+		roleCheckErr error
+		err          error
 	}{
 		{
 			desc: "issue API key",
 			key: auth.Key{
 				Type:     auth.APIKey,
+				Subject:  userID,
+				Role:     auth.UserRole,
 				IssuedAt: time.Now(),
 			},
 			token: accessToken,
@@ -329,6 +200,8 @@ func TestIssue(t *testing.T) {
 			desc: "issue API key with an invalid token",
 			key: auth.Key{
 				Type:     auth.APIKey,
+				Subject:  userID,
+				Role:     auth.UserRole,
 				IssuedAt: time.Now(),
 			},
 			token: "invalid",
@@ -338,6 +211,8 @@ func TestIssue(t *testing.T) {
 			desc: " issue API key with invalid key request",
 			key: auth.Key{
 				Type:     auth.APIKey,
+				Subject:  "",
+				Role:     auth.UserRole,
 				IssuedAt: time.Now(),
 			},
 			token: apiToken,
@@ -347,296 +222,133 @@ func TestIssue(t *testing.T) {
 			desc: "issue API key with failed to save",
 			key: auth.Key{
 				Type:     auth.APIKey,
+				Subject:  userID,
+				Role:     auth.UserRole,
 				IssuedAt: time.Now(),
 			},
 			token:   accessToken,
 			saveErr: repoerr.ErrNotFound,
 			err:     repoerr.ErrNotFound,
 		},
+		{
+			desc: "issue API key with failed to check role",
+			key: auth.Key{
+				Type:     auth.APIKey,
+				Subject:  userID,
+				Role:     auth.UserRole,
+				IssuedAt: time.Now(),
+			},
+			token:        accessToken,
+			roleCheckErr: errRoleAuth,
+			err:          errRoleAuth,
+		},
 	}
 	for _, tc := range cases3 {
 		repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, tc.saveErr)
+		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, policies.Policy{
+			Subject:     tc.key.Subject,
+			SubjectType: policies.UserType,
+			Permission:  policies.MembershipPermission,
+			Object:      policies.SuperMQObject,
+			ObjectType:  policies.PlatformType,
+		}).Return(tc.roleCheckErr)
+		callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 		_, err := svc.Issue(context.Background(), tc.token, tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall.Unset()
+		policyCall.Unset()
+		callBackCall.Unset()
 	}
 
 	cases4 := []struct {
-		desc                  string
-		key                   auth.Key
-		token                 string
-		checkPlatformAdminReq policies.Policy
-		checkDomainMemberReq  policies.Policy
-		checkDomainMemberReq1 policies.Policy
-		checkPlatformAdminErr error
-		checkDomainMemberErr  error
-		retrieveByIDErr       error
-		err                   error
+		desc         string
+		key          auth.Key
+		token        string
+		roleCheckErr error
+		err          error
 	}{
 		{
-			desc: "issue refresh key without domain",
+			desc: "issue refresh key",
 			key: auth.Key{
 				Type:     auth.RefreshKey,
 				IssuedAt: time.Now(),
-				User:     validID,
+				Subject:  userID,
+				Role:     auth.UserRole,
 			},
 			token: refreshToken,
-			checkPlatformAdminReq: policies.Policy{
-				Subject:     userID,
-				SubjectType: policies.UserType,
-				Permission:  policies.AdminPermission,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-			},
-			checkDomainMemberReq: policies.Policy{},
-			err:                  nil,
-		},
-		{
-			desc: "issue refresh key as admin with domain",
-			key: auth.Key{
-				Type:     auth.RefreshKey,
-				IssuedAt: time.Now(),
-				Domain:   validID,
-				User:     userID,
-			},
-			token: refreshToken,
-			checkPlatformAdminReq: policies.Policy{
-				Subject:     userID,
-				SubjectType: policies.UserType,
-				Permission:  policies.AdminPermission,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-			},
-			checkPlatformAdminErr: nil,
-			err:                   nil,
-		},
-		{
-			desc: "issue refresh key as non admin with domain",
-			key: auth.Key{
-				Type:     auth.RefreshKey,
-				IssuedAt: time.Now(),
-				Domain:   domainID,
-				User:     userID,
-			},
-			token: refreshToken,
-			checkPlatformAdminReq: policies.Policy{
-				Subject:     userID,
-				SubjectType: policies.UserType,
-				Permission:  policies.AdminPermission,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-			},
-			checkDomainMemberReq: policies.Policy{
-				Subject:     auth.EncodeDomainUserID(domainID, userID),
-				SubjectType: policies.UserType,
-				Permission:  policies.MembershipPermission,
-				Object:      domainID,
-				ObjectType:  policies.DomainType,
-			},
-			checkDomainMemberReq1: policies.Policy{
-				Subject:     auth.EncodeDomainUserID(domainID, userID),
-				SubjectType: policies.UserType,
-				Permission:  policies.MembershipPermission,
-				Object:      domainID,
-				ObjectType:  policies.DomainType,
-			},
-			checkPlatformAdminErr: svcerr.ErrAuthorization,
-			checkDomainMemberErr:  nil,
-			err:                   nil,
-		},
-		{
-			desc: "issue refresh key as non admin and non domain member",
-			key: auth.Key{
-				Type:     auth.RefreshKey,
-				IssuedAt: time.Now(),
-				Domain:   domainID,
-				User:     userID,
-			},
-			token: refreshToken,
-			checkPlatformAdminReq: policies.Policy{
-				Subject:     userID,
-				SubjectType: policies.UserType,
-				Permission:  policies.AdminPermission,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-			},
-			checkDomainMemberReq: policies.Policy{
-				Subject:     auth.EncodeDomainUserID(domainID, userID),
-				SubjectType: policies.UserType,
-				Permission:  policies.MembershipPermission,
-				Object:      domainID,
-				ObjectType:  policies.DomainType,
-			},
-			checkPlatformAdminErr: svcerr.ErrAuthorization,
-			checkDomainMemberErr:  svcerr.ErrAuthorization,
-			err:                   svcerr.ErrAuthorization,
+			err:   nil,
 		},
 		{
 			desc: "issue refresh key with invalid token",
 			key: auth.Key{
 				Type:     auth.RefreshKey,
 				IssuedAt: time.Now(),
-				User:     validID,
+				Subject:  userID,
+				Role:     auth.UserRole,
 			},
 			token: inValidToken,
-			checkPlatformAdminReq: policies.Policy{
-				Subject:     userID,
-				SubjectType: policies.UserType,
-				Permission:  policies.AdminPermission,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-			},
-			checkDomainMemberReq: policies.Policy{},
-			err:                  svcerr.ErrAuthentication,
+			err:   svcerr.ErrAuthentication,
 		},
 		{
 			desc: "issue refresh key with empty token",
 			key: auth.Key{
 				Type:     auth.RefreshKey,
 				IssuedAt: time.Now(),
-				User:     validID,
+				Subject:  userID,
+				Role:     auth.UserRole,
 			},
 			token: "",
-			checkPlatformAdminReq: policies.Policy{
-				Subject:     userID,
-				SubjectType: policies.UserType,
-				Permission:  policies.AdminPermission,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-			},
-			checkDomainMemberReq: policies.Policy{},
-			err:                  svcerr.ErrAuthentication,
+			err:   svcerr.ErrAuthentication,
 		},
 		{
-			desc: "issue invitation key without domain",
+			desc: "issue refresh key with failed to check role",
 			key: auth.Key{
-				Type:     auth.InvitationKey,
+				Type:     auth.RefreshKey,
 				IssuedAt: time.Now(),
+				Subject:  userID,
+				Role:     auth.UserRole,
 			},
-			checkPlatformAdminReq: policies.Policy{
-				Subject:     email,
-				SubjectType: policies.UserType,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-				Permission:  policies.AdminPermission,
-			},
-			err: nil,
-		},
-		{
-			desc: "issue invitation key as admin with domain",
-			key: auth.Key{
-				Type:     auth.InvitationKey,
-				IssuedAt: time.Now(),
-				Domain:   validID,
-				User:     userID,
-			},
-			token: refreshToken,
-			checkPlatformAdminReq: policies.Policy{
-				Subject:     userID,
-				SubjectType: policies.UserType,
-				Permission:  policies.AdminPermission,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-			},
-			checkPlatformAdminErr: nil,
-			err:                   nil,
-		},
-		{
-			desc: "issue invitation key as non admin with domain",
-			key: auth.Key{
-				Type:     auth.InvitationKey,
-				IssuedAt: time.Now(),
-				Domain:   domainID,
-				User:     userID,
-			},
-			token: refreshToken,
-			checkPlatformAdminReq: policies.Policy{
-				Subject:     userID,
-				SubjectType: policies.UserType,
-				Permission:  policies.AdminPermission,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-			},
-			checkDomainMemberReq: policies.Policy{
-				Subject:     auth.EncodeDomainUserID(domainID, userID),
-				SubjectType: policies.UserType,
-				Permission:  policies.MembershipPermission,
-				Object:      domainID,
-				ObjectType:  policies.DomainType,
-			},
-			checkDomainMemberReq1: policies.Policy{
-				Subject:     auth.EncodeDomainUserID(domainID, userID),
-				SubjectType: policies.UserType,
-				Permission:  policies.MembershipPermission,
-				Object:      domainID,
-				ObjectType:  policies.DomainType,
-			},
-			checkPlatformAdminErr: svcerr.ErrAuthorization,
-			checkDomainMemberErr:  nil,
-			err:                   nil,
-		},
-		{
-			desc: "issue invitation key as non admin as non domain member",
-			key: auth.Key{
-				Type:     auth.InvitationKey,
-				IssuedAt: time.Now(),
-				Domain:   domainID,
-				User:     userID,
-			},
-			token: refreshToken,
-			checkPlatformAdminReq: policies.Policy{
-				Subject:     userID,
-				SubjectType: policies.UserType,
-				Permission:  policies.AdminPermission,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-			},
-			checkDomainMemberReq: policies.Policy{
-				Subject:     auth.EncodeDomainUserID(domainID, userID),
-				SubjectType: policies.UserType,
-				Permission:  policies.MembershipPermission,
-				Object:      domainID,
-				ObjectType:  policies.DomainType,
-			},
-			checkDomainMemberReq1: policies.Policy{
-				Subject:     auth.EncodeDomainUserID(domainID, userID),
-				SubjectType: policies.UserType,
-				Permission:  policies.MembershipPermission,
-				Object:      domainID,
-				ObjectType:  policies.DomainType,
-			},
-			checkPlatformAdminErr: svcerr.ErrAuthorization,
-			checkDomainMemberErr:  svcerr.ErrAuthorization,
-			err:                   svcerr.ErrDomainAuthorization,
+			token:        refreshToken,
+			roleCheckErr: errRoleAuth,
+			err:          errRoleAuth,
 		},
 	}
 	for _, tc := range cases4 {
-		repoCall := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPlatformAdminReq).Return(tc.checkPlatformAdminErr)
-		repoCall1 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDomainMemberReq).Return(tc.checkDomainMemberErr)
-		repoCall2 := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
+		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, policies.Policy{
+			Subject:     tc.key.Subject,
+			SubjectType: policies.UserType,
+			Permission:  policies.MembershipPermission,
+			Object:      policies.SuperMQObject,
+			ObjectType:  policies.PlatformType,
+		}).Return(tc.roleCheckErr)
+		callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 		_, err := svc.Issue(context.Background(), tc.token, tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-		repoCall.Unset()
-		repoCall1.Unset()
-		repoCall2.Unset()
+		policyCall.Unset()
+		callBackCall.Unset()
 	}
 }
 
 func TestRevoke(t *testing.T) {
 	svc, _ := newService()
 	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, errIssueUser)
-	secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, IssuedAt: time.Now(), Subject: id})
+	policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
+	callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
+	secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Role: auth.UserRole, IssuedAt: time.Now(), Subject: userID})
 	repocall.Unset()
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	repocall1 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	key := auth.Key{
 		Type:     auth.APIKey,
+		Role:     auth.UserRole,
 		IssuedAt: time.Now(),
-		Subject:  id,
+		Subject:  userID,
 	}
 	_, err = svc.Issue(context.Background(), secret.AccessToken, key)
 	assert.Nil(t, err, fmt.Sprintf("Issuing user's key expected to succeed: %s", err))
 	repocall1.Unset()
+	policyCall.Unset()
+	callBackCall.Unset()
 
 	cases := []struct {
 		desc  string
@@ -678,30 +390,35 @@ func TestRevoke(t *testing.T) {
 func TestRetrieve(t *testing.T) {
 	svc, _ := newService()
 	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, IssuedAt: time.Now(), Subject: id})
+	repocall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
+	repocall2 := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
+	secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	repocall.Unset()
 	key := auth.Key{
 		ID:       "id",
 		Type:     auth.APIKey,
-		Subject:  id,
+		Subject:  userID,
+		Role:     auth.UserRole,
 		IssuedAt: time.Now(),
 	}
 
-	repocall1 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	userToken, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, IssuedAt: time.Now(), Subject: id})
+	repocall3 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
+	userToken, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repocall1.Unset()
+	repocall3.Unset()
 
-	repocall2 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
+	repocall4 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	apiToken, err := svc.Issue(context.Background(), secret.AccessToken, key)
 	assert.Nil(t, err, fmt.Sprintf("Issuing login's key expected to succeed: %s", err))
-	repocall2.Unset()
+	repocall4.Unset()
 
-	repocall3 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	resetToken, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.RecoveryKey, IssuedAt: time.Now()})
+	repocall5 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
+	resetToken, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.RecoveryKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))
-	repocall3.Unset()
+	repocall5.Unset()
+	repocall1.Unset()
+	repocall2.Unset()
 
 	cases := []struct {
 		desc  string
@@ -750,94 +467,87 @@ func TestIdentify(t *testing.T) {
 
 	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	repocall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	repoCall2 := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
-	loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, User: id, IssuedAt: time.Now(), Domain: groupName})
+	repocall2 := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
+	loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repocall.Unset()
-	repocall1.Unset()
-	repoCall2.Unset()
 
-	repocall2 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	recoverySecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.RecoveryKey, IssuedAt: time.Now(), Subject: id})
+	recoverySecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.RecoveryKey, Role: auth.UserRole, IssuedAt: time.Now(), Subject: userID})
 	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))
-	repocall2.Unset()
 
-	repocall3 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	apiSecret, err := svc.Issue(context.Background(), loginSecret.AccessToken, auth.Key{Type: auth.APIKey, Subject: id, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Minute)})
+	apiSecret, err := svc.Issue(context.Background(), loginSecret.AccessToken, auth.Key{Type: auth.APIKey, Role: auth.UserRole, Subject: userID, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Minute)})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repocall3.Unset()
 
-	repocall4 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	exp0 := time.Now().UTC().Add(-10 * time.Second).Round(time.Second)
 	exp1 := time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
-	expSecret, err := svc.Issue(context.Background(), loginSecret.AccessToken, auth.Key{Type: auth.APIKey, IssuedAt: exp0, ExpiresAt: exp1})
+	expSecret, err := svc.Issue(context.Background(), loginSecret.AccessToken, auth.Key{Type: auth.APIKey, Role: auth.UserRole, IssuedAt: exp0, ExpiresAt: exp1})
 	assert.Nil(t, err, fmt.Sprintf("Issuing expired login key expected to succeed: %s", err))
-	repocall4.Unset()
+	repocall.Unset()
+	repocall1.Unset()
+	repocall2.Unset()
 
 	te := jwt.New([]byte(secret))
 	key := auth.Key{
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(refreshDuration),
-		Subject:   id,
 		Type:      7,
-		User:      email,
-		Domain:    groupName,
+		Subject:   userID,
+		Role:      auth.UserRole,
 	}
 	invalidTokenType, _ := te.Issue(key)
 
 	cases := []struct {
-		desc string
-		key  string
-		idt  string
-		err  error
+		desc    string
+		key     string
+		subject string
+		err     error
 	}{
 		{
-			desc: "identify login key",
-			key:  loginSecret.AccessToken,
-			idt:  id,
-			err:  nil,
+			desc:    "identify login key",
+			key:     loginSecret.AccessToken,
+			subject: userID,
+			err:     nil,
 		},
 		{
-			desc: "identify refresh key",
-			key:  loginSecret.RefreshToken,
-			idt:  id,
-			err:  nil,
+			desc:    "identify refresh key",
+			key:     loginSecret.RefreshToken,
+			subject: userID,
+			err:     nil,
 		},
 		{
-			desc: "identify recovery key",
-			key:  recoverySecret.AccessToken,
-			idt:  id,
-			err:  nil,
+			desc:    "identify recovery key",
+			key:     recoverySecret.AccessToken,
+			subject: userID,
+			err:     nil,
 		},
 		{
-			desc: "identify API key",
-			key:  apiSecret.AccessToken,
-			idt:  id,
-			err:  nil,
+			desc:    "identify API key",
+			key:     apiSecret.AccessToken,
+			subject: userID,
+			err:     nil,
 		},
 		{
-			desc: "identify expired API key",
-			key:  expSecret.AccessToken,
-			idt:  "",
-			err:  auth.ErrKeyExpired,
+			desc:    "identify expired API key",
+			key:     expSecret.AccessToken,
+			subject: "",
+			err:     auth.ErrKeyExpired,
 		},
 		{
-			desc: "identify API key with failed to retrieve",
-			key:  apiSecret.AccessToken,
-			idt:  "",
-			err:  svcerr.ErrAuthentication,
+			desc:    "identify API key with failed to retrieve",
+			key:     apiSecret.AccessToken,
+			subject: "",
+			err:     svcerr.ErrAuthentication,
 		},
 		{
-			desc: "identify invalid key",
-			key:  "invalid",
-			idt:  "",
-			err:  svcerr.ErrAuthentication,
+			desc:    "identify invalid key",
+			key:     "invalid",
+			subject: "",
+			err:     svcerr.ErrAuthentication,
 		},
 		{
-			desc: "identify invalid key type",
-			key:  invalidTokenType,
-			idt:  "",
-			err:  svcerr.ErrAuthentication,
+			desc:    "identify invalid key type",
+			key:     invalidTokenType,
+			subject: "",
+			err:     svcerr.ErrAuthentication,
 		},
 	}
 
@@ -846,7 +556,7 @@ func TestIdentify(t *testing.T) {
 		repocall1 := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
 		idt, err := svc.Identify(context.Background(), tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-		assert.Equal(t, tc.idt, idt.Subject, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.idt, idt))
+		assert.Equal(t, tc.subject, idt.Subject, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.subject, idt))
 		repocall.Unset()
 		repocall1.Unset()
 	}
@@ -858,35 +568,24 @@ func TestAuthorize(t *testing.T) {
 	repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	repoCall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
 	repoCall2 := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
-	loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, User: id, IssuedAt: time.Now(), Domain: groupName})
+	loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	repoCall.Unset()
-	repoCall1.Unset()
-	repoCall2.Unset()
 
 	repoCall = krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	exp1 := time.Now().Add(-2 * time.Second)
-	expSecret, err := svc.Issue(context.Background(), loginSecret.AccessToken, auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), ExpiresAt: exp1})
+	expSecret, err := svc.Issue(context.Background(), loginSecret.AccessToken, auth.Key{Type: auth.APIKey, Role: auth.UserRole, IssuedAt: time.Now(), ExpiresAt: exp1})
 	assert.Nil(t, err, fmt.Sprintf("Issuing expired login key expected to succeed: %s", err))
 	repoCall.Unset()
 
 	repoCall = krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	repoCall1 = pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
 	repoCall2 = callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
-	emptySubject, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, User: "", IssuedAt: time.Now(), Domain: groupName})
+	emptySubject, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: "", Role: auth.UserRole, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	repoCall.Unset()
 	repoCall1.Unset()
-
-	te := jwt.New([]byte(secret))
-	key := auth.Key{
-		IssuedAt:  time.Now(),
-		ExpiresAt: time.Now().Add(refreshDuration),
-		Subject:   id,
-		Type:      auth.AccessKey,
-		User:      email,
-	}
-	emptyDomain, _ := te.Issue(key)
+	repoCall2.Unset()
 
 	cases := []struct {
 		desc                 string
@@ -909,7 +608,7 @@ func TestAuthorize(t *testing.T) {
 				Permission:  policies.AdminPermission,
 			},
 			checkPolicyReq: policies.Policy{
-				Subject:     id,
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				SubjectKind: policies.TokenKind,
 				Object:      policies.SuperMQObject,
@@ -917,7 +616,7 @@ func TestAuthorize(t *testing.T) {
 				Permission:  policies.AdminPermission,
 			},
 			checkDomainPolicyReq: policies.Policy{
-				Subject:     id,
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				ObjectType:  policies.DomainType,
 				Permission:  policies.MembershipPermission,
@@ -936,32 +635,12 @@ func TestAuthorize(t *testing.T) {
 			},
 			checkPolicyReq: policies.Policy{},
 			checkDomainPolicyReq: policies.Policy{
-				Subject:     id,
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				ObjectType:  policies.DomainType,
 				Permission:  policies.MembershipPermission,
 			},
 			err: svcerr.ErrMalformedEntity,
-		},
-		{
-			desc: "authorize token for group type with empty domain",
-			policyReq: policies.Policy{
-				Subject:     emptyDomain,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.TokenKind,
-				Object:      "",
-				ObjectType:  policies.GroupType,
-				Permission:  policies.AdminPermission,
-			},
-			checkPolicyReq: policies.Policy{
-				Subject:     id,
-				SubjectType: policies.UserType,
-				SubjectKind: policies.TokenKind,
-				Object:      "",
-				ObjectType:  policies.GroupType,
-				Permission:  policies.AdminPermission,
-			},
-			err: svcerr.ErrDomainAuthorization,
 		},
 		{
 			desc: "authorize token with disabled domain",
@@ -974,7 +653,7 @@ func TestAuthorize(t *testing.T) {
 				Permission:  policies.AdminPermission,
 			},
 			checkDomainPolicyReq: policies.Policy{
-				Subject:     id,
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				Object:      validID,
 				ObjectType:  policies.DomainType,
@@ -995,7 +674,7 @@ func TestAuthorize(t *testing.T) {
 			},
 			checkPolicyReq: policies.Policy{},
 			checkDomainPolicyReq: policies.Policy{
-				Subject:     id,
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				Object:      validID,
 				ObjectType:  policies.DomainType,
@@ -1015,7 +694,7 @@ func TestAuthorize(t *testing.T) {
 			},
 			checkPolicyReq: policies.Policy{},
 			checkDomainPolicyReq: policies.Policy{
-				Subject:     id,
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				Object:      validID,
 				ObjectType:  policies.DomainType,
@@ -1040,7 +719,7 @@ func TestAuthorize(t *testing.T) {
 				Permission:  policies.AdminPermission,
 			},
 			checkDomainPolicyReq: policies.Policy{
-				Subject:     id,
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				Object:      validID,
 				ObjectType:  policies.DomainType,
@@ -1065,7 +744,7 @@ func TestAuthorize(t *testing.T) {
 				Permission:  policies.AdminPermission,
 			},
 			checkDomainPolicyReq: policies.Policy{
-				Subject:     id,
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				Object:      validID,
 				ObjectType:  policies.DomainType,
@@ -1090,7 +769,7 @@ func TestAuthorize(t *testing.T) {
 				Permission:  policies.AdminPermission,
 			},
 			checkDomainPolicyReq: policies.Policy{
-				Subject:     id,
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				Object:      validID,
 				ObjectType:  policies.DomainType,
@@ -1115,7 +794,7 @@ func TestAuthorize(t *testing.T) {
 				Permission:  policies.AdminPermission,
 			},
 			checkDomainPolicyReq: policies.Policy{
-				Subject:     id,
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				Object:      validID,
 				ObjectType:  policies.DomainType,
@@ -1140,7 +819,7 @@ func TestAuthorize(t *testing.T) {
 				Permission:  policies.AdminPermission,
 			},
 			checkDomainPolicyReq: policies.Policy{
-				Subject:     id,
+				Subject:     userID,
 				SubjectType: policies.UserType,
 				Object:      validID,
 				ObjectType:  policies.DomainType,

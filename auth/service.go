@@ -35,6 +35,7 @@ var (
 	errRetrieve  = errors.New("failed to retrieve key data")
 	errIdentify  = errors.New("failed to validate token")
 	errPlatform  = errors.New("invalid platform id")
+	errRoleAuth  = errors.New("failed to authorize user role")
 
 	errMalformedPAT        = errors.New("malformed personal access token")
 	errFailedToParseUUID   = errors.New("failed to parse string to UUID")
@@ -133,7 +134,7 @@ func (svc service) Issue(ctx context.Context, token string, key Key) (Token, err
 	case RefreshKey:
 		return svc.refreshKey(ctx, token, key)
 	case RecoveryKey:
-		return svc.tmpKey(recoveryDuration, key)
+		return svc.tmpKey(ctx, recoveryDuration, key)
 	case InvitationKey:
 		return svc.invitationKey(ctx, key)
 	default:
@@ -205,7 +206,6 @@ func (svc service) Authorize(ctx context.Context, pr policies.Policy) error {
 			return svcerr.ErrAuthentication
 		}
 		pr.Subject = key.Subject
-		pr.Domain = key.Domain
 	}
 	if err := svc.checkPolicy(ctx, pr); err != nil {
 		return err
@@ -259,8 +259,11 @@ func (svc service) PolicyValidation(pr policies.Policy) error {
 	return nil
 }
 
-func (svc service) tmpKey(duration time.Duration, key Key) (Token, error) {
+func (svc service) tmpKey(ctx context.Context, duration time.Duration, key Key) (Token, error) {
 	key.ExpiresAt = time.Now().Add(duration)
+	if err := svc.checkUserRole(ctx, key); err != nil {
+		return Token{}, errors.Wrap(errIssueTmp, err)
+	}
 	value, err := svc.tokenizer.Issue(key)
 	if err != nil {
 		return Token{}, errors.Wrap(errIssueTmp, err)
@@ -274,9 +277,8 @@ func (svc service) accessKey(ctx context.Context, key Key) (Token, error) {
 	key.Type = AccessKey
 	key.ExpiresAt = time.Now().Add(svc.loginDuration)
 
-	key.Subject, err = svc.checkUserDomain(ctx, key)
-	if err != nil {
-		return Token{}, errors.Wrap(svcerr.ErrAuthorization, err)
+	if err := svc.checkUserRole(ctx, key); err != nil {
+		return Token{}, errors.Wrap(errIssueUser, err)
 	}
 
 	access, err := svc.tokenizer.Issue(key)
@@ -299,9 +301,8 @@ func (svc service) invitationKey(ctx context.Context, key Key) (Token, error) {
 	key.Type = InvitationKey
 	key.ExpiresAt = time.Now().Add(svc.invitationDuration)
 
-	key.Subject, err = svc.checkUserDomain(ctx, key)
-	if err != nil {
-		return Token{}, err
+	if err := svc.checkUserRole(ctx, key); err != nil {
+		return Token{}, errors.Wrap(errIssueTmp, err)
 	}
 
 	access, err := svc.tokenizer.Issue(key)
@@ -321,16 +322,13 @@ func (svc service) refreshKey(ctx context.Context, token string, key Key) (Token
 		return Token{}, errIssueUser
 	}
 	key.ID = k.ID
-	if key.Domain == "" {
-		key.Domain = k.Domain
-	}
-	key.User = k.User
 	key.Type = AccessKey
+	key.Subject = k.Subject
 
-	key.Subject, err = svc.checkUserDomain(ctx, key)
-	if err != nil {
-		return Token{}, errors.Wrap(svcerr.ErrAuthorization, err)
+	if err := svc.checkUserRole(ctx, key); err != nil {
+		return Token{}, errors.Wrap(errIssueUser, err)
 	}
+	key.Role = k.Role
 
 	key.ExpiresAt = time.Now().Add(svc.loginDuration)
 	access, err := svc.tokenizer.Issue(key)
@@ -348,32 +346,33 @@ func (svc service) refreshKey(ctx context.Context, token string, key Key) (Token
 	return Token{AccessToken: access, RefreshToken: refresh}, nil
 }
 
-func (svc service) checkUserDomain(ctx context.Context, key Key) (subject string, err error) {
-	if key.Domain != "" {
-		// Check user is platform admin.
+func (svc service) checkUserRole(ctx context.Context, key Key) (err error) {
+	switch key.Role {
+	case AdminRole:
 		if err = svc.Authorize(ctx, policies.Policy{
-			Subject:     key.User,
+			Subject:     key.Subject,
 			SubjectType: policies.UserType,
 			Permission:  policies.AdminPermission,
 			Object:      policies.SuperMQObject,
 			ObjectType:  policies.PlatformType,
-		}); err == nil {
-			return key.User, nil
+		}); err != nil {
+			return errRoleAuth
 		}
-		// Check user is domain member.
-		domainUserSubject := EncodeDomainUserID(key.Domain, key.User)
+		return nil
+	case UserRole:
 		if err = svc.Authorize(ctx, policies.Policy{
-			Subject:     domainUserSubject,
+			Subject:     key.Subject,
 			SubjectType: policies.UserType,
 			Permission:  policies.MembershipPermission,
-			Object:      key.Domain,
-			ObjectType:  policies.DomainType,
+			Object:      policies.SuperMQObject,
+			ObjectType:  policies.PlatformType,
 		}); err != nil {
-			return "", err
+			return errRoleAuth
 		}
-		return domainUserSubject, nil
+		return nil
+	default:
+		return nil
 	}
-	return "", nil
 }
 
 func (svc service) userKey(ctx context.Context, token string, key Key) (Token, error) {
@@ -385,6 +384,9 @@ func (svc service) userKey(ctx context.Context, token string, key Key) (Token, e
 	key.Issuer = id
 	if key.Subject == "" {
 		key.Subject = sub
+	}
+	if err := svc.checkUserRole(ctx, key); err != nil {
+		return Token{}, errors.Wrap(errIssueUser, err)
 	}
 
 	keyID, err := svc.idProvider.ID()
@@ -471,7 +473,7 @@ func (svc service) CreatePAT(ctx context.Context, token, name, description strin
 	if err != nil {
 		return PAT{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
-	secret, hash, err := svc.generateSecretAndHash(key.User, id)
+	secret, hash, err := svc.generateSecretAndHash(key.Subject, id)
 	if err != nil {
 		return PAT{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
@@ -479,7 +481,7 @@ func (svc service) CreatePAT(ctx context.Context, token, name, description strin
 	now := time.Now()
 	pat := PAT{
 		ID:          id,
-		User:        key.User,
+		User:        key.Subject,
 		Name:        name,
 		Description: description,
 		Secret:      hash,
@@ -502,7 +504,7 @@ func (svc service) UpdatePATName(ctx context.Context, token, patID, name string)
 	if err != nil {
 		return PAT{}, err
 	}
-	pat, err := svc.pats.UpdateName(ctx, key.User, patID, name)
+	pat, err := svc.pats.UpdateName(ctx, key.Subject, patID, name)
 	if err != nil {
 		return PAT{}, errors.Wrap(errUpdatePAT, err)
 	}
@@ -514,7 +516,7 @@ func (svc service) UpdatePATDescription(ctx context.Context, token, patID, descr
 	if err != nil {
 		return PAT{}, err
 	}
-	pat, err := svc.pats.UpdateDescription(ctx, key.User, patID, description)
+	pat, err := svc.pats.UpdateDescription(ctx, key.Subject, patID, description)
 	if err != nil {
 		return PAT{}, errors.Wrap(errUpdatePAT, err)
 	}
@@ -526,7 +528,7 @@ func (svc service) RetrievePAT(ctx context.Context, token, patID string) (PAT, e
 	if err != nil {
 		return PAT{}, err
 	}
-	pat, err := svc.pats.Retrieve(ctx, key.User, patID)
+	pat, err := svc.pats.Retrieve(ctx, key.Subject, patID)
 	if err != nil {
 		return PAT{}, errors.Wrap(errRetrievePAT, err)
 	}
@@ -538,7 +540,7 @@ func (svc service) ListPATS(ctx context.Context, token string, pm PATSPageMeta) 
 	if err != nil {
 		return PATSPage{}, err
 	}
-	patsPage, err := svc.pats.RetrieveAll(ctx, key.User, pm)
+	patsPage, err := svc.pats.RetrieveAll(ctx, key.Subject, pm)
 	if err != nil {
 		return PATSPage{}, errors.Wrap(errRetrievePAT, err)
 	}
@@ -550,7 +552,7 @@ func (svc service) DeletePAT(ctx context.Context, token, patID string) error {
 	if err != nil {
 		return err
 	}
-	if err := svc.pats.Remove(ctx, key.User, patID); err != nil {
+	if err := svc.pats.Remove(ctx, key.Subject, patID); err != nil {
 		return errors.Wrap(errDeletePAT, err)
 	}
 	return nil
@@ -563,17 +565,17 @@ func (svc service) ResetPATSecret(ctx context.Context, token, patID string, dura
 	}
 
 	// Generate new HashToken take place here
-	secret, hash, err := svc.generateSecretAndHash(key.User, patID)
+	secret, hash, err := svc.generateSecretAndHash(key.Subject, patID)
 	if err != nil {
 		return PAT{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 
-	pat, err := svc.pats.UpdateTokenHash(ctx, key.User, patID, hash, time.Now().Add(duration))
+	pat, err := svc.pats.UpdateTokenHash(ctx, key.Subject, patID, hash, time.Now().Add(duration))
 	if err != nil {
 		return PAT{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 
-	if err := svc.pats.Reactivate(ctx, key.User, patID); err != nil {
+	if err := svc.pats.Reactivate(ctx, key.Subject, patID); err != nil {
 		return PAT{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	pat.Secret = secret
@@ -588,7 +590,7 @@ func (svc service) RevokePATSecret(ctx context.Context, token, patID string) err
 		return err
 	}
 
-	if err := svc.pats.Revoke(ctx, key.User, patID); err != nil {
+	if err := svc.pats.Revoke(ctx, key.Subject, patID); err != nil {
 		return errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	return nil
@@ -599,7 +601,7 @@ func (svc service) RemoveAllPAT(ctx context.Context, token string) error {
 	if err != nil {
 		return err
 	}
-	if err := svc.pats.RemoveAllPAT(ctx, key.User); err != nil {
+	if err := svc.pats.RemoveAllPAT(ctx, key.Subject); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 	return nil
@@ -620,7 +622,7 @@ func (svc service) AddScope(ctx context.Context, token, patID string, scopes []S
 		scopes[i].PatID = patID
 	}
 
-	err = svc.pats.AddScope(ctx, key.User, scopes)
+	err = svc.pats.AddScope(ctx, key.Subject, scopes)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
@@ -633,7 +635,7 @@ func (svc service) RemoveScope(ctx context.Context, token, patID string, scopesI
 		return err
 	}
 
-	err = svc.pats.RemoveScope(ctx, key.User, scopesIDs...)
+	err = svc.pats.RemoveScope(ctx, key.Subject, scopesIDs...)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
@@ -750,7 +752,7 @@ func (svc service) authnAuthzUserPAT(ctx context.Context, token, patID string) (
 		return Key{}, err
 	}
 
-	_, err = svc.pats.Retrieve(ctx, key.User, patID)
+	_, err = svc.pats.Retrieve(ctx, key.Subject, patID)
 	if err != nil {
 		return Key{}, errors.Wrap(svcerr.ErrAuthorization, err)
 	}

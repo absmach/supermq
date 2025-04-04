@@ -21,9 +21,9 @@ message AuthNReq {
 }
 
 message AuthNRes {
-  string id    = 1;     // id
+  string id    = 1;     // token id
   string user_id = 2;   // user id
-  string domain_id = 3; // domain id
+  uint32 user_role = 3; // user role  
 }
 
 message AuthZReq {
