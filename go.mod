@@ -8,9 +8,9 @@ require (
 	github.com/absmach/certs v0.0.0-20250303232207-ef00d309ca02
 	github.com/absmach/mgate v0.4.5
 	github.com/absmach/senml v1.0.7
-	github.com/authzed/authzed-go v1.3.1-0.20250221193325-56375fd9bd96
+	github.com/authzed/authzed-go v1.3.1-0.20250320210445-0cde0d8c71e2
 	github.com/authzed/grpcutil v0.0.0-20250221190651-1985b19b35b8
-	github.com/authzed/spicedb v1.41.0
+	github.com/authzed/spicedb v1.42.1
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
