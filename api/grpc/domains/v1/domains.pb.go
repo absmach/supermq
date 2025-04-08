@@ -113,6 +113,50 @@ func (x *DeleteUserReq) GetId() string {
 	return ""
 }
 
+type RetrieveByRouteReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Route         string                 `protobuf:"bytes,1,opt,name=route,proto3" json:"route,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RetrieveByRouteReq) Reset() {
+	*x = RetrieveByRouteReq{}
+	mi := &file_domains_v1_domains_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RetrieveByRouteReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RetrieveByRouteReq) ProtoMessage() {}
+
+func (x *RetrieveByRouteReq) ProtoReflect() protoreflect.Message {
+	mi := &file_domains_v1_domains_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RetrieveByRouteReq.ProtoReflect.Descriptor instead.
+func (*RetrieveByRouteReq) Descriptor() ([]byte, []int) {
+	return file_domains_v1_domains_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *RetrieveByRouteReq) GetRoute() string {
+	if x != nil {
+		return x.Route
+	}
+	return ""
+}
+
 var File_domains_v1_domains_proto protoreflect.FileDescriptor
 
 const file_domains_v1_domains_proto_rawDesc = "" +
@@ -122,10 +166,13 @@ const file_domains_v1_domains_proto_rawDesc = "" +
 	"\rDeleteUserRes\x12\x18\n" +
 	"\adeleted\x18\x01 \x01(\bR\adeleted\"\x1f\n" +
 	"\rDeleteUserReq\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id2\xb1\x01\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"*\n" +
+	"\x12RetrieveByRouteReq\x12\x14\n" +
+	"\x05route\x18\x01 \x01(\tR\x05route2\x84\x02\n" +
 	"\x0eDomainsService\x12O\n" +
 	"\x15DeleteUserFromDomains\x12\x19.domains.v1.DeleteUserReq\x1a\x19.domains.v1.DeleteUserRes\"\x00\x12N\n" +
-	"\x0eRetrieveEntity\x12\x1c.common.v1.RetrieveEntityReq\x1a\x1c.common.v1.RetrieveEntityRes\"\x00B5Z3github.com/absmach/supermq/internal/grpc/domains/v1b\x06proto3"
+	"\x0eRetrieveEntity\x12\x1c.common.v1.RetrieveEntityReq\x1a\x1c.common.v1.RetrieveEntityRes\"\x00\x12Q\n" +
+	"\x0fRetrieveByRoute\x12\x1e.domains.v1.RetrieveByRouteReq\x1a\x1c.common.v1.RetrieveEntityRes\"\x00B5Z3github.com/absmach/supermq/internal/grpc/domains/v1b\x06proto3"
 
 var (
 	file_domains_v1_domains_proto_rawDescOnce sync.Once
@@ -139,20 +186,23 @@ func file_domains_v1_domains_proto_rawDescGZIP() []byte {
 	return file_domains_v1_domains_proto_rawDescData
 }
 
-var file_domains_v1_domains_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_domains_v1_domains_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_domains_v1_domains_proto_goTypes = []any{
 	(*DeleteUserRes)(nil),        // 0: domains.v1.DeleteUserRes
 	(*DeleteUserReq)(nil),        // 1: domains.v1.DeleteUserReq
-	(*v1.RetrieveEntityReq)(nil), // 2: common.v1.RetrieveEntityReq
-	(*v1.RetrieveEntityRes)(nil), // 3: common.v1.RetrieveEntityRes
+	(*RetrieveByRouteReq)(nil),   // 2: domains.v1.RetrieveByRouteReq
+	(*v1.RetrieveEntityReq)(nil), // 3: common.v1.RetrieveEntityReq
+	(*v1.RetrieveEntityRes)(nil), // 4: common.v1.RetrieveEntityRes
 }
 var file_domains_v1_domains_proto_depIdxs = []int32{
 	1, // 0: domains.v1.DomainsService.DeleteUserFromDomains:input_type -> domains.v1.DeleteUserReq
-	2, // 1: domains.v1.DomainsService.RetrieveEntity:input_type -> common.v1.RetrieveEntityReq
-	0, // 2: domains.v1.DomainsService.DeleteUserFromDomains:output_type -> domains.v1.DeleteUserRes
-	3, // 3: domains.v1.DomainsService.RetrieveEntity:output_type -> common.v1.RetrieveEntityRes
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	3, // 1: domains.v1.DomainsService.RetrieveEntity:input_type -> common.v1.RetrieveEntityReq
+	2, // 2: domains.v1.DomainsService.RetrieveByRoute:input_type -> domains.v1.RetrieveByRouteReq
+	0, // 3: domains.v1.DomainsService.DeleteUserFromDomains:output_type -> domains.v1.DeleteUserRes
+	4, // 4: domains.v1.DomainsService.RetrieveEntity:output_type -> common.v1.RetrieveEntityRes
+	4, // 5: domains.v1.DomainsService.RetrieveByRoute:output_type -> common.v1.RetrieveEntityRes
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -169,7 +219,7 @@ func file_domains_v1_domains_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_domains_v1_domains_proto_rawDesc), len(file_domains_v1_domains_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

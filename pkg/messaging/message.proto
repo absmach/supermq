@@ -9,9 +9,10 @@ option go_package = "./messaging";
 // Message represents a message emitted by the SuperMQ adapters layer.
 message Message {
   string channel = 1;
-  string subtopic = 2;
-  string publisher = 3;
-  string protocol = 4;
-  bytes payload = 5;
-  int64 created = 6; // Unix timestamp in nanoseconds
+  string domain = 2;
+  string subtopic = 3;
+  string publisher = 4;
+  string protocol = 5;
+  bytes payload = 6;
+  int64 created = 7; // Unix timestamp in nanoseconds
 }

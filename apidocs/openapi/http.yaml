@@ -27,7 +27,7 @@ tags:
       url: https://docs.supermq.abstractmachines.fr/
 
 paths:
-  /c/{id}/m:
+  /{domainRoute}/c/{channelRoute}/m:
     post:
       summary: Sends message to the communication channel
       description: |
@@ -36,7 +36,8 @@ paths:
       tags:
         - messages
       parameters:
-        - $ref: "#/components/parameters/ID"
+        - $ref: "#/components/parameters/domainRoute"
+        - $ref: "#/components/parameters/channelRoute"
       requestBody:
         $ref: "#/components/requestBodies/MessageReq"
       responses:
@@ -129,13 +130,19 @@ components:
         $ref: "#/components/schemas/SenMLRecord"
 
   parameters:
-    ID:
-      name: id
-      description: Unique channel identifier.
+    domainRoute:
+      name: domainRoute
+      description: Route of the domain associated with the channel and client.
       in: path
       schema:
         type: string
-        format: uuid
+      required: true
+    channelRoute:
+      name: channelRoute
+      description: Route of the channel.
+      in: path
+      schema:
+        type: string
       required: true
 
   requestBodies:

@@ -35,6 +35,8 @@ import (
 const (
 	instanceID   = "5de9b29a-feb9-11ed-be56-0242ac120002"
 	invalidValue = "invalid"
+	validRoute   = "validRoute"
+	chanRoute    = "channelRoute"
 )
 
 var clientID = testsutil.GenerateUUID(&testing.T{})
@@ -93,7 +95,6 @@ func TestPublish(t *testing.T) {
 	clients := new(climocks.ClientsServiceClient)
 	authn := new(authnMocks.Authentication)
 	channels := new(chmocks.ChannelsServiceClient)
-	chanID := "1"
 	ctSenmlJSON := "application/senml+json"
 	ctSenmlCBOR := "application/senml+cbor"
 	ctJSON := "application/json"
@@ -112,7 +113,8 @@ func TestPublish(t *testing.T) {
 
 	cases := []struct {
 		desc        string
-		chanID      string
+		domainRoute string
+		chanRoute   string
 		msg         string
 		contentType string
 		key         string
@@ -126,7 +128,8 @@ func TestPublish(t *testing.T) {
 	}{
 		{
 			desc:        "publish message successfully",
-			chanID:      chanID,
+			domainRoute: validRoute,
+			chanRoute:   chanRoute,
 			msg:         msg,
 			contentType: ctSenmlJSON,
 			key:         clientKey,
@@ -136,7 +139,8 @@ func TestPublish(t *testing.T) {
 		},
 		{
 			desc:        "publish message with application/senml+cbor content-type",
-			chanID:      chanID,
+			domainRoute: validRoute,
+			chanRoute:   chanRoute,
 			msg:         msgCBOR,
 			contentType: ctSenmlCBOR,
 			key:         clientKey,
@@ -146,7 +150,8 @@ func TestPublish(t *testing.T) {
 		},
 		{
 			desc:        "publish message with application/json content-type",
-			chanID:      chanID,
+			domainRoute: validRoute,
+			chanRoute:   chanRoute,
 			msg:         msgJSON,
 			contentType: ctJSON,
 			key:         clientKey,
@@ -156,7 +161,8 @@ func TestPublish(t *testing.T) {
 		},
 		{
 			desc:        "publish message with empty key",
-			chanID:      chanID,
+			domainRoute: validRoute,
+			chanRoute:   chanRoute,
 			msg:         msg,
 			contentType: ctSenmlJSON,
 			key:         "",
@@ -164,7 +170,8 @@ func TestPublish(t *testing.T) {
 		},
 		{
 			desc:        "publish message with basic auth",
-			chanID:      chanID,
+			domainRoute: validRoute,
+			chanRoute:   chanRoute,
 			msg:         msg,
 			contentType: ctSenmlJSON,
 			key:         clientKey,
@@ -175,7 +182,8 @@ func TestPublish(t *testing.T) {
 		},
 		{
 			desc:        "publish message with invalid key",
-			chanID:      chanID,
+			domainRoute: validRoute,
+			chanRoute:   chanRoute,
 			msg:         msg,
 			contentType: ctSenmlJSON,
 			key:         invalidKey,
@@ -184,7 +192,8 @@ func TestPublish(t *testing.T) {
 		},
 		{
 			desc:        "publish message with invalid basic auth",
-			chanID:      chanID,
+			domainRoute: validRoute,
+			chanRoute:   chanRoute,
 			msg:         msg,
 			contentType: ctSenmlJSON,
 			key:         invalidKey,
@@ -194,7 +203,8 @@ func TestPublish(t *testing.T) {
 		},
 		{
 			desc:        "publish message without content type",
-			chanID:      chanID,
+			domainRoute: validRoute,
+			chanRoute:   chanRoute,
 			msg:         msg,
 			contentType: "",
 			key:         clientKey,
@@ -203,12 +213,24 @@ func TestPublish(t *testing.T) {
 			authzRes:    &grpcChannelsV1.AuthzRes{Authorized: true},
 		},
 		{
-			desc:        "publish message to invalid channel",
-			chanID:      "",
+			desc:        "publish message to empty channel",
+			domainRoute: validRoute,
+			chanRoute:   "",
 			msg:         msg,
 			contentType: ctSenmlJSON,
 			key:         clientKey,
 			status:      http.StatusBadRequest,
+			authnRes:    &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			authzRes:    &grpcChannelsV1.AuthzRes{Authorized: false},
+		},
+		{
+			desc:        "publish message with invalid domain route",
+			domainRoute: invalidValue,
+			chanRoute:   chanRoute,
+			msg:         msg,
+			contentType: ctSenmlJSON,
+			key:         clientKey,
+			status:      http.StatusUnauthorized,
 			authnRes:    &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authzRes:    &grpcChannelsV1.AuthzRes{Authorized: false},
 		},
@@ -218,16 +240,17 @@ func TestPublish(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			clientsCall := clients.On("Authenticate", mock.Anything, &grpcClientsV1.AuthnReq{ClientSecret: tc.key}).Return(tc.authnRes, tc.authnErr)
 			channelsCall := channels.On("Authorize", mock.Anything, &grpcChannelsV1.AuthzReq{
-				ChannelId:  tc.chanID,
-				ClientId:   clientID,
-				ClientType: policies.ClientType,
-				Type:       uint32(connections.Publish),
+				DomainRoute:  tc.domainRoute,
+				ChannelRoute: tc.chanRoute,
+				ClientId:     clientID,
+				ClientType:   policies.ClientType,
+				Type:         uint32(connections.Publish),
 			}).Return(tc.authzRes, tc.authzErr)
-			svcCall := pub.On("Publish", mock.Anything, tc.chanID, mock.Anything).Return(nil)
+			svcCall := pub.On("Publish", mock.Anything, tc.domainRoute+"."+tc.chanRoute, mock.Anything).Return(nil)
 			req := testRequest{
 				client:      ts.Client(),
 				method:      http.MethodPost,
-				url:         fmt.Sprintf("%s/c/%s/m", ts.URL, tc.chanID),
+				url:         fmt.Sprintf("%s/%s/c/%s/m", ts.URL, tc.domainRoute, tc.chanRoute),
 				contentType: tc.contentType,
 				token:       tc.key,
 				body:        strings.NewReader(tc.msg),

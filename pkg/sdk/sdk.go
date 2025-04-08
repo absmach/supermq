@@ -1015,9 +1015,10 @@ type SDK interface {
 	//
 	// example:
 	//  msg := '[{"bn":"some-base-name:","bt":1.276020076001e+09, "bu":"A","bver":5, "n":"voltage","u":"V","v":120.1}, {"n":"current","t":-5,"v":1.2}, {"n":"current","t":-4,"v":1.3}]'
-	//  err := sdk.SendMessage("channelID", msg, "clientSecret")
+	// 	chanTopic := "channelRoute.subopic"
+	//  err := sdk.SendMessage(chanName, msg, "domainRoute", "clientSecret")
 	//  fmt.Println(err)
-	SendMessage(ctx context.Context, chanID, msg, key string) errors.SDKError
+	SendMessage(ctx context.Context, chanTopic, msg, domainRoute, key string) errors.SDKError
 
 	// SetContentType sets message content type.
 	//

@@ -11,4 +11,5 @@ import (
 
 type Authorization interface {
 	RetrieveEntity(ctx context.Context, id string) (domains.Domain, error)
+	RetrieveByRoute(ctx context.Context, route string) (domains.Domain, error)
 }

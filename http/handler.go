@@ -55,7 +55,7 @@ var (
 	errFailedParseSubtopic      = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("failed to parse subtopic"))
 )
 
-var channelRegExp = regexp.MustCompile(`^\/?c\/([\w\-]+)\/m(\/[^?]*)?(\?.*)?$`)
+var channelRegExp = regexp.MustCompile(`^\/?([\w\-]+)/c\/([\w\-]+)\/m(\/[^?]*)?(\?.*)?$`)
 
 // Event implements events.Event interface.
 type handler struct {
@@ -153,24 +153,26 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
 	}
 
-	chanID, subtopic, err := parseTopic(*topic)
+	domainRoute, chanRoute, subtopic, err := parseTopic(*topic)
 	if err != nil {
 		return mgate.NewHTTPProxyError(http.StatusBadRequest, err)
 	}
 
 	msg := messaging.Message{
 		Protocol: protocol,
-		Channel:  chanID,
+		Domain:   domainRoute,
+		Channel:  chanRoute,
 		Subtopic: subtopic,
 		Payload:  *payload,
 		Created:  time.Now().UnixNano(),
 	}
 
 	ar := &grpcChannelsV1.AuthzReq{
-		ClientId:   clientID,
-		ClientType: clientType,
-		ChannelId:  msg.Channel,
-		Type:       uint32(connections.Publish),
+		DomainRoute:  domainRoute,
+		ClientId:     clientID,
+		ClientType:   clientType,
+		ChannelRoute: msg.Channel,
+		Type:         uint32(connections.Publish),
 	}
 	res, err := h.channels.Authorize(ctx, ar)
 	if err != nil {
@@ -183,8 +185,9 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 	if clientType == policies.ClientType {
 		msg.Publisher = clientID
 	}
+	msgTopic := fmt.Sprintf("%s.%s", msg.GetDomain(), msg.GetChannel())
 
-	if err := h.publisher.Publish(ctx, msg.Channel, &msg); err != nil {
+	if err := h.publisher.Publish(ctx, msgTopic, &msg); err != nil {
 		return errors.Wrap(errFailedPublishToMsgBroker, err)
 	}
 
@@ -208,23 +211,24 @@ func (h *handler) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func parseTopic(topic string) (string, string, error) {
+func parseTopic(topic string) (string, string, string, error) {
 	// Topics are in the format:
-	// c/<channel_id>/m/<subtopic>/.../ct/<content_type>
+	// domain_route/c/<channel_route>/m/<subtopic>/.../ct/<content_type>
 	channelParts := channelRegExp.FindStringSubmatch(topic)
-	if len(channelParts) < 2 {
-		return "", "", errors.Wrap(errFailedPublish, errMalformedTopic)
+	if len(channelParts) < 3 {
+		return "", "", "", errors.Wrap(errFailedPublish, errMalformedTopic)
 	}
 
-	chanID := channelParts[1]
-	subtopic := channelParts[2]
+	domainRoute := channelParts[1]
+	chanRoute := channelParts[2]
+	subtopic := channelParts[3]
 
 	subtopic, err := parseSubtopic(subtopic)
 	if err != nil {
-		return "", "", errors.Wrap(errFailedParseSubtopic, err)
+		return "", "", "", errors.Wrap(errFailedParseSubtopic, err)
 	}
 
-	return chanID, subtopic, nil
+	return domainRoute, chanRoute, subtopic, nil
 }
 
 func parseSubtopic(subtopic string) (string, error) {

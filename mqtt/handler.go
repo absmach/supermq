@@ -57,7 +57,7 @@ var (
 
 var (
 	errInvalidUserId = errors.New("invalid user id")
-	channelRegExp    = regexp.MustCompile(`^\/?c\/([\w\-]+)\/m(\/[^?]*)?(\?.*)?$`)
+	channelRegExp    = regexp.MustCompile(`^\/?([\w\-]+)/c\/([\w\-]+)\/m(\/[^?]*)?(\?.*)?$`)
 )
 
 // Event implements events.Event interface.
@@ -158,16 +158,18 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		return errors.Wrap(ErrFailedPublish, ErrClientNotInitialized)
 	}
 	h.logger.Info(fmt.Sprintf(LogInfoPublished, s.ID, *topic))
+
 	// Topics are in the format:
-	// c/<channel_id>/m/<subtopic>/.../ct/<content_type>
+	// domain_route/c/<channel_route>/m/<subtopic>/.../ct/<content_type>
 
 	channelParts := channelRegExp.FindStringSubmatch(*topic)
-	if len(channelParts) < 2 {
+	if len(channelParts) < 3 {
 		return errors.Wrap(ErrFailedPublish, ErrMalformedTopic)
 	}
 
-	chanID := channelParts[1]
-	subtopic := channelParts[2]
+	domainRoute := channelParts[1]
+	chanRoute := channelParts[2]
+	subtopic := channelParts[3]
 
 	subtopic, err := parseSubtopic(subtopic)
 	if err != nil {
@@ -176,14 +178,16 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 
 	msg := messaging.Message{
 		Protocol:  protocol,
-		Channel:   chanID,
+		Domain:    domainRoute,
+		Channel:   chanRoute,
 		Subtopic:  subtopic,
 		Publisher: s.Username,
 		Payload:   *payload,
 		Created:   time.Now().UnixNano(),
 	}
+	msgTopic := fmt.Sprintf("%s.%s", msg.GetDomain(), msg.GetChannel())
 
-	if err := h.publisher.Publish(ctx, msg.GetChannel(), &msg); err != nil {
+	if err := h.publisher.Publish(ctx, msgTopic, &msg); err != nil {
 		return errors.Wrap(ErrFailedPublishToMsgBroker, err)
 	}
 
@@ -225,23 +229,25 @@ func (h *handler) Disconnect(ctx context.Context) error {
 
 func (h *handler) authAccess(ctx context.Context, clientID, topic string, msgType connections.ConnType) error {
 	// Topics are in the format:
-	// c/<channel_id>/m/<subtopic>/.../ct/<content_type>
+	// domain_route/c/<channel_route>/m/<subtopic>/.../ct/<content_type>
 	if !channelRegExp.MatchString(topic) {
 		return ErrMalformedTopic
 	}
 
 	channelParts := channelRegExp.FindStringSubmatch(topic)
-	if len(channelParts) < 1 {
+	if len(channelParts) < 3 {
 		return ErrMalformedTopic
 	}
 
-	chanID := channelParts[1]
+	domainRoute := channelParts[1]
+	chanRoute := channelParts[2]
 
 	ar := &grpcChannelsV1.AuthzReq{
-		Type:       uint32(msgType),
-		ClientId:   clientID,
-		ClientType: policies.ClientType,
-		ChannelId:  chanID,
+		Type:         uint32(msgType),
+		ClientId:     clientID,
+		ClientType:   policies.ClientType,
+		ChannelRoute: chanRoute,
+		DomainRoute:  domainRoute,
 	}
 	res, err := h.channels.Authorize(ctx, ar)
 	if err != nil {

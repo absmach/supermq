@@ -29,15 +29,15 @@ type Service interface {
 	// Key is used to authorize publisher.
 	Publish(ctx context.Context, key string, msg *messaging.Message) error
 
-	// Subscribes to channel with specified id, subtopic and adds subscription to
+	// Subscribes to channel with specified route, domainRoute, subtopic and adds subscription to
 	// service map of subscriptions under given ID.
-	Subscribe(ctx context.Context, key, chanID, subtopic string, c Client) error
+	Subscribe(ctx context.Context, key, domainRoute, chanRoute, subtopic string, c Client) error
 
 	// Unsubscribe method is used to stop observing resource.
-	Unsubscribe(ctx context.Context, key, chanID, subptopic, token string) error
+	Unsubscribe(ctx context.Context, key, domainRoute, chanRoute, subptopic, token string) error
 
 	// DisconnectHandler method is used to disconnected the client
-	DisconnectHandler(ctx context.Context, chanID, subptopic, token string) error
+	DisconnectHandler(ctx context.Context, domainID, chanRoute, subptopic, token string) error
 }
 
 var _ Service = (*adapterService)(nil)
@@ -72,10 +72,11 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 	}
 
 	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
-		ClientId:   authnRes.GetId(),
-		ClientType: policies.ClientType,
-		Type:       uint32(connections.Publish),
-		ChannelId:  msg.GetChannel(),
+		DomainRoute:  msg.GetDomain(),
+		ClientId:     authnRes.GetId(),
+		ClientType:   policies.ClientType,
+		Type:         uint32(connections.Publish),
+		ChannelRoute: msg.GetChannel(),
 	})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)
@@ -85,11 +86,12 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 	}
 
 	msg.Publisher = authnRes.GetId()
+	topic := fmt.Sprintf("%s.%s", msg.GetDomain(), msg.GetChannel())
 
-	return svc.pubsub.Publish(ctx, msg.GetChannel(), msg)
+	return svc.pubsub.Publish(ctx, topic, msg)
 }
 
-func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic string, c Client) error {
+func (svc *adapterService) Subscribe(ctx context.Context, key, domainRoute, chanRoute, subtopic string, c Client) error {
 	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{
 		ClientSecret: key,
 	})
@@ -102,10 +104,11 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 
 	clientID := authnRes.GetId()
 	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
-		ClientId:   clientID,
-		ClientType: policies.ClientType,
-		Type:       uint32(connections.Subscribe),
-		ChannelId:  chanID,
+		DomainRoute:  domainRoute,
+		ClientId:     clientID,
+		ClientType:   policies.ClientType,
+		Type:         uint32(connections.Subscribe),
+		ChannelRoute: chanRoute,
 	})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)
@@ -114,12 +117,12 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 		return svcerr.ErrAuthorization
 	}
 
-	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
+	subject := fmt.Sprintf("%s.%s.%s", chansPrefix, domainRoute, chanRoute)
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
 
-	authzc := newAuthzClient(clientID, chanID, subtopic, svc.channels, c)
+	authzc := newAuthzClient(clientID, domainRoute, chanRoute, subtopic, svc.channels, c)
 	subCfg := messaging.SubscriberConfig{
 		ID:       c.Token(),
 		ClientID: clientID,
@@ -129,7 +132,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 	return svc.pubsub.Subscribe(ctx, subCfg)
 }
 
-func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopic, token string) error {
+func (svc *adapterService) Unsubscribe(ctx context.Context, key, domainRoute, chanRoute, subtopic, token string) error {
 	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{
 		ClientSecret: key,
 	})
@@ -141,11 +144,11 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopi
 	}
 
 	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
-		DomainId:   "",
-		ClientId:   authnRes.GetId(),
-		ClientType: policies.ClientType,
-		Type:       uint32(connections.Subscribe),
-		ChannelId:  chanID,
+		DomainRoute:  domainRoute,
+		ClientId:     authnRes.GetId(),
+		ClientType:   policies.ClientType,
+		Type:         uint32(connections.Subscribe),
+		ChannelRoute: chanRoute,
 	})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)
@@ -154,7 +157,7 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopi
 		return svcerr.ErrAuthorization
 	}
 
-	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
+	subject := fmt.Sprintf("%s.%s.%s", chansPrefix, domainRoute, chanRoute)
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
@@ -162,8 +165,8 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopi
 	return svc.pubsub.Unsubscribe(ctx, token, subject)
 }
 
-func (svc *adapterService) DisconnectHandler(ctx context.Context, chanID, subtopic, token string) error {
-	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
+func (svc *adapterService) DisconnectHandler(ctx context.Context, domainRoute, chanRoute, subtopic, token string) error {
+	subject := fmt.Sprintf("%s.%s.%s", chansPrefix, domainRoute, chanRoute)
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
@@ -180,19 +183,26 @@ type authzClient interface {
 }
 
 type ac struct {
-	clientID  string
-	channelID string
-	subTopic  string
-	channels  grpcChannelsV1.ChannelsServiceClient
-	client    Client
+	clientID     string
+	channelRoute string
+	domainRoute  string
+	subTopic     string
+	channels     grpcChannelsV1.ChannelsServiceClient
+	client       Client
 }
 
-func newAuthzClient(clientID, channelID, subTopic string, channels grpcChannelsV1.ChannelsServiceClient, client Client) authzClient {
-	return ac{clientID, channelID, subTopic, channels, client}
+func newAuthzClient(clientID, domainRoute, channelRoute, subTopic string, channels grpcChannelsV1.ChannelsServiceClient, client Client) authzClient {
+	return ac{clientID, channelRoute, domainRoute, subTopic, channels, client}
 }
 
 func (a ac) Handle(m *messaging.Message) error {
-	res, err := a.channels.Authorize(context.Background(), &grpcChannelsV1.AuthzReq{ClientId: a.clientID, ClientType: policies.ClientType, ChannelId: a.channelID, Type: uint32(connections.Subscribe)})
+	res, err := a.channels.Authorize(context.Background(), &grpcChannelsV1.AuthzReq{
+		ClientId:     a.clientID,
+		ClientType:   policies.ClientType,
+		ChannelRoute: a.channelRoute,
+		DomainRoute:  a.domainRoute,
+		Type:         uint32(connections.Subscribe),
+	})
 	if err != nil {
 		if disErr := a.Cancel(); disErr != nil {
 			return errors.Wrap(err, errors.Wrap(errFailedToDisconnectClient, disErr))

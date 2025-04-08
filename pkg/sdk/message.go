@@ -15,15 +15,15 @@ import (
 
 const channelParts = 2
 
-func (sdk mgSDK) SendMessage(ctx context.Context, chanName, msg, key string) errors.SDKError {
+func (sdk mgSDK) SendMessage(ctx context.Context, chanName, msg, domainRoute, key string) errors.SDKError {
 	chanNameParts := strings.SplitN(chanName, ".", channelParts)
-	chanID := chanNameParts[0]
+	chanRoute := chanNameParts[0]
 	subtopicPart := ""
 	if len(chanNameParts) == channelParts {
 		subtopicPart = fmt.Sprintf("/%s", strings.ReplaceAll(chanNameParts[1], ".", "/"))
 	}
 
-	reqURL := fmt.Sprintf("%s/c/%s/m%s", sdk.httpAdapterURL, chanID, subtopicPart)
+	reqURL := fmt.Sprintf("%s/%s/c/%s/m%s", sdk.httpAdapterURL, domainRoute, chanRoute, subtopicPart)
 
 	_, _, err := sdk.processRequest(ctx, http.MethodPost, reqURL, ClientPrefix+key, []byte(msg), nil, http.StatusAccepted)
 

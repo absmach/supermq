@@ -42,3 +42,18 @@ func (a authorization) RetrieveEntity(ctx context.Context, id string) (domains.D
 		Status: domains.Status(res.Entity.GetStatus()),
 	}, nil
 }
+
+func (a authorization) RetrieveByRoute(ctx context.Context, route string) (domains.Domain, error) {
+	req := grpcDomainsV1.RetrieveByRouteReq{
+		Route: route,
+	}
+	res, err := a.domainsSvcClient.RetrieveByRoute(ctx, &req)
+	if err != nil {
+		return domains.Domain{}, err
+	}
+
+	return domains.Domain{
+		ID:     res.Entity.GetId(),
+		Status: domains.Status(res.Entity.GetStatus()),
+	}, nil
+}

@@ -19,11 +19,11 @@ func authorizeEndpoint(svc channels.Service) endpoint.Endpoint {
 		}
 
 		if err := svc.Authorize(ctx, ch.AuthzReq{
-			DomainID:   req.domainID,
-			ClientID:   req.clientID,
-			ClientType: req.clientType,
-			ChannelID:  req.channelID,
-			Type:       req.connType,
+			DomainRoute:  req.domainRoute,
+			ClientID:     req.clientID,
+			ClientType:   req.clientType,
+			ChannelRoute: req.channelRoute,
+			Type:         req.connType,
 		}); err != nil {
 			return authorizeRes{}, err
 		}

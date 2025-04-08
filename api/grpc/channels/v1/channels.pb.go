@@ -187,10 +187,10 @@ func (*UnsetParentGroupFromChannelsRes) Descriptor() ([]byte, []int) {
 
 type AuthzReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	DomainId      string                 `protobuf:"bytes,1,opt,name=domain_id,json=domainId,proto3" json:"domain_id,omitempty"`
+	DomainRoute   string                 `protobuf:"bytes,1,opt,name=domain_route,json=domainRoute,proto3" json:"domain_route,omitempty"`
 	ClientId      string                 `protobuf:"bytes,2,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
 	ClientType    string                 `protobuf:"bytes,3,opt,name=client_type,json=clientType,proto3" json:"client_type,omitempty"`
-	ChannelId     string                 `protobuf:"bytes,4,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
+	ChannelRoute  string                 `protobuf:"bytes,4,opt,name=channel_route,json=channelRoute,proto3" json:"channel_route,omitempty"`
 	Type          uint32                 `protobuf:"varint,5,opt,name=type,proto3" json:"type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -226,9 +226,9 @@ func (*AuthzReq) Descriptor() ([]byte, []int) {
 	return file_channels_v1_channels_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *AuthzReq) GetDomainId() string {
+func (x *AuthzReq) GetDomainRoute() string {
 	if x != nil {
-		return x.DomainId
+		return x.DomainRoute
 	}
 	return ""
 }
@@ -247,9 +247,9 @@ func (x *AuthzReq) GetClientType() string {
 	return ""
 }
 
-func (x *AuthzReq) GetChannelId() string {
+func (x *AuthzReq) GetChannelRoute() string {
 	if x != nil {
-		return x.ChannelId
+		return x.ChannelRoute
 	}
 	return ""
 }
@@ -315,14 +315,13 @@ const file_channels_v1_channels_proto_rawDesc = "" +
 	"\x1aRemoveClientConnectionsRes\"I\n" +
 	"\x1fUnsetParentGroupFromChannelsReq\x12&\n" +
 	"\x0fparent_group_id\x18\x01 \x01(\tR\rparentGroupId\"!\n" +
-	"\x1fUnsetParentGroupFromChannelsRes\"\x98\x01\n" +
-	"\bAuthzReq\x12\x1b\n" +
-	"\tdomain_id\x18\x01 \x01(\tR\bdomainId\x12\x1b\n" +
+	"\x1fUnsetParentGroupFromChannelsRes\"\xa4\x01\n" +
+	"\bAuthzReq\x12!\n" +
+	"\fdomain_route\x18\x01 \x01(\tR\vdomainRoute\x12\x1b\n" +
 	"\tclient_id\x18\x02 \x01(\tR\bclientId\x12\x1f\n" +
 	"\vclient_type\x18\x03 \x01(\tR\n" +
-	"clientType\x12\x1d\n" +
-	"\n" +
-	"channel_id\x18\x04 \x01(\tR\tchannelId\x12\x12\n" +
+	"clientType\x12#\n" +
+	"\rchannel_route\x18\x04 \x01(\tR\fchannelRoute\x12\x12\n" +
 	"\x04type\x18\x05 \x01(\rR\x04type\"*\n" +
 	"\bAuthzRes\x12\x1e\n" +
 	"\n" +

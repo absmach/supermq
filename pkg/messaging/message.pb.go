@@ -28,11 +28,12 @@ const (
 type Message struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Channel       string                 `protobuf:"bytes,1,opt,name=channel,proto3" json:"channel,omitempty"`
-	Subtopic      string                 `protobuf:"bytes,2,opt,name=subtopic,proto3" json:"subtopic,omitempty"`
-	Publisher     string                 `protobuf:"bytes,3,opt,name=publisher,proto3" json:"publisher,omitempty"`
-	Protocol      string                 `protobuf:"bytes,4,opt,name=protocol,proto3" json:"protocol,omitempty"`
-	Payload       []byte                 `protobuf:"bytes,5,opt,name=payload,proto3" json:"payload,omitempty"`
-	Created       int64                  `protobuf:"varint,6,opt,name=created,proto3" json:"created,omitempty"` // Unix timestamp in nanoseconds
+	Domain        string                 `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitempty"`
+	Subtopic      string                 `protobuf:"bytes,3,opt,name=subtopic,proto3" json:"subtopic,omitempty"`
+	Publisher     string                 `protobuf:"bytes,4,opt,name=publisher,proto3" json:"publisher,omitempty"`
+	Protocol      string                 `protobuf:"bytes,5,opt,name=protocol,proto3" json:"protocol,omitempty"`
+	Payload       []byte                 `protobuf:"bytes,6,opt,name=payload,proto3" json:"payload,omitempty"`
+	Created       int64                  `protobuf:"varint,7,opt,name=created,proto3" json:"created,omitempty"` // Unix timestamp in nanoseconds
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -70,6 +71,13 @@ func (*Message) Descriptor() ([]byte, []int) {
 func (x *Message) GetChannel() string {
 	if x != nil {
 		return x.Channel
+	}
+	return ""
+}
+
+func (x *Message) GetDomain() string {
+	if x != nil {
+		return x.Domain
 	}
 	return ""
 }
@@ -113,14 +121,15 @@ var File_pkg_messaging_message_proto protoreflect.FileDescriptor
 
 const file_pkg_messaging_message_proto_rawDesc = "" +
 	"\n" +
-	"\x1bpkg/messaging/message.proto\x12\tmessaging\"\xad\x01\n" +
+	"\x1bpkg/messaging/message.proto\x12\tmessaging\"\xc5\x01\n" +
 	"\aMessage\x12\x18\n" +
-	"\achannel\x18\x01 \x01(\tR\achannel\x12\x1a\n" +
-	"\bsubtopic\x18\x02 \x01(\tR\bsubtopic\x12\x1c\n" +
-	"\tpublisher\x18\x03 \x01(\tR\tpublisher\x12\x1a\n" +
-	"\bprotocol\x18\x04 \x01(\tR\bprotocol\x12\x18\n" +
-	"\apayload\x18\x05 \x01(\fR\apayload\x12\x18\n" +
-	"\acreated\x18\x06 \x01(\x03R\acreatedB\rZ\v./messagingb\x06proto3"
+	"\achannel\x18\x01 \x01(\tR\achannel\x12\x16\n" +
+	"\x06domain\x18\x02 \x01(\tR\x06domain\x12\x1a\n" +
+	"\bsubtopic\x18\x03 \x01(\tR\bsubtopic\x12\x1c\n" +
+	"\tpublisher\x18\x04 \x01(\tR\tpublisher\x12\x1a\n" +
+	"\bprotocol\x18\x05 \x01(\tR\bprotocol\x12\x18\n" +
+	"\apayload\x18\x06 \x01(\fR\apayload\x12\x18\n" +
+	"\acreated\x18\a \x01(\x03R\acreatedB\rZ\v./messagingb\x06proto3"
 
 var (
 	file_pkg_messaging_message_proto_rawDescOnce sync.Once

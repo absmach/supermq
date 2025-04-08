@@ -33,11 +33,12 @@ const (
 	startObserve = 0 // observe option value that indicates start of observation
 )
 
-var channelPartRegExp = regexp.MustCompile(`^/c/([\w\-]+)/m(/[^?]*)?(\?.*)?$`)
+var channelPartRegExp = regexp.MustCompile(`^/([\w\-]+)/c/([\w\-]+)/m(/[^?]*)?(\?.*)?$`)
 
 const (
-	numGroups    = 3 // entire expression + channel group + subtopic group
-	channelGroup = 2 // channel group is second in channel regexp
+	numGroups    = 4 // entire expression+ domain group + channel group + subtopic group
+	domainGroup  = 1 // domain group is first in channel regexp
+	channelGroup = 3 // channel group is third in channel regexp
 )
 
 var (
@@ -132,11 +133,11 @@ func handleGet(m *mux.Message, w mux.ResponseWriter, msg *messaging.Message, key
 	if obs == startObserve {
 		c := coap.NewClient(w.Conn(), m.Token(), logger)
 		w.Conn().AddOnClose(func() {
-			_ = service.DisconnectHandler(context.Background(), msg.GetChannel(), msg.GetSubtopic(), c.Token())
+			_ = service.DisconnectHandler(context.Background(), msg.GetDomain(), msg.GetChannel(), msg.GetSubtopic(), c.Token())
 		})
-		return service.Subscribe(w.Conn().Context(), key, msg.GetChannel(), msg.GetSubtopic(), c)
+		return service.Subscribe(w.Conn().Context(), key, msg.GetDomain(), msg.GetChannel(), msg.GetSubtopic(), c)
 	}
-	return service.Unsubscribe(w.Conn().Context(), key, msg.GetChannel(), msg.GetSubtopic(), m.Token().String())
+	return service.Unsubscribe(w.Conn().Context(), key, msg.GetDomain(), msg.GetChannel(), msg.GetSubtopic(), m.Token().String())
 }
 
 func decodeMessage(msg *mux.Message) (*messaging.Message, error) {
@@ -158,11 +159,13 @@ func decodeMessage(msg *mux.Message) (*messaging.Message, error) {
 	}
 	ret := &messaging.Message{
 		Protocol: protocol,
-		Channel:  channelParts[1],
+		Domain:   channelParts[domainGroup],
+		Channel:  channelParts[2],
 		Subtopic: st,
 		Payload:  []byte{},
 		Created:  time.Now().UnixNano(),
 	}
+	fmt.Printf("Message: %+v\n", ret)
 
 	if msg.Body() != nil {
 		buff, err := io.ReadAll(msg.Body())

@@ -32,3 +32,11 @@ func (a authorization) RetrieveEntity(ctx context.Context, id string) (domains.D
 	}
 	return dom, nil
 }
+
+func (a authorization) RetrieveByRoute(ctx context.Context, route string) (domains.Domain, error) {
+	dom, err := a.psvc.RetrieveByRoute(ctx, route)
+	if err != nil {
+		return domains.Domain{}, errors.Wrap(svcerr.ErrViewEntity, err)
+	}
+	return dom, nil
+}

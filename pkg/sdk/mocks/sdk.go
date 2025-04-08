@@ -5644,16 +5644,16 @@ func (_c *SDK_SendInvitation_Call) RunAndReturn(run func(ctx context.Context, in
 }
 
 // SendMessage provides a mock function for the type SDK
-func (_mock *SDK) SendMessage(ctx context.Context, chanID string, msg string, key string) errors.SDKError {
-	ret := _mock.Called(ctx, chanID, msg, key)
+func (_mock *SDK) SendMessage(ctx context.Context, chanTopic string, msg string, domainRoute string, key string) errors.SDKError {
+	ret := _mock.Called(ctx, chanTopic, msg, domainRoute, key)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SendMessage")
 	}
 
 	var r0 errors.SDKError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, string) errors.SDKError); ok {
-		r0 = returnFunc(ctx, chanID, msg, key)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, string, string) errors.SDKError); ok {
+		r0 = returnFunc(ctx, chanTopic, msg, domainRoute, key)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.SDKError)
@@ -5669,16 +5669,17 @@ type SDK_SendMessage_Call struct {
 
 // SendMessage is a helper method to define mock.On call
 //   - ctx
-//   - chanID
+//   - chanTopic
 //   - msg
+//   - domainRoute
 //   - key
-func (_e *SDK_Expecter) SendMessage(ctx interface{}, chanID interface{}, msg interface{}, key interface{}) *SDK_SendMessage_Call {
-	return &SDK_SendMessage_Call{Call: _e.mock.On("SendMessage", ctx, chanID, msg, key)}
+func (_e *SDK_Expecter) SendMessage(ctx interface{}, chanTopic interface{}, msg interface{}, domainRoute interface{}, key interface{}) *SDK_SendMessage_Call {
+	return &SDK_SendMessage_Call{Call: _e.mock.On("SendMessage", ctx, chanTopic, msg, domainRoute, key)}
 }
 
-func (_c *SDK_SendMessage_Call) Run(run func(ctx context.Context, chanID string, msg string, key string)) *SDK_SendMessage_Call {
+func (_c *SDK_SendMessage_Call) Run(run func(ctx context.Context, chanTopic string, msg string, domainRoute string, key string)) *SDK_SendMessage_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -5688,7 +5689,7 @@ func (_c *SDK_SendMessage_Call) Return(sDKError errors.SDKError) *SDK_SendMessag
 	return _c
 }
 
-func (_c *SDK_SendMessage_Call) RunAndReturn(run func(ctx context.Context, chanID string, msg string, key string) errors.SDKError) *SDK_SendMessage_Call {
+func (_c *SDK_SendMessage_Call) RunAndReturn(run func(ctx context.Context, chanTopic string, msg string, domainRoute string, key string) errors.SDKError) *SDK_SendMessage_Call {
 	_c.Call.Return(run)
 	return _c
 }

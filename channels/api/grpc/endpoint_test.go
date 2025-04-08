@@ -32,8 +32,10 @@ const port = 7005
 
 var (
 	validID      = testsutil.GenerateUUID(&testing.T{})
+	validRoute   = "validRoute"
 	validChannel = ch.Channel{
 		ID:     validID,
+		Route:  validID,
 		Domain: testsutil.GenerateUUID(&testing.T{}),
 		Status: channels.EnabledStatus,
 	}
@@ -63,67 +65,67 @@ func TestAuthorize(t *testing.T) {
 	client := grpcapi.NewClient(conn, time.Second)
 
 	cases := []struct {
-		desc       string
-		domainID   string
-		clientID   string
-		clientType string
-		channelID  string
-		connType   connections.ConnType
-		err        error
-		authzErr   error
-		res        *grpcChannelsV1.AuthzRes
-		code       codes.Code
+		desc         string
+		domainRoute  string
+		clientID     string
+		clientType   string
+		channelRoute string
+		connType     connections.ConnType
+		err          error
+		authzErr     error
+		res          *grpcChannelsV1.AuthzRes
+		code         codes.Code
 	}{
 		{
-			desc:       "authorize successfully",
-			domainID:   validID,
-			clientID:   validID,
-			clientType: policies.UserType,
-			channelID:  validID,
-			connType:   connections.Publish,
-			res:        &grpcChannelsV1.AuthzRes{Authorized: true},
-			err:        nil,
+			desc:         "authorize successfully",
+			domainRoute:  validRoute,
+			clientID:     validRoute,
+			clientType:   policies.UserType,
+			channelRoute: validID,
+			connType:     connections.Publish,
+			res:          &grpcChannelsV1.AuthzRes{Authorized: true},
+			err:          nil,
 		},
 		{
-			desc:       "authorize with authorization  error",
-			domainID:   validID,
-			clientID:   validID,
-			clientType: policies.UserType,
-			channelID:  validID,
-			connType:   connections.Publish,
-			res:        &grpcChannelsV1.AuthzRes{Authorized: false},
-			authzErr:   svcerr.ErrAuthorization,
-			err:        svcerr.ErrAuthorization,
+			desc:         "authorize with authorization  error",
+			domainRoute:  validRoute,
+			clientID:     validRoute,
+			clientType:   policies.UserType,
+			channelRoute: validID,
+			connType:     connections.Publish,
+			res:          &grpcChannelsV1.AuthzRes{Authorized: false},
+			authzErr:     svcerr.ErrAuthorization,
+			err:          svcerr.ErrAuthorization,
 		},
 		{
-			desc:       "authorize withnot found error",
-			domainID:   validID,
-			clientID:   validID,
-			clientType: policies.UserType,
-			channelID:  validID,
-			connType:   connections.Publish,
-			res:        &grpcChannelsV1.AuthzRes{Authorized: false},
-			authzErr:   svcerr.ErrNotFound,
-			err:        svcerr.ErrNotFound,
+			desc:         "authorize with not found error",
+			domainRoute:  validRoute,
+			clientID:     validRoute,
+			clientType:   policies.UserType,
+			channelRoute: validID,
+			connType:     connections.Publish,
+			res:          &grpcChannelsV1.AuthzRes{Authorized: false},
+			authzErr:     svcerr.ErrNotFound,
+			err:          svcerr.ErrNotFound,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			authReq := ch.AuthzReq{
-				DomainID:   tc.domainID,
-				ClientID:   tc.clientID,
-				ClientType: tc.clientType,
-				ChannelID:  tc.channelID,
-				Type:       tc.connType,
+				DomainRoute:  tc.domainRoute,
+				ClientID:     tc.clientID,
+				ClientType:   tc.clientType,
+				ChannelRoute: tc.channelRoute,
+				Type:         tc.connType,
 			}
 			svcCall := svc.On("Authorize", mock.Anything, authReq).Return(tc.authzErr)
 			res, err := client.Authorize(context.Background(), &grpcChannelsV1.AuthzReq{
-				DomainId:   tc.domainID,
-				ClientId:   tc.clientID,
-				ClientType: tc.clientType,
-				ChannelId:  tc.channelID,
-				Type:       uint32(tc.connType),
+				DomainRoute:  tc.domainRoute,
+				ClientId:     tc.clientID,
+				ClientType:   tc.clientType,
+				ChannelRoute: tc.channelRoute,
+				Type:         uint32(tc.connType),
 			})
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.err, err))
 			assert.Equal(t, tc.res, res, fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.res, res))

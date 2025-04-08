@@ -9,19 +9,19 @@ import (
 	"github.com/absmach/supermq/pkg/policies"
 )
 
-var errDomainID = errors.New("domain id required for users")
+var errDomainRoute = errors.New("domain route required for users")
 
 type authorizeReq struct {
-	domainID   string
-	channelID  string
-	clientID   string
-	clientType string
-	connType   connections.ConnType
+	domainRoute  string
+	channelRoute string
+	clientID     string
+	clientType   string
+	connType     connections.ConnType
 }
 
 func (req authorizeReq) validate() error {
-	if req.clientType == policies.UserType && req.domainID == "" {
-		return errDomainID
+	if req.clientType == policies.UserType && req.domainRoute == "" {
+		return errDomainRoute
 	}
 	return nil
 }

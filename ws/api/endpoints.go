@@ -16,7 +16,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-var channelPartRegExp = regexp.MustCompile(`^/c/([\w\-]+)/m(/[^?]*)?(\?.*)?$`)
+var channelPartRegExp = regexp.MustCompile(`^\/?([\w\-]+)/c\/([\w\-]+)\/m(\/[^?]*)?(\?.*)?$`)
 
 func handshake(ctx context.Context, svc ws.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -33,12 +33,12 @@ func handshake(ctx context.Context, svc ws.Service) http.HandlerFunc {
 		req.conn = conn
 		client := ws.NewClient(conn)
 
-		if err := svc.Subscribe(ctx, req.clientKey, req.chanID, req.subtopic, client); err != nil {
+		if err := svc.Subscribe(ctx, req.clientKey, req.domainRoute, req.chanRoute, req.subtopic, client); err != nil {
 			req.conn.Close()
 			return
 		}
 
-		logger.Debug(fmt.Sprintf("Successfully upgraded communication to WS on channel %s", req.chanID))
+		logger.Debug(fmt.Sprintf("Successfully upgraded communication to WS on channel %s", req.chanRoute))
 	}
 }
 
@@ -53,20 +53,22 @@ func decodeRequest(r *http.Request) (connReq, error) {
 		authKey = authKeys[0]
 	}
 
-	chanID := chi.URLParam(r, "chanID")
+	domainRoute := chi.URLParam(r, "domainRoute")
+	chanRoute := chi.URLParam(r, "chanRoute")
 
 	req := connReq{
-		clientKey: authKey,
-		chanID:    chanID,
+		clientKey:   authKey,
+		chanRoute:   chanRoute,
+		domainRoute: domainRoute,
 	}
 
 	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
-	if len(channelParts) < 2 {
-		logger.Warn("Empty channel id or malformed url")
+	if len(channelParts) < 3 {
+		logger.Warn("Empty channel route or malformed url")
 		return connReq{}, errors.ErrMalformedEntity
 	}
 
-	subtopic, err := parseSubTopic(channelParts[2])
+	subtopic, err := parseSubTopic(channelParts[3])
 	if err != nil {
 		return connReq{}, err
 	}

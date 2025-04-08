@@ -23,6 +23,7 @@ type Channel struct {
 	Tags        []string  `json:"tags,omitempty"`
 	ParentGroup string    `json:"parent_group_id,omitempty"`
 	Domain      string    `json:"domain_id,omitempty"`
+	Route       string    `json:"route,omitempty"`
 	Metadata    Metadata  `json:"metadata,omitempty"`
 	CreatedBy   string    `json:"created_by,omitempty"`
 	CreatedAt   time.Time `json:"created_at,omitempty"`
@@ -81,11 +82,11 @@ type Connection struct {
 }
 
 type AuthzReq struct {
-	DomainID   string
-	ChannelID  string
-	ClientID   string
-	ClientType string
-	Type       connections.ConnType
+	DomainRoute  string
+	ChannelRoute string
+	ClientID     string
+	ClientType   string
+	Type         connections.ConnType
 }
 
 type Service interface {
@@ -149,6 +150,9 @@ type Repository interface {
 
 	// RetrieveByID retrieves the channel having the provided identifier
 	RetrieveByID(ctx context.Context, id string) (Channel, error)
+
+	// RetrieveByRoute retrieves the channel having the provided route
+	RetrieveByRoute(ctx context.Context, route, domainID string) (Channel, error)
 
 	// RetrieveByIDWithRoles retrieves channel by its unique ID along with member roles.
 	RetrieveByIDWithRoles(ctx context.Context, id, memberID string) (Channel, error)

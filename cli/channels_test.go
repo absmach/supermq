@@ -21,8 +21,9 @@ import (
 )
 
 var channel = mgsdk.Channel{
-	ID:   testsutil.GenerateUUID(&testing.T{}),
-	Name: "testchannel",
+	ID:    testsutil.GenerateUUID(&testing.T{}),
+	Name:  "testchannel",
+	Route: "testchannel",
 }
 
 func TestCreateChannelCmd(t *testing.T) {

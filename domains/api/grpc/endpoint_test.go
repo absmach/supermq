@@ -10,11 +10,14 @@ import (
 	"testing"
 	"time"
 
+	grpcCommonV1 "github.com/absmach/supermq/api/grpc/common/v1"
 	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
 	apiutil "github.com/absmach/supermq/api/http/util"
+	domainsSvc "github.com/absmach/supermq/domains"
 	grpcapi "github.com/absmach/supermq/domains/api/grpc"
 	domains "github.com/absmach/supermq/domains/private"
 	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc"
@@ -99,5 +102,65 @@ func TestDeleteUserFromDomains(t *testing.T) {
 		assert.Equal(t, tc.deleteUserRes.GetDeleted(), dpr.GetDeleted(), fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.deleteUserRes.GetDeleted(), dpr.GetDeleted()))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall.Unset()
+	}
+}
+
+func TestRetrieveByRoute(t *testing.T) {
+	conn, err := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	assert.Nil(t, err, fmt.Sprintf("Unexpected error creating client connection %s", err))
+	grpcClient := grpcapi.NewDomainsClient(conn, time.Second)
+
+	cases := []struct {
+		desc               string
+		retrieveByRouteReq *grpcDomainsV1.RetrieveByRouteReq
+		retrieveByRouteRes *grpcCommonV1.RetrieveEntityRes
+		svcRes             domainsSvc.Domain
+		svcErr             error
+		err                error
+	}{
+		{
+			desc: "retrieve valid req",
+			retrieveByRouteReq: &grpcDomainsV1.RetrieveByRouteReq{
+				Route: id,
+			},
+			svcRes: domainsSvc.Domain{
+				ID:     id,
+				Status: domainsSvc.EnabledStatus,
+			},
+			retrieveByRouteRes: &grpcCommonV1.RetrieveEntityRes{
+				Entity: &grpcCommonV1.EntityBasic{
+					Id:     id,
+					Status: uint32(domainsSvc.EnabledStatus),
+				},
+			},
+			err: nil,
+		},
+		{
+			desc: "retrieve enity with empty route",
+			retrieveByRouteReq: &grpcDomainsV1.RetrieveByRouteReq{
+				Route: "",
+			},
+			svcRes:             domainsSvc.Domain{},
+			retrieveByRouteRes: &grpcCommonV1.RetrieveEntityRes{},
+			err:                apiutil.ErrMissingRoute,
+		},
+		{
+			desc: "retrieve enity with invalid route",
+			retrieveByRouteReq: &grpcDomainsV1.RetrieveByRouteReq{
+				Route: "invalid",
+			},
+			svcRes:             domainsSvc.Domain{},
+			retrieveByRouteRes: &grpcCommonV1.RetrieveEntityRes{},
+			svcErr:             svcerr.ErrViewEntity,
+			err:                svcerr.ErrViewEntity,
+		},
+	}
+	for _, tc := range cases {
+		svcCall := svc.On("RetrieveByRoute", mock.Anything, tc.retrieveByRouteReq.Route).Return(tc.svcRes, tc.svcErr)
+		dpr, err := grpcClient.RetrieveByRoute(context.Background(), tc.retrieveByRouteReq)
+		assert.Equal(t, tc.retrieveByRouteRes.GetEntity().GetId(), dpr.GetEntity().GetId(), fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.retrieveByRouteRes.GetEntity().GetId(), dpr.GetEntity().GetId()))
+		assert.Equal(t, tc.retrieveByRouteRes.GetEntity().GetStatus(), dpr.GetEntity().GetStatus(), fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.retrieveByRouteRes.GetEntity().GetStatus(), dpr.GetEntity().GetStatus()))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		svcCall.Unset()
 	}
 }

@@ -44,31 +44,33 @@ func (tm *tracingServiceMiddleware) Publish(ctx context.Context, key string, msg
 }
 
 // Subscribe traces a CoAP subscribe operation.
-func (tm *tracingServiceMiddleware) Subscribe(ctx context.Context, key, chanID, subtopic string, c coap.Client) error {
+func (tm *tracingServiceMiddleware) Subscribe(ctx context.Context, key, domainRoute, chanRoute, subtopic string, c coap.Client) error {
 	ctx, span := tm.tracer.Start(ctx, subscribeOP, trace.WithAttributes(
-		attribute.String("channel_id", chanID),
+		attribute.String("channel_route", chanRoute),
+		attribute.String("domain_route", domainRoute),
 		attribute.String("subtopic", subtopic),
 	))
 	defer span.End()
-	return tm.svc.Subscribe(ctx, key, chanID, subtopic, c)
+	return tm.svc.Subscribe(ctx, key, domainRoute, chanRoute, subtopic, c)
 }
 
 // Unsubscribe traces a CoAP unsubscribe operation.
-func (tm *tracingServiceMiddleware) Unsubscribe(ctx context.Context, key, chanID, subptopic, token string) error {
+func (tm *tracingServiceMiddleware) Unsubscribe(ctx context.Context, key, domainRoute, chanRoute, subtopic, token string) error {
 	ctx, span := tm.tracer.Start(ctx, unsubscribeOP, trace.WithAttributes(
-		attribute.String("channel_id", chanID),
-		attribute.String("subtopic", subptopic),
+		attribute.String("channel_route", chanRoute),
+		attribute.String("domain_route", domainRoute),
+		attribute.String("subtopic", subtopic),
 	))
 	defer span.End()
-	return tm.svc.Unsubscribe(ctx, key, chanID, subptopic, token)
+	return tm.svc.Unsubscribe(ctx, key, domainRoute, chanRoute, subtopic, token)
 }
 
 // DisconnectHandler traces a CoAP disconnect operation.
-func (tm *tracingServiceMiddleware) DisconnectHandler(ctx context.Context, chanID, subptopic, token string) error {
+func (tm *tracingServiceMiddleware) DisconnectHandler(ctx context.Context, domainRoute, chanRoute, subptopic, token string) error {
 	ctx, span := tm.tracer.Start(ctx, disconnectHandlerOp, trace.WithAttributes(
-		attribute.String("channel_id", chanID),
+		attribute.String("channel_route", chanRoute),
 		attribute.String("subtopic", subptopic),
 	))
 	defer span.End()
-	return tm.svc.DisconnectHandler(ctx, chanID, subptopic, token)
+	return tm.svc.DisconnectHandler(ctx, domainRoute, chanRoute, subptopic, token)
 }
