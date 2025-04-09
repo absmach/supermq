@@ -42,7 +42,7 @@ const (
 	readPermission            = "read_permission"
 	deletePermission          = "delete_permission"
 	manageRolePermission      = "manage_role_permission"
-	addRoleUsersPermission    = "add_role_users_permission"
+	AddRoleUsersPermission    = "add_role_users_permission"
 	removeRoleUsersPermission = "remove_role_users_permission"
 	viewRoleUsersPermission   = "view_role_users_permission"
 )
@@ -75,7 +75,7 @@ func NewRolesOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 		roles.OpRoleCheckActionsExists: manageRolePermission,
 		roles.OpRoleRemoveActions:      manageRolePermission,
 		roles.OpRoleRemoveAllActions:   manageRolePermission,
-		roles.OpRoleAddMembers:         addRoleUsersPermission,
+		roles.OpRoleAddMembers:         AddRoleUsersPermission,
 		roles.OpRoleListMembers:        viewRoleUsersPermission,
 		roles.OpRoleCheckMembersExists: viewRoleUsersPermission,
 		roles.OpRoleRemoveMembers:      removeRoleUsersPermission,
