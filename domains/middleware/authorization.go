@@ -187,6 +187,13 @@ func (am *authorizationMiddleware) ListInvitations(ctx context.Context, session 
 }
 
 func (am *authorizationMiddleware) AcceptInvitation(ctx context.Context, session authn.Session, domainID string) (err error) {
+	inv, err := am.svc.ViewInvitation(ctx, session, session.UserID, domainID)
+	if err != nil {
+		return err
+	}
+	if err := am.extAuthorize(ctx, auth.EncodeDomainUserID(domainID, inv.InvitedBy), domains.AddRoleUsersPermission, policies.DomainType, domainID); err == nil {
+		return err
+	}
 	return am.svc.AcceptInvitation(ctx, session, domainID)
 }
 
