@@ -208,7 +208,7 @@ type Service interface {
 	ListInvitations(ctx context.Context, session authn.Session, page InvitationPageMeta) (invitations InvitationPage, err error)
 
 	// AcceptInvitation accepts an invitation by adding the user to the domain.
-	AcceptInvitation(ctx context.Context, session authn.Session, domainID string) (err error)
+	AcceptInvitation(ctx context.Context, session authn.Session, domainID string) (invitation Invitation, err error)
 
 	// DeleteInvitation deletes an invitation.
 	// People who can delete invitations are:

@@ -229,7 +229,7 @@ func (lm *loggingMiddleware) ListInvitations(ctx context.Context, session authn.
 	return lm.svc.ListInvitations(ctx, session, pm)
 }
 
-func (lm *loggingMiddleware) AcceptInvitation(ctx context.Context, session authn.Session, domainID string) (err error) {
+func (lm *loggingMiddleware) AcceptInvitation(ctx context.Context, session authn.Session, domainID string) (inv domains.Invitation, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),

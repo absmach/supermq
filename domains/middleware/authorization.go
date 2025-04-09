@@ -186,7 +186,7 @@ func (am *authorizationMiddleware) ListInvitations(ctx context.Context, session 
 	return am.svc.ListInvitations(ctx, session, page)
 }
 
-func (am *authorizationMiddleware) AcceptInvitation(ctx context.Context, session authn.Session, domainID string) (err error) {
+func (am *authorizationMiddleware) AcceptInvitation(ctx context.Context, session authn.Session, domainID string) (inv domains.Invitation, err error) {
 	return am.svc.AcceptInvitation(ctx, session, domainID)
 }
 

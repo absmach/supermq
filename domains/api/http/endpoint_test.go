@@ -1551,7 +1551,7 @@ func TestAcceptInvitation(t *testing.T) {
 				tc.session = authn.Session{UserID: userID, DomainID: domainID}
 			}
 			authnCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
-			repoCall := svc.On("AcceptInvitation", mock.Anything, tc.session, mock.Anything).Return(tc.svcErr)
+			repoCall := svc.On("AcceptInvitation", mock.Anything, tc.session, mock.Anything).Return(domains.Invitation{}, tc.svcErr)
 			req := testRequest{
 				client:      is.Client(),
 				method:      http.MethodPost,

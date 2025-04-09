@@ -252,9 +252,14 @@ func (es *eventStore) ListInvitations(ctx context.Context, session authn.Session
 	return ip, nil
 }
 
-func (es *eventStore) AcceptInvitation(ctx context.Context, session authn.Session, domainID string) error {
-	if err := es.svc.AcceptInvitation(ctx, session, domainID); err != nil {
-		return err
+func (es *eventStore) AcceptInvitation(ctx context.Context, session authn.Session, domainID string) (domains.Invitation, error) {
+	inv, err := es.svc.AcceptInvitation(ctx, session, domainID)
+	if err != nil {
+		return inv, err
+	}
+
+	if err := es.RoleManagerEventStore.RoleAddMembersEventPublisher(ctx, inv.DomainID, inv.RoleID, []string{inv.InviteeUserID}); err != nil {
+		return inv, err
 	}
 
 	event := acceptInvitationEvent{
@@ -262,7 +267,10 @@ func (es *eventStore) AcceptInvitation(ctx context.Context, session authn.Sessio
 		session:  session,
 	}
 
-	return es.Publish(ctx, acceptInvitationStream, event)
+	if err := es.Publish(ctx, acceptInvitationStream, event); err != nil {
+		return inv, err
+	}
+	return inv, err
 }
 
 func (es *eventStore) RejectInvitation(ctx context.Context, session authn.Session, domainID string) error {

@@ -10,6 +10,7 @@ import (
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
+	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
@@ -225,38 +226,38 @@ func (svc *service) ListInvitations(ctx context.Context, session authn.Session, 
 	return ip, nil
 }
 
-func (svc *service) AcceptInvitation(ctx context.Context, session authn.Session, domainID string) error {
+func (svc *service) AcceptInvitation(ctx context.Context, session authn.Session, domainID string) (invitation Invitation, err error) {
 	inv, err := svc.repo.RetrieveInvitation(ctx, session.UserID, domainID)
 	if err != nil {
-		return errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return Invitation{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 
 	if inv.InviteeUserID != session.UserID {
-		return svcerr.ErrAuthorization
+		return Invitation{}, svcerr.ErrAuthorization
 	}
 
 	if !inv.ConfirmedAt.IsZero() {
-		return svcerr.ErrInvitationAlreadyAccepted
+		return Invitation{}, svcerr.ErrInvitationAlreadyAccepted
 	}
 
 	if !inv.RejectedAt.IsZero() {
-		return svcerr.ErrInvitationAlreadyRejected
+		return Invitation{}, svcerr.ErrInvitationAlreadyRejected
 	}
 
 	session.DomainID = domainID
 
 	if _, err := svc.RoleAddMembers(ctx, session, domainID, inv.RoleID, []string{session.UserID}); err != nil {
-		return errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return Invitation{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 
 	inv.ConfirmedAt = time.Now()
 	inv.UpdatedAt = inv.ConfirmedAt
 
 	if err := svc.repo.UpdateConfirmation(ctx, inv); err != nil {
-		return errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return Invitation{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 
-	return nil
+	return inv, nil
 }
 
 func (svc *service) RejectInvitation(ctx context.Context, session authn.Session, domainID string) error {
@@ -312,4 +313,27 @@ func (svc *service) DeleteInvitation(ctx context.Context, session authn.Session,
 	}
 
 	return nil
+}
+
+// Add addition removal of user from invitations.
+func (svc *service) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) error {
+	for _, member := range members {
+		if err := svc.repo.DeleteInvitation(ctx, member, entityID); err != nil && err != repoerr.ErrNotFound {
+			return err
+		}
+	}
+	return svc.ProvisionManageService.RemoveEntityMembers(ctx, session, entityID, members)
+}
+
+func (svc *service) RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleID string, members []string) (err error) {
+	for _, member := range members {
+		if err := svc.repo.DeleteInvitation(ctx, member, entityID); err != nil && err != repoerr.ErrNotFound {
+			return err
+		}
+	}
+	return svc.ProvisionManageService.RoleRemoveMembers(ctx, session, entityID, roleID, members)
+}
+
+func (svc *service) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleID string) (err error) {
+	return svcerr.ErrNotFound
 }

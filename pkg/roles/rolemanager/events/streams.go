@@ -224,6 +224,11 @@ func (rmes *RoleManagerEventStore) RoleAddMembers(ctx context.Context, session a
 		return mems, err
 	}
 
+	err = rmes.RoleAddMembersEventPublisher(ctx, entityID, roleID, mems)
+	return mems, err
+}
+
+func (rmes *RoleManagerEventStore) RoleAddMembersEventPublisher(ctx context.Context, entityID, roleID string, members []string) error {
 	e := roleAddMembersEvent{
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
@@ -231,9 +236,9 @@ func (rmes *RoleManagerEventStore) RoleAddMembers(ctx context.Context, session a
 		members:         members,
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
-		return mems, err
+		return err
 	}
-	return mems, nil
+	return nil
 }
 
 func (rmes *RoleManagerEventStore) RoleListMembers(ctx context.Context, session authn.Session, entityID, roleID string, limit, offset uint64) (roles.MembersPage, error) {
