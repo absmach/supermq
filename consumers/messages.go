@@ -153,7 +153,6 @@ func makeTransformer(cfg transformerConfig, logger *slog.Logger) transformers.Tr
 		return json.New(cfg.TimeFields)
 	default:
 		logger.Error(fmt.Sprintf("Can't create transformer: unknown transformer type %s", cfg.Format))
-		os.Exit(1)
 		return nil
 	}
 }
