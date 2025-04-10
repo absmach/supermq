@@ -386,7 +386,7 @@ func TestAcceptInvitation(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := svc.On("AcceptInvitation", mock.Anything, tc.session, tc.domainID).Return(tc.svcErr)
+			svcCall := svc.On("AcceptInvitation", mock.Anything, tc.session, tc.domainID).Return(domains.Invitation{}, tc.svcErr)
 			err := mgsdk.AcceptInvitation(context.Background(), tc.domainID, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
