@@ -7,7 +7,7 @@ import "github.com/spf13/cobra"
 
 var cmdMessages = []cobra.Command{
 	{
-		Use:   "send <domain_id> <channel_id.subtopic> <secret> <JSON_string>",
+		Use:   "send <domain_id> <channel_id.subtopic> <JSON_string> <secret>",
 		Short: "Send messages",
 		Long:  `Sends message on the channel`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -29,7 +29,7 @@ var cmdMessages = []cobra.Command{
 // NewMessagesCmd returns messages command.
 func NewMessagesCmd() *cobra.Command {
 	cmd := cobra.Command{
-		Use:   "messages [send | read]",
+		Use:   "messages [send]",
 		Short: "Send messages",
 		Long:  `Send messages using the http-adapter`,
 	}

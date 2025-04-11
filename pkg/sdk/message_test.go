@@ -74,92 +74,92 @@ func TestSendMessage(t *testing.T) {
 	mgsdk := sdk.NewSDK(sdkConf)
 
 	cases := []struct {
-		desc      string
-		topic     string
-		domainID  string
-		msg       string
-		clientKey string
-		authRes   *grpcClientsV1.AuthnRes
-		authErr   error
-		svcErr    error
-		err       errors.SDKError
+		desc     string
+		topic    string
+		domainID string
+		msg      string
+		secret   string
+		authRes  *grpcClientsV1.AuthnRes
+		authErr  error
+		svcErr   error
+		err      errors.SDKError
 	}{
 		{
-			desc:      "publish message successfully",
-			topic:     channelID,
-			domainID:  domainID,
-			msg:       msg,
-			clientKey: clientKey,
-			authRes:   &grpcClientsV1.AuthnRes{Authenticated: true, Id: ""},
-			authErr:   nil,
-			svcErr:    nil,
-			err:       nil,
+			desc:     "publish message successfully",
+			topic:    channelID,
+			domainID: domainID,
+			msg:      msg,
+			secret:   clientKey,
+			authRes:  &grpcClientsV1.AuthnRes{Authenticated: true, Id: ""},
+			authErr:  nil,
+			svcErr:   nil,
+			err:      nil,
 		},
 		{
-			desc:      "publish message with empty client key",
-			topic:     channelID,
-			domainID:  domainID,
-			msg:       msg,
-			clientKey: "",
-			authRes:   &grpcClientsV1.AuthnRes{Authenticated: false, Id: ""},
-			authErr:   svcerr.ErrAuthentication,
-			svcErr:    nil,
-			err:       errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+			desc:     "publish message with empty client key",
+			topic:    channelID,
+			domainID: domainID,
+			msg:      msg,
+			secret:   "",
+			authRes:  &grpcClientsV1.AuthnRes{Authenticated: false, Id: ""},
+			authErr:  svcerr.ErrAuthentication,
+			svcErr:   nil,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
-			desc:      "publish message with invalid client key",
-			topic:     channelID,
-			domainID:  domainID,
-			msg:       msg,
-			clientKey: "invalid",
-			authRes:   &grpcClientsV1.AuthnRes{Authenticated: false, Id: ""},
-			authErr:   svcerr.ErrAuthentication,
-			svcErr:    svcerr.ErrAuthentication,
-			err:       errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+			desc:     "publish message with invalid client key",
+			topic:    channelID,
+			domainID: domainID,
+			msg:      msg,
+			secret:   "invalid",
+			authRes:  &grpcClientsV1.AuthnRes{Authenticated: false, Id: ""},
+			authErr:  svcerr.ErrAuthentication,
+			svcErr:   svcerr.ErrAuthentication,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
-			desc:      "publish message with invalid channel ID",
-			topic:     wrongID,
-			domainID:  domainID,
-			msg:       msg,
-			clientKey: clientKey,
-			authRes:   &grpcClientsV1.AuthnRes{Authenticated: false, Id: ""},
-			authErr:   svcerr.ErrAuthentication,
-			svcErr:    svcerr.ErrAuthentication,
-			err:       errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+			desc:     "publish message with invalid channel ID",
+			topic:    wrongID,
+			domainID: domainID,
+			msg:      msg,
+			secret:   clientKey,
+			authRes:  &grpcClientsV1.AuthnRes{Authenticated: false, Id: ""},
+			authErr:  svcerr.ErrAuthentication,
+			svcErr:   svcerr.ErrAuthentication,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
-			desc:      "publish message with empty message body",
-			topic:     channelID,
-			domainID:  domainID,
-			msg:       "",
-			clientKey: clientKey,
-			authRes:   &grpcClientsV1.AuthnRes{Authenticated: true, Id: ""},
-			authErr:   nil,
-			svcErr:    nil,
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrEmptyMessage), http.StatusBadRequest),
+			desc:     "publish message with empty message body",
+			topic:    channelID,
+			domainID: domainID,
+			msg:      "",
+			secret:   clientKey,
+			authRes:  &grpcClientsV1.AuthnRes{Authenticated: true, Id: ""},
+			authErr:  nil,
+			svcErr:   nil,
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrEmptyMessage), http.StatusBadRequest),
 		},
 		{
-			desc:      "publish message with channel subtopic",
-			topic:     channelID + ".subtopic",
-			domainID:  domainID,
-			msg:       msg,
-			clientKey: clientKey,
-			authRes:   &grpcClientsV1.AuthnRes{Authenticated: true, Id: ""},
-			authErr:   nil,
-			svcErr:    nil,
-			err:       nil,
+			desc:     "publish message with channel subtopic",
+			topic:    channelID + ".subtopic",
+			domainID: domainID,
+			msg:      msg,
+			secret:   clientKey,
+			authRes:  &grpcClientsV1.AuthnRes{Authenticated: true, Id: ""},
+			authErr:  nil,
+			svcErr:   nil,
+			err:      nil,
 		},
 		{
-			desc:      "publish message with invalid domain ID",
-			topic:     channelID,
-			domainID:  wrongID,
-			msg:       msg,
-			clientKey: clientKey,
-			authRes:   &grpcClientsV1.AuthnRes{Authenticated: false, Id: ""},
-			authErr:   svcerr.ErrAuthentication,
-			svcErr:    svcerr.ErrAuthentication,
-			err:       errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
+			desc:     "publish message with invalid domain ID",
+			topic:    channelID,
+			domainID: wrongID,
+			msg:      msg,
+			secret:   clientKey,
+			authRes:  &grpcClientsV1.AuthnRes{Authenticated: false, Id: ""},
+			authErr:  svcerr.ErrAuthentication,
+			svcErr:   svcerr.ErrAuthentication,
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
 	}
 	for _, tc := range cases {
@@ -167,7 +167,7 @@ func TestSendMessage(t *testing.T) {
 			authzCall := clientsGRPCClient.On("Authenticate", mock.Anything, mock.Anything).Return(tc.authRes, tc.authErr)
 			authnCall := channelsGRPCClient.On("Authorize", mock.Anything, mock.Anything).Return(&grpcChannelsV1.AuthzRes{Authorized: true}, nil)
 			svcCall := pub.On("Publish", mock.Anything, channelID, mock.Anything).Return(tc.svcErr)
-			err := mgsdk.SendMessage(context.Background(), tc.domainID, tc.topic, tc.clientKey, tc.msg)
+			err := mgsdk.SendMessage(context.Background(), tc.domainID, tc.topic, tc.msg, tc.secret)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "Publish", mock.Anything, channelID, mock.Anything)

@@ -272,12 +272,6 @@ supermq-cli channels connections <channel_id> <user_token>
 supermq-cli messages send <domain_id> <channel_id.subtopic> <secret> '[{"bn":"Dev1","n":"temp","v":20}, {"n":"hum","v":40}, {"bn":"Dev2", "n":"temp","v":20}, {"n":"hum","v":40}]'
 ```
 
-#### Read messages over HTTP
-
-```bash
-supermq-cli messages read <channel_id> <user_token> -R <reader_url>
-```
-
 ### Groups
 
 #### Create Group
