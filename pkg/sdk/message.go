@@ -15,8 +15,8 @@ import (
 
 const channelParts = 2
 
-func (sdk mgSDK) SendMessage(ctx context.Context, chanName, msg, domainID, key string) errors.SDKError {
-	chanNameParts := strings.SplitN(chanName, ".", channelParts)
+func (sdk mgSDK) SendMessage(ctx context.Context, domainID, topic, key, msg string) errors.SDKError {
+	chanNameParts := strings.SplitN(topic, ".", channelParts)
 	chanID := chanNameParts[0]
 	subtopicPart := ""
 	if len(chanNameParts) == channelParts {

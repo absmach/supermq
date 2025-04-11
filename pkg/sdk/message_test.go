@@ -75,7 +75,7 @@ func TestSendMessage(t *testing.T) {
 
 	cases := []struct {
 		desc      string
-		chanName  string
+		topic     string
 		domainID  string
 		msg       string
 		clientKey string
@@ -86,7 +86,7 @@ func TestSendMessage(t *testing.T) {
 	}{
 		{
 			desc:      "publish message successfully",
-			chanName:  channelID,
+			topic:     channelID,
 			domainID:  domainID,
 			msg:       msg,
 			clientKey: clientKey,
@@ -97,7 +97,7 @@ func TestSendMessage(t *testing.T) {
 		},
 		{
 			desc:      "publish message with empty client key",
-			chanName:  channelID,
+			topic:     channelID,
 			domainID:  domainID,
 			msg:       msg,
 			clientKey: "",
@@ -108,7 +108,7 @@ func TestSendMessage(t *testing.T) {
 		},
 		{
 			desc:      "publish message with invalid client key",
-			chanName:  channelID,
+			topic:     channelID,
 			domainID:  domainID,
 			msg:       msg,
 			clientKey: "invalid",
@@ -119,7 +119,7 @@ func TestSendMessage(t *testing.T) {
 		},
 		{
 			desc:      "publish message with invalid channel ID",
-			chanName:  wrongID,
+			topic:     wrongID,
 			domainID:  domainID,
 			msg:       msg,
 			clientKey: clientKey,
@@ -130,7 +130,7 @@ func TestSendMessage(t *testing.T) {
 		},
 		{
 			desc:      "publish message with empty message body",
-			chanName:  channelID,
+			topic:     channelID,
 			domainID:  domainID,
 			msg:       "",
 			clientKey: clientKey,
@@ -141,7 +141,7 @@ func TestSendMessage(t *testing.T) {
 		},
 		{
 			desc:      "publish message with channel subtopic",
-			chanName:  channelID + ".subtopic",
+			topic:     channelID + ".subtopic",
 			domainID:  domainID,
 			msg:       msg,
 			clientKey: clientKey,
@@ -152,7 +152,7 @@ func TestSendMessage(t *testing.T) {
 		},
 		{
 			desc:      "publish message with invalid domain ID",
-			chanName:  channelID,
+			topic:     channelID,
 			domainID:  wrongID,
 			msg:       msg,
 			clientKey: clientKey,
@@ -167,7 +167,7 @@ func TestSendMessage(t *testing.T) {
 			authzCall := clientsGRPCClient.On("Authenticate", mock.Anything, mock.Anything).Return(tc.authRes, tc.authErr)
 			authnCall := channelsGRPCClient.On("Authorize", mock.Anything, mock.Anything).Return(&grpcChannelsV1.AuthzRes{Authorized: true}, nil)
 			svcCall := pub.On("Publish", mock.Anything, channelID, mock.Anything).Return(tc.svcErr)
-			err := mgsdk.SendMessage(context.Background(), tc.chanName, tc.msg, tc.domainID, tc.clientKey)
+			err := mgsdk.SendMessage(context.Background(), tc.domainID, tc.topic, tc.clientKey, tc.msg)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "Publish", mock.Anything, channelID, mock.Anything)
