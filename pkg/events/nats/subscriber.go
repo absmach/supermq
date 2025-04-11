@@ -43,7 +43,6 @@ var (
 
 type subEventStore struct {
 	pubsub messaging.PubSub
-	logger *slog.Logger
 }
 
 func NewSubscriber(ctx context.Context, url string, logger *slog.Logger) (events.Subscriber, error) {
@@ -54,7 +53,6 @@ func NewSubscriber(ctx context.Context, url string, logger *slog.Logger) (events
 
 	return &subEventStore{
 		pubsub: pubsub,
-		logger: logger,
 	}, nil
 }
 
@@ -72,7 +70,6 @@ func (es *subEventStore) Subscribe(ctx context.Context, cfg events.SubscriberCon
 		Handler: &eventHandler{
 			handler: cfg.Handler,
 			ctx:     ctx,
-			logger:  es.logger,
 		},
 		DeliveryPolicy: cfg.DeliveryPolicy,
 		Ordered:        cfg.Ordered,
@@ -96,7 +93,6 @@ func (re event) Encode() (map[string]interface{}, error) {
 type eventHandler struct {
 	handler events.EventHandler
 	ctx     context.Context
-	logger  *slog.Logger
 }
 
 func (eh *eventHandler) Handle(msg *messaging.Message) error {

@@ -30,7 +30,6 @@ var (
 
 type subEventStore struct {
 	pubsub messaging.PubSub
-	logger *slog.Logger
 }
 
 func NewSubscriber(url string, logger *slog.Logger) (events.Subscriber, error) {
@@ -41,7 +40,6 @@ func NewSubscriber(url string, logger *slog.Logger) (events.Subscriber, error) {
 
 	return &subEventStore{
 		pubsub: pubsub,
-		logger: logger,
 	}, nil
 }
 
@@ -59,7 +57,6 @@ func (es *subEventStore) Subscribe(ctx context.Context, cfg events.SubscriberCon
 		Handler: &eventHandler{
 			handler: cfg.Handler,
 			ctx:     ctx,
-			logger:  es.logger,
 		},
 		DeliveryPolicy: messaging.DeliverNewPolicy,
 	}
@@ -82,7 +79,6 @@ func (re event) Encode() (map[string]interface{}, error) {
 type eventHandler struct {
 	handler events.EventHandler
 	ctx     context.Context
-	logger  *slog.Logger
 }
 
 func (eh *eventHandler) Handle(msg *messaging.Message) error {
@@ -95,7 +91,7 @@ func (eh *eventHandler) Handle(msg *messaging.Message) error {
 	}
 
 	if err := eh.handler.Handle(eh.ctx, event); err != nil {
-		eh.logger.Warn(fmt.Sprintf("failed to handle rabbitmq event: %s", err))
+		return fmt.Errorf("failed to handle rabbitmq event: %s", err)
 	}
 
 	return nil

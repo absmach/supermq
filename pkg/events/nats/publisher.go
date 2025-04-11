@@ -14,7 +14,6 @@ import (
 )
 
 type pubEventStore struct {
-	url       string
 	publisher messaging.Publisher
 }
 
@@ -25,7 +24,6 @@ func NewPublisher(ctx context.Context, url string) (events.Publisher, error) {
 	}
 
 	es := &pubEventStore{
-		url:       url,
 		publisher: publisher,
 	}
 
