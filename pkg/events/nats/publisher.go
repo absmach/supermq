@@ -13,16 +13,12 @@ import (
 	broker "github.com/absmach/supermq/pkg/messaging/nats"
 )
 
-// Max message payload size is 1MB.
-var reconnectBufSize = 1024 * 1024 * int(events.MaxUnpublishedEvents)
-
 type pubEventStore struct {
 	url       string
 	publisher messaging.Publisher
 }
 
 func NewPublisher(ctx context.Context, url string) (events.Publisher, error) {
-
 	publisher, err := broker.NewPublisher(ctx, url, broker.Prefix(eventsPrefix), broker.JSStreamConfig(jsStreamConfig))
 	if err != nil {
 		return nil, err
@@ -56,6 +52,5 @@ func (es *pubEventStore) Publish(ctx context.Context, stream string, event event
 }
 
 func (es *pubEventStore) Close() error {
-
 	return es.publisher.Close()
 }

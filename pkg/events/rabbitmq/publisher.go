@@ -18,7 +18,6 @@ type pubEventStore struct {
 }
 
 func NewPublisher(ctx context.Context, url string) (events.Publisher, error) {
-
 	publisher, err := broker.NewPublisher(url, broker.Prefix(eventsPrefix), broker.Exchange(exchangeName))
 	if err != nil {
 		return nil, err
@@ -51,6 +50,5 @@ func (es *pubEventStore) Publish(ctx context.Context, stream string, event event
 }
 
 func (es *pubEventStore) Close() error {
-
 	return es.publisher.Close()
 }

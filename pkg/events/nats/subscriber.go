@@ -17,8 +17,6 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-const maxReconnects = -1
-
 var _ events.Subscriber = (*subEventStore)(nil)
 
 var (
@@ -49,7 +47,6 @@ type subEventStore struct {
 }
 
 func NewSubscriber(ctx context.Context, url string, logger *slog.Logger) (events.Subscriber, error) {
-
 	pubsub, err := broker.NewPubSub(ctx, url, logger, broker.JSStreamConfig(jsStreamConfig))
 	if err != nil {
 		return nil, err
