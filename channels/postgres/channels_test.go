@@ -52,6 +52,8 @@ func TestSave(t *testing.T) {
 
 	repo := postgres.NewRepository(database)
 
+	duplicateChannelID := testsutil.GenerateUUID(t)
+
 	cases := []struct {
 		desc    string
 		channel channels.Channel
@@ -123,6 +125,29 @@ func TestSave(t *testing.T) {
 			},
 			resp: []channels.Channel{},
 			err:  repoerr.ErrMalformedEntity,
+		},
+		{
+			desc: "add channel with duplicate name",
+			channel: channels.Channel{
+				ID:        duplicateChannelID,
+				Domain:    validChannel.Domain,
+				Name:      validChannel.Name,
+				Metadata:  map[string]interface{}{"key": "different_value"},
+				CreatedAt: validTimestamp,
+				Status:    channels.EnabledStatus,
+			},
+			resp: []channels.Channel{
+				{
+					ID:              duplicateChannelID,
+					Domain:          validChannel.Domain,
+					Name:            validChannel.Name,
+					Metadata:        map[string]interface{}{"key": "different_value"},
+					CreatedAt:       validTimestamp,
+					Status:          channels.EnabledStatus,
+					ConnectionTypes: []connections.ConnType{},
+				},
+			},
+			err: nil,
 		},
 	}
 

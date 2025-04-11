@@ -53,6 +53,15 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 					`DROP TABLE IF EXISTS connections`,
 				},
 			},
+			{
+				Id: "channels_02",
+				Up: []string{
+					`ALTER TABLE channels DROP CONSTRAINT IF EXISTS channels_domain_id_name_key`,
+				},
+				Down: []string{
+					`ALTER TABLE channels ADD CONSTRAINT channels_domain_id_name_key UNIQUE (domain_id, name)`,
+				},
+			},
 		},
 	}
 	channelsMigration.Migrations = append(channelsMigration.Migrations, rolesMigration.Migrations...)

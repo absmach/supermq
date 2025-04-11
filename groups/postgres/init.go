@@ -55,6 +55,15 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 					`DROP EXTENSION IF EXISTS LTREE`,
 				},
 			},
+			{
+				Id: "groups_03",
+				Up: []string{
+					`ALTER TABLE groups DROP CONSTRAINT IF EXISTS groups_domain_id_name_key`,
+				},
+				Down: []string{
+					`ALTER TABLE groups ADD CONSTRAINT groups_domain_id_name_key UNIQUE (domain_id, name)`,
+				},
+			},
 		},
 	}
 
