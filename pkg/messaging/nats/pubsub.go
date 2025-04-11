@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
-	"time"
 
 	"github.com/absmach/supermq/pkg/messaging"
 	broker "github.com/nats-io/nats.go"
@@ -17,25 +16,11 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const chansPrefix = "channels"
-
 // Publisher and Subscriber errors.
 var (
 	ErrNotSubscribed = errors.New("not subscribed")
 	ErrEmptyTopic    = errors.New("empty topic")
 	ErrEmptyID       = errors.New("empty id")
-
-	jsStreamConfig = jetstream.StreamConfig{
-		Name:              "channels",
-		Description:       "SuperMQ stream for sending and receiving messages in between SuperMQ channels",
-		Subjects:          []string{"channels.>"},
-		Retention:         jetstream.LimitsPolicy,
-		MaxMsgsPerSubject: 1e6,
-		MaxAge:            time.Hour * 24,
-		MaxMsgSize:        1024 * 1024,
-		Discard:           jetstream.DiscardOld,
-		Storage:           jetstream.FileStorage,
-	}
 )
 
 var _ messaging.PubSub = (*pubsub)(nil)
@@ -54,36 +39,36 @@ type pubsub struct {
 // here: https://docs.nats.io/developing-with-nats/receiving/queues.
 // If the queue is empty, Subscribe will be used.
 func NewPubSub(ctx context.Context, url string, logger *slog.Logger, opts ...messaging.Option) (messaging.PubSub, error) {
-	conn, err := broker.Connect(url, broker.MaxReconnects(maxReconnects))
-	if err != nil {
-		return nil, err
-	}
-	js, err := jetstream.New(conn)
-	if err != nil {
-		return nil, err
-	}
-	stream, err := js.CreateStream(ctx, jsStreamConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	ret := &pubsub{
+	ps := &pubsub{
 		publisher: publisher{
-			js:     js,
-			conn:   conn,
-			prefix: chansPrefix,
+			options: defaultOptions(),
 		},
-		stream: stream,
-		logger: logger,
 	}
 
 	for _, opt := range opts {
-		if err := opt(ret); err != nil {
+		if err := opt(ps); err != nil {
 			return nil, err
 		}
 	}
 
-	return ret, nil
+	conn, err := broker.Connect(url, broker.MaxReconnects(maxReconnects))
+	if err != nil {
+		return nil, err
+	}
+	ps.conn = conn
+
+	js, err := jetstream.New(conn)
+	if err != nil {
+		return nil, err
+	}
+	stream, err := js.CreateStream(ctx, ps.jsStreamConfig)
+	if err != nil {
+		return nil, err
+	}
+	ps.js = js
+	ps.stream = stream
+
+	return ps, nil
 }
 
 func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig) error {

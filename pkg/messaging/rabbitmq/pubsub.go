@@ -15,14 +15,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const (
-	// SubjectAllChannels represents subject to subscribe for all the channels.
-	SubjectAllChannels = "channels.#"
-
-	exchangeName = "messages"
-	chansPrefix  = "channels"
-)
-
 var (
 	// ErrNotSubscribed indicates that the topic is not subscribed to.
 	ErrNotSubscribed = errors.New("not subscribed")
@@ -47,10 +39,24 @@ type pubsub struct {
 
 // NewPubSub returns RabbitMQ message publisher/subscriber.
 func NewPubSub(url string, logger *slog.Logger, opts ...messaging.Option) (messaging.PubSub, error) {
+	ps := &pubsub{
+		publisher: publisher{
+			options: defaultOptions(),
+		},
+		subscriptions: make(map[string]map[string]subscription),
+	}
+
+	for _, opt := range opts {
+		if err := opt(ps); err != nil {
+			return nil, err
+		}
+	}
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		return nil, err
 	}
+	ps.conn = conn
+
 	ch, err := conn.Channel()
 	if err != nil {
 		return nil, err
@@ -58,25 +64,9 @@ func NewPubSub(url string, logger *slog.Logger, opts ...messaging.Option) (messa
 	if err := ch.ExchangeDeclare(exchangeName, amqp.ExchangeTopic, true, false, false, false, nil); err != nil {
 		return nil, err
 	}
+	ps.channel = ch
 
-	ret := &pubsub{
-		publisher: publisher{
-			conn:     conn,
-			channel:  ch,
-			exchange: exchangeName,
-			prefix:   chansPrefix,
-		},
-		logger:        logger,
-		subscriptions: make(map[string]map[string]subscription),
-	}
-
-	for _, opt := range opts {
-		if err := opt(ret); err != nil {
-			return nil, err
-		}
-	}
-
-	return ret, nil
+	return ps, nil
 }
 
 func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig) error {

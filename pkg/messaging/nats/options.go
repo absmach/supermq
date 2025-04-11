@@ -5,51 +5,70 @@ package nats
 
 import (
 	"errors"
+	"time"
 
 	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-// ErrInvalidType is returned when the provided value is not of the expected type.
-var ErrInvalidType = errors.New("invalid type")
+var (
+	// ErrInvalidType is returned when the provided value is not of the expected type.
+	ErrInvalidType = errors.New("invalid type")
 
-// Prefix sets the prefix for the publisher.
+	jsStreamConfig = jetstream.StreamConfig{
+		Name:              "channels",
+		Description:       "SuperMQ stream for sending and receiving messages in between SuperMQ channels",
+		Subjects:          []string{"channels.>"},
+		Retention:         jetstream.LimitsPolicy,
+		MaxMsgsPerSubject: 1e6,
+		MaxAge:            time.Hour * 24,
+		MaxMsgSize:        1024 * 1024,
+		Discard:           jetstream.DiscardOld,
+		Storage:           jetstream.FileStorage,
+	}
+)
+
+const chansPrefix = "channels"
+
+type options struct {
+	prefix         string
+	jsStreamConfig jetstream.StreamConfig
+}
+
+func defaultOptions() options {
+	return options{
+		prefix:         chansPrefix,
+		jsStreamConfig: jsStreamConfig,
+	}
+}
+
+// Prefix sets the prefix for the publisher or subscriber.
 func Prefix(prefix string) messaging.Option {
 	return func(val interface{}) error {
-		p, ok := val.(*publisher)
-		if !ok {
+		switch v := val.(type) {
+		case *publisher:
+			v.prefix = prefix
+		case *pubsub:
+			v.prefix = prefix
+		default:
 			return ErrInvalidType
 		}
-
-		p.prefix = prefix
 
 		return nil
 	}
 }
 
-// JSStream sets the JetStream for the publisher.
-func JSStream(stream jetstream.JetStream) messaging.Option {
+// JSStreamConfig sets the JetStream for the publisher or subscriber.
+func JSStreamConfig(jsStreamConfig jetstream.StreamConfig) messaging.Option {
 	return func(val interface{}) error {
-		p, ok := val.(*publisher)
-		if !ok {
+		switch v := val.(type) {
+		case *publisher:
+			v.jsStreamConfig = jsStreamConfig
+		case *pubsub:
+			v.jsStreamConfig = jsStreamConfig
+		default:
 			return ErrInvalidType
 		}
-
-		p.js = stream
-
-		return nil
-	}
-}
-
-// Stream sets the Stream for the subscriber.
-func Stream(stream jetstream.Stream) messaging.Option {
-	return func(val interface{}) error {
-		p, ok := val.(*pubsub)
-		if !ok {
-			return ErrInvalidType
-		}
-
-		p.stream = stream
 
 		return nil
 	}

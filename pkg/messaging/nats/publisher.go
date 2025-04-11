@@ -28,38 +28,39 @@ const (
 var _ messaging.Publisher = (*publisher)(nil)
 
 type publisher struct {
-	js     jetstream.JetStream
-	conn   *broker.Conn
-	prefix string
+	js   jetstream.JetStream
+	conn *broker.Conn
+	options
 }
 
 // NewPublisher returns NATS message Publisher.
 func NewPublisher(ctx context.Context, url string, opts ...messaging.Option) (messaging.Publisher, error) {
-	conn, err := broker.Connect(url, broker.MaxReconnects(maxReconnects), broker.ReconnectBufSize(int(reconnectBufSize)))
-	if err != nil {
-		return nil, err
-	}
-	js, err := jetstream.New(conn)
-	if err != nil {
-		return nil, err
-	}
-	if _, err := js.CreateStream(ctx, jsStreamConfig); err != nil {
-		return nil, err
-	}
-
-	ret := &publisher{
-		js:     js,
-		conn:   conn,
-		prefix: chansPrefix,
+	pub := &publisher{
+		options: defaultOptions(),
 	}
 
 	for _, opt := range opts {
-		if err := opt(ret); err != nil {
+		if err := opt(pub); err != nil {
 			return nil, err
 		}
 	}
 
-	return ret, nil
+	conn, err := broker.Connect(url, broker.MaxReconnects(maxReconnects), broker.ReconnectBufSize(int(reconnectBufSize)))
+	if err != nil {
+		return nil, err
+	}
+	pub.conn = conn
+
+	js, err := jetstream.New(conn)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := js.CreateStream(ctx, pub.jsStreamConfig); err != nil {
+		return nil, err
+	}
+	pub.js = js
+
+	return pub, nil
 }
 
 func (pub *publisher) Publish(ctx context.Context, topic string, msg *messaging.Message) error {

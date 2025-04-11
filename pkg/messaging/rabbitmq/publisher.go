@@ -16,40 +16,39 @@ import (
 var _ messaging.Publisher = (*publisher)(nil)
 
 type publisher struct {
-	conn     *amqp.Connection
-	channel  *amqp.Channel
-	prefix   string
-	exchange string
+	conn    *amqp.Connection
+	channel *amqp.Channel
+	options
 }
 
 // NewPublisher returns RabbitMQ message Publisher.
 func NewPublisher(url string, opts ...messaging.Option) (messaging.Publisher, error) {
-	conn, err := amqp.Dial(url)
-	if err != nil {
-		return nil, err
-	}
-	ch, err := conn.Channel()
-	if err != nil {
-		return nil, err
-	}
-	if err := ch.ExchangeDeclare(exchangeName, amqp.ExchangeTopic, true, false, false, false, nil); err != nil {
-		return nil, err
-	}
-
-	ret := &publisher{
-		conn:     conn,
-		channel:  ch,
-		prefix:   chansPrefix,
-		exchange: exchangeName,
+	pub := &publisher{
+		options: defaultOptions(),
 	}
 
 	for _, opt := range opts {
-		if err := opt(ret); err != nil {
+		if err := opt(pub); err != nil {
 			return nil, err
 		}
 	}
 
-	return ret, nil
+	conn, err := amqp.Dial(url)
+	if err != nil {
+		return nil, err
+	}
+	pub.conn = conn
+
+	ch, err := conn.Channel()
+	if err != nil {
+		return nil, err
+	}
+	if err := ch.ExchangeDeclare(pub.exchange, amqp.ExchangeTopic, true, false, false, false, nil); err != nil {
+		return nil, err
+	}
+	pub.channel = ch
+
+	return pub, nil
 }
 
 func (pub *publisher) Publish(ctx context.Context, topic string, msg *messaging.Message) error {
