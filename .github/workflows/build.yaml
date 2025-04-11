@@ -51,11 +51,11 @@ jobs:
 
       - name: Compile check for rabbitmq
         run: |
-          SMQ_MESSAGE_BROKER_TYPE=rabbitmq make mqtt
+          SMQ_MESSAGE_BROKER_TYPE=msg_rabbitmq make mqtt
 
       - name: Compile check for redis
         run: |
-          SMQ_ES_TYPE=redis make mqtt
+          SMQ_ES_TYPE=es_redis make mqtt
 
       - name: Build and push Dockers
         run: |
