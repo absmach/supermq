@@ -29,18 +29,18 @@ INTERNAL_PROTO_FILES := $(shell find $(INTERNAL_PROTO_DIR) -name "*.proto" | sed
 ifneq ($(SMQ_MESSAGE_BROKER_TYPE),)
     SMQ_MESSAGE_BROKER_TYPE := $(SMQ_MESSAGE_BROKER_TYPE)
 else
-    SMQ_MESSAGE_BROKER_TYPE=nats
+    SMQ_MESSAGE_BROKER_TYPE=msg_nats
 endif
 
 ifneq ($(SMQ_ES_TYPE),)
     SMQ_ES_TYPE := $(SMQ_ES_TYPE)
 else
-    SMQ_ES_TYPE=nats
+    SMQ_ES_TYPE=es_nats
 endif
 
 define compile_service
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) \
-	go build -tags $(SMQ_MESSAGE_BROKER_TYPE) --tags $(SMQ_ES_TYPE) -ldflags "-s -w \
+	go build -tags $(SMQ_MESSAGE_BROKER_TYPE) -tags $(SMQ_ES_TYPE) -ldflags "-s -w \
 	-X 'github.com/absmach/supermq.BuildTime=$(TIME)' \
 	-X 'github.com/absmach/supermq.Version=$(VERSION)' \
 	-X 'github.com/absmach/supermq.Commit=$(COMMIT)'" \

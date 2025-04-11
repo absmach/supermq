@@ -1,8 +1,8 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build !nats && !rabbitmq
-// +build !nats,!rabbitmq
+//go:build !es_nats && !es_rabbitmq
+// +build !es_nats,!es_rabbitmq
 
 package store
 

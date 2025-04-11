@@ -1,8 +1,8 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build nats
-// +build nats
+//go:build es_nats
+// +build es_nats
 
 package store
 
@@ -19,7 +19,7 @@ import (
 const StreamAllEvents = "events.>"
 
 func init() {
-	log.Println("The binary was build using nats as the events store")
+	log.Println("The binary was build using Nats as the events store")
 }
 
 func NewPublisher(ctx context.Context, url string) (events.Publisher, error) {

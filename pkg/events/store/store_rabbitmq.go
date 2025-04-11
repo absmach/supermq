@@ -1,8 +1,8 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build rabbitmq
-// +build rabbitmq
+//go:build es_rabbitmq
+// +build es_rabbitmq
 
 package store
 
@@ -19,7 +19,7 @@ import (
 const StreamAllEvents = "events.#"
 
 func init() {
-	log.Println("The binary was build using rabbitmq as the events store")
+	log.Println("The binary was build using RabbitMQ as the events store")
 }
 
 func NewPublisher(ctx context.Context, url string) (events.Publisher, error) {
