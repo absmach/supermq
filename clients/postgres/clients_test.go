@@ -57,6 +57,8 @@ func TestClientsSave(t *testing.T) {
 	domainID := testsutil.GenerateUUID(t)
 	secret := testsutil.GenerateUUID(t)
 
+	duplicateClientID := testsutil.GenerateUUID(t)
+
 	cases := []struct {
 		desc    string
 		clients []clients.Client
@@ -314,6 +316,20 @@ func TestClientsSave(t *testing.T) {
 				},
 			},
 			err: errors.ErrMalformedEntity,
+		},
+		{
+			desc: "add client with duplicate name",
+			clients: []clients.Client{
+				{
+					ID:        duplicateClientID,
+					Domain:    validClient.Domain,
+					Name:      validClient.Name,
+					Metadata:  map[string]interface{}{"key": "different_value"},
+					CreatedAt: validTimestamp,
+					Status:    clients.EnabledStatus,
+				},
+			},
+			err: nil,
 		},
 	}
 	for _, tc := range cases {

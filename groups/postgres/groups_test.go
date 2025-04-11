@@ -82,6 +82,7 @@ func TestSave(t *testing.T) {
 	validChildGroupRes := validChildGroup
 	validChildGroupRes.Path = fmt.Sprintf("%s.%s", pgroup.Path, validChildGroupRes.ID)
 	validChildGroupRes.Level = 2
+	duplicateGroupID := testsutil.GenerateUUID(t)
 
 	cases := []struct {
 		desc  string
@@ -198,6 +199,32 @@ func TestSave(t *testing.T) {
 				Status:      groups.EnabledStatus,
 			},
 			err: repoerr.ErrMalformedEntity,
+		},
+		{
+			desc: "add group with duplicate name",
+			group: groups.Group{
+				ID:          duplicateGroupID,
+				Domain:      validGroup.Domain,
+				Name:        validGroup.Name,
+				Description: strings.Repeat("b", 64),
+				Metadata:    map[string]interface{}{"key": "different_value"},
+				CreatedAt:   validTimestamp,
+				Status:      groups.EnabledStatus,
+				Path:        duplicateGroupID,
+				Level:       1,
+			},
+			resp: groups.Group{
+				ID:          duplicateGroupID,
+				Domain:      validGroup.Domain,
+				Name:        validGroup.Name,
+				Description: strings.Repeat("b", 64),
+				Metadata:    map[string]interface{}{"key": "different_value"},
+				CreatedAt:   validTimestamp,
+				Status:      groups.EnabledStatus,
+				Path:        duplicateGroupID,
+				Level:       1,
+			},
+			err: nil,
 		},
 	}
 
