@@ -15,8 +15,8 @@ import (
 	"github.com/absmach/supermq/pkg/messaging/rabbitmq"
 )
 
-// SubjectAllChannels represents subject to subscribe for all the channels.
-const SubjectAllChannels = "channels.#"
+// SubjectAllMessages represents subject to subscribe for all the messages.
+const SubjectAllMessages = messaging.MsgTopicPrefix + ".#"
 
 func init() {
 	log.Println("The binary was build using RabbitMQ as the message broker")

@@ -37,6 +37,7 @@ type subscribeEvent struct {
 	operation    string
 	clientID     string
 	subscriberID string
+	domainID     string
 	channelID    string
 	subtopic     string
 }
@@ -46,6 +47,7 @@ func (se subscribeEvent) Encode() (map[string]interface{}, error) {
 		"operation":     se.operation,
 		"client_id":     se.clientID,
 		"subscriber_id": se.subscriberID,
+		"domainID":      se.domainID,
 		"channel_id":    se.channelID,
 		"subtopic":      se.subtopic,
 	}, nil

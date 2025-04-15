@@ -7,8 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"net/url"
-	"regexp"
 	"strings"
 	"time"
 
@@ -37,9 +35,7 @@ const (
 
 // Error wrappers for MQTT errors.
 var (
-	ErrMalformedSubtopic            = errors.New("malformed subtopic")
 	ErrClientNotInitialized         = errors.New("client is not initialized")
-	ErrMalformedTopic               = errors.New("malformed topic")
 	ErrMissingClientID              = errors.New("client_id not found")
 	ErrMissingTopicPub              = errors.New("failed to publish due to missing topic")
 	ErrMissingTopicSub              = errors.New("failed to subscribe due to missing topic")
@@ -49,15 +45,11 @@ var (
 	ErrFailedPublish                = errors.New("failed to publish")
 	ErrFailedDisconnect             = errors.New("failed to disconnect")
 	ErrFailedPublishDisconnectEvent = errors.New("failed to publish disconnect event")
-	ErrFailedParseSubtopic          = errors.New("failed to parse subtopic")
 	ErrFailedPublishConnectEvent    = errors.New("failed to publish connect event")
 	ErrFailedSubscribeEvent         = errors.New("failed to publish subscribe event")
 	ErrFailedPublishToMsgBroker     = errors.New("failed to publish to supermq message broker")
-)
 
-var (
 	errInvalidUserId = errors.New("invalid user id")
-	channelRegExp    = regexp.MustCompile(`^\/?m\/([\w\-]+)\/c\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
 )
 
 // Event implements events.Event interface.
@@ -159,28 +151,16 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 	}
 	h.logger.Info(fmt.Sprintf(LogInfoPublished, s.ID, *topic))
 
-	// Topics are in the format:
-	// m/<domain_id>/c/<channel_id>/<subtopic>/.../ct/<content_type>
-
-	channelParts := channelRegExp.FindStringSubmatch(*topic)
-	if len(channelParts) < 3 {
-		return errors.Wrap(ErrFailedPublish, ErrMalformedTopic)
-	}
-
-	domainID := channelParts[1]
-	chanID := channelParts[2]
-	subtopic := channelParts[3]
-
-	subtopic, err := parseSubtopic(subtopic)
+	domainID, chanID, subTopic, err := messaging.ParseTopic(*topic)
 	if err != nil {
-		return errors.Wrap(ErrFailedParseSubtopic, err)
+		return errors.Wrap(ErrFailedPublish, err)
 	}
 
 	msg := messaging.Message{
 		Protocol:  protocol,
 		Domain:    domainID,
 		Channel:   chanID,
-		Subtopic:  subtopic,
+		Subtopic:  subTopic,
 		Publisher: s.Username,
 		Payload:   *payload,
 		Created:   time.Now().UnixNano(),
@@ -227,19 +207,10 @@ func (h *handler) Disconnect(ctx context.Context) error {
 }
 
 func (h *handler) authAccess(ctx context.Context, clientID, topic string, msgType connections.ConnType) error {
-	// Topics are in the format:
-	// m/<domain_id>/c/<channel_id>/<subtopic>/.../ct/<content_type>
-	if !channelRegExp.MatchString(topic) {
-		return ErrMalformedTopic
+	domainID, chanID, _, err := messaging.ParseTopic(topic)
+	if err != nil {
+		return err
 	}
-
-	channelParts := channelRegExp.FindStringSubmatch(topic)
-	if len(channelParts) < 3 {
-		return ErrMalformedTopic
-	}
-
-	domainID := channelParts[1]
-	chanID := channelParts[2]
 
 	ar := &grpcChannelsV1.AuthzReq{
 		Type:       uint32(msgType),
@@ -257,33 +228,4 @@ func (h *handler) authAccess(ctx context.Context, clientID, topic string, msgTyp
 	}
 
 	return nil
-}
-
-func parseSubtopic(subtopic string) (string, error) {
-	if subtopic == "" {
-		return subtopic, nil
-	}
-
-	subtopic, err := url.QueryUnescape(subtopic)
-	if err != nil {
-		return "", ErrMalformedSubtopic
-	}
-	subtopic = strings.ReplaceAll(subtopic, "/", ".")
-
-	elems := strings.Split(subtopic, ".")
-	filteredElems := []string{}
-	for _, elem := range elems {
-		if elem == "" {
-			continue
-		}
-
-		if len(elem) > 1 && (strings.Contains(elem, "*") || strings.Contains(elem, ">")) {
-			return "", ErrMalformedSubtopic
-		}
-
-		filteredElems = append(filteredElems, elem)
-	}
-
-	subtopic = strings.Join(filteredElems, ".")
-	return subtopic, nil
 }
