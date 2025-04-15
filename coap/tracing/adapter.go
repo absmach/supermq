@@ -66,11 +66,12 @@ func (tm *tracingServiceMiddleware) Unsubscribe(ctx context.Context, key, domain
 }
 
 // DisconnectHandler traces a CoAP disconnect operation.
-func (tm *tracingServiceMiddleware) DisconnectHandler(ctx context.Context, chanID, subptopic, token string) error {
+func (tm *tracingServiceMiddleware) DisconnectHandler(ctx context.Context, domainID, chanID, subptopic, token string) error {
 	ctx, span := tm.tracer.Start(ctx, disconnectHandlerOp, trace.WithAttributes(
+		attribute.String("domain_id", domainID),
 		attribute.String("channel_id", chanID),
 		attribute.String("subtopic", subptopic),
 	))
 	defer span.End()
-	return tm.svc.DisconnectHandler(ctx, chanID, subptopic, token)
+	return tm.svc.DisconnectHandler(ctx, domainID, chanID, subptopic, token)
 }

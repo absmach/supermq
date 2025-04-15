@@ -21,7 +21,7 @@ import (
 
 var errFailedToDisconnectClient = errors.New("failed to disconnect client")
 
-const chansPrefix = "channels"
+const msgPrefix = "m"
 
 // Service specifies CoAP service API.
 type Service interface {
@@ -37,7 +37,7 @@ type Service interface {
 	Unsubscribe(ctx context.Context, key, domainID, chanID, subptopic, token string) error
 
 	// DisconnectHandler method is used to disconnected the client
-	DisconnectHandler(ctx context.Context, chanID, subptopic, token string) error
+	DisconnectHandler(ctx context.Context, domainID, chanID, subptopic, token string) error
 }
 
 var _ Service = (*adapterService)(nil)
@@ -116,11 +116,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, domainID, chanID,
 		return svcerr.ErrAuthorization
 	}
 
-	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
-	if subtopic != "" {
-		subject = fmt.Sprintf("%s.%s", subject, subtopic)
-	}
-
+	subject := messaging.EncodeToInternalSubject(domainID, chanID, subtopic)
 	authzc := newAuthzClient(clientID, domainID, chanID, subtopic, svc.channels, c)
 	subCfg := messaging.SubscriberConfig{
 		ID:       c.Token(),
@@ -156,16 +152,13 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, key, domainID, chanI
 		return svcerr.ErrAuthorization
 	}
 
-	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
-	if subtopic != "" {
-		subject = fmt.Sprintf("%s.%s", subject, subtopic)
-	}
+	subject := messaging.EncodeToInternalSubject(domainID, chanID, subtopic)
 
 	return svc.pubsub.Unsubscribe(ctx, token, subject)
 }
 
-func (svc *adapterService) DisconnectHandler(ctx context.Context, chanID, subtopic, token string) error {
-	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
+func (svc *adapterService) DisconnectHandler(ctx context.Context, domainID, chanID, subtopic, token string) error {
+	subject := fmt.Sprintf("%s.%s.c.%s", msgPrefix, domainID, chanID)
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}

@@ -14,7 +14,7 @@ var ErrInvalidType = errors.New("invalid type")
 
 const (
 	exchangeName = "messages"
-	chansPrefix  = "channels"
+	msgPrefix    = "m"
 )
 
 type options struct {
@@ -24,7 +24,7 @@ type options struct {
 
 func defaultOptions() options {
 	return options{
-		prefix:   chansPrefix,
+		prefix:   msgPrefix,
 		exchange: exchangeName,
 	}
 }

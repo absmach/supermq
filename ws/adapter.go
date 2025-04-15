@@ -17,7 +17,7 @@ import (
 	"github.com/absmach/supermq/pkg/policies"
 )
 
-const chansPrefix = "channels"
+const msgPrefix = "m"
 
 var (
 	// ErrFailedSubscription indicates that client couldn't subscribe to specified channel.
@@ -67,7 +67,9 @@ func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientKey, 
 		return svcerr.ErrAuthorization
 	}
 
-	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
+	c.id = clientID
+
+	subject := fmt.Sprintf("%s.%s.c.%s", msgPrefix, domainID, chanID)
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}

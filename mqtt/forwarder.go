@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"strings"
 
 	"github.com/absmach/supermq/pkg/messaging"
 )
@@ -47,12 +46,8 @@ func handle(ctx context.Context, pub messaging.Publisher, logger *slog.Logger) h
 		if msg.GetProtocol() == protocol {
 			return nil
 		}
-		// Use concatenation instead of fmt.Sprintf for the
-		// sake of simplicity and performance.
-		topic := "m/" + msg.GetDomain() + "/c/" + msg.GetChannel()
-		if msg.GetSubtopic() != "" {
-			topic = topic + "/" + strings.ReplaceAll(msg.GetSubtopic(), ".", "/")
-		}
+
+		topic := msg.EncodeToMQTTTopic()
 
 		go func() {
 			if err := pub.Publish(ctx, topic, msg); err != nil {

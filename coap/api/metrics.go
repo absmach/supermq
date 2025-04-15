@@ -62,11 +62,11 @@ func (mm *metricsMiddleware) Unsubscribe(ctx context.Context, key, domainID, cha
 }
 
 // DisconnectHandler instruments DisconnectHandler method with metrics.
-func (mm *metricsMiddleware) DisconnectHandler(ctx context.Context, chanID, subtopic, token string) error {
+func (mm *metricsMiddleware) DisconnectHandler(ctx context.Context, domainID, chanID, subtopic, token string) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "disconnect_handler").Add(1)
 		mm.latency.With("method", "disconnect_handler").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.DisconnectHandler(ctx, chanID, subtopic, token)
+	return mm.svc.DisconnectHandler(ctx, domainID, chanID, subtopic, token)
 }
