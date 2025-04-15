@@ -62,6 +62,17 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 					`ALTER TABLE channels ADD CONSTRAINT channels_domain_id_name_key UNIQUE (domain_id, name)`,
 				},
 			},
+			{
+				Id: "channels_03",
+				Up: []string{
+					`ALTER TABLE channels ADD COLUMN route VARCHAR(36) NOT NULL;`,
+					`ALTER TABLE channels ADD CONSTRAINT unique_domain_route UNIQUE (domain_id, route);`,
+				},
+				Down: []string{
+					`ALTER TABLE channels DROP CONSTRAINT unique_domain_route;`,
+					`ALTER TABLE channels DROP COLUMN route;`,
+				},
+			},
 		},
 	}
 	channelsMigration.Migrations = append(channelsMigration.Migrations, rolesMigration.Migrations...)
