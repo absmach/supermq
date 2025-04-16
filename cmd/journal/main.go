@@ -11,6 +11,7 @@ import (
 	"log/slog"
 	"net/url"
 	"os"
+	"time"
 
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/supermq"
@@ -50,12 +51,20 @@ const (
 )
 
 type config struct {
-	LogLevel      string  `env:"SMQ_JOURNAL_LOG_LEVEL"   envDefault:"info"`
-	ESURL         string  `env:"SMQ_ES_URL"              envDefault:"nats://localhost:4222"`
-	JaegerURL     url.URL `env:"SMQ_JAEGER_URL"          envDefault:"http://localhost:4318/v1/traces"`
-	SendTelemetry bool    `env:"SMQ_SEND_TELEMETRY"      envDefault:"true"`
-	InstanceID    string  `env:"SMQ_JOURNAL_INSTANCE_ID" envDefault:""`
-	TraceRatio    float64 `env:"SMQ_JAEGER_TRACE_RATIO"  envDefault:"1.0"`
+	LogLevel                   string        `env:"SMQ_JOURNAL_LOG_LEVEL"   envDefault:"info"`
+	ESURL                      string        `env:"SMQ_ES_URL"              envDefault:"nats://localhost:4222"`
+	JaegerURL                  url.URL       `env:"SMQ_JAEGER_URL"          envDefault:"http://localhost:4318/v1/traces"`
+	SendTelemetry              bool          `env:"SMQ_SEND_TELEMETRY"      envDefault:"true"`
+	InstanceID                 string        `env:"SMQ_JOURNAL_INSTANCE_ID" envDefault:""`
+	TraceRatio                 float64       `env:"SMQ_JAEGER_TRACE_RATIO"  envDefault:"1.0"`
+	AuthCalloutURLs            []string      `env:"SMQ_AUTH_CALLOUT_URLS"             envDefault:"" envSeparator:","`
+	AuthCalloutMethod          string        `env:"SMQ_AUTH_CALLOUT_METHOD"           envDefault:"POST"`
+	AuthCalloutTLSVerification bool          `env:"SMQ_AUTH_CALLOUT_TLS_VERIFICATION" envDefault:"true"`
+	AuthCalloutTimeout         time.Duration `env:"SMQ_AUTH_CALLOUT_TIMEOUT"          envDefault:"10s"`
+	AuthCalloutCACert          string        `env:"SMQ_AUTH_CALLOUT_CA_CERT"          envDefault:""`
+	AuthCalloutCert            string        `env:"SMQ_AUTH_CALLOUT_CERT"             envDefault:""`
+	AuthCalloutKey             string        `env:"SMQ_AUTH_CALLOUT_KEY"              envDefault:""`
+	AuthCalloutPermissions     []string      `env:"SMQ_AUTH_CALLOUT_INVOKE_PERMISSIONS" envDefault:"" envSeparator:","`
 }
 
 func main() {
@@ -127,7 +136,14 @@ func main() {
 	}
 	defer domainsHandler.Close()
 
-	authz, authzHandler, err := authsvcAuthz.NewAuthorization(ctx, authClientCfg, domAuthz)
+	client, err := authsvcAuthz.NewCalloutClient(cfg.AuthCalloutTLSVerification, cfg.AuthCalloutCACert, cfg.AuthCalloutKey, cfg.AuthCalloutCACert, cfg.AuthCalloutTimeout)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+
+	authz, authzHandler, err := authsvcAuthz.NewAuthorization(ctx, authClientCfg, domAuthz, client, cfg.AuthCalloutMethod, cfg.AuthCalloutURLs, cfg.AuthCalloutPermissions)
 	if err != nil {
 		logger.Error(err.Error())
 		exitCode = 1

@@ -5,6 +5,7 @@ package authsvc
 
 import (
 	"context"
+	"net/http"
 
 	grpcAuthV1 "github.com/absmach/supermq/api/grpc/auth/v1"
 	"github.com/absmach/supermq/auth/api/grpc/auth"
@@ -21,11 +22,12 @@ import (
 type authorization struct {
 	authSvcClient grpcAuthV1.AuthServiceClient
 	domains       pkgDomians.Authorization
+	callback      authz.CallBack
 }
 
 var _ authz.Authorization = (*authorization)(nil)
 
-func NewAuthorization(ctx context.Context, cfg grpcclient.Config, domainsAuthz pkgDomians.Authorization) (authz.Authorization, grpcclient.Handler, error) {
+func NewAuthorization(ctx context.Context, cfg grpcclient.Config, domainsAuthz pkgDomians.Authorization, httpClient *http.Client, authCalloutMethod string, authCalloutURLs, authCalloutPermissions []string) (authz.Authorization, grpcclient.Handler, error) {
 	client, err := grpcclient.NewHandler(cfg)
 	if err != nil {
 		return nil, nil, err
@@ -38,10 +40,17 @@ func NewAuthorization(ctx context.Context, cfg grpcclient.Config, domainsAuthz p
 	if err != nil || resp.GetStatus() != grpchealth.HealthCheckResponse_SERVING {
 		return nil, nil, grpcclient.ErrSvcNotServing
 	}
+
+	callback, err := NewCallback(httpClient, authCalloutMethod, authCalloutURLs, authCalloutPermissions)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	authSvcClient := auth.NewAuthClient(client.Connection(), cfg.Timeout)
 	return authorization{
 		authSvcClient: authSvcClient,
 		domains:       domainsAuthz,
+		callback:      callback,
 	}, client, nil
 }
 
@@ -74,6 +83,11 @@ func (a authorization) Authorize(ctx context.Context, pr authz.PolicyReq) error 
 	if err != nil {
 		return errors.Wrap(errors.ErrAuthorization, err)
 	}
+
+	if err := a.callback.Authorize(ctx, pr); err != nil {
+		return err
+	}
+
 	if !res.GetAuthorized() {
 		return errors.ErrAuthorization
 	}

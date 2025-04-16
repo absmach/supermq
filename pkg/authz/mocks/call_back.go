@@ -10,7 +10,7 @@ package mocks
 import (
 	"context"
 
-	"github.com/absmach/supermq/pkg/policies"
+	"github.com/absmach/supermq/pkg/authz"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -42,7 +42,7 @@ func (_m *CallBack) EXPECT() *CallBack_Expecter {
 }
 
 // Authorize provides a mock function for the type CallBack
-func (_mock *CallBack) Authorize(ctx context.Context, pr policies.Policy) error {
+func (_mock *CallBack) Authorize(ctx context.Context, pr authz.PolicyReq) error {
 	ret := _mock.Called(ctx, pr)
 
 	if len(ret) == 0 {
@@ -50,7 +50,7 @@ func (_mock *CallBack) Authorize(ctx context.Context, pr policies.Policy) error 
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, policies.Policy) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, authz.PolicyReq) error); ok {
 		r0 = returnFunc(ctx, pr)
 	} else {
 		r0 = ret.Error(0)
@@ -70,9 +70,9 @@ func (_e *CallBack_Expecter) Authorize(ctx interface{}, pr interface{}) *CallBac
 	return &CallBack_Authorize_Call{Call: _e.mock.On("Authorize", ctx, pr)}
 }
 
-func (_c *CallBack_Authorize_Call) Run(run func(ctx context.Context, pr policies.Policy)) *CallBack_Authorize_Call {
+func (_c *CallBack_Authorize_Call) Run(run func(ctx context.Context, pr authz.PolicyReq)) *CallBack_Authorize_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(policies.Policy))
+		run(args[0].(context.Context), args[1].(authz.PolicyReq))
 	})
 	return _c
 }
@@ -82,7 +82,7 @@ func (_c *CallBack_Authorize_Call) Return(err error) *CallBack_Authorize_Call {
 	return _c
 }
 
-func (_c *CallBack_Authorize_Call) RunAndReturn(run func(ctx context.Context, pr policies.Policy) error) *CallBack_Authorize_Call {
+func (_c *CallBack_Authorize_Call) RunAndReturn(run func(ctx context.Context, pr authz.PolicyReq) error) *CallBack_Authorize_Call {
 	_c.Call.Return(run)
 	return _c
 }

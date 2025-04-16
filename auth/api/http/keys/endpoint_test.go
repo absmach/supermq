@@ -40,7 +40,6 @@ const (
 var (
 	krepo      *mocks.KeyRepository
 	pEvaluator *policymocks.Evaluator
-	callback   *mocks.CallBack
 )
 
 type issueRequest struct {
@@ -82,9 +81,8 @@ func newService() auth.Service {
 	pService := new(policymocks.Service)
 	pEvaluator = new(policymocks.Evaluator)
 	t := jwt.New([]byte(secret))
-	callback = new(mocks.CallBack)
 
-	return auth.New(krepo, pRepo, cache, hash, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration, callback)
+	return auth.New(krepo, pRepo, cache, hash, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration)
 }
 
 func newServer(svc auth.Service) *httptest.Server {
@@ -103,11 +101,9 @@ func toJSON(data interface{}) string {
 func TestIssue(t *testing.T) {
 	svc := newService()
 	policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Role: auth.UserRole, IssuedAt: time.Now(), Subject: id})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	policyCall.Unset()
-	callBackCall.Unset()
 
 	ts := newServer(svc)
 	defer ts.Close()
@@ -207,20 +203,17 @@ func TestIssue(t *testing.T) {
 		}
 		repocall := krepo.On("Save", mock.Anything, mock.Anything).Return("", nil)
 		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-		callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 		repocall.Unset()
 		policyCall.Unset()
-		callBackCall.Unset()
 	}
 }
 
 func TestRetrieve(t *testing.T) {
 	svc := newService()
 	policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Role: auth.UserRole, IssuedAt: time.Now(), Subject: id})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	key := auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), Subject: id}
@@ -230,7 +223,6 @@ func TestRetrieve(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	repocall.Unset()
 	policyCall.Unset()
-	callBackCall.Unset()
 
 	ts := newServer(svc)
 	defer ts.Close()
@@ -288,21 +280,18 @@ func TestRetrieve(t *testing.T) {
 			token:  tc.token,
 		}
 		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-		callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 		repocall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(tc.key, tc.err)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 		repocall.Unset()
 		policyCall.Unset()
-		callBackCall.Unset()
 	}
 }
 
 func TestRevoke(t *testing.T) {
 	svc := newService()
 	policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Role: auth.UserRole, IssuedAt: time.Now(), Subject: id})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	key := auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), Subject: id}
@@ -312,7 +301,6 @@ func TestRevoke(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	repocall.Unset()
 	policyCall.Unset()
-	callBackCall.Unset()
 
 	ts := newServer(svc)
 	defer ts.Close()

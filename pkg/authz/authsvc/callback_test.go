@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package auth_test
+package authsvc_test
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/absmach/supermq/auth"
+	"github.com/absmach/supermq/pkg/authz"
+	"github.com/absmach/supermq/pkg/authz/authsvc"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
-	"github.com/absmach/supermq/pkg/policies"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCallback_Authorize(t *testing.T) {
-	policy := policies.Policy{
+	policy := authz.PolicyReq{
 		Domain:          "test-domain",
 		Subject:         "test-subject",
 		SubjectType:     "user",
@@ -71,7 +71,7 @@ func TestCallback_Authorize(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			cb, err := auth.NewCallback(http.DefaultClient, tc.method, []string{ts.URL}, []string{})
+			cb, err := authsvc.NewCallback(http.DefaultClient, tc.method, []string{ts.URL}, []string{})
 			assert.NoError(t, err)
 			err = cb.Authorize(context.Background(), policy)
 
@@ -96,21 +96,21 @@ func TestCallback_MultipleURLs(t *testing.T) {
 	}))
 	defer ts2.Close()
 
-	cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{ts1.URL, ts2.URL}, []string{})
+	cb, err := authsvc.NewCallback(http.DefaultClient, http.MethodPost, []string{ts1.URL, ts2.URL}, []string{})
 	assert.NoError(t, err)
-	err = cb.Authorize(context.Background(), policies.Policy{})
+	err = cb.Authorize(context.Background(), authz.PolicyReq{})
 	assert.NoError(t, err)
 }
 
 func TestCallback_InvalidURL(t *testing.T) {
-	cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{"http://invalid-url"}, []string{})
+	cb, err := authsvc.NewCallback(http.DefaultClient, http.MethodPost, []string{"http://invalid-url"}, []string{})
 	assert.NoError(t, err)
-	err = cb.Authorize(context.Background(), policies.Policy{})
+	err = cb.Authorize(context.Background(), authz.PolicyReq{})
 	assert.Error(t, err)
 }
 
 func TestCallback_InvalidMethod(t *testing.T) {
-	_, err := auth.NewCallback(http.DefaultClient, "invalid-method", []string{"http://example.com"}, []string{})
+	_, err := authsvc.NewCallback(http.DefaultClient, "invalid-method", []string{"http://example.com"}, []string{})
 	assert.Error(t, err)
 }
 
@@ -123,22 +123,22 @@ func TestCallback_CancelledContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{ts.URL}, []string{})
+	cb, err := authsvc.NewCallback(http.DefaultClient, http.MethodPost, []string{ts.URL}, []string{})
 	assert.NoError(t, err)
-	err = cb.Authorize(ctx, policies.Policy{})
+	err = cb.Authorize(ctx, authz.PolicyReq{})
 	assert.Error(t, err)
 }
 
 func TestNewCallback_NilClient(t *testing.T) {
-	cb, err := auth.NewCallback(nil, http.MethodPost, []string{"test"}, []string{})
+	cb, err := authsvc.NewCallback(nil, http.MethodPost, []string{"test"}, []string{})
 	assert.NoError(t, err)
 	assert.NotNil(t, cb)
 }
 
 func TestCallback_NoURL(t *testing.T) {
-	cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{}, []string{})
+	cb, err := authsvc.NewCallback(http.DefaultClient, http.MethodPost, []string{}, []string{})
 	assert.NoError(t, err)
-	err = cb.Authorize(context.Background(), policies.Policy{})
+	err = cb.Authorize(context.Background(), authz.PolicyReq{})
 	assert.NoError(t, err)
 }
 
@@ -155,10 +155,10 @@ func TestCallback_PermissionFiltering(t *testing.T) {
 		webhookCalled = false
 		allowedPermissions := []string{"create_client", "delete_channel"}
 
-		cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{ts.URL}, allowedPermissions)
+		cb, err := authsvc.NewCallback(http.DefaultClient, http.MethodPost, []string{ts.URL}, allowedPermissions)
 		assert.NoError(t, err)
 
-		err = cb.Authorize(context.Background(), policies.Policy{
+		err = cb.Authorize(context.Background(), authz.PolicyReq{
 			Permission: "create_client",
 		})
 		assert.NoError(t, err)
@@ -169,10 +169,10 @@ func TestCallback_PermissionFiltering(t *testing.T) {
 		webhookCalled = false
 		allowedPermissions := []string{"create_client", "delete_channel"}
 
-		cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{ts.URL}, allowedPermissions)
+		cb, err := authsvc.NewCallback(http.DefaultClient, http.MethodPost, []string{ts.URL}, allowedPermissions)
 		assert.NoError(t, err)
 
-		err = cb.Authorize(context.Background(), policies.Policy{
+		err = cb.Authorize(context.Background(), authz.PolicyReq{
 			Permission: "read_channel",
 		})
 		assert.NoError(t, err)
@@ -183,10 +183,10 @@ func TestCallback_PermissionFiltering(t *testing.T) {
 		webhookCalled = false
 		allowedPermissions := []string{}
 
-		cb, err := auth.NewCallback(http.DefaultClient, http.MethodPost, []string{ts.URL}, allowedPermissions)
+		cb, err := authsvc.NewCallback(http.DefaultClient, http.MethodPost, []string{ts.URL}, allowedPermissions)
 		assert.NoError(t, err)
 
-		err = cb.Authorize(context.Background(), policies.Policy{
+		err = cb.Authorize(context.Background(), authz.PolicyReq{
 			Permission: "any_permission",
 		})
 		assert.NoError(t, err)

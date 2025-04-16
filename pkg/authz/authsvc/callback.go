@@ -1,19 +1,23 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package auth
+package authsvc
 
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
+	"time"
 
+	"github.com/absmach/supermq/pkg/authz"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
-	"github.com/absmach/supermq/pkg/policies"
 )
 
 type callback struct {
@@ -23,13 +27,8 @@ type callback struct {
 	allowedPermission map[string]struct{}
 }
 
-// CallBack send auth request to an external service.
-type CallBack interface {
-	Authorize(ctx context.Context, pr policies.Policy) error
-}
-
 // NewCallback creates a new instance of CallBack.
-func NewCallback(httpClient *http.Client, method string, urls []string, permissions []string) (CallBack, error) {
+func NewCallback(httpClient *http.Client, method string, urls []string, permissions []string) (authz.CallBack, error) {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
@@ -50,7 +49,7 @@ func NewCallback(httpClient *http.Client, method string, urls []string, permissi
 	}, nil
 }
 
-func (c *callback) Authorize(ctx context.Context, pr policies.Policy) error {
+func (c *callback) Authorize(ctx context.Context, pr authz.PolicyReq) error {
 	if len(c.urls) == 0 {
 		return nil
 	}
@@ -124,4 +123,38 @@ func (c *callback) makeRequest(ctx context.Context, urlStr string, params map[st
 	}
 
 	return nil
+}
+
+func NewCalloutClient(authCalloutTLSVerification bool, authCalloutCert, authCalloutKey, authCalloutCACert string, authCalloutTimeout time.Duration) (*http.Client, error) {
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: !authCalloutTLSVerification,
+	}
+	if authCalloutCert != "" || authCalloutKey != "" {
+		clientTLSCert, err := tls.LoadX509KeyPair(authCalloutCert, authCalloutKey)
+		if err != nil {
+			return nil, err
+		}
+		certPool, err := x509.SystemCertPool()
+		if err != nil {
+			return nil, err
+		}
+		caCert, err := os.ReadFile(authCalloutCACert)
+		if err != nil {
+			return nil, err
+		}
+		if !certPool.AppendCertsFromPEM(caCert) {
+			return nil, errors.New("failed to append CA certificate")
+		}
+		tlsConfig.RootCAs = certPool
+		tlsConfig.Certificates = []tls.Certificate{clientTLSCert}
+	}
+
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsConfig,
+		},
+		Timeout: authCalloutTimeout,
+	}
+
+	return httpClient, nil
 }
