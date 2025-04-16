@@ -18,8 +18,10 @@ import (
 	"github.com/absmach/supermq"
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
+	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/authn/authsvc"
+	domainsAuthz "github.com/absmach/supermq/pkg/domains/grpcclient"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	jaegerclient "github.com/absmach/supermq/pkg/jaeger"
 	"github.com/absmach/supermq/pkg/messaging"
@@ -44,6 +46,7 @@ const (
 	envPrefixClients  = "SMQ_CLIENTS_GRPC_"
 	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
 	envPrefixAuth     = "SMQ_AUTH_GRPC_"
+	envPrefixDomains  = "SMQ_DOMAINS_GRPC_"
 	defSvcHTTPPort    = "8190"
 	targetWSPort      = "8191"
 	targetWSHost      = "localhost"
@@ -95,6 +98,22 @@ func main() {
 		Port: targetWSPort,
 		Host: targetWSHost,
 	}
+
+	domsGrpcCfg := grpcclient.Config{}
+	if err := env.ParseWithOptions(&domsGrpcCfg, env.Options{Prefix: envPrefixDomains}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load domains gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+	_, domainsClient, domainsHandler, err := domainsAuthz.NewAuthorization(ctx, domsGrpcCfg)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer domainsHandler.Close()
+
+	logger.Info("Domains service gRPC client successfully connected to domains gRPC server " + domainsHandler.Secure())
 
 	clientsClientCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&clientsClientCfg, env.Options{Prefix: envPrefixClients}); err != nil {
@@ -174,7 +193,7 @@ func main() {
 		return
 	}
 
-	svc := newService(clientsClient, channelsClient, nps, logger, tracer)
+	svc := newService(clientsClient, channelsClient, domainsClient, nps, logger, tracer)
 
 	hs := httpserver.NewServer(ctx, cancel, svcName, targetServerConfig, httpapi.MakeHandler(ctx, svc, logger, cfg.InstanceID), logger)
 
@@ -200,8 +219,8 @@ func main() {
 	}
 }
 
-func newService(clientsClient grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, nps messaging.PubSub, logger *slog.Logger, tracer trace.Tracer) ws.Service {
-	svc := ws.New(clientsClient, channels, nps)
+func newService(clientsClient grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient, nps messaging.PubSub, logger *slog.Logger, tracer trace.Tracer) ws.Service {
+	svc := ws.New(clientsClient, channels, domains, nps)
 	svc = tracing.New(tracer, svc)
 	svc = httpapi.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics("ws_adapter", "api")

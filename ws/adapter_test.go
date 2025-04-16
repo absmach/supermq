@@ -13,6 +13,7 @@ import (
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	climocks "github.com/absmach/supermq/clients/mocks"
+	dmocks "github.com/absmach/supermq/domains/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/connections"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -51,8 +52,9 @@ func newService() (ws.Service, *mocks.PubSub, *climocks.ClientsServiceClient, *c
 	pubsub := new(mocks.PubSub)
 	clients := new(climocks.ClientsServiceClient)
 	channels := new(chmocks.ChannelsServiceClient)
+	domains := new(dmocks.DomainsServiceClient)
 
-	return ws.New(clients, channels, pubsub), pubsub, clients, channels
+	return ws.New(clients, channels, domains, pubsub), pubsub, clients, channels
 }
 
 func TestSubscribe(t *testing.T) {

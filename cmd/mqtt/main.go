@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"regexp"
 	"syscall"
 	"time"
 
@@ -23,6 +24,9 @@ import (
 	"github.com/absmach/mgate/pkg/mqtt/websocket"
 	"github.com/absmach/mgate/pkg/session"
 	"github.com/absmach/supermq"
+	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
+	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
+	grpcCommonV1 "github.com/absmach/supermq/api/grpc/common/v1"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/mqtt"
 	"github.com/absmach/supermq/mqtt/events"
@@ -41,6 +45,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/eclipse/paho.mqtt.golang/packets"
 	"golang.org/x/sync/errgroup"
+	api "github.com/absmach/supermq/api/http"
 )
 
 const (
@@ -48,6 +53,11 @@ const (
 	envPrefixClients  = "SMQ_CLIENTS_GRPC_"
 	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
 	wsPathPrefix      = "/mqtt"
+)
+
+var (
+	channelRegExp     = regexp.MustCompile(`^\/?m\/([\w\-]+)\/c\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
+	errMalformedTopic = errors.New("malformed topic")
 )
 
 type config struct {
@@ -347,4 +357,88 @@ func (ic interceptor) Intercept(ctx context.Context, pkt packets.ControlPacket, 
 	}
 
 	return pkt, nil
+}
+
+type preInterceptor struct {
+	domains  grpcDomainsV1.DomainsServiceClient
+	channels grpcChannelsV1.ChannelsServiceClient
+}
+
+func (ic preInterceptor) Intercept(ctx context.Context, pkt packets.ControlPacket, dir session.Direction) (packets.ControlPacket, error) {
+	switch pt := pkt.(type) {
+	case *packets.SubscribePacket:
+		for i, topic := range pt.Topics {
+			ft, err := ic.parseTopic(topic)
+			if err != nil {
+				return nil, err
+			}
+			pt.Topics[i] = ft
+		}
+
+		return pt, nil
+	case *packets.UnsubscribePacket:
+		for i, topic := range pt.Topics {
+			ft, err := ic.parseTopic(topic)
+			if err != nil {
+				return nil, err
+			}
+			pt.Topics[i] = ft
+		}
+		return pt, nil
+	case *packets.PublishPacket:
+		ft, err := ic.parseTopic(pt.TopicName)
+		if err != nil {
+			return nil, err
+		}
+		pt.TopicName = ft
+
+		return pt, nil
+	}
+
+	return pkt, nil
+}
+
+func (ic preInterceptor) parseTopic(topic string) (string, error) {
+	matches := channelRegExp.FindStringSubmatch(topic)
+	if len(matches) < 3 {
+		return "", errMalformedTopic
+	}
+
+	domainID, err := ic.resolveDomain(matches[1])
+	if err != nil {
+		return "", errMalformedTopic
+	}
+	channelID, err := ic.resolveChannel(matches[2], domainID)
+	if err != nil {
+		return "", errMalformedTopic
+	}
+
+	return fmt.Sprintf("m/%s/c/%s%s", domainID, channelID, matches[3]), nil
+}
+
+func (ic preInterceptor) resolveDomain(domain string) (string, error) {
+	if api.ValidateUUID(domain) == nil {
+		return domain, nil
+	}
+
+	resp, err := ic.domains.RetrieveByRoute(context.Background(), &grpcCommonV1.RetrieveByRouteReq{Route: domain})
+	if err != nil {
+		return "", err
+	}
+	return resp.Entity.Id, nil
+}
+
+func (ic preInterceptor) resolveChannel(channel, domainID string) (string, error) {
+	if api.ValidateUUID(channel) == nil {
+		return channel, nil
+	}
+
+	resp, err := ic.channels.RetrieveByRoute(context.Background(), &grpcCommonV1.RetrieveByRouteReq{
+		Route:    channel,
+		DomainId: domainID,
+	})
+	if err != nil {
+		return "", err
+	}
+	return resp.Entity.Id, nil
 }

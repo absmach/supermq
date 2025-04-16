@@ -55,3 +55,8 @@ message Connection {
   string domain_id  = 3;
   uint32 type = 4;
 }
+
+message RetrieveByRouteReq{
+  string route = 1;
+  string domain_id = 2;
+}

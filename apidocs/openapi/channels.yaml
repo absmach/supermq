@@ -454,7 +454,7 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
- 
+
   /{domainID}/channels/{chanID}/connect:
     post:
       operationId: connectClientsToChannel
@@ -534,14 +534,14 @@ components:
           type: string
           example: channelName
           description: Free-form channel name. Channel name is unique on the given hierarchy level.
-        description:
-          type: string
-          example: long channel description
-          description: Channel description, free form text.
         parent_id:
           type: string
           example: bb7edb32-2eac-4aad-aebe-ed96fe073879
           description: Id of parent channel, it must be existing channel.
+        route:
+          type: string
+          example: channelRoute
+          description: Channel route.
         metadata:
           type: object
           example: { "location": "example" }
@@ -557,7 +557,7 @@ components:
     ParentGroupReqObj:
       type: object
       properties:
-         parent_group_id:
+        parent_group_id:
           type: string
           format: uuid
           example: bb7edb32-2eac-4aad-aebe-ed96fe073879
@@ -587,10 +587,10 @@ components:
           format: uuid
           example: bb7edb32-2eac-4aad-aebe-ed96fe073879
           description: Channel parent identifier.
-        description:
+        route:
           type: string
-          example: long channel description
-          description: Channel description, free form text.
+          example: channelRoute
+          description: Channel route.
         metadata:
           type: object
           example: { "role": "general" }
@@ -655,10 +655,6 @@ components:
           type: string
           example: channelName
           description: Free-form channel name. Channel name is unique on the given hierarchy level.
-        description:
-          type: string
-          example: long description but not too long
-          description: Channel description, free form text.
         metadata:
           type: object
           example: { "role": "general" }
@@ -666,8 +662,7 @@ components:
       required:
         - name
         - metadata
-        - description
-    
+
     ChannelUpdateTags:
       type: object
       properties:
@@ -817,7 +812,7 @@ components:
         format: uuid
       required: false
       example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-      
+
     Metadata:
       name: metadata
       description: Metadata filter. Filtering is performed matching the parameter with metadata on top level. Parameter is json.
@@ -867,7 +862,7 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ChannelReqObj"
-    
+
     ChannelsCreateReq:
       description: JSON-formatted document describing the new channels to be registered
       required: true
@@ -885,15 +880,15 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ChannelUpdate"
-    
+
     ChannelUpdateTagsReq:
       description: JSON-formated document describing the tags of channel to be updated.
       required: true
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ChannelUpdate"
-    
+            $ref: "#/components/schemas/ChannelUpdateTags"
+
     ChannelParentGroupReq:
       description: JSON-formated document describing the parent group to be set to or removed from a channel.
       required: true
@@ -909,7 +904,7 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ConnectionReqSchema"
-    
+
     ChannelConnReq:
       description: JSON-formatted document describing the new connection.
       required: true
@@ -976,7 +971,7 @@ components:
           operationId: unassignGroupsFromChannel
           parameters:
             chanID: $response.body#/id
-    
+
     ChannelsCreateRes:
       description: Registered new channels.
       headers:
