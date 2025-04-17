@@ -168,3 +168,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/utils v0.0.0-20241210054802-24370beab758 // indirect
 )
+
+replace github.com/absmach/mgate => github.com/arvindh123/mproxy v0.0.0-20250417155913-5d38ec80fa67

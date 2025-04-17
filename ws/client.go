@@ -32,8 +32,8 @@ func (c *Client) Cancel() error {
 
 // Handle handles the sending and receiving of messages via the broker.
 func (c *Client) Handle(msg *messaging.Message) error {
-	// To prevent publisher from receiving its own published message
-	if msg.GetPublisher() == c.id {
+	// To prevent publisher from receiving its own protocol message
+	if msg.GetProtocol() == protocol {
 		return nil
 	}
 

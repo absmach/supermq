@@ -50,7 +50,8 @@ const (
 	envPrefixAuth     = "SMQ_AUTH_GRPC_"
 	defSvcHTTPPort    = "80"
 	targetHTTPPort    = "81"
-	targetHTTPHost    = "http://localhost"
+	targetHTTPHost    = "localhost"
+	targetHTTPPath    = ""
 )
 
 type config struct {
@@ -212,7 +213,7 @@ func proxyHTTP(ctx context.Context, cfg server.Config, logger *slog.Logger, sess
 	config := mgate.Config{
 		Address:    fmt.Sprintf("%s:%s", "", cfg.Port),
 		Target:     fmt.Sprintf("%s:%s", targetHTTPHost, targetHTTPPort),
-		PathPrefix: "/",
+		PathPrefix: targetHTTPPath,
 	}
 	if cfg.CertFile != "" || cfg.KeyFile != "" {
 		tlsCert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
@@ -223,7 +224,7 @@ func proxyHTTP(ctx context.Context, cfg server.Config, logger *slog.Logger, sess
 			Certificates: []tls.Certificate{tlsCert},
 		}
 	}
-	mp, err := mgatehttp.NewProxy(config, sessionHandler, logger)
+	mp, err := mgatehttp.NewProxy(config, sessionHandler, logger, []string{}, []string{"/health", "/metrics"})
 	if err != nil {
 		return err
 	}

@@ -58,7 +58,7 @@ func newProxyHTPPServer(svc session.Handler, targetServer *httptest.Server) (*ht
 		Address: "",
 		Target:  targetServer.URL,
 	}
-	mp, err := proxy.NewProxy(config, svc, smqlog.NewMock())
+	mp, err := proxy.NewProxy(config, svc, smqlog.NewMock(), []string{}, []string{})
 	if err != nil {
 		return nil, err
 	}
