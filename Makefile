@@ -225,22 +225,18 @@ grpc_mtls_certs:
 
 check_tls:
 ifeq ($(GRPC_TLS),true)
-	@unset GRPC_MTLS
-	@echo "gRPC TLS is enabled"
-	GRPC_MTLS=
+    $(eval GRPC_MTLS =)
+    @echo "gRPC TLS is enabled"
 else
-	@unset GRPC_TLS
-	GRPC_TLS=
+    $(eval GRPC_TLS =)
 endif
 
 check_mtls:
 ifeq ($(GRPC_MTLS),true)
-	@unset GRPC_TLS
-	@echo "gRPC MTLS is enabled"
-	GRPC_TLS=
+    $(eval GRPC_TLS =)
+    @echo "gRPC MTLS is enabled"
 else
-	@unset GRPC_MTLS
-	GRPC_MTLS=
+    $(eval GRPC_MTLS =)
 endif
 
 check_certs: check_mtls check_tls
