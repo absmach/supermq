@@ -335,5 +335,5 @@ func (svc *service) RoleRemoveMembers(ctx context.Context, session authn.Session
 }
 
 func (svc *service) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleID string) error {
-    return svc.ProvisionManageService.RoleRemoveAllMembers(ctx, session, entityID, roleID)
+	return svc.ProvisionManageService.RoleRemoveAllMembers(ctx, session, entityID, roleID)
 }
