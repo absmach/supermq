@@ -553,18 +553,13 @@ func (r ProvisionManageService) RoleCheckMembersExists(ctx context.Context, sess
 	return result, nil
 }
 
-func (r ProvisionManageService) RoleRemoveMembers(
-    ctx context.Context,
-    session authn.Session,
-    entityID, roleID string,
-    members []string,
-) error {
-    ro, err := r.repo.RetrieveEntityRole(ctx, entityID, roleID)
-    if err != nil {
-        return errors.Wrap(svcerr.ErrRemoveEntity, err)
-    }
+func (r ProvisionManageService) RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleID string, members []string) (err error) {
+	ro, err := r.repo.RetrieveEntityRole(ctx, entityID, roleID)
+	if err != nil {
+		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
 
-    if ro.Name == "admin" {
+	if ro.Name == "admin" {
         page, err := r.repo.RoleListMembers(ctx, ro.ID, 0, 0)
         if err != nil {
             return errors.Wrap(svcerr.ErrViewEntity, err)
@@ -574,31 +569,31 @@ func (r ProvisionManageService) RoleRemoveMembers(
         }
     }
 
-    if len(members) == 0 {
-        return svcerr.ErrMalformedEntity
-    }
+	if len(members) == 0 {
+		return svcerr.ErrMalformedEntity
+	}
 
-    var prs []policies.Policy
-    for _, mem := range members {
-        prs = append(prs, policies.Policy{
-            SubjectType: policies.UserType,
-            Subject:     policies.EncodeDomainUserID(session.DomainID, mem),
-            Relation:    policies.MemberRelation,
-            Object:      ro.ID,
-            ObjectType:  policies.RoleType,
-        })
-    }
-    if err := r.policy.DeletePolicies(ctx, prs); err != nil {
-        return errors.Wrap(svcerr.ErrDeletePolicies, err)
-    }
+	prs := []policies.Policy{}
+	for _, mem := range members {
+		prs = append(prs, policies.Policy{
+			SubjectType: policies.UserType,
+			Subject:     policies.EncodeDomainUserID(session.DomainID, mem),
+			Relation:    policies.MemberRelation,
+			Object:      ro.ID,
+			ObjectType:  policies.RoleType,
+		})
+	}
 
-    ro.UpdatedAt = time.Now()
-    ro.UpdatedBy = session.UserID
-    if err := r.repo.RoleRemoveMembers(ctx, ro, members); err != nil {
-        return errors.Wrap(svcerr.ErrRemoveEntity, err)
-    }
+	if err := r.policy.DeletePolicies(ctx, prs); err != nil {
+		return errors.Wrap(svcerr.ErrDeletePolicies, err)
+	}
 
-    return nil
+	ro.UpdatedAt = time.Now()
+	ro.UpdatedBy = session.UserID
+	if err := r.repo.RoleRemoveMembers(ctx, ro, members); err != nil {
+		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+	return nil
 }
 
 func (r ProvisionManageService) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleID string) (err error) {
