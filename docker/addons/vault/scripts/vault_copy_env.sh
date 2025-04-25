@@ -33,7 +33,7 @@ done
 
 write_env() {
     if [ -e "$scriptdir/data/secrets" ]; then
-        if [[ "$(uname)" == "Darwin" ]]; then # macOS
+        if [[ "$(uname)" == "Darwin" ]]; then
             SED_OPT=(-i '')
         else
             SED_OPT=(-i)
