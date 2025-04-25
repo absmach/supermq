@@ -26,7 +26,7 @@ require (
 	github.com/jackc/pgtype v1.14.4
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/lestrrat-go/jwx/v2 v2.1.4
+	github.com/lestrrat-go/jwx/v2 v2.1.5
 	github.com/lib/pq v1.10.9
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/nats-io/nats.go v1.41.1
@@ -52,7 +52,7 @@ require (
 	golang.org/x/oauth2 v0.29.0
 	golang.org/x/sync v0.13.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250303144028-a0af3efb3deb
-	google.golang.org/grpc v1.71.1
+	google.golang.org/grpc v1.72.0
 	google.golang.org/protobuf v1.36.6
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	moul.io/http2curl v1.0.0
@@ -114,7 +114,7 @@ require (
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/jzelinskie/stringz v0.0.3 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
-	github.com/lestrrat-go/blackmagic v1.0.2 // indirect
+	github.com/lestrrat-go/blackmagic v1.0.3 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
 	github.com/lestrrat-go/httprc v1.0.6 // indirect
 	github.com/lestrrat-go/iter v1.0.2 // indirect
