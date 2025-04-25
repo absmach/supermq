@@ -8,7 +8,7 @@ require (
 	github.com/absmach/certs v0.0.0-20250303232207-ef00d309ca02
 	github.com/absmach/mgate v0.4.5
 	github.com/absmach/senml v1.0.7
-	github.com/authzed/authzed-go v1.3.1-0.20250320210445-0cde0d8c71e2
+	github.com/authzed/authzed-go v1.4.0
 	github.com/authzed/grpcutil v0.0.0-20250221190651-1985b19b35b8
 	github.com/authzed/spicedb v1.42.1
 	github.com/caarlos0/env/v11 v11.3.1
@@ -29,7 +29,7 @@ require (
 	github.com/lestrrat-go/jwx/v2 v2.1.5
 	github.com/lib/pq v1.10.9
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/nats-io/nats.go v1.41.1
+	github.com/nats-io/nats.go v1.41.2
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/ory/dockertest/v3 v3.12.0
 	github.com/pelletier/go-toml v1.9.5
@@ -37,7 +37,7 @@ require (
 	github.com/prometheus/client_golang v1.22.0
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/redis/go-redis/v9 v9.7.3
-	github.com/rubenv/sql-migrate v1.7.1
+	github.com/rubenv/sql-migrate v1.8.0
 	github.com/spf13/cobra v1.9.1
 	github.com/sqids/sqids-go v0.4.1
 	github.com/stretchr/testify v1.10.0
@@ -126,7 +126,7 @@ require (
 	github.com/moby/sys/user v0.3.0 // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/nats-io/nkeys v0.4.10 // indirect
+	github.com/nats-io/nkeys v0.4.11 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
