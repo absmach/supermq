@@ -53,6 +53,7 @@ const (
 type config struct {
 	LogLevel              string        `env:"SMQ_MQTT_ADAPTER_LOG_LEVEL"                    envDefault:"info"`
 	MQTTPort              string        `env:"SMQ_MQTT_ADAPTER_MQTT_PORT"                    envDefault:"1883"`
+	MQTTTargetProtocol    string        `env:"SMQ_MQTT_ADAPTER_MQTT_TARGET_PROTOCOL"         envDefault:"mqtt"`
 	MQTTTargetHost        string        `env:"SMQ_MQTT_ADAPTER_MQTT_TARGET_HOST"             envDefault:"localhost"`
 	MQTTTargetPort        string        `env:"SMQ_MQTT_ADAPTER_MQTT_TARGET_PORT"             envDefault:"1883"`
 	MQTTTargetUsername    string        `env:"SMQ_MQTT_ADAPTER_MQTT_TARGET_USERNAME"         envDefault:""`
@@ -61,6 +62,7 @@ type config struct {
 	MQTTTargetHealthCheck string        `env:"SMQ_MQTT_ADAPTER_MQTT_TARGET_HEALTH_CHECK"     envDefault:""`
 	MQTTQoS               uint8         `env:"SMQ_MQTT_ADAPTER_MQTT_QOS"                     envDefault:"1"`
 	HTTPPort              string        `env:"SMQ_MQTT_ADAPTER_WS_PORT"                      envDefault:"8080"`
+	HTTPTargetProtocol    string        `env:"SMQ_MQTT_ADAPTER_WS_TARGET_PROTOCOL"           envDefault:"http"`
 	HTTPTargetHost        string        `env:"SMQ_MQTT_ADAPTER_WS_TARGET_HOST"               envDefault:"localhost"`
 	HTTPTargetPort        string        `env:"SMQ_MQTT_ADAPTER_WS_TARGET_PORT"               envDefault:"8080"`
 	HTTPTargetPath        string        `env:"SMQ_MQTT_ADAPTER_WS_TARGET_PATH"               envDefault:"/mqtt"`
@@ -250,10 +252,11 @@ func main() {
 
 func proxyMQTT(ctx context.Context, cfg config, logger *slog.Logger, sessionHandler session.Handler, interceptor session.Interceptor) error {
 	config := mgate.Config{
-		Address: fmt.Sprintf(":%s", cfg.MQTTPort),
-		Target:  fmt.Sprintf("%s:%s", cfg.MQTTTargetHost, cfg.MQTTTargetPort),
+		Port:       cfg.MQTTPort,
+		TargetHost: cfg.MQTTTargetHost,
+		TargetPort: cfg.MQTTTargetPort,
 	}
-	mproxy := mgatemqtt.New(config, sessionHandler, interceptor, logger)
+	mproxy := mgatemqtt.New(config, sessionHandler, nil, interceptor, logger)
 
 	errCh := make(chan error)
 	go func() {
@@ -262,7 +265,7 @@ func proxyMQTT(ctx context.Context, cfg config, logger *slog.Logger, sessionHand
 
 	select {
 	case <-ctx.Done():
-		logger.Info(fmt.Sprintf("proxy MQTT shutdown at %s", config.Target))
+		logger.Info(fmt.Sprintf("proxy MQTT shutdown at %s:%s", config.Host, config.Port))
 		return nil
 	case err := <-errCh:
 		return err
@@ -271,12 +274,15 @@ func proxyMQTT(ctx context.Context, cfg config, logger *slog.Logger, sessionHand
 
 func proxyWS(ctx context.Context, cfg config, logger *slog.Logger, sessionHandler session.Handler, interceptor session.Interceptor) error {
 	config := mgate.Config{
-		Address:    fmt.Sprintf("%s:%s", "", cfg.HTTPPort),
-		Target:     fmt.Sprintf("ws://%s:%s%s", cfg.HTTPTargetHost, cfg.HTTPTargetPort, cfg.HTTPTargetPath),
-		PathPrefix: wsPathPrefix,
+		Port:           cfg.HTTPPort,
+		TargetProtocol: "http",
+		TargetHost:     cfg.HTTPTargetHost,
+		TargetPort:     cfg.HTTPTargetPort,
+		TargetPath:     cfg.HTTPTargetPath,
+		PathPrefix:     wsPathPrefix,
 	}
 
-	wp := websocket.New(config, sessionHandler, interceptor, logger)
+	wp := websocket.New(config, sessionHandler, nil, interceptor, logger)
 	http.HandleFunc(wsPathPrefix, wp.ServeHTTP)
 
 	errCh := make(chan error)
@@ -287,7 +293,7 @@ func proxyWS(ctx context.Context, cfg config, logger *slog.Logger, sessionHandle
 
 	select {
 	case <-ctx.Done():
-		logger.Info(fmt.Sprintf("proxy MQTT WS shutdown at %s", config.Target))
+		logger.Info(fmt.Sprintf("proxy MQTT WS shutdown at %s:%s", config.Host, config.Port))
 		return nil
 	case err := <-errCh:
 		return err

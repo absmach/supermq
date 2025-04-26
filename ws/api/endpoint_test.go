@@ -6,14 +6,16 @@ package api_test
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 
+	"github.com/absmach/mgate"
+	mHttp "github.com/absmach/mgate/pkg/http"
 	"github.com/absmach/mgate/pkg/session"
-	"github.com/absmach/mgate/pkg/websockets"
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
 	chmocks "github.com/absmach/supermq/channels/mocks"
@@ -55,11 +57,22 @@ func newHTTPServer(svc ws.Service) *httptest.Server {
 
 func newProxyHTPPServer(svc session.Handler, targetServer *httptest.Server) (*httptest.Server, error) {
 	turl := strings.ReplaceAll(targetServer.URL, "http", "ws")
-	mp, err := websockets.NewProxy("", turl, smqlog.NewMock(), svc)
+	ptUrl, _ := url.Parse(turl)
+	ptHost, ptPort, _ := net.SplitHostPort(ptUrl.Host)
+	config := mgate.Config{
+		Host:           "",
+		Port:           "",
+		PathPrefix:     "",
+		TargetHost:     ptHost,
+		TargetPort:     ptPort,
+		TargetProtocol: ptUrl.Scheme,
+		TargetPath:     ptUrl.Path,
+	}
+	mp, err := mHttp.NewProxy(config, svc, smqlog.NewMock(), []string{}, []string{})
 	if err != nil {
 		return nil, err
 	}
-	return httptest.NewServer(http.HandlerFunc(mp.Handler)), nil
+	return httptest.NewServer(http.HandlerFunc(mp.ServeHTTP)), nil
 }
 
 func makeURL(tsURL, domainID, chanID, subtopic, clientKey string, header bool) (string, error) {
@@ -108,8 +121,12 @@ func TestHandshake(t *testing.T) {
 	require.Nil(t, err)
 	defer ts.Close()
 	pubsub.On("Subscribe", mock.Anything, mock.Anything).Return(nil)
+	pubsub.On("Unsubscribe", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	pubsub.On("Publish", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	clients.On("Authenticate", mock.Anything, mock.Anything).Return(&grpcClientsV1.AuthnRes{Authenticated: true}, nil)
+	clients.On("Authenticate", mock.Anything, mock.MatchedBy(func(req *grpcClientsV1.AuthnReq) bool {
+		return req.ClientSecret == clientKey
+	})).Return(&grpcClientsV1.AuthnRes{Authenticated: true}, nil)
+	clients.On("Authenticate", mock.Anything, mock.Anything).Return(&grpcClientsV1.AuthnRes{Authenticated: false}, nil)
 	authn.On("Authenticate", mock.Anything, mock.Anything).Return(smqauthn.Session{}, nil)
 	channels.On("Authorize", mock.Anything, mock.Anything, mock.Anything).Return(&grpcChannelsV1.AuthzRes{Authorized: true}, nil)
 
@@ -191,7 +208,7 @@ func TestHandshake(t *testing.T) {
 			subtopic:  "",
 			header:    true,
 			clientKey: clientKey,
-			status:    http.StatusBadGateway,
+			status:    http.StatusBadRequest,
 			msg:       []byte{},
 		},
 		{

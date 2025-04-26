@@ -20,14 +20,10 @@ import (
 const chansPrefix = "channels"
 
 var (
-	// errFailedMessagePublish indicates that message publishing failed.
-	errFailedMessagePublish = errors.New("failed to publish message")
-
 	// ErrFailedSubscription indicates that client couldn't subscribe to specified channel.
 	ErrFailedSubscription = errors.New("failed to subscribe to a channel")
 
-	// errFailedUnsubscribe indicates that client couldn't unsubscribe from specified channel.
-	errFailedUnsubscribe = errors.New("failed to unsubscribe from a channel")
+	ErrFailedSubscribe = errors.New("failed to unsubscribe from topic")
 
 	// ErrEmptyTopic indicate absence of clientKey in the request.
 	ErrEmptyTopic = errors.New("empty topic")
@@ -39,7 +35,9 @@ type Service interface {
 	// the channelID for subscription and domainID specifies the domain for authorization.
 	// Subtopic is optional.
 	// If the subscription is successful, nil is returned otherwise error is returned.
-	Subscribe(ctx context.Context, clientKey, domainID, chanID, subtopic string, client *Client) error
+	Subscribe(ctx context.Context, sessionID, clientKey, domainID, chanID, subtopic string, client *Client) error
+
+	Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string) error
 }
 
 var _ Service = (*adapterService)(nil)
@@ -59,7 +57,7 @@ func New(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.Cha
 	}
 }
 
-func (svc *adapterService) Subscribe(ctx context.Context, clientKey, domainID, chanID, subtopic string, c *Client) error {
+func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientKey, domainID, chanID, subtopic string, c *Client) error {
 	if chanID == "" || clientKey == "" || domainID == "" {
 		return svcerr.ErrAuthentication
 	}
@@ -69,15 +67,13 @@ func (svc *adapterService) Subscribe(ctx context.Context, clientKey, domainID, c
 		return svcerr.ErrAuthorization
 	}
 
-	c.id = clientID
-
 	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
 
 	subCfg := messaging.SubscriberConfig{
-		ID:       clientID,
+		ID:       sessionID,
 		ClientID: clientID,
 		Topic:    subject,
 		Handler:  c,
@@ -86,6 +82,18 @@ func (svc *adapterService) Subscribe(ctx context.Context, clientKey, domainID, c
 		return ErrFailedSubscription
 	}
 
+	return nil
+}
+
+func (svc *adapterService) Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string) error {
+	topic := fmt.Sprintf("%s.%s", chansPrefix, chanID)
+	if subtopic != "" {
+		topic = fmt.Sprintf("%s.%s", topic, subtopic)
+	}
+
+	if err := svc.pubsub.Unsubscribe(ctx, sessionID, topic); err != nil {
+		return errors.Wrap(ErrFailedSubscribe, err)
+	}
 	return nil
 }
 

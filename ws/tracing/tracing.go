@@ -13,7 +13,6 @@ import (
 var _ ws.Service = (*tracingMiddleware)(nil)
 
 const (
-	publishOP     = "publish_op"
 	subscribeOP   = "subscribe_op"
 	unsubscribeOP = "unsubscribe_op"
 )
@@ -32,9 +31,16 @@ func New(tracer trace.Tracer, svc ws.Service) ws.Service {
 }
 
 // Subscribe traces the "Subscribe" operation of the wrapped ws.Service.
-func (tm *tracingMiddleware) Subscribe(ctx context.Context, clientKey, domainID, chanID, subtopic string, client *ws.Client) error {
+func (tm *tracingMiddleware) Subscribe(ctx context.Context, sessionID, clientKey, domainID, chanID, subtopic string, client *ws.Client) error {
 	ctx, span := tm.tracer.Start(ctx, subscribeOP)
 	defer span.End()
 
-	return tm.svc.Subscribe(ctx, clientKey, domainID, chanID, subtopic, client)
+	return tm.svc.Subscribe(ctx, sessionID, clientKey, domainID, chanID, subtopic, client)
+}
+
+func (tm *tracingMiddleware) Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string) error {
+	ctx, span := tm.tracer.Start(ctx, unsubscribeOP)
+	defer span.End()
+
+	return tm.svc.Unsubscribe(ctx, sessionID, domainID, chanID, subtopic)
 }

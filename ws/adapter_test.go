@@ -6,6 +6,7 @@ package ws_test
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"testing"
 
@@ -45,6 +46,7 @@ var (
 		Protocol:  protocol,
 		Payload:   []byte(`[{"n":"current","t":-5,"v":1.2}]`),
 	}
+	sessionID = "sessionID"
 )
 
 func newService() (ws.Service, *mocks.PubSub, *climocks.ClientsServiceClient, *chmocks.ChannelsServiceClient) {
@@ -58,7 +60,7 @@ func newService() (ws.Service, *mocks.PubSub, *climocks.ClientsServiceClient, *c
 func TestSubscribe(t *testing.T) {
 	svc, pubsub, clients, channels := newService()
 
-	c := ws.NewClient(nil)
+	c := ws.NewClient(slog.Default(), nil, sessionID)
 
 	cases := []struct {
 		desc      string
@@ -182,7 +184,7 @@ func TestSubscribe(t *testing.T) {
 
 	for _, tc := range cases {
 		subConfig := messaging.SubscriberConfig{
-			ID:       clientID,
+			ID:       sessionID,
 			Topic:    "channels." + tc.chanID + "." + subTopic,
 			ClientID: clientID,
 			Handler:  c,
@@ -200,7 +202,7 @@ func TestSubscribe(t *testing.T) {
 			DomainId:   tc.domainID,
 		}).Return(tc.authZRes, tc.authZErr)
 		repocall := pubsub.On("Subscribe", mock.Anything, subConfig).Return(tc.subErr)
-		err := svc.Subscribe(context.Background(), tc.clientKey, tc.domainID, tc.chanID, tc.subtopic, c)
+		err := svc.Subscribe(context.Background(), sessionID, tc.clientKey, tc.domainID, tc.chanID, tc.subtopic, c)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		repocall.Unset()
 		clientsCall.Unset()

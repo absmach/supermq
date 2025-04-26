@@ -3,12 +3,9 @@
 
 package api
 
-import "github.com/gorilla/websocket"
-
 type connReq struct {
 	clientKey string
 	chanID    string
 	domainID  string
 	subtopic  string
-	conn      *websocket.Conn
 }

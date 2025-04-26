@@ -13,8 +13,9 @@ import (
 	"os"
 
 	chclient "github.com/absmach/callhome/pkg/client"
+	"github.com/absmach/mgate"
+	"github.com/absmach/mgate/pkg/http"
 	"github.com/absmach/mgate/pkg/session"
-	"github.com/absmach/mgate/pkg/websockets"
 	"github.com/absmach/supermq"
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
@@ -45,8 +46,9 @@ const (
 	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
 	envPrefixAuth     = "SMQ_AUTH_GRPC_"
 	defSvcHTTPPort    = "8190"
-	targetWSPort      = "8191"
+	targetWSProtocol  = "http"
 	targetWSHost      = "localhost"
+	targetWSPort      = "8191"
 )
 
 type config struct {
@@ -184,9 +186,10 @@ func main() {
 	}
 
 	g.Go(func() error {
-		g.Go(func() error {
-			return hs.Start()
-		})
+		return hs.Start()
+	})
+
+	g.Go(func() error {
 		handler := ws.NewHandler(nps, logger, authn, clientsClient, channelsClient)
 		return proxyWS(ctx, httpServerConfig, targetServerConfig, logger, handler)
 	})
@@ -210,9 +213,14 @@ func newService(clientsClient grpcClientsV1.ClientsServiceClient, channels grpcC
 }
 
 func proxyWS(ctx context.Context, hostConfig, targetConfig server.Config, logger *slog.Logger, handler session.Handler) error {
-	target := fmt.Sprintf("ws://%s:%s", targetConfig.Host, targetConfig.Port)
-	address := fmt.Sprintf("%s:%s", hostConfig.Host, hostConfig.Port)
-	wp, err := websockets.NewProxy(address, target, logger, handler)
+	config := mgate.Config{
+		Host:           hostConfig.Host,
+		Port:           hostConfig.Port,
+		TargetProtocol: targetWSProtocol,
+		TargetHost:     targetWSHost,
+		TargetPort:     targetWSPort,
+	}
+	wp, err := http.NewProxy(config, handler, logger, []string{}, []string{"/health", "/metrics"})
 	if err != nil {
 		return err
 	}
@@ -220,18 +228,12 @@ func proxyWS(ctx context.Context, hostConfig, targetConfig server.Config, logger
 	errCh := make(chan error)
 
 	go func() {
-		if hostConfig.CertFile != "" && hostConfig.KeyFile != "" {
-			logger.Info(fmt.Sprintf("ws-adapter service HTTP server listening at %s:%s with TLS", hostConfig.Host, hostConfig.Port))
-			errCh <- wp.ListenTLS(hostConfig.CertFile, hostConfig.KeyFile)
-		} else {
-			logger.Info(fmt.Sprintf("ws-adapter service HTTP server listening at %s:%s without TLS", hostConfig.Host, hostConfig.Port))
-			errCh <- wp.Listen()
-		}
+		errCh <- wp.Listen(ctx)
 	}()
 
 	select {
 	case <-ctx.Done():
-		logger.Info(fmt.Sprintf("proxy MQTT WS shutdown at %s", target))
+		logger.Info(fmt.Sprintf("ws-adapter service shutdown at %s:%s", hostConfig.Host, hostConfig.Port))
 		return nil
 	case err := <-errCh:
 		return err

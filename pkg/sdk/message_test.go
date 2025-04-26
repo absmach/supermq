@@ -6,8 +6,10 @@ package sdk_test
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/absmach/mgate"
@@ -44,11 +46,19 @@ func setupMessages() (*httptest.Server, *pubsub.PubSub) {
 	mux := api.MakeHandler(smqlog.NewMock(), "")
 	target := httptest.NewServer(mux)
 
+	ptUrl, _ := url.Parse(target.URL)
+	ptHost, ptPort, _ := net.SplitHostPort(ptUrl.Host)
 	config := mgate.Config{
-		Address: "",
-		Target:  target.URL,
+		Host:           "",
+		Port:           "",
+		PathPrefix:     "",
+		TargetHost:     ptHost,
+		TargetPort:     ptPort,
+		TargetProtocol: ptUrl.Scheme,
+		TargetPath:     ptUrl.Path,
 	}
-	mp, err := proxy.NewProxy(config, handler, smqlog.NewMock())
+
+	mp, err := proxy.NewProxy(config, handler, smqlog.NewMock(), []string{}, []string{"/health", "/metrics"})
 	if err != nil {
 		return nil, nil
 	}

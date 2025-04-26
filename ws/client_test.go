@@ -4,7 +4,9 @@
 package ws_test
 
 import (
+	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -17,7 +19,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const expectedCount = uint64(1)
+const expectedCount = uint64(2)
 
 var (
 	msgChan = make(chan []byte)
@@ -61,7 +63,8 @@ func TestHandle(t *testing.T) {
 	}
 	defer wsConn.Close()
 
-	c = ws.NewClient(wsConn)
+	c = ws.NewClient(slog.Default(), wsConn, "sessionID")
+	go c.Start(context.Background())
 
 	cases := []struct {
 		desc            string

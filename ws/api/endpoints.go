@@ -5,7 +5,10 @@ package api
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -16,25 +19,51 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-var channelPartRegExp = regexp.MustCompile(`^\/?m\/([\w\-]+)\/c\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
+var (
+	channelPartRegExp = regexp.MustCompile(`^\/?m\/([\w\-]+)\/c\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
 
-func handshake(ctx context.Context, svc ws.Service) http.HandlerFunc {
+	errGenSessionID = errors.New("failed to generate session id")
+)
+
+func generateSessionID() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", errors.Wrap(errGenSessionID, err)
+	}
+	return hex.EncodeToString(b), nil
+}
+
+func handshake(ctx context.Context, svc ws.Service, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req, err := decodeRequest(r)
 		if err != nil {
 			encodeError(w, err)
 			return
 		}
+
+		sessionID, err := generateSessionID()
+		if err != nil {
+			logger.Warn(fmt.Sprintf("Failed to generate session id: %s", err.Error()))
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Failed to upgrade connection to websocket: %s", err.Error()))
 			return
 		}
-		req.conn = conn
-		client := ws.NewClient(conn)
 
-		if err := svc.Subscribe(ctx, req.clientKey, req.domainID, req.chanID, req.subtopic, client); err != nil {
-			req.conn.Close()
+		client := ws.NewClient(logger, conn, sessionID)
+
+		client.SetCloseHandler(func(code int, text string) error {
+			return svc.Unsubscribe(ctx, sessionID, req.domainID, req.chanID, req.subtopic)
+		})
+
+		go client.Start(ctx)
+
+		if err := svc.Subscribe(ctx, sessionID, req.clientKey, req.domainID, req.chanID, req.subtopic, client); err != nil {
+			conn.Close()
 			return
 		}
 

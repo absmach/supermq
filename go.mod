@@ -6,7 +6,7 @@ require (
 	github.com/0x6flab/namegenerator v1.4.0
 	github.com/absmach/callhome v0.14.0
 	github.com/absmach/certs v0.0.0-20250303232207-ef00d309ca02
-	github.com/absmach/mgate v0.4.5
+	github.com/absmach/mgate v0.4.6-0.20250425104654-79c62d581921
 	github.com/absmach/senml v1.0.7
 	github.com/authzed/authzed-go v1.4.0
 	github.com/authzed/grpcutil v0.0.0-20250221190651-1985b19b35b8

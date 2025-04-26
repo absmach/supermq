@@ -6,8 +6,10 @@ package api_test
 import (
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -54,11 +56,18 @@ func newTargetHTTPServer() *httptest.Server {
 }
 
 func newProxyHTPPServer(svc session.Handler, targetServer *httptest.Server) (*httptest.Server, error) {
+	ptUrl, _ := url.Parse(targetServer.URL)
+	ptHost, ptPort, _ := net.SplitHostPort(ptUrl.Host)
 	config := mgate.Config{
-		Address: "",
-		Target:  targetServer.URL,
+		Host:           "",
+		Port:           "",
+		PathPrefix:     "",
+		TargetHost:     ptHost,
+		TargetPort:     ptPort,
+		TargetProtocol: ptUrl.Scheme,
+		TargetPath:     ptUrl.Path,
 	}
-	mp, err := proxy.NewProxy(config, svc, smqlog.NewMock())
+	mp, err := proxy.NewProxy(config, svc, smqlog.NewMock(), []string{}, []string{})
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +177,7 @@ func TestPublish(t *testing.T) {
 			msg:         msg,
 			contentType: ctSenmlJSON,
 			key:         "",
-			status:      http.StatusBadGateway,
+			status:      http.StatusBadRequest,
 		},
 		{
 			desc:        "publish message with basic auth",
