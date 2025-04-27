@@ -10,9 +10,12 @@
 
 networks:
   supermq-base-net:
+    external: true
+    name: supermq-base-net
 
 volumes:
   supermq-vault-volume:
+
 
 services:
   vault:

@@ -9,9 +9,12 @@
 
 networks:
   supermq-base-net:
+    external: true
+    name: supermq-base-net
 
 volumes:
   supermq-prometheus-volume:
+
 
 services:
   promethues:
