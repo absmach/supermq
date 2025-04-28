@@ -8,8 +8,7 @@
 
 networks:
   supermq-base-net:
-    external: true
-    name: supermq-base-net
+
 
 volumes:
   supermq-certs-db-volume:
