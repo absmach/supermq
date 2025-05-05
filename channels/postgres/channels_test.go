@@ -29,6 +29,7 @@ var (
 		Domain:          testsutil.GenerateUUID(&testing.T{}),
 		ParentGroup:     testsutil.GenerateUUID(&testing.T{}),
 		Name:            namegen.Generate(),
+		Route:           testsutil.GenerateUUID(&testing.T{}),
 		Tags:            []string{"tag1", "tag2"},
 		Metadata:        map[string]interface{}{"key": "value"},
 		CreatedAt:       time.Now().UTC().Truncate(time.Microsecond),
@@ -183,6 +184,7 @@ func TestUpdate(t *testing.T) {
 			channel: channels.Channel{
 				ID:        validChannel.ID,
 				Name:      namegen.Generate(),
+				Route:     testsutil.GenerateUUID(t),
 				Metadata:  map[string]interface{}{"key": "value"},
 				UpdatedAt: validTimestamp,
 				UpdatedBy: testsutil.GenerateUUID(t),
@@ -330,6 +332,7 @@ func TestChangeStatus(t *testing.T) {
 	disabledChannel := validChannel
 	disabledChannel.ID = testsutil.GenerateUUID(t)
 	disabledChannel.Name = namegen.Generate()
+	disabledChannel.Route = testsutil.GenerateUUID(t)
 	disabledChannel.Status = channels.DisabledStatus
 
 	_, err := repo.Save(context.Background(), validChannel, disabledChannel)
@@ -442,6 +445,69 @@ func TestRetrieveByID(t *testing.T) {
 	}
 }
 
+func TestRetrieveByRoute(t *testing.T) {
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM channels")
+		require.Nil(t, err, fmt.Sprintf("clean channels unexpected error: %s", err))
+	})
+
+	repo := postgres.NewRepository(database)
+
+	_, err := repo.Save(context.Background(), validChannel)
+	require.Nil(t, err, fmt.Sprintf("save channel unexpected error: %s", err))
+
+	cases := []struct {
+		desc     string
+		route    string
+		domainID string
+		resp     channels.Channel
+		err      error
+	}{
+		{
+			desc:     "retrieve channel by route successfully",
+			route:    validChannel.Route,
+			domainID: validChannel.Domain,
+			resp:     validChannel,
+			err:      nil,
+		},
+		{
+			desc:     "retrieve channel by id with invalid route",
+			route:    "invalid-route",
+			domainID: validChannel.Domain,
+			err:      repoerr.ErrNotFound,
+		},
+		{
+			desc:     "retrieve channel by id with empty route",
+			route:    "",
+			domainID: validChannel.Domain,
+			err:      repoerr.ErrNotFound,
+		},
+		{
+			desc:     "retrieve channel by id with invalid domain",
+			route:    validChannel.Route,
+			domainID: "invalid-domain",
+			err:      repoerr.ErrNotFound,
+		},
+		{
+			desc:     "retrieve channel by id with empty domain",
+			route:    validChannel.Route,
+			domainID: "",
+			err:      repoerr.ErrNotFound,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			channel, err := repo.RetrieveByRoute(context.Background(), tc.route, tc.domainID)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+			if err == nil {
+				assert.Nil(t, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+				assert.Equal(t, tc.resp, channel, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.resp, channel))
+			}
+		})
+	}
+}
+
 func TestRetrieveAll(t *testing.T) {
 	t.Cleanup(func() {
 		_, err := db.Exec("DELETE FROM channels")
@@ -460,6 +526,7 @@ func TestRetrieveAll(t *testing.T) {
 			Domain:          testsutil.GenerateUUID(t),
 			ParentGroup:     parentID,
 			Name:            name,
+			Route:           testsutil.GenerateUUID(t),
 			Metadata:        map[string]interface{}{"name": name},
 			CreatedAt:       time.Now().UTC().Truncate(time.Microsecond),
 			Status:          channels.EnabledStatus,
