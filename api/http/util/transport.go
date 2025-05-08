@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/absmach/supermq/internal/nullable"
 	"github.com/absmach/supermq/pkg/errors"
 	kithttp "github.com/go-kit/kit/transport/http"
 )
@@ -36,6 +37,19 @@ func ReadStringQuery(r *http.Request, key, def string) (string, error) {
 	}
 
 	return vals[0], nil
+}
+
+func ReadNullableString(r *http.Request, key, def string) (nullable.Nullable[string], error) {
+	vals := r.URL.Query()[key]
+	if len(vals) > 1 {
+		return nullable.Nullable[string]{}, ErrInvalidQueryParams
+	}
+
+	if len(vals) == 0 {
+		return nullable.Nullable[string]{}, nil
+	}
+
+	return nullable.Nullable[string]{Set: true, Value: (vals[0])}, nil
 }
 
 // ReadMetadataQuery reads the value of json http query parameters for a given key.

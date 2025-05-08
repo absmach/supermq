@@ -131,14 +131,9 @@ func decodeListChannels(_ context.Context, r *http.Request) (interface{}, error)
 		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
-	var groupPtr *string
-	groupID, err := apiutil.ReadStringQuery(r, api.GroupKey, "")
+	groupID, err := apiutil.ReadNullableString(r, api.GroupKey, "")
 	if err != nil {
 		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
-	}
-
-	if r.URL.Query().Has(api.GroupKey) {
-		groupPtr = &groupID
 	}
 
 	clientID, err := apiutil.ReadStringQuery(r, api.ClientKey, "")
@@ -165,7 +160,7 @@ func decodeListChannels(_ context.Context, r *http.Request) (interface{}, error)
 			Dir:        dir,
 			Offset:     offset,
 			Limit:      limit,
-			Group:      groupPtr,
+			Group:      groupID,
 			Client:     clientID,
 			ID:         id,
 		},
