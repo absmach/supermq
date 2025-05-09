@@ -87,6 +87,61 @@ func (_c *Service_DeleteUserFromDomains_Call) RunAndReturn(run func(ctx context.
 	return _c
 }
 
+// RetrieveByRoute provides a mock function for the type Service
+func (_mock *Service) RetrieveByRoute(ctx context.Context, route string) (domains.Domain, error) {
+	ret := _mock.Called(ctx, route)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveByRoute")
+	}
+
+	var r0 domains.Domain
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (domains.Domain, error)); ok {
+		return returnFunc(ctx, route)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) domains.Domain); ok {
+		r0 = returnFunc(ctx, route)
+	} else {
+		r0 = ret.Get(0).(domains.Domain)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, route)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Service_RetrieveByRoute_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RetrieveByRoute'
+type Service_RetrieveByRoute_Call struct {
+	*mock.Call
+}
+
+// RetrieveByRoute is a helper method to define mock.On call
+//   - ctx
+//   - route
+func (_e *Service_Expecter) RetrieveByRoute(ctx interface{}, route interface{}) *Service_RetrieveByRoute_Call {
+	return &Service_RetrieveByRoute_Call{Call: _e.mock.On("RetrieveByRoute", ctx, route)}
+}
+
+func (_c *Service_RetrieveByRoute_Call) Run(run func(ctx context.Context, route string)) *Service_RetrieveByRoute_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *Service_RetrieveByRoute_Call) Return(domain domains.Domain, err error) *Service_RetrieveByRoute_Call {
+	_c.Call.Return(domain, err)
+	return _c
+}
+
+func (_c *Service_RetrieveByRoute_Call) RunAndReturn(run func(ctx context.Context, route string) (domains.Domain, error)) *Service_RetrieveByRoute_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // RetrieveEntity provides a mock function for the type Service
 func (_mock *Service) RetrieveEntity(ctx context.Context, id string) (domains.Domain, error) {
 	ret := _mock.Called(ctx, id)

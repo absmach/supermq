@@ -19,6 +19,7 @@ type domainsGrpcServer struct {
 	grpcDomainsV1.UnimplementedDomainsServiceServer
 	deleteUserFromDomains kitgrpc.Handler
 	retrieveEntity        kitgrpc.Handler
+	retrieveByRoute       kitgrpc.Handler
 }
 
 func NewDomainsServer(svc domains.Service) grpcDomainsV1.DomainsServiceServer {
@@ -32,6 +33,11 @@ func NewDomainsServer(svc domains.Service) grpcDomainsV1.DomainsServiceServer {
 			retrieveEntityEndpoint(svc),
 			decodeRetrieveEntityRequest,
 			encodeRetrieveEntityResponse,
+		),
+		retrieveByRoute: kitgrpc.NewServer(
+			retrieveByRouteEndpoint(svc),
+			decodeRetrieveByRouteRequest,
+			encodeRetrieveByRouteResponse,
 		),
 	}
 }
@@ -77,6 +83,34 @@ func encodeRetrieveEntityResponse(_ context.Context, grpcRes interface{}) (inter
 
 func (s *domainsGrpcServer) RetrieveEntity(ctx context.Context, req *grpcCommonV1.RetrieveEntityReq) (*grpcCommonV1.RetrieveEntityRes, error) {
 	_, res, err := s.retrieveEntity.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, grpcapi.EncodeError(err)
+	}
+
+	return res.(*grpcCommonV1.RetrieveEntityRes), nil
+}
+
+func decodeRetrieveByRouteRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*grpcCommonV1.RetrieveByRouteReq)
+
+	return retrieveByRouteReq{
+		Route: req.GetRoute(),
+	}, nil
+}
+
+func encodeRetrieveByRouteResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(retrieveEntityRes)
+
+	return &grpcCommonV1.RetrieveEntityRes{
+		Entity: &grpcCommonV1.EntityBasic{
+			Id:     res.id,
+			Status: uint32(res.status),
+		},
+	}, nil
+}
+
+func (s *domainsGrpcServer) RetrieveByRoute(ctx context.Context, req *grpcCommonV1.RetrieveByRouteReq) (*grpcCommonV1.RetrieveEntityRes, error) {
+	_, res, err := s.retrieveByRoute.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, grpcapi.EncodeError(err)
 	}

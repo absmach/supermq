@@ -22,6 +22,7 @@ type Service interface {
 	UnsetParentGroupFromChannels(ctx context.Context, parentGroupID string) error
 	RemoveClientConnections(ctx context.Context, clientID string) error
 	RetrieveByID(ctx context.Context, id string) (channels.Channel, error)
+	RetrieveByRoute(ctx context.Context, route string, domainID string) (channels.Channel, error)
 }
 
 type service struct {
@@ -119,4 +120,8 @@ func (svc service) UnsetParentGroupFromChannels(ctx context.Context, parentGroup
 
 func (svc service) RetrieveByID(ctx context.Context, id string) (channels.Channel, error) {
 	return svc.repo.RetrieveByID(ctx, id)
+}
+
+func (svc service) RetrieveByRoute(ctx context.Context, route string, domainID string) (channels.Channel, error) {
+	return svc.repo.RetrieveByRoute(ctx, route, domainID)
 }

@@ -17,6 +17,9 @@ import (
 	"github.com/absmach/mgate/pkg/session"
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
+	grpcCommonV1 "github.com/absmach/supermq/api/grpc/common/v1"
+	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
+	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
@@ -62,17 +65,19 @@ type handler struct {
 	publisher messaging.Publisher
 	clients   grpcClientsV1.ClientsServiceClient
 	channels  grpcChannelsV1.ChannelsServiceClient
+	domains   grpcDomainsV1.DomainsServiceClient
 	authn     smqauthn.Authentication
 	logger    *slog.Logger
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(publisher messaging.Publisher, authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, logger *slog.Logger) session.Handler {
+func NewHandler(publisher messaging.Publisher, authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient, logger *slog.Logger) session.Handler {
 	return &handler{
 		publisher: publisher,
 		authn:     authn,
 		clients:   clients,
 		channels:  channels,
+		domains:   domains,
 		logger:    logger,
 	}
 }
@@ -153,7 +158,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
 	}
 
-	domainID, chanID, subtopic, err := parseTopic(*topic)
+	domainID, chanID, subtopic, err := h.parseTopic(ctx, *topic)
 	if err != nil {
 		return mgate.NewHTTPProxyError(http.StatusBadRequest, err)
 	}
@@ -210,7 +215,7 @@ func (h *handler) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func parseTopic(topic string) (string, string, string, error) {
+func (h *handler) parseTopic(ctx context.Context, topic string) (string, string, string, error) {
 	// Topics are in the format:
 	// m/<domain_id>/c/<channel_id>/<subtopic>/.../ct/<content_type>
 	channelParts := channelRegExp.FindStringSubmatch(topic)
@@ -218,11 +223,17 @@ func parseTopic(topic string) (string, string, string, error) {
 		return "", "", "", errors.Wrap(errFailedPublish, errMalformedTopic)
 	}
 
-	domainID := channelParts[1]
-	chanID := channelParts[2]
+	domainID, err := h.resolveDomain(ctx, channelParts[1])
+	if err != nil {
+		return "", "", "", errors.Wrap(errFailedParseSubtopic, err)
+	}
+	chanID, err := h.resolveChannel(ctx, channelParts[2], domainID)
+	if err != nil {
+		return "", "", "", errors.Wrap(errFailedParseSubtopic, err)
+	}
 	subtopic := channelParts[3]
 
-	subtopic, err := parseSubtopic(subtopic)
+	subtopic, err = parseSubtopic(subtopic)
 	if err != nil {
 		return "", "", "", errors.Wrap(errFailedParseSubtopic, err)
 	}
@@ -257,4 +268,35 @@ func parseSubtopic(subtopic string) (string, error) {
 
 	subtopic = strings.Join(filteredElems, ".")
 	return subtopic, nil
+}
+
+func (h *handler) resolveDomain(ctx context.Context, domain string) (string, error) {
+	if api.ValidateUUID(domain) == nil {
+		return domain, nil
+	}
+
+	d, err := h.domains.RetrieveByRoute(ctx, &grpcCommonV1.RetrieveByRouteReq{
+		Route: domain,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return d.Entity.Id, nil
+}
+
+func (h *handler) resolveChannel(ctx context.Context, channel, domainID string) (string, error) {
+	if api.ValidateUUID(channel) == nil {
+		return channel, nil
+	}
+
+	c, err := h.channels.RetrieveByRoute(ctx, &grpcCommonV1.RetrieveByRouteReq{
+		Route:    channel,
+		DomainId: domainID,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return c.Entity.Id, nil
 }
