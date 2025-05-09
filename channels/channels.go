@@ -56,7 +56,7 @@ type Page struct {
 	Domain         string   `json:"domain,omitempty"`
 	Tag            string   `json:"tag,omitempty"`
 	Status         Status   `json:"status,omitempty"`
-	Group          string   `json:"group,omitempty"`
+	Group          *string  `json:"group,omitempty"`
 	Client         string   `json:"client,omitempty"`
 	ConnectionType string   `json:"connection_type,omitempty"`
 	RoleName       string   `json:"role_name,omitempty"`
