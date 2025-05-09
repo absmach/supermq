@@ -23,6 +23,7 @@ const (
 	OpRemoveAllChildrenGroups
 	OpListChildrenGroups
 	OpDeleteGroup
+	OpCreateGroup
 )
 
 var expectedOperations = []svcutil.Operation{
@@ -40,7 +41,7 @@ var expectedOperations = []svcutil.Operation{
 	OpDeleteGroup,
 }
 
-var operationNames = []string{
+var OperationNames = []string{
 	"OpViewGroup",
 	"OpUpdateGroup",
 	"OpEnableGroup",
@@ -53,10 +54,11 @@ var operationNames = []string{
 	"OpRemoveAllChildrenGroups",
 	"OpListChildrenGroups",
 	"OpDeleteGroup",
+	"OpCreateGroup",
 }
 
 func NewOperationPerm() svcutil.OperationPerm {
-	return svcutil.NewOperationPerm(expectedOperations, operationNames)
+	return svcutil.NewOperationPerm(expectedOperations, OperationNames)
 }
 
 // External Operations.

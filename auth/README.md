@@ -94,15 +94,15 @@ The service is configured using the environment variables presented in the follo
 | SMQ_JAEGER_URL                      | Jaeger server URL                                                                    | <http://jaeger:4318/v1/traces> |
 | SMQ_JAEGER_TRACE_RATIO              | Jaeger sampling ratio                                                                | 1.0                            |
 | SMQ_SEND_TELEMETRY                  | Send telemetry to supermq call home server                                           | true                           |
-| SMQ_AUTH_ADAPTER_INSTANCE_ID        | Adapter instance ID                                                                  | ""                             |
-| SMQ_AUTH_CALLOUT_URLS               | Comma-separated list of callout URLs                                                 | ""                             |
-| SMQ_AUTH_CALLOUT_METHOD             | Callout method                                                                       | POST                           |
-| SMQ_AUTH_CALLOUT_TLS_VERIFICATION   | Enable TLS verification for callouts                                                 | true                           |
-| SMQ_AUTH_CALLOUT_TIMEOUT            | Callout timeout                                                                      | 10s                            |
-| SMQ_AUTH_CALLOUT_CA_CERT            | Path to CA certificate file                                                          | ""                             |
-| SMQ_AUTH_CALLOUT_CERT               | Path to client certificate file                                                      | ""                             |
-| SMQ_AUTH_CALLOUT_KEY                | Path to client key file                                                              | ""                             |
-| SMQ_AUTH_CALLOUT_INVOKE_PERMISSIONS | Invoke callout if the authorization permission matches any of the given permissions. | ""                             |
+| SMQ_ADAPTER_INSTANCE_ID        | Adapter instance ID                                                                  | ""                             |
+| SMQ_CALLOUT_URLS               | Comma-separated list of callout URLs                                                 | ""                             |
+| SMQ_CALLOUT_METHOD             | Callout method                                                                       | POST                           |
+| SMQ_CALLOUT_TLS_VERIFICATION   | Enable TLS verification for callouts                                                 | true                           |
+| SMQ_CALLOUT_TIMEOUT            | Callout timeout                                                                      | 10s                            |
+| SMQ_CALLOUT_CA_CERT            | Path to CA certificate file                                                          | ""                             |
+| SMQ_CALLOUT_CERT               | Path to client certificate file                                                      | ""                             |
+| SMQ_CALLOUT_KEY                | Path to client key file                                                              | ""                             |
+| SMQ_CALLOUT_INVOKE_PERMISSIONS | Invoke callout if the authorization permission matches any of the given permissions. | ""                             |
 
 ## Deployment
 
@@ -156,9 +156,9 @@ SMQ_JAEGER_URL=http://localhost:14268/api/traces \
 SMQ_JAEGER_TRACE_RATIO=1.0 \
 SMQ_SEND_TELEMETRY=true \
 SMQ_AUTH_ADAPTER_INSTANCE_ID="" \
-SMQ_AUTH_CALLOUT_URLS="" \
-SMQ_AUTH_CALLOUT_METHOD="POST" \
-SMQ_AUTH_CALLOUT_TLS_VERIFICATION=true \
+SMQ_CALLOUT_URLS="" \
+SMQ_CALLOUT_METHOD="POST" \
+SMQ_CALLOUT_TLS_VERIFICATION=true \
 $GOBIN/supermq-auth
 ```
 

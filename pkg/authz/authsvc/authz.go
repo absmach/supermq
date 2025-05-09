@@ -38,6 +38,7 @@ func NewAuthorization(ctx context.Context, cfg grpcclient.Config, domainsAuthz p
 	if err != nil || resp.GetStatus() != grpchealth.HealthCheckResponse_SERVING {
 		return nil, nil, grpcclient.ErrSvcNotServing
 	}
+
 	authSvcClient := auth.NewAuthClient(client.Connection(), cfg.Timeout)
 	return authorization{
 		authSvcClient: authSvcClient,
