@@ -85,6 +85,32 @@ func UpdateGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 	}
 }
 
+func updateGroupTagsEndpoint(svc groups.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(updateGroupTagsReq)
+		if err := req.validate(); err != nil {
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
+		}
+
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+
+		g := groups.Group{
+			ID:   req.id,
+			Tags: req.Tags,
+		}
+		g, err := svc.UpdateGroupTags(ctx, session, g)
+		if err != nil {
+			return nil, err
+		}
+
+		return updateGroupRes{Group: g}, nil
+	}
+}
+
+
 func EnableGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(changeGroupStatusReq)

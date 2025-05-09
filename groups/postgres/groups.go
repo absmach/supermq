@@ -18,6 +18,7 @@ import (
 	"github.com/absmach/supermq/pkg/postgres"
 	"github.com/absmach/supermq/pkg/roles"
 	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
+	"github.com/jackc/pgtype"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -95,7 +96,7 @@ func (repo groupRepository) Update(ctx context.Context, g groups.Group) (groups.
 	g.Status = groups.EnabledStatus
 	q := fmt.Sprintf(`UPDATE groups SET %s updated_at = :updated_at, updated_by = :updated_by
 		WHERE id = :id AND status = :status
-		RETURNING id, name, description, domain_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, updated_at, updated_by, status`, upq)
+		RETURNING id, name, tags, description, domain_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, updated_at, updated_by, status`, upq)
 
 	dbu, err := toDBGroup(g)
 	if err != nil {
@@ -118,9 +119,41 @@ func (repo groupRepository) Update(ctx context.Context, g groups.Group) (groups.
 	return toGroup(dbu)
 }
 
+func (repo groupRepository) UpdateTags(ctx context.Context, group groups.Group) (groups.Group, error) {
+	q := `UPDATE channels SET tags = :tags, updated_at = :updated_at, updated_by = :updated_by
+	WHERE id = :id AND status = :status
+	RETURNING id, name, tags,  metadata, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, status, created_at, updated_at, updated_by`
+	group.Status = groups.EnabledStatus
+	return repo.update(ctx, group, q)
+}
+
+func (repo groupRepository) update(ctx context.Context, g groups.Group, query string) (groups.Group, error) {
+	dbg, err := toDBGroup(g)
+	if err != nil {
+		return groups.Group{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+	}
+
+	row, err := repo.db.NamedQueryContext(ctx, query, dbg)
+	if err != nil {
+		return groups.Group{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
+	}
+	defer row.Close()
+
+	dbg = dbGroup{}
+	if row.Next() {
+		if err := row.StructScan(&dbg); err != nil {
+			return groups.Group{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+		}
+
+		return toGroup(dbg)
+	}
+
+	return groups.Group{}, repoerr.ErrNotFound
+}
+
 func (repo groupRepository) ChangeStatus(ctx context.Context, group groups.Group) (groups.Group, error) {
 	qc := `UPDATE groups SET status = :status, updated_at = :updated_at, updated_by = :updated_by WHERE id = :id
-	RETURNING id, name, description, domain_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, updated_at, updated_by, status`
+	RETURNING id, name, tags, description, domain_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, updated_at, updated_by, status`
 
 	dbg, err := toDBGroup(group)
 	if err != nil {
@@ -143,7 +176,7 @@ func (repo groupRepository) ChangeStatus(ctx context.Context, group groups.Group
 }
 
 func (repo groupRepository) RetrieveByID(ctx context.Context, id string) (groups.Group, error) {
-	q := `SELECT id, name, domain_id, COALESCE(parent_id, '') AS parent_id, description, metadata, created_at, updated_at, updated_by, status, path FROM groups
+	q := `SELECT id, name, tags, domain_id, COALESCE(parent_id, '') AS parent_id, description, metadata, created_at, updated_at, updated_by, status, path FROM groups
 	    WHERE id = :id`
 
 	dbg := dbGroup{
@@ -289,6 +322,7 @@ func (repo groupRepository) RetrieveByIDWithRoles(ctx context.Context, id, membe
 		g.parent_id,
 		g.domain_id,
 		g.name,
+		g.tags,
 		g.description,
 		g.path,
 		g.metadata,
@@ -334,6 +368,7 @@ func (repo groupRepository) RetrieveByIDAndUser(ctx context.Context, domainID, u
 						g.name,
 						g.domain_id,
 						COALESCE(g.parent_id, '') AS parent_id,
+						g.tags,
 						g.description,
 						g.metadata,
 						g.created_at,
@@ -378,7 +413,7 @@ func (repo groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMeta)
 	var q string
 	query := buildQuery(pm)
 
-	q = fmt.Sprintf(`SELECT DISTINCT g.id, g.domain_id, COALESCE(g.parent_id, '') AS parent_id, g.name, g.description,
+	q = fmt.Sprintf(`SELECT DISTINCT g.id, g.domain_id, tags, COALESCE(g.parent_id, '') AS parent_id, g.name, g.description,
 		g.metadata, g.created_at, g.updated_at, g.updated_by, g.status FROM groups g %s ORDER BY g.created_at LIMIT :limit OFFSET :offset;`, query)
 
 	dbPageMeta, err := toDBGroupPageMeta(pm)
@@ -421,7 +456,7 @@ func (repo groupRepository) RetrieveByIDs(ctx context.Context, pm groups.PageMet
 	}
 	query := buildQuery(pm, ids...)
 
-	q = fmt.Sprintf(`SELECT DISTINCT g.id, g.domain_id, COALESCE(g.parent_id, '') AS parent_id, g.name, g.description,
+	q = fmt.Sprintf(`SELECT DISTINCT g.id, g.domain_id, tags, COALESCE(g.parent_id, '') AS parent_id, g.name, g.description,
 		g.metadata, g.created_at, g.updated_at, g.updated_by, g.status FROM groups g %s ORDER BY g.created_at LIMIT :limit OFFSET :offset;`, query)
 
 	dbPageMeta, err := toDBGroupPageMeta(pm)
@@ -469,6 +504,7 @@ func (repo groupRepository) RetrieveHierarchy(ctx context.Context, id string, hm
 			g.domain_id,
 			g.name,
 			g.description,
+			g.tags,
 			g.metadata,
 			g.created_at,
 			g.updated_at,
@@ -801,6 +837,7 @@ func (repo groupRepository) retrieveGroups(ctx context.Context, domainID, userID
 						g.domain_id,
 						COALESCE(g.parent_id, '') AS parent_id,
 						g.description,
+						g.tags,
 						g.metadata,
 						g.created_at,
 						g.updated_at,
@@ -848,6 +885,7 @@ func (repo groupRepository) retrieveGroups(ctx context.Context, domainID, userID
 								g.domain_id,
 								COALESCE(g.parent_id, '') AS parent_id,
 								g.description,
+								g.tags,
 								g.metadata,
 								g.created_at,
 								g.updated_at,
@@ -1093,28 +1131,29 @@ func buildQuery(gm groups.PageMeta, ids ...string) string {
 }
 
 type dbGroup struct {
-	ID                        string          `db:"id"`
-	ParentID                  *string         `db:"parent_id,omitempty"`
-	DomainID                  string          `db:"domain_id,omitempty"`
-	Name                      string          `db:"name"`
-	Description               string          `db:"description,omitempty"`
-	Level                     int             `db:"level"`
-	Path                      string          `db:"path,omitempty"`
-	Metadata                  []byte          `db:"metadata,omitempty"`
-	CreatedAt                 time.Time       `db:"created_at"`
-	UpdatedAt                 sql.NullTime    `db:"updated_at,omitempty"`
-	UpdatedBy                 *string         `db:"updated_by,omitempty"`
-	Status                    groups.Status   `db:"status"`
-	RoleID                    string          `db:"role_id"`
-	RoleName                  string          `db:"role_name"`
-	Actions                   pq.StringArray  `db:"actions"`
-	AccessType                string          `db:"access_type"`
-	AccessProviderId          string          `db:"access_provider_id"`
-	AccessProviderRoleId      string          `db:"access_provider_role_id"`
-	AccessProviderRoleName    string          `db:"access_provider_role_name"`
-	AccessProviderRoleActions pq.StringArray  `db:"access_provider_role_actions"`
-	MemberID                  string          `db:"member_id,omitempty"`
-	Roles                     json.RawMessage `db:"roles,omitempty"`
+	ID                        string           `db:"id"`
+	ParentID                  *string          `db:"parent_id,omitempty"`
+	DomainID                  string           `db:"domain_id,omitempty"`
+	Name                      string           `db:"name"`
+	Description               string           `db:"description,omitempty"`
+	Tags                      pgtype.TextArray `db:"tags,omitempty"`
+	Level                     int              `db:"level"`
+	Path                      string           `db:"path,omitempty"`
+	Metadata                  []byte           `db:"metadata,omitempty"`
+	CreatedAt                 time.Time        `db:"created_at"`
+	UpdatedAt                 sql.NullTime     `db:"updated_at,omitempty"`
+	UpdatedBy                 *string          `db:"updated_by,omitempty"`
+	Status                    groups.Status    `db:"status"`
+	RoleID                    string           `db:"role_id"`
+	RoleName                  string           `db:"role_name"`
+	Actions                   pq.StringArray   `db:"actions"`
+	AccessType                string           `db:"access_type"`
+	AccessProviderId          string           `db:"access_provider_id"`
+	AccessProviderRoleId      string           `db:"access_provider_role_id"`
+	AccessProviderRoleName    string           `db:"access_provider_role_name"`
+	AccessProviderRoleActions pq.StringArray   `db:"access_provider_role_actions"`
+	MemberID                  string           `db:"member_id,omitempty"`
+	Roles                     json.RawMessage  `db:"roles,omitempty"`
 }
 
 func toDBGroup(g groups.Group) (dbGroup, error) {
@@ -1125,6 +1164,10 @@ func toDBGroup(g groups.Group) (dbGroup, error) {
 			return dbGroup{}, errors.Wrap(errors.ErrMalformedEntity, err)
 		}
 		data = b
+	}
+	var tags pgtype.TextArray
+	if err := tags.Set(g.Tags); err != nil {
+		return dbGroup{}, err
 	}
 	var parentID *string
 	if g.Parent != "" {
@@ -1144,6 +1187,7 @@ func toDBGroup(g groups.Group) (dbGroup, error) {
 		ParentID:    parentID,
 		DomainID:    g.Domain,
 		Description: g.Description,
+		Tags:        tags,
 		Metadata:    data,
 		Path:        g.Path,
 		CreatedAt:   g.CreatedAt,
@@ -1159,6 +1203,10 @@ func toGroup(g dbGroup) (groups.Group, error) {
 		if err := json.Unmarshal(g.Metadata, &metadata); err != nil {
 			return groups.Group{}, errors.Wrap(repoerr.ErrMalformedEntity, err)
 		}
+	}
+	var tags []string
+	for _, e := range g.Tags.Elements {
+		tags = append(tags, e.String)
 	}
 	var parentID string
 	if g.ParentID != nil {
@@ -1186,6 +1234,7 @@ func toGroup(g dbGroup) (groups.Group, error) {
 		Parent:                    parentID,
 		Domain:                    g.DomainID,
 		Description:               g.Description,
+		Tags:                      tags,
 		Metadata:                  metadata,
 		Level:                     g.Level,
 		Path:                      g.Path,
@@ -1276,12 +1325,12 @@ func (repo groupRepository) getInsertQuery(c context.Context, g groups.Group) (s
 		if len(strings.Split(path, ".")) > groups.MaxPathLength {
 			return "", fmt.Errorf("reached max nested depth")
 		}
-		return fmt.Sprintf(`INSERT INTO groups (name, description, id, domain_id, parent_id, metadata, created_at, status, path)
-		VALUES (:name, :description, :id, :domain_id, :parent_id, :metadata, :created_at, :status, '%s')
+		return fmt.Sprintf(`INSERT INTO groups (name, description, tags, id, domain_id, parent_id, metadata, created_at, status, path)
+		VALUES (:name, :description, :tags, :id, :domain_id, :parent_id, :metadata, :created_at, :status, '%s')
 		RETURNING id, name, description, domain_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, status, path, nlevel(path) as level;`, path), nil
 	default:
-		return `INSERT INTO groups (name, description, id, domain_id, metadata, created_at, status, path)
-		VALUES (:name, :description, :id, :domain_id, :metadata, :created_at, :status, :id)
+		return `INSERT INTO groups (name, description, tags, id, domain_id, metadata, created_at, status, path)
+		VALUES (:name, :description, :tags, :id, :domain_id, :metadata, :created_at, :status, :id)
 		RETURNING id, name, description, domain_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, status, path, nlevel(path) as level;`, nil
 	}
 }

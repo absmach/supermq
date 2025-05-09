@@ -342,6 +342,53 @@ func TestUpdateGroup(t *testing.T) {
 	}
 }
 
+func TestUpdateGroupTags(t *testing.T) {
+	svc := newService(t)
+
+	cases := []struct {
+		desc      string
+		updateReq groups.Group
+		repoResp  groups.Group
+		repoErr   error
+		err       error
+	}{
+		{
+			desc: "update group tags successfully",
+			updateReq: groups.Group{
+				ID:   testsutil.GenerateUUID(t),
+				Tags: []string{"tag1", "tag2"},
+			},
+			repoResp: groups.Group{
+				ID:   testsutil.GenerateUUID(t),
+				Tags: []string{"tag1", "tag2"},
+			},
+		},
+		{
+			desc: "update group tags with repo error",
+			updateReq: groups.Group{
+				ID:   testsutil.GenerateUUID(t),
+				Tags: []string{"tag1", "tag2"},
+			},
+			repoErr: repoerr.ErrNotFound,
+			err:     svcerr.ErrNotFound,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			repoCall := repo.On("UpdateTags", context.Background(), mock.Anything).Return(tc.repoResp, tc.repoErr)
+			got, err := svc.UpdateGroupTags(context.Background(), validSession, tc.updateReq)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
+			if err == nil {
+				assert.Equal(t, tc.repoResp, got)
+				ok := repo.AssertCalled(t, "UpdateTags", context.Background(), mock.Anything)
+				assert.True(t, ok, fmt.Sprintf("UpdateTags was not called on %s", tc.desc))
+			}
+			repoCall.Unset()
+		})
+	}
+}
+
 func TestEnableGroup(t *testing.T) {
 	svc := newService(t)
 

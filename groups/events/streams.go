@@ -19,6 +19,7 @@ const (
 	supermqPrefix           = "supermq."
 	createStream            = supermqPrefix + groupCreate
 	updateStream            = supermqPrefix + groupUpdate
+	updateTagsStream        = supermqPrefix + groupUpdateTags
 	enableStream            = supermqPrefix + groupEnable
 	disableStream           = supermqPrefix + groupDisable
 	viewStream              = supermqPrefix + groupView
@@ -86,9 +87,10 @@ func (es eventStore) UpdateGroup(ctx context.Context, session authn.Session, gro
 	}
 
 	event := updateGroupEvent{
-		group,
-		session,
-		middleware.GetReqID(ctx),
+		Group:     group,
+		Session:   session,
+		operation: groupUpdate,
+		requestID: middleware.GetReqID(ctx),
 	}
 
 	if err := es.Publish(ctx, updateStream, event); err != nil {
@@ -96,6 +98,25 @@ func (es eventStore) UpdateGroup(ctx context.Context, session authn.Session, gro
 	}
 
 	return group, nil
+}
+
+func (es *eventStore) UpdateGroupTags(ctx context.Context, session authn.Session, g groups.Group) (groups.Group, error) {
+	g, err := es.svc.UpdateGroupTags(ctx, session, g)
+	if err != nil {
+		return g, err
+	}
+
+	event := updateGroupEvent{
+		Group:     g,
+		Session:   session,
+		operation: groupUpdateTags,
+		requestID: middleware.GetReqID(ctx),
+	}
+	if err := es.Publish(ctx, updateTagsStream, event); err != nil {
+		return g, err
+	}
+
+	return g, nil
 }
 
 func (es eventStore) ViewGroup(ctx context.Context, session authn.Session, id string, withRoles bool) (groups.Group, error) {

@@ -1768,6 +1768,62 @@ func (_c *Service_UpdateGroup_Call) RunAndReturn(run func(ctx context.Context, s
 	return _c
 }
 
+// UpdateGroupTags provides a mock function for the type Service
+func (_mock *Service) UpdateGroupTags(ctx context.Context, session authn.Session, group groups.Group) (groups.Group, error) {
+	ret := _mock.Called(ctx, session, group)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateGroupTags")
+	}
+
+	var r0 groups.Group
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, authn.Session, groups.Group) (groups.Group, error)); ok {
+		return returnFunc(ctx, session, group)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, authn.Session, groups.Group) groups.Group); ok {
+		r0 = returnFunc(ctx, session, group)
+	} else {
+		r0 = ret.Get(0).(groups.Group)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, authn.Session, groups.Group) error); ok {
+		r1 = returnFunc(ctx, session, group)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Service_UpdateGroupTags_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateGroupTags'
+type Service_UpdateGroupTags_Call struct {
+	*mock.Call
+}
+
+// UpdateGroupTags is a helper method to define mock.On call
+//   - ctx
+//   - session
+//   - group
+func (_e *Service_Expecter) UpdateGroupTags(ctx interface{}, session interface{}, group interface{}) *Service_UpdateGroupTags_Call {
+	return &Service_UpdateGroupTags_Call{Call: _e.mock.On("UpdateGroupTags", ctx, session, group)}
+}
+
+func (_c *Service_UpdateGroupTags_Call) Run(run func(ctx context.Context, session authn.Session, group groups.Group)) *Service_UpdateGroupTags_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(authn.Session), args[2].(groups.Group))
+	})
+	return _c
+}
+
+func (_c *Service_UpdateGroupTags_Call) Return(group1 groups.Group, err error) *Service_UpdateGroupTags_Call {
+	_c.Call.Return(group1, err)
+	return _c
+}
+
+func (_c *Service_UpdateGroupTags_Call) RunAndReturn(run func(ctx context.Context, session authn.Session, group groups.Group) (groups.Group, error)) *Service_UpdateGroupTags_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // UpdateRoleName provides a mock function for the type Service
 func (_mock *Service) UpdateRoleName(ctx context.Context, session authn.Session, entityID string, roleID string, newRoleName string) (roles.Role, error) {
 	ret := _mock.Called(ctx, session, entityID, roleID, newRoleName)

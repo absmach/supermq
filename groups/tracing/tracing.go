@@ -89,6 +89,17 @@ func (tm *tracingMiddleware) UpdateGroup(ctx context.Context, session authn.Sess
 	return tm.svc.UpdateGroup(ctx, session, g)
 }
 
+// UpdateGroupTags traces the "UpdateGroupTags" operation of the wrapped groups.Service.
+func (tm *tracingMiddleware) UpdateGroupTags(ctx context.Context, session authn.Session, group groups.Group) (groups.Group, error) {
+	ctx, span := tracing.StartSpan(ctx, tm.tracer, "svc_update_group_tags", trace.WithAttributes(
+		attribute.String("id", group.ID),
+		attribute.StringSlice("tags", group.Tags),
+	))
+	defer span.End()
+
+	return tm.svc.UpdateGroupTags(ctx, session, group)
+}
+
 // EnableGroup traces the "EnableGroup" operation of the wrapped groups.Service.
 func (tm *tracingMiddleware) EnableGroup(ctx context.Context, session authn.Session, id string) (groups.Group, error) {
 	ctx, span := tracing.StartSpan(ctx, tm.tracer, "svc_enable_group", trace.WithAttributes(attribute.String("id", id)))

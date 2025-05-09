@@ -16,6 +16,7 @@ const (
 	groupPrefix                  = "group."
 	groupCreate                  = groupPrefix + "create"
 	groupUpdate                  = groupPrefix + "update"
+	groupUpdateTags              = groupPrefix + "update_tags"
 	groupEnable                  = groupPrefix + "enable"
 	groupDisable                 = groupPrefix + "disable"
 	groupView                    = groupPrefix + "view"
@@ -93,12 +94,13 @@ func (cge createGroupEvent) Encode() (map[string]interface{}, error) {
 type updateGroupEvent struct {
 	groups.Group
 	authn.Session
+	operation string
 	requestID string
 }
 
 func (uge updateGroupEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
-		"operation":   groupUpdate,
+		"operation":   uge.operation,
 		"updated_at":  uge.UpdatedAt,
 		"updated_by":  uge.UpdatedBy,
 		"domain":      uge.DomainID,

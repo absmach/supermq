@@ -29,6 +29,7 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 						domain_id	VARCHAR(36) NOT NULL,
 						name		VARCHAR(1024) NOT NULL,
 						description	VARCHAR(1024),
+						tags        TEXT[],
 						metadata	JSONB,
 						created_at	TIMESTAMP,
 						updated_at	TIMESTAMP,

@@ -30,6 +30,7 @@ type Group struct {
 	Parent                    string                    `json:"parent_id,omitempty"`
 	Name                      string                    `json:"name"`
 	Description               string                    `json:"description,omitempty"`
+	Tags                      []string                  `json:"tags,omitempty"`
 	Metadata                  Metadata                  `json:"metadata,omitempty"`
 	Level                     int                       `json:"level,omitempty"`
 	Path                      string                    `json:"path,omitempty"`
@@ -91,6 +92,9 @@ type Repository interface {
 	// Update a group.
 	Update(ctx context.Context, g Group) (Group, error)
 
+	// Update a group's tags.
+	UpdateTags(ctx context.Context, g Group) (Group, error)
+
 	// RetrieveByID retrieves group by its id.
 	RetrieveByID(ctx context.Context, id string) (Group, error)
 
@@ -139,6 +143,9 @@ type Service interface {
 
 	// UpdateGroup updates the group identified by the provided ID.
 	UpdateGroup(ctx context.Context, session authn.Session, g Group) (Group, error)
+
+	// UpdateGroupTags updates the groups's tags.
+	UpdateGroupTags(ctx context.Context, session authn.Session, group Group) (Group, error)
 
 	// ViewGroup retrieves data about the group identified by ID.
 	ViewGroup(ctx context.Context, session authn.Session, id string, withRoles bool) (Group, error)

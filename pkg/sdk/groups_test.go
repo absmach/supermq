@@ -850,6 +850,157 @@ func TestUpdateGroup(t *testing.T) {
 	}
 }
 
+func TestUpdateGroupTags(t *testing.T) {
+	ts, tsvc, auth := setupGroups()
+	defer ts.Close()
+
+	sdkGroup := generateTestGroup(t)
+	updatedGroup := sdkGroup
+	updatedGroup.Tags = []string{"newTag1", "newTag2"}
+	updateGroupReq := sdk.Group{
+		ID:   sdkGroup.ID,
+		Tags: updatedGroup.Tags,
+	}
+
+	conf := sdk.Config{
+		GroupsURL: ts.URL,
+	}
+	mgsdk := sdk.NewSDK(conf)
+
+	cases := []struct {
+		desc            string
+		domainID        string
+		token           string
+		session         smqauthn.Session
+		updateGroupReq  sdk.Group
+		svcReq          groups.Group
+		svcRes          groups.Group
+		svcErr          error
+		authenticateErr error
+		response        sdk.Group
+		err             errors.SDKError
+	}{
+		{
+			desc:           "update channel tags successfully",
+			domainID:       domainID,
+			token:          validToken,
+			updateGroupReq: updateGroupReq,
+			svcReq:         convertGroup(updateGroupReq),
+			svcRes:         convertGroup(updatedGroup),
+			svcErr:         nil,
+			response:       updatedGroup,
+			err:            nil,
+		},
+		{
+			desc:            "update channel tags with an invalid token",
+			domainID:        domainID,
+			token:           invalidToken,
+			updateGroupReq:  updateGroupReq,
+			svcReq:          convertGroup(updateGroupReq),
+			svcRes:          groups.Group{},
+			authenticateErr: svcerr.ErrAuthorization,
+			response:        sdk.Group{},
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+		},
+		{
+			desc:           "update channel tags with empty token",
+			domainID:       domainID,
+			token:          "",
+			updateGroupReq: updateGroupReq,
+			svcReq:         convertGroup(updateGroupReq),
+			svcRes:         groups.Group{},
+			svcErr:         nil,
+			response:       sdk.Group{},
+			err:            errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
+		},
+		{
+			desc:     "update channel tags with an invalid channel id",
+			domainID: domainID,
+			token:    validToken,
+			updateGroupReq: sdk.Group{
+				ID:   wrongID,
+				Tags: updatedGroup.Tags,
+			},
+			svcReq: convertGroup(sdk.Group{
+				ID:   wrongID,
+				Tags: updatedGroup.Tags,
+			}),
+			svcRes:   groups.Group{},
+			svcErr:   svcerr.ErrUpdateEntity,
+			response: sdk.Group{},
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity),
+		},
+		{
+			desc:     "update channel tags with empty channel id",
+			domainID: domainID,
+			token:    validToken,
+			updateGroupReq: sdk.Group{
+				ID:   "",
+				Tags: updatedGroup.Tags,
+			},
+			svcReq: convertGroup(sdk.Group{
+				ID:   "",
+				Tags: updatedGroup.Tags,
+			}),
+			svcRes:   groups.Group{},
+			svcErr:   nil,
+			response: sdk.Group{},
+			err:      errors.NewSDKError(apiutil.ErrMissingID),
+		},
+		{
+			desc:     "update channel tags with a request that can't be marshalled",
+			domainID: domainID,
+			token:    validToken,
+			updateGroupReq: sdk.Group{
+				ID: "test",
+				Metadata: map[string]interface{}{
+					"test": make(chan int),
+				},
+			},
+			svcReq:   groups.Group{},
+			svcRes:   groups.Group{},
+			svcErr:   nil,
+			response: sdk.Group{},
+			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+		},
+		{
+			desc:           "update channel tags with a response that can't be unmarshalled",
+			domainID:       domainID,
+			token:          validToken,
+			updateGroupReq: updateGroupReq,
+			svcReq:         convertGroup(updateGroupReq),
+			svcRes: groups.Group{
+				Name: updatedGroup.Name,
+				Tags: updatedGroup.Tags,
+				Metadata: groups.Metadata{
+					"test": make(chan int),
+				},
+			},
+			svcErr:   nil,
+			response: sdk.Group{},
+			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, mock.Anything).Return(tc.session, tc.authenticateErr)
+			svcCall := tsvc.On("UpdateGroupTags", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			resp, err := mgsdk.UpdateGroupTags(context.Background(), tc.updateGroupReq, tc.domainID, tc.token)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.response, resp)
+			if tc.err == nil {
+				ok := svcCall.Parent.AssertCalled(t, "UpdateGroupTags", mock.Anything, tc.session, tc.svcReq)
+				assert.True(t, ok)
+			}
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
 func TestEnableGroup(t *testing.T) {
 	ts, gsvc, auth := setupGroups()
 	defer ts.Close()

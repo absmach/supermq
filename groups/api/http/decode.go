@@ -68,6 +68,21 @@ func DecodeGroupUpdate(_ context.Context, r *http.Request) (interface{}, error) 
 	return req, nil
 }
 
+func decodeUpdateGroupTags(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
+		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
+	}
+
+	req := updateGroupTagsReq{
+		id: chi.URLParam(r, "channelID"),
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+	}
+
+	return req, nil
+}
+
 func DecodeGroupRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	roles, err := apiutil.ReadBoolQuery(r, api.RolesKey, false)
 	if err != nil {

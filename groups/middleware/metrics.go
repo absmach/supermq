@@ -52,6 +52,15 @@ func (ms *metricsMiddleware) UpdateGroup(ctx context.Context, session authn.Sess
 	return ms.svc.UpdateGroup(ctx, session, group)
 }
 
+// UpdateGroupTags instruments UpdateGroupTags method with metrics.
+func (ms *metricsMiddleware) UpdateGroupTags(ctx context.Context, session authn.Session, group groups.Group) (groups.Group, error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "update_group_tags").Add(1)
+		ms.latency.With("method", "update_group_tags").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.UpdateGroupTags(ctx, session, group)
+}
+
 // ViewGroup instruments ViewGroup method with metrics.
 func (ms *metricsMiddleware) ViewGroup(ctx context.Context, session authn.Session, id string, withRoles bool) (g groups.Group, err error) {
 	defer func(begin time.Time) {

@@ -13,6 +13,7 @@ import (
 const (
 	OpViewGroup svcutil.Operation = iota
 	OpUpdateGroup
+	OpUpdateGroupTags
 	OpEnableGroup
 	OpDisableGroup
 	OpRetrieveGroupHierarchy
@@ -28,6 +29,7 @@ const (
 var expectedOperations = []svcutil.Operation{
 	OpViewGroup,
 	OpUpdateGroup,
+	OpUpdateGroupTags,
 	OpEnableGroup,
 	OpDisableGroup,
 	OpRetrieveGroupHierarchy,
@@ -43,6 +45,7 @@ var expectedOperations = []svcutil.Operation{
 var operationNames = []string{
 	"OpViewGroup",
 	"OpUpdateGroup",
+	"OpUpdateGroupTags",
 	"OpEnableGroup",
 	"OpDisableGroup",
 	"OpRetrieveGroupHierarchy",
@@ -107,6 +110,7 @@ func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 	opPerm := map[svcutil.Operation]svcutil.Permission{
 		OpViewGroup:               readPermission,
 		OpUpdateGroup:             updatePermission,
+		OpUpdateGroupTags:         updatePermission,
 		OpEnableGroup:             updatePermission,
 		OpDisableGroup:            updatePermission,
 		OpRetrieveGroupHierarchy:  readPermission,

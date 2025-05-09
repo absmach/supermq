@@ -640,6 +640,17 @@ type SDK interface {
 	//  fmt.Println(group)
 	UpdateGroup(ctx context.Context, group Group, domainID, token string) (Group, errors.SDKError)
 
+	// UpdateGroupTags updates tags for existing group.
+	//
+	// example:
+	//  group := sdk.Group{
+	//    ID:   "groupID",
+	//    Tags: []string{"tag1", "tag2"}
+	//  }
+	//  group, _ := sdk.UpdateGroupTags(group, "domainID", "token")
+	//  fmt.Println(group)
+	UpdateGroupTags(ctx context.Context, group Group, domainID, token string) (Group, errors.SDKError)
+
 	// SetGroupParent sets the parent group of a group.
 	//
 	// example:

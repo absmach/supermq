@@ -22,6 +22,7 @@ import (
 var (
 	errView                        = errors.New("not authorized to view group")
 	errUpdate                      = errors.New("not authorized to update group")
+	errUpdateTags                  = errors.New("not authorized to update group tags")
 	errEnable                      = errors.New("not authorized to enable group")
 	errDisable                     = errors.New("not authorized to disable group")
 	errDelete                      = errors.New("not authorized to delete group")
@@ -148,6 +149,32 @@ func (am *authorizationMiddleware) UpdateGroup(ctx context.Context, session auth
 	}
 
 	return am.svc.UpdateGroup(ctx, session, g)
+}
+
+func (am *authorizationMiddleware) UpdateGroupTags(ctx context.Context, session authn.Session, group groups.Group) (groups.Group, error) {
+	if session.Type == authn.PersonalAccessToken {
+		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
+			UserID:           session.UserID,
+			PatID:            session.PatID,
+			EntityType:       auth.GroupsType,
+			OptionalDomainID: session.DomainID,
+			Operation:        auth.UpdateOp,
+			EntityID:         group.ID,
+		}); err != nil {
+			return groups.Group{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
+		}
+	}
+
+	if err := am.authorize(ctx, groups.OpUpdateGroupTags, smqauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		Subject:     session.DomainUserID,
+		ObjectType:  policies.GroupType,
+		Object:      group.ID,
+	}); err != nil {
+		return groups.Group{}, errors.Wrap(err, errUpdateTags)
+	}
+	return am.svc.UpdateGroupTags(ctx, session, group)
 }
 
 func (am *authorizationMiddleware) ViewGroup(ctx context.Context, session authn.Session, id string, withRoles bool) (groups.Group, error) {

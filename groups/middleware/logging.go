@@ -75,6 +75,28 @@ func (lm *loggingMiddleware) UpdateGroup(ctx context.Context, session authn.Sess
 	return lm.svc.UpdateGroup(ctx, session, group)
 }
 
+func (lm *loggingMiddleware) UpdateGroupTags(ctx context.Context, session authn.Session, group groups.Group) (g groups.Group, err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.String("domain_id", session.DomainID),
+			slog.String("request_id", middleware.GetReqID(ctx)),
+			slog.Group("group",
+				slog.String("id", g.ID),
+				slog.String("name", g.Name),
+				slog.Any("tags", g.Tags),
+			),
+		}
+		if err != nil {
+			args := append(args, slog.String("error", err.Error()))
+			lm.logger.Warn("Update group tags failed", args...)
+			return
+		}
+		lm.logger.Info("Update group tags completed successfully", args...)
+	}(time.Now())
+	return lm.svc.UpdateGroupTags(ctx, session, group)
+}
+
 // ViewGroup logs the view_group request. It logs the group name, id and the time it took to complete the request.
 // If the request fails, it logs the error.
 func (lm *loggingMiddleware) ViewGroup(ctx context.Context, session authn.Session, id string, withRoles bool) (g groups.Group, err error) {

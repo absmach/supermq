@@ -32,6 +32,7 @@ type Group struct {
 	ParentID                  string                    `json:"parent_id,omitempty"`
 	Name                      string                    `json:"name,omitempty"`
 	Description               string                    `json:"description,omitempty"`
+	Tags                      []string                  `json:"tags,omitempty"`
 	Metadata                  Metadata                  `json:"metadata,omitempty"`
 	Level                     int                       `json:"level,omitempty"`
 	Path                      string                    `json:"path,omitempty"`
@@ -123,6 +124,30 @@ func (sdk mgSDK) UpdateGroup(ctx context.Context, g Group, domainID, token strin
 	url := fmt.Sprintf("%s/%s/%s/%s", sdk.groupsURL, domainID, groupsEndpoint, g.ID)
 
 	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPut, url, token, data, nil, http.StatusOK)
+	if sdkerr != nil {
+		return Group{}, sdkerr
+	}
+
+	g = Group{}
+	if err := json.Unmarshal(body, &g); err != nil {
+		return Group{}, errors.NewSDKError(err)
+	}
+
+	return g, nil
+}
+
+func (sdk mgSDK) UpdateGroupTags(ctx context.Context, g Group, domainID, token string) (Group, errors.SDKError) {
+	if g.ID == "" {
+		return Group{}, errors.NewSDKError(apiutil.ErrMissingID)
+	}
+	url := fmt.Sprintf("%s/%s/%s/%s/tags", sdk.groupsURL, domainID, groupsEndpoint, g.ID)
+
+	data, err := json.Marshal(g)
+	if err != nil {
+		return Group{}, errors.NewSDKError(err)
+	}
+
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
 	if sdkerr != nil {
 		return Group{}, sdkerr
 	}

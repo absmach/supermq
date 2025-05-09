@@ -158,6 +158,20 @@ func (svc service) UpdateGroup(ctx context.Context, session smqauthn.Session, g 
 	return group, nil
 }
 
+func (svc service) UpdateGroupTags(ctx context.Context, session smqauthn.Session, g Group) (Group, error) {
+	group := Group{
+		ID:        g.ID,
+		Tags:      g.Tags,
+		UpdatedAt: time.Now(),
+		UpdatedBy: session.UserID,
+	}
+	group, err := svc.repo.UpdateTags(ctx, group)
+	if err != nil {
+		return Group{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+	}
+	return group, nil
+}
+
 func (svc service) EnableGroup(ctx context.Context, session smqauthn.Session, id string) (Group, error) {
 	group := Group{
 		ID:        id,

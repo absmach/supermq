@@ -2009,3 +2009,58 @@ func (_c *Repository_UpdateRole_Call) RunAndReturn(run func(ctx context.Context,
 	_c.Call.Return(run)
 	return _c
 }
+
+// UpdateTags provides a mock function for the type Repository
+func (_mock *Repository) UpdateTags(ctx context.Context, g groups.Group) (groups.Group, error) {
+	ret := _mock.Called(ctx, g)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateTags")
+	}
+
+	var r0 groups.Group
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, groups.Group) (groups.Group, error)); ok {
+		return returnFunc(ctx, g)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, groups.Group) groups.Group); ok {
+		r0 = returnFunc(ctx, g)
+	} else {
+		r0 = ret.Get(0).(groups.Group)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, groups.Group) error); ok {
+		r1 = returnFunc(ctx, g)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Repository_UpdateTags_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateTags'
+type Repository_UpdateTags_Call struct {
+	*mock.Call
+}
+
+// UpdateTags is a helper method to define mock.On call
+//   - ctx
+//   - g
+func (_e *Repository_Expecter) UpdateTags(ctx interface{}, g interface{}) *Repository_UpdateTags_Call {
+	return &Repository_UpdateTags_Call{Call: _e.mock.On("UpdateTags", ctx, g)}
+}
+
+func (_c *Repository_UpdateTags_Call) Run(run func(ctx context.Context, g groups.Group)) *Repository_UpdateTags_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(groups.Group))
+	})
+	return _c
+}
+
+func (_c *Repository_UpdateTags_Call) Return(group groups.Group, err error) *Repository_UpdateTags_Call {
+	_c.Call.Return(group, err)
+	return _c
+}
+
+func (_c *Repository_UpdateTags_Call) RunAndReturn(run func(ctx context.Context, g groups.Group) (groups.Group, error)) *Repository_UpdateTags_Call {
+	_c.Call.Return(run)
+	return _c
+}

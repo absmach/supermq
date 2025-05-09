@@ -38,6 +38,19 @@ func (req updateGroupReq) validate() error {
 	return nil
 }
 
+type updateGroupTagsReq struct {
+	id   string
+	Tags []string `json:"tags,omitempty"`
+}
+
+func (req updateGroupTagsReq) validate() error {
+	if req.id == "" {
+		return apiutil.ErrMissingID
+	}
+
+	return nil
+}
+
 type listGroupsReq struct {
 	groups.PageMeta
 	userID  string
