@@ -559,6 +559,16 @@ func (r ProvisionManageService) RoleRemoveMembers(ctx context.Context, session a
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
+	if ro.Name == "admin" {
+		page, err := r.repo.RoleListMembers(ctx, ro.ID, 0, 0)
+		if err != nil {
+			return errors.Wrap(svcerr.ErrViewEntity, err)
+		}
+		if page.Total <= uint64(len(members)) {
+			return errors.Wrap(svcerr.ErrRemoveEntity, fmt.Errorf("admin role must retain at least one member"))
+		}
+	}
+
 	if len(members) == 0 {
 		return svcerr.ErrMalformedEntity
 	}
@@ -590,6 +600,10 @@ func (r ProvisionManageService) RoleRemoveAllMembers(ctx context.Context, sessio
 	ro, err := r.repo.RetrieveEntityRole(ctx, entityID, roleID)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+
+	if ro.Name == "admin" {
+		return errors.Wrap(svcerr.ErrRemoveEntity, fmt.Errorf("removing all members from the built-in admin role is not permitted"))
 	}
 
 	prs := policies.Policy{
