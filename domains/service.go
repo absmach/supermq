@@ -61,7 +61,7 @@ func (svc service) CreateDomain(ctx context.Context, session authn.Session, d Do
 		return Domain{}, []roles.RoleProvision{}, svcerr.ErrInvalidStatus
 	}
 
-	d.CreatedAt = time.Now()
+	d.CreatedAt = time.Now().UTC()
 
 	// Domain is created in repo first, because Roles table have foreign key relation with Domain ID
 	dom, err := svc.repo.SaveDomain(ctx, d)
@@ -190,7 +190,6 @@ func (svc *service) SendInvitation(ctx context.Context, session authn.Session, i
 		return errors.Wrap(svcerr.ErrInvalidRole, err)
 	}
 	invitation.InvitedBy = session.UserID
-
 	invitation.CreatedAt = time.Now().UTC()
 
 	if invitation.Resend {

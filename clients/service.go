@@ -73,7 +73,7 @@ func (svc service) CreateClients(ctx context.Context, session authn.Session, cls
 			return []Client{}, []roles.RoleProvision{}, svcerr.ErrInvalidStatus
 		}
 		c.Domain = session.DomainID
-		c.CreatedAt = time.Now()
+		c.CreatedAt = time.Now().UTC()
 		clients = append(clients, c)
 	}
 
@@ -166,7 +166,7 @@ func (svc service) Update(ctx context.Context, session authn.Session, cli Client
 		ID:        cli.ID,
 		Name:      cli.Name,
 		Metadata:  cli.Metadata,
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 		UpdatedBy: session.UserID,
 	}
 	client, err := svc.repo.Update(ctx, client)
@@ -180,7 +180,7 @@ func (svc service) UpdateTags(ctx context.Context, session authn.Session, cli Cl
 	client := Client{
 		ID:        cli.ID,
 		Tags:      cli.Tags,
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 		UpdatedBy: session.UserID,
 	}
 	client, err := svc.repo.UpdateTags(ctx, client)
@@ -196,7 +196,7 @@ func (svc service) UpdateSecret(ctx context.Context, session authn.Session, id, 
 		Credentials: Credentials{
 			Secret: key,
 		},
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 		UpdatedBy: session.UserID,
 		Status:    EnabledStatus,
 	}
@@ -211,7 +211,7 @@ func (svc service) Enable(ctx context.Context, session authn.Session, id string)
 	client := Client{
 		ID:        id,
 		Status:    EnabledStatus,
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 	}
 	client, err := svc.changeClientStatus(ctx, session, client)
 	if err != nil {
@@ -225,7 +225,7 @@ func (svc service) Disable(ctx context.Context, session authn.Session, id string
 	client := Client{
 		ID:        id,
 		Status:    DisabledStatus,
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 	}
 	client, err := svc.changeClientStatus(ctx, session, client)
 	if err != nil {
@@ -285,7 +285,7 @@ func (svc service) SetParentGroup(ctx context.Context, session authn.Session, pa
 			}
 		}
 	}()
-	cli = Client{ID: id, ParentGroup: parentGroupID, UpdatedBy: session.UserID, UpdatedAt: time.Now()}
+	cli = Client{ID: id, ParentGroup: parentGroupID, UpdatedBy: session.UserID, UpdatedAt: time.Now().UTC()}
 
 	if err := svc.repo.SetParentGroup(ctx, cli); err != nil {
 		return errors.Wrap(svcerr.ErrUpdateEntity, err)
@@ -321,7 +321,7 @@ func (svc service) RemoveParentGroup(ctx context.Context, session authn.Session,
 			}
 		}()
 
-		cli := Client{ID: id, UpdatedBy: session.UserID, UpdatedAt: time.Now()}
+		cli := Client{ID: id, UpdatedBy: session.UserID, UpdatedAt: time.Now().UTC()}
 
 		if err := svc.repo.RemoveParentGroup(ctx, cli); err != nil {
 			return err

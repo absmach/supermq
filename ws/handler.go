@@ -164,7 +164,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		Channel:  chanID,
 		Subtopic: subtopic,
 		Payload:  *payload,
-		Created:  time.Now().UnixNano(),
+		Created:  time.Now().UTC().UnixNano(),
 	}
 
 	if clientType == policies.ClientType {

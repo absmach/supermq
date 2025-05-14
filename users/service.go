@@ -73,7 +73,7 @@ func (svc service) Register(ctx context.Context, session authn.Session, u User, 
 		return User{}, errors.Wrap(svcerr.ErrMalformedEntity, svcerr.ErrInvalidRole)
 	}
 	u.ID = userID
-	u.CreatedAt = time.Now()
+	u.CreatedAt = time.Now().UTC()
 
 	if err := svc.addUserPolicy(ctx, u.ID, u.Role); err != nil {
 		return User{}, err
@@ -207,7 +207,7 @@ func (svc service) Update(ctx context.Context, session authn.Session, usr User) 
 		LastName:  usr.LastName,
 		Metadata:  usr.Metadata,
 		Role:      AllRole,
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 		UpdatedBy: session.UserID,
 	}
 
@@ -229,7 +229,7 @@ func (svc service) UpdateTags(ctx context.Context, session authn.Session, usr Us
 		ID:        usr.ID,
 		Tags:      usr.Tags,
 		Role:      AllRole,
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 		UpdatedBy: session.UserID,
 	}
 	user, err := svc.users.Update(ctx, user)
@@ -274,7 +274,7 @@ func (svc service) UpdateEmail(ctx context.Context, session authn.Session, userI
 		ID:        userID,
 		Email:     email,
 		Role:      AllRole,
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 		UpdatedBy: session.UserID,
 	}
 	user, err := svc.users.Update(ctx, user)
@@ -317,7 +317,7 @@ func (svc service) ResetSecret(ctx context.Context, session authn.Session, secre
 		Credentials: Credentials{
 			Secret: secret,
 		},
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 		UpdatedBy: session.UserID,
 	}
 	if _, err := svc.users.UpdateSecret(ctx, u); err != nil {
@@ -339,7 +339,7 @@ func (svc service) UpdateSecret(ctx context.Context, session authn.Session, oldS
 		return User{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 	}
 	dbUser.Credentials.Secret = newSecret
-	dbUser.UpdatedAt = time.Now()
+	dbUser.UpdatedAt = time.Now().UTC()
 	dbUser.UpdatedBy = session.UserID
 
 	dbUser, err = svc.users.UpdateSecret(ctx, dbUser)
@@ -362,7 +362,7 @@ func (svc service) UpdateUsername(ctx context.Context, session authn.Session, id
 		Credentials: Credentials{
 			Username: username,
 		},
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 		UpdatedBy: session.UserID,
 	}
 	updatedUser, err := svc.users.UpdateUsername(ctx, usr)
@@ -384,7 +384,7 @@ func (svc service) UpdateRole(ctx context.Context, session authn.Session, usr Us
 	user := User{
 		ID:        usr.ID,
 		Role:      usr.Role,
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 		UpdatedBy: session.UserID,
 	}
 
@@ -406,7 +406,7 @@ func (svc service) UpdateRole(ctx context.Context, session authn.Session, usr Us
 func (svc service) Enable(ctx context.Context, session authn.Session, id string) (User, error) {
 	u := User{
 		ID:        id,
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 		Status:    EnabledStatus,
 	}
 	user, err := svc.changeUserStatus(ctx, session, u)
@@ -420,7 +420,7 @@ func (svc service) Enable(ctx context.Context, session authn.Session, id string)
 func (svc service) Disable(ctx context.Context, session authn.Session, id string) (User, error) {
 	user := User{
 		ID:        id,
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 		Status:    DisabledStatus,
 	}
 	user, err := svc.changeUserStatus(ctx, session, user)
@@ -456,7 +456,7 @@ func (svc service) changeUserStatus(ctx context.Context, session authn.Session, 
 func (svc service) Delete(ctx context.Context, session authn.Session, id string) error {
 	user := User{
 		ID:        id,
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 		Status:    DeletedStatus,
 	}
 

@@ -185,7 +185,7 @@ func (repo *userRepo) UpdateUsername(ctx context.Context, user users.User) (user
 	dbu = DBUser{
 		ID:        user.ID,
 		Username:  stringToNullString(user.Credentials.Username),
-		UpdatedAt: sql.NullTime{Time: time.Now(), Valid: true},
+		UpdatedAt: sql.NullTime{Time: time.Now().UTC(), Valid: true},
 	}
 
 	if ok := row.Next(); !ok {

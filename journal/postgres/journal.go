@@ -136,7 +136,7 @@ type dbJournal struct {
 
 func toDBJournal(j journal.Journal) (dbJournal, error) {
 	if j.OccurredAt.IsZero() {
-		j.OccurredAt = time.Now()
+		j.OccurredAt = time.Now().UTC()
 	}
 
 	attributes := []byte("{}")

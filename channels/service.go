@@ -70,7 +70,7 @@ func (svc service) CreateChannels(ctx context.Context, session authn.Session, ch
 			return []Channel{}, []roles.RoleProvision{}, svcerr.ErrInvalidStatus
 		}
 		c.Domain = session.DomainID
-		c.CreatedAt = time.Now()
+		c.CreatedAt = time.Now().UTC()
 		reChs = append(reChs, c)
 	}
 
@@ -120,7 +120,7 @@ func (svc service) UpdateChannel(ctx context.Context, session authn.Session, ch 
 		ID:        ch.ID,
 		Name:      ch.Name,
 		Metadata:  ch.Metadata,
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 		UpdatedBy: session.UserID,
 	}
 	channel, err := svc.repo.Update(ctx, channel)
@@ -134,7 +134,7 @@ func (svc service) UpdateChannelTags(ctx context.Context, session authn.Session,
 	channel := Channel{
 		ID:        ch.ID,
 		Tags:      ch.Tags,
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 		UpdatedBy: session.UserID,
 	}
 	channel, err := svc.repo.UpdateTags(ctx, channel)
@@ -148,7 +148,7 @@ func (svc service) EnableChannel(ctx context.Context, session authn.Session, id 
 	channel := Channel{
 		ID:        id,
 		Status:    EnabledStatus,
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 	}
 	ch, err := svc.changeChannelStatus(ctx, session.UserID, channel)
 	if err != nil {
@@ -162,7 +162,7 @@ func (svc service) DisableChannel(ctx context.Context, session authn.Session, id
 	channel := Channel{
 		ID:        id,
 		Status:    DisabledStatus,
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 	}
 	ch, err := svc.changeChannelStatus(ctx, session.UserID, channel)
 	if err != nil {
@@ -432,7 +432,7 @@ func (svc service) SetParentGroup(ctx context.Context, session authn.Session, pa
 			}
 		}
 	}()
-	ch = Channel{ID: id, ParentGroup: parentGroupID, UpdatedBy: session.UserID, UpdatedAt: time.Now()}
+	ch = Channel{ID: id, ParentGroup: parentGroupID, UpdatedBy: session.UserID, UpdatedAt: time.Now().UTC()}
 
 	if err := svc.repo.SetParentGroup(ctx, ch); err != nil {
 		return errors.Wrap(svcerr.ErrUpdateEntity, err)
@@ -468,7 +468,7 @@ func (svc service) RemoveParentGroup(ctx context.Context, session authn.Session,
 			}
 		}()
 
-		ch := Channel{ID: id, UpdatedBy: session.UserID, UpdatedAt: time.Now()}
+		ch := Channel{ID: id, UpdatedBy: session.UserID, UpdatedAt: time.Now().UTC()}
 
 		if err := svc.repo.RemoveParentGroup(ctx, ch); err != nil {
 			return err

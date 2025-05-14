@@ -88,7 +88,7 @@ func (pr *patRepo) RetrieveAll(ctx context.Context, userID string, pm auth.PATSP
 		Name:      pm.Name,
 		ID:        pm.ID,
 		Status:    pm.Status,
-		Timestamp: time.Now(),
+		Timestamp: time.Now().UTC(),
 	}
 
 	rows, err := pr.db.NamedQueryContext(ctx, q, dbPage)
@@ -160,7 +160,7 @@ func (pr *patRepo) RetrieveSecretAndRevokeStatus(ctx context.Context, userID, pa
 	dbPage := dbPagemeta{
 		User:      userID,
 		PatID:     patID,
-		Timestamp: time.Now(),
+		Timestamp: time.Now().UTC(),
 	}
 
 	rows, err := pr.db.NamedQueryContext(ctx, q, dbPage)
@@ -181,7 +181,7 @@ func (pr *patRepo) RetrieveSecretAndRevokeStatus(ctx context.Context, userID, pa
 		return "", true, true, postgres.HandleError(repoerr.ErrNotFound, err)
 	}
 
-	expired := time.Now().After(expiresAt)
+	expired := time.Now().UTC().After(expiresAt)
 	return secret, revoked, expired, nil
 }
 
@@ -197,7 +197,7 @@ func (pr *patRepo) UpdateName(ctx context.Context, userID, patID, name string) (
 		ID:   patID,
 		Name: name,
 		UpdatedAt: sql.NullTime{
-			Time:  time.Now(),
+			Time:  time.Now().UTC(),
 			Valid: true,
 		},
 	}
@@ -230,7 +230,7 @@ func (pr *patRepo) UpdateDescription(ctx context.Context, userID, patID, descrip
 		User: userID,
 		ID:   patID,
 		UpdatedAt: sql.NullTime{
-			Time:  time.Now(),
+			Time:  time.Now().UTC(),
 			Valid: true,
 		},
 		Description: description,
@@ -264,7 +264,7 @@ func (pr *patRepo) UpdateTokenHash(ctx context.Context, userID, patID, tokenHash
 		User: userID,
 		ID:   patID,
 		UpdatedAt: sql.NullTime{
-			Time:  time.Now(),
+			Time:  time.Now().UTC(),
 			Valid: true,
 		},
 		ExpiresAt: expiryAt,
@@ -298,7 +298,7 @@ func (pr *patRepo) Revoke(ctx context.Context, userID, patID string) error {
 		User: userID,
 		ID:   patID,
 		RevokedAt: sql.NullTime{
-			Time:  time.Now(),
+			Time:  time.Now().UTC(),
 			Valid: true,
 		},
 	}
@@ -653,7 +653,7 @@ func (pr *patRepo) retrievePATFromDB(ctx context.Context, userID, patID string) 
 	dbp := dbPagemeta{
 		ID:        patID,
 		User:      userID,
-		Timestamp: time.Now(),
+		Timestamp: time.Now().UTC(),
 	}
 
 	rows, err := pr.db.NamedQueryContext(ctx, q, dbp)

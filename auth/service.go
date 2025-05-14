@@ -260,7 +260,7 @@ func (svc service) PolicyValidation(pr policies.Policy) error {
 }
 
 func (svc service) tmpKey(ctx context.Context, duration time.Duration, key Key) (Token, error) {
-	key.ExpiresAt = time.Now().Add(duration)
+	key.ExpiresAt = time.Now().UTC().Add(duration)
 	if err := svc.checkUserRole(ctx, key); err != nil {
 		return Token{}, errors.Wrap(errIssueTmp, err)
 	}
@@ -275,7 +275,7 @@ func (svc service) tmpKey(ctx context.Context, duration time.Duration, key Key) 
 func (svc service) accessKey(ctx context.Context, key Key) (Token, error) {
 	var err error
 	key.Type = AccessKey
-	key.ExpiresAt = time.Now().Add(svc.loginDuration)
+	key.ExpiresAt = time.Now().UTC().Add(svc.loginDuration)
 
 	if err := svc.checkUserRole(ctx, key); err != nil {
 		return Token{}, errors.Wrap(errIssueUser, err)
@@ -286,7 +286,7 @@ func (svc service) accessKey(ctx context.Context, key Key) (Token, error) {
 		return Token{}, errors.Wrap(errIssueTmp, err)
 	}
 
-	key.ExpiresAt = time.Now().Add(svc.refreshDuration)
+	key.ExpiresAt = time.Now().UTC().Add(svc.refreshDuration)
 	key.Type = RefreshKey
 	refresh, err := svc.tokenizer.Issue(key)
 	if err != nil {
@@ -299,7 +299,7 @@ func (svc service) accessKey(ctx context.Context, key Key) (Token, error) {
 func (svc service) invitationKey(ctx context.Context, key Key) (Token, error) {
 	var err error
 	key.Type = InvitationKey
-	key.ExpiresAt = time.Now().Add(svc.invitationDuration)
+	key.ExpiresAt = time.Now().UTC().Add(svc.invitationDuration)
 
 	if err := svc.checkUserRole(ctx, key); err != nil {
 		return Token{}, errors.Wrap(errIssueTmp, err)
@@ -330,13 +330,13 @@ func (svc service) refreshKey(ctx context.Context, token string, key Key) (Token
 	}
 	key.Role = k.Role
 
-	key.ExpiresAt = time.Now().Add(svc.loginDuration)
+	key.ExpiresAt = time.Now().UTC().Add(svc.loginDuration)
 	access, err := svc.tokenizer.Issue(key)
 	if err != nil {
 		return Token{}, errors.Wrap(errIssueTmp, err)
 	}
 
-	key.ExpiresAt = time.Now().Add(svc.refreshDuration)
+	key.ExpiresAt = time.Now().UTC().Add(svc.refreshDuration)
 	key.Type = RefreshKey
 	refresh, err := svc.tokenizer.Issue(key)
 	if err != nil {
@@ -478,7 +478,7 @@ func (svc service) CreatePAT(ctx context.Context, token, name, description strin
 		return PAT{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	pat := PAT{
 		ID:          id,
 		User:        key.Subject,
@@ -570,7 +570,7 @@ func (svc service) ResetPATSecret(ctx context.Context, token, patID string, dura
 		return PAT{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 
-	pat, err := svc.pats.UpdateTokenHash(ctx, key.Subject, patID, hash, time.Now().Add(duration))
+	pat, err := svc.pats.UpdateTokenHash(ctx, key.Subject, patID, hash, time.Now().UTC().Add(duration))
 	if err != nil {
 		return PAT{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}

@@ -317,8 +317,8 @@ func createAdmin(ctx context.Context, c config, repo users.Repository, hsr users
 		Metadata: users.Metadata{
 			"role": "admin",
 		},
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
 		Role:      users.AdminRole,
 		Status:    users.EnabledStatus,
 	}

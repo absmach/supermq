@@ -183,7 +183,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		Subtopic:  subtopic,
 		Publisher: s.Username,
 		Payload:   *payload,
-		Created:   time.Now().UnixNano(),
+		Created:   time.Now().UTC().UnixNano(),
 	}
 
 	if err := h.publisher.Publish(ctx, msg.GetChannel(), &msg); err != nil {

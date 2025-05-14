@@ -35,7 +35,7 @@ func (es *pubEventStore) Publish(ctx context.Context, stream string, event event
 	if err != nil {
 		return err
 	}
-	values["occurred_at"] = time.Now().UnixNano()
+	values["occurred_at"] = time.Now().UTC().UnixNano()
 
 	data, err := json.Marshal(values)
 	if err != nil {

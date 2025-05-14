@@ -5,6 +5,7 @@ package postgres
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/absmach/supermq/pkg/errors"
 	_ "github.com/jackc/pgx/v5/stdlib" // required for SQL access
@@ -60,6 +61,9 @@ func Connect(cfg Config) (*sqlx.DB, error) {
 	if err != nil {
 		return nil, errors.Wrap(errConnect, err)
 	}
-
+	db.SetConnMaxLifetime(time.Hour)
+	db.SetConnMaxIdleTime(time.Minute)
+	db.SetMaxIdleConns(10)
+	db.SetMaxOpenConns(20)
 	return db, nil
 }

@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/attribute"
@@ -48,6 +49,9 @@ type Database interface {
 
 // NewDatabase creates a Clients'Database instance.
 func NewDatabase(db *sqlx.DB, config Config, tracer trace.Tracer) Database {
+	db.SetMaxIdleConns(10)
+	db.SetConnMaxIdleTime(5 * time.Minute)
+	db.SetMaxOpenConns(1000)
 	database := &database{
 		Config: config,
 		db:     db,

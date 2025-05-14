@@ -402,7 +402,7 @@ func (repo domainRepo) UpdateDomain(ctx context.Context, id string, dr domains.D
 		query = append(query, "status = :status")
 		d.Status = *dr.Status
 	}
-	d.UpdatedAt = time.Now()
+	d.UpdatedAt = time.Now().UTC()
 	if dr.UpdatedAt != nil {
 		query = append(query, "updated_at = :updated_at")
 		d.UpdatedAt = *dr.UpdatedAt
