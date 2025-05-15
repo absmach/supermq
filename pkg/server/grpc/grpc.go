@@ -56,7 +56,7 @@ func (s *grpcServer) Start() error {
 
 	switch {
 	case s.Config.CertFile != "" || s.Config.KeyFile != "":
-		certificate, err := tls.LoadX509KeyPair(s.Config.CertFile, s.Config.KeyFile)
+		certificate, err := LoadX509KeyPair(s.Config.CertFile, s.Config.KeyFile)
 		if err != nil {
 			return fmt.Errorf("failed to load auth gRPC client certificates: %w", err)
 		}
@@ -67,32 +67,28 @@ func (s *grpcServer) Start() error {
 
 		var mtlsCA string
 		// Loading Server CA file
-		rootCA, err := loadCertFile(s.Config.ServerCAFile)
+		rootCA, err := LoadRootCACerts(s.Config.ServerCAFile)
 		if err != nil {
 			return fmt.Errorf("failed to load root ca file: %w", err)
 		}
-		if len(rootCA) > 0 {
+		if rootCA != nil {
 			if tlsConfig.RootCAs == nil {
 				tlsConfig.RootCAs = x509.NewCertPool()
 			}
-			if !tlsConfig.RootCAs.AppendCertsFromPEM(rootCA) {
-				return fmt.Errorf("failed to append root ca to tls.Config")
-			}
+			tlsConfig.RootCAs = rootCA
 			mtlsCA = fmt.Sprintf("root ca %s", s.Config.ServerCAFile)
 		}
 
 		// Loading Client CA File
-		clientCA, err := loadCertFile(s.Config.ClientCAFile)
+		clientCA, err := LoadRootCACerts(s.Config.ClientCAFile)
 		if err != nil {
 			return fmt.Errorf("failed to load client ca file: %w", err)
 		}
-		if len(clientCA) > 0 {
+		if clientCA != nil {
 			if tlsConfig.ClientCAs == nil {
 				tlsConfig.ClientCAs = x509.NewCertPool()
 			}
-			if !tlsConfig.ClientCAs.AppendCertsFromPEM(clientCA) {
-				return fmt.Errorf("failed to append client ca to tls.Config")
-			}
+			tlsConfig.ClientCAs = clientCA
 			mtlsCA = fmt.Sprintf("%s client ca %s", mtlsCA, s.Config.ClientCAFile)
 		}
 		creds = grpc.Creds(credentials.NewTLS(tlsConfig))
@@ -146,9 +142,39 @@ func (s *grpcServer) Stop() error {
 	return nil
 }
 
-func loadCertFile(certFile string) ([]byte, error) {
-	if certFile != "" {
-		return os.ReadFile(certFile)
+func readFileOrData(input string) ([]byte, error) {
+	if _, err := os.Stat(input); err == nil {
+		return os.ReadFile(input)
 	}
-	return []byte{}, nil
+	return []byte(input), nil
+}
+
+func LoadRootCACerts(input string) (*x509.CertPool, error) {
+	pemData, err := readFileOrData(input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load root CA data: %w", err)
+	}
+
+	if len(pemData) > 0 {
+		capool := x509.NewCertPool()
+		if !capool.AppendCertsFromPEM(pemData) {
+			return nil, fmt.Errorf("failed to append root ca to tls.Config")
+		}
+		return capool, nil
+	}
+	return nil, nil
+}
+
+func LoadX509KeyPair(certFile, keyFile string) (tls.Certificate, error) {
+	cert, err := readFileOrData(certFile)
+	if err != nil {
+		return tls.Certificate{}, fmt.Errorf("failed to read cert: %v", err)
+	}
+
+	key, err := readFileOrData(keyFile)
+	if err != nil {
+		return tls.Certificate{}, fmt.Errorf("failed to read key: %v", err)
+	}
+
+	return tls.X509KeyPair(cert, key)
 }
