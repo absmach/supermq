@@ -119,7 +119,7 @@ func (svc service) RetrieveDomain(ctx context.Context, session authn.Session, id
 }
 
 func (svc service) UpdateDomain(ctx context.Context, session authn.Session, id string, d DomainReq) (Domain, error) {
-	updatedAt := time.Now()
+	updatedAt := time.Now().UTC()
 	d.UpdatedAt = &updatedAt
 	d.UpdatedBy = &session.UserID
 	dom, err := svc.repo.UpdateDomain(ctx, id, d)
@@ -131,7 +131,7 @@ func (svc service) UpdateDomain(ctx context.Context, session authn.Session, id s
 
 func (svc service) EnableDomain(ctx context.Context, session authn.Session, id string) (Domain, error) {
 	status := EnabledStatus
-	updatedAt := time.Now()
+	updatedAt := time.Now().UTC()
 	dom, err := svc.repo.UpdateDomain(ctx, id, DomainReq{Status: &status, UpdatedBy: &session.UserID, UpdatedAt: &updatedAt})
 	if err != nil {
 		return Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
@@ -145,7 +145,7 @@ func (svc service) EnableDomain(ctx context.Context, session authn.Session, id s
 
 func (svc service) DisableDomain(ctx context.Context, session authn.Session, id string) (Domain, error) {
 	status := DisabledStatus
-	updatedAt := time.Now()
+	updatedAt := time.Now().UTC()
 	dom, err := svc.repo.UpdateDomain(ctx, id, DomainReq{Status: &status, UpdatedBy: &session.UserID, UpdatedAt: &updatedAt})
 	if err != nil {
 		return Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
@@ -160,7 +160,7 @@ func (svc service) DisableDomain(ctx context.Context, session authn.Session, id 
 // Only SuperAdmin can freeze the domain.
 func (svc service) FreezeDomain(ctx context.Context, session authn.Session, id string) (Domain, error) {
 	status := FreezeStatus
-	updatedAt := time.Now()
+	updatedAt := time.Now().UTC()
 	dom, err := svc.repo.UpdateDomain(ctx, id, DomainReq{Status: &status, UpdatedBy: &session.UserID, UpdatedAt: &updatedAt})
 	if err != nil {
 		return Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)

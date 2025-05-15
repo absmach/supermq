@@ -107,7 +107,7 @@ func (cs *certsService) RevokeCert(ctx context.Context, domainID, token, clientI
 		if err != nil {
 			return revoke, errors.Wrap(ErrFailedCertRevocation, err)
 		}
-		revoke.RevocationTime = time.Now()
+		revoke.RevocationTime = time.Now().UTC()
 	}
 
 	return revoke, nil
