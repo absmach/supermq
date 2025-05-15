@@ -811,7 +811,7 @@ final_channels AS (
 		dc.updated_at,
 		dc.updated_by,
 		dc.status,
-		text2ltree('') AS parent_group_path,
+		g."path" AS parent_group_path,
 		'' AS role_id,
 		'' AS role_name,
 		array[]::::text[] AS actions,
@@ -830,6 +830,8 @@ final_channels AS (
 		domains d ON d.id = dr.entity_id
 	JOIN
 		channels dc ON dc.domain_id = d.id
+	JOIN
+		groups g ON dc.parent_group_id = g.id
 	WHERE
 		drm.member_id = '%s' -- user_id
 	 	AND d.id = '%s' -- domain_id
@@ -839,7 +841,7 @@ final_channels AS (
 			WHERE gc.id = dc.id
 		)
 	 GROUP BY
-		dc.id, d.id, dr.id
+		dc.id, d.id, dr.id, g."path"
 )
 	`, userID, domainID, userID, domainID, userID, domainID, domainID, userID, domainID)
 }
