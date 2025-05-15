@@ -130,7 +130,6 @@ func decodeListChannels(_ context.Context, r *http.Request) (interface{}, error)
 	if err != nil {
 		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-
 	groupID, err := apiutil.ReadNullableString(r, api.GroupKey, "")
 	if err != nil {
 		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)

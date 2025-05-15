@@ -1252,7 +1252,7 @@ func PageQuery(pm channels.Page) (string, error) {
 	if pm.Domain != "" {
 		query = append(query, "c.domain_id = :domain_id")
 	}
-	switch pm.Group.IsSet() {
+	switch pm.Group.Set {
 	case true:
 		query = append(query, "c.parent_group_path <@ (SELECT path from groups where id = :group_id) ")
 	default:
@@ -1318,7 +1318,7 @@ func toDBChannelsPage(pm channels.Page) (dbChannelsPage, error) {
 		Metadata:   data,
 		Tag:        pm.Tag,
 		Status:     pm.Status,
-		GroupID:    sql.NullString{Valid: pm.Group.IsSet(), String: pm.Group.Value},
+		GroupID:    sql.NullString{Valid: pm.Group.Set, String: pm.Group.Value},
 		ClientID:   pm.Client,
 		ConnType:   pm.ConnectionType,
 		RoleName:   pm.RoleName,

@@ -1,3 +1,6 @@
+// Copyright (c) Abstract Machines
+// SPDX-License-Identifier: Apache-2.0
+
 package nullable
 
 import (
@@ -9,19 +12,6 @@ import (
 type Nullable[T any] struct {
 	Set   bool
 	Value T
-}
-
-// New creates a new Nullable with a value.
-func New[T any](v T) Nullable[T] {
-	return Nullable[T]{Set: true, Value: v}
-}
-
-func (n Nullable[T]) IsSet() bool {
-	return n.Set
-}
-
-func (n Nullable[T]) Get() (T, bool) {
-	return n.Value, n.Set
 }
 
 func (n Nullable[T]) OrElse(defaultVal T) T {

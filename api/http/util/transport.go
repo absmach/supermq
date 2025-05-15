@@ -44,12 +44,11 @@ func ReadNullableString(r *http.Request, key, def string) (nullable.Nullable[str
 	if len(vals) > 1 {
 		return nullable.Nullable[string]{}, ErrInvalidQueryParams
 	}
-
 	if len(vals) == 0 {
-		return nullable.Nullable[string]{}, nil
+		return nullable.Nullable[string]{Set: false, Value: def}, nil
 	}
 
-	return nullable.Nullable[string]{Set: true, Value: (vals[0])}, nil
+	return nullable.ParseString(vals[0])
 }
 
 // ReadMetadataQuery reads the value of json http query parameters for a given key.
