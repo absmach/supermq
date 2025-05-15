@@ -123,9 +123,9 @@ func (req searchUsersReq) validate() error {
 
 type updateUserReq struct {
 	id        string
-	FirstName string         `json:"first_name,omitempty"`
-	LastName  string         `json:"last_name,omitempty"`
-	Metadata  users.Metadata `json:"metadata,omitempty"`
+	FirstName *string         `json:"first_name,omitempty"`
+	LastName  *string         `json:"last_name,omitempty"`
+	Metadata  *users.Metadata `json:"metadata,omitempty"`
 }
 
 func (req updateUserReq) validate() error {
@@ -138,7 +138,7 @@ func (req updateUserReq) validate() error {
 
 type updateUserTagsReq struct {
 	id   string
-	Tags []string `json:"tags,omitempty"`
+	Tags *[]string `json:"tags,omitempty"`
 }
 
 func (req updateUserTagsReq) validate() error {
@@ -216,15 +216,17 @@ func (req updateUsernameReq) validate() error {
 
 type updateProfilePictureReq struct {
 	id             string
-	ProfilePicture string `json:"profile_picture,omitempty"`
+	ProfilePicture *string `json:"profile_picture,omitempty"`
 }
 
 func (req updateProfilePictureReq) validate() error {
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
-	if _, err := url.Parse(req.ProfilePicture); err != nil {
-		return apiutil.ErrInvalidProfilePictureURL
+	if req.ProfilePicture != nil {
+		if _, err := url.Parse(*req.ProfilePicture); err != nil {
+			return apiutil.ErrInvalidProfilePictureURL
+		}
 	}
 	return nil
 }

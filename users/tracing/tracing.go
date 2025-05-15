@@ -86,26 +86,23 @@ func (tm *tracingMiddleware) SearchUsers(ctx context.Context, pm users.Page) (us
 }
 
 // Update traces the "Update" operation of the wrapped users.Service.
-func (tm *tracingMiddleware) Update(ctx context.Context, session authn.Session, cli users.User) (users.User, error) {
+func (tm *tracingMiddleware) Update(ctx context.Context, session authn.Session, id string, user users.UserReq) (users.User, error) {
 	ctx, span := tracing.StartSpan(ctx, tm.tracer, "svc_update_user", trace.WithAttributes(
-		attribute.String("id", cli.ID),
-		attribute.String("first_name", cli.FirstName),
-		attribute.String("last_name", cli.LastName),
+		attribute.String("id", id),
 	))
 	defer span.End()
 
-	return tm.svc.Update(ctx, session, cli)
+	return tm.svc.Update(ctx, session, id, user)
 }
 
 // UpdateTags traces the "UpdateTags" operation of the wrapped users.Service.
-func (tm *tracingMiddleware) UpdateTags(ctx context.Context, session authn.Session, cli users.User) (users.User, error) {
+func (tm *tracingMiddleware) UpdateTags(ctx context.Context, session authn.Session, id string, user users.UserReq) (users.User, error) {
 	ctx, span := tracing.StartSpan(ctx, tm.tracer, "svc_update_user_tags", trace.WithAttributes(
-		attribute.String("id", cli.ID),
-		attribute.StringSlice("tags", cli.Tags),
+		attribute.String("id", id),
 	))
 	defer span.End()
 
-	return tm.svc.UpdateTags(ctx, session, cli)
+	return tm.svc.UpdateTags(ctx, session, id, user)
 }
 
 // UpdateEmail traces the "UpdateEmail" operation of the wrapped users.Service.
@@ -139,11 +136,13 @@ func (tm *tracingMiddleware) UpdateUsername(ctx context.Context, session authn.S
 }
 
 // UpdateProfilePicture traces the "UpdateProfilePicture" operation of the wrapped users.Service.
-func (tm *tracingMiddleware) UpdateProfilePicture(ctx context.Context, session authn.Session, usr users.User) (users.User, error) {
-	ctx, span := tracing.StartSpan(ctx, tm.tracer, "svc_update_profile_picture", trace.WithAttributes(attribute.String("id", usr.ID)))
+func (tm *tracingMiddleware) UpdateProfilePicture(ctx context.Context, session authn.Session, id string, usr users.UserReq) (users.User, error) {
+	ctx, span := tracing.StartSpan(ctx, tm.tracer, "svc_update_profile_picture", trace.WithAttributes(
+		attribute.String("id", id),
+	))
 	defer span.End()
 
-	return tm.svc.UpdateProfilePicture(ctx, session, usr)
+	return tm.svc.UpdateProfilePicture(ctx, session, id, usr)
 }
 
 // GenerateResetToken traces the "GenerateResetToken" operation of the wrapped users.Service.

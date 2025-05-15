@@ -182,7 +182,7 @@ func (lm *loggingMiddleware) SearchUsers(ctx context.Context, cp users.Page) (mp
 
 // Update logs the update_user request. It logs the user id and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) Update(ctx context.Context, session authn.Session, user users.User) (u users.User, err error) {
+func (lm *loggingMiddleware) Update(ctx context.Context, session authn.Session, id string, user users.UserReq) (u users.User, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -202,12 +202,12 @@ func (lm *loggingMiddleware) Update(ctx context.Context, session authn.Session, 
 		}
 		lm.logger.Info("Update user completed successfully", args...)
 	}(time.Now())
-	return lm.svc.Update(ctx, session, user)
+	return lm.svc.Update(ctx, session, id, user)
 }
 
 // UpdateTags logs the update_user_tags request. It logs the user id and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) UpdateTags(ctx context.Context, session authn.Session, user users.User) (c users.User, err error) {
+func (lm *loggingMiddleware) UpdateTags(ctx context.Context, session authn.Session, id string, user users.UserReq) (c users.User, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -224,7 +224,7 @@ func (lm *loggingMiddleware) UpdateTags(ctx context.Context, session authn.Sessi
 		}
 		lm.logger.Info("Update user tags completed successfully", args...)
 	}(time.Now())
-	return lm.svc.UpdateTags(ctx, session, user)
+	return lm.svc.UpdateTags(ctx, session, id, user)
 }
 
 // UpdateEmail logs the update_user_email request. It logs the user id and the time it took to complete the request.
@@ -294,14 +294,14 @@ func (lm *loggingMiddleware) UpdateUsername(ctx context.Context, session authn.S
 
 // UpdateProfilePicture logs the update_profile_picture request. It logs the user id and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) UpdateProfilePicture(ctx context.Context, session authn.Session, user users.User) (u users.User, err error) {
+func (lm *loggingMiddleware) UpdateProfilePicture(ctx context.Context, session authn.Session, id string, user users.UserReq) (u users.User, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.String("request_id", middleware.GetReqID(ctx)),
 			slog.Group("user",
-				slog.String("id", user.ID),
-				slog.String("profile_picture", user.ProfilePicture),
+				slog.String("id", u.ID),
+				slog.String("profile_picture", u.ProfilePicture),
 			),
 		}
 		if err != nil {
@@ -311,7 +311,7 @@ func (lm *loggingMiddleware) UpdateProfilePicture(ctx context.Context, session a
 		}
 		lm.logger.Info("Update profile picture completed successfully", args...)
 	}(time.Now())
-	return lm.svc.UpdateProfilePicture(ctx, session, user)
+	return lm.svc.UpdateProfilePicture(ctx, session, id, user)
 }
 
 // GenerateResetToken logs the generate_reset_token request. It logs the time it took to complete the request.

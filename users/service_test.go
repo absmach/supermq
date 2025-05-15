@@ -506,13 +506,16 @@ func TestUpdateUser(t *testing.T) {
 
 	user1 := user
 	user2 := user
-	user1.FirstName = "Updated user"
-	user2.Metadata = users.Metadata{"role": "test"}
+	updateFirstName := "Updated user"
+	user1.FirstName = updateFirstName
+	updatedMetadata := users.Metadata{"role": "test"}
+	user2.Metadata = updatedMetadata
 	adminID := testsutil.GenerateUUID(t)
 
 	cases := []struct {
 		desc               string
-		user               users.User
+		userID             string
+		userReq            users.UserReq
 		session            authn.Session
 		updateResponse     users.User
 		token              string
@@ -521,24 +524,33 @@ func TestUpdateUser(t *testing.T) {
 		err                error
 	}{
 		{
-			desc:           "update user name  successfully as normal user",
-			user:           user1,
+			desc:   "update user name  successfully as normal user",
+			userID: user1.ID,
+			userReq: users.UserReq{
+				FirstName: &updateFirstName,
+			},
 			session:        authn.Session{UserID: user1.ID},
 			updateResponse: user1,
 			token:          validToken,
 			err:            nil,
 		},
 		{
-			desc:           "update metadata successfully as normal user",
-			user:           user2,
+			desc:   "update metadata successfully as normal user",
+			userID: user2.ID,
+			userReq: users.UserReq{
+				Metadata: &updatedMetadata,
+			},
 			session:        authn.Session{UserID: user2.ID},
 			updateResponse: user2,
 			token:          validToken,
 			err:            nil,
 		},
 		{
-			desc:           "update user name as normal user with repo error on update",
-			user:           user1,
+			desc:   "update user name as normal user with repo error on update",
+			userID: user1.ID,
+			userReq: users.UserReq{
+				FirstName: &updateFirstName,
+			},
 			session:        authn.Session{UserID: user1.ID},
 			updateResponse: users.User{},
 			token:          validToken,
@@ -546,32 +558,44 @@ func TestUpdateUser(t *testing.T) {
 			err:            svcerr.ErrUpdateEntity,
 		},
 		{
-			desc:           "update user name as admin successfully",
-			user:           user1,
+			desc:   "update user name as admin successfully",
+			userID: user1.ID,
+			userReq: users.UserReq{
+				FirstName: &updateFirstName,
+			},
 			session:        authn.Session{UserID: adminID, SuperAdmin: true},
 			updateResponse: user1,
 			token:          validToken,
 			err:            nil,
 		},
 		{
-			desc:           "update user metadata as admin successfully",
-			user:           user2,
+			desc:   "update user metadata as admin successfully",
+			userID: user2.ID,
+			userReq: users.UserReq{
+				Metadata: &updatedMetadata,
+			},
 			session:        authn.Session{UserID: adminID, SuperAdmin: true},
 			updateResponse: user2,
 			token:          validToken,
 			err:            nil,
 		},
 		{
-			desc:               "update user with failed check on super admin",
-			user:               user1,
+			desc:   "update user with failed check on super admin",
+			userID: user1.ID,
+			userReq: users.UserReq{
+				FirstName: &updateFirstName,
+			},
 			session:            authn.Session{UserID: adminID},
 			token:              validToken,
 			checkSuperAdminErr: svcerr.ErrAuthorization,
 			err:                svcerr.ErrAuthorization,
 		},
 		{
-			desc:           "update user name as admin with repo error on update",
-			user:           user1,
+			desc:   "update user name as admin with repo error on update",
+			userID: user1.ID,
+			userReq: users.UserReq{
+				FirstName: &updateFirstName,
+			},
 			session:        authn.Session{UserID: adminID, SuperAdmin: true},
 			updateResponse: users.User{},
 			token:          validToken,
@@ -582,12 +606,12 @@ func TestUpdateUser(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
-		repoCall1 := cRepo.On("Update", context.Background(), mock.Anything).Return(tc.updateResponse, tc.err)
-		updatedUser, err := svc.Update(context.Background(), tc.session, tc.user)
+		repoCall1 := cRepo.On("Update", context.Background(), tc.userID, mock.Anything).Return(tc.updateResponse, tc.err)
+		updatedUser, err := svc.Update(context.Background(), tc.session, tc.userID, tc.userReq)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateResponse, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateResponse, updatedUser))
 		if tc.err == nil {
-			ok := repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything)
+			ok := repoCall1.Parent.AssertCalled(t, "Update", context.Background(), tc.userID, mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
@@ -598,12 +622,14 @@ func TestUpdateUser(t *testing.T) {
 func TestUpdateTags(t *testing.T) {
 	svc, cRepo := newServiceMinimal()
 
-	user.Tags = []string{"updated"}
+	updateTags := []string{"tag1", "tag2"}
+	user.Tags = updateTags
 	adminID := testsutil.GenerateUUID(t)
 
 	cases := []struct {
 		desc                   string
-		user                   users.User
+		userID                 string
+		userReq                users.UserReq
 		session                authn.Session
 		updateUserTagsResponse users.User
 		updateUserTagsErr      error
@@ -612,14 +638,16 @@ func TestUpdateTags(t *testing.T) {
 	}{
 		{
 			desc:                   "update user tags as normal user successfully",
-			user:                   user,
+			userID:                 user.ID,
+			userReq:                users.UserReq{Tags: &updateTags},
 			session:                authn.Session{UserID: user.ID},
 			updateUserTagsResponse: user,
 			err:                    nil,
 		},
 		{
 			desc:                   "update user tags as normal user with repo error on update",
-			user:                   user,
+			userID:                 user.ID,
+			userReq:                users.UserReq{Tags: &updateTags},
 			session:                authn.Session{UserID: user.ID},
 			updateUserTagsResponse: users.User{},
 			updateUserTagsErr:      errors.ErrMalformedEntity,
@@ -627,20 +655,23 @@ func TestUpdateTags(t *testing.T) {
 		},
 		{
 			desc:    "update user tags as admin successfully",
-			user:    user,
+			userID:  user.ID,
+			userReq: users.UserReq{Tags: &updateTags},
 			session: authn.Session{UserID: adminID, SuperAdmin: true},
 			err:     nil,
 		},
 		{
 			desc:               "update user tags as admin with failed check on super admin",
-			user:               user,
+			userID:             user.ID,
+			userReq:            users.UserReq{Tags: &updateTags},
 			session:            authn.Session{UserID: adminID},
 			checkSuperAdminErr: svcerr.ErrAuthorization,
 			err:                svcerr.ErrAuthorization,
 		},
 		{
 			desc:                   "update user tags as admin with repo error on update",
-			user:                   user,
+			userID:                 user.ID,
+			userReq:                users.UserReq{Tags: &updateTags},
 			session:                authn.Session{UserID: adminID, SuperAdmin: true},
 			updateUserTagsResponse: users.User{},
 			updateUserTagsErr:      errors.ErrMalformedEntity,
@@ -650,13 +681,13 @@ func TestUpdateTags(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
-		repoCall1 := cRepo.On("Update", context.Background(), mock.Anything).Return(tc.updateUserTagsResponse, tc.updateUserTagsErr)
-		updatedUser, err := svc.UpdateTags(context.Background(), tc.session, tc.user)
+		repoCall1 := cRepo.On("Update", context.Background(), tc.userID, mock.Anything).Return(tc.updateUserTagsResponse, tc.updateUserTagsErr)
+		updatedUser, err := svc.UpdateTags(context.Background(), tc.session, tc.userID, tc.userReq)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateUserTagsResponse, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateUserTagsResponse, updatedUser))
 
 		if tc.err == nil {
-			ok := repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything)
+			ok := repoCall1.Parent.AssertCalled(t, "Update", context.Background(), tc.userID, mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
@@ -745,13 +776,13 @@ func TestUpdateRole(t *testing.T) {
 		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
 		policyCall := policies.On("AddPolicy", context.Background(), mock.Anything).Return(tc.addPolicyErr)
 		policyCall1 := policies.On("DeletePolicyFilter", context.Background(), mock.Anything).Return(tc.deletePolicyErr)
-		repoCall1 := cRepo.On("Update", context.Background(), mock.Anything).Return(tc.updateRoleResponse, tc.updateRoleErr)
+		repoCall1 := cRepo.On("Update", context.Background(), mock.Anything, mock.Anything).Return(tc.updateRoleResponse, tc.updateRoleErr)
 
 		updatedUser, err := svc.UpdateRole(context.Background(), tc.session, tc.user)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateRoleResponse, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateRoleResponse, updatedUser))
 		if tc.err == nil {
-			ok := repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything)
+			ok := repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything, mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
@@ -939,12 +970,12 @@ func TestUpdateEmail(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
-		repoCall1 := cRepo.On("Update", context.Background(), mock.Anything).Return(tc.updateEmailResponse, tc.updateEmailErr)
+		repoCall1 := cRepo.On("Update", context.Background(), mock.Anything, mock.Anything).Return(tc.updateEmailResponse, tc.updateEmailErr)
 		updatedUser, err := svc.UpdateEmail(context.Background(), authn.Session{DomainUserID: tc.reqUserID, UserID: validID, DomainID: validID}, tc.id, tc.email)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateEmailResponse, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateEmailResponse, updatedUser))
 		if tc.err == nil {
-			ok := repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything)
+			ok := repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything, mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
@@ -955,12 +986,14 @@ func TestUpdateEmail(t *testing.T) {
 func TestUpdateProfilePicture(t *testing.T) {
 	svc, cRepo := newServiceMinimal()
 
-	user.ProfilePicture = "https://example.com/profile.jpg"
+	updatedPicture := "https://example.com/profile.jpg"
+	user.ProfilePicture = updatedPicture
 	adminID := testsutil.GenerateUUID(t)
 
 	cases := []struct {
 		desc                     string
-		user                     users.User
+		userID                   string
+		userReq                  users.UserReq
 		session                  authn.Session
 		updateProfilePicResponse users.User
 		updateProfilePicErr      error
@@ -969,14 +1002,16 @@ func TestUpdateProfilePicture(t *testing.T) {
 	}{
 		{
 			desc:                     "update profile picture as normal user successfully",
-			user:                     user,
+			userID:                   user.ID,
+			userReq:                  users.UserReq{ProfilePicture: &updatedPicture},
 			session:                  authn.Session{UserID: user.ID},
 			updateProfilePicResponse: user,
 			err:                      nil,
 		},
 		{
 			desc:                     "update profile picture as normal user with repo error on update",
-			user:                     user,
+			userID:                   user.ID,
+			userReq:                  users.UserReq{ProfilePicture: &updatedPicture},
 			session:                  authn.Session{UserID: user.ID},
 			updateProfilePicResponse: users.User{},
 			updateProfilePicErr:      errors.ErrMalformedEntity,
@@ -984,20 +1019,23 @@ func TestUpdateProfilePicture(t *testing.T) {
 		},
 		{
 			desc:    "update profile picture as admin successfully",
-			user:    user,
+			userID:  user.ID,
+			userReq: users.UserReq{ProfilePicture: &updatedPicture},
 			session: authn.Session{UserID: adminID, SuperAdmin: true},
 			err:     nil,
 		},
 		{
 			desc:               "update profile picture as admin with failed check on super admin",
-			user:               user,
+			userID:             user.ID,
+			userReq:            users.UserReq{ProfilePicture: &updatedPicture},
 			session:            authn.Session{UserID: adminID},
 			checkSuperAdminErr: svcerr.ErrAuthorization,
 			err:                svcerr.ErrAuthorization,
 		},
 		{
 			desc:                     "update profile picture as admin with repo error on update",
-			user:                     user,
+			userID:                   user.ID,
+			userReq:                  users.UserReq{ProfilePicture: &updatedPicture},
 			session:                  authn.Session{UserID: adminID, SuperAdmin: true},
 			updateProfilePicResponse: users.User{},
 			updateProfilePicErr:      errors.ErrMalformedEntity,
@@ -1007,12 +1045,12 @@ func TestUpdateProfilePicture(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
-		repoCall1 := cRepo.On("Update", context.Background(), mock.Anything).Return(tc.updateProfilePicResponse, tc.updateProfilePicErr)
-		updatedUser, err := svc.UpdateProfilePicture(context.Background(), tc.session, tc.user)
+		repoCall1 := cRepo.On("Update", context.Background(), tc.userID, mock.Anything).Return(tc.updateProfilePicResponse, tc.updateProfilePicErr)
+		updatedUser, err := svc.UpdateProfilePicture(context.Background(), tc.session, tc.userID, tc.userReq)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateProfilePicResponse, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateProfilePicResponse, updatedUser))
 		if tc.err == nil {
-			ok := repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything)
+			ok := repoCall1.Parent.AssertCalled(t, "Update", context.Background(), tc.userID, mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
 		}
 		repoCall.Unset()

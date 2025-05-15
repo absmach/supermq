@@ -101,14 +101,14 @@ func (am *authorizationMiddleware) SearchUsers(ctx context.Context, pm users.Pag
 	return am.svc.SearchUsers(ctx, pm)
 }
 
-func (am *authorizationMiddleware) Update(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+func (am *authorizationMiddleware) Update(ctx context.Context, session authn.Session, id string, user users.UserReq) (users.User, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
 			UserID:     session.UserID,
 			PatID:      session.PatID,
 			EntityType: smqauth.UsersType,
 			Operation:  smqauth.UpdateOp,
-			EntityID:   user.ID,
+			EntityID:   id,
 		}); err != nil {
 			return users.User{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
@@ -118,17 +118,17 @@ func (am *authorizationMiddleware) Update(ctx context.Context, session authn.Ses
 		session.SuperAdmin = true
 	}
 
-	return am.svc.Update(ctx, session, user)
+	return am.svc.Update(ctx, session, id, user)
 }
 
-func (am *authorizationMiddleware) UpdateTags(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+func (am *authorizationMiddleware) UpdateTags(ctx context.Context, session authn.Session, id string, user users.UserReq) (users.User, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
 			UserID:     session.UserID,
 			PatID:      session.PatID,
 			EntityType: smqauth.UsersType,
 			Operation:  smqauth.UpdateOp,
-			EntityID:   user.ID,
+			EntityID:   id,
 		}); err != nil {
 			return users.User{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
@@ -138,7 +138,7 @@ func (am *authorizationMiddleware) UpdateTags(ctx context.Context, session authn
 		session.SuperAdmin = true
 	}
 
-	return am.svc.UpdateTags(ctx, session, user)
+	return am.svc.UpdateTags(ctx, session, id, user)
 }
 
 func (am *authorizationMiddleware) UpdateEmail(ctx context.Context, session authn.Session, id, email string) (users.User, error) {
@@ -180,14 +180,14 @@ func (am *authorizationMiddleware) UpdateUsername(ctx context.Context, session a
 	return am.svc.UpdateUsername(ctx, session, id, username)
 }
 
-func (am *authorizationMiddleware) UpdateProfilePicture(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+func (am *authorizationMiddleware) UpdateProfilePicture(ctx context.Context, session authn.Session, id string, usr users.UserReq) (users.User, error) {
 	if session.Type == authn.PersonalAccessToken {
 		if err := am.authz.AuthorizePAT(ctx, smqauthz.PatReq{
 			UserID:     session.UserID,
 			PatID:      session.PatID,
 			EntityType: smqauth.UsersType,
 			Operation:  smqauth.UpdateOp,
-			EntityID:   user.ID,
+			EntityID:   id,
 		}); err != nil {
 			return users.User{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
@@ -197,7 +197,7 @@ func (am *authorizationMiddleware) UpdateProfilePicture(ctx context.Context, ses
 		session.SuperAdmin = true
 	}
 
-	return am.svc.UpdateProfilePicture(ctx, session, user)
+	return am.svc.UpdateProfilePicture(ctx, session, id, usr)
 }
 
 func (am *authorizationMiddleware) GenerateResetToken(ctx context.Context, email, host string) error {

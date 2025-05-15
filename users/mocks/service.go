@@ -786,8 +786,8 @@ func (_c *Service_SendPasswordReset_Call) RunAndReturn(run func(ctx context.Cont
 }
 
 // Update provides a mock function for the type Service
-func (_mock *Service) Update(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
-	ret := _mock.Called(ctx, session, user)
+func (_mock *Service) Update(ctx context.Context, session authn.Session, id string, user users.UserReq) (users.User, error) {
+	ret := _mock.Called(ctx, session, id, user)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Update")
@@ -795,16 +795,16 @@ func (_mock *Service) Update(ctx context.Context, session authn.Session, user us
 
 	var r0 users.User
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, authn.Session, users.User) (users.User, error)); ok {
-		return returnFunc(ctx, session, user)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, authn.Session, string, users.UserReq) (users.User, error)); ok {
+		return returnFunc(ctx, session, id, user)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, authn.Session, users.User) users.User); ok {
-		r0 = returnFunc(ctx, session, user)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, authn.Session, string, users.UserReq) users.User); ok {
+		r0 = returnFunc(ctx, session, id, user)
 	} else {
 		r0 = ret.Get(0).(users.User)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, authn.Session, users.User) error); ok {
-		r1 = returnFunc(ctx, session, user)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, authn.Session, string, users.UserReq) error); ok {
+		r1 = returnFunc(ctx, session, id, user)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -819,14 +819,15 @@ type Service_Update_Call struct {
 // Update is a helper method to define mock.On call
 //   - ctx
 //   - session
+//   - id
 //   - user
-func (_e *Service_Expecter) Update(ctx interface{}, session interface{}, user interface{}) *Service_Update_Call {
-	return &Service_Update_Call{Call: _e.mock.On("Update", ctx, session, user)}
+func (_e *Service_Expecter) Update(ctx interface{}, session interface{}, id interface{}, user interface{}) *Service_Update_Call {
+	return &Service_Update_Call{Call: _e.mock.On("Update", ctx, session, id, user)}
 }
 
-func (_c *Service_Update_Call) Run(run func(ctx context.Context, session authn.Session, user users.User)) *Service_Update_Call {
+func (_c *Service_Update_Call) Run(run func(ctx context.Context, session authn.Session, id string, user users.UserReq)) *Service_Update_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(users.User))
+		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(users.UserReq))
 	})
 	return _c
 }
@@ -836,7 +837,7 @@ func (_c *Service_Update_Call) Return(user1 users.User, err error) *Service_Upda
 	return _c
 }
 
-func (_c *Service_Update_Call) RunAndReturn(run func(ctx context.Context, session authn.Session, user users.User) (users.User, error)) *Service_Update_Call {
+func (_c *Service_Update_Call) RunAndReturn(run func(ctx context.Context, session authn.Session, id string, user users.UserReq) (users.User, error)) *Service_Update_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -899,8 +900,8 @@ func (_c *Service_UpdateEmail_Call) RunAndReturn(run func(ctx context.Context, s
 }
 
 // UpdateProfilePicture provides a mock function for the type Service
-func (_mock *Service) UpdateProfilePicture(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
-	ret := _mock.Called(ctx, session, user)
+func (_mock *Service) UpdateProfilePicture(ctx context.Context, session authn.Session, id string, usr users.UserReq) (users.User, error) {
+	ret := _mock.Called(ctx, session, id, usr)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateProfilePicture")
@@ -908,16 +909,16 @@ func (_mock *Service) UpdateProfilePicture(ctx context.Context, session authn.Se
 
 	var r0 users.User
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, authn.Session, users.User) (users.User, error)); ok {
-		return returnFunc(ctx, session, user)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, authn.Session, string, users.UserReq) (users.User, error)); ok {
+		return returnFunc(ctx, session, id, usr)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, authn.Session, users.User) users.User); ok {
-		r0 = returnFunc(ctx, session, user)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, authn.Session, string, users.UserReq) users.User); ok {
+		r0 = returnFunc(ctx, session, id, usr)
 	} else {
 		r0 = ret.Get(0).(users.User)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, authn.Session, users.User) error); ok {
-		r1 = returnFunc(ctx, session, user)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, authn.Session, string, users.UserReq) error); ok {
+		r1 = returnFunc(ctx, session, id, usr)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -932,24 +933,25 @@ type Service_UpdateProfilePicture_Call struct {
 // UpdateProfilePicture is a helper method to define mock.On call
 //   - ctx
 //   - session
-//   - user
-func (_e *Service_Expecter) UpdateProfilePicture(ctx interface{}, session interface{}, user interface{}) *Service_UpdateProfilePicture_Call {
-	return &Service_UpdateProfilePicture_Call{Call: _e.mock.On("UpdateProfilePicture", ctx, session, user)}
+//   - id
+//   - usr
+func (_e *Service_Expecter) UpdateProfilePicture(ctx interface{}, session interface{}, id interface{}, usr interface{}) *Service_UpdateProfilePicture_Call {
+	return &Service_UpdateProfilePicture_Call{Call: _e.mock.On("UpdateProfilePicture", ctx, session, id, usr)}
 }
 
-func (_c *Service_UpdateProfilePicture_Call) Run(run func(ctx context.Context, session authn.Session, user users.User)) *Service_UpdateProfilePicture_Call {
+func (_c *Service_UpdateProfilePicture_Call) Run(run func(ctx context.Context, session authn.Session, id string, usr users.UserReq)) *Service_UpdateProfilePicture_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(users.User))
+		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(users.UserReq))
 	})
 	return _c
 }
 
-func (_c *Service_UpdateProfilePicture_Call) Return(user1 users.User, err error) *Service_UpdateProfilePicture_Call {
-	_c.Call.Return(user1, err)
+func (_c *Service_UpdateProfilePicture_Call) Return(user users.User, err error) *Service_UpdateProfilePicture_Call {
+	_c.Call.Return(user, err)
 	return _c
 }
 
-func (_c *Service_UpdateProfilePicture_Call) RunAndReturn(run func(ctx context.Context, session authn.Session, user users.User) (users.User, error)) *Service_UpdateProfilePicture_Call {
+func (_c *Service_UpdateProfilePicture_Call) RunAndReturn(run func(ctx context.Context, session authn.Session, id string, usr users.UserReq) (users.User, error)) *Service_UpdateProfilePicture_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1068,8 +1070,8 @@ func (_c *Service_UpdateSecret_Call) RunAndReturn(run func(ctx context.Context, 
 }
 
 // UpdateTags provides a mock function for the type Service
-func (_mock *Service) UpdateTags(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
-	ret := _mock.Called(ctx, session, user)
+func (_mock *Service) UpdateTags(ctx context.Context, session authn.Session, id string, user users.UserReq) (users.User, error) {
+	ret := _mock.Called(ctx, session, id, user)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateTags")
@@ -1077,16 +1079,16 @@ func (_mock *Service) UpdateTags(ctx context.Context, session authn.Session, use
 
 	var r0 users.User
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, authn.Session, users.User) (users.User, error)); ok {
-		return returnFunc(ctx, session, user)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, authn.Session, string, users.UserReq) (users.User, error)); ok {
+		return returnFunc(ctx, session, id, user)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, authn.Session, users.User) users.User); ok {
-		r0 = returnFunc(ctx, session, user)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, authn.Session, string, users.UserReq) users.User); ok {
+		r0 = returnFunc(ctx, session, id, user)
 	} else {
 		r0 = ret.Get(0).(users.User)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, authn.Session, users.User) error); ok {
-		r1 = returnFunc(ctx, session, user)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, authn.Session, string, users.UserReq) error); ok {
+		r1 = returnFunc(ctx, session, id, user)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1101,14 +1103,15 @@ type Service_UpdateTags_Call struct {
 // UpdateTags is a helper method to define mock.On call
 //   - ctx
 //   - session
+//   - id
 //   - user
-func (_e *Service_Expecter) UpdateTags(ctx interface{}, session interface{}, user interface{}) *Service_UpdateTags_Call {
-	return &Service_UpdateTags_Call{Call: _e.mock.On("UpdateTags", ctx, session, user)}
+func (_e *Service_Expecter) UpdateTags(ctx interface{}, session interface{}, id interface{}, user interface{}) *Service_UpdateTags_Call {
+	return &Service_UpdateTags_Call{Call: _e.mock.On("UpdateTags", ctx, session, id, user)}
 }
 
-func (_c *Service_UpdateTags_Call) Run(run func(ctx context.Context, session authn.Session, user users.User)) *Service_UpdateTags_Call {
+func (_c *Service_UpdateTags_Call) Run(run func(ctx context.Context, session authn.Session, id string, user users.UserReq)) *Service_UpdateTags_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(users.User))
+		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(users.UserReq))
 	})
 	return _c
 }
@@ -1118,7 +1121,7 @@ func (_c *Service_UpdateTags_Call) Return(user1 users.User, err error) *Service_
 	return _c
 }
 
-func (_c *Service_UpdateTags_Call) RunAndReturn(run func(ctx context.Context, session authn.Session, user users.User) (users.User, error)) *Service_UpdateTags_Call {
+func (_c *Service_UpdateTags_Call) RunAndReturn(run func(ctx context.Context, session authn.Session, id string, user users.UserReq) (users.User, error)) *Service_UpdateTags_Call {
 	_c.Call.Return(run)
 	return _c
 }

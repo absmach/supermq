@@ -176,14 +176,13 @@ func updateEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		user := users.User{
-			ID:        req.id,
+		usr := users.UserReq{
 			FirstName: req.FirstName,
 			LastName:  req.LastName,
 			Metadata:  req.Metadata,
 		}
 
-		user, err := svc.Update(ctx, session, user)
+		user, err := svc.Update(ctx, session, req.id, usr)
 		if err != nil {
 			return nil, err
 		}
@@ -204,12 +203,11 @@ func updateTagsEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthentication
 		}
 
-		user := users.User{
-			ID:   req.id,
+		usr := users.UserReq{
 			Tags: req.Tags,
 		}
 
-		user, err := svc.UpdateTags(ctx, session, user)
+		user, err := svc.UpdateTags(ctx, session, req.id, usr)
 		if err != nil {
 			return nil, err
 		}
@@ -334,8 +332,7 @@ func updateProfilePictureEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		user := users.User{
-			ID:             req.id,
+		usr := users.UserReq{
 			ProfilePicture: req.ProfilePicture,
 		}
 
@@ -344,7 +341,7 @@ func updateProfilePictureEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthorization
 		}
 
-		user, err := svc.UpdateProfilePicture(ctx, session, user)
+		user, err := svc.UpdateProfilePicture(ctx, session, req.id, usr)
 		if err != nil {
 			return nil, err
 		}

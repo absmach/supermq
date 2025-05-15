@@ -44,6 +44,18 @@ type UsersPage struct {
 // Metadata represents arbitrary JSON.
 type Metadata map[string]interface{}
 
+type UserReq struct {
+	FirstName      *string    `json:"first_name,omitempty"`
+	LastName       *string    `json:"last_name,omitempty"`
+	Metadata       *Metadata  `json:"metadata,omitempty"`
+	Tags           *[]string  `json:"tags,omitempty"`
+	Role           *Role      `json:"role,omitempty"`
+	ProfilePicture *string    `json:"profile_picture,omitempty"`
+	Email          *string    `json:"email,omitempty"`
+	UpdatedBy      *string    `json:"updated_by,omitempty"`
+	UpdatedAt      *time.Time `json:"updated_at,omitempty"`
+}
+
 // MembersPage contains page related metadata as well as list of members that
 // belong to this page.
 type MembersPage struct {
@@ -70,7 +82,7 @@ type Repository interface {
 	RetrieveByUsername(ctx context.Context, username string) (User, error)
 
 	// Update updates the user name and metadata.
-	Update(ctx context.Context, user User) (User, error)
+	Update(ctx context.Context, id string, user UserReq) (User, error)
 
 	// UpdateUsername updates the User's names.
 	UpdateUsername(ctx context.Context, user User) (User, error)
@@ -152,10 +164,10 @@ type Service interface {
 	SearchUsers(ctx context.Context, pm Page) (UsersPage, error)
 
 	// Update updates the user's name and metadata.
-	Update(ctx context.Context, session authn.Session, user User) (User, error)
+	Update(ctx context.Context, session authn.Session, id string, user UserReq) (User, error)
 
 	// UpdateTags updates the user's tags.
-	UpdateTags(ctx context.Context, session authn.Session, user User) (User, error)
+	UpdateTags(ctx context.Context, session authn.Session, id string, user UserReq) (User, error)
 
 	// UpdateEmail updates the user's email.
 	UpdateEmail(ctx context.Context, session authn.Session, id, email string) (User, error)
@@ -164,7 +176,7 @@ type Service interface {
 	UpdateUsername(ctx context.Context, session authn.Session, id, username string) (User, error)
 
 	// UpdateProfilePicture updates the user's profile picture.
-	UpdateProfilePicture(ctx context.Context, session authn.Session, user User) (User, error)
+	UpdateProfilePicture(ctx context.Context, session authn.Session, id string, usr UserReq) (User, error)
 
 	// GenerateResetToken email where mail will be sent.
 	// host is used for generating reset link.

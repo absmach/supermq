@@ -574,8 +574,8 @@ func (_c *Repository_SearchUsers_Call) RunAndReturn(run func(ctx context.Context
 }
 
 // Update provides a mock function for the type Repository
-func (_mock *Repository) Update(ctx context.Context, user users.User) (users.User, error) {
-	ret := _mock.Called(ctx, user)
+func (_mock *Repository) Update(ctx context.Context, id string, user users.UserReq) (users.User, error) {
+	ret := _mock.Called(ctx, id, user)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Update")
@@ -583,16 +583,16 @@ func (_mock *Repository) Update(ctx context.Context, user users.User) (users.Use
 
 	var r0 users.User
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, users.User) (users.User, error)); ok {
-		return returnFunc(ctx, user)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, users.UserReq) (users.User, error)); ok {
+		return returnFunc(ctx, id, user)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, users.User) users.User); ok {
-		r0 = returnFunc(ctx, user)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, users.UserReq) users.User); ok {
+		r0 = returnFunc(ctx, id, user)
 	} else {
 		r0 = ret.Get(0).(users.User)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, users.User) error); ok {
-		r1 = returnFunc(ctx, user)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, users.UserReq) error); ok {
+		r1 = returnFunc(ctx, id, user)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -606,14 +606,15 @@ type Repository_Update_Call struct {
 
 // Update is a helper method to define mock.On call
 //   - ctx
+//   - id
 //   - user
-func (_e *Repository_Expecter) Update(ctx interface{}, user interface{}) *Repository_Update_Call {
-	return &Repository_Update_Call{Call: _e.mock.On("Update", ctx, user)}
+func (_e *Repository_Expecter) Update(ctx interface{}, id interface{}, user interface{}) *Repository_Update_Call {
+	return &Repository_Update_Call{Call: _e.mock.On("Update", ctx, id, user)}
 }
 
-func (_c *Repository_Update_Call) Run(run func(ctx context.Context, user users.User)) *Repository_Update_Call {
+func (_c *Repository_Update_Call) Run(run func(ctx context.Context, id string, user users.UserReq)) *Repository_Update_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(users.User))
+		run(args[0].(context.Context), args[1].(string), args[2].(users.UserReq))
 	})
 	return _c
 }
@@ -623,7 +624,7 @@ func (_c *Repository_Update_Call) Return(user1 users.User, err error) *Repositor
 	return _c
 }
 
-func (_c *Repository_Update_Call) RunAndReturn(run func(ctx context.Context, user users.User) (users.User, error)) *Repository_Update_Call {
+func (_c *Repository_Update_Call) RunAndReturn(run func(ctx context.Context, id string, user users.UserReq) (users.User, error)) *Repository_Update_Call {
 	_c.Call.Return(run)
 	return _c
 }

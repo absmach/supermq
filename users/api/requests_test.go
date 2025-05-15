@@ -232,6 +232,7 @@ func TestUpdateUserReqValidate(t *testing.T) {
 }
 
 func TestUpdateUserTagsReqValidate(t *testing.T) {
+	tags := []string{"tag1", "tag2"}
 	cases := []struct {
 		desc string
 		req  updateUserTagsReq
@@ -241,7 +242,7 @@ func TestUpdateUserTagsReqValidate(t *testing.T) {
 			desc: "valid request",
 			req: updateUserTagsReq{
 				id:   validID,
-				Tags: []string{"tag1", "tag2"},
+				Tags: &tags,
 			},
 			err: nil,
 		},
@@ -249,7 +250,7 @@ func TestUpdateUserTagsReqValidate(t *testing.T) {
 			desc: "empty id",
 			req: updateUserTagsReq{
 				id:   "",
-				Tags: []string{"tag1", "tag2"},
+				Tags: &tags,
 			},
 			err: apiutil.ErrMissingID,
 		},
@@ -304,6 +305,7 @@ func TestUpdateProfilePictureReqValidate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error parsing URL: %v", err)
 	}
+	url := parsedURL.String()
 	cases := []struct {
 		desc string
 		req  updateProfilePictureReq
@@ -313,7 +315,7 @@ func TestUpdateProfilePictureReqValidate(t *testing.T) {
 			desc: "valid request",
 			req: updateProfilePictureReq{
 				id:             validID,
-				ProfilePicture: parsedURL.String(),
+				ProfilePicture: &url,
 			},
 			err: nil,
 		},
@@ -321,7 +323,7 @@ func TestUpdateProfilePictureReqValidate(t *testing.T) {
 			desc: "empty ID",
 			req: updateProfilePictureReq{
 				id:             "",
-				ProfilePicture: parsedURL.String(),
+				ProfilePicture: &url,
 			},
 			err: apiutil.ErrMissingID,
 		},

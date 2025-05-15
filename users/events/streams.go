@@ -82,8 +82,8 @@ func (es *eventStore) Register(ctx context.Context, session authn.Session, user 
 	return user, nil
 }
 
-func (es *eventStore) Update(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
-	user, err := es.svc.Update(ctx, session, user)
+func (es *eventStore) Update(ctx context.Context, session authn.Session, id string, usr users.UserReq) (users.User, error) {
+	user, err := es.svc.Update(ctx, session, id, usr)
 	if err != nil {
 		return user, err
 	}
@@ -100,8 +100,8 @@ func (es *eventStore) UpdateRole(ctx context.Context, session authn.Session, use
 	return es.update(ctx, session, userUpdateRole, updateRoleStream, user)
 }
 
-func (es *eventStore) UpdateTags(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
-	user, err := es.svc.UpdateTags(ctx, session, user)
+func (es *eventStore) UpdateTags(ctx context.Context, session authn.Session, id string, usr users.UserReq) (users.User, error) {
+	user, err := es.svc.UpdateTags(ctx, session, id, usr)
 	if err != nil {
 		return user, err
 	}
@@ -137,8 +137,8 @@ func (es *eventStore) UpdateUsername(ctx context.Context, session authn.Session,
 	return user, nil
 }
 
-func (es *eventStore) UpdateProfilePicture(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
-	user, err := es.svc.UpdateProfilePicture(ctx, session, user)
+func (es *eventStore) UpdateProfilePicture(ctx context.Context, session authn.Session, id string, usr users.UserReq) (users.User, error) {
+	user, err := es.svc.UpdateProfilePicture(ctx, session, id, usr)
 	if err != nil {
 		return user, err
 	}

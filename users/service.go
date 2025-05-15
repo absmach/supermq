@@ -194,45 +194,35 @@ func (svc service) SearchUsers(ctx context.Context, pm Page) (UsersPage, error) 
 	return cp, nil
 }
 
-func (svc service) Update(ctx context.Context, session authn.Session, usr User) (User, error) {
-	if session.UserID != usr.ID {
+func (svc service) Update(ctx context.Context, session authn.Session, id string, usr UserReq) (User, error) {
+	if session.UserID != id {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
 			return User{}, err
 		}
 	}
+	updatedAt := time.Now().UTC()
+	usr.UpdatedAt = &updatedAt
+	usr.UpdatedBy = &session.UserID
 
-	user := User{
-		ID:        usr.ID,
-		FirstName: usr.FirstName,
-		LastName:  usr.LastName,
-		Metadata:  usr.Metadata,
-		Role:      AllRole,
-		UpdatedAt: time.Now().UTC(),
-		UpdatedBy: session.UserID,
-	}
-
-	user, err := svc.users.Update(ctx, user)
+	user, err := svc.users.Update(ctx, id, usr)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	return user, nil
 }
 
-func (svc service) UpdateTags(ctx context.Context, session authn.Session, usr User) (User, error) {
-	if session.UserID != usr.ID {
+func (svc service) UpdateTags(ctx context.Context, session authn.Session, id string, usr UserReq) (User, error) {
+	if session.UserID != id {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
 			return User{}, err
 		}
 	}
 
-	user := User{
-		ID:        usr.ID,
-		Tags:      usr.Tags,
-		Role:      AllRole,
-		UpdatedAt: time.Now().UTC(),
-		UpdatedBy: session.UserID,
-	}
-	user, err := svc.users.Update(ctx, user)
+	updatedAt := time.Now().UTC()
+	usr.UpdatedAt = &updatedAt
+	usr.UpdatedBy = &session.UserID
+
+	user, err := svc.users.Update(ctx, id, usr)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
@@ -240,22 +230,18 @@ func (svc service) UpdateTags(ctx context.Context, session authn.Session, usr Us
 	return user, nil
 }
 
-func (svc service) UpdateProfilePicture(ctx context.Context, session authn.Session, usr User) (User, error) {
-	if session.UserID != usr.ID {
+func (svc service) UpdateProfilePicture(ctx context.Context, session authn.Session, id string, usr UserReq) (User, error) {
+	if session.UserID != id {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
 			return User{}, err
 		}
 	}
 
-	user := User{
-		ID:             usr.ID,
-		ProfilePicture: usr.ProfilePicture,
-		Role:           AllRole,
-		UpdatedAt:      time.Now(),
-		UpdatedBy:      session.UserID,
-	}
+	updatedAt := time.Now().UTC()
+	usr.UpdatedAt = &updatedAt
+	usr.UpdatedBy = &session.UserID
 
-	user, err := svc.users.Update(ctx, user)
+	user, err := svc.users.Update(ctx, id, usr)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
@@ -270,14 +256,13 @@ func (svc service) UpdateEmail(ctx context.Context, session authn.Session, userI
 		}
 	}
 
-	user := User{
-		ID:        userID,
-		Email:     email,
-		Role:      AllRole,
-		UpdatedAt: time.Now().UTC(),
-		UpdatedBy: session.UserID,
+	updatedAt := time.Now().UTC()
+	usr := UserReq{
+		Email:     &email,
+		UpdatedAt: &updatedAt,
+		UpdatedBy: &session.UserID,
 	}
-	user, err := svc.users.Update(ctx, user)
+	user, err := svc.users.Update(ctx, userID, usr)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
@@ -381,18 +366,18 @@ func (svc service) UpdateRole(ctx context.Context, session authn.Session, usr Us
 	if err := svc.checkSuperAdmin(ctx, session); err != nil {
 		return User{}, err
 	}
-	user := User{
-		ID:        usr.ID,
-		Role:      usr.Role,
-		UpdatedAt: time.Now().UTC(),
-		UpdatedBy: session.UserID,
+	updateAt := time.Now().UTC()
+	uReq := UserReq{
+		Role:      &usr.Role,
+		UpdatedAt: &updateAt,
+		UpdatedBy: &session.UserID,
 	}
 
 	if err := svc.updateUserPolicy(ctx, usr.ID, usr.Role); err != nil {
 		return User{}, err
 	}
 
-	u, err := svc.users.Update(ctx, user)
+	u, err := svc.users.Update(ctx, usr.ID, uReq)
 	if err != nil {
 		// If failed to update role in DB, then revert back to platform admin policies in spicedb
 		if errRollback := svc.updateUserPolicy(ctx, usr.ID, UserRole); errRollback != nil {

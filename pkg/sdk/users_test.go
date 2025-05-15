@@ -904,7 +904,8 @@ func TestUpdateUser(t *testing.T) {
 		token           string
 		session         smqauthn.Session
 		updateUserReq   sdk.User
-		svcReq          users.User
+		userID          string
+		svcReq          users.UserReq
 		svcRes          users.User
 		svcErr          error
 		authenticateErr error
@@ -918,9 +919,9 @@ func TestUpdateUser(t *testing.T) {
 				ID:        user.ID,
 				FirstName: updatedName,
 			},
-			svcReq: users.User{
-				ID:        user.ID,
-				FirstName: updatedName,
+			userID: user.ID,
+			svcReq: users.UserReq{
+				FirstName: &updatedName,
 			},
 			svcRes:   convertUser(updatedUser),
 			svcErr:   nil,
@@ -934,9 +935,9 @@ func TestUpdateUser(t *testing.T) {
 				ID:        user.ID,
 				FirstName: updatedName,
 			},
-			svcReq: users.User{
-				ID:        user.ID,
-				FirstName: updatedName,
+			userID: user.ID,
+			svcReq: users.UserReq{
+				FirstName: &updatedName,
 			},
 			svcRes:          users.User{},
 			authenticateErr: svcerr.ErrAuthentication,
@@ -950,9 +951,9 @@ func TestUpdateUser(t *testing.T) {
 				ID:        wrongID,
 				FirstName: updatedName,
 			},
-			svcReq: users.User{
-				ID:        wrongID,
-				FirstName: updatedName,
+			userID: wrongID,
+			svcReq: users.UserReq{
+				FirstName: &updatedName,
 			},
 			svcRes:   users.User{},
 			svcErr:   svcerr.ErrUpdateEntity,
@@ -966,9 +967,9 @@ func TestUpdateUser(t *testing.T) {
 				ID:        user.ID,
 				FirstName: updatedName,
 			},
-			svcReq: users.User{
-				ID:        user.ID,
-				FirstName: updatedName,
+			userID: user.ID,
+			svcReq: users.UserReq{
+				FirstName: &updatedName,
 			},
 			svcRes:   users.User{},
 			svcErr:   nil,
@@ -982,9 +983,9 @@ func TestUpdateUser(t *testing.T) {
 				ID:        "",
 				FirstName: updatedName,
 			},
-			svcReq: users.User{
-				ID:        "",
-				FirstName: updatedName,
+			userID: "",
+			svcReq: users.UserReq{
+				FirstName: &updatedName,
 			},
 			svcRes:   users.User{},
 			svcErr:   nil,
@@ -1000,7 +1001,7 @@ func TestUpdateUser(t *testing.T) {
 					"test": make(chan int),
 				},
 			},
-			svcReq:   users.User{},
+			svcReq:   users.UserReq{},
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
@@ -1013,9 +1014,9 @@ func TestUpdateUser(t *testing.T) {
 				ID:        user.ID,
 				FirstName: updatedName,
 			},
-			svcReq: users.User{
-				ID:        user.ID,
-				FirstName: updatedName,
+			userID: user.ID,
+			svcReq: users.UserReq{
+				FirstName: &updatedName,
 			},
 			svcRes: users.User{
 				ID:        id,
@@ -1036,12 +1037,12 @@ func TestUpdateUser(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := svc.On("Update", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			svcCall := svc.On("Update", mock.Anything, tc.session, tc.userID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.UpdateUser(context.Background(), tc.updateUserReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "Update", mock.Anything, tc.session, tc.svcReq)
+				ok := svcCall.Parent.AssertCalled(t, "Update", mock.Anything, tc.session, tc.userID, tc.svcReq)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1069,7 +1070,8 @@ func TestUpdateUserTags(t *testing.T) {
 		token           string
 		session         smqauthn.Session
 		updateUserReq   sdk.User
-		svcReq          users.User
+		userID          string
+		svcReq          users.UserReq
 		svcRes          users.User
 		svcErr          error
 		authenticateErr error
@@ -1083,9 +1085,9 @@ func TestUpdateUserTags(t *testing.T) {
 				ID:   user.ID,
 				Tags: updatedTags,
 			},
-			svcReq: users.User{
-				ID:   user.ID,
-				Tags: updatedTags,
+			userID: user.ID,
+			svcReq: users.UserReq{
+				Tags: &updatedTags,
 			},
 			svcRes:   convertUser(updatedUser),
 			svcErr:   nil,
@@ -1099,9 +1101,9 @@ func TestUpdateUserTags(t *testing.T) {
 				ID:   user.ID,
 				Tags: updatedTags,
 			},
-			svcReq: users.User{
-				ID:   user.ID,
-				Tags: updatedTags,
+			userID: user.ID,
+			svcReq: users.UserReq{
+				Tags: &updatedTags,
 			},
 			svcRes:          users.User{},
 			authenticateErr: svcerr.ErrAuthentication,
@@ -1115,7 +1117,7 @@ func TestUpdateUserTags(t *testing.T) {
 				ID:   user.ID,
 				Tags: updatedTags,
 			},
-			svcReq:   users.User{},
+			svcReq:   users.UserReq{},
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
@@ -1128,9 +1130,9 @@ func TestUpdateUserTags(t *testing.T) {
 				ID:   wrongID,
 				Tags: updatedTags,
 			},
-			svcReq: users.User{
-				ID:   wrongID,
-				Tags: updatedTags,
+			userID: wrongID,
+			svcReq: users.UserReq{
+				Tags: &updatedTags,
 			},
 			svcRes:   users.User{},
 			svcErr:   svcerr.ErrUpdateEntity,
@@ -1144,7 +1146,8 @@ func TestUpdateUserTags(t *testing.T) {
 				ID:   "",
 				Tags: updatedTags,
 			},
-			svcReq:   users.User{},
+			userID:   "",
+			svcReq:   users.UserReq{},
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
@@ -1159,7 +1162,7 @@ func TestUpdateUserTags(t *testing.T) {
 					"test": make(chan int),
 				},
 			},
-			svcReq:   users.User{},
+			svcReq:   users.UserReq{},
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
@@ -1172,9 +1175,9 @@ func TestUpdateUserTags(t *testing.T) {
 				ID:   user.ID,
 				Tags: updatedTags,
 			},
-			svcReq: users.User{
-				ID:   user.ID,
-				Tags: updatedTags,
+			userID: user.ID,
+			svcReq: users.UserReq{
+				Tags: &updatedTags,
 			},
 			svcRes: users.User{
 				ID:   id,
@@ -1194,12 +1197,12 @@ func TestUpdateUserTags(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := svc.On("UpdateTags", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			svcCall := svc.On("UpdateTags", mock.Anything, tc.session, tc.userID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.UpdateUserTags(context.Background(), tc.updateUserReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "UpdateTags", mock.Anything, tc.session, tc.svcReq)
+				ok := svcCall.Parent.AssertCalled(t, "UpdateTags", mock.Anything, tc.session, tc.userID, tc.svcReq)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()
@@ -1994,7 +1997,8 @@ func TestUpdateProfilePicture(t *testing.T) {
 		token           string
 		session         smqauthn.Session
 		updateUserReq   sdk.User
-		svcReq          users.User
+		userID          string
+		svcReq          users.UserReq
 		svcRes          users.User
 		svcErr          error
 		authenticateErr error
@@ -2008,9 +2012,9 @@ func TestUpdateProfilePicture(t *testing.T) {
 				ID:             user.ID,
 				ProfilePicture: updatedProfilePicture,
 			},
-			svcReq: users.User{
-				ID:             user.ID,
-				ProfilePicture: updatedProfilePicture,
+			userID: user.ID,
+			svcReq: users.UserReq{
+				ProfilePicture: &updatedProfilePicture,
 			},
 			svcRes:   convertUser(updatedUser),
 			svcErr:   nil,
@@ -2024,9 +2028,9 @@ func TestUpdateProfilePicture(t *testing.T) {
 				ID:             user.ID,
 				ProfilePicture: updatedProfilePicture,
 			},
-			svcReq: users.User{
-				ID:             user.ID,
-				ProfilePicture: updatedProfilePicture,
+			userID: user.ID,
+			svcReq: users.UserReq{
+				ProfilePicture: &updatedProfilePicture,
 			},
 			svcRes:          users.User{},
 			authenticateErr: svcerr.ErrAuthentication,
@@ -2040,9 +2044,9 @@ func TestUpdateProfilePicture(t *testing.T) {
 				ID:             user.ID,
 				ProfilePicture: updatedProfilePicture,
 			},
-			svcReq: users.User{
-				ID:             user.ID,
-				ProfilePicture: updatedProfilePicture,
+			userID: user.ID,
+			svcReq: users.UserReq{
+				ProfilePicture: &updatedProfilePicture,
 			},
 			svcRes:   users.User{},
 			svcErr:   nil,
@@ -2056,9 +2060,9 @@ func TestUpdateProfilePicture(t *testing.T) {
 				ID:             wrongID,
 				ProfilePicture: updatedProfilePicture,
 			},
-			svcReq: users.User{
-				ID:             wrongID,
-				ProfilePicture: updatedProfilePicture,
+			userID: wrongID,
+			svcReq: users.UserReq{
+				ProfilePicture: &updatedProfilePicture,
 			},
 			svcRes:   users.User{},
 			svcErr:   svcerr.ErrUpdateEntity,
@@ -2072,9 +2076,9 @@ func TestUpdateProfilePicture(t *testing.T) {
 				ID:             "",
 				ProfilePicture: updatedProfilePicture,
 			},
-			svcReq: users.User{
-				ID:             "",
-				ProfilePicture: updatedProfilePicture,
+			userID: "",
+			svcReq: users.UserReq{
+				ProfilePicture: &updatedProfilePicture,
 			},
 			svcRes:   users.User{},
 			svcErr:   nil,
@@ -2090,7 +2094,7 @@ func TestUpdateProfilePicture(t *testing.T) {
 					"test": make(chan int),
 				},
 			},
-			svcReq:   users.User{},
+			svcReq:   users.UserReq{},
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
@@ -2103,9 +2107,9 @@ func TestUpdateProfilePicture(t *testing.T) {
 				ID:             user.ID,
 				ProfilePicture: updatedProfilePicture,
 			},
-			svcReq: users.User{
-				ID:             user.ID,
-				ProfilePicture: updatedProfilePicture,
+			userID: user.ID,
+			svcReq: users.UserReq{
+				ProfilePicture: &updatedProfilePicture,
 			},
 			svcRes: users.User{
 				ID: id,
@@ -2124,12 +2128,12 @@ func TestUpdateProfilePicture(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := svc.On("UpdateProfilePicture", mock.Anything, tc.session, tc.svcReq).Return(tc.svcRes, tc.svcErr)
+			svcCall := svc.On("UpdateProfilePicture", mock.Anything, tc.session, tc.userID, tc.svcReq).Return(tc.svcRes, tc.svcErr)
 			resp, err := mgsdk.UpdateProfilePicture(context.Background(), tc.updateUserReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "UpdateProfilePicture", mock.Anything, tc.session, tc.svcReq)
+				ok := svcCall.Parent.AssertCalled(t, "UpdateProfilePicture", mock.Anything, tc.session, tc.userID, tc.svcReq)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()

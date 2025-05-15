@@ -1042,7 +1042,7 @@ func TestUpdate(t *testing.T) {
 				body:        strings.NewReader(tc.data),
 			}
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-			svcCall := svc.On("Update", mock.Anything, tc.authnRes, mock.Anything).Return(tc.userResponse, tc.err)
+			svcCall := svc.On("Update", mock.Anything, tc.authnRes, tc.id, mock.Anything).Return(tc.userResponse, tc.err)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			var resBody respBody
@@ -1180,7 +1180,7 @@ func TestUpdateTags(t *testing.T) {
 			}
 
 			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-			svcCall := svc.On("UpdateTags", mock.Anything, tc.authnRes, mock.Anything).Return(tc.userResponse, tc.err)
+			svcCall := svc.On("UpdateTags", mock.Anything, tc.authnRes, tc.id, mock.Anything).Return(tc.userResponse, tc.err)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			var resBody respBody
@@ -1629,7 +1629,7 @@ func TestUpdateProfilePicture(t *testing.T) {
 		}
 
 		authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-		svcCall := svc.On("UpdateProfilePicture", mock.Anything, tc.authnRes, mock.Anything).Return(tc.user, tc.svcErr)
+		svcCall := svc.On("UpdateProfilePicture", mock.Anything, tc.authnRes, tc.user.ID, mock.Anything).Return(tc.user, tc.svcErr)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		var resBody respBody

@@ -199,43 +199,58 @@ func (repo *userRepo) UpdateUsername(ctx context.Context, user users.User) (user
 	return ToUser(dbu)
 }
 
-func (repo *userRepo) Update(ctx context.Context, user users.User) (users.User, error) {
+func (repo *userRepo) Update(ctx context.Context, id string, ur users.UserReq) (users.User, error) {
 	var query []string
 	var upq string
-	if user.FirstName != "" {
-		query = append(query, "first_name = :first_name,")
+	u := users.User{ID: id}
+	if ur.FirstName != nil && *ur.FirstName != "" {
+		query = append(query, "first_name = :first_name")
+		u.FirstName = *ur.FirstName
 	}
-	if user.LastName != "" {
-		query = append(query, "last_name = :last_name,")
+	if ur.LastName != nil && *ur.LastName != "" {
+		query = append(query, "last_name = :last_name")
+		u.LastName = *ur.LastName
 	}
-	if user.Metadata != nil {
-		query = append(query, "metadata = :metadata,")
+	if ur.Metadata != nil {
+		query = append(query, "metadata = :metadata")
+		u.Metadata = *ur.Metadata
 	}
-	if len(user.Tags) > 0 {
-		query = append(query, "tags = :tags,")
+	if ur.Tags != nil {
+		query = append(query, "tags = :tags")
+		u.Tags = *ur.Tags
 	}
-	if user.Role != users.AllRole {
-		query = append(query, "role = :role,")
+	if ur.Role != nil && *ur.Role != users.AllRole {
+		query = append(query, "role = :role")
+		u.Role = *ur.Role
 	}
-
-	if user.ProfilePicture != "" {
-		query = append(query, "profile_picture = :profile_picture,")
+	if ur.ProfilePicture != nil {
+		query = append(query, "profile_picture = :profile_picture")
+		u.ProfilePicture = *ur.ProfilePicture
 	}
-
-	if user.Email != "" {
-		query = append(query, "email = :email,")
+	if ur.Email != nil && *ur.Email != "" {
+		query = append(query, "email = :email")
+		u.Email = *ur.Email
+	}
+	u.UpdatedAt = time.Now().UTC()
+	if ur.UpdatedAt != nil {
+		query = append(query, "updated_at = :updated_at")
+		u.UpdatedAt = *ur.UpdatedAt
+	}
+	if ur.UpdatedBy != nil {
+		query = append(query, "updated_by = :updated_by")
+		u.UpdatedBy = *ur.UpdatedBy
 	}
 
 	if len(query) > 0 {
-		upq = strings.Join(query, " ")
+		upq = strings.Join(query, ", ")
 	}
 
-	q := fmt.Sprintf(`UPDATE users SET %s updated_at = :updated_at, updated_by = :updated_by
+	q := fmt.Sprintf(`UPDATE users SET %s
         WHERE id = :id AND status = :status
         RETURNING id, tags, metadata, status, created_at, updated_at, updated_by, last_name, first_name, username, profile_picture, email, role`, upq)
 
-	user.Status = users.EnabledStatus
-	return repo.update(ctx, user, q)
+	u.Status = users.EnabledStatus
+	return repo.update(ctx, u, q)
 }
 
 func (repo *userRepo) update(ctx context.Context, user users.User, query string) (users.User, error) {

@@ -94,21 +94,21 @@ func (ms *metricsMiddleware) SearchUsers(ctx context.Context, pm users.Page) (mp
 }
 
 // Update instruments Update method with metrics.
-func (ms *metricsMiddleware) Update(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+func (ms *metricsMiddleware) Update(ctx context.Context, session authn.Session, id string, user users.UserReq) (users.User, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "update_user").Add(1)
 		ms.latency.With("method", "update_user").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.Update(ctx, session, user)
+	return ms.svc.Update(ctx, session, id, user)
 }
 
 // UpdateTags instruments UpdateTags method with metrics.
-func (ms *metricsMiddleware) UpdateTags(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+func (ms *metricsMiddleware) UpdateTags(ctx context.Context, session authn.Session, id string, user users.UserReq) (users.User, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "update_user_tags").Add(1)
 		ms.latency.With("method", "update_user_tags").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.UpdateTags(ctx, session, user)
+	return ms.svc.UpdateTags(ctx, session, id, user)
 }
 
 // UpdateEmail instruments UpdateEmail method with metrics.
@@ -139,12 +139,12 @@ func (ms *metricsMiddleware) UpdateUsername(ctx context.Context, session authn.S
 }
 
 // UpdateProfilePicture instruments UpdateProfilePicture method with metrics.
-func (ms *metricsMiddleware) UpdateProfilePicture(ctx context.Context, session authn.Session, user users.User) (users.User, error) {
+func (ms *metricsMiddleware) UpdateProfilePicture(ctx context.Context, session authn.Session, id string, user users.UserReq) (users.User, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "update_profile_picture").Add(1)
 		ms.latency.With("method", "update_profile_picture").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.UpdateProfilePicture(ctx, session, user)
+	return ms.svc.UpdateProfilePicture(ctx, session, id, user)
 }
 
 // GenerateResetToken instruments GenerateResetToken method with metrics.
