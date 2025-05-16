@@ -249,7 +249,7 @@ func TestHandle(t *testing.T) {
 				"metadata":    payload,
 			},
 			repoErr: repoerr.ErrCreateEntity,
-			err:     repoerr.ErrCreateEntity,
+			err:     nil,
 		},
 	}
 

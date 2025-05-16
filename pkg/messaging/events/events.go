@@ -18,6 +18,7 @@ var (
 )
 
 type publishEvent struct {
+	domainID  string
 	channelID string
 	clientID  string
 	subtopic  string
@@ -26,6 +27,7 @@ type publishEvent struct {
 func (pe publishEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"operation":  clientPublish,
+		"domain_id":  pe.domainID,
 		"channel_id": pe.channelID,
 		"client_id":  pe.clientID,
 		"subtopic":   pe.subtopic,

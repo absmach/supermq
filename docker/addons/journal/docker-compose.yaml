@@ -16,7 +16,6 @@ networks:
 volumes:
   supermq-journal-volume:
 
-
 services:
   journal-db:
     image: postgres:16.2-alpine

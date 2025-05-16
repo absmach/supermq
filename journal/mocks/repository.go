@@ -190,16 +190,16 @@ func (_c *Repository_DeleteClientTelemetry_Call) RunAndReturn(run func(ctx conte
 }
 
 // IncrementInboundMessages provides a mock function for the type Repository
-func (_mock *Repository) IncrementInboundMessages(ctx context.Context, clientID string) error {
-	ret := _mock.Called(ctx, clientID)
+func (_mock *Repository) IncrementInboundMessages(ctx context.Context, ct journal.ClientTelemetry) error {
+	ret := _mock.Called(ctx, ct)
 
 	if len(ret) == 0 {
 		panic("no return value specified for IncrementInboundMessages")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = returnFunc(ctx, clientID)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, journal.ClientTelemetry) error); ok {
+		r0 = returnFunc(ctx, ct)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -213,14 +213,14 @@ type Repository_IncrementInboundMessages_Call struct {
 
 // IncrementInboundMessages is a helper method to define mock.On call
 //   - ctx
-//   - clientID
-func (_e *Repository_Expecter) IncrementInboundMessages(ctx interface{}, clientID interface{}) *Repository_IncrementInboundMessages_Call {
-	return &Repository_IncrementInboundMessages_Call{Call: _e.mock.On("IncrementInboundMessages", ctx, clientID)}
+//   - ct
+func (_e *Repository_Expecter) IncrementInboundMessages(ctx interface{}, ct interface{}) *Repository_IncrementInboundMessages_Call {
+	return &Repository_IncrementInboundMessages_Call{Call: _e.mock.On("IncrementInboundMessages", ctx, ct)}
 }
 
-func (_c *Repository_IncrementInboundMessages_Call) Run(run func(ctx context.Context, clientID string)) *Repository_IncrementInboundMessages_Call {
+func (_c *Repository_IncrementInboundMessages_Call) Run(run func(ctx context.Context, ct journal.ClientTelemetry)) *Repository_IncrementInboundMessages_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		run(args[0].(context.Context), args[1].(journal.ClientTelemetry))
 	})
 	return _c
 }
@@ -230,7 +230,7 @@ func (_c *Repository_IncrementInboundMessages_Call) Return(err error) *Repositor
 	return _c
 }
 
-func (_c *Repository_IncrementInboundMessages_Call) RunAndReturn(run func(ctx context.Context, clientID string) error) *Repository_IncrementInboundMessages_Call {
+func (_c *Repository_IncrementInboundMessages_Call) RunAndReturn(run func(ctx context.Context, ct journal.ClientTelemetry) error) *Repository_IncrementInboundMessages_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -46,6 +46,7 @@ func (repo *repository) DeleteClientTelemetry(ctx context.Context, clientID, dom
 	if rows, _ := result.RowsAffected(); rows == 0 {
 		return repoerr.ErrNotFound
 	}
+
 	return nil
 }
 
@@ -81,17 +82,17 @@ func (repo *repository) RetrieveClientTelemetry(ctx context.Context, clientID, d
 }
 
 func (repo *repository) AddSubscription(ctx context.Context, sub journal.ClientSubscription) error {
-	q := `INSERT INTO subscriptions (id, subscriber_id, channel_id, subtopic, client_id)
-		VALUES (:id, :subscriber_id, :channel_id, :subtopic, :client_id);
+	q := `
+		INSERT INTO subscriptions (id, subscriber_id, channel_id, subtopic, client_id)
+		SELECT :id, :subscriber_id, :channel_id, :subtopic, :client_id
+		FROM clients_telemetry
+		WHERE client_id = :client_id
+		RETURNING id;
 	`
 
-	result, err := repo.db.NamedExecContext(ctx, q, sub)
+	_, err := repo.db.NamedExecContext(ctx, q, sub)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
-	}
-
-	if rows, _ := result.RowsAffected(); rows == 0 {
-		return repoerr.ErrNotFound
 	}
 
 	return nil
@@ -127,18 +128,15 @@ func (repo *repository) RemoveSubscription(ctx context.Context, subscriberID str
 	return nil
 }
 
-func (repo *repository) IncrementInboundMessages(ctx context.Context, clientID string) error {
-	q := `
-		UPDATE clients_telemetry
-		SET inbound_messages = inbound_messages + 1,
-			last_seen = :last_seen
-		WHERE client_id = :client_id;
+func (repo *repository) IncrementInboundMessages(ctx context.Context, ct journal.ClientTelemetry) error {
+	q := `INSERT INTO clients_telemetry (client_id,domain_id, inbound_messages,first_seen, last_seen)
+		VALUES (:client_id, :domain_id, 1, :first_seen, :last_seen)
+		ON CONFLICT (client_id)
+		DO UPDATE SET
+			inbound_messages = clients_telemetry.inbound_messages + 1,
+			last_seen = EXCLUDED.last_seen;
 	`
 
-	ct := journal.ClientTelemetry{
-		ClientID: clientID,
-		LastSeen: time.Now(),
-	}
 	dbct, err := toDBClientsTelemetry(ct)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrUpdateEntity, err)

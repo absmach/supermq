@@ -148,13 +148,6 @@ func main() {
 	}
 	defer mpub.Close()
 
-	mpub, err = msgevents.NewPublisherMiddleware(ctx, mpub, cfg.ESURL)
-	if err != nil {
-		logger.Error(fmt.Sprintf("failed to create event store middleware: %s", err))
-		exitCode = 1
-		return
-	}
-
 	fwd := mqtt.NewForwarder(brokers.SubjectAllChannels, logger)
 	fwd = mqtttracing.New(serverConfig, tracer, fwd, brokers.SubjectAllChannels)
 	if err := fwd.Forward(ctx, svcName, bsub, mpub); err != nil {

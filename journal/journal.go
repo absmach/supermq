@@ -181,7 +181,7 @@ type Repository interface {
 	RemoveSubscription(ctx context.Context, subscriberID string) error
 
 	// IncrementInboundMessages increments the inbound messages count for a client.
-	IncrementInboundMessages(ctx context.Context, clientID string) error
+	IncrementInboundMessages(ctx context.Context, ct ClientTelemetry) error
 
 	// IncrementOutboundMessages increments the outbound messages count for a client.
 	IncrementOutboundMessages(ctx context.Context, channelID, subtopic string) error
