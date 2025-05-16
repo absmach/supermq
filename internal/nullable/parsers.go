@@ -11,62 +11,62 @@ import (
 
 var ErrInvalidQueryParams = errors.New("invalid query parameters")
 
-func Parse[T any](q url.Values, key string, parser FromString[T]) (Nullable[T], error) {
+func Parse[T any](q url.Values, key string, parser FromString[T]) (Value[T], error) {
 	vals, ok := q[key]
 	if !ok {
-		return Nullable[T]{}, nil
+		return Value[T]{}, nil
 	}
 	if len(vals) > 1 {
-		return Nullable[T]{}, ErrInvalidQueryParams
+		return Value[T]{}, ErrInvalidQueryParams
 	}
 	s := vals[0]
 	if s == "" {
 		// The actual value is sent in query, so nullable is set, but empty.
-		return Nullable[T]{Set: true}, nil
+		return Value[T]{Set: true}, nil
 	}
 	return parser(s)
 }
 
-func ParseString(s string) (Nullable[string], error) {
-	return Nullable[string]{Set: true, Value: s}, nil
+func ParseString(s string) (Value[string], error) {
+	return Value[string]{Set: true, Value: s}, nil
 }
 
-func ParseInt(s string) (Nullable[int], error) {
+func ParseInt(s string) (Value[int], error) {
 	val, err := strconv.Atoi(s)
 	if err != nil {
-		return Nullable[int]{}, err
+		return Value[int]{}, err
 	}
-	return Nullable[int]{Set: true, Value: val}, nil
+	return Value[int]{Set: true, Value: val}, nil
 }
 
-func ParseFloat(s string) (Nullable[float64], error) {
+func ParseFloat(s string) (Value[float64], error) {
 	val, err := strconv.ParseFloat(s, 64)
 	if err != nil {
-		return Nullable[float64]{}, err
+		return Value[float64]{}, err
 	}
-	return Nullable[float64]{Set: true, Value: val}, err
+	return Value[float64]{Set: true, Value: val}, err
 }
 
-func ParseBool(s string) (Nullable[bool], error) {
+func ParseBool(s string) (Value[bool], error) {
 	b, err := strconv.ParseBool(s)
 	if err != nil {
-		return Nullable[bool]{}, err
+		return Value[bool]{}, err
 	}
-	return Nullable[bool]{Set: true, Value: b}, nil
+	return Value[bool]{Set: true, Value: b}, nil
 }
 
-func ParseU16(s string) (Nullable[uint16], error) {
+func ParseU16(s string) (Value[uint16], error) {
 	val, err := strconv.ParseUint(s, 10, 16)
 	if err != nil {
-		return Nullable[uint16]{}, err
+		return Value[uint16]{}, err
 	}
-	return Nullable[uint16]{Set: true, Value: uint16(val)}, nil
+	return Value[uint16]{Set: true, Value: uint16(val)}, nil
 }
 
-func ParseU64(s string) (Nullable[uint64], error) {
+func ParseU64(s string) (Value[uint64], error) {
 	val, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
-		return Nullable[uint64]{}, err
+		return Value[uint64]{}, err
 	}
-	return Nullable[uint64]{Set: true, Value: val}, nil
+	return Value[uint64]{Set: true, Value: val}, nil
 }
