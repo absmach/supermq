@@ -16,14 +16,6 @@ type Value[T any] struct {
 	Value T
 }
 
-// OrElse returns the dedault value if n is not set.
-func (n Value[T]) OrElse(defaultVal T) T {
-	if n.Set {
-		return n.Value
-	}
-	return defaultVal
-}
-
 // FromString[T any] represents a parser function. It is used to avoid
 // a single parser for all nullables for improved readability and performance.
 // FromString should always return Nullable with Set=true, error otherwise.
@@ -41,8 +33,8 @@ func (n Value[T]) MarshalJSON() ([]byte, error) {
 func (n *Value[T]) UnmarshalJSON(data []byte) error {
 	if bytes.Equal(data, []byte("null")) {
 		n.Set = false
-		var zero T
-		n.Value = zero
+		var empty T
+		n.Value = empty
 		return nil
 	}
 
