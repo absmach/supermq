@@ -12,6 +12,7 @@ import (
 	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/channels"
+	"github.com/absmach/supermq/internal/nullable"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/go-chi/chi/v5"
 )
@@ -130,7 +131,7 @@ func decodeListChannels(_ context.Context, r *http.Request) (interface{}, error)
 	if err != nil {
 		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	groupID, err := apiutil.ReadNullableString(r, api.GroupKey, "")
+	groupID, err := nullable.Parse(r.URL.Query(), api.GroupKey, nullable.ParseString)
 	if err != nil {
 		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
