@@ -4,6 +4,7 @@
 package nullable
 
 import (
+	"net/url"
 	"strconv"
 	"testing"
 )
@@ -141,5 +142,38 @@ func BenchmarkPointerFloatParse(b *testing.B) {
 	for b.Loop() {
 		n, _ := parser("123.45")
 		_ = *n
+	}
+}
+
+func BenchmarkParseNullable(b *testing.B) {
+	for b.Loop() {
+		Parse(url.Values{"key": []string{"123.456"}}, "key", ParseFloat)
+	}
+}
+
+func BenchmarkParsePointer(b *testing.B) {
+	parser := func(q url.Values, key string) (*float64, error) {
+		vals, ok := q[key]
+		var ret float64
+		if !ok {
+			return nil, nil
+		}
+		if len(vals) > 1 {
+			return &ret, ErrInvalidQueryParams
+		}
+		s := vals[0]
+		if s == "" {
+			return &ret, nil // not nil, but empty
+		}
+
+		v, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			return nil, err
+		}
+		return &v, nil
+	}
+
+	for b.Loop() {
+		parser(url.Values{"key": []string{"123.456"}}, "key")
 	}
 }
