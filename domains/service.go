@@ -326,11 +326,12 @@ func (svc *service) DeleteInvitation(ctx context.Context, session authn.Session,
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
-	if inv.InvitedBy == session.UserID {
-		if err := svc.repo.DeleteInvitation(ctx, inviteeUserID, domainID); err != nil {
-			return errors.Wrap(svcerr.ErrRemoveEntity, err)
-		}
-		return nil
+	if !inv.ConfirmedAt.IsZero() {
+		return errors.Wrap(svcerr.ErrRemoveEntity, svcerr.ErrInvitationAlreadyAccepted)
+	}
+
+	if !inv.RejectedAt.IsZero() {
+		return errors.Wrap(svcerr.ErrRemoveEntity, svcerr.ErrInvitationAlreadyRejected)
 	}
 
 	if err := svc.repo.DeleteInvitation(ctx, inviteeUserID, domainID); err != nil {
