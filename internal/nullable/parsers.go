@@ -44,7 +44,7 @@ func ParseFloat(s string) (Value[float64], error) {
 	if err != nil {
 		return Value[float64]{}, err
 	}
-	return Value[float64]{Set: true, Value: val}, err
+	return Value[float64]{Set: true, Value: val}, nil
 }
 
 func ParseBool(s string) (Value[bool], error) {
