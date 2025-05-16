@@ -5,11 +5,14 @@ package middleware
 
 import (
 	"context"
+	"net/http"
+	"time"
 
 	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/pkg/authn"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
+	"github.com/absmach/supermq/pkg/callout"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
@@ -36,16 +39,17 @@ var (
 var _ clients.Service = (*authorizationMiddleware)(nil)
 
 type authorizationMiddleware struct {
-	svc    clients.Service
-	repo   clients.Repository
-	authz  smqauthz.Authorization
-	opp    svcutil.OperationPerm
-	extOpp svcutil.ExternalOperationPerm
+	svc     clients.Service
+	repo    clients.Repository
+	authz   smqauthz.Authorization
+	opp     svcutil.OperationPerm
+	extOpp  svcutil.ExternalOperationPerm
+	callout callout.Callout
 	rmMW.RoleManagerAuthorizationMiddleware
 }
 
 // AuthorizationMiddleware adds authorization to the clients service.
-func AuthorizationMiddleware(entityType string, svc clients.Service, authz smqauthz.Authorization, repo clients.Repository, thingsOpPerm, rolesOpPerm map[svcutil.Operation]svcutil.Permission, extOpPerm map[svcutil.ExternalOperation]svcutil.Permission) (clients.Service, error) {
+func AuthorizationMiddleware(entityType string, svc clients.Service, authz smqauthz.Authorization, repo clients.Repository, thingsOpPerm, rolesOpPerm map[svcutil.Operation]svcutil.Permission, extOpPerm map[svcutil.ExternalOperation]svcutil.Permission, httpClient *http.Client, method string, urls []string, permissions []string) (clients.Service, error) {
 	opp := clients.NewOperationPerm()
 	if err := opp.AddOperationPermissionMap(thingsOpPerm); err != nil {
 		return nil, err
@@ -64,6 +68,12 @@ func AuthorizationMiddleware(entityType string, svc clients.Service, authz smqau
 	if err := extOpp.Validate(); err != nil {
 		return nil, err
 	}
+
+	call, err := callout.NewCallback(httpClient, method, urls, permissions)
+	if err != nil {
+		return nil, err
+	}
+
 	return &authorizationMiddleware{
 		svc:                                svc,
 		authz:                              authz,
@@ -71,6 +81,7 @@ func AuthorizationMiddleware(entityType string, svc clients.Service, authz smqau
 		opp:                                opp,
 		extOpp:                             extOpp,
 		RoleManagerAuthorizationMiddleware: ram,
+		callout:                            call,
 	}, nil
 }
 
@@ -87,7 +98,6 @@ func (am *authorizationMiddleware) CreateClients(ctx context.Context, session au
 			return []clients.Client{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
 	}
-
 	if err := am.extAuthorize(ctx, clients.DomainOpCreateClient, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
@@ -96,6 +106,9 @@ func (am *authorizationMiddleware) CreateClients(ctx context.Context, session au
 		Object:      session.DomainID,
 	}); err != nil {
 		return []clients.Client{}, []roles.RoleProvision{}, errors.Wrap(err, errDomainCreateClients)
+	}
+	if err := am.Callout(ctx, session, clients.OpCreateClient.String(clients.OperationNames)); err != nil {
+		return []clients.Client{}, []roles.RoleProvision{}, err
 	}
 
 	return am.svc.CreateClients(ctx, session, client...)
@@ -124,6 +137,10 @@ func (am *authorizationMiddleware) View(ctx context.Context, session authn.Sessi
 	}); err != nil {
 		return clients.Client{}, errors.Wrap(err, errView)
 	}
+	if err := am.Callout(ctx, session, clients.OpViewClient.String(clients.OperationNames)); err != nil {
+		return clients.Client{}, err
+	}
+
 	return am.svc.View(ctx, session, id, withRoles)
 }
 
@@ -193,6 +210,10 @@ func (am *authorizationMiddleware) Update(ctx context.Context, session authn.Ses
 		return clients.Client{}, errors.Wrap(err, errUpdate)
 	}
 
+	if err := am.Callout(ctx, session, clients.OpUpdateClient.String(clients.OperationNames)); err != nil {
+		return clients.Client{}, err
+	}
+
 	return am.svc.Update(ctx, session, client)
 }
 
@@ -218,6 +239,9 @@ func (am *authorizationMiddleware) UpdateTags(ctx context.Context, session authn
 		Object:      client.ID,
 	}); err != nil {
 		return clients.Client{}, errors.Wrap(err, errUpdateTags)
+	}
+	if err := am.Callout(ctx, session, clients.OpUpdateClientTags.String(clients.OperationNames)); err != nil {
+		return clients.Client{}, err
 	}
 
 	return am.svc.UpdateTags(ctx, session, client)
@@ -246,6 +270,9 @@ func (am *authorizationMiddleware) UpdateSecret(ctx context.Context, session aut
 	}); err != nil {
 		return clients.Client{}, errors.Wrap(err, errUpdateSecret)
 	}
+	if err := am.Callout(ctx, session, clients.OpUpdateClientSecret.String(clients.OperationNames)); err != nil {
+		return clients.Client{}, err
+	}
 	return am.svc.UpdateSecret(ctx, session, id, key)
 }
 
@@ -271,6 +298,10 @@ func (am *authorizationMiddleware) Enable(ctx context.Context, session authn.Ses
 		Object:      id,
 	}); err != nil {
 		return clients.Client{}, errors.Wrap(err, errEnable)
+	}
+
+	if err := am.Callout(ctx, session, clients.OpEnableClient.String(clients.OperationNames)); err != nil {
+		return clients.Client{}, err
 	}
 
 	return am.svc.Enable(ctx, session, id)
@@ -299,6 +330,9 @@ func (am *authorizationMiddleware) Disable(ctx context.Context, session authn.Se
 	}); err != nil {
 		return clients.Client{}, errors.Wrap(err, errDisable)
 	}
+	if err := am.Callout(ctx, session, clients.OpDisableClient.String(clients.OperationNames)); err != nil {
+		return clients.Client{}, err
+	}
 	return am.svc.Disable(ctx, session, id)
 }
 
@@ -323,6 +357,9 @@ func (am *authorizationMiddleware) Delete(ctx context.Context, session authn.Ses
 		Object:      id,
 	}); err != nil {
 		return errors.Wrap(err, errDelete)
+	}
+	if err := am.Callout(ctx, session, clients.OpDeleteClient.String(clients.OperationNames)); err != nil {
+		return err
 	}
 
 	return am.svc.Delete(ctx, session, id)
@@ -360,6 +397,9 @@ func (am *authorizationMiddleware) SetParentGroup(ctx context.Context, session a
 		Object:      parentGroupID,
 	}); err != nil {
 		return errors.Wrap(err, errGroupSetChildClients)
+	}
+	if err := am.Callout(ctx, session, clients.OpSetParentGroup.String(clients.OperationNames)); err != nil {
+		return err
 	}
 	return am.svc.SetParentGroup(ctx, session, parentGroupID, id)
 }
@@ -402,6 +442,9 @@ func (am *authorizationMiddleware) RemoveParentGroup(ctx context.Context, sessio
 			Object:      th.ParentGroup,
 		}); err != nil {
 			return errors.Wrap(err, errGroupRemoveChildClients)
+		}
+		if err := am.Callout(ctx, session, clients.OpRemoveParentGroup.String(clients.OperationNames)); err != nil {
+			return err
 		}
 		return am.svc.RemoveParentGroup(ctx, session, id)
 	}
@@ -448,5 +491,20 @@ func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, userID s
 	}); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (am *authorizationMiddleware) Callout(ctx context.Context, session authn.Session, op string) error {
+	pl := map[string]interface{}{
+		"entity_type": policies.ClientType,
+		"sender":      session.UserID,
+		"domain":      session.DomainID,
+		"time":        time.Now().String(),
+	}
+
+	if err := am.callout.Callout(ctx, op, pl); err != nil {
+		return err
+	}
+
 	return nil
 }

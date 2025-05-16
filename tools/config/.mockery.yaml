@@ -65,7 +65,6 @@ packages:
     interfaces:
       Authz:
       Cache:
-      CallBack:
       Hasher:
       KeyRepository:
       PATS:
@@ -136,6 +135,9 @@ packages:
       Provisioner:
       RoleManager:
       Repository:
+  github.com/absmach/supermq/pkg/callout:
+    interfaces:
+      Callout:
   github.com/absmach/supermq/readers:
     interfaces:
       MessageRepository:

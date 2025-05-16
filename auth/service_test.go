@@ -53,7 +53,6 @@ var (
 	patsrepo   *mocks.PATSRepository
 	cache      *mocks.Cache
 	hasher     *mocks.Hasher
-	callback   *mocks.CallBack
 )
 
 func newService() (auth.Service, string) {
@@ -64,7 +63,6 @@ func newService() (auth.Service, string) {
 	patsrepo = new(mocks.PATSRepository)
 	hasher = new(mocks.Hasher)
 	idProvider := uuid.NewMock()
-	callback = new(mocks.CallBack)
 
 	t := jwt.New([]byte(secret))
 	key := auth.Key{
@@ -76,7 +74,7 @@ func newService() (auth.Service, string) {
 	}
 	token, _ := t.Issue(key)
 
-	return auth.New(krepo, patsrepo, cache, hasher, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration, callback), token
+	return auth.New(krepo, patsrepo, cache, hasher, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), token
 }
 
 func TestIssue(t *testing.T) {
@@ -132,11 +130,9 @@ func TestIssue(t *testing.T) {
 			Object:      policies.SuperMQObject,
 			ObjectType:  policies.PlatformType,
 		}).Return(tc.roleCheckErr)
-		callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 		_, err := svc.Issue(context.Background(), tc.token, tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		policyCall.Unset()
-		callBackCall.Unset()
 	}
 
 	cases2 := []struct {
@@ -169,12 +165,10 @@ func TestIssue(t *testing.T) {
 			Object:      policies.SuperMQObject,
 			ObjectType:  policies.PlatformType,
 		}).Return(tc.roleCheckErr)
-		callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 		_, err := svc.Issue(context.Background(), tc.token, tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall.Unset()
 		policyCall.Unset()
-		callBackCall.Unset()
 	}
 
 	cases3 := []struct {
@@ -252,12 +246,10 @@ func TestIssue(t *testing.T) {
 			Object:      policies.SuperMQObject,
 			ObjectType:  policies.PlatformType,
 		}).Return(tc.roleCheckErr)
-		callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 		_, err := svc.Issue(context.Background(), tc.token, tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall.Unset()
 		policyCall.Unset()
-		callBackCall.Unset()
 	}
 
 	cases4 := []struct {
@@ -321,11 +313,9 @@ func TestIssue(t *testing.T) {
 			Object:      policies.SuperMQObject,
 			ObjectType:  policies.PlatformType,
 		}).Return(tc.roleCheckErr)
-		callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 		_, err := svc.Issue(context.Background(), tc.token, tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		policyCall.Unset()
-		callBackCall.Unset()
 	}
 }
 
@@ -333,7 +323,6 @@ func TestRevoke(t *testing.T) {
 	svc, _ := newService()
 	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, errIssueUser)
 	policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	callBackCall := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Role: auth.UserRole, IssuedAt: time.Now(), Subject: userID})
 	repocall.Unset()
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
@@ -348,7 +337,6 @@ func TestRevoke(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Issuing user's key expected to succeed: %s", err))
 	repocall1.Unset()
 	policyCall.Unset()
-	callBackCall.Unset()
 
 	cases := []struct {
 		desc  string
@@ -391,7 +379,6 @@ func TestRetrieve(t *testing.T) {
 	svc, _ := newService()
 	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	repocall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	repocall2 := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	repocall.Unset()
@@ -418,7 +405,6 @@ func TestRetrieve(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))
 	repocall5.Unset()
 	repocall1.Unset()
-	repocall2.Unset()
 
 	cases := []struct {
 		desc  string
@@ -467,7 +453,6 @@ func TestIdentify(t *testing.T) {
 
 	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	repocall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	repocall2 := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
@@ -483,7 +468,6 @@ func TestIdentify(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Issuing expired login key expected to succeed: %s", err))
 	repocall.Unset()
 	repocall1.Unset()
-	repocall2.Unset()
 
 	te := jwt.New([]byte(secret))
 	key := auth.Key{
@@ -567,7 +551,6 @@ func TestAuthorize(t *testing.T) {
 
 	repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	repoCall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	repoCall2 := callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	repoCall.Unset()
@@ -580,12 +563,10 @@ func TestAuthorize(t *testing.T) {
 
 	repoCall = krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	repoCall1 = pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	repoCall2 = callback.On("Authorize", mock.Anything, mock.Anything).Return(nil)
 	emptySubject, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: "", Role: auth.UserRole, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	repoCall.Unset()
 	repoCall1.Unset()
-	repoCall2.Unset()
 
 	cases := []struct {
 		desc                 string
@@ -802,44 +783,16 @@ func TestAuthorize(t *testing.T) {
 			},
 			err: svcerr.ErrDomainAuthorization,
 		},
-		{
-			desc: "failed to authorize a user via callback",
-			policyReq: policies.Policy{
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-				Permission:  policies.AdminPermission,
-			},
-			checkPolicyReq: policies.Policy{
-				SubjectType: policies.UserType,
-				SubjectKind: policies.UsersKind,
-				Object:      policies.SuperMQObject,
-				ObjectType:  policies.PlatformType,
-				Permission:  policies.AdminPermission,
-			},
-			checkDomainPolicyReq: policies.Policy{
-				Subject:     userID,
-				SubjectType: policies.UserType,
-				Object:      validID,
-				ObjectType:  policies.DomainType,
-				Permission:  policies.MembershipPermission,
-			},
-			callBackErr: svcerr.ErrAuthorization,
-			err:         svcerr.ErrAuthorization,
-		},
 	}
 	for _, tc := range cases {
 		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPolicyReq).Return(tc.checkPolicyErr)
 		policyCall1 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDomainPolicyReq).Return(tc.checkDomainPolicyErr)
 		repoCall := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		callbackCall := callback.On("Authorize", mock.Anything, tc.checkPolicyReq).Return(tc.callBackErr)
 		err := svc.Authorize(context.Background(), tc.policyReq)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		policyCall.Unset()
 		policyCall1.Unset()
 		repoCall.Unset()
-		callbackCall.Unset()
 	}
 }
 

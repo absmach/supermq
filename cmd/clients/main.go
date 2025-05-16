@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"net/http"
 	"net/url"
 	"os"
 	"time"
@@ -34,6 +35,7 @@ import (
 	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
+	"github.com/absmach/supermq/pkg/callout"
 	dconsumer "github.com/absmach/supermq/pkg/domains/events/consumer"
 	domainsAuthz "github.com/absmach/supermq/pkg/domains/grpcclient"
 	gconsumer "github.com/absmach/supermq/pkg/groups/events/consumer"
@@ -203,6 +205,20 @@ func main() {
 	}
 	defer domainsHandler.Close()
 
+	callCfg := callout.Config{}
+	if err := env.Parse(&callCfg); err != nil {
+		logger.Error(fmt.Sprintf("failed to parse callout config : %s", err))
+		exitCode = 1
+		return
+	}
+
+	calloutClient, err := callout.NewCalloutClient(callCfg.CalloutTLSVerification, callCfg.CalloutCACert, callCfg.CalloutKey, callCfg.CalloutCACert, callCfg.CalloutTimeout)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to create callout client: %s", err))
+		exitCode = 1
+		return
+	}
+
 	authz, authzClient, err := authsvcAuthz.NewAuthorization(ctx, grpcCfg, domAuthz)
 	if err != nil {
 		logger.Error(err.Error())
@@ -242,7 +258,9 @@ func main() {
 	defer groupsHandler.Close()
 	logger.Info("Groups gRPC client successfully connected to groups gRPC server " + groupsHandler.Secure())
 
-	svc, psvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cacheclient, cfg, channelsgRPC, groupsClient, tracer, logger)
+	svc, psvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cacheclient,
+		cfg, channelsgRPC, groupsClient, tracer, logger,
+		calloutClient, callCfg.CalloutMethod, callCfg.CalloutURLs, callCfg.CalloutPermissions)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
 		exitCode = 1
@@ -313,7 +331,23 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz smqauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, cfg config, channels grpcChannelsV1.ChannelsServiceClient, groups grpcGroupsV1.GroupsServiceClient, tracer trace.Tracer, logger *slog.Logger) (clients.Service, pClients.Service, error) {
+func newService(ctx context.Context,
+	db *sqlx.DB,
+	dbConfig pgclient.Config,
+	authz smqauthz.Authorization,
+	pe policies.Evaluator,
+	ps policies.Service,
+	cacheClient *redis.Client,
+	cfg config,
+	channels grpcChannelsV1.ChannelsServiceClient,
+	groups grpcGroupsV1.GroupsServiceClient,
+	tracer trace.Tracer,
+	logger *slog.Logger,
+	calloutClient *http.Client,
+	authCalloutMethod string,
+	authCalloutURLs []string,
+	authCalloutPermissions []string,
+) (clients.Service, pClients.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	repo := postgres.NewRepository(database)
 
@@ -347,7 +381,8 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 	csvc = middleware.MetricsMiddleware(csvc, counter, latency)
 	csvc = middleware.MetricsMiddleware(csvc, counter, latency)
 
-	csvc, err = middleware.AuthorizationMiddleware(policies.ClientType, csvc, authz, repo, clients.NewOperationPermissionMap(), clients.NewRolesOperationPermissionMap(), clients.NewExternalOperationPermissionMap())
+	csvc, err = middleware.AuthorizationMiddleware(policies.ClientType, csvc, authz, repo, clients.NewOperationPermissionMap(), clients.NewRolesOperationPermissionMap(), clients.NewExternalOperationPermissionMap(),
+		calloutClient, authCalloutMethod, authCalloutURLs, authCalloutPermissions)
 	if err != nil {
 		return nil, nil, err
 	}
