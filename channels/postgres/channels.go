@@ -1250,13 +1250,12 @@ func PageQuery(pm channels.Page) (string, error) {
 	if pm.Domain != "" {
 		query = append(query, "c.domain_id = :domain_id")
 	}
-
-	if pm.Group != nil {
-		switch *pm.Group {
-		case "":
-			query = append(query, "c.parent_group_id = '' ")
-		default:
+	if pm.Group.Set {
+		switch {
+		case pm.Group.Value != "":
 			query = append(query, "c.parent_group_path <@ (SELECT path from groups where id = :group_id) ")
+		default:
+			query = append(query, "c.parent_group_id = '' ")
 		}
 	}
 
@@ -1319,7 +1318,7 @@ func toDBChannelsPage(pm channels.Page) (dbChannelsPage, error) {
 		Metadata:   data,
 		Tag:        pm.Tag,
 		Status:     pm.Status,
-		GroupID:    pm.Group,
+		GroupID:    sql.NullString{Valid: pm.Group.Set, String: pm.Group.Value},
 		ClientID:   pm.Client,
 		ConnType:   pm.ConnectionType,
 		RoleName:   pm.RoleName,
@@ -1338,7 +1337,7 @@ type dbChannelsPage struct {
 	Metadata   []byte          `db:"metadata"`
 	Tag        string          `db:"tag"`
 	Status     channels.Status `db:"status"`
-	GroupID    *string         `db:"group_id"`
+	GroupID    sql.NullString  `db:"group_id"`
 	ClientID   string          `db:"client_id"`
 	ConnType   string          `db:"type"`
 	RoleName   string          `db:"role_name"`

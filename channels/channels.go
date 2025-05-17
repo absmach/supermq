@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/absmach/supermq/internal/nullable"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/roles"
@@ -45,25 +46,25 @@ type Channel struct {
 }
 
 type Page struct {
-	Total          uint64   `json:"total"`
-	Offset         uint64   `json:"offset"`
-	Limit          uint64   `json:"limit"`
-	Order          string   `json:"order,omitempty"`
-	Dir            string   `json:"dir,omitempty"`
-	ID             string   `json:"id,omitempty"`
-	Name           string   `json:"name,omitempty"`
-	Metadata       Metadata `json:"metadata,omitempty"`
-	Domain         string   `json:"domain,omitempty"`
-	Tag            string   `json:"tag,omitempty"`
-	Status         Status   `json:"status,omitempty"`
-	Group          *string  `json:"group,omitempty"`
-	Client         string   `json:"client,omitempty"`
-	ConnectionType string   `json:"connection_type,omitempty"`
-	RoleName       string   `json:"role_name,omitempty"`
-	RoleID         string   `json:"role_id,omitempty"`
-	Actions        []string `json:"actions,omitempty"`
-	AccessType     string   `json:"access_type,omitempty"`
-	IDs            []string `json:"-"`
+	Total          uint64                 `json:"total"`
+	Offset         uint64                 `json:"offset"`
+	Limit          uint64                 `json:"limit"`
+	Order          string                 `json:"order,omitempty"`
+	Dir            string                 `json:"dir,omitempty"`
+	ID             string                 `json:"id,omitempty"`
+	Name           string                 `json:"name,omitempty"`
+	Metadata       Metadata               `json:"metadata,omitempty"`
+	Domain         string                 `json:"domain,omitempty"`
+	Tag            string                 `json:"tag,omitempty"`
+	Status         Status                 `json:"status,omitempty"`
+	Group          nullable.Value[string] `json:"group,omitempty"`
+	Client         string                 `json:"client,omitempty"`
+	ConnectionType string                 `json:"connection_type,omitempty"`
+	RoleName       string                 `json:"role_name,omitempty"`
+	RoleID         string                 `json:"role_id,omitempty"`
+	Actions        []string               `json:"actions,omitempty"`
+	AccessType     string                 `json:"access_type,omitempty"`
+	IDs            []string               `json:"-"`
 }
 
 // ChannelsPage contains page related metadata as well as list of channels that
