@@ -10,7 +10,7 @@ import (
 )
 
 // Value type is used to represent difference betweeen an
-// intentionally omitted value and default type falue.
+// intentionally omitted value and default type value.
 type Value[T any] struct {
 	Set   bool
 	Value T

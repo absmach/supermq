@@ -147,23 +147,23 @@ func BenchmarkPointerFloatParse(b *testing.B) {
 
 func BenchmarkParseNullable(b *testing.B) {
 	for b.Loop() {
-		Parse(url.Values{"key": []string{"123.456"}}, "key", ParseFloat)
+		val, _ := Parse(url.Values{"key": []string{"123.456"}}, "key", ParseFloat)
+		_ = val
 	}
 }
 
 func BenchmarkParsePointer(b *testing.B) {
 	parser := func(q url.Values, key string) (*float64, error) {
 		vals, ok := q[key]
-		var ret float64
 		if !ok {
 			return nil, nil
 		}
 		if len(vals) > 1 {
-			return &ret, ErrInvalidQueryParams
+			return nil, ErrInvalidQueryParams
 		}
 		s := vals[0]
 		if s == "" {
-			return &ret, nil // not nil, but empty
+			return nil, nil // not nil, but empty
 		}
 
 		v, err := strconv.ParseFloat(s, 64)
@@ -174,6 +174,7 @@ func BenchmarkParsePointer(b *testing.B) {
 	}
 
 	for b.Loop() {
-		parser(url.Values{"key": []string{"123.456"}}, "key")
+		val, _ := parser(url.Values{"key": []string{"123.456"}}, "key")
+		_ = val
 	}
 }
