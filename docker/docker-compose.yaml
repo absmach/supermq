@@ -6,6 +6,7 @@ name: "supermq"
 networks:
   supermq-base-net:
     driver: bridge
+    attachable: true
     ipam:
       config:
         - subnet: 172.20.0.0/24
@@ -416,6 +417,7 @@ services:
       options:
         fluentd-address: "fluent-bit:24224"
         tag: "docker.clients"
+        fluentd-async: "true"
     environment:
       SMQ_CLIENTS_LOG_LEVEL: ${SMQ_CLIENTS_LOG_LEVEL}
       SMQ_CLIENTS_STANDALONE_ID: ${SMQ_CLIENTS_STANDALONE_ID}
@@ -559,13 +561,10 @@ services:
     volumes:
       - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
       - ./fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf:ro
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:2020/api/v1/health"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
     networks:
-      - supermq-base-net
+      supermq-base-net:
+        aliases:
+          - fluent-bit
     dns:
       - 8.8.8.8
       - 1.1.1.1
