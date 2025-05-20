@@ -1,16 +1,14 @@
 # grafana/provisioning/datasources/opensearch-datasource.yaml
 apiVersion: 1
 
+apiVersion: 1
 datasources:
-  - name: OpenSearchLogs
-    type: elasticsearch
-    access: proxy
-    url: http://opensearch:9200
-    isDefault: true
-    jsonData:
-      timeField: "@timestamp"
-      esVersion: 70 
-      logMessageField: "message"
-      logLevelField: "level"
-    basicAuth: false
-    editable: true
+- name: OpenSearch
+  type: opensearch
+  access: proxy
+  url: http://opensearch:9200
+  jsonData:
+    timeField: timestamp
+    version: "2.12.0"
+    tlsAuth: false
+    tlsAuthWithCACert: false
