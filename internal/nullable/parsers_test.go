@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseXxxHelpers(t *testing.T) {
+func TestParseHelpers(t *testing.T) {
 	t.Run("ParseString", func(t *testing.T) {
 		val, err := ParseString("hello")
 		assert.NoError(t, err)
