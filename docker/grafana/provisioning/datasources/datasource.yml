@@ -8,6 +8,6 @@ datasources:
     type: prometheus
     access: proxy
     orgId: 1
-    url: http://152.42.146.18:9090 # Replace 152.42.146.18 with your Prometheus public IP
+    url: http://159.203.48.225:9090 # Replace 152.42.146.18 with your Prometheus public IP
     isDefault: true
     editable: true
