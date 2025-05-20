@@ -1,13 +1,16 @@
-# Copyright (c) Abstract Machines
-# SPDX-License-Identifier: Apache-2.0
-
+# grafana/provisioning/datasources/opensearch-datasource.yaml
 apiVersion: 1
 
 datasources:
-  - name: Prometheus
-    type: prometheus
+  - name: OpenSearchLogs
+    type: elasticsearch
     access: proxy
-    orgId: 1
-    url: http://159.203.48.225:9090 # Replace 152.42.146.18 with your Prometheus public IP
+    url: http://opensearch:9200
     isDefault: true
+    jsonData:
+      timeField: "@timestamp"
+      esVersion: 70 
+      logMessageField: "message"
+      logLevelField: "level"
+    basicAuth: false
     editable: true

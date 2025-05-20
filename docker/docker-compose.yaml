@@ -6,6 +6,10 @@ name: "supermq"
 networks:
   supermq-base-net:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1
     name: supermq-base-net
 
 volumes:
@@ -22,6 +26,8 @@ volumes:
   supermq-domains-db-volume:
   supermq-domains-redis-volume:
   supermq-auth-redis-volume:
+  opensearch_data: {}
+  grafana_data: {}
 
 
 services:
@@ -399,11 +405,17 @@ services:
     image: supermq/clients:${SMQ_RELEASE_TAG}
     container_name: supermq-clients
     depends_on:
+      - fluent-bit
       - clients-db
       - users
       - auth
       - nats
     restart: on-failure
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: "fluent-bit:24224"
+        tag: "docker.clients"
     environment:
       SMQ_CLIENTS_LOG_LEVEL: ${SMQ_CLIENTS_LOG_LEVEL}
       SMQ_CLIENTS_STANDALONE_ID: ${SMQ_CLIENTS_STANDALONE_ID}
@@ -537,6 +549,79 @@ services:
         bind:
           create_host_path: true
 
+  fluent-bit:
+    image: fluent/fluent-bit:2.2.2
+    container_name: supermq-fluent-bit
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+      - "2020:2020"
+    volumes:
+      - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - ./fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2020/api/v1/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - supermq-base-net
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    dns_search: .
+    depends_on:
+      opensearch:
+        condition: service_healthy
+
+  opensearch:
+    image: opensearchproject/opensearch:2.12.0
+    container_name: supermq-opensearch
+    environment:
+      - discovery.type=single-node
+      - DISABLE_SECURITY_PLUGIN=true
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" 
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    networks:
+      - supermq-base-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s --fail http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  grafana:
+    image: grafana/grafana:7.5.5
+    container_name: supermq-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # GF_LOG_LEVEL=debug # Uncomment for more verbose Grafana logs if needed
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+    networks:
+      - supermq-base-net
+    depends_on:
+      opensearch:
+        condition: service_healthy
   channels-db:
     image: postgres:16.2-alpine
     container_name: supermq-channels-db
