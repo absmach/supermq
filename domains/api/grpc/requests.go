@@ -30,3 +30,15 @@ func (req retrieveEntityReq) validate() error {
 
 	return nil
 }
+
+type retrieveByRouteReq struct {
+	Route string
+}
+
+func (req retrieveByRouteReq) validate() error {
+	if req.Route == "" {
+		return apiutil.ErrMissingRoute
+	}
+
+	return nil
+}

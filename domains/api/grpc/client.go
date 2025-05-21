@@ -22,6 +22,7 @@ var _ grpcDomainsV1.DomainsServiceClient = (*domainsGrpcClient)(nil)
 type domainsGrpcClient struct {
 	deleteUserFromDomains endpoint.Endpoint
 	retrieveEntity        endpoint.Endpoint
+	retrieveByRoute       endpoint.Endpoint
 	timeout               time.Duration
 }
 
@@ -42,6 +43,14 @@ func NewDomainsClient(conn *grpc.ClientConn, timeout time.Duration) grpcDomainsV
 			"RetrieveEntity",
 			encodeRetrieveEntityRequest,
 			decodeRetrieveEntityResponse,
+			grpcCommonV1.RetrieveEntityRes{},
+		).Endpoint(),
+		retrieveByRoute: kitgrpc.NewClient(
+			conn,
+			domainsSvcName,
+			"RetrieveByRoute",
+			encodeRetrieveByRouteRequest,
+			decodeRetrieveByRouteResponse,
 			grpcCommonV1.RetrieveEntityRes{},
 		).Endpoint(),
 		timeout: timeout,
@@ -104,5 +113,37 @@ func encodeRetrieveEntityRequest(_ context.Context, grpcReq interface{}) (interf
 	req := grpcReq.(retrieveEntityReq)
 	return &grpcCommonV1.RetrieveEntityReq{
 		Id: req.ID,
+	}, nil
+}
+
+func (client domainsGrpcClient) RetrieveByRoute(ctx context.Context, in *grpcCommonV1.RetrieveByRouteReq, opts ...grpc.CallOption) (*grpcCommonV1.RetrieveEntityRes, error) {
+	ctx, cancel := context.WithTimeout(ctx, client.timeout)
+	defer cancel()
+
+	res, err := client.retrieveByRoute(ctx, retrieveByRouteReq{
+		Route: in.GetRoute(),
+	})
+	if err != nil {
+		return &grpcCommonV1.RetrieveEntityRes{}, grpcapi.DecodeError(err)
+	}
+
+	rbr := res.(retrieveEntityRes)
+	return &grpcCommonV1.RetrieveEntityRes{
+		Entity: &grpcCommonV1.EntityBasic{
+			Id:     rbr.id,
+			Status: uint32(rbr.status),
+		},
+	}, nil
+}
+
+func decodeRetrieveByRouteResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(*grpcCommonV1.RetrieveEntityRes)
+	return retrieveEntityRes{id: res.Entity.GetId(), status: uint8(res.Entity.GetStatus())}, nil
+}
+
+func encodeRetrieveByRouteRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(retrieveByRouteReq)
+	return &grpcCommonV1.RetrieveByRouteReq{
+		Route: req.Route,
 	}, nil
 }

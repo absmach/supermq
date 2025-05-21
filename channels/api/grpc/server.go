@@ -27,6 +27,7 @@ type grpcServer struct {
 	removeClientConnections      kitgrpc.Handler
 	unsetParentGroupFromChannels kitgrpc.Handler
 	retrieveEntity               kitgrpc.Handler
+	retrieveByRoute              kitgrpc.Handler
 }
 
 // NewServer returns new AuthServiceServer instance.
@@ -51,6 +52,11 @@ func NewServer(svc channels.Service) grpcChannelsV1.ChannelsServiceServer {
 			retrieveEntityEndpoint(svc),
 			decodeRetrieveEntityRequest,
 			encodeRetrieveEntityResponse,
+		),
+		retrieveByRoute: kitgrpc.NewServer(
+			retrieveByRouteEndpoint(svc),
+			decodeRetrieveByRouteRequest,
+			encodeRetrieveByRouteResponse,
 		),
 	}
 }
@@ -152,6 +158,33 @@ func encodeRetrieveEntityResponse(_ context.Context, grpcRes interface{}) (inter
 			Status:        uint32(res.status),
 		},
 	}, nil
+}
+
+func decodeRetrieveByRouteRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*grpcCommonV1.RetrieveByRouteReq)
+	return retrieveByRouteReq{
+		route:    req.GetRoute(),
+		domainID: req.GetDomainId(),
+	}, nil
+}
+
+func encodeRetrieveByRouteResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(retrieveEntityRes)
+
+	return &grpcCommonV1.RetrieveEntityRes{
+		Entity: &grpcCommonV1.EntityBasic{
+			Id:     res.id,
+			Status: uint32(res.status),
+		},
+	}, nil
+}
+
+func (s *grpcServer) RetrieveByRoute(ctx context.Context, req *grpcCommonV1.RetrieveByRouteReq) (*grpcCommonV1.RetrieveEntityRes, error) {
+	_, res, err := s.retrieveByRoute.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, encodeError(err)
+	}
+	return res.(*grpcCommonV1.RetrieveEntityRes), nil
 }
 
 func encodeError(err error) error {

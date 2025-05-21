@@ -25,6 +25,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	DomainsService_DeleteUserFromDomains_FullMethodName = "/domains.v1.DomainsService/DeleteUserFromDomains"
 	DomainsService_RetrieveEntity_FullMethodName        = "/domains.v1.DomainsService/RetrieveEntity"
+	DomainsService_RetrieveByRoute_FullMethodName       = "/domains.v1.DomainsService/RetrieveByRoute"
 )
 
 // DomainsServiceClient is the client API for DomainsService service.
@@ -36,6 +37,7 @@ const (
 type DomainsServiceClient interface {
 	DeleteUserFromDomains(ctx context.Context, in *DeleteUserReq, opts ...grpc.CallOption) (*DeleteUserRes, error)
 	RetrieveEntity(ctx context.Context, in *v1.RetrieveEntityReq, opts ...grpc.CallOption) (*v1.RetrieveEntityRes, error)
+	RetrieveByRoute(ctx context.Context, in *v1.RetrieveByRouteReq, opts ...grpc.CallOption) (*v1.RetrieveEntityRes, error)
 }
 
 type domainsServiceClient struct {
@@ -66,6 +68,16 @@ func (c *domainsServiceClient) RetrieveEntity(ctx context.Context, in *v1.Retrie
 	return out, nil
 }
 
+func (c *domainsServiceClient) RetrieveByRoute(ctx context.Context, in *v1.RetrieveByRouteReq, opts ...grpc.CallOption) (*v1.RetrieveEntityRes, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(v1.RetrieveEntityRes)
+	err := c.cc.Invoke(ctx, DomainsService_RetrieveByRoute_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DomainsServiceServer is the server API for DomainsService service.
 // All implementations must embed UnimplementedDomainsServiceServer
 // for forward compatibility.
@@ -75,6 +87,7 @@ func (c *domainsServiceClient) RetrieveEntity(ctx context.Context, in *v1.Retrie
 type DomainsServiceServer interface {
 	DeleteUserFromDomains(context.Context, *DeleteUserReq) (*DeleteUserRes, error)
 	RetrieveEntity(context.Context, *v1.RetrieveEntityReq) (*v1.RetrieveEntityRes, error)
+	RetrieveByRoute(context.Context, *v1.RetrieveByRouteReq) (*v1.RetrieveEntityRes, error)
 	mustEmbedUnimplementedDomainsServiceServer()
 }
 
@@ -90,6 +103,9 @@ func (UnimplementedDomainsServiceServer) DeleteUserFromDomains(context.Context, 
 }
 func (UnimplementedDomainsServiceServer) RetrieveEntity(context.Context, *v1.RetrieveEntityReq) (*v1.RetrieveEntityRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RetrieveEntity not implemented")
+}
+func (UnimplementedDomainsServiceServer) RetrieveByRoute(context.Context, *v1.RetrieveByRouteReq) (*v1.RetrieveEntityRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RetrieveByRoute not implemented")
 }
 func (UnimplementedDomainsServiceServer) mustEmbedUnimplementedDomainsServiceServer() {}
 func (UnimplementedDomainsServiceServer) testEmbeddedByValue()                        {}
@@ -148,6 +164,24 @@ func _DomainsService_RetrieveEntity_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DomainsService_RetrieveByRoute_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(v1.RetrieveByRouteReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DomainsServiceServer).RetrieveByRoute(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DomainsService_RetrieveByRoute_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DomainsServiceServer).RetrieveByRoute(ctx, req.(*v1.RetrieveByRouteReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DomainsService_ServiceDesc is the grpc.ServiceDesc for DomainsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -162,6 +196,10 @@ var DomainsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RetrieveEntity",
 			Handler:    _DomainsService_RetrieveEntity_Handler,
+		},
+		{
+			MethodName: "RetrieveByRoute",
+			Handler:    _DomainsService_RetrieveByRoute_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

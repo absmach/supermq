@@ -114,6 +114,77 @@ func (_c *DomainsServiceClient_DeleteUserFromDomains_Call) RunAndReturn(run func
 	return _c
 }
 
+// RetrieveByRoute provides a mock function for the type DomainsServiceClient
+func (_mock *DomainsServiceClient) RetrieveByRoute(ctx context.Context, in *v10.RetrieveByRouteReq, opts ...grpc.CallOption) (*v10.RetrieveEntityRes, error) {
+	var tmpRet mock.Arguments
+	if len(opts) > 0 {
+		tmpRet = _mock.Called(ctx, in, opts)
+	} else {
+		tmpRet = _mock.Called(ctx, in)
+	}
+	ret := tmpRet
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveByRoute")
+	}
+
+	var r0 *v10.RetrieveEntityRes
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveByRouteReq, []grpc.CallOption) (*v10.RetrieveEntityRes, error)); ok {
+		return returnFunc(ctx, in, opts)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveByRouteReq, ...grpc.CallOption) *v10.RetrieveEntityRes); ok {
+		r0 = returnFunc(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*v10.RetrieveEntityRes)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *v10.RetrieveByRouteReq, ...grpc.CallOption) error); ok {
+		r1 = returnFunc(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// DomainsServiceClient_RetrieveByRoute_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RetrieveByRoute'
+type DomainsServiceClient_RetrieveByRoute_Call struct {
+	*mock.Call
+}
+
+// RetrieveByRoute is a helper method to define mock.On call
+//   - ctx
+//   - in
+//   - opts
+func (_e *DomainsServiceClient_Expecter) RetrieveByRoute(ctx interface{}, in interface{}, opts ...interface{}) *DomainsServiceClient_RetrieveByRoute_Call {
+	return &DomainsServiceClient_RetrieveByRoute_Call{Call: _e.mock.On("RetrieveByRoute",
+		append([]interface{}{ctx, in}, opts...)...)}
+}
+
+func (_c *DomainsServiceClient_RetrieveByRoute_Call) Run(run func(ctx context.Context, in *v10.RetrieveByRouteReq, opts ...grpc.CallOption)) *DomainsServiceClient_RetrieveByRoute_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		variadicArgs := make([]grpc.CallOption, len(args)-2)
+		for i, a := range args[2:] {
+			if a != nil {
+				variadicArgs[i] = a.(grpc.CallOption)
+			}
+		}
+		run(args[0].(context.Context), args[1].(*v10.RetrieveByRouteReq), variadicArgs...)
+	})
+	return _c
+}
+
+func (_c *DomainsServiceClient_RetrieveByRoute_Call) Return(retrieveEntityRes *v10.RetrieveEntityRes, err error) *DomainsServiceClient_RetrieveByRoute_Call {
+	_c.Call.Return(retrieveEntityRes, err)
+	return _c
+}
+
+func (_c *DomainsServiceClient_RetrieveByRoute_Call) RunAndReturn(run func(ctx context.Context, in *v10.RetrieveByRouteReq, opts ...grpc.CallOption) (*v10.RetrieveEntityRes, error)) *DomainsServiceClient_RetrieveByRoute_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // RetrieveEntity provides a mock function for the type DomainsServiceClient
 func (_mock *DomainsServiceClient) RetrieveEntity(ctx context.Context, in *v10.RetrieveEntityReq, opts ...grpc.CallOption) (*v10.RetrieveEntityRes, error) {
 	var tmpRet mock.Arguments
