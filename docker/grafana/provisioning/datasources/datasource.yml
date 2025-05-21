@@ -1,5 +1,5 @@
-# grafana/provisioning/datasources/opensearch-datasource.yaml
-apiVersion: 1
+# Copyright (c) Abstract Machines
+# SPDX-License-Identifier: Apache-2.0
 
 apiVersion: 1
 datasources:
@@ -12,3 +12,13 @@ datasources:
     version: "2.12.0"
     tlsAuth: false
     tlsAuthWithCACert: false
+---
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    orgId: 1
+    url: http://159.203.48.225:9090 # Ensure this is your correct Prometheus IP
+    isDefault: true
+    editable: true
