@@ -1046,7 +1046,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Users Service Dashboard",
+  "title": "HTTP Adapter Service Dashboard",
   "uid": "users-metrics-complete",
   "version": 15,
   "weekStart": ""
