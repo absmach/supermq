@@ -92,14 +92,22 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 		token = string(s.Password)
 	}
 
-	domainID, chanID, _, err := messaging.ParseTopic(*topic)
+	domainID, chanID, _, err := messaging.ParseTopicWithOption(*topic, true)
 	if err != nil {
 		return err
 	}
 
-	_, _, err = h.authAccess(ctx, token, domainID, chanID, connections.Publish)
+	clientID, clientType, err := h.authAccess(ctx, token, domainID, chanID, connections.Publish)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	if s.Username == "" && clientType == policies.ClientType {
+		s.Username = clientID
+	}
+
+	return nil
 }
 
 // AuthSubscribe is called on device publish,
@@ -114,7 +122,7 @@ func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
 	}
 
 	for _, topic := range *topics {
-		domainID, chanID, _, err := messaging.ParseTopic(topic)
+		domainID, chanID, _, err := messaging.ParseTopicWithOption(topic, true)
 		if err != nil {
 			return err
 		}
@@ -148,22 +156,14 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		return errors.Wrap(errFailedPublish, err)
 	}
 
-	clientID, clientType, err := h.authAccess(ctx, string(s.Password), domainID, chanID, connections.Publish)
-	if err != nil {
-		return err
-	}
-
 	msg := messaging.Message{
-		Protocol: protocol,
-		Domain:   domainID,
-		Channel:  chanID,
-		Subtopic: subtopic,
-		Payload:  *payload,
-		Created:  time.Now().UnixNano(),
-	}
-
-	if clientType == policies.ClientType {
-		msg.Publisher = clientID
+		Protocol:  protocol,
+		Domain:    domainID,
+		Channel:   chanID,
+		Subtopic:  subtopic,
+		Payload:   *payload,
+		Publisher: s.Username,
+		Created:   time.Now().UnixNano(),
 	}
 
 	if err := h.pubsub.Publish(ctx, msg.GetChannel(), &msg); err != nil {

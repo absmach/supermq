@@ -8,7 +8,6 @@ package coap
 
 import (
 	"context"
-	"fmt"
 
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
@@ -20,8 +19,6 @@ import (
 )
 
 var errFailedToDisconnectClient = errors.New("failed to disconnect client")
-
-const msgPrefix = "m"
 
 // Service specifies CoAP service API.
 type Service interface {
@@ -158,10 +155,7 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, key, domainID, chanI
 }
 
 func (svc *adapterService) DisconnectHandler(ctx context.Context, domainID, chanID, subtopic, token string) error {
-	subject := fmt.Sprintf("%s.%s.c.%s", msgPrefix, domainID, chanID)
-	if subtopic != "" {
-		subject = fmt.Sprintf("%s.%s", subject, subtopic)
-	}
+	subject := messaging.EncodeToInternalSubject(domainID, chanID, subtopic)
 
 	return svc.pubsub.Unsubscribe(ctx, token, subject)
 }
