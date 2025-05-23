@@ -31,12 +31,6 @@ const (
 	startObserve = 0 // observe option value that indicates start of observation
 )
 
-const (
-	numGroups    = 4 // entire expression+ domain group + channel group + subtopic group
-	domainGroup  = 1 // domain group is first in channel regexp
-	channelGroup = 3 // channel group is third in channel regexp
-)
-
 var (
 	errBadOptions       = errors.New("bad options")
 	errMethodNotAllowed = errors.New("method not allowed")
@@ -145,7 +139,7 @@ func decodeMessage(msg *mux.Message) (*messaging.Message, error) {
 	}
 	domainID, channelID, subTopic, err := messaging.ParseTopic(path)
 	if err != nil {
-		return nil, err
+		return &messaging.Message{}, err
 	}
 	ret := &messaging.Message{
 		Protocol: protocol,

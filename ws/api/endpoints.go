@@ -15,7 +15,6 @@ import (
 	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/ws"
 	"github.com/go-chi/chi/v5"
-	"micro.dev/v4/service/logger"
 )
 
 var errGenSessionID = errors.New("failed to generate session id")
@@ -30,7 +29,7 @@ func generateSessionID() (string, error) {
 
 func handshake(ctx context.Context, svc ws.Service, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req, err := decodeRequest(r)
+		req, err := decodeRequest(r, logger)
 		if err != nil {
 			encodeError(w, err)
 			return
@@ -66,7 +65,7 @@ func handshake(ctx context.Context, svc ws.Service, logger *slog.Logger) http.Ha
 	}
 }
 
-func decodeRequest(r *http.Request) (connReq, error) {
+func decodeRequest(r *http.Request, logger *slog.Logger) (connReq, error) {
 	authKey := r.Header.Get("Authorization")
 	if authKey == "" {
 		authKeys := r.URL.Query()["authorization"]

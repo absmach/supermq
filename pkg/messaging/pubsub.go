@@ -3,9 +3,7 @@
 
 package messaging
 
-import (
-	"context"
-)
+import "context"
 
 type DeliveryPolicy uint8
 

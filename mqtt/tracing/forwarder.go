@@ -44,7 +44,7 @@ func (fm *forwarderMiddleware) Forward(ctx context.Context, id string, sub messa
 		trace.WithAttributes(
 			attribute.String("messaging.system", "mqtt"),
 			attribute.Bool("messaging.destination.anonymous", false),
-			attribute.String("messaging.destination.template", "channels/{channelID}/messages/*"),
+			attribute.String("messaging.destination.template", "m/{domainID}/c/{channelID}/*"),
 			attribute.Bool("messaging.destination.temporary", true),
 			attribute.String("network.protocol.name", "mqtt"),
 			attribute.String("network.protocol.version", "3.1.1"),
