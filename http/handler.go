@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"net/url"
-	"regexp"
 	"strings"
 	"time"
 
@@ -49,13 +47,9 @@ var (
 	errClientNotInitialized     = errors.New("client is not initialized")
 	errFailedPublish            = errors.New("failed to publish")
 	errFailedPublishToMsgBroker = errors.New("failed to publish to supermq message broker")
-	errMalformedSubtopic        = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("malformed subtopic"))
 	errMalformedTopic           = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("malformed topic"))
 	errMissingTopicPub          = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("failed to publish due to missing topic"))
-	errFailedParseSubtopic      = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("failed to parse subtopic"))
 )
-
-var channelRegExp = regexp.MustCompile(`^\/?m\/([\w\-]+)\/c\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
 
 // Event implements events.Event interface.
 type handler struct {
@@ -125,6 +119,11 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		return errors.Wrap(errFailedPublish, errClientNotInitialized)
 	}
 
+	domainID, chanID, subtopic, err := messaging.ParseTopic(*topic)
+	if err != nil {
+		return errors.Wrap(errMalformedTopic, err)
+	}
+
 	var clientID, clientType string
 	switch {
 	case strings.HasPrefix(string(s.Password), "Client"):
@@ -151,11 +150,6 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		clientID = authnSession.DomainUserID
 	default:
 		return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
-	}
-
-	domainID, chanID, subtopic, err := parseTopic(*topic)
-	if err != nil {
-		return mgate.NewHTTPProxyError(http.StatusBadRequest, err)
 	}
 
 	msg := messaging.Message{
@@ -208,53 +202,4 @@ func (h *handler) Unsubscribe(ctx context.Context, topics *[]string) error {
 // Disconnect - not used for HTTP.
 func (h *handler) Disconnect(ctx context.Context) error {
 	return nil
-}
-
-func parseTopic(topic string) (string, string, string, error) {
-	// Topics are in the format:
-	// m/<domain_id>/c/<channel_id>/<subtopic>/.../ct/<content_type>
-	channelParts := channelRegExp.FindStringSubmatch(topic)
-	if len(channelParts) < 3 {
-		return "", "", "", errors.Wrap(errFailedPublish, errMalformedTopic)
-	}
-
-	domainID := channelParts[1]
-	chanID := channelParts[2]
-	subtopic := channelParts[3]
-
-	subtopic, err := parseSubtopic(subtopic)
-	if err != nil {
-		return "", "", "", errors.Wrap(errFailedParseSubtopic, err)
-	}
-
-	return domainID, chanID, subtopic, nil
-}
-
-func parseSubtopic(subtopic string) (string, error) {
-	if subtopic == "" {
-		return subtopic, nil
-	}
-
-	subtopic, err := url.QueryUnescape(subtopic)
-	if err != nil {
-		return "", mgate.NewHTTPProxyError(http.StatusBadRequest, errMalformedSubtopic)
-	}
-	subtopic = strings.ReplaceAll(subtopic, "/", ".")
-
-	elems := strings.Split(subtopic, ".")
-	filteredElems := []string{}
-	for _, elem := range elems {
-		if elem == "" {
-			continue
-		}
-
-		if len(elem) > 1 && (strings.Contains(elem, "*") || strings.Contains(elem, ">")) {
-			return "", mgate.NewHTTPProxyError(http.StatusBadRequest, errMalformedSubtopic)
-		}
-
-		filteredElems = append(filteredElems, elem)
-	}
-
-	subtopic = strings.Join(filteredElems, ".")
-	return subtopic, nil
 }

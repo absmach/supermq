@@ -123,7 +123,7 @@ type config struct {
 func loadConfig(configPath string) (config, error) {
 	cfg := config{
 		SubscriberCfg: subscriberConfig{
-			Subjects: []string{brokers.SubjectAllChannels},
+			Subjects: []string{brokers.SubjectAllMessages},
 		},
 		TransformerCfg: transformerConfig{
 			Format:      defFormat,

@@ -37,15 +37,14 @@ func New(config server.Config, tracer trace.Tracer, forwarder mqtt.Forwarder, to
 
 // Forward traces mqtt forward operations.
 func (fm *forwarderMiddleware) Forward(ctx context.Context, id string, sub messaging.Subscriber, pub messaging.Publisher) error {
-	subject := fmt.Sprintf("channels.%s.messages", fm.topic)
-	spanName := fmt.Sprintf("%s %s", subject, forwardOP)
+	spanName := fmt.Sprintf("%s %s", fm.topic, forwardOP)
 
 	ctx, span := fm.tracer.Start(ctx,
 		spanName,
 		trace.WithAttributes(
 			attribute.String("messaging.system", "mqtt"),
 			attribute.Bool("messaging.destination.anonymous", false),
-			attribute.String("messaging.destination.template", "channels/{channelID}/messages/*"),
+			attribute.String("messaging.destination.template", "m/{domainID}/c/{channelID}/*"),
 			attribute.Bool("messaging.destination.temporary", true),
 			attribute.String("network.protocol.name", "mqtt"),
 			attribute.String("network.protocol.version", "3.1.1"),

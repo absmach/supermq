@@ -15,8 +15,8 @@ import (
 	"github.com/absmach/supermq/pkg/messaging/nats"
 )
 
-// SubjectAllChannels represents subject to subscribe for all the channels.
-const SubjectAllChannels = "channels.>"
+// SubjectAllMessages represents subject to subscribe for all the messages.
+const SubjectAllMessages = messaging.MsgTopicPrefix + ".>"
 
 func init() {
 	log.Println("The binary was build using Nats as the message broker")
