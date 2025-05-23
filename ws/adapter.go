@@ -81,10 +81,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientKey, 
 }
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string) error {
-	topic := fmt.Sprintf("%s.%s", chansPrefix, chanID)
-	if subtopic != "" {
-		topic = fmt.Sprintf("%s.%s", topic, subtopic)
-	}
+	topic := messaging.EncodeToInternalSubject(domainID, chanID, subtopic)
 
 	if err := svc.pubsub.Unsubscribe(ctx, sessionID, topic); err != nil {
 		return errors.Wrap(ErrFailedSubscribe, err)

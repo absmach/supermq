@@ -1,3 +1,6 @@
+// Copyright (c) Abstract Machines
+// SPDX-License-Identifier: Apache-2.0
+
 package messaging
 
 import (
@@ -22,7 +25,7 @@ const (
 var (
 	ErrMalformedTopic    = errors.New("malformed topic")
 	ErrMalformedSubtopic = errors.New("malformed subtopic")
-	// Regex to group topic in format m.<domain_id>.c.<channel_id>.<sub_topic> `^\/?m\/([\w\-]+)\/c\/([\w\-]+)(\/[^?]*)?(\?.*)?$`
+	// Regex to group topic in format m.<domain_id>.c.<channel_id>.<sub_topic> `^\/?m\/([\w\-]+)\/c\/([\w\-]+)(\/[^?]*)?(\?.*)?$`.
 	msgTopicRegExp = regexp.MustCompile(`^\/?` + MsgTopicPrefix + `\/([\w\-]+)\/` + ChannelTopicPrefix + `\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
 )
 
@@ -65,7 +68,6 @@ func ParseSubtopic(subtopic string) (string, error) {
 	elems := strings.Split(subtopic, ".")
 	filteredElems := []string{}
 	for _, elem := range elems {
-
 		if elem == "" {
 			continue
 		}

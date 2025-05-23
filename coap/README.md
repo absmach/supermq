@@ -76,5 +76,5 @@ Setting `SMQ_CLIENTS_GRPC_CLIENT_CERT` and `SMQ_CLIENTS_GRPC_CLIENT_KEY` will en
 
 ## Usage
 
-If CoAP adapter is running locally (on default 5683 port), a valid URL would be: `coap://localhost/channels/<channel_id>/messages?auth=<client_auth_key>`.
+If CoAP adapter is running locally (on default 5683 port), a valid URL would be: `coap://localhost/m/<domain_id>/c/<channel_id>/<subtopic>?auth=<client_auth_key>`.
 Since CoAP protocol does not support `Authorization` header (option) and options have limited size, in order to send CoAP messages, valid `auth` value (a valid Client key) must be present in `Uri-Query` option.

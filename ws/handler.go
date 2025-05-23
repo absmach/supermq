@@ -38,11 +38,9 @@ const (
 
 // Error wrappers for MQTT errors.
 var (
-	errMalformedSubtopic        = errors.New("malformed subtopic")
 	errClientNotInitialized     = errors.New("client is not initialized")
 	errMissingTopicPub          = errors.New("failed to publish due to missing topic")
 	errMissingTopicSub          = errors.New("failed to subscribe due to missing topic")
-	errFailedSubscribe          = errors.New("failed to subscribe")
 	errFailedPublish            = errors.New("failed to publish")
 	errFailedPublishToMsgBroker = errors.New("failed to publish to supermq message broker")
 )
@@ -98,7 +96,6 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 	}
 
 	clientID, clientType, err := h.authAccess(ctx, token, domainID, chanID, connections.Publish)
-
 	if err != nil {
 		return err
 	}
