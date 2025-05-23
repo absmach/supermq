@@ -1,0 +1,12 @@
+# Copyright (c) Abstract Machines
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: 1
+providers:
+- name: 'default'
+  orgId: 1
+  folder: ''
+  type: file
+  updateIntervalSeconds: 10
+  options:
+    path: /var/lib/grafana/dashboards
