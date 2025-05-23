@@ -27,7 +27,10 @@ var (
 )
 
 func ParseTopic(topic string) (string, string, string, error) {
+	return ParseTopicWithOption(topic, false)
+}
 
+func ParseTopicWithOption(topic string, skipParseSubtopic bool) (string, string, string, error) {
 	msgParts := msgTopicRegExp.FindStringSubmatch(topic)
 	if len(msgParts) < numGroups {
 		return "", "", "", ErrMalformedTopic
@@ -37,9 +40,12 @@ func ParseTopic(topic string) (string, string, string, error) {
 	chanID := msgParts[channelGroup]
 	subtopic := msgParts[subtopicGroup]
 
-	subtopic, err := ParseSubtopic(subtopic)
-	if err != nil {
-		return "", "", "", errors.Wrap(ErrMalformedTopic, err)
+	if !skipParseSubtopic {
+		var err error
+		subtopic, err = ParseSubtopic(subtopic)
+		if err != nil {
+			return "", "", "", errors.Wrap(ErrMalformedTopic, err)
+		}
 	}
 
 	return domainID, chanID, subtopic, nil
@@ -76,9 +82,11 @@ func ParseSubtopic(subtopic string) (string, error) {
 }
 
 func EncodeToInternalSubject(domainID string, channelID string, subtopic string) string {
-	// Use concatenation instead of fmt.Sprintf for the
-	// sake of simplicity and performance.
-	subject := fmt.Sprintf("%s.%s.%s.%s", MsgTopicPrefix, domainID, ChannelTopicPrefix, channelID)
+	return fmt.Sprintf("%s.%s", MsgTopicPrefix, EncodeToInternalSubjectSuffix(domainID, ChannelTopicPrefix, channelID))
+}
+
+func EncodeToInternalSubjectSuffix(domainID string, channelID string, subtopic string) string {
+	subject := fmt.Sprintf("%s.%s.%s", domainID, ChannelTopicPrefix, channelID)
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
@@ -87,6 +95,10 @@ func EncodeToInternalSubject(domainID string, channelID string, subtopic string)
 
 func (m *Message) EncodeToInternalSubject() string {
 	return EncodeToInternalSubject(m.GetDomain(), m.GetChannel(), m.GetSubtopic())
+}
+
+func (m *Message) EncodeToInternalSubjectSuffix() string {
+	return EncodeToInternalSubjectSuffix(m.GetDomain(), m.GetChannel(), m.GetSubtopic())
 }
 
 func (m *Message) EncodeToMQTTTopic() string {

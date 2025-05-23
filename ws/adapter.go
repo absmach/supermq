@@ -5,7 +5,6 @@ package ws
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
@@ -16,8 +15,6 @@ import (
 	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/pkg/policies"
 )
-
-const msgPrefix = "m"
 
 var (
 	// ErrFailedSubscription indicates that client couldn't subscribe to specified channel.
@@ -69,11 +66,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientKey, 
 
 	c.id = clientID
 
-	subject := fmt.Sprintf("%s.%s.c.%s", msgPrefix, domainID, chanID)
-	if subtopic != "" {
-		subject = fmt.Sprintf("%s.%s", subject, subtopic)
-	}
-
+	subject := messaging.EncodeToInternalSubject(domainID, chanID, subtopic)
 	subCfg := messaging.SubscriberConfig{
 		ID:       sessionID,
 		ClientID: clientID,
