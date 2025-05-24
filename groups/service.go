@@ -204,7 +204,7 @@ func (svc service) RetrieveGroupHierarchy(ctx context.Context, session smqauthn.
 		return HierarchyPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	hids := svc.getGroupIDs(hp.Groups)
-	ids, err := svc.filterAllowedGroupIDsOfUserID(ctx, session.DomainUserID, "read_permission", hids)
+	ids, err := svc.filterAllowedGroupIDsOfUserID(ctx, session.DomainID, session.UserID, hids)
 	if err != nil {
 		return HierarchyPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
@@ -486,12 +486,13 @@ func (svc service) DeleteGroup(ctx context.Context, session smqauthn.Session, id
 	return nil
 }
 
-func (svc service) filterAllowedGroupIDsOfUserID(ctx context.Context, userID, permission string, groupIDs []string) ([]string, error) {
+func (svc service) filterAllowedGroupIDsOfUserID(ctx context.Context, domainID, userID string, groupIDs []string) ([]string, error) {
 	var ids []string
-	allowedIDs, err := svc.listAllGroupsOfUserID(ctx, userID, permission)
+	allowedGroups, err := svc.repo.RetrieveUserGroups(ctx, domainID, userID, PageMeta{Limit: 1<<63 - 1})
 	if err != nil {
 		return []string{}, err
 	}
+	allowedIDs := svc.getGroupIDs(allowedGroups.Groups)
 
 	for _, gid := range groupIDs {
 		for _, id := range allowedIDs {
@@ -501,19 +502,6 @@ func (svc service) filterAllowedGroupIDsOfUserID(ctx context.Context, userID, pe
 		}
 	}
 	return ids, nil
-}
-
-func (svc service) listAllGroupsOfUserID(ctx context.Context, userID, permission string) ([]string, error) {
-	allowedIDs, err := svc.policy.ListAllObjects(ctx, policies.Policy{
-		SubjectType: policies.UserType,
-		Subject:     userID,
-		Permission:  permission,
-		ObjectType:  policies.GroupType,
-	})
-	if err != nil {
-		return []string{}, err
-	}
-	return allowedIDs.Policies, nil
 }
 
 func (svc service) changeGroupStatus(ctx context.Context, session smqauthn.Session, group Group) (Group, error) {
