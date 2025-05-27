@@ -12,6 +12,8 @@ jobs:
   build-and-push:
     name: Build and Push
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
@@ -57,6 +59,20 @@ jobs:
         run: |
           SMQ_ES_TYPE=es_redis make mqtt
 
-      - name: Build and push Dockers
+      - name: Build and push Docker images
         run: |
-          make latest -j $(nproc)
+          make latest -j $(nproc) # This should build and push docker.io/absmach/supermq:latest
+
+      - name: Notify amdm Helm Chart Repository of New Image
+        if: success()
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.REPO_DISPATCH_PAT_TO_AMDM }}
+          repository: absmach/amdm
+          event-type: supermq-image-updated
+          client-payload: |
+            {
+              "image_repository": "docker.io/absmach/supermq",
+              "image_tag": "latest",
+              "source_commit_sha": "${{ github.sha }}"
+            }
