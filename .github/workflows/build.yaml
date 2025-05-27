@@ -60,3 +60,15 @@ jobs:
       - name: Build and push Dockers
         run: |
           make latest -j $(nproc)
+
+      - name: Notify Helm chart repo (amdm)
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.REPO_DISPATCH_TOKEN }}
+          repository: absmach/amdm
+          event-type: deploy-latest-image
+          client-payload: |
+            {
+              "repo": "docker.io/absmach/supermq",
+              "tag": "latest"
+            }
