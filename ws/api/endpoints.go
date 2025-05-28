@@ -85,10 +85,10 @@ func decodeRequest(r *http.Request, logger *slog.Logger) (connReq, error) {
 		domainID:  domainID,
 	}
 
-	subTopic := chi.URLParam(r, "subTopic")
+	subTopic := chi.URLParam(r, "*")
 
 	if subTopic != "" {
-		subTopic, err := messaging.ParseSubtopic(subTopic)
+		subTopic, err := messaging.ParseSubscribeSubtopic(subTopic)
 		if err != nil {
 			return connReq{}, err
 		}

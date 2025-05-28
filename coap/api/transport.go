@@ -137,10 +137,18 @@ func decodeMessage(msg *mux.Message) (*messaging.Message, error) {
 	if err != nil {
 		return &messaging.Message{}, err
 	}
-	domainID, channelID, subTopic, err := messaging.ParseTopic(path)
+
+	var domainID, channelID, subTopic string
+	switch msg.Code() {
+	case codes.GET:
+		domainID, channelID, subTopic, err = messaging.ParseSubscribeTopic(path)
+	case codes.POST:
+		domainID, channelID, subTopic, err = messaging.ParsePublishTopic(path)
+	}
 	if err != nil {
 		return &messaging.Message{}, err
 	}
+
 	ret := &messaging.Message{
 		Protocol: protocol,
 		Domain:   domainID,

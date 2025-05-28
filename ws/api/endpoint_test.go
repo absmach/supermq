@@ -208,7 +208,7 @@ func TestHandshake(t *testing.T) {
 			subtopic:  "",
 			header:    true,
 			clientKey: clientKey,
-			status:    http.StatusBadRequest,
+			status:    http.StatusUnauthorized,
 			msg:       []byte{},
 		},
 		{
@@ -228,7 +228,7 @@ func TestHandshake(t *testing.T) {
 			subtopic:  "sub/a*b/topic",
 			header:    true,
 			clientKey: clientKey,
-			status:    http.StatusBadGateway,
+			status:    http.StatusUnauthorized,
 			msg:       msg,
 		},
 	}

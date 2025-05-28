@@ -119,7 +119,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		return errors.Wrap(errFailedPublish, errClientNotInitialized)
 	}
 
-	domainID, chanID, subtopic, err := messaging.ParseTopic(*topic)
+	domainID, chanID, subtopic, err := messaging.ParsePublishTopic(*topic)
 	if err != nil {
 		return errors.Wrap(errMalformedTopic, err)
 	}
@@ -180,7 +180,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		msg.Publisher = clientID
 	}
 
-	if err := h.publisher.Publish(ctx, msg.Channel, &msg); err != nil {
+	if err := h.publisher.Publish(ctx, msg.EncodeToInternalSubjectSuffix(), &msg); err != nil {
 		return errors.Wrap(errFailedPublishToMsgBroker, err)
 	}
 

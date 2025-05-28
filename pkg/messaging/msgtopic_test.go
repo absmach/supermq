@@ -67,7 +67,7 @@ func TestParseTopic(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			domainID, chanID, subtopic, err := messaging.ParseTopic(tc.topic)
+			domainID, chanID, subtopic, err := messaging.ParsePublishTopic(tc.topic)
 
 			if tc.expectErr {
 				assert.Error(t, err)
