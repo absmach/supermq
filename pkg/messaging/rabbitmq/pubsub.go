@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"sync"
 
 	"github.com/absmach/supermq/pkg/messaging"
@@ -179,4 +180,8 @@ func (ps *pubsub) handle(deliveries <-chan amqp.Delivery, h messaging.MessageHan
 			return
 		}
 	}
+}
+
+func formatTopic(topic string) string {
+	return strings.ReplaceAll(topic, ">", "#")
 }

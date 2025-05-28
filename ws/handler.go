@@ -90,7 +90,7 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 		token = string(s.Password)
 	}
 
-	domainID, chanID, _, err := messaging.ParseTopicWithOption(*topic, true)
+	domainID, chanID, _, err := messaging.ParsePublishTopic(*topic)
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
 	}
 
 	for _, topic := range *topics {
-		domainID, chanID, _, err := messaging.ParseTopicWithOption(topic, true)
+		domainID, chanID, _, err := messaging.ParseSubscribeTopic(topic)
 		if err != nil {
 			return err
 		}
@@ -148,7 +148,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		return nil
 	}
 
-	domainID, chanID, subtopic, err := messaging.ParseTopic(*topic)
+	domainID, chanID, subtopic, err := messaging.ParsePublishTopic(*topic)
 	if err != nil {
 		return errors.Wrap(errFailedPublish, err)
 	}
@@ -163,7 +163,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		Created:   time.Now().UnixNano(),
 	}
 
-	if err := h.pubsub.Publish(ctx, msg.GetChannel(), &msg); err != nil {
+	if err := h.pubsub.Publish(ctx, msg.EncodeToInternalSubjectSuffix(), &msg); err != nil {
 		return mgate.NewHTTPProxyError(http.StatusInternalServerError, errors.Wrap(errFailedPublishToMsgBroker, err))
 	}
 

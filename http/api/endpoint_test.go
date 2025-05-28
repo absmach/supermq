@@ -28,6 +28,7 @@ import (
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnMocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/connections"
+	"github.com/absmach/supermq/pkg/messaging"
 	pubsub "github.com/absmach/supermq/pkg/messaging/mocks"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/stretchr/testify/assert"
@@ -257,7 +258,7 @@ func TestPublish(t *testing.T) {
 				ClientType: policies.ClientType,
 				Type:       uint32(connections.Publish),
 			}).Return(tc.authzRes, tc.authzErr)
-			svcCall := pub.On("Publish", mock.Anything, tc.chanID, mock.Anything).Return(nil)
+			svcCall := pub.On("Publish", mock.Anything, messaging.EncodeToInternalSubjectSuffix(tc.domainID, tc.chanID, ""), mock.Anything).Return(nil)
 			req := testRequest{
 				client:      ts.Client(),
 				method:      http.MethodPost,

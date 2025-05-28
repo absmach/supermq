@@ -16,6 +16,7 @@ import (
 	climocks "github.com/absmach/supermq/clients/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/connections"
+	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/pkg/messaging/mocks"
@@ -185,7 +186,7 @@ func TestSubscribe(t *testing.T) {
 	for _, tc := range cases {
 		subConfig := messaging.SubscriberConfig{
 			ID:       sessionID,
-			Topic:    "channels." + tc.chanID + "." + subTopic,
+			Topic:    "m." + tc.domainID + ".c." + tc.chanID + "." + subTopic,
 			ClientID: clientID,
 			Handler:  c,
 		}
@@ -203,7 +204,7 @@ func TestSubscribe(t *testing.T) {
 		}).Return(tc.authZRes, tc.authZErr)
 		repocall := pubsub.On("Subscribe", mock.Anything, subConfig).Return(tc.subErr)
 		err := svc.Subscribe(context.Background(), sessionID, tc.clientKey, tc.domainID, tc.chanID, tc.subtopic, c)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		repocall.Unset()
 		clientsCall.Unset()
 		channelsCall.Unset()

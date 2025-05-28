@@ -74,7 +74,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientKey, 
 		Handler:  c,
 	}
 	if err := svc.pubsub.Subscribe(ctx, subCfg); err != nil {
-		return ErrFailedSubscription
+		return errors.Wrap(ErrFailedSubscription, err)
 	}
 
 	return nil

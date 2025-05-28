@@ -84,7 +84,7 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 
 	msg.Publisher = authnRes.GetId()
 
-	return svc.pubsub.Publish(ctx, msg.GetChannel(), msg)
+	return svc.pubsub.Publish(ctx, msg.EncodeToInternalSubjectSuffix(), msg)
 }
 
 func (svc *adapterService) Subscribe(ctx context.Context, key, domainID, chanID, subtopic string, c Client) error {

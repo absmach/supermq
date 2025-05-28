@@ -90,7 +90,7 @@ func (es *eventStore) Subscribe(ctx context.Context, topics *[]string) error {
 	}
 
 	for _, topic := range *topics {
-		domainID, channelID, subTopic, err := messaging.ParseTopic(topic)
+		domainID, channelID, subTopic, err := messaging.ParseSubscribeTopic(topic)
 		if err != nil {
 			return err
 		}

@@ -110,7 +110,12 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 		return ErrClientNotInitialized
 	}
 
-	return h.authAccess(ctx, string(s.Username), *topic, connections.Publish)
+	domainID, chanID, _, err := messaging.ParsePublishTopic(*topic)
+	if err != nil {
+		return err
+	}
+
+	return h.authAccess(ctx, string(s.Username), domainID, chanID, connections.Publish)
 }
 
 // AuthSubscribe is called on device subscribe,
@@ -125,7 +130,12 @@ func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
 	}
 
 	for _, topic := range *topics {
-		if err := h.authAccess(ctx, string(s.Username), topic, connections.Subscribe); err != nil {
+		domainID, chanID, _, err := messaging.ParseSubscribeTopic(topic)
+		if err != nil {
+			return err
+		}
+
+		if err := h.authAccess(ctx, string(s.Username), domainID, chanID, connections.Subscribe); err != nil {
 			return err
 		}
 	}
@@ -151,7 +161,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 	}
 	h.logger.Info(fmt.Sprintf(LogInfoPublished, s.ID, *topic))
 
-	domainID, chanID, subTopic, err := messaging.ParseTopic(*topic)
+	domainID, chanID, subTopic, err := messaging.ParsePublishTopic(*topic)
 	if err != nil {
 		return errors.Wrap(ErrFailedPublish, err)
 	}
@@ -166,7 +176,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		Created:   time.Now().UnixNano(),
 	}
 
-	if err := h.publisher.Publish(ctx, msg.GetChannel(), &msg); err != nil {
+	if err := h.publisher.Publish(ctx, msg.EncodeToInternalSubjectSuffix(), &msg); err != nil {
 		return errors.Wrap(ErrFailedPublishToMsgBroker, err)
 	}
 
@@ -206,12 +216,7 @@ func (h *handler) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func (h *handler) authAccess(ctx context.Context, clientID, topic string, msgType connections.ConnType) error {
-	domainID, chanID, _, err := messaging.ParseTopic(topic)
-	if err != nil {
-		return err
-	}
-
+func (h *handler) authAccess(ctx context.Context, clientID, domainID, chanID string, msgType connections.ConnType) error {
 	ar := &grpcChannelsV1.AuthzReq{
 		Type:       uint32(msgType),
 		ClientId:   clientID,
