@@ -1014,7 +1014,7 @@ type DBClient struct {
 	UpdatedAt                 sql.NullTime     `db:"updated_at,omitempty"`
 	UpdatedBy                 *string          `db:"updated_by,omitempty"`
 	Status                    clients.Status   `db:"status,omitempty"`
-	ParentGroupPath           string           `db:"parent_group_path,omitempty"`
+	ParentGroupPath           sql.NullString   `db:"parent_group_path,omitempty"`
 	RoleID                    string           `db:"role_id,omitempty"`
 	RoleName                  string           `db:"role_name,omitempty"`
 	Actions                   pq.StringArray   `db:"actions,omitempty"`
@@ -1120,7 +1120,7 @@ func ToClient(t DBClient) (clients.Client, error) {
 		UpdatedAt:                 updatedAt,
 		UpdatedBy:                 updatedBy,
 		Status:                    t.Status,
-		ParentGroupPath:           t.ParentGroupPath,
+		ParentGroupPath:           toString(t.ParentGroupPath),
 		RoleID:                    t.RoleID,
 		RoleName:                  t.RoleName,
 		Actions:                   t.Actions,

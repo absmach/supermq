@@ -1116,7 +1116,7 @@ type dbChannel struct {
 	UpdatedAt                 sql.NullTime     `db:"updated_at,omitempty"`
 	UpdatedBy                 *string          `db:"updated_by,omitempty"`
 	Status                    channels.Status  `db:"status,omitempty"`
-	ParentGroupPath           string           `db:"parent_group_path,omitempty"`
+	ParentGroupPath           sql.NullString   `db:"parent_group_path,omitempty"`
 	RoleID                    string           `db:"role_id,omitempty"`
 	RoleName                  string           `db:"role_name,omitempty"`
 	Actions                   pq.StringArray   `db:"actions,omitempty"`
@@ -1242,7 +1242,7 @@ func toChannel(ch dbChannel) (channels.Channel, error) {
 		UpdatedAt:                 updatedAt,
 		UpdatedBy:                 updatedBy,
 		Status:                    ch.Status,
-		ParentGroupPath:           ch.ParentGroupPath,
+		ParentGroupPath:           toString(ch.ParentGroupPath),
 		RoleID:                    ch.RoleID,
 		RoleName:                  ch.RoleName,
 		Actions:                   ch.Actions,
