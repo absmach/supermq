@@ -147,7 +147,7 @@ func (cr *channelRepository) RetrieveByID(ctx context.Context, id string) (chann
 }
 
 func (cr *channelRepository) RetrieveByRoute(ctx context.Context, route, domainID string) (channels.Channel, error) {
-	q := `SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, route,  metadata, created_at, updated_at, updated_by, status 
+	q := `SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id, COALESCE(parent_group_id, '') AS parent_group_id, route,  metadata, created_at, updated_at, updated_by, status
 		FROM channels WHERE route = :route AND domain_id = :domain_id`
 
 	dbch := dbChannel{
@@ -864,7 +864,7 @@ final_channels AS (
 		domains d ON d.id = dr.entity_id
 	JOIN
 		channels dc ON dc.domain_id = d.id
-	JOIN
+	LEFT JOIN
 		groups g ON dc.parent_group_id = g.id
 	WHERE
 		drm.member_id = '%s' -- user_id

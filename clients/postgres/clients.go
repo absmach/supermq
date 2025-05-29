@@ -889,7 +889,7 @@ func (repo *clientRepo) userClientBaseQuery(domainID, userID string) string {
 			domains d ON d.id = dr.entity_id
 		JOIN
 			clients dc ON dc.domain_id = d.id
-		JOIN
+		LEFT JOIN
 			groups g ON dc.parent_group_id = g.id
 		WHERE
 			drm.member_id = '%s' -- user_id
