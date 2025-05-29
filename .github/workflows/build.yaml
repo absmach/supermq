@@ -64,7 +64,7 @@ jobs:
           make latest -j $(nproc) # This should build and push docker.io/absmach/supermq:latest
 
       - name: Notify amdm Helm Chart Repository of New Image
-        if: success()
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.REPO_DISPATCH_PAT_TO_AMDM }}
