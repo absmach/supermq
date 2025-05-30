@@ -57,17 +57,17 @@ func handshake(ctx context.Context, svc ws.Service, logger *slog.Logger) http.Ha
 		client := ws.NewClient(logger, conn, sessionID)
 
 		client.SetCloseHandler(func(code int, text string) error {
-			return svc.Unsubscribe(ctx, sessionID, req.domainID, req.chanID, req.subtopic)
+			return svc.Unsubscribe(ctx, sessionID, req.domain, req.channel, req.subtopic)
 		})
 
 		go client.Start(ctx)
 
-		if err := svc.Subscribe(ctx, sessionID, req.clientKey, req.domainID, req.chanID, req.subtopic, client); err != nil {
+		if err := svc.Subscribe(ctx, sessionID, req.clientKey, req.domain, req.channel, req.subtopic, client); err != nil {
 			conn.Close()
 			return
 		}
 
-		logger.Debug(fmt.Sprintf("Successfully upgraded communication to WS on channel %s", req.chanID))
+		logger.Debug(fmt.Sprintf("Successfully upgraded communication to WS on channel %s", req.channel))
 	}
 }
 
@@ -82,13 +82,13 @@ func decodeRequest(r *http.Request) (connReq, error) {
 		authKey = authKeys[0]
 	}
 
-	domainID := chi.URLParam(r, "domainID")
-	chanID := chi.URLParam(r, "chanID")
+	domain := chi.URLParam(r, "domain")
+	channel := chi.URLParam(r, "channel")
 
 	req := connReq{
 		clientKey: authKey,
-		chanID:    chanID,
-		domainID:  domainID,
+		channel:   channel,
+		domain:    domain,
 	}
 
 	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)

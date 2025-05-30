@@ -18,8 +18,10 @@ import (
 	"github.com/absmach/mgate/pkg/session"
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
+	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	climocks "github.com/absmach/supermq/clients/mocks"
+	dmocks "github.com/absmach/supermq/domains/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
@@ -34,7 +36,6 @@ import (
 )
 
 const (
-	id         = "1"
 	clientKey  = "c02ff576-ccd5-40f6-ba5f-c85377aad529"
 	protocol   = "ws"
 	instanceID = "5de9b29a-feb9-11ed-be56-0242ac120002"
@@ -43,11 +44,12 @@ const (
 var (
 	msg      = []byte(`[{"n":"current","t":-1,"v":1.6}]`)
 	domainID = testsutil.GenerateUUID(&testing.T{})
+	id       = testsutil.GenerateUUID(&testing.T{})
 )
 
-func newService(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) (ws.Service, *mocks.PubSub) {
+func newService(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient) (ws.Service, *mocks.PubSub) {
 	pubsub := new(mocks.PubSub)
-	return ws.New(clients, channels, pubsub), pubsub
+	return ws.New(clients, channels, domains, pubsub), pubsub
 }
 
 func newHTTPServer(svc ws.Service) *httptest.Server {
@@ -113,10 +115,11 @@ func TestHandshake(t *testing.T) {
 	clients := new(climocks.ClientsServiceClient)
 	channels := new(chmocks.ChannelsServiceClient)
 	authn := new(authnMocks.Authentication)
-	svc, pubsub := newService(clients, channels)
+	domains := new(dmocks.DomainsServiceClient)
+	svc, pubsub := newService(clients, channels, domains)
 	target := newHTTPServer(svc)
 	defer target.Close()
-	handler := ws.NewHandler(pubsub, smqlog.NewMock(), authn, clients, channels)
+	handler := ws.NewHandler(pubsub, smqlog.NewMock(), authn, clients, channels, domains)
 	ts, err := newProxyHTPPServer(handler, target)
 	require.Nil(t, err)
 	defer ts.Close()

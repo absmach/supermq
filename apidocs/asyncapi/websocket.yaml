@@ -32,14 +32,14 @@ servers:
         default: '8186'
 
 channels:
-  'm/{domainID}/c/{channelID}/{subtopic}':
+  'm/{domainPrefix}/c/{channelPrefix}/{subtopic}':
     parameters:
-      domainID:
-        $ref: '#/components/parameters/domainID'
+      domainPrefix:
+        $ref: '#/components/parameters/domainPrefix'
         in: path
         required: true
-      channelID:
-        $ref: '#/components/parameters/channelID'
+      channelPrefix:
+        $ref: '#/components/parameters/channelPrefix'
         in: path
         required: true
       subtopic:
@@ -129,16 +129,14 @@ components:
 
         ```
   parameters:
-    domainID:
-      description: Domain ID associated with the channel and client.
+    domainPrefix:
+      description: ID or route of the domain associated with the channel and client.
       schema:
         type: string
-        format: uuid
-    channelID:
-      description: Channel ID connected to the Client ID defined in the username.
+    channelPrefix:
+      description: ID or route of the channel connected to the Client ID defined in the username.
       schema:
         type: string
-        format: uuid
     subtopic:
       description: Arbitrary message subtopic.
       schema:

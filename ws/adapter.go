@@ -10,6 +10,9 @@ import (
 
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
+	grpcCommonV1 "github.com/absmach/supermq/api/grpc/common/v1"
+	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
+	api "github.com/absmach/supermq/api/http"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -45,21 +48,32 @@ var _ Service = (*adapterService)(nil)
 type adapterService struct {
 	clients  grpcClientsV1.ClientsServiceClient
 	channels grpcChannelsV1.ChannelsServiceClient
+	domains  grpcDomainsV1.DomainsServiceClient
 	pubsub   messaging.PubSub
 }
 
 // New instantiates the WS adapter implementation.
-func New(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, pubsub messaging.PubSub) Service {
+func New(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient, pubsub messaging.PubSub) Service {
 	return &adapterService{
 		clients:  clients,
 		channels: channels,
+		domains:  domains,
 		pubsub:   pubsub,
 	}
 }
 
-func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientKey, domainID, chanID, subtopic string, c *Client) error {
-	if chanID == "" || clientKey == "" || domainID == "" {
+func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientKey, domain, channel, subtopic string, c *Client) error {
+	if channel == "" || clientKey == "" || domain == "" {
 		return svcerr.ErrAuthentication
+	}
+
+	domainID, err := svc.resolveDomain(ctx, domain)
+	if err != nil {
+		return errFailedResolveDomain
+	}
+	chanID, err := svc.resolveChannel(ctx, channel, domainID)
+	if err != nil {
+		return errFailedResolveChannel
 	}
 
 	clientID, err := svc.authorize(ctx, clientKey, domainID, chanID, connections.Subscribe)
@@ -85,7 +99,16 @@ func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientKey, 
 	return nil
 }
 
-func (svc *adapterService) Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string) error {
+func (svc *adapterService) Unsubscribe(ctx context.Context, sessionID, domain, channel, subtopic string) error {
+	domainID, err := svc.resolveDomain(ctx, domain)
+	if err != nil {
+		return errFailedResolveDomain
+	}
+	chanID, err := svc.resolveChannel(ctx, channel, domainID)
+	if err != nil {
+		return errFailedResolveChannel
+	}
+
 	topic := fmt.Sprintf("%s.%s", chansPrefix, chanID)
 	if subtopic != "" {
 		topic = fmt.Sprintf("%s.%s", topic, subtopic)
@@ -130,4 +153,35 @@ func (svc *adapterService) authorize(ctx context.Context, clientKey, domainID, c
 	}
 
 	return authnRes.GetId(), nil
+}
+
+func (svc *adapterService) resolveDomain(ctx context.Context, domain string) (string, error) {
+	if api.ValidateUUID(domain) == nil {
+		return domain, nil
+	}
+
+	d, err := svc.domains.RetrieveByRoute(ctx, &grpcCommonV1.RetrieveByRouteReq{
+		Route: domain,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return d.Entity.Id, nil
+}
+
+func (svc *adapterService) resolveChannel(ctx context.Context, channel, domainID string) (string, error) {
+	if api.ValidateUUID(channel) == nil {
+		return channel, nil
+	}
+
+	c, err := svc.channels.RetrieveByRoute(ctx, &grpcCommonV1.RetrieveByRouteReq{
+		Route:    channel,
+		DomainId: domainID,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return c.Entity.Id, nil
 }

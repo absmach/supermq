@@ -5,7 +5,7 @@ package api
 
 type connReq struct {
 	clientKey string
-	chanID    string
-	domainID  string
+	channel   string
+	domain    string
 	subtopic  string
 }

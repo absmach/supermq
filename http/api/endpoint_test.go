@@ -18,9 +18,12 @@ import (
 	"github.com/absmach/mgate/pkg/session"
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
+	grpcCommonV1 "github.com/absmach/supermq/api/grpc/common/v1"
+	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	climocks "github.com/absmach/supermq/clients/mocks"
+	dmocks "github.com/absmach/supermq/domains/mocks"
 	server "github.com/absmach/supermq/http"
 	"github.com/absmach/supermq/http/api"
 	"github.com/absmach/supermq/internal/testsutil"
@@ -45,9 +48,9 @@ var (
 	domainID = testsutil.GenerateUUID(&testing.T{})
 )
 
-func newService(authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) (session.Handler, *pubsub.PubSub) {
+func newService(authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient) (session.Handler, *pubsub.PubSub) {
 	pub := new(pubsub.PubSub)
-	return server.NewHandler(pub, authn, clients, channels, smqlog.NewMock()), pub
+	return server.NewHandler(pub, authn, clients, channels, domains, smqlog.NewMock()), pub
 }
 
 func newTargetHTTPServer() *httptest.Server {
@@ -106,6 +109,7 @@ func TestPublish(t *testing.T) {
 	clients := new(climocks.ClientsServiceClient)
 	authn := new(authnMocks.Authentication)
 	channels := new(chmocks.ChannelsServiceClient)
+	domains := new(dmocks.DomainsServiceClient)
 	ctSenmlJSON := "application/senml+json"
 	ctSenmlCBOR := "application/senml+cbor"
 	ctJSON := "application/json"
@@ -114,7 +118,7 @@ func TestPublish(t *testing.T) {
 	msg := `[{"n":"current","t":-1,"v":1.6}]`
 	msgJSON := `{"field1":"val1","field2":"val2"}`
 	msgCBOR := `81A3616E6763757272656E746174206176FB3FF999999999999A`
-	svc, pub := newService(authn, clients, channels)
+	svc, pub := newService(authn, clients, channels, domains)
 	target := newTargetHTTPServer()
 	defer target.Close()
 	ts, err := newProxyHTPPServer(svc, target)
@@ -250,6 +254,7 @@ func TestPublish(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			clientsCall := clients.On("Authenticate", mock.Anything, &grpcClientsV1.AuthnReq{ClientSecret: tc.key}).Return(tc.authnRes, tc.authnErr)
+			domainsCall := domains.On("RetrieveByRoute", mock.Anything, mock.Anything).Return(&grpcCommonV1.RetrieveEntityRes{Entity: &grpcCommonV1.EntityBasic{Id: tc.domainID}}, nil)
 			channelsCall := channels.On("Authorize", mock.Anything, &grpcChannelsV1.AuthzReq{
 				DomainId:   tc.domainID,
 				ChannelId:  tc.chanID,
@@ -257,6 +262,7 @@ func TestPublish(t *testing.T) {
 				ClientType: policies.ClientType,
 				Type:       uint32(connections.Publish),
 			}).Return(tc.authzRes, tc.authzErr)
+			channelsCall1 := channels.On("RetrieveByRoute", mock.Anything, mock.Anything).Return(&grpcCommonV1.RetrieveEntityRes{Entity: &grpcCommonV1.EntityBasic{Id: chanID}}, nil)
 			svcCall := pub.On("Publish", mock.Anything, tc.chanID, mock.Anything).Return(nil)
 			req := testRequest{
 				client:      ts.Client(),
@@ -273,6 +279,8 @@ func TestPublish(t *testing.T) {
 			svcCall.Unset()
 			clientsCall.Unset()
 			channelsCall.Unset()
+			domainsCall.Unset()
+			channelsCall1.Unset()
 		})
 	}
 }
