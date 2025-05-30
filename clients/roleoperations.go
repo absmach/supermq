@@ -3,15 +3,9 @@
 
 package clients
 
-import (
-	"github.com/absmach/supermq/pkg/roles"
-	"github.com/absmach/supermq/pkg/svcutil"
-)
-
 // Internal Operations
-
 const (
-	OpViewClient svcutil.Operation = iota
+	OpViewClient Operation = iota
 	OpUpdateClient
 	OpUpdateClientTags
 	OpUpdateClientSecret
@@ -27,7 +21,7 @@ const (
 	OpListUserClients
 )
 
-var expectedOperations = []svcutil.Operation{
+var expectedOperations = []Operation{
 	OpViewClient,
 	OpUpdateClient,
 	OpUpdateClientTags,
@@ -58,13 +52,13 @@ var OperationNames = []string{
 	"OpListUserClients",
 }
 
-func NewOperationPerm() svcutil.OperationPerm {
-	return svcutil.NewOperationPerm(expectedOperations, OperationNames)
+func NewOperationPerm() OperationPerm {
+	return newOperationPerm(expectedOperations, OperationNames)
 }
 
 // External Operations.
 const (
-	DomainOpCreateClient svcutil.ExternalOperation = iota
+	DomainOpCreateClient ExternalOperation = iota
 	DomainOpListClients
 	GroupOpSetChildClient
 	GroupsOpRemoveChildClient
@@ -72,7 +66,7 @@ const (
 	ChannelsOpDisconnectChannel
 )
 
-var expectedExternalOperations = []svcutil.ExternalOperation{
+var expectedExternalOperations = []ExternalOperation{
 	DomainOpCreateClient,
 	DomainOpListClients,
 	GroupOpSetChildClient,
@@ -90,8 +84,8 @@ var externalOperationNames = []string{
 	"ChannelsOpDisconnectChannel",
 }
 
-func NewExternalOperationPerm() svcutil.ExternalOperationPerm {
-	return svcutil.NewExternalOperationPerm(expectedExternalOperations, externalOperationNames)
+func NewExternalOperationPerm() ExternalOperationPerm {
+	return newExternalOperationPerm(expectedExternalOperations, externalOperationNames)
 }
 
 // Below codes should moved out of service, may be can be kept in `cmd/<svc>/main.go`
@@ -109,8 +103,8 @@ const (
 	viewRoleUsersPermission   = "view_role_users_permission"
 )
 
-func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
-	opPerm := map[svcutil.Operation]svcutil.Permission{
+func NewOperationPermissionMap() map[Operation]Permission {
+	opPerm := map[Operation]Permission{
 		OpViewClient:            readPermission,
 		OpUpdateClient:          updatePermission,
 		OpUpdateClientTags:      updatePermission,
@@ -126,23 +120,77 @@ func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 	return opPerm
 }
 
-func NewRolesOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
-	opPerm := map[svcutil.Operation]svcutil.Permission{
-		roles.OpAddRole:                manageRolePermission,
-		roles.OpRemoveRole:             manageRolePermission,
-		roles.OpUpdateRoleName:         manageRolePermission,
-		roles.OpRetrieveRole:           manageRolePermission,
-		roles.OpRetrieveAllRoles:       manageRolePermission,
-		roles.OpRoleAddActions:         manageRolePermission,
-		roles.OpRoleListActions:        manageRolePermission,
-		roles.OpRoleCheckActionsExists: manageRolePermission,
-		roles.OpRoleRemoveActions:      manageRolePermission,
-		roles.OpRoleRemoveAllActions:   manageRolePermission,
-		roles.OpRoleAddMembers:         addRoleUsersPermission,
-		roles.OpRoleListMembers:        viewRoleUsersPermission,
-		roles.OpRoleCheckMembersExists: viewRoleUsersPermission,
-		roles.OpRoleRemoveMembers:      removeRoleUsersPermission,
-		roles.OpRoleRemoveAllMembers:   manageRolePermission,
+const (
+	OpAddRole Operation = iota
+	OpRemoveRole
+	OpUpdateRoleName
+	OpRetrieveRole
+	OpRetrieveAllRoles
+	OpRoleAddActions
+	OpRoleListActions
+	OpRoleCheckActionsExists
+	OpRoleRemoveActions
+	OpRoleRemoveAllActions
+	OpRoleAddMembers
+	OpRoleListMembers
+	OpRoleCheckMembersExists
+	OpRoleRemoveMembers
+	OpRoleRemoveAllMembers
+)
+
+var rolesExpectedOperations = []Operation{
+	OpAddRole,
+	OpRemoveRole,
+	OpUpdateRoleName,
+	OpRetrieveRole,
+	OpRetrieveAllRoles,
+	OpRoleAddActions,
+	OpRoleListActions,
+	OpRoleCheckActionsExists,
+	OpRoleRemoveActions,
+	OpRoleRemoveAllActions,
+	OpRoleAddMembers,
+	OpRoleListMembers,
+	OpRoleCheckMembersExists,
+	OpRoleRemoveMembers,
+	OpRoleRemoveAllMembers,
+}
+
+var operationNames = []string{
+	"OpAddRole",
+	"OpRemoveRole",
+	"OpUpdateRoleName",
+	"OpRetrieveRole",
+	"OpRetrieveAllRoles",
+	"OpRoleAddActions",
+	"OpRoleListActions",
+	"OpRoleCheckActionsExists",
+	"OpRoleRemoveActions",
+	"OpRoleRemoveAllActions",
+	"OpRoleAddMembers",
+	"OpRoleListMembers",
+	"OpRoleCheckMembersExists",
+	"OpRoleRemoveMembers",
+	"OpRoleRemoveAllMembers",
+}
+
+func NewRolesOperationPermissionMap() map[Operation]Permission {
+	opPerm := map[Operation]Permission{
+		OpAddRole:                manageRolePermission,
+		OpRemoveRole:             manageRolePermission,
+		OpUpdateRoleName:         manageRolePermission,
+		OpRetrieveRole:           manageRolePermission,
+		OpRetrieveAllRoles:       manageRolePermission,
+		OpRoleAddActions:         manageRolePermission,
+		OpRoleListActions:        manageRolePermission,
+		OpRoleCheckActionsExists: manageRolePermission,
+		OpRoleRemoveActions:      manageRolePermission,
+		OpRoleRemoveAllActions:   manageRolePermission,
+		OpRoleAddMembers:         addRoleUsersPermission,
+		OpRoleListMembers:        viewRoleUsersPermission,
+		OpRoleCheckMembersExists: viewRoleUsersPermission,
+		OpRoleRemoveMembers:      removeRoleUsersPermission,
+		OpRoleRemoveAllMembers:   manageRolePermission,
 	}
 	return opPerm
 }
@@ -159,8 +207,8 @@ const (
 	channelsDisconnectClientPermission = "connect_to_client_permission"
 )
 
-func NewExternalOperationPermissionMap() map[svcutil.ExternalOperation]svcutil.Permission {
-	extOpPerm := map[svcutil.ExternalOperation]svcutil.Permission{
+func NewExternalOperationPermissionMap() map[ExternalOperation]Permission {
+	extOpPerm := map[ExternalOperation]Permission{
 		DomainOpCreateClient:        domainCreateClientPermission,
 		DomainOpListClients:         domainListClientsPermission,
 		GroupOpSetChildClient:       groupSetChildClientPermission,
