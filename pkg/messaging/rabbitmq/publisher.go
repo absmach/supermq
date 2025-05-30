@@ -6,7 +6,6 @@ package rabbitmq
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/absmach/supermq/pkg/messaging"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -61,10 +60,6 @@ func (pub *publisher) Publish(ctx context.Context, topic string, msg *messaging.
 	}
 
 	subject := fmt.Sprintf("%s.%s", pub.prefix, topic)
-	if msg.GetSubtopic() != "" {
-		subject = fmt.Sprintf("%s.%s", subject, msg.GetSubtopic())
-	}
-	subject = formatTopic(subject)
 
 	err = pub.channel.PublishWithContext(
 		ctx,
@@ -87,8 +82,4 @@ func (pub *publisher) Publish(ctx context.Context, topic string, msg *messaging.
 
 func (pub *publisher) Close() error {
 	return pub.conn.Close()
-}
-
-func formatTopic(topic string) string {
-	return strings.ReplaceAll(topic, ">", "#")
 }

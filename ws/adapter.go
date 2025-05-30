@@ -5,7 +5,6 @@ package ws
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
@@ -16,8 +15,6 @@ import (
 	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/pkg/policies"
 )
-
-const chansPrefix = "channels"
 
 var (
 	// ErrFailedSubscription indicates that client couldn't subscribe to specified channel.
@@ -67,11 +64,9 @@ func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientKey, 
 		return svcerr.ErrAuthorization
 	}
 
-	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
-	if subtopic != "" {
-		subject = fmt.Sprintf("%s.%s", subject, subtopic)
-	}
+	c.id = clientID
 
+	subject := messaging.EncodeToInternalSubject(domainID, chanID, subtopic)
 	subCfg := messaging.SubscriberConfig{
 		ID:       sessionID,
 		ClientID: clientID,
@@ -79,17 +74,14 @@ func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientKey, 
 		Handler:  c,
 	}
 	if err := svc.pubsub.Subscribe(ctx, subCfg); err != nil {
-		return ErrFailedSubscription
+		return errors.Wrap(ErrFailedSubscription, err)
 	}
 
 	return nil
 }
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string) error {
-	topic := fmt.Sprintf("%s.%s", chansPrefix, chanID)
-	if subtopic != "" {
-		topic = fmt.Sprintf("%s.%s", topic, subtopic)
-	}
+	topic := messaging.EncodeToInternalSubject(domainID, chanID, subtopic)
 
 	if err := svc.pubsub.Unsubscribe(ctx, sessionID, topic); err != nil {
 		return errors.Wrap(ErrFailedSubscribe, err)

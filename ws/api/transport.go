@@ -45,6 +45,5 @@ func MakeHandler(ctx context.Context, svc ws.Service, l *slog.Logger, instanceID
 
 	mux.Get("/health", supermq.Health(service, instanceID))
 	mux.Handle("/metrics", promhttp.Handler())
-
 	return mux
 }

@@ -9,8 +9,6 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"net/url"
-	"regexp"
 	"strings"
 	"time"
 
@@ -33,18 +31,9 @@ const (
 	startObserve = 0 // observe option value that indicates start of observation
 )
 
-var channelPartRegExp = regexp.MustCompile(`^/m/([\w\-]+)/c/([\w\-]+)(/[^?]*)?(\?.*)?$`)
-
-const (
-	numGroups    = 4 // entire expression+ domain group + channel group + subtopic group
-	domainGroup  = 1 // domain group is first in channel regexp
-	channelGroup = 3 // channel group is third in channel regexp
-)
-
 var (
-	errMalformedSubtopic = errors.New("malformed subtopic")
-	errBadOptions        = errors.New("bad options")
-	errMethodNotAllowed  = errors.New("method not allowed")
+	errBadOptions       = errors.New("bad options")
+	errMethodNotAllowed = errors.New("method not allowed")
 )
 
 var (
@@ -133,7 +122,7 @@ func handleGet(m *mux.Message, w mux.ResponseWriter, msg *messaging.Message, key
 	if obs == startObserve {
 		c := coap.NewClient(w.Conn(), m.Token(), logger)
 		w.Conn().AddOnClose(func() {
-			_ = service.DisconnectHandler(context.Background(), msg.GetChannel(), msg.GetSubtopic(), c.Token())
+			_ = service.DisconnectHandler(context.Background(), msg.GetDomain(), msg.GetChannel(), msg.GetSubtopic(), c.Token())
 		})
 		return service.Subscribe(w.Conn().Context(), key, msg.GetDomain(), msg.GetChannel(), msg.GetSubtopic(), c)
 	}
@@ -148,20 +137,23 @@ func decodeMessage(msg *mux.Message) (*messaging.Message, error) {
 	if err != nil {
 		return &messaging.Message{}, err
 	}
-	channelParts := channelPartRegExp.FindStringSubmatch(path)
-	if len(channelParts) < numGroups {
-		return &messaging.Message{}, errMalformedSubtopic
-	}
 
-	st, err := parseSubtopic(channelParts[channelGroup])
+	var domainID, channelID, subTopic string
+	switch msg.Code() {
+	case codes.GET:
+		domainID, channelID, subTopic, err = messaging.ParseSubscribeTopic(path)
+	case codes.POST:
+		domainID, channelID, subTopic, err = messaging.ParsePublishTopic(path)
+	}
 	if err != nil {
 		return &messaging.Message{}, err
 	}
+
 	ret := &messaging.Message{
 		Protocol: protocol,
-		Domain:   channelParts[domainGroup],
-		Channel:  channelParts[2],
-		Subtopic: st,
+		Domain:   domainID,
+		Channel:  channelID,
+		Subtopic: subTopic,
 		Payload:  []byte{},
 		Created:  time.Now().UnixNano(),
 	}
@@ -186,33 +178,4 @@ func parseKey(msg *mux.Message) (string, error) {
 		return "", svcerr.ErrAuthorization
 	}
 	return vars[1], nil
-}
-
-func parseSubtopic(subtopic string) (string, error) {
-	if subtopic == "" {
-		return subtopic, nil
-	}
-
-	subtopic, err := url.QueryUnescape(subtopic)
-	if err != nil {
-		return "", errMalformedSubtopic
-	}
-	subtopic = strings.ReplaceAll(subtopic, "/", ".")
-
-	elems := strings.Split(subtopic, ".")
-	filteredElems := []string{}
-	for _, elem := range elems {
-		if elem == "" {
-			continue
-		}
-
-		if len(elem) > 1 && (strings.Contains(elem, "*") || strings.Contains(elem, ">")) {
-			return "", errMalformedSubtopic
-		}
-
-		filteredElems = append(filteredElems, elem)
-	}
-
-	subtopic = strings.Join(filteredElems, ".")
-	return subtopic, nil
 }

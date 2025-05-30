@@ -10,20 +10,14 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"net/url"
-	"regexp"
-	"strings"
 
 	"github.com/absmach/supermq/pkg/errors"
+	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/ws"
 	"github.com/go-chi/chi/v5"
 )
 
-var (
-	channelPartRegExp = regexp.MustCompile(`^\/?m\/([\w\-]+)\/c\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
-
-	errGenSessionID = errors.New("failed to generate session id")
-)
+var errGenSessionID = errors.New("failed to generate session id")
 
 func generateSessionID() (string, error) {
 	b := make([]byte, 32)
@@ -35,7 +29,7 @@ func generateSessionID() (string, error) {
 
 func handshake(ctx context.Context, svc ws.Service, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req, err := decodeRequest(r)
+		req, err := decodeRequest(r, logger)
 		if err != nil {
 			encodeError(w, err)
 			return
@@ -71,7 +65,7 @@ func handshake(ctx context.Context, svc ws.Service, logger *slog.Logger) http.Ha
 	}
 }
 
-func decodeRequest(r *http.Request) (connReq, error) {
+func decodeRequest(r *http.Request, logger *slog.Logger) (connReq, error) {
 	authKey := r.Header.Get("Authorization")
 	if authKey == "" {
 		authKeys := r.URL.Query()["authorization"]
@@ -91,51 +85,17 @@ func decodeRequest(r *http.Request) (connReq, error) {
 		domainID:  domainID,
 	}
 
-	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
-	if len(channelParts) < 3 {
-		logger.Warn("Empty channel id or malformed url")
-		return connReq{}, errors.ErrMalformedEntity
-	}
+	subTopic := chi.URLParam(r, "*")
 
-	subtopic, err := parseSubTopic(channelParts[3])
-	if err != nil {
-		return connReq{}, err
+	if subTopic != "" {
+		subTopic, err := messaging.ParseSubscribeSubtopic(subTopic)
+		if err != nil {
+			return connReq{}, err
+		}
+		req.subtopic = subTopic
 	}
-
-	req.subtopic = subtopic
 
 	return req, nil
-}
-
-func parseSubTopic(subtopic string) (string, error) {
-	if subtopic == "" {
-		return subtopic, nil
-	}
-
-	subtopic, err := url.QueryUnescape(subtopic)
-	if err != nil {
-		return "", errMalformedSubtopic
-	}
-
-	subtopic = strings.ReplaceAll(subtopic, "/", ".")
-
-	elems := strings.Split(subtopic, ".")
-	filteredElems := []string{}
-	for _, elem := range elems {
-		if elem == "" {
-			continue
-		}
-
-		if len(elem) > 1 && (strings.Contains(elem, "*") || strings.Contains(elem, ">")) {
-			return "", errMalformedSubtopic
-		}
-
-		filteredElems = append(filteredElems, elem)
-	}
-
-	subtopic = strings.Join(filteredElems, ".")
-
-	return subtopic, nil
 }
 
 func encodeError(w http.ResponseWriter, err error) {

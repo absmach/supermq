@@ -5,14 +5,12 @@ package events
 
 import (
 	"context"
-	"net/url"
-	"regexp"
-	"strings"
 
 	"github.com/absmach/mgate/pkg/session"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/absmach/supermq/pkg/events"
 	"github.com/absmach/supermq/pkg/events/store"
+	"github.com/absmach/supermq/pkg/messaging"
 )
 
 const (
@@ -22,11 +20,7 @@ const (
 	disconnectStream = supermqPrefix + clientDisconnect
 )
 
-var (
-	errFailedSession  = errors.New("failed to obtain session from context")
-	errMalformedTopic = errors.New("malformed topic")
-	channelRegExp     = regexp.MustCompile(`^\/?m\/([\w\-]+)\/c\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
-)
+var errFailedSession = errors.New("failed to obtain session from context")
 
 // EventStore is a struct used to store event streams in Redis.
 type eventStore struct {
@@ -96,16 +90,17 @@ func (es *eventStore) Subscribe(ctx context.Context, topics *[]string) error {
 	}
 
 	for _, topic := range *topics {
-		channelID, subtopic, err := parseTopic(topic)
+		domainID, channelID, subTopic, err := messaging.ParseSubscribeTopic(topic)
 		if err != nil {
 			return err
 		}
 		ev := subscribeEvent{
 			operation:    clientSubscribe,
 			clientID:     s.Username,
+			domainID:     domainID,
 			channelID:    channelID,
+			subtopic:     subTopic,
 			subscriberID: s.ID,
-			subtopic:     subtopic,
 		}
 
 		if err := es.ep.Publish(ctx, subscribeStream, ev); err != nil {
@@ -138,42 +133,4 @@ func (es *eventStore) Disconnect(ctx context.Context) error {
 	}
 
 	return es.ep.Publish(ctx, disconnectStream, ev)
-}
-
-func parseTopic(topic string) (string, string, error) {
-	channelParts := channelRegExp.FindStringSubmatch(topic)
-	if len(channelParts) < 3 {
-		return "", "", errMalformedTopic
-	}
-
-	chanID := channelParts[2]
-	subtopic := channelParts[3]
-
-	if subtopic == "" {
-		return chanID, subtopic, nil
-	}
-
-	subtopic, err := url.QueryUnescape(subtopic)
-	if err != nil {
-		return "", "", errMalformedTopic
-	}
-	subtopic = strings.ReplaceAll(subtopic, "/", ".")
-
-	elems := strings.Split(subtopic, ".")
-	filteredElems := []string{}
-	for _, elem := range elems {
-		if elem == "" {
-			continue
-		}
-
-		if len(elem) > 1 && (strings.Contains(elem, "*") || strings.Contains(elem, ">")) {
-			return "", "", errMalformedTopic
-		}
-
-		filteredElems = append(filteredElems, elem)
-	}
-
-	subtopic = strings.Join(filteredElems, ".")
-
-	return chanID, subtopic, nil
 }

@@ -35,10 +35,11 @@ const (
 
 // Client handles messaging and websocket connection.
 type Client struct {
-	logger *slog.Logger
-	conn   *websocket.Conn
-	id     string
-	msg    chan *messaging.Message
+	logger       *slog.Logger
+	conn         *websocket.Conn
+	id           string
+	msg          chan *messaging.Message
+	handledClose bool
 }
 
 // NewClient returns a new websocket client.
@@ -60,6 +61,20 @@ func (c *Client) Cancel() error {
 	return c.conn.Close()
 }
 
+// Close handles the websocket connection after unsubscribing.
+func (c *Client) Close() error {
+	err := c.conn.Close()
+	if err != nil {
+		c.logger.Debug("failed to close websocket client", slog.String("session_id", c.id), slog.String("error", err.Error()))
+	}
+	ch := c.conn.CloseHandler()
+	err = ch(0, "")
+	if err != nil {
+		c.logger.Debug("failed to execute websocket connection close handler", slog.String("session_id", c.id), slog.String("error", err.Error()))
+	}
+	return nil
+}
+
 // Handle handles the sending and receiving of messages via the broker.
 func (c *Client) Handle(msg *messaging.Message) error {
 	select {
@@ -79,22 +94,34 @@ func (c *Client) readPump(ctx context.Context, cancel context.CancelFunc) error 
 		}
 		return nil
 	})
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- c.readMessage()
+	}()
+
 	for {
 		select {
 		case <-ctx.Done():
 			c.logger.Debug("read_pump: received context Done")
 			return nil
-		default:
-			msgType, msg, err := c.conn.ReadMessage()
-			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					c.logger.Debug("read_pump: unexpected close error", slog.String("error", err.Error()))
-					return nil
-				}
-				return errors.Wrap(errReadMsg, err)
-			}
-			c.logger.Debug("read_pump: received message ", slog.Int("message_type", msgType), slog.String("message", string(msg)))
+		case err := <-errCh:
+			return err
 		}
+	}
+}
+
+func (c *Client) readMessage() error {
+	for {
+		msgType, msg, err := c.conn.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				c.logger.Debug("read_pump: unexpected close error", slog.String("error", err.Error()))
+				return nil
+			}
+			return errors.Wrap(errReadMsg, err)
+		}
+		c.logger.Debug("read_pump: received message ", slog.Int("message_type", msgType), slog.String("message", string(msg)))
 	}
 }
 
@@ -102,15 +129,13 @@ func (c *Client) writePump(ctx context.Context, cancel context.CancelFunc) error
 	defer cancel()
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
-	if err := c.conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
-		return err
-	}
 	for {
 		select {
 		case <-ctx.Done():
 			c.logger.Debug("write_pump: received context Done ")
 			return nil
 		case msg, ok := <-c.msg:
+			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				if err := c.conn.WriteMessage(websocket.CloseMessage, []byte{}); err != nil {
 					return errors.Wrap(errHandlerClosedMsgChan, err)
@@ -121,7 +146,7 @@ func (c *Client) writePump(ctx context.Context, cancel context.CancelFunc) error
 				return errors.Wrap(errFailedToWriteMsg, err)
 			}
 		case <-ticker.C:
-			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+			if err := c.conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(writeWait)); err != nil {
 				return errors.Wrap(errFailedToWritePing, err)
 			}
 		}
@@ -131,15 +156,18 @@ func (c *Client) writePump(ctx context.Context, cancel context.CancelFunc) error
 // SetCloseHandler sets a close handler for the WebSocket connection.
 func (c *Client) SetCloseHandler(handler func(code int, text string) error) {
 	c.conn.SetCloseHandler(func(code int, text string) error {
-		c.logger.Debug("WebSocket closed", slog.String("session_id", c.id), slog.Int("code", code), slog.String("text", text))
-		if err := handler(code, text); err != nil {
-			c.logger.Warn("Error in close handler", slog.String("error", err.Error()))
+		if !c.handledClose {
+			if err := handler(code, text); err != nil {
+				c.logger.Warn("Error in close handler", slog.String("error", err.Error()))
+			}
+			c.handledClose = true
 		}
 		return nil
 	})
 }
 
 func (c *Client) Start(ctx context.Context) {
+	defer c.Close()
 	ctx, cancel := context.WithCancel(ctx)
 	g, ctx := errgroup.WithContext(ctx)
 

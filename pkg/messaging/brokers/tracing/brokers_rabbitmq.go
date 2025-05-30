@@ -15,9 +15,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// SubjectAllChannels represents subject to subscribe for all the channels.
-const SubjectAllChannels = "channels.#"
-
 func init() {
 	log.Println("The binary was build using RabbitMQ as the message broker")
 }

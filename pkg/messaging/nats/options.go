@@ -16,9 +16,9 @@ var (
 	ErrInvalidType = errors.New("invalid type")
 
 	jsStreamConfig = jetstream.StreamConfig{
-		Name:              "channels",
+		Name:              "m",
 		Description:       "SuperMQ stream for sending and receiving messages in between SuperMQ channels",
-		Subjects:          []string{"channels.>"},
+		Subjects:          []string{"m.>"},
 		Retention:         jetstream.LimitsPolicy,
 		MaxMsgsPerSubject: 1e6,
 		MaxAge:            time.Hour * 24,
@@ -28,7 +28,7 @@ var (
 	}
 )
 
-const chansPrefix = "channels"
+const msgPrefix = "m"
 
 type options struct {
 	prefix         string
@@ -37,7 +37,7 @@ type options struct {
 
 func defaultOptions() options {
 	return options{
-		prefix:         chansPrefix,
+		prefix:         msgPrefix,
 		jsStreamConfig: jsStreamConfig,
 	}
 }

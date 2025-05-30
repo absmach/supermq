@@ -21,6 +21,7 @@ import (
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/pkg/messaging/mocks"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/stretchr/testify/assert"
@@ -192,7 +193,7 @@ func TestAuthPublish(t *testing.T) {
 		{
 			desc:    "publish with malformed topic",
 			session: &sessionClient,
-			err:     mqtt.ErrMalformedTopic,
+			err:     messaging.ErrMalformedTopic,
 			topic:   &invalidTopic,
 			payload: payload,
 		},
@@ -254,7 +255,7 @@ func TestAuthSubscribe(t *testing.T) {
 		{
 			desc:    "subscribe with invalid topics",
 			session: &sessionClient,
-			err:     mqtt.ErrMalformedTopic,
+			err:     messaging.ErrMalformedTopic,
 			topic:   &invalidTopics,
 		},
 		{
@@ -366,28 +367,28 @@ func TestPublish(t *testing.T) {
 			topic:   invalidTopic,
 			payload: payload,
 			logMsg:  fmt.Sprintf(mqtt.LogInfoPublished, clientID, invalidTopic),
-			err:     errors.Wrap(mqtt.ErrFailedPublish, mqtt.ErrMalformedTopic),
+			err:     errors.Wrap(mqtt.ErrFailedPublish, messaging.ErrMalformedTopic),
 		},
 		{
 			desc:    "publish with invalid channel ID",
 			session: &sessionClient,
 			topic:   invalidChannelIDTopic,
 			payload: payload,
-			err:     errors.Wrap(mqtt.ErrFailedPublish, mqtt.ErrMalformedTopic),
+			err:     errors.Wrap(mqtt.ErrFailedPublish, messaging.ErrMalformedTopic),
 		},
 		{
 			desc:    "publish with malformed subtopic",
 			session: &sessionClient,
 			topic:   malformedSubtopics,
 			payload: payload,
-			err:     errors.Wrap(mqtt.ErrFailedParseSubtopic, mqtt.ErrMalformedSubtopic),
+			err:     errors.Wrap(mqtt.ErrFailedPublish, errors.Wrap(messaging.ErrMalformedTopic, errors.Wrap(messaging.ErrMalformedSubtopic, errors.New("invalid URL escape \"%\"")))),
 		},
 		{
 			desc:    "publish with subtopic containing wrong character",
 			session: &sessionClient,
 			topic:   wrongCharSubtopics,
 			payload: payload,
-			err:     errors.Wrap(mqtt.ErrFailedParseSubtopic, mqtt.ErrMalformedSubtopic),
+			err:     errors.Wrap(mqtt.ErrFailedPublish, errors.Wrap(messaging.ErrMalformedTopic, messaging.ErrMalformedSubtopic)),
 		},
 		{
 			desc:    "publish with subtopic",
