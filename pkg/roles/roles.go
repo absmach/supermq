@@ -201,6 +201,7 @@ const (
 	OpRoleCheckMembersExists
 	OpRoleRemoveMembers
 	OpRoleRemoveAllMembers
+	OpListAvailableActions
 )
 
 var expectedOperations = []svcutil.Operation{
@@ -221,7 +222,7 @@ var expectedOperations = []svcutil.Operation{
 	OpRoleRemoveAllMembers,
 }
 
-var operationNames = []string{
+var OperationNames = []string{
 	"OpAddRole",
 	"OpRemoveRole",
 	"OpUpdateRoleName",
@@ -237,8 +238,9 @@ var operationNames = []string{
 	"OpRoleCheckMembersExists",
 	"OpRoleRemoveMembers",
 	"OpRoleRemoveAllMembers",
+	"OpListAvailableActions",
 }
 
 func NewOperationPerm() svcutil.OperationPerm {
-	return svcutil.NewOperationPerm(expectedOperations, operationNames)
+	return svcutil.NewOperationPerm(expectedOperations, OperationNames)
 }

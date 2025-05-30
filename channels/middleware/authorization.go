@@ -78,7 +78,7 @@ func AuthorizationMiddleware(
 	if err := extOpp.Validate(); err != nil {
 		return nil, err
 	}
-	ram, err := rmMW.NewRoleManagerAuthorizationMiddleware(policies.ChannelType, svc, authz, rolesOpPerm)
+	ram, err := rmMW.NewRoleManagerAuthorizationMiddleware(policies.ChannelType, svc, authz, rolesOpPerm, callout)
 	if err != nil {
 		return nil, err
 	}

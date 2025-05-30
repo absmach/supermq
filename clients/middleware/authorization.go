@@ -65,7 +65,7 @@ func AuthorizationMiddleware(
 	if err := opp.Validate(); err != nil {
 		return nil, err
 	}
-	ram, err := rmMW.NewRoleManagerAuthorizationMiddleware(policies.ClientType, svc, authz, rolesOpPerm)
+	ram, err := rmMW.NewRoleManagerAuthorizationMiddleware(policies.ClientType, svc, authz, rolesOpPerm, callout)
 	if err != nil {
 		return nil, err
 	}
