@@ -30,6 +30,7 @@ var (
 
 type service struct {
 	repo       Repository
+	cache      Cache
 	policy     policies.Service
 	idProvider supermq.IDProvider
 	clients    grpcClientsV1.ClientsServiceClient
@@ -39,7 +40,7 @@ type service struct {
 
 var _ Service = (*service)(nil)
 
-func New(repo Repository, policy policies.Service, idProvider supermq.IDProvider, clients grpcClientsV1.ClientsServiceClient, groups grpcGroupsV1.GroupsServiceClient, sidProvider supermq.IDProvider, availableActions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action) (Service, error) {
+func New(repo Repository, cache Cache, policy policies.Service, idProvider supermq.IDProvider, clients grpcClientsV1.ClientsServiceClient, groups grpcGroupsV1.GroupsServiceClient, sidProvider supermq.IDProvider, availableActions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action) (Service, error) {
 	rpms, err := roles.NewProvisionManageService(policies.ChannelType, repo, policy, sidProvider, availableActions, builtInRoles)
 	if err != nil {
 		return nil, err
@@ -47,6 +48,7 @@ func New(repo Repository, policy policies.Service, idProvider supermq.IDProvider
 
 	return service{
 		repo:                   repo,
+		cache:                  cache,
 		policy:                 policy,
 		idProvider:             idProvider,
 		clients:                clients,
@@ -226,6 +228,11 @@ func (svc service) RemoveChannel(ctx context.Context, session authn.Session, id 
 	ch, err := svc.repo.ChangeStatus(ctx, Channel{ID: id, Status: DeletedStatus})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
+	}
+	if ch.Route != "" {
+		if err := svc.cache.Remove(ctx, ch.Route, ch.Domain); err != nil {
+			return errors.Wrap(svcerr.ErrRemoveEntity, err)
+		}
 	}
 
 	deletePolicies := []policies.Policy{

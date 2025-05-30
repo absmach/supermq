@@ -192,3 +192,15 @@ type Repository interface {
 
 	roles.Repository
 }
+
+// Cache contains channels caching interface.
+type Cache interface {
+	// Save stores the channelID for the given domain ID and channel route.
+	Save(ctx context.Context, channelRoute, domainID, channelID string) error
+
+	// ID retrieves the channelID for the given domain ID and channel route.
+	ID(ctx context.Context, channelRoute, domainID string) (string, error)
+
+	// Remove removes the channel ID for the given domain ID and channel route.
+	Remove(ctx context.Context, channelRoute, domainID string) error
+}
