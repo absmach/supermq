@@ -66,7 +66,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientKey, 
 
 	c.id = clientID
 
-	subject := messaging.EncodeToInternalSubject(domainID, chanID, subtopic)
+	subject := messaging.EncodeTopic(domainID, chanID, subtopic)
 	subCfg := messaging.SubscriberConfig{
 		ID:       sessionID,
 		ClientID: clientID,
@@ -81,7 +81,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientKey, 
 }
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string) error {
-	topic := messaging.EncodeToInternalSubject(domainID, chanID, subtopic)
+	topic := messaging.EncodeTopic(domainID, chanID, subtopic)
 
 	if err := svc.pubsub.Unsubscribe(ctx, sessionID, topic); err != nil {
 		return errors.Wrap(ErrFailedSubscribe, err)

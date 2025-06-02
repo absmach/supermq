@@ -84,7 +84,7 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 
 	msg.Publisher = authnRes.GetId()
 
-	return svc.pubsub.Publish(ctx, msg.EncodeToInternalSubjectSuffix(), msg)
+	return svc.pubsub.Publish(ctx, msg.EncodeTopicSuffix(), msg)
 }
 
 func (svc *adapterService) Subscribe(ctx context.Context, key, domainID, chanID, subtopic string, c Client) error {
@@ -113,7 +113,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, domainID, chanID,
 		return svcerr.ErrAuthorization
 	}
 
-	subject := messaging.EncodeToInternalSubject(domainID, chanID, subtopic)
+	subject := messaging.EncodeTopic(domainID, chanID, subtopic)
 	authzc := newAuthzClient(clientID, domainID, chanID, subtopic, svc.channels, c)
 	subCfg := messaging.SubscriberConfig{
 		ID:       c.Token(),
@@ -149,13 +149,13 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, key, domainID, chanI
 		return svcerr.ErrAuthorization
 	}
 
-	subject := messaging.EncodeToInternalSubject(domainID, chanID, subtopic)
+	subject := messaging.EncodeTopic(domainID, chanID, subtopic)
 
 	return svc.pubsub.Unsubscribe(ctx, token, subject)
 }
 
 func (svc *adapterService) DisconnectHandler(ctx context.Context, domainID, chanID, subtopic, token string) error {
-	subject := messaging.EncodeToInternalSubject(domainID, chanID, subtopic)
+	subject := messaging.EncodeTopic(domainID, chanID, subtopic)
 
 	return svc.pubsub.Unsubscribe(ctx, token, subject)
 }

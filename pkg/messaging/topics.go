@@ -26,20 +26,21 @@ var (
 	ErrMalformedTopic    = errors.New("malformed topic")
 	ErrMalformedSubtopic = errors.New("malformed subtopic")
 	// Regex to group topic in format m.<domain_id>.c.<channel_id>.<sub_topic> `^\/?m\/([\w\-]+)\/c\/([\w\-]+)(\/[^?]*)?(\?.*)?$`.
-	msgTopicRegExp = regexp.MustCompile(`^\/?` + MsgTopicPrefix + `\/([\w\-]+)\/` + ChannelTopicPrefix + `\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
+	msgTopicRegExp             = regexp.MustCompile(`^\/?` + MsgTopicPrefix + `\/([\w\-]+)\/` + ChannelTopicPrefix + `\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
+	pubSubTopicNotAllowedChars = []string{" ", "#", "+", "*", ">"}
+	subSubTopicNotAllowedChars = []string{" ", "#", "+"}
 )
 
-func ParsePublishTopic(topic string) (string, string, string, error) {
+func ParsePublishTopic(topic string) (domainID, chanID, subtopic string, err error) {
 	msgParts := msgTopicRegExp.FindStringSubmatch(topic)
 	if len(msgParts) < numGroups {
 		return "", "", "", ErrMalformedTopic
 	}
 
-	domainID := msgParts[domainGroup]
-	chanID := msgParts[channelGroup]
-	subtopic := msgParts[subtopicGroup]
+	domainID = msgParts[domainGroup]
+	chanID = msgParts[channelGroup]
+	subtopic = msgParts[subtopicGroup]
 
-	var err error
 	subtopic, err = ParsePublishSubtopic(subtopic)
 	if err != nil {
 		return "", "", "", errors.Wrap(ErrMalformedTopic, err)
@@ -48,46 +49,36 @@ func ParsePublishTopic(topic string) (string, string, string, error) {
 	return domainID, chanID, subtopic, nil
 }
 
-func ParsePublishSubtopic(subtopic string) (string, error) {
+func ParsePublishSubtopic(subtopic string) (parseSubTopic string, err error) {
 	if subtopic == "" {
 		return subtopic, nil
 	}
 
-	subtopic, err := url.QueryUnescape(subtopic)
+	subtopic, err = url.QueryUnescape(subtopic)
 	if err != nil {
 		return "", errors.Wrap(ErrMalformedSubtopic, err)
 	}
 	subtopic = strings.ReplaceAll(subtopic, "/", ".")
 
-	elems := strings.Split(subtopic, ".")
-	filteredElems := []string{}
-	for _, elem := range elems {
-		if elem == "" {
-			continue
-		}
-
-		if strings.Contains(elem, " ") || strings.Contains(elem, "#") || strings.Contains(elem, "+") || strings.Contains(elem, "*") || strings.Contains(elem, ">") {
+	for _, psnaChars := range pubSubTopicNotAllowedChars {
+		if strings.Contains(subtopic, psnaChars) {
 			return "", ErrMalformedSubtopic
 		}
-
-		filteredElems = append(filteredElems, elem)
 	}
 
-	subtopic = strings.Join(filteredElems, ".")
 	return subtopic, nil
 }
 
-func ParseSubscribeTopic(topic string) (string, string, string, error) {
+func ParseSubscribeTopic(topic string) (domainID string, chanID string, subtopic string, err error) {
 	msgParts := msgTopicRegExp.FindStringSubmatch(topic)
 	if len(msgParts) < numGroups {
 		return "", "", "", ErrMalformedTopic
 	}
 
-	domainID := msgParts[domainGroup]
-	chanID := msgParts[channelGroup]
-	subtopic := msgParts[subtopicGroup]
+	domainID = msgParts[domainGroup]
+	chanID = msgParts[channelGroup]
+	subtopic = msgParts[subtopicGroup]
 
-	var err error
 	subtopic, err = ParseSubscribeSubtopic(subtopic)
 	if err != nil {
 		return "", "", "", errors.Wrap(ErrMalformedTopic, err)
@@ -104,29 +95,21 @@ func ParseSubscribeSubtopic(subtopic string) (string, error) {
 	subtopic = strings.ReplaceAll(subtopic, "/", ".")
 	subtopic = strings.ReplaceAll(subtopic, "+", "*")
 	subtopic = strings.ReplaceAll(subtopic, "#", ">")
-	elems := strings.Split(subtopic, ".")
-	filteredElems := []string{}
-	for _, elem := range elems {
-		if elem == "" {
-			continue
-		}
 
-		if strings.Contains(elem, " ") || (len(elem) > 1 && (strings.Contains(elem, "#") || strings.Contains(elem, "+") || strings.Contains(elem, "*") || strings.Contains(elem, ">"))) {
+	for _, ssnaChars := range subSubTopicNotAllowedChars {
+		if strings.Contains(subtopic, ssnaChars) {
 			return "", ErrMalformedSubtopic
 		}
-
-		filteredElems = append(filteredElems, elem)
 	}
 
-	subtopic = strings.Join(filteredElems, ".")
 	return subtopic, nil
 }
 
-func EncodeToInternalSubject(domainID string, channelID string, subtopic string) string {
-	return fmt.Sprintf("%s.%s", MsgTopicPrefix, EncodeToInternalSubjectSuffix(domainID, channelID, subtopic))
+func EncodeTopic(domainID string, channelID string, subtopic string) string {
+	return fmt.Sprintf("%s.%s", MsgTopicPrefix, EncodeTopicSuffix(domainID, channelID, subtopic))
 }
 
-func EncodeToInternalSubjectSuffix(domainID string, channelID string, subtopic string) string {
+func EncodeTopicSuffix(domainID string, channelID string, subtopic string) string {
 	subject := fmt.Sprintf("%s.%s.%s", domainID, ChannelTopicPrefix, channelID)
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
@@ -134,12 +117,8 @@ func EncodeToInternalSubjectSuffix(domainID string, channelID string, subtopic s
 	return subject
 }
 
-func (m *Message) EncodeToInternalSubject() string {
-	return EncodeToInternalSubject(m.GetDomain(), m.GetChannel(), m.GetSubtopic())
-}
-
-func (m *Message) EncodeToInternalSubjectSuffix() string {
-	return EncodeToInternalSubjectSuffix(m.GetDomain(), m.GetChannel(), m.GetSubtopic())
+func (m *Message) EncodeTopicSuffix() string {
+	return EncodeTopicSuffix(m.GetDomain(), m.GetChannel(), m.GetSubtopic())
 }
 
 func (m *Message) EncodeToMQTTTopic() string {
