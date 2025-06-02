@@ -26,9 +26,9 @@ var (
 	ErrMalformedTopic    = errors.New("malformed topic")
 	ErrMalformedSubtopic = errors.New("malformed subtopic")
 	// Regex to group topic in format m.<domain_id>.c.<channel_id>.<sub_topic> `^\/?m\/([\w\-]+)\/c\/([\w\-]+)(\/[^?]*)?(\?.*)?$`.
-	msgTopicRegExp             = regexp.MustCompile(`^\/?` + MsgTopicPrefix + `\/([\w\-]+)\/` + ChannelTopicPrefix + `\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
-	pubSubTopicNotAllowedChars = []string{" ", "#", "+", "*", ">"}
-	subSubTopicNotAllowedChars = []string{" ", "#", "+"}
+	msgTopicRegExp              = regexp.MustCompile(`^\/?` + MsgTopicPrefix + `\/([\w\-]+)\/` + ChannelTopicPrefix + `\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
+	subTopicNotAllowedWildCards = []rune{'*', '>'}
+	subTopicNotAllowedChars     = []rune{' ', '#', '+'}
 )
 
 func ParsePublishTopic(topic string) (domainID, chanID, subtopic string, err error) {
@@ -54,14 +54,13 @@ func ParsePublishSubtopic(subtopic string) (parseSubTopic string, err error) {
 		return subtopic, nil
 	}
 
-	subtopic, err = url.QueryUnescape(subtopic)
+	subtopic, err = formatSubTopic(subtopic)
 	if err != nil {
 		return "", errors.Wrap(ErrMalformedSubtopic, err)
 	}
-	subtopic = strings.ReplaceAll(subtopic, "/", ".")
 
-	for _, psnaChars := range pubSubTopicNotAllowedChars {
-		if strings.Contains(subtopic, psnaChars) {
+	for _, snaChars := range append(subTopicNotAllowedChars, subTopicNotAllowedWildCards...) {
+		if strings.ContainsRune(subtopic, snaChars) {
 			return "", ErrMalformedSubtopic
 		}
 	}
@@ -78,7 +77,6 @@ func ParseSubscribeTopic(topic string) (domainID string, chanID string, subtopic
 	domainID = msgParts[domainGroup]
 	chanID = msgParts[channelGroup]
 	subtopic = msgParts[subtopicGroup]
-
 	subtopic, err = ParseSubscribeSubtopic(subtopic)
 	if err != nil {
 		return "", "", "", errors.Wrap(ErrMalformedTopic, err)
@@ -87,21 +85,55 @@ func ParseSubscribeTopic(topic string) (domainID string, chanID string, subtopic
 	return domainID, chanID, subtopic, nil
 }
 
-func ParseSubscribeSubtopic(subtopic string) (string, error) {
+func ParseSubscribeSubtopic(subtopic string) (parseSubTopic string, err error) {
 	if subtopic == "" {
 		return subtopic, nil
 	}
 
-	subtopic = strings.ReplaceAll(subtopic, "/", ".")
 	subtopic = strings.ReplaceAll(subtopic, "+", "*")
 	subtopic = strings.ReplaceAll(subtopic, "#", ">")
 
-	for _, ssnaChars := range subSubTopicNotAllowedChars {
-		if strings.Contains(subtopic, ssnaChars) {
-			return "", ErrMalformedSubtopic
-		}
+	subtopic, err = formatSubTopic(subtopic)
+	if err != nil {
+		return "", errors.Wrap(ErrMalformedSubtopic, err)
 	}
 
+	elems := strings.Split(subtopic, ".")
+	filteredElems := []string{}
+	for _, elem := range elems {
+		switch len(elem) {
+		case 0:
+			continue
+		case 1:
+			for _, snaChars := range subTopicNotAllowedChars {
+				if strings.ContainsRune(elem, snaChars) {
+					return "", ErrMalformedSubtopic
+				}
+			}
+		default:
+			for _, snaChars := range append(subTopicNotAllowedChars, subTopicNotAllowedWildCards...) {
+				if strings.ContainsRune(elem, snaChars) {
+					return "", ErrMalformedSubtopic
+				}
+			}
+		}
+		filteredElems = append(filteredElems, elem)
+	}
+
+	subtopic = strings.Join(filteredElems, ".")
+
+	return subtopic, nil
+}
+
+func formatSubTopic(subtopic string) (string, error) {
+	subtopic, err := url.QueryUnescape(subtopic)
+	if err != nil {
+		return "", err
+	}
+	subtopic = strings.TrimPrefix(subtopic, "/")
+	subtopic = strings.TrimSuffix(subtopic, "/")
+	subtopic = strings.TrimSpace(subtopic)
+	subtopic = strings.ReplaceAll(subtopic, "/", ".")
 	return subtopic, nil
 }
 
