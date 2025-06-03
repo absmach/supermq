@@ -26,13 +26,16 @@ var (
 	ErrMalformedTopic    = errors.New("malformed topic")
 	ErrMalformedSubtopic = errors.New("malformed subtopic")
 	// Regex to group topic in format m.<domain_id>.c.<channel_id>.<sub_topic> `^\/?m\/([\w\-]+)\/c\/([\w\-]+)(\/[^?]*)?(\?.*)?$`.
-	msgTopicRegExp              = regexp.MustCompile(`^\/?` + MsgTopicPrefix + `\/([\w\-]+)\/` + ChannelTopicPrefix + `\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
-	subTopicNotAllowedWildCards = []rune{'*', '>'}
-	subTopicNotAllowedChars     = []rune{' ', '#', '+'}
+	topicRegExp          = regexp.MustCompile(`^\/?` + MsgTopicPrefix + `\/([\w\-]+)\/` + ChannelTopicPrefix + `\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
+	mqWildcards          = "+#"
+	wildcards            = "*>"
+	subtopicInvalidChars = " #+"
+	wildcardsReplacer    = strings.NewReplacer("+", "*", "#", ">")
+	pathReplacer         = strings.NewReplacer("/", ".")
 )
 
 func ParsePublishTopic(topic string) (domainID, chanID, subtopic string, err error) {
-	msgParts := msgTopicRegExp.FindStringSubmatch(topic)
+	msgParts := topicRegExp.FindStringSubmatch(topic)
 	if len(msgParts) < numGroups {
 		return "", "", "", ErrMalformedTopic
 	}
@@ -54,22 +57,24 @@ func ParsePublishSubtopic(subtopic string) (parseSubTopic string, err error) {
 		return subtopic, nil
 	}
 
-	subtopic, err = formatSubTopic(subtopic)
+	subtopic, err = formatSubtopic(subtopic)
 	if err != nil {
 		return "", errors.Wrap(ErrMalformedSubtopic, err)
 	}
 
-	for _, snaChars := range append(subTopicNotAllowedChars, subTopicNotAllowedWildCards...) {
-		if strings.ContainsRune(subtopic, snaChars) {
-			return "", ErrMalformedSubtopic
-		}
+	if strings.ContainsAny(subtopic, subtopicInvalidChars+wildcards) {
+		return "", ErrMalformedSubtopic
+	}
+
+	if strings.Contains(subtopic, "..") {
+		return "", ErrMalformedSubtopic
 	}
 
 	return subtopic, nil
 }
 
 func ParseSubscribeTopic(topic string) (domainID string, chanID string, subtopic string, err error) {
-	msgParts := msgTopicRegExp.FindStringSubmatch(topic)
+	msgParts := topicRegExp.FindStringSubmatch(topic)
 	if len(msgParts) < numGroups {
 		return "", "", "", ErrMalformedTopic
 	}
@@ -87,45 +92,34 @@ func ParseSubscribeTopic(topic string) (domainID string, chanID string, subtopic
 
 func ParseSubscribeSubtopic(subtopic string) (parseSubTopic string, err error) {
 	if subtopic == "" {
-		return subtopic, nil
+		return "", nil
 	}
 
-	subtopic = strings.ReplaceAll(subtopic, "+", "*")
-	subtopic = strings.ReplaceAll(subtopic, "#", ">")
-
-	subtopic, err = formatSubTopic(subtopic)
+	if strings.ContainsAny(subtopic, mqWildcards) {
+		subtopic = wildcardsReplacer.Replace(subtopic)
+	}
+	subtopic, err = formatSubtopic(subtopic)
 	if err != nil {
 		return "", errors.Wrap(ErrMalformedSubtopic, err)
 	}
 
-	elems := strings.Split(subtopic, ".")
-	filteredElems := []string{}
-	for _, elem := range elems {
-		switch len(elem) {
-		case 0:
-			continue
-		case 1:
-			for _, snaChars := range subTopicNotAllowedChars {
-				if strings.ContainsRune(elem, snaChars) {
-					return "", ErrMalformedSubtopic
-				}
-			}
-		default:
-			for _, snaChars := range append(subTopicNotAllowedChars, subTopicNotAllowedWildCards...) {
-				if strings.ContainsRune(elem, snaChars) {
-					return "", ErrMalformedSubtopic
-				}
-			}
-		}
-		filteredElems = append(filteredElems, elem)
+	if strings.ContainsAny(subtopic, subtopicInvalidChars) {
+		return "", ErrMalformedSubtopic
 	}
 
-	subtopic = strings.Join(filteredElems, ".")
+	if strings.Contains(subtopic, "..") {
+		return "", ErrMalformedSubtopic
+	}
 
+	for _, elem := range strings.Split(subtopic, ".") {
+		if len(elem) > 1 && strings.ContainsAny(elem, wildcards) {
+			return "", ErrMalformedSubtopic
+		}
+	}
 	return subtopic, nil
 }
 
-func formatSubTopic(subtopic string) (string, error) {
+func formatSubtopic(subtopic string) (string, error) {
 	subtopic, err := url.QueryUnescape(subtopic)
 	if err != nil {
 		return "", err
@@ -133,7 +127,7 @@ func formatSubTopic(subtopic string) (string, error) {
 	subtopic = strings.TrimPrefix(subtopic, "/")
 	subtopic = strings.TrimSuffix(subtopic, "/")
 	subtopic = strings.TrimSpace(subtopic)
-	subtopic = strings.ReplaceAll(subtopic, "/", ".")
+	subtopic = pathReplacer.Replace(subtopic)
 	return subtopic, nil
 }
 

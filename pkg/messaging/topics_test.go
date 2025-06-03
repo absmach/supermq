@@ -10,94 +10,126 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParsePublishTopic(t *testing.T) {
-	cases := []struct {
-		desc      string
-		topic     string
-		domainID  string
-		channelID string
-		subtopic  string
-		expectErr bool
-	}{
-		{
-			desc:      "valid topic with subtopic",
-			topic:     "/m/domain123/c/channel456/devices/temp",
-			domainID:  "domain123",
-			channelID: "channel456",
-			subtopic:  "devices.temp",
-		},
-		{
-			desc:      "valid topic with URL encoded subtopic",
-			topic:     "/m/domain123/c/channel456/devices%2Ftemp%2Fdata",
-			domainID:  "domain123",
-			channelID: "channel456",
-			subtopic:  "devices.temp.data",
-		},
-		{
-			desc:      "valid topic with subtopic",
-			topic:     "/m/domain/c/channel/extra/extra2",
-			domainID:  "domain",
-			channelID: "channel",
-			subtopic:  "extra.extra2",
-		},
-		{
-			desc:      "valid topic without subtopic",
-			topic:     "/m/domain123/c/channel456",
-			domainID:  "domain123",
-			channelID: "channel456",
-			subtopic:  "",
-		},
-		{
-			desc:      "invalid topic format (missing parts)",
-			topic:     "/m/domain123/c/",
-			domainID:  "domain123",
-			channelID: "",
-			subtopic:  "",
-			expectErr: true,
-		},
-		{
-			desc:      "invalid topic format (missing domain)",
-			topic:     "/m//c/channel123",
-			domainID:  "",
-			channelID: "",
-			subtopic:  "",
-			expectErr: true,
-		},
-		{
-			desc:      "topic with wildcards + and #",
-			topic:     "/m/domain123/c/channel456/devices/+/temp/#",
-			domainID:  "domain123",
-			channelID: "channel456",
-			subtopic:  "",
-			expectErr: true,
-		},
-		{
-			desc:      "invalid domain name",
-			topic:     "m/domain*123/c/channel456/devices/+/temp/#",
-			domainID:  "",
-			channelID: "channel456",
-			subtopic:  "devices.*.temp.>",
-			expectErr: true,
-		},
-		{
-			desc:      "invalid subtopic",
-			topic:     "/m/domain123/c/channel456/sub/a*b/topic",
-			domainID:  "domain123",
-			channelID: "channel456",
-			subtopic:  "",
-			expectErr: true,
-		},
-		{
-			desc:      "invalid topic regex",
-			topic:     "not-a-topic",
-			domainID:  "",
-			channelID: "",
-			subtopic:  "",
-			expectErr: true,
-		},
-	}
+var ParsePublisherTopicTestCases = []struct {
+	desc      string
+	topic     string
+	domainID  string
+	channelID string
+	subtopic  string
+	expectErr bool
+}{
+	{
+		desc:      "valid topic with subtopic /m/domain123/c/channel456/devices/temp",
+		topic:     "/m/domain123/c/channel456/devices/temp",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "devices.temp",
+	},
+	{
+		desc:      "valid topic with URL encoded subtopic /m/domain123/c/channel456/devices%2Ftemp%2Fdata",
+		topic:     "/m/domain123/c/channel456/devices%2Ftemp%2Fdata",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "devices.temp.data",
+	},
+	{
+		desc:      "valid topic with subtopic /m/domain/c/channel/extra/extra2",
+		topic:     "/m/domain/c/channel/extra/extra2",
+		domainID:  "domain",
+		channelID: "channel",
+		subtopic:  "extra.extra2",
+	},
+	{
+		desc:      "valid topic without subtopic /m/domain123/c/channel456",
+		topic:     "/m/domain123/c/channel456",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "",
+	},
+	{
+		desc:      "invalid topic format (missing parts) /m/domain123/c/",
+		topic:     "/m/domain123/c/",
+		domainID:  "domain123",
+		channelID: "",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid topic format (missing domain) /m//c/channel123",
+		topic:     "/m//c/channel123",
+		domainID:  "",
+		channelID: "",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "topic with wildcards + and # /m/domain123/c/channel456/devices/+/temp/#",
+		topic:     "/m/domain123/c/channel456/devices/+/temp/#",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid domain name m/domain*123/c/channel456/devices/+/temp/#",
+		topic:     "m/domain*123/c/channel456/devices/+/temp/#",
+		domainID:  "",
+		channelID: "channel456",
+		subtopic:  "devices.*.temp.>",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a*b/topic",
+		topic:     "/m/domain123/c/channel456/sub/a*b/topic",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a>b/topic",
+		topic:     "/m/domain123/c/channel456/sub/a>b/topic",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a#b/topic",
+		topic:     "/m/domain123/c/channel456/sub/a#b/topic",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a+b/topic",
+		topic:     "/m/domain123/c/channel456/sub/a+b/topic",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a//b/topic",
+		topic:     "/m/domain123/c/channel456/sub/a//b/topic",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid topic regex \"not-a-topic\"",
+		topic:     "not-a-topic",
+		domainID:  "",
+		channelID: "",
+		subtopic:  "",
+		expectErr: true,
+	},
+}
 
-	for _, tc := range cases {
+func TestParsePublishTopic(t *testing.T) {
+	for _, tc := range ParsePublisherTopicTestCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			domainID, channelID, subtopic, err := messaging.ParsePublishTopic(tc.topic)
 			if tc.expectErr {
@@ -112,79 +144,129 @@ func TestParsePublishTopic(t *testing.T) {
 	}
 }
 
-func TestParseSubscribeTopic(t *testing.T) {
-	cases := []struct {
-		desc      string
-		topic     string
-		domainID  string
-		channelID string
-		subtopic  string
-		expectErr bool
-	}{
-		{
-			desc:      "valid topic with subtopic",
-			topic:     "/m/domain123/c/channel456/devices/temp",
-			domainID:  "domain123",
-			channelID: "channel456",
-			subtopic:  "devices.temp",
-		},
-		{
-			desc:      "topic with wildcards + and #",
-			topic:     "/m/domain123/c/channel456/devices/+/temp/#",
-			domainID:  "domain123",
-			channelID: "channel456",
-			subtopic:  "devices.*.temp.>",
-		},
-		{
-			desc:      "valid topic without subtopic",
-			topic:     "/m/domain123/c/channel456",
-			domainID:  "domain123",
-			channelID: "channel456",
-			subtopic:  "",
-		},
-		{
-			desc:      "invalid topic format (missing channel)",
-			topic:     "/m/domain123/c/",
-			domainID:  "domain123",
-			channelID: "",
-			subtopic:  "",
-			expectErr: true,
-		},
-		{
-			desc:      "invalid topic format (missing domain)",
-			topic:     "/m//c/channel123",
-			domainID:  "",
-			channelID: "",
-			subtopic:  "",
-			expectErr: true,
-		},
-		{
-			desc:      "invalid domain name m/domain*123/c/channel456/devices/+/temp/#",
-			topic:     "m/domain*123/c/channel456/devices/+/temp/#",
-			domainID:  "",
-			channelID: "channel456",
-			subtopic:  "devices.*.temp.>",
-			expectErr: true,
-		},
-		{
-			desc:      "invalid subtopic /m/domain123/c/channel456/sub/a*b/topic",
-			topic:     "/m/domain123/c/channel456/sub/a*b/topic",
-			domainID:  "domain123",
-			channelID: "channel456",
-			subtopic:  "",
-			expectErr: true,
-		},
-		{
-			desc:      "completely invalid topic",
-			topic:     "invalid-topic",
-			domainID:  "",
-			channelID: "",
-			subtopic:  "",
-			expectErr: true,
-		},
+func BenchmarkParsePublisherTopic(b *testing.B) {
+	for _, tc := range ParsePublisherTopicTestCases {
+		b.Run(tc.desc, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				_, _, _, _ = messaging.ParsePublishTopic(tc.topic)
+			}
+		})
 	}
+}
 
-	for _, tc := range cases {
+var ParseSubscribeTestCases = []struct {
+	desc      string
+	topic     string
+	domainID  string
+	channelID string
+	subtopic  string
+	expectErr bool
+}{
+	{
+		desc:      "valid topic with subtopic /m/domain123/c/channel456/devices/temp",
+		topic:     "/m/domain123/c/channel456/devices/temp",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "devices.temp",
+	},
+	{
+		desc:      "topic with wildcards + and # /m/domain123/c/channel456/devices/+/temp/#",
+		topic:     "/m/domain123/c/channel456/devices/+/temp/#",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "devices.*.temp.>",
+	},
+	{
+		desc:      "valid topic without subtopic /m/domain123/c/channel456",
+		topic:     "/m/domain123/c/channel456",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "",
+	},
+	{
+		desc:      "invalid topic format (missing channel) /m/domain123/c/",
+		topic:     "/m/domain123/c/",
+		domainID:  "domain123",
+		channelID: "",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid topic format (missing domain) /m//c/channel123",
+		topic:     "/m//c/channel123",
+		domainID:  "",
+		channelID: "",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid domain name m/domain*123/c/channel456/devices/+/temp/#",
+		topic:     "m/domain*123/c/channel456/devices/+/temp/#",
+		domainID:  "",
+		channelID: "channel456",
+		subtopic:  "devices.*.temp.>",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a*b/topic",
+		topic:     "/m/domain123/c/channel456/sub/a*b/topic",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a>b/topic",
+		topic:     "/m/domain123/c/channel456/sub/a>b/topic",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a#b/topic",
+		topic:     "/m/domain123/c/channel456/sub/a#b/topic",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a+b/topic",
+		topic:     "/m/domain123/c/channel456/sub/a+b/topic",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a//b/topic",
+		topic:     "/m/domain123/c/channel456/sub/a//b/topic",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a/ /b/topic",
+		topic:     "/m/domain123/c/channel456/sub/a/ /b/topic",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "completely invalid topic \"invalid-topic\"",
+		topic:     "invalid-topic",
+		domainID:  "",
+		channelID: "",
+		subtopic:  "",
+		expectErr: true,
+	},
+}
+
+func TestParseSubscribeTopic(t *testing.T) {
+	for _, tc := range ParseSubscribeTestCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			domainID, channelID, subtopic, err := messaging.ParseSubscribeTopic(tc.topic)
 			if tc.expectErr {
@@ -194,6 +276,16 @@ func TestParseSubscribeTopic(t *testing.T) {
 				assert.Equal(t, tc.domainID, domainID)
 				assert.Equal(t, tc.channelID, channelID)
 				assert.Equal(t, tc.subtopic, subtopic)
+			}
+		})
+	}
+}
+
+func BenchmarkParseSubscribeTopic(b *testing.B) {
+	for _, tc := range ParseSubscribeTestCases {
+		b.Run(tc.desc, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				_, _, _, _ = messaging.ParseSubscribeTopic(tc.topic)
 			}
 		})
 	}
