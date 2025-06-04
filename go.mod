@@ -1,6 +1,6 @@
 module github.com/absmach/supermq
 
-go 1.24.2
+go 1.24.3
 
 require (
 	github.com/0x6flab/namegenerator v1.4.0
