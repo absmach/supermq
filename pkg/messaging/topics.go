@@ -143,7 +143,7 @@ func EncodeTopicSuffix(domainID string, channelID string, subtopic string) strin
 	return subject
 }
 
-func EncodeMessageTopicSuffix(m *Message) string {
+func EncodeMessageTopic(m *Message) string {
 	return EncodeTopicSuffix(m.GetDomain(), m.GetChannel(), m.GetSubtopic())
 }
 

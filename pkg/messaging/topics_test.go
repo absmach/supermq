@@ -382,7 +382,7 @@ func TestMessage_EncodeTopicSuffix(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			actual := messaging.EncodeMessageTopicSuffix(tc.message)
+			actual := messaging.EncodeMessageTopic(tc.message)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
