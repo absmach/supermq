@@ -382,7 +382,7 @@ func TestMessage_EncodeTopicSuffix(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			actual := tc.message.EncodeTopicSuffix()
+			actual := messaging.EncodeMessageTopicSuffix(tc.message)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
@@ -415,7 +415,7 @@ func TestMessage_EncodeToMQTTTopic(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			actual := tc.message.EncodeToMQTTTopic()
+			actual := messaging.EncodeMessageMQTTTopic(tc.message)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}

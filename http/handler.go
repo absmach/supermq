@@ -180,7 +180,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		msg.Publisher = clientID
 	}
 
-	if err := h.publisher.Publish(ctx, msg.EncodeTopicSuffix(), &msg); err != nil {
+	if err := h.publisher.Publish(ctx, messaging.EncodeMessageTopicSuffix(&msg), &msg); err != nil {
 		return errors.Wrap(errFailedPublishToMsgBroker, err)
 	}
 

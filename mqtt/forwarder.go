@@ -47,7 +47,7 @@ func handle(ctx context.Context, pub messaging.Publisher, logger *slog.Logger) h
 			return nil
 		}
 
-		topic := msg.EncodeToMQTTTopic()
+		topic := messaging.EncodeMessageMQTTTopic(msg)
 
 		go func() {
 			if err := pub.Publish(ctx, topic, msg); err != nil {

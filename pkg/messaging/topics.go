@@ -143,11 +143,11 @@ func EncodeTopicSuffix(domainID string, channelID string, subtopic string) strin
 	return subject
 }
 
-func (m *Message) EncodeTopicSuffix() string {
+func EncodeMessageTopicSuffix(m *Message) string {
 	return EncodeTopicSuffix(m.GetDomain(), m.GetChannel(), m.GetSubtopic())
 }
 
-func (m *Message) EncodeToMQTTTopic() string {
+func EncodeMessageMQTTTopic(m *Message) string {
 	topic := fmt.Sprintf("%s/%s/%s/%s", MsgTopicPrefix, m.GetDomain(), ChannelTopicPrefix, m.GetChannel())
 	if m.GetSubtopic() != "" {
 		topic = topic + "/" + strings.ReplaceAll(m.GetSubtopic(), ".", "/")

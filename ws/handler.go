@@ -163,7 +163,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		Created:   time.Now().UnixNano(),
 	}
 
-	if err := h.pubsub.Publish(ctx, msg.EncodeTopicSuffix(), &msg); err != nil {
+	if err := h.pubsub.Publish(ctx, messaging.EncodeMessageTopicSuffix(&msg), &msg); err != nil {
 		return mgate.NewHTTPProxyError(http.StatusInternalServerError, errors.Wrap(errFailedPublishToMsgBroker, err))
 	}
 
