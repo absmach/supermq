@@ -3,13 +3,10 @@
 
 package domains
 
-import (
-	"github.com/absmach/supermq/pkg/roles"
-	"github.com/absmach/supermq/pkg/svcutil"
-)
+import "github.com/absmach/supermq/pkg/roles"
 
 const (
-	OpUpdateDomain svcutil.Operation = iota
+	OpUpdateDomain Operation = iota
 	OpRetrieveDomain
 	OpEnableDomain
 	OpDisableDomain
@@ -24,31 +21,31 @@ const (
 	OpDeleteInvitation
 )
 
-var expectedOperations = []svcutil.Operation{
+var expectedOperations = []Operation{
 	OpRetrieveDomain,
 	OpUpdateDomain,
 	OpEnableDomain,
 	OpDisableDomain,
 }
 
-var OperationNames = []string{
-	"OpRetrieveDomain",
-	"OpUpdateDomain",
-	"OpEnableDomain",
-	"OpDisableDomain",
-	"OpSendInvitation",
-	"OpAcceptInvitation",
-	"OpCreateDomain",
-	"OpFreezeDomain",
-	"OpListDomains",
-	"OpViewInvitation",
-	"OpListInvitations",
-	"OpRejectInvitation",
-	"OpDeleteInvitation",
-}
+const (
+	OpUpdateDomainStr     = "OpRetrieveDomain"
+	OpRetrieveDomainStr   = "OpUpdateDomain"
+	OpEnableDomainStr     = "OpEnableDomain"
+	OpDisableDomainStr    = "OpDisableDomain"
+	OpSendInvitationStr   = "OpSendInvitation"
+	OpAcceptInvitationStr = "OpAcceptInvitation"
+	OpCreateDomainStr     = "OpCreateDomain"
+	OpFreezeDomainStr     = "OpFreezeDomain"
+	OpListDomainsStr      = "OpListDomains"
+	OpViewInvitationStr   = "OpViewInvitation"
+	OpListInvitationsStr  = "OpListInvitations"
+	OpRejectInvitationStr = "OpRejectInvitation"
+	OpDeleteInvitationStr = "OpDeleteInvitation"
+)
 
-func NewOperationPerm() svcutil.OperationPerm {
-	return svcutil.NewOperationPerm(expectedOperations, OperationNames)
+func NewOperationPerm() OperationPerm {
+	return newOperationPerm(expectedOperations)
 }
 
 // Below codes should moved out of service, may be can be kept in `cmd/<svc>/main.go`
@@ -71,8 +68,8 @@ const (
 	GroupCreatePermission   = "group_create_permission"
 )
 
-func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
-	opPerm := map[svcutil.Operation]svcutil.Permission{
+func NewOperationPermissionMap() map[Operation]Permission {
+	opPerm := map[Operation]Permission{
 		OpRetrieveDomain: readPermission,
 		OpUpdateDomain:   updatePermission,
 		OpEnableDomain:   enablePermission,
@@ -81,8 +78,8 @@ func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
 	return opPerm
 }
 
-func NewRolesOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
-	opPerm := map[svcutil.Operation]svcutil.Permission{
+func NewRolesOperationPermissionMap() map[roles.Operation]roles.Permission {
+	opPerm := map[roles.Operation]roles.Permission{
 		roles.OpAddRole:                manageRolePermission,
 		roles.OpRemoveRole:             manageRolePermission,
 		roles.OpUpdateRoleName:         manageRolePermission,
