@@ -5,12 +5,12 @@ package google
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"net/http"
 	"net/url"
 	"time"
 
+	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	mgoauth2 "github.com/absmach/supermq/pkg/oauth2"
 	uclient "github.com/absmach/supermq/users"
@@ -100,33 +100,10 @@ func (cfg *config) UserInfo(accessToken string) (uclient.User, error) {
 		return uclient.User{}, err
 	}
 
-	var user struct {
-		ID        string `json:"id"`
-		FirstName string `json:"first_name"`
-		LastName  string `json:"last_name"`
-		Username  string `json:"username"`
-		Email     string `json:"email"`
-		Picture   string `json:"picture"`
-	}
-	if err := json.Unmarshal(data, &user); err != nil {
-		return uclient.User{}, err
+	user, err := mgoauth2.NormalizeUser(data, providerName)
+	if err != nil {
+		return uclient.User{}, errors.Wrap(err, svcerr.ErrAuthentication)
 	}
 
-	if user.ID == "" || user.FirstName == "" || user.LastName == "" || user.Email == "" {
-		return uclient.User{}, svcerr.ErrAuthentication
-	}
-
-	client := uclient.User{
-		ID:        user.ID,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
-		Metadata: map[string]interface{}{
-			"oauth_provider":  providerName,
-			"profile_picture": user.Picture,
-		},
-		Status: uclient.EnabledStatus,
-	}
-
-	return client, nil
+	return user, nil
 }
