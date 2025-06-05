@@ -49,6 +49,14 @@ func NewProvisionManageService(entityType string, repo Repository, policy polici
 	return rm, nil
 }
 
+func (pms ProvisionManageService) BuiltInRoleActions(name BuiltInRoleName) ([]Action, error) {
+	actions, ok := pms.builtInRoles[name]
+	if !ok {
+		return nil, errors.Wrap(svcerr.ErrNotFound, fmt.Errorf("role %s not found", name))
+	}
+	return actions, nil
+}
+
 func toRolesActions(actions []string) []Action {
 	roActions := []Action{}
 	for _, action := range actions {
