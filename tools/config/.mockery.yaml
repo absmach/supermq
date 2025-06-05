@@ -75,6 +75,7 @@ packages:
       Service:
   github.com/absmach/supermq/channels:
     interfaces:
+      Cache:
       Repository:
       Service:
   github.com/absmach/supermq/channels/private:

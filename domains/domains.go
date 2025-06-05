@@ -276,11 +276,20 @@ type Repository interface {
 // Cache contains domains caching interface.
 type Cache interface {
 	// Save stores pair domain status and  domain id.
-	Save(ctx context.Context, domainID string, status Status) error
+	SaveStatus(ctx context.Context, domainID string, status Status) error
+
+	// SaveID stores pair route and domain id.
+	SaveID(ctx context.Context, route, domainID string) error
 
 	// Status returns domain status for given domain ID.
 	Status(ctx context.Context, domainID string) (Status, error)
 
-	// Removes domain from cache.
-	Remove(ctx context.Context, domainID string) error
+	// ID returns domain ID for given route.
+	ID(ctx context.Context, route string) (string, error)
+
+	// RemoveStatus removes domain ID and status pair from cache.
+	RemoveStatus(ctx context.Context, domainID string) error
+
+	// RemoveID removes domain route and ID pair from cache.
+	RemoveID(ctx context.Context, route string) error
 }

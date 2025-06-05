@@ -411,7 +411,7 @@ func TestEnableDomain(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := drepo.On("UpdateDomain", context.Background(), tc.domainID, mock.Anything).Return(tc.enableRes, tc.enableErr)
-			cacheCall := dcache.On("Remove", context.Background(), tc.domainID).Return(tc.cacheErr)
+			cacheCall := dcache.On("RemoveStatus", context.Background(), tc.domainID).Return(tc.cacheErr)
 			domain, err := svc.EnableDomain(context.Background(), tc.session, tc.domainID)
 			assert.True(t, errors.Contains(err, tc.err))
 			assert.Equal(t, tc.resp, domain)
@@ -475,7 +475,7 @@ func TestDisableDomain(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := drepo.On("UpdateDomain", context.Background(), tc.domainID, mock.Anything).Return(tc.disableRes, tc.disableErr)
-			cacheCall := dcache.On("Remove", context.Background(), tc.domainID).Return(tc.cacheErr)
+			cacheCall := dcache.On("RemoveStatus", context.Background(), tc.domainID).Return(tc.cacheErr)
 			domain, err := svc.DisableDomain(context.Background(), tc.session, tc.domainID)
 			assert.True(t, errors.Contains(err, tc.err))
 			assert.Equal(t, tc.disableRes, domain)
@@ -539,7 +539,7 @@ func TestFreezeDomain(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := drepo.On("UpdateDomain", context.Background(), tc.domainID, mock.Anything).Return(tc.freezeRes, tc.freezeErr)
-			cacheCall := dcache.On("Remove", context.Background(), tc.domainID).Return(tc.cacheErr)
+			cacheCall := dcache.On("RemoveStatus", context.Background(), tc.domainID).Return(tc.cacheErr)
 			domain, err := svc.FreezeDomain(context.Background(), tc.session, tc.domainID)
 			assert.True(t, errors.Contains(err, tc.err))
 			assert.Equal(t, tc.freezeRes, domain)
