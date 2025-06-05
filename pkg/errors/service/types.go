@@ -87,4 +87,7 @@ var (
 
 	// ErrUnauthorizedPAT indicates failure occurred while authorizing PAT.
 	ErrUnauthorizedPAT = errors.New("failed to authorize PAT")
+
+	// ErrRetainOneMember indicates that at least one owner must be retained in the entity.
+	ErrRetainOneMember = errors.New("must retain at least one member")
 )
