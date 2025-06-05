@@ -8,10 +8,9 @@ import (
 	"github.com/absmach/supermq/pkg/svcutil"
 )
 
-// Internal Operations
-
+// Internal Operations.
 const (
-	OpViewGroup svcutil.Operation = iota
+	OpViewGroup Operation = iota
 	OpUpdateGroup
 	OpUpdateGroupTags
 	OpEnableGroup
@@ -29,7 +28,7 @@ const (
 	OpListUserGroups
 )
 
-var expectedOperations = []svcutil.Operation{
+var expectedOperations = []Operation{
 	OpViewGroup,
 	OpUpdateGroup,
 	OpUpdateGroupTags,
@@ -45,39 +44,39 @@ var expectedOperations = []svcutil.Operation{
 	OpDeleteGroup,
 }
 
-var OperationNames = []string{
-	"OpViewGroup",
-	"OpUpdateGroup",
-	"OpUpdateGroupTags",
-	"OpEnableGroup",
-	"OpDisableGroup",
-	"OpRetrieveGroupHierarchy",
-	"OpAddParentGroup",
-	"OpRemoveParentGroup",
-	"OpAddChildrenGroups",
-	"OpRemoveChildrenGroups",
-	"OpRemoveAllChildrenGroups",
-	"OpListChildrenGroups",
-	"OpDeleteGroup",
-	"OpCreateGroup",
-	"OpListGroups",
-	"OpListUserGroups",
-}
+const (
+	OpViewGroupStr               = "OpViewGroup"
+	OpUpdateGroupStr             = "OpUpdateGroup"
+	OpUpdateGroupTagsStr         = "OpUpdateGroupTags"
+	OpEnableGroupStr             = "OpEnableGroup"
+	OpDisableGroupStr            = "OpDisableGroup"
+	OpRetrieveGroupHierarchyStr  = "OpRetrieveGroupHierarchy"
+	OpAddParentGroupStr          = "OpAddParentGroup"
+	OpRemoveParentGroupStr       = "OpRemoveParentGroup"
+	OpAddChildrenGroupsStr       = "OpAddChildrenGroups"
+	OpRemoveChildrenGroupsStr    = "OpRemoveChildrenGroups"
+	OpRemoveAllChildrenGroupsStr = "OpRemoveAllChildrenGroups"
+	OpListChildrenGroupsStr      = "OpListChildrenGroups"
+	OpDeleteGroupStr             = "OpDeleteGroup"
+	OpCreateGroupStr             = "OpCreateGroup"
+	OpListGroupsStr              = "OpListGroups"
+	OpListUserGroupsStr          = "OpListUserGroups"
+)
 
-func NewOperationPerm() svcutil.OperationPerm {
-	return svcutil.NewOperationPerm(expectedOperations, OperationNames)
+func NewOperationPerm() OperationPerm {
+	return newOperationPerm(expectedOperations)
 }
 
 // External Operations.
 const (
-	DomainOpCreateGroup svcutil.ExternalOperation = iota
+	DomainOpCreateGroup ExternalOperation = iota
 	DomainOpListGroups
 	UserOpListGroups
 	ClientsOpListGroups
 	ChannelsOpListGroups
 )
 
-var expectedExternalOperations = []svcutil.ExternalOperation{
+var expectedExternalOperations = []ExternalOperation{
 	DomainOpCreateGroup,
 	DomainOpListGroups,
 	UserOpListGroups,
@@ -85,16 +84,16 @@ var expectedExternalOperations = []svcutil.ExternalOperation{
 	ChannelsOpListGroups,
 }
 
-var externalOperationNames = []string{
-	"DomainOpCreateGroup",
-	"DomainOpListGroups",
-	"UserOpListGroups",
-	"ClientsOpListGroups",
-	"ChannelsOpListGroups",
-}
+const (
+	DomainOpCreateGroupStr  = "DomainOpCreateGroup"
+	DomainOpListGroupsStr   = "DomainOpListGroups"
+	UserOpListGroupsStr     = "UserOpListGroups"
+	ClientsOpListGroupsStr  = "ClientsOpListGroups"
+	ChannelsOpListGroupsStr = "ChannelsOpListGroups"
+)
 
-func NewExternalOperationPerm() svcutil.ExternalOperationPerm {
-	return svcutil.NewExternalOperationPerm(expectedExternalOperations, externalOperationNames)
+func NewExternalOperationPerm() ExternalOperationPerm {
+	return newExternalOperationPerm(expectedExternalOperations)
 }
 
 // Below codes should moved out of service, may be can be kept in `cmd/<svc>/main.go`
@@ -112,8 +111,8 @@ const (
 	viewRoleUsersPermission   = "view_role_users_permission"
 )
 
-func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
-	opPerm := map[svcutil.Operation]svcutil.Permission{
+func NewOperationPermissionMap() map[Operation]Permission {
+	opPerm := map[Operation]Permission{
 		OpViewGroup:               readPermission,
 		OpUpdateGroup:             updatePermission,
 		OpUpdateGroupTags:         updatePermission,
@@ -161,8 +160,8 @@ const (
 	chanelListGroupPermission   = "read_permission"
 )
 
-func NewExternalOperationPermissionMap() map[svcutil.ExternalOperation]svcutil.Permission {
-	extOpPerm := map[svcutil.ExternalOperation]svcutil.Permission{
+func NewExternalOperationPermissionMap() map[ExternalOperation]Permission {
+	extOpPerm := map[ExternalOperation]Permission{
 		DomainOpCreateGroup:  domainCreateGroupPermission,
 		DomainOpListGroups:   domainListGroupPermission,
 		UserOpListGroups:     userListGroupsPermission,
