@@ -362,7 +362,7 @@ func (svc *service) RoleRemoveMembers(ctx context.Context, session authn.Session
 		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	if _, ok := svc.ProvisionManageService.BuiltInRoles[roles.BuiltInRoleName(ro.Name)]; ok {
+	if _, err := svc.ProvisionManageService.BuiltInRoleActions(roles.BuiltInRoleName(ro.Name)); err == nil {
 		membersPage, err := svc.repo.RoleListMembers(ctx, ro.ID, 0, 0)
 		if err != nil {
 			return errors.Wrap(svcerr.ErrViewEntity, err)
@@ -387,7 +387,7 @@ func (svc *service) RoleRemoveAllMembers(ctx context.Context, session authn.Sess
 		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	if _, ok := svc.ProvisionManageService.BuiltInRoles[roles.BuiltInRoleName(ro.Name)]; ok {
+	if _, err := svc.ProvisionManageService.BuiltInRoleActions(roles.BuiltInRoleName(ro.Name)); err == nil {
 		membersPage, err := svc.repo.RoleListMembers(ctx, ro.ID, 0, 0)
 		if err != nil {
 			return errors.Wrap(svcerr.ErrViewEntity, err)

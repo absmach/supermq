@@ -34,7 +34,7 @@ type ProvisionManageService struct {
 	sidProvider  supermq.IDProvider
 	policy       policies.Service
 	actions      []Action
-	BuiltInRoles map[BuiltInRoleName][]Action
+	builtInRoles map[BuiltInRoleName][]Action
 }
 
 func NewProvisionManageService(entityType string, repo Repository, policy policies.Service, sidProvider supermq.IDProvider, actions []Action, builtInRoles map[BuiltInRoleName][]Action) (ProvisionManageService, error) {
@@ -44,9 +44,17 @@ func NewProvisionManageService(entityType string, repo Repository, policy polici
 		sidProvider:  sidProvider,
 		policy:       policy,
 		actions:      actions,
-		BuiltInRoles: builtInRoles,
+		builtInRoles: builtInRoles,
 	}
 	return rm, nil
+}
+
+func (pms ProvisionManageService) BuiltInRoleActions(name BuiltInRoleName) ([]Action, error) {
+	actions, ok := pms.builtInRoles[name]
+	if !ok {
+		return nil, errors.Wrap(svcerr.ErrNotFound, fmt.Errorf("role %s not found", name))
+	}
+	return actions, nil
 }
 
 func toRolesActions(actions []string) []Action {
@@ -143,7 +151,7 @@ func (r ProvisionManageService) AddNewEntitiesRoles(ctx context.Context, domainI
 
 	for _, entityID := range entityIDs {
 		for defaultRole, defaultRoleMembers := range newBuiltInRoleMembers {
-			actions, ok := r.BuiltInRoles[defaultRole]
+			actions, ok := r.builtInRoles[defaultRole]
 			if !ok {
 				return []RoleProvision{}, fmt.Errorf("default role %s not found in in-built roles", defaultRole)
 			}
