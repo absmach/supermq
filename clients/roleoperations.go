@@ -8,10 +8,9 @@ import (
 	"github.com/absmach/supermq/pkg/svcutil"
 )
 
-// Internal Operations
-
+// Internal Operations.
 const (
-	OpViewClient svcutil.Operation = iota
+	OpViewClient Operation = iota
 	OpUpdateClient
 	OpUpdateClientTags
 	OpUpdateClientSecret
@@ -27,7 +26,24 @@ const (
 	OpListUserClients
 )
 
-var expectedOperations = []svcutil.Operation{
+const (
+	OpViewClientStr            = "OpViewClient"
+	OpUpdateClientStr          = "OpUpdateClient"
+	OpUpdateClientTagsStr      = "OpUpdateClientTags"
+	OpUpdateClientSecretStr    = "OpUpdateClientSecret"
+	OpEnableClientStr          = "OpEnableClient"
+	OpDisableClientStr         = "OpDisableClient"
+	OpDeleteClientStr          = "OpDeleteClient"
+	OpSetParentGroupStr        = "OpSetParentGroup"
+	OpRemoveParentGroupStr     = "OpRemoveParentGroup"
+	OpConnectToChannelStr      = "OpConnectToChannel"
+	OpDisconnectFromChannelStr = "OpDisconnectFromChannel"
+	OpCreateClientStr          = "OpCreateClient"
+	OpListClientsStr           = "OpListClients"
+	OpListUserClientsStr       = "OpListUserClients"
+)
+
+var expectedOperations = []Operation{
 	OpViewClient,
 	OpUpdateClient,
 	OpUpdateClientTags,
@@ -41,30 +57,13 @@ var expectedOperations = []svcutil.Operation{
 	OpDisconnectFromChannel,
 }
 
-var OperationNames = []string{
-	"OpViewClient",
-	"OpUpdateClient",
-	"OpUpdateClientTags",
-	"OpUpdateClientSecret",
-	"OpEnableClient",
-	"OpDisableClient",
-	"OpDeleteClient",
-	"OpSetParentGroup",
-	"OpRemoveParentGroup",
-	"OpConnectToChannel",
-	"OpDisconnectFromChannel",
-	"OpCreateClient",
-	"OpListClients",
-	"OpListUserClients",
-}
-
-func NewOperationPerm() svcutil.OperationPerm {
-	return svcutil.NewOperationPerm(expectedOperations, OperationNames)
+func NewOperationPerm() OperationPerm {
+	return newOperationPerm(expectedOperations)
 }
 
 // External Operations.
 const (
-	DomainOpCreateClient svcutil.ExternalOperation = iota
+	DomainOpCreateClient ExternalOperation = iota
 	DomainOpListClients
 	GroupOpSetChildClient
 	GroupsOpRemoveChildClient
@@ -72,7 +71,16 @@ const (
 	ChannelsOpDisconnectChannel
 )
 
-var expectedExternalOperations = []svcutil.ExternalOperation{
+const (
+	DomainOpCreateClientStr        = "DomainOpCreateClient"
+	DomainOpListClientsStr         = "DomainOpListClients"
+	GroupOpSetChildClientStr       = "GroupOpSetChildClient"
+	GroupsOpRemoveChildClientStr   = "GroupsOpRemoveChildClient"
+	ChannelsOpConnectChannelStr    = "ChannelsOpConnectChannel"
+	ChannelsOpDisconnectChannelStr = "ChannelsOpDisconnectChannel"
+)
+
+var expectedExternalOperations = []ExternalOperation{
 	DomainOpCreateClient,
 	DomainOpListClients,
 	GroupOpSetChildClient,
@@ -81,17 +89,8 @@ var expectedExternalOperations = []svcutil.ExternalOperation{
 	ChannelsOpDisconnectChannel,
 }
 
-var externalOperationNames = []string{
-	"DomainOpCreateClient",
-	"DomainOpListClients",
-	"GroupOpSetChildClient",
-	"GroupsOpRemoveChildClient",
-	"ChannelsOpConnectChannel",
-	"ChannelsOpDisconnectChannel",
-}
-
-func NewExternalOperationPerm() svcutil.ExternalOperationPerm {
-	return svcutil.NewExternalOperationPerm(expectedExternalOperations, externalOperationNames)
+func NewExternalOperationPerm() ExternalOperationPerm {
+	return newExternalOperationPerm(expectedExternalOperations)
 }
 
 // Below codes should moved out of service, may be can be kept in `cmd/<svc>/main.go`
@@ -109,8 +108,8 @@ const (
 	viewRoleUsersPermission   = "view_role_users_permission"
 )
 
-func NewOperationPermissionMap() map[svcutil.Operation]svcutil.Permission {
-	opPerm := map[svcutil.Operation]svcutil.Permission{
+func NewOperationPermissionMap() map[Operation]Permission {
+	opPerm := map[Operation]Permission{
 		OpViewClient:            readPermission,
 		OpUpdateClient:          updatePermission,
 		OpUpdateClientTags:      updatePermission,
@@ -159,8 +158,8 @@ const (
 	channelsDisconnectClientPermission = "connect_to_client_permission"
 )
 
-func NewExternalOperationPermissionMap() map[svcutil.ExternalOperation]svcutil.Permission {
-	extOpPerm := map[svcutil.ExternalOperation]svcutil.Permission{
+func NewExternalOperationPermissionMap() map[ExternalOperation]Permission {
+	extOpPerm := map[ExternalOperation]Permission{
 		DomainOpCreateClient:        domainCreateClientPermission,
 		DomainOpListClients:         domainListClientsPermission,
 		GroupOpSetChildClient:       groupSetChildClientPermission,
