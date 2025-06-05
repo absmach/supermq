@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	errCreateDomainPolicy = errors.New("failed to create domain policy")
-	errRollbackRepo       = errors.New("failed to rollback repo")
+	errCreateDomainPolicy     = errors.New("failed to create domain policy")
+	errRollbackRepo           = errors.New("failed to rollback repo")
 	errAtLeastOneMemberRetain = errors.New("at least one member must remain in built-in role")
 )
 
