@@ -9,6 +9,7 @@ import (
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/events"
 	"github.com/absmach/supermq/pkg/roles"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 const (
@@ -47,6 +48,7 @@ func (rmes *RoleManagerEventStore) AddRole(ctx context.Context, session authn.Se
 	e := addRoleEvent{
 		operationPrefix: rmes.operationPrefix,
 		RoleProvision:   nrp,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return nrp, err
@@ -62,6 +64,7 @@ func (rmes *RoleManagerEventStore) RemoveRole(ctx context.Context, session authn
 		operationPrefix: rmes.operationPrefix,
 		roleID:          roleID,
 		entityID:        entityID,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return err
@@ -78,6 +81,7 @@ func (rmes *RoleManagerEventStore) UpdateRoleName(ctx context.Context, session a
 	e := updateRoleEvent{
 		operationPrefix: rmes.operationPrefix,
 		Role:            ro,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return ro, err
@@ -93,6 +97,7 @@ func (rmes *RoleManagerEventStore) RetrieveRole(ctx context.Context, session aut
 	e := retrieveRoleEvent{
 		operationPrefix: rmes.operationPrefix,
 		Role:            ro,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return ro, err
@@ -111,6 +116,7 @@ func (rmes *RoleManagerEventStore) RetrieveAllRoles(ctx context.Context, session
 		entityID:        entityID,
 		limit:           limit,
 		offset:          offset,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return rp, err
@@ -125,6 +131,7 @@ func (rmes *RoleManagerEventStore) ListAvailableActions(ctx context.Context, ses
 	}
 	e := listAvailableActionsEvent{
 		operationPrefix: rmes.operationPrefix,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return actions, err
@@ -142,6 +149,7 @@ func (rmes *RoleManagerEventStore) RoleAddActions(ctx context.Context, session a
 		entityID:        entityID,
 		roleID:          roleID,
 		actions:         actions,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return actions, err
@@ -159,6 +167,7 @@ func (rmes *RoleManagerEventStore) RoleListActions(ctx context.Context, session 
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
 		roleID:          roleID,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return actions, err
@@ -178,6 +187,7 @@ func (rmes *RoleManagerEventStore) RoleCheckActionsExists(ctx context.Context, s
 		roleID:          roleID,
 		actions:         actions,
 		isAllExists:     isAllExists,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return isAllExists, err
@@ -195,6 +205,7 @@ func (rmes *RoleManagerEventStore) RoleRemoveActions(ctx context.Context, sessio
 		entityID:        entityID,
 		roleID:          roleID,
 		actions:         actions,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return err
@@ -211,6 +222,7 @@ func (rmes *RoleManagerEventStore) RoleRemoveAllActions(ctx context.Context, ses
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
 		roleID:          roleID,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return err
@@ -234,6 +246,7 @@ func (rmes *RoleManagerEventStore) RoleAddMembersEventPublisher(ctx context.Cont
 		entityID:        entityID,
 		roleID:          roleID,
 		members:         members,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return err
@@ -253,6 +266,7 @@ func (rmes *RoleManagerEventStore) RoleListMembers(ctx context.Context, session 
 		roleID:          roleID,
 		limit:           limit,
 		offset:          offset,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return mp, err
@@ -271,6 +285,7 @@ func (rmes *RoleManagerEventStore) RoleCheckMembersExists(ctx context.Context, s
 		entityID:        entityID,
 		roleID:          roleID,
 		members:         members,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return isAllExists, err
@@ -288,6 +303,7 @@ func (rmes *RoleManagerEventStore) RoleRemoveMembers(ctx context.Context, sessio
 		entityID:        entityID,
 		roleID:          roleID,
 		members:         members,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return err
@@ -304,6 +320,7 @@ func (rmes *RoleManagerEventStore) RoleRemoveAllMembers(ctx context.Context, ses
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
 		roleID:          roleID,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return err
@@ -322,6 +339,7 @@ func (rmes *RoleManagerEventStore) ListEntityMembers(ctx context.Context, sessio
 		entityID:        entityID,
 		limit:           pageQuery.Limit,
 		offset:          pageQuery.Offset,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return mems, err
@@ -338,6 +356,7 @@ func (rmes *RoleManagerEventStore) RemoveEntityMembers(ctx context.Context, sess
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
 		members:         members,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return err
@@ -353,6 +372,7 @@ func (rmes *RoleManagerEventStore) RemoveMemberFromAllRoles(ctx context.Context,
 	e := removeMemberFromAllRolesEvent{
 		operationPrefix: rmes.operationPrefix,
 		memberID:        memberID,
+		requestID:       middleware.GetReqID(ctx),
 	}
 	if err := rmes.Publish(ctx, rmes.streamID, e); err != nil {
 		return err
