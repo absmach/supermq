@@ -19,6 +19,7 @@ import (
 var (
 	errCreateDomainPolicy = errors.New("failed to create domain policy")
 	errRollbackRepo       = errors.New("failed to rollback repo")
+	errAtLeastOneMemberRetain = errors.New("at least one member must remain in built-in role")
 )
 
 type service struct {
@@ -367,7 +368,6 @@ func (svc *service) RoleRemoveMembers(ctx context.Context, session authn.Session
 			return errors.Wrap(svcerr.ErrViewEntity, err)
 		}
 		if membersPage.Total <= uint64(len(members)) {
-			errAtLeastOneMemberRetain := errors.New("at least one member should be in built-in role")
 			return errors.Wrap(svcerr.ErrRemoveEntity, errAtLeastOneMemberRetain)
 		}
 	}
@@ -393,7 +393,6 @@ func (svc *service) RoleRemoveAllMembers(ctx context.Context, session authn.Sess
 			return errors.Wrap(svcerr.ErrViewEntity, err)
 		}
 		if membersPage.Total > 0 {
-			errAtLeastOneMemberRetain := errors.New("at least one member should be in built-in role")
 			return errors.Wrap(svcerr.ErrRemoveEntity, errAtLeastOneMemberRetain)
 		}
 	}
